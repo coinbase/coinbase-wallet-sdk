@@ -21,6 +21,7 @@ func NewServer() *Server {
 	router := mux.NewRouter()
 	srv := &Server{router: router}
 
+	router.HandleFunc("/rpc", srv.rpcHandler).Methods("GET")
 	router.HandleFunc("/", srv.rootHandler).Methods("GET")
 
 	return srv
