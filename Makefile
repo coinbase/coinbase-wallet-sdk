@@ -10,7 +10,7 @@ build:
 	go build $(BUILD_FLAGS) -tags $(BUILD_TAGS) -o build/walletlinkd ./cmd/walletlinkd
 
 test:
-	go test -v ./...
+	go test -v ./... -timeout 5s
 
 run: build
 	build/walletlinkd
