@@ -5,6 +5,7 @@ package secp256k1
 import (
 	"encoding/hex"
 
+	secp256k1 "github.com/btcsuite/btcd/btcec"
 	"github.com/pkg/errors"
 )
 
@@ -38,4 +39,10 @@ func (puk PublicKey) String() string {
 // Equals - compare two public keys and returns true if they are the same
 func (puk PublicKey) Equals(puk2 *PublicKey) bool {
 	return puk == *puk2
+}
+
+// Decompress - return uncompressed public key
+func (puk PublicKey) Decompress() []byte {
+	pubKey, _ := secp256k1.ParsePubKey(puk[:], secp256k1.S256())
+	return pubKey.SerializeUncompressed()
 }
