@@ -16,6 +16,9 @@ func TestRPC(t *testing.T) {
 	testSrv := httptest.NewServer(srv.router)
 	defer testSrv.Close()
 
+	agentReqID := 1
+	signerReqID := 1
+
 	rpcURL := strings.Replace(testSrv.URL, "http", "ws", 1) + "/rpc"
 	agentWs, _, err := websocket.DefaultDialer.Dial(rpcURL, nil)
 	assert.Nil(t, err)
@@ -35,7 +38,7 @@ func TestRPC(t *testing.T) {
 	assert.Nil(t, err)
 
 	err = agentWs.WriteJSON(RPCRequest{
-		ID:      1,
+		ID:      agentReqID,
 		Message: RPCRequestMessageCreateSession,
 		Data: map[string]string{
 			"sessionID": sessionID,
@@ -47,12 +50,36 @@ func TestRPC(t *testing.T) {
 	err = agentWs.ReadJSON(rcvd)
 	assert.Nil(t, err)
 
-	assert.Equal(t, 1, rcvd.ID)
-	assert.Equal(t, RPCResponseMessageSessionCreated, rcvd.Message)
+	assert.Equal(t, agentReqID, rcvd.ID)
 
 	// session should be created
 	sess, err = srv.store.GetSession(sessionID)
 	assert.NotNil(t, sess)
 	assert.Nil(t, err)
 	assert.NotEmpty(t, sess.Nonce)
+
+	// signer scans the QR code, obtains sessionId and secret, and then connects
+	// to server
+
+	address := "0x0000000000000000000000000000000000000000"
+
+	err = signerWs.WriteJSON(RPCRequest{
+		ID:      signerReqID,
+		Message: RPCRequestMessageInitAuth,
+		Data: map[string]string{
+			"sessionID": sessionID,
+			"address":   address,
+		},
+	})
+	assert.Nil(t, err)
+
+	// backend then sends a message that should be signed by the signer
+
+	err = signerWs.ReadJSON(rcvd)
+	assert.Nil(t, err)
+
+	message := makeAuthMessage(address, sessionID, sess.Nonce())
+
+	assert.Equal(t, signerReqID, rcvd.ID)
+	assert.Equal(t, message, rcvd.Data["message"])
 }

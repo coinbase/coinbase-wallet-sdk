@@ -3,6 +3,9 @@
 package server
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/CoinbaseWallet/walletlinkd/session"
 	"github.com/CoinbaseWallet/walletlinkd/store"
 	"github.com/pkg/errors"
@@ -48,11 +51,16 @@ func (rs *RPCConnection) HandleMessage(msg *RPCRequest) (*RPCResponse, error) {
 	switch msg.Message {
 	case RPCRequestMessageCreateSession:
 		res, err = rs.handleConnectAgent(msg.ID, msg.Data)
+	case RPCRequestMessageInitAuth:
+		res, err = rs.handleInitAuth(msg.ID, msg.Data)
 	}
 	return res, err
 }
 
-func (rs *RPCConnection) handleConnectAgent(id int, data map[string]string) (*RPCResponse, error) {
+func (rs *RPCConnection) handleConnectAgent(
+	id int,
+	data map[string]string,
+) (*RPCResponse, error) {
 	if rs.connectionType != RPCConnectionTypeUnknown {
 		return nil, errors.Errorf("connection type already set")
 	}
@@ -63,6 +71,7 @@ func (rs *RPCConnection) handleConnectAgent(id int, data map[string]string) (*RP
 	}
 
 	sess, err := session.NewSession(sessID)
+	// TODO: validate session ID
 	if err != nil {
 		return nil, errors.Wrap(err, "session creation failed")
 	}
@@ -73,8 +82,52 @@ func (rs *RPCConnection) handleConnectAgent(id int, data map[string]string) (*RP
 
 	rs.connectionType = RPCConnectionTypeAgent
 
+	return &RPCResponse{ID: id}, nil
+}
+
+func (rs *RPCConnection) handleInitAuth(
+	id int,
+	data map[string]string,
+) (*RPCResponse, error) {
+	if rs.connectionType != RPCConnectionTypeUnknown {
+		return nil, errors.Errorf("connection type already set")
+	}
+
+	sessID, ok := data["sessionID"]
+	// TODO: validate session ID
+	if !ok || sessID == "" {
+		return nil, errors.Errorf("sessionID must be present")
+	}
+
+	sess, err := rs.store.GetSession(sessID)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not get session")
+	}
+	if sess == nil {
+		return nil, errors.Errorf("session not found")
+	}
+
+	address, ok := data["address"]
+	// TODO: validate ethereum address
+	if !ok || address == "" {
+		return nil, errors.Errorf("address must be present")
+	}
+
+	rs.connectionType = RPCConnectionTypeSigner
+
 	return &RPCResponse{
-		ID:      id,
-		Message: RPCResponseMessageSessionCreated,
+		ID: id,
+		Data: map[string]string{
+			"message": makeAuthMessage(address, sessID, sess.Nonce()),
+		},
 	}, nil
+}
+
+func makeAuthMessage(address, sessionID, nonce string) string {
+	return fmt.Sprintf(
+		"WalletLink\n\nAddress: %s\nSession ID: %s\n\n%s",
+		strings.ToLower(address),
+		sessionID,
+		nonce,
+	)
 }
