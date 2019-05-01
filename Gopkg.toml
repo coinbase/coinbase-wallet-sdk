@@ -44,3 +44,11 @@
 [[constraint]]
   name = "github.com/stretchr/testify"
   version = "1.3.0"
+
+[[constraint]]
+  name = "github.com/btcsuite/btcd"
+  revision = "ed77733ec07dfc8a513741138419b8d9d3de9d2d"
+
+[[constraint]]
+  branch = "release-branch.go1.12"
+  name = "golang.org/x/crypto"
