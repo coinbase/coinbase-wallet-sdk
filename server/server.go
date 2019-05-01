@@ -8,18 +8,23 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/CoinbaseWallet/walletlinkd/store"
 	"github.com/gorilla/mux"
 )
 
 // Server - server
 type Server struct {
 	router *mux.Router
+	store  store.Store
 }
 
 // NewServer - construct a Server
 func NewServer() *Server {
 	router := mux.NewRouter()
-	srv := &Server{router: router}
+	srv := &Server{
+		router: router,
+		store:  store.NewMemoryStore(),
+	}
 
 	router.HandleFunc("/rpc", srv.rpcHandler).Methods("GET")
 	router.HandleFunc("/", srv.rootHandler).Methods("GET")

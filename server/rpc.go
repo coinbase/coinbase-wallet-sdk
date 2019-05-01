@@ -21,36 +21,34 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(errors.Wrap(err, "upgrade failed"))
 		return
 	}
-
 	defer conn.Close()
 
+	rpcConnection, err := NewRPCConnection(srv.store)
+	if err != nil {
+		log.Println(errors.Wrap(err, "rpc connection creation failed"))
+		return
+	}
+
 	for {
-		msgType, msg, err := conn.ReadMessage()
+		rpcMsg := &RPCRequest{}
+		err := conn.ReadJSON(rpcMsg)
 		if err != nil {
-			log.Println(errors.Wrap(err, "read message failed"))
+			if !websocket.IsCloseError(err) &&
+				!websocket.IsUnexpectedCloseError(err) {
+				log.Println(errors.Wrap(err, "read message failed"))
+			}
 			break
 		}
 
-		shouldBreak := false
-
-		switch msgType {
-		case websocket.TextMessage:
-			fallthrough
-		case websocket.BinaryMessage:
-			if err := conn.WriteMessage(msgType, msg); err != nil {
-				log.Println(errors.Wrap(err, "Write failed"))
-				shouldBreak = true
-			}
-
-		case websocket.PingMessage:
-			if err := conn.WriteMessage(websocket.PongMessage, nil); err != nil {
-				log.Println(errors.Wrap(err, "Pong failed"))
-				shouldBreak = true
-			}
-		}
-
-		if shouldBreak {
+		res, err := rpcConnection.HandleMessage(rpcMsg)
+		if err != nil {
+			log.Println(errors.Wrap(err, "handle message failed"))
 			break
+		}
+		if res != nil {
+			if err = conn.WriteJSON(res); err != nil {
+				log.Println(errors.Wrap(err, "write json failed"))
+			}
 		}
 	}
 }
