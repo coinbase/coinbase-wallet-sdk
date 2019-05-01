@@ -67,15 +67,19 @@ func (rs *RPCConnection) handleCreateSession(
 	}
 
 	sessID, ok := data["sessionID"]
-	if !ok || sessID == "" {
+	if !ok || !session.IsValidID(sessID) {
 		return nil, errors.Errorf("sessionID must be present")
 	}
 
-	// TODO: handle preexisting session
-
-	sess, err := session.NewSession(sessID)
+	sess, err := rs.store.GetSession(sessID)
 	if err != nil {
-		return nil, errors.Wrap(err, "session creation failed")
+		return nil, errors.Wrap(err, "attempting to get existing session failed")
+	}
+	if sess == nil {
+		sess, err = session.NewSession(sessID)
+		if err != nil {
+			return nil, errors.Wrap(err, "session creation failed")
+		}
 	}
 
 	if err := rs.store.AddSession(sess); err != nil {
