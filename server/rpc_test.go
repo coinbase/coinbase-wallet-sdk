@@ -3,12 +3,22 @@
 package server
 
 import (
+	"encoding/hex"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/CoinbaseWallet/walletlinkd/pkg/ethereum"
+	"github.com/CoinbaseWallet/walletlinkd/pkg/secp256k1"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
+)
+
+var (
+	privateKey, _ = secp256k1.PrivateKeyFromString(
+		"9703fceda5a0bada47af806d90d8e33250b71308ea583b37a1d0615c683e7fce",
+	)
+	address = "0xfa1f9244527E708e37e3db30ec04fcae621eA694"
 )
 
 func TestRPC(t *testing.T) {
@@ -46,11 +56,12 @@ func TestRPC(t *testing.T) {
 	})
 	assert.Nil(t, err)
 
-	rcvd := &RPCResponse{}
-	err = agentWs.ReadJSON(rcvd)
+	res := &RPCResponse{}
+	err = agentWs.ReadJSON(res)
 	assert.Nil(t, err)
 
-	assert.Equal(t, agentReqID, rcvd.ID)
+	assert.Equal(t, agentReqID, res.ID)
+	assert.Empty(t, res.Error)
 
 	// session should be created
 	sess, err = srv.store.GetSession(sessionID)
@@ -60,8 +71,6 @@ func TestRPC(t *testing.T) {
 
 	// signer scans the QR code, obtains sessionId and secret, and then connects
 	// to server
-
-	address := "0x0000000000000000000000000000000000000000"
 
 	err = signerWs.WriteJSON(RPCRequest{
 		ID:      signerReqID,
@@ -75,11 +84,37 @@ func TestRPC(t *testing.T) {
 
 	// backend then sends a message that should be signed by the signer
 
-	err = signerWs.ReadJSON(rcvd)
+	err = signerWs.ReadJSON(res)
 	assert.Nil(t, err)
 
 	message := makeAuthMessage(address, sessionID, sess.Nonce())
 
-	assert.Equal(t, signerReqID, rcvd.ID)
-	assert.Equal(t, message, rcvd.Data["message"])
+	assert.Equal(t, signerReqID, res.ID)
+	assert.Empty(t, res.Error)
+	assert.Equal(t, message, res.Data["message"])
+
+	// signer then signs the message and authenticate with it
+
+	sig, err := ethereum.EthSign(message, privateKey)
+	assert.Nil(t, err)
+	sigHex := hex.EncodeToString(sig)
+
+	signerReqID++
+	err = signerWs.WriteJSON(RPCRequest{
+		ID:      signerReqID,
+		Message: RPCRequestMessageAuthenticate,
+		Data: map[string]string{
+			"signature": sigHex,
+			"address":   address,
+		},
+	})
+	assert.Nil(t, err)
+
+	// backend validates the signature
+
+	err = signerWs.ReadJSON(res)
+	assert.Nil(t, err)
+
+	assert.Equal(t, signerReqID, res.ID)
+	assert.Empty(t, res.Error)
 }

@@ -5,16 +5,18 @@ package server
 // RPCRequestMessage - RPC method
 type RPCRequestMessage string
 
+// FROM AGENTS:
 const (
-	// FOR AGENTS:
-
 	// RPCRequestMessageCreateSession - create a session
 	RPCRequestMessageCreateSession RPCRequestMessage = "createSession"
+)
 
-	// FOR SIGNERS:
-
+// FROM SIGNERS:
+const (
 	// RPCRequestMessageInitAuth - initiate authentication
 	RPCRequestMessageInitAuth RPCRequestMessage = "initAuth"
+	// RPCRequestMessageAuthenticate - authenticate
+	RPCRequestMessageAuthenticate RPCRequestMessage = "authenticate"
 )
 
 // RPCResponseMessage - RPC response message
@@ -29,6 +31,7 @@ type RPCRequest struct {
 
 // RPCResponse - RPC response message
 type RPCResponse struct {
-	ID   int               `json:"i"`
-	Data map[string]string `json:"d"`
+	ID          int               `json:"i"`
+	Error       string            `json:"e,omitempty"`
+	Data        map[string]string `json:"d,omitempty"`
 }
