@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/CoinbaseWallet/walletlinkd/pkg/ethereum"
 	"github.com/CoinbaseWallet/walletlinkd/session"
 	"github.com/CoinbaseWallet/walletlinkd/store"
 	"github.com/pkg/errors"
@@ -50,14 +51,14 @@ func (rs *RPCConnection) HandleMessage(msg *RPCRequest) (*RPCResponse, error) {
 
 	switch msg.Message {
 	case RPCRequestMessageCreateSession:
-		res, err = rs.handleConnectAgent(msg.ID, msg.Data)
+		res, err = rs.handleCreateSession(msg.ID, msg.Data)
 	case RPCRequestMessageInitAuth:
 		res, err = rs.handleInitAuth(msg.ID, msg.Data)
 	}
 	return res, err
 }
 
-func (rs *RPCConnection) handleConnectAgent(
+func (rs *RPCConnection) handleCreateSession(
 	id int,
 	data map[string]string,
 ) (*RPCResponse, error) {
@@ -70,8 +71,9 @@ func (rs *RPCConnection) handleConnectAgent(
 		return nil, errors.Errorf("sessionID must be present")
 	}
 
+	// TODO: handle preexisting session
+
 	sess, err := session.NewSession(sessID)
-	// TODO: validate session ID
 	if err != nil {
 		return nil, errors.Wrap(err, "session creation failed")
 	}
@@ -94,9 +96,8 @@ func (rs *RPCConnection) handleInitAuth(
 	}
 
 	sessID, ok := data["sessionID"]
-	// TODO: validate session ID
-	if !ok || sessID == "" {
-		return nil, errors.Errorf("sessionID must be present")
+	if !ok || !session.IsValidID(sessID) {
+		return nil, errors.Errorf("sessionID must be valid")
 	}
 
 	sess, err := rs.store.GetSession(sessID)
@@ -108,9 +109,12 @@ func (rs *RPCConnection) handleInitAuth(
 	}
 
 	address, ok := data["address"]
-	// TODO: validate ethereum address
 	if !ok || address == "" {
 		return nil, errors.Errorf("address must be present")
+	}
+	address = strings.ToLower(address)
+	if !ethereum.IsValidAddress(address) {
+		return nil, errors.Errorf("invalid ethereum address")
 	}
 
 	rs.connectionType = RPCConnectionTypeSigner
