@@ -54,7 +54,7 @@ func (ac *AgentConnection) handleCreateSession(
 		return nil, errors.Errorf("sessionID must be present")
 	}
 
-	sess, err := ac.store.GetSession(sessID)
+	sess, err := ac.store.LoadSession(sessID)
 	if err != nil {
 		return nil, errors.Wrap(err, "attempting to get existing session failed")
 	}
@@ -65,7 +65,7 @@ func (ac *AgentConnection) handleCreateSession(
 		}
 	}
 
-	if err := ac.store.AddSession(sess); err != nil {
+	if err := ac.store.SaveSession(sess); err != nil {
 		return nil, errors.Wrap(err, "session could not be stored")
 	}
 

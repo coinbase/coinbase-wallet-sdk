@@ -46,7 +46,7 @@ func TestRPC(t *testing.T) {
 	// secret := "29115acb7e001f1092e97552471c1116"
 
 	// session should not exist yet
-	sess, err := srv.store.GetSession(sessionID)
+	sess, err := srv.store.LoadSession(sessionID)
 	assert.Nil(t, sess)
 	assert.Nil(t, err)
 
@@ -67,7 +67,7 @@ func TestRPC(t *testing.T) {
 	assert.Empty(t, res.Error)
 
 	// session should be created
-	sess, err = srv.store.GetSession(sessionID)
+	sess, err = srv.store.LoadSession(sessionID)
 	assert.NotNil(t, sess)
 	assert.Nil(t, err)
 	assert.NotEmpty(t, sess.Nonce)

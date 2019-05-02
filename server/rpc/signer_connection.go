@@ -63,7 +63,7 @@ func (sc *SignerConnection) handleInitAuth(
 		return nil, errors.Errorf("sessionID must be valid")
 	}
 
-	sess, err := sc.store.GetSession(sessID)
+	sess, err := sc.store.LoadSession(sessID)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not get session")
 	}

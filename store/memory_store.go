@@ -24,8 +24,8 @@ func NewMemoryStore() *MemoryStore {
 	}
 }
 
-// AddSession - add session
-func (ms *MemoryStore) AddSession(sess *session.Session) error {
+// SaveSession - save session
+func (ms *MemoryStore) SaveSession(sess *session.Session) error {
 	if sess == nil {
 		return errors.Errorf("session is nil")
 	}
@@ -35,8 +35,8 @@ func (ms *MemoryStore) AddSession(sess *session.Session) error {
 	return nil
 }
 
-// GetSession - get session by id, if both return values are nil, it's not found
-func (ms *MemoryStore) GetSession(id string) (*session.Session, error) {
+// LoadSession - get session by id, returns (nil, nil) if not found
+func (ms *MemoryStore) LoadSession(id string) (*session.Session, error) {
 	if len(id) == 0 {
 		return nil, errors.Errorf("id must not be empty")
 	}

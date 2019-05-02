@@ -8,6 +8,6 @@ import (
 
 // Store - store interface
 type Store interface {
-	AddSession(sess *session.Session) error
-	GetSession(id string) (*session.Session, error)
+	SaveSession(sess *session.Session) error
+	LoadSession(id string) (*session.Session, error)
 }
