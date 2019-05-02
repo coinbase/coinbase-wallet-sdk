@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/CoinbaseWallet/walletlinkd/pkg/ethereum"
 	"github.com/CoinbaseWallet/walletlinkd/session"
@@ -22,16 +23,18 @@ const (
 
 // SignerConnection - signer connection
 type SignerConnection struct {
-	store       store.Store
-	session     *session.Session
-	sendMessage SendMessageFunc
+	store           store.Store
+	session         *session.Session
+	sendMessageLock sync.Mutex
+	sendMessage     SendMessageFunc
 }
+
+var _ Connection = (*SignerConnection)(nil)
 
 // NewSignerConnection - construct a SignerConnection
 func NewSignerConnection(
 	sto store.Store,
 	sendMessage SendMessageFunc,
-
 ) (*SignerConnection, error) {
 	if sto == nil {
 		return nil, errors.Errorf("store must not be nil")
@@ -43,6 +46,13 @@ func NewSignerConnection(
 		store:       sto,
 		sendMessage: sendMessage,
 	}, nil
+}
+
+// SendMessage - send message to connection
+func (sc *SignerConnection) SendMessage(msg interface{}) error {
+	sc.sendMessageLock.Lock()
+	defer sc.sendMessageLock.Unlock()
+	return sc.sendMessage(msg)
 }
 
 // HandleMessage - handle an RPC message
@@ -61,7 +71,7 @@ func (sc *SignerConnection) HandleMessage(msg *Request) error {
 	}
 
 	if res != nil {
-		if err := sc.sendMessage(res); err != nil {
+		if err := sc.SendMessage(res); err != nil {
 			return errors.Wrap(err, "failed to send message")
 		}
 	}

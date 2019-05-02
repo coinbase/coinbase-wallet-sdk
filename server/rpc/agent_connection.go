@@ -3,6 +3,8 @@
 package rpc
 
 import (
+	"sync"
+
 	"github.com/CoinbaseWallet/walletlinkd/session"
 	"github.com/CoinbaseWallet/walletlinkd/store"
 	"github.com/pkg/errors"
@@ -15,10 +17,13 @@ const (
 
 // AgentConnection - agent connection
 type AgentConnection struct {
-	store       store.Store
-	session     *session.Session
-	sendMessage SendMessageFunc
+	store           store.Store
+	session         *session.Session
+	sendMessageLock sync.Mutex
+	sendMessage     SendMessageFunc
 }
+
+var _ Connection = (*AgentConnection)(nil)
 
 // NewAgentConnection - construct an AgentConnection
 func NewAgentConnection(
@@ -37,6 +42,13 @@ func NewAgentConnection(
 	}, nil
 }
 
+// SendMessage - send message to connection
+func (ac *AgentConnection) SendMessage(msg interface{}) error {
+	ac.sendMessageLock.Lock()
+	defer ac.sendMessageLock.Unlock()
+	return ac.sendMessage(msg)
+}
+
 // HandleMessage - handle an RPC message
 func (ac *AgentConnection) HandleMessage(msg *Request) error {
 	var res *Response
@@ -51,7 +63,7 @@ func (ac *AgentConnection) HandleMessage(msg *Request) error {
 	}
 
 	if res != nil {
-		if err := ac.sendMessage(res); err != nil {
+		if err := ac.SendMessage(res); err != nil {
 			return errors.Wrap(err, "failed to send message")
 		}
 	}
