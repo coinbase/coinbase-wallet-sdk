@@ -20,7 +20,7 @@ var (
 	privateKey, _ = secp256k1.PrivateKeyFromString(
 		"9703fceda5a0bada47af806d90d8e33250b71308ea583b37a1d0615c683e7fce",
 	)
-	address = "0xfa1f9244527E708e37e3db30ec04fcae621eA694"
+	address = "0xfa1f9244527e708e37e3db30ec04fcae621ea694"
 )
 
 func TestRPC(t *testing.T) {
@@ -125,4 +125,7 @@ func TestRPC(t *testing.T) {
 
 	assert.Equal(t, signerReqID, res.ID)
 	assert.Empty(t, res.Error)
+
+	// session now has address
+	assert.Equal(t, address, sess.Address())
 }

@@ -124,6 +124,9 @@ func (sc *SignerConnection) handleAuthenticate(
 		return nil, errors.Errorf("signature verification failed")
 	}
 
+	sc.session.SetAddress(address)
+	sc.store.SaveSession(sc.session)
+
 	return &Response{ID: id}, nil
 }
 

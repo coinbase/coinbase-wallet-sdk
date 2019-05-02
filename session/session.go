@@ -16,8 +16,9 @@ var (
 
 // Session - rpc session
 type Session struct {
-	id    string
-	nonce string
+	id      string
+	nonce   string
+	address string
 }
 
 // NewSession - construct a session
@@ -46,6 +47,16 @@ func (s *Session) ID() string {
 // Nonce - return nonce
 func (s *Session) Nonce() string {
 	return s.nonce
+}
+
+// Address - return address
+func (s *Session) Address() string {
+	return s.address
+}
+
+// SetAddress - set address
+func (s *Session) SetAddress(address string) {
+	s.address = address
 }
 
 // IsValidID - validate session id
