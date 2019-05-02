@@ -26,7 +26,8 @@ func NewServer() *Server {
 		store:  store.NewMemoryStore(),
 	}
 
-	router.HandleFunc("/rpc", srv.rpcHandler).Methods("GET")
+	router.HandleFunc("/rpc/agent", srv.rpcAgentHandler).Methods("GET")
+	router.HandleFunc("/rpc/signer", srv.rpcSignerHandler).Methods("GET")
 	router.HandleFunc("/", srv.rootHandler).Methods("GET")
 
 	return srv

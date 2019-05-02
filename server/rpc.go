@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/CoinbaseWallet/walletlinkd/server/rpc"
+	"github.com/CoinbaseWallet/walletlinkd/store"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 )
@@ -15,7 +17,11 @@ var upgrader = websocket.Upgrader{
 	HandshakeTimeout: time.Second * 30,
 }
 
-func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) rpcHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	connectionConstructor rpc.ConnectionConstructor,
+) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(errors.Wrap(err, "upgrade failed"))
@@ -23,14 +29,14 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	rpcConnection, err := NewRPCConnection(srv.store)
+	rpcConn, err := connectionConstructor(srv.store)
 	if err != nil {
 		log.Println(errors.Wrap(err, "rpc connection creation failed"))
 		return
 	}
 
 	for {
-		rpcMsg := &RPCRequest{}
+		rpcMsg := &rpc.Request{}
 		err := conn.ReadJSON(rpcMsg)
 		if err != nil {
 			if !websocket.IsCloseError(err) &&
@@ -40,7 +46,7 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		res, err := rpcConnection.HandleMessage(rpcMsg)
+		res, err := rpcConn.HandleMessage(rpcMsg)
 		if err != nil {
 			log.Println(errors.Wrap(err, "handle message failed"))
 			break
@@ -51,4 +57,24 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+}
+
+func (srv *Server) rpcAgentHandler(w http.ResponseWriter, r *http.Request) {
+	srv.rpcHandler(
+		w,
+		r,
+		func(s store.Store) (rpc.Connection, error) {
+			return rpc.NewAgentConnection(s)
+		},
+	)
+}
+
+func (srv *Server) rpcSignerHandler(w http.ResponseWriter, r *http.Request) {
+	srv.rpcHandler(
+		w,
+		r,
+		func(s store.Store) (rpc.Connection, error) {
+			return rpc.NewSignerConnection(s)
+		},
+	)
 }

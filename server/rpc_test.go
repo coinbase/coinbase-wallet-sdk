@@ -4,12 +4,14 @@ package server
 
 import (
 	"encoding/hex"
+	"fmt"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/CoinbaseWallet/walletlinkd/pkg/ethereum"
 	"github.com/CoinbaseWallet/walletlinkd/pkg/secp256k1"
+	"github.com/CoinbaseWallet/walletlinkd/server/rpc"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 )
@@ -30,11 +32,12 @@ func TestRPC(t *testing.T) {
 	signerReqID := 1
 
 	rpcURL := strings.Replace(testSrv.URL, "http", "ws", 1) + "/rpc"
-	agentWs, _, err := websocket.DefaultDialer.Dial(rpcURL, nil)
+
+	agentWs, _, err := websocket.DefaultDialer.Dial(rpcURL+"/agent", nil)
 	assert.Nil(t, err)
 	defer agentWs.Close()
 
-	signerWs, _, err := websocket.DefaultDialer.Dial(rpcURL, nil)
+	signerWs, _, err := websocket.DefaultDialer.Dial(rpcURL+"/signer", nil)
 	assert.Nil(t, err)
 	defer signerWs.Close()
 
@@ -47,16 +50,16 @@ func TestRPC(t *testing.T) {
 	assert.Nil(t, sess)
 	assert.Nil(t, err)
 
-	err = agentWs.WriteJSON(RPCRequest{
+	err = agentWs.WriteJSON(rpc.Request{
 		ID:      agentReqID,
-		Message: RPCRequestMessageCreateSession,
+		Message: rpc.AgentMessageCreateSession,
 		Data: map[string]string{
 			"sessionID": sessionID,
 		},
 	})
 	assert.Nil(t, err)
 
-	res := &RPCResponse{}
+	res := &rpc.Response{}
 	err = agentWs.ReadJSON(res)
 	assert.Nil(t, err)
 
@@ -72,9 +75,9 @@ func TestRPC(t *testing.T) {
 	// signer scans the QR code, obtains sessionId and secret, and then connects
 	// to server
 
-	err = signerWs.WriteJSON(RPCRequest{
+	err = signerWs.WriteJSON(rpc.Request{
 		ID:      signerReqID,
-		Message: RPCRequestMessageInitAuth,
+		Message: rpc.SignerMessageInitAuth,
 		Data: map[string]string{
 			"sessionID": sessionID,
 			"address":   address,
@@ -87,7 +90,12 @@ func TestRPC(t *testing.T) {
 	err = signerWs.ReadJSON(res)
 	assert.Nil(t, err)
 
-	message := makeAuthMessage(address, sessionID, sess.Nonce())
+	message := fmt.Sprintf(
+		"WalletLink\n\nAddress: %s\nSession ID: %s\n\n%s",
+		strings.ToLower(address),
+		sessionID,
+		sess.Nonce(),
+	)
 
 	assert.Equal(t, signerReqID, res.ID)
 	assert.Empty(t, res.Error)
@@ -100,9 +108,9 @@ func TestRPC(t *testing.T) {
 	sigHex := hex.EncodeToString(sig)
 
 	signerReqID++
-	err = signerWs.WriteJSON(RPCRequest{
+	err = signerWs.WriteJSON(rpc.Request{
 		ID:      signerReqID,
-		Message: RPCRequestMessageAuthenticate,
+		Message: rpc.SignerMessageAuthenticate,
 		Data: map[string]string{
 			"signature": sigHex,
 			"address":   address,
