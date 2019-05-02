@@ -9,7 +9,7 @@ type SendMessageFunc func(res interface{}) error
 
 // Connection - common interface for rpc connections
 type Connection interface {
-	HandleMessage(msg *Request) (*Response, error)
+	HandleMessage(msg *Request) error
 }
 
 // ConnectionConstructor - constructor function for connections

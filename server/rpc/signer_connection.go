@@ -46,11 +46,11 @@ func NewSignerConnection(
 }
 
 // HandleMessage - handle an RPC message
-func (sc *SignerConnection) HandleMessage(msg *Request) (*Response, error) {
+func (sc *SignerConnection) HandleMessage(msg *Request) error {
 	var res *Response
 	var err error
 	if msg.ID <= 0 {
-		return nil, errors.Errorf("id is invalid")
+		return errors.Errorf("id is invalid")
 	}
 
 	switch msg.Message {
@@ -60,7 +60,13 @@ func (sc *SignerConnection) HandleMessage(msg *Request) (*Response, error) {
 		res, err = sc.handleAuthenticate(msg.ID, msg.Data)
 	}
 
-	return res, err
+	if res != nil {
+		if err := sc.sendMessage(res); err != nil {
+			return errors.Wrap(err, "failed to send message")
+		}
+	}
+
+	return err
 }
 
 func (sc *SignerConnection) handleInitAuth(

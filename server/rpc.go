@@ -46,15 +46,9 @@ func (srv *Server) rpcHandler(
 			break
 		}
 
-		res, err := rpcConn.HandleMessage(rpcMsg)
-		if err != nil {
+		if err := rpcConn.HandleMessage(rpcMsg); err != nil {
 			log.Println(errors.Wrap(err, "handle message failed"))
 			break
-		}
-		if res != nil {
-			if err = conn.WriteJSON(res); err != nil {
-				log.Println(errors.Wrap(err, "write json failed"))
-			}
 		}
 	}
 }
