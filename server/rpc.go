@@ -29,7 +29,7 @@ func (srv *Server) rpcHandler(
 	}
 	defer conn.Close()
 
-	rpcConn, err := connectionConstructor(srv.store)
+	rpcConn, err := connectionConstructor(srv.store, conn.WriteJSON)
 	if err != nil {
 		log.Println(errors.Wrap(err, "rpc connection creation failed"))
 		return
@@ -63,8 +63,11 @@ func (srv *Server) rpcAgentHandler(w http.ResponseWriter, r *http.Request) {
 	srv.rpcHandler(
 		w,
 		r,
-		func(s store.Store) (rpc.Connection, error) {
-			return rpc.NewAgentConnection(s)
+		func(
+			s store.Store,
+			sendMessage rpc.SendMessageFunc,
+		) (rpc.Connection, error) {
+			return rpc.NewAgentConnection(s, sendMessage)
 		},
 	)
 }
@@ -73,8 +76,11 @@ func (srv *Server) rpcSignerHandler(w http.ResponseWriter, r *http.Request) {
 	srv.rpcHandler(
 		w,
 		r,
-		func(s store.Store) (rpc.Connection, error) {
-			return rpc.NewSignerConnection(s)
+		func(
+			s store.Store,
+			sendMessage rpc.SendMessageFunc,
+		) (rpc.Connection, error) {
+			return rpc.NewSignerConnection(s, sendMessage)
 		},
 	)
 }

@@ -15,17 +15,25 @@ const (
 
 // AgentConnection - agent connection
 type AgentConnection struct {
-	store   store.Store
-	session *session.Session
+	store       store.Store
+	session     *session.Session
+	sendMessage SendMessageFunc
 }
 
 // NewAgentConnection - construct an AgentConnection
-func NewAgentConnection(sto store.Store) (*AgentConnection, error) {
+func NewAgentConnection(
+	sto store.Store,
+	sendMessage SendMessageFunc,
+) (*AgentConnection, error) {
 	if sto == nil {
 		return nil, errors.Errorf("store must not be nil")
 	}
+	if sendMessage == nil {
+		return nil, errors.Errorf("sendMessage must not be nil")
+	}
 	return &AgentConnection{
-		store: sto,
+		store:       sto,
+		sendMessage: sendMessage,
 	}, nil
 }
 

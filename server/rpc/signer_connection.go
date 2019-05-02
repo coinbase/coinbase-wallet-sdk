@@ -22,17 +22,26 @@ const (
 
 // SignerConnection - signer connection
 type SignerConnection struct {
-	store   store.Store
-	session *session.Session
+	store       store.Store
+	session     *session.Session
+	sendMessage SendMessageFunc
 }
 
 // NewSignerConnection - construct a SignerConnection
-func NewSignerConnection(sto store.Store) (*SignerConnection, error) {
+func NewSignerConnection(
+	sto store.Store,
+	sendMessage SendMessageFunc,
+
+) (*SignerConnection, error) {
 	if sto == nil {
 		return nil, errors.Errorf("store must not be nil")
 	}
+	if sendMessage == nil {
+		return nil, errors.Errorf("sendMessage must not be nil")
+	}
 	return &SignerConnection{
-		store: sto,
+		store:       sto,
+		sendMessage: sendMessage,
 	}, nil
 }
 
