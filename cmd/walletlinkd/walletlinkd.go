@@ -13,6 +13,11 @@ import (
 func main() {
 	srv := server.NewServer()
 
-	fmt.Printf("walletlinkd %s-%s listening on port %s...\n", app.Version, app.GitCommit, config.PORT)
-	srv.Start(config.PORT)
+	fmt.Printf(
+		"walletlinkd %s-%s listening on port %s...\n",
+		app.Version,
+		app.GitCommit,
+		config.Port,
+	)
+	srv.Start(config.Port)
 }

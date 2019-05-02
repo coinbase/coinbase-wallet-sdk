@@ -4,8 +4,18 @@ package config
 
 import "os"
 
-// PORT - port to listen on
-var PORT = getEnv("PORT", "3000")
+var (
+	// Port - port to listen on
+	Port = getEnv("PORT", "3000")
+	// NotificationServerSecret - secret for authenticating with
+	// push notification server
+	NotificationServerSecret = getEnv("NOTIFICATION_SERVER_SECRET", "")
+	// NotificationServerURL - the url for the push notification server
+	NotificationServerURL = getEnv(
+		"NOTIFICATION_SERVER_URL",
+		"http://localhost:3000",
+	)
+)
 
 func getEnv(name string, defaultValue string) string {
 	value := os.Getenv(name)
