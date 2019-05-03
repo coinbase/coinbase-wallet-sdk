@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/CoinbaseWallet/walletlinkd/pkg/crypto"
 	"github.com/CoinbaseWallet/walletlinkd/server/rpc"
+	"github.com/CoinbaseWallet/walletlinkd/util"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 )
@@ -38,7 +38,7 @@ func TestRPC(t *testing.T) {
 	secret := "29115acb7e001f1092e97552471c1116"
 
 	// agent then derives a sessionKey from sessionID and secret
-	sessionKey := hex.EncodeToString(crypto.SHA256(
+	sessionKey := hex.EncodeToString(util.SHA256(
 		[]byte(fmt.Sprintf("%s %s WalletLink", sessionID, secret)),
 	))
 
