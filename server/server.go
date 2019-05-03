@@ -15,24 +15,24 @@ import (
 
 // Server - server
 type Server struct {
-	router       *mux.Router
-	store        store.Store
-	agentPubSub  *rpc.PubSub
-	signerPubSub *rpc.PubSub
+	router      *mux.Router
+	store       store.Store
+	hostPubSub  *rpc.PubSub
+	guestPubSub *rpc.PubSub
 }
 
 // NewServer - construct a Server
 func NewServer() *Server {
 	router := mux.NewRouter()
 	srv := &Server{
-		router:       router,
-		store:        store.NewMemoryStore(),
-		agentPubSub:  rpc.NewPubSub(),
-		signerPubSub: rpc.NewPubSub(),
+		router:      router,
+		store:       store.NewMemoryStore(),
+		hostPubSub:  rpc.NewPubSub(),
+		guestPubSub: rpc.NewPubSub(),
 	}
 
-	router.HandleFunc("/rpc/agent", srv.rpcAgentHandler).Methods("GET")
-	router.HandleFunc("/rpc/signer", srv.rpcSignerHandler).Methods("GET")
+	router.HandleFunc("/rpc/host", srv.rpcHostHandler).Methods("GET")
+	router.HandleFunc("/rpc/guest", srv.rpcGuestHandler).Methods("GET")
 	router.HandleFunc("/", srv.rootHandler).Methods("GET")
 
 	return srv
