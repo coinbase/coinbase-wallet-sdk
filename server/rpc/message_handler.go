@@ -3,8 +3,6 @@
 package rpc
 
 import (
-	"sync"
-
 	"github.com/CoinbaseWallet/walletlinkd/session"
 	"github.com/CoinbaseWallet/walletlinkd/store"
 	"github.com/pkg/errors"
@@ -18,35 +16,30 @@ const (
 	GuestMessageJoinSession = "joinSession"
 )
 
-// SendMessageFunc - callback function to send a message
-type SendMessageFunc = func(msg interface{}) error
-
 // MessageHandler - handles rpc messages
 type MessageHandler struct {
-	sendMessageLock sync.Mutex
-	sendMessage     SendMessageFunc
-	session         *session.Session
+	session *session.Session
+
+	sendCh chan<- interface{}
+	subCh  chan interface{}
 
 	store       store.Store
 	hostPubSub  *PubSub
 	guestPubSub *PubSub
 }
 
-// MessageHandler conforms to MessageSender interface
-var _ MessageSender = (*MessageHandler)(nil)
-
 // NewMessageHandler - construct a MessageHandler
 func NewMessageHandler(
-	sendMessage SendMessageFunc,
+	sendCh chan<- interface{},
 	sto store.Store,
 	hostPubSub *PubSub,
 	guestPubSub *PubSub,
 ) (*MessageHandler, error) {
+	if sendCh == nil {
+		return nil, errors.Errorf("sendCh must not be nil")
+	}
 	if sto == nil {
 		return nil, errors.Errorf("store must not be nil")
-	}
-	if sendMessage == nil {
-		return nil, errors.Errorf("sendMessage must not be nil")
 	}
 	if hostPubSub == nil {
 		return nil, errors.Errorf("hostPubSub must not be nil")
@@ -55,21 +48,12 @@ func NewMessageHandler(
 		return nil, errors.Errorf("guestPubSub must not be nil")
 	}
 	return &MessageHandler{
-		sendMessage: sendMessage,
+		sendCh:      sendCh,
+		subCh:       make(chan interface{}),
 		store:       sto,
 		hostPubSub:  hostPubSub,
 		guestPubSub: guestPubSub,
 	}, nil
-}
-
-// SendMessage - send message to connection
-func (c *MessageHandler) SendMessage(msg interface{}) error {
-	if c.sendMessage == nil {
-		return nil
-	}
-	c.sendMessageLock.Lock()
-	defer c.sendMessageLock.Unlock()
-	return c.sendMessage(msg)
 }
 
 // Handle - handle an RPC message
@@ -89,20 +73,18 @@ func (c *MessageHandler) Handle(msg *Request) error {
 	}
 
 	if res != nil {
-		if err := c.SendMessage(res); err != nil {
-			return errors.Wrap(err, "failed to send message")
-		}
+		c.sendCh <- res
 	}
 
 	return err
 }
 
-// CleanUp - unsubscribes from pubsub
-func (c *MessageHandler) CleanUp() {
+// Close - clean up
+func (c *MessageHandler) Close() {
 	if c.session != nil {
-		c.hostPubSub.Unsubscribe(c.session.ID(), c)
+		c.hostPubSub.Unsubscribe(c.session.ID(), c.subCh)
 	}
-	c.sendMessage = nil
+	close(c.subCh)
 }
 
 func (c *MessageHandler) handleCreateSession(
@@ -135,7 +117,7 @@ func (c *MessageHandler) handleCreateSession(
 	}
 
 	c.session = sess
-	c.hostPubSub.Subscribe(sessID, c)
+	c.hostPubSub.Subscribe(sessID, c.subCh)
 
 	return &Response{ID: id}, nil
 }
@@ -163,7 +145,7 @@ func (c *MessageHandler) handleJoinSession(
 	}
 
 	c.session = sess
-	c.guestPubSub.Subscribe(sessID, c)
+	c.guestPubSub.Subscribe(sessID, c.subCh)
 
 	return &Response{ID: id}, nil
 }

@@ -3,98 +3,94 @@
 package rpc
 
 import (
-	"log"
 	"sync"
-
-	"github.com/pkg/errors"
 )
 
-type MessageSender interface {
-	SendMessage(msg interface{}) error
-}
+// Subscriber - channel that takes in any type
+type Subscriber chan<- interface{}
 
-type connectionSet = map[MessageSender]struct{}
+type subscriberSet = map[Subscriber]struct{}
 
-// PubSub - pub/sub for connections
+// PubSub - pub/sub interface for message senders
 type PubSub struct {
-	connMapLock sync.Mutex
-	connMap     map[string]connectionSet
+	subMapLock sync.Mutex
+	subMap     map[string]subscriberSet
 }
 
 // NewPubSub - construct a PubSub
 func NewPubSub() *PubSub {
 	return &PubSub{
-		connMap: map[string]connectionSet{},
+		subMap: map[string]subscriberSet{},
 	}
 }
 
-// Subscribe - subscribes a connection to an id
-func (cm *PubSub) Subscribe(id string, connection MessageSender) {
-	if id == "" || connection == nil {
+// Subscribe - subscribes a Subscriber to an id
+func (cm *PubSub) Subscribe(id string, subscriber Subscriber) {
+	if id == "" || subscriber == nil {
 		return
 	}
-	cm.connMapLock.Lock()
-	defer cm.connMapLock.Unlock()
+	cm.subMapLock.Lock()
+	defer cm.subMapLock.Unlock()
 
-	set, ok := cm.connMap[id]
+	set, ok := cm.subMap[id]
 	if !ok {
-		set = connectionSet{}
-		cm.connMap[id] = set
+		set = subscriberSet{}
+		cm.subMap[id] = set
 	}
 
-	set[connection] = struct{}{}
+	set[subscriber] = struct{}{}
 }
 
-// Unsubscribe - unsubscribes a connection from an id
-func (cm *PubSub) Unsubscribe(id string, connection MessageSender) {
-	if id == "" || connection == nil {
+// Unsubscribe - unsubscribes a Subscriber from an id
+func (cm *PubSub) Unsubscribe(id string, subscriber Subscriber) {
+	if id == "" || subscriber == nil {
 		return
 	}
-	cm.connMapLock.Lock()
-	defer cm.connMapLock.Unlock()
+	cm.subMapLock.Lock()
+	defer cm.subMapLock.Unlock()
 
-	set, ok := cm.connMap[id]
+	set, ok := cm.subMap[id]
 	if !ok {
 		return
 	}
 
-	delete(set, connection)
+	delete(set, subscriber)
 
 	if len(set) == 0 {
-		delete(cm.connMap, id)
+		delete(cm.subMap, id)
 	}
 }
 
-// UnsubscribeAll - unsubscribes all connections from an id
+// UnsubscribeAll - unsubscribes all Subscribers from an id
 func (cm *PubSub) UnsubscribeAll(id string) {
 	if id == "" {
 		return
 	}
-	cm.connMapLock.Lock()
-	defer cm.connMapLock.Unlock()
+	cm.subMapLock.Lock()
+	defer cm.subMapLock.Unlock()
 
-	delete(cm.connMap, id)
+	delete(cm.subMap, id)
 }
 
-// Publish - publishes a message to connections that are subscribed to an id
-func (cm *PubSub) Publish(id string, msg interface{}) {
+// Publish - publishes a message to all subscribers of an id and returns
+// the number of subscribers messaged
+func (cm *PubSub) Publish(id string, msg interface{}) int {
 	if id == "" {
-		return
+		return 0
 	}
-	cm.connMapLock.Lock()
-	defer cm.connMapLock.Unlock()
+	cm.subMapLock.Lock()
+	defer cm.subMapLock.Unlock()
 
-	connections, ok := cm.connMap[id]
+	subscribers, ok := cm.subMap[id]
 	if !ok {
-		return
+		return 0
 	}
 
-	for connection := range connections {
-		connection := connection
+	for subscriber := range subscribers {
+		subscriber := subscriber
 		go func() {
-			if err := connection.SendMessage(msg); err != nil {
-				log.Println(errors.Wrap(err, "unable to send message"))
-			}
+			subscriber <- msg
 		}()
 	}
+	return len(subscribers)
 }

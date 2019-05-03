@@ -24,8 +24,23 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer ws.Close()
 
+	sendCh := make(chan interface{})
+	defer close(sendCh)
+
+	go func() {
+		for {
+			res, ok := <-sendCh
+			if !ok {
+				return
+			}
+			if err := ws.WriteJSON(res); err != nil {
+				log.Println(errors.Wrap(err, "write failed"))
+			}
+		}
+	}()
+
 	handler, err := rpc.NewMessageHandler(
-		ws.WriteJSON,
+		sendCh,
 		srv.store,
 		srv.hostPubSub,
 		srv.guestPubSub,
@@ -35,7 +50,7 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	defer handler.CleanUp()
+	defer handler.Close()
 
 	for {
 		rpcMsg := &rpc.Request{}
@@ -43,13 +58,13 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			if !websocket.IsCloseError(err) &&
 				!websocket.IsUnexpectedCloseError(err) {
-				log.Println(errors.Wrap(err, "read message failed"))
+				log.Println(errors.Wrap(err, "read failed"))
 			}
 			break
 		}
 
 		if err := handler.Handle(rpcMsg); err != nil {
-			log.Println(errors.Wrap(err, "handle message failed"))
+			log.Println(errors.Wrap(err, "message handling failed"))
 			break
 		}
 	}
