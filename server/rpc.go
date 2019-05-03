@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/CoinbaseWallet/walletlinkd/server/rpc"
-	"github.com/CoinbaseWallet/walletlinkd/store"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 )
@@ -17,27 +16,58 @@ var upgrader = websocket.Upgrader{
 	HandshakeTimeout: time.Second * 30,
 }
 
-func (srv *Server) rpcHandler(
-	w http.ResponseWriter,
-	r *http.Request,
-	connectionConstructor rpc.ConnectionConstructor,
-) {
-	conn, err := upgrader.Upgrade(w, r, nil)
+func (srv *Server) rpcAgentHandler(w http.ResponseWriter, r *http.Request) {
+	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(errors.Wrap(err, "upgrade failed"))
 		return
 	}
-	defer conn.Close()
+	defer ws.Close()
 
-	rpcConn, err := connectionConstructor(srv.store, conn.WriteJSON)
+	agentConn, err := rpc.NewAgentConnection(
+		ws.WriteJSON,
+		srv.store,
+		srv.agentPubSub,
+		srv.signerPubSub,
+	)
 	if err != nil {
-		log.Println(errors.Wrap(err, "rpc connection creation failed"))
+		log.Println(errors.Wrap(err, "agent connection creation failed"))
 		return
 	}
 
+	defer agentConn.CleanUp()
+
+	handleMessages(agentConn, ws)
+}
+
+func (srv *Server) rpcSignerHandler(w http.ResponseWriter, r *http.Request) {
+	ws, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(errors.Wrap(err, "upgrade failed"))
+		return
+	}
+	defer ws.Close()
+
+	signerConn, err := rpc.NewSignerConnection(
+		ws.WriteJSON,
+		srv.store,
+		srv.agentPubSub,
+		srv.signerPubSub,
+	)
+	if err != nil {
+		log.Println(errors.Wrap(err, "signer connection creation failed"))
+		return
+	}
+
+	defer signerConn.CleanUp()
+
+	handleMessages(signerConn, ws)
+}
+
+func handleMessages(rpcConn rpc.Connection, ws *websocket.Conn) {
 	for {
 		rpcMsg := &rpc.Request{}
-		err := conn.ReadJSON(rpcMsg)
+		err := ws.ReadJSON(rpcMsg)
 		if err != nil {
 			if !websocket.IsCloseError(err) &&
 				!websocket.IsUnexpectedCloseError(err) {
@@ -51,30 +81,4 @@ func (srv *Server) rpcHandler(
 			break
 		}
 	}
-}
-
-func (srv *Server) rpcAgentHandler(w http.ResponseWriter, r *http.Request) {
-	srv.rpcHandler(
-		w,
-		r,
-		func(
-			s store.Store,
-			sendMessage rpc.SendMessageFunc,
-		) (rpc.Connection, error) {
-			return rpc.NewAgentConnection(s, sendMessage)
-		},
-	)
-}
-
-func (srv *Server) rpcSignerHandler(w http.ResponseWriter, r *http.Request) {
-	srv.rpcHandler(
-		w,
-		r,
-		func(
-			s store.Store,
-			sendMessage rpc.SendMessageFunc,
-		) (rpc.Connection, error) {
-			return rpc.NewSignerConnection(s, sendMessage)
-		},
-	)
 }

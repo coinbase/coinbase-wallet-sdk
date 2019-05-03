@@ -23,18 +23,23 @@ const (
 
 // SignerConnection - signer connection
 type SignerConnection struct {
-	store           store.Store
-	session         *session.Session
 	sendMessageLock sync.Mutex
 	sendMessage     SendMessageFunc
+	session         *session.Session
+
+	store        store.Store
+	agentPubSub  *PubSub
+	signerPubSub *PubSub
 }
 
 var _ Connection = (*SignerConnection)(nil)
 
 // NewSignerConnection - construct a SignerConnection
 func NewSignerConnection(
-	sto store.Store,
 	sendMessage SendMessageFunc,
+	sto store.Store,
+	agentPubSub *PubSub,
+	signerPubSub *PubSub,
 ) (*SignerConnection, error) {
 	if sto == nil {
 		return nil, errors.Errorf("store must not be nil")
@@ -42,14 +47,25 @@ func NewSignerConnection(
 	if sendMessage == nil {
 		return nil, errors.Errorf("sendMessage must not be nil")
 	}
+	if agentPubSub == nil {
+		return nil, errors.Errorf("agentPubSub must not be nil")
+	}
+	if signerPubSub == nil {
+		return nil, errors.Errorf("signerPubSub must not be nil")
+	}
 	return &SignerConnection{
-		store:       sto,
-		sendMessage: sendMessage,
+		store:        sto,
+		sendMessage:  sendMessage,
+		agentPubSub:  agentPubSub,
+		signerPubSub: signerPubSub,
 	}, nil
 }
 
 // SendMessage - send message to connection
 func (sc *SignerConnection) SendMessage(msg interface{}) error {
+	if sc.sendMessage == nil {
+		return nil
+	}
 	sc.sendMessageLock.Lock()
 	defer sc.sendMessageLock.Unlock()
 	return sc.sendMessage(msg)
@@ -77,6 +93,14 @@ func (sc *SignerConnection) HandleMessage(msg *Request) error {
 	}
 
 	return err
+}
+
+// CleanUp - unsubscribes from pubsub
+func (sc *SignerConnection) CleanUp() {
+	if sc.session != nil {
+		sc.signerPubSub.Unsubscribe(sc.session.ID(), sc)
+	}
+	sc.sendMessage = nil
 }
 
 func (sc *SignerConnection) handleInitAuth(
@@ -151,6 +175,7 @@ func (sc *SignerConnection) handleAuthenticate(
 
 	sc.session.SetAddress(address)
 	sc.store.SaveSession(sc.session)
+	sc.signerPubSub.Subscribe(address, sc)
 
 	return &Response{ID: id}, nil
 }

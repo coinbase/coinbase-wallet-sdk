@@ -17,18 +17,23 @@ const (
 
 // AgentConnection - agent connection
 type AgentConnection struct {
-	store           store.Store
-	session         *session.Session
 	sendMessageLock sync.Mutex
 	sendMessage     SendMessageFunc
+	session         *session.Session
+
+	store        store.Store
+	agentPubSub  *PubSub
+	signerPubSub *PubSub
 }
 
 var _ Connection = (*AgentConnection)(nil)
 
 // NewAgentConnection - construct an AgentConnection
 func NewAgentConnection(
-	sto store.Store,
 	sendMessage SendMessageFunc,
+	sto store.Store,
+	agentPubSub *PubSub,
+	signerPubSub *PubSub,
 ) (*AgentConnection, error) {
 	if sto == nil {
 		return nil, errors.Errorf("store must not be nil")
@@ -36,14 +41,25 @@ func NewAgentConnection(
 	if sendMessage == nil {
 		return nil, errors.Errorf("sendMessage must not be nil")
 	}
+	if agentPubSub == nil {
+		return nil, errors.Errorf("agentPubSub must not be nil")
+	}
+	if signerPubSub == nil {
+		return nil, errors.Errorf("signerPubSub must not be nil")
+	}
 	return &AgentConnection{
-		store:       sto,
-		sendMessage: sendMessage,
+		sendMessage:  sendMessage,
+		store:        sto,
+		agentPubSub:  agentPubSub,
+		signerPubSub: signerPubSub,
 	}, nil
 }
 
 // SendMessage - send message to connection
 func (ac *AgentConnection) SendMessage(msg interface{}) error {
+	if ac.sendMessage == nil {
+		return nil
+	}
 	ac.sendMessageLock.Lock()
 	defer ac.sendMessageLock.Unlock()
 	return ac.sendMessage(msg)
@@ -69,6 +85,14 @@ func (ac *AgentConnection) HandleMessage(msg *Request) error {
 	}
 
 	return err
+}
+
+// CleanUp - unsubscribes from pubsub
+func (ac *AgentConnection) CleanUp() {
+	if ac.session != nil {
+		ac.agentPubSub.Unsubscribe(ac.session.ID(), ac)
+	}
+	ac.sendMessage = nil
 }
 
 func (ac *AgentConnection) handleCreateSession(

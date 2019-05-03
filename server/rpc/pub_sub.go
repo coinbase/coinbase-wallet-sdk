@@ -9,7 +9,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-type connectionSet = map[Connection]struct{}
+type MessageSender interface {
+	SendMessage(msg interface{}) error
+}
+
+type connectionSet = map[MessageSender]struct{}
 
 // PubSub - pub/sub for connections
 type PubSub struct {
@@ -25,7 +29,7 @@ func NewPubSub() *PubSub {
 }
 
 // Subscribe - subscribes a connection to an id
-func (cm *PubSub) Subscribe(id string, connection Connection) {
+func (cm *PubSub) Subscribe(id string, connection MessageSender) {
 	if id == "" || connection == nil {
 		return
 	}
@@ -42,7 +46,7 @@ func (cm *PubSub) Subscribe(id string, connection Connection) {
 }
 
 // Unsubscribe - unsubscribes a connection from an id
-func (cm *PubSub) Unsubscribe(id string, connection Connection) {
+func (cm *PubSub) Unsubscribe(id string, connection MessageSender) {
 	if id == "" || connection == nil {
 		return
 	}

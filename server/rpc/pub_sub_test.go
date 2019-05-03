@@ -13,11 +13,7 @@ type mockConn struct {
 	msgSent interface{}
 }
 
-var _ Connection = (*mockConn)(nil)
-
-func (mc *mockConn) HandleMessage(msg *Request) error {
-	return nil
-}
+var _ MessageSender = (*mockConn)(nil)
 
 func (mc *mockConn) SendMessage(msg interface{}) error {
 	mc.msgSent = msg

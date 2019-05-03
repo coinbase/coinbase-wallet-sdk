@@ -2,8 +2,6 @@
 
 package rpc
 
-import "github.com/CoinbaseWallet/walletlinkd/store"
-
 // SendMessageFunc - callback function to send a message
 type SendMessageFunc func(msg interface{}) error
 
@@ -11,10 +9,5 @@ type SendMessageFunc func(msg interface{}) error
 type Connection interface {
 	SendMessage(msg interface{}) error
 	HandleMessage(msg *Request) error
+	CleanUp()
 }
-
-// ConnectionConstructor - constructor function for connections
-type ConnectionConstructor func(
-	sto store.Store,
-	sendMessage SendMessageFunc,
-) (Connection, error)
