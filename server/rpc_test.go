@@ -22,7 +22,7 @@ func TestRPC(t *testing.T) {
 
 	rpcURL := strings.Replace(testSrv.URL, "http", "ws", 1) + "/rpc"
 
-	hostWs, _, err := websocket.DefaultDialer.Dial(rpcURL+"/host", nil)
+	hostWs, _, err := websocket.DefaultDialer.Dial(rpcURL, nil)
 	require.Nil(t, err)
 	defer hostWs.Close()
 
@@ -69,7 +69,7 @@ func TestRPC(t *testing.T) {
 	// guest scans the QR code, obtains sessionId and secret, derives sessionKey
 	// from sessionID and secret and makes a request to the server
 
-	guestWs, _, err := websocket.DefaultDialer.Dial(rpcURL+"/guest", nil)
+	guestWs, _, err := websocket.DefaultDialer.Dial(rpcURL, nil)
 	require.Nil(t, err)
 	defer guestWs.Close()
 

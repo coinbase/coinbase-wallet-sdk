@@ -9,34 +9,34 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type mockConn struct {
+type mockMsgSender struct {
 	msgSent interface{}
 }
 
-var _ MessageSender = (*mockConn)(nil)
+var _ MessageSender = (*mockMsgSender)(nil)
 
-func (mc *mockConn) SendMessage(msg interface{}) error {
+func (mc *mockMsgSender) SendMessage(msg interface{}) error {
 	mc.msgSent = msg
 	return nil
 }
 
-func (mc *mockConn) resetMsgSent() {
+func (mc *mockMsgSender) resetMsgSent() {
 	mc.msgSent = nil
 }
 
 func TestPubSub(t *testing.T) {
-	conn1 := &mockConn{}
-	conn2 := &mockConn{}
+	sub1 := &mockMsgSender{}
+	sub2 := &mockMsgSender{}
 
 	pubsub := NewPubSub()
 
 	// publishing when nothing is subscribed does nothing
 	pubsub.Publish("1", "hello")
-	assert.Equal(t, conn1.msgSent, nil)
-	assert.Equal(t, conn2.msgSent, nil)
+	assert.Equal(t, sub1.msgSent, nil)
+	assert.Equal(t, sub2.msgSent, nil)
 
-	// subscribe conn1 to "1"
-	pubsub.Subscribe("1", conn1)
+	// subscribe sub1 to "1"
+	pubsub.Subscribe("1", sub1)
 
 	// publish "foo" to "1"
 	pubsub.Publish("1", "foo")
@@ -44,41 +44,41 @@ func TestPubSub(t *testing.T) {
 	// wait a bit to let async processing finish
 	time.Sleep(5 * time.Millisecond)
 
-	assert.Equal(t, conn1.msgSent, "foo")
-	assert.Equal(t, conn2.msgSent, nil)
+	assert.Equal(t, sub1.msgSent, "foo")
+	assert.Equal(t, sub2.msgSent, nil)
 
-	// subscribe conn2 to "1"
-	pubsub.Subscribe("1", conn2)
+	// subscribe sub2 to "1"
+	pubsub.Subscribe("1", sub2)
 
-	conn1.resetMsgSent()
-	conn2.resetMsgSent()
+	sub1.resetMsgSent()
+	sub2.resetMsgSent()
 
 	// publish "bar" to "1"
 	pubsub.Publish("1", "bar")
 
 	time.Sleep(5 * time.Millisecond)
 
-	assert.Equal(t, conn1.msgSent, "bar")
-	assert.Equal(t, conn2.msgSent, "bar")
+	assert.Equal(t, sub1.msgSent, "bar")
+	assert.Equal(t, sub2.msgSent, "bar")
 
-	conn1.resetMsgSent()
-	conn2.resetMsgSent()
+	sub1.resetMsgSent()
+	sub2.resetMsgSent()
 
-	// subscribe conn1 to "2"
-	pubsub.Subscribe("2", conn1)
+	// subscribe sub1 to "2"
+	pubsub.Subscribe("2", sub1)
 
 	// publish "baz" to "2"
 	pubsub.Publish("2", "baz")
 
 	time.Sleep(5 * time.Millisecond)
 
-	assert.Equal(t, conn1.msgSent, "baz")
-	assert.Equal(t, conn2.msgSent, nil)
+	assert.Equal(t, sub1.msgSent, "baz")
+	assert.Equal(t, sub2.msgSent, nil)
 
-	conn1.resetMsgSent()
-	conn2.resetMsgSent()
+	sub1.resetMsgSent()
+	sub2.resetMsgSent()
 
-	// unsubscribe all connections from "2"
+	// unsubscribe all subscribers of "2"
 	pubsub.UnsubscribeAll("2")
 
 	// publish "bazz" to "2"
@@ -86,31 +86,31 @@ func TestPubSub(t *testing.T) {
 
 	time.Sleep(5 * time.Millisecond)
 
-	assert.Equal(t, conn1.msgSent, nil)
-	assert.Equal(t, conn2.msgSent, nil)
+	assert.Equal(t, sub1.msgSent, nil)
+	assert.Equal(t, sub2.msgSent, nil)
 
-	// unsubscribe conn1 from "1"
-	pubsub.Unsubscribe("1", conn1)
+	// unsubscribe sub1 from "1"
+	pubsub.Unsubscribe("1", sub1)
 
 	// publish "qux" to "1"
 	pubsub.Publish("1", "qux")
 
 	time.Sleep(5 * time.Millisecond)
 
-	assert.Equal(t, conn1.msgSent, nil)
-	assert.Equal(t, conn2.msgSent, "qux")
+	assert.Equal(t, sub1.msgSent, nil)
+	assert.Equal(t, sub2.msgSent, "qux")
 
-	conn1.resetMsgSent()
-	conn2.resetMsgSent()
+	sub1.resetMsgSent()
+	sub2.resetMsgSent()
 
-	// unsubscribe conn2 from "1"
-	pubsub.Unsubscribe("1", conn2)
+	// unsubscribe sub2 from "1"
+	pubsub.Unsubscribe("1", sub2)
 
 	// publish "quux" to "1"
 	pubsub.Publish("1", "quux")
 
 	time.Sleep(5 * time.Millisecond)
 
-	assert.Equal(t, conn1.msgSent, nil)
-	assert.Equal(t, conn2.msgSent, nil)
+	assert.Equal(t, sub1.msgSent, nil)
+	assert.Equal(t, sub2.msgSent, nil)
 }

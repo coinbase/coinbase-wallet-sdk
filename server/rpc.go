@@ -16,7 +16,7 @@ var upgrader = websocket.Upgrader{
 	HandshakeTimeout: time.Second * 30,
 }
 
-func (srv *Server) rpcHostHandler(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(errors.Wrap(err, "upgrade failed"))
@@ -24,7 +24,7 @@ func (srv *Server) rpcHostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer ws.Close()
 
-	hostConn, err := rpc.NewHostConnection(
+	handler, err := rpc.NewMessageHandler(
 		ws.WriteJSON,
 		srv.store,
 		srv.hostPubSub,
@@ -35,36 +35,8 @@ func (srv *Server) rpcHostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	defer hostConn.CleanUp()
+	defer handler.CleanUp()
 
-	handleMessages(hostConn, ws)
-}
-
-func (srv *Server) rpcGuestHandler(w http.ResponseWriter, r *http.Request) {
-	ws, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println(errors.Wrap(err, "upgrade failed"))
-		return
-	}
-	defer ws.Close()
-
-	guestConn, err := rpc.NewGuestConnection(
-		ws.WriteJSON,
-		srv.store,
-		srv.hostPubSub,
-		srv.guestPubSub,
-	)
-	if err != nil {
-		log.Println(errors.Wrap(err, "guest connection creation failed"))
-		return
-	}
-
-	defer guestConn.CleanUp()
-
-	handleMessages(guestConn, ws)
-}
-
-func handleMessages(rpcConn rpc.Connection, ws *websocket.Conn) {
 	for {
 		rpcMsg := &rpc.Request{}
 		err := ws.ReadJSON(rpcMsg)
@@ -76,7 +48,7 @@ func handleMessages(rpcConn rpc.Connection, ws *websocket.Conn) {
 			break
 		}
 
-		if err := rpcConn.HandleMessage(rpcMsg); err != nil {
+		if err := handler.Handle(rpcMsg); err != nil {
 			log.Println(errors.Wrap(err, "handle message failed"))
 			break
 		}

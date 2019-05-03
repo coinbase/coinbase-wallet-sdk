@@ -13,10 +13,16 @@ import (
 const (
 	// HostMessageCreateSession - create session
 	HostMessageCreateSession = "createSession"
+
+	// GuestMessageJoinSession - join session
+	GuestMessageJoinSession = "joinSession"
 )
 
-// HostConnection - host connection
-type HostConnection struct {
+// SendMessageFunc - callback function to send a message
+type SendMessageFunc = func(msg interface{}) error
+
+// MessageHandler - handles rpc messages
+type MessageHandler struct {
 	sendMessageLock sync.Mutex
 	sendMessage     SendMessageFunc
 	session         *session.Session
@@ -26,15 +32,16 @@ type HostConnection struct {
 	guestPubSub *PubSub
 }
 
-var _ Connection = (*HostConnection)(nil)
+// MessageHandler conforms to MessageSender interface
+var _ MessageSender = (*MessageHandler)(nil)
 
-// NewHostConnection - construct an HostConnection
-func NewHostConnection(
+// NewMessageHandler - construct a MessageHandler
+func NewMessageHandler(
 	sendMessage SendMessageFunc,
 	sto store.Store,
 	hostPubSub *PubSub,
 	guestPubSub *PubSub,
-) (*HostConnection, error) {
+) (*MessageHandler, error) {
 	if sto == nil {
 		return nil, errors.Errorf("store must not be nil")
 	}
@@ -47,7 +54,7 @@ func NewHostConnection(
 	if guestPubSub == nil {
 		return nil, errors.Errorf("guestPubSub must not be nil")
 	}
-	return &HostConnection{
+	return &MessageHandler{
 		sendMessage: sendMessage,
 		store:       sto,
 		hostPubSub:  hostPubSub,
@@ -56,17 +63,17 @@ func NewHostConnection(
 }
 
 // SendMessage - send message to connection
-func (ac *HostConnection) SendMessage(msg interface{}) error {
-	if ac.sendMessage == nil {
+func (c *MessageHandler) SendMessage(msg interface{}) error {
+	if c.sendMessage == nil {
 		return nil
 	}
-	ac.sendMessageLock.Lock()
-	defer ac.sendMessageLock.Unlock()
-	return ac.sendMessage(msg)
+	c.sendMessageLock.Lock()
+	defer c.sendMessageLock.Unlock()
+	return c.sendMessage(msg)
 }
 
-// HandleMessage - handle an RPC message
-func (ac *HostConnection) HandleMessage(msg *Request) error {
+// Handle - handle an RPC message
+func (c *MessageHandler) Handle(msg *Request) error {
 	var res *Response
 	var err error
 	if msg.ID <= 0 {
@@ -75,11 +82,14 @@ func (ac *HostConnection) HandleMessage(msg *Request) error {
 
 	switch msg.Message {
 	case HostMessageCreateSession:
-		res, err = ac.handleCreateSession(msg.ID, msg.Data)
+		res, err = c.handleCreateSession(msg.ID, msg.Data)
+
+	case GuestMessageJoinSession:
+		res, err = c.handleJoinSession(msg.ID, msg.Data)
 	}
 
 	if res != nil {
-		if err := ac.SendMessage(res); err != nil {
+		if err := c.SendMessage(res); err != nil {
 			return errors.Wrap(err, "failed to send message")
 		}
 	}
@@ -88,14 +98,14 @@ func (ac *HostConnection) HandleMessage(msg *Request) error {
 }
 
 // CleanUp - unsubscribes from pubsub
-func (ac *HostConnection) CleanUp() {
-	if ac.session != nil {
-		ac.hostPubSub.Unsubscribe(ac.session.ID(), ac)
+func (c *MessageHandler) CleanUp() {
+	if c.session != nil {
+		c.hostPubSub.Unsubscribe(c.session.ID(), c)
 	}
-	ac.sendMessage = nil
+	c.sendMessage = nil
 }
 
-func (ac *HostConnection) handleCreateSession(
+func (c *MessageHandler) handleCreateSession(
 	id int,
 	data map[string]string,
 ) (*Response, error) {
@@ -109,7 +119,7 @@ func (ac *HostConnection) handleCreateSession(
 		return nil, errors.Errorf("key must be valid")
 	}
 
-	sess, err := ac.store.LoadSession(sessID)
+	sess, err := c.store.LoadSession(sessID)
 	if err != nil {
 		return nil, errors.Wrap(err, "attempting to get existing session failed")
 	}
@@ -120,12 +130,40 @@ func (ac *HostConnection) handleCreateSession(
 		}
 	}
 
-	if err := ac.store.SaveSession(sess); err != nil {
+	if err := c.store.SaveSession(sess); err != nil {
 		return nil, errors.Wrap(err, "session could not be stored")
 	}
 
-	ac.session = sess
-	ac.hostPubSub.Subscribe(sessID, ac)
+	c.session = sess
+	c.hostPubSub.Subscribe(sessID, c)
+
+	return &Response{ID: id}, nil
+}
+
+func (c *MessageHandler) handleJoinSession(
+	id int,
+	data map[string]string,
+) (*Response, error) {
+	sessID, ok := data["id"]
+	if !ok || !session.IsValidID(sessID) {
+		return nil, errors.Errorf("id must be valid")
+	}
+
+	sessKey, ok := data["key"]
+	if !ok || !session.IsValidKey(sessKey) {
+		return nil, errors.Errorf("key must be valid")
+	}
+
+	sess, err := c.store.LoadSession(sessID)
+	if err != nil {
+		return nil, errors.Wrap(err, "attempting to get existing session failed")
+	}
+	if sess == nil {
+		return nil, errors.Errorf("session not found")
+	}
+
+	c.session = sess
+	c.guestPubSub.Subscribe(sessID, c)
 
 	return &Response{ID: id}, nil
 }

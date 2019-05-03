@@ -31,8 +31,7 @@ func NewServer() *Server {
 		guestPubSub: rpc.NewPubSub(),
 	}
 
-	router.HandleFunc("/rpc/host", srv.rpcHostHandler).Methods("GET")
-	router.HandleFunc("/rpc/guest", srv.rpcGuestHandler).Methods("GET")
+	router.HandleFunc("/rpc", srv.rpcHandler).Methods("GET")
 	router.HandleFunc("/", srv.rootHandler).Methods("GET")
 
 	return srv
