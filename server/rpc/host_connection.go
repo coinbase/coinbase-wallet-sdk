@@ -11,52 +11,52 @@ import (
 )
 
 const (
-	// AgentMessageCreateSession - create session
-	AgentMessageCreateSession = "createSession"
+	// HostMessageCreateSession - create session
+	HostMessageCreateSession = "createSession"
 )
 
-// AgentConnection - agent connection
-type AgentConnection struct {
+// HostConnection - host connection
+type HostConnection struct {
 	sendMessageLock sync.Mutex
 	sendMessage     SendMessageFunc
 	session         *session.Session
 
-	store        store.Store
-	agentPubSub  *PubSub
-	signerPubSub *PubSub
+	store       store.Store
+	hostPubSub  *PubSub
+	guestPubSub *PubSub
 }
 
-var _ Connection = (*AgentConnection)(nil)
+var _ Connection = (*HostConnection)(nil)
 
-// NewAgentConnection - construct an AgentConnection
-func NewAgentConnection(
+// NewHostConnection - construct an HostConnection
+func NewHostConnection(
 	sendMessage SendMessageFunc,
 	sto store.Store,
-	agentPubSub *PubSub,
-	signerPubSub *PubSub,
-) (*AgentConnection, error) {
+	hostPubSub *PubSub,
+	guestPubSub *PubSub,
+) (*HostConnection, error) {
 	if sto == nil {
 		return nil, errors.Errorf("store must not be nil")
 	}
 	if sendMessage == nil {
 		return nil, errors.Errorf("sendMessage must not be nil")
 	}
-	if agentPubSub == nil {
-		return nil, errors.Errorf("agentPubSub must not be nil")
+	if hostPubSub == nil {
+		return nil, errors.Errorf("hostPubSub must not be nil")
 	}
-	if signerPubSub == nil {
-		return nil, errors.Errorf("signerPubSub must not be nil")
+	if guestPubSub == nil {
+		return nil, errors.Errorf("guestPubSub must not be nil")
 	}
-	return &AgentConnection{
-		sendMessage:  sendMessage,
-		store:        sto,
-		agentPubSub:  agentPubSub,
-		signerPubSub: signerPubSub,
+	return &HostConnection{
+		sendMessage: sendMessage,
+		store:       sto,
+		hostPubSub:  hostPubSub,
+		guestPubSub: guestPubSub,
 	}, nil
 }
 
 // SendMessage - send message to connection
-func (ac *AgentConnection) SendMessage(msg interface{}) error {
+func (ac *HostConnection) SendMessage(msg interface{}) error {
 	if ac.sendMessage == nil {
 		return nil
 	}
@@ -66,7 +66,7 @@ func (ac *AgentConnection) SendMessage(msg interface{}) error {
 }
 
 // HandleMessage - handle an RPC message
-func (ac *AgentConnection) HandleMessage(msg *Request) error {
+func (ac *HostConnection) HandleMessage(msg *Request) error {
 	var res *Response
 	var err error
 	if msg.ID <= 0 {
@@ -74,7 +74,7 @@ func (ac *AgentConnection) HandleMessage(msg *Request) error {
 	}
 
 	switch msg.Message {
-	case AgentMessageCreateSession:
+	case HostMessageCreateSession:
 		res, err = ac.handleCreateSession(msg.ID, msg.Data)
 	}
 
@@ -88,14 +88,14 @@ func (ac *AgentConnection) HandleMessage(msg *Request) error {
 }
 
 // CleanUp - unsubscribes from pubsub
-func (ac *AgentConnection) CleanUp() {
+func (ac *HostConnection) CleanUp() {
 	if ac.session != nil {
-		ac.agentPubSub.Unsubscribe(ac.session.ID(), ac)
+		ac.hostPubSub.Unsubscribe(ac.session.ID(), ac)
 	}
 	ac.sendMessage = nil
 }
 
-func (ac *AgentConnection) handleCreateSession(
+func (ac *HostConnection) handleCreateSession(
 	id int,
 	data map[string]string,
 ) (*Response, error) {
@@ -125,7 +125,7 @@ func (ac *AgentConnection) handleCreateSession(
 	}
 
 	ac.session = sess
-	ac.agentPubSub.Subscribe(sessID, ac)
+	ac.hostPubSub.Subscribe(sessID, ac)
 
 	return &Response{ID: id}, nil
 }

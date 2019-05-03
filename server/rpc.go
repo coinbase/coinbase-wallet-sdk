@@ -16,7 +16,7 @@ var upgrader = websocket.Upgrader{
 	HandshakeTimeout: time.Second * 30,
 }
 
-func (srv *Server) rpcAgentHandler(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) rpcHostHandler(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(errors.Wrap(err, "upgrade failed"))
@@ -24,23 +24,23 @@ func (srv *Server) rpcAgentHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer ws.Close()
 
-	agentConn, err := rpc.NewAgentConnection(
+	hostConn, err := rpc.NewHostConnection(
 		ws.WriteJSON,
 		srv.store,
-		srv.agentPubSub,
-		srv.signerPubSub,
+		srv.hostPubSub,
+		srv.guestPubSub,
 	)
 	if err != nil {
-		log.Println(errors.Wrap(err, "agent connection creation failed"))
+		log.Println(errors.Wrap(err, "host connection creation failed"))
 		return
 	}
 
-	defer agentConn.CleanUp()
+	defer hostConn.CleanUp()
 
-	handleMessages(agentConn, ws)
+	handleMessages(hostConn, ws)
 }
 
-func (srv *Server) rpcSignerHandler(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) rpcGuestHandler(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(errors.Wrap(err, "upgrade failed"))
@@ -48,20 +48,20 @@ func (srv *Server) rpcSignerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer ws.Close()
 
-	signerConn, err := rpc.NewSignerConnection(
+	guestConn, err := rpc.NewGuestConnection(
 		ws.WriteJSON,
 		srv.store,
-		srv.agentPubSub,
-		srv.signerPubSub,
+		srv.hostPubSub,
+		srv.guestPubSub,
 	)
 	if err != nil {
-		log.Println(errors.Wrap(err, "signer connection creation failed"))
+		log.Println(errors.Wrap(err, "guest connection creation failed"))
 		return
 	}
 
-	defer signerConn.CleanUp()
+	defer guestConn.CleanUp()
 
-	handleMessages(signerConn, ws)
+	handleMessages(guestConn, ws)
 }
 
 func handleMessages(rpcConn rpc.Connection, ws *websocket.Conn) {

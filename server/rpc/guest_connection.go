@@ -11,52 +11,52 @@ import (
 )
 
 const (
-	// SignerMessageJoinSession - join session
-	SignerMessageJoinSession = "joinSession"
+	// GuestMessageJoinSession - join session
+	GuestMessageJoinSession = "joinSession"
 )
 
-// SignerConnection - signer connection
-type SignerConnection struct {
+// GuestConnection - guest connection
+type GuestConnection struct {
 	sendMessageLock sync.Mutex
 	sendMessage     SendMessageFunc
 	session         *session.Session
 
-	store        store.Store
-	agentPubSub  *PubSub
-	signerPubSub *PubSub
+	store       store.Store
+	hostPubSub  *PubSub
+	guestPubSub *PubSub
 }
 
-var _ Connection = (*SignerConnection)(nil)
+var _ Connection = (*GuestConnection)(nil)
 
-// NewSignerConnection - construct a SignerConnection
-func NewSignerConnection(
+// NewGuestConnection - construct a GuestConnection
+func NewGuestConnection(
 	sendMessage SendMessageFunc,
 	sto store.Store,
-	agentPubSub *PubSub,
-	signerPubSub *PubSub,
-) (*SignerConnection, error) {
+	hostPubSub *PubSub,
+	guestPubSub *PubSub,
+) (*GuestConnection, error) {
 	if sto == nil {
 		return nil, errors.Errorf("store must not be nil")
 	}
 	if sendMessage == nil {
 		return nil, errors.Errorf("sendMessage must not be nil")
 	}
-	if agentPubSub == nil {
-		return nil, errors.Errorf("agentPubSub must not be nil")
+	if hostPubSub == nil {
+		return nil, errors.Errorf("hostPubSub must not be nil")
 	}
-	if signerPubSub == nil {
-		return nil, errors.Errorf("signerPubSub must not be nil")
+	if guestPubSub == nil {
+		return nil, errors.Errorf("guestPubSub must not be nil")
 	}
-	return &SignerConnection{
-		store:        sto,
-		sendMessage:  sendMessage,
-		agentPubSub:  agentPubSub,
-		signerPubSub: signerPubSub,
+	return &GuestConnection{
+		store:       sto,
+		sendMessage: sendMessage,
+		hostPubSub:  hostPubSub,
+		guestPubSub: guestPubSub,
 	}, nil
 }
 
 // SendMessage - send message to connection
-func (sc *SignerConnection) SendMessage(msg interface{}) error {
+func (sc *GuestConnection) SendMessage(msg interface{}) error {
 	if sc.sendMessage == nil {
 		return nil
 	}
@@ -66,7 +66,7 @@ func (sc *SignerConnection) SendMessage(msg interface{}) error {
 }
 
 // HandleMessage - handle an RPC message
-func (sc *SignerConnection) HandleMessage(msg *Request) error {
+func (sc *GuestConnection) HandleMessage(msg *Request) error {
 	var res *Response
 	var err error
 	if msg.ID <= 0 {
@@ -74,7 +74,7 @@ func (sc *SignerConnection) HandleMessage(msg *Request) error {
 	}
 
 	switch msg.Message {
-	case SignerMessageJoinSession:
+	case GuestMessageJoinSession:
 		res, err = sc.handleJoinSession(msg.ID, msg.Data)
 	}
 
@@ -88,14 +88,14 @@ func (sc *SignerConnection) HandleMessage(msg *Request) error {
 }
 
 // CleanUp - unsubscribes from pubsub
-func (sc *SignerConnection) CleanUp() {
+func (sc *GuestConnection) CleanUp() {
 	if sc.session != nil {
-		sc.signerPubSub.Unsubscribe(sc.session.ID(), sc)
+		sc.guestPubSub.Unsubscribe(sc.session.ID(), sc)
 	}
 	sc.sendMessage = nil
 }
 
-func (sc *SignerConnection) handleJoinSession(
+func (sc *GuestConnection) handleJoinSession(
 	id int,
 	data map[string]string,
 ) (*Response, error) {
@@ -118,7 +118,7 @@ func (sc *SignerConnection) handleJoinSession(
 	}
 
 	sc.session = sess
-	sc.signerPubSub.Subscribe(sessID, sc)
+	sc.guestPubSub.Subscribe(sessID, sc)
 
 	return &Response{ID: id}, nil
 }
