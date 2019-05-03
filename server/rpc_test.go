@@ -9,18 +9,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/CoinbaseWallet/walletlinkd/pkg/ethereum"
-	"github.com/CoinbaseWallet/walletlinkd/pkg/secp256k1"
+	"github.com/CoinbaseWallet/walletlinkd/pkg/crypto"
 	"github.com/CoinbaseWallet/walletlinkd/server/rpc"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
-)
-
-var (
-	privateKey, _ = secp256k1.PrivateKeyFromString(
-		"9703fceda5a0bada47af806d90d8e33250b71308ea583b37a1d0615c683e7fce",
-	)
-	address = "0xfa1f9244527e708e37e3db30ec04fcae621ea694"
 )
 
 func TestRPC(t *testing.T) {
@@ -41,24 +33,32 @@ func TestRPC(t *testing.T) {
 	assert.Nil(t, err)
 	defer signerWs.Close()
 
-	// agent generates sessionId and secret
+	// agent generates sessionID and secret
 	sessionID := "c9db0147e942b2675045e3f61b247692"
-	// secret := "29115acb7e001f1092e97552471c1116"
+	secret := "29115acb7e001f1092e97552471c1116"
 
-	// session should not exist yet
+	// agent then derives a sessionKey from sessionID and secret
+	sessionKey := hex.EncodeToString(crypto.SHA256(
+		[]byte(fmt.Sprintf("%s %s WalletLink", sessionID, secret)),
+	))
+
+	// assert that session does not exist yet
 	sess, err := srv.store.LoadSession(sessionID)
 	assert.Nil(t, sess)
 	assert.Nil(t, err)
 
+	// agent makes a request to the server with sessionID and sessionKey
 	err = agentWs.WriteJSON(rpc.Request{
 		ID:      agentReqID,
 		Message: rpc.AgentMessageCreateSession,
 		Data: map[string]string{
-			"sessionID": sessionID,
+			"id":  sessionID,
+			"key": sessionKey,
 		},
 	})
 	assert.Nil(t, err)
 
+	// agent receives a response back from server
 	res := &rpc.Response{}
 	err = agentWs.ReadJSON(res)
 	assert.Nil(t, err)
@@ -68,64 +68,29 @@ func TestRPC(t *testing.T) {
 
 	// session should be created
 	sess, err = srv.store.LoadSession(sessionID)
+	assert.Nil(t, err)
 	assert.NotNil(t, sess)
-	assert.Nil(t, err)
-	assert.NotEmpty(t, sess.Nonce)
+	assert.Equal(t, sess.ID(), sessionID)
+	assert.Equal(t, sess.Key(), sessionKey)
 
-	// signer scans the QR code, obtains sessionId and secret, and then connects
-	// to server
+	// signer scans the QR code, obtains sessionId and secret, derives sessionKey
+	// from sessionID and secret and makes a request to the server
 
 	err = signerWs.WriteJSON(rpc.Request{
 		ID:      signerReqID,
-		Message: rpc.SignerMessageInitAuth,
+		Message: rpc.SignerMessageJoinSession,
 		Data: map[string]string{
-			"sessionID": sessionID,
-			"address":   address,
+			"id":  sessionID,
+			"key": sessionKey,
 		},
 	})
 	assert.Nil(t, err)
 
-	// backend then sends a message that should be signed by the signer
-
-	err = signerWs.ReadJSON(res)
-	assert.Nil(t, err)
-
-	message := fmt.Sprintf(
-		"WalletLink\n\nAddress: %s\nSession ID: %s\n\n%s",
-		strings.ToLower(address),
-		sessionID,
-		sess.Nonce(),
-	)
-
-	assert.Equal(t, signerReqID, res.ID)
-	assert.Empty(t, res.Error)
-	assert.Equal(t, message, res.Data["message"])
-
-	// signer then signs the message and authenticate with it
-
-	sig, err := ethereum.EthSign(message, privateKey)
-	assert.Nil(t, err)
-	sigHex := hex.EncodeToString(sig)
-
-	signerReqID++
-	err = signerWs.WriteJSON(rpc.Request{
-		ID:      signerReqID,
-		Message: rpc.SignerMessageAuthenticate,
-		Data: map[string]string{
-			"signature": sigHex,
-			"address":   address,
-		},
-	})
-	assert.Nil(t, err)
-
-	// backend validates the signature
+	// server response
 
 	err = signerWs.ReadJSON(res)
 	assert.Nil(t, err)
 
 	assert.Equal(t, signerReqID, res.ID)
 	assert.Empty(t, res.Error)
-
-	// session now has address
-	assert.Equal(t, address, sess.Address())
 }

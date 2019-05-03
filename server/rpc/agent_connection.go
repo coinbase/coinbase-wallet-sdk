@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	// AgentMessageCreateSession - create sesion
+	// AgentMessageCreateSession - create session
 	AgentMessageCreateSession = "createSession"
 )
 
@@ -99,9 +99,14 @@ func (ac *AgentConnection) handleCreateSession(
 	id int,
 	data map[string]string,
 ) (*Response, error) {
-	sessID, ok := data["sessionID"]
+	sessID, ok := data["id"]
 	if !ok || !session.IsValidID(sessID) {
-		return nil, errors.Errorf("sessionID must be present")
+		return nil, errors.Errorf("id must be valid")
+	}
+
+	sessKey, ok := data["key"]
+	if !ok || !session.IsValidKey(sessKey) {
+		return nil, errors.Errorf("key must be valid")
 	}
 
 	sess, err := ac.store.LoadSession(sessID)
@@ -109,7 +114,7 @@ func (ac *AgentConnection) handleCreateSession(
 		return nil, errors.Wrap(err, "attempting to get existing session failed")
 	}
 	if sess == nil {
-		sess, err = session.NewSession(sessID)
+		sess, err = session.NewSession(sessID, sessKey)
 		if err != nil {
 			return nil, errors.Wrap(err, "session creation failed")
 		}
@@ -120,6 +125,7 @@ func (ac *AgentConnection) handleCreateSession(
 	}
 
 	ac.session = sess
+	ac.agentPubSub.Subscribe(sessID, ac)
 
 	return &Response{ID: id}, nil
 }

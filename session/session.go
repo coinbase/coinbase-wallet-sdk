@@ -3,40 +3,26 @@
 package session
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"regexp"
 
 	"github.com/pkg/errors"
 )
 
-var (
-	sessionIDRegex = regexp.MustCompile("^[a-f0-9]{32}$")
-)
+var hexStringRegex = regexp.MustCompile("^([a-f0-9]{2})+$")
 
 // Session - rpc session
 type Session struct {
-	id      string
-	nonce   string
-	address string
+	id  string
+	key string
 }
 
 // NewSession - construct a session
-func NewSession(id string) (*Session, error) {
+func NewSession(id, key string) (*Session, error) {
 	if !IsValidID(id) {
 		return nil, errors.Errorf("invalid session ID")
 	}
 
-	b := make([]byte, 16)
-	if _, err := rand.Read(b); err != nil {
-		return nil, errors.Wrap(err, "could not generate random nonce")
-	}
-	nonce := hex.EncodeToString(b)
-
-	return &Session{
-		id:    id,
-		nonce: nonce,
-	}, nil
+	return &Session{id: id, key: key}, nil
 }
 
 // ID - return ID
@@ -44,22 +30,17 @@ func (s *Session) ID() string {
 	return s.id
 }
 
-// Nonce - return nonce
-func (s *Session) Nonce() string {
-	return s.nonce
-}
-
-// Address - return address
-func (s *Session) Address() string {
-	return s.address
-}
-
-// SetAddress - set address
-func (s *Session) SetAddress(address string) {
-	s.address = address
+// Key - return key
+func (s *Session) Key() string {
+	return s.key
 }
 
 // IsValidID - validate session id
 func IsValidID(id string) bool {
-	return sessionIDRegex.MatchString(id)
+	return len(id) == 32 && hexStringRegex.MatchString(id)
+}
+
+// IsValidKey - validate session key
+func IsValidKey(key string) bool {
+	return len(key) == 64 && hexStringRegex.MatchString(key)
 }

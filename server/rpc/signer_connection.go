@@ -3,22 +3,16 @@
 package rpc
 
 import (
-	"encoding/hex"
-	"fmt"
-	"strings"
 	"sync"
 
-	"github.com/CoinbaseWallet/walletlinkd/pkg/ethereum"
 	"github.com/CoinbaseWallet/walletlinkd/session"
 	"github.com/CoinbaseWallet/walletlinkd/store"
 	"github.com/pkg/errors"
 )
 
 const (
-	// SignerMessageInitAuth - initiate authentication
-	SignerMessageInitAuth = "initAuth"
-	// SignerMessageAuthenticate - authenticate
-	SignerMessageAuthenticate = "authenticate"
+	// SignerMessageJoinSession - join session
+	SignerMessageJoinSession = "joinSession"
 )
 
 // SignerConnection - signer connection
@@ -80,10 +74,8 @@ func (sc *SignerConnection) HandleMessage(msg *Request) error {
 	}
 
 	switch msg.Message {
-	case SignerMessageInitAuth:
-		res, err = sc.handleInitAuth(msg.ID, msg.Data)
-	case SignerMessageAuthenticate:
-		res, err = sc.handleAuthenticate(msg.ID, msg.Data)
+	case SignerMessageJoinSession:
+		res, err = sc.handleJoinSession(msg.ID, msg.Data)
 	}
 
 	if res != nil {
@@ -103,88 +95,30 @@ func (sc *SignerConnection) CleanUp() {
 	sc.sendMessage = nil
 }
 
-func (sc *SignerConnection) handleInitAuth(
+func (sc *SignerConnection) handleJoinSession(
 	id int,
 	data map[string]string,
 ) (*Response, error) {
-	sessID, ok := data["sessionID"]
+	sessID, ok := data["id"]
 	if !ok || !session.IsValidID(sessID) {
-		return nil, errors.Errorf("sessionID must be valid")
+		return nil, errors.Errorf("id must be valid")
+	}
+
+	sessKey, ok := data["key"]
+	if !ok || !session.IsValidKey(sessKey) {
+		return nil, errors.Errorf("key must be valid")
 	}
 
 	sess, err := sc.store.LoadSession(sessID)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not get session")
+		return nil, errors.Wrap(err, "attempting to get existing session failed")
 	}
 	if sess == nil {
 		return nil, errors.Errorf("session not found")
 	}
 
-	address, ok := data["address"]
-	if !ok {
-		return nil, errors.Errorf("address must be present")
-	}
-	address = strings.ToLower(address)
-	if !ethereum.IsValidAddress(address) {
-		return nil, errors.Errorf("invalid ethereum address")
-	}
-
 	sc.session = sess
-
-	return &Response{
-		ID: id,
-		Data: map[string]string{
-			"message": makeAuthMessage(address, sessID, sess.Nonce()),
-		},
-	}, nil
-}
-
-func (sc *SignerConnection) handleAuthenticate(
-	id int,
-	data map[string]string,
-) (*Response, error) {
-	if sc.session == nil {
-		return nil, errors.Errorf("session must be present")
-	}
-
-	signature, ok := data["signature"]
-	if !ok {
-		return nil, errors.Errorf("signature must be present")
-	}
-
-	address, ok := data["address"]
-	if !ok {
-		return nil, errors.Errorf("address must be present")
-	}
-	address = strings.ToLower(address)
-
-	if !ethereum.IsValidAddress(address) {
-		return nil, errors.Errorf("invalid ethereum address")
-	}
-
-	sigBytes, err := hex.DecodeString(signature)
-	if err != nil {
-		return nil, errors.Wrap(err, "signature must be in hexadecimal characters")
-	}
-
-	message := makeAuthMessage(address, sc.session.ID(), sc.session.Nonce())
-	recoveredAddress, err := ethereum.EcRecover(message, sigBytes)
-	if err != nil || address != recoveredAddress {
-		return nil, errors.Errorf("signature verification failed")
-	}
-
-	sc.session.SetAddress(address)
-	sc.store.SaveSession(sc.session)
-	sc.signerPubSub.Subscribe(address, sc)
+	sc.signerPubSub.Subscribe(sessID, sc)
 
 	return &Response{ID: id}, nil
-}
-
-func makeAuthMessage(address, sessionID, nonce string) string {
-	return fmt.Sprintf(
-		"WalletLink\n\nAddress: %s\nSession ID: %s\n\n%s",
-		strings.ToLower(address),
-		sessionID,
-		nonce,
-	)
 }
