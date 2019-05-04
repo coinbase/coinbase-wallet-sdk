@@ -81,9 +81,8 @@ func (c *MessageHandler) Handle(msg *Request) error {
 
 // Close - clean up
 func (c *MessageHandler) Close() {
-	if c.session != nil {
-		c.hostPubSub.Unsubscribe(c.session.ID(), c.subCh)
-	}
+	c.hostPubSub.UnsubscribeAll(c.subCh)
+	c.guestPubSub.UnsubscribeAll(c.subCh)
 	close(c.subCh)
 }
 

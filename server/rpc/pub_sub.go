@@ -10,17 +10,20 @@ import (
 type Subscriber chan<- interface{}
 
 type subscriberSet = map[Subscriber]struct{}
+type idSet = map[string]struct{}
 
 // PubSub - pub/sub interface for message senders
 type PubSub struct {
-	subMapLock sync.Mutex
-	subMap     map[string]subscriberSet
+	lock   sync.Mutex
+	subMap map[string]subscriberSet
+	idMap  map[Subscriber]idSet
 }
 
 // NewPubSub - construct a PubSub
 func NewPubSub() *PubSub {
 	return &PubSub{
 		subMap: map[string]subscriberSet{},
+		idMap:  map[Subscriber]idSet{},
 	}
 }
 
@@ -29,16 +32,23 @@ func (cm *PubSub) Subscribe(id string, subscriber Subscriber) {
 	if id == "" || subscriber == nil {
 		return
 	}
-	cm.subMapLock.Lock()
-	defer cm.subMapLock.Unlock()
+	cm.lock.Lock()
+	defer cm.lock.Unlock()
 
-	set, ok := cm.subMap[id]
+	subscribers, ok := cm.subMap[id]
 	if !ok {
-		set = subscriberSet{}
-		cm.subMap[id] = set
+		subscribers = subscriberSet{}
+		cm.subMap[id] = subscribers
 	}
 
-	set[subscriber] = struct{}{}
+	ids, ok := cm.idMap[subscriber]
+	if !ok {
+		ids = idSet{}
+		cm.idMap[subscriber] = ids
+	}
+
+	subscribers[subscriber] = struct{}{}
+	ids[id] = struct{}{}
 }
 
 // Unsubscribe - unsubscribes a Subscriber from an id
@@ -46,30 +56,31 @@ func (cm *PubSub) Unsubscribe(id string, subscriber Subscriber) {
 	if id == "" || subscriber == nil {
 		return
 	}
-	cm.subMapLock.Lock()
-	defer cm.subMapLock.Unlock()
+	cm.lock.Lock()
+	defer cm.lock.Unlock()
 
-	set, ok := cm.subMap[id]
-	if !ok {
-		return
-	}
-
-	delete(set, subscriber)
-
-	if len(set) == 0 {
-		delete(cm.subMap, id)
-	}
+	cm.unsubscribeOne(id, subscriber)
 }
 
-// UnsubscribeAll - unsubscribes all Subscribers from an id
-func (cm *PubSub) UnsubscribeAll(id string) {
-	if id == "" {
-		return
+// UnsubscribeAll - unsubscribes subscriber from every id and returns the number
+// of unsubscriptions done
+func (cm *PubSub) UnsubscribeAll(subscriber Subscriber) int {
+	if subscriber == nil {
+		return 0
 	}
-	cm.subMapLock.Lock()
-	defer cm.subMapLock.Unlock()
+	cm.lock.Lock()
+	defer cm.lock.Unlock()
 
-	delete(cm.subMap, id)
+	ids, ok := cm.idMap[subscriber]
+	if !ok {
+		return 0
+	}
+
+	for id := range ids {
+		cm.unsubscribeOne(id, subscriber)
+	}
+
+	return len(ids)
 }
 
 // Publish - publishes a message to all subscribers of an id and returns
@@ -78,8 +89,8 @@ func (cm *PubSub) Publish(id string, msg interface{}) int {
 	if id == "" {
 		return 0
 	}
-	cm.subMapLock.Lock()
-	defer cm.subMapLock.Unlock()
+	cm.lock.Lock()
+	defer cm.lock.Unlock()
 
 	subscribers, ok := cm.subMap[id]
 	if !ok {
@@ -93,4 +104,17 @@ func (cm *PubSub) Publish(id string, msg interface{}) int {
 		}()
 	}
 	return len(subscribers)
+}
+
+func (cm *PubSub) unsubscribeOne(id string, subscriber Subscriber) {
+	set, ok := cm.subMap[id]
+	if !ok {
+		return
+	}
+
+	delete(set, subscriber)
+
+	if len(set) == 0 {
+		delete(cm.subMap, id)
+	}
 }
