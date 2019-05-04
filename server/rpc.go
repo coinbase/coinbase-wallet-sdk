@@ -42,8 +42,7 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 	handler, err := rpc.NewMessageHandler(
 		sendCh,
 		srv.store,
-		srv.hostPubSub,
-		srv.guestPubSub,
+		srv.pubSub,
 	)
 	if err != nil {
 		log.Println(errors.Wrap(err, "host connection creation failed"))

@@ -23,17 +23,15 @@ type MessageHandler struct {
 	sendCh chan<- interface{}
 	subCh  chan interface{}
 
-	store       store.Store
-	hostPubSub  *PubSub
-	guestPubSub *PubSub
+	store  store.Store
+	pubSub *PubSub
 }
 
 // NewMessageHandler - construct a MessageHandler
 func NewMessageHandler(
 	sendCh chan<- interface{},
 	sto store.Store,
-	hostPubSub *PubSub,
-	guestPubSub *PubSub,
+	pubSub *PubSub,
 ) (*MessageHandler, error) {
 	if sendCh == nil {
 		return nil, errors.Errorf("sendCh must not be nil")
@@ -41,18 +39,14 @@ func NewMessageHandler(
 	if sto == nil {
 		return nil, errors.Errorf("store must not be nil")
 	}
-	if hostPubSub == nil {
-		return nil, errors.Errorf("hostPubSub must not be nil")
-	}
-	if guestPubSub == nil {
-		return nil, errors.Errorf("guestPubSub must not be nil")
+	if pubSub == nil {
+		return nil, errors.Errorf("pubSub must not be nil")
 	}
 	return &MessageHandler{
-		sendCh:      sendCh,
-		subCh:       make(chan interface{}),
-		store:       sto,
-		hostPubSub:  hostPubSub,
-		guestPubSub: guestPubSub,
+		sendCh: sendCh,
+		subCh:  make(chan interface{}),
+		store:  sto,
+		pubSub: pubSub,
 	}, nil
 }
 
@@ -81,8 +75,7 @@ func (c *MessageHandler) Handle(msg *Request) error {
 
 // Close - clean up
 func (c *MessageHandler) Close() {
-	c.hostPubSub.UnsubscribeAll(c.subCh)
-	c.guestPubSub.UnsubscribeAll(c.subCh)
+	c.pubSub.UnsubscribeAll(c.subCh)
 	close(c.subCh)
 }
 
@@ -116,7 +109,7 @@ func (c *MessageHandler) handleCreateSession(
 	}
 
 	c.session = sess
-	c.hostPubSub.Subscribe(sessID, c.subCh)
+	c.pubSub.Subscribe(hostPubSubID(sessID), c.subCh)
 
 	return &Response{ID: id}, nil
 }
@@ -144,7 +137,15 @@ func (c *MessageHandler) handleJoinSession(
 	}
 
 	c.session = sess
-	c.guestPubSub.Subscribe(sessID, c.subCh)
+	c.pubSub.Subscribe(guestPubSubID(sessID), c.subCh)
 
 	return &Response{ID: id}, nil
+}
+
+func hostPubSubID(sessionID string) string {
+	return "h." + sessionID
+}
+
+func guestPubSubID(sessionID string) string {
+	return "g." + sessionID
 }
