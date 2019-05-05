@@ -11,8 +11,8 @@ type Request struct {
 
 // Response - response message
 type Response struct {
-	RequestID   int               `json:"i"`
-	Error       string            `json:"e,omitempty"`
-	Data        map[string]string `json:"d,omitempty"`
-	ShouldClose bool              `json:"-"`
+	RequestID int               `json:"i"`
+	Error     string            `json:"e,omitempty"`
+	Data      map[string]string `json:"d,omitempty"`
+	Fatal     bool              `json:"-"`
 }

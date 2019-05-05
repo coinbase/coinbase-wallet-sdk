@@ -52,26 +52,28 @@ func NewMessageHandler(
 }
 
 // Handle - handle an RPC message
-func (c *MessageHandler) Handle(msg *Request) error {
+func (c *MessageHandler) Handle(req *Request) (ok bool) {
 	var res *Response
-	var err error
-	if msg.ID <= 0 {
-		return errors.Errorf("request id is invalid")
+
+	if req.ID < 1 {
+		res = errorResponse(req.ID, "invalid request ID", true)
+	} else {
+		switch req.Message {
+		case HostMessageHostSession:
+			res = c.handleHostSession(req.ID, req.Data)
+
+		case GuestMessageJoinSession:
+			res = c.handleJoinSession(req.ID, req.Data)
+		}
 	}
 
-	switch msg.Message {
-	case HostMessageHostSession:
-		res = c.handleHostSession(msg.ID, msg.Data)
-
-	case GuestMessageJoinSession:
-		res = c.handleJoinSession(msg.ID, msg.Data)
+	if res == nil {
+		res = errorResponse(req.ID, "unsupported message", true)
 	}
 
-	if res != nil {
-		c.sendCh <- res
-	}
+	c.sendCh <- res
 
-	return err
+	return !res.Fatal
 }
 
 // Close - clean up
@@ -162,9 +164,9 @@ func (c *MessageHandler) findSession(
 
 func errorResponse(requestID int, errorMessage string, fatal bool) *Response {
 	return &Response{
-		RequestID:   requestID,
-		Error:       errorMessage,
-		ShouldClose: fatal,
+		RequestID: requestID,
+		Error:     errorMessage,
+		Fatal:     fatal,
 	}
 }
 

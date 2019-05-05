@@ -35,6 +35,8 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			if err := ws.WriteJSON(res); err != nil {
 				log.Println(errors.Wrap(err, "write failed"))
+				ws.Close()
+				return
 			}
 		}
 	}()
@@ -45,7 +47,7 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 		srv.pubSub,
 	)
 	if err != nil {
-		log.Println(errors.Wrap(err, "host connection creation failed"))
+		log.Println(errors.Wrap(err, "message handler creation failed"))
 		return
 	}
 
@@ -62,8 +64,7 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		if err := handler.Handle(rpcMsg); err != nil {
-			log.Println(errors.Wrap(err, "message handling failed"))
+		if ok := handler.Handle(rpcMsg); !ok {
 			break
 		}
 	}
