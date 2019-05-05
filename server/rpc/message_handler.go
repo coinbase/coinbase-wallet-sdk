@@ -3,14 +3,15 @@
 package rpc
 
 import (
-	"github.com/CoinbaseWallet/walletlinkd/session"
+	"fmt"
+
 	"github.com/CoinbaseWallet/walletlinkd/store"
 	"github.com/pkg/errors"
 )
 
 const (
-	// HostMessageCreateSession - create session
-	HostMessageCreateSession = "createSession"
+	// HostMessageHostSession - host session
+	HostMessageHostSession = "hostSession"
 
 	// GuestMessageJoinSession - join session
 	GuestMessageJoinSession = "joinSession"
@@ -18,7 +19,7 @@ const (
 
 // MessageHandler - handles rpc messages
 type MessageHandler struct {
-	session *session.Session
+	session *Session
 
 	sendCh chan<- interface{}
 	subCh  chan interface{}
@@ -55,15 +56,15 @@ func (c *MessageHandler) Handle(msg *Request) error {
 	var res *Response
 	var err error
 	if msg.ID <= 0 {
-		return errors.Errorf("id is invalid")
+		return errors.Errorf("request id is invalid")
 	}
 
 	switch msg.Message {
-	case HostMessageCreateSession:
-		res, err = c.handleCreateSession(msg.ID, msg.Data)
+	case HostMessageHostSession:
+		res = c.handleHostSession(msg.ID, msg.Data)
 
 	case GuestMessageJoinSession:
-		res, err = c.handleJoinSession(msg.ID, msg.Data)
+		res = c.handleJoinSession(msg.ID, msg.Data)
 	}
 
 	if res != nil {
@@ -79,70 +80,92 @@ func (c *MessageHandler) Close() {
 	close(c.subCh)
 }
 
-func (c *MessageHandler) handleCreateSession(
-	id int,
+func (c *MessageHandler) handleHostSession(
+	requestID int,
 	data map[string]string,
-) (*Response, error) {
-	sessID, ok := data["id"]
-	if !ok || !session.IsValidID(sessID) {
-		return nil, errors.Errorf("id must be valid")
+) *Response {
+	sessionID, sessionKey := data["id"], data["key"]
+
+	res, session := c.findSession(requestID, sessionID, sessionKey)
+	if res != nil {
+		return res
 	}
 
-	sessKey, ok := data["key"]
-	if !ok || !session.IsValidKey(sessKey) {
-		return nil, errors.Errorf("key must be valid")
-	}
-
-	storeKey := session.StoreKey(sessID)
-	sess := &session.Session{}
-	ok, err := c.store.Get(storeKey, sess)
-	if err != nil {
-		return nil, errors.Wrap(err, "attempting to get existing session failed")
-	}
-	if !ok {
-		sess, err = session.NewSession(sessID, sessKey)
-		if err != nil {
-			return nil, errors.Wrap(err, "session creation failed")
+	if session == nil {
+		// there isn't an existing session; persist the new session
+		session = &Session{ID: sessionID, Key: sessionKey}
+		if err := c.store.Set(session.StoreKey(), session); err != nil {
+			fmt.Println(errors.Wrap(err, "failed to persist session"))
+			return errorResponse(requestID, "internal error", true)
 		}
 	}
 
-	if err := c.store.Set(storeKey, sess); err != nil {
-		return nil, errors.Wrap(err, "session could not be stored")
-	}
+	c.session = session
+	c.pubSub.Subscribe(hostPubSubID(sessionID), c.subCh)
 
-	c.session = sess
-	c.pubSub.Subscribe(hostPubSubID(sessID), c.subCh)
-
-	return &Response{ID: id}, nil
+	return &Response{RequestID: requestID}
 }
 
 func (c *MessageHandler) handleJoinSession(
-	id int,
+	requestID int,
 	data map[string]string,
-) (*Response, error) {
-	sessID, ok := data["id"]
-	if !ok || !session.IsValidID(sessID) {
-		return nil, errors.Errorf("id must be valid")
+) *Response {
+	sessionID, sessionKey := data["id"], data["key"]
+
+	res, session := c.findSession(requestID, sessionID, sessionKey)
+	if res != nil {
+		return res
 	}
 
-	sessKey, ok := data["key"]
-	if !ok || !session.IsValidKey(sessKey) {
-		return nil, errors.Errorf("key must be valid")
+	if session == nil {
+		// there isn't an existing session; fail
+		errMsg := fmt.Sprintf("no such session: %s", sessionID)
+		return errorResponse(requestID, errMsg, false)
 	}
 
-	sess := &session.Session{}
-	ok, err := c.store.Get(session.StoreKey(sessID), sess)
+	c.session = session
+	c.pubSub.Subscribe(guestPubSubID(sessionID), c.subCh)
+
+	return &Response{RequestID: requestID}
+}
+
+func (c *MessageHandler) findSession(
+	requestID int,
+	sessionID string,
+	sessionKey string,
+) (*Response, *Session) {
+	if !isValidSessionID(sessionID) {
+		return errorResponse(requestID, "invalid session id", true), nil
+	}
+	if !isValidSessionKey(sessionKey) {
+		return errorResponse(requestID, "invalid session key", true), nil
+	}
+
+	session := &Session{ID: sessionID}
+	ok, err := c.store.Get(session.StoreKey(), session)
 	if err != nil {
-		return nil, errors.Wrap(err, "attempting to get existing session failed")
+		fmt.Println(errors.Wrap(err, "failed to load session"))
+		return errorResponse(requestID, "internal error", true), nil
 	}
+
 	if !ok {
-		return nil, errors.Errorf("session not found")
+		return nil, nil
 	}
 
-	c.session = sess
-	c.pubSub.Subscribe(guestPubSubID(sessID), c.subCh)
+	// there is an existing session; check that session key matches
+	if session.Key != sessionKey {
+		return errorResponse(requestID, "incorrect session key", true), nil
+	}
 
-	return &Response{ID: id}, nil
+	return nil, session
+}
+
+func errorResponse(requestID int, errorMessage string, fatal bool) *Response {
+	return &Response{
+		RequestID:   requestID,
+		Error:       errorMessage,
+		ShouldClose: fatal,
+	}
 }
 
 func hostPubSubID(sessionID string) string {

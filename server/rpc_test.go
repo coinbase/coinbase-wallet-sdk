@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/CoinbaseWallet/walletlinkd/server/rpc"
-	"github.com/CoinbaseWallet/walletlinkd/session"
 	"github.com/CoinbaseWallet/walletlinkd/util"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/require"
@@ -37,15 +36,15 @@ func TestRPC(t *testing.T) {
 	))
 
 	// assert that session does not exist yet
-	sess := session.Session{}
-	ok, err := srv.store.Get(session.StoreKey(sessionID), &sess)
+	session := rpc.Session{ID: sessionID}
+	ok, err := srv.store.Get(session.StoreKey(), &session)
 	require.Nil(t, err)
 	require.False(t, ok)
 
 	// host makes a request to the server with sessionID and sessionKey
 	err = hostWs.WriteJSON(rpc.Request{
 		ID:      1,
-		Message: rpc.HostMessageCreateSession,
+		Message: rpc.HostMessageHostSession,
 		Data: map[string]string{
 			"id":  sessionID,
 			"key": sessionKey,
@@ -58,15 +57,15 @@ func TestRPC(t *testing.T) {
 	err = hostWs.ReadJSON(res)
 	require.Nil(t, err)
 
-	require.Equal(t, 1, res.ID)
+	require.Equal(t, 1, res.RequestID)
 	require.Empty(t, res.Error)
 
 	// session should be created
-	ok, err = srv.store.Get(session.StoreKey(sessionID), &sess)
+	ok, err = srv.store.Get(session.StoreKey(), &session)
 	require.Nil(t, err)
 	require.True(t, ok)
-	require.Equal(t, sess.ID, sessionID)
-	require.Equal(t, sess.Key, sessionKey)
+	require.Equal(t, session.ID, sessionID)
+	require.Equal(t, session.Key, sessionKey)
 
 	// guest scans the QR code, obtains sessionId and secret, derives sessionKey
 	// from sessionID and secret and makes a request to the server
@@ -90,6 +89,6 @@ func TestRPC(t *testing.T) {
 	err = guestWs.ReadJSON(res)
 	require.Nil(t, err)
 
-	require.Equal(t, 1, res.ID)
+	require.Equal(t, 1, res.RequestID)
 	require.Empty(t, res.Error)
 }
