@@ -2,12 +2,9 @@
 
 package store
 
-import (
-	"github.com/CoinbaseWallet/walletlinkd/session"
-)
-
 // Store - store interface
 type Store interface {
-	SaveSession(sess *session.Session) error
-	LoadSession(id string) (*session.Session, error)
+	Set(key string, value interface{}) error
+	Get(key string, value interface{}) (ok bool, err error)
+	Remove(key string) error
 }

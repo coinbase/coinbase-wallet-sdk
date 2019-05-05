@@ -12,8 +12,8 @@ var hexStringRegex = regexp.MustCompile("^([a-f0-9]{2})+$")
 
 // Session - rpc session
 type Session struct {
-	id  string
-	key string
+	ID  string `json:"id"`
+	Key string `json:"key"`
 }
 
 // NewSession - construct a session
@@ -21,18 +21,11 @@ func NewSession(id, key string) (*Session, error) {
 	if !IsValidID(id) {
 		return nil, errors.Errorf("invalid session ID")
 	}
+	if !IsValidKey(key) {
+		return nil, errors.Errorf("invalid session key")
+	}
 
-	return &Session{id: id, key: key}, nil
-}
-
-// ID - return ID
-func (s *Session) ID() string {
-	return s.id
-}
-
-// Key - return key
-func (s *Session) Key() string {
-	return s.key
+	return &Session{ID: id, Key: key}, nil
 }
 
 // IsValidID - validate session id
@@ -43,4 +36,9 @@ func IsValidID(id string) bool {
 // IsValidKey - validate session key
 func IsValidKey(key string) bool {
 	return len(key) == 64 && hexStringRegex.MatchString(key)
+}
+
+// StoreKey - make key for session in the store
+func StoreKey(id string) string {
+	return "session:" + id
 }

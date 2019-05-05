@@ -3,16 +3,16 @@
 package store
 
 import (
+	"encoding/json"
 	"sync"
 
-	"github.com/CoinbaseWallet/walletlinkd/session"
 	"github.com/pkg/errors"
 )
 
 // MemoryStore - in-memory store
 type MemoryStore struct {
-	sessionsLock sync.Mutex
-	sessions     map[string]*session.Session
+	lock sync.Mutex
+	db   map[string][]byte
 }
 
 var _ Store = (*MemoryStore)(nil)
@@ -20,32 +20,47 @@ var _ Store = (*MemoryStore)(nil)
 // NewMemoryStore - construct a MemoryStore
 func NewMemoryStore() *MemoryStore {
 	return &MemoryStore{
-		sessions: map[string]*session.Session{},
+		db: map[string][]byte{},
 	}
 }
 
-// SaveSession - save session
-func (ms *MemoryStore) SaveSession(sess *session.Session) error {
-	if sess == nil {
-		return errors.Errorf("session is nil")
+// Set - save data under a given key
+func (ms *MemoryStore) Set(key string, value interface{}) error {
+	ms.lock.Lock()
+	defer ms.lock.Unlock()
+
+	j, err := json.Marshal(value)
+	if err != nil {
+		return errors.Wrap(err, "could not serialize value")
 	}
-	ms.sessionsLock.Lock()
-	defer ms.sessionsLock.Unlock()
-	ms.sessions[sess.ID()] = sess
+
+	ms.db[key] = j
 	return nil
 }
 
-// LoadSession - get session by id, returns (nil, nil) if not found
-func (ms *MemoryStore) LoadSession(id string) (*session.Session, error) {
-	if len(id) == 0 {
-		return nil, errors.Errorf("id must not be empty")
+// Get - load data for a given key. value passed must be a reference.
+// (false, nil) is returned if key does not exist.
+func (ms *MemoryStore) Get(key string, value interface{}) (bool, error) {
+	ms.lock.Lock()
+	defer ms.lock.Unlock()
+
+	j, ok := ms.db[key]
+	if !ok {
+		return false, nil
 	}
 
-	ms.sessionsLock.Lock()
-	defer ms.sessionsLock.Unlock()
-	if sess, ok := ms.sessions[id]; ok {
-		return sess, nil
+	if err := json.Unmarshal(j, value); err != nil {
+		return false, errors.Wrap(err, "could not deserialize value")
 	}
 
-	return nil, nil
+	return true, nil
+}
+
+// Remove - remove a key. does not return an error if key does not exist
+func (ms *MemoryStore) Remove(key string) error {
+	ms.lock.Lock()
+	defer ms.lock.Unlock()
+
+	delete(ms.db, key)
+	return nil
 }

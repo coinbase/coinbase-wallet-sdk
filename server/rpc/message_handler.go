@@ -93,18 +93,20 @@ func (c *MessageHandler) handleCreateSession(
 		return nil, errors.Errorf("key must be valid")
 	}
 
-	sess, err := c.store.LoadSession(sessID)
+	storeKey := session.StoreKey(sessID)
+	sess := &session.Session{}
+	ok, err := c.store.Get(storeKey, sess)
 	if err != nil {
 		return nil, errors.Wrap(err, "attempting to get existing session failed")
 	}
-	if sess == nil {
+	if !ok {
 		sess, err = session.NewSession(sessID, sessKey)
 		if err != nil {
 			return nil, errors.Wrap(err, "session creation failed")
 		}
 	}
 
-	if err := c.store.SaveSession(sess); err != nil {
+	if err := c.store.Set(storeKey, sess); err != nil {
 		return nil, errors.Wrap(err, "session could not be stored")
 	}
 
@@ -128,11 +130,12 @@ func (c *MessageHandler) handleJoinSession(
 		return nil, errors.Errorf("key must be valid")
 	}
 
-	sess, err := c.store.LoadSession(sessID)
+	sess := &session.Session{}
+	ok, err := c.store.Get(session.StoreKey(sessID), sess)
 	if err != nil {
 		return nil, errors.Wrap(err, "attempting to get existing session failed")
 	}
-	if sess == nil {
+	if !ok {
 		return nil, errors.Errorf("session not found")
 	}
 

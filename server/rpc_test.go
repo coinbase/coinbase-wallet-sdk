@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/CoinbaseWallet/walletlinkd/server/rpc"
+	"github.com/CoinbaseWallet/walletlinkd/session"
 	"github.com/CoinbaseWallet/walletlinkd/util"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/require"
@@ -36,9 +37,10 @@ func TestRPC(t *testing.T) {
 	))
 
 	// assert that session does not exist yet
-	sess, err := srv.store.LoadSession(sessionID)
-	require.Nil(t, sess)
+	sess := session.Session{}
+	ok, err := srv.store.Get(session.StoreKey(sessionID), &sess)
 	require.Nil(t, err)
+	require.False(t, ok)
 
 	// host makes a request to the server with sessionID and sessionKey
 	err = hostWs.WriteJSON(rpc.Request{
@@ -60,11 +62,11 @@ func TestRPC(t *testing.T) {
 	require.Empty(t, res.Error)
 
 	// session should be created
-	sess, err = srv.store.LoadSession(sessionID)
+	ok, err = srv.store.Get(session.StoreKey(sessionID), &sess)
 	require.Nil(t, err)
-	require.NotNil(t, sess)
-	require.Equal(t, sess.ID(), sessionID)
-	require.Equal(t, sess.Key(), sessionKey)
+	require.True(t, ok)
+	require.Equal(t, sess.ID, sessionID)
+	require.Equal(t, sess.Key, sessionKey)
 
 	// guest scans the QR code, obtains sessionId and secret, derives sessionKey
 	// from sessionID and secret and makes a request to the server
