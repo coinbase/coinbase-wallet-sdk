@@ -11,11 +11,10 @@ import (
 )
 
 const (
-	// HostMessageHostSession - host session
-	HostMessageHostSession = "hostSession"
-
-	// GuestMessageJoinSession - join session
-	GuestMessageJoinSession = "joinSession"
+	// MessageHostSession - host session
+	MessageHostSession = "hostSession"
+	// MessageJoinSession - join session
+	MessageJoinSession = "joinSession"
 )
 
 // MessageHandler - handles rpc messages
@@ -60,10 +59,10 @@ func (c *MessageHandler) Handle(req *Request) (ok bool) {
 		res = errorResponse(req.ID, "invalid request ID", true)
 	} else {
 		switch req.Message {
-		case HostMessageHostSession:
+		case MessageHostSession:
 			res = c.handleHostSession(req.ID, req.Data)
 
-		case GuestMessageJoinSession:
+		case MessageJoinSession:
 			res = c.handleJoinSession(req.ID, req.Data)
 		}
 	}

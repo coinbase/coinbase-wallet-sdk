@@ -45,7 +45,7 @@ func TestRPC(t *testing.T) {
 	// host makes a request to the server with sessionID and sessionKey
 	err = hostWs.WriteJSON(rpc.Request{
 		ID:      1,
-		Message: rpc.HostMessageHostSession,
+		Message: rpc.MessageHostSession,
 		Data: map[string]string{
 			"id":  sessionID,
 			"key": sessionKey,
@@ -77,7 +77,7 @@ func TestRPC(t *testing.T) {
 
 	err = guestWs.WriteJSON(rpc.Request{
 		ID:      1,
-		Message: rpc.GuestMessageJoinSession,
+		Message: rpc.MessageJoinSession,
 		Data: map[string]string{
 			"id":  sessionID,
 			"key": sessionKey,
