@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/CoinbaseWallet/walletlinkd/server/rpc"
+	"github.com/CoinbaseWallet/walletlinkd/store/models"
 	"github.com/CoinbaseWallet/walletlinkd/util"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/require"
@@ -36,7 +37,7 @@ func TestRPC(t *testing.T) {
 	))
 
 	// assert that session does not exist yet
-	session := rpc.Session{ID: sessionID}
+	session := models.Session{ID: sessionID}
 	ok, err := srv.store.Get(session.StoreKey(), &session)
 	require.Nil(t, err)
 	require.False(t, ok)

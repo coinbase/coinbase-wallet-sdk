@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Coinbase, Inc. See LICENSE
 
-package rpc
+package models
 
 import (
 	"regexp"
@@ -19,10 +19,12 @@ func (session *Session) StoreKey() string {
 	return "session:" + session.ID
 }
 
-func isValidSessionID(id string) bool {
+// IsValidSessionID - check validity of a given session ID
+func IsValidSessionID(id string) bool {
 	return len(id) == 32 && hexStringRegex.MatchString(id)
 }
 
-func isValidSessionKey(key string) bool {
+// IsValidSessionKey - check validity of a given session key
+func IsValidSessionKey(key string) bool {
 	return len(key) == 64 && hexStringRegex.MatchString(key)
 }

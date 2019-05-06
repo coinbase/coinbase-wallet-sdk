@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/CoinbaseWallet/walletlinkd/store"
+	"github.com/CoinbaseWallet/walletlinkd/store/models"
 	"github.com/pkg/errors"
 )
 
@@ -19,7 +20,7 @@ const (
 
 // MessageHandler - handles rpc messages
 type MessageHandler struct {
-	session *Session
+	session *models.Session
 
 	sendCh chan<- interface{}
 	subCh  chan interface{}
@@ -95,7 +96,7 @@ func (c *MessageHandler) handleHostSession(
 
 	if session == nil {
 		// there isn't an existing session; persist the new session
-		session = &Session{ID: sessionID, Key: sessionKey}
+		session = &models.Session{ID: sessionID, Key: sessionKey}
 		if err := c.store.Set(session.StoreKey(), session); err != nil {
 			fmt.Println(errors.Wrap(err, "failed to persist session"))
 			return errorResponse(requestID, "internal error", true)
@@ -135,15 +136,15 @@ func (c *MessageHandler) findSession(
 	requestID int,
 	sessionID string,
 	sessionKey string,
-) (*Response, *Session) {
-	if !isValidSessionID(sessionID) {
+) (*Response, *models.Session) {
+	if !models.IsValidSessionID(sessionID) {
 		return errorResponse(requestID, "invalid session id", true), nil
 	}
-	if !isValidSessionKey(sessionKey) {
+	if !models.IsValidSessionKey(sessionKey) {
 		return errorResponse(requestID, "invalid session key", true), nil
 	}
 
-	session := &Session{ID: sessionID}
+	session := &models.Session{ID: sessionID}
 	ok, err := c.store.Get(session.StoreKey(), session)
 	if err != nil {
 		fmt.Println(errors.Wrap(err, "failed to load session"))
