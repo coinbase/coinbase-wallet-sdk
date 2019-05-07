@@ -70,7 +70,6 @@ func TestRPC(t *testing.T) {
 
 	// guest scans the QR code, obtains sessionId and secret, derives sessionKey
 	// from sessionID and secret and makes a request to the server
-
 	guestWs, _, err := websocket.DefaultDialer.Dial(rpcURL, nil)
 	require.Nil(t, err)
 	defer guestWs.Close()
@@ -85,11 +84,48 @@ func TestRPC(t *testing.T) {
 	})
 	require.Nil(t, err)
 
-	// server responds
-
+	// server responds to guest
 	err = guestWs.ReadJSON(res)
 	require.Nil(t, err)
 
 	require.Equal(t, 1, res.RequestID)
+	require.Empty(t, res.Error)
+
+	// guest sets metadata
+	err = guestWs.WriteJSON(rpc.Request{
+		ID:      2,
+		Message: rpc.MessageSetMetadata,
+		Data: map[string]string{
+			"id":            sessionID,
+			"metadataKey":   "foo",
+			"metadataValue": "hello world",
+		},
+	})
+	require.Nil(t, err)
+
+	// server responds to guest
+	err = guestWs.ReadJSON(res)
+	require.Nil(t, err)
+
+	require.Equal(t, 2, res.RequestID)
+	require.Empty(t, res.Error)
+
+	// host reads metadata
+	err = hostWs.WriteJSON(rpc.Request{
+		ID:      2,
+		Message: rpc.MessageGetMetadata,
+		Data: map[string]string{
+			"id":          sessionID,
+			"metadataKey": "foo",
+		},
+	})
+	require.Nil(t, err)
+
+	// server responds to host
+	err = hostWs.ReadJSON(res)
+	require.Nil(t, err)
+
+	require.Equal(t, 2, res.RequestID)
+	require.Equal(t, "hello world", res.Data["value"])
 	require.Empty(t, res.Error)
 }
