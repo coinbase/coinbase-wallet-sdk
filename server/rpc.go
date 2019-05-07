@@ -12,6 +12,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+const websocketReadLimit = 1024 * 1024
+
 var upgrader = websocket.Upgrader{
 	HandshakeTimeout: time.Second * 30,
 }
@@ -19,10 +21,11 @@ var upgrader = websocket.Upgrader{
 func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println(errors.Wrap(err, "upgrade failed"))
+		log.Println(errors.Wrap(err, "websocket upgrade failed"))
 		return
 	}
 	defer ws.Close()
+	ws.SetReadLimit(websocketReadLimit)
 
 	sendCh := make(chan interface{})
 	defer close(sendCh)
@@ -34,7 +37,7 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			if err := ws.WriteJSON(res); err != nil {
-				log.Println(errors.Wrap(err, "write failed"))
+				log.Println(errors.Wrap(err, "websocket write failed"))
 				ws.Close()
 				return
 			}
@@ -54,17 +57,21 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 	defer handler.Close()
 
 	for {
-		rpcMsg := &rpc.ClientMessage{}
-		err := ws.ReadJSON(rpcMsg)
+		msgType, msgData, err := ws.ReadMessage()
 		if err != nil {
 			if !websocket.IsCloseError(err) &&
 				!websocket.IsUnexpectedCloseError(err) {
-				log.Println(errors.Wrap(err, "read failed"))
+				log.Println(errors.Wrap(err, "websocket read failed"))
 			}
 			break
 		}
 
-		if ok := handler.Handle(rpcMsg); !ok {
+		if msgType != websocket.TextMessage && msgType != websocket.BinaryMessage {
+			continue
+		}
+
+		if err := handler.HandleRawMessage(msgData); err != nil {
+			log.Println(err)
 			break
 		}
 	}

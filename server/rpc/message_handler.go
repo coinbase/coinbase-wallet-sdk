@@ -4,23 +4,11 @@ package rpc
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/CoinbaseWallet/walletlinkd/store"
 	"github.com/CoinbaseWallet/walletlinkd/store/models"
 	"github.com/CoinbaseWallet/walletlinkd/util"
 	"github.com/pkg/errors"
-)
-
-const (
-	// ClientMessageHostSession - host session
-	ClientMessageHostSession = "hostSession"
-	// ClientMessageJoinSession - join session
-	ClientMessageJoinSession = "joinSession"
-	// ClientMessageSetMetadata - set session metadata
-	ClientMessageSetMetadata = "setMetadata"
-	// ClientMessageGetMetadata - get session metadata
-	ClientMessageGetMetadata = "getMetadata"
 )
 
 // MessageHandler - handles RPC messages
@@ -60,161 +48,153 @@ func NewMessageHandler(
 	}, nil
 }
 
-// Handle - handle a client message
-func (c *MessageHandler) Handle(req *ClientMessage) (ok bool) {
-	var res *ServerMessage
-
-	if req.ID < 1 {
-		res = errorMessage(req.ID, "invalid request ID", true)
-	} else {
-		switch req.Message {
-		case ClientMessageHostSession:
-			res = c.handleHostSession(req.ID, req.Data)
-
-		case ClientMessageJoinSession:
-			res = c.handleJoinSession(req.ID, req.Data)
-
-		case ClientMessageSetMetadata:
-			res = c.handleSetMetadata(req.ID, req.Data)
-
-		case ClientMessageGetMetadata:
-			res = c.handleGetMetadata(req.ID, req.Data)
-		}
+// HandleRawMessage - handle a raw client message
+func (c *MessageHandler) HandleRawMessage(data []byte) error {
+	msg, msgType, err := unmarshalClientMessage(data)
+	if err != nil {
+		return err
 	}
 
-	if res == nil {
-		res = errorMessage(req.ID, "unsupported message", true)
+	var res serverMessage
+
+	switch msg := msg.(type) {
+	case *clientMessageHostSession:
+		res = c.handleHostSession(msg)
+	case *clientMessageJoinSession:
+		res = c.handleJoinSession(msg)
+	case *clientMessageSetMetadata:
+		res = c.handleSetMetadata(msg)
+	case *clientMessageGetMetadata:
+		res = c.handleGetMetadata(msg)
+	default:
+		errMsg := fmt.Sprintf("unsupported message type: %s", msgType)
+		res = newServerMessageFail(0, "", errMsg)
 	}
 
-	c.sendCh <- res
+	if res != nil {
+		c.sendCh <- res
+	}
 
-	return !res.Fatal
+	return nil
 }
 
 // Close - clean up
 func (c *MessageHandler) Close() {
 	c.pubSub.UnsubscribeAll(c.subCh)
-	close(c.subCh)
 }
 
 func (c *MessageHandler) handleHostSession(
-	requestID int,
-	data map[string]string,
-) *ServerMessage {
+	msg *clientMessageHostSession,
+) serverMessage {
 	if c.isHost {
-		return errorMessage(requestID, "cannot host more than one session", false)
+		return newServerMessageFail(
+			msg.ID, msg.SessionID, "cannot host more than one session",
+		)
 	}
 
-	sessionID, sessionKey := data["id"], data["key"]
-
-	session, res := c.findSessionWithIDAndKey(requestID, sessionID, sessionKey)
-	if res != nil {
-		return res
+	session, err := c.findSessionWithIDAndKey(msg.SessionID, msg.SessionKey)
+	if err != nil {
+		return newServerMessageFail(msg.ID, msg.SessionID, err.Error())
 	}
 
 	if session == nil {
 		// there isn't an existing session; persist the new session
-		session = &models.Session{ID: sessionID, Key: sessionKey}
+		session = &models.Session{ID: msg.SessionID, Key: msg.SessionKey}
 		if err := c.store.Set(session.StoreKey(), session); err != nil {
 			fmt.Println(errors.Wrap(err, "failed to persist session"))
-			return errorMessage(requestID, "internal error", true)
+			return newServerMessageFail(msg.ID, msg.SessionID, "internal error")
 		}
 	}
 
 	c.isHost = true
-	c.authedSessions.Add(sessionID)
-	c.pubSub.Subscribe(hostPubSubID(sessionID), c.subCh)
+	c.authedSessions.Add(msg.SessionID)
+	c.pubSub.Subscribe(hostPubSubID(msg.SessionID), c.subCh)
 
-	return &ServerMessage{ClientMessageID: requestID}
+	return newServerMessageOK(msg.ID, msg.SessionID)
 }
 
 func (c *MessageHandler) handleJoinSession(
-	requestID int,
-	data map[string]string,
-) *ServerMessage {
+	msg *clientMessageJoinSession,
+) serverMessage {
 	if c.isHost {
-		return errorMessage(requestID, "host cannot join a session", false)
+		return newServerMessageFail(
+			msg.ID, msg.SessionID, "host cannot join a session",
+		)
 	}
 
-	sessionID, sessionKey := data["id"], data["key"]
-
-	session, res := c.findSessionWithIDAndKey(requestID, sessionID, sessionKey)
-	if res != nil {
-		return res
+	session, err := c.findSessionWithIDAndKey(msg.SessionID, msg.SessionKey)
+	if err != nil {
+		return newServerMessageFail(msg.ID, msg.SessionID, err.Error())
 	}
 
 	if session == nil {
 		// there isn't an existing session; fail
-		errMsg := fmt.Sprintf("no such session: %s", sessionID)
-		return errorMessage(requestID, errMsg, false)
+		errMsg := fmt.Sprintf("no such session: %s", msg.SessionID)
+		return newServerMessageFail(msg.ID, msg.SessionID, errMsg)
 	}
 
-	c.authedSessions.Add(sessionID)
-	c.pubSub.Subscribe(guestPubSubID(sessionID), c.subCh)
+	c.authedSessions.Add(msg.SessionID)
+	c.pubSub.Subscribe(guestPubSubID(msg.SessionID), c.subCh)
 
-	return &ServerMessage{ClientMessageID: requestID}
+	return newServerMessageOK(msg.ID, msg.SessionID)
 }
 
 func (c *MessageHandler) handleSetMetadata(
-	requestID int,
-	data map[string]string,
-) *ServerMessage {
-	sessionID := data["id"]
-	metadataKey := strings.TrimSpace(data["metadataKey"])
-	metadataValue := data["metadataValue"]
-
-	session, res := c.findAuthedSessionWithID(requestID, sessionID)
-	if res != nil {
-		return res
+	msg *clientMessageSetMetadata,
+) serverMessage {
+	if !models.IsValidSessionMetadataKey(msg.Key) {
+		return newServerMessageFail(msg.ID, msg.SessionID, "invalid metadata key")
+	}
+	if !models.IsValidSessionMetadataValue(msg.Value) {
+		return newServerMessageFail(msg.ID, msg.SessionID, "invalid metadata value")
 	}
 
-	session.SetMetadata(metadataKey, metadataValue)
+	session, err := c.findAuthedSessionWithID(msg.SessionID)
+	if err != nil {
+		return newServerMessageFail(msg.ID, msg.SessionID, err.Error())
+	}
+
+	session.SetMetadata(msg.Key, msg.Value)
 	if err := c.store.Set(session.StoreKey(), session); err != nil {
 		fmt.Println(errors.Wrap(err, "failed to persist session"))
-		return errorMessage(requestID, "internal error", true)
+		return newServerMessageFail(msg.ID, msg.SessionID, "internal error")
 	}
 
-	return &ServerMessage{ClientMessageID: requestID}
+	return newServerMessageOK(msg.ID, msg.SessionID)
 }
 
 func (c *MessageHandler) handleGetMetadata(
-	requestID int,
-	data map[string]string,
-) *ServerMessage {
-	sessionID := data["id"]
-	metadataKey := strings.TrimSpace(data["metadataKey"])
-
-	session, res := c.findAuthedSessionWithID(requestID, sessionID)
-	if res != nil {
-		return res
+	msg *clientMessageGetMetadata,
+) serverMessage {
+	if !models.IsValidSessionMetadataKey(msg.Key) {
+		return newServerMessageFail(msg.ID, msg.SessionID, "invalid metadata key")
 	}
 
-	metadataValue := session.GetMetadata(metadataKey)
-
-	return &ServerMessage{
-		ClientMessageID: requestID,
-		Data: map[string]string{
-			"value": metadataValue,
-		},
+	session, err := c.findAuthedSessionWithID(msg.SessionID)
+	if err != nil {
+		return newServerMessageFail(msg.ID, msg.SessionID, err.Error())
 	}
+
+	value := session.GetMetadata(msg.Key)
+
+	return newServerMessageGetMetadata(msg.ID, msg.SessionID, msg.Key, value)
 }
 
 func (c *MessageHandler) findSessionWithIDAndKey(
-	requestID int,
 	sessionID string,
 	sessionKey string,
-) (*models.Session, *ServerMessage) {
+) (*models.Session, error) {
 	if !models.IsValidSessionID(sessionID) {
-		return nil, errorMessage(requestID, "invalid session id", true)
+		return nil, errors.New("invalid session id")
 	}
 	if !models.IsValidSessionKey(sessionKey) {
-		return nil, errorMessage(requestID, "invalid session key", true)
+		return nil, errors.New("invalid session key")
 	}
 
 	session, err := c.loadSession(sessionID)
 	if err != nil {
 		fmt.Println(err)
-		return nil, errorMessage(requestID, "internal error", true)
+		return nil, errors.New("internal error")
 	}
 	if session == nil {
 		return nil, nil
@@ -222,28 +202,26 @@ func (c *MessageHandler) findSessionWithIDAndKey(
 
 	// there is an existing session; check that session key matches
 	if session.Key != sessionKey {
-		return nil, errorMessage(requestID, "incorrect session key", true)
+		return nil, errors.New("incorrect session key")
 	}
 
 	return session, nil
 }
 
 func (c *MessageHandler) findAuthedSessionWithID(
-	requestID int,
 	sessionID string,
-) (*models.Session, *ServerMessage) {
+) (*models.Session, error) {
 	if !c.authedSessions.Contains(sessionID) {
-		errMsg := fmt.Sprintf("not authenticated to session: %s", sessionID)
-		return nil, errorMessage(requestID, errMsg, false)
+		return nil, errors.Errorf("not authenticated to session: %s", sessionID)
 	}
 
 	session, err := c.loadSession(sessionID)
 	if err != nil {
 		fmt.Println(err)
-		return nil, errorMessage(requestID, "internal error", true)
+		return nil, errors.New("internal error")
 	}
 	if session == nil {
-		return nil, errorMessage(requestID, "session is gone somehow", true)
+		return nil, errors.New("session is gone somehow")
 	}
 
 	return session, nil
@@ -263,18 +241,6 @@ func (c *MessageHandler) loadSession(
 	}
 
 	return session, nil
-}
-
-func errorMessage(
-	requestID int,
-	errorMessage string,
-	fatal bool,
-) *ServerMessage {
-	return &ServerMessage{
-		ClientMessageID: requestID,
-		Error:           errorMessage,
-		Fatal:           fatal,
-	}
 }
 
 func hostPubSubID(sessionID string) string {

@@ -9,12 +9,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/CoinbaseWallet/walletlinkd/server/rpc"
 	"github.com/CoinbaseWallet/walletlinkd/store/models"
 	"github.com/CoinbaseWallet/walletlinkd/util"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/require"
 )
+
+type jsonMap map[string]interface{}
 
 func TestRPC(t *testing.T) {
 	srv := NewServer()
@@ -43,23 +44,23 @@ func TestRPC(t *testing.T) {
 	require.False(t, ok)
 
 	// host makes a request to the server with sessionID and sessionKey
-	err = hostWs.WriteJSON(rpc.ClientMessage{
-		ID:      1,
-		Message: rpc.ClientMessageHostSession,
-		Data: map[string]string{
-			"id":  sessionID,
-			"key": sessionKey,
-		},
+	err = hostWs.WriteJSON(jsonMap{
+		"type":        "HostSession",
+		"id":          1,
+		"session_id":  sessionID,
+		"session_key": sessionKey,
 	})
 	require.Nil(t, err)
 
 	// host receives a response back from server
-	res := &rpc.ServerMessage{}
-	err = hostWs.ReadJSON(res)
+	res := jsonMap{}
+	err = hostWs.ReadJSON(&res)
 	require.Nil(t, err)
-
-	require.Equal(t, 1, res.ClientMessageID)
-	require.Empty(t, res.Error)
+	require.Equal(t, jsonMap{
+		"type":       "OK",
+		"id":         float64(1),
+		"session_id": sessionID,
+	}, res)
 
 	// session should be created
 	ok, err = srv.store.Get(session.StoreKey(), &session)
@@ -74,58 +75,59 @@ func TestRPC(t *testing.T) {
 	require.Nil(t, err)
 	defer guestWs.Close()
 
-	err = guestWs.WriteJSON(rpc.ClientMessage{
-		ID:      1,
-		Message: rpc.ClientMessageJoinSession,
-		Data: map[string]string{
-			"id":  sessionID,
-			"key": sessionKey,
-		},
+	err = guestWs.WriteJSON(jsonMap{
+		"type":        "JoinSession",
+		"id":          1,
+		"session_id":  sessionID,
+		"session_key": sessionKey,
 	})
 	require.Nil(t, err)
 
 	// server responds to guest
-	err = guestWs.ReadJSON(res)
+	err = guestWs.ReadJSON(&res)
 	require.Nil(t, err)
-
-	require.Equal(t, 1, res.ClientMessageID)
-	require.Empty(t, res.Error)
+	require.Equal(t, jsonMap{
+		"type":       "OK",
+		"id":         float64(1),
+		"session_id": sessionID,
+	}, res)
 
 	// guest sets metadata
-	err = guestWs.WriteJSON(rpc.ClientMessage{
-		ID:      2,
-		Message: rpc.ClientMessageSetMetadata,
-		Data: map[string]string{
-			"id":            sessionID,
-			"metadataKey":   "foo",
-			"metadataValue": "hello world",
-		},
+	err = guestWs.WriteJSON(jsonMap{
+		"type":       "SetMetadata",
+		"id":         2,
+		"session_id": sessionID,
+		"key":        "foo",
+		"value":      "hello world",
 	})
 	require.Nil(t, err)
 
 	// server responds to guest
-	err = guestWs.ReadJSON(res)
+	err = guestWs.ReadJSON(&res)
 	require.Nil(t, err)
-
-	require.Equal(t, 2, res.ClientMessageID)
-	require.Empty(t, res.Error)
+	require.Equal(t, jsonMap{
+		"type":       "OK",
+		"id":         float64(2),
+		"session_id": sessionID,
+	}, res)
 
 	// host reads metadata
-	err = hostWs.WriteJSON(rpc.ClientMessage{
-		ID:      2,
-		Message: rpc.ClientMessageGetMetadata,
-		Data: map[string]string{
-			"id":          sessionID,
-			"metadataKey": "foo",
-		},
+	err = hostWs.WriteJSON(jsonMap{
+		"type":       "GetMetadata",
+		"id":         2,
+		"session_id": sessionID,
+		"key":        "foo",
 	})
 	require.Nil(t, err)
 
 	// server responds to host
-	err = hostWs.ReadJSON(res)
+	err = hostWs.ReadJSON(&res)
 	require.Nil(t, err)
-
-	require.Equal(t, 2, res.ClientMessageID)
-	require.Equal(t, "hello world", res.Data["value"])
-	require.Empty(t, res.Error)
+	require.Equal(t, jsonMap{
+		"type":       "GetMetadata",
+		"id":         float64(2),
+		"session_id": sessionID,
+		"key":        "foo",
+		"value":      "hello world",
+	}, res)
 }

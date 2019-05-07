@@ -1,0 +1,93 @@
+// Copyright (c) 2019 Coinbase, Inc. See LICENSE
+
+package rpc
+
+import (
+	"encoding/json"
+
+	"github.com/pkg/errors"
+)
+
+const (
+	clientMessageTypeHostSession = "HostSession"
+	clientMessageTypeJoinSession = "JoinSession"
+	clientMessageTypeSetMetadata = "SetMetadata"
+	clientMessageTypeGetMetadata = "GetMetadata"
+)
+
+type clientMessage interface{ xxxClientMessage() }
+type _clientMessage struct{}
+
+func (_clientMessage) xxxClientMessage() {}
+
+type clientMessageEnvelope struct {
+	Type string `json:"type"`
+}
+
+type clientMessageHostSession struct {
+	_clientMessage
+	Type       string `json:"type"`
+	ID         int    `json:"id"`
+	SessionID  string `json:"session_id"`
+	SessionKey string `json:"session_key"`
+}
+
+type clientMessageJoinSession struct {
+	_clientMessage
+	Type       string `json:"type"`
+	ID         int    `json:"id"`
+	SessionID  string `json:"session_id"`
+	SessionKey string `json:"session_key"`
+}
+
+type clientMessageSetMetadata struct {
+	_clientMessage
+	Type      string `json:"type"`
+	ID        int    `json:"id"`
+	SessionID string `json:"session_id"`
+	Key       string `json:"key"`
+	Value     string `json:"value"`
+}
+
+type clientMessageGetMetadata struct {
+	_clientMessage
+	Type      string `json:"type"`
+	ID        int    `json:"id"`
+	SessionID string `json:"session_id"`
+	Key       string `json:"key"`
+}
+
+func unmarshalClientMessage(
+	data []byte,
+) (msg clientMessage, msgType string, err error) {
+	envelope := &clientMessageEnvelope{}
+	if err := json.Unmarshal(data, envelope); err != nil {
+		return nil, "", errors.Wrap(err, "failed to unmarshal client message")
+	}
+
+	switch envelope.Type {
+	case clientMessageTypeHostSession:
+		msg = &clientMessageHostSession{}
+	case clientMessageTypeJoinSession:
+		msg = &clientMessageJoinSession{}
+	case clientMessageTypeSetMetadata:
+		msg = &clientMessageSetMetadata{}
+	case clientMessageTypeGetMetadata:
+		msg = &clientMessageGetMetadata{}
+	default:
+		return nil, envelope.Type, errors.Errorf(
+			"unknown client message type: %s",
+			envelope.Type,
+		)
+	}
+
+	if err := json.Unmarshal(data, msg); err != nil {
+		return nil, envelope.Type, errors.Wrapf(
+			err,
+			"failed to unmarshal client message of type: %s",
+			envelope.Type,
+		)
+	}
+
+	return msg, envelope.Type, nil
+}
