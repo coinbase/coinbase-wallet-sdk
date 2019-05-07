@@ -4,26 +4,27 @@ package rpc
 
 import (
 	"sync"
+
+	"github.com/CoinbaseWallet/walletlinkd/util"
 )
 
 // Subscriber - channel that takes in any type
 type Subscriber chan<- interface{}
 
-type subscriberSet = map[Subscriber]struct{}
-type idSet = map[string]struct{}
+type subscriberSet map[Subscriber]struct{}
 
 // PubSub - pub/sub interface for message senders
 type PubSub struct {
 	lock   sync.Mutex
-	subMap map[string]subscriberSet
-	idMap  map[Subscriber]idSet
+	subMap map[string]subscriberSet      // Subscription ID -> Subscribers
+	idMap  map[Subscriber]util.StringSet // Subscriber -> Subscription IDs
 }
 
 // NewPubSub - construct a PubSub
 func NewPubSub() *PubSub {
 	return &PubSub{
 		subMap: map[string]subscriberSet{},
-		idMap:  map[Subscriber]idSet{},
+		idMap:  map[Subscriber]util.StringSet{},
 	}
 }
 
@@ -43,12 +44,12 @@ func (cm *PubSub) Subscribe(id string, subscriber Subscriber) {
 
 	ids, ok := cm.idMap[subscriber]
 	if !ok {
-		ids = idSet{}
+		ids = util.NewStringSet()
 		cm.idMap[subscriber] = ids
 	}
 
 	subscribers[subscriber] = struct{}{}
-	ids[id] = struct{}{}
+	ids.Add(id)
 }
 
 // Unsubscribe - unsubscribes a Subscriber from an id
@@ -76,11 +77,13 @@ func (cm *PubSub) UnsubscribeAll(subscriber Subscriber) int {
 		return 0
 	}
 
+	idsLen := len(ids)
+
 	for id := range ids {
 		cm.unsubscribeOne(id, subscriber)
 	}
 
-	return len(ids)
+	return idsLen
 }
 
 // Publish - publishes a message to all subscribers of an id and returns
@@ -107,14 +110,21 @@ func (cm *PubSub) Publish(id string, msg interface{}) int {
 }
 
 func (cm *PubSub) unsubscribeOne(id string, subscriber Subscriber) {
-	set, ok := cm.subMap[id]
+	subSet, ok := cm.subMap[id]
 	if !ok {
 		return
 	}
 
-	delete(set, subscriber)
+	delete(subSet, subscriber)
 
-	if len(set) == 0 {
+	if len(subSet) == 0 {
 		delete(cm.subMap, id)
+	}
+
+	idSet := cm.idMap[subscriber]
+	idSet.Remove(id)
+
+	if len(idSet) == 0 {
+		delete(cm.idMap, subscriber)
 	}
 }
