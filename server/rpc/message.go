@@ -2,17 +2,18 @@
 
 package rpc
 
-// Request - request message
-type Request struct {
+// ClientMessage - message originating from client
+type ClientMessage struct {
 	ID      int               `json:"i"`
 	Message string            `json:"m"`
 	Data    map[string]string `json:"d"`
 }
 
-// Response - response message
-type Response struct {
-	RequestID int               `json:"i"`
-	Error     string            `json:"e,omitempty"`
-	Data      map[string]string `json:"d,omitempty"`
-	Fatal     bool              `json:"-"`
+// ServerMessage - message originating from server
+type ServerMessage struct {
+	ClientMessageID int               `json:"i,omitempty"`
+	Message         string            `json:"m,omitempty"`
+	Data            map[string]string `json:"d,omitempty"`
+	Error           string            `json:"e,omitempty"`
+	Fatal           bool              `json:"-"`
 }

@@ -43,9 +43,9 @@ func TestRPC(t *testing.T) {
 	require.False(t, ok)
 
 	// host makes a request to the server with sessionID and sessionKey
-	err = hostWs.WriteJSON(rpc.Request{
+	err = hostWs.WriteJSON(rpc.ClientMessage{
 		ID:      1,
-		Message: rpc.MessageHostSession,
+		Message: rpc.ClientMessageHostSession,
 		Data: map[string]string{
 			"id":  sessionID,
 			"key": sessionKey,
@@ -54,11 +54,11 @@ func TestRPC(t *testing.T) {
 	require.Nil(t, err)
 
 	// host receives a response back from server
-	res := &rpc.Response{}
+	res := &rpc.ServerMessage{}
 	err = hostWs.ReadJSON(res)
 	require.Nil(t, err)
 
-	require.Equal(t, 1, res.RequestID)
+	require.Equal(t, 1, res.ClientMessageID)
 	require.Empty(t, res.Error)
 
 	// session should be created
@@ -74,9 +74,9 @@ func TestRPC(t *testing.T) {
 	require.Nil(t, err)
 	defer guestWs.Close()
 
-	err = guestWs.WriteJSON(rpc.Request{
+	err = guestWs.WriteJSON(rpc.ClientMessage{
 		ID:      1,
-		Message: rpc.MessageJoinSession,
+		Message: rpc.ClientMessageJoinSession,
 		Data: map[string]string{
 			"id":  sessionID,
 			"key": sessionKey,
@@ -88,13 +88,13 @@ func TestRPC(t *testing.T) {
 	err = guestWs.ReadJSON(res)
 	require.Nil(t, err)
 
-	require.Equal(t, 1, res.RequestID)
+	require.Equal(t, 1, res.ClientMessageID)
 	require.Empty(t, res.Error)
 
 	// guest sets metadata
-	err = guestWs.WriteJSON(rpc.Request{
+	err = guestWs.WriteJSON(rpc.ClientMessage{
 		ID:      2,
-		Message: rpc.MessageSetMetadata,
+		Message: rpc.ClientMessageSetMetadata,
 		Data: map[string]string{
 			"id":            sessionID,
 			"metadataKey":   "foo",
@@ -107,13 +107,13 @@ func TestRPC(t *testing.T) {
 	err = guestWs.ReadJSON(res)
 	require.Nil(t, err)
 
-	require.Equal(t, 2, res.RequestID)
+	require.Equal(t, 2, res.ClientMessageID)
 	require.Empty(t, res.Error)
 
 	// host reads metadata
-	err = hostWs.WriteJSON(rpc.Request{
+	err = hostWs.WriteJSON(rpc.ClientMessage{
 		ID:      2,
-		Message: rpc.MessageGetMetadata,
+		Message: rpc.ClientMessageGetMetadata,
 		Data: map[string]string{
 			"id":          sessionID,
 			"metadataKey": "foo",
@@ -125,7 +125,7 @@ func TestRPC(t *testing.T) {
 	err = hostWs.ReadJSON(res)
 	require.Nil(t, err)
 
-	require.Equal(t, 2, res.RequestID)
+	require.Equal(t, 2, res.ClientMessageID)
 	require.Equal(t, "hello world", res.Data["value"])
 	require.Empty(t, res.Error)
 }

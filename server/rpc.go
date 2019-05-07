@@ -54,7 +54,7 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 	defer handler.Close()
 
 	for {
-		rpcMsg := &rpc.Request{}
+		rpcMsg := &rpc.ClientMessage{}
 		err := ws.ReadJSON(rpcMsg)
 		if err != nil {
 			if !websocket.IsCloseError(err) &&
