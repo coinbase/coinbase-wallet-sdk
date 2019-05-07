@@ -9,10 +9,11 @@ import (
 )
 
 const (
-	clientMessageTypeHostSession = "HostSession"
-	clientMessageTypeJoinSession = "JoinSession"
-	clientMessageTypeSetMetadata = "SetMetadata"
-	clientMessageTypeGetMetadata = "GetMetadata"
+	clientMessageTypeHostSession  = "HostSession"
+	clientMessageTypeJoinSession  = "JoinSession"
+	clientMessageTypeSetMetadata  = "SetMetadata"
+	clientMessageTypeGetMetadata  = "GetMetadata"
+	clientMessageTypePublishEvent = "PublishEvent"
 )
 
 type clientMessage interface{ xxxClientMessage() }
@@ -57,6 +58,15 @@ type clientMessageGetMetadata struct {
 	Key       string `json:"key"`
 }
 
+type clientMessagePublishEvent struct {
+	_clientMessage
+	Type      string            `json:"type"`
+	ID        int               `json:"id"`
+	SessionID string            `json:"session_id"`
+	Event     string            `json:"event"`
+	Data      map[string]string `json:"data"`
+}
+
 func unmarshalClientMessage(
 	data []byte,
 ) (msg clientMessage, msgType string, err error) {
@@ -74,6 +84,8 @@ func unmarshalClientMessage(
 		msg = &clientMessageSetMetadata{}
 	case clientMessageTypeGetMetadata:
 		msg = &clientMessageGetMetadata{}
+	case clientMessageTypePublishEvent:
+		msg = &clientMessagePublishEvent{}
 	default:
 		return nil, envelope.Type, errors.Errorf(
 			"unknown client message type: %s",

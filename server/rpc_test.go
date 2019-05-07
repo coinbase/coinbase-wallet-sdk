@@ -84,6 +84,7 @@ func TestRPC(t *testing.T) {
 	require.Nil(t, err)
 
 	// server responds to guest
+	res = jsonMap{}
 	err = guestWs.ReadJSON(&res)
 	require.Nil(t, err)
 	require.Equal(t, jsonMap{
@@ -103,6 +104,7 @@ func TestRPC(t *testing.T) {
 	require.Nil(t, err)
 
 	// server responds to guest
+	res = jsonMap{}
 	err = guestWs.ReadJSON(&res)
 	require.Nil(t, err)
 	require.Equal(t, jsonMap{
@@ -121,6 +123,7 @@ func TestRPC(t *testing.T) {
 	require.Nil(t, err)
 
 	// server responds to host
+	res = jsonMap{}
 	err = hostWs.ReadJSON(&res)
 	require.Nil(t, err)
 	require.Equal(t, jsonMap{
@@ -129,5 +132,81 @@ func TestRPC(t *testing.T) {
 		"session_id": sessionID,
 		"key":        "foo",
 		"value":      "hello world",
+	}, res)
+
+	// host publishes an event
+	err = hostWs.WriteJSON(jsonMap{
+		"type":       "PublishEvent",
+		"id":         3,
+		"session_id": sessionID,
+		"event":      "do_something",
+		"data": map[string]string{
+			"with_this": "data",
+			"and":       "this_data",
+			"some_id":   "123",
+		},
+	})
+	require.Nil(t, err)
+
+	// server responds to host
+	res = jsonMap{}
+	err = hostWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":       "OK",
+		"id":         float64(3),
+		"session_id": sessionID,
+	}, res)
+
+	// server sends event to guest
+	res = jsonMap{}
+	err = guestWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":       "Event",
+		"session_id": sessionID,
+		"event":      "do_something",
+		"data": map[string]interface{}{
+			"with_this": "data",
+			"and":       "this_data",
+			"some_id":   "123",
+		},
+	}, res)
+
+	// guest publishes an event
+	err = guestWs.WriteJSON(jsonMap{
+		"type":       "PublishEvent",
+		"id":         3,
+		"session_id": sessionID,
+		"event":      "did_something",
+		"data": map[string]string{
+			"result":  "was_great",
+			"some_id": "123",
+		},
+	})
+	require.Nil(t, err)
+
+	// server responds to guest
+	res = jsonMap{}
+	err = guestWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":       "OK",
+		"id":         float64(3),
+		"session_id": sessionID,
+	}, res)
+
+	// server sends event to host
+	res = jsonMap{}
+	err = hostWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":       "Event",
+		"session_id": sessionID,
+		"event":      "did_something",
+		"data": map[string]interface{}{
+			"result":  "was_great",
+			"some_id": "123",
+		},
 	}, res)
 }

@@ -6,6 +6,7 @@ const (
 	serverMessageTypeOK          = "OK"
 	serverMessageTypeFail        = "Fail"
 	serverMessageTypeGetMetadata = "GetMetadata"
+	serverMessageTypeEvent       = "Event"
 )
 
 type serverMessage interface{ xxxServerMessage() }
@@ -41,6 +42,14 @@ type serverMessageGetMetadata struct {
 	Value     string `json:"value"`
 }
 
+type serverMessageEvent struct {
+	_serverMessage
+	Type      string            `json:"type"`
+	SessionID string            `json:"session_id"`
+	Event     string            `json:"event"`
+	Data      map[string]string `json:"data"`
+}
+
 func newServerMessageOK(id int, sessionID string) *serverMessageOK {
 	return &serverMessageOK{
 		Type:      serverMessageTypeOK,
@@ -67,5 +76,16 @@ func newServerMessageGetMetadata(
 		SessionID: sessionID,
 		Key:       key,
 		Value:     value,
+	}
+}
+
+func newServerMessageEvent(
+	sessionID, event string, data map[string]string,
+) *serverMessageEvent {
+	return &serverMessageEvent{
+		Type:      serverMessageTypeEvent,
+		SessionID: sessionID,
+		Event:     event,
+		Data:      data,
 	}
 }

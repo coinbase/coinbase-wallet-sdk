@@ -17,8 +17,6 @@ type MessageHandler struct {
 	isHost         bool
 
 	sendCh chan<- interface{}
-	subCh  chan interface{}
-
 	store  store.Store
 	pubSub *PubSub
 }
@@ -42,7 +40,6 @@ func NewMessageHandler(
 		authedSessions: util.NewStringSet(),
 		isHost:         false,
 		sendCh:         sendCh,
-		subCh:          make(chan interface{}),
 		store:          sto,
 		pubSub:         pubSub,
 	}, nil
@@ -66,6 +63,8 @@ func (c *MessageHandler) HandleRawMessage(data []byte) error {
 		res = c.handleSetMetadata(msg)
 	case *clientMessageGetMetadata:
 		res = c.handleGetMetadata(msg)
+	case *clientMessagePublishEvent:
+		res = c.handlePublishEvent(msg)
 	default:
 		errMsg := fmt.Sprintf("unsupported message type: %s", msgType)
 		res = newServerMessageFail(0, "", errMsg)
@@ -80,7 +79,7 @@ func (c *MessageHandler) HandleRawMessage(data []byte) error {
 
 // Close - clean up
 func (c *MessageHandler) Close() {
-	c.pubSub.UnsubscribeAll(c.subCh)
+	c.pubSub.UnsubscribeAll(c.sendCh)
 }
 
 func (c *MessageHandler) handleHostSession(
@@ -108,7 +107,7 @@ func (c *MessageHandler) handleHostSession(
 
 	c.isHost = true
 	c.authedSessions.Add(msg.SessionID)
-	c.pubSub.Subscribe(hostPubSubID(msg.SessionID), c.subCh)
+	c.pubSub.Subscribe(hostPubSubID(msg.SessionID), c.sendCh)
 
 	return newServerMessageOK(msg.ID, msg.SessionID)
 }
@@ -134,7 +133,7 @@ func (c *MessageHandler) handleJoinSession(
 	}
 
 	c.authedSessions.Add(msg.SessionID)
-	c.pubSub.Subscribe(guestPubSubID(msg.SessionID), c.subCh)
+	c.pubSub.Subscribe(guestPubSubID(msg.SessionID), c.sendCh)
 
 	return newServerMessageOK(msg.ID, msg.SessionID)
 }
@@ -178,6 +177,34 @@ func (c *MessageHandler) handleGetMetadata(
 	value := session.GetMetadata(msg.Key)
 
 	return newServerMessageGetMetadata(msg.ID, msg.SessionID, msg.Key, value)
+}
+
+func (c *MessageHandler) handlePublishEvent(
+	msg *clientMessagePublishEvent,
+) serverMessage {
+	lenEvent := len(msg.Event)
+	if lenEvent == 0 || lenEvent > 100 {
+		return newServerMessageFail(msg.ID, msg.SessionID, "invalid event name")
+	}
+
+	if !c.authedSessions.Contains(msg.SessionID) {
+		errMsg := fmt.Sprintf("not authenticated to session: %s", msg.SessionID)
+		return newServerMessageFail(msg.ID, msg.SessionID, errMsg)
+	}
+
+	var subID string
+	if c.isHost {
+		// if host, publish to guests
+		subID = guestPubSubID(msg.SessionID)
+	} else {
+		// if guest, publish to host
+		subID = hostPubSubID(msg.SessionID)
+	}
+
+	eventMsg := newServerMessageEvent(msg.SessionID, msg.Event, msg.Data)
+	c.pubSub.Publish(subID, eventMsg)
+
+	return newServerMessageOK(msg.ID, msg.SessionID)
 }
 
 func (c *MessageHandler) findSessionWithIDAndKey(
