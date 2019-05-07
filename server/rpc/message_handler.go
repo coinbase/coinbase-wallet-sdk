@@ -7,6 +7,7 @@ import (
 
 	"github.com/CoinbaseWallet/walletlinkd/store"
 	"github.com/CoinbaseWallet/walletlinkd/store/models"
+	"github.com/CoinbaseWallet/walletlinkd/util"
 	"github.com/pkg/errors"
 )
 
@@ -19,7 +20,8 @@ const (
 
 // MessageHandler - handles rpc messages
 type MessageHandler struct {
-	session *models.Session
+	authedSessions util.StringSet // IDs of authenticated sessions
+	isHost         bool
 
 	sendCh chan<- interface{}
 	subCh  chan interface{}
@@ -44,10 +46,12 @@ func NewMessageHandler(
 		return nil, errors.Errorf("pubSub must not be nil")
 	}
 	return &MessageHandler{
-		sendCh: sendCh,
-		subCh:  make(chan interface{}),
-		store:  sto,
-		pubSub: pubSub,
+		authedSessions: util.NewStringSet(),
+		isHost:         false,
+		sendCh:         sendCh,
+		subCh:          make(chan interface{}),
+		store:          sto,
+		pubSub:         pubSub,
 	}, nil
 }
 
@@ -86,6 +90,10 @@ func (c *MessageHandler) handleHostSession(
 	requestID int,
 	data map[string]string,
 ) *Response {
+	if c.isHost {
+		return errorResponse(requestID, "cannot host more than one session", false)
+	}
+
 	sessionID, sessionKey := data["id"], data["key"]
 
 	res, session := c.findSession(requestID, sessionID, sessionKey)
@@ -102,7 +110,8 @@ func (c *MessageHandler) handleHostSession(
 		}
 	}
 
-	c.session = session
+	c.isHost = true
+	c.authedSessions.Add(sessionID)
 	c.pubSub.Subscribe(hostPubSubID(sessionID), c.subCh)
 
 	return &Response{RequestID: requestID}
@@ -112,6 +121,10 @@ func (c *MessageHandler) handleJoinSession(
 	requestID int,
 	data map[string]string,
 ) *Response {
+	if c.isHost {
+		return errorResponse(requestID, "host cannot join a session", false)
+	}
+
 	sessionID, sessionKey := data["id"], data["key"]
 
 	res, session := c.findSession(requestID, sessionID, sessionKey)
@@ -125,7 +138,7 @@ func (c *MessageHandler) handleJoinSession(
 		return errorResponse(requestID, errMsg, false)
 	}
 
-	c.session = session
+	c.authedSessions.Add(sessionID)
 	c.pubSub.Subscribe(guestPubSubID(sessionID), c.subCh)
 
 	return &Response{RequestID: requestID}
