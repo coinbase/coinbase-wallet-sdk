@@ -38,10 +38,9 @@ func TestRPC(t *testing.T) {
 	))
 
 	// assert that session does not exist yet
-	session := models.Session{ID: sessionID}
-	ok, err := srv.store.Get(session.StoreKey(), &session)
+	session, err := models.LoadSession(srv.store, sessionID)
 	require.Nil(t, err)
-	require.False(t, ok)
+	require.Nil(t, session)
 
 	// host makes a request to the server with sessionID and sessionKey
 	err = hostWs.WriteJSON(jsonMap{
@@ -63,9 +62,8 @@ func TestRPC(t *testing.T) {
 	}, res)
 
 	// session should be created
-	ok, err = srv.store.Get(session.StoreKey(), &session)
+	session, err = models.LoadSession(srv.store, sessionID)
 	require.Nil(t, err)
-	require.True(t, ok)
 	require.Equal(t, session.ID, sessionID)
 	require.Equal(t, session.Key, sessionKey)
 

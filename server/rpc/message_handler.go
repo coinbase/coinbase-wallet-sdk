@@ -99,8 +99,8 @@ func (c *MessageHandler) handleHostSession(
 	if session == nil {
 		// there isn't an existing session; persist the new session
 		session = &models.Session{ID: msg.SessionID, Key: msg.SessionKey}
-		if err := c.store.Set(session.StoreKey(), session); err != nil {
-			fmt.Println(errors.Wrap(err, "failed to persist session"))
+		if err := session.Save(c.store); err != nil {
+			fmt.Println(err)
 			return newServerMessageFail(msg.ID, msg.SessionID, "internal error")
 		}
 	}
@@ -154,8 +154,8 @@ func (c *MessageHandler) handleSetMetadata(
 	}
 
 	session.SetMetadata(msg.Key, msg.Value)
-	if err := c.store.Set(session.StoreKey(), session); err != nil {
-		fmt.Println(errors.Wrap(err, "failed to persist session"))
+	if err := session.Save(c.store); err != nil {
+		fmt.Println(err)
 		return newServerMessageFail(msg.ID, msg.SessionID, "internal error")
 	}
 
@@ -224,7 +224,7 @@ func (c *MessageHandler) findSessionWithIDAndKey(
 		return nil, errors.New("invalid session key")
 	}
 
-	session, err := c.loadSession(sessionID)
+	session, err := models.LoadSession(c.store, sessionID)
 	if err != nil {
 		fmt.Println(err)
 		return nil, errors.New("internal error")
@@ -248,29 +248,13 @@ func (c *MessageHandler) findAuthedSessionWithID(
 		return nil, errors.Errorf("not authenticated to session: %s", sessionID)
 	}
 
-	session, err := c.loadSession(sessionID)
+	session, err := models.LoadSession(c.store, sessionID)
 	if err != nil {
 		fmt.Println(err)
 		return nil, errors.New("internal error")
 	}
 	if session == nil {
 		return nil, errors.New("session is gone somehow")
-	}
-
-	return session, nil
-}
-
-func (c *MessageHandler) loadSession(
-	sessionID string,
-) (*models.Session, error) {
-	session := &models.Session{ID: sessionID}
-	ok, err := c.store.Get(session.StoreKey(), session)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to load session")
-	}
-
-	if !ok {
-		return nil, nil
 	}
 
 	return session, nil

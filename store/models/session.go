@@ -5,7 +5,9 @@ package models
 import (
 	"sync"
 
+	"github.com/CoinbaseWallet/walletlinkd/store"
 	"github.com/CoinbaseWallet/walletlinkd/util"
+	"github.com/pkg/errors"
 )
 
 // Session - rpc session
@@ -16,9 +18,30 @@ type Session struct {
 	metadataLock sync.Mutex
 }
 
-// StoreKey - make key for session in the store
-func (s *Session) StoreKey() string {
-	return "session:" + s.ID
+// LoadSession - load session from the store. returns (nil, nil), if session
+// with a given ID is not found in the store
+func LoadSession(st store.Store, sessionID string) (*Session, error) {
+	s := &Session{ID: sessionID}
+	ok, err := st.Get(s.storeKey(), s)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to load session")
+	}
+	if !ok {
+		return nil, nil
+	}
+	return s, nil
+}
+
+// Save - save session in the store
+func (s *Session) Save(st store.Store) error {
+	storeKey := s.storeKey()
+	if len(storeKey) == 0 {
+		return errors.New("session ID is not set")
+	}
+	if err := st.Set(storeKey, s); err != nil {
+		return errors.Wrap(err, "failed to save session")
+	}
+	return nil
 }
 
 // SetMetadata - sets a key-value data
@@ -65,4 +88,11 @@ func IsValidSessionMetadataKey(metadataKey string) bool {
 func IsValidSessionMetadataValue(metadataValue string) bool {
 	lenMetadataValue := len(metadataValue)
 	return lenMetadataValue > 0 && lenMetadataValue <= 1024
+}
+
+func (s *Session) storeKey() string {
+	if len(s.ID) == 0 {
+		return ""
+	}
+	return "session:" + s.ID
 }
