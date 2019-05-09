@@ -3,11 +3,10 @@
 package models
 
 import (
-	"regexp"
 	"sync"
-)
 
-var hexStringRegex = regexp.MustCompile("^([a-f0-9]{2})+$")
+	"github.com/CoinbaseWallet/walletlinkd/util"
+)
 
 // Session - rpc session
 type Session struct {
@@ -48,12 +47,12 @@ func (s *Session) GetMetadata(key string) string {
 
 // IsValidSessionID - check validity of a given session ID
 func IsValidSessionID(id string) bool {
-	return len(id) == 32 && hexStringRegex.MatchString(id)
+	return len(id) == 32 && util.IsHexString(id)
 }
 
 // IsValidSessionKey - check validity of a given session key
 func IsValidSessionKey(key string) bool {
-	return len(key) == 64 && hexStringRegex.MatchString(key)
+	return len(key) == 64 && util.IsHexString(key)
 }
 
 // IsValidSessionMetadataKey - check validity of a metadata key
