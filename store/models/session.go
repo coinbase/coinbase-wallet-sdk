@@ -20,11 +20,11 @@ type Session struct {
 	metadataLock sync.Mutex
 }
 
-// LoadSession - load session from the store. returns (nil, nil), if session
-// with a given ID is not found in the store
+// LoadSession - load a session from the store. if a session with a given ID is
+// not found in the store, (nil, nil) is returned
 func LoadSession(st store.Store, sessionID string) (*Session, error) {
-	s := &Session{ID: sessionID}
-	ok, err := st.Get(s.storeKey(), s)
+	s := &Session{}
+	ok, err := st.Get(sessionStoreKey(sessionID), s)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to load session")
 	}
@@ -36,7 +36,7 @@ func LoadSession(st store.Store, sessionID string) (*Session, error) {
 
 // Save - save session in the store
 func (s *Session) Save(st store.Store) error {
-	storeKey := s.storeKey()
+	storeKey := sessionStoreKey(s.ID)
 	if len(storeKey) == 0 {
 		return errors.New("session ID is not set")
 	}
@@ -102,9 +102,9 @@ func IsValidSessionMetadataValue(metadataValue string) bool {
 	return lenMetadataValue > 0 && lenMetadataValue <= 1024
 }
 
-func (s *Session) storeKey() string {
-	if len(s.ID) == 0 {
+func sessionStoreKey(sessionID string) string {
+	if len(sessionID) == 0 {
 		return ""
 	}
-	return "session:" + s.ID
+	return "session:" + sessionID
 }

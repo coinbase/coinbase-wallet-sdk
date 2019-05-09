@@ -221,6 +221,16 @@ func (c *MessageHandler) handlePublishEvent(
 		return newServerMessageFail(msg.ID, msg.SessionID, "internal error")
 	}
 
+	event := &models.Event{
+		ID:    eventID,
+		Event: msg.Event,
+		Data:  msg.Data,
+	}
+	if err := event.Save(c.store, msg.SessionID); err != nil {
+		fmt.Println(err)
+		return newServerMessageFail(msg.ID, msg.SessionID, "internal error")
+	}
+
 	var subID string
 	if c.isHost {
 		// if host, publish to guests

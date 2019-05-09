@@ -151,17 +151,20 @@ func TestRPC(t *testing.T) {
 		"value":      "hello world",
 	}, res)
 
+	eventName := "do_something"
+	eventData := map[string]string{
+		"with_this": "data",
+		"and":       "this_data",
+		"some_id":   "123",
+	}
+
 	// host publishes an event
 	err = hostWs.WriteJSON(jsonMap{
 		"type":       "PublishEvent",
 		"id":         3,
 		"session_id": sessionID,
-		"event":      "do_something",
-		"data": map[string]string{
-			"with_this": "data",
-			"and":       "this_data",
-			"some_id":   "123",
-		},
+		"event":      eventName,
+		"data":       eventData,
 	})
 	require.Nil(t, err)
 
@@ -177,6 +180,14 @@ func TestRPC(t *testing.T) {
 	require.Len(t, eventID, 8)
 	require.True(t, util.IsHexString(eventID))
 
+	// the event published by the host should have been persisted
+	event, err := models.LoadEvent(srv.store, sessionID, eventID)
+	require.Nil(t, err)
+	require.NotNil(t, event)
+	require.Equal(t, eventID, event.ID)
+	require.Equal(t, eventName, event.Event)
+	require.Equal(t, eventData, event.Data)
+
 	// server sends event to guest
 	res = jsonMap{}
 	err = guestWs.ReadJSON(&res)
@@ -184,23 +195,22 @@ func TestRPC(t *testing.T) {
 	require.Equal(t, "Event", res["type"])
 	require.Equal(t, sessionID, res["session_id"])
 	require.Equal(t, eventID, res["event_id"])
-	require.Equal(t, "do_something", res["event"])
-	require.Equal(t, map[string]interface{}{
-		"with_this": "data",
-		"and":       "this_data",
-		"some_id":   "123",
-	}, res["data"])
+	require.Equal(t, eventName, res["event"])
+	require.Equal(t, eventData, toStringMap(res["data"]))
+
+	eventName = "did_something"
+	eventData = map[string]string{
+		"result":  "was_great",
+		"some_id": "123",
+	}
 
 	// guest publishes an event
 	err = guestWs.WriteJSON(jsonMap{
 		"type":       "PublishEvent",
 		"id":         4,
 		"session_id": sessionID,
-		"event":      "did_something",
-		"data": map[string]string{
-			"result":  "was_great",
-			"some_id": "123",
-		},
+		"event":      eventName,
+		"data":       eventData,
 	})
 	require.Nil(t, err)
 
@@ -216,6 +226,14 @@ func TestRPC(t *testing.T) {
 	require.Len(t, eventID, 8)
 	require.True(t, util.IsHexString(eventID))
 
+	// the event published by the guest should have been persisted
+	event, err = models.LoadEvent(srv.store, sessionID, eventID)
+	require.Nil(t, err)
+	require.NotNil(t, event)
+	require.Equal(t, eventID, event.ID)
+	require.Equal(t, eventName, event.Event)
+	require.Equal(t, eventData, event.Data)
+
 	// server sends event to host
 	res = jsonMap{}
 	err = hostWs.ReadJSON(&res)
@@ -224,8 +242,19 @@ func TestRPC(t *testing.T) {
 	require.Equal(t, sessionID, res["session_id"])
 	require.Equal(t, eventID, res["event_id"])
 	require.Equal(t, "did_something", res["event"])
-	require.Equal(t, map[string]interface{}{
-		"result":  "was_great",
-		"some_id": "123",
-	}, res["data"])
+	require.Equal(t, eventData, toStringMap(res["data"]))
+}
+
+func toStringMap(m interface{}) map[string]string {
+	im, ok := m.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	sm := map[string]string{}
+	for k, v := range im {
+		if sv, ok := v.(string); ok {
+			sm[k] = sv
+		}
+	}
+	return sm
 }
