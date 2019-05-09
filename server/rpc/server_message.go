@@ -3,10 +3,11 @@
 package rpc
 
 const (
-	serverMessageTypeOK          = "OK"
-	serverMessageTypeFail        = "Fail"
-	serverMessageTypeGetMetadata = "GetMetadata"
-	serverMessageTypeEvent       = "Event"
+	serverMessageTypeOK             = "OK"
+	serverMessageTypeFail           = "Fail"
+	serverMessageTypeGetMetadataOK  = "GetMetadataOK"
+	serverMessageTypePublishEventOK = "PublishEventOK"
+	serverMessageTypeEvent          = "Event"
 )
 
 type serverMessage interface{ xxxServerMessage() }
@@ -33,7 +34,7 @@ type serverMessageFail struct {
 	Error     string `json:"error"`
 }
 
-type serverMessageGetMetadata struct {
+type serverMessageGetMetadataOK struct {
 	_serverMessage
 	Type      string `json:"type"`
 	ID        int    `json:"id"`
@@ -42,10 +43,19 @@ type serverMessageGetMetadata struct {
 	Value     string `json:"value"`
 }
 
+type serverMessagePublishEventOK struct {
+	_serverMessage
+	Type      string `json:"type"`
+	ID        int    `json:"id"`
+	SessionID string `json:"session_id"`
+	EventID   string `json:"event_id"`
+}
+
 type serverMessageEvent struct {
 	_serverMessage
 	Type      string            `json:"type"`
 	SessionID string            `json:"session_id"`
+	EventID   string            `json:"event_id"`
 	Event     string            `json:"event"`
 	Data      map[string]string `json:"data"`
 }
@@ -67,11 +77,11 @@ func newServerMessageFail(id int, sessionID, errMsg string) *serverMessageFail {
 	}
 }
 
-func newServerMessageGetMetadata(
+func newServerMessageGetMetadataOK(
 	id int, sessionID, key, value string,
-) *serverMessageGetMetadata {
-	return &serverMessageGetMetadata{
-		Type:      serverMessageTypeGetMetadata,
+) *serverMessageGetMetadataOK {
+	return &serverMessageGetMetadataOK{
+		Type:      serverMessageTypeGetMetadataOK,
 		ID:        id,
 		SessionID: sessionID,
 		Key:       key,
@@ -79,12 +89,24 @@ func newServerMessageGetMetadata(
 	}
 }
 
+func newServerMessagePublishEventOK(
+	id int, sessionID, eventID string,
+) *serverMessagePublishEventOK {
+	return &serverMessagePublishEventOK{
+		Type:      serverMessageTypePublishEventOK,
+		ID:        id,
+		SessionID: sessionID,
+		EventID:   eventID,
+	}
+}
+
 func newServerMessageEvent(
-	sessionID, event string, data map[string]string,
+	sessionID, eventID, event string, data map[string]string,
 ) *serverMessageEvent {
 	return &serverMessageEvent{
 		Type:      serverMessageTypeEvent,
 		SessionID: sessionID,
+		EventID:   eventID,
 		Event:     event,
 		Data:      data,
 	}

@@ -176,7 +176,7 @@ func (c *MessageHandler) handleGetMetadata(
 
 	value := session.GetMetadata(msg.Key)
 
-	return newServerMessageGetMetadata(msg.ID, msg.SessionID, msg.Key, value)
+	return newServerMessageGetMetadataOK(msg.ID, msg.SessionID, msg.Key, value)
 }
 
 func (c *MessageHandler) handlePublishEvent(
@@ -192,6 +192,12 @@ func (c *MessageHandler) handlePublishEvent(
 		return newServerMessageFail(msg.ID, msg.SessionID, errMsg)
 	}
 
+	eventID, err := util.RandomHex(4)
+	if err != nil {
+		fmt.Println(errors.Wrap(err, "failed to generate eventID"))
+		return newServerMessageFail(msg.ID, msg.SessionID, "internal error")
+	}
+
 	var subID string
 	if c.isHost {
 		// if host, publish to guests
@@ -201,10 +207,10 @@ func (c *MessageHandler) handlePublishEvent(
 		subID = hostPubSubID(msg.SessionID)
 	}
 
-	eventMsg := newServerMessageEvent(msg.SessionID, msg.Event, msg.Data)
+	eventMsg := newServerMessageEvent(msg.SessionID, eventID, msg.Event, msg.Data)
 	c.pubSub.Publish(subID, eventMsg)
 
-	return newServerMessageOK(msg.ID, msg.SessionID)
+	return newServerMessagePublishEventOK(msg.ID, msg.SessionID, eventID)
 }
 
 func (c *MessageHandler) findSessionWithIDAndKey(
