@@ -11,6 +11,7 @@ import (
 const (
 	clientMessageTypeHostSession  = "HostSession"
 	clientMessageTypeJoinSession  = "JoinSession"
+	clientMessageTypeSetPushID    = "SetPushID"
 	clientMessageTypeSetMetadata  = "SetMetadata"
 	clientMessageTypeGetMetadata  = "GetMetadata"
 	clientMessageTypePublishEvent = "PublishEvent"
@@ -39,6 +40,14 @@ type clientMessageJoinSession struct {
 	ID         int    `json:"id"`
 	SessionID  string `json:"session_id"`
 	SessionKey string `json:"session_key"`
+}
+
+type clientMessageSetPushID struct {
+	_clientMessage
+	Type      string `json:"type"`
+	ID        int    `json:"id"`
+	SessionID string `json:"session_id"`
+	PushID    string `json:"push_id"`
 }
 
 type clientMessageSetMetadata struct {
@@ -80,6 +89,8 @@ func unmarshalClientMessage(
 		msg = &clientMessageHostSession{}
 	case clientMessageTypeJoinSession:
 		msg = &clientMessageJoinSession{}
+	case clientMessageTypeSetPushID:
+		msg = &clientMessageSetPushID{}
 	case clientMessageTypeSetMetadata:
 		msg = &clientMessageSetMetadata{}
 	case clientMessageTypeGetMetadata:

@@ -59,6 +59,8 @@ func (c *MessageHandler) HandleRawMessage(data []byte) error {
 		res = c.handleHostSession(msg)
 	case *clientMessageJoinSession:
 		res = c.handleJoinSession(msg)
+	case *clientMessageSetPushID:
+		res = c.handleSetPushID(msg)
 	case *clientMessageSetMetadata:
 		res = c.handleSetMetadata(msg)
 	case *clientMessageGetMetadata:
@@ -134,6 +136,27 @@ func (c *MessageHandler) handleJoinSession(
 
 	c.authedSessions.Add(msg.SessionID)
 	c.pubSub.Subscribe(guestPubSubID(msg.SessionID), c.sendCh)
+
+	return newServerMessageOK(msg.ID, msg.SessionID)
+}
+
+func (c *MessageHandler) handleSetPushID(
+	msg *clientMessageSetPushID,
+) serverMessage {
+	if !models.IsValidSessionPushID(msg.PushID) {
+		return newServerMessageFail(msg.ID, msg.SessionID, "invalid push ID")
+	}
+
+	session, err := c.findAuthedSessionWithID(msg.SessionID)
+	if err != nil {
+		return newServerMessageFail(msg.ID, msg.SessionID, err.Error())
+	}
+
+	session.SetPushID(msg.PushID)
+	if err := session.Save(c.store); err != nil {
+		fmt.Println(err)
+		return newServerMessageFail(msg.ID, msg.SessionID, "internal error")
+	}
 
 	return newServerMessageOK(msg.ID, msg.SessionID)
 }

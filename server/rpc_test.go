@@ -91,10 +91,29 @@ func TestRPC(t *testing.T) {
 		"session_id": sessionID,
 	}, res)
 
+	// guest sets push ID
+	err = guestWs.WriteJSON(jsonMap{
+		"type":       "SetPushID",
+		"id":         2,
+		"session_id": sessionID,
+		"push_id":    "1234abcd",
+	})
+	require.Nil(t, err)
+
+	// server responds to guest
+	res = jsonMap{}
+	err = guestWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":       "OK",
+		"id":         float64(2),
+		"session_id": sessionID,
+	}, res)
+
 	// guest sets metadata
 	err = guestWs.WriteJSON(jsonMap{
 		"type":       "SetMetadata",
-		"id":         2,
+		"id":         3,
 		"session_id": sessionID,
 		"key":        "foo",
 		"value":      "hello world",
@@ -107,7 +126,7 @@ func TestRPC(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, jsonMap{
 		"type":       "OK",
-		"id":         float64(2),
+		"id":         float64(3),
 		"session_id": sessionID,
 	}, res)
 
@@ -175,7 +194,7 @@ func TestRPC(t *testing.T) {
 	// guest publishes an event
 	err = guestWs.WriteJSON(jsonMap{
 		"type":       "PublishEvent",
-		"id":         3,
+		"id":         4,
 		"session_id": sessionID,
 		"event":      "did_something",
 		"data": map[string]string{
@@ -190,7 +209,7 @@ func TestRPC(t *testing.T) {
 	err = guestWs.ReadJSON(&res)
 	require.Nil(t, err)
 	require.Equal(t, "PublishEventOK", res["type"])
-	require.Equal(t, float64(3), res["id"])
+	require.Equal(t, float64(4), res["id"])
 	require.Equal(t, sessionID, res["session_id"])
 	eventID, ok = res["event_id"].(string)
 	require.True(t, ok)

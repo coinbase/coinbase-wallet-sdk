@@ -12,9 +12,11 @@ import (
 
 // Session - rpc session
 type Session struct {
-	ID           string            `json:"id"`
-	Key          string            `json:"key"`
-	Metadata     map[string]string `json:"metadata,omitempty"`
+	ID       string            `json:"id"`
+	Key      string            `json:"key"`
+	PushID   string            `json:"push_id,omitempty"`
+	Metadata map[string]string `json:"metadata,omitempty"`
+
 	metadataLock sync.Mutex
 }
 
@@ -42,6 +44,11 @@ func (s *Session) Save(st store.Store) error {
 		return errors.Wrap(err, "failed to save session")
 	}
 	return nil
+}
+
+// SetPushID - sets push ID
+func (s *Session) SetPushID(pushID string) {
+	s.PushID = pushID
 }
 
 // SetMetadata - sets a key-value data
@@ -76,6 +83,11 @@ func IsValidSessionID(id string) bool {
 // IsValidSessionKey - check validity of a given session key
 func IsValidSessionKey(key string) bool {
 	return len(key) == 64 && util.IsHexString(key)
+}
+
+// IsValidSessionPushID - check validity of a push id
+func IsValidSessionPushID(pushID string) bool {
+	return len(pushID) <= 100
 }
 
 // IsValidSessionMetadataKey - check validity of a metadata key
