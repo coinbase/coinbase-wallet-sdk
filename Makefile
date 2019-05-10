@@ -17,7 +17,7 @@ init:
 	psql walletlinkd_test -f ./schema.sql
 
 test:
-	@POSTGRES_URL="postgres:///walletlinkd_test?sslmode=disable" go test -v ./... -timeout 5s | $(COLORIZE_TEST)
+	@APP_ENV="test" POSTGRES_URL="postgres:///walletlinkd_test?sslmode=disable" go test -v ./... -timeout 5s | $(COLORIZE_TEST)
 
 run: build
 	@POSTGRES_URL="postgres:///walletlinkd?sslmode=disable" build/walletlinkd
