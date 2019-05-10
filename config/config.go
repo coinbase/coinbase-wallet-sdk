@@ -15,6 +15,8 @@ var (
 		"NOTIFICATION_SERVER_URL",
 		"http://localhost:3000",
 	)
+	// PostgresURL - postgreSQL server url
+	PostgresURL = getEnv("POSTGRES_URL", "")
 )
 
 func getEnv(name string, defaultValue string) string {

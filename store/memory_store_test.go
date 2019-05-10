@@ -13,7 +13,7 @@ type dummy struct {
 	Y int `json:"y"`
 }
 
-func TestNonExisting(t *testing.T) {
+func TestMemoryStoreNonExisting(t *testing.T) {
 	ms := NewMemoryStore()
 
 	foo := dummy{}
@@ -22,7 +22,7 @@ func TestNonExisting(t *testing.T) {
 	require.Nil(t, err)
 }
 
-func TestSetGet(t *testing.T) {
+func TestMemoryStoreSetGet(t *testing.T) {
 	ms := NewMemoryStore()
 
 	foo := dummy{X: 10, Y: 20}
@@ -50,7 +50,7 @@ func TestSetGet(t *testing.T) {
 	require.Equal(t, 222, loadedBar.Y)
 }
 
-func TestOverwrite(t *testing.T) {
+func TestMemoryStoreOverwrite(t *testing.T) {
 	ms := NewMemoryStore()
 
 	foo := dummy{X: 10, Y: 20}
@@ -70,7 +70,7 @@ func TestOverwrite(t *testing.T) {
 	require.Equal(t, 456, loadedFoo.Y)
 }
 
-func TestRemove(t *testing.T) {
+func TestMemoryStoreRemove(t *testing.T) {
 	ms := NewMemoryStore()
 
 	foo := dummy{X: 10, Y: 20}

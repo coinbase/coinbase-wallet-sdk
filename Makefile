@@ -10,10 +10,16 @@ all: build
 build:
 	go build $(BUILD_FLAGS) -tags $(BUILD_TAGS) -o build/walletlinkd ./cmd/walletlinkd
 
+init:
+	createdb walletlinkd
+	createdb walletlinkd_test
+	psql walletlinkd -f ./schema.sql
+	psql walletlinkd_test -f ./schema.sql
+
 test:
-	@go test -v ./... -timeout 5s | $(COLORIZE_TEST)
+	@POSTGRES_URL="postgres:///walletlinkd_test?sslmode=disable" go test -v ./... -timeout 5s | $(COLORIZE_TEST)
 
 run: build
-	build/walletlinkd
+	@POSTGRES_URL="postgres:///walletlinkd?sslmode=disable" build/walletlinkd
 
-.PHONY: build test run
+.PHONY: build init test run
