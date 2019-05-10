@@ -10,6 +10,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+const notificationCategory = "wallet_link"
+
 // API - used to broadcast push notifications
 type API struct {
 	serverURL string
@@ -21,14 +23,15 @@ func NewAPI(serverURL string, secret string) *API {
 	return &API{serverURL: serverURL, secret: secret}
 }
 
-// Send - send a push notification to a given address
-func (a *API) Send(address, title, body string, data map[string]string) error {
+// Send - send a push notification to a given pushID
+func (a *API) Send(pushID, title, body string, data map[string]string) error {
 	notification := sendParams{
-		Secret:  a.secret,
-		Address: address,
-		Title:   title,
-		Body:    body,
-		Data:    data,
+		Secret:   a.secret,
+		PushID:   pushID,
+		Title:    title,
+		Body:     body,
+		Data:     data,
+		Category: notificationCategory,
 	}
 
 	j, err := json.Marshal(notification)
@@ -43,7 +46,7 @@ func (a *API) Send(address, title, body string, data map[string]string) error {
 
 	defer res.Body.Close()
 
-	response := sendResponse{}
+	response := SendResponse{}
 
 	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
 		return errors.Wrap(err, "unable to unmarshal notification response")

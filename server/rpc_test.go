@@ -4,11 +4,14 @@ package server
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/CoinbaseWallet/walletlinkd/notification"
 	"github.com/CoinbaseWallet/walletlinkd/store/models"
 	"github.com/CoinbaseWallet/walletlinkd/util"
 	"github.com/gorilla/websocket"
@@ -18,7 +21,19 @@ import (
 type jsonMap map[string]interface{}
 
 func TestRPC(t *testing.T) {
-	srv := NewServer(nil)
+	nSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+
+		response := notification.SendResponse{
+			Result: notification.SendResponseResult{Sent: true},
+		}
+
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			require.FailNow(t, "unable to encode response body")
+		}
+	}))
+
+	srv := NewServer(&NewServerOptions{NotificationSrvURL: nSrv.URL})
 	testSrv := httptest.NewServer(srv.router)
 	defer testSrv.Close()
 

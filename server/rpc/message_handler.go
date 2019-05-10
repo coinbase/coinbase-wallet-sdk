@@ -5,6 +5,7 @@ package rpc
 import (
 	"fmt"
 
+	"github.com/CoinbaseWallet/walletlinkd/notification"
 	"github.com/CoinbaseWallet/walletlinkd/store"
 	"github.com/CoinbaseWallet/walletlinkd/store/models"
 	"github.com/CoinbaseWallet/walletlinkd/util"
@@ -19,6 +20,7 @@ type MessageHandler struct {
 	sendCh chan<- interface{}
 	store  store.Store
 	pubSub *PubSub
+	api    *notification.API
 }
 
 // NewMessageHandler - construct a MessageHandler
@@ -26,6 +28,7 @@ func NewMessageHandler(
 	sendCh chan<- interface{},
 	sto store.Store,
 	pubSub *PubSub,
+	api *notification.API,
 ) (*MessageHandler, error) {
 	if sendCh == nil {
 		return nil, errors.Errorf("sendCh must not be nil")
@@ -42,6 +45,7 @@ func NewMessageHandler(
 		sendCh:         sendCh,
 		store:          sto,
 		pubSub:         pubSub,
+		api:            api,
 	}, nil
 }
 
@@ -240,6 +244,26 @@ func (c *MessageHandler) handlePublishEvent(
 
 	eventMsg := newServerMessageEvent(msg.SessionID, eventID, msg.Event, msg.Data)
 	c.pubSub.Publish(subID, eventMsg)
+
+	if c.isHost {
+		// if host, send a push notification
+		session, err := models.LoadSession(c.store, msg.SessionID)
+		if err != nil {
+			return newServerMessageFail(msg.ID, msg.SessionID, "internal error")
+		}
+
+		go func() {
+			err := c.api.Send(
+				session.PushID,
+				"New Request",
+				"You have a new request",
+				map[string]string{"eventID": eventID},
+			)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}()
+	}
 
 	return newServerMessagePublishEventOK(msg.ID, msg.SessionID, eventID)
 }

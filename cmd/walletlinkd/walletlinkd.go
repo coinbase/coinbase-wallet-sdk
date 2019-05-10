@@ -22,9 +22,11 @@ func main() {
 	webRoot := filepath.Join(execDir, "public")
 
 	srv := server.NewServer(&server.NewServerOptions{
-		PostgresURL:    config.PostgresURL,
-		WebRoot:        webRoot,
-		AllowedOrigins: config.AllowedOrigins,
+		PostgresURL:           config.PostgresURL,
+		WebRoot:               webRoot,
+		AllowedOrigins:        config.AllowedOrigins,
+		NotificationSrvURL:    config.NotificationServerURL,
+		NotificationSrvSecret: config.NotificationServerSecret,
 	})
 
 	fmt.Printf(

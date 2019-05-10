@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/CoinbaseWallet/walletlinkd/notification"
 	"github.com/CoinbaseWallet/walletlinkd/server/rpc"
 	"github.com/CoinbaseWallet/walletlinkd/store"
 	"github.com/CoinbaseWallet/walletlinkd/util"
@@ -20,13 +21,16 @@ type Server struct {
 	store          store.Store
 	pubSub         *rpc.PubSub
 	allowedOrigins util.StringSet
+	api            *notification.API
 }
 
 // NewServerOptions - options for NewServer function
 type NewServerOptions struct {
-	PostgresURL    string
-	WebRoot        string
-	AllowedOrigins util.StringSet
+	PostgresURL           string
+	WebRoot               string
+	AllowedOrigins        util.StringSet
+	NotificationSrvURL    string
+	NotificationSrvSecret string
 }
 
 // NewServer - construct a Server
@@ -48,11 +52,17 @@ func NewServer(options *NewServerOptions) *Server {
 
 	router := mux.NewRouter()
 
+	a := notification.NewAPI(
+		options.NotificationSrvURL,
+		options.NotificationSrvSecret,
+	)
+
 	srv := &Server{
 		router:         router,
 		store:          s,
 		pubSub:         rpc.NewPubSub(),
 		allowedOrigins: options.AllowedOrigins,
+		api:            a,
 	}
 
 	router.HandleFunc("/rpc", srv.rpcHandler).Methods("GET")
