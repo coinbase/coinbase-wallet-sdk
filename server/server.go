@@ -43,6 +43,7 @@ func NewServer() *Server {
 	}
 
 	router.HandleFunc("/rpc", srv.rpcHandler).Methods("GET")
+	router.HandleFunc("/events/{id}", srv.getEventHandler).Methods("GET")
 	router.HandleFunc("/", srv.rootHandler).Methods("GET")
 
 	return srv
