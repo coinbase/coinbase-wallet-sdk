@@ -4,7 +4,18 @@ package config
 
 import "os"
 
+const (
+	// AppEnvDevelopment - development environment
+	AppEnvDevelopment = "development"
+	// AppEnvTest - test environment
+	AppEnvTest = "test"
+	// AppEnvProduction - production environment
+	AppEnvProduction = "production"
+)
+
 var (
+	// AppEnv - application environment (development/test/production)
+	AppEnv = getEnv("APP_ENV", "development")
 	// Port - port to listen on
 	Port = getEnv("PORT", "3000")
 	// NotificationServerSecret - secret for authenticating with

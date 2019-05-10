@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/CoinbaseWallet/walletlinkd/config"
 	"github.com/CoinbaseWallet/walletlinkd/server/rpc"
 	"github.com/CoinbaseWallet/walletlinkd/store"
 	"github.com/gorilla/mux"
@@ -23,9 +24,21 @@ type Server struct {
 // NewServer - construct a Server
 func NewServer() *Server {
 	router := mux.NewRouter()
+
+	var s store.Store
+	if len(config.PostgresURL) == 0 || config.AppEnv == config.AppEnvTest {
+		s = store.NewMemoryStore()
+	} else {
+		var err error
+		s, err = store.NewPostgresStore(config.PostgresURL, "store")
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	srv := &Server{
 		router: router,
-		store:  store.NewMemoryStore(),
+		store:  s,
 		pubSub: rpc.NewPubSub(),
 	}
 
