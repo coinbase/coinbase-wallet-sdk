@@ -1,0 +1,39 @@
+{
+  "extends": ["tslint-react", "tslint:recommended", "tslint-config-prettier"],
+
+  "rules": {
+    "await-promise": false,
+    "interface-name": [true, "never-prefix"],
+    "jsx-alignment": false,
+    "jsx-boolean-value": false,
+    "jsx-curly-spacing": false,
+    "jsx-no-multiline-js": false,
+    "jsx-wrap-multiline": false,
+    "member-ordering": false,
+    "no-console": false,
+    "no-empty": false,
+    "no-empty-interface": false,
+    "no-unused-variable": false,
+    "no-use-before-declare": false,
+    "no-var-requires": false,
+    "object-literal-sort-keys": false,
+    "ordered-imports": false,
+    "prefer-const": true,
+    "semicolon": false,
+    "space-before-function-paren": false,
+    "strict-type-predicates": false,
+    "ter-func-call-spacing": false,
+    "ter-indent": false,
+    "variable-name": [
+      true,
+      "allow-leading-underscore",
+      "allow-pascal-case",
+      "allow-trailing-underscore",
+      "ban-keywords",
+      "check-format",
+      "require-const-for-all-caps"
+    ]
+  },
+
+  "rulesDirectory": ["./node_modules/tslint-microsoft-contrib"]
+}

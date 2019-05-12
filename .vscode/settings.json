@@ -1,0 +1,20 @@
+{
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/build/": true,
+    "**/node_modules/": true
+  },
+  "editor.formatOnSave": true,
+  "emmet.excludeLanguages": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "typescript.preferences.importModuleSpecifier": "auto",
+  "javascript.preferences.importModuleSpecifier": "auto",
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": true
+  }
+}
