@@ -14,18 +14,21 @@ const (
 )
 
 var (
+	// GitCommit is the current git commit hash
+	GitCommit string
+	// Version is the app version
+	Version string
+)
+
+var (
 	// AppEnv - application environment (development/test/production)
 	AppEnv = getEnv("APP_ENV", "development")
 	// Port - port to listen on
-	Port = getEnv("PORT", "3000")
-	// NotificationServerSecret - secret for authenticating with
-	// push notification server
+	Port = getEnv("PORT", "8080")
+	// NotificationServerSecret - secret for the push notification server
 	NotificationServerSecret = getEnv("NOTIFICATION_SERVER_SECRET", "")
-	// NotificationServerURL - the url for the push notification server
-	NotificationServerURL = getEnv(
-		"NOTIFICATION_SERVER_URL",
-		"http://localhost:3000",
-	)
+	// NotificationServerURL - url for the push notification server
+	NotificationServerURL = getEnv("NOTIFICATION_SERVER_URL", "")
 	// PostgresURL - postgreSQL server url
 	PostgresURL = getEnv("POSTGRES_URL", "")
 )

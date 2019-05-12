@@ -18,7 +18,7 @@ import (
 type jsonMap map[string]interface{}
 
 func TestRPC(t *testing.T) {
-	srv := NewServer()
+	srv := NewServer("", "")
 	testSrv := httptest.NewServer(srv.router)
 	defer testSrv.Close()
 
