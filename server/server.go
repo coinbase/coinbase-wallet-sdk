@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/CoinbaseWallet/walletlinkd/config"
 	"github.com/CoinbaseWallet/walletlinkd/server/rpc"
 	"github.com/CoinbaseWallet/walletlinkd/store"
 	"github.com/gorilla/mux"
@@ -22,17 +21,17 @@ type Server struct {
 }
 
 // NewServer - construct a Server
-func NewServer() *Server {
+func NewServer(postgresURL string, webRoot string) *Server {
 	router := mux.NewRouter()
 
 	var s store.Store
-	if len(config.PostgresURL) == 0 || config.AppEnv == config.AppEnvTest {
+	if len(postgresURL) == 0 {
 		s = store.NewMemoryStore()
 	} else {
 		var err error
-		s, err = store.NewPostgresStore(config.PostgresURL, "store")
+		s, err = store.NewPostgresStore(postgresURL, "store")
 		if err != nil {
-			panic(err)
+			log.Panicln(err)
 		}
 	}
 
@@ -44,7 +43,11 @@ func NewServer() *Server {
 
 	router.HandleFunc("/rpc", srv.rpcHandler).Methods("GET")
 	router.HandleFunc("/events/{id}", srv.getEventHandler).Methods("GET")
-	router.HandleFunc("/", srv.rootHandler).Methods("GET")
+	if len(webRoot) > 0 {
+		router.PathPrefix("/").Methods("GET").Handler(
+			http.FileServer(http.Dir(webRoot)),
+		)
+	}
 
 	return srv
 }

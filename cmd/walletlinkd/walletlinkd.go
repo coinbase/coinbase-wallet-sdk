@@ -4,20 +4,32 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"path/filepath"
 
-	"github.com/CoinbaseWallet/walletlinkd/app"
 	"github.com/CoinbaseWallet/walletlinkd/config"
 	"github.com/CoinbaseWallet/walletlinkd/server"
+	"github.com/pkg/errors"
 )
 
 func main() {
-	srv := server.NewServer()
+	execFile, err := os.Executable()
+	if err != nil {
+		log.Fatalln(errors.Wrap(err, "could not determine executable path"))
+	}
+	execDir := filepath.Dir(execFile)
+	webRoot := filepath.Join(execDir, "public")
+
+	srv := server.NewServer(config.PostgresURL, webRoot)
 
 	fmt.Printf(
-		"walletlinkd %s-%s listening on port %s...\n",
-		app.Version,
-		app.GitCommit,
+		"walletlinkd %s-%s listening on port %s...\n"+
+			"Serving static assets in %s...\n",
+		config.Version,
+		config.GitCommit,
 		config.Port,
+		webRoot,
 	)
 	srv.Start(config.Port)
 }
