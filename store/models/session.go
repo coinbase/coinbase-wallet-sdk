@@ -14,7 +14,7 @@ import (
 type Session struct {
 	ID       string            `json:"id"`
 	Key      string            `json:"key"`
-	PushID   string            `json:"push_id,omitempty"`
+	PushID   string            `json:"pushId,omitempty"`
 	Metadata map[string]string `json:"metadata,omitempty"`
 
 	metadataLock sync.Mutex

@@ -30,31 +30,31 @@ type clientMessageHostSession struct {
 	_clientMessage
 	Type       string `json:"type"`
 	ID         int    `json:"id"`
-	SessionID  string `json:"session_id"`
-	SessionKey string `json:"session_key"`
+	SessionID  string `json:"sessionId"`
+	SessionKey string `json:"sessionKey"`
 }
 
 type clientMessageJoinSession struct {
 	_clientMessage
 	Type       string `json:"type"`
 	ID         int    `json:"id"`
-	SessionID  string `json:"session_id"`
-	SessionKey string `json:"session_key"`
+	SessionID  string `json:"sessionId"`
+	SessionKey string `json:"sessionKey"`
 }
 
 type clientMessageSetPushID struct {
 	_clientMessage
 	Type      string `json:"type"`
 	ID        int    `json:"id"`
-	SessionID string `json:"session_id"`
-	PushID    string `json:"push_id"`
+	SessionID string `json:"sessionId"`
+	PushID    string `json:"pushId"`
 }
 
 type clientMessageSetMetadata struct {
 	_clientMessage
 	Type      string `json:"type"`
 	ID        int    `json:"id"`
-	SessionID string `json:"session_id"`
+	SessionID string `json:"sessionId"`
 	Key       string `json:"key"`
 	Value     string `json:"value"`
 }
@@ -63,7 +63,7 @@ type clientMessageGetMetadata struct {
 	_clientMessage
 	Type      string `json:"type"`
 	ID        int    `json:"id"`
-	SessionID string `json:"session_id"`
+	SessionID string `json:"sessionId"`
 	Key       string `json:"key"`
 }
 
@@ -71,7 +71,7 @@ type clientMessagePublishEvent struct {
 	_clientMessage
 	Type      string            `json:"type"`
 	ID        int               `json:"id"`
-	SessionID string            `json:"session_id"`
+	SessionID string            `json:"sessionId"`
 	Event     string            `json:"event"`
 	Data      map[string]string `json:"data"`
 }
