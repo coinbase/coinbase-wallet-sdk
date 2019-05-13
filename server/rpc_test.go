@@ -44,10 +44,10 @@ func TestRPC(t *testing.T) {
 
 	// host makes a request to the server with sessionID and sessionKey
 	err = hostWs.WriteJSON(jsonMap{
-		"type":        "HostSession",
-		"id":          1,
-		"session_id":  sessionID,
-		"session_key": sessionKey,
+		"type":       "HostSession",
+		"id":         1,
+		"sessionId":  sessionID,
+		"sessionKey": sessionKey,
 	})
 	require.Nil(t, err)
 
@@ -56,9 +56,9 @@ func TestRPC(t *testing.T) {
 	err = hostWs.ReadJSON(&res)
 	require.Nil(t, err)
 	require.Equal(t, jsonMap{
-		"type":       "OK",
-		"id":         float64(1),
-		"session_id": sessionID,
+		"type":      "OK",
+		"id":        float64(1),
+		"sessionId": sessionID,
 	}, res)
 
 	// session should be created
@@ -74,10 +74,10 @@ func TestRPC(t *testing.T) {
 	defer guestWs.Close()
 
 	err = guestWs.WriteJSON(jsonMap{
-		"type":        "JoinSession",
-		"id":          1,
-		"session_id":  sessionID,
-		"session_key": sessionKey,
+		"type":       "JoinSession",
+		"id":         1,
+		"sessionId":  sessionID,
+		"sessionKey": sessionKey,
 	})
 	require.Nil(t, err)
 
@@ -86,17 +86,17 @@ func TestRPC(t *testing.T) {
 	err = guestWs.ReadJSON(&res)
 	require.Nil(t, err)
 	require.Equal(t, jsonMap{
-		"type":       "OK",
-		"id":         float64(1),
-		"session_id": sessionID,
+		"type":      "OK",
+		"id":        float64(1),
+		"sessionId": sessionID,
 	}, res)
 
 	// guest sets push ID
 	err = guestWs.WriteJSON(jsonMap{
-		"type":       "SetPushID",
-		"id":         2,
-		"session_id": sessionID,
-		"push_id":    "1234abcd",
+		"type":      "SetPushID",
+		"id":        2,
+		"sessionId": sessionID,
+		"pushId":    "1234abcd",
 	})
 	require.Nil(t, err)
 
@@ -105,18 +105,18 @@ func TestRPC(t *testing.T) {
 	err = guestWs.ReadJSON(&res)
 	require.Nil(t, err)
 	require.Equal(t, jsonMap{
-		"type":       "OK",
-		"id":         float64(2),
-		"session_id": sessionID,
+		"type":      "OK",
+		"id":        float64(2),
+		"sessionId": sessionID,
 	}, res)
 
 	// guest sets metadata
 	err = guestWs.WriteJSON(jsonMap{
-		"type":       "SetMetadata",
-		"id":         3,
-		"session_id": sessionID,
-		"key":        "foo",
-		"value":      "hello world",
+		"type":      "SetMetadata",
+		"id":        3,
+		"sessionId": sessionID,
+		"key":       "foo",
+		"value":     "hello world",
 	})
 	require.Nil(t, err)
 
@@ -125,17 +125,17 @@ func TestRPC(t *testing.T) {
 	err = guestWs.ReadJSON(&res)
 	require.Nil(t, err)
 	require.Equal(t, jsonMap{
-		"type":       "OK",
-		"id":         float64(3),
-		"session_id": sessionID,
+		"type":      "OK",
+		"id":        float64(3),
+		"sessionId": sessionID,
 	}, res)
 
 	// host reads metadata
 	err = hostWs.WriteJSON(jsonMap{
-		"type":       "GetMetadata",
-		"id":         2,
-		"session_id": sessionID,
-		"key":        "foo",
+		"type":      "GetMetadata",
+		"id":        2,
+		"sessionId": sessionID,
+		"key":       "foo",
 	})
 	require.Nil(t, err)
 
@@ -144,27 +144,27 @@ func TestRPC(t *testing.T) {
 	err = hostWs.ReadJSON(&res)
 	require.Nil(t, err)
 	require.Equal(t, jsonMap{
-		"type":       "GetMetadataOK",
-		"id":         float64(2),
-		"session_id": sessionID,
-		"key":        "foo",
-		"value":      "hello world",
+		"type":      "GetMetadataOK",
+		"id":        float64(2),
+		"sessionId": sessionID,
+		"key":       "foo",
+		"value":     "hello world",
 	}, res)
 
 	eventName := "do_something"
 	eventData := map[string]string{
 		"with_this": "data",
 		"and":       "this_data",
-		"some_id":   "123",
+		"someId":    "123",
 	}
 
 	// host publishes an event
 	err = hostWs.WriteJSON(jsonMap{
-		"type":       "PublishEvent",
-		"id":         3,
-		"session_id": sessionID,
-		"event":      eventName,
-		"data":       eventData,
+		"type":      "PublishEvent",
+		"id":        3,
+		"sessionId": sessionID,
+		"event":     eventName,
+		"data":      eventData,
 	})
 	require.Nil(t, err)
 
@@ -174,8 +174,8 @@ func TestRPC(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, "PublishEventOK", res["type"])
 	require.Equal(t, float64(3), res["id"])
-	require.Equal(t, sessionID, res["session_id"])
-	eventID, ok := res["event_id"].(string)
+	require.Equal(t, sessionID, res["sessionId"])
+	eventID, ok := res["eventId"].(string)
 	require.True(t, ok)
 	require.Len(t, eventID, 8)
 	require.True(t, util.IsHexString(eventID))
@@ -193,24 +193,24 @@ func TestRPC(t *testing.T) {
 	err = guestWs.ReadJSON(&res)
 	require.Nil(t, err)
 	require.Equal(t, "Event", res["type"])
-	require.Equal(t, sessionID, res["session_id"])
-	require.Equal(t, eventID, res["event_id"])
+	require.Equal(t, sessionID, res["sessionId"])
+	require.Equal(t, eventID, res["eventId"])
 	require.Equal(t, eventName, res["event"])
 	require.Equal(t, eventData, toStringMap(res["data"]))
 
 	eventName = "did_something"
 	eventData = map[string]string{
-		"result":  "was_great",
-		"some_id": "123",
+		"result": "was_great",
+		"someId": "123",
 	}
 
 	// guest publishes an event
 	err = guestWs.WriteJSON(jsonMap{
-		"type":       "PublishEvent",
-		"id":         4,
-		"session_id": sessionID,
-		"event":      eventName,
-		"data":       eventData,
+		"type":      "PublishEvent",
+		"id":        4,
+		"sessionId": sessionID,
+		"event":     eventName,
+		"data":      eventData,
 	})
 	require.Nil(t, err)
 
@@ -220,8 +220,8 @@ func TestRPC(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, "PublishEventOK", res["type"])
 	require.Equal(t, float64(4), res["id"])
-	require.Equal(t, sessionID, res["session_id"])
-	eventID, ok = res["event_id"].(string)
+	require.Equal(t, sessionID, res["sessionId"])
+	eventID, ok = res["eventId"].(string)
 	require.True(t, ok)
 	require.Len(t, eventID, 8)
 	require.True(t, util.IsHexString(eventID))
@@ -239,8 +239,8 @@ func TestRPC(t *testing.T) {
 	err = hostWs.ReadJSON(&res)
 	require.Nil(t, err)
 	require.Equal(t, "Event", res["type"])
-	require.Equal(t, sessionID, res["session_id"])
-	require.Equal(t, eventID, res["event_id"])
+	require.Equal(t, sessionID, res["sessionId"])
+	require.Equal(t, eventID, res["eventId"])
 	require.Equal(t, "did_something", res["event"])
 	require.Equal(t, eventData, toStringMap(res["data"]))
 }

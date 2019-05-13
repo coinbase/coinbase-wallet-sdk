@@ -23,14 +23,14 @@ type serverMessageOK struct {
 	_serverMessage
 	Type      string `json:"type"`
 	ID        int    `json:"id"`
-	SessionID string `json:"session_id"`
+	SessionID string `json:"sessionId"`
 }
 
 type serverMessageFail struct {
 	_serverMessage
 	Type      string `json:"type"`
 	ID        int    `json:"id,omitempty"`
-	SessionID string `json:"session_id,omitempty"`
+	SessionID string `json:"sessionId,omitempty"`
 	Error     string `json:"error"`
 }
 
@@ -38,7 +38,7 @@ type serverMessageGetMetadataOK struct {
 	_serverMessage
 	Type      string `json:"type"`
 	ID        int    `json:"id"`
-	SessionID string `json:"session_id"`
+	SessionID string `json:"sessionId"`
 	Key       string `json:"key"`
 	Value     string `json:"value"`
 }
@@ -47,15 +47,15 @@ type serverMessagePublishEventOK struct {
 	_serverMessage
 	Type      string `json:"type"`
 	ID        int    `json:"id"`
-	SessionID string `json:"session_id"`
-	EventID   string `json:"event_id"`
+	SessionID string `json:"sessionId"`
+	EventID   string `json:"eventId"`
 }
 
 type serverMessageEvent struct {
 	_serverMessage
 	Type      string            `json:"type"`
-	SessionID string            `json:"session_id"`
-	EventID   string            `json:"event_id"`
+	SessionID string            `json:"sessionId"`
+	EventID   string            `json:"eventId"`
 	Event     string            `json:"event"`
 	Data      map[string]string `json:"data"`
 }
