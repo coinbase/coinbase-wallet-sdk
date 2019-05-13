@@ -36,6 +36,10 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 			if !ok {
 				return
 			}
+			if v, ok := res.(rune); ok && v == 'h' {
+				ws.WriteMessage(websocket.TextMessage, []byte("h"))
+				continue
+			}
 			if err := ws.WriteJSON(res); err != nil {
 				log.Println(errors.Wrap(err, "websocket write failed"))
 				ws.Close()
