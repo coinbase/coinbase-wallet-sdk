@@ -47,6 +47,11 @@ func NewMessageHandler(
 
 // HandleRawMessage - handle a raw client message
 func (c *MessageHandler) HandleRawMessage(data []byte) error {
+	if len(data) == 1 && data[0] == 'h' {
+		c.sendCh <- 'h'
+		return nil
+	}
+
 	msg, msgType, err := unmarshalClientMessage(data)
 	if err != nil {
 		return err

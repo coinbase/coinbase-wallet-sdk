@@ -243,6 +243,15 @@ func TestRPC(t *testing.T) {
 	require.Equal(t, eventID, res["eventId"])
 	require.Equal(t, "did_something", res["event"])
 	require.Equal(t, eventData, toStringMap(res["data"]))
+
+	// test heartbeat
+	err = guestWs.WriteMessage(websocket.TextMessage, []byte("h"))
+	require.Nil(t, err)
+
+	mt, resb, err := guestWs.ReadMessage()
+	require.Nil(t, err)
+	require.Equal(t, websocket.TextMessage, mt)
+	require.Equal(t, []byte("h"), resb)
 }
 
 func toStringMap(m interface{}) map[string]string {
