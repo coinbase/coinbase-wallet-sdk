@@ -15,11 +15,17 @@ build-web:
 	@cd web && yarn install && yarn build
 	@cp -a web/build build/public
 
-init:
+db-create:
 	createdb walletlinkd
 	createdb walletlinkd_test
 	psql walletlinkd -f ./schema.sql
 	psql walletlinkd_test -f ./schema.sql
+
+db-drop:
+	dropdb walletlinkd
+	dropdb walletlinkd_test
+
+db-reset: db-drop db-create
 
 test:
 	@APP_ENV="test" \
@@ -31,4 +37,4 @@ run:
 	POSTGRES_URL="postgres:///walletlinkd?sslmode=disable" \
 	build/walletlinkd
 
-.PHONY: build build-web init test run
+.PHONY: build build-web db-create db-drop db-reset test run
