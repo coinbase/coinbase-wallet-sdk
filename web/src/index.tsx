@@ -1,9 +1,20 @@
 import React from "react"
 import ReactDOM from "react-dom"
+import { cssRule } from "typestyle"
 import App from "./components/App"
-import "./index.css"
-// import * as serviceWorker from "./serviceWorker"
+
+cssRule("*", {
+  boxSizing: "border-box"
+})
+
+cssRule("body", {
+  fontFamily:
+    '-apple-system, BlinkMacSystemFont, "Helvetica Neue", "Arial", sans-serif',
+  margin: 0
+})
+
+cssRule("code", {
+  fontFamily: '"SF Mono", Menlo, Consolas, "Andale Mono", monosapce'
+})
 
 ReactDOM.render(<App />, document.getElementById("root"))
-
-// serviceWorker.unregister()
