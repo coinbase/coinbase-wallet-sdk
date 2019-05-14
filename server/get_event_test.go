@@ -14,7 +14,7 @@ import (
 )
 
 func TestGetEventNoSession(t *testing.T) {
-	srv := NewServer("", "")
+	srv := NewServer(nil)
 
 	req, err := http.NewRequest("GET", "/events/123", nil)
 	require.Nil(t, err)
@@ -37,7 +37,7 @@ func TestGetEventNoSession(t *testing.T) {
 }
 
 func TestGetEventInvalidSessionKey(t *testing.T) {
-	srv := NewServer("", "")
+	srv := NewServer(nil)
 	sessionID := "456"
 
 	s := models.Session{ID: sessionID, Key: "correctKey"}
@@ -63,7 +63,7 @@ func TestGetEventInvalidSessionKey(t *testing.T) {
 }
 
 func TestGetEventNoEvent(t *testing.T) {
-	srv := NewServer("", "")
+	srv := NewServer(nil)
 	sessionID := "123"
 	sessionKey := "456"
 
@@ -90,7 +90,7 @@ func TestGetEventNoEvent(t *testing.T) {
 }
 
 func TestGetEvent(t *testing.T) {
-	srv := NewServer("", "")
+	srv := NewServer(nil)
 	sessionID := "123"
 	sessionKey := "456"
 	eventID := "789"

@@ -22,9 +22,13 @@ init:
 	psql walletlinkd_test -f ./schema.sql
 
 test:
-	@APP_ENV="test" POSTGRES_URL="postgres:///walletlinkd_test?sslmode=disable" go test -v ./... -timeout 5s | $(COLORIZE_TEST)
+	@APP_ENV="test" \
+	POSTGRES_URL="postgres:///walletlinkd_test?sslmode=disable" \
+	go test -v ./... -timeout 5s | $(COLORIZE_TEST)
 
 run:
-	@POSTGRES_URL="postgres:///walletlinkd?sslmode=disable" build/walletlinkd
+	@ALLOWED_ORIGINS="http://localhost:3000 http://localhost:3001 http://localhost:8080" \
+	POSTGRES_URL="postgres:///walletlinkd?sslmode=disable" \
+	build/walletlinkd
 
 .PHONY: build build-web init test run
