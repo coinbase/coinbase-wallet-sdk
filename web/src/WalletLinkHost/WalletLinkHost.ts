@@ -1,5 +1,5 @@
-import { interval, Subscription } from "rxjs"
-import { delay, filter, flatMap, retry, skip } from "rxjs/operators"
+import { iif, Subscription, timer } from "rxjs"
+import { delay, filter, flatMap, retry, skip, switchMap } from "rxjs/operators"
 import { ConnectionState, RxWebSocket } from "./RxWebSocket"
 
 const HEARTBEAT_INTERVAL = 10000
@@ -9,8 +9,7 @@ export class WalletLinkHost {
   private subscriptions = new Subscription()
   private destroyed = false
 
-  private heartbeatSub: Subscription | null = null
-  private lastHeartbeat: number = 0
+  private lastHeartbeatResponse = 0
 
   constructor(url: string, WebSocketClass: typeof WebSocket = WebSocket) {
     const ws = (this.ws = new RxWebSocket(url, WebSocketClass))
@@ -29,22 +28,28 @@ export class WalletLinkHost {
         .subscribe()
     )
 
-    // start heart beat when connected, and stop when disconnected
+    // send heartbeat every n seconds while connected
     this.subscriptions.add(
-      ws.connectionState$.pipe(skip(1)).subscribe(cs => {
-        if (cs === ConnectionState.CONNECTED) {
-          this.startHeartbeat()
-        } else if (cs === ConnectionState.DISCONNECTED) {
-          this.stopHeartbeat()
-        }
-      })
+      ws.connectionState$
+        .pipe(
+          skip(1),
+          switchMap(cs =>
+            iif(
+              () => cs === ConnectionState.CONNECTED,
+              timer(0, HEARTBEAT_INTERVAL)
+            )
+          )
+        )
+        .subscribe(i =>
+          i === 0 ? this.updateLastHeartbeat() : this.heartbeat()
+        )
     )
 
-    // handle heartbeat messages
+    // handle server's heartbeat responses
     this.subscriptions.add(
-      ws.incomingData$.pipe(filter(m => m === "h")).subscribe(_ => {
-        this.lastHeartbeat = Date.now()
-      })
+      ws.incomingData$
+        .pipe(filter(m => m === "h"))
+        .subscribe(_ => this.updateLastHeartbeat())
     )
   }
 
@@ -57,32 +62,21 @@ export class WalletLinkHost {
 
   public destroy(): void {
     this.subscriptions.unsubscribe()
-    this.stopHeartbeat()
     this.ws.disconnect()
     this.destroyed = true
   }
 
-  private startHeartbeat(): void {
-    if (this.heartbeatSub) {
-      return
-    }
-    this.lastHeartbeat = Date.now()
-    this.heartbeatSub = interval(HEARTBEAT_INTERVAL).subscribe(_ => {
-      if (Date.now() - this.lastHeartbeat > HEARTBEAT_INTERVAL * 2) {
-        this.ws.disconnect()
-        return
-      }
-      try {
-        this.ws.sendData("h")
-      } catch {}
-    })
+  private updateLastHeartbeat(): void {
+    this.lastHeartbeatResponse = Date.now()
   }
 
-  private stopHeartbeat(): void {
-    if (!this.heartbeatSub) {
+  private heartbeat(): void {
+    if (Date.now() - this.lastHeartbeatResponse > HEARTBEAT_INTERVAL * 2) {
+      this.ws.disconnect()
       return
     }
-    this.heartbeatSub.unsubscribe()
-    this.heartbeatSub = null
+    try {
+      this.ws.sendData("h")
+    } catch {}
   }
 }
