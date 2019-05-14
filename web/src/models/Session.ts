@@ -1,5 +1,8 @@
 import crypto from "crypto"
 
+const localStorageSessionIdKey = "WalletLinkSessionId"
+const localStorageSessionSecretKey = "WalletLinkSessionSecret"
+
 export class Session {
   private readonly _id: string
   private readonly _secret: string
@@ -14,6 +17,20 @@ export class Session {
       .digest("hex")
   }
 
+  public static load(): Session | null {
+    const id = localStorage.getItem(localStorageSessionIdKey)
+    const secret = localStorage.getItem(localStorageSessionSecretKey)
+    if (id && secret) {
+      return new Session(id, secret)
+    }
+    return null
+  }
+
+  public static clear(): void {
+    localStorage.removeItem(localStorageSessionIdKey)
+    localStorage.removeItem(localStorageSessionSecretKey)
+  }
+
   public get id(): string {
     return this._id
   }
@@ -24,5 +41,11 @@ export class Session {
 
   public get key(): string {
     return this._key
+  }
+
+  public save(): Session {
+    localStorage.setItem(localStorageSessionIdKey, this.id)
+    localStorage.setItem(localStorageSessionSecretKey, this.secret)
+    return this
   }
 }
