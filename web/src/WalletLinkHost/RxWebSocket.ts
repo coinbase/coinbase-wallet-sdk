@@ -14,6 +14,9 @@ export enum ConnectionState {
   CONNECTED
 }
 
+/**
+ * Rx-ified WebSocket
+ */
 export class RxWebSocket {
   private webSocket: WebSocket | null = null
   private connectionStateSubject = new BehaviorSubject<ConnectionState>(
@@ -21,12 +24,19 @@ export class RxWebSocket {
   )
   private incomingDataSubject = new Subject<string>()
 
+  /**
+   * @param url WebSocket server URL
+   * @param [WebSocketClass] Custom WebSocket implementation
+   */
   constructor(
     private url: string,
     private WebSocketClass: typeof WebSocket = WebSocket
   ) {}
 
-  public get connect$(): Observable<void> {
+  /**
+   * Make a websocket connection
+   */
+  public connect(): Observable<void> {
     if (this.webSocket) {
       return throwError(new Error("webSocket object is not null"))
     }
@@ -55,6 +65,9 @@ export class RxWebSocket {
     }).pipe(take(1))
   }
 
+  /**
+   * Disconnect from server
+   */
   public disconnect(): void {
     const { webSocket } = this
     if (!webSocket) {
@@ -67,14 +80,23 @@ export class RxWebSocket {
     } catch {}
   }
 
+  /**
+   * Emits current connection state and subsequent changes
+   */
   public get connectionState$(): Observable<ConnectionState> {
     return this.connectionStateSubject.asObservable()
   }
 
+  /**
+   * Emits incoming data from server
+   */
   public get incomingData$(): Observable<string> {
     return this.incomingDataSubject.asObservable()
   }
 
+  /**
+   * Emits incoming JSON data from server. non-JSON data are ignored
+   */
   public get incomingJSONData$(): any {
     return this.incomingData$.pipe(
       flatMap(m => {
@@ -89,6 +111,10 @@ export class RxWebSocket {
     )
   }
 
+  /**
+   * Send data to server
+   * @param data text to send
+   */
   public sendData(data: string): void {
     const { webSocket } = this
     if (!webSocket) {

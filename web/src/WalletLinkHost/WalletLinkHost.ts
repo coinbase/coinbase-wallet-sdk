@@ -30,6 +30,9 @@ import { ConnectionState, RxWebSocket } from "./RxWebSocket"
 const HEARTBEAT_INTERVAL = 10000
 const REQUEST_TIMEOUT = 60000
 
+/**
+ * Provides WalletLink host interactions
+ */
 export class WalletLinkHost {
   private ws: RxWebSocket
   private subscriptions = new Subscription()
@@ -38,6 +41,12 @@ export class WalletLinkHost {
   private nextReqId = 0
   private readySubject = new BehaviorSubject(false)
 
+  /**
+   * @param sessionId Session ID
+   * @param sessionKey Session Key
+   * @param rpcUrl Walletlinkd RPC URL
+   * @param [WebSocketClass] Custom WebSocket implementation
+   */
   constructor(
     private sessionId: string,
     private sessionKey: string,
@@ -50,11 +59,16 @@ export class WalletLinkHost {
     this.subscriptions.add(
       ws.connectionState$
         .pipe(
+          // ignore initial DISCONNECTED state
           skip(1),
+          // if DISCONNECTED and not destroyed
           filter(cs => cs === ConnectionState.DISCONNECTED && !this.destroyed),
+          // wait 5 seconds
           delay(5000),
+          // check whether it's destroyed again
           filter(_ => !this.destroyed),
-          flatMap(_ => ws.connect$),
+          // reconnect
+          flatMap(_ => ws.connect()),
           retry()
         )
         .subscribe()
@@ -64,13 +78,14 @@ export class WalletLinkHost {
     this.subscriptions.add(
       ws.connectionState$
         .pipe(
-          // skip initial DISCONNECTED and CONNECTING
+          // ignore initial DISCONNECTED and CONNECTING states
           skip(2),
-          // if connected, attempt to authenticate, else emit false
           switchMap(cs =>
             iif(
               () => cs === ConnectionState.CONNECTED,
+              // if CONNECTED, attempt to authenticate
               this.authenticate(),
+              // if not CONNECTED, emit false immediately
               of(false)
             )
           ),
@@ -83,15 +98,19 @@ export class WalletLinkHost {
     this.subscriptions.add(
       ws.connectionState$
         .pipe(
+          // ignore initial DISCONNECTED state
           skip(1),
           switchMap(cs =>
             iif(
               () => cs === ConnectionState.CONNECTED,
+              // if CONNECTED, start the heartbeat timer
               timer(0, HEARTBEAT_INTERVAL)
             )
           )
         )
         .subscribe(i =>
+          // first timer event updates lastHeartbeat timestamp
+          // subsequent calls send heartbeat message
           i === 0 ? this.updateLastHeartbeat() : this.heartbeat()
         )
     )
@@ -104,13 +123,20 @@ export class WalletLinkHost {
     )
   }
 
+  /**
+   * Make a connection to the server
+   */
   public connect(): void {
     if (this.destroyed) {
       throw new Error("instance is destroyed")
     }
-    this.ws.connect$.subscribe()
+    this.ws.connect().subscribe()
   }
 
+  /**
+   * Terminate connection, and mark as destroyed. To reconnect, create a new
+   * instance of WalletLinkHost
+   */
   public destroy(): void {
     this.subscriptions.unsubscribe()
     this.ws.disconnect()
@@ -118,7 +144,7 @@ export class WalletLinkHost {
   }
 
   /**
-   * emits true if connected and authenticated, else false
+   * Emits true if connected and authenticated, else false
    */
   public get ready$(): Observable<boolean> {
     return this.readySubject.asObservable()
@@ -149,9 +175,11 @@ export class WalletLinkHost {
       return throwError(err)
     }
     return race(
+      // await server message with corresponding id
       this.ws.incomingJSONData$.pipe(
         filter((m: ServerMessage) => m.id === reqId)
       ),
+      // or error out if timeout happens first
       timer(timeout).pipe(
         flatMap(_ => throwError(`request ${reqId} timed out`))
       )
