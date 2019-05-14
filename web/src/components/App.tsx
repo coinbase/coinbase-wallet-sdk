@@ -1,25 +1,33 @@
 import React, { useEffect } from "react"
+import { style } from "typestyle"
 import { Session } from "../models/Session"
 import { WalletLinkHost } from "../WalletLinkHost/WalletLinkHost"
-import "./App.css"
+import { SessionQRCode } from "./SessionQRCode"
+
+const WEB_HOST = "http://localhost:3000"
+const RPC_URL = "ws://localhost:8080/rpc"
 
 const session = Session.load() || new Session().save()
-const host = new WalletLinkHost(
-  session.id,
-  session.key,
-  "ws://localhost:8080/rpc"
-)
+const walletLinkHost = new WalletLinkHost(session.id, session.key, RPC_URL)
+
+const styleApp = style({
+  textAlign: "center"
+})
 
 const App: React.FC = () => {
   useEffect(() => {
-    host.connect()
-    return () => host.destroy()
+    walletLinkHost.connect()
+    return () => walletLinkHost.destroy()
   }, [])
 
   return (
-    <div className="App">
+    <div className={styleApp}>
       <p>WalletLink</p>
-      <p>Session ID: {session.id}</p>
+      <SessionQRCode
+        hostname={WEB_HOST}
+        sessionId={session.id}
+        sessionSecret={session.secret}
+      />
     </div>
   )
 }
