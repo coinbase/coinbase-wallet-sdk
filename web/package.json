@@ -16,9 +16,11 @@
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-scripts": "3.0.1",
+    "rxjs": "^6.5.2",
     "typescript": "3.4.5"
   },
   "devDependencies": {
+    "rxjs-tslint": "^0.1.7",
     "tslint": "^5.16.0",
     "tslint-config-prettier": "^1.18.0",
     "tslint-microsoft-contrib": "^6.1.1",
