@@ -1,5 +1,12 @@
-import { BehaviorSubject, Observable, Subject, throwError } from "rxjs"
-import { take } from "rxjs/operators"
+import {
+  BehaviorSubject,
+  empty,
+  Observable,
+  of,
+  Subject,
+  throwError
+} from "rxjs"
+import { flatMap, take } from "rxjs/operators"
 
 export enum ConnectionState {
   DISCONNECTED,
@@ -66,6 +73,20 @@ export class RxWebSocket {
 
   public get incomingData$(): Observable<string> {
     return this.incomingDataSubject.asObservable()
+  }
+
+  public get incomingJSONData$(): any {
+    return this.incomingData$.pipe(
+      flatMap(m => {
+        let j: any
+        try {
+          j = JSON.parse(m)
+        } catch (err) {
+          return empty()
+        }
+        return of(j)
+      })
+    )
   }
 
   public sendData(data: string): void {

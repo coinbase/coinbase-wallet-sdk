@@ -1,8 +1,14 @@
 import React, { useEffect } from "react"
+import { Session } from "../models/Session"
 import { WalletLinkHost } from "../WalletLinkHost/WalletLinkHost"
 import "./App.css"
 
-const host = new WalletLinkHost("ws://localhost:8080/rpc")
+const session = new Session()
+const host = new WalletLinkHost(
+  session.id,
+  session.key,
+  "ws://localhost:8080/rpc"
+)
 
 const App: React.FC = () => {
   useEffect(() => {
