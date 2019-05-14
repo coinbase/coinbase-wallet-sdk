@@ -3,7 +3,7 @@ import { Session } from "../models/Session"
 import { WalletLinkHost } from "../WalletLinkHost/WalletLinkHost"
 import "./App.css"
 
-const session = new Session()
+const session = Session.load() || new Session().save()
 const host = new WalletLinkHost(
   session.id,
   session.key,
@@ -19,6 +19,7 @@ const App: React.FC = () => {
   return (
     <div className="App">
       <p>WalletLink</p>
+      <p>Session ID: {session.id}</p>
     </div>
   )
 }
