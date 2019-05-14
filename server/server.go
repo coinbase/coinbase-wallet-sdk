@@ -10,42 +10,57 @@ import (
 
 	"github.com/CoinbaseWallet/walletlinkd/server/rpc"
 	"github.com/CoinbaseWallet/walletlinkd/store"
+	"github.com/CoinbaseWallet/walletlinkd/util"
 	"github.com/gorilla/mux"
 )
 
 // Server - server
 type Server struct {
-	router *mux.Router
-	store  store.Store
-	pubSub *rpc.PubSub
+	router         *mux.Router
+	store          store.Store
+	pubSub         *rpc.PubSub
+	allowedOrigins util.StringSet
+}
+
+// NewServerOptions - options for NewServer function
+type NewServerOptions struct {
+	PostgresURL    string
+	WebRoot        string
+	AllowedOrigins util.StringSet
 }
 
 // NewServer - construct a Server
-func NewServer(postgresURL string, webRoot string) *Server {
-	router := mux.NewRouter()
+func NewServer(options *NewServerOptions) *Server {
+	if options == nil {
+		options = &NewServerOptions{}
+	}
 
 	var s store.Store
-	if len(postgresURL) == 0 {
+	if len(options.PostgresURL) == 0 {
 		s = store.NewMemoryStore()
 	} else {
 		var err error
-		s, err = store.NewPostgresStore(postgresURL, "store")
+		s, err = store.NewPostgresStore(options.PostgresURL, "store")
 		if err != nil {
 			log.Panicln(err)
 		}
 	}
 
+	router := mux.NewRouter()
+
 	srv := &Server{
-		router: router,
-		store:  s,
-		pubSub: rpc.NewPubSub(),
+		router:         router,
+		store:          s,
+		pubSub:         rpc.NewPubSub(),
+		allowedOrigins: options.AllowedOrigins,
 	}
 
 	router.HandleFunc("/rpc", srv.rpcHandler).Methods("GET")
 	router.HandleFunc("/events/{id}", srv.getEventHandler).Methods("GET")
-	if len(webRoot) > 0 {
+
+	if len(options.WebRoot) > 0 {
 		router.PathPrefix("/").Methods("GET").Handler(
-			http.FileServer(http.Dir(webRoot)),
+			http.FileServer(http.Dir(options.WebRoot)),
 		)
 	}
 

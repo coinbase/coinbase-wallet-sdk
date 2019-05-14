@@ -12,14 +12,26 @@ import (
 	"github.com/pkg/errors"
 )
 
-const websocketReadLimit = 1024 * 1024
-
-var upgrader = websocket.Upgrader{
-	HandshakeTimeout: time.Second * 30,
-}
+const (
+	websocketReadLimit = 1024 * 1024
+	handshaketimeout   = time.Second * 30
+)
 
 func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
+	upgrader := &websocket.Upgrader{HandshakeTimeout: handshaketimeout}
+
+	if len(srv.allowedOrigins) > 0 {
+		upgrader.CheckOrigin = func(r *http.Request) bool {
+			origin := r.Header.Get("Origin")
+			if len(origin) == 0 {
+				return true
+			}
+			return srv.allowedOrigins.Contains(origin)
+		}
+	}
+
 	ws, err := upgrader.Upgrade(w, r, nil)
+
 	if err != nil {
 		log.Println(errors.Wrap(err, "websocket upgrade failed"))
 		return

@@ -10,6 +10,15 @@ func NewStringSet() StringSet {
 	return StringSet{}
 }
 
+// StringSetFromStringSlice - make a string set from a slice of strings
+func StringSetFromStringSlice(slice []string) StringSet {
+	s := NewStringSet()
+	for _, str := range slice {
+		s.Add(str)
+	}
+	return s
+}
+
 // Add - add value to the set
 func (s StringSet) Add(value string) {
 	s[value] = struct{}{}

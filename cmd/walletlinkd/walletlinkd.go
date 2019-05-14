@@ -21,7 +21,11 @@ func main() {
 	execDir := filepath.Dir(execFile)
 	webRoot := filepath.Join(execDir, "public")
 
-	srv := server.NewServer(config.PostgresURL, webRoot)
+	srv := server.NewServer(&server.NewServerOptions{
+		PostgresURL:    config.PostgresURL,
+		WebRoot:        webRoot,
+		AllowedOrigins: config.AllowedOrigins,
+	})
 
 	fmt.Printf(
 		"walletlinkd %s-%s listening on port %s...\n"+
