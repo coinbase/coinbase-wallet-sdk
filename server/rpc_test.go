@@ -91,12 +91,17 @@ func TestRPC(t *testing.T) {
 		"sessionId": sessionID,
 	}, res)
 
-	// guest sets push ID
+	// guest sets session config
 	err = guestWs.WriteJSON(jsonMap{
-		"type":      "SetPushID",
-		"id":        2,
-		"sessionId": sessionID,
-		"pushId":    "1234abcd",
+		"type":       "SetSessionConfig",
+		"id":         2,
+		"sessionId":  sessionID,
+		"webhookId":  "1234abcd",
+		"webhookUrl": "https://example.com/",
+		"metadata": map[string]string{
+			"foo": "hello world",
+			"bar": "1234",
+		},
 	})
 	require.Nil(t, err)
 
@@ -110,32 +115,11 @@ func TestRPC(t *testing.T) {
 		"sessionId": sessionID,
 	}, res)
 
-	// guest sets metadata
-	err = guestWs.WriteJSON(jsonMap{
-		"type":      "SetMetadata",
-		"id":        3,
-		"sessionId": sessionID,
-		"key":       "foo",
-		"value":     "hello world",
-	})
-	require.Nil(t, err)
-
-	// server responds to guest
-	res = jsonMap{}
-	err = guestWs.ReadJSON(&res)
-	require.Nil(t, err)
-	require.Equal(t, jsonMap{
-		"type":      "OK",
-		"id":        float64(3),
-		"sessionId": sessionID,
-	}, res)
-
-	// host reads metadata
+	// host reads session config
 	err = hostWs.WriteJSON(jsonMap{
-		"type":      "GetMetadata",
+		"type":      "GetSessionConfig",
 		"id":        2,
 		"sessionId": sessionID,
-		"key":       "foo",
 	})
 	require.Nil(t, err)
 
@@ -144,11 +128,15 @@ func TestRPC(t *testing.T) {
 	err = hostWs.ReadJSON(&res)
 	require.Nil(t, err)
 	require.Equal(t, jsonMap{
-		"type":      "GetMetadataOK",
-		"id":        float64(2),
-		"sessionId": sessionID,
-		"key":       "foo",
-		"value":     "hello world",
+		"type":       "GetSessionConfigOK",
+		"id":         float64(2),
+		"sessionId":  sessionID,
+		"webhookId":  "1234abcd",
+		"webhookUrl": "https://example.com/",
+		"metadata": map[string]interface{}{
+			"foo": "hello world",
+			"bar": "1234",
+		},
 	}, res)
 
 	eventName := "do_something"
@@ -175,6 +163,7 @@ func TestRPC(t *testing.T) {
 	require.Equal(t, "PublishEventOK", res["type"])
 	require.Equal(t, float64(3), res["id"])
 	require.Equal(t, sessionID, res["sessionId"])
+
 	eventID, ok := res["eventId"].(string)
 	require.True(t, ok)
 	require.Len(t, eventID, 8)
@@ -192,11 +181,13 @@ func TestRPC(t *testing.T) {
 	res = jsonMap{}
 	err = guestWs.ReadJSON(&res)
 	require.Nil(t, err)
-	require.Equal(t, "Event", res["type"])
-	require.Equal(t, sessionID, res["sessionId"])
-	require.Equal(t, eventID, res["eventId"])
-	require.Equal(t, eventName, res["event"])
-	require.Equal(t, eventData, toStringMap(res["data"]))
+	require.Equal(t, jsonMap{
+		"type":      "Event",
+		"sessionId": sessionID,
+		"eventId":   eventID,
+		"event":     eventName,
+		"data":      toStringAnyMap(eventData),
+	}, res)
 
 	eventName = "did_something"
 	eventData = map[string]string{
@@ -207,7 +198,7 @@ func TestRPC(t *testing.T) {
 	// guest publishes an event
 	err = guestWs.WriteJSON(jsonMap{
 		"type":      "PublishEvent",
-		"id":        4,
+		"id":        3,
 		"sessionId": sessionID,
 		"event":     eventName,
 		"data":      eventData,
@@ -219,8 +210,9 @@ func TestRPC(t *testing.T) {
 	err = guestWs.ReadJSON(&res)
 	require.Nil(t, err)
 	require.Equal(t, "PublishEventOK", res["type"])
-	require.Equal(t, float64(4), res["id"])
+	require.Equal(t, float64(3), res["id"])
 	require.Equal(t, sessionID, res["sessionId"])
+
 	eventID, ok = res["eventId"].(string)
 	require.True(t, ok)
 	require.Len(t, eventID, 8)
@@ -238,11 +230,13 @@ func TestRPC(t *testing.T) {
 	res = jsonMap{}
 	err = hostWs.ReadJSON(&res)
 	require.Nil(t, err)
-	require.Equal(t, "Event", res["type"])
-	require.Equal(t, sessionID, res["sessionId"])
-	require.Equal(t, eventID, res["eventId"])
-	require.Equal(t, "did_something", res["event"])
-	require.Equal(t, eventData, toStringMap(res["data"]))
+	require.Equal(t, jsonMap{
+		"type":      "Event",
+		"sessionId": sessionID,
+		"eventId":   eventID,
+		"event":     eventName,
+		"data":      toStringAnyMap(eventData),
+	}, res)
 
 	// test heartbeat
 	err = guestWs.WriteMessage(websocket.TextMessage, []byte("h"))
@@ -254,16 +248,10 @@ func TestRPC(t *testing.T) {
 	require.Equal(t, []byte("h"), resb)
 }
 
-func toStringMap(m interface{}) map[string]string {
-	im, ok := m.(map[string]interface{})
-	if !ok {
-		return nil
+func toStringAnyMap(m map[string]string) map[string]interface{} {
+	mm := map[string]interface{}{}
+	for k, v := range m {
+		mm[k] = v
 	}
-	sm := map[string]string{}
-	for k, v := range im {
-		if sv, ok := v.(string); ok {
-			sm[k] = sv
-		}
-	}
-	return sm
+	return mm
 }

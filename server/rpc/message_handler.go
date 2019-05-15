@@ -64,12 +64,10 @@ func (c *MessageHandler) HandleRawMessage(data []byte) error {
 		res = c.handleHostSession(msg)
 	case *clientMessageJoinSession:
 		res = c.handleJoinSession(msg)
-	case *clientMessageSetPushID:
-		res = c.handleSetPushID(msg)
-	case *clientMessageSetMetadata:
-		res = c.handleSetMetadata(msg)
-	case *clientMessageGetMetadata:
-		res = c.handleGetMetadata(msg)
+	case *clientMessageSetSessionConfig:
+		res = c.handleSetSessionConfig(msg)
+	case *clientMessageGetSessionConfig:
+		res = c.handleGetSessionConfig(msg)
 	case *clientMessagePublishEvent:
 		res = c.handlePublishEvent(msg)
 	default:
@@ -145,11 +143,21 @@ func (c *MessageHandler) handleJoinSession(
 	return newServerMessageOK(msg.ID, msg.SessionID)
 }
 
-func (c *MessageHandler) handleSetPushID(
-	msg *clientMessageSetPushID,
+func (c *MessageHandler) handleSetSessionConfig(
+	msg *clientMessageSetSessionConfig,
 ) serverMessage {
-	if !models.IsValidSessionPushID(msg.PushID) {
-		return newServerMessageFail(msg.ID, msg.SessionID, "invalid push ID")
+	if c.isHost {
+		return newServerMessageFail(
+			msg.ID, msg.SessionID, "only guests can set session config",
+		)
+	}
+
+	if valid, invalidReason := models.IsValidSessionConfig(
+		msg.WebhookID,
+		msg.WebhookURL,
+		msg.Metadata,
+	); !valid {
+		return newServerMessageFail(msg.ID, msg.SessionID, invalidReason)
 	}
 
 	session, err := c.findAuthedSessionWithID(msg.SessionID)
@@ -157,7 +165,9 @@ func (c *MessageHandler) handleSetPushID(
 		return newServerMessageFail(msg.ID, msg.SessionID, err.Error())
 	}
 
-	session.SetPushID(msg.PushID)
+	session.WebhookID = msg.WebhookID
+	session.WebhookURL = msg.WebhookURL
+	session.Metadata = msg.Metadata
 	if err := session.Save(c.store); err != nil {
 		fmt.Println(err)
 		return newServerMessageFail(msg.ID, msg.SessionID, "internal error")
@@ -166,45 +176,21 @@ func (c *MessageHandler) handleSetPushID(
 	return newServerMessageOK(msg.ID, msg.SessionID)
 }
 
-func (c *MessageHandler) handleSetMetadata(
-	msg *clientMessageSetMetadata,
+func (c *MessageHandler) handleGetSessionConfig(
+	msg *clientMessageGetSessionConfig,
 ) serverMessage {
-	if !models.IsValidSessionMetadataKey(msg.Key) {
-		return newServerMessageFail(msg.ID, msg.SessionID, "invalid metadata key")
-	}
-	if !models.IsValidSessionMetadataValue(msg.Value) {
-		return newServerMessageFail(msg.ID, msg.SessionID, "invalid metadata value")
-	}
-
 	session, err := c.findAuthedSessionWithID(msg.SessionID)
 	if err != nil {
 		return newServerMessageFail(msg.ID, msg.SessionID, err.Error())
 	}
 
-	session.SetMetadata(msg.Key, msg.Value)
-	if err := session.Save(c.store); err != nil {
-		fmt.Println(err)
-		return newServerMessageFail(msg.ID, msg.SessionID, "internal error")
-	}
-
-	return newServerMessageOK(msg.ID, msg.SessionID)
-}
-
-func (c *MessageHandler) handleGetMetadata(
-	msg *clientMessageGetMetadata,
-) serverMessage {
-	if !models.IsValidSessionMetadataKey(msg.Key) {
-		return newServerMessageFail(msg.ID, msg.SessionID, "invalid metadata key")
-	}
-
-	session, err := c.findAuthedSessionWithID(msg.SessionID)
-	if err != nil {
-		return newServerMessageFail(msg.ID, msg.SessionID, err.Error())
-	}
-
-	value := session.GetMetadata(msg.Key)
-
-	return newServerMessageGetMetadataOK(msg.ID, msg.SessionID, msg.Key, value)
+	return newServerMessageGetSessionConfigOK(
+		msg.ID,
+		msg.SessionID,
+		session.WebhookID,
+		session.WebhookURL,
+		session.Metadata,
+	)
 }
 
 func (c *MessageHandler) handlePublishEvent(

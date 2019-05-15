@@ -3,11 +3,11 @@
 package rpc
 
 const (
-	serverMessageTypeOK             = "OK"
-	serverMessageTypeFail           = "Fail"
-	serverMessageTypeGetMetadataOK  = "GetMetadataOK"
-	serverMessageTypePublishEventOK = "PublishEventOK"
-	serverMessageTypeEvent          = "Event"
+	serverMessageTypeOK                 = "OK"
+	serverMessageTypeFail               = "Fail"
+	serverMessageTypeGetSessionConfigOK = "GetSessionConfigOK"
+	serverMessageTypePublishEventOK     = "PublishEventOK"
+	serverMessageTypeEvent              = "Event"
 )
 
 type serverMessage interface{ xxxServerMessage() }
@@ -34,13 +34,14 @@ type serverMessageFail struct {
 	Error     string `json:"error"`
 }
 
-type serverMessageGetMetadataOK struct {
+type serverMessageGetSessionConfigOK struct {
 	_serverMessage
-	Type      string `json:"type"`
-	ID        int    `json:"id"`
-	SessionID string `json:"sessionId"`
-	Key       string `json:"key"`
-	Value     string `json:"value"`
+	Type       string            `json:"type"`
+	ID         int               `json:"id"`
+	SessionID  string            `json:"sessionId"`
+	WebhookID  string            `json:"webhookId"`
+	WebhookURL string            `json:"webhookUrl"`
+	Metadata   map[string]string `json:"metadata"`
 }
 
 type serverMessagePublishEventOK struct {
@@ -77,15 +78,16 @@ func newServerMessageFail(id int, sessionID, errMsg string) *serverMessageFail {
 	}
 }
 
-func newServerMessageGetMetadataOK(
-	id int, sessionID, key, value string,
-) *serverMessageGetMetadataOK {
-	return &serverMessageGetMetadataOK{
-		Type:      serverMessageTypeGetMetadataOK,
-		ID:        id,
-		SessionID: sessionID,
-		Key:       key,
-		Value:     value,
+func newServerMessageGetSessionConfigOK(
+	id int, sessionID, webhookID, webhookURL string, metadata map[string]string,
+) *serverMessageGetSessionConfigOK {
+	return &serverMessageGetSessionConfigOK{
+		Type:       serverMessageTypeGetSessionConfigOK,
+		ID:         id,
+		SessionID:  sessionID,
+		WebhookID:  webhookID,
+		WebhookURL: webhookURL,
+		Metadata:   metadata,
 	}
 }
 
