@@ -3,11 +3,12 @@
 package rpc
 
 const (
-	serverMessageTypeOK                 = "OK"
-	serverMessageTypeFail               = "Fail"
-	serverMessageTypeGetSessionConfigOK = "GetSessionConfigOK"
-	serverMessageTypePublishEventOK     = "PublishEventOK"
-	serverMessageTypeEvent              = "Event"
+	serverMessageTypeOK                   = "OK"
+	serverMessageTypeFail                 = "Fail"
+	serverMessageTypeGetSessionConfigOK   = "GetSessionConfigOK"
+	serverMessageTypeSessionConfigUpdated = "SessionConfigUpdated"
+	serverMessageTypePublishEventOK       = "PublishEventOK"
+	serverMessageTypeEvent                = "Event"
 )
 
 type serverMessage interface{ xxxServerMessage() }
@@ -38,6 +39,15 @@ type serverMessageGetSessionConfigOK struct {
 	_serverMessage
 	Type       string            `json:"type"`
 	ID         int               `json:"id"`
+	SessionID  string            `json:"sessionId"`
+	WebhookID  string            `json:"webhookId"`
+	WebhookURL string            `json:"webhookUrl"`
+	Metadata   map[string]string `json:"metadata"`
+}
+
+type serverMessageSessionConfigUpdated struct {
+	_serverMessage
+	Type       string            `json:"type"`
 	SessionID  string            `json:"sessionId"`
 	WebhookID  string            `json:"webhookId"`
 	WebhookURL string            `json:"webhookUrl"`
@@ -84,6 +94,18 @@ func newServerMessageGetSessionConfigOK(
 	return &serverMessageGetSessionConfigOK{
 		Type:       serverMessageTypeGetSessionConfigOK,
 		ID:         id,
+		SessionID:  sessionID,
+		WebhookID:  webhookID,
+		WebhookURL: webhookURL,
+		Metadata:   metadata,
+	}
+}
+
+func newServerMessageSessionConfigUpdated(
+	sessionID, webhookID, webhookURL string, metadata map[string]string,
+) *serverMessageSessionConfigUpdated {
+	return &serverMessageSessionConfigUpdated{
+		Type:       serverMessageTypeSessionConfigUpdated,
 		SessionID:  sessionID,
 		WebhookID:  webhookID,
 		WebhookURL: webhookURL,
