@@ -18,12 +18,13 @@ export interface ServerMessageFail extends ServerMessage {
   error: string
 }
 
-export interface ServerMessageGetMetadataOK extends ServerMessage {
-  type: "GetMetadataOK"
+export interface ServerMessageGetSessionConfigOK extends ServerMessage {
+  type: "GetSessionConfigOK"
   id: number
   sessionId: string
-  key: string
-  value: string
+  webhookId: string
+  webhookUrl: string
+  metadata: { [field: string]: string }
 }
 
 export interface ServerMessagePublishEventOK extends ServerMessage {
@@ -65,23 +66,9 @@ export interface ClientMessageJoinSession extends ClientMessage {
   sessionKey: string
 }
 
-export interface ClientMessageSetPushID extends ClientMessage {
-  type: "SetPushID"
+export interface ClientMessageGetSessionConfig extends ClientMessage {
+  type: "GetSessionConfig"
   sessionId: string
-  pushId: string
-}
-
-export interface ClientMessageSetMetadata extends ClientMessage {
-  type: "SetMetadata"
-  sessionId: string
-  key: string
-  value: string
-}
-
-export interface ClientMessageGetMetadata extends ClientMessage {
-  type: "GetMetadata"
-  sessionId: string
-  key: string
 }
 
 export interface ClientMessagePublishEvent extends ClientMessage {

@@ -9,12 +9,11 @@ import (
 )
 
 const (
-	clientMessageTypeHostSession  = "HostSession"
-	clientMessageTypeJoinSession  = "JoinSession"
-	clientMessageTypeSetPushID    = "SetPushID"
-	clientMessageTypeSetMetadata  = "SetMetadata"
-	clientMessageTypeGetMetadata  = "GetMetadata"
-	clientMessageTypePublishEvent = "PublishEvent"
+	clientMessageTypeHostSession      = "HostSession"
+	clientMessageTypeJoinSession      = "JoinSession"
+	clientMessageTypeSetSessionConfig = "SetSessionConfig"
+	clientMessageTypeGetSessionConfig = "GetSessionConfig"
+	clientMessageTypePublishEvent     = "PublishEvent"
 )
 
 type clientMessage interface{ xxxClientMessage() }
@@ -42,29 +41,21 @@ type clientMessageJoinSession struct {
 	SessionKey string `json:"sessionKey"`
 }
 
-type clientMessageSetPushID struct {
+type clientMessageSetSessionConfig struct {
 	_clientMessage
-	Type      string `json:"type"`
-	ID        int    `json:"id"`
-	SessionID string `json:"sessionId"`
-	PushID    string `json:"pushId"`
+	Type       string            `json:"type"`
+	ID         int               `json:"id"`
+	SessionID  string            `json:"sessionId"`
+	WebhookID  string            `json:"webhookId,omitempty"`
+	WebhookURL string            `json:"webhookUrl,omitempty"`
+	Metadata   map[string]string `json:"metadata,omitempty"`
 }
 
-type clientMessageSetMetadata struct {
+type clientMessageGetSessionConfig struct {
 	_clientMessage
 	Type      string `json:"type"`
 	ID        int    `json:"id"`
 	SessionID string `json:"sessionId"`
-	Key       string `json:"key"`
-	Value     string `json:"value"`
-}
-
-type clientMessageGetMetadata struct {
-	_clientMessage
-	Type      string `json:"type"`
-	ID        int    `json:"id"`
-	SessionID string `json:"sessionId"`
-	Key       string `json:"key"`
 }
 
 type clientMessagePublishEvent struct {
@@ -89,12 +80,10 @@ func unmarshalClientMessage(
 		msg = &clientMessageHostSession{}
 	case clientMessageTypeJoinSession:
 		msg = &clientMessageJoinSession{}
-	case clientMessageTypeSetPushID:
-		msg = &clientMessageSetPushID{}
-	case clientMessageTypeSetMetadata:
-		msg = &clientMessageSetMetadata{}
-	case clientMessageTypeGetMetadata:
-		msg = &clientMessageGetMetadata{}
+	case clientMessageTypeSetSessionConfig:
+		msg = &clientMessageSetSessionConfig{}
+	case clientMessageTypeGetSessionConfig:
+		msg = &clientMessageGetSessionConfig{}
 	case clientMessageTypePublishEvent:
 		msg = &clientMessagePublishEvent{}
 	default:

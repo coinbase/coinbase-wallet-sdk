@@ -3,8 +3,6 @@
 package models
 
 import (
-	"sync"
-
 	"github.com/CoinbaseWallet/walletlinkd/store"
 	"github.com/CoinbaseWallet/walletlinkd/util"
 	"github.com/pkg/errors"
@@ -12,12 +10,11 @@ import (
 
 // Session - rpc session
 type Session struct {
-	ID       string            `json:"id"`
-	Key      string            `json:"key"`
-	PushID   string            `json:"pushId,omitempty"`
-	Metadata map[string]string `json:"metadata,omitempty"`
-
-	metadataLock sync.Mutex
+	ID         string            `json:"id"`
+	Key        string            `json:"key"`
+	WebhookID  string            `json:"webhookId,omitempty"`
+	WebhookURL string            `json:"webhookUrl,omitempty"`
+	Metadata   map[string]string `json:"metadata,omitempty"`
 }
 
 // LoadSession - load a session from the store. if a session with a given ID is
@@ -46,35 +43,6 @@ func (s *Session) Save(st store.Store) error {
 	return nil
 }
 
-// SetPushID - sets push ID
-func (s *Session) SetPushID(pushID string) {
-	s.PushID = pushID
-}
-
-// SetMetadata - sets a key-value data
-func (s *Session) SetMetadata(key, value string) {
-	s.metadataLock.Lock()
-	defer s.metadataLock.Unlock()
-	if s.Metadata == nil {
-		s.Metadata = map[string]string{}
-	}
-	if value == "" {
-		delete(s.Metadata, key)
-		if len(s.Metadata) == 0 {
-			s.Metadata = nil
-		}
-		return
-	}
-	s.Metadata[key] = value
-}
-
-// GetMetadata - gets a key-value data
-func (s *Session) GetMetadata(key string) string {
-	s.metadataLock.Lock()
-	defer s.metadataLock.Unlock()
-	return s.Metadata[key]
-}
-
 // IsValidSessionID - check validity of a given session ID
 func IsValidSessionID(id string) bool {
 	return len(id) == 32 && util.IsHexString(id)
@@ -85,21 +53,33 @@ func IsValidSessionKey(key string) bool {
 	return len(key) == 64 && util.IsHexString(key)
 }
 
-// IsValidSessionPushID - check validity of a push id
-func IsValidSessionPushID(pushID string) bool {
-	return len(pushID) <= 100
-}
-
-// IsValidSessionMetadataKey - check validity of a metadata key
-func IsValidSessionMetadataKey(metadataKey string) bool {
-	lenMetadataKey := len(metadataKey)
-	return lenMetadataKey > 0 && lenMetadataKey <= 100
-}
-
-// IsValidSessionMetadataValue - check validty of a metadata value
-func IsValidSessionMetadataValue(metadataValue string) bool {
-	lenMetadataValue := len(metadataValue)
-	return lenMetadataValue > 0 && lenMetadataValue <= 1024
+// IsValidSessionConfig - check validty of session config parameters
+func IsValidSessionConfig(
+	webhookID string,
+	webhookURL string,
+	metadata map[string]string,
+) (valid bool, invalidReason string) {
+	if len(webhookID) > 100 {
+		return false, "webhook ID can't be longer than 100 characters"
+	}
+	if len(webhookURL) > 200 {
+		return false, "webhook URL can't be longer than 200 characters"
+	}
+	if len(metadata) > 50 {
+		return false, "metadata can't contain more than 50 fields"
+	}
+	for k, v := range metadata {
+		if len(k) == 0 {
+			return false, "metadata field name can't be blank"
+		}
+		if len(k) > 100 {
+			return false, "metadata field name can't be longer than 100 characters"
+		}
+		if len(v) > 1024 {
+			return false, "metadata value can't be longer than 1024 characters"
+		}
+	}
+	return true, ""
 }
 
 func sessionStoreKey(sessionID string) string {
