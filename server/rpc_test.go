@@ -115,6 +115,21 @@ func TestRPC(t *testing.T) {
 		"sessionId": sessionID,
 	}, res)
 
+	// server sends SessionConfigUpdated message to host
+	res = jsonMap{}
+	err = hostWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":       "SessionConfigUpdated",
+		"sessionId":  sessionID,
+		"webhookId":  "1234abcd",
+		"webhookUrl": "https://example.com/",
+		"metadata": map[string]interface{}{
+			"foo": "hello world",
+			"bar": "1234",
+		},
+	}, res)
+
 	// host reads session config
 	err = hostWs.WriteJSON(jsonMap{
 		"type":      "GetSessionConfig",
