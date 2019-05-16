@@ -1,5 +1,5 @@
 {
-  "name": "walletlink",
+  "name": "walletlink-web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,25 +9,25 @@
     "eject": "react-scripts eject"
   },
   "dependencies": {
-    "@types/jest": "24.0.12",
-    "@types/node": "12.0.0",
-    "@types/react": "16.8.17",
-    "@types/react-dom": "16.8.4",
     "qrcode.react": "^0.9.3",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-scripts": "3.0.1",
     "rxjs": "^6.5.2",
-    "typescript": "3.4.5",
     "typestyle": "^2.0.2"
   },
   "devDependencies": {
+    "@types/jest": "24.0.12",
+    "@types/node": "12.0.0",
     "@types/qrcode.react": "^0.8.2",
+    "@types/react": "16.8.17",
+    "@types/react-dom": "16.8.4",
     "rxjs-tslint": "^0.1.7",
     "tslint": "^5.16.0",
     "tslint-config-prettier": "^1.18.0",
     "tslint-microsoft-contrib": "^6.1.1",
-    "tslint-react": "^4.0.0"
+    "tslint-react": "^4.0.0",
+    "typescript": "3.4.5"
   },
   "eslintConfig": {
     "extends": "react-app"
