@@ -155,11 +155,7 @@ func TestRPC(t *testing.T) {
 	}, res)
 
 	eventName := "do_something"
-	eventData := map[string]string{
-		"with_this": "data",
-		"and":       "this_data",
-		"someId":    "123",
-	}
+	eventData := "foobarbaz123"
 
 	// host publishes an event
 	err = hostWs.WriteJSON(jsonMap{
@@ -201,14 +197,11 @@ func TestRPC(t *testing.T) {
 		"sessionId": sessionID,
 		"eventId":   eventID,
 		"event":     eventName,
-		"data":      toStringAnyMap(eventData),
+		"data":      eventData,
 	}, res)
 
 	eventName = "did_something"
-	eventData = map[string]string{
-		"result": "was_great",
-		"someId": "123",
-	}
+	eventData = "quxquxabc"
 
 	// guest publishes an event
 	err = guestWs.WriteJSON(jsonMap{
@@ -250,7 +243,7 @@ func TestRPC(t *testing.T) {
 		"sessionId": sessionID,
 		"eventId":   eventID,
 		"event":     eventName,
-		"data":      toStringAnyMap(eventData),
+		"data":      eventData,
 	}, res)
 
 	// test heartbeat
