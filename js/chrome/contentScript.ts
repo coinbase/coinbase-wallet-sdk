@@ -14,27 +14,26 @@ function chromeMain(): void {
 
   const shouldntInject: boolean =
     (WALLETLINK_WEB_URL && location.origin.startsWith(WALLETLINK_WEB_URL)) ||
-    (window.frameElement && window.frameElement.id === "__WalletLink__") ||
-    document.documentElement!.hasAttribute("data-no-walletlink")
+    (document.documentElement &&
+      document.documentElement.hasAttribute("data-no-walletlink"))
 
   if (shouldntInject) {
     return
   }
 
-  window.Web3 = Web3
-
-  const js: string = require("../build/walletlink.js").default
+  const walletLinkJS: string = require("../build/walletlink.js").default
+  const web3JS: string = require("./web3-0.20.7.min.js").default
   const container = document.head || document.documentElement!
   const s = document.createElement("script")
   s.textContent = `
-    ${js};\n
+    ${web3JS};\n
+    ${walletLinkJS};\n
     window.walletLink = new WalletLink({ appName: "WalletLink App" })
-    window.web3 = new Web3(
-      walletLink.makeWeb3Provider(
-        "https://mainnet.infura.io/v3/38747f203c9e4ffebbdaf0f6c09ad72c",
-        1
-      )
+    window.ethereum = walletLink.makeWeb3Provider(
+      "https://mainnet.infura.io/v3/38747f203c9e4ffebbdaf0f6c09ad72c",
+      1
     )
+    window.web3 = new Web3(window.ethereum)
   `
   container.insertBefore(s, container.children[0])
 }

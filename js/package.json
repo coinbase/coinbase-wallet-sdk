@@ -28,14 +28,14 @@
     "test:watch": "jest --watch",
     "build": "webpack --config webpack.config.js",
     "build-chrome": "webpack --config webpack.config.chrome.js",
-    "build:watch": "nodemon -e ts,tsx,js,json --watch src/ --watch chrome/ --exec 'yarn build && yarn build-chrome'",
+    "build:dev": "export WALLETLINK_WEB_URL='http://localhost:3000'; yarn build && yarn build-chrome",
+    "build:dev:watch": "nodemon -e ts,tsx,js,json --watch src/ --watch chrome/ --exec 'yarn build:dev'",
     "lint": "tslint -p . 'src/**/*.ts{,x}'",
     "lint:watch": "nodemon -e ts,tsx,js,json --watch src/ --exec 'yarn tsc && yarn lint'"
   },
   "dependencies": {
     "bn.js": "^4.11.8",
-    "lodash": "^4.17.11",
-    "web3": "0.20.7"
+    "lodash": "^4.17.11"
   },
   "devDependencies": {
     "@types/bn.js": "^4.11.5",
