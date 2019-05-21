@@ -100,10 +100,7 @@ func TestGetEvent(t *testing.T) {
 	require.Nil(t, err)
 
 	name := "name"
-	data := map[string]string{
-		"key1": "value1",
-		"key2": "value2",
-	}
+	data := "data"
 	e := models.Event{ID: eventID, Event: name, Data: data}
 	err = e.Save(srv.store, sessionID)
 	require.Nil(t, err)

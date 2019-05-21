@@ -11,9 +11,9 @@ import (
 
 // Event - event published by a host or guest
 type Event struct {
-	ID    string            `json:"id"`
-	Event string            `json:"event"`
-	Data  map[string]string `json:"data"`
+	ID    string `json:"id"`
+	Event string `json:"event"`
+	Data  string `json:"data"`
 }
 
 // LoadEvent - load an event from the store. if an event with a given ID is

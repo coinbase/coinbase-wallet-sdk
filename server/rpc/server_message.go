@@ -64,11 +64,11 @@ type serverMessagePublishEventOK struct {
 
 type serverMessageEvent struct {
 	_serverMessage
-	Type      string            `json:"type"`
-	SessionID string            `json:"sessionId"`
-	EventID   string            `json:"eventId"`
-	Event     string            `json:"event"`
-	Data      map[string]string `json:"data"`
+	Type      string `json:"type"`
+	SessionID string `json:"sessionId"`
+	EventID   string `json:"eventId"`
+	Event     string `json:"event"`
+	Data      string `json:"data"`
 }
 
 func newServerMessageOK(id int, sessionID string) *serverMessageOK {
@@ -125,7 +125,7 @@ func newServerMessagePublishEventOK(
 }
 
 func newServerMessageEvent(
-	sessionID, eventID, event string, data map[string]string,
+	sessionID, eventID, event string, data string,
 ) *serverMessageEvent {
 	return &serverMessageEvent{
 		Type:      serverMessageTypeEvent,
