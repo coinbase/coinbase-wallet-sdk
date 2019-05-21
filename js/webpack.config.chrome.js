@@ -9,7 +9,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\/walletlink\.js$/,
+        test: /\/(walletlink|web3-0.20.7.min)\.js$/,
         use: "raw-loader"
       },
       ...defaultWebpackConfig.module.rules
