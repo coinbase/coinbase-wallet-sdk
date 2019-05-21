@@ -3,8 +3,13 @@
 
 import max from "lodash/max"
 import range from "lodash/range"
-import Web3, { JSONRPCRequestPayload, JSONRPCResponsePayload } from "web3"
-import { HexString, IntNumber } from "./types"
+import {
+  HexString,
+  IntNumber,
+  JSONRPCRequest,
+  JSONRPCResponse,
+  Web3Provider
+} from "./types"
 import {
   ensureHexString,
   hexStringFromIntNumber,
@@ -37,7 +42,7 @@ export interface Filter {
 }
 
 export class FilterPolyfill {
-  private readonly provider: Web3.Provider
+  private readonly provider: Web3Provider
   private readonly logFilters = new Map<IntNumber, Filter>() // <id, filter>
   private readonly blockFilters = new Set<IntNumber>() // <id>
   private readonly pendingTransactionFilters = new Set<IntNumber>() // <id, true>
@@ -45,7 +50,7 @@ export class FilterPolyfill {
   private readonly timeouts = new Map<IntNumber, number>() // <id, setTimeout id>
   private nextFilterId = IntNumber(1)
 
-  constructor(provider: Web3.Provider) {
+  constructor(provider: Web3Provider) {
     this.provider = provider
   }
 
@@ -95,9 +100,7 @@ export class FilterPolyfill {
     return true
   }
 
-  public getFilterChanges(
-    filterId: HexString
-  ): Promise<JSONRPCResponsePayload> {
+  public getFilterChanges(filterId: HexString): Promise<JSONRPCResponse> {
     const id = intNumberFromHexString(filterId)
     if (this.timeouts.has(id)) {
       // extend timeout
@@ -113,9 +116,7 @@ export class FilterPolyfill {
     return Promise.resolve(filterNotFoundError())
   }
 
-  public async getFilterLogs(
-    filterId: HexString
-  ): Promise<JSONRPCResponsePayload> {
+  public async getFilterLogs(filterId: HexString): Promise<JSONRPCResponse> {
     const id = intNumberFromHexString(filterId)
     const filter = this.logFilters.get(id)
     if (!filter) {
@@ -132,9 +133,7 @@ export class FilterPolyfill {
     return IntNumber(++this.nextFilterId)
   }
 
-  private sendAsyncPromise(
-    request: JSONRPCRequestPayload
-  ): Promise<JSONRPCResponsePayload> {
+  private sendAsyncPromise(request: JSONRPCRequest): Promise<JSONRPCResponse> {
     return new Promise((resolve, reject) => {
       this.provider.sendAsync(request, (err, response) => {
         if (err) {
@@ -161,9 +160,7 @@ export class FilterPolyfill {
     this.timeouts.delete(id)
   }
 
-  private async getLogFilterChanges(
-    id: IntNumber
-  ): Promise<JSONRPCResponsePayload> {
+  private async getLogFilterChanges(id: IntNumber): Promise<JSONRPCResponse> {
     const filter = this.logFilters.get(id)
     const cursorPosition = this.cursors.get(id)
     if (!cursorPosition || !filter) {
@@ -213,9 +210,7 @@ export class FilterPolyfill {
     return response
   }
 
-  private async getBlockFilterChanges(
-    id: IntNumber
-  ): Promise<JSONRPCResponsePayload> {
+  private async getBlockFilterChanges(id: IntNumber): Promise<JSONRPCResponse> {
     const cursorPosition = this.cursors.get(id)
     if (!cursorPosition) {
       return filterNotFoundError()
@@ -244,7 +239,7 @@ export class FilterPolyfill {
 
   private async getPendingTransactionFilterChanges(
     _id: IntNumber
-  ): Promise<JSONRPCResponsePayload> {
+  ): Promise<JSONRPCResponse> {
     // pending transaction filters are not supported
     return Promise.resolve(emptyResult())
   }
@@ -346,13 +341,13 @@ function hexBlockHeightFromIntBlockHeight(
   return hexStringFromIntNumber(value)
 }
 
-function filterNotFoundError(): JSONRPCResponsePayload {
+function filterNotFoundError(): JSONRPCResponse {
   return {
     ...JSONRPC_TEMPLATE,
     error: { code: -32000, message: "filter not found" }
   }
 }
 
-function emptyResult(): JSONRPCResponsePayload {
+function emptyResult(): JSONRPCResponse {
   return { ...JSONRPC_TEMPLATE, result: [] }
 }

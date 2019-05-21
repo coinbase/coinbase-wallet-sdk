@@ -7,36 +7,37 @@ import {
   HexString,
   IdNumber,
   IntNumber,
-  OpaqueType,
   RegExpString
 } from "./types"
+import { WalletLinkMethod } from "./WalletLinkMethod"
 
-interface BaseWalletLinkRequest {
-  id: IdNumber
-  method: string
-  params: {}
+interface BaseWalletLinkRequest<
+  Method extends WalletLinkMethod,
+  Params extends object
+> {
+  method: Method
+  params: Params
 }
 
-export interface GetEthereumAddressRequest extends BaseWalletLinkRequest {
-  method: "getEthereumAddress"
-  params: {
+export type RequestEthereumAddressesRequest = BaseWalletLinkRequest<
+  WalletLinkMethod.requestEthereumAddresses,
+  {
     appName: string
-    chainId: IntNumber
   }
-}
+>
 
-export interface SignEthereumMessageRequest extends BaseWalletLinkRequest {
-  method: "signEthereumMessage"
-  params: {
+export type SignEthereumMessageRequest = BaseWalletLinkRequest<
+  WalletLinkMethod.signEthereumMessage,
+  {
     message: HexString
     address: AddressString
     addPrefix: boolean
   }
-}
+>
 
-export interface SignEthereumTransactionRequest extends BaseWalletLinkRequest {
-  method: "signEthereumTransaction"
-  params: {
+export type SignEthereumTransactionRequest = BaseWalletLinkRequest<
+  WalletLinkMethod.signEthereumTransaction,
+  {
     fromAddress: AddressString
     toAddress: AddressString | null
     weiValue: BigIntString
@@ -47,45 +48,41 @@ export interface SignEthereumTransactionRequest extends BaseWalletLinkRequest {
     chainId: IntNumber
     shouldSubmit: boolean
   }
-}
+>
 
-export interface SubmitEthereumTransactionRequest
-  extends BaseWalletLinkRequest {
-  method: "submitEthereumTransaction"
-  params: {
+export type SubmitEthereumTransactionRequest = BaseWalletLinkRequest<
+  WalletLinkMethod.submitEthereumTransaction,
+  {
     signedTransaction: HexString
     chainId: IntNumber
   }
-}
+>
 
-export interface EthereumAddressFromSignedMessageRequest
-  extends BaseWalletLinkRequest {
-  method: "ethereumAddressFromSignedMessage"
-  params: {
+export type EthereumAddressFromSignedMessageRequest = BaseWalletLinkRequest<
+  WalletLinkMethod.ethereumAddressFromSignedMessage,
+  {
     message: HexString
     signature: HexString
     addPrefix: boolean
   }
-}
+>
 
-export interface ScanQRCodeRequest extends BaseWalletLinkRequest {
-  method: "scanQRCode"
-  params: {
+export type ScanQRCodeRequest = BaseWalletLinkRequest<
+  WalletLinkMethod.scanQRCode,
+  {
     regExp: RegExpString
   }
-}
+>
 
 export type WalletLinkRequest =
-  | GetEthereumAddressRequest
+  | RequestEthereumAddressesRequest
   | SignEthereumMessageRequest
   | SignEthereumTransactionRequest
   | SubmitEthereumTransactionRequest
   | EthereumAddressFromSignedMessageRequest
   | ScanQRCodeRequest
 
-export type WalletLinkRequestJson = OpaqueType<"WalletLinkRequestJson", string>
-export function WalletLinkRequestJson<T extends WalletLinkRequest>(
-  message: T
-): WalletLinkRequestJson {
-  return JSON.stringify(message) as WalletLinkRequestJson
+export interface WalletLinkRequestMessage {
+  id: IdNumber
+  request: WalletLinkRequest
 }
