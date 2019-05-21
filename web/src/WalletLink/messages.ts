@@ -1,3 +1,6 @@
+// Copyright (c) 2018-2019 Coinbase, Inc. <https://coinbase.com/>
+// Licensed under the Apache License, version 2.0
+
 export interface WalletLinkMessage {
   type: string
   id?: number
@@ -39,7 +42,7 @@ export interface ServerMessageEvent extends ServerMessage {
   sessionId: string
   eventId: string
   event: string
-  data: { [field: string]: string }
+  data: string
 }
 
 export interface ClientMessage extends WalletLinkMessage {
@@ -75,5 +78,14 @@ export interface ClientMessagePublishEvent extends ClientMessage {
   type: "PublishEvent"
   sessionId: string
   event: string
-  data: { [field: string]: string }
+  data: string
+}
+
+export function ClientMessagePublishEvent(
+  id: number,
+  sessionId: string,
+  event: string,
+  data: string
+): ClientMessagePublishEvent {
+  return { type: "PublishEvent", id, sessionId, event, data }
 }

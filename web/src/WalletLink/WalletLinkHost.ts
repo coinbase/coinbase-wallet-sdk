@@ -1,3 +1,6 @@
+// Copyright (c) 2018-2019 Coinbase, Inc. <https://coinbase.com/>
+// Licensed under the Apache License, version 2.0
+
 import {
   BehaviorSubject,
   iif,
@@ -21,9 +24,12 @@ import {
 import {
   ClientMessage,
   ClientMessageHostSession,
+  ClientMessagePublishEvent,
   ServerMessage,
+  ServerMessageEvent,
   ServerMessageFail,
-  ServerMessageOK
+  ServerMessageOK,
+  ServerMessagePublishEventOK
 } from "./messages"
 import { ConnectionState, RxWebSocket } from "./RxWebSocket"
 
@@ -38,7 +44,7 @@ export class WalletLinkHost {
   private subscriptions = new Subscription()
   private destroyed = false
   private lastHeartbeatResponse = 0
-  private nextReqId = 0
+  private nextReqId = 1
   private readySubject = new BehaviorSubject(false)
 
   /**
@@ -144,10 +150,55 @@ export class WalletLinkHost {
   }
 
   /**
-   * Emits true if connected and authenticated, else false
+   * Emit true if connected and authenticated, else false
    */
   public get ready$(): Observable<boolean> {
     return this.readySubject.asObservable()
+  }
+
+  /**
+   * Emit Event messages
+   */
+  public get incomingEvent$(): Observable<ServerMessageEvent> {
+    return this.ws.incomingJSONData$.pipe(
+      filter(m => {
+        if (m.type !== "Event") {
+          return false
+        }
+        const sme = m as ServerMessageEvent
+        return (
+          typeof sme.sessionId === "string" &&
+          typeof sme.eventId === "string" &&
+          typeof sme.event === "string" &&
+          typeof sme.data === "object"
+        )
+      }),
+      map(m => m as ServerMessageEvent)
+    )
+  }
+
+  /**
+   * Publish an event and emit event ID when successful
+   * @param event event name
+   * @param data event data
+   */
+  public publishEvent(event: string, data: string): Observable<string> {
+    const message = ClientMessagePublishEvent(
+      this.nextReqId++,
+      this.sessionId,
+      event,
+      data
+    )
+
+    return this.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(
+      message
+    ).pipe(
+      flatMap(res =>
+        res.type === "PublishEventOK"
+          ? of(res.eventId)
+          : throwError(new Error(res.error || "unknown error"))
+      )
+    )
   }
 
   private updateLastHeartbeat(): void {
@@ -176,14 +227,12 @@ export class WalletLinkHost {
     }
     return race(
       // await server message with corresponding id
-      this.ws.incomingJSONData$.pipe(
-        filter((m: ServerMessage) => m.id === reqId)
-      ),
+      this.ws.incomingJSONData$.pipe(filter(m => m.id === reqId)),
       // or error out if timeout happens first
       timer(timeout).pipe(
-        flatMap(_ => throwError(`request ${reqId} timed out`))
+        flatMap(_ => throwError(new Error(`request ${reqId} timed out`)))
       )
-    )
+    ) as Observable<T>
   }
 
   private authenticate(): Observable<boolean> {
