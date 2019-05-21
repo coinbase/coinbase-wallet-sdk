@@ -1,3 +1,6 @@
+// Copyright (c) 2018-2019 Coinbase, Inc. <https://coinbase.com/>
+// Licensed under the Apache License, version 2.0
+
 import QRCode from "qrcode.react"
 import React from "react"
 import { style } from "typestyle"

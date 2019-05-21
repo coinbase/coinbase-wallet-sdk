@@ -1,3 +1,6 @@
+// Copyright (c) 2018-2019 Coinbase, Inc. <https://coinbase.com/>
+// Licensed under the Apache License, version 2.0
+
 import {
   BehaviorSubject,
   empty,
@@ -7,6 +10,7 @@ import {
   throwError
 } from "rxjs"
 import { flatMap, take } from "rxjs/operators"
+import { ServerMessage } from "./messages"
 
 export enum ConnectionState {
   DISCONNECTED,
@@ -97,7 +101,7 @@ export class RxWebSocket {
   /**
    * Emits incoming JSON data from server. non-JSON data are ignored
    */
-  public get incomingJSONData$(): any {
+  public get incomingJSONData$(): Observable<ServerMessage> {
     return this.incomingData$.pipe(
       flatMap(m => {
         let j: any
