@@ -140,6 +140,11 @@ func (c *MessageHandler) handleJoinSession(
 	c.authedSessions.Add(msg.SessionID)
 	c.pubSub.Subscribe(guestPubSubID(msg.SessionID), c.sendCh)
 
+	// send Linked message to host
+	subID := hostPubSubID(msg.SessionID)
+	joinedMsg := newServerMessageLinked(msg.SessionID)
+	c.pubSub.Publish(subID, joinedMsg)
+
 	return newServerMessageOK(msg.ID, msg.SessionID)
 }
 

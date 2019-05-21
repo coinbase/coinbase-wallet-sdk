@@ -91,6 +91,15 @@ func TestRPC(t *testing.T) {
 		"sessionId": sessionID,
 	}, res)
 
+	// server sends Linked message to host
+	res = jsonMap{}
+	err = hostWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":      "Linked",
+		"sessionId": sessionID,
+	}, res)
+
 	// guest sets session config
 	err = guestWs.WriteJSON(jsonMap{
 		"type":       "SetSessionConfig",

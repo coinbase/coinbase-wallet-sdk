@@ -9,6 +9,7 @@ const (
 	serverMessageTypeSessionConfigUpdated = "SessionConfigUpdated"
 	serverMessageTypePublishEventOK       = "PublishEventOK"
 	serverMessageTypeEvent                = "Event"
+	serverMessageTypeLinked               = "Linked"
 )
 
 type serverMessage interface{ xxxServerMessage() }
@@ -69,6 +70,12 @@ type serverMessageEvent struct {
 	EventID   string `json:"eventId"`
 	Event     string `json:"event"`
 	Data      string `json:"data"`
+}
+
+type serverMessageLinked struct {
+	_serverMessage
+	Type      string `json:"type"`
+	SessionID string `json:"sessionId"`
 }
 
 func newServerMessageOK(id int, sessionID string) *serverMessageOK {
@@ -133,5 +140,12 @@ func newServerMessageEvent(
 		EventID:   eventID,
 		Event:     event,
 		Data:      data,
+	}
+}
+
+func newServerMessageLinked(sessionID string) *serverMessageLinked {
+	return &serverMessageLinked{
+		Type:      serverMessageTypeLinked,
+		SessionID: sessionID,
 	}
 }
