@@ -11,6 +11,7 @@ import (
 const (
 	clientMessageTypeHostSession      = "HostSession"
 	clientMessageTypeJoinSession      = "JoinSession"
+	clientMessageTypeIsLinked         = "IsLinked"
 	clientMessageTypeSetSessionConfig = "SetSessionConfig"
 	clientMessageTypeGetSessionConfig = "GetSessionConfig"
 	clientMessageTypePublishEvent     = "PublishEvent"
@@ -39,6 +40,13 @@ type clientMessageJoinSession struct {
 	ID         int    `json:"id"`
 	SessionID  string `json:"sessionId"`
 	SessionKey string `json:"sessionKey"`
+}
+
+type clientMessageIsLinked struct {
+	_clientMessage
+	Type      string `json:"type"`
+	ID        int    `json:"id"`
+	SessionID string `json:"sessionId"`
 }
 
 type clientMessageSetSessionConfig struct {
@@ -80,6 +88,8 @@ func unmarshalClientMessage(
 		msg = &clientMessageHostSession{}
 	case clientMessageTypeJoinSession:
 		msg = &clientMessageJoinSession{}
+	case clientMessageTypeIsLinked:
+		msg = &clientMessageIsLinked{}
 	case clientMessageTypeSetSessionConfig:
 		msg = &clientMessageSetSessionConfig{}
 	case clientMessageTypeGetSessionConfig:

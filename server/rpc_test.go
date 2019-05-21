@@ -42,10 +42,13 @@ func TestRPC(t *testing.T) {
 	require.Nil(t, err)
 	require.Nil(t, session)
 
+	hostReqID := 1
+	guestReqID := 1
+
 	// host makes a request to the server with sessionID and sessionKey
 	err = hostWs.WriteJSON(jsonMap{
 		"type":       "HostSession",
-		"id":         1,
+		"id":         hostReqID,
 		"sessionId":  sessionID,
 		"sessionKey": sessionKey,
 	})
@@ -57,7 +60,7 @@ func TestRPC(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, jsonMap{
 		"type":      "OK",
-		"id":        float64(1),
+		"id":        float64(hostReqID),
 		"sessionId": sessionID,
 	}, res)
 
@@ -67,6 +70,27 @@ func TestRPC(t *testing.T) {
 	require.Equal(t, session.ID, sessionID)
 	require.Equal(t, session.Key, sessionKey)
 
+	// host calls IsLinked
+	hostReqID++
+	err = hostWs.WriteJSON(jsonMap{
+		"type":      "IsLinked",
+		"id":        hostReqID,
+		"sessionId": sessionID,
+	})
+	require.Nil(t, err)
+
+	// host receives a response back from server
+	res = jsonMap{}
+	err = hostWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":         "IsLinkedOK",
+		"id":           float64(hostReqID),
+		"sessionId":    sessionID,
+		"linked":       false,
+		"onlineGuests": float64(0),
+	}, res)
+
 	// guest scans the QR code, obtains sessionId and secret, derives sessionKey
 	// from sessionID and secret and makes a request to the server
 	guestWs, _, err := websocket.DefaultDialer.Dial(rpcURL, nil)
@@ -75,7 +99,7 @@ func TestRPC(t *testing.T) {
 
 	err = guestWs.WriteJSON(jsonMap{
 		"type":       "JoinSession",
-		"id":         1,
+		"id":         guestReqID,
 		"sessionId":  sessionID,
 		"sessionKey": sessionKey,
 	})
@@ -87,7 +111,7 @@ func TestRPC(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, jsonMap{
 		"type":      "OK",
-		"id":        float64(1),
+		"id":        float64(guestReqID),
 		"sessionId": sessionID,
 	}, res)
 
@@ -100,10 +124,32 @@ func TestRPC(t *testing.T) {
 		"sessionId": sessionID,
 	}, res)
 
+	// host calls IsLinked again
+	hostReqID++
+	err = hostWs.WriteJSON(jsonMap{
+		"type":      "IsLinked",
+		"id":        hostReqID,
+		"sessionId": sessionID,
+	})
+	require.Nil(t, err)
+
+	// host receives a response back from server
+	res = jsonMap{}
+	err = hostWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":         "IsLinkedOK",
+		"id":           float64(hostReqID),
+		"sessionId":    sessionID,
+		"linked":       true,
+		"onlineGuests": float64(1),
+	}, res)
+
 	// guest sets session config
+	guestReqID++
 	err = guestWs.WriteJSON(jsonMap{
 		"type":       "SetSessionConfig",
-		"id":         2,
+		"id":         guestReqID,
 		"sessionId":  sessionID,
 		"webhookId":  "1234abcd",
 		"webhookUrl": "https://example.com/",
@@ -120,7 +166,7 @@ func TestRPC(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, jsonMap{
 		"type":      "OK",
-		"id":        float64(2),
+		"id":        float64(guestReqID),
 		"sessionId": sessionID,
 	}, res)
 
@@ -140,9 +186,10 @@ func TestRPC(t *testing.T) {
 	}, res)
 
 	// host reads session config
+	hostReqID++
 	err = hostWs.WriteJSON(jsonMap{
 		"type":      "GetSessionConfig",
-		"id":        2,
+		"id":        hostReqID,
 		"sessionId": sessionID,
 	})
 	require.Nil(t, err)
@@ -153,7 +200,7 @@ func TestRPC(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, jsonMap{
 		"type":       "GetSessionConfigOK",
-		"id":         float64(2),
+		"id":         float64(hostReqID),
 		"sessionId":  sessionID,
 		"webhookId":  "1234abcd",
 		"webhookUrl": "https://example.com/",
@@ -167,9 +214,10 @@ func TestRPC(t *testing.T) {
 	eventData := "foobarbaz123"
 
 	// host publishes an event
+	hostReqID++
 	err = hostWs.WriteJSON(jsonMap{
 		"type":      "PublishEvent",
-		"id":        3,
+		"id":        hostReqID,
 		"sessionId": sessionID,
 		"event":     eventName,
 		"data":      eventData,
@@ -181,7 +229,7 @@ func TestRPC(t *testing.T) {
 	err = hostWs.ReadJSON(&res)
 	require.Nil(t, err)
 	require.Equal(t, "PublishEventOK", res["type"])
-	require.Equal(t, float64(3), res["id"])
+	require.Equal(t, float64(hostReqID), res["id"])
 	require.Equal(t, sessionID, res["sessionId"])
 
 	eventID, ok := res["eventId"].(string)
@@ -213,9 +261,10 @@ func TestRPC(t *testing.T) {
 	eventData = "quxquxabc"
 
 	// guest publishes an event
+	guestReqID++
 	err = guestWs.WriteJSON(jsonMap{
 		"type":      "PublishEvent",
-		"id":        3,
+		"id":        guestReqID,
 		"sessionId": sessionID,
 		"event":     eventName,
 		"data":      eventData,
@@ -227,7 +276,7 @@ func TestRPC(t *testing.T) {
 	err = guestWs.ReadJSON(&res)
 	require.Nil(t, err)
 	require.Equal(t, "PublishEventOK", res["type"])
-	require.Equal(t, float64(3), res["id"])
+	require.Equal(t, float64(guestReqID), res["id"])
 	require.Equal(t, sessionID, res["sessionId"])
 
 	eventID, ok = res["eventId"].(string)

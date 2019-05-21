@@ -25,9 +25,13 @@ func TestPubSub(t *testing.T) {
 
 	require.Equal(t, 0, len(sub1))
 	require.Equal(t, 0, len(sub2))
+	require.Equal(t, 0, pubsub.Len("1"))
+	require.Equal(t, 0, pubsub.Len("2"))
 
 	// subscribe sub1 to "1"
 	pubsub.Subscribe("1", sub1)
+	require.Equal(t, 1, pubsub.Len("1"))
+	require.Equal(t, 0, pubsub.Len("2"))
 
 	// publish "foo" to "1"
 	require.Equal(t, 1, pubsub.Publish("1", "foo"), 1)
@@ -40,6 +44,8 @@ func TestPubSub(t *testing.T) {
 
 	// subscribe sub2 to "1"
 	pubsub.Subscribe("1", sub2)
+	require.Equal(t, 2, pubsub.Len("1"))
+	require.Equal(t, 0, pubsub.Len("2"))
 
 	// publish "bar" to "1"
 	require.Equal(t, 2, pubsub.Publish("1", "bar"))
@@ -53,6 +59,8 @@ func TestPubSub(t *testing.T) {
 
 	// subscribe sub1 to "2"
 	pubsub.Subscribe("2", sub1)
+	require.Equal(t, 2, pubsub.Len("1"))
+	require.Equal(t, 1, pubsub.Len("2"))
 
 	// publish "baz" to "2"
 	require.Equal(t, 1, pubsub.Publish("2", "baz"))
@@ -65,6 +73,8 @@ func TestPubSub(t *testing.T) {
 
 	// unsubscribe sub2 from "1"
 	pubsub.Unsubscribe("1", sub2)
+	require.Equal(t, 1, pubsub.Len("1"))
+	require.Equal(t, 1, pubsub.Len("2"))
 
 	// publish "qux" to "1"
 	require.Equal(t, 1, pubsub.Publish("1", "qux"))
@@ -77,6 +87,8 @@ func TestPubSub(t *testing.T) {
 
 	// unsubscribe sub1 from all ids
 	require.Equal(t, 2, pubsub.UnsubscribeAll(sub1))
+	require.Equal(t, 0, pubsub.Len("1"))
+	require.Equal(t, 0, pubsub.Len("2"))
 
 	// publish "bazz" to "1" and "2"
 	require.Equal(t, 0, pubsub.Publish("1", "bazz"))

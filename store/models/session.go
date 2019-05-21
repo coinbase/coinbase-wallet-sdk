@@ -12,6 +12,7 @@ import (
 type Session struct {
 	ID         string            `json:"id"`
 	Key        string            `json:"key"`
+	Linked     bool              `json:"linked"`
 	WebhookID  string            `json:"webhookId,omitempty"`
 	WebhookURL string            `json:"webhookUrl,omitempty"`
 	Metadata   map[string]string `json:"metadata,omitempty"`

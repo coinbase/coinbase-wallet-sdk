@@ -5,6 +5,7 @@ package rpc
 const (
 	serverMessageTypeOK                   = "OK"
 	serverMessageTypeFail                 = "Fail"
+	serverMessageTypeIsLinkedOK           = "IsLinkedOK"
 	serverMessageTypeGetSessionConfigOK   = "GetSessionConfigOK"
 	serverMessageTypeSessionConfigUpdated = "SessionConfigUpdated"
 	serverMessageTypePublishEventOK       = "PublishEventOK"
@@ -34,6 +35,15 @@ type serverMessageFail struct {
 	ID        int    `json:"id,omitempty"`
 	SessionID string `json:"sessionId,omitempty"`
 	Error     string `json:"error"`
+}
+
+type serverMessageIsLinkedOK struct {
+	_serverMessage
+	Type         string `json:"type"`
+	ID           int    `json:"id"`
+	SessionID    string `json:"sessionId"`
+	Linked       bool   `json:"linked"`
+	OnlineGuests int    `json:"onlineGuests"`
 }
 
 type serverMessageGetSessionConfigOK struct {
@@ -92,6 +102,18 @@ func newServerMessageFail(id int, sessionID, errMsg string) *serverMessageFail {
 		ID:        id,
 		SessionID: sessionID,
 		Error:     errMsg,
+	}
+}
+
+func newServerMessageIsLinkedOK(
+	id int, sessionID string, linked bool, onlineGuests int,
+) *serverMessageIsLinkedOK {
+	return &serverMessageIsLinkedOK{
+		Type:         serverMessageTypeIsLinkedOK,
+		ID:           id,
+		SessionID:    sessionID,
+		Linked:       linked,
+		OnlineGuests: onlineGuests,
 	}
 }
 

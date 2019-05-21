@@ -64,6 +64,8 @@ func (c *MessageHandler) HandleRawMessage(data []byte) error {
 		res = c.handleHostSession(msg)
 	case *clientMessageJoinSession:
 		res = c.handleJoinSession(msg)
+	case *clientMessageIsLinked:
+		res = c.handleIsLinked(msg)
 	case *clientMessageSetSessionConfig:
 		res = c.handleSetSessionConfig(msg)
 	case *clientMessageGetSessionConfig:
@@ -137,6 +139,12 @@ func (c *MessageHandler) handleJoinSession(
 		return newServerMessageFail(msg.ID, msg.SessionID, errMsg)
 	}
 
+	session.Linked = true
+	if err := session.Save(c.store); err != nil {
+		fmt.Println(err)
+		return newServerMessageFail(msg.ID, msg.SessionID, "internal error")
+	}
+
 	c.authedSessions.Add(msg.SessionID)
 	c.pubSub.Subscribe(guestPubSubID(msg.SessionID), c.sendCh)
 
@@ -146,6 +154,27 @@ func (c *MessageHandler) handleJoinSession(
 	c.pubSub.Publish(subID, joinedMsg)
 
 	return newServerMessageOK(msg.ID, msg.SessionID)
+}
+
+func (c *MessageHandler) handleIsLinked(
+	msg *clientMessageIsLinked,
+) serverMessage {
+	if !c.isHost {
+		return newServerMessageFail(
+			msg.ID, msg.SessionID, "only hosts are allowed",
+		)
+	}
+
+	session, err := c.findAuthedSessionWithID(msg.SessionID)
+	if err != nil {
+		return newServerMessageFail(msg.ID, msg.SessionID, err.Error())
+	}
+
+	onlineGuests := c.pubSub.Len(guestPubSubID(msg.SessionID))
+
+	return newServerMessageIsLinkedOK(
+		msg.ID, msg.SessionID, session.Linked, onlineGuests,
+	)
 }
 
 func (c *MessageHandler) handleSetSessionConfig(

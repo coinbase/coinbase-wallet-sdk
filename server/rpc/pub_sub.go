@@ -86,6 +86,22 @@ func (cm *PubSub) UnsubscribeAll(subscriber Subscriber) int {
 	return idsLen
 }
 
+// Len - returns the number of subscribers for a given id
+func (cm *PubSub) Len(id string) int {
+	if id == "" {
+		return 0
+	}
+	cm.lock.Lock()
+	defer cm.lock.Unlock()
+
+	subscribers, ok := cm.subMap[id]
+	if !ok {
+		return 0
+	}
+
+	return len(subscribers)
+}
+
 // Publish - publishes a message to all subscribers of an id and returns
 // the number of subscribers messaged
 func (cm *PubSub) Publish(id string, msg interface{}) int {
