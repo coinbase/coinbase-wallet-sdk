@@ -2,6 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 import QRCode from "qrcode.react"
+import querystring from "querystring"
 import React from "react"
 import { style } from "typestyle"
 
@@ -19,15 +20,21 @@ const styleSessionId = style({
 })
 
 export interface Props {
-  hostname: string
+  webUrl: string
+  rpcUrl: string
   sessionId: string
   sessionSecret: string
 }
 
 export class SessionQRCode extends React.PureComponent<Props> {
   public render() {
-    const { hostname, sessionId, sessionSecret } = this.props
-    const url = `${hostname}/#/joinSession?id=${sessionId}&secret=${sessionSecret}`
+    const { webUrl, rpcUrl, sessionId, sessionSecret } = this.props
+    const queryParams = {
+      id: sessionId,
+      secret: sessionSecret,
+      rpc: rpcUrl
+    }
+    const url = `${webUrl}/#/joinSession?${querystring.stringify(queryParams)}`
 
     return (
       <div className={styleSessionQRCode}>
