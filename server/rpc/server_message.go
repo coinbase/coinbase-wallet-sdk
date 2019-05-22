@@ -46,6 +46,13 @@ type serverMessageIsLinkedOK struct {
 	OnlineGuests int    `json:"onlineGuests"`
 }
 
+type serverMessageLinked struct {
+	_serverMessage
+	Type         string `json:"type"`
+	SessionID    string `json:"sessionId"`
+	OnlineGuests int    `json:"onlineGuests"`
+}
+
 type serverMessageGetSessionConfigOK struct {
 	_serverMessage
 	Type       string            `json:"type"`
@@ -82,12 +89,6 @@ type serverMessageEvent struct {
 	Data      string `json:"data"`
 }
 
-type serverMessageLinked struct {
-	_serverMessage
-	Type      string `json:"type"`
-	SessionID string `json:"sessionId"`
-}
-
 func newServerMessageOK(id int, sessionID string) *serverMessageOK {
 	return &serverMessageOK{
 		Type:      serverMessageTypeOK,
@@ -113,6 +114,16 @@ func newServerMessageIsLinkedOK(
 		ID:           id,
 		SessionID:    sessionID,
 		Linked:       linked,
+		OnlineGuests: onlineGuests,
+	}
+}
+
+func newServerMessageLinked(
+	sessionID string, onlineGuests int,
+) *serverMessageLinked {
+	return &serverMessageLinked{
+		Type:         serverMessageTypeLinked,
+		SessionID:    sessionID,
 		OnlineGuests: onlineGuests,
 	}
 }
@@ -162,12 +173,5 @@ func newServerMessageEvent(
 		EventID:   eventID,
 		Event:     event,
 		Data:      data,
-	}
-}
-
-func newServerMessageLinked(sessionID string) *serverMessageLinked {
-	return &serverMessageLinked{
-		Type:      serverMessageTypeLinked,
-		SessionID: sessionID,
 	}
 }

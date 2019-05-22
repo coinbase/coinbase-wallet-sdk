@@ -120,8 +120,9 @@ func TestRPC(t *testing.T) {
 	err = hostWs.ReadJSON(&res)
 	require.Nil(t, err)
 	require.Equal(t, jsonMap{
-		"type":      "Linked",
-		"sessionId": sessionID,
+		"type":         "Linked",
+		"sessionId":    sessionID,
+		"onlineGuests": float64(1),
 	}, res)
 
 	// host calls IsLinked again
