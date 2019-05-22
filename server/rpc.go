@@ -17,9 +17,13 @@ const (
 	handshaketimeout   = time.Second * 30
 )
 
+// rpcHandler deals with rpc methods over RPC.
+// HTTP -> WS upgrades are also handled here.
+// It includes a heartbeat mechanism to determine if a connection is alive or not
 func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 	upgrader := &websocket.Upgrader{HandshakeTimeout: handshaketimeout}
 
+	// CORS
 	if len(srv.allowedOrigins) > 0 {
 		upgrader.CheckOrigin = func(r *http.Request) bool {
 			origin := r.Header.Get("Origin")
@@ -30,8 +34,8 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// WS upgrade
 	ws, err := upgrader.Upgrade(w, r, nil)
-
 	if err != nil {
 		log.Println(errors.Wrap(err, "websocket upgrade failed"))
 		return
@@ -42,21 +46,28 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 	sendCh := make(chan interface{})
 	defer close(sendCh)
 
+	// Receive internal messages and write them to the websocket
+	// associated with the original http requester
 	go func() {
 		for {
 			res, ok := <-sendCh
 			if !ok {
 				return
 			}
+
+			// check for heartbeat response
 			if v, ok := res.(rune); ok && v == 'h' {
 				ws.WriteMessage(websocket.TextMessage, []byte("h"))
 				continue
 			}
+
+			// write to ws
 			if err := ws.WriteJSON(res); err != nil {
 				log.Println(errors.Wrap(err, "websocket write failed"))
 				ws.Close()
 				return
 			}
+
 		}
 	}()
 
@@ -72,6 +83,7 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 
 	defer handler.Close()
 
+	// read messages from websocket and handle them
 	for {
 		msgType, msgData, err := ws.ReadMessage()
 		if err != nil {

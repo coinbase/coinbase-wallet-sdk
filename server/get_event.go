@@ -23,6 +23,8 @@ type getEventResponse struct {
 	Error string        `json:"error,omitempty"`
 }
 
+// getEventHandler allows for an authenticated session participant to fetch a previously
+// published event.
 func (srv *Server) getEventHandler(w http.ResponseWriter, r *http.Request) {
 	eventID := mux.Vars(r)["id"]
 
