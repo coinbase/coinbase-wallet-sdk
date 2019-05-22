@@ -12,6 +12,7 @@ import {
   timer
 } from "rxjs"
 import {
+  catchError,
   delay,
   distinctUntilChanged,
   filter,
@@ -19,15 +20,20 @@ import {
   map,
   retry,
   skip,
-  switchMap
+  switchMap,
+  take,
+  tap
 } from "rxjs/operators"
 import {
   ClientMessage,
   ClientMessageHostSession,
+  ClientMessageIsLinked,
   ClientMessagePublishEvent,
   ServerMessage,
   ServerMessageEvent,
   ServerMessageFail,
+  ServerMessageIsLinkedOK,
+  ServerMessageLinked,
   ServerMessageOK,
   ServerMessagePublishEventOK
 } from "./messages"
@@ -45,7 +51,8 @@ export class WalletLinkHost {
   private destroyed = false
   private lastHeartbeatResponse = 0
   private nextReqId = 1
-  private readySubject = new BehaviorSubject(false)
+  private connectedSubject = new BehaviorSubject(false)
+  private linkedSubject = new BehaviorSubject(false)
 
   /**
    * @param sessionId Session ID
@@ -89,15 +96,18 @@ export class WalletLinkHost {
           switchMap(cs =>
             iif(
               () => cs === ConnectionState.CONNECTED,
-              // if CONNECTED, attempt to authenticate
-              this.authenticate(),
+              // if CONNECTED, authenticate, and then check link status
+              this.authenticate().pipe(
+                tap(authed => authed && this.sendIsLinked())
+              ),
               // if not CONNECTED, emit false immediately
               of(false)
             )
           ),
-          distinctUntilChanged()
+          distinctUntilChanged(),
+          catchError(_ => of(false))
         )
-        .subscribe(isReady => this.readySubject.next(isReady))
+        .subscribe(connected => this.connectedSubject.next(connected))
     )
 
     // send heartbeat every n seconds while connected
@@ -127,6 +137,16 @@ export class WalletLinkHost {
         .pipe(filter(m => m === "h"))
         .subscribe(_ => this.updateLastHeartbeat())
     )
+
+    // handle link status updates
+    this.subscriptions.add(
+      ws.incomingJSONData$
+        .pipe(filter(m => m.type === "IsLinkedOK" || m.type === "Linked"))
+        .subscribe(m => {
+          const msg = m as ServerMessageIsLinkedOK & ServerMessageLinked
+          this.linkedSubject.next(msg.linked || msg.onlineGuests > 0)
+        })
+    )
   }
 
   /**
@@ -152,8 +172,15 @@ export class WalletLinkHost {
   /**
    * Emit true if connected and authenticated, else false
    */
-  public get ready$(): Observable<boolean> {
-    return this.readySubject.asObservable()
+  public get connected$(): Observable<boolean> {
+    return this.connectedSubject.asObservable()
+  }
+
+  /**
+   * Emit true if linked (a guest has joined before)
+   */
+  public get linked$(): Observable<boolean> {
+    return this.linkedSubject.asObservable()
   }
 
   /**
@@ -178,6 +205,14 @@ export class WalletLinkHost {
   }
 
   /**
+   * Send data without waiting for the response
+   * @param message client message to send
+   */
+  public sendData(message: ClientMessage): void {
+    this.ws.sendData(JSON.stringify(message))
+  }
+
+  /**
    * Publish an event and emit event ID when successful
    * @param event event name
    * @param data event data
@@ -190,14 +225,21 @@ export class WalletLinkHost {
       data
     )
 
-    return this.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(
-      message
-    ).pipe(
-      flatMap(res =>
-        res.type === "PublishEventOK"
-          ? of(res.eventId)
-          : throwError(new Error(res.error || "unknown error"))
-      )
+    return this.linked$.pipe(
+      // Wait until session is linked before sending message
+      filter(v => v),
+      take(1),
+      flatMap(_ =>
+        this.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(
+          message
+        )
+      ),
+      map(res => {
+        if (res.type !== "PublishEventOK") {
+          throw new Error(res.error || "unknown error")
+        }
+        return res.eventId
+      })
     )
   }
 
@@ -221,28 +263,38 @@ export class WalletLinkHost {
   ): Observable<T> {
     const reqId = message.id
     try {
-      this.ws.sendData(JSON.stringify(message))
+      this.sendData(message)
     } catch (err) {
       return throwError(err)
     }
     return race(
       // await server message with corresponding id
-      this.ws.incomingJSONData$.pipe(filter(m => m.id === reqId)),
+      (this.ws.incomingJSONData$ as Observable<T>).pipe(
+        filter(m => m.id === reqId),
+        take(1)
+      ),
       // or error out if timeout happens first
       timer(timeout).pipe(
-        flatMap(_ => throwError(new Error(`request ${reqId} timed out`)))
+        map(_ => {
+          throw new Error(`request ${reqId} timed out`)
+        })
       )
-    ) as Observable<T>
+    )
   }
 
   private authenticate(): Observable<boolean> {
-    const hostSession = ClientMessageHostSession(
+    const msg = ClientMessageHostSession(
       this.nextReqId++,
       this.sessionId,
       this.sessionKey
     )
-    return this.makeRequest<ServerMessageOK | ServerMessageFail>(
-      hostSession
-    ).pipe(map(res => res.type === "OK"))
+    return this.makeRequest<ServerMessageOK | ServerMessageFail>(msg).pipe(
+      map(res => res.type === "OK")
+    )
+  }
+
+  private sendIsLinked(): void {
+    const msg = ClientMessageIsLinked(this.nextReqId++, this.sessionId)
+    this.sendData(msg)
   }
 }

@@ -4,7 +4,7 @@
 import React from "react"
 import ReactDOM from "react-dom"
 import { cssRule } from "typestyle"
-import App from "./components/App"
+import { App } from "./components/App"
 
 cssRule("*", {
   boxSizing: "border-box"

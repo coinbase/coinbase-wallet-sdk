@@ -21,6 +21,20 @@ export interface ServerMessageFail extends ServerMessage {
   error: string
 }
 
+export interface ServerMessageIsLinkedOK extends ServerMessage {
+  type: "IsLinkedOK"
+  id: number
+  sessionId: string
+  linked: boolean
+  onlineGuests: number
+}
+
+export interface ServerMessageLinked extends ServerMessage {
+  type: "Linked"
+  sessionId: string
+  onlineGuests: number
+}
+
 export interface ServerMessageGetSessionConfigOK extends ServerMessage {
   type: "GetSessionConfigOK"
   id: number
@@ -63,10 +77,16 @@ export function ClientMessageHostSession(
   return { type: "HostSession", id, sessionId, sessionKey }
 }
 
-export interface ClientMessageJoinSession extends ClientMessage {
-  type: "JoinSession"
+export interface ClientMessageIsLinked extends ClientMessage {
+  type: "IsLinked"
   sessionId: string
-  sessionKey: string
+}
+
+export function ClientMessageIsLinked(
+  id: number,
+  sessionId: string
+): ClientMessageIsLinked {
+  return { type: "IsLinked", id, sessionId }
 }
 
 export interface ClientMessageGetSessionConfig extends ClientMessage {
