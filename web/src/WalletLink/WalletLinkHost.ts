@@ -98,7 +98,8 @@ export class WalletLinkHost {
               () => cs === ConnectionState.CONNECTED,
               // if CONNECTED, authenticate, and then check link status
               this.authenticate().pipe(
-                tap(authed => authed && this.sendIsLinked())
+                tap(_ => this.sendIsLinked()),
+                map(_ => true)
               ),
               // if not CONNECTED, emit false immediately
               of(false)
@@ -197,7 +198,7 @@ export class WalletLinkHost {
           typeof sme.sessionId === "string" &&
           typeof sme.eventId === "string" &&
           typeof sme.event === "string" &&
-          typeof sme.data === "object"
+          typeof sme.data === "string"
         )
       }),
       map(m => m as ServerMessageEvent)
@@ -235,8 +236,8 @@ export class WalletLinkHost {
         )
       ),
       map(res => {
-        if (res.type !== "PublishEventOK") {
-          throw new Error(res.error || "unknown error")
+        if (res.type === "Fail") {
+          throw new Error(res.error || "failed to publish event")
         }
         return res.eventId
       })
@@ -282,14 +283,18 @@ export class WalletLinkHost {
     )
   }
 
-  private authenticate(): Observable<boolean> {
+  private authenticate(): Observable<void> {
     const msg = ClientMessageHostSession(
       this.nextReqId++,
       this.sessionId,
       this.sessionKey
     )
     return this.makeRequest<ServerMessageOK | ServerMessageFail>(msg).pipe(
-      map(res => res.type === "OK")
+      map(res => {
+        if (res.type === "Fail") {
+          throw new Error(res.error || "failed to authentcate")
+        }
+      })
     )
   }
 

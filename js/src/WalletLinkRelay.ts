@@ -1,24 +1,24 @@
 // Copyright (c) 2018-2019 Coinbase, Inc. <https://coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
+import bind from "bind-decorator"
 import BN from "bn.js"
+import crypto from "crypto"
 import url from "url"
-import { AddressString, IdNumber, IntNumber, RegExpString } from "./types"
+import { AddressString, IntNumber, RegExpString } from "./types"
 import { bigIntStringFromBN, hexStringFromBuffer } from "./util"
-import { WalletLinkMethod } from "./WalletLinkMethod"
-import {
-  WalletLinkRequest,
-  WalletLinkRequestMessage
-} from "./WalletLinkRequest"
+import { Web3Method } from "./Web3Method"
+import { Web3Request, Web3RequestMessage } from "./Web3Request"
 import {
   EthereumAddressFromSignedMessageResponse,
+  isWeb3ResponseMessage,
   RequestEthereumAddressesResponse,
   ScanQRCodeResponse,
   SignEthereumMessageResponse,
   SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse,
-  WalletLinkResponse
-} from "./WalletLinkResponse"
+  Web3Response
+} from "./Web3Response"
 
 export interface EthereumTransactionParams {
   fromAddress: AddressString
@@ -31,11 +31,10 @@ export interface EthereumTransactionParams {
   chainId: IntNumber
 }
 
-type ResponseCallback = (response: WalletLinkResponse) => void
+type ResponseCallback = (response: Web3Response) => void
 
 export class WalletLinkRelay {
-  private static _nextId = IdNumber(0)
-  private static _callbacks = new Map<IdNumber, ResponseCallback>()
+  private static _callbacks = new Map<string, ResponseCallback>()
 
   private _walletLinkWebUrl: string
   private _iframe: HTMLIFrameElement | null = null
@@ -69,25 +68,15 @@ export class WalletLinkRelay {
     } else {
       window.addEventListener("load", inject, false)
     }
-  }
 
-  private static _makeId(): IdNumber {
-    // max nextId == max int32 for compatibility with mobile
-    const id = (this._nextId = IdNumber((this._nextId + 1) % 0x7fffffff))
-    // unlikely that this will ever be an issue, but just to be safe
-    const callback = this._callbacks.get(id)
-    if (callback) {
-      this._callbacks.delete(id)
-      callback({ errorMessage: "callback expired" })
-    }
-    return id
+    window.addEventListener("message", this._handleMessage, false)
   }
 
   public requestEthereumAccounts(
     appName: string
   ): Promise<RequestEthereumAddressesResponse> {
     return this.sendRequest({
-      method: WalletLinkMethod.requestEthereumAddresses,
+      method: Web3Method.requestEthereumAddresses,
       params: {
         appName
       }
@@ -100,7 +89,7 @@ export class WalletLinkRelay {
     addPrefix: boolean
   ): Promise<SignEthereumMessageResponse> {
     return this.sendRequest({
-      method: WalletLinkMethod.signEthereumMessage,
+      method: Web3Method.signEthereumMessage,
       params: {
         message: hexStringFromBuffer(message, true),
         address,
@@ -115,7 +104,7 @@ export class WalletLinkRelay {
     addPrefix: boolean
   ): Promise<EthereumAddressFromSignedMessageResponse> {
     return this.sendRequest({
-      method: WalletLinkMethod.ethereumAddressFromSignedMessage,
+      method: Web3Method.ethereumAddressFromSignedMessage,
       params: {
         message: hexStringFromBuffer(message, true),
         signature: hexStringFromBuffer(signature, true),
@@ -128,7 +117,7 @@ export class WalletLinkRelay {
     params: EthereumTransactionParams
   ): Promise<SignEthereumTransactionResponse> {
     return this.sendRequest({
-      method: WalletLinkMethod.signEthereumTransaction,
+      method: Web3Method.signEthereumTransaction,
       params: {
         fromAddress: params.fromAddress,
         toAddress: params.toAddress,
@@ -149,7 +138,7 @@ export class WalletLinkRelay {
     params: EthereumTransactionParams
   ): Promise<SubmitEthereumTransactionResponse> {
     return this.sendRequest({
-      method: WalletLinkMethod.signEthereumTransaction,
+      method: Web3Method.signEthereumTransaction,
       params: {
         fromAddress: params.fromAddress,
         toAddress: params.toAddress,
@@ -171,7 +160,7 @@ export class WalletLinkRelay {
     chainId: IntNumber
   ): Promise<SubmitEthereumTransactionResponse> {
     return this.sendRequest({
-      method: WalletLinkMethod.submitEthereumTransaction,
+      method: Web3Method.submitEthereumTransaction,
       params: {
         signedTransaction: hexStringFromBuffer(signedTransaction, true),
         chainId
@@ -181,12 +170,12 @@ export class WalletLinkRelay {
 
   public scanQRCode(regExp: RegExpString): Promise<ScanQRCodeResponse> {
     return this.sendRequest({
-      method: WalletLinkMethod.scanQRCode,
+      method: Web3Method.scanQRCode,
       params: { regExp }
     })
   }
 
-  public sendRequest<T extends WalletLinkRequest, U extends WalletLinkResponse>(
+  public sendRequest<T extends Web3Request, U extends Web3Response>(
     request: T
   ): Promise<U> {
     return new Promise((resolve, reject) => {
@@ -197,7 +186,7 @@ export class WalletLinkRelay {
       const u = url.parse(this._walletLinkWebUrl)
       const targetOrigin = `${u.protocol}//${u.host}`
 
-      const id = WalletLinkRelay._makeId()
+      const id = crypto.randomBytes(8).toString("hex")
 
       WalletLinkRelay._callbacks.set(id, response => {
         if (response.errorMessage) {
@@ -206,8 +195,21 @@ export class WalletLinkRelay {
         resolve(response as U)
       })
 
-      const message: WalletLinkRequestMessage = { id, request }
+      const message: Web3RequestMessage = { id, request }
       this._iframe.contentWindow.postMessage(message, targetOrigin)
     })
+  }
+
+  @bind
+  private _handleMessage(evt: MessageEvent): void {
+    const message = isWeb3ResponseMessage(evt.data) ? evt.data : null
+    if (!message) {
+      return
+    }
+
+    const callback = WalletLinkRelay._callbacks.get(message.id)
+    if (callback) {
+      callback(message.response)
+    }
   }
 }

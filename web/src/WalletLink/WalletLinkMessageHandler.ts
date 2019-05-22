@@ -2,10 +2,16 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator"
-import { of, Subscription } from "rxjs"
-import { catchError, filter, flatMap, take } from "rxjs/operators"
+import { Subscription } from "rxjs"
+import { filter } from "rxjs/operators"
 import * as aes256gcm from "../lib/aes256gcm"
+import { ServerMessageEvent } from "./messages"
 import { WalletLinkHost } from "./WalletLinkHost"
+import {
+  isWeb3RequestMessage,
+  isWeb3ResponseMessage,
+  Web3RequestMessageWithOrigin
+} from "./WalletLinkTypes"
 
 export class WalletLinkMessageHandler {
   private subscriptions = new Subscription()
@@ -14,6 +20,11 @@ export class WalletLinkMessageHandler {
 
   public listen() {
     window.addEventListener("message", this.handleMessage, false)
+    this.subscriptions.add(
+      this.walletLinkHost.incomingEvent$
+        .pipe(filter(m => m.event === "Web3Response"))
+        .subscribe(this.handleWeb3Response)
+    )
   }
 
   public destroy() {
@@ -22,41 +33,36 @@ export class WalletLinkMessageHandler {
   }
 
   @bind
-  private handleMessage(message: MessageEvent): void {
-    const { origin, data } = message
-
-    if (
-      !data ||
-      !data.request ||
-      typeof data.request.method !== "string" ||
-      typeof data.request.params !== "object"
-    ) {
+  private handleMessage(evt: MessageEvent): void {
+    const request = isWeb3RequestMessage(evt.data) ? evt.data : null
+    if (!request) {
       return
     }
 
-    const request = {
-      ...data.request,
-      url: origin
+    const requestWithOrigin: Web3RequestMessageWithOrigin = {
+      ...request,
+      origin: evt.origin
     }
-    const encrypted = aes256gcm.encrypt(JSON.stringify(request), this.secret)
-    console.log("Sending:", request)
-
-    this.subscriptions.add(
-      this.walletLinkHost
-        .publishEvent("Web3Request", encrypted)
-        .pipe(
-          flatMap(eventId =>
-            this.walletLinkHost.incomingEvent$.pipe(
-              filter(m => m.eventId === eventId),
-              take(1)
-            )
-          ),
-          catchError(err => {
-            console.log(err)
-            return of(undefined)
-          })
-        )
-        .subscribe()
+    const encrypted = aes256gcm.encrypt(
+      JSON.stringify(requestWithOrigin),
+      this.secret
     )
+
+    this.walletLinkHost
+      .publishEvent("Web3Request", encrypted)
+      .subscribe(null, err => console.log(err))
+  }
+
+  @bind
+  private handleWeb3Response(message: ServerMessageEvent): void {
+    const json = JSON.parse(aes256gcm.decrypt(message.data, this.secret))
+    const response = isWeb3ResponseMessage(json) ? json : null
+    if (!response) {
+      return
+    }
+
+    if (window.parent) {
+      window.parent.postMessage(response, "*")
+    }
   }
 }

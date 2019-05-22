@@ -5,29 +5,25 @@ import {
   AddressString,
   BigIntString,
   HexString,
-  IdNumber,
   IntNumber,
   RegExpString
 } from "./types"
-import { WalletLinkMethod } from "./WalletLinkMethod"
+import { Web3Method } from "./Web3Method"
 
-interface BaseWalletLinkRequest<
-  Method extends WalletLinkMethod,
-  Params extends object
-> {
+interface BaseWeb3Request<Method extends Web3Method, Params extends object> {
   method: Method
   params: Params
 }
 
-export type RequestEthereumAddressesRequest = BaseWalletLinkRequest<
-  WalletLinkMethod.requestEthereumAddresses,
+export type RequestEthereumAddressesRequest = BaseWeb3Request<
+  Web3Method.requestEthereumAddresses,
   {
     appName: string
   }
 >
 
-export type SignEthereumMessageRequest = BaseWalletLinkRequest<
-  WalletLinkMethod.signEthereumMessage,
+export type SignEthereumMessageRequest = BaseWeb3Request<
+  Web3Method.signEthereumMessage,
   {
     message: HexString
     address: AddressString
@@ -35,8 +31,8 @@ export type SignEthereumMessageRequest = BaseWalletLinkRequest<
   }
 >
 
-export type SignEthereumTransactionRequest = BaseWalletLinkRequest<
-  WalletLinkMethod.signEthereumTransaction,
+export type SignEthereumTransactionRequest = BaseWeb3Request<
+  Web3Method.signEthereumTransaction,
   {
     fromAddress: AddressString
     toAddress: AddressString | null
@@ -50,16 +46,16 @@ export type SignEthereumTransactionRequest = BaseWalletLinkRequest<
   }
 >
 
-export type SubmitEthereumTransactionRequest = BaseWalletLinkRequest<
-  WalletLinkMethod.submitEthereumTransaction,
+export type SubmitEthereumTransactionRequest = BaseWeb3Request<
+  Web3Method.submitEthereumTransaction,
   {
     signedTransaction: HexString
     chainId: IntNumber
   }
 >
 
-export type EthereumAddressFromSignedMessageRequest = BaseWalletLinkRequest<
-  WalletLinkMethod.ethereumAddressFromSignedMessage,
+export type EthereumAddressFromSignedMessageRequest = BaseWeb3Request<
+  Web3Method.ethereumAddressFromSignedMessage,
   {
     message: HexString
     signature: HexString
@@ -67,14 +63,14 @@ export type EthereumAddressFromSignedMessageRequest = BaseWalletLinkRequest<
   }
 >
 
-export type ScanQRCodeRequest = BaseWalletLinkRequest<
-  WalletLinkMethod.scanQRCode,
+export type ScanQRCodeRequest = BaseWeb3Request<
+  Web3Method.scanQRCode,
   {
     regExp: RegExpString
   }
 >
 
-export type WalletLinkRequest =
+export type Web3Request =
   | RequestEthereumAddressesRequest
   | SignEthereumMessageRequest
   | SignEthereumTransactionRequest
@@ -82,7 +78,7 @@ export type WalletLinkRequest =
   | EthereumAddressFromSignedMessageRequest
   | ScanQRCodeRequest
 
-export interface WalletLinkRequestMessage {
-  id: IdNumber
-  request: WalletLinkRequest
+export interface Web3RequestMessage {
+  id: string
+  request: Web3Request
 }
