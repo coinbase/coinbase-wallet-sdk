@@ -13,15 +13,15 @@ import (
 
 // MessageHandler - handles RPC messages
 type MessageHandler struct {
-	authedSessions util.StringSet // IDs of authenticated sessions
-	isHost         bool
-
-	sendCh chan<- interface{}
-	store  store.Store
-	pubSub *PubSub
+	authedSessions util.StringSet     // IDs of authenticated sessions
+	isHost         bool               // if the current connection is the host
+	sendCh         chan<- interface{} // send channel that writes to websocket
+	store          store.Store        // the current persistence store
+	pubSub         *PubSub            // publish-subscribe instance
 }
 
 // NewMessageHandler - construct a MessageHandler
+// A single message handler is allocated per websocket connection.
 func NewMessageHandler(
 	sendCh chan<- interface{},
 	sto store.Store,
@@ -47,6 +47,8 @@ func NewMessageHandler(
 
 // HandleRawMessage - handle a raw client message
 func (c *MessageHandler) HandleRawMessage(data []byte) error {
+
+	// handle heartbeat request
 	if len(data) == 1 && data[0] == 'h' {
 		c.sendCh <- 'h'
 		return nil
@@ -77,6 +79,7 @@ func (c *MessageHandler) HandleRawMessage(data []byte) error {
 		res = newServerMessageFail(0, "", errMsg)
 	}
 
+	// send response to websocket
 	if res != nil {
 		c.sendCh <- res
 	}
@@ -89,6 +92,9 @@ func (c *MessageHandler) Close() {
 	c.pubSub.UnsubscribeAll(c.sendCh)
 }
 
+// handleHostSession creates or binds an existing session to the to-be host.
+// If successfully authenticated, the host will be subscribed to the sessions pubsub instance.
+// Only a single host per session is supported.
 func (c *MessageHandler) handleHostSession(
 	msg *clientMessageHostSession,
 ) serverMessage {
@@ -103,8 +109,8 @@ func (c *MessageHandler) handleHostSession(
 		return newServerMessageFail(msg.ID, msg.SessionID, err.Error())
 	}
 
+	// there isn't an existing session; persist the new session
 	if session == nil {
-		// there isn't an existing session; persist the new session
 		session = &models.Session{ID: msg.SessionID, Key: msg.SessionKey}
 		if err := session.Save(c.store); err != nil {
 			fmt.Println(err)
@@ -119,6 +125,8 @@ func (c *MessageHandler) handleHostSession(
 	return newServerMessageOK(msg.ID, msg.SessionID)
 }
 
+// handleJoinSession binds an existing session to a to-be guest.
+// If successfully authenticated, a guest will be subscribed to the pubsub instance of the session.
 func (c *MessageHandler) handleJoinSession(
 	msg *clientMessageJoinSession,
 ) serverMessage {
@@ -158,6 +166,7 @@ func (c *MessageHandler) handleJoinSession(
 	return newServerMessageOK(msg.ID, msg.SessionID)
 }
 
+// handleIsLinked allows for hosts to check if any guests are online
 func (c *MessageHandler) handleIsLinked(
 	msg *clientMessageIsLinked,
 ) serverMessage {
@@ -179,6 +188,7 @@ func (c *MessageHandler) handleIsLinked(
 	)
 }
 
+// handleSetSessionConfig allows for a guest to set metadata associated with the session.
 func (c *MessageHandler) handleSetSessionConfig(
 	msg *clientMessageSetSessionConfig,
 ) serverMessage {
@@ -219,6 +229,7 @@ func (c *MessageHandler) handleSetSessionConfig(
 	return newServerMessageOK(msg.ID, msg.SessionID)
 }
 
+// handleGetSessionConfig allows for a session participant to get the current session config.
 func (c *MessageHandler) handleGetSessionConfig(
 	msg *clientMessageGetSessionConfig,
 ) serverMessage {
@@ -236,6 +247,9 @@ func (c *MessageHandler) handleGetSessionConfig(
 	)
 }
 
+// handlePublishEvent allows for a session participant to publish an event to their counterparty.
+// Ex. a session published by a guest will be propagated to the respective sessions' host.
+// A session published by a host will be propagated to the respective sessions' guests.
 func (c *MessageHandler) handlePublishEvent(
 	msg *clientMessagePublishEvent,
 ) serverMessage {
@@ -280,6 +294,8 @@ func (c *MessageHandler) handlePublishEvent(
 	return newServerMessagePublishEventOK(msg.ID, msg.SessionID, eventID)
 }
 
+// findSessionWithIDAndKey fetches a session associated with a sessionID and a sessionKey.
+// Used to check for existence of a session.
 func (c *MessageHandler) findSessionWithIDAndKey(
 	sessionID string,
 	sessionKey string,
@@ -308,6 +324,8 @@ func (c *MessageHandler) findSessionWithIDAndKey(
 	return session, nil
 }
 
+// findAuthedSessionWithID fetches a session from a sessionID iff the session participant has
+// already been authenticated.
 func (c *MessageHandler) findAuthedSessionWithID(
 	sessionID string,
 ) (*models.Session, error) {
