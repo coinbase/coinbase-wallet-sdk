@@ -4,13 +4,11 @@
 import React from "react"
 import { Subscription } from "rxjs"
 import { style } from "typestyle"
+import { RPC_URL, WEB_URL } from "../config"
 import { Session } from "../models/Session"
 import { WalletLinkHost } from "../WalletLink/WalletLinkHost"
 import { WalletLinkMessageHandler } from "../WalletLink/WalletLinkMessageHandler"
 import { SessionQRCode } from "./SessionQRCode"
-
-const WEB_URL = "http://localhost:3000"
-const RPC_URL = "ws://localhost:8080/rpc"
 
 const styleApp = style({
   textAlign: "center"
