@@ -37,4 +37,8 @@ run:
 	DATABASE_URL="postgres:///walletlinkd?sslmode=disable" \
 	build/walletlinkd
 
-.PHONY: build build-web db-create db-drop db-reset test run
+docker:
+	docker build . -t walletlinkd
+	docker save -o ./build/walletlinkd.tar walletlinkd
+
+.PHONY: build build-web db-create db-drop db-reset test run docker
