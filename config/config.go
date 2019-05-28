@@ -40,7 +40,7 @@ var (
 	NotificationServerURL = getEnv("NOTIFICATION_SERVER_URL", "")
 
 	// PostgresURL - postgreSQL server url
-	PostgresURL = getEnv("POSTGRES_URL", "")
+	PostgresURL = getEnv("DATABASE_URL", "")
 
 	// AllowedOrigins - allowed RPC origins, space separated
 	AllowedOrigins = func() util.StringSet {
