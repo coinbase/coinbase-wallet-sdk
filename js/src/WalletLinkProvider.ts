@@ -80,7 +80,7 @@ export class WalletLinkProvider implements Web3Provider {
     let address: AddressString | null = null
 
     try {
-      response = await this.send(JSONRPCMethod.eth_requestAccounts)
+      response = await this._send(JSONRPCMethod.eth_requestAccounts)
       errorMessage = (response.error && response.error.message) || null
     } catch (err) {
       errorMessage = err.message || String(err)
@@ -140,7 +140,7 @@ export class WalletLinkProvider implements Web3Provider {
     if (typeof callbackOrParams == "function") {
       const request = requestOrMethod as any
       const callback = callbackOrParams as any
-      return this.sendAsync(request, callback)
+      return this._sendAsync(request, callback)
     }
 
     // send(JSONRPCRequest[]): JSONRPCResponse[]
@@ -193,6 +193,9 @@ export class WalletLinkProvider implements Web3Provider {
     }
     return res.result
   }
+
+  private _send = this.send
+  private _sendAsync = this.sendAsync
 
   private _sendRequest(request: JSONRPCRequest): JSONRPCResponse {
     const response: JSONRPCResponse = {
