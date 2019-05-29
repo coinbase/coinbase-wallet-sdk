@@ -7,6 +7,7 @@ import {
   Observable,
   of,
   race,
+  ReplaySubject,
   Subscription,
   throwError,
   timer
@@ -26,18 +27,22 @@ import {
 } from "rxjs/operators"
 import {
   ClientMessage,
+  ClientMessageGetSessionConfig,
   ClientMessageHostSession,
   ClientMessageIsLinked,
   ClientMessagePublishEvent,
   ServerMessage,
   ServerMessageEvent,
   ServerMessageFail,
+  ServerMessageGetSessionConfigOK,
   ServerMessageIsLinkedOK,
   ServerMessageLinked,
   ServerMessageOK,
-  ServerMessagePublishEventOK
+  ServerMessagePublishEventOK,
+  ServerMessageSessionConfigUpdated
 } from "./messages"
 import { ConnectionState, RxWebSocket } from "./RxWebSocket"
+import { SessionConfig } from "./types"
 
 const HEARTBEAT_INTERVAL = 10000
 const REQUEST_TIMEOUT = 60000
@@ -53,6 +58,7 @@ export class WalletLinkHost {
   private nextReqId = 1
   private connectedSubject = new BehaviorSubject(false)
   private linkedSubject = new BehaviorSubject(false)
+  private sessionConfigSubject = new ReplaySubject<SessionConfig>(1)
 
   /**
    * @param sessionId Session ID
@@ -99,6 +105,7 @@ export class WalletLinkHost {
               // if CONNECTED, authenticate, and then check link status
               this.authenticate().pipe(
                 tap(_ => this.sendIsLinked()),
+                tap(_ => this.sendGetSessionConfig()),
                 map(_ => true)
               ),
               // if not CONNECTED, emit false immediately
@@ -142,10 +149,29 @@ export class WalletLinkHost {
     // handle link status updates
     this.subscriptions.add(
       ws.incomingJSONData$
-        .pipe(filter(m => m.type === "IsLinkedOK" || m.type === "Linked"))
+        .pipe(filter(m => ["IsLinkedOK", "Linked"].includes(m.type)))
         .subscribe(m => {
           const msg = m as ServerMessageIsLinkedOK & ServerMessageLinked
           this.linkedSubject.next(msg.linked || msg.onlineGuests > 0)
+        })
+    )
+
+    // handle session config updates
+    this.subscriptions.add(
+      ws.incomingJSONData$
+        .pipe(
+          filter(m =>
+            ["GetSessionConfigOK", "SessionConfigUpdated"].includes(m.type)
+          )
+        )
+        .subscribe(m => {
+          const msg = m as ServerMessageGetSessionConfigOK &
+            ServerMessageSessionConfigUpdated
+          this.sessionConfigSubject.next({
+            webhookId: msg.webhookId,
+            webhookUrl: msg.webhookUrl,
+            metadata: msg.metadata
+          })
         })
     )
   }
@@ -300,6 +326,11 @@ export class WalletLinkHost {
 
   private sendIsLinked(): void {
     const msg = ClientMessageIsLinked(this.nextReqId++, this.sessionId)
+    this.sendData(msg)
+  }
+
+  private sendGetSessionConfig(): void {
+    const msg = ClientMessageGetSessionConfig(this.nextReqId++, this.sessionId)
     this.sendData(msg)
   }
 }

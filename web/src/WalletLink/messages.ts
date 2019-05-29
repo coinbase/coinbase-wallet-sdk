@@ -44,6 +44,14 @@ export interface ServerMessageGetSessionConfigOK extends ServerMessage {
   metadata: { [field: string]: string }
 }
 
+export interface ServerMessageSessionConfigUpdated extends ServerMessage {
+  type: "SessionConfigUpdated"
+  sessionId: string
+  webhookId: string
+  webhookUrl: string
+  metadata: { [field: string]: string }
+}
+
 export interface ServerMessagePublishEventOK extends ServerMessage {
   type: "PublishEventOK"
   id: number
@@ -92,6 +100,13 @@ export function ClientMessageIsLinked(
 export interface ClientMessageGetSessionConfig extends ClientMessage {
   type: "GetSessionConfig"
   sessionId: string
+}
+
+export function ClientMessageGetSessionConfig(
+  id: number,
+  sessionId: string
+): ClientMessageGetSessionConfig {
+  return { type: "GetSessionConfig", id, sessionId }
 }
 
 export interface ClientMessagePublishEvent extends ClientMessage {

@@ -34,3 +34,9 @@ export interface Web3ResponseMessage {
 export function isWeb3ResponseMessage(msg: any): msg is Web3ResponseMessage {
   return msg && typeof msg.id === "string" && typeof msg.response === "object"
 }
+
+export interface SessionConfig {
+  webhookId: string
+  webhookUrl: string
+  metadata: { [key: string]: string | undefined }
+}
