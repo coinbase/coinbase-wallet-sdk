@@ -5,6 +5,8 @@ package rpc
 import (
 	"fmt"
 
+	"github.com/CoinbaseWallet/walletlinkd/webhook"
+
 	"github.com/CoinbaseWallet/walletlinkd/store"
 	"github.com/CoinbaseWallet/walletlinkd/store/models"
 	"github.com/CoinbaseWallet/walletlinkd/util"
@@ -16,9 +18,10 @@ type MessageHandler struct {
 	authedSessions util.StringSet // IDs of authenticated sessions
 	isHost         bool
 
-	sendCh chan<- interface{}
-	store  store.Store
-	pubSub *PubSub
+	sendCh  chan<- interface{}
+	store   store.Store
+	pubSub  *PubSub
+	webhook webhook.Caller
 }
 
 // NewMessageHandler - construct a MessageHandler
@@ -26,6 +29,7 @@ func NewMessageHandler(
 	sendCh chan<- interface{},
 	sto store.Store,
 	pubSub *PubSub,
+	webhook webhook.Caller,
 ) (*MessageHandler, error) {
 	if sendCh == nil {
 		return nil, errors.Errorf("sendCh must not be nil")
@@ -42,6 +46,7 @@ func NewMessageHandler(
 		sendCh:         sendCh,
 		store:          sto,
 		pubSub:         pubSub,
+		webhook:        webhook,
 	}, nil
 }
 
@@ -261,9 +266,9 @@ func (c *MessageHandler) handlePublishEvent(
 		return newServerMessageFail(msg.ID, msg.SessionID, "invalid event name")
 	}
 
-	if !c.authedSessions.Contains(msg.SessionID) {
-		errMsg := fmt.Sprintf("not authenticated to session: %s", msg.SessionID)
-		return newServerMessageFail(msg.ID, msg.SessionID, errMsg)
+	session, err := c.findAuthedSessionWithID(msg.SessionID)
+	if err != nil {
+		return newServerMessageFail(msg.ID, msg.SessionID, err.Error())
 	}
 
 	eventID, err := util.RandomHex(4)
@@ -293,6 +298,10 @@ func (c *MessageHandler) handlePublishEvent(
 
 	eventMsg := newServerMessageEvent(msg.SessionID, eventID, msg.Event, msg.Data)
 	c.pubSub.Publish(subID, eventMsg)
+
+	if c.isHost {
+		go c.callWebhook(eventID, session.ID, session.WebhookID, session.WebhookURL)
+	}
 
 	return newServerMessagePublishEventOK(msg.ID, msg.SessionID, eventID)
 }
@@ -342,6 +351,18 @@ func (c *MessageHandler) findAuthedSessionWithID(
 	}
 
 	return session, nil
+}
+
+func (c *MessageHandler) callWebhook(eventID, sessionID, webhookID, webhookURL string) {
+	if c.webhook == nil || len(webhookURL) == 0 || len(webhookID) == 0 {
+		return
+	}
+
+	err := c.webhook.Call(eventID, sessionID, webhookID, webhookURL)
+	if err != nil {
+		fmt.Println(errors.Wrap(err, "failed to call webhook"))
+	}
+
 }
 
 func hostPubSubID(sessionID string) string {

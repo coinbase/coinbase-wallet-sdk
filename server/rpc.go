@@ -64,6 +64,7 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 		sendCh,
 		srv.store,
 		srv.pubSub,
+		srv.webhook,
 	)
 	if err != nil {
 		log.Println(errors.Wrap(err, "message handler creation failed"))

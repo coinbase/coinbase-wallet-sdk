@@ -8,17 +8,45 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/CoinbaseWallet/walletlinkd/store/models"
 	"github.com/CoinbaseWallet/walletlinkd/util"
+	"github.com/CoinbaseWallet/walletlinkd/webhook"
 	"github.com/gorilla/websocket"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 type jsonMap map[string]interface{}
 
+const (
+	webhookURL = "https://example.com"
+	webhookID  = "1234abcd"
+	host       = "example.com"
+)
+
+type mockWebhook struct {
+	mock.Mock
+}
+
+var _ webhook.Caller = (*mockWebhook)(nil)
+
+func (m *mockWebhook) Call(
+	eventID, sessionID, webhookID, webhookURL string,
+) error {
+	args := m.Called(eventID, sessionID, webhookID, webhookURL)
+	return args.Error(0)
+}
+
 func TestRPC(t *testing.T) {
-	srv := NewServer(nil)
+	webhook := &mockWebhook{}
+	webhook.On(
+		"Call",
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+	).Return(nil)
+
+	srv := NewServer(&NewServerOptions{Webhook: webhook})
 	testSrv := httptest.NewServer(srv.router)
 	defer testSrv.Close()
 
@@ -152,8 +180,8 @@ func TestRPC(t *testing.T) {
 		"type":       "SetSessionConfig",
 		"id":         guestReqID,
 		"sessionId":  sessionID,
-		"webhookId":  "1234abcd",
-		"webhookUrl": "https://example.com/",
+		"webhookId":  webhookID,
+		"webhookUrl": webhookURL,
 		"metadata": map[string]string{
 			"foo": "hello world",
 			"bar": "1234",
@@ -178,8 +206,8 @@ func TestRPC(t *testing.T) {
 	require.Equal(t, jsonMap{
 		"type":       "SessionConfigUpdated",
 		"sessionId":  sessionID,
-		"webhookId":  "1234abcd",
-		"webhookUrl": "https://example.com/",
+		"webhookId":  webhookID,
+		"webhookUrl": webhookURL,
 		"metadata": map[string]interface{}{
 			"foo": "hello world",
 			"bar": "1234",
@@ -203,8 +231,8 @@ func TestRPC(t *testing.T) {
 		"type":       "GetSessionConfigOK",
 		"id":         float64(hostReqID),
 		"sessionId":  sessionID,
-		"webhookId":  "1234abcd",
-		"webhookUrl": "https://example.com/",
+		"webhookId":  webhookID,
+		"webhookUrl": webhookURL,
 		"metadata": map[string]interface{}{
 			"foo": "hello world",
 			"bar": "1234",
@@ -342,8 +370,8 @@ func TestRPC(t *testing.T) {
 	err = guestWs.WriteJSON(jsonMap{
 		"type":       "SetSessionConfig",
 		"id":         guestReqID,
-		"webhookUrl": "",
 		"sessionId":  sessionID,
+		"webhookUrl": "",
 	})
 	require.Nil(t, err)
 
@@ -398,6 +426,41 @@ func TestRPC(t *testing.T) {
 	eventName := "do_something"
 	eventData := "foobarbaz123"
 
+	// guest updates session config - re-add webhook URL
+	guestReqID++
+	err = guestWs.WriteJSON(jsonMap{
+		"type":       "SetSessionConfig",
+		"id":         guestReqID,
+		"sessionId":  sessionID,
+		"webhookUrl": webhookURL,
+	})
+	require.Nil(t, err)
+
+	// server responds to guest
+	res = jsonMap{}
+	err = guestWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":      "OK",
+		"id":        float64(guestReqID),
+		"sessionId": sessionID,
+	}, res)
+
+	// server sends SessionConfigUpdated message to host
+	res = jsonMap{}
+	err = hostWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":       "SessionConfigUpdated",
+		"sessionId":  sessionID,
+		"webhookId":  webhookID,
+		"webhookUrl": webhookURL,
+		"metadata": map[string]interface{}{
+			"bar": "1234",
+			"baz": "abcdefg",
+		},
+	}, res)
+
 	// host publishes an event
 	hostReqID++
 	err = hostWs.WriteJSON(jsonMap{
@@ -421,6 +484,15 @@ func TestRPC(t *testing.T) {
 	require.True(t, ok)
 	require.Len(t, eventID, 8)
 	require.True(t, util.IsHexString(eventID))
+
+	// wait for webhook to get invoked
+	time.Sleep(5 * time.Millisecond)
+	webhook.AssertCalled(
+		t,
+		"Call",
+		eventID, sessionID, webhookID, webhookURL,
+	)
+	webhook.AssertNumberOfCalls(t, "Call", 1)
 
 	// the event published by the host should have been persisted
 	event, err := models.LoadEvent(srv.store, sessionID, eventID)

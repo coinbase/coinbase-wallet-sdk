@@ -54,10 +54,19 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:8d58d88a7b2a7440509bee60f3e865773e8f79e622817ddb63ba3cda9efba25a"
+  name = "github.com/stretchr/objx"
+  packages = ["."]
+  pruneopts = "T"
+  revision = "477a77ecc69700c7cdeb1fa9e129548e1c1c393c"
+  version = "v0.1.1"
+
+[[projects]]
   digest = "1:17c4ccf5cdb1627aaaeb5c1725cb13aec97b63ea2033d4a6824dcaedf94223dc"
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
+    "mock",
     "require",
   ]
   pruneopts = "T"
@@ -72,7 +81,7 @@
     "github.com/gorilla/websocket",
     "github.com/lib/pq",
     "github.com/pkg/errors",
-    "github.com/stretchr/testify/assert",
+    "github.com/stretchr/testify/mock",
     "github.com/stretchr/testify/require",
   ]
   solver-name = "gps-cdcl"
