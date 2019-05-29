@@ -11,6 +11,7 @@ import (
 	"github.com/CoinbaseWallet/walletlinkd/server/rpc"
 	"github.com/CoinbaseWallet/walletlinkd/store"
 	"github.com/CoinbaseWallet/walletlinkd/util"
+	"github.com/CoinbaseWallet/walletlinkd/webhook"
 	"github.com/gorilla/mux"
 )
 
@@ -20,6 +21,7 @@ type Server struct {
 	store          store.Store
 	pubSub         *rpc.PubSub
 	allowedOrigins util.StringSet
+	webhook        webhook.Caller
 }
 
 // NewServerOptions - options for NewServer function
@@ -27,6 +29,7 @@ type NewServerOptions struct {
 	PostgresURL    string
 	WebRoot        string
 	AllowedOrigins util.StringSet
+	Webhook        webhook.Caller
 }
 
 // NewServer - construct a Server
@@ -53,6 +56,7 @@ func NewServer(options *NewServerOptions) *Server {
 		store:          s,
 		pubSub:         rpc.NewPubSub(),
 		allowedOrigins: options.AllowedOrigins,
+		webhook:        options.Webhook,
 	}
 
 	router.HandleFunc("/rpc", srv.rpcHandler).Methods("GET")

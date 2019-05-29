@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/CoinbaseWallet/walletlinkd/webhook"
+
 	"github.com/CoinbaseWallet/walletlinkd/config"
 	"github.com/CoinbaseWallet/walletlinkd/server"
 	"github.com/pkg/errors"
@@ -25,6 +27,7 @@ func main() {
 		PostgresURL:    config.PostgresURL,
 		WebRoot:        webRoot,
 		AllowedOrigins: config.AllowedOrigins,
+		Webhook:        webhook.NewWebhook(config.ServerURL),
 	})
 
 	fmt.Printf(

@@ -33,11 +33,8 @@ var (
 	// Port - port to listen on
 	Port = getEnv("PORT", "8080")
 
-	// NotificationServerSecret - secret for the push notification server
-	NotificationServerSecret = getEnv("NOTIFICATION_SERVER_SECRET", "")
-
-	// NotificationServerURL - url for the push notification server
-	NotificationServerURL = getEnv("NOTIFICATION_SERVER_URL", "")
+	// ServerURL - url of the server
+	ServerURL = getEnv("SERVER_URL", "")
 
 	// PostgresURL - postgreSQL server url
 	PostgresURL = getEnv("DATABASE_URL", "")
