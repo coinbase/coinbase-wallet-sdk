@@ -83,7 +83,7 @@ export interface Web3Provider {
   send(request: JSONRPCRequest[]): JSONRPCResponse[]
   send(request: JSONRPCRequest, callback: Callback<JSONRPCResponse>): void
   send(request: JSONRPCRequest[], callback: Callback<JSONRPCResponse[]>): void
-  send(method: string, params?: any[] | any): Promise<JSONRPCResponse>
+  send<T = any>(method: string, params?: any[] | any): Promise<T>
 
   sendAsync(request: JSONRPCRequest, callback: Callback<JSONRPCResponse>): void
   sendAsync(

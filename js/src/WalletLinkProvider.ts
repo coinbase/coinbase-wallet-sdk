@@ -75,32 +75,12 @@ export class WalletLinkProvider implements Web3Provider {
       return [this._address]
     }
 
-    let response: JSONRPCResponse<string[]> | null = null
-    let errorMessage: string | null = null
-    let address: AddressString | null = null
+    const addresses = await this._send<string[]>(
+      JSONRPCMethod.eth_requestAccounts
+    )
 
-    try {
-      response = await this._send(JSONRPCMethod.eth_requestAccounts)
-      errorMessage = (response.error && response.error.message) || null
-    } catch (err) {
-      errorMessage = err.message || String(err)
-    }
-
-    if (
-      response &&
-      Array.isArray(response.result) &&
-      typeof response.result[0] === "string"
-    ) {
-      this._address = address = ensureAddressString(response.result[0])
-    }
-
-    if (errorMessage || !address) {
-      throw new Error(
-        errorMessage
-          ? `User rejected provider access ${errorMessage}`
-          : "Response did not contain a valid address"
-      )
-    }
+    const address = ensureAddressString(addresses[0])
+    this._address = address
 
     return [address]
   }
@@ -115,7 +95,7 @@ export class WalletLinkProvider implements Web3Provider {
     request: JSONRPCRequest[],
     callback: Callback<JSONRPCResponse[]>
   ): void
-  public send(method: string, params?: any[] | any): Promise<JSONRPCResponse>
+  public send<T = any>(method: string, params?: any[] | any): Promise<T>
   public send(
     requestOrMethod: JSONRPCRequest | JSONRPCRequest[] | string,
     callbackOrParams?:
@@ -123,8 +103,8 @@ export class WalletLinkProvider implements Web3Provider {
       | Callback<JSONRPCResponse[]>
       | any[]
       | any
-  ): JSONRPCResponse | JSONRPCResponse[] | void | Promise<JSONRPCResponse> {
-    // send(method, params): Promise<JSONRPCResponse>
+  ): JSONRPCResponse | JSONRPCResponse[] | void | Promise<any> {
+    // send<T>(method, params): Promise<T>
     if (typeof requestOrMethod === "string") {
       const method = requestOrMethod
       const params = Array.isArray(callbackOrParams)
@@ -133,7 +113,7 @@ export class WalletLinkProvider implements Web3Provider {
         ? [callbackOrParams]
         : []
       const request: JSONRPCRequest = { jsonrpc: "2.0", id: 1, method, params }
-      return this._sendRequestAsync(request)
+      return this._sendRequestAsync(request).then(res => res.result)
     }
 
     // send(JSONRPCRequest | JSONRPCRequest[], callback): void
