@@ -2,51 +2,49 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator"
-import { Subscription } from "rxjs"
-import { filter } from "rxjs/operators"
+import { empty, fromEvent, of, Subscription } from "rxjs"
+import { filter, flatMap } from "rxjs/operators"
 import * as aes256gcm from "../lib/aes256gcm"
 import { ServerMessageEvent } from "./messages"
-import { WalletLinkHost } from "./WalletLinkHost"
 import {
   isWeb3RequestMessage,
   isWeb3ResponseMessage,
   Web3RequestMessageWithOrigin
-} from "./WalletLinkTypes"
+} from "./types"
+import { WalletLinkHost } from "./WalletLinkHost"
 
-export class WalletLinkMessageHandler {
+export class WalletLinkWeb3Handler {
   private subscriptions = new Subscription()
 
   constructor(private walletLinkHost: WalletLinkHost, private secret: string) {}
 
   public listen() {
-    window.addEventListener("message", this.handleMessage, false)
+    this.subscriptions.add(
+      fromEvent<MessageEvent>(window, "message")
+        .pipe(
+          flatMap(evt =>
+            isWeb3RequestMessage(evt.data)
+              ? of(Web3RequestMessageWithOrigin(evt.data, evt.origin))
+              : empty()
+          )
+        )
+        .subscribe(this.handleWeb3Request)
+    )
+
     this.subscriptions.add(
       this.walletLinkHost.incomingEvent$
         .pipe(filter(m => m.event === "Web3Response"))
-        .subscribe(this.handleWeb3Response)
+        .subscribe(this.handleWeb3ResponseEvent)
     )
   }
 
   public destroy() {
-    window.removeEventListener("message", this.handleMessage, false)
     this.subscriptions.unsubscribe()
   }
 
   @bind
-  private handleMessage(evt: MessageEvent): void {
-    const request = isWeb3RequestMessage(evt.data) ? evt.data : null
-    if (!request) {
-      return
-    }
-
-    const requestWithOrigin: Web3RequestMessageWithOrigin = {
-      ...request,
-      origin: evt.origin
-    }
-    const encrypted = aes256gcm.encrypt(
-      JSON.stringify(requestWithOrigin),
-      this.secret
-    )
+  private handleWeb3Request(request: Web3RequestMessageWithOrigin): void {
+    const encrypted = aes256gcm.encrypt(JSON.stringify(request), this.secret)
 
     this.walletLinkHost
       .publishEvent("Web3Request", encrypted)
@@ -54,8 +52,14 @@ export class WalletLinkMessageHandler {
   }
 
   @bind
-  private handleWeb3Response(message: ServerMessageEvent): void {
-    const json = JSON.parse(aes256gcm.decrypt(message.data, this.secret))
+  private handleWeb3ResponseEvent(message: ServerMessageEvent): void {
+    let json: unknown
+    try {
+      json = JSON.parse(aes256gcm.decrypt(message.data, this.secret))
+    } catch {
+      return
+    }
+
     const response = isWeb3ResponseMessage(json) ? json : null
     if (!response) {
       return

@@ -7,7 +7,7 @@ import { style } from "typestyle"
 import { RPC_URL, WEB_URL } from "../config"
 import { Session } from "../models/Session"
 import { WalletLinkHost } from "../WalletLink/WalletLinkHost"
-import { WalletLinkMessageHandler } from "../WalletLink/WalletLinkMessageHandler"
+import { WalletLinkWeb3Handler } from "../WalletLink/WalletLinkWeb3Handler"
 import { SessionQRCode } from "./SessionQRCode"
 
 const styleApp = style({
@@ -22,7 +22,7 @@ type State = Readonly<{
 export class App extends React.PureComponent<{}, State> {
   private session = Session.load() || new Session().save()
   private walletLinkHost: WalletLinkHost | null = null
-  private walletLinkMessageHandler: WalletLinkMessageHandler | null = null
+  private web3Handler: WalletLinkWeb3Handler | null = null
   private subscriptions = new Subscription()
 
   public state: State = {
@@ -32,18 +32,16 @@ export class App extends React.PureComponent<{}, State> {
 
   public componentDidMount() {
     const { session } = this
-    const walletLinkHost = (this.walletLinkHost = new WalletLinkHost(
-      session.id,
-      session.key,
-      RPC_URL
-    ))
-    const walletLinkMessageHandler = (this.walletLinkMessageHandler = new WalletLinkMessageHandler(
+    const walletLinkHost = new WalletLinkHost(session.id, session.key, RPC_URL)
+    const web3Handler = new WalletLinkWeb3Handler(
       walletLinkHost,
       session.secret
-    ))
+    )
+    this.walletLinkHost = walletLinkHost
+    this.web3Handler = web3Handler
 
     walletLinkHost.connect()
-    walletLinkMessageHandler.listen()
+    web3Handler.listen()
 
     this.subscriptions.add(
       walletLinkHost.connected$.subscribe(v => this.setState({ connected: v }))
@@ -60,9 +58,9 @@ export class App extends React.PureComponent<{}, State> {
       this.walletLinkHost.destroy()
       this.walletLinkHost = null
     }
-    if (this.walletLinkMessageHandler) {
-      this.walletLinkMessageHandler.destroy()
-      this.walletLinkMessageHandler = null
+    if (this.web3Handler) {
+      this.web3Handler.destroy()
+      this.web3Handler = null
     }
   }
 

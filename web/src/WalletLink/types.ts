@@ -23,6 +23,13 @@ export interface Web3RequestMessageWithOrigin extends Web3RequestMessage {
   origin: string
 }
 
+export function Web3RequestMessageWithOrigin(
+  requestMessage: Web3RequestMessage,
+  origin: string
+): Web3RequestMessageWithOrigin {
+  return { ...requestMessage, origin }
+}
+
 export interface Web3ResponseMessage {
   id: string
   response: {
