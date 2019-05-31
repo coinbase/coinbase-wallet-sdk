@@ -2,6 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 import BN from "bn.js"
+import crypto from "crypto"
 import "whatwg-fetch"
 import { FilterPolyfill } from "./FilterPolyfill"
 import {
@@ -22,6 +23,7 @@ import {
   ensureRegExpString
 } from "./util"
 import { EthereumTransactionParams, WalletLinkRelay } from "./WalletLinkRelay"
+import { RequestEthereumAddressesResponse } from "./Web3Response"
 
 export interface WalletLinkProviderOptions {
   relay: WalletLinkRelay
@@ -37,9 +39,16 @@ export class WalletLinkProvider implements Web3Provider {
 
   private readonly _relay: WalletLinkRelay
   private readonly _appName: string
-  private readonly _jsonRpcUrl: string
   private readonly _chainId: IntNumber
+  private readonly _jsonRpcUrl: string
+  private readonly _providerId: string
+
   private _address: AddressString | null = null
+  private _walletLinkWindow: Window | null = null
+
+  private get _localStorageAddressKey(): string {
+    return `WalletLinkProvider:${this._providerId}:address`
+  }
 
   constructor(options: WalletLinkProviderOptions) {
     if (!options.relay) {
@@ -52,6 +61,18 @@ export class WalletLinkProvider implements Web3Provider {
     this._appName = options.appName || DEFAULT_APP_NAME
     this._chainId = ensureIntNumber(options.chainId || 1)
     this._jsonRpcUrl = options.jsonRpcUrl
+    this._providerId = crypto
+      .createHash("sha256")
+      .update([this._appName, this._chainId, this._jsonRpcUrl].join(), "utf8")
+      .digest("hex")
+      .slice(0, 10)
+
+    try {
+      const address = localStorage.getItem(this._localStorageAddressKey)
+      if (address) {
+        this._setAddress(address)
+      }
+    } catch {}
   }
 
   public get selectedAddress(): AddressString | undefined {
@@ -75,14 +96,7 @@ export class WalletLinkProvider implements Web3Provider {
       return [this._address]
     }
 
-    const addresses = await this._send<string[]>(
-      JSONRPCMethod.eth_requestAccounts
-    )
-
-    const address = ensureAddressString(addresses[0])
-    this._address = address
-
-    return [address]
+    return await this._send<AddressString[]>(JSONRPCMethod.eth_requestAccounts)
   }
 
   public send(request: JSONRPCRequest): JSONRPCResponse
@@ -195,6 +209,13 @@ export class WalletLinkProvider implements Web3Provider {
     }
 
     return response
+  }
+
+  private _setAddress(address: string, persist: boolean = false): void {
+    this._address = ensureAddressString(address)
+    if (persist) {
+      localStorage.setItem(this._localStorageAddressKey, this._address)
+    }
   }
 
   private _sendRequestAsync(request: JSONRPCRequest): Promise<JSONRPCResponse> {
@@ -371,10 +392,37 @@ export class WalletLinkProvider implements Web3Provider {
     return this._chainId.toString(10)
   }
 
-  private _eth_requestAccounts(): Promise<JSONRPCResponse> {
-    return this._relay
-      .requestEthereumAccounts(this._appName)
-      .then(res => ({ jsonrpc: "2.0", id: 0, result: res.result }))
+  private async _eth_requestAccounts(): Promise<JSONRPCResponse> {
+    if (this._address) {
+      return Promise.resolve({ jsonrpc: "2.0", id: 0, result: [this._address] })
+    }
+
+    if (this._walletLinkWindow && this._walletLinkWindow.opener) {
+      this._walletLinkWindow.focus()
+    } else {
+      this._walletLinkWindow = this._relay.openWalletLinkWindow()
+    }
+
+    let res: RequestEthereumAddressesResponse
+    try {
+      res = await this._relay.requestEthereumAccounts(this._appName)
+    } catch (err) {
+      throw err
+    } finally {
+      if (this._walletLinkWindow) {
+        this._walletLinkWindow.close()
+        this._walletLinkWindow = null
+        window.focus()
+      }
+    }
+
+    if (!res.result) {
+      throw new Error("accounts received is empty")
+    }
+
+    this._setAddress(res.result[0], true)
+
+    return { jsonrpc: "2.0", id: 0, result: [this._address] }
   }
 
   private _eth_sign(params: Array<unknown>): Promise<JSONRPCResponse> {

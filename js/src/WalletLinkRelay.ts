@@ -72,6 +72,10 @@ export class WalletLinkRelay {
     window.addEventListener("message", this._handleMessage, false)
   }
 
+  public openWalletLinkWindow(): Window | null {
+    return window.open(`${this._walletLinkWebUrl}/#/link`, "_blank")
+  }
+
   public requestEthereumAccounts(
     appName: string
   ): Promise<RequestEthereumAddressesResponse> {
