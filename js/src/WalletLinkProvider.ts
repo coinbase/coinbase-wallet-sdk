@@ -43,11 +43,11 @@ export class WalletLinkProvider implements Web3Provider {
   private readonly _jsonRpcUrl: string
   private readonly _providerId: string
 
-  private _address: AddressString | null = null
+  private _addresses: AddressString[] = []
   private _walletLinkWindow: Window | null = null
 
-  private get _localStorageAddressKey(): string {
-    return `WalletLinkProvider:${this._providerId}:address`
+  private get _localStorageAddressesKey(): string {
+    return `WalletLinkProvider:${this._providerId}:addresses`
   }
 
   constructor(options: WalletLinkProviderOptions) {
@@ -68,15 +68,15 @@ export class WalletLinkProvider implements Web3Provider {
       .slice(0, 10)
 
     try {
-      const address = localStorage.getItem(this._localStorageAddressKey)
-      if (address) {
-        this._setAddress(address)
+      const addresses = localStorage.getItem(this._localStorageAddressesKey)
+      if (addresses) {
+        this._setAddresses(addresses.split(" "))
       }
     } catch {}
   }
 
   public get selectedAddress(): AddressString | undefined {
-    return this._address || undefined
+    return this._addresses[0] || undefined
   }
 
   public get networkVersion(): string {
@@ -92,8 +92,8 @@ export class WalletLinkProvider implements Web3Provider {
   }
 
   public async enable(): Promise<AddressString[]> {
-    if (this._address) {
-      return [this._address]
+    if (this._addresses.length > 0) {
+      return this._addresses
     }
 
     return await this._send<AddressString[]>(JSONRPCMethod.eth_requestAccounts)
@@ -211,10 +211,18 @@ export class WalletLinkProvider implements Web3Provider {
     return response
   }
 
-  private _setAddress(address: string, persist: boolean = false): void {
-    this._address = ensureAddressString(address)
+  private _setAddresses(addresses: string[], persist: boolean = false): void {
+    if (!Array.isArray(addresses)) {
+      throw new Error("addresses is not an array")
+    }
+
+    this._addresses = addresses.map(address => ensureAddressString(address))
+
     if (persist) {
-      localStorage.setItem(this._localStorageAddressKey, this._address)
+      localStorage.setItem(
+        this._localStorageAddressesKey,
+        this._addresses.join(" ")
+      )
     }
   }
 
@@ -353,11 +361,13 @@ export class WalletLinkProvider implements Web3Provider {
     data?: unknown
     nonce?: unknown
   }): EthereumTransactionParams {
-    const fromAddress = tx.from ? ensureAddressString(tx.from) : this._address
-    if (fromAddress === null) {
+    const fromAddress = tx.from
+      ? ensureAddressString(tx.from)
+      : this.selectedAddress
+    if (!fromAddress) {
       throw new Error("Ethereum address is unavailable")
     }
-    if (fromAddress !== this._address) {
+    if (!this._addresses.includes(fromAddress)) {
       throw new Error("Unknown Ethereum address")
     }
     const toAddress = tx.to ? ensureAddressString(tx.to) : null
@@ -381,11 +391,11 @@ export class WalletLinkProvider implements Web3Provider {
   }
 
   private _eth_accounts(): string[] {
-    return this._address ? [this._address] : []
+    return this._addresses
   }
 
   private _eth_coinbase(): string | null {
-    return this._address || null
+    return this.selectedAddress || null
   }
 
   private _net_version(): string {
@@ -393,8 +403,8 @@ export class WalletLinkProvider implements Web3Provider {
   }
 
   private async _eth_requestAccounts(): Promise<JSONRPCResponse> {
-    if (this._address) {
-      return Promise.resolve({ jsonrpc: "2.0", id: 0, result: [this._address] })
+    if (this._addresses.length > 0) {
+      return Promise.resolve({ jsonrpc: "2.0", id: 0, result: this._addresses })
     }
 
     if (this._walletLinkWindow && this._walletLinkWindow.opener) {
@@ -420,9 +430,9 @@ export class WalletLinkProvider implements Web3Provider {
       throw new Error("accounts received is empty")
     }
 
-    this._setAddress(res.result[0], true)
+    this._setAddresses(res.result, true)
 
-    return { jsonrpc: "2.0", id: 0, result: [this._address] }
+    return { jsonrpc: "2.0", id: 0, result: this._addresses }
   }
 
   private _eth_sign(params: Array<unknown>): Promise<JSONRPCResponse> {
