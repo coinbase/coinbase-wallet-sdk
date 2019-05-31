@@ -435,65 +435,73 @@ export class WalletLinkProvider implements Web3Provider {
     return { jsonrpc: "2.0", id: 0, result: this._addresses }
   }
 
-  private _eth_sign(params: Array<unknown>): Promise<JSONRPCResponse> {
+  private async _eth_sign(params: Array<unknown>): Promise<JSONRPCResponse> {
     const message = ensureBuffer(params[1])
     const address = ensureAddressString(params[0])
-    return this._relay
-      .signEthereumMessage(message, address, false)
-      .then(res => ({ jsonrpc: "2.0", id: 0, result: res.result }))
+    const res = await this._relay.signEthereumMessage(message, address, false)
+    return { jsonrpc: "2.0", id: 0, result: res.result }
   }
 
-  private _eth_ecRecover(params: Array<unknown>): Promise<JSONRPCResponse> {
-    const message = ensureBuffer(params[0])
-    const signature = ensureBuffer(params[1])
-    return this._relay
-      .ethereumAddressFromSignedMessage(message, signature, false)
-      .then(res => ({ jsonrpc: "2.0", id: 0, result: res.result }))
-  }
-
-  private _personal_sign(params: Array<unknown>): Promise<JSONRPCResponse> {
-    const message = ensureBuffer(params[0])
-    const address = ensureAddressString(params[1])
-    return this._relay
-      .signEthereumMessage(message, address, true)
-      .then(res => ({ jsonrpc: "2.0", id: 0, result: res.result }))
-  }
-
-  private _personal_ecRecover(
+  private async _eth_ecRecover(
     params: Array<unknown>
   ): Promise<JSONRPCResponse> {
     const message = ensureBuffer(params[0])
     const signature = ensureBuffer(params[1])
-    return this._relay
-      .ethereumAddressFromSignedMessage(message, signature, true)
-      .then(res => ({ jsonrpc: "2.0", id: 0, result: res.result }))
+    const res = await this._relay.ethereumAddressFromSignedMessage(
+      message,
+      signature,
+      false
+    )
+    return { jsonrpc: "2.0", id: 0, result: res.result }
   }
 
-  private _eth_signTransaction(
+  private async _personal_sign(
+    params: Array<unknown>
+  ): Promise<JSONRPCResponse> {
+    const message = ensureBuffer(params[0])
+    const address = ensureAddressString(params[1])
+    const res = await this._relay.signEthereumMessage(message, address, true)
+    return { jsonrpc: "2.0", id: 0, result: res.result }
+  }
+
+  private async _personal_ecRecover(
+    params: Array<unknown>
+  ): Promise<JSONRPCResponse> {
+    const message = ensureBuffer(params[0])
+    const signature = ensureBuffer(params[1])
+    const res = await this._relay.ethereumAddressFromSignedMessage(
+      message,
+      signature,
+      true
+    )
+    return { jsonrpc: "2.0", id: 0, result: res.result }
+  }
+
+  private async _eth_signTransaction(
     params: Array<unknown>
   ): Promise<JSONRPCResponse> {
     const tx = this._prepareTransactionParams((params[0] as any) || {})
-    return this._relay
-      .signEthereumTransaction(tx)
-      .then(res => ({ jsonrpc: "2.0", id: 0, result: res.result }))
+    const res = await this._relay.signEthereumTransaction(tx)
+    return { jsonrpc: "2.0", id: 0, result: res.result }
   }
 
-  private _eth_sendRawTransaction(
+  private async _eth_sendRawTransaction(
     params: Array<unknown>
   ): Promise<JSONRPCResponse> {
     const signedTransaction = ensureBuffer(params[0])
-    return this._relay
-      .submitEthereumTransaction(signedTransaction, this._chainId)
-      .then(res => ({ jsonrpc: "2.0", id: 0, result: res.result }))
+    const res = await this._relay.submitEthereumTransaction(
+      signedTransaction,
+      this._chainId
+    )
+    return { jsonrpc: "2.0", id: 0, result: res.result }
   }
 
-  private _eth_sendTransaction(
+  private async _eth_sendTransaction(
     params: Array<unknown>
   ): Promise<JSONRPCResponse> {
     const tx = this._prepareTransactionParams((params[0] as any) || {})
-    return this._relay
-      .signAndSubmitEthereumTransaction(tx)
-      .then(res => ({ jsonrpc: "2.0", id: 0, result: res.result }))
+    const res = await this._relay.signAndSubmitEthereumTransaction(tx)
+    return { jsonrpc: "2.0", id: 0, result: res.result }
   }
 
   private _eth_uninstallFilter(params: Array<unknown>): boolean {
