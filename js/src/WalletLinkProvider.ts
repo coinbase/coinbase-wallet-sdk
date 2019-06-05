@@ -136,7 +136,7 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     }
 
     // send(JSONRPCRequest | JSONRPCRequest[], callback): void
-    if (typeof callbackOrParams == "function") {
+    if (typeof callbackOrParams === "function") {
       const request = requestOrMethod as any
       const callback = callbackOrParams as any
       return this._sendAsync(request, callback)
@@ -149,8 +149,8 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     }
 
     // send(JSONRPCRequest): JSONRPCResponse
-    const request = requestOrMethod
-    return this._sendRequest(request)
+    const req: JSONRPCRequest = requestOrMethod
+    return this._sendRequest(req)
   }
 
   public sendAsync(
@@ -171,10 +171,10 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
 
     // send(JSONRPCRequest[], callback): void
     if (Array.isArray(request)) {
-      const cb = callback as Callback<JSONRPCResponse[]>
+      const arrayCb = callback as Callback<JSONRPCResponse[]>
       this._sendMultipleRequestsAsync(request)
-        .then(responses => cb(null, responses))
-        .catch(err => cb(err, null))
+        .then(responses => arrayCb(null, responses))
+        .catch(err => arrayCb(err, null))
       return
     }
 
@@ -439,16 +439,14 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     return { jsonrpc: "2.0", id: 0, result: this._addresses }
   }
 
-  private async _eth_sign(params: Array<unknown>): Promise<JSONRPCResponse> {
+  private async _eth_sign(params: unknown[]): Promise<JSONRPCResponse> {
     const message = ensureBuffer(params[1])
     const address = ensureAddressString(params[0])
     const res = await this._relay.signEthereumMessage(message, address, false)
     return { jsonrpc: "2.0", id: 0, result: res.result }
   }
 
-  private async _eth_ecRecover(
-    params: Array<unknown>
-  ): Promise<JSONRPCResponse> {
+  private async _eth_ecRecover(params: unknown[]): Promise<JSONRPCResponse> {
     const message = ensureBuffer(params[0])
     const signature = ensureBuffer(params[1])
     const res = await this._relay.ethereumAddressFromSignedMessage(
@@ -459,9 +457,7 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     return { jsonrpc: "2.0", id: 0, result: res.result }
   }
 
-  private async _personal_sign(
-    params: Array<unknown>
-  ): Promise<JSONRPCResponse> {
+  private async _personal_sign(params: unknown[]): Promise<JSONRPCResponse> {
     const message = ensureBuffer(params[0])
     const address = ensureAddressString(params[1])
     const res = await this._relay.signEthereumMessage(message, address, true)
@@ -469,7 +465,7 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
   }
 
   private async _personal_ecRecover(
-    params: Array<unknown>
+    params: unknown[]
   ): Promise<JSONRPCResponse> {
     const message = ensureBuffer(params[0])
     const signature = ensureBuffer(params[1])
@@ -482,7 +478,7 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
   }
 
   private async _eth_signTransaction(
-    params: Array<unknown>
+    params: unknown[]
   ): Promise<JSONRPCResponse> {
     const tx = this._prepareTransactionParams((params[0] as any) || {})
     const res = await this._relay.signEthereumTransaction(tx)
@@ -490,7 +486,7 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
   }
 
   private async _eth_sendRawTransaction(
-    params: Array<unknown>
+    params: unknown[]
   ): Promise<JSONRPCResponse> {
     const signedTransaction = ensureBuffer(params[0])
     const res = await this._relay.submitEthereumTransaction(
@@ -501,21 +497,19 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
   }
 
   private async _eth_sendTransaction(
-    params: Array<unknown>
+    params: unknown[]
   ): Promise<JSONRPCResponse> {
     const tx = this._prepareTransactionParams((params[0] as any) || {})
     const res = await this._relay.signAndSubmitEthereumTransaction(tx)
     return { jsonrpc: "2.0", id: 0, result: res.result }
   }
 
-  private _eth_uninstallFilter(params: Array<unknown>): boolean {
+  private _eth_uninstallFilter(params: unknown[]): boolean {
     const filterId = ensureHexString(params[0])
     return this._filterPolyfill.uninstallFilter(filterId)
   }
 
-  private async _eth_newFilter(
-    params: Array<unknown>
-  ): Promise<JSONRPCResponse> {
+  private async _eth_newFilter(params: unknown[]): Promise<JSONRPCResponse> {
     const param = params[0] as any // TODO: un-any this
     const filterId = await this._filterPolyfill.newFilter(param)
     return { jsonrpc: "2.0", id: 0, result: filterId }
@@ -531,14 +525,12 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     return { jsonrpc: "2.0", id: 0, result: filterId }
   }
 
-  private _eth_getFilterChanges(
-    params: Array<unknown>
-  ): Promise<JSONRPCResponse> {
+  private _eth_getFilterChanges(params: unknown[]): Promise<JSONRPCResponse> {
     const filterId = ensureHexString(params[0])
     return this._filterPolyfill.getFilterChanges(filterId)
   }
 
-  private _eth_getFilterLogs(params: Array<unknown>): Promise<JSONRPCResponse> {
+  private _eth_getFilterLogs(params: unknown[]): Promise<JSONRPCResponse> {
     const filterId = ensureHexString(params[0])
     return this._filterPolyfill.getFilterLogs(filterId)
   }
