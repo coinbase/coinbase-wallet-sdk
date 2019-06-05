@@ -198,7 +198,7 @@ export class WalletLinkRelay {
         message: notificationMessage,
         onClickCancel: () => {
           WalletLinkRelay._callbacks.delete(id)
-          reject(new Error("User canceled request"))
+          reject(new Error("User rejected request"))
         },
         onClickHelp: () => {
           this.openWalletLinkWindow()

@@ -13,6 +13,8 @@ import {
   JSONRPCMethod,
   JSONRPCRequest,
   JSONRPCResponse,
+  ProviderError,
+  ProviderErrorCode,
   Web3Provider
 } from "./types"
 import {
@@ -327,7 +329,23 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
         headers: { "Content-Type": "application/json" }
       })
       .then(res => res.json())
-      .then(json => json as JSONRPCResponse)
+      .then(json => {
+        if (!json) {
+          throw new ProviderError("unexpected response")
+        }
+        const response = json as JSONRPCResponse
+        const { error } = response
+
+        if (error) {
+          throw new ProviderError(
+            error.message || "RPC Error",
+            error.code,
+            error.data
+          )
+        }
+
+        return response
+      })
   }
 
   private _handleAsynchronousFilterMethods(
@@ -394,6 +412,12 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     }
   }
 
+  private _requireAuthorization(): void {
+    if (this._addresses.length === 0) {
+      throw new ProviderError("Unauthorized", ProviderErrorCode.UNAUTHORIZED)
+    }
+  }
+
   private _eth_accounts(): string[] {
     return this._addresses
   }
@@ -421,6 +445,15 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     try {
       res = await this._relay.requestEthereumAccounts(this._appName)
     } catch (err) {
+      if (
+        typeof err.message === "string" &&
+        err.message.match(/(denied|rejected)/i)
+      ) {
+        throw new ProviderError(
+          "User denied account authorization",
+          ProviderErrorCode.USER_DENIED_REQUEST_ACCOUNTS
+        )
+      }
       throw err
     } finally {
       if (this._walletLinkWindow) {
@@ -440,10 +473,24 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
   }
 
   private async _eth_sign(params: unknown[]): Promise<JSONRPCResponse> {
+    this._requireAuthorization()
     const message = ensureBuffer(params[1])
     const address = ensureAddressString(params[0])
-    const res = await this._relay.signEthereumMessage(message, address, false)
-    return { jsonrpc: "2.0", id: 0, result: res.result }
+    try {
+      const res = await this._relay.signEthereumMessage(message, address, false)
+      return { jsonrpc: "2.0", id: 0, result: res.result }
+    } catch (err) {
+      if (
+        typeof err.message === "string" &&
+        err.message.match(/(denied|rejected)/i)
+      ) {
+        throw new ProviderError(
+          "User denied message signature",
+          ProviderErrorCode.USER_DENIED_REQUEST_SIGNATURE
+        )
+      }
+      throw err
+    }
   }
 
   private async _eth_ecRecover(params: unknown[]): Promise<JSONRPCResponse> {
@@ -458,10 +505,24 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
   }
 
   private async _personal_sign(params: unknown[]): Promise<JSONRPCResponse> {
+    this._requireAuthorization()
     const message = ensureBuffer(params[0])
     const address = ensureAddressString(params[1])
-    const res = await this._relay.signEthereumMessage(message, address, true)
-    return { jsonrpc: "2.0", id: 0, result: res.result }
+    try {
+      const res = await this._relay.signEthereumMessage(message, address, true)
+      return { jsonrpc: "2.0", id: 0, result: res.result }
+    } catch (err) {
+      if (
+        typeof err.message === "string" &&
+        err.message.match(/(denied|rejected)/i)
+      ) {
+        throw new ProviderError(
+          "User denied message signature",
+          ProviderErrorCode.USER_DENIED_REQUEST_SIGNATURE
+        )
+      }
+      throw err
+    }
   }
 
   private async _personal_ecRecover(
@@ -480,9 +541,23 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
   private async _eth_signTransaction(
     params: unknown[]
   ): Promise<JSONRPCResponse> {
+    this._requireAuthorization()
     const tx = this._prepareTransactionParams((params[0] as any) || {})
-    const res = await this._relay.signEthereumTransaction(tx)
-    return { jsonrpc: "2.0", id: 0, result: res.result }
+    try {
+      const res = await this._relay.signEthereumTransaction(tx)
+      return { jsonrpc: "2.0", id: 0, result: res.result }
+    } catch (err) {
+      if (
+        typeof err.message === "string" &&
+        err.message.match(/(denied|rejected)/i)
+      ) {
+        throw new ProviderError(
+          "User denied transaction signature",
+          ProviderErrorCode.USER_DENIED_REQUEST_SIGNATURE
+        )
+      }
+      throw err
+    }
   }
 
   private async _eth_sendRawTransaction(
@@ -499,9 +574,23 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
   private async _eth_sendTransaction(
     params: unknown[]
   ): Promise<JSONRPCResponse> {
+    this._requireAuthorization()
     const tx = this._prepareTransactionParams((params[0] as any) || {})
-    const res = await this._relay.signAndSubmitEthereumTransaction(tx)
-    return { jsonrpc: "2.0", id: 0, result: res.result }
+    try {
+      const res = await this._relay.signAndSubmitEthereumTransaction(tx)
+      return { jsonrpc: "2.0", id: 0, result: res.result }
+    } catch (err) {
+      if (
+        typeof err.message === "string" &&
+        err.message.match(/(denied|rejected)/i)
+      ) {
+        throw new ProviderError(
+          "User denied transaction signature",
+          ProviderErrorCode.USER_DENIED_REQUEST_SIGNATURE
+        )
+      }
+      throw err
+    }
   }
 
   private _eth_uninstallFilter(params: unknown[]): boolean {
