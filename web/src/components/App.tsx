@@ -1,7 +1,8 @@
 // Copyright (c) 2018-2019 Coinbase, Inc. <https://coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import React from "react"
+import bind from "bind-decorator"
+import React, { MouseEvent } from "react"
 import { Subscription } from "rxjs"
 import { style } from "typestyle"
 import { RPC_URL, WEB_URL } from "../config"
@@ -49,6 +50,14 @@ export class App extends React.PureComponent<{}, State> {
     this.subscriptions.add(
       walletLinkHost.linked$.subscribe(v => this.setState({ linked: v }))
     )
+
+    this.subscriptions.add(
+      Session.sessionIdChange$.subscribe(change => {
+        if (window.parent && change.oldValue && !change.newValue) {
+          window.parent.postMessage("WALLETLINK_UNLINKED", "*")
+        }
+      })
+    )
   }
 
   public componentWillUnmount() {
@@ -79,7 +88,17 @@ export class App extends React.PureComponent<{}, State> {
         />
         <p>{connected ? "Connected" : "Disconnected"}</p>
         <p>{linked ? "Linked" : "Not Linked"}</p>
+
+        <button onClick={this.handleClickUnlink}>Unlink</button>
       </div>
     )
+  }
+
+  @bind
+  private handleClickUnlink(evt: MouseEvent): void {
+    evt.preventDefault()
+
+    Session.clear()
+    document.location.reload()
   }
 }

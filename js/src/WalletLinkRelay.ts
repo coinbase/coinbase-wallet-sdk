@@ -8,6 +8,7 @@ import url from "url"
 import { AddressString, IntNumber, RegExpString } from "./types"
 import { bigIntStringFromBN, doOnLoad, hexStringFromBuffer } from "./util"
 import { WalletLinkNotification } from "./WalletLinkNotification"
+import * as walletLinkStorage from "./walletLinkStorage"
 import { Web3Method } from "./Web3Method"
 import { Web3Request, Web3RequestMessage } from "./Web3Request"
 import {
@@ -218,6 +219,12 @@ export class WalletLinkRelay {
 
   @bind
   private _handleMessage(evt: MessageEvent): void {
+    if (evt.data === "WALLETLINK_UNLINKED") {
+      walletLinkStorage.clear()
+      document.location.reload()
+      return
+    }
+
     const message = isWeb3ResponseMessage(evt.data) ? evt.data : null
     if (!message) {
       return

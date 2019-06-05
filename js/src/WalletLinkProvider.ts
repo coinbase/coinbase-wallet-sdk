@@ -23,6 +23,7 @@ import {
   ensureRegExpString
 } from "./util"
 import { EthereumTransactionParams, WalletLinkRelay } from "./WalletLinkRelay"
+import * as walletLinkStorage from "./walletLinkStorage"
 import { RequestEthereumAddressesResponse } from "./Web3Response"
 
 export interface WalletLinkProviderOptions {
@@ -68,9 +69,11 @@ export class WalletLinkProvider implements Web3Provider {
       .slice(0, 10)
 
     try {
-      const addresses = localStorage.getItem(this._localStorageAddressesKey)
+      const addresses = walletLinkStorage.getItem<string[]>(
+        this._localStorageAddressesKey
+      )
       if (addresses) {
-        this._setAddresses(addresses.split(" "))
+        this._setAddresses(addresses)
       }
     } catch {}
   }
@@ -219,10 +222,7 @@ export class WalletLinkProvider implements Web3Provider {
     this._addresses = addresses.map(address => ensureAddressString(address))
 
     if (persist) {
-      localStorage.setItem(
-        this._localStorageAddressesKey,
-        this._addresses.join(" ")
-      )
+      walletLinkStorage.setItem(this._localStorageAddressesKey, this._addresses)
     }
   }
 

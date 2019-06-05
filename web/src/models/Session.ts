@@ -1,4 +1,6 @@
 import crypto from "crypto"
+import { fromEvent, Observable } from "rxjs"
+import { filter, map } from "rxjs/operators"
 
 const localStorageSessionIdKey = "WalletLinkSessionId"
 const localStorageSessionSecretKey = "WalletLinkSessionSecret"
@@ -29,6 +31,19 @@ export class Session {
   public static clear(): void {
     localStorage.removeItem(localStorageSessionIdKey)
     localStorage.removeItem(localStorageSessionSecretKey)
+  }
+
+  public static get sessionIdChange$(): Observable<{
+    oldValue: string | null
+    newValue: string | null
+  }> {
+    return fromEvent<StorageEvent>(window, "storage").pipe(
+      filter(evt => evt.key === localStorageSessionIdKey),
+      map(evt => ({
+        oldValue: evt.oldValue || null,
+        newValue: evt.newValue || null
+      }))
+    )
   }
 
   public get id(): string {
