@@ -3,6 +3,7 @@
 
 import BN from "bn.js"
 import crypto from "crypto"
+import { EventEmitter } from "events"
 import "whatwg-fetch"
 import { FilterPolyfill } from "./FilterPolyfill"
 import {
@@ -35,7 +36,7 @@ export interface WalletLinkProviderOptions {
 
 const DEFAULT_APP_NAME = "DApp"
 
-export class WalletLinkProvider implements Web3Provider {
+export class WalletLinkProvider extends EventEmitter implements Web3Provider {
   private readonly _filterPolyfill = new FilterPolyfill(this)
 
   private readonly _relay: WalletLinkRelay
@@ -52,6 +53,7 @@ export class WalletLinkProvider implements Web3Provider {
   }
 
   constructor(options: WalletLinkProviderOptions) {
+    super()
     if (!options.relay) {
       throw new Error("realy must be provided")
     }
@@ -224,6 +226,8 @@ export class WalletLinkProvider implements Web3Provider {
     if (persist) {
       walletLinkStorage.setItem(this._localStorageAddressesKey, this._addresses)
     }
+
+    this.emit("accountsChanged", this._addresses)
   }
 
   private _sendRequestAsync(request: JSONRPCRequest): Promise<JSONRPCResponse> {
