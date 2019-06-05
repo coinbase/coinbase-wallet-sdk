@@ -6,7 +6,8 @@ import BN from "bn.js"
 import crypto from "crypto"
 import url from "url"
 import { AddressString, IntNumber, RegExpString } from "./types"
-import { bigIntStringFromBN, hexStringFromBuffer } from "./util"
+import { bigIntStringFromBN, doOnLoad, hexStringFromBuffer } from "./util"
+import { WalletLinkNotification } from "./WalletLinkNotification"
 import { Web3Method } from "./Web3Method"
 import { Web3Request, Web3RequestMessage } from "./Web3Request"
 import {
@@ -48,7 +49,7 @@ export class WalletLinkRelay {
       throw new Error("iframe already injected!")
     }
     const iframe = (this._iframe = document.createElement("iframe"))
-    iframe.className = "__WalletLink__"
+    iframe.className = "_WalletLinkBridge"
     iframe.src = `${this._walletLinkWebUrl}/#/bridge`
     iframe.width = "1"
     iframe.height = "1"
@@ -58,16 +59,10 @@ export class WalletLinkRelay {
     iframe.style.top = "0"
     iframe.style.right = "0"
 
-    const inject = () => {
+    doOnLoad(() => {
       const parentEl = document.body || document.documentElement
       parentEl.appendChild(iframe)
-    }
-
-    if (["complete", "interactive"].includes(document.readyState)) {
-      inject()
-    } else {
-      window.addEventListener("load", inject, false)
-    }
+    })
 
     window.addEventListener("message", this._handleMessage, false)
   }
@@ -189,10 +184,26 @@ export class WalletLinkRelay {
 
       const u = url.parse(this._walletLinkWebUrl)
       const targetOrigin = `${u.protocol}//${u.host}`
-
       const id = crypto.randomBytes(8).toString("hex")
 
+      const notificationMessage =
+        request.method === Web3Method.requestEthereumAddresses
+          ? "Requested access to your account..."
+          : "Pushed a WalletLink request to your device..."
+
+      const notification = new WalletLinkNotification({
+        message: notificationMessage,
+        onClickCancel: () => {
+          WalletLinkRelay._callbacks.delete(id)
+          reject(new Error("User canceled request"))
+        },
+        onClickHelp: () => {
+          this.openWalletLinkWindow()
+        }
+      })
+
       WalletLinkRelay._callbacks.set(id, response => {
+        notification.hide()
         if (response.errorMessage) {
           return reject(new Error(response.errorMessage))
         }
@@ -201,6 +212,7 @@ export class WalletLinkRelay {
 
       const message: Web3RequestMessage = { id, request }
       this._iframe.contentWindow.postMessage(message, targetOrigin)
+      notification.show()
     })
   }
 
@@ -214,6 +226,7 @@ export class WalletLinkRelay {
     const callback = WalletLinkRelay._callbacks.get(message.id)
     if (callback) {
       callback(message.response)
+      WalletLinkRelay._callbacks.delete(message.id)
     }
   }
 }

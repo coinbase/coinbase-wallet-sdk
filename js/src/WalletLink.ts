@@ -1,6 +1,7 @@
 // Copyright (c) 2018-2019 Coinbase, Inc. <https://coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
+import { WalletLinkNotification } from "./WalletLinkNotification"
 import { WalletLinkProvider } from "./WalletLinkProvider"
 import { WalletLinkRelay } from "./WalletLinkRelay"
 
@@ -20,6 +21,7 @@ export class WalletLink {
     this._relay = new WalletLinkRelay(
       options.walletLinkWebUrl || WALLETLINK_WEB_URL
     )
+    WalletLinkNotification.injectContainer()
     this._relay.injectIframe()
   }
 
