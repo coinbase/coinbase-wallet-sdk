@@ -26,14 +26,27 @@ function chromeMain(): void {
   const container = document.head || document.documentElement!
   const s = document.createElement("script")
   s.textContent = `
-    ${web3JS};\n
-    ${walletLinkJS};\n
-    window.walletLink = new WalletLink({ appName: "WalletLink App" })
-    window.ethereum = walletLink.makeWeb3Provider(
-      "https://mainnet.infura.io/v3/38747f203c9e4ffebbdaf0f6c09ad72c",
-      1
-    )
-    window.web3 = new Web3(window.ethereum)
+    // web3.js
+    ${web3JS};
+    // walletlink.js
+    ${walletLinkJS}
+    ;(() => {
+      const walletLink = new WalletLink({ appName: "WalletLink App" })
+      const ethereum = walletLink.makeWeb3Provider(
+        "https://mainnet.infura.io/v3/38747f203c9e4ffebbdaf0f6c09ad72c",
+        1
+      )
+      const web3 = new Web3(ethereum)
+      web3.eth.defaultAccount = web3.eth.accounts[0]
+
+      ethereum.on('accountsChanged', accounts => {
+        web3.eth.defaultAccount = accounts[0]
+      })
+
+      window.walletLink = walletLink
+      window.ethereum = ethereum
+      window.web3 = web3
+    })()
   `
   container.insertBefore(s, container.children[0])
 }
