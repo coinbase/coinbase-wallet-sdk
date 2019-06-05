@@ -38,11 +38,16 @@ type ResponseCallback = (response: Web3Response) => void
 export class WalletLinkRelay {
   private static _callbacks = new Map<string, ResponseCallback>()
 
-  private _walletLinkWebUrl: string
+  private readonly _walletLinkWebUrl: string
+  private readonly _walletLinkWebOrigin: string
+
   private _iframe: HTMLIFrameElement | null = null
 
   constructor(walletLinkWebUrl: string) {
     this._walletLinkWebUrl = walletLinkWebUrl
+
+    const u = url.parse(this._walletLinkWebUrl)
+    this._walletLinkWebOrigin = `${u.protocol}//${u.host}`
   }
 
   public injectIframe(): void {
@@ -182,9 +187,6 @@ export class WalletLinkRelay {
       if (!this._iframe || !this._iframe.contentWindow) {
         return reject("iframe is not initialized")
       }
-
-      const u = url.parse(this._walletLinkWebUrl)
-      const targetOrigin = `${u.protocol}//${u.host}`
       const id = crypto.randomBytes(8).toString("hex")
 
       const notificationMessage =
@@ -212,13 +214,17 @@ export class WalletLinkRelay {
       })
 
       const message: Web3RequestMessage = { id, request }
-      this._iframe.contentWindow.postMessage(message, targetOrigin)
+      this._iframe.contentWindow.postMessage(message, this._walletLinkWebOrigin)
       notification.show()
     })
   }
 
   @bind
   private _handleMessage(evt: MessageEvent): void {
+    if (evt.origin !== this._walletLinkWebOrigin) {
+      return
+    }
+
     if (evt.data === "WALLETLINK_UNLINKED") {
       walletLinkStorage.clear()
       document.location.reload()
