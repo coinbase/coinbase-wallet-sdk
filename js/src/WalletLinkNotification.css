@@ -157,6 +157,7 @@
   top: 0;
   right: 0;
   text-align: right;
+  z-index: 2147483647;
 }
 
 #_WalletLinkNotifications style {
@@ -165,12 +166,14 @@
 
 #_WalletLinkNotifications ._WalletLinkNotification {
   display: block;
+  margin: 8px 16px 0 16px;
 }
 
 #_WalletLinkNotifications ._WalletLinkNotification p {
   display: inline-block;
-  margin: 8px 16px 0 16px;
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(255, 255, 255, 0.95);
+  color: black;
+  margin: 0;
   padding: 0 16px;
   line-height: 40px;
   border-radius: 4px;
