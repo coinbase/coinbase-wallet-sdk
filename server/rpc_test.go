@@ -211,6 +211,190 @@ func TestRPC(t *testing.T) {
 		},
 	}, res)
 
+	// guest updates session config - add metadata value
+	guestReqID++
+	err = guestWs.WriteJSON(jsonMap{
+		"type":      "SetSessionConfig",
+		"id":        guestReqID,
+		"sessionId": sessionID,
+		"metadata": map[string]string{
+			"baz": "abcdefg",
+		},
+	})
+	require.Nil(t, err)
+
+	// server responds to guest
+	res = jsonMap{}
+	err = guestWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":      "OK",
+		"id":        float64(guestReqID),
+		"sessionId": sessionID,
+	}, res)
+
+	// server sends SessionConfigUpdated message to host
+	res = jsonMap{}
+	err = hostWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":       "SessionConfigUpdated",
+		"sessionId":  sessionID,
+		"webhookId":  webhookID,
+		"webhookUrl": webhookURL,
+		"metadata": map[string]interface{}{
+			"foo": "hello world",
+			"bar": "1234",
+			"baz": "abcdefg",
+		},
+	}, res)
+
+	// host reads session config
+	hostReqID++
+	err = hostWs.WriteJSON(jsonMap{
+		"type":      "GetSessionConfig",
+		"id":        hostReqID,
+		"sessionId": sessionID,
+	})
+	require.Nil(t, err)
+
+	// server responds to host
+	res = jsonMap{}
+	err = hostWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":       "GetSessionConfigOK",
+		"id":         float64(hostReqID),
+		"sessionId":  sessionID,
+		"webhookId":  webhookID,
+		"webhookUrl": webhookURL,
+		"metadata": map[string]interface{}{
+			"foo": "hello world",
+			"bar": "1234",
+			"baz": "abcdefg",
+		},
+	}, res)
+
+	// guest updates session config - remove metadata value
+	guestReqID++
+	err = guestWs.WriteJSON(jsonMap{
+		"type":      "SetSessionConfig",
+		"id":        guestReqID,
+		"sessionId": sessionID,
+		"metadata": map[string]*string{
+			"foo": nil,
+		},
+	})
+	require.Nil(t, err)
+
+	// server responds to guest
+	res = jsonMap{}
+	err = guestWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":      "OK",
+		"id":        float64(guestReqID),
+		"sessionId": sessionID,
+	}, res)
+
+	// server sends SessionConfigUpdated message to host
+	res = jsonMap{}
+	err = hostWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":       "SessionConfigUpdated",
+		"sessionId":  sessionID,
+		"webhookId":  webhookID,
+		"webhookUrl": webhookURL,
+		"metadata": map[string]interface{}{
+			"bar": "1234",
+			"baz": "abcdefg",
+		},
+	}, res)
+
+	// host reads session config
+	hostReqID++
+	err = hostWs.WriteJSON(jsonMap{
+		"type":      "GetSessionConfig",
+		"id":        hostReqID,
+		"sessionId": sessionID,
+	})
+	require.Nil(t, err)
+
+	// server responds to host
+	res = jsonMap{}
+	err = hostWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":       "GetSessionConfigOK",
+		"id":         float64(hostReqID),
+		"sessionId":  sessionID,
+		"webhookId":  webhookID,
+		"webhookUrl": webhookURL,
+		"metadata": map[string]interface{}{
+			"bar": "1234",
+			"baz": "abcdefg",
+		},
+	}, res)
+
+	// guest updates session config - remove webhook URL
+	guestReqID++
+	err = guestWs.WriteJSON(jsonMap{
+		"type":       "SetSessionConfig",
+		"id":         guestReqID,
+		"webhookUrl": "",
+		"sessionId":  sessionID,
+	})
+	require.Nil(t, err)
+
+	// server responds to guest
+	res = jsonMap{}
+	err = guestWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":      "OK",
+		"id":        float64(guestReqID),
+		"sessionId": sessionID,
+	}, res)
+
+	// server sends SessionConfigUpdated message to host
+	res = jsonMap{}
+	err = hostWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":      "SessionConfigUpdated",
+		"sessionId": sessionID,
+		"webhookId": webhookID,
+		"metadata": map[string]interface{}{
+			"bar": "1234",
+			"baz": "abcdefg",
+		},
+	}, res)
+
+	// host reads session config
+	hostReqID++
+	err = hostWs.WriteJSON(jsonMap{
+		"type":      "GetSessionConfig",
+		"id":        hostReqID,
+		"sessionId": sessionID,
+	})
+	require.Nil(t, err)
+
+	// server responds to host
+	res = jsonMap{}
+	err = hostWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":      "GetSessionConfigOK",
+		"id":        float64(hostReqID),
+		"sessionId": sessionID,
+		"webhookId": webhookID,
+		"metadata": map[string]interface{}{
+			"bar": "1234",
+			"baz": "abcdefg",
+		},
+	}, res)
+
 	eventName := "do_something"
 	eventData := "foobarbaz123"
 

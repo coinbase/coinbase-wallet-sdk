@@ -201,9 +201,26 @@ func (c *MessageHandler) handleSetSessionConfig(
 		return newServerMessageFail(msg.ID, msg.SessionID, err.Error())
 	}
 
-	session.WebhookID = msg.WebhookID
-	session.WebhookURL = msg.WebhookURL
-	session.Metadata = msg.Metadata
+	if msg.WebhookID != nil {
+		session.WebhookID = *msg.WebhookID
+	}
+
+	if msg.WebhookURL != nil {
+		session.WebhookURL = *msg.WebhookURL
+	}
+
+	if session.Metadata == nil {
+		session.Metadata = map[string]string{}
+	}
+
+	for k, v := range msg.Metadata {
+		if v != nil {
+			session.Metadata[k] = *v
+		} else {
+			delete(session.Metadata, k)
+		}
+	}
+
 	if err := session.Save(c.store); err != nil {
 		fmt.Println(err)
 		return newServerMessageFail(msg.ID, msg.SessionID, "internal error")
@@ -212,7 +229,7 @@ func (c *MessageHandler) handleSetSessionConfig(
 	// send SessionConfigUpdated message to host
 	subID := hostPubSubID(msg.SessionID)
 	updatedMsg := newServerMessageSessionConfigUpdated(
-		msg.SessionID, msg.WebhookID, msg.WebhookURL, msg.Metadata,
+		msg.SessionID, session.WebhookID, session.WebhookURL, session.Metadata,
 	)
 	c.pubSub.Publish(subID, updatedMsg)
 

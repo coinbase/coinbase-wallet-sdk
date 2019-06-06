@@ -51,12 +51,12 @@ type clientMessageIsLinked struct {
 
 type clientMessageSetSessionConfig struct {
 	_clientMessage
-	Type       string            `json:"type"`
-	ID         int               `json:"id"`
-	SessionID  string            `json:"sessionId"`
-	WebhookID  string            `json:"webhookId,omitempty"`
-	WebhookURL string            `json:"webhookUrl,omitempty"`
-	Metadata   map[string]string `json:"metadata,omitempty"`
+	Type       string             `json:"type"`
+	ID         int                `json:"id"`
+	SessionID  string             `json:"sessionId"`
+	WebhookID  *string            `json:"webhookId,omitempty"`
+	WebhookURL *string            `json:"webhookUrl,omitempty"`
+	Metadata   map[string]*string `json:"metadata,omitempty"`
 }
 
 type clientMessageGetSessionConfig struct {

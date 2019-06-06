@@ -56,14 +56,14 @@ func IsValidSessionKey(key string) bool {
 
 // IsValidSessionConfig - check validty of session config parameters
 func IsValidSessionConfig(
-	webhookID string,
-	webhookURL string,
-	metadata map[string]string,
+	webhookID *string,
+	webhookURL *string,
+	metadata map[string]*string,
 ) (valid bool, invalidReason string) {
-	if len(webhookID) > 100 {
+	if webhookID != nil && len(*webhookID) > 100 {
 		return false, "webhook ID can't be longer than 100 characters"
 	}
-	if len(webhookURL) > 200 {
+	if webhookURL != nil && len(*webhookURL) > 200 {
 		return false, "webhook URL can't be longer than 200 characters"
 	}
 	if len(metadata) > 50 {
@@ -76,7 +76,7 @@ func IsValidSessionConfig(
 		if len(k) > 100 {
 			return false, "metadata field name can't be longer than 100 characters"
 		}
-		if len(v) > 1024 {
+		if v != nil && len(*v) > 1024 {
 			return false, "metadata value can't be longer than 1024 characters"
 		}
 	}

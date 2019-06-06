@@ -58,8 +58,8 @@ type serverMessageGetSessionConfigOK struct {
 	Type       string            `json:"type"`
 	ID         int               `json:"id"`
 	SessionID  string            `json:"sessionId"`
-	WebhookID  string            `json:"webhookId"`
-	WebhookURL string            `json:"webhookUrl"`
+	WebhookID  string            `json:"webhookId,omitempty"`
+	WebhookURL string            `json:"webhookUrl,omitempty"`
 	Metadata   map[string]string `json:"metadata"`
 }
 
@@ -67,8 +67,8 @@ type serverMessageSessionConfigUpdated struct {
 	_serverMessage
 	Type       string            `json:"type"`
 	SessionID  string            `json:"sessionId"`
-	WebhookID  string            `json:"webhookId"`
-	WebhookURL string            `json:"webhookUrl"`
+	WebhookID  string            `json:"webhookId,omitempty"`
+	WebhookURL string            `json:"webhookUrl,omitempty"`
 	Metadata   map[string]string `json:"metadata"`
 }
 
