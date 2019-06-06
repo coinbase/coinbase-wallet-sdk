@@ -2,7 +2,6 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator"
-import { doOnLoad } from "./util"
 
 const css = require("./WalletLinkNotification.css").default
 
@@ -15,22 +14,18 @@ const dismissElClassName = "_WalletLinkNotificationDismiss"
 
 export class WalletLinkNotification {
   public static injectContainer(): void {
-    doOnLoad(() => {
-      if (document.querySelector(`#${containerElId}`)) {
-        return
-      }
+    if (document.querySelector(`#${containerElId}`)) {
+      return
+    }
 
-      const containerEl = document.createElement("div")
-      containerEl.id = containerElId
+    const containerEl = document.createElement("div")
+    containerEl.id = containerElId
 
-      const styleEl = document.createElement("style")
-      styleEl.innerHTML = css
+    const styleEl = document.createElement("style")
+    styleEl.innerHTML = css
 
-      const parentEl = document.body || document.documentElement
-
-      containerEl.appendChild(styleEl)
-      parentEl.appendChild(containerEl)
-    })
+    containerEl.appendChild(styleEl)
+    document.documentElement.appendChild(containerEl)
   }
 
   private readonly message: string

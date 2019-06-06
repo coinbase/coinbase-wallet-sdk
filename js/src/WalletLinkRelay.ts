@@ -6,7 +6,7 @@ import BN from "bn.js"
 import crypto from "crypto"
 import url from "url"
 import { AddressString, IntNumber, RegExpString } from "./types"
-import { bigIntStringFromBN, doOnLoad, hexStringFromBuffer } from "./util"
+import { bigIntStringFromBN, hexStringFromBuffer } from "./util"
 import { WalletLinkNotification } from "./WalletLinkNotification"
 import * as walletLinkStorage from "./walletLinkStorage"
 import { Web3Method } from "./Web3Method"
@@ -54,7 +54,7 @@ export class WalletLinkRelay {
     if (this._iframe) {
       throw new Error("iframe already injected!")
     }
-    const iframe = (this._iframe = document.createElement("iframe"))
+    const iframe = document.createElement("iframe")
     iframe.className = "_WalletLinkBridge"
     iframe.src = `${this._walletLinkWebUrl}/#/bridge`
     iframe.width = "1"
@@ -64,11 +64,8 @@ export class WalletLinkRelay {
     iframe.style.position = "absolute"
     iframe.style.top = "0"
     iframe.style.right = "0"
-
-    doOnLoad(() => {
-      const parentEl = document.body || document.documentElement
-      parentEl.appendChild(iframe)
-    })
+    this._iframe = iframe
+    document.documentElement.appendChild(iframe)
 
     window.addEventListener("message", this._handleMessage, false)
   }

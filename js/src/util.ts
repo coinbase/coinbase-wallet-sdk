@@ -160,11 +160,3 @@ function isBigNumber(val: unknown): boolean {
     typeof constructor.EUCLID === "number"
   )
 }
-
-export function doOnLoad(fn: () => void): void {
-  if (["complete", "interactive"].includes(document.readyState)) {
-    fn()
-  } else {
-    window.addEventListener("load", fn, false)
-  }
-}
