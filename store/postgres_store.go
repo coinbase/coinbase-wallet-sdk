@@ -47,7 +47,7 @@ func (ps *PostgresStore) Set(key string, value interface{}) error {
 		fmt.Sprintf(
 			`INSERT INTO %s (key, value) VALUES ($1, $2)
 			ON CONFLICT (key)
-			DO UPDATE SET key = $1, value = $2`,
+			DO UPDATE SET key = $1, value = $2, updated_at = now()`,
 			ps.tableName,
 		),
 		key,
