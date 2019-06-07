@@ -5,6 +5,7 @@ package store
 import (
 	"database/sql"
 	"testing"
+	"time"
 
 	"github.com/CoinbaseWallet/walletlinkd/config"
 	_ "github.com/lib/pq" // register postgres adapter
@@ -138,4 +139,48 @@ func TestPostgresStoreRemove(t *testing.T) {
 	err = db.QueryRow("SELECT count(*) FROM store WHERE key = $1", "foo").Scan(&n)
 	require.Nil(t, err)
 	require.Equal(t, 0, n)
+}
+
+func TestPostgresStoreFindByPrefix(t *testing.T) {
+	setup(t)
+	defer teardown()
+
+	ps, err := NewPostgresStore(config.PostgresURL, "store")
+	require.Nil(t, err)
+	defer ps.Close()
+
+	startTime := time.Now().Unix()
+
+	foo := dummy{X: 123, Y: 20}
+	err = ps.Set("prefix_foo", &foo)
+	require.Nil(t, err)
+
+	bar := dummy{X: 546, Y: 23}
+	err = ps.Set("prefix_bar", &bar)
+	require.Nil(t, err)
+
+	values := []dummy{}
+	err = ps.FindByPrefix("prefix", startTime, &values)
+	require.Nil(t, err)
+	require.Len(t, values, 2)
+	require.Contains(t, values, foo)
+	require.Contains(t, values, bar)
+
+	values = []dummy{}
+	err = ps.FindByPrefix("prefid", startTime, &values)
+	require.Nil(t, err)
+	require.Len(t, values, 0)
+
+	values = []dummy{}
+	err = ps.FindByPrefix("prefix_f", startTime, &values)
+	require.Nil(t, err)
+	require.Len(t, values, 1)
+	require.Equal(t, foo, values[0])
+
+	intValue := 1234
+	err = ps.FindByPrefix("prefix", startTime, intValue)
+	require.NotNil(t, err)
+
+	err = ps.FindByPrefix("prefix", startTime, &intValue)
+	require.NotNil(t, err)
 }

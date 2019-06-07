@@ -4,6 +4,7 @@ package store
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -84,4 +85,43 @@ func TestMemoryStoreRemove(t *testing.T) {
 	ok, err := ms.Get("foo", &loadedFoo)
 	require.False(t, ok)
 	require.Nil(t, err)
+}
+
+func TestMemoryStoreFindByPrefix(t *testing.T) {
+	ms := NewMemoryStore()
+
+	startTime := time.Now().Unix() - 1
+
+	foo := dummy{X: 123, Y: 20}
+	err := ms.Set("prefix_foo", &foo)
+	require.Nil(t, err)
+
+	bar := dummy{X: 546, Y: 23}
+	err = ms.Set("prefix_bar", &bar)
+	require.Nil(t, err)
+
+	values := []dummy{}
+	err = ms.FindByPrefix("prefix", startTime, &values)
+	require.Nil(t, err)
+	require.Len(t, values, 2)
+	require.Contains(t, values, foo)
+	require.Contains(t, values, bar)
+
+	values = []dummy{}
+	err = ms.FindByPrefix("prefid", startTime, &values)
+	require.Nil(t, err)
+	require.Len(t, values, 0)
+
+	values = []dummy{}
+	err = ms.FindByPrefix("prefix_f", startTime, &values)
+	require.Nil(t, err)
+	require.Len(t, values, 1)
+	require.Equal(t, foo, values[0])
+
+	intValue := 1234
+	err = ms.FindByPrefix("prefix", startTime, intValue)
+	require.NotNil(t, err)
+
+	err = ms.FindByPrefix("prefix", startTime, &intValue)
+	require.NotNil(t, err)
 }
