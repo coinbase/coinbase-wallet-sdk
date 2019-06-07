@@ -60,7 +60,8 @@ func NewServer(options *NewServerOptions) *Server {
 	}
 
 	router.HandleFunc("/rpc", srv.rpcHandler).Methods("GET")
-	router.HandleFunc("/events/{id}", srv.getEventHandler).Methods("GET")
+	router.HandleFunc("/events", srv.getEventsSinceHandler).Methods("GET")
+	router.HandleFunc("/events/{id}", srv.getEventByIDHandler).Methods("GET")
 
 	if len(options.WebRoot) > 0 {
 		router.PathPrefix("/").Methods("GET").Handler(

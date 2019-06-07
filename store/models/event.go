@@ -34,6 +34,16 @@ func LoadEvent(
 	return e, nil
 }
 
+// LoadEventsForSession - load all events from the store for the session with the given ID
+func LoadEventsForSession(st store.Store, since int64, sessionID string) ([]Event, error) {
+	e := []Event{}
+	err := st.FindByPrefix(sessionKeyPrefix(sessionID), since, &e)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to load events")
+	}
+	return e, nil
+}
+
 // Save - save event in the store
 func (e *Event) Save(st store.Store, sessionID string) error {
 	storeKey := eventStoreKey(e.ID, sessionID)
@@ -50,5 +60,9 @@ func eventStoreKey(eventID string, sessionID string) string {
 	if len(eventID) == 0 || len(sessionID) == 0 {
 		return ""
 	}
-	return fmt.Sprintf("session:%s:event:%s", sessionID, eventID)
+	return fmt.Sprintf("%s%s", sessionKeyPrefix(sessionID), eventID)
+}
+
+func sessionKeyPrefix(sessionID string) string {
+	return fmt.Sprintf("session:%s:event:", sessionID)
 }

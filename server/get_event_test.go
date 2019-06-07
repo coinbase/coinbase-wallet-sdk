@@ -32,7 +32,7 @@ func TestGetEventNoSession(t *testing.T) {
 	body := getEventResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&body)
 	require.Nil(t, err)
-	require.Equal(t, getEventResponseErrorInvalidSessionCredentials, body.Error)
+	require.Equal(t, responseErrorInvalidSessionCredentials, body.Error)
 	require.Nil(t, body.Event)
 }
 
@@ -58,7 +58,7 @@ func TestGetEventInvalidSessionKey(t *testing.T) {
 	body := getEventResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&body)
 	require.Nil(t, err)
-	require.Equal(t, getEventResponseErrorInvalidSessionCredentials, body.Error)
+	require.Equal(t, responseErrorInvalidSessionCredentials, body.Error)
 	require.Nil(t, body.Event)
 }
 
