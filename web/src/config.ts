@@ -3,7 +3,7 @@
 
 export const NODE_ENV = process.env.NODE_ENV || "development"
 export const WEB_URL = getWebUrl()
-export const RPC_URL = getRpcUrl()
+export const SERVER_URL = getServerUrl()
 
 function getWebUrl(): string {
   if (NODE_ENV === "development") {
@@ -13,10 +13,9 @@ function getWebUrl(): string {
   return `${protocol}//${host}`
 }
 
-function getRpcUrl(): string {
+function getServerUrl(): string {
   if (NODE_ENV === "development") {
-    return process.env.REACT_APP_RPC_URL || "ws://localhost:8080/rpc"
+    return process.env.REACT_APP_SERVER_URL || "http://localhost:8080"
   }
-  const { protocol, host } = document.location
-  return `${protocol.replace("http", "ws")}//${host}/rpc`
+  return getWebUrl()
 }

@@ -5,7 +5,7 @@ import bind from "bind-decorator"
 import React, { MouseEvent } from "react"
 import { Subscription } from "rxjs"
 import { style } from "typestyle"
-import { RPC_URL, WEB_URL } from "../config"
+import { SERVER_URL, WEB_URL } from "../config"
 import { Session } from "../models/Session"
 import { WalletLinkHost } from "../WalletLink/WalletLinkHost"
 import { WalletLinkWeb3Handler } from "../WalletLink/WalletLinkWeb3Handler"
@@ -33,7 +33,11 @@ export class App extends React.PureComponent<{}, State> {
 
   public componentDidMount() {
     const { session } = this
-    const walletLinkHost = new WalletLinkHost(session.id, session.key, RPC_URL)
+    const walletLinkHost = new WalletLinkHost(
+      session.id,
+      session.key,
+      SERVER_URL
+    )
     const web3Handler = new WalletLinkWeb3Handler(
       walletLinkHost,
       session.secret
@@ -83,7 +87,7 @@ export class App extends React.PureComponent<{}, State> {
         <p>WalletLink</p>
         <SessionQRCode
           webUrl={WEB_URL}
-          rpcUrl={RPC_URL}
+          serverUrl={SERVER_URL}
           sessionId={session.id}
           sessionSecret={session.secret}
         />

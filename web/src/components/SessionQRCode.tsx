@@ -21,18 +21,18 @@ const styleSessionId = style({
 
 export interface Props {
   webUrl: string
-  rpcUrl: string
+  serverUrl: string
   sessionId: string
   sessionSecret: string
 }
 
 export class SessionQRCode extends React.PureComponent<Props> {
   public render() {
-    const { webUrl, rpcUrl, sessionId, sessionSecret } = this.props
+    const { webUrl, serverUrl, sessionId, sessionSecret } = this.props
     const queryParams = {
       id: sessionId,
       secret: sessionSecret,
-      rpc: rpcUrl
+      server: serverUrl
     }
     const url = `${webUrl}/#/joinSession?${querystring.stringify(queryParams)}`
 

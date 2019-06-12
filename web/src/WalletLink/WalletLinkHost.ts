@@ -63,16 +63,17 @@ export class WalletLinkHost {
   /**
    * @param sessionId Session ID
    * @param sessionKey Session Key
-   * @param rpcUrl Walletlinkd RPC URL
+   * @param serverUrl Walletlinkd RPC URL
    * @param [WebSocketClass] Custom WebSocket implementation
    */
   constructor(
     private sessionId: string,
     private sessionKey: string,
-    rpcUrl: string,
+    serverUrl: string,
     WebSocketClass: typeof WebSocket = WebSocket
   ) {
-    const ws = (this.ws = new RxWebSocket(rpcUrl, WebSocketClass))
+    const ws = new RxWebSocket(serverUrl + "/rpc", WebSocketClass)
+    this.ws = ws
 
     // attempt to reconnect every 5 seconds when disconnected
     this.subscriptions.add(

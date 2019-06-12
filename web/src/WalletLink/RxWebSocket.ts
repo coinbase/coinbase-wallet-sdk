@@ -22,6 +22,7 @@ export enum ConnectionState {
  * Rx-ified WebSocket
  */
 export class RxWebSocket {
+  private readonly url: string
   private webSocket: WebSocket | null = null
   private connectionStateSubject = new BehaviorSubject<ConnectionState>(
     ConnectionState.DISCONNECTED
@@ -33,9 +34,11 @@ export class RxWebSocket {
    * @param [WebSocketClass] Custom WebSocket implementation
    */
   constructor(
-    private url: string,
-    private WebSocketClass: typeof WebSocket = WebSocket
-  ) {}
+    url: string,
+    private readonly WebSocketClass: typeof WebSocket = WebSocket
+  ) {
+    this.url = url.replace(/^http/, "ws")
+  }
 
   /**
    * Make a websocket connection
