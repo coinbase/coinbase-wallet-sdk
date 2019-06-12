@@ -20,7 +20,7 @@ const isLocalhost = Boolean(
     )
 )
 
-type Config = {
+interface Config {
   onSuccess?: (registration: ServiceWorkerRegistration) => void
   onUpdate?: (registration: ServiceWorkerRegistration) => void
 }

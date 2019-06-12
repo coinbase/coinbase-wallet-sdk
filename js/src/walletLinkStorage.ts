@@ -2,6 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 const LOCALSTORAGE_KEY_PREFIX = "WalletLink:"
+
 function key(name: string): string {
   return `${LOCALSTORAGE_KEY_PREFIX}${name}`
 }
@@ -28,9 +29,9 @@ export function removeItem(name: string): void {
 
 export function clear(): void {
   for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i)
-    if (typeof key === "string" && key.startsWith(LOCALSTORAGE_KEY_PREFIX)) {
-      localStorage.removeItem(key)
+    const k = localStorage.key(i)
+    if (typeof k === "string" && k.startsWith(LOCALSTORAGE_KEY_PREFIX)) {
+      localStorage.removeItem(k)
     }
   }
 }
