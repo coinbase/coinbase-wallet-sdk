@@ -28,15 +28,17 @@ func main() {
 		WebRoot:        webRoot,
 		AllowedOrigins: config.AllowedOrigins,
 		Webhook:        webhook.NewWebhook(config.ServerURL),
+		ServerURL:      config.ServerURL,
+		ForceSSL:       config.ForceSSL,
 	})
 
 	fmt.Printf(
-		"walletlinkd %s-%s listening on port %s...\n"+
+		"walletlinkd %s-%s listening on port %d...\n"+
 			"Serving static assets in %s...\n",
 		config.Version,
 		config.GitCommit,
 		config.Port,
 		webRoot,
 	)
-	srv.Start(config.Port)
+	srv.Start(uint(config.Port))
 }

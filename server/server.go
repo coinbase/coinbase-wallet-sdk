@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/CoinbaseWallet/walletlinkd/server/rpc"
@@ -22,6 +23,7 @@ type Server struct {
 	pubSub         *rpc.PubSub
 	allowedOrigins util.StringSet
 	webhook        webhook.Caller
+	serverURL      string
 }
 
 // NewServerOptions - options for NewServer function
@@ -30,6 +32,8 @@ type NewServerOptions struct {
 	WebRoot        string
 	AllowedOrigins util.StringSet
 	Webhook        webhook.Caller
+	ServerURL      string
+	ForceSSL       bool
 }
 
 // NewServer - construct a Server
@@ -57,6 +61,11 @@ func NewServer(options *NewServerOptions) *Server {
 		pubSub:         rpc.NewPubSub(),
 		allowedOrigins: options.AllowedOrigins,
 		webhook:        options.Webhook,
+		serverURL:      options.ServerURL,
+	}
+
+	if options.ForceSSL {
+		router.Use(srv.forceSSL)
 	}
 
 	router.HandleFunc("/rpc", srv.rpcHandler).Methods("GET")
@@ -73,9 +82,9 @@ func NewServer(options *NewServerOptions) *Server {
 }
 
 // Start - start the server
-func (s *Server) Start(port string) {
+func (s *Server) Start(port uint) {
 	httpServer := &http.Server{
-		Addr: fmt.Sprintf("0.0.0.0:%s", port),
+		Addr: fmt.Sprintf("0.0.0.0:%d", port),
 		// Good practice to set timeouts to avoid Slowloris attacks.
 		WriteTimeout: time.Second * 30,
 		ReadTimeout:  time.Second * 30,
@@ -83,4 +92,24 @@ func (s *Server) Start(port string) {
 		Handler:      s.router,
 	}
 	log.Fatal(httpServer.ListenAndServe())
+}
+
+func (s *Server) forceSSL(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Scheme != "https" && r.Header.Get("X-Forwarded-Proto") != "https" {
+			if r.Method != http.MethodGet {
+				w.WriteHeader(403)
+				return
+			}
+
+			u, _ := url.Parse(s.serverURL)
+			u.Scheme = "https"
+			u.Path = r.URL.Path
+			u.RawQuery = r.URL.RawQuery
+
+			http.Redirect(w, r, u.String(), 301)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }

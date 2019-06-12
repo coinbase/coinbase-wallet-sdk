@@ -3,7 +3,9 @@
 package config
 
 import (
+	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/CoinbaseWallet/walletlinkd/util"
@@ -31,7 +33,7 @@ var (
 	AppEnv = getEnv("APP_ENV", "development")
 
 	// Port - port to listen on
-	Port = getEnv("PORT", "8080")
+	Port, _ = strconv.ParseUint(getEnv("PORT", "8080"), 10, 16)
 
 	// ServerURL - url of the server
 	ServerURL = getEnv("SERVER_URL", "")
@@ -47,7 +49,16 @@ var (
 		}
 		return util.StringSetFromStringSlice(strings.Split(allowedOrigins, " "))
 	}()
+
+	// ForceSSL - enforce HTTPS
+	ForceSSL, _ = strconv.ParseBool(getEnv("FORCE_SSL", "false"))
 )
+
+func init() {
+	if ForceSSL && len(ServerURL) == 0 {
+		log.Fatal("SERVER_URL is required when FORCE_SSL is enabled")
+	}
+}
 
 func getEnv(name string, defaultValue string) string {
 	value := os.Getenv(name)
