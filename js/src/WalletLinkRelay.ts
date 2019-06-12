@@ -19,7 +19,8 @@ import {
   SignEthereumMessageResponse,
   SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse,
-  Web3Response
+  Web3Response,
+  Web3ResponseMessage
 } from "./Web3Response"
 
 export interface EthereumTransactionParams {
@@ -190,7 +191,7 @@ export class WalletLinkRelay {
       if (request.method === Web3Method.requestEthereumAddresses) {
         notificationMessage = "Requested access to your account..."
         if (!this._linked) {
-          this.openWalletLinkWindow()
+          this._openWalletLinkWindow()
         }
       } else {
         notificationMessage = "Pushed a WalletLink request to your device..."
@@ -199,16 +200,18 @@ export class WalletLinkRelay {
       const notification = new WalletLinkNotification({
         message: notificationMessage,
         onClickCancel: () => {
-          WalletLinkRelay._callbacks.delete(id)
-          reject(new Error("User rejected request"))
+          this._invokeCallback({
+            id,
+            response: { errorMessage: "User rejected request" }
+          })
         },
         onClickHelp: () => {
-          this.openWalletLinkWindow()
+          this._openWalletLinkWindow()
         }
       })
 
       WalletLinkRelay._callbacks.set(id, response => {
-        this.closeWalletLinkWindow()
+        this._closeWalletLinkWindow()
         notification.hide()
         if (response.errorMessage) {
           return reject(new Error(response.errorMessage))
@@ -222,23 +225,48 @@ export class WalletLinkRelay {
     })
   }
 
-  private openWalletLinkWindow(): void {
+  private _openWalletLinkWindow(): void {
     if (this._walletLinkWindow && this._walletLinkWindow.opener) {
       this._walletLinkWindow.focus()
       return
     }
+    const width = 320
+    const height = 500
+    const left = Math.floor(window.outerWidth / 2 - width / 2 + window.screenX)
+    const top = Math.floor(window.outerHeight / 2 - height / 2 + window.screenY)
+
     this._walletLinkWindow = window.open(
       `${this._walletLinkWebUrl}/#/link`,
-      "_blank"
+      "_blank",
+      [
+        `width=${width}`,
+        `height=${height}`,
+        `left=${left}`,
+        `top=${top}`,
+        "location=yes",
+        "menubar=no",
+        "resizable=no",
+        "status=no",
+        "titlebar=yes",
+        "toolbar=no"
+      ].join(",")
     )
   }
 
-  private closeWalletLinkWindow(): void {
+  private _closeWalletLinkWindow(): void {
     if (this._walletLinkWindow) {
       this._walletLinkWindow.close()
       this._walletLinkWindow = null
     }
     window.focus()
+  }
+
+  private _invokeCallback(message: Web3ResponseMessage) {
+    const callback = WalletLinkRelay._callbacks.get(message.id)
+    if (callback) {
+      callback(message.response)
+      WalletLinkRelay._callbacks.delete(message.id)
+    }
   }
 
   @bind
@@ -261,15 +289,8 @@ export class WalletLinkRelay {
       }
     }
 
-    const message = isWeb3ResponseMessage(evt.data) ? evt.data : null
-    if (!message) {
-      return
-    }
-
-    const callback = WalletLinkRelay._callbacks.get(message.id)
-    if (callback) {
-      callback(message.response)
-      WalletLinkRelay._callbacks.delete(message.id)
+    if (isWeb3ResponseMessage(evt.data)) {
+      this._invokeCallback(evt.data)
     }
   }
 }

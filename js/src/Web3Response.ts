@@ -8,6 +8,8 @@ interface BaseWeb3Response<Result> {
   result?: Result
 }
 
+export type ErrorResponse = BaseWeb3Response<undefined>
+
 export type RequestEthereumAddressesResponse = BaseWeb3Response<
   AddressString[] // an array of ethereum addresses
 >
@@ -33,6 +35,7 @@ export type ScanQRCodeResponse = BaseWeb3Response<
 >
 
 export type Web3Response =
+  | ErrorResponse
   | RequestEthereumAddressesResponse
   | SignEthereumMessageResponse
   | SignEthereumTransactionResponse
