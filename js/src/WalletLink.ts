@@ -9,15 +9,18 @@ const WALLETLINK_WEB_URL = process.env.WALLETLINK_WEB_URL!
 
 export interface WalletLinkOptions {
   appName?: string
+  appLogoUrl?: string
   walletLinkWebUrl?: string
 }
 
 export class WalletLink {
-  private _appName?: string
+  private _appName: string
+  private _appLogoUrl: string | null = null
   private _relay: WalletLinkRelay
 
   constructor(options: WalletLinkOptions) {
     this._appName = options.appName || "DApp"
+    this._appLogoUrl = options.appLogoUrl || null
     this._relay = new WalletLinkRelay(
       options.walletLinkWebUrl || WALLETLINK_WEB_URL
     )
@@ -32,6 +35,7 @@ export class WalletLink {
     return new WalletLinkProvider({
       relay: this._relay,
       appName: this._appName,
+      appLogoUrl: this._appLogoUrl,
       jsonRpcUrl,
       chainId
     })

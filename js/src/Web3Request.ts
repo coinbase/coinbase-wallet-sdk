@@ -19,6 +19,7 @@ export type RequestEthereumAddressesRequest = BaseWeb3Request<
   Web3Method.requestEthereumAddresses,
   {
     appName: string
+    appLogoUrl: string | null
   }
 >
 

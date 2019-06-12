@@ -32,6 +32,7 @@ import { RequestEthereumAddressesResponse } from "./Web3Response"
 export interface WalletLinkProviderOptions {
   relay: WalletLinkRelay
   appName?: string
+  appLogoUrl?: string | null
   jsonRpcUrl: string
   chainId?: number
 }
@@ -43,6 +44,7 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
 
   private readonly _relay: WalletLinkRelay
   private readonly _appName: string
+  private readonly _appLogoUrl: string | null = null
   private readonly _chainId: IntNumber
   private readonly _jsonRpcUrl: string
   private readonly _providerId: string
@@ -63,6 +65,7 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     }
     this._relay = options.relay
     this._appName = options.appName || DEFAULT_APP_NAME
+    this._appLogoUrl = options.appLogoUrl || null
     this._chainId = ensureIntNumber(options.chainId || 1)
     this._jsonRpcUrl = options.jsonRpcUrl
     this._providerId = crypto
@@ -436,7 +439,10 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
 
     let res: RequestEthereumAddressesResponse
     try {
-      res = await this._relay.requestEthereumAccounts(this._appName)
+      res = await this._relay.requestEthereumAccounts(
+        this._appName,
+        this._appLogoUrl
+      )
     } catch (err) {
       if (
         typeof err.message === "string" &&

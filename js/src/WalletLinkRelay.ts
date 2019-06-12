@@ -10,7 +10,12 @@ import { bigIntStringFromBN, hexStringFromBuffer } from "./util"
 import { WalletLinkNotification } from "./WalletLinkNotification"
 import * as walletLinkStorage from "./walletLinkStorage"
 import { Web3Method } from "./Web3Method"
-import { Web3Request, Web3RequestMessage } from "./Web3Request"
+import {
+  RequestEthereumAddressesRequest,
+  SignEthereumMessageRequest,
+  Web3Request,
+  Web3RequestMessage
+} from "./Web3Request"
 import {
   EthereumAddressFromSignedMessageResponse,
   isWeb3ResponseMessage,
@@ -75,12 +80,17 @@ export class WalletLinkRelay {
   }
 
   public requestEthereumAccounts(
-    appName: string
+    appName: string,
+    appLogoUrl: string | null
   ): Promise<RequestEthereumAddressesResponse> {
-    return this.sendRequest({
+    return this.sendRequest<
+      RequestEthereumAddressesRequest,
+      RequestEthereumAddressesResponse
+    >({
       method: Web3Method.requestEthereumAddresses,
       params: {
-        appName
+        appName,
+        appLogoUrl: appLogoUrl || this._getFavicon()
       }
     })
   }
@@ -259,6 +269,31 @@ export class WalletLinkRelay {
       this._walletLinkWindow = null
     }
     window.focus()
+  }
+
+  private _getFavicon(): string | null {
+    const el =
+      document.querySelector('link[sizes="192x192"]') ||
+      document.querySelector('link[sizes="180x180"]') ||
+      document.querySelector('link[rel="icon"]') ||
+      document.querySelector('link[rel="shortcut icon"]')
+
+    const { protocol, host } = document.location
+    const href = el ? el.getAttribute("href") : null
+    if (!href || href.startsWith("javascript:")) {
+      return null
+    }
+    if (
+      href.startsWith("http://") ||
+      href.startsWith("https://") ||
+      href.startsWith("data:")
+    ) {
+      return href
+    }
+    if (href.startsWith("//")) {
+      return protocol + href
+    }
+    return `${protocol}//${host}${href}`
   }
 
   private _invokeCallback(message: Web3ResponseMessage) {
