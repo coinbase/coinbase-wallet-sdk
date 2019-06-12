@@ -11,8 +11,12 @@ import { WalletLinkNotification } from "./WalletLinkNotification"
 import * as walletLinkStorage from "./walletLinkStorage"
 import { Web3Method } from "./Web3Method"
 import {
+  EthereumAddressFromSignedMessageRequest,
   RequestEthereumAddressesRequest,
+  ScanQRCodeRequest,
   SignEthereumMessageRequest,
+  SignEthereumTransactionRequest,
+  SubmitEthereumTransactionRequest,
   Web3Request,
   Web3RequestMessage
 } from "./Web3Request"
@@ -100,7 +104,10 @@ export class WalletLinkRelay {
     address: AddressString,
     addPrefix: boolean
   ): Promise<SignEthereumMessageResponse> {
-    return this.sendRequest({
+    return this.sendRequest<
+      SignEthereumMessageRequest,
+      SignEthereumMessageResponse
+    >({
       method: Web3Method.signEthereumMessage,
       params: {
         message: hexStringFromBuffer(message, true),
@@ -115,7 +122,10 @@ export class WalletLinkRelay {
     signature: Buffer,
     addPrefix: boolean
   ): Promise<EthereumAddressFromSignedMessageResponse> {
-    return this.sendRequest({
+    return this.sendRequest<
+      EthereumAddressFromSignedMessageRequest,
+      EthereumAddressFromSignedMessageResponse
+    >({
       method: Web3Method.ethereumAddressFromSignedMessage,
       params: {
         message: hexStringFromBuffer(message, true),
@@ -128,7 +138,10 @@ export class WalletLinkRelay {
   public signEthereumTransaction(
     params: EthereumTransactionParams
   ): Promise<SignEthereumTransactionResponse> {
-    return this.sendRequest({
+    return this.sendRequest<
+      SignEthereumTransactionRequest,
+      SignEthereumTransactionResponse
+    >({
       method: Web3Method.signEthereumTransaction,
       params: {
         fromAddress: params.fromAddress,
@@ -149,7 +162,10 @@ export class WalletLinkRelay {
   public signAndSubmitEthereumTransaction(
     params: EthereumTransactionParams
   ): Promise<SubmitEthereumTransactionResponse> {
-    return this.sendRequest({
+    return this.sendRequest<
+      SignEthereumTransactionRequest,
+      SubmitEthereumTransactionResponse
+    >({
       method: Web3Method.signEthereumTransaction,
       params: {
         fromAddress: params.fromAddress,
@@ -171,7 +187,10 @@ export class WalletLinkRelay {
     signedTransaction: Buffer,
     chainId: IntNumber
   ): Promise<SubmitEthereumTransactionResponse> {
-    return this.sendRequest({
+    return this.sendRequest<
+      SubmitEthereumTransactionRequest,
+      SubmitEthereumTransactionResponse
+    >({
       method: Web3Method.submitEthereumTransaction,
       params: {
         signedTransaction: hexStringFromBuffer(signedTransaction, true),
@@ -181,7 +200,7 @@ export class WalletLinkRelay {
   }
 
   public scanQRCode(regExp: RegExpString): Promise<ScanQRCodeResponse> {
-    return this.sendRequest({
+    return this.sendRequest<ScanQRCodeRequest, ScanQRCodeResponse>({
       method: Web3Method.scanQRCode,
       params: { regExp }
     })
