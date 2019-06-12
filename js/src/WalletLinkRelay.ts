@@ -42,6 +42,9 @@ export class WalletLinkRelay {
   private readonly _walletLinkWebOrigin: string
 
   private _iframe: HTMLIFrameElement | null = null
+  private _walletLinkWindow: Window | null = null
+
+  private _linked = false
 
   constructor(walletLinkWebUrl: string) {
     this._walletLinkWebUrl = walletLinkWebUrl
@@ -68,10 +71,6 @@ export class WalletLinkRelay {
     document.documentElement.appendChild(iframe)
 
     window.addEventListener("message", this._handleMessage, false)
-  }
-
-  public openWalletLinkWindow(): Window | null {
-    return window.open(`${this._walletLinkWebUrl}/#/link`, "_blank")
   }
 
   public requestEthereumAccounts(
@@ -186,10 +185,16 @@ export class WalletLinkRelay {
       }
       const id = crypto.randomBytes(8).toString("hex")
 
-      const notificationMessage =
-        request.method === Web3Method.requestEthereumAddresses
-          ? "Requested access to your account..."
-          : "Pushed a WalletLink request to your device..."
+      let notificationMessage: string
+
+      if (request.method === Web3Method.requestEthereumAddresses) {
+        notificationMessage = "Requested access to your account..."
+        if (!this._linked) {
+          this.openWalletLinkWindow()
+        }
+      } else {
+        notificationMessage = "Pushed a WalletLink request to your device..."
+      }
 
       const notification = new WalletLinkNotification({
         message: notificationMessage,
@@ -203,6 +208,7 @@ export class WalletLinkRelay {
       })
 
       WalletLinkRelay._callbacks.set(id, response => {
+        this.closeWalletLinkWindow()
         notification.hide()
         if (response.errorMessage) {
           return reject(new Error(response.errorMessage))
@@ -216,16 +222,43 @@ export class WalletLinkRelay {
     })
   }
 
+  private openWalletLinkWindow(): void {
+    if (this._walletLinkWindow && this._walletLinkWindow.opener) {
+      this._walletLinkWindow.focus()
+      return
+    }
+    this._walletLinkWindow = window.open(
+      `${this._walletLinkWebUrl}/#/link`,
+      "_blank"
+    )
+  }
+
+  private closeWalletLinkWindow(): void {
+    if (this._walletLinkWindow) {
+      this._walletLinkWindow.close()
+      this._walletLinkWindow = null
+    }
+    window.focus()
+  }
+
   @bind
   private _handleMessage(evt: MessageEvent): void {
     if (evt.origin !== this._walletLinkWebOrigin) {
       return
     }
 
-    if (evt.data === "WALLETLINK_UNLINKED") {
-      walletLinkStorage.clear()
-      document.location.reload()
-      return
+    switch (evt.data) {
+      case "WALLETLINK_LINKED": {
+        this._linked = true
+        return
+      }
+
+      case "WALLETLINK_UNLINKED": {
+        this._linked = false
+        walletLinkStorage.clear()
+        document.location.reload()
+        return
+      }
     }
 
     const message = isWeb3ResponseMessage(evt.data) ? evt.data : null

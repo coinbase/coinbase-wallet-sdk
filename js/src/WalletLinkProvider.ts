@@ -48,7 +48,6 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
   private readonly _providerId: string
 
   private _addresses: AddressString[] = []
-  private _walletLinkWindow: Window | null = null
 
   private get _localStorageAddressesKey(): string {
     return `WalletLinkProvider:${this._providerId}:addresses`
@@ -435,12 +434,6 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
       return Promise.resolve({ jsonrpc: "2.0", id: 0, result: this._addresses })
     }
 
-    if (this._walletLinkWindow && this._walletLinkWindow.opener) {
-      this._walletLinkWindow.focus()
-    } else {
-      this._walletLinkWindow = this._relay.openWalletLinkWindow()
-    }
-
     let res: RequestEthereumAddressesResponse
     try {
       res = await this._relay.requestEthereumAccounts(this._appName)
@@ -455,12 +448,6 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
         )
       }
       throw err
-    } finally {
-      if (this._walletLinkWindow) {
-        this._walletLinkWindow.close()
-        this._walletLinkWindow = null
-        window.focus()
-      }
     }
 
     if (!res.result) {

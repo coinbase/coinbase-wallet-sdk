@@ -130,7 +130,7 @@ export class WalletLinkNotification {
       if (this.el) {
         this.el.className += " " + elShowClassName
       }
-    }, 0)
+    }, 5)
   }
 
   public hide() {

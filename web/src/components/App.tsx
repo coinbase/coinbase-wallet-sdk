@@ -52,7 +52,13 @@ export class App extends React.PureComponent<{}, State> {
       walletLinkHost.connected$.subscribe(v => this.setState({ connected: v }))
     )
     this.subscriptions.add(
-      walletLinkHost.linked$.subscribe(v => this.setState({ linked: v }))
+      walletLinkHost.linked$.subscribe(linked => {
+        this.setState({ linked })
+        if (linked) {
+          // tslint:disable-next-line: tsr-detect-unsafe-cross-origin-communication
+          window.parent.postMessage("WALLETLINK_LINKED", "*")
+        }
+      })
     )
 
     this.subscriptions.add(
