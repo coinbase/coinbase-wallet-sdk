@@ -1,5 +1,10 @@
 {
-  "extends": ["tslint-react", "tslint:recommended", "tslint-config-prettier"],
+  "extends": [
+    "tslint-react",
+    "tslint:recommended",
+    "tslint-config-prettier",
+    "tslint-config-security"
+  ],
 
   "rules": {
     "await-promise": false,

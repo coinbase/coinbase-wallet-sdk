@@ -54,6 +54,7 @@ export class App extends React.PureComponent<{}, State> {
     this.subscriptions.add(
       Session.sessionIdChange$.subscribe(change => {
         if (window.parent && change.oldValue && !change.newValue) {
+          // tslint:disable-next-line: tsr-detect-unsafe-cross-origin-communication
           window.parent.postMessage("WALLETLINK_UNLINKED", "*")
         }
       })

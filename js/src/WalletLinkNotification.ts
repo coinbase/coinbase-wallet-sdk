@@ -22,7 +22,8 @@ export class WalletLinkNotification {
     containerEl.id = containerElId
 
     const styleEl = document.createElement("style")
-    styleEl.innerHTML = css
+    styleEl.type = "text/css"
+    styleEl.appendChild(document.createTextNode(css))
 
     containerEl.appendChild(styleEl)
     document.documentElement.appendChild(containerEl)
@@ -72,20 +73,35 @@ export class WalletLinkNotification {
     if (!this.el) {
       this.el = document.createElement("div")
       this.el.className = elClassName
-      let html = `<p>${this.message}<span>`
+      const pEl = document.createElement("p")
+      pEl.appendChild(document.createTextNode(this.message))
+
+      const spanEl = document.createElement("span")
 
       if (this.onClickCancel) {
-        html += `<a class="${cancelElClassName}" href="#">${cancelLabel}</a>`
+        const aEl = document.createElement("a")
+        aEl.className = cancelElClassName
+        aEl.href = "#"
+        aEl.appendChild(document.createTextNode(cancelLabel))
+        spanEl.appendChild(aEl)
       }
       if (this.onClickHelp) {
-        html += `<a class="${helpElClassName}" href="#">${helpLabel}</a>`
+        const aEl = document.createElement("a")
+        aEl.className = helpElClassName
+        aEl.href = "#"
+        aEl.appendChild(document.createTextNode(helpLabel))
+        spanEl.appendChild(aEl)
       }
       if (this.onClickDismiss) {
-        html += `<a class="${dismissElClassName}" href="#">${dismissLabel}</a>`
+        const aEl = document.createElement("a")
+        aEl.className = dismissElClassName
+        aEl.href = "#"
+        aEl.appendChild(document.createTextNode(dismissLabel))
+        spanEl.appendChild(aEl)
       }
 
-      html += `</p></span>`
-      this.el.innerHTML = html
+      pEl.appendChild(spanEl)
+      this.el.appendChild(pEl)
     }
 
     const containerEl = document.querySelector(`#${containerElId}`)

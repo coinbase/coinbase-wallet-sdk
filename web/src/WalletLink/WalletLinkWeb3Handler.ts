@@ -66,6 +66,7 @@ export class WalletLinkWeb3Handler {
     }
 
     if (window.parent) {
+      // tslint:disable-next-line: tsr-detect-unsafe-cross-origin-communication
       window.parent.postMessage(response, "*")
     }
   }
