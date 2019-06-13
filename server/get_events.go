@@ -25,13 +25,23 @@ func (srv *Server) getEventsSinceHandler(
 		return
 	}
 
+	query := r.URL.Query()
+
 	seconds := int64(0)
-	timestamps, ok := r.URL.Query()["timestamp"]
+	timestamps, ok := query["timestamp"]
 	if ok && len(timestamps) > 0 {
 		seconds, _ = strconv.ParseInt(timestamps[0], 10, 64)
 	}
 
-	events, err := models.LoadEventsForSession(srv.store, seconds, session.ID)
+	unseen := false
+	unseens, ok := query["unseen"]
+	if ok && len(unseens) > 0 {
+		unseen, _ = strconv.ParseBool(unseens[0])
+	}
+
+	events, err := models.LoadEventsForSession(
+		srv.store, seconds, unseen, session.ID,
+	)
 	if err != nil {
 		writeResponse(w, 500, &getEventsResponse{Error: responseErrorInternalError})
 		return

@@ -20,7 +20,8 @@ type MemoryStore struct {
 
 type storeValue struct {
 	value     []byte
-	timestamp int64
+	updatedAt int64
+	seenAt    int64
 }
 
 var _ Store = (*MemoryStore)(nil)
@@ -42,7 +43,7 @@ func (ms *MemoryStore) Set(key string, value interface{}) error {
 		return errors.Wrap(err, "could not serialize value")
 	}
 
-	ms.db[key] = storeValue{j, time.Now().Unix()}
+	ms.db[key] = storeValue{value: j, updatedAt: time.Now().Unix(), seenAt: 0}
 	return nil
 }
 
@@ -65,10 +66,12 @@ func (ms *MemoryStore) Get(key string, value interface{}) (bool, error) {
 }
 
 // FindByPrefix - load all values whose key starts with the given prefix that
-// were updated after since.
+// were updated after since. If unseen is true, only return values that have not
+// been marked seen.
 func (ms *MemoryStore) FindByPrefix(
 	prefix string,
 	since int64,
+	unseen bool,
 	values interface{},
 ) error {
 	valuesValue := reflect.ValueOf(values)
@@ -86,7 +89,8 @@ func (ms *MemoryStore) FindByPrefix(
 	vs := reflect.New(sliceType).Elem()
 
 	for k, v := range ms.db {
-		if !strings.HasPrefix(k, prefix) || v.timestamp <= since {
+		if !strings.HasPrefix(k, prefix) || v.updatedAt <= since ||
+			(unseen && v.seenAt > 0) {
 			continue
 		}
 
@@ -102,6 +106,22 @@ func (ms *MemoryStore) FindByPrefix(
 	reflect.ValueOf(values).Elem().Set(vs)
 
 	return nil
+}
+
+// MarkSeen - mark the value with the given key as seen
+func (ms *MemoryStore) MarkSeen(key string) (updated bool, err error) {
+	ms.lock.Lock()
+	defer ms.lock.Unlock()
+
+	v, ok := ms.db[key]
+	if !ok {
+		return false, nil
+	}
+
+	v.seenAt = time.Now().Unix()
+	ms.db[key] = v
+
+	return true, nil
 }
 
 // Remove - remove a key. does not return an error if key does not exist

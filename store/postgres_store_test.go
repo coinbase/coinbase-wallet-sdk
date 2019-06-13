@@ -160,27 +160,56 @@ func TestPostgresStoreFindByPrefix(t *testing.T) {
 	require.Nil(t, err)
 
 	values := []dummy{}
-	err = ps.FindByPrefix("prefix", startTime, &values)
+	err = ps.FindByPrefix("prefix", startTime, false, &values)
 	require.Nil(t, err)
 	require.Len(t, values, 2)
 	require.Contains(t, values, foo)
 	require.Contains(t, values, bar)
 
 	values = []dummy{}
-	err = ps.FindByPrefix("prefid", startTime, &values)
+	err = ps.FindByPrefix("prefid", startTime, false, &values)
 	require.Nil(t, err)
 	require.Len(t, values, 0)
 
 	values = []dummy{}
-	err = ps.FindByPrefix("prefix_f", startTime, &values)
+	err = ps.FindByPrefix("prefix_f", startTime, false, &values)
 	require.Nil(t, err)
 	require.Len(t, values, 1)
 	require.Equal(t, foo, values[0])
 
 	intValue := 1234
-	err = ps.FindByPrefix("prefix", startTime, intValue)
+	err = ps.FindByPrefix("prefix", startTime, false, intValue)
 	require.NotNil(t, err)
 
-	err = ps.FindByPrefix("prefix", startTime, &intValue)
+	err = ps.FindByPrefix("prefix", startTime, false, &intValue)
 	require.NotNil(t, err)
+}
+
+func TestPostgresStoreMarkSeen(t *testing.T) {
+	setup(t)
+	defer teardown()
+
+	ps, err := NewPostgresStore(config.PostgresURL, "store")
+	require.Nil(t, err)
+	defer ps.Close()
+
+	startTime := time.Now().Unix() - 1
+
+	foo := dummy{X: 123, Y: 20}
+	err = ps.Set("prefix_foo", &foo)
+	require.Nil(t, err)
+
+	bar := dummy{X: 546, Y: 23}
+	err = ps.Set("prefix_bar", &bar)
+	require.Nil(t, err)
+
+	updated, err := ps.MarkSeen("prefix_foo")
+	require.True(t, updated)
+	require.Nil(t, err)
+
+	values := []dummy{}
+	err = ps.FindByPrefix("prefix_", startTime, true, &values)
+	require.Nil(t, err)
+	require.Len(t, values, 1)
+	require.Contains(t, values, bar)
 }

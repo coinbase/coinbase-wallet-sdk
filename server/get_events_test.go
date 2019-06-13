@@ -178,3 +178,51 @@ func TestGetEventsBadTimestamp(t *testing.T) {
 	require.Contains(t, body.Events, e1)
 	require.Contains(t, body.Events, e2)
 }
+
+func TestGetEventsUnseen(t *testing.T) {
+	srv := NewServer(nil)
+	sessionID := "123"
+	sessionKey := "456"
+	timestamp := time.Now().Unix() - 1
+
+	s := models.Session{ID: sessionID, Key: sessionKey}
+	err := s.Save(srv.store)
+	require.Nil(t, err)
+
+	name := "name"
+	data := "data"
+
+	e1 := models.Event{ID: "abc", Event: name, Data: data}
+	err = e1.Save(srv.store, sessionID)
+	require.Nil(t, err)
+
+	updated, err := models.MarkEventSeen(srv.store, sessionID, "abc")
+	require.True(t, updated)
+	require.Nil(t, err)
+
+	e2 := models.Event{ID: "def", Event: name, Data: data}
+	err = e2.Save(srv.store, sessionID)
+	require.Nil(t, err)
+
+	req, err := http.NewRequest(
+		"GET",
+		fmt.Sprintf("/events?timestamp=%d&unseen=true", timestamp),
+		nil,
+	)
+	require.Nil(t, err)
+
+	req.SetBasicAuth(sessionID, sessionKey)
+
+	rr := httptest.NewRecorder()
+	srv.router.ServeHTTP(rr, req)
+
+	resp := rr.Result()
+	require.Equal(t, 200, resp.StatusCode)
+
+	body := getEventsResponse{}
+	err = json.NewDecoder(resp.Body).Decode(&body)
+	require.Nil(t, err)
+	require.Empty(t, body.Error)
+	require.Len(t, body.Events, 1)
+	require.Contains(t, body.Events, e2)
+}
