@@ -101,27 +101,51 @@ func TestMemoryStoreFindByPrefix(t *testing.T) {
 	require.Nil(t, err)
 
 	values := []dummy{}
-	err = ms.FindByPrefix("prefix", startTime, &values)
+	err = ms.FindByPrefix("prefix", startTime, false, &values)
 	require.Nil(t, err)
 	require.Len(t, values, 2)
 	require.Contains(t, values, foo)
 	require.Contains(t, values, bar)
 
 	values = []dummy{}
-	err = ms.FindByPrefix("prefid", startTime, &values)
+	err = ms.FindByPrefix("prefid", startTime, false, &values)
 	require.Nil(t, err)
 	require.Len(t, values, 0)
 
 	values = []dummy{}
-	err = ms.FindByPrefix("prefix_f", startTime, &values)
+	err = ms.FindByPrefix("prefix_f", startTime, false, &values)
 	require.Nil(t, err)
 	require.Len(t, values, 1)
 	require.Equal(t, foo, values[0])
 
 	intValue := 1234
-	err = ms.FindByPrefix("prefix", startTime, intValue)
+	err = ms.FindByPrefix("prefix", startTime, false, intValue)
 	require.NotNil(t, err)
 
-	err = ms.FindByPrefix("prefix", startTime, &intValue)
+	err = ms.FindByPrefix("prefix", startTime, false, &intValue)
 	require.NotNil(t, err)
+}
+
+func TestMemoryStoreMarkSeen(t *testing.T) {
+	ms := NewMemoryStore()
+
+	startTime := time.Now().Unix() - 1
+
+	foo := dummy{X: 123, Y: 20}
+	err := ms.Set("prefix_foo", &foo)
+	require.Nil(t, err)
+
+	bar := dummy{X: 546, Y: 23}
+	err = ms.Set("prefix_bar", &bar)
+	require.Nil(t, err)
+
+	updated, err := ms.MarkSeen("prefix_foo")
+	require.True(t, updated)
+	require.Nil(t, err)
+
+	values := []dummy{}
+	err = ms.FindByPrefix("prefix_", startTime, true, &values)
+	require.Nil(t, err)
+	require.Len(t, values, 1)
+	require.Contains(t, values, bar)
 }

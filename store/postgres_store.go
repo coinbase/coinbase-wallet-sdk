@@ -87,10 +87,12 @@ func (ps *PostgresStore) Get(key string, value interface{}) (bool, error) {
 }
 
 // FindByPrefix - load all values whose key starts with the given prefix that
-// were updated after since.
+// were updated after since. If unseen is true, only return values that have not
+// been marked seen.
 func (ps *PostgresStore) FindByPrefix(
 	prefix string,
 	since int64,
+	unseen bool,
 	values interface{},
 ) error {
 	valuesValue := reflect.ValueOf(values)
@@ -99,13 +101,18 @@ func (ps *PostgresStore) FindByPrefix(
 		return errors.New("values must be a pointer to a slice")
 	}
 
-	query := fmt.Sprintf(
+	q := fmt.Sprintf(
 		`SELECT value
 		FROM %s
-		WHERE key LIKE $1 || '%%' AND updated_at > $2 ORDER BY updated_at DESC`,
+		WHERE key LIKE $1 || '%%' AND updated_at > $2`,
 		ps.tableName,
 	)
-	rows, err := ps.db.Query(query, prefix, time.Unix(since, 0))
+	if unseen {
+		q += " AND seen_at IS NULL"
+	}
+	q += " ORDER BY updated_at DESC"
+
+	rows, err := ps.db.Query(q, prefix, time.Unix(since, 0))
 	if err != nil {
 		return errors.Wrap(err, "failed to load values from postgres store")
 	}
@@ -133,6 +140,22 @@ func (ps *PostgresStore) FindByPrefix(
 	reflect.ValueOf(values).Elem().Set(vs)
 
 	return nil
+}
+
+// MarkSeen - mark the value with the given key as seen
+func (ps *PostgresStore) MarkSeen(key string) (updated bool, err error) {
+	result, err := ps.db.Exec(
+		fmt.Sprintf(
+			"UPDATE %s SET seen_at = now(), updated_at = now() WHERE key = $1",
+			ps.tableName,
+		),
+		key,
+	)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to update value")
+	}
+	num, _ := result.RowsAffected()
+	return num > 0, nil
 }
 
 // Remove - remove a key. does not return an error if key does not exist

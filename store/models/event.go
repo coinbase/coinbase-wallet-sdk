@@ -34,14 +34,24 @@ func LoadEvent(
 	return e, nil
 }
 
-// LoadEventsForSession - load all events from the store for the session with the given ID
-func LoadEventsForSession(st store.Store, since int64, sessionID string) ([]Event, error) {
+// LoadEventsForSession - load all events from the store for the session with
+// the given ID. If unseen is true, only return events that have not been seen
+func LoadEventsForSession(
+	st store.Store, since int64, unseen bool, sessionID string,
+) ([]Event, error) {
 	e := []Event{}
-	err := st.FindByPrefix(sessionKeyPrefix(sessionID), since, &e)
+	err := st.FindByPrefix(sessionKeyPrefix(sessionID), since, unseen, &e)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to load events")
 	}
 	return e, nil
+}
+
+// MarkEventSeen - mark the event as seen
+func MarkEventSeen(
+	st store.Store, sessionID, eventID string,
+) (updated bool, err error) {
+	return st.MarkSeen(eventStoreKey(eventID, sessionID))
 }
 
 // Save - save event in the store
