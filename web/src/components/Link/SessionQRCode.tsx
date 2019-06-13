@@ -34,7 +34,7 @@ export class SessionQRCode extends React.PureComponent<Props> {
       secret: sessionSecret,
       server: serverUrl
     }
-    const url = `${webUrl}/#/joinSession?${querystring.stringify(queryParams)}`
+    const url = `${webUrl}/#/link?${querystring.stringify(queryParams)}`
 
     return (
       <div className={styleSessionQRCode}>

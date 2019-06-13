@@ -2,18 +2,19 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator"
-import React, { MouseEvent } from "react"
+import React from "react"
+import {
+  HashRouter as Router,
+  Route,
+  RouteComponentProps
+} from "react-router-dom"
 import { Subscription } from "rxjs"
-import { style } from "typestyle"
 import { SERVER_URL, WEB_URL } from "../config"
 import { Session } from "../models/Session"
 import { WalletLinkHost } from "../WalletLink/WalletLinkHost"
 import { WalletLinkWeb3Handler } from "../WalletLink/WalletLinkWeb3Handler"
-import { SessionQRCode } from "./SessionQRCode"
-
-const styleApp = style({
-  textAlign: "center"
-})
+import { LinkRoute } from "./Link/LinkRoute"
+import { RootRoute } from "./Root/RootRoute"
 
 type State = Readonly<{
   connected: boolean
@@ -85,31 +86,34 @@ export class App extends React.PureComponent<{}, State> {
   }
 
   public render() {
-    const { session } = this
-    const { connected, linked } = this.state
-
     return (
-      <div className={styleApp}>
-        <p>WalletLink</p>
-        <SessionQRCode
-          webUrl={WEB_URL}
-          serverUrl={SERVER_URL}
-          sessionId={session.id}
-          sessionSecret={session.secret}
-        />
-        <p>{connected ? "Connected" : "Disconnected"}</p>
-        <p>{linked ? "Linked" : "Not Linked"}</p>
-
-        <button onClick={this.handleClickUnlink}>Unlink</button>
-      </div>
+      <Router>
+        <Route exact path="/" render={this.renderRootRoute} />
+        <Route exact path="/link" render={this.renderLinkRoute} />
+      </Router>
     )
   }
 
   @bind
-  private handleClickUnlink(evt: MouseEvent): void {
-    evt.preventDefault()
+  private renderRootRoute(routeProps: RouteComponentProps) {
+    return <RootRoute {...routeProps} />
+  }
 
-    Session.clear()
-    document.location.reload()
+  @bind
+  private renderLinkRoute(routeProps: RouteComponentProps) {
+    const { connected, linked } = this.state
+    const { session } = this
+
+    return (
+      <LinkRoute
+        {...routeProps}
+        connected={connected}
+        linked={linked}
+        webUrl={WEB_URL}
+        serverUrl={SERVER_URL}
+        sessionId={session.id}
+        sessionSecret={session.secret}
+      />
+    )
   }
 }
