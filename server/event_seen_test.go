@@ -9,9 +9,22 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/CoinbaseWallet/walletlinkd/store"
+
 	"github.com/CoinbaseWallet/walletlinkd/store/models"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
+
+type MockStore struct {
+	*store.MemoryStore
+	mock.Mock
+}
+
+func (ms *MockStore) MarkSeen(key string) (updated bool, err error) {
+	args := ms.Called(key)
+	return args.Bool(0), args.Error(1)
+}
 
 func TestMarkEventSeenNoSession(t *testing.T) {
 	srv := NewServer(nil)
@@ -63,7 +76,10 @@ func TestMarkEventSeenInvalidSessionKey(t *testing.T) {
 }
 
 func TestMarkEventSeenNoEvent(t *testing.T) {
-	srv := NewServer(nil)
+	mockStore := &MockStore{MemoryStore: store.NewMemoryStore()}
+	mockStore.On("MarkSeen", mock.Anything).Return(false, nil)
+
+	srv := NewServer(&NewServerOptions{Store: mockStore})
 	sessionID := "123"
 	sessionKey := "456"
 
@@ -87,10 +103,16 @@ func TestMarkEventSeenNoEvent(t *testing.T) {
 	require.Nil(t, err)
 	require.Empty(t, body.Error)
 	require.True(t, body.Success)
+
+	mockStore.AssertCalled(t, "MarkSeen", "session:123:event:789")
+	mockStore.AssertNumberOfCalls(t, "MarkSeen", 1)
 }
 
 func TestMarkEventSeen(t *testing.T) {
-	srv := NewServer(nil)
+	mockStore := &MockStore{MemoryStore: store.NewMemoryStore()}
+	mockStore.On("MarkSeen", mock.Anything).Return(true, nil)
+
+	srv := NewServer(&NewServerOptions{Store: mockStore})
 	sessionID := "123"
 	sessionKey := "456"
 	eventID := "789"
@@ -125,4 +147,7 @@ func TestMarkEventSeen(t *testing.T) {
 	require.Nil(t, err)
 	require.Empty(t, body.Error)
 	require.True(t, body.Success)
+
+	mockStore.AssertCalled(t, "MarkSeen", "session:123:event:789")
+	mockStore.AssertNumberOfCalls(t, "MarkSeen", 1)
 }
