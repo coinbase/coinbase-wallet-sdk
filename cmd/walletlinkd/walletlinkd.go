@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/CoinbaseWallet/walletlinkd/store"
+
 	"github.com/CoinbaseWallet/walletlinkd/webhook"
 
 	"github.com/CoinbaseWallet/walletlinkd/config"
@@ -23,8 +25,19 @@ func main() {
 	execDir := filepath.Dir(execFile)
 	webRoot := filepath.Join(execDir, "public")
 
+	var st store.Store
+	if len(config.PostgresURL) == 0 {
+		st = store.NewMemoryStore()
+	} else {
+		var err error
+		st, err = store.NewPostgresStore(config.PostgresURL, "store")
+		if err != nil {
+			log.Panicln(err)
+		}
+	}
+
 	srv := server.NewServer(&server.NewServerOptions{
-		PostgresURL:    config.PostgresURL,
+		Store:          st,
 		WebRoot:        webRoot,
 		AllowedOrigins: config.AllowedOrigins,
 		Webhook:        webhook.NewWebhook(config.ServerURL),

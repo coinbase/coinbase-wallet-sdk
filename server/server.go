@@ -28,7 +28,7 @@ type Server struct {
 
 // NewServerOptions - options for NewServer function
 type NewServerOptions struct {
-	PostgresURL    string
+	Store          store.Store
 	WebRoot        string
 	AllowedOrigins util.StringSet
 	Webhook        webhook.Caller
@@ -42,22 +42,16 @@ func NewServer(options *NewServerOptions) *Server {
 		options = &NewServerOptions{}
 	}
 
-	var s store.Store
-	if len(options.PostgresURL) == 0 {
-		s = store.NewMemoryStore()
-	} else {
-		var err error
-		s, err = store.NewPostgresStore(options.PostgresURL, "store")
-		if err != nil {
-			log.Panicln(err)
-		}
+	st := options.Store
+	if st == nil {
+		st = store.NewMemoryStore()
 	}
 
 	router := mux.NewRouter()
 
 	srv := &Server{
 		router:         router,
-		store:          s,
+		store:          st,
 		pubSub:         rpc.NewPubSub(),
 		allowedOrigins: options.AllowedOrigins,
 		webhook:        options.Webhook,
