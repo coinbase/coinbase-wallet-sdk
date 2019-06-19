@@ -145,6 +145,15 @@ func (c *MessageHandler) handleJoinSession(
 	}
 
 	session.Linked = true
+
+	if err := session.UpdateSessionConfig(
+		msg.WebhookID,
+		msg.WebhookURL,
+		msg.Metadata,
+	); err != nil {
+		return newServerMessageFail(msg.ID, msg.SessionID, err.Error())
+	}
+
 	if err := session.Save(c.store); err != nil {
 		fmt.Println(err)
 		return newServerMessageFail(msg.ID, msg.SessionID, "internal error")
@@ -157,7 +166,13 @@ func (c *MessageHandler) handleJoinSession(
 
 	// send Linked message to host
 	subID := hostPubSubID(msg.SessionID)
-	joinedMsg := newServerMessageLinked(msg.SessionID, onlineGuests)
+	joinedMsg := newServerMessageLinked(
+		msg.SessionID,
+		session.WebhookID,
+		session.WebhookURL,
+		onlineGuests,
+		session.Metadata,
+	)
 	c.pubSub.Publish(subID, joinedMsg)
 
 	return newServerMessageOK(msg.ID, msg.SessionID)
@@ -193,37 +208,17 @@ func (c *MessageHandler) handleSetSessionConfig(
 		)
 	}
 
-	if valid, invalidReason := models.IsValidSessionConfig(
-		msg.WebhookID,
-		msg.WebhookURL,
-		msg.Metadata,
-	); !valid {
-		return newServerMessageFail(msg.ID, msg.SessionID, invalidReason)
-	}
-
 	session, err := c.findAuthedSessionWithID(msg.SessionID)
 	if err != nil {
 		return newServerMessageFail(msg.ID, msg.SessionID, err.Error())
 	}
 
-	if msg.WebhookID != nil {
-		session.WebhookID = *msg.WebhookID
-	}
-
-	if msg.WebhookURL != nil {
-		session.WebhookURL = *msg.WebhookURL
-	}
-
-	if session.Metadata == nil {
-		session.Metadata = map[string]string{}
-	}
-
-	for k, v := range msg.Metadata {
-		if v != nil {
-			session.Metadata[k] = *v
-		} else {
-			delete(session.Metadata, k)
-		}
+	if err = session.UpdateSessionConfig(
+		msg.WebhookID,
+		msg.WebhookURL,
+		msg.Metadata,
+	); err != nil {
+		return newServerMessageFail(msg.ID, msg.SessionID, err.Error())
 	}
 
 	if err := session.Save(c.store); err != nil {

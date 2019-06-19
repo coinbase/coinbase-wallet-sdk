@@ -48,9 +48,12 @@ type serverMessageIsLinkedOK struct {
 
 type serverMessageLinked struct {
 	_serverMessage
-	Type         string `json:"type"`
-	SessionID    string `json:"sessionId"`
-	OnlineGuests int    `json:"onlineGuests"`
+	Type         string            `json:"type"`
+	SessionID    string            `json:"sessionId"`
+	OnlineGuests int               `json:"onlineGuests"`
+	WebhookID    string            `json:"webhookId,omitempty"`
+	WebhookURL   string            `json:"webhookUrl,omitempty"`
+	Metadata     map[string]string `json:"metadata"`
 }
 
 type serverMessageGetSessionConfigOK struct {
@@ -119,12 +122,17 @@ func newServerMessageIsLinkedOK(
 }
 
 func newServerMessageLinked(
-	sessionID string, onlineGuests int,
+	sessionID, webhookID, webhookURL string,
+	onlineGuests int,
+	metadata map[string]string,
 ) *serverMessageLinked {
 	return &serverMessageLinked{
 		Type:         serverMessageTypeLinked,
 		SessionID:    sessionID,
 		OnlineGuests: onlineGuests,
+		WebhookID:    webhookID,
+		WebhookURL:   webhookURL,
+		Metadata:     metadata,
 	}
 }
 

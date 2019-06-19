@@ -36,10 +36,13 @@ type clientMessageHostSession struct {
 
 type clientMessageJoinSession struct {
 	_clientMessage
-	Type       string `json:"type"`
-	ID         int    `json:"id"`
-	SessionID  string `json:"sessionId"`
-	SessionKey string `json:"sessionKey"`
+	Type       string             `json:"type"`
+	ID         int                `json:"id"`
+	SessionID  string             `json:"sessionId"`
+	SessionKey string             `json:"sessionKey"`
+	WebhookID  *string            `json:"webhookId,omitempty"`
+	WebhookURL *string            `json:"webhookUrl,omitempty"`
+	Metadata   map[string]*string `json:"metadata,omitempty"`
 }
 
 type clientMessageIsLinked struct {

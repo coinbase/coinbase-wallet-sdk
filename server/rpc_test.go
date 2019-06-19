@@ -125,11 +125,15 @@ func TestRPC(t *testing.T) {
 	require.Nil(t, err)
 	defer guestWs.Close()
 
+	initialWebhookID := "initialWebhookID"
+	initialWebhookURL := "initialWebhookURL"
 	err = guestWs.WriteJSON(jsonMap{
 		"type":       "JoinSession",
 		"id":         guestReqID,
 		"sessionId":  sessionID,
 		"sessionKey": sessionKey,
+		"webhookId":  initialWebhookID,
+		"webhookUrl": initialWebhookURL,
 	})
 	require.Nil(t, err)
 
@@ -151,6 +155,9 @@ func TestRPC(t *testing.T) {
 		"type":         "Linked",
 		"sessionId":    sessionID,
 		"onlineGuests": float64(1),
+		"webhookId":    initialWebhookID,
+		"webhookUrl":   initialWebhookURL,
+		"metadata":     map[string]interface{}{},
 	}, res)
 
 	// host calls IsLinked again

@@ -54,8 +54,42 @@ func IsValidSessionKey(key string) bool {
 	return len(key) == 64 && util.IsHexString(key)
 }
 
-// IsValidSessionConfig - check validty of session config parameters
-func IsValidSessionConfig(
+// UpdateSessionConfig - update the session configuration
+func (s *Session) UpdateSessionConfig(
+	webhookID, webhookURL *string, metadata map[string]*string,
+) error {
+	if valid, invalidReason := isValidSessionConfig(
+		webhookID,
+		webhookURL,
+		metadata,
+	); !valid {
+		return errors.New(invalidReason)
+	}
+
+	if webhookID != nil {
+		s.WebhookID = *webhookID
+	}
+
+	if webhookURL != nil {
+		s.WebhookURL = *webhookURL
+	}
+
+	if s.Metadata == nil {
+		s.Metadata = map[string]string{}
+	}
+
+	for k, v := range metadata {
+		if v != nil {
+			s.Metadata[k] = *v
+		} else {
+			delete(s.Metadata, k)
+		}
+	}
+
+	return nil
+}
+
+func isValidSessionConfig(
 	webhookID *string,
 	webhookURL *string,
 	metadata map[string]*string,
