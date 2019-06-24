@@ -204,11 +204,34 @@ export class WalletLinkHost {
     return this.connectedSubject.asObservable()
   }
 
+  public get connected(): boolean {
+    return this.connectedSubject.getValue()
+  }
+
   /**
    * Emit true if linked (a guest has joined before)
    */
   public get linked$(): Observable<boolean> {
     return this.linkedSubject.asObservable()
+  }
+
+  public get linked(): boolean {
+    return this.linkedSubject.getValue()
+  }
+
+  /**
+   * Emit once when linked
+   */
+  public get onceLinked$(): Observable<void> {
+    return this.linked$.pipe(
+      filter(v => v),
+      take(1),
+      map(() => void 0)
+    )
+  }
+
+  public get sessionConfig$(): Observable<SessionConfig> {
+    return this.sessionConfigSubject.asObservable()
   }
 
   /**
@@ -253,10 +276,7 @@ export class WalletLinkHost {
       data
     )
 
-    return this.linked$.pipe(
-      // Wait until session is linked before sending message
-      filter(v => v),
-      take(1),
+    return this.onceLinked$.pipe(
       flatMap(_ =>
         this.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(
           message

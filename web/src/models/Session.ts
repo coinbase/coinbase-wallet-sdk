@@ -33,7 +33,7 @@ export class Session {
     localStorage.removeItem(localStorageSessionSecretKey)
   }
 
-  public static get sessionIdChange$(): Observable<{
+  public static get persistedSessionIdChange$(): Observable<{
     oldValue: string | null
     newValue: string | null
   }> {

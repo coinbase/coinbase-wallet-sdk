@@ -18,7 +18,7 @@ export class WalletLink {
   private _appLogoUrl: string
   private _relay: WalletLinkRelay
 
-  constructor(options: WalletLinkOptions) {
+  constructor(options: Readonly<WalletLinkOptions>) {
     this._appName = options.appName || "DApp"
     this._appLogoUrl = options.appLogoUrl || this._getFavicon()
     this._relay = new WalletLinkRelay({

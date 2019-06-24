@@ -4,28 +4,45 @@
 import bind from "bind-decorator"
 import React from "react"
 import { RouteComponentProps } from "react-router"
+import { Subscription } from "rxjs"
 import { Session } from "../../models/Session"
+import { routes } from "../../routes"
+import { AppContext } from "../AppContext"
 import { LinkPage } from "./LinkPage"
 
-export interface Props extends RouteComponentProps {
-  connected: boolean
-  linked: boolean
-  webUrl: string
-  serverUrl: string
-  sessionId: string
-  sessionSecret: string
-}
+export class LinkRoute extends React.PureComponent<RouteComponentProps> {
+  public static contextType = AppContext
+  public context!: React.ContextType<typeof AppContext>
 
-export class LinkRoute extends React.PureComponent<Props> {
+  private subscriptions = new Subscription()
+
+  public componentDidMount() {
+    const { mainRepo } = this.context
+
+    this.subscriptions.add(
+      mainRepo.onceLinked$.subscribe(() => {
+        const { history } = this.props
+        history.replace({
+          pathname: routes.authorize,
+          search: history.location.search
+        })
+      })
+    )
+  }
+
+  public componentWillUnmount() {
+    this.subscriptions.unsubscribe()
+  }
+
   public render() {
-    const { webUrl, serverUrl, sessionId, sessionSecret } = this.props
+    const { mainRepo } = this.context
 
     return (
       <LinkPage
-        webUrl={webUrl}
-        serverUrl={serverUrl}
-        sessionId={sessionId}
-        sessionSecret={sessionSecret}
+        webUrl={mainRepo.webUrl}
+        serverUrl={mainRepo.serverUrl}
+        sessionId={mainRepo.sessionId}
+        sessionSecret={mainRepo.sessionSecret}
         onClickUnlink={this.handleClickUnlink}
       />
     )

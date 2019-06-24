@@ -9,7 +9,13 @@ const tsConfigPath = (exports.tsConfigPath = path.join(
 
 module.exports = {
   target: "web",
-  entry: "./src/index.ts",
+  entry: [
+    "core-js/shim",
+    "core-js/modules/es7.object.entries",
+    "core-js/modules/es7.object.values",
+    "regenerator-runtime/runtime",
+    "./src/index.ts"
+  ],
   // devtool: 'inline-source-map',
   mode: "production",
   module: {

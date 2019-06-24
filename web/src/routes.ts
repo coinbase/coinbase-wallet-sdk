@@ -4,5 +4,6 @@
 export const routes = {
   root: "/",
   link: "/link",
-  bridge: "/bridge"
+  bridge: "/bridge",
+  authorize: "/authorize"
 }
