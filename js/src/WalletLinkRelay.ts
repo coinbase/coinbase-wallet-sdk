@@ -5,32 +5,36 @@ import bind from "bind-decorator"
 import BN from "bn.js"
 import crypto from "crypto"
 import url from "url"
-import { AddressString, IntNumber, RegExpString } from "./types"
-import { bigIntStringFromBN, hexStringFromBuffer } from "./util"
-import { WalletLinkNotification } from "./WalletLinkNotification"
-import * as walletLinkStorage from "./walletLinkStorage"
-import { Web3Method } from "./Web3Method"
+import { AddressString, IntNumber, RegExpString } from "./types/common"
+import { isLinkedMessage } from "./types/LinkedMessage"
+import { isUnlinkedMessage } from "./types/UnlinkedMessage"
 import {
   EthereumAddressFromSignedMessageRequest,
-  RequestEthereumAddressesRequest,
+  RequestEthereumAccountsRequest,
   ScanQRCodeRequest,
   SignEthereumMessageRequest,
   SignEthereumTransactionRequest,
   SubmitEthereumTransactionRequest,
-  Web3Request,
-  Web3RequestMessage
-} from "./Web3Request"
+  Web3Method,
+  Web3Request
+} from "./types/Web3Request"
+import { Web3RequestMessage } from "./types/Web3RequestMessage"
 import {
   EthereumAddressFromSignedMessageResponse,
-  isWeb3ResponseMessage,
-  RequestEthereumAddressesResponse,
+  RequestEthereumAccountsResponse,
   ScanQRCodeResponse,
   SignEthereumMessageResponse,
   SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse,
-  Web3Response,
+  Web3Response
+} from "./types/Web3Response"
+import {
+  isWeb3ResponseMessage,
   Web3ResponseMessage
-} from "./Web3Response"
+} from "./types/Web3ResponseMessage"
+import { bigIntStringFromBN, hexStringFromBuffer } from "./util"
+import { WalletLinkNotification } from "./WalletLinkNotification"
+import * as walletLinkStorage from "./walletLinkStorage"
 
 export interface EthereumTransactionParams {
   fromAddress: AddressString
@@ -86,12 +90,12 @@ export class WalletLinkRelay {
   public requestEthereumAccounts(
     appName: string,
     appLogoUrl: string | null
-  ): Promise<RequestEthereumAddressesResponse> {
+  ): Promise<RequestEthereumAccountsResponse> {
     return this.sendRequest<
-      RequestEthereumAddressesRequest,
-      RequestEthereumAddressesResponse
+      RequestEthereumAccountsRequest,
+      RequestEthereumAccountsResponse
     >({
-      method: Web3Method.requestEthereumAddresses,
+      method: Web3Method.requestEthereumAccounts,
       params: {
         appName,
         appLogoUrl: appLogoUrl || this._getFavicon()
@@ -217,7 +221,7 @@ export class WalletLinkRelay {
 
       let notificationMessage: string
 
-      if (request.method === Web3Method.requestEthereumAddresses) {
+      if (request.method === Web3Method.requestEthereumAccounts) {
         notificationMessage = "Requested access to your account..."
         if (!this._linked) {
           this._openWalletLinkWindow()
@@ -229,10 +233,12 @@ export class WalletLinkRelay {
       const notification = new WalletLinkNotification({
         message: notificationMessage,
         onClickCancel: () => {
-          this._invokeCallback({
-            id,
-            response: { errorMessage: "User rejected request" }
-          })
+          this._invokeCallback(
+            Web3ResponseMessage({
+              id,
+              response: { errorMessage: "User rejected request" }
+            })
+          )
         },
         onClickHelp: () => {
           this._openWalletLinkWindow()
@@ -248,7 +254,7 @@ export class WalletLinkRelay {
         resolve(response as U)
       })
 
-      const message: Web3RequestMessage = { id, request }
+      const message = Web3RequestMessage({ id, request })
       this._iframe.contentWindow.postMessage(message, this._walletLinkWebOrigin)
       notification.show()
     })
@@ -329,21 +335,21 @@ export class WalletLinkRelay {
       return
     }
 
-    switch (evt.data) {
-      case "WALLETLINK_LINKED": {
-        this._linked = true
-        return
-      }
+    const message: unknown = evt.data
 
-      case "WALLETLINK_UNLINKED": {
-        this._linked = false
-        walletLinkStorage.clear()
-        document.location.reload()
-        return
-      }
+    if (isLinkedMessage(message)) {
+      this._linked = true
+      return
     }
 
-    if (isWeb3ResponseMessage(evt.data)) {
+    if (isUnlinkedMessage(message)) {
+      this._linked = false
+      walletLinkStorage.clear()
+      document.location.reload()
+      return
+    }
+
+    if (isWeb3ResponseMessage(message)) {
       this._invokeCallback(evt.data)
     }
   }

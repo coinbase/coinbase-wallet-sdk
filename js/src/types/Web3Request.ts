@@ -7,20 +7,27 @@ import {
   HexString,
   IntNumber,
   RegExpString
-} from "./types"
-import { Web3Method } from "./Web3Method"
+} from "./common"
 
-interface BaseWeb3Request<Method extends Web3Method, Params extends object> {
+export enum Web3Method {
+  requestEthereumAccounts = "requestEthereumAccounts",
+  signEthereumMessage = "signEthereumMessage",
+  signEthereumTransaction = "signEthereumTransaction",
+  submitEthereumTransaction = "submitEthereumTransaction",
+  ethereumAddressFromSignedMessage = "ethereumAddressFromSignedMessage",
+  scanQRCode = "scanQRCode"
+}
+
+interface BaseWeb3Request<
+  Method extends Web3Method,
+  Params extends object = {}
+> {
   method: Method
   params: Params
 }
 
-export type RequestEthereumAddressesRequest = BaseWeb3Request<
-  Web3Method.requestEthereumAddresses,
-  {
-    appName: string
-    appLogoUrl: string | null
-  }
+export type RequestEthereumAccountsRequest = BaseWeb3Request<
+  Web3Method.requestEthereumAccounts
 >
 
 export type SignEthereumMessageRequest = BaseWeb3Request<
@@ -72,14 +79,9 @@ export type ScanQRCodeRequest = BaseWeb3Request<
 >
 
 export type Web3Request =
-  | RequestEthereumAddressesRequest
+  | RequestEthereumAccountsRequest
   | SignEthereumMessageRequest
   | SignEthereumTransactionRequest
   | SubmitEthereumTransactionRequest
   | EthereumAddressFromSignedMessageRequest
   | ScanQRCodeRequest
-
-export interface Web3RequestMessage {
-  id: string
-  request: Web3Request
-}

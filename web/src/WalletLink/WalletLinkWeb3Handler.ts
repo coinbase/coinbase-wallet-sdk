@@ -8,9 +8,9 @@ import * as aes256gcm from "../lib/aes256gcm"
 import { ServerMessageEvent } from "./messages"
 import {
   isWeb3RequestMessage,
-  isWeb3ResponseMessage,
   Web3RequestMessageWithOrigin
-} from "./types"
+} from "./types/Web3RequestMessage"
+import { isWeb3ResponseMessage } from "./types/Web3ResponseMessage"
 import { WalletLinkHost } from "./WalletLinkHost"
 
 export class WalletLinkWeb3Handler {

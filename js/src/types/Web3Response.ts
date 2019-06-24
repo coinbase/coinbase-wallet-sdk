@@ -1,16 +1,18 @@
 // Copyright (c) 2018-2019 Coinbase, Inc. <https://coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { AddressString, HexString } from "./types"
+import { AddressString, HexString } from "./common"
 
 interface BaseWeb3Response<Result> {
   errorMessage?: string | null
   result?: Result
 }
 
-export type ErrorResponse = BaseWeb3Response<undefined>
+export interface ErrorResponse extends BaseWeb3Response<void> {
+  errorMessage: string
+}
 
-export type RequestEthereumAddressesResponse = BaseWeb3Response<
+export type RequestEthereumAccountsResponse = BaseWeb3Response<
   AddressString[] // an array of ethereum addresses
 >
 
@@ -36,18 +38,9 @@ export type ScanQRCodeResponse = BaseWeb3Response<
 
 export type Web3Response =
   | ErrorResponse
-  | RequestEthereumAddressesResponse
+  | RequestEthereumAccountsResponse
   | SignEthereumMessageResponse
   | SignEthereumTransactionResponse
   | SubmitEthereumTransactionResponse
   | EthereumAddressFromSignedMessageResponse
   | ScanQRCodeResponse
-
-export interface Web3ResponseMessage {
-  id: string
-  response: Web3Response
-}
-
-export function isWeb3ResponseMessage(msg: any): msg is Web3ResponseMessage {
-  return msg && typeof msg.id === "string" && typeof msg.response === "object"
-}

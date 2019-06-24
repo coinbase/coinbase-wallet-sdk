@@ -42,7 +42,7 @@ import {
   ServerMessageSessionConfigUpdated
 } from "./messages"
 import { ConnectionState, RxWebSocket } from "./RxWebSocket"
-import { SessionConfig } from "./types"
+import { SessionConfig } from "./types/SessionConfig"
 
 const HEARTBEAT_INTERVAL = 10000
 const REQUEST_TIMEOUT = 60000

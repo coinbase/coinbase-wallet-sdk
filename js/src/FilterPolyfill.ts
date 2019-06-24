@@ -3,13 +3,9 @@
 
 import max from "lodash/max"
 import range from "lodash/range"
-import {
-  HexString,
-  IntNumber,
-  JSONRPCRequest,
-  JSONRPCResponse,
-  Web3Provider
-} from "./types"
+import { HexString, IntNumber } from "./types/common"
+import { JSONRPCRequest, JSONRPCResponse } from "./types/JSONRPC"
+import { Web3Provider } from "./types/Web3Provider"
 import {
   ensureHexString,
   hexStringFromIntNumber,

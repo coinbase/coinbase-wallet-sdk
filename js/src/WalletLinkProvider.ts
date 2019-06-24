@@ -6,17 +6,14 @@ import crypto from "crypto"
 import { EventEmitter } from "events"
 import "whatwg-fetch"
 import { FilterPolyfill } from "./FilterPolyfill"
+import { AddressString, Callback, IntNumber } from "./types/common"
+import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from "./types/JSONRPC"
 import {
-  AddressString,
-  Callback,
-  IntNumber,
-  JSONRPCMethod,
-  JSONRPCRequest,
-  JSONRPCResponse,
   ProviderError,
   ProviderErrorCode,
   Web3Provider
-} from "./types"
+} from "./types/Web3Provider"
+import { RequestEthereumAccountsResponse } from "./types/Web3Response"
 import {
   ensureAddressString,
   ensureBN,
@@ -27,7 +24,6 @@ import {
 } from "./util"
 import { EthereumTransactionParams, WalletLinkRelay } from "./WalletLinkRelay"
 import * as walletLinkStorage from "./walletLinkStorage"
-import { RequestEthereumAddressesResponse } from "./Web3Response"
 
 export interface WalletLinkProviderOptions {
   relay: WalletLinkRelay
@@ -437,7 +433,7 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
       return Promise.resolve({ jsonrpc: "2.0", id: 0, result: this._addresses })
     }
 
-    let res: RequestEthereumAddressesResponse
+    let res: RequestEthereumAccountsResponse
     try {
       res = await this._relay.requestEthereumAccounts(
         this._appName,

@@ -11,6 +11,8 @@ import {
 import { Subscription } from "rxjs"
 import { SERVER_URL, WEB_URL } from "../config"
 import { Session } from "../models/Session"
+import { LinkedMessage } from "../WalletLink/types/LinkedMessage"
+import { UnlinkedMessage } from "../WalletLink/types/UnlinkedMessage"
 import { WalletLinkHost } from "../WalletLink/WalletLinkHost"
 import { WalletLinkWeb3Handler } from "../WalletLink/WalletLinkWeb3Handler"
 import { LinkRoute } from "./Link/LinkRoute"
@@ -57,7 +59,7 @@ export class App extends React.PureComponent<{}, State> {
         this.setState({ linked })
         if (linked) {
           // tslint:disable-next-line: tsr-detect-unsafe-cross-origin-communication
-          window.parent.postMessage("WALLETLINK_LINKED", "*")
+          window.parent.postMessage(LinkedMessage(), "*")
         }
       })
     )
@@ -66,7 +68,7 @@ export class App extends React.PureComponent<{}, State> {
       Session.sessionIdChange$.subscribe(change => {
         if (window.parent && change.oldValue && !change.newValue) {
           // tslint:disable-next-line: tsr-detect-unsafe-cross-origin-communication
-          window.parent.postMessage("WALLETLINK_UNLINKED", "*")
+          window.parent.postMessage(UnlinkedMessage(), "*")
         }
       })
     )
