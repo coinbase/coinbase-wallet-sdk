@@ -5,19 +5,20 @@ import QRCode from "qrcode.react"
 import querystring from "querystring"
 import React from "react"
 import { style } from "typestyle"
+import { routes } from "../../routes"
 
-const styleSessionQRCode = style({
-  borderRadius: 8,
-  boxShadow: "0 5px 10px rgba(0, 0, 0, .2)",
-  display: "inline-block",
-  padding: 16
-})
-
-const styleSessionId = style({
-  display: "block",
-  fontSize: 9,
-  width: "100%"
-})
+const styles = {
+  main: style({
+    borderRadius: 8,
+    boxShadow: "0 5px 10px rgba(0, 0, 0, .2)",
+    display: "inline-block",
+    padding: 16
+  }),
+  qrUrl: style({
+    display: "block",
+    width: "100%"
+  })
+}
 
 export interface Props {
   webUrl: string
@@ -34,13 +35,14 @@ export class SessionQRCode extends React.PureComponent<Props> {
       secret: sessionSecret,
       server: serverUrl
     }
-    const url = `${webUrl}/#/link?${querystring.stringify(queryParams)}`
+    const url = `${webUrl}/#${routes.link}?${querystring.stringify(
+      queryParams
+    )}`
 
     return (
-      <div className={styleSessionQRCode}>
+      <div className={styles.main}>
         <QRCode value={url} renderAs="svg" size={196} />
-        <code className={styleSessionId}>{sessionId}</code>
-        <input type="hidden" value={url} readOnly />
+        <input className={styles.qrUrl} type="text" value={url} readOnly />
       </div>
     )
   }

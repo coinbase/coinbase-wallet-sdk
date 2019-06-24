@@ -2,12 +2,9 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator"
+import { createHashHistory } from "history"
 import React from "react"
-import {
-  HashRouter as Router,
-  Route,
-  RouteComponentProps
-} from "react-router-dom"
+import { Route, RouteComponentProps, Router } from "react-router-dom"
 import { Subscription } from "rxjs"
 import { SERVER_URL, WEB_URL } from "../config"
 import { Session } from "../models/Session"
@@ -24,6 +21,8 @@ type State = Readonly<{
 }>
 
 export class App extends React.PureComponent<{}, State> {
+  private readonly history = createHashHistory()
+
   private session = Session.load() || new Session().save()
   private walletLinkHost: WalletLinkHost | null = null
   private web3Handler: WalletLinkWeb3Handler | null = null
@@ -89,16 +88,11 @@ export class App extends React.PureComponent<{}, State> {
 
   public render() {
     return (
-      <Router>
-        <Route exact path="/" render={this.renderRootRoute} />
+      <Router history={this.history}>
+        <Route exact path="/" component={RootRoute} />
         <Route exact path="/link" render={this.renderLinkRoute} />
       </Router>
     )
-  }
-
-  @bind
-  private renderRootRoute(routeProps: RouteComponentProps) {
-    return <RootRoute {...routeProps} />
   }
 
   @bind

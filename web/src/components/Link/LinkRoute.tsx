@@ -2,11 +2,10 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator"
-import React, { MouseEvent } from "react"
+import React from "react"
 import { RouteComponentProps } from "react-router"
-import { style as typestyle } from "typestyle"
 import { Session } from "../../models/Session"
-import { SessionQRCode } from "./SessionQRCode"
+import { LinkPage } from "./LinkPage"
 
 export interface Props extends RouteComponentProps {
   connected: boolean
@@ -17,42 +16,23 @@ export interface Props extends RouteComponentProps {
   sessionSecret: string
 }
 
-const style = typestyle({
-  textAlign: "center"
-})
-
 export class LinkRoute extends React.PureComponent<Props> {
   public render() {
-    const {
-      connected,
-      linked,
-      webUrl,
-      serverUrl,
-      sessionId,
-      sessionSecret
-    } = this.props
+    const { webUrl, serverUrl, sessionId, sessionSecret } = this.props
 
     return (
-      <div className={style}>
-        <p>WalletLink</p>
-        <SessionQRCode
-          webUrl={webUrl}
-          serverUrl={serverUrl}
-          sessionId={sessionId}
-          sessionSecret={sessionSecret}
-        />
-        <p>{connected ? "Connected" : "Disconnected"}</p>
-        <p>{linked ? "Linked" : "Not Linked"}</p>
-
-        <button onClick={this.handleClickUnlink}>Unlink</button>
-      </div>
+      <LinkPage
+        webUrl={webUrl}
+        serverUrl={serverUrl}
+        sessionId={sessionId}
+        sessionSecret={sessionSecret}
+        onClickUnlink={this.handleClickUnlink}
+      />
     )
   }
 
   @bind
-  private handleClickUnlink(evt: MouseEvent): void {
-    evt.preventDefault()
-
+  private handleClickUnlink(): void {
     Session.clear()
     document.location.reload()
   }
