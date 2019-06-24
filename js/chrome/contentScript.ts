@@ -13,7 +13,8 @@ function chromeMain(): void {
   const { WALLETLINK_WEB_URL } = process.env
 
   const shouldntInject: boolean =
-    (WALLETLINK_WEB_URL && location.origin.startsWith(WALLETLINK_WEB_URL)) ||
+    (WALLETLINK_WEB_URL &&
+      document.location.origin.startsWith(WALLETLINK_WEB_URL)) ||
     (document.documentElement &&
       document.documentElement.hasAttribute("data-no-walletlink"))
 
