@@ -62,36 +62,36 @@ export interface WalletLinkRelayOptions {
 }
 
 export class WalletLinkRelay {
-  private static _callbacks = new Map<string, ResponseCallback>()
-  private static _accountRequestCallbackIds = new Set<string>()
+  private static callbacks = new Map<string, ResponseCallback>()
+  private static accountRequestCallbackIds = new Set<string>()
 
-  private readonly _walletLinkWebUrl: string
-  private readonly _walletLinkWebOrigin: string
+  private readonly walletLinkWebUrl: string
+  private readonly walletLinkWebOrigin: string
   private readonly appName: string
   private readonly appLogoUrl: string
 
-  private _iframeEl: HTMLIFrameElement | null = null
+  private iframeEl: HTMLIFrameElement | null = null
   private popupWindow: Window | null = null
   private authorizeWindowTimer: number | null = null
 
-  private _linked = false
+  private linked = false
 
   constructor(options: Readonly<WalletLinkRelayOptions>) {
-    this._walletLinkWebUrl = options.walletLinkWebUrl
+    this.walletLinkWebUrl = options.walletLinkWebUrl
     this.appName = options.appName
     this.appLogoUrl = options.appLogoUrl
 
-    const u = url.parse(this._walletLinkWebUrl)
-    this._walletLinkWebOrigin = `${u.protocol}//${u.host}`
+    const u = url.parse(this.walletLinkWebUrl)
+    this.walletLinkWebOrigin = `${u.protocol}//${u.host}`
   }
 
   public injectIframe(): void {
-    if (this._iframeEl) {
+    if (this.iframeEl) {
       throw new Error("iframe already injected!")
     }
     const iframeEl = document.createElement("iframe")
     iframeEl.className = "_WalletLinkBridge"
-    iframeEl.src = `${this._walletLinkWebUrl}/#/bridge`
+    iframeEl.src = `${this.walletLinkWebUrl}/#/bridge`
     iframeEl.width = "1"
     iframeEl.height = "1"
     iframeEl.style.opacity = "0"
@@ -99,10 +99,10 @@ export class WalletLinkRelay {
     iframeEl.style.position = "absolute"
     iframeEl.style.top = "0"
     iframeEl.style.right = "0"
-    this._iframeEl = iframeEl
+    this.iframeEl = iframeEl
     document.documentElement.appendChild(iframeEl)
 
-    window.addEventListener("message", this._handleMessage, false)
+    window.addEventListener("message", this.handleMessage, false)
   }
 
   public requestEthereumAccounts(): Promise<RequestEthereumAccountsResponse> {
@@ -226,7 +226,7 @@ export class WalletLinkRelay {
     request: T
   ): Promise<U> {
     return new Promise((resolve, reject) => {
-      if (!this._iframeEl || !this._iframeEl.contentWindow) {
+      if (!this.iframeEl || !this.iframeEl.contentWindow) {
         return reject("iframe is not initialized")
       }
       const id = crypto.randomBytes(8).toString("hex")
@@ -239,7 +239,7 @@ export class WalletLinkRelay {
           ? "Requested access to your account..."
           : "Pushed a WalletLink request to your device...",
         onClickCancel: () => {
-          this._invokeCallback(
+          this.invokeCallback(
             Web3ResponseMessage({
               id,
               response: { errorMessage: "User rejected request" }
@@ -247,13 +247,13 @@ export class WalletLinkRelay {
           )
         },
         onClickHelp: () => {
-          this._openLinkWindow()
+          this.openLinkWindow()
         }
       })
       notification.show()
 
-      WalletLinkRelay._callbacks.set(id, response => {
-        this._closePopupWindow()
+      WalletLinkRelay.callbacks.set(id, response => {
+        this.closePopupWindow()
         notification.hide()
         if (response.errorMessage) {
           return reject(new Error(response.errorMessage))
@@ -262,13 +262,13 @@ export class WalletLinkRelay {
       })
 
       if (isRequestEthereumAccounts) {
-        if (this._linked) {
+        if (this.linked) {
           this.requestAccounts()
         } else {
-          this._openLinkWindow()
+          this.openLinkWindow()
         }
 
-        WalletLinkRelay._accountRequestCallbackIds.add(id)
+        WalletLinkRelay.accountRequestCallbackIds.add(id)
         return
       }
 
@@ -277,20 +277,20 @@ export class WalletLinkRelay {
   }
 
   private postIPCMessage(message: IPCMessage): void {
-    if (!this._iframeEl || !this._iframeEl.contentWindow) {
+    if (!this.iframeEl || !this.iframeEl.contentWindow) {
       throw new Error("WalletLink iframe is not initialized")
     }
-    this._iframeEl.contentWindow.postMessage(message, this._walletLinkWebOrigin)
+    this.iframeEl.contentWindow.postMessage(message, this.walletLinkWebOrigin)
   }
 
-  private _openLinkWindow(): void {
-    this._openPopupWindow("/link")
+  private openLinkWindow(): void {
+    this.openPopupWindow("/link")
   }
 
   private requestAccounts(): void {
     if (this.authorizeWindowTimer === null) {
       this.authorizeWindowTimer = window.setTimeout(() => {
-        this._openPopupWindow("/authorize")
+        this.openPopupWindow("/authorize")
         this.authorizeWindowTimer = null
       }, AUTHORIZE_TIMEOUT)
     }
@@ -298,7 +298,7 @@ export class WalletLinkRelay {
     this.postIPCMessage(Web3AccountsRequestMessage())
   }
 
-  private _openPopupWindow(path: string): void {
+  private openPopupWindow(path: string): void {
     if (this.popupWindow && this.popupWindow.opener) {
       this.popupWindow.focus()
       return
@@ -315,7 +315,7 @@ export class WalletLinkRelay {
     })
 
     this.popupWindow = window.open(
-      `${this._walletLinkWebUrl}/#${path}?${query}`,
+      `${this.walletLinkWebUrl}/#${path}?${query}`,
       "_blank",
       [
         `width=${width}`,
@@ -332,7 +332,7 @@ export class WalletLinkRelay {
     )
   }
 
-  private _closePopupWindow(): void {
+  private closePopupWindow(): void {
     if (this.popupWindow) {
       this.popupWindow.close()
       this.popupWindow = null
@@ -340,29 +340,29 @@ export class WalletLinkRelay {
     window.focus()
   }
 
-  private _invokeCallback(message: Web3ResponseMessage) {
-    const callback = WalletLinkRelay._callbacks.get(message.id)
+  private invokeCallback(message: Web3ResponseMessage) {
+    const callback = WalletLinkRelay.callbacks.get(message.id)
     if (callback) {
       callback(message.response)
-      WalletLinkRelay._callbacks.delete(message.id)
+      WalletLinkRelay.callbacks.delete(message.id)
     }
   }
 
   @bind
-  private _handleMessage(evt: MessageEvent): void {
-    if (evt.origin !== this._walletLinkWebOrigin) {
+  private handleMessage(evt: MessageEvent): void {
+    if (evt.origin !== this.walletLinkWebOrigin) {
       return
     }
 
     const message: unknown = evt.data
 
     if (isLinkedMessage(message)) {
-      this._linked = true
+      this.linked = true
       return
     }
 
     if (isUnlinkedMessage(message)) {
-      this._linked = false
+      this.linked = false
       document.location.reload()
       return
     }
@@ -374,12 +374,12 @@ export class WalletLinkRelay {
           ? RequestEthereumAccountsResponse(addresses)
           : ErrorResponse("User denied account authorization")
 
-      Array.from(WalletLinkRelay._accountRequestCallbackIds.values()).forEach(
+      Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach(
         id => {
-          this._invokeCallback(Web3ResponseMessage({ id, response }))
+          this.invokeCallback(Web3ResponseMessage({ id, response }))
         }
       )
-      WalletLinkRelay._accountRequestCallbackIds.clear()
+      WalletLinkRelay.accountRequestCallbackIds.clear()
 
       // prevent authorize window from appearing
       if (this.authorizeWindowTimer !== null) {
@@ -390,7 +390,7 @@ export class WalletLinkRelay {
     }
 
     if (isWeb3ResponseMessage(message)) {
-      this._invokeCallback(message)
+      this.invokeCallback(message)
     }
   }
 }
