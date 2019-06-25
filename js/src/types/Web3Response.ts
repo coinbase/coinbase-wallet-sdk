@@ -12,9 +12,19 @@ export interface ErrorResponse extends BaseWeb3Response<void> {
   errorMessage: string
 }
 
+export function ErrorResponse(errorMessage: string): ErrorResponse {
+  return { errorMessage }
+}
+
 export type RequestEthereumAccountsResponse = BaseWeb3Response<
   AddressString[] // an array of ethereum addresses
 >
+
+export function RequestEthereumAccountsResponse(
+  addresses: AddressString[]
+): RequestEthereumAccountsResponse {
+  return { result: addresses }
+}
 
 export type SignEthereumMessageResponse = BaseWeb3Response<
   HexString // signature

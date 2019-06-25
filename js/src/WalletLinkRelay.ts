@@ -7,9 +7,11 @@ import crypto from "crypto"
 import querystring from "querystring"
 import url from "url"
 import { AddressString, IntNumber, RegExpString } from "./types/common"
+import { IPCMessage } from "./types/IPCMessage"
 import { isLinkedMessage } from "./types/LinkedMessage"
 import { isUnlinkedMessage } from "./types/UnlinkedMessage"
-import { isWeb3DenyAddressesMessage } from "./types/Web3DenyAddressesMessage"
+import { Web3AccountsRequestMessage } from "./types/Web3AccountsRequestMessage"
+import { isWeb3AccountsResponseMessage } from "./types/Web3AccountsResponseMessage"
 import {
   EthereumAddressFromSignedMessageRequest,
   RequestEthereumAccountsRequest,
@@ -35,10 +37,10 @@ import {
   isWeb3ResponseMessage,
   Web3ResponseMessage
 } from "./types/Web3ResponseMessage"
-import { isWeb3RevealAddressesMessage } from "./types/Web3RevealAddressesMessage"
 import { bigIntStringFromBN, hexStringFromBuffer } from "./util"
 import { WalletLinkNotification } from "./WalletLinkNotification"
-import * as walletLinkStorage from "./walletLinkStorage"
+
+const AUTHORIZE_TIMEOUT = 500
 
 export interface EthereumTransactionParams {
   fromAddress: AddressString
@@ -70,6 +72,7 @@ export class WalletLinkRelay {
 
   private _iframeEl: HTMLIFrameElement | null = null
   private popupWindow: Window | null = null
+  private authorizeWindowTimer: number | null = null
 
   private _linked = false
 
@@ -260,7 +263,7 @@ export class WalletLinkRelay {
 
       if (isRequestEthereumAccounts) {
         if (this._linked) {
-          this._openAuthorizeWindow()
+          this.requestAccounts()
         } else {
           this._openLinkWindow()
         }
@@ -269,19 +272,30 @@ export class WalletLinkRelay {
         return
       }
 
-      this._iframeEl.contentWindow.postMessage(
-        Web3RequestMessage({ id, request }),
-        this._walletLinkWebOrigin
-      )
+      this.postIPCMessage(Web3RequestMessage({ id, request }))
     })
+  }
+
+  private postIPCMessage(message: IPCMessage): void {
+    if (!this._iframeEl || !this._iframeEl.contentWindow) {
+      throw new Error("WalletLink iframe is not initialized")
+    }
+    this._iframeEl.contentWindow.postMessage(message, this._walletLinkWebOrigin)
   }
 
   private _openLinkWindow(): void {
     this._openPopupWindow("/link")
   }
 
-  private _openAuthorizeWindow(): void {
-    this._openPopupWindow("/authorize")
+  private requestAccounts(): void {
+    if (this.authorizeWindowTimer === null) {
+      this.authorizeWindowTimer = window.setTimeout(() => {
+        this._openPopupWindow("/authorize")
+        this.authorizeWindowTimer = null
+      }, AUTHORIZE_TIMEOUT)
+    }
+
+    this.postIPCMessage(Web3AccountsRequestMessage())
   }
 
   private _openPopupWindow(path: string): void {
@@ -349,34 +363,29 @@ export class WalletLinkRelay {
 
     if (isUnlinkedMessage(message)) {
       this._linked = false
-      walletLinkStorage.clear()
       document.location.reload()
       return
     }
 
-    if (isWeb3RevealAddressesMessage(message)) {
-      Array.from(WalletLinkRelay._accountRequestCallbackIds.values()).forEach(
-        id => {
-          const response: RequestEthereumAccountsResponse = {
-            result: message.addresses as AddressString[]
-          }
-          this._invokeCallback(Web3ResponseMessage({ id, response }))
-        }
-      )
-      WalletLinkRelay._accountRequestCallbackIds.clear()
-      return
-    }
+    if (isWeb3AccountsResponseMessage(message)) {
+      const addresses = message.addresses as AddressString[]
+      const response =
+        addresses.length > 0
+          ? RequestEthereumAccountsResponse(addresses)
+          : ErrorResponse("User denied account authorization")
 
-    if (isWeb3DenyAddressesMessage(message)) {
       Array.from(WalletLinkRelay._accountRequestCallbackIds.values()).forEach(
         id => {
-          const response: ErrorResponse = {
-            errorMessage: "User denied account authorization"
-          }
           this._invokeCallback(Web3ResponseMessage({ id, response }))
         }
       )
       WalletLinkRelay._accountRequestCallbackIds.clear()
+
+      // prevent authorize window from appearing
+      if (this.authorizeWindowTimer !== null) {
+        window.clearTimeout(this.authorizeWindowTimer)
+        this.authorizeWindowTimer = null
+      }
       return
     }
 

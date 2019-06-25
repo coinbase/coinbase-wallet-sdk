@@ -2,7 +2,6 @@
 // Licensed under the Apache License, version 2.0
 
 import BN from "bn.js"
-import crypto from "crypto"
 import { EventEmitter } from "events"
 import "whatwg-fetch"
 import { FilterPolyfill } from "./FilterPolyfill"
@@ -23,11 +22,9 @@ import {
   ensureRegExpString
 } from "./util"
 import { EthereumTransactionParams, WalletLinkRelay } from "./WalletLinkRelay"
-import * as walletLinkStorage from "./walletLinkStorage"
 
 export interface WalletLinkProviderOptions {
   relay: WalletLinkRelay
-  appName: string
   jsonRpcUrl: string
   chainId?: number
 }
@@ -36,16 +33,10 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
   private readonly _filterPolyfill = new FilterPolyfill(this)
 
   private readonly _relay: WalletLinkRelay
-  private readonly _appName: string
   private readonly _chainId: IntNumber
   private readonly _jsonRpcUrl: string
-  private readonly _providerId: string
 
   private _addresses: AddressString[] = []
-
-  private get _localStorageAddressesKey(): string {
-    return `WalletLinkProvider:${this._providerId}:addresses`
-  }
 
   constructor(options: Readonly<WalletLinkProviderOptions>) {
     super()
@@ -56,23 +47,8 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
       throw new Error("jsonRpcUrl must be provided")
     }
     this._relay = options.relay
-    this._appName = options.appName
     this._chainId = ensureIntNumber(options.chainId || 1)
     this._jsonRpcUrl = options.jsonRpcUrl
-    this._providerId = crypto
-      .createHash("sha256")
-      .update([this._appName, this._chainId, this._jsonRpcUrl].join(), "utf8")
-      .digest("hex")
-      .slice(0, 10)
-
-    try {
-      const addresses = walletLinkStorage.getItem<string[]>(
-        this._localStorageAddressesKey
-      )
-      if (addresses) {
-        this._setAddresses(addresses)
-      }
-    } catch {}
   }
 
   public get selectedAddress(): AddressString | undefined {
@@ -211,17 +187,12 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     return response
   }
 
-  private _setAddresses(addresses: string[], persist: boolean = false): void {
+  private _setAddresses(addresses: string[]): void {
     if (!Array.isArray(addresses)) {
       throw new Error("addresses is not an array")
     }
 
     this._addresses = addresses.map(address => ensureAddressString(address))
-
-    if (persist) {
-      walletLinkStorage.setItem(this._localStorageAddressesKey, this._addresses)
-    }
-
     this.emit("accountsChanged", this._addresses)
   }
 
@@ -448,7 +419,7 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
       throw new Error("accounts received is empty")
     }
 
-    this._setAddresses(res.result, true)
+    this._setAddresses(res.result)
 
     return { jsonrpc: "2.0", id: 0, result: this._addresses }
   }

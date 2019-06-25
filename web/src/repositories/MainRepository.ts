@@ -1,32 +1,44 @@
 // Copyright (c) 2018-2019 Coinbase, Inc. <https://coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { BehaviorSubject, Observable, Subscription } from "rxjs"
-import { filter, map, take } from "rxjs/operators"
+import bind from "bind-decorator"
+import { BehaviorSubject, fromEvent, Observable, of, Subscription } from "rxjs"
+import { catchError, filter, map, take, timeout } from "rxjs/operators"
 import * as aes256gcm from "../lib/aes256gcm"
+import { nextTick } from "../lib/util"
 import { Session } from "../models/Session"
-import { postMessageToOpener, postMessageToParent } from "../WalletLink/ipc"
+import { isOriginAuthorized } from "../WalletLink/appAuthorizations"
+import { ServerMessageEvent } from "../WalletLink/messages"
+import { IPCMessage } from "../WalletLink/types/IPCMessage"
 import { LinkedMessage } from "../WalletLink/types/LinkedMessage"
 import { UnlinkedMessage } from "../WalletLink/types/UnlinkedMessage"
-import { Web3DenyAddressesMessage } from "../WalletLink/types/Web3DenyAddressesMessage"
-import { Web3RevealAddressesMessage } from "../WalletLink/types/Web3RevealAddressesMessage"
+import { isWeb3AccountsRequestMessage } from "../WalletLink/types/Web3AccountsRequestMessage"
+import { Web3AccountsResponseMessage } from "../WalletLink/types/Web3AccountsResponseMessage"
+import {
+  isWeb3RequestMessage,
+  Web3RequestMessage,
+  Web3RequestMessageWithOrigin
+} from "../WalletLink/types/Web3RequestMessage"
+import {
+  isWeb3ResponseMessage,
+  Web3ResponseMessage
+} from "../WalletLink/types/Web3ResponseMessage"
 import { WalletLinkHost } from "../WalletLink/WalletLinkHost"
-import { WalletLinkWeb3Handler } from "../WalletLink/WalletLinkWeb3Handler"
 
 export interface MainRepositoryOptions {
   webUrl: string
   serverUrl: string
   session?: Session
   walletLinkHost?: WalletLinkHost
-  web3Handler?: WalletLinkWeb3Handler
 }
+
+const AUTHORIZE_TIMEOUT = 500
 
 export class MainRepository {
   private readonly _webUrl: string
   private readonly _serverUrl: string
   private readonly session: Session
   private readonly walletLinkHost: WalletLinkHost
-  private readonly web3Handler: WalletLinkWeb3Handler
   private readonly subscriptions = new Subscription()
   private readonly ethereumAddressesSubject = new BehaviorSubject<string[]>([])
 
@@ -42,18 +54,12 @@ export class MainRepository {
       new WalletLinkHost(session.id, session.key, options.serverUrl)
     this.walletLinkHost = walletLinkHost
 
-    const web3Handler =
-      options.web3Handler ||
-      new WalletLinkWeb3Handler(walletLinkHost, session.secret)
-    this.web3Handler = web3Handler
-
     walletLinkHost.connect()
-    web3Handler.listen()
 
     this.subscriptions.add(
       walletLinkHost.linked$.subscribe(linked => {
         if (linked) {
-          postMessageToParent(LinkedMessage())
+          this.postIPCMessage(LinkedMessage())
         }
       })
     )
@@ -61,7 +67,7 @@ export class MainRepository {
     this.subscriptions.add(
       Session.persistedSessionIdChange$.subscribe(change => {
         if (change.oldValue && !change.newValue) {
-          postMessageToParent(UnlinkedMessage())
+          this.postIPCMessage(UnlinkedMessage())
         }
       })
     )
@@ -88,12 +94,21 @@ export class MainRepository {
         }
       })
     )
+
+    this.subscriptions.add(
+      fromEvent<MessageEvent>(window, "message").subscribe(this.handleMessage)
+    )
+
+    this.subscriptions.add(
+      this.walletLinkHost.incomingEvent$
+        .pipe(filter(m => m.event === "Web3Response"))
+        .subscribe(this.handleWeb3ResponseEvent)
+    )
   }
 
   public destroy(): void {
     this.subscriptions.unsubscribe()
     this.walletLinkHost.destroy()
-    this.web3Handler.destroy()
   }
 
   public get webUrl() {
@@ -133,18 +148,89 @@ export class MainRepository {
   }
 
   public revealEthereumAddressesToOpener(origin: string): Observable<void> {
-    return this.ethereumAddressesSubject.pipe(
+    return this.ethereumAddresses$.pipe(
       filter(addrs => addrs.length > 0),
       take(1),
       map(addresses => {
-        const message = Web3RevealAddressesMessage({ addresses })
-        postMessageToOpener(message, origin)
+        const message = Web3AccountsResponseMessage(addresses)
+        this.postIPCMessage(message, origin)
       })
     )
   }
 
   public denyEthereumAddressesFromOpener(origin: string): void {
-    const message = Web3DenyAddressesMessage()
-    postMessageToOpener(message, origin)
+    const message = Web3AccountsResponseMessage([])
+    this.postIPCMessage(message, origin)
+  }
+
+  private postIPCMessage(message: IPCMessage, origin: string = "*"): void {
+    if (window.opener) {
+      window.opener.postMessage(message, origin)
+      return
+    }
+    if (window.parent !== window) {
+      window.parent.postMessage(message, origin)
+    }
+  }
+
+  @bind
+  private handleMessage(evt: MessageEvent): void {
+    const message = evt.data
+    const { origin } = evt
+
+    if (isWeb3RequestMessage(message)) {
+      this.handleWeb3Request(message, origin)
+      return
+    }
+
+    if (isWeb3AccountsRequestMessage(message) && isOriginAuthorized(origin)) {
+      const sub = this.revealEthereumAddressesToOpener(origin)
+        .pipe(
+          timeout(AUTHORIZE_TIMEOUT),
+          catchError(() => of(null))
+        )
+        .subscribe(() => {
+          nextTick(() => this.subscriptions.remove(sub))
+        })
+      this.subscriptions.add(sub)
+    }
+  }
+
+  private handleWeb3Request(request: Web3RequestMessage, origin: string): void {
+    const requestWithOrigin = Web3RequestMessageWithOrigin(request, origin)
+    const encrypted = aes256gcm.encrypt(
+      JSON.stringify(requestWithOrigin),
+      this.session.secret
+    )
+    const sub = this.walletLinkHost
+      .publishEvent("Web3Request", encrypted)
+      .subscribe(null, err => {
+        const response = Web3ResponseMessage({
+          id: request.id,
+          response: {
+            errorMessage: err.message || String(err)
+          }
+        })
+        this.postIPCMessage(response)
+        nextTick(() => this.subscriptions.remove(sub))
+      })
+    this.subscriptions.add(sub)
+  }
+
+  @bind
+  private handleWeb3ResponseEvent(message: ServerMessageEvent): void {
+    let json: unknown
+    try {
+      json = JSON.parse(aes256gcm.decrypt(message.data, this.session.secret))
+    } catch {
+      return
+    }
+
+    const response = isWeb3ResponseMessage(json) ? json : null
+    if (!response) {
+      return
+    }
+
+    this.postIPCMessage(response)
   }
 }

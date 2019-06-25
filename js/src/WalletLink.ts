@@ -36,7 +36,6 @@ export class WalletLink {
   ): WalletLinkProvider {
     return new WalletLinkProvider({
       relay: this._relay,
-      appName: this._appName,
       jsonRpcUrl,
       chainId
     })

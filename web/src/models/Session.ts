@@ -2,8 +2,8 @@ import crypto from "crypto"
 import { fromEvent, Observable } from "rxjs"
 import { filter, map } from "rxjs/operators"
 
-const localStorageSessionIdKey = "WalletLinkSessionId"
-const localStorageSessionSecretKey = "WalletLinkSessionSecret"
+const LOCAL_STORAGE_SESSION_ID_KEY = "SessionId"
+const LOCAL_STORAGE_SESSION_SECRET_KEY = "SessionSecret"
 
 export class Session {
   private readonly _id: string
@@ -20,8 +20,8 @@ export class Session {
   }
 
   public static load(): Session | null {
-    const id = localStorage.getItem(localStorageSessionIdKey)
-    const secret = localStorage.getItem(localStorageSessionSecretKey)
+    const id = localStorage.getItem(LOCAL_STORAGE_SESSION_ID_KEY)
+    const secret = localStorage.getItem(LOCAL_STORAGE_SESSION_SECRET_KEY)
     if (id && secret) {
       return new Session(id, secret)
     }
@@ -29,8 +29,8 @@ export class Session {
   }
 
   public static clear(): void {
-    localStorage.removeItem(localStorageSessionIdKey)
-    localStorage.removeItem(localStorageSessionSecretKey)
+    localStorage.removeItem(LOCAL_STORAGE_SESSION_ID_KEY)
+    localStorage.removeItem(LOCAL_STORAGE_SESSION_SECRET_KEY)
   }
 
   public static get persistedSessionIdChange$(): Observable<{
@@ -38,7 +38,7 @@ export class Session {
     newValue: string | null
   }> {
     return fromEvent<StorageEvent>(window, "storage").pipe(
-      filter(evt => evt.key === localStorageSessionIdKey),
+      filter(evt => evt.key === LOCAL_STORAGE_SESSION_ID_KEY),
       map(evt => ({
         oldValue: evt.oldValue || null,
         newValue: evt.newValue || null
@@ -59,8 +59,8 @@ export class Session {
   }
 
   public save(): Session {
-    localStorage.setItem(localStorageSessionIdKey, this.id)
-    localStorage.setItem(localStorageSessionSecretKey, this.secret)
+    localStorage.setItem(LOCAL_STORAGE_SESSION_ID_KEY, this.id)
+    localStorage.setItem(LOCAL_STORAGE_SESSION_SECRET_KEY, this.secret)
     return this
   }
 }

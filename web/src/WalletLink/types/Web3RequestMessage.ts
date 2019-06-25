@@ -26,24 +26,3 @@ export function Web3RequestMessageWithOrigin(
 ): Web3RequestMessageWithOrigin {
   return { ...requestMessage, origin }
 }
-
-export interface RequestEthereumAddressesMessage
-  extends Web3RequestMessageWithOrigin {
-  request: {
-    method: "requestEthereumAddresses"
-    params: {
-      appName: string
-      appLogoUrl: string
-    }
-    origin: string
-  }
-}
-
-export function isRequestEthereumAddressesMessage(
-  msg: Web3RequestMessageWithOrigin
-): msg is RequestEthereumAddressesMessage {
-  return (
-    isWeb3RequestMessage(msg) &&
-    msg.request.method === "requestEthereumAddresses"
-  )
-}
