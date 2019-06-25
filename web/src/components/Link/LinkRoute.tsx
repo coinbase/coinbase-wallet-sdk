@@ -3,13 +3,15 @@
 
 import bind from "bind-decorator"
 import React from "react"
-import { RouteComponentProps } from "react-router"
-import { Subscription } from "rxjs"
+import { fromEvent, Subscription } from "rxjs"
 import { routes } from "../../routes"
 import { AppContext } from "../AppContext"
+import { RouteComponentPropsWithAppInfo } from "../routeWithAppInfo"
 import { LinkPage } from "./LinkPage"
 
-export class LinkRoute extends React.PureComponent<RouteComponentProps> {
+export class LinkRoute extends React.PureComponent<
+  RouteComponentPropsWithAppInfo
+> {
   public static contextType = AppContext
   public context!: React.ContextType<typeof AppContext>
 
@@ -27,6 +29,14 @@ export class LinkRoute extends React.PureComponent<RouteComponentProps> {
         })
       })
     )
+
+    this.subscriptions.add(
+      fromEvent(window, "unload").subscribe(() => {
+        this.context.mainRepo.denyEthereumAddressesFromOpener(
+          this.props.appInfo.origin
+        )
+      })
+    )
   }
 
   public componentWillUnmount() {
@@ -35,6 +45,7 @@ export class LinkRoute extends React.PureComponent<RouteComponentProps> {
 
   public render() {
     const { mainRepo } = this.context
+    console.log(this.props.appInfo)
 
     return (
       <LinkPage

@@ -12,6 +12,7 @@ import { AuthorizeRoute } from "./Authorize/AuthorizeRoute"
 import { LinkRoute } from "./Link/LinkRoute"
 import { ResetRoute } from "./Reset/ResetRoute"
 import { RootRoute } from "./Root/RootRoute"
+import { routeWithAppInfo } from "./routeWithAppInfo"
 
 export class App extends React.PureComponent {
   private readonly history = createHashHistory()
@@ -26,9 +27,17 @@ export class App extends React.PureComponent {
       <AppContext.Provider value={{ mainRepo: this.mainRepo }}>
         <Router history={this.history}>
           <Route exact path={routes.root} component={RootRoute} />
-          <Route exact path={routes.link} component={LinkRoute} />
+          <Route
+            exact
+            path={routes.link}
+            component={routeWithAppInfo(LinkRoute)}
+          />
+          <Route
+            exact
+            path={routes.authorize}
+            component={routeWithAppInfo(AuthorizeRoute)}
+          />
           <Route exact path={routes.reset} component={ResetRoute} />
-          <Route exact path={routes.authorize} component={AuthorizeRoute} />
         </Router>
       </AppContext.Provider>
     )

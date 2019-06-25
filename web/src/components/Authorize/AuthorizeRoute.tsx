@@ -2,28 +2,22 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator"
-import querystring from "querystring"
 import React from "react"
-import { Redirect, RouteComponentProps } from "react-router"
-import { Subscription } from "rxjs"
+import { Redirect } from "react-router"
+import { fromEvent, Subscription } from "rxjs"
 import { nextTick } from "../../lib/util"
 import { routes } from "../../routes"
 import * as appAuthorizations from "../../WalletLink/appAuthorizations"
 import { AppContext } from "../AppContext"
+import { RouteComponentPropsWithAppInfo } from "../routeWithAppInfo"
 import { AuthorizePage } from "./AuthorizePage"
 
 interface State {
   ethereumAddresses: string[]
 }
 
-interface AppInfo {
-  appName: string
-  appLogoUrl: string
-  origin: string
-}
-
 export class AuthorizeRoute extends React.PureComponent<
-  RouteComponentProps,
+  RouteComponentPropsWithAppInfo,
   State
 > {
   public static contextType = AppContext
@@ -33,11 +27,6 @@ export class AuthorizeRoute extends React.PureComponent<
   }
 
   private subscriptions = new Subscription()
-  private appInfo: AppInfo = {
-    appName: "",
-    appLogoUrl: "",
-    origin: ""
-  }
 
   public componentDidMount() {
     const { mainRepo } = this.context
@@ -45,6 +34,12 @@ export class AuthorizeRoute extends React.PureComponent<
     this.subscriptions.add(
       mainRepo.ethereumAddresses$.subscribe(v => {
         this.setState({ ethereumAddresses: v })
+      })
+    )
+
+    this.subscriptions.add(
+      fromEvent(window, "unload").subscribe(() => {
+        this.handleClickDontAllowButton()
       })
     )
   }
@@ -55,8 +50,7 @@ export class AuthorizeRoute extends React.PureComponent<
 
   public render() {
     const { ethereumAddresses } = this.state
-    this.appInfo = this.parseQuery()
-    const { appName, appLogoUrl, origin } = this.appInfo
+    const { appName, appLogoUrl, origin } = this.props.appInfo
 
     if (appAuthorizations.isOriginAuthorized(origin)) {
       this.handleClickAllowButton()
@@ -78,7 +72,7 @@ export class AuthorizeRoute extends React.PureComponent<
 
   @bind
   private handleClickAllowButton() {
-    const { origin } = this.appInfo
+    const { origin } = this.props.appInfo
     appAuthorizations.setOriginAuthorized(origin)
 
     const sub = this.context.mainRepo
@@ -89,20 +83,8 @@ export class AuthorizeRoute extends React.PureComponent<
 
   @bind
   private handleClickDontAllowButton() {
-    this.context.mainRepo.denyEthereumAddressesFromOpener(this.appInfo.origin)
+    this.context.mainRepo.denyEthereumAddressesFromOpener(
+      this.props.appInfo.origin
+    )
   }
-
-  private parseQuery(): AppInfo {
-    const query = querystring.parse(this.props.location.search.slice(1))
-    const { appName, appLogoUrl, origin } = query
-    return {
-      appName: firstValue(appName),
-      appLogoUrl: firstValue(appLogoUrl),
-      origin: firstValue(origin)
-    }
-  }
-}
-
-function firstValue(val: string[] | string): string {
-  return (Array.isArray(val) ? val[0] : val) || ""
 }
