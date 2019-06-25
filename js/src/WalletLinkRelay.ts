@@ -71,6 +71,7 @@ export class WalletLinkRelay {
   private readonly appLogoUrl: string
 
   private iframeEl: HTMLIFrameElement | null = null
+  private popupUrl: string | null = null
   private popupWindow: Window | null = null
   private authorizeWindowTimer: number | null = null
 
@@ -247,7 +248,7 @@ export class WalletLinkRelay {
           )
         },
         onClickHelp: () => {
-          this.openLinkWindow()
+          this.openPopupWindow("/reset")
         }
       })
       notification.show()
@@ -265,7 +266,7 @@ export class WalletLinkRelay {
         if (this.linked) {
           this.requestAccounts()
         } else {
-          this.openLinkWindow()
+          this.openPopupWindow("/link")
         }
 
         WalletLinkRelay.accountRequestCallbackIds.add(id)
@@ -283,10 +284,6 @@ export class WalletLinkRelay {
     this.iframeEl.contentWindow.postMessage(message, this.walletLinkWebOrigin)
   }
 
-  private openLinkWindow(): void {
-    this.openPopupWindow("/link")
-  }
-
   private requestAccounts(): void {
     if (this.authorizeWindowTimer === null) {
       this.authorizeWindowTimer = window.setTimeout(() => {
@@ -299,23 +296,30 @@ export class WalletLinkRelay {
   }
 
   private openPopupWindow(path: string): void {
-    if (this.popupWindow && this.popupWindow.opener) {
-      this.popupWindow.focus()
-      return
-    }
-    const width = 320
-    const height = 500
-    const left = Math.floor(window.outerWidth / 2 - width / 2 + window.screenX)
-    const top = Math.floor(window.outerHeight / 2 - height / 2 + window.screenY)
-
     const query = querystring.stringify({
       appName: this.appName,
       appLogoUrl: this.appLogoUrl,
       origin: document.location.origin
     })
+    const popupUrl = `${this.walletLinkWebUrl}/#${path}?${query}`
 
+    if (this.popupWindow && this.popupWindow.opener) {
+      if (this.popupUrl !== popupUrl) {
+        this.popupWindow.location.href = popupUrl
+        this.popupUrl = popupUrl
+      }
+      this.popupWindow.focus()
+      return
+    }
+
+    const width = 320
+    const height = 500
+    const left = Math.floor(window.outerWidth / 2 - width / 2 + window.screenX)
+    const top = Math.floor(window.outerHeight / 2 - height / 2 + window.screenY)
+
+    this.popupUrl = popupUrl
     this.popupWindow = window.open(
-      `${this.walletLinkWebUrl}/#${path}?${query}`,
+      popupUrl,
       "_blank",
       [
         `width=${width}`,
@@ -335,6 +339,7 @@ export class WalletLinkRelay {
   private closePopupWindow(): void {
     if (this.popupWindow) {
       this.popupWindow.close()
+      this.popupUrl = null
       this.popupWindow = null
     }
     window.focus()

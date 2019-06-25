@@ -10,6 +10,7 @@ import { routes } from "../routes"
 import { AppContext } from "./AppContext"
 import { AuthorizeRoute } from "./Authorize/AuthorizeRoute"
 import { LinkRoute } from "./Link/LinkRoute"
+import { ResetRoute } from "./Reset/ResetRoute"
 import { RootRoute } from "./Root/RootRoute"
 
 export class App extends React.PureComponent {
@@ -26,6 +27,7 @@ export class App extends React.PureComponent {
         <Router history={this.history}>
           <Route exact path={routes.root} component={RootRoute} />
           <Route exact path={routes.link} component={LinkRoute} />
+          <Route exact path={routes.reset} component={ResetRoute} />
           <Route exact path={routes.authorize} component={AuthorizeRoute} />
         </Router>
       </AppContext.Provider>

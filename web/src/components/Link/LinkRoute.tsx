@@ -6,7 +6,6 @@ import React from "react"
 import { RouteComponentProps } from "react-router"
 import { Subscription } from "rxjs"
 import { routes } from "../../routes"
-import { Session } from "../../WalletLink/Session"
 import { AppContext } from "../AppContext"
 import { LinkPage } from "./LinkPage"
 
@@ -50,7 +49,6 @@ export class LinkRoute extends React.PureComponent<RouteComponentProps> {
 
   @bind
   private handleClickUnlink(): void {
-    Session.clear()
-    document.location.reload()
+    this.props.history.push(routes.reset)
   }
 }
