@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "bind-decorator": "^1.0.11",
+    "classnames": "^2.2.6",
     "qrcode.react": "^0.9.3",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
@@ -22,6 +23,7 @@
     "typestyle": "^2.0.2"
   },
   "devDependencies": {
+    "@types/classnames": "^2.2.8",
     "@types/jest": "^24.0.13",
     "@types/node": "^12.0.8",
     "@types/qrcode.react": "^0.8.2",
