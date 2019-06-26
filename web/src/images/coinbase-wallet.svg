@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="22px" height="22px" viewBox="0 0 22 22" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <desc>Meticulously snapped to pixel grid by Pete</desc>
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g transform="translate(0.000000, -1.000000)">
+            <rect fill-opacity="0" fill="#FFFFFF" x="0" y="0" width="22" height="22"></rect>
+            <path d="M18.1987937,5 L5.05390031,5 L14.8422703,9.20679 C15.5571703,9.50924 15.9970703,10.19663 15.9970703,10.9665 L15.9970703,15.9982 L18.1712937,15.9982 C18.6386938,15.9982 18.9960938,15.6407 18.9960938,15.1733 L18.9960938,5.824862 C19.0235937,5.35744 18.6386938,5 18.1987937,5 Z" fill="#C7EDFE" fill-rule="nonzero"></path>
+            <path d="M3,15.9983 L13.6524559,20.92 C14.2848559,21.1949 14.9997559,20.7275 14.9997559,20.0401 L14.9997559,17.0981 L14.9997559,15.9983 L3,15.9983 Z" fill="#56B4FC" fill-rule="nonzero"></path>
+            <path d="M15.0002441,11.51641 C15.0002441,10.85652 14.6152441,10.25162 14.0103441,10.00416 L3,5 L3,15.9982 L15.0002441,15.9982 L15.0002441,11.51641 Z" fill="#1752EE" fill-rule="nonzero"></path>
+        </g>
+    </g>
+</svg>

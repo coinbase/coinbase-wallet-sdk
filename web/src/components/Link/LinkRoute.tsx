@@ -1,7 +1,6 @@
 // Copyright (c) 2018-2019 Coinbase, Inc. <https://coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import bind from "bind-decorator"
 import React from "react"
 import { fromEvent, Subscription } from "rxjs"
 import { routes } from "../../routes"
@@ -22,11 +21,13 @@ export class LinkRoute extends React.PureComponent<
 
     this.subscriptions.add(
       mainRepo.onceLinked$.subscribe(() => {
-        const { history } = this.props
-        history.replace({
-          pathname: routes.authorize,
-          search: history.location.search
-        })
+        if (this.props.appInfo.origin) {
+          const { history } = this.props
+          history.replace({
+            pathname: routes.authorize,
+            search: history.location.search
+          })
+        }
       })
     )
 
@@ -45,7 +46,6 @@ export class LinkRoute extends React.PureComponent<
 
   public render() {
     const { mainRepo } = this.context
-    console.log(this.props.appInfo)
 
     return (
       <LinkPage
@@ -53,13 +53,8 @@ export class LinkRoute extends React.PureComponent<
         serverUrl={mainRepo.serverUrl}
         sessionId={mainRepo.sessionId}
         sessionSecret={mainRepo.sessionSecret}
-        onClickUnlink={this.handleClickUnlink}
+        hasNextStep={!!this.props.appInfo.origin}
       />
     )
-  }
-
-  @bind
-  private handleClickUnlink(): void {
-    this.props.history.push(routes.reset)
   }
 }
