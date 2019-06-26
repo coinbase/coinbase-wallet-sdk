@@ -1,6 +1,7 @@
 // Copyright (c) 2018-2019 Coinbase, Inc. <https://coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
+import querystring from "querystring"
 import React from "react"
 import { fromEvent, Subscription } from "rxjs"
 import { routes } from "../../routes"
@@ -23,9 +24,13 @@ export class LinkRoute extends React.PureComponent<
       mainRepo.onceLinked$.subscribe(() => {
         if (this.props.appInfo.origin) {
           const { history } = this.props
+          const query = querystring.stringify({
+            ...this.props.appInfo,
+            fromLinkPage: true
+          })
           history.replace({
             pathname: routes.authorize,
-            search: history.location.search
+            search: "?" + query
           })
         }
       })

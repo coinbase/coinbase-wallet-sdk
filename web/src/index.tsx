@@ -4,7 +4,6 @@
 import React from "react"
 import ReactDOM from "react-dom"
 import { cssRule } from "typestyle"
-import { colors } from "./colors"
 import { App } from "./components/App"
 
 cssRule("*", {
@@ -12,7 +11,7 @@ cssRule("*", {
 })
 
 cssRule("html", {
-  backgroundColor: colors.primary
+  backgroundColor: "white"
 })
 
 cssRule("body", {

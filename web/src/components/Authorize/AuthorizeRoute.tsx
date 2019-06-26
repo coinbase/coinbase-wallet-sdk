@@ -50,7 +50,7 @@ export class AuthorizeRoute extends React.PureComponent<
 
   public render() {
     const { ethereumAddresses } = this.state
-    const { appName, appLogoUrl, origin } = this.props.appInfo
+    const { appName, appLogoUrl, origin, fromLinkPage } = this.props.appInfo
 
     if (appAuthorizations.isOriginAuthorized(origin)) {
       this.handleClickAllowButton()
@@ -61,6 +61,7 @@ export class AuthorizeRoute extends React.PureComponent<
         appName={appName}
         appLogoUrl={appLogoUrl}
         origin={origin}
+        fromLinkPage={fromLinkPage}
         disabled={ethereumAddresses.length === 0}
         onClickAllowButton={this.handleClickAllowButton}
         onClickDontAllowButton={this.handleClickDontAllowButton}

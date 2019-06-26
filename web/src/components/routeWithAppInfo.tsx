@@ -9,6 +9,7 @@ export interface AppInfo {
   appName: string
   appLogoUrl: string
   origin: string
+  fromLinkPage: boolean
 }
 
 export interface RouteComponentPropsWithAppInfo extends RouteComponentProps {
@@ -26,11 +27,12 @@ export function routeWithAppInfo(
 
 function parseQuery(qs: string): AppInfo {
   const query = querystring.parse(qs)
-  const { appName, appLogoUrl, origin } = query
+  const { appName, appLogoUrl, origin, fromLinkPage } = query
   return {
     appName: firstValue(appName),
     appLogoUrl: firstValue(appLogoUrl),
-    origin: firstValue(origin)
+    origin: firstValue(origin),
+    fromLinkPage: firstValue(fromLinkPage) === "true"
   }
 }
 

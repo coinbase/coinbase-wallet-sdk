@@ -3,6 +3,7 @@
 
 import React from "react"
 import { style } from "typestyle"
+import { colors } from "../../colors"
 import { SessionQRCode } from "./SessionQRCode"
 
 export interface Props {
@@ -15,18 +16,26 @@ export interface Props {
 
 const styles = {
   main: style({
+    paddingTop: 16,
     textAlign: "center",
-    paddingTop: 16
+    color: "white"
+  }),
+  background: style({
+    zIndex: -1,
+    position: "fixed",
+    backgroundColor: colors.primary,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0
   }),
   step: style({
     textTransform: "uppercase",
-    color: "white",
     opacity: 0.5,
     margin: 0
   }),
   title: style({
     fontSize: 20,
-    color: "white",
     marginTop: 4,
     marginBottom: 16
   }),
@@ -41,14 +50,13 @@ const styles = {
     margin: 0,
     padding: 0,
     listStylePosition: "inside",
-    color: "white",
     fontSize: 13,
     lineHeight: 1.5
   }),
   compatibleAppListTitle: style({
     fontSize: 13,
     fontWeight: "normal",
-    color: "rgba(255, 255, 255, .5)",
+    opacity: 0.5,
     marginTop: 16,
     marginBottom: 8
   }),
@@ -56,14 +64,13 @@ const styles = {
     margin: 0,
     padding: 0,
     listStyle: "none",
-    color: "white"
+    fontSize: 13,
+    fontWeight: "bold"
   }),
   compatibleAppListItem: style({
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
-    fontSize: 13,
-    fontWeight: "bold",
     marginTop: 8
   }),
   compatibleAppIcon: style({
@@ -81,7 +88,7 @@ const styles = {
     height: 22
   }),
   powered: style({
-    color: "rgba(255, 255, 255, .5)",
+    opacity: 0.5,
     fontSize: 13,
     textAlign: "center"
   })
@@ -103,7 +110,10 @@ export class LinkPage extends React.PureComponent<Props> {
 
     return (
       <div className={styles.main}>
+        <div className={styles.background} />
+
         {hasNextStep && <h5 className={styles.step}>Step 1 of 2</h5>}
+
         <h3 className={styles.title}>Scan QR Code</h3>
 
         <SessionQRCode
