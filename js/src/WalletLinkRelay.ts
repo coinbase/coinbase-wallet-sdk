@@ -235,51 +235,79 @@ export class WalletLinkRelay {
 
       const isRequestEthereumAccounts =
         request.method === Web3Method.requestEthereumAccounts
+      let notification: WalletLinkNotification | null = null
 
-      const notification = new WalletLinkNotification({
-        message: isRequestEthereumAccounts
-          ? "Requested access to your account..."
-          : "Pushed a WalletLink request to your device...",
-        iconUrl: this.appLogoUrl,
-        buttonLabel1: "Cancel",
-        onClickButton1: () => {
-          this.invokeCallback(
-            Web3ResponseMessage({
-              id,
-              response: { errorMessage: "User rejected request" }
-            })
-          )
-          notification.hide()
-        },
-        buttonLabel2: "Reset",
-        onClickButton2: () => {
-          this.openPopupWindow("/reset")
+      const cancel = () => {
+        this.invokeCallback(
+          Web3ResponseMessage({
+            id,
+            response: { errorMessage: "User rejected request" }
+          })
+        )
+        if (notification) {
           notification.hide()
         }
-      })
+      }
+
+      const reset = () => {
+        this.openPopupWindow("/reset")
+        if (notification) {
+          notification.hide()
+        }
+      }
+
+      if (isRequestEthereumAccounts) {
+        const showPopup = () => {
+          if (this.linked) {
+            this.requestAccounts()
+          } else {
+            this.openLinkPopup()
+          }
+        }
+
+        WalletLinkRelay.accountRequestCallbackIds.add(id)
+        showPopup()
+
+        notification = new WalletLinkNotification({
+          message: "Requesting to connect to your wallet...",
+          iconUrl: this.appLogoUrl,
+          buttonInfo1: "Don’t see the popup?",
+          buttonLabel1: "Show window",
+          onClickButton1: showPopup,
+          buttonInfo2: "Made a mistake?",
+          buttonLabel2: "Cancel request",
+          onClickButton2: cancel,
+          buttonInfo3: "Not receiving requests?",
+          buttonLabel3: "Disconnect",
+          onClickButton3: reset
+        })
+      } else {
+        this.postIPCMessage(Web3RequestMessage({ id, request }))
+
+        notification = new WalletLinkNotification({
+          message: "Pushed a request to your wallet...",
+          iconUrl: this.appLogoUrl,
+          buttonInfo1: "Made a mistake?",
+          buttonLabel1: "Cancel request",
+          onClickButton1: cancel,
+          buttonInfo2: "Not receiving requests?",
+          buttonLabel2: "Disconnect",
+          onClickButton2: reset
+        })
+      }
+
       notification.show()
 
       WalletLinkRelay.callbacks.set(id, response => {
         this.closePopupWindow()
-        notification.hide()
+        if (notification) {
+          notification.hide()
+        }
         if (response.errorMessage) {
           return reject(new Error(response.errorMessage))
         }
         resolve(response as U)
       })
-
-      if (isRequestEthereumAccounts) {
-        if (this.linked) {
-          this.requestAccounts()
-        } else {
-          this.openPopupWindow("/link")
-        }
-
-        WalletLinkRelay.accountRequestCallbackIds.add(id)
-        return
-      }
-
-      this.postIPCMessage(Web3RequestMessage({ id, request }))
     })
   }
 
@@ -290,6 +318,14 @@ export class WalletLinkRelay {
     this.iframeEl.contentWindow.postMessage(message, this.walletLinkWebOrigin)
   }
 
+  private openLinkPopup(): void {
+    this.openPopupWindow("/link")
+  }
+
+  /**
+   * Request accounts, and open popup if account list is not received before
+   * AUTHORIZE_TIMEOUT
+   */
   private requestAccounts(): void {
     if (this.authorizeWindowTimer === null) {
       this.authorizeWindowTimer = window.setTimeout(() => {
