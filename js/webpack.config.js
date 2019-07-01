@@ -14,6 +14,7 @@ module.exports = {
     "core-js/modules/es7.object.entries",
     "core-js/modules/es7.object.values",
     "regenerator-runtime/runtime",
+    "classlist-polyfill",
     "./src/index.ts"
   ],
   // devtool: 'inline-source-map',

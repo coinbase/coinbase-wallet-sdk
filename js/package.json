@@ -36,6 +36,7 @@
   "dependencies": {
     "bind-decorator": "^1.0.11",
     "bn.js": "^4.11.8",
+    "classlist-polyfill": "^1.2.0",
     "lodash": "^4.17.11"
   },
   "devDependencies": {
