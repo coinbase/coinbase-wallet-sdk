@@ -38,7 +38,7 @@ export class AuthorizeRoute extends React.PureComponent<
     )
 
     this.subscriptions.add(
-      fromEvent(window, "unload").subscribe(() => {
+      fromEvent(window, "beforeunload").subscribe(() => {
         this.handleClickDontAllowButton()
       })
     )

@@ -104,6 +104,7 @@ export class WalletLinkRelay {
     document.documentElement.appendChild(iframeEl)
 
     window.addEventListener("message", this.handleMessage, false)
+    window.addEventListener("beforeunload", this.handleBeforeUnload, false)
   }
 
   public requestEthereumAccounts(): Promise<RequestEthereumAccountsResponse> {
@@ -397,5 +398,10 @@ export class WalletLinkRelay {
     if (isWeb3ResponseMessage(message)) {
       this.invokeCallback(message)
     }
+  }
+
+  @bind
+  private handleBeforeUnload(_evt: BeforeUnloadEvent): void {
+    this.closePopupWindow()
   }
 }
