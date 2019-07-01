@@ -8,17 +8,24 @@ const css = require("./WalletLinkNotification.css").default
 const containerElId = "_WalletLinkNotifications"
 const elClassName = "_WalletLinkNotification"
 const showElClassName = "_WalletLinkNotificationShow"
+const expandElClassName = "_WalletLinkNotificationExpand"
 const boxElClassName = "_WalletLinkNotificationBox"
 const contentElClassName = "_WalletLinkNotificationContent"
 const iconContainerElClassName = "_WalletLinkNotificationIconContainer"
 const iconElClassName = "_WalletLinkNotificationIcon"
-const messageElClassName = "_WalletLinkNotificationMessage"
 const spinnerElClassName = "_WalletLinkNotificationSpinner"
+const messageElClassName = "_WalletLinkNotificationMessage"
+const chevronElClassName = "_WalletLinkNotificationChevron"
+const chevronImageElClassName = "_WalletLinkNotificationChevronImage"
 const actionsElClassName = "_WalletLinkNotificationActions"
 const actionElClassName = "_WalletLinkNotificationAction"
+const buttonInfoElClassName = "_WalletLinkNotificationButtonInfo"
 const buttonElClassName = "_WalletLinkNotificationButton"
 
-const spinnerSvg = require("./images/spinner.svg")
+const images = {
+  spinner: require("./images/spinner.svg"),
+  chevron: require("./images/chevron.svg")
+}
 
 export class WalletLinkNotification {
   public static injectContainer(): void {
@@ -53,6 +60,7 @@ export class WalletLinkNotification {
   private readonly onClickButton3: (() => void) | null
 
   private el: HTMLElement | null = null
+  private expanded = false
 
   constructor(params: {
     message?: string
@@ -117,7 +125,7 @@ export class WalletLinkNotification {
       }
 
       const spinnerEl = document.createElement("img")
-      spinnerEl.src = spinnerSvg
+      spinnerEl.src = images.spinner
       spinnerEl.alt = ""
       spinnerEl.className = spinnerElClassName
       iconContainerEl.appendChild(spinnerEl)
@@ -127,6 +135,18 @@ export class WalletLinkNotification {
       messageEl.className = messageElClassName
       messageEl.appendChild(document.createTextNode(this.message))
       contentEl.appendChild(messageEl)
+
+      if (this.onClickButton1 || this.onClickButton2 || this.onClickButton3) {
+        const chevronEl = document.createElement("button")
+        chevronEl.className = chevronElClassName
+        const chevronImageEl = document.createElement("img")
+        chevronImageEl.src = images.chevron
+        chevronImageEl.alt = "Expand"
+        chevronImageEl.className = chevronImageElClassName
+        chevronEl.appendChild(chevronImageEl)
+        chevronEl.addEventListener("click", this.handleClickChevron, false)
+        contentEl.appendChild(chevronEl)
+      }
 
       boxEl.appendChild(contentEl)
 
@@ -138,11 +158,14 @@ export class WalletLinkNotification {
         actionEl.className = actionElClassName
 
         const infoEl = document.createElement("span")
+        infoEl.classList.add(buttonInfoElClassName)
+        infoEl.classList.add(`${buttonInfoElClassName}1`)
         infoEl.appendChild(document.createTextNode(this.buttonInfo1))
         actionEl.appendChild(infoEl)
 
         const buttonEl = document.createElement("button")
-        buttonEl.className = buttonElClassName + ` ${buttonElClassName}1`
+        buttonEl.classList.add(buttonElClassName)
+        buttonEl.classList.add(`${buttonElClassName}1`)
         buttonEl.appendChild(document.createTextNode(buttonLabel1))
         actionEl.appendChild(buttonEl)
 
@@ -154,11 +177,14 @@ export class WalletLinkNotification {
         actionEl.className = actionElClassName
 
         const infoEl = document.createElement("span")
+        infoEl.classList.add(buttonInfoElClassName)
+        infoEl.classList.add(`${buttonInfoElClassName}2`)
         infoEl.appendChild(document.createTextNode(this.buttonInfo2))
         actionEl.appendChild(infoEl)
 
         const buttonEl = document.createElement("button")
-        buttonEl.className = buttonElClassName + ` ${buttonElClassName}2`
+        buttonEl.classList.add(buttonElClassName)
+        buttonEl.classList.add(`${buttonElClassName}2`)
         buttonEl.appendChild(document.createTextNode(buttonLabel2))
         actionEl.appendChild(buttonEl)
 
@@ -170,11 +196,14 @@ export class WalletLinkNotification {
         actionEl.className = actionElClassName
 
         const infoEl = document.createElement("span")
+        infoEl.classList.add(buttonInfoElClassName)
+        infoEl.classList.add(`${buttonInfoElClassName}3`)
         infoEl.appendChild(document.createTextNode(this.buttonInfo3))
         actionEl.appendChild(infoEl)
 
         const buttonEl = document.createElement("button")
-        buttonEl.className = buttonElClassName + ` ${buttonElClassName}3`
+        buttonEl.classList.add(buttonElClassName)
+        buttonEl.classList.add(`${buttonElClassName}3`)
         buttonEl.appendChild(document.createTextNode(buttonLabel3))
         actionEl.appendChild(buttonEl)
 
@@ -189,7 +218,6 @@ export class WalletLinkNotification {
     if (!containerEl) {
       return
     }
-
     containerEl.appendChild(this.el)
 
     const button1El = this.$(`.${buttonElClassName}1`)
@@ -209,7 +237,7 @@ export class WalletLinkNotification {
 
     window.setTimeout(() => {
       if (this.el) {
-        this.el.className += " " + showElClassName
+        this.el.classList.add(showElClassName)
       }
     }, 5)
   }
@@ -247,6 +275,20 @@ export class WalletLinkNotification {
       return null
     }
     return this.el.querySelector(selector)
+  }
+
+  @bind
+  private handleClickChevron(evt: MouseEvent): void {
+    evt.preventDefault()
+    this.expanded = !this.expanded
+
+    if (this.el) {
+      if (this.expanded) {
+        this.el.classList.add(expandElClassName)
+      } else {
+        this.el.classList.remove(expandElClassName)
+      }
+    }
   }
 
   @bind

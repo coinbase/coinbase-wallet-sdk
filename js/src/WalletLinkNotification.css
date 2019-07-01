@@ -186,7 +186,7 @@
 }
 
 #_WalletLinkNotifications
-  ._WalletLinkNotification._WalletLinkNotificationShow
+  ._WalletLinkNotificationShow
   ._WalletLinkNotificationBox {
   opacity: 1;
   transform: translateX(0);
@@ -204,6 +204,7 @@
   position: relative;
   width: 34px;
   height: 34px;
+  margin-right: 12px;
 }
 
 #_WalletLinkNotifications ._WalletLinkNotificationIcon {
@@ -231,30 +232,61 @@
 #_WalletLinkNotifications ._WalletLinkNotificationMessage {
   display: block;
   color: black;
-  margin-left: 12px;
   line-height: 1.5;
 }
 
+#_WalletLinkNotifications ._WalletLinkNotificationChevron {
+  display: block;
+  margin-left: 8px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  transition: opacity 0.25s, transform 0.05s;
+}
+
+#_WalletLinkNotifications
+  ._WalletLinkNotificationExpand
+  ._WalletLinkNotificationChevron {
+  transform: rotateZ(180deg);
+}
+
+#_WalletLinkNotifications ._WalletLinkNotificationChevron:active {
+  opacity: 0.6;
+}
+
+#_WalletLinkNotifications ._WalletLinkNotificationChevronImage {
+  display: block;
+}
+
 #_WalletLinkNotifications ._WalletLinkNotificationActions {
-  display: flex;
+  display: none;
   flex-direction: column;
   border-top: 1px solid #f5f7f8;
   padding: 8px 16px;
 }
 
+#_WalletLinkNotifications
+  ._WalletLinkNotificationExpand
+  ._WalletLinkNotificationActions {
+  display: flex;
+}
+
 #_WalletLinkNotifications ._WalletLinkNotificationAction {
-  color: #aaa;
+  color: #888;
   margin: 8px 0;
+}
+
+#_WalletLinkNotifications ._WalletLinkNotificationButtonInfo {
+  margin: 0 8px 0 0;
 }
 
 #_WalletLinkNotifications ._WalletLinkNotificationButton {
   color: #1652f0;
-  margin: 0 0 8px 0;
   cursor: pointer;
   display: inline;
-  margin: 0 0 0 8px;
+  margin: 0;
   padding: 0;
   -webkit-appearance: none;
+  transition: opacity 0.25s;
 }
 
 #_WalletLinkNotifications ._WalletLinkNotificationButton:active {
