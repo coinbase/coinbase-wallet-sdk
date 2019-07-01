@@ -40,6 +40,14 @@ export class WalletLink {
       chainId
     })
   }
+
+  public setAppInfo(
+    info: { appName?: string; appLogoUrl?: string } = {}
+  ): void {
+    this._appName = info.appName || "DApp"
+    this._appLogoUrl = info.appLogoUrl || getFavicon()
+    this._relay.setAppInfo(this._appName, this._appLogoUrl)
+  }
 }
 
 function getFavicon(): string {

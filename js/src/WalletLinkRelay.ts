@@ -67,14 +67,14 @@ export class WalletLinkRelay {
 
   private readonly walletLinkWebUrl: string
   private readonly walletLinkWebOrigin: string
-  private readonly appName: string
-  private readonly appLogoUrl: string
 
   private iframeEl: HTMLIFrameElement | null = null
   private popupUrl: string | null = null
   private popupWindow: Window | null = null
   private authorizeWindowTimer: number | null = null
 
+  private appName: string
+  private appLogoUrl: string
   private linked = false
 
   constructor(options: Readonly<WalletLinkRelayOptions>) {
@@ -84,6 +84,11 @@ export class WalletLinkRelay {
 
     const u = url.parse(this.walletLinkWebUrl)
     this.walletLinkWebOrigin = `${u.protocol}//${u.host}`
+  }
+
+  public setAppInfo(appName: string, appLogoUrl: string): void {
+    this.appName = appName
+    this.appLogoUrl = appLogoUrl
   }
 
   public injectIframe(): void {

@@ -32,7 +32,7 @@ function chromeMain(): void {
     // walletlink.js
     ${walletLinkJS}
     ;(() => {
-      const walletLink = new WalletLink({ appName: "WalletLink App" })
+      const walletLink = new WalletLink({ appName: document.title })
       const ethereum = walletLink.makeWeb3Provider(
         "https://mainnet.infura.io/v3/38747f203c9e4ffebbdaf0f6c09ad72c",
         1
@@ -47,6 +47,10 @@ function chromeMain(): void {
       window.walletLink = walletLink
       window.ethereum = ethereum
       window.web3 = web3
+
+      window.addEventListener('load', _ => {
+        walletLink.setAppInfo({ appName: document.title })
+      }, false)
     })()
   `
   container.insertBefore(s, container.children[0])
