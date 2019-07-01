@@ -240,16 +240,21 @@ export class WalletLinkRelay {
         message: isRequestEthereumAccounts
           ? "Requested access to your account..."
           : "Pushed a WalletLink request to your device...",
-        onClickCancel: () => {
+        iconUrl: this.appLogoUrl,
+        buttonLabel1: "Cancel",
+        onClickButton1: () => {
           this.invokeCallback(
             Web3ResponseMessage({
               id,
               response: { errorMessage: "User rejected request" }
             })
           )
+          notification.hide()
         },
-        onClickHelp: () => {
+        buttonLabel2: "Reset",
+        onClickButton2: () => {
           this.openPopupWindow("/reset")
+          notification.hide()
         }
       })
       notification.show()

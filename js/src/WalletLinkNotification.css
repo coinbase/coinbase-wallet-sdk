@@ -169,37 +169,103 @@
   margin: 8px 16px 0 16px;
 }
 
-#_WalletLinkNotifications ._WalletLinkNotification p {
-  display: inline-block;
-  background-color: rgba(255, 255, 255, 0.95);
+#_WalletLinkNotifications ._WalletLinkNotificationBox {
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
   color: black;
   margin: 0;
-  padding: 0 16px;
-  line-height: 40px;
-  border-radius: 4px;
   font-size: 14px;
   font-family: sans-serif;
-  box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: 0px 16px 24px rgba(0, 0, 0, 0.06), 0px 0px 8px rgba(0, 0, 0, 0.04);
+  border-radius: 16px;
   transition: opacity 0.25s, transform 0.25s;
   opacity: 0;
   transform: translateX(25%);
+  text-align: left;
 }
 
 #_WalletLinkNotifications
   ._WalletLinkNotification._WalletLinkNotificationShow
-  p {
+  ._WalletLinkNotificationBox {
   opacity: 1;
   transform: translateX(0);
 }
 
-#_WalletLinkNotifications ._WalletLinkNotification span {
-  display: inline-block;
-  margin-left: 4px;
+#_WalletLinkNotifications ._WalletLinkNotificationContent {
+  display: flex;
+  flex-direction: row;
+  padding: 8px 16px;
+  align-items: center;
 }
 
-#_WalletLinkNotifications ._WalletLinkNotification a {
-  color: #38488f;
-  text-decoration: underline;
-  margin-left: 4px;
+#_WalletLinkNotifications ._WalletLinkNotificationIconContainer {
+  display: block;
+  position: relative;
+  width: 34px;
+  height: 34px;
+}
+
+#_WalletLinkNotifications ._WalletLinkNotificationIcon {
+  display: block;
+  width: 32px;
+  height: 32px;
+  background-size: cover;
+  border-radius: 16px;
+  margin: 2px;
+}
+
+#_WalletLinkNotifications ._WalletLinkNotificationSpinner {
+  display: block;
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  top: 0;
+  left: 0;
+  animation-name: WalletLinkNotificationIconSpin;
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+#_WalletLinkNotifications ._WalletLinkNotificationMessage {
+  display: block;
+  color: black;
+  margin-left: 12px;
+  line-height: 1.5;
+}
+
+#_WalletLinkNotifications ._WalletLinkNotificationActions {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid #f5f7f8;
+  padding: 8px 16px;
+}
+
+#_WalletLinkNotifications ._WalletLinkNotificationAction {
+  color: #aaa;
+  margin: 8px 0;
+}
+
+#_WalletLinkNotifications ._WalletLinkNotificationButton {
+  color: #1652f0;
+  margin: 0 0 8px 0;
   cursor: pointer;
+  display: inline;
+  margin: 0 0 0 8px;
+  padding: 0;
+  -webkit-appearance: none;
+}
+
+#_WalletLinkNotifications ._WalletLinkNotificationButton:active {
+  opacity: 0.6;
+}
+
+@keyframes WalletLinkNotificationIconSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }

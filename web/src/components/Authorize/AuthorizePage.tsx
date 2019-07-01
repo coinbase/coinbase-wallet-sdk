@@ -113,6 +113,7 @@ const styles = {
     flex: 1,
     boxShadow: "0px 1px 4px rgba(0, 0, 0, 0.125)",
     appearance: "none",
+    "-webkit-appearance": "none",
     border: "none",
     borderRadius: 16,
     backgroundColor: "white",

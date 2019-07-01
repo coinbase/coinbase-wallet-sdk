@@ -7,10 +7,18 @@ const css = require("./WalletLinkNotification.css").default
 
 const containerElId = "_WalletLinkNotifications"
 const elClassName = "_WalletLinkNotification"
-const elShowClassName = "_WalletLinkNotificationShow"
-const cancelElClassName = "_WalletLinkNotificationCancel"
-const helpElClassName = "_WalletLinkNotificationHelp"
-const dismissElClassName = "_WalletLinkNotificationDismiss"
+const showElClassName = "_WalletLinkNotificationShow"
+const boxElClassName = "_WalletLinkNotificationBox"
+const contentElClassName = "_WalletLinkNotificationContent"
+const iconContainerElClassName = "_WalletLinkNotificationIconContainer"
+const iconElClassName = "_WalletLinkNotificationIcon"
+const messageElClassName = "_WalletLinkNotificationMessage"
+const spinnerElClassName = "_WalletLinkNotificationSpinner"
+const actionsElClassName = "_WalletLinkNotificationActions"
+const actionElClassName = "_WalletLinkNotificationAction"
+const buttonElClassName = "_WalletLinkNotificationButton"
+
+const spinnerSvg = require("./images/spinner.svg")
 
 export class WalletLinkNotification {
   public static injectContainer(): void {
@@ -30,78 +38,151 @@ export class WalletLinkNotification {
   }
 
   private readonly message: string
-  private readonly cancelLabel: string
-  private readonly helpLabel: string
-  private readonly dismissLabel: string
+  private readonly iconUrl: string
 
-  private readonly onClickCancel: (() => void) | null
-  private readonly onClickHelp: (() => void) | null
-  private readonly onClickDismiss: (() => void) | null
+  private readonly buttonInfo1: string
+  private readonly buttonInfo2: string
+  private readonly buttonInfo3: string
+
+  private readonly buttonLabel1: string
+  private readonly buttonLabel2: string
+  private readonly buttonLabel3: string
+
+  private readonly onClickButton1: (() => void) | null
+  private readonly onClickButton2: (() => void) | null
+  private readonly onClickButton3: (() => void) | null
 
   private el: HTMLElement | null = null
 
   constructor(params: {
     message?: string
-    cancelLabel?: string
-    helpLabel?: string
-    dismissLabel?: string
-    onClickCancel?: () => void
-    onClickHelp?: () => void
-    onClickDismiss?: () => void
+    iconUrl?: string
+    buttonInfo1?: string
+    buttonInfo2?: string
+    buttonInfo3?: string
+    buttonLabel1?: string
+    buttonLabel2?: string
+    buttonLabel3?: string
+    onClickButton1?: () => void
+    onClickButton2?: () => void
+    onClickButton3?: () => void
   }) {
     const {
       message,
-      cancelLabel,
-      helpLabel,
-      dismissLabel,
-      onClickCancel,
-      onClickHelp,
-      onClickDismiss
+      iconUrl,
+      buttonInfo1,
+      buttonInfo2,
+      buttonInfo3,
+      buttonLabel1,
+      buttonLabel2,
+      buttonLabel3,
+      onClickButton1,
+      onClickButton2,
+      onClickButton3
     } = params
     this.message = message || "Notification"
-    this.cancelLabel = cancelLabel || "Cancel"
-    this.helpLabel = helpLabel || "Help"
-    this.dismissLabel = dismissLabel || "Dismiss"
-    this.onClickCancel = onClickCancel || null
-    this.onClickHelp = onClickHelp || null
-    this.onClickDismiss = onClickDismiss || null
+    this.iconUrl = iconUrl || ""
+    this.buttonInfo1 = buttonInfo1 || ""
+    this.buttonInfo2 = buttonInfo2 || ""
+    this.buttonInfo3 = buttonInfo3 || ""
+    this.buttonLabel1 = buttonLabel1 || "Cancel"
+    this.buttonLabel2 = buttonLabel2 || "Help"
+    this.buttonLabel3 = buttonLabel3 || "Dismiss"
+    this.onClickButton1 = onClickButton1 || null
+    this.onClickButton2 = onClickButton2 || null
+    this.onClickButton3 = onClickButton3 || null
   }
 
   public show() {
-    const { cancelLabel, helpLabel, dismissLabel } = this
+    const { buttonLabel1, buttonLabel2, buttonLabel3 } = this
 
     if (!this.el) {
       this.el = document.createElement("div")
       this.el.className = elClassName
-      const pEl = document.createElement("p")
-      pEl.appendChild(document.createTextNode(this.message))
 
-      const spanEl = document.createElement("span")
+      const boxEl = document.createElement("div")
+      boxEl.className = boxElClassName
 
-      if (this.onClickCancel) {
-        const aEl = document.createElement("a")
-        aEl.className = cancelElClassName
-        aEl.href = "#"
-        aEl.appendChild(document.createTextNode(cancelLabel))
-        spanEl.appendChild(aEl)
-      }
-      if (this.onClickHelp) {
-        const aEl = document.createElement("a")
-        aEl.className = helpElClassName
-        aEl.href = "#"
-        aEl.appendChild(document.createTextNode(helpLabel))
-        spanEl.appendChild(aEl)
-      }
-      if (this.onClickDismiss) {
-        const aEl = document.createElement("a")
-        aEl.className = dismissElClassName
-        aEl.href = "#"
-        aEl.appendChild(document.createTextNode(dismissLabel))
-        spanEl.appendChild(aEl)
+      const contentEl = document.createElement("div")
+      contentEl.className = contentElClassName
+
+      const iconContainerEl = document.createElement("div")
+      iconContainerEl.className = iconContainerElClassName
+
+      if (this.iconUrl) {
+        const iconEl = document.createElement("div")
+        iconEl.style.backgroundImage = `url(${this.iconUrl})`
+        iconEl.className = iconElClassName
+        iconContainerEl.append(iconEl)
       }
 
-      pEl.appendChild(spanEl)
-      this.el.appendChild(pEl)
+      const spinnerEl = document.createElement("img")
+      spinnerEl.src = spinnerSvg
+      spinnerEl.alt = ""
+      spinnerEl.className = spinnerElClassName
+      iconContainerEl.appendChild(spinnerEl)
+      contentEl.appendChild(iconContainerEl)
+
+      const messageEl = document.createElement("div")
+      messageEl.className = messageElClassName
+      messageEl.appendChild(document.createTextNode(this.message))
+      contentEl.appendChild(messageEl)
+
+      boxEl.appendChild(contentEl)
+
+      const actionsEl = document.createElement("div")
+      actionsEl.className = actionsElClassName
+
+      if (this.onClickButton1) {
+        const actionEl = document.createElement("div")
+        actionEl.className = actionElClassName
+
+        const infoEl = document.createElement("span")
+        infoEl.appendChild(document.createTextNode(this.buttonInfo1))
+        actionEl.appendChild(infoEl)
+
+        const buttonEl = document.createElement("button")
+        buttonEl.className = buttonElClassName + ` ${buttonElClassName}1`
+        buttonEl.appendChild(document.createTextNode(buttonLabel1))
+        actionEl.appendChild(buttonEl)
+
+        actionsEl.appendChild(actionEl)
+      }
+
+      if (this.onClickButton2) {
+        const actionEl = document.createElement("div")
+        actionEl.className = actionElClassName
+
+        const infoEl = document.createElement("span")
+        infoEl.appendChild(document.createTextNode(this.buttonInfo2))
+        actionEl.appendChild(infoEl)
+
+        const buttonEl = document.createElement("button")
+        buttonEl.className = buttonElClassName + ` ${buttonElClassName}2`
+        buttonEl.appendChild(document.createTextNode(buttonLabel2))
+        actionEl.appendChild(buttonEl)
+
+        actionsEl.appendChild(actionEl)
+      }
+
+      if (this.onClickButton3) {
+        const actionEl = document.createElement("div")
+        actionEl.className = actionElClassName
+
+        const infoEl = document.createElement("span")
+        infoEl.appendChild(document.createTextNode(this.buttonInfo3))
+        actionEl.appendChild(infoEl)
+
+        const buttonEl = document.createElement("button")
+        buttonEl.className = buttonElClassName + ` ${buttonElClassName}3`
+        buttonEl.appendChild(document.createTextNode(buttonLabel3))
+        actionEl.appendChild(buttonEl)
+
+        actionsEl.appendChild(actionEl)
+      }
+
+      boxEl.appendChild(actionsEl)
+      this.el.appendChild(boxEl)
     }
 
     const containerEl = document.querySelector(`#${containerElId}`)
@@ -111,24 +192,24 @@ export class WalletLinkNotification {
 
     containerEl.appendChild(this.el)
 
-    const cancelEl = this.$(`.${cancelElClassName}`)
-    if (cancelEl) {
-      cancelEl.addEventListener("click", this.handleClickCancel, false)
+    const button1El = this.$(`.${buttonElClassName}1`)
+    if (button1El) {
+      button1El.addEventListener("click", this.handleClickButton1, false)
     }
 
-    const helpEl = this.$(`.${helpElClassName}`)
-    if (helpEl) {
-      helpEl.addEventListener("click", this.handleClickHelp, false)
+    const button2El = this.$(`.${buttonElClassName}2`)
+    if (button2El) {
+      button2El.addEventListener("click", this.handleClickButton2, false)
     }
 
-    const dismissEl = this.$(`.${dismissElClassName}`)
-    if (dismissEl) {
-      dismissEl.addEventListener("click", this.handleClickDismiss, false)
+    const button3El = this.$(`.${buttonElClassName}3`)
+    if (button3El) {
+      button3El.addEventListener("click", this.handleClickButton3, false)
     }
 
     window.setTimeout(() => {
       if (this.el) {
-        this.el.className += " " + elShowClassName
+        this.el.className += " " + showElClassName
       }
     }, 5)
   }
@@ -143,19 +224,19 @@ export class WalletLinkNotification {
       parentNode.removeChild(this.el)
     }
 
-    const cancelEl = this.$(`.${cancelElClassName}`)
-    if (cancelEl) {
-      cancelEl.removeEventListener("click", this.handleClickCancel, false)
+    const button1El = this.$(`.${buttonElClassName}1`)
+    if (button1El) {
+      button1El.removeEventListener("click", this.handleClickButton1, false)
     }
 
-    const helpEl = this.$(`.${helpElClassName}`)
-    if (helpEl) {
-      helpEl.removeEventListener("click", this.handleClickHelp, false)
+    const button2El = this.$(`.${buttonElClassName}2`)
+    if (button2El) {
+      button2El.removeEventListener("click", this.handleClickButton2, false)
     }
 
-    const dismissEl = this.$(`.${dismissElClassName}`)
-    if (dismissEl) {
-      dismissEl.removeEventListener("click", this.handleClickDismiss, false)
+    const button3El = this.$(`.${buttonElClassName}3`)
+    if (button3El) {
+      button3El.removeEventListener("click", this.handleClickButton3, false)
     }
 
     this.el = null
@@ -169,28 +250,26 @@ export class WalletLinkNotification {
   }
 
   @bind
-  private handleClickCancel(evt: MouseEvent): void {
+  private handleClickButton1(evt: MouseEvent): void {
     evt.preventDefault()
-    if (this.onClickCancel) {
-      this.onClickCancel()
-    }
-    this.hide()
-  }
-
-  @bind
-  private handleClickHelp(evt: MouseEvent): void {
-    evt.preventDefault()
-    if (this.onClickHelp) {
-      this.onClickHelp()
+    if (this.onClickButton1) {
+      this.onClickButton1()
     }
   }
 
   @bind
-  private handleClickDismiss(evt: MouseEvent): void {
+  private handleClickButton2(evt: MouseEvent): void {
     evt.preventDefault()
-    if (this.onClickDismiss) {
-      this.onClickDismiss()
+    if (this.onClickButton2) {
+      this.onClickButton2()
     }
-    this.hide()
+  }
+
+  @bind
+  private handleClickButton3(evt: MouseEvent): void {
+    evt.preventDefault()
+    if (this.onClickButton3) {
+      this.onClickButton3()
+    }
   }
 }
