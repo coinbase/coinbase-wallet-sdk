@@ -33,6 +33,15 @@ module.exports = {
       {
         test: /\.css$/,
         use: "raw-loader"
+      },
+      {
+        test: /\.svg$/,
+        use: {
+          loader: "svg-url-loader",
+          options: {
+            encoding: "base64"
+          }
+        }
       }
     ]
   },
