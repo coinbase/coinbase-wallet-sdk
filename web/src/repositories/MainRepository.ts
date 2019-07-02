@@ -11,6 +11,8 @@ import { ServerMessageEvent } from "../WalletLink/messages"
 import { Session } from "../WalletLink/Session"
 import { IPCMessage } from "../WalletLink/types/IPCMessage"
 import { LinkedMessage } from "../WalletLink/types/LinkedMessage"
+import { isSessionIdRequestMessage } from "../WalletLink/types/SessionIdRequestMessage"
+import { SessionIdResponseMessage } from "../WalletLink/types/SessionIdResponseMessage"
 import { UnlinkedMessage } from "../WalletLink/types/UnlinkedMessage"
 import { isWeb3AccountsRequestMessage } from "../WalletLink/types/Web3AccountsRequestMessage"
 import { Web3AccountsResponseMessage } from "../WalletLink/types/Web3AccountsResponseMessage"
@@ -193,6 +195,12 @@ export class MainRepository {
           nextTick(() => this.subscriptions.remove(sub))
         })
       this.subscriptions.add(sub)
+      return
+    }
+
+    if (isSessionIdRequestMessage(message)) {
+      this.postIPCMessage(SessionIdResponseMessage(this.session.id))
+      return
     }
   }
 

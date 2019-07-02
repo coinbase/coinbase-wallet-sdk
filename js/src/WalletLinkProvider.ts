@@ -5,6 +5,7 @@ import BN from "bn.js"
 import { EventEmitter } from "events"
 import "whatwg-fetch"
 import { FilterPolyfill } from "./FilterPolyfill"
+import * as scopedLocalStorage from "./scopedLocalStorage"
 import { AddressString, Callback, IntNumber } from "./types/common"
 import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from "./types/JSONRPC"
 import {
@@ -22,6 +23,8 @@ import {
   ensureRegExpString
 } from "./util"
 import { EthereumTransactionParams, WalletLinkRelay } from "./WalletLinkRelay"
+
+const LOCAL_STORAGE_ADDRESSES_KEY = "Addresses"
 
 export interface WalletLinkProviderOptions {
   relay: WalletLinkRelay
@@ -49,6 +52,16 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     this._relay = options.relay
     this._chainId = ensureIntNumber(options.chainId || 1)
     this._jsonRpcUrl = options.jsonRpcUrl
+
+    const cahedAddresses = scopedLocalStorage.getItem(
+      LOCAL_STORAGE_ADDRESSES_KEY
+    )
+    if (cahedAddresses) {
+      const addresses = cahedAddresses.split(" ") as AddressString[]
+      if (addresses[0] !== "") {
+        this._addresses = addresses
+      }
+    }
   }
 
   public get selectedAddress(): AddressString | undefined {
@@ -193,6 +206,7 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     }
 
     this._addresses = addresses.map(address => ensureAddressString(address))
+    scopedLocalStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, addresses.join(" "))
     this.emit("accountsChanged", this._addresses)
   }
 

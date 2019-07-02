@@ -6,9 +6,12 @@ import BN from "bn.js"
 import crypto from "crypto"
 import querystring from "querystring"
 import url from "url"
+import * as scopedLocalStorage from "./scopedLocalStorage"
 import { AddressString, IntNumber, RegExpString } from "./types/common"
 import { IPCMessage } from "./types/IPCMessage"
 import { isLinkedMessage } from "./types/LinkedMessage"
+import { SessionIdRequestMessage } from "./types/SessionIdRequestMessage"
+import { isSessionIdResponseMessage } from "./types/SessionIdResponseMessage"
 import { isUnlinkedMessage } from "./types/UnlinkedMessage"
 import { Web3AccountsRequestMessage } from "./types/Web3AccountsRequestMessage"
 import { isWeb3AccountsResponseMessage } from "./types/Web3AccountsResponseMessage"
@@ -43,7 +46,8 @@ import {
   WalletLinkNotificationOptions
 } from "./WalletLinkNotification"
 
-const AUTHORIZE_TIMEOUT = 500
+const LOCAL_STORAGE_SESSION_ID_KEY = "SessionId"
+const AUTHORIZE_TIMEOUT = 600
 
 export interface EthereumTransactionParams {
   fromAddress: AddressString
@@ -75,6 +79,7 @@ export class WalletLinkRelay {
   private popupUrl: string | null = null
   private popupWindow: Window | null = null
   private authorizeWindowTimer: number | null = null
+  private sessionId: string | null = null
 
   private appName: string
   private appLogoUrl: string
@@ -87,6 +92,9 @@ export class WalletLinkRelay {
 
     const u = url.parse(this.walletLinkWebUrl)
     this.walletLinkWebOrigin = `${u.protocol}//${u.host}`
+
+    this.sessionId =
+      scopedLocalStorage.getItem(LOCAL_STORAGE_SESSION_ID_KEY) || null
   }
 
   public setAppInfo(appName: string, appLogoUrl: string): void {
@@ -110,6 +118,7 @@ export class WalletLinkRelay {
     iframeEl.style.right = "0"
     this.iframeEl = iframeEl
     document.documentElement.appendChild(iframeEl)
+    iframeEl.addEventListener("load", this.handleIframeLoad, false)
 
     window.addEventListener("message", this.handleMessage, false)
     window.addEventListener("beforeunload", this.handleBeforeUnload, false)
@@ -397,6 +406,11 @@ export class WalletLinkRelay {
   }
 
   @bind
+  private handleIframeLoad(_evt: Event): void {
+    this.postIPCMessage(SessionIdRequestMessage())
+  }
+
+  @bind
   private handleMessage(evt: MessageEvent): void {
     if (evt.origin !== this.walletLinkWebOrigin) {
       return
@@ -404,14 +418,8 @@ export class WalletLinkRelay {
 
     const message: unknown = evt.data
 
-    if (isLinkedMessage(message)) {
-      this.linked = true
-      return
-    }
-
-    if (isUnlinkedMessage(message)) {
-      this.linked = false
-      document.location.reload()
+    if (isWeb3ResponseMessage(message)) {
+      this.invokeCallback(message)
       return
     }
 
@@ -437,8 +445,27 @@ export class WalletLinkRelay {
       return
     }
 
-    if (isWeb3ResponseMessage(message)) {
-      this.invokeCallback(message)
+    if (isSessionIdResponseMessage(message)) {
+      const { sessionId } = message
+      if (this.sessionId !== null && this.sessionId !== sessionId) {
+        // sessionId changed, clear all local data and reload page
+        scopedLocalStorage.clear()
+        document.location.reload()
+      }
+      this.sessionId = sessionId
+      scopedLocalStorage.setItem(LOCAL_STORAGE_SESSION_ID_KEY, sessionId)
+      return
+    }
+
+    if (isLinkedMessage(message)) {
+      this.linked = true
+      return
+    }
+
+    if (isUnlinkedMessage(message)) {
+      this.linked = false
+      document.location.reload()
+      return
     }
   }
 
