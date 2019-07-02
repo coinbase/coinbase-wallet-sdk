@@ -27,6 +27,20 @@ const images = {
   chevron: require("./images/chevron.svg")
 }
 
+export interface WalletLinkNotificationOptions {
+  message?: string
+  iconUrl?: string
+  buttonInfo1?: string
+  buttonInfo2?: string
+  buttonInfo3?: string
+  buttonLabel1?: string
+  buttonLabel2?: string
+  buttonLabel3?: string
+  onClickButton1?: () => void
+  onClickButton2?: () => void
+  onClickButton3?: () => void
+}
+
 export class WalletLinkNotification {
   public static injectContainer(): void {
     if (document.querySelector(`#${containerElId}`)) {
@@ -62,19 +76,7 @@ export class WalletLinkNotification {
   private el: HTMLElement | null = null
   private expanded = false
 
-  constructor(params: {
-    message?: string
-    iconUrl?: string
-    buttonInfo1?: string
-    buttonInfo2?: string
-    buttonInfo3?: string
-    buttonLabel1?: string
-    buttonLabel2?: string
-    buttonLabel3?: string
-    onClickButton1?: () => void
-    onClickButton2?: () => void
-    onClickButton3?: () => void
-  }) {
+  constructor(params: WalletLinkNotificationOptions) {
     const {
       message,
       iconUrl,

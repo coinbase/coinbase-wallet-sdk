@@ -38,7 +38,10 @@ import {
   Web3ResponseMessage
 } from "./types/Web3ResponseMessage"
 import { bigIntStringFromBN, hexStringFromBuffer } from "./util"
-import { WalletLinkNotification } from "./WalletLinkNotification"
+import {
+  WalletLinkNotification,
+  WalletLinkNotificationOptions
+} from "./WalletLinkNotification"
 
 const AUTHORIZE_TIMEOUT = 500
 
@@ -273,7 +276,7 @@ export class WalletLinkRelay {
         WalletLinkRelay.accountRequestCallbackIds.add(id)
         showPopup()
 
-        notification = new WalletLinkNotification({
+        const options: WalletLinkNotificationOptions = {
           message: "Requesting to connect to your wallet...",
           iconUrl: this.appLogoUrl,
           buttonInfo1: "Don’t see the popup?",
@@ -281,11 +284,16 @@ export class WalletLinkRelay {
           onClickButton1: showPopup,
           buttonInfo2: "Made a mistake?",
           buttonLabel2: "Cancel request",
-          onClickButton2: cancel,
-          buttonInfo3: "Not receiving requests?",
-          buttonLabel3: "Disconnect",
-          onClickButton3: reset
-        })
+          onClickButton2: cancel
+        }
+
+        if (this.linked) {
+          options.buttonInfo3 = "Not receiving requests?"
+          options.buttonLabel3 = "Reconnect"
+          options.onClickButton3 = reset
+        }
+
+        notification = new WalletLinkNotification(options)
       } else {
         this.postIPCMessage(Web3RequestMessage({ id, request }))
 
