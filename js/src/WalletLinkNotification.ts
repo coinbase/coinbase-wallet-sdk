@@ -30,6 +30,7 @@ const images = {
 export interface WalletLinkNotificationOptions {
   message?: string
   iconUrl?: string
+  autoExpandAfter?: number
   buttonInfo1?: string
   buttonInfo2?: string
   buttonInfo3?: string
@@ -60,6 +61,7 @@ export class WalletLinkNotification {
 
   private readonly message: string
   private readonly iconUrl: string
+  private readonly autoExpandAfter: number
 
   private readonly buttonInfo1: string
   private readonly buttonInfo2: string
@@ -74,12 +76,14 @@ export class WalletLinkNotification {
   private readonly onClickButton3: (() => void) | null
 
   private el: HTMLElement | null = null
-  private expanded = false
+  private autoExpandTimer: number | null = null
+  private _expanded = false
 
   constructor(params: WalletLinkNotificationOptions) {
     const {
       message,
       iconUrl,
+      autoExpandAfter,
       buttonInfo1,
       buttonInfo2,
       buttonInfo3,
@@ -92,6 +96,10 @@ export class WalletLinkNotification {
     } = params
     this.message = message || "Notification"
     this.iconUrl = iconUrl || ""
+    this.autoExpandAfter =
+      typeof autoExpandAfter === "number" && autoExpandAfter >= 0
+        ? autoExpandAfter
+        : -1
     this.buttonInfo1 = buttonInfo1 || ""
     this.buttonInfo2 = buttonInfo2 || ""
     this.buttonInfo3 = buttonInfo3 || ""
@@ -242,6 +250,13 @@ export class WalletLinkNotification {
         this.el.classList.add(showElClassName)
       }
     }, 5)
+
+    if (this.autoExpandAfter >= 0) {
+      this.autoExpandTimer = window.setTimeout(() => {
+        this.autoExpandTimer = null
+        this.expanded = true
+      }, this.autoExpandAfter)
+    }
   }
 
   public hide() {
@@ -272,6 +287,27 @@ export class WalletLinkNotification {
     this.el = null
   }
 
+  public get expanded(): boolean {
+    return this._expanded
+  }
+
+  public set expanded(expanded: boolean) {
+    this._expanded = expanded
+
+    if (this.autoExpandTimer !== null) {
+      window.clearTimeout(this.autoExpandTimer)
+      this.autoExpandTimer = null
+    }
+
+    if (this.el) {
+      if (expanded) {
+        this.el.classList.add(expandElClassName)
+      } else {
+        this.el.classList.remove(expandElClassName)
+      }
+    }
+  }
+
   private $(selector: string): HTMLElement | null {
     if (!this.el) {
       return null
@@ -283,14 +319,6 @@ export class WalletLinkNotification {
   private handleClickChevron(evt: MouseEvent): void {
     evt.preventDefault()
     this.expanded = !this.expanded
-
-    if (this.el) {
-      if (this.expanded) {
-        this.el.classList.add(expandElClassName)
-      } else {
-        this.el.classList.remove(expandElClassName)
-      }
-    }
   }
 
   @bind

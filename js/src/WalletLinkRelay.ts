@@ -241,10 +241,6 @@ export class WalletLinkRelay {
       }
       const id = crypto.randomBytes(8).toString("hex")
 
-      const isRequestEthereumAccounts =
-        request.method === Web3Method.requestEthereumAccounts
-      let notification: WalletLinkNotification | null = null
-
       const cancel = () => {
         this.invokeCallback(
           Web3ResponseMessage({
@@ -264,7 +260,21 @@ export class WalletLinkRelay {
         }
       }
 
-      if (isRequestEthereumAccounts) {
+      const options: WalletLinkNotificationOptions = {
+        iconUrl: this.appLogoUrl,
+        autoExpandAfter: 10000,
+        buttonInfo2: "Made a mistake?",
+        buttonLabel2: "Cancel request",
+        onClickButton2: cancel
+      }
+
+      if (this.linked) {
+        options.buttonInfo3 = "Not receiving requests?"
+        options.buttonLabel3 = "Reconnect"
+        options.onClickButton3 = reset
+      }
+
+      if (request.method === Web3Method.requestEthereumAccounts) {
         const showPopup = () => {
           if (this.linked) {
             this.requestAccounts()
@@ -276,39 +286,17 @@ export class WalletLinkRelay {
         WalletLinkRelay.accountRequestCallbackIds.add(id)
         showPopup()
 
-        const options: WalletLinkNotificationOptions = {
-          message: "Requesting to connect to your wallet...",
-          iconUrl: this.appLogoUrl,
-          buttonInfo1: "Don’t see the popup?",
-          buttonLabel1: "Show window",
-          onClickButton1: showPopup,
-          buttonInfo2: "Made a mistake?",
-          buttonLabel2: "Cancel request",
-          onClickButton2: cancel
-        }
-
-        if (this.linked) {
-          options.buttonInfo3 = "Not receiving requests?"
-          options.buttonLabel3 = "Reconnect"
-          options.onClickButton3 = reset
-        }
-
-        notification = new WalletLinkNotification(options)
+        options.message = "Requesting to connect to your wallet..."
+        options.buttonInfo1 = "Don’t see the popup?"
+        options.buttonLabel1 = "Show window"
+        options.onClickButton1 = showPopup
       } else {
         this.postIPCMessage(Web3RequestMessage({ id, request }))
 
-        notification = new WalletLinkNotification({
-          message: "Pushed a request to your wallet...",
-          iconUrl: this.appLogoUrl,
-          buttonInfo1: "Made a mistake?",
-          buttonLabel1: "Cancel request",
-          onClickButton1: cancel,
-          buttonInfo2: "Not receiving requests?",
-          buttonLabel2: "Disconnect",
-          onClickButton2: reset
-        })
+        options.message = "Pushed a request to your wallet..."
       }
 
+      const notification = new WalletLinkNotification(options)
       notification.show()
 
       WalletLinkRelay.callbacks.set(id, response => {
