@@ -197,6 +197,8 @@
   flex-direction: row;
   padding: 8px 16px;
   align-items: center;
+  user-select: none;
+  cursor: pointer;
 }
 
 #_WalletLinkNotifications ._WalletLinkNotificationIconContainer {
@@ -238,23 +240,13 @@
 #_WalletLinkNotifications ._WalletLinkNotificationChevron {
   display: block;
   margin-left: 8px;
-  cursor: pointer;
-  -webkit-appearance: none;
-  transition: opacity 0.25s, transform 0.05s;
+  transition: transform 0.05s;
 }
 
 #_WalletLinkNotifications
   ._WalletLinkNotificationExpand
   ._WalletLinkNotificationChevron {
   transform: rotateZ(180deg);
-}
-
-#_WalletLinkNotifications ._WalletLinkNotificationChevron:active {
-  opacity: 0.6;
-}
-
-#_WalletLinkNotifications ._WalletLinkNotificationChevronImage {
-  display: block;
 }
 
 #_WalletLinkNotifications ._WalletLinkNotificationActions {

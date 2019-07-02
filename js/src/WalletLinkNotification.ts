@@ -16,7 +16,6 @@ const iconElClassName = "_WalletLinkNotificationIcon"
 const spinnerElClassName = "_WalletLinkNotificationSpinner"
 const messageElClassName = "_WalletLinkNotificationMessage"
 const chevronElClassName = "_WalletLinkNotificationChevron"
-const chevronImageElClassName = "_WalletLinkNotificationChevronImage"
 const actionsElClassName = "_WalletLinkNotificationActions"
 const actionElClassName = "_WalletLinkNotificationAction"
 const buttonInfoElClassName = "_WalletLinkNotificationButtonInfo"
@@ -147,17 +146,14 @@ export class WalletLinkNotification {
       contentEl.appendChild(messageEl)
 
       if (this.onClickButton1 || this.onClickButton2 || this.onClickButton3) {
-        const chevronEl = document.createElement("button")
+        const chevronEl = document.createElement("img")
+        chevronEl.src = images.chevron
+        chevronEl.alt = "Expand"
         chevronEl.className = chevronElClassName
-        const chevronImageEl = document.createElement("img")
-        chevronImageEl.src = images.chevron
-        chevronImageEl.alt = "Expand"
-        chevronImageEl.className = chevronImageElClassName
-        chevronEl.appendChild(chevronImageEl)
-        chevronEl.addEventListener("click", this.handleClickChevron, false)
         contentEl.appendChild(chevronEl)
       }
 
+      contentEl.addEventListener("click", this.handleClick, false)
       boxEl.appendChild(contentEl)
 
       const actionsEl = document.createElement("div")
@@ -316,7 +312,7 @@ export class WalletLinkNotification {
   }
 
   @bind
-  private handleClickChevron(evt: MouseEvent): void {
+  private handleClick(evt: MouseEvent): void {
     evt.preventDefault()
     this.expanded = !this.expanded
   }
