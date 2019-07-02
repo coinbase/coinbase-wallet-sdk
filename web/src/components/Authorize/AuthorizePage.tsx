@@ -42,30 +42,39 @@ const styles = {
     marginTop: 4,
     marginBottom: 0
   }),
-  logoCircle: style({
+  circles: style({
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 32,
+    marginLeft: "auto",
+    marginRight: "auto",
+    marginBottom: 32
+  }),
+  circle: style({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     width: APP_LOGO_IMAGE_SIZE,
     height: APP_LOGO_IMAGE_SIZE,
-    marginTop: 32,
-    marginLeft: "auto",
-    marginRight: "auto",
-    marginBottom: 32,
     borderRadius: Math.floor(APP_LOGO_IMAGE_SIZE / 2),
     overflow: "hidden",
     backgroundColor: "white",
     backgroundSize: "cover",
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "center center",
     boxShadow:
       "0px 16px 24px rgba(0, 0, 0, 0.06), 0px 0px 8px rgba(0, 0, 0, 0.04)",
     fontSize: Math.floor(APP_LOGO_IMAGE_SIZE / 2),
     fontWeight: "bold",
     color: "#bbb"
   }),
-  logoImage: style({
-    width: APP_LOGO_IMAGE_SIZE,
-    height: APP_LOGO_IMAGE_SIZE,
-    backgroundSize: "cover"
+  appCircle: style({
+    zIndex: 1
+  }),
+  walletCircle: style({
+    marginLeft: -8,
+    backgroundSize: "64px 64px"
   }),
   content: style({
     width: 256,
@@ -141,15 +150,14 @@ const styles = {
 
 const images = {
   bank: require("../../images/bank.svg"),
-  checkmark: require("../../images/checkmark.svg")
+  checkmark: require("../../images/checkmark.svg"),
+  coinbaseWallet: require("../../images/coinbase-wallet.svg")
 }
 
 export class AuthorizePage extends React.PureComponent<Props> {
   public render() {
     const { appName, appLogoUrl, origin, fromLinkPage, disabled } = this.props
     const appInitial = appName[0] || "A"
-    // const appLogoUrl =
-    //   "https://www.cryptokitties.co/icons/apple-icon-180x180.png"
 
     return (
       <div className={styles.main}>
@@ -158,11 +166,17 @@ export class AuthorizePage extends React.PureComponent<Props> {
         <h3 className={styles.title}>Authorize {appName}</h3>
         <h4 className={styles.origin}>{origin.replace(/^https?:\/\//, "")}</h4>
 
-        <div
-          className={styles.logoCircle}
-          style={{ backgroundImage: `url("${appLogoUrl}")` }}
-        >
-          {!appLogoUrl && <span>{appInitial}</span>}
+        <div className={styles.circles}>
+          <div
+            className={classNames(styles.circle, styles.appCircle)}
+            style={{ backgroundImage: `url('${appLogoUrl}')` }}
+          >
+            {!appLogoUrl && <span>{appInitial}</span>}
+          </div>
+          <div
+            className={classNames(styles.circle, styles.walletCircle)}
+            style={{ backgroundImage: `url('${images.coinbaseWallet}')` }}
+          />
         </div>
 
         <div className={styles.content}>
