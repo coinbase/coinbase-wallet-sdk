@@ -7,6 +7,10 @@ import { WalletLinkRelay } from "./WalletLinkRelay"
 
 const WALLETLINK_WEB_URL =
   process.env.WALLETLINK_WEB_URL! || "https://www.walletlink.org"
+const WALLETLINK_VERSION =
+  process.env.WALLETLINK_VERSION! ||
+  require("../package.json").version ||
+  "unknown"
 
 export interface WalletLinkOptions {
   appName?: string
@@ -15,6 +19,8 @@ export interface WalletLinkOptions {
 }
 
 export class WalletLink {
+  public static VERSION = WALLETLINK_VERSION
+
   private _appName: string
   private _appLogoUrl: string
   private _relay: WalletLinkRelay

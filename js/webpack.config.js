@@ -63,7 +63,8 @@ module.exports = {
     new webpack.DefinePlugin({
       "process.env": {
         NODE_ENV: JSON.stringify(env.NODE_ENV),
-        WALLETLINK_WEB_URL: JSON.stringify(env.WALLETLINK_WEB_URL)
+        WALLETLINK_WEB_URL: JSON.stringify(env.WALLETLINK_WEB_URL),
+        WALLETLINK_VERSION: JSON.stringify(require("./package.json").version)
       }
     })
   ]
