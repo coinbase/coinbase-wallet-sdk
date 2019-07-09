@@ -3,7 +3,6 @@
 
 import BN from "bn.js"
 import { EventEmitter } from "events"
-import "whatwg-fetch"
 import { FilterPolyfill } from "./FilterPolyfill"
 import * as scopedLocalStorage from "./scopedLocalStorage"
 import { AddressString, Callback, IntNumber } from "./types/common"

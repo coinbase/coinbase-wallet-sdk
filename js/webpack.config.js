@@ -15,6 +15,7 @@ module.exports = {
     "core-js/modules/es7.object.values",
     "regenerator-runtime/runtime",
     "classlist-polyfill",
+    "whatwg-fetch",
     "./src/index.ts"
   ],
   // devtool: 'inline-source-map',

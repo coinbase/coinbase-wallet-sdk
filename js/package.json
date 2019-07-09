@@ -28,8 +28,10 @@
     "test:watch": "jest --watch",
     "build": "webpack --config webpack.config.js",
     "build-chrome": "webpack --config webpack.config.chrome.js",
+    "build-npm": "tsc -p ./tsconfig.build.json",
     "build:dev": "export WALLETLINK_WEB_URL='http://localhost:3000'; yarn build && yarn build-chrome",
     "build:dev:watch": "nodemon -e ts,tsx,js,json,css --watch src/ --watch chrome/ --exec 'yarn build:dev'",
+    "build:prod": "yarn build && yarn build-chrome && yarn build-npm && cp ./package.json build/npm",
     "lint": "tslint -p . 'src/**/*.ts{,x}'",
     "lint:watch": "nodemon -e ts,tsx,js,json,css --watch src/ --exec 'yarn tsc && yarn lint'"
   },

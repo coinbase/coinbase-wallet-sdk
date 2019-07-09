@@ -5,7 +5,8 @@ import { WalletLinkNotification } from "./WalletLinkNotification"
 import { WalletLinkProvider } from "./WalletLinkProvider"
 import { WalletLinkRelay } from "./WalletLinkRelay"
 
-const WALLETLINK_WEB_URL = process.env.WALLETLINK_WEB_URL!
+const WALLETLINK_WEB_URL =
+  process.env.WALLETLINK_WEB_URL! || "https://www.walletlink.org"
 
 export interface WalletLinkOptions {
   appName?: string

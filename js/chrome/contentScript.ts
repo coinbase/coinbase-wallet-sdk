@@ -10,7 +10,8 @@ declare global {
 }
 
 function chromeMain(): void {
-  const { WALLETLINK_WEB_URL } = process.env
+  const WALLETLINK_WEB_URL =
+    process.env.WALLETLINK_WEB_URL! || "https://www.walletlink.org"
 
   const shouldntInject: boolean =
     (WALLETLINK_WEB_URL &&
