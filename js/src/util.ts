@@ -150,7 +150,7 @@ export function ensureBN(val: unknown): BN {
   throw new Error(`Not an integer: ${val}`)
 }
 
-function isBigNumber(val: unknown): boolean {
+export function isBigNumber(val: unknown): boolean {
   if (val == null || typeof (val as any).constructor !== "function") {
     return false
   }
@@ -159,4 +159,8 @@ function isBigNumber(val: unknown): boolean {
     typeof constructor.config === "function" &&
     typeof constructor.EUCLID === "number"
   )
+}
+
+export function range(start: number, stop: number): number[] {
+  return Array.from({ length: stop - start }, (_, i) => start + i)
 }

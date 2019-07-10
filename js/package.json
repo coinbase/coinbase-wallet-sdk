@@ -38,13 +38,11 @@
   "dependencies": {
     "bind-decorator": "^1.0.11",
     "bn.js": "^4.11.8",
-    "classlist-polyfill": "^1.2.0",
-    "lodash": "^4.17.11"
+    "classlist-polyfill": "^1.2.0"
   },
   "devDependencies": {
     "@types/bn.js": "^4.11.5",
     "@types/jest": "^24.0.13",
-    "@types/lodash": "^4.14.134",
     "@types/node": "^12.0.8",
     "copy-webpack-plugin": "^5.0.3",
     "core-js": "^2.6.9",

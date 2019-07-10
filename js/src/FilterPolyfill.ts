@@ -1,8 +1,6 @@
 // Copyright (c) 2018-2019 Coinbase, Inc. <https://coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import max from "lodash/max"
-import range from "lodash/range"
 import { HexString, IntNumber } from "./types/common"
 import { JSONRPCRequest, JSONRPCResponse } from "./types/JSONRPC"
 import { Web3Provider } from "./types/Web3Provider"
@@ -10,7 +8,8 @@ import {
   ensureHexString,
   hexStringFromIntNumber,
   intNumberFromHexString,
-  isHexString
+  isHexString,
+  range
 } from "./util"
 
 const TIMEOUT = 5 * 60 * 1000 // 5 minutes
@@ -190,11 +189,10 @@ export class FilterPolyfill {
     })
 
     if (Array.isArray(response.result)) {
-      const highestBlock = max(
-        response.result.map(log =>
-          intNumberFromHexString(log.blockNumber || "0x0")
-        )
+      const blocks = response.result.map(log =>
+        intNumberFromHexString(log.blockNumber || "0x0")
       )
+      const highestBlock = Math.max(...blocks)
       if (highestBlock && highestBlock > cursorPosition) {
         const newCursorPosition = IntNumber(highestBlock + 1)
         console.log(
