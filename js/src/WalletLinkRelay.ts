@@ -14,7 +14,6 @@ import { isLocalStorageBlockedMessage } from "./types/LocalStorageBlockedMessage
 import { SessionIdRequestMessage } from "./types/SessionIdRequestMessage"
 import { isSessionIdResponseMessage } from "./types/SessionIdResponseMessage"
 import { isUnlinkedMessage } from "./types/UnlinkedMessage"
-import { Web3AccountsRequestMessage } from "./types/Web3AccountsRequestMessage"
 import { isWeb3AccountsResponseMessage } from "./types/Web3AccountsResponseMessage"
 import {
   EthereumAddressFromSignedMessageRequest,
@@ -48,7 +47,6 @@ import {
 } from "./WalletLinkNotification"
 
 const LOCAL_STORAGE_SESSION_ID_KEY = "SessionId"
-const AUTHORIZE_TIMEOUT = 600
 
 export interface EthereumTransactionParams {
   fromAddress: AddressString
@@ -80,7 +78,6 @@ export class WalletLinkRelay {
   private iframeEl: HTMLIFrameElement | null = null
   private popupUrl: string | null = null
   private popupWindow: Window | null = null
-  private authorizeWindowTimer: number | null = null
   private sessionId: string | null = null
 
   private appName: string
@@ -305,7 +302,7 @@ export class WalletLinkRelay {
       if (request.method === Web3Method.requestEthereumAccounts) {
         const showPopup = () => {
           if (this.linked) {
-            this.requestAccounts()
+            this.openAuthorizePopup()
           } else {
             this.openLinkPopup()
           }
@@ -351,19 +348,8 @@ export class WalletLinkRelay {
     this.openPopupWindow("/link")
   }
 
-  /**
-   * Request accounts, and open popup if account list is not received before
-   * AUTHORIZE_TIMEOUT
-   */
-  private requestAccounts(): void {
-    if (this.authorizeWindowTimer === null) {
-      this.authorizeWindowTimer = window.setTimeout(() => {
-        this.openPopupWindow("/authorize")
-        this.authorizeWindowTimer = null
-      }, AUTHORIZE_TIMEOUT)
-    }
-
-    this.postIPCMessage(Web3AccountsRequestMessage())
+  private openAuthorizePopup(): void {
+    this.openPopupWindow("/authorize")
   }
 
   private openPopupWindow(path: string): void {
@@ -455,12 +441,6 @@ export class WalletLinkRelay {
         }
       )
       WalletLinkRelay.accountRequestCallbackIds.clear()
-
-      // prevent authorize window from appearing
-      if (this.authorizeWindowTimer !== null) {
-        window.clearTimeout(this.authorizeWindowTimer)
-        this.authorizeWindowTimer = null
-      }
       return
     }
 

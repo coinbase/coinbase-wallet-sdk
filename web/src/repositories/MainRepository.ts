@@ -2,11 +2,10 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator"
-import { BehaviorSubject, fromEvent, Observable, of, Subscription } from "rxjs"
-import { catchError, filter, map, take, timeout } from "rxjs/operators"
+import { BehaviorSubject, fromEvent, Observable, Subscription } from "rxjs"
+import { filter, map, take } from "rxjs/operators"
 import * as aes256gcm from "../lib/aes256gcm"
 import { nextTick, postMessageToParent } from "../lib/util"
-import { isOriginAuthorized } from "../WalletLink/appAuthorizations"
 import { ServerMessageEvent } from "../WalletLink/messages"
 import { Session } from "../WalletLink/Session"
 import { IPCMessage } from "../WalletLink/types/IPCMessage"
@@ -14,7 +13,6 @@ import { LinkedMessage } from "../WalletLink/types/LinkedMessage"
 import { isSessionIdRequestMessage } from "../WalletLink/types/SessionIdRequestMessage"
 import { SessionIdResponseMessage } from "../WalletLink/types/SessionIdResponseMessage"
 import { UnlinkedMessage } from "../WalletLink/types/UnlinkedMessage"
-import { isWeb3AccountsRequestMessage } from "../WalletLink/types/Web3AccountsRequestMessage"
 import { Web3AccountsResponseMessage } from "../WalletLink/types/Web3AccountsResponseMessage"
 import {
   isWeb3RequestMessage,
@@ -33,8 +31,6 @@ export interface MainRepositoryOptions {
   session?: Session
   walletLinkHost?: WalletLinkHost
 }
-
-const AUTHORIZE_TIMEOUT = 500
 
 export class MainRepository {
   private readonly _webUrl: string
@@ -176,19 +172,6 @@ export class MainRepository {
 
     if (isWeb3RequestMessage(message)) {
       this.handleWeb3Request(message, origin)
-      return
-    }
-
-    if (isWeb3AccountsRequestMessage(message) && isOriginAuthorized(origin)) {
-      const sub = this.revealEthereumAddressesToOpener(origin)
-        .pipe(
-          timeout(AUTHORIZE_TIMEOUT),
-          catchError(() => of(null))
-        )
-        .subscribe(() => {
-          nextTick(() => this.subscriptions.remove(sub))
-        })
-      this.subscriptions.add(sub)
       return
     }
 

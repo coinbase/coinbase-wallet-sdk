@@ -7,7 +7,6 @@ import { Redirect } from "react-router"
 import { fromEvent, Subscription } from "rxjs"
 import { nextTick } from "../../lib/util"
 import { routes } from "../../routes"
-import * as appAuthorizations from "../../WalletLink/appAuthorizations"
 import { AppContext } from "../AppContext"
 import { RouteComponentPropsWithAppInfo } from "../routeWithAppInfo"
 import { AuthorizePage } from "./AuthorizePage"
@@ -52,10 +51,6 @@ export class AuthorizeRoute extends React.PureComponent<
     const { ethereumAddresses } = this.state
     const { appName, appLogoUrl, origin, fromLinkPage } = this.props.appInfo
 
-    if (appAuthorizations.isOriginAuthorized(origin)) {
-      this.handleClickAllowButton()
-    }
-
     return appName && origin ? (
       <AuthorizePage
         appName={appName}
@@ -73,11 +68,8 @@ export class AuthorizeRoute extends React.PureComponent<
 
   @bind
   private handleClickAllowButton() {
-    const { origin } = this.props.appInfo
-    appAuthorizations.setOriginAuthorized(origin)
-
     const sub = this.context.mainRepo
-      .revealEthereumAddressesToOpener(origin)
+      .revealEthereumAddressesToOpener(this.props.appInfo.origin)
       .subscribe(() => nextTick(() => this.subscriptions.remove(sub)))
     this.subscriptions.add(sub)
   }

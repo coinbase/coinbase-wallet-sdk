@@ -3,12 +3,10 @@
 
 import React from "react"
 import { RouteComponentProps } from "react-router"
-import { clearAllAuthorizations } from "../../WalletLink/appAuthorizations"
 import { Session } from "../../WalletLink/Session"
 
 export class ResetRoute extends React.PureComponent<RouteComponentProps> {
   public componentDidMount() {
-    clearAllAuthorizations()
     Session.clear()
     window.close()
   }
