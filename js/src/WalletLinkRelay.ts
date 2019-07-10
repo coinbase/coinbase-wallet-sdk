@@ -6,7 +6,7 @@ import BN from "bn.js"
 import crypto from "crypto"
 import querystring from "querystring"
 import url from "url"
-import * as scopedLocalStorage from "./scopedLocalStorage"
+import { ScopedLocalStorage } from "./ScopedLocalStorage"
 import { AddressString, IntNumber, RegExpString } from "./types/common"
 import { IPCMessage } from "./types/IPCMessage"
 import { isLinkedMessage } from "./types/LinkedMessage"
@@ -74,7 +74,8 @@ export class WalletLinkRelay {
   private static accountRequestCallbackIds = new Set<string>()
 
   private readonly walletLinkUrl: string
-  private readonly walletLinkWebOrigin: string
+  private readonly walletLinkOrigin: string
+  private readonly storage: ScopedLocalStorage
 
   private iframeEl: HTMLIFrameElement | null = null
   private popupUrl: string | null = null
@@ -93,10 +94,12 @@ export class WalletLinkRelay {
     this.appLogoUrl = options.appLogoUrl
 
     const u = url.parse(this.walletLinkUrl)
-    this.walletLinkWebOrigin = `${u.protocol}//${u.host}`
+    this.walletLinkOrigin = `${u.protocol}//${u.host}`
+    this.storage = new ScopedLocalStorage(
+      `__WalletLink__:${this.walletLinkOrigin}`
+    )
 
-    this.sessionId =
-      scopedLocalStorage.getItem(LOCAL_STORAGE_SESSION_ID_KEY) || null
+    this.sessionId = this.getStorageItem(LOCAL_STORAGE_SESSION_ID_KEY) || null
   }
 
   public setAppInfo(appName: string, appLogoUrl: string): void {
@@ -126,6 +129,14 @@ export class WalletLinkRelay {
     window.addEventListener("beforeunload", this.handleBeforeUnload, false)
 
     document.documentElement.appendChild(iframeEl)
+  }
+
+  public getStorageItem(key: string): string | null {
+    return this.storage.getItem(key)
+  }
+
+  public setStorageItem(key: string, value: string): void {
+    this.storage.setItem(key, value)
   }
 
   public requestEthereumAccounts(): Promise<RequestEthereumAccountsResponse> {
@@ -333,7 +344,7 @@ export class WalletLinkRelay {
     if (!this.iframeEl || !this.iframeEl.contentWindow) {
       throw new Error("WalletLink iframe is not initialized")
     }
-    this.iframeEl.contentWindow.postMessage(message, this.walletLinkWebOrigin)
+    this.iframeEl.contentWindow.postMessage(message, this.walletLinkOrigin)
   }
 
   private openLinkPopup(): void {
@@ -420,7 +431,7 @@ export class WalletLinkRelay {
 
   @bind
   private handleMessage(evt: MessageEvent): void {
-    if (evt.origin !== this.walletLinkWebOrigin) {
+    if (evt.origin !== this.walletLinkOrigin) {
       return
     }
 
@@ -457,11 +468,11 @@ export class WalletLinkRelay {
       const { sessionId } = message
       if (this.sessionId !== null && this.sessionId !== sessionId) {
         // sessionId changed, clear all local data and reload page
-        scopedLocalStorage.clear()
+        this.storage.clear()
         document.location.reload()
       }
       this.sessionId = sessionId
-      scopedLocalStorage.setItem(LOCAL_STORAGE_SESSION_ID_KEY, sessionId)
+      this.setStorageItem(LOCAL_STORAGE_SESSION_ID_KEY, sessionId)
       return
     }
 

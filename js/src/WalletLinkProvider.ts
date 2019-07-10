@@ -4,7 +4,6 @@
 import BN from "bn.js"
 import { EventEmitter } from "events"
 import { FilterPolyfill } from "./FilterPolyfill"
-import * as scopedLocalStorage from "./scopedLocalStorage"
 import { AddressString, Callback, IntNumber } from "./types/common"
 import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from "./types/JSONRPC"
 import {
@@ -52,7 +51,7 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     this._chainId = ensureIntNumber(options.chainId || 1)
     this._jsonRpcUrl = options.jsonRpcUrl
 
-    const cahedAddresses = scopedLocalStorage.getItem(
+    const cahedAddresses = this._relay.getStorageItem(
       LOCAL_STORAGE_ADDRESSES_KEY
     )
     if (cahedAddresses) {
@@ -205,7 +204,7 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     }
 
     this._addresses = addresses.map(address => ensureAddressString(address))
-    scopedLocalStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, addresses.join(" "))
+    this._relay.setStorageItem(LOCAL_STORAGE_ADDRESSES_KEY, addresses.join(" "))
     this.emit("accountsChanged", this._addresses)
   }
 
