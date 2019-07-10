@@ -5,7 +5,7 @@ import bind from "bind-decorator"
 import { BehaviorSubject, fromEvent, Observable, of, Subscription } from "rxjs"
 import { catchError, filter, map, take, timeout } from "rxjs/operators"
 import * as aes256gcm from "../lib/aes256gcm"
-import { nextTick } from "../lib/util"
+import { nextTick, postMessageToParent } from "../lib/util"
 import { isOriginAuthorized } from "../WalletLink/appAuthorizations"
 import { ServerMessageEvent } from "../WalletLink/messages"
 import { Session } from "../WalletLink/Session"
@@ -166,13 +166,7 @@ export class MainRepository {
   }
 
   private postIPCMessage(message: IPCMessage, origin: string = "*"): void {
-    if (window.opener) {
-      window.opener.postMessage(message, origin)
-      return
-    }
-    if (window.parent !== window) {
-      window.parent.postMessage(message, origin)
-    }
+    postMessageToParent(message, origin)
   }
 
   @bind

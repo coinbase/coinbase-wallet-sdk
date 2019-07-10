@@ -10,6 +10,7 @@ import * as scopedLocalStorage from "./scopedLocalStorage"
 import { AddressString, IntNumber, RegExpString } from "./types/common"
 import { IPCMessage } from "./types/IPCMessage"
 import { isLinkedMessage } from "./types/LinkedMessage"
+import { isLocalStorageBlockedMessage } from "./types/LocalStorageBlockedMessage"
 import { SessionIdRequestMessage } from "./types/SessionIdRequestMessage"
 import { isSessionIdResponseMessage } from "./types/SessionIdResponseMessage"
 import { isUnlinkedMessage } from "./types/UnlinkedMessage"
@@ -84,6 +85,7 @@ export class WalletLinkRelay {
   private appName: string
   private appLogoUrl: string
   private linked = false
+  private localStorageBlocked = false
 
   constructor(options: Readonly<WalletLinkRelayOptions>) {
     this.walletLinkWebUrl = options.walletLinkWebUrl
@@ -106,6 +108,7 @@ export class WalletLinkRelay {
     if (this.iframeEl) {
       throw new Error("iframe already injected!")
     }
+
     const iframeEl = document.createElement("iframe")
     iframeEl.className = "_WalletLinkBridge"
     iframeEl.src = `${this.walletLinkWebUrl}/#/bridge`
@@ -117,11 +120,12 @@ export class WalletLinkRelay {
     iframeEl.style.top = "0"
     iframeEl.style.right = "0"
     this.iframeEl = iframeEl
-    document.documentElement.appendChild(iframeEl)
-    iframeEl.addEventListener("load", this.handleIframeLoad, false)
 
+    iframeEl.addEventListener("load", this.handleIframeLoad, false)
     window.addEventListener("message", this.handleMessage, false)
     window.addEventListener("beforeunload", this.handleBeforeUnload, false)
+
+    document.documentElement.appendChild(iframeEl)
   }
 
   public requestEthereumAccounts(): Promise<RequestEthereumAccountsResponse> {
@@ -244,6 +248,10 @@ export class WalletLinkRelay {
   public sendRequest<T extends Web3Request, U extends Web3Response>(
     request: T
   ): Promise<U> {
+    if (this.localStorageBlocked) {
+      window.alert("Please enable third-party cookies to use WalletLink")
+      return Promise.reject(new Error("third party cookies disabled"))
+    }
     return new Promise((resolve, reject) => {
       if (!this.iframeEl || !this.iframeEl.contentWindow) {
         return reject("iframe is not initialized")
@@ -465,6 +473,11 @@ export class WalletLinkRelay {
     if (isUnlinkedMessage(message)) {
       this.linked = false
       document.location.reload()
+      return
+    }
+
+    if (isLocalStorageBlockedMessage(message)) {
+      this.localStorageBlocked = true
       return
     }
   }

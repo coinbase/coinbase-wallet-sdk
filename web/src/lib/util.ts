@@ -9,3 +9,22 @@ export function nextTick(fn: () => void): void {
   }
   window.setTimeout(fn, 0)
 }
+
+export function isLocalStorageBlocked(): boolean {
+  try {
+    localStorage.getItem("test")
+  } catch (err) {
+    return true
+  }
+  return false
+}
+
+export function postMessageToParent(message: any, origin: string = "*"): void {
+  if (window.opener) {
+    window.opener.postMessage(message, origin)
+    return
+  }
+  if (window.parent !== window) {
+    window.parent.postMessage(message, origin)
+  }
+}
