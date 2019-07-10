@@ -5,8 +5,8 @@ import { WalletLinkNotification } from "./WalletLinkNotification"
 import { WalletLinkProvider } from "./WalletLinkProvider"
 import { WalletLinkRelay } from "./WalletLinkRelay"
 
-const WALLETLINK_WEB_URL =
-  process.env.WALLETLINK_WEB_URL! || "https://www.walletlink.org"
+const WALLETLINK_URL =
+  process.env.WALLETLINK_URL! || "https://www.walletlink.org"
 const WALLETLINK_VERSION =
   process.env.WALLETLINK_VERSION! ||
   require("../package.json").version ||
@@ -15,7 +15,7 @@ const WALLETLINK_VERSION =
 export interface WalletLinkOptions {
   appName?: string
   appLogoUrl?: string
-  walletLinkWebUrl?: string
+  walletLinkUrl?: string
 }
 
 export class WalletLink {
@@ -31,7 +31,7 @@ export class WalletLink {
     this._relay = new WalletLinkRelay({
       appName: this._appName,
       appLogoUrl: this._appLogoUrl,
-      walletLinkWebUrl: options.walletLinkWebUrl || WALLETLINK_WEB_URL
+      walletLinkUrl: options.walletLinkUrl || WALLETLINK_URL
     })
     WalletLinkNotification.injectContainer()
     this._relay.injectIframe()

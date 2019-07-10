@@ -64,7 +64,7 @@ export interface EthereumTransactionParams {
 type ResponseCallback = (response: Web3Response) => void
 
 export interface WalletLinkRelayOptions {
-  walletLinkWebUrl: string
+  walletLinkUrl: string
   appName: string
   appLogoUrl: string
 }
@@ -73,7 +73,7 @@ export class WalletLinkRelay {
   private static callbacks = new Map<string, ResponseCallback>()
   private static accountRequestCallbackIds = new Set<string>()
 
-  private readonly walletLinkWebUrl: string
+  private readonly walletLinkUrl: string
   private readonly walletLinkWebOrigin: string
 
   private iframeEl: HTMLIFrameElement | null = null
@@ -88,11 +88,11 @@ export class WalletLinkRelay {
   private localStorageBlocked = false
 
   constructor(options: Readonly<WalletLinkRelayOptions>) {
-    this.walletLinkWebUrl = options.walletLinkWebUrl
+    this.walletLinkUrl = options.walletLinkUrl
     this.appName = options.appName
     this.appLogoUrl = options.appLogoUrl
 
-    const u = url.parse(this.walletLinkWebUrl)
+    const u = url.parse(this.walletLinkUrl)
     this.walletLinkWebOrigin = `${u.protocol}//${u.host}`
 
     this.sessionId =
@@ -111,7 +111,7 @@ export class WalletLinkRelay {
 
     const iframeEl = document.createElement("iframe")
     iframeEl.className = "_WalletLinkBridge"
-    iframeEl.src = `${this.walletLinkWebUrl}/#/bridge`
+    iframeEl.src = `${this.walletLinkUrl}/#/bridge`
     iframeEl.width = "1"
     iframeEl.height = "1"
     iframeEl.style.opacity = "0"
@@ -361,7 +361,7 @@ export class WalletLinkRelay {
       appLogoUrl: this.appLogoUrl,
       origin: document.location.origin
     })
-    const popupUrl = `${this.walletLinkWebUrl}/#${path}?${query}`
+    const popupUrl = `${this.walletLinkUrl}/#${path}?${query}`
 
     if (this.popupWindow && this.popupWindow.opener) {
       if (this.popupUrl !== popupUrl) {
