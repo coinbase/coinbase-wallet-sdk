@@ -4,6 +4,7 @@
 export const routes = {
   root: "/",
   link: "/link",
+  linked: "/linked",
   reset: "/reset",
   bridge: "/bridge"
 }

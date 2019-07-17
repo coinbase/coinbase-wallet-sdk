@@ -3,12 +3,13 @@
 
 import React from "react"
 import { RouteComponentProps } from "react-router"
-import { fromEvent, Subscription } from "rxjs"
+import { Subscription } from "rxjs"
+import { take } from "rxjs/operators"
 import { routes } from "../../routes"
 import { AppContext } from "../AppContext"
-import { LinkPage } from "./LinkPage"
+import { LinkedPage } from "./LinkedPage"
 
-export class LinkRoute extends React.PureComponent<RouteComponentProps> {
+export class LinkedRoute extends React.PureComponent<RouteComponentProps> {
   public static contextType = AppContext
   public context!: React.ContextType<typeof AppContext>
 
@@ -19,14 +20,10 @@ export class LinkRoute extends React.PureComponent<RouteComponentProps> {
     const { history } = this.props
 
     this.subscriptions.add(
-      mainRepo.onceLinked$.subscribe(_ => {
-        history.replace(routes.linked)
-      })
-    )
-
-    this.subscriptions.add(
-      fromEvent(window, "unload").subscribe(() => {
-        this.context.mainRepo.denyEthereumAddressesFromOpener()
+      mainRepo.linked$.pipe(take(1)).subscribe(linked => {
+        if (!linked) {
+          history.replace(routes.link)
+        }
       })
     )
   }
@@ -36,15 +33,6 @@ export class LinkRoute extends React.PureComponent<RouteComponentProps> {
   }
 
   public render() {
-    const { mainRepo } = this.context
-
-    return (
-      <LinkPage
-        webUrl={mainRepo.webUrl}
-        serverUrl={mainRepo.serverUrl}
-        sessionId={mainRepo.sessionId}
-        sessionSecret={mainRepo.sessionSecret}
-      />
-    )
+    return <LinkedPage />
   }
 }

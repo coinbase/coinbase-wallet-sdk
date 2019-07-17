@@ -11,6 +11,7 @@ import { routes } from "../routes"
 import { LocalStorageBlockedMessage } from "../WalletLink/types/LocalStorageBlockedMessage"
 import { AppContext } from "./AppContext"
 import { LinkRoute } from "./Link/LinkRoute"
+import { LinkedRoute } from "./Linked/LinkedRoute"
 import { ResetRoute } from "./Reset/ResetRoute"
 import { RootRoute } from "./Root/RootRoute"
 
@@ -41,6 +42,7 @@ export class App extends React.PureComponent {
         {mainRepo && (
           <AppContext.Provider value={{ mainRepo }}>
             <Route exact path={routes.link} component={LinkRoute} />
+            <Route exact path={routes.linked} component={LinkedRoute} />
             <Route exact path={routes.reset} component={ResetRoute} />
           </AppContext.Provider>
         )}

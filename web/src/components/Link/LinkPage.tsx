@@ -11,7 +11,6 @@ export interface Props {
   serverUrl: string
   sessionId: string
   sessionSecret: string
-  linked: boolean
 }
 
 const styles = {
