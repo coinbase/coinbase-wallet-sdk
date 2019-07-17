@@ -2,8 +2,10 @@
 // Licensed under the Apache License, version 2.0
 
 import { AddressString, HexString } from "./common"
+import { Web3Method } from "./Web3Method"
 
 interface BaseWeb3Response<Result> {
+  method: Web3Method
   errorMessage?: string | null
   result?: Result
 }
@@ -12,8 +14,11 @@ export interface ErrorResponse extends BaseWeb3Response<void> {
   errorMessage: string
 }
 
-export function ErrorResponse(errorMessage: string): ErrorResponse {
-  return { errorMessage }
+export function ErrorResponse(
+  method: Web3Method,
+  errorMessage: string
+): ErrorResponse {
+  return { method, errorMessage }
 }
 
 export type RequestEthereumAccountsResponse = BaseWeb3Response<
@@ -23,7 +28,13 @@ export type RequestEthereumAccountsResponse = BaseWeb3Response<
 export function RequestEthereumAccountsResponse(
   addresses: AddressString[]
 ): RequestEthereumAccountsResponse {
-  return { result: addresses }
+  return { method: Web3Method.requestEthereumAccounts, result: addresses }
+}
+
+export function isRequestEthereumAccountsResponse(
+  res: any
+): res is RequestEthereumAccountsResponse {
+  return res && res.method === Web3Method.requestEthereumAccounts
 }
 
 export type SignEthereumMessageResponse = BaseWeb3Response<

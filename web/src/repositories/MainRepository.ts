@@ -2,8 +2,8 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator"
-import { BehaviorSubject, fromEvent, Observable, Subscription } from "rxjs"
-import { filter, map, take } from "rxjs/operators"
+import { BehaviorSubject, fromEvent, Subscription } from "rxjs"
+import { filter } from "rxjs/operators"
 import * as aes256gcm from "../lib/aes256gcm"
 import { nextTick, postMessageToParent } from "../lib/util"
 import { ServerMessageEvent } from "../WalletLink/messages"
@@ -13,7 +13,6 @@ import { LinkedMessage } from "../WalletLink/types/LinkedMessage"
 import { isSessionIdRequestMessage } from "../WalletLink/types/SessionIdRequestMessage"
 import { SessionIdResponseMessage } from "../WalletLink/types/SessionIdResponseMessage"
 import { UnlinkedMessage } from "../WalletLink/types/UnlinkedMessage"
-import { Web3AccountsResponseMessage } from "../WalletLink/types/Web3AccountsResponseMessage"
 import {
   isWeb3RequestMessage,
   Web3RequestMessage,
@@ -133,6 +132,10 @@ export class MainRepository {
     return this.walletLinkHost.linked$
   }
 
+  public get onceLinked$() {
+    return this.walletLinkHost.onceLinked$
+  }
+
   public get sessionConfig$() {
     return this.walletLinkHost.sessionConfig$
   }
@@ -145,19 +148,14 @@ export class MainRepository {
     return this.ethereumAddressesSubject.asObservable()
   }
 
-  public revealEthereumAddressesToOpener(origin: string): Observable<void> {
-    return this.ethereumAddresses$.pipe(
-      filter(addrs => addrs.length > 0),
-      take(1),
-      map(addresses => {
-        const message = Web3AccountsResponseMessage(addresses)
-        this.postIPCMessage(message, origin)
-      })
-    )
-  }
-
   public denyEthereumAddressesFromOpener(origin: string = "*"): void {
-    const message = Web3AccountsResponseMessage([])
+    const message = Web3ResponseMessage({
+      id: "",
+      response: {
+        method: "requestEthereumAccounts",
+        errorMessage: "User denied account authorization"
+      }
+    })
     this.postIPCMessage(message, origin)
   }
 
@@ -193,6 +191,7 @@ export class MainRepository {
         const response = Web3ResponseMessage({
           id: request.id,
           response: {
+            method: request.request.method,
             errorMessage: err.message || String(err)
           }
         })

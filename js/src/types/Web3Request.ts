@@ -8,15 +8,7 @@ import {
   IntNumber,
   RegExpString
 } from "./common"
-
-export enum Web3Method {
-  requestEthereumAccounts = "requestEthereumAccounts",
-  signEthereumMessage = "signEthereumMessage",
-  signEthereumTransaction = "signEthereumTransaction",
-  submitEthereumTransaction = "submitEthereumTransaction",
-  ethereumAddressFromSignedMessage = "ethereumAddressFromSignedMessage",
-  scanQRCode = "scanQRCode"
-}
+import { Web3Method } from "./Web3Method"
 
 interface BaseWeb3Request<
   Method extends Web3Method,
@@ -27,7 +19,11 @@ interface BaseWeb3Request<
 }
 
 export type RequestEthereumAccountsRequest = BaseWeb3Request<
-  Web3Method.requestEthereumAccounts
+  Web3Method.requestEthereumAccounts,
+  {
+    appName: string
+    appLogoUrl: string
+  }
 >
 
 export type SignEthereumMessageRequest = BaseWeb3Request<

@@ -4,7 +4,6 @@
 import bind from "bind-decorator"
 import BN from "bn.js"
 import crypto from "crypto"
-import querystring from "querystring"
 import url from "url"
 import { ScopedLocalStorage } from "./ScopedLocalStorage"
 import { AddressString, IntNumber, RegExpString } from "./types/common"
@@ -14,7 +13,7 @@ import { isLocalStorageBlockedMessage } from "./types/LocalStorageBlockedMessage
 import { SessionIdRequestMessage } from "./types/SessionIdRequestMessage"
 import { isSessionIdResponseMessage } from "./types/SessionIdResponseMessage"
 import { isUnlinkedMessage } from "./types/UnlinkedMessage"
-import { isWeb3AccountsResponseMessage } from "./types/Web3AccountsResponseMessage"
+import { Web3Method } from "./types/Web3Method"
 import {
   EthereumAddressFromSignedMessageRequest,
   RequestEthereumAccountsRequest,
@@ -22,13 +21,13 @@ import {
   SignEthereumMessageRequest,
   SignEthereumTransactionRequest,
   SubmitEthereumTransactionRequest,
-  Web3Method,
   Web3Request
 } from "./types/Web3Request"
 import { Web3RequestMessage } from "./types/Web3RequestMessage"
 import {
   ErrorResponse,
   EthereumAddressFromSignedMessageResponse,
+  isRequestEthereumAccountsResponse,
   RequestEthereumAccountsResponse,
   ScanQRCodeResponse,
   SignEthereumMessageResponse,
@@ -142,7 +141,10 @@ export class WalletLinkRelay {
       RequestEthereumAccountsResponse
     >({
       method: Web3Method.requestEthereumAccounts,
-      params: {}
+      params: {
+        appName: this.appName,
+        appLogoUrl: this.appLogoUrl
+      }
     })
   }
 
@@ -270,7 +272,7 @@ export class WalletLinkRelay {
         this.invokeCallback(
           Web3ResponseMessage({
             id,
-            response: { errorMessage: "User rejected request" }
+            response: ErrorResponse(request.method, "User rejected request")
           })
         )
         if (notification) {
@@ -289,26 +291,15 @@ export class WalletLinkRelay {
         iconUrl: this.appLogoUrl,
         autoExpandAfter: 10000,
         buttonInfo2: "Made a mistake?",
-        buttonLabel2: "Cancel request",
+        buttonLabel2: "Cancel",
         onClickButton2: cancel
       }
 
-      if (this.linked) {
-        options.buttonInfo3 = "Not receiving requests?"
-        options.buttonLabel3 = "Reconnect"
-        options.onClickButton3 = reset
-      }
+      const isRequestAccounts =
+        request.method === Web3Method.requestEthereumAccounts
 
-      if (request.method === Web3Method.requestEthereumAccounts) {
-        const showPopup = () => {
-          if (this.linked) {
-            this.openAuthorizePopup()
-          } else {
-            this.openLinkPopup()
-          }
-        }
-
-        WalletLinkRelay.accountRequestCallbackIds.add(id)
+      if (!this.linked && isRequestAccounts) {
+        const showPopup = () => this.openPopupWindow("/link")
         showPopup()
 
         options.message = "Requesting to connect to your wallet..."
@@ -316,13 +307,15 @@ export class WalletLinkRelay {
         options.buttonLabel1 = "Show window"
         options.onClickButton1 = showPopup
       } else {
-        this.postIPCMessage(Web3RequestMessage({ id, request }))
-
         options.message = "Pushed a request to your wallet..."
+        options.buttonInfo3 = "Not receiving requests?"
+        options.buttonLabel3 = "Reconnect"
+        options.onClickButton3 = reset
       }
 
-      const notification = new WalletLinkNotification(options)
-      notification.show()
+      if (isRequestAccounts) {
+        WalletLinkRelay.accountRequestCallbackIds.add(id)
+      }
 
       WalletLinkRelay.callbacks.set(id, response => {
         this.closePopupWindow()
@@ -334,6 +327,11 @@ export class WalletLinkRelay {
         }
         resolve(response as U)
       })
+
+      const notification = new WalletLinkNotification(options)
+      notification.show()
+
+      this.postIPCMessage(Web3RequestMessage({ id, request }))
     })
   }
 
@@ -344,21 +342,8 @@ export class WalletLinkRelay {
     this.iframeEl.contentWindow.postMessage(message, this.walletLinkOrigin)
   }
 
-  private openLinkPopup(): void {
-    this.openPopupWindow("/link")
-  }
-
-  private openAuthorizePopup(): void {
-    this.openPopupWindow("/authorize")
-  }
-
   private openPopupWindow(path: string): void {
-    const query = querystring.stringify({
-      appName: this.appName,
-      appLogoUrl: this.appLogoUrl,
-      origin: document.location.origin
-    })
-    const popupUrl = `${this.walletLinkUrl}/#${path}?${query}`
+    const popupUrl = `${this.walletLinkUrl}/#${path}`
 
     if (this.popupWindow && this.popupWindow.opener) {
       if (this.popupUrl !== popupUrl) {
@@ -424,23 +409,17 @@ export class WalletLinkRelay {
     const message: unknown = evt.data
 
     if (isWeb3ResponseMessage(message)) {
+      const { response } = message
+
+      if (isRequestEthereumAccountsResponse(response)) {
+        Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach(
+          id => this.invokeCallback({ ...message, id })
+        )
+        WalletLinkRelay.accountRequestCallbackIds.clear()
+        return
+      }
+
       this.invokeCallback(message)
-      return
-    }
-
-    if (isWeb3AccountsResponseMessage(message)) {
-      const addresses = message.addresses as AddressString[]
-      const response =
-        addresses.length > 0
-          ? RequestEthereumAccountsResponse(addresses)
-          : ErrorResponse("User denied account authorization")
-
-      Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach(
-        id => {
-          this.invokeCallback(Web3ResponseMessage({ id, response }))
-        }
-      )
-      WalletLinkRelay.accountRequestCallbackIds.clear()
       return
     }
 

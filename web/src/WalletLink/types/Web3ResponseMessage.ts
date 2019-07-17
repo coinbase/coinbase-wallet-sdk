@@ -7,6 +7,7 @@ export interface Web3ResponseMessage
   extends IPCMessage<IPCMessageType.WEB3_RESPONSE> {
   id: string
   response: {
+    method: string
     errorMessage?: string
     result?: any
   }
