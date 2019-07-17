@@ -10,11 +10,9 @@ import { MainRepository } from "../repositories/MainRepository"
 import { routes } from "../routes"
 import { LocalStorageBlockedMessage } from "../WalletLink/types/LocalStorageBlockedMessage"
 import { AppContext } from "./AppContext"
-import { AuthorizeRoute } from "./Authorize/AuthorizeRoute"
 import { LinkRoute } from "./Link/LinkRoute"
 import { ResetRoute } from "./Reset/ResetRoute"
 import { RootRoute } from "./Root/RootRoute"
-import { routeWithAppInfo } from "./routeWithAppInfo"
 
 export class App extends React.PureComponent {
   private readonly history = createHashHistory()
@@ -42,16 +40,7 @@ export class App extends React.PureComponent {
 
         {mainRepo && (
           <AppContext.Provider value={{ mainRepo }}>
-            <Route
-              exact
-              path={routes.link}
-              component={routeWithAppInfo(LinkRoute)}
-            />
-            <Route
-              exact
-              path={routes.authorize}
-              component={routeWithAppInfo(AuthorizeRoute)}
-            />
+            <Route exact path={routes.link} component={LinkRoute} />
             <Route exact path={routes.reset} component={ResetRoute} />
           </AppContext.Provider>
         )}

@@ -129,8 +129,8 @@ export class MainRepository {
     return this.session.key
   }
 
-  public get onceLinked$() {
-    return this.walletLinkHost.onceLinked$
+  public get linked$() {
+    return this.walletLinkHost.linked$
   }
 
   public get sessionConfig$() {
@@ -156,7 +156,7 @@ export class MainRepository {
     )
   }
 
-  public denyEthereumAddressesFromOpener(origin: string): void {
+  public denyEthereumAddressesFromOpener(origin: string = "*"): void {
     const message = Web3AccountsResponseMessage([])
     this.postIPCMessage(message, origin)
   }

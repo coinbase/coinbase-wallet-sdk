@@ -11,7 +11,7 @@ export interface Props {
   serverUrl: string
   sessionId: string
   sessionSecret: string
-  hasNextStep: boolean
+  linked: boolean
 }
 
 const styles = {
@@ -28,11 +28,6 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0
-  }),
-  step: style({
-    textTransform: "uppercase",
-    opacity: 0.5,
-    margin: 0
   }),
   title: style({
     fontSize: 20,
@@ -100,19 +95,11 @@ const images = {
 
 export class LinkPage extends React.PureComponent<Props> {
   public render() {
-    const {
-      webUrl,
-      serverUrl,
-      sessionId,
-      sessionSecret,
-      hasNextStep
-    } = this.props
+    const { webUrl, serverUrl, sessionId, sessionSecret } = this.props
 
     return (
       <div className={styles.main}>
         <div className={styles.background} />
-
-        {hasNextStep && <h5 className={styles.step}>Step 1 of 2</h5>}
 
         <h3 className={styles.title}>Scan QR Code</h3>
 

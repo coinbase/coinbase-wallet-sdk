@@ -1,19 +1,22 @@
 // Copyright (c) 2018-2019 Coinbase, Inc. <https://coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import querystring from "querystring"
 import React from "react"
+import { RouteComponentProps } from "react-router"
 import { fromEvent, Subscription } from "rxjs"
-import { routes } from "../../routes"
 import { AppContext } from "../AppContext"
-import { RouteComponentPropsWithAppInfo } from "../routeWithAppInfo"
 import { LinkPage } from "./LinkPage"
 
-export class LinkRoute extends React.PureComponent<
-  RouteComponentPropsWithAppInfo
-> {
+interface State {
+  linked: boolean
+}
+
+export class LinkRoute extends React.PureComponent<RouteComponentProps, State> {
   public static contextType = AppContext
   public context!: React.ContextType<typeof AppContext>
+  public state: State = {
+    linked: false
+  }
 
   private subscriptions = new Subscription()
 
@@ -21,26 +24,14 @@ export class LinkRoute extends React.PureComponent<
     const { mainRepo } = this.context
 
     this.subscriptions.add(
-      mainRepo.onceLinked$.subscribe(() => {
-        if (this.props.appInfo.origin) {
-          const { history } = this.props
-          const query = querystring.stringify({
-            ...this.props.appInfo,
-            fromLinkPage: true
-          })
-          history.replace({
-            pathname: routes.authorize,
-            search: "?" + query
-          })
-        }
+      mainRepo.linked$.subscribe(v => {
+        this.setState({ linked: v })
       })
     )
 
     this.subscriptions.add(
       fromEvent(window, "unload").subscribe(() => {
-        this.context.mainRepo.denyEthereumAddressesFromOpener(
-          this.props.appInfo.origin
-        )
+        this.context.mainRepo.denyEthereumAddressesFromOpener()
       })
     )
   }
@@ -51,6 +42,7 @@ export class LinkRoute extends React.PureComponent<
 
   public render() {
     const { mainRepo } = this.context
+    const { linked } = this.state
 
     return (
       <LinkPage
@@ -58,7 +50,7 @@ export class LinkRoute extends React.PureComponent<
         serverUrl={mainRepo.serverUrl}
         sessionId={mainRepo.sessionId}
         sessionSecret={mainRepo.sessionSecret}
-        hasNextStep={!!this.props.appInfo.origin}
+        linked={linked}
       />
     )
   }
