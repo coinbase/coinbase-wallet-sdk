@@ -350,6 +350,14 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     return undefined
   }
 
+  private _isKnownAddress(addressString: string): boolean {
+    try {
+      const address = ensureAddressString(addressString)
+      return this._addresses.includes(address)
+    } catch {}
+    return false
+  }
+
   private _prepareTransactionParams(tx: {
     from?: unknown
     to?: unknown
@@ -365,7 +373,7 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     if (!fromAddress) {
       throw new Error("Ethereum address is unavailable")
     }
-    if (!this._addresses.includes(fromAddress)) {
+    if (!this._isKnownAddress(fromAddress)) {
       throw new Error("Unknown Ethereum address")
     }
     const toAddress = tx.to ? ensureAddressString(tx.to) : null
@@ -440,6 +448,11 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     this._requireAuthorization()
     const message = ensureBuffer(params[1])
     const address = ensureAddressString(params[0])
+
+    if (!this._isKnownAddress(address)) {
+      throw new Error("Unknown Ethereum address")
+    }
+
     try {
       const res = await this._relay.signEthereumMessage(message, address, false)
       return { jsonrpc: "2.0", id: 0, result: res.result }
@@ -472,6 +485,11 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     this._requireAuthorization()
     const message = ensureBuffer(params[0])
     const address = ensureAddressString(params[1])
+
+    if (!this._isKnownAddress(address)) {
+      throw new Error("Unknown Ethereum address")
+    }
+
     try {
       const res = await this._relay.signEthereumMessage(message, address, true)
       return { jsonrpc: "2.0", id: 0, result: res.result }
