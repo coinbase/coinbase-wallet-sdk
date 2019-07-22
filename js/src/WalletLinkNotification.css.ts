@@ -207,15 +207,15 @@ export default `#_WalletLinkNotifications,
 #_WalletLinkNotifications ._WalletLinkNotificationIconContainer {
   display: block;
   position: relative;
-  width: 34px;
-  height: 34px;
-  margin-right: 12px;
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
 }
 
 #_WalletLinkNotifications ._WalletLinkNotificationIcon {
-  display: block;
-  width: 32px;
-  height: 32px;
+  display: none;
+  width: 22px;
+  height: 22px;
   background-size: cover;
   border-radius: 16px;
   margin: 2px;
@@ -224,8 +224,8 @@ export default `#_WalletLinkNotifications,
 #_WalletLinkNotifications ._WalletLinkNotificationSpinner {
   display: block;
   position: absolute;
-  width: 36px;
-  height: 36px;
+  width: 24px;
+  height: 24px;
   top: 0;
   left: 0;
   animation-name: WalletLinkNotificationIconSpin;
