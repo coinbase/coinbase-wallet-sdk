@@ -2,7 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator"
-import { BehaviorSubject, fromEvent, Subscription } from "rxjs"
+import { fromEvent, Subscription } from "rxjs"
 import { filter } from "rxjs/operators"
 import * as aes256gcm from "../lib/aes256gcm"
 import { nextTick, postMessageToParent } from "../lib/util"
@@ -37,7 +37,6 @@ export class MainRepository {
   private readonly session: Session
   private readonly walletLinkHost: WalletLinkHost
   private readonly subscriptions = new Subscription()
-  private readonly ethereumAddressesSubject = new BehaviorSubject<string[]>([])
 
   constructor(options: Readonly<MainRepositoryOptions>) {
     this._webUrl = options.webUrl
@@ -65,29 +64,6 @@ export class MainRepository {
       Session.persistedSessionIdChange$.subscribe(change => {
         if (change.oldValue && !change.newValue) {
           this.postIPCMessage(UnlinkedMessage())
-        }
-      })
-    )
-
-    this.subscriptions.add(
-      walletLinkHost.sessionConfig$.subscribe(config => {
-        if (
-          config.metadata &&
-          typeof config.metadata.EthereumAddress === "string"
-        ) {
-          let decrypted: string
-          try {
-            decrypted = aes256gcm.decrypt(
-              config.metadata.EthereumAddress,
-              this.sessionSecret
-            )
-          } catch {
-            return
-          }
-          const addresses = decrypted.toLowerCase().split(" ")
-          if (addresses) {
-            this.ethereumAddressesSubject.next(addresses)
-          }
         }
       })
     )
@@ -138,14 +114,6 @@ export class MainRepository {
 
   public get sessionConfig$() {
     return this.walletLinkHost.sessionConfig$
-  }
-
-  public get ethereumAddresses() {
-    return this.ethereumAddressesSubject.getValue()
-  }
-
-  public get ethereumAddresses$() {
-    return this.ethereumAddressesSubject.asObservable()
   }
 
   public denyEthereumAddressesFromOpener(origin: string = "*"): void {
