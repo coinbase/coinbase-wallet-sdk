@@ -23,6 +23,7 @@ import {
   SubmitEthereumTransactionRequest,
   Web3Request
 } from "./types/Web3Request"
+import { Web3RequestCanceledMessage } from "./types/Web3RequestCanceledMessage"
 import { Web3RequestMessage } from "./types/Web3RequestMessage"
 import {
   ErrorResponse,
@@ -269,6 +270,7 @@ export class WalletLinkRelay {
       const id = crypto.randomBytes(8).toString("hex")
 
       const cancel = () => {
+        this.postIPCMessage(Web3RequestCanceledMessage(id))
         this.invokeCallback(
           Web3ResponseMessage({
             id,

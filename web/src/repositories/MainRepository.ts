@@ -2,8 +2,8 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator"
-import { fromEvent, Subscription } from "rxjs"
-import { filter } from "rxjs/operators"
+import { fromEvent, ReplaySubject, Subscription } from "rxjs"
+import { filter, takeUntil } from "rxjs/operators"
 import * as aes256gcm from "../lib/aes256gcm"
 import { nextTick, postMessageToParent } from "../lib/util"
 import { ServerMessageEvent } from "../WalletLink/messages"
@@ -13,6 +13,11 @@ import { LinkedMessage } from "../WalletLink/types/LinkedMessage"
 import { isSessionIdRequestMessage } from "../WalletLink/types/SessionIdRequestMessage"
 import { SessionIdResponseMessage } from "../WalletLink/types/SessionIdResponseMessage"
 import { UnlinkedMessage } from "../WalletLink/types/UnlinkedMessage"
+import {
+  isWeb3RequestCanceledMessage,
+  Web3RequestCanceledMessage,
+  Web3RequestCanceledMessageWithOrigin
+} from "../WalletLink/types/Web3RequestCanceledMessage"
 import {
   isWeb3RequestMessage,
   Web3RequestMessage,
@@ -37,6 +42,7 @@ export class MainRepository {
   private readonly session: Session
   private readonly walletLinkHost: WalletLinkHost
   private readonly subscriptions = new Subscription()
+  private readonly destroyed$ = new ReplaySubject<void>()
 
   constructor(options: Readonly<MainRepositoryOptions>) {
     this._webUrl = options.webUrl
@@ -80,6 +86,7 @@ export class MainRepository {
   }
 
   public destroy(): void {
+    this.destroyed$.next()
     this.subscriptions.unsubscribe()
     this.walletLinkHost.destroy()
   }
@@ -141,6 +148,11 @@ export class MainRepository {
       return
     }
 
+    if (isWeb3RequestCanceledMessage(message)) {
+      this.handleWeb3RequestCanceled(message, origin)
+      return
+    }
+
     if (isSessionIdRequestMessage(message)) {
       this.postIPCMessage(SessionIdResponseMessage(this.session.id))
       return
@@ -167,6 +179,24 @@ export class MainRepository {
         nextTick(() => this.subscriptions.remove(sub))
       })
     this.subscriptions.add(sub)
+  }
+
+  private handleWeb3RequestCanceled(
+    message: Web3RequestCanceledMessage,
+    origin: string
+  ): void {
+    const messageWithOrigin = Web3RequestCanceledMessageWithOrigin(
+      message,
+      origin
+    )
+    const encrypted = aes256gcm.encrypt(
+      JSON.stringify(messageWithOrigin),
+      this.session.secret
+    )
+    this.walletLinkHost
+      .publishEvent("Web3RequestCanceled", encrypted)
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe()
   }
 
   @bind
