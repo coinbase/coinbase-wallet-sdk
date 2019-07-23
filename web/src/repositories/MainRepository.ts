@@ -2,10 +2,10 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator"
-import { fromEvent, ReplaySubject, Subscription } from "rxjs"
+import { fromEvent, ReplaySubject } from "rxjs"
 import { filter, takeUntil } from "rxjs/operators"
 import * as aes256gcm from "../lib/aes256gcm"
-import { nextTick, postMessageToParent } from "../lib/util"
+import { postMessageToParent } from "../lib/util"
 import { ServerMessageEvent } from "../WalletLink/messages"
 import { Session } from "../WalletLink/Session"
 import { IPCMessage } from "../WalletLink/types/IPCMessage"
@@ -41,7 +41,6 @@ export class MainRepository {
   private readonly _serverUrl: string
   private readonly session: Session
   private readonly walletLinkHost: WalletLinkHost
-  private readonly subscriptions = new Subscription()
   private readonly destroyed$ = new ReplaySubject<void>()
 
   constructor(options: Readonly<MainRepositoryOptions>) {
@@ -58,36 +57,38 @@ export class MainRepository {
 
     walletLinkHost.connect()
 
-    this.subscriptions.add(
-      walletLinkHost.linked$.subscribe(linked => {
+    walletLinkHost.linked$.pipe(takeUntil(this.destroyed$)).subscribe({
+      next: linked => {
         if (linked) {
           this.postIPCMessage(LinkedMessage())
         }
-      })
-    )
+      }
+    })
 
-    this.subscriptions.add(
-      Session.persistedSessionIdChange$.subscribe(change => {
-        if (change.oldValue && !change.newValue) {
-          this.postIPCMessage(UnlinkedMessage())
+    Session.persistedSessionIdChange$
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe({
+        next: change => {
+          if (change.oldValue && !change.newValue) {
+            this.postIPCMessage(UnlinkedMessage())
+          }
         }
       })
-    )
 
-    this.subscriptions.add(
-      fromEvent<MessageEvent>(window, "message").subscribe(this.handleMessage)
-    )
+    fromEvent<MessageEvent>(window, "message")
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe({ next: this.handleMessage })
 
-    this.subscriptions.add(
-      this.walletLinkHost.incomingEvent$
-        .pipe(filter(m => m.event === "Web3Response"))
-        .subscribe(this.handleWeb3ResponseEvent)
-    )
+    this.walletLinkHost.incomingEvent$
+      .pipe(
+        takeUntil(this.destroyed$),
+        filter(m => m.event === "Web3Response")
+      )
+      .subscribe({ next: this.handleWeb3ResponseEvent })
   }
 
   public destroy(): void {
     this.destroyed$.next()
-    this.subscriptions.unsubscribe()
     this.walletLinkHost.destroy()
   }
 
@@ -159,26 +160,27 @@ export class MainRepository {
     }
   }
 
-  private handleWeb3Request(request: Web3RequestMessage, origin: string): void {
-    const requestWithOrigin = Web3RequestMessageWithOrigin(request, origin)
+  private handleWeb3Request(message: Web3RequestMessage, origin: string): void {
+    const messageWithOrigin = Web3RequestMessageWithOrigin(message, origin)
     const encrypted = aes256gcm.encrypt(
-      JSON.stringify(requestWithOrigin),
+      JSON.stringify(messageWithOrigin),
       this.session.secret
     )
-    const sub = this.walletLinkHost
+    this.walletLinkHost
       .publishEvent("Web3Request", encrypted)
-      .subscribe(null, err => {
-        const response = Web3ResponseMessage({
-          id: request.id,
-          response: {
-            method: request.request.method,
-            errorMessage: err.message || String(err)
-          }
-        })
-        this.postIPCMessage(response)
-        nextTick(() => this.subscriptions.remove(sub))
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe({
+        error: err => {
+          const response = Web3ResponseMessage({
+            id: message.id,
+            response: {
+              method: message.request.method,
+              errorMessage: err.message || String(err)
+            }
+          })
+          this.postIPCMessage(response)
+        }
       })
-    this.subscriptions.add(sub)
   }
 
   private handleWeb3RequestCanceled(
