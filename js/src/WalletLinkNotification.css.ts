@@ -180,12 +180,15 @@ export default `#_WalletLinkNotifications,
   margin: 0;
   font-size: 14px;
   font-family: sans-serif;
-  box-shadow: 0px 16px 24px rgba(0, 0, 0, 0.06), 0px 0px 8px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0px 16px 24px rgba(0, 0, 0, 0.06),
+    0px 0px 8px rgba(0, 0, 0, 0.04);
   border-radius: 16px;
   transition: opacity 0.25s, transform 0.25s;
   opacity: 0;
   transform: translateX(25%);
   text-align: left;
+  overflow: hidden;
 }
 
 #_WalletLinkNotifications
@@ -198,40 +201,10 @@ export default `#_WalletLinkNotifications,
 #_WalletLinkNotifications ._WalletLinkNotificationContent {
   display: flex;
   flex-direction: row;
-  padding: 8px 16px;
+  padding: 8px 8px 8px 16px;
   align-items: center;
   user-select: none;
   cursor: pointer;
-}
-
-#_WalletLinkNotifications ._WalletLinkNotificationIconContainer {
-  display: block;
-  position: relative;
-  width: 24px;
-  height: 24px;
-  margin-right: 8px;
-}
-
-#_WalletLinkNotifications ._WalletLinkNotificationIcon {
-  display: none;
-  width: 22px;
-  height: 22px;
-  background-size: cover;
-  border-radius: 16px;
-  margin: 2px;
-}
-
-#_WalletLinkNotifications ._WalletLinkNotificationSpinner {
-  display: block;
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  top: 0;
-  left: 0;
-  animation-name: WalletLinkNotificationIconSpin;
-  animation-duration: 1s;
-  animation-iteration-count: infinite;
-  animation-timing-function: linear;
 }
 
 #_WalletLinkNotifications ._WalletLinkNotificationMessage {
@@ -244,6 +217,78 @@ export default `#_WalletLinkNotifications,
   display: block;
   margin-left: 8px;
   transition: transform 0.05s;
+}
+
+#_WalletLinkNotifications ._WalletLinkNotificationProgressBar {
+  display: block;
+  height: 2px;
+  position: relative;
+}
+
+#_WalletLinkNotifications ._WalletLinkNotificationProgressBar::before {
+  display: block;
+  position: absolute;
+  content: "";
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background-image: linear-gradient(
+    to right,
+    rgba(22, 82, 240, 0) 0%,
+    rgba(22, 82, 240, 1) 100%
+  );
+  animation: WalletLinkNotificationProgressBar 2s linear infinite;
+}
+
+@keyframes WalletLinkNotificationProgressBar {
+  0% {
+    left: 0;
+    width: 0%;
+    background-image: linear-gradient(
+      to right,
+      rgba(22, 82, 240, 0) 0%,
+      rgba(22, 82, 240, 1) 100%
+    );
+  }
+  25% {
+    left: 0;
+    width: 100%;
+  }
+  50% {
+    left: 100%;
+    width: 0%;
+    background-image: linear-gradient(
+      to right,
+      rgba(22, 82, 240, 0) 0%,
+      rgba(22, 82, 240, 1) 100%
+    );
+  }
+  50.01% {
+    background-image: linear-gradient(
+      to left,
+      rgba(22, 82, 240, 0) 0%,
+      rgba(22, 82, 240, 1) 100%
+    );
+  }
+  75% {
+    left: 0;
+    width: 100%;
+  }
+  100% {
+    left: 0;
+    width: 0%;
+    background-image: linear-gradient(
+      to left,
+      rgba(22, 82, 240, 0) 0%,
+      rgba(22, 82, 240, 1) 100%
+    );
+  }
+}
+
+#_WalletLinkNotifications
+  ._WalletLinkNotificationExpand
+  ._WalletLinkNotificationProgressBar {
+  margin-bottom: -1px;
 }
 
 #_WalletLinkNotifications
@@ -287,12 +332,4 @@ export default `#_WalletLinkNotifications,
 #_WalletLinkNotifications ._WalletLinkNotificationButton:active {
   opacity: 0.6;
 }
-
-@keyframes WalletLinkNotificationIconSpin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}`
+`

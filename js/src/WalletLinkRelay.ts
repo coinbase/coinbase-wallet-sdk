@@ -288,7 +288,7 @@ export class WalletLinkRelay {
       }
 
       const options: WalletLinkNotificationOptions = {
-        iconUrl: this.appLogoUrl,
+        showProgressBar: true,
         autoExpandAfter: 10000,
         buttonInfo2: "Made a mistake?",
         buttonLabel2: "Cancel",

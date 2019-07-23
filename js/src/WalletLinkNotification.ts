@@ -11,24 +11,21 @@ const showElClassName = "_WalletLinkNotificationShow"
 const expandElClassName = "_WalletLinkNotificationExpand"
 const boxElClassName = "_WalletLinkNotificationBox"
 const contentElClassName = "_WalletLinkNotificationContent"
-const iconContainerElClassName = "_WalletLinkNotificationIconContainer"
-const iconElClassName = "_WalletLinkNotificationIcon"
-const spinnerElClassName = "_WalletLinkNotificationSpinner"
 const messageElClassName = "_WalletLinkNotificationMessage"
 const chevronElClassName = "_WalletLinkNotificationChevron"
+const progressBarElClassName = "_WalletLinkNotificationProgressBar"
 const actionsElClassName = "_WalletLinkNotificationActions"
 const actionElClassName = "_WalletLinkNotificationAction"
 const buttonInfoElClassName = "_WalletLinkNotificationButtonInfo"
 const buttonElClassName = "_WalletLinkNotificationButton"
 
 const images = {
-  spinner: require("./images/spinner.svg"),
   chevron: require("./images/chevron.svg")
 }
 
 export interface WalletLinkNotificationOptions {
   message?: string
-  iconUrl?: string
+  showProgressBar?: boolean
   autoExpandAfter?: number
   buttonInfo1?: string
   buttonInfo2?: string
@@ -59,7 +56,7 @@ export class WalletLinkNotification {
   }
 
   private readonly message: string
-  private readonly iconUrl: string
+  private readonly showProgressBar: boolean
   private readonly autoExpandAfter: number
 
   private readonly buttonInfo1: string
@@ -81,7 +78,7 @@ export class WalletLinkNotification {
   constructor(params: WalletLinkNotificationOptions) {
     const {
       message,
-      iconUrl,
+      showProgressBar,
       autoExpandAfter,
       buttonInfo1,
       buttonInfo2,
@@ -94,7 +91,7 @@ export class WalletLinkNotification {
       onClickButton3
     } = params
     this.message = message || "Notification"
-    this.iconUrl = iconUrl || ""
+    this.showProgressBar = showProgressBar || false
     this.autoExpandAfter =
       typeof autoExpandAfter === "number" && autoExpandAfter >= 0
         ? autoExpandAfter
@@ -123,23 +120,6 @@ export class WalletLinkNotification {
       const contentEl = document.createElement("div")
       contentEl.className = contentElClassName
 
-      const iconContainerEl = document.createElement("div")
-      iconContainerEl.className = iconContainerElClassName
-
-      if (this.iconUrl) {
-        const iconEl = document.createElement("div")
-        iconEl.style.backgroundImage = `url(${this.iconUrl})`
-        iconEl.className = iconElClassName
-        iconContainerEl.append(iconEl)
-      }
-
-      const spinnerEl = document.createElement("img")
-      spinnerEl.src = images.spinner
-      spinnerEl.alt = ""
-      spinnerEl.className = spinnerElClassName
-      iconContainerEl.appendChild(spinnerEl)
-      contentEl.appendChild(iconContainerEl)
-
       const messageEl = document.createElement("div")
       messageEl.className = messageElClassName
       messageEl.appendChild(document.createTextNode(this.message))
@@ -155,6 +135,12 @@ export class WalletLinkNotification {
 
       contentEl.addEventListener("click", this.handleClick, false)
       boxEl.appendChild(contentEl)
+
+      if (this.showProgressBar) {
+        const progressBarEl = document.createElement("div")
+        progressBarEl.className = progressBarElClassName
+        boxEl.appendChild(progressBarEl)
+      }
 
       const actionsEl = document.createElement("div")
       actionsEl.className = actionsElClassName
