@@ -299,7 +299,7 @@ func (c *MessageHandler) handlePublishEvent(
 	eventMsg := newServerMessageEvent(msg.SessionID, eventID, msg.Event, msg.Data)
 	c.pubSub.Publish(subID, eventMsg)
 
-	if c.isHost {
+	if c.isHost && msg.CallWebhook {
 		go c.callWebhook(eventID, session.ID, session.WebhookID, session.WebhookURL)
 	}
 

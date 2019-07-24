@@ -68,11 +68,12 @@ type clientMessageGetSessionConfig struct {
 
 type clientMessagePublishEvent struct {
 	_clientMessage
-	Type      string `json:"type"`
-	ID        int    `json:"id"`
-	SessionID string `json:"sessionId"`
-	Event     string `json:"event"`
-	Data      string `json:"data"`
+	Type        string `json:"type"`
+	ID          int    `json:"id"`
+	SessionID   string `json:"sessionId"`
+	Event       string `json:"event"`
+	Data        string `json:"data"`
+	CallWebhook bool   `json:"callWebhook,omitempty"`
 }
 
 func unmarshalClientMessage(

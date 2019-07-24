@@ -464,11 +464,12 @@ func TestRPC(t *testing.T) {
 	// host publishes an event
 	hostReqID++
 	err = hostWs.WriteJSON(jsonMap{
-		"type":      "PublishEvent",
-		"id":        hostReqID,
-		"sessionId": sessionID,
-		"event":     eventName,
-		"data":      eventData,
+		"type":        "PublishEvent",
+		"id":          hostReqID,
+		"sessionId":   sessionID,
+		"event":       eventName,
+		"data":        eventData,
+		"callWebhook": true,
 	})
 	require.Nil(t, err)
 
@@ -552,6 +553,59 @@ func TestRPC(t *testing.T) {
 	// server sends event to host
 	res = jsonMap{}
 	err = hostWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":      "Event",
+		"sessionId": sessionID,
+		"eventId":   eventID,
+		"event":     eventName,
+		"data":      eventData,
+	}, res)
+
+	eventName = "cancel_something"
+	eventData = "lololol"
+
+	// host publishes another event with callWebhook: false
+	hostReqID++
+	err = hostWs.WriteJSON(jsonMap{
+		"type":        "PublishEvent",
+		"id":          hostReqID,
+		"sessionId":   sessionID,
+		"event":       eventName,
+		"data":        eventData,
+		"callWebhook": false,
+	})
+	require.Nil(t, err)
+
+	// server responds to host
+	res = jsonMap{}
+	err = hostWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, "PublishEventOK", res["type"])
+	require.Equal(t, float64(hostReqID), res["id"])
+	require.Equal(t, sessionID, res["sessionId"])
+
+	eventID, ok = res["eventId"].(string)
+	require.True(t, ok)
+	require.Len(t, eventID, 8)
+	require.True(t, util.IsHexString(eventID))
+
+	// webhook should not have been invoked
+	// number of calls should still be 1
+	time.Sleep(5 * time.Millisecond)
+	webhook.AssertNumberOfCalls(t, "Call", 1)
+
+	// the event published by the host should have been persisted
+	event, err = models.LoadEvent(srv.store, sessionID, eventID)
+	require.Nil(t, err)
+	require.NotNil(t, event)
+	require.Equal(t, eventID, event.ID)
+	require.Equal(t, eventName, event.Event)
+	require.Equal(t, eventData, event.Data)
+
+	// server sends event to guest
+	res = jsonMap{}
+	err = guestWs.ReadJSON(&res)
 	require.Nil(t, err)
 	require.Equal(t, jsonMap{
 		"type":      "Event",

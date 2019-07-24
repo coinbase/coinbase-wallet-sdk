@@ -267,13 +267,19 @@ export class WalletLinkHost {
    * Publish an event and emit event ID when successful
    * @param event event name
    * @param data event data
+   * @param callWebhook whether the webhook should be invoked
    */
-  public publishEvent(event: string, data: string): Observable<string> {
+  public publishEvent(
+    event: string,
+    data: string,
+    callWebhook: boolean = false
+  ): Observable<string> {
     const message = ClientMessagePublishEvent(
       this.nextReqId++,
       this.sessionId,
       event,
-      data
+      data,
+      callWebhook
     )
 
     return this.onceLinked$.pipe(

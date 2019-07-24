@@ -114,13 +114,15 @@ export interface ClientMessagePublishEvent extends ClientMessage {
   sessionId: string
   event: string
   data: string
+  callWebhook: boolean
 }
 
 export function ClientMessagePublishEvent(
   id: number,
   sessionId: string,
   event: string,
-  data: string
+  data: string,
+  callWebhook: boolean
 ): ClientMessagePublishEvent {
-  return { type: "PublishEvent", id, sessionId, event, data }
+  return { type: "PublishEvent", id, sessionId, event, data, callWebhook }
 }

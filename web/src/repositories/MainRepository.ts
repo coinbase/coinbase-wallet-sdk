@@ -167,7 +167,7 @@ export class MainRepository {
       this.session.secret
     )
     this.walletLinkHost
-      .publishEvent("Web3Request", encrypted)
+      .publishEvent("Web3Request", encrypted, true)
       .pipe(takeUntil(this.destroyed$))
       .subscribe({
         error: err => {
@@ -196,7 +196,7 @@ export class MainRepository {
       this.session.secret
     )
     this.walletLinkHost
-      .publishEvent("Web3RequestCanceled", encrypted)
+      .publishEvent("Web3RequestCanceled", encrypted, false)
       .pipe(takeUntil(this.destroyed$))
       .subscribe()
   }
