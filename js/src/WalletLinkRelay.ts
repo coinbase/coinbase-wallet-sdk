@@ -357,7 +357,7 @@ export class WalletLinkRelay {
     }
 
     const width = 320
-    const height = 480
+    const height = 520
     const left = Math.floor(window.outerWidth / 2 - width / 2 + window.screenX)
     const top = Math.floor(window.outerHeight / 2 - height / 2 + window.screenY)
 

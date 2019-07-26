@@ -16,7 +16,8 @@ cssRule("html", {
 
 cssRule("body", {
   fontFamily:
-    '-apple-system, BlinkMacSystemFont, "Helvetica Neue", "Arial", sans-serif',
+    `-apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", ` +
+    `"Arial", sans-serif`,
   margin: 0
 })
 

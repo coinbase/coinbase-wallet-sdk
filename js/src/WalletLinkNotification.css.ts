@@ -78,7 +78,9 @@ export default `#_WalletLinkNotifications,
   empty-cells: show;
   float: none;
   font: normal;
-  font-family: sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue",
+    Arial, sans-serif;
   font-size: medium;
   font-style: normal;
   font-variant: normal;
