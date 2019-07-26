@@ -5,7 +5,6 @@ import QRCode from "qrcode.react"
 import querystring from "querystring"
 import React from "react"
 import { style } from "typestyle"
-import { colors } from "../../colors"
 import { routes } from "../../routes"
 
 const styles = {
@@ -48,7 +47,7 @@ export class SessionQRCode extends React.PureComponent<Props> {
           renderAs="svg"
           size={224}
           bgColor="white"
-          fgColor={colors.primary}
+          fgColor="black"
         />
         <input className={styles.qrUrl} type="hidden" value={url} readOnly />
       </div>
