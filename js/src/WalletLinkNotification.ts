@@ -2,8 +2,8 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator"
-
-const css = require("./WalletLinkNotification.css").default
+import chevronSvg from "./images/chevronSvg"
+import css from "./WalletLinkNotificationCss"
 
 const containerElId = "_WalletLinkNotifications"
 const elClassName = "_WalletLinkNotification"
@@ -18,10 +18,6 @@ const actionsElClassName = "_WalletLinkNotificationActions"
 const actionElClassName = "_WalletLinkNotificationAction"
 const buttonInfoElClassName = "_WalletLinkNotificationButtonInfo"
 const buttonElClassName = "_WalletLinkNotificationButton"
-
-const images = {
-  chevron: require("./images/chevron.svg")
-}
 
 export interface WalletLinkNotificationOptions {
   message?: string
@@ -127,7 +123,7 @@ export class WalletLinkNotification {
 
       if (this.onClickButton1 || this.onClickButton2 || this.onClickButton3) {
         const chevronEl = document.createElement("img")
-        chevronEl.src = images.chevron
+        chevronEl.src = chevronSvg
         chevronEl.alt = "Expand"
         chevronEl.className = chevronElClassName
         contentEl.appendChild(chevronEl)

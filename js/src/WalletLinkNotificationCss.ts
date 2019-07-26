@@ -1,7 +1,8 @@
 // Copyright (c) 2018-2019 Coinbase, Inc. <https://coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-export default `#_WalletLinkNotifications,
+export default `
+#_WalletLinkNotifications,
 #_WalletLinkNotifications * {
   animation: none;
   animation-delay: 0;
