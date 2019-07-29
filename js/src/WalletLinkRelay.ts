@@ -63,8 +63,6 @@ type ResponseCallback = (response: Web3Response) => void
 
 export interface WalletLinkRelayOptions {
   walletLinkUrl: string
-  appName: string
-  appLogoUrl: string
 }
 
 export class WalletLinkRelay {
@@ -80,15 +78,13 @@ export class WalletLinkRelay {
   private popupWindow: Window | null = null
   private sessionId: string | null = null
 
-  private appName: string
-  private appLogoUrl: string
+  private appName = ""
+  private appLogoUrl: string | null = null
   private linked = false
   private localStorageBlocked = false
 
   constructor(options: Readonly<WalletLinkRelayOptions>) {
     this.walletLinkUrl = options.walletLinkUrl
-    this.appName = options.appName
-    this.appLogoUrl = options.appLogoUrl
 
     const u = url.parse(this.walletLinkUrl)
     this.walletLinkOrigin = `${u.protocol}//${u.host}`
@@ -99,7 +95,7 @@ export class WalletLinkRelay {
     this.sessionId = this.getStorageItem(LOCAL_STORAGE_SESSION_ID_KEY) || null
   }
 
-  public setAppInfo(appName: string, appLogoUrl: string): void {
+  public setAppInfo(appName: string, appLogoUrl: string | null): void {
     this.appName = appName
     this.appLogoUrl = appLogoUrl
   }
@@ -144,7 +140,7 @@ export class WalletLinkRelay {
       method: Web3Method.requestEthereumAccounts,
       params: {
         appName: this.appName,
-        appLogoUrl: this.appLogoUrl
+        appLogoUrl: this.appLogoUrl || null
       }
     })
   }

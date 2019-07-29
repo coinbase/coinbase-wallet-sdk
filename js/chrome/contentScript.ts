@@ -49,7 +49,7 @@ function chromeMain(): void {
       window.web3 = web3
 
       window.addEventListener('load', _ => {
-        walletLink.setAppInfo({ appName: document.title })
+        walletLink.setAppInfo(document.title, null)
       }, false)
     })()
   `

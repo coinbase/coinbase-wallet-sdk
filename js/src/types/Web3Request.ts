@@ -22,7 +22,7 @@ export type RequestEthereumAccountsRequest = BaseWeb3Request<
   Web3Method.requestEthereumAccounts,
   {
     appName: string
-    appLogoUrl: string
+    appLogoUrl: string | null
   }
 >
 

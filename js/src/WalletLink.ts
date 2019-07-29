@@ -14,25 +14,22 @@ const WALLETLINK_VERSION =
 
 export interface WalletLinkOptions {
   appName?: string
-  appLogoUrl?: string
+  appLogoUrl?: string | null
   walletLinkUrl?: string
 }
 
 export class WalletLink {
   public static VERSION = WALLETLINK_VERSION
 
-  private _appName: string
-  private _appLogoUrl: string
+  private _appName = ""
+  private _appLogoUrl: string | null = null
   private _relay: WalletLinkRelay
 
   constructor(options: Readonly<WalletLinkOptions>) {
-    this._appName = options.appName || "DApp"
-    this._appLogoUrl = options.appLogoUrl || getFavicon()
     this._relay = new WalletLinkRelay({
-      appName: this._appName,
-      appLogoUrl: this._appLogoUrl,
       walletLinkUrl: options.walletLinkUrl || WALLETLINK_URL
     })
+    this.setAppInfo(options.appName, options.appLogoUrl)
     WalletLinkNotification.injectContainer()
     this._relay.injectIframe()
   }
@@ -49,15 +46,16 @@ export class WalletLink {
   }
 
   public setAppInfo(
-    info: { appName?: string; appLogoUrl?: string } = {}
+    appName: string | undefined,
+    appLogoUrl: string | null | undefined
   ): void {
-    this._appName = info.appName || "DApp"
-    this._appLogoUrl = info.appLogoUrl || getFavicon()
+    this._appName = appName || "DApp"
+    this._appLogoUrl = appLogoUrl || getFavicon()
     this._relay.setAppInfo(this._appName, this._appLogoUrl)
   }
 }
 
-function getFavicon(): string {
+function getFavicon(): string | null {
   const el =
     document.querySelector('link[sizes="192x192"]') ||
     document.querySelector('link[sizes="180x180"]') ||
@@ -67,7 +65,7 @@ function getFavicon(): string {
   const { protocol, host } = document.location
   const href = el ? el.getAttribute("href") : null
   if (!href || href.startsWith("javascript:")) {
-    return ""
+    return null
   }
   if (
     href.startsWith("http://") ||
