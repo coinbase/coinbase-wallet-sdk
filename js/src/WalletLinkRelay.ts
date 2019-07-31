@@ -41,6 +41,7 @@ import {
   Web3ResponseMessage
 } from "./types/Web3ResponseMessage"
 import { bigIntStringFromBN, hexStringFromBuffer } from "./util"
+import * as walletLinkBlockedDialog from "./walletLinkBlockedDialog"
 import {
   WalletLinkNotification,
   WalletLinkNotificationOptions
@@ -256,8 +257,13 @@ export class WalletLinkRelay {
     request: T
   ): Promise<U> {
     if (this.localStorageBlocked) {
-      window.alert("Please enable third-party cookies to use WalletLink")
-      return Promise.reject(new Error("third party cookies disabled"))
+      walletLinkBlockedDialog.show(this.walletLinkUrl)
+      return Promise.reject(
+        new Error(
+          "Browser is blocking third-party localStorage usage. To continue, " +
+            "turn off third-party cookie blocking or whitelist WalletLink."
+        )
+      )
     }
     return new Promise((resolve, reject) => {
       if (!this.iframeEl || !this.iframeEl.contentWindow) {
