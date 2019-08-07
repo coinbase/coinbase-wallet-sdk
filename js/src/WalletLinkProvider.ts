@@ -184,6 +184,14 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     return res.result
   }
 
+  public async arbitraryRequest(data: string): Promise<string> {
+    const res = await this._relay.arbitraryRequest(data)
+    if (typeof res.result !== "string") {
+      throw new Error("result was not a string")
+    }
+    return res.result
+  }
+
   public supportsSubscriptions(): boolean {
     return false
   }
@@ -333,6 +341,9 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
       case JSONRPCMethod.eth_signTypedData_v4:
       case JSONRPCMethod.eth_signTypedData:
         return this._eth_signTypedData_v4(params)
+
+      case JSONRPCMethod.walletlink_arbitrary:
+        return this._walletlink_arbitrary(params)
     }
 
     return window
@@ -665,6 +676,18 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     const typedDataJson = JSON.stringify(typedData, null, 2)
 
     return this._signEthereumMessage(message, address, false, typedDataJson)
+  }
+
+  private async _walletlink_arbitrary(
+    params: unknown[]
+  ): Promise<JSONRPCResponse> {
+    const data = params[0]
+    if (typeof data !== "string") {
+      throw new Error("parameter must be a string")
+    }
+
+    const result = await this.arbitraryRequest(data)
+    return { jsonrpc: "2.0", id: 0, result }
   }
 
   private _eth_uninstallFilter(params: unknown[]): boolean {

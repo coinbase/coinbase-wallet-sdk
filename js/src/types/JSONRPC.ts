@@ -22,6 +22,7 @@ export enum JSONRPCMethod {
   eth_signTypedData_v3 = "eth_signTypedData_v3",
   eth_signTypedData_v4 = "eth_signTypedData_v4",
   eth_signTypedData = "eth_signTypedData",
+  walletlink_arbitrary = "walletlink_arbitrary",
 
   // asynchronous filter methods
   eth_newFilter = "eth_newFilter",

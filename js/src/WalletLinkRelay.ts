@@ -15,6 +15,7 @@ import { isSessionIdResponseMessage } from "./types/SessionIdResponseMessage"
 import { isUnlinkedMessage } from "./types/UnlinkedMessage"
 import { Web3Method } from "./types/Web3Method"
 import {
+  ArbitraryRequest,
   EthereumAddressFromSignedMessageRequest,
   RequestEthereumAccountsRequest,
   ScanQRCodeRequest,
@@ -26,6 +27,7 @@ import {
 import { Web3RequestCanceledMessage } from "./types/Web3RequestCanceledMessage"
 import { Web3RequestMessage } from "./types/Web3RequestMessage"
 import {
+  ArbitraryResponse,
   ErrorResponse,
   EthereumAddressFromSignedMessageResponse,
   isRequestEthereumAccountsResponse,
@@ -252,6 +254,13 @@ export class WalletLinkRelay {
     return this.sendRequest<ScanQRCodeRequest, ScanQRCodeResponse>({
       method: Web3Method.scanQRCode,
       params: { regExp }
+    })
+  }
+
+  public arbitraryRequest(data: string): Promise<ArbitraryResponse> {
+    return this.sendRequest<ArbitraryRequest, ArbitraryResponse>({
+      method: Web3Method.arbitrary,
+      params: { data }
     })
   }
 

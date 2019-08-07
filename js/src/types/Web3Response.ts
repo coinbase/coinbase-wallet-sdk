@@ -57,6 +57,10 @@ export type ScanQRCodeResponse = BaseWeb3Response<
   string // scanned string
 >
 
+export type ArbitraryResponse = BaseWeb3Response<
+  string // response data
+>
+
 export type Web3Response =
   | ErrorResponse
   | RequestEthereumAccountsResponse
@@ -65,3 +69,4 @@ export type Web3Response =
   | SubmitEthereumTransactionResponse
   | EthereumAddressFromSignedMessageResponse
   | ScanQRCodeResponse
+  | ArbitraryResponse

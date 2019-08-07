@@ -7,5 +7,6 @@ export enum Web3Method {
   signEthereumTransaction = "signEthereumTransaction",
   submitEthereumTransaction = "submitEthereumTransaction",
   ethereumAddressFromSignedMessage = "ethereumAddressFromSignedMessage",
-  scanQRCode = "scanQRCode"
+  scanQRCode = "scanQRCode",
+  arbitrary = "arbitrary"
 }

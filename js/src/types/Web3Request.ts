@@ -75,6 +75,13 @@ export type ScanQRCodeRequest = BaseWeb3Request<
   }
 >
 
+export type ArbitraryRequest = BaseWeb3Request<
+  Web3Method.arbitrary,
+  {
+    data: string
+  }
+>
+
 export type Web3Request =
   | RequestEthereumAccountsRequest
   | SignEthereumMessageRequest
@@ -82,3 +89,4 @@ export type Web3Request =
   | SubmitEthereumTransactionRequest
   | EthereumAddressFromSignedMessageRequest
   | ScanQRCodeRequest
+  | ArbitraryRequest
