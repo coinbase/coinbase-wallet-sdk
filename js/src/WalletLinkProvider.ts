@@ -74,6 +74,14 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     return true
   }
 
+  public get host(): string {
+    return this._jsonRpcUrl
+  }
+
+  public get connected(): boolean {
+    return true
+  }
+
   public isConnected(): boolean {
     return true
   }
@@ -173,6 +181,22 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
       throw new Error("result was not a string")
     }
     return res.result
+  }
+
+  public supportsSubscriptions(): boolean {
+    return false
+  }
+
+  public subscribe(): void {
+    throw new Error("Subscriptions are not supported")
+  }
+
+  public unsubscribe(): void {
+    throw new Error("Subscriptions are not supported")
+  }
+
+  public disconnect(): boolean {
+    return true
   }
 
   private _send = this.send

@@ -16,6 +16,11 @@ export interface Web3Provider {
     request: JSONRPCRequest[],
     callback: Callback<JSONRPCResponse[]>
   ): void
+
+  host: string
+  connected: boolean
+  supportsSubscriptions(): boolean
+  disconnect(): boolean
 }
 
 export enum ProviderErrorCode {
