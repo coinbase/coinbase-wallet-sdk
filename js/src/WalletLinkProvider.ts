@@ -382,6 +382,12 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     return false
   }
 
+  private _ensureKnownAddress(addressString: string): void {
+    if (!this._isKnownAddress(addressString)) {
+      throw new Error("Unknown Ethereum address")
+    }
+  }
+
   private _prepareTransactionParams(tx: {
     from?: unknown
     to?: unknown
@@ -397,9 +403,9 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     if (!fromAddress) {
       throw new Error("Ethereum address is unavailable")
     }
-    if (!this._isKnownAddress(fromAddress)) {
-      throw new Error("Unknown Ethereum address")
-    }
+
+    this._ensureKnownAddress(fromAddress)
+
     const toAddress = tx.to ? ensureAddressString(tx.to) : null
     const weiValue = tx.value != null ? ensureBN(tx.value) : new BN(0)
     const data = tx.data ? ensureBuffer(tx.data) : Buffer.alloc(0)
@@ -424,6 +430,56 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     if (this._addresses.length === 0) {
       throw new ProviderError("Unauthorized", ProviderErrorCode.UNAUTHORIZED)
     }
+  }
+
+  private _throwUnsupportedMethodError(): Promise<JSONRPCResponse> {
+    throw new ProviderError(
+      "Unsupported method",
+      ProviderErrorCode.UNSUPPORTED_METHOD
+    )
+  }
+
+  private async _signEthereumMessage(
+    message: Buffer,
+    address: AddressString,
+    addPrefix: boolean,
+    typedDataJson?: string | null
+  ): Promise<JSONRPCResponse> {
+    this._ensureKnownAddress(address)
+
+    try {
+      const res = await this._relay.signEthereumMessage(
+        message,
+        address,
+        addPrefix,
+        typedDataJson
+      )
+      return { jsonrpc: "2.0", id: 0, result: res.result }
+    } catch (err) {
+      if (
+        typeof err.message === "string" &&
+        err.message.match(/(denied|rejected)/i)
+      ) {
+        throw new ProviderError(
+          "User denied message signature",
+          ProviderErrorCode.USER_DENIED_REQUEST_SIGNATURE
+        )
+      }
+      throw err
+    }
+  }
+
+  private async _ethereumAddressFromSignedMessage(
+    message: Buffer,
+    signature: Buffer,
+    addPrefix: boolean
+  ): Promise<JSONRPCResponse> {
+    const res = await this._relay.ethereumAddressFromSignedMessage(
+      message,
+      signature,
+      addPrefix
+    )
+    return { jsonrpc: "2.0", id: 0, result: res.result }
   }
 
   private _eth_accounts(): string[] {
@@ -468,80 +524,33 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     return { jsonrpc: "2.0", id: 0, result: this._addresses }
   }
 
-  private async _eth_sign(params: unknown[]): Promise<JSONRPCResponse> {
+  private _eth_sign(params: unknown[]): Promise<JSONRPCResponse> {
     this._requireAuthorization()
-    const message = ensureBuffer(params[1])
     const address = ensureAddressString(params[0])
+    const message = ensureBuffer(params[1])
 
-    if (!this._isKnownAddress(address)) {
-      throw new Error("Unknown Ethereum address")
-    }
-
-    try {
-      const res = await this._relay.signEthereumMessage(message, address, false)
-      return { jsonrpc: "2.0", id: 0, result: res.result }
-    } catch (err) {
-      if (
-        typeof err.message === "string" &&
-        err.message.match(/(denied|rejected)/i)
-      ) {
-        throw new ProviderError(
-          "User denied message signature",
-          ProviderErrorCode.USER_DENIED_REQUEST_SIGNATURE
-        )
-      }
-      throw err
-    }
+    return this._signEthereumMessage(message, address, false)
   }
 
-  private async _eth_ecRecover(params: unknown[]): Promise<JSONRPCResponse> {
+  private _eth_ecRecover(params: unknown[]): Promise<JSONRPCResponse> {
     const message = ensureBuffer(params[0])
     const signature = ensureBuffer(params[1])
-    const res = await this._relay.ethereumAddressFromSignedMessage(
-      message,
-      signature,
-      false
-    )
-    return { jsonrpc: "2.0", id: 0, result: res.result }
+    return this._ethereumAddressFromSignedMessage(message, signature, false)
   }
 
-  private async _personal_sign(params: unknown[]): Promise<JSONRPCResponse> {
+  private _personal_sign(params: unknown[]): Promise<JSONRPCResponse> {
     this._requireAuthorization()
     const message = ensureBuffer(params[0])
     const address = ensureAddressString(params[1])
 
-    if (!this._isKnownAddress(address)) {
-      throw new Error("Unknown Ethereum address")
-    }
-
-    try {
-      const res = await this._relay.signEthereumMessage(message, address, true)
-      return { jsonrpc: "2.0", id: 0, result: res.result }
-    } catch (err) {
-      if (
-        typeof err.message === "string" &&
-        err.message.match(/(denied|rejected)/i)
-      ) {
-        throw new ProviderError(
-          "User denied message signature",
-          ProviderErrorCode.USER_DENIED_REQUEST_SIGNATURE
-        )
-      }
-      throw err
-    }
+    return this._signEthereumMessage(message, address, true)
   }
 
-  private async _personal_ecRecover(
-    params: unknown[]
-  ): Promise<JSONRPCResponse> {
+  private _personal_ecRecover(params: unknown[]): Promise<JSONRPCResponse> {
     const message = ensureBuffer(params[0])
     const signature = ensureBuffer(params[1])
-    const res = await this._relay.ethereumAddressFromSignedMessage(
-      message,
-      signature,
-      true
-    )
-    return { jsonrpc: "2.0", id: 0, result: res.result }
+
+    return this._ethereumAddressFromSignedMessage(message, signature, true)
   }
 
   private async _eth_signTransaction(
