@@ -32,6 +32,7 @@ export type SignEthereumMessageRequest = BaseWeb3Request<
     message: HexString
     address: AddressString
     addPrefix: boolean
+    typedDataJson: string | null
   }
 >
 

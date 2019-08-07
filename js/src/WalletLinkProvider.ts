@@ -2,6 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 import BN from "bn.js"
+import eip712 from "eth-eip712-util"
 import { EventEmitter } from "events"
 import { FilterPolyfill } from "./FilterPolyfill"
 import { AddressString, Callback, IntNumber } from "./types/common"
@@ -319,6 +320,19 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
 
       case JSONRPCMethod.eth_sendTransaction:
         return this._eth_sendTransaction(params)
+
+      case JSONRPCMethod.eth_signTypedData_v1:
+        return this._eth_signTypedData_v1(params)
+
+      case JSONRPCMethod.eth_signTypedData_v2:
+        return this._throwUnsupportedMethodError()
+
+      case JSONRPCMethod.eth_signTypedData_v3:
+        return this._eth_signTypedData_v3(params)
+
+      case JSONRPCMethod.eth_signTypedData_v4:
+      case JSONRPCMethod.eth_signTypedData:
+        return this._eth_signTypedData_v4(params)
     }
 
     return window
@@ -606,6 +620,51 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
       }
       throw err
     }
+  }
+
+  private async _eth_signTypedData_v1(
+    params: unknown[]
+  ): Promise<JSONRPCResponse> {
+    this._requireAuthorization()
+    const typedData = params[0]
+    const address = ensureAddressString(params[1])
+
+    this._ensureKnownAddress(address)
+
+    const message = eip712.hashForSignTypedDataLegacy({ data: typedData })
+    const typedDataJson = JSON.stringify(typedData, null, 2)
+
+    return this._signEthereumMessage(message, address, false, typedDataJson)
+  }
+
+  private async _eth_signTypedData_v3(
+    params: unknown[]
+  ): Promise<JSONRPCResponse> {
+    this._requireAuthorization()
+    const address = ensureAddressString(params[0])
+    const typedData = params[1]
+
+    this._ensureKnownAddress(address)
+
+    const message = eip712.hashForSignTypedData_v3({ data: typedData })
+    const typedDataJson = JSON.stringify(typedData, null, 2)
+
+    return this._signEthereumMessage(message, address, false, typedDataJson)
+  }
+
+  private async _eth_signTypedData_v4(
+    params: unknown[]
+  ): Promise<JSONRPCResponse> {
+    this._requireAuthorization()
+    const address = ensureAddressString(params[0])
+    const typedData = params[1]
+
+    this._ensureKnownAddress(address)
+
+    const message = eip712.hashForSignTypedData_v4({ data: typedData })
+    const typedDataJson = JSON.stringify(typedData, null, 2)
+
+    return this._signEthereumMessage(message, address, false, typedDataJson)
   }
 
   private _eth_uninstallFilter(params: unknown[]): boolean {

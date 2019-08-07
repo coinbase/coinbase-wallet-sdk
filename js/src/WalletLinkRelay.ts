@@ -149,7 +149,8 @@ export class WalletLinkRelay {
   public signEthereumMessage(
     message: Buffer,
     address: AddressString,
-    addPrefix: boolean
+    addPrefix: boolean,
+    typedDataJson?: string | null
   ): Promise<SignEthereumMessageResponse> {
     return this.sendRequest<
       SignEthereumMessageRequest,
@@ -159,7 +160,8 @@ export class WalletLinkRelay {
       params: {
         message: hexStringFromBuffer(message, true),
         address,
-        addPrefix
+        addPrefix,
+        typedDataJson: typedDataJson || null
       }
     })
   }

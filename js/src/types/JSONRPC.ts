@@ -17,7 +17,11 @@ export enum JSONRPCMethod {
   eth_signTransaction = "eth_signTransaction",
   eth_sendRawTransaction = "eth_sendRawTransaction",
   eth_sendTransaction = "eth_sendTransaction",
-  // TODO: eth_signTypedData = 'eth_signTypedData',
+  eth_signTypedData_v1 = "eth_signTypedData_v1",
+  eth_signTypedData_v2 = "eth_signTypedData_v2",
+  eth_signTypedData_v3 = "eth_signTypedData_v3",
+  eth_signTypedData_v4 = "eth_signTypedData_v4",
+  eth_signTypedData = "eth_signTypedData",
 
   // asynchronous filter methods
   eth_newFilter = "eth_newFilter",
