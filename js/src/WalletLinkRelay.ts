@@ -84,7 +84,9 @@ export class WalletLinkRelay {
   private appName = ""
   private appLogoUrl: string | null = null
   private linked = false
+  private iframeLoaded = false
   private localStorageBlocked = false
+  private requestsPendingIframeLoad: IPCMessage[] = []
 
   constructor(options: Readonly<WalletLinkRelayOptions>) {
     this.walletLinkUrl = options.walletLinkUrl
@@ -120,9 +122,19 @@ export class WalletLinkRelay {
     iframeEl.style.right = "0"
     this.iframeEl = iframeEl
 
-    iframeEl.addEventListener("load", this.handleIframeLoad, false)
     window.addEventListener("message", this.handleMessage, false)
     window.addEventListener("beforeunload", this.handleBeforeUnload, false)
+
+    const onIframeLoad = () => {
+      iframeEl.removeEventListener("load", onIframeLoad, false)
+      this.iframeLoaded = true
+      this.postIPCMessage(SessionIdRequestMessage())
+      this.requestsPendingIframeLoad.forEach(request => {
+        this.postIPCMessage(request)
+      })
+      this.requestsPendingIframeLoad = []
+    }
+    iframeEl.addEventListener("load", onIframeLoad, false)
 
     document.documentElement.appendChild(iframeEl)
   }
@@ -351,10 +363,13 @@ export class WalletLinkRelay {
   }
 
   private postIPCMessage(message: IPCMessage): void {
-    if (!this.iframeEl || !this.iframeEl.contentWindow) {
-      throw new Error("WalletLink iframe is not initialized")
+    if (!this.iframeLoaded) {
+      this.requestsPendingIframeLoad.push(message)
+      return
     }
-    this.iframeEl.contentWindow.postMessage(message, this.walletLinkOrigin)
+    if (this.iframeEl && this.iframeEl.contentWindow) {
+      this.iframeEl.contentWindow.postMessage(message, this.walletLinkOrigin)
+    }
   }
 
   private openPopupWindow(path: string): void {
@@ -408,11 +423,6 @@ export class WalletLinkRelay {
       callback(message.response)
       WalletLinkRelay.callbacks.delete(message.id)
     }
-  }
-
-  @bind
-  private handleIframeLoad(_evt: Event): void {
-    this.postIPCMessage(SessionIdRequestMessage())
   }
 
   @bind
