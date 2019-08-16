@@ -18,12 +18,14 @@ export class ScopedLocalStorage {
 
   public clear(): void {
     const prefix = this.scopedKey("")
+    const keysToRemove: string[] = []
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i)
       if (typeof key === "string" && key.startsWith(prefix)) {
-        localStorage.removeItem(key)
+        keysToRemove.push(key)
       }
     }
+    keysToRemove.forEach(key => localStorage.removeItem(key))
   }
 
   private scopedKey(key: string): string {

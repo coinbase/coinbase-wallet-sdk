@@ -425,6 +425,11 @@ export class WalletLinkRelay {
     }
   }
 
+  private resetAndReload(): void {
+    this.storage.clear()
+    document.location.reload()
+  }
+
   @bind
   private handleMessage(evt: MessageEvent): void {
     if (evt.origin !== this.walletLinkOrigin) {
@@ -452,8 +457,8 @@ export class WalletLinkRelay {
       const { sessionId } = message
       if (this.sessionId !== null && this.sessionId !== sessionId) {
         // sessionId changed, clear all local data and reload page
-        this.storage.clear()
-        document.location.reload()
+        this.resetAndReload()
+        return
       }
       this.sessionId = sessionId
       this.setStorageItem(LOCAL_STORAGE_SESSION_ID_KEY, sessionId)
@@ -467,7 +472,7 @@ export class WalletLinkRelay {
 
     if (isUnlinkedMessage(message)) {
       this.linked = false
-      document.location.reload()
+      this.resetAndReload()
       return
     }
 
