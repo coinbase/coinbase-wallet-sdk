@@ -32,8 +32,7 @@ export class LinkedPage extends React.PureComponent {
         <h3 className={styles.title}>Authorize on Wallet App</h3>
 
         <p className={styles.para}>
-          A request to connect your wallet to this app has been pushed to your
-          phone. Check your wallet app to continue.
+          We’ve sent a request to your phone. Check your Wallet app to continue.
         </p>
       </PopUpFrame>
     )
