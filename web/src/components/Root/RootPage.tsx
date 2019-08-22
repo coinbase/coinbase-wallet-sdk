@@ -42,10 +42,17 @@ export class RootPage extends React.PureComponent {
               styles.section.container.right
             )}
           >
-            <video className={styles.hero.video} autoPlay loop>
-              <source src={videos.webm} type="video/webm" />
-              <source src={videos.mp4} type="video/mp4" />
-            </video>
+            <div
+              className={classNames(
+                styles.section.content._,
+                styles.section.content.half
+              )}
+            >
+              <video className={styles.hero.video} autoPlay loop>
+                <source src={videos.webm} type="video/webm" />
+                <source src={videos.mp4} type="video/mp4" />
+              </video>
+            </div>
             <div
               className={classNames(
                 styles.section.content._,
@@ -127,8 +134,8 @@ export class RootPage extends React.PureComponent {
                 See WalletLink on GitHub
               </a>
             </div>
-            <div className={styles.snippet.box}>
-              <div className={styles.snippet.titlebar}>
+            <div className={styles.integrate.snippet.box}>
+              <div className={styles.integrate.snippet.titlebar}>
                 <div />
                 <div />
                 <div />
@@ -141,9 +148,14 @@ export class RootPage extends React.PureComponent {
           className={classNames(styles.section._, styles.section.centered)}
         >
           <div className={styles.section.container._}>
-            <div className={styles.section.content._}>
+            <div
+              className={classNames(
+                styles.section.content._,
+                styles.supportedDApps.content
+              )}
+            >
               <h2>Supported DApps on WalletLink</h2>
-              <ul className={styles.supportedDAppList}>
+              <ul className={styles.supportedDApps.list}>
                 {dapps.map((item, i) => {
                   const [name, logoUrl, url] = item
                   return (
@@ -189,7 +201,12 @@ export class RootPage extends React.PureComponent {
             </ul>
           </div>
         </section>
-        <section className={styles.section._}>
+        <section
+          className={classNames(
+            styles.section._,
+            styles.supportedWallets.section
+          )}
+        >
           <div
             className={classNames(
               styles.section.container._,
@@ -219,7 +236,13 @@ export class RootPage extends React.PureComponent {
                 See Mobile Wallet SDK on GitHub
               </a>
             </div>
-            <div className={styles.supportedWallets.wallets}>
+            <div
+              className={classNames(
+                styles.section.content._,
+                styles.section.content.half,
+                styles.supportedWallets.wallets
+              )}
+            >
               <div className={styles.supportedWallets.walletLogos}>
                 <div
                   className={classNames(
@@ -297,9 +320,9 @@ const SupportedDApp = (props: {
   logoUrl: string
   url: string
 }) => (
-  <li className={styles.supportedDApp}>
+  <li className={styles.supportedDApps.item}>
     <a href={props.url}>
-      <div className={styles.supportedDAppLogo}>
+      <div className={styles.supportedDApps.logo}>
         <img src={props.logoUrl} alt="" />
       </div>
       {props.name}

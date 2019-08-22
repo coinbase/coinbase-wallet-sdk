@@ -29,12 +29,28 @@ export const dapps: Array<[string, string, string]> = [
 export const quotes: Array<[string, string, string, string, string, string]> = [
   // [quote, photoUrl, name, company, personalUrl, companyUrl]
   [
+    "It's a no-brainer upgrade for the user experience.",
+    require("../../images/people/robert.jpg"),
+    "Robert Leshner",
+    "Compound",
+    "https://twitter.com/rleshner",
+    "https://compound.finance/"
+  ],
+  [
+    "Integrating WalletLink was super easy, and took us less than a day!",
+    require("../../images/people/antonio.jpg"),
+    "Antonio Juliano",
+    "dYdX",
+    "https://twitter.com/antoniomjuliano",
+    "https://dydx.exchange/"
+  ],
+  [
     "WalletLink makes accessing DeFi services secure and simple.",
     require("../../images/people/petejkim.jpg"),
     "Pete Kim",
     "Coinbase",
     "http://twitter.com/petejkim",
-    "https://wallet.coinbase.com"
+    "https://wallet.coinbase.com/"
   ]
 ]
 

@@ -1,4 +1,4 @@
-import { style as typestyle } from "typestyle"
+import { media, style as typestyle } from "typestyle"
 
 const colors = {
   primary: "#5e00ff",
@@ -25,15 +25,18 @@ export const styles = {
     fontFamily: "Roboto"
   }),
   section: {
-    _: typestyle({
-      position: "relative",
-      backgroundColor: colors.primary,
-      paddingTop: 56,
-      paddingBottom: 56,
-      paddingLeft: 24,
-      paddingRight: 24,
-      color: "white"
-    }),
+    _: typestyle(
+      {
+        position: "relative",
+        backgroundColor: colors.primary,
+        paddingTop: 56,
+        paddingBottom: 56,
+        paddingLeft: 24,
+        paddingRight: 24,
+        color: "white"
+      },
+      media({ maxWidth: 640 }, { paddingTop: 40, paddingBottom: 40 })
+    ),
     alternate: typestyle({
       backgroundColor: colors.secondary
     }),
@@ -49,45 +52,70 @@ export const styles = {
         minWidth: 320,
         maxWidth: 1000,
         marginLeft: "auto",
-        marginRight: "auto"
-      }),
-      left: typestyle({
-        display: "flex",
-        flexDirection: "row",
+        marginRight: "auto",
         alignItems: "center",
         justifyContent: "space-between"
       }),
-      right: typestyle({
-        display: "flex",
-        flexDirection: "row-reverse",
-        alignItems: "center",
-        justifyContent: "space-between"
-      })
+      left: typestyle(
+        {
+          display: "flex",
+          flexDirection: "row"
+        },
+        media(
+          { maxWidth: 640 },
+          {
+            flexDirection: "column",
+            alignItems: "center"
+          }
+        )
+      ),
+      right: typestyle(
+        {
+          display: "flex",
+          flexDirection: "row-reverse"
+        },
+        media(
+          { maxWidth: 640 },
+          {
+            flexDirection: "column",
+            alignItems: "center"
+          }
+        )
+      )
     },
     content: {
-      _: typestyle({
-        textAlign: "left",
-        $nest: {
-          h2: {
-            marginTop: 0,
-            marginBottom: 16,
-            fontFamily: "Overpass",
-            fontWeight: "bold",
-            fontSize: 24,
-            lineHeight: 1.02
-          },
-          p: {
-            marginTop: 0,
-            marginBottom: 32,
-            fontSize: 16,
-            lineHeight: 1.7,
-            opacity: 0.8
+      _: typestyle(
+        {
+          textAlign: "left",
+          $nest: {
+            h2: {
+              marginTop: 0,
+              marginBottom: 16,
+              fontFamily: "Overpass",
+              fontWeight: "bold",
+              fontSize: 24,
+              lineHeight: 1.02
+            },
+            p: {
+              marginTop: 0,
+              marginBottom: 32,
+              fontSize: 16,
+              lineHeight: 1.7,
+              opacity: 0.8
+            }
           }
-        }
-      }),
-      half: typestyle({
-        maxWidth: "50%"
-      })
+        },
+        media(
+          { maxWidth: 640 },
+          {
+            $nest: { p: { fontSize: 15 } }
+          }
+        )
+      ),
+      half: typestyle(
+        { maxWidth: "50%" },
+        media({ maxWidth: 640 }, { maxWidth: "initial" })
+      )
     }
   },
   header: {
@@ -121,16 +149,31 @@ export const styles = {
   },
   hero: {
     video: typestyle({
-      maxWidth: "50%"
+      width: "100%"
     }),
-    content: typestyle({
-      maxWidth: 436,
-      $nest: {
-        h2: {
-          fontSize: 40
+    content: typestyle(
+      {
+        maxWidth: 436,
+        $nest: {
+          h2: {
+            fontSize: 40
+          }
         }
-      }
-    })
+      },
+      media(
+        { maxWidth: 640 },
+        {
+          maxWidth: "initial",
+          marginTop: 24,
+          justifyContent: "center",
+          $nest: {
+            h2: {
+              fontSize: 32
+            }
+          }
+        }
+      )
+    )
   },
   lastCTA: typestyle({
     textAlign: "center",
@@ -141,38 +184,47 @@ export const styles = {
     }
   }),
   roundedButton: {
-    _: typestyle({
-      display: "inline-block",
-      fontFamily: "Overpass",
-      fontSize: 16,
-      fontWeight: "bold",
-      color: "white",
-      backgroundColor: colors.primary,
-      borderWidth: 4,
-      borderStyle: "solid",
-      borderColor: "white",
-      paddingTop: 15,
-      paddingBottom: 15,
-      paddingLeft: 24,
-      paddingRight: 24,
-      borderRadius: 28,
-      lineHeight: 1,
-      cursor: "pointer",
-      transition: "opacity .1s, color .1s, background-color .1s",
-      textDecoration: "none",
-      $nest: {
-        "&:focus": {
-          outline: "none"
-        },
-        "&:active": {
-          opacity: 0.6
-        },
-        "&:hover": {
-          backgroundColor: "white",
-          color: colors.primary
+    _: typestyle(
+      {
+        display: "inline-block",
+        fontFamily: "Overpass",
+        fontSize: 16,
+        fontWeight: "bold",
+        color: "white",
+        backgroundColor: colors.primary,
+        borderWidth: 4,
+        borderStyle: "solid",
+        borderColor: "white",
+        paddingTop: 15,
+        paddingBottom: 15,
+        paddingLeft: 24,
+        paddingRight: 24,
+        borderRadius: 28,
+        lineHeight: 1,
+        cursor: "pointer",
+        transition: "opacity .1s, color .1s, background-color .1s",
+        textDecoration: "none",
+        $nest: {
+          "&:focus": {
+            outline: "none"
+          },
+          "&:active": {
+            opacity: 0.6
+          },
+          "&:hover": {
+            backgroundColor: "white",
+            color: colors.primary
+          }
         }
-      }
-    }),
+      },
+      media(
+        { maxWidth: 640 },
+        {
+          display: "block",
+          textAlign: "center"
+        }
+      )
+    ),
     filled: typestyle({
       backgroundColor: "white",
       color: colors.primary,
@@ -201,49 +253,75 @@ export const styles = {
     })
   },
   features: {
-    _: typestyle({
-      position: "relative",
-      paddingTop: 0,
-      paddingBottom: 0,
-      $nest: {
-        ul: {
-          position: "relative",
-          zIndex: 1,
-          listStyle: "none",
-          backgroundColor: "white",
-          borderRadius: 2,
-          color: colors.primary,
-          margin: 0,
-          padding: 0,
-          display: "flex",
-          flexDirection: "row",
-          $nest: {
-            li: {
-              flex: 1,
-              textAlign: "left",
-              padding: 40,
-              $nest: {
-                img: {
-                  width: 32,
-                  height: 32
-                },
-                h3: {
-                  fontSize: 18,
-                  lineHeight: 1.4,
-                  marginTop: 24,
-                  marginBottom: 8
-                },
-                p: {
-                  fontSize: 14,
-                  lineHeight: 1.7,
-                  margin: 0
-                }
+    _: typestyle(
+      {
+        position: "relative",
+        paddingTop: 0,
+        paddingBottom: 0,
+        $nest: {
+          ul: {
+            position: "relative",
+            zIndex: 1,
+            listStyle: "none",
+            backgroundColor: "white",
+            borderRadius: 2,
+            color: colors.primary,
+            margin: 0,
+            padding: 0,
+            display: "flex",
+            flexDirection: "row"
+          },
+          li: {
+            flex: 1,
+            textAlign: "left",
+            padding: 40,
+            $nest: {
+              img: {
+                width: 32,
+                height: 32
+              },
+              h3: {
+                fontSize: 18,
+                lineHeight: 1.4,
+                marginTop: 24,
+                marginBottom: 8
+              },
+              p: {
+                fontSize: 14,
+                lineHeight: 1.7,
+                margin: 0
               }
             }
           }
         }
-      }
-    }),
+      },
+      media(
+        { maxWidth: 640 },
+        {
+          padding: 0,
+          $nest: {
+            ul: {
+              flexDirection: "column",
+              paddingTop: 40,
+              paddingLeft: 0,
+              paddingRight: 0,
+              paddingBottom: 0,
+              borderRadius: 0
+            },
+            li: {
+              paddingTop: 0,
+              paddingLeft: 24,
+              paddingRight: 24,
+              paddingBottom: 32,
+              $nest: {
+                "&:last-of-type": { paddingBottom: 40 },
+                h3: { marginTop: 8 }
+              }
+            }
+          }
+        }
+      )
+    ),
     bg: typestyle({
       position: "absolute",
       height: "50%",
@@ -253,90 +331,138 @@ export const styles = {
       backgroundColor: colors.secondary
     })
   },
-  snippet: {
-    box: typestyle({
-      display: "block",
-      textAlign: "left",
-      background: "white",
-      borderRadius: 2,
-      $nest: {
-        pre: {
-          margin: 0,
-          paddingTop: 16,
-          paddingBottom: 24,
-          paddingLeft: 24,
-          paddingRight: 24,
-          fontFamily: "Roboto Mono",
-          fontSize: 13,
-          color: "black",
+  integrate: {
+    snippet: {
+      box: typestyle(
+        {
+          display: "block",
+          textAlign: "left",
+          background: "white",
+          borderRadius: 2,
+          marginRight: 32,
+          maxWidth: "50%",
           $nest: {
-            ".k": { color: "#d73a49" },
-            ".s": { color: "#032f62" },
-            ".f": { color: "#6f42c1" },
-            ".n": { color: "#005cc5" }
+            pre: {
+              margin: 0,
+              paddingTop: 16,
+              paddingBottom: 24,
+              paddingLeft: 24,
+              paddingRight: 24,
+              fontFamily: "Roboto Mono",
+              fontSize: 13,
+              color: "black",
+              overflow: "scroll",
+              $nest: {
+                ".k": { color: "#d73a49" },
+                ".s": { color: "#032f62" },
+                ".f": { color: "#6f42c1" },
+                ".n": { color: "#005cc5" }
+              }
+            }
+          }
+        },
+        media(
+          { maxWidth: 640 },
+          {
+            width: "100%",
+            maxWidth: "inherit",
+            marginTop: 40,
+            marginRight: 0,
+            $nest: {
+              pre: {
+                paddingTop: 8,
+                paddingBottom: 16,
+                paddingLeft: 16,
+                paddingRight: 16
+              }
+            }
+          }
+        )
+      ),
+      titlebar: typestyle({
+        display: "flex",
+        flexDirection: "row",
+        padding: 8,
+        $nest: {
+          div: {
+            width: 12,
+            height: 12,
+            borderRadius: 6,
+            backgroundColor: "#ccc",
+            marginRight: 4
+          }
+        }
+      })
+    }
+  },
+  supportedDApps: {
+    content: typestyle({
+      $nest: {
+        h2: { margin: 0 }
+      }
+    }),
+    list: typestyle(
+      {
+        listStyle: "none",
+        margin: 0,
+        padding: 0,
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "space-between"
+      },
+      media({ maxWidth: 640 }, { flexWrap: "wrap" })
+    ),
+    item: typestyle({
+      marginTop: 32,
+      textAlign: "center",
+      $nest: {
+        a: {
+          fontSize: 16,
+          fontWeight: "bold",
+          color: "black",
+          textDecoration: "none",
+          $nest: {
+            "&:hover": {
+              textDecoration: "underline"
+            }
           }
         }
       }
     }),
-    titlebar: typestyle({
-      display: "flex",
-      flexDirection: "row",
-      padding: 8,
-      $nest: {
-        div: {
-          width: 12,
-          height: 12,
-          borderRadius: 6,
-          backgroundColor: "#ccc",
-          marginRight: 4
-        }
-      }
-    })
-  },
-  supportedDAppList: typestyle({
-    listStyle: "none",
-    marginTop: 32,
-    marginLeft: 0,
-    marginRight: 0,
-    marginBottom: 0,
-    padding: 0,
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between"
-  }),
-  supportedDApp: typestyle({
-    textAlign: "center",
-    $nest: {
-      a: {
-        fontSize: 16,
-        fontWeight: "bold",
-        color: "black",
-        textDecoration: "none",
+    logo: typestyle(
+      {
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        boxShadow:
+          "0px 16px 24px rgba(0, 0, 0, 0.06), 0px 0px 8px rgba(0, 0, 0, 0.04)",
+        marginBottom: 24,
         $nest: {
-          "&:hover": {
-            textDecoration: "underline"
+          img: {
+            width: 90,
+            height: 90
           }
         }
-      }
-    }
-  }),
-  supportedDAppLogo: typestyle({
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    boxShadow:
-      "0px 16px 24px rgba(0, 0, 0, 0.06), 0px 0px 8px rgba(0, 0, 0, 0.04)",
-    marginBottom: 24,
-    $nest: {
-      img: {
-        width: 90,
-        height: 90
-      }
-    }
-  }),
+      },
+      media(
+        { maxWidth: 640 },
+        {
+          width: 140,
+          height: 140,
+          borderRadius: 70,
+          $nest: {
+            img: {
+              width: 110,
+              height: 110
+            }
+          }
+        }
+      )
+    )
+  },
   inspiringQuote: {
     list: typestyle({
       listStyle: "none",
@@ -346,50 +472,140 @@ export const styles = {
       flexDirection: "column"
     }),
     item: {
-      _: typestyle({
-        width: "60%",
-        textAlign: "left",
-        marginBottom: 24,
-        $nest: {
-          "&:last-of-type": {
-            marginBottom: 0
-          },
-          blockquote: {
-            fontSize: 40,
-            fontWeight: "bold",
-            lineHeight: 1.02,
-            marginTop: 0,
-            marginLeft: 0,
-            marginRight: 0,
-            marginBottom: 24
+      _: typestyle(
+        {
+          width: "65%",
+          textAlign: "left",
+          marginBottom: 24,
+          $nest: {
+            "&:last-of-type": {
+              marginBottom: 0
+            },
+            blockquote: {
+              fontSize: 40,
+              fontFamily: "Overpass",
+              fontWeight: "bold",
+              lineHeight: 1.02,
+              marginTop: 0,
+              marginLeft: 0,
+              marginRight: 0,
+              marginBottom: 24
+            }
           }
-        }
-      }),
+        },
+        media(
+          { maxWidth: 640 },
+          {
+            width: "100%",
+            marginBottom: 40,
+            $nest: {
+              blockquote: {
+                fontSize: 24
+              }
+            }
+          }
+        )
+      ),
       right: typestyle({
         alignSelf: "flex-end",
         textAlign: "right"
       })
     },
     person: {
-      _: typestyle({
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        textAlign: "left",
-        fontSize: 16,
+      _: typestyle(
+        {
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          textAlign: "left",
+          fontSize: 16,
+          $nest: {
+            img: {
+              width: 60,
+              height: 60,
+              borderRadius: 30,
+              marginRight: 20
+            },
+            p: {
+              marginTop: 8,
+              marginBottom: 8,
+              $nest: {
+                a: {
+                  color: "white",
+                  textDecoration: "none",
+                  $nest: {
+                    "&:hover": {
+                      textDecoration: "underline"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        media(
+          { maxWidth: 640 },
+          {
+            fontSize: 14,
+            $nest: {
+              img: {
+                width: 48,
+                height: 48,
+                borderRadius: 24,
+                marginRight: 12
+              }
+            }
+          }
+        )
+      ),
+      right: typestyle({
+        justifyContent: "flex-end"
+      })
+    }
+  },
+  supportedWallets: {
+    section: typestyle({}, media({ maxWidth: 640 }, { padding: 0 })),
+    content: typestyle(
+      { paddingRight: 48 },
+      media(
+        { maxWidth: 640 },
+        {
+          paddingTop: 40,
+          paddingBottom: 40,
+          paddingLeft: 24,
+          paddingRight: 24
+        }
+      )
+    ),
+    whiteBg: typestyle(
+      {
+        backgroundColor: "white",
+        position: "absolute",
+        width: "50%",
+        top: 0,
+        bottom: 0,
+        right: 0
+      },
+      media({ maxWidth: 640 }, { display: "none" })
+    ),
+    wallets: typestyle(
+      {
+        width: "50%",
+        position: "relative",
+        backgroundColor: "white",
+        color: "black",
+        textAlign: "center",
         $nest: {
-          img: {
-            width: 60,
-            height: 60,
-            borderRadius: 30,
-            marginRight: 20
-          },
-          p: {
-            marginTop: 8,
-            marginBottom: 8,
+          h4: {
+            position: "relative",
+            zIndex: 1,
+            fontSize: 24,
+            fontFamily: "Overpass",
+            marginTop: 24,
+            marginBottom: 0,
             $nest: {
               a: {
-                color: "white",
+                color: colors.cbBlue,
                 textDecoration: "none",
                 $nest: {
                   "&:hover": {
@@ -398,57 +614,24 @@ export const styles = {
                 }
               }
             }
+          },
+          p: {
+            margin: 0
           }
         }
-      }),
-      right: typestyle({
-        justifyContent: "flex-end"
-      })
-    }
-  },
-  supportedWallets: {
-    content: typestyle({
-      paddingRight: 48
-    }),
-    whiteBg: typestyle({
-      backgroundColor: "white",
-      position: "absolute",
-      width: "50%",
-      top: 0,
-      bottom: 0,
-      right: 0
-    }),
-    wallets: typestyle({
-      width: "50%",
-      position: "relative",
-      backgroundColor: "white",
-      color: "black",
-      textAlign: "center",
-      $nest: {
-        h4: {
-          position: "relative",
-          zIndex: 1,
-          fontSize: 24,
-          fontFamily: "Overpass",
-          marginTop: 24,
-          marginBottom: 0,
-          $nest: {
-            a: {
-              color: colors.cbBlue,
-              textDecoration: "none",
-              $nest: {
-                "&:hover": {
-                  textDecoration: "underline"
-                }
-              }
-            }
-          }
-        },
-        p: {
-          margin: 0
+      },
+      media(
+        { maxWidth: 640 },
+        {
+          width: "100%",
+          paddingTop: 40,
+          paddingBottom: 40,
+          paddingLeft: 24,
+          paddingRight: 24,
+          overflow: "hidden"
         }
-      }
-    }),
+      )
+    ),
     walletLogos: typestyle({
       position: "relative",
       display: "flex",
