@@ -1,6 +1,6 @@
 {
-  "name": "WalletLinkHelper",
-  "version": "0.0.1",
+  "name": "WalletLinkDevHelper",
+  "version": "1.0.0",
   "manifest_version": 2,
   "description": "Injects WalletLink",
   "homepage_url": "https://wallet.coinbase.com/",
