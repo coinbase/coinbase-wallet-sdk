@@ -1,12 +1,15 @@
 // Copyright (c) 2018-2019 Coinbase, Inc. <https://coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
+import bind from "bind-decorator"
 import classNames from "classnames"
-import React from "react"
+import React, { MouseEvent } from "react"
 import { dapps, links, quotes, snippet } from "./data"
 import { images, styles, videos } from "./styles"
 
 export class RootPage extends React.PureComponent {
+  public video = React.createRef<HTMLVideoElement>()
+
   public render() {
     return (
       <div className={styles.main}>
@@ -48,7 +51,13 @@ export class RootPage extends React.PureComponent {
                 styles.section.content.half
               )}
             >
-              <video className={styles.hero.video} autoPlay loop>
+              <video
+                className={styles.hero.video}
+                ref={this.video}
+                onClick={this.handleClickVideo}
+                autoPlay
+                loop
+              >
                 <source src={videos.webm} type="video/webm" />
                 <source src={videos.mp4} type="video/mp4" />
               </video>
@@ -313,6 +322,15 @@ export class RootPage extends React.PureComponent {
       </div>
     )
   }
+
+  @bind
+  public handleClickVideo(e: MouseEvent): void {
+    e.preventDefault()
+    const video = this.video.current
+    if (video) {
+      video.play()
+    }
+  }
 }
 
 const SupportedDApp = (props: {
@@ -321,7 +339,7 @@ const SupportedDApp = (props: {
   url: string
 }) => (
   <li className={styles.supportedDApps.item}>
-    <a href={props.url}>
+    <a href={props.url} target="_blank">
       <div className={styles.supportedDApps.logo}>
         <img src={props.logoUrl} alt="" />
       </div>
@@ -355,10 +373,14 @@ const InspiringQuote = (props: {
       <img src={props.photoUrl} alt="" />
       <div>
         <p>
-          <a href={props.personalUrl}>{props.name}</a>
+          <a href={props.personalUrl} target="_blank" rel="noopener noreferrer">
+            {props.name}
+          </a>
         </p>
         <p>
-          <a href={props.companyUrl}>{props.company}</a>
+          <a href={props.companyUrl} target="_blank" rel="noopener noreferrer">
+            {props.company}
+          </a>
         </p>
       </div>
     </div>
