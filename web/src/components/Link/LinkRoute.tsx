@@ -1,10 +1,13 @@
 // Copyright (c) 2018-2019 Coinbase, Inc. <https://coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
+import querystring from "querystring"
 import React from "react"
 import { RouteComponentProps } from "react-router"
 import { fromEvent, Subscription } from "rxjs"
+import { postMessageToParent } from "../../lib/util"
 import { routes } from "../../routes"
+import { LocalStorageBlockedMessage } from "../../WalletLink/types/LocalStorageBlockedMessage"
 import { AppContext } from "../AppContext"
 import { LinkPage } from "./LinkPage"
 
@@ -17,6 +20,13 @@ export class LinkRoute extends React.PureComponent<RouteComponentProps> {
   public componentDidMount() {
     const { mainRepo } = this.context
     const { history } = this.props
+
+    const userSuppliedSessionId = querystring.parse(
+      this.props.location.search.slice(1)
+    ).id
+    if (userSuppliedSessionId && userSuppliedSessionId !== mainRepo.sessionId) {
+      postMessageToParent(LocalStorageBlockedMessage())
+    }
 
     this.subscriptions.add(
       mainRepo.onceLinked$.subscribe(_ => {

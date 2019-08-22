@@ -17,15 +17,9 @@ const classNames = {
   button: `${SELECTOR_PREFIX}Button`
 }
 
-let walletlinkUrl = process.env.WALLETLINK_URL! || "http://www.walletlink.org"
-
-export function show(customWalletLinkUrl?: string): void {
+export function show(): void {
   if (document.querySelector(`#${SELECTOR_PREFIX}`)) {
     return
-  }
-
-  if (customWalletLinkUrl) {
-    walletlinkUrl = customWalletLinkUrl
   }
 
   const wrapperEl = document.createElement("div")
@@ -121,5 +115,8 @@ function handleClickClose(evt: Event): void {
 
 function handleClickButton(evt: Event): void {
   evt.preventDefault()
-  window.open(`${walletlinkUrl}/#/whitelist`, "_blank")
+  window.open(
+    "https://github.com/walletlink/walletlink/wiki/Browser-Troubleshooting",
+    "_blank"
+  )
 }

@@ -47,6 +47,7 @@ export default `
   top: 22px;
   left: 22px;
   transition: opacity 0.25s;
+  cursor: pointer;
 }
 
 #_WalletLinkBlockedDialog ._WalletLinkBlockedDialogClose:active {
@@ -79,10 +80,12 @@ export default `
   padding: 16px;
   background-color: #050f19;
   border-radius: 16px;
-  color: white;
+  color: white !important;
   font-size: 16px;
   cursor: pointer;
   transition: opacity 0.25s;
+  -webkit-appearance: none;
+  -webkit-text-fill-color: white;
 }
 
 #_WalletLinkBlockedDialog ._WalletLinkBlockedDialogButton:active {

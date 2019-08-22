@@ -68,6 +68,10 @@ export interface WalletLinkRelayOptions {
   walletLinkUrl: string
 }
 
+const BLOCKED_LOCAL_STORAGE_ERROR_MESSAGE =
+  "Browser is blocking third-party localStorage usage. To continue, " +
+  "turn off third-party storage blocking or whitelist WalletLink."
+
 export class WalletLinkRelay {
   private static callbacks = new Map<string, ResponseCallback>()
   private static accountRequestCallbackIds = new Set<string>()
@@ -86,7 +90,8 @@ export class WalletLinkRelay {
   private linked = false
   private iframeLoaded = false
   private localStorageBlocked = false
-  private requestsPendingIframeLoad: IPCMessage[] = []
+  private actionsPendingIframeLoad: Array<() => void> = []
+  private actionsPendingSessionId: Array<() => void> = []
 
   constructor(options: Readonly<WalletLinkRelayOptions>) {
     this.walletLinkUrl = options.walletLinkUrl
@@ -112,7 +117,6 @@ export class WalletLinkRelay {
 
     const iframeEl = document.createElement("iframe")
     iframeEl.className = "_WalletLinkBridge"
-    iframeEl.src = `${this.walletLinkUrl}/#/bridge`
     iframeEl.width = "1"
     iframeEl.height = "1"
     iframeEl.style.opacity = "0"
@@ -120,19 +124,22 @@ export class WalletLinkRelay {
     iframeEl.style.position = "absolute"
     iframeEl.style.top = "0"
     iframeEl.style.right = "0"
+    iframeEl.setAttribute(
+      "sandbox",
+      "allow-scripts allow-popups allow-same-origin"
+    )
+    iframeEl.src = `${this.walletLinkUrl}/#/bridge`
     this.iframeEl = iframeEl
 
     window.addEventListener("message", this.handleMessage, false)
     window.addEventListener("beforeunload", this.handleBeforeUnload, false)
 
     const onIframeLoad = () => {
-      iframeEl.removeEventListener("load", onIframeLoad, false)
       this.iframeLoaded = true
+      iframeEl.removeEventListener("load", onIframeLoad, false)
       this.postIPCMessage(SessionIdRequestMessage())
-      this.requestsPendingIframeLoad.forEach(request => {
-        this.postIPCMessage(request)
-      })
-      this.requestsPendingIframeLoad = []
+      this.actionsPendingIframeLoad.forEach(action => action())
+      this.actionsPendingIframeLoad = []
     }
     iframeEl.addEventListener("load", onIframeLoad, false)
 
@@ -280,13 +287,8 @@ export class WalletLinkRelay {
     request: T
   ): Promise<U> {
     if (this.localStorageBlocked) {
-      walletLinkBlockedDialog.show(this.walletLinkUrl)
-      return Promise.reject(
-        new Error(
-          "Browser is blocking third-party localStorage usage. To continue, " +
-            "turn off third-party cookie blocking or whitelist WalletLink."
-        )
-      )
+      walletLinkBlockedDialog.show()
+      return Promise.reject(new Error(BLOCKED_LOCAL_STORAGE_ERROR_MESSAGE))
     }
     return new Promise((resolve, reject) => {
       if (!this.iframeEl || !this.iframeEl.contentWindow) {
@@ -326,7 +328,9 @@ export class WalletLinkRelay {
         request.method === Web3Method.requestEthereumAccounts
 
       if (!this.linked && isRequestAccounts) {
-        const showPopup = () => this.openPopupWindow("/link")
+        const showPopup = () => {
+          this.openPopupWindow(`/link?id=${this.sessionId}`)
+        }
         showPopup()
 
         options.message = "Requesting to connect to your wallet..."
@@ -364,7 +368,9 @@ export class WalletLinkRelay {
 
   private postIPCMessage(message: IPCMessage): void {
     if (!this.iframeLoaded) {
-      this.requestsPendingIframeLoad.push(message)
+      this.actionsPendingIframeLoad.push(() => {
+        this.postIPCMessage(message)
+      })
       return
     }
     if (this.iframeEl && this.iframeEl.contentWindow) {
@@ -373,6 +379,12 @@ export class WalletLinkRelay {
   }
 
   private openPopupWindow(path: string): void {
+    if (!this.sessionId) {
+      this.actionsPendingSessionId.push(() => {
+        this.openPopupWindow(path)
+      })
+      return
+    }
     const popupUrl = `${this.walletLinkUrl}/#${path}`
 
     if (this.popupWindow && this.popupWindow.opener) {
@@ -462,6 +474,9 @@ export class WalletLinkRelay {
       }
       this.sessionId = sessionId
       this.setStorageItem(LOCAL_STORAGE_SESSION_ID_KEY, sessionId)
+
+      this.actionsPendingSessionId.forEach(action => action())
+      this.actionsPendingSessionId = []
       return
     }
 
@@ -478,6 +493,27 @@ export class WalletLinkRelay {
 
     if (isLocalStorageBlockedMessage(message)) {
       this.localStorageBlocked = true
+
+      if (
+        WalletLinkRelay.accountRequestCallbackIds.size > 0 &&
+        this.popupWindow
+      ) {
+        Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach(
+          id =>
+            this.invokeCallback(
+              Web3ResponseMessage({
+                id,
+                response: ErrorResponse(
+                  Web3Method.requestEthereumAccounts,
+                  BLOCKED_LOCAL_STORAGE_ERROR_MESSAGE
+                )
+              })
+            )
+        )
+        WalletLinkRelay.accountRequestCallbackIds.clear()
+        walletLinkBlockedDialog.show()
+        this.closePopupWindow()
+      }
       return
     }
   }

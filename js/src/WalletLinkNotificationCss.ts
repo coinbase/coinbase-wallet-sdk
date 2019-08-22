@@ -180,6 +180,7 @@ export default `
 
 #_WalletLinkNotifications ._WalletLinkNotificationButton {
   color: #1652f0;
+  -webkit-text-fill-color: #1652f0;
   cursor: pointer;
   display: inline;
   margin: 0;
