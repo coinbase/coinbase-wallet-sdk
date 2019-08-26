@@ -1,4 +1,6 @@
-// Copyright (c) 2019 Coinbase, Inc. See LICENSE
+// Copyright (c) 2018-2019 WalletLink.org <https://www.walletlink.org/>
+// Copyright (c) 2018-2019 Coinbase, Inc. <https://www.coinbase.com/>
+// Licensed under the Apache License, version 2.0
 
 package server
 
@@ -10,12 +12,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/CoinbaseWallet/walletlinkd/store/models"
-	"github.com/CoinbaseWallet/walletlinkd/util"
-	"github.com/CoinbaseWallet/walletlinkd/webhook"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"github.com/walletlink/walletlink/store/models"
+	"github.com/walletlink/walletlink/util"
+	"github.com/walletlink/walletlink/webhook"
 )
 
 type jsonMap map[string]interface{}

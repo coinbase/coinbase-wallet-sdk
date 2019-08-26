@@ -1,12 +1,14 @@
-// Copyright (c) 2019 Coinbase, Inc. See LICENSE
+// Copyright (c) 2018-2019 WalletLink.org <https://www.walletlink.org/>
+// Copyright (c) 2018-2019 Coinbase, Inc. <https://www.coinbase.com/>
+// Licensed under the Apache License, version 2.0
 
 package models
 
 import (
 	"fmt"
 
-	"github.com/CoinbaseWallet/walletlinkd/store"
 	"github.com/pkg/errors"
+	"github.com/walletlink/walletlink/store"
 )
 
 // Event - event published by a host or guest

@@ -1,4 +1,6 @@
-// Copyright (c) 2019 Coinbase, Inc. See LICENSE
+// Copyright (c) 2018-2019 WalletLink.org <https://www.walletlink.org/>
+// Copyright (c) 2018-2019 Coinbase, Inc. <https://www.coinbase.com/>
+// Licensed under the Apache License, version 2.0
 
 package server
 
@@ -7,8 +9,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/CoinbaseWallet/walletlinkd/store/models"
 	"github.com/pkg/errors"
+	"github.com/walletlink/walletlink/store/models"
 )
 
 const (

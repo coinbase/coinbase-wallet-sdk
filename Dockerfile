@@ -4,7 +4,7 @@
 
 FROM golang:1.12-alpine as go-builder
 
-WORKDIR /go/src/github.com/CoinbaseWallet/walletlinkd
+WORKDIR /go/src/github.com/walletlink/walletlink
 
 COPY . ./
 
@@ -37,7 +37,7 @@ FROM gcr.io/distroless/base
 
 WORKDIR /app
 
-COPY --from=go-builder /go/src/github.com/CoinbaseWallet/walletlinkd/build/walletlinkd ./
+COPY --from=go-builder /go/src/github.com/walletlink/walletlink/build/walletlinkd ./
 COPY --from=node-builder /app/build/public ./public
 
 # distroless lacks a shell

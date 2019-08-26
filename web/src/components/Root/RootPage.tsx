@@ -1,4 +1,5 @@
-// Copyright (c) 2018-2019 Coinbase, Inc. <https://coinbase.com/>
+// Copyright (c) 2018-2019 WalletLink.org <https://www.walletlink.org/>
+// Copyright (c) 2018-2019 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator"
@@ -339,7 +340,7 @@ const SupportedDApp = (props: {
   url: string
 }) => (
   <li className={styles.supportedDApps.item}>
-    <a href={props.url} target="_blank">
+    <a href={props.url} target="_blank" rel="noopener noreferrer">
       <div className={styles.supportedDApps.logo}>
         <img src={props.logoUrl} alt="" />
       </div>

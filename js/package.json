@@ -19,7 +19,7 @@
   ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "repository": "https://github.com/CoinbaseWallet/walletlink.git",
+  "repository": "https://github.com/walletlink/walletlink.git",
   "author": "Coinbase, Inc.",
   "license": "Apache-2.0",
   "scripts": {

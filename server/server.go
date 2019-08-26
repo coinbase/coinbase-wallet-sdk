@@ -1,4 +1,6 @@
-// Copyright (c) 2019 Coinbase, Inc. See LICENSE
+// Copyright (c) 2018-2019 WalletLink.org <https://www.walletlink.org/>
+// Copyright (c) 2018-2019 Coinbase, Inc. <https://www.coinbase.com/>
+// Licensed under the Apache License, version 2.0
 
 package server
 
@@ -9,11 +11,11 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/CoinbaseWallet/walletlinkd/server/rpc"
-	"github.com/CoinbaseWallet/walletlinkd/store"
-	"github.com/CoinbaseWallet/walletlinkd/util"
-	"github.com/CoinbaseWallet/walletlinkd/webhook"
 	"github.com/gorilla/mux"
+	"github.com/walletlink/walletlink/server/rpc"
+	"github.com/walletlink/walletlink/store"
+	"github.com/walletlink/walletlink/util"
+	"github.com/walletlink/walletlink/webhook"
 )
 
 // Server - server

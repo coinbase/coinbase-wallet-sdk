@@ -1,5 +1,5 @@
 BUILD_TAGS?='walletlinkd'
-CONFIG_PKG="github.com/CoinbaseWallet/walletlinkd/config"
+CONFIG_PKG="github.com/walletlink/walletlink/config"
 GIT_COMMIT="`git rev-parse --short=8 HEAD`"
 VERSION=`cat VERSION`
 BUILD_FLAGS=-ldflags "-X $(CONFIG_PKG).GitCommit=$(GIT_COMMIT) -X $(CONFIG_PKG).Version=$(VERSION)"
