@@ -6,7 +6,7 @@ import React from "react"
 import { MainRepository } from "../repositories/MainRepository"
 
 export const AppContext = React.createContext<{
-  mainRepo: MainRepository
+  mainRepo: MainRepository | null
 }>({
-  mainRepo: null as any // intentional
+  mainRepo: null
 })

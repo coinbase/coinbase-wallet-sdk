@@ -61,6 +61,7 @@ export class MainRepository {
     walletLinkHost.linked$.pipe(takeUntil(this.destroyed$)).subscribe({
       next: linked => {
         if (linked) {
+          session.linked = linked
           this.postIPCMessage(LinkedMessage())
         }
       }
@@ -111,6 +112,10 @@ export class MainRepository {
 
   public get sessionKey() {
     return this.session.key
+  }
+
+  public get sessionLinked() {
+    return this.session.linked
   }
 
   public get linked$() {

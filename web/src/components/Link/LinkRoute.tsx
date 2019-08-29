@@ -22,6 +22,15 @@ export class LinkRoute extends React.PureComponent<RouteComponentProps> {
     const { mainRepo } = this.context
     const { history } = this.props
 
+    if (!mainRepo) {
+      return
+    }
+
+    if (mainRepo.sessionLinked) {
+      history.replace(routes.linked)
+      return
+    }
+
     const userSuppliedSessionId = querystring.parse(
       this.props.location.search.slice(1)
     ).id
@@ -37,7 +46,7 @@ export class LinkRoute extends React.PureComponent<RouteComponentProps> {
 
     this.subscriptions.add(
       fromEvent(window, "unload").subscribe(() => {
-        this.context.mainRepo.denyEthereumAddressesFromOpener()
+        mainRepo.denyEthereumAddressesFromOpener()
       })
     )
   }
@@ -49,13 +58,13 @@ export class LinkRoute extends React.PureComponent<RouteComponentProps> {
   public render() {
     const { mainRepo } = this.context
 
-    return (
+    return mainRepo ? (
       <LinkPage
         webUrl={mainRepo.webUrl}
         serverUrl={mainRepo.serverUrl}
         sessionId={mainRepo.sessionId}
         sessionSecret={mainRepo.sessionSecret}
       />
-    )
+    ) : null
   }
 }

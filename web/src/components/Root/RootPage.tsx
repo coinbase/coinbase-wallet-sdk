@@ -8,10 +8,17 @@ import React, { MouseEvent } from "react"
 import { dapps, links, quotes, snippet } from "./data"
 import { images, styles, videos } from "./styles"
 
-export class RootPage extends React.PureComponent {
+export interface Props {
+  linked: boolean
+  onClickDisconnect: () => void
+}
+
+export class RootPage extends React.PureComponent<Props> {
   public video = React.createRef<HTMLVideoElement>()
 
   public render() {
+    const { linked } = this.props
+
     return (
       <div className={styles.main}>
         <style>
@@ -28,15 +35,25 @@ export class RootPage extends React.PureComponent {
             <h1>
               <a href="/">WalletLink</a>
             </h1>
-            <a
-              className={classNames(
-                styles.roundedButton._,
-                styles.roundedButton.filled
+            <div className={styles.header.buttons}>
+              <a
+                className={classNames(
+                  styles.roundedButton._,
+                  styles.roundedButton.filled
+                )}
+                href={links.githubJsRepo}
+              >
+                Get started
+              </a>
+              {linked && (
+                <button
+                  className={classNames(styles.roundedButton._)}
+                  onClick={this.handleClickDisconnect}
+                >
+                  Disconnect
+                </button>
               )}
-              href={links.githubJsRepo}
-            >
-              Get started
-            </a>
+            </div>
           </div>
         </header>
         <section className={styles.section._}>
@@ -331,6 +348,12 @@ export class RootPage extends React.PureComponent {
     if (video) {
       video.play()
     }
+  }
+
+  @bind
+  public handleClickDisconnect(e: MouseEvent): void {
+    e.preventDefault()
+    this.props.onClickDisconnect()
   }
 }
 

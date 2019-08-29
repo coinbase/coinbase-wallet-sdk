@@ -38,15 +38,13 @@ export class App extends React.PureComponent {
     const { mainRepo } = this
     return (
       <Router history={this.history}>
-        <Route exact path={routes.root} component={RootRoute} />
+        <AppContext.Provider value={{ mainRepo }}>
+          <Route exact path={routes.root} component={RootRoute} />
+          <Route exact path={routes.link} component={LinkRoute} />
+          <Route exact path={routes.linked} component={LinkedRoute} />
+        </AppContext.Provider>
 
-        {mainRepo && (
-          <AppContext.Provider value={{ mainRepo }}>
-            <Route exact path={routes.link} component={LinkRoute} />
-            <Route exact path={routes.linked} component={LinkedRoute} />
-            <Route exact path={routes.reset} component={ResetRoute} />
-          </AppContext.Provider>
-        )}
+        <Route exact path={routes.reset} component={ResetRoute} />
       </Router>
     )
   }

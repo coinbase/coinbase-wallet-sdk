@@ -9,7 +9,6 @@ import { Session } from "../../WalletLink/Session"
 export class ResetRoute extends React.PureComponent<RouteComponentProps> {
   public componentDidMount() {
     Session.clear()
-    window.close()
   }
 
   public render() {

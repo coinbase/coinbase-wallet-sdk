@@ -149,6 +149,13 @@ export const styles = {
           }
         }
       }
+    }),
+    buttons: typestyle({
+      $nest: {
+        button: {
+          marginLeft: 16
+        }
+      }
     })
   },
   hero: {
@@ -194,7 +201,9 @@ export const styles = {
         fontFamily: "Overpass",
         fontSize: 16,
         fontWeight: "bold",
+        "-webkit-appearance": "none",
         color: "white",
+        "-webkit-text-fill-color": "white",
         backgroundColor: colors.primary,
         borderWidth: 4,
         borderStyle: "solid",
@@ -217,7 +226,8 @@ export const styles = {
           },
           "&:hover": {
             backgroundColor: "white",
-            color: colors.primary
+            color: colors.primary,
+            "-webkit-text-fill-color": colors.primary
           }
         }
       },
@@ -232,6 +242,7 @@ export const styles = {
     filled: typestyle({
       backgroundColor: "white",
       color: colors.primary,
+      "-webkit-text-fill-color": colors.primary,
       $nest: {
         "&:focus": {
           outline: "none"
@@ -241,17 +252,20 @@ export const styles = {
         },
         "&:hover": {
           backgroundColor: colors.primary,
-          color: "white"
+          color: "white",
+          "-webkit-text-fill-color": "white"
         }
       }
     }),
     secondary: typestyle({
       color: "white",
+      "-webkit-text-fill-color": "white",
       backgroundColor: colors.secondary,
       $nest: {
         "&:hover": {
           backgroundColor: "white",
-          color: colors.secondary
+          color: colors.secondary,
+          "-webkit-text-fill-color": colors.secondary
         }
       }
     })
