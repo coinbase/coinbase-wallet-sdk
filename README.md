@@ -42,7 +42,7 @@ const ETH_JSONRPC_URL = "https://mainnet.infura.io/v3/<YOUR_INFURA_API_KEY>"
 const CHAIN_ID = 1
 
 // Initialize WalletLink
-export const WalletLink = new WalletLink({
+export const walletLink = new WalletLink({
   appName: APP_NAME,
   appLogoUrl: APP_LOGO_URL
 })
