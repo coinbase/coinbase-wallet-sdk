@@ -10,9 +10,7 @@ const tsConfigPath = (exports.tsConfigPath = path.join(
 module.exports = {
   target: "web",
   entry: [
-    "core-js/shim",
-    "core-js/modules/es7.object.entries",
-    "core-js/modules/es7.object.values",
+    "core-js/stable",
     "regenerator-runtime/runtime",
     "classlist-polyfill",
     "whatwg-fetch",
