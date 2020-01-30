@@ -10,7 +10,6 @@ import { ScopedLocalStorage } from "./ScopedLocalStorage"
 import { AddressString, IntNumber, RegExpString } from "./types/common"
 import { IPCMessage } from "./types/IPCMessage"
 import { isLinkedMessage } from "./types/LinkedMessage"
-import { isLocalStorageBlockedMessage } from "./types/LocalStorageBlockedMessage"
 import { SessionIdRequestMessage } from "./types/SessionIdRequestMessage"
 import { isSessionIdResponseMessage } from "./types/SessionIdResponseMessage"
 import { isUnlinkedMessage } from "./types/UnlinkedMessage"
@@ -44,7 +43,6 @@ import {
   Web3ResponseMessage
 } from "./types/Web3ResponseMessage"
 import { bigIntStringFromBN, hexStringFromBuffer } from "./util"
-import * as walletLinkBlockedDialog from "./walletLinkBlockedDialog"
 
 const LOCAL_STORAGE_SESSION_ID_KEY = "SessionId"
 
@@ -65,10 +63,6 @@ export interface WalletLinkRelayOptions {
   walletLinkUrl: string
 }
 
-const BLOCKED_LOCAL_STORAGE_ERROR_MESSAGE =
-  "Browser is blocking third-party localStorage usage. To continue, " +
-  "turn off third-party storage blocking or whitelist WalletLink."
-
 export class WalletLinkRelay {
   private static callbacks = new Map<string, ResponseCallback>()
   private static accountRequestCallbackIds = new Set<string>()
@@ -88,7 +82,6 @@ export class WalletLinkRelay {
   private appLogoUrl: string | null = null
   private linked = false
   private iframeLoaded = false
-  private localStorageBlocked = false
   private actionsPendingIframeLoad: (() => void)[] = []
   private actionsPendingSessionId: (() => void)[] = []
 
@@ -291,10 +284,6 @@ export class WalletLinkRelay {
   public sendRequest<T extends Web3Request, U extends Web3Response>(
     request: T
   ): Promise<U> {
-    if (this.localStorageBlocked) {
-      walletLinkBlockedDialog.show()
-      return Promise.reject(new Error(BLOCKED_LOCAL_STORAGE_ERROR_MESSAGE))
-    }
     return new Promise((resolve, reject) => {
       if (!this.iframeEl || !this.iframeEl.contentWindow) {
         return reject("iframe is not initialized")
@@ -496,32 +485,6 @@ export class WalletLinkRelay {
     if (isUnlinkedMessage(message)) {
       this.linked = false
       this.resetAndReload()
-      return
-    }
-
-    if (isLocalStorageBlockedMessage(message)) {
-      this.localStorageBlocked = true
-
-      if (
-        WalletLinkRelay.accountRequestCallbackIds.size > 0 &&
-        this.popupWindow
-      ) {
-        Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach(
-          id =>
-            this.invokeCallback(
-              Web3ResponseMessage({
-                id,
-                response: ErrorResponse(
-                  Web3Method.requestEthereumAccounts,
-                  BLOCKED_LOCAL_STORAGE_ERROR_MESSAGE
-                )
-              })
-            )
-        )
-        WalletLinkRelay.accountRequestCallbackIds.clear()
-        walletLinkBlockedDialog.show()
-        this.closePopupWindow()
-      }
       return
     }
   }
