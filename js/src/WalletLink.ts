@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2019 Coinbase, Inc. <https://coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { WalletLinkNotification } from "./WalletLinkNotification"
+import { injectCssReset } from "./cssReset"
 import { WalletLinkProvider } from "./WalletLinkProvider"
 import { WalletLinkRelay } from "./WalletLinkRelay"
 
@@ -30,8 +30,8 @@ export class WalletLink {
       walletLinkUrl: options.walletLinkUrl || WALLETLINK_URL
     })
     this.setAppInfo(options.appName, options.appLogoUrl)
-    WalletLinkNotification.injectContainer()
-    this._relay.injectIframe()
+    this._relay.attach(document.documentElement)
+    injectCssReset()
   }
 
   public makeWeb3Provider(

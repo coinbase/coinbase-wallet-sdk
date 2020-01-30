@@ -5,6 +5,7 @@ import bind from "bind-decorator"
 import BN from "bn.js"
 import crypto from "crypto"
 import url from "url"
+import { Snackbar, SnackbarItemProps } from "./components/Snackbar"
 import { ScopedLocalStorage } from "./ScopedLocalStorage"
 import { AddressString, IntNumber, RegExpString } from "./types/common"
 import { IPCMessage } from "./types/IPCMessage"
@@ -44,10 +45,6 @@ import {
 } from "./types/Web3ResponseMessage"
 import { bigIntStringFromBN, hexStringFromBuffer } from "./util"
 import * as walletLinkBlockedDialog from "./walletLinkBlockedDialog"
-import {
-  WalletLinkNotification,
-  WalletLinkNotificationOptions
-} from "./WalletLinkNotification"
 
 const LOCAL_STORAGE_SESSION_ID_KEY = "SessionId"
 
@@ -80,6 +77,8 @@ export class WalletLinkRelay {
   private readonly walletLinkOrigin: string
   private readonly storage: ScopedLocalStorage
 
+  private readonly snackbar = new Snackbar()
+
   private iframeEl: HTMLIFrameElement | null = null
   private popupUrl: string | null = null
   private popupWindow: Window | null = null
@@ -90,8 +89,8 @@ export class WalletLinkRelay {
   private linked = false
   private iframeLoaded = false
   private localStorageBlocked = false
-  private actionsPendingIframeLoad: Array<() => void> = []
-  private actionsPendingSessionId: Array<() => void> = []
+  private actionsPendingIframeLoad: (() => void)[] = []
+  private actionsPendingSessionId: (() => void)[] = []
 
   constructor(options: Readonly<WalletLinkRelayOptions>) {
     this.walletLinkUrl = options.walletLinkUrl
@@ -110,10 +109,16 @@ export class WalletLinkRelay {
     this.appLogoUrl = appLogoUrl
   }
 
-  public injectIframe(): void {
+  public attach(el: Element): void {
     if (this.iframeEl) {
       throw new Error("iframe already injected!")
     }
+
+    const container = document.createElement("div")
+    container.className = "-walletlink-css-reset"
+    el.appendChild(container)
+
+    this.snackbar.attach(container)
 
     const iframeEl = document.createElement("iframe")
     iframeEl.className = "_WalletLinkBridge"
@@ -143,7 +148,7 @@ export class WalletLinkRelay {
     }
     iframeEl.addEventListener("load", onIframeLoad, false)
 
-    document.documentElement.appendChild(iframeEl)
+    container.appendChild(iframeEl)
   }
 
   public getStorageItem(key: string): string | null {
@@ -294,6 +299,8 @@ export class WalletLinkRelay {
       if (!this.iframeEl || !this.iframeEl.contentWindow) {
         return reject("iframe is not initialized")
       }
+
+      let hideSnackbarItem: (() => void) | null = null
       const id = crypto.randomBytes(8).toString("hex")
 
       const cancel = () => {
@@ -304,24 +311,23 @@ export class WalletLinkRelay {
             response: ErrorResponse(request.method, "User rejected request")
           })
         )
-        if (notification) {
-          notification.hide()
-        }
+        hideSnackbarItem?.()
       }
 
       const reset = () => {
         this.openPopupWindow("/reset")
-        if (notification) {
-          notification.hide()
-        }
+        hideSnackbarItem?.()
       }
 
-      const options: WalletLinkNotificationOptions = {
+      const snackbarProps: SnackbarItemProps = {
         showProgressBar: true,
-        autoExpandAfter: 10000,
-        buttonInfo2: "Made a mistake?",
-        buttonLabel2: "Cancel",
-        onClickButton2: cancel
+        actions: [
+          {
+            info: "Made a mistake?",
+            buttonLabel: "Cancel",
+            onClick: cancel
+          }
+        ]
       }
 
       const isRequestAccounts =
@@ -333,15 +339,19 @@ export class WalletLinkRelay {
         }
         showPopup()
 
-        options.message = "Requesting to connect to your wallet..."
-        options.buttonInfo1 = "Don’t see the popup?"
-        options.buttonLabel1 = "Show window"
-        options.onClickButton1 = showPopup
+        snackbarProps.message = "Requesting to connect to your wallet..."
+        snackbarProps.actions?.unshift({
+          info: "Don’t see the popup?",
+          buttonLabel: "Show window",
+          onClick: showPopup
+        })
       } else {
-        options.message = "Pushed a request to your wallet..."
-        options.buttonInfo3 = "Not receiving requests?"
-        options.buttonLabel3 = "Reconnect"
-        options.onClickButton3 = reset
+        snackbarProps.message = "Pushed a request to your wallet..."
+        snackbarProps.actions?.push({
+          info: "Not receiving requests?",
+          buttonLabel: "Reconnect",
+          onClick: reset
+        })
       }
 
       if (isRequestAccounts) {
@@ -350,17 +360,15 @@ export class WalletLinkRelay {
 
       WalletLinkRelay.callbacks.set(id, response => {
         this.closePopupWindow()
-        if (notification) {
-          notification.hide()
-        }
+        hideSnackbarItem?.()
+
         if (response.errorMessage) {
           return reject(new Error(response.errorMessage))
         }
         resolve(response as U)
       })
 
-      const notification = new WalletLinkNotification(options)
-      notification.show()
+      hideSnackbarItem = this.snackbar.presentItem(snackbarProps)
 
       this.postIPCMessage(Web3RequestMessage({ id, request }))
     })
@@ -454,9 +462,9 @@ export class WalletLinkRelay {
       const { response } = message
 
       if (isRequestEthereumAccountsResponse(response)) {
-        Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach(
-          id => this.invokeCallback({ ...message, id })
-        )
+        Array.from(
+          WalletLinkRelay.accountRequestCallbackIds.values()
+        ).forEach(id => this.invokeCallback({ ...message, id }))
         WalletLinkRelay.accountRequestCallbackIds.clear()
         return
       }

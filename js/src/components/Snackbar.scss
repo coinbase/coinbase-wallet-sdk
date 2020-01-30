@@ -1,0 +1,170 @@
+// Copyright (c) 2018-2020 Coinbase, Inc. <https://coinbase.com/>
+// Licensed under the Apache License, version 2.0
+
+.-walletlink-css-reset {
+  .-walletlink-snackbar {
+    align-items: flex-end;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 2147483647;
+
+    &-item {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0px 16px 24px rgba(0, 0, 0, 0.06),
+        0px 0px 8px rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+      margin: 8px 16px 0 16px;
+      overflow: hidden;
+      text-align: left;
+      transform: translateX(0);
+      transition: opacity 0.25s, transform 0.25s;
+
+      &-content {
+        align-items: center;
+        cursor: pointer;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 8px 8px 8px 16px;
+        user-select: none;
+
+        &-message {
+          color: #000;
+          font-size: 14px;
+          line-height: 1.5;
+        }
+
+        &-chevron {
+          display: block;
+          margin-left: 8px;
+          transition: transform 0.05s;
+        }
+      }
+
+      &-progress-bar {
+        display: block;
+        height: 2px;
+        position: relative;
+
+        &::before {
+          animation: -walletlink-snackbar-progressbar 2s linear infinite;
+          background-image: linear-gradient(
+            to right,
+            rgba(22, 82, 240, 0) 0%,
+            rgba(22, 82, 240, 1) 100%
+          );
+          content: "";
+          height: 100%;
+          left: -100%;
+          position: absolute;
+          width: 100%;
+        }
+      }
+
+      &-actions {
+        display: none;
+        flex-direction: column;
+        border-top: 1px solid #f5f7f8;
+        padding: 2px 16px 8px;
+
+        &-item {
+          margin: 8px 0;
+
+          &-info {
+            color: #888;
+            font-size: 14px;
+            margin: 0 8px 0 0;
+          }
+
+          &-button {
+            -webkit-appearance: none;
+            -webkit-text-fill-color: #1652f0;
+            background: #fff;
+            color: #1652f0;
+            cursor: pointer;
+            display: inline;
+            font-size: 14px;
+            margin: 0;
+            padding: 0;
+            transition: opacity 0.25s;
+
+            &:active {
+              opacity: 0.6;
+            }
+          }
+        }
+      }
+
+      &-hidden {
+        opacity: 0;
+        text-align: left;
+        transform: translateX(25%);
+      }
+
+      &-expanded {
+        .-walletlink-snackbar-item-content-chevron {
+          transform: rotateZ(180deg);
+        }
+
+        .-walletlink-snackbar-item-actions {
+          display: flex;
+        }
+      }
+    }
+  }
+}
+
+@keyframes -walletlink-snackbar-progressbar {
+  0% {
+    left: 0;
+    width: 0%;
+    background-image: linear-gradient(
+      to right,
+      rgba(22, 82, 240, 0) 0%,
+      rgba(22, 82, 240, 1) 100%
+    );
+  }
+
+  25% {
+    left: 0;
+    width: 100%;
+  }
+
+  50% {
+    left: 100%;
+    width: 0%;
+    background-image: linear-gradient(
+      to right,
+      rgba(22, 82, 240, 0) 0%,
+      rgba(22, 82, 240, 1) 100%
+    );
+  }
+
+  50.01% {
+    background-image: linear-gradient(
+      to left,
+      rgba(22, 82, 240, 0) 0%,
+      rgba(22, 82, 240, 1) 100%
+    );
+  }
+
+  75% {
+    left: 0;
+    width: 100%;
+  }
+
+  100% {
+    left: 0;
+    width: 0%;
+    background-image: linear-gradient(
+      to left,
+      rgba(22, 82, 240, 0) 0%,
+      rgba(22, 82, 240, 1) 100%
+    );
+  }
+}
