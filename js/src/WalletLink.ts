@@ -27,7 +27,8 @@ export class WalletLink {
 
   constructor(options: Readonly<WalletLinkOptions>) {
     this._relay = new WalletLinkRelay({
-      walletLinkUrl: options.walletLinkUrl || WALLETLINK_URL
+      walletLinkUrl: options.walletLinkUrl || WALLETLINK_URL,
+      version: WALLETLINK_VERSION
     })
     this.setAppInfo(options.appName, options.appLogoUrl)
     this._relay.attach(document.documentElement)

@@ -5,6 +5,7 @@ import bind from "bind-decorator"
 import BN from "bn.js"
 import crypto from "crypto"
 import url from "url"
+import { LinkDialog } from "./components/LinkDialog"
 import { Snackbar, SnackbarItemProps } from "./components/Snackbar"
 import { ScopedLocalStorage } from "./ScopedLocalStorage"
 import { AddressString, IntNumber, RegExpString } from "./types/common"
@@ -61,6 +62,7 @@ type ResponseCallback = (response: Web3Response) => void
 
 export interface WalletLinkRelayOptions {
   walletLinkUrl: string
+  version: string
 }
 
 export class WalletLinkRelay {
@@ -71,6 +73,7 @@ export class WalletLinkRelay {
   private readonly walletLinkOrigin: string
   private readonly storage: ScopedLocalStorage
 
+  private readonly linkDialog: LinkDialog
   private readonly snackbar = new Snackbar()
 
   private iframeEl: HTMLIFrameElement | null = null
@@ -95,6 +98,7 @@ export class WalletLinkRelay {
     )
 
     this.sessionId = this.getStorageItem(LOCAL_STORAGE_SESSION_ID_KEY) || null
+    this.linkDialog = new LinkDialog({ version: options.version })
   }
 
   public setAppInfo(appName: string, appLogoUrl: string | null): void {
@@ -111,6 +115,7 @@ export class WalletLinkRelay {
     container.className = "-walletlink-css-reset"
     el.appendChild(container)
 
+    this.linkDialog.attach(container)
     this.snackbar.attach(container)
 
     const iframeEl = document.createElement("iframe")
