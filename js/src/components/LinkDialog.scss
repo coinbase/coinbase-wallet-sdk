@@ -59,9 +59,13 @@
           padding: 16px;
           border-radius: 8px;
           box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+          width: 256px;
+          height: 256px;
 
           img {
             display: block;
+            width: 224px;
+            height: 224px;
           }
         }
 

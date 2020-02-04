@@ -16,6 +16,7 @@ export interface WalletLinkOptions {
   appName?: string
   appLogoUrl?: string | null
   walletLinkUrl?: string
+  walletLinkServerUrl?: string
 }
 
 export class WalletLink {

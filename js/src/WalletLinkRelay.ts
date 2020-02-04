@@ -5,14 +5,13 @@ import bind from "bind-decorator"
 import BN from "bn.js"
 import crypto from "crypto"
 import url from "url"
-import { LinkDialog } from "./components/LinkDialog"
+import { LinkFlow } from "./components/LinkFlow"
 import { Snackbar, SnackbarItemProps } from "./components/Snackbar"
 import { ScopedLocalStorage } from "./ScopedLocalStorage"
+import { Session } from "./Session"
 import { AddressString, IntNumber, RegExpString } from "./types/common"
 import { IPCMessage } from "./types/IPCMessage"
 import { isLinkedMessage } from "./types/LinkedMessage"
-import { SessionIdRequestMessage } from "./types/SessionIdRequestMessage"
-import { isSessionIdResponseMessage } from "./types/SessionIdResponseMessage"
 import { isUnlinkedMessage } from "./types/UnlinkedMessage"
 import { Web3Method } from "./types/Web3Method"
 import {
@@ -45,8 +44,6 @@ import {
 } from "./types/Web3ResponseMessage"
 import { bigIntStringFromBN, hexStringFromBuffer } from "./util"
 
-const LOCAL_STORAGE_SESSION_ID_KEY = "SessionId"
-
 export interface EthereumTransactionParams {
   fromAddress: AddressString
   toAddress: AddressString | null
@@ -72,21 +69,20 @@ export class WalletLinkRelay {
   private readonly walletLinkUrl: string
   private readonly walletLinkOrigin: string
   private readonly storage: ScopedLocalStorage
+  private readonly session: Session
 
-  private readonly linkDialog: LinkDialog
+  private readonly linkFlow: LinkFlow
   private readonly snackbar = new Snackbar()
 
   private iframeEl: HTMLIFrameElement | null = null
   private popupUrl: string | null = null
   private popupWindow: Window | null = null
-  private sessionId: string | null = null
 
   private appName = ""
   private appLogoUrl: string | null = null
   private linked = false
   private iframeLoaded = false
   private actionsPendingIframeLoad: (() => void)[] = []
-  private actionsPendingSessionId: (() => void)[] = []
 
   constructor(options: Readonly<WalletLinkRelayOptions>) {
     this.walletLinkUrl = options.walletLinkUrl
@@ -94,11 +90,17 @@ export class WalletLinkRelay {
     const u = url.parse(this.walletLinkUrl)
     this.walletLinkOrigin = `${u.protocol}//${u.host}`
     this.storage = new ScopedLocalStorage(
-      `__WalletLink__:${this.walletLinkOrigin}`
+      `-walletlink:${this.walletLinkOrigin}`
     )
+    this.session =
+      Session.load(this.storage) || new Session(this.storage).save()
 
-    this.sessionId = this.getStorageItem(LOCAL_STORAGE_SESSION_ID_KEY) || null
-    this.linkDialog = new LinkDialog({ version: options.version })
+    this.linkFlow = new LinkFlow({
+      version: options.version,
+      sessionId: this.session.id,
+      sessionSecret: this.session.secret,
+      walletLinkUrl: this.walletLinkUrl
+    })
   }
 
   public setAppInfo(appName: string, appLogoUrl: string | null): void {
@@ -115,7 +117,7 @@ export class WalletLinkRelay {
     container.className = "-walletlink-css-reset"
     el.appendChild(container)
 
-    this.linkDialog.attach(container)
+    this.linkFlow.attach(container)
     this.snackbar.attach(container)
 
     const iframeEl = document.createElement("iframe")
@@ -140,7 +142,6 @@ export class WalletLinkRelay {
     const onIframeLoad = () => {
       this.iframeLoaded = true
       iframeEl.removeEventListener("load", onIframeLoad, false)
-      this.postIPCMessage(SessionIdRequestMessage())
       this.actionsPendingIframeLoad.forEach(action => action())
       this.actionsPendingIframeLoad = []
     }
@@ -329,7 +330,7 @@ export class WalletLinkRelay {
 
       if (!this.linked && isRequestAccounts) {
         const showPopup = () => {
-          this.openPopupWindow(`/link?id=${this.sessionId}`)
+          this.openPopupWindow(`/link?id=${this.session.id}`)
         }
         showPopup()
 
@@ -381,12 +382,6 @@ export class WalletLinkRelay {
   }
 
   private openPopupWindow(path: string): void {
-    if (!this.sessionId) {
-      this.actionsPendingSessionId.push(() => {
-        this.openPopupWindow(path)
-      })
-      return
-    }
     const popupUrl = `${this.walletLinkUrl}/#${path}`
 
     if (this.popupWindow && this.popupWindow.opener) {
@@ -464,21 +459,6 @@ export class WalletLinkRelay {
       }
 
       this.invokeCallback(message)
-      return
-    }
-
-    if (isSessionIdResponseMessage(message)) {
-      const { sessionId } = message
-      if (this.sessionId !== null && this.sessionId !== sessionId) {
-        // sessionId changed, clear all local data and reload page
-        this.resetAndReload()
-        return
-      }
-      this.sessionId = sessionId
-      this.setStorageItem(LOCAL_STORAGE_SESSION_ID_KEY, sessionId)
-
-      this.actionsPendingSessionId.forEach(action => action())
-      this.actionsPendingSessionId = []
       return
     }
 
