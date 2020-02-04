@@ -74,15 +74,11 @@ export class WalletLinkRelay {
   private readonly linkFlow: LinkFlow
   private readonly snackbar = new Snackbar()
 
-  private iframeEl: HTMLIFrameElement | null = null
-  private popupUrl: string | null = null
-  private popupWindow: Window | null = null
-
   private appName = ""
   private appLogoUrl: string | null = null
+  private attached = false
   private linked = false
-  private iframeLoaded = false
-  private actionsPendingIframeLoad: (() => void)[] = []
+  private pendingActions: (() => void)[] = []
 
   constructor(options: Readonly<WalletLinkRelayOptions>) {
     this.walletLinkUrl = options.walletLinkUrl
@@ -109,10 +105,9 @@ export class WalletLinkRelay {
   }
 
   public attach(el: Element): void {
-    if (this.iframeEl) {
-      throw new Error("iframe already injected!")
+    if (this.attached) {
+      throw new Error("WalletLinkRelay is already attached")
     }
-
     const container = document.createElement("div")
     container.className = "-walletlink-css-reset"
     el.appendChild(container)
@@ -120,34 +115,7 @@ export class WalletLinkRelay {
     this.linkFlow.attach(container)
     this.snackbar.attach(container)
 
-    const iframeEl = document.createElement("iframe")
-    iframeEl.className = "_WalletLinkBridge"
-    iframeEl.width = "1"
-    iframeEl.height = "1"
-    iframeEl.style.opacity = "0"
-    iframeEl.style.pointerEvents = "none"
-    iframeEl.style.position = "absolute"
-    iframeEl.style.top = "0"
-    iframeEl.style.right = "0"
-    iframeEl.setAttribute(
-      "sandbox",
-      "allow-scripts allow-popups allow-same-origin"
-    )
-    iframeEl.src = `${this.walletLinkUrl}/#/bridge`
-    this.iframeEl = iframeEl
-
     window.addEventListener("message", this.handleMessage, false)
-    window.addEventListener("beforeunload", this.handleBeforeUnload, false)
-
-    const onIframeLoad = () => {
-      this.iframeLoaded = true
-      iframeEl.removeEventListener("load", onIframeLoad, false)
-      this.actionsPendingIframeLoad.forEach(action => action())
-      this.actionsPendingIframeLoad = []
-    }
-    iframeEl.addEventListener("load", onIframeLoad, false)
-
-    container.appendChild(iframeEl)
   }
 
   public getStorageItem(key: string): string | null {
@@ -291,10 +259,6 @@ export class WalletLinkRelay {
     request: T
   ): Promise<U> {
     return new Promise((resolve, reject) => {
-      if (!this.iframeEl || !this.iframeEl.contentWindow) {
-        return reject("iframe is not initialized")
-      }
-
       let hideSnackbarItem: (() => void) | null = null
       const id = crypto.randomBytes(8).toString("hex")
 
@@ -306,11 +270,6 @@ export class WalletLinkRelay {
             response: ErrorResponse(request.method, "User rejected request")
           })
         )
-        hideSnackbarItem?.()
-      }
-
-      const reset = () => {
-        this.openPopupWindow("/reset")
         hideSnackbarItem?.()
       }
 
@@ -329,23 +288,14 @@ export class WalletLinkRelay {
         request.method === Web3Method.requestEthereumAccounts
 
       if (!this.linked && isRequestAccounts) {
-        const showPopup = () => {
-          this.openPopupWindow(`/link?id=${this.session.id}`)
-        }
-        showPopup()
-
         snackbarProps.message = "Requesting to connect to your wallet..."
-        snackbarProps.actions?.unshift({
-          info: "Don’t see the popup?",
-          buttonLabel: "Show window",
-          onClick: showPopup
-        })
+        this.openLinkFlow()
       } else {
         snackbarProps.message = "Pushed a request to your wallet..."
         snackbarProps.actions?.push({
           info: "Not receiving requests?",
-          buttonLabel: "Reconnect",
-          onClick: reset
+          buttonLabel: "Reset Connection",
+          onClick: this.resetAndReload
         })
       }
 
@@ -354,7 +304,7 @@ export class WalletLinkRelay {
       }
 
       WalletLinkRelay.callbacks.set(id, response => {
-        this.closePopupWindow()
+        this.closeLinkFlow()
         hideSnackbarItem?.()
 
         if (response.errorMessage) {
@@ -369,61 +319,24 @@ export class WalletLinkRelay {
     })
   }
 
+  private openLinkFlow(): void {
+    this.linkFlow.open()
+  }
+
+  private closeLinkFlow(): void {
+    this.linkFlow.close()
+  }
+
   private postIPCMessage(message: IPCMessage): void {
-    if (!this.iframeLoaded) {
-      this.actionsPendingIframeLoad.push(() => {
+    if (!this.linked) {
+      this.pendingActions.push(() => {
         this.postIPCMessage(message)
       })
       return
     }
-    if (this.iframeEl && this.iframeEl.contentWindow) {
-      this.iframeEl.contentWindow.postMessage(message, this.walletLinkOrigin)
-    }
-  }
-
-  private openPopupWindow(path: string): void {
-    const popupUrl = `${this.walletLinkUrl}/#${path}`
-
-    if (this.popupWindow && this.popupWindow.opener) {
-      if (this.popupUrl !== popupUrl) {
-        this.popupWindow.location.href = popupUrl
-        this.popupUrl = popupUrl
-      }
-      this.popupWindow.focus()
-      return
-    }
-
-    const width = 320
-    const height = 520
-    const left = Math.floor(window.outerWidth / 2 - width / 2 + window.screenX)
-    const top = Math.floor(window.outerHeight / 2 - height / 2 + window.screenY)
-
-    this.popupUrl = popupUrl
-    this.popupWindow = window.open(
-      popupUrl,
-      "_blank",
-      [
-        `width=${width}`,
-        `height=${height}`,
-        `left=${left}`,
-        `top=${top}`,
-        "location=yes",
-        "menubar=no",
-        "resizable=no",
-        "status=no",
-        "titlebar=yes",
-        "toolbar=no"
-      ].join(",")
-    )
-  }
-
-  private closePopupWindow(): void {
-    if (this.popupWindow) {
-      this.popupWindow.close()
-      this.popupUrl = null
-      this.popupWindow = null
-    }
-    window.focus()
+    // if (this.iframeEl && this.iframeEl.contentWindow) {
+    //   this.iframeEl.contentWindow.postMessage(message, this.walletLinkOrigin)
+    // }
   }
 
   private invokeCallback(message: Web3ResponseMessage) {
@@ -434,6 +347,7 @@ export class WalletLinkRelay {
     }
   }
 
+  @bind
   private resetAndReload(): void {
     this.storage.clear()
     document.location.reload()
@@ -472,10 +386,5 @@ export class WalletLinkRelay {
       this.resetAndReload()
       return
     }
-  }
-
-  @bind
-  private handleBeforeUnload(_evt: BeforeUnloadEvent): void {
-    this.closePopupWindow()
   }
 }

@@ -17,6 +17,8 @@ export class LinkFlow {
   private readonly sessionSecret: string
   private readonly walletLinkUrl: string
 
+  private isOpen = false
+
   private root: Element | null = null
 
   constructor(options: Readonly<LinkFlowOptions>) {
@@ -30,6 +32,23 @@ export class LinkFlow {
     this.root = document.createElement("div")
     this.root.className = "-walletlink-link-flow-root"
     el.appendChild(this.root)
+    this.render()
+  }
+
+  public open(): void {
+    this.isOpen = true
+    this.render()
+  }
+
+  public close(): void {
+    this.isOpen = false
+    this.render()
+  }
+
+  private render(): void {
+    if (!this.root) {
+      return
+    }
 
     render(
       <LinkDialog
@@ -37,10 +56,9 @@ export class LinkFlow {
         sessionId={this.sessionId}
         sessionSecret={this.sessionSecret}
         walletLinkUrl={this.walletLinkUrl}
+        isOpen={this.isOpen}
       />,
       this.root
     )
   }
-
-  public close(): void {}
 }

@@ -1,7 +1,9 @@
 // Copyright (c) 2018-2020 Coinbase, Inc. <https://coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
+import clsx from "clsx"
 import { FunctionComponent, h } from "preact"
+import { useEffect, useState } from "preact/hooks"
 import css from "./LinkDialog.css"
 import { QRCode } from "./QRCode"
 
@@ -10,28 +12,72 @@ export const LinkDialog: FunctionComponent<{
   sessionId: string
   sessionSecret: string
   walletLinkUrl: string
-}> = props => (
-  <div class="-walletlink-link-dialog-container">
-    <style>{css}</style>
-    <div class="-walletlink-link-dialog-backdrop" />
-    <div class="-walletlink-link-dialog">
-      <div class="-walletlink-link-dialog-box">
-        <div class="-walletlink-link-dialog-box-content">
-          <ScanQRCode
-            sessionId={props.sessionId}
-            sessionSecret={props.sessionSecret}
-            walletLinkUrl={props.walletLinkUrl}
-          />
-        </div>
+  isOpen: boolean
+}> = props => {
+  const [isContainerHidden, setContainerHidden] = useState(!props.isOpen)
+  const [isDialogHidden, setDialogHidden] = useState(!props.isOpen)
 
-        <div class="-walletlink-link-dialog-box-footer">
-          <p>Powered by WalletLink</p>
-          <small>v{props.version}</small>
+  useEffect(() => {
+    const { isOpen } = props
+    const timers = [
+      window.setTimeout(() => {
+        setDialogHidden(!isOpen)
+      }, 10)
+    ]
+
+    if (isOpen) {
+      setContainerHidden(false)
+    } else {
+      timers.push(
+        window.setTimeout(() => {
+          setContainerHidden(true)
+        }, 360)
+      )
+    }
+
+    return () => {
+      timers.forEach(window.clearTimeout)
+    }
+  })
+
+  return (
+    <div
+      class={clsx(
+        "-walletlink-link-dialog-container",
+        isContainerHidden && "-walletlink-link-dialog-container-hidden"
+      )}
+    >
+      <style>{css}</style>
+      <div
+        class={clsx(
+          "-walletlink-link-dialog-backdrop",
+          isDialogHidden && "-walletlink-link-dialog-backdrop-hidden"
+        )}
+      />
+      <div class="-walletlink-link-dialog">
+        <div
+          class={clsx(
+            "-walletlink-link-dialog-box",
+            isDialogHidden && "-walletlink-link-dialog-box-hidden"
+          )}
+        >
+          <div class="-walletlink-link-dialog-box-content">
+            <ScanQRCode
+              sessionId={props.sessionId}
+              sessionSecret={props.sessionSecret}
+              walletLinkUrl={props.walletLinkUrl}
+            />
+          </div>
+
+          <div class="-walletlink-link-dialog-box-footer">
+            <p>Powered by WalletLink</p>
+            <small>v{props.version}</small>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-)
+  )
+}
 
 const ScanQRCode: FunctionComponent<{
   sessionId: string
