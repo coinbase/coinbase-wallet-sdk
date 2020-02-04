@@ -8,6 +8,11 @@
   "rules": {
     "await-promise": false,
     "interface-name": [true, "never-prefix"],
+    "jsx-alignment": false,
+    "jsx-boolean-value": false,
+    "jsx-curly-spacing": false,
+    "jsx-no-multiline-js": false,
+    "jsx-wrap-multiline": false,
     "member-ordering": false,
     "no-console": false,
     "no-empty": false,
@@ -31,8 +36,15 @@
       "ban-keywords",
       "check-format",
       "require-const-for-all-caps"
-    ]
+    ],
+    "rxjs-collapse-imports": true,
+    "rxjs-pipeable-operators-only": true,
+    "rxjs-no-static-observable-methods": true,
+    "rxjs-proper-imports": true
   },
 
-  "rulesDirectory": ["./node_modules/tslint-microsoft-contrib"]
+  "rulesDirectory": [
+    "./node_modules/tslint-microsoft-contrib",
+    "./node_modules/rxjs-tslint"
+  ]
 }
