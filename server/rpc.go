@@ -22,14 +22,12 @@ const (
 func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 	upgrader := &websocket.Upgrader{HandshakeTimeout: handshaketimeout}
 
-	if len(srv.allowedOrigins) > 0 {
-		upgrader.CheckOrigin = func(r *http.Request) bool {
-			origin := r.Header.Get("Origin")
-			if len(origin) == 0 {
-				return true
-			}
-			return srv.allowedOrigins.Contains(origin)
+	upgrader.CheckOrigin = func(r *http.Request) bool {
+		origin := r.Header.Get("Origin")
+		if len(origin) == 0 || len(srv.allowedOrigins) == 0 || srv.allowedOrigins.Contains("*") {
+			return true
 		}
+		return srv.allowedOrigins.Contains(origin)
 	}
 
 	ws, err := upgrader.Upgrade(w, r, nil)
