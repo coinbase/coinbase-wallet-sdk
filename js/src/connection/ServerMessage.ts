@@ -1,0 +1,67 @@
+// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
+// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
+// Licensed under the Apache License, version 2.0
+
+export interface ServerMessage {
+  type: string
+  id?: number
+}
+
+export interface ServerMessageOK extends ServerMessage {
+  type: "OK"
+  id: number
+  sessionId: string
+}
+
+export interface ServerMessageFail extends ServerMessage {
+  type: "Fail"
+  id: number
+  sessionId: string
+  error: string
+}
+
+export interface ServerMessageIsLinkedOK extends ServerMessage {
+  type: "IsLinkedOK"
+  id: number
+  sessionId: string
+  linked: boolean
+  onlineGuests: number
+}
+
+export interface ServerMessageLinked extends ServerMessage {
+  type: "Linked"
+  sessionId: string
+  onlineGuests: number
+}
+
+export interface ServerMessageGetSessionConfigOK extends ServerMessage {
+  type: "GetSessionConfigOK"
+  id: number
+  sessionId: string
+  webhookId: string
+  webhookUrl: string
+  metadata: { [field: string]: string }
+}
+
+export interface ServerMessageSessionConfigUpdated extends ServerMessage {
+  type: "SessionConfigUpdated"
+  sessionId: string
+  webhookId: string
+  webhookUrl: string
+  metadata: { [field: string]: string }
+}
+
+export interface ServerMessagePublishEventOK extends ServerMessage {
+  type: "PublishEventOK"
+  id: number
+  sessionId: string
+  eventId: string
+}
+
+export interface ServerMessageEvent extends ServerMessage {
+  type: "Event"
+  sessionId: string
+  eventId: string
+  event: string
+  data: string
+}

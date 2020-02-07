@@ -7,6 +7,7 @@ import crypto from "crypto"
 import url from "url"
 import { LinkFlow } from "./components/LinkFlow"
 import { Snackbar, SnackbarItemProps } from "./components/Snackbar"
+import { WalletLinkConnection } from "./connection/WalletLinkConnection"
 import { ScopedLocalStorage } from "./ScopedLocalStorage"
 import { Session } from "./Session"
 import { AddressString, IntNumber, RegExpString } from "./types/common"
@@ -70,6 +71,7 @@ export class WalletLinkRelay {
   private readonly walletLinkOrigin: string
   private readonly storage: ScopedLocalStorage
   private readonly session: Session
+  private readonly connection: WalletLinkConnection
 
   private readonly linkFlow: LinkFlow
   private readonly snackbar = new Snackbar()
@@ -90,6 +92,13 @@ export class WalletLinkRelay {
     )
     this.session =
       Session.load(this.storage) || new Session(this.storage).save()
+
+    this.connection = new WalletLinkConnection(
+      this.session.id,
+      this.session.key,
+      this.walletLinkUrl
+    )
+    this.connection.connect()
 
     this.linkFlow = new LinkFlow({
       version: options.version,
@@ -349,6 +358,7 @@ export class WalletLinkRelay {
 
   @bind
   private resetAndReload(): void {
+    this.connection.destroy()
     this.storage.clear()
     document.location.reload()
   }
