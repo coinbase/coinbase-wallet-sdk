@@ -1,20 +1,24 @@
-// Copyright (c) 2018-2019 Coinbase, Inc. <https://coinbase.com/>
+// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
+// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator"
 import BN from "bn.js"
 import crypto from "crypto"
+import { Observable } from "rxjs"
 import url from "url"
-import { LinkFlow } from "./components/LinkFlow"
-import { Snackbar, SnackbarItemProps } from "./components/Snackbar"
-import { WalletLinkConnection } from "./connection/WalletLinkConnection"
-import { ScopedLocalStorage } from "./ScopedLocalStorage"
-import { Session } from "./Session"
-import { AddressString, IntNumber, RegExpString } from "./types/common"
-import { IPCMessage } from "./types/IPCMessage"
-import { isLinkedMessage } from "./types/LinkedMessage"
-import { isUnlinkedMessage } from "./types/UnlinkedMessage"
-import { Web3Method } from "./types/Web3Method"
+import { LinkFlow } from "../components/LinkFlow"
+import { Snackbar, SnackbarItemProps } from "../components/Snackbar"
+import { WalletLinkConnection } from "../connection/WalletLinkConnection"
+import { ScopedLocalStorage } from "../ScopedLocalStorage"
+import { Session } from "../Session"
+import { AddressString, IntNumber, RegExpString } from "../types/common"
+import { bigIntStringFromBN, hexStringFromBuffer } from "../util"
+import * as aes256gcm from "./aes256gcm"
+import { IPCMessage } from "./IPCMessage"
+import { isLinkedMessage } from "./LinkedMessage"
+import { isUnlinkedMessage } from "./UnlinkedMessage"
+import { Web3Method } from "./Web3Method"
 import {
   ArbitraryRequest,
   EthereumAddressFromSignedMessageRequest,
@@ -24,9 +28,9 @@ import {
   SignEthereumTransactionRequest,
   SubmitEthereumTransactionRequest,
   Web3Request
-} from "./types/Web3Request"
-import { Web3RequestCanceledMessage } from "./types/Web3RequestCanceledMessage"
-import { Web3RequestMessage } from "./types/Web3RequestMessage"
+} from "./Web3Request"
+import { Web3RequestCanceledMessage } from "./Web3RequestCanceledMessage"
+import { Web3RequestMessage } from "./Web3RequestMessage"
 import {
   ArbitraryResponse,
   ErrorResponse,
@@ -38,12 +42,11 @@ import {
   SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse,
   Web3Response
-} from "./types/Web3Response"
+} from "./Web3Response"
 import {
   isWeb3ResponseMessage,
   Web3ResponseMessage
-} from "./types/Web3ResponseMessage"
-import { bigIntStringFromBN, hexStringFromBuffer } from "./util"
+} from "./Web3ResponseMessage"
 
 export interface EthereumTransactionParams {
   fromAddress: AddressString
@@ -80,7 +83,6 @@ export class WalletLinkRelay {
   private appLogoUrl: string | null = null
   private attached = false
   private linked = false
-  private pendingActions: (() => void)[] = []
 
   constructor(options: Readonly<WalletLinkRelayOptions>) {
     this.walletLinkUrl = options.walletLinkUrl
@@ -274,7 +276,7 @@ export class WalletLinkRelay {
       const id = crypto.randomBytes(8).toString("hex")
 
       const cancel = () => {
-        this.postIPCMessage(Web3RequestCanceledMessage(id))
+        this.publishWeb3RequestCanceledEvent(id)
         this.invokeCallback(
           Web3ResponseMessage({
             id,
@@ -300,7 +302,7 @@ export class WalletLinkRelay {
 
       if (!this.linked && isRequestAccounts) {
         snackbarProps.message = "Requesting to connect to your wallet..."
-        this.openLinkFlow()
+        this.linkFlow.open()
       } else {
         snackbarProps.message = "Pushed a request to your wallet..."
         snackbarProps.actions?.push({
@@ -315,7 +317,7 @@ export class WalletLinkRelay {
       }
 
       WalletLinkRelay.callbacks.set(id, response => {
-        this.closeLinkFlow()
+        this.linkFlow.close()
         hideSnackbarItem?.()
 
         if (response.errorMessage) {
@@ -325,29 +327,42 @@ export class WalletLinkRelay {
       })
 
       hideSnackbarItem = this.snackbar.presentItem(snackbarProps)
-
-      this.postIPCMessage(Web3RequestMessage({ id, request }))
+      this.publishWeb3RequestEvent(id, request)
     })
   }
 
-  private openLinkFlow(): void {
-    this.linkFlow.open()
+  private publishWeb3RequestEvent(id: string, request: Web3Request): void {
+    const message = Web3RequestMessage({ id, request })
+    this.publishEvent("Web3Request", message, true).subscribe({
+      error: err => {
+        this.invokeCallback(
+          Web3ResponseMessage({
+            id: message.id,
+            response: {
+              method: message.request.method,
+              errorMessage: err.message
+            }
+          })
+        )
+      }
+    })
   }
 
-  private closeLinkFlow(): void {
-    this.linkFlow.close()
+  private publishWeb3RequestCanceledEvent(id: string) {
+    const message = Web3RequestCanceledMessage(id)
+    this.publishEvent("Web3RequestCanceled", message, false).subscribe()
   }
 
-  private postIPCMessage(message: IPCMessage): void {
-    if (!this.linked) {
-      this.pendingActions.push(() => {
-        this.postIPCMessage(message)
-      })
-      return
-    }
-    // if (this.iframeEl && this.iframeEl.contentWindow) {
-    //   this.iframeEl.contentWindow.postMessage(message, this.walletLinkOrigin)
-    // }
+  private publishEvent(
+    event: string,
+    message: IPCMessage,
+    callWebhook: boolean
+  ): Observable<string> {
+    const encrypted = aes256gcm.encrypt(
+      JSON.stringify({ ...message, origin: location.origin }),
+      this.session.secret
+    )
+    return this.connection.publishEvent(event, encrypted, callWebhook)
   }
 
   private invokeCallback(message: Web3ResponseMessage) {

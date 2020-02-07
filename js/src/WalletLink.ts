@@ -2,8 +2,8 @@
 // Licensed under the Apache License, version 2.0
 
 import { injectCssReset } from "./cssReset"
+import { WalletLinkRelay } from "./relay/WalletLinkRelay"
 import { WalletLinkProvider } from "./WalletLinkProvider"
-import { WalletLinkRelay } from "./WalletLinkRelay"
 
 const WALLETLINK_URL =
   process.env.WALLETLINK_URL! || "https://www.walletlink.org"

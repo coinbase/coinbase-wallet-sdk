@@ -252,15 +252,6 @@ export class WalletLinkConnection {
       map(m => m as ServerMessageEvent)
     )
   }
-
-  /**
-   * Send data without waiting for the response
-   * @param message client message to send
-   */
-  public sendData(message: ClientMessage): void {
-    this.ws.sendData(JSON.stringify(message))
-  }
-
   /**
    * Publish an event and emit event ID when successful
    * @param event event name
@@ -293,6 +284,14 @@ export class WalletLinkConnection {
         return res.eventId
       })
     )
+  }
+
+  /**
+   * Send data without waiting for the response
+   * @param message client message to send
+   */
+  private sendData(message: ClientMessage): void {
+    this.ws.sendData(JSON.stringify(message))
   }
 
   private updateLastHeartbeat(): void {

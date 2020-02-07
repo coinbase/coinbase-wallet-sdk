@@ -5,6 +5,11 @@ import BN from "bn.js"
 import eip712 from "eth-eip712-util"
 import { EventEmitter } from "events"
 import { FilterPolyfill } from "./FilterPolyfill"
+import {
+  EthereumTransactionParams,
+  WalletLinkRelay
+} from "./relay/WalletLinkRelay"
+import { RequestEthereumAccountsResponse } from "./relay/Web3Response"
 import { AddressString, Callback, IntNumber } from "./types/common"
 import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from "./types/JSONRPC"
 import {
@@ -12,7 +17,6 @@ import {
   ProviderErrorCode,
   Web3Provider
 } from "./types/Web3Provider"
-import { RequestEthereumAccountsResponse } from "./types/Web3Response"
 import {
   ensureAddressString,
   ensureBN,
@@ -21,7 +25,6 @@ import {
   ensureIntNumber,
   ensureRegExpString
 } from "./util"
-import { EthereumTransactionParams, WalletLinkRelay } from "./WalletLinkRelay"
 
 const LOCAL_STORAGE_ADDRESSES_KEY = "Addresses"
 
