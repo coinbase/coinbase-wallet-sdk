@@ -104,7 +104,9 @@ export class WalletLinkRelay {
       version: options.version,
       sessionId: this.session.id,
       sessionSecret: this.session.secret,
-      walletLinkUrl: this.walletLinkUrl
+      walletLinkUrl: this.walletLinkUrl,
+      connected$: this.connection.connected$,
+      onceLinked$: this.connection.onceLinked$
     })
   }
 

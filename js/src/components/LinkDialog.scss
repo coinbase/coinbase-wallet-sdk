@@ -20,7 +20,7 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background-color: rgba(0, 0, 0, 0.33);
+      background-color: rgba(#000, 0.33);
       transition: opacity 0.25s;
 
       &-hidden {
@@ -30,14 +30,15 @@
 
     &-box {
       display: flex;
+      position: relative;
       flex-direction: column;
       width: 320px;
       background-color: #f5f5f5;
       border-radius: 8px;
-      box-shadow: 0px 16px 24px rgba(0, 0, 0, 0.15),
-        0px 0px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0px 16px 24px rgba(#000, 0.15), 0px 0px 8px rgba(#000, 0.1);
       transform: scale(1);
       transition: opacity 0.25s, transform 0.25s;
+      overflow: hidden;
 
       &-hidden {
         opacity: 0;
@@ -65,19 +66,41 @@
         }
 
         &-qrcode {
+          position: relative;
           display: block;
           margin-bottom: 16px;
           background-color: #fff;
           padding: 16px;
           border-radius: 8px;
-          box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+          box-shadow: 0px 4px 12px rgba(#000, 0.1);
           width: 256px;
           height: 256px;
+          overflow: hidden;
 
           img {
             display: block;
             width: 224px;
             height: 224px;
+          }
+
+          &-connecting {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(#fff, 0.98);
+
+            p {
+              margin-top: 16px;
+              color: #333;
+              font-size: 12px;
+              font-weight: bold;
+            }
           }
         }
 

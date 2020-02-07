@@ -6,6 +6,7 @@ import { FunctionComponent, h } from "preact"
 import { useEffect, useState } from "preact/hooks"
 import css from "./LinkDialog.css"
 import { QRCode } from "./QRCode"
+import { Spinner } from "./Spinner"
 
 export const LinkDialog: FunctionComponent<{
   version: string
@@ -13,6 +14,8 @@ export const LinkDialog: FunctionComponent<{
   sessionSecret: string
   walletLinkUrl: string
   isOpen: boolean
+  isConnected: boolean
+  isLinked: boolean
 }> = props => {
   const [isContainerHidden, setContainerHidden] = useState(!props.isOpen)
   const [isDialogHidden, setDialogHidden] = useState(!props.isOpen)
@@ -66,6 +69,7 @@ export const LinkDialog: FunctionComponent<{
               sessionId={props.sessionId}
               sessionSecret={props.sessionSecret}
               walletLinkUrl={props.walletLinkUrl}
+              isConnected={props.isConnected}
             />
           </div>
 
@@ -83,6 +87,7 @@ const ScanQRCode: FunctionComponent<{
   sessionId: string
   sessionSecret: string
   walletLinkUrl: string
+  isConnected: boolean
 }> = props => {
   const serverUrl = window.encodeURIComponent(props.walletLinkUrl)
   const qrUrl = `${props.walletLinkUrl}/#/link?id=${props.sessionId}&secret=${props.sessionSecret}&server=${serverUrl}`
@@ -95,6 +100,12 @@ const ScanQRCode: FunctionComponent<{
       <div class="-walletlink-link-dialog-box-content-qrcode">
         <QRCode content={qrUrl} width={224} height={224} />
         <input type="hidden" value={qrUrl} />
+        {!props.isConnected && (
+          <div class="-walletlink-link-dialog-box-content-qrcode-connecting">
+            <Spinner size={128} color="#000" />
+            <p>Connecting...</p>
+          </div>
+        )}
       </div>
 
       <ol>
