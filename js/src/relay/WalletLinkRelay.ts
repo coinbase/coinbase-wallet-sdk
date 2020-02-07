@@ -82,7 +82,6 @@ export class WalletLinkRelay {
   private appName = ""
   private appLogoUrl: string | null = null
   private attached = false
-  private linked = false
 
   constructor(options: Readonly<WalletLinkRelayOptions>) {
     this.walletLinkUrl = options.walletLinkUrl
@@ -100,16 +99,16 @@ export class WalletLinkRelay {
       this.session.key,
       this.walletLinkUrl
     )
-    this.connection.connect()
 
     this.linkFlow = new LinkFlow({
       version: options.version,
       sessionId: this.session.id,
       sessionSecret: this.session.secret,
       walletLinkUrl: this.walletLinkUrl,
-      connected$: this.connection.connected$,
-      onceLinked$: this.connection.onceLinked$
+      connected$: this.connection.connected$
     })
+
+    this.connection.connect()
   }
 
   public setAppInfo(appName: string, appLogoUrl: string | null): void {
@@ -274,10 +273,11 @@ export class WalletLinkRelay {
     return new Promise((resolve, reject) => {
       let hideSnackbarItem: (() => void) | null = null
       const id = crypto.randomBytes(8).toString("hex")
-
+      const isRequestAccounts =
+        request.method === Web3Method.requestEthereumAccounts
       const cancel = () => {
         this.publishWeb3RequestCanceledEvent(id)
-        this.invokeCallback(
+        this.handleWeb3ResponseMessage(
           Web3ResponseMessage({
             id,
             response: ErrorResponse(request.method, "User rejected request")
@@ -286,34 +286,28 @@ export class WalletLinkRelay {
         hideSnackbarItem?.()
       }
 
-      const snackbarProps: SnackbarItemProps = {
-        showProgressBar: true,
-        actions: [
-          {
-            info: "Made a mistake?",
-            buttonLabel: "Cancel",
-            onClick: cancel
-          }
-        ]
-      }
-
-      const isRequestAccounts =
-        request.method === Web3Method.requestEthereumAccounts
-
-      if (!this.linked && isRequestAccounts) {
-        snackbarProps.message = "Requesting to connect to your wallet..."
-        this.linkFlow.open()
-      } else {
-        snackbarProps.message = "Pushed a request to your wallet..."
-        snackbarProps.actions?.push({
-          info: "Not receiving requests?",
-          buttonLabel: "Reset Connection",
-          onClick: this.resetAndReload
-        })
-      }
-
       if (isRequestAccounts) {
+        this.linkFlow.open({ onCancel: cancel })
         WalletLinkRelay.accountRequestCallbackIds.add(id)
+      } else {
+        const snackbarProps: SnackbarItemProps = {
+          message: "Pushed a request to your wallet...",
+          showProgressBar: true,
+          actions: [
+            {
+              info: "Made a mistake?",
+              buttonLabel: "Cancel",
+              onClick: cancel
+            },
+            {
+              info: "Not receiving requests?",
+              buttonLabel: "Reset Connection",
+              onClick: this.resetAndReload
+            }
+          ]
+        }
+
+        hideSnackbarItem = this.snackbar.presentItem(snackbarProps)
       }
 
       WalletLinkRelay.callbacks.set(id, response => {
@@ -326,7 +320,6 @@ export class WalletLinkRelay {
         resolve(response as U)
       })
 
-      hideSnackbarItem = this.snackbar.presentItem(snackbarProps)
       this.publishWeb3RequestEvent(id, request)
     })
   }
@@ -365,6 +358,20 @@ export class WalletLinkRelay {
     return this.connection.publishEvent(event, encrypted, callWebhook)
   }
 
+  private handleWeb3ResponseMessage(message: Web3ResponseMessage) {
+    const { response } = message
+
+    if (isRequestEthereumAccountsResponse(response)) {
+      Array.from(
+        WalletLinkRelay.accountRequestCallbackIds.values()
+      ).forEach(id => this.invokeCallback({ ...message, id }))
+      WalletLinkRelay.accountRequestCallbackIds.clear()
+      return
+    }
+
+    this.invokeCallback(message)
+  }
+
   private invokeCallback(message: Web3ResponseMessage) {
     const callback = WalletLinkRelay.callbacks.get(message.id)
     if (callback) {
@@ -389,27 +396,15 @@ export class WalletLinkRelay {
     const message: unknown = evt.data
 
     if (isWeb3ResponseMessage(message)) {
-      const { response } = message
-
-      if (isRequestEthereumAccountsResponse(response)) {
-        Array.from(
-          WalletLinkRelay.accountRequestCallbackIds.values()
-        ).forEach(id => this.invokeCallback({ ...message, id }))
-        WalletLinkRelay.accountRequestCallbackIds.clear()
-        return
-      }
-
-      this.invokeCallback(message)
+      this.handleWeb3ResponseMessage(message)
       return
     }
 
     if (isLinkedMessage(message)) {
-      this.linked = true
       return
     }
 
     if (isUnlinkedMessage(message)) {
-      this.linked = false
       this.resetAndReload()
       return
     }

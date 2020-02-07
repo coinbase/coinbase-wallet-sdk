@@ -137,6 +137,14 @@
           color: #999;
         }
       }
+
+      &-cancel {
+        position: absolute;
+        -webkit-appearance: none;
+        top: 8px;
+        left: 8px;
+        cursor: pointer;
+      }
     }
 
     &-container {

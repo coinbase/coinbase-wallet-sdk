@@ -11,7 +11,6 @@ export interface LinkFlowOptions {
   sessionSecret: string
   walletLinkUrl: string
   connected$: Observable<boolean>
-  onceLinked$: Observable<void>
 }
 
 export class LinkFlow {
@@ -21,12 +20,11 @@ export class LinkFlow {
   private readonly walletLinkUrl: string
 
   private readonly connected$: Observable<boolean>
-  private readonly onceLinked$: Observable<void>
   private readonly subscriptions = new Subscription()
 
   private isConnected = false
   private isOpen = false
-  private isLinked = false
+  private onCancel: (() => void) | null = null
 
   private root: Element | null = null
 
@@ -36,7 +34,6 @@ export class LinkFlow {
     this.sessionSecret = options.sessionSecret
     this.walletLinkUrl = options.walletLinkUrl
     this.connected$ = options.connected$
-    this.onceLinked$ = options.onceLinked$
   }
 
   public attach(el: Element): void {
@@ -44,30 +41,35 @@ export class LinkFlow {
     this.root.className = "-walletlink-link-flow-root"
     el.appendChild(this.root)
     this.render()
-  }
 
-  public open(): void {
     this.subscriptions.add(
       this.connected$.subscribe(v => {
-        this.isConnected = v
-        this.render()
+        if (this.isConnected !== v) {
+          this.isConnected = v
+          this.render()
+        }
       })
     )
+  }
 
-    this.subscriptions.add(
-      this.onceLinked$.subscribe(_ => {
-        this.isLinked = true
-        this.render()
-      })
-    )
+  public detach(): void {
+    if (!this.root) {
+      return
+    }
+    this.subscriptions.unsubscribe()
+    render(null, this.root)
+    this.root.parentElement?.removeChild(this.root)
+  }
 
+  public open(options: { onCancel: () => void }): void {
     this.isOpen = true
+    this.onCancel = options.onCancel
     this.render()
   }
 
   public close(): void {
-    this.subscriptions.unsubscribe()
     this.isOpen = false
+    this.onCancel = null
     this.render()
   }
 
@@ -84,7 +86,7 @@ export class LinkFlow {
         walletLinkUrl={this.walletLinkUrl}
         isOpen={this.isOpen}
         isConnected={this.isConnected}
-        isLinked={this.isLinked}
+        onCancel={this.onCancel}
       />,
       this.root
     )

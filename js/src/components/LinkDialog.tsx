@@ -4,6 +4,7 @@
 import clsx from "clsx"
 import { FunctionComponent, h } from "preact"
 import { useEffect, useState } from "preact/hooks"
+import closeSvg from "../images/closeSvg"
 import css from "./LinkDialog.css"
 import { QRCode } from "./QRCode"
 import { Spinner } from "./Spinner"
@@ -15,7 +16,7 @@ export const LinkDialog: FunctionComponent<{
   walletLinkUrl: string
   isOpen: boolean
   isConnected: boolean
-  isLinked: boolean
+  onCancel: (() => void) | null
 }> = props => {
   const [isContainerHidden, setContainerHidden] = useState(!props.isOpen)
   const [isDialogHidden, setDialogHidden] = useState(!props.isOpen)
@@ -41,7 +42,7 @@ export const LinkDialog: FunctionComponent<{
     return () => {
       timers.forEach(window.clearTimeout)
     }
-  })
+  }, [props.isOpen])
 
   return (
     <div
@@ -77,6 +78,15 @@ export const LinkDialog: FunctionComponent<{
             <p>Powered by WalletLink</p>
             <small>v{props.version}</small>
           </div>
+
+          {props.onCancel && (
+            <button
+              class="-walletlink-link-dialog-box-cancel"
+              onClick={props.onCancel}
+            >
+              <img src={closeSvg} alt="Cancel" />
+            </button>
+          )}
         </div>
       </div>
     </div>
