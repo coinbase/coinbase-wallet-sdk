@@ -1,5 +1,4 @@
-WalletLink
-==========
+# WalletLink
 
 WalletLink is an open protocol that lets users connect their mobile wallets to
 your DApp.
@@ -33,12 +32,12 @@ annotations, for example `: string[]` or `as any`.
 
 ```typescript
 // TypeScript
-import WalletLink from "walletlink"
-import Web3 from "web3"
+import WalletLink from 'walletlink'
+import Web3 from 'web3'
 
-const APP_NAME = "My Awesome App"
-const APP_LOGO_URL = "https://example.com/logo.png"
-const ETH_JSONRPC_URL = "https://mainnet.infura.io/v3/<YOUR_INFURA_API_KEY>"
+const APP_NAME = 'My Awesome App'
+const APP_LOGO_URL = 'https://example.com/logo.png'
+const ETH_JSONRPC_URL = 'https://mainnet.infura.io/v3/<YOUR_INFURA_API_KEY>'
 const CHAIN_ID = 1
 
 // Initialize WalletLink
@@ -54,7 +53,7 @@ export const ethereum = walletLink.makeWeb3Provider(ETH_JSONRPC_URL, CHAIN_ID)
 export const web3 = new Web3(ethereum as any)
 
 // Optionally, have the default account be set automatically when available
-ethereum.on("accountsChanged", (accounts: string[]) => {
+ethereum.on('accountsChanged', (accounts: string[]) => {
   web3.eth.defaultAccount = accounts[0]
 })
 web3.eth.defaultAccount = web3.eth.accounts[0]
@@ -69,9 +68,8 @@ blocked by the browser.
 
 ```typescript
 // Use eth_RequestAccounts
-ethereum.send("eth_requestAccounts").then((accounts: string[]) => {
+ethereum.send('eth_requestAccounts').then((accounts: string[]) => {
   console.log(`User's address is ${accounts[0]}`)
-
 })
 
 // Alternatively, you can use ethereum.enable()
@@ -83,10 +81,11 @@ ethereum.enable().then((accounts: string[]) => {
 That's it! Once the authorization is obtained from the user, the Web3 object
 (`web3`) and the Web3 Provider (`ethereum`) are ready to be used as per usual.
 
-- - -
+---
+
 ```
-Copyright © 2018-2019 WalletLink.org <https://www.walletlink.org/>
-Copyright © 2018-2019 Coinbase, Inc. <https://www.coinbase.com/>
+Copyright © 2018-2020 WalletLink.org <https://www.walletlink.org/>
+Copyright © 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
