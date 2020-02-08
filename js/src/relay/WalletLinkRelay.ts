@@ -6,9 +6,11 @@ import bind from "bind-decorator"
 import BN from "bn.js"
 import crypto from "crypto"
 import { Observable } from "rxjs"
+import { filter } from "rxjs/operators"
 import url from "url"
 import { LinkFlow } from "../components/LinkFlow"
 import { Snackbar, SnackbarItemProps } from "../components/Snackbar"
+import { ServerMessageEvent } from "../connection/ServerMessage"
 import { WalletLinkConnection } from "../connection/WalletLinkConnection"
 import { ScopedLocalStorage } from "../ScopedLocalStorage"
 import { Session } from "../Session"
@@ -16,8 +18,6 @@ import { AddressString, IntNumber, RegExpString } from "../types/common"
 import { bigIntStringFromBN, hexStringFromBuffer } from "../util"
 import * as aes256gcm from "./aes256gcm"
 import { IPCMessage } from "./IPCMessage"
-import { isLinkedMessage } from "./LinkedMessage"
-import { isUnlinkedMessage } from "./UnlinkedMessage"
 import { Web3Method } from "./Web3Method"
 import {
   ArbitraryRequest,
@@ -100,6 +100,10 @@ export class WalletLinkRelay {
       this.walletLinkUrl
     )
 
+    this.connection.incomingEvent$
+      .pipe(filter(m => m.event === "Web3Response"))
+      .subscribe({ next: this.handleIncomingEvent })
+
     this.linkFlow = new LinkFlow({
       version: options.version,
       sessionId: this.session.id,
@@ -126,8 +130,6 @@ export class WalletLinkRelay {
 
     this.linkFlow.attach(container)
     this.snackbar.attach(container)
-
-    window.addEventListener("message", this.handleMessage, false)
   }
 
   public getStorageItem(key: string): string | null {
@@ -328,7 +330,7 @@ export class WalletLinkRelay {
     const message = Web3RequestMessage({ id, request })
     this.publishEvent("Web3Request", message, true).subscribe({
       error: err => {
-        this.invokeCallback(
+        this.handleWeb3ResponseMessage(
           Web3ResponseMessage({
             id: message.id,
             response: {
@@ -358,6 +360,23 @@ export class WalletLinkRelay {
     return this.connection.publishEvent(event, encrypted, callWebhook)
   }
 
+  @bind
+  private handleIncomingEvent(event: ServerMessageEvent): void {
+    let json: unknown
+    try {
+      json = JSON.parse(aes256gcm.decrypt(event.data, this.session.secret))
+    } catch {
+      return
+    }
+
+    const message = isWeb3ResponseMessage(json) ? json : null
+    if (!message) {
+      return
+    }
+
+    this.handleWeb3ResponseMessage(message)
+  }
+
   private handleWeb3ResponseMessage(message: Web3ResponseMessage) {
     const { response } = message
 
@@ -385,28 +404,5 @@ export class WalletLinkRelay {
     this.connection.destroy()
     this.storage.clear()
     document.location.reload()
-  }
-
-  @bind
-  private handleMessage(evt: MessageEvent): void {
-    if (evt.origin !== this.walletLinkOrigin) {
-      return
-    }
-
-    const message: unknown = evt.data
-
-    if (isWeb3ResponseMessage(message)) {
-      this.handleWeb3ResponseMessage(message)
-      return
-    }
-
-    if (isLinkedMessage(message)) {
-      return
-    }
-
-    if (isUnlinkedMessage(message)) {
-      this.resetAndReload()
-      return
-    }
   }
 }
