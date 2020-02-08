@@ -8,7 +8,7 @@ import {
   HexString,
   IntNumber,
   RegExpString
-} from "./types/common"
+} from "./types"
 
 const INT_STRING_REGEX = /^[0-9]*$/
 const HEXADECIMAL_STRING_REGEX = /^[a-f0-9]*$/

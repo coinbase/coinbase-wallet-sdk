@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2020 Coinbase, Inc. <https://coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { h, FunctionComponent } from "preact"
+import { FunctionComponent, h } from "preact"
 import { useEffect, useState } from "preact/hooks"
 import QRCodeSVG from "qrcode-svg"
 

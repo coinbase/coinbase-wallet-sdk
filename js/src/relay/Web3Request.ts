@@ -7,7 +7,7 @@ import {
   HexString,
   IntNumber,
   RegExpString
-} from "../types/common"
+} from "../types"
 import { Web3Method } from "./Web3Method"
 
 interface BaseWeb3Request<

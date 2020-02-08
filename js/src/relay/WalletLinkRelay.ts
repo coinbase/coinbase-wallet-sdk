@@ -12,12 +12,12 @@ import { LinkFlow } from "../components/LinkFlow"
 import { Snackbar, SnackbarItemProps } from "../components/Snackbar"
 import { ServerMessageEvent } from "../connection/ServerMessage"
 import { WalletLinkConnection } from "../connection/WalletLinkConnection"
-import { ScopedLocalStorage } from "../ScopedLocalStorage"
-import { Session } from "../Session"
-import { AddressString, IntNumber, RegExpString } from "../types/common"
+import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
+import { AddressString, IntNumber, RegExpString } from "../types"
 import { bigIntStringFromBN, hexStringFromBuffer } from "../util"
 import * as aes256gcm from "./aes256gcm"
-import { IPCMessage } from "./IPCMessage"
+import { RelayMessage } from "./RelayMessage"
+import { Session } from "./Session"
 import { Web3Method } from "./Web3Method"
 import {
   ArbitraryRequest,
@@ -350,7 +350,7 @@ export class WalletLinkRelay {
 
   private publishEvent(
     event: string,
-    message: IPCMessage,
+    message: RelayMessage,
     callWebhook: boolean
   ): Observable<string> {
     const encrypted = aes256gcm.encrypt(

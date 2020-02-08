@@ -1,22 +1,16 @@
-// Copyright (c) 2018-2019 Coinbase, Inc. <https://coinbase.com/>
+// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
+// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
 import BN from "bn.js"
 import eip712 from "eth-eip712-util"
 import { EventEmitter } from "events"
-import { FilterPolyfill } from "./FilterPolyfill"
 import {
   EthereumTransactionParams,
   WalletLinkRelay
-} from "./relay/WalletLinkRelay"
-import { RequestEthereumAccountsResponse } from "./relay/Web3Response"
-import { AddressString, Callback, IntNumber } from "./types/common"
-import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from "./types/JSONRPC"
-import {
-  ProviderError,
-  ProviderErrorCode,
-  Web3Provider
-} from "./types/Web3Provider"
+} from "../relay/WalletLinkRelay"
+import { RequestEthereumAccountsResponse } from "../relay/Web3Response"
+import { AddressString, Callback, IntNumber } from "../types"
 import {
   ensureAddressString,
   ensureBN,
@@ -24,7 +18,10 @@ import {
   ensureHexString,
   ensureIntNumber,
   ensureRegExpString
-} from "./util"
+} from "../util"
+import { FilterPolyfill } from "./FilterPolyfill"
+import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from "./JSONRPC"
+import { ProviderError, ProviderErrorCode, Web3Provider } from "./Web3Provider"
 
 const LOCAL_STORAGE_ADDRESSES_KEY = "Addresses"
 

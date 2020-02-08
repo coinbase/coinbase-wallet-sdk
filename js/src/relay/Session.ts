@@ -5,7 +5,7 @@
 import crypto from "crypto"
 import { fromEvent, Observable } from "rxjs"
 import { filter, map } from "rxjs/operators"
-import { ScopedLocalStorage } from "./ScopedLocalStorage"
+import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
 
 const STORAGE_KEY_SESSION_ID = "session:id"
 const STORAGE_KEY_SESSION_SECRET = "session:secret"

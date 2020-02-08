@@ -1,16 +1,17 @@
-// Copyright (c) 2018-2019 Coinbase, Inc. <https://coinbase.com/>
+// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
+// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { HexString, IntNumber } from "./types/common"
-import { JSONRPCRequest, JSONRPCResponse } from "./types/JSONRPC"
-import { Web3Provider } from "./types/Web3Provider"
+import { HexString, IntNumber } from "../types"
 import {
   ensureHexString,
   hexStringFromIntNumber,
   intNumberFromHexString,
   isHexString,
   range
-} from "./util"
+} from "../util"
+import { JSONRPCRequest, JSONRPCResponse } from "./JSONRPC"
+import { Web3Provider } from "./Web3Provider"
 
 const TIMEOUT = 5 * 60 * 1000 // 5 minutes
 const JSONRPC_TEMPLATE: { jsonrpc: "2.0"; id: number } = {
@@ -26,14 +27,14 @@ export interface FilterParam {
   fromBlock: RawHexBlockHeight | undefined
   toBlock: RawHexBlockHeight | undefined
   address?: string | string[]
-  topics?: Array<string | string[]>
+  topics?: (string | string[])[]
 }
 
 export interface Filter {
   fromBlock: IntBlockHeight
   toBlock: IntBlockHeight
   addresses: string[] | null
-  topics: Array<string | string[]>
+  topics: (string | string[])[]
 }
 
 export class FilterPolyfill {
@@ -217,11 +218,13 @@ export class FilterPolyfill {
     console.log(
       `Fetching blocks from ${cursorPosition} to ${currentBlockHeight} for filter (${id})`
     )
-    const blocks = (await Promise.all(
-      range(cursorPosition, currentBlockHeight + 1).map(i =>
-        this.getBlockHashByNumber(IntNumber(i))
+    const blocks = (
+      await Promise.all(
+        range(cursorPosition, currentBlockHeight + 1).map(i =>
+          this.getBlockHashByNumber(IntNumber(i))
+        )
       )
-    )).filter(hash => !!hash)
+    ).filter(hash => !!hash)
 
     const newCursorPosition = IntNumber(cursorPosition + blocks.length)
     console.log(

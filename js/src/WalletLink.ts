@@ -1,9 +1,10 @@
-// Copyright (c) 2018-2019 Coinbase, Inc. <https://coinbase.com/>
+// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
+// Copyright (c) 2018-2020 Coinbase, Inc. <https://coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { injectCssReset } from "./cssReset"
+import { injectCssReset } from "./lib/cssReset"
+import { WalletLinkProvider } from "./provider/WalletLinkProvider"
 import { WalletLinkRelay } from "./relay/WalletLinkRelay"
-import { WalletLinkProvider } from "./WalletLinkProvider"
 
 const WALLETLINK_URL =
   process.env.WALLETLINK_URL! || "https://www.walletlink.org"

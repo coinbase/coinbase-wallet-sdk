@@ -1,11 +1,11 @@
 // Copyright (c) 2018-2019 Coinbase, Inc. <https://coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
+import { WalletLinkProvider } from "./provider/WalletLinkProvider"
 import { WalletLink } from "./WalletLink"
-import { WalletLinkProvider } from "./WalletLinkProvider"
 
+export { WalletLinkProvider } from "./provider/WalletLinkProvider"
 export { WalletLink } from "./WalletLink"
-export { WalletLinkProvider } from "./WalletLinkProvider"
 export default WalletLink
 
 declare global {
