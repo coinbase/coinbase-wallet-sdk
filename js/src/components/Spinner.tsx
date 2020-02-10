@@ -3,7 +3,7 @@
 // Licensed under the Apache License, version 2.0
 
 import { FunctionComponent, h } from "preact"
-import css from "./Spinner.css"
+import css from "./Spinner-css"
 
 export const Spinner: FunctionComponent<{
   size?: number

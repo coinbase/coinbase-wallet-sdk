@@ -5,8 +5,8 @@
 import clsx from "clsx"
 import { FunctionComponent, h } from "preact"
 import { useEffect, useState } from "preact/hooks"
-import closeSvg from "../images/closeSvg"
-import css from "./LinkDialog.css"
+import closeSvg from "../images/close-svg"
+import css from "./LinkDialog-css"
 import { QRCode } from "./QRCode"
 import { Spinner } from "./Spinner"
 

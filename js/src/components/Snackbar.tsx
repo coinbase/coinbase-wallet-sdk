@@ -5,8 +5,8 @@
 import clsx from "clsx"
 import { FunctionComponent, h, render } from "preact"
 import { useEffect, useState } from "preact/hooks"
-import chevronSvg from "../images/chevronSvg"
-import css from "./Snackbar.css"
+import chevronSvg from "../images/chevron-svg"
+import css from "./Snackbar-css"
 
 export interface SnackbarItemProps {
   message?: string
