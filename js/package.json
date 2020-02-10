@@ -26,14 +26,14 @@
     "tsc": "tsc --noEmit --pretty",
     "test": "jest",
     "test:watch": "jest --watch",
-    "build": "node compile-scss.js && webpack --config webpack.config.js",
+    "build": "node compile-assets.js && webpack --config webpack.config.js",
     "build-chrome": "webpack --config webpack.config.chrome.js",
     "build-npm": "tsc -p ./tsconfig.build.json",
     "build:dev": "export WALLETLINK_URL='http://localhost:3000'; yarn build && yarn build-chrome",
-    "build:dev:watch": "nodemon -e 'ts,tsx,js,json,css,scss' --ignore 'src/**/*.css.ts' --watch src/ --watch chrome/ --exec 'yarn build:dev'",
+    "build:dev:watch": "nodemon -e 'ts,tsx,js,json,css,scss,svg' --ignore 'src/**/*-css.ts' --ignore 'src/**/*-svg.ts' --watch src/ --watch chrome/ --exec 'yarn build:dev'",
     "build:prod": "yarn build && yarn build-chrome && yarn build-npm && cp ./package.json ../README.md ../LICENSE build/npm",
     "lint": "tslint -p . 'src/**/*.ts{,x}'",
-    "lint:watch": "nodemon -e ts,tsx,js,json,css --watch src/ --exec 'yarn tsc && yarn lint'"
+    "lint:watch": "nodemon -e ts,tsx,js,json,css,scss,svg --watch src/ --exec 'yarn tsc && yarn lint'"
   },
   "dependencies": {
     "bind-decorator": "^1.0.11",
@@ -60,6 +60,7 @@
     "regenerator-runtime": "^0.13.3",
     "rxjs-tslint": "^0.1.7",
     "sass": "^1.25.0",
+    "svgo": "^1.3.2",
     "ts-jest": "^24.3.0",
     "ts-loader": "^6.2.1",
     "tslib": "^1.10.0",
