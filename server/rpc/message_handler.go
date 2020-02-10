@@ -189,12 +189,6 @@ func (c *MessageHandler) handleIsLinked(
 func (c *MessageHandler) handleSetSessionConfig(
 	msg *clientMessageSetSessionConfig,
 ) serverMessage {
-	if c.isHost {
-		return newServerMessageFail(
-			msg.ID, msg.SessionID, "only guests can set session config",
-		)
-	}
-
 	if valid, invalidReason := models.IsValidSessionConfig(
 		msg.WebhookID,
 		msg.WebhookURL,
@@ -222,6 +216,10 @@ func (c *MessageHandler) handleSetSessionConfig(
 
 	for k, v := range msg.Metadata {
 		if v != nil {
+			// disallow having more than 50 entries
+			if _, exists := session.Metadata[k]; !exists && len(session.Metadata) >= 50 {
+				continue
+			}
 			session.Metadata[k] = *v
 		} else {
 			delete(session.Metadata, k)
