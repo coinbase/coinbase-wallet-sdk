@@ -95,6 +95,10 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
     return await this._send<AddressString[]>(JSONRPCMethod.eth_requestAccounts)
   }
 
+  public close() {
+    this._relay.resetAndReload()
+  }
+
   public send(request: JSONRPCRequest): JSONRPCResponse
   public send(request: JSONRPCRequest[]): JSONRPCResponse[]
   public send(

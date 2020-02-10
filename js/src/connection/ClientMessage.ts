@@ -45,6 +45,21 @@ export function ClientMessageGetSessionConfig(
   return { type: "GetSessionConfig", id, sessionId }
 }
 
+export interface ClientMessageSetSessionConfig extends ClientMessage {
+  type: "SetSessionConfig"
+  id: number
+  sessionId: string
+  webhookId?: string | null
+  webhookUrl?: string | null
+  metadata?: { [key: string]: string | null }
+}
+
+export function ClientMessageSetSessionConfig(
+  params: Omit<ClientMessageSetSessionConfig, "type">
+): ClientMessageSetSessionConfig {
+  return { type: "SetSessionConfig", ...params }
+}
+
 export interface ClientMessagePublishEvent extends ClientMessage {
   type: "PublishEvent"
   sessionId: string

@@ -20,6 +20,16 @@ export interface ServerMessageFail extends ServerMessage {
   error: string
 }
 
+export function isServerMessageFail(msg: any): msg is ServerMessageFail {
+  return (
+    msg &&
+    msg.type === "Fail" &&
+    typeof msg.id === "number" &&
+    typeof msg.sessionId === "string" &&
+    typeof msg.error === "string"
+  )
+}
+
 export interface ServerMessageIsLinkedOK extends ServerMessage {
   type: "IsLinkedOK"
   id: number

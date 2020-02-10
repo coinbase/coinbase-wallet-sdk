@@ -56,6 +56,14 @@ export class WalletLink {
     this._appLogoUrl = appLogoUrl || getFavicon()
     this._relay.setAppInfo(this._appName, this._appLogoUrl)
   }
+
+  /**
+   * Disconnect. After disconnecting, this will reload the web page to ensure
+   * all potential stale state is cleared.
+   */
+  public disconnect(): void {
+    this._relay.resetAndReload()
+  }
 }
 
 function getFavicon(): string | null {

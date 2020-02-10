@@ -5,8 +5,8 @@
 import bind from "bind-decorator"
 import BN from "bn.js"
 import crypto from "crypto"
-import { Observable } from "rxjs"
-import { filter } from "rxjs/operators"
+import { Observable, of } from "rxjs"
+import { catchError, filter, timeout } from "rxjs/operators"
 import url from "url"
 import { LinkFlow } from "../components/LinkFlow"
 import { Snackbar, SnackbarItemProps } from "../components/Snackbar"
@@ -113,6 +113,21 @@ export class WalletLinkRelay {
     })
 
     this.connection.connect()
+  }
+
+  @bind
+  public resetAndReload(): void {
+    this.connection
+      .setSessionMetadata("__destroyed", "1")
+      .pipe(
+        timeout(1000),
+        catchError(_ => of(null))
+      )
+      .subscribe(_ => {
+        this.connection.destroy()
+        this.storage.clear()
+        document.location.reload()
+      })
   }
 
   public setAppInfo(appName: string, appLogoUrl: string | null): void {
@@ -397,12 +412,5 @@ export class WalletLinkRelay {
       callback(message.response)
       WalletLinkRelay.callbacks.delete(message.id)
     }
-  }
-
-  @bind
-  private resetAndReload(): void {
-    this.connection.destroy()
-    this.storage.clear()
-    document.location.reload()
   }
 }

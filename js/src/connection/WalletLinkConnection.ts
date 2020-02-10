@@ -31,10 +31,12 @@ import {
   ClientMessageGetSessionConfig,
   ClientMessageHostSession,
   ClientMessageIsLinked,
-  ClientMessagePublishEvent
+  ClientMessagePublishEvent,
+  ClientMessageSetSessionConfig
 } from "./ClientMessage"
 import { ConnectionState, RxWebSocket } from "./RxWebSocket"
 import {
+  isServerMessageFail,
   ServerMessage,
   ServerMessageEvent,
   ServerMessageFail,
@@ -211,6 +213,17 @@ export class WalletLinkConnection {
   }
 
   /**
+   * Emit once connected
+   */
+  public get onceConnected$(): Observable<void> {
+    return this.connected$.pipe(
+      filter(v => v),
+      take(1),
+      map(() => void 0)
+    )
+  }
+
+  /**
    * Emit true if linked (a guest has joined before)
    */
   public get linked$(): Observable<boolean> {
@@ -252,11 +265,41 @@ export class WalletLinkConnection {
       map(m => m as ServerMessageEvent)
     )
   }
+
+  /**
+   * Set session metadata in SessionConfig object
+   * @param key
+   * @param value
+   * @returns an Observable that completes when successful
+   */
+  public setSessionMetadata(
+    key: string,
+    value: string | null
+  ): Observable<void> {
+    const message = ClientMessageSetSessionConfig({
+      id: this.nextReqId++,
+      sessionId: this.sessionId,
+      metadata: { [key]: value }
+    })
+
+    return this.onceConnected$.pipe(
+      flatMap(_ =>
+        this.makeRequest<ServerMessageOK | ServerMessageFail>(message)
+      ),
+      map(res => {
+        if (isServerMessageFail(res)) {
+          throw new Error(res.error || "failed to set session metadata")
+        }
+      })
+    )
+  }
+
   /**
    * Publish an event and emit event ID when successful
    * @param event event name
    * @param data event data
    * @param callWebhook whether the webhook should be invoked
+   * @returns an Observable that emits event ID when successful
    */
   public publishEvent(
     event: string,
