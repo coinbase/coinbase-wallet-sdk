@@ -231,12 +231,16 @@ func (c *MessageHandler) handleSetSessionConfig(
 		return newServerMessageFail(msg.ID, msg.SessionID, "internal error")
 	}
 
-	// send SessionConfigUpdated message to host
-	subID := hostPubSubID(msg.SessionID)
+	// send SessionConfigUpdated message
 	updatedMsg := newServerMessageSessionConfigUpdated(
 		msg.SessionID, session.WebhookID, session.WebhookURL, session.Metadata,
 	)
-	c.pubSub.Publish(subID, updatedMsg)
+	for _, subID := range []string{
+		hostPubSubID(msg.SessionID),
+		guestPubSubID(msg.SessionID),
+	} {
+		c.pubSub.Publish(subID, updatedMsg)
+	}
 
 	return newServerMessageOK(msg.ID, msg.SessionID)
 }
