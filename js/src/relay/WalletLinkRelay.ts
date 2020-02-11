@@ -104,6 +104,11 @@ export class WalletLinkRelay {
       .pipe(filter(m => m.event === "Web3Response"))
       .subscribe({ next: this.handleIncomingEvent })
 
+    // if session is marked destroyed, reset and reload
+    this.connection.sessionConfig$
+      .pipe(filter(c => !!c.metadata && c.metadata.__destroyed === "1"))
+      .subscribe({ next: this.resetAndReload })
+
     this.linkFlow = new LinkFlow({
       version: options.version,
       sessionId: this.session.id,
