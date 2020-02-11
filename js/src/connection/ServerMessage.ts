@@ -2,20 +2,22 @@
 // Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
+import { IntNumber } from "../types"
+
 export interface ServerMessage {
   type: string
-  id?: number
+  id?: IntNumber
 }
 
 export interface ServerMessageOK extends ServerMessage {
   type: "OK"
-  id: number
+  id: IntNumber
   sessionId: string
 }
 
 export interface ServerMessageFail extends ServerMessage {
   type: "Fail"
-  id: number
+  id: IntNumber
   sessionId: string
   error: string
 }
@@ -32,7 +34,7 @@ export function isServerMessageFail(msg: any): msg is ServerMessageFail {
 
 export interface ServerMessageIsLinkedOK extends ServerMessage {
   type: "IsLinkedOK"
-  id: number
+  id: IntNumber
   sessionId: string
   linked: boolean
   onlineGuests: number
@@ -46,7 +48,7 @@ export interface ServerMessageLinked extends ServerMessage {
 
 export interface ServerMessageGetSessionConfigOK extends ServerMessage {
   type: "GetSessionConfigOK"
-  id: number
+  id: IntNumber
   sessionId: string
   webhookId: string
   webhookUrl: string
@@ -63,7 +65,7 @@ export interface ServerMessageSessionConfigUpdated extends ServerMessage {
 
 export interface ServerMessagePublishEventOK extends ServerMessage {
   type: "PublishEventOK"
-  id: number
+  id: IntNumber
   sessionId: string
   eventId: string
 }

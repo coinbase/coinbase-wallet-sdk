@@ -165,3 +165,28 @@ export function isBigNumber(val: unknown): boolean {
 export function range(start: number, stop: number): number[] {
   return Array.from({ length: stop - start }, (_, i) => start + i)
 }
+
+export function getFavicon(): string | null {
+  const el =
+    document.querySelector('link[sizes="192x192"]') ||
+    document.querySelector('link[sizes="180x180"]') ||
+    document.querySelector('link[rel="icon"]') ||
+    document.querySelector('link[rel="shortcut icon"]')
+
+  const { protocol, host } = document.location
+  const href = el ? el.getAttribute("href") : null
+  if (!href || href.startsWith("javascript:")) {
+    return null
+  }
+  if (
+    href.startsWith("http://") ||
+    href.startsWith("https://") ||
+    href.startsWith("data:")
+  ) {
+    return href
+  }
+  if (href.startsWith("//")) {
+    return protocol + href
+  }
+  return `${protocol}//${host}${href}`
+}

@@ -7,7 +7,6 @@ import {
   iif,
   Observable,
   of,
-  race,
   ReplaySubject,
   Subscription,
   throwError,
@@ -24,7 +23,8 @@ import {
   skip,
   switchMap,
   take,
-  tap
+  tap,
+  timeoutWith
 } from "rxjs/operators"
 import {
   ClientMessage,
@@ -32,6 +32,7 @@ import {
   ClientMessageHostSession,
   ClientMessageIsLinked,
   ClientMessagePublishEvent,
+  isServerMessageFail,
   ServerMessage,
   ServerMessageEvent,
   ServerMessageFail,
@@ -290,7 +291,7 @@ export class WalletLinkHost {
         )
       ),
       map(res => {
-        if (res.type === "Fail") {
+        if (isServerMessageFail(res)) {
           throw new Error(res.error || "failed to publish event")
         }
         return res.eventId
@@ -322,18 +323,11 @@ export class WalletLinkHost {
     } catch (err) {
       return throwError(err)
     }
-    return race(
-      // await server message with corresponding id
-      (this.ws.incomingJSONData$ as Observable<T>).pipe(
-        filter(m => m.id === reqId),
-        take(1)
-      ),
-      // or error out if timeout happens first
-      timer(timeout).pipe(
-        map(_ => {
-          throw new Error(`request ${reqId} timed out`)
-        })
-      )
+    // await server message with corresponding id
+    return (this.ws.incomingJSONData$ as Observable<T>).pipe(
+      timeoutWith(timeout, throwError(new Error(`request ${reqId} timed out`))),
+      filter(m => m.id === reqId),
+      take(1)
     )
   }
 
@@ -345,7 +339,7 @@ export class WalletLinkHost {
     )
     return this.makeRequest<ServerMessageOK | ServerMessageFail>(msg).pipe(
       map(res => {
-        if (res.type === "Fail") {
+        if (isServerMessageFail(res)) {
           throw new Error(res.error || "failed to authentcate")
         }
       })

@@ -19,14 +19,13 @@ export const HexString = OpaqueType<HexString>()
 export type AddressString = OpaqueType<"AddressString", string>
 export const AddressString = OpaqueType<AddressString>()
 
-export type IdNumber = OpaqueType<"IdNumber", number>
-export const IdNumber = OpaqueType<IdNumber>()
-
 export type BigIntString = OpaqueType<"BigIntString", string>
 export const BigIntString = OpaqueType<BigIntString>()
 
 export type IntNumber = OpaqueType<"IntNumber", number>
-export const IntNumber = OpaqueType<IntNumber>()
+export function IntNumber(num: number): IntNumber {
+  return Math.floor(num) as IntNumber
+}
 
 export type RegExpString = OpaqueType<"RegExpString", string>
 export const RegExpString = OpaqueType<RegExpString>()

@@ -30,6 +30,7 @@ export class RxWebSocket<T = object> {
   private incomingDataSubject = new Subject<string>()
 
   /**
+   * Constructor
    * @param url WebSocket server URL
    * @param [WebSocketClass] Custom WebSocket implementation
    */
@@ -42,6 +43,7 @@ export class RxWebSocket<T = object> {
 
   /**
    * Make a websocket connection
+   * @returns an Observable that completes when connected
    */
   public connect(): Observable<void> {
     if (this.webSocket) {
@@ -88,21 +90,24 @@ export class RxWebSocket<T = object> {
   }
 
   /**
-   * Emits current connection state and subsequent changes
+   * Emit current connection state and subsequent changes
+   * @returns an Observable for the connection state
    */
   public get connectionState$(): Observable<ConnectionState> {
     return this.connectionStateSubject.asObservable()
   }
 
   /**
-   * Emits incoming data from server
+   * Emit incoming data from server
+   * @returns an Observable for the data received
    */
   public get incomingData$(): Observable<string> {
     return this.incomingDataSubject.asObservable()
   }
 
   /**
-   * Emits incoming JSON data from server. non-JSON data are ignored
+   * Emit incoming JSON data from server. non-JSON data are ignored
+   * @returns an Observable for parsed JSON data
    */
   public get incomingJSONData$(): Observable<T> {
     return this.incomingData$.pipe(

@@ -7,7 +7,6 @@ import {
   iif,
   Observable,
   of,
-  race,
   ReplaySubject,
   Subscription,
   throwError,
@@ -24,8 +23,10 @@ import {
   skip,
   switchMap,
   take,
-  tap
+  tap,
+  timeoutWith
 } from "rxjs/operators"
+import { IntNumber } from "../types"
 import {
   ClientMessage,
   ClientMessageGetSessionConfig,
@@ -60,12 +61,13 @@ export class WalletLinkConnection {
   private subscriptions = new Subscription()
   private destroyed = false
   private lastHeartbeatResponse = 0
-  private nextReqId = 1
+  private nextReqId = IntNumber(1)
   private connectedSubject = new BehaviorSubject(false)
   private linkedSubject = new BehaviorSubject(false)
   private sessionConfigSubject = new ReplaySubject<SessionConfig>(1)
 
   /**
+   * Constructor
    * @param sessionId Session ID
    * @param sessionKey Session Key
    * @param serverUrl Walletlinkd RPC URL
@@ -197,7 +199,7 @@ export class WalletLinkConnection {
 
   /**
    * Terminate connection, and mark as destroyed. To reconnect, create a new
-   * instance of WalletLinkHost
+   * instance of WalletLinkConnection
    */
   public destroy(): void {
     this.subscriptions.unsubscribe()
@@ -207,6 +209,7 @@ export class WalletLinkConnection {
 
   /**
    * Emit true if connected and authenticated, else false
+   * @returns an Observable
    */
   public get connected$(): Observable<boolean> {
     return this.connectedSubject.asObservable()
@@ -214,6 +217,7 @@ export class WalletLinkConnection {
 
   /**
    * Emit once connected
+   * @returns an Observable
    */
   public get onceConnected$(): Observable<void> {
     return this.connected$.pipe(
@@ -225,6 +229,7 @@ export class WalletLinkConnection {
 
   /**
    * Emit true if linked (a guest has joined before)
+   * @returns an Observable
    */
   public get linked$(): Observable<boolean> {
     return this.linkedSubject.asObservable()
@@ -232,6 +237,7 @@ export class WalletLinkConnection {
 
   /**
    * Emit once when linked
+   * @returns an Observable
    */
   public get onceLinked$(): Observable<void> {
     return this.linked$.pipe(
@@ -241,12 +247,17 @@ export class WalletLinkConnection {
     )
   }
 
+  /**
+   * Emit current session config if available, and subsequent updates
+   * @returns an Observable for the session config
+   */
   public get sessionConfig$(): Observable<SessionConfig> {
     return this.sessionConfigSubject.asObservable()
   }
 
   /**
-   * Emit Event messages
+   * Emit incoming Event messages
+   * @returns an Observable for the messages
    */
   public get incomingEvent$(): Observable<ServerMessageEvent> {
     return this.ws.incomingJSONData$.pipe(
@@ -277,7 +288,7 @@ export class WalletLinkConnection {
     value: string | null
   ): Observable<void> {
     const message = ClientMessageSetSessionConfig({
-      id: this.nextReqId++,
+      id: IntNumber(this.nextReqId++),
       sessionId: this.sessionId,
       metadata: { [key]: value }
     })
@@ -306,13 +317,13 @@ export class WalletLinkConnection {
     data: string,
     callWebhook: boolean = false
   ): Observable<string> {
-    const message = ClientMessagePublishEvent(
-      this.nextReqId++,
-      this.sessionId,
+    const message = ClientMessagePublishEvent({
+      id: IntNumber(this.nextReqId++),
+      sessionId: this.sessionId,
       event,
       data,
       callWebhook
-    )
+    })
 
     return this.onceLinked$.pipe(
       flatMap(_ =>
@@ -321,7 +332,7 @@ export class WalletLinkConnection {
         )
       ),
       map(res => {
-        if (res.type === "Fail") {
+        if (isServerMessageFail(res)) {
           throw new Error(res.error || "failed to publish event")
         }
         return res.eventId
@@ -329,10 +340,6 @@ export class WalletLinkConnection {
     )
   }
 
-  /**
-   * Send data without waiting for the response
-   * @param message client message to send
-   */
   private sendData(message: ClientMessage): void {
     this.ws.sendData(JSON.stringify(message))
   }
@@ -361,30 +368,24 @@ export class WalletLinkConnection {
     } catch (err) {
       return throwError(err)
     }
-    return race(
-      // await server message with corresponding id
-      (this.ws.incomingJSONData$ as Observable<T>).pipe(
-        filter(m => m.id === reqId),
-        take(1)
-      ),
-      // or error out if timeout happens first
-      timer(timeout).pipe(
-        map(_ => {
-          throw new Error(`request ${reqId} timed out`)
-        })
-      )
+
+    // await server message with corresponding id
+    return (this.ws.incomingJSONData$ as Observable<T>).pipe(
+      timeoutWith(timeout, throwError(new Error(`request ${reqId} timed out`))),
+      filter(m => m.id === reqId),
+      take(1)
     )
   }
 
   private authenticate(): Observable<void> {
-    const msg = ClientMessageHostSession(
-      this.nextReqId++,
-      this.sessionId,
-      this.sessionKey
-    )
+    const msg = ClientMessageHostSession({
+      id: IntNumber(this.nextReqId++),
+      sessionId: this.sessionId,
+      sessionKey: this.sessionKey
+    })
     return this.makeRequest<ServerMessageOK | ServerMessageFail>(msg).pipe(
       map(res => {
-        if (res.type === "Fail") {
+        if (isServerMessageFail(res)) {
           throw new Error(res.error || "failed to authentcate")
         }
       })
@@ -392,12 +393,18 @@ export class WalletLinkConnection {
   }
 
   private sendIsLinked(): void {
-    const msg = ClientMessageIsLinked(this.nextReqId++, this.sessionId)
+    const msg = ClientMessageIsLinked({
+      id: IntNumber(this.nextReqId++),
+      sessionId: this.sessionId
+    })
     this.sendData(msg)
   }
 
   private sendGetSessionConfig(): void {
-    const msg = ClientMessageGetSessionConfig(this.nextReqId++, this.sessionId)
+    const msg = ClientMessageGetSessionConfig({
+      id: IntNumber(this.nextReqId++),
+      sessionId: this.sessionId
+    })
     this.sendData(msg)
   }
 }

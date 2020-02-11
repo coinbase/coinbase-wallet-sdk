@@ -2,9 +2,11 @@
 // Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
+import { IntNumber } from "../types"
+
 export interface ClientMessage {
   type: string
-  id: number
+  id: IntNumber
 }
 
 export interface ClientMessageHostSession extends ClientMessage {
@@ -14,11 +16,9 @@ export interface ClientMessageHostSession extends ClientMessage {
 }
 
 export function ClientMessageHostSession(
-  id: number,
-  sessionId: string,
-  sessionKey: string
+  params: Omit<ClientMessageHostSession, "type">
 ): ClientMessageHostSession {
-  return { type: "HostSession", id, sessionId, sessionKey }
+  return { type: "HostSession", ...params }
 }
 
 export interface ClientMessageIsLinked extends ClientMessage {
@@ -27,10 +27,9 @@ export interface ClientMessageIsLinked extends ClientMessage {
 }
 
 export function ClientMessageIsLinked(
-  id: number,
-  sessionId: string
+  params: Omit<ClientMessageIsLinked, "type">
 ): ClientMessageIsLinked {
-  return { type: "IsLinked", id, sessionId }
+  return { type: "IsLinked", ...params }
 }
 
 export interface ClientMessageGetSessionConfig extends ClientMessage {
@@ -39,15 +38,14 @@ export interface ClientMessageGetSessionConfig extends ClientMessage {
 }
 
 export function ClientMessageGetSessionConfig(
-  id: number,
-  sessionId: string
+  params: Omit<ClientMessageGetSessionConfig, "type">
 ): ClientMessageGetSessionConfig {
-  return { type: "GetSessionConfig", id, sessionId }
+  return { type: "GetSessionConfig", ...params }
 }
 
 export interface ClientMessageSetSessionConfig extends ClientMessage {
   type: "SetSessionConfig"
-  id: number
+  id: IntNumber
   sessionId: string
   webhookId?: string | null
   webhookUrl?: string | null
@@ -69,11 +67,7 @@ export interface ClientMessagePublishEvent extends ClientMessage {
 }
 
 export function ClientMessagePublishEvent(
-  id: number,
-  sessionId: string,
-  event: string,
-  data: string,
-  callWebhook: boolean
+  params: Omit<ClientMessagePublishEvent, "type">
 ): ClientMessagePublishEvent {
-  return { type: "PublishEvent", id, sessionId, event, data, callWebhook }
+  return { type: "PublishEvent", ...params }
 }

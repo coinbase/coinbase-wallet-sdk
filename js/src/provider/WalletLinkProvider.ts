@@ -126,7 +126,12 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
         : callbackOrParams !== undefined
         ? [callbackOrParams]
         : []
-      const request: JSONRPCRequest = { jsonrpc: "2.0", id: 1, method, params }
+      const request: JSONRPCRequest = {
+        jsonrpc: "2.0",
+        id: 0,
+        method,
+        params
+      }
       return this._sendRequestAsync(request).then(res => res.result)
     }
 
@@ -525,7 +530,11 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
 
   private async _eth_requestAccounts(): Promise<JSONRPCResponse> {
     if (this._addresses.length > 0) {
-      return Promise.resolve({ jsonrpc: "2.0", id: 0, result: this._addresses })
+      return Promise.resolve({
+        jsonrpc: "2.0",
+        id: 0,
+        result: this._addresses
+      })
     }
 
     let res: RequestEthereumAccountsResponse
@@ -700,7 +709,7 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
   }
 
   private async _eth_newFilter(params: unknown[]): Promise<JSONRPCResponse> {
-    const param = params[0] as any // TODO: un-any this
+    const param = params[0] as any
     const filterId = await this._filterPolyfill.newFilter(param)
     return { jsonrpc: "2.0", id: 0, result: filterId }
   }

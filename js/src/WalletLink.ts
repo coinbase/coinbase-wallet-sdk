@@ -5,6 +5,7 @@
 import { injectCssReset } from "./lib/cssReset"
 import { WalletLinkProvider } from "./provider/WalletLinkProvider"
 import { WalletLinkRelay } from "./relay/WalletLinkRelay"
+import { getFavicon } from "./util"
 
 const WALLETLINK_URL =
   process.env.WALLETLINK_URL! || "https://www.walletlink.org"
@@ -13,20 +14,30 @@ const WALLETLINK_VERSION =
   require("../package.json").version ||
   "unknown"
 
+/** WalletLink Constructor Options */
 export interface WalletLinkOptions {
-  appName?: string
+  /** Application name */
+  appName: string
+  /** @optional Application logo image URL; favicon is used if unspecified */
   appLogoUrl?: string | null
+  /** @optional WalletLink server URL; for most, leave it unspecified */
   walletLinkUrl?: string
-  walletLinkServerUrl?: string
 }
 
 export class WalletLink {
+  /**
+   * WalletLink version
+   */
   public static VERSION = WALLETLINK_VERSION
 
   private _appName = ""
   private _appLogoUrl: string | null = null
   private _relay: WalletLinkRelay
 
+  /**
+   * Constructor
+   * @param options WalletLink options object
+   */
   constructor(options: Readonly<WalletLinkOptions>) {
     this._relay = new WalletLinkRelay({
       walletLinkUrl: options.walletLinkUrl || WALLETLINK_URL,
@@ -37,6 +48,12 @@ export class WalletLink {
     injectCssReset()
   }
 
+  /**
+   * Create a Web3 Provider object
+   * @param jsonRpcUrl Ethereum JSON RPC URL
+   * @param chainId Ethereum Chain ID (Default: 1)
+   * @returns A Web3 Provider
+   */
   public makeWeb3Provider(
     jsonRpcUrl: string,
     chainId: number = 1
@@ -48,6 +65,11 @@ export class WalletLink {
     })
   }
 
+  /**
+   * Set application information
+   * @param appName Application name
+   * @param appLogoUrl Application logo image URL
+   */
   public setAppInfo(
     appName: string | undefined,
     appLogoUrl: string | null | undefined
@@ -64,29 +86,4 @@ export class WalletLink {
   public disconnect(): void {
     this._relay.resetAndReload()
   }
-}
-
-function getFavicon(): string | null {
-  const el =
-    document.querySelector('link[sizes="192x192"]') ||
-    document.querySelector('link[sizes="180x180"]') ||
-    document.querySelector('link[rel="icon"]') ||
-    document.querySelector('link[rel="shortcut icon"]')
-
-  const { protocol, host } = document.location
-  const href = el ? el.getAttribute("href") : null
-  if (!href || href.startsWith("javascript:")) {
-    return null
-  }
-  if (
-    href.startsWith("http://") ||
-    href.startsWith("https://") ||
-    href.startsWith("data:")
-  ) {
-    return href
-  }
-  if (href.startsWith("//")) {
-    return protocol + href
-  }
-  return `${protocol}//${host}${href}`
 }
