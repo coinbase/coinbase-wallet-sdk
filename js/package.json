@@ -22,6 +22,7 @@
   "repository": "https://github.com/walletlink/walletlink.git",
   "author": "Coinbase, Inc.",
   "license": "Apache-2.0",
+  "private": true,
   "scripts": {
     "tsc": "tsc --noEmit --pretty",
     "test": "jest",
@@ -31,7 +32,7 @@
     "build-npm": "tsc -p ./tsconfig.build.json",
     "build:dev": "export WALLETLINK_URL='http://localhost:3000'; yarn build && yarn build-chrome",
     "build:dev:watch": "nodemon -e 'ts,tsx,js,json,css,scss,svg' --ignore 'src/**/*-css.ts' --ignore 'src/**/*-svg.ts' --watch src/ --watch chrome/ --exec 'yarn build:dev'",
-    "build:prod": "yarn build && yarn build-chrome && yarn build-npm && cp ./package.json ../README.md ../LICENSE build/npm",
+    "build:prod": "yarn build && yarn build-chrome && yarn build-npm && cp ./package.json ../README.md ../LICENSE build/npm && sed -i '' 's|  \"private\": true,||g' build/npm/package.json",
     "lint": "tslint -p . 'src/**/*.ts{,x}'",
     "lint:watch": "nodemon -e ts,tsx,js,json,css,scss,svg --watch src/ --exec 'yarn tsc && yarn lint'"
   },
