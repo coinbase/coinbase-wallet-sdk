@@ -59,7 +59,7 @@ export const snippet = `
 <span class="k">import</span> WalletLink <span class="k">from</span> <span class="s">"walletlink"</span>
 <span class="k">import</span> Web3 <span class="k">from</span> <span class="s">"web3"</span>
 
-<span class="k">export const</span> WalletLink <span class="k">= new</span> <span class="f">WalletLink</span>({
+<span class="k">export const</span> walletLink <span class="k">= new</span> <span class="f">WalletLink</span>({
   appName: <span class="s">"My Awesome DApp"</span>,
   appLogoUrl: <span class="s">"https://example.com/logo.png"</span>
 })
