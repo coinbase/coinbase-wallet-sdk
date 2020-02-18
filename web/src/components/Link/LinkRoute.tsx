@@ -21,8 +21,16 @@ export class LinkRoute extends React.PureComponent<RouteComponentProps> {
   public componentDidMount() {
     const { mainRepo } = this.context
     const { history } = this.props
+    const query = querystring.parse(
+      this.props.location.search.slice(1)
+    )
 
     if (!mainRepo) {
+      return
+    }
+
+    if (!!query.v) {
+      history.replace(routes.wallets)
       return
     }
 
@@ -31,9 +39,7 @@ export class LinkRoute extends React.PureComponent<RouteComponentProps> {
       return
     }
 
-    const userSuppliedSessionId = querystring.parse(
-      this.props.location.search.slice(1)
-    ).id
+    const userSuppliedSessionId = query.id
     if (userSuppliedSessionId && userSuppliedSessionId !== mainRepo.sessionId) {
       postMessageToParent(LocalStorageBlockedMessage())
     }

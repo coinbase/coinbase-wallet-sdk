@@ -7,5 +7,6 @@ export const routes = {
   link: "/link",
   linked: "/linked",
   reset: "/reset",
-  bridge: "/bridge"
+  bridge: "/bridge",
+  wallets: "/wallets"
 }
