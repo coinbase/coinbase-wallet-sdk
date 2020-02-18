@@ -66,19 +66,13 @@ export const LinkDialog: FunctionComponent<{
             isDialogHidden && "-walletlink-link-dialog-box-hidden"
           )}
         >
-          <div class="-walletlink-link-dialog-box-content">
-            <ScanQRCode
-              sessionId={props.sessionId}
-              sessionSecret={props.sessionSecret}
-              walletLinkUrl={props.walletLinkUrl}
-              isConnected={props.isConnected}
-            />
-          </div>
-
-          <div class="-walletlink-link-dialog-box-footer">
-            <p>Powered by WalletLink</p>
-            <small>v{props.version}</small>
-          </div>
+          <ScanQRCode
+            version={props.version}
+            sessionId={props.sessionId}
+            sessionSecret={props.sessionSecret}
+            walletLinkUrl={props.walletLinkUrl}
+            isConnected={props.isConnected}
+          />
 
           {props.onCancel && (
             <button
@@ -95,21 +89,31 @@ export const LinkDialog: FunctionComponent<{
 }
 
 const ScanQRCode: FunctionComponent<{
+  version: string
   sessionId: string
   sessionSecret: string
   walletLinkUrl: string
   isConnected: boolean
 }> = props => {
   const serverUrl = window.encodeURIComponent(props.walletLinkUrl)
-  const qrUrl = `${props.walletLinkUrl}/#/link?id=${props.sessionId}&secret=${props.sessionSecret}&server=${serverUrl}`
+  const qrUrl = `${props.walletLinkUrl}/#/link?id=${props.sessionId}&secret=${props.sessionSecret}&server=${serverUrl}&v=1`
 
   return (
     <div class="-walletlink-link-dialog-box-content">
-      <h3>Scan QR Code</h3>
-      <h4>to connect mobile wallet</h4>
+      <h3>
+        Scan to
+        <br /> Connect
+      </h3>
 
       <div class="-walletlink-link-dialog-box-content-qrcode">
-        <QRCode content={qrUrl} width={224} height={224} />
+        <div class="-walletlink-link-dialog-box-content-qrcode-wrapper">
+          <QRCode
+            content={qrUrl}
+            width={224}
+            height={224}
+            bgColor="transparent"
+          />
+        </div>
         <input type="hidden" value={qrUrl} />
         {!props.isConnected && (
           <div class="-walletlink-link-dialog-box-content-qrcode-connecting">
@@ -117,13 +121,16 @@ const ScanQRCode: FunctionComponent<{
             <p>Connecting...</p>
           </div>
         )}
+        <p title={`WalletLink v${props.version}`}>Powered by WalletLink</p>
       </div>
 
-      <ol>
-        <li>Open compatible wallet app</li>
-        <li>Find and open the QR scanner</li>
-        <li>Scan this QR code</li>
-      </ol>
+      <a
+        href={`${props.walletLinkUrl}/#/wallets`}
+        target="_blank"
+        rel="noopener"
+      >
+        Don&rsquo;t have a wallet app?
+      </a>
     </div>
   )
 }
