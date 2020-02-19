@@ -1965,10 +1965,10 @@ esutils@^2.0.2:
   resolved "https://registry.yarnpkg.com/esutils/-/esutils-2.0.3.tgz#74d2eb4de0b8da1293711910d50775b9b710ef64"
   integrity sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==
 
-eth-eip712-util@^2.3.0:
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/eth-eip712-util/-/eth-eip712-util-2.3.0.tgz#efdd21ca9a0fa129861002e5e98cea88deafa853"
-  integrity sha512-HyN6Bi55l5TIYbRBSrwVzC744YyKMnPgSAEfj08/hum6cjq3/1+nrnh7qENLM+DW8EOdRrs64GLZGXUIgRZxXQ==
+eth-eip712-util@^2.3.1:
+  version "2.3.1"
+  resolved "https://registry.yarnpkg.com/eth-eip712-util/-/eth-eip712-util-2.3.1.tgz#f017895b7c6b822a5017e045320a9ceae7d76062"
+  integrity sha512-4Q7udznDnb0g+Dd5AWz4bRztCTs68MYm5NlxgA4PEhSL1NpJPDvGLcop0BHdDTeKCeJGoIAzJWa7wausJbTb3w==
 
 events@^3.0.0:
   version "3.1.0"

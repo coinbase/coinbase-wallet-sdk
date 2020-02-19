@@ -40,7 +40,7 @@
     "bind-decorator": "^1.0.11",
     "bn.js": "^5.1.1",
     "clsx": "^1.0.4",
-    "eth-eip712-util": "^2.3.0",
+    "eth-eip712-util": "^2.3.1",
     "keccak": "^3.0.0",
     "preact": "^10.2.1",
     "qrcode-svg": "^1.1.0",
