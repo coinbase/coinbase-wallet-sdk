@@ -5,12 +5,12 @@
 import clsx from "clsx"
 import { FunctionComponent, h } from "preact"
 import { useEffect, useState } from "preact/hooks"
-import closeSvg from "../images/close-svg"
 import css from "./LinkDialog-css"
 import { QRCode } from "./QRCode"
 import { Spinner } from "./Spinner"
 
 export const LinkDialog: FunctionComponent<{
+  darkMode: boolean
   version: string
   sessionId: string
   sessionSecret: string
@@ -49,6 +49,7 @@ export const LinkDialog: FunctionComponent<{
     <div
       class={clsx(
         "-walletlink-link-dialog-container",
+        props.darkMode && "-walletlink-link-dialog-container-dark",
         isContainerHidden && "-walletlink-link-dialog-container-hidden"
       )}
     >
@@ -67,6 +68,7 @@ export const LinkDialog: FunctionComponent<{
           )}
         >
           <ScanQRCode
+            darkMode={props.darkMode}
             version={props.version}
             sessionId={props.sessionId}
             sessionSecret={props.sessionSecret}
@@ -74,14 +76,7 @@ export const LinkDialog: FunctionComponent<{
             isConnected={props.isConnected}
           />
 
-          {props.onCancel && (
-            <button
-              class="-walletlink-link-dialog-box-cancel"
-              onClick={props.onCancel}
-            >
-              <img src={closeSvg} alt="Cancel" />
-            </button>
-          )}
+          {props.onCancel && <CancelButton onClick={props.onCancel} />}
         </div>
       </div>
     </div>
@@ -89,6 +84,7 @@ export const LinkDialog: FunctionComponent<{
 }
 
 const ScanQRCode: FunctionComponent<{
+  darkMode: boolean
   version: string
   sessionId: string
   sessionSecret: string
@@ -111,13 +107,14 @@ const ScanQRCode: FunctionComponent<{
             content={qrUrl}
             width={224}
             height={224}
+            fgColor={props.darkMode ? "#fff" : "#000"}
             bgColor="transparent"
           />
         </div>
         <input type="hidden" value={qrUrl} />
         {!props.isConnected && (
           <div class="-walletlink-link-dialog-box-content-qrcode-connecting">
-            <Spinner size={128} color="#000" />
+            <Spinner size={128} color={props.darkMode ? "#fff" : "#000"} />
             <p>Connecting...</p>
           </div>
         )}
@@ -134,3 +131,12 @@ const ScanQRCode: FunctionComponent<{
     </div>
   )
 }
+
+const CancelButton: FunctionComponent<{ onClick: () => void }> = props => (
+  <button class="-walletlink-link-dialog-box-cancel" onClick={props.onClick}>
+    <div class="-walletlink-link-dialog-box-cancel-x">
+      <div class="-walletlink-link-dialog-box-cancel-x-a" />
+      <div class="-walletlink-link-dialog-box-cancel-x-b" />
+    </div>
+  </button>
+)

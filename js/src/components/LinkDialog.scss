@@ -57,6 +57,7 @@
           font-size: 22px;
           font-weight: bold;
           line-height: 1.2;
+          color: #000;
         }
 
         &-qrcode {
@@ -100,7 +101,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: rgba(#fff, 0.98);
+            background: rgba(#f6f6f6, 0.98);
 
             p {
               margin-top: 16px;
@@ -144,13 +145,38 @@
         background-color: #e7e7e7;
         cursor: pointer;
 
-        img {
-          transition: opacity 0.1s;
-          opacity: 0.33;
+        &-x {
+          position: relative;
+          display: block;
+
+          &-a,
+          &-b {
+            position: absolute;
+            display: block;
+            top: -1px;
+            left: -7px;
+            width: 14px;
+            height: 2px;
+            background-color: #999;
+            transition: background-color 0.2s;
+          }
+
+          &-a {
+            transform: rotate(45deg);
+          }
+
+          &-b {
+            transform: rotate(135deg);
+          }
         }
 
-        &:hover img {
-          opacity: 1;
+        &:hover {
+          .-walletlink-link-dialog-box-cancel-x {
+            &-a,
+            &-b {
+              background-color: #000;
+            }
+          }
         }
       }
     }
@@ -160,6 +186,70 @@
 
       &-hidden {
         display: none;
+      }
+    }
+  }
+
+  .-walletlink-link-dialog-container-dark {
+    .-walletlink-link-dialog {
+      &-box {
+        background-color: #2a2a2a;
+
+        &-content {
+          h3 {
+            color: #ccc;
+          }
+
+          &-qrcode {
+            background-color: #2a2a2a;
+            box-shadow: 4px 4px 8px rgba(#000, 0.5), -8px -8px 8px #333;
+
+            > p {
+              color: #999;
+            }
+
+            &-connecting {
+              background: rgba(#2a2a2a, 0.98);
+
+              p {
+                color: #ddd;
+              }
+            }
+          }
+
+          a {
+            &,
+            &:link,
+            &:visited {
+              color: #888;
+            }
+
+            &:hover,
+            &:active {
+              color: #aaa;
+            }
+          }
+        }
+
+        &-cancel {
+          background-color: #333;
+
+          &-x {
+            &-a,
+            &-b {
+              background-color: #aaa;
+            }
+          }
+
+          &:hover {
+            .-walletlink-link-dialog-box-cancel-x {
+              &-a,
+              &-b {
+                background-color: #eee;
+              }
+            }
+          }
+        }
       }
     }
   }

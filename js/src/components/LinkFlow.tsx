@@ -7,6 +7,7 @@ import { Observable, Subscription } from "rxjs"
 import { LinkDialog } from "./LinkDialog"
 
 export interface LinkFlowOptions {
+  darkMode: boolean
   version: string
   sessionId: string
   sessionSecret: string
@@ -15,6 +16,7 @@ export interface LinkFlowOptions {
 }
 
 export class LinkFlow {
+  private readonly darkMode: boolean
   private readonly version: string
   private readonly sessionId: string
   private readonly sessionSecret: string
@@ -30,6 +32,7 @@ export class LinkFlow {
   private root: Element | null = null
 
   constructor(options: Readonly<LinkFlowOptions>) {
+    this.darkMode = options.darkMode
     this.version = options.version
     this.sessionId = options.sessionId
     this.sessionSecret = options.sessionSecret
@@ -81,6 +84,7 @@ export class LinkFlow {
 
     render(
       <LinkDialog
+        darkMode={this.darkMode}
         version={this.version}
         sessionId={this.sessionId}
         sessionSecret={this.sessionSecret}

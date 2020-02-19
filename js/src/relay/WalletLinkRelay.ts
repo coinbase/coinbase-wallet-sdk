@@ -64,6 +64,7 @@ type ResponseCallback = (response: Web3Response) => void
 export interface WalletLinkRelayOptions {
   walletLinkUrl: string
   version: string
+  darkMode: boolean
 }
 
 export class WalletLinkRelay {
@@ -77,7 +78,7 @@ export class WalletLinkRelay {
   private readonly connection: WalletLinkConnection
 
   private readonly linkFlow: LinkFlow
-  private readonly snackbar = new Snackbar()
+  private readonly snackbar: Snackbar
 
   private appName = ""
   private appLogoUrl: string | null = null
@@ -109,7 +110,12 @@ export class WalletLinkRelay {
       .pipe(filter(c => !!c.metadata && c.metadata.__destroyed === "1"))
       .subscribe({ next: this.resetAndReload })
 
+    this.snackbar = new Snackbar({
+      darkMode: options.darkMode
+    })
+
     this.linkFlow = new LinkFlow({
+      darkMode: options.darkMode,
       version: options.version,
       sessionId: this.session.id,
       sessionSecret: this.session.secret,

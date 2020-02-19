@@ -8,6 +8,10 @@ import { useEffect, useState } from "preact/hooks"
 import chevronSvg from "../images/chevron-svg"
 import css from "./Snackbar-css"
 
+export interface SnackbarOptions {
+  darkMode: boolean
+}
+
 export interface SnackbarItemProps {
   message?: string
   showProgressBar?: boolean
@@ -21,9 +25,15 @@ export interface SnackbarItemAction {
 }
 
 export class Snackbar {
-  private items = new Map<number, SnackbarItemProps>()
+  private readonly darkMode: boolean
+  private readonly items = new Map<number, SnackbarItemProps>()
+
   private nextItemKey = 0
   private root: Element | null = null
+
+  constructor(options: Readonly<SnackbarOptions>) {
+    this.darkMode = options.darkMode
+  }
 
   public attach(el: Element): void {
     this.root = document.createElement("div")
@@ -54,7 +64,7 @@ export class Snackbar {
       return
     }
     render(
-      <SnackbarContainer>
+      <SnackbarContainer darkMode={this.darkMode}>
         {Array.from(this.items.entries()).map(([key, itemProps]) => (
           <SnackbarItem {...itemProps} key={key} />
         ))}
@@ -64,10 +74,15 @@ export class Snackbar {
   }
 }
 
-const SnackbarContainer: FunctionComponent = ({ children }) => (
-  <div class="-walletlink-snackbar-container">
+const SnackbarContainer: FunctionComponent<{ darkMode: boolean }> = props => (
+  <div
+    class={clsx(
+      "-walletlink-snackbar-container",
+      props.darkMode && "-walletlink-snackbar-container-dark"
+    )}
+  >
     <style>{css}</style>
-    <div class="-walletlink-snackbar">{children}</div>
+    <div class="-walletlink-snackbar">{props.children}</div>
   </div>
 )
 

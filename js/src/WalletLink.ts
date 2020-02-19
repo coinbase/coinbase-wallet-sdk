@@ -20,6 +20,8 @@ export interface WalletLinkOptions {
   appName: string
   /** @optional Application logo image URL; favicon is used if unspecified */
   appLogoUrl?: string | null
+  /** @optional Use dark theme */
+  darkMode?: boolean
   /** @optional WalletLink server URL; for most, leave it unspecified */
   walletLinkUrl?: string
 }
@@ -41,7 +43,8 @@ export class WalletLink {
   constructor(options: Readonly<WalletLinkOptions>) {
     this._relay = new WalletLinkRelay({
       walletLinkUrl: options.walletLinkUrl || WALLETLINK_URL,
-      version: WALLETLINK_VERSION
+      version: WALLETLINK_VERSION,
+      darkMode: !!options.darkMode
     })
     this.setAppInfo(options.appName, options.appLogoUrl)
     this._relay.attach(document.documentElement)
