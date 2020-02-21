@@ -1,5 +1,0 @@
-// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
-// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
-// Licensed under the Apache License, version 2.0
-
-export default `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTE2LjU1NCAxMC40MTdhLjY2NC42NjQgMCAwMC0uOTU1LS45MjNsLTIuMzI0IDIuNDAzYy0uNDAxLjQxNS0uNjAyLjYyMy0uODM1LjdhMSAxIDAgMDEtLjYzIDBjLS4yMzMtLjA3Ny0uNDM0LS4yODQtLjgzNS0uN0w4LjY1IDkuNDk0YS42NjQuNjY0IDAgMDAtLjk1NS45MjNsMy4yNzkgMy4zOTNjLjQuNDE1LjYwMi42MjIuODM1LjdhMSAxIDAgMDAuNjMgMGMuMjM0LS4wNzguNDM0LS4yODUuODM2LS43bDMuMjc4LTMuMzkzeiIgZmlsbD0iIzAwMCIvPjwvc3ZnPg==`

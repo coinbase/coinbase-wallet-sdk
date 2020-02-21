@@ -149,8 +149,9 @@
           position: relative;
           display: block;
 
-          &-a,
-          &-b {
+          &::before,
+          &::after {
+            content: "";
             position: absolute;
             display: block;
             top: -1px;
@@ -161,11 +162,11 @@
             transition: background-color 0.2s;
           }
 
-          &-a {
+          &::before {
             transform: rotate(45deg);
           }
 
-          &-b {
+          &::after {
             transform: rotate(135deg);
           }
         }
@@ -202,7 +203,7 @@
 
           &-qrcode {
             background-color: #2a2a2a;
-            box-shadow: 4px 4px 8px rgba(#000, 0.5), -8px -8px 8px #333;
+            box-shadow: 4px 4px 8px rgba(#000, 0.5), -8px -8px 8px #343434;
 
             > p {
               color: #999;
@@ -235,16 +236,16 @@
           background-color: #333;
 
           &-x {
-            &-a,
-            &-b {
+            &::before,
+            &::after {
               background-color: #aaa;
             }
           }
 
           &:hover {
             .-walletlink-link-dialog-box-cancel-x {
-              &-a,
-              &-b {
+              &::before,
+              &::after {
                 background-color: #eee;
               }
             }

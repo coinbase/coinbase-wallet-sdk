@@ -41,9 +41,22 @@
         }
 
         &-chevron {
+          position: relative;
           display: block;
-          margin-left: 8px;
+          margin: 0 8px;
           transition: transform 0.05s;
+
+          &::before {
+            position: relative;
+            top: -2px;
+            content: "";
+            display: block;
+            border-top: 2px solid #000;
+            border-left: 2px solid #000;
+            width: 8px;
+            height: 8px;
+            transform: rotate(-135deg);
+          }
         }
       }
 
@@ -56,8 +69,8 @@
           animation: -walletlink-snackbar-progressbar 2s linear infinite;
           background-image: linear-gradient(
             to right,
-            rgba(22, 82, 240, 0) 0%,
-            rgba(22, 82, 240, 1) 100%
+            rgba(#1652f0, 0) 0%,
+            rgba(#1652f0, 1) 100%
           );
           content: "";
           height: 100%;
@@ -85,7 +98,7 @@
           &-button {
             -webkit-appearance: none;
             -webkit-text-fill-color: #1652f0;
-            background: #fff;
+            background: transparent;
             color: #1652f0;
             cursor: pointer;
             display: inline;
@@ -109,11 +122,54 @@
 
       &-expanded {
         .-walletlink-snackbar-item-content-chevron {
-          transform: rotateZ(180deg);
+          transform: rotate(180deg);
         }
 
         .-walletlink-snackbar-item-actions {
           display: flex;
+        }
+      }
+    }
+  }
+
+  .-walletlink-snackbar-container-dark {
+    .-walletlink-snackbar {
+      &-item {
+        background-color: #2a2a2a;
+
+        &-content {
+          &-message {
+            color: #999;
+          }
+
+          &-chevron {
+            &::before {
+              border-top: 2px solid #ccc;
+              border-left: 2px solid #ccc;
+            }
+          }
+        }
+
+        &-progress-bar {
+          &::before {
+            animation: -walletlink-snackbar-progressbar-dark 2s linear infinite;
+            background-image: linear-gradient(
+              to right,
+              rgba(#4578ff, 0) 0%,
+              rgba(#4578ff, 1) 100%
+            );
+          }
+        }
+
+        &-actions {
+          border-top: 1px solid #343434;
+
+          &-item {
+            &-button {
+              -webkit-text-fill-color: #ccc;
+              color: #ccc;
+            }
+          }
         }
       }
     }
@@ -126,8 +182,8 @@
     width: 0%;
     background-image: linear-gradient(
       to right,
-      rgba(22, 82, 240, 0) 0%,
-      rgba(22, 82, 240, 1) 100%
+      rgba(#1652f0, 0) 0%,
+      rgba(#1652f0, 1) 100%
     );
   }
 
@@ -141,16 +197,16 @@
     width: 0%;
     background-image: linear-gradient(
       to right,
-      rgba(22, 82, 240, 0) 0%,
-      rgba(22, 82, 240, 1) 100%
+      rgba(#1652f0, 0) 0%,
+      rgba(#1652f0, 1) 100%
     );
   }
 
   50.01% {
     background-image: linear-gradient(
       to left,
-      rgba(22, 82, 240, 0) 0%,
-      rgba(22, 82, 240, 1) 100%
+      rgba(#1652f0, 0) 0%,
+      rgba(#1652f0, 1) 100%
     );
   }
 
@@ -164,8 +220,58 @@
     width: 0%;
     background-image: linear-gradient(
       to left,
-      rgba(22, 82, 240, 0) 0%,
-      rgba(22, 82, 240, 1) 100%
+      rgba(#1652f0, 0) 0%,
+      rgba(#1652f0, 1) 100%
+    );
+  }
+}
+
+@keyframes -walletlink-snackbar-progressbar-dark {
+  0% {
+    left: 0;
+    width: 0%;
+    background-image: linear-gradient(
+      to right,
+      rgba(#4578ff, 0) 0%,
+      rgba(#4578ff, 1) 100%
+    );
+  }
+
+  25% {
+    left: 0;
+    width: 100%;
+  }
+
+  50% {
+    left: 100%;
+    width: 0%;
+    background-image: linear-gradient(
+      to right,
+      rgba(#4578ff, 0) 0%,
+      rgba(#4578ff, 1) 100%
+    );
+  }
+
+  50.01% {
+    background-image: linear-gradient(
+      to left,
+      rgba(#4578ff, 0) 0%,
+      rgba(#4578ff, 1) 100%
+    );
+  }
+
+  75% {
+    left: 0;
+    width: 100%;
+  }
+
+  100% {
+    left: 0;
+    width: 0%;
+    background-image: linear-gradient(
+      to left,
+      rgba(#4578ff, 0) 0%,
+      rgba(#4578ff, 1) 100%
     );
   }
 }

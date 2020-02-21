@@ -134,9 +134,6 @@ const ScanQRCode: FunctionComponent<{
 
 const CancelButton: FunctionComponent<{ onClick: () => void }> = props => (
   <button class="-walletlink-link-dialog-box-cancel" onClick={props.onClick}>
-    <div class="-walletlink-link-dialog-box-cancel-x">
-      <div class="-walletlink-link-dialog-box-cancel-x-a" />
-      <div class="-walletlink-link-dialog-box-cancel-x-b" />
-    </div>
+    <div class="-walletlink-link-dialog-box-cancel-x" />
   </button>
 )

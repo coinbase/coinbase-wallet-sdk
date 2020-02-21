@@ -5,7 +5,6 @@
 import clsx from "clsx"
 import { FunctionComponent, h, render } from "preact"
 import { useEffect, useState } from "preact/hooks"
-import chevronSvg from "../images/chevron-svg"
 import css from "./Snackbar-css"
 
 export interface SnackbarOptions {
@@ -123,11 +122,7 @@ const SnackbarItem: FunctionComponent<SnackbarItemProps> = ({
     >
       <div class="-walletlink-snackbar-item-content" onClick={toggleExpanded}>
         <div class="-walletlink-snackbar-item-content-message">{message}</div>
-        <img
-          class="-walletlink-snackbar-item-content-chevron"
-          src={chevronSvg}
-          alt="Expand"
-        />
+        <div class="-walletlink-snackbar-item-content-chevron" title="Expand" />
       </div>
       {showProgressBar && (
         <div class="-walletlink-snackbar-item-progress-bar" />
