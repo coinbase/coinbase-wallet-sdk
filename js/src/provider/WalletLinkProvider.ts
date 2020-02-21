@@ -4,7 +4,6 @@
 
 import BN from "bn.js"
 import eip712 from "eth-eip712-util"
-import { EventEmitter } from "events"
 import {
   EthereumTransactionParams,
   WalletLinkRelay
@@ -31,7 +30,7 @@ export interface WalletLinkProviderOptions {
   chainId?: number
 }
 
-export class WalletLinkProvider extends EventEmitter implements Web3Provider {
+export class WalletLinkProvider implements Web3Provider {
   private readonly _filterPolyfill = new FilterPolyfill(this)
 
   private readonly _relay: WalletLinkRelay
@@ -41,7 +40,6 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
   private _addresses: AddressString[] = []
 
   constructor(options: Readonly<WalletLinkProviderOptions>) {
-    super()
     if (!options.relay) {
       throw new Error("realy must be provided")
     }
@@ -247,7 +245,6 @@ export class WalletLinkProvider extends EventEmitter implements Web3Provider {
 
     this._addresses = addresses.map(address => ensureAddressString(address))
     this._relay.setStorageItem(LOCAL_STORAGE_ADDRESSES_KEY, addresses.join(" "))
-    this.emit("accountsChanged", this._addresses)
   }
 
   private _sendRequestAsync(request: JSONRPCRequest): Promise<JSONRPCResponse> {
