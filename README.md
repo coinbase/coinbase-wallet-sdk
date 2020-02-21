@@ -28,6 +28,17 @@ The following instructions are in [TypeScript](https://www.typescriptlang.org/),
 but the usage is the same in JavaScript, except for the occasional type
 annotations, for example `: string[]` or `as any`.
 
+### Upgrading from WalletLink 1.0 to 2.0
+
+For most users, simply update the NPM package, and you should be good to go.
+
+If you were using `ethereum.on("accountsChanged")`, please remove it and obtain
+addresses via [EIP-1102](#use-eip-1102-to-obtain-authorization-and-get-ethereum-accounts)
+callbacks instead. It's removed to improve compatibility with the latest web3.js.
+
+Dark mode theme (`darkMode`) is now available as an option to WalletLink
+constructor.
+
 ### Initializing WalletLink and a WalletLink-powered Web3 object
 
 ```typescript
@@ -43,7 +54,8 @@ const CHAIN_ID = 1
 // Initialize WalletLink
 export const walletLink = new WalletLink({
   appName: APP_NAME,
-  appLogoUrl: APP_LOGO_URL
+  appLogoUrl: APP_LOGO_URL,
+  darkMode: false
 })
 
 // Initialize a Web3 Provider object
@@ -51,12 +63,6 @@ export const ethereum = walletLink.makeWeb3Provider(ETH_JSONRPC_URL, CHAIN_ID)
 
 // Initialize a Web3 object
 export const web3 = new Web3(ethereum as any)
-
-// Optionally, have the default account be set automatically when available
-ethereum.on('accountsChanged', (accounts: string[]) => {
-  web3.eth.defaultAccount = accounts[0]
-})
-web3.eth.defaultAccount = web3.eth.accounts[0]
 ```
 
 ### Use EIP-1102 to obtain authorization and get Ethereum accounts
@@ -70,11 +76,15 @@ blocked by the browser.
 // Use eth_RequestAccounts
 ethereum.send('eth_requestAccounts').then((accounts: string[]) => {
   console.log(`User's address is ${accounts[0]}`)
+
+  // Optionally, have the default account set for web3.js
+  web3.eth.defaultAccount = accounts[0]
 })
 
 // Alternatively, you can use ethereum.enable()
 ethereum.enable().then((accounts: string[]) => {
   console.log(`User's address is ${accounts[0]}`)
+  web3.eth.defaultAccount = accounts[0]
 })
 ```
 

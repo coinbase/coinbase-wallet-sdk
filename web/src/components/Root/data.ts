@@ -61,7 +61,8 @@ export const snippet = `
 
 <span class="k">export const</span> walletLink <span class="k">= new</span> <span class="f">WalletLink</span>({
   appName: <span class="s">"My Awesome DApp"</span>,
-  appLogoUrl: <span class="s">"https://example.com/logo.png"</span>
+  appLogoUrl: <span class="s">"https://example.com/logo.png"</span>,
+  darkMode: <span class="n">"false</span>
 })
 
 <span class="k">export const</span> ethereum <span class="k">=</span> walletLink.<span class="f">makeWeb3Provider</span>(
