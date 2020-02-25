@@ -14,24 +14,20 @@ export const dapps: Array<[string, string, string]> = [
   // [name, logoUrl, url]
   [
     "Compound",
-    require("../../images/dapps/compound.svg"),
+    require("./images/dapps/compound.svg"),
     "https://compound.finance"
   ],
-  ["dYdX", require("../../images/dapps/dydx.svg"), "https://dydx.exchange/"],
-  ["IDEX", require("../../images/dapps/idex.svg"), "https://idex.market/"],
-  [
-    "Maker",
-    require("../../images/dapps/maker.svg"),
-    "https://cdp.makerdao.com"
-  ],
-  ["Uniswap", require("../../images/dapps/uniswap.svg"), "https://uniswap.io"]
+  ["dYdX", require("./images/dapps/dydx.svg"), "https://dydx.exchange/"],
+  ["IDEX", require("./images/dapps/idex.svg"), "https://idex.market/"],
+  ["Maker", require("./images/dapps/maker.svg"), "https://cdp.makerdao.com"],
+  ["Uniswap", require("./images/dapps/uniswap.svg"), "https://uniswap.io"]
 ]
 
 export const quotes: Array<[string, string, string, string, string, string]> = [
   // [quote, photoUrl, name, company, personalUrl, companyUrl]
   [
     "It's a no-brainer upgrade for the user experience.",
-    require("../../images/people/robert.jpg"),
+    require("./images/people/robert.jpg"),
     "Robert Leshner",
     "Compound",
     "https://twitter.com/rleshner",
@@ -39,7 +35,7 @@ export const quotes: Array<[string, string, string, string, string, string]> = [
   ],
   [
     "Integrating WalletLink was super easy, and took us less than a day!",
-    require("../../images/people/antonio.jpg"),
+    require("./images/people/antonio.jpg"),
     "Antonio Juliano",
     "dYdX",
     "https://twitter.com/antoniomjuliano",
@@ -47,11 +43,21 @@ export const quotes: Array<[string, string, string, string, string, string]> = [
   ],
   [
     "WalletLink makes accessing DeFi services secure and simple.",
-    require("../../images/people/petejkim.jpg"),
+    require("./images/people/petejkim.jpg"),
     "Pete Kim",
     "Coinbase",
     "http://twitter.com/petejkim",
     "https://wallet.coinbase.com/"
+  ]
+]
+
+export const wallets: Array<[string, string, string, string]> = [
+  // [walletName, logoUrl, googlePlayUrl, appStoreUrl]
+  [
+    "Coinbase Wallet",
+    require("./images/wallets/coinbase-wallet.svg"),
+    "https://play.google.com/store/apps/details?id=org.toshi",
+    "https://itunes.apple.com/app/coinbase-wallet/id1278383455?ls=1&mt=8"
   ]
 ]
 

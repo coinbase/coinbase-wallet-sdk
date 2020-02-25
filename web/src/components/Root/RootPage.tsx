@@ -5,7 +5,7 @@
 import bind from "bind-decorator"
 import classNames from "classnames"
 import React, { MouseEvent } from "react"
-import { dapps, links, quotes, snippet } from "./data"
+import { dapps, links, quotes, snippet } from "../../data"
 import { images, styles, videos } from "./styles"
 
 export interface Props {
@@ -183,17 +183,14 @@ export class RootPage extends React.PureComponent<Props> {
             >
               <h2>Supported DApps on WalletLink</h2>
               <ul className={styles.supportedDApps.list}>
-                {dapps.map((item, i) => {
-                  const [name, logoUrl, url] = item
-                  return (
-                    <SupportedDApp
-                      key={i}
-                      name={name}
-                      logoUrl={logoUrl}
-                      url={url}
-                    />
-                  )
-                })}
+                {dapps.map(([name, logoUrl, url], i) => (
+                  <SupportedDApp
+                    key={i}
+                    name={name}
+                    logoUrl={logoUrl}
+                    url={url}
+                  />
+                ))}
               </ul>
             </div>
           </div>
@@ -203,16 +200,11 @@ export class RootPage extends React.PureComponent<Props> {
         >
           <div className={classNames(styles.section.container._)}>
             <ul className={styles.inspiringQuote.list}>
-              {quotes.map((item, i) => {
-                const [
-                  quote,
-                  photoUrl,
-                  name,
-                  company,
-                  personalUrl,
-                  companyUrl
-                ] = item
-                return (
+              {quotes.map(
+                (
+                  [quote, photoUrl, name, company, personalUrl, companyUrl],
+                  i
+                ) => (
                   <InspiringQuote
                     key={i}
                     quote={quote}
@@ -224,7 +216,7 @@ export class RootPage extends React.PureComponent<Props> {
                     right={i % 2 > 0}
                   />
                 )
-              })}
+              )}
             </ul>
           </div>
         </section>

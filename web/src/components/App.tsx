@@ -4,7 +4,7 @@
 
 import { createHashHistory } from "history"
 import React from "react"
-import { Route, Router, Redirect } from "react-router-dom"
+import { Route, Router } from "react-router-dom"
 import { SERVER_URL, WEB_URL } from "../config"
 import { isLocalStorageBlocked, postMessageToParent } from "../lib/util"
 import { MainRepository } from "../repositories/MainRepository"
@@ -15,6 +15,7 @@ import { LinkRoute } from "./Link/LinkRoute"
 import { LinkedRoute } from "./Linked/LinkedRoute"
 import { ResetRoute } from "./Reset/ResetRoute"
 import { RootRoute } from "./Root/RootRoute"
+import { WalletsRoute } from "./Wallets/WalletsRoute"
 
 export class App extends React.PureComponent {
   private readonly history = createHashHistory()
@@ -44,9 +45,7 @@ export class App extends React.PureComponent {
           <Route exact path={routes.linked} component={LinkedRoute} />
         </AppContext.Provider>
 
-        <Route exact path={routes.wallets}>
-          <Redirect to={routes.root} />
-        </Route>
+        <Route exact path={routes.wallets} component={WalletsRoute} />
         <Route exact path={routes.reset} component={ResetRoute} />
       </Router>
     )

@@ -12,7 +12,7 @@ cssRule("*", {
 })
 
 cssRule("html", {
-  backgroundColor: "white"
+  backgroundColor: "#f3f3f3"
 })
 
 cssRule("body", {
