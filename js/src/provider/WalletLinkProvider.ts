@@ -245,6 +245,9 @@ export class WalletLinkProvider implements Web3Provider {
 
     this._addresses = addresses.map(address => ensureAddressString(address))
     this._relay.setStorageItem(LOCAL_STORAGE_ADDRESSES_KEY, addresses.join(" "))
+    window.dispatchEvent(
+      new CustomEvent("walletlink:addresses", { detail: this._addresses })
+    )
   }
 
   private _sendRequestAsync(request: JSONRPCRequest): Promise<JSONRPCResponse> {

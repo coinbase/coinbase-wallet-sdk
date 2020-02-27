@@ -33,7 +33,7 @@ function chromeMain(): void {
     // walletlink.js
     ${walletLinkJS}
     ;(() => {
-      const walletLink = new WalletLink({ appName: document.title })
+      const walletLink = new WalletLink({ appName: document.title, darkMode: true })
       const ethereum = walletLink.makeWeb3Provider(
         "https://mainnet.infura.io/v3/38747f203c9e4ffebbdaf0f6c09ad72c",
         1
@@ -41,9 +41,10 @@ function chromeMain(): void {
       const web3 = new Web3(ethereum)
       web3.eth.defaultAccount = web3.eth.accounts[0]
 
-      ethereum.on('accountsChanged', accounts => {
-        web3.eth.defaultAccount = accounts[0]
-      })
+      window.addEventListener("walletlink:addresses", evt => {
+        const addresses = evt.detail
+        web3.eth.defaultAccount = addresses[0]
+      }, false)
 
       window.walletLink = walletLink
       window.ethereum = ethereum
