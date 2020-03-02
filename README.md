@@ -3,9 +3,10 @@
 WalletLink is an open protocol that lets users connect their mobile wallets to
 your DApp.
 
-With WalletLink, users can use your DApp in any desktop browser without
-installing an extension, and end-to-end encryption using client-side generated
-keys keeps all user activity private.
+With WalletLink, users can use your application in any desktop browser without
+installing an extension, and the secure tunnel established between your app and
+the mobile wallet with end-to-end encryption utilizing client-generated keys
+keeps all user activity private.
 
 For DApp developers to integrate with WalletLink, all you need to do is drop a
 few lines of code into your application, and WalletLink will take care of the
@@ -68,8 +69,8 @@ export const web3 = new Web3(ethereum as any)
 ### Use EIP-1102 to obtain authorization and get Ethereum accounts
 
 Invoking EIP-1102 will show a QR code dialog if the user's mobile wallet is not
-already connected to their browser. The following code should run in response to
-a user-initiated action such as clicking a button to ensure the pop up is not
+already connected to your app. The following code should run in response to a
+user-initiated action such as clicking a button to ensure the pop up is not
 blocked by the browser.
 
 ```typescript
@@ -90,6 +91,19 @@ ethereum.enable().then((accounts: string[]) => {
 
 That's it! Once the authorization is obtained from the user, the Web3 object
 (`web3`) and the Web3 Provider (`ethereum`) are ready to be used as per usual.
+
+### Disconnecting / De-establishing a link
+
+To disconnect, call the instance method `disconnect()` on the WalletLink object,
+or the instance method `close()` on the WalletLink Web3 Provider object. This
+will de-establish the link, and require user to reconnect by scanning QR code
+again.
+
+```typescript
+walletLink.disconnect()
+// is the same as the following:
+ethereum.close()
+```
 
 ---
 
