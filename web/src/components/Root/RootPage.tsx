@@ -355,7 +355,7 @@ const SupportedDApp = (props: {
   url: string
 }) => (
   <li className={styles.supportedDApps.item}>
-    <a href={props.url} target="_blank" rel="noopener noreferrer">
+    <a href={props.url || "#"} target="_blank" rel="noopener noreferrer">
       <div className={styles.supportedDApps.logo}>
         <img src={props.logoUrl} alt="" />
       </div>

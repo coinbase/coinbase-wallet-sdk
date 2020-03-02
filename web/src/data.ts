@@ -18,9 +18,42 @@ export const dapps: Array<[string, string, string]> = [
     "https://compound.finance"
   ],
   ["dYdX", require("./images/dapps/dydx.svg"), "https://dydx.exchange/"],
-  ["IDEX", require("./images/dapps/idex.svg"), "https://idex.market/"],
   ["Maker", require("./images/dapps/maker.svg"), "https://cdp.makerdao.com"],
-  ["Uniswap", require("./images/dapps/uniswap.svg"), "https://uniswap.io"]
+  ["IDEX", require("./images/dapps/idex.svg"), "https://idex.market/"],
+  ["Uniswap", require("./images/dapps/uniswap.svg"), "https://uniswap.io"],
+  ["0x", require("./images/dapps/0x.svg"), "https://0x.org/zrx/staking"],
+  [
+    "PoolTogether",
+    require("./images/dapps/pooltogether.svg"),
+    "https://www.pooltogether.com/"
+  ],
+  ["Airswap", require("./images/dapps/airswap.svg"), "https://www.airswap.io/"],
+  ["DDEX", require("./images/dapps/ddex.svg"), "https://ddex.io/"],
+  ["Nuo", require("./images/dapps/nuo.svg"), "https://www.nuo.network/"],
+  ["Kyber", require("./images/dapps/kyber.svg"), "https://kyber.network/"],
+  ["1inch", require("./images/dapps/1inch.png"), "https://1inch.exchange/"],
+  [
+    "Sablier",
+    require("./images/dapps/sablier.svg"),
+    "https://sablier.finance/"
+  ],
+  ["Zerion", require("./images/dapps/zerion.svg"), "https://zerion.io/"],
+  [
+    "DeFi Saver",
+    require("./images/dapps/defi-saver.svg"),
+    "https://defisaver.com/"
+  ],
+  [
+    "Synthetix",
+    require("./images/dapps/synthetix.svg"),
+    "https://www.synthetix.io/"
+  ],
+  [
+    "Set Protocol",
+    require("./images/dapps/set.svg"),
+    "https://www.tokensets.com/"
+  ],
+  ["Aave", require("./images/dapps/aave.svg"), "https://aave.com/"]
 ]
 
 export const quotes: Array<[string, string, string, string, string, string]> = [
