@@ -10,7 +10,7 @@ export const links = {
   coinbaseWallet: "https://wallet.coinbase.com/"
 }
 
-export const dapps: Array<[string, string, string]> = [
+export const dapps: [string, string, string][] = [
   // [name, logoUrl, url]
   [
     "Compound",
@@ -56,7 +56,7 @@ export const dapps: Array<[string, string, string]> = [
   ["Aave", require("./images/dapps/aave.svg"), "https://aave.com/"]
 ]
 
-export const quotes: Array<[string, string, string, string, string, string]> = [
+export const quotes: [string, string, string, string, string, string][] = [
   // [quote, photoUrl, name, company, personalUrl, companyUrl]
   [
     "It's a no-brainer upgrade for the user experience.",
@@ -84,7 +84,7 @@ export const quotes: Array<[string, string, string, string, string, string]> = [
   ]
 ]
 
-export const wallets: Array<[string, string, string, string]> = [
+export const wallets: [string, string, string, string][] = [
   // [walletName, logoUrl, googlePlayUrl, appStoreUrl]
   [
     "Coinbase Wallet",
