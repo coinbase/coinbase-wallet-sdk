@@ -12,7 +12,6 @@ module.exports = {
   entry: [
     "core-js/stable",
     "regenerator-runtime/runtime",
-    "classlist-polyfill",
     "whatwg-fetch",
     "./src/index.ts"
   ],

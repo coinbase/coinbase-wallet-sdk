@@ -4,7 +4,7 @@
 
 import { FunctionComponent, h } from "preact"
 import { useEffect, useState } from "preact/hooks"
-import QRCodeSVG from "qrcode-svg"
+import QRCodeSVG from "../vendor-js/qrcode-svg"
 
 export interface QRCodeProps {
   content: string

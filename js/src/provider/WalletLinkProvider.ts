@@ -3,7 +3,6 @@
 // Licensed under the Apache License, version 2.0
 
 import BN from "bn.js"
-import eip712 from "eth-eip712-util"
 import {
   EthereumTransactionParams,
   WalletLinkRelay
@@ -18,6 +17,7 @@ import {
   ensureIntNumber,
   ensureRegExpString
 } from "../util"
+import eip712 from "../vendor-js/eth-eip712-util"
 import { FilterPolyfill } from "./FilterPolyfill"
 import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from "./JSONRPC"
 import { ProviderError, ProviderErrorCode, Web3Provider } from "./Web3Provider"
