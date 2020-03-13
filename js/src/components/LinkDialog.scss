@@ -72,8 +72,11 @@
 
           &-wrapper {
             display: block;
-            width: 224px;
-            height: 224px;
+            width: 232px;
+            height: 232px;
+            padding: 4px;
+            border-radius: 4px;
+            background: #f4f4f4;
             margin-bottom: 16px;
 
             img {

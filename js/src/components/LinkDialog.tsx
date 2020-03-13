@@ -107,7 +107,7 @@ const ScanQRCode: FunctionComponent<{
             content={qrUrl}
             width={224}
             height={224}
-            fgColor={props.darkMode ? "#fff" : "#000"}
+            fgColor="#000"
             bgColor="transparent"
           />
         </div>

@@ -33,7 +33,10 @@ function chromeMain(): void {
     // walletlink.js
     ${walletLinkJS}
     ;(() => {
-      const walletLink = new WalletLink({ appName: document.title, darkMode: true })
+      const walletLink = new WalletLink({
+        appName: document.title,
+        darkMode: true
+      })
       const ethereum = walletLink.makeWeb3Provider(
         "https://mainnet.infura.io/v3/38747f203c9e4ffebbdaf0f6c09ad72c",
         1
