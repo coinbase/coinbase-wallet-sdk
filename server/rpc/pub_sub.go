@@ -17,16 +17,18 @@ type subscriberSet map[Subscriber]struct{}
 
 // PubSub - pub/sub interface for message senders
 type PubSub struct {
-	lock   sync.Mutex
-	subMap map[string]subscriberSet      // Subscription ID -> Subscribers
-	idMap  map[Subscriber]util.StringSet // Subscriber -> Subscription IDs
+	lock     sync.Mutex
+	subMap   map[string]subscriberSet      // Subscription ID -> Subscribers
+	idMap    map[Subscriber]util.StringSet // Subscriber -> Subscription IDs
+	subLocks map[Subscriber]*sync.Mutex    // Subscriber -> mutex lock
 }
 
 // NewPubSub - construct a PubSub
 func NewPubSub() *PubSub {
 	return &PubSub{
-		subMap: map[string]subscriberSet{},
-		idMap:  map[Subscriber]util.StringSet{},
+		subMap:   map[string]subscriberSet{},
+		idMap:    map[Subscriber]util.StringSet{},
+		subLocks: map[Subscriber]*sync.Mutex{},
 	}
 }
 
@@ -48,6 +50,10 @@ func (cm *PubSub) Subscribe(id string, subscriber Subscriber) {
 	if !ok {
 		ids = util.NewStringSet()
 		cm.idMap[subscriber] = ids
+	}
+
+	if _, ok := cm.subLocks[subscriber]; !ok {
+		cm.subLocks[subscriber] = &sync.Mutex{}
 	}
 
 	subscribers[subscriber] = struct{}{}
@@ -83,6 +89,10 @@ func (cm *PubSub) UnsubscribeAll(subscriber Subscriber) int {
 
 	for id := range ids {
 		cm.unsubscribeOne(id, subscriber)
+	}
+
+	if _, ok = cm.subLocks[subscriber]; ok {
+		delete(cm.subLocks, subscriber)
 	}
 
 	return idsLen
@@ -121,6 +131,14 @@ func (cm *PubSub) Publish(id string, msg interface{}) int {
 	for subscriber := range subscribers {
 		subscriber := subscriber
 		go func() {
+			subLock, ok := cm.subLocks[subscriber]
+			if !ok {
+				return
+			}
+
+			subLock.Lock()
+			defer subLock.Unlock()
+
 			subscriber <- msg
 		}()
 	}
@@ -128,6 +146,14 @@ func (cm *PubSub) Publish(id string, msg interface{}) int {
 }
 
 func (cm *PubSub) unsubscribeOne(id string, subscriber Subscriber) {
+	subLock, ok := cm.subLocks[subscriber]
+	if !ok {
+		return
+	}
+
+	subLock.Lock()
+	defer subLock.Unlock()
+
 	subSet, ok := cm.subMap[id]
 	if !ok {
 		return
