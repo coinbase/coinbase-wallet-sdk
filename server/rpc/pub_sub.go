@@ -17,7 +17,7 @@ type subscriberSet map[Subscriber]struct{}
 
 // PubSub - pub/sub interface for message senders
 type PubSub struct {
-	lock     sync.Mutex
+	lock     *sync.Mutex
 	subMap   map[string]subscriberSet      // Subscription ID -> Subscribers
 	idMap    map[Subscriber]util.StringSet // Subscriber -> Subscription IDs
 	subLocks map[Subscriber]*sync.Mutex    // Subscriber -> mutex lock
@@ -26,6 +26,7 @@ type PubSub struct {
 // NewPubSub - construct a PubSub
 func NewPubSub() *PubSub {
 	return &PubSub{
+		lock:     &sync.Mutex{},
 		subMap:   map[string]subscriberSet{},
 		idMap:    map[Subscriber]util.StringSet{},
 		subLocks: map[Subscriber]*sync.Mutex{},
