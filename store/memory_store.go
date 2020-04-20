@@ -16,7 +16,7 @@ import (
 
 // MemoryStore - in-memory store
 type MemoryStore struct {
-	lock sync.Mutex
+	lock *sync.Mutex
 	db   map[string]storeValue
 }
 
@@ -31,7 +31,8 @@ var _ Store = (*MemoryStore)(nil)
 // NewMemoryStore - construct a MemoryStore
 func NewMemoryStore() *MemoryStore {
 	return &MemoryStore{
-		db: map[string]storeValue{},
+		lock: &sync.Mutex{},
+		db:   map[string]storeValue{},
 	}
 }
 
