@@ -74,6 +74,13 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 	defer handler.Close()
 
 	for {
+		if srv.readDeadline > 0 {
+			if err := ws.SetReadDeadline(time.Now().Add(srv.readDeadline)); err != nil {
+				log.Println(errors.Wrap(err, "websocket set read deadline failed"))
+				break
+			}
+		}
+
 		msgType, msgData, err := ws.ReadMessage()
 		if err != nil {
 			if !websocket.IsCloseError(err) &&
