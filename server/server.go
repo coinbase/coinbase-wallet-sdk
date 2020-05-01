@@ -6,9 +6,14 @@ package server
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
+	"strconv"
+	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -27,6 +32,9 @@ type Server struct {
 	webhook        webhook.Caller
 	serverURL      string
 	readDeadline   time.Duration
+
+	activeConnNum     int
+	activeConnNumLock *sync.Mutex
 }
 
 // NewServerOptions - options for NewServer function
@@ -54,13 +62,15 @@ func NewServer(options *NewServerOptions) *Server {
 	router := mux.NewRouter()
 
 	srv := &Server{
-		router:         router,
-		store:          st,
-		pubSub:         rpc.NewPubSub(),
-		allowedOrigins: options.AllowedOrigins,
-		webhook:        options.Webhook,
-		serverURL:      options.ServerURL,
-		readDeadline:   options.ReadDeadline,
+		router:            router,
+		store:             st,
+		pubSub:            rpc.NewPubSub(),
+		allowedOrigins:    options.AllowedOrigins,
+		webhook:           options.Webhook,
+		serverURL:         options.ServerURL,
+		readDeadline:      options.ReadDeadline,
+		activeConnNum:     0,
+		activeConnNumLock: &sync.Mutex{},
 	}
 
 	if options.ForceSSL {
@@ -91,6 +101,40 @@ func (s *Server) Start(port uint) {
 		IdleTimeout:  time.Second * 60,
 		Handler:      s.router,
 	}
+
+	go func() {
+		ticker := time.NewTicker(5 * time.Minute)
+
+		for {
+			select {
+			case <-ticker.C:
+				files := map[string]time.Time{}
+
+				fdpath := filepath.Join("/proc", strconv.Itoa(os.Getpid()), "fd")
+				ffiles, err := ioutil.ReadDir(fdpath)
+				if err != nil {
+					log.Printf("Failed to read /proc :%v", err)
+					continue
+				}
+
+				for _, f := range ffiles {
+					if f.Name() == "0" || f.Name() == "1" || f.Name() == "2" {
+						continue
+					}
+
+					fpath, err := os.Readlink(filepath.Join(fdpath, f.Name()))
+					if err != nil {
+						continue
+					}
+
+					files[fpath] = f.ModTime()
+				}
+
+				log.Printf("Number of active conns: %d", len(files))
+			}
+		}
+	}()
+
 	log.Fatal(httpServer.ListenAndServe())
 }
 

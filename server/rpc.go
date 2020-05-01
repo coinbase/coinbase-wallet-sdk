@@ -6,7 +6,9 @@ package server
 
 import (
 	"log"
+	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -31,8 +33,8 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ws, err := upgrader.Upgrade(w, r, nil)
-
 	if err != nil {
+		log.Printf("IP: %s, User-Agent: %s", clientIP(r), r.Header.Get("User-Agent"))
 		log.Println(errors.Wrap(err, "websocket upgrade failed"))
 		return
 	}
@@ -99,4 +101,23 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
+}
+
+func clientIP(req *http.Request) string {
+	clientIP := req.Header.Get("X-Forwarded-For")
+	clientIP = strings.TrimSpace(strings.Split(clientIP, ",")[0])
+	if clientIP != "" {
+		return clientIP
+	}
+
+	clientIP = strings.TrimSpace(req.Header.Get("X-Real-Ip"))
+	if clientIP != "" {
+		return clientIP
+	}
+
+	if ip, _, err := net.SplitHostPort(strings.TrimSpace(req.RemoteAddr)); err == nil {
+		return ip
+	}
+
+	return ""
 }
