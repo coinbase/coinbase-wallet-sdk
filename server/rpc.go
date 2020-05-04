@@ -34,11 +34,16 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Printf("IP: %s, User-Agent: %s", clientIP(r), r.Header.Get("User-Agent"))
 		log.Println(errors.Wrap(err, "websocket upgrade failed"))
 		return
 	}
-	defer ws.Close()
+
+	log.Printf("Opened ws with IP: %s, %s User-Agent: %s", clientIP(r), r.RemoteAddr, r.Header.Get("User-Agent"))
+	defer func() {
+		log.Printf("Closed ws with IP: %s, %s User-Agent: %s", clientIP(r), r.RemoteAddr, r.Header.Get("User-Agent"))
+		ws.Close()
+	}()
+
 	ws.SetReadLimit(websocketReadLimit)
 
 	sendCh := make(chan interface{})

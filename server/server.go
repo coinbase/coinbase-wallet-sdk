@@ -48,6 +48,10 @@ type NewServerOptions struct {
 	ReadDeadline   time.Duration
 }
 
+const (
+	activeConnsThreshold = 5000
+)
+
 // NewServer - construct a Server
 func NewServer(options *NewServerOptions) *Server {
 	if options == nil {
@@ -131,6 +135,11 @@ func (s *Server) Start(port uint) {
 				}
 
 				log.Printf("Number of active conns: %d", len(files))
+
+				if len(files) > activeConnsThreshold {
+					fmt.Println("Restarting due to too many active conns")
+					os.Exit(1)
+				}
 			}
 		}
 	}()
