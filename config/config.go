@@ -61,6 +61,9 @@ var (
 
 	// WriteDeadline - Deadline for writing messages
 	WriteDeadline time.Duration
+
+	// For debugging
+	BasicAuthPassword = getEnv("BASIC_AUTH_PASSWORD", "")
 )
 
 func init() {

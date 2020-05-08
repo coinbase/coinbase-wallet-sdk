@@ -5,14 +5,17 @@
 package server
 
 import (
+	"crypto/subtle"
 	"log"
 	"net"
 	"net/http"
+	"net/http/pprof"
 	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
+	"github.com/walletlink/walletlink/config"
 	"github.com/walletlink/walletlink/server/rpc"
 )
 
@@ -124,6 +127,32 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
+}
+
+func (srv *Server) goroutineHandler(w http.ResponseWriter, r *http.Request) {
+	user, pass, ok := r.BasicAuth()
+
+	if !ok || subtle.ConstantTimeCompare([]byte(user), []byte("wallet")) != 1 || subtle.ConstantTimeCompare([]byte(pass), []byte(config.BasicAuthPassword)) != 1 {
+		w.Header().Set("WWW-Authenticate", `Basic realm="Provide user name and password"`)
+		w.WriteHeader(401)
+		w.Write([]byte("Unauthorised.\n"))
+		return
+	}
+
+	pprof.Handler("goroutine").ServeHTTP(w, r)
+}
+
+func (srv *Server) heapHandler(w http.ResponseWriter, r *http.Request) {
+	user, pass, ok := r.BasicAuth()
+
+	if !ok || subtle.ConstantTimeCompare([]byte(user), []byte("wallet")) != 1 || subtle.ConstantTimeCompare([]byte(pass), []byte(config.BasicAuthPassword)) != 1 {
+		w.Header().Set("WWW-Authenticate", `Basic realm="Provide user name and password"`)
+		w.WriteHeader(401)
+		w.Write([]byte("Unauthorised.\n"))
+		return
+	}
+
+	pprof.Handler("heap").ServeHTTP(w, r)
 }
 
 func clientIP(req *http.Request) string {

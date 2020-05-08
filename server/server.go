@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/walletlink/walletlink/config"
 	"github.com/walletlink/walletlink/server/rpc"
 	"github.com/walletlink/walletlink/store"
 	"github.com/walletlink/walletlink/util"
@@ -88,6 +89,11 @@ func NewServer(options *NewServerOptions) *Server {
 	router.HandleFunc("/events", srv.getEventsSinceHandler).Methods("GET")
 	router.HandleFunc("/events/{id}", srv.getEventByIDHandler).Methods("GET")
 	router.HandleFunc("/events/{id}/seen", srv.markEventSeenHandler).Methods("POST")
+
+	if len(config.BasicAuthPassword) > 0 {
+		router.HandleFunc("/debug/pprof/goroutine", srv.goroutineHandler).Methods("GET")
+		router.HandleFunc("/debug/pprof/heap", srv.heapHandler).Methods("GET")
+	}
 
 	if len(options.WebRoot) > 0 {
 		router.PathPrefix("/").Methods("GET").Handler(
