@@ -58,6 +58,9 @@ var (
 
 	// ReadDeadline - Deadline for reading messages
 	ReadDeadline time.Duration
+
+	// WriteDeadline - Deadline for writing messages
+	WriteDeadline time.Duration
 )
 
 func init() {
@@ -67,6 +70,9 @@ func init() {
 
 	readDeadlineSecs, _ := strconv.Atoi(getEnv("READ_DEADLINE_SECS", "30"))
 	ReadDeadline = time.Second * time.Duration(readDeadlineSecs)
+
+	writeDeadlineSecs, _ := strconv.Atoi(getEnv("WRITE_DEADLINE_SECS", "30"))
+	WriteDeadline = time.Second * time.Duration(writeDeadlineSecs)
 }
 
 func getEnv(name string, defaultValue string) string {

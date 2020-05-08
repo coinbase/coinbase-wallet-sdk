@@ -46,6 +46,7 @@ func main() {
 		ServerURL:      config.ServerURL,
 		ForceSSL:       config.ForceSSL,
 		ReadDeadline:   config.ReadDeadline,
+		WriteDeadline:  config.WriteDeadline,
 	})
 
 	fmt.Printf(

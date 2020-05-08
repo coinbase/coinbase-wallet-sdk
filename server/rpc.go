@@ -55,10 +55,28 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 			if !ok {
 				return
 			}
+
 			if v, ok := res.(rune); ok && v == 'h' {
-				ws.WriteMessage(websocket.TextMessage, []byte("h"))
+				if srv.writeDeadline > 0 {
+					if err := ws.SetWriteDeadline(time.Now().Add(srv.writeDeadline)); err != nil {
+						log.Println(errors.Wrap(err, "websocket set write deadline failed"))
+						break
+					}
+				}
+
+				if err := ws.WriteMessage(websocket.TextMessage, []byte("h")); err != nil {
+					log.Println(errors.Wrap(err, "websocket write heartbeat"))
+				}
 				continue
 			}
+
+			if srv.writeDeadline > 0 {
+				if err := ws.SetWriteDeadline(time.Now().Add(srv.writeDeadline)); err != nil {
+					log.Println(errors.Wrap(err, "websocket set write deadline failed"))
+					break
+				}
+			}
+
 			if err := ws.WriteJSON(res); err != nil {
 				log.Println(errors.Wrap(err, "websocket write failed"))
 				ws.Close()

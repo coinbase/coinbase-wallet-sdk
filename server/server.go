@@ -32,6 +32,7 @@ type Server struct {
 	webhook        webhook.Caller
 	serverURL      string
 	readDeadline   time.Duration
+	writeDeadline  time.Duration
 
 	activeConnNum     int
 	activeConnNumLock *sync.Mutex
@@ -46,6 +47,7 @@ type NewServerOptions struct {
 	ServerURL      string
 	ForceSSL       bool
 	ReadDeadline   time.Duration
+	WriteDeadline  time.Duration
 }
 
 const (
@@ -73,6 +75,7 @@ func NewServer(options *NewServerOptions) *Server {
 		webhook:           options.Webhook,
 		serverURL:         options.ServerURL,
 		readDeadline:      options.ReadDeadline,
+		writeDeadline:     options.WriteDeadline,
 		activeConnNum:     0,
 		activeConnNumLock: &sync.Mutex{},
 	}
