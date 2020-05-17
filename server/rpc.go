@@ -53,37 +53,39 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 	defer close(sendCh)
 
 	go func() {
+		isClosed := false
 		for {
 			res, ok := <-sendCh
 			if !ok {
+				log.Printf("channel closed. IP: %s, %s User-Agent: %s", clientIP(r), r.RemoteAddr, r.Header.Get("User-Agent"))
 				return
+			}
+
+			if isClosed {
+				log.Printf("received a message %v after ws closed. IP: %s, %s User-Agent: %s", res, clientIP(r), r.RemoteAddr, r.Header.Get("User-Agent"))
+				continue
 			}
 
 			if v, ok := res.(rune); ok && v == 'h' {
 				if srv.writeDeadline > 0 {
-					if err := ws.SetWriteDeadline(time.Now().Add(srv.writeDeadline)); err != nil {
-						log.Println(errors.Wrap(err, "websocket set write deadline failed"))
-						break
-					}
+					ws.SetWriteDeadline(time.Now().Add(srv.writeDeadline))
 				}
 
 				if err := ws.WriteMessage(websocket.TextMessage, []byte("h")); err != nil {
 					log.Println(errors.Wrap(err, "websocket write heartbeat"))
 				}
+
 				continue
 			}
 
 			if srv.writeDeadline > 0 {
-				if err := ws.SetWriteDeadline(time.Now().Add(srv.writeDeadline)); err != nil {
-					log.Println(errors.Wrap(err, "websocket set write deadline failed"))
-					break
-				}
+				ws.SetWriteDeadline(time.Now().Add(srv.writeDeadline))
 			}
 
 			if err := ws.WriteJSON(res); err != nil {
 				log.Println(errors.Wrap(err, "websocket write failed"))
 				ws.Close()
-				return
+				isClosed = true
 			}
 		}
 	}()
