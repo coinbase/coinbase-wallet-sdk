@@ -15,12 +15,17 @@ type Subscriber chan<- interface{}
 
 type subscriberSet map[Subscriber]struct{}
 
+type subscriberLock struct {
+	IsUnsubcribed bool
+	Lock          *sync.Mutex
+}
+
 // PubSub - pub/sub interface for message senders
 type PubSub struct {
 	lock     *sync.Mutex
-	subMap   map[string]subscriberSet      // Subscription ID -> Subscribers
-	idMap    map[Subscriber]util.StringSet // Subscriber -> Subscription IDs
-	subLocks map[Subscriber]*sync.Mutex    // Subscriber -> mutex lock
+	subMap   map[string]subscriberSet       // Subscription ID -> Subscribers
+	idMap    map[Subscriber]util.StringSet  // Subscriber -> Subscription IDs
+	subLocks map[Subscriber]*subscriberLock // Subscriber -> mutex lock
 }
 
 // NewPubSub - construct a PubSub
@@ -29,7 +34,7 @@ func NewPubSub() *PubSub {
 		lock:     &sync.Mutex{},
 		subMap:   map[string]subscriberSet{},
 		idMap:    map[Subscriber]util.StringSet{},
-		subLocks: map[Subscriber]*sync.Mutex{},
+		subLocks: map[Subscriber]*subscriberLock{},
 	}
 }
 
@@ -54,7 +59,10 @@ func (cm *PubSub) Subscribe(id string, subscriber Subscriber) {
 	}
 
 	if _, ok := cm.subLocks[subscriber]; !ok {
-		cm.subLocks[subscriber] = &sync.Mutex{}
+		cm.subLocks[subscriber] = &subscriberLock{
+			IsUnsubcribed: false,
+			Lock:          &sync.Mutex{},
+		}
 	}
 
 	subscribers[subscriber] = struct{}{}
@@ -137,8 +145,12 @@ func (cm *PubSub) Publish(id string, msg interface{}) int {
 				return
 			}
 
-			subLock.Lock()
-			defer subLock.Unlock()
+			subLock.Lock.Lock()
+			defer subLock.Lock.Unlock()
+
+			if subLock.IsUnsubcribed {
+				return
+			}
 
 			subscriber <- msg
 		}()
@@ -152,8 +164,11 @@ func (cm *PubSub) unsubscribeOne(id string, subscriber Subscriber) {
 		return
 	}
 
-	subLock.Lock()
-	defer subLock.Unlock()
+	subLock.Lock.Lock()
+	defer func() {
+		subLock.IsUnsubcribed = true
+		subLock.Lock.Unlock()
+	}()
 
 	subSet, ok := cm.subMap[id]
 	if !ok {
