@@ -61,6 +61,17 @@ var (
 
 	// WebhookTimeout - Timeout for webhook
 	WebhookTimeout time.Duration
+
+	// PGMaxIdelConns - maximum number of idle connections to postgres
+	PGMaxIdelConns, _ = strconv.ParseUint(
+		getEnv("PG_MAX_IDLE_CONNS", "10"), 10, 16)
+
+	// PGMaxOpenConns - maximum number of open connections to postgres
+	PGMaxOpenConns, _ = strconv.ParseUint(
+		getEnv("PG_MAX_OPEN_CONNS", "30"), 10, 16)
+
+	// PGConnMaxLifetime - maximum amount of time a connection may be reused
+	PGConnMaxLifetime time.Duration
 )
 
 func init() {
@@ -73,6 +84,9 @@ func init() {
 
 	webhookTimeoutSecs, _ := strconv.Atoi(getEnv("WEBHOOK_TIMEOUT_SECS", "10"))
 	WebhookTimeout = time.Second * time.Duration(webhookTimeoutSecs)
+
+	pgConnMaxLifetimeSecs, _ := strconv.Atoi(getEnv("PG_CONN_MAX_LIFETIME", "600"))
+	PGConnMaxLifetime = time.Second * time.Duration(pgConnMaxLifetimeSecs)
 }
 
 func getEnv(name string, defaultValue string) string {

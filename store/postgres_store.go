@@ -25,11 +25,19 @@ var _ Store = (*PostgresStore)(nil)
 
 // NewPostgresStore - make a connection to a PostgreSQL instance, and return
 // a PostgresStore
-func NewPostgresStore(url, tableName string) (*PostgresStore, error) {
+func NewPostgresStore(
+	url, tableName string,
+	maxIdleConns, maxOpenConns int,
+	maxConnMaxLifetime time.Duration,
+) (*PostgresStore, error) {
 	db, err := sql.Open("postgres", url)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to open a postgres connection")
 	}
+
+	db.SetMaxIdleConns(maxIdleConns)
+	db.SetMaxOpenConns(maxOpenConns)
+	db.SetConnMaxLifetime(maxConnMaxLifetime)
 
 	return &PostgresStore{
 		db:        db,

@@ -32,7 +32,14 @@ func main() {
 		st = store.NewMemoryStore()
 	} else {
 		var err error
-		st, err = store.NewPostgresStore(config.PostgresURL, "store")
+		st, err = store.NewPostgresStore(
+			config.PostgresURL,
+			"store",
+			int(config.PGMaxIdelConns),
+			int(config.PGMaxOpenConns),
+			config.PGConnMaxLifetime,
+		)
+
 		if err != nil {
 			log.Panicln(err)
 		}

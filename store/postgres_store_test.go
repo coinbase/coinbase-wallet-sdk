@@ -34,7 +34,7 @@ func TestPostgresStoreNonExisting(t *testing.T) {
 	setup(t)
 	defer teardown()
 
-	ps, err := NewPostgresStore(config.PostgresURL, "store")
+	ps, err := NewPostgresStore(config.PostgresURL, "store", 5, 5, time.Minute)
 	require.Nil(t, err)
 	defer ps.Close()
 
@@ -48,7 +48,7 @@ func TestPostgresStoreGetSet(t *testing.T) {
 	setup(t)
 	defer teardown()
 
-	ps, err := NewPostgresStore(config.PostgresURL, "store")
+	ps, err := NewPostgresStore(config.PostgresURL, "store", 5, 5, time.Minute)
 	require.Nil(t, err)
 	defer ps.Close()
 
@@ -91,7 +91,7 @@ func TestPosgresStoreOverwrite(t *testing.T) {
 	setup(t)
 	defer teardown()
 
-	ps, err := NewPostgresStore(config.PostgresURL, "store")
+	ps, err := NewPostgresStore(config.PostgresURL, "store", 5, 5, time.Minute)
 	require.Nil(t, err)
 	defer ps.Close()
 
@@ -121,7 +121,7 @@ func TestPostgresStoreRemove(t *testing.T) {
 	setup(t)
 	defer teardown()
 
-	ps, err := NewPostgresStore(config.PostgresURL, "store")
+	ps, err := NewPostgresStore(config.PostgresURL, "store", 5, 5, time.Minute)
 	require.Nil(t, err)
 	defer ps.Close()
 
@@ -147,7 +147,7 @@ func TestPostgresStoreFindByPrefix(t *testing.T) {
 	setup(t)
 	defer teardown()
 
-	ps, err := NewPostgresStore(config.PostgresURL, "store")
+	ps, err := NewPostgresStore(config.PostgresURL, "store", 5, 5, time.Minute)
 	require.Nil(t, err)
 	defer ps.Close()
 
@@ -191,7 +191,7 @@ func TestPostgresStoreMarkSeen(t *testing.T) {
 	setup(t)
 	defer teardown()
 
-	ps, err := NewPostgresStore(config.PostgresURL, "store")
+	ps, err := NewPostgresStore(config.PostgresURL, "store", 5, 5, time.Minute)
 	require.Nil(t, err)
 	defer ps.Close()
 
