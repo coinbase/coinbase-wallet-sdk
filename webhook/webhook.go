@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"github.com/pkg/errors"
+	"github.com/walletlink/walletlink/config"
 )
 
 // Caller - Interface for calling webhooks
@@ -22,6 +23,7 @@ var _ Caller = (*Webhook)(nil)
 // Webhook - used to broadcast push notifications
 type Webhook struct {
 	serverURL string
+	client    *http.Client
 }
 
 type callParams struct {
@@ -33,7 +35,15 @@ type callParams struct {
 
 // NewWebhook - returns a new Webhook instance
 func NewWebhook(serverURL string) *Webhook {
-	return &Webhook{serverURL: serverURL}
+	return &Webhook{
+		serverURL: serverURL,
+		client: &http.Client{
+			Transport: &http.Transport{
+				ResponseHeaderTimeout: config.WebhookTimeout,
+			},
+			Timeout: config.WebhookTimeout,
+		},
+	}
 }
 
 // Call - call webhook to notify about a new event
@@ -52,7 +62,7 @@ func (a *Webhook) Call(eventID, sessionID, webhookID, webhookURL string) error {
 		json.NewEncoder(pw).Encode(notification)
 	}()
 
-	res, err := http.Post(webhookURL, "application/json", pr)
+	res, err := a.client.Post(webhookURL, "application/json", pr)
 	if err != nil {
 		return errors.Wrap(err, "failed to call webhook")
 	}

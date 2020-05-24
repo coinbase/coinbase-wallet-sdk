@@ -58,6 +58,9 @@ var (
 
 	// ReadDeadline - Deadline for reading messages
 	ReadDeadline time.Duration
+
+	// WebhookTimeout - Timeout for webhook
+	WebhookTimeout time.Duration
 )
 
 func init() {
@@ -67,6 +70,9 @@ func init() {
 
 	readDeadlineSecs, _ := strconv.Atoi(getEnv("READ_DEADLINE_SECS", "30"))
 	ReadDeadline = time.Second * time.Duration(readDeadlineSecs)
+
+	webhookTimeoutSecs, _ := strconv.Atoi(getEnv("WEBHOOK_TIMEOUT_SECS", "10"))
+	WebhookTimeout = time.Second * time.Duration(webhookTimeoutSecs)
 }
 
 func getEnv(name string, defaultValue string) string {
