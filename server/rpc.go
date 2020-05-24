@@ -44,9 +44,14 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 
 	go func() {
 		for {
+			isClosed := false
+
 			res, ok := <-sendCh
 			if !ok {
 				return
+			}
+			if isClosed {
+				continue
 			}
 			if v, ok := res.(rune); ok && v == 'h' {
 				ws.WriteMessage(websocket.TextMessage, []byte("h"))
@@ -55,7 +60,7 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 			if err := ws.WriteJSON(res); err != nil {
 				log.Println(errors.Wrap(err, "websocket write failed"))
 				ws.Close()
-				return
+				isClosed = true
 			}
 		}
 	}()
