@@ -162,7 +162,8 @@ export class WalletLinkConnection {
       ws.incomingJSONData$
         .pipe(filter(m => ["IsLinkedOK", "Linked"].includes(m.type)))
         .subscribe(m => {
-          const msg = m as ServerMessageIsLinkedOK & ServerMessageLinked
+          const msg = m as Omit<ServerMessageIsLinkedOK, "type"> &
+            ServerMessageLinked
           this.linkedSubject.next(msg.linked || msg.onlineGuests > 0)
         })
     )
@@ -176,7 +177,7 @@ export class WalletLinkConnection {
           )
         )
         .subscribe(m => {
-          const msg = m as ServerMessageGetSessionConfigOK &
+          const msg = m as Omit<ServerMessageGetSessionConfigOK, "type"> &
             ServerMessageSessionConfigUpdated
           this.sessionConfigSubject.next({
             webhookId: msg.webhookId,

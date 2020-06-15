@@ -154,7 +154,8 @@ export class WalletLinkHost {
       ws.incomingJSONData$
         .pipe(filter(m => ["IsLinkedOK", "Linked"].includes(m.type)))
         .subscribe(m => {
-          const msg = m as ServerMessageIsLinkedOK & ServerMessageLinked
+          const msg = m as Omit<ServerMessageIsLinkedOK, "type"> &
+            ServerMessageLinked
           this.linkedSubject.next(msg.linked || msg.onlineGuests > 0)
         })
     )
@@ -168,7 +169,7 @@ export class WalletLinkHost {
           )
         )
         .subscribe(m => {
-          const msg = m as ServerMessageGetSessionConfigOK &
+          const msg = m as Omit<ServerMessageGetSessionConfigOK, "type"> &
             ServerMessageSessionConfigUpdated
           this.sessionConfigSubject.next({
             webhookId: msg.webhookId,
@@ -340,7 +341,7 @@ export class WalletLinkHost {
     return this.makeRequest<ServerMessageOK | ServerMessageFail>(msg).pipe(
       map(res => {
         if (isServerMessageFail(res)) {
-          throw new Error(res.error || "failed to authentcate")
+          throw new Error(res.error || "failed to authenticate")
         }
       })
     )
