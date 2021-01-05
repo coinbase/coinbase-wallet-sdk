@@ -2,7 +2,6 @@
 // Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import React from "react"
 import ReactDOM from "react-dom"
 import { cssRule } from "typestyle"
 import { App } from "./components/App"

@@ -3,7 +3,6 @@
 // Licensed under the Apache License, version 2.0
 
 import classNames from "classnames"
-import React from "react"
 import { wallets } from "../../data"
 import { styles } from "./styles"
 
