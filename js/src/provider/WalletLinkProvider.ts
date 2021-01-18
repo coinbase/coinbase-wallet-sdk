@@ -15,7 +15,8 @@ import {
   ensureBuffer,
   ensureHexString,
   ensureIntNumber,
-  ensureRegExpString
+  ensureRegExpString,
+  ensureString
 } from "../util"
 import eip712 from "../vendor-js/eth-eip712-util"
 import { FilterPolyfill } from "./FilterPolyfill"
@@ -650,15 +651,15 @@ export class WalletLinkProvider implements Web3Provider {
     params: unknown[]
   ): Promise<JSONRPCResponse> {
     this._requireAuthorization()
-    const typedData = params[0]
+    const typedDataStr = ensureString(params[0])
     const address = ensureAddressString(params[1])
 
     this._ensureKnownAddress(address)
 
-    const message = eip712.hashForSignTypedDataLegacy({ data: typedData })
-    const typedDataJson = JSON.stringify(typedData, null, 2)
+    const typedDataJson = JSON.parse(typedDataStr)
+    const message = eip712.hashForSignTypedDataLegacy({ data: typedDataJson })
 
-    return this._signEthereumMessage(message, address, false, typedDataJson)
+    return this._signEthereumMessage(message, address, false, typedDataStr)
   }
 
   private async _eth_signTypedData_v3(
@@ -666,14 +667,14 @@ export class WalletLinkProvider implements Web3Provider {
   ): Promise<JSONRPCResponse> {
     this._requireAuthorization()
     const address = ensureAddressString(params[0])
-    const typedData = params[1]
+    const typedDataStr = ensureString(params[1])
 
     this._ensureKnownAddress(address)
 
-    const message = eip712.hashForSignTypedData_v3({ data: typedData })
-    const typedDataJson = JSON.stringify(typedData, null, 2)
+    const typedDataJson = JSON.parse(typedDataStr)
+    const message = eip712.hashForSignTypedData_v3({ data: typedDataJson })
 
-    return this._signEthereumMessage(message, address, false, typedDataJson)
+    return this._signEthereumMessage(message, address, false, typedDataStr)
   }
 
   private async _eth_signTypedData_v4(
@@ -681,14 +682,14 @@ export class WalletLinkProvider implements Web3Provider {
   ): Promise<JSONRPCResponse> {
     this._requireAuthorization()
     const address = ensureAddressString(params[0])
-    const typedData = params[1]
+    const typedDataStr = ensureString(params[1])
 
     this._ensureKnownAddress(address)
 
-    const message = eip712.hashForSignTypedData_v4({ data: typedData })
-    const typedDataJson = JSON.stringify(typedData, null, 2)
+    const typedDataJson = JSON.parse(typedDataStr)
+    const message = eip712.hashForSignTypedData_v4({ data: typedDataJson })
 
-    return this._signEthereumMessage(message, address, false, typedDataJson)
+    return this._signEthereumMessage(message, address, false, typedDataStr)
   }
 
   private async _walletlink_arbitrary(

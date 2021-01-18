@@ -151,6 +151,14 @@ export function ensureBN(val: unknown): BN {
   throw new Error(`Not an integer: ${val}`)
 }
 
+export function ensureString(val: unknown): string {
+  if (typeof val === "string") {
+    return val as string
+  }
+
+  throw new Error(`Not a string: ${val}`)
+}
+
 export function isBigNumber(val: unknown): boolean {
   if (val == null || typeof (val as any).constructor !== "function") {
     return false
