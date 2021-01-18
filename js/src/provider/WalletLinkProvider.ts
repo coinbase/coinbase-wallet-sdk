@@ -13,10 +13,10 @@ import {
   ensureAddressString,
   ensureBN,
   ensureBuffer,
+  ensureJsonOrParseString,
   ensureHexString,
   ensureIntNumber,
-  ensureRegExpString,
-  ensureString
+  ensureRegExpString
 } from "../util"
 import eip712 from "../vendor-js/eth-eip712-util"
 import { FilterPolyfill } from "./FilterPolyfill"
@@ -651,13 +651,13 @@ export class WalletLinkProvider implements Web3Provider {
     params: unknown[]
   ): Promise<JSONRPCResponse> {
     this._requireAuthorization()
-    const typedDataStr = ensureString(params[0])
+    const typedDataJson = ensureJsonOrParseString(params[0])
     const address = ensureAddressString(params[1])
 
     this._ensureKnownAddress(address)
 
-    const typedDataJson = JSON.parse(typedDataStr)
     const message = eip712.hashForSignTypedDataLegacy({ data: typedDataJson })
+    const typedDataStr = JSON.stringify(typedDataJson, null, 2)
 
     return this._signEthereumMessage(message, address, false, typedDataStr)
   }
@@ -667,12 +667,12 @@ export class WalletLinkProvider implements Web3Provider {
   ): Promise<JSONRPCResponse> {
     this._requireAuthorization()
     const address = ensureAddressString(params[0])
-    const typedDataStr = ensureString(params[1])
+    const typedDataJson = ensureJsonOrParseString(params[1])
 
     this._ensureKnownAddress(address)
 
-    const typedDataJson = JSON.parse(typedDataStr)
     const message = eip712.hashForSignTypedData_v3({ data: typedDataJson })
+    const typedDataStr = JSON.stringify(typedDataJson, null, 2)
 
     return this._signEthereumMessage(message, address, false, typedDataStr)
   }
@@ -682,12 +682,12 @@ export class WalletLinkProvider implements Web3Provider {
   ): Promise<JSONRPCResponse> {
     this._requireAuthorization()
     const address = ensureAddressString(params[0])
-    const typedDataStr = ensureString(params[1])
+    const typedDataJson = ensureJsonOrParseString(params[1])
 
     this._ensureKnownAddress(address)
 
-    const typedDataJson = JSON.parse(typedDataStr)
     const message = eip712.hashForSignTypedData_v4({ data: typedDataJson })
+    const typedDataStr = JSON.stringify(typedDataJson, null, 2)
 
     return this._signEthereumMessage(message, address, false, typedDataStr)
   }
