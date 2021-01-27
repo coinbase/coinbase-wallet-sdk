@@ -151,16 +151,18 @@ export function ensureBN(val: unknown): BN {
   throw new Error(`Not an integer: ${val}`)
 }
 
-export function ensureJsonOrParseString(val: unknown): Object {
+export function ensureParsedJsonObject<T extends object = any>(
+  val: unknown
+): T {
   if (typeof val === "string") {
     return JSON.parse(val)
   }
 
-  if (typeof val == "object") {
-    return val as Object
+  if (typeof val === "object") {
+    return val as T
   }
 
-  throw new Error(`Not a string or a json object: ${val}`)
+  throw new Error(`Not a JSON string or an object: ${val}`)
 }
 
 export function isBigNumber(val: unknown): boolean {
