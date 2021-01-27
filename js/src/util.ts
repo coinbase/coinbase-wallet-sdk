@@ -151,7 +151,7 @@ export function ensureBN(val: unknown): BN {
   throw new Error(`Not an integer: ${val}`)
 }
 
-export function ensureParsedJsonObject<T extends object = any>(
+export function ensureParsedJSONObject<T extends object = any>(
   val: unknown
 ): T {
   if (typeof val === "string") {

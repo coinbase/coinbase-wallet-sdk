@@ -13,7 +13,7 @@ import {
   ensureAddressString,
   ensureBN,
   ensureBuffer,
-  ensureParsedJsonObject,
+  ensureParsedJSONObject,
   ensureHexString,
   ensureIntNumber,
   ensureRegExpString
@@ -651,7 +651,7 @@ export class WalletLinkProvider implements Web3Provider {
     params: unknown[]
   ): Promise<JSONRPCResponse> {
     this._requireAuthorization()
-    const typedData = ensureParsedJsonObject(params[0])
+    const typedData = ensureParsedJSONObject(params[0])
     const address = ensureAddressString(params[1])
 
     this._ensureKnownAddress(address)
@@ -667,7 +667,7 @@ export class WalletLinkProvider implements Web3Provider {
   ): Promise<JSONRPCResponse> {
     this._requireAuthorization()
     const address = ensureAddressString(params[0])
-    const typedData = ensureParsedJsonObject(params[1])
+    const typedData = ensureParsedJSONObject(params[1])
 
     this._ensureKnownAddress(address)
 
@@ -682,7 +682,7 @@ export class WalletLinkProvider implements Web3Provider {
   ): Promise<JSONRPCResponse> {
     this._requireAuthorization()
     const address = ensureAddressString(params[0])
-    const typedData = ensureParsedJsonObject(params[1])
+    const typedData = ensureParsedJSONObject(params[1])
 
     this._ensureKnownAddress(address)
 
