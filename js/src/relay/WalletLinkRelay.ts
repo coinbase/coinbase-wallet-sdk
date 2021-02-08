@@ -14,7 +14,7 @@ import { ServerMessageEvent } from "../connection/ServerMessage"
 import { WalletLinkConnection } from "../connection/WalletLinkConnection"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
 import { AddressString, IntNumber, RegExpString } from "../types"
-import { bigIntStringFromBN, hexStringFromBuffer } from "../util"
+import { bigIntStringFromBN, hexStringFromBuffer, prepend0x } from "../util"
 import * as aes256gcm from "./aes256gcm"
 import { RelayMessage } from "./RelayMessage"
 import { Session } from "./Session"
@@ -68,6 +68,7 @@ export interface WalletLinkRelayOptions {
 }
 
 export class WalletLinkRelay {
+  private static _nextRequestId = 0
   private static callbacks = new Map<string, ResponseCallback>()
   private static accountRequestCallbackIds = new Set<string>()
 
@@ -350,6 +351,20 @@ export class WalletLinkRelay {
 
       this.publishWeb3RequestEvent(id, request)
     })
+  }
+
+  public static makeRequestId(): number {
+    // max nextId == max int32 for compatibility with mobile
+    this._nextRequestId = (this._nextRequestId + 1) % 0x7fffffff
+    const id = this._nextRequestId
+    const idStr = prepend0x(id.toString(16))
+    // unlikely that this will ever be an issue, but just to be safe
+    const callback = WalletLinkRelay.callbacks.get(idStr)
+    if (callback) {
+      // TODO - how to handle this case
+      WalletLinkRelay.callbacks.delete(idStr)
+    }
+    return id
   }
 
   private publishWeb3RequestEvent(id: string, request: Web3Request): void {

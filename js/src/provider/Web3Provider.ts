@@ -18,6 +18,8 @@ export interface Web3Provider {
     callback: Callback<JSONRPCResponse[]>
   ): void
 
+  request<T>(args: RequestArguments): Promise<T>
+
   host: string
   connected: boolean
   supportsSubscriptions(): boolean
@@ -38,4 +40,13 @@ export class ProviderError extends Error {
     this.name = "ProviderError"
     Object.setPrototypeOf(this, ProviderError.prototype)
   }
+}
+
+export interface RequestArguments {
+
+  /** The RPC method to request. */
+  method: string;
+
+  /** The params of the RPC method, if any. */
+  params?: any[];
 }

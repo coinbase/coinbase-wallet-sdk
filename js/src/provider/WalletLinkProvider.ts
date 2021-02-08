@@ -16,12 +16,15 @@ import {
   ensureParsedJSONObject,
   ensureHexString,
   ensureIntNumber,
-  ensureRegExpString
+  ensureRegExpString,
+  prepend0x
 } from "../util"
 import eip712 from "../vendor-js/eth-eip712-util"
 import { FilterPolyfill } from "./FilterPolyfill"
 import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from "./JSONRPC"
-import { ProviderError, ProviderErrorCode, Web3Provider } from "./Web3Provider"
+import { ProviderError, ProviderErrorCode, Web3Provider, RequestArguments } from "./Web3Provider"
+import { ethErrors } from 'eth-rpc-errors'
+import SafeEventEmitter from '@metamask/safe-event-emitter';
 
 const LOCAL_STORAGE_ADDRESSES_KEY = "Addresses"
 
@@ -31,7 +34,7 @@ export interface WalletLinkProviderOptions {
   chainId?: number
 }
 
-export class WalletLinkProvider implements Web3Provider {
+export class WalletLinkProvider extends SafeEventEmitter implements Web3Provider {
   private readonly _filterPolyfill = new FilterPolyfill(this)
 
   private readonly _relay: WalletLinkRelay
@@ -41,6 +44,7 @@ export class WalletLinkProvider implements Web3Provider {
   private _addresses: AddressString[] = []
 
   constructor(options: Readonly<WalletLinkProviderOptions>) {
+    super()
     if (!options.relay) {
       throw new Error("realy must be provided")
     }
@@ -51,6 +55,11 @@ export class WalletLinkProvider implements Web3Provider {
     this._chainId = ensureIntNumber(options.chainId || 1)
     this._jsonRpcUrl = options.jsonRpcUrl
 
+    const chainIdStr = prepend0x(this._chainId.toString(16))
+
+    // indicate that we've connected, for EIP-1193 compliance
+    this.emit('connect', { chainIdStr });
+
     const cahedAddresses = this._relay.getStorageItem(
       LOCAL_STORAGE_ADDRESSES_KEY
     )
@@ -58,6 +67,7 @@ export class WalletLinkProvider implements Web3Provider {
       const addresses = cahedAddresses.split(" ") as AddressString[]
       if (addresses[0] !== "") {
         this._addresses = addresses
+        this.emit('accountsChanged', addresses)
       }
     }
   }
@@ -184,6 +194,40 @@ export class WalletLinkProvider implements Web3Provider {
       .catch(err => cb(err, null))
   }
 
+
+  public async request<T>(args: RequestArguments): Promise<T> {
+    if (!args || typeof args !== 'object' || Array.isArray(args)) {
+      throw ethErrors.rpc.invalidRequest({
+        message: "Expected a single, non-array, object argument.",
+        data: args,
+      });
+    }
+
+    const { method, params } = args;
+
+    if (typeof method !== 'string' || method.length === 0) {
+      throw ethErrors.rpc.invalidRequest({
+        message: "'args.method' must be a non-empty string.",
+        data: args,
+      });
+    }
+
+    if (
+      params !== undefined && !Array.isArray(params) &&
+      (typeof params !== 'object' || params === null)
+    ) {
+      throw ethErrors.rpc.invalidRequest({
+        message: "'args.params' must be an object or array if provided.",
+        data: args,
+      });
+    }
+
+    const newParams = params === undefined ? [] : params
+    const id = WalletLinkRelay.makeRequestId()
+    const result = await this._sendRequestAsync({method: method, params: newParams, jsonrpc: "2.0", id: id})
+    return result.result as T
+  }
+
   public async scanQRCode(match?: RegExp): Promise<string> {
     const res = await this._relay.scanQRCode(ensureRegExpString(match))
     if (typeof res.result !== "string") {
@@ -245,6 +289,7 @@ export class WalletLinkProvider implements Web3Provider {
     }
 
     this._addresses = addresses.map(address => ensureAddressString(address))
+    this.emit('accountsChanged', this._addresses)
     this._relay.setStorageItem(LOCAL_STORAGE_ADDRESSES_KEY, addresses.join(" "))
     window.dispatchEvent(
       new CustomEvent("walletlink:addresses", { detail: this._addresses })
