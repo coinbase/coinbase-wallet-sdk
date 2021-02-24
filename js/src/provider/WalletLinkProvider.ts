@@ -22,9 +22,16 @@ import {
 import eip712 from "../vendor-js/eth-eip712-util"
 import { FilterPolyfill } from "./FilterPolyfill"
 import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from "./JSONRPC"
-import { ProviderError, ProviderErrorCode, Web3Provider, RequestArguments } from "./Web3Provider"
-import { ethErrors } from 'eth-rpc-errors'
-import SafeEventEmitter from '@metamask/safe-event-emitter';
+import {
+  ProviderError,
+  ProviderErrorCode,
+  Web3Provider,
+  RequestArguments,
+  ProviderMessage
+} from "./Web3Provider"
+import { ethErrors } from "eth-rpc-errors"
+import SafeEventEmitter from "@metamask/safe-event-emitter"
+import { SubscriptionManager } from "./SubscriptionManager"
 
 const LOCAL_STORAGE_ADDRESSES_KEY = "Addresses"
 
@@ -34,19 +41,22 @@ export interface WalletLinkProviderOptions {
   chainId?: number
 }
 
-export class WalletLinkProvider extends SafeEventEmitter implements Web3Provider {
+export class WalletLinkProvider
+  extends SafeEventEmitter
+  implements Web3Provider {
   private readonly _filterPolyfill = new FilterPolyfill(this)
 
   private readonly _relay: WalletLinkRelay
   private readonly _chainId: IntNumber
   private readonly _jsonRpcUrl: string
+  private readonly _subscriptionManager: SubscriptionManager
 
   private _addresses: AddressString[] = []
 
   constructor(options: Readonly<WalletLinkProviderOptions>) {
     super()
     if (!options.relay) {
-      throw new Error("realy must be provided")
+      throw new Error("relay must be provided")
     }
     if (!options.jsonRpcUrl) {
       throw new Error("jsonRpcUrl must be provided")
@@ -58,18 +68,23 @@ export class WalletLinkProvider extends SafeEventEmitter implements Web3Provider
     const chainIdStr = prepend0x(this._chainId.toString(16))
 
     // indicate that we've connected, for EIP-1193 compliance
-    this.emit('connect', { chainIdStr });
+    this.emit("connect", { chainIdStr })
 
-    const cahedAddresses = this._relay.getStorageItem(
+    const cachedAddresses = this._relay.getStorageItem(
       LOCAL_STORAGE_ADDRESSES_KEY
     )
-    if (cahedAddresses) {
-      const addresses = cahedAddresses.split(" ") as AddressString[]
+    if (cachedAddresses) {
+      const addresses = cachedAddresses.split(" ") as AddressString[]
       if (addresses[0] !== "") {
         this._addresses = addresses
-        this.emit('accountsChanged', addresses)
+        this.emit("accountsChanged", addresses)
       }
     }
+
+    this._subscriptionManager = new SubscriptionManager(this)
+    this._subscriptionManager.events.on("notification", (data: ProviderMessage) => {
+      this.emit("message", data)
+    })
   }
 
   public get selectedAddress(): AddressString | undefined {
@@ -194,38 +209,54 @@ export class WalletLinkProvider extends SafeEventEmitter implements Web3Provider
       .catch(err => cb(err, null))
   }
 
-
   public async request<T>(args: RequestArguments): Promise<T> {
-    if (!args || typeof args !== 'object' || Array.isArray(args)) {
+    if (!args || typeof args !== "object" || Array.isArray(args)) {
       throw ethErrors.rpc.invalidRequest({
         message: "Expected a single, non-array, object argument.",
-        data: args,
-      });
+        data: args
+      })
     }
 
-    const { method, params } = args;
+    const { method, params } = args
 
-    if (typeof method !== 'string' || method.length === 0) {
+    if (typeof method !== "string" || method.length === 0) {
       throw ethErrors.rpc.invalidRequest({
         message: "'args.method' must be a non-empty string.",
-        data: args,
-      });
+        data: args
+      })
     }
 
     if (
-      params !== undefined && !Array.isArray(params) &&
-      (typeof params !== 'object' || params === null)
+      params !== undefined &&
+      !Array.isArray(params) &&
+      (typeof params !== "object" || params === null)
     ) {
       throw ethErrors.rpc.invalidRequest({
         message: "'args.params' must be an object or array if provided.",
-        data: args,
-      });
+        data: args
+      })
     }
 
     const newParams = params === undefined ? [] : params
-    const id = WalletLinkRelay.makeRequestId()
-    const result = await this._sendRequestAsync({method: method, params: newParams, jsonrpc: "2.0", id: id})
-    return result.result as T
+
+    switch (method) {
+      case "eth_subscribe":
+      case "eth_unsubscribe":
+        return (await this._subscriptionManager.handleRequest({
+          method: method,
+          params: newParams
+        })) as T
+      default:
+        // WalletLink Requests
+        const id = WalletLinkRelay.makeRequestId()
+        const result = await this._sendRequestAsync({
+          method: method,
+          params: newParams,
+          jsonrpc: "2.0",
+          id: id
+        })
+        return result.result as T
+    }
   }
 
   public async scanQRCode(match?: RegExp): Promise<string> {
@@ -289,7 +320,7 @@ export class WalletLinkProvider extends SafeEventEmitter implements Web3Provider
     }
 
     this._addresses = addresses.map(address => ensureAddressString(address))
-    this.emit('accountsChanged', this._addresses)
+    this.emit("accountsChanged", this._addresses)
     this._relay.setStorageItem(LOCAL_STORAGE_ADDRESSES_KEY, addresses.join(" "))
     window.dispatchEvent(
       new CustomEvent("walletlink:addresses", { detail: this._addresses })
