@@ -82,9 +82,12 @@ export class WalletLinkProvider
     }
 
     this._subscriptionManager = new SubscriptionManager(this)
-    this._subscriptionManager.events.on("notification", (data: ProviderMessage) => {
-      this.emit("message", data)
-    })
+    this._subscriptionManager.events.on(
+      "notification",
+      (data: ProviderMessage) => {
+        this.emit("message", data)
+      }
+    )
   }
 
   public get selectedAddress(): AddressString | undefined {
@@ -243,17 +246,17 @@ export class WalletLinkProvider
       case "eth_subscribe":
       case "eth_unsubscribe":
         return (await this._subscriptionManager.handleRequest({
-          method: method,
+          method,
           params: newParams
         })) as T
       default:
         // WalletLink Requests
         const id = WalletLinkRelay.makeRequestId()
         const result = await this._sendRequestAsync({
-          method: method,
+          method,
           params: newParams,
           jsonrpc: "2.0",
-          id: id
+          id
         })
         return result.result as T
     }

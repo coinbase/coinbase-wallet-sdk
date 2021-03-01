@@ -91,11 +91,11 @@ declare namespace QRCode {
     /** The cache used to store data during the creation of this QRCode. */
     dataCache: number[] | null
     /** A list of the data added to this QRCode. */
-    dataList: Array<{
+    dataList: {
       data: string
       mode: number
       parsedData: number[]
-    }>
+    }[]
 
     /**
      * Queue data up to be added to this QRCode. `make` needs to be called
