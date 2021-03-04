@@ -49,8 +49,3 @@ export interface RequestArguments {
   /** The params of the RPC method, if any. */
   params?: any[]
 }
-
-export interface ProviderMessage {
-  readonly type: string
-  readonly data: unknown
-}
