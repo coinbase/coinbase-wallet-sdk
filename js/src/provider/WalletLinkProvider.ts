@@ -26,12 +26,15 @@ import {
   ProviderError,
   ProviderErrorCode,
   Web3Provider,
-  RequestArguments,
-  ProviderMessage
+  RequestArguments
 } from "./Web3Provider"
 import { ethErrors } from "eth-rpc-errors"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
-import { SubscriptionManager } from "./SubscriptionManager"
+import {
+  SubscriptionManager,
+  SubscriptionNotification,
+  SubscriptionResult
+} from "./SubscriptionManager"
 
 const LOCAL_STORAGE_ADDRESSES_KEY = "Addresses"
 
@@ -45,11 +48,11 @@ export class WalletLinkProvider
   extends SafeEventEmitter
   implements Web3Provider {
   private readonly _filterPolyfill = new FilterPolyfill(this)
+  private readonly _subscriptionManager = new SubscriptionManager(this)
 
   private readonly _relay: WalletLinkRelay
   private readonly _chainId: IntNumber
   private readonly _jsonRpcUrl: string
-  private readonly _subscriptionManager: SubscriptionManager
 
   private _addresses: AddressString[] = []
 
@@ -81,11 +84,13 @@ export class WalletLinkProvider
       }
     }
 
-    this._subscriptionManager = new SubscriptionManager(this)
     this._subscriptionManager.events.on(
       "notification",
-      (data: ProviderMessage) => {
-        this.emit("message", data)
+      (notification: SubscriptionNotification) => {
+        this.emit("message", {
+          type: notification.method,
+          data: notification.params
+        })
       }
     )
   }
@@ -242,24 +247,16 @@ export class WalletLinkProvider
 
     const newParams = params === undefined ? [] : params
 
-    switch (method) {
-      case "eth_subscribe":
-      case "eth_unsubscribe":
-        return (await this._subscriptionManager.handleRequest({
-          method,
-          params: newParams
-        })) as T
-      default:
-        // WalletLink Requests
-        const id = WalletLinkRelay.makeRequestId()
-        const result = await this._sendRequestAsync({
-          method,
-          params: newParams,
-          jsonrpc: "2.0",
-          id
-        })
-        return result.result as T
-    }
+    // WalletLink Requests
+    const id = WalletLinkRelay.makeRequestId()
+    const result = await this._sendRequestAsync({
+      method,
+      params: newParams,
+      jsonrpc: "2.0",
+      id
+    })
+
+    return result.result as T
   }
 
   public async scanQRCode(match?: RegExp): Promise<string> {
@@ -346,6 +343,20 @@ export class WalletLinkProvider
         if (filterPromise !== undefined) {
           filterPromise
             .then(res => resolve({ ...res, id: request.id }))
+            .catch(err => reject(err))
+          return
+        }
+
+        const subscriptionPromise = this._handleSubscriptionMethods(request)
+        if (subscriptionPromise !== undefined) {
+          subscriptionPromise
+            .then(res =>
+              resolve({
+                jsonrpc: "2.0",
+                id: request.id,
+                result: res.result
+              })
+            )
             .catch(err => reject(err))
           return
         }
@@ -483,6 +494,18 @@ export class WalletLinkProvider
 
       case JSONRPCMethod.eth_getFilterLogs:
         return this._eth_getFilterLogs(params)
+    }
+
+    return undefined
+  }
+
+  private _handleSubscriptionMethods(
+    request: JSONRPCRequest
+  ): Promise<SubscriptionResult> | undefined {
+    switch (request.method) {
+      case JSONRPCMethod.eth_subscribe:
+      case JSONRPCMethod.eth_unsubscribe:
+        return this._subscriptionManager.handleRequest(request)
     }
 
     return undefined

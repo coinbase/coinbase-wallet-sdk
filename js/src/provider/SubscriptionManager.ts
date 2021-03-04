@@ -8,6 +8,18 @@ const PollingBlockTracker = require("eth-block-tracker")
 const createSubscriptionManager = require("eth-json-rpc-filters/subscriptionManager")
 const noop = () => {}
 
+export interface SubscriptionResult {
+  result?: unknown
+}
+
+export interface SubscriptionNotification {
+  method: string
+  params: {
+    subscription: string
+    result: unknown
+  }
+}
+
 export class SubscriptionManager {
   private readonly subscriptionMiddleware: SubscriptionMiddleware
   readonly events: SafeEventEmitter
@@ -41,8 +53,6 @@ export class SubscriptionManager {
     this.subscriptionMiddleware.destroy()
   }
 }
-
-type SubscriptionResult = { result?: any }
 
 interface SubscriptionMiddleware {
   (
