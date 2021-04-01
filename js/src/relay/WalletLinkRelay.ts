@@ -316,8 +316,13 @@ export class WalletLinkRelay {
       }
 
       if (isRequestAccounts) {
-        this.linkFlow.open({ onCancel: cancel })
-        WalletLinkRelay.accountRequestCallbackIds.add(id)
+        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+          document.location.href = "https://go.cb-w.com"
+        }
+        else {
+          this.linkFlow.open({ onCancel: cancel })
+          WalletLinkRelay.accountRequestCallbackIds.add(id)
+        }
       } else {
         const snackbarProps: SnackbarItemProps = {
           message: "Pushed a request to your wallet...",
