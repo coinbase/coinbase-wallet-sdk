@@ -316,7 +316,8 @@ export class WalletLinkRelay {
       }
 
       if (isRequestAccounts) {
-        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        const userAgent = window?.navigator?.userAgent || null
+        if (userAgent && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent)) {
           window.location.href = "https://go.cb-w.com"
           return
         }
