@@ -3,7 +3,10 @@
 // Licensed under the Apache License, version 2.0
 
 import BN from "bn.js"
-import { EthereumTransactionParams } from "../relay/EthereumTransactionParams"
+import {
+  EthereumTransactionParams,
+  WalletLinkRelay
+} from "../relay/WalletLinkRelay"
 import { RequestEthereumAccountsResponse } from "../relay/Web3Response"
 import { AddressString, Callback, IntNumber } from "../types"
 import {
@@ -19,35 +22,21 @@ import {
 import eip712 from "../vendor-js/eth-eip712-util"
 import { FilterPolyfill } from "./FilterPolyfill"
 import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from "./JSONRPC"
-import {
-  ProviderError,
-  ProviderErrorCode,
-  Web3Provider,
-  RequestArguments
-} from "./Web3Provider"
-import { ethErrors } from "eth-rpc-errors"
+import { Web3Provider, RequestArguments } from "./Web3Provider"
+import { ethErrors, serializeError } from "eth-rpc-errors"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import {
   SubscriptionManager,
   SubscriptionNotification,
   SubscriptionResult
 } from "./SubscriptionManager"
-import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
-import { WalletLinkRelayEventManager } from "../relay/WalletLinkRelayEventManager"
-import {
-  WalletLinkRelayAbstract,
-  WALLET_USER_NAME_KEY
-} from "../relay/WalletLinkRelayAbstract"
 
 const LOCAL_STORAGE_ADDRESSES_KEY = "Addresses"
 
 export interface WalletLinkProviderOptions {
-  relayProvider: () => Promise<WalletLinkRelayAbstract>
-  relayEventManager: WalletLinkRelayEventManager
+  relay: WalletLinkRelay
   jsonRpcUrl: string
   chainId?: number
-  overrideIsMetaMask: boolean
-  storage: ScopedLocalStorage
 }
 
 export class WalletLinkProvider
@@ -56,37 +45,32 @@ export class WalletLinkProvider
   private readonly _filterPolyfill = new FilterPolyfill(this)
   private readonly _subscriptionManager = new SubscriptionManager(this)
 
-  private readonly _relayProvider: () => Promise<WalletLinkRelayAbstract>
-  private _relay: WalletLinkRelayAbstract | null = null
-  private readonly _storage: ScopedLocalStorage
-  private readonly _relayEventManager: WalletLinkRelayEventManager
-
+  private readonly _relay: WalletLinkRelay
   private readonly _chainId: IntNumber
   private readonly _jsonRpcUrl: string
-  private readonly _overrideIsMetaMask: boolean
 
   private _addresses: AddressString[] = []
 
   constructor(options: Readonly<WalletLinkProviderOptions>) {
     super()
-
+    if (!options.relay) {
+      throw new Error("relay must be provided")
+    }
     if (!options.jsonRpcUrl) {
       throw new Error("jsonRpcUrl must be provided")
     }
-
+    this._relay = options.relay
     this._chainId = ensureIntNumber(options.chainId || 1)
     this._jsonRpcUrl = options.jsonRpcUrl
-    this._overrideIsMetaMask = options.overrideIsMetaMask
-    this._relayProvider = options.relayProvider
-    this._storage = options.storage
-    this._relayEventManager = options.relayEventManager
 
     const chainIdStr = prepend0x(this._chainId.toString(16))
 
     // indicate that we've connected, for EIP-1193 compliance
     this.emit("connect", { chainIdStr })
 
-    const cachedAddresses = this._storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY)
+    const cachedAddresses = this._relay.getStorageItem(
+      LOCAL_STORAGE_ADDRESSES_KEY
+    )
     if (cachedAddresses) {
       const addresses = cachedAddresses.split(" ") as AddressString[]
       if (addresses[0] !== "") {
@@ -118,14 +102,6 @@ export class WalletLinkProvider
     return true
   }
 
-  /**
-   * Some DApps (i.e. Alpha Homora) seem to require the window.ethereum object return
-   * true for this method.
-   */
-  public get isMetaMask(): boolean {
-    return this._overrideIsMetaMask
-  }
-
   public get host(): string {
     return this._jsonRpcUrl
   }
@@ -138,12 +114,6 @@ export class WalletLinkProvider
     return true
   }
 
-  public get walletUsername(): string | null {
-    return (
-      this._relay?.walletUsername || this._storage.getItem(WALLET_USER_NAME_KEY)
-    )
-  }
-
   public async enable(): Promise<AddressString[]> {
     if (this._addresses.length > 0) {
       return this._addresses
@@ -153,7 +123,7 @@ export class WalletLinkProvider
   }
 
   public close() {
-    this.initializeRelay().then(relay => relay.resetAndReload())
+    this._relay.resetAndReload()
   }
 
   public send(request: JSONRPCRequest): JSONRPCResponse
@@ -273,7 +243,7 @@ export class WalletLinkProvider
     const newParams = params === undefined ? [] : params
 
     // WalletLink Requests
-    const id = this._relayEventManager.makeRequestId()
+    const id = WalletLinkRelay.makeRequestId()
     const result = await this._sendRequestAsync({
       method,
       params: newParams,
@@ -285,8 +255,7 @@ export class WalletLinkProvider
   }
 
   public async scanQRCode(match?: RegExp): Promise<string> {
-    const relay = await this.initializeRelay()
-    const res = await relay.scanQRCode(ensureRegExpString(match))
+    const res = await this._relay.scanQRCode(ensureRegExpString(match))
     if (typeof res.result !== "string") {
       throw new Error("result was not a string")
     }
@@ -294,31 +263,11 @@ export class WalletLinkProvider
   }
 
   public async arbitraryRequest(data: string): Promise<string> {
-    const relay = await this.initializeRelay()
-    const res = await relay.arbitraryRequest(data)
+    const res = await this._relay.arbitraryRequest(data)
     if (typeof res.result !== "string") {
       throw new Error("result was not a string")
     }
     return res.result
-  }
-
-  public async childRequestEthereumAccounts(
-    childSessionId: string,
-    childSessionSecret: string,
-    dappName: string,
-    dappLogoURL: string,
-    dappURL: string
-  ): Promise<boolean> {
-    const relay = await this.initializeRelay()
-    await relay.childRequestEthereumAccounts(
-      childSessionId,
-      childSessionSecret,
-      dappName,
-      dappLogoURL,
-      dappURL
-    )
-
-    return true
   }
 
   public supportsSubscriptions(): boolean {
@@ -367,7 +316,7 @@ export class WalletLinkProvider
 
     this._addresses = addresses.map(address => ensureAddressString(address))
     this.emit("accountsChanged", this._addresses)
-    this._storage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, addresses.join(" "))
+    this._relay.setStorageItem(LOCAL_STORAGE_ADDRESSES_KEY, addresses.join(" "))
     window.dispatchEvent(
       new CustomEvent("walletlink:addresses", { detail: this._addresses })
     )
@@ -502,17 +451,13 @@ export class WalletLinkProvider
       .then(res => res.json())
       .then(json => {
         if (!json) {
-          throw new ProviderError("unexpected response")
+          throw ethErrors.rpc.parse({})
         }
         const response = json as JSONRPCResponse
         const { error } = response
 
         if (error) {
-          throw new ProviderError(
-            error.message || "RPC Error",
-            error.code,
-            error.data
-          )
+          throw serializeError(error)
         }
 
         return response
@@ -611,15 +556,12 @@ export class WalletLinkProvider
 
   private _requireAuthorization(): void {
     if (this._addresses.length === 0) {
-      throw new ProviderError("Unauthorized", ProviderErrorCode.UNAUTHORIZED)
+      throw ethErrors.provider.unauthorized({})
     }
   }
 
   private _throwUnsupportedMethodError(): Promise<JSONRPCResponse> {
-    throw new ProviderError(
-      "Unsupported method",
-      ProviderErrorCode.UNSUPPORTED_METHOD
-    )
+    throw ethErrors.provider.unsupportedMethod({})
   }
 
   private async _signEthereumMessage(
@@ -631,8 +573,7 @@ export class WalletLinkProvider
     this._ensureKnownAddress(address)
 
     try {
-      const relay = await this.initializeRelay()
-      const res = await relay.signEthereumMessage(
+      const res = await this._relay.signEthereumMessage(
         message,
         address,
         addPrefix,
@@ -644,9 +585,8 @@ export class WalletLinkProvider
         typeof err.message === "string" &&
         err.message.match(/(denied|rejected)/i)
       ) {
-        throw new ProviderError(
-          "User denied message signature",
-          ProviderErrorCode.USER_DENIED_REQUEST_SIGNATURE
+        throw ethErrors.provider.userRejectedRequest(
+          "User denied message signature"
         )
       }
       throw err
@@ -658,8 +598,7 @@ export class WalletLinkProvider
     signature: Buffer,
     addPrefix: boolean
   ): Promise<JSONRPCResponse> {
-    const relay = await this.initializeRelay()
-    const res = await relay.ethereumAddressFromSignedMessage(
+    const res = await this._relay.ethereumAddressFromSignedMessage(
       message,
       signature,
       addPrefix
@@ -690,16 +629,14 @@ export class WalletLinkProvider
 
     let res: RequestEthereumAccountsResponse
     try {
-      const relay = await this.initializeRelay()
-      res = await relay.requestEthereumAccounts()
+      res = await this._relay.requestEthereumAccounts()
     } catch (err) {
       if (
         typeof err.message === "string" &&
         err.message.match(/(denied|rejected)/i)
       ) {
-        throw new ProviderError(
-          "User denied account authorization",
-          ProviderErrorCode.USER_DENIED_REQUEST_ACCOUNTS
+        throw ethErrors.provider.userRejectedRequest(
+          "User denied account authorization"
         )
       }
       throw err
@@ -749,17 +686,15 @@ export class WalletLinkProvider
     this._requireAuthorization()
     const tx = this._prepareTransactionParams((params[0] as any) || {})
     try {
-      const relay = await this.initializeRelay()
-      const res = await relay.signEthereumTransaction(tx)
+      const res = await this._relay.signEthereumTransaction(tx)
       return { jsonrpc: "2.0", id: 0, result: res.result }
     } catch (err) {
       if (
         typeof err.message === "string" &&
         err.message.match(/(denied|rejected)/i)
       ) {
-        throw new ProviderError(
-          "User denied transaction signature",
-          ProviderErrorCode.USER_DENIED_REQUEST_SIGNATURE
+        throw ethErrors.provider.userRejectedRequest(
+          "User denied transaction signature"
         )
       }
       throw err
@@ -770,8 +705,7 @@ export class WalletLinkProvider
     params: unknown[]
   ): Promise<JSONRPCResponse> {
     const signedTransaction = ensureBuffer(params[0])
-    const relay = await this.initializeRelay()
-    const res = await relay.submitEthereumTransaction(
+    const res = await this._relay.submitEthereumTransaction(
       signedTransaction,
       this._chainId
     )
@@ -784,17 +718,15 @@ export class WalletLinkProvider
     this._requireAuthorization()
     const tx = this._prepareTransactionParams((params[0] as any) || {})
     try {
-      const relay = await this.initializeRelay()
-      const res = await relay.signAndSubmitEthereumTransaction(tx)
+      const res = await this._relay.signAndSubmitEthereumTransaction(tx)
       return { jsonrpc: "2.0", id: 0, result: res.result }
     } catch (err) {
       if (
         typeof err.message === "string" &&
         err.message.match(/(denied|rejected)/i)
       ) {
-        throw new ProviderError(
-          "User denied transaction signature",
-          ProviderErrorCode.USER_DENIED_REQUEST_SIGNATURE
+        throw ethErrors.provider.userRejectedRequest(
+          "User denied transaction signature"
         )
       }
       throw err
@@ -887,16 +819,5 @@ export class WalletLinkProvider
   private _eth_getFilterLogs(params: unknown[]): Promise<JSONRPCResponse> {
     const filterId = ensureHexString(params[0])
     return this._filterPolyfill.getFilterLogs(filterId)
-  }
-
-  private initializeRelay(): Promise<WalletLinkRelayAbstract> {
-    if (this._relay) {
-      return Promise.resolve(this._relay)
-    }
-
-    return this._relayProvider().then(relay => {
-      this._relay = relay
-      return relay
-    })
   }
 }

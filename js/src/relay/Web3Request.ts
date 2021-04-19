@@ -83,17 +83,6 @@ export type ArbitraryRequest = BaseWeb3Request<
   }
 >
 
-export type ChildRequestEthereumAccountsRequest = BaseWeb3Request<
-  Web3Method.childRequestEthereumAccounts,
-  {
-    sessionId: string
-    sessionSecret: string,
-    appName: string,
-    appLogoURL: string
-    appURL: string
-  }
->
-
 export type Web3Request =
   | RequestEthereumAccountsRequest
   | SignEthereumMessageRequest
@@ -102,4 +91,3 @@ export type Web3Request =
   | EthereumAddressFromSignedMessageRequest
   | ScanQRCodeRequest
   | ArbitraryRequest
-  | ChildRequestEthereumAccountsRequest

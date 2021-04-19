@@ -3,25 +3,23 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator"
+import BN from "bn.js"
 import crypto from "crypto"
 import { Observable, of } from "rxjs"
-import { catchError, filter, map, timeout } from "rxjs/operators"
+import { catchError, filter, timeout } from "rxjs/operators"
+import url from "url"
 import { ServerMessageEvent } from "../connection/ServerMessage"
 import { WalletLinkConnection } from "../connection/WalletLinkConnection"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
 import { WalletLinkUI, WalletLinkUIOptions } from "../provider/WalletLinkUI"
 import { AddressString, IntNumber, RegExpString } from "../types"
-import { bigIntStringFromBN, hexStringFromBuffer } from "../util"
+import { bigIntStringFromBN, hexStringFromBuffer, prepend0x } from "../util"
 import * as aes256gcm from "./aes256gcm"
-import { EthereumTransactionParams } from "./EthereumTransactionParams"
 import { RelayMessage } from "./RelayMessage"
 import { Session } from "./Session"
-import { WalletLinkRelayAbstract, WALLET_USER_NAME_KEY } from "./WalletLinkRelayAbstract"
-import { WalletLinkRelayEventManager } from "./WalletLinkRelayEventManager"
 import { Web3Method } from "./Web3Method"
 import {
   ArbitraryRequest,
-  ChildRequestEthereumAccountsRequest,
   EthereumAddressFromSignedMessageRequest,
   RequestEthereumAccountsRequest,
   ScanQRCodeRequest,
@@ -34,7 +32,6 @@ import { Web3RequestCanceledMessage } from "./Web3RequestCanceledMessage"
 import { Web3RequestMessage } from "./Web3RequestMessage"
 import {
   ArbitraryResponse,
-  ChildRequestEthereumAccountsResponse,
   ErrorResponse,
   EthereumAddressFromSignedMessageResponse,
   isRequestEthereumAccountsResponse,
@@ -50,25 +47,37 @@ import {
   Web3ResponseMessage
 } from "./Web3ResponseMessage"
 
+export interface EthereumTransactionParams {
+  fromAddress: AddressString
+  toAddress: AddressString | null
+  weiValue: BN
+  data: Buffer
+  nonce: IntNumber | null
+  gasPriceInWei: BN | null
+  gasLimit: BN | null
+  chainId: IntNumber
+}
+
+type ResponseCallback = (response: Web3Response) => void
 
 export interface WalletLinkRelayOptions {
   walletLinkUrl: string
   version: string
   darkMode: boolean
-  storage: ScopedLocalStorage
-  relayEventManager: WalletLinkRelayEventManager
   walletLinkUIConstructor: (
     options: Readonly<WalletLinkUIOptions>
   ) => WalletLinkUI
 }
 
-export class WalletLinkRelay implements WalletLinkRelayAbstract {
+export class WalletLinkRelay {
+  private static _nextRequestId = 0
+  private static callbacks = new Map<string, ResponseCallback>()
   private static accountRequestCallbackIds = new Set<string>()
 
   private readonly walletLinkUrl: string
+  private readonly walletLinkOrigin: string
   private readonly storage: ScopedLocalStorage
   private readonly session: Session
-  private readonly relayEventManager: WalletLinkRelayEventManager
   private readonly connection: WalletLinkConnection
 
   private ui: WalletLinkUI
@@ -76,23 +85,23 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
   private appName = ""
   private appLogoUrl: string | null = null
 
-  walletUsername: string | null = null
-
   constructor(options: Readonly<WalletLinkRelayOptions>) {
     this.walletLinkUrl = options.walletLinkUrl
-    this.storage = options.storage
-    this.session =
-      Session.load(options.storage) || new Session(options.storage).save()
 
-    this.relayEventManager = options.relayEventManager
+    const u = url.parse(this.walletLinkUrl)
+    this.walletLinkOrigin = `${u.protocol}//${u.host}`
+    this.storage = new ScopedLocalStorage(
+      `-walletlink:${this.walletLinkOrigin}`
+    )
+
+    this.session =
+      Session.load(this.storage) || new Session(this.storage).save()
 
     this.connection = new WalletLinkConnection(
       this.session.id,
       this.session.key,
       this.walletLinkUrl
     )
-
-    this.walletUsername = options.storage.getItem(WALLET_USER_NAME_KEY)
 
     this.connection.incomingEvent$
       .pipe(filter(m => m.event === "Web3Response"))
@@ -102,20 +111,6 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
     this.connection.sessionConfig$
       .pipe(filter(c => !!c.metadata && c.metadata.__destroyed === "1"))
       .subscribe({ next: this.resetAndReload })
-
-    this.connection.sessionConfig$
-      .pipe(filter(c => c.metadata && c.metadata.WalletUsername !== undefined))
-      .pipe(
-        map(c =>
-          aes256gcm.decrypt(c.metadata.WalletUsername!, this.session.secret)
-        )
-      )
-      .subscribe({
-        next: walletUsername => {
-          this.walletUsername = walletUsername
-          this.storage.setItem("walletUsername", walletUsername)
-        }
-      })
 
     this.ui = options.walletLinkUIConstructor({
       walletLinkUrl: options.walletLinkUrl,
@@ -158,28 +153,6 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
 
   public setStorageItem(key: string, value: string): void {
     this.storage.setItem(key, value)
-  }
-
-  public childRequestEthereumAccounts(
-    childSessionId: string,
-    childSessionSecret: string,
-    dappName: string,
-    dappLogoURL: string,
-    dappURL: string
-  ): Promise<ChildRequestEthereumAccountsResponse> {
-    return this.sendRequest<
-      ChildRequestEthereumAccountsRequest,
-      ChildRequestEthereumAccountsResponse
-    >({
-      method: Web3Method.childRequestEthereumAccounts,
-      params: {
-        sessionId: childSessionId,
-        sessionSecret: childSessionSecret,
-        appName: dappName,
-        appLogoURL: dappLogoURL,
-        appURL: dappURL
-      }
-    })
   }
 
   public requestEthereumAccounts(): Promise<RequestEthereumAccountsResponse> {
@@ -370,7 +343,7 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
         })
       }
 
-      this.relayEventManager.callbacks.set(id, response => {
+      WalletLinkRelay.callbacks.set(id, response => {
         this.ui.hideRequestEthereumAccounts()
         hideSnackbarItem?.()
 
@@ -380,14 +353,25 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
         resolve(response as U)
       })
 
-      if (
-        !isRequestAccounts ||
-        !this.ui.inlineAccountsResponse()
-      ) {
+      if (!isRequestAccounts || !this.ui.inlineAccountsResponse()) {
         console.log("Publish web3 request")
         this.publishWeb3RequestEvent(id, request)
       }
     })
+  }
+
+  public static makeRequestId(): number {
+    // max nextId == max int32 for compatibility with mobile
+    this._nextRequestId = (this._nextRequestId + 1) % 0x7fffffff
+    const id = this._nextRequestId
+    const idStr = prepend0x(id.toString(16))
+    // unlikely that this will ever be an issue, but just to be safe
+    const callback = WalletLinkRelay.callbacks.get(idStr)
+    if (callback) {
+      // TODO - how to handle this case
+      WalletLinkRelay.callbacks.delete(idStr)
+    }
+    return id
   }
 
   private publishWeb3RequestEvent(id: string, request: Web3Request): void {
@@ -456,10 +440,10 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
   }
 
   private invokeCallback(message: Web3ResponseMessage) {
-    const callback = this.relayEventManager.callbacks.get(message.id)
+    const callback = WalletLinkRelay.callbacks.get(message.id)
     if (callback) {
       callback(message.response)
-      this.relayEventManager.callbacks.delete(message.id)
+      WalletLinkRelay.callbacks.delete(message.id)
     }
   }
 }
