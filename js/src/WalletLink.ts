@@ -2,10 +2,14 @@
 // Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { injectCssReset } from "./lib/cssReset"
 import { WalletLinkProvider } from "./provider/WalletLinkProvider"
 import { WalletLinkRelay } from "./relay/WalletLinkRelay"
 import { getFavicon } from "./util"
+import { WalletLinkUI, WalletLinkUIOptions } from "./provider/WalletLinkUI"
+import { WalletLinkSdkUI } from "./provider/WalletLinkSdkUI"
+import url from "url"
+import { ScopedLocalStorage } from "./lib/ScopedLocalStorage"
+import { WalletLinkRelayEventManager } from "./relay/WalletLinkRelayEventManager"
 
 const WALLETLINK_URL =
   process.env.WALLETLINK_URL! || "https://www.walletlink.org"
@@ -24,6 +28,12 @@ export interface WalletLinkOptions {
   darkMode?: boolean
   /** @optional WalletLink server URL; for most, leave it unspecified */
   walletLinkUrl?: string
+  /** @optional an implementation of WalletLinkUI; for most, leave it unspecified */
+  walletLinkUIConstructor?: (
+    options: Readonly<WalletLinkUIOptions>
+  ) => WalletLinkUI
+  /** optional whether wallet link provider should override the isMetaMask property. */
+  overrideIsMetaMask?: boolean
 }
 
 export class WalletLink {
@@ -35,20 +45,49 @@ export class WalletLink {
   private _appName = ""
   private _appLogoUrl: string | null = null
   private _relay: WalletLinkRelay
+  private _relayEventManager: WalletLinkRelayEventManager
+  private _storage: ScopedLocalStorage
+  private _overrideIsMetaMask: boolean
 
   /**
    * Constructor
    * @param options WalletLink options object
    */
   constructor(options: Readonly<WalletLinkOptions>) {
+    let walletLinkUrl = options.walletLinkUrl || WALLETLINK_URL
+    let walletLinkUIConstructor: (
+      options: Readonly<WalletLinkUIOptions>
+    ) => WalletLinkUI
+    if (!options.walletLinkUIConstructor) {
+      walletLinkUIConstructor = options => new WalletLinkSdkUI(options)
+    } else {
+      walletLinkUIConstructor = options.walletLinkUIConstructor
+    }
+
+    if (typeof options.overrideIsMetaMask === "undefined") {
+      this._overrideIsMetaMask = false
+    } else {
+      this._overrideIsMetaMask = options.overrideIsMetaMask
+    }
+
+    const u = url.parse(walletLinkUrl)
+    const walletLinkOrigin = `${u.protocol}//${u.host}`
+    this._storage = new ScopedLocalStorage(
+      `-walletlink:${walletLinkOrigin}`
+    )
+
+    this._relayEventManager = new WalletLinkRelayEventManager()
+
     this._relay = new WalletLinkRelay({
-      walletLinkUrl: options.walletLinkUrl || WALLETLINK_URL,
+      walletLinkUrl: walletLinkUrl,
       version: WALLETLINK_VERSION,
-      darkMode: !!options.darkMode
+      darkMode: !!options.darkMode,
+      walletLinkUIConstructor: walletLinkUIConstructor,
+      storage: this._storage,
+      relayEventManager: this._relayEventManager
     })
     this.setAppInfo(options.appName, options.appLogoUrl)
-    this._relay.attach(document.documentElement)
-    injectCssReset()
+    this._relay.attachUI()
   }
 
   /**
@@ -62,9 +101,12 @@ export class WalletLink {
     chainId: number = 1
   ): WalletLinkProvider {
     return new WalletLinkProvider({
-      relay: this._relay,
+      relayProvider: () => Promise.resolve(this._relay),
+      relayEventManager: this._relayEventManager,
+      storage: this._storage,
       jsonRpcUrl,
-      chainId
+      chainId,
+      overrideIsMetaMask: this._overrideIsMetaMask
     })
   }
 

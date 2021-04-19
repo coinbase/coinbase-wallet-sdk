@@ -12,6 +12,7 @@ export interface QRCodeProps {
   height?: number
   fgColor?: string
   bgColor?: string
+  image?: QRCodeSVG.SvgLogo
 }
 
 export const QRCode: FunctionComponent<QRCodeProps> = props => {
@@ -26,7 +27,8 @@ export const QRCode: FunctionComponent<QRCodeProps> = props => {
       ecl: "M",
       width: props.width ?? 256,
       height: props.height ?? 256,
-      padding: 0
+      padding: 0,
+      image: props.image
     })
     const base64 = Buffer.from(qrcode.svg(), "utf8").toString("base64")
     setSvg(`data:image/svg+xml;base64,${base64}`)
