@@ -15,7 +15,6 @@ export class WalletLinkRelayEventManager {
     // unlikely that this will ever be an issue, but just to be safe
     const callback = this.callbacks.get(idStr)
     if (callback) {
-      // TODO - how to handle this case
       this.callbacks.delete(idStr)
     }
     return id

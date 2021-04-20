@@ -57,4 +57,6 @@ export abstract class WalletLinkRelayAbstract {
   abstract sendRequest<T extends Web3Request, U extends Web3Response>(
     request: T
   ): Promise<U>
+
+  abstract setAppInfo(appName: string, appLogoUrl: string | null): void
 }

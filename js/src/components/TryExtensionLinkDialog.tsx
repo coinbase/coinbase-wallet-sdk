@@ -69,7 +69,10 @@ export const TryExtensionLinkDialog: FunctionComponent<{
         >
           <TryExtensionBox
             onInstallClick={() => {
-              // TODO - Vishnu: Redirect users to extension download page
+              window.open(
+                "https://api.wallet.coinbase.com/rpc/v2/desktop/chrome",
+                "_blank"
+              )
             }}
           />
           <ScanQRBox

@@ -58,8 +58,8 @@ export class WalletLinkProvider
   private readonly _storage: ScopedLocalStorage
   private readonly _relayEventManager: WalletLinkRelayEventManager
 
-  private readonly _chainId: IntNumber
-  private readonly _jsonRpcUrl: string
+  private _chainId: IntNumber
+  private _jsonRpcUrl: string
   private readonly _overrideIsMetaMask: boolean
 
   private _addresses: AddressString[] = []
@@ -133,6 +133,16 @@ export class WalletLinkProvider
 
   public isConnected(): boolean {
     return true
+  }
+
+  public setProviderInfo(jsonRpcUrl: string, chainId: number) {
+    this._jsonRpcUrl = jsonRpcUrl
+    this._chainId = ensureIntNumber(chainId)
+    this.emit("chainChanged", this._chainId)
+  }
+
+  public setAppInfo(appName: string, appLogoUrl: string | null): void {
+    this.initializeRelay().then(relay => relay.setAppInfo(appName, appLogoUrl))
   }
 
   public async enable(): Promise<AddressString[]> {

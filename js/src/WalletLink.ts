@@ -32,7 +32,7 @@ export interface WalletLinkOptions {
   walletLinkUIConstructor?: (
     options: Readonly<WalletLinkUIOptions>
   ) => WalletLinkUI
-  /** optional whether wallet link provider should override the isMetaMask property. */
+  /** @optional whether wallet link provider should override the isMetaMask property. */
   overrideIsMetaMask?: boolean
 }
 
@@ -44,8 +44,8 @@ export class WalletLink {
 
   private _appName = ""
   private _appLogoUrl: string | null = null
-  private _relay: WalletLinkRelay
-  private _relayEventManager: WalletLinkRelayEventManager
+  private _relay: WalletLinkRelay | null = null
+  private _relayEventManager: WalletLinkRelayEventManager | null = null
   private _storage: ScopedLocalStorage
   private _overrideIsMetaMask: boolean
 
@@ -72,9 +72,11 @@ export class WalletLink {
 
     const u = url.parse(walletLinkUrl)
     const walletLinkOrigin = `${u.protocol}//${u.host}`
-    this._storage = new ScopedLocalStorage(
-      `-walletlink:${walletLinkOrigin}`
-    )
+    this._storage = new ScopedLocalStorage(`-walletlink:${walletLinkOrigin}`)
+
+    if (typeof window.walletLinkExtension !== "undefined") {
+      return
+    }
 
     this._relayEventManager = new WalletLinkRelayEventManager()
 
@@ -100,8 +102,20 @@ export class WalletLink {
     jsonRpcUrl: string,
     chainId: number = 1
   ): WalletLinkProvider {
+    if (typeof window.walletLinkExtension !== "undefined") {
+      //@ts-ignore
+      window.walletLinkExtension.setProviderInfo(jsonRpcUrl, chainId)
+
+      return window.walletLinkExtension
+    }
+
+    const relay = this._relay
+    if (!relay || !this._relayEventManager || !this._storage) {
+      throw new Error("Relay not initialized, should never happen")
+    }
+
     return new WalletLinkProvider({
-      relayProvider: () => Promise.resolve(this._relay),
+      relayProvider: () => Promise.resolve(relay),
       relayEventManager: this._relayEventManager,
       storage: this._storage,
       jsonRpcUrl,
@@ -121,7 +135,13 @@ export class WalletLink {
   ): void {
     this._appName = appName || "DApp"
     this._appLogoUrl = appLogoUrl || getFavicon()
-    this._relay.setAppInfo(this._appName, this._appLogoUrl)
+
+    if (typeof window.walletLinkExtension !== "undefined") {
+      //@ts-ignore
+      window.walletLinkExtension.setAppInfo(this._appName, this._appLogoUrl)
+    } else {
+      this._relay?.setAppInfo(this._appName, this._appLogoUrl)
+    }
   }
 
   /**
@@ -129,6 +149,10 @@ export class WalletLink {
    * all potential stale state is cleared.
    */
   public disconnect(): void {
-    this._relay.resetAndReload()
+    if (typeof window.walletLinkExtension !== "undefined") {
+      window.walletLinkExtension.close()
+    } else {
+      this._relay?.resetAndReload()
+    }
   }
 }
