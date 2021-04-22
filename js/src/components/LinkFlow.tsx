@@ -62,7 +62,7 @@ export class LinkFlow {
           this.extensionUI$.next({ value: enabled })
         }
       })
-      .catch(err => {
+      .catch(_ => {
         this.extensionUI$.next({ value: false })
       })
   }
