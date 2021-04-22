@@ -368,7 +368,7 @@ QRCode.prototype.svg = function(opt) {
     modrect = indent + '<path x="0" y="0" style="fill:' + options.color + ';shape-rendering:crispEdges;" d="' + pathdata + '" />';
   }
   let imgSvg = "";
-  if(this.options.image.svg){
+  if(this.options.image !== undefined && this.options.image.svg){
     const imgWidth = width * this.options.image.width / 100;
     const imgHeight = height * this.options.image.height / 100;
     const imgX = (width/2) - imgWidth/2;

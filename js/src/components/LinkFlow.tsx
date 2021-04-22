@@ -3,8 +3,10 @@
 // Licensed under the Apache License, version 2.0
 
 import { h, render } from "preact"
-import { Observable, Subscription } from "rxjs"
+import { BehaviorSubject, Observable, Subscription } from "rxjs"
 import { LinkDialog } from "./LinkDialog"
+import { first } from "rxjs/operators"
+import { TryExtensionLinkDialog } from "./TryExtensionLinkDialog"
 
 export interface LinkFlowOptions {
   darkMode: boolean
@@ -16,6 +18,10 @@ export interface LinkFlowOptions {
   connected$: Observable<boolean>
 }
 
+interface Optional<T> {
+  value?: T
+}
+
 export class LinkFlow {
   private readonly darkMode: boolean
   private readonly version: string
@@ -25,6 +31,9 @@ export class LinkFlow {
   private readonly isParentConnection: boolean
 
   private readonly connected$: Observable<boolean>
+  private readonly extensionUI$: BehaviorSubject<
+    Optional<boolean>
+  > = new BehaviorSubject({})
   private readonly subscriptions = new Subscription()
 
   private isConnected = false
@@ -41,6 +50,21 @@ export class LinkFlow {
     this.walletLinkUrl = options.walletLinkUrl
     this.isParentConnection = options.isParentConnection
     this.connected$ = options.connected$
+
+    // Check if extension UI is enabled
+    fetch("https://api.wallet.coinbase.com/rpc/v2/getFeatureFlags")
+      .then(res => res.json())
+      .then(json => {
+        const enabled: boolean | undefined = json.result.desktop.extension_ui
+        if (typeof enabled === "undefined") {
+          this.extensionUI$.next({ value: false })
+        } else {
+          this.extensionUI$.next({ value: enabled })
+        }
+      })
+      .catch(err => {
+        this.extensionUI$.next({ value: false })
+      })
   }
 
   public attach(el: Element): void {
@@ -85,21 +109,43 @@ export class LinkFlow {
       return
     }
 
-    // TODO - Vishnu: Use feature flag to show correct dialog UI
+    const subscription = this.extensionUI$
+      .pipe(first(enabled => enabled.value !== undefined)) // wait for a valid value before rendering
+      .subscribe(enabled => {
+        if (!this.root) {
+          return
+        }
 
-    render(
-      <LinkDialog
-        darkMode={this.darkMode}
-        version={this.version}
-        sessionId={this.sessionId}
-        sessionSecret={this.sessionSecret}
-        walletLinkUrl={this.walletLinkUrl}
-        isOpen={this.isOpen}
-        isConnected={this.isConnected}
-        isParentConnection={this.isParentConnection}
-        onCancel={this.onCancel}
-      />,
-      this.root
-    )
+        render(
+          enabled.value! ? (
+            <TryExtensionLinkDialog
+              darkMode={this.darkMode}
+              version={this.version}
+              sessionId={this.sessionId}
+              sessionSecret={this.sessionSecret}
+              walletLinkUrl={this.walletLinkUrl}
+              isOpen={this.isOpen}
+              isConnected={this.isConnected}
+              isParentConnection={this.isParentConnection}
+              onCancel={this.onCancel}
+            />
+          ) : (
+            <LinkDialog
+              darkMode={this.darkMode}
+              version={this.version}
+              sessionId={this.sessionId}
+              sessionSecret={this.sessionSecret}
+              walletLinkUrl={this.walletLinkUrl}
+              isOpen={this.isOpen}
+              isConnected={this.isConnected}
+              isParentConnection={this.isParentConnection}
+              onCancel={this.onCancel}
+            />
+          ),
+          this.root
+        )
+      })
+
+    this.subscriptions.add(subscription)
   }
 }

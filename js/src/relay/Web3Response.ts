@@ -58,6 +58,17 @@ export type ScanQRCodeResponse = BaseWeb3Response<
   string // scanned string
 >
 
+export type ChildRequestEthereumAccountsResponse = BaseWeb3Response<
+  AddressString[] // an array of ethereum addresses
+>
+
+export function ChildRequestEthereumAccountsResponse(
+  addresses: AddressString[]
+): RequestEthereumAccountsResponse {
+  return { method: Web3Method.childRequestEthereumAccounts, result: addresses }
+}
+
+
 export type ArbitraryResponse = BaseWeb3Response<
   string // response data
 >
@@ -71,3 +82,4 @@ export type Web3Response =
   | EthereumAddressFromSignedMessageResponse
   | ScanQRCodeResponse
   | ArbitraryResponse
+  | ChildRequestEthereumAccountsResponse
