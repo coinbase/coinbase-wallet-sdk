@@ -74,7 +74,7 @@ export class WalletLink {
     const walletLinkOrigin = `${u.protocol}//${u.host}`
     this._storage = new ScopedLocalStorage(`-walletlink:${walletLinkOrigin}`)
 
-    this._storage.setItem("version", VERSION);
+    this._storage.setItem("version", WalletLink.VERSION);
 
     if (typeof window.walletLinkExtension !== "undefined") {
       return
