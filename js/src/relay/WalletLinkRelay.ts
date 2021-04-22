@@ -333,7 +333,7 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
             userAgent
           )
         ) {
-          window.location.href = "https://go.cb-w.com"
+          window.location.href = "https://go.cb-w.com/kQz6p7iFFfb"
           return
         }
         if (this.ui.inlineAccountsResponse()) {
