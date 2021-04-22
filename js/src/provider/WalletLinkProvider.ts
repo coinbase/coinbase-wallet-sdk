@@ -101,6 +101,10 @@ export class WalletLinkProvider
         })
       }
     )
+
+    if (this._addresses.length > 0) {
+      this.initializeRelay()
+    }
   }
 
   public get selectedAddress(): AddressString | undefined {
@@ -109,6 +113,10 @@ export class WalletLinkProvider
 
   public get networkVersion(): string {
     return this._chainId.toString(10)
+  }
+
+  public get chainId(): string {
+    return prepend0x(this._chainId.toString(16))
   }
 
   public get isWalletLink(): boolean {
@@ -711,7 +719,6 @@ export class WalletLinkProvider
     }
 
     this._setAddresses(res.result)
-
     return { jsonrpc: "2.0", id: 0, result: this._addresses }
   }
 

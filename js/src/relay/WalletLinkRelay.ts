@@ -9,7 +9,6 @@ import { catchError, filter, map, timeout } from "rxjs/operators"
 import { ServerMessageEvent } from "../connection/ServerMessage"
 import { WalletLinkConnection } from "../connection/WalletLinkConnection"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
-import { WalletLinkUI, WalletLinkUIOptions } from "../provider/WalletLinkUI"
 import { AddressString, IntNumber, RegExpString } from "../types"
 import { bigIntStringFromBN, hexStringFromBuffer } from "../util"
 import * as aes256gcm from "./aes256gcm"
@@ -412,7 +411,7 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
     callWebhook: boolean
   ): Observable<string> {
     const encrypted = aes256gcm.encrypt(
-      JSON.stringify({ ...message, origin: window.location.origin }),
+      JSON.stringify({ ...message, origin: location.origin }),
       this.session.secret
     )
     return this.connection.publishEvent(event, encrypted, callWebhook)

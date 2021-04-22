@@ -1,10 +1,10 @@
 const path = require("path")
 const webpack = require("webpack")
-const { env } = process
+const {env} = process
 
 const tsConfigPath = (exports.tsConfigPath = path.join(
-  __dirname,
-  "tsconfig.json"
+    __dirname,
+    "tsconfig.json"
 ))
 
 module.exports = {
