@@ -22,6 +22,7 @@ export interface Web3Provider {
 
   host: string
   connected: boolean
+  chainId: string
   supportsSubscriptions(): boolean
   disconnect(): boolean
 }
