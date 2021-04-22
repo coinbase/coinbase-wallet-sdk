@@ -8,11 +8,10 @@ import crypto from "crypto"
 import { Observable, of } from "rxjs"
 import { catchError, filter, timeout } from "rxjs/operators"
 import url from "url"
-import { LinkFlow } from "../components/LinkFlow"
-import { Snackbar, SnackbarItemProps } from "../components/Snackbar"
 import { ServerMessageEvent } from "../connection/ServerMessage"
 import { WalletLinkConnection } from "../connection/WalletLinkConnection"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
+import { WalletLinkUI, WalletLinkUIOptions } from "../provider/WalletLinkUI"
 import { AddressString, IntNumber, RegExpString } from "../types"
 import { bigIntStringFromBN, hexStringFromBuffer, prepend0x } from "../util"
 import * as aes256gcm from "./aes256gcm"
@@ -65,6 +64,9 @@ export interface WalletLinkRelayOptions {
   walletLinkUrl: string
   version: string
   darkMode: boolean
+  walletLinkUIConstructor: (
+    options: Readonly<WalletLinkUIOptions>
+  ) => WalletLinkUI
 }
 
 export class WalletLinkRelay {
@@ -78,12 +80,10 @@ export class WalletLinkRelay {
   private readonly session: Session
   private readonly connection: WalletLinkConnection
 
-  private readonly linkFlow: LinkFlow
-  private readonly snackbar: Snackbar
+  private ui: WalletLinkUI
 
   private appName = ""
   private appLogoUrl: string | null = null
-  private attached = false
 
   constructor(options: Readonly<WalletLinkRelayOptions>) {
     this.walletLinkUrl = options.walletLinkUrl
@@ -93,6 +93,7 @@ export class WalletLinkRelay {
     this.storage = new ScopedLocalStorage(
       `-walletlink:${this.walletLinkOrigin}`
     )
+
     this.session =
       Session.load(this.storage) || new Session(this.storage).save()
 
@@ -111,20 +112,19 @@ export class WalletLinkRelay {
       .pipe(filter(c => !!c.metadata && c.metadata.__destroyed === "1"))
       .subscribe({ next: this.resetAndReload })
 
-    this.snackbar = new Snackbar({
-      darkMode: options.darkMode
-    })
-
-    this.linkFlow = new LinkFlow({
-      darkMode: options.darkMode,
+    this.ui = options.walletLinkUIConstructor({
+      walletLinkUrl: options.walletLinkUrl,
       version: options.version,
-      sessionId: this.session.id,
-      sessionSecret: this.session.secret,
-      walletLinkUrl: this.walletLinkUrl,
+      darkMode: options.darkMode,
+      session: this.session,
       connected$: this.connection.connected$
     })
 
     this.connection.connect()
+  }
+
+  public attachUI() {
+    this.ui.attach()
   }
 
   @bind
@@ -138,25 +138,13 @@ export class WalletLinkRelay {
       .subscribe(_ => {
         this.connection.destroy()
         this.storage.clear()
-        document.location.reload()
+        this.ui.reloadUI()
       })
   }
 
   public setAppInfo(appName: string, appLogoUrl: string | null): void {
     this.appName = appName
     this.appLogoUrl = appLogoUrl
-  }
-
-  public attach(el: Element): void {
-    if (this.attached) {
-      throw new Error("WalletLinkRelay is already attached")
-    }
-    const container = document.createElement("div")
-    container.className = "-walletlink-css-reset"
-    el.appendChild(container)
-
-    this.linkFlow.attach(container)
-    this.snackbar.attach(container)
   }
 
   public getStorageItem(key: string): string | null {
@@ -316,31 +304,47 @@ export class WalletLinkRelay {
       }
 
       if (isRequestAccounts) {
-        this.linkFlow.open({ onCancel: cancel })
-        WalletLinkRelay.accountRequestCallbackIds.add(id)
-      } else {
-        const snackbarProps: SnackbarItemProps = {
-          message: "Pushed a request to your wallet...",
-          showProgressBar: true,
-          actions: [
-            {
-              info: "Made a mistake?",
-              buttonLabel: "Cancel",
-              onClick: cancel
-            },
-            {
-              info: "Not receiving requests?",
-              buttonLabel: "Reset Connection",
-              onClick: this.resetAndReload
-            }
-          ]
+        const userAgent = window?.navigator?.userAgent || null
+        if (
+          userAgent &&
+          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            userAgent
+          )
+        ) {
+          window.location.href = "https://go.cb-w.com"
+          return
+        }
+        if (this.ui.inlineAccountsResponse()) {
+          const onAccounts = (accounts: [AddressString]) => {
+            console.log("Got accounts response from extension " + accounts[0])
+            this.handleWeb3ResponseMessage(
+              Web3ResponseMessage({
+                id,
+                response: RequestEthereumAccountsResponse(accounts)
+              })
+            )
+          }
+
+          this.ui.requestEthereumAccounts({
+            onCancel: cancel,
+            onAccounts: onAccounts
+          })
+        } else {
+          this.ui.requestEthereumAccounts({
+            onCancel: cancel
+          })
         }
 
-        hideSnackbarItem = this.snackbar.presentItem(snackbarProps)
+        WalletLinkRelay.accountRequestCallbackIds.add(id)
+      } else {
+        hideSnackbarItem = this.ui.showConnecting({
+          onCancel: cancel,
+          onResetConnection: this.resetAndReload
+        })
       }
 
       WalletLinkRelay.callbacks.set(id, response => {
-        this.linkFlow.close()
+        this.ui.hideRequestEthereumAccounts()
         hideSnackbarItem?.()
 
         if (response.errorMessage) {
@@ -349,7 +353,10 @@ export class WalletLinkRelay {
         resolve(response as U)
       })
 
-      this.publishWeb3RequestEvent(id, request)
+      if (!isRequestAccounts || !this.ui.inlineAccountsResponse()) {
+        console.log("Publish web3 request")
+        this.publishWeb3RequestEvent(id, request)
+      }
     })
   }
 
@@ -395,7 +402,7 @@ export class WalletLinkRelay {
     callWebhook: boolean
   ): Observable<string> {
     const encrypted = aes256gcm.encrypt(
-      JSON.stringify({ ...message, origin: location.origin }),
+      JSON.stringify({ ...message, origin: window.location.origin }),
       this.session.secret
     )
     return this.connection.publishEvent(event, encrypted, callWebhook)

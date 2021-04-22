@@ -3,6 +3,32 @@
 // Licensed under the Apache License, version 2.0
 
 .-walletlink-css-reset {
+  .-gear-container {
+    margin-left: 16px !important;
+    margin-right: 9px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    transition: opacity 0.25s;
+
+    * {
+      user-select: none;
+    }
+
+    svg {
+      opacity: 0.0;
+      position: absolute;
+    }
+  }
+
+  .-gear-icon {
+    height: 12px;
+    width: 12px;
+    z-index: 10000;
+  }
+
   .-walletlink-snackbar {
     align-items: flex-end;
     display: flex;
@@ -12,104 +38,127 @@
     top: 0;
     z-index: 2147483647;
 
-    &-item {
-      background-color: #fff;
-      border-radius: 8px;
-      box-shadow: 0px 16px 24px rgba(0, 0, 0, 0.06),
-        0px 0px 8px rgba(0, 0, 0, 0.04);
+    * {
+      user-select: none;
+    }
+
+    &-instance {
       display: flex;
       flex-direction: column;
       margin: 8px 16px 0 16px;
-      overflow: hidden;
+      overflow: visible;
       text-align: left;
       transform: translateX(0);
       transition: opacity 0.25s, transform 0.25s;
 
-      &-content {
-        align-items: center;
-        cursor: pointer;
+      &-header:hover {
+        .-gear-container svg {
+          opacity: 1.0
+        }
+      }
+
+      &-header {
         display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        padding: 8px 8px 8px 16px;
-        user-select: none;
+        align-items: center;
+        background: #FFFFFF;
+        overflow: hidden;
+
+        border: 1px solid #E7EBEE;
+        box-sizing: border-box;
+        border-radius: 8px;
+        cursor: pointer;
+
+        &-cblogo {
+          margin: 8px 8px 8px 8px;
+        }
+
+        * {
+          cursor: pointer;
+        }
 
         &-message {
           color: #000;
-          font-size: 14px;
+          font-size: 13px;
           line-height: 1.5;
+          user-select: none;
+        }
+      }
+
+      &-menu {
+        background: #FFFFFF;
+
+        transition: opacity .25s ease-in-out, transform .25s linear, visibility 0s;
+        visibility: hidden;
+
+        border: 1px solid #E7EBEE;
+        box-sizing: border-box;
+        border-radius: 8px;
+
+        opacity: 0;
+        flex-direction: column;
+        padding-left: 8px;
+        padding-right: 8px;
+
+        &-item:last-child {
+          margin-bottom: 8px !important;
         }
 
-        &-chevron {
-          position: relative;
-          display: block;
-          margin: 0 8px;
-          transition: transform 0.05s;
+        &-item:hover {
+          background: #F5F7F8;
+          border-radius: 6px;
+          transition: background 0.25s;
 
-          &::before {
-            position: relative;
-            top: -2px;
-            content: "";
-            display: block;
-            border-top: 2px solid #000;
-            border-left: 2px solid #000;
-            width: 8px;
-            height: 8px;
-            transform: rotate(-135deg);
+          span {
+            color: #050F19;
+            transition: color 0.25s;
+          }
+
+          svg path {
+            fill: #000000;
+            transition: fill 0.25s;
           }
         }
-      }
-
-      &-progress-bar {
-        display: block;
-        height: 2px;
-        position: relative;
-
-        &::before {
-          animation: -walletlink-snackbar-progressbar 2s linear infinite;
-          background-image: linear-gradient(
-            to right,
-            rgba(#1652f0, 0) 0%,
-            rgba(#1652f0, 1) 100%
-          );
-          content: "";
-          height: 100%;
-          left: -100%;
-          position: absolute;
-          width: 100%;
-        }
-      }
-
-      &-actions {
-        display: none;
-        flex-direction: column;
-        border-top: 1px solid #f5f7f8;
-        padding: 2px 16px 8px;
 
         &-item {
-          margin: 8px 0;
+          visibility: inherit;
+          height: 35px;
+          margin-top: 8px;
+          margin-bottom: 0;
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          padding: 8px;
+          cursor: pointer;
 
-          &-info {
-            color: #888;
-            font-size: 14px;
-            margin: 0 8px 0 0;
+          * {
+            visibility: inherit;
+            cursor: pointer;
           }
 
-          &-button {
-            -webkit-appearance: none;
-            -webkit-text-fill-color: #1652f0;
-            background: transparent;
-            color: #1652f0;
-            cursor: pointer;
-            display: inline;
-            font-size: 14px;
-            margin: 0;
-            padding: 0;
-            transition: opacity 0.25s;
+          &-is-red:hover {
+            background: rgba(223, 95, 103, 0.2);
+            transition: background 0.25s;
 
-            &:active {
-              opacity: 0.6;
+            * {
+              cursor: pointer;
             }
+
+            svg path {
+              fill: #DF5F67;
+              transition: fill 0.25s;
+            }
+
+            span {
+              color: #DF5F67;
+              transition: color 0.25s;
+            }
+          }
+
+          &-info {
+            color: #AAAAAA;
+            font-size: 13px;
+            margin: 0 8px 0 32px;
+            position: absolute;
           }
         }
       }
@@ -118,160 +167,17 @@
         opacity: 0;
         text-align: left;
         transform: translateX(25%);
+        transition: opacity 0.5s linear;
       }
 
       &-expanded {
-        .-walletlink-snackbar-item-content-chevron {
-          transform: rotate(180deg);
-        }
-
-        .-walletlink-snackbar-item-actions {
+        .-walletlink-snackbar-instance-menu {
+          opacity: 1;
           display: flex;
+          transform: translateY(8px);
+          visibility: visible;
         }
       }
     }
-  }
-
-  .-walletlink-snackbar-container-dark {
-    .-walletlink-snackbar {
-      &-item {
-        background-color: #2a2a2a;
-
-        &-content {
-          &-message {
-            color: #999;
-          }
-
-          &-chevron {
-            &::before {
-              border-top: 2px solid #ccc;
-              border-left: 2px solid #ccc;
-            }
-          }
-        }
-
-        &-progress-bar {
-          &::before {
-            animation: -walletlink-snackbar-progressbar-dark 2s linear infinite;
-            background-image: linear-gradient(
-              to right,
-              rgba(#4578ff, 0) 0%,
-              rgba(#4578ff, 1) 100%
-            );
-          }
-        }
-
-        &-actions {
-          border-top: 1px solid #343434;
-
-          &-item {
-            &-button {
-              -webkit-text-fill-color: #ccc;
-              color: #ccc;
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-@keyframes -walletlink-snackbar-progressbar {
-  0% {
-    left: 0;
-    width: 0%;
-    background-image: linear-gradient(
-      to right,
-      rgba(#1652f0, 0) 0%,
-      rgba(#1652f0, 1) 100%
-    );
-  }
-
-  25% {
-    left: 0;
-    width: 100%;
-  }
-
-  50% {
-    left: 100%;
-    width: 0%;
-    background-image: linear-gradient(
-      to right,
-      rgba(#1652f0, 0) 0%,
-      rgba(#1652f0, 1) 100%
-    );
-  }
-
-  50.01% {
-    background-image: linear-gradient(
-      to left,
-      rgba(#1652f0, 0) 0%,
-      rgba(#1652f0, 1) 100%
-    );
-  }
-
-  75% {
-    left: 0;
-    width: 100%;
-  }
-
-  100% {
-    left: 0;
-    width: 0%;
-    background-image: linear-gradient(
-      to left,
-      rgba(#1652f0, 0) 0%,
-      rgba(#1652f0, 1) 100%
-    );
-  }
-}
-
-@keyframes -walletlink-snackbar-progressbar-dark {
-  0% {
-    left: 0;
-    width: 0%;
-    background-image: linear-gradient(
-      to right,
-      rgba(#4578ff, 0) 0%,
-      rgba(#4578ff, 1) 100%
-    );
-  }
-
-  25% {
-    left: 0;
-    width: 100%;
-  }
-
-  50% {
-    left: 100%;
-    width: 0%;
-    background-image: linear-gradient(
-      to right,
-      rgba(#4578ff, 0) 0%,
-      rgba(#4578ff, 1) 100%
-    );
-  }
-
-  50.01% {
-    background-image: linear-gradient(
-      to left,
-      rgba(#4578ff, 0) 0%,
-      rgba(#4578ff, 1) 100%
-    );
-  }
-
-  75% {
-    left: 0;
-    width: 100%;
-  }
-
-  100% {
-    left: 0;
-    width: 0%;
-    background-image: linear-gradient(
-      to left,
-      rgba(#4578ff, 0) 0%,
-      rgba(#4578ff, 1) 100%
-    );
   }
 }

@@ -12,6 +12,7 @@ export interface LinkFlowOptions {
   sessionId: string
   sessionSecret: string
   walletLinkUrl: string
+  isParentConnection: boolean
   connected$: Observable<boolean>
 }
 
@@ -21,6 +22,7 @@ export class LinkFlow {
   private readonly sessionId: string
   private readonly sessionSecret: string
   private readonly walletLinkUrl: string
+  private readonly isParentConnection: boolean
 
   private readonly connected$: Observable<boolean>
   private readonly subscriptions = new Subscription()
@@ -37,6 +39,7 @@ export class LinkFlow {
     this.sessionId = options.sessionId
     this.sessionSecret = options.sessionSecret
     this.walletLinkUrl = options.walletLinkUrl
+    this.isParentConnection = options.isParentConnection
     this.connected$ = options.connected$
   }
 
@@ -82,6 +85,8 @@ export class LinkFlow {
       return
     }
 
+    // TODO - Vishnu: Use feature flag to show correct dialog UI
+
     render(
       <LinkDialog
         darkMode={this.darkMode}
@@ -91,6 +96,7 @@ export class LinkFlow {
         walletLinkUrl={this.walletLinkUrl}
         isOpen={this.isOpen}
         isConnected={this.isConnected}
+        isParentConnection={this.isParentConnection}
         onCancel={this.onCancel}
       />,
       this.root

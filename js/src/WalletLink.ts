@@ -2,10 +2,11 @@
 // Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { injectCssReset } from "./lib/cssReset"
 import { WalletLinkProvider } from "./provider/WalletLinkProvider"
 import { WalletLinkRelay } from "./relay/WalletLinkRelay"
 import { getFavicon } from "./util"
+import { WalletLinkUI, WalletLinkUIOptions } from "./provider/WalletLinkUI"
+import { WalletLinkSdkUI } from "./provider/WalletLinkSdkUI"
 
 const WALLETLINK_URL =
   process.env.WALLETLINK_URL! || "https://www.walletlink.org"
@@ -24,6 +25,10 @@ export interface WalletLinkOptions {
   darkMode?: boolean
   /** @optional WalletLink server URL; for most, leave it unspecified */
   walletLinkUrl?: string
+  /** @optional an implementation of WalletLinkUI; for most, leave it unspecified */
+  walletLinkUIConstructor?: (
+    options: Readonly<WalletLinkUIOptions>
+  ) => WalletLinkUI
 }
 
 export class WalletLink {
@@ -41,14 +46,23 @@ export class WalletLink {
    * @param options WalletLink options object
    */
   constructor(options: Readonly<WalletLinkOptions>) {
+    let walletLinkUIConstructor: (
+      options: Readonly<WalletLinkUIOptions>
+    ) => WalletLinkUI
+    if (!options.walletLinkUIConstructor) {
+      walletLinkUIConstructor = options => new WalletLinkSdkUI(options)
+    } else {
+      walletLinkUIConstructor = options.walletLinkUIConstructor
+    }
+
     this._relay = new WalletLinkRelay({
       walletLinkUrl: options.walletLinkUrl || WALLETLINK_URL,
       version: WALLETLINK_VERSION,
-      darkMode: !!options.darkMode
+      darkMode: !!options.darkMode,
+      walletLinkUIConstructor: walletLinkUIConstructor
     })
     this.setAppInfo(options.appName, options.appLogoUrl)
-    this._relay.attach(document.documentElement)
-    injectCssReset()
+    this._relay.attachUI()
   }
 
   /**
