@@ -63,7 +63,6 @@ export class LinkFlow {
         }
       })
       .catch(err => {
-        console.error(`Couldn't fetch feature flags - ${err}`)
         this.extensionUI$.next({ value: false })
       })
   }
