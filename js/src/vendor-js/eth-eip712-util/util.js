@@ -1,8 +1,8 @@
 // Extracted from https://github.com/ethereumjs/ethereumjs-util and stripped out irrelevant code
 // Original code licensed under the Mozilla Public License Version 2.0
 
-const createKeccakHash = require('../keccak')
-const BN = require('bn.js')
+const createKeccakHash = require("../keccak")
+const BN = require("bn.js")
 
 /**
  * Returns a buffer filled with 0s
@@ -10,7 +10,7 @@ const BN = require('bn.js')
  * @param {Number} bytes  the number of bytes the buffer should be
  * @return {Buffer}
  */
-function zeros (bytes) {
+function zeros(bytes) {
   return Buffer.allocUnsafe(bytes).fill(0)
 }
 
@@ -23,7 +23,7 @@ function zeros (bytes) {
  * @param {Boolean} [right=false] whether to start padding form the left or right
  * @return {Buffer|Array}
  */
-function setLength (msg, length, right) {
+function setLength(msg, length, right) {
   const buf = zeros(length)
   msg = toBuffer(msg)
   if (right) {
@@ -48,7 +48,7 @@ function setLength (msg, length, right) {
  * @param {Number} length the number of bytes the output should be
  * @return {Buffer|Array}
  */
-function setLengthRight (msg, length) {
+function setLengthRight(msg, length) {
   return setLength(msg, length, true)
 }
 
@@ -56,17 +56,17 @@ function setLengthRight (msg, length) {
  * Attempts to turn a value into a `Buffer`. As input it supports `Buffer`, `String`, `Number`, null/undefined, `BN` and other objects with a `toArray()` method.
  * @param {*} v the value
  */
-function toBuffer (v) {
+function toBuffer(v) {
   if (!Buffer.isBuffer(v)) {
     if (Array.isArray(v)) {
       v = Buffer.from(v)
-    } else if (typeof v === 'string') {
+    } else if (typeof v === "string") {
       if (isHexString(v)) {
-        v = Buffer.from(padToEven(stripHexPrefix(v)), 'hex')
+        v = Buffer.from(padToEven(stripHexPrefix(v)), "hex")
       } else {
         v = Buffer.from(v)
       }
-    } else if (typeof v === 'number') {
+    } else if (typeof v === "number") {
       v = intToBuffer(v)
     } else if (v === null || v === undefined) {
       v = Buffer.allocUnsafe(0)
@@ -76,7 +76,7 @@ function toBuffer (v) {
       // converts a BN to a Buffer
       v = Buffer.from(v.toArray())
     } else {
-      throw new Error('invalid type')
+      throw new Error("invalid type")
     }
   }
   return v
@@ -87,9 +87,9 @@ function toBuffer (v) {
  * @param {Buffer} buf
  * @return {String}
  */
-function bufferToHex (buf) {
+function bufferToHex(buf) {
   buf = toBuffer(buf)
-  return '0x' + buf.toString('hex')
+  return "0x" + buf.toString("hex")
 }
 
 /**
@@ -98,23 +98,25 @@ function bufferToHex (buf) {
  * @param {Number} [bits=256] the Keccak width
  * @return {Buffer}
  */
-function keccak (a, bits) {
+function keccak(a, bits) {
   a = toBuffer(a)
   if (!bits) bits = 256
 
-  return createKeccakHash('keccak' + bits).update(a).digest()
+  return createKeccakHash("keccak" + bits)
+    .update(a)
+    .digest()
 }
 
-function padToEven (str) {
-  return str.length % 2 ? '0' + str : str
+function padToEven(str) {
+  return str.length % 2 ? "0" + str : str
 }
 
-function isHexString (str) {
-  return typeof str === 'string' && str.match(/^0x[0-9A-Fa-f]*$/)
+function isHexString(str) {
+  return typeof str === "string" && str.match(/^0x[0-9A-Fa-f]*$/)
 }
 
-function stripHexPrefix (str) {
-  if (typeof str === 'string' && str.startsWith('0x')) {
+function stripHexPrefix(str) {
+  if (typeof str === "string" && str.startsWith("0x")) {
     return str.slice(2)
   }
   return str
