@@ -512,7 +512,7 @@ export class WalletLinkProvider
         const { error } = response
 
         if (error) {
-          throw ethErrors.rpc.parse({})
+          throw serializeError(error)
         }
 
         return response
