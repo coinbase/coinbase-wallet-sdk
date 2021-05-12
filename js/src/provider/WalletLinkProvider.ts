@@ -19,13 +19,8 @@ import {
 import eip712 from "../vendor-js/eth-eip712-util"
 import { FilterPolyfill } from "./FilterPolyfill"
 import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from "./JSONRPC"
-import {
-  ProviderError,
-  ProviderErrorCode,
-  Web3Provider,
-  RequestArguments
-} from "./Web3Provider"
-import { ethErrors } from "eth-rpc-errors"
+import { Web3Provider, RequestArguments } from "./Web3Provider"
+import { ethErrors, serializeError } from "eth-rpc-errors"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import {
   SubscriptionManager,
@@ -511,17 +506,13 @@ export class WalletLinkProvider
       .then(res => res.json())
       .then(json => {
         if (!json) {
-          throw new ProviderError("unexpected response")
+          throw ethErrors.rpc.parse({})
         }
         const response = json as JSONRPCResponse
         const { error } = response
 
         if (error) {
-          throw new ProviderError(
-            error.message || "RPC Error",
-            error.code,
-            error.data
-          )
+          throw serializeError(error)
         }
 
         return response
@@ -620,15 +611,12 @@ export class WalletLinkProvider
 
   private _requireAuthorization(): void {
     if (this._addresses.length === 0) {
-      throw new ProviderError("Unauthorized", ProviderErrorCode.UNAUTHORIZED)
+      throw ethErrors.provider.unauthorized({})
     }
   }
 
   private _throwUnsupportedMethodError(): Promise<JSONRPCResponse> {
-    throw new ProviderError(
-      "Unsupported method",
-      ProviderErrorCode.UNSUPPORTED_METHOD
-    )
+    throw ethErrors.provider.unsupportedMethod({})
   }
 
   private async _signEthereumMessage(
@@ -653,9 +641,8 @@ export class WalletLinkProvider
         typeof err.message === "string" &&
         err.message.match(/(denied|rejected)/i)
       ) {
-        throw new ProviderError(
-          "User denied message signature",
-          ProviderErrorCode.USER_DENIED_REQUEST_SIGNATURE
+        throw ethErrors.provider.userRejectedRequest(
+          "User denied message signature"
         )
       }
       throw err
@@ -706,9 +693,8 @@ export class WalletLinkProvider
         typeof err.message === "string" &&
         err.message.match(/(denied|rejected)/i)
       ) {
-        throw new ProviderError(
-          "User denied account authorization",
-          ProviderErrorCode.USER_DENIED_REQUEST_ACCOUNTS
+        throw ethErrors.provider.userRejectedRequest(
+          "User denied account authorization"
         )
       }
       throw err
@@ -765,9 +751,8 @@ export class WalletLinkProvider
         typeof err.message === "string" &&
         err.message.match(/(denied|rejected)/i)
       ) {
-        throw new ProviderError(
-          "User denied transaction signature",
-          ProviderErrorCode.USER_DENIED_REQUEST_SIGNATURE
+        throw ethErrors.provider.userRejectedRequest(
+          "User denied transaction signature"
         )
       }
       throw err
@@ -800,9 +785,8 @@ export class WalletLinkProvider
         typeof err.message === "string" &&
         err.message.match(/(denied|rejected)/i)
       ) {
-        throw new ProviderError(
-          "User denied transaction signature",
-          ProviderErrorCode.USER_DENIED_REQUEST_SIGNATURE
+        throw ethErrors.provider.userRejectedRequest(
+          "User denied transaction signature"
         )
       }
       throw err
