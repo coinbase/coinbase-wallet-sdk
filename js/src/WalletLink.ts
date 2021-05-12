@@ -146,8 +146,15 @@ export class WalletLink {
     this._appLogoUrl = appLogoUrl || getFavicon()
 
     if (typeof window.walletLinkExtension !== "undefined") {
-      //@ts-ignore
-      window.walletLinkExtension.setAppInfo(this._appName, this._appLogoUrl)
+      if (
+        //@ts-ignore
+        typeof window.walletLinkExtension.isCipher !== "boolean" ||
+        //@ts-ignore
+        !window.walletLinkExtension.isCipher
+      ) {
+        //@ts-ignore
+        window.walletLinkExtension.setAppInfo(this._appName, this._appLogoUrl)
+      }
     } else {
       this._relay?.setAppInfo(this._appName, this._appLogoUrl)
     }
