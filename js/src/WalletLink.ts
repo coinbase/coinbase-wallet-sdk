@@ -2,14 +2,14 @@
 // Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { WalletLinkProvider } from "./provider/WalletLinkProvider"
-import { WalletLinkRelay } from "./relay/WalletLinkRelay"
-import { getFavicon } from "./util"
-import { WalletLinkUI, WalletLinkUIOptions } from "./provider/WalletLinkUI"
-import { WalletLinkSdkUI } from "./provider/WalletLinkSdkUI"
 import url from "url"
 import { ScopedLocalStorage } from "./lib/ScopedLocalStorage"
+import { WalletLinkProvider } from "./provider/WalletLinkProvider"
+import { WalletLinkSdkUI } from "./provider/WalletLinkSdkUI"
+import { WalletLinkUI, WalletLinkUIOptions } from "./provider/WalletLinkUI"
+import { WalletLinkRelay } from "./relay/WalletLinkRelay"
 import { WalletLinkRelayEventManager } from "./relay/WalletLinkRelayEventManager"
+import { getFavicon } from "./util"
 
 const WALLETLINK_URL =
   process.env.WALLETLINK_URL! || "https://www.walletlink.org"
@@ -74,7 +74,7 @@ export class WalletLink {
     const walletLinkOrigin = `${u.protocol}//${u.host}`
     this._storage = new ScopedLocalStorage(`-walletlink:${walletLinkOrigin}`)
 
-    this._storage.setItem("version", WalletLink.VERSION);
+    this._storage.setItem("version", WalletLink.VERSION)
 
     if (typeof window.walletLinkExtension !== "undefined") {
       return
@@ -105,8 +105,15 @@ export class WalletLink {
     chainId: number = 1
   ): WalletLinkProvider {
     if (typeof window.walletLinkExtension !== "undefined") {
-      //@ts-ignore
-      window.walletLinkExtension.setProviderInfo(jsonRpcUrl, chainId)
+      if (
+        //@ts-ignore
+        typeof window.walletLinkExtension.isCipher !== "boolean" ||
+        //@ts-ignore
+        !window.walletLinkExtension.isCipher
+      ) {
+        //@ts-ignore
+        window.walletLinkExtension.setProviderInfo(jsonRpcUrl, chainId)
+      }
 
       return window.walletLinkExtension
     }
@@ -139,8 +146,15 @@ export class WalletLink {
     this._appLogoUrl = appLogoUrl || getFavicon()
 
     if (typeof window.walletLinkExtension !== "undefined") {
-      //@ts-ignore
-      window.walletLinkExtension.setAppInfo(this._appName, this._appLogoUrl)
+      if (
+        //@ts-ignore
+        typeof window.walletLinkExtension.isCipher !== "boolean" ||
+        //@ts-ignore
+        !window.walletLinkExtension.isCipher
+      ) {
+        //@ts-ignore
+        window.walletLinkExtension.setAppInfo(this._appName, this._appLogoUrl)
+      }
     } else {
       this._relay?.setAppInfo(this._appName, this._appLogoUrl)
     }
