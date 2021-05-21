@@ -96,12 +96,12 @@ export class WalletLink {
 
   /**
    * Create a Web3 Provider object
-   * @param jsonRpcUrl Ethereum JSON RPC URL
+   * @param jsonRpcUrl Ethereum JSON RPC URL (Default: "")
    * @param chainId Ethereum Chain ID (Default: 1)
    * @returns A Web3 Provider
    */
   public makeWeb3Provider(
-    jsonRpcUrl: string,
+    jsonRpcUrl: string = "",
     chainId: number = 1
   ): WalletLinkProvider {
     if (typeof window.walletLinkExtension !== "undefined") {
@@ -122,6 +122,7 @@ export class WalletLink {
     if (!relay || !this._relayEventManager || !this._storage) {
       throw new Error("Relay not initialized, should never happen")
     }
+    if (!jsonRpcUrl) relay.setConnectDisabled(true)
 
     return new WalletLinkProvider({
       relayProvider: () => Promise.resolve(relay),

@@ -62,10 +62,6 @@ export class WalletLinkProvider
   constructor(options: Readonly<WalletLinkProviderOptions>) {
     super()
 
-    if (!options.jsonRpcUrl) {
-      throw new Error("jsonRpcUrl must be provided")
-    }
-
     this._chainId = ensureIntNumber(options.chainId || 1)
     this._jsonRpcUrl = options.jsonRpcUrl
     this._overrideIsMetaMask = options.overrideIsMetaMask
@@ -496,6 +492,7 @@ export class WalletLinkProvider
         return this._walletlink_arbitrary(params)
     }
 
+    if (!this._jsonRpcUrl) throw Error("Error: No jsonRpcUrl provided")
     return window
       .fetch(this._jsonRpcUrl, {
         method: "POST",

@@ -92,19 +92,19 @@ export class LinkFlow {
     this.root.parentElement?.removeChild(this.root)
   }
 
-  public open(options: { onCancel: () => void }): void {
+  public open(options: { onCancel: () => void, connectDisabled: boolean }): void {
     this.isOpen = true
     this.onCancel = options.onCancel
-    this.render()
+    this.render(options.connectDisabled)
   }
 
-  public close(): void {
+  public close(connectDisabled : boolean = false): void {
     this.isOpen = false
     this.onCancel = null
-    this.render()
+    this.render(connectDisabled)
   }
 
-  private render(): void {
+  private render(connectDisabled: boolean = false): void {
     if (!this.root) {
       return
     }
@@ -128,6 +128,7 @@ export class LinkFlow {
               isConnected={this.isConnected}
               isParentConnection={this.isParentConnection}
               onCancel={this.onCancel}
+              connectDisabled={connectDisabled}
             />
           ) : (
             <LinkDialog

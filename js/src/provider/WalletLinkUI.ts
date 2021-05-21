@@ -21,13 +21,14 @@ export abstract class WalletLinkUI {
    */
   abstract requestEthereumAccounts(options: {
     onCancel: () => void
-    onAccounts?: (accounts: [AddressString]) => void
+    onAccounts?: (accounts: [AddressString]) => void,
+    connectDisabled: boolean
   }): void
 
   /**
    * Hide the link flow
    */
-  abstract hideRequestEthereumAccounts(): void
+  abstract hideRequestEthereumAccounts(connectDisabled: boolean): void
 
   /**
    *
