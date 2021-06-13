@@ -59,4 +59,6 @@ export abstract class WalletLinkRelayAbstract {
   ): Promise<U>
 
   abstract setAppInfo(appName: string, appLogoUrl: string | null): void
+  abstract setChainIdCallback(chainIdCallback: (chainId: string) => void): void
+  abstract setJsonRpcUrlCallback(jsonRpcUrlCallback: (jsonRpcUrl: string) => void): void
 }
