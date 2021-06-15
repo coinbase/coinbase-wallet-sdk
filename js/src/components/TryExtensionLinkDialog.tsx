@@ -18,6 +18,7 @@ export const TryExtensionLinkDialog: FunctionComponent<{
   isOpen: boolean
   isConnected: boolean
   isParentConnection: boolean
+  connectDisabled: boolean
   onCancel: (() => void) | null
 }> = props => {
   const [isContainerHidden, setContainerHidden] = useState(!props.isOpen)
@@ -75,7 +76,7 @@ export const TryExtensionLinkDialog: FunctionComponent<{
               )
             }}
           />
-          <ScanQRBox
+          {!props.connectDisabled ? <ScanQRBox
             darkMode={props.darkMode}
             version={props.version}
             sessionId={props.sessionId}
@@ -83,7 +84,7 @@ export const TryExtensionLinkDialog: FunctionComponent<{
             walletLinkUrl={props.walletLinkUrl}
             isConnected={props.isConnected}
             isParentConnection={props.isParentConnection}
-          />
+          /> : null}
 
           {props.onCancel && <CancelButton onClick={props.onCancel} />}
         </div>

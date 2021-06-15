@@ -42,6 +42,9 @@ export class LinkFlow {
 
   private root: Element | null = null
 
+  // if true, hide QR code in LinkFlow (which happens if no jsonRpcUrl is provided)
+  private connectDisabled = false
+
   constructor(options: Readonly<LinkFlowOptions>) {
     this.darkMode = options.darkMode
     this.version = options.version
@@ -92,6 +95,10 @@ export class LinkFlow {
     this.root.parentElement?.removeChild(this.root)
   }
 
+  public setConnectDisabled(connectDisabled: boolean) {
+    this.connectDisabled = connectDisabled
+  }
+
   public open(options: { onCancel: () => void }): void {
     this.isOpen = true
     this.onCancel = options.onCancel
@@ -128,6 +135,7 @@ export class LinkFlow {
               isConnected={this.isConnected}
               isParentConnection={this.isParentConnection}
               onCancel={this.onCancel}
+              connectDisabled={this.connectDisabled}
             />
           ) : (
             <LinkDialog

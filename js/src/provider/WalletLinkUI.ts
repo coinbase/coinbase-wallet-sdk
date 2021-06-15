@@ -51,4 +51,9 @@ export abstract class WalletLinkUI {
    * (i.e. don't need to call a websocket api to get the accounts response)
    */
   abstract inlineAccountsResponse(): boolean
+
+  /**
+   * We want to disable showing the qr code for in-page walletlink if the dapp hasn't provided a json rpc url
+   */
+  setConnectDisabled(_: boolean) {}
 }

@@ -78,6 +78,7 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
   private appName = ""
   private appLogoUrl: string | null = null
 
+
   constructor(options: Readonly<WalletLinkRelayOptions>) {
     this.walletLinkUrl = options.walletLinkUrl
     this.storage = options.storage
@@ -406,6 +407,10 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
         this.publishWeb3RequestEvent(id, request)
       }
     })
+  }
+
+  public setConnectDisabled(disabled: boolean) {
+    this.ui.setConnectDisabled(disabled)
   }
 
   public setChainIdCallback(chainIdCallback: (chainId: string) => void) {
