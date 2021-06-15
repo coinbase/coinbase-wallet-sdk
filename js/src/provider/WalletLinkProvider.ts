@@ -59,6 +59,8 @@ export class WalletLinkProvider
 
   private _addresses: AddressString[] = []
 
+  private hasMadeFirstChainChangedEmission = false
+
   constructor(options: Readonly<WalletLinkProviderOptions>) {
     super()
 
@@ -136,8 +138,13 @@ export class WalletLinkProvider
 
   public setProviderInfo(jsonRpcUrl: string, chainId: number) {
     this._jsonRpcUrl = jsonRpcUrl
+    const originalChainId = this._chainId
     this._chainId = ensureIntNumber(chainId)
-    this.emit("chainChanged", this._chainId)
+    const chainChanged = this._chainId !== originalChainId
+    if (chainChanged || !this.hasMadeFirstChainChangedEmission) {
+      this.emit("chainChanged", this._chainId)
+      this.hasMadeFirstChainChangedEmission = true
+    }
   }
 
   public setAppInfo(appName: string, appLogoUrl: string | null): void {
@@ -884,6 +891,8 @@ export class WalletLinkProvider
     }
 
     return this._relayProvider().then(relay => {
+      relay.setChainIdCallback((chainId) => this.setProviderInfo(this._jsonRpcUrl, parseInt(chainId, 10)))
+      relay.setJsonRpcUrlCallback((jsonRpcUrl) => this.setProviderInfo(jsonRpcUrl, this._chainId))
       this._relay = relay
       return relay
     })
