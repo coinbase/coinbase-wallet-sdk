@@ -5,7 +5,7 @@
 import bind from "bind-decorator"
 import crypto from "crypto"
 import { Observable, of } from "rxjs"
-import { catchError, filter, map, timeout } from "rxjs/operators"
+import { catchError, distinctUntilChanged, filter, map, timeout } from "rxjs/operators"
 import { ServerMessageEvent } from "../connection/ServerMessage"
 import { WalletLinkConnection } from "../connection/WalletLinkConnection"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
@@ -70,6 +70,8 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
   private readonly session: Session
   private readonly relayEventManager: WalletLinkRelayEventManager
   private readonly connection: WalletLinkConnection
+  private chainIdCallback: ((chainId: string) => void) | null = null
+  private jsonRpcUrlCallback: ((jsonRpcUrl: string) => void) | null = null
 
   private ui: WalletLinkUI
 
@@ -111,6 +113,29 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
           this.storage.setItem(WALLET_USER_NAME_KEY, walletUsername)
         }
       })
+
+    this.connection.sessionConfig$
+      .pipe(filter(c => c.metadata && c.metadata.ChainId !== undefined))
+      .pipe(map(c => aes256gcm.decrypt(c.metadata.ChainId!, this.session.secret)))
+      .pipe(distinctUntilChanged())
+      .subscribe({ next: chainId => {
+          if (this.chainIdCallback) {
+            this.chainIdCallback(chainId!)
+          }
+        }
+      })
+
+    this.connection.sessionConfig$
+      .pipe(filter(c => c.metadata && c.metadata.JsonRpcUrl !== undefined))
+      .pipe(map(c => aes256gcm.decrypt(c.metadata.JsonRpcUrl!, this.session.secret)))
+      .pipe(distinctUntilChanged())
+      .subscribe({
+        next: jsonRpcURl => {
+          if (this.jsonRpcUrlCallback) {
+            this.jsonRpcUrlCallback(jsonRpcURl!);
+          }
+        },
+      });
 
     this.ui = options.walletLinkUIConstructor({
       walletLinkUrl: options.walletLinkUrl,
@@ -381,6 +406,14 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
         this.publishWeb3RequestEvent(id, request)
       }
     })
+  }
+
+  public setChainIdCallback(chainIdCallback: (chainId: string) => void) {
+    this.chainIdCallback = chainIdCallback
+  }
+
+  public setJsonRpcUrlCallback(jsonRpcUrlCallback: (jsonRpcUrl: string) => void) {
+    this.jsonRpcUrlCallback = jsonRpcUrlCallback
   }
 
   private publishWeb3RequestEvent(id: string, request: Web3Request): void {
