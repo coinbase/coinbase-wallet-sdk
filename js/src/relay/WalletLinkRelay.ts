@@ -76,8 +76,6 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
   private appName = ""
   private appLogoUrl: string | null = null
 
-  // if true, hide QR code in LinkFlow (which happens if no jsonRpcUrl is provided)
-  private connectDisabled = false
 
   constructor(options: Readonly<WalletLinkRelayOptions>) {
     this.walletLinkUrl = options.walletLinkUrl
@@ -351,13 +349,11 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
 
           this.ui.requestEthereumAccounts({
             onCancel: cancel,
-            onAccounts: onAccounts,
-            connectDisabled: this.connectDisabled
+            onAccounts: onAccounts
           })
         } else {
           this.ui.requestEthereumAccounts({
-            onCancel: cancel,
-            connectDisabled: this.connectDisabled
+            onCancel: cancel
           })
         }
 
@@ -370,7 +366,7 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
       }
 
       this.relayEventManager.callbacks.set(id, response => {
-        this.ui.hideRequestEthereumAccounts(this.connectDisabled)
+        this.ui.hideRequestEthereumAccounts()
         hideSnackbarItem?.()
 
         if (response.errorMessage) {
@@ -389,7 +385,7 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
   }
 
   public setConnectDisabled(disabled: boolean) {
-    this.connectDisabled = disabled
+    this.ui.setConnectDisabled(disabled)
   }
 
   private publishWeb3RequestEvent(id: string, request: Web3Request): void {

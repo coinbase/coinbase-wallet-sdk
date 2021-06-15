@@ -41,12 +41,16 @@ export class WalletLinkSdkUI extends WalletLinkUI {
     injectCssReset()
   }
 
-  requestEthereumAccounts(options: { onCancel: () => void, connectDisabled: boolean }): void {
-    this.linkFlow.open(options)
+  setConnectDisabled(connectDisabled: boolean) {
+    this.linkFlow.setConnectDisabled(connectDisabled)
   }
 
-  hideRequestEthereumAccounts(connectDisabled: boolean = false): void {
-    this.linkFlow.close(connectDisabled)
+  requestEthereumAccounts(options: { onCancel: () => void }): void {
+    this.linkFlow.open({ onCancel: options.onCancel })
+  }
+
+  hideRequestEthereumAccounts(): void {
+    this.linkFlow.close()
   }
 
   showConnecting(options: {
