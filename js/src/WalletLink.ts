@@ -122,6 +122,7 @@ export class WalletLink {
     if (!relay || !this._relayEventManager || !this._storage) {
       throw new Error("Relay not initialized, should never happen")
     }
+
     if (!jsonRpcUrl) relay.setConnectDisabled(true)
 
     return new WalletLinkProvider({
