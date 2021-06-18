@@ -14,7 +14,7 @@ import {
   ensureHexString,
   ensureIntNumber,
   ensureRegExpString,
-  prepend0x
+  prepend0x, hexStringFromIntNumber
 } from "../util"
 import eip712 from "../vendor-js/eth-eip712-util"
 import { FilterPolyfill } from "./FilterPolyfill"
@@ -446,6 +446,9 @@ export class WalletLinkProvider
       case JSONRPCMethod.net_version:
         return this._net_version()
 
+      case JSONRPCMethod.eth_chainId:
+        return this._eth_chainId()
+
       default:
         return undefined
     }
@@ -677,6 +680,10 @@ export class WalletLinkProvider
 
   private _net_version(): string {
     return this._chainId.toString(10)
+  }
+
+  private _eth_chainId(): string {
+    return hexStringFromIntNumber(this._chainId)
   }
 
   private async _eth_requestAccounts(): Promise<JSONRPCResponse> {

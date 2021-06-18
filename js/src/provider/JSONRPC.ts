@@ -7,6 +7,7 @@ export enum JSONRPCMethod {
   eth_accounts = "eth_accounts",
   eth_coinbase = "eth_coinbase",
   net_version = "net_version",
+  eth_chainId = "eth_chainId",
   eth_uninstallFilter = "eth_uninstallFilter", // synchronous
 
   // asynchronous only
