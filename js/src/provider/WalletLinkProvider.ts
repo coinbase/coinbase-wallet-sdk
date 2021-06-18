@@ -14,7 +14,8 @@ import {
   ensureHexString,
   ensureIntNumber,
   ensureRegExpString,
-  prepend0x, hexStringFromIntNumber
+  prepend0x,
+  hexStringFromIntNumber
 } from "../util"
 import eip712 from "../vendor-js/eth-eip712-util"
 import { FilterPolyfill } from "./FilterPolyfill"
