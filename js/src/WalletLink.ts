@@ -105,16 +105,6 @@ export class WalletLink {
     chainId: number = 1
   ): WalletLinkProvider {
     if (typeof window.walletLinkExtension !== "undefined") {
-      if (
-        //@ts-ignore
-        typeof window.walletLinkExtension.isCipher !== "boolean" ||
-        //@ts-ignore
-        !window.walletLinkExtension.isCipher
-      ) {
-        //@ts-ignore
-        window.walletLinkExtension.setProviderInfo(jsonRpcUrl, chainId)
-      }
-
       return window.walletLinkExtension
     }
 
