@@ -141,16 +141,14 @@ export class WalletLinkProvider
 
   public setProviderInfo(jsonRpcUrl: string, chainId: number) {
     if (this.isChainOverridden) return
-    this.updateProviderInfo(jsonRpcUrl, chainId)
+    this.updateProviderInfo(jsonRpcUrl, chainId, false)
   }
 
-  private updateProviderInfo(jsonRpcUrl: string, chainId: number) {
+  private updateProviderInfo(jsonRpcUrl: string, chainId: number, fromRelay: boolean) {
+    if (fromRelay) this.isChainOverridden = true
     const originalChainId = this._chainId
     this._chainId = ensureIntNumber(chainId)
-    const chainChanged = this._chainId !== originalChainId
-    if (chainChanged) {
-      this.isChainOverridden = true
-    }
+    const chainChanged = this._chainId != originalChainId
     this._jsonRpcUrl = jsonRpcUrl
     if (chainChanged || !this.hasMadeFirstChainChangedEmission) {
       this.emit("chainChanged", this._chainId)
@@ -911,8 +909,12 @@ export class WalletLinkProvider
     }
 
     return this._relayProvider().then(relay => {
-      relay.setChainIdCallback((chainId) => this.updateProviderInfo(this._jsonRpcUrl, parseInt(chainId, 10)))
-      relay.setJsonRpcUrlCallback((jsonRpcUrl) => this.updateProviderInfo(jsonRpcUrl, this._chainId))
+      relay.setChainIdCallback((chainId) => {
+        this.updateProviderInfo(this._jsonRpcUrl, parseInt(chainId, 10), true)
+      })
+      relay.setJsonRpcUrlCallback((jsonRpcUrl) => {
+        this.updateProviderInfo(jsonRpcUrl, this._chainId, true)
+      })
       this._relay = relay
       return relay
     })
