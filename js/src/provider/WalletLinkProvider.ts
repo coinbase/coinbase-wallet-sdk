@@ -145,10 +145,13 @@ export class WalletLinkProvider
   }
 
   private updateProviderInfo(jsonRpcUrl: string, chainId: number) {
-    this._jsonRpcUrl = jsonRpcUrl
     const originalChainId = this._chainId
     this._chainId = ensureIntNumber(chainId)
     const chainChanged = this._chainId !== originalChainId
+    if (chainChanged) {
+      this.isChainOverridden = true
+    }
+    this._jsonRpcUrl = jsonRpcUrl
     if (chainChanged || !this.hasMadeFirstChainChangedEmission) {
       this.emit("chainChanged", this._chainId)
       this.hasMadeFirstChainChangedEmission = true
