@@ -61,6 +61,8 @@ export class WalletLinkProvider
   private _addresses: AddressString[] = []
 
   private hasMadeFirstChainChangedEmission = false
+  // true if mobile client has sent message to override jsonRpcUrl+chainId
+  private isChainOverridden = false
 
   constructor(options: Readonly<WalletLinkProviderOptions>) {
     super()
@@ -138,6 +140,11 @@ export class WalletLinkProvider
   }
 
   public setProviderInfo(jsonRpcUrl: string, chainId: number) {
+    if (this.isChainOverridden) return
+    this.updateProviderInfo(jsonRpcUrl, chainId)
+  }
+
+  private updateProviderInfo(jsonRpcUrl: string, chainId: number) {
     this._jsonRpcUrl = jsonRpcUrl
     const originalChainId = this._chainId
     this._chainId = ensureIntNumber(chainId)
@@ -151,6 +158,8 @@ export class WalletLinkProvider
   public setAppInfo(appName: string, appLogoUrl: string | null): void {
     this.initializeRelay().then(relay => relay.setAppInfo(appName, appLogoUrl))
   }
+
+
 
   public async enable(): Promise<AddressString[]> {
     if (this._addresses.length > 0) {
@@ -899,8 +908,8 @@ export class WalletLinkProvider
     }
 
     return this._relayProvider().then(relay => {
-      relay.setChainIdCallback((chainId) => this.setProviderInfo(this._jsonRpcUrl, parseInt(chainId, 10)))
-      relay.setJsonRpcUrlCallback((jsonRpcUrl) => this.setProviderInfo(jsonRpcUrl, this._chainId))
+      relay.setChainIdCallback((chainId) => this.updateProviderInfo(this._jsonRpcUrl, parseInt(chainId, 10)))
+      relay.setJsonRpcUrlCallback((jsonRpcUrl) => this.updateProviderInfo(jsonRpcUrl, this._chainId))
       this._relay = relay
       return relay
     })
