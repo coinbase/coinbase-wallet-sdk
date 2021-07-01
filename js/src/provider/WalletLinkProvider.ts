@@ -61,9 +61,24 @@ export class WalletLinkProvider
   private _addresses: AddressString[] = []
 
   private hasMadeFirstChainChangedEmission = false
+  // true if mobile client has sent message to override jsonRpcUrl+chainId
+  private isChainOverridden = false
 
   constructor(options: Readonly<WalletLinkProviderOptions>) {
     super()
+
+    this.setProviderInfo = this.setProviderInfo.bind(this)
+    this.updateProviderInfo = this.updateProviderInfo.bind(this)
+    this.setAppInfo = this.setAppInfo.bind(this)
+    this.enable = this.enable.bind(this)
+    this.close = this.close.bind(this)
+    this.send = this.send.bind(this)
+    this.sendAsync = this.sendAsync.bind(this)
+    this.request = this.request.bind(this)
+    this._setAddresses = this._setAddresses.bind(this)
+    this.scanQRCode = this.scanQRCode.bind(this)
+    this.arbitraryRequest = this.arbitraryRequest.bind(this)
+    this.childRequestEthereumAccounts = this.childRequestEthereumAccounts.bind(this)
 
     this._chainId = ensureIntNumber(options.chainId || 1)
     this._jsonRpcUrl = options.jsonRpcUrl
@@ -138,10 +153,16 @@ export class WalletLinkProvider
   }
 
   public setProviderInfo(jsonRpcUrl: string, chainId: number) {
-    this._jsonRpcUrl = jsonRpcUrl
+    if (this.isChainOverridden) return
+    this.updateProviderInfo(jsonRpcUrl, chainId, false)
+  }
+
+  private updateProviderInfo(jsonRpcUrl: string, chainId: number, fromRelay: boolean) {
+    if (fromRelay) this.isChainOverridden = true
     const originalChainId = this._chainId
     this._chainId = ensureIntNumber(chainId)
     const chainChanged = this._chainId !== originalChainId
+    this._jsonRpcUrl = jsonRpcUrl
     if (chainChanged || !this.hasMadeFirstChainChangedEmission) {
       this.emit("chainChanged", this._chainId)
       this.hasMadeFirstChainChangedEmission = true
@@ -899,8 +920,12 @@ export class WalletLinkProvider
     }
 
     return this._relayProvider().then(relay => {
-      relay.setChainIdCallback((chainId) => this.setProviderInfo(this._jsonRpcUrl, parseInt(chainId, 10)))
-      relay.setJsonRpcUrlCallback((jsonRpcUrl) => this.setProviderInfo(jsonRpcUrl, this._chainId))
+      relay.setChainIdCallback((chainId) => {
+        this.updateProviderInfo(this._jsonRpcUrl, parseInt(chainId, 10), true)
+      })
+      relay.setJsonRpcUrlCallback((jsonRpcUrl) => {
+        this.updateProviderInfo(jsonRpcUrl, this._chainId, true)
+      })
       this._relay = relay
       return relay
     })
