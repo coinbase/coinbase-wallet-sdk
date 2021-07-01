@@ -148,7 +148,7 @@ export class WalletLinkProvider
     if (fromRelay) this.isChainOverridden = true
     const originalChainId = this._chainId
     this._chainId = ensureIntNumber(chainId)
-    const chainChanged = this._chainId != originalChainId
+    const chainChanged = this._chainId !== originalChainId
     this._jsonRpcUrl = jsonRpcUrl
     if (chainChanged || !this.hasMadeFirstChainChangedEmission) {
       this.emit("chainChanged", this._chainId)
