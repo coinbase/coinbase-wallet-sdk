@@ -67,6 +67,19 @@ export class WalletLinkProvider
   constructor(options: Readonly<WalletLinkProviderOptions>) {
     super()
 
+    this.setProviderInfo = this.setProviderInfo.bind(this)
+    this.updateProviderInfo = this.updateProviderInfo.bind(this)
+    this.setAppInfo = this.setAppInfo.bind(this)
+    this.enable = this.enable.bind(this)
+    this.close = this.close.bind(this)
+    this.send = this.send.bind(this)
+    this.sendAsync = this.sendAsync.bind(this)
+    this.request = this.request.bind(this)
+    this._setAddresses = this._setAddresses.bind(this)
+    this.scanQRCode = this.scanQRCode.bind(this)
+    this.arbitraryRequest = this.arbitraryRequest.bind(this)
+    this.childRequestEthereumAccounts = this.childRequestEthereumAccounts.bind(this)
+
     this._chainId = ensureIntNumber(options.chainId || 1)
     this._jsonRpcUrl = options.jsonRpcUrl
     this._overrideIsMetaMask = options.overrideIsMetaMask
@@ -159,8 +172,6 @@ export class WalletLinkProvider
   public setAppInfo(appName: string, appLogoUrl: string | null): void {
     this.initializeRelay().then(relay => relay.setAppInfo(appName, appLogoUrl))
   }
-
-
 
   public async enable(): Promise<AddressString[]> {
     if (this._addresses.length > 0) {
