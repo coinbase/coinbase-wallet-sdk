@@ -45,7 +45,6 @@ func main() {
 		Webhook:        webhook.NewWebhook(config.ServerURL),
 		ServerURL:      config.ServerURL,
 		ForceSSL:       config.ForceSSL,
-		ReadDeadline:   config.ReadDeadline,
 	})
 
 	fmt.Printf(
