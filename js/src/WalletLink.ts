@@ -2,7 +2,6 @@
 // Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import url from "url"
 import { ScopedLocalStorage } from "./lib/ScopedLocalStorage"
 import { WalletLinkProvider } from "./provider/WalletLinkProvider"
 import { WalletLinkSdkUI } from "./provider/WalletLinkSdkUI"
@@ -70,7 +69,7 @@ export class WalletLink {
       this._overrideIsMetaMask = options.overrideIsMetaMask
     }
 
-    const u = url.parse(walletLinkUrl)
+    const u = new URL(walletLinkUrl)
     const walletLinkOrigin = `${u.protocol}//${u.host}`
     this._storage = new ScopedLocalStorage(`-walletlink:${walletLinkOrigin}`)
 

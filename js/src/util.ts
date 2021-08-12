@@ -14,6 +14,21 @@ import {
 const INT_STRING_REGEX = /^[0-9]*$/
 const HEXADECIMAL_STRING_REGEX = /^[a-f0-9]*$/
 
+/**
+ * @param length number of bytes
+ */
+export function randomBytesHex(length: number): string {
+  return uint8ArrayToHex(crypto.getRandomValues(new Uint8Array(length)))
+}
+
+export function uint8ArrayToHex(value: Uint8Array) {
+  return [...value].map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+export function hexStringToUint8Array(hexString: string): Uint8Array {
+  return new Uint8Array(hexString.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
+}
+
 export function hexStringFromBuffer(
   buf: Buffer,
   includePrefix: boolean = false

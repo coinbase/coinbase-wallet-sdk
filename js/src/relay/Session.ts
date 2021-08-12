@@ -2,10 +2,12 @@
 // Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import crypto from "crypto"
 import { fromEvent, Observable } from "rxjs"
 import { filter, map } from "rxjs/operators"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
+import { randomBytesHex } from "../util";
+import { sha256 } from 'js-sha256';
+
 
 const STORAGE_KEY_SESSION_ID = "session:id"
 const STORAGE_KEY_SESSION_SECRET = "session:secret"
@@ -25,13 +27,13 @@ export class Session {
     linked?: boolean
   ) {
     this._storage = storage
-    this._id = id || crypto.randomBytes(16).toString("hex")
-    this._secret = secret || crypto.randomBytes(32).toString("hex")
+    this._id = id || randomBytesHex(16)
+    this._secret = secret || randomBytesHex(32)
 
-    this._key = crypto
-      .createHash("sha256")
-      .update(`${this._id}, ${this._secret} WalletLink`, "ascii")
-      .digest("hex")
+    const hash = sha256.create()
+    hash.update(`${this._id}, ${this._secret} WalletLink`)
+    this._key = hash.hex()
+
     this._linked = !!linked
   }
 

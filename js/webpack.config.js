@@ -32,6 +32,12 @@ module.exports = {
     ]
   },
   resolve: {
+    fallback: {
+      fs: false,
+      "stream": require.resolve("stream-browserify"),
+      "buffer": require.resolve("buffer/"),
+      "util": require.resolve("util/")
+    },
     extensions: [".ts", ".tsx", ".js"],
     plugins: [],
     symlinks: false
@@ -46,7 +52,7 @@ module.exports = {
   plugins: [
     new webpack.DefinePlugin({
       "process.env": {
-        NODE_ENV: JSON.stringify(env.NODE_ENV),
+        NODE_ENV: JSON.stringify(env.NODE_ENV) || JSON.stringify('production'),
         WALLETLINK_URL: JSON.stringify(env.WALLETLINK_URL),
         WALLETLINK_VERSION: JSON.stringify(require("./package.json").version)
       }
