@@ -46,6 +46,8 @@ export type SignEthereumTransactionRequest = BaseWeb3Request<
     data: HexString
     nonce: IntNumber | null
     gasPriceInWei: BigIntString | null
+    maxFeePerGas: BigIntString | null // in wei
+    maxPriorityFeePerGas: BigIntString | null // in wei
     gasLimit: BigIntString | null
     chainId: IntNumber
     shouldSubmit: boolean
