@@ -1,7 +1,7 @@
 // Extracted from https://github.com/ethereumjs/ethereumjs-util and stripped out irrelevant code
 // Original code licensed under the Mozilla Public License Version 2.0
 
-const createKeccakHash = require('../keccak')
+const createKeccakHash = require('keccak/js')
 const BN = require('bn.js')
 
 /**

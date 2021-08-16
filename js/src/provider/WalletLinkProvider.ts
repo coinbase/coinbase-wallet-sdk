@@ -604,6 +604,8 @@ export class WalletLinkProvider
     from?: unknown
     to?: unknown
     gasPrice?: unknown
+    maxFeePerGas?: unknown
+    maxPriorityFeePerGas?: unknown
     gas?: unknown
     value?: unknown
     data?: unknown
@@ -623,6 +625,8 @@ export class WalletLinkProvider
     const data = tx.data ? ensureBuffer(tx.data) : Buffer.alloc(0)
     const nonce = tx.nonce != null ? ensureIntNumber(tx.nonce) : null
     const gasPriceInWei = tx.gasPrice != null ? ensureBN(tx.gasPrice) : null
+    const maxFeePerGas = tx.maxFeePerGas != null ? ensureBN(tx.maxFeePerGas) : null
+    const maxPriorityFeePerGas = tx.maxPriorityFeePerGas != null ? ensureBN(tx.maxPriorityFeePerGas) : null
     const gasLimit = tx.gas != null ? ensureBN(tx.gas) : null
     const chainId = this._chainId
 
@@ -633,6 +637,8 @@ export class WalletLinkProvider
       data,
       nonce,
       gasPriceInWei,
+      maxFeePerGas,
+      maxPriorityFeePerGas,
       gasLimit,
       chainId
     }
