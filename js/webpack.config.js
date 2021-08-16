@@ -57,8 +57,5 @@ module.exports = {
         WALLETLINK_VERSION: JSON.stringify(require("./package.json").version)
       }
     })
-  ],
-  node: {
-    fs: "empty"
-  }
+  ]
 }
