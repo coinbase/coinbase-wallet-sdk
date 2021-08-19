@@ -94,7 +94,7 @@ export class WalletLinkProvider
 
     const cachedAddresses = this._storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY)
     if (cachedAddresses) {
-      const addresses = cachedAddresses.split(" ") as AddressString[]
+      const addresses = cachedAddresses.split(" ").map(ensureAddressString)
       if (addresses[0] !== "") {
         this._addresses = addresses
         this.emit("accountsChanged", addresses)
