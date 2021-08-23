@@ -424,8 +424,7 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
             userAgent
           )
         ) {
-          const dappUrl = window.location.href.split("?")[0]
-          window.location.href = `https://go.cb-w.com/xoXnYwQimhb?cb_url=${dappUrl}`
+          window.location.href = `https://go.cb-w.com/xoXnYwQimhb?cb_url=${window.location.href}`
           return
         }
         if (this.ui.inlineAccountsResponse()) {
