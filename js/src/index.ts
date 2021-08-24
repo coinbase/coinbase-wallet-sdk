@@ -14,6 +14,7 @@ declare global {
     WalletLink: typeof WalletLink
     WalletLinkProvider: typeof WalletLinkProvider
     ethereum?: WalletLinkProvider
+    walletLinkExtension?: WalletLinkProvider
   }
 }
 

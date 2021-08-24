@@ -73,6 +73,14 @@ declare namespace QRCode {
      * `none`: No wrapper.
      */
     container?: "svg" | "svg-viewbox" | "g" | "none"
+    /**image option for logo in the center of the QR code */
+    image?: SvgLogo
+  }
+
+  interface SvgLogo {
+    svg: string; // svg raw string
+    width: number;
+    height: number;
   }
 
   interface Model {

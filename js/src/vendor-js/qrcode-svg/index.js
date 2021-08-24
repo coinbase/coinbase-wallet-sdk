@@ -165,7 +165,12 @@ function QRCode(options) {
     typeNumber: 4,
     color: "#000000",
     background: "#ffffff",
-    ecl: "M"
+    ecl: "M",
+    image:{
+      svg:"",
+      width:0,
+      height:0
+    }
   };
 
   //In case the options is string
@@ -362,6 +367,16 @@ QRCode.prototype.svg = function(opt) {
   if (join) {
     modrect = indent + '<path x="0" y="0" style="fill:' + options.color + ';shape-rendering:crispEdges;" d="' + pathdata + '" />';
   }
+  let imgSvg = "";
+  if(this.options.image !== undefined && this.options.image.svg){
+    const imgWidth = width * this.options.image.width / 100;
+    const imgHeight = height * this.options.image.height / 100;
+    const imgX = (width/2) - imgWidth/2;
+    const imgY = (height/2) - imgHeight/2;
+    imgSvg += `<svg x="${imgX}" y="${imgY}" width="${imgWidth}" height="${imgHeight}" viewBox="0 0 100 100" preserveAspectRatio="xMinYMin meet">`;
+    imgSvg += this.options.image.svg + EOL;
+    imgSvg += '</svg>';
+  }
 
   var svg = "";
   switch (opt.container) {
@@ -372,6 +387,7 @@ QRCode.prototype.svg = function(opt) {
       }
       svg += '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="' + width + '" height="' + height + '">' + EOL;
       svg += defs + bgrect + modrect;
+      svg += imgSvg;
       svg += '</svg>';
       break;
 
@@ -382,6 +398,7 @@ QRCode.prototype.svg = function(opt) {
       }
       svg += '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 ' + width + ' ' + height + '">' + EOL;
       svg += defs + bgrect + modrect;
+      svg += imgSvg;
       svg += '</svg>';
       break;
 
@@ -390,12 +407,14 @@ QRCode.prototype.svg = function(opt) {
     case "g":
       svg += '<g width="' + width + '" height="' + height + '">' + EOL;
       svg += defs + bgrect + modrect;
+      svg += imgSvg;
       svg += '</g>';
+
       break;
 
     //Without a container
     default:
-      svg += (defs + bgrect + modrect).replace(/^\s+/, ""); //Clear indents on each line
+      svg += (defs + bgrect + modrect + imgSvg).replace(/^\s+/, ""); //Clear indents on each line
       break;
   }
 

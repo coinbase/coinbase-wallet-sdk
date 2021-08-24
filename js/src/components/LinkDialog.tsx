@@ -17,6 +17,7 @@ export const LinkDialog: FunctionComponent<{
   walletLinkUrl: string
   isOpen: boolean
   isConnected: boolean
+  isParentConnection: boolean
   onCancel: (() => void) | null
 }> = props => {
   const [isContainerHidden, setContainerHidden] = useState(!props.isOpen)
@@ -74,6 +75,7 @@ export const LinkDialog: FunctionComponent<{
             sessionSecret={props.sessionSecret}
             walletLinkUrl={props.walletLinkUrl}
             isConnected={props.isConnected}
+            isParentConnection={props.isParentConnection}
           />
 
           {props.onCancel && <CancelButton onClick={props.onCancel} />}
@@ -90,9 +92,11 @@ const ScanQRCode: FunctionComponent<{
   sessionSecret: string
   walletLinkUrl: string
   isConnected: boolean
+  isParentConnection: boolean
 }> = props => {
   const serverUrl = window.encodeURIComponent(props.walletLinkUrl)
-  const qrUrl = `${props.walletLinkUrl}/#/link?id=${props.sessionId}&secret=${props.sessionSecret}&server=${serverUrl}&v=1`
+  const sessionIdKey = props.isParentConnection ? "parent-id" : "id"
+  const qrUrl = `${props.walletLinkUrl}/#/link?${sessionIdKey}=${props.sessionId}&secret=${props.sessionSecret}&server=${serverUrl}&v=1`
 
   return (
     <div class="-walletlink-link-dialog-box-content">
