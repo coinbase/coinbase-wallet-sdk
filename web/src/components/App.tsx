@@ -1,5 +1,5 @@
-// Copyright (c) 2018-2019 WalletLink.org <https://www.walletlink.org/>
-// Copyright (c) 2018-2019 Coinbase, Inc. <https://www.coinbase.com/>
+// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
+// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
 import { createHashHistory } from "history"
@@ -15,6 +15,7 @@ import { LinkRoute } from "./Link/LinkRoute"
 import { LinkedRoute } from "./Linked/LinkedRoute"
 import { ResetRoute } from "./Reset/ResetRoute"
 import { RootRoute } from "./Root/RootRoute"
+import { WalletsRoute } from "./Wallets/WalletsRoute"
 
 export class App extends React.PureComponent {
   private readonly history = createHashHistory()
@@ -44,6 +45,7 @@ export class App extends React.PureComponent {
           <Route exact path={routes.linked} component={LinkedRoute} />
         </AppContext.Provider>
 
+        <Route exact path={routes.wallets} component={WalletsRoute} />
         <Route exact path={routes.reset} component={ResetRoute} />
       </Router>
     )

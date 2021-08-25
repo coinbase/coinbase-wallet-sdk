@@ -1,5 +1,5 @@
-// Copyright (c) 2018-2019 WalletLink.org <https://www.walletlink.org/>
-// Copyright (c) 2018-2019 Coinbase, Inc. <https://www.coinbase.com/>
+// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
+// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
 export interface WalletLinkMessage {
@@ -20,6 +20,16 @@ export interface ServerMessageFail extends ServerMessage {
   id: number
   sessionId: string
   error: string
+}
+
+export function isServerMessageFail(msg: any): msg is ServerMessageFail {
+  return (
+    msg &&
+    msg.type === "Fail" &&
+    typeof msg.id === "number" &&
+    typeof msg.sessionId === "string" &&
+    typeof msg.error === "string"
+  )
 }
 
 export interface ServerMessageIsLinkedOK extends ServerMessage {

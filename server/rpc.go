@@ -1,5 +1,5 @@
-// Copyright (c) 2018-2019 WalletLink.org <https://www.walletlink.org/>
-// Copyright (c) 2018-2019 Coinbase, Inc. <https://www.coinbase.com/>
+// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
+// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
 package server
@@ -22,14 +22,12 @@ const (
 func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 	upgrader := &websocket.Upgrader{HandshakeTimeout: handshaketimeout}
 
-	if len(srv.allowedOrigins) > 0 {
-		upgrader.CheckOrigin = func(r *http.Request) bool {
-			origin := r.Header.Get("Origin")
-			if len(origin) == 0 {
-				return true
-			}
-			return srv.allowedOrigins.Contains(origin)
+	upgrader.CheckOrigin = func(r *http.Request) bool {
+		origin := r.Header.Get("Origin")
+		if len(origin) == 0 || len(srv.allowedOrigins) == 0 || srv.allowedOrigins.Contains("*") {
+			return true
 		}
+		return srv.allowedOrigins.Contains(origin)
 	}
 
 	ws, err := upgrader.Upgrade(w, r, nil)
@@ -76,6 +74,13 @@ func (srv *Server) rpcHandler(w http.ResponseWriter, r *http.Request) {
 	defer handler.Close()
 
 	for {
+		if srv.readDeadline > 0 {
+			if err := ws.SetReadDeadline(time.Now().Add(srv.readDeadline)); err != nil {
+				log.Println(errors.Wrap(err, "websocket set read deadline failed"))
+				break
+			}
+		}
+
 		msgType, msgData, err := ws.ReadMessage()
 		if err != nil {
 			if !websocket.IsCloseError(err) &&

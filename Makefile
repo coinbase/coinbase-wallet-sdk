@@ -33,7 +33,7 @@ test:
 	go test -v ./... -timeout 5s | $(COLORIZE_TEST)
 
 run:
-	@ALLOWED_ORIGINS="http://localhost:3000 http://localhost:3001 http://localhost:8080" \
+	@ALLOWED_ORIGINS="*" \
 	DATABASE_URL="postgres:///walletlinkd?sslmode=disable" \
 	build/walletlinkd
 

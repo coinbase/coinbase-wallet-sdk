@@ -1,5 +1,5 @@
-// Copyright (c) 2018-2019 WalletLink.org <https://www.walletlink.org/>
-// Copyright (c) 2018-2019 Coinbase, Inc. <https://www.coinbase.com/>
+// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
+// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
 import {
@@ -7,7 +7,6 @@ import {
   iif,
   Observable,
   of,
-  race,
   ReplaySubject,
   Subscription,
   throwError,
@@ -24,7 +23,8 @@ import {
   skip,
   switchMap,
   take,
-  tap
+  tap,
+  timeoutWith
 } from "rxjs/operators"
 import {
   ClientMessage,
@@ -32,6 +32,7 @@ import {
   ClientMessageHostSession,
   ClientMessageIsLinked,
   ClientMessagePublishEvent,
+  isServerMessageFail,
   ServerMessage,
   ServerMessageEvent,
   ServerMessageFail,
@@ -153,7 +154,8 @@ export class WalletLinkHost {
       ws.incomingJSONData$
         .pipe(filter(m => ["IsLinkedOK", "Linked"].includes(m.type)))
         .subscribe(m => {
-          const msg = m as ServerMessageIsLinkedOK & ServerMessageLinked
+          const msg = m as Omit<ServerMessageIsLinkedOK, "type"> &
+            ServerMessageLinked
           this.linkedSubject.next(msg.linked || msg.onlineGuests > 0)
         })
     )
@@ -167,7 +169,7 @@ export class WalletLinkHost {
           )
         )
         .subscribe(m => {
-          const msg = m as ServerMessageGetSessionConfigOK &
+          const msg = m as Omit<ServerMessageGetSessionConfigOK, "type"> &
             ServerMessageSessionConfigUpdated
           this.sessionConfigSubject.next({
             webhookId: msg.webhookId,
@@ -290,7 +292,7 @@ export class WalletLinkHost {
         )
       ),
       map(res => {
-        if (res.type === "Fail") {
+        if (isServerMessageFail(res)) {
           throw new Error(res.error || "failed to publish event")
         }
         return res.eventId
@@ -322,18 +324,11 @@ export class WalletLinkHost {
     } catch (err) {
       return throwError(err)
     }
-    return race(
-      // await server message with corresponding id
-      (this.ws.incomingJSONData$ as Observable<T>).pipe(
-        filter(m => m.id === reqId),
-        take(1)
-      ),
-      // or error out if timeout happens first
-      timer(timeout).pipe(
-        map(_ => {
-          throw new Error(`request ${reqId} timed out`)
-        })
-      )
+    // await server message with corresponding id
+    return (this.ws.incomingJSONData$ as Observable<T>).pipe(
+      timeoutWith(timeout, throwError(new Error(`request ${reqId} timed out`))),
+      filter(m => m.id === reqId),
+      take(1)
     )
   }
 
@@ -345,8 +340,8 @@ export class WalletLinkHost {
     )
     return this.makeRequest<ServerMessageOK | ServerMessageFail>(msg).pipe(
       map(res => {
-        if (res.type === "Fail") {
-          throw new Error(res.error || "failed to authentcate")
+        if (isServerMessageFail(res)) {
+          throw new Error(res.error || "failed to authenticate")
         }
       })
     )

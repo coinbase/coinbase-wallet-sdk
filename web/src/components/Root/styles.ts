@@ -1,5 +1,5 @@
-// Copyright (c) 2018-2019 WalletLink.org <https://www.walletlink.org/>
-// Copyright (c) 2018-2019 Coinbase, Inc. <https://www.coinbase.com/>
+// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
+// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
 import { media, style as typestyle } from "typestyle"
@@ -416,37 +416,44 @@ export const styles = {
   supportedDApps: {
     content: typestyle({
       $nest: {
-        h2: { margin: 0 }
-      }
-    }),
-    list: typestyle(
-      {
-        listStyle: "none",
-        margin: 0,
-        padding: 0,
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "space-between"
-      },
-      media({ maxWidth: 640 }, { flexWrap: "wrap" })
-    ),
-    item: typestyle({
-      marginTop: 32,
-      textAlign: "center",
-      $nest: {
-        a: {
-          fontSize: 16,
-          fontWeight: "bold",
-          color: "black",
-          textDecoration: "none",
-          $nest: {
-            "&:hover": {
-              textDecoration: "underline"
-            }
-          }
+        h2: {
+          margin: 0,
+          textAlign: "center"
         }
       }
     }),
+    list: typestyle({
+      listStyle: "none",
+      margin: 0,
+      padding: 0,
+      display: "flex",
+      flexDirection: "row",
+      justifyContent: "center",
+      flexWrap: "wrap"
+    }),
+    item: typestyle(
+      {
+        marginTop: 32,
+        marginBottom: 16,
+        marginLeft: 32,
+        marginRight: 32,
+        textAlign: "center",
+        $nest: {
+          a: {
+            fontSize: 16,
+            fontWeight: "bold",
+            color: "black",
+            textDecoration: "none",
+            $nest: {
+              "&:hover": {
+                textDecoration: "underline"
+              }
+            }
+          }
+        }
+      },
+      media({ maxWidth: 640 }, {})
+    ),
     logo: typestyle(
       {
         display: "flex",
@@ -460,21 +467,21 @@ export const styles = {
         marginBottom: 24,
         $nest: {
           img: {
-            width: 90,
-            height: 90
+            maxWidth: 80,
+            maxHeight: 80
           }
         }
       },
       media(
         { maxWidth: 640 },
         {
-          width: 140,
-          height: 140,
-          borderRadius: 70,
+          width: 80,
+          height: 80,
+          borderRadius: 40,
           $nest: {
             img: {
-              width: 110,
-              height: 110
+              maxWidth: 50,
+              maxHeight: 50
             }
           }
         }

@@ -21,12 +21,14 @@ module.exports = {
   },
   plugins: [
     ...defaultWebpackConfig.plugins,
-    new CopyWebpackPlugin([
-      {
-        from: path.resolve(__dirname, "chrome", "manifest.json"),
-        to: path.resolve(__dirname, "build", "chrome")
-      }
-    ])
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: path.resolve(__dirname, "chrome", "manifest.json"),
+          to: path.resolve(__dirname, "build", "chrome")
+        }
+      ]
+    })
   ],
   optimization: {
     minimizer: []

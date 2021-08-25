@@ -1,5 +1,5 @@
-// Copyright (c) 2018-2019 WalletLink.org <https://www.walletlink.org/>
-// Copyright (c) 2018-2019 Coinbase, Inc. <https://www.coinbase.com/>
+// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
+// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
 package store
@@ -16,7 +16,7 @@ import (
 
 // MemoryStore - in-memory store
 type MemoryStore struct {
-	lock sync.Mutex
+	lock *sync.Mutex
 	db   map[string]storeValue
 }
 
@@ -31,7 +31,8 @@ var _ Store = (*MemoryStore)(nil)
 // NewMemoryStore - construct a MemoryStore
 func NewMemoryStore() *MemoryStore {
 	return &MemoryStore{
-		db: map[string]storeValue{},
+		lock: &sync.Mutex{},
+		db:   map[string]storeValue{},
 	}
 }
 

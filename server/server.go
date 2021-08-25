@@ -1,5 +1,5 @@
-// Copyright (c) 2018-2019 WalletLink.org <https://www.walletlink.org/>
-// Copyright (c) 2018-2019 Coinbase, Inc. <https://www.coinbase.com/>
+// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
+// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
 package server
@@ -26,6 +26,7 @@ type Server struct {
 	allowedOrigins util.StringSet
 	webhook        webhook.Caller
 	serverURL      string
+	readDeadline   time.Duration
 }
 
 // NewServerOptions - options for NewServer function
@@ -36,6 +37,7 @@ type NewServerOptions struct {
 	Webhook        webhook.Caller
 	ServerURL      string
 	ForceSSL       bool
+	ReadDeadline   time.Duration
 }
 
 // NewServer - construct a Server
@@ -58,6 +60,7 @@ func NewServer(options *NewServerOptions) *Server {
 		allowedOrigins: options.AllowedOrigins,
 		webhook:        options.Webhook,
 		serverURL:      options.ServerURL,
+		readDeadline:   options.ReadDeadline,
 	}
 
 	if options.ForceSSL {

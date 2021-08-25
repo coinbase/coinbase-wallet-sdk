@@ -5,9 +5,10 @@
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "forceConsistentCasingInFileNames": true,
-    "jsx": "preserve",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "module": "esnext",
+    "jsx": "react",
+    "jsxFactory": "h",
+    "lib": ["dom", "dom.iterable", "es2016"],
+    "module": "commonjs",
     "moduleResolution": "node",
     "noErrorTruncation": true,
     "noFallthroughCasesInSwitch": true,
@@ -17,7 +18,7 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
-    "target": "es5"
+    "target": "es2016"
   },
   "include": ["src", "src/@types", "chrome"]
 }

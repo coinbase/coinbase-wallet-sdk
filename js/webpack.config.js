@@ -1,20 +1,17 @@
 const path = require("path")
 const webpack = require("webpack")
-const { env } = process
+const {env} = process
 
 const tsConfigPath = (exports.tsConfigPath = path.join(
-  __dirname,
-  "tsconfig.json"
+    __dirname,
+    "tsconfig.json"
 ))
 
 module.exports = {
   target: "web",
   entry: [
-    "core-js/shim",
-    "core-js/modules/es7.object.entries",
-    "core-js/modules/es7.object.values",
+    "core-js/stable",
     "regenerator-runtime/runtime",
-    "classlist-polyfill",
     "whatwg-fetch",
     "./src/index.ts"
   ],
@@ -23,7 +20,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.ts$/,
+        test: /\.tsx?$/,
         use: {
           loader: "ts-loader",
           options: {
@@ -35,7 +32,13 @@ module.exports = {
     ]
   },
   resolve: {
-    extensions: [".ts", ".js"],
+    fallback: {
+      fs: false,
+      "stream": require.resolve("stream-browserify"),
+      "buffer": require.resolve("buffer/"),
+      "util": require.resolve("util/")
+    },
+    extensions: [".ts", ".tsx", ".js"],
     plugins: [],
     symlinks: false
   },
@@ -49,7 +52,7 @@ module.exports = {
   plugins: [
     new webpack.DefinePlugin({
       "process.env": {
-        NODE_ENV: JSON.stringify(env.NODE_ENV),
+        NODE_ENV: JSON.stringify(env.NODE_ENV) || JSON.stringify('production'),
         WALLETLINK_URL: JSON.stringify(env.WALLETLINK_URL),
         WALLETLINK_VERSION: JSON.stringify(require("./package.json").version)
       }

@@ -2,7 +2,7 @@
 # STEP 1 build executable binary
 ################################
 
-FROM golang:1.12-alpine as go-builder
+FROM golang:1.13.8-alpine as go-builder
 
 WORKDIR /go/src/github.com/walletlink/walletlink
 
@@ -16,7 +16,7 @@ RUN CGO_ENABLED=0 GOOS=linux make build
 # STEP 2 build web assets
 #########################
 
-FROM node:10.15-alpine as node-builder
+FROM node:12-alpine as node-builder
 
 WORKDIR /app
 
@@ -26,7 +26,6 @@ COPY ./web ./web
 RUN apk add --update make
 RUN apk add --update git
 RUN npm config set unsafe-perm true
-RUN npm install -g yarn
 RUN make build-web
 
 ############################

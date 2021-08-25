@@ -1,5 +1,5 @@
-// Copyright (c) 2018-2019 WalletLink.org <https://www.walletlink.org/>
-// Copyright (c) 2018-2019 Coinbase, Inc. <https://www.coinbase.com/>
+// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
+// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
 package server
@@ -191,6 +191,21 @@ func TestRPC(t *testing.T) {
 	})
 	require.Nil(t, err)
 
+	// server sends SessionConfigUpdated message to host
+	res = jsonMap{}
+	err = hostWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":       "SessionConfigUpdated",
+		"sessionId":  sessionID,
+		"webhookId":  webhookID,
+		"webhookUrl": webhookURL,
+		"metadata": map[string]interface{}{
+			"foo": "hello world",
+			"bar": "1234",
+		},
+	}, res)
+
 	// server responds to guest
 	res = jsonMap{}
 	err = guestWs.ReadJSON(&res)
@@ -201,9 +216,9 @@ func TestRPC(t *testing.T) {
 		"sessionId": sessionID,
 	}, res)
 
-	// server sends SessionConfigUpdated message to host
+	// server sends SessionConfigUpdated message to guest
 	res = jsonMap{}
-	err = hostWs.ReadJSON(&res)
+	err = guestWs.ReadJSON(&res)
 	require.Nil(t, err)
 	require.Equal(t, jsonMap{
 		"type":       "SessionConfigUpdated",
@@ -253,6 +268,22 @@ func TestRPC(t *testing.T) {
 	})
 	require.Nil(t, err)
 
+	// server sends SessionConfigUpdated message to host
+	res = jsonMap{}
+	err = hostWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":       "SessionConfigUpdated",
+		"sessionId":  sessionID,
+		"webhookId":  webhookID,
+		"webhookUrl": webhookURL,
+		"metadata": map[string]interface{}{
+			"foo": "hello world",
+			"bar": "1234",
+			"baz": "abcdefg",
+		},
+	}, res)
+
 	// server responds to guest
 	res = jsonMap{}
 	err = guestWs.ReadJSON(&res)
@@ -263,9 +294,9 @@ func TestRPC(t *testing.T) {
 		"sessionId": sessionID,
 	}, res)
 
-	// server sends SessionConfigUpdated message to host
+	// server sends SessionConfigUpdated message to guest
 	res = jsonMap{}
-	err = hostWs.ReadJSON(&res)
+	err = guestWs.ReadJSON(&res)
 	require.Nil(t, err)
 	require.Equal(t, jsonMap{
 		"type":       "SessionConfigUpdated",
@@ -317,6 +348,21 @@ func TestRPC(t *testing.T) {
 	})
 	require.Nil(t, err)
 
+	// server sends SessionConfigUpdated message to host
+	res = jsonMap{}
+	err = hostWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":       "SessionConfigUpdated",
+		"sessionId":  sessionID,
+		"webhookId":  webhookID,
+		"webhookUrl": webhookURL,
+		"metadata": map[string]interface{}{
+			"bar": "1234",
+			"baz": "abcdefg",
+		},
+	}, res)
+
 	// server responds to guest
 	res = jsonMap{}
 	err = guestWs.ReadJSON(&res)
@@ -327,9 +373,9 @@ func TestRPC(t *testing.T) {
 		"sessionId": sessionID,
 	}, res)
 
-	// server sends SessionConfigUpdated message to host
+	// server sends SessionConfigUpdated message to guest
 	res = jsonMap{}
-	err = hostWs.ReadJSON(&res)
+	err = guestWs.ReadJSON(&res)
 	require.Nil(t, err)
 	require.Equal(t, jsonMap{
 		"type":       "SessionConfigUpdated",
@@ -377,6 +423,20 @@ func TestRPC(t *testing.T) {
 	})
 	require.Nil(t, err)
 
+	// server sends SessionConfigUpdated message to host
+	res = jsonMap{}
+	err = hostWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":      "SessionConfigUpdated",
+		"sessionId": sessionID,
+		"webhookId": webhookID,
+		"metadata": map[string]interface{}{
+			"bar": "1234",
+			"baz": "abcdefg",
+		},
+	}, res)
+
 	// server responds to guest
 	res = jsonMap{}
 	err = guestWs.ReadJSON(&res)
@@ -387,9 +447,9 @@ func TestRPC(t *testing.T) {
 		"sessionId": sessionID,
 	}, res)
 
-	// server sends SessionConfigUpdated message to host
+	// server sends SessionConfigUpdated message to guest
 	res = jsonMap{}
-	err = hostWs.ReadJSON(&res)
+	err = guestWs.ReadJSON(&res)
 	require.Nil(t, err)
 	require.Equal(t, jsonMap{
 		"type":      "SessionConfigUpdated",
@@ -438,6 +498,21 @@ func TestRPC(t *testing.T) {
 	})
 	require.Nil(t, err)
 
+	// server sends SessionConfigUpdated message to host
+	res = jsonMap{}
+	err = hostWs.ReadJSON(&res)
+	require.Nil(t, err)
+	require.Equal(t, jsonMap{
+		"type":       "SessionConfigUpdated",
+		"sessionId":  sessionID,
+		"webhookId":  webhookID,
+		"webhookUrl": webhookURL,
+		"metadata": map[string]interface{}{
+			"bar": "1234",
+			"baz": "abcdefg",
+		},
+	}, res)
+
 	// server responds to guest
 	res = jsonMap{}
 	err = guestWs.ReadJSON(&res)
@@ -448,9 +523,9 @@ func TestRPC(t *testing.T) {
 		"sessionId": sessionID,
 	}, res)
 
-	// server sends SessionConfigUpdated message to host
+	// server sends SessionConfigUpdated message to guest
 	res = jsonMap{}
-	err = hostWs.ReadJSON(&res)
+	err = guestWs.ReadJSON(&res)
 	require.Nil(t, err)
 	require.Equal(t, jsonMap{
 		"type":       "SessionConfigUpdated",

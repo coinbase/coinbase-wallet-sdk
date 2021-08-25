@@ -1,5 +1,5 @@
-// Copyright (c) 2018-2019 WalletLink.org <https://www.walletlink.org/>
-// Copyright (c) 2018-2019 Coinbase, Inc. <https://www.coinbase.com/>
+// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
+// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
 package rpc
@@ -189,12 +189,6 @@ func (c *MessageHandler) handleIsLinked(
 func (c *MessageHandler) handleSetSessionConfig(
 	msg *clientMessageSetSessionConfig,
 ) serverMessage {
-	if c.isHost {
-		return newServerMessageFail(
-			msg.ID, msg.SessionID, "only guests can set session config",
-		)
-	}
-
 	if valid, invalidReason := models.IsValidSessionConfig(
 		msg.WebhookID,
 		msg.WebhookURL,
@@ -222,6 +216,10 @@ func (c *MessageHandler) handleSetSessionConfig(
 
 	for k, v := range msg.Metadata {
 		if v != nil {
+			// disallow having more than 50 entries
+			if _, exists := session.Metadata[k]; !exists && len(session.Metadata) >= 50 {
+				continue
+			}
 			session.Metadata[k] = *v
 		} else {
 			delete(session.Metadata, k)
@@ -233,12 +231,16 @@ func (c *MessageHandler) handleSetSessionConfig(
 		return newServerMessageFail(msg.ID, msg.SessionID, "internal error")
 	}
 
-	// send SessionConfigUpdated message to host
-	subID := hostPubSubID(msg.SessionID)
+	// send SessionConfigUpdated message
 	updatedMsg := newServerMessageSessionConfigUpdated(
 		msg.SessionID, session.WebhookID, session.WebhookURL, session.Metadata,
 	)
-	c.pubSub.Publish(subID, updatedMsg)
+	for _, subID := range []string{
+		hostPubSubID(msg.SessionID),
+		guestPubSubID(msg.SessionID),
+	} {
+		c.pubSub.Publish(subID, updatedMsg)
+	}
 
 	return newServerMessageOK(msg.ID, msg.SessionID)
 }
