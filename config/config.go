@@ -9,7 +9,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/walletlink/walletlink/util"
 )
@@ -55,18 +54,12 @@ var (
 
 	// ForceSSL - enforce HTTPS
 	ForceSSL, _ = strconv.ParseBool(getEnv("FORCE_SSL", "false"))
-
-	// ReadDeadline - Deadline for reading messages
-	ReadDeadline time.Duration
 )
 
 func init() {
 	if ForceSSL && len(ServerURL) == 0 {
 		log.Fatal("SERVER_URL is required when FORCE_SSL is enabled")
 	}
-
-	readDeadlineSecs, _ := strconv.Atoi(getEnv("READ_DEADLINE_SECS", "30"))
-	ReadDeadline = time.Second * time.Duration(readDeadlineSecs)
 }
 
 func getEnv(name string, defaultValue string) string {
