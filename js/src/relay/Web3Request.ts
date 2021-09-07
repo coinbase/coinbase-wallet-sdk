@@ -25,7 +25,7 @@ export type RequestEthereumAccountsRequest = BaseWeb3Request<
     appName: string
     appLogoUrl: string | null
   }
-  >
+>
 
 export type AddEthereumChainRequest = BaseWeb3Request<
   Web3Method.addEthereumChain,
@@ -41,14 +41,14 @@ export type AddEthereumChainRequest = BaseWeb3Request<
       decimals: number;
     }
   }
-  >
+>
 
 export type SwitchEthereumChainRequest = BaseWeb3Request<
   Web3Method.switchEthereumChain,
   {
     chainId: string
   }
-  >
+>
 
 export type SignEthereumMessageRequest = BaseWeb3Request<
   Web3Method.signEthereumMessage,
@@ -58,7 +58,7 @@ export type SignEthereumMessageRequest = BaseWeb3Request<
     addPrefix: boolean
     typedDataJson: string | null
   }
-  >
+>
 
 export type SignEthereumTransactionRequest = BaseWeb3Request<
   Web3Method.signEthereumTransaction,
@@ -75,7 +75,7 @@ export type SignEthereumTransactionRequest = BaseWeb3Request<
     chainId: IntNumber
     shouldSubmit: boolean
   }
-  >
+>
 
 export type SubmitEthereumTransactionRequest = BaseWeb3Request<
   Web3Method.submitEthereumTransaction,
@@ -83,7 +83,7 @@ export type SubmitEthereumTransactionRequest = BaseWeb3Request<
     signedTransaction: HexString
     chainId: IntNumber
   }
-  >
+>
 
 export type EthereumAddressFromSignedMessageRequest = BaseWeb3Request<
   Web3Method.ethereumAddressFromSignedMessage,
@@ -92,21 +92,21 @@ export type EthereumAddressFromSignedMessageRequest = BaseWeb3Request<
     signature: HexString
     addPrefix: boolean
   }
-  >
+>
 
 export type ScanQRCodeRequest = BaseWeb3Request<
   Web3Method.scanQRCode,
   {
     regExp: RegExpString
   }
-  >
+>
 
 export type ArbitraryRequest = BaseWeb3Request<
   Web3Method.arbitrary,
   {
     data: string
   }
-  >
+>
 
 export type ChildRequestEthereumAccountsRequest = BaseWeb3Request<
   Web3Method.childRequestEthereumAccounts,
@@ -117,7 +117,7 @@ export type ChildRequestEthereumAccountsRequest = BaseWeb3Request<
     appLogoURL: string
     appURL: string
   }
-  >
+>
 
 export type Web3Request =
   | RequestEthereumAccountsRequest
