@@ -17,8 +17,8 @@
     "walletlink",
     "web3"
   ],
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "build/npm/dist/index.js",
+  "types": "build/npm/dist/index.d.ts",
   "repository": "https://github.com/walletlink/walletlink.git",
   "author": "Coinbase, Inc.",
   "license": "Apache-2.0",
