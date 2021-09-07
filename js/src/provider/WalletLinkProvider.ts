@@ -940,14 +940,14 @@ export class WalletLinkProvider
   ): Promise<JSONRPCResponse> {
     const request = (params[0]) as AddEthereumChainParams;
 
-    const chainIdNumber = parseInt(request.chainId, 10);
+    const chainIdNumber = parseInt(request.chainId, 16);
     const ethereumChain = EthereumChain.fromChainId(BigInt(chainIdNumber));
     if (ethereumChain === undefined) {
       return { jsonrpc: '2.0', id: 0, error: { code: 2, message: `chainId ${request.chainId} not supported` } };
     }
     const rpcUrl = EthereumChain.rpcUrl(ethereumChain);
     // @ts-ignore
-    await this.switchEthereumChain(rpcUrl, parseInt(request.chainId, 10));
+    await this.switchEthereumChain(rpcUrl, parseInt(request.chainId, 16));
 
     return { jsonrpc: '2.0', id: 0, result: null };
   }
@@ -957,14 +957,14 @@ export class WalletLinkProvider
   ): Promise<JSONRPCResponse> {
     const request = (params[0]) as SwitchEthereumChainParams
 
-    const chainIdNumber = parseInt(request.chainId, 10);
+    const chainIdNumber = parseInt(request.chainId, 16);
     const ethereumChain = EthereumChain.fromChainId(BigInt(chainIdNumber));
     if (ethereumChain === undefined) {
       return { jsonrpc: '2.0', id: 0, error: { code: 2, message: `chainId ${request.chainId} not supported` } };
     }
     const rpcUrl = EthereumChain.rpcUrl(ethereumChain);
     // @ts-ignore
-    await this.switchEthereumChain(rpcUrl, parseInt(request.chainId, 10));
+    await this.switchEthereumChain(rpcUrl, parseInt(request.chainId, 16));
 
     return { jsonrpc: "2.0", id: 0, result: null }
   }
