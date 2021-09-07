@@ -45,6 +45,11 @@ export class WalletLinkSdkUI extends WalletLinkUI {
     this.linkFlow.setConnectDisabled(connectDisabled)
   }
 
+  // @ts-ignore
+  switchEthereumChain(options: { onCancel: () => void; onApprove: () => void, chainId: string }) {
+    // no-op
+  }
+
   requestEthereumAccounts(options: { onCancel: () => void }): void {
     this.linkFlow.open({ onCancel: options.onCancel })
   }
@@ -90,7 +95,11 @@ export class WalletLinkSdkUI extends WalletLinkUI {
     document.location.reload()
   }
 
-  inlineAccountsResponse(): boolean { 
+  inlineAccountsResponse(): boolean {
+    return false
+  }
+
+  inlineSwitchEthereumChain(): boolean {
     return false
   }
 }

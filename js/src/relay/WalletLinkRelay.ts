@@ -15,6 +15,7 @@ import { RelayMessage } from "./RelayMessage"
 import { Session } from "./Session"
 import { Web3Method } from "./Web3Method"
 import {
+  AddEthereumChainRequest,
   ArbitraryRequest,
   ChildRequestEthereumAccountsRequest,
   EthereumAddressFromSignedMessageRequest,
@@ -23,11 +24,13 @@ import {
   SignEthereumMessageRequest,
   SignEthereumTransactionRequest,
   SubmitEthereumTransactionRequest,
-  Web3Request
-} from "./Web3Request"
+  SwitchEthereumChainRequest,
+  Web3Request,
+} from './Web3Request';
 import { Web3RequestCanceledMessage } from "./Web3RequestCanceledMessage"
 import { Web3RequestMessage } from "./Web3RequestMessage"
 import {
+  AddEthereumChainResponse,
   ArbitraryResponse,
   ChildRequestEthereumAccountsResponse,
   ErrorResponse,
@@ -38,8 +41,9 @@ import {
   SignEthereumMessageResponse,
   SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse,
-  Web3Response
-} from "./Web3Response"
+  SwitchEthereumChainResponse,
+  Web3Response,
+} from './Web3Response';
 import {
   isWeb3ResponseMessage,
   Web3ResponseMessage
@@ -371,6 +375,28 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
     })
   }
 
+  public addEthereumChain(
+    chainId: string,
+    blockExplorerUrls?: string[],
+    chainName?: string,
+    iconUrls?: string[],
+    nativeCurrency?: { name: string; symbol: string; decimals: number }
+  ): Promise<AddEthereumChainResponse> {
+    return this.sendRequest<
+      AddEthereumChainRequest,
+      AddEthereumChainResponse
+      >({
+      method: Web3Method.addEthereumChain,
+      params: {
+        chainId,
+        blockExplorerUrls,
+        chainName,
+        iconUrls,
+        nativeCurrency
+      }
+    })
+  }
+
   /**
    *
    * @param request a request to connect the child session using a parent session's connection
@@ -403,8 +429,8 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
     return new Promise((resolve, reject) => {
       let hideSnackbarItem: (() => void) | null = null
       const id = randomBytesHex(8)
-      const isRequestAccounts =
-        request.method === Web3Method.requestEthereumAccounts
+      const isRequestAccounts = request.method === Web3Method.requestEthereumAccounts
+      const isSwitchEthereumChain = request.method === Web3Method.switchEthereumChain
       const cancel = () => {
         this.publishWeb3RequestCanceledEvent(id)
         this.handleWeb3ResponseMessage(
@@ -439,7 +465,7 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
 
           this.ui.requestEthereumAccounts({
             onCancel: cancel,
-            onAccounts: onAccounts
+            onAccounts
           })
         } else {
           this.ui.requestEthereumAccounts({
@@ -448,6 +474,36 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
         }
 
         WalletLinkRelay.accountRequestCallbackIds.add(id)
+      } else if (request.method === Web3Method.switchEthereumChain || request.method === Web3Method.addEthereumChain) {
+        const cancel = () => {
+          this.handleWeb3ResponseMessage(
+            Web3ResponseMessage({
+              id,
+              response: SwitchEthereumChainResponse(false),
+            }),
+          );
+        };
+        const approve = () => {
+          this.handleWeb3ResponseMessage(
+            Web3ResponseMessage({
+              id,
+              response: SwitchEthereumChainResponse(true),
+            }),
+          );
+        };
+
+        this.ui.switchEthereumChain({
+          onCancel: cancel,
+          onApprove: approve,
+          chainId: (request as SwitchEthereumChainRequest).params.chainId,
+        });
+
+        if (!this.ui.inlineSwitchEthereumChain()) {
+          hideSnackbarItem = this.ui.showConnecting({
+            onCancel: cancel,
+            onResetConnection: this.resetAndReload,
+          });
+        }
       } else {
         hideSnackbarItem = this.ui.showConnecting({
           onCancel: cancel,
@@ -465,12 +521,12 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
         resolve(response as U)
       })
 
-      if (
-        !isRequestAccounts ||
-        !this.ui.inlineAccountsResponse()
-      ) {
-        this.publishWeb3RequestEvent(id, request)
+      if ((isRequestAccounts && this.ui.inlineAccountsResponse()) ||
+        (isSwitchEthereumChain && this.ui.inlineSwitchEthereumChain())) {
+        return
       }
+
+      this.publishWeb3RequestEvent(id, request)
     })
   }
 
@@ -517,8 +573,8 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
     message: RelayMessage,
     callWebhook: boolean
   ): Observable<string> {
-    const secret = this.session.secret
-    return new Observable<string>((subscriber) => {
+    let secret = this.session.secret
+    return new Observable<string>(function (subscriber) {
       aes256gcm.encrypt(
         JSON.stringify({ ...message, origin: location.origin }),
         secret
@@ -571,5 +627,17 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
       callback(message.response)
       this.relayEventManager.callbacks.delete(message.id)
     }
+  }
+
+  switchEthereumChain(chainId: string): Promise<SwitchEthereumChainResponse> {
+    return this.sendRequest<
+      SwitchEthereumChainRequest,
+      SwitchEthereumChainResponse
+      >({
+      method: Web3Method.switchEthereumChain,
+      params: {
+        chainId
+      }
+    })
   }
 }

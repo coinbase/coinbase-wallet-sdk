@@ -25,6 +25,8 @@ export enum JSONRPCMethod {
   eth_signTypedData_v4 = "eth_signTypedData_v4",
   eth_signTypedData = "eth_signTypedData",
   walletlink_arbitrary = "walletlink_arbitrary",
+  wallet_addEthereumChain = "wallet_addEthereumChain",
+  wallet_switchEthereumChain = "wallet_switchEthereumChain",
 
   // asynchronous pub/sub
   eth_subscribe = "eth_subscribe",

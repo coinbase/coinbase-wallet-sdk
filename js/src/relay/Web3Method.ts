@@ -10,5 +10,7 @@ export enum Web3Method {
   ethereumAddressFromSignedMessage = "ethereumAddressFromSignedMessage",
   scanQRCode = "scanQRCode",
   arbitrary = "arbitrary",
-  childRequestEthereumAccounts = "childRequestEthereumAccounts"
+  childRequestEthereumAccounts = "childRequestEthereumAccounts",
+  addEthereumChain = "addEthereumChain",
+  switchEthereumChain = "switchEthereumChain"
 }

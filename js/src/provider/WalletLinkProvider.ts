@@ -15,8 +15,8 @@ import {
   ensureIntNumber,
   ensureRegExpString,
   prepend0x,
-  hexStringFromIntNumber
-} from "../util"
+  hexStringFromIntNumber,
+} from "../util";
 import eip712 from "../vendor-js/eth-eip712-util"
 import { FilterPolyfill } from "./FilterPolyfill"
 import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from "./JSONRPC"
@@ -31,8 +31,12 @@ import {
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
 import { WalletLinkRelayEventManager } from "../relay/WalletLinkRelayEventManager"
 import { WalletLinkRelayAbstract } from "../relay/WalletLinkRelayAbstract"
+import { EthereumChain } from '../EthereumChain';
 
 const LOCAL_STORAGE_ADDRESSES_KEY = "Addresses"
+const DEFAULT_CHAIN_ID_KEY = "DefaultChainId"
+// Indicates chain has been switched by switchEthereumChain or addEthereumChain request
+const HAS_CHAIN_BEEN_SWITCHED_KEY = "HasChainBeenSwitched"
 
 export interface WalletLinkProviderOptions {
   relayProvider: () => Promise<WalletLinkRelayAbstract>
@@ -54,7 +58,6 @@ export class WalletLinkProvider
   private readonly _storage: ScopedLocalStorage
   private readonly _relayEventManager: WalletLinkRelayEventManager
 
-  private _chainId: IntNumber
   private _jsonRpcUrl: string
   private readonly _overrideIsMetaMask: boolean
 
@@ -69,6 +72,7 @@ export class WalletLinkProvider
 
     this.setProviderInfo = this.setProviderInfo.bind(this)
     this.updateProviderInfo = this.updateProviderInfo.bind(this)
+    this.getChainId = this.getChainId.bind(this)
     this.setAppInfo = this.setAppInfo.bind(this)
     this.enable = this.enable.bind(this)
     this.close = this.close.bind(this)
@@ -80,15 +84,14 @@ export class WalletLinkProvider
     this.arbitraryRequest = this.arbitraryRequest.bind(this)
     this.childRequestEthereumAccounts = this.childRequestEthereumAccounts.bind(this)
 
-    this._chainId = ensureIntNumber(options.chainId || 1)
     this._jsonRpcUrl = options.jsonRpcUrl
     this._overrideIsMetaMask = options.overrideIsMetaMask
     this._relayProvider = options.relayProvider
     this._storage = options.storage
     this._relayEventManager = options.relayEventManager
 
-    const chainIdStr = prepend0x(this._chainId.toString(16))
-
+    const chainId = this.getChainId()
+    const chainIdStr = prepend0x(chainId.toString(16))
     // indicate that we've connected, for EIP-1193 compliance
     this.emit("connect", { chainIdStr })
 
@@ -121,11 +124,11 @@ export class WalletLinkProvider
   }
 
   public get networkVersion(): string {
-    return this._chainId.toString(10)
+    return this.getChainId().toString(10)
   }
 
   public get chainId(): string {
-    return prepend0x(this._chainId.toString(16))
+    return prepend0x(this.getChainId().toString(16))
   }
 
   public get isWalletLink(): boolean {
@@ -152,20 +155,45 @@ export class WalletLinkProvider
     return true
   }
 
+  // @ts-ignore
   public setProviderInfo(jsonRpcUrl: string, chainId: number) {
     if (this.isChainOverridden) return
-    this.updateProviderInfo(jsonRpcUrl, chainId, false)
+    this.updateProviderInfo(jsonRpcUrl, this.getChainId(), false)
   }
 
-  private updateProviderInfo(jsonRpcUrl: string, chainId: number, fromRelay: boolean) {
-    if (fromRelay) this.isChainOverridden = true
-    const originalChainId = this._chainId
-    this._chainId = ensureIntNumber(chainId)
-    const chainChanged = this._chainId !== originalChainId
+  private updateProviderInfo(
+    jsonRpcUrl: string,
+    chainId: number,
+    fromRelay: boolean,
+  ) {
+    const hasChainSwitched = this._storage.getItem(HAS_CHAIN_BEEN_SWITCHED_KEY) === "true"
+    if (hasChainSwitched && fromRelay) return
+    if (fromRelay) {
+      this.isChainOverridden = true
+    }
+
     this._jsonRpcUrl = jsonRpcUrl
+
+    // emit chainChanged event if necessary
+    const originalChainId = this.getChainId()
+    this._storage.setItem(DEFAULT_CHAIN_ID_KEY, chainId.toString(10))
+    const chainChanged = ensureIntNumber(chainId) !== originalChainId
     if (chainChanged || !this.hasMadeFirstChainChangedEmission) {
-      this.emit("chainChanged", this._chainId)
+      this.emit("chainChanged", this.getChainId())
       this.hasMadeFirstChainChangedEmission = true
+    }
+  }
+
+  private async switchEthereumChain(rpcUrl: string, chainId: number) {
+    if (ensureIntNumber(chainId) === this.getChainId()) {
+      return
+    }
+    const relay = await this.initializeRelay()
+    const res = await relay.switchEthereumChain(chainId.toString(10))
+    if (res.result === true) {
+      this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
+      this._storage.setItem(DEFAULT_CHAIN_ID_KEY, chainId.toString(10))
+      this.updateProviderInfo(rpcUrl, chainId, false)
     }
   }
 
@@ -210,8 +238,8 @@ export class WalletLinkProvider
       const params = Array.isArray(callbackOrParams)
         ? callbackOrParams
         : callbackOrParams !== undefined
-        ? [callbackOrParams]
-        : []
+          ? [callbackOrParams]
+          : []
       const request: JSONRPCRequest = {
         jsonrpc: "2.0",
         id: 0,
@@ -381,8 +409,8 @@ export class WalletLinkProvider
     if (response.result === undefined) {
       throw new Error(
         `WalletLink does not support calling ${method} synchronously without ` +
-          `a callback. Please provide a callback parameter to call ${method} ` +
-          `asynchronously.`
+        `a callback. Please provide a callback parameter to call ${method} ` +
+        `asynchronously.`
       )
     }
 
@@ -394,7 +422,13 @@ export class WalletLinkProvider
       throw new Error("addresses is not an array")
     }
 
-    this._addresses = addresses.map(address => ensureAddressString(address))
+    const newAddresses = addresses.map(address => ensureAddressString(address))
+
+    if (JSON.stringify(newAddresses) === JSON.stringify(this._addresses)) {
+      return
+    }
+
+    this._addresses = newAddresses
     this.emit("accountsChanged", this._addresses)
     this._storage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, addresses.join(" "))
     window.dispatchEvent(
@@ -522,6 +556,12 @@ export class WalletLinkProvider
 
       case JSONRPCMethod.walletlink_arbitrary:
         return this._walletlink_arbitrary(params)
+
+      case JSONRPCMethod.wallet_addEthereumChain:
+        return this._wallet_addEthereumChain(params)
+
+      case JSONRPCMethod.wallet_switchEthereumChain:
+        return this._wallet_switchEthereumChain(params)
     }
 
     if (!this._jsonRpcUrl) throw Error("Error: No jsonRpcUrl provided")
@@ -628,7 +668,7 @@ export class WalletLinkProvider
     const maxFeePerGas = tx.maxFeePerGas != null ? ensureBN(tx.maxFeePerGas) : null
     const maxPriorityFeePerGas = tx.maxPriorityFeePerGas != null ? ensureBN(tx.maxPriorityFeePerGas) : null
     const gasLimit = tx.gas != null ? ensureBN(tx.gas) : null
-    const chainId = this._chainId
+    const chainId = this.getChainId()
 
     return {
       fromAddress,
@@ -707,11 +747,17 @@ export class WalletLinkProvider
   }
 
   private _net_version(): string {
-    return this._chainId.toString(10)
+    return this.getChainId().toString(10)
   }
 
   private _eth_chainId(): string {
-    return hexStringFromIntNumber(this._chainId)
+    return hexStringFromIntNumber(this.getChainId())
+  }
+
+  private getChainId(): IntNumber {
+    const chainIdStr = this._storage.getItem(DEFAULT_CHAIN_ID_KEY) || "1"
+    const chainId = parseInt(chainIdStr, 10)
+    return ensureIntNumber(chainId)
   }
 
   private async _eth_requestAccounts(): Promise<JSONRPCResponse> {
@@ -805,7 +851,7 @@ export class WalletLinkProvider
     const relay = await this.initializeRelay()
     const res = await relay.submitEthereumTransaction(
       signedTransaction,
-      this._chainId
+      this.getChainId()
     )
     return { jsonrpc: "2.0", id: 0, result: res.result }
   }
@@ -889,6 +935,40 @@ export class WalletLinkProvider
     return { jsonrpc: "2.0", id: 0, result }
   }
 
+  private async _wallet_addEthereumChain(
+    params: unknown[],
+  ): Promise<JSONRPCResponse> {
+    const request = (params[0]) as AddEthereumChainParams;
+
+    const chainIdNumber = parseInt(request.chainId, 10);
+    const ethereumChain = EthereumChain.fromChainId(BigInt(chainIdNumber));
+    if (ethereumChain === undefined) {
+      return { jsonrpc: '2.0', id: 0, error: { code: 2, message: `chainId ${request.chainId} not supported` } };
+    }
+    const rpcUrl = EthereumChain.rpcUrl(ethereumChain);
+    // @ts-ignore
+    await this.switchEthereumChain(rpcUrl, parseInt(request.chainId, 10));
+
+    return { jsonrpc: '2.0', id: 0, result: null };
+  }
+
+  private async _wallet_switchEthereumChain(
+    params: unknown[]
+  ): Promise<JSONRPCResponse> {
+    const request = (params[0]) as SwitchEthereumChainParams
+
+    const chainIdNumber = parseInt(request.chainId, 10);
+    const ethereumChain = EthereumChain.fromChainId(BigInt(chainIdNumber));
+    if (ethereumChain === undefined) {
+      return { jsonrpc: '2.0', id: 0, error: { code: 2, message: `chainId ${request.chainId} not supported` } };
+    }
+    const rpcUrl = EthereumChain.rpcUrl(ethereumChain);
+    // @ts-ignore
+    await this.switchEthereumChain(rpcUrl, parseInt(request.chainId, 10));
+
+    return { jsonrpc: "2.0", id: 0, result: null }
+  }
+
   private _eth_uninstallFilter(params: unknown[]): boolean {
     const filterId = ensureHexString(params[0])
     return this._filterPolyfill.uninstallFilter(filterId)
@@ -926,14 +1006,32 @@ export class WalletLinkProvider
     }
 
     return this._relayProvider().then(relay => {
+      relay.setAccountsCallback((accounts) => this._setAddresses(accounts))
       relay.setChainIdCallback((chainId) => {
         this.updateProviderInfo(this._jsonRpcUrl, parseInt(chainId, 10), true)
       })
       relay.setJsonRpcUrlCallback((jsonRpcUrl) => {
-        this.updateProviderInfo(jsonRpcUrl, this._chainId, true)
+        this.updateProviderInfo(jsonRpcUrl, this.getChainId(), true)
       })
       this._relay = relay
       return relay
     })
   }
+}
+
+interface AddEthereumChainParams {
+  chainId: string,
+  blockExplorerUrls?: string[],
+  chainName?: string,
+  iconUrls?: string[]
+  rpcUrls?: string[],
+  nativeCurrency?: {
+    name: string;
+    symbol: string;
+    decimals: number;
+  }
+}
+
+interface SwitchEthereumChainParams {
+  chainId: string
 }
