@@ -573,8 +573,8 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
     message: RelayMessage,
     callWebhook: boolean
   ): Observable<string> {
-    let secret = this.session.secret
-    return new Observable<string>(function (subscriber) {
+    const secret = this.session.secret
+    return new Observable<string>((subscriber) => {
       aes256gcm.encrypt(
         JSON.stringify({ ...message, origin: location.origin }),
         secret
