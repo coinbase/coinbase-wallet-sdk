@@ -8,8 +8,10 @@ import {
   SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse,
   SignEthereumMessageResponse,
-  EthereumAddressFromSignedMessageResponse
-} from "./Web3Response"
+  EthereumAddressFromSignedMessageResponse,
+  AddEthereumChainResponse,
+  SwitchEthereumChainResponse,
+} from './Web3Response';
 import { Web3Request } from "./Web3Request"
 import { EthereumTransactionParams } from "./EthereumTransactionParams"
 
@@ -25,6 +27,22 @@ export abstract class WalletLinkRelayAbstract {
     dappURL: string
   ): Promise<ChildRequestEthereumAccountsResponse>
   abstract requestEthereumAccounts(): Promise<RequestEthereumAccountsResponse>
+
+  abstract addEthereumChain(
+    chainId: string,
+    blockExplorerUrls?: string[],
+    chainName?: string,
+    iconUrls?: string[],
+    nativeCurrency?: {
+      name: string;
+      symbol: string;
+      decimals: number;
+    }
+  ): Promise<AddEthereumChainResponse>
+
+  abstract switchEthereumChain(
+    chainId: string,
+  ): Promise<SwitchEthereumChainResponse>
 
   abstract signEthereumMessage(
     message: Buffer,
@@ -59,6 +77,7 @@ export abstract class WalletLinkRelayAbstract {
   ): Promise<U>
 
   abstract setAppInfo(appName: string, appLogoUrl: string | null): void
+  abstract setAccountsCallback(accountsCallback: (accounts: [string]) => void): void
   abstract setChainIdCallback(chainIdCallback: (chainId: string) => void): void
   abstract setJsonRpcUrlCallback(jsonRpcUrlCallback: (jsonRpcUrl: string) => void): void
 }

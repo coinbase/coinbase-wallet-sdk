@@ -24,6 +24,12 @@ export abstract class WalletLinkUI {
     onAccounts?: (accounts: [AddressString]) => void
   }): void
 
+  abstract switchEthereumChain(options: {
+    onCancel: () => void
+    onApprove: () => void,
+    chainId: string,
+  }): void
+
   /**
    * Hide the link flow
    */
@@ -47,10 +53,17 @@ export abstract class WalletLinkUI {
   abstract reloadUI(): void
 
   /**
-   * In some cases, we get the accounts response inline
+   * In some cases, we get the accounts response inline. This means the extension can handle
+   * returning the accounts resposne.
    * (i.e. don't need to call a websocket api to get the accounts response)
    */
   abstract inlineAccountsResponse(): boolean
+
+  /**
+   * If the extension is available, it can handle the switch ethereum chain request without
+   * having to send a request over walletlink
+   */
+  abstract inlineSwitchEthereumChain(): boolean
 
   /**
    * We want to disable showing the qr code for in-page walletlink if the dapp hasn't provided a json rpc url

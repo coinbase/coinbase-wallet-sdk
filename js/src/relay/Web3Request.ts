@@ -14,7 +14,7 @@ import { Web3Method } from "./Web3Method"
 interface BaseWeb3Request<
   Method extends Web3Method,
   Params extends object = {}
-> {
+  > {
   method: Method
   params: Params
 }
@@ -24,6 +24,29 @@ export type RequestEthereumAccountsRequest = BaseWeb3Request<
   {
     appName: string
     appLogoUrl: string | null
+  }
+>
+
+export type AddEthereumChainRequest = BaseWeb3Request<
+  Web3Method.addEthereumChain,
+  {
+    chainId: string,
+    blockExplorerUrls?: string[],
+    chainName?: string,
+    iconUrls?: string[]
+    rpcUrls?: string[],
+    nativeCurrency?: {
+      name: string;
+      symbol: string;
+      decimals: number;
+    }
+  }
+>
+
+export type SwitchEthereumChainRequest = BaseWeb3Request<
+  Web3Method.switchEthereumChain,
+  {
+    chainId: string
   }
 >
 
@@ -105,3 +128,5 @@ export type Web3Request =
   | ScanQRCodeRequest
   | ArbitraryRequest
   | ChildRequestEthereumAccountsRequest
+  | AddEthereumChainRequest
+  | SwitchEthereumChainRequest
