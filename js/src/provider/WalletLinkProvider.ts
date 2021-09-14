@@ -192,7 +192,6 @@ export class WalletLinkProvider
     const res = await relay.switchEthereumChain(chainId.toString(10))
     if (res.result === true) {
       this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
-      this._storage.setItem(DEFAULT_CHAIN_ID_KEY, chainId.toString(10))
       this.updateProviderInfo(rpcUrl, chainId, false)
     }
   }
