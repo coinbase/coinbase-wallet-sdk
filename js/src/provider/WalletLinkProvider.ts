@@ -627,10 +627,11 @@ export class WalletLinkProvider
 
   private _isKnownAddress(addressString: string): boolean {
     try {
-      const address = ensureAddressString(addressString)
-      return this._addresses.includes(address)
-    } catch {}
-    return false
+      const address = ensureAddressString(addressString.toLowerCase())
+      return this._addresses.map(x => x.toLowerCase()).includes(address)
+    } catch (error) {
+      throw new Error("Can't ensure that address is known")
+    }
   }
 
   private _ensureKnownAddress(addressString: string): void {
