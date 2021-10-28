@@ -3,6 +3,8 @@
 // Licensed under the Apache License, version 2.0
 
 import BN from "bn.js"
+import { WalletLinkAnalytics } from "../connection/WalletLinkAnalytics"
+import { EVENTS, WalletLinkAnalyticsAbstract } from "../init"
 import { EthereumTransactionParams } from "../relay/EthereumTransactionParams"
 import { RequestEthereumAccountsResponse } from "../relay/Web3Response"
 import { AddressString, Callback, IntNumber } from "../types"
@@ -30,10 +32,10 @@ import {
 } from "./SubscriptionManager"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
 import { WalletLinkRelayEventManager } from "../relay/WalletLinkRelayEventManager"
-import { WalletLinkRelayAbstract } from "../relay/WalletLinkRelayAbstract"
+import { LOCAL_STORAGE_ADDRESSES_KEY, WalletLinkRelayAbstract } from "../relay/WalletLinkRelayAbstract"
 import { EthereumChain } from '../EthereumChain';
+import { Session } from "../relay/Session"
 
-const LOCAL_STORAGE_ADDRESSES_KEY = "Addresses"
 const DEFAULT_CHAIN_ID_KEY = "DefaultChainId"
 // Indicates chain has been switched by switchEthereumChain or addEthereumChain request
 const HAS_CHAIN_BEEN_SWITCHED_KEY = "HasChainBeenSwitched"
@@ -45,6 +47,7 @@ export interface WalletLinkProviderOptions {
   chainId?: number
   overrideIsMetaMask: boolean
   storage: ScopedLocalStorage
+  walletLinkAnalytics?: WalletLinkAnalyticsAbstract
 }
 
 export class WalletLinkProvider
@@ -57,6 +60,7 @@ export class WalletLinkProvider
   private _relay: WalletLinkRelayAbstract | null = null
   private readonly _storage: ScopedLocalStorage
   private readonly _relayEventManager: WalletLinkRelayEventManager
+  private readonly _walletLinkAnalytics: WalletLinkAnalyticsAbstract
 
   private _jsonRpcUrl: string
   private readonly _overrideIsMetaMask: boolean
@@ -82,13 +86,15 @@ export class WalletLinkProvider
     this._setAddresses = this._setAddresses.bind(this)
     this.scanQRCode = this.scanQRCode.bind(this)
     this.arbitraryRequest = this.arbitraryRequest.bind(this)
-    this.childRequestEthereumAccounts = this.childRequestEthereumAccounts.bind(this)
 
     this._jsonRpcUrl = options.jsonRpcUrl
     this._overrideIsMetaMask = options.overrideIsMetaMask
     this._relayProvider = options.relayProvider
     this._storage = options.storage
     this._relayEventManager = options.relayEventManager
+    this._walletLinkAnalytics = options.walletLinkAnalytics
+      ? options.walletLinkAnalytics
+      : new WalletLinkAnalytics()
 
     const chainId = this.getChainId()
     const chainIdStr = prepend0x(chainId.toString(16))
@@ -162,8 +168,8 @@ export class WalletLinkProvider
   }
 
   private updateProviderInfo(
-    jsonRpcUrl: string,
-    chainId: number,
+    jsonRpcUrl: string, 
+    chainId: number, 
     fromRelay: boolean,
   ) {
     const hasChainSwitched = this._storage.getItem(HAS_CHAIN_BEEN_SWITCHED_KEY) === "true"
@@ -189,7 +195,7 @@ export class WalletLinkProvider
       return
     }
     const relay = await this.initializeRelay()
-    const res = await relay.switchEthereumChain(chainId.toString(10))
+    const res = await relay.switchEthereumChain(chainId.toString(10)).promise
     if (res.result === true) {
       this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
       this.updateProviderInfo(rpcUrl, chainId, false)
@@ -201,6 +207,11 @@ export class WalletLinkProvider
   }
 
   public async enable(): Promise<AddressString[]> {
+    this._walletLinkAnalytics.sendEvent(EVENTS.ETH_ACCOUNTS_STATE, {
+      method: "provider::enable",
+      addresses_length: this._addresses.length,
+      sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : null
+    })
     if (this._addresses.length > 0) {
       return this._addresses
     }
@@ -237,8 +248,8 @@ export class WalletLinkProvider
       const params = Array.isArray(callbackOrParams)
         ? callbackOrParams
         : callbackOrParams !== undefined
-          ? [callbackOrParams]
-          : []
+        ? [callbackOrParams]
+        : []
       const request: JSONRPCRequest = {
         jsonrpc: "2.0",
         id: 0,
@@ -342,7 +353,7 @@ export class WalletLinkProvider
 
   public async scanQRCode(match?: RegExp): Promise<string> {
     const relay = await this.initializeRelay()
-    const res = await relay.scanQRCode(ensureRegExpString(match))
+    const res = await relay.scanQRCode(ensureRegExpString(match)).promise
     if (typeof res.result !== "string") {
       throw new Error("result was not a string")
     }
@@ -351,31 +362,13 @@ export class WalletLinkProvider
 
   public async arbitraryRequest(data: string): Promise<string> {
     const relay = await this.initializeRelay()
-    const res = await relay.arbitraryRequest(data)
+    const res = await relay.arbitraryRequest(data).promise
     if (typeof res.result !== "string") {
       throw new Error("result was not a string")
     }
     return res.result
   }
 
-  public async childRequestEthereumAccounts(
-    childSessionId: string,
-    childSessionSecret: string,
-    dappName: string,
-    dappLogoURL: string,
-    dappURL: string
-  ): Promise<boolean> {
-    const relay = await this.initializeRelay()
-    await relay.childRequestEthereumAccounts(
-      childSessionId,
-      childSessionSecret,
-      dappName,
-      dappLogoURL,
-      dappURL
-    )
-
-    return true
-  }
 
   public supportsSubscriptions(): boolean {
     return false
@@ -408,8 +401,8 @@ export class WalletLinkProvider
     if (response.result === undefined) {
       throw new Error(
         `WalletLink does not support calling ${method} synchronously without ` +
-        `a callback. Please provide a callback parameter to call ${method} ` +
-        `asynchronously.`
+          `a callback. Please provide a callback parameter to call ${method} ` +
+          `asynchronously.`
       )
     }
 
@@ -429,7 +422,7 @@ export class WalletLinkProvider
 
     this._addresses = newAddresses
     this.emit("accountsChanged", this._addresses)
-    this._storage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, addresses.join(" "))
+    this._storage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, newAddresses.join(" "))
     window.dispatchEvent(
       new CustomEvent("walletlink:addresses", { detail: this._addresses })
     )
@@ -708,7 +701,7 @@ export class WalletLinkProvider
         address,
         addPrefix,
         typedDataJson
-      )
+      ).promise
       return { jsonrpc: "2.0", id: 0, result: res.result }
     } catch (err) {
       if (
@@ -733,7 +726,7 @@ export class WalletLinkProvider
       message,
       signature,
       addPrefix
-    )
+    ).promise
     return { jsonrpc: "2.0", id: 0, result: res.result }
   }
 
@@ -760,6 +753,11 @@ export class WalletLinkProvider
   }
 
   private async _eth_requestAccounts(): Promise<JSONRPCResponse> {
+    this._walletLinkAnalytics.sendEvent(EVENTS.ETH_ACCOUNTS_STATE, {
+      method: "provider::_eth_requestAccounts",
+      addresses_length: this._addresses.length,
+      sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : null
+    })
     if (this._addresses.length > 0) {
       return Promise.resolve({
         jsonrpc: "2.0",
@@ -771,7 +769,7 @@ export class WalletLinkProvider
     let res: RequestEthereumAccountsResponse
     try {
       const relay = await this.initializeRelay()
-      res = await relay.requestEthereumAccounts()
+      res = await relay.requestEthereumAccounts().promise
     } catch (err) {
       if (
         typeof err.message === "string" &&
@@ -828,7 +826,7 @@ export class WalletLinkProvider
     const tx = this._prepareTransactionParams((params[0] as any) || {})
     try {
       const relay = await this.initializeRelay()
-      const res = await relay.signEthereumTransaction(tx)
+      const res = await relay.signEthereumTransaction(tx).promise
       return { jsonrpc: "2.0", id: 0, result: res.result }
     } catch (err) {
       if (
@@ -851,7 +849,7 @@ export class WalletLinkProvider
     const res = await relay.submitEthereumTransaction(
       signedTransaction,
       this.getChainId()
-    )
+    ).promise
     return { jsonrpc: "2.0", id: 0, result: res.result }
   }
 
@@ -862,7 +860,7 @@ export class WalletLinkProvider
     const tx = this._prepareTransactionParams((params[0] as any) || {})
     try {
       const relay = await this.initializeRelay()
-      const res = await relay.signAndSubmitEthereumTransaction(tx)
+      const res = await relay.signAndSubmitEthereumTransaction(tx).promise
       return { jsonrpc: "2.0", id: 0, result: res.result }
     } catch (err) {
       if (

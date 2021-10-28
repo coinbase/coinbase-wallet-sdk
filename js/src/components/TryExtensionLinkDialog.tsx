@@ -1,13 +1,13 @@
 import clsx from "clsx"
-import css from "./TryExtensionLinkDialog-css"
-import linkIcon from "./icons/link-icon-svg"
+import { FunctionComponent, h } from "preact"
+import { useEffect, useState } from "preact/hooks"
 import globeIcon from "./icons/globe-icon-svg"
+import linkIcon from "./icons/link-icon-svg"
 import lockIcon from "./icons/lock-icon-svg"
 import walletLogo from "./icons/QRLogo"
-import { FunctionComponent, h } from "preact"
-import { useState, useEffect } from "preact/hooks"
 import { QRCode } from "./QRCode"
 import { Spinner } from "./Spinner"
+import css from "./TryExtensionLinkDialog-css"
 
 export const TryExtensionLinkDialog: FunctionComponent<{
   darkMode: boolean
@@ -76,15 +76,17 @@ export const TryExtensionLinkDialog: FunctionComponent<{
               )
             }}
           />
-          {!props.connectDisabled ? <ScanQRBox
-            darkMode={props.darkMode}
-            version={props.version}
-            sessionId={props.sessionId}
-            sessionSecret={props.sessionSecret}
-            walletLinkUrl={props.walletLinkUrl}
-            isConnected={props.isConnected}
-            isParentConnection={props.isParentConnection}
-          /> : null}
+          {!props.connectDisabled ? (
+            <ScanQRBox
+              darkMode={props.darkMode}
+              version={props.version}
+              sessionId={props.sessionId}
+              sessionSecret={props.sessionSecret}
+              walletLinkUrl={props.walletLinkUrl}
+              isConnected={props.isConnected}
+              isParentConnection={props.isParentConnection}
+            />
+          ) : null}
 
           {props.onCancel && <CancelButton onClick={props.onCancel} />}
         </div>
@@ -99,7 +101,7 @@ const TryExtensionBox: FunctionComponent<{
   return (
     <div class="-walletlink-extension-dialog-box-top">
       <div class="-walletlink-extension-dialog-box-top-install-region">
-        <h2>Try Coinbase Wallet extension</h2>
+        <h2>Try the Coinbase Wallet extension</h2>
         <button onClick={props.onInstallClick}>Install</button>
       </div>
       <div class="-walletlink-extension-dialog-box-top-info-region">
@@ -109,11 +111,11 @@ const TryExtensionBox: FunctionComponent<{
         />
         <DescriptionItem
           icon={lockIcon}
-          text="Private keys remain secure on mobile app"
+          text="Your private key is stored securely"
         />
         <DescriptionItem
           icon={globeIcon}
-          text="Compatible with all crypto apps"
+          text="Works with Ethereum, Polygon, and more"
         />
       </div>
     </div>

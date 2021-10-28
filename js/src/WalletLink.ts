@@ -2,6 +2,8 @@
 // Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
+import { WalletLinkAnalytics } from "./connection/WalletLinkAnalytics"
+import { WalletLinkAnalyticsAbstract } from "./init/WalletLinkAnalyticsAbstract"
 import { ScopedLocalStorage } from "./lib/ScopedLocalStorage"
 import { WalletLinkProvider } from "./provider/WalletLinkProvider"
 import { WalletLinkSdkUI } from "./provider/WalletLinkSdkUI"
@@ -31,6 +33,8 @@ export interface WalletLinkOptions {
   walletLinkUIConstructor?: (
     options: Readonly<WalletLinkUIOptions>
   ) => WalletLinkUI
+  /** @optional an implementation of WalletLinkAnalytics.ts; for most, leave it unspecified  */
+  walletLinkAnalytics?: WalletLinkAnalyticsAbstract
   /** @optional whether wallet link provider should override the isMetaMask property. */
   overrideIsMetaMask?: boolean
 }
@@ -47,6 +51,7 @@ export class WalletLink {
   private _relayEventManager: WalletLinkRelayEventManager | null = null
   private _storage: ScopedLocalStorage
   private _overrideIsMetaMask: boolean
+  private _walletLinkAnalytics: WalletLinkAnalyticsAbstract
 
   /**
    * Constructor
@@ -69,6 +74,10 @@ export class WalletLink {
       this._overrideIsMetaMask = options.overrideIsMetaMask
     }
 
+    this._walletLinkAnalytics = options.walletLinkAnalytics
+      ? options.walletLinkAnalytics
+      : new WalletLinkAnalytics()
+
     const u = new URL(walletLinkUrl)
     const walletLinkOrigin = `${u.protocol}//${u.host}`
     this._storage = new ScopedLocalStorage(`-walletlink:${walletLinkOrigin}`)
@@ -85,9 +94,10 @@ export class WalletLink {
       walletLinkUrl: walletLinkUrl,
       version: WALLETLINK_VERSION,
       darkMode: !!options.darkMode,
-      walletLinkUIConstructor: walletLinkUIConstructor,
+      walletLinkUIConstructor,
       storage: this._storage,
-      relayEventManager: this._relayEventManager
+      relayEventManager: this._relayEventManager,
+      walletLinkAnalytics: this._walletLinkAnalytics
     })
     this.setAppInfo(options.appName, options.appLogoUrl)
     this._relay.attachUI()
@@ -130,6 +140,7 @@ export class WalletLink {
       storage: this._storage,
       jsonRpcUrl,
       chainId,
+      walletLinkAnalytics: this._walletLinkAnalytics,
       overrideIsMetaMask: this._overrideIsMetaMask
     })
   }

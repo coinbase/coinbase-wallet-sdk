@@ -2,8 +2,8 @@
 // Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { hexStringToUint8Array, uint8ArrayToHex } from '../util';
 import { Observable } from 'rxjs';
+import { hexStringToUint8Array, uint8ArrayToHex } from '../util';
 
 /**
  *
@@ -14,7 +14,7 @@ import { Observable } from 'rxjs';
  * encrypted plainText.
  */
 export async function encrypt(plainText: string, secret: string): Promise<string> {
-  if (secret.length !== 64) throw Error(`secret must be 256 bits`)
+  if (secret.length != 64) throw Error(`secret must be 256 bits`)
   const ivBytes = crypto.getRandomValues(new Uint8Array(12))
   const secretKey: CryptoKey = await crypto.subtle.importKey(
     "raw",
@@ -24,7 +24,7 @@ export async function encrypt(plainText: string, secret: string): Promise<string
     ["encrypt", "decrypt"]
   )
 
-  const enc = new TextEncoder()
+  let enc = new TextEncoder()
 
   // Will return encrypted plainText with auth tag (ie MAC or checksum) appended at the end
   const encryptedResult: ArrayBuffer = await window.crypto.subtle.encrypt(
@@ -36,13 +36,13 @@ export async function encrypt(plainText: string, secret: string): Promise<string
     enc.encode(plainText)
   );
 
-  const tagLength = 16
-  const authTag: ArrayBuffer = encryptedResult.slice(encryptedResult.byteLength - tagLength)
-  const encryptedPlaintext = encryptedResult.slice(0, encryptedResult.byteLength - tagLength)
+  let tagLength = 16
+  let authTag: ArrayBuffer = encryptedResult.slice(encryptedResult.byteLength - tagLength)
+  let encryptedPlaintext = encryptedResult.slice(0, encryptedResult.byteLength - tagLength)
 
-  const authTagBytes = new Uint8Array(authTag)
-  const encryptedPlaintextBytes = new Uint8Array(encryptedPlaintext)
-  const concatted = new Uint8Array([...ivBytes, ...authTagBytes, ...encryptedPlaintextBytes])
+  let authTagBytes = new Uint8Array(authTag)
+  let encryptedPlaintextBytes = new Uint8Array(encryptedPlaintext)
+  let concatted = new Uint8Array([...ivBytes, ...authTagBytes, ...encryptedPlaintextBytes])
   return uint8ArrayToHex(concatted)
 }
 
@@ -53,9 +53,9 @@ export async function encrypt(plainText: string, secret: string): Promise<string
  * @param secret hex string representation of 32-byte secret
  */
 export function decrypt(cipherText: string, secret: string): Observable<string> {
-  if (secret.length !== 64) throw Error(`secret must be 256 bits`)
-  return new Observable<string>((subscriber) => {
-    (async () => {
+  if (secret.length != 64) throw Error(`secret must be 256 bits`)
+  return new Observable<string>(function (subscriber) {
+    (async function() {
       const secretKey: CryptoKey = await crypto.subtle.importKey(
         "raw",
         hexStringToUint8Array(secret),
@@ -74,11 +74,18 @@ export function decrypt(cipherText: string, secret: string): Observable<string> 
         name: "AES-GCM",
         iv: new Uint8Array(ivBytes)
       }
-      const decrypted = await window.crypto.subtle.decrypt(algo, secretKey, concattedBytes)
-
-      const decoder = new TextDecoder();
-      subscriber.next(decoder.decode(decrypted))
-      subscriber.complete()
+      try {
+        const decrypted = await window.crypto.subtle.decrypt(
+          algo,
+          secretKey,
+          concattedBytes
+        )
+        let decoder = new TextDecoder()
+        subscriber.next(decoder.decode(decrypted))
+        subscriber.complete()
+      } catch (err) {
+        subscriber.error(err)
+      }
     })()
   })
 }

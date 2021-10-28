@@ -1,6 +1,6 @@
 {
   "name": "walletlink",
-  "version": "2.1.11",
+  "version": "2.2.6",
   "description": "WalletLink JavaScript SDK",
   "keywords": [
     "cipher",
@@ -17,8 +17,8 @@
     "walletlink",
     "web3"
   ],
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "build/npm/dist/index.js",
+  "types": "build/npm/dist/index.d.ts",
   "repository": "https://github.com/walletlink/walletlink.git",
   "author": "Coinbase, Inc.",
   "license": "Apache-2.0",
@@ -84,5 +84,21 @@
   },
   "engines": {
     "node": ">= 10.0.0"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testEnvironment": "node",
+    "testPathIgnorePatterns": [
+      "<rootDir>/dist/",
+      "<rootDir>/node_modules/"
+    ],
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json"
+    ]
   }
 }

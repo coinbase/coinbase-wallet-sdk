@@ -2,8 +2,8 @@
 // Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { AddressString, HexString } from '../types';
-import { Web3Method } from './Web3Method';
+import { AddressString, HexString } from "../types"
+import { Web3Method } from "./Web3Method"
 
 interface BaseWeb3Response<Result> {
   method: Web3Method
@@ -28,9 +28,7 @@ export type RequestEthereumAccountsResponse = BaseWeb3Response<
 
 export type AddEthereumChainResponse = BaseWeb3Response<null>
 
-export type SwitchEthereumChainResponse = BaseWeb3Response<
-  boolean // was request approved
->
+export type SwitchEthereumChainResponse = BaseWeb3Response<boolean> // was request approved
 
 export function SwitchEthereumChainResponse(
   isApproved: boolean
@@ -50,39 +48,44 @@ export function isRequestEthereumAccountsResponse(
   return res && res.method === Web3Method.requestEthereumAccounts
 }
 
-export type SignEthereumMessageResponse = BaseWeb3Response<
-  HexString // signature
->
-
-export type SignEthereumTransactionResponse = BaseWeb3Response<
-  HexString // signed transaction
->
-
-export type SubmitEthereumTransactionResponse = BaseWeb3Response<
-  HexString // transaction hash
->
-
-export type EthereumAddressFromSignedMessageResponse = BaseWeb3Response<
-  AddressString // ethereum address
->
-
-export type ScanQRCodeResponse = BaseWeb3Response<
-  string // scanned string
->
-
-export type ChildRequestEthereumAccountsResponse = BaseWeb3Response<
-  string // unused, just means that there was a successful response
->
-
-export function ChildRequestEthereumAccountsResponse(
-  result: string
-): ChildRequestEthereumAccountsResponse {
-  return { method: Web3Method.childRequestEthereumAccounts, result }
+export function SignEthereumMessageResponse(
+  signature: HexString
+): SignEthereumMessageResponse {
+  return { method: Web3Method.signEthereumMessage, result: signature }
 }
 
-export type ArbitraryResponse = BaseWeb3Response<
-  string // response data
->
+export type SignEthereumMessageResponse = BaseWeb3Response<HexString> // signature
+
+export function SignEthereumTransactionResponse(
+  signedData: HexString
+): SignEthereumTransactionResponse {
+  return { method: Web3Method.signEthereumTransaction, result: signedData }
+}
+
+export type SignEthereumTransactionResponse = BaseWeb3Response<HexString> // signed transaction
+
+export function SubmitEthereumTransactionResponse(
+  txHash: HexString
+): SubmitEthereumTransactionResponse {
+  return { method: Web3Method.submitEthereumTransaction, result: txHash }
+}
+
+export type SubmitEthereumTransactionResponse = BaseWeb3Response<HexString> // transaction hash
+
+export function EthereumAddressFromSignedMessageResponse(
+  address: AddressString
+): EthereumAddressFromSignedMessageResponse {
+  return {
+    method: Web3Method.ethereumAddressFromSignedMessage,
+    result: address
+  }
+}
+
+export type EthereumAddressFromSignedMessageResponse = BaseWeb3Response<AddressString> // ethereum address
+
+export type ScanQRCodeResponse = BaseWeb3Response<string> // scanned string
+
+export type ArbitraryResponse = BaseWeb3Response<string> // response data
 
 export type Web3Response =
   | ErrorResponse
@@ -93,6 +96,5 @@ export type Web3Response =
   | EthereumAddressFromSignedMessageResponse
   | ScanQRCodeResponse
   | ArbitraryResponse
-  | ChildRequestEthereumAccountsResponse
   | AddEthereumChainResponse
   | SwitchEthereumChainResponse

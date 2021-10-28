@@ -1,32 +1,23 @@
-import { RegExpString, IntNumber, AddressString } from "../types"
+import { AddressString, IntNumber, RegExpString } from "../types";
+import { EthereumTransactionParams } from "./EthereumTransactionParams";
+import { Session } from "./Session";
+import { Web3Request } from "./Web3Request";
 import {
-  ScanQRCodeResponse,
-  ArbitraryResponse,
-  Web3Response,
-  ChildRequestEthereumAccountsResponse,
-  RequestEthereumAccountsResponse,
-  SignEthereumTransactionResponse,
-  SubmitEthereumTransactionResponse,
-  SignEthereumMessageResponse,
-  EthereumAddressFromSignedMessageResponse,
-  AddEthereumChainResponse,
-  SwitchEthereumChainResponse,
+  AddEthereumChainResponse, ArbitraryResponse, EthereumAddressFromSignedMessageResponse, RequestEthereumAccountsResponse, ScanQRCodeResponse, SignEthereumMessageResponse, SignEthereumTransactionResponse,
+  SubmitEthereumTransactionResponse, SwitchEthereumChainResponse, Web3Response
 } from './Web3Response';
-import { Web3Request } from "./Web3Request"
-import { EthereumTransactionParams } from "./EthereumTransactionParams"
 
 export const WALLET_USER_NAME_KEY = "walletUsername"
+export const LOCAL_STORAGE_ADDRESSES_KEY = "Addresses"
+
+export type CancelablePromise<T> = {
+  promise: Promise<T>;
+  cancel: () => void;
+}
 
 export abstract class WalletLinkRelayAbstract {
   abstract resetAndReload(): void
-  abstract childRequestEthereumAccounts(
-    childSessionId: string,
-    childSessionSecret: string,
-    dappName: string,
-    dappLogoURL: string,
-    dappURL: string
-  ): Promise<ChildRequestEthereumAccountsResponse>
-  abstract requestEthereumAccounts(): Promise<RequestEthereumAccountsResponse>
+  abstract requestEthereumAccounts(): CancelablePromise<RequestEthereumAccountsResponse>
 
   abstract addEthereumChain(
     chainId: string,
@@ -38,46 +29,47 @@ export abstract class WalletLinkRelayAbstract {
       symbol: string;
       decimals: number;
     }
-  ): Promise<AddEthereumChainResponse>
+  ): CancelablePromise<AddEthereumChainResponse>
 
   abstract switchEthereumChain(
     chainId: string,
-  ): Promise<SwitchEthereumChainResponse>
+  ): CancelablePromise<SwitchEthereumChainResponse>
 
   abstract signEthereumMessage(
     message: Buffer,
     address: AddressString,
     addPrefix: boolean,
     typedDataJson?: string | null
-  ): Promise<SignEthereumMessageResponse>
+  ): CancelablePromise<SignEthereumMessageResponse>
 
   abstract ethereumAddressFromSignedMessage(
     message: Buffer,
     signature: Buffer,
     addPrefix: boolean
-  ): Promise<EthereumAddressFromSignedMessageResponse>
+  ): CancelablePromise<EthereumAddressFromSignedMessageResponse>
 
   abstract signEthereumTransaction(
     params: EthereumTransactionParams
-  ): Promise<SignEthereumTransactionResponse>
+  ): CancelablePromise<SignEthereumTransactionResponse>
 
   abstract signAndSubmitEthereumTransaction(
     params: EthereumTransactionParams
-  ): Promise<SubmitEthereumTransactionResponse>
+  ): CancelablePromise<SubmitEthereumTransactionResponse>
 
   abstract submitEthereumTransaction(
     signedTransaction: Buffer,
     chainId: IntNumber
-  ): Promise<SubmitEthereumTransactionResponse>
+  ): CancelablePromise<SubmitEthereumTransactionResponse>
 
-  abstract scanQRCode(regExp: RegExpString): Promise<ScanQRCodeResponse>
-  abstract arbitraryRequest(data: string): Promise<ArbitraryResponse>
+  abstract scanQRCode(regExp: RegExpString): CancelablePromise<ScanQRCodeResponse>
+  abstract arbitraryRequest(data: string): CancelablePromise<ArbitraryResponse>
   abstract sendRequest<T extends Web3Request, U extends Web3Response>(
     request: T
-  ): Promise<U>
+  ): CancelablePromise<U>
 
   abstract setAppInfo(appName: string, appLogoUrl: string | null): void
   abstract setAccountsCallback(accountsCallback: (accounts: [string]) => void): void
   abstract setChainIdCallback(chainIdCallback: (chainId: string) => void): void
   abstract setJsonRpcUrlCallback(jsonRpcUrlCallback: (jsonRpcUrl: string) => void): void
+  abstract get session(): Session
 }

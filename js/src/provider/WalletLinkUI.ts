@@ -1,5 +1,17 @@
-import { Session } from "../relay/Session"
 import { Observable } from "rxjs"
+import { Session } from "../relay/Session"
+import {
+  EthereumAddressFromSignedMessageRequest,
+  SignEthereumMessageRequest,
+  SignEthereumTransactionRequest,
+  SubmitEthereumTransactionRequest
+} from "../relay/Web3Request"
+import {
+  EthereumAddressFromSignedMessageResponse,
+  SignEthereumMessageResponse,
+  SignEthereumTransactionResponse,
+  SubmitEthereumTransactionResponse
+} from "../relay/Web3Response"
 import { AddressString } from "../types"
 
 export interface WalletLinkUIOptions {
@@ -26,8 +38,31 @@ export abstract class WalletLinkUI {
 
   abstract switchEthereumChain(options: {
     onCancel: () => void
-    onApprove: () => void,
-    chainId: string,
+    onApprove: () => void
+    chainId: string
+  }): void
+
+  abstract signEthereumMessage(options: {
+    request: SignEthereumMessageRequest
+    onSuccess: (response: SignEthereumMessageResponse) => void
+    onCancel: () => void
+  }): void
+
+  abstract signEthereumTransaction(options: {
+    request: SignEthereumTransactionRequest
+    onSuccess: (response: SignEthereumTransactionResponse) => void
+    onCancel: () => void
+  }): void
+
+  abstract submitEthereumTransaction(options: {
+    request: SubmitEthereumTransactionRequest
+    onSuccess: (response: SubmitEthereumTransactionResponse) => void
+    onCancel: () => void
+  }): void
+
+  abstract ethereumAddressFromSignedMessage(options: {
+    request: EthereumAddressFromSignedMessageRequest
+    onSuccess: (response: EthereumAddressFromSignedMessageResponse) => void
   }): void
 
   /**
@@ -64,6 +99,11 @@ export abstract class WalletLinkUI {
    * having to send a request over walletlink
    */
   abstract inlineSwitchEthereumChain(): boolean
+
+  /**
+   * If the extension is in standalone mode, it can handle signing locally
+   */
+  abstract isStandalone(): boolean
 
   /**
    * We want to disable showing the qr code for in-page walletlink if the dapp hasn't provided a json rpc url

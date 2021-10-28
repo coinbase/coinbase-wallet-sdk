@@ -32,8 +32,8 @@ module.exports = {
     ]
   },
   resolve: {
-    fallback: {
-      fs: false,
+    fallback : {
+      fs : false,
       "stream": require.resolve("stream-browserify"),
       "buffer": require.resolve("buffer/"),
       "util": require.resolve("util/")
