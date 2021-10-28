@@ -7,9 +7,9 @@ export interface EthereumTransactionParams {
     weiValue: BN
     data: Buffer
     nonce: IntNumber | null
+    gasPriceInWei: BN | null
     maxFeePerGas: BN | null // in wei
     maxPriorityFeePerGas: BN | null // in wei
-    gasPriceInWei: BN | null
     gasLimit: BN | null
     chainId: IntNumber
   }

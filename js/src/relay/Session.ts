@@ -5,9 +5,8 @@
 import { fromEvent, Observable } from "rxjs"
 import { filter, map } from "rxjs/operators"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
-import { randomBytesHex } from "../util";
+import { randomBytesHex } from '../util';
 import { sha256 } from 'js-sha256';
-
 
 const STORAGE_KEY_SESSION_ID = "session:id"
 const STORAGE_KEY_SESSION_SECRET = "session:secret"
@@ -66,6 +65,15 @@ export class Session {
         newValue: evt.newValue || null
       }))
     )
+  }
+
+  /**
+   * Takes in a session ID and returns the sha256 hash of it.
+   * @param sessionId session ID
+   */
+  public static hash(sessionId: string): string {
+    const hash = sha256.create()
+    return hash.update(sessionId).hex()
   }
 
   public get id(): string {
