@@ -53,6 +53,8 @@ export interface WalletLinkProviderOptions {
 export class WalletLinkProvider
   extends SafeEventEmitter
   implements Web3Provider {
+  public readonly isCoinbaseWallet = true
+
   private readonly _filterPolyfill = new FilterPolyfill(this)
   private readonly _subscriptionManager = new SubscriptionManager(this)
 
