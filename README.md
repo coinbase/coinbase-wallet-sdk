@@ -13,6 +13,8 @@ few lines of code into your application, and WalletLink will take care of the
 rest. WalletLink is open-source and uses minimal dependencies for maximum
 security and no code bloat.
 
+testing
+
 ## Getting Started
 
 ### Installation
