@@ -4,10 +4,10 @@
 const fs = require("fs")
 const glob = require("glob")
 const sass = require("sass")
-const SVGO = require("svgo")
+const { optimize } = require("svgo")
 
-const COPYRIGHT = `// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
-// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
+const COPYRIGHT = `// Copyright (c) 2018-2021 WalletLink.org <https://www.walletlink.org/>
+// Copyright (c) 2018-2021 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0`
 
 async function main() {
@@ -25,12 +25,14 @@ async function main() {
   }
 
   // compile SVG
-  const svgo = new SVGO({ datauri: "base64" })
   const svgFiles = glob.sync(`${__dirname}/src/**/*.svg`)
   for (const filePath of svgFiles) {
     console.log(`Compiling ${filePath}...`)
     const svg = fs.readFileSync(filePath, { encoding: "utf8" })
-    const { data } = await svgo.optimize(svg)
+    const { data } = optimize(svg, {
+      path: filePath,
+      datauri: "base64"
+    })
     const ts = `${COPYRIGHT}\n\nexport default \`${data}\``
     fs.writeFileSync(filePath.replace(/\.svg$/, "-svg.ts"), ts, {
       mode: 0o644

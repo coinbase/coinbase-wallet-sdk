@@ -464,7 +464,7 @@ export class WalletLinkProvider
             .catch(err => reject(err))
           return
         }
-      } catch (err) {
+      } catch (err: any) {
         return reject(err)
       }
 
@@ -706,7 +706,7 @@ export class WalletLinkProvider
         typedDataJson
       ).promise
       return { jsonrpc: "2.0", id: 0, result: res.result }
-    } catch (err) {
+    } catch (err: any) {
       if (
         typeof err.message === "string" &&
         err.message.match(/(denied|rejected)/i)
@@ -773,7 +773,7 @@ export class WalletLinkProvider
     try {
       const relay = await this.initializeRelay()
       res = await relay.requestEthereumAccounts().promise
-    } catch (err) {
+    } catch (err: any) {
       if (
         typeof err.message === "string" &&
         err.message.match(/(denied|rejected)/i)
@@ -831,7 +831,7 @@ export class WalletLinkProvider
       const relay = await this.initializeRelay()
       const res = await relay.signEthereumTransaction(tx).promise
       return { jsonrpc: "2.0", id: 0, result: res.result }
-    } catch (err) {
+    } catch (err: any) {
       if (
         typeof err.message === "string" &&
         err.message.match(/(denied|rejected)/i)
@@ -865,7 +865,7 @@ export class WalletLinkProvider
       const relay = await this.initializeRelay()
       const res = await relay.signAndSubmitEthereumTransaction(tx).promise
       return { jsonrpc: "2.0", id: 0, result: res.result }
-    } catch (err) {
+    } catch (err: any) {
       if (
         typeof err.message === "string" &&
         err.message.match(/(denied|rejected)/i)
