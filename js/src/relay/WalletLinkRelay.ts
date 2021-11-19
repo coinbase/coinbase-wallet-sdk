@@ -481,15 +481,21 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
 
   public addEthereumChain(
     chainId: string,
+    rpcUrls: string[],
     blockExplorerUrls?: string[],
     chainName?: string,
     iconUrls?: string[],
-    nativeCurrency?: { name: string; symbol: string; decimals: number }
+    nativeCurrency?: {
+      name: string;
+      symbol: string;
+      decimals: number;
+    }
   ): CancelablePromise<AddEthereumChainResponse> {
     return this.sendRequest<AddEthereumChainRequest, AddEthereumChainResponse>({
       method: Web3Method.addEthereumChain,
       params: {
         chainId,
+        rpcUrls,
         blockExplorerUrls,
         chainName,
         iconUrls,

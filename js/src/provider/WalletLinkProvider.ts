@@ -193,6 +193,36 @@ export class WalletLinkProvider
     }
   }
 
+  private async addEthereumChain(
+    chainId: number,
+    rpcUrls: string[],
+    blockExplorerUrls?: string[],
+    chainName?: string,
+    iconUrls?: string[],
+    nativeCurrency?: {
+      name: string;
+      symbol: string;
+      decimals: number;
+    }
+  ): Promise<boolean> {
+    const relay = await this.initializeRelay()
+    const res = await relay.addEthereumChain(
+      chainId.toString(),
+      rpcUrls,
+      blockExplorerUrls,
+      chainName,
+      iconUrls,
+      nativeCurrency
+    ).promise
+
+    if (res.result === true) {
+      this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
+      this.updateProviderInfo(rpcUrls[0], chainId, false)
+    }
+
+    return res.result === true
+  }
+
   private async switchEthereumChain(rpcUrl: string, chainId: number) {
     if (ensureIntNumber(chainId) === this.getChainId()) {
       return
@@ -940,16 +970,32 @@ export class WalletLinkProvider
   ): Promise<JSONRPCResponse> {
     const request = (params[0]) as AddEthereumChainParams;
 
+    if (request.rpcUrls?.length === 0) {
+      return { jsonrpc: '2.0', id: 0, error: { code: 2, message: `please pass in at least 1 rpcUrl` } };
+    }
+
     const chainIdNumber = parseInt(request.chainId, 16);
     const ethereumChain = EthereumChain.fromChainId(BigInt(chainIdNumber));
     if (ethereumChain === undefined) {
-      return { jsonrpc: '2.0', id: 0, error: { code: 2, message: `chainId ${request.chainId} not supported` } };
+      const success = await this.addEthereumChain(
+        chainIdNumber,
+        request.rpcUrls ?? [],
+        request.blockExplorerUrls,
+        request.chainName,
+        request.iconUrls,
+        request.nativeCurrency
+      )
+      if (success) {
+        return { jsonrpc: '2.0', id: 0, result: null };
+      } else {
+        return { jsonrpc: '2.0', id: 0, error: { code: 2, message: `unable to add ethereum chain` } };
+      }
+    } else {
+      const rpcUrl = EthereumChain.rpcUrl(ethereumChain);
+      // @ts-ignore
+      await this.switchEthereumChain(rpcUrl, parseInt(request.chainId, 16));
+      return { jsonrpc: '2.0', id: 0, result: null };
     }
-    const rpcUrl = EthereumChain.rpcUrl(ethereumChain);
-    // @ts-ignore
-    await this.switchEthereumChain(rpcUrl, parseInt(request.chainId, 16));
-
-    return { jsonrpc: '2.0', id: 0, result: null };
   }
 
   private async _wallet_switchEthereumChain(

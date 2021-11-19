@@ -21,6 +21,7 @@ export abstract class WalletLinkRelayAbstract {
 
   abstract addEthereumChain(
     chainId: string,
+    rpcUrls: string[],
     blockExplorerUrls?: string[],
     chainName?: string,
     iconUrls?: string[],
