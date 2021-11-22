@@ -99,8 +99,13 @@ export class WalletLinkProvider
       ? options.walletLinkAnalytics
       : new WalletLinkAnalytics()
 
+    if (options.chainId) {
+      this._storage.setItem(DEFAULT_CHAIN_ID_KEY, options.chainId.toString())
+    }
+
     const chainId = this.getChainId()
     const chainIdStr = prepend0x(chainId.toString(16))
+
     // indicate that we've connected, for EIP-1193 compliance
     this.emit("connect", { chainIdStr })
 
