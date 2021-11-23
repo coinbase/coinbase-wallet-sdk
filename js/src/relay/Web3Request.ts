@@ -101,10 +101,11 @@ export type ScanQRCodeRequest = BaseWeb3Request<
   }
 >
 
-export type ArbitraryRequest = BaseWeb3Request<
-  Web3Method.arbitrary,
+export type GenericRequest = BaseWeb3Request<
+  Web3Method.generic,
   {
-    data: string
+    action: string
+    data: object
   }
 >
 
@@ -115,6 +116,6 @@ export type Web3Request =
   | SubmitEthereumTransactionRequest
   | EthereumAddressFromSignedMessageRequest
   | ScanQRCodeRequest
-  | ArbitraryRequest
+  | GenericRequest
   | AddEthereumChainRequest
   | SwitchEthereumChainRequest

@@ -9,7 +9,7 @@ export enum Web3Method {
   submitEthereumTransaction = "submitEthereumTransaction",
   ethereumAddressFromSignedMessage = "ethereumAddressFromSignedMessage",
   scanQRCode = "scanQRCode",
-  arbitrary = "arbitrary",
+  generic = "generic",
   childRequestEthereumAccounts = "childRequestEthereumAccounts",
   addEthereumChain = "addEthereumChain",
   switchEthereumChain = "switchEthereumChain"

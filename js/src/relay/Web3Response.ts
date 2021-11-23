@@ -85,7 +85,7 @@ export type EthereumAddressFromSignedMessageResponse = BaseWeb3Response<AddressS
 
 export type ScanQRCodeResponse = BaseWeb3Response<string> // scanned string
 
-export type ArbitraryResponse = BaseWeb3Response<string> // response data
+export type GenericResponse = BaseWeb3Response<object> // response data
 
 export type Web3Response =
   | ErrorResponse
@@ -95,6 +95,6 @@ export type Web3Response =
   | SubmitEthereumTransactionResponse
   | EthereumAddressFromSignedMessageResponse
   | ScanQRCodeResponse
-  | ArbitraryResponse
+  | GenericResponse
   | AddEthereumChainResponse
   | SwitchEthereumChainResponse
