@@ -1,3 +1,5 @@
+import BN from "bn.js"
+
 export enum EthereumChain {
   // mainnets
   ETHEREUM_MAINNET = 1,
@@ -48,7 +50,7 @@ export namespace EthereumChain {
     }
   }
 
-  export function fromChainId(chainId: bigint): EthereumChain | undefined {
+  export function fromChainId(chainId: BN): EthereumChain | undefined {
     switch(Number(chainId)) {
       // mainnets
       case EthereumChain.ETHEREUM_MAINNET.valueOf() : return EthereumChain.ETHEREUM_MAINNET

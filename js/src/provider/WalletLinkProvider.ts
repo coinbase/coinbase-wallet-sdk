@@ -940,8 +940,8 @@ export class WalletLinkProvider
   ): Promise<JSONRPCResponse> {
     const request = (params[0]) as AddEthereumChainParams;
 
-    const chainIdNumber = parseInt(request.chainId, 16);
-    const ethereumChain = EthereumChain.fromChainId(BigInt(chainIdNumber));
+    const chainId = new BN(request.chainId)
+    const ethereumChain = EthereumChain.fromChainId(chainId)
     if (ethereumChain === undefined) {
       return { jsonrpc: '2.0', id: 0, error: { code: 2, message: `chainId ${request.chainId} not supported` } };
     }
@@ -957,8 +957,8 @@ export class WalletLinkProvider
   ): Promise<JSONRPCResponse> {
     const request = (params[0]) as SwitchEthereumChainParams
 
-    const chainIdNumber = parseInt(request.chainId, 16);
-    const ethereumChain = EthereumChain.fromChainId(BigInt(chainIdNumber));
+    const chainId = new BN(request.chainId)
+    const ethereumChain = EthereumChain.fromChainId(chainId)
     if (ethereumChain === undefined) {
       return { jsonrpc: '2.0', id: 0, error: { code: 2, message: `chainId ${request.chainId} not supported` } };
     }
