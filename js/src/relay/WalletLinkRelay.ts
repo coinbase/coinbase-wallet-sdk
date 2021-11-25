@@ -501,6 +501,10 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
     })
   }
 
+  public sendGenericMessage(request: GenericRequest): CancelablePromise<GenericResponse> {
+    return this.sendRequest(request);
+  }
+
   public sendRequest<T extends Web3Request, U extends Web3Response>(
     request: T
   ): CancelablePromise<U> {
