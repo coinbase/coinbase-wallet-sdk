@@ -69,7 +69,6 @@ export abstract class WalletLinkRelayAbstract {
 
   abstract setAppInfo(appName: string, appLogoUrl: string | null): void
   abstract setAccountsCallback(accountsCallback: (accounts: [string]) => void): void
-  abstract setChainIdCallback(chainIdCallback: (chainId: string) => void): void
-  abstract setJsonRpcUrlCallback(jsonRpcUrlCallback: (jsonRpcUrl: string) => void): void
+  abstract setChainCallback(chainIdCallback: (chainId: string, jsonRpcUrl: string) => void): void
   abstract get session(): Session
 }

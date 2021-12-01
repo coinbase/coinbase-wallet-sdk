@@ -156,7 +156,7 @@ export class WalletLinkSdkUI extends WalletLinkUI {
     return false
   }
 
-  setChainIdCallback(_callback: (chainId: string) => void) {
+  setChainCallback(_callback: (chainId: string, jsonRpcUrl: string) => void) {
     // no-op
   }
 }

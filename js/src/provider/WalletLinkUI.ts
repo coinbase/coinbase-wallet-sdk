@@ -110,5 +110,5 @@ export abstract class WalletLinkUI {
    */
   setConnectDisabled(_: boolean) {}
 
-  abstract setChainIdCallback(callback: (chainId: string) => void): void
+  abstract setChainCallback(callback: (chainId: string, jsonRpcUrl: string) => void): void
 }
