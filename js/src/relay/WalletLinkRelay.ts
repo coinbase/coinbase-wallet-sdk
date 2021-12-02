@@ -189,7 +189,10 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
         .pipe(filter(c => c.metadata && c.metadata.ChainId !== undefined && c.metadata.JsonRpcUrl !== undefined))
         .pipe(
           mergeMap(c =>
-            zip([aes256gcm.decrypt(c.metadata.ChainId!, this._session.secret), aes256gcm.decrypt(c.metadata.JsonRpcUrl!, this._session.secret)])
+            zip(
+              aes256gcm.decrypt(c.metadata.ChainId!, this._session.secret),
+              aes256gcm.decrypt(c.metadata.JsonRpcUrl!, this._session.secret)
+            )
           )
         )
         .pipe(distinctUntilChanged())
