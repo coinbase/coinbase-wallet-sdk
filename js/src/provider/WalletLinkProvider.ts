@@ -128,7 +128,7 @@ export class WalletLinkProvider
       if (event.data.data.action === 'defaultChainChanged') {
         const chainId = event.data.data.chainId;
         const jsonRpcUrl = event.data.data.jsonRpcUrl ?? this.jsonRpcUrl;
-        this.updateProviderInfo(jsonRpcUrl, chainId, true)
+        this.updateProviderInfo(jsonRpcUrl, Number(chainId), true)
       }
     })
   }
