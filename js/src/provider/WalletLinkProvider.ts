@@ -2,43 +2,40 @@
 // Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
+import SafeEventEmitter from "@metamask/safe-event-emitter"
 import BN from "bn.js"
+import { ethErrors, serializeError } from "eth-rpc-errors"
 import { WalletLinkAnalytics } from "../connection/WalletLinkAnalytics"
+import { EthereumChain } from '../EthereumChain'
 import { EVENTS, WalletLinkAnalyticsAbstract } from "../init"
+import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
 import { EthereumTransactionParams } from "../relay/EthereumTransactionParams"
+import { Session } from "../relay/Session"
+import { LOCAL_STORAGE_ADDRESSES_KEY, WalletLinkRelayAbstract } from "../relay/WalletLinkRelayAbstract"
+import { WalletLinkRelayEventManager } from "../relay/WalletLinkRelayEventManager"
 import { RequestEthereumAccountsResponse } from "../relay/Web3Response"
 import { AddressString, Callback, IntNumber } from "../types"
 import {
   ensureAddressString,
   ensureBN,
-  ensureBuffer,
-  ensureParsedJSONObject,
-  ensureHexString,
-  ensureIntNumber,
-  ensureRegExpString,
-  prepend0x,
-  hexStringFromIntNumber,
-} from "../util";
+  ensureBuffer, ensureHexString,
+  ensureIntNumber, ensureParsedJSONObject, ensureRegExpString, hexStringFromIntNumber, prepend0x
+} from "../util"
 import eip712 from "../vendor-js/eth-eip712-util"
 import { FilterPolyfill } from "./FilterPolyfill"
 import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from "./JSONRPC"
-import { Web3Provider, RequestArguments } from "./Web3Provider"
-import { ethErrors, serializeError } from "eth-rpc-errors"
-import SafeEventEmitter from "@metamask/safe-event-emitter"
 import {
   SubscriptionManager,
   SubscriptionNotification,
   SubscriptionResult
 } from "./SubscriptionManager"
-import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
-import { WalletLinkRelayEventManager } from "../relay/WalletLinkRelayEventManager"
-import { LOCAL_STORAGE_ADDRESSES_KEY, WalletLinkRelayAbstract } from "../relay/WalletLinkRelayAbstract"
-import { EthereumChain } from '../EthereumChain';
-import { Session } from "../relay/Session"
+import { RequestArguments, Web3Provider } from "./Web3Provider"
 
 const DEFAULT_CHAIN_ID_KEY = "DefaultChainId"
+const DEFAULT_JSON_RPC_URL = "DefaultJsonRpcUrl"
 // Indicates chain has been switched by switchEthereumChain or addEthereumChain request
 const HAS_CHAIN_BEEN_SWITCHED_KEY = "HasChainBeenSwitched"
+const HAS_CHAIN_OVERRIDDEN_FROM_RELAY = "HasChainOverriddenFromRelay"
 
 export interface WalletLinkProviderOptions {
   relayProvider: () => Promise<WalletLinkRelayAbstract>
@@ -65,14 +62,12 @@ export class WalletLinkProvider
   private readonly _relayEventManager: WalletLinkRelayEventManager
   private readonly _walletLinkAnalytics: WalletLinkAnalyticsAbstract
 
-  private _jsonRpcUrl: string
+  private _jsonRpcUrlFromOpts: string
   private readonly _overrideIsMetaMask: boolean
 
   private _addresses: AddressString[] = []
 
   private hasMadeFirstChainChangedEmission = false
-  // true if mobile client has sent message to override jsonRpcUrl+chainId
-  private isChainOverridden = false
 
   constructor(options: Readonly<WalletLinkProviderOptions>) {
     super()
@@ -90,7 +85,7 @@ export class WalletLinkProvider
     this.scanQRCode = this.scanQRCode.bind(this)
     this.arbitraryRequest = this.arbitraryRequest.bind(this)
 
-    this._jsonRpcUrl = options.jsonRpcUrl
+    this._jsonRpcUrlFromOpts = options.jsonRpcUrl
     this._overrideIsMetaMask = options.overrideIsMetaMask
     this._relayProvider = options.relayProvider
     this._storage = options.storage
@@ -126,6 +121,16 @@ export class WalletLinkProvider
     if (this._addresses.length > 0) {
       this.initializeRelay()
     }
+
+    window.addEventListener('message', (event) => {
+      if (event.data.type !== 'walletLinkMessage') return;
+
+      if (event.data.data.action === 'defaultChainChanged') {
+        const chainId = event.data.data.chainId;
+        const jsonRpcUrl = event.data.data.jsonRpcUrl ?? this.jsonRpcUrl;
+        this.updateProviderInfo(jsonRpcUrl, Number(chainId), true)
+      }
+    })
   }
 
   public get selectedAddress(): AddressString | undefined {
@@ -153,7 +158,7 @@ export class WalletLinkProvider
   }
 
   public get host(): string {
-    return this._jsonRpcUrl
+    return this.jsonRpcUrl
   }
 
   public get connected(): boolean {
@@ -162,6 +167,22 @@ export class WalletLinkProvider
 
   public isConnected(): boolean {
     return true
+  }
+
+  private get jsonRpcUrl(): string {
+    return this._storage.getItem(DEFAULT_JSON_RPC_URL) ?? this._jsonRpcUrlFromOpts
+  }
+
+  private set jsonRpcUrl(value: string) {
+    this._storage.setItem(DEFAULT_JSON_RPC_URL, value)
+  }
+
+  private get isChainOverridden(): boolean {
+    return this._storage.getItem(HAS_CHAIN_OVERRIDDEN_FROM_RELAY) === 'true'
+  }
+
+  private set isChainOverridden(value: boolean) {
+    this._storage.setItem(HAS_CHAIN_OVERRIDDEN_FROM_RELAY, value.toString())
   }
 
   // @ts-ignore
@@ -181,7 +202,7 @@ export class WalletLinkProvider
       this.isChainOverridden = true
     }
 
-    this._jsonRpcUrl = jsonRpcUrl
+    this.jsonRpcUrl = jsonRpcUrl
 
     // emit chainChanged event if necessary
     const originalChainId = this.getChainId()
@@ -559,9 +580,9 @@ export class WalletLinkProvider
         return this._wallet_switchEthereumChain(params)
     }
 
-    if (!this._jsonRpcUrl) throw Error("Error: No jsonRpcUrl provided")
+    if (!this.jsonRpcUrl) throw Error("Error: No jsonRpcUrl provided")
     return window
-      .fetch(this._jsonRpcUrl, {
+      .fetch(this.jsonRpcUrl, {
         method: "POST",
         body: JSON.stringify(request),
         mode: "cors",
@@ -1007,11 +1028,8 @@ export class WalletLinkProvider
 
     return this._relayProvider().then(relay => {
       relay.setAccountsCallback((accounts) => this._setAddresses(accounts))
-      relay.setChainIdCallback((chainId) => {
-        this.updateProviderInfo(this._jsonRpcUrl, parseInt(chainId, 10), true)
-      })
-      relay.setJsonRpcUrlCallback((jsonRpcUrl) => {
-        this.updateProviderInfo(jsonRpcUrl, this.getChainId(), true)
+      relay.setChainCallback((chainId, jsonRpcUrl) => {
+        this.updateProviderInfo(jsonRpcUrl, parseInt(chainId, 10), true)
       })
       this._relay = relay
       return relay
