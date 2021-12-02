@@ -109,6 +109,4 @@ export abstract class WalletLinkUI {
    * We want to disable showing the qr code for in-page walletlink if the dapp hasn't provided a json rpc url
    */
   setConnectDisabled(_: boolean) {}
-
-  abstract setChainCallback(callback: (chainId: string, jsonRpcUrl: string) => void): void
 }

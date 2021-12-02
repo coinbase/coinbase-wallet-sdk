@@ -660,7 +660,6 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
 
   public setChainCallback(chainCallback: (chainId: string, jsonRpcUrl: string) => void) {
     this.chainCallback = chainCallback
-    this.ui.setChainCallback(chainCallback)
   }
 
   private publishWeb3RequestEvent(id: string, request: Web3Request): void {
