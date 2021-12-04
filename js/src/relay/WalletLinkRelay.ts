@@ -519,6 +519,7 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
       )
       hideSnackbarItem?.()
     }
+
     const promise = new Promise<U>((resolve, reject) => {
       const isRequestAccounts =
         request.method === Web3Method.requestEthereumAccounts

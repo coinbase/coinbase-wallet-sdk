@@ -33,7 +33,6 @@ import {
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
 import { WalletLinkRelayEventManager } from "../relay/WalletLinkRelayEventManager"
 import { LOCAL_STORAGE_ADDRESSES_KEY, WalletLinkRelayAbstract } from "../relay/WalletLinkRelayAbstract"
-import { EthereumChain } from '../EthereumChain';
 import { Session } from "../relay/Session"
 
 const DEFAULT_CHAIN_ID_KEY = "DefaultChainId"
@@ -229,6 +228,7 @@ export class WalletLinkProvider
     }
     const relay = await this.initializeRelay()
     const res = await relay.switchEthereumChain(chainId.toString(10)).promise
+    // TODO: switchEthereumChain should return rpcUrl to pass to updateProviderInfo
     if (res.result === true) {
       this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
       this.updateProviderInfo(rpcUrl, chainId, false)
@@ -975,26 +975,18 @@ export class WalletLinkProvider
     }
 
     const chainIdNumber = parseInt(request.chainId, 16);
-    const ethereumChain = EthereumChain.fromChainId(BigInt(chainIdNumber));
-    if (ethereumChain === undefined) {
-      const success = await this.addEthereumChain(
-        chainIdNumber,
-        request.rpcUrls ?? [],
-        request.blockExplorerUrls,
-        request.chainName,
-        request.iconUrls,
-        request.nativeCurrency
-      )
-      if (success) {
-        return { jsonrpc: '2.0', id: 0, result: null };
-      } else {
-        return { jsonrpc: '2.0', id: 0, error: { code: 2, message: `unable to add ethereum chain` } };
-      }
+    const success = await this.addEthereumChain(
+      chainIdNumber,
+      request.rpcUrls ?? [],
+      request.blockExplorerUrls,
+      request.chainName,
+      request.iconUrls,
+      request.nativeCurrency
+    )
+    if (success) {
+      return {jsonrpc: '2.0', id: 0, result: null};
     } else {
-      const rpcUrl = EthereumChain.rpcUrl(ethereumChain);
-      // @ts-ignore
-      await this.switchEthereumChain(rpcUrl, parseInt(request.chainId, 16));
-      return { jsonrpc: '2.0', id: 0, result: null };
+      return {jsonrpc: '2.0', id: 0, error: {code: 2, message: `unable to add ethereum chain`}};
     }
   }
 
@@ -1002,16 +994,7 @@ export class WalletLinkProvider
     params: unknown[]
   ): Promise<JSONRPCResponse> {
     const request = (params[0]) as SwitchEthereumChainParams
-
-    const chainIdNumber = parseInt(request.chainId, 16);
-    const ethereumChain = EthereumChain.fromChainId(BigInt(chainIdNumber));
-    if (ethereumChain === undefined) {
-      return { jsonrpc: '2.0', id: 0, error: { code: 2, message: `chainId ${request.chainId} not supported` } };
-    }
-    const rpcUrl = EthereumChain.rpcUrl(ethereumChain);
-    // @ts-ignore
-    await this.switchEthereumChain(rpcUrl, parseInt(request.chainId, 16));
-
+    await this.switchEthereumChain("", parseInt(request.chainId, 16));
     return { jsonrpc: "2.0", id: 0, result: null }
   }
 
