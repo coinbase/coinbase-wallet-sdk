@@ -3,7 +3,7 @@ import { EthereumTransactionParams } from "./EthereumTransactionParams";
 import { Session } from "./Session";
 import { Web3Request } from "./Web3Request";
 import {
-  AddEthereumChainResponse, ArbitraryResponse, EthereumAddressFromSignedMessageResponse, RequestEthereumAccountsResponse, ScanQRCodeResponse, SignEthereumMessageResponse, SignEthereumTransactionResponse,
+  AddEthereumChainResponse, GenericResponse, EthereumAddressFromSignedMessageResponse, RequestEthereumAccountsResponse, ScanQRCodeResponse, SignEthereumMessageResponse, SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse, SwitchEthereumChainResponse, Web3Response
 } from './Web3Response';
 
@@ -62,7 +62,7 @@ export abstract class WalletLinkRelayAbstract {
   ): CancelablePromise<SubmitEthereumTransactionResponse>
 
   abstract scanQRCode(regExp: RegExpString): CancelablePromise<ScanQRCodeResponse>
-  abstract arbitraryRequest(data: string): CancelablePromise<ArbitraryResponse>
+  abstract genericRequest(data: object, action: string): CancelablePromise<GenericResponse>
   abstract sendRequest<T extends Web3Request, U extends Web3Response>(
     request: T
   ): CancelablePromise<U>

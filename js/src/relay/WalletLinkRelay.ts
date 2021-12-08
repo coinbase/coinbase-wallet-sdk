@@ -40,7 +40,7 @@ import { WalletLinkRelayEventManager } from "./WalletLinkRelayEventManager"
 import { Web3Method } from "./Web3Method"
 import {
   AddEthereumChainRequest,
-  ArbitraryRequest,
+  GenericRequest,
   EthereumAddressFromSignedMessageRequest,
   RequestEthereumAccountsRequest,
   ScanQRCodeRequest,
@@ -54,7 +54,7 @@ import { Web3RequestCanceledMessage } from "./Web3RequestCanceledMessage"
 import { Web3RequestMessage } from "./Web3RequestMessage"
 import {
   AddEthereumChainResponse,
-  ArbitraryResponse,
+  GenericResponse,
   ErrorResponse,
   EthereumAddressFromSignedMessageResponse,
   isRequestEthereumAccountsResponse,
@@ -453,10 +453,13 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
     })
   }
 
-  public arbitraryRequest(data: string): CancelablePromise<ArbitraryResponse> {
-    return this.sendRequest<ArbitraryRequest, ArbitraryResponse>({
-      method: Web3Method.arbitrary,
-      params: { data }
+  public genericRequest(data: object, action: string): CancelablePromise<GenericResponse> {
+    return this.sendRequest<GenericRequest, GenericResponse>({
+      method: Web3Method.generic,
+      params: {
+        action,
+        data
+      }
     })
   }
 
@@ -477,6 +480,10 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
         nativeCurrency
       }
     })
+  }
+
+  public sendGenericMessage(request: GenericRequest): CancelablePromise<GenericResponse> {
+    return this.sendRequest(request);
   }
 
   public sendRequest<T extends Web3Request, U extends Web3Response>(

@@ -83,7 +83,7 @@ export class WalletLinkProvider
     this.request = this.request.bind(this)
     this._setAddresses = this._setAddresses.bind(this)
     this.scanQRCode = this.scanQRCode.bind(this)
-    this.arbitraryRequest = this.arbitraryRequest.bind(this)
+    this.genericRequest = this.genericRequest.bind(this)
 
     this._jsonRpcUrlFromOpts = options.jsonRpcUrl
     this._overrideIsMetaMask = options.overrideIsMetaMask
@@ -384,9 +384,9 @@ export class WalletLinkProvider
     return res.result
   }
 
-  public async arbitraryRequest(data: string): Promise<string> {
+  public async genericRequest(data: object, action: string): Promise<string> {
     const relay = await this.initializeRelay()
-    const res = await relay.arbitraryRequest(data).promise
+    const res = await relay.genericRequest(data, action).promise
     if (typeof res.result !== "string") {
       throw new Error("result was not a string")
     }
@@ -947,12 +947,17 @@ export class WalletLinkProvider
   private async _walletlink_arbitrary(
     params: unknown[]
   ): Promise<JSONRPCResponse> {
-    const data = params[0]
+    const action = params[0]
+    const data = params[1]
     if (typeof data !== "string") {
       throw new Error("parameter must be a string")
     }
 
-    const result = await this.arbitraryRequest(data)
+    if (typeof action !== "object" || action === null) {
+      throw new Error("parameter must be an object")
+    }
+
+    const result = await this.genericRequest(action, data)
     return { jsonrpc: "2.0", id: 0, result }
   }
 
