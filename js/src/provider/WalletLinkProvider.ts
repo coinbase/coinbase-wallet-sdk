@@ -214,12 +214,12 @@ export class WalletLinkProvider
       nativeCurrency
     ).promise
 
-    if (res.result === true) {
+    if (res.result?.isApproved === true) {
       this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
       this.updateProviderInfo(rpcUrls[0], chainId, false)
     }
 
-    return res.result === true
+    return res.result?.isApproved === true
   }
 
   private async switchEthereumChain(chainId: number) {
@@ -228,7 +228,6 @@ export class WalletLinkProvider
     }
     const relay = await this.initializeRelay()
     const res = await relay.switchEthereumChain(chainId.toString(10)).promise
-    console.log(`switchEthereumChain res: ${res}`)
     if (res.result?.isApproved === true && res.result?.rpcUrl.length > 0) {
       this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
       this.updateProviderInfo(res.result.rpcUrl, chainId, false)
