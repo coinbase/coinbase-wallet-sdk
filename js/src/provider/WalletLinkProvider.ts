@@ -222,16 +222,16 @@ export class WalletLinkProvider
     return res.result === true
   }
 
-  private async switchEthereumChain(rpcUrl: string, chainId: number) {
+  private async switchEthereumChain(chainId: number) {
     if (ensureIntNumber(chainId) === this.getChainId()) {
       return
     }
     const relay = await this.initializeRelay()
     const res = await relay.switchEthereumChain(chainId.toString(10)).promise
-    // TODO: switchEthereumChain should return rpcUrl to pass to updateProviderInfo
-    if (res.result === true) {
+    console.log(`switchEthereumChain res: ${res}`)
+    if (res.result?.isApproved === true && res.result?.rpcUrl.length > 0) {
       this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
-      this.updateProviderInfo(rpcUrl, chainId, false)
+      this.updateProviderInfo(res.result.rpcUrl, chainId, false)
     }
   }
 
@@ -994,7 +994,7 @@ export class WalletLinkProvider
     params: unknown[]
   ): Promise<JSONRPCResponse> {
     const request = (params[0]) as SwitchEthereumChainParams
-    await this.switchEthereumChain("", parseInt(request.chainId, 16));
+    await this.switchEthereumChain(parseInt(request.chainId, 16));
     return { jsonrpc: "2.0", id: 0, result: null }
   }
 
