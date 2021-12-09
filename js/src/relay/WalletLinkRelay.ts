@@ -3,7 +3,7 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator"
-import { Observable, of, Subscription } from "rxjs"
+import { Observable, of, Subscription, zip } from "rxjs"
 import {
   catchError,
   distinctUntilChanged,
@@ -40,7 +40,7 @@ import { WalletLinkRelayEventManager } from "./WalletLinkRelayEventManager"
 import { Web3Method } from "./Web3Method"
 import {
   AddEthereumChainRequest,
-  ArbitraryRequest,
+  GenericRequest,
   EthereumAddressFromSignedMessageRequest,
   RequestEthereumAccountsRequest,
   ScanQRCodeRequest,
@@ -54,7 +54,7 @@ import { Web3RequestCanceledMessage } from "./Web3RequestCanceledMessage"
 import { Web3RequestMessage } from "./Web3RequestMessage"
 import {
   AddEthereumChainResponse,
-  ArbitraryResponse,
+  GenericResponse,
   ErrorResponse,
   EthereumAddressFromSignedMessageResponse,
   isRequestEthereumAccountsResponse,
@@ -93,8 +93,7 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
   protected readonly walletLinkAnalytics: WalletLinkAnalyticsAbstract | null
   private readonly connection: WalletLinkConnection
   private accountsCallback: ((account: [string]) => void) | null = null
-  private chainIdCallback: ((chainId: string) => void) | null = null
-  private jsonRpcUrlCallback: ((jsonRpcUrl: string) => void) | null = null
+  private chainCallback: ((chainId: string, jsonRpcUrl: string) => void) | null = null
 
   private ui: WalletLinkUI
 
@@ -187,42 +186,24 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
 
     this.subscriptions.add(
       this.connection.sessionConfig$
-        .pipe(filter(c => c.metadata && c.metadata.ChainId !== undefined))
+        .pipe(filter(c => c.metadata && c.metadata.ChainId !== undefined && c.metadata.JsonRpcUrl !== undefined))
         .pipe(
           mergeMap(c =>
-            aes256gcm.decrypt(c.metadata.ChainId!, this._session.secret)
+            zip(
+              aes256gcm.decrypt(c.metadata.ChainId!, this._session.secret),
+              aes256gcm.decrypt(c.metadata.JsonRpcUrl!, this._session.secret)
+            )
           )
         )
         .pipe(distinctUntilChanged())
         .subscribe({
-          next: chainId => {
-            if (this.chainIdCallback) {
-              this.chainIdCallback(chainId!)
+          next: ([chainId, jsonRpcUrl]) => {
+            if (this.chainCallback) {
+              this.chainCallback(chainId!, jsonRpcUrl)
             }
           },
           error: () => {
-            this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {message: 'Had error decrypting', value: 'chainId'})
-          }
-        })
-    )
-
-    this.subscriptions.add(
-      this.connection.sessionConfig$
-        .pipe(filter(c => c.metadata && c.metadata.JsonRpcUrl !== undefined))
-        .pipe(
-          mergeMap(c =>
-            aes256gcm.decrypt(c.metadata.JsonRpcUrl!, this._session.secret)
-          )
-        )
-        .pipe(distinctUntilChanged())
-        .subscribe({
-          next: jsonRpcURl => {
-            if (this.jsonRpcUrlCallback) {
-              this.jsonRpcUrlCallback(jsonRpcURl!)
-            }
-          },
-          error: () => {
-            this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {message: 'Had error decrypting', value: 'jsonRpcUrl'})
+            this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {message: 'Had error decrypting', value: 'chainId|jsonRpcUrl'})
           }
         })
     )
@@ -472,10 +453,13 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
     })
   }
 
-  public arbitraryRequest(data: string): CancelablePromise<ArbitraryResponse> {
-    return this.sendRequest<ArbitraryRequest, ArbitraryResponse>({
-      method: Web3Method.arbitrary,
-      params: { data }
+  public genericRequest(data: object, action: string): CancelablePromise<GenericResponse> {
+    return this.sendRequest<GenericRequest, GenericResponse>({
+      method: Web3Method.generic,
+      params: {
+        action,
+        data
+      }
     })
   }
 
@@ -502,6 +486,10 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
         nativeCurrency
       }
     })
+  }
+
+  public sendGenericMessage(request: GenericRequest): CancelablePromise<GenericResponse> {
+    return this.sendRequest(request);
   }
 
   public sendRequest<T extends Web3Request, U extends Web3Response>(
@@ -687,15 +675,8 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
     this.accountsCallback = accountsCallback
   }
 
-  public setChainIdCallback(chainIdCallback: (chainId: string) => void) {
-    this.chainIdCallback = chainIdCallback
-    this.ui.setChainIdCallback(chainIdCallback)
-  }
-
-  public setJsonRpcUrlCallback(
-    jsonRpcUrlCallback: (jsonRpcUrl: string) => void
-  ) {
-    this.jsonRpcUrlCallback = jsonRpcUrlCallback
+  public setChainCallback(chainCallback: (chainId: string, jsonRpcUrl: string) => void) {
+    this.chainCallback = chainCallback
   }
 
   private publishWeb3RequestEvent(id: string, request: Web3Request): void {

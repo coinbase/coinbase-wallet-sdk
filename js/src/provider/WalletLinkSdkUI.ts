@@ -155,8 +155,4 @@ export class WalletLinkSdkUI extends WalletLinkUI {
   isStandalone(): boolean {
     return false
   }
-
-  setChainIdCallback(_callback: (chainId: string) => void) {
-    // no-op
-  }
 }
