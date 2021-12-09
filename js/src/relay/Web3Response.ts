@@ -26,11 +26,11 @@ export type RequestEthereumAccountsResponse = BaseWeb3Response<
   AddressString[] // an array of ethereum addresses
 >
 
-export type AddEthereumChainResponse = BaseWeb3Response<SwitchResponse> // was request approved
+export type AddEthereumChainResponse = BaseWeb3Response<SwitchResponse | boolean> // was request approved
 
-export type SwitchEthereumChainResponse = BaseWeb3Response<SwitchResponse> // was request approved
+export type SwitchEthereumChainResponse = BaseWeb3Response<SwitchResponse | boolean> // was request approved
 
-type SwitchResponse = {
+export type SwitchResponse = {
   isApproved: boolean;
   rpcUrl: string;
 }

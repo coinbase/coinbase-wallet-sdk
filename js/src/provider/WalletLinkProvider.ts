@@ -6,7 +6,7 @@ import BN from "bn.js"
 import { WalletLinkAnalytics } from "../connection/WalletLinkAnalytics"
 import { EVENTS, WalletLinkAnalyticsAbstract } from "../init"
 import { EthereumTransactionParams } from "../relay/EthereumTransactionParams"
-import { RequestEthereumAccountsResponse } from "../relay/Web3Response"
+import {RequestEthereumAccountsResponse, SwitchResponse} from "../relay/Web3Response"
 import { AddressString, Callback, IntNumber } from "../types"
 import {
   ensureAddressString,
@@ -34,6 +34,7 @@ import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
 import { WalletLinkRelayEventManager } from "../relay/WalletLinkRelayEventManager"
 import { LOCAL_STORAGE_ADDRESSES_KEY, WalletLinkRelayAbstract } from "../relay/WalletLinkRelayAbstract"
 import { Session } from "../relay/Session"
+import {EthereumChain} from "../EthereumChain";
 
 const DEFAULT_CHAIN_ID_KEY = "DefaultChainId"
 // Indicates chain has been switched by switchEthereumChain or addEthereumChain request
@@ -214,12 +215,22 @@ export class WalletLinkProvider
       nativeCurrency
     ).promise
 
-    if (res.result?.isApproved === true) {
-      this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
-      this.updateProviderInfo(rpcUrls[0], chainId, false)
-    }
+    if (typeof res.result === 'boolean') {
+      // legacy handling. to be deprecated in february 2022
+      if (res.result === true) {
+        this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
+        this.updateProviderInfo(rpcUrls[0], chainId, false)
+      }
 
-    return res.result?.isApproved === true
+      return res.result === true
+    } else {
+      if (res.result?.isApproved === true) {
+        this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
+        this.updateProviderInfo(rpcUrls[0], chainId, false)
+      }
+
+      return res.result?.isApproved === true
+    }
   }
 
   private async switchEthereumChain(chainId: number) {
@@ -228,10 +239,24 @@ export class WalletLinkProvider
     }
     const relay = await this.initializeRelay()
     const res = await relay.switchEthereumChain(chainId.toString(10)).promise
-    if (res.result?.isApproved === true && res.result?.rpcUrl.length > 0) {
-      this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
-      this.updateProviderInfo(res.result.rpcUrl, chainId, false)
+
+    if (typeof res.result !== 'boolean') {
+      const switchResponse = res.result as SwitchResponse
+      if (switchResponse.isApproved && switchResponse.rpcUrl.length > 0) {
+        this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
+        this.updateProviderInfo(switchResponse.rpcUrl, chainId, false)
+      }
+    } else {
+      // this is for legac
+      // y clients that return a boolean as result. can deprecate below in February 2022
+      if (res.result) {
+        this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
+        const ethereumChain = EthereumChain.fromChainId(BigInt(chainId))!
+        const rpcUrl = EthereumChain.rpcUrl(ethereumChain) ?? ""
+        this.updateProviderInfo(rpcUrl, chainId, false)
+      }
     }
+
   }
 
   public setAppInfo(appName: string, appLogoUrl: string | null): void {
