@@ -268,8 +268,7 @@ export class WalletLinkProvider
         this.updateProviderInfo(switchResponse.rpcUrl, chainId, false)
       }
     } else {
-      // this is for legac
-      // y clients that return a boolean as result. can deprecate below in February 2022
+      // this is for legacy clients that return a boolean as result. can deprecate below in February 2022
       if (res.result) {
         this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
         const ethereumChain = EthereumChain.fromChainId(BigInt(chainId))!
