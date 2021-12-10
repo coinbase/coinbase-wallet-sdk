@@ -31,6 +31,7 @@ import { EthereumTransactionParams } from "./EthereumTransactionParams"
 import { RelayMessage } from "./RelayMessage"
 import { Session } from "./Session"
 import {
+  APP_VERSION_KEY,
   CancelablePromise,
   LOCAL_STORAGE_ADDRESSES_KEY,
   WalletLinkRelayAbstract,
@@ -184,6 +185,27 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
             this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {
               message: "Had error decrypting",
               value: "username"
+            })
+          }
+        })
+    )
+
+    this.subscriptions.add(
+      this.connection.sessionConfig$
+        .pipe(filter(c => c.metadata && c.metadata.AppVersion !== undefined))
+        .pipe(
+          mergeMap(c =>
+            aes256gcm.decrypt(c.metadata.AppVersion!, this._session.secret)
+          )
+        )
+        .subscribe({
+          next: appVersion => {
+            this.storage.setItem(APP_VERSION_KEY, appVersion)
+          },
+          error: () => {
+            this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {
+              message: "Had error decrypting",
+              value: "appversion"
             })
           }
         })
