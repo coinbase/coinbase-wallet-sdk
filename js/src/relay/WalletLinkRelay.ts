@@ -40,8 +40,8 @@ import { WalletLinkRelayEventManager } from "./WalletLinkRelayEventManager"
 import { Web3Method } from "./Web3Method"
 import {
   AddEthereumChainRequest,
-  GenericRequest,
   EthereumAddressFromSignedMessageRequest,
+  GenericRequest,
   RequestEthereumAccountsRequest,
   ScanQRCodeRequest,
   SignEthereumMessageRequest,
@@ -54,9 +54,9 @@ import { Web3RequestCanceledMessage } from "./Web3RequestCanceledMessage"
 import { Web3RequestMessage } from "./Web3RequestMessage"
 import {
   AddEthereumChainResponse,
-  GenericResponse,
   ErrorResponse,
   EthereumAddressFromSignedMessageResponse,
+  GenericResponse,
   isRequestEthereumAccountsResponse,
   RequestEthereumAccountsResponse,
   ScanQRCodeResponse,
@@ -93,7 +93,9 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
   protected readonly walletLinkAnalytics: WalletLinkAnalyticsAbstract | null
   private readonly connection: WalletLinkConnection
   private accountsCallback: ((account: [string]) => void) | null = null
-  private chainCallback: ((chainId: string, jsonRpcUrl: string) => void) | null = null
+  private chainCallback:
+    | ((chainId: string, jsonRpcUrl: string) => void)
+    | null = null
 
   private ui: WalletLinkUI
 
@@ -179,14 +181,24 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
             this.storage.setItem(WALLET_USER_NAME_KEY, walletUsername)
           },
           error: () => {
-            this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {message: 'Had error decrypting', value: 'username'})
+            this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {
+              message: "Had error decrypting",
+              value: "username"
+            })
           }
         })
     )
 
     this.subscriptions.add(
       this.connection.sessionConfig$
-        .pipe(filter(c => c.metadata && c.metadata.ChainId !== undefined && c.metadata.JsonRpcUrl !== undefined))
+        .pipe(
+          filter(
+            c =>
+              c.metadata &&
+              c.metadata.ChainId !== undefined &&
+              c.metadata.JsonRpcUrl !== undefined
+          )
+        )
         .pipe(
           mergeMap(c =>
             zip(
@@ -203,7 +215,10 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
             }
           },
           error: () => {
-            this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {message: 'Had error decrypting', value: 'chainId|jsonRpcUrl'})
+            this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {
+              message: "Had error decrypting",
+              value: "chainId|jsonRpcUrl"
+            })
           }
         })
     )
@@ -243,7 +258,10 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
             }
           },
           error: () => {
-            this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {message: 'Had error decrypting', value: 'selectedAddress'})
+            this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {
+              message: "Had error decrypting",
+              value: "selectedAddress"
+            })
           }
         })
     )
@@ -453,7 +471,10 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
     })
   }
 
-  public genericRequest(data: object, action: string): CancelablePromise<GenericResponse> {
+  public genericRequest(
+    data: object,
+    action: string
+  ): CancelablePromise<GenericResponse> {
     return this.sendRequest<GenericRequest, GenericResponse>({
       method: Web3Method.generic,
       params: {
@@ -482,8 +503,10 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
     })
   }
 
-  public sendGenericMessage(request: GenericRequest): CancelablePromise<GenericResponse> {
-    return this.sendRequest(request);
+  public sendGenericMessage(
+    request: GenericRequest
+  ): CancelablePromise<GenericResponse> {
+    return this.sendRequest(request)
   }
 
   public sendRequest<T extends Web3Request, U extends Web3Response>(
@@ -668,7 +691,9 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
     this.accountsCallback = accountsCallback
   }
 
-  public setChainCallback(chainCallback: (chainId: string, jsonRpcUrl: string) => void) {
+  public setChainCallback(
+    chainCallback: (chainId: string, jsonRpcUrl: string) => void
+  ) {
     this.chainCallback = chainCallback
   }
 
@@ -738,7 +763,10 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
               this.handleWeb3ResponseMessage(message)
             },
             error: () => {
-              this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {message: 'Had error decrypting', value: 'incomingEvent'})
+              this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {
+                message: "Had error decrypting",
+                value: "incomingEvent"
+              })
             }
           })
       )
