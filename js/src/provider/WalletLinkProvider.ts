@@ -10,10 +10,10 @@ import { EthereumChain } from '../EthereumChain'
 import { EVENTS, WalletLinkAnalyticsAbstract } from "../init"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
 import { EthereumTransactionParams } from "../relay/EthereumTransactionParams"
+import {RequestEthereumAccountsResponse, SwitchResponse} from "../relay/Web3Response"
 import { Session } from "../relay/Session"
 import { LOCAL_STORAGE_ADDRESSES_KEY, WalletLinkRelayAbstract } from "../relay/WalletLinkRelayAbstract"
 import { WalletLinkRelayEventManager } from "../relay/WalletLinkRelayEventManager"
-import { RequestEthereumAccountsResponse } from "../relay/Web3Response"
 import { AddressString, Callback, IntNumber } from "../types"
 import {
   ensureAddressString,
@@ -214,16 +214,69 @@ export class WalletLinkProvider
     }
   }
 
-  private async switchEthereumChain(rpcUrl: string, chainId: number) {
+  private async addEthereumChain(
+    chainId: number,
+    rpcUrls: string[],
+    blockExplorerUrls?: string[],
+    chainName?: string,
+    iconUrls?: string[],
+    nativeCurrency?: {
+      name: string;
+      symbol: string;
+      decimals: number;
+    }
+  ): Promise<boolean> {
+    const relay = await this.initializeRelay()
+    const res = await relay.addEthereumChain(
+      chainId.toString(),
+      rpcUrls,
+      blockExplorerUrls,
+      chainName,
+      iconUrls,
+      nativeCurrency
+    ).promise
+
+    if (typeof res.result === 'boolean') {
+      // legacy handling. to be deprecated in february 2022
+      if (res.result === true) {
+        this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
+        this.updateProviderInfo(rpcUrls[0], chainId, false)
+      }
+
+      return res.result === true
+    }
+
+    if (res.result?.isApproved === true) {
+      this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
+      this.updateProviderInfo(rpcUrls[0], chainId, false)
+    }
+
+    return res.result?.isApproved === true
+  }
+
+  private async switchEthereumChain(chainId: number) {
     if (ensureIntNumber(chainId) === this.getChainId()) {
       return
     }
     const relay = await this.initializeRelay()
     const res = await relay.switchEthereumChain(chainId.toString(10)).promise
-    if (res.result === true) {
-      this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
-      this.updateProviderInfo(rpcUrl, chainId, false)
+
+    if (typeof res.result !== 'boolean') {
+      const switchResponse = res.result as SwitchResponse
+      if (switchResponse.isApproved && switchResponse.rpcUrl.length > 0) {
+        this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
+        this.updateProviderInfo(switchResponse.rpcUrl, chainId, false)
+      }
+    } else {
+      // this is for legacy clients that return a boolean as result. can deprecate below in February 2022
+      if (res.result) {
+        this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
+        const ethereumChain = EthereumChain.fromChainId(BigInt(chainId))!
+        const rpcUrl = EthereumChain.rpcUrl(ethereumChain) ?? ""
+        this.updateProviderInfo(rpcUrl, chainId, false)
+      }
     }
+
   }
 
   public setAppInfo(appName: string, appLogoUrl: string | null): void {
@@ -966,32 +1019,31 @@ export class WalletLinkProvider
   ): Promise<JSONRPCResponse> {
     const request = (params[0]) as AddEthereumChainParams;
 
-    const chainIdNumber = parseInt(request.chainId, 16);
-    const ethereumChain = EthereumChain.fromChainId(BigInt(chainIdNumber));
-    if (ethereumChain === undefined) {
-      return { jsonrpc: '2.0', id: 0, error: { code: 2, message: `chainId ${request.chainId} not supported` } };
+    if (request.rpcUrls?.length === 0) {
+      return { jsonrpc: '2.0', id: 0, error: { code: 2, message: `please pass in at least 1 rpcUrl` } };
     }
-    const rpcUrl = EthereumChain.rpcUrl(ethereumChain);
-    // @ts-ignore
-    await this.switchEthereumChain(rpcUrl, parseInt(request.chainId, 16));
 
-    return { jsonrpc: '2.0', id: 0, result: null };
+    const chainIdNumber = parseInt(request.chainId, 16);
+    const success = await this.addEthereumChain(
+      chainIdNumber,
+      request.rpcUrls ?? [],
+      request.blockExplorerUrls,
+      request.chainName,
+      request.iconUrls,
+      request.nativeCurrency
+    )
+    if (success) {
+      return {jsonrpc: '2.0', id: 0, result: null};
+    } else {
+      return {jsonrpc: '2.0', id: 0, error: {code: 2, message: `unable to add ethereum chain`}};
+    }
   }
 
   private async _wallet_switchEthereumChain(
     params: unknown[]
   ): Promise<JSONRPCResponse> {
     const request = (params[0]) as SwitchEthereumChainParams
-
-    const chainIdNumber = parseInt(request.chainId, 16);
-    const ethereumChain = EthereumChain.fromChainId(BigInt(chainIdNumber));
-    if (ethereumChain === undefined) {
-      return { jsonrpc: '2.0', id: 0, error: { code: 2, message: `chainId ${request.chainId} not supported` } };
-    }
-    const rpcUrl = EthereumChain.rpcUrl(ethereumChain);
-    // @ts-ignore
-    await this.switchEthereumChain(rpcUrl, parseInt(request.chainId, 16));
-
+    await this.switchEthereumChain(parseInt(request.chainId, 16));
     return { jsonrpc: "2.0", id: 0, result: null }
   }
 

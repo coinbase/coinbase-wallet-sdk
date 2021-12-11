@@ -26,14 +26,22 @@ export type RequestEthereumAccountsResponse = BaseWeb3Response<
   AddressString[] // an array of ethereum addresses
 >
 
-export type AddEthereumChainResponse = BaseWeb3Response<null>
+export type AddEthereumChainResponse = BaseWeb3Response<SwitchResponse | boolean> // was request approved
 
-export type SwitchEthereumChainResponse = BaseWeb3Response<boolean> // was request approved
+export type SwitchEthereumChainResponse = BaseWeb3Response<SwitchResponse | boolean> // was request approved
+
+export type SwitchResponse = {
+  isApproved: boolean;
+  rpcUrl: string;
+}
 
 export function SwitchEthereumChainResponse(
-  isApproved: boolean
+  switchResponse: SwitchResponse
 ): SwitchEthereumChainResponse {
-  return { method: Web3Method.switchEthereumChain, result: isApproved }
+  return {
+    method: Web3Method.switchEthereumChain,
+    result: switchResponse
+  }
 }
 
 export function RequestEthereumAccountsResponse(

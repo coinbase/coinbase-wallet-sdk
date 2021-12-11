@@ -1,3 +1,4 @@
+// TODO: deprecate this class in February 2022
 export enum EthereumChain {
   // mainnets
   ETHEREUM_MAINNET = 1,

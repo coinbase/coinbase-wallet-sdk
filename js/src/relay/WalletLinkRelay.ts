@@ -508,15 +508,21 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
 
   public addEthereumChain(
     chainId: string,
+    rpcUrls: string[],
     blockExplorerUrls?: string[],
     chainName?: string,
     iconUrls?: string[],
-    nativeCurrency?: { name: string; symbol: string; decimals: number }
+    nativeCurrency?: {
+      name: string;
+      symbol: string;
+      decimals: number;
+    }
   ): CancelablePromise<AddEthereumChainResponse> {
     return this.sendRequest<AddEthereumChainRequest, AddEthereumChainResponse>({
       method: Web3Method.addEthereumChain,
       params: {
         chainId,
+        rpcUrls,
         blockExplorerUrls,
         chainName,
         iconUrls,
@@ -546,6 +552,7 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
       )
       hideSnackbarItem?.()
     }
+
     const promise = new Promise<U>((resolve, reject) => {
       const isRequestAccounts =
         request.method === Web3Method.requestEthereumAccounts
@@ -592,15 +599,15 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
           this.handleWeb3ResponseMessage(
             Web3ResponseMessage({
               id,
-              response: SwitchEthereumChainResponse(false)
+              response: SwitchEthereumChainResponse({ isApproved: false, rpcUrl: ""})
             })
           )
         }
-        const approve = () => {
+        const approve = (rpcUrl: string) => {
           this.handleWeb3ResponseMessage(
             Web3ResponseMessage({
               id,
-              response: SwitchEthereumChainResponse(true)
+              response: SwitchEthereumChainResponse({ isApproved: false, rpcUrl})
             })
           )
         }
