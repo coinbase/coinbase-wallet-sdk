@@ -244,14 +244,14 @@ export class WalletLinkProvider
       }
 
       return res.result === true
-    } else {
-      if (res.result?.isApproved === true) {
-        this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
-        this.updateProviderInfo(rpcUrls[0], chainId, false)
-      }
-
-      return res.result?.isApproved === true
     }
+
+    if (res.result?.isApproved === true) {
+      this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
+      this.updateProviderInfo(rpcUrls[0], chainId, false)
+    }
+
+    return res.result?.isApproved === true
   }
 
   private async switchEthereumChain(chainId: number) {
