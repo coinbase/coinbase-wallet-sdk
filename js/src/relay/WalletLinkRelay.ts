@@ -607,7 +607,7 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
           this.handleWeb3ResponseMessage(
             Web3ResponseMessage({
               id,
-              response: SwitchEthereumChainResponse({ isApproved: false, rpcUrl})
+              response: SwitchEthereumChainResponse({ isApproved: true, rpcUrl})
             })
           )
         }
