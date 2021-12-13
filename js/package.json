@@ -1,6 +1,6 @@
 {
   "name": "walletlink",
-  "version": "2.2.11",
+  "version": "2.3.0",
   "description": "WalletLink JavaScript SDK",
   "keywords": [
     "cipher",
