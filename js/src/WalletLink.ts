@@ -37,6 +37,8 @@ export interface WalletLinkOptions {
   walletLinkAnalytics?: WalletLinkAnalyticsAbstract
   /** @optional whether wallet link provider should override the isMetaMask property. */
   overrideIsMetaMask?: boolean
+  /** @optional whether wallet link provider should override the isCoinbaseWallet property. */
+  overrideIsCoinbaseWallet?: boolean
 }
 
 export class WalletLink {
@@ -51,6 +53,7 @@ export class WalletLink {
   private _relayEventManager: WalletLinkRelayEventManager | null = null
   private _storage: ScopedLocalStorage
   private _overrideIsMetaMask: boolean
+  private _overrideIsCoinbaseWallet: boolean
   private _walletLinkAnalytics: WalletLinkAnalyticsAbstract
 
   /**
@@ -73,6 +76,8 @@ export class WalletLink {
     } else {
       this._overrideIsMetaMask = options.overrideIsMetaMask
     }
+
+    this._overrideIsCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true
 
     this._walletLinkAnalytics = options.walletLinkAnalytics
       ? options.walletLinkAnalytics
@@ -142,7 +147,8 @@ export class WalletLink {
       jsonRpcUrl,
       chainId,
       walletLinkAnalytics: this._walletLinkAnalytics,
-      overrideIsMetaMask: this._overrideIsMetaMask
+      overrideIsMetaMask: this._overrideIsMetaMask,
+      overrideIsCoinbaseWallet: this._overrideIsCoinbaseWallet
     })
   }
 
