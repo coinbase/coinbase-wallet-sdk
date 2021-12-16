@@ -53,7 +53,7 @@ export class WalletLinkProvider
   extends SafeEventEmitter
   implements Web3Provider {
   // So dapps can easily identify Coinbase Wallet for enabling features like 3085 network switcher menus
-  public readonly isCoinbaseWallet: boolean = true
+  public readonly isCoinbaseWallet: boolean
 
   private readonly _filterPolyfill = new FilterPolyfill(this)
   private readonly _subscriptionManager = new SubscriptionManager(this)
@@ -96,9 +96,7 @@ export class WalletLinkProvider
       ? options.walletLinkAnalytics
       : new WalletLinkAnalytics()
 
-    if (options.overrideIsCoinbaseWallet) {
-      this.isCoinbaseWallet = options.overrideIsCoinbaseWallet
-    }
+    this.isCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true
 
     const chainId = this.getChainId()
     const chainIdStr = prepend0x(chainId.toString(16))
