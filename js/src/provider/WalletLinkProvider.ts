@@ -39,11 +39,12 @@ const HAS_CHAIN_BEEN_SWITCHED_KEY = "HasChainBeenSwitched"
 const HAS_CHAIN_OVERRIDDEN_FROM_RELAY = "HasChainOverriddenFromRelay"
 
 export interface WalletLinkProviderOptions {
-  relayProvider: () => Promise<WalletLinkRelayAbstract>
-  relayEventManager: WalletLinkRelayEventManager
-  jsonRpcUrl: string
   chainId?: number
+  jsonRpcUrl: string
+  overrideIsCoinbaseWallet?: boolean
   overrideIsMetaMask: boolean
+  relayEventManager: WalletLinkRelayEventManager
+  relayProvider: () => Promise<WalletLinkRelayAbstract>
   storage: ScopedLocalStorage
   walletLinkAnalytics?: WalletLinkAnalyticsAbstract
 }
@@ -52,7 +53,7 @@ export class WalletLinkProvider
   extends SafeEventEmitter
   implements Web3Provider {
   // So dapps can easily identify Coinbase Wallet for enabling features like 3085 network switcher menus
-  public readonly isCoinbaseWallet = true
+  public readonly isCoinbaseWallet: boolean
 
   private readonly _filterPolyfill = new FilterPolyfill(this)
   private readonly _subscriptionManager = new SubscriptionManager(this)
@@ -94,6 +95,8 @@ export class WalletLinkProvider
     this._walletLinkAnalytics = options.walletLinkAnalytics
       ? options.walletLinkAnalytics
       : new WalletLinkAnalytics()
+
+    this.isCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true
 
     const chainId = this.getChainId()
     const chainIdStr = prepend0x(chainId.toString(16))
