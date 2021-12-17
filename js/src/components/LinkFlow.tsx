@@ -4,8 +4,9 @@
 
 import { h, render } from "preact"
 import { BehaviorSubject, Observable, Subscription } from "rxjs"
-import { LinkDialog } from "./LinkDialog"
 import { first } from "rxjs/operators"
+
+import { LinkDialog } from "./LinkDialog"
 import { TryExtensionLinkDialog } from "./TryExtensionLinkDialog"
 
 export interface LinkFlowOptions {
@@ -66,7 +67,7 @@ export class LinkFlow {
         }
       })
       .catch(err => {
-        console.error(`Couldn't fetch feature flags - ${err}`)
+        console.error('Couldn\'t fetch feature flags - ', err)
         this.extensionUI$.next({ value: false })
       })
   }
