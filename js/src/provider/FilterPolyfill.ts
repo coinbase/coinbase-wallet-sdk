@@ -220,12 +220,14 @@ export class FilterPolyfill {
     )
     const blocks = (
       await Promise.all(
+        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
         range(cursorPosition, currentBlockHeight + 1).map(i =>
           this.getBlockHashByNumber(IntNumber(i))
         )
       )
     ).filter(hash => !!hash)
 
+    // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
     const newCursorPosition = IntNumber(cursorPosition + blocks.length)
     console.log(
       `Moving cursor position for filter (${id}) from ${cursorPosition} to ${newCursorPosition}`
@@ -326,7 +328,7 @@ function intBlockHeightFromHexBlockHeight(
   } else if (isHexString(value)) {
     return intNumberFromHexString(value)
   }
-  throw new Error(`Invalid block option: ${value}`)
+  throw new Error(`Invalid block option: ${String(value)}`)
 }
 
 function hexBlockHeightFromIntBlockHeight(

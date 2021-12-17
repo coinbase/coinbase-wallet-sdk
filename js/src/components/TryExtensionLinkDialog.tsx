@@ -1,6 +1,7 @@
 import clsx from "clsx"
 import { FunctionComponent, h } from "preact"
 import { useEffect, useState } from "preact/hooks"
+
 import globeIcon from "./icons/globe-icon-svg"
 import linkIcon from "./icons/link-icon-svg"
 import lockIcon from "./icons/lock-icon-svg"

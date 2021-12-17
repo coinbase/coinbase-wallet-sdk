@@ -19,7 +19,7 @@ declare class QRCode {
    *   options object will be inferred as the defaults.
    * @param options The options with which to create the QRCode.
    */
-  // tslint:disable-next-line:unified-signatures
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
   constructor(options: QRCode.Options)
 
   /** The raw model of this QRCode. */
@@ -73,7 +73,7 @@ declare namespace QRCode {
      * `none`: No wrapper.
      */
     container?: "svg" | "svg-viewbox" | "g" | "none"
-    /**image option for logo in the center of the QR code */
+    /** image option for logo in the center of the QR code */
     image?: SvgLogo
   }
 

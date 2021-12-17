@@ -2,11 +2,12 @@
 // Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
+import { sha256 } from 'js-sha256';
 import { fromEvent, Observable } from "rxjs"
 import { filter, map } from "rxjs/operators"
+
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
 import { randomBytesHex } from '../util';
-import { sha256 } from 'js-sha256';
 
 const STORAGE_KEY_SESSION_ID = "session:id"
 const STORAGE_KEY_SESSION_SECRET = "session:secret"

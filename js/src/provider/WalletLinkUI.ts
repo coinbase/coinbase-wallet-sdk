@@ -1,4 +1,5 @@
 import { Observable } from "rxjs"
+
 import { Session } from "../relay/Session"
 import {
   EthereumAddressFromSignedMessageRequest,

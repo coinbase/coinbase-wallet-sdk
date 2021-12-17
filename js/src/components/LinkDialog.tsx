@@ -5,6 +5,7 @@
 import clsx from "clsx"
 import { FunctionComponent, h } from "preact"
 import { useEffect, useState } from "preact/hooks"
+
 import css from "./LinkDialog-css"
 import { QRCode } from "./QRCode"
 import { Spinner } from "./Spinner"

@@ -3,6 +3,7 @@
 // Licensed under the Apache License, version 2.0
 
 import BN from "bn.js"
+
 import {
   AddressString,
   BigIntString,
@@ -25,13 +26,13 @@ export function uint8ArrayToHex(value: Uint8Array) {
   return [...value].map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
-export function hexStringToUint8Array(hexString: String): Uint8Array {
+export function hexStringToUint8Array(hexString: string): Uint8Array {
   return new Uint8Array(hexString.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
 }
 
 export function hexStringFromBuffer(
   buf: Buffer,
-  includePrefix: boolean = false
+  includePrefix = false
 ): HexString {
   const hex = buf.toString("hex")
   return HexString(includePrefix ? "0x" + hex : hex)
@@ -77,7 +78,7 @@ export function isHexString(hex: unknown): hex is HexString {
 
 export function ensureHexString(
   hex: unknown,
-  includePrefix: boolean = false
+  includePrefix = false
 ): HexString {
   if (typeof hex === "string") {
     const s = strip0x(hex).toLowerCase()
@@ -85,12 +86,12 @@ export function ensureHexString(
       return HexString(includePrefix ? "0x" + s : s)
     }
   }
-  throw new Error(`"${hex}" is not a hexadecimal string`)
+  throw new Error(`"${String(hex)}" is not a hexadecimal string`)
 }
 
 export function ensureEvenLengthHexString(
   hex: unknown,
-  includePrefix: boolean = false
+  includePrefix = false
 ): HexString {
   let h = ensureHexString(hex, false)
   if (h.length % 2 === 1) {
@@ -106,7 +107,7 @@ export function ensureAddressString(str: unknown): AddressString {
       return AddressString(prepend0x(s))
     }
   }
-  throw new Error(`Invalid Ethereum address: ${str}`)
+  throw new Error(`Invalid Ethereum address: ${String(str)}`)
 }
 
 export function ensureBuffer(str: unknown): Buffer {
@@ -121,7 +122,7 @@ export function ensureBuffer(str: unknown): Buffer {
       return Buffer.from(str, "utf8")
     }
   }
-  throw new Error(`Not binary data: ${str}`)
+  throw new Error(`Not binary data: ${String(str)}`)
 }
 
 export function ensureIntNumber(num: unknown): IntNumber {
@@ -138,18 +139,18 @@ export function ensureIntNumber(num: unknown): IntNumber {
       )
     }
   }
-  throw new Error(`Not an integer: ${num}`)
+  throw new Error(`Not an integer: ${String(num)}`)
 }
 
 export function ensureRegExpString(regExp: unknown): RegExpString {
   if (regExp instanceof RegExp) {
     return RegExpString(regExp.toString())
   }
-  throw new Error(`Not a RegExp: ${regExp}`)
+  throw new Error(`Not a RegExp: ${String(regExp)}`)
 }
 
 export function ensureBN(val: unknown): BN {
-  if (val != null && (BN.isBN(val) || isBigNumber(val))) {
+  if (val !== null && (BN.isBN(val) || isBigNumber(val))) {
     return new BN((val as any).toString(10), 10)
   }
   if (typeof val === "number") {
@@ -163,21 +164,21 @@ export function ensureBN(val: unknown): BN {
       return new BN(ensureEvenLengthHexString(val, false), 16)
     }
   }
-  throw new Error(`Not an integer: ${val}`)
+  throw new Error(`Not an integer: ${String(val)}`)
 }
 
-export function ensureParsedJSONObject<T extends object = any>(
+export function ensureParsedJSONObject<T extends object>(
   val: unknown
 ): T {
   if (typeof val === "string") {
-    return JSON.parse(val)
+    return JSON.parse(val) as T
   }
 
   if (typeof val === "object") {
     return val as T
   }
 
-  throw new Error(`Not a JSON string or an object: ${val}`)
+  throw new Error(`Not a JSON string or an object: ${String(val)}`)
 }
 
 export function isBigNumber(val: unknown): boolean {

@@ -26,6 +26,7 @@ import {
   tap,
   timeoutWith
 } from "rxjs/operators"
+
 import { EVENTS, WalletLinkAnalyticsAbstract } from "../init"
 import { Session } from "../relay/Session"
 import { IntNumber } from "../types"
@@ -348,7 +349,7 @@ export class WalletLinkConnection {
   public publishEvent(
     event: string,
     data: string,
-    callWebhook: boolean = false
+    callWebhook = false
   ): Observable<string> {
     const message = ClientMessagePublishEvent({
       id: IntNumber(this.nextReqId++),

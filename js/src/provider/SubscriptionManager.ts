@@ -1,9 +1,11 @@
 import SafeEventEmitter from "@metamask/safe-event-emitter"
-import { RequestArguments, Web3Provider } from "./Web3Provider"
 import {
-  JsonRpcEngineNextCallback,
-  JsonRpcEngineEndCallback
+  JsonRpcEngineEndCallback,
+  JsonRpcEngineNextCallback
 } from "json-rpc-engine"
+
+import { RequestArguments, Web3Provider } from "./Web3Provider"
+
 const PollingBlockTracker = require("eth-block-tracker")
 const createSubscriptionManager = require("eth-json-rpc-filters/subscriptionManager")
 const noop = () => {}
