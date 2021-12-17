@@ -3,6 +3,7 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator"
+import { ethErrors, serializeError } from "eth-rpc-errors"
 import { Observable, of, Subscription, zip } from "rxjs"
 import {
   catchError,
@@ -20,6 +21,7 @@ import { WalletLinkAnalytics } from "../connection/WalletLinkAnalytics"
 import { WalletLinkConnection } from "../connection/WalletLinkConnection"
 import { EVENTS, WalletLinkAnalyticsAbstract } from "../init"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
+import { JSONRPCRequest, JSONRPCResponse } from "../provider/JSONRPC"
 import { WalletLinkUI, WalletLinkUIOptions } from "../provider/WalletLinkUI"
 import { AddressString, IntNumber, RegExpString } from "../types"
 import {
@@ -514,9 +516,9 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
     chainName?: string,
     iconUrls?: string[],
     nativeCurrency?: {
-      name: string;
-      symbol: string;
-      decimals: number;
+      name: string
+      symbol: string
+      decimals: number
     }
   ): CancelablePromise<AddEthereumChainResponse> {
     return this.sendRequest<AddEthereumChainRequest, AddEthereumChainResponse>({
@@ -600,7 +602,10 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
           this.handleWeb3ResponseMessage(
             Web3ResponseMessage({
               id,
-              response: SwitchEthereumChainResponse({ isApproved: false, rpcUrl: "" })
+              response: SwitchEthereumChainResponse({
+                isApproved: false,
+                rpcUrl: ""
+              })
             })
           )
         }
@@ -608,7 +613,10 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
           this.handleWeb3ResponseMessage(
             Web3ResponseMessage({
               id,
-              response: SwitchEthereumChainResponse({ isApproved: true, rpcUrl })
+              response: SwitchEthereumChainResponse({
+                isApproved: true,
+                rpcUrl
+              })
             })
           )
         }
@@ -653,28 +661,28 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
         switch (request.method) {
           case Web3Method.signEthereumMessage:
             this.ui.signEthereumMessage({
-              request ,
+              request,
               onSuccess,
               onCancel: _cancel
             })
             break
           case Web3Method.signEthereumTransaction:
             this.ui.signEthereumTransaction({
-              request ,
+              request,
               onSuccess,
               onCancel: _cancel
             })
             break
           case Web3Method.submitEthereumTransaction:
             this.ui.submitEthereumTransaction({
-              request ,
+              request,
               onSuccess,
               onCancel: _cancel
             })
             break
           case Web3Method.ethereumAddressFromSignedMessage:
             this.ui.ethereumAddressFromSignedMessage({
-              request ,
+              request,
               onSuccess
             })
             break
@@ -685,7 +693,7 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
       } else {
         hideSnackbarItem = this.ui.showConnecting({
           onCancel: cancel,
-          onResetConnection: this.resetAndReload  // eslint-disable-line @typescript-eslint/unbound-method
+          onResetConnection: this.resetAndReload // eslint-disable-line @typescript-eslint/unbound-method
         })
       }
 
@@ -809,9 +817,9 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
     const { response } = message
 
     if (isRequestEthereumAccountsResponse(response)) {
-      Array.from(
-        WalletLinkRelay.accountRequestCallbackIds.values()
-      ).forEach(id => this.invokeCallback({ ...message, id }))
+      Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach(
+        id => this.invokeCallback({ ...message, id })
+      )
       WalletLinkRelay.accountRequestCallbackIds.clear()
       return
     }
@@ -839,5 +847,30 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
         chainId
       }
     })
+  }
+
+  public async makeEthereumJSONRPCRequest(
+    request: JSONRPCRequest,
+    jsonRpcUrl: string
+  ) {
+    return window
+      .fetch(jsonRpcUrl, {
+        method: "POST",
+        body: JSON.stringify(request),
+        mode: "cors",
+        headers: { "Content-Type": "application/json" }
+      })
+      .then(res => res.json())
+      .then(json => {
+        if (!json) {
+          throw ethErrors.rpc.parse({})
+        }
+        const response = json as JSONRPCResponse
+        const { error } = response
+        if (error) {
+          throw serializeError(error)
+        }
+        return response
+      })
   }
 }

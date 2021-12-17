@@ -1,3 +1,4 @@
+import { JSONRPCRequest, JSONRPCResponse } from "../provider/JSONRPC"
 import { AddressString, IntNumber, RegExpString } from "../types"
 import { EthereumTransactionParams } from "./EthereumTransactionParams"
 import { Session } from "./Session"
@@ -26,6 +27,7 @@ export type CancelablePromise<T> = {
 
 export abstract class WalletLinkRelayAbstract {
   abstract resetAndReload(): void
+
   abstract requestEthereumAccounts(): CancelablePromise<RequestEthereumAccountsResponse>
 
   abstract addEthereumChain(
@@ -74,20 +76,27 @@ export abstract class WalletLinkRelayAbstract {
   abstract scanQRCode(
     regExp: RegExpString
   ): CancelablePromise<ScanQRCodeResponse>
+
   abstract genericRequest(
     data: object,
     action: string
   ): CancelablePromise<GenericResponse>
+
   abstract sendRequest<T extends Web3Request, U extends Web3Response>(
     request: T
   ): CancelablePromise<U>
 
   abstract setAppInfo(appName: string, appLogoUrl: string | null): void
+
   abstract setAccountsCallback(
-    accountsCallback: (accounts: [string]) => void
+    accountsCallback: (accounts: string[]) => void
   ): void
+
   abstract setChainCallback(
     chainIdCallback: (chainId: string, jsonRpcUrl: string) => void
   ): void
+  
+  abstract makeEthereumJSONRPCRequest(request: JSONRPCRequest, jsonRpcUrl?: string): Promise<JSONRPCResponse>
+
   abstract get session(): Session
 }

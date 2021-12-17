@@ -4,7 +4,7 @@
 
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import BN from "bn.js"
-import { ethErrors, serializeError } from "eth-rpc-errors"
+import { ethErrors } from "eth-rpc-errors"
 
 import { WalletLinkAnalytics } from "../connection/WalletLinkAnalytics"
 import { EthereumChain } from '../EthereumChain'
@@ -584,7 +584,7 @@ export class WalletLinkProvider
     }
   }
 
-  private _handleAsynchronousMethods(
+  private async _handleAsynchronousMethods(
     request: JSONRPCRequest
   ): Promise<JSONRPCResponse> {
     const { method } = request
@@ -639,27 +639,9 @@ export class WalletLinkProvider
     }
 
     if (!this.jsonRpcUrl) throw Error("Error: No jsonRpcUrl provided")
-    return window
-      .fetch(this.jsonRpcUrl, {
-        method: "POST",
-        body: JSON.stringify(request),
-        mode: "cors",
-        headers: { "Content-Type": "application/json" }
-      })
-      .then(res => res.json())
-      .then(json => {
-        if (!json) {
-          throw ethErrors.rpc.parse({})
-        }
-        const response = json as JSONRPCResponse
-        const { error } = response
-
-        if (error) {
-          throw serializeError(error)
-        }
-
-        return response
-      })
+    
+    const relay = await this.initializeRelay()
+    return relay.makeEthereumJSONRPCRequest(request, this.jsonRpcUrl)
   }
 
   private _handleAsynchronousFilterMethods(
