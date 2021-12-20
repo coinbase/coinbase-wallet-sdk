@@ -23,7 +23,7 @@ export interface WalletLinkUIOptions {
 }
 
 export abstract class WalletLinkUI {
-  constructor(_: Readonly<WalletLinkUIOptions>) {}
+  constructor(_: Readonly<WalletLinkUIOptions>) { }
   abstract attach(): void
 
   /**
@@ -34,6 +34,12 @@ export abstract class WalletLinkUI {
   abstract requestEthereumAccounts(options: {
     onCancel: () => void
     onAccounts?: (accounts: [AddressString]) => void
+  }): void
+
+  abstract addEthereumChain(options: {
+    onCancel: () => void
+    onApprove: (rpcUrl: string) => void
+    chainId: string
   }): void
 
   abstract switchEthereumChain(options: {
@@ -108,5 +114,5 @@ export abstract class WalletLinkUI {
   /**
    * We want to disable showing the qr code for in-page walletlink if the dapp hasn't provided a json rpc url
    */
-  setConnectDisabled(_: boolean) {}
+  setConnectDisabled(_: boolean) { }
 }

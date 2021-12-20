@@ -58,6 +58,15 @@ export class WalletLinkSdkUI extends WalletLinkUI {
   }
 
   // @ts-ignore
+  addEthereumChain(options: {
+    onCancel: () => void
+    onApprove: () => void
+    chainId: string
+  }) {
+    // no-op
+  }
+
+  // @ts-ignore
   switchEthereumChain(options: {
     onCancel: () => void
     onApprove: () => void

@@ -591,15 +591,12 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
         }
 
         WalletLinkRelay.accountRequestCallbackIds.add(id)
-      } else if (
-        request.method === Web3Method.switchEthereumChain ||
-        request.method === Web3Method.addEthereumChain
-      ) {
+      } else if (request.method === Web3Method.addEthereumChain) {
         const cancel = () => {
           this.handleWeb3ResponseMessage(
             Web3ResponseMessage({
               id,
-              response: SwitchEthereumChainResponse({ isApproved: false, rpcUrl: ""})
+              response: AddEthereumChainResponse({ isApproved: false, rpcUrl: "" })
             })
           )
         }
@@ -607,7 +604,31 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
           this.handleWeb3ResponseMessage(
             Web3ResponseMessage({
               id,
-              response: SwitchEthereumChainResponse({ isApproved: true, rpcUrl})
+              response: AddEthereumChainResponse({ isApproved: true, rpcUrl })
+            })
+          )
+        }
+
+        this.ui.addEthereumChain({
+          onCancel: cancel,
+          onApprove: approve,
+          chainId: (request as AddEthereumChainRequest).params.chainId
+        })
+        // TODO: handle not inline situation
+      } else if (request.method === Web3Method.switchEthereumChain) {
+        const cancel = () => {
+          this.handleWeb3ResponseMessage(
+            Web3ResponseMessage({
+              id,
+              response: SwitchEthereumChainResponse({ isApproved: false, rpcUrl: "" })
+            })
+          )
+        }
+        const approve = (rpcUrl: string) => {
+          this.handleWeb3ResponseMessage(
+            Web3ResponseMessage({
+              id,
+              response: SwitchEthereumChainResponse({ isApproved: true, rpcUrl })
             })
           )
         }
