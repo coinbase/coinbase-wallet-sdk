@@ -853,6 +853,7 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
     request: JSONRPCRequest,
     jsonRpcUrl: string
   ) {
+    if (!jsonRpcUrl) throw new Error("Error: No jsonRpcUrl provided")
     return window
       .fetch(jsonRpcUrl, {
         method: "POST",

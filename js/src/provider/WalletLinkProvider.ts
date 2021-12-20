@@ -7,20 +7,31 @@ import BN from "bn.js"
 import { ethErrors } from "eth-rpc-errors"
 
 import { WalletLinkAnalytics } from "../connection/WalletLinkAnalytics"
-import { EthereumChain } from '../EthereumChain'
+import { EthereumChain } from "../EthereumChain"
 import { EVENTS, WalletLinkAnalyticsAbstract } from "../init"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
 import { EthereumTransactionParams } from "../relay/EthereumTransactionParams"
 import { Session } from "../relay/Session"
-import { LOCAL_STORAGE_ADDRESSES_KEY, WalletLinkRelayAbstract } from "../relay/WalletLinkRelayAbstract"
+import {
+  LOCAL_STORAGE_ADDRESSES_KEY,
+  WalletLinkRelayAbstract
+} from "../relay/WalletLinkRelayAbstract"
 import { WalletLinkRelayEventManager } from "../relay/WalletLinkRelayEventManager"
-import { RequestEthereumAccountsResponse, SwitchResponse } from "../relay/Web3Response"
+import {
+  RequestEthereumAccountsResponse,
+  SwitchResponse
+} from "../relay/Web3Response"
 import { AddressString, Callback, IntNumber } from "../types"
 import {
   ensureAddressString,
   ensureBN,
-  ensureBuffer, ensureHexString,
-  ensureIntNumber, ensureParsedJSONObject, ensureRegExpString, hexStringFromIntNumber, prepend0x
+  ensureBuffer,
+  ensureHexString,
+  ensureIntNumber,
+  ensureParsedJSONObject,
+  ensureRegExpString,
+  hexStringFromIntNumber,
+  prepend0x
 } from "../util"
 import eip712 from "../vendor-js/eth-eip712-util"
 import { FilterPolyfill } from "./FilterPolyfill"
@@ -51,7 +62,8 @@ export interface WalletLinkProviderOptions {
 
 export class WalletLinkProvider
   extends SafeEventEmitter
-  implements Web3Provider {
+  implements Web3Provider
+{
   // So dapps can easily identify Coinbase Wallet for enabling features like 3085 network switcher menus
   public readonly isCoinbaseWallet: boolean
 
@@ -126,12 +138,12 @@ export class WalletLinkProvider
       void this.initializeRelay()
     }
 
-    window.addEventListener('message', (event) => {
-      if (event.data.type !== 'walletLinkMessage') return;
+    window.addEventListener("message", event => {
+      if (event.data.type !== "walletLinkMessage") return
 
-      if (event.data.data.action === 'defaultChainChanged') {
-        const _chainId = event.data.data.chainId;
-        const jsonRpcUrl = event.data.data.jsonRpcUrl ?? this.jsonRpcUrl;
+      if (event.data.data.action === "defaultChainChanged") {
+        const _chainId = event.data.data.chainId
+        const jsonRpcUrl = event.data.data.jsonRpcUrl ?? this.jsonRpcUrl
         this.updateProviderInfo(jsonRpcUrl, Number(_chainId), true)
       }
     })
@@ -174,7 +186,9 @@ export class WalletLinkProvider
   }
 
   private get jsonRpcUrl(): string {
-    return this._storage.getItem(DEFAULT_JSON_RPC_URL) ?? this._jsonRpcUrlFromOpts
+    return (
+      this._storage.getItem(DEFAULT_JSON_RPC_URL) ?? this._jsonRpcUrlFromOpts
+    )
   }
 
   private set jsonRpcUrl(value: string) {
@@ -182,7 +196,7 @@ export class WalletLinkProvider
   }
 
   private get isChainOverridden(): boolean {
-    return this._storage.getItem(HAS_CHAIN_OVERRIDDEN_FROM_RELAY) === 'true'
+    return this._storage.getItem(HAS_CHAIN_OVERRIDDEN_FROM_RELAY) === "true"
   }
 
   private set isChainOverridden(value: boolean) {
@@ -197,11 +211,12 @@ export class WalletLinkProvider
   }
 
   private updateProviderInfo(
-    jsonRpcUrl: string, 
-    chainId: number, 
-    fromRelay: boolean,
+    jsonRpcUrl: string,
+    chainId: number,
+    fromRelay: boolean
   ) {
-    const hasChainSwitched = this._storage.getItem(HAS_CHAIN_BEEN_SWITCHED_KEY) === "true"
+    const hasChainSwitched =
+      this._storage.getItem(HAS_CHAIN_BEEN_SWITCHED_KEY) === "true"
     if (hasChainSwitched && fromRelay) return
     if (fromRelay) {
       this.isChainOverridden = true
@@ -226,9 +241,9 @@ export class WalletLinkProvider
     chainName?: string,
     iconUrls?: string[],
     nativeCurrency?: {
-      name: string;
-      symbol: string;
-      decimals: number;
+      name: string
+      symbol: string
+      decimals: number
     }
   ): Promise<boolean> {
     const relay = await this.initializeRelay()
@@ -241,7 +256,7 @@ export class WalletLinkProvider
       nativeCurrency
     ).promise
 
-    if (typeof res.result === 'boolean') {
+    if (typeof res.result === "boolean") {
       // legacy handling. to be deprecated in february 2022
       if (res.result === true) {
         this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
@@ -266,7 +281,7 @@ export class WalletLinkProvider
     const relay = await this.initializeRelay()
     const res = await relay.switchEthereumChain(chainId.toString(10)).promise
 
-    if (typeof res.result !== 'boolean') {
+    if (typeof res.result !== "boolean") {
       const switchResponse = res.result as SwitchResponse
       if (switchResponse.isApproved && switchResponse.rpcUrl.length > 0) {
         this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
@@ -281,11 +296,12 @@ export class WalletLinkProvider
         this.updateProviderInfo(rpcUrl, chainId, false)
       }
     }
-
   }
 
   public setAppInfo(appName: string, appLogoUrl: string | null): void {
-    void this.initializeRelay().then(relay => relay.setAppInfo(appName, appLogoUrl))
+    void this.initializeRelay().then(relay =>
+      relay.setAppInfo(appName, appLogoUrl)
+    )
   }
 
   public async enable(): Promise<AddressString[]> {
@@ -344,7 +360,7 @@ export class WalletLinkProvider
     // send(JSONRPCRequest | JSONRPCRequest[], callback): void
     if (typeof callbackOrParams === "function") {
       const request = requestOrMethod as any
-      const callback = callbackOrParams 
+      const callback = callbackOrParams
       return this._sendAsync(request, callback)
     }
 
@@ -450,7 +466,6 @@ export class WalletLinkProvider
     }
     return res.result
   }
-
 
   public supportsSubscriptions(): boolean {
     return false
@@ -638,8 +653,6 @@ export class WalletLinkProvider
         return this._wallet_switchEthereumChain(params)
     }
 
-    if (!this.jsonRpcUrl) throw Error("Error: No jsonRpcUrl provided")
-    
     const relay = await this.initializeRelay()
     return relay.makeEthereumJSONRPCRequest(request, this.jsonRpcUrl)
   }
@@ -721,8 +734,10 @@ export class WalletLinkProvider
     const data = tx.data ? ensureBuffer(tx.data) : Buffer.alloc(0)
     const nonce = tx.nonce != null ? ensureIntNumber(tx.nonce) : null
     const gasPriceInWei = tx.gasPrice != null ? ensureBN(tx.gasPrice) : null
-    const maxFeePerGas = tx.maxFeePerGas != null ? ensureBN(tx.maxFeePerGas) : null
-    const maxPriorityFeePerGas = tx.maxPriorityFeePerGas != null ? ensureBN(tx.maxPriorityFeePerGas) : null
+    const maxFeePerGas =
+      tx.maxFeePerGas != null ? ensureBN(tx.maxFeePerGas) : null
+    const maxPriorityFeePerGas =
+      tx.maxPriorityFeePerGas != null ? ensureBN(tx.maxPriorityFeePerGas) : null
     const gasLimit = tx.gas != null ? ensureBN(tx.gas) : null
     const chainId = this.getChainId()
 
@@ -1002,15 +1017,19 @@ export class WalletLinkProvider
   }
 
   private async _wallet_addEthereumChain(
-    params: unknown[],
+    params: unknown[]
   ): Promise<JSONRPCResponse> {
-    const request = (params[0]) as AddEthereumChainParams;
+    const request = params[0] as AddEthereumChainParams
 
     if (request.rpcUrls?.length === 0) {
-      return { jsonrpc: '2.0', id: 0, error: { code: 2, message: `please pass in at least 1 rpcUrl` } };
+      return {
+        jsonrpc: "2.0",
+        id: 0,
+        error: { code: 2, message: `please pass in at least 1 rpcUrl` }
+      }
     }
 
-    const chainIdNumber = parseInt(request.chainId, 16);
+    const chainIdNumber = parseInt(request.chainId, 16)
     const success = await this.addEthereumChain(
       chainIdNumber,
       request.rpcUrls ?? [],
@@ -1020,17 +1039,21 @@ export class WalletLinkProvider
       request.nativeCurrency
     )
     if (success) {
-      return { jsonrpc: '2.0', id: 0, result: null };
+      return { jsonrpc: "2.0", id: 0, result: null }
     } else {
-      return { jsonrpc: '2.0', id: 0, error: { code: 2, message: `unable to add ethereum chain` } };
+      return {
+        jsonrpc: "2.0",
+        id: 0,
+        error: { code: 2, message: `unable to add ethereum chain` }
+      }
     }
   }
 
   private async _wallet_switchEthereumChain(
     params: unknown[]
   ): Promise<JSONRPCResponse> {
-    const request = (params[0]) as SwitchEthereumChainParams
-    await this.switchEthereumChain(parseInt(request.chainId, 16));
+    const request = params[0] as SwitchEthereumChainParams
+    await this.switchEthereumChain(parseInt(request.chainId, 16))
     return { jsonrpc: "2.0", id: 0, result: null }
   }
 
@@ -1071,7 +1094,7 @@ export class WalletLinkProvider
     }
 
     return this._relayProvider().then(relay => {
-      relay.setAccountsCallback((accounts) => this._setAddresses(accounts))
+      relay.setAccountsCallback(accounts => this._setAddresses(accounts))
       relay.setChainCallback((chainId, jsonRpcUrl) => {
         this.updateProviderInfo(jsonRpcUrl, parseInt(chainId, 10), true)
       })
@@ -1082,15 +1105,15 @@ export class WalletLinkProvider
 }
 
 interface AddEthereumChainParams {
-  chainId: string,
-  blockExplorerUrls?: string[],
-  chainName?: string,
+  chainId: string
+  blockExplorerUrls?: string[]
+  chainName?: string
   iconUrls?: string[]
-  rpcUrls?: string[],
+  rpcUrls?: string[]
   nativeCurrency?: {
-    name: string;
-    symbol: string;
-    decimals: number;
+    name: string
+    symbol: string
+    decimals: number
   }
 }
 
