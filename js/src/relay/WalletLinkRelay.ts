@@ -852,7 +852,7 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
   public async makeEthereumJSONRPCRequest(
     request: JSONRPCRequest,
     jsonRpcUrl?: string
-  ) {
+  ): Promise<JSONRPCResponse> {
     if (!jsonRpcUrl) throw new Error("Error: No jsonRpcUrl provided")
     return window
       .fetch(jsonRpcUrl, {

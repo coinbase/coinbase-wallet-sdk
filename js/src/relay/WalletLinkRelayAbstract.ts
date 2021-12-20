@@ -95,8 +95,11 @@ export abstract class WalletLinkRelayAbstract {
   abstract setChainCallback(
     chainIdCallback: (chainId: string, jsonRpcUrl: string) => void
   ): void
-  
-  abstract makeEthereumJSONRPCRequest(request: JSONRPCRequest, jsonRpcUrl?: string): Promise<JSONRPCResponse>
+
+  abstract makeEthereumJSONRPCRequest(
+    request: JSONRPCRequest,
+    jsonRpcUrl?: string
+  ): Promise<JSONRPCResponse> | void
 
   abstract get session(): Session
 }
