@@ -14,7 +14,7 @@ import { Web3Method } from "./Web3Method"
 interface BaseWeb3Request<
   Method extends Web3Method,
   Params extends object = {}
-> {
+  > {
   method: Method
   params: Params
 }
@@ -34,7 +34,7 @@ export type AddEthereumChainRequest = BaseWeb3Request<
     blockExplorerUrls?: string[],
     chainName?: string,
     iconUrls?: string[]
-    rpcUrls?: string[],
+    rpcUrls: string[],
     nativeCurrency?: {
       name: string;
       symbol: string;

@@ -62,6 +62,15 @@ export class WalletLinkSdkUI extends WalletLinkUI {
     onCancel: () => void
     onApprove: () => void
     chainId: string
+    rpcUrls: string[]
+    blockExplorerUrls?: string[],
+    chainName?: string,
+    iconUrls?: string[],
+    nativeCurrency?: {
+      name: string;
+      symbol: string;
+      decimals: number;
+    }
   }) {
     // no-op
   }

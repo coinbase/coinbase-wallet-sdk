@@ -612,7 +612,12 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
         this.ui.addEthereumChain({
           onCancel: cancel,
           onApprove: approve,
-          chainId: (request as AddEthereumChainRequest).params.chainId
+          chainId: (request as AddEthereumChainRequest).params.chainId,
+          rpcUrls: (request as AddEthereumChainRequest).params.rpcUrls,
+          blockExplorerUrls: (request as AddEthereumChainRequest).params.blockExplorerUrls,
+          chainName: (request as AddEthereumChainRequest).params.chainName,
+          iconUrls: (request as AddEthereumChainRequest).params.iconUrls,
+          nativeCurrency: (request as AddEthereumChainRequest).params.nativeCurrency,
         })
         // TODO: handle not inline situation
       } else if (request.method === Web3Method.switchEthereumChain) {

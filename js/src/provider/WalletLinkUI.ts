@@ -40,6 +40,15 @@ export abstract class WalletLinkUI {
     onCancel: () => void
     onApprove: (rpcUrl: string) => void
     chainId: string
+    rpcUrls: string[]
+    blockExplorerUrls?: string[],
+    chainName?: string,
+    iconUrls?: string[],
+    nativeCurrency?: {
+      name: string;
+      symbol: string;
+      decimals: number;
+    }
   }): void
 
   abstract switchEthereumChain(options: {
