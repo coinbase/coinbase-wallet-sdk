@@ -1,3 +1,5 @@
+import { ethErrors, serializeError } from "eth-rpc-errors"
+
 import { JSONRPCRequest, JSONRPCResponse } from "../provider/JSONRPC"
 import { AddressString, IntNumber, RegExpString } from "../types"
 import { EthereumTransactionParams } from "./EthereumTransactionParams"
@@ -96,10 +98,31 @@ export abstract class WalletLinkRelayAbstract {
     chainIdCallback: (chainId: string, jsonRpcUrl: string) => void
   ): void
 
-  abstract makeEthereumJSONRPCRequest(
+  public async makeEthereumJSONRPCRequest(
     request: JSONRPCRequest,
     jsonRpcUrl?: string
-  ): Promise<JSONRPCResponse> | void
+  ): Promise<JSONRPCResponse | void> {
+    if (!jsonRpcUrl) throw new Error("Error: No jsonRpcUrl provided")
+    return window
+      .fetch(jsonRpcUrl, {
+        method: "POST",
+        body: JSON.stringify(request),
+        mode: "cors",
+        headers: { "Content-Type": "application/json" }
+      })
+      .then(res => res.json())
+      .then(json => {
+        if (!json) {
+          throw ethErrors.rpc.parse({})
+        }
+        const response = json as JSONRPCResponse
+        const { error } = response
+        if (error) {
+          throw serializeError(error)
+        }
+        return response
+      })
+  }
 
   abstract get session(): Session
 }

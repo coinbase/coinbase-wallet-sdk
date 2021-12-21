@@ -563,7 +563,7 @@ export class WalletLinkProvider
       }
 
       this._handleAsynchronousMethods(request)
-        .then(res => resolve({ ...res, id: request.id }))
+        .then(res => res && resolve({ ...res, id: request.id }))
         .catch(err => reject(err))
     })
   }
@@ -601,7 +601,7 @@ export class WalletLinkProvider
 
   private async _handleAsynchronousMethods(
     request: JSONRPCRequest
-  ): Promise<JSONRPCResponse> {
+  ): Promise<JSONRPCResponse | void> {
     const { method } = request
     const params = request.params || []
 

@@ -3,7 +3,6 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator"
-import { ethErrors, serializeError } from "eth-rpc-errors"
 import { Observable, of, Subscription, zip } from "rxjs"
 import {
   catchError,
@@ -21,7 +20,6 @@ import { WalletLinkAnalytics } from "../connection/WalletLinkAnalytics"
 import { WalletLinkConnection } from "../connection/WalletLinkConnection"
 import { EVENTS, WalletLinkAnalyticsAbstract } from "../init"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
-import { JSONRPCRequest, JSONRPCResponse } from "../provider/JSONRPC"
 import { WalletLinkUI, WalletLinkUIOptions } from "../provider/WalletLinkUI"
 import { AddressString, IntNumber, RegExpString } from "../types"
 import {
@@ -87,7 +85,7 @@ export interface WalletLinkRelayOptions {
   walletLinkAnalytics?: WalletLinkAnalyticsAbstract
 }
 
-export class WalletLinkRelay implements WalletLinkRelayAbstract {
+export class WalletLinkRelay extends WalletLinkRelayAbstract {
   private static accountRequestCallbackIds = new Set<string>()
 
   private readonly walletLinkUrl: string
@@ -109,6 +107,7 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
   isLinked: boolean | undefined
 
   constructor(options: Readonly<WalletLinkRelayOptions>) {
+    super()
     this.walletLinkUrl = options.walletLinkUrl
     this.storage = options.storage
     this._session =
@@ -847,31 +846,5 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
         chainId
       }
     })
-  }
-
-  public async makeEthereumJSONRPCRequest(
-    request: JSONRPCRequest,
-    jsonRpcUrl?: string
-  ): Promise<JSONRPCResponse> {
-    if (!jsonRpcUrl) throw new Error("Error: No jsonRpcUrl provided")
-    return window
-      .fetch(jsonRpcUrl, {
-        method: "POST",
-        body: JSON.stringify(request),
-        mode: "cors",
-        headers: { "Content-Type": "application/json" }
-      })
-      .then(res => res.json())
-      .then(json => {
-        if (!json) {
-          throw ethErrors.rpc.parse({})
-        }
-        const response = json as JSONRPCResponse
-        const { error } = response
-        if (error) {
-          throw serializeError(error)
-        }
-        return response
-      })
   }
 }
