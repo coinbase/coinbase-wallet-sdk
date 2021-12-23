@@ -31,7 +31,7 @@
     "build:dev": "export WALLETLINK_URL='http://localhost:3000'; yarn build && yarn build-chrome",
     "build:dev:watch": "nodemon -e 'ts,tsx,js,json,css,scss,svg' --ignore 'src/**/*-css.ts' --ignore 'src/**/*-svg.ts' --watch src/ --watch chrome/ --exec 'yarn build:dev'",
     "build:prod": "yarn build && yarn build-chrome && yarn build-npm && cp ./package.json ../README.md ../LICENSE build/npm && cp -a src/vendor-js build/npm/dist && sed -i.bak 's|  \"private\": true,||g' build/npm/package.json && rm -f build/npm/package.json.bak",
-    "lint": "eslint . --cache --ext .ts,.tsx",
+    "lint": "eslint ./src --ext .ts,.tsx",
     "lint:watch": "nodemon -e ts,tsx,js,json,css,scss,svg --watch src/ --exec 'yarn tsc && yarn lint'"
   },
   "dependencies": {

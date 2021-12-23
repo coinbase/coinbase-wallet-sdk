@@ -85,7 +85,7 @@ export interface WalletLinkRelayOptions {
   walletLinkAnalytics?: WalletLinkAnalyticsAbstract
 }
 
-export class WalletLinkRelay implements WalletLinkRelayAbstract {
+export class WalletLinkRelay extends WalletLinkRelayAbstract {
   private static accountRequestCallbackIds = new Set<string>()
 
   private readonly walletLinkUrl: string
@@ -107,6 +107,7 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
   isLinked: boolean | undefined
 
   constructor(options: Readonly<WalletLinkRelayOptions>) {
+    super()
     this.walletLinkUrl = options.walletLinkUrl
     this.storage = options.storage
     this._session =
@@ -514,9 +515,9 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
     chainName?: string,
     iconUrls?: string[],
     nativeCurrency?: {
-      name: string;
-      symbol: string;
-      decimals: number;
+      name: string
+      symbol: string
+      decimals: number
     }
   ): CancelablePromise<AddEthereumChainResponse> {
     return this.sendRequest<AddEthereumChainRequest, AddEthereumChainResponse>({
@@ -600,7 +601,10 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
           this.handleWeb3ResponseMessage(
             Web3ResponseMessage({
               id,
-              response: SwitchEthereumChainResponse({ isApproved: false, rpcUrl: "" })
+              response: SwitchEthereumChainResponse({
+                isApproved: false,
+                rpcUrl: ""
+              })
             })
           )
         }
@@ -608,7 +612,10 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
           this.handleWeb3ResponseMessage(
             Web3ResponseMessage({
               id,
-              response: SwitchEthereumChainResponse({ isApproved: true, rpcUrl })
+              response: SwitchEthereumChainResponse({
+                isApproved: true,
+                rpcUrl
+              })
             })
           )
         }
@@ -653,28 +660,28 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
         switch (request.method) {
           case Web3Method.signEthereumMessage:
             this.ui.signEthereumMessage({
-              request ,
+              request,
               onSuccess,
               onCancel: _cancel
             })
             break
           case Web3Method.signEthereumTransaction:
             this.ui.signEthereumTransaction({
-              request ,
+              request,
               onSuccess,
               onCancel: _cancel
             })
             break
           case Web3Method.submitEthereumTransaction:
             this.ui.submitEthereumTransaction({
-              request ,
+              request,
               onSuccess,
               onCancel: _cancel
             })
             break
           case Web3Method.ethereumAddressFromSignedMessage:
             this.ui.ethereumAddressFromSignedMessage({
-              request ,
+              request,
               onSuccess
             })
             break
@@ -685,7 +692,7 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
       } else {
         hideSnackbarItem = this.ui.showConnecting({
           onCancel: cancel,
-          onResetConnection: this.resetAndReload  // eslint-disable-line @typescript-eslint/unbound-method
+          onResetConnection: this.resetAndReload // eslint-disable-line @typescript-eslint/unbound-method
         })
       }
 
@@ -809,9 +816,9 @@ export class WalletLinkRelay implements WalletLinkRelayAbstract {
     const { response } = message
 
     if (isRequestEthereumAccountsResponse(response)) {
-      Array.from(
-        WalletLinkRelay.accountRequestCallbackIds.values()
-      ).forEach(id => this.invokeCallback({ ...message, id }))
+      Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach(
+        id => this.invokeCallback({ ...message, id })
+      )
       WalletLinkRelay.accountRequestCallbackIds.clear()
       return
     }
