@@ -100,7 +100,7 @@ export abstract class WalletLinkRelayAbstract {
 
   public async makeEthereumJSONRPCRequest(
     request: JSONRPCRequest,
-    jsonRpcUrl?: string
+    jsonRpcUrl: string
   ): Promise<JSONRPCResponse | void> {
     if (!jsonRpcUrl) throw new Error("Error: No jsonRpcUrl provided")
     return window
