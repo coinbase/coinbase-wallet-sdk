@@ -1,0 +1,10 @@
+# specific files to ignore
+*.md
+.eslintrc.js
+.eslintignore
+webpack.*.js
+
+# folders to ignore
+build
+chrome
+node_modules

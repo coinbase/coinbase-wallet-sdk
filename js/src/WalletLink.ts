@@ -37,6 +37,8 @@ export interface WalletLinkOptions {
   walletLinkAnalytics?: WalletLinkAnalyticsAbstract
   /** @optional whether wallet link provider should override the isMetaMask property. */
   overrideIsMetaMask?: boolean
+  /** @optional whether wallet link provider should override the isCoinbaseWallet property. */
+  overrideIsCoinbaseWallet?: boolean
 }
 
 export class WalletLink {
@@ -51,6 +53,7 @@ export class WalletLink {
   private _relayEventManager: WalletLinkRelayEventManager | null = null
   private _storage: ScopedLocalStorage
   private _overrideIsMetaMask: boolean
+  private _overrideIsCoinbaseWallet: boolean
   private _walletLinkAnalytics: WalletLinkAnalyticsAbstract
 
   /**
@@ -58,12 +61,12 @@ export class WalletLink {
    * @param options WalletLink options object
    */
   constructor(options: Readonly<WalletLinkOptions>) {
-    let walletLinkUrl = options.walletLinkUrl || WALLETLINK_URL
+    const walletLinkUrl = options.walletLinkUrl || WALLETLINK_URL
     let walletLinkUIConstructor: (
       options: Readonly<WalletLinkUIOptions>
     ) => WalletLinkUI
     if (!options.walletLinkUIConstructor) {
-      walletLinkUIConstructor = options => new WalletLinkSdkUI(options)
+      walletLinkUIConstructor = opts => new WalletLinkSdkUI(opts)
     } else {
       walletLinkUIConstructor = options.walletLinkUIConstructor
     }
@@ -73,6 +76,8 @@ export class WalletLink {
     } else {
       this._overrideIsMetaMask = options.overrideIsMetaMask
     }
+
+    this._overrideIsCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true
 
     this._walletLinkAnalytics = options.walletLinkAnalytics
       ? options.walletLinkAnalytics
@@ -91,7 +96,7 @@ export class WalletLink {
     this._relayEventManager = new WalletLinkRelayEventManager()
 
     this._relay = new WalletLinkRelay({
-      walletLinkUrl: walletLinkUrl,
+      walletLinkUrl,
       version: WALLETLINK_VERSION,
       darkMode: !!options.darkMode,
       walletLinkUIConstructor,
@@ -110,17 +115,18 @@ export class WalletLink {
    * @returns A Web3 Provider
    */
   public makeWeb3Provider(
-    jsonRpcUrl: string = "",
-    chainId: number = 1
+    jsonRpcUrl = "",
+    chainId = 1
   ): WalletLinkProvider {
     if (typeof window.walletLinkExtension !== "undefined") {
       if (
-        //@ts-ignore
+        /* eslint-disable @typescript-eslint/ban-ts-comment */
+        // @ts-ignore
         typeof window.walletLinkExtension.isCipher !== "boolean" ||
-        //@ts-ignore
+        // @ts-ignore
         !window.walletLinkExtension.isCipher
+        /* eslint-enable @typescript-eslint/ban-ts-comment */
       ) {
-        //@ts-ignore
         window.walletLinkExtension.setProviderInfo(jsonRpcUrl, chainId)
       }
 
@@ -141,7 +147,8 @@ export class WalletLink {
       jsonRpcUrl,
       chainId,
       walletLinkAnalytics: this._walletLinkAnalytics,
-      overrideIsMetaMask: this._overrideIsMetaMask
+      overrideIsMetaMask: this._overrideIsMetaMask,
+      overrideIsCoinbaseWallet: this._overrideIsCoinbaseWallet
     })
   }
 
@@ -159,12 +166,13 @@ export class WalletLink {
 
     if (typeof window.walletLinkExtension !== "undefined") {
       if (
-        //@ts-ignore
+        /* eslint-disable @typescript-eslint/ban-ts-comment */
+        // @ts-ignore
         typeof window.walletLinkExtension.isCipher !== "boolean" ||
-        //@ts-ignore
+        // @ts-ignore
         !window.walletLinkExtension.isCipher
+        /* eslint-enable @typescript-eslint/ban-ts-comment */
       ) {
-        //@ts-ignore
         window.walletLinkExtension.setAppInfo(this._appName, this._appLogoUrl)
       }
     } else {

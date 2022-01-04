@@ -57,6 +57,7 @@ export class WalletLinkSdkUI extends WalletLinkUI {
     this.linkFlow.setConnectDisabled(connectDisabled)
   }
 
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   addEthereumChain(options: {
     onCancel: () => void
