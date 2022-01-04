@@ -7,4 +7,5 @@ webpack.*.js
 # folders to ignore
 build
 chrome
+dist
 node_modules
