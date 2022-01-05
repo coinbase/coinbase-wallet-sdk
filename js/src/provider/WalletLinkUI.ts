@@ -1,5 +1,4 @@
 import { Observable } from "rxjs"
-
 import { Session } from "../relay/Session"
 import {
   EthereumAddressFromSignedMessageRequest,
@@ -14,6 +13,7 @@ import {
   SubmitEthereumTransactionResponse
 } from "../relay/Web3Response"
 import { AddressString } from "../types"
+
 
 export interface WalletLinkUIOptions {
   walletLinkUrl: string
@@ -109,6 +109,12 @@ export abstract class WalletLinkUI {
    * (i.e. don't need to call a websocket api to get the accounts response)
    */
   abstract inlineAccountsResponse(): boolean
+
+  /**
+   * If the extension is available, it can handle the add ethereum chain request without
+   * having to send a request over walletlink
+   */
+  abstract inlineAddEthereumChain(): boolean
 
   /**
    * If the extension is available, it can handle the switch ethereum chain request without

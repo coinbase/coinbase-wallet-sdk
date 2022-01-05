@@ -600,6 +600,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
             })
           )
         }
+
         const approve = (rpcUrl: string) => {
           this.handleWeb3ResponseMessage(
             Web3ResponseMessage({
@@ -619,7 +620,13 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
           iconUrls: (request as AddEthereumChainRequest).params.iconUrls,
           nativeCurrency: (request as AddEthereumChainRequest).params.nativeCurrency,
         })
-        // TODO: handle not inline situation
+
+        if (!this.ui.inlineAddEthereumChain()) {
+          hideSnackbarItem = this.ui.showConnecting({
+            onCancel: cancel,
+            onResetConnection: this.resetAndReload // eslint-disable-line @typescript-eslint/unbound-method
+          })
+        }
       } else if (request.method === Web3Method.switchEthereumChain) {
         const _cancel = () => {
           this.handleWeb3ResponseMessage(
