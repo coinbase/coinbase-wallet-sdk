@@ -14,7 +14,6 @@ import {
   tap,
   timeout
 } from "rxjs/operators"
-
 import { ServerMessageEvent } from "../connection/ServerMessage"
 import { WalletLinkAnalytics } from "../connection/WalletLinkAnalytics"
 import { WalletLinkConnection } from "../connection/WalletLinkConnection"
@@ -34,9 +33,7 @@ import { Session } from "./Session"
 import {
   APP_VERSION_KEY,
   CancelablePromise,
-  LOCAL_STORAGE_ADDRESSES_KEY,
-  WALLET_USER_NAME_KEY,
-  WalletLinkRelayAbstract
+  LOCAL_STORAGE_ADDRESSES_KEY, WalletLinkRelayAbstract, WALLET_USER_NAME_KEY
 } from "./WalletLinkRelayAbstract"
 import { WalletLinkRelayEventManager } from "./WalletLinkRelayEventManager"
 import { Web3Method } from "./Web3Method"
@@ -72,6 +69,7 @@ import {
   isWeb3ResponseMessage,
   Web3ResponseMessage
 } from "./Web3ResponseMessage"
+
 
 export interface WalletLinkRelayOptions {
   walletLinkUrl: string
@@ -593,10 +591,43 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
         }
 
         WalletLinkRelay.accountRequestCallbackIds.add(id)
-      } else if (
-        request.method === Web3Method.switchEthereumChain ||
-        request.method === Web3Method.addEthereumChain
-      ) {
+      } else if (request.method === Web3Method.addEthereumChain) {
+        const cancel = () => {
+          this.handleWeb3ResponseMessage(
+            Web3ResponseMessage({
+              id,
+              response: AddEthereumChainResponse({ isApproved: false, rpcUrl: "" })
+            })
+          )
+        }
+
+        const approve = (rpcUrl: string) => {
+          this.handleWeb3ResponseMessage(
+            Web3ResponseMessage({
+              id,
+              response: AddEthereumChainResponse({ isApproved: true, rpcUrl })
+            })
+          )
+        }
+
+        this.ui.addEthereumChain({
+          onCancel: cancel,
+          onApprove: approve,
+          chainId: (request as AddEthereumChainRequest).params.chainId,
+          rpcUrls: (request as AddEthereumChainRequest).params.rpcUrls,
+          blockExplorerUrls: (request as AddEthereumChainRequest).params.blockExplorerUrls,
+          chainName: (request as AddEthereumChainRequest).params.chainName,
+          iconUrls: (request as AddEthereumChainRequest).params.iconUrls,
+          nativeCurrency: (request as AddEthereumChainRequest).params.nativeCurrency,
+        })
+
+        if (!this.ui.inlineAddEthereumChain()) {
+          hideSnackbarItem = this.ui.showConnecting({
+            onCancel: cancel,
+            onResetConnection: this.resetAndReload // eslint-disable-line @typescript-eslint/unbound-method
+          })
+        }
+      } else if (request.method === Web3Method.switchEthereumChain) {
         const _cancel = () => {
           this.handleWeb3ResponseMessage(
             Web3ResponseMessage({
