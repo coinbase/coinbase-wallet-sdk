@@ -46,6 +46,7 @@ export type SwitchEthereumChainResponse = BaseWeb3Response<SwitchResponse | bool
 
 export type SwitchResponse = {
   isApproved: boolean;
+  errorCode?: number;
   rpcUrl: string;
 }
 
