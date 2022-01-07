@@ -167,7 +167,8 @@ export class WalletLinkSdkUI extends WalletLinkUI {
     return false
   }
 
-  inlineAddEthereumChain(): boolean {
+  // @ts-ignore
+  inlineAddEthereumChain(chainId: string): boolean {
     return false
   }
 
