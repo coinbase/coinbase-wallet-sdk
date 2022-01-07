@@ -35,10 +35,10 @@ export abstract class WalletLinkRelayAbstract {
   abstract addEthereumChain(
     chainId: string,
     rpcUrls: string[],
-    blockExplorerUrls?: string[],
-    chainName?: string,
-    iconUrls?: string[],
-    nativeCurrency?: {
+    iconUrls: string[],
+    blockExplorerUrls: string[],
+    chainName: string,
+    nativeCurrency: {
       name: string
       symbol: string
       decimals: number

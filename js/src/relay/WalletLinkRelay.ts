@@ -735,9 +735,9 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
   addEthereumChain(
     chainId: string,
     rpcUrls: string[],
-    blockExplorerUrls?: string[],
+    iconUrls: string[],
+    blockExplorerUrls: string[],
     chainName?: string,
-    iconUrls?: string[],
     nativeCurrency?: {
       name: string
       symbol: string

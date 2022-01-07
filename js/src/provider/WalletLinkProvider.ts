@@ -238,10 +238,10 @@ export class WalletLinkProvider
   private async addEthereumChain(
     chainId: number,
     rpcUrls: string[],
-    blockExplorerUrls?: string[],
-    chainName?: string,
-    iconUrls?: string[],
-    nativeCurrency?: {
+    blockExplorerUrls: string[],
+    chainName: string,
+    iconUrls: string[],
+    nativeCurrency: {
       name: string
       symbol: string
       decimals: number
@@ -251,9 +251,9 @@ export class WalletLinkProvider
     const res = await relay.addEthereumChain(
       chainId.toString(),
       rpcUrls,
+      iconUrls,
       blockExplorerUrls,
       chainName,
-      iconUrls,
       nativeCurrency
     ).promise
 
@@ -1036,13 +1036,27 @@ export class WalletLinkProvider
       }
     }
 
+    if (!request.chainName || request.chainName.trim() === "") {
+      throw ethErrors.provider.custom({
+        code: 0,
+        message: "chainName is a required field"
+      })
+    }
+
+    if (!request.nativeCurrency) {
+      throw ethErrors.provider.custom({
+        code: 0,
+        message: "nativeCurrency is a required field"
+      })
+    }
+
     const chainIdNumber = parseInt(request.chainId, 16)
     const success = await this.addEthereumChain(
       chainIdNumber,
       request.rpcUrls ?? [],
-      request.blockExplorerUrls,
+      request.blockExplorerUrls ?? [],
       request.chainName,
-      request.iconUrls,
+      request.iconUrls ?? [],
       request.nativeCurrency
     )
     if (success) {
