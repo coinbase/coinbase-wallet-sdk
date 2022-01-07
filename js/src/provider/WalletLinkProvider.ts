@@ -18,6 +18,7 @@ import {
 } from "../relay/WalletLinkRelayAbstract"
 import { WalletLinkRelayEventManager } from "../relay/WalletLinkRelayEventManager"
 import {
+  ErrorResponse,
   RequestEthereumAccountsResponse,
   SwitchResponse
 } from "../relay/Web3Response"
@@ -280,8 +281,11 @@ export class WalletLinkProvider
     }
     const relay = await this.initializeRelay()
     const res = await relay.switchEthereumChain(chainId.toString(10)).promise
-    if ((res.result as SwitchResponse).errorCode) {
 
+    if ((res as ErrorResponse).errorCode) {
+      throw ethErrors.provider.custom({
+        code: (res as ErrorResponse).errorCode!
+      })
     }
 
     if (typeof res.result !== "boolean") {
@@ -1057,12 +1061,6 @@ export class WalletLinkProvider
   ): Promise<JSONRPCResponse> {
     const request = params[0] as SwitchEthereumChainParams
     await this.switchEthereumChain(parseInt(request.chainId, 16))
-    if (err) {
-      throw ethErrors.provider.custom({
-        code: 4902, // To-be-standardized "unrecognized chain ID" error
-        message: `Unrecognized chain ID. Try adding the chain using addEthereumChain first.`,
-      })
-    }
     return { jsonrpc: "2.0", id: 0, result: null }
   }
 

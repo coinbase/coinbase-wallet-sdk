@@ -114,7 +114,7 @@ export abstract class WalletLinkUI {
    * If the extension is available, it can handle the add ethereum chain request without
    * having to send a request over walletlink
    */
-  abstract inlineAddEthereumChain(): boolean
+  abstract inlineAddEthereumChain(chainId: string): boolean
 
   /**
    * If the extension is available, it can handle the switch ethereum chain request without

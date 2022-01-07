@@ -12,14 +12,16 @@ interface BaseWeb3Response<Result> {
 }
 
 export interface ErrorResponse extends BaseWeb3Response<void> {
+  errorCode?: number
   errorMessage: string
 }
 
 export function ErrorResponse(
   method: Web3Method,
-  errorMessage: string
+  errorMessage: string,
+  errorCode?: number
 ): ErrorResponse {
-  return { method, errorMessage }
+  return { method, errorMessage, errorCode }
 }
 
 export type RequestEthereumAccountsResponse = BaseWeb3Response<
@@ -46,7 +48,6 @@ export type SwitchEthereumChainResponse = BaseWeb3Response<SwitchResponse | bool
 
 export type SwitchResponse = {
   isApproved: boolean;
-  errorCode?: number;
   rpcUrl: string;
 }
 
