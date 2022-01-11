@@ -12,5 +12,6 @@ export enum Web3Method {
   generic = "generic",
   childRequestEthereumAccounts = "childRequestEthereumAccounts",
   addEthereumChain = "addEthereumChain",
-  switchEthereumChain = "switchEthereumChain"
+  switchEthereumChain = "switchEthereumChain",
+  makeEthereumJSONRPCRequest = "makeEthereumJSONRPCRequest"
 }
