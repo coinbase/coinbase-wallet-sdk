@@ -14,4 +14,6 @@ export const EVENTS = {
   SESSION_STATE_CHANGE: "walletlink_sdk.session_state_change",
   UNLINKED_ERROR_STATE: "walletlink_sdk.unlinked_error_state",
   GENERAL_ERROR: "walletlink_sdk.general_error",
+  WEB3_REQUEST: "walletlink_sdk.web3.request",
+  WEB3_RESPONSE: "walletlink_sdk.web3.response"
 }

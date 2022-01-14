@@ -3,6 +3,7 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator"
+import { ethErrors } from "eth-rpc-errors"
 import { Observable, of, Subscription, zip } from "rxjs"
 import {
   catchError,
@@ -33,7 +34,9 @@ import { Session } from "./Session"
 import {
   APP_VERSION_KEY,
   CancelablePromise,
-  LOCAL_STORAGE_ADDRESSES_KEY, WalletLinkRelayAbstract, WALLET_USER_NAME_KEY
+  LOCAL_STORAGE_ADDRESSES_KEY,
+  WalletLinkRelayAbstract,
+  WALLET_USER_NAME_KEY
 } from "./WalletLinkRelayAbstract"
 import { WalletLinkRelayEventManager } from "./WalletLinkRelayEventManager"
 import { Web3Method } from "./Web3Method"
@@ -68,8 +71,6 @@ import {
   isWeb3ResponseMessage,
   Web3ResponseMessage
 } from "./Web3ResponseMessage"
-import {ethErrors} from "eth-rpc-errors";
-
 
 export interface WalletLinkRelayOptions {
   walletLinkUrl: string
@@ -333,7 +334,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
         (err: string) => {
           this.walletLinkAnalytics?.sendEvent(EVENTS.FAILURE, {
             method: "relay::resetAndReload",
-            message: `faled to reset and relod with ${err}`,
+            message: `failed to reset and reload with ${err}`,
             sessionIdHash: Session.hash(this._session.id)
           })
         }
@@ -363,6 +364,10 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
     addPrefix: boolean,
     typedDataJson?: string | null
   ): CancelablePromise<SignEthereumMessageResponse> {
+    // if (this.isInBadState()) {
+    // show user UI offering to reconnect
+    // in the reconnect UI, when user accepts, call relay.resetAndReload
+    // }
     return this.sendRequest<
       SignEthereumMessageRequest,
       SignEthereumMessageResponse
@@ -559,6 +564,12 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
 
   private publishWeb3RequestEvent(id: string, request: Web3Request): void {
     const message = Web3RequestMessage({ id, request })
+    console.log("WEB3_REQUEST", { message })
+    this.walletLinkAnalytics?.sendEvent(EVENTS.WEB3_RESPONSE, {
+      eventId: message.id,
+      method: `relay::${message.request.method}`,
+      sessionIdHash: Session.hash(this._session.id)
+    })
     this.subscriptions.add(
       this.publishEvent("Web3Request", message, true).subscribe({
         error: err => {
@@ -637,7 +648,12 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
 
   private handleWeb3ResponseMessage(message: Web3ResponseMessage) {
     const { response } = message
-
+    console.log("WEB3_RESPONSE", { message })
+    this.walletLinkAnalytics?.sendEvent(EVENTS.WEB3_RESPONSE, {
+      eventId: message.id,
+      method: `relay::${response.method}`,
+      sessionIdHash: Session.hash(this._session.id)
+    })
     if (isRequestEthereumAccountsResponse(response)) {
       Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach(
         id => this.invokeCallback({ ...message, id })
@@ -680,54 +696,56 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
       hideSnackbarItem?.()
     }
 
-    const promise = new Promise<RequestEthereumAccountsResponse>((resolve, reject) => {
-      this.relayEventManager.callbacks.set(id, response => {
-        this.ui.hideRequestEthereumAccounts()
-        hideSnackbarItem?.()
+    const promise = new Promise<RequestEthereumAccountsResponse>(
+      (resolve, reject) => {
+        this.relayEventManager.callbacks.set(id, response => {
+          this.ui.hideRequestEthereumAccounts()
+          hideSnackbarItem?.()
 
-        if (response.errorMessage) {
-          return reject(new Error(response.errorMessage))
-        }
-        resolve(response as RequestEthereumAccountsResponse)
-      })
+          if (response.errorMessage) {
+            return reject(new Error(response.errorMessage))
+          }
+          resolve(response as RequestEthereumAccountsResponse)
+        })
 
-      const userAgent = window?.navigator?.userAgent || null
-      if (
-        userAgent &&
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          userAgent
-        )
-      ) {
-        window.location.href = `https://go.cb-w.com/xoXnYwQimhb?cb_url=${window.location.href}`
-        return
-      }
-
-      if (this.ui.inlineAccountsResponse()) {
-        const onAccounts = (accounts: [AddressString]) => {
-          this.handleWeb3ResponseMessage(
-            Web3ResponseMessage({
-              id,
-              response: RequestEthereumAccountsResponse(accounts)
-            })
+        const userAgent = window?.navigator?.userAgent || null
+        if (
+          userAgent &&
+          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            userAgent
           )
+        ) {
+          window.location.href = `https://go.cb-w.com/xoXnYwQimhb?cb_url=${window.location.href}`
+          return
         }
 
-        this.ui.requestEthereumAccounts({
-          onCancel: cancel,
-          onAccounts
-        })
-      } else {
-        this.ui.requestEthereumAccounts({
-          onCancel: cancel
-        })
-      }
+        if (this.ui.inlineAccountsResponse()) {
+          const onAccounts = (accounts: [AddressString]) => {
+            this.handleWeb3ResponseMessage(
+              Web3ResponseMessage({
+                id,
+                response: RequestEthereumAccountsResponse(accounts)
+              })
+            )
+          }
 
-      WalletLinkRelay.accountRequestCallbackIds.add(id)
+          this.ui.requestEthereumAccounts({
+            onCancel: cancel,
+            onAccounts
+          })
+        } else {
+          this.ui.requestEthereumAccounts({
+            onCancel: cancel
+          })
+        }
 
-      if (!this.ui.inlineAccountsResponse() && !this.ui.isStandalone()) {
-        this.publishWeb3RequestEvent(id, request)
+        WalletLinkRelay.accountRequestCallbackIds.add(id)
+
+        if (!this.ui.inlineAccountsResponse() && !this.ui.isStandalone()) {
+          this.publishWeb3RequestEvent(id, request)
+        }
       }
-    })
+    )
 
     return { promise, cancel }
   }
@@ -791,7 +809,10 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
         this.handleWeb3ResponseMessage(
           Web3ResponseMessage({
             id,
-            response: AddEthereumChainResponse({ isApproved: false, rpcUrl: "" })
+            response: AddEthereumChainResponse({
+              isApproved: false,
+              rpcUrl: ""
+            })
           })
         )
       }
@@ -811,10 +832,12 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
           onApprove: approve,
           chainId: (request as AddEthereumChainRequest).params.chainId,
           rpcUrls: (request as AddEthereumChainRequest).params.rpcUrls,
-          blockExplorerUrls: (request as AddEthereumChainRequest).params.blockExplorerUrls,
+          blockExplorerUrls: (request as AddEthereumChainRequest).params
+            .blockExplorerUrls,
           chainName: (request as AddEthereumChainRequest).params.chainName,
           iconUrls: (request as AddEthereumChainRequest).params.iconUrls,
-          nativeCurrency: (request as AddEthereumChainRequest).params.nativeCurrency,
+          nativeCurrency: (request as AddEthereumChainRequest).params
+            .nativeCurrency
         })
       }
 
@@ -857,77 +880,78 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
       })
     }
 
-    const promise = new Promise<SwitchEthereumChainResponse>((resolve, reject) => {
-      this.relayEventManager.callbacks.set(id, response => {
-        hideSnackbarItem?.()
+    const promise = new Promise<SwitchEthereumChainResponse>(
+      (resolve, reject) => {
+        this.relayEventManager.callbacks.set(id, response => {
+          hideSnackbarItem?.()
 
-        if (response.errorMessage && (response as ErrorResponse).errorCode) {
-          return reject(ethErrors.provider.custom({
-            code: (response as ErrorResponse).errorCode!,
-            message: `Unrecognized chain ID. Try adding the chain using addEthereumChain first.`,
-          }))
-        } else if (response.errorMessage) {
-          return reject(new Error(response.errorMessage))
+          if (response.errorMessage && (response as ErrorResponse).errorCode) {
+            return reject(
+              ethErrors.provider.custom({
+                code: (response as ErrorResponse).errorCode!,
+                message: `Unrecognized chain ID. Try adding the chain using addEthereumChain first.`
+              })
+            )
+          } else if (response.errorMessage) {
+            return reject(new Error(response.errorMessage))
+          }
+
+          resolve(response as SwitchEthereumChainResponse)
+        })
+
+        const _cancel = (errorCode?: number) => {
+          if (errorCode) {
+            this.handleWeb3ResponseMessage(
+              Web3ResponseMessage({
+                id,
+                response: ErrorResponse(
+                  Web3Method.switchEthereumChain,
+                  "unsupported chainId",
+                  errorCode
+                )
+              })
+            )
+          } else {
+            this.handleWeb3ResponseMessage(
+              Web3ResponseMessage({
+                id,
+                response: SwitchEthereumChainResponse({
+                  isApproved: false,
+                  rpcUrl: ""
+                })
+              })
+            )
+          }
         }
 
-        resolve(response as SwitchEthereumChainResponse)
-      })
-
-      const _cancel = (errorCode?: number) => {
-        if (errorCode) {
-          this.handleWeb3ResponseMessage(
-            Web3ResponseMessage({
-              id,
-              response: ErrorResponse(
-                Web3Method.switchEthereumChain,
-                "unsupported chainId",
-                errorCode
-              )
-            })
-          )
-        } else {
+        const approve = (rpcUrl: string) => {
           this.handleWeb3ResponseMessage(
             Web3ResponseMessage({
               id,
               response: SwitchEthereumChainResponse({
-                isApproved: false,
-                rpcUrl: "",
+                isApproved: true,
+                rpcUrl
               })
             })
           )
         }
-      }
 
-      const approve = (rpcUrl: string) => {
-        this.handleWeb3ResponseMessage(
-          Web3ResponseMessage({
-            id,
-            response: SwitchEthereumChainResponse({
-              isApproved: true,
-              rpcUrl
-            })
-          })
-        )
-      }
+        this.ui.switchEthereumChain({
+          onCancel: _cancel,
+          onApprove: approve,
+          chainId: (request as SwitchEthereumChainRequest).params.chainId
+        })
 
-      this.ui.switchEthereumChain({
-        onCancel: _cancel,
-        onApprove: approve,
-        chainId: (request as SwitchEthereumChainRequest).params.chainId
-      })
-
-      if (!this.ui.inlineSwitchEthereumChain() && !this.ui.isStandalone()) {
-        this.publishWeb3RequestEvent(id, request)
+        if (!this.ui.inlineSwitchEthereumChain() && !this.ui.isStandalone()) {
+          this.publishWeb3RequestEvent(id, request)
+        }
       }
-    })
+    )
 
     return { promise, cancel }
   }
 
-  private sendRequestStandalone<T extends Web3Request>(
-    id: string,
-    request: T,
-  ) {
+  private sendRequestStandalone<T extends Web3Request>(id: string, request: T) {
     const _cancel = () => {
       this.handleWeb3ResponseMessage(
         Web3ResponseMessage({
