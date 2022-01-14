@@ -104,6 +104,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
   private appLogoUrl: string | null = null
   private subscriptions = new Subscription()
   isLinked: boolean | undefined
+  isUnlinkedErrorState: boolean | undefined
 
   constructor(options: Readonly<WalletLinkRelayOptions>) {
     super()
@@ -139,9 +140,13 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
             const cachedAddresses = this.storage.getItem(
               LOCAL_STORAGE_ADDRESSES_KEY
             )
+
+            this.isUnlinkedErrorState = false
+
             if (cachedAddresses) {
               const addresses = cachedAddresses.split(" ") as AddressString[]
               if (addresses[0] !== "" && !linked) {
+                this.isUnlinkedErrorState = true
                 const sessionIdHash = this.getSessionIdHash()
                 this.walletLinkAnalytics?.sendEvent(
                   EVENTS.UNLINKED_ERROR_STATE,
@@ -520,6 +525,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
     const promise = new Promise<U>((resolve, reject) => {
       if (!this.ui.isStandalone()) {
         hideSnackbarItem = this.ui.showConnecting({
+          isUnlinkedErrorState: this.isUnlinkedErrorState,
           onCancel: cancel,
           onResetConnection: this.resetAndReload // eslint-disable-line @typescript-eslint/unbound-method
         })
@@ -784,6 +790,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
 
     if (!this.ui.inlineAddEthereumChain(chainId)) {
       hideSnackbarItem = this.ui.showConnecting({
+        isUnlinkedErrorState: this.isUnlinkedErrorState,
         onCancel: cancel,
         onResetConnection: this.resetAndReload // eslint-disable-line @typescript-eslint/unbound-method
       })
@@ -869,6 +876,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
 
     if (!this.ui.inlineSwitchEthereumChain()) {
       hideSnackbarItem = this.ui.showConnecting({
+        isUnlinkedErrorState: this.isUnlinkedErrorState,
         onCancel: cancel,
         onResetConnection: this.resetAndReload // eslint-disable-line @typescript-eslint/unbound-method
       })
