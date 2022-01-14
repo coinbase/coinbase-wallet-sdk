@@ -94,6 +94,7 @@ export abstract class WalletLinkUI {
    * @returns callback that call can call to hide the connecting ui
    */
   abstract showConnecting(options: {
+    isUnlinkedErrorState?: boolean
     onCancel: () => void
     onResetConnection: () => void
   }): () => void
