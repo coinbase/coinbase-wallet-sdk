@@ -142,7 +142,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
             if (cachedAddresses) {
               const addresses = cachedAddresses.split(" ") as AddressString[]
               if (addresses[0] !== "" && !linked) {
-                const sessionIdHash = Session.hash(this._session.id)
+                const sessionIdHash = this.getSessionIdHash()
                 this.walletLinkAnalytics?.sendEvent(
                   EVENTS.UNLINKED_ERROR_STATE,
                   { sessionIdHash }
@@ -162,7 +162,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
           const alreadyDestroyed = this.connection.isDestroyed
           this.walletLinkAnalytics?.sendEvent(EVENTS.METADATA_DESTROYED, {
             alreadyDestroyed,
-            sessionIdHash: Session.hash(this._session.id)
+            sessionIdHash: this.getSessionIdHash()
           })
           return this.resetAndReload()
         })
@@ -325,7 +325,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
           this.walletLinkAnalytics?.sendEvent(EVENTS.SESSION_STATE_CHANGE, {
             method: "relay::resetAndReload",
             sessionMetadataChange: "__destroyed, 1",
-            sessionIdHash: Session.hash(this._session.id)
+            sessionIdHash: this.getSessionIdHash()
           })
           this.connection.destroy()
           this.storage.clear()
@@ -335,7 +335,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
           this.walletLinkAnalytics?.sendEvent(EVENTS.FAILURE, {
             method: "relay::resetAndReload",
             message: `failed to reset and reload with ${err}`,
-            sessionIdHash: Session.hash(this._session.id)
+            sessionIdHash: this.getSessionIdHash()
           })
         }
       )
@@ -364,10 +364,6 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
     addPrefix: boolean,
     typedDataJson?: string | null
   ): CancelablePromise<SignEthereumMessageResponse> {
-    // if (this.isInBadState()) {
-    // show user UI offering to reconnect
-    // in the reconnect UI, when user accepts, call relay.resetAndReload
-    // }
     return this.sendRequest<
       SignEthereumMessageRequest,
       SignEthereumMessageResponse
@@ -564,11 +560,10 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
 
   private publishWeb3RequestEvent(id: string, request: Web3Request): void {
     const message = Web3RequestMessage({ id, request })
-    console.log("WEB3_REQUEST", { message })
     this.walletLinkAnalytics?.sendEvent(EVENTS.WEB3_RESPONSE, {
       eventId: message.id,
       method: `relay::${message.request.method}`,
-      sessionIdHash: Session.hash(this._session.id)
+      sessionIdHash: this.getSessionIdHash()
     })
     this.subscriptions.add(
       this.publishEvent("Web3Request", message, true).subscribe({
@@ -648,11 +643,10 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
 
   private handleWeb3ResponseMessage(message: Web3ResponseMessage) {
     const { response } = message
-    console.log("WEB3_RESPONSE", { message })
     this.walletLinkAnalytics?.sendEvent(EVENTS.WEB3_RESPONSE, {
       eventId: message.id,
       method: `relay::${response.method}`,
-      sessionIdHash: Session.hash(this._session.id)
+      sessionIdHash: this.getSessionIdHash()
     })
     if (isRequestEthereumAccountsResponse(response)) {
       Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach(
@@ -949,6 +943,10 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
     )
 
     return { promise, cancel }
+  }
+
+  private getSessionIdHash(): string {
+    return Session.hash(this._session.id)
   }
 
   private sendRequestStandalone<T extends Web3Request>(id: string, request: T) {
