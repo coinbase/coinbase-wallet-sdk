@@ -333,7 +333,18 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
             sessionIdHash: this.getSessionIdHash()
           })
           this.connection.destroy()
-          this.storage.clear()
+          /**
+           * Only clear storage if the session id we have in memory matches the one on disk
+           * Otherwise, in the case where we have 2 tabs, another tab might have cleared
+           * storage already.  In that case if we clear storage again, the user will be in
+           * a state where the first tab allows the user to connect but the session that
+           * was used isn't persisted.  This leaves the user in a state where they aren't
+           * connected to the mobile app.
+           */
+          const storedSession = Session.load(this.storage)
+          if (storedSession?.id === this._session.id) {
+            this.storage.clear()
+          }
           this.ui.reloadUI()
         },
         (err: string) => {
