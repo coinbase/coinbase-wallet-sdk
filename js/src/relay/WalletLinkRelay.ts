@@ -347,7 +347,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
           } else if (storedSession) {
             this.walletLinkAnalytics?.sendEvent(EVENTS.SKIPPED_CLEARING_SESSION, {
               sessionIdHash: this.getSessionIdHash(),
-              storedSessionIdHash: Session.hash(storedSession._id) 
+              storedSessionIdHash: Session.hash(storedSession.id)
             })
           }
           this.ui.reloadUI()
@@ -587,7 +587,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
       eventId: message.id,
       method: `relay::${message.request.method}`,
       sessionIdHash: this.getSessionIdHash(),
-      storedSessionIdHash: storedSession ? Session.hash(storedSession._id) : "",
+      storedSessionIdHash: storedSession ? Session.hash(storedSession.id) : "",
       isSessionMismatched: (storedSession?.id !== this._session.id).toString()
     })
 

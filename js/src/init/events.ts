@@ -13,6 +13,7 @@ export const EVENTS = {
   ETH_ACCOUNTS_STATE: "walletlink_sdk.eth_accounts_state",
   SESSION_STATE_CHANGE: "walletlink_sdk.session_state_change",
   UNLINKED_ERROR_STATE: "walletlink_sdk.unlinked_error_state",
+  SKIPPED_CLEARING_SESSION: "walletlink_sdk.skipped_clearing_session",
   GENERAL_ERROR: "walletlink_sdk.general_error",
   WEB3_REQUEST: "walletlink_sdk.web3.request",
   WEB3_RESPONSE: "walletlink_sdk.web3.response"
