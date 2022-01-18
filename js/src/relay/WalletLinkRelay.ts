@@ -333,7 +333,23 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
             sessionIdHash: this.getSessionIdHash()
           })
           this.connection.destroy()
-          this.storage.clear()
+          /**
+           * Only clear storage if the session id we have in memory matches the one on disk
+           * Otherwise, in the case where we have 2 tabs, another tab might have cleared
+           * storage already.  In that case if we clear storage again, the user will be in
+           * a state where the first tab allows the user to connect but the session that
+           * was used isn't persisted.  This leaves the user in a state where they aren't
+           * connected to the mobile app.
+           */
+          const storedSession = Session.load(this.storage)
+          if (storedSession?.id === this._session.id) {
+            this.storage.clear()
+          } else if (storedSession) {
+            this.walletLinkAnalytics?.sendEvent(EVENTS.SKIPPED_CLEARING_SESSION, {
+              sessionIdHash: this.getSessionIdHash(),
+              storedSessionIdHash: Session.hash(storedSession.id)
+            })
+          }
           this.ui.reloadUI()
         },
         (err: string) => {
@@ -566,11 +582,15 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
 
   private publishWeb3RequestEvent(id: string, request: Web3Request): void {
     const message = Web3RequestMessage({ id, request })
-    this.walletLinkAnalytics?.sendEvent(EVENTS.WEB3_RESPONSE, {
+    const storedSession = Session.load(this.storage)
+    this.walletLinkAnalytics?.sendEvent(EVENTS.WEB3_REQUEST, {
       eventId: message.id,
       method: `relay::${message.request.method}`,
-      sessionIdHash: this.getSessionIdHash()
+      sessionIdHash: this.getSessionIdHash(),
+      storedSessionIdHash: storedSession ? Session.hash(storedSession.id) : "",
+      isSessionMismatched: (storedSession?.id !== this._session.id).toString()
     })
+
     this.subscriptions.add(
       this.publishEvent("Web3Request", message, true).subscribe({
         error: err => {
