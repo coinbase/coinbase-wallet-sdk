@@ -344,7 +344,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
           const storedSession = Session.load(this.storage)
           if (storedSession?.id === this._session.id) {
             this.storage.clear()
-          } else {
+          } else if (storedSession) {
             this.walletLinkAnalytics?.sendEvent(EVENTS.SKIPPED_CLEARING_SESSION, {
               sessionIdHash: this.getSessionIdHash(),
               storedSessionIdHash: Session.hash(storedSession._id) 
@@ -586,8 +586,8 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
     this.walletLinkAnalytics?.sendEvent(EVENTS.WEB3_REQUEST, {
       eventId: message.id,
       method: `relay::${message.request.method}`,
-      sessionIdHash: this.getSessionIdHash()
-      storedSessionIdHash: Session.hash(storedSession._id)
+      sessionIdHash: this.getSessionIdHash(),
+      storedSessionIdHash: storedSession ? Session.hash(storedSession._id) : "",
       isSessionMismatched: (storedSession?.id !== this._session.id).toString()
     })
 
