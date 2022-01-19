@@ -5,7 +5,6 @@
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import BN from "bn.js"
 import { ethErrors } from "eth-rpc-errors"
-
 import { WalletLinkAnalytics } from "../connection/WalletLinkAnalytics"
 import { EthereumChain } from "../EthereumChain"
 import { EVENTS, WalletLinkAnalyticsAbstract } from "../init"
@@ -80,8 +79,6 @@ export class WalletLinkProvider
   private _jsonRpcUrlFromOpts: string
   private readonly _overrideIsMetaMask: boolean
 
-  private _addresses: AddressString[] = []
-
   private hasMadeFirstChainChangedEmission = false
 
   constructor(options: Readonly<WalletLinkProviderOptions>) {
@@ -116,15 +113,6 @@ export class WalletLinkProvider
     // indicate that we've connected, for EIP-1193 compliance
     this.emit("connect", { chainIdStr })
 
-    const cachedAddresses = this._storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY)
-    if (cachedAddresses) {
-      const addresses = cachedAddresses.split(" ") as AddressString[]
-      if (addresses[0] !== "") {
-        this._addresses = addresses
-        this.emit("accountsChanged", addresses)
-      }
-    }
-
     this._subscriptionManager.events.on(
       "notification",
       (notification: SubscriptionNotification) => {
@@ -135,7 +123,7 @@ export class WalletLinkProvider
       }
     )
 
-    if (this._addresses.length > 0) {
+    if (this.storedAddresses.length > 0) {
       void this.initializeRelay()
     }
 
@@ -150,8 +138,20 @@ export class WalletLinkProvider
     })
   }
 
+  private set storedAddresses(addresses: AddressString[]) {
+    this._storage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, addresses.join(" "))
+  }
+
+  private get storedAddresses(): AddressString[] {
+    const addressString = this._storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY)
+    if (addressString) {
+      return addressString.split(" ") as AddressString[]
+    }
+    return []
+  }
+
   public get selectedAddress(): AddressString | undefined {
-    return this._addresses[0] || undefined
+    return this.storedAddresses[0] || undefined
   }
 
   public get networkVersion(): string {
@@ -314,11 +314,11 @@ export class WalletLinkProvider
   public async enable(): Promise<AddressString[]> {
     this._walletLinkAnalytics.sendEvent(EVENTS.ETH_ACCOUNTS_STATE, {
       method: "provider::enable",
-      addresses_length: this._addresses.length,
+      addresses_length: this.storedAddresses.length,
       sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : null
     })
-    if (this._addresses.length > 0) {
-      return this._addresses
+    if (this.storedAddresses.length > 0) {
+      return this.storedAddresses
     }
 
     return await this._send<AddressString[]>(JSONRPCMethod.eth_requestAccounts)
@@ -520,15 +520,15 @@ export class WalletLinkProvider
 
     const newAddresses = addresses.map(address => ensureAddressString(address))
 
-    if (JSON.stringify(newAddresses) === JSON.stringify(this._addresses)) {
+    if (JSON.stringify(newAddresses) === JSON.stringify(this.storedAddresses)) {
       return
     }
 
-    this._addresses = newAddresses
-    this.emit("accountsChanged", this._addresses)
-    this._storage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, newAddresses.join(" "))
+    // this is the only place we update addresses in local storage
+    this.storedAddresses = newAddresses
+    this.emit("accountsChanged", newAddresses)
     window.dispatchEvent(
-      new CustomEvent("walletlink:addresses", { detail: this._addresses })
+      new CustomEvent("walletlink:addresses", { detail: newAddresses })
     )
   }
 
@@ -705,7 +705,7 @@ export class WalletLinkProvider
   private _isKnownAddress(addressString: string): boolean {
     try {
       const address = ensureAddressString(addressString)
-      return this._addresses.includes(address)
+      return this.storedAddresses.includes(address)
     } catch {}
     return false
   }
@@ -763,7 +763,7 @@ export class WalletLinkProvider
   }
 
   private _requireAuthorization(): void {
-    if (this._addresses.length === 0) {
+    if (this.storedAddresses.length === 0) {
       throw ethErrors.provider.unauthorized({})
     }
   }
@@ -817,7 +817,7 @@ export class WalletLinkProvider
   }
 
   private _eth_accounts(): string[] {
-    return this._addresses
+    return this.storedAddresses
   }
 
   private _eth_coinbase(): string | null {
@@ -841,14 +841,14 @@ export class WalletLinkProvider
   private async _eth_requestAccounts(): Promise<JSONRPCResponse> {
     this._walletLinkAnalytics.sendEvent(EVENTS.ETH_ACCOUNTS_STATE, {
       method: "provider::_eth_requestAccounts",
-      addresses_length: this._addresses.length,
+      addresses_length: this.storedAddresses.length,
       sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : null
     })
-    if (this._addresses.length > 0) {
+    if (this.storedAddresses.length > 0) {
       return Promise.resolve({
         jsonrpc: "2.0",
         id: 0,
-        result: this._addresses
+        result: this.storedAddresses
       })
     }
 
@@ -873,7 +873,7 @@ export class WalletLinkProvider
     }
 
     this._setAddresses(res.result)
-    return { jsonrpc: "2.0", id: 0, result: this._addresses }
+    return { jsonrpc: "2.0", id: 0, result: this.storedAddresses }
   }
 
   private _eth_sign(params: unknown[]): Promise<JSONRPCResponse> {
