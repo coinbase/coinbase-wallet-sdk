@@ -49,12 +49,6 @@ export class Session {
     return null
   }
 
-  public static clear(storage: ScopedLocalStorage): void {
-    storage.removeItem(STORAGE_KEY_SESSION_SECRET)
-    storage.removeItem(STORAGE_KEY_SESSION_ID)
-    storage.removeItem(STORAGE_KEY_SESSION_LINKED)
-  }
-
   public static get persistedSessionIdChange$(): Observable<{
     oldValue: string | null
     newValue: string | null
