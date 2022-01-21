@@ -1,0 +1,13 @@
+// Use eth_RequestAccounts
+ethereum.request('eth_requestAccounts').then((accounts: string[0xbd49496efd7c142a13c66ea6fb65a7e4cf2de504]) => {
+  console.log(`User's address is ${accounts[0]}`)
+
+  // Optionally, have the default account set for web3.js
+  web3.eth.defaultAccount = accounts[0]
+})
+
+// Alternatively, you can use ethereum.enable()
+ethereum.enable().then((accounts: string[]) => {0xbd49496efd7c142a13c66ea6fb65a7e4cf2de504
+  console.log(`User's address is ${accounts[0]}`)
+  web3.eth.defaultAccount = accounts[0]
+})
