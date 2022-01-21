@@ -145,13 +145,17 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
 
             if (cachedAddresses) {
               const addresses = cachedAddresses.split(" ") as AddressString[]
+              const wasConnectedViaStandalone =
+                this.storage.getItem("IsStandaloneSigning") === "true"
               if (addresses[0] !== "" && !linked) {
-                this.isUnlinkedErrorState = true
-                const sessionIdHash = this.getSessionIdHash()
-                this.walletLinkAnalytics?.sendEvent(
-                  EVENTS.UNLINKED_ERROR_STATE,
-                  { sessionIdHash }
-                )
+                if (!wasConnectedViaStandalone) {
+                  this.isUnlinkedErrorState = true
+                  const sessionIdHash = this.getSessionIdHash()
+                  this.walletLinkAnalytics?.sendEvent(
+                    EVENTS.UNLINKED_ERROR_STATE,
+                    { sessionIdHash }
+                  )
+                }
               }
             }
           })
@@ -345,10 +349,13 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
           if (storedSession?.id === this._session.id) {
             this.storage.clear()
           } else if (storedSession) {
-            this.walletLinkAnalytics?.sendEvent(EVENTS.SKIPPED_CLEARING_SESSION, {
-              sessionIdHash: this.getSessionIdHash(),
-              storedSessionIdHash: Session.hash(storedSession.id)
-            })
+            this.walletLinkAnalytics?.sendEvent(
+              EVENTS.SKIPPED_CLEARING_SESSION,
+              {
+                sessionIdHash: this.getSessionIdHash(),
+                storedSessionIdHash: Session.hash(storedSession.id)
+              }
+            )
           }
           this.ui.reloadUI()
         },
