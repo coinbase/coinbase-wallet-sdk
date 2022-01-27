@@ -1,0 +1,5 @@
+# With Yarn
+yarn add walletlink
+
+# With NPM
+npm install walletlink
