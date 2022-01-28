@@ -49,8 +49,8 @@ import Web3 from 'web3'
 
 const APP_NAME = 'My Awesome App'
 const APP_LOGO_URL = 'https://example.com/logo.png'
-const ETH_JSONRPC_URL = 'https://mainnet.infura.io/v3/<YOUR_INFURA_API_KEY>'
-const CHAIN_ID = 1
+const DEFAULT_ETH_JSONRPC_URL = 'https://mainnet.infura.io/v3/<YOUR_INFURA_API_KEY>'
+const DEFAULT_CHAIN_ID = 1
 
 // Initialize WalletLink
 export const walletLink = new WalletLink({
@@ -60,11 +60,16 @@ export const walletLink = new WalletLink({
 })
 
 // Initialize a Web3 Provider object
-export const ethereum = walletLink.makeWeb3Provider(ETH_JSONRPC_URL, CHAIN_ID)
+export const ethereum = walletLink.makeWeb3Provider(DEFAULT_ETH_JSONRPC_URL, DEFAULT_CHAIN_ID)
 
 // Initialize a Web3 object
 export const web3 = new Web3(ethereum as any)
 ```
+
+Walletlink will use an rpcUrl provided by Coinbase Wallet clients regardless of the the rpcUrl passed into `makeWeb3Provider` 
+for whitelisted networks. Walletlink solely needs an rpcUrl to be provided by the dapp as a fallback.
+
+For more information on using alternate networks, please see EIP-3085 and EIP-3326 section below.
 
 ### Use EIP-1102 to obtain authorization and get Ethereum accounts
 
@@ -91,6 +96,72 @@ ethereum.enable().then((accounts: string[]) => {
 
 That's it! Once the authorization is obtained from the user, the Web3 object
 (`web3`) and the Web3 Provider (`ethereum`) are ready to be used as per usual.
+
+### Switching / Adding Alternative EVM-Compatible Chains with EIP-3085 and EIP-3326
+
+Walletlink and Coinbase Wallet clients support both EIP-3085 `wallet_addEthereumChain` and EIP-3326 
+`wallet_switchEthereumChain` requests for whitelisted networks.
+
+Current whitelisted networks are Ethereum, Optimism, Polygon, Avalanche, Arbitrum, Fantom, Binance Smart Chain, xDai,
+Arbitrum Rinkeby, Avalanche Fuji, Binance Smart Chain Testnet, Fantom Testnet, Gorli, Kovan, Optimistic Kovan,
+Polygon Mumbai, Rinkeby, and Ropsten.
+
+A dapp can determine if a network is whitelisted or not by sending a `wallet_switchEthereumChain` request for
+that network. If error code 4092 is returned, then the network is not supported by default by the client wallet.
+
+Here's how to request the wallet switch to an alternative network:
+
+```
+await ethereum.request({
+  method: 'wallet_addEthereumChain',
+  params: [{ chainId: '0xA86A' }]
+})      
+```
+
+Here's how to request the client wallet add a new network
+
+```
+          await ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: '0x63564C40',
+              rpcUrls: ['https://api.harmony.one'],
+              chainName: 'Harmony Mainnet',
+              nativeCurrency: { name: 'ONE', decimals: 18, symbol: 'ONE' },
+              blockExplorerUrls: ['https://explorer.harmony.one'],
+              iconUrls: ['https://harmonynews.one/wp-content/uploads/2019/11/slfdjs.png'],
+            }],
+          })
+```
+
+Many dapps will attempt to switch to a network via `wallet_switchEthereumChain`, determine if the network is supported 
+by the wallet based on the error code, and follow with a `wallet_addEthereumChain` request if the network is not 
+supported. Here's an example:
+
+```
+    try {
+      // attempt to switch to Harmony One network
+      const result = await ethereum.send('wallet_switchEthereumChain', [{ chainId: `0x63564C40` }])
+    } catch (switchError) {
+      // 4902 indicates that the client does not recognize the Harmony One network
+      if (switchError.code === 4902) {
+          await ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: '0x63564C40',
+              rpcUrls: ['https://api.harmony.one'],
+              chainName: 'Harmony Mainnet',
+              nativeCurrency: { name: 'ONE', decimals: 18, symbol: 'ONE' },
+              blockExplorerUrls: ['https://explorer.harmony.one'],
+              iconUrls: ['https://harmonynews.one/wp-content/uploads/2019/11/slfdjs.png'],
+            }],
+          })
+      }
+    }
+```
+
+Beginning on February 7, Coinbase Wallet clients will handle `wallet_addEthereumChain` requests for non-whitelisted
+networks. Until then, `wallet_addEthereumChain` requests for non-whitelisted networks will be rejected.
 
 ### Disconnecting / De-establishing a link
 
