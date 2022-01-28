@@ -247,6 +247,10 @@ export class WalletLinkProvider
       decimals: number
     }
   ): Promise<boolean> {
+    if (ensureIntNumber(chainId) === this.getChainId()) {
+      return false
+    }
+
     const relay = await this.initializeRelay()
     const res = await relay.addEthereumChain(
       chainId.toString(),
@@ -279,6 +283,7 @@ export class WalletLinkProvider
     if (ensureIntNumber(chainId) === this.getChainId()) {
       return
     }
+
     const relay = await this.initializeRelay()
     const res = await relay.switchEthereumChain(chainId.toString(10)).promise
 
