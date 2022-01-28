@@ -113,7 +113,8 @@ Arbitrum Rinkeby, Avalanche Fuji, Binance Smart Chain Testnet, Fantom Testnet, G
 Polygon Mumbai, Rinkeby, and Ropsten.
 
 Beginning February 7, Coinbase Wallet clients will handle `wallet_addEthereumChain` requests for non-whitelisted
-networks. Until then, `wallet_addEthereumChain` requests for non-whitelisted networks will be rejected.
+networks (eg a network such as `Harmony One` which is not supported by clients by default today). 
+Until then, `wallet_addEthereumChain` requests for non-whitelisted networks will be rejected.
 
 A dapp can determine if a network is whitelisted or not by sending a `wallet_switchEthereumChain` request for
 that network. If error code 4092 is returned, then the network is not supported by default by the client wallet.
