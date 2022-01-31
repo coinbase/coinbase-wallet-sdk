@@ -66,10 +66,10 @@ export const ethereum = walletLink.makeWeb3Provider(DEFAULT_ETH_JSONRPC_URL, DEF
 export const web3 = new Web3(ethereum as any)
 ```
 
-Walletlink will use an rpcUrl provided by Coinbase Wallet clients regardless of the rpcUrl passed into `makeWeb3Provider` 
-for whitelisted networks. Walletlink solely needs an rpcUrl to be provided by the dapp as a fallback.
+Walletlink uses an rpcUrl provided by Coinbase Wallet clients regardless of the rpcUrl passed into `makeWeb3Provider` 
+for whitelisted networks. Walletlink needs an rpcUrl to be provided by the dapp as a fallback.
 
-For more information on using alternate networks, please see EIP-3085 and EIP-3326 section below.
+For more information on using alternate networks, please see the section on EIP-3085 and EIP-3326 below.
 
 ### Use EIP-1102 to obtain authorization and get Ethereum accounts
 
