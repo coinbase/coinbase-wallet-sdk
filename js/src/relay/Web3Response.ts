@@ -44,9 +44,7 @@ export function AddEthereumChainResponse(
   }
 }
 
-export type SwitchEthereumChainResponse = BaseWeb3Response<
-  SwitchResponse | boolean
-> // was request approved
+export type SwitchEthereumChainResponse = BaseWeb3Response<SwitchResponse> // was request approved
 
 export type SwitchResponse = {
   isApproved: boolean
