@@ -10,6 +10,8 @@ import css from "./LinkDialog-css"
 import { QRCode } from "./QRCode"
 import { Spinner } from "./Spinner"
 
+import { LIB_VERSION } from '../version';
+
 export const LinkDialog: FunctionComponent<{
   darkMode: boolean
   version: string
@@ -55,6 +57,7 @@ export const LinkDialog: FunctionComponent<{
         isContainerHidden && "-walletlink-link-dialog-container-hidden"
       )}
     >
+      <input type="hidden" name="walletlink-version" value={LIB_VERSION} />
       <style>{css}</style>
       <div
         class={clsx(

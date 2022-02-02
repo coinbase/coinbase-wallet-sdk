@@ -25,6 +25,7 @@
   "scripts": {
     "tsc": "tsc --noEmit --pretty",
     "test": "yarn build-npm && karma start",
+    "prebuild": "node -p \"'export const LIB_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
     "build": "node compile-assets.js && webpack --config webpack.config.js",
     "build-chrome": "webpack --config webpack.config.chrome.js",
     "build-npm": "tsc -p ./tsconfig.build.json",
