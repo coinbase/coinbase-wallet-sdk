@@ -261,16 +261,6 @@ export class WalletLinkProvider
       nativeCurrency
     ).promise
 
-    if (typeof res.result === "boolean") {
-      // legacy handling. to be deprecated in february 2022
-      if (res.result === true) {
-        this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
-        this.updateProviderInfo(rpcUrls[0], chainId, false)
-      }
-
-      return res.result === true
-    }
-
     if (res.result?.isApproved === true) {
       this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
       this.updateProviderInfo(rpcUrls[0], chainId, false)
@@ -293,20 +283,10 @@ export class WalletLinkProvider
       })
     }
 
-    if (typeof res.result !== "boolean") {
-      const switchResponse = res.result as SwitchResponse
-      if (switchResponse.isApproved && switchResponse.rpcUrl.length > 0) {
-        this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
-        this.updateProviderInfo(switchResponse.rpcUrl, chainId, false)
-      }
-    } else {
-      // this is for legacy clients that return a boolean as result. can deprecate below in February 2022
-      if (res.result) {
-        this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
-        const ethereumChain = EthereumChain.fromChainId(BigInt(chainId))!
-        const rpcUrl = EthereumChain.rpcUrl(ethereumChain) ?? ""
-        this.updateProviderInfo(rpcUrl, chainId, false)
-      }
+    const switchResponse = res.result as SwitchResponse
+    if (switchResponse.isApproved && switchResponse.rpcUrl.length > 0) {
+      this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true")
+      this.updateProviderInfo(switchResponse.rpcUrl, chainId, false)
     }
   }
 
