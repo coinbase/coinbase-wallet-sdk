@@ -9,6 +9,7 @@ import walletLogo from "./icons/QRLogo"
 import { QRCode } from "./QRCode"
 import { Spinner } from "./Spinner"
 import css from "./TryExtensionLinkDialog-css"
+import {LIB_VERSION} from "../version";
 
 export const TryExtensionLinkDialog: FunctionComponent<{
   darkMode: boolean
@@ -160,6 +161,7 @@ const ScanQRBox: FunctionComponent<{
             }}
           />
         </div>
+        <input type="hidden" name="walletlink-version" value={LIB_VERSION} />
         <input type="hidden" value={qrUrl} />
         {!props.isConnected && (
           <div class="-walletlink-extension-dialog-box-bottom-qr-connecting">

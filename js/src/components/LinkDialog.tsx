@@ -10,6 +10,8 @@ import css from "./LinkDialog-css"
 import { QRCode } from "./QRCode"
 import { Spinner } from "./Spinner"
 
+import { LIB_VERSION } from '../version';
+
 export const LinkDialog: FunctionComponent<{
   darkMode: boolean
   version: string
@@ -116,6 +118,7 @@ const ScanQRCode: FunctionComponent<{
             bgColor="transparent"
           />
         </div>
+        <input type="hidden" name="walletlink-version" value={LIB_VERSION} />
         <input type="hidden" value={qrUrl} />
         {!props.isConnected && (
           <div class="-walletlink-link-dialog-box-content-qrcode-connecting">
