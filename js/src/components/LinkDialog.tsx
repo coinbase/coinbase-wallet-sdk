@@ -57,7 +57,6 @@ export const LinkDialog: FunctionComponent<{
         isContainerHidden && "-walletlink-link-dialog-container-hidden"
       )}
     >
-      <input type="hidden" name="walletlink-version" value={LIB_VERSION} />
       <style>{css}</style>
       <div
         class={clsx(
@@ -119,6 +118,7 @@ const ScanQRCode: FunctionComponent<{
             bgColor="transparent"
           />
         </div>
+        <input type="hidden" name="walletlink-version" value={LIB_VERSION} />
         <input type="hidden" value={qrUrl} />
         {!props.isConnected && (
           <div class="-walletlink-link-dialog-box-content-qrcode-connecting">
