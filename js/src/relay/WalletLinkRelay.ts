@@ -222,35 +222,14 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
     )
 
     this.subscriptions.add(
-      this.connection.sessionConfig$
-        .pipe(
-          filter(
-            c =>
-              c.metadata &&
-              c.metadata.ChainId !== undefined &&
-              c.metadata.JsonRpcUrl !== undefined
-          )
-        )
-        .pipe(
-          mergeMap(c =>
-            zip(
-              aes256gcm.decrypt(c.metadata.ChainId!, this._session.secret),
-              aes256gcm.decrypt(c.metadata.JsonRpcUrl!, this._session.secret)
-            )
-          )
-        )
-        .pipe(distinctUntilChanged())
+      this.connection.chainUpdate$
         .subscribe({
-          next: ([chainId, jsonRpcUrl]) => {
+          next: chainUpdate => {
+            //TODO: where is decryption handled (don't actually need to encrypt these props)
+            //TODO: need error logging
             if (this.chainCallback) {
-              this.chainCallback(chainId, jsonRpcUrl)
+              this.chainCallback(chainUpdate.chainId, chainUpdate.rpcUrl)
             }
-          },
-          error: () => {
-            this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {
-              message: "Had error decrypting",
-              value: "chainId|jsonRpcUrl"
-            })
           }
         })
     )

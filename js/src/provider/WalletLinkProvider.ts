@@ -111,7 +111,10 @@ export class WalletLinkProvider
 
     this.isCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true
 
-    const chainId = this.getChainId()
+    const chainId = options.chainId || this.getChainId()
+    if (options.chainId) {
+      this._storage.setItem(DEFAULT_CHAIN_ID_KEY, options.chainId.toString(10))
+    }
     const chainIdStr = prepend0x(chainId.toString(16))
     // indicate that we've connected, for EIP-1193 compliance
     this.emit("connect", { chainIdStr })

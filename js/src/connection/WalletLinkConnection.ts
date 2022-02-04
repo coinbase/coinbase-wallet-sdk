@@ -7,7 +7,7 @@ import {
   iif,
   Observable,
   of,
-  ReplaySubject,
+  ReplaySubject, Subject,
   Subscription,
   throwError,
   timer
@@ -40,6 +40,7 @@ import {
 } from "./ClientMessage"
 import { ConnectionState, RxWebSocket } from "./RxWebSocket"
 import {
+  ChainUpdate,
   isServerMessageFail,
   ServerMessage,
   ServerMessageEvent,
@@ -68,6 +69,7 @@ export class WalletLinkConnection {
   private connectedSubject = new BehaviorSubject(false)
   private linkedSubject = new BehaviorSubject(false)
   private sessionConfigSubject = new ReplaySubject<SessionConfig>(1)
+  private chainUpdateSubject = new Subject<ChainUpdate>()
   private walletLinkAnalytics: WalletLinkAnalyticsAbstract
 
   /**
@@ -186,6 +188,19 @@ export class WalletLinkConnection {
         })
     )
 
+    this.subscriptions.add(
+      ws.incomingJSONData$
+        .pipe(
+          filter(m =>
+            m.type == "SetChainId"
+          )
+        )
+        .subscribe(m => {
+          const msg = m as ChainUpdate
+          this.chainUpdateSubject.next(msg)
+        })
+    )
+
     // handle session config updates
     this.subscriptions.add(
       ws.incomingJSONData$
@@ -287,6 +302,10 @@ export class WalletLinkConnection {
    */
   public get sessionConfig$(): Observable<SessionConfig> {
     return this.sessionConfigSubject.asObservable()
+  }
+
+  public get chainUpdate$(): Observable<ChainUpdate> {
+    return this.chainUpdateSubject.asObservable()
   }
 
   /**

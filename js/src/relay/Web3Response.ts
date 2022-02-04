@@ -2,7 +2,7 @@
 // Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { AddressString, HexString } from "../types"
+import {AddressString, HexString, IntNumber} from "../types"
 import { Web3Method } from "./Web3Method"
 
 interface BaseWeb3Response<Result> {

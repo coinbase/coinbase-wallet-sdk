@@ -46,6 +46,12 @@ export interface ServerMessageLinked extends ServerMessage {
   onlineGuests: number
 }
 
+export interface ChainUpdate extends ServerMessage {
+  type: "ChainUpdate",
+  chainId: string,
+  rpcUrl: string
+}
+
 export interface ServerMessageGetSessionConfigOK extends ServerMessage {
   type: "GetSessionConfigOK"
   id: IntNumber
