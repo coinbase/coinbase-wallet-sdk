@@ -16,5 +16,6 @@ export const EVENTS = {
   SKIPPED_CLEARING_SESSION: "walletlink_sdk.skipped_clearing_session",
   GENERAL_ERROR: "walletlink_sdk.general_error",
   WEB3_REQUEST: "walletlink_sdk.web3.request",
+  WEB3_REQUEST_PUBLISHED: "walletlink_sdk.web3.request_published",
   WEB3_RESPONSE: "walletlink_sdk.web3.response"
 }

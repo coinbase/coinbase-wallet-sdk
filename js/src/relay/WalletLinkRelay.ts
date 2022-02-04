@@ -153,7 +153,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
                   const sessionIdHash = this.getSessionIdHash()
                   this.walletLinkAnalytics?.sendEvent(
                     EVENTS.UNLINKED_ERROR_STATE,
-                    { sessionIdHash }
+                    { sessionIdHash, origin: location.origin }
                   )
                 }
               }
@@ -171,7 +171,8 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
           const alreadyDestroyed = this.connection.isDestroyed
           this.walletLinkAnalytics?.sendEvent(EVENTS.METADATA_DESTROYED, {
             alreadyDestroyed,
-            sessionIdHash: this.getSessionIdHash()
+            sessionIdHash: this.getSessionIdHash(),
+            origin: location.origin
           })
           return this.resetAndReload()
         })
@@ -334,7 +335,8 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
           this.walletLinkAnalytics?.sendEvent(EVENTS.SESSION_STATE_CHANGE, {
             method: "relay::resetAndReload",
             sessionMetadataChange: "__destroyed, 1",
-            sessionIdHash: this.getSessionIdHash()
+            sessionIdHash: this.getSessionIdHash(),
+            origin: location.origin
           })
           this.connection.destroy()
           /**
@@ -353,7 +355,8 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
               EVENTS.SKIPPED_CLEARING_SESSION,
               {
                 sessionIdHash: this.getSessionIdHash(),
-                storedSessionIdHash: Session.hash(storedSession.id)
+                storedSessionIdHash: Session.hash(storedSession.id),
+                origin: location.origin
               }
             )
           }
@@ -595,11 +598,26 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
       method: `relay::${message.request.method}`,
       sessionIdHash: this.getSessionIdHash(),
       storedSessionIdHash: storedSession ? Session.hash(storedSession.id) : "",
-      isSessionMismatched: (storedSession?.id !== this._session.id).toString()
+      isSessionMismatched: (storedSession?.id !== this._session.id).toString(),
+      origin: location.origin
     })
 
     this.subscriptions.add(
       this.publishEvent("Web3Request", message, true).subscribe({
+        next: _ => {
+          this.walletLinkAnalytics?.sendEvent(EVENTS.WEB3_REQUEST_PUBLISHED, {
+            eventId: message.id,
+            method: `relay::${message.request.method}`,
+            sessionIdHash: this.getSessionIdHash(),
+            storedSessionIdHash: storedSession
+              ? Session.hash(storedSession.id)
+              : "",
+            isSessionMismatched: (
+              storedSession?.id !== this._session.id
+            ).toString(),
+            origin: location.origin
+          })
+        },
         error: err => {
           this.handleWeb3ResponseMessage(
             Web3ResponseMessage({
@@ -679,7 +697,8 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
     this.walletLinkAnalytics?.sendEvent(EVENTS.WEB3_RESPONSE, {
       eventId: message.id,
       method: `relay::${response.method}`,
-      sessionIdHash: this.getSessionIdHash()
+      sessionIdHash: this.getSessionIdHash(),
+      origin: location.origin
     })
     if (isRequestEthereumAccountsResponse(response)) {
       Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach(
