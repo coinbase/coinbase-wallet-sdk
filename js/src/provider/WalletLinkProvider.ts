@@ -7,7 +7,6 @@ import BN from "bn.js"
 import { ethErrors } from "eth-rpc-errors"
 
 import { WalletLinkAnalytics } from "../connection/WalletLinkAnalytics"
-import { EthereumChain } from "../EthereumChain"
 import { EVENTS, WalletLinkAnalyticsAbstract } from "../init"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
 import { EthereumTransactionParams } from "../relay/EthereumTransactionParams"
