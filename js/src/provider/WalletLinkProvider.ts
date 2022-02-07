@@ -119,7 +119,7 @@ export class WalletLinkProvider
     if (cachedAddresses) {
       const addresses = cachedAddresses.split(" ") as AddressString[]
       if (addresses[0] !== "") {
-        this._addresses = addresses
+        this._addresses = addresses.map(address => ensureAddressString(address))
         this.emit("accountsChanged", addresses)
       }
     }
@@ -828,6 +828,7 @@ export class WalletLinkProvider
       addresses_length: this._addresses.length,
       sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : null
     })
+
     if (this._addresses.length > 0) {
       return Promise.resolve({
         jsonrpc: "2.0",
