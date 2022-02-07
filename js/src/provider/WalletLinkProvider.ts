@@ -303,7 +303,7 @@ export class WalletLinkProvider
     })
 
     if (this._addresses.length > 0) {
-      return this._addresses
+      return [...this._addresses]
     }
 
     return await this._send<AddressString[]>(JSONRPCMethod.eth_requestAccounts)
@@ -804,7 +804,7 @@ export class WalletLinkProvider
   }
 
   private _eth_accounts(): string[] {
-    return this._addresses
+    return [...this._addresses]
   }
 
   private _eth_coinbase(): string | null {
