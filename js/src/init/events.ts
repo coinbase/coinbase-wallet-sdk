@@ -17,4 +17,5 @@ export const EVENTS = {
   GENERAL_ERROR: "walletlink_sdk.general_error",
   WEB3_REQUEST: "walletlink_sdk.web3.request",
   WEB3_RESPONSE: "walletlink_sdk.web3.response"
+  UNKNOWN_ADDRESS_ENCOUNTERED: "walletlink_sdk.unknown_address_encountered"
 }
