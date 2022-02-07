@@ -119,7 +119,7 @@ export class WalletLinkProvider
     if (cachedAddresses) {
       const addresses = cachedAddresses.split(" ") as AddressString[]
       if (addresses[0] !== "") {
-        this._addresses = addresses
+        this._addresses = addresses.map(address => ensureAddressString(address))
         this.emit("accountsChanged", addresses)
       }
     }
@@ -301,8 +301,9 @@ export class WalletLinkProvider
       addresses_length: this._addresses.length,
       sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : null
     })
+
     if (this._addresses.length > 0) {
-      return this._addresses
+      return [...this._addresses]
     }
 
     return await this._send<AddressString[]>(JSONRPCMethod.eth_requestAccounts)
@@ -689,13 +690,15 @@ export class WalletLinkProvider
   private _isKnownAddress(addressString: string): boolean {
     try {
       const address = ensureAddressString(addressString)
-      return this._addresses.includes(address)
+      const lowercaseAddresses = this._addresses.map(address => ensureAddressString(address))
+      return lowercaseAddresses.includes(address)
     } catch {}
     return false
   }
 
   private _ensureKnownAddress(addressString: string): void {
     if (!this._isKnownAddress(addressString)) {
+      this._walletLinkAnalytics.sendEvent(EVENTS.UNKNOWN_ADDRESS_ENCOUNTERED)
       throw new Error("Unknown Ethereum address")
     }
   }
@@ -801,7 +804,7 @@ export class WalletLinkProvider
   }
 
   private _eth_accounts(): string[] {
-    return this._addresses
+    return [...this._addresses]
   }
 
   private _eth_coinbase(): string | null {
@@ -828,6 +831,7 @@ export class WalletLinkProvider
       addresses_length: this._addresses.length,
       sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : null
     })
+
     if (this._addresses.length > 0) {
       return Promise.resolve({
         jsonrpc: "2.0",
