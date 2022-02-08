@@ -152,15 +152,18 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
               const addresses = cachedAddresses.split(" ") as AddressString[]
               const wasConnectedViaStandalone =
                 this.storage.getItem("IsStandaloneSigning") === "true"
-              if (addresses[0] !== "" && !linked && this.session.linked) {
-                if (!wasConnectedViaStandalone) {
-                  this.isUnlinkedErrorState = true
-                  const sessionIdHash = this.getSessionIdHash()
-                  this.walletLinkAnalytics?.sendEvent(
-                    EVENTS.UNLINKED_ERROR_STATE,
-                    { sessionIdHash, origin: location.origin }
-                  )
-                }
+              if (
+                addresses[0] !== "" &&
+                !linked &&
+                this.session.linked &&
+                !wasConnectedViaStandalone
+              ) {
+                this.isUnlinkedErrorState = true
+                const sessionIdHash = this.getSessionIdHash()
+                this.walletLinkAnalytics?.sendEvent(
+                  EVENTS.UNLINKED_ERROR_STATE,
+                  { sessionIdHash, origin: location.origin }
+                )
               }
             }
           })
