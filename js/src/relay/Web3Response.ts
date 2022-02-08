@@ -28,7 +28,7 @@ export type RequestEthereumAccountsResponse = BaseWeb3Response<
   AddressString[] // an array of ethereum addresses
 >
 
-export type AddEthereumChainResponse = BaseWeb3Response<AddResponse | boolean> // was request approved
+export type AddEthereumChainResponse = BaseWeb3Response<AddResponse> // was request approved
 
 export type AddResponse = {
   isApproved: boolean
@@ -44,9 +44,7 @@ export function AddEthereumChainResponse(
   }
 }
 
-export type SwitchEthereumChainResponse = BaseWeb3Response<
-  SwitchResponse | boolean
-> // was request approved
+export type SwitchEthereumChainResponse = BaseWeb3Response<SwitchResponse> // was request approved
 
 export type SwitchResponse = {
   isApproved: boolean

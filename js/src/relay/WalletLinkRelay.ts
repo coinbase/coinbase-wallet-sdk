@@ -141,13 +141,18 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
               LOCAL_STORAGE_ADDRESSES_KEY
             )
 
+            if (linked) {
+              // Only set linked session variable one way
+              this.session.linked = linked
+            }
+
             this.isUnlinkedErrorState = false
 
             if (cachedAddresses) {
               const addresses = cachedAddresses.split(" ") as AddressString[]
               const wasConnectedViaStandalone =
                 this.storage.getItem("IsStandaloneSigning") === "true"
-              if (addresses[0] !== "" && !linked) {
+              if (addresses[0] !== "" && !linked && this.session.linked) {
                 if (!wasConnectedViaStandalone) {
                   this.isUnlinkedErrorState = true
                   const sessionIdHash = this.getSessionIdHash()
