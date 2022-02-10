@@ -74,7 +74,7 @@ export class LinkFlow {
 
   public attach(el: Element): void {
     this.root = document.createElement("div")
-    this.root.className = "-walletlink-link-flow-root"
+    this.root.className = "-cbwsdk-link-flow-root"
     el.appendChild(this.root)
     this.render()
 

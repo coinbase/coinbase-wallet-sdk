@@ -14,7 +14,7 @@ export const Spinner: FunctionComponent<{
   const color = props.color || "#000"
 
   return (
-    <div class="-walletlink-spinner">
+    <div class="-cbwsdk-spinner">
       <style>{css}</style>
       <svg
         viewBox="0 0 100 100"
