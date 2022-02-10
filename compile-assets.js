@@ -6,8 +6,7 @@ const glob = require("glob")
 const sass = require("sass")
 const { optimize } = require("svgo")
 
-const COPYRIGHT = `// Copyright (c) 2018-2021 WalletLink.org <https://www.walletlink.org/>
-// Copyright (c) 2018-2021 Coinbase, Inc. <https://www.coinbase.com/>
+const COPYRIGHT = `// Copyright (c) 2018-2021 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0`
 
 async function main() {
