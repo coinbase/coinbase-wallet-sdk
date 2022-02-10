@@ -1,4 +1,3 @@
-// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
 // Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
@@ -14,7 +13,7 @@ export const Spinner: FunctionComponent<{
   const color = props.color || "#000"
 
   return (
-    <div class="-walletlink-spinner">
+    <div class="-cbwsdk-spinner">
       <style>{css}</style>
       <svg
         viewBox="0 0 100 100"

@@ -43,7 +43,7 @@ export class WalletLinkSdkUI extends WalletLinkUI {
     }
     const el = document.documentElement
     const container = document.createElement("div")
-    container.className = "-walletlink-css-reset"
+    container.className = "-cbwsdk-css-reset"
     el.appendChild(container)
 
     this.linkFlow.attach(container)

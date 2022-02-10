@@ -1,4 +1,3 @@
-// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
 // Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
@@ -74,7 +73,7 @@ export class LinkFlow {
 
   public attach(el: Element): void {
     this.root = document.createElement("div")
-    this.root.className = "-walletlink-link-flow-root"
+    this.root.className = "-cbwsdk-link-flow-root"
     el.appendChild(this.root)
     this.render()
 
