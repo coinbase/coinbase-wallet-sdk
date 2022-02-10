@@ -1,0 +1,6 @@
+package.json
+yarn.lock
+**/build
+**/dist
+**/node_modules
+**/src/vendor-js
