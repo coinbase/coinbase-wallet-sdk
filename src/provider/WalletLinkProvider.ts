@@ -472,6 +472,7 @@ export class WalletLinkProvider
   }
 
   public disconnect(): boolean {
+    this.close()
     return true
   }
 
