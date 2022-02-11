@@ -769,7 +769,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
             userAgent
           )
         ) {
-          window.location.href = `https://go.cb-w.com/xoXnYwQimhb?cb_url=${window.location.href}`
+          window.location.href = `https://go.cb-w.com/xoXnYwQimhb?cb_url=${encodeURIComponent(window.location.href)}`
           return
         }
 
