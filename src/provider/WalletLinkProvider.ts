@@ -471,11 +471,6 @@ export class WalletLinkProvider
     throw new Error("Subscriptions are not supported")
   }
 
-  public disconnect(): boolean {
-    this.close()
-    return true
-  }
-
   private _send = this.send.bind(this)
   private _sendAsync = this.sendAsync.bind(this)
 

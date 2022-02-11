@@ -24,7 +24,6 @@ export interface Web3Provider {
   connected: boolean
   chainId: string
   supportsSubscriptions(): boolean
-  disconnect(): boolean
 }
 
 export interface RequestArguments {
