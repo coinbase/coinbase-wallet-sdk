@@ -278,9 +278,11 @@ ethereum.close()
 
 ## Libraries using Coinbase Wallet SDK
 
-- [web3-react](https://github.com/NoahZinsmeister/web3-react)
-
 - [blocknative/onboard](https://github.com/blocknative/onboard)
+
+- [wagmi](https://github.com/tmm/wagmi)
+
+- [web3-react](https://github.com/NoahZinsmeister/web3-react)
 
 - [web3modal](https://github.com/Web3Modal/web3modal)
 
