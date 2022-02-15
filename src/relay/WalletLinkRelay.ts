@@ -65,6 +65,8 @@ import {
   SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse,
   SwitchEthereumChainResponse,
+  WatchAssetReponse,
+  WatchAssetResponse,
   Web3Response
 } from "./Web3Response"
 import {
@@ -769,7 +771,9 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
             userAgent
           )
         ) {
-          window.location.href = `https://go.cb-w.com/xoXnYwQimhb?cb_url=${encodeURIComponent(window.location.href)}`
+          window.location.href = `https://go.cb-w.com/xoXnYwQimhb?cb_url=${encodeURIComponent(
+            window.location.href
+          )}`
           return
         }
 
@@ -802,6 +806,92 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
     )
 
     return { promise, cancel }
+  }
+
+  watchAsset(
+    type: string,
+    address: string,
+    symbol?: string,
+    decimals?: number,
+    image?: string
+  ): CancelablePromise<WatchAssetResponse> {
+    const request: Web3Request = {
+      method: Web3Method.watchAsset,
+      params: {
+        type,
+        options: {
+          address,
+          symbol,
+          decimals,
+          image
+        }
+      }
+    }
+
+    let hideSnackbarItem: (() => void) | null = null
+    const id = randomBytesHex(8)
+
+    const cancel = () => {
+      this.publishWeb3RequestCanceledEvent(id)
+      this.handleWeb3ResponseMessage(
+        Web3ResponseMessage({
+          id,
+          response: ErrorResponse(request.method, "User rejected request")
+        })
+      )
+      hideSnackbarItem?.()
+    }
+
+    if (!this.ui.inlineWatchAsset()) {
+      hideSnackbarItem = this.ui.showConnecting({
+        isUnlinkedErrorState: this.isUnlinkedErrorState,
+        onCancel: cancel,
+        onResetConnection: this.resetAndReload // eslint-disable-line @typescript-eslint/unbound-method
+      })
+    }
+
+    const promise = new Promise<WatchAssetResponse>((resolve, reject) => {
+      this.relayEventManager.callbacks.set(id, response => {
+        hideSnackbarItem?.()
+
+        if (response.errorMessage) {
+          return reject(new Error(response.errorMessage))
+        }
+        resolve(response as WatchAssetResponse)
+      })
+
+      const _cancel = () => {
+        this.handleWeb3ResponseMessage(
+          Web3ResponseMessage({
+            id,
+            response: WatchAssetReponse(false)
+          })
+        )
+      }
+
+      const approve = () => {
+        this.handleWeb3ResponseMessage(
+          Web3ResponseMessage({
+            id,
+            response: WatchAssetReponse(true)
+          })
+        )
+      }
+
+      this.ui.watchAsset({
+        onApprove: approve,
+        onCancel: _cancel,
+        type,
+        address,
+        symbol,
+        decimals,
+        image
+      })
+
+      resolve({ method: Web3Method.watchAsset, result: true })
+    })
+
+    return { cancel, promise }
   }
 
   addEthereumChain(
