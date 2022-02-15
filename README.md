@@ -1,46 +1,118 @@
-# WalletLink
+# Coinbase Wallet SDK
 
-WalletLink is an open protocol that lets users connect their mobile wallets to
-your DApp.
+Coinbase Wallet SDK (formerly WalletLink) lets developers connect their dapps to Coinbase Wallet
+on both mobile web (for iOS and Android) and desktop: 
 
-With WalletLink, users can use your application in any desktop browser without
-installing an extension, and the secure tunnel established between your app and
-the mobile wallet with end-to-end encryption utilizing client-generated keys
-keeps all user activity private.
+- **Mobile**: Users can connect to your mobile web dapp through a deeplink to the 
+dapp browser in Coinbase Wallet Mobile App.
 
-For DApp developers to integrate with WalletLink, all you need to do is drop a
-few lines of code into your application, and WalletLink will take care of the
-rest. WalletLink is open-source and uses minimal dependencies for maximum
-security and no code bloat.
+- **Desktop**: Users can connect to your desktop app with a QR code in the 
+Coinbase Wallet Mobile App or with the Coinbase Wallet Chrome Extension.
 
-## Getting Started
+Wallet SDK is open-source and uses minimal dependencies for maximum security 
+and no code bloat. Simply drop a few lines of code into your dapp and Wallet 
+SDK takes care of the rest. 
 
-### Installation
+## Installing and Upgrading
+
+> Coinbase Wallet SDK was previously known as WalletLink. The installation 
+package is named `walletlink`. 
+
+### Installing Wallet SDK
+
+
+Install Coinbase Wallet SDK with yarn or npm. 
+
+#### Yarn
+
+1. Check available versions of Wallet SDK.
 
 ```shell
-# With Yarn
-yarn add walletlink
+yarn info walletlink versions
+```
 
-# With NPM
+2. Install a specific version or the latest version.
+
+```shell
+#yarn add walletlink@2.4.7
+yarn add walletlink
+```
+
+3. Check your installed version. 
+
+```shell
+yarn list walletlink
+```
+
+#### Npm
+
+1. Check available versions of Wallet SDK.
+
+```shell
+npm view walletlink versions
+```
+
+2. Install a specific version or the latest version.
+
+```shell
+#npm install walletlink@2.4.7
 npm install walletlink
 ```
 
-The following instructions are in [TypeScript](https://www.typescriptlang.org/),
-but the usage is the same in JavaScript, except for the occasional type
-annotations, for example `: string[]` or `as any`.
+3. Check your installed version. 
 
-### Upgrading from WalletLink 1.0 to 2.0
+```shell
+npm list walletlink
+```
 
-For most users, simply update the NPM package, and you should be good to go.
+### Upgrading Wallet SDK
 
-If you were using `ethereum.on("accountsChanged")`, please remove it and obtain
-addresses via [EIP-1102](#use-eip-1102-to-obtain-authorization-and-get-ethereum-accounts)
-callbacks instead. It's removed to improve compatibility with the latest web3.js.
+Upgrade Coinbase Wallet SDK with yarn or npm. 
 
-Dark mode theme (`darkMode`) is now available as an option to WalletLink
-constructor.
+#### Yarn
 
-### Initializing WalletLink and a WalletLink-powered Web3 object
+1. Compare your installed version of Coinbase Wallet SDK with the latest available version.
+
+```shell
+yarn outdated walletlink
+```
+
+2. Update Coinbase Wallet SDK to the latest.
+
+```shell
+yarn upgrade walletlink --latest
+```
+
+#### Npm
+
+1. Compare your installed version of Coinbase Wallet SDK with the latest available version. 
+
+```shell
+npm outdated walletlink
+```
+
+2. If necessary, update `package.json` with the latest major version. 
+
+```shell
+{
+  "dependencies": {
+    "walletlink": "^2.4.7"
+  }
+}
+```
+
+3. Update Coinbase Wallet SDK to the latest available version.
+
+```shell
+npm update walletlink
+```
+
+## Initializing WalletLink and a WalletLink-powered Web3 object
+
+> Instructions are in [TypeScript](https://www.typescriptlang.org/). The usage 
+is the same in JavaScript, except for the occasional TypeScript type 
+annotation such as `string[]` or `as any`.
+
 
 ```typescript
 // TypeScript
@@ -66,21 +138,21 @@ export const ethereum = walletLink.makeWeb3Provider(DEFAULT_ETH_JSONRPC_URL, DEF
 export const web3 = new Web3(ethereum as any)
 ```
 
-Walletlink uses an rpcUrl provided by Coinbase Wallet clients regardless of the rpcUrl passed into `makeWeb3Provider` 
-for whitelisted networks. Walletlink needs an rpcUrl to be provided by the dapp as a fallback.
+Coinbase Wallet SDK uses an rpcUrl provided by Coinbase Wallet clients 
+regardless of the rpcUrl passed into `makeWeb3Provider` for whitelisted 
+networks. Wallet SDK needs an rpcUrl to be provided by the dapp as a fallback.
 
-For more information on using alternate networks, please see the section on EIP-3085 and EIP-3326 below.
+For more information on using alternate networks, see Switching / Adding Alternative EVM-Compatible Chains below.
 
-### Use EIP-1102 to obtain authorization and get Ethereum accounts
+## Getting Ethereum Accounts
 
-Invoking EIP-1102 will show a QR code dialog if the user's mobile wallet is not
-already connected to your app. The following code should run in response to a
-user-initiated action such as clicking a button to ensure the pop up is not
-blocked by the browser.
+Use [EIP-1102](https://eips.ethereum.org/EIPS/eip-1102) to obtain authorization and get Ethereum accounts. Invoking EIP-1102 shows a QR code dialog if the user's mobile wallet is not already connected to your app. 
+
+The following code runs in response to a user-initiated action such as clicking a button to ensure the pop up is not blocked by the browser.
 
 ```typescript
 // Use eth_RequestAccounts
-ethereum.send('eth_requestAccounts').then((accounts: string[]) => {
+ethereum.request('eth_requestAccounts').then((accounts: string[]) => {
   console.log(`User's address is ${accounts[0]}`)
 
   // Optionally, have the default account set for web3.js
@@ -94,30 +166,50 @@ ethereum.enable().then((accounts: string[]) => {
 })
 ```
 
-That's it! Once the authorization is obtained from the user, the Web3 object
-(`web3`) and the Web3 Provider (`ethereum`) are ready to be used as per usual.
+Once the user obtains authorization, the Web3 object (`web3`) and the Web3 
+Provider (`ethereum`) are ready to be used.
 
-### Switching / Adding Alternative EVM-Compatible Chains with EIP-3085 and EIP-3326
+> If you were using `ethereum.on("accountsChanged")`, remove it and obtain 
+addresses with EIP-1102 callbacks instead. It was removed to improve 
+compatibility with the latest web3.js.
 
-For dapps supporting multiple networks, only 1 rpcUrl needs to be provided to walletlink. And that is 
-the rpcUrl of the chain the dapp wishes to default users to.
 
-Walletlink and Coinbase Wallet clients support both EIP-3085 `wallet_addEthereumChain` and EIP-3326 
-`wallet_switchEthereumChain` requests for switching networks.
+## Switching / Adding Alternative EVM-Compatible Chains
 
-If walletlink receives either a `wallet_switchEthereumChain` or `wallet_addEthereumChain` request for a whitelisted 
-network, then it will switch the user to that network after asking approval from the user.
+Coinbase Wallet SDK and Coinbase Wallet clients support both [EIP-3326](https://eips.ethereum.org/EIPS/eip-3326) `wallet_switchEthereumChain` and [EIP-3085](https://eips.ethereum.org/EIPS/eip-3085) `wallet_addEthereumChain` requests for switching networks.
 
-Current whitelisted networks are Ethereum, Optimism, Polygon, Avalanche, Arbitrum, Fantom, Binance Smart Chain, xDai,
-Arbitrum Rinkeby, Avalanche Fuji, Binance Smart Chain Testnet, Fantom Testnet, Gorli, Kovan, Optimistic Kovan,
-Polygon Mumbai, Rinkeby, and Ropsten.
+For dapps supporting multiple networks, Coinbase Wallet SDK only needs 1 rpcUrl -- the rpcUrl of the chain the dapp wishes to default users to.
 
-Beginning February 7, Coinbase Wallet clients will handle `wallet_addEthereumChain` requests for non-whitelisted
-networks (eg a network such as `Harmony One` which is not supported by clients by default today). 
-Until then, `wallet_addEthereumChain` requests for non-whitelisted networks will be rejected.
+If Wallet SDK receives either a `wallet_switchEthereumChain` or `wallet_addEthereumChain` request for a whitelisted network, then it switches the user to that network after asking approval from the user.
 
-A dapp can determine if a network is whitelisted or not by sending a `wallet_switchEthereumChain` request for
-that network. If error code 4092 is returned, then the network is not supported by default by the client wallet.
+Current whitelisted networks: 
+
+| Whitelisted Networks        |
+|:----------------------------|
+| Arbitrum                    |
+| Arbitrum Rinkeby            |
+| Avalanche                   |
+| Avalanche Fuji              |
+| Binance Smart Chain         |
+| Binance Smart Chain Testnet |
+| Ethereum                    |
+| Fantom                      |
+| Fantom Testnet              |
+| Gorli                       |
+| Kovan                       |
+| Optimism                    |
+| Optimistic Kovan            |
+| Polygon                     |
+| Polygon Mumbai              |
+| Rinkeby                     |
+| Ropsten                     |
+| xDai                        |
+
+Coinbase Wallet clients handle `wallet_addEthereumChain` requests for non-whitelisted networks (for example, a network such as `Harmony One` which is not currently supported by clients by default).
+
+A dapp can determine if a network is whitelisted or not by sending a `wallet_switchEthereumChain` request for that network. If error code 4092 is returned, then the network is not supported by default by the client wallet.
+
+### Example
 
 Here's how to request the wallet switch networks:
 
@@ -144,8 +236,9 @@ Here's how to request the client wallet add a new network
           })
 ```
 
-Many dapps will attempt to switch to a network via `wallet_switchEthereumChain`, determine if the network is supported 
-by the wallet based on the error code, and follow with a `wallet_addEthereumChain` request if the network is not 
+Many dapps attempt to switch to a network with `wallet_switchEthereumChain`, 
+determine if the network is supported by the wallet based on the error code, 
+and follow with a `wallet_addEthereumChain` request if the network is not 
 supported. Here's an example:
 
 ```
@@ -170,11 +263,11 @@ supported. Here's an example:
     }
 ```
 
-### Disconnecting / De-establishing a link
+## Disconnecting / Disestablishing a Link
 
 To disconnect, call the instance method `disconnect()` on the WalletLink object,
 or the instance method `close()` on the WalletLink Web3 Provider object. This
-will de-establish the link, and require user to reconnect by scanning QR code
+will disestablish the link, and require user to reconnect by scanning QR code
 again.
 
 ```typescript
@@ -183,11 +276,19 @@ walletLink.disconnect()
 ethereum.close()
 ```
 
+## Libraries using Coinbase Wallet SDK
+
+- [web3-react](https://github.com/NoahZinsmeister/web3-react)
+
+- [blocknative/onboard](https://github.com/blocknative/onboard)
+
+- [web3modal](https://github.com/Web3Modal/web3modal)
+
 ---
 
 ```
-Copyright © 2018-2020 WalletLink.org <https://www.walletlink.org/>
-Copyright © 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
+Copyright © 2018-2022 WalletLink.org <https://www.walletlink.org/>
+Copyright © 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -201,7 +302,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ```
-### Attributions
+
+## Attributions
  * [Eth-json-rpc-filters](https://github.com/MetaMask/eth-json-rpc-filters/blob/main/LICENSE) under the ISC license
  * [Safe-event-emitter](https://github.com/MetaMask/safe-event-emitter/blob/master/LICENSE) under the ISC license
  * [Json-rpc-engine](https://github.com/MetaMask/json-rpc-engine/blob/main/LICENSE) under the ISC license
