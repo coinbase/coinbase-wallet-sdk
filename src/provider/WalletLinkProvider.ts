@@ -1091,31 +1091,26 @@ export class WalletLinkProvider
 
   private async _wallet_watchAsset(params: unknown): Promise<JSONRPCResponse> {
     const request = params as WatchAssetParams
-
     if (request.type?.length === 0) {
-      throw ethErrors.provider.custom({
-        code: 0,
+      throw ethErrors.rpc.invalidParams({
         message: "type is a required field"
       })
     }
 
     if (request.type !== "ERC20") {
-      throw ethErrors.provider.custom({
-        code: 0,
+      throw ethErrors.rpc.invalidParams({
         message: `Asset of type '${request.type}' not supported`
       })
     }
 
     if (!request?.options) {
-      throw ethErrors.provider.custom({
-        code: 0,
+      throw ethErrors.rpc.invalidParams({
         message: "options is a required field"
       })
     }
 
     if (!request.options.address) {
-      throw ethErrors.provider.custom({
-        code: 0,
+      throw ethErrors.rpc.invalidParams({
         message: "option address is a required option"
       })
     }
