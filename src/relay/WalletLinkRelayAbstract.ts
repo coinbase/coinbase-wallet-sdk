@@ -1,5 +1,4 @@
 import { ethErrors, serializeError } from "eth-rpc-errors"
-
 import { JSONRPCRequest, JSONRPCResponse } from "../provider/JSONRPC"
 import { AddressString, IntNumber, RegExpString } from "../types"
 import { EthereumTransactionParams } from "./EthereumTransactionParams"
@@ -15,6 +14,7 @@ import {
   SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse,
   SwitchEthereumChainResponse,
+  WatchAssetResponse,
   Web3Response
 } from "./Web3Response"
 
@@ -44,6 +44,14 @@ export abstract class WalletLinkRelayAbstract {
       decimals: number
     }
   ): CancelablePromise<AddEthereumChainResponse>
+
+  abstract watchAsset(
+    type: string,
+    address: string,
+    symbol?: string,
+    decimals?: number,
+    image?: string
+  ): CancelablePromise<WatchAssetResponse>
 
   abstract switchEthereumChain(
     chainId: string

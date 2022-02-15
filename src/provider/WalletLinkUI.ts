@@ -14,7 +14,6 @@ import {
 } from "../relay/Web3Response"
 import { AddressString } from "../types"
 
-
 export interface WalletLinkUIOptions {
   walletLinkUrl: string
   version: string
@@ -24,7 +23,7 @@ export interface WalletLinkUIOptions {
 }
 
 export abstract class WalletLinkUI {
-  constructor(_: Readonly<WalletLinkUIOptions>) { }
+  constructor(_: Readonly<WalletLinkUIOptions>) {}
   abstract attach(): void
 
   /**
@@ -42,14 +41,24 @@ export abstract class WalletLinkUI {
     onApprove: (rpcUrl: string) => void
     chainId: string
     rpcUrls: string[]
-    blockExplorerUrls?: string[],
-    chainName?: string,
-    iconUrls?: string[],
+    blockExplorerUrls?: string[]
+    chainName?: string
+    iconUrls?: string[]
     nativeCurrency?: {
-      name: string;
-      symbol: string;
-      decimals: number;
+      name: string
+      symbol: string
+      decimals: number
     }
+  }): void
+
+  abstract watchAsset(options: {
+    onCancel: () => void
+    onApprove: () => void
+    type: string
+    address: string
+    symbol?: string
+    decimals?: number
+    image?: string
   }): void
 
   abstract switchEthereumChain(options: {
@@ -118,6 +127,12 @@ export abstract class WalletLinkUI {
   abstract inlineAddEthereumChain(chainId: string): boolean
 
   /**
+   * If the extension is available, it can handle the watch asset request without
+   * having to send a request over walletlink
+   */
+  abstract inlineWatchAsset(): boolean
+
+  /**
    * If the extension is available, it can handle the switch ethereum chain request without
    * having to send a request over walletlink
    */
@@ -131,5 +146,5 @@ export abstract class WalletLinkUI {
   /**
    * We want to disable showing the qr code for in-page walletlink if the dapp hasn't provided a json rpc url
    */
-  setConnectDisabled(_: boolean) { }
+  setConnectDisabled(_: boolean) {}
 }

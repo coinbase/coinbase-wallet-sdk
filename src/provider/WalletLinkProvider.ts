@@ -5,7 +5,6 @@
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import BN from "bn.js"
 import { ethErrors } from "eth-rpc-errors"
-
 import { WalletLinkAnalytics } from "../connection/WalletLinkAnalytics"
 import { EVENTS, WalletLinkAnalyticsAbstract } from "../init"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
@@ -232,6 +231,26 @@ export class WalletLinkProvider
       this.emit("chainChanged", this.getChainId())
       this.hasMadeFirstChainChangedEmission = true
     }
+  }
+
+  private async watchAsset(
+    type: string,
+    address: string,
+    symbol?: string,
+    decimals?: number,
+    image?: string
+  ): Promise<boolean> {
+    console.log("private watchAsset Method")
+    const relay = await this.initializeRelay()
+    const result = await relay.watchAsset(
+      type,
+      address,
+      symbol,
+      decimals,
+      image
+    ).promise
+
+    return !!result.result
   }
 
   private async addEthereumChain(
@@ -643,6 +662,9 @@ export class WalletLinkProvider
 
       case JSONRPCMethod.wallet_switchEthereumChain:
         return this._wallet_switchEthereumChain(params)
+
+      case JSONRPCMethod.wallet_watchAsset:
+        return this._wallet_watchAsset(params)
     }
 
     const relay = await this.initializeRelay()
@@ -690,7 +712,9 @@ export class WalletLinkProvider
   private _isKnownAddress(addressString: string): boolean {
     try {
       const address = ensureAddressString(addressString)
-      const lowercaseAddresses = this._addresses.map(address => ensureAddressString(address))
+      const lowercaseAddresses = this._addresses.map(address =>
+        ensureAddressString(address)
+      )
       return lowercaseAddresses.includes(address)
     } catch {}
     return false
@@ -1066,6 +1090,50 @@ export class WalletLinkProvider
     return { jsonrpc: "2.0", id: 0, result: null }
   }
 
+  private async _wallet_watchAsset(params: unknown): Promise<JSONRPCResponse> {
+    const request = params as WatchAssetParams
+
+    if (request.type?.length === 0) {
+      throw ethErrors.provider.custom({
+        code: 0,
+        message: "type is a required field"
+      })
+    }
+
+    if (request.type !== "ERC20") {
+      throw ethErrors.provider.custom({
+        code: 0,
+        message: `Asset of type '${request.type}' not supported`
+      })
+    }
+
+    if (!request?.options) {
+      throw ethErrors.provider.custom({
+        code: 0,
+        message: "options is a required field"
+      })
+    }
+
+    if (!request.options.address) {
+      throw ethErrors.provider.custom({
+        code: 0,
+        message: "option address is a required option"
+      })
+    }
+
+    const { address, symbol, image, decimals } = request.options
+
+    const res = await this.watchAsset(
+      request.type,
+      address,
+      symbol,
+      decimals,
+      image
+    )
+
+    return { jsonrpc: "2.0", id: 0, result: res }
+  }
+
   private _eth_uninstallFilter(params: unknown[]): boolean {
     const filterId = ensureHexString(params[0])
     return this._filterPolyfill.uninstallFilter(filterId)
@@ -1128,4 +1196,14 @@ interface AddEthereumChainParams {
 
 interface SwitchEthereumChainParams {
   chainId: string
+}
+
+interface WatchAssetParams {
+  type: string
+  options: {
+    address: string
+    symbol?: string
+    decimals?: number
+    image?: string
+  }
 }

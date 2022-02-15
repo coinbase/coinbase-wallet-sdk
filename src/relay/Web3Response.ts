@@ -30,6 +30,8 @@ export type RequestEthereumAccountsResponse = BaseWeb3Response<
 
 export type AddEthereumChainResponse = BaseWeb3Response<AddResponse> // was request approved
 
+export type WatchAssetResponse = BaseWeb3Response<boolean>
+
 export type AddResponse = {
   isApproved: boolean
   rpcUrl: string
@@ -64,6 +66,10 @@ export function RequestEthereumAccountsResponse(
   addresses: AddressString[]
 ): RequestEthereumAccountsResponse {
   return { method: Web3Method.requestEthereumAccounts, result: addresses }
+}
+
+export function WatchAssetReponse(success: boolean): WatchAssetResponse {
+  return { method: Web3Method.watchAsset, result: success }
 }
 
 export function isRequestEthereumAccountsResponse(

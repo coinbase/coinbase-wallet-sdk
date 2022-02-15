@@ -118,6 +118,19 @@ export type MakeEthereumJSONRPCRequest = BaseWeb3Request<
   }
 >
 
+export type WatchAssetRequest = BaseWeb3Request<
+  Web3Method.watchAsset,
+  {
+    type: string
+    options: {
+      address: string
+      symbol?: string
+      decimals?: number
+      image?: string
+    }
+  }
+>
+
 export type Web3Request =
   | RequestEthereumAccountsRequest
   | SignEthereumMessageRequest
@@ -129,3 +142,4 @@ export type Web3Request =
   | AddEthereumChainRequest
   | SwitchEthereumChainRequest
   | MakeEthereumJSONRPCRequest
+  | WatchAssetRequest
