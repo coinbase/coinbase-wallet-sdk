@@ -240,7 +240,6 @@ export class WalletLinkProvider
     decimals?: number,
     image?: string
   ): Promise<boolean> {
-    console.log("private watchAsset Method")
     const relay = await this.initializeRelay()
     const result = await relay.watchAsset(
       type,
