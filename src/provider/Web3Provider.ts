@@ -32,5 +32,5 @@ export interface RequestArguments {
   method: string
 
   /** The params of the RPC method, if any. */
-  params?: any[]
+  params?: any
 }
