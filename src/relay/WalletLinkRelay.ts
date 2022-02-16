@@ -878,17 +878,21 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
         )
       }
 
-      this.ui.watchAsset({
-        onApprove: approve,
-        onCancel: _cancel,
-        type,
-        address,
-        symbol,
-        decimals,
-        image
-      })
+      if (this.ui.inlineWatchAsset()) {
+        this.ui.watchAsset({
+          onApprove: approve,
+          onCancel: _cancel,
+          type,
+          address,
+          symbol,
+          decimals,
+          image
+        })
+      }
 
-      resolve({ method: Web3Method.watchAsset, result: true })
+      if (!this.ui.inlineWatchAsset() && !this.ui.isStandalone()) {
+        this.publishWeb3RequestEvent(id, request)
+      }
     })
 
     return { cancel, promise }
