@@ -1090,7 +1090,9 @@ export class WalletLinkProvider
   }
 
   private async _wallet_watchAsset(params: unknown): Promise<JSONRPCResponse> {
-    const request = params as WatchAssetParams
+    const request = (
+      Array.isArray(params) ? params[0] : params
+    ) as WatchAssetParams
     if (request.type?.length === 0) {
       throw ethErrors.rpc.invalidParams({
         message: "type is a required field"
