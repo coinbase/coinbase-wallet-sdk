@@ -151,8 +151,8 @@ Use [EIP-1102](https://eips.ethereum.org/EIPS/eip-1102) to obtain authorization 
 The following code runs in response to a user-initiated action such as clicking a button to ensure the pop up is not blocked by the browser.
 
 ```typescript
-// Use eth_RequestAccounts
-ethereum.request('eth_requestAccounts').then((accounts: string[]) => {
+// Use eth_requestAccounts
+ethereum.send('eth_requestAccounts').then((accounts: string[]) => {
   console.log(`User's address is ${accounts[0]}`)
 
   // Optionally, have the default account set for web3.js
@@ -263,7 +263,78 @@ supported. Here's an example:
     }
 ```
 
-## Disconnecting / Disestablishing a Link
+### Suggest client wallet track a specific token with EIP-747
+
+Calling `wallet_watchAsset` method returns true/false if the asset was accepted/denied by the user, or an error if there is something wrong with the request.
+Unlike other methods, the default definition of `wallet_watchAsset` params is not an array, however, in order to keep it compatible with code conventions of other dapps walletlink supports both array and object format.
+
+```typescript
+interface WatchAssetParameters {
+  type: string // The asset's interface, e.g. 'ERC20'
+  options: {
+    address: string // The hexadecimal Ethereum address of the token contract
+    symbol?: string // A ticker symbol or shorthand, up to 5 alphanumerical characters
+    decimals?: number // The number of asset decimals
+    image?: string // A string url of the token logo
+  }
+}
+```
+
+Here's an example of how to suggest the client wallet add a custom token:
+
+```typescript
+function onApproveWatchAsset() {
+  // your approval callback implementation
+}
+
+function onDenyWatchAsset() {
+  // your denying callback implementation
+}
+
+function onError(message: string) {
+  // your error callback implementation
+}
+
+// Use wallet_watchAsset
+ethereum.request({
+  method: "wallet_watchAsset",
+  params: {
+    type: "ERC20",
+    options: {
+      address: "0xcf664087a5bb0237a0bad6742852ec6c8d69a27a",
+      symbol: "WONE",
+      decimals: 18,
+      image:
+        "https://s2.coinmarketcap.com/static/img/coins/64x64/11696.png",
+    },
+  },
+  ,
+})
+.then((result: boolean) =>
+  result ? onApproveWatchAsset() : onDenyWatchAsset()
+)
+.catch(err => onError(err.message));
+
+
+// Alternatively, you can use ethereum.send
+ethereum
+  .send("wallet_watchAsset", {
+    type: "ERC20",
+    options: {
+      address: "0xcf664087a5bb0237a0bad6742852ec6c8d69a27a",
+      symbol: "WONE",
+      decimals: 18,
+      image: "https://s2.coinmarketcap.com/static/img/coins/64x64/11696.png"
+    }
+  })
+  .then((result: boolean) =>
+    result ? onApproveWatchAsset() : onDenyWatchAsset()
+  )
+  .catch(err => onError(err.message))
+})
+```
+
+### Disconnecting / De-establishing a link
 
 To disconnect, call the instance method `disconnect()` on the WalletLink object,
 or the instance method `close()` on the WalletLink Web3 Provider object. This
