@@ -266,6 +266,7 @@ supported. Here's an example:
 ### Suggest client wallet track a specific token with EIP-747
 
 Calling `wallet_watchAsset` method returns true/false if the asset was accepted/denied by the user, or an error if there is something wrong with the request.
+
 Unlike other methods, the default definition of `wallet_watchAsset` params is not an array, however, in order to keep it compatible with code conventions of other dapps walletlink supports both array and object format.
 
 ```typescript
