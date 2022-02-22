@@ -1,0 +1,21 @@
+//TypeScript
+import WalletLink from 'walletlink
+import Web3 from web3'
+
+const APP_Name='My coinbase App'
+const App_LOGO_URL='https://conbase.com/logo.png'
+const DEFAULT_ETH_JSONRPC_URL=https://mainet.infura.io/v3/<a513d99c4bf641889efcc4c8f236bf10>'
+const DEFAULT_CHAIN_ID=1
+
+//initialize Walletlink
+export const walletLink=new WalletLink({
+appname:APP_NAME,
+appLogoUrl:APP_LOGO_URL,
+darkmode:false
+})
+
+//initialize a Web3 object
+export const ethereum=export const ethereum = walletLink.makeWeb3Provider(DEFAULT_ETH_JSONRPC_URL, DEFAULT_CHAIN_ID)
+
+// Initialize a Web3 object
+export const web3 = new Web3(ethereum as any)
