@@ -152,7 +152,7 @@ The following code runs in response to a user-initiated action such as clicking 
 
 ```typescript
 // Use eth_requestAccounts
-ethereum.send('eth_requestAccounts').then((accounts: string[]) => {
+ethereum.request('eth_requestAccounts').then((accounts: string[]) => {
   console.log(`User's address is ${accounts[0]}`)
 
   // Optionally, have the default account set for web3.js
@@ -315,24 +315,6 @@ ethereum.request({
   result ? onApproveWatchAsset() : onDenyWatchAsset()
 )
 .catch(err => onError(err.message));
-
-
-// Alternatively, you can use ethereum.send
-ethereum
-  .send("wallet_watchAsset", {
-    type: "ERC20",
-    options: {
-      address: "0xcf664087a5bb0237a0bad6742852ec6c8d69a27a",
-      symbol: "WONE",
-      decimals: 18,
-      image: "https://s2.coinmarketcap.com/static/img/coins/64x64/11696.png"
-    }
-  })
-  .then((result: boolean) =>
-    result ? onApproveWatchAsset() : onDenyWatchAsset()
-  )
-  .catch(err => onError(err.message))
-})
 ```
 
 ### Disconnecting / De-establishing a link
