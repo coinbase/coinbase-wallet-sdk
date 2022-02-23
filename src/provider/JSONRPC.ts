@@ -26,6 +26,7 @@ export enum JSONRPCMethod {
   walletlink_arbitrary = "walletlink_arbitrary",
   wallet_addEthereumChain = "wallet_addEthereumChain",
   wallet_switchEthereumChain = "wallet_switchEthereumChain",
+  wallet_watchAsset = "wallet_watchAsset",
 
   // asynchronous pub/sub
   eth_subscribe = "eth_subscribe",
@@ -39,7 +40,7 @@ export enum JSONRPCMethod {
   eth_getFilterLogs = "eth_getFilterLogs"
 }
 
-export interface JSONRPCRequest<T = any[]> {
+export interface JSONRPCRequest<T = any> {
   jsonrpc: "2.0"
   id: number
   method: string

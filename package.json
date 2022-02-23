@@ -1,6 +1,6 @@
 {
   "name": "walletlink",
-  "version": "2.4.7",
+  "version": "2.5.0",
   "description": "Coinbase Wallet JavaScript SDK",
   "keywords": [
     "cipher",
