@@ -16,7 +16,7 @@ import {
 } from "rxjs/operators"
 import { ServerMessageEvent } from "../connection/ServerMessage"
 import { WalletLinkConnection } from "../connection/WalletLinkConnection"
-import { WalletLinkAnalyticsAbstract, EVENTS } from "../connection/WalletLinkAnalyticsAbstract"
+import { WalletLinkAnalyticsAbstract, EVENTS } from "../connection/WalletLinkAnalytics"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
 import { WalletLinkUI, WalletLinkUIOptions } from "../provider/WalletLinkUI"
 import { AddressString, IntNumber, RegExpString } from "../types"

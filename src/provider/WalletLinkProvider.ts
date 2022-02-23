@@ -5,7 +5,7 @@ import SafeEventEmitter from "@metamask/safe-event-emitter"
 import BN from "bn.js"
 import { ethErrors } from "eth-rpc-errors"
 
-import { WalletLinkAnalyticsAbstract, EVENTS } from "../connection/WalletLinkAnalyticsAbstract"
+import { WalletLinkAnalyticsAbstract, EVENTS } from "../connection/WalletLinkAnalytics"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
 import { EthereumTransactionParams } from "../relay/EthereumTransactionParams"
 import { Session } from "../relay/Session"

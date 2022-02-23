@@ -26,7 +26,7 @@ import {
   timeoutWith
 } from "rxjs/operators"
 
-import { WalletLinkAnalyticsAbstract, EVENTS } from "./WalletLinkAnalyticsAbstract"
+import { WalletLinkAnalyticsAbstract, EVENTS } from "./WalletLinkAnalytics"
 import { Session } from "../relay/Session"
 import { IntNumber } from "../types"
 import {
