@@ -56,9 +56,9 @@ const HEARTBEAT_INTERVAL = 10000
 const REQUEST_TIMEOUT = 60000
 
 /**
- * WalletLink Connection
+ * CoinbaseWallet Connection
  */
-export class WalletLinkConnection {
+export class CBWalletConnection {
   private ws: RxWebSocket<ServerMessage>
   private subscriptions = new Subscription()
   private destroyed = false
@@ -72,14 +72,14 @@ export class WalletLinkConnection {
    * Constructor
    * @param sessionId Session ID
    * @param sessionKey Session Key
-   * @param serverUrl Walletlinkd RPC URL
+   * @param serverUrl CBWalletConnection RPC URL
    * @param [WebSocketClass] Custom WebSocket implementation
    */
   constructor(
     private sessionId: string,
     private sessionKey: string,
     serverUrl: string,
-    private walletLinkAnalytics?: WalletLinkAnalyticsAbstract,
+    private analytics?: WalletLinkAnalyticsAbstract,
     WebSocketClass: typeof WebSocket = WebSocket
   ) {
     const ws = new RxWebSocket<ServerMessage>(
@@ -93,7 +93,7 @@ export class WalletLinkConnection {
       ws.connectionState$
         .pipe(
           tap(state =>
-            this.walletLinkAnalytics?.sendEvent(EVENTS.CONNECTED_STATE_CHANGE, {
+            this.analytics?.sendEvent(EVENTS.CONNECTED_STATE_CHANGE, {
               state,
               sessionIdHash: Session.hash(sessionId)
             })
@@ -173,7 +173,7 @@ export class WalletLinkConnection {
         .subscribe(m => {
           const msg = m as Omit<ServerMessageIsLinkedOK, "type"> &
             ServerMessageLinked
-          this.walletLinkAnalytics?.sendEvent(EVENTS.LINKED, {
+          this.analytics?.sendEvent(EVENTS.LINKED, {
             sessionIdHash: Session.hash(sessionId),
             linked: msg.linked,
             type: m.type,
@@ -194,7 +194,7 @@ export class WalletLinkConnection {
         .subscribe(m => {
           const msg = m as Omit<ServerMessageGetSessionConfigOK, "type"> &
             ServerMessageSessionConfigUpdated
-          this.walletLinkAnalytics?.sendEvent(EVENTS.SESSION_CONFIG_RECEIVED, {
+          this.analytics?.sendEvent(EVENTS.SESSION_CONFIG_RECEIVED, {
             sessionIdHash: Session.hash(sessionId),
             metadata_keys:
               msg && msg.metadata ? Object.keys(msg.metadata) : undefined
@@ -215,7 +215,7 @@ export class WalletLinkConnection {
     if (this.destroyed) {
       throw new Error("instance is destroyed")
     }
-    this.walletLinkAnalytics?.sendEvent(EVENTS.STARTED_CONNECTING, {
+    this.analytics?.sendEvent(EVENTS.STARTED_CONNECTING, {
       sessionIdHash: Session.hash(this.sessionId)
     })
     this.ws.connect().subscribe()
@@ -223,12 +223,12 @@ export class WalletLinkConnection {
 
   /**
    * Terminate connection, and mark as destroyed. To reconnect, create a new
-   * instance of WalletLinkConnection
+   * instance of CBWalletConnection
    */
   public destroy(): void {
     this.subscriptions.unsubscribe()
     this.ws.disconnect()
-    this.walletLinkAnalytics?.sendEvent(EVENTS.DISCONNECTED, {
+    this.analytics?.sendEvent(EVENTS.DISCONNECTED, {
       sessionIdHash: Session.hash(this.sessionId)
     })
     this.destroyed = true
