@@ -26,7 +26,7 @@ import {
   timeoutWith
 } from "rxjs/operators"
 
-import { EVENTS, WalletLinkAnalyticsAbstract } from "../init"
+import { WalletLinkAnalyticsAbstract, EVENTS } from "./WalletLinkAnalyticsAbstract"
 import { Session } from "../relay/Session"
 import { IntNumber } from "../types"
 import {
@@ -67,7 +67,6 @@ export class WalletLinkConnection {
   private connectedSubject = new BehaviorSubject(false)
   private linkedSubject = new BehaviorSubject(false)
   private sessionConfigSubject = new ReplaySubject<SessionConfig>(1)
-  private walletLinkAnalytics: WalletLinkAnalyticsAbstract
 
   /**
    * Constructor
@@ -80,7 +79,7 @@ export class WalletLinkConnection {
     private sessionId: string,
     private sessionKey: string,
     serverUrl: string,
-    walletLinkAnalytics: WalletLinkAnalyticsAbstract,
+    private walletLinkAnalytics?: WalletLinkAnalyticsAbstract,
     WebSocketClass: typeof WebSocket = WebSocket
   ) {
     const ws = new RxWebSocket<ServerMessage>(
@@ -88,14 +87,13 @@ export class WalletLinkConnection {
       WebSocketClass
     )
     this.ws = ws
-    this.walletLinkAnalytics = walletLinkAnalytics
 
     // attempt to reconnect every 5 seconds when disconnected
     this.subscriptions.add(
       ws.connectionState$
         .pipe(
           tap(state =>
-            this.walletLinkAnalytics.sendEvent(EVENTS.CONNECTED_STATE_CHANGE, {
+            this.walletLinkAnalytics?.sendEvent(EVENTS.CONNECTED_STATE_CHANGE, {
               state,
               sessionIdHash: Session.hash(sessionId)
             })
@@ -175,7 +173,7 @@ export class WalletLinkConnection {
         .subscribe(m => {
           const msg = m as Omit<ServerMessageIsLinkedOK, "type"> &
             ServerMessageLinked
-          this.walletLinkAnalytics.sendEvent(EVENTS.LINKED, {
+          this.walletLinkAnalytics?.sendEvent(EVENTS.LINKED, {
             sessionIdHash: Session.hash(sessionId),
             linked: msg.linked,
             type: m.type,
@@ -196,7 +194,7 @@ export class WalletLinkConnection {
         .subscribe(m => {
           const msg = m as Omit<ServerMessageGetSessionConfigOK, "type"> &
             ServerMessageSessionConfigUpdated
-          this.walletLinkAnalytics.sendEvent(EVENTS.SESSION_CONFIG_RECEIVED, {
+          this.walletLinkAnalytics?.sendEvent(EVENTS.SESSION_CONFIG_RECEIVED, {
             sessionIdHash: Session.hash(sessionId),
             metadata_keys:
               msg && msg.metadata ? Object.keys(msg.metadata) : undefined
@@ -217,7 +215,7 @@ export class WalletLinkConnection {
     if (this.destroyed) {
       throw new Error("instance is destroyed")
     }
-    this.walletLinkAnalytics.sendEvent(EVENTS.STARTED_CONNECTING, {
+    this.walletLinkAnalytics?.sendEvent(EVENTS.STARTED_CONNECTING, {
       sessionIdHash: Session.hash(this.sessionId)
     })
     this.ws.connect().subscribe()
@@ -230,7 +228,7 @@ export class WalletLinkConnection {
   public destroy(): void {
     this.subscriptions.unsubscribe()
     this.ws.disconnect()
-    this.walletLinkAnalytics.sendEvent(EVENTS.DISCONNECTED, {
+    this.walletLinkAnalytics?.sendEvent(EVENTS.DISCONNECTED, {
       sessionIdHash: Session.hash(this.sessionId)
     })
     this.destroyed = true

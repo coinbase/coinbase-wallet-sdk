@@ -31,7 +31,7 @@ export class WalletLinkSdkUI extends WalletLinkUI {
       version: options.version,
       sessionId: options.session.id,
       sessionSecret: options.session.secret,
-      walletLinkUrl: options.walletLinkUrl,
+      cbwalletApiUrl: options.walletLinkUrl,
       connected$: options.connected$,
       isParentConnection: false
     })

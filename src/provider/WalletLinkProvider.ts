@@ -5,8 +5,7 @@ import SafeEventEmitter from "@metamask/safe-event-emitter"
 import BN from "bn.js"
 import { ethErrors } from "eth-rpc-errors"
 
-import { WalletLinkAnalytics } from "../connection/WalletLinkAnalytics"
-import { EVENTS, WalletLinkAnalyticsAbstract } from "../init"
+import { WalletLinkAnalyticsAbstract, EVENTS } from "../connection/WalletLinkAnalyticsAbstract"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
 import { EthereumTransactionParams } from "../relay/EthereumTransactionParams"
 import { Session } from "../relay/Session"
@@ -73,7 +72,7 @@ export class WalletLinkProvider
   private _relay: WalletLinkRelayAbstract | null = null
   private readonly _storage: ScopedLocalStorage
   private readonly _relayEventManager: WalletLinkRelayEventManager
-  private readonly _walletLinkAnalytics: WalletLinkAnalyticsAbstract
+  private readonly _walletLinkAnalytics?: WalletLinkAnalyticsAbstract
 
   private _jsonRpcUrlFromOpts: string
   private readonly _overrideIsMetaMask: boolean
@@ -104,8 +103,6 @@ export class WalletLinkProvider
     this._storage = options.storage
     this._relayEventManager = options.relayEventManager
     this._walletLinkAnalytics = options.walletLinkAnalytics
-      ? options.walletLinkAnalytics
-      : new WalletLinkAnalytics()
 
     this.isCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true
 
@@ -295,7 +292,7 @@ export class WalletLinkProvider
   }
 
   public async enable(): Promise<AddressString[]> {
-    this._walletLinkAnalytics.sendEvent(EVENTS.ETH_ACCOUNTS_STATE, {
+    this._walletLinkAnalytics?.sendEvent(EVENTS.ETH_ACCOUNTS_STATE, {
       method: "provider::enable",
       addresses_length: this._addresses.length,
       sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : null
@@ -697,7 +694,7 @@ export class WalletLinkProvider
 
   private _ensureKnownAddress(addressString: string): void {
     if (!this._isKnownAddress(addressString)) {
-      this._walletLinkAnalytics.sendEvent(EVENTS.UNKNOWN_ADDRESS_ENCOUNTERED)
+      this._walletLinkAnalytics?.sendEvent(EVENTS.UNKNOWN_ADDRESS_ENCOUNTERED)
       throw new Error("Unknown Ethereum address")
     }
   }
@@ -825,7 +822,7 @@ export class WalletLinkProvider
   }
 
   private async _eth_requestAccounts(): Promise<JSONRPCResponse> {
-    this._walletLinkAnalytics.sendEvent(EVENTS.ETH_ACCOUNTS_STATE, {
+    this._walletLinkAnalytics?.sendEvent(EVENTS.ETH_ACCOUNTS_STATE, {
       method: "provider::_eth_requestAccounts",
       addresses_length: this._addresses.length,
       sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : null
