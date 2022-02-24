@@ -18,7 +18,7 @@ import { ServerMessageEvent } from "../connection/ServerMessage"
 import { CBWalletConnection } from "../connection/CBWalletConnection"
 import { EventListener, EVENTS } from "../connection/EventListener"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
-import { WalletLinkUI, WalletLinkUIOptions } from "../provider/WalletLinkUI"
+import { CBWalletUI, CBWalletUIOptions } from "../provider/CBWalletUI"
 import { AddressString, IntNumber, RegExpString } from "../types"
 import {
   bigIntStringFromBN,
@@ -78,9 +78,9 @@ export interface CBWalletRelayOptions {
   darkMode: boolean
   storage: ScopedLocalStorage
   relayEventManager: CBWalletRelayEventManager
-  walletLinkUIConstructor: (
-    options: Readonly<WalletLinkUIOptions>
-  ) => WalletLinkUI
+  uiConstructor: (
+    options: Readonly<CBWalletUIOptions>
+  ) => CBWalletUI
   eventListener?: EventListener
 }
 
@@ -98,7 +98,7 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
     | ((chainId: string, jsonRpcUrl: string) => void)
     | null = null
 
-  private ui: WalletLinkUI
+  private ui: CBWalletUI
 
   private appName = ""
   private appLogoUrl: string | null = null
@@ -305,7 +305,7 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
         })
     )
 
-    this.ui = options.walletLinkUIConstructor({
+    this.ui = options.uiConstructor({
       cbWalletApiUrl: options.cbWalletApiUrl,
       version: options.version,
       darkMode: options.darkMode,

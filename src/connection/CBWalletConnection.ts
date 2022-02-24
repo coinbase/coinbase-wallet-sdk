@@ -72,7 +72,7 @@ export class CBWalletConnection {
    * Constructor
    * @param sessionId Session ID
    * @param sessionKey Session Key
-   * @param serverUrl CBWalletConnection RPC URL
+   * @param serverUrl CBWalletConnection API URL
    * @param [WebSocketClass] Custom WebSocket implementation
    */
   constructor(

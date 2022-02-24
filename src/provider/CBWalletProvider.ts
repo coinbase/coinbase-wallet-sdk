@@ -47,7 +47,7 @@ const DEFAULT_JSON_RPC_URL = "DefaultJsonRpcUrl"
 const HAS_CHAIN_BEEN_SWITCHED_KEY = "HasChainBeenSwitched"
 const HAS_CHAIN_OVERRIDDEN_FROM_RELAY = "HasChainOverriddenFromRelay"
 
-export interface WalletLinkProviderOptions {
+export interface CBWalletProviderOptions {
   chainId?: number
   jsonRpcUrl: string
   overrideIsCoinbaseWallet?: boolean
@@ -81,7 +81,7 @@ export class CBWalletProvider
 
   private hasMadeFirstChainChangedEmission = false
 
-  constructor(options: Readonly<WalletLinkProviderOptions>) {
+  constructor(options: Readonly<CBWalletProviderOptions>) {
     super()
 
     this.setProviderInfo = this.setProviderInfo.bind(this)
@@ -444,7 +444,7 @@ export class CBWalletProvider
 
     const newParams = params === undefined ? [] : params
 
-    // WalletLink Requests
+    // Coinbase Wallet Requests
     const id = this._relayEventManager.makeRequestId()
     const result = await this._sendRequestAsync({
       method,
@@ -504,7 +504,7 @@ export class CBWalletProvider
 
     if (response.result === undefined) {
       throw new Error(
-        `WalletLink does not support calling ${method} synchronously without ` +
+        `Coinbase Wallet does not support calling ${method} synchronously without ` +
           `a callback. Please provide a callback parameter to call ${method} ` +
           `asynchronously.`
       )
@@ -650,8 +650,8 @@ export class CBWalletProvider
       case JSONRPCMethod.eth_signTypedData:
         return this._eth_signTypedData_v4(params)
 
-      case JSONRPCMethod.walletlink_arbitrary:
-        return this._walletlink_arbitrary(params)
+      case JSONRPCMethod.cbWallet_arbitrary:
+        return this._cbwallet_arbitrary(params)
 
       case JSONRPCMethod.wallet_addEthereumChain:
         return this._wallet_addEthereumChain(params)
@@ -1014,7 +1014,7 @@ export class CBWalletProvider
     return this._signEthereumMessage(message, address, false, typedDataJSON)
   }
 
-  private async _walletlink_arbitrary(
+  private async _cbwallet_arbitrary(
     params: unknown[]
   ): Promise<JSONRPCResponse> {
     const action = params[0]

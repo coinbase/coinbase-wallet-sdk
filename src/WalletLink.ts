@@ -4,8 +4,8 @@
 import { EventListener } from "./connection/EventListener"
 import { ScopedLocalStorage } from "./lib/ScopedLocalStorage"
 import { CBWalletProvider } from "./provider/CBWalletProvider"
-import { CBWalletSdkUI } from "./provider/CBWalletSdkUI"
-import { WalletLinkUI, WalletLinkUIOptions } from "./provider/WalletLinkUI"
+import { CBWalletSDKUI } from "./provider/CBWalletSDKUI"
+import { CBWalletUI, CBWalletUIOptions } from "./provider/CBWalletUI"
 import { WalletLinkRelay } from "./relay/WalletLinkRelay"
 import { CBWalletRelayEventManager } from "./relay/CBWalletRelayEventManager"
 import { getFavicon } from "./util"
@@ -29,8 +29,8 @@ export interface WalletLinkOptions {
   walletLinkUrl?: string
   /** @optional an implementation of WalletLinkUI; for most, leave it unspecified */
   walletLinkUIConstructor?: (
-    options: Readonly<WalletLinkUIOptions>
-  ) => WalletLinkUI
+    options: Readonly<CBWalletUIOptions>
+  ) => CBWalletUI
   /** @optional an implementation of EventListener.ts for debugging; for most, leave it unspecified  */
   eventListener?: EventListener
   /** @optional whether wallet link provider should override the isMetaMask property. */
@@ -61,10 +61,10 @@ export class WalletLink {
   constructor(options: Readonly<WalletLinkOptions>) {
     const walletLinkUrl = options.walletLinkUrl || WALLETLINK_URL
     let walletLinkUIConstructor: (
-      options: Readonly<WalletLinkUIOptions>
-    ) => WalletLinkUI
+      options: Readonly<CBWalletUIOptions>
+    ) => CBWalletUI
     if (!options.walletLinkUIConstructor) {
-      walletLinkUIConstructor = opts => new CBWalletSdkUI(opts)
+      walletLinkUIConstructor = opts => new CBWalletSDKUI(opts)
     } else {
       walletLinkUIConstructor = options.walletLinkUIConstructor
     }
@@ -95,7 +95,7 @@ export class WalletLink {
       cbWalletApiUrl: walletLinkUrl,
       version: WALLETLINK_VERSION,
       darkMode: !!options.darkMode,
-      walletLinkUIConstructor,
+      uiConstructor: walletLinkUIConstructor,
       storage: this._storage,
       relayEventManager: this._relayEventManager,
       eventListener: this._eventListener

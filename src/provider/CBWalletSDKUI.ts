@@ -13,14 +13,14 @@ import {
   SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse
 } from "../relay/Web3Response"
-import { WalletLinkUI, WalletLinkUIOptions } from "./WalletLinkUI"
+import { CBWalletUI, CBWalletUIOptions } from "./CBWalletUI"
 
-export class CBWalletSdkUI extends WalletLinkUI {
+export class CBWalletSDKUI extends CBWalletUI {
   private readonly linkFlow: LinkFlow
   private readonly snackbar: Snackbar
   private attached = false
 
-  constructor(options: Readonly<WalletLinkUIOptions>) {
+  constructor(options: Readonly<CBWalletUIOptions>) {
     super(options)
     this.snackbar = new Snackbar({
       darkMode: options.darkMode
@@ -31,7 +31,7 @@ export class CBWalletSdkUI extends WalletLinkUI {
       version: options.version,
       sessionId: options.session.id,
       sessionSecret: options.session.secret,
-      cbWalletApiUrl: options.walletLinkUrl,
+      cbWalletApiUrl: options.cbWalletApiUrl,
       connected$: options.connected$,
       isParentConnection: false
     })

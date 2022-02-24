@@ -14,7 +14,7 @@ import {
 } from "../relay/Web3Response"
 import { AddressString } from "../types"
 
-export interface WalletLinkUIOptions {
+export interface CBWalletUIOptions {
   cbWalletApiUrl: string
   version: string
   darkMode: boolean
@@ -22,12 +22,12 @@ export interface WalletLinkUIOptions {
   connected$: Observable<boolean>
 }
 
-export abstract class WalletLinkUI {
-  constructor(_: Readonly<WalletLinkUIOptions>) {}
+export abstract class CBWalletUI {
+  constructor(_: Readonly<CBWalletUIOptions>) {}
   abstract attach(): void
 
   /**
-   * Opens a qr code or auth page to start a walletlink connection
+   * Opens a qr code or auth page to start a Coinbase Wallet connection
    * @param options onCancel callback
    *
    */
@@ -122,19 +122,19 @@ export abstract class WalletLinkUI {
 
   /**
    * If the extension is available, it can handle the add ethereum chain request without
-   * having to send a request over walletlink
+   * having to send a request over Coinbase Wallet API
    */
   abstract inlineAddEthereumChain(chainId: string): boolean
 
   /**
    * If the extension is available, it can handle the watch asset request without
-   * having to send a request over walletlink
+   * having to send a request over Coinbase Wallet API
    */
   abstract inlineWatchAsset(): boolean
 
   /**
    * If the extension is available, it can handle the switch ethereum chain request without
-   * having to send a request over walletlink
+   * having to send a request over Coinbase Wallet API
    */
   abstract inlineSwitchEthereumChain(): boolean
 
@@ -144,7 +144,7 @@ export abstract class WalletLinkUI {
   abstract isStandalone(): boolean
 
   /**
-   * We want to disable showing the qr code for in-page walletlink if the dapp hasn't provided a json rpc url
+   * We want to disable showing the qr code for in-page connection if the dapp hasn't provided a json rpc url
    */
   setConnectDisabled(_: boolean) {}
 }
