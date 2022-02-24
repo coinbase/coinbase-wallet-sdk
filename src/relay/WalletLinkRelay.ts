@@ -72,8 +72,8 @@ import {
   Web3ResponseMessage
 } from "./Web3ResponseMessage"
 
-export interface WalletLinkRelayOptions {
-  walletLinkUrl: string
+export interface CBWalletRelayOptions {
+  cbwalletApiUrl: string
   version: string
   darkMode: boolean
   storage: ScopedLocalStorage
@@ -87,7 +87,7 @@ export interface WalletLinkRelayOptions {
 export class WalletLinkRelay extends CBWalletRelayAbstract {
   private static accountRequestCallbackIds = new Set<string>()
 
-  private readonly walletLinkUrl: string
+  private readonly cbwalletApiUrl: string
   protected readonly storage: ScopedLocalStorage
   private readonly _session: Session
   private readonly relayEventManager: CBWalletRelayEventManager
@@ -106,9 +106,9 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
   isLinked: boolean | undefined
   isUnlinkedErrorState: boolean | undefined
 
-  constructor(options: Readonly<WalletLinkRelayOptions>) {
+  constructor(options: Readonly<CBWalletRelayOptions>) {
     super()
-    this.walletLinkUrl = options.walletLinkUrl
+    this.cbwalletApiUrl = options.cbwalletApiUrl
     this.storage = options.storage
     this._session =
       Session.load(options.storage) || new Session(options.storage).save()
@@ -119,7 +119,7 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
     this.connection = new CBWalletConnection(
       this._session.id,
       this._session.key,
-      this.walletLinkUrl,
+      this.cbwalletApiUrl,
       this.walletLinkAnalytics
     )
 
@@ -306,7 +306,7 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
     )
 
     this.ui = options.walletLinkUIConstructor({
-      walletLinkUrl: options.walletLinkUrl,
+      cbwalletApiUrl: options.cbwalletApiUrl,
       version: options.version,
       darkMode: options.darkMode,
       session: this._session,
