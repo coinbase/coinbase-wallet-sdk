@@ -1,8 +1,7 @@
 // Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { WalletLinkAnalytics } from "./connection/WalletLinkAnalytics"
-import { WalletLinkAnalyticsAbstract } from "./init/WalletLinkAnalyticsAbstract"
+import { EventListener } from "./connection/EventListener"
 import { ScopedLocalStorage } from "./lib/ScopedLocalStorage"
 import { CBWalletProvider } from "./provider/CBWalletProvider"
 import { CBWalletSdkUI } from "./provider/CBWalletSdkUI"
@@ -32,8 +31,8 @@ export interface WalletLinkOptions {
   walletLinkUIConstructor?: (
     options: Readonly<WalletLinkUIOptions>
   ) => WalletLinkUI
-  /** @optional an implementation of WalletLinkAnalytics.ts; for most, leave it unspecified  */
-  walletLinkAnalytics?: WalletLinkAnalyticsAbstract
+  /** @optional an implementation of EventListener.ts for debugging; for most, leave it unspecified  */
+  eventListener?: EventListener
   /** @optional whether wallet link provider should override the isMetaMask property. */
   overrideIsMetaMask?: boolean
   /** @optional whether wallet link provider should override the isCoinbaseWallet property. */
@@ -53,7 +52,7 @@ export class WalletLink {
   private _storage: ScopedLocalStorage
   private _overrideIsMetaMask: boolean
   private _overrideIsCoinbaseWallet: boolean
-  private _walletLinkAnalytics: WalletLinkAnalyticsAbstract
+  private _eventListener?: EventListener
 
   /**
    * Constructor
@@ -78,9 +77,7 @@ export class WalletLink {
 
     this._overrideIsCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true
 
-    this._walletLinkAnalytics = options.walletLinkAnalytics
-      ? options.walletLinkAnalytics
-      : new WalletLinkAnalytics()
+    this._eventListener = options.eventListener
 
     const u = new URL(walletLinkUrl)
     const walletLinkOrigin = `${u.protocol}//${u.host}`
@@ -95,13 +92,13 @@ export class WalletLink {
     this._relayEventManager = new CBWalletRelayEventManager()
 
     this._relay = new WalletLinkRelay({
-      walletLinkUrl,
+      cbwalletApiUrl: walletLinkUrl,
       version: WALLETLINK_VERSION,
       darkMode: !!options.darkMode,
       walletLinkUIConstructor,
       storage: this._storage,
       relayEventManager: this._relayEventManager,
-      walletLinkAnalytics: this._walletLinkAnalytics
+      eventListener: this._eventListener
     })
     this.setAppInfo(options.appName, options.appLogoUrl)
     this._relay.attachUI()
@@ -145,7 +142,7 @@ export class WalletLink {
       storage: this._storage,
       jsonRpcUrl,
       chainId,
-      walletLinkAnalytics: this._walletLinkAnalytics,
+      eventListener: this._eventListener,
       overrideIsMetaMask: this._overrideIsMetaMask,
       overrideIsCoinbaseWallet: this._overrideIsCoinbaseWallet
     })
