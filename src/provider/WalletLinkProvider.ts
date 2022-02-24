@@ -269,6 +269,14 @@ export class WalletLinkProvider
     }
 
     const relay = await this.initializeRelay()
+
+    if (
+      !this._isAuthorized() &&
+      !relay.supportsUnauthedAddEthereumChain(chainId.toString())
+    ) {
+      await relay.requestEthereumAccounts().promise
+    }
+
     const res = await relay.addEthereumChain(
       chainId.toString(),
       rpcUrls,
@@ -769,8 +777,12 @@ export class WalletLinkProvider
     }
   }
 
+  private _isAuthorized(): boolean {
+    return this._addresses.length > 0
+  }
+
   private _requireAuthorization(): void {
-    if (this._addresses.length === 0) {
+    if (!this._isAuthorized()) {
       throw ethErrors.provider.unauthorized({})
     }
   }

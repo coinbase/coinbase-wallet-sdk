@@ -106,6 +106,12 @@ export abstract class WalletLinkRelayAbstract {
     chainIdCallback: (chainId: string, jsonRpcUrl: string) => void
   ): void
 
+  /**
+   * Whether the provider should first call request ethereum accounts
+   * if handling an add ehereum chain call
+   */
+  abstract supportsUnauthedAddEthereumChain(chainId: string): boolean
+
   public async makeEthereumJSONRPCRequest(
     request: JSONRPCRequest,
     jsonRpcUrl: string

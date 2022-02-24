@@ -1101,6 +1101,10 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
     return { promise, cancel }
   }
 
+  supportsUnauthedAddEthereumChain(chainId: string): boolean {
+    return this.ui.inlineAddEthereumChain(chainId)
+  }
+
   private getSessionIdHash(): string {
     return Session.hash(this._session.id)
   }
