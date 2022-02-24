@@ -5,7 +5,7 @@ import SafeEventEmitter from "@metamask/safe-event-emitter"
 import BN from "bn.js"
 import { ethErrors } from "eth-rpc-errors"
 
-import { WalletLinkAnalyticsAbstract, EVENTS } from "../connection/WalletLinkAnalytics"
+import { EventListener, EVENTS } from "../connection/EventListener"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
 import { EthereumTransactionParams } from "../relay/EthereumTransactionParams"
 import { Session } from "../relay/Session"
@@ -55,7 +55,7 @@ export interface WalletLinkProviderOptions {
   relayEventManager: CBWalletRelayEventManager
   relayProvider: () => Promise<CBWalletRelayAbstract>
   storage: ScopedLocalStorage
-  walletLinkAnalytics?: WalletLinkAnalyticsAbstract
+  eventListener?: EventListener
 }
 
 export class CBWalletProvider
@@ -72,7 +72,7 @@ export class CBWalletProvider
   private _relay: CBWalletRelayAbstract | null = null
   private readonly _storage: ScopedLocalStorage
   private readonly _relayEventManager: CBWalletRelayEventManager
-  private readonly _walletLinkAnalytics?: WalletLinkAnalyticsAbstract
+  private readonly _eventListener?: EventListener
 
   private _jsonRpcUrlFromOpts: string
   private readonly _overrideIsMetaMask: boolean
@@ -102,7 +102,7 @@ export class CBWalletProvider
     this._relayProvider = options.relayProvider
     this._storage = options.storage
     this._relayEventManager = options.relayEventManager
-    this._walletLinkAnalytics = options.walletLinkAnalytics
+    this._eventListener = options.eventListener
 
     this.isCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true
 
@@ -311,7 +311,7 @@ export class CBWalletProvider
   }
 
   public async enable(): Promise<AddressString[]> {
-    this._walletLinkAnalytics?.sendEvent(EVENTS.ETH_ACCOUNTS_STATE, {
+    this._eventListener?.onEvent(EVENTS.ETH_ACCOUNTS_STATE, {
       method: "provider::enable",
       addresses_length: this._addresses.length,
       sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : null
@@ -718,7 +718,7 @@ export class CBWalletProvider
 
   private _ensureKnownAddress(addressString: string): void {
     if (!this._isKnownAddress(addressString)) {
-      this._walletLinkAnalytics?.sendEvent(EVENTS.UNKNOWN_ADDRESS_ENCOUNTERED)
+      this._eventListener?.onEvent(EVENTS.UNKNOWN_ADDRESS_ENCOUNTERED)
       throw new Error("Unknown Ethereum address")
     }
   }
@@ -846,7 +846,7 @@ export class CBWalletProvider
   }
 
   private async _eth_requestAccounts(): Promise<JSONRPCResponse> {
-    this._walletLinkAnalytics?.sendEvent(EVENTS.ETH_ACCOUNTS_STATE, {
+    this._eventListener?.onEvent(EVENTS.ETH_ACCOUNTS_STATE, {
       method: "provider::_eth_requestAccounts",
       addresses_length: this._addresses.length,
       sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : null

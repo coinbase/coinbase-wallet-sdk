@@ -16,7 +16,7 @@ import {
 } from "rxjs/operators"
 import { ServerMessageEvent } from "../connection/ServerMessage"
 import { CBWalletConnection } from "../connection/CBWalletConnection"
-import { WalletLinkAnalyticsAbstract, EVENTS } from "../connection/WalletLinkAnalytics"
+import { EventListener, EVENTS } from "../connection/EventListener"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
 import { WalletLinkUI, WalletLinkUIOptions } from "../provider/WalletLinkUI"
 import { AddressString, IntNumber, RegExpString } from "../types"
@@ -81,7 +81,7 @@ export interface CBWalletRelayOptions {
   walletLinkUIConstructor: (
     options: Readonly<WalletLinkUIOptions>
   ) => WalletLinkUI
-  walletLinkAnalytics?: WalletLinkAnalyticsAbstract
+  eventListener?: EventListener
 }
 
 export class WalletLinkRelay extends CBWalletRelayAbstract {
@@ -91,7 +91,7 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
   protected readonly storage: ScopedLocalStorage
   private readonly _session: Session
   private readonly relayEventManager: CBWalletRelayEventManager
-  protected readonly walletLinkAnalytics?: WalletLinkAnalyticsAbstract
+  protected readonly eventListener?: EventListener
   private readonly connection: CBWalletConnection
   private accountsCallback: ((account: [string]) => void) | null = null
   private chainCallback:
@@ -114,13 +114,13 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
       Session.load(options.storage) || new Session(options.storage).save()
 
     this.relayEventManager = options.relayEventManager
-    this.walletLinkAnalytics = options.walletLinkAnalytics
+    this.eventListener = options.eventListener
 
     this.connection = new CBWalletConnection(
       this._session.id,
       this._session.key,
       this.cbwalletApiUrl,
-      this.walletLinkAnalytics
+      this.eventListener
     )
 
     this.subscriptions.add(
@@ -158,7 +158,7 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
               ) {
                 this.isUnlinkedErrorState = true
                 const sessionIdHash = this.getSessionIdHash()
-                this.walletLinkAnalytics?.sendEvent(
+                this.eventListener?.onEvent(
                   EVENTS.UNLINKED_ERROR_STATE,
                   { sessionIdHash, origin: location.origin }
                 )
@@ -175,7 +175,7 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
         .pipe(filter(c => !!c.metadata && c.metadata.__destroyed === "1"))
         .subscribe(() => {
           const alreadyDestroyed = this.connection.isDestroyed
-          this.walletLinkAnalytics?.sendEvent(EVENTS.METADATA_DESTROYED, {
+          this.eventListener?.onEvent(EVENTS.METADATA_DESTROYED, {
             alreadyDestroyed,
             sessionIdHash: this.getSessionIdHash(),
             origin: location.origin
@@ -199,7 +199,7 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
             this.storage.setItem(WALLET_USER_NAME_KEY, walletUsername)
           },
           error: () => {
-            this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {
+            this.eventListener?.onEvent(EVENTS.GENERAL_ERROR, {
               message: "Had error decrypting",
               value: "username"
             })
@@ -220,7 +220,7 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
             this.storage.setItem(APP_VERSION_KEY, appVersion)
           },
           error: () => {
-            this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {
+            this.eventListener?.onEvent(EVENTS.GENERAL_ERROR, {
               message: "Had error decrypting",
               value: "appversion"
             })
@@ -254,7 +254,7 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
             }
           },
           error: () => {
-            this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {
+            this.eventListener?.onEvent(EVENTS.GENERAL_ERROR, {
               message: "Had error decrypting",
               value: "chainId|jsonRpcUrl"
             })
@@ -297,7 +297,7 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
             }
           },
           error: () => {
-            this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {
+            this.eventListener?.onEvent(EVENTS.GENERAL_ERROR, {
               message: "Had error decrypting",
               value: "selectedAddress"
             })
@@ -333,12 +333,12 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
           try {
             this.subscriptions.unsubscribe()
           } catch (err) {
-            this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {
+            this.eventListener?.onEvent(EVENTS.GENERAL_ERROR, {
               message: "Had error unsubscribing"
             })
           }
 
-          this.walletLinkAnalytics?.sendEvent(EVENTS.SESSION_STATE_CHANGE, {
+          this.eventListener?.onEvent(EVENTS.SESSION_STATE_CHANGE, {
             method: "relay::resetAndReload",
             sessionMetadataChange: "__destroyed, 1",
             sessionIdHash: this.getSessionIdHash(),
@@ -357,7 +357,7 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
           if (storedSession?.id === this._session.id) {
             this.storage.clear()
           } else if (storedSession) {
-            this.walletLinkAnalytics?.sendEvent(
+            this.eventListener?.onEvent(
               EVENTS.SKIPPED_CLEARING_SESSION,
               {
                 sessionIdHash: this.getSessionIdHash(),
@@ -369,7 +369,7 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
           this.ui.reloadUI()
         },
         (err: string) => {
-          this.walletLinkAnalytics?.sendEvent(EVENTS.FAILURE, {
+          this.eventListener?.onEvent(EVENTS.FAILURE, {
             method: "relay::resetAndReload",
             message: `failed to reset and reload with ${err}`,
             sessionIdHash: this.getSessionIdHash()
@@ -599,7 +599,7 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
   private publishWeb3RequestEvent(id: string, request: Web3Request): void {
     const message = Web3RequestMessage({ id, request })
     const storedSession = Session.load(this.storage)
-    this.walletLinkAnalytics?.sendEvent(EVENTS.WEB3_REQUEST, {
+    this.eventListener?.onEvent(EVENTS.WEB3_REQUEST, {
       eventId: message.id,
       method: `relay::${message.request.method}`,
       sessionIdHash: this.getSessionIdHash(),
@@ -611,7 +611,7 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
     this.subscriptions.add(
       this.publishEvent("Web3Request", message, true).subscribe({
         next: _ => {
-          this.walletLinkAnalytics?.sendEvent(EVENTS.WEB3_REQUEST_PUBLISHED, {
+          this.eventListener?.onEvent(EVENTS.WEB3_REQUEST_PUBLISHED, {
             eventId: message.id,
             method: `relay::${message.request.method}`,
             sessionIdHash: this.getSessionIdHash(),
@@ -686,7 +686,7 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
               this.handleWeb3ResponseMessage(message)
             },
             error: () => {
-              this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {
+              this.eventListener?.onEvent(EVENTS.GENERAL_ERROR, {
                 message: "Had error decrypting",
                 value: "incomingEvent"
               })
@@ -700,7 +700,7 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
 
   private handleWeb3ResponseMessage(message: Web3ResponseMessage) {
     const { response } = message
-    this.walletLinkAnalytics?.sendEvent(EVENTS.WEB3_RESPONSE, {
+    this.eventListener?.onEvent(EVENTS.WEB3_RESPONSE, {
       eventId: message.id,
       method: `relay::${response.method}`,
       sessionIdHash: this.getSessionIdHash(),

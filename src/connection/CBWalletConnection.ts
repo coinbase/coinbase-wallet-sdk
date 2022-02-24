@@ -26,7 +26,7 @@ import {
   timeoutWith
 } from "rxjs/operators"
 
-import { WalletLinkAnalyticsAbstract, EVENTS } from "./WalletLinkAnalytics"
+import { EventListener, EVENTS } from "./EventListener"
 import { Session } from "../relay/Session"
 import { IntNumber } from "../types"
 import {
@@ -79,7 +79,7 @@ export class CBWalletConnection {
     private sessionId: string,
     private sessionKey: string,
     serverUrl: string,
-    private analytics?: WalletLinkAnalyticsAbstract,
+    private eventListener?: EventListener,
     WebSocketClass: typeof WebSocket = WebSocket
   ) {
     const ws = new RxWebSocket<ServerMessage>(
@@ -93,7 +93,7 @@ export class CBWalletConnection {
       ws.connectionState$
         .pipe(
           tap(state =>
-            this.analytics?.sendEvent(EVENTS.CONNECTED_STATE_CHANGE, {
+            this.eventListener?.onEvent(EVENTS.CONNECTED_STATE_CHANGE, {
               state,
               sessionIdHash: Session.hash(sessionId)
             })
@@ -173,7 +173,7 @@ export class CBWalletConnection {
         .subscribe(m => {
           const msg = m as Omit<ServerMessageIsLinkedOK, "type"> &
             ServerMessageLinked
-          this.analytics?.sendEvent(EVENTS.LINKED, {
+          this.eventListener?.onEvent(EVENTS.LINKED, {
             sessionIdHash: Session.hash(sessionId),
             linked: msg.linked,
             type: m.type,
@@ -194,7 +194,7 @@ export class CBWalletConnection {
         .subscribe(m => {
           const msg = m as Omit<ServerMessageGetSessionConfigOK, "type"> &
             ServerMessageSessionConfigUpdated
-          this.analytics?.sendEvent(EVENTS.SESSION_CONFIG_RECEIVED, {
+          this.eventListener?.onEvent(EVENTS.SESSION_CONFIG_RECEIVED, {
             sessionIdHash: Session.hash(sessionId),
             metadata_keys:
               msg && msg.metadata ? Object.keys(msg.metadata) : undefined
@@ -215,7 +215,7 @@ export class CBWalletConnection {
     if (this.destroyed) {
       throw new Error("instance is destroyed")
     }
-    this.analytics?.sendEvent(EVENTS.STARTED_CONNECTING, {
+    this.eventListener?.onEvent(EVENTS.STARTED_CONNECTING, {
       sessionIdHash: Session.hash(this.sessionId)
     })
     this.ws.connect().subscribe()
@@ -228,7 +228,7 @@ export class CBWalletConnection {
   public destroy(): void {
     this.subscriptions.unsubscribe()
     this.ws.disconnect()
-    this.analytics?.sendEvent(EVENTS.DISCONNECTED, {
+    this.eventListener?.onEvent(EVENTS.DISCONNECTED, {
       sessionIdHash: Session.hash(this.sessionId)
     })
     this.destroyed = true
