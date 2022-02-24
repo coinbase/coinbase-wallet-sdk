@@ -13,7 +13,7 @@ export interface LinkFlowOptions {
   version: string
   sessionId: string
   sessionSecret: string
-  cbwalletApiUrl: string
+  cbWalletApiUrl: string
   isParentConnection: boolean
   connected$: Observable<boolean>
 }
@@ -27,7 +27,7 @@ export class LinkFlow {
   private readonly version: string
   private readonly sessionId: string
   private readonly sessionSecret: string
-  private readonly cbwalletApiUrl: string
+  private readonly cbWalletApiUrl: string
   private readonly isParentConnection: boolean
 
   private readonly connected$: Observable<boolean>
@@ -50,7 +50,7 @@ export class LinkFlow {
     this.version = options.version
     this.sessionId = options.sessionId
     this.sessionSecret = options.sessionSecret
-    this.cbwalletApiUrl = options.cbwalletApiUrl
+    this.cbWalletApiUrl = options.cbWalletApiUrl
     this.isParentConnection = options.isParentConnection
     this.connected$ = options.connected$
 
@@ -131,7 +131,7 @@ export class LinkFlow {
               version={this.version}
               sessionId={this.sessionId}
               sessionSecret={this.sessionSecret}
-              cbwalletApiUrl={this.cbwalletApiUrl}
+              cbWalletApiUrl={this.cbWalletApiUrl}
               isOpen={this.isOpen}
               isConnected={this.isConnected}
               isParentConnection={this.isParentConnection}
@@ -144,7 +144,7 @@ export class LinkFlow {
               version={this.version}
               sessionId={this.sessionId}
               sessionSecret={this.sessionSecret}
-              cbwalletApiUrl={this.cbwalletApiUrl}
+              cbWalletApiUrl={this.cbWalletApiUrl}
               isOpen={this.isOpen}
               isConnected={this.isConnected}
               isParentConnection={this.isParentConnection}

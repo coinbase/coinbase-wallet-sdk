@@ -15,7 +15,7 @@ import {
 import { AddressString } from "../types"
 
 export interface WalletLinkUIOptions {
-  cbwalletApiUrl: string
+  cbWalletApiUrl: string
   version: string
   darkMode: boolean
   session: Session

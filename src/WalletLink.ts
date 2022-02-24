@@ -92,7 +92,7 @@ export class WalletLink {
     this._relayEventManager = new CBWalletRelayEventManager()
 
     this._relay = new WalletLinkRelay({
-      cbwalletApiUrl: walletLinkUrl,
+      cbWalletApiUrl: walletLinkUrl,
       version: WALLETLINK_VERSION,
       darkMode: !!options.darkMode,
       walletLinkUIConstructor,
