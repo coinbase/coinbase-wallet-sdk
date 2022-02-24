@@ -1,6 +1,8 @@
 // Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
+import { WalletLinkAnalytics } from "./connection/WalletLinkAnalytics"
+import { WalletLinkAnalyticsAbstract } from "./init/WalletLinkAnalyticsAbstract"
 import { ScopedLocalStorage } from "./lib/ScopedLocalStorage"
 import { CBWalletProvider } from "./provider/CBWalletProvider"
 import { CBWalletSdkUI } from "./provider/CBWalletSdkUI"
@@ -30,6 +32,8 @@ export interface WalletLinkOptions {
   walletLinkUIConstructor?: (
     options: Readonly<WalletLinkUIOptions>
   ) => WalletLinkUI
+  /** @optional an implementation of WalletLinkAnalytics.ts; for most, leave it unspecified  */
+  walletLinkAnalytics?: WalletLinkAnalyticsAbstract
   /** @optional whether wallet link provider should override the isMetaMask property. */
   overrideIsMetaMask?: boolean
   /** @optional whether wallet link provider should override the isCoinbaseWallet property. */
@@ -49,6 +53,7 @@ export class WalletLink {
   private _storage: ScopedLocalStorage
   private _overrideIsMetaMask: boolean
   private _overrideIsCoinbaseWallet: boolean
+  private _walletLinkAnalytics: WalletLinkAnalyticsAbstract
 
   /**
    * Constructor
@@ -73,6 +78,10 @@ export class WalletLink {
 
     this._overrideIsCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true
 
+    this._walletLinkAnalytics = options.walletLinkAnalytics
+      ? options.walletLinkAnalytics
+      : new WalletLinkAnalytics()
+
     const u = new URL(walletLinkUrl)
     const walletLinkOrigin = `${u.protocol}//${u.host}`
     this._storage = new ScopedLocalStorage(`-walletlink:${walletLinkOrigin}`)
@@ -92,6 +101,7 @@ export class WalletLink {
       walletLinkUIConstructor,
       storage: this._storage,
       relayEventManager: this._relayEventManager,
+      walletLinkAnalytics: this._walletLinkAnalytics
     })
     this.setAppInfo(options.appName, options.appLogoUrl)
     this._relay.attachUI()
@@ -135,6 +145,7 @@ export class WalletLink {
       storage: this._storage,
       jsonRpcUrl,
       chainId,
+      walletLinkAnalytics: this._walletLinkAnalytics,
       overrideIsMetaMask: this._overrideIsMetaMask,
       overrideIsCoinbaseWallet: this._overrideIsCoinbaseWallet
     })
