@@ -3,7 +3,7 @@
 
 import { ScopedLocalStorage } from "./lib/ScopedLocalStorage"
 import { WalletLinkProvider } from "./provider/WalletLinkProvider"
-import { WalletLinkSdkUI } from "./provider/WalletLinkSdkUI"
+import { CBWalletSdkUI } from "./provider/CBWalletSdkUI"
 import { WalletLinkUI, WalletLinkUIOptions } from "./provider/WalletLinkUI"
 import { WalletLinkRelay } from "./relay/WalletLinkRelay"
 import { WalletLinkRelayEventManager } from "./relay/WalletLinkRelayEventManager"
@@ -60,7 +60,7 @@ export class WalletLink {
       options: Readonly<WalletLinkUIOptions>
     ) => WalletLinkUI
     if (!options.walletLinkUIConstructor) {
-      walletLinkUIConstructor = opts => new WalletLinkSdkUI(opts)
+      walletLinkUIConstructor = opts => new CBWalletSdkUI(opts)
     } else {
       walletLinkUIConstructor = options.walletLinkUIConstructor
     }

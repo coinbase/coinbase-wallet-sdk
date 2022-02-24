@@ -15,7 +15,7 @@ import {
 } from "../relay/Web3Response"
 import { WalletLinkUI, WalletLinkUIOptions } from "./WalletLinkUI"
 
-export class WalletLinkSdkUI extends WalletLinkUI {
+export class CBWalletSdkUI extends WalletLinkUI {
   private readonly linkFlow: LinkFlow
   private readonly snackbar: Snackbar
   private attached = false
@@ -39,7 +39,7 @@ export class WalletLinkSdkUI extends WalletLinkUI {
 
   attach(): void {
     if (this.attached) {
-      throw new Error("WalletLinkUI is already attached")
+      throw new Error("CBWalletSdkUI is already attached")
     }
     const el = document.documentElement
     const container = document.createElement("div")
