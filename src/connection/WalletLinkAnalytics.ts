@@ -1,5 +1,5 @@
-export interface WalletLinkAnalyticsAbstract {
-  sendEvent(eventType: string, eventProperties?: any): void
+export abstract class WalletLinkAnalyticsAbstract {
+  abstract sendEvent(eventType: string, eventProperties?: any): void
 }
 
 export const EVENTS = {

@@ -33,10 +33,10 @@ import {
   APP_VERSION_KEY,
   CancelablePromise,
   LOCAL_STORAGE_ADDRESSES_KEY,
-  WalletLinkRelayAbstract,
+  CBWalletRelayAbstract,
   WALLET_USER_NAME_KEY
-} from "./WalletLinkRelayAbstract"
-import { WalletLinkRelayEventManager } from "./WalletLinkRelayEventManager"
+} from "./CBWalletRelayAbstract"
+import { CBWalletRelayEventManager } from "./CBWalletRelayEventManager"
 import { Web3Method } from "./Web3Method"
 import {
   AddEthereumChainRequest,
@@ -77,20 +77,20 @@ export interface WalletLinkRelayOptions {
   version: string
   darkMode: boolean
   storage: ScopedLocalStorage
-  relayEventManager: WalletLinkRelayEventManager
+  relayEventManager: CBWalletRelayEventManager
   walletLinkUIConstructor: (
     options: Readonly<WalletLinkUIOptions>
   ) => WalletLinkUI
   walletLinkAnalytics?: WalletLinkAnalyticsAbstract
 }
 
-export class WalletLinkRelay extends WalletLinkRelayAbstract {
+export class WalletLinkRelay extends CBWalletRelayAbstract {
   private static accountRequestCallbackIds = new Set<string>()
 
   private readonly walletLinkUrl: string
   protected readonly storage: ScopedLocalStorage
   private readonly _session: Session
-  private readonly relayEventManager: WalletLinkRelayEventManager
+  private readonly relayEventManager: CBWalletRelayEventManager
   protected readonly walletLinkAnalytics?: WalletLinkAnalyticsAbstract
   private readonly connection: CBWalletConnection
   private accountsCallback: ((account: [string]) => void) | null = null

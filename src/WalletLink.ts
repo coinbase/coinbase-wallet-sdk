@@ -2,11 +2,11 @@
 // Licensed under the Apache License, version 2.0
 
 import { ScopedLocalStorage } from "./lib/ScopedLocalStorage"
-import { WalletLinkProvider } from "./provider/WalletLinkProvider"
+import { CBWalletProvider } from "./provider/CBWalletProvider"
 import { CBWalletSdkUI } from "./provider/CBWalletSdkUI"
 import { WalletLinkUI, WalletLinkUIOptions } from "./provider/WalletLinkUI"
 import { WalletLinkRelay } from "./relay/WalletLinkRelay"
-import { WalletLinkRelayEventManager } from "./relay/WalletLinkRelayEventManager"
+import { CBWalletRelayEventManager } from "./relay/CBWalletRelayEventManager"
 import { getFavicon } from "./util"
 
 const WALLETLINK_URL =
@@ -45,7 +45,7 @@ export class WalletLink {
   private _appName = ""
   private _appLogoUrl: string | null = null
   private _relay: WalletLinkRelay | null = null
-  private _relayEventManager: WalletLinkRelayEventManager | null = null
+  private _relayEventManager: CBWalletRelayEventManager | null = null
   private _storage: ScopedLocalStorage
   private _overrideIsMetaMask: boolean
   private _overrideIsCoinbaseWallet: boolean
@@ -83,7 +83,7 @@ export class WalletLink {
       return
     }
 
-    this._relayEventManager = new WalletLinkRelayEventManager()
+    this._relayEventManager = new CBWalletRelayEventManager()
 
     this._relay = new WalletLinkRelay({
       walletLinkUrl,
@@ -106,7 +106,7 @@ export class WalletLink {
   public makeWeb3Provider(
     jsonRpcUrl = "",
     chainId = 1
-  ): WalletLinkProvider {
+  ): CBWalletProvider {
     if (typeof window.walletLinkExtension !== "undefined") {
       if (
         /* eslint-disable @typescript-eslint/ban-ts-comment */
@@ -129,7 +129,7 @@ export class WalletLink {
 
     if (!jsonRpcUrl) relay.setConnectDisabled(true)
 
-    return new WalletLinkProvider({
+    return new CBWalletProvider({
       relayProvider: () => Promise.resolve(relay),
       relayEventManager: this._relayEventManager,
       storage: this._storage,

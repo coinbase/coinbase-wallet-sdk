@@ -11,9 +11,9 @@ import { EthereumTransactionParams } from "../relay/EthereumTransactionParams"
 import { Session } from "../relay/Session"
 import {
   LOCAL_STORAGE_ADDRESSES_KEY,
-  WalletLinkRelayAbstract
-} from "../relay/WalletLinkRelayAbstract"
-import { WalletLinkRelayEventManager } from "../relay/WalletLinkRelayEventManager"
+  CBWalletRelayAbstract
+} from "../relay/CBWalletRelayAbstract"
+import { CBWalletRelayEventManager } from "../relay/CBWalletRelayEventManager"
 import {
   ErrorResponse,
   RequestEthereumAccountsResponse,
@@ -52,13 +52,13 @@ export interface WalletLinkProviderOptions {
   jsonRpcUrl: string
   overrideIsCoinbaseWallet?: boolean
   overrideIsMetaMask: boolean
-  relayEventManager: WalletLinkRelayEventManager
-  relayProvider: () => Promise<WalletLinkRelayAbstract>
+  relayEventManager: CBWalletRelayEventManager
+  relayProvider: () => Promise<CBWalletRelayAbstract>
   storage: ScopedLocalStorage
   walletLinkAnalytics?: WalletLinkAnalyticsAbstract
 }
 
-export class WalletLinkProvider
+export class CBWalletProvider
   extends SafeEventEmitter
   implements Web3Provider
 {
@@ -68,10 +68,10 @@ export class WalletLinkProvider
   private readonly _filterPolyfill = new FilterPolyfill(this)
   private readonly _subscriptionManager = new SubscriptionManager(this)
 
-  private readonly _relayProvider: () => Promise<WalletLinkRelayAbstract>
-  private _relay: WalletLinkRelayAbstract | null = null
+  private readonly _relayProvider: () => Promise<CBWalletRelayAbstract>
+  private _relay: CBWalletRelayAbstract | null = null
   private readonly _storage: ScopedLocalStorage
-  private readonly _relayEventManager: WalletLinkRelayEventManager
+  private readonly _relayEventManager: CBWalletRelayEventManager
   private readonly _walletLinkAnalytics?: WalletLinkAnalyticsAbstract
 
   private _jsonRpcUrlFromOpts: string
@@ -1158,7 +1158,7 @@ export class WalletLinkProvider
     return this._filterPolyfill.getFilterLogs(filterId)
   }
 
-  private initializeRelay(): Promise<WalletLinkRelayAbstract> {
+  private initializeRelay(): Promise<CBWalletRelayAbstract> {
     if (this._relay) {
       return Promise.resolve(this._relay)
     }
