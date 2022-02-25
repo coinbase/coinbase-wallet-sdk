@@ -135,7 +135,7 @@ export class CBWalletProvider
     }
 
     window.addEventListener("message", event => {
-      if (event.data.type !== "walletLinkMessage") return
+      if (event.data.type !== "walletLinkMessage") return // compatibility with CBW extension
 
       if (event.data.data.action === "defaultChainChanged") {
         const _chainId = event.data.data.chainId

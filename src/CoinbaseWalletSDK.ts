@@ -39,7 +39,7 @@ export interface CBWalletSDKOptions {
   overrideIsCoinbaseWallet?: boolean
 }
 
-export class CoinbaseWallet {
+export class CoinbaseWalletSDK {
   public static VERSION = SDK_VERSION
 
   private _appName = ""
@@ -78,9 +78,9 @@ export class CoinbaseWallet {
 
     const u = new URL(linkAPIUrl)
     const origin = `${u.protocol}//${u.host}`
-    this._storage = new ScopedLocalStorage(`-walletlink:${origin}`)
+    this._storage = new ScopedLocalStorage(`-walletlink:${origin}`) // needs migration to preserve local states
 
-    this._storage.setItem("version", CoinbaseWallet.VERSION)
+    this._storage.setItem("version", CoinbaseWalletSDK.VERSION)
 
     if (this.walletExtension) {
       return

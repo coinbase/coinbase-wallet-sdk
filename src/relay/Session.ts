@@ -30,7 +30,7 @@ export class Session {
     this._secret = secret || randomBytesHex(32)
 
     const hash = sha256.create()
-    hash.update(`${this._id}, ${this._secret} WalletLink`)
+    hash.update(`${this._id}, ${this._secret} WalletLink`) // ensure old sessions stay connected
     this._key = hash.hex()
 
     this._linked = !!linked

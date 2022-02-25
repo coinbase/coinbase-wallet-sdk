@@ -1,32 +1,32 @@
 // Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { CoinbaseWallet } from "./CoinbaseWallet"
+import { CoinbaseWalletSDK } from "./CoinbaseWalletSDK"
 import { CBWalletProvider } from "./provider/CBWalletProvider"
 
-export { CoinbaseWallet } from "./CoinbaseWallet"
+export { CoinbaseWalletSDK } from "./CoinbaseWalletSDK"
 export { CBWalletProvider } from "./provider/CBWalletProvider"
-export default CoinbaseWallet
+export default CoinbaseWalletSDK
 
 declare global {
   interface Window {
-    CoinbaseWallet: typeof CoinbaseWallet
+    CoinbaseWalletSDK: typeof CoinbaseWalletSDK
     CBWalletProvider: typeof CBWalletProvider
     ethereum?: CBWalletProvider
     coinbaseWalletExtension?: CBWalletProvider
 
     // deprecated
-    WalletLink: typeof CoinbaseWallet
+    WalletLink: typeof CoinbaseWalletSDK
     WalletLinkProvider: typeof CBWalletProvider
     walletLinkExtension?: CBWalletProvider
   }
 }
 
 if (typeof window !== "undefined") {
-  window.CoinbaseWallet = CoinbaseWallet
+  window.CoinbaseWalletSDK = CoinbaseWalletSDK
   window.CBWalletProvider = CBWalletProvider
 
   // deprecated
-  window.WalletLink = CoinbaseWallet
+  window.WalletLink = CoinbaseWalletSDK
   window.WalletLinkProvider = CBWalletProvider
 }
