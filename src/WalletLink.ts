@@ -89,7 +89,7 @@ export class WalletLink {
 
     this._storage.setItem("version", WalletLink.VERSION)
 
-    if (this.getCBWalletExtension()) {
+    if (this.walletExtension) {
       return
     }
 
@@ -118,7 +118,7 @@ export class WalletLink {
     jsonRpcUrl = "",
     chainId = 1
   ): WalletLinkProvider {
-    const extension = this.getCBWalletExtension()
+    const extension = this.walletExtension
     if (extension) {
       if (!this.isCipherProvider(extension)) {
         extension.setProviderInfo(jsonRpcUrl, chainId)
@@ -158,7 +158,7 @@ export class WalletLink {
     this._appName = appName || "DApp"
     this._appLogoUrl = appLogoUrl || getFavicon()
 
-    const extension = this.getCBWalletExtension()
+    const extension = this.walletExtension
     if (extension) {
       if (!this.isCipherProvider(extension)) {
         extension.setAppInfo(this._appName, this._appLogoUrl)
@@ -173,7 +173,7 @@ export class WalletLink {
    * all potential stale state is cleared.
    */
   public disconnect(): void {
-    const extension = this.getCBWalletExtension()
+    const extension = this.walletExtension
     if (extension) {
       extension.close()
     } else {
@@ -181,7 +181,7 @@ export class WalletLink {
     }
   }
 
-  private getCBWalletExtension(): WalletLinkProvider | undefined {
+  private get walletExtension(): WalletLinkProvider | undefined {
     return window.walletLinkExtension
   }
 
