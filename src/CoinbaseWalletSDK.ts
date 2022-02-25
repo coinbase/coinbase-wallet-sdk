@@ -3,7 +3,7 @@
 
 import { EventListener } from "./connection/EventListener"
 import { ScopedLocalStorage } from "./lib/ScopedLocalStorage"
-import { CBWalletProvider } from "./provider/CBWalletProvider"
+import { CoinbaseWalletProvider } from "./provider/CoinbaseWalletProvider"
 import { CBWalletSDKUI } from "./provider/CBWalletSDKUI"
 import { CBWalletUI, CBWalletUIOptions } from "./provider/CBWalletUI"
 import { CBWalletRelay } from "./relay/CBWalletRelay"
@@ -110,7 +110,7 @@ export class CoinbaseWalletSDK {
   public makeWeb3Provider(
     jsonRpcUrl = "",
     chainId = 1
-  ): CBWalletProvider {
+  ): CoinbaseWalletProvider {
     const extension = this.walletExtension
     if (extension) {
       if (!this.isCipherProvider(extension)) {
@@ -127,7 +127,7 @@ export class CoinbaseWalletSDK {
 
     if (!jsonRpcUrl) relay.setConnectDisabled(true)
 
-    return new CBWalletProvider({
+    return new CoinbaseWalletProvider({
       relayProvider: () => Promise.resolve(relay),
       relayEventManager: this._relayEventManager,
       storage: this._storage,
@@ -174,11 +174,11 @@ export class CoinbaseWalletSDK {
     }
   }
 
-  private get walletExtension(): CBWalletProvider | undefined {
+  private get walletExtension(): CoinbaseWalletProvider | undefined {
     return window.coinbaseWalletExtension ?? window.walletLinkExtension
   }
 
-  private isCipherProvider(provider: CBWalletProvider): boolean {
+  private isCipherProvider(provider: CoinbaseWalletProvider): boolean {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     return typeof provider.isCipher === "boolean" && provider.isCipher

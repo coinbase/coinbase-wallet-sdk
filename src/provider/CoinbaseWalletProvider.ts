@@ -58,7 +58,7 @@ export interface CBWalletProviderOptions {
   eventListener?: EventListener
 }
 
-export class CBWalletProvider
+export class CoinbaseWalletProvider
   extends SafeEventEmitter
   implements Web3Provider
 {

@@ -2,31 +2,31 @@
 // Licensed under the Apache License, version 2.0
 
 import { CoinbaseWalletSDK } from "./CoinbaseWalletSDK"
-import { CBWalletProvider } from "./provider/CBWalletProvider"
+import { CoinbaseWalletProvider } from "./provider/CoinbaseWalletProvider"
 
 export { CoinbaseWalletSDK } from "./CoinbaseWalletSDK"
-export { CBWalletProvider } from "./provider/CBWalletProvider"
+export { CoinbaseWalletProvider } from "./provider/CoinbaseWalletProvider"
 export default CoinbaseWalletSDK
 
 declare global {
   interface Window {
     CoinbaseWalletSDK: typeof CoinbaseWalletSDK
-    CBWalletProvider: typeof CBWalletProvider
-    ethereum?: CBWalletProvider
-    coinbaseWalletExtension?: CBWalletProvider
+    CoinbaseWalletProvider: typeof CoinbaseWalletProvider
+    ethereum?: CoinbaseWalletProvider
+    coinbaseWalletExtension?: CoinbaseWalletProvider
 
     // deprecated
     WalletLink: typeof CoinbaseWalletSDK
-    WalletLinkProvider: typeof CBWalletProvider
-    walletLinkExtension?: CBWalletProvider
+    WalletLinkProvider: typeof CoinbaseWalletProvider
+    walletLinkExtension?: CoinbaseWalletProvider
   }
 }
 
 if (typeof window !== "undefined") {
   window.CoinbaseWalletSDK = CoinbaseWalletSDK
-  window.CBWalletProvider = CBWalletProvider
+  window.CoinbaseWalletProvider = CoinbaseWalletProvider
 
   // deprecated
   window.WalletLink = CoinbaseWalletSDK
-  window.WalletLinkProvider = CBWalletProvider
+  window.WalletLinkProvider = CoinbaseWalletProvider
 }
