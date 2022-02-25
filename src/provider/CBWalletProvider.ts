@@ -528,7 +528,7 @@ export class CBWalletProvider
     this.emit("accountsChanged", this._addresses)
     this._storage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, newAddresses.join(" "))
     window.dispatchEvent(
-      new CustomEvent("walletlink:addresses", { detail: this._addresses })
+      new CustomEvent("cbWallet:addresses", { detail: this._addresses })
     )
   }
 

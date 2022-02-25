@@ -43,7 +43,7 @@ function chromeMain(): void {
       const web3 = new Web3(ethereum)
       web3.eth.defaultAccount = web3.eth.accounts[0]
 
-      window.addEventListener("walletlink:addresses", evt => {
+      window.addEventListener("cbWallet:addresses", evt => {
         const addresses = evt.detail
         web3.eth.defaultAccount = addresses[0]
       }, false)
