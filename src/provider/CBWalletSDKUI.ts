@@ -31,7 +31,7 @@ export class CBWalletSDKUI extends CBWalletUI {
       version: options.version,
       sessionId: options.session.id,
       sessionSecret: options.session.secret,
-      cbWalletApiUrl: options.cbWalletApiUrl,
+      apiUrl: options.apiUrl,
       connected$: options.connected$,
       isParentConnection: false
     })

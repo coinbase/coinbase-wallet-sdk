@@ -16,7 +16,7 @@ export const TryExtensionLinkDialog: FunctionComponent<{
   version: string
   sessionId: string
   sessionSecret: string
-  cbWalletApiUrl: string
+  apiUrl: string
   isOpen: boolean
   isConnected: boolean
   isParentConnection: boolean
@@ -84,7 +84,7 @@ export const TryExtensionLinkDialog: FunctionComponent<{
               version={props.version}
               sessionId={props.sessionId}
               sessionSecret={props.sessionSecret}
-              cbWalletApiUrl={props.cbWalletApiUrl}
+              apiUrl={props.apiUrl}
               isConnected={props.isConnected}
               isParentConnection={props.isParentConnection}
             />
@@ -129,13 +129,13 @@ const ScanQRBox: FunctionComponent<{
   version: string
   sessionId: string
   sessionSecret: string
-  cbWalletApiUrl: string
+  apiUrl: string
   isConnected: boolean
   isParentConnection: boolean
 }> = props => {
-  const serverUrl = window.encodeURIComponent(props.cbWalletApiUrl)
+  const serverUrl = window.encodeURIComponent(props.apiUrl)
   const sessionIdKey = props.isParentConnection ? "parent-id" : "id"
-  const qrUrl = `${props.cbWalletApiUrl}/#/link?${sessionIdKey}=${props.sessionId}&secret=${props.sessionSecret}&server=${serverUrl}&v=1`
+  const qrUrl = `${props.apiUrl}/#/link?${sessionIdKey}=${props.sessionId}&secret=${props.sessionSecret}&server=${serverUrl}&v=1`
 
   return (
     <div class="-cbwsdk-extension-dialog-box-bottom">
