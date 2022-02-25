@@ -56,9 +56,9 @@ const HEARTBEAT_INTERVAL = 10000
 const REQUEST_TIMEOUT = 60000
 
 /**
- * CoinbaseWallet Connection
+ * Coinbase Wallet Connection
  */
-export class CBWalletConnection {
+export class WalletConnection {
   private ws: RxWebSocket<ServerMessage>
   private subscriptions = new Subscription()
   private destroyed = false

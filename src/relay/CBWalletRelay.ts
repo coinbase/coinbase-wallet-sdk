@@ -15,7 +15,7 @@ import {
   timeout
 } from "rxjs/operators"
 import { ServerMessageEvent } from "../connection/ServerMessage"
-import { CBWalletConnection } from "../connection/CBWalletConnection"
+import { WalletConnection } from "../connection/WalletConnection"
 import { EventListener, EVENTS } from "../connection/EventListener"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
 import { CBWalletUI, CBWalletUIOptions } from "../provider/CBWalletUI"
@@ -92,7 +92,7 @@ export class CBWalletRelay extends CBWalletRelayAbstract {
   private readonly _session: Session
   private readonly relayEventManager: CBWalletRelayEventManager
   protected readonly eventListener?: EventListener
-  private readonly connection: CBWalletConnection
+  private readonly connection: WalletConnection
   private accountsCallback: ((account: [string]) => void) | null = null
   private chainCallback:
     | ((chainId: string, jsonRpcUrl: string) => void)
@@ -116,7 +116,7 @@ export class CBWalletRelay extends CBWalletRelayAbstract {
     this.relayEventManager = options.relayEventManager
     this.eventListener = options.eventListener
 
-    this.connection = new CBWalletConnection(
+    this.connection = new WalletConnection(
       this._session.id,
       this._session.key,
       this.linkAPIUrl,
