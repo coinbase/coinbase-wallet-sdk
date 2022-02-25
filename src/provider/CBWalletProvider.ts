@@ -157,7 +157,7 @@ export class CBWalletProvider
     return prepend0x(this.getChainId().toString(16))
   }
 
-  public get isWalletLink(): boolean {
+  public get isWalletLink(): boolean { // backward compatibility
     return true
   }
 
