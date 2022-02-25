@@ -72,18 +72,18 @@ export class CBWalletConnection {
    * Constructor
    * @param sessionId Session ID
    * @param sessionKey Session Key
-   * @param serverUrl CBWalletConnection API URL
+   * @param linkAPIUrl Coinbase Wallet link server URL
    * @param [WebSocketClass] Custom WebSocket implementation
    */
   constructor(
     private sessionId: string,
     private sessionKey: string,
-    serverUrl: string,
+    linkAPIUrl: string,
     private eventListener?: EventListener,
     WebSocketClass: typeof WebSocket = WebSocket
   ) {
     const ws = new RxWebSocket<ServerMessage>(
-      serverUrl + "/rpc",
+      linkAPIUrl + "/rpc",
       WebSocketClass
     )
     this.ws = ws
