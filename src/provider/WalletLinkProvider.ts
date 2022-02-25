@@ -269,10 +269,11 @@ export class WalletLinkProvider
     }
 
     const relay = await this.initializeRelay()
+      const isWhitelistedNetwork = !relay.supportsUnauthedAddEthereumChain(chainId.toString())
 
     if (
       !this._isAuthorized() &&
-      !relay.supportsUnauthedAddEthereumChain(chainId.toString())
+      isWhitelistedNetwork
     ) {
       await relay.requestEthereumAccounts().promise
     }

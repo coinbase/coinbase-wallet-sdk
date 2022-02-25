@@ -108,7 +108,7 @@ export abstract class WalletLinkRelayAbstract {
 
   /**
    * Whether the provider should first call request ethereum accounts
-   * if handling an add ehereum chain call
+   * if handling an add ethereum chain call
    */
   abstract supportsUnauthedAddEthereumChain(chainId: string): boolean
 
