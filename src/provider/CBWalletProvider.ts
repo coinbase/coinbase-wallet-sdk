@@ -527,9 +527,6 @@ export class CBWalletProvider
     this._addresses = newAddresses
     this.emit("accountsChanged", this._addresses)
     this._storage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, newAddresses.join(" "))
-    window.dispatchEvent(
-      new CustomEvent("cbWallet:addresses", { detail: this._addresses })
-    )
   }
 
   private _sendRequestAsync(request: JSONRPCRequest): Promise<JSONRPCResponse> {
