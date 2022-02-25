@@ -174,11 +174,11 @@ export class CoinbaseWallet {
     }
   }
 
-  private getCBWalletExtension(): WalletLinkProvider | undefined {
-    return window.walletLinkExtension
+  private getCBWalletExtension(): CBWalletProvider | undefined {
+    return window.coinbaseWalletExtension ?? window.walletLinkExtension
   }
 
-  private isCipherProvider(provider: WalletLinkProvider): boolean {
+  private isCipherProvider(provider: CBWalletProvider): boolean {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     return typeof provider.isCipher === "boolean" && provider.isCipher

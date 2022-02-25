@@ -41,7 +41,7 @@ module.exports = {
     symlinks: false
   },
   output: {
-    filename: "walletlink.js",
+    filename: "CBWalletSDK.js",
     path: path.resolve(__dirname, "build")
   },
   performance: {
