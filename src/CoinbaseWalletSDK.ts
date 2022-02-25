@@ -4,10 +4,10 @@
 import { EventListener } from "./connection/EventListener"
 import { ScopedLocalStorage } from "./lib/ScopedLocalStorage"
 import { CoinbaseWalletProvider } from "./provider/CoinbaseWalletProvider"
-import { CBWalletSDKUI } from "./provider/CBWalletSDKUI"
-import { CBWalletUI, CBWalletUIOptions } from "./provider/CBWalletUI"
-import { CBWalletRelay } from "./relay/CBWalletRelay"
-import { CBWalletRelayEventManager } from "./relay/CBWalletRelayEventManager"
+import { WalletSDKUI } from "./provider/WalletSDKUI"
+import { WalletUI, WalletUIOptions } from "./provider/WalletUI"
+import { WalletSDKRelay } from "./relay/WalletSDKRelay"
+import { WalletSDKRelayEventManager } from "./relay/WalletSDKRelayEventManager"
 import { getFavicon } from "./util"
 
 const LINK_API_URL =
@@ -18,7 +18,7 @@ const SDK_VERSION =
     "unknown"
 
 /** Coinbase Wallet SDK Constructor Options */
-export interface CBWalletSDKOptions {
+export interface CoinbaseWalletSDKOptions {
   /** Application name */
   appName: string
   /** @optional Application logo image URL; favicon is used if unspecified */
@@ -27,10 +27,10 @@ export interface CBWalletSDKOptions {
   darkMode?: boolean
   /** @optional Coinbase Wallet link server URL; for most, leave it unspecified */
   linkAPIUrl?: string
-  /** @optional an implementation of CBWalletUI; for most, leave it unspecified */
+  /** @optional an implementation of WalletUI; for most, leave it unspecified */
   uiConstructor?: (
-      options: Readonly<CBWalletUIOptions>
-  ) => CBWalletUI
+      options: Readonly<WalletUIOptions>
+  ) => WalletUI
   /** @optional an implementation of EventListener for debugging; for most, leave it unspecified  */
   eventListener?: EventListener
   /** @optional whether wallet link provider should override the isMetaMask property. */
@@ -44,8 +44,8 @@ export class CoinbaseWalletSDK {
 
   private _appName = ""
   private _appLogoUrl: string | null = null
-  private _relay: CBWalletRelay | null = null
-  private _relayEventManager: CBWalletRelayEventManager | null = null
+  private _relay: WalletSDKRelay | null = null
+  private _relayEventManager: WalletSDKRelayEventManager | null = null
   private _storage: ScopedLocalStorage
   private _overrideIsMetaMask: boolean
   private _overrideIsCoinbaseWallet: boolean
@@ -55,13 +55,13 @@ export class CoinbaseWalletSDK {
    * Constructor
    * @param options Coinbase Wallet SDK constructor options
    */
-  constructor(options: Readonly<CBWalletSDKOptions>) {
+  constructor(options: Readonly<CoinbaseWalletSDKOptions>) {
     const linkAPIUrl = options.linkAPIUrl || LINK_API_URL
     let uiConstructor: (
-        options: Readonly<CBWalletUIOptions>
-    ) => CBWalletUI
+        options: Readonly<WalletUIOptions>
+    ) => WalletUI
     if (!options.uiConstructor) {
-      uiConstructor = opts => new CBWalletSDKUI(opts)
+      uiConstructor = opts => new WalletSDKUI(opts)
     } else {
       uiConstructor = options.uiConstructor
     }
@@ -86,9 +86,9 @@ export class CoinbaseWalletSDK {
       return
     }
 
-    this._relayEventManager = new CBWalletRelayEventManager()
+    this._relayEventManager = new WalletSDKRelayEventManager()
 
-    this._relay = new CBWalletRelay({
+    this._relay = new WalletSDKRelay({
       linkAPIUrl,
       version: SDK_VERSION,
       darkMode: !!options.darkMode,

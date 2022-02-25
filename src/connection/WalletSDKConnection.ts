@@ -58,7 +58,7 @@ const REQUEST_TIMEOUT = 60000
 /**
  * Coinbase Wallet Connection
  */
-export class WalletConnection {
+export class WalletSDKConnection {
   private ws: RxWebSocket<ServerMessage>
   private subscriptions = new Subscription()
   private destroyed = false
@@ -223,7 +223,7 @@ export class WalletConnection {
 
   /**
    * Terminate connection, and mark as destroyed. To reconnect, create a new
-   * instance of CBWalletConnection
+   * instance of WalletSDKConnection
    */
   public destroy(): void {
     this.subscriptions.unsubscribe()

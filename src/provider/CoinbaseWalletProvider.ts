@@ -11,9 +11,9 @@ import { EthereumTransactionParams } from "../relay/EthereumTransactionParams"
 import { Session } from "../relay/Session"
 import {
   LOCAL_STORAGE_ADDRESSES_KEY,
-  CBWalletRelayAbstract
-} from "../relay/CBWalletRelayAbstract"
-import { CBWalletRelayEventManager } from "../relay/CBWalletRelayEventManager"
+  WalletSDKRelayAbstract
+} from "../relay/WalletSDKRelayAbstract"
+import { WalletSDKRelayEventManager } from "../relay/WalletSDKRelayEventManager"
 import {
   ErrorResponse,
   RequestEthereumAccountsResponse,
@@ -47,13 +47,13 @@ const DEFAULT_JSON_RPC_URL = "DefaultJsonRpcUrl"
 const HAS_CHAIN_BEEN_SWITCHED_KEY = "HasChainBeenSwitched"
 const HAS_CHAIN_OVERRIDDEN_FROM_RELAY = "HasChainOverriddenFromRelay"
 
-export interface CBWalletProviderOptions {
+export interface CoinbaseWalletProviderOptions {
   chainId?: number
   jsonRpcUrl: string
   overrideIsCoinbaseWallet?: boolean
   overrideIsMetaMask: boolean
-  relayEventManager: CBWalletRelayEventManager
-  relayProvider: () => Promise<CBWalletRelayAbstract>
+  relayEventManager: WalletSDKRelayEventManager
+  relayProvider: () => Promise<WalletSDKRelayAbstract>
   storage: ScopedLocalStorage
   eventListener?: EventListener
 }
@@ -68,10 +68,10 @@ export class CoinbaseWalletProvider
   private readonly _filterPolyfill = new FilterPolyfill(this)
   private readonly _subscriptionManager = new SubscriptionManager(this)
 
-  private readonly _relayProvider: () => Promise<CBWalletRelayAbstract>
-  private _relay: CBWalletRelayAbstract | null = null
+  private readonly _relayProvider: () => Promise<WalletSDKRelayAbstract>
+  private _relay: WalletSDKRelayAbstract | null = null
   private readonly _storage: ScopedLocalStorage
-  private readonly _relayEventManager: CBWalletRelayEventManager
+  private readonly _relayEventManager: WalletSDKRelayEventManager
   private readonly _eventListener?: EventListener
 
   private _jsonRpcUrlFromOpts: string
@@ -81,7 +81,7 @@ export class CoinbaseWalletProvider
 
   private hasMadeFirstChainChangedEmission = false
 
-  constructor(options: Readonly<CBWalletProviderOptions>) {
+  constructor(options: Readonly<CoinbaseWalletProviderOptions>) {
     super()
 
     this.setProviderInfo = this.setProviderInfo.bind(this)
@@ -1155,7 +1155,7 @@ export class CoinbaseWalletProvider
     return this._filterPolyfill.getFilterLogs(filterId)
   }
 
-  private initializeRelay(): Promise<CBWalletRelayAbstract> {
+  private initializeRelay(): Promise<WalletSDKRelayAbstract> {
     if (this._relay) {
       return Promise.resolve(this._relay)
     }

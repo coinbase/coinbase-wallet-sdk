@@ -3,7 +3,7 @@ import { Web3Response } from "./Web3Response"
 
 type ResponseCallback = (response: Web3Response) => void
 
-export class CBWalletRelayEventManager {
+export class WalletSDKRelayEventManager {
   _nextRequestId = 0
   callbacks = new Map<string, ResponseCallback>()
 

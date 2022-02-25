@@ -27,7 +27,7 @@ export type CancelablePromise<T> = {
   cancel: () => void
 }
 
-export abstract class CBWalletRelayAbstract {
+export abstract class WalletSDKRelayAbstract {
   abstract resetAndReload(): void
 
   abstract requestEthereumAccounts(): CancelablePromise<RequestEthereumAccountsResponse>

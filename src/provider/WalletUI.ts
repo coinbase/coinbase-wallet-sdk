@@ -14,7 +14,7 @@ import {
 } from "../relay/Web3Response"
 import { AddressString } from "../types"
 
-export interface CBWalletUIOptions {
+export interface WalletUIOptions {
   linkAPIUrl: string
   version: string
   darkMode: boolean
@@ -22,8 +22,8 @@ export interface CBWalletUIOptions {
   connected$: Observable<boolean>
 }
 
-export abstract class CBWalletUI {
-  constructor(_: Readonly<CBWalletUIOptions>) {}
+export abstract class WalletUI {
+  constructor(_: Readonly<WalletUIOptions>) {}
   abstract attach(): void
 
   /**

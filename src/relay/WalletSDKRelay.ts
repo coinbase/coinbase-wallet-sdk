@@ -15,10 +15,10 @@ import {
   timeout
 } from "rxjs/operators"
 import { ServerMessageEvent } from "../connection/ServerMessage"
-import { WalletConnection } from "../connection/WalletConnection"
+import { WalletSDKConnection } from "../connection/WalletSDKConnection"
 import { EventListener, EVENTS } from "../connection/EventListener"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
-import { CBWalletUI, CBWalletUIOptions } from "../provider/CBWalletUI"
+import { WalletUI, WalletUIOptions } from "../provider/WalletUI"
 import { AddressString, IntNumber, RegExpString } from "../types"
 import {
   bigIntStringFromBN,
@@ -33,10 +33,10 @@ import {
   APP_VERSION_KEY,
   CancelablePromise,
   LOCAL_STORAGE_ADDRESSES_KEY,
-  CBWalletRelayAbstract,
+  WalletSDKRelayAbstract,
   WALLET_USER_NAME_KEY
-} from "./CBWalletRelayAbstract"
-import { CBWalletRelayEventManager } from "./CBWalletRelayEventManager"
+} from "./WalletSDKRelayAbstract"
+import { WalletSDKRelayEventManager } from "./WalletSDKRelayEventManager"
 import { Web3Method } from "./Web3Method"
 import {
   AddEthereumChainRequest,
@@ -72,33 +72,33 @@ import {
   Web3ResponseMessage
 } from "./Web3ResponseMessage"
 
-export interface CBWalletRelayOptions {
+export interface WalletSDKRelayOptions {
   linkAPIUrl: string
   version: string
   darkMode: boolean
   storage: ScopedLocalStorage
-  relayEventManager: CBWalletRelayEventManager
+  relayEventManager: WalletSDKRelayEventManager
   uiConstructor: (
-    options: Readonly<CBWalletUIOptions>
-  ) => CBWalletUI
+    options: Readonly<WalletUIOptions>
+  ) => WalletUI
   eventListener?: EventListener
 }
 
-export class CBWalletRelay extends CBWalletRelayAbstract {
+export class WalletSDKRelay extends WalletSDKRelayAbstract {
   private static accountRequestCallbackIds = new Set<string>()
 
   private readonly linkAPIUrl: string
   protected readonly storage: ScopedLocalStorage
   private readonly _session: Session
-  private readonly relayEventManager: CBWalletRelayEventManager
+  private readonly relayEventManager: WalletSDKRelayEventManager
   protected readonly eventListener?: EventListener
-  private readonly connection: WalletConnection
+  private readonly connection: WalletSDKConnection
   private accountsCallback: ((account: [string]) => void) | null = null
   private chainCallback:
     | ((chainId: string, jsonRpcUrl: string) => void)
     | null = null
 
-  private ui: CBWalletUI
+  private ui: WalletUI
 
   private appName = ""
   private appLogoUrl: string | null = null
@@ -106,7 +106,7 @@ export class CBWalletRelay extends CBWalletRelayAbstract {
   isLinked: boolean | undefined
   isUnlinkedErrorState: boolean | undefined
 
-  constructor(options: Readonly<CBWalletRelayOptions>) {
+  constructor(options: Readonly<WalletSDKRelayOptions>) {
     super()
     this.linkAPIUrl = options.linkAPIUrl
     this.storage = options.storage
@@ -116,7 +116,7 @@ export class CBWalletRelay extends CBWalletRelayAbstract {
     this.relayEventManager = options.relayEventManager
     this.eventListener = options.eventListener
 
-    this.connection = new WalletConnection(
+    this.connection = new WalletSDKConnection(
       this._session.id,
       this._session.key,
       this.linkAPIUrl,
@@ -278,12 +278,12 @@ export class CBWalletRelay extends CBWalletRelayAbstract {
               this.accountsCallback([selectedAddress])
             }
 
-            if (CBWalletRelay.accountRequestCallbackIds.size > 0) {
+            if (WalletSDKRelay.accountRequestCallbackIds.size > 0) {
               // We get the ethereum address from the metadata.  If for whatever
               // reason we don't get a response via an explicit web3 message
               // we can still fulfill the eip1102 request.
               Array.from(
-                CBWalletRelay.accountRequestCallbackIds.values()
+                WalletSDKRelay.accountRequestCallbackIds.values()
               ).forEach(id => {
                 const message = Web3ResponseMessage({
                   id,
@@ -293,7 +293,7 @@ export class CBWalletRelay extends CBWalletRelayAbstract {
                 })
                 this.invokeCallback({ ...message, id })
               })
-              CBWalletRelay.accountRequestCallbackIds.clear()
+              WalletSDKRelay.accountRequestCallbackIds.clear()
             }
           },
           error: () => {
@@ -707,10 +707,10 @@ export class CBWalletRelay extends CBWalletRelayAbstract {
       origin: location.origin
     })
     if (isRequestEthereumAccountsResponse(response)) {
-      Array.from(CBWalletRelay.accountRequestCallbackIds.values()).forEach(
+      Array.from(WalletSDKRelay.accountRequestCallbackIds.values()).forEach(
         id => this.invokeCallback({ ...message, id })
       )
-      CBWalletRelay.accountRequestCallbackIds.clear()
+      WalletSDKRelay.accountRequestCallbackIds.clear()
       return
     }
 
@@ -793,7 +793,7 @@ export class CBWalletRelay extends CBWalletRelayAbstract {
           })
         }
 
-        CBWalletRelay.accountRequestCallbackIds.add(id)
+        WalletSDKRelay.accountRequestCallbackIds.add(id)
 
         if (!this.ui.inlineAccountsResponse() && !this.ui.isStandalone()) {
           this.publishWeb3RequestEvent(id, request)

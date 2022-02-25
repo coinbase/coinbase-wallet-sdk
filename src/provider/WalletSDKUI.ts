@@ -13,14 +13,14 @@ import {
   SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse
 } from "../relay/Web3Response"
-import { CBWalletUI, CBWalletUIOptions } from "./CBWalletUI"
+import { WalletUI, WalletUIOptions } from "./WalletUI"
 
-export class CBWalletSDKUI extends CBWalletUI {
+export class WalletSDKUI extends WalletUI {
   private readonly linkFlow: LinkFlow
   private readonly snackbar: Snackbar
   private attached = false
 
-  constructor(options: Readonly<CBWalletUIOptions>) {
+  constructor(options: Readonly<WalletUIOptions>) {
     super(options)
     this.snackbar = new Snackbar({
       darkMode: options.darkMode
@@ -39,7 +39,7 @@ export class CBWalletSDKUI extends CBWalletUI {
 
   attach(): void {
     if (this.attached) {
-      throw new Error("CBWalletSdkUI is already attached")
+      throw new Error("Coinbase Wallet SDK UI is already attached")
     }
     const el = document.documentElement
     const container = document.createElement("div")
