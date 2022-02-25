@@ -89,7 +89,7 @@ export class WalletLink {
 
     this._storage.setItem("version", WalletLink.VERSION)
 
-    if (typeof window.walletLinkExtension !== "undefined") {
+    if (this.walletExtension) {
       return
     }
 
@@ -118,19 +118,13 @@ export class WalletLink {
     jsonRpcUrl = "",
     chainId = 1
   ): WalletLinkProvider {
-    if (typeof window.walletLinkExtension !== "undefined") {
-      if (
-        /* eslint-disable @typescript-eslint/ban-ts-comment */
-        // @ts-ignore
-        typeof window.walletLinkExtension.isCipher !== "boolean" ||
-        // @ts-ignore
-        !window.walletLinkExtension.isCipher
-        /* eslint-enable @typescript-eslint/ban-ts-comment */
-      ) {
-        window.walletLinkExtension.setProviderInfo(jsonRpcUrl, chainId)
+    const extension = this.walletExtension
+    if (extension) {
+      if (!this.isCipherProvider(extension)) {
+        extension.setProviderInfo(jsonRpcUrl, chainId)
       }
 
-      return window.walletLinkExtension
+      return extension
     }
 
     const relay = this._relay
@@ -164,16 +158,10 @@ export class WalletLink {
     this._appName = appName || "DApp"
     this._appLogoUrl = appLogoUrl || getFavicon()
 
-    if (typeof window.walletLinkExtension !== "undefined") {
-      if (
-        /* eslint-disable @typescript-eslint/ban-ts-comment */
-        // @ts-ignore
-        typeof window.walletLinkExtension.isCipher !== "boolean" ||
-        // @ts-ignore
-        !window.walletLinkExtension.isCipher
-        /* eslint-enable @typescript-eslint/ban-ts-comment */
-      ) {
-        window.walletLinkExtension.setAppInfo(this._appName, this._appLogoUrl)
+    const extension = this.walletExtension
+    if (extension) {
+      if (!this.isCipherProvider(extension)) {
+        extension.setAppInfo(this._appName, this._appLogoUrl)
       }
     } else {
       this._relay?.setAppInfo(this._appName, this._appLogoUrl)
@@ -185,10 +173,21 @@ export class WalletLink {
    * all potential stale state is cleared.
    */
   public disconnect(): void {
-    if (typeof window.walletLinkExtension !== "undefined") {
-      window.walletLinkExtension.close()
+    const extension = this.walletExtension
+    if (extension) {
+      extension.close()
     } else {
       this._relay?.resetAndReload()
     }
+  }
+
+  private get walletExtension(): WalletLinkProvider | undefined {
+    return window.walletLinkExtension
+  }
+
+  private isCipherProvider(provider: WalletLinkProvider): boolean {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    return typeof provider.isCipher === "boolean" && provider.isCipher
   }
 }
