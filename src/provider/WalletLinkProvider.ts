@@ -530,9 +530,6 @@ export class WalletLinkProvider
     this._addresses = newAddresses
     this.emit("accountsChanged", this._addresses)
     this._storage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, newAddresses.join(" "))
-    window.dispatchEvent(
-      new CustomEvent("walletlink:addresses", { detail: this._addresses })
-    )
   }
 
   private _sendRequestAsync(request: JSONRPCRequest): Promise<JSONRPCResponse> {
