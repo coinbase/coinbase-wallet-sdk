@@ -27,7 +27,7 @@ export abstract class CBWalletUI {
   abstract attach(): void
 
   /**
-   * Opens a qr code or auth page to start a Coinbase Wallet connection
+   * Opens a qr code or auth page to connect with Coinbase Wallet mobile app
    * @param options onCancel callback
    *
    */
@@ -122,19 +122,19 @@ export abstract class CBWalletUI {
 
   /**
    * If the extension is available, it can handle the add ethereum chain request without
-   * having to send a request over Coinbase Wallet API
+   * having to send a request to Coinbase Wallet mobile app
    */
   abstract inlineAddEthereumChain(chainId: string): boolean
 
   /**
    * If the extension is available, it can handle the watch asset request without
-   * having to send a request over Coinbase Wallet API
+   * having to send a request to Coinbase Wallet mobile app
    */
   abstract inlineWatchAsset(): boolean
 
   /**
    * If the extension is available, it can handle the switch ethereum chain request without
-   * having to send a request over Coinbase Wallet API
+   * having to send a request to Coinbase Wallet mobile app
    */
   abstract inlineSwitchEthereumChain(): boolean
 

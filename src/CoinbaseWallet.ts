@@ -25,7 +25,7 @@ export interface CBWalletSDKOptions {
   appLogoUrl?: string | null
   /** @optional Use dark theme */
   darkMode?: boolean
-  /** @optional Coinbase Wallet connection server URL; for most, leave it unspecified */
+  /** @optional Coinbase Wallet link server URL; for most, leave it unspecified */
   linkAPIUrl?: string
   /** @optional an implementation of CBWalletUI; for most, leave it unspecified */
   uiConstructor?: (
