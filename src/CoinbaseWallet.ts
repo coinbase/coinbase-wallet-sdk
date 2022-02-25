@@ -82,7 +82,7 @@ export class CoinbaseWallet {
 
     this._storage.setItem("version", CoinbaseWallet.VERSION)
 
-    if (this.getCBWalletExtension()) {
+    if (this.walletExtension) {
       return
     }
 
@@ -111,7 +111,7 @@ export class CoinbaseWallet {
     jsonRpcUrl = "",
     chainId = 1
   ): CBWalletProvider {
-    const extension = this.getCBWalletExtension()
+    const extension = this.walletExtension
     if (extension) {
       if (!this.isCipherProvider(extension)) {
         extension.setProviderInfo(jsonRpcUrl, chainId)
@@ -151,7 +151,7 @@ export class CoinbaseWallet {
     this._appName = appName || "DApp"
     this._appLogoUrl = appLogoUrl || getFavicon()
 
-    const extension = this.getCBWalletExtension()
+    const extension = this.walletExtension
     if (extension) {
       if (!this.isCipherProvider(extension)) {
         extension.setAppInfo(this._appName, this._appLogoUrl)
@@ -166,7 +166,7 @@ export class CoinbaseWallet {
    * all potential stale state is cleared.
    */
   public disconnect(): void {
-    const extension = this.getCBWalletExtension()
+    const extension = this.walletExtension
     if (extension) {
       extension.close()
     } else {
@@ -174,7 +174,7 @@ export class CoinbaseWallet {
     }
   }
 
-  private getCBWalletExtension(): CBWalletProvider | undefined {
+  private get walletExtension(): CBWalletProvider | undefined {
     return window.coinbaseWalletExtension ?? window.walletLinkExtension
   }
 
