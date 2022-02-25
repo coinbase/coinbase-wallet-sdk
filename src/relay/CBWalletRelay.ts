@@ -84,7 +84,7 @@ export interface CBWalletRelayOptions {
   eventListener?: EventListener
 }
 
-export class WalletLinkRelay extends CBWalletRelayAbstract {
+export class CBWalletRelay extends CBWalletRelayAbstract {
   private static accountRequestCallbackIds = new Set<string>()
 
   private readonly cbWalletApiUrl: string
@@ -278,12 +278,12 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
               this.accountsCallback([selectedAddress])
             }
 
-            if (WalletLinkRelay.accountRequestCallbackIds.size > 0) {
+            if (CBWalletRelay.accountRequestCallbackIds.size > 0) {
               // We get the ethereum address from the metadata.  If for whatever
               // reason we don't get a response via an explicit web3 message
               // we can still fulfill the eip1102 request.
               Array.from(
-                WalletLinkRelay.accountRequestCallbackIds.values()
+                CBWalletRelay.accountRequestCallbackIds.values()
               ).forEach(id => {
                 const message = Web3ResponseMessage({
                   id,
@@ -293,7 +293,7 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
                 })
                 this.invokeCallback({ ...message, id })
               })
-              WalletLinkRelay.accountRequestCallbackIds.clear()
+              CBWalletRelay.accountRequestCallbackIds.clear()
             }
           },
           error: () => {
@@ -707,10 +707,10 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
       origin: location.origin
     })
     if (isRequestEthereumAccountsResponse(response)) {
-      Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach(
+      Array.from(CBWalletRelay.accountRequestCallbackIds.values()).forEach(
         id => this.invokeCallback({ ...message, id })
       )
-      WalletLinkRelay.accountRequestCallbackIds.clear()
+      CBWalletRelay.accountRequestCallbackIds.clear()
       return
     }
 
@@ -793,7 +793,7 @@ export class WalletLinkRelay extends CBWalletRelayAbstract {
           })
         }
 
-        WalletLinkRelay.accountRequestCallbackIds.add(id)
+        CBWalletRelay.accountRequestCallbackIds.add(id)
 
         if (!this.ui.inlineAccountsResponse() && !this.ui.isStandalone()) {
           this.publishWeb3RequestEvent(id, request)

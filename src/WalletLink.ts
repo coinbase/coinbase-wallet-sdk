@@ -6,7 +6,7 @@ import { ScopedLocalStorage } from "./lib/ScopedLocalStorage"
 import { CBWalletProvider } from "./provider/CBWalletProvider"
 import { CBWalletSDKUI } from "./provider/CBWalletSDKUI"
 import { CBWalletUI, CBWalletUIOptions } from "./provider/CBWalletUI"
-import { WalletLinkRelay } from "./relay/WalletLinkRelay"
+import { CBWalletRelay } from "./relay/CBWalletRelay"
 import { CBWalletRelayEventManager } from "./relay/CBWalletRelayEventManager"
 import { getFavicon } from "./util"
 
@@ -47,7 +47,7 @@ export class WalletLink {
 
   private _appName = ""
   private _appLogoUrl: string | null = null
-  private _relay: WalletLinkRelay | null = null
+  private _relay: CBWalletRelay | null = null
   private _relayEventManager: CBWalletRelayEventManager | null = null
   private _storage: ScopedLocalStorage
   private _overrideIsMetaMask: boolean
@@ -91,7 +91,7 @@ export class WalletLink {
 
     this._relayEventManager = new CBWalletRelayEventManager()
 
-    this._relay = new WalletLinkRelay({
+    this._relay = new CBWalletRelay({
       cbWalletApiUrl: walletLinkUrl,
       version: WALLETLINK_VERSION,
       darkMode: !!options.darkMode,
