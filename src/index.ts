@@ -2,15 +2,15 @@
 // Licensed under the Apache License, version 2.0
 
 import { CBWalletProvider } from "./provider/CBWalletProvider"
-import { WalletLink } from "./WalletLink"
+import { CoinbaseWallet } from "./CoinbaseWallet"
 
 export { CBWalletProvider } from "./provider/CBWalletProvider"
-export { WalletLink } from "./WalletLink"
-export default WalletLink
+export { CoinbaseWallet } from "./CoinbaseWallet"
+export default CoinbaseWallet
 
 declare global {
   interface Window {
-    WalletLink: typeof WalletLink
+    WalletLink: typeof CoinbaseWallet
     WalletLinkProvider: typeof CBWalletProvider
     ethereum?: CBWalletProvider
     walletLinkExtension?: CBWalletProvider
@@ -18,6 +18,6 @@ declare global {
 }
 
 if (typeof window !== "undefined") {
-  window.WalletLink = WalletLink
+  window.WalletLink = CoinbaseWallet
   window.WalletLinkProvider = CBWalletProvider
 }

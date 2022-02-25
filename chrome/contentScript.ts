@@ -10,11 +10,11 @@ declare global {
 }
 
 function chromeMain(): void {
-  const WALLETLINK_URL =
-    process.env.WALLETLINK_URL! || "https://www.walletlink.org"
+  const API_URL =
+    process.env.API_URL! || "https://www.walletlink.org"
 
   const shouldntInject: boolean =
-    (WALLETLINK_URL && document.location.origin.startsWith(WALLETLINK_URL)) ||
+    (API_URL && document.location.origin.startsWith(API_URL)) ||
     (document.documentElement &&
       document.documentElement.hasAttribute("data-no-walletlink"))
 

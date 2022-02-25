@@ -10,10 +10,10 @@ import { CBWalletRelay } from "./relay/CBWalletRelay"
 import { CBWalletRelayEventManager } from "./relay/CBWalletRelayEventManager"
 import { getFavicon } from "./util"
 
-const WALLETLINK_URL =
-  process.env.WALLETLINK_URL! || "https://www.walletlink.org"
-const WALLETLINK_VERSION =
-  process.env.WALLETLINK_VERSION! ||
+const API_URL =
+  process.env.API_URL! || "https://www.walletlink.org"
+const CBWSDK_VERSION =
+  process.env.CBWSDK_VERSION! ||
   require("../package.json").version ||
   "unknown"
 
@@ -39,11 +39,11 @@ export interface WalletLinkOptions {
   overrideIsCoinbaseWallet?: boolean
 }
 
-export class WalletLink {
+export class CoinbaseWallet {
   /**
    * WalletLink version
    */
-  public static VERSION = WALLETLINK_VERSION
+  public static VERSION = CBWSDK_VERSION
 
   private _appName = ""
   private _appLogoUrl: string | null = null
@@ -59,7 +59,7 @@ export class WalletLink {
    * @param options WalletLink options object
    */
   constructor(options: Readonly<WalletLinkOptions>) {
-    const walletLinkUrl = options.walletLinkUrl || WALLETLINK_URL
+    const walletLinkUrl = options.walletLinkUrl || API_URL
     let walletLinkUIConstructor: (
       options: Readonly<CBWalletUIOptions>
     ) => CBWalletUI
@@ -83,7 +83,7 @@ export class WalletLink {
     const walletLinkOrigin = `${u.protocol}//${u.host}`
     this._storage = new ScopedLocalStorage(`-walletlink:${walletLinkOrigin}`)
 
-    this._storage.setItem("version", WalletLink.VERSION)
+    this._storage.setItem("version", CoinbaseWallet.VERSION)
 
     if (typeof window.walletLinkExtension !== "undefined") {
       return
@@ -93,7 +93,7 @@ export class WalletLink {
 
     this._relay = new CBWalletRelay({
       cbWalletApiUrl: walletLinkUrl,
-      version: WALLETLINK_VERSION,
+      version: CBWSDK_VERSION,
       darkMode: !!options.darkMode,
       uiConstructor: walletLinkUIConstructor,
       storage: this._storage,
