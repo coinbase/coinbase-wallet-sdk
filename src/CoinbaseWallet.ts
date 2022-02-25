@@ -11,27 +11,27 @@ import { CBWalletRelayEventManager } from "./relay/CBWalletRelayEventManager"
 import { getFavicon } from "./util"
 
 const API_URL =
-  process.env.API_URL! || "https://www.walletlink.org"
+    process.env.API_URL! || "https://www.walletlink.org"
 const CBWSDK_VERSION =
-  process.env.CBWSDK_VERSION! ||
-  require("../package.json").version ||
-  "unknown"
+    process.env.CBWSDK_VERSION! ||
+    require("../package.json").version ||
+    "unknown"
 
-/** WalletLink Constructor Options */
-export interface WalletLinkOptions {
+/** Coinbase Wallet SDK Constructor Options */
+export interface CBWalletSDKOptions {
   /** Application name */
   appName: string
   /** @optional Application logo image URL; favicon is used if unspecified */
   appLogoUrl?: string | null
   /** @optional Use dark theme */
   darkMode?: boolean
-  /** @optional WalletLink server URL; for most, leave it unspecified */
-  walletLinkUrl?: string
-  /** @optional an implementation of WalletLinkUI; for most, leave it unspecified */
-  walletLinkUIConstructor?: (
-    options: Readonly<CBWalletUIOptions>
+  /** @optional Coinbase Wallet connection server URL; for most, leave it unspecified */
+  apiUrl?: string
+  /** @optional an implementation of CBWalletUI; for most, leave it unspecified */
+  uiConstructor?: (
+      options: Readonly<CBWalletUIOptions>
   ) => CBWalletUI
-  /** @optional an implementation of EventListener.ts for debugging; for most, leave it unspecified  */
+  /** @optional an implementation of EventListener for debugging; for most, leave it unspecified  */
   eventListener?: EventListener
   /** @optional whether wallet link provider should override the isMetaMask property. */
   overrideIsMetaMask?: boolean
@@ -40,9 +40,6 @@ export interface WalletLinkOptions {
 }
 
 export class CoinbaseWallet {
-  /**
-   * WalletLink version
-   */
   public static VERSION = CBWSDK_VERSION
 
   private _appName = ""
@@ -56,17 +53,17 @@ export class CoinbaseWallet {
 
   /**
    * Constructor
-   * @param options WalletLink options object
+   * @param options Coinbase Wallet SDK constructor options
    */
-  constructor(options: Readonly<WalletLinkOptions>) {
-    const walletLinkUrl = options.walletLinkUrl || API_URL
-    let walletLinkUIConstructor: (
-      options: Readonly<CBWalletUIOptions>
+  constructor(options: Readonly<CBWalletSDKOptions>) {
+    const apiUrl = options.apiUrl || API_URL
+    let uiConstructor: (
+        options: Readonly<CBWalletUIOptions>
     ) => CBWalletUI
-    if (!options.walletLinkUIConstructor) {
-      walletLinkUIConstructor = opts => new CBWalletSDKUI(opts)
+    if (!options.uiConstructor) {
+      uiConstructor = opts => new CBWalletSDKUI(opts)
     } else {
-      walletLinkUIConstructor = options.walletLinkUIConstructor
+      uiConstructor = options.uiConstructor
     }
 
     if (typeof options.overrideIsMetaMask === "undefined") {
@@ -79,9 +76,9 @@ export class CoinbaseWallet {
 
     this._eventListener = options.eventListener
 
-    const u = new URL(walletLinkUrl)
-    const walletLinkOrigin = `${u.protocol}//${u.host}`
-    this._storage = new ScopedLocalStorage(`-walletlink:${walletLinkOrigin}`)
+    const u = new URL(apiUrl)
+    const origin = `${u.protocol}//${u.host}`
+    this._storage = new ScopedLocalStorage(`-walletlink:${origin}`)
 
     this._storage.setItem("version", CoinbaseWallet.VERSION)
 
@@ -92,10 +89,10 @@ export class CoinbaseWallet {
     this._relayEventManager = new CBWalletRelayEventManager()
 
     this._relay = new CBWalletRelay({
-      cbWalletApiUrl: walletLinkUrl,
+      apiUrl,
       version: CBWSDK_VERSION,
       darkMode: !!options.darkMode,
-      uiConstructor: walletLinkUIConstructor,
+      uiConstructor,
       storage: this._storage,
       relayEventManager: this._relayEventManager,
       eventListener: this._eventListener
