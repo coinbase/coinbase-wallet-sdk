@@ -73,7 +73,7 @@ import {
 } from "./Web3ResponseMessage"
 
 export interface CBWalletRelayOptions {
-  apiUrl: string
+  linkAPIUrl: string
   version: string
   darkMode: boolean
   storage: ScopedLocalStorage
@@ -87,7 +87,7 @@ export interface CBWalletRelayOptions {
 export class CBWalletRelay extends CBWalletRelayAbstract {
   private static accountRequestCallbackIds = new Set<string>()
 
-  private readonly apiUrl: string
+  private readonly linkAPIUrl: string
   protected readonly storage: ScopedLocalStorage
   private readonly _session: Session
   private readonly relayEventManager: CBWalletRelayEventManager
@@ -108,7 +108,7 @@ export class CBWalletRelay extends CBWalletRelayAbstract {
 
   constructor(options: Readonly<CBWalletRelayOptions>) {
     super()
-    this.apiUrl = options.apiUrl
+    this.linkAPIUrl = options.linkAPIUrl
     this.storage = options.storage
     this._session =
       Session.load(options.storage) || new Session(options.storage).save()
@@ -119,7 +119,7 @@ export class CBWalletRelay extends CBWalletRelayAbstract {
     this.connection = new CBWalletConnection(
       this._session.id,
       this._session.key,
-      this.apiUrl,
+      this.linkAPIUrl,
       this.eventListener
     )
 
@@ -306,7 +306,7 @@ export class CBWalletRelay extends CBWalletRelayAbstract {
     )
 
     this.ui = options.uiConstructor({
-      apiUrl: options.apiUrl,
+      linkAPIUrl: options.linkAPIUrl,
       version: options.version,
       darkMode: options.darkMode,
       session: this._session,

@@ -10,10 +10,10 @@ import { CBWalletRelay } from "./relay/CBWalletRelay"
 import { CBWalletRelayEventManager } from "./relay/CBWalletRelayEventManager"
 import { getFavicon } from "./util"
 
-const API_URL =
-    process.env.API_URL! || "https://www.walletlink.org"
-const CBWSDK_VERSION =
-    process.env.CBWSDK_VERSION! ||
+const LINK_API_URL =
+    process.env.LINK_API_URL! || "https://www.walletlink.org"
+const SDK_VERSION =
+    process.env.SDK_VERSION! ||
     require("../package.json").version ||
     "unknown"
 
@@ -26,7 +26,7 @@ export interface CBWalletSDKOptions {
   /** @optional Use dark theme */
   darkMode?: boolean
   /** @optional Coinbase Wallet connection server URL; for most, leave it unspecified */
-  apiUrl?: string
+  linkAPIUrl?: string
   /** @optional an implementation of CBWalletUI; for most, leave it unspecified */
   uiConstructor?: (
       options: Readonly<CBWalletUIOptions>
@@ -40,7 +40,7 @@ export interface CBWalletSDKOptions {
 }
 
 export class CoinbaseWallet {
-  public static VERSION = CBWSDK_VERSION
+  public static VERSION = SDK_VERSION
 
   private _appName = ""
   private _appLogoUrl: string | null = null
@@ -56,7 +56,7 @@ export class CoinbaseWallet {
    * @param options Coinbase Wallet SDK constructor options
    */
   constructor(options: Readonly<CBWalletSDKOptions>) {
-    const apiUrl = options.apiUrl || API_URL
+    const linkAPIUrl = options.linkAPIUrl || LINK_API_URL
     let uiConstructor: (
         options: Readonly<CBWalletUIOptions>
     ) => CBWalletUI
@@ -76,7 +76,7 @@ export class CoinbaseWallet {
 
     this._eventListener = options.eventListener
 
-    const u = new URL(apiUrl)
+    const u = new URL(linkAPIUrl)
     const origin = `${u.protocol}//${u.host}`
     this._storage = new ScopedLocalStorage(`-walletlink:${origin}`)
 
@@ -89,8 +89,8 @@ export class CoinbaseWallet {
     this._relayEventManager = new CBWalletRelayEventManager()
 
     this._relay = new CBWalletRelay({
-      apiUrl,
-      version: CBWSDK_VERSION,
+      linkAPIUrl,
+      version: SDK_VERSION,
       darkMode: !!options.darkMode,
       uiConstructor,
       storage: this._storage,

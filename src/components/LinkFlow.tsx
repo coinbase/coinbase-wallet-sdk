@@ -13,7 +13,7 @@ export interface LinkFlowOptions {
   version: string
   sessionId: string
   sessionSecret: string
-  apiUrl: string
+  linkAPIUrl: string
   isParentConnection: boolean
   connected$: Observable<boolean>
 }
@@ -27,7 +27,7 @@ export class LinkFlow {
   private readonly version: string
   private readonly sessionId: string
   private readonly sessionSecret: string
-  private readonly apiUrl: string
+  private readonly linkAPIUrl: string
   private readonly isParentConnection: boolean
 
   private readonly connected$: Observable<boolean>
@@ -50,7 +50,7 @@ export class LinkFlow {
     this.version = options.version
     this.sessionId = options.sessionId
     this.sessionSecret = options.sessionSecret
-    this.apiUrl = options.apiUrl
+    this.linkAPIUrl = options.linkAPIUrl
     this.isParentConnection = options.isParentConnection
     this.connected$ = options.connected$
 
@@ -131,7 +131,7 @@ export class LinkFlow {
               version={this.version}
               sessionId={this.sessionId}
               sessionSecret={this.sessionSecret}
-              apiUrl={this.apiUrl}
+              linkAPIUrl={this.linkAPIUrl}
               isOpen={this.isOpen}
               isConnected={this.isConnected}
               isParentConnection={this.isParentConnection}
@@ -144,7 +144,7 @@ export class LinkFlow {
               version={this.version}
               sessionId={this.sessionId}
               sessionSecret={this.sessionSecret}
-              apiUrl={this.apiUrl}
+              linkAPIUrl={this.linkAPIUrl}
               isOpen={this.isOpen}
               isConnected={this.isConnected}
               isParentConnection={this.isParentConnection}

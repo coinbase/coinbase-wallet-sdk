@@ -51,8 +51,8 @@ module.exports = {
     new webpack.DefinePlugin({
       "process.env": {
         NODE_ENV: JSON.stringify(env.NODE_ENV) || JSON.stringify('production'),
-        API_URL: JSON.stringify(env.API_URL),
-        CBWSDK_VERSION: JSON.stringify(require("./package.json").version)
+        LINK_API_URL: JSON.stringify(env.LINK_API_URL),
+        SDK_VERSION: JSON.stringify(require("./package.json").version)
       }
     })
   ]
