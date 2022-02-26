@@ -1101,7 +1101,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
     return { promise, cancel }
   }
 
-  supportsUnauthedAddEthereumChain(chainId: string): boolean {
+  inlineAddEthereumChain(chainId: string): boolean {
     return this.ui.inlineAddEthereumChain(chainId)
   }
 

@@ -107,10 +107,10 @@ export abstract class WalletLinkRelayAbstract {
   ): void
 
   /**
-   * Whether the provider should first call request ethereum accounts
-   * if handling an add ethereum chain call
+   * Whether the relay supports the add ethereum chain call without
+   * needing to be connected to the mobile client.
    */
-  abstract supportsUnauthedAddEthereumChain(chainId: string): boolean
+  abstract inlineAddEthereumChain(chainId: string): boolean
 
   public async makeEthereumJSONRPCRequest(
     request: JSONRPCRequest,
