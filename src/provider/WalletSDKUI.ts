@@ -15,13 +15,12 @@ import {
 } from "../relay/Web3Response"
 import { WalletUI, WalletUIOptions } from "./WalletUI"
 
-export class WalletSDKUI extends WalletUI {
+export class WalletSDKUI implements WalletUI {
   private readonly linkFlow: LinkFlow
   private readonly snackbar: Snackbar
   private attached = false
 
   constructor(options: Readonly<WalletUIOptions>) {
-    super(options)
     this.snackbar = new Snackbar({
       darkMode: options.darkMode
     })
