@@ -15,8 +15,7 @@ SDK takes care of the rest.
 
 ## Installing and Upgrading
 
-> Coinbase Wallet SDK was previously known as WalletLink. The installation 
-package is named `walletlink`. 
+> The installation package for **Coinbase Wallet SDK** (formerly WalletLink) is now named `@coinbase/wallet-sdk`.
 
 ### Installing Wallet SDK
 
@@ -28,20 +27,20 @@ Install Coinbase Wallet SDK with yarn or npm.
 1. Check available versions of Wallet SDK.
 
 ```shell
-yarn info walletlink versions
+yarn info @coinbase/wallet-sdk versions
 ```
 
 2. Install a specific version or the latest version.
 
 ```shell
-#yarn add walletlink@2.4.7
-yarn add walletlink
+#yarn add @coinbase/wallet-sdk@2.5.0
+yarn add @coinbase/wallet-sdk
 ```
 
 3. Check your installed version. 
 
 ```shell
-yarn list walletlink
+yarn list @coinbase/wallet-sdk
 ```
 
 #### Npm
@@ -49,20 +48,20 @@ yarn list walletlink
 1. Check available versions of Wallet SDK.
 
 ```shell
-npm view walletlink versions
+npm view @coinbase/wallet-sdk versions
 ```
 
 2. Install a specific version or the latest version.
 
 ```shell
-#npm install walletlink@2.4.7
-npm install walletlink
+#npm install @coinbase/wallet-sdk@2.5.0
+npm install @coinbase/wallet-sdk
 ```
 
 3. Check your installed version. 
 
 ```shell
-npm list walletlink
+npm list @coinbase/wallet-sdk
 ```
 
 ### Upgrading Wallet SDK
@@ -74,13 +73,13 @@ Upgrade Coinbase Wallet SDK with yarn or npm.
 1. Compare your installed version of Coinbase Wallet SDK with the latest available version.
 
 ```shell
-yarn outdated walletlink
+yarn outdated @coinbase/wallet-sdk
 ```
 
 2. Update Coinbase Wallet SDK to the latest.
 
 ```shell
-yarn upgrade walletlink --latest
+yarn upgrade @coinbase/wallet-sdk --latest
 ```
 
 #### Npm
@@ -88,7 +87,7 @@ yarn upgrade walletlink --latest
 1. Compare your installed version of Coinbase Wallet SDK with the latest available version. 
 
 ```shell
-npm outdated walletlink
+npm outdated @coinbase/wallet-sdk
 ```
 
 2. If necessary, update `package.json` with the latest major version. 
@@ -96,7 +95,7 @@ npm outdated walletlink
 ```shell
 {
   "dependencies": {
-    "walletlink": "^2.4.7"
+    "@coinbase/wallet-sdk": "^2.5.0"
   }
 }
 ```
@@ -104,10 +103,10 @@ npm outdated walletlink
 3. Update Coinbase Wallet SDK to the latest available version.
 
 ```shell
-npm update walletlink
+npm update @coinbase/wallet-sdk
 ```
 
-## Initializing WalletLink and a WalletLink-powered Web3 object
+## Initializing Wallet SDK and a Wallet SDK-powered Web3 object
 
 > Instructions are in [TypeScript](https://www.typescriptlang.org/). The usage 
 is the same in JavaScript, except for the occasional TypeScript type 
@@ -116,7 +115,7 @@ annotation such as `string[]` or `as any`.
 
 ```typescript
 // TypeScript
-import WalletLink from 'walletlink'
+import CoinbaseWallet from 'wallet-sdk'
 import Web3 from 'web3'
 
 const APP_NAME = 'My Awesome App'
@@ -124,15 +123,15 @@ const APP_LOGO_URL = 'https://example.com/logo.png'
 const DEFAULT_ETH_JSONRPC_URL = 'https://mainnet.infura.io/v3/<YOUR_INFURA_API_KEY>'
 const DEFAULT_CHAIN_ID = 1
 
-// Initialize WalletLink
-export const walletLink = new WalletLink({
+// Initialize Coinbase Wallet SDK
+export const coinbaseWallet = new CoinbaseWallet({
   appName: APP_NAME,
   appLogoUrl: APP_LOGO_URL,
   darkMode: false
 })
 
 // Initialize a Web3 Provider object
-export const ethereum = walletLink.makeWeb3Provider(DEFAULT_ETH_JSONRPC_URL, DEFAULT_CHAIN_ID)
+export const ethereum = coinbaseWallet.makeWeb3Provider(DEFAULT_ETH_JSONRPC_URL, DEFAULT_CHAIN_ID)
 
 // Initialize a Web3 object
 export const web3 = new Web3(ethereum as any)
@@ -265,9 +264,9 @@ supported. Here's an example:
 
 ### Suggest client wallet track a specific token with EIP-747
 
-Calling `wallet_watchAsset` method returns true/false if the asset was accepted/denied by the user, or an error if there is something wrong with the request.
+Calling `wallet_watchAsset` method returns true/false if the asset is accepted/denied by the user, or an error if there is something wrong with the request.
 
-Unlike other methods, the default definition of `wallet_watchAsset` params is not an array, however, in order to keep it compatible with code conventions of other dapps walletlink supports both array and object format.
+Unlike other methods, the default definition of `wallet_watchAsset` params is not an array, but to keep it compatible with code conventions of other dapps, wallet-sdk supports both array and object format.
 
 ```typescript
 interface WatchAssetParameters {
@@ -317,15 +316,12 @@ ethereum.request({
 .catch(err => onError(err.message));
 ```
 
-### Disconnecting / De-establishing a link
+## Disconnecting a Link
 
-To disconnect, call the instance method `disconnect()` on the WalletLink object,
-or the instance method `close()` on the WalletLink Web3 Provider object. This
-will disestablish the link, and require user to reconnect by scanning QR code
-again.
+To disconnect or disestablish a link, call the instance method `disconnect()` on the `CoinbaseWallet` object/instance, or the instance method `close()` on the Coinbase Wallet SDK Web3 Provider object. This disestablishes the link, and requires the user to reconnect by scanning QR code again.
 
 ```typescript
-walletLink.disconnect()
+coinbaseWallet.disconnect()
 // is the same as the following:
 ethereum.close()
 ```
@@ -343,7 +339,6 @@ ethereum.close()
 ---
 
 ```
-Copyright © 2018-2022 WalletLink.org <https://www.walletlink.org/>
 Copyright © 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 
 Licensed under the Apache License, Version 2.0 (the "License");
