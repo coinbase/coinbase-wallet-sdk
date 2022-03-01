@@ -1,6 +1,6 @@
 {
   "name": "@coinbase/wallet-sdk",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Coinbase Wallet JavaScript SDK",
   "keywords": [
     "cipher",
@@ -31,10 +31,10 @@
     "build:dev": "export LINK_API_URL='http://localhost:3000'; yarn build",
     "build:dev:watch": "nodemon -e 'ts,tsx,js,json,css,scss,svg' --ignore 'src/**/*-css.ts' --ignore 'src/**/*-svg.ts' --watch src/ --exec 'yarn build:dev'",
     "build:prod": "yarn prebuild && yarn build && yarn build-npm && cp ./package.json ./README.md ./LICENSE build/npm && cp -a src/vendor-js build/npm/dist && sed -i.bak 's|  \"private\": true,||g' build/npm/package.json && rm -f build/npm/package.json.bak",
-    "prepublishOnly": "yarn build:prod",
     "lint": "eslint ./src --ext .ts,.tsx",
     "lint:watch": "nodemon -e ts,tsx,js,json,css,scss,svg --watch src/ --exec 'yarn tsc && yarn lint'"
   },
+  "private": true,
   "dependencies": {
     "@metamask/safe-event-emitter": "2.0.0",
     "bind-decorator": "^1.0.11",
