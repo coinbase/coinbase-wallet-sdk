@@ -33,7 +33,8 @@ export abstract class WalletLinkUI {
    */
   abstract requestEthereumAccounts(options: {
     onCancel: () => void
-    onAccounts?: (accounts: [AddressString]) => void
+    onAccounts?: (accounts: [AddressString]) => void,
+    dappNameFromCoinbaseSDK?: string
   }): void
 
   abstract addEthereumChain(options: {

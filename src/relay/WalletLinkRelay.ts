@@ -44,6 +44,7 @@ import {
   AddEthereumChainRequest,
   EthereumAddressFromSignedMessageRequest,
   GenericRequest,
+  RequestEthereumAccountsRequest,
   ScanQRCodeRequest,
   SignEthereumMessageRequest,
   SignEthereumTransactionRequest,
@@ -789,7 +790,8 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
 
           this.ui.requestEthereumAccounts({
             onCancel: cancel,
-            onAccounts
+            onAccounts,
+            dappNameFromCoinbaseSDK: (request as RequestEthereumAccountsRequest).params.appName
           })
         } else {
           this.ui.requestEthereumAccounts({

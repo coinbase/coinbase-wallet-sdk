@@ -82,6 +82,9 @@ export class WalletLinkProvider
 
   private hasMadeFirstChainChangedEmission = false
 
+  private _appName: string | null = null
+  private _appLogoUrl: string | null = null
+
   constructor(options: Readonly<WalletLinkProviderOptions>) {
     super()
 
@@ -317,9 +320,11 @@ export class WalletLinkProvider
   }
 
   public setAppInfo(appName: string, appLogoUrl: string | null): void {
-    void this.initializeRelay().then(relay =>
-      relay.setAppInfo(appName, appLogoUrl)
-    )
+    if (this._relay) {
+      this._relay.setAppInfo(appName, appLogoUrl)
+    }
+    this._appName = appName
+    this._appLogoUrl = appLogoUrl
   }
 
   public async enable(): Promise<AddressString[]> {
@@ -1177,6 +1182,9 @@ export class WalletLinkProvider
     }
 
     return this._relayProvider().then(relay => {
+      if (this._appName) {
+        relay.setAppInfo(this._appName, this._appLogoUrl)
+      }
       relay.setAccountsCallback(accounts => this._setAddresses(accounts))
       relay.setChainCallback((chainId, jsonRpcUrl) => {
         this.updateProviderInfo(jsonRpcUrl, parseInt(chainId, 10), true)

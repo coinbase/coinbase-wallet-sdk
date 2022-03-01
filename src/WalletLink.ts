@@ -90,6 +90,7 @@ export class WalletLink {
     this._storage.setItem("version", WalletLink.VERSION)
 
     if (this.walletExtension) {
+      this.walletExtension.setAppInfo(options.appName, options.appLogoUrl ?? null)
       return
     }
 
@@ -120,7 +121,7 @@ export class WalletLink {
   ): WalletLinkProvider {
     const extension = this.walletExtension
     if (extension) {
-      if (!this.isCipherProvider(extension)) {
+      if (!WalletLink.isCipherProvider(extension)) {
         extension.setProviderInfo(jsonRpcUrl, chainId)
       }
 
@@ -160,7 +161,7 @@ export class WalletLink {
 
     const extension = this.walletExtension
     if (extension) {
-      if (!this.isCipherProvider(extension)) {
+      if (!WalletLink.isCipherProvider(extension)) {
         extension.setAppInfo(this._appName, this._appLogoUrl)
       }
     } else {
@@ -185,7 +186,7 @@ export class WalletLink {
     return window.walletLinkExtension
   }
 
-  private isCipherProvider(provider: WalletLinkProvider): boolean {
+  private static isCipherProvider(provider: WalletLinkProvider): boolean {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     return typeof provider.isCipher === "boolean" && provider.isCipher
