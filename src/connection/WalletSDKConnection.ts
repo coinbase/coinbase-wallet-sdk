@@ -1,5 +1,4 @@
-// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
-// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
+// Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
 import {
@@ -27,7 +26,7 @@ import {
   timeoutWith
 } from "rxjs/operators"
 
-import { EVENTS, WalletLinkAnalyticsAbstract } from "../init"
+import { EventListener, EVENTS } from "./EventListener"
 import { Session } from "../relay/Session"
 import { IntNumber } from "../types"
 import {
@@ -57,9 +56,9 @@ const HEARTBEAT_INTERVAL = 10000
 const REQUEST_TIMEOUT = 60000
 
 /**
- * WalletLink Connection
+ * Coinbase Wallet Connection
  */
-export class WalletLinkConnection {
+export class WalletSDKConnection {
   private ws: RxWebSocket<ServerMessage>
   private subscriptions = new Subscription()
   private destroyed = false
@@ -68,35 +67,33 @@ export class WalletLinkConnection {
   private connectedSubject = new BehaviorSubject(false)
   private linkedSubject = new BehaviorSubject(false)
   private sessionConfigSubject = new ReplaySubject<SessionConfig>(1)
-  private walletLinkAnalytics: WalletLinkAnalyticsAbstract
 
   /**
    * Constructor
    * @param sessionId Session ID
    * @param sessionKey Session Key
-   * @param serverUrl Walletlinkd RPC URL
+   * @param linkAPIUrl Coinbase Wallet link server URL
    * @param [WebSocketClass] Custom WebSocket implementation
    */
   constructor(
     private sessionId: string,
     private sessionKey: string,
-    serverUrl: string,
-    walletLinkAnalytics: WalletLinkAnalyticsAbstract,
+    linkAPIUrl: string,
+    private eventListener?: EventListener,
     WebSocketClass: typeof WebSocket = WebSocket
   ) {
     const ws = new RxWebSocket<ServerMessage>(
-      serverUrl + "/rpc",
+      linkAPIUrl + "/rpc",
       WebSocketClass
     )
     this.ws = ws
-    this.walletLinkAnalytics = walletLinkAnalytics
 
     // attempt to reconnect every 5 seconds when disconnected
     this.subscriptions.add(
       ws.connectionState$
         .pipe(
           tap(state =>
-            this.walletLinkAnalytics.sendEvent(EVENTS.CONNECTED_STATE_CHANGE, {
+            this.eventListener?.onEvent(EVENTS.CONNECTED_STATE_CHANGE, {
               state,
               sessionIdHash: Session.hash(sessionId)
             })
@@ -176,7 +173,7 @@ export class WalletLinkConnection {
         .subscribe(m => {
           const msg = m as Omit<ServerMessageIsLinkedOK, "type"> &
             ServerMessageLinked
-          this.walletLinkAnalytics.sendEvent(EVENTS.LINKED, {
+          this.eventListener?.onEvent(EVENTS.LINKED, {
             sessionIdHash: Session.hash(sessionId),
             linked: msg.linked,
             type: m.type,
@@ -197,7 +194,7 @@ export class WalletLinkConnection {
         .subscribe(m => {
           const msg = m as Omit<ServerMessageGetSessionConfigOK, "type"> &
             ServerMessageSessionConfigUpdated
-          this.walletLinkAnalytics.sendEvent(EVENTS.SESSION_CONFIG_RECEIVED, {
+          this.eventListener?.onEvent(EVENTS.SESSION_CONFIG_RECEIVED, {
             sessionIdHash: Session.hash(sessionId),
             metadata_keys:
               msg && msg.metadata ? Object.keys(msg.metadata) : undefined
@@ -218,7 +215,7 @@ export class WalletLinkConnection {
     if (this.destroyed) {
       throw new Error("instance is destroyed")
     }
-    this.walletLinkAnalytics.sendEvent(EVENTS.STARTED_CONNECTING, {
+    this.eventListener?.onEvent(EVENTS.STARTED_CONNECTING, {
       sessionIdHash: Session.hash(this.sessionId)
     })
     this.ws.connect().subscribe()
@@ -226,12 +223,12 @@ export class WalletLinkConnection {
 
   /**
    * Terminate connection, and mark as destroyed. To reconnect, create a new
-   * instance of WalletLinkConnection
+   * instance of WalletSDKConnection
    */
   public destroy(): void {
     this.subscriptions.unsubscribe()
     this.ws.disconnect()
-    this.walletLinkAnalytics.sendEvent(EVENTS.DISCONNECTED, {
+    this.eventListener?.onEvent(EVENTS.DISCONNECTED, {
       sessionIdHash: Session.hash(this.sessionId)
     })
     this.destroyed = true

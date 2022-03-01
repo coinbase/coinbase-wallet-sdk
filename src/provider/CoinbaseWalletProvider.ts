@@ -1,20 +1,19 @@
-// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
-// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
+// Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import BN from "bn.js"
 import { ethErrors } from "eth-rpc-errors"
-import { WalletLinkAnalytics } from "../connection/WalletLinkAnalytics"
-import { EVENTS, WalletLinkAnalyticsAbstract } from "../init"
+
+import { EventListener, EVENTS } from "../connection/EventListener"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
 import { EthereumTransactionParams } from "../relay/EthereumTransactionParams"
 import { Session } from "../relay/Session"
 import {
   LOCAL_STORAGE_ADDRESSES_KEY,
-  WalletLinkRelayAbstract
-} from "../relay/WalletLinkRelayAbstract"
-import { WalletLinkRelayEventManager } from "../relay/WalletLinkRelayEventManager"
+  WalletSDKRelayAbstract
+} from "../relay/WalletSDKRelayAbstract"
+import { WalletSDKRelayEventManager } from "../relay/WalletSDKRelayEventManager"
 import {
   ErrorResponse,
   RequestEthereumAccountsResponse,
@@ -48,18 +47,18 @@ const DEFAULT_JSON_RPC_URL = "DefaultJsonRpcUrl"
 const HAS_CHAIN_BEEN_SWITCHED_KEY = "HasChainBeenSwitched"
 const HAS_CHAIN_OVERRIDDEN_FROM_RELAY = "HasChainOverriddenFromRelay"
 
-export interface WalletLinkProviderOptions {
+export interface CoinbaseWalletProviderOptions {
   chainId?: number
   jsonRpcUrl: string
   overrideIsCoinbaseWallet?: boolean
   overrideIsMetaMask: boolean
-  relayEventManager: WalletLinkRelayEventManager
-  relayProvider: () => Promise<WalletLinkRelayAbstract>
+  relayEventManager: WalletSDKRelayEventManager
+  relayProvider: () => Promise<WalletSDKRelayAbstract>
   storage: ScopedLocalStorage
-  walletLinkAnalytics?: WalletLinkAnalyticsAbstract
+  eventListener?: EventListener
 }
 
-export class WalletLinkProvider
+export class CoinbaseWalletProvider
   extends SafeEventEmitter
   implements Web3Provider
 {
@@ -69,11 +68,11 @@ export class WalletLinkProvider
   private readonly _filterPolyfill = new FilterPolyfill(this)
   private readonly _subscriptionManager = new SubscriptionManager(this)
 
-  private readonly _relayProvider: () => Promise<WalletLinkRelayAbstract>
-  private _relay: WalletLinkRelayAbstract | null = null
+  private readonly _relayProvider: () => Promise<WalletSDKRelayAbstract>
+  private _relay: WalletSDKRelayAbstract | null = null
   private readonly _storage: ScopedLocalStorage
-  private readonly _relayEventManager: WalletLinkRelayEventManager
-  private readonly _walletLinkAnalytics: WalletLinkAnalyticsAbstract
+  private readonly _relayEventManager: WalletSDKRelayEventManager
+  private readonly _eventListener?: EventListener
 
   private _jsonRpcUrlFromOpts: string
   private readonly _overrideIsMetaMask: boolean
@@ -85,7 +84,7 @@ export class WalletLinkProvider
   private _appName: string | null = null
   private _appLogoUrl: string | null = null
 
-  constructor(options: Readonly<WalletLinkProviderOptions>) {
+  constructor(options: Readonly<CoinbaseWalletProviderOptions>) {
     super()
 
     this.setProviderInfo = this.setProviderInfo.bind(this)
@@ -106,9 +105,7 @@ export class WalletLinkProvider
     this._relayProvider = options.relayProvider
     this._storage = options.storage
     this._relayEventManager = options.relayEventManager
-    this._walletLinkAnalytics = options.walletLinkAnalytics
-      ? options.walletLinkAnalytics
-      : new WalletLinkAnalytics()
+    this._eventListener = options.eventListener
 
     this.isCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true
 
@@ -141,7 +138,7 @@ export class WalletLinkProvider
     }
 
     window.addEventListener("message", event => {
-      if (event.data.type !== "walletLinkMessage") return
+      if (event.data.type !== "walletLinkMessage") return // compatibility with CBW extension
 
       if (event.data.data.action === "defaultChainChanged") {
         const _chainId = event.data.data.chainId
@@ -163,7 +160,7 @@ export class WalletLinkProvider
     return prepend0x(this.getChainId().toString(16))
   }
 
-  public get isWalletLink(): boolean {
+  public get isWalletLink(): boolean { // backward compatibility
     return true
   }
 
@@ -328,7 +325,7 @@ export class WalletLinkProvider
   }
 
   public async enable(): Promise<AddressString[]> {
-    this._walletLinkAnalytics.sendEvent(EVENTS.ETH_ACCOUNTS_STATE, {
+    this._eventListener?.onEvent(EVENTS.ETH_ACCOUNTS_STATE, {
       method: "provider::enable",
       addresses_length: this._addresses.length,
       sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : null
@@ -461,7 +458,7 @@ export class WalletLinkProvider
 
     const newParams = params === undefined ? [] : params
 
-    // WalletLink Requests
+    // Coinbase Wallet Requests
     const id = this._relayEventManager.makeRequestId()
     const result = await this._sendRequestAsync({
       method,
@@ -521,7 +518,7 @@ export class WalletLinkProvider
 
     if (response.result === undefined) {
       throw new Error(
-        `WalletLink does not support calling ${method} synchronously without ` +
+        `Coinbase Wallet does not support calling ${method} synchronously without ` +
           `a callback. Please provide a callback parameter to call ${method} ` +
           `asynchronously.`
       )
@@ -664,8 +661,8 @@ export class WalletLinkProvider
       case JSONRPCMethod.eth_signTypedData:
         return this._eth_signTypedData_v4(params)
 
-      case JSONRPCMethod.walletlink_arbitrary:
-        return this._walletlink_arbitrary(params)
+      case JSONRPCMethod.cbWallet_arbitrary:
+        return this._cbwallet_arbitrary(params)
 
       case JSONRPCMethod.wallet_addEthereumChain:
         return this._wallet_addEthereumChain(params)
@@ -732,7 +729,7 @@ export class WalletLinkProvider
 
   private _ensureKnownAddress(addressString: string): void {
     if (!this._isKnownAddress(addressString)) {
-      this._walletLinkAnalytics.sendEvent(EVENTS.UNKNOWN_ADDRESS_ENCOUNTERED)
+      this._eventListener?.onEvent(EVENTS.UNKNOWN_ADDRESS_ENCOUNTERED)
       throw new Error("Unknown Ethereum address")
     }
   }
@@ -864,7 +861,7 @@ export class WalletLinkProvider
   }
 
   private async _eth_requestAccounts(): Promise<JSONRPCResponse> {
-    this._walletLinkAnalytics.sendEvent(EVENTS.ETH_ACCOUNTS_STATE, {
+    this._eventListener?.onEvent(EVENTS.ETH_ACCOUNTS_STATE, {
       method: "provider::_eth_requestAccounts",
       addresses_length: this._addresses.length,
       sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : null
@@ -1032,7 +1029,7 @@ export class WalletLinkProvider
     return this._signEthereumMessage(message, address, false, typedDataJSON)
   }
 
-  private async _walletlink_arbitrary(
+  private async _cbwallet_arbitrary(
     params: unknown[]
   ): Promise<JSONRPCResponse> {
     const action = params[0]
@@ -1176,7 +1173,7 @@ export class WalletLinkProvider
     return this._filterPolyfill.getFilterLogs(filterId)
   }
 
-  private initializeRelay(): Promise<WalletLinkRelayAbstract> {
+  private initializeRelay(): Promise<WalletSDKRelayAbstract> {
     if (this._relay) {
       return Promise.resolve(this._relay)
     }

@@ -23,3 +23,9 @@ yarn-error.log*
 
 # eslint cache
 .eslintcache
+
+.vscode
+.idea
+
+*-svg.ts
+*-css.ts

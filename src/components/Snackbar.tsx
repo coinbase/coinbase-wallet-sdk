@@ -1,5 +1,4 @@
-// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
-// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
+// Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
 import clsx from "clsx"
@@ -46,7 +45,7 @@ export class Snackbar {
   public attach(el: Element): void {
     this.root = document.createElement("div")
 
-    this.root.className = "-walletlink-snackbar-root"
+    this.root.className = "-cbwsdk-snackbar-root"
     el.appendChild(this.root)
 
     this.render()
@@ -88,11 +87,11 @@ export class Snackbar {
 const SnackbarContainer: FunctionComponent<{ darkMode: boolean }> = props => (
   <div
     class={clsx(
-      "-walletlink-snackbar-container"
+      "-cbwsdk-snackbar-container"
     )}
   >
     <style>{css}</style>
-    <div class="-walletlink-snackbar">{props.children}</div>
+    <div class="-cbwsdk-snackbar">{props.children}</div>
   </div>
 )
 
@@ -126,14 +125,14 @@ const SnackbarInstance: FunctionComponent<SnackbarInstanceProps> = ({
   return (
     <div
       class={clsx(
-        "-walletlink-snackbar-instance",
-        hidden && "-walletlink-snackbar-instance-hidden",
-        expanded && "-walletlink-snackbar-instance-expanded"
+        "-cbwsdk-snackbar-instance",
+        hidden && "-cbwsdk-snackbar-instance-hidden",
+        expanded && "-cbwsdk-snackbar-instance-expanded"
       )}
     >
-      <div class="-walletlink-snackbar-instance-header" onClick={toggleExpanded}>
-        <img src={cblogo} class="-walletlink-snackbar-instance-header-cblogo"/>
-        <div class="-walletlink-snackbar-instance-header-message">{message}</div>
+      <div class="-cbwsdk-snackbar-instance-header" onClick={toggleExpanded}>
+        <img src={cblogo} class="-cbwsdk-snackbar-instance-header-cblogo"/>
+        <div class="-cbwsdk-snackbar-instance-header-message">{message}</div>
         <div class="-gear-container">
           {!expanded && (
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -144,11 +143,11 @@ const SnackbarInstance: FunctionComponent<SnackbarInstanceProps> = ({
         </div>
       </div>
       {menuItems && menuItems.length > 0 && (
-        <div class="-walletlink-snackbar-instance-menu">
+        <div class="-cbwsdk-snackbar-instance-menu">
           {menuItems.map((action, i) => (
             <div class={clsx(
-              "-walletlink-snackbar-instance-menu-item",
-              action.isRed && "-walletlink-snackbar-instance-menu-item-is-red"
+              "-cbwsdk-snackbar-instance-menu-item",
+              action.isRed && "-cbwsdk-snackbar-instance-menu-item-is-red"
             )}
                  onClick={action.onClick}
                  key={i}>
@@ -157,8 +156,8 @@ const SnackbarInstance: FunctionComponent<SnackbarInstanceProps> = ({
                 </svg>
               <span
                 class={clsx(
-                  "-walletlink-snackbar-instance-menu-item-info",
-                  action.isRed && "-walletlink-snackbar-instance-menu-item-info-is-red"
+                  "-cbwsdk-snackbar-instance-menu-item-info",
+                  action.isRed && "-cbwsdk-snackbar-instance-menu-item-info-is-red"
                 )}
               >
                 {action.info}

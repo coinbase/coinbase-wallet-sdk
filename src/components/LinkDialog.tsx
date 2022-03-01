@@ -1,5 +1,4 @@
-// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
-// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
+// Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
 import clsx from "clsx"
@@ -17,7 +16,7 @@ export const LinkDialog: FunctionComponent<{
   version: string
   sessionId: string
   sessionSecret: string
-  walletLinkUrl: string
+  linkAPIUrl: string
   isOpen: boolean
   isConnected: boolean
   isParentConnection: boolean
@@ -52,23 +51,23 @@ export const LinkDialog: FunctionComponent<{
   return (
     <div
       class={clsx(
-        "-walletlink-link-dialog-container",
-        props.darkMode && "-walletlink-link-dialog-container-dark",
-        isContainerHidden && "-walletlink-link-dialog-container-hidden"
+        "-cbwsdk-link-dialog-container",
+        props.darkMode && "-cbwsdk-link-dialog-container-dark",
+        isContainerHidden && "-cbwsdk-link-dialog-container-hidden"
       )}
     >
       <style>{css}</style>
       <div
         class={clsx(
-          "-walletlink-link-dialog-backdrop",
-          isDialogHidden && "-walletlink-link-dialog-backdrop-hidden"
+          "-cbwsdk-link-dialog-backdrop",
+          isDialogHidden && "-cbwsdk-link-dialog-backdrop-hidden"
         )}
       />
-      <div class="-walletlink-link-dialog">
+      <div class="-cbwsdk-link-dialog">
         <div
           class={clsx(
-            "-walletlink-link-dialog-box",
-            isDialogHidden && "-walletlink-link-dialog-box-hidden"
+            "-cbwsdk-link-dialog-box",
+            isDialogHidden && "-cbwsdk-link-dialog-box-hidden"
           )}
         >
           <ScanQRCode
@@ -76,7 +75,7 @@ export const LinkDialog: FunctionComponent<{
             version={props.version}
             sessionId={props.sessionId}
             sessionSecret={props.sessionSecret}
-            walletLinkUrl={props.walletLinkUrl}
+            linkAPIUrl={props.linkAPIUrl}
             isConnected={props.isConnected}
             isParentConnection={props.isParentConnection}
           />
@@ -93,23 +92,23 @@ const ScanQRCode: FunctionComponent<{
   version: string
   sessionId: string
   sessionSecret: string
-  walletLinkUrl: string
+  linkAPIUrl: string
   isConnected: boolean
   isParentConnection: boolean
 }> = props => {
-  const serverUrl = window.encodeURIComponent(props.walletLinkUrl)
+  const serverUrl = window.encodeURIComponent(props.linkAPIUrl)
   const sessionIdKey = props.isParentConnection ? "parent-id" : "id"
-  const qrUrl = `${props.walletLinkUrl}/#/link?${sessionIdKey}=${props.sessionId}&secret=${props.sessionSecret}&server=${serverUrl}&v=1`
+  const qrUrl = `${props.linkAPIUrl}/#/link?${sessionIdKey}=${props.sessionId}&secret=${props.sessionSecret}&server=${serverUrl}&v=1`
 
   return (
-    <div class="-walletlink-link-dialog-box-content">
+    <div class="-cbwsdk-link-dialog-box-content">
       <h3>
         Scan to
         <br /> Connect
       </h3>
 
-      <div class="-walletlink-link-dialog-box-content-qrcode">
-        <div class="-walletlink-link-dialog-box-content-qrcode-wrapper">
+      <div class="-cbwsdk-link-dialog-box-content-qrcode">
+        <div class="-cbwsdk-link-dialog-box-content-qrcode-wrapper">
           <QRCode
             content={qrUrl}
             width={224}
@@ -118,19 +117,19 @@ const ScanQRCode: FunctionComponent<{
             bgColor="transparent"
           />
         </div>
-        <input type="hidden" name="walletlink-version" value={LIB_VERSION} />
+        <input type="hidden" name="cbwsdk-version" value={LIB_VERSION} />
         <input type="hidden" value={qrUrl} />
         {!props.isConnected && (
-          <div class="-walletlink-link-dialog-box-content-qrcode-connecting">
+          <div class="-cbwsdk-link-dialog-box-content-qrcode-connecting">
             <Spinner size={128} color={props.darkMode ? "#fff" : "#000"} />
             <p>Connecting...</p>
           </div>
         )}
-        <p title={`WalletLink v${props.version}`}>Powered by WalletLink</p>
+        <p title={`Coinbase Wallet SDK v${props.version}`}>Powered by Coinbase Wallet SDK</p>
       </div>
 
       <a
-        href={`${props.walletLinkUrl}/#/wallets`}
+        href={`${props.linkAPIUrl}/#/wallets`}
         target="_blank"
         rel="noopener"
       >
@@ -141,7 +140,7 @@ const ScanQRCode: FunctionComponent<{
 }
 
 const CancelButton: FunctionComponent<{ onClick: () => void }> = props => (
-  <button class="-walletlink-link-dialog-box-cancel" onClick={props.onClick}>
-    <div class="-walletlink-link-dialog-box-cancel-x" />
+  <button class="-cbwsdk-link-dialog-box-cancel" onClick={props.onClick}>
+    <div class="-cbwsdk-link-dialog-box-cancel-x" />
   </button>
 )

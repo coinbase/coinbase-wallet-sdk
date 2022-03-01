@@ -1,5 +1,4 @@
-// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
-// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
+// Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
 import { sha256 } from 'js-sha256';
@@ -31,7 +30,7 @@ export class Session {
     this._secret = secret || randomBytesHex(32)
 
     const hash = sha256.create()
-    hash.update(`${this._id}, ${this._secret} WalletLink`)
+    hash.update(`${this._id}, ${this._secret} WalletLink`) // ensure old sessions stay connected
     this._key = hash.hex()
 
     this._linked = !!linked

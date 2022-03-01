@@ -1,5 +1,4 @@
-// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
-// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
+// Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator"
@@ -16,11 +15,10 @@ import {
   timeout
 } from "rxjs/operators"
 import { ServerMessageEvent } from "../connection/ServerMessage"
-import { WalletLinkAnalytics } from "../connection/WalletLinkAnalytics"
-import { WalletLinkConnection } from "../connection/WalletLinkConnection"
-import { EVENTS, WalletLinkAnalyticsAbstract } from "../init"
+import { WalletSDKConnection } from "../connection/WalletSDKConnection"
+import { EventListener, EVENTS } from "../connection/EventListener"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
-import { WalletLinkUI, WalletLinkUIOptions } from "../provider/WalletLinkUI"
+import { WalletUI, WalletUIOptions } from "../provider/WalletUI"
 import { AddressString, IntNumber, RegExpString } from "../types"
 import {
   bigIntStringFromBN,
@@ -35,10 +33,10 @@ import {
   APP_VERSION_KEY,
   CancelablePromise,
   LOCAL_STORAGE_ADDRESSES_KEY,
-  WalletLinkRelayAbstract,
+  WalletSDKRelayAbstract,
   WALLET_USER_NAME_KEY
-} from "./WalletLinkRelayAbstract"
-import { WalletLinkRelayEventManager } from "./WalletLinkRelayEventManager"
+} from "./WalletSDKRelayAbstract"
+import { WalletSDKRelayEventManager } from "./WalletSDKRelayEventManager"
 import { Web3Method } from "./Web3Method"
 import {
   AddEthereumChainRequest,
@@ -75,33 +73,33 @@ import {
   Web3ResponseMessage
 } from "./Web3ResponseMessage"
 
-export interface WalletLinkRelayOptions {
-  walletLinkUrl: string
+export interface WalletSDKRelayOptions {
+  linkAPIUrl: string
   version: string
   darkMode: boolean
   storage: ScopedLocalStorage
-  relayEventManager: WalletLinkRelayEventManager
-  walletLinkUIConstructor: (
-    options: Readonly<WalletLinkUIOptions>
-  ) => WalletLinkUI
-  walletLinkAnalytics?: WalletLinkAnalyticsAbstract
+  relayEventManager: WalletSDKRelayEventManager
+  uiConstructor: (
+    options: Readonly<WalletUIOptions>
+  ) => WalletUI
+  eventListener?: EventListener
 }
 
-export class WalletLinkRelay extends WalletLinkRelayAbstract {
+export class WalletSDKRelay extends WalletSDKRelayAbstract {
   private static accountRequestCallbackIds = new Set<string>()
 
-  private readonly walletLinkUrl: string
+  private readonly linkAPIUrl: string
   protected readonly storage: ScopedLocalStorage
   private readonly _session: Session
-  private readonly relayEventManager: WalletLinkRelayEventManager
-  protected readonly walletLinkAnalytics: WalletLinkAnalyticsAbstract | null
-  private readonly connection: WalletLinkConnection
+  private readonly relayEventManager: WalletSDKRelayEventManager
+  protected readonly eventListener?: EventListener
+  private readonly connection: WalletSDKConnection
   private accountsCallback: ((account: [string]) => void) | null = null
   private chainCallback:
     | ((chainId: string, jsonRpcUrl: string) => void)
     | null = null
 
-  private ui: WalletLinkUI
+  private ui: WalletUI
 
   private appName = ""
   private appLogoUrl: string | null = null
@@ -109,23 +107,21 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
   isLinked: boolean | undefined
   isUnlinkedErrorState: boolean | undefined
 
-  constructor(options: Readonly<WalletLinkRelayOptions>) {
+  constructor(options: Readonly<WalletSDKRelayOptions>) {
     super()
-    this.walletLinkUrl = options.walletLinkUrl
+    this.linkAPIUrl = options.linkAPIUrl
     this.storage = options.storage
     this._session =
       Session.load(options.storage) || new Session(options.storage).save()
 
     this.relayEventManager = options.relayEventManager
-    this.walletLinkAnalytics = options.walletLinkAnalytics
-      ? options.walletLinkAnalytics
-      : new WalletLinkAnalytics()
+    this.eventListener = options.eventListener
 
-    this.connection = new WalletLinkConnection(
+    this.connection = new WalletSDKConnection(
       this._session.id,
       this._session.key,
-      this.walletLinkUrl,
-      this.walletLinkAnalytics
+      this.linkAPIUrl,
+      this.eventListener
     )
 
     this.subscriptions.add(
@@ -163,7 +159,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
               ) {
                 this.isUnlinkedErrorState = true
                 const sessionIdHash = this.getSessionIdHash()
-                this.walletLinkAnalytics?.sendEvent(
+                this.eventListener?.onEvent(
                   EVENTS.UNLINKED_ERROR_STATE,
                   { sessionIdHash, origin: location.origin }
                 )
@@ -180,7 +176,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
         .pipe(filter(c => !!c.metadata && c.metadata.__destroyed === "1"))
         .subscribe(() => {
           const alreadyDestroyed = this.connection.isDestroyed
-          this.walletLinkAnalytics?.sendEvent(EVENTS.METADATA_DESTROYED, {
+          this.eventListener?.onEvent(EVENTS.METADATA_DESTROYED, {
             alreadyDestroyed,
             sessionIdHash: this.getSessionIdHash(),
             origin: location.origin
@@ -204,7 +200,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
             this.storage.setItem(WALLET_USER_NAME_KEY, walletUsername)
           },
           error: () => {
-            this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {
+            this.eventListener?.onEvent(EVENTS.GENERAL_ERROR, {
               message: "Had error decrypting",
               value: "username"
             })
@@ -225,7 +221,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
             this.storage.setItem(APP_VERSION_KEY, appVersion)
           },
           error: () => {
-            this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {
+            this.eventListener?.onEvent(EVENTS.GENERAL_ERROR, {
               message: "Had error decrypting",
               value: "appversion"
             })
@@ -259,7 +255,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
             }
           },
           error: () => {
-            this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {
+            this.eventListener?.onEvent(EVENTS.GENERAL_ERROR, {
               message: "Had error decrypting",
               value: "chainId|jsonRpcUrl"
             })
@@ -283,12 +279,12 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
               this.accountsCallback([selectedAddress])
             }
 
-            if (WalletLinkRelay.accountRequestCallbackIds.size > 0) {
+            if (WalletSDKRelay.accountRequestCallbackIds.size > 0) {
               // We get the ethereum address from the metadata.  If for whatever
               // reason we don't get a response via an explicit web3 message
               // we can still fulfill the eip1102 request.
               Array.from(
-                WalletLinkRelay.accountRequestCallbackIds.values()
+                WalletSDKRelay.accountRequestCallbackIds.values()
               ).forEach(id => {
                 const message = Web3ResponseMessage({
                   id,
@@ -298,11 +294,11 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
                 })
                 this.invokeCallback({ ...message, id })
               })
-              WalletLinkRelay.accountRequestCallbackIds.clear()
+              WalletSDKRelay.accountRequestCallbackIds.clear()
             }
           },
           error: () => {
-            this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {
+            this.eventListener?.onEvent(EVENTS.GENERAL_ERROR, {
               message: "Had error decrypting",
               value: "selectedAddress"
             })
@@ -310,8 +306,8 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
         })
     )
 
-    this.ui = options.walletLinkUIConstructor({
-      walletLinkUrl: options.walletLinkUrl,
+    this.ui = options.uiConstructor({
+      linkAPIUrl: options.linkAPIUrl,
       version: options.version,
       darkMode: options.darkMode,
       session: this._session,
@@ -338,12 +334,12 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
           try {
             this.subscriptions.unsubscribe()
           } catch (err) {
-            this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {
+            this.eventListener?.onEvent(EVENTS.GENERAL_ERROR, {
               message: "Had error unsubscribing"
             })
           }
 
-          this.walletLinkAnalytics?.sendEvent(EVENTS.SESSION_STATE_CHANGE, {
+          this.eventListener?.onEvent(EVENTS.SESSION_STATE_CHANGE, {
             method: "relay::resetAndReload",
             sessionMetadataChange: "__destroyed, 1",
             sessionIdHash: this.getSessionIdHash(),
@@ -362,7 +358,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
           if (storedSession?.id === this._session.id) {
             this.storage.clear()
           } else if (storedSession) {
-            this.walletLinkAnalytics?.sendEvent(
+            this.eventListener?.onEvent(
               EVENTS.SKIPPED_CLEARING_SESSION,
               {
                 sessionIdHash: this.getSessionIdHash(),
@@ -374,7 +370,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
           this.ui.reloadUI()
         },
         (err: string) => {
-          this.walletLinkAnalytics?.sendEvent(EVENTS.FAILURE, {
+          this.eventListener?.onEvent(EVENTS.FAILURE, {
             method: "relay::resetAndReload",
             message: `failed to reset and reload with ${err}`,
             sessionIdHash: this.getSessionIdHash()
@@ -604,7 +600,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
   private publishWeb3RequestEvent(id: string, request: Web3Request): void {
     const message = Web3RequestMessage({ id, request })
     const storedSession = Session.load(this.storage)
-    this.walletLinkAnalytics?.sendEvent(EVENTS.WEB3_REQUEST, {
+    this.eventListener?.onEvent(EVENTS.WEB3_REQUEST, {
       eventId: message.id,
       method: `relay::${message.request.method}`,
       sessionIdHash: this.getSessionIdHash(),
@@ -616,7 +612,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
     this.subscriptions.add(
       this.publishEvent("Web3Request", message, true).subscribe({
         next: _ => {
-          this.walletLinkAnalytics?.sendEvent(EVENTS.WEB3_REQUEST_PUBLISHED, {
+          this.eventListener?.onEvent(EVENTS.WEB3_REQUEST_PUBLISHED, {
             eventId: message.id,
             method: `relay::${message.request.method}`,
             sessionIdHash: this.getSessionIdHash(),
@@ -691,7 +687,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
               this.handleWeb3ResponseMessage(message)
             },
             error: () => {
-              this.walletLinkAnalytics?.sendEvent(EVENTS.GENERAL_ERROR, {
+              this.eventListener?.onEvent(EVENTS.GENERAL_ERROR, {
                 message: "Had error decrypting",
                 value: "incomingEvent"
               })
@@ -705,17 +701,17 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
 
   private handleWeb3ResponseMessage(message: Web3ResponseMessage) {
     const { response } = message
-    this.walletLinkAnalytics?.sendEvent(EVENTS.WEB3_RESPONSE, {
+    this.eventListener?.onEvent(EVENTS.WEB3_RESPONSE, {
       eventId: message.id,
       method: `relay::${response.method}`,
       sessionIdHash: this.getSessionIdHash(),
       origin: location.origin
     })
     if (isRequestEthereumAccountsResponse(response)) {
-      Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach(
+      Array.from(WalletSDKRelay.accountRequestCallbackIds.values()).forEach(
         id => this.invokeCallback({ ...message, id })
       )
-      WalletLinkRelay.accountRequestCallbackIds.clear()
+      WalletSDKRelay.accountRequestCallbackIds.clear()
       return
     }
 
@@ -799,7 +795,7 @@ export class WalletLinkRelay extends WalletLinkRelayAbstract {
           })
         }
 
-        WalletLinkRelay.accountRequestCallbackIds.add(id)
+        WalletSDKRelay.accountRequestCallbackIds.add(id)
 
         if (!this.ui.inlineAccountsResponse() && !this.ui.isStandalone()) {
           this.publishWeb3RequestEvent(id, request)
