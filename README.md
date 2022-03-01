@@ -33,7 +33,7 @@ yarn info @coinbase/wallet-sdk versions
 2. Install a specific version or the latest version.
 
 ```shell
-#yarn add @coinbase/wallet-sdk@2.5.0
+#yarn add @coinbase/wallet-sdk@3.0.0
 yarn add @coinbase/wallet-sdk
 ```
 
@@ -54,7 +54,7 @@ npm view @coinbase/wallet-sdk versions
 2. Install a specific version or the latest version.
 
 ```shell
-#npm install @coinbase/wallet-sdk@2.5.0
+#npm install @coinbase/wallet-sdk@3.0.0
 npm install @coinbase/wallet-sdk
 ```
 
@@ -95,7 +95,7 @@ npm outdated @coinbase/wallet-sdk
 ```shell
 {
   "dependencies": {
-    "@coinbase/wallet-sdk": "^2.5.0"
+    "@coinbase/wallet-sdk": "^3.0.0"
   }
 }
 ```
@@ -115,7 +115,7 @@ annotation such as `string[]` or `as any`.
 
 ```typescript
 // TypeScript
-import CoinbaseWallet from 'wallet-sdk'
+import CoinbaseWalletSDK from '@coinbase/wallet-sdk'
 import Web3 from 'web3'
 
 const APP_NAME = 'My Awesome App'
@@ -124,7 +124,7 @@ const DEFAULT_ETH_JSONRPC_URL = 'https://mainnet.infura.io/v3/<YOUR_INFURA_API_K
 const DEFAULT_CHAIN_ID = 1
 
 // Initialize Coinbase Wallet SDK
-export const coinbaseWallet = new CoinbaseWallet({
+export const coinbaseWallet = new CoinbaseWalletSDK({
   appName: APP_NAME,
   appLogoUrl: APP_LOGO_URL,
   darkMode: false
