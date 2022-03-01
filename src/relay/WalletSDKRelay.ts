@@ -1097,6 +1097,10 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     return { promise, cancel }
   }
 
+  inlineAddEthereumChain(chainId: string): boolean {
+    return this.ui.inlineAddEthereumChain(chainId)
+  }
+
   private getSessionIdHash(): string {
     return Session.hash(this._session.id)
   }

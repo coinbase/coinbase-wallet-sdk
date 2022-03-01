@@ -266,6 +266,15 @@ export class CoinbaseWalletProvider
     }
 
     const relay = await this.initializeRelay()
+      const isWhitelistedNetworkOrStandalone = relay.inlineAddEthereumChain(chainId.toString())
+
+    if (
+      !this._isAuthorized() &&
+      !isWhitelistedNetworkOrStandalone 
+    ) {
+      await relay.requestEthereumAccounts().promise
+    }
+
     const res = await relay.addEthereumChain(
       chainId.toString(),
       rpcUrls,
@@ -766,8 +775,12 @@ export class CoinbaseWalletProvider
     }
   }
 
+  private _isAuthorized(): boolean {
+    return this._addresses.length > 0
+  }
+
   private _requireAuthorization(): void {
-    if (this._addresses.length === 0) {
+    if (!this._isAuthorized()) {
       throw ethErrors.provider.unauthorized({})
     }
   }
