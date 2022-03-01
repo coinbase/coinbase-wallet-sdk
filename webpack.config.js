@@ -41,7 +41,7 @@ module.exports = {
     symlinks: false
   },
   output: {
-    filename: "walletlink.js",
+    filename: "CoinbaseWalletSDK.js",
     path: path.resolve(__dirname, "build")
   },
   performance: {
@@ -51,8 +51,8 @@ module.exports = {
     new webpack.DefinePlugin({
       "process.env": {
         NODE_ENV: JSON.stringify(env.NODE_ENV) || JSON.stringify('production'),
-        WALLETLINK_URL: JSON.stringify(env.WALLETLINK_URL),
-        WALLETLINK_VERSION: JSON.stringify(require("./package.json").version)
+        LINK_API_URL: JSON.stringify(env.LINK_API_URL),
+        SDK_VERSION: JSON.stringify(require("./package.json").version)
       }
     })
   ]

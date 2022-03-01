@@ -1,24 +1,32 @@
-// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
-// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
+// Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { WalletLinkProvider } from "./provider/WalletLinkProvider"
-import { WalletLink } from "./WalletLink"
+import { CoinbaseWalletSDK } from "./CoinbaseWalletSDK"
+import { CoinbaseWalletProvider } from "./provider/CoinbaseWalletProvider"
 
-export { WalletLinkProvider } from "./provider/WalletLinkProvider"
-export { WalletLink } from "./WalletLink"
-export default WalletLink
+export { CoinbaseWalletSDK } from "./CoinbaseWalletSDK"
+export { CoinbaseWalletProvider } from "./provider/CoinbaseWalletProvider"
+export default CoinbaseWalletSDK
 
 declare global {
   interface Window {
-    WalletLink: typeof WalletLink
-    WalletLinkProvider: typeof WalletLinkProvider
-    ethereum?: WalletLinkProvider
-    walletLinkExtension?: WalletLinkProvider
+    CoinbaseWalletSDK: typeof CoinbaseWalletSDK
+    CoinbaseWalletProvider: typeof CoinbaseWalletProvider
+    ethereum?: CoinbaseWalletProvider
+    coinbaseWalletExtension?: CoinbaseWalletProvider
+
+    // deprecated
+    WalletLink: typeof CoinbaseWalletSDK
+    WalletLinkProvider: typeof CoinbaseWalletProvider
+    walletLinkExtension?: CoinbaseWalletProvider
   }
 }
 
 if (typeof window !== "undefined") {
-  window.WalletLink = WalletLink
-  window.WalletLinkProvider = WalletLinkProvider
+  window.CoinbaseWalletSDK = CoinbaseWalletSDK
+  window.CoinbaseWalletProvider = CoinbaseWalletProvider
+
+  // deprecated
+  window.WalletLink = CoinbaseWalletSDK
+  window.WalletLinkProvider = CoinbaseWalletProvider
 }

@@ -1,5 +1,4 @@
-// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
-// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
+// Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
 import { h, render } from "preact"
@@ -14,7 +13,7 @@ export interface LinkFlowOptions {
   version: string
   sessionId: string
   sessionSecret: string
-  walletLinkUrl: string
+  linkAPIUrl: string
   isParentConnection: boolean
   connected$: Observable<boolean>
 }
@@ -28,7 +27,7 @@ export class LinkFlow {
   private readonly version: string
   private readonly sessionId: string
   private readonly sessionSecret: string
-  private readonly walletLinkUrl: string
+  private readonly linkAPIUrl: string
   private readonly isParentConnection: boolean
 
   private readonly connected$: Observable<boolean>
@@ -51,7 +50,7 @@ export class LinkFlow {
     this.version = options.version
     this.sessionId = options.sessionId
     this.sessionSecret = options.sessionSecret
-    this.walletLinkUrl = options.walletLinkUrl
+    this.linkAPIUrl = options.linkAPIUrl
     this.isParentConnection = options.isParentConnection
     this.connected$ = options.connected$
 
@@ -74,7 +73,7 @@ export class LinkFlow {
 
   public attach(el: Element): void {
     this.root = document.createElement("div")
-    this.root.className = "-walletlink-link-flow-root"
+    this.root.className = "-cbwsdk-link-flow-root"
     el.appendChild(this.root)
     this.render()
 
@@ -132,7 +131,7 @@ export class LinkFlow {
               version={this.version}
               sessionId={this.sessionId}
               sessionSecret={this.sessionSecret}
-              walletLinkUrl={this.walletLinkUrl}
+              linkAPIUrl={this.linkAPIUrl}
               isOpen={this.isOpen}
               isConnected={this.isConnected}
               isParentConnection={this.isParentConnection}
@@ -145,7 +144,7 @@ export class LinkFlow {
               version={this.version}
               sessionId={this.sessionId}
               sessionSecret={this.sessionSecret}
-              walletLinkUrl={this.walletLinkUrl}
+              linkAPIUrl={this.linkAPIUrl}
               isOpen={this.isOpen}
               isConnected={this.isConnected}
               isParentConnection={this.isParentConnection}

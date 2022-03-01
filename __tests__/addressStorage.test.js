@@ -1,5 +1,5 @@
 const { ensureAddressString } = require("../build/npm/dist/util");
-const {WalletLink} = require("../build/npm/dist");
+const { CoinbaseWalletSDK } = require("../build/npm/dist");
 
 describe("address storage tests", function() {
   it("ensureAddressString returns lowercase string", function() {
@@ -9,12 +9,12 @@ describe("address storage tests", function() {
   })
 
   it("cannot mutate addresses via window.ethereum.enable()", done => {
-    const walletLink = new WalletLink({
+    const coinbaseWalletSDK = new CoinbaseWalletSDK({
       appName: "My Awesome DApp",
       appLogoUrl: "https://example.com/logo.png"
     })
 
-    const provider = walletLink.makeWeb3Provider(
+    const provider = coinbaseWalletSDK.makeWeb3Provider(
         "https://mainnet.infura.io/v3/INFURA_API_KEY", 1
     )
 
@@ -27,12 +27,12 @@ describe("address storage tests", function() {
   })
 
   it("cannot mutate addresses via window.ethereum.request eth_accounts", done => {
-    const walletLink = new WalletLink({
+    const coinbaseWalletSDK = new CoinbaseWalletSDK({
       appName: "My Awesome DApp",
       appLogoUrl: "https://example.com/logo.png"
     })
 
-    const provider = walletLink.makeWeb3Provider(
+    const provider = coinbaseWalletSDK.makeWeb3Provider(
         "https://mainnet.infura.io/v3/INFURA_API_KEY", 1
     )
 

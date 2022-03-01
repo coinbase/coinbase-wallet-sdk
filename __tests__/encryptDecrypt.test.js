@@ -6,7 +6,7 @@ describe('encryption and decryption tests', function() {
   it('decrypted output matches original input', done => {
     (async function() {
       const secret = randomBytesHex(32)
-      let input = "walletlink:2.0"
+      let input = "coinbasewallet:2.0"
       let cipherText = await encrypt(input, secret)
 
       decrypt(cipherText, secret).subscribe({

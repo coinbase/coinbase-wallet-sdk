@@ -16,7 +16,7 @@ export const TryExtensionLinkDialog: FunctionComponent<{
   version: string
   sessionId: string
   sessionSecret: string
-  walletLinkUrl: string
+  linkAPIUrl: string
   isOpen: boolean
   isConnected: boolean
   isParentConnection: boolean
@@ -52,22 +52,22 @@ export const TryExtensionLinkDialog: FunctionComponent<{
   return (
     <div
       class={clsx(
-        "-walletlink-extension-dialog-container",
-        isContainerHidden && "-walletlink-extension-dialog-container-hidden"
+        "-cbwsdk-extension-dialog-container",
+        isContainerHidden && "-cbwsdk-extension-dialog-container-hidden"
       )}
     >
       <style>{css}</style>
       <div
         class={clsx(
-          "-walletlink-extension-dialog-backdrop",
-          isDialogHidden && "-walletlink-extension-dialog-backdrop-hidden"
+          "-cbwsdk-extension-dialog-backdrop",
+          isDialogHidden && "-cbwsdk-extension-dialog-backdrop-hidden"
         )}
       />
-      <div class="-walletlink-extension-dialog">
+      <div class="-cbwsdk-extension-dialog">
         <div
           class={clsx(
-            "-walletlink-extension-dialog-box",
-            isDialogHidden && "-walletlink-extension-dialog-box-hidden"
+            "-cbwsdk-extension-dialog-box",
+            isDialogHidden && "-cbwsdk-extension-dialog-box-hidden"
           )}
         >
           <TryExtensionBox
@@ -84,7 +84,7 @@ export const TryExtensionLinkDialog: FunctionComponent<{
               version={props.version}
               sessionId={props.sessionId}
               sessionSecret={props.sessionSecret}
-              walletLinkUrl={props.walletLinkUrl}
+              linkAPIUrl={props.linkAPIUrl}
               isConnected={props.isConnected}
               isParentConnection={props.isParentConnection}
             />
@@ -101,12 +101,12 @@ const TryExtensionBox: FunctionComponent<{
   onInstallClick: () => void
 }> = props => {
   return (
-    <div class="-walletlink-extension-dialog-box-top">
-      <div class="-walletlink-extension-dialog-box-top-install-region">
+    <div class="-cbwsdk-extension-dialog-box-top">
+      <div class="-cbwsdk-extension-dialog-box-top-install-region">
         <h2>Try the Coinbase Wallet extension</h2>
         <button onClick={props.onInstallClick}>Install</button>
       </div>
-      <div class="-walletlink-extension-dialog-box-top-info-region">
+      <div class="-cbwsdk-extension-dialog-box-top-info-region">
         <DescriptionItem
           icon={linkIcon}
           text="Connect to crypto apps with one click"
@@ -129,25 +129,25 @@ const ScanQRBox: FunctionComponent<{
   version: string
   sessionId: string
   sessionSecret: string
-  walletLinkUrl: string
+  linkAPIUrl: string
   isConnected: boolean
   isParentConnection: boolean
 }> = props => {
-  const serverUrl = window.encodeURIComponent(props.walletLinkUrl)
+  const serverUrl = window.encodeURIComponent(props.linkAPIUrl)
   const sessionIdKey = props.isParentConnection ? "parent-id" : "id"
-  const qrUrl = `${props.walletLinkUrl}/#/link?${sessionIdKey}=${props.sessionId}&secret=${props.sessionSecret}&server=${serverUrl}&v=1`
+  const qrUrl = `${props.linkAPIUrl}/#/link?${sessionIdKey}=${props.sessionId}&secret=${props.sessionSecret}&server=${serverUrl}&v=1`
 
   return (
-    <div class="-walletlink-extension-dialog-box-bottom">
-      <div class="-walletlink-extension-dialog-box-bottom-description-region">
+    <div class="-cbwsdk-extension-dialog-box-bottom">
+      <div class="-cbwsdk-extension-dialog-box-bottom-description-region">
         <h2>Or scan to connect</h2>
-        <body class="-walletlink-extension-dialog-box-bottom-description">
+        <body class="-cbwsdk-extension-dialog-box-bottom-description">
           Open <a href={"https://wallet.coinbase.com/"}>Coinbase Wallet</a> on
           your mobile phone and scan
         </body>
       </div>
-      <div class="-walletlink-extension-dialog-box-bottom-qr-region">
-        <div class="-walletlink-extension-dialog-box-bottom-qr-wrapper">
+      <div class="-cbwsdk-extension-dialog-box-bottom-qr-region">
+        <div class="-cbwsdk-extension-dialog-box-bottom-qr-wrapper">
           <QRCode
             content={qrUrl}
             width={150}
@@ -161,10 +161,10 @@ const ScanQRBox: FunctionComponent<{
             }}
           />
         </div>
-        <input type="hidden" name="walletlink-version" value={LIB_VERSION} />
+        <input type="hidden" name="cbwsdk-version" value={LIB_VERSION} />
         <input type="hidden" value={qrUrl} />
         {!props.isConnected && (
-          <div class="-walletlink-extension-dialog-box-bottom-qr-connecting">
+          <div class="-cbwsdk-extension-dialog-box-bottom-qr-connecting">
             <Spinner size={36} color={"#000"} />
             <p>Connecting...</p>
           </div>
@@ -179,11 +179,11 @@ const DescriptionItem: FunctionComponent<{
   text: string
 }> = props => {
   return (
-    <div class="-walletlink-extension-dialog-box-top-description">
-      <div class="-walletlink-extension-dialog-box-top-description-icon-wrapper">
+    <div class="-cbwsdk-extension-dialog-box-top-description">
+      <div class="-cbwsdk-extension-dialog-box-top-description-icon-wrapper">
         <img src={props.icon} />
       </div>
-      <body class="-walletlink-extension-dialog-box-top-description-text">
+      <body class="-cbwsdk-extension-dialog-box-top-description-text">
         {props.text}
       </body>
     </div>
@@ -192,9 +192,9 @@ const DescriptionItem: FunctionComponent<{
 
 const CancelButton: FunctionComponent<{ onClick: () => void }> = props => (
   <button
-    class="-walletlink-extension-dialog-box-cancel"
+    class="-cbwsdk-extension-dialog-box-cancel"
     onClick={props.onClick}
   >
-    <div class="-walletlink-extension-dialog-box-cancel-x" />
+    <div class="-cbwsdk-extension-dialog-box-cancel-x" />
   </button>
 )

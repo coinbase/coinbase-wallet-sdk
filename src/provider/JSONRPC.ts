@@ -1,5 +1,4 @@
-// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
-// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
+// Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
 export enum JSONRPCMethod {
@@ -24,7 +23,7 @@ export enum JSONRPCMethod {
   eth_signTypedData_v3 = "eth_signTypedData_v3",
   eth_signTypedData_v4 = "eth_signTypedData_v4",
   eth_signTypedData = "eth_signTypedData",
-  walletlink_arbitrary = "walletlink_arbitrary",
+  cbWallet_arbitrary = "walletlink_arbitrary", // compatibility
   wallet_addEthereumChain = "wallet_addEthereumChain",
   wallet_switchEthereumChain = "wallet_switchEthereumChain",
   wallet_watchAsset = "wallet_watchAsset",

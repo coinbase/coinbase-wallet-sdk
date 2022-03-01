@@ -343,7 +343,6 @@ ethereum.close()
 ---
 
 ```
-Copyright © 2018-2022 WalletLink.org <https://www.walletlink.org/>
 Copyright © 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 
 Licensed under the Apache License, Version 2.0 (the "License");

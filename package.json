@@ -1,7 +1,7 @@
 {
-  "name": "walletlink",
-  "version": "2.5.1",
-  "description": "WalletLink JavaScript SDK",
+  "name": "@coinbase/wallet-sdk",
+  "version": "3.0.0",
+  "description": "Coinbase Wallet JavaScript SDK",
   "keywords": [
     "cipher",
     "cipherbrowser",
@@ -19,7 +19,7 @@
   ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "repository": "https://github.com/walletlink/walletlink.git",
+  "repository": "https://github.com/coinbase/coinbase-wallet-sdk.git",
   "author": "Coinbase, Inc.",
   "license": "Apache-2.0",
   "scripts": {
@@ -28,7 +28,7 @@
     "prebuild": "node -p \"'export const LIB_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
     "build": "node compile-assets.js && webpack --config webpack.config.js",
     "build-npm": "tsc -p ./tsconfig.build.json",
-    "build:dev": "export WALLETLINK_URL='http://localhost:3000'; yarn build",
+    "build:dev": "export LINK_API_URL='http://localhost:3000'; yarn build",
     "build:dev:watch": "nodemon -e 'ts,tsx,js,json,css,scss,svg' --ignore 'src/**/*-css.ts' --ignore 'src/**/*-svg.ts' --watch src/ --exec 'yarn build:dev'",
     "build:prod": "yarn prebuild && yarn build && yarn build-npm && cp ./package.json ./README.md ./LICENSE build/npm && cp -a src/vendor-js build/npm/dist && sed -i.bak 's|  \"private\": true,||g' build/npm/package.json && rm -f build/npm/package.json.bak",
     "lint": "eslint ./src --ext .ts,.tsx",

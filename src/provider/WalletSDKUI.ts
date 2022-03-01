@@ -13,15 +13,14 @@ import {
   SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse
 } from "../relay/Web3Response"
-import { WalletLinkUI, WalletLinkUIOptions } from "./WalletLinkUI"
+import { WalletUI, WalletUIOptions } from "./WalletUI"
 
-export class WalletLinkSdkUI extends WalletLinkUI {
+export class WalletSDKUI implements WalletUI {
   private readonly linkFlow: LinkFlow
   private readonly snackbar: Snackbar
   private attached = false
 
-  constructor(options: Readonly<WalletLinkUIOptions>) {
-    super(options)
+  constructor(options: Readonly<WalletUIOptions>) {
     this.snackbar = new Snackbar({
       darkMode: options.darkMode
     })
@@ -31,7 +30,7 @@ export class WalletLinkSdkUI extends WalletLinkUI {
       version: options.version,
       sessionId: options.session.id,
       sessionSecret: options.session.secret,
-      walletLinkUrl: options.walletLinkUrl,
+      linkAPIUrl: options.linkAPIUrl,
       connected$: options.connected$,
       isParentConnection: false
     })
@@ -39,11 +38,11 @@ export class WalletLinkSdkUI extends WalletLinkUI {
 
   attach(): void {
     if (this.attached) {
-      throw new Error("WalletLinkUI is already attached")
+      throw new Error("Coinbase Wallet SDK UI is already attached")
     }
     const el = document.documentElement
     const container = document.createElement("div")
-    container.className = "-walletlink-css-reset"
+    container.className = "-cbwsdk-css-reset"
     el.appendChild(container)
 
     this.linkFlow.attach(container)

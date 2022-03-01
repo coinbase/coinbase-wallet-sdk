@@ -1,3 +1,7 @@
+export interface EventListener {
+  onEvent(eventType: string, eventProperties?: any): void
+}
+
 export const EVENTS = {
   REQUEST_CHILD_ETHEREUM_ACCOUNTS_START:
     "walletlink_sdk.request_child_ethereum_accounts.start",

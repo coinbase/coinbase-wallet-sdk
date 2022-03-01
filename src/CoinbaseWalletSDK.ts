@@ -1,74 +1,69 @@
-// Copyright (c) 2018-2020 WalletLink.org <https://www.walletlink.org/>
-// Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
+// Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { WalletLinkAnalytics } from "./connection/WalletLinkAnalytics"
-import { WalletLinkAnalyticsAbstract } from "./init/WalletLinkAnalyticsAbstract"
+import { EventListener } from "./connection/EventListener"
 import { ScopedLocalStorage } from "./lib/ScopedLocalStorage"
-import { WalletLinkProvider } from "./provider/WalletLinkProvider"
-import { WalletLinkSdkUI } from "./provider/WalletLinkSdkUI"
-import { WalletLinkUI, WalletLinkUIOptions } from "./provider/WalletLinkUI"
-import { WalletLinkRelay } from "./relay/WalletLinkRelay"
-import { WalletLinkRelayEventManager } from "./relay/WalletLinkRelayEventManager"
+import { CoinbaseWalletProvider } from "./provider/CoinbaseWalletProvider"
+import { WalletSDKUI } from "./provider/WalletSDKUI"
+import { WalletUI, WalletUIOptions } from "./provider/WalletUI"
+import { WalletSDKRelay } from "./relay/WalletSDKRelay"
+import { WalletSDKRelayEventManager } from "./relay/WalletSDKRelayEventManager"
 import { getFavicon } from "./util"
 
-const WALLETLINK_URL =
-  process.env.WALLETLINK_URL! || "https://www.walletlink.org"
-const WALLETLINK_VERSION =
-  process.env.WALLETLINK_VERSION! ||
-  require("../package.json").version ||
-  "unknown"
+const LINK_API_URL =
+    process.env.LINK_API_URL! || "https://www.walletlink.org"
+const SDK_VERSION =
+    process.env.SDK_VERSION! ||
+    require("../package.json").version ||
+    "unknown"
 
-/** WalletLink Constructor Options */
-export interface WalletLinkOptions {
+/** Coinbase Wallet SDK Constructor Options */
+export interface CoinbaseWalletSDKOptions {
   /** Application name */
   appName: string
   /** @optional Application logo image URL; favicon is used if unspecified */
   appLogoUrl?: string | null
   /** @optional Use dark theme */
   darkMode?: boolean
-  /** @optional WalletLink server URL; for most, leave it unspecified */
-  walletLinkUrl?: string
-  /** @optional an implementation of WalletLinkUI; for most, leave it unspecified */
-  walletLinkUIConstructor?: (
-    options: Readonly<WalletLinkUIOptions>
-  ) => WalletLinkUI
-  /** @optional an implementation of WalletLinkAnalytics.ts; for most, leave it unspecified  */
-  walletLinkAnalytics?: WalletLinkAnalyticsAbstract
+  /** @optional Coinbase Wallet link server URL; for most, leave it unspecified */
+  linkAPIUrl?: string
+  /** @optional an implementation of WalletUI; for most, leave it unspecified */
+  uiConstructor?: (
+      options: Readonly<WalletUIOptions>
+  ) => WalletUI
+  /** @optional an implementation of EventListener for debugging; for most, leave it unspecified  */
+  eventListener?: EventListener
   /** @optional whether wallet link provider should override the isMetaMask property. */
   overrideIsMetaMask?: boolean
   /** @optional whether wallet link provider should override the isCoinbaseWallet property. */
   overrideIsCoinbaseWallet?: boolean
 }
 
-export class WalletLink {
-  /**
-   * WalletLink version
-   */
-  public static VERSION = WALLETLINK_VERSION
+export class CoinbaseWalletSDK {
+  public static VERSION = SDK_VERSION
 
   private _appName = ""
   private _appLogoUrl: string | null = null
-  private _relay: WalletLinkRelay | null = null
-  private _relayEventManager: WalletLinkRelayEventManager | null = null
+  private _relay: WalletSDKRelay | null = null
+  private _relayEventManager: WalletSDKRelayEventManager | null = null
   private _storage: ScopedLocalStorage
   private _overrideIsMetaMask: boolean
   private _overrideIsCoinbaseWallet: boolean
-  private _walletLinkAnalytics: WalletLinkAnalyticsAbstract
+  private _eventListener?: EventListener
 
   /**
    * Constructor
-   * @param options WalletLink options object
+   * @param options Coinbase Wallet SDK constructor options
    */
-  constructor(options: Readonly<WalletLinkOptions>) {
-    const walletLinkUrl = options.walletLinkUrl || WALLETLINK_URL
-    let walletLinkUIConstructor: (
-      options: Readonly<WalletLinkUIOptions>
-    ) => WalletLinkUI
-    if (!options.walletLinkUIConstructor) {
-      walletLinkUIConstructor = opts => new WalletLinkSdkUI(opts)
+  constructor(options: Readonly<CoinbaseWalletSDKOptions>) {
+    const linkAPIUrl = options.linkAPIUrl || LINK_API_URL
+    let uiConstructor: (
+        options: Readonly<WalletUIOptions>
+    ) => WalletUI
+    if (!options.uiConstructor) {
+      uiConstructor = opts => new WalletSDKUI(opts)
     } else {
-      walletLinkUIConstructor = options.walletLinkUIConstructor
+      uiConstructor = options.uiConstructor
     }
 
     if (typeof options.overrideIsMetaMask === "undefined") {
@@ -79,30 +74,28 @@ export class WalletLink {
 
     this._overrideIsCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true
 
-    this._walletLinkAnalytics = options.walletLinkAnalytics
-      ? options.walletLinkAnalytics
-      : new WalletLinkAnalytics()
+    this._eventListener = options.eventListener
 
-    const u = new URL(walletLinkUrl)
-    const walletLinkOrigin = `${u.protocol}//${u.host}`
-    this._storage = new ScopedLocalStorage(`-walletlink:${walletLinkOrigin}`)
+    const u = new URL(linkAPIUrl)
+    const origin = `${u.protocol}//${u.host}`
+    this._storage = new ScopedLocalStorage(`-walletlink:${origin}`) // needs migration to preserve local states
 
-    this._storage.setItem("version", WalletLink.VERSION)
+    this._storage.setItem("version", CoinbaseWalletSDK.VERSION)
 
     if (this.walletExtension) {
       return
     }
 
-    this._relayEventManager = new WalletLinkRelayEventManager()
+    this._relayEventManager = new WalletSDKRelayEventManager()
 
-    this._relay = new WalletLinkRelay({
-      walletLinkUrl,
-      version: WALLETLINK_VERSION,
+    this._relay = new WalletSDKRelay({
+      linkAPIUrl,
+      version: SDK_VERSION,
       darkMode: !!options.darkMode,
-      walletLinkUIConstructor,
+      uiConstructor,
       storage: this._storage,
       relayEventManager: this._relayEventManager,
-      walletLinkAnalytics: this._walletLinkAnalytics
+      eventListener: this._eventListener
     })
     this.setAppInfo(options.appName, options.appLogoUrl)
     this._relay.attachUI()
@@ -117,7 +110,7 @@ export class WalletLink {
   public makeWeb3Provider(
     jsonRpcUrl = "",
     chainId = 1
-  ): WalletLinkProvider {
+  ): CoinbaseWalletProvider {
     const extension = this.walletExtension
     if (extension) {
       if (!this.isCipherProvider(extension)) {
@@ -134,13 +127,13 @@ export class WalletLink {
 
     if (!jsonRpcUrl) relay.setConnectDisabled(true)
 
-    return new WalletLinkProvider({
+    return new CoinbaseWalletProvider({
       relayProvider: () => Promise.resolve(relay),
       relayEventManager: this._relayEventManager,
       storage: this._storage,
       jsonRpcUrl,
       chainId,
-      walletLinkAnalytics: this._walletLinkAnalytics,
+      eventListener: this._eventListener,
       overrideIsMetaMask: this._overrideIsMetaMask,
       overrideIsCoinbaseWallet: this._overrideIsCoinbaseWallet
     })
@@ -181,11 +174,11 @@ export class WalletLink {
     }
   }
 
-  private get walletExtension(): WalletLinkProvider | undefined {
-    return window.walletLinkExtension
+  private get walletExtension(): CoinbaseWalletProvider | undefined {
+    return window.coinbaseWalletExtension ?? window.walletLinkExtension
   }
 
-  private isCipherProvider(provider: WalletLinkProvider): boolean {
+  private isCipherProvider(provider: CoinbaseWalletProvider): boolean {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     return typeof provider.isCipher === "boolean" && provider.isCipher
