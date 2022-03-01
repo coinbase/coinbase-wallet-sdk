@@ -114,7 +114,7 @@ export class CoinbaseWalletSDK {
   ): CoinbaseWalletProvider {
     const extension = this.walletExtension
     if (extension) {
-      if (!WalletLink.isCipherProvider(extension)) {
+      if (!CoinbaseWalletSDK.isCipherProvider(extension)) {
         extension.setProviderInfo(jsonRpcUrl, chainId)
       }
 
@@ -154,7 +154,7 @@ export class CoinbaseWalletSDK {
 
     const extension = this.walletExtension
     if (extension) {
-      if (!WalletLink.isCipherProvider(extension)) {
+      if (!CoinbaseWalletSDK.isCipherProvider(extension)) {
         extension.setAppInfo(this._appName, this._appLogoUrl)
       }
     } else {
