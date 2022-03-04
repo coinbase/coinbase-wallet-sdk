@@ -50,7 +50,8 @@ export abstract class WalletSDKRelayAbstract {
     address: string,
     symbol?: string,
     decimals?: number,
-    image?: string
+    image?: string,
+    chainId?: string
   ): CancelablePromise<WatchAssetResponse>
 
   abstract switchEthereumChain(

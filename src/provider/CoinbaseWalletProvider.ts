@@ -235,7 +235,8 @@ export class CoinbaseWalletProvider
     address: string,
     symbol?: string,
     decimals?: number,
-    image?: string
+    image?: string,
+    chainId?: number
   ): Promise<boolean> {
     const relay = await this.initializeRelay()
     const result = await relay.watchAsset(
@@ -243,7 +244,8 @@ export class CoinbaseWalletProvider
       address,
       symbol,
       decimals,
-      image
+      image,
+      chainId?.toString()
     ).promise
 
     return !!result.result
@@ -1124,6 +1126,7 @@ export class CoinbaseWalletProvider
       })
     }
 
+    const chainId = parseInt(this.chainId, 16)
     const { address, symbol, image, decimals } = request.options
 
     const res = await this.watchAsset(
@@ -1131,7 +1134,8 @@ export class CoinbaseWalletProvider
       address,
       symbol,
       decimals,
-      image
+      image,
+      chainId
     )
 
     return { jsonrpc: "2.0", id: 0, result: res }
