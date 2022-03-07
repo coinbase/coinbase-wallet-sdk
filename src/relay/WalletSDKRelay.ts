@@ -701,8 +701,8 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
       origin: location.origin
     })
     if (isRequestEthereumAccountsResponse(response)) {
-      WalletSDKRelay.accountRequestCallbackIds.forEach(
-        (_, id) => this.invokeCallback({ ...message, id })
+      WalletSDKRelay.accountRequestCallbackIds.forEach(id =>
+        this.invokeCallback({ ...message, id })
       )
       WalletSDKRelay.accountRequestCallbackIds.clear()
       return
