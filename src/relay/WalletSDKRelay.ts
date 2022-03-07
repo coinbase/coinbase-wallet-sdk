@@ -14,9 +14,10 @@ import {
   tap,
   timeout
 } from "rxjs/operators"
+
+import { EventListener, EVENTS } from "../connection/EventListener"
 import { ServerMessageEvent } from "../connection/ServerMessage"
 import { WalletSDKConnection } from "../connection/WalletSDKConnection"
-import { EventListener, EVENTS } from "../connection/EventListener"
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
 import { WalletUI, WalletUIOptions } from "../provider/WalletUI"
 import { AddressString, IntNumber, RegExpString } from "../types"
@@ -33,20 +34,18 @@ import {
   APP_VERSION_KEY,
   CancelablePromise,
   LOCAL_STORAGE_ADDRESSES_KEY,
-  WalletSDKRelayAbstract,
-  WALLET_USER_NAME_KEY
+  WALLET_USER_NAME_KEY,
+  WalletSDKRelayAbstract
 } from "./WalletSDKRelayAbstract"
 import { WalletSDKRelayEventManager } from "./WalletSDKRelayEventManager"
 import { Web3Method } from "./Web3Method"
 import {
-  AddEthereumChainRequest,
   EthereumAddressFromSignedMessageRequest,
   GenericRequest,
   ScanQRCodeRequest,
   SignEthereumMessageRequest,
   SignEthereumTransactionRequest,
   SubmitEthereumTransactionRequest,
-  SwitchEthereumChainRequest,
   Web3Request
 } from "./Web3Request"
 import { Web3RequestCanceledMessage } from "./Web3RequestCanceledMessage"
@@ -78,9 +77,7 @@ export interface WalletSDKRelayOptions {
   darkMode: boolean
   storage: ScopedLocalStorage
   relayEventManager: WalletSDKRelayEventManager
-  uiConstructor: (
-    options: Readonly<WalletUIOptions>
-  ) => WalletUI
+  uiConstructor: (options: Readonly<WalletUIOptions>) => WalletUI
   eventListener?: EventListener
 }
 
@@ -158,10 +155,10 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
               ) {
                 this.isUnlinkedErrorState = true
                 const sessionIdHash = this.getSessionIdHash()
-                this.eventListener?.onEvent(
-                  EVENTS.UNLINKED_ERROR_STATE,
-                  { sessionIdHash, origin: location.origin }
-                )
+                this.eventListener?.onEvent(EVENTS.UNLINKED_ERROR_STATE, {
+                  sessionIdHash,
+                  origin: location.origin
+                })
               }
             }
           })
@@ -357,14 +354,11 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
           if (storedSession?.id === this._session.id) {
             this.storage.clear()
           } else if (storedSession) {
-            this.eventListener?.onEvent(
-              EVENTS.SKIPPED_CLEARING_SESSION,
-              {
-                sessionIdHash: this.getSessionIdHash(),
-                storedSessionIdHash: Session.hash(storedSession.id),
-                origin: location.origin
-              }
-            )
+            this.eventListener?.onEvent(EVENTS.SKIPPED_CLEARING_SESSION, {
+              sessionIdHash: this.getSessionIdHash(),
+              storedSessionIdHash: Session.hash(storedSession.id),
+              origin: location.origin
+            })
           }
           this.ui.reloadUI()
         },
@@ -707,8 +701,8 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
       origin: location.origin
     })
     if (isRequestEthereumAccountsResponse(response)) {
-      Array.from(WalletSDKRelay.accountRequestCallbackIds.values()).forEach(
-        id => this.invokeCallback({ ...message, id })
+      WalletSDKRelay.accountRequestCallbackIds.forEach(id =>
+        this.invokeCallback({ ...message, id })
       )
       WalletSDKRelay.accountRequestCallbackIds.clear()
       return
@@ -726,7 +720,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
   }
 
   public requestEthereumAccounts(): CancelablePromise<RequestEthereumAccountsResponse> {
-    let request: Web3Request = {
+    const request: Web3Request = {
       method: Web3Method.requestEthereumAccounts,
       params: {
         appName: this.appName,
@@ -734,7 +728,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
       }
     }
 
-    let hideSnackbarItem: (() => void) | null = null
+    const hideSnackbarItem: (() => void) | null = null
     const id = randomBytesHex(8)
 
     const cancel = () => {
@@ -745,6 +739,8 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
           response: ErrorResponse(request.method, "User rejected request")
         })
       )
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
       hideSnackbarItem?.()
     }
 
@@ -752,6 +748,8 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
       (resolve, reject) => {
         this.relayEventManager.callbacks.set(id, response => {
           this.ui.hideRequestEthereumAccounts()
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
           hideSnackbarItem?.()
 
           if (response.errorMessage) {
@@ -906,7 +904,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
       decimals: number
     }
   ) {
-    let request: Web3Request = {
+    const request: Web3Request = {
       method: Web3Method.addEthereumChain,
       params: {
         chainId,
@@ -975,14 +973,12 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         this.ui.addEthereumChain({
           onCancel: _cancel,
           onApprove: approve,
-          chainId: (request as AddEthereumChainRequest).params.chainId,
-          rpcUrls: (request as AddEthereumChainRequest).params.rpcUrls,
-          blockExplorerUrls: (request as AddEthereumChainRequest).params
-            .blockExplorerUrls,
-          chainName: (request as AddEthereumChainRequest).params.chainName,
-          iconUrls: (request as AddEthereumChainRequest).params.iconUrls,
-          nativeCurrency: (request as AddEthereumChainRequest).params
-            .nativeCurrency
+          chainId: request.params.chainId,
+          rpcUrls: request.params.rpcUrls,
+          blockExplorerUrls: request.params.blockExplorerUrls,
+          chainName: request.params.chainName,
+          iconUrls: request.params.iconUrls,
+          nativeCurrency: request.params.nativeCurrency
         })
       }
 
@@ -997,7 +993,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
   switchEthereumChain(
     chainId: string
   ): CancelablePromise<SwitchEthereumChainResponse> {
-    let request: Web3Request = {
+    const request: Web3Request = {
       method: Web3Method.switchEthereumChain,
       params: {
         chainId
@@ -1085,7 +1081,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         this.ui.switchEthereumChain({
           onCancel: _cancel,
           onApprove: approve,
-          chainId: (request as SwitchEthereumChainRequest).params.chainId
+          chainId: request.params.chainId
         })
 
         if (!this.ui.inlineSwitchEthereumChain() && !this.ui.isStandalone()) {

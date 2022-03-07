@@ -1,10 +1,10 @@
 const path = require("path")
 const webpack = require("webpack")
-const {env} = process
+const { env } = process
 
 const tsConfigPath = (exports.tsConfigPath = path.join(
-    __dirname,
-    "tsconfig.json"
+  __dirname,
+  "tsconfig.json"
 ))
 
 module.exports = {
@@ -32,9 +32,9 @@ module.exports = {
     ]
   },
   resolve: {
-    fallback : {
-      fs : false,
-      "stream": require.resolve("stream-browserify")
+    fallback: {
+      fs: false,
+      stream: require.resolve("stream-browserify")
     },
     extensions: [".ts", ".tsx", ".js"],
     plugins: [],
@@ -50,7 +50,7 @@ module.exports = {
   plugins: [
     new webpack.DefinePlugin({
       "process.env": {
-        NODE_ENV: JSON.stringify(env.NODE_ENV) || JSON.stringify('production'),
+        NODE_ENV: JSON.stringify(env.NODE_ENV) || JSON.stringify("production"),
         LINK_API_URL: JSON.stringify(env.LINK_API_URL),
         SDK_VERSION: JSON.stringify(require("./package.json").version)
       }
