@@ -58,6 +58,7 @@ export interface WalletUI {
     symbol?: string
     decimals?: number
     image?: string
+    chainId?: string
   }): void
 
   switchEthereumChain(options: {

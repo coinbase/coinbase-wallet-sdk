@@ -78,9 +78,7 @@ export interface WalletSDKRelayOptions {
   darkMode: boolean
   storage: ScopedLocalStorage
   relayEventManager: WalletSDKRelayEventManager
-  uiConstructor: (
-    options: Readonly<WalletUIOptions>
-  ) => WalletUI
+  uiConstructor: (options: Readonly<WalletUIOptions>) => WalletUI
   eventListener?: EventListener
 }
 
@@ -158,10 +156,10 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
               ) {
                 this.isUnlinkedErrorState = true
                 const sessionIdHash = this.getSessionIdHash()
-                this.eventListener?.onEvent(
-                  EVENTS.UNLINKED_ERROR_STATE,
-                  { sessionIdHash, origin: location.origin }
-                )
+                this.eventListener?.onEvent(EVENTS.UNLINKED_ERROR_STATE, {
+                  sessionIdHash,
+                  origin: location.origin
+                })
               }
             }
           })
@@ -357,14 +355,11 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
           if (storedSession?.id === this._session.id) {
             this.storage.clear()
           } else if (storedSession) {
-            this.eventListener?.onEvent(
-              EVENTS.SKIPPED_CLEARING_SESSION,
-              {
-                sessionIdHash: this.getSessionIdHash(),
-                storedSessionIdHash: Session.hash(storedSession.id),
-                origin: location.origin
-              }
-            )
+            this.eventListener?.onEvent(EVENTS.SKIPPED_CLEARING_SESSION, {
+              sessionIdHash: this.getSessionIdHash(),
+              storedSessionIdHash: Session.hash(storedSession.id),
+              origin: location.origin
+            })
           }
           this.ui.reloadUI()
         },
@@ -884,7 +879,8 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
           address,
           symbol,
           decimals,
-          image
+          image,
+          chainId
         })
       }
 
