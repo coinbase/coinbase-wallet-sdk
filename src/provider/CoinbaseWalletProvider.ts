@@ -1126,7 +1126,7 @@ export class CoinbaseWalletProvider
       })
     }
 
-    const chainId = parseInt(this.chainId, 16)
+    const chainId = this.getChainId();
     const { address, symbol, image, decimals } = request.options
 
     const res = await this.watchAsset(
