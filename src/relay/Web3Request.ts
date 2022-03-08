@@ -117,16 +117,20 @@ export type MakeEthereumJSONRPCRequest = BaseWeb3Request<
   }
 >
 
+type WatchAssetRequestBaseParams = {
+  type: string
+  options: {
+    address: string
+    symbol?: string
+    decimals?: number
+    image?: string
+  }
+}
+
 export type WatchAssetRequest = BaseWeb3Request<
   Web3Method.watchAsset,
-  {
-    type: string
-    options: {
-      address: string
-      symbol?: string
-      decimals?: number
-      image?: string
-    }
+  WatchAssetRequestBaseParams & {
+    chainId?: string
   }
 >
 

@@ -807,7 +807,8 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     address: string,
     symbol?: string,
     decimals?: number,
-    image?: string
+    image?: string,
+    chainId?: string
   ): CancelablePromise<WatchAssetResponse> {
     const request: Web3Request = {
       method: Web3Method.watchAsset,
@@ -818,7 +819,8 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
           symbol,
           decimals,
           image
-        }
+        },
+        chainId
       }
     }
 
@@ -880,7 +882,8 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
           address,
           symbol,
           decimals,
-          image
+          image,
+          chainId
         })
       }
 
