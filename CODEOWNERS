@@ -1,4 +1,4 @@
 * @bangtoven @erin-at-work @jeongmincho
 # overriding heimdall requirement
-#~ {"path": "/package.json", "required_reviews": 0}
-#~ {"path": "/src/version.ts", "required_reviews": 0}
+#~ { "path": "/package.json", "teams": { "@wallet/wallet": { "required_reviews": 0 } } }
+#~ { "path": "/src/version.ts", "teams": { "@wallet/wallet": { "required_reviews": 0 } } }
