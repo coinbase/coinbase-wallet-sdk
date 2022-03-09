@@ -162,7 +162,7 @@ const TypedDataUtils = {
    * @param {string} primaryType - Root type
    * @param {Object} data - Object to hash
    * @param {Object} types - Type definitions
-   * @returns {string} - Hash of an object
+   * @returns {Buffer} - Hash of an object
    */
   hashStruct (primaryType, data, types, useV4 = true) {
     return util.keccak(this.encodeData(primaryType, data, types, useV4))
