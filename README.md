@@ -13,12 +13,16 @@ Wallet SDK is open-source and uses minimal dependencies for maximum security
 and no code bloat. Simply drop a few lines of code into your dapp and Wallet 
 SDK takes care of the rest. 
 
+## Getting started
+
+- This readme cointains brief instructions to get up and running
+- Visit our [public developer docs](https://docs.cloud.coinbase.com/wallet-sdk/docs) for more detail, including sample code for using libraries like [web3-react](https://github.com/NoahZinsmeister/web3-react) and [web3modal](https://github.com/Web3Modal/web3modal) to integrate Coinbase
+
 ## Installing and Upgrading
 
 > The installation package for **Coinbase Wallet SDK** (formerly WalletLink) is now named `@coinbase/wallet-sdk`.
 
 ### Installing Wallet SDK
-
 
 Install Coinbase Wallet SDK with yarn or npm. 
 
