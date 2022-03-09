@@ -15,8 +15,8 @@ SDK takes care of the rest.
 
 ## Getting started
 
-- This readme cointains brief instructions to get up and running
-- Visit our [public developer docs](https://docs.cloud.coinbase.com/wallet-sdk/docs) for more detail, including sample code for using libraries like [web3-react](https://github.com/NoahZinsmeister/web3-react) and [web3modal](https://github.com/Web3Modal/web3modal) to integrate Coinbase
+- This readme cointains brief instructions to get up and running.
+- Visit our [public developer docs](https://docs.cloud.coinbase.com/wallet-sdk/docs) for more detail, including samples for integating Coinbase Wallet using libraries like [web3-react](https://github.com/NoahZinsmeister/web3-react) and [web3modal](https://github.com/Web3Modal/web3modal).
 
 ## Installing and Upgrading
 
