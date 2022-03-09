@@ -4,7 +4,7 @@ const module: {
   hashForSignTypedData_v4: (params: { data: any }) => Buffer
   TypedDataUtils: {
     sanitizeData: (data: any) => any,
-    hashStruct: (primaryType: string, data: any, types: any, useV4: any) => buffer
+    hashStruct: (primaryType: string, data: any, types: any, useV4: any) => Buffer
   }
 }
 

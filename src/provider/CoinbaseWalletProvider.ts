@@ -796,8 +796,6 @@ export class CoinbaseWalletProvider
     address: AddressString,
     addPrefix: boolean,
     typedDataJson?: string | null,
-    domainSeperatorHex?: string | null,
-    hashStructMessageHex?: string | null
   ): Promise<JSONRPCResponse> {
     this._ensureKnownAddress(address)
 
@@ -808,8 +806,6 @@ export class CoinbaseWalletProvider
         address,
         addPrefix,
         typedDataJson,
-        domainSeperatorHex,
-        hashStructMessageHex
       ).promise
       return { jsonrpc: "2.0", id: 0, result: res.result }
     } catch (err: any) {
@@ -1021,28 +1017,13 @@ export class CoinbaseWalletProvider
     this._requireAuthorization()
     const address = ensureAddressString(params[0])
     const typedData = ensureParsedJSONObject(params[1])
-    const isV4 = true
 
     this._ensureKnownAddress(address)
-
-    const { domain, types, primaryType, message } = eip712.TypedDataUtils.sanitizeData(typedData);
-    const domainSeparatorHex = eip712.TypedDataUtils.hashStruct(
-      'EIP712Domain',
-      domain,
-      types,
-      isV4,
-    ).toString('hex');
-    const hashStructMessageHex = eip712.TypedDataUtils.hashStruct(
-      primaryType,
-      message,
-      types,
-      isV4,
-    ).toString('hex');
 
     const messageHash = eip712.hashForSignTypedData_v4({ data: typedData })
     const typedDataJSON = JSON.stringify(typedData, null, 2)
 
-    return this._signEthereumMessage(messageHash, address, false, typedDataJSON, domainSeparatorHex, hashStructMessageHex)
+    return this._signEthereumMessage(messageHash, address, false, typedDataJSON)
   }
 
   private async _cbwallet_arbitrary(

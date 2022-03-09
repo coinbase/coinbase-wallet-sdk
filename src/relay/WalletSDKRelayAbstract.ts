@@ -63,8 +63,6 @@ export abstract class WalletSDKRelayAbstract {
     address: AddressString,
     addPrefix: boolean,
     typedDataJson?: string | null,
-    domainSeperatorHex?: string | null,
-    hashStructMessageHex?: string | null
   ): CancelablePromise<SignEthereumMessageResponse>
 
   abstract ethereumAddressFromSignedMessage(
