@@ -795,7 +795,7 @@ export class CoinbaseWalletProvider
     message: Buffer,
     address: AddressString,
     addPrefix: boolean,
-    typedDataJson?: string | null,
+    typedDataJson?: string | null
   ): Promise<JSONRPCResponse> {
     this._ensureKnownAddress(address)
 
@@ -805,7 +805,7 @@ export class CoinbaseWalletProvider
         message,
         address,
         addPrefix,
-        typedDataJson,
+        typedDataJson
       ).promise
       return { jsonrpc: "2.0", id: 0, result: res.result }
     } catch (err: any) {
@@ -1020,10 +1020,10 @@ export class CoinbaseWalletProvider
 
     this._ensureKnownAddress(address)
 
-    const messageHash = eip712.hashForSignTypedData_v4({ data: typedData })
+    const message = eip712.hashForSignTypedData_v4({ data: typedData })
     const typedDataJSON = JSON.stringify(typedData, null, 2)
 
-    return this._signEthereumMessage(messageHash, address, false, typedDataJSON)
+    return this._signEthereumMessage(message, address, false, typedDataJSON)
   }
 
   private async _cbwallet_arbitrary(
