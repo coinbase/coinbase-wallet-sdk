@@ -199,9 +199,7 @@ export class CoinbaseWalletProvider
     this._storage.setItem(HAS_CHAIN_OVERRIDDEN_FROM_RELAY, value.toString())
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  public setProviderInfo(jsonRpcUrl: string, chainId: number) {
+  public setProviderInfo(jsonRpcUrl: string, _chainId: number) {
     if (this.isChainOverridden) return
     this.updateProviderInfo(jsonRpcUrl, this.getChainId(), false)
   }

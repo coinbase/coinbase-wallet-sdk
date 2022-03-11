@@ -31,12 +31,12 @@ export interface WalletUI {
    *
    */
   requestEthereumAccounts(options: {
-    onCancel: (error: Error) => void
+    onCancel: (error?: Error) => void
     onAccounts?: (accounts: [AddressString]) => void
   }): void
 
   addEthereumChain(options: {
-    onCancel: (error: Error) => void
+    onCancel: (error?: Error) => void
     onApprove: (rpcUrl: string) => void
     chainId: string
     rpcUrls: string[]
@@ -51,7 +51,7 @@ export interface WalletUI {
   }): void
 
   watchAsset(options: {
-    onCancel: (error: Error) => void
+    onCancel: (error?: Error) => void
     onApprove: () => void
     type: string
     address: string
@@ -62,7 +62,7 @@ export interface WalletUI {
   }): void
 
   switchEthereumChain(options: {
-    onCancel: (error: Error) => void
+    onCancel: (error?: Error) => void
     onApprove: (rpcUrl: string) => void
     chainId: string
   }): void
@@ -70,19 +70,19 @@ export interface WalletUI {
   signEthereumMessage(options: {
     request: SignEthereumMessageRequest
     onSuccess: (response: SignEthereumMessageResponse) => void
-    onCancel: (error: Error) => void
+    onCancel: (error?: Error) => void
   }): void
 
   signEthereumTransaction(options: {
     request: SignEthereumTransactionRequest
     onSuccess: (response: SignEthereumTransactionResponse) => void
-    onCancel: (error: Error) => void
+    onCancel: (error?: Error) => void
   }): void
 
   submitEthereumTransaction(options: {
     request: SubmitEthereumTransactionRequest
     onSuccess: (response: SubmitEthereumTransactionResponse) => void
-    onCancel: (error: Error) => void
+    onCancel: (error?: Error) => void
   }): void
 
   ethereumAddressFromSignedMessage(options: {
@@ -104,7 +104,7 @@ export interface WalletUI {
    */
   showConnecting(options: {
     isUnlinkedErrorState?: boolean
-    onCancel: (error: Error) => void
+    onCancel: (error?: Error) => void
     onResetConnection: () => void
   }): () => void
 

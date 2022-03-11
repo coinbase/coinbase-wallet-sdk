@@ -83,6 +83,7 @@ export interface WalletSDKRelayOptions {
 
 export class WalletSDKRelay extends WalletSDKRelayAbstract {
   private static accountRequestCallbackIds = new Set<string>()
+  private static userRejectedError = new Error("User rejected request")
 
   private readonly linkAPIUrl: string
   protected readonly storage: ScopedLocalStorage
@@ -537,12 +538,12 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     let hideSnackbarItem: (() => void) | null = null
     const id = randomBytesHex(8)
 
-    const cancel = (error: Error) => {
+    const cancel = (error?: Error) => {
       this.publishWeb3RequestCanceledEvent(id)
       this.handleWeb3ResponseMessage(
         Web3ResponseMessage({
           id,
-          response: ErrorResponse(request.method, error.message)
+          response: ErrorResponse(request.method, (error ?? WalletSDKRelay.userRejectedError).message)
         })
       )
       hideSnackbarItem?.()
@@ -731,12 +732,12 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     const hideSnackbarItem: (() => void) | null = null
     const id = randomBytesHex(8)
 
-    const cancel = (error: Error) => {
+    const cancel = (error?: Error) => {
       this.publishWeb3RequestCanceledEvent(id)
       this.handleWeb3ResponseMessage(
         Web3ResponseMessage({
           id,
-          response: ErrorResponse(request.method, error.message)
+          response: ErrorResponse(request.method, (error ?? WalletSDKRelay.userRejectedError).message)
         })
       )
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -827,12 +828,12 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     let hideSnackbarItem: (() => void) | null = null
     const id = randomBytesHex(8)
 
-    const cancel = () => {
+    const cancel = (error?: Error) => {
       this.publishWeb3RequestCanceledEvent(id)
       this.handleWeb3ResponseMessage(
         Web3ResponseMessage({
           id,
-          response: ErrorResponse(request.method, "User rejected request")
+          response: ErrorResponse(request.method, (error ?? WalletSDKRelay.userRejectedError).message)
         })
       )
       hideSnackbarItem?.()
@@ -856,7 +857,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         resolve(response as WatchAssetResponse)
       })
 
-      const _cancel = (_error: Error) => {
+      const _cancel = (_error?: Error) => {
         this.handleWeb3ResponseMessage(
           Web3ResponseMessage({
             id,
@@ -922,12 +923,12 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     let hideSnackbarItem: (() => void) | null = null
     const id = randomBytesHex(8)
 
-    const cancel = (error: Error) => {
+    const cancel = (error?: Error) => {
       this.publishWeb3RequestCanceledEvent(id)
       this.handleWeb3ResponseMessage(
         Web3ResponseMessage({
           id,
-          response: ErrorResponse(request.method, error.message)
+          response: ErrorResponse(request.method, (error ?? WalletSDKRelay.userRejectedError).message)
         })
       )
       hideSnackbarItem?.()
@@ -951,7 +952,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         resolve(response as AddEthereumChainResponse)
       })
 
-      const _cancel = (_error: Error) => {
+      const _cancel = (_error?: Error) => {
         this.handleWeb3ResponseMessage(
           Web3ResponseMessage({
             id,
@@ -1006,12 +1007,12 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     let hideSnackbarItem: (() => void) | null = null
     const id = randomBytesHex(8)
 
-    const cancel = () => {
+    const cancel = (error?: Error) => {
       this.publishWeb3RequestCanceledEvent(id)
       this.handleWeb3ResponseMessage(
         Web3ResponseMessage({
           id,
-          response: ErrorResponse(request.method, "User rejected request")
+          response: ErrorResponse(request.method, (error ?? WalletSDKRelay.userRejectedError).message)
         })
       )
       hideSnackbarItem?.()
@@ -1104,11 +1105,11 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
   }
 
   private sendRequestStandalone<T extends Web3Request>(id: string, request: T) {
-    const _cancel = (error: Error) => {
+    const _cancel = (error?: Error) => {
       this.handleWeb3ResponseMessage(
         Web3ResponseMessage({
           id,
-          response: ErrorResponse(request.method, error.message)
+          response: ErrorResponse(request.method, (error ?? WalletSDKRelay.userRejectedError).message)
         })
       )
     }
@@ -1157,7 +1158,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         })
         break
       default:
-        _cancel(new Error("User rejected request"))
+        _cancel()
         break
     }
   }

@@ -59,7 +59,7 @@ export class WalletSDKUI implements WalletUI {
   }
 
   addEthereumChain(_options: {
-    onCancel: (error: Error) => void
+    onCancel: (error?: Error) => void
     onApprove: () => void
     chainId: string
     rpcUrls: string[]
@@ -76,7 +76,7 @@ export class WalletSDKUI implements WalletUI {
   }
 
   watchAsset(_options: {
-    onCancel: (error: Error) => void
+    onCancel: (error?: Error) => void
     onApprove: () => void
     type: string
     address: string
@@ -88,14 +88,14 @@ export class WalletSDKUI implements WalletUI {
   }
 
   switchEthereumChain(_options: {
-    onCancel: (error: Error) => void
+    onCancel: (error?: Error) => void
     onApprove: () => void
     chainId: string
   }) {
     // no-op
   }
 
-  requestEthereumAccounts(options: { onCancel: (error: Error) => void }): void {
+  requestEthereumAccounts(options: { onCancel: (error?: Error) => void }): void {
     this.linkFlow.open({ onCancel: () => options.onCancel(WalletSDKUI.userRejectedRequestError) })
   }
 
@@ -106,7 +106,7 @@ export class WalletSDKUI implements WalletUI {
   signEthereumMessage(_: {
     request: SignEthereumMessageRequest
     onSuccess: (response: SignEthereumMessageResponse) => void
-    onCancel: (error: Error) => void
+    onCancel: (error?: Error) => void
   }): void {
     // No-op
   }
@@ -114,7 +114,7 @@ export class WalletSDKUI implements WalletUI {
   signEthereumTransaction(_: {
     request: SignEthereumTransactionRequest
     onSuccess: (response: SignEthereumTransactionResponse) => void
-    onCancel: (error: Error) => void
+    onCancel: (error?: Error) => void
   }): void {
     // No-op
   }
@@ -122,7 +122,7 @@ export class WalletSDKUI implements WalletUI {
   submitEthereumTransaction(_: {
     request: SubmitEthereumTransactionRequest
     onSuccess: (response: SubmitEthereumTransactionResponse) => void
-    onCancel: (error: Error) => void
+    onCancel: (error?: Error) => void
   }): void {
     // No-op
   }
@@ -136,7 +136,7 @@ export class WalletSDKUI implements WalletUI {
 
   showConnecting(options: {
     isUnlinkedErrorState?: boolean
-    onCancel: (error: Error) => void
+    onCancel: (error?: Error) => void
     onResetConnection: () => void
   }): () => void {
     let snackbarProps: SnackbarInstanceProps
