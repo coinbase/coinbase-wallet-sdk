@@ -16,8 +16,6 @@ import {
 import { WalletUI, WalletUIOptions } from "./WalletUI"
 
 export class WalletSDKUI implements WalletUI {
-  private static userRejectedRequestError = new Error("User rejected request")
-
   private readonly linkFlow: LinkFlow
   private readonly snackbar: Snackbar
   private attached = false
@@ -96,7 +94,7 @@ export class WalletSDKUI implements WalletUI {
   }
 
   requestEthereumAccounts(options: { onCancel: (error?: Error) => void }): void {
-    this.linkFlow.open({ onCancel: () => options.onCancel(WalletSDKUI.userRejectedRequestError) })
+    this.linkFlow.open({ onCancel: options.onCancel })
   }
 
   hideRequestEthereumAccounts(): void {
@@ -169,7 +167,7 @@ export class WalletSDKUI implements WalletUI {
             path: "M10.3711 1.52346L9.21775 0.370117L5.37109 4.21022L1.52444 0.370117L0.371094 1.52346L4.2112 5.37012L0.371094 9.21677L1.52444 10.3701L5.37109 6.53001L9.21775 10.3701L10.3711 9.21677L6.53099 5.37012L10.3711 1.52346Z",
             defaultFillRule: "inherit",
             defaultClipRule: "inherit",
-            onClick: () => options.onCancel(WalletSDKUI.userRejectedRequestError)
+            onClick: options.onCancel
           },
           {
             isRed: false,
