@@ -10,7 +10,7 @@ interface BaseWeb3Response<Result> {
   result?: Result
 }
 
-export interface ErrorResponse extends BaseWeb3Response<void> {
+export interface ErrorResponse extends BaseWeb3Response<void>, Error {
   errorCode?: number
   errorMessage: string
 }
@@ -20,7 +20,13 @@ export function ErrorResponse(
   errorMessage: string,
   errorCode?: number
 ): ErrorResponse {
-  return { method, errorMessage, errorCode }
+  return {
+    method,
+    errorMessage,
+    errorCode,
+    name: method,
+    message: errorMessage
+  }
 }
 
 export type RequestEthereumAccountsResponse = BaseWeb3Response<

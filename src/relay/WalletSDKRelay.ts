@@ -1046,14 +1046,11 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         })
 
         const _cancel = (error?: Error) => {
-          if (error) {
+          if (error && (error instanceof ErrorResponse)) {
             this.handleWeb3ResponseMessage(
               Web3ResponseMessage({
                 id,
-                response: ErrorResponse(
-                  Web3Method.switchEthereumChain,
-                  error.message
-                )
+                response: (error as ErrorResponse)
               })
             )
           } else {
