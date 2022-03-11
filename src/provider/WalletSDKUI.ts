@@ -16,6 +16,8 @@ import {
 import { WalletUI, WalletUIOptions } from "./WalletUI"
 
 export class WalletSDKUI implements WalletUI {
+  private static userRejectedRequestError = new Error("User rejected request")
+
   private readonly linkFlow: LinkFlow
   private readonly snackbar: Snackbar
   private attached = false
@@ -56,10 +58,8 @@ export class WalletSDKUI implements WalletUI {
     this.linkFlow.setConnectDisabled(connectDisabled)
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  addEthereumChain(options: {
-    onCancel: () => void
+  addEthereumChain(_options: {
+    onCancel: (error: Error) => void
     onApprove: () => void
     chainId: string
     rpcUrls: string[]
@@ -75,9 +75,8 @@ export class WalletSDKUI implements WalletUI {
     // no-op
   }
 
-  // @ts-ignore
-  watchAsset(options: {
-    onCancel: () => void
+  watchAsset(_options: {
+    onCancel: (error: Error) => void
     onApprove: () => void
     type: string
     address: string
@@ -88,17 +87,16 @@ export class WalletSDKUI implements WalletUI {
     // no-op
   }
 
-  // @ts-ignore
-  switchEthereumChain(options: {
-    onCancel: () => void
+  switchEthereumChain(_options: {
+    onCancel: (error: Error) => void
     onApprove: () => void
     chainId: string
   }) {
     // no-op
   }
 
-  requestEthereumAccounts(options: { onCancel: () => void }): void {
-    this.linkFlow.open({ onCancel: options.onCancel })
+  requestEthereumAccounts(options: { onCancel: (error: Error) => void }): void {
+    this.linkFlow.open({ onCancel: () => options.onCancel(WalletSDKUI.userRejectedRequestError) })
   }
 
   hideRequestEthereumAccounts(): void {
@@ -108,7 +106,7 @@ export class WalletSDKUI implements WalletUI {
   signEthereumMessage(_: {
     request: SignEthereumMessageRequest
     onSuccess: (response: SignEthereumMessageResponse) => void
-    onCancel: () => void
+    onCancel: (error: Error) => void
   }): void {
     // No-op
   }
@@ -116,7 +114,7 @@ export class WalletSDKUI implements WalletUI {
   signEthereumTransaction(_: {
     request: SignEthereumTransactionRequest
     onSuccess: (response: SignEthereumTransactionResponse) => void
-    onCancel: () => void
+    onCancel: (error: Error) => void
   }): void {
     // No-op
   }
@@ -124,7 +122,7 @@ export class WalletSDKUI implements WalletUI {
   submitEthereumTransaction(_: {
     request: SubmitEthereumTransactionRequest
     onSuccess: (response: SubmitEthereumTransactionResponse) => void
-    onCancel: () => void
+    onCancel: (error: Error) => void
   }): void {
     // No-op
   }
@@ -138,7 +136,7 @@ export class WalletSDKUI implements WalletUI {
 
   showConnecting(options: {
     isUnlinkedErrorState?: boolean
-    onCancel: () => void
+    onCancel: (error: Error) => void
     onResetConnection: () => void
   }): () => void {
     let snackbarProps: SnackbarInstanceProps
@@ -171,7 +169,7 @@ export class WalletSDKUI implements WalletUI {
             path: "M10.3711 1.52346L9.21775 0.370117L5.37109 4.21022L1.52444 0.370117L0.371094 1.52346L4.2112 5.37012L0.371094 9.21677L1.52444 10.3701L5.37109 6.53001L9.21775 10.3701L10.3711 9.21677L6.53099 5.37012L10.3711 1.52346Z",
             defaultFillRule: "inherit",
             defaultClipRule: "inherit",
-            onClick: options.onCancel
+            onClick: () => options.onCancel(WalletSDKUI.userRejectedRequestError)
           },
           {
             isRed: false,
@@ -198,8 +196,7 @@ export class WalletSDKUI implements WalletUI {
     return false
   }
 
-  // @ts-ignore
-  inlineAddEthereumChain(chainId: string): boolean {
+  inlineAddEthereumChain(_chainId: string): boolean {
     return false
   }
 

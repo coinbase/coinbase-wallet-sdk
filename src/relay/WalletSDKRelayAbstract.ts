@@ -24,7 +24,7 @@ export const APP_VERSION_KEY = "AppVersion"
 
 export type CancelablePromise<T> = {
   promise: Promise<T>
-  cancel: () => void
+  cancel: (error: Error) => void
 }
 
 export abstract class WalletSDKRelayAbstract {
