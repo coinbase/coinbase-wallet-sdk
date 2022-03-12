@@ -10,24 +10,23 @@ interface BaseWeb3Response<Result> {
   result?: Result
 }
 
-export interface ErrorResponse extends BaseWeb3Response<void>, Error {
+export class ErrorResponse implements BaseWeb3Response<void>, Error {
+  method: Web3Method
   errorCode?: number
   errorMessage: string
-}
+  name: string
+  message: string
 
-export function ErrorResponse(
-  method: Web3Method,
-  errorMessage: string,
-  errorCode?: number
-): ErrorResponse {
-  return {
-    method,
-    errorMessage,
-    errorCode,
-    name: method,
-    message: errorMessage
+  constructor(method: Web3Method, errorMessage: string, errorCode?: number) {
+    this.method = method
+    this.errorMessage = errorMessage
+    this.errorCode = errorCode
+    this.name = method
+    this.message = errorMessage
   }
 }
+
+export const USER_REJECTED_REQUEST_ERROR = new Error("User rejected request")
 
 export type RequestEthereumAccountsResponse = BaseWeb3Response<
   AddressString[] // an array of ethereum addresses
