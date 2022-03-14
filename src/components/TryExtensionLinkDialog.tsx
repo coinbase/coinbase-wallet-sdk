@@ -2,6 +2,7 @@ import clsx from "clsx"
 import { FunctionComponent, h } from "preact"
 import { useEffect, useState } from "preact/hooks"
 
+import { LIB_VERSION } from "../version"
 import globeIcon from "./icons/globe-icon-svg"
 import linkIcon from "./icons/link-icon-svg"
 import lockIcon from "./icons/lock-icon-svg"
@@ -9,7 +10,6 @@ import walletLogo from "./icons/QRLogo"
 import { QRCode } from "./QRCode"
 import { Spinner } from "./Spinner"
 import css from "./TryExtensionLinkDialog-css"
-import {LIB_VERSION} from "../version";
 
 export const TryExtensionLinkDialog: FunctionComponent<{
   darkMode: boolean
@@ -73,7 +73,7 @@ export const TryExtensionLinkDialog: FunctionComponent<{
           <TryExtensionBox
             onInstallClick={() => {
               window.open(
-                "https://api.wallet.coinbase.com/rpc/v2/desktop/chrome",
+                "https://chrome.google.com/webstore/detail/coinbase-wallet-extension/hnfanknocfeofbddgcijnmhnfnkdnaad",
                 "_blank"
               )
             }}
@@ -191,10 +191,7 @@ const DescriptionItem: FunctionComponent<{
 }
 
 const CancelButton: FunctionComponent<{ onClick: () => void }> = props => (
-  <button
-    class="-cbwsdk-extension-dialog-box-cancel"
-    onClick={props.onClick}
-  >
+  <button class="-cbwsdk-extension-dialog-box-cancel" onClick={props.onClick}>
     <div class="-cbwsdk-extension-dialog-box-cancel-x" />
   </button>
 )
