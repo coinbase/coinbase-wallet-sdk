@@ -93,7 +93,9 @@ export class WalletSDKUI implements WalletUI {
     // no-op
   }
 
-  requestEthereumAccounts(options: { onCancel: (error?: Error) => void }): void {
+  requestEthereumAccounts(options: {
+    onCancel: (error?: Error) => void
+  }): void {
     this.linkFlow.open({ onCancel: options.onCancel })
   }
 
@@ -194,7 +196,8 @@ export class WalletSDKUI implements WalletUI {
     return false
   }
 
-  inlineAddEthereumChain(_chainId: string): boolean {
+  // @ts-ignore
+  inlineAddEthereumChain(chainId: string): boolean {
     return false
   }
 
