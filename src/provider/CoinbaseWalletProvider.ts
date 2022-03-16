@@ -82,7 +82,7 @@ export class CoinbaseWalletProvider
 
   private hasMadeFirstChainChangedEmission = false
 
-  private _supportsAddressSwitching?: boolean
+  private supportsAddressSwitching?: boolean
 
   constructor(options: Readonly<CoinbaseWalletProviderOptions>) {
     super()
@@ -109,7 +109,7 @@ export class CoinbaseWalletProvider
 
     this.isCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true
 
-    this._supportsAddressSwitching = options.supportsAddressSwitching
+    this.supportsAddressSwitching = options.supportsAddressSwitching
 
     const chainId = this.getChainId()
     const chainIdStr = prepend0x(chainId.toString(16))
@@ -540,7 +540,7 @@ export class CoinbaseWalletProvider
       return
     }
 
-    if (this._addresses && this._supportsAddressSwitching === false) {
+    if (this._addresses && this.supportsAddressSwitching === false) {
       /**
        * The extension currently doesn't support switching selected wallet index
        * make sure walletlink doesn't update it's address in this case
