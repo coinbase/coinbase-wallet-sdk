@@ -56,6 +56,7 @@ export interface CoinbaseWalletProviderOptions {
   relayProvider: () => Promise<WalletSDKRelayAbstract>
   storage: ScopedLocalStorage
   eventListener?: EventListener
+  supportsAddressSwitching?: boolean
 }
 
 export class CoinbaseWalletProvider
@@ -81,6 +82,8 @@ export class CoinbaseWalletProvider
 
   private hasMadeFirstChainChangedEmission = false
 
+  private _supportsAddressSwitching?: boolean
+
   constructor(options: Readonly<CoinbaseWalletProviderOptions>) {
     super()
 
@@ -105,6 +108,8 @@ export class CoinbaseWalletProvider
     this._eventListener = options.eventListener
 
     this.isCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true
+
+    this._supportsAddressSwitching = options.supportsAddressSwitching
 
     const chainId = this.getChainId()
     const chainIdStr = prepend0x(chainId.toString(16))
@@ -532,6 +537,14 @@ export class CoinbaseWalletProvider
     const newAddresses = addresses.map(address => ensureAddressString(address))
 
     if (JSON.stringify(newAddresses) === JSON.stringify(this._addresses)) {
+      return
+    }
+
+    if (this._addresses && this._supportsAddressSwitching === false) {
+      /**
+       * The extension currently doesn't support switching selected wallet index
+       * make sure walletlink doesn't update it's address in this case
+       */
       return
     }
 
