@@ -2,6 +2,7 @@ import clsx from "clsx"
 import { FunctionComponent, h } from "preact"
 import { useEffect, useState } from "preact/hooks"
 
+import { LIB_VERSION } from "../version"
 import globeIcon from "./icons/globe-icon-svg"
 import linkIcon from "./icons/link-icon-svg"
 import lockIcon from "./icons/lock-icon-svg"
@@ -9,7 +10,6 @@ import walletLogo from "./icons/QRLogo"
 import { QRCode } from "./QRCode"
 import { Spinner } from "./Spinner"
 import css from "./TryExtensionLinkDialog-css"
-import {LIB_VERSION} from "../version";
 
 export const TryExtensionLinkDialog: FunctionComponent<{
   darkMode: boolean
@@ -100,11 +100,29 @@ export const TryExtensionLinkDialog: FunctionComponent<{
 const TryExtensionBox: FunctionComponent<{
   onInstallClick: () => void
 }> = props => {
+  const [isClicked, setIsClicked] = useState(false)
+
+  const clickHandler = () => {
+    if (isClicked) {
+      window.location.reload()
+    } else {
+      props.onInstallClick()
+      setIsClicked(true)
+    }
+  }
+
   return (
     <div class="-cbwsdk-extension-dialog-box-top">
       <div class="-cbwsdk-extension-dialog-box-top-install-region">
         <h2>Try the Coinbase Wallet extension</h2>
-        <button onClick={props.onInstallClick}>Install</button>
+        {isClicked && (
+          <div class="-cbwsdk-extension-dialog-box-top-subtext">
+            After installing Coinbase Wallet, click below to refresh the page.
+          </div>
+        )}
+        <button onClick={clickHandler}>
+          {isClicked ? "Continue" : "Install"}
+        </button>
       </div>
       <div class="-cbwsdk-extension-dialog-box-top-info-region">
         <DescriptionItem
@@ -142,8 +160,15 @@ const ScanQRBox: FunctionComponent<{
       <div class="-cbwsdk-extension-dialog-box-bottom-description-region">
         <h2>Or scan to connect</h2>
         <body class="-cbwsdk-extension-dialog-box-bottom-description">
-          Open <a href={"https://wallet.coinbase.com/"}>Coinbase Wallet</a> on
-          your mobile phone and scan
+          Open{" "}
+          <a
+            href={"https://wallet.coinbase.com/"}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Coinbase Wallet
+          </a>{" "}
+          on your mobile phone and scan
         </body>
       </div>
       <div class="-cbwsdk-extension-dialog-box-bottom-qr-region">
@@ -191,10 +216,7 @@ const DescriptionItem: FunctionComponent<{
 }
 
 const CancelButton: FunctionComponent<{ onClick: () => void }> = props => (
-  <button
-    class="-cbwsdk-extension-dialog-box-cancel"
-    onClick={props.onClick}
-  >
+  <button class="-cbwsdk-extension-dialog-box-cancel" onClick={props.onClick}>
     <div class="-cbwsdk-extension-dialog-box-cancel-x" />
   </button>
 )
