@@ -32,7 +32,8 @@
     "build:dev:watch": "nodemon -e 'ts,tsx,js,json,css,scss,svg' --ignore 'src/**/*-css.ts' --ignore 'src/**/*-svg.ts' --watch src/ --exec 'yarn build:dev'",
     "build:prod": "yarn prebuild && yarn build && yarn build-npm && cp ./package.json ./README.md ./LICENSE build/npm && cp -a src/vendor-js build/npm/dist && sed -i.bak 's|  \"private\": true,||g' build/npm/package.json && rm -f build/npm/package.json.bak",
     "lint": "eslint ./src --ext .ts,.tsx",
-    "lint:watch": "nodemon -e ts,tsx,js,json,css,scss,svg --watch src/ --exec 'yarn tsc && yarn lint'"
+    "lint:watch": "nodemon -e ts,tsx,js,json,css,scss,svg --watch src/ --exec 'yarn tsc && yarn lint'",
+    "prepare": "husky install"
   },
   "private": true,
   "dependencies": {
@@ -107,17 +108,11 @@
       "json"
     ]
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": [
-        "lint-staged"
-      ]
-    }
-  },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
-      "eslint --cache --fix", 
+      "eslint --cache --fix",
       "prettier --write"
-    ]
+    ],
+    "*.{scss}": "prettier --write"
   }
 }
