@@ -32,8 +32,7 @@
     "build:dev:watch": "nodemon -e 'ts,tsx,js,json,css,scss,svg' --ignore 'src/**/*-css.ts' --ignore 'src/**/*-svg.ts' --watch src/ --exec 'yarn build:dev'",
     "build:prod": "yarn prebuild && yarn build && yarn build-npm && cp ./package.json ./README.md ./LICENSE build/npm && cp -a src/vendor-js build/npm/dist && sed -i.bak 's|  \"private\": true,||g' build/npm/package.json && rm -f build/npm/package.json.bak",
     "lint": "eslint ./src --ext .ts,.tsx",
-    "lint:watch": "nodemon -e ts,tsx,js,json,css,scss,svg --watch src/ --exec 'yarn tsc && yarn lint'",
-    "prepare": "husky install"
+    "lint:watch": "nodemon -e ts,tsx,js,json,css,scss,svg --watch src/ --exec 'yarn tsc && yarn lint'"
   },
   "private": true,
   "dependencies": {
@@ -67,13 +66,11 @@
     "eslint-plugin-preact": "^0.1.0",
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-simple-import-sort": "^7.0.0",
-    "husky": "7.0.4",
     "jasmine": "3.8.0",
     "karma": "^6.3.15",
     "karma-browserify": "8.1.0",
     "karma-chrome-launcher": "^3.1.0",
     "karma-jasmine": "^4.0.1",
-    "lint-staged": "12.3.7",
     "nodemon": "^2.0.6",
     "prettier": "^2.5.1",
     "raw-loader": "^4.0.2",
@@ -107,12 +104,5 @@
       "js",
       "json"
     ]
-  },
-  "lint-staged": {
-    "*.{ts,tsx,js,jsx}": [
-      "eslint --cache --fix",
-      "prettier --write"
-    ],
-    "*.{scss}": "prettier --write"
   }
 }
