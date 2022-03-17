@@ -540,7 +540,7 @@ export class CoinbaseWalletProvider
       return
     }
 
-    if (this._addresses && this.supportsAddressSwitching === false) {
+    if (this._addresses.length > 0 && this.supportsAddressSwitching === false) {
       /**
        * The extension currently doesn't support switching selected wallet index
        * make sure walletlink doesn't update it's address in this case
