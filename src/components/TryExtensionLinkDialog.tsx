@@ -117,11 +117,12 @@ const TryExtensionBox: FunctionComponent<{
         <h2>Try the Coinbase Wallet extension</h2>
         {isClicked && (
           <div class="-cbwsdk-extension-dialog-box-top-subtext">
-            After installing Coinbase Wallet, click below to refresh the page.
+            After installing Coinbase Wallet, refresh the page and connect
+            again.
           </div>
         )}
         <button onClick={clickHandler}>
-          {isClicked ? "Continue" : "Install"}
+          {isClicked ? "Refresh" : "Install"}
         </button>
       </div>
       <div class="-cbwsdk-extension-dialog-box-top-info-region">
