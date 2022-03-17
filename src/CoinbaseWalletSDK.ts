@@ -10,12 +10,9 @@ import { WalletSDKRelay } from "./relay/WalletSDKRelay"
 import { WalletSDKRelayEventManager } from "./relay/WalletSDKRelayEventManager"
 import { getFavicon } from "./util"
 
-const LINK_API_URL =
-    process.env.LINK_API_URL! || "https://www.walletlink.org"
+const LINK_API_URL = process.env.LINK_API_URL! || "https://www.walletlink.org"
 const SDK_VERSION =
-    process.env.SDK_VERSION! ||
-    require("../package.json").version ||
-    "unknown"
+  process.env.SDK_VERSION! || require("../package.json").version || "unknown"
 
 /** Coinbase Wallet SDK Constructor Options */
 export interface CoinbaseWalletSDKOptions {
@@ -28,9 +25,7 @@ export interface CoinbaseWalletSDKOptions {
   /** @optional Coinbase Wallet link server URL; for most, leave it unspecified */
   linkAPIUrl?: string
   /** @optional an implementation of WalletUI; for most, leave it unspecified */
-  uiConstructor?: (
-      options: Readonly<WalletUIOptions>
-  ) => WalletUI
+  uiConstructor?: (options: Readonly<WalletUIOptions>) => WalletUI
   /** @optional an implementation of EventListener for debugging; for most, leave it unspecified  */
   eventListener?: EventListener
   /** @optional whether wallet link provider should override the isMetaMask property. */
@@ -57,9 +52,7 @@ export class CoinbaseWalletSDK {
    */
   constructor(options: Readonly<CoinbaseWalletSDKOptions>) {
     const linkAPIUrl = options.linkAPIUrl || LINK_API_URL
-    let uiConstructor: (
-        options: Readonly<WalletUIOptions>
-    ) => WalletUI
+    let uiConstructor: (options: Readonly<WalletUIOptions>) => WalletUI
     if (!options.uiConstructor) {
       uiConstructor = opts => new WalletSDKUI(opts)
     } else {
