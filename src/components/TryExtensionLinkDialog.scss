@@ -58,6 +58,12 @@
         overflow: hidden;
         min-height: 300px;
 
+        &-subtext {
+          margin-top: 15px;
+          font-size: 12px;
+          line-height: 1.5;
+        }
+
         &-install-region {
           display: flex;
           flex-basis: 50%;
