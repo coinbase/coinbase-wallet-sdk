@@ -23,7 +23,7 @@
   "author": "Coinbase, Inc.",
   "license": "Apache-2.0",
   "scripts": {
-    "tsc": "tsc --noEmit --pretty",
+    "typecheck": "tsc --noEmit --pretty",
     "test": "yarn build-npm && karma start",
     "prebuild": "node -p \"'export const LIB_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
     "build": "node compile-assets.js && webpack --config webpack.config.js",
@@ -32,7 +32,8 @@
     "build:dev:watch": "nodemon -e 'ts,tsx,js,json,css,scss,svg' --ignore 'src/**/*-css.ts' --ignore 'src/**/*-svg.ts' --watch src/ --exec 'yarn build:dev'",
     "build:prod": "yarn prebuild && yarn build && yarn build-npm && cp ./package.json ./README.md ./LICENSE build/npm && cp -a src/vendor-js build/npm/dist && sed -i.bak 's|  \"private\": true,||g' build/npm/package.json && rm -f build/npm/package.json.bak",
     "lint": "eslint ./src --ext .ts,.tsx",
-    "lint:watch": "nodemon -e ts,tsx,js,json,css,scss,svg --watch src/ --exec 'yarn tsc && yarn lint'"
+    "lint:watch": "nodemon -e ts,tsx,js,json,css,scss,svg --watch src/ --exec 'yarn tsc && yarn lint'",
+    "pretest": "yarn lint && yarn typecheck"
   },
   "private": true,
   "dependencies": {
