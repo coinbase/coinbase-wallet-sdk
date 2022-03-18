@@ -5,6 +5,6 @@ semi: false
 singleQuote: false
 trailingComma: none
 bracketSpacing: true
-jsxBracketSameLine: false
+bracketSameLine: false
 arrowParens: avoid
 proseWrap: preserve
