@@ -14,19 +14,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Cached node_modules
-        uses: actions/cache@v2
-        with:
-          path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
-
       - name: Checkout node action
         uses: actions/setup-node@v2
         with:
           node-version-file: ".nvmrc"
 
       - name: Install NPM dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install
       
       # - name: Runs compile asset script
       #   run: ./compile-assets.js # FIXME: Permission denied error
