@@ -10,7 +10,7 @@ import { WalletSDKRelay } from "./relay/WalletSDKRelay"
 import { WalletSDKRelayEventManager } from "./relay/WalletSDKRelayEventManager"
 import { getFavicon } from "./util"
 
-const LINK_API_URL = process.env.LINK_API_URL! || "https://www.walletlink.org"
+const LINK_API_URL = process.env.LINK_API_URL || "https://www.walletlink.org"
 const SDK_VERSION =
   process.env.SDK_VERSION! || require("../package.json").version || "unknown"
 
