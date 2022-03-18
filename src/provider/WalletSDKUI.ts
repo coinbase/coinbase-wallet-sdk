@@ -75,7 +75,7 @@ export class WalletSDKUI implements WalletUI {
     // no-op
   }
 
-  watchAsset(options: {
+  watchAsset(_options: {
     onCancel: () => void
     onApprove: () => void
     type: string
@@ -87,7 +87,7 @@ export class WalletSDKUI implements WalletUI {
     // no-op
   }
 
-  switchEthereumChain(options: {
+  switchEthereumChain(_options: {
     onCancel: () => void
     onApprove: () => void
     chainId: string
@@ -196,7 +196,7 @@ export class WalletSDKUI implements WalletUI {
     return false
   }
 
-  inlineAddEthereumChain(chainId: string): boolean {
+  inlineAddEthereumChain(_chainId: string): boolean {
     return false
   }
 
