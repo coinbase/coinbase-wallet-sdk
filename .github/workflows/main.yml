@@ -5,7 +5,7 @@ on:
 
 jobs:
   lint-check:
-    name: Check for ESLint, Formatting, and Types
+    name: Check for ESLint and Types
     runs-on: ubuntu-latest
 
     steps:
@@ -28,6 +28,3 @@ jobs:
 
       - name: Check Types
         run: yarn lint:types
-
-      - name: Check prettier formatting
-        run: yarn lint:prettier
