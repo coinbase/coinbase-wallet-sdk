@@ -1,29 +1,29 @@
-import { LinkFlow } from "../components/LinkFlow"
-import { Snackbar, SnackbarInstanceProps } from "../components/Snackbar"
-import { injectCssReset } from "../lib/cssReset"
+import { LinkFlow } from "../components/LinkFlow";
+import { Snackbar, SnackbarInstanceProps } from "../components/Snackbar";
+import { injectCssReset } from "../lib/cssReset";
 import {
   EthereumAddressFromSignedMessageRequest,
   SignEthereumMessageRequest,
   SignEthereumTransactionRequest,
   SubmitEthereumTransactionRequest
-} from "../relay/Web3Request"
+} from "../relay/Web3Request";
 import {
   EthereumAddressFromSignedMessageResponse,
   SignEthereumMessageResponse,
   SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse
-} from "../relay/Web3Response"
-import { WalletUI, WalletUIOptions } from "./WalletUI"
+} from "../relay/Web3Response";
+import { WalletUI, WalletUIOptions } from "./WalletUI";
 
 export class WalletSDKUI implements WalletUI {
-  private readonly linkFlow: LinkFlow
-  private readonly snackbar: Snackbar
-  private attached = false
+  private readonly linkFlow: LinkFlow;
+  private readonly snackbar: Snackbar;
+  private attached = false;
 
   constructor(options: Readonly<WalletUIOptions>) {
     this.snackbar = new Snackbar({
       darkMode: options.darkMode
-    })
+    });
 
     this.linkFlow = new LinkFlow({
       darkMode: options.darkMode,
@@ -33,113 +33,113 @@ export class WalletSDKUI implements WalletUI {
       linkAPIUrl: options.linkAPIUrl,
       connected$: options.connected$,
       isParentConnection: false
-    })
+    });
   }
 
   attach(): void {
     if (this.attached) {
-      throw new Error("Coinbase Wallet SDK UI is already attached")
+      throw new Error("Coinbase Wallet SDK UI is already attached");
     }
-    const el = document.documentElement
-    const container = document.createElement("div")
-    container.className = "-cbwsdk-css-reset"
-    el.appendChild(container)
+    const el = document.documentElement;
+    const container = document.createElement("div");
+    container.className = "-cbwsdk-css-reset";
+    el.appendChild(container);
 
-    this.linkFlow.attach(container)
-    this.snackbar.attach(container)
-    this.attached = true
+    this.linkFlow.attach(container);
+    this.snackbar.attach(container);
+    this.attached = true;
 
-    injectCssReset()
+    injectCssReset();
   }
 
   setConnectDisabled(connectDisabled: boolean) {
-    this.linkFlow.setConnectDisabled(connectDisabled)
+    this.linkFlow.setConnectDisabled(connectDisabled);
   }
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   addEthereumChain(options: {
-    onCancel: () => void
-    onApprove: () => void
-    chainId: string
-    rpcUrls: string[]
-    blockExplorerUrls?: string[]
-    chainName?: string
-    iconUrls?: string[]
+    onCancel: () => void;
+    onApprove: () => void;
+    chainId: string;
+    rpcUrls: string[];
+    blockExplorerUrls?: string[];
+    chainName?: string;
+    iconUrls?: string[];
     nativeCurrency?: {
-      name: string
-      symbol: string
-      decimals: number
-    }
+      name: string;
+      symbol: string;
+      decimals: number;
+    };
   }) {
     // no-op
   }
 
   watchAsset(_options: {
-    onCancel: () => void
-    onApprove: () => void
-    type: string
-    address: string
-    symbol?: string
-    decimals?: number
-    image?: string
+    onCancel: () => void;
+    onApprove: () => void;
+    type: string;
+    address: string;
+    symbol?: string;
+    decimals?: number;
+    image?: string;
   }) {
     // no-op
   }
 
   switchEthereumChain(_options: {
-    onCancel: () => void
-    onApprove: () => void
-    chainId: string
+    onCancel: () => void;
+    onApprove: () => void;
+    chainId: string;
   }) {
     // no-op
   }
 
   requestEthereumAccounts(options: { onCancel: () => void }): void {
-    this.linkFlow.open({ onCancel: options.onCancel })
+    this.linkFlow.open({ onCancel: options.onCancel });
   }
 
   hideRequestEthereumAccounts(): void {
-    this.linkFlow.close()
+    this.linkFlow.close();
   }
 
   signEthereumMessage(_: {
-    request: SignEthereumMessageRequest
-    onSuccess: (response: SignEthereumMessageResponse) => void
-    onCancel: () => void
+    request: SignEthereumMessageRequest;
+    onSuccess: (response: SignEthereumMessageResponse) => void;
+    onCancel: () => void;
   }): void {
     // No-op
   }
 
   signEthereumTransaction(_: {
-    request: SignEthereumTransactionRequest
-    onSuccess: (response: SignEthereumTransactionResponse) => void
-    onCancel: () => void
+    request: SignEthereumTransactionRequest;
+    onSuccess: (response: SignEthereumTransactionResponse) => void;
+    onCancel: () => void;
   }): void {
     // No-op
   }
 
   submitEthereumTransaction(_: {
-    request: SubmitEthereumTransactionRequest
-    onSuccess: (response: SubmitEthereumTransactionResponse) => void
-    onCancel: () => void
+    request: SubmitEthereumTransactionRequest;
+    onSuccess: (response: SubmitEthereumTransactionResponse) => void;
+    onCancel: () => void;
   }): void {
     // No-op
   }
 
   ethereumAddressFromSignedMessage(_: {
-    request: EthereumAddressFromSignedMessageRequest
-    onSuccess: (response: EthereumAddressFromSignedMessageResponse) => void
+    request: EthereumAddressFromSignedMessageRequest;
+    onSuccess: (response: EthereumAddressFromSignedMessageResponse) => void;
   }): void {
     // No-op
   }
 
   showConnecting(options: {
-    isUnlinkedErrorState?: boolean
-    onCancel: () => void
-    onResetConnection: () => void
+    isUnlinkedErrorState?: boolean;
+    onCancel: () => void;
+    onResetConnection: () => void;
   }): () => void {
-    let snackbarProps: SnackbarInstanceProps
+    let snackbarProps: SnackbarInstanceProps;
     if (options.isUnlinkedErrorState) {
       snackbarProps = {
         autoExpand: true,
@@ -156,7 +156,7 @@ export class WalletSDKUI implements WalletUI {
             onClick: options.onResetConnection
           }
         ]
-      }
+      };
     } else {
       snackbarProps = {
         message: "Confirm on phone",
@@ -182,33 +182,33 @@ export class WalletSDKUI implements WalletUI {
             onClick: options.onResetConnection
           }
         ]
-      }
+      };
     }
 
-    return this.snackbar.presentItem(snackbarProps)
+    return this.snackbar.presentItem(snackbarProps);
   }
 
   reloadUI(): void {
-    document.location.reload()
+    document.location.reload();
   }
 
   inlineAccountsResponse(): boolean {
-    return false
+    return false;
   }
 
   inlineAddEthereumChain(_chainId: string): boolean {
-    return false
+    return false;
   }
 
   inlineWatchAsset(): boolean {
-    return false
+    return false;
   }
 
   inlineSwitchEthereumChain(): boolean {
-    return false
+    return false;
   }
 
   isStandalone(): boolean {
-    return false
+    return false;
   }
 }

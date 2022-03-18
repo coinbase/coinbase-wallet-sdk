@@ -8,8 +8,8 @@ import {
   of,
   Subject,
   throwError
-} from "rxjs"
-import { flatMap, take } from "rxjs/operators"
+} from "rxjs";
+import { flatMap, take } from "rxjs/operators";
 
 export enum ConnectionState {
   DISCONNECTED,
@@ -21,12 +21,12 @@ export enum ConnectionState {
  * Rx-ified WebSocket
  */
 export class RxWebSocket<T = object> {
-  private readonly url: string
-  private webSocket: WebSocket | null = null
+  private readonly url: string;
+  private webSocket: WebSocket | null = null;
   private connectionStateSubject = new BehaviorSubject<ConnectionState>(
     ConnectionState.DISCONNECTED
-  )
-  private incomingDataSubject = new Subject<string>()
+  );
+  private incomingDataSubject = new Subject<string>();
 
   /**
    * Constructor
@@ -37,7 +37,7 @@ export class RxWebSocket<T = object> {
     url: string,
     private readonly WebSocketClass: typeof WebSocket = WebSocket
   ) {
-    this.url = url.replace(/^http/, "ws")
+    this.url = url.replace(/^http/, "ws");
   }
 
   /**
@@ -46,45 +46,45 @@ export class RxWebSocket<T = object> {
    */
   public connect(): Observable<void> {
     if (this.webSocket) {
-      return throwError(new Error("webSocket object is not null"))
+      return throwError(new Error("webSocket object is not null"));
     }
     return new Observable<void>(obs => {
-      let webSocket: WebSocket
+      let webSocket: WebSocket;
       try {
-        this.webSocket = webSocket = new this.WebSocketClass(this.url)
+        this.webSocket = webSocket = new this.WebSocketClass(this.url);
       } catch (err) {
-        obs.error(err)
-        return
+        obs.error(err);
+        return;
       }
-      this.connectionStateSubject.next(ConnectionState.CONNECTING)
+      this.connectionStateSubject.next(ConnectionState.CONNECTING);
       webSocket.onclose = evt => {
-        this.clearWebSocket()
-        obs.error(new Error(`websocket error ${evt.code}: ${evt.reason}`))
-        this.connectionStateSubject.next(ConnectionState.DISCONNECTED)
-      }
+        this.clearWebSocket();
+        obs.error(new Error(`websocket error ${evt.code}: ${evt.reason}`));
+        this.connectionStateSubject.next(ConnectionState.DISCONNECTED);
+      };
       webSocket.onopen = _ => {
-        obs.next()
-        obs.complete()
-        this.connectionStateSubject.next(ConnectionState.CONNECTED)
-      }
+        obs.next();
+        obs.complete();
+        this.connectionStateSubject.next(ConnectionState.CONNECTED);
+      };
       webSocket.onmessage = evt => {
-        this.incomingDataSubject.next(evt.data as string)
-      }
-    }).pipe(take(1))
+        this.incomingDataSubject.next(evt.data as string);
+      };
+    }).pipe(take(1));
   }
 
   /**
    * Disconnect from server
    */
   public disconnect(): void {
-    const { webSocket } = this
+    const { webSocket } = this;
     if (!webSocket) {
-      return
+      return;
     }
-    this.clearWebSocket()
-    this.connectionStateSubject.next(ConnectionState.DISCONNECTED)
+    this.clearWebSocket();
+    this.connectionStateSubject.next(ConnectionState.DISCONNECTED);
     try {
-      webSocket.close()
+      webSocket.close();
     } catch {}
   }
 
@@ -93,7 +93,7 @@ export class RxWebSocket<T = object> {
    * @returns an Observable for the connection state
    */
   public get connectionState$(): Observable<ConnectionState> {
-    return this.connectionStateSubject.asObservable()
+    return this.connectionStateSubject.asObservable();
   }
 
   /**
@@ -101,7 +101,7 @@ export class RxWebSocket<T = object> {
    * @returns an Observable for the data received
    */
   public get incomingData$(): Observable<string> {
-    return this.incomingDataSubject.asObservable()
+    return this.incomingDataSubject.asObservable();
   }
 
   /**
@@ -111,15 +111,15 @@ export class RxWebSocket<T = object> {
   public get incomingJSONData$(): Observable<T> {
     return this.incomingData$.pipe(
       flatMap(m => {
-        let j: any
+        let j: any;
         try {
-          j = JSON.parse(m)
+          j = JSON.parse(m);
         } catch (err) {
-          return empty()
+          return empty();
         }
-        return of(j)
+        return of(j);
       })
-    )
+    );
   }
 
   /**
@@ -127,22 +127,22 @@ export class RxWebSocket<T = object> {
    * @param data text to send
    */
   public sendData(data: string): void {
-    const { webSocket } = this
+    const { webSocket } = this;
     if (!webSocket) {
-      throw new Error("websocket is not connected")
+      throw new Error("websocket is not connected");
     }
-    webSocket.send(data)
+    webSocket.send(data);
   }
 
   private clearWebSocket(): void {
-    const { webSocket } = this
+    const { webSocket } = this;
     if (!webSocket) {
-      return
+      return;
     }
-    this.webSocket = null
-    webSocket.onclose = null
-    webSocket.onerror = null
-    webSocket.onmessage = null
-    webSocket.onopen = null
+    this.webSocket = null;
+    webSocket.onclose = null;
+    webSocket.onerror = null;
+    webSocket.onmessage = null;
+    webSocket.onopen = null;
   }
 }

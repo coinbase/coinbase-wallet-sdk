@@ -118,30 +118,30 @@ npm update @coinbase/wallet-sdk
 
 ```typescript
 // TypeScript
-import CoinbaseWalletSDK from "@coinbase/wallet-sdk"
-import Web3 from "web3"
+import CoinbaseWalletSDK from "@coinbase/wallet-sdk";
+import Web3 from "web3";
 
-const APP_NAME = "My Awesome App"
-const APP_LOGO_URL = "https://example.com/logo.png"
+const APP_NAME = "My Awesome App";
+const APP_LOGO_URL = "https://example.com/logo.png";
 const DEFAULT_ETH_JSONRPC_URL =
-  "https://mainnet.infura.io/v3/<YOUR_INFURA_API_KEY>"
-const DEFAULT_CHAIN_ID = 1
+  "https://mainnet.infura.io/v3/<YOUR_INFURA_API_KEY>";
+const DEFAULT_CHAIN_ID = 1;
 
 // Initialize Coinbase Wallet SDK
 export const coinbaseWallet = new CoinbaseWalletSDK({
   appName: APP_NAME,
   appLogoUrl: APP_LOGO_URL,
   darkMode: false
-})
+});
 
 // Initialize a Web3 Provider object
 export const ethereum = coinbaseWallet.makeWeb3Provider(
   DEFAULT_ETH_JSONRPC_URL,
   DEFAULT_CHAIN_ID
-)
+);
 
 // Initialize a Web3 object
-export const web3 = new Web3(ethereum as any)
+export const web3 = new Web3(ethereum as any);
 ```
 
 Coinbase Wallet SDK uses an rpcUrl provided by Coinbase Wallet clients
@@ -159,17 +159,17 @@ The following code runs in response to a user-initiated action such as clicking 
 ```typescript
 // Use eth_requestAccounts
 ethereum.request("eth_requestAccounts").then((accounts: string[]) => {
-  console.log(`User's address is ${accounts[0]}`)
+  console.log(`User's address is ${accounts[0]}`);
 
   // Optionally, have the default account set for web3.js
-  web3.eth.defaultAccount = accounts[0]
-})
+  web3.eth.defaultAccount = accounts[0];
+});
 
 // Alternatively, you can use ethereum.enable()
 ethereum.enable().then((accounts: string[]) => {
-  console.log(`User's address is ${accounts[0]}`)
-  web3.eth.defaultAccount = accounts[0]
-})
+  console.log(`User's address is ${accounts[0]}`);
+  web3.eth.defaultAccount = accounts[0];
+});
 ```
 
 Once the user obtains authorization, the Web3 object (`web3`) and the Web3
@@ -276,13 +276,13 @@ Unlike other methods, the default definition of `wallet_watchAsset` params is no
 
 ```typescript
 interface WatchAssetParameters {
-  type: string // The asset's interface, e.g. 'ERC20'
+  type: string; // The asset's interface, e.g. 'ERC20'
   options: {
-    address: string // The hexadecimal Ethereum address of the token contract
-    symbol?: string // A ticker symbol or shorthand, up to 5 alphanumerical characters
-    decimals?: number // The number of asset decimals
-    image?: string // A string url of the token logo
-  }
+    address: string; // The hexadecimal Ethereum address of the token contract
+    symbol?: string; // A ticker symbol or shorthand, up to 5 alphanumerical characters
+    decimals?: number; // The number of asset decimals
+    image?: string; // A string url of the token logo
+  };
 }
 ```
 
@@ -327,9 +327,9 @@ ethereum.request({
 To disconnect or disestablish a link, call the instance method `disconnect()` on the `CoinbaseWallet` object/instance, or the instance method `close()` on the Coinbase Wallet SDK Web3 Provider object. This disestablishes the link, and requires the user to reconnect by scanning QR code again.
 
 ```typescript
-coinbaseWallet.disconnect()
+coinbaseWallet.disconnect();
 // is the same as the following:
-ethereum.close()
+ethereum.close();
 ```
 
 ## Libraries using Coinbase Wallet SDK

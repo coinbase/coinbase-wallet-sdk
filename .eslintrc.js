@@ -206,4 +206,4 @@ module.exports = {
     "use-isnan": "error",
     "valid-typeof": "off"
   }
-}
+};

@@ -1,53 +1,53 @@
-import clsx from "clsx"
-import { FunctionComponent, h } from "preact"
-import { useCallback, useEffect, useState } from "preact/hooks"
+import clsx from "clsx";
+import { FunctionComponent, h } from "preact";
+import { useCallback, useEffect, useState } from "preact/hooks";
 
-import { LIB_VERSION } from "../version"
-import globeIcon from "./icons/globe-icon-svg"
-import linkIcon from "./icons/link-icon-svg"
-import lockIcon from "./icons/lock-icon-svg"
-import walletLogo from "./icons/QRLogo"
-import { QRCode } from "./QRCode"
-import { Spinner } from "./Spinner"
-import css from "./TryExtensionLinkDialog-css"
+import { LIB_VERSION } from "../version";
+import globeIcon from "./icons/globe-icon-svg";
+import linkIcon from "./icons/link-icon-svg";
+import lockIcon from "./icons/lock-icon-svg";
+import walletLogo from "./icons/QRLogo";
+import { QRCode } from "./QRCode";
+import { Spinner } from "./Spinner";
+import css from "./TryExtensionLinkDialog-css";
 
 export const TryExtensionLinkDialog: FunctionComponent<{
-  darkMode: boolean
-  version: string
-  sessionId: string
-  sessionSecret: string
-  linkAPIUrl: string
-  isOpen: boolean
-  isConnected: boolean
-  isParentConnection: boolean
-  connectDisabled: boolean
-  onCancel: (() => void) | null
+  darkMode: boolean;
+  version: string;
+  sessionId: string;
+  sessionSecret: string;
+  linkAPIUrl: string;
+  isOpen: boolean;
+  isConnected: boolean;
+  isParentConnection: boolean;
+  connectDisabled: boolean;
+  onCancel: (() => void) | null;
 }> = props => {
-  const [isContainerHidden, setContainerHidden] = useState(!props.isOpen)
-  const [isDialogHidden, setDialogHidden] = useState(!props.isOpen)
+  const [isContainerHidden, setContainerHidden] = useState(!props.isOpen);
+  const [isDialogHidden, setDialogHidden] = useState(!props.isOpen);
 
   useEffect(() => {
-    const { isOpen } = props
+    const { isOpen } = props;
     const timers = [
       window.setTimeout(() => {
-        setDialogHidden(!isOpen)
+        setDialogHidden(!isOpen);
       }, 10)
-    ]
+    ];
 
     if (isOpen) {
-      setContainerHidden(false)
+      setContainerHidden(false);
     } else {
       timers.push(
         window.setTimeout(() => {
-          setContainerHidden(true)
+          setContainerHidden(true);
         }, 360)
-      )
+      );
     }
 
     return () => {
-      timers.forEach(window.clearTimeout)
-    }
-  }, [props.isOpen])
+      timers.forEach(window.clearTimeout);
+    };
+  }, [props.isOpen]);
 
   return (
     <div
@@ -75,7 +75,7 @@ export const TryExtensionLinkDialog: FunctionComponent<{
               window.open(
                 "https://api.wallet.coinbase.com/rpc/v2/desktop/chrome",
                 "_blank"
-              )
+              );
             }}
           />
           {!props.connectDisabled ? (
@@ -94,22 +94,22 @@ export const TryExtensionLinkDialog: FunctionComponent<{
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 const TryExtensionBox: FunctionComponent<{
-  onInstallClick: () => void
+  onInstallClick: () => void;
 }> = ({ onInstallClick }) => {
-  const [isClicked, setIsClicked] = useState(false)
+  const [isClicked, setIsClicked] = useState(false);
 
   const clickHandler = useCallback(() => {
     if (isClicked) {
-      window.location.reload()
+      window.location.reload();
     } else {
-      onInstallClick()
-      setIsClicked(true)
+      onInstallClick();
+      setIsClicked(true);
     }
-  }, [])
+  }, []);
 
   return (
     <div class="-cbwsdk-extension-dialog-box-top">
@@ -140,21 +140,21 @@ const TryExtensionBox: FunctionComponent<{
         />
       </div>
     </div>
-  )
-}
+  );
+};
 
 const ScanQRBox: FunctionComponent<{
-  darkMode: boolean
-  version: string
-  sessionId: string
-  sessionSecret: string
-  linkAPIUrl: string
-  isConnected: boolean
-  isParentConnection: boolean
+  darkMode: boolean;
+  version: string;
+  sessionId: string;
+  sessionSecret: string;
+  linkAPIUrl: string;
+  isConnected: boolean;
+  isParentConnection: boolean;
 }> = props => {
-  const serverUrl = window.encodeURIComponent(props.linkAPIUrl)
-  const sessionIdKey = props.isParentConnection ? "parent-id" : "id"
-  const qrUrl = `${props.linkAPIUrl}/#/link?${sessionIdKey}=${props.sessionId}&secret=${props.sessionSecret}&server=${serverUrl}&v=1`
+  const serverUrl = window.encodeURIComponent(props.linkAPIUrl);
+  const sessionIdKey = props.isParentConnection ? "parent-id" : "id";
+  const qrUrl = `${props.linkAPIUrl}/#/link?${sessionIdKey}=${props.sessionId}&secret=${props.sessionSecret}&server=${serverUrl}&v=1`;
 
   return (
     <div class="-cbwsdk-extension-dialog-box-bottom">
@@ -197,12 +197,12 @@ const ScanQRBox: FunctionComponent<{
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
 const DescriptionItem: FunctionComponent<{
-  icon: string
-  text: string
+  icon: string;
+  text: string;
 }> = props => {
   return (
     <div class="-cbwsdk-extension-dialog-box-top-description">
@@ -213,8 +213,8 @@ const DescriptionItem: FunctionComponent<{
         {props.text}
       </body>
     </div>
-  )
-}
+  );
+};
 
 const CancelButton: FunctionComponent<{ onClick: () => void }> = props => (
   <button
@@ -224,4 +224,4 @@ const CancelButton: FunctionComponent<{ onClick: () => void }> = props => (
   >
     <div class="-cbwsdk-extension-dialog-box-cancel-x" />
   </button>
-)
+);
