@@ -41,19 +41,19 @@ export enum JSONRPCMethod {
 }
 
 export interface JSONRPCRequest<T = any> {
-  jsonrpc: "2.0"
-  id: number
-  method: string
-  params: T
+  jsonrpc: "2.0";
+  id: number;
+  method: string;
+  params: T;
 }
 
 export interface JSONRPCResponse<T = any, U = any> {
-  jsonrpc: "2.0"
-  id: number
-  result?: T
+  jsonrpc: "2.0";
+  id: number;
+  result?: T;
   error?: {
-    code: number
-    message: string
-    data?: U
-  } | null
+    code: number;
+    message: string;
+    data?: U;
+  } | null;
 }

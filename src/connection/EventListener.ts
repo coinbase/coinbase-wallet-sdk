@@ -1,5 +1,5 @@
 export interface EventListener {
-  onEvent(eventType: string, eventProperties?: any): void
+  onEvent(eventType: string, eventProperties?: any): void;
 }
 
 export const EVENTS = {
@@ -23,4 +23,4 @@ export const EVENTS = {
   WEB3_REQUEST_PUBLISHED: "walletlink_sdk.web3.request_published",
   WEB3_RESPONSE: "walletlink_sdk.web3.response",
   UNKNOWN_ADDRESS_ENCOUNTERED: "walletlink_sdk.unknown_address_encountered"
-}
+};
