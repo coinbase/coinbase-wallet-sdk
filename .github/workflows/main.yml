@@ -13,10 +13,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: 'nvm install lts/* && npm install'
-        uses: ljharb/actions/node/install@main
+      - name: Checkout node action
+        uses: actions/setup-node@v2
         with:
-          node-version: 'lts/*'
+          node-version-file: '.nvmrc'
 
       - name: Install NPM dependencies
         run: yarn install
