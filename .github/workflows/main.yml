@@ -22,14 +22,14 @@ jobs:
       - name: Install NPM dependencies
         run: yarn install
       
-      # - name: Runs compile asset script
-      #   run: ./compile-assets.js # FIXME: Permission denied error
+      - name: Runs compile asset script
+        run: node ./compile-assets.js
 
       - name: Check ESLint
         run: yarn lint:eslint
 
-      # - name: Check Types
-      #   run: yarn lint:types # TODO: Needs to run against generated files
+      - name: Check Types
+        run: yarn lint:types
 
       - name: Check prettier formatting
         run: yarn lint:prettier
