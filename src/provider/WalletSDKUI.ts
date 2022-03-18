@@ -75,7 +75,6 @@ export class WalletSDKUI implements WalletUI {
     // no-op
   }
 
-  // @ts-ignore
   watchAsset(options: {
     onCancel: () => void
     onApprove: () => void
@@ -88,7 +87,6 @@ export class WalletSDKUI implements WalletUI {
     // no-op
   }
 
-  // @ts-ignore
   switchEthereumChain(options: {
     onCancel: () => void
     onApprove: () => void
@@ -198,7 +196,6 @@ export class WalletSDKUI implements WalletUI {
     return false
   }
 
-  // @ts-ignore
   inlineAddEthereumChain(chainId: string): boolean {
     return false
   }

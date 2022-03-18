@@ -1,4 +1,5 @@
 import { ethErrors, serializeError } from "eth-rpc-errors"
+
 import { JSONRPCRequest, JSONRPCResponse } from "../provider/JSONRPC"
 import { AddressString, IntNumber, RegExpString } from "../types"
 import { EthereumTransactionParams } from "./EthereumTransactionParams"

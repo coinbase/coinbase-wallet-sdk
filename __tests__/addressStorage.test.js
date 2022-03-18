@@ -1,8 +1,8 @@
-const { ensureAddressString } = require("../build/npm/dist/util");
-const { CoinbaseWalletSDK } = require("../build/npm/dist");
+const { ensureAddressString } = require("../build/npm/dist/util")
+const { CoinbaseWalletSDK } = require("../build/npm/dist")
 
-describe("address storage tests", function() {
-  it("ensureAddressString returns lowercase string", function() {
+describe("address storage tests", function () {
+  it("ensureAddressString returns lowercase string", function () {
     let input = "0xFadAFCE89EA2221fa33005640Acf2C923312F2b9"
     let output = ensureAddressString(input)
     expect(output).toEqual("0xfadafce89ea2221fa33005640acf2c923312f2b9")
@@ -15,13 +15,16 @@ describe("address storage tests", function() {
     })
 
     const provider = coinbaseWalletSDK.makeWeb3Provider(
-        "https://mainnet.infura.io/v3/INFURA_API_KEY", 1
+      "https://mainnet.infura.io/v3/INFURA_API_KEY",
+      1
     )
 
     provider._addresses = ["0xfadafce89ea2221fa33005640acf2c923312f2b9"]
     provider.enable().then(addresses => {
       addresses[0] = "0xFadAFCE89EA2221fa33005640Acf2C923312F2b9"
-      expect(provider._addresses[0]).toEqual("0xfadafce89ea2221fa33005640acf2c923312f2b9")
+      expect(provider._addresses[0]).toEqual(
+        "0xfadafce89ea2221fa33005640acf2c923312f2b9"
+      )
       done()
     })
   })
@@ -33,13 +36,16 @@ describe("address storage tests", function() {
     })
 
     const provider = coinbaseWalletSDK.makeWeb3Provider(
-        "https://mainnet.infura.io/v3/INFURA_API_KEY", 1
+      "https://mainnet.infura.io/v3/INFURA_API_KEY",
+      1
     )
 
     provider._addresses = ["0xfadafce89ea2221fa33005640acf2c923312f2b9"]
-    provider.request({method: "eth_accounts"}).then(addresses => {
+    provider.request({ method: "eth_accounts" }).then(addresses => {
       addresses[0] = "0xFadAFCE89EA2221fa33005640Acf2C923312F2b9"
-      expect(provider._addresses[0]).toEqual("0xfadafce89ea2221fa33005640acf2c923312f2b9")
+      expect(provider._addresses[0]).toEqual(
+        "0xfadafce89ea2221fa33005640acf2c923312f2b9"
+      )
       done()
     })
   })
@@ -51,13 +57,18 @@ describe("address storage tests", function() {
     })
 
     const provider = coinbaseWalletSDK.makeWeb3Provider(
-        "https://mainnet.infura.io/v3/INFURA_API_KEY", 1
+      "https://mainnet.infura.io/v3/INFURA_API_KEY",
+      1
     )
     provider.supportsAddressSwitching = false
 
     provider._addresses = ["0xfadafce89ea2221fa33005640acf2c923312f2b9"]
     await provider.initializeRelay()
-    provider._relay.accountsCallback(["0x7f268357A8c2552623316e2562D90e642bB538E5"])
-    expect(provider._addresses[0]).toEqual("0xfadafce89ea2221fa33005640acf2c923312f2b9")
+    provider._relay.accountsCallback([
+      "0x7f268357A8c2552623316e2562D90e642bB538E5"
+    ])
+    expect(provider._addresses[0]).toEqual(
+      "0xfadafce89ea2221fa33005640acf2c923312f2b9"
+    )
   })
 })

@@ -26,7 +26,6 @@ import {
   timeoutWith
 } from "rxjs/operators"
 
-import { EventListener, EVENTS } from "./EventListener"
 import { Session } from "../relay/Session"
 import { IntNumber } from "../types"
 import {
@@ -37,6 +36,7 @@ import {
   ClientMessagePublishEvent,
   ClientMessageSetSessionConfig
 } from "./ClientMessage"
+import { EventListener, EVENTS } from "./EventListener"
 import { ConnectionState, RxWebSocket } from "./RxWebSocket"
 import {
   isServerMessageFail,

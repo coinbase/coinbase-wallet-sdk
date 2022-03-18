@@ -31,9 +31,8 @@ export class LinkFlow {
   private readonly isParentConnection: boolean
 
   private readonly connected$: Observable<boolean>
-  private readonly extensionUI$: BehaviorSubject<
-    Optional<boolean>
-  > = new BehaviorSubject({})
+  private readonly extensionUI$: BehaviorSubject<Optional<boolean>> =
+    new BehaviorSubject({})
   private readonly subscriptions = new Subscription()
 
   private isConnected = false
@@ -66,7 +65,7 @@ export class LinkFlow {
         }
       })
       .catch(err => {
-        console.error('Couldn\'t fetch feature flags - ', err)
+        console.error("Couldn't fetch feature flags - ", err)
         this.extensionUI$.next({ value: false })
       })
   }

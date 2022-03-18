@@ -162,7 +162,8 @@ export class CoinbaseWalletProvider
     return prepend0x(this.getChainId().toString(16))
   }
 
-  public get isWalletLink(): boolean { // backward compatibility
+  public get isWalletLink(): boolean {
+    // backward compatibility
     return true
   }
 
@@ -273,12 +274,11 @@ export class CoinbaseWalletProvider
     }
 
     const relay = await this.initializeRelay()
-      const isWhitelistedNetworkOrStandalone = relay.inlineAddEthereumChain(chainId.toString())
+    const isWhitelistedNetworkOrStandalone = relay.inlineAddEthereumChain(
+      chainId.toString()
+    )
 
-    if (
-      !this._isAuthorized() &&
-      !isWhitelistedNetworkOrStandalone 
-    ) {
+    if (!this._isAuthorized() && !isWhitelistedNetworkOrStandalone) {
       await relay.requestEthereumAccounts().promise
     }
 
@@ -728,11 +728,11 @@ export class CoinbaseWalletProvider
 
   private _isKnownAddress(addressString: string): boolean {
     try {
-      const address = ensureAddressString(addressString)
+      const addressStr = ensureAddressString(addressString)
       const lowercaseAddresses = this._addresses.map(address =>
         ensureAddressString(address)
       )
-      return lowercaseAddresses.includes(address)
+      return lowercaseAddresses.includes(addressStr)
     } catch {}
     return false
   }
@@ -1139,7 +1139,7 @@ export class CoinbaseWalletProvider
       })
     }
 
-    const chainId = this.getChainId();
+    const chainId = this.getChainId()
     const { address, symbol, image, decimals } = request.options
 
     const res = await this.watchAsset(

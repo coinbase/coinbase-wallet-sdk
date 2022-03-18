@@ -5,11 +5,10 @@ import clsx from "clsx"
 import { FunctionComponent, h } from "preact"
 import { useEffect, useState } from "preact/hooks"
 
+import { LIB_VERSION } from "../version"
 import css from "./LinkDialog-css"
 import { QRCode } from "./QRCode"
 import { Spinner } from "./Spinner"
-
-import { LIB_VERSION } from '../version';
 
 export const LinkDialog: FunctionComponent<{
   darkMode: boolean
@@ -125,14 +124,12 @@ const ScanQRCode: FunctionComponent<{
             <p>Connecting...</p>
           </div>
         )}
-        <p title={`Coinbase Wallet SDK v${props.version}`}>Powered by Coinbase Wallet SDK</p>
+        <p title={`Coinbase Wallet SDK v${props.version}`}>
+          Powered by Coinbase Wallet SDK
+        </p>
       </div>
 
-      <a
-        href={`${props.linkAPIUrl}/#/wallets`}
-        target="_blank"
-        rel="noopener"
-      >
+      <a href={`${props.linkAPIUrl}/#/wallets`} target="_blank" rel="noopener">
         Don&rsquo;t have a wallet app?
       </a>
     </div>

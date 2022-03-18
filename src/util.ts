@@ -22,11 +22,13 @@ export function randomBytesHex(length: number): string {
 }
 
 export function uint8ArrayToHex(value: Uint8Array) {
-  return [...value].map(b => b.toString(16).padStart(2, '0')).join('')
+  return [...value].map(b => b.toString(16).padStart(2, "0")).join("")
 }
 
 export function hexStringToUint8Array(hexString: string): Uint8Array {
-  return new Uint8Array(hexString.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
+  return new Uint8Array(
+    hexString.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16))
+  )
 }
 
 export function hexStringFromBuffer(
@@ -166,9 +168,7 @@ export function ensureBN(val: unknown): BN {
   throw new Error(`Not an integer: ${String(val)}`)
 }
 
-export function ensureParsedJSONObject<T extends object>(
-  val: unknown
-): T {
+export function ensureParsedJSONObject<T extends object>(val: unknown): T {
   if (typeof val === "string") {
     return JSON.parse(val) as T
   }
