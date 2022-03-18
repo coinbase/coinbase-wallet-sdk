@@ -33,6 +33,8 @@
     "lint:types": "tsc --noEmit",
     "lint:prettier": "prettier --check \"{src,__tests__}/**/*.(js|ts|tsx)\"",
     "lint:eslint": "eslint ./src --ext .ts,.tsx",
+    "fix:eslint": "yarn lint:eslint --fix",
+    "fix:prettier": "prettier . --write",
     "pretest": "yarn lint:eslint && yarn lint:types && yarn lint:prettier"
   },
   "private": true,
