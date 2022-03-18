@@ -1,6 +1,6 @@
 import clsx from "clsx"
 import { FunctionComponent, h } from "preact"
-import { useEffect, useState } from "preact/hooks"
+import { useCallback, useEffect, useState } from "preact/hooks"
 
 import { LIB_VERSION } from "../version"
 import globeIcon from "./icons/globe-icon-svg"
@@ -99,17 +99,17 @@ export const TryExtensionLinkDialog: FunctionComponent<{
 
 const TryExtensionBox: FunctionComponent<{
   onInstallClick: () => void
-}> = props => {
+}> = ({ onInstallClick }) => {
   const [isClicked, setIsClicked] = useState(false)
 
-  const clickHandler = () => {
+  const clickHandler = useCallback(() => {
     if (isClicked) {
       window.location.reload()
     } else {
-      props.onInstallClick()
+      onInstallClick()
       setIsClicked(true)
     }
-  }
+  }, [])
 
   return (
     <div class="-cbwsdk-extension-dialog-box-top">
@@ -121,7 +121,7 @@ const TryExtensionBox: FunctionComponent<{
             again.
           </div>
         )}
-        <button onClick={clickHandler}>
+        <button type="button" onClick={clickHandler}>
           {isClicked ? "Refresh" : "Install"}
         </button>
       </div>
@@ -163,7 +163,7 @@ const ScanQRBox: FunctionComponent<{
         <body class="-cbwsdk-extension-dialog-box-bottom-description">
           Open{" "}
           <a
-            href={"https://wallet.coinbase.com/"}
+            href="https://wallet.coinbase.com/"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -217,7 +217,11 @@ const DescriptionItem: FunctionComponent<{
 }
 
 const CancelButton: FunctionComponent<{ onClick: () => void }> = props => (
-  <button class="-cbwsdk-extension-dialog-box-cancel" onClick={props.onClick}>
+  <button
+    type="button"
+    class="-cbwsdk-extension-dialog-box-cancel"
+    onClick={props.onClick}
+  >
     <div class="-cbwsdk-extension-dialog-box-cancel-x" />
   </button>
 )
