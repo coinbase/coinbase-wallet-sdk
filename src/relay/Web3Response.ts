@@ -11,22 +11,22 @@ interface BaseWeb3Response<Result> {
 }
 
 export class ErrorResponse implements BaseWeb3Response<void>, Error {
-  method: Web3Method
-  errorCode?: number
-  errorMessage: string
-  name: string
-  message: string
+  method: Web3Method;
+  errorCode?: number;
+  errorMessage: string;
+  name: string;
+  message: string;
 
   constructor(method: Web3Method, errorMessage: string, errorCode?: number) {
-    this.method = method
-    this.errorMessage = errorMessage
-    this.errorCode = errorCode
-    this.name = method
-    this.message = errorMessage
+    this.method = method;
+    this.errorMessage = errorMessage;
+    this.errorCode = errorCode;
+    this.name = method;
+    this.message = errorMessage;
   }
 }
 
-export const USER_REJECTED_REQUEST_ERROR = new Error("User rejected request")
+export const USER_REJECTED_REQUEST_ERROR = new Error("User rejected request");
 
 export type RequestEthereumAccountsResponse = BaseWeb3Response<
   AddressString[] // an array of ethereum addresses

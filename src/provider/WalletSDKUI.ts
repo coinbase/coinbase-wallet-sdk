@@ -57,46 +57,46 @@ export class WalletSDKUI implements WalletUI {
   }
 
   addEthereumChain(_options: {
-    onCancel: (error?: Error) => void
-    onApprove: () => void
-    chainId: string
-    rpcUrls: string[]
-    blockExplorerUrls?: string[]
-    chainName?: string
-    iconUrls?: string[]
+    onCancel: (error?: Error) => void;
+    onApprove: () => void;
+    chainId: string;
+    rpcUrls: string[];
+    blockExplorerUrls?: string[];
+    chainName?: string;
+    iconUrls?: string[];
     nativeCurrency?: {
-      name: string
-      symbol: string
-      decimals: number
-    }
+      name: string;
+      symbol: string;
+      decimals: number;
+    };
   }) {
     // no-op
   }
 
   watchAsset(_options: {
-    onCancel: (error?: Error) => void
-    onApprove: () => void
-    type: string
-    address: string
-    symbol?: string
-    decimals?: number
-    image?: string
+    onCancel: (error?: Error) => void;
+    onApprove: () => void;
+    type: string;
+    address: string;
+    symbol?: string;
+    decimals?: number;
+    image?: string;
   }) {
     // no-op
   }
 
   switchEthereumChain(_options: {
-    onCancel: (error?: Error) => void
-    onApprove: () => void
-    chainId: string
+    onCancel: (error?: Error) => void;
+    onApprove: () => void;
+    chainId: string;
   }) {
     // no-op
   }
 
   requestEthereumAccounts(options: {
-    onCancel: (error?: Error) => void
+    onCancel: (error?: Error) => void;
   }): void {
-    this.linkFlow.open({ onCancel: options.onCancel })
+    this.linkFlow.open({ onCancel: options.onCancel });
   }
 
   hideRequestEthereumAccounts(): void {
@@ -104,25 +104,25 @@ export class WalletSDKUI implements WalletUI {
   }
 
   signEthereumMessage(_: {
-    request: SignEthereumMessageRequest
-    onSuccess: (response: SignEthereumMessageResponse) => void
-    onCancel: (error?: Error) => void
+    request: SignEthereumMessageRequest;
+    onSuccess: (response: SignEthereumMessageResponse) => void;
+    onCancel: (error?: Error) => void;
   }): void {
     // No-op
   }
 
   signEthereumTransaction(_: {
-    request: SignEthereumTransactionRequest
-    onSuccess: (response: SignEthereumTransactionResponse) => void
-    onCancel: (error?: Error) => void
+    request: SignEthereumTransactionRequest;
+    onSuccess: (response: SignEthereumTransactionResponse) => void;
+    onCancel: (error?: Error) => void;
   }): void {
     // No-op
   }
 
   submitEthereumTransaction(_: {
-    request: SubmitEthereumTransactionRequest
-    onSuccess: (response: SubmitEthereumTransactionResponse) => void
-    onCancel: (error?: Error) => void
+    request: SubmitEthereumTransactionRequest;
+    onSuccess: (response: SubmitEthereumTransactionResponse) => void;
+    onCancel: (error?: Error) => void;
   }): void {
     // No-op
   }
@@ -135,9 +135,9 @@ export class WalletSDKUI implements WalletUI {
   }
 
   showConnecting(options: {
-    isUnlinkedErrorState?: boolean
-    onCancel: (error?: Error) => void
-    onResetConnection: () => void
+    isUnlinkedErrorState?: boolean;
+    onCancel: (error?: Error) => void;
+    onResetConnection: () => void;
   }): () => void {
     let snackbarProps: SnackbarInstanceProps;
     if (options.isUnlinkedErrorState) {
