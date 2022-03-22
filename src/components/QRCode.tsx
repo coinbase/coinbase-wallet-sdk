@@ -1,22 +1,22 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { FunctionComponent, h } from "preact"
-import { useEffect, useState } from "preact/hooks"
+import { FunctionComponent, h } from "preact";
+import { useEffect, useState } from "preact/hooks";
 
-import QRCodeSVG from "../vendor-js/qrcode-svg"
+import QRCodeSVG from "../vendor-js/qrcode-svg";
 
 export interface QRCodeProps {
-  content: string
-  width?: number
-  height?: number
-  fgColor?: string
-  bgColor?: string
-  image?: QRCodeSVG.SvgLogo
+  content: string;
+  width?: number;
+  height?: number;
+  fgColor?: string;
+  bgColor?: string;
+  image?: QRCodeSVG.SvgLogo;
 }
 
 export const QRCode: FunctionComponent<QRCodeProps> = props => {
-  const [svg, setSvg] = useState("")
+  const [svg, setSvg] = useState("");
 
   useEffect(() => {
     const qrcode = new QRCodeSVG({
@@ -29,10 +29,10 @@ export const QRCode: FunctionComponent<QRCodeProps> = props => {
       height: props.height ?? 256,
       padding: 0,
       image: props.image
-    })
-    const base64 = Buffer.from(qrcode.svg(), "utf8").toString("base64")
-    setSvg(`data:image/svg+xml;base64,${base64}`)
-  })
+    });
+    const base64 = Buffer.from(qrcode.svg(), "utf8").toString("base64");
+    setSvg(`data:image/svg+xml;base64,${base64}`);
+  });
 
-  return svg ? <img src={svg} alt="QR Code" /> : null
-}
+  return svg ? <img src={svg} alt="QR Code" /> : null;
+};

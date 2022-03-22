@@ -17,7 +17,7 @@
     }
 
     svg {
-      opacity: 0.0;
+      opacity: 0;
       position: absolute;
     }
   }
@@ -52,17 +52,17 @@
 
       &-header:hover {
         .-gear-container svg {
-          opacity: 1.0
+          opacity: 1;
         }
       }
 
       &-header {
         display: flex;
         align-items: center;
-        background: #FFFFFF;
+        background: #ffffff;
         overflow: hidden;
 
-        border: 1px solid #E7EBEE;
+        border: 1px solid #e7ebee;
         box-sizing: border-box;
         border-radius: 8px;
         cursor: pointer;
@@ -84,12 +84,13 @@
       }
 
       &-menu {
-        background: #FFFFFF;
+        background: #ffffff;
 
-        transition: opacity .25s ease-in-out, transform .25s linear, visibility 0s;
+        transition: opacity 0.25s ease-in-out, transform 0.25s linear,
+          visibility 0s;
         visibility: hidden;
 
-        border: 1px solid #E7EBEE;
+        border: 1px solid #e7ebee;
         box-sizing: border-box;
         border-radius: 8px;
 
@@ -103,12 +104,12 @@
         }
 
         &-item:hover {
-          background: #F5F7F8;
+          background: #f5f7f8;
           border-radius: 6px;
           transition: background 0.25s;
 
           span {
-            color: #050F19;
+            color: #050f19;
             transition: color 0.25s;
           }
 
@@ -143,18 +144,18 @@
             }
 
             svg path {
-              fill: #DF5F67;
+              fill: #df5f67;
               transition: fill 0.25s;
             }
 
             span {
-              color: #DF5F67;
+              color: #df5f67;
               transition: color 0.25s;
             }
           }
 
           &-info {
-            color: #AAAAAA;
+            color: #aaaaaa;
             font-size: 13px;
             margin: 0 8px 0 32px;
             position: absolute;

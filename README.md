@@ -1,17 +1,17 @@
 # Coinbase Wallet SDK
 
 Coinbase Wallet SDK (formerly WalletLink) lets developers connect their dapps to Coinbase Wallet
-on both mobile web (for iOS and Android) and desktop: 
+on both mobile web (for iOS and Android) and desktop:
 
-- **Mobile**: Users can connect to your mobile web dapp through a deeplink to the 
-dapp browser in Coinbase Wallet Mobile App.
+- **Mobile**: Users can connect to your mobile web dapp through a deeplink to the
+  dapp browser in Coinbase Wallet Mobile App.
 
-- **Desktop**: Users can connect to your desktop app with a QR code in the 
-Coinbase Wallet Mobile App or with the Coinbase Wallet Chrome Extension.
+- **Desktop**: Users can connect to your desktop app with a QR code in the
+  Coinbase Wallet Mobile App or with the Coinbase Wallet Chrome Extension.
 
-Wallet SDK is open-source and uses minimal dependencies for maximum security 
-and no code bloat. Simply drop a few lines of code into your dapp and Wallet 
-SDK takes care of the rest. 
+Wallet SDK is open-source and uses minimal dependencies for maximum security
+and no code bloat. Simply drop a few lines of code into your dapp and Wallet
+SDK takes care of the rest.
 
 ## Getting started
 
@@ -24,7 +24,7 @@ SDK takes care of the rest.
 
 ### Installing Wallet SDK
 
-Install Coinbase Wallet SDK with yarn or npm. 
+Install Coinbase Wallet SDK with yarn or npm.
 
 #### Yarn
 
@@ -41,7 +41,7 @@ yarn info @coinbase/wallet-sdk versions
 yarn add @coinbase/wallet-sdk
 ```
 
-3. Check your installed version. 
+3. Check your installed version.
 
 ```shell
 yarn list @coinbase/wallet-sdk
@@ -62,7 +62,7 @@ npm view @coinbase/wallet-sdk versions
 npm install @coinbase/wallet-sdk
 ```
 
-3. Check your installed version. 
+3. Check your installed version.
 
 ```shell
 npm list @coinbase/wallet-sdk
@@ -70,7 +70,7 @@ npm list @coinbase/wallet-sdk
 
 ### Upgrading Wallet SDK
 
-Upgrade Coinbase Wallet SDK with yarn or npm. 
+Upgrade Coinbase Wallet SDK with yarn or npm.
 
 #### Yarn
 
@@ -88,13 +88,13 @@ yarn upgrade @coinbase/wallet-sdk --latest
 
 #### Npm
 
-1. Compare your installed version of Coinbase Wallet SDK with the latest available version. 
+1. Compare your installed version of Coinbase Wallet SDK with the latest available version.
 
 ```shell
 npm outdated @coinbase/wallet-sdk
 ```
 
-2. If necessary, update `package.json` with the latest major version. 
+2. If necessary, update `package.json` with the latest major version.
 
 ```shell
 {
@@ -112,70 +112,72 @@ npm update @coinbase/wallet-sdk
 
 ## Initializing Wallet SDK and a Wallet SDK-powered Web3 object
 
-> Instructions are in [TypeScript](https://www.typescriptlang.org/). The usage 
-is the same in JavaScript, except for the occasional TypeScript type 
-annotation such as `string[]` or `as any`.
-
+> Instructions are in [TypeScript](https://www.typescriptlang.org/). The usage
+> is the same in JavaScript, except for the occasional TypeScript type
+> annotation such as `string[]` or `as any`.
 
 ```typescript
 // TypeScript
-import CoinbaseWalletSDK from '@coinbase/wallet-sdk'
-import Web3 from 'web3'
+import CoinbaseWalletSDK from "@coinbase/wallet-sdk";
+import Web3 from "web3";
 
-const APP_NAME = 'My Awesome App'
-const APP_LOGO_URL = 'https://example.com/logo.png'
-const DEFAULT_ETH_JSONRPC_URL = 'https://mainnet.infura.io/v3/<YOUR_INFURA_API_KEY>'
-const DEFAULT_CHAIN_ID = 1
+const APP_NAME = "My Awesome App";
+const APP_LOGO_URL = "https://example.com/logo.png";
+const DEFAULT_ETH_JSONRPC_URL =
+  "https://mainnet.infura.io/v3/<YOUR_INFURA_API_KEY>";
+const DEFAULT_CHAIN_ID = 1;
 
 // Initialize Coinbase Wallet SDK
 export const coinbaseWallet = new CoinbaseWalletSDK({
   appName: APP_NAME,
   appLogoUrl: APP_LOGO_URL,
   darkMode: false
-})
+});
 
 // Initialize a Web3 Provider object
-export const ethereum = coinbaseWallet.makeWeb3Provider(DEFAULT_ETH_JSONRPC_URL, DEFAULT_CHAIN_ID)
+export const ethereum = coinbaseWallet.makeWeb3Provider(
+  DEFAULT_ETH_JSONRPC_URL,
+  DEFAULT_CHAIN_ID
+);
 
 // Initialize a Web3 object
-export const web3 = new Web3(ethereum as any)
+export const web3 = new Web3(ethereum as any);
 ```
 
-Coinbase Wallet SDK uses an rpcUrl provided by Coinbase Wallet clients 
-regardless of the rpcUrl passed into `makeWeb3Provider` for whitelisted 
+Coinbase Wallet SDK uses an rpcUrl provided by Coinbase Wallet clients
+regardless of the rpcUrl passed into `makeWeb3Provider` for whitelisted
 networks. Wallet SDK needs an rpcUrl to be provided by the dapp as a fallback.
 
 For more information on using alternate networks, see Switching / Adding Alternative EVM-Compatible Chains below.
 
 ## Getting Ethereum Accounts
 
-Use [EIP-1102](https://eips.ethereum.org/EIPS/eip-1102) to obtain authorization and get Ethereum accounts. Invoking EIP-1102 shows a QR code dialog if the user's mobile wallet is not already connected to your app. 
+Use [EIP-1102](https://eips.ethereum.org/EIPS/eip-1102) to obtain authorization and get Ethereum accounts. Invoking EIP-1102 shows a QR code dialog if the user's mobile wallet is not already connected to your app.
 
 The following code runs in response to a user-initiated action such as clicking a button to ensure the pop up is not blocked by the browser.
 
 ```typescript
 // Use eth_requestAccounts
-ethereum.request('eth_requestAccounts').then((accounts: string[]) => {
-  console.log(`User's address is ${accounts[0]}`)
+ethereum.request("eth_requestAccounts").then((accounts: string[]) => {
+  console.log(`User's address is ${accounts[0]}`);
 
   // Optionally, have the default account set for web3.js
-  web3.eth.defaultAccount = accounts[0]
-})
+  web3.eth.defaultAccount = accounts[0];
+});
 
 // Alternatively, you can use ethereum.enable()
 ethereum.enable().then((accounts: string[]) => {
-  console.log(`User's address is ${accounts[0]}`)
-  web3.eth.defaultAccount = accounts[0]
-})
+  console.log(`User's address is ${accounts[0]}`);
+  web3.eth.defaultAccount = accounts[0];
+});
 ```
 
-Once the user obtains authorization, the Web3 object (`web3`) and the Web3 
+Once the user obtains authorization, the Web3 object (`web3`) and the Web3
 Provider (`ethereum`) are ready to be used.
 
-> If you were using `ethereum.on("accountsChanged")`, remove it and obtain 
-addresses with EIP-1102 callbacks instead. It was removed to improve 
-compatibility with the latest web3.js.
-
+> If you were using `ethereum.on("accountsChanged")`, remove it and obtain
+> addresses with EIP-1102 callbacks instead. It was removed to improve
+> compatibility with the latest web3.js.
 
 ## Switching / Adding Alternative EVM-Compatible Chains
 
@@ -185,10 +187,10 @@ For dapps supporting multiple networks, Coinbase Wallet SDK only needs 1 rpcUrl 
 
 If Wallet SDK receives either a `wallet_switchEthereumChain` or `wallet_addEthereumChain` request for a whitelisted network, then it switches the user to that network after asking approval from the user.
 
-Current whitelisted networks: 
+Current whitelisted networks:
 
 | Whitelisted Networks        |
-|:----------------------------|
+| :-------------------------- |
 | Arbitrum                    |
 | Arbitrum Rinkeby            |
 | Avalanche                   |
@@ -220,7 +222,7 @@ Here's how to request the wallet switch networks:
 await ethereum.request({
   method: 'wallet_addEthereumChain',
   params: [{ chainId: '0xA86A' }]
-})      
+})
 ```
 
 Here's how to request the client wallet add a new network
@@ -239,9 +241,9 @@ Here's how to request the client wallet add a new network
           })
 ```
 
-Many dapps attempt to switch to a network with `wallet_switchEthereumChain`, 
-determine if the network is supported by the wallet based on the error code, 
-and follow with a `wallet_addEthereumChain` request if the network is not 
+Many dapps attempt to switch to a network with `wallet_switchEthereumChain`,
+determine if the network is supported by the wallet based on the error code,
+and follow with a `wallet_addEthereumChain` request if the network is not
 supported. Here's an example:
 
 ```
@@ -274,13 +276,13 @@ Unlike other methods, the default definition of `wallet_watchAsset` params is no
 
 ```typescript
 interface WatchAssetParameters {
-  type: string // The asset's interface, e.g. 'ERC20'
+  type: string; // The asset's interface, e.g. 'ERC20'
   options: {
-    address: string // The hexadecimal Ethereum address of the token contract
-    symbol?: string // A ticker symbol or shorthand, up to 5 alphanumerical characters
-    decimals?: number // The number of asset decimals
-    image?: string // A string url of the token logo
-  }
+    address: string; // The hexadecimal Ethereum address of the token contract
+    symbol?: string; // A ticker symbol or shorthand, up to 5 alphanumerical characters
+    decimals?: number; // The number of asset decimals
+    image?: string; // A string url of the token logo
+  };
 }
 ```
 
@@ -325,9 +327,9 @@ ethereum.request({
 To disconnect or disestablish a link, call the instance method `disconnect()` on the `CoinbaseWallet` object/instance, or the instance method `close()` on the Coinbase Wallet SDK Web3 Provider object. This disestablishes the link, and requires the user to reconnect by scanning QR code again.
 
 ```typescript
-coinbaseWallet.disconnect()
+coinbaseWallet.disconnect();
 // is the same as the following:
-ethereum.close()
+ethereum.close();
 ```
 
 ## Libraries using Coinbase Wallet SDK
@@ -359,8 +361,9 @@ limitations under the License.
 ```
 
 ## Attributions
- * [Eth-json-rpc-filters](https://github.com/MetaMask/eth-json-rpc-filters/blob/main/LICENSE) under the ISC license
- * [Safe-event-emitter](https://github.com/MetaMask/safe-event-emitter/blob/master/LICENSE) under the ISC license
- * [Json-rpc-engine](https://github.com/MetaMask/json-rpc-engine/blob/main/LICENSE) under the ISC license
- * [Eth-rpc-errors](https://github.com/MetaMask/eth-rpc-errors/blob/main/LICENSE) under the MIT license
- * [Eth-block-tracker](https://github.com/MetaMask/eth-block-tracker/blob/master/LICENSE) under the MIT license
+
+- [Eth-json-rpc-filters](https://github.com/MetaMask/eth-json-rpc-filters/blob/main/LICENSE) under the ISC license
+- [Safe-event-emitter](https://github.com/MetaMask/safe-event-emitter/blob/master/LICENSE) under the ISC license
+- [Json-rpc-engine](https://github.com/MetaMask/json-rpc-engine/blob/main/LICENSE) under the ISC license
+- [Eth-rpc-errors](https://github.com/MetaMask/eth-rpc-errors/blob/main/LICENSE) under the MIT license
+- [Eth-block-tracker](https://github.com/MetaMask/eth-block-tracker/blob/master/LICENSE) under the MIT license
