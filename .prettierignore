@@ -4,3 +4,6 @@ yarn.lock
 **/dist
 **/node_modules
 **/src/vendor-js
+**/*-css.ts
+**/*-svg.ts
+
