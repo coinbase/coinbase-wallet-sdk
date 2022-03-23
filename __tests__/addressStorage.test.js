@@ -49,26 +49,4 @@ describe("address storage tests", function () {
       done();
     });
   });
-
-  it("will not switch address if address switching disabled", async () => {
-    const coinbaseWalletSDK = new CoinbaseWalletSDK({
-      appName: "My Awesome DApp",
-      appLogoUrl: "https://example.com/logo.png"
-    });
-
-    const provider = coinbaseWalletSDK.makeWeb3Provider(
-      "https://mainnet.infura.io/v3/INFURA_API_KEY",
-      1
-    );
-    provider.supportsAddressSwitching = false;
-
-    provider._addresses = ["0xfadafce89ea2221fa33005640acf2c923312f2b9"];
-    await provider.initializeRelay();
-    provider._relay.accountsCallback([
-      "0x7f268357A8c2552623316e2562D90e642bB538E5"
-    ]);
-    expect(provider._addresses[0]).toEqual(
-      "0xfadafce89ea2221fa33005640acf2c923312f2b9"
-    );
-  });
 });

@@ -20,5 +20,5 @@
     "strict": true,
     "target": "es2016"
   },
-  "include": ["src", "src/@types", "chrome"]
+  "include": ["src", "src/@types", "__tests__"]
 }
