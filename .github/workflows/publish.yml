@@ -6,7 +6,7 @@ on:
       packageVersion:
         description: "The version to publish (e.g. patch, minor, major)"
         required: true
-        default: "tag"
+        default: "patch"
       distTag:
         description: "The dist-tag to publish (e.g. latest, beta)"
         required: true
