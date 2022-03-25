@@ -12,11 +12,7 @@ declare global {
   interface Window {
     CoinbaseWalletSDK: typeof CoinbaseWalletSDK;
     CoinbaseWalletProvider: typeof CoinbaseWalletProvider;
-    /**
-     * Workaround possible compatibility issues in Angular
-     * Set as CoinbaseWalletProvider
-     */
-    ethereum?: any;
+    ethereum?: unknown;
     coinbaseWalletExtension?: CoinbaseWalletProvider;
 
     // deprecated
