@@ -22,7 +22,13 @@ declare global {
      * @deprecated Legacy API
      */
     WalletLink: typeof CoinbaseWalletSDK;
+    /**
+     * @deprecated Legacy API
+     */
     WalletLinkProvider: typeof CoinbaseWalletProvider;
+    /**
+     * @deprecated Legacy API
+     */
     walletLinkExtension?: CoinbaseWalletProvider;
   }
 }
@@ -31,7 +37,12 @@ if (typeof window !== "undefined") {
   window.CoinbaseWalletSDK = CoinbaseWalletSDK;
   window.CoinbaseWalletProvider = CoinbaseWalletProvider;
 
-  // deprecated
+  /**
+   * @deprecated Use `window.CoinbaseWalletSDK`
+   */
   window.WalletLink = CoinbaseWalletSDK;
+  /**
+   * @deprecated Use `window.CoinbaseWalletProvider`
+   */
   window.WalletLinkProvider = CoinbaseWalletProvider;
 }
