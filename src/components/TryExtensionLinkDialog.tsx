@@ -109,7 +109,7 @@ const TryExtensionBox: FunctionComponent<{
       onInstallClick();
       setIsClicked(true);
     }
-  }, []);
+  }, [isClicked]);
 
   return (
     <div class="-cbwsdk-extension-dialog-box-top">
