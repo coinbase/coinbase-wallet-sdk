@@ -1,9 +1,10 @@
-import { ethErrors, serializeError } from "eth-rpc-errors"
-import { JSONRPCRequest, JSONRPCResponse } from "../provider/JSONRPC"
-import { AddressString, IntNumber, RegExpString } from "../types"
-import { EthereumTransactionParams } from "./EthereumTransactionParams"
-import { Session } from "./Session"
-import { Web3Request } from "./Web3Request"
+import { ethErrors, serializeError } from "eth-rpc-errors";
+
+import { JSONRPCRequest, JSONRPCResponse } from "../provider/JSONRPC";
+import { AddressString, IntNumber, RegExpString } from "../types";
+import { EthereumTransactionParams } from "./EthereumTransactionParams";
+import { Session } from "./Session";
+import { Web3Request } from "./Web3Request";
 import {
   AddEthereumChainResponse,
   EthereumAddressFromSignedMessageResponse,
@@ -16,21 +17,21 @@ import {
   SwitchEthereumChainResponse,
   WatchAssetResponse,
   Web3Response
-} from "./Web3Response"
+} from "./Web3Response";
 
-export const WALLET_USER_NAME_KEY = "walletUsername"
-export const LOCAL_STORAGE_ADDRESSES_KEY = "Addresses"
-export const APP_VERSION_KEY = "AppVersion"
+export const WALLET_USER_NAME_KEY = "walletUsername";
+export const LOCAL_STORAGE_ADDRESSES_KEY = "Addresses";
+export const APP_VERSION_KEY = "AppVersion";
 
 export type CancelablePromise<T> = {
-  promise: Promise<T>
-  cancel: () => void
-}
+  promise: Promise<T>;
+  cancel: () => void;
+};
 
 export abstract class WalletSDKRelayAbstract {
-  abstract resetAndReload(): void
+  abstract resetAndReload(): void;
 
-  abstract requestEthereumAccounts(): CancelablePromise<RequestEthereumAccountsResponse>
+  abstract requestEthereumAccounts(): CancelablePromise<RequestEthereumAccountsResponse>;
 
   abstract addEthereumChain(
     chainId: string,
@@ -39,11 +40,11 @@ export abstract class WalletSDKRelayAbstract {
     blockExplorerUrls: string[],
     chainName: string,
     nativeCurrency: {
-      name: string
-      symbol: string
-      decimals: number
+      name: string;
+      symbol: string;
+      decimals: number;
     }
-  ): CancelablePromise<AddEthereumChainResponse>
+  ): CancelablePromise<AddEthereumChainResponse>;
 
   abstract watchAsset(
     type: string,
@@ -52,72 +53,72 @@ export abstract class WalletSDKRelayAbstract {
     decimals?: number,
     image?: string,
     chainId?: string
-  ): CancelablePromise<WatchAssetResponse>
+  ): CancelablePromise<WatchAssetResponse>;
 
   abstract switchEthereumChain(
     chainId: string
-  ): CancelablePromise<SwitchEthereumChainResponse>
+  ): CancelablePromise<SwitchEthereumChainResponse>;
 
   abstract signEthereumMessage(
     message: Buffer,
     address: AddressString,
     addPrefix: boolean,
     typedDataJson?: string | null
-  ): CancelablePromise<SignEthereumMessageResponse>
+  ): CancelablePromise<SignEthereumMessageResponse>;
 
   abstract ethereumAddressFromSignedMessage(
     message: Buffer,
     signature: Buffer,
     addPrefix: boolean
-  ): CancelablePromise<EthereumAddressFromSignedMessageResponse>
+  ): CancelablePromise<EthereumAddressFromSignedMessageResponse>;
 
   abstract signEthereumTransaction(
     params: EthereumTransactionParams
-  ): CancelablePromise<SignEthereumTransactionResponse>
+  ): CancelablePromise<SignEthereumTransactionResponse>;
 
   abstract signAndSubmitEthereumTransaction(
     params: EthereumTransactionParams
-  ): CancelablePromise<SubmitEthereumTransactionResponse>
+  ): CancelablePromise<SubmitEthereumTransactionResponse>;
 
   abstract submitEthereumTransaction(
     signedTransaction: Buffer,
     chainId: IntNumber
-  ): CancelablePromise<SubmitEthereumTransactionResponse>
+  ): CancelablePromise<SubmitEthereumTransactionResponse>;
 
   abstract scanQRCode(
     regExp: RegExpString
-  ): CancelablePromise<ScanQRCodeResponse>
+  ): CancelablePromise<ScanQRCodeResponse>;
 
   abstract genericRequest(
     data: object,
     action: string
-  ): CancelablePromise<GenericResponse>
+  ): CancelablePromise<GenericResponse>;
 
   abstract sendRequest<T extends Web3Request, U extends Web3Response>(
     request: T
-  ): CancelablePromise<U>
+  ): CancelablePromise<U>;
 
-  abstract setAppInfo(appName: string, appLogoUrl: string | null): void
+  abstract setAppInfo(appName: string, appLogoUrl: string | null): void;
 
   abstract setAccountsCallback(
     accountsCallback: (accounts: string[]) => void
-  ): void
+  ): void;
 
   abstract setChainCallback(
     chainIdCallback: (chainId: string, jsonRpcUrl: string) => void
-  ): void
+  ): void;
 
   /**
    * Whether the relay supports the add ethereum chain call without
    * needing to be connected to the mobile client.
    */
-  abstract inlineAddEthereumChain(chainId: string): boolean
+  abstract inlineAddEthereumChain(chainId: string): boolean;
 
   public async makeEthereumJSONRPCRequest(
     request: JSONRPCRequest,
     jsonRpcUrl: string
   ): Promise<JSONRPCResponse | void> {
-    if (!jsonRpcUrl) throw new Error("Error: No jsonRpcUrl provided")
+    if (!jsonRpcUrl) throw new Error("Error: No jsonRpcUrl provided");
     return window
       .fetch(jsonRpcUrl, {
         method: "POST",
@@ -128,16 +129,16 @@ export abstract class WalletSDKRelayAbstract {
       .then(res => res.json())
       .then(json => {
         if (!json) {
-          throw ethErrors.rpc.parse({})
+          throw ethErrors.rpc.parse({});
         }
-        const response = json as JSONRPCResponse
-        const { error } = response
+        const response = json as JSONRPCResponse;
+        const { error } = response;
         if (error) {
-          throw serializeError(error)
+          throw serializeError(error);
         }
-        return response
-      })
+        return response;
+      });
   }
 
-  abstract get session(): Session
+  abstract get session(): Session;
 }

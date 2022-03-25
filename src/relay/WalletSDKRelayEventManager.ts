@@ -1,22 +1,22 @@
-import { prepend0x } from "../util"
-import { Web3Response } from "./Web3Response"
+import { prepend0x } from "../util";
+import { Web3Response } from "./Web3Response";
 
-type ResponseCallback = (response: Web3Response) => void
+type ResponseCallback = (response: Web3Response) => void;
 
 export class WalletSDKRelayEventManager {
-  _nextRequestId = 0
-  callbacks = new Map<string, ResponseCallback>()
+  _nextRequestId = 0;
+  callbacks = new Map<string, ResponseCallback>();
 
   public makeRequestId(): number {
     // max nextId == max int32 for compatibility with mobile
-    this._nextRequestId = (this._nextRequestId + 1) % 0x7fffffff
-    const id = this._nextRequestId
-    const idStr = prepend0x(id.toString(16))
+    this._nextRequestId = (this._nextRequestId + 1) % 0x7fffffff;
+    const id = this._nextRequestId;
+    const idStr = prepend0x(id.toString(16));
     // unlikely that this will ever be an issue, but just to be safe
-    const callback = this.callbacks.get(idStr)
+    const callback = this.callbacks.get(idStr);
     if (callback) {
-      this.callbacks.delete(idStr)
+      this.callbacks.delete(idStr);
     }
-    return id
+    return id;
   }
 }

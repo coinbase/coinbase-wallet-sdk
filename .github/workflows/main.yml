@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  pull_request:
+    types: [ready_for_review]
+
+jobs:
+  lint-check:
+    name: Check for ESLint, Formatting, and Types
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Checkout node action
+        uses: actions/setup-node@v2
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Install NPM dependencies
+        run: yarn install
+
+      - name: Check ESLint
+        run: yarn lint:eslint
+
+      - name: Check prettier formatting
+        run: yarn lint:prettier
+
+      - name: Runs compile asset script
+        run: node ./compile-assets.js
+
+      - name: Check Types
+        run: yarn lint:types

@@ -10,7 +10,7 @@ import {
   Subscription,
   throwError,
   timer
-} from "rxjs"
+} from "rxjs";
 import {
   catchError,
   delay,
@@ -24,11 +24,10 @@ import {
   take,
   tap,
   timeoutWith
-} from "rxjs/operators"
+} from "rxjs/operators";
 
-import { EventListener, EVENTS } from "./EventListener"
-import { Session } from "../relay/Session"
-import { IntNumber } from "../types"
+import { Session } from "../relay/Session";
+import { IntNumber } from "../types";
 import {
   ClientMessage,
   ClientMessageGetSessionConfig,
@@ -36,8 +35,9 @@ import {
   ClientMessageIsLinked,
   ClientMessagePublishEvent,
   ClientMessageSetSessionConfig
-} from "./ClientMessage"
-import { ConnectionState, RxWebSocket } from "./RxWebSocket"
+} from "./ClientMessage";
+import { EventListener, EVENTS } from "./EventListener";
+import { ConnectionState, RxWebSocket } from "./RxWebSocket";
 import {
   isServerMessageFail,
   ServerMessage,
@@ -49,24 +49,24 @@ import {
   ServerMessageOK,
   ServerMessagePublishEventOK,
   ServerMessageSessionConfigUpdated
-} from "./ServerMessage"
-import { SessionConfig } from "./SessionConfig"
+} from "./ServerMessage";
+import { SessionConfig } from "./SessionConfig";
 
-const HEARTBEAT_INTERVAL = 10000
-const REQUEST_TIMEOUT = 60000
+const HEARTBEAT_INTERVAL = 10000;
+const REQUEST_TIMEOUT = 60000;
 
 /**
  * Coinbase Wallet Connection
  */
 export class WalletSDKConnection {
-  private ws: RxWebSocket<ServerMessage>
-  private subscriptions = new Subscription()
-  private destroyed = false
-  private lastHeartbeatResponse = 0
-  private nextReqId = IntNumber(1)
-  private connectedSubject = new BehaviorSubject(false)
-  private linkedSubject = new BehaviorSubject(false)
-  private sessionConfigSubject = new ReplaySubject<SessionConfig>(1)
+  private ws: RxWebSocket<ServerMessage>;
+  private subscriptions = new Subscription();
+  private destroyed = false;
+  private lastHeartbeatResponse = 0;
+  private nextReqId = IntNumber(1);
+  private connectedSubject = new BehaviorSubject(false);
+  private linkedSubject = new BehaviorSubject(false);
+  private sessionConfigSubject = new ReplaySubject<SessionConfig>(1);
 
   /**
    * Constructor
@@ -85,8 +85,8 @@ export class WalletSDKConnection {
     const ws = new RxWebSocket<ServerMessage>(
       linkAPIUrl + "/rpc",
       WebSocketClass
-    )
-    this.ws = ws
+    );
+    this.ws = ws;
 
     // attempt to reconnect every 5 seconds when disconnected
     this.subscriptions.add(
@@ -111,7 +111,7 @@ export class WalletSDKConnection {
           retry()
         )
         .subscribe()
-    )
+    );
 
     // perform authentication upon connection
     this.subscriptions.add(
@@ -136,7 +136,7 @@ export class WalletSDKConnection {
           catchError(_ => of(false))
         )
         .subscribe(connected => this.connectedSubject.next(connected))
-    )
+    );
 
     // send heartbeat every n seconds while connected
     this.subscriptions.add(
@@ -157,14 +157,14 @@ export class WalletSDKConnection {
           // subsequent calls send heartbeat message
           i === 0 ? this.updateLastHeartbeat() : this.heartbeat()
         )
-    )
+    );
 
     // handle server's heartbeat responses
     this.subscriptions.add(
       ws.incomingData$
         .pipe(filter(m => m === "h"))
         .subscribe(_ => this.updateLastHeartbeat())
-    )
+    );
 
     // handle link status updates
     this.subscriptions.add(
@@ -172,16 +172,16 @@ export class WalletSDKConnection {
         .pipe(filter(m => ["IsLinkedOK", "Linked"].includes(m.type)))
         .subscribe(m => {
           const msg = m as Omit<ServerMessageIsLinkedOK, "type"> &
-            ServerMessageLinked
+            ServerMessageLinked;
           this.eventListener?.onEvent(EVENTS.LINKED, {
             sessionIdHash: Session.hash(sessionId),
             linked: msg.linked,
             type: m.type,
             onlineGuests: msg.onlineGuests
-          })
-          this.linkedSubject.next(msg.linked || msg.onlineGuests > 0)
+          });
+          this.linkedSubject.next(msg.linked || msg.onlineGuests > 0);
         })
-    )
+    );
 
     // handle session config updates
     this.subscriptions.add(
@@ -193,19 +193,19 @@ export class WalletSDKConnection {
         )
         .subscribe(m => {
           const msg = m as Omit<ServerMessageGetSessionConfigOK, "type"> &
-            ServerMessageSessionConfigUpdated
+            ServerMessageSessionConfigUpdated;
           this.eventListener?.onEvent(EVENTS.SESSION_CONFIG_RECEIVED, {
             sessionIdHash: Session.hash(sessionId),
             metadata_keys:
               msg && msg.metadata ? Object.keys(msg.metadata) : undefined
-          })
+          });
           this.sessionConfigSubject.next({
             webhookId: msg.webhookId,
             webhookUrl: msg.webhookUrl,
             metadata: msg.metadata
-          })
+          });
         })
-    )
+    );
   }
 
   /**
@@ -213,12 +213,12 @@ export class WalletSDKConnection {
    */
   public connect(): void {
     if (this.destroyed) {
-      throw new Error("instance is destroyed")
+      throw new Error("instance is destroyed");
     }
     this.eventListener?.onEvent(EVENTS.STARTED_CONNECTING, {
       sessionIdHash: Session.hash(this.sessionId)
-    })
-    this.ws.connect().subscribe()
+    });
+    this.ws.connect().subscribe();
   }
 
   /**
@@ -226,16 +226,16 @@ export class WalletSDKConnection {
    * instance of WalletSDKConnection
    */
   public destroy(): void {
-    this.subscriptions.unsubscribe()
-    this.ws.disconnect()
+    this.subscriptions.unsubscribe();
+    this.ws.disconnect();
     this.eventListener?.onEvent(EVENTS.DISCONNECTED, {
       sessionIdHash: Session.hash(this.sessionId)
-    })
-    this.destroyed = true
+    });
+    this.destroyed = true;
   }
 
   public get isDestroyed(): boolean {
-    return this.destroyed
+    return this.destroyed;
   }
 
   /**
@@ -243,7 +243,7 @@ export class WalletSDKConnection {
    * @returns an Observable
    */
   public get connected$(): Observable<boolean> {
-    return this.connectedSubject.asObservable()
+    return this.connectedSubject.asObservable();
   }
 
   /**
@@ -255,7 +255,7 @@ export class WalletSDKConnection {
       filter(v => v),
       take(1),
       map(() => void 0)
-    )
+    );
   }
 
   /**
@@ -263,7 +263,7 @@ export class WalletSDKConnection {
    * @returns an Observable
    */
   public get linked$(): Observable<boolean> {
-    return this.linkedSubject.asObservable()
+    return this.linkedSubject.asObservable();
   }
 
   /**
@@ -275,7 +275,7 @@ export class WalletSDKConnection {
       filter(v => v),
       take(1),
       map(() => void 0)
-    )
+    );
   }
 
   /**
@@ -283,7 +283,7 @@ export class WalletSDKConnection {
    * @returns an Observable for the session config
    */
   public get sessionConfig$(): Observable<SessionConfig> {
-    return this.sessionConfigSubject.asObservable()
+    return this.sessionConfigSubject.asObservable();
   }
 
   /**
@@ -294,18 +294,18 @@ export class WalletSDKConnection {
     return this.ws.incomingJSONData$.pipe(
       filter(m => {
         if (m.type !== "Event") {
-          return false
+          return false;
         }
-        const sme = m as ServerMessageEvent
+        const sme = m as ServerMessageEvent;
         return (
           typeof sme.sessionId === "string" &&
           typeof sme.eventId === "string" &&
           typeof sme.event === "string" &&
           typeof sme.data === "string"
-        )
+        );
       }),
       map(m => m as ServerMessageEvent)
-    )
+    );
   }
 
   /**
@@ -322,7 +322,7 @@ export class WalletSDKConnection {
       id: IntNumber(this.nextReqId++),
       sessionId: this.sessionId,
       metadata: { [key]: value }
-    })
+    });
 
     return this.onceConnected$.pipe(
       flatMap(_ =>
@@ -330,10 +330,10 @@ export class WalletSDKConnection {
       ),
       map(res => {
         if (isServerMessageFail(res)) {
-          throw new Error(res.error || "failed to set session metadata")
+          throw new Error(res.error || "failed to set session metadata");
         }
       })
-    )
+    );
   }
 
   /**
@@ -354,7 +354,7 @@ export class WalletSDKConnection {
       event,
       data,
       callWebhook
-    })
+    });
 
     return this.onceLinked$.pipe(
       flatMap(_ =>
@@ -364,28 +364,28 @@ export class WalletSDKConnection {
       ),
       map(res => {
         if (isServerMessageFail(res)) {
-          throw new Error(res.error || "failed to publish event")
+          throw new Error(res.error || "failed to publish event");
         }
-        return res.eventId
+        return res.eventId;
       })
-    )
+    );
   }
 
   private sendData(message: ClientMessage): void {
-    this.ws.sendData(JSON.stringify(message))
+    this.ws.sendData(JSON.stringify(message));
   }
 
   private updateLastHeartbeat(): void {
-    this.lastHeartbeatResponse = Date.now()
+    this.lastHeartbeatResponse = Date.now();
   }
 
   private heartbeat(): void {
     if (Date.now() - this.lastHeartbeatResponse > HEARTBEAT_INTERVAL * 2) {
-      this.ws.disconnect()
-      return
+      this.ws.disconnect();
+      return;
     }
     try {
-      this.ws.sendData("h")
+      this.ws.sendData("h");
     } catch {}
   }
 
@@ -393,11 +393,11 @@ export class WalletSDKConnection {
     message: ClientMessage,
     timeout: number = REQUEST_TIMEOUT
   ): Observable<T> {
-    const reqId = message.id
+    const reqId = message.id;
     try {
-      this.sendData(message)
+      this.sendData(message);
     } catch (err) {
-      return throwError(err)
+      return throwError(err);
     }
 
     // await server message with corresponding id
@@ -405,7 +405,7 @@ export class WalletSDKConnection {
       timeoutWith(timeout, throwError(new Error(`request ${reqId} timed out`))),
       filter(m => m.id === reqId),
       take(1)
-    )
+    );
   }
 
   private authenticate(): Observable<void> {
@@ -413,29 +413,29 @@ export class WalletSDKConnection {
       id: IntNumber(this.nextReqId++),
       sessionId: this.sessionId,
       sessionKey: this.sessionKey
-    })
+    });
     return this.makeRequest<ServerMessageOK | ServerMessageFail>(msg).pipe(
       map(res => {
         if (isServerMessageFail(res)) {
-          throw new Error(res.error || "failed to authentcate")
+          throw new Error(res.error || "failed to authentcate");
         }
       })
-    )
+    );
   }
 
   private sendIsLinked(): void {
     const msg = ClientMessageIsLinked({
       id: IntNumber(this.nextReqId++),
       sessionId: this.sessionId
-    })
-    this.sendData(msg)
+    });
+    this.sendData(msg);
   }
 
   private sendGetSessionConfig(): void {
     const msg = ClientMessageGetSessionConfig({
       id: IntNumber(this.nextReqId++),
       sessionId: this.sessionId
-    })
-    this.sendData(msg)
+    });
+    this.sendData(msg);
   }
 }

@@ -2,7 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 export interface SessionConfig {
-  webhookId: string
-  webhookUrl: string
-  metadata: { [key: string]: string | undefined }
+  webhookId: string;
+  webhookUrl: string;
+  metadata: { [key: string]: string | undefined };
 }
