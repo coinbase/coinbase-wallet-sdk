@@ -12,10 +12,15 @@ declare global {
   interface Window {
     CoinbaseWalletSDK: typeof CoinbaseWalletSDK;
     CoinbaseWalletProvider: typeof CoinbaseWalletProvider;
+    /**
+     * For CoinbaseWalletSDK, window.ethereum is `CoinbaseWalletProvider`
+     */
     ethereum?: unknown;
     coinbaseWalletExtension?: CoinbaseWalletProvider;
 
-    // deprecated
+    /**
+     * @deprecated Legacy API
+     */
     WalletLink: typeof CoinbaseWalletSDK;
     WalletLinkProvider: typeof CoinbaseWalletProvider;
     walletLinkExtension?: CoinbaseWalletProvider;
