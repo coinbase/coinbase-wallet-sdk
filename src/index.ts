@@ -12,12 +12,23 @@ declare global {
   interface Window {
     CoinbaseWalletSDK: typeof CoinbaseWalletSDK;
     CoinbaseWalletProvider: typeof CoinbaseWalletProvider;
-    ethereum?: CoinbaseWalletProvider;
+    /**
+     * For CoinbaseWalletSDK, window.ethereum is `CoinbaseWalletProvider`
+     */
+    ethereum?: unknown;
     coinbaseWalletExtension?: CoinbaseWalletProvider;
 
-    // deprecated
+    /**
+     * @deprecated Legacy API
+     */
     WalletLink: typeof CoinbaseWalletSDK;
+    /**
+     * @deprecated Legacy API
+     */
     WalletLinkProvider: typeof CoinbaseWalletProvider;
+    /**
+     * @deprecated Legacy API
+     */
     walletLinkExtension?: CoinbaseWalletProvider;
   }
 }
@@ -26,7 +37,12 @@ if (typeof window !== "undefined") {
   window.CoinbaseWalletSDK = CoinbaseWalletSDK;
   window.CoinbaseWalletProvider = CoinbaseWalletProvider;
 
-  // deprecated
+  /**
+   * @deprecated Use `window.CoinbaseWalletSDK`
+   */
   window.WalletLink = CoinbaseWalletSDK;
+  /**
+   * @deprecated Use `window.CoinbaseWalletProvider`
+   */
   window.WalletLinkProvider = CoinbaseWalletProvider;
 }
