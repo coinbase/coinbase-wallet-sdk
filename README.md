@@ -3,9 +3,9 @@
 Coinbase Wallet SDK (formerly WalletLink) lets developers connect their dapps to Coinbase Wallet
 on both mobile web (for iOS and Android) and desktop:
 
-- **Mobile**: Users can connect to your mobile web dapp through a deeplink to the dapp browser in Coinbase Wallet Mobile App.
+- **Mobile**: Users can connect to your mobile web dapp through a deeplink to the dapp browser in [Coinbase Wallet Mobile App](https://coinbase-wallet.onelink.me/q5Sx/fdb9b250).
 
-- **Desktop**: Users can connect to your desktop app with a QR code in the Coinbase Wallet Mobile App or with the Coinbase Wallet Chrome Extension.
+- **Desktop**: Users can connect to your desktop app with a QR code in the [Coinbase Wallet Mobile App](https://coinbase-wallet.onelink.me/q5Sx/fdb9b250) or with the [Coinbase Wallet Chrome Extension](https://coinbase-wallet.onelink.me/q5Sx/fdb9b250).
 
 Wallet SDK is open-source and uses minimal dependencies for maximum security and no code bloat. Simply drop a few lines of code into your dapp and Wallet SDK takes care of the rest.
 
