@@ -45,7 +45,6 @@ jobs:
         uses: actions/setup-node@v2
         with:
           registry-url: 'https://registry.npmjs.org'
-          scope: '@coinbase'
       
       - name: Update version
         run: yarn version --${{ env.PACKAGE_VERSION }}
