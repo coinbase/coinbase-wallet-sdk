@@ -44,6 +44,7 @@ export class CoinbaseWalletSDK {
   private _storage: ScopedLocalStorage;
   private _overrideIsMetaMask: boolean;
   private _overrideIsCoinbaseWallet: boolean;
+  private _qrUrl: string;
   private _eventListener?: EventListener;
 
   /**
@@ -53,6 +54,7 @@ export class CoinbaseWalletSDK {
   constructor(options: Readonly<CoinbaseWalletSDKOptions>) {
     const linkAPIUrl = options.linkAPIUrl || LINK_API_URL;
     let uiConstructor: (options: Readonly<WalletUIOptions>) => WalletUI;
+    console.log("options: ", options);
     if (!options.uiConstructor) {
       uiConstructor = opts => new WalletSDKUI(opts);
     } else {
@@ -92,6 +94,9 @@ export class CoinbaseWalletSDK {
     });
     this.setAppInfo(options.appName, options.appLogoUrl);
     this._relay.attachUI();
+
+    const serverUrl = window.encodeURIComponent(linkAPIUrl);
+    this._qrUrl = `${linkAPIUrl}/#/link?id=${this._relay.session.id}&secret=${this._relay.session.secret}&server=${serverUrl}&v=1`;
   }
 
   /**
@@ -165,6 +170,10 @@ export class CoinbaseWalletSDK {
     } else {
       this._relay?.resetAndReload();
     }
+  }
+
+  public getQrUrl(): string {
+    return this._qrUrl;
   }
 
   private get walletExtension(): CoinbaseWalletProvider | undefined {
