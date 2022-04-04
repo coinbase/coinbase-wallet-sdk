@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       packageVersion:
-        description: "The version to publish (e.g. patch, minor, major)"
+        description: "The version to publish in MAJOR.MINOR.PATCH format"
         required: true
-        default: "patch"
+        default: ""
 
 jobs:
   authorize:
@@ -19,7 +19,7 @@ jobs:
           permission: "write"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  
+
   version:
     name: Updates package version
     runs-on: ubuntu-latest
@@ -35,16 +35,15 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version-file: ".nvmrc"
-          cache: 'yarn'
 
       - name: Update version
-        run: yarn version --${{ env.PACKAGE_VERSION }}
+        run: yarn version --new-version ${{ env.PACKAGE_VERSION }} --no-git-tag-version
 
       - name: Run prebuild
         run: yarn prebuild
-      
+
       - name: Commit updated src/version.ts
         uses: EndBug/add-and-commit@v9
         with:
-          add: 'src/version.ts'
-          commit: --amend --no-edit
+          commit: "v${{ env.PACKAGE_VERSION }}"
+          tag: "v${{ env.PACKAGE_VERSION }}"
