@@ -41,10 +41,10 @@ export class CoinbaseWalletSDK {
   private _appLogoUrl: string | null = null;
   private _relay: WalletSDKRelay | null = null;
   private _relayEventManager: WalletSDKRelayEventManager | null = null;
+  private _qrUrl: string | null = null;
   private _storage: ScopedLocalStorage;
   private _overrideIsMetaMask: boolean;
   private _overrideIsCoinbaseWallet: boolean;
-  private _qrUrl: string;
   private _eventListener?: EventListener;
 
   /**
@@ -172,7 +172,7 @@ export class CoinbaseWalletSDK {
     }
   }
 
-  public getQrUrl(): string {
+  public getQrUrl(): string | null {
     return this._qrUrl;
   }
 
