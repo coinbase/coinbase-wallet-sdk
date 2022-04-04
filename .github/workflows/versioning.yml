@@ -39,10 +39,10 @@ jobs:
       - name: Update version
         run: yarn version --new-version ${{ env.PACKAGE_VERSION }} --no-git-tag-version
 
-      - name: Run prebuild
+      - name: Update version.ts file
         run: yarn prebuild
 
-      - name: Commit updated src/version.ts
+      - name: Commit and tag updated version
         uses: EndBug/add-and-commit@v9
         with:
           commit: "v${{ env.PACKAGE_VERSION }}"
