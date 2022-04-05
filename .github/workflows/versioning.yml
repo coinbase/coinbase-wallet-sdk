@@ -42,8 +42,8 @@ jobs:
       - name: Update version.ts file
         run: yarn prebuild
 
-      - name: Commit and tag updated version
+      - name: Commit and branch updated version
         uses: EndBug/add-and-commit@v9
         with:
           message: "v${{ env.PACKAGE_VERSION }}"
-          tag: "v${{ env.PACKAGE_VERSION }}"
+          new_branch: release-v${{ env.PACKAGE_VERSION }}
