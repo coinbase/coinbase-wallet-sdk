@@ -45,5 +45,5 @@ jobs:
       - name: Commit and tag updated version
         uses: EndBug/add-and-commit@v9
         with:
-          commit: "v${{ env.PACKAGE_VERSION }}"
+          message: "v${{ env.PACKAGE_VERSION }}"
           tag: "v${{ env.PACKAGE_VERSION }}"
