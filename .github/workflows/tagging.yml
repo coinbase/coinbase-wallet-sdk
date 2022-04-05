@@ -1,17 +1,18 @@
 name: Tag release branch
 
 on:
-  pull_request:
-    types: 
-      - opened
-      # - closed
-    # branches: 
-    #   - master
+  push:
+    branches:
+      - master
 
 jobs:
   tag_merged:
-    # if: github.event.pull_request.merged
+    name: Tag version branch
+    if: startsWith(github.event.head_commit.message, 'v')
     runs-on: ubuntu-latest
+
     steps:
-      - run: echo "${{ toJson(github) }}"
-# v[39].[0-9]+.[0-9]+ version tag regex
+      - name: Tagging ${{ github.event.head_commit.message }}"
+        uses: EndBug/add-and-commit@v9
+        with:
+          tag: "${{ github.event.head_commit.message }}"
