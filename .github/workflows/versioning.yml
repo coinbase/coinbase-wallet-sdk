@@ -1,0 +1,49 @@
+name: Version tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      packageVersion:
+        description: "The version to publish in MAJOR.MINOR.PATCH format"
+        required: true
+        default: ""
+
+jobs:
+  authorize:
+    name: Authorize
+    runs-on: ubuntu-latest
+    steps:
+      - name: ${{ github.actor }} permission check to update release version
+        uses: "lannonbr/repo-permission-check-action@2.0.2"
+        with:
+          permission: "write"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  version:
+    name: Updates package version
+    runs-on: ubuntu-latest
+    needs: [authorize]
+    env:
+      PACKAGE_VERSION: ${{ github.event.inputs.packageVersion }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Update version
+        run: yarn version --new-version ${{ env.PACKAGE_VERSION }} --no-git-tag-version
+
+      - name: Update version.ts file
+        run: yarn prebuild
+
+      - name: Commit and tag updated version
+        uses: EndBug/add-and-commit@v9
+        with:
+          commit: "v${{ env.PACKAGE_VERSION }}"
+          tag: "v${{ env.PACKAGE_VERSION }}"
