@@ -54,7 +54,6 @@ export class CoinbaseWalletSDK {
   constructor(options: Readonly<CoinbaseWalletSDKOptions>) {
     const linkAPIUrl = options.linkAPIUrl || LINK_API_URL;
     let uiConstructor: (options: Readonly<WalletUIOptions>) => WalletUI;
-    console.log("options: ", options);
     if (!options.uiConstructor) {
       uiConstructor = opts => new WalletSDKUI(opts);
     } else {
