@@ -43,7 +43,10 @@ jobs:
         run: yarn prebuild
 
       - name: Commit and branch updated version
-        uses: EndBug/add-and-commit@v9
+        uses: peter-evans/create-pull-request@v4
         with:
-          message: "v${{ env.PACKAGE_VERSION }}"
-          new_branch: release-v${{ env.PACKAGE_VERSION }}
+          title: "v${{ env.PACKAGE_VERSION }}"
+          body: "Automated workflow: version update"
+          branch: release-v${{ env.PACKAGE_VERSION }}
+          delete-branch: true
+          labels: version-update
