@@ -2,12 +2,11 @@ name: Tag version
 
 on:
   push:
-    # branches:
-    #   - master
+    branches:
+      - master
 
 jobs:
-  tag_merged:
-    if: startsWith(github.event.head_commit.message, 'v')
+  tag_merged_version:
     runs-on: ubuntu-latest
 
     steps:
