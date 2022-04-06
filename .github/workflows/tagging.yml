@@ -7,6 +7,7 @@ on:
 
 jobs:
   tag_merged_version:
+    if: startsWith(github.event.head_commit.message, 'v')
     runs-on: ubuntu-latest
 
     steps:
