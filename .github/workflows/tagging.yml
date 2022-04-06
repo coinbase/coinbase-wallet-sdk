@@ -1,0 +1,37 @@
+name: Tag version
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  tag_merged_version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Tag Match
+        id: check-tag
+        run: |
+          if [[ ${{ github.event.head_commit.message }} =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo ::set-output name=match::true
+          fi
+
+      - name: Tag Match
+        if: steps.check-tag.outputs.match == 'true'
+        run: |
+          echo "Tag is a match"
+
+      - name: Tagging ${{ github.event.head_commit.message }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: "refs/tags/${{ github.event.head_commit.message }}",
+              sha: context.sha
+            })
