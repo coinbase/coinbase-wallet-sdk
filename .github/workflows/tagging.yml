@@ -1,4 +1,4 @@
-name: Tag version
+name: Tag
 
 on:
   push:
@@ -7,6 +7,7 @@ on:
 
 jobs:
   tag_merged_version:
+    if: startsWith(github.event.head_commit.message, 'v')
     runs-on: ubuntu-latest
 
     steps:
@@ -22,10 +23,6 @@ jobs:
 
       - name: Tag Match
         if: steps.check-tag.outputs.match == 'true'
-        run: |
-          echo "Tag is a match"
-
-      - name: Tagging ${{ github.event.head_commit.message }}
         uses: actions/github-script@v6
         with:
           script: |

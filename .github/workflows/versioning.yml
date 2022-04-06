@@ -1,4 +1,4 @@
-name: Version tag
+name: Input version tag
 
 on:
   workflow_dispatch:
@@ -45,8 +45,9 @@ jobs:
       - name: Commit and branch updated version
         uses: peter-evans/create-pull-request@v4
         with:
-          title: "v${{ env.PACKAGE_VERSION }}"
+          title: "[Version update] v${{ env.PACKAGE_VERSION }}"
           body: "Automated workflow: version update"
           branch: release-v${{ env.PACKAGE_VERSION }}
           delete-branch: true
+          commit-message: "v${{ env.PACKAGE_VERSION }}"
           labels: version-update
