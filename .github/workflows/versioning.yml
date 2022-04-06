@@ -45,7 +45,7 @@ jobs:
       - name: Commit and branch updated version
         uses: peter-evans/create-pull-request@v4
         with:
-          title: "[Version update]"
+          title: "[Version update] v${{ env.PACKAGE_VERSION }}"
           body: "Automated workflow: version update"
           branch: release-v${{ env.PACKAGE_VERSION }}
           delete-branch: true
