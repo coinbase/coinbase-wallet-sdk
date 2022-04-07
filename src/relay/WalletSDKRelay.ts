@@ -79,11 +79,13 @@ export interface WalletSDKRelayOptions {
   relayEventManager: WalletSDKRelayEventManager;
   uiConstructor: (options: Readonly<WalletUIOptions>) => WalletUI;
   eventListener?: EventListener;
+  headlessMode?: boolean;
 }
 
 export class WalletSDKRelay extends WalletSDKRelayAbstract {
   private static accountRequestCallbackIds = new Set<string>();
 
+  private readonly headlessMode: boolean | undefined;
   private readonly linkAPIUrl: string;
   protected readonly storage: ScopedLocalStorage;
   private readonly _session: Session;
@@ -105,6 +107,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
 
   constructor(options: Readonly<WalletSDKRelayOptions>) {
     super();
+    this.headlessMode = options.headlessMode;
     this.linkAPIUrl = options.linkAPIUrl;
     this.storage = options.storage;
     this._session =
@@ -314,6 +317,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
   }
 
   public attachUI() {
+    if (this.headlessMode) return;
     this.ui.attach();
   }
 
