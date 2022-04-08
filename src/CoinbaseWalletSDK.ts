@@ -172,13 +172,6 @@ export class CoinbaseWalletSDK {
     }
   }
 
-  /**
-   * Return QR URL for mobile wallet connection, will return null if extension is installed
-   */
-  public getQrUrl(): string | null {
-    return this._qrUri;
-  }
-
   private get walletExtension(): CoinbaseWalletProvider | undefined {
     return window.coinbaseWalletExtension ?? window.walletLinkExtension;
   }
