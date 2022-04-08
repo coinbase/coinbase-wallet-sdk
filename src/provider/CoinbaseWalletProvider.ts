@@ -50,7 +50,7 @@ const HAS_CHAIN_OVERRIDDEN_FROM_RELAY = "HasChainOverriddenFromRelay";
 export interface CoinbaseWalletProviderOptions {
   chainId?: number;
   jsonRpcUrl: string;
-  linkAPIUrl: string;
+  qrUri: string | null;
   overrideIsCoinbaseWallet?: boolean;
   overrideIsMetaMask: boolean;
   relayEventManager: WalletSDKRelayEventManager;
@@ -66,6 +66,7 @@ export class CoinbaseWalletProvider
 {
   // So dapps can easily identify Coinbase Wallet for enabling features like 3085 network switcher menus
   public readonly isCoinbaseWallet: boolean;
+  public readonly qrUri: string | null;
 
   private readonly _filterPolyfill = new FilterPolyfill(this);
   private readonly _subscriptionManager = new SubscriptionManager(this);
@@ -75,7 +76,6 @@ export class CoinbaseWalletProvider
   private readonly _storage: ScopedLocalStorage;
   private readonly _relayEventManager: WalletSDKRelayEventManager;
   private readonly _eventListener?: EventListener;
-  private readonly _linkAPIUrl: string;
 
   private _jsonRpcUrlFromOpts: string;
   private readonly _overrideIsMetaMask: boolean;
@@ -101,17 +101,16 @@ export class CoinbaseWalletProvider
     this._setAddresses = this._setAddresses.bind(this);
     this.scanQRCode = this.scanQRCode.bind(this);
     this.genericRequest = this.genericRequest.bind(this);
-    this.getUri = this.getUri.bind(this);
 
     this._jsonRpcUrlFromOpts = options.jsonRpcUrl;
     this._overrideIsMetaMask = options.overrideIsMetaMask;
     this._relayProvider = options.relayProvider;
     this._storage = options.storage;
     this._relayEventManager = options.relayEventManager;
-    this._linkAPIUrl = options.linkAPIUrl;
     this._eventListener = options.eventListener;
 
     this.isCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true;
+    this.qrUri = options.qrUri;
 
     this.supportsAddressSwitching = options.supportsAddressSwitching;
 
@@ -171,10 +170,6 @@ export class CoinbaseWalletProvider
   public get isWalletLink(): boolean {
     // backward compatibility
     return true;
-  }
-
-  public get connectMobileUri(): string | null {
-    return this.getUri();
   }
 
   /**
@@ -880,14 +875,6 @@ export class CoinbaseWalletProvider
     const chainIdStr = this._storage.getItem(DEFAULT_CHAIN_ID_KEY) || "1";
     const chainId = parseInt(chainIdStr, 10);
     return ensureIntNumber(chainId);
-  }
-
-  private getUri(): string | null {
-    if (!this._relay) return null;
-    const serverUrl = window.encodeURIComponent(this._linkAPIUrl);
-    const uri = `${this._linkAPIUrl}/#/link?id=${this._relay.session.id}&secret=${this._relay.session.secret}&server=${serverUrl}&v=1`;
-
-    return uri;
   }
 
   private async _eth_requestAccounts(): Promise<JSONRPCResponse> {

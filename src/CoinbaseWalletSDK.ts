@@ -32,7 +32,7 @@ export interface CoinbaseWalletSDKOptions {
   overrideIsMetaMask?: boolean;
   /** @optional whether wallet link provider should override the isCoinbaseWallet property. */
   overrideIsCoinbaseWallet?: boolean;
-  /** @optional whetehr to prevent onboarding popup FIXTHITSSFISEFP */
+  /** @optional whether or not onboarding overlay popup should be displayed */
   headlessMode?: boolean;
 }
 
@@ -43,12 +43,11 @@ export class CoinbaseWalletSDK {
   private _appLogoUrl: string | null = null;
   private _relay: WalletSDKRelay | null = null;
   private _relayEventManager: WalletSDKRelayEventManager | null = null;
-  private _qrUrl: string | null = null;
+  private _qrUri: string | null = null;
   private _storage: ScopedLocalStorage;
   private _overrideIsMetaMask: boolean;
   private _overrideIsCoinbaseWallet: boolean;
   private _eventListener?: EventListener;
-  private _linkAPIUrl: string;
 
   /**
    * Constructor
@@ -68,8 +67,6 @@ export class CoinbaseWalletSDK {
     } else {
       this._overrideIsMetaMask = options.overrideIsMetaMask;
     }
-
-    this._linkAPIUrl = linkAPIUrl;
 
     this._overrideIsCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true;
 
@@ -101,7 +98,7 @@ export class CoinbaseWalletSDK {
     this._relay.attachUI();
 
     const serverUrl = window.encodeURIComponent(linkAPIUrl);
-    this._qrUrl = `${linkAPIUrl}/#/link?id=${this._relay.session.id}&secret=${this._relay.session.secret}&server=${serverUrl}&v=1`;
+    this._qrUri = `${linkAPIUrl}/#/link?id=${this._relay.session.id}&secret=${this._relay.session.secret}&server=${serverUrl}&v=1`;
   }
 
   /**
@@ -136,7 +133,7 @@ export class CoinbaseWalletSDK {
       storage: this._storage,
       jsonRpcUrl,
       chainId,
-      linkAPIUrl: this._linkAPIUrl,
+      qrUri: this._qrUri,
       eventListener: this._eventListener,
       overrideIsMetaMask: this._overrideIsMetaMask,
       overrideIsCoinbaseWallet: this._overrideIsCoinbaseWallet
@@ -182,7 +179,7 @@ export class CoinbaseWalletSDK {
    * Return QR URL for mobile wallet connection, will return null if extension is installed
    */
   public getQrUrl(): string | null {
-    return this._qrUrl;
+    return this._qrUri;
   }
 
   private get walletExtension(): CoinbaseWalletProvider | undefined {
