@@ -32,6 +32,8 @@ export interface CoinbaseWalletSDKOptions {
   overrideIsMetaMask?: boolean;
   /** @optional whether wallet link provider should override the isCoinbaseWallet property. */
   overrideIsCoinbaseWallet?: boolean;
+  /** @optional whether or not onboarding overlay popup should be displayed */
+  headlessMode?: boolean;
 }
 
 export class CoinbaseWalletSDK {
@@ -91,6 +93,9 @@ export class CoinbaseWalletSDK {
       eventListener: this._eventListener
     });
     this.setAppInfo(options.appName, options.appLogoUrl);
+
+    if (!!options.headlessMode) return;
+
     this._relay.attachUI();
   }
 
