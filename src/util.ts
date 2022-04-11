@@ -221,3 +221,16 @@ export function getFavicon(): string | null {
   }
   return `${protocol}//${host}${href}`;
 }
+
+export function createQrUrl(
+  sessionId: string,
+  sessionSecret: string,
+  serverUrl: string,
+  isParentConnection: boolean
+): string {
+  const encodedServerUrl = window.encodeURIComponent(serverUrl);
+  const sessionIdKey = isParentConnection ? "parent-id" : "id";
+  const qrUrl = `${serverUrl}/#/link?${sessionIdKey}=${sessionId}&secret=${sessionSecret}&server=${encodedServerUrl}&v=1`;
+
+  return qrUrl;
+}

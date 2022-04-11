@@ -8,7 +8,7 @@ import { WalletSDKUI } from "./provider/WalletSDKUI";
 import { WalletUI, WalletUIOptions } from "./provider/WalletUI";
 import { WalletSDKRelay } from "./relay/WalletSDKRelay";
 import { WalletSDKRelayEventManager } from "./relay/WalletSDKRelayEventManager";
-import { getFavicon } from "./util";
+import { createQrUrl, getFavicon } from "./util";
 
 const LINK_API_URL = process.env.LINK_API_URL || "https://www.walletlink.org";
 const SDK_VERSION =
@@ -41,7 +41,7 @@ export class CoinbaseWalletSDK {
   private _appLogoUrl: string | null = null;
   private _relay: WalletSDKRelay | null = null;
   private _relayEventManager: WalletSDKRelayEventManager | null = null;
-  private _qrUri: string | null = null;
+  private _qrUrl: string | null = null;
   private _storage: ScopedLocalStorage;
   private _overrideIsMetaMask: boolean;
   private _overrideIsCoinbaseWallet: boolean;
@@ -94,8 +94,12 @@ export class CoinbaseWalletSDK {
     this.setAppInfo(options.appName, options.appLogoUrl);
     this._relay.attachUI();
 
-    const serverUrl = window.encodeURIComponent(linkAPIUrl);
-    this._qrUri = `${linkAPIUrl}/#/link?id=${this._relay.session.id}&secret=${this._relay.session.secret}&server=${serverUrl}&v=1`;
+    this._qrUrl = createQrUrl(
+      this._relay.session.id,
+      this._relay.session.secret,
+      linkAPIUrl,
+      false
+    );
   }
 
   /**
@@ -130,7 +134,7 @@ export class CoinbaseWalletSDK {
       storage: this._storage,
       jsonRpcUrl,
       chainId,
-      qrUri: this._qrUri,
+      qrUrl: this._qrUrl,
       eventListener: this._eventListener,
       overrideIsMetaMask: this._overrideIsMetaMask,
       overrideIsCoinbaseWallet: this._overrideIsCoinbaseWallet

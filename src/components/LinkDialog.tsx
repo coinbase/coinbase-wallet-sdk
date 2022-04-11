@@ -5,6 +5,7 @@ import clsx from "clsx";
 import { FunctionComponent, h } from "preact";
 import { useEffect, useState } from "preact/hooks";
 
+import { createQrUrl } from "../util";
 import { LIB_VERSION } from "../version";
 import css from "./LinkDialog-css";
 import { QRCode } from "./QRCode";
@@ -95,9 +96,12 @@ const ScanQRCode: FunctionComponent<{
   isConnected: boolean;
   isParentConnection: boolean;
 }> = props => {
-  const serverUrl = window.encodeURIComponent(props.linkAPIUrl);
-  const sessionIdKey = props.isParentConnection ? "parent-id" : "id";
-  const qrUrl = `${props.linkAPIUrl}/#/link?${sessionIdKey}=${props.sessionId}&secret=${props.sessionSecret}&server=${serverUrl}&v=1`;
+  const qrUrl = createQrUrl(
+    props.sessionId,
+    props.sessionSecret,
+    props.linkAPIUrl,
+    props.isParentConnection
+  );
 
   return (
     <div class="-cbwsdk-link-dialog-box-content">
