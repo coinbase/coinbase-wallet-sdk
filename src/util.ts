@@ -2,6 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 import BN from "bn.js";
+import { stringify } from "qs";
 
 import {
   AddressString,
@@ -228,9 +229,16 @@ export function createQrUrl(
   serverUrl: string,
   isParentConnection: boolean
 ): string {
-  const encodedServerUrl = window.encodeURIComponent(serverUrl);
   const sessionIdKey = isParentConnection ? "parent-id" : "id";
-  const qrUrl = `${serverUrl}/#/link?${sessionIdKey}=${sessionId}&secret=${sessionSecret}&server=${encodedServerUrl}&v=1`;
+
+  const query: string = stringify({
+    [sessionIdKey]: sessionId,
+    secret: sessionSecret,
+    server: serverUrl,
+    v: "1"
+  });
+
+  const qrUrl = `${serverUrl}/#/link?${query}`;
 
   return qrUrl;
 }
