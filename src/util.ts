@@ -2,6 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 import BN from "bn.js";
+import { stringify } from "qs";
 
 import {
   AddressString,
@@ -220,4 +221,24 @@ export function getFavicon(): string | null {
     return protocol + href;
   }
   return `${protocol}//${host}${href}`;
+}
+
+export function createQrUrl(
+  sessionId: string,
+  sessionSecret: string,
+  serverUrl: string,
+  isParentConnection: boolean
+): string {
+  const sessionIdKey = isParentConnection ? "parent-id" : "id";
+
+  const query: string = stringify({
+    [sessionIdKey]: sessionId,
+    secret: sessionSecret,
+    server: serverUrl,
+    v: "1"
+  });
+
+  const qrUrl = `${serverUrl}/#/link?${query}`;
+
+  return qrUrl;
 }

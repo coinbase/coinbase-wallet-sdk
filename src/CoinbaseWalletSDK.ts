@@ -8,7 +8,7 @@ import { WalletSDKUI } from "./provider/WalletSDKUI";
 import { WalletUI, WalletUIOptions } from "./provider/WalletUI";
 import { WalletSDKRelay } from "./relay/WalletSDKRelay";
 import { WalletSDKRelayEventManager } from "./relay/WalletSDKRelayEventManager";
-import { getFavicon } from "./util";
+import { createQrUrl, getFavicon } from "./util";
 
 const LINK_API_URL = process.env.LINK_API_URL || "https://www.walletlink.org";
 const SDK_VERSION =
@@ -43,6 +43,7 @@ export class CoinbaseWalletSDK {
   private _appLogoUrl: string | null = null;
   private _relay: WalletSDKRelay | null = null;
   private _relayEventManager: WalletSDKRelayEventManager | null = null;
+  private _qrUrl: string | null = null;
   private _storage: ScopedLocalStorage;
   private _overrideIsMetaMask: boolean;
   private _overrideIsCoinbaseWallet: boolean;
@@ -97,6 +98,13 @@ export class CoinbaseWalletSDK {
     if (!!options.headlessMode) return;
 
     this._relay.attachUI();
+
+    this._qrUrl = createQrUrl(
+      this._relay.session.id,
+      this._relay.session.secret,
+      linkAPIUrl,
+      false
+    );
   }
 
   /**
@@ -170,6 +178,13 @@ export class CoinbaseWalletSDK {
     } else {
       this._relay?.resetAndReload();
     }
+  }
+
+  /**
+   * Return QR URL for mobile wallet connection, will return null if extension is installed
+   */
+  public getQrUrl(): string | null {
+    return this._qrUrl;
   }
 
   private get walletExtension(): CoinbaseWalletProvider | undefined {
