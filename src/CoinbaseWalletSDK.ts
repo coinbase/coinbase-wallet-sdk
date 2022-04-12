@@ -134,7 +134,6 @@ export class CoinbaseWalletSDK {
       storage: this._storage,
       jsonRpcUrl,
       chainId,
-      qrUrl: this._qrUrl,
       eventListener: this._eventListener,
       overrideIsMetaMask: this._overrideIsMetaMask,
       overrideIsCoinbaseWallet: this._overrideIsCoinbaseWallet
@@ -174,6 +173,13 @@ export class CoinbaseWalletSDK {
     } else {
       this._relay?.resetAndReload();
     }
+  }
+
+  /**
+   * Return QR URL for mobile wallet connection, will return null if extension is installed
+   */
+  public getQrUrl(): string | null {
+    return this._qrUrl;
   }
 
   private get walletExtension(): CoinbaseWalletProvider | undefined {
