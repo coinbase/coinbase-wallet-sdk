@@ -23,7 +23,7 @@
   "author": "Coinbase, Inc.",
   "license": "Apache-2.0",
   "scripts": {
-    "test": "yarn build-npm && karma start",
+    "test": "jest",
     "prebuild": "node -p \"'export const LIB_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
     "build": "node compile-assets.js && webpack --config webpack.config.js",
     "build-npm": "tsc -p ./tsconfig.build.json",
@@ -55,13 +55,16 @@
     "stream-browserify": "^3.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.0.0",
+    "@babel/core": "^7.17.9",
+    "@babel/preset-env": "^7.16.11",
     "@types/bn.js": "^4.11.6",
+    "@types/jest": "^27.4.1",
     "@types/node": "^14.14.20",
     "@types/qs": "^6.9.7",
     "@typescript-eslint/eslint-plugin": "^5.7.0",
     "@typescript-eslint/eslint-plugin-tslint": "^5.7.0",
     "@typescript-eslint/parser": "^5.7.0",
+    "babel-jest": "^27.5.1",
     "browserify": "17.0.0",
     "copy-webpack-plugin": "^6.4.1",
     "core-js": "^3.8.2",
@@ -72,6 +75,7 @@
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-simple-import-sort": "^7.0.0",
     "jasmine": "3.8.0",
+    "jest": "^27.5.1",
     "karma": "^6.3.15",
     "karma-browserify": "8.1.0",
     "karma-chrome-launcher": "^3.1.0",
@@ -82,7 +86,7 @@
     "regenerator-runtime": "^0.13.7",
     "sass": "^1.32.0",
     "svgo": "^2.8.0",
-    "ts-jest": "^26.4.4",
+    "ts-jest": "^27.1.4",
     "ts-loader": "^8.0.13",
     "tslib": "^2.0.3",
     "typescript": "^4.1.3",
@@ -93,21 +97,5 @@
   },
   "engines": {
     "node": ">= 10.0.0"
-  },
-  "jest": {
-    "transform": {
-      "^.+\\.tsx?$": "ts-jest"
-    },
-    "testEnvironment": "node",
-    "testPathIgnorePatterns": [
-      "<rootDir>/dist/",
-      "<rootDir>/node_modules/"
-    ],
-    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "js",
-      "json"
-    ]
   }
 }
