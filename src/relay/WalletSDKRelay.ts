@@ -23,6 +23,7 @@ import { WalletUI, WalletUIOptions } from "../provider/WalletUI";
 import { AddressString, IntNumber, RegExpString } from "../types";
 import {
   bigIntStringFromBN,
+  createQrUrl,
   hexStringFromBuffer,
   randomBytesHex
 } from "../util";
@@ -510,6 +511,15 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
       method: Web3Method.scanQRCode,
       params: { regExp }
     });
+  }
+
+  public getQRCodeUrl() {
+    return createQrUrl(
+      this.session.id,
+      this.session.secret,
+      this.linkAPIUrl,
+      false
+    );
   }
 
   public genericRequest(
