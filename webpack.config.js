@@ -1,5 +1,6 @@
 const path = require("path");
 const webpack = require("webpack");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const { env } = process;
 
 const tsConfigPath = (exports.tsConfigPath = path.join(
@@ -28,6 +29,20 @@ module.exports = {
           }
         },
         exclude: /node_modules/
+      },
+      {
+        test: /\.(scss|css)$/,
+        use: [
+          MiniCssExtractPlugin.loader,
+          {
+            loader: "css-loader",
+            options: {
+              // Enables es module syntax for better bundle optimization
+              esModule: true,
+              publicPath: ""
+            }
+          }
+        ]
       }
     ]
   },
