@@ -131,6 +131,7 @@ export class CoinbaseWalletSDK {
       storage: this._storage,
       jsonRpcUrl,
       chainId,
+      qrUrl: relay.getQRCodeUrl(),
       eventListener: this._eventListener,
       overrideIsMetaMask: this._overrideIsMetaMask,
       overrideIsCoinbaseWallet: this._overrideIsCoinbaseWallet
