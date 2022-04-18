@@ -50,6 +50,7 @@ const HAS_CHAIN_OVERRIDDEN_FROM_RELAY = "HasChainOverriddenFromRelay";
 export interface CoinbaseWalletProviderOptions {
   chainId?: number;
   jsonRpcUrl: string;
+  qrUrl: string | null;
   overrideIsCoinbaseWallet?: boolean;
   overrideIsMetaMask: boolean;
   relayEventManager: WalletSDKRelayEventManager;
@@ -65,6 +66,7 @@ export class CoinbaseWalletProvider
 {
   // So dapps can easily identify Coinbase Wallet for enabling features like 3085 network switcher menus
   public readonly isCoinbaseWallet: boolean;
+  public readonly qrUrl: string | null;
 
   private readonly _filterPolyfill = new FilterPolyfill(this);
   private readonly _subscriptionManager = new SubscriptionManager(this);
@@ -108,6 +110,8 @@ export class CoinbaseWalletProvider
     this._eventListener = options.eventListener;
 
     this.isCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true;
+
+    this.qrUrl = options.qrUrl;
 
     this.supportsAddressSwitching = options.supportsAddressSwitching;
 

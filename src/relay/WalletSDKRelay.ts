@@ -515,8 +515,8 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
 
   public getQRCodeUrl() {
     return createQrUrl(
-      this.session.id,
-      this.session.secret,
+      this._session.id,
+      this._session.secret,
       this.linkAPIUrl,
       false
     );
