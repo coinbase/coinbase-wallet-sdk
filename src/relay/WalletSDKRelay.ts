@@ -2,6 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator";
+import { Buffer } from 'buffer';
 import { ethErrors } from "eth-rpc-errors";
 import { Observable, of, Subscription, zip } from "rxjs";
 import {

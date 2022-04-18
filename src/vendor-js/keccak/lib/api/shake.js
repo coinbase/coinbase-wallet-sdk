@@ -1,3 +1,4 @@
+const { Buffer } = require('buffer');
 const { Transform } = require('stream')
 
 module.exports = (KeccakState) => class Shake extends Transform {

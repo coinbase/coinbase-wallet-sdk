@@ -3,6 +3,8 @@
 
 const util = require('./util')
 const BN = require('bn.js')
+const { Buffer } = require('buffer');
+
 
 // Convert from short to canonical names
 // FIXME: optimise or make this nicer?
@@ -34,13 +36,13 @@ function parseTypeN (type) {
 
 // Parse N,M from type<N>x<M>
 function parseTypeNxM (type) {
-  var tmp = /^\D+(\d+)x(\d+)$/.exec(type)
+  const tmp = /^\D+(\d+)x(\d+)$/.exec(type)
   return [ parseInt(tmp[1], 10), parseInt(tmp[2], 10) ]
 }
 
 // Parse N in type[<N>] where "type" can itself be an array type.
 function parseTypeArray (type) {
-  var tmp = type.match(/(.*)\[(.*?)\]$/)
+  const tmp = type.match(/(.*)\[(.*?)\]$/)
   if (tmp) {
     return tmp[2] === '' ? 'dynamic' : parseInt(tmp[2], 10)
   }
@@ -48,7 +50,7 @@ function parseTypeArray (type) {
 }
 
 function parseNumber (arg) {
-  var type = typeof arg
+  const type = typeof arg
   if (type === 'string') {
     if (util.isHexString(arg)) {
       return new BN(util.stripHexPrefix(arg), 16)
@@ -68,7 +70,7 @@ function parseNumber (arg) {
 // Encodes a single item (can be dynamic array)
 // @returns: Buffer
 function encodeSingle (type, arg) {
-  var size, num, ret, i
+  let size; let num; let ret; let i
 
   if (type === 'address') {
     return encodeSingle('uint160', parseNumber(arg))
@@ -95,7 +97,7 @@ function encodeSingle (type, arg) {
       ret.push(encodeSingle(type, arg[i]))
     }
     if (size === 'dynamic') {
-      var length = encodeSingle('uint256', arg.length)
+      const length = encodeSingle('uint256', arg.length)
       ret.unshift(length)
     }
     return Buffer.concat(ret)
@@ -178,15 +180,15 @@ function isArray (type) {
 // @types an array of string type names
 // @args  an array of the appropriate values
 function rawEncode (types, values) {
-  var output = []
-  var data = []
+  const output = []
+  const data = []
 
-  var headLength = 32 * types.length
+  let headLength = 32 * types.length
 
-  for (var i in types) {
-    var type = elementaryName(types[i])
-    var value = values[i]
-    var cur = encodeSingle(type, value)
+  for (const i in types) {
+    const type = elementaryName(types[i])
+    const value = values[i]
+    const cur = encodeSingle(type, value)
 
     // Use the head/tail method for storing dynamic data
     if (isDynamic(type)) {
@@ -206,12 +208,12 @@ function solidityPack (types, values) {
     throw new Error('Number of types are not matching the values')
   }
 
-  var size, num
-  var ret = []
+  let size; let num
+  const ret = []
 
-  for (var i = 0; i < types.length; i++) {
-    var type = elementaryName(types[i])
-    var value = values[i]
+  for (let i = 0; i < types.length; i++) {
+    const type = elementaryName(types[i])
+    const value = values[i]
 
     if (type === 'bytes') {
       ret.push(value)

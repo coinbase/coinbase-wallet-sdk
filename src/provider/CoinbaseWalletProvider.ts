@@ -3,6 +3,7 @@
 
 import SafeEventEmitter from "@metamask/safe-event-emitter";
 import BN from "bn.js";
+import { Buffer } from 'buffer';
 import { ethErrors } from "eth-rpc-errors";
 
 import { EventListener, EVENTS } from "../connection/EventListener";

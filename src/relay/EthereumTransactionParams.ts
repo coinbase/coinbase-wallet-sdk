@@ -1,4 +1,5 @@
 import BN from "bn.js";
+import { Buffer } from 'buffer';
 
 import { AddressString, IntNumber } from "../types";
 

@@ -1,8 +1,9 @@
 // Extracted from https://github.com/ethereumjs/ethereumjs-util and stripped out irrelevant code
 // Original code licensed under the Mozilla Public License Version 2.0
 
+const BN = require('bn.js');
+const { Buffer } = require('buffer');
 const createKeccakHash = require('keccak/js')
-const BN = require('bn.js')
 
 /**
  * Returns a buffer filled with 0s

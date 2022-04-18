@@ -2,6 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 import BN from "bn.js";
+import { Buffer } from 'buffer';
 import { stringify } from "qs";
 
 import {

@@ -42,6 +42,7 @@
     "@metamask/safe-event-emitter": "2.0.0",
     "bind-decorator": "^1.0.11",
     "bn.js": "^5.1.1",
+    "buffer": "^6.0.3",
     "clsx": "^1.1.0",
     "eth-block-tracker": "4.4.3",
     "eth-json-rpc-filters": "4.2.2",
@@ -57,7 +58,7 @@
   "devDependencies": {
     "@babel/core": "^7.0.0",
     "@types/bn.js": "^4.11.6",
-    "@types/node": "^14.14.20",
+    "@types/node": "^17.0.25",
     "@types/qs": "^6.9.7",
     "@typescript-eslint/eslint-plugin": "^5.7.0",
     "@typescript-eslint/eslint-plugin-tslint": "^5.7.0",

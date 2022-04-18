@@ -1,3 +1,4 @@
+const { Buffer } = require('buffer');
 const keccakState = require('./keccak-state-unroll')
 
 function Keccak () {

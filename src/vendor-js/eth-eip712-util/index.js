@@ -1,5 +1,6 @@
-const util = require('./util')
 const abi = require('./abi')
+const { Buffer } = require('buffer');
+const util = require('./util')
 
 const TYPED_MESSAGE_SCHEMA = {
   type: 'object',
@@ -11,16 +12,16 @@ const TYPED_MESSAGE_SCHEMA = {
         items: {
           type: 'object',
           properties: {
-            name: {type: 'string'},
-            type: {type: 'string'},
+            name: { type: 'string' },
+            type: { type: 'string' },
           },
           required: ['name', 'type'],
         },
       },
     },
-    primaryType: {type: 'string'},
-    domain: {type: 'object'},
-    message: {type: 'object'},
+    primaryType: { type: 'string' },
+    domain: { type: 'object' },
+    message: { type: 'object' },
   },
   required: ['types', 'primaryType', 'domain', 'message'],
 }
@@ -217,15 +218,15 @@ module.exports = {
   TYPED_MESSAGE_SCHEMA,
   TypedDataUtils,
 
-  hashForSignTypedDataLegacy: function (msgParams) {
+  hashForSignTypedDataLegacy (msgParams) {
     return typedSignatureHashLegacy(msgParams.data)
   },
 
-  hashForSignTypedData_v3: function (msgParams) {
+  hashForSignTypedData_v3 (msgParams) {
     return TypedDataUtils.hash(msgParams.data, false)
   },
 
-  hashForSignTypedData_v4: function (msgParams) {
+  hashForSignTypedData_v4 (msgParams) {
     return TypedDataUtils.hash(msgParams.data)
   },
 }
@@ -238,11 +239,11 @@ function typedSignatureHashLegacy(typedData) {
   const error = new Error('Expect argument to be non-empty array')
   if (typeof typedData !== 'object' || !typedData.length) throw error
 
-  const data = typedData.map(function (e) {
+  const data = typedData.map((e) => {
     return e.type === 'bytes' ? util.toBuffer(e.value) : e.value
   })
-  const types = typedData.map(function (e) { return e.type })
-  const schema = typedData.map(function (e) {
+  const types = typedData.map((e) => { return e.type })
+  const schema = typedData.map((e) => {
     if (!e.name) throw error
     return e.type + ' ' + e.name
   })
