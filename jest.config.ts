@@ -11,7 +11,24 @@ export default {
   collectCoverage: true,
 
   // An array of glob patterns indicating a set of files for which coverage information should be collected
-  collectCoverageFrom: ["./src/**/*.{ts,tsx}"],
+  collectCoverageFrom: [
+    "./src/util.ts",
+    "./src/CoinbaseWalletSDK.tsx",
+    "./src/connection/RxWebSocket.ts",
+    "./src/connection/WalletSDKConnection.ts",
+    "./src/lib/ScopedLocalStorage.ts",
+    "./src/provider/CoinbaseWalletProvider.ts",
+    "./src/provider/FilterPolyfill.ts",
+    "./src/provider/SubscriptionManager.ts",
+    "./src/provider/WalletSDKUI.ts",
+    "./src/provider/Web3Provider.ts",
+    "./src/relay/aes256gcm.ts",
+    "./src/relay/Session.ts",
+    "./src/relay/WalletSDKAbstract.ts",
+    "./src/relay/WalletSDKRelayEventManager.ts",
+    "./src/relay/Web3Response.ts",
+    "./src/relay/Web3ResponseMessage.ts"
+  ],
 
   // The directory where Jest should output its coverage files
   coverageDirectory: "coverage",
@@ -53,10 +70,10 @@ export default {
   roots: ["<rootDir>/tests"],
 
   // The paths to modules that run some code to configure or set up the testing environment before each test
-  // setupFiles: [],
+  setupFiles: ["<rootDir>/tests/setupTests.ts"],
 
   // A list of paths to modules that run some code to configure or set up the testing framework before each test
-  setupFiles: ["<rootDir>/tests/setupTests.ts"],
+  // setupFilesAfterEnv: [],
 
   // The test environment that will be used for testing
   testEnvironment: "jsdom",

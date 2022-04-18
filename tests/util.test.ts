@@ -1,5 +1,5 @@
-import { randomBytesHex } from "./../src/util";
+import { uint8ArrayToHex } from "./../src/util";
 
-test("randomBytesHex", () => {
-  expect(randomBytesHex(1234));
+test("uint8ArrayToHex", () => {
+  expect(uint8ArrayToHex(new Uint8Array(6))).toEqual("000000000000");
 });
