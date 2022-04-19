@@ -21,7 +21,6 @@ export default {
     "./src/provider/FilterPolyfill.ts",
     "./src/provider/SubscriptionManager.ts",
     "./src/provider/WalletSDKUI.ts",
-    "./src/provider/Web3Provider.ts",
     "./src/relay/aes256gcm.ts",
     "./src/relay/Session.ts",
     "./src/relay/WalletSDKAbstract.ts",
