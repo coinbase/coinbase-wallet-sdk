@@ -12,9 +12,7 @@ export class MockProviderClass extends CoinbaseWalletProvider {
     super(opts);
   }
 
-  public close() {
-    return "mockClose";
-  }
+  public async close() {}
 
   // @ts-expect-error mock relay
   private async initializeRelay() {

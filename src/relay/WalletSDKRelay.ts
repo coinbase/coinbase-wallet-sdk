@@ -81,6 +81,7 @@ export interface WalletSDKRelayOptions {
   relayEventManager: WalletSDKRelayEventManager;
   uiConstructor: (options: Readonly<WalletUIOptions>) => WalletUI;
   eventListener?: EventListener;
+  headlessMode?: boolean;
 }
 
 export class WalletSDKRelay extends WalletSDKRelayAbstract {
@@ -167,7 +168,6 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         .subscribe(),
     );
 
-    // if session is marked destroyed, reset and reload
     this.subscriptions.add(
       this.connection.sessionConfig$
         .pipe(filter(c => !!c.metadata && c.metadata.__destroyed === "1"))
@@ -177,6 +177,9 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
             alreadyDestroyed,
             sessionIdHash: this.getSessionIdHash(),
           });
+          if (options.headlessMode) {
+            return this.reset();
+          }
           return this.resetAndReload();
         }),
     );
@@ -318,6 +321,60 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
 
   public attachUI() {
     this.ui.attach();
+  }
+
+  @bind
+  public reset(): void {
+    this.connection
+      .setSessionMetadata("__destroyed", "1")
+      .pipe(
+        timeout(1000),
+        catchError(_ => of(null)),
+      )
+      .subscribe(
+        _ => {
+          try {
+            this.subscriptions.unsubscribe();
+          } catch (err) {
+            this.eventListener?.onEvent(EVENTS.GENERAL_ERROR, {
+              message: "Had error unsubscribing",
+            });
+          }
+
+          this.eventListener?.onEvent(EVENTS.SESSION_STATE_CHANGE, {
+            method: "relay::reset",
+            sessionMetadataChange: "__destroyed, 1",
+            sessionIdHash: this.getSessionIdHash(),
+            origin: location.origin,
+          });
+          this.connection.destroy();
+          /**
+           * Only clear storage if the session id we have in memory matches the one on disk
+           * Otherwise, in the case where we have 2 tabs, another tab might have cleared
+           * storage already.  In that case if we clear storage again, the user will be in
+           * a state where the first tab allows the user to connect but the session that
+           * was used isn't persisted.  This leaves the user in a state where they aren't
+           * connected to the mobile app.
+           */
+          const storedSession = Session.load(this.storage);
+          if (storedSession?.id === this._session.id) {
+            this.storage.clear();
+          } else if (storedSession) {
+            this.eventListener?.onEvent(EVENTS.SKIPPED_CLEARING_SESSION, {
+              sessionIdHash: this.getSessionIdHash(),
+              storedSessionIdHash: Session.hash(storedSession.id),
+              origin: location.origin,
+            });
+          }
+        },
+        (err: string) => {
+          this.eventListener?.onEvent(EVENTS.FAILURE, {
+            method: "relay::reset",
+            message: `failed to reset with ${err}`,
+            sessionIdHash: this.getSessionIdHash(),
+          });
+        },
+      );
   }
 
   @bind

@@ -29,6 +29,7 @@ export type CancelablePromise<T> = {
 };
 
 export abstract class WalletSDKRelayAbstract {
+  abstract reset(): void;
   abstract resetAndReload(): void;
 
   abstract requestEthereumAccounts(): CancelablePromise<RequestEthereumAccountsResponse>;

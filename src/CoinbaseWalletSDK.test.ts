@@ -49,11 +49,11 @@ describe("CoinbaseWalletSDK", () => {
         );
       });
 
-      test("@disconnect", () => {
+      test("@disconnect", async () => {
         const relayResetMock = jest
           .spyOn(WalletSDKRelay.prototype, "resetAndReload")
           .mockImplementation(() => "resetAndReload");
-        coinbaseWalletSDK2.disconnect();
+        await coinbaseWalletSDK2.disconnect();
 
         expect(relayResetMock).toHaveBeenCalled();
       });
@@ -96,10 +96,10 @@ describe("CoinbaseWalletSDK", () => {
         );
       });
 
-      test("@disconnect", () => {
+      test("@disconnect", async () => {
         // Calls extension close
-        coinbaseWalletSDK2.disconnect();
-        expect(mockExtensionProvider.close()).toEqual("mockClose");
+        await coinbaseWalletSDK2.disconnect();
+        expect(await mockExtensionProvider.close()).toEqual(undefined);
       });
 
       test("@setAppInfo", async () => {
@@ -151,6 +151,29 @@ describe("CoinbaseWalletSDK", () => {
           .mockImplementation(() => "setAppInfo");
         coinbaseWalletSDK2.setAppInfo("cipher", "http://cipher-image.png");
         expect(relaySetAppInfoMock).not.toBeCalled();
+      });
+    });
+  });
+
+  describe("public methods headless mode", () => {
+    let headlessWalletSDK: CoinbaseWalletSDK;
+
+    beforeEach(() => {
+      headlessWalletSDK = new CoinbaseWalletSDK({
+        appName: "Test",
+        appLogoUrl: "http://coinbase.com/wallet-logo.png",
+        headlessMode: true,
+      });
+    });
+
+    describe("sdk", () => {
+      test("@disconnect", async () => {
+        const relayMock = jest
+          .spyOn(WalletSDKRelay.prototype, "reset")
+          .mockImplementation(() => "reset");
+        await headlessWalletSDK.disconnect();
+
+        expect(relayMock).toHaveBeenCalled();
       });
     });
   });

@@ -50,12 +50,15 @@ export class CoinbaseWalletSDK {
   private _overrideIsCoinbaseWallet: boolean;
   private _overrideIsCoinbaseBrowser: boolean;
   private _eventListener?: EventListener;
+  private _headlessMode: boolean | undefined;
 
   /**
    * Constructor
    * @param options Coinbase Wallet SDK constructor options
    */
   constructor(options: Readonly<CoinbaseWalletSDKOptions>) {
+    this._headlessMode = options.headlessMode;
+
     const linkAPIUrl = options.linkAPIUrl || LINK_API_URL;
     let uiConstructor: (options: Readonly<WalletUIOptions>) => WalletUI;
     if (!options.uiConstructor) {
@@ -96,6 +99,7 @@ export class CoinbaseWalletSDK {
       storage: this._storage,
       relayEventManager: this._relayEventManager,
       eventListener: this._eventListener,
+      headlessMode: options.headlessMode,
     });
     this.setAppInfo(options.appName, options.appLogoUrl);
 
@@ -141,6 +145,7 @@ export class CoinbaseWalletSDK {
       overrideIsMetaMask: this._overrideIsMetaMask,
       overrideIsCoinbaseWallet: this._overrideIsCoinbaseWallet,
       overrideIsCoinbaseBrowser: this._overrideIsCoinbaseBrowser,
+      headlessMode: this._headlessMode,
     });
   }
 
@@ -168,14 +173,18 @@ export class CoinbaseWalletSDK {
 
   /**
    * Disconnect. After disconnecting, this will reload the web page to ensure
-   * all potential stale state is cleared.
+   * all potential stale state is cleared if not in headless mode.
    */
-  public disconnect(): void {
+  public async disconnect(): Promise<void> {
     const extension = this.walletExtension;
     if (extension) {
-      extension.close();
+      await extension.close();
     } else {
-      this._relay?.resetAndReload();
+      if (this._headlessMode) {
+        this._relay?.reset();
+      } else {
+        this._relay?.resetAndReload();
+      }
     }
   }
 

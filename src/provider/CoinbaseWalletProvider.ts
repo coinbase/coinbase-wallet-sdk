@@ -59,6 +59,7 @@ export interface CoinbaseWalletProviderOptions {
   storage: ScopedLocalStorage;
   eventListener?: EventListener;
   supportsAddressSwitching?: boolean;
+  headlessMode?: boolean;
 }
 
 export class CoinbaseWalletProvider
@@ -80,6 +81,8 @@ export class CoinbaseWalletProvider
   private readonly _storage: ScopedLocalStorage;
   private readonly _relayEventManager: WalletSDKRelayEventManager;
   private readonly _eventListener?: EventListener;
+
+  private _headlessMode: boolean | undefined;
 
   private _jsonRpcUrlFromOpts: string;
   private readonly _overrideIsMetaMask: boolean;
@@ -106,6 +109,7 @@ export class CoinbaseWalletProvider
     this.scanQRCode = this.scanQRCode.bind(this);
     this.genericRequest = this.genericRequest.bind(this);
 
+    this._headlessMode = options.headlessMode;
     this._jsonRpcUrlFromOpts = options.jsonRpcUrl;
     this._overrideIsMetaMask = options.overrideIsMetaMask;
     this._relayProvider = options.relayProvider;
@@ -351,8 +355,13 @@ export class CoinbaseWalletProvider
     return await this._send<AddressString[]>(JSONRPCMethod.eth_requestAccounts);
   }
 
-  public close() {
-    void this.initializeRelay().then(relay => relay.resetAndReload());
+  public async close() {
+    const relay = await this.initializeRelay();
+    if (this._headlessMode) {
+      relay.reset();
+    } else {
+      relay.resetAndReload();
+    }
   }
 
   public send(request: JSONRPCRequest): JSONRPCResponse;
