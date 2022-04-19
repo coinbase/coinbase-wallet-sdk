@@ -67,10 +67,10 @@ export default {
   // modulePathIgnorePatterns: ["**/*-css.ts"],
 
   // A list of paths to directories that Jest should use to search for files in
-  roots: ["<rootDir>/tests"],
+  roots: ["<rootDir>/src"],
 
   // The paths to modules that run some code to configure or set up the testing environment before each test
-  setupFiles: ["<rootDir>/tests/setupTests.ts"],
+  // setupFiles: ["<rootDir>/tests/setupTests.ts"],
 
   // A list of paths to modules that run some code to configure or set up the testing framework before each test
   // setupFilesAfterEnv: [],
@@ -79,12 +79,7 @@ export default {
   testEnvironment: "jsdom",
 
   // The glob patterns Jest uses to detect test files
-  testMatch: ["<rootDir>/tests/**/*.test.[tj]s?(x)"],
-
-  // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
-  // testPathIgnorePatterns: [
-  //   "/node_modules/"
-  // ],
+  testMatch: ["<rootDir>/src/**/*.test.[tj]s?(x)"],
 
   // A map from regular expressions to paths to transformers
   transform: {
