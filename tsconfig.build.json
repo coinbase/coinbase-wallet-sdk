@@ -2,8 +2,11 @@
   "extends": "./tsconfig",
   "compilerOptions": {
     "declaration": true,
+    "emitDeclarationOnly": true,
     "module": "commonjs",
     "moduleResolution": "node",
+    "isolatedModules": true,
+    "noEmit": true,
     "outDir": "./build/npm/dist",
     "target": "es2017"
   },

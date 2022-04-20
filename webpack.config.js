@@ -20,13 +20,8 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.tsx?$/,
-        use: {
-          loader: "ts-loader",
-          options: {
-            configFile: tsConfigPath
-          }
-        },
+        test: /\.(ts|js)x?$/,
+        loader: "babel-loader",
         exclude: /node_modules/
       }
     ]
