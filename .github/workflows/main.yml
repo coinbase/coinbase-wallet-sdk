@@ -32,3 +32,6 @@ jobs:
 
       - name: Check Types
         run: yarn lint:types
+
+      - name: Run Unit Tests
+        run: yarn test:unit
