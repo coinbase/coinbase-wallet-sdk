@@ -7,5 +7,6 @@
     "outDir": "./build/npm/dist",
     "target": "es2017"
   },
-  "include": ["src", "src/@types"]
+  "include": ["src", "src/@types"],
+  "exclude": ["**/*.test.*", "__tests__"]
 }
