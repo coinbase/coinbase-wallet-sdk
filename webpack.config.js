@@ -2,11 +2,6 @@ const path = require("path");
 const webpack = require("webpack");
 const { env } = process;
 
-const tsConfigPath = (exports.tsConfigPath = path.join(
-  __dirname,
-  "tsconfig.json"
-));
-
 module.exports = {
   target: "web",
   entry: [
@@ -20,7 +15,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.(ts|js)x?$/,
+        test: /\.tsx?$/,
         loader: "babel-loader",
         exclude: /node_modules/
       }
