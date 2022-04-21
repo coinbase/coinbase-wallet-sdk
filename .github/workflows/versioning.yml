@@ -1,4 +1,4 @@
-name: Input version tag
+name: Version - PR
 
 on:
   workflow_dispatch:
