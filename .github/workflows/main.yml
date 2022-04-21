@@ -7,7 +7,7 @@ on:
 
 jobs:
   lint-check:
-    name: Check for ESLint, Formatting, and Types
+    name: Lint / Type Check
     runs-on: ubuntu-latest
 
     steps:
@@ -40,7 +40,7 @@ jobs:
 
     strategy:
         matrix:
-          node-version: [12.x, 14.x, 16.x]
+          node-version: [16.x]
 
     steps:
     - name: Checkout
