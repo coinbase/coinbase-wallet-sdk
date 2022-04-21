@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches-ignore:
-      - "master"
+      - master
 
 jobs:
   lint-check:
