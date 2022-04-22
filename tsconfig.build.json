@@ -2,6 +2,7 @@
   "extends": "./tsconfig",
   "compilerOptions": {
     "declaration": true,
+    "emitDeclarationOnly": true,
     "module": "commonjs",
     "moduleResolution": "node",
     "isolatedModules": true,

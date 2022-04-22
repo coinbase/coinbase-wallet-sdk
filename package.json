@@ -58,6 +58,7 @@
     "stream-browserify": "^3.0.0"
   },
   "devDependencies": {
+    "@babel/cli": "^7.17.6",
     "@babel/core": "^7.17.9",
     "@babel/plugin-proposal-decorators": "^7.17.9",
     "@babel/preset-env": "^7.16.11",
