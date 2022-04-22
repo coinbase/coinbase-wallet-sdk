@@ -31,8 +31,8 @@ module.exports = {
     symlinks: false
   },
   output: {
-    filename: "CoinbaseWalletSDK.js",
-    path: path.resolve(__dirname, "build")
+    filename: "[name].js",
+    path: path.resolve(__dirname, "build/npm/dist")
   },
   performance: {
     hints: false
