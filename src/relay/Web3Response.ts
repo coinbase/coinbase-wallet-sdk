@@ -17,16 +17,14 @@ export class ErrorResponse implements BaseWeb3Response<void>, Error {
   name: string;
   message: string;
 
-  constructor(method: Web3Method, errorMessage: string, errorCode?: number) {
+  constructor(method: Web3Method, errorMessage?: string, errorCode?: number) {
     this.method = method;
-    this.errorMessage = errorMessage;
+    this.errorMessage = errorMessage ?? "User rejected request";
     this.errorCode = errorCode;
-    this.name = method;
-    this.message = errorMessage;
+    this.name = this.method;
+    this.message = this.errorMessage;
   }
 }
-
-export const USER_REJECTED_REQUEST_ERROR = new Error("User rejected request");
 
 export type RequestEthereumAccountsResponse = BaseWeb3Response<
   AddressString[] // an array of ethereum addresses
