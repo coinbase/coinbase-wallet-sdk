@@ -23,17 +23,6 @@ export function ErrorResponse(
   return { method, errorMessage, errorCode };
 }
 
-export class TransactionError extends Error {
-  private constructor(readonly message: string, readonly errorCode?: number) {
-    super(message);
-  }
-
-  static switchEthereumChainUnsupportedChainId = new TransactionError(
-    "unsupported chainId",
-    4902
-  );
-}
-
 export type RequestEthereumAccountsResponse = BaseWeb3Response<
   AddressString[] // an array of ethereum addresses
 >;
@@ -62,6 +51,17 @@ export type SwitchResponse = {
   isApproved: boolean;
   rpcUrl: string;
 };
+
+export class SwitchEthereumChainError extends Error {
+  private constructor(readonly message: string, readonly errorCode?: number) {
+    super(message);
+  }
+
+  static UnsupportedChainId = new SwitchEthereumChainError(
+    "Unsupported chainId",
+    4902
+  );
+}
 
 export function SwitchEthereumChainResponse(
   switchResponse: SwitchResponse

@@ -61,8 +61,8 @@ import {
   SignEthereumMessageResponse,
   SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse,
+  SwitchEthereumChainError,
   SwitchEthereumChainResponse,
-  TransactionError,
   WatchAssetReponse,
   WatchAssetResponse,
   Web3Response
@@ -707,13 +707,19 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     this.invokeCallback(message);
   }
 
-  private handleErrorResponse(id: string, method: Web3Method, error?: Error) {
+  private handleErrorResponse(
+    id: string,
+    method: Web3Method,
+    error?: Error,
+    errorCode?: number
+  ) {
     this.handleWeb3ResponseMessage(
       Web3ResponseMessage({
         id,
         response: ErrorResponse(
           method,
-          error?.message ?? "User rejected request"
+          error?.message ?? "User rejected request",
+          errorCode
         )
       })
     );
@@ -1032,17 +1038,25 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
           resolve(response as SwitchEthereumChainResponse);
         });
 
-        const _cancel = (error?: Error) => {
-          if (error instanceof TransactionError) {
+        const _cancel = (error?: any) => {
+          if (typeof error === "number") {
+            // backward compatibility
             this.handleWeb3ResponseMessage(
               Web3ResponseMessage({
                 id,
                 response: ErrorResponse(
                   Web3Method.switchEthereumChain,
-                  error.message,
-                  error.errorCode
+                  "unsupported chainId",
+                  error
                 )
               })
+            );
+          } else if (error instanceof SwitchEthereumChainError) {
+            this.handleErrorResponse(
+              id,
+              Web3Method.switchEthereumChain,
+              error,
+              error.errorCode
             );
           } else {
             this.handleWeb3ResponseMessage(
