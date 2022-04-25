@@ -3,8 +3,9 @@
   "compilerOptions": {
     "declaration": true,
     "emitDeclarationOnly": true,
-    "module": "commonjs",
     "moduleResolution": "node",
+    "module": "commonjs",
+    "outDir": "./build/npm/dist",
   },
   "include": ["src", "src/@types"],
   "exclude": ["**/*.test.*", "__tests__"]
