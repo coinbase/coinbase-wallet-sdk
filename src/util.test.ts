@@ -96,7 +96,6 @@ test("ensureHexString", () => {
     '"123" is not a hexadecimal string'
   );
   expect(() => ensureHexString("az123456")).toThrowError();
-
   expect(ensureHexString("123456")).toEqual("123456");
   expect(ensureHexString("123456", true)).toEqual("0x123456");
 });
@@ -108,16 +107,16 @@ test("ensureEvenLengthHexString", () => {
 });
 
 test("ensureAddressString", () => {
-  expect(() => {
-    ensureAddressString(1234);
-  }).toThrowError("Invalid Ethereum address");
-  expect(() => {
-    ensureAddressString("E556B9bfEFDd5B190");
-  }).toThrowError("Invalid Ethereum address");
+  expect(() => ensureAddressString(1234)).toThrowError(
+    "Invalid Ethereum address"
+  );
+  expect(() => ensureAddressString("E556B9bfEFDd5B190")).toThrowError(
+    "Invalid Ethereum address"
+  );
 
-  expect(() => {
-    ensureAddressString("E556B9bfEFDd5B190c67b521ED0A7d19Ab89a3111");
-  }).toThrowError("Invalid Ethereum address");
+  expect(() =>
+    ensureAddressString("E556B9bfEFDd5B190c67b521ED0A7d19Ab89a3111")
+  ).toThrowError("Invalid Ethereum address");
 
   expect(ensureAddressString(hexString)).toEqual(
     "0xe556b9bfefdd5b190c67b521ed0a7d19ab89a311"
