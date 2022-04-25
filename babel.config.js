@@ -5,6 +5,7 @@ module.exports = {
     "preact"
   ],
   targets: "> 0.25%, not dead",
+  compact: true,
   // TODO: Refactor from legacy decorators
   plugins: [["@babel/plugin-proposal-decorators", { legacy: true }]]
 };
