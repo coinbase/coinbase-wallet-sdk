@@ -52,17 +52,6 @@ export type SwitchResponse = {
   rpcUrl: string;
 };
 
-export class SwitchEthereumChainError extends Error {
-  private constructor(readonly message: string, readonly errorCode?: number) {
-    super(message);
-  }
-
-  static UnsupportedChainId = new SwitchEthereumChainError(
-    "Unsupported chainId",
-    4902
-  );
-}
-
 export function SwitchEthereumChainResponse(
   switchResponse: SwitchResponse
 ): SwitchEthereumChainResponse {
