@@ -17,12 +17,12 @@ export class ErrorResponse implements BaseWeb3Response<void>, Error {
   name: string;
   message: string;
 
-  constructor(method: Web3Method, errorMessage?: string, errorCode?: number) {
+  constructor(method: Web3Method, errorMessage: string, errorCode?: number) {
     this.method = method;
-    this.errorMessage = errorMessage ?? "User rejected request";
+    this.errorMessage = errorMessage;
     this.errorCode = errorCode;
-    this.name = this.method;
-    this.message = this.errorMessage;
+    this.name = method;
+    this.message = errorMessage;
   }
 }
 

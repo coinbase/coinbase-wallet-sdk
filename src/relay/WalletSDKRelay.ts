@@ -539,12 +539,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
 
     const cancel = (error?: Error) => {
       this.publishWeb3RequestCanceledEvent(id);
-      this.handleWeb3ResponseMessage(
-        Web3ResponseMessage({
-          id,
-          response: new ErrorResponse(request.method, error?.message)
-        })
-      );
+      this.handleErrorResponse(id, request.method, error);
       hideSnackbarItem?.();
     };
 
@@ -711,6 +706,18 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     this.invokeCallback(message);
   }
 
+  private handleErrorResponse(id: string, method: Web3Method, error?: Error) {
+    this.handleWeb3ResponseMessage(
+      Web3ResponseMessage({
+        id,
+        response: new ErrorResponse(
+          method,
+          error?.message ?? "User rejected request"
+        )
+      })
+    );
+  }
+
   private invokeCallback(message: Web3ResponseMessage) {
     const callback = this.relayEventManager.callbacks.get(message.id);
     if (callback) {
@@ -733,12 +740,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
 
     const cancel = (error?: Error) => {
       this.publishWeb3RequestCanceledEvent(id);
-      this.handleWeb3ResponseMessage(
-        Web3ResponseMessage({
-          id,
-          response: new ErrorResponse(request.method, error?.message)
-        })
-      );
+      this.handleErrorResponse(id, request.method, error);
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       hideSnackbarItem?.();
@@ -829,12 +831,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
 
     const cancel = (error?: Error) => {
       this.publishWeb3RequestCanceledEvent(id);
-      this.handleWeb3ResponseMessage(
-        Web3ResponseMessage({
-          id,
-          response: new ErrorResponse(request.method, error?.message)
-        })
-      );
+      this.handleErrorResponse(id, request.method, error);
       hideSnackbarItem?.();
     };
 
@@ -924,12 +921,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
 
     const cancel = (error?: Error) => {
       this.publishWeb3RequestCanceledEvent(id);
-      this.handleWeb3ResponseMessage(
-        Web3ResponseMessage({
-          id,
-          response: new ErrorResponse(request.method, error?.message)
-        })
-      );
+      this.handleErrorResponse(id, request.method, error);
       hideSnackbarItem?.();
     };
 
@@ -1008,12 +1000,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
 
     const cancel = (error?: Error) => {
       this.publishWeb3RequestCanceledEvent(id);
-      this.handleWeb3ResponseMessage(
-        Web3ResponseMessage({
-          id,
-          response: new ErrorResponse(request.method, error?.message)
-        })
-      );
+      this.handleErrorResponse(id, request.method, error);
       hideSnackbarItem?.();
     };
 
@@ -1102,12 +1089,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
 
   private sendRequestStandalone<T extends Web3Request>(id: string, request: T) {
     const _cancel = (error?: Error) => {
-      this.handleWeb3ResponseMessage(
-        Web3ResponseMessage({
-          id,
-          response: new ErrorResponse(request.method, error?.message)
-        })
-      );
+      this.handleErrorResponse(id, request.method, error);
     };
 
     const onSuccess = (
