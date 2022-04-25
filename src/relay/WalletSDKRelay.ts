@@ -62,6 +62,7 @@ import {
   SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse,
   SwitchEthereumChainResponse,
+  TransactionError,
   WatchAssetReponse,
   WatchAssetResponse,
   Web3Response
@@ -710,7 +711,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     this.handleWeb3ResponseMessage(
       Web3ResponseMessage({
         id,
-        response: new ErrorResponse(
+        response: ErrorResponse(
           method,
           error?.message ?? "User rejected request"
         )
@@ -1032,11 +1033,15 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         });
 
         const _cancel = (error?: Error) => {
-          if (error instanceof ErrorResponse) {
+          if (error instanceof TransactionError) {
             this.handleWeb3ResponseMessage(
               Web3ResponseMessage({
                 id,
-                response: error
+                response: ErrorResponse(
+                  Web3Method.switchEthereumChain,
+                  error.message,
+                  error.errorCode
+                )
               })
             );
           } else {

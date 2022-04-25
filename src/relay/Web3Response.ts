@@ -10,20 +10,28 @@ interface BaseWeb3Response<Result> {
   result?: Result;
 }
 
-export class ErrorResponse implements BaseWeb3Response<void>, Error {
-  method: Web3Method;
+export interface ErrorResponse extends BaseWeb3Response<void> {
   errorCode?: number;
   errorMessage: string;
-  name: string;
-  message: string;
+}
 
-  constructor(method: Web3Method, errorMessage: string, errorCode?: number) {
-    this.method = method;
-    this.errorMessage = errorMessage;
-    this.errorCode = errorCode;
-    this.name = method;
-    this.message = errorMessage;
+export function ErrorResponse(
+  method: Web3Method,
+  errorMessage: string,
+  errorCode?: number
+): ErrorResponse {
+  return { method, errorMessage, errorCode };
+}
+
+export class TransactionError extends Error {
+  private constructor(readonly message: string, readonly errorCode?: number) {
+    super(message);
   }
+
+  static switchEthereumChainUnsupportedChainId = new TransactionError(
+    "unsupported chainId",
+    4902
+  );
 }
 
 export type RequestEthereumAccountsResponse = BaseWeb3Response<
