@@ -4,6 +4,7 @@ module.exports = {
     "@babel/preset-typescript",
     "preact"
   ],
+  targets: "> 0.25%, not dead",
   // TODO: Refactor from legacy decorators
   plugins: [["@babel/plugin-proposal-decorators", { legacy: true }]]
 };

@@ -5,8 +5,6 @@
     "emitDeclarationOnly": true,
     "module": "commonjs",
     "moduleResolution": "node",
-    "isolatedModules": true,
-    "noEmit": true
   },
   "include": ["src", "src/@types"],
   "exclude": ["**/*.test.*", "__tests__"]
