@@ -1038,7 +1038,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
           resolve(response as SwitchEthereumChainResponse);
         });
 
-        const _cancel = (error?: any) => {
+        const _cancel = (error?: unknown) => {
           if (typeof error === "number") {
             // backward compatibility
             const errorCode: number = error;
