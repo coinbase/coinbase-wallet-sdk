@@ -28,6 +28,10 @@ import {
 const uint8ArrVal = new Uint8Array(6);
 const hexString = "E556B9bfEFDd5B190c67b521ED0A7d19Ab89a311";
 
+test.skip("randomBytesHex", () => {
+  // TODO
+});
+
 test("uint8ArrayToHex", () => {
   expect(uint8ArrayToHex(uint8ArrVal)).toEqual("000000000000");
 });
