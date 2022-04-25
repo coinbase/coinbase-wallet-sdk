@@ -20,6 +20,7 @@ import { ServerMessageEvent } from "../connection/ServerMessage";
 import { WalletSDKConnection } from "../connection/WalletSDKConnection";
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
 import { WalletUI, WalletUIOptions } from "../provider/WalletUI";
+import { WalletUIError } from "../provider/WalletUIError";
 import { AddressString, IntNumber, RegExpString } from "../types";
 import {
   bigIntStringFromBN,
@@ -70,7 +71,6 @@ import {
   isWeb3ResponseMessage,
   Web3ResponseMessage
 } from "./Web3ResponseMessage";
-import { WalletUIError } from "../provider/WalletUIError";
 
 export interface WalletSDKRelayOptions {
   linkAPIUrl: string;
