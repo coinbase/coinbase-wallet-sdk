@@ -1,5 +1,4 @@
 import BN from "bn.js";
-import exp from "constants";
 
 import { HexString, IntNumber } from "./types";
 import {
