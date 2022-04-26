@@ -56,10 +56,8 @@ export class WalletSDKUI implements WalletUI {
     this.linkFlow.setConnectDisabled(connectDisabled);
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  addEthereumChain(options: {
-    onCancel: () => void;
+  addEthereumChain(_options: {
+    onCancel: (error?: Error) => void;
     onApprove: () => void;
     chainId: string;
     rpcUrls: string[];
@@ -76,7 +74,7 @@ export class WalletSDKUI implements WalletUI {
   }
 
   watchAsset(_options: {
-    onCancel: () => void;
+    onCancel: (error?: Error) => void;
     onApprove: () => void;
     type: string;
     address: string;
@@ -88,14 +86,16 @@ export class WalletSDKUI implements WalletUI {
   }
 
   switchEthereumChain(_options: {
-    onCancel: () => void;
+    onCancel: (error?: Error) => void;
     onApprove: () => void;
     chainId: string;
   }) {
     // no-op
   }
 
-  requestEthereumAccounts(options: { onCancel: () => void }): void {
+  requestEthereumAccounts(options: {
+    onCancel: (error?: Error) => void;
+  }): void {
     this.linkFlow.open({ onCancel: options.onCancel });
   }
 
@@ -106,7 +106,7 @@ export class WalletSDKUI implements WalletUI {
   signEthereumMessage(_: {
     request: SignEthereumMessageRequest;
     onSuccess: (response: SignEthereumMessageResponse) => void;
-    onCancel: () => void;
+    onCancel: (error?: Error) => void;
   }): void {
     // No-op
   }
@@ -114,7 +114,7 @@ export class WalletSDKUI implements WalletUI {
   signEthereumTransaction(_: {
     request: SignEthereumTransactionRequest;
     onSuccess: (response: SignEthereumTransactionResponse) => void;
-    onCancel: () => void;
+    onCancel: (error?: Error) => void;
   }): void {
     // No-op
   }
@@ -122,7 +122,7 @@ export class WalletSDKUI implements WalletUI {
   submitEthereumTransaction(_: {
     request: SubmitEthereumTransactionRequest;
     onSuccess: (response: SubmitEthereumTransactionResponse) => void;
-    onCancel: () => void;
+    onCancel: (error?: Error) => void;
   }): void {
     // No-op
   }
@@ -136,7 +136,7 @@ export class WalletSDKUI implements WalletUI {
 
   showConnecting(options: {
     isUnlinkedErrorState?: boolean;
-    onCancel: () => void;
+    onCancel: (error?: Error) => void;
     onResetConnection: () => void;
   }): () => void {
     let snackbarProps: SnackbarInstanceProps;

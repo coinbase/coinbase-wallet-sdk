@@ -20,6 +20,7 @@ import { ServerMessageEvent } from "../connection/ServerMessage";
 import { WalletSDKConnection } from "../connection/WalletSDKConnection";
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
 import { WalletUI, WalletUIOptions } from "../provider/WalletUI";
+import { WalletUIError } from "../provider/WalletUIError";
 import { AddressString, IntNumber, RegExpString } from "../types";
 import {
   bigIntStringFromBN,
@@ -547,14 +548,9 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     let hideSnackbarItem: (() => void) | null = null;
     const id = randomBytesHex(8);
 
-    const cancel = () => {
+    const cancel = (error?: Error) => {
       this.publishWeb3RequestCanceledEvent(id);
-      this.handleWeb3ResponseMessage(
-        Web3ResponseMessage({
-          id,
-          response: ErrorResponse(request.method, "User rejected request")
-        })
-      );
+      this.handleErrorResponse(id, request.method, error);
       hideSnackbarItem?.();
     };
 
@@ -721,6 +717,24 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     this.invokeCallback(message);
   }
 
+  private handleErrorResponse(
+    id: string,
+    method: Web3Method,
+    error?: Error,
+    errorCode?: number
+  ) {
+    this.handleWeb3ResponseMessage(
+      Web3ResponseMessage({
+        id,
+        response: ErrorResponse(
+          method,
+          (error ?? WalletUIError.UserRejectedRequest).message,
+          errorCode
+        )
+      })
+    );
+  }
+
   private invokeCallback(message: Web3ResponseMessage) {
     const callback = this.relayEventManager.callbacks.get(message.id);
     if (callback) {
@@ -741,14 +755,9 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     const hideSnackbarItem: (() => void) | null = null;
     const id = randomBytesHex(8);
 
-    const cancel = () => {
+    const cancel = (error?: Error) => {
       this.publishWeb3RequestCanceledEvent(id);
-      this.handleWeb3ResponseMessage(
-        Web3ResponseMessage({
-          id,
-          response: ErrorResponse(request.method, "User rejected request")
-        })
-      );
+      this.handleErrorResponse(id, request.method, error);
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       hideSnackbarItem?.();
@@ -837,14 +846,9 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     let hideSnackbarItem: (() => void) | null = null;
     const id = randomBytesHex(8);
 
-    const cancel = () => {
+    const cancel = (error?: Error) => {
       this.publishWeb3RequestCanceledEvent(id);
-      this.handleWeb3ResponseMessage(
-        Web3ResponseMessage({
-          id,
-          response: ErrorResponse(request.method, "User rejected request")
-        })
-      );
+      this.handleErrorResponse(id, request.method, error);
       hideSnackbarItem?.();
     };
 
@@ -866,7 +870,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         resolve(response as WatchAssetResponse);
       });
 
-      const _cancel = () => {
+      const _cancel = (_error?: Error) => {
         this.handleWeb3ResponseMessage(
           Web3ResponseMessage({
             id,
@@ -932,14 +936,9 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     let hideSnackbarItem: (() => void) | null = null;
     const id = randomBytesHex(8);
 
-    const cancel = () => {
+    const cancel = (error?: Error) => {
       this.publishWeb3RequestCanceledEvent(id);
-      this.handleWeb3ResponseMessage(
-        Web3ResponseMessage({
-          id,
-          response: ErrorResponse(request.method, "User rejected request")
-        })
-      );
+      this.handleErrorResponse(id, request.method, error);
       hideSnackbarItem?.();
     };
 
@@ -961,7 +960,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         resolve(response as AddEthereumChainResponse);
       });
 
-      const _cancel = () => {
+      const _cancel = (_error?: Error) => {
         this.handleWeb3ResponseMessage(
           Web3ResponseMessage({
             id,
@@ -1016,14 +1015,9 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     let hideSnackbarItem: (() => void) | null = null;
     const id = randomBytesHex(8);
 
-    const cancel = () => {
+    const cancel = (error?: Error) => {
       this.publishWeb3RequestCanceledEvent(id);
-      this.handleWeb3ResponseMessage(
-        Web3ResponseMessage({
-          id,
-          response: ErrorResponse(request.method, "User rejected request")
-        })
-      );
+      this.handleErrorResponse(id, request.method, error);
       hideSnackbarItem?.();
     };
 
@@ -1054,17 +1048,26 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
           resolve(response as SwitchEthereumChainResponse);
         });
 
-        const _cancel = (errorCode?: number) => {
-          if (errorCode) {
+        const _cancel = (error?: Error | number) => {
+          if (typeof error === "number") {
+            // backward compatibility
+            const errorCode: number = error;
             this.handleWeb3ResponseMessage(
               Web3ResponseMessage({
                 id,
                 response: ErrorResponse(
                   Web3Method.switchEthereumChain,
-                  "unsupported chainId",
+                  WalletUIError.SwitchEthereumChainUnsupportedChainId.message,
                   errorCode
                 )
               })
+            );
+          } else if (error instanceof WalletUIError) {
+            this.handleErrorResponse(
+              id,
+              Web3Method.switchEthereumChain,
+              error,
+              error.errorCode
             );
           } else {
             this.handleWeb3ResponseMessage(
@@ -1115,13 +1118,8 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
   }
 
   private sendRequestStandalone<T extends Web3Request>(id: string, request: T) {
-    const _cancel = () => {
-      this.handleWeb3ResponseMessage(
-        Web3ResponseMessage({
-          id,
-          response: ErrorResponse(request.method, "User rejected request")
-        })
-      );
+    const _cancel = (error?: Error) => {
+      this.handleErrorResponse(id, request.method, error);
     };
 
     const onSuccess = (
