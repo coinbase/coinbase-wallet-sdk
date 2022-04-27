@@ -41,8 +41,14 @@ export default {
   // A list of reporter names that Jest uses when writing coverage reports
   coverageReporters: ["json", "text", "text-summary", "lcov"],
 
-  // An object that configures minimum threshold enforcement for coverage results
-  // coverageThreshold: undefined,
+  // TODO: Increase threshold as additional tests are added
+  coverageThreshold: {
+    global: {
+      branches: 18.3,
+      functions: 9.05,
+      statements: 9.44
+    }
+  },
 
   // A set of global variables that need to be available in all test environments
   // globals: {},
