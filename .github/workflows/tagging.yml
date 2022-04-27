@@ -26,7 +26,7 @@ jobs:
         id: tag
         run: |
           COMMIT_MSG="${{ github.event.head_commit.message }}"
-          TAG=$(echo $COMMIT_MSG | sed -e '2~4d'  -e 's/\(^v[[:digit:]].[[:digit:]].[[:digit:]]\).*$/\1/' )
+          TAG=$(echo $COMMIT_MSG | sed -e '2~4d'  -e 's/\(^v[[:digit:]]+.[[:digit:]]+.[[:digit:]]+\).*$/\1/' )
           echo "PARSED_TAG=$TAG" >> $GITHUB_ENV
 
       - name: Tag
