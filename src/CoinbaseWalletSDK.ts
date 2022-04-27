@@ -32,6 +32,8 @@ export interface CoinbaseWalletSDKOptions {
   overrideIsMetaMask?: boolean;
   /** @optional whether wallet link provider should override the isCoinbaseWallet property. */
   overrideIsCoinbaseWallet?: boolean;
+/** @optional whether coinbase wallet provider should override the isCoinbaseBrowser property. */
+  overrideIsCoinbaseBrowser?: boolean;
   /** @optional whether or not onboarding overlay popup should be displayed */
   headlessMode?: boolean;
 }
@@ -46,6 +48,7 @@ export class CoinbaseWalletSDK {
   private _storage: ScopedLocalStorage;
   private _overrideIsMetaMask: boolean;
   private _overrideIsCoinbaseWallet: boolean;
+  private _overrideIsCoinbaseBrowser: boolean;
   private _eventListener?: EventListener;
 
   /**
@@ -68,6 +71,7 @@ export class CoinbaseWalletSDK {
     }
 
     this._overrideIsCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true;
+    this._overrideIsCoinbaseBrowser = options.overrideIsCoinbaseBrowser ?? true;
 
     this._eventListener = options.eventListener;
 
@@ -134,7 +138,8 @@ export class CoinbaseWalletSDK {
       qrUrl: this.getQrUrl(),
       eventListener: this._eventListener,
       overrideIsMetaMask: this._overrideIsMetaMask,
-      overrideIsCoinbaseWallet: this._overrideIsCoinbaseWallet
+      overrideIsCoinbaseWallet: this._overrideIsCoinbaseWallet,
+      overrideIsCoinbaseBrowser: this._overrideIsCoinbaseBrowser
     });
   }
 

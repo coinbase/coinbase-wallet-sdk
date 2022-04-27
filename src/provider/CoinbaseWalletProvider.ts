@@ -52,6 +52,7 @@ export interface CoinbaseWalletProviderOptions {
   jsonRpcUrl: string;
   qrUrl?: string | null;
   overrideIsCoinbaseWallet?: boolean;
+  overrideIsCoinbaseBrowser?: boolean;
   overrideIsMetaMask: boolean;
   relayEventManager: WalletSDKRelayEventManager;
   relayProvider: () => Promise<WalletSDKRelayAbstract>;
@@ -66,6 +67,9 @@ export class CoinbaseWalletProvider
 {
   // So dapps can easily identify Coinbase Wallet for enabling features like 3085 network switcher menus
   public readonly isCoinbaseWallet: boolean;
+  // So dapps can easily identify Coinbase Dapp Browser for enabling dapp browser specific features
+  public readonly isCoinbaseBrowser: boolean;
+  
   public readonly qrUrl?: string | null;
 
   private readonly _filterPolyfill = new FilterPolyfill(this);
@@ -110,6 +114,7 @@ export class CoinbaseWalletProvider
     this._eventListener = options.eventListener;
 
     this.isCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true;
+    this.isCoinbaseBrowser = options.overrideIsCoinbaseBrowser ?? false;
 
     this.qrUrl = options.qrUrl;
 
