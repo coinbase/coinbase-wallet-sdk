@@ -39,7 +39,7 @@ export default {
   // coverageProvider: "babel",
 
   // A list of reporter names that Jest uses when writing coverage reports
-  coverageReporters: ["json", "text", "text-summary", "lcov"],
+  coverageReporters: ["json", "lcov"],
 
   // TODO: Increase threshold as additional tests are added
   coverageThreshold: {
