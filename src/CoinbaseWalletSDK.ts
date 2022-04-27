@@ -32,7 +32,7 @@ export interface CoinbaseWalletSDKOptions {
   overrideIsMetaMask?: boolean;
   /** @optional whether wallet link provider should override the isCoinbaseWallet property. */
   overrideIsCoinbaseWallet?: boolean;
-/** @optional whether coinbase wallet provider should override the isCoinbaseBrowser property. */
+  /** @optional whether coinbase wallet provider should override the isCoinbaseBrowser property. */
   overrideIsCoinbaseBrowser?: boolean;
   /** @optional whether or not onboarding overlay popup should be displayed */
   headlessMode?: boolean;

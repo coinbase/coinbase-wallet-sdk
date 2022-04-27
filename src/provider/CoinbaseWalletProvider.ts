@@ -69,7 +69,7 @@ export class CoinbaseWalletProvider
   public readonly isCoinbaseWallet: boolean;
   // So dapps can easily identify Coinbase Dapp Browser for enabling dapp browser specific features
   public readonly isCoinbaseBrowser: boolean;
-  
+
   public readonly qrUrl?: string | null;
 
   private readonly _filterPolyfill = new FilterPolyfill(this);
