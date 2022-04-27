@@ -71,7 +71,8 @@ export class CoinbaseWalletSDK {
     }
 
     this._overrideIsCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true;
-    this._overrideIsCoinbaseBrowser = options.overrideIsCoinbaseBrowser ?? false;
+    this._overrideIsCoinbaseBrowser =
+      options.overrideIsCoinbaseBrowser ?? false;
 
     this._eventListener = options.eventListener;
 
