@@ -11,15 +11,14 @@ gitMessage=$(git log --oneline -n 1)
 mainBranch="master"
 branch=$(git rev-parse --abbrev-ref HEAD)
 
-echo -e "${PURPLE}Checking all branches are up-to-date..."
-echo -e "================================================="
-echo -e " git fetch --all"
-git fetch --all
-echo -e " git pull origin ${mainBranch}"
-git pull origin $mainBranch
-echo -e "-------------------------------------------------"
-
 if [ $branch == $mainBranch ]; then
+  echo -e "${PURPLE}Checking all branches are up-to-date..."
+  echo -e "================================================="
+  echo -e " git fetch --all"
+  git fetch --all
+  echo -e " git pull"
+  git pull
+  echo -e "-------------------------------------------------"
   echo -e "${TEAL}Build production and publish..."
   echo "================================================="
   echo -e "rm -rf ./node_modules"
