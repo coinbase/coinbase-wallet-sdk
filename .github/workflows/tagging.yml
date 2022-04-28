@@ -2,8 +2,8 @@ name: Version - Tag
 
 on:
   push:
-    # branches:
-    #   - master
+    branches:
+      - master
 
 jobs:
   tag_merged_version:
