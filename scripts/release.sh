@@ -19,14 +19,6 @@ echo -e " git pull origin ${mainBranch}"
 git pull origin $mainBranch
 echo -e "-------------------------------------------------"
 
-if [ $branch != $mainBranch ]; then
-  echo -e "${RED}⚠️  Need to publish from ${mainBranch} branch"
-  echo -e "${REDBOLD}Checking out ${mainBranch}... "
-  git checkout master
-  echo -e "${RED}Run again"
-fi
-
-
 if [ $branch == $mainBranch ]; then
   echo -e "${TEAL}Build production and publish..."
   echo "================================================="
@@ -42,6 +34,11 @@ if [ $branch == $mainBranch ]; then
   echo -e "npm publish"
   npm publish
   echo -e " ${GREEN}Releasing: ${gitMessage}"
+else
+  echo -e "${RED}⚠️  Need to publish from ${mainBranch} branch"
+  echo -e "${REDBOLD}Checking out ${mainBranch}... "
+  git checkout master
+  echo -e "${RED}Run again"
 fi
 
 # TODO: Add Slack notification?
