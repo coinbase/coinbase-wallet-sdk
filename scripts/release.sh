@@ -7,7 +7,6 @@ PURPLE='\033[0;35m'
 TEAL='\033[0;36m'
 GREEN='\033[1;32m'
 
-
 gitMessage=$(git log --oneline -n 1)
 mainBranch="master"
 branch=$(git rev-parse --abbrev-ref HEAD)
@@ -44,3 +43,8 @@ if [ $branch == $mainBranch ]; then
   npm publish
   echo -e " ${GREEN}Releasing: ${gitMessage}"
 fi
+
+# TODO: Add Slack notification?
+# - Add release notes generation?
+# - Add version tag as argument?
+# - Add prompt for  npm login?
