@@ -122,7 +122,11 @@ const TryExtensionBox: FunctionComponent<{
             again.
           </div>
         )}
-        <button type="button" onClick={clickHandler}>
+        <button
+          data-testid="try-extension-button"
+          type="button"
+          onClick={clickHandler}
+        >
           {isClicked ? "Refresh" : "Install"}
         </button>
       </div>
@@ -161,7 +165,7 @@ const ScanQRBox: FunctionComponent<{
   );
 
   return (
-    <div class="-cbwsdk-extension-dialog-box-bottom">
+    <div data-testid="scan-qr-box" class="-cbwsdk-extension-dialog-box-bottom">
       <div class="-cbwsdk-extension-dialog-box-bottom-description-region">
         <h2>Or scan to connect</h2>
         <body class="-cbwsdk-extension-dialog-box-bottom-description">
@@ -194,7 +198,10 @@ const ScanQRBox: FunctionComponent<{
         <input type="hidden" name="cbwsdk-version" value={LIB_VERSION} />
         <input type="hidden" value={qrUrl} />
         {!props.isConnected && (
-          <div class="-cbwsdk-extension-dialog-box-bottom-qr-connecting">
+          <div
+            data-testid="connecting-spinner"
+            class="-cbwsdk-extension-dialog-box-bottom-qr-connecting"
+          >
             <Spinner size={36} color={"#000"} />
             <p>Connecting...</p>
           </div>
