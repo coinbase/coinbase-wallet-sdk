@@ -57,7 +57,7 @@ describe("TryExtensionLinkDialog", () => {
     renderTryExtensionLinkDialog({});
 
     await waitFor(async () => {
-      const button = await screen.findByTestId("try-extension-button");
+      const button = await screen.findByRole("button", { name: "Install" });
       fireEvent.click(button);
       expect(mockedWindowOpen).toBeCalledWith(
         "https://api.wallet.coinbase.com/rpc/v2/desktop/chrome",
@@ -72,7 +72,7 @@ describe("TryExtensionLinkDialog", () => {
     renderTryExtensionLinkDialog({});
 
     await waitFor(async () => {
-      const button = await screen.findByTestId("try-extension-button");
+      const button = await screen.findByRole("button", { name: "Install" });
       expect(button.textContent).toEqual("Install");
 
       fireEvent.click(button);

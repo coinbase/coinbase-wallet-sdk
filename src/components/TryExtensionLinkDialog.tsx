@@ -122,11 +122,7 @@ const TryExtensionBox: FunctionComponent<{
             again.
           </div>
         )}
-        <button
-          data-testid="try-extension-button"
-          type="button"
-          onClick={clickHandler}
-        >
+        <button type="button" onClick={clickHandler}>
           {isClicked ? "Refresh" : "Install"}
         </button>
       </div>
