@@ -14,19 +14,18 @@ export default {
   collectCoverageFrom: [
     "./src/util.ts",
     "./src/CoinbaseWalletSDK.tsx",
-    "./src/connection/RxWebSocket.ts",
-    "./src/connection/WalletSDKConnection.ts",
+    "./src/connection/RxWebSocket.ts", // How do you get rid of rxjs, not a large effort if we're refactoring
+    "./src/connection/WalletSDKConnection.ts", // 2 tickets
     "./src/lib/ScopedLocalStorage.ts",
-    "./src/provider/CoinbaseWalletProvider.ts",
+    "./src/provider/CoinbaseWalletProvider.ts", // 4-5 issues
     "./src/provider/FilterPolyfill.ts",
     "./src/provider/SubscriptionManager.ts",
     "./src/provider/WalletSDKUI.ts",
-    "./src/relay/aes256gcm.ts",
+    "./src/relay/aes256gcm.ts", // low priority
     "./src/relay/Session.ts",
-    "./src/relay/WalletSDKAbstract.ts",
-    "./src/relay/WalletSDKRelayEventManager.ts",
-    "./src/relay/Web3Response.ts",
-    "./src/relay/Web3ResponseMessage.ts"
+    "./src/relay/WalletSDKRelay.ts", // spike task - big one, break down
+    "./src/relay/WalletSDKAbstract.ts", // test for makeEthereumJSONRPCRequest
+    "./src/relay/WalletSDKRelayEventManager.ts"
   ],
 
   // The directory where Jest should output its coverage files
