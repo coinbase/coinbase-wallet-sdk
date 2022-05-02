@@ -13,7 +13,7 @@ export default {
   // An array of glob patterns indicating a set of files for which coverage information should be collected
   collectCoverageFrom: [
     "./src/util.ts",
-    "./src/CoinbaseWalletSDK.tsx",
+    "./src/CoinbaseWalletSDK.ts",
     "./src/connection/RxWebSocket.ts", // How do you get rid of rxjs, not a large effort if we're refactoring
     "./src/connection/WalletSDKConnection.ts", // 2 tickets
     "./src/lib/ScopedLocalStorage.ts",
@@ -25,7 +25,8 @@ export default {
     "./src/relay/Session.ts",
     "./src/relay/WalletSDKRelay.ts", // spike task - big one, break down
     "./src/relay/WalletSDKAbstract.ts", // test for makeEthereumJSONRPCRequest
-    "./src/relay/WalletSDKRelayEventManager.ts"
+    "./src/relay/WalletSDKRelayEventManager.ts",
+    "./src/components/TryExtensionLinkDialog.tsx"
   ],
 
   // The directory where Jest should output its coverage files
@@ -43,9 +44,9 @@ export default {
   // TODO: Increase threshold as additional tests are added
   coverageThreshold: {
     global: {
-      branches: 18.22,
-      functions: 9.05,
-      statements: 9.43
+      branches: 17.85,
+      functions: 15.02,
+      statements: 16.44
     }
   },
 
