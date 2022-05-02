@@ -16,6 +16,6 @@ module.exports = {
         pragma: "h",
         pragmaFrag: "Fragment"
       }
-    ]
-  ]
+    ],
+    ["@babel/plugin-proposal-decorators", { legacy: true }]]
 };
