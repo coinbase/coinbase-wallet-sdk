@@ -23,6 +23,7 @@
   "author": "Coinbase, Inc.",
   "license": "Apache-2.0",
   "scripts": {
+    "pretest:unit": "node compile-assets.js",
     "test:unit": "jest",
     "test:unit:coverage": "yarn test:unit && open coverage/lcov-report/index.html",
     "test:karma": "yarn build-npm && karma start",
@@ -57,8 +58,10 @@
   },
   "devDependencies": {
     "@babel/core": "^7.17.9",
+    "@babel/plugin-transform-react-jsx": "^7.17.3",
     "@babel/preset-env": "^7.16.11",
     "@babel/preset-typescript": "^7.16.7",
+    "@testing-library/preact": "^2.0.1",
     "@types/bn.js": "^4.11.6",
     "@types/jest": "^27.4.1",
     "@types/node": "^14.14.20",
