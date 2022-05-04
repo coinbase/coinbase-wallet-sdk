@@ -5,13 +5,13 @@ import {
   EthereumAddressFromSignedMessageRequest,
   SignEthereumMessageRequest,
   SignEthereumTransactionRequest,
-  SubmitEthereumTransactionRequest
+  SubmitEthereumTransactionRequest,
 } from "../relay/Web3Request";
 import {
   EthereumAddressFromSignedMessageResponse,
   SignEthereumMessageResponse,
   SignEthereumTransactionResponse,
-  SubmitEthereumTransactionResponse
+  SubmitEthereumTransactionResponse,
 } from "../relay/Web3Response";
 import { AddressString } from "../types";
 

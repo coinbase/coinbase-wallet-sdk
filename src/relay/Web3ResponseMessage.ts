@@ -12,7 +12,7 @@ export interface Web3ResponseMessage
 }
 
 export function Web3ResponseMessage(
-  params: Omit<Web3ResponseMessage, "type">
+  params: Omit<Web3ResponseMessage, "type">,
 ): Web3ResponseMessage {
   return { type: RelayMessageType.WEB3_RESPONSE, ...params };
 }

@@ -3,13 +3,13 @@ import { waitFor } from "@testing-library/preact";
 import {
   mockExtensionProvider,
   MockProviderClass,
-  mockSetAppInfo
+  mockSetAppInfo,
 } from "./__mocks__/provider";
 import { CoinbaseWalletSDK } from "./CoinbaseWalletSDK";
 import { ScopedLocalStorage } from "./lib/ScopedLocalStorage";
 import {
   CoinbaseWalletProvider,
-  CoinbaseWalletProviderOptions
+  CoinbaseWalletProviderOptions,
 } from "./provider/CoinbaseWalletProvider";
 import { WalletSDKRelay } from "./relay/WalletSDKRelay";
 import { WalletSDKRelayEventManager } from "./relay/WalletSDKRelayEventManager";
@@ -21,14 +21,14 @@ describe("CoinbaseWalletSDK", () => {
     test("with defaults", () => {
       const coinbaseWalletSDK1 = new CoinbaseWalletSDK({
         appName: "",
-        appLogoUrl: ""
+        appLogoUrl: "",
       });
 
       expect(coinbaseWalletSDK1).toMatchObject({
         _appLogoUrl: null,
         _appName: "DApp",
         _overrideIsMetaMask: false,
-        _overrideIsCoinbaseWallet: true
+        _overrideIsCoinbaseWallet: true,
       });
     });
   });
@@ -38,14 +38,14 @@ describe("CoinbaseWalletSDK", () => {
     beforeEach(() => {
       coinbaseWalletSDK2 = new CoinbaseWalletSDK({
         appName: "Test",
-        appLogoUrl: "http://coinbase.com/wallet-logo.png"
+        appLogoUrl: "http://coinbase.com/wallet-logo.png",
       });
     });
 
     describe("sdk", () => {
       test("@makeWeb3Provider", () => {
         expect(coinbaseWalletSDK2.makeWeb3Provider()).toBeInstanceOf(
-          CoinbaseWalletProvider
+          CoinbaseWalletProvider,
         );
       });
 
@@ -66,7 +66,7 @@ describe("CoinbaseWalletSDK", () => {
 
         expect(relaySetAppInfoMock).toHaveBeenCalledWith(
           "sdk",
-          "http://sdk-image.png"
+          "http://sdk-image.png",
         );
       });
 
@@ -92,7 +92,7 @@ describe("CoinbaseWalletSDK", () => {
       test("@makeWeb3Provider", () => {
         // Returns extension provider
         expect(coinbaseWalletSDK2.makeWeb3Provider()).toEqual(
-          mockExtensionProvider
+          mockExtensionProvider,
         );
       });
 
@@ -108,7 +108,7 @@ describe("CoinbaseWalletSDK", () => {
         await waitFor(() => {
           expect(mockSetAppInfo).toBeCalledWith(
             "extension",
-            "http://extension-logo.png"
+            "http://extension-logo.png",
           );
         });
       });
@@ -128,7 +128,7 @@ describe("CoinbaseWalletSDK", () => {
         overrideIsMetaMask: false,
         relayEventManager: new WalletSDKRelayEventManager(),
         relayProvider: jest.fn(),
-        storage: new ScopedLocalStorage("-walletlink")
+        storage: new ScopedLocalStorage("-walletlink"),
       });
       beforeAll(() => {
         // @ts-expect-error mocked provider
@@ -141,7 +141,7 @@ describe("CoinbaseWalletSDK", () => {
 
       test("@makeWeb3Provider", () => {
         expect(coinbaseWalletSDK2.makeWeb3Provider()).toEqual(
-          mockCipherProvider
+          mockCipherProvider,
         );
       });
 

@@ -37,7 +37,7 @@ export enum JSONRPCMethod {
   eth_newBlockFilter = "eth_newBlockFilter",
   eth_newPendingTransactionFilter = "eth_newPendingTransactionFilter",
   eth_getFilterChanges = "eth_getFilterChanges",
-  eth_getFilterLogs = "eth_getFilterLogs"
+  eth_getFilterLogs = "eth_getFilterLogs",
 }
 
 export interface JSONRPCRequest<T = any> {

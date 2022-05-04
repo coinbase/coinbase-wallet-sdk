@@ -23,7 +23,7 @@ import {
   randomBytesHex,
   range,
   strip0x,
-  uint8ArrayToHex
+  uint8ArrayToHex,
 } from "./util";
 
 const uint8ArrVal = new Uint8Array(6);
@@ -42,7 +42,7 @@ describe("util", () => {
 
   test("hexStringToUint8Array", () => {
     expect(hexStringToUint8Array("9298119f5025")).toEqual(
-      new Uint8Array([146, 152, 17, 159, 80, 37])
+      new Uint8Array([146, 152, 17, 159, 80, 37]),
     );
   });
 
@@ -54,21 +54,21 @@ describe("util", () => {
   test("bigIntStringFromBN", () => {
     expect(
       bigIntStringFromBN(
-        new BN(0b11111111111111111111111111111111111111111111111111111)
-      )
+        new BN(0b11111111111111111111111111111111111111111111111111111),
+      ),
     ).toEqual("9007199254740991");
   });
 
   test("intNumberFromHexString", () => {
     expect(intNumberFromHexString(HexString("0x1fffffffffffff"))).toEqual(
-      9007199254740991
+      9007199254740991,
     );
   });
 
   test("hexStringFromIntNumber", () => {
     expect(hexStringFromIntNumber(IntNumber(1234))).toEqual("0x4d2");
     expect(hexStringFromIntNumber(IntNumber(112341234234))).toEqual(
-      "0x1a280f323a"
+      "0x1a280f323a",
     );
   });
 
@@ -97,7 +97,7 @@ describe("util", () => {
 
   test("ensureHexString", () => {
     expect(() => ensureHexString(123)).toThrowError(
-      '"123" is not a hexadecimal string'
+      '"123" is not a hexadecimal string',
     );
     expect(() => ensureHexString("az123456")).toThrowError();
     expect(ensureHexString("123456")).toEqual("123456");
@@ -108,28 +108,28 @@ describe("util", () => {
     expect(ensureEvenLengthHexString("0x1234")).toEqual("1234");
     expect(ensureEvenLengthHexString("123456789")).toEqual("0123456789");
     expect(ensureEvenLengthHexString("123456789", true)).toEqual(
-      "0x0123456789"
+      "0x0123456789",
     );
   });
 
   test("ensureAddressString", () => {
     expect(() => ensureAddressString(1234)).toThrowError(
-      "Invalid Ethereum address"
+      "Invalid Ethereum address",
     );
     expect(() => ensureAddressString("E556B9bfEFDd5B190")).toThrowError(
-      "Invalid Ethereum address"
+      "Invalid Ethereum address",
     );
 
     expect(() =>
-      ensureAddressString("E556B9bfEFDd5B190c67b521ED0A7d19Ab89a3111")
+      ensureAddressString("E556B9bfEFDd5B190c67b521ED0A7d19Ab89a3111"),
     ).toThrowError("Invalid Ethereum address");
 
     expect(ensureAddressString(hexString)).toEqual(
-      "0xe556b9bfefdd5b190c67b521ed0a7d19ab89a311"
+      "0xe556b9bfefdd5b190c67b521ed0a7d19ab89a311",
     );
 
     expect(
-      ensureAddressString("0XE556B9bfEFDd5B190c67b521ED0A7d19Ab89a311")
+      ensureAddressString("0XE556B9bfEFDd5B190c67b521ED0A7d19Ab89a311"),
     ).toEqual("0xe556b9bfefdd5b190c67b521ed0a7d19ab89a311");
   });
 
@@ -141,8 +141,9 @@ describe("util", () => {
     expect(ensureBuffer(hexString).buffer).toEqual(
       Uint8Array.from([
         140, 22, 81, 137, 137, 56, 98, 28, 52, 215, 100, 110, 146, 161, 33, 228,
-        175, 127, 154, 17, 189, 218, 72, 67, 182, 57, 17, 81, 245, 199, 172, 231
-      ]).buffer
+        175, 127, 154, 17, 189, 218, 72, 67, 182, 57, 17, 81, 245, 199, 172,
+        231,
+      ]).buffer,
     );
 
     expect(() => ensureBuffer(new Set([12, 23]))).toThrowError();
@@ -161,7 +162,7 @@ describe("util", () => {
     const HEXADECIMAL_STRING_REGEX = /^[a-f0-9]*$/;
     expect(() => ensureRegExpString("^&1234")).toThrowError();
     expect(ensureRegExpString(HEXADECIMAL_STRING_REGEX)).toEqual(
-      "/^[a-f0-9]*$/"
+      "/^[a-f0-9]*$/",
     );
   });
 
@@ -177,14 +178,14 @@ describe("util", () => {
   test("ensureParsedJSONObject", () => {
     const testObj = {
       a: 1,
-      b: 2
+      b: 2,
     };
     expect(ensureParsedJSONObject('{"a":1,"b":2}')).toMatchObject(testObj);
     expect(
       ensureParsedJSONObject({
         a: 1,
-        b: 2
-      })
+        b: 2,
+      }),
     ).toMatchObject(testObj);
   });
 
@@ -221,20 +222,20 @@ describe("util", () => {
         "1dc7878268586cbcaf041c6817d446d3",
         "b9a1d5933eae7064fc6e1a673235f648",
         "https://www.walletlink.org",
-        false
-      )
+        false,
+      ),
     ).toEqual(
-      "https://www.walletlink.org/#/link?id=1dc7878268586cbcaf041c6817d446d3&secret=b9a1d5933eae7064fc6e1a673235f648&server=https%3A%2F%2Fwww.walletlink.org&v=1"
+      "https://www.walletlink.org/#/link?id=1dc7878268586cbcaf041c6817d446d3&secret=b9a1d5933eae7064fc6e1a673235f648&server=https%3A%2F%2Fwww.walletlink.org&v=1",
     );
     expect(
       createQrUrl(
         "1dc7878268586cbcaf041c6817d446d3",
         "b9a1d5933eae7064fc6e1a673235f648",
         "https://www.walletlink.org",
-        true
-      )
+        true,
+      ),
     ).toEqual(
-      "https://www.walletlink.org/#/link?parent-id=1dc7878268586cbcaf041c6817d446d3&secret=b9a1d5933eae7064fc6e1a673235f648&server=https%3A%2F%2Fwww.walletlink.org&v=1"
+      "https://www.walletlink.org/#/link?parent-id=1dc7878268586cbcaf041c6817d446d3&secret=b9a1d5933eae7064fc6e1a673235f648&server=https%3A%2F%2Fwww.walletlink.org&v=1",
     );
   });
 });

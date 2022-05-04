@@ -8,7 +8,7 @@ export enum RelayMessageType {
   UNLINKED = "UNLINKED",
   WEB3_REQUEST = "WEB3_REQUEST",
   WEB3_REQUEST_CANCELED = "WEB3_REQUEST_CANCELED",
-  WEB3_RESPONSE = "WEB3_RESPONSE"
+  WEB3_RESPONSE = "WEB3_RESPONSE",
 }
 
 export interface RelayMessage<T extends RelayMessageType = any> {

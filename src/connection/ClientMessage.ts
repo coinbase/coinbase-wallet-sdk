@@ -15,7 +15,7 @@ export interface ClientMessageHostSession extends ClientMessage {
 }
 
 export function ClientMessageHostSession(
-  params: Omit<ClientMessageHostSession, "type">
+  params: Omit<ClientMessageHostSession, "type">,
 ): ClientMessageHostSession {
   return { type: "HostSession", ...params };
 }
@@ -26,7 +26,7 @@ export interface ClientMessageIsLinked extends ClientMessage {
 }
 
 export function ClientMessageIsLinked(
-  params: Omit<ClientMessageIsLinked, "type">
+  params: Omit<ClientMessageIsLinked, "type">,
 ): ClientMessageIsLinked {
   return { type: "IsLinked", ...params };
 }
@@ -37,7 +37,7 @@ export interface ClientMessageGetSessionConfig extends ClientMessage {
 }
 
 export function ClientMessageGetSessionConfig(
-  params: Omit<ClientMessageGetSessionConfig, "type">
+  params: Omit<ClientMessageGetSessionConfig, "type">,
 ): ClientMessageGetSessionConfig {
   return { type: "GetSessionConfig", ...params };
 }
@@ -52,7 +52,7 @@ export interface ClientMessageSetSessionConfig extends ClientMessage {
 }
 
 export function ClientMessageSetSessionConfig(
-  params: Omit<ClientMessageSetSessionConfig, "type">
+  params: Omit<ClientMessageSetSessionConfig, "type">,
 ): ClientMessageSetSessionConfig {
   return { type: "SetSessionConfig", ...params };
 }
@@ -66,7 +66,7 @@ export interface ClientMessagePublishEvent extends ClientMessage {
 }
 
 export function ClientMessagePublishEvent(
-  params: Omit<ClientMessagePublishEvent, "type">
+  params: Omit<ClientMessagePublishEvent, "type">,
 ): ClientMessagePublishEvent {
   return { type: "PublishEvent", ...params };
 }

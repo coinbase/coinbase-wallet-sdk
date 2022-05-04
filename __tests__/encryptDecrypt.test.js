@@ -12,7 +12,7 @@ describe("encryption and decryption tests", function () {
         next: decryptedText => {
           expect(input).toEqual(decryptedText);
           done();
-        }
+        },
       });
     })();
   });
@@ -29,7 +29,7 @@ describe("encryption and decryption tests", function () {
         next: value => {
           expect(sampleDataResult).toEqual(value);
           done();
-        }
+        },
       });
     })();
   });

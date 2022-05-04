@@ -4,7 +4,7 @@ const { env } = process;
 
 const tsConfigPath = (exports.tsConfigPath = path.join(
   __dirname,
-  "tsconfig.json"
+  "tsconfig.json",
 ));
 
 module.exports = {
@@ -13,7 +13,7 @@ module.exports = {
     "core-js/stable",
     "regenerator-runtime/runtime",
     "whatwg-fetch",
-    "./src/index.ts"
+    "./src/index.ts",
   ],
   // devtool: 'inline-source-map',
   mode: "production",
@@ -24,36 +24,36 @@ module.exports = {
         use: {
           loader: "ts-loader",
           options: {
-            configFile: tsConfigPath
-          }
+            configFile: tsConfigPath,
+          },
         },
-        exclude: /node_modules/
-      }
-    ]
+        exclude: /node_modules/,
+      },
+    ],
   },
   resolve: {
     fallback: {
       fs: false,
-      stream: require.resolve("stream-browserify")
+      stream: require.resolve("stream-browserify"),
     },
     extensions: [".ts", ".tsx", ".js"],
     plugins: [],
-    symlinks: false
+    symlinks: false,
   },
   output: {
     filename: "CoinbaseWalletSDK.js",
-    path: path.resolve(__dirname, "build")
+    path: path.resolve(__dirname, "build"),
   },
   performance: {
-    hints: false
+    hints: false,
   },
   plugins: [
     new webpack.DefinePlugin({
       "process.env": {
         NODE_ENV: JSON.stringify(env.NODE_ENV) || JSON.stringify("production"),
         LINK_API_URL: JSON.stringify(env.LINK_API_URL),
-        SDK_VERSION: JSON.stringify(require("./package.json").version)
-      }
-    })
-  ]
+        SDK_VERSION: JSON.stringify(require("./package.json").version),
+      },
+    }),
+  ],
 };

@@ -82,7 +82,7 @@ export class LinkFlow {
           this.isConnected = v;
           this.render();
         }
-      })
+      }),
     );
   }
 
@@ -150,7 +150,7 @@ export class LinkFlow {
               onCancel={this.onCancel}
             />
           ),
-          this.root
+          this.root,
         );
       });
 

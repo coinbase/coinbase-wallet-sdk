@@ -6,13 +6,13 @@ import {
   BigIntString,
   HexString,
   IntNumber,
-  RegExpString
+  RegExpString,
 } from "../types";
 import { Web3Method } from "./Web3Method";
 
 interface BaseWeb3Request<
   Method extends Web3Method,
-  Params extends object = Record<string, unknown>
+  Params extends object = Record<string, unknown>,
 > {
   method: Method;
   params: Params;
