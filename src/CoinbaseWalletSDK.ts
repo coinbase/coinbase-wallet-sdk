@@ -191,8 +191,7 @@ export class CoinbaseWalletSDK {
   }
 
   private isCipherProvider(provider: CoinbaseWalletProvider): boolean {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
+    // @ts-expect-error isCipher walletlink property
     return typeof provider.isCipher === "boolean" && provider.isCipher;
   }
 }

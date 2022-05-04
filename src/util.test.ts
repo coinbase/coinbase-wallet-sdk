@@ -20,6 +20,7 @@ import {
   intNumberFromHexString,
   isHexString,
   prepend0x,
+  randomBytesHex,
   range,
   strip0x,
   uint8ArrayToHex
@@ -29,8 +30,10 @@ const uint8ArrVal = new Uint8Array(6);
 const hexString = "E556B9bfEFDd5B190c67b521ED0A7d19Ab89a311";
 
 describe("util", () => {
-  test.skip("randomBytesHex", () => {
-    // TODO
+  test("randomBytesHex", () => {
+    expect(randomBytesHex(8)).toHaveLength(16);
+    expect(randomBytesHex(8)).not.toEqual(randomBytesHex(8));
+    expect(randomBytesHex(32)).not.toEqual(randomBytesHex(32));
   });
 
   test("uint8ArrayToHex", () => {
