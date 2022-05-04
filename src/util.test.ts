@@ -31,7 +31,9 @@ const hexString = "E556B9bfEFDd5B190c67b521ED0A7d19Ab89a311";
 
 describe("util", () => {
   test("randomBytesHex", () => {
-    expect(randomBytesHex(5)).toHaveLength(10);
+    expect(randomBytesHex(8)).toHaveLength(16);
+    expect(randomBytesHex(8)).not.toEqual(randomBytesHex(8));
+    expect(randomBytesHex(32)).not.toEqual(randomBytesHex(32));
   });
 
   test("uint8ArrayToHex", () => {

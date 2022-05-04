@@ -14,29 +14,25 @@ export default {
   collectCoverageFrom: [
     "./src/util.ts",
     "./src/CoinbaseWalletSDK.ts",
-    "./src/connection/RxWebSocket.ts", // How do you get rid of rxjs, not a large effort if we're refactoring
-    "./src/connection/WalletSDKConnection.ts", // 2 tickets
+    "./src/connection/RxWebSocket.ts",
+    "./src/connection/WalletSDKConnection.ts",
     "./src/lib/ScopedLocalStorage.ts",
-    "./src/provider/CoinbaseWalletProvider.ts", // 4-5 issues
+    "./src/provider/CoinbaseWalletProvider.ts",
     "./src/provider/FilterPolyfill.ts",
     "./src/provider/SubscriptionManager.ts",
     "./src/provider/WalletSDKUI.ts",
-    "./src/relay/aes256gcm.ts", // low priority
+    "./src/relay/aes256gcm.ts",
     "./src/relay/Session.ts",
-    "./src/relay/WalletSDKRelay.ts", // spike task - big one, break down
-    "./src/relay/WalletSDKAbstract.ts", // test for makeEthereumJSONRPCRequest
+    "./src/relay/WalletSDKRelay.ts",
+    "./src/relay/WalletSDKAbstract.ts",
     "./src/relay/WalletSDKRelayEventManager.ts",
-    "./src/components/TryExtensionLinkDialog.tsx"
+    "./src/components/**/*.tsx"
   ],
-
   // The directory where Jest should output its coverage files
   coverageDirectory: "coverage",
 
   // An array of regexp pattern strings used to skip coverage collection
   coveragePathIgnorePatterns: ["/node_modules/"],
-
-  // Indicates which provider should be used to instrument code for coverage
-  // coverageProvider: "babel",
 
   // A list of reporter names that Jest uses when writing coverage reports
   coverageReporters: ["json", "text", "text-summary", "lcov"],
@@ -44,14 +40,11 @@ export default {
   // TODO: Increase threshold as additional tests are added
   coverageThreshold: {
     global: {
-      branches: 25.7,
-      functions: 22.4,
-      statements: 26.9
+      branches: 25,
+      functions: 21,
+      statements: 25.95
     }
   },
-
-  // A set of global variables that need to be available in all test environments
-  // globals: {},
 
   // An array of file extensions your modules use
   moduleFileExtensions: ["js", "jsx", "ts", "tsx", "json", "node"],
@@ -61,17 +54,11 @@ export default {
     "^src/(.*)$": "<rootDir>/src/$1"
   },
 
-  // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module loader
-  // modulePathIgnorePatterns: ["**/*-css.ts"],
-
   // A list of paths to directories that Jest should use to search for files in
   roots: ["<rootDir>/src"],
 
-  // The paths to modules that run some code to configure or set up the testing environment before each test
-  // setupFiles: ["<rootDir>/tests/setupTests.ts"],
-
   // A list of paths to modules that run some code to configure or set up the testing framework before each test
-  setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
 
   // The test environment that will be used for testing
   testEnvironment: "jsdom",
@@ -81,13 +68,9 @@ export default {
 
   // A map from regular expressions to paths to transformers
   transform: {
-    // Required to find the root babel config when jest is ran in sub-folders
     "^.+\\.(js|ts|tsx)$": ["babel-jest"]
   },
 
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
   testPathIgnorePatterns: ["/node_modules/", "/build/"]
-
-  // An array of regexp patterns that are matched against all source file paths before re-running tests in watch mode
-  // watchPathIgnorePatterns: [],
 };

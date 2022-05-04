@@ -1,4 +1,4 @@
-const webcrypto = require("crypto");
+import webcrypto from "crypto";
 
 Object.defineProperty(global.self, "crypto", {
   value: {

@@ -1,5 +1,10 @@
 import { waitFor } from "@testing-library/preact";
 
+import {
+  mockExtensionProvider,
+  MockProviderClass,
+  mockSetAppInfo
+} from "./__mocks__/provider";
 import { CoinbaseWalletSDK } from "./CoinbaseWalletSDK";
 import { ScopedLocalStorage } from "./lib/ScopedLocalStorage";
 import {
@@ -10,35 +15,6 @@ import { WalletSDKRelay } from "./relay/WalletSDKRelay";
 import { WalletSDKRelayEventManager } from "./relay/WalletSDKRelayEventManager";
 
 jest.mock("./provider/WalletSDKUI");
-
-const mockSetAppInfo = jest.fn();
-
-class MockProviderClass extends CoinbaseWalletProvider {
-  constructor(opts: Readonly<CoinbaseWalletProviderOptions>) {
-    super(opts);
-  }
-
-  public close() {
-    return "mockClose";
-  }
-
-  // @ts-expect-error mock relay
-  private async initializeRelay() {
-    const relay = {
-      setAppInfo: mockSetAppInfo
-    };
-    await Promise.resolve();
-    return relay;
-  }
-}
-
-const mockProvider = new MockProviderClass({
-  jsonRpcUrl: "jsonrpc-url",
-  overrideIsMetaMask: false,
-  relayEventManager: new WalletSDKRelayEventManager(),
-  relayProvider: jest.fn(),
-  storage: new ScopedLocalStorage("-walletlink")
-});
 
 describe("CoinbaseWalletSDK", () => {
   describe("initialize", () => {
@@ -67,34 +43,35 @@ describe("CoinbaseWalletSDK", () => {
     });
 
     describe("sdk", () => {
-      test("makeWeb3Provider", () => {
+      test("@makeWeb3Provider", () => {
         expect(coinbaseWalletSDK2.makeWeb3Provider()).toBeInstanceOf(
           CoinbaseWalletProvider
         );
       });
 
-      test("disconnect", () => {
+      test("@disconnect", () => {
         const relayResetMock = jest
           .spyOn(WalletSDKRelay.prototype, "resetAndReload")
           .mockImplementation(() => "resetAndReload");
         coinbaseWalletSDK2.disconnect();
+
         expect(relayResetMock).toHaveBeenCalled();
       });
 
-      test("setAppInfo", () => {
+      test("@setAppInfo", () => {
         const relaySetAppInfoMock = jest
           .spyOn(WalletSDKRelay.prototype, "setAppInfo")
           .mockImplementation(() => "setAppInfo");
         coinbaseWalletSDK2.setAppInfo("sdk", "http://sdk-image.png");
+
         expect(relaySetAppInfoMock).toHaveBeenCalledWith(
           "sdk",
           "http://sdk-image.png"
         );
       });
 
-      test("getQrUrl", () => {
+      test("@getQrUrl", () => {
         const qrUrl = coinbaseWalletSDK2.getQrUrl() || "";
-
         const url = new URL(qrUrl);
 
         expect(url.hostname).toEqual("www.walletlink.org");
@@ -105,25 +82,27 @@ describe("CoinbaseWalletSDK", () => {
     describe("extension", () => {
       beforeAll(() => {
         // @ts-expect-error mocked provider
-        window.coinbaseWalletExtension = mockProvider;
+        window.coinbaseWalletExtension = mockExtensionProvider;
       });
 
       afterAll(() => {
         window.coinbaseWalletExtension = undefined;
       });
 
-      test("makeWeb3Provider", () => {
+      test("@makeWeb3Provider", () => {
         // Returns extension provider
-        expect(coinbaseWalletSDK2.makeWeb3Provider()).toEqual(mockProvider);
+        expect(coinbaseWalletSDK2.makeWeb3Provider()).toEqual(
+          mockExtensionProvider
+        );
       });
 
-      test("disconnect", () => {
+      test("@disconnect", () => {
         // Calls extension close
         coinbaseWalletSDK2.disconnect();
-        expect(mockProvider.close()).toEqual("mockClose");
+        expect(mockExtensionProvider.close()).toEqual("mockClose");
       });
 
-      test("setAppInfo", async () => {
+      test("@setAppInfo", async () => {
         coinbaseWalletSDK2.setAppInfo("extension", "http://extension-logo.png");
 
         await waitFor(() => {
@@ -132,6 +111,46 @@ describe("CoinbaseWalletSDK", () => {
             "http://extension-logo.png"
           );
         });
+      });
+    });
+
+    describe("cipher provider", () => {
+      class MockCipherProviderClass extends MockProviderClass {
+        public isCipher = true;
+
+        constructor(opts: Readonly<CoinbaseWalletProviderOptions>) {
+          super(opts);
+        }
+      }
+
+      const mockCipherProvider = new MockCipherProviderClass({
+        jsonRpcUrl: "url",
+        overrideIsMetaMask: false,
+        relayEventManager: new WalletSDKRelayEventManager(),
+        relayProvider: jest.fn(),
+        storage: new ScopedLocalStorage("-walletlink")
+      });
+      beforeAll(() => {
+        // @ts-expect-error mocked provider
+        window.coinbaseWalletExtension = mockCipherProvider;
+      });
+
+      afterAll(() => {
+        window.coinbaseWalletExtension = undefined;
+      });
+
+      test("@makeWeb3Provider", () => {
+        expect(coinbaseWalletSDK2.makeWeb3Provider()).toEqual(
+          mockCipherProvider
+        );
+      });
+
+      test("@setAppInfo", () => {
+        const relaySetAppInfoMock = jest
+          .spyOn(WalletSDKRelay.prototype, "setAppInfo")
+          .mockImplementation(() => "setAppInfo");
+        coinbaseWalletSDK2.setAppInfo("cipher", "http://cipher-image.png");
+        expect(relaySetAppInfoMock).not.toBeCalled();
       });
     });
   });
