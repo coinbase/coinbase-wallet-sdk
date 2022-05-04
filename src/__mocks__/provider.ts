@@ -1,7 +1,7 @@
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
 import {
   CoinbaseWalletProvider,
-  CoinbaseWalletProviderOptions
+  CoinbaseWalletProviderOptions,
 } from "../provider/CoinbaseWalletProvider";
 import { WalletSDKRelayEventManager } from "../relay/WalletSDKRelayEventManager";
 
@@ -19,7 +19,7 @@ export class MockProviderClass extends CoinbaseWalletProvider {
   // @ts-expect-error mock relay
   private async initializeRelay() {
     const relay = {
-      setAppInfo: mockSetAppInfo
+      setAppInfo: mockSetAppInfo,
     };
     await Promise.resolve();
     return relay;
@@ -31,5 +31,5 @@ export const mockExtensionProvider = new MockProviderClass({
   overrideIsMetaMask: false,
   relayEventManager: new WalletSDKRelayEventManager(),
   relayProvider: jest.fn(),
-  storage: new ScopedLocalStorage("-walletlink")
+  storage: new ScopedLocalStorage("-walletlink"),
 });

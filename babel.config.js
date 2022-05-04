@@ -5,17 +5,18 @@ module.exports = {
       "@babel/preset-typescript",
       {
         jsxPragma: "h",
-        jsxPragmaFrag: "Fragment"
-      }
-    ]
+        jsxPragmaFrag: "Fragment",
+      },
+    ],
   ],
   plugins: [
     [
       "@babel/plugin-transform-react-jsx",
       {
         pragma: "h",
-        pragmaFrag: "Fragment"
-      }
+        pragmaFrag: "Fragment",
+      },
     ],
-    ["@babel/plugin-proposal-decorators", { legacy: true }]]
+    ["@babel/plugin-proposal-decorators", { legacy: true }],
+  ],
 };

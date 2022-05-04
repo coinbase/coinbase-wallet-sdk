@@ -1,7 +1,7 @@
 import SafeEventEmitter from "@metamask/safe-event-emitter";
 import {
   JsonRpcEngineEndCallback,
-  JsonRpcEngineNextCallback
+  JsonRpcEngineNextCallback,
 } from "json-rpc-engine";
 
 import { RequestArguments, Web3Provider } from "./Web3Provider";
@@ -30,12 +30,12 @@ export class SubscriptionManager {
     const blockTracker = new PollingBlockTracker({
       provider,
       pollingInterval: 15 * 1000, // 15 sec
-      setSkipCacheFlag: true
+      setSkipCacheFlag: true,
     });
 
     const { events, middleware } = createSubscriptionManager({
       blockTracker,
-      provider
+      provider,
     });
 
     this.events = events;
@@ -61,7 +61,7 @@ interface SubscriptionMiddleware {
     req: RequestArguments,
     res: SubscriptionResult,
     next: JsonRpcEngineNextCallback,
-    end: JsonRpcEngineEndCallback
+    end: JsonRpcEngineEndCallback,
   ): Promise<void>;
 
   destroy(): void;

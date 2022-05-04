@@ -15,7 +15,7 @@ import { hexStringToUint8Array, uint8ArrayToHex } from "../util";
  */
 export async function encrypt(
   plainText: string,
-  secret: string
+  secret: string,
 ): Promise<string> {
   if (secret.length !== 64) throw Error(`secret must be 256 bits`);
   const ivBytes = crypto.getRandomValues(new Uint8Array(12));
@@ -24,7 +24,7 @@ export async function encrypt(
     hexStringToUint8Array(secret),
     { name: "aes-gcm" },
     false,
-    ["encrypt", "decrypt"]
+    ["encrypt", "decrypt"],
   );
 
   const enc = new TextEncoder();
@@ -33,19 +33,19 @@ export async function encrypt(
   const encryptedResult: ArrayBuffer = await window.crypto.subtle.encrypt(
     {
       name: "AES-GCM",
-      iv: ivBytes
+      iv: ivBytes,
     },
     secretKey,
-    enc.encode(plainText)
+    enc.encode(plainText),
   );
 
   const tagLength = 16;
   const authTag: ArrayBuffer = encryptedResult.slice(
-    encryptedResult.byteLength - tagLength
+    encryptedResult.byteLength - tagLength,
   );
   const encryptedPlaintext = encryptedResult.slice(
     0,
-    encryptedResult.byteLength - tagLength
+    encryptedResult.byteLength - tagLength,
   );
 
   const authTagBytes = new Uint8Array(authTag);
@@ -53,7 +53,7 @@ export async function encrypt(
   const concatted = new Uint8Array([
     ...ivBytes,
     ...authTagBytes,
-    ...encryptedPlaintextBytes
+    ...encryptedPlaintextBytes,
   ]);
   return uint8ArrayToHex(concatted);
 }
@@ -66,7 +66,7 @@ export async function encrypt(
  */
 export function decrypt(
   cipherText: string,
-  secret: string
+  secret: string,
 ): Observable<string> {
   if (secret.length !== 64) throw Error(`secret must be 256 bits`);
   return new Observable<string>(subscriber => {
@@ -76,7 +76,7 @@ export function decrypt(
         hexStringToUint8Array(secret),
         { name: "aes-gcm" },
         false,
-        ["encrypt", "decrypt"]
+        ["encrypt", "decrypt"],
       );
 
       const encrypted: Uint8Array = hexStringToUint8Array(cipherText);
@@ -86,17 +86,17 @@ export function decrypt(
       const encryptedPlaintextBytes = encrypted.slice(28);
       const concattedBytes = new Uint8Array([
         ...encryptedPlaintextBytes,
-        ...authTagBytes
+        ...authTagBytes,
       ]);
       const algo = {
         name: "AES-GCM",
-        iv: new Uint8Array(ivBytes)
+        iv: new Uint8Array(ivBytes),
       };
       try {
         const decrypted = await window.crypto.subtle.decrypt(
           algo,
           secretKey,
-          concattedBytes
+          concattedBytes,
         );
         const decoder = new TextDecoder();
         subscriber.next(decoder.decode(decrypted));

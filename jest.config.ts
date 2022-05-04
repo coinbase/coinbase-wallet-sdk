@@ -26,7 +26,7 @@ export default {
     "./src/relay/WalletSDKRelay.ts",
     "./src/relay/WalletSDKAbstract.ts",
     "./src/relay/WalletSDKRelayEventManager.ts",
-    "./src/components/**/*.tsx"
+    "./src/components/**/*.tsx",
   ],
   // The directory where Jest should output its coverage files
   coverageDirectory: "coverage",
@@ -42,8 +42,8 @@ export default {
     global: {
       branches: 25,
       functions: 21,
-      statements: 25.95
-    }
+      statements: 25.95,
+    },
   },
 
   // An array of file extensions your modules use
@@ -51,7 +51,7 @@ export default {
 
   // A map from regular expressions to module names or to arrays of module names that allow to stub out resources with a single module
   moduleNameMapper: {
-    "^src/(.*)$": "<rootDir>/src/$1"
+    "^src/(.*)$": "<rootDir>/src/$1",
   },
 
   // A list of paths to directories that Jest should use to search for files in
@@ -68,9 +68,9 @@ export default {
 
   // A map from regular expressions to paths to transformers
   transform: {
-    "^.+\\.(js|ts|tsx)$": ["babel-jest"]
+    "^.+\\.(js|ts|tsx)$": ["babel-jest"],
   },
 
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
-  testPathIgnorePatterns: ["/node_modules/", "/build/"]
+  testPathIgnorePatterns: ["/node_modules/", "/build/"],
 };

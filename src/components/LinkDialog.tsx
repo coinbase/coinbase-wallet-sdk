@@ -30,7 +30,7 @@ export const LinkDialog: FunctionComponent<{
     const timers = [
       window.setTimeout(() => {
         setDialogHidden(!isOpen);
-      }, 10)
+      }, 10),
     ];
 
     if (isOpen) {
@@ -39,7 +39,7 @@ export const LinkDialog: FunctionComponent<{
       timers.push(
         window.setTimeout(() => {
           setContainerHidden(true);
-        }, 360)
+        }, 360),
       );
     }
 
@@ -53,21 +53,21 @@ export const LinkDialog: FunctionComponent<{
       class={clsx(
         "-cbwsdk-link-dialog-container",
         props.darkMode && "-cbwsdk-link-dialog-container-dark",
-        isContainerHidden && "-cbwsdk-link-dialog-container-hidden"
+        isContainerHidden && "-cbwsdk-link-dialog-container-hidden",
       )}
     >
       <style>{css}</style>
       <div
         class={clsx(
           "-cbwsdk-link-dialog-backdrop",
-          isDialogHidden && "-cbwsdk-link-dialog-backdrop-hidden"
+          isDialogHidden && "-cbwsdk-link-dialog-backdrop-hidden",
         )}
       />
       <div class="-cbwsdk-link-dialog">
         <div
           class={clsx(
             "-cbwsdk-link-dialog-box",
-            isDialogHidden && "-cbwsdk-link-dialog-box-hidden"
+            isDialogHidden && "-cbwsdk-link-dialog-box-hidden",
           )}
         >
           <ScanQRCode
@@ -100,7 +100,7 @@ const ScanQRCode: FunctionComponent<{
     props.sessionId,
     props.sessionSecret,
     props.linkAPIUrl,
-    props.isParentConnection
+    props.isParentConnection,
   );
 
   return (

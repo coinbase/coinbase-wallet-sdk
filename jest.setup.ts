@@ -2,6 +2,6 @@ import webcrypto from "crypto";
 
 Object.defineProperty(global.self, "crypto", {
   value: {
-    getRandomValues: (arr: Uint8Array) => webcrypto.randomBytes(arr.length)
-  }
+    getRandomValues: (arr: Uint8Array) => webcrypto.randomBytes(arr.length),
+  },
 });

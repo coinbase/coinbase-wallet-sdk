@@ -26,43 +26,43 @@ Install Coinbase Wallet SDK with yarn or npm.
 
 1. Check available versions of Wallet SDK.
 
-  ```shell
-  yarn info @coinbase/wallet-sdk versions
-  ```
+```shell
+yarn info @coinbase/wallet-sdk versions
+```
 
 2. Install a specific version or the latest version.
 
-  ```shell
-  #yarn add @coinbase/wallet-sdk@3.0.0
-  yarn add @coinbase/wallet-sdk
-  ```
+```shell
+#yarn add @coinbase/wallet-sdk@3.0.0
+yarn add @coinbase/wallet-sdk
+```
 
 3. Check your installed version.
 
-  ```shell
-  yarn list @coinbase/wallet-sdk
-  ```
+```shell
+yarn list @coinbase/wallet-sdk
+```
 
 #### Npm
 
 1. Check available versions of Wallet SDK.
 
-  ```shell
-  npm view @coinbase/wallet-sdk versions
-  ```
+```shell
+npm view @coinbase/wallet-sdk versions
+```
 
 2. Install a specific version or the latest version.
 
-  ```shell
-  #npm install @coinbase/wallet-sdk@3.0.0
-  npm install @coinbase/wallet-sdk
-  ```
+```shell
+#npm install @coinbase/wallet-sdk@3.0.0
+npm install @coinbase/wallet-sdk
+```
 
 3. Check your installed version.
 
-  ```shell
-  npm list @coinbase/wallet-sdk
-  ```
+```shell
+npm list @coinbase/wallet-sdk
+```
 
 ### Upgrading Wallet SDK
 
@@ -72,39 +72,39 @@ Upgrade Coinbase Wallet SDK with yarn or npm.
 
 1. Compare your installed version of Coinbase Wallet SDK with the latest available version.
 
-  ```shell
-  yarn outdated @coinbase/wallet-sdk
-  ```
+```shell
+yarn outdated @coinbase/wallet-sdk
+```
 
 2. Update Coinbase Wallet SDK to the latest.
 
-  ```shell
-  yarn upgrade @coinbase/wallet-sdk --latest
-  ```
+```shell
+yarn upgrade @coinbase/wallet-sdk --latest
+```
 
 #### Npm
 
 1. Compare your installed version of Coinbase Wallet SDK with the latest available version.
 
-  ```shell
-  npm outdated @coinbase/wallet-sdk
-  ```
+```shell
+npm outdated @coinbase/wallet-sdk
+```
 
 2. If necessary, update `package.json` with the latest major version.
 
-  ```shell
-  {
-    "dependencies": {
-      "@coinbase/wallet-sdk": "^3.0.0"
-    }
+```shell
+{
+  "dependencies": {
+    "@coinbase/wallet-sdk": "^3.0.0"
   }
-  ```
+}
+```
 
 3. Update Coinbase Wallet SDK to the latest available version.
 
-  ```shell
-  npm update @coinbase/wallet-sdk
-  ```
+```shell
+npm update @coinbase/wallet-sdk
+```
 
 ## Libraries using Coinbase Wallet SDK
 

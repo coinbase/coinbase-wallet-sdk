@@ -28,7 +28,7 @@ export const QRCode: FunctionComponent<QRCodeProps> = props => {
       width: props.width ?? 256,
       height: props.height ?? 256,
       padding: 0,
-      image: props.image
+      image: props.image,
     });
     const base64 = Buffer.from(qrcode.svg(), "utf8").toString("base64");
     setSvg(`data:image/svg+xml;base64,${base64}`);

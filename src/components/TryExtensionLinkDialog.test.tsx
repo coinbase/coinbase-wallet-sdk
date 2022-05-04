@@ -5,7 +5,7 @@ import { TryExtensionLinkDialog } from "./TryExtensionLinkDialog";
 
 const renderTryExtensionLinkDialog = ({
   connectDisabled = false,
-  isConnected = true
+  isConnected = true,
 }) => {
   return render(
     <TryExtensionLinkDialog
@@ -19,7 +19,7 @@ const renderTryExtensionLinkDialog = ({
       isParentConnection={false}
       connectDisabled={connectDisabled}
       onCancel={null}
-    />
+    />,
   );
 };
 
@@ -61,7 +61,7 @@ describe("TryExtensionLinkDialog", () => {
       fireEvent.click(button);
       expect(mockedWindowOpen).toBeCalledWith(
         "https://api.wallet.coinbase.com/rpc/v2/desktop/chrome",
-        "_blank"
+        "_blank",
       );
     });
   });
