@@ -35,15 +35,16 @@ export default {
   coveragePathIgnorePatterns: ["/node_modules/"],
 
   // A list of reporter names that Jest uses when writing coverage reports
-  coverageReporters: ["json", "text", "text-summary", "lcov"],
+  // coverageReporters: ["json", "text"],
+  // coverageReporters: ["json", "text", "text-summary", "lcov"],
 
   // TODO: Increase threshold as additional tests are added
   coverageThreshold: {
-    global: {
-      branches: 25,
-      functions: 21,
-      statements: 25.95,
-    },
+    // global: {
+    //   branches: 25,
+    //   functions: 21,
+    //   statements: 25.95,
+    // },
   },
 
   // An array of file extensions your modules use
