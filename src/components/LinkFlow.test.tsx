@@ -1,3 +1,5 @@
+import { render, screen, waitFor } from "@testing-library/preact";
+import { h } from "preact";
 import { Observable } from "rxjs";
 
 import { LinkFlow } from "./LinkFlow";
@@ -43,22 +45,23 @@ describe("LinkFlow", () => {
     });
   });
 
-  describe("public methods", () => {
-    const attachedEl = document.getElementsByClassName(
-      "-cbwsdk-link-flow-root",
-    );
+  const attachedEl = document.getElementsByClassName("-cbwsdk-link-flow-root");
 
-    beforeEach(async () => {
-      const el = document.createElement("div");
-      await linkFlow.attach(el);
+  describe("public methods", () => {
+    beforeEach(() => {
+      render(<div id="attach-here" />);
+      const ele = document.getElementById("attach-here");
+      if (ele) {
+        linkFlow.attach(ele);
+      }
     });
 
     test("@attach", () => {
-      expect(attachedEl).toBeTruthy();
+      expect(attachedEl.length).toEqual(1);
     });
 
-    test("@detach", async () => {
-      await linkFlow.detach();
+    test("@detach", () => {
+      linkFlow.detach();
 
       expect(attachedEl.length).toEqual(0);
     });
@@ -88,6 +91,23 @@ describe("LinkFlow", () => {
         isOpen: false,
         onCancel: null,
       });
+    });
+  });
+
+  describe("without root element", () => {
+    test("@detach", () => {
+      const linkFlow1 = new LinkFlow({
+        darkMode: true,
+        version: "1.2.1",
+        sessionId: "session123",
+        sessionSecret: "sessionSecret",
+        linkAPIUrl: "http://link-url.com",
+        isParentConnection: false,
+        connected$: new Observable(),
+      });
+      linkFlow1.detach();
+
+      expect(attachedEl.length).toEqual(0);
     });
   });
 });
