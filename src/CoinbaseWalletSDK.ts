@@ -61,7 +61,6 @@ export class CoinbaseWalletSDK {
     if (!options.uiConstructor) {
       uiConstructor = opts => new WalletSDKUI(opts);
     } else {
-      /** @deprecated */
       uiConstructor = options.uiConstructor;
     }
 
