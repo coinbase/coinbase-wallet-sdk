@@ -1,22 +1,8 @@
-import { render, screen, waitFor } from "@testing-library/preact";
+import { render } from "@testing-library/preact";
 import { h } from "preact";
 import { Observable } from "rxjs";
 
 import { LinkFlow } from "./LinkFlow";
-
-// @ts-expect-error I do what I want
-global.fetch = jest.fn(() =>
-  Promise.resolve({
-    ok: true,
-    json: () => ({
-      result: {
-        desktop: {
-          extension_ui: true,
-        },
-      },
-    }),
-  }),
-);
 
 describe("LinkFlow", () => {
   const linkFlow = new LinkFlow({
