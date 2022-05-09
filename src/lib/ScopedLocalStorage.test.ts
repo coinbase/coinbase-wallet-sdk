@@ -1,0 +1,38 @@
+import { ScopedLocalStorage } from "./ScopedLocalStorage";
+
+describe("ScopedLocalStorage", () => {
+  describe("public methods", () => {
+    afterAll(() => localStorage.clear());
+
+    const scopedLocalStorage = new ScopedLocalStorage("-testing");
+    test("@setItem", () => {
+      scopedLocalStorage.setItem("foo", "bar");
+
+      expect(localStorage.getItem("-testing:foo")).toEqual("bar");
+      expect(localStorage.length).toEqual(1);
+    });
+
+    test("@getItem", () => {
+      const getVal = scopedLocalStorage.getItem("foo");
+
+      expect(getVal).toEqual("bar");
+    });
+
+    test("@removeItem", () => {
+      scopedLocalStorage.removeItem("foo");
+
+      expect(localStorage.length).toEqual(0);
+    });
+
+    test("@clear", () => {
+      scopedLocalStorage.setItem("foo1", "bar1");
+      scopedLocalStorage.setItem("foo2", "bar2");
+      scopedLocalStorage.setItem("foo3", "bar3");
+      expect(localStorage.length).toEqual(3);
+
+      scopedLocalStorage.clear();
+
+      expect(localStorage.length).toEqual(0);
+    });
+  });
+});
