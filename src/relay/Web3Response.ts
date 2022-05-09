@@ -115,7 +115,7 @@ export type EthereumAddressFromSignedMessageResponse =
 
 export type ScanQRCodeResponse = BaseWeb3Response<string>; // scanned string
 
-export type GenericResponse = BaseWeb3Response<object>; // response data
+export type GenericResponse = BaseWeb3Response<string>; // response data
 
 export type MakeEthereumJSONRPCResponse = BaseWeb3Response<unknown>;
 

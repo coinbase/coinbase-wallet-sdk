@@ -61,6 +61,33 @@ export interface CoinbaseWalletProviderOptions {
   supportsAddressSwitching?: boolean;
 }
 
+interface AddEthereumChainParams {
+  chainId: string;
+  blockExplorerUrls?: string[];
+  chainName?: string;
+  iconUrls?: string[];
+  rpcUrls?: string[];
+  nativeCurrency?: {
+    name: string;
+    symbol: string;
+    decimals: number;
+  };
+}
+
+interface SwitchEthereumChainParams {
+  chainId: string;
+}
+
+interface WatchAssetParams {
+  type: string;
+  options: {
+    address: string;
+    symbol?: string;
+    decimals?: number;
+    image?: string;
+  };
+}
+
 export class CoinbaseWalletProvider
   extends SafeEventEmitter
   implements Web3Provider
@@ -218,7 +245,7 @@ export class CoinbaseWalletProvider
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  public setProviderInfo(jsonRpcUrl: string, chainId: number) {
+  public setProviderInfo(jsonRpcUrl: string, chainId?: number) {
     if (this.isChainOverridden) return;
     this.updateProviderInfo(jsonRpcUrl, this.getChainId(), false);
   }
@@ -351,8 +378,9 @@ export class CoinbaseWalletProvider
     return await this._send<AddressString[]>(JSONRPCMethod.eth_requestAccounts);
   }
 
-  public close() {
-    void this.initializeRelay().then(relay => relay.resetAndReload());
+  public async close() {
+    const relay = await this.initializeRelay()
+    relay.resetAndReload();
   }
 
   public send(request: JSONRPCRequest): JSONRPCResponse;
@@ -417,10 +445,10 @@ export class CoinbaseWalletProvider
     request: JSONRPCRequest[],
     callback: Callback<JSONRPCResponse[]>,
   ): void;
-  public sendAsync(
+  public async sendAsync(
     request: JSONRPCRequest | JSONRPCRequest[],
     callback: Callback<JSONRPCResponse> | Callback<JSONRPCResponse[]>,
-  ): void {
+  ): Promise<void> {
     if (typeof callback !== "function") {
       throw new Error("callback is required");
     }
@@ -436,7 +464,7 @@ export class CoinbaseWalletProvider
 
     // send(JSONRPCRequest, callback): void
     const cb = callback as Callback<JSONRPCResponse>;
-    this._sendRequestAsync(request)
+    return this._sendRequestAsync(request)
       .then(response => cb(null, response))
       .catch(err => cb(err, null));
   }
@@ -1212,31 +1240,4 @@ export class CoinbaseWalletProvider
       return relay;
     });
   }
-}
-
-interface AddEthereumChainParams {
-  chainId: string;
-  blockExplorerUrls?: string[];
-  chainName?: string;
-  iconUrls?: string[];
-  rpcUrls?: string[];
-  nativeCurrency?: {
-    name: string;
-    symbol: string;
-    decimals: number;
-  };
-}
-
-interface SwitchEthereumChainParams {
-  chainId: string;
-}
-
-interface WatchAssetParams {
-  type: string;
-  options: {
-    address: string;
-    symbol?: string;
-    decimals?: number;
-    image?: string;
-  };
 }
