@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/preact";
+import { fireEvent, render, screen } from "@testing-library/preact";
 import { h } from "preact";
 
 import {
