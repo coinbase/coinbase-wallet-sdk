@@ -58,10 +58,11 @@
   },
   "devDependencies": {
     "@babel/core": "^7.17.9",
-    "@babel/plugin-transform-react-jsx": "^7.17.3",
     "@babel/plugin-proposal-decorators": "^7.17.9",
+    "@babel/plugin-transform-react-jsx": "^7.17.3",
     "@babel/preset-env": "^7.16.11",
     "@babel/preset-typescript": "^7.16.7",
+    "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/preact": "^2.0.1",
     "@types/bn.js": "^4.11.6",
     "@types/jest": "^27.4.1",
