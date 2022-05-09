@@ -84,7 +84,7 @@ describe("CoinbaseWalletProvider", () => {
   });
 
   it("handles close", async () => {
-    const spy = jest.spyOn(MockRelayClass.prototype, 'resetAndReload');
+    const spy = jest.spyOn(MockRelayClass.prototype, "resetAndReload");
     const relay = new MockRelayClass();
 
     const provider = setupCoinbaseWalletProvider({
@@ -137,7 +137,8 @@ describe("CoinbaseWalletProvider", () => {
       mockCallback,
     );
 
-    expect(mockCallback).toHaveBeenCalledWith(null,
+    expect(mockCallback).toHaveBeenCalledWith(
+      null,
       expect.objectContaining({
         result: [MOCK_ADDERESS.toLowerCase()],
       }),
@@ -156,7 +157,8 @@ describe("CoinbaseWalletProvider", () => {
       },
       mockCallback,
     );
-    expect(mockCallback).toHaveBeenCalledWith(null,
+    expect(mockCallback).toHaveBeenCalledWith(
+      null,
       expect.objectContaining({
         result: [MOCK_ADDERESS.toLowerCase()],
       }),
@@ -166,7 +168,7 @@ describe("CoinbaseWalletProvider", () => {
   it("handles generic requests successfully", async () => {
     const relay = new MockRelayClass();
     jest.spyOn(relay, "genericRequest").mockReturnValue({
-      cancel: () => { },
+      cancel: () => {},
       promise: Promise.resolve({
         method: Web3Method.generic,
         result: "Success",
@@ -190,11 +192,11 @@ describe("CoinbaseWalletProvider", () => {
   it("handles error responses with generic requests", async () => {
     const relay = new MockRelayClass();
     jest.spyOn(relay, "genericRequest").mockReturnValue({
-      cancel: () => { },
+      cancel: () => {},
       // @ts-expect-error result should be a string
       promise: Promise.resolve({
         method: Web3Method.generic,
-        result: { foo: 'bar' },
+        result: { foo: "bar" },
       }),
     });
     const provider = setupCoinbaseWalletProvider({
@@ -208,13 +210,15 @@ describe("CoinbaseWalletProvider", () => {
     };
     const action = "cbSignAndSubmit";
 
-    await expect(() => provider.genericRequest(data, action)).rejects.toThrowError("result was not a string");
+    await expect(() =>
+      provider.genericRequest(data, action),
+    ).rejects.toThrowError("result was not a string");
   });
 
   it("handles user rejecting enable call", async () => {
     const relay = new MockRelayClass();
     jest.spyOn(relay, "requestEthereumAccounts").mockReturnValue({
-      cancel: () => { },
+      cancel: () => {},
       promise: Promise.reject(new Error("rejected")),
     });
     const provider = setupCoinbaseWalletProvider({
@@ -224,13 +228,15 @@ describe("CoinbaseWalletProvider", () => {
       },
     });
 
-    await expect(() => provider.enable()).rejects.toThrowError("User denied account authorization");
+    await expect(() => provider.enable()).rejects.toThrowError(
+      "User denied account authorization",
+    );
   });
 
   it("handles user rejecting enable call with unknown error", async () => {
     const relay = new MockRelayClass();
     jest.spyOn(relay, "requestEthereumAccounts").mockReturnValue({
-      cancel: () => { },
+      cancel: () => {},
       promise: Promise.reject(new Error("Unknown")),
     });
     const provider = setupCoinbaseWalletProvider({
@@ -252,7 +258,7 @@ describe("CoinbaseWalletProvider", () => {
     expect(response1[0]).toBe(MOCK_ADDERESS.toLowerCase());
 
     // @ts-expect-error accessing private value for test
-    expect(provider._addresses).toEqual([MOCK_ADDERESS.toLowerCase()])
+    expect(provider._addresses).toEqual([MOCK_ADDERESS.toLowerCase()]);
 
     // Set the account on the first request
     const response2 = await provider.request<string[]>({
@@ -262,14 +268,17 @@ describe("CoinbaseWalletProvider", () => {
   });
 
   it("gets the users address from storage on init", async () => {
-    const localStorage = new ScopedLocalStorage('test')
-    localStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDERESS.toLowerCase())
+    const localStorage = new ScopedLocalStorage("test");
+    localStorage.setItem(
+      LOCAL_STORAGE_ADDRESSES_KEY,
+      MOCK_ADDERESS.toLowerCase(),
+    );
     const provider = setupCoinbaseWalletProvider({
-      storage: localStorage
+      storage: localStorage,
     });
 
     // @ts-expect-error accessing private value for test
-    expect(provider._addresses).toEqual([MOCK_ADDERESS.toLowerCase()])
+    expect(provider._addresses).toEqual([MOCK_ADDERESS.toLowerCase()]);
 
     // Set the account on the first request
     const response = await provider.request<string[]>({
@@ -281,24 +290,26 @@ describe("CoinbaseWalletProvider", () => {
   it("handles scanning QR code with bad response", async () => {
     const relay = new MockRelayClass();
     jest.spyOn(relay, "scanQRCode").mockReturnValue({
-      cancel: () => { },
+      cancel: () => {},
       // @ts-expect-error result should be a string
       promise: Promise.resolve({
         method: Web3Method.scanQRCode,
-        result: { foo: 'bar' },
+        result: { foo: "bar" },
       }),
     });
     const provider = setupCoinbaseWalletProvider({
       relayProvider: async () => Promise.resolve(relay),
     });
 
-    await expect(() => provider.scanQRCode(new RegExp('cbwallet://cool'))).rejects.toThrowError("result was not a string");
+    await expect(() =>
+      provider.scanQRCode(new RegExp("cbwallet://cool")),
+    ).rejects.toThrowError("result was not a string");
   });
 
   it("handles scanning QR code", async () => {
     const relay = new MockRelayClass();
     jest.spyOn(relay, "scanQRCode").mockReturnValue({
-      cancel: () => { },
+      cancel: () => {},
       promise: Promise.resolve({
         method: Web3Method.scanQRCode,
         result: "cbwallet://result",
@@ -307,7 +318,7 @@ describe("CoinbaseWalletProvider", () => {
     const provider = setupCoinbaseWalletProvider({
       relayProvider: async () => Promise.resolve(relay),
     });
-    const result = await provider.scanQRCode(new RegExp('cbwallet://cool'))
+    const result = await provider.scanQRCode(new RegExp("cbwallet://cool"));
     expect(result).toBe("cbwallet://result");
   });
 });

@@ -379,7 +379,7 @@ export class CoinbaseWalletProvider
   }
 
   public async close() {
-    const relay = await this.initializeRelay()
+    const relay = await this.initializeRelay();
     relay.resetAndReload();
   }
 
