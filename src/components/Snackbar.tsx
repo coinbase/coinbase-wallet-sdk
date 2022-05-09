@@ -84,14 +84,16 @@ export class Snackbar {
   }
 }
 
-const SnackbarContainer: FunctionComponent<{ darkMode: boolean }> = props => (
+export const SnackbarContainer: FunctionComponent<{
+  darkMode: boolean;
+}> = props => (
   <div class={clsx("-cbwsdk-snackbar-container")}>
     <style>{css}</style>
     <div class="-cbwsdk-snackbar">{props.children}</div>
   </div>
 );
 
-const SnackbarInstance: FunctionComponent<SnackbarInstanceProps> = ({
+export const SnackbarInstance: FunctionComponent<SnackbarInstanceProps> = ({
   autoExpand,
   message,
   menuItems,

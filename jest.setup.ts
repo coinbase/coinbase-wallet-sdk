@@ -1,3 +1,5 @@
+import "@testing-library/jest-dom";
+
 import webcrypto from "crypto";
 
 Object.defineProperty(global.self, "crypto", {
