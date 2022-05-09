@@ -159,7 +159,6 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
                 const sessionIdHash = this.getSessionIdHash();
                 this.eventListener?.onEvent(EVENTS.UNLINKED_ERROR_STATE, {
                   sessionIdHash,
-                  origin: location.origin,
                 });
               }
             }
@@ -177,7 +176,6 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
           this.eventListener?.onEvent(EVENTS.METADATA_DESTROYED, {
             alreadyDestroyed,
             sessionIdHash: this.getSessionIdHash(),
-            origin: location.origin,
           });
           return this.resetAndReload();
         }),
@@ -344,7 +342,6 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
             method: "relay::resetAndReload",
             sessionMetadataChange: "__destroyed, 1",
             sessionIdHash: this.getSessionIdHash(),
-            origin: location.origin,
           });
           this.connection.destroy();
           /**
@@ -362,7 +359,6 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
             this.eventListener?.onEvent(EVENTS.SKIPPED_CLEARING_SESSION, {
               sessionIdHash: this.getSessionIdHash(),
               storedSessionIdHash: Session.hash(storedSession.id),
-              origin: location.origin,
             });
           }
           this.ui.reloadUI();
@@ -608,7 +604,6 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
       sessionIdHash: this.getSessionIdHash(),
       storedSessionIdHash: storedSession ? Session.hash(storedSession.id) : "",
       isSessionMismatched: (storedSession?.id !== this._session.id).toString(),
-      origin: location.origin,
     });
 
     this.subscriptions.add(
@@ -624,7 +619,6 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
             isSessionMismatched: (
               storedSession?.id !== this._session.id
             ).toString(),
-            origin: location.origin,
           });
         },
         error: err => {
@@ -707,7 +701,6 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
       eventId: message.id,
       method: `relay::${response.method}`,
       sessionIdHash: this.getSessionIdHash(),
-      origin: location.origin,
     });
     if (isRequestEthereumAccountsResponse(response)) {
       WalletSDKRelay.accountRequestCallbackIds.forEach(id =>
