@@ -31,7 +31,6 @@ describe("ScopedLocalStorage", () => {
       expect(localStorage.length).toEqual(3);
 
       scopedLocalStorage.clear();
-
       expect(localStorage.length).toEqual(0);
     });
   });
