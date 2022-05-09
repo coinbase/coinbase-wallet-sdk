@@ -56,6 +56,7 @@ export class WalletSDKUI implements WalletUI {
     this.linkFlow.setConnectDisabled(connectDisabled);
   }
 
+  /* istanbul ignore next */
   addEthereumChain(_options: {
     onCancel: (error?: Error) => void;
     onApprove: () => void;
@@ -73,6 +74,7 @@ export class WalletSDKUI implements WalletUI {
     // no-op
   }
 
+  /* istanbul ignore next */
   watchAsset(_options: {
     onCancel: (error?: Error) => void;
     onApprove: () => void;
@@ -85,6 +87,7 @@ export class WalletSDKUI implements WalletUI {
     // no-op
   }
 
+  /* istanbul ignore next */
   switchEthereumChain(_options: {
     onCancel: (error?: Error) => void;
     onApprove: () => void;
@@ -103,6 +106,7 @@ export class WalletSDKUI implements WalletUI {
     this.linkFlow.close();
   }
 
+  /* istanbul ignore next */
   signEthereumMessage(_: {
     request: SignEthereumMessageRequest;
     onSuccess: (response: SignEthereumMessageResponse) => void;
@@ -111,6 +115,7 @@ export class WalletSDKUI implements WalletUI {
     // No-op
   }
 
+  /* istanbul ignore next */
   signEthereumTransaction(_: {
     request: SignEthereumTransactionRequest;
     onSuccess: (response: SignEthereumTransactionResponse) => void;
@@ -119,6 +124,7 @@ export class WalletSDKUI implements WalletUI {
     // No-op
   }
 
+  /* istanbul ignore next */
   submitEthereumTransaction(_: {
     request: SubmitEthereumTransactionRequest;
     onSuccess: (response: SubmitEthereumTransactionResponse) => void;
@@ -127,6 +133,7 @@ export class WalletSDKUI implements WalletUI {
     // No-op
   }
 
+  /* istanbul ignore next */
   ethereumAddressFromSignedMessage(_: {
     request: EthereumAddressFromSignedMessageRequest;
     onSuccess: (response: EthereumAddressFromSignedMessageResponse) => void;
@@ -188,26 +195,32 @@ export class WalletSDKUI implements WalletUI {
     return this.snackbar.presentItem(snackbarProps);
   }
 
+  /* istanbul ignore next */
   reloadUI(): void {
     document.location.reload();
   }
 
+  /* istanbul ignore next */
   inlineAccountsResponse(): boolean {
     return false;
   }
 
+  /* istanbul ignore next */
   inlineAddEthereumChain(_chainId: string): boolean {
     return false;
   }
 
+  /* istanbul ignore next */
   inlineWatchAsset(): boolean {
     return false;
   }
 
+  /* istanbul ignore next */
   inlineSwitchEthereumChain(): boolean {
     return false;
   }
 
+  /* istanbul ignore next */
   isStandalone(): boolean {
     return false;
   }
