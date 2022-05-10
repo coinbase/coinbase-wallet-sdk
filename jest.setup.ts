@@ -1,9 +1,11 @@
 import "@testing-library/jest-dom";
 
-import webcrypto from "crypto";
+import { Crypto } from "@peculiar/webcrypto";
+import { TextDecoder, TextEncoder } from "util";
 
-Object.defineProperty(global.self, "crypto", {
-  value: {
-    getRandomValues: (arr: Uint8Array) => webcrypto.randomBytes(arr.length),
-  },
-});
+global.crypto = new Crypto();
+
+global.TextEncoder = TextEncoder;
+
+// @ts-expect-error Use util TextDecoder
+global.TextDecoder = TextDecoder;
