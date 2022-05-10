@@ -101,7 +101,6 @@ describe("CoinbaseWalletSDK", () => {
           .spyOn(mockExtensionProvider, "close")
           // @ts-expect-error expect string instead of void
           .mockImplementation(() => "mockClose");
-        coinbaseWalletSDK2.disconnect();
         // Calls extension close
         coinbaseWalletSDK2.disconnect();
         expect(await mockExtensionProvider.close()).toBe("mockClose");
