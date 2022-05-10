@@ -173,7 +173,7 @@ export class CoinbaseWalletSDK {
   public disconnect(): void {
     const extension = this.walletExtension;
     if (extension) {
-      extension.close();
+      void extension.close();
     } else {
       this._relay?.resetAndReload();
     }

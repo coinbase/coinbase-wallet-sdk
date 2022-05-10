@@ -96,10 +96,14 @@ describe("CoinbaseWalletSDK", () => {
         );
       });
 
-      test("@disconnect", () => {
+      test("@disconnect", async () => {
+        jest
+          .spyOn(mockExtensionProvider, "close")
+          // @ts-expect-error expect string instead of void
+          .mockImplementation(() => "mockClose");
         // Calls extension close
         coinbaseWalletSDK2.disconnect();
-        expect(mockExtensionProvider.close()).toEqual("mockClose");
+        expect(await mockExtensionProvider.close()).toBe("mockClose");
       });
 
       test("@setAppInfo", async () => {
