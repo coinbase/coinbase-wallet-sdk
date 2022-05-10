@@ -2,7 +2,7 @@ import { ScopedLocalStorage } from "./ScopedLocalStorage";
 
 describe("ScopedLocalStorage", () => {
   describe("public methods", () => {
-    afterAll(() => localStorage.clear());
+    afterEach(() => localStorage.clear());
 
     const scopedLocalStorage = new ScopedLocalStorage("-testing");
     test("@setItem", () => {
@@ -13,6 +13,7 @@ describe("ScopedLocalStorage", () => {
     });
 
     test("@getItem", () => {
+      scopedLocalStorage.setItem("foo", "bar");
       const getVal = scopedLocalStorage.getItem("foo");
 
       expect(getVal).toEqual("bar");
