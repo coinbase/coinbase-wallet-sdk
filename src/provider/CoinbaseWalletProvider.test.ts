@@ -642,7 +642,7 @@ describe("CoinbaseWalletProvider", () => {
         method: "eth_getFilterLogs",
         params: ["0x2"],
       });
-      expect(response).toEqual('0x1');
+      expect(response).toEqual("0x1");
     });
   });
 });
