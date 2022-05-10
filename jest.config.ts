@@ -24,7 +24,6 @@ export default {
     "./src/relay/aes256gcm.ts",
     "./src/relay/Session.ts",
     "./src/relay/WalletSDKRelay.ts",
-    "./src/relay/WalletSDKAbstract.ts",
     "./src/relay/WalletSDKRelayEventManager.ts",
     "./src/components/**/*.tsx",
   ],
