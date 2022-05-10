@@ -1,4 +1,10 @@
-import { MOCK_ADDERESS, MockRelayClass } from "../__mocks__/relay";
+import { MockRelayClass } from "../__mocks__/relay";
+import {
+  MOCK_ADDERESS,
+  MOCK_SIGNED_TX,
+  MOCK_TX,
+  MOCK_TYPED_DATA,
+} from "../fixtures/provider";
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
 import { LOCAL_STORAGE_ADDRESSES_KEY } from "../relay/WalletSDKRelayAbstract";
 import { WalletSDKRelayEventManager } from "../relay/WalletSDKRelayEventManager";
@@ -24,6 +30,22 @@ const setupCoinbaseWalletProvider = (
     relayProvider: async () => Promise.resolve(new MockRelayClass()),
     storage,
     ...options,
+  });
+};
+
+const mockSuccessfulFetchResponse = () => {
+  global.fetch = jest.fn().mockImplementationOnce(() => {
+    return new Promise(resolve => {
+      resolve({
+        ok: true,
+        json: () => ({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "eth_blockNumber",
+          result: "0x1",
+        }),
+      });
+    });
   });
 };
 
@@ -320,5 +342,307 @@ describe("CoinbaseWalletProvider", () => {
     });
     const result = await provider.scanQRCode(new RegExp("cbwallet://cool"));
     expect(result).toBe("cbwallet://result");
+  });
+
+  describe("RPC Methods", () => {
+    let provider: CoinbaseWalletProvider | null = null;
+    let localStorage: ScopedLocalStorage;
+    beforeEach(() => {
+      localStorage = new ScopedLocalStorage("test");
+      localStorage.setItem(
+        LOCAL_STORAGE_ADDRESSES_KEY,
+        MOCK_ADDERESS.toLowerCase(),
+      );
+      provider = setupCoinbaseWalletProvider({
+        storage: localStorage,
+      });
+    });
+
+    afterEach(() => {
+      provider = null;
+      localStorage?.clear();
+    });
+
+    test("eth_accounts", async () => {
+      const response = await provider?.request({
+        method: "eth_accounts",
+      });
+      expect(response).toEqual([MOCK_ADDERESS.toLowerCase()]);
+    });
+
+    test("eth_coinbase", async () => {
+      const response = await provider?.request({
+        method: "eth_coinbase",
+      });
+      expect(response).toBe(MOCK_ADDERESS.toLowerCase());
+    });
+
+    test("net_version", async () => {
+      const response = await provider?.request({
+        method: "net_version",
+      });
+      expect(response).toEqual("1");
+    });
+
+    test("eth_chainId", async () => {
+      const response = await provider?.request<string>({
+        method: "eth_chainId",
+      });
+      expect(response).toEqual("0x1");
+    });
+
+    test("eth_uninstallFilter", async () => {
+      const response = await provider?.request<boolean>({
+        method: "eth_uninstallFilter",
+        params: ["0xb"],
+      });
+      expect(response).toBe(true);
+    });
+
+    test("eth_requestAccounts", async () => {
+      const response = await provider?.request({
+        method: "eth_requestAccounts",
+      });
+      expect(response).toEqual([MOCK_ADDERESS.toLowerCase()]);
+    });
+
+    test("eth_sign success", async () => {
+      const response = await provider?.request({
+        method: "eth_sign",
+        params: [MOCK_ADDERESS.toLowerCase(), "Super safe message"],
+      });
+      expect(response).toBe("0x");
+    });
+
+    test("eth_sign fail bad address", async () => {
+      await expect(() =>
+        provider?.request({
+          method: "eth_sign",
+          params: ["0x123456789abcdef", "Super safe message"],
+        }),
+      ).rejects.toThrowError("Invalid Ethereum address: 0x123456789abcdef");
+    });
+
+    test("eth_sign fail bad message format", async () => {
+      await expect(() =>
+        provider?.request({
+          method: "eth_sign",
+          params: [MOCK_ADDERESS.toLowerCase(), 123456789],
+        }),
+      ).rejects.toThrowError("Not binary data: 123456789");
+    });
+
+    test("eth_ecRecover", async () => {
+      const response = await provider?.request({
+        method: "eth_ecRecover",
+        params: ["Super safe message", "0x"],
+      });
+      expect(response).toBe(MOCK_ADDERESS);
+    });
+
+    test("personal_sign success", async () => {
+      const response = await provider?.request({
+        method: "personal_sign",
+        params: ["My secret message", MOCK_ADDERESS.toLowerCase()],
+      });
+      expect(response).toBe("0x");
+    });
+
+    test("personal_sign fail", async () => {
+      await expect(() =>
+        provider?.request({
+          method: "personal_sign",
+          params: ["0x123456789abcdef", "Super safe message"],
+        }),
+      ).rejects.toThrowError("Invalid Ethereum address: Super safe message");
+    });
+
+    test("personal_ecRecover", async () => {
+      const response = await provider?.request({
+        method: "personal_ecRecover",
+        params: ["Super safe message", "0x"],
+      });
+      expect(response).toBe(MOCK_ADDERESS);
+    });
+
+    test("eth_signTransaction", async () => {
+      const response = await provider?.request({
+        method: "eth_signTransaction",
+        params: [
+          {
+            from: MOCK_ADDERESS,
+            to: MOCK_ADDERESS,
+            gasPrice: "21000",
+            maxFeePerGas: "10000000000",
+            maxPriorityFeePerGas: "10000000000",
+            gas: "10000000000",
+            value: "10000000000",
+            data: "0xA0",
+            nonce: 1,
+          },
+        ],
+      });
+      expect(response).toBe(MOCK_TX);
+    });
+
+    test("eth_sendRawTransaction", async () => {
+      const response = await provider?.request({
+        method: "eth_sendRawTransaction",
+        params: [MOCK_SIGNED_TX],
+      });
+      expect(response).toBe(MOCK_TX);
+    });
+
+    test("eth_sendTransaction", async () => {
+      const response = await provider?.request({
+        method: "eth_sendTransaction",
+        params: [
+          {
+            from: MOCK_ADDERESS,
+            to: MOCK_ADDERESS,
+            gasPrice: "21000",
+            maxFeePerGas: "10000000000",
+            maxPriorityFeePerGas: "10000000000",
+            gas: "10000000000",
+            value: "10000000000",
+            data: "0xA0",
+            nonce: 1,
+          },
+        ],
+      });
+      expect(response).toBe(MOCK_TX);
+    });
+
+    test.skip("eth_signTypedData_v1", async () => {
+      const response = await provider?.request({
+        method: "eth_signTypedData_v1",
+        params: [[MOCK_TYPED_DATA], MOCK_ADDERESS],
+      });
+      expect(response).toBe("0x");
+    });
+
+    test("eth_signTypedData_v2", async () => {
+      await expect(() =>
+        provider?.request({
+          method: "eth_signTypedData_v2",
+          params: [],
+        }),
+      ).rejects.toThrowError(
+        "The requested method is not supported by this Ethereum provider",
+      );
+    });
+
+    test("eth_signTypedData_v3", async () => {
+      const response = await provider?.request({
+        method: "eth_signTypedData_v3",
+        params: [MOCK_ADDERESS, MOCK_TYPED_DATA],
+      });
+      expect(response).toBe("0x");
+    });
+
+    test("eth_signTypedData_v4", async () => {
+      const response = await provider?.request({
+        method: "eth_signTypedData_v4",
+        params: [MOCK_ADDERESS, MOCK_TYPED_DATA],
+      });
+      expect(response).toBe("0x");
+    });
+
+    test("eth_signTypedData", async () => {
+      const response = await provider?.request({
+        method: "eth_signTypedData",
+        params: [MOCK_ADDERESS, MOCK_TYPED_DATA],
+      });
+      expect(response).toBe("0x");
+    });
+
+    test("wallet_addEthereumChain", () => {
+      // Placeholder
+      expect(true).toBe(true);
+    });
+
+    test("wallet_switchEthereumChain", () => {
+      // Placeholder
+      expect(true).toBe(true);
+    });
+
+    test("wallet_watchAsset", () => {
+      // Placeholder
+      expect(true).toBe(true);
+    });
+
+    test("eth_newFilter", async () => {
+      mockSuccessfulFetchResponse();
+      const response = await provider?.request({
+        method: "eth_newFilter",
+        params: [
+          {
+            fromBlock: "0xb",
+            toBlock: "0xc",
+            address: MOCK_ADDERESS,
+          },
+        ],
+      });
+      expect(response).toBe("0x2");
+    });
+
+    test("eth_newBlockFilter", async () => {
+      mockSuccessfulFetchResponse();
+      const response = await provider?.request({
+        method: "eth_newBlockFilter",
+      });
+      expect(response).toBe("0x2");
+    });
+
+    test("eth_newPendingTransactionFilter", async () => {
+      mockSuccessfulFetchResponse();
+      const response = await provider?.request({
+        method: "eth_newPendingTransactionFilter",
+      });
+      expect(response).toBe("0x2");
+    });
+
+    test("eth_getFilterChanges", async () => {
+      mockSuccessfulFetchResponse();
+      await provider?.request({
+        method: "eth_newFilter",
+        params: [
+          {
+            fromBlock: "0xb",
+            toBlock: "0xc",
+            address: MOCK_ADDERESS,
+          },
+        ],
+      });
+
+      mockSuccessfulFetchResponse();
+      const response = await provider?.request({
+        method: "eth_getFilterChanges",
+        params: ["0x2"],
+      });
+
+      expect(response).toEqual([]); // expect empty result
+    });
+
+    test("eth_getFilterLogs", async () => {
+      mockSuccessfulFetchResponse();
+      await provider?.request({
+        method: "eth_newFilter",
+        params: [
+          {
+            fromBlock: "0xb",
+            toBlock: "0xc",
+            address: MOCK_ADDERESS,
+          },
+        ],
+      });
+
+      mockSuccessfulFetchResponse();
+      const response = await provider?.request({
+        method: "eth_getFilterLogs",
+        params: ["0x2"],
+      });
+      expect(response).toEqual('0x1');
+    });
   });
 });

@@ -1080,6 +1080,7 @@ export class CoinbaseWalletProvider
     return this._signEthereumMessage(message, address, false, typedDataJSON);
   }
 
+  /** @deprecated */
   private async _cbwallet_arbitrary(
     params: unknown[],
   ): Promise<JSONRPCResponse> {
