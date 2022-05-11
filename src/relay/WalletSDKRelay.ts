@@ -17,6 +17,7 @@ import {
 
 import { EventListener, EVENTS } from "../connection/EventListener";
 import { ServerMessageEvent } from "../connection/ServerMessage";
+import { SessionConfig } from "../connection/SessionConfig";
 import { WalletSDKConnection } from "../connection/WalletSDKConnection";
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
 import { WalletUI, WalletUIOptions } from "../provider/WalletUI";
@@ -36,6 +37,7 @@ import {
   APP_VERSION_KEY,
   CancelablePromise,
   LOCAL_STORAGE_ADDRESSES_KEY,
+  SESSION_CONFIG_KEY,
   WALLET_USER_NAME_KEY,
   WalletSDKRelayAbstract,
 } from "./WalletSDKRelayAbstract";
@@ -80,6 +82,7 @@ export interface WalletSDKRelayOptions {
   storage: ScopedLocalStorage;
   relayEventManager: WalletSDKRelayEventManager;
   uiConstructor: (options: Readonly<WalletUIOptions>) => WalletUI;
+  sessionConfigCallback?: (config: SessionConfig) => void;
   eventListener?: EventListener;
 }
 
@@ -120,6 +123,24 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
       this._session.key,
       this.linkAPIUrl,
       this.eventListener,
+    );
+
+    this.subscriptions.add(
+      this.connection.sessionConfig$.subscribe({
+        next: sessionConfig => {
+          this.storage.setItem(
+            SESSION_CONFIG_KEY,
+            JSON.stringify(sessionConfig),
+          );
+
+          options.sessionConfigCallback?.(sessionConfig);
+        },
+        error: () => {
+          this.eventListener?.onEvent(EVENTS.GENERAL_ERROR, {
+            message: "error while invoking session config callback",
+          });
+        },
+      }),
     );
 
     this.subscriptions.add(
