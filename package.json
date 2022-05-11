@@ -37,7 +37,8 @@
     "lint:prettier": "prettier --check \"{src,__tests__}/**/*.(js|ts|tsx)\"",
     "lint:eslint": "eslint ./src --ext .ts,.tsx",
     "fix:eslint": "yarn lint:eslint --fix",
-    "fix:prettier": "prettier . --write"
+    "fix:prettier": "prettier . --write",
+    "release": "./scripts/release.sh"
   },
   "private": true,
   "dependencies": {
