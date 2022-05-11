@@ -4,11 +4,18 @@ import { Observable } from "rxjs";
 import { ConnectionState, RxWebSocket } from "./RxWebSocket";
 
 describe("RxWebSocket", () => {
-  const server = new WS("ws://localhost:1234");
-  const rxWS = new RxWebSocket("http://localhost:1234");
+  let server: WS;
+  let rxWS: RxWebSocket;
+  beforeEach(() => {
+    server = new WS("ws://localhost:1234");
+    rxWS = new RxWebSocket("http://localhost:1234");
+  });
 
-  test.only("@connect & @disconnect", async () => {
-    const client = await rxWS.connect();
+  afterEach(() => {
+    server.close();
+  });
+  test("@connect & @disconnect", async () => {
+    const client = rxWS.connect();
 
     expect(client).toBeInstanceOf(Observable);
     await client.toPromise();
@@ -24,33 +31,22 @@ describe("RxWebSocket", () => {
     // @ts-expect-error test private methods
     rxWS.connectionStateSubject.subscribe({
       next: val => {
-        console.log(val);
-
         expect(val).toEqual(ConnectionState.CONNECTED);
       },
-    });
-
-    await rxWS.disconnect();
-    // @ts-expect-error test private methods
-    expect(rxWS.webSocket).toBe(null);
-    // @ts-expect-error test private methods
-    rxWS.connectionStateSubject.subscribe({
-      next: val => {
-        console.log(val);
-
+      closed: (val: ConnectionState) => {
         expect(val).toEqual(ConnectionState.DISCONNECTED);
       },
     });
-  });
 
-  test("@sendData", async () => {
     const webSocketSendMock = jest
       .spyOn(WebSocket.prototype, "send")
       .mockImplementation(() => "send");
-
-    await rxWS.connect().toPromise();
     rxWS.sendData("data");
     expect(webSocketSendMock).toHaveBeenCalledWith("data");
+
+      rxWS.disconnect();
+      // @ts-expect-error test private methods
+      expect(rxWS.webSocket).toBe(null);
   });
 
   test("@connectionState$ & @incomingData$", () => {
