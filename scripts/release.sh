@@ -11,7 +11,7 @@ gitMessage=$(git log --oneline -n 1)
 mainBranch="master"
 branch=$(git rev-parse --abbrev-ref HEAD)
 
-if [ $branch != $mainBranch ]; then
+if [ $branch == $mainBranch ]; then
   echo -e "${PURPLE}Checking all branches are up-to-date..."
   echo -e "================================================="
   echo -e " git fetch --all"
@@ -27,8 +27,9 @@ if [ $branch != $mainBranch ]; then
   yarn install
   echo -e "yarn build:prod"
   yarn build:prod
-  echo -e "-------------------------------------------------"
-  echo -e " ${GREEN}cd build/npm and run 'npm publish'${gitMessage}"
+  echo "================================================="
+  echo -e " ${GREEN}cd build/npm and run 'npm publish'"
+  echo "================================================="
 else
   echo -e "${RED}⚠️  Need to publish from ${mainBranch} branch"
   echo -e "${REDBOLD}Checking out ${mainBranch}... "
