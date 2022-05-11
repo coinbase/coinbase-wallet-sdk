@@ -577,7 +577,7 @@ describe("CoinbaseWalletProvider", () => {
         method: "eth_newFilter",
         params: [
           {
-            fromBlock: "0xb",
+            fromBlock: "0xa",
             toBlock: "0xc",
             address: MOCK_ADDERESS,
           },
@@ -608,7 +608,7 @@ describe("CoinbaseWalletProvider", () => {
         method: "eth_newFilter",
         params: [
           {
-            fromBlock: "0xb",
+            fromBlock: "0xa",
             toBlock: "0xc",
             address: MOCK_ADDERESS,
           },
@@ -630,7 +630,7 @@ describe("CoinbaseWalletProvider", () => {
         method: "eth_newFilter",
         params: [
           {
-            fromBlock: "0xb",
+            fromBlock: "0xa",
             toBlock: "0xc",
             address: MOCK_ADDERESS,
           },
