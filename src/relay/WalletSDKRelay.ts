@@ -37,7 +37,6 @@ import {
   APP_VERSION_KEY,
   CancelablePromise,
   LOCAL_STORAGE_ADDRESSES_KEY,
-  SESSION_CONFIG_KEY,
   WALLET_USER_NAME_KEY,
   WalletSDKRelayAbstract,
 } from "./WalletSDKRelayAbstract";
@@ -128,11 +127,6 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     this.subscriptions.add(
       this.connection.sessionConfig$.subscribe({
         next: sessionConfig => {
-          this.storage.setItem(
-            SESSION_CONFIG_KEY,
-            JSON.stringify(sessionConfig),
-          );
-
           options.sessionConfigCallback?.(sessionConfig);
         },
         error: () => {
