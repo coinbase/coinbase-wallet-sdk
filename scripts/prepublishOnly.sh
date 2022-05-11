@@ -1,5 +1,7 @@
 #! /bin/bash
 
+# Run before `npm publish`
+
 # COLORS
 REDBOLD='\033[1;31m'
 RED='\033[0;31m'
@@ -31,7 +33,6 @@ if [ $branch == $mainBranch ]; then
   cd build/npm
   echo -e "-------------------------------------------------"
   echo -e "npm publish"
-  npm publish
   echo -e " ${GREEN}Releasing: ${gitMessage}"
 else
   echo -e "${RED}⚠️  Need to publish from ${mainBranch} branch"

@@ -38,7 +38,7 @@
     "lint:eslint": "eslint ./src --ext .ts,.tsx",
     "fix:eslint": "yarn lint:eslint --fix",
     "fix:prettier": "prettier . --write",
-    "release": "./scripts/release.sh"
+    "prepublishOnly": "./scripts/prepublishOnly.sh"
   },
   "private": true,
   "dependencies": {
