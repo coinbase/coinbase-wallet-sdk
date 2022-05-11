@@ -40,9 +40,9 @@ describe("RxWebSocket", () => {
     rxWS.sendData("data");
     expect(webSocketSendMock).toHaveBeenCalledWith("data");
 
-      rxWS.disconnect();
-      // @ts-expect-error test private methods
-      expect(rxWS.webSocket).toBe(null);
+    rxWS.disconnect();
+    // @ts-expect-error test private methods
+    expect(rxWS.webSocket).toBe(null);
   });
 
   test("@connectionState$ & @incomingData$", () => {
