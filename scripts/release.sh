@@ -1,7 +1,5 @@
 #! /bin/bash
 
-# Run before `npm publish`
-
 # COLORS
 REDBOLD='\033[1;31m'
 RED='\033[0;31m'
@@ -13,7 +11,7 @@ gitMessage=$(git log --oneline -n 1)
 mainBranch="master"
 branch=$(git rev-parse --abbrev-ref HEAD)
 
-if [ $branch == $mainBranch ]; then
+if [ $branch != $mainBranch ]; then
   echo -e "${PURPLE}Checking all branches are up-to-date..."
   echo -e "================================================="
   echo -e " git fetch --all"
@@ -29,10 +27,7 @@ if [ $branch == $mainBranch ]; then
   yarn install
   echo -e "yarn build:prod"
   yarn build:prod
-  echo -e "cd build/npm"
-  cd build/npm
   echo -e "-------------------------------------------------"
-  echo -e "npm publish"
   echo -e " ${GREEN}Releasing: ${gitMessage}"
 else
   echo -e "${RED}⚠️  Need to publish from ${mainBranch} branch"
