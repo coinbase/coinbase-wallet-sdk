@@ -19,8 +19,9 @@ class MockWebSocket extends EventEmitter {
 }
 
 describe("RxWebSocket", () => {
+  const rxWS = new RxWebSocket("http://link-url.com");
+
   test("@connect & @disconnect", async () => {
-    const rxWS = new RxWebSocket("http://link-url.com");
     const rxWsRes = await rxWS.connect();
 
     expect(rxWsRes).toBeInstanceOf(Observable);
@@ -39,22 +40,16 @@ describe("RxWebSocket", () => {
       .spyOn(WebSocket.prototype, "send")
       .mockImplementation(() => "send");
 
-    const rxWS = new RxWebSocket("http://link-url.com");
     expect(rxWS.connect().toPromise()).toBeTruthy();
     rxWS.sendData("data");
     expect(webSocketSendMock).toHaveBeenCalledWith("data");
   });
 
   test("@connectionState$ & @incomingData$", () => {
-    const rxWS = new RxWebSocket("http://link-url.com");
-    expect(rxWS.connect().toPromise()).toBeTruthy();
-    expect(rxWS.connectionState$).toBeInstanceOf(Observable);
     expect(rxWS.incomingData$).toBeInstanceOf(Observable);
   });
 
   test("@incomingJSONData$", () => {
-    const rxWS = new RxWebSocket("http://link-url.com");
-    expect(rxWS.connect().toPromise()).toBeTruthy();
     expect(rxWS.incomingJSONData$).toBeInstanceOf(Observable);
   });
 });
