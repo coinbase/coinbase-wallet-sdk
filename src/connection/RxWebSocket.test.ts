@@ -1,9 +1,7 @@
 import { Observable } from "rxjs";
 import { EventEmitter } from "stream";
 
-import { RxWebSocket } from "./RxWebSocket";
-
-const mockSend = jest.fn;
+import { ConnectionState, RxWebSocket } from "./RxWebSocket";
 
 class MockWebSocket extends EventEmitter {
   readonly url: string | URL;
@@ -22,9 +20,6 @@ class MockWebSocket extends EventEmitter {
 
 describe("RxWebSocket", () => {
   test("@connect & @disconnect", async () => {
-    // @ts-expect-error mock WebSocket
-    window.WebSocket = MockWebSocket;
-
     const rxWS = new RxWebSocket("http://link-url.com");
     const rxWsRes = await rxWS.connect();
 
@@ -32,20 +27,34 @@ describe("RxWebSocket", () => {
     expect(rxWsRes.toPromise()).toBeTruthy();
 
     // @ts-expect-error test private methods
-    expect(rxWS.webSocket).toBeInstanceOf(MockWebSocket);
+    expect(rxWS.webSocket).toBeInstanceOf(WebSocket);
 
     await rxWS.disconnect();
     // @ts-expect-error test private methods
     expect(rxWS.webSocket).toBe(null);
   });
 
-  test("sendData", async () => {
-    // @ts-expect-error mock WebSocket
-    window.WebSocket = MockWebSocket;
+  test("@sendData", () => {
+    const webSocketSendMock = jest
+      .spyOn(WebSocket.prototype, "send")
+      .mockImplementation(() => "send");
 
     const rxWS = new RxWebSocket("http://link-url.com");
-    const rxWsRes = await rxWS.connect();
-    expect(rxWsRes.toPromise()).toBeTruthy();
-    expect(rxWS.sendData("data")).toEqual("");
+    expect(rxWS.connect().toPromise()).toBeTruthy();
+    rxWS.sendData("data");
+    expect(webSocketSendMock).toHaveBeenCalledWith("data");
+  });
+
+  test("@connectionState$ & @incomingData$", () => {
+    const rxWS = new RxWebSocket("http://link-url.com");
+    expect(rxWS.connect().toPromise()).toBeTruthy();
+    expect(rxWS.connectionState$).toBeInstanceOf(Observable);
+    expect(rxWS.incomingData$).toBeInstanceOf(Observable);
+  });
+
+  test("@incomingJSONData$", () => {
+    const rxWS = new RxWebSocket("http://link-url.com");
+    expect(rxWS.connect().toPromise()).toBeTruthy();
+    expect(rxWS.incomingJSONData$).toBeInstanceOf(Observable);
   });
 });
