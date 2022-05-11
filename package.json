@@ -38,7 +38,7 @@
     "lint:eslint": "eslint ./src --ext .ts,.tsx",
     "fix:eslint": "yarn lint:eslint --fix",
     "fix:prettier": "prettier . --write",
-    "test": "./scripts/release.sh && cd build/npm"
+    "test": "./scripts/release.sh && cd ./build/npm"
   },
   "private": true,
   "dependencies": {

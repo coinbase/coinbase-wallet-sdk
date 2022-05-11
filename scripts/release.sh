@@ -28,7 +28,7 @@ if [ $branch != $mainBranch ]; then
   echo -e "yarn build:prod"
   yarn build:prod
   echo -e "-------------------------------------------------"
-  echo -e " ${GREEN}Releasing: ${gitMessage}"
+  echo -e " ${GREEN}cd build/npm and run 'npm publish'${gitMessage}"
 else
   echo -e "${RED}⚠️  Need to publish from ${mainBranch} branch"
   echo -e "${REDBOLD}Checking out ${mainBranch}... "
