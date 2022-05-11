@@ -81,7 +81,6 @@ export interface WalletSDKRelayOptions {
   storage: ScopedLocalStorage;
   relayEventManager: WalletSDKRelayEventManager;
   uiConstructor: (options: Readonly<WalletUIOptions>) => WalletUI;
-  sessionConfigCallback?: (config: SessionConfig) => void;
   eventListener?: EventListener;
 }
 
@@ -127,7 +126,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     this.subscriptions.add(
       this.connection.sessionConfig$.subscribe({
         next: sessionConfig => {
-          options.sessionConfigCallback?.(sessionConfig);
+          this.onSessionConfigChanged(sessionConfig);
         },
         error: () => {
           this.eventListener?.onEvent(EVENTS.GENERAL_ERROR, {
@@ -1181,4 +1180,6 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         break;
     }
   }
+
+  protected onSessionConfigChanged(_nextSessionConfig: SessionConfig): void {}
 }
