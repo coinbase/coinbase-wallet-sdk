@@ -19,13 +19,8 @@ describe("RxWebSocket", () => {
 
     expect(client).toBeInstanceOf(Observable);
     await client.toPromise();
-    await server.connected; // wait for the server to have established the connection
+    await server.connected;
 
-    // the mock websocket server will record all the messages it receives
-    // rxWS.sendData("hello");
-
-    // the mock websocket server can also send messages to all connected clients
-    // server.send("hello everyone");
     // @ts-expect-error test private methods
     expect(rxWS.webSocket).toBeInstanceOf(WebSocket);
     // @ts-expect-error test private methods
@@ -41,6 +36,7 @@ describe("RxWebSocket", () => {
     const webSocketSendMock = jest
       .spyOn(WebSocket.prototype, "send")
       .mockImplementation(() => "send");
+
     rxWS.sendData("data");
     expect(webSocketSendMock).toHaveBeenCalledWith("data");
 
