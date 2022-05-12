@@ -17,6 +17,7 @@ import {
 
 import { EventListener, EVENTS } from "../connection/EventListener";
 import { ServerMessageEvent } from "../connection/ServerMessage";
+import { SessionConfig } from "../connection/SessionConfig";
 import { WalletSDKConnection } from "../connection/WalletSDKConnection";
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
 import { WalletUI, WalletUIOptions } from "../provider/WalletUI";
@@ -120,6 +121,19 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
       this._session.key,
       this.linkAPIUrl,
       this.eventListener,
+    );
+
+    this.subscriptions.add(
+      this.connection.sessionConfig$.subscribe({
+        next: sessionConfig => {
+          this.onSessionConfigChanged(sessionConfig);
+        },
+        error: () => {
+          this.eventListener?.onEvent(EVENTS.GENERAL_ERROR, {
+            message: "error while invoking session config callback",
+          });
+        },
+      }),
     );
 
     this.subscriptions.add(
@@ -1166,4 +1180,6 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         break;
     }
   }
+
+  protected onSessionConfigChanged(_nextSessionConfig: SessionConfig): void {}
 }
