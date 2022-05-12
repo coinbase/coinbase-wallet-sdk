@@ -26,13 +26,16 @@ describe("RxWebSocket", () => {
     // @ts-expect-error test private methods
     rxWS.connectionStateSubject.subscribe({
       next: val => {
+        //  Connected state
         expect(val).toEqual(ConnectionState.CONNECTED);
       },
       closed: (val: ConnectionState) => {
+        //  Disconnected state
         expect(val).toEqual(ConnectionState.DISCONNECTED);
       },
     });
 
+    // Sends data
     const webSocketSendMock = jest
       .spyOn(WebSocket.prototype, "send")
       .mockImplementation(() => "send");
@@ -40,6 +43,7 @@ describe("RxWebSocket", () => {
     rxWS.sendData("data");
     expect(webSocketSendMock).toHaveBeenCalledWith("data");
 
+    // Disconnects
     rxWS.disconnect();
     // @ts-expect-error test private methods
     expect(rxWS.webSocket).toBe(null);
