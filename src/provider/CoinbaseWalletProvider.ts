@@ -5,7 +5,7 @@ import SafeEventEmitter from "@metamask/safe-event-emitter";
 import BN from "bn.js";
 import { ethErrors } from "eth-rpc-errors";
 
-import { EventListener, EVENTS } from "../connection/EventListener";
+import { DiagnosticLogger, EVENTS } from "../connection/DiagnosticLogger";
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
 import { EthereumTransactionParams } from "../relay/EthereumTransactionParams";
 import { Session } from "../relay/Session";
@@ -57,7 +57,7 @@ export interface CoinbaseWalletProviderOptions {
   relayEventManager: WalletSDKRelayEventManager;
   relayProvider: () => Promise<WalletSDKRelayAbstract>;
   storage: ScopedLocalStorage;
-  eventListener?: EventListener;
+  diagnosticLogger?: DiagnosticLogger;
   supportsAddressSwitching?: boolean;
 }
 
@@ -106,7 +106,7 @@ export class CoinbaseWalletProvider
   private _relay: WalletSDKRelayAbstract | null = null;
   private readonly _storage: ScopedLocalStorage;
   private readonly _relayEventManager: WalletSDKRelayEventManager;
-  private readonly _eventListener?: EventListener;
+  private readonly _eventListener?: DiagnosticLogger;
 
   private _jsonRpcUrlFromOpts: string;
   private readonly _overrideIsMetaMask: boolean;
@@ -138,7 +138,7 @@ export class CoinbaseWalletProvider
     this._relayProvider = options.relayProvider;
     this._storage = options.storage;
     this._relayEventManager = options.relayEventManager;
-    this._eventListener = options.eventListener;
+    this._eventListener = options.diagnosticLogger;
 
     this.isCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true;
     this.isCoinbaseBrowser = options.overrideIsCoinbaseBrowser ?? false;
@@ -365,10 +365,12 @@ export class CoinbaseWalletProvider
   }
 
   public async enable(): Promise<AddressString[]> {
-    this._eventListener?.onEvent(EVENTS.ETH_ACCOUNTS_STATE, {
+    this._eventListener?.log(EVENTS.ETH_ACCOUNTS_STATE, {
       method: "provider::enable",
       addresses_length: this._addresses.length,
-      sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : null,
+      sessionIdHash: this._relay
+        ? Session.hash(this._relay.session.id)
+        : undefined,
     });
 
     if (this._addresses.length > 0) {
@@ -778,7 +780,7 @@ export class CoinbaseWalletProvider
 
   private _ensureKnownAddress(addressString: string): void {
     if (!this._isKnownAddress(addressString)) {
-      this._eventListener?.onEvent(EVENTS.UNKNOWN_ADDRESS_ENCOUNTERED);
+      this._eventListener?.log(EVENTS.UNKNOWN_ADDRESS_ENCOUNTERED);
       throw new Error("Unknown Ethereum address");
     }
   }
@@ -912,10 +914,12 @@ export class CoinbaseWalletProvider
   }
 
   private async _eth_requestAccounts(): Promise<JSONRPCResponse> {
-    this._eventListener?.onEvent(EVENTS.ETH_ACCOUNTS_STATE, {
+    this._eventListener?.log(EVENTS.ETH_ACCOUNTS_STATE, {
       method: "provider::_eth_requestAccounts",
       addresses_length: this._addresses.length,
-      sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : null,
+      sessionIdHash: this._relay
+        ? Session.hash(this._relay.session.id)
+        : undefined,
     });
 
     if (this._addresses.length > 0) {
