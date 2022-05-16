@@ -559,14 +559,16 @@ describe("CoinbaseWalletProvider", () => {
     test("wallet_addEthereumChain success", async () => {
       const response = await provider?.request({
         method: "wallet_addEthereumChain",
-        params: [{
-          chainId: "0x0539",
-          chainName: "Leet Chain",
-          nativeCurrency: "LEET",
-          rpcUrls: ["https://node.ethchain.com"],
-          blockExplorerUrls: ["https://leetscan.com"],
-          iconUrls: ["https://leetchain.com/icon.svg"],
-        }],
+        params: [
+          {
+            chainId: "0x0539",
+            chainName: "Leet Chain",
+            nativeCurrency: "LEET",
+            rpcUrls: ["https://node.ethchain.com"],
+            blockExplorerUrls: ["https://leetscan.com"],
+            iconUrls: ["https://leetchain.com/icon.svg"],
+          },
+        ],
       });
       expect(response).toBeNull();
     });
@@ -574,9 +576,11 @@ describe("CoinbaseWalletProvider", () => {
     test("wallet_addEthereumChain missing RPC urls", async () => {
       const response = await provider?.request({
         method: "wallet_addEthereumChain",
-        params: [{
-          rpcUrls: [],
-        }],
+        params: [
+          {
+            rpcUrls: [],
+          },
+        ],
       });
       expect(response).toBeUndefined();
     });
@@ -587,51 +591,61 @@ describe("CoinbaseWalletProvider", () => {
           method: "wallet_addEthereumChain",
           params: [{}],
         });
-      }).rejects.toThrowError("\"code\" must be an integer such that: 1000 <= code <= 4999");
+      }).rejects.toThrowError(
+        '"code" must be an integer such that: 1000 <= code <= 4999',
+      );
     });
 
     test("wallet_addEthereumChain native currency", async () => {
       await expect(() => {
         return provider?.request({
           method: "wallet_addEthereumChain",
-          params: [{
-            chainId: "0x0539",
-            chainName: "Leet Chain",
-          }],
+          params: [
+            {
+              chainId: "0x0539",
+              chainName: "Leet Chain",
+            },
+          ],
         });
-      }).rejects.toThrowError("\"code\" must be an integer such that: 1000 <= code <= 4999");
+      }).rejects.toThrowError(
+        '"code" must be an integer such that: 1000 <= code <= 4999',
+      );
     });
 
     test("wallet_switchEthereumChain", async () => {
       const response = await provider?.request({
         method: "wallet_switchEthereumChain",
-        params: [{
-          chainId: "0x0539",
-        }],
+        params: [
+          {
+            chainId: "0x0539",
+          },
+        ],
       });
       expect(response).toBeNull();
     });
 
     test("wallet_switchEthereumChain w/ error code", async () => {
-      const relay = new MockRelayClass()
+      const relay = new MockRelayClass();
 
       jest.spyOn(relay, "switchEthereumChain").mockReturnValue({
-        cancel: () => { },
+        cancel: () => {},
         promise: Promise.resolve({
           method: Web3Method.switchEthereumChain,
           errorCode: 4092,
         }),
       });
       const localProvider = setupCoinbaseWalletProvider({
-        relayProvider: () => Promise.resolve(relay)
+        relayProvider: () => Promise.resolve(relay),
       });
 
       await expect(() => {
         return localProvider.request({
           method: "wallet_switchEthereumChain",
-          params: [{
-            chainId: "0x0539",
-          }],
+          params: [
+            {
+              chainId: "0x0539",
+            },
+          ],
         });
       }).rejects.toThrowError();
     });
@@ -639,49 +653,65 @@ describe("CoinbaseWalletProvider", () => {
     test("wallet_watchAsset", async () => {
       const response = await provider?.request({
         method: "wallet_watchAsset",
-        params: [{
-          type: 'ERC20',
-          options: {
-            address: '0xAdD4e55',
+        params: [
+          {
+            type: "ERC20",
+            options: {
+              address: "0xAdD4e55",
+            },
           },
-        }],
+        ],
       });
       expect(response).toBe(true);
     });
 
     test("wallet_watchAsset w/o valid asset type", async () => {
-      await expect(() => provider?.request({
-        method: "wallet_watchAsset",
-        params: [{}],
-      })).rejects.toThrowError("Type is required");
+      await expect(() =>
+        provider?.request({
+          method: "wallet_watchAsset",
+          params: [{}],
+        }),
+      ).rejects.toThrowError("Type is required");
     });
 
     test("wallet_watchAsset w/o valid asset type", async () => {
-      await expect(() => provider?.request({
-        method: "wallet_watchAsset",
-        params: [{
-          type: "ERC721"
-        }],
-      })).rejects.toThrowError("Asset of type 'ERC721' is not supported");
+      await expect(() =>
+        provider?.request({
+          method: "wallet_watchAsset",
+          params: [
+            {
+              type: "ERC721",
+            },
+          ],
+        }),
+      ).rejects.toThrowError("Asset of type 'ERC721' is not supported");
     });
 
     test("wallet_watchAsset", async () => {
-      await expect(() => provider?.request({
-        method: "wallet_watchAsset",
-        params: [{
-          type: "ERC20"
-        }],
-      })).rejects.toThrowError("Options are required");
+      await expect(() =>
+        provider?.request({
+          method: "wallet_watchAsset",
+          params: [
+            {
+              type: "ERC20",
+            },
+          ],
+        }),
+      ).rejects.toThrowError("Options are required");
     });
 
     test("wallet_watchAsset", async () => {
-      await expect(() => provider?.request({
-        method: "wallet_watchAsset",
-        params: [{
-          type: "ERC20",
-          options: {},
-        }],
-      })).rejects.toThrowError("Address is required");
+      await expect(() =>
+        provider?.request({
+          method: "wallet_watchAsset",
+          params: [
+            {
+              type: "ERC20",
+              options: {},
+            },
+          ],
+        }),
+      ).rejects.toThrowError("Address is required");
     });
 
     test("eth_newFilter", async () => {

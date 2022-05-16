@@ -310,12 +310,12 @@ export class CoinbaseWalletProvider
     if (ensureIntNumber(chainId) === this.getChainId()) {
       return false;
     }
-    
+
     const relay = await this.initializeRelay();
     const isWhitelistedNetworkOrStandalone = relay.inlineAddEthereumChain(
       chainId.toString(),
     );
-    
+
     if (!this._isAuthorized() && !isWhitelistedNetworkOrStandalone) {
       await relay.requestEthereumAccounts().promise;
     }

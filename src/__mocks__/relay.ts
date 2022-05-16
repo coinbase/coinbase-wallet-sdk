@@ -45,7 +45,7 @@ export class MockRelayClass extends WalletSDKRelayAbstract {
       method: Web3Method.addEthereumChain,
       result: {
         isApproved: true,
-        rpcUrl: "https://node.ethchain.com"
+        rpcUrl: "https://node.ethchain.com",
       },
     });
   }
@@ -62,7 +62,7 @@ export class MockRelayClass extends WalletSDKRelayAbstract {
       method: Web3Method.switchEthereumChain,
       result: {
         isApproved: true,
-        rpcUrl: "https://node.ethchain.com"
+        rpcUrl: "https://node.ethchain.com",
       },
     });
   }
