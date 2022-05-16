@@ -79,7 +79,7 @@ export class WalletSDKConnection {
     private sessionId: string,
     private sessionKey: string,
     linkAPIUrl: string,
-    private diagnosticLogger?: DiagnosticLogger,
+    private diagnostic?: DiagnosticLogger,
     WebSocketClass: typeof WebSocket = WebSocket,
   ) {
     const ws = new RxWebSocket<ServerMessage>(
@@ -93,7 +93,7 @@ export class WalletSDKConnection {
       ws.connectionState$
         .pipe(
           tap(state =>
-            this.diagnosticLogger?.log(EVENTS.CONNECTED_STATE_CHANGE, {
+            this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
               state,
               sessionIdHash: Session.hash(sessionId),
             }),
@@ -173,7 +173,7 @@ export class WalletSDKConnection {
         .subscribe(m => {
           const msg = m as Omit<ServerMessageIsLinkedOK, "type"> &
             ServerMessageLinked;
-          this.diagnosticLogger?.log(EVENTS.LINKED, {
+          this.diagnostic?.log(EVENTS.LINKED, {
             sessionIdHash: Session.hash(sessionId),
             linked: msg.linked,
             type: m.type,
@@ -194,7 +194,7 @@ export class WalletSDKConnection {
         .subscribe(m => {
           const msg = m as Omit<ServerMessageGetSessionConfigOK, "type"> &
             ServerMessageSessionConfigUpdated;
-          this.diagnosticLogger?.log(EVENTS.SESSION_CONFIG_RECEIVED, {
+          this.diagnostic?.log(EVENTS.SESSION_CONFIG_RECEIVED, {
             sessionIdHash: Session.hash(sessionId),
             metadata_keys:
               msg && msg.metadata ? Object.keys(msg.metadata) : undefined,
@@ -215,7 +215,7 @@ export class WalletSDKConnection {
     if (this.destroyed) {
       throw new Error("instance is destroyed");
     }
-    this.diagnosticLogger?.log(EVENTS.STARTED_CONNECTING, {
+    this.diagnostic?.log(EVENTS.STARTED_CONNECTING, {
       sessionIdHash: Session.hash(this.sessionId),
     });
     this.ws.connect().subscribe();
@@ -228,7 +228,7 @@ export class WalletSDKConnection {
   public destroy(): void {
     this.subscriptions.unsubscribe();
     this.ws.disconnect();
-    this.diagnosticLogger?.log(EVENTS.DISCONNECTED, {
+    this.diagnostic?.log(EVENTS.DISCONNECTED, {
       sessionIdHash: Session.hash(this.sessionId),
     });
     this.destroyed = true;
