@@ -41,15 +41,30 @@ export class MockRelayClass extends WalletSDKRelayAbstract {
   }
 
   addEthereumChain(): CancelablePromise<AddEthereumChainResponse> {
-    return makeMockReturn<AddEthereumChainResponse>();
+    return makeMockReturn<AddEthereumChainResponse>({
+      method: Web3Method.addEthereumChain,
+      result: {
+        isApproved: true,
+        rpcUrl: "https://node.ethchain.com",
+      },
+    });
   }
 
   watchAsset(): CancelablePromise<WatchAssetResponse> {
-    return makeMockReturn<WatchAssetResponse>();
+    return makeMockReturn<WatchAssetResponse>({
+      method: Web3Method.watchAsset,
+      result: true,
+    });
   }
 
   switchEthereumChain(): CancelablePromise<SwitchEthereumChainResponse> {
-    return makeMockReturn<SwitchEthereumChainResponse>();
+    return makeMockReturn<SwitchEthereumChainResponse>({
+      method: Web3Method.switchEthereumChain,
+      result: {
+        isApproved: true,
+        rpcUrl: "https://node.ethchain.com",
+      },
+    });
   }
 
   signEthereumMessage(): CancelablePromise<SignEthereumMessageResponse> {
