@@ -86,6 +86,7 @@
     "jasmine": "3.8.0",
     "jest": "^27.5.1",
     "jest-chrome": "^0.7.2",
+    "jest-websocket-mock": "^2.3.0",
     "karma": "^6.3.15",
     "karma-browserify": "8.1.0",
     "karma-chrome-launcher": "^3.1.0",
