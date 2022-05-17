@@ -1,6 +1,7 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
+import { DiagnosticLogger } from "./connection/DiagnosticLogger";
 import { EventListener } from "./connection/EventListener";
 import { ScopedLocalStorage } from "./lib/ScopedLocalStorage";
 import { CoinbaseWalletProvider } from "./provider/CoinbaseWalletProvider";
@@ -27,7 +28,10 @@ export interface CoinbaseWalletSDKOptions {
   /** @optional an implementation of WalletUI; for most, leave it unspecified */
   uiConstructor?: (options: Readonly<WalletUIOptions>) => WalletUI;
   /** @optional an implementation of EventListener for debugging; for most, leave it unspecified  */
+  /** @deprecated in favor of diagnosticLogger */
   eventListener?: EventListener;
+  /** @optional a diagnostic tool for debugging; for most, leave it unspecified  */
+  diagnosticLogger?: DiagnosticLogger;
   /** @optional whether wallet link provider should override the isMetaMask property. */
   overrideIsMetaMask?: boolean;
   /** @optional whether wallet link provider should override the isCoinbaseWallet property. */
@@ -49,7 +53,7 @@ export class CoinbaseWalletSDK {
   private _overrideIsMetaMask: boolean;
   private _overrideIsCoinbaseWallet: boolean;
   private _overrideIsCoinbaseBrowser: boolean;
-  private _eventListener?: EventListener;
+  private _diagnosticLogger?: DiagnosticLogger;
 
   /**
    * Constructor
@@ -74,7 +78,20 @@ export class CoinbaseWalletSDK {
     this._overrideIsCoinbaseBrowser =
       options.overrideIsCoinbaseBrowser ?? false;
 
-    this._eventListener = options.eventListener;
+    if (options.diagnosticLogger && options.eventListener) {
+      throw new Error(
+        "Cant have both eventListener and diagnosticLogger, use only diagnosticLogger",
+      );
+    }
+
+    if (options.eventListener) {
+      this._diagnosticLogger = {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
+        log: options.eventListener.onEvent,
+      };
+    } else {
+      this._diagnosticLogger = options.diagnosticLogger;
+    }
 
     const u = new URL(linkAPIUrl);
     const origin = `${u.protocol}//${u.host}`;
@@ -95,7 +112,7 @@ export class CoinbaseWalletSDK {
       uiConstructor,
       storage: this._storage,
       relayEventManager: this._relayEventManager,
-      eventListener: this._eventListener,
+      diagnosticLogger: this._diagnosticLogger,
     });
     this.setAppInfo(options.appName, options.appLogoUrl);
 
@@ -137,7 +154,7 @@ export class CoinbaseWalletSDK {
       jsonRpcUrl,
       chainId,
       qrUrl: this.getQrUrl(),
-      eventListener: this._eventListener,
+      diagnosticLogger: this._diagnosticLogger,
       overrideIsMetaMask: this._overrideIsMetaMask,
       overrideIsCoinbaseWallet: this._overrideIsCoinbaseWallet,
       overrideIsCoinbaseBrowser: this._overrideIsCoinbaseBrowser,

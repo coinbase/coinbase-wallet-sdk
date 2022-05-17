@@ -1,3 +1,4 @@
+/** @deprecated in favor of DiagnosticLogger */
 export interface EventListener {
   onEvent(eventType: string, eventProperties?: any): void;
 }

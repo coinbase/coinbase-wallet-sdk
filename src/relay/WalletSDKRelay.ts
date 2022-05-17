@@ -15,7 +15,7 @@ import {
   timeout,
 } from "rxjs/operators";
 
-import { EventListener, EVENTS } from "../connection/EventListener";
+import { DiagnosticLogger, EVENTS } from "../connection/DiagnosticLogger";
 import { ServerMessageEvent } from "../connection/ServerMessage";
 import { SessionConfig } from "../connection/SessionConfig";
 import { WalletSDKConnection } from "../connection/WalletSDKConnection";
@@ -81,7 +81,7 @@ export interface WalletSDKRelayOptions {
   storage: ScopedLocalStorage;
   relayEventManager: WalletSDKRelayEventManager;
   uiConstructor: (options: Readonly<WalletUIOptions>) => WalletUI;
-  eventListener?: EventListener;
+  diagnosticLogger?: DiagnosticLogger;
 }
 
 export class WalletSDKRelay extends WalletSDKRelayAbstract {
@@ -91,7 +91,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
   protected readonly storage: ScopedLocalStorage;
   private readonly _session: Session;
   private readonly relayEventManager: WalletSDKRelayEventManager;
-  protected readonly eventListener?: EventListener;
+  protected readonly diagnostic?: DiagnosticLogger;
   private readonly connection: WalletSDKConnection;
   private accountsCallback: ((account: [string]) => void) | null = null;
   private chainCallback:
@@ -114,13 +114,13 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
       Session.load(options.storage) || new Session(options.storage).save();
 
     this.relayEventManager = options.relayEventManager;
-    this.eventListener = options.eventListener;
+    this.diagnostic = options.diagnosticLogger;
 
     this.connection = new WalletSDKConnection(
       this._session.id,
       this._session.key,
       this.linkAPIUrl,
-      this.eventListener,
+      this.diagnostic,
     );
 
     this.subscriptions.add(
@@ -129,7 +129,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
           this.onSessionConfigChanged(sessionConfig);
         },
         error: () => {
-          this.eventListener?.onEvent(EVENTS.GENERAL_ERROR, {
+          this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
             message: "error while invoking session config callback",
           });
         },
@@ -171,7 +171,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
               ) {
                 this.isUnlinkedErrorState = true;
                 const sessionIdHash = this.getSessionIdHash();
-                this.eventListener?.onEvent(EVENTS.UNLINKED_ERROR_STATE, {
+                this.diagnostic?.log(EVENTS.UNLINKED_ERROR_STATE, {
                   sessionIdHash,
                 });
               }
@@ -187,7 +187,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         .pipe(filter(c => !!c.metadata && c.metadata.__destroyed === "1"))
         .subscribe(() => {
           const alreadyDestroyed = this.connection.isDestroyed;
-          this.eventListener?.onEvent(EVENTS.METADATA_DESTROYED, {
+          this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
             alreadyDestroyed,
             sessionIdHash: this.getSessionIdHash(),
           });
@@ -210,7 +210,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
             this.storage.setItem(WALLET_USER_NAME_KEY, walletUsername);
           },
           error: () => {
-            this.eventListener?.onEvent(EVENTS.GENERAL_ERROR, {
+            this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
               message: "Had error decrypting",
               value: "username",
             });
@@ -231,7 +231,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
             this.storage.setItem(APP_VERSION_KEY, appVersion);
           },
           error: () => {
-            this.eventListener?.onEvent(EVENTS.GENERAL_ERROR, {
+            this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
               message: "Had error decrypting",
               value: "appversion",
             });
@@ -265,7 +265,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
             }
           },
           error: () => {
-            this.eventListener?.onEvent(EVENTS.GENERAL_ERROR, {
+            this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
               message: "Had error decrypting",
               value: "chainId|jsonRpcUrl",
             });
@@ -311,7 +311,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
             }
           },
           error: () => {
-            this.eventListener?.onEvent(EVENTS.GENERAL_ERROR, {
+            this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
               message: "Had error decrypting",
               value: "selectedAddress",
             });
@@ -347,12 +347,12 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
           try {
             this.subscriptions.unsubscribe();
           } catch (err) {
-            this.eventListener?.onEvent(EVENTS.GENERAL_ERROR, {
+            this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
               message: "Had error unsubscribing",
             });
           }
 
-          this.eventListener?.onEvent(EVENTS.SESSION_STATE_CHANGE, {
+          this.diagnostic?.log(EVENTS.SESSION_STATE_CHANGE, {
             method: "relay::resetAndReload",
             sessionMetadataChange: "__destroyed, 1",
             sessionIdHash: this.getSessionIdHash(),
@@ -370,7 +370,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
           if (storedSession?.id === this._session.id) {
             this.storage.clear();
           } else if (storedSession) {
-            this.eventListener?.onEvent(EVENTS.SKIPPED_CLEARING_SESSION, {
+            this.diagnostic?.log(EVENTS.SKIPPED_CLEARING_SESSION, {
               sessionIdHash: this.getSessionIdHash(),
               storedSessionIdHash: Session.hash(storedSession.id),
             });
@@ -378,7 +378,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
           this.ui.reloadUI();
         },
         (err: string) => {
-          this.eventListener?.onEvent(EVENTS.FAILURE, {
+          this.diagnostic?.log(EVENTS.FAILURE, {
             method: "relay::resetAndReload",
             message: `failed to reset and reload with ${err}`,
             sessionIdHash: this.getSessionIdHash(),
@@ -612,7 +612,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
   private publishWeb3RequestEvent(id: string, request: Web3Request): void {
     const message = Web3RequestMessage({ id, request });
     const storedSession = Session.load(this.storage);
-    this.eventListener?.onEvent(EVENTS.WEB3_REQUEST, {
+    this.diagnostic?.log(EVENTS.WEB3_REQUEST, {
       eventId: message.id,
       method: `relay::${message.request.method}`,
       sessionIdHash: this.getSessionIdHash(),
@@ -623,7 +623,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     this.subscriptions.add(
       this.publishEvent("Web3Request", message, true).subscribe({
         next: _ => {
-          this.eventListener?.onEvent(EVENTS.WEB3_REQUEST_PUBLISHED, {
+          this.diagnostic?.log(EVENTS.WEB3_REQUEST_PUBLISHED, {
             eventId: message.id,
             method: `relay::${message.request.method}`,
             sessionIdHash: this.getSessionIdHash(),
@@ -697,7 +697,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
               this.handleWeb3ResponseMessage(message);
             },
             error: () => {
-              this.eventListener?.onEvent(EVENTS.GENERAL_ERROR, {
+              this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
                 message: "Had error decrypting",
                 value: "incomingEvent",
               });
@@ -711,7 +711,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
 
   private handleWeb3ResponseMessage(message: Web3ResponseMessage) {
     const { response } = message;
-    this.eventListener?.onEvent(EVENTS.WEB3_RESPONSE, {
+    this.diagnostic?.log(EVENTS.WEB3_RESPONSE, {
       eventId: message.id,
       method: `relay::${response.method}`,
       sessionIdHash: this.getSessionIdHash(),
