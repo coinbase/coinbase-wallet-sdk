@@ -1161,27 +1161,27 @@ export class CoinbaseWalletProvider
     const request = (
       Array.isArray(params) ? params[0] : params
     ) as WatchAssetParams;
-    if (request.type?.length === 0) {
+    if (!request.type) {
       throw ethErrors.rpc.invalidParams({
-        message: "type is a required field",
+        message: "Type is required",
       });
     }
 
-    if (request.type !== "ERC20") {
+    if (request?.type !== "ERC20") {
       throw ethErrors.rpc.invalidParams({
-        message: `Asset of type '${request.type}' not supported`,
+        message: `Asset of type '${request.type}' is not supported`,
       });
     }
 
     if (!request?.options) {
       throw ethErrors.rpc.invalidParams({
-        message: "options is a required field",
+        message: "Options are required",
       });
     }
 
-    if (!request.options.address) {
+    if (!request?.options.address) {
       throw ethErrors.rpc.invalidParams({
-        message: "option address is a required option",
+        message: "Address is required",
       });
     }
 
