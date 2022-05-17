@@ -5,7 +5,7 @@ import { Web3ResponseMessage } from "../relay/Web3ResponseMessage";
 import { ConnectionState } from "./RxWebSocket";
 import { ServerMessage, ServerMessageIsLinkedOK } from "./ServerMessage";
 
-type LogProperties = {
+export type LogProperties = {
   addresses_length?: number; // number of eth addresses
   alreadyDestroyed?: boolean; // error flag if metadata is already destroyed on resetAndReload
   eventId?: Web3RequestMessage["id"] | Web3ResponseMessage["id"];
@@ -24,7 +24,7 @@ type LogProperties = {
 };
 
 type Keys = keyof typeof EVENTS;
-type EventType = typeof EVENTS[Keys];
+export type EventType = typeof EVENTS[Keys];
 
 export interface DiagnosticLogger {
   log(eventType: EventType, logProperties?: LogProperties): void;
