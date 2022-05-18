@@ -13,6 +13,19 @@ describe("SubscriptionManager", () => {
         method: Web3Method.requestEthereumAccounts,
         params: [AddressString(MOCK_ADDERESS)],
       }),
-    ).resolves.toStrictEqual({});
+    ).resolves.toEqual({});
+
+    subscription.events.on("notification", message => {
+      subscription.events.emit("message", {
+        type: message.method,
+        data: message.params,
+      });
+    });
+
+    expect(subscription.events).toBeDefined();
+  });
+
+  test("@destroy", () => {
+    subscription.destroy();
   });
 });
