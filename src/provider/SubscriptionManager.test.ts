@@ -27,5 +27,7 @@ describe("SubscriptionManager", () => {
 
   test("@destroy", () => {
     subscription.destroy();
+
+    // TODO: Fill me in
   });
 });
