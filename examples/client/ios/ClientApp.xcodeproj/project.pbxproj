@@ -15,6 +15,7 @@
 
 /* Begin PBXFileReference section */
 		5D46EC7928370F1B009F5130 /* ClientApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ClientApp.entitlements; sourceTree = "<group>"; };
+		5D46EC7A28370FE0009F5130 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		5DBA651A28370D6500E36D26 /* ClientApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClientApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5DBA651D28370D6500E36D26 /* ClientAppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientAppApp.swift; sourceTree = "<group>"; };
 		5DBA651F28370D6500E36D26 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -36,6 +37,7 @@
 		5DBA651128370D6500E36D26 = {
 			isa = PBXGroup;
 			children = (
+				5D46EC7A28370FE0009F5130 /* README.md */,
 				5DBA651C28370D6500E36D26 /* ClientApp */,
 				5DBA651B28370D6500E36D26 /* Products */,
 			);
