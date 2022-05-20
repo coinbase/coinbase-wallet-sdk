@@ -1,0 +1,16 @@
+PODS:
+  - WalletSegue (0.1.0)
+
+DEPENDENCIES:
+  - WalletSegue (from `../../../`)
+
+EXTERNAL SOURCES:
+  WalletSegue:
+    :path: "../../../"
+
+SPEC CHECKSUMS:
+  WalletSegue: d3cab8802a04740bd8c39198c6b9d5c92db8c7d5
+
+PODFILE CHECKSUM: 05331245a8f001d9148e842ee2554643a71c37dc
+
+COCOAPODS: 1.11.3
