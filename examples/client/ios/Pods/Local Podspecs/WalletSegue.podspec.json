@@ -14,5 +14,5 @@
   "platforms": {
     "ios": "9.0"
   },
-  "source_files": "WalletSegue/Classes/**/*"
+  "source_files": "ios/Classes/**/*"
 }

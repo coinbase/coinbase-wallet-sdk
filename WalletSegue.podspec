@@ -30,10 +30,10 @@ TODO: Add long description of the pod here.
 
   s.ios.deployment_target = '9.0'
 
-  s.source_files = 'WalletSegue/Classes/**/*'
+  s.source_files = 'ios/Classes/**/*'
   
   # s.resource_bundles = {
-  #   'WalletSegue' => ['WalletSegue/Assets/*.png']
+  #   'WalletSegue' => ['ios/Assets/*.png']
   # }
 
   # s.public_header_files = 'Pod/Classes/**/*.h'
