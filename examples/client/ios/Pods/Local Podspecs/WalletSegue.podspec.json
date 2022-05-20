@@ -12,7 +12,7 @@
     "tag": "0.1.0"
   },
   "platforms": {
-    "ios": "9.0"
+    "ios": "13.0"
   },
-  "source_files": "ios/Classes/**/*"
+  "source_files": "src/**/*"
 }
