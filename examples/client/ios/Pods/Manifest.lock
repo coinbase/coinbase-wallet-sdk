@@ -2,15 +2,15 @@ PODS:
   - WalletSegue (0.1.0)
 
 DEPENDENCIES:
-  - WalletSegue (from `../../../`)
+  - WalletSegue (from `../../../ios/`)
 
 EXTERNAL SOURCES:
   WalletSegue:
-    :path: "../../../"
+    :path: "../../../ios/"
 
 SPEC CHECKSUMS:
   WalletSegue: ef8c2c4b28a15ffcec940795d59ecf292e9a0891
 
-PODFILE CHECKSUM: 05331245a8f001d9148e842ee2554643a71c37dc
+PODFILE CHECKSUM: 6fa1f3b05c64d4413bbc513fb674dd0c1a954672
 
 COCOAPODS: 1.11.3

@@ -22,7 +22,7 @@ pod 'WalletSegue'
 
 ## Author
 
-bangtoven, jungho.bang@coinbase.com
+jungho.bang@coinbase.com
 
 ## License
 

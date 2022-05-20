@@ -6,6 +6,6 @@ target 'ClientApp' do
   use_frameworks!
 
   # Pods for ClientApp
-  pod 'WalletSegue', path: '../../../'
+  pod 'WalletSegue', path: '../../../ios/'
 
 end
