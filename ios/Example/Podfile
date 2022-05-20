@@ -1,0 +1,6 @@
+use_frameworks!
+target 'WalletSegue_Tests' do
+  pod 'WalletSegue', :path => '../'
+  
+  
+end

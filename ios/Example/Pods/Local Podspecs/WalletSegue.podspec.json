@@ -1,0 +1,22 @@
+{
+  "name": "WalletSegue",
+  "version": "0.1.0",
+  "summary": "A short description of WalletSegue.",
+  "description": "TODO: Add long description of the pod here.",
+  "homepage": "https://github.com/bangtoven/WalletSegue",
+  "license": {
+    "type": "MIT",
+    "file": "LICENSE"
+  },
+  "authors": {
+    "bangtoven": "jungho.bang@coinbase.com"
+  },
+  "source": {
+    "git": "https://github.com/bangtoven/WalletSegue.git",
+    "tag": "0.1.0"
+  },
+  "platforms": {
+    "ios": "9.0"
+  },
+  "source_files": "WalletSegue/Classes/**/*"
+}
