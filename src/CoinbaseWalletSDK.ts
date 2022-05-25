@@ -1,6 +1,7 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
+import { LogoType, walletLogo } from "./assets/wallet-logo";
 import { DiagnosticLogger } from "./connection/DiagnosticLogger";
 import { EventListener } from "./connection/EventListener";
 import { ScopedLocalStorage } from "./lib/ScopedLocalStorage";
@@ -201,6 +202,16 @@ export class CoinbaseWalletSDK {
    */
   public getQrUrl(): string | null {
     return this._relay?.getQRCodeUrl() ?? null;
+  }
+
+  /**
+   * Official Coinbase Wallet logo for developers to use on their frontend
+   * @param type Type of wallet logo: "standard" | "circle" | "text" | "textWithLogo" | "textLight" | "textWithLogoLight"
+   * @param width Width of the logo (Optional)
+   * @returns SVG Data URI
+   */
+  public getCoinbaseWalletLogo(type: LogoType, width = 240): string {
+    return walletLogo(type, width);
   }
 
   private get walletExtension(): CoinbaseWalletProvider | undefined {

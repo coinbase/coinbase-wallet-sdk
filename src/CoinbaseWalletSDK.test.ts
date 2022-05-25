@@ -77,6 +77,32 @@ describe("CoinbaseWalletSDK", () => {
         expect(url.hostname).toEqual("www.walletlink.org");
         expect(url.hash.split("=")).toHaveLength(5);
       });
+
+      test("@getCoinbaseWalletLogo", () => {
+        let svgUri;
+
+        svgUri = coinbaseWalletSDK2.getCoinbaseWalletLogo("standard");
+        expect(svgUri).toContain("viewBox='0 0 1024 1024'");
+
+        svgUri = coinbaseWalletSDK2.getCoinbaseWalletLogo("circle");
+        expect(svgUri).toContain("viewBox='0 0 999.81 999.81'");
+
+        svgUri = coinbaseWalletSDK2.getCoinbaseWalletLogo("text");
+        expect(svgUri).toContain("viewBox='0 0 528.15 53.64'");
+        expect(svgUri).toContain("fill:%230052ff");
+
+        svgUri = coinbaseWalletSDK2.getCoinbaseWalletLogo("textWithLogo");
+        expect(svgUri).toContain("viewBox='0 0 308.44 77.61'");
+        expect(svgUri).toContain("fill:%230052ff");
+
+        svgUri = coinbaseWalletSDK2.getCoinbaseWalletLogo("textLight");
+        expect(svgUri).toContain("viewBox='0 0 528.15 53.64'");
+        expect(svgUri).toContain("fill:%23fefefe");
+
+        svgUri = coinbaseWalletSDK2.getCoinbaseWalletLogo("textWithLogoLight");
+        expect(svgUri).toContain("viewBox='0 0 308.44 77.61'");
+        expect(svgUri).toContain("fill:%23fefefe");
+      });
     });
 
     describe("extension", () => {
