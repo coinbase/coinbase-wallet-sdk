@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import walletLogo from "./assets/wallet-logo";
+import { walletLogo, LogoType } from "./assets/wallet-logo";
 import { DiagnosticLogger } from "./connection/DiagnosticLogger";
 import { EventListener } from "./connection/EventListener";
 import { ScopedLocalStorage } from "./lib/ScopedLocalStorage";
@@ -206,11 +206,11 @@ export class CoinbaseWalletSDK {
 
   /**
    * Official Coinbase Wallet logo for developers to use on their frontend
-   * @param type Type of wallet logo (1-6), please refer to Coinbase Wallet SDK Docs for details
-   * @param width Width of the logo to be rendered
+   * @param type Type of wallet logo: "standard" | "circle" | "text" | "textWithLogo" | "textLight" | "textWithLogoLight"
+   * @param width Width of the logo (Optional)
    * @returns SVG Data URI
    */
-  public getCoinbaseWalletLogo(type: number, width = 240): string {
+  public getCoinbaseWalletLogo(type: LogoType, width = 240): string {
     return walletLogo(type, width);
   }
 
