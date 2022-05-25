@@ -82,22 +82,22 @@ describe("CoinbaseWalletSDK", () => {
         let svgUri;
 
         svgUri = coinbaseWalletSDK2.getCoinbaseWalletLogo("standard");
-        expect(svgUri).toStartWith("data:image/svg+xml");
+        expect(svgUri).toContain("data:image/svg+xml");
 
         svgUri = coinbaseWalletSDK2.getCoinbaseWalletLogo("circle");
-        expect(svgUri).toStartWith("data:image/svg+xml");
+        expect(svgUri).toContain("data:image/svg+xml");
 
         svgUri = coinbaseWalletSDK2.getCoinbaseWalletLogo("text");
-        expect(svgUri).toStartWith("data:image/svg+xml");
+        expect(svgUri).toContain("data:image/svg+xml");
 
         svgUri = coinbaseWalletSDK2.getCoinbaseWalletLogo("textWithLogo");
-        expect(svgUri).toStartWith("data:image/svg+xml");
+        expect(svgUri).toContain("data:image/svg+xml");
 
         svgUri = coinbaseWalletSDK2.getCoinbaseWalletLogo("textLight");
-        expect(svgUri).toStartWith("data:image/svg+xml");
+        expect(svgUri).toContain("data:image/svg+xml");
 
         svgUri = coinbaseWalletSDK2.getCoinbaseWalletLogo("textWithLogoLight");
-        expect(svgUri).toStartWith("data:image/svg+xml");
+        expect(svgUri).toContain("data:image/svg+xml");
       });
     });
 
