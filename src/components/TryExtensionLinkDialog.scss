@@ -14,10 +14,13 @@
     justify-content: center;
 
     $blue-normal: #1652f0;
+    $blue-dark: rgb(55, 115, 245);
     $wash: #fafbfc;
     $white: #fff;
     $black: #000;
     $grey-50: #aaa;
+    $background-alt-dark: rgb(20, 21, 25);
+
     $elevation-z3: 0px 4px 12px rgba($black, 0.1);
     $elevation-z4: 0px 0px 8px rgba($black, 0.04),
       0px 16px 24px rgba($black, 0.06);
@@ -29,12 +32,17 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background-color: rgba($black, 0.5);
       transition: opacity 0.25s;
 
       &-hidden {
         opacity: 0;
       }
+    }
+    &-backdrop-light {
+      background-color: rgba($black, 0.5);
+    }
+    &-backdrop-dark {
+      background-color: rgba(50, 53, 61, 0.33);
     }
 
     &-box {
@@ -53,7 +61,6 @@
       &-top {
         display: flex;
         flex-direction: row;
-        background-color: $white;
         border-radius: 8px;
         overflow: hidden;
         min-height: 300px;
@@ -86,6 +93,9 @@
             cursor: pointer;
             font-weight: 500;
             text-align: center;
+            &.-dark {
+              background-color: $blue-dark;
+            }
           }
         }
 
@@ -94,7 +104,12 @@
           flex-basis: 50%;
           flex-direction: column;
           justify-content: center;
+        }
+        &-info-region-light {
           background-color: $wash;
+        }
+        &-info-region-dark {
+          background-color: $background-alt-dark;
         }
 
         &-description {
@@ -132,10 +147,23 @@
             flex-grow: 1;
             font-size: 13px;
             line-height: 19px;
-            color: $black;
             align-self: center;
           }
+          &-text-light {
+            color: $black;
+          }
+          &-text-dark {
+            color: white;
+          }
         }
+      }
+      &-top-dark {
+        background-color: $black;
+        box-shadow: 0 4px 16px rgba(0, 24, 77, 0.05);
+      }
+
+      &-top-light {
+        background-color: $white;
       }
 
       &-bottom {
@@ -143,7 +171,6 @@
         flex-direction: row;
         overflow: hidden;
         border-radius: 8px;
-        background-color: $white;
         margin-top: 8px;
 
         &-description-region {
@@ -168,6 +195,13 @@
           }
         }
 
+        &-description-dark {
+          color: $white;
+          a {
+            color: $blue-dark;
+          }
+        }
+
         &-qr-region {
           position: relative;
           flex-shrink: 0;
@@ -186,6 +220,7 @@
           padding: 8px;
           border-radius: 8px;
           box-shadow: $elevation-z3;
+          background-color: $white;
 
           img {
             display: block;
@@ -211,6 +246,14 @@
             margin-top: 16px;
           }
         }
+      }
+
+      &-bottom-light {
+        background-color: $white;
+      }
+      &-bottom-dark {
+        background-color: $black;
+        box-shadow: 0 4px 16px rgba(0, 24, 77, 0.05);
       }
 
       &-cancel {
@@ -279,7 +322,12 @@
       font-size: 22px;
       font-weight: 600;
       line-height: 28px;
-      color: $black;
+      &.-light {
+        color: $black;
+      }
+      &.-dark {
+        color: $white;
+      }
     }
   }
 }
