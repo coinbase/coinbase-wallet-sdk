@@ -101,7 +101,7 @@ export abstract class WalletSDKRelayAbstract {
   abstract setAppInfo(appName: string, appLogoUrl: string | null): void;
 
   abstract setAccountsCallback(
-    accountsCallback: (accounts: string[]) => void,
+    accountsCallback: (accounts: string[], isDisconnect?: boolean) => void,
   ): void;
 
   abstract setChainCallback(
