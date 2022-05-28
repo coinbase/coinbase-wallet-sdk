@@ -18,9 +18,12 @@ import { WalletUI, WalletUIOptions } from "./WalletUI";
 export class WalletSDKUI implements WalletUI {
   private readonly linkFlow: LinkFlow;
   private readonly snackbar: Snackbar;
+  private standalone: boolean | null;
   private attached = false;
 
   constructor(options: Readonly<WalletUIOptions>) {
+    this.standalone = null;
+
     this.snackbar = new Snackbar({
       darkMode: options.darkMode
     });
@@ -208,7 +211,11 @@ export class WalletSDKUI implements WalletUI {
     return false;
   }
 
+  setStandalone(status: boolean): void {
+    this.standalone = status;
+  }
+
   isStandalone(): boolean {
-    return false;
+    return this.standalone ?? false;
   }
 }

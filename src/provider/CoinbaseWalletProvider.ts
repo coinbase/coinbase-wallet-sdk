@@ -535,7 +535,7 @@ export class CoinbaseWalletProvider
     return response;
   }
 
-  private _setAddresses(addresses: string[]): void {
+  private _setAddresses(addresses: string[], isDisconnect?: boolean): void {
     if (!Array.isArray(addresses)) {
       throw new Error("addresses is not an array");
     }
@@ -546,7 +546,11 @@ export class CoinbaseWalletProvider
       return;
     }
 
-    if (this._addresses.length > 0 && this.supportsAddressSwitching === false) {
+    if (
+      this._addresses.length > 0 &&
+      this.supportsAddressSwitching === false &&
+      !isDisconnect
+    ) {
       /**
        * The extension currently doesn't support switching selected wallet index
        * make sure walletlink doesn't update it's address in this case
@@ -1199,7 +1203,9 @@ export class CoinbaseWalletProvider
     }
 
     return this._relayProvider().then(relay => {
-      relay.setAccountsCallback(accounts => this._setAddresses(accounts));
+      relay.setAccountsCallback((accounts, isDisconnect) =>
+        this._setAddresses(accounts, isDisconnect)
+      );
       relay.setChainCallback((chainId, jsonRpcUrl) => {
         this.updateProviderInfo(jsonRpcUrl, parseInt(chainId, 10), true);
       });
