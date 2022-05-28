@@ -50,7 +50,7 @@ export const TryExtensionLinkDialog: FunctionComponent<{
     };
   }, [props.isOpen]);
 
-  const theme = darkMode ? "-dark" : "-light";
+  const theme = darkMode ? "dark" : "light";
 
   return (
     <div
@@ -63,7 +63,7 @@ export const TryExtensionLinkDialog: FunctionComponent<{
       <div
         class={clsx(
           "-cbwsdk-extension-dialog-backdrop",
-          `-cbwsdk-extension-dialog-backdrop${theme}`,
+          theme,
           isDialogHidden && "-cbwsdk-extension-dialog-backdrop-hidden",
         )}
       />
@@ -119,15 +119,10 @@ const TryExtensionBox: FunctionComponent<{
     }
   }, [onInstallClick, isClicked]);
 
-  const theme = darkMode ? "-dark" : "-light";
+  const theme = darkMode ? "dark" : "light";
 
   return (
-    <div
-      class={clsx(
-        "-cbwsdk-extension-dialog-box-top",
-        `-cbwsdk-extension-dialog-box-top${theme}`,
-      )}
-    >
+    <div class={clsx("-cbwsdk-extension-dialog-box-top", theme)}>
       <div class={"-cbwsdk-extension-dialog-box-top-install-region"}>
         <h2 class={theme}>Try the Coinbase Wallet extension</h2>
         {isClicked && (
@@ -140,12 +135,7 @@ const TryExtensionBox: FunctionComponent<{
           {isClicked ? "Refresh" : "Install"}
         </button>
       </div>
-      <div
-        class={clsx(
-          "-cbwsdk-extension-dialog-box-top-info-region",
-          `-cbwsdk-extension-dialog-box-top-info-region${theme}`,
-        )}
-      >
+      <div class={clsx("-cbwsdk-extension-dialog-box-top-info-region", theme)}>
         <DescriptionItem
           darkMode={darkMode}
           icon={linkIcon}
@@ -182,23 +172,17 @@ const ScanQRBox: FunctionComponent<{
     props.isParentConnection,
   );
 
-  const theme = props.darkMode ? "-dark" : "-light";
+  const theme = props.darkMode ? "dark" : "light";
 
   return (
     <div
       data-testid="scan-qr-box"
-      class={clsx(
-        `-cbwsdk-extension-dialog-box-bottom`,
-        `-cbwsdk-extension-dialog-box-bottom${theme}`,
-      )}
+      class={clsx(`-cbwsdk-extension-dialog-box-bottom`, theme)}
     >
       <div class={`-cbwsdk-extension-dialog-box-bottom-description-region`}>
         <h2 class={theme}>Or scan to connect</h2>
         <body
-          class={clsx(
-            `-cbwsdk-extension-dialog-box-bottom-description`,
-            `-cbwsdk-extension-dialog-box-bottom-description${theme}`,
-          )}
+          class={clsx(`-cbwsdk-extension-dialog-box-bottom-description`, theme)}
         >
           Open{" "}
           <a
@@ -247,17 +231,14 @@ const DescriptionItem: FunctionComponent<{
   text: string;
   darkMode: boolean;
 }> = props => {
-  const theme = props.darkMode ? "-dark" : "-light";
+  const theme = props.darkMode ? "dark" : "light";
   return (
     <div class="-cbwsdk-extension-dialog-box-top-description">
       <div class="-cbwsdk-extension-dialog-box-top-description-icon-wrapper">
         <img src={props.icon} />
       </div>
       <body
-        class={clsx(
-          "-cbwsdk-extension-dialog-box-top-description-text",
-          `-cbwsdk-extension-dialog-box-top-description-text${theme}`,
-        )}
+        class={clsx("-cbwsdk-extension-dialog-box-top-description-text", theme)}
       >
         {props.text}
       </body>
@@ -269,14 +250,14 @@ const CancelButton: FunctionComponent<{
   onClick: () => void;
   darkMode: boolean;
 }> = props => {
-  const theme = props.darkMode ? "-dark" : "-light";
+  const theme = props.darkMode ? "dark" : "light";
   return (
     <button
       type="button"
       class={clsx("-cbwsdk-extension-dialog-box-cancel", theme)}
       onClick={props.onClick}
     >
-      <div class={"-cbwsdk-extension-dialog-box-cancel-x"} />
+      <div class={clsx("-cbwsdk-extension-dialog-box-cancel-x", theme)} />
     </button>
   );
 };
