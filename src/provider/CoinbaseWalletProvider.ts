@@ -496,6 +496,17 @@ export class CoinbaseWalletProvider
     return res.result;
   }
 
+  public async selectProvider(providers: any): Promise<string> {
+    console.log("inside select provider");
+    const relay = await this.initializeRelay();
+    const res = await relay.selectProvider(providers).promise;
+    console.log("result from relay.selectProvider: ", res);
+    if (typeof res.result !== "string") {
+      throw new Error("result was not a string");
+    }
+    return res.result;
+  }
+
   public supportsSubscriptions(): boolean {
     return false;
   }

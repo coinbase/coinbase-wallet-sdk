@@ -60,6 +60,7 @@ import {
   isRequestEthereumAccountsResponse,
   RequestEthereumAccountsResponse,
   ScanQRCodeResponse,
+  SelectProviderResponse,
   SignEthereumMessageResponse,
   SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse,
@@ -851,6 +852,59 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     );
 
     return { promise, cancel };
+  }
+
+  selectProvider(providers: any): CancelablePromise<SelectProviderResponse> {
+    console.log("inside selectprovider of relay");
+    const request: Web3Request = {
+      method: Web3Method.selectProvider,
+      params: {
+        providers
+      }
+    };
+
+    const id = randomBytesHex(8);
+
+    const cancel = (error?: Error) => {
+      this.publishWeb3RequestCanceledEvent(id);
+      this.handleErrorResponse(id, request.method, error);
+    };
+
+    const promise = new Promise<SelectProviderResponse>((resolve, reject) => {
+      this.relayEventManager.callbacks.set(id, response => {
+        if (response.errorMessage) {
+          return reject(new Error(response.errorMessage));
+        }
+        resolve(response as SelectProviderResponse);
+      });
+
+      const _cancel = (_error?: Error) => {
+        this.handleWeb3ResponseMessage(
+          Web3ResponseMessage({
+            id,
+            response: SelectProviderResponse("")
+          })
+        );
+      };
+
+      const approve = (selectedProvider: string) => {
+        this.handleWeb3ResponseMessage(
+          Web3ResponseMessage({
+            id,
+            response: SelectProviderResponse(selectedProvider)
+          })
+        );
+      };
+
+      console.log("right before this.ui.select provider");
+      this.ui.selectProvider({
+        onApprove: approve,
+        onCancel: _cancel,
+        providers
+      });
+    });
+
+    return { cancel, promise };
   }
 
   watchAsset(

@@ -62,6 +62,12 @@ export interface WalletUI {
     chainId?: string;
   }): void;
 
+  selectProvider(options: {
+    onCancel: (error?: Error) => void;
+    onApprove: (selectedProvider: string) => void;
+    providers: any;
+  }): void;
+
   switchEthereumChain(options: {
     onCancel: (error?: Error) => void;
     onApprove: (rpcUrl: string) => void;

@@ -11,6 +11,7 @@ import {
   GenericResponse,
   RequestEthereumAccountsResponse,
   ScanQRCodeResponse,
+  SelectProviderResponse,
   SignEthereumMessageResponse,
   SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse,
@@ -54,6 +55,10 @@ export abstract class WalletSDKRelayAbstract {
     image?: string,
     chainId?: string
   ): CancelablePromise<WatchAssetResponse>;
+
+  abstract selectProvider(
+    providers: any
+  ): CancelablePromise<SelectProviderResponse>;
 
   abstract switchEthereumChain(
     chainId: string

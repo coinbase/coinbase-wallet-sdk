@@ -108,6 +108,13 @@ export type GenericRequest = BaseWeb3Request<
   }
 >;
 
+export type SelectProviderRequest = BaseWeb3Request<
+  Web3Method.selectProvider,
+  {
+    providers: any;
+  }
+>;
+
 export type MakeEthereumJSONRPCRequest = BaseWeb3Request<
   Web3Method.makeEthereumJSONRPCRequest,
   {
@@ -145,4 +152,5 @@ export type Web3Request =
   | AddEthereumChainRequest
   | SwitchEthereumChainRequest
   | MakeEthereumJSONRPCRequest
-  | WatchAssetRequest;
+  | WatchAssetRequest
+  | SelectProviderRequest;

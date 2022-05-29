@@ -71,6 +71,12 @@ export function WatchAssetReponse(success: boolean): WatchAssetResponse {
   return { method: Web3Method.watchAsset, result: success };
 }
 
+export function SelectProviderResponse(
+  selectedProvider: string
+): SelectProviderResponse {
+  return { method: Web3Method.selectProvider, result: selectedProvider };
+}
+
 export function isRequestEthereumAccountsResponse(
   res: any
 ): res is RequestEthereumAccountsResponse {
@@ -116,6 +122,8 @@ export type EthereumAddressFromSignedMessageResponse =
 export type ScanQRCodeResponse = BaseWeb3Response<string>; // scanned string
 
 export type GenericResponse = BaseWeb3Response<object>; // response data
+
+export type SelectProviderResponse = BaseWeb3Response<string>; // response data
 
 export type MakeEthereumJSONRPCResponse = BaseWeb3Response<unknown>;
 
