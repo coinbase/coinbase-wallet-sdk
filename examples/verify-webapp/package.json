@@ -19,7 +19,7 @@
     "dapp",
     "ethereum"
   ],
-  "author": "Erin L",
+  "author": "Coinbase Engineering",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/coinbase/coinbase-wallet-sdk/issues"
