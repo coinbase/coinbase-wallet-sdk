@@ -82,6 +82,7 @@ export interface WalletSDKRelayOptions {
   relayEventManager: WalletSDKRelayEventManager;
   uiConstructor: (options: Readonly<WalletUIOptions>) => WalletUI;
   diagnosticLogger?: DiagnosticLogger;
+  reloadOnDisconnect?: boolean;
 }
 
 export class WalletSDKRelay extends WalletSDKRelayAbstract {
@@ -89,20 +90,24 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
 
   private readonly linkAPIUrl: string;
   protected readonly storage: ScopedLocalStorage;
-  private readonly _session: Session;
+  private _session: Session;
   private readonly relayEventManager: WalletSDKRelayEventManager;
   protected readonly diagnostic?: DiagnosticLogger;
-  private readonly connection: WalletSDKConnection;
-  private accountsCallback: ((account: [string]) => void) | null = null;
+  private connection: WalletSDKConnection;
+  private accountsCallback:
+    | ((account: string[], isDisconnect?: boolean) => void)
+    | null = null;
   private chainCallback:
     | ((chainId: string, jsonRpcUrl: string) => void)
     | null = null;
+  private readonly options: WalletSDKRelayOptions;
 
   private ui: WalletUI;
 
   private appName = "";
   private appLogoUrl: string | null = null;
   private subscriptions = new Subscription();
+  private _reloadOnDisconnect: boolean;
   isLinked: boolean | undefined;
   isUnlinkedErrorState: boolean | undefined;
 
@@ -110,21 +115,34 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     super();
     this.linkAPIUrl = options.linkAPIUrl;
     this.storage = options.storage;
-    this._session =
-      Session.load(options.storage) || new Session(options.storage).save();
+    this.options = options;
+
+    const { session, ui, connection } = this.subscribe();
+
+    this._session = session;
+    this.connection = connection;
 
     this.relayEventManager = options.relayEventManager;
     this.diagnostic = options.diagnosticLogger;
 
-    this.connection = new WalletSDKConnection(
-      this._session.id,
-      this._session.key,
+    this._reloadOnDisconnect = options.reloadOnDisconnect ?? true;
+
+    this.ui = ui;
+  }
+
+  public subscribe() {
+    const session =
+      Session.load(this.storage) || new Session(this.storage).save();
+
+    const connection = new WalletSDKConnection(
+      session.id,
+      session.key,
       this.linkAPIUrl,
       this.diagnostic,
     );
 
     this.subscriptions.add(
-      this.connection.sessionConfig$.subscribe({
+      connection.sessionConfig$.subscribe({
         next: sessionConfig => {
           this.onSessionConfigChanged(sessionConfig);
         },
@@ -137,13 +155,13 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     );
 
     this.subscriptions.add(
-      this.connection.incomingEvent$
+      connection.incomingEvent$
         .pipe(filter(m => m.event === "Web3Response"))
         .subscribe({ next: this.handleIncomingEvent }), // eslint-disable-line @typescript-eslint/unbound-method
     );
 
     this.subscriptions.add(
-      this.connection.linked$
+      connection.linked$
         .pipe(
           skip(1),
           tap((linked: boolean) => {
@@ -183,10 +201,10 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
 
     // if session is marked destroyed, reset and reload
     this.subscriptions.add(
-      this.connection.sessionConfig$
+      connection.sessionConfig$
         .pipe(filter(c => !!c.metadata && c.metadata.__destroyed === "1"))
         .subscribe(() => {
-          const alreadyDestroyed = this.connection.isDestroyed;
+          const alreadyDestroyed = connection.isDestroyed;
           this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
             alreadyDestroyed,
             sessionIdHash: this.getSessionIdHash(),
@@ -196,13 +214,13 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     );
 
     this.subscriptions.add(
-      this.connection.sessionConfig$
+      connection.sessionConfig$
         .pipe(
           filter(c => c.metadata && c.metadata.WalletUsername !== undefined),
         )
         .pipe(
           mergeMap(c =>
-            aes256gcm.decrypt(c.metadata.WalletUsername!, this._session.secret),
+            aes256gcm.decrypt(c.metadata.WalletUsername!, session.secret),
           ),
         )
         .subscribe({
@@ -219,11 +237,11 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     );
 
     this.subscriptions.add(
-      this.connection.sessionConfig$
+      connection.sessionConfig$
         .pipe(filter(c => c.metadata && c.metadata.AppVersion !== undefined))
         .pipe(
           mergeMap(c =>
-            aes256gcm.decrypt(c.metadata.AppVersion!, this._session.secret),
+            aes256gcm.decrypt(c.metadata.AppVersion!, session.secret),
           ),
         )
         .subscribe({
@@ -240,7 +258,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     );
 
     this.subscriptions.add(
-      this.connection.sessionConfig$
+      connection.sessionConfig$
         .pipe(
           filter(
             c =>
@@ -252,8 +270,8 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         .pipe(
           mergeMap(c =>
             zip(
-              aes256gcm.decrypt(c.metadata.ChainId!, this._session.secret),
-              aes256gcm.decrypt(c.metadata.JsonRpcUrl!, this._session.secret),
+              aes256gcm.decrypt(c.metadata.ChainId!, session.secret),
+              aes256gcm.decrypt(c.metadata.JsonRpcUrl!, session.secret),
             ),
           ),
         )
@@ -274,16 +292,13 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     );
 
     this.subscriptions.add(
-      this.connection.sessionConfig$
+      connection.sessionConfig$
         .pipe(
           filter(c => c.metadata && c.metadata.EthereumAddress !== undefined),
         )
         .pipe(
           mergeMap(c =>
-            aes256gcm.decrypt(
-              c.metadata.EthereumAddress!,
-              this._session.secret,
-            ),
+            aes256gcm.decrypt(c.metadata.EthereumAddress!, session.secret),
           ),
         )
         .subscribe({
@@ -319,15 +334,17 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         }),
     );
 
-    this.ui = options.uiConstructor({
-      linkAPIUrl: options.linkAPIUrl,
-      version: options.version,
-      darkMode: options.darkMode,
-      session: this._session,
-      connected$: this.connection.connected$,
+    const ui = this.options.uiConstructor({
+      linkAPIUrl: this.options.linkAPIUrl,
+      version: this.options.version,
+      darkMode: this.options.darkMode,
+      session,
+      connected$: connection.connected$,
     });
 
-    this.connection.connect();
+    connection.connect();
+
+    return { session, ui, connection };
   }
 
   public attachUI() {
@@ -344,6 +361,8 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
       )
       .subscribe(
         _ => {
+          const isStandalone = this.ui.isStandalone();
+
           try {
             this.subscriptions.unsubscribe();
           } catch (err) {
@@ -375,7 +394,24 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
               storedSessionIdHash: Session.hash(storedSession.id),
             });
           }
-          this.ui.reloadUI();
+
+          if (this._reloadOnDisconnect) {
+            this.ui.reloadUI();
+            return;
+          }
+
+          if (this.accountsCallback) {
+            this.accountsCallback([], true);
+          }
+
+          const { session, ui, connection } = this.subscribe();
+          this._session = session;
+          this.connection = connection;
+          this.ui = ui;
+
+          if (isStandalone) this.ui.setStandalone(true);
+
+          this.attachUI();
         },
         (err: string) => {
           this.diagnostic?.log(EVENTS.FAILURE, {
@@ -599,7 +635,9 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     this.ui.setConnectDisabled(disabled);
   }
 
-  public setAccountsCallback(accountsCallback: (accounts: [string]) => void) {
+  public setAccountsCallback(
+    accountsCallback: (accounts: string[], isDisconnect?: boolean) => void,
+  ) {
     this.accountsCallback = accountsCallback;
   }
 
