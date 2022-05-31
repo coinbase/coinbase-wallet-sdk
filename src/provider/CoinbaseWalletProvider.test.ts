@@ -88,8 +88,8 @@ describe("CoinbaseWalletProvider", () => {
 
   it("handles setting disable reload on disconnect flag", () => {
     const provider = setupCoinbaseWalletProvider();
-    provider.setDisableDisconnectReload();
-    expect(provider.disableDisconnectReload).toBe(true);
+    provider.disableReloadOnDisconnect();
+    expect(provider.reloadOnDisconnect).toBe(false);
   });
 
   it("handles subscriptions", () => {

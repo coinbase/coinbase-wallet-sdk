@@ -82,7 +82,7 @@ export interface WalletSDKRelayOptions {
   relayEventManager: WalletSDKRelayEventManager;
   uiConstructor: (options: Readonly<WalletUIOptions>) => WalletUI;
   diagnosticLogger?: DiagnosticLogger;
-  disableDisconnectReload?: boolean;
+  reloadOnDisconnect?: boolean;
 }
 
 export class WalletSDKRelay extends WalletSDKRelayAbstract {
@@ -107,7 +107,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
   private appName = "";
   private appLogoUrl: string | null = null;
   private subscriptions = new Subscription();
-  private reloadOnDisconnect: boolean;
+  private _reloadOnDisconnect: boolean;
   isLinked: boolean | undefined;
   isUnlinkedErrorState: boolean | undefined;
 
@@ -125,9 +125,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     this.relayEventManager = options.relayEventManager;
     this.diagnostic = options.diagnosticLogger;
 
-    this.reloadOnDisconnect = options.disableDisconnectReload
-      ? !options.disableDisconnectReload
-      : true;
+    this._reloadOnDisconnect = options.reloadOnDisconnect ?? true;
 
     this.ui = ui;
   }
@@ -397,7 +395,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
             });
           }
 
-          if (this.reloadOnDisconnect) {
+          if (this._reloadOnDisconnect) {
             this.ui.reloadUI();
             return;
           }

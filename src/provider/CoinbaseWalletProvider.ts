@@ -98,7 +98,7 @@ export class CoinbaseWalletProvider
   public readonly isCoinbaseBrowser: boolean;
 
   public readonly qrUrl?: string | null;
-  public disableDisconnectReload: boolean;
+  public reloadOnDisconnect: boolean;
 
   private readonly _filterPolyfill = new FilterPolyfill(this);
   private readonly _subscriptionManager = new SubscriptionManager(this);
@@ -140,7 +140,7 @@ export class CoinbaseWalletProvider
     this._storage = options.storage;
     this._relayEventManager = options.relayEventManager;
     this.diagnostic = options.diagnosticLogger;
-    this.disableDisconnectReload = false;
+    this.reloadOnDisconnect = true;
 
     this.isCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true;
     this.isCoinbaseBrowser = options.overrideIsCoinbaseBrowser ?? false;
@@ -245,8 +245,8 @@ export class CoinbaseWalletProvider
     this._storage.setItem(HAS_CHAIN_OVERRIDDEN_FROM_RELAY, value.toString());
   }
 
-  public setDisableDisconnectReload() {
-    this.disableDisconnectReload = true;
+  public disableReloadOnDisconnect() {
+    this.reloadOnDisconnect = false;
   }
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
