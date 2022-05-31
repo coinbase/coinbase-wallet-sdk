@@ -4,13 +4,13 @@ Demo app to verify user's wallet address from third-party app. For Android & iOS
 
 Install packages:
 
-```npm run build:app```
+```yarn build:app```
 
-```npm run build:wallet```
+```yarn build:wallet```
 
 Run apps:
 
-```npm run dev```
+```yarn dev```
 
 Open app:
 
