@@ -86,6 +86,12 @@ describe("CoinbaseWalletProvider", () => {
     expect(provider.host).toBe("http://test.ethnode.com");
   });
 
+  it("handles setting disable reload on disconnect flag", () => {
+    const provider = setupCoinbaseWalletProvider();
+    provider.setDisableDisconnectReload();
+    expect(provider.disableDisconnectReload).toBe(true);
+  });
+
   it("handles subscriptions", () => {
     const provider = setupCoinbaseWalletProvider();
     expect(provider.supportsSubscriptions()).toBe(false);
