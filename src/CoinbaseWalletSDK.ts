@@ -3,6 +3,7 @@
 
 import { LogoType, walletLogo } from "./assets/wallet-logo";
 import { DiagnosticLogger } from "./connection/DiagnosticLogger";
+import { EventListener } from "./connection/EventListener";
 import { ScopedLocalStorage } from "./lib/ScopedLocalStorage";
 import { CoinbaseWalletProvider } from "./provider/CoinbaseWalletProvider";
 import { WalletSDKUI } from "./provider/WalletSDKUI";
@@ -27,6 +28,9 @@ export interface CoinbaseWalletSDKOptions {
   linkAPIUrl?: string;
   /** @optional an implementation of WalletUI; for most, leave it unspecified */
   uiConstructor?: (options: Readonly<WalletUIOptions>) => WalletUI;
+  /** @optional an implementation of EventListener for debugging; for most, leave it unspecified  */
+  /** @deprecated in favor of diagnosticLogger */
+  eventListener?: EventListener;
   /** @optional a diagnostic tool for debugging; for most, leave it unspecified  */
   diagnosticLogger?: DiagnosticLogger;
   /** @optional whether wallet link provider should override the isMetaMask property. */
@@ -78,7 +82,20 @@ export class CoinbaseWalletSDK {
     this._overrideIsCoinbaseBrowser =
       options.overrideIsCoinbaseBrowser ?? false;
 
-    this._diagnosticLogger = options.diagnosticLogger;
+    if (options.diagnosticLogger && options.eventListener) {
+      throw new Error(
+        "Cant have both eventListener and diagnosticLogger, use only diagnosticLogger",
+      );
+    }
+
+    if (options.eventListener) {
+      this._diagnosticLogger = {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
+        log: options.eventListener.onEvent,
+      };
+    } else {
+      this._diagnosticLogger = options.diagnosticLogger;
+    }
 
     this._reloadOnDisconnect = options.reloadOnDisconnect ?? true;
 
