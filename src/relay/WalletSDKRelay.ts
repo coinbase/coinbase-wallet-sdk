@@ -82,6 +82,7 @@ export interface WalletSDKRelayOptions {
   relayEventManager: WalletSDKRelayEventManager;
   uiConstructor: (options: Readonly<WalletUIOptions>) => WalletUI;
   diagnosticLogger?: DiagnosticLogger;
+  disableDisconnectReload?: boolean;
 }
 
 export class WalletSDKRelay extends WalletSDKRelayAbstract {
@@ -106,6 +107,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
   private appName = "";
   private appLogoUrl: string | null = null;
   private subscriptions = new Subscription();
+  private reloadOnDisconnect: boolean;
   isLinked: boolean | undefined;
   isUnlinkedErrorState: boolean | undefined;
 
@@ -122,6 +124,10 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
 
     this.relayEventManager = options.relayEventManager;
     this.diagnostic = options.diagnosticLogger;
+
+    this.reloadOnDisconnect = options.disableDisconnectReload
+      ? !options.disableDisconnectReload
+      : true;
 
     this.ui = ui;
   }
@@ -216,8 +222,8 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         )
         .pipe(
           mergeMap(c =>
-            aes256gcm.decrypt(c.metadata.WalletUsername!, session.secret)
-          )
+            aes256gcm.decrypt(c.metadata.WalletUsername!, session.secret),
+          ),
         )
         .subscribe({
           next: walletUsername => {
@@ -237,8 +243,8 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         .pipe(filter(c => c.metadata && c.metadata.AppVersion !== undefined))
         .pipe(
           mergeMap(c =>
-            aes256gcm.decrypt(c.metadata.AppVersion!, session.secret)
-          )
+            aes256gcm.decrypt(c.metadata.AppVersion!, session.secret),
+          ),
         )
         .subscribe({
           next: appVersion => {
@@ -267,9 +273,9 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
           mergeMap(c =>
             zip(
               aes256gcm.decrypt(c.metadata.ChainId!, session.secret),
-              aes256gcm.decrypt(c.metadata.JsonRpcUrl!, session.secret)
-            )
-          )
+              aes256gcm.decrypt(c.metadata.JsonRpcUrl!, session.secret),
+            ),
+          ),
         )
         .pipe(distinctUntilChanged())
         .subscribe({
@@ -294,8 +300,8 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         )
         .pipe(
           mergeMap(c =>
-            aes256gcm.decrypt(c.metadata.EthereumAddress!, session.secret)
-          )
+            aes256gcm.decrypt(c.metadata.EthereumAddress!, session.secret),
+          ),
         )
         .subscribe({
           next: selectedAddress => {
@@ -335,7 +341,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
       version: this.options.version,
       darkMode: this.options.darkMode,
       session,
-      connected$: connection.connected$
+      connected$: connection.connected$,
     });
 
     connection.connect();
@@ -389,6 +395,10 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
               sessionIdHash: this.getSessionIdHash(),
               storedSessionIdHash: Session.hash(storedSession.id),
             });
+          }
+
+          if (this.reloadOnDisconnect) {
+            this.ui.reloadUI();
           }
 
           if (this.accountsCallback) {
@@ -627,7 +637,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
   }
 
   public setAccountsCallback(
-    accountsCallback: (accounts: string[], isDisconnect?: boolean) => void
+    accountsCallback: (accounts: string[], isDisconnect?: boolean) => void,
   ) {
     this.accountsCallback = accountsCallback;
   }
