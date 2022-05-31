@@ -1,0 +1,31 @@
+{
+  "name": "verify-webapp",
+  "version": "0.1.0",
+  "description": "Sample verify web app",
+  "scripts": {
+    "dev:app": "cd ./a-profile-app && npm run dev",
+    "dev:wallet": "cd ./a-wallet && npm run dev",
+    "build:app": "cd ./a-profile-app && npm i",
+    "build:wallet": "cd ./a-wallet && npm i",
+    "dev": "concurrently --kill-others \"npm run dev:app\" \"npm run dev:wallet\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/coinbase/coinbase-wallet-sdk.git"
+  },
+  "keywords": [
+    "verification",
+    "ethers",
+    "dapp",
+    "ethereum"
+  ],
+  "author": "Erin L",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/coinbase/coinbase-wallet-sdk/issues"
+  },
+  "homepage": "https://github.com/coinbase/coinbase-wallet-sdk/examples/verify-webapp",
+  "devDependencies": {
+    "concurrently": "^7.2.1"
+  }
+}
