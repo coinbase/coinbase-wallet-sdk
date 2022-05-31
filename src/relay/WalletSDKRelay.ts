@@ -399,6 +399,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
 
           if (this.reloadOnDisconnect) {
             this.ui.reloadUI();
+            return;
           }
 
           if (this.accountsCallback) {
