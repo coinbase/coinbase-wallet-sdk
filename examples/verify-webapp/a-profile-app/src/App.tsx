@@ -41,7 +41,7 @@ function App() {
   async function fetchImages(add: string) {
     try {
       const imageResp = await fetchAssets(add);
-      console.log(imageResp);
+
       const validImgUrls = imageResp.assets.filter(img =>
         Boolean(img.image_preview_url || img.collection.image_url),
       );
