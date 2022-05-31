@@ -142,7 +142,7 @@ export interface WalletUI {
   /**
    * Set whether the UI is in standalone mode, to preserve context when disconnecting
    */
-  setStandalone(status: boolean): void;
+  setStandalone?(status: boolean): void;
 
   /**
    * If the extension is in standalone mode, it can handle signing locally
