@@ -84,7 +84,7 @@ export class CoinbaseWalletSDK {
 
     if (options.diagnosticLogger && options.eventListener) {
       throw new Error(
-        "Cant have both eventListener and diagnosticLogger, use only diagnosticLogger",
+        "Can't have both eventListener and diagnosticLogger options, use only diagnosticLogger",
       );
     }
 
