@@ -33,7 +33,7 @@ function App() {
 
   async function fetchAssets(add: string | null): Promise<Resp> {
     const resp = await fetch(
-      `https://testnets-api.opensea.io/api/v1/assets?owner=${add}&order_direction=desc&offset=0&limit=20`
+      `https://testnets-api.opensea.io/api/v1/assets?owner=${add}&order_direction=desc&offset=0&limit=20`,
     );
     return await resp.json();
   }
@@ -41,7 +41,12 @@ function App() {
   async function fetchImages(add: string) {
     try {
       const imageResp = await fetchAssets(add);
-      setImages(imageResp.assets);
+      console.log(imageResp);
+      const validImgUrls = imageResp.assets.filter(img =>
+        Boolean(img.image_preview_url || img.collection.image_url),
+      );
+
+      setImages(validImgUrls);
     } catch (err) {
       console.error(err);
     }
@@ -97,7 +102,9 @@ function App() {
             <></>
           )}
           {!profileImg && images?.length > 0 ? (
-            <div className="font-medium text-center">Select your profile picture ...</div>
+            <div className="font-medium text-center">
+              Select your profile picture ...
+            </div>
           ) : (
             <></>
           )}
@@ -119,7 +126,7 @@ function App() {
         </div>
       </div>
       <div className="flex flex-wrap justify-center w-1/2 my-10 h-screen overflow-y-scroll pb-16">
-        {images?.map((img) => {
+        {images?.map(img => {
           const image = img.image_preview_url || img.collection.image_url;
           const isSelectedImage = profileImg === image;
 
@@ -135,13 +142,19 @@ function App() {
               />
               <div
                 className={`
-                ${isSelectedImage ? "opacity-100" : "opacity-0 hover:opacity-100"}
+                ${
+                  isSelectedImage
+                    ? "opacity-100"
+                    : "opacity-0 hover:opacity-100"
+                }
                 px-8 py-10 relative z-10 w-full bg-white transition duration-200 ease-in-out`}
               >
                 <h2 className="tracking-widest text-xs title-font font-medium text-indigo-500 mb-1">
                   {img.collection.name}
                 </h2>
-                <h1 className="title-font text-sm font-medium text-gray-500 mb-6">{img.name}</h1>
+                <h1 className="title-font text-sm font-medium text-gray-500 mb-6">
+                  {img.name}
+                </h1>
                 <button
                   onClick={() => handleOnSelect(image)}
                   disabled={isSelectedImage}

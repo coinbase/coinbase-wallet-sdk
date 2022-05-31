@@ -27,13 +27,13 @@ async function signEthereum() {
   console.log("signEthereum");
 
   try {
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const signer = provider.getSigner();
-    const address = await signer.getAddress();
-
     if (!token) {
       throw new Error("Not a valid user");
     }
+
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    const address = await signer.getAddress();
 
     const message = await fetchToken(token);
     const signature = await signer.signMessage(message);
