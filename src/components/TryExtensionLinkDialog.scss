@@ -14,10 +14,13 @@
     justify-content: center;
 
     $blue-normal: #1652f0;
+    $blue-dark: rgb(55, 115, 245);
     $wash: #fafbfc;
     $white: #fff;
     $black: #000;
     $grey-50: #aaa;
+    $background-alt-dark: rgb(20, 21, 25);
+
     $elevation-z3: 0px 4px 12px rgba($black, 0.1);
     $elevation-z4: 0px 0px 8px rgba($black, 0.04),
       0px 16px 24px rgba($black, 0.06);
@@ -29,8 +32,15 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background-color: rgba($black, 0.5);
       transition: opacity 0.25s;
+
+      &.light {
+        background-color: rgba($black, 0.5);
+      }
+
+      &.dark {
+        background-color: rgba(50, 53, 61, 0.4);
+      }
 
       &-hidden {
         opacity: 0;
@@ -53,10 +63,18 @@
       &-top {
         display: flex;
         flex-direction: row;
-        background-color: $white;
         border-radius: 8px;
         overflow: hidden;
         min-height: 300px;
+
+        &.dark {
+          background-color: $black;
+          box-shadow: 0 4px 16px rgba(255, 255, 255, 0.05);
+        }
+
+        &.light {
+          background-color: $white;
+        }
 
         &-subtext {
           margin-top: 15px;
@@ -86,6 +104,10 @@
             cursor: pointer;
             font-weight: 500;
             text-align: center;
+
+            &.dark {
+              background-color: $blue-dark;
+            }
           }
         }
 
@@ -94,7 +116,14 @@
           flex-basis: 50%;
           flex-direction: column;
           justify-content: center;
-          background-color: $wash;
+
+          &.light {
+            background-color: $wash;
+          }
+
+          &.dark {
+            background-color: $background-alt-dark;
+          }
         }
 
         &-description {
@@ -132,8 +161,15 @@
             flex-grow: 1;
             font-size: 13px;
             line-height: 19px;
-            color: $black;
             align-self: center;
+
+            &.light {
+              color: $black;
+            }
+
+            &.dark {
+              color: white;
+            }
           }
         }
       }
@@ -143,8 +179,16 @@
         flex-direction: row;
         overflow: hidden;
         border-radius: 8px;
-        background-color: $white;
         margin-top: 8px;
+
+        &.light {
+          background-color: $white;
+        }
+
+        &.dark {
+          background-color: $black;
+          box-shadow: 0 4px 16px rgba(255, 255, 255, 0.05);
+        }
 
         &-description-region {
           display: flex;
@@ -159,6 +203,14 @@
           line-height: 19px;
           margin-top: 12px;
           color: $grey-50;
+
+          &.dark {
+            color: $white;
+
+            a {
+              color: $blue-dark;
+            }
+          }
 
           a {
             font-size: inherit;
@@ -186,6 +238,7 @@
           padding: 8px;
           border-radius: 8px;
           box-shadow: $elevation-z3;
+          background-color: $white;
 
           img {
             display: block;
@@ -224,13 +277,35 @@
         width: 24px;
         height: 24px;
         border-radius: 12px;
-        background-color: $wash;
+
         cursor: pointer;
+
+        &.light {
+          background-color: $wash;
+        }
+
+        &.dark {
+          background-color: $background-alt-dark;
+        }
 
         &-x {
           position: relative;
           display: block;
           cursor: pointer;
+
+          &.light {
+            &::before,
+            &::after {
+              background-color: $black;
+            }
+          }
+
+          &.dark {
+            &::before,
+            &::after {
+              background-color: $white;
+            }
+          }
 
           &::before,
           &::after {
@@ -241,7 +316,6 @@
             left: -7px;
             width: 14px;
             height: 1px;
-            background-color: $black;
             transition: background-color 0.2s;
           }
 
@@ -279,7 +353,14 @@
       font-size: 22px;
       font-weight: 600;
       line-height: 28px;
-      color: $black;
+
+      &.light {
+        color: $black;
+      }
+
+      &.dark {
+        color: $white;
+      }
     }
   }
 }

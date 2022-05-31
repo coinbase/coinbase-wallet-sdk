@@ -24,11 +24,11 @@ export const TryExtensionLinkDialog: FunctionComponent<{
   connectDisabled: boolean;
   onCancel: (() => void) | null;
 }> = props => {
-  const [isContainerHidden, setContainerHidden] = useState(!props.isOpen);
-  const [isDialogHidden, setDialogHidden] = useState(!props.isOpen);
+  const { isOpen, darkMode } = props;
+  const [isContainerHidden, setContainerHidden] = useState(!isOpen);
+  const [isDialogHidden, setDialogHidden] = useState(!isOpen);
 
   useEffect(() => {
-    const { isOpen } = props;
     const timers = [
       window.setTimeout(() => {
         setDialogHidden(!isOpen);
@@ -50,6 +50,8 @@ export const TryExtensionLinkDialog: FunctionComponent<{
     };
   }, [props.isOpen]);
 
+  const theme = darkMode ? "dark" : "light";
+
   return (
     <div
       class={clsx(
@@ -61,6 +63,7 @@ export const TryExtensionLinkDialog: FunctionComponent<{
       <div
         class={clsx(
           "-cbwsdk-extension-dialog-backdrop",
+          theme,
           isDialogHidden && "-cbwsdk-extension-dialog-backdrop-hidden",
         )}
       />
@@ -72,6 +75,7 @@ export const TryExtensionLinkDialog: FunctionComponent<{
           )}
         >
           <TryExtensionBox
+            darkMode={darkMode}
             onInstallClick={() => {
               window.open(
                 "https://api.wallet.coinbase.com/rpc/v2/desktop/chrome",
@@ -81,7 +85,7 @@ export const TryExtensionLinkDialog: FunctionComponent<{
           />
           {!props.connectDisabled ? (
             <ScanQRBox
-              darkMode={props.darkMode}
+              darkMode={darkMode}
               version={props.version}
               sessionId={props.sessionId}
               sessionSecret={props.sessionSecret}
@@ -91,7 +95,9 @@ export const TryExtensionLinkDialog: FunctionComponent<{
             />
           ) : null}
 
-          {props.onCancel && <CancelButton onClick={props.onCancel} />}
+          {props.onCancel && (
+            <CancelButton darkMode={darkMode} onClick={props.onCancel} />
+          )}
         </div>
       </div>
     </div>
@@ -99,8 +105,9 @@ export const TryExtensionLinkDialog: FunctionComponent<{
 };
 
 const TryExtensionBox: FunctionComponent<{
+  darkMode: boolean;
   onInstallClick: () => void;
-}> = ({ onInstallClick }) => {
+}> = ({ darkMode, onInstallClick }) => {
   const [isClicked, setIsClicked] = useState(false);
 
   const clickHandler = useCallback(() => {
@@ -112,12 +119,14 @@ const TryExtensionBox: FunctionComponent<{
     }
   }, [onInstallClick, isClicked]);
 
+  const theme = darkMode ? "dark" : "light";
+
   return (
-    <div class="-cbwsdk-extension-dialog-box-top">
-      <div class="-cbwsdk-extension-dialog-box-top-install-region">
-        <h2>Try the Coinbase Wallet extension</h2>
+    <div class={clsx("-cbwsdk-extension-dialog-box-top", theme)}>
+      <div class={"-cbwsdk-extension-dialog-box-top-install-region"}>
+        <h2 class={theme}>Try the Coinbase Wallet extension</h2>
         {isClicked && (
-          <div class="-cbwsdk-extension-dialog-box-top-subtext">
+          <div class={"-cbwsdk-extension-dialog-box-top-subtext"}>
             After installing Coinbase Wallet, refresh the page and connect
             again.
           </div>
@@ -126,16 +135,19 @@ const TryExtensionBox: FunctionComponent<{
           {isClicked ? "Refresh" : "Install"}
         </button>
       </div>
-      <div class="-cbwsdk-extension-dialog-box-top-info-region">
+      <div class={clsx("-cbwsdk-extension-dialog-box-top-info-region", theme)}>
         <DescriptionItem
+          darkMode={darkMode}
           icon={linkIcon}
           text="Connect to crypto apps with one click"
         />
         <DescriptionItem
+          darkMode={darkMode}
           icon={lockIcon}
           text="Your private key is stored securely"
         />
         <DescriptionItem
+          darkMode={darkMode}
           icon={globeIcon}
           text="Works with Ethereum, Polygon, and more"
         />
@@ -160,11 +172,18 @@ const ScanQRBox: FunctionComponent<{
     props.isParentConnection,
   );
 
+  const theme = props.darkMode ? "dark" : "light";
+
   return (
-    <div data-testid="scan-qr-box" class="-cbwsdk-extension-dialog-box-bottom">
-      <div class="-cbwsdk-extension-dialog-box-bottom-description-region">
-        <h2>Or scan to connect</h2>
-        <body class="-cbwsdk-extension-dialog-box-bottom-description">
+    <div
+      data-testid="scan-qr-box"
+      class={clsx(`-cbwsdk-extension-dialog-box-bottom`, theme)}
+    >
+      <div class={`-cbwsdk-extension-dialog-box-bottom-description-region`}>
+        <h2 class={theme}>Or scan to connect</h2>
+        <body
+          class={clsx(`-cbwsdk-extension-dialog-box-bottom-description`, theme)}
+        >
           Open{" "}
           <a
             href="https://wallet.coinbase.com/"
@@ -210,25 +229,35 @@ const ScanQRBox: FunctionComponent<{
 const DescriptionItem: FunctionComponent<{
   icon: string;
   text: string;
+  darkMode: boolean;
 }> = props => {
+  const theme = props.darkMode ? "dark" : "light";
   return (
     <div class="-cbwsdk-extension-dialog-box-top-description">
       <div class="-cbwsdk-extension-dialog-box-top-description-icon-wrapper">
         <img src={props.icon} />
       </div>
-      <body class="-cbwsdk-extension-dialog-box-top-description-text">
+      <body
+        class={clsx("-cbwsdk-extension-dialog-box-top-description-text", theme)}
+      >
         {props.text}
       </body>
     </div>
   );
 };
 
-const CancelButton: FunctionComponent<{ onClick: () => void }> = props => (
-  <button
-    type="button"
-    class="-cbwsdk-extension-dialog-box-cancel"
-    onClick={props.onClick}
-  >
-    <div class="-cbwsdk-extension-dialog-box-cancel-x" />
-  </button>
-);
+const CancelButton: FunctionComponent<{
+  onClick: () => void;
+  darkMode: boolean;
+}> = props => {
+  const theme = props.darkMode ? "dark" : "light";
+  return (
+    <button
+      type="button"
+      class={clsx("-cbwsdk-extension-dialog-box-cancel", theme)}
+      onClick={props.onClick}
+    >
+      <div class={clsx("-cbwsdk-extension-dialog-box-cancel-x", theme)} />
+    </button>
+  );
+};
