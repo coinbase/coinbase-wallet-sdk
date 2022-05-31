@@ -68,6 +68,7 @@
         min-height: 300px;
 
         &.dark {
+          color: $white;
           background-color: $black;
           box-shadow: 0 4px 16px rgba(255, 255, 255, 0.05);
         }
@@ -255,12 +256,25 @@
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          background-color: rgba($white, 0.95);
+
+          &.light {
+            background-color: rgba($white, 0.95);
+            > p {
+              color: $black;
+            }
+          }
+
+          &.dark {
+            background-color: rgba($background-alt-dark, 0.9);
+            > p {
+              color: $white;
+            }
+          }
 
           > p {
             font-size: 12px;
             font-weight: bold;
-            color: $black;
+
             margin-top: 16px;
           }
         }

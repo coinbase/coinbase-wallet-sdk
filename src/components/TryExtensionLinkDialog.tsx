@@ -215,9 +215,12 @@ const ScanQRBox: FunctionComponent<{
         {!props.isConnected && (
           <div
             data-testid="connecting-spinner"
-            class="-cbwsdk-extension-dialog-box-bottom-qr-connecting"
+            class={clsx(
+              "-cbwsdk-extension-dialog-box-bottom-qr-connecting",
+              theme,
+            )}
           >
-            <Spinner size={36} color={"#000"} />
+            <Spinner size={36} color={props.darkMode ? "#FFF" : "#000"} />
             <p>Connecting...</p>
           </div>
         )}
