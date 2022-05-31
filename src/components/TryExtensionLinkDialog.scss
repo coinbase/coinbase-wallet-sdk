@@ -68,6 +68,7 @@
         min-height: 300px;
 
         &.dark {
+          color: $white;
           background-color: $black;
           box-shadow: 0 4px 16px rgba(255, 255, 255, 0.05);
         }
