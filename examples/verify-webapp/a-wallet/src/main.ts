@@ -24,7 +24,7 @@ function isAndroid() {
 }
 
 async function signEthereum() {
-  console.log("signEthereum");
+  console.info("signEthereum");
 
   try {
     if (!token) {
@@ -62,10 +62,10 @@ async function signEthereum() {
 }
 
 async function handleEthereum() {
-  console.log("handleEthereum");
+  console.info("handleEthereum");
   try {
     await window.ethereum.enable();
-    console.log("enabled");
+    console.info("enabled");
 
     setTimeout(signEthereum, 500);
   } catch (err) {
@@ -74,7 +74,7 @@ async function handleEthereum() {
 }
 
 function initListener() {
-  console.log("initListener");
+  console.info("initListener");
   window.addEventListener("ethereum#intialized", handleEthereum, {
     once: true,
   });

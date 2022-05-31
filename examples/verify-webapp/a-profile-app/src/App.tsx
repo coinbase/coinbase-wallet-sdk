@@ -52,7 +52,7 @@ function App() {
     }
   }
 
-  console.log(address);
+  console.info(address);
 
   useEffect(() => {
     if (address && message && sign) {
@@ -70,12 +70,12 @@ function App() {
   }, [address]);
 
   const handleOnClick = async () => {
-    console.log("clicked");
+    console.info("clicked");
     window.location.href = VERIFY_URL;
   };
 
   const handleOnSelect = (img: string) => {
-    console.log("selected");
+    console.info("selected");
     setProfileImg(img);
   };
 
