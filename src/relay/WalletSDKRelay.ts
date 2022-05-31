@@ -409,7 +409,8 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
           this.connection = connection;
           this.ui = ui;
 
-          if (isStandalone) this.ui.setStandalone(true);
+          if (isStandalone && this.ui.setStandalone)
+            this.ui.setStandalone(true);
 
           this.attachUI();
         },
