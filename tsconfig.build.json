@@ -8,5 +8,5 @@
     "target": "es2017"
   },
   "include": ["src", "src/@types"],
-  "exclude": ["**/*.test.*", "__tests__"]
+  "exclude": ["**/*.test.*", "__tests__", "examples"]
 }

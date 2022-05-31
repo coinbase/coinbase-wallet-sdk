@@ -29,3 +29,5 @@ yarn-error.log*
 
 *-svg.ts
 *-css.ts
+
+examples/**/yarn.lock
