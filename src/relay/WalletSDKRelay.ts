@@ -16,6 +16,7 @@ import {
 } from "rxjs/operators";
 
 import { DiagnosticLogger, EVENTS } from "../connection/DiagnosticLogger";
+import { EventListener } from "../connection/EventListener";
 import { ServerMessageEvent } from "../connection/ServerMessage";
 import { SessionConfig } from "../connection/SessionConfig";
 import { WalletSDKConnection } from "../connection/WalletSDKConnection";
@@ -82,6 +83,7 @@ export interface WalletSDKRelayOptions {
   relayEventManager: WalletSDKRelayEventManager;
   uiConstructor: (options: Readonly<WalletUIOptions>) => WalletUI;
   diagnosticLogger?: DiagnosticLogger;
+  eventListener?: EventListener;
   reloadOnDisconnect?: boolean;
 }
 
@@ -123,7 +125,21 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     this.connection = connection;
 
     this.relayEventManager = options.relayEventManager;
-    this.diagnostic = options.diagnosticLogger;
+
+    if (options.diagnosticLogger && options.eventListener) {
+      throw new Error(
+        "Can't have both eventListener and diagnosticLogger options, use only diagnosticLogger",
+      );
+    }
+
+    if (options.eventListener) {
+      this.diagnostic = {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
+        log: options.eventListener.onEvent,
+      };
+    } else {
+      this.diagnostic = options.diagnosticLogger;
+    }
 
     this._reloadOnDisconnect = options.reloadOnDisconnect ?? true;
 
