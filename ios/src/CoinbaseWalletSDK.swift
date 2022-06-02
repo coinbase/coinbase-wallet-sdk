@@ -8,31 +8,35 @@
 import Foundation
 import CryptoKit
 
-class CoinbaseWalletSDK {
-    private let bundleId: String
-    private let callbackUrl: URL
-    private let privateKey: Curve25519.KeyAgreement.PrivateKey
+public class CoinbaseWalletSDK {
+    private let appId: String
+    private let callback: URL
     
-    init?(callback: String) {
-        guard let bundleId = Bundle.main.bundleIdentifier,
-              let callbackUrl = URL(string: callback) else {
+    public init?(
+        callback: URL,
+        appId: String? = nil
+    ) {
+        guard let appId = appId ?? Bundle.main.bundleIdentifier else {
             return nil
         }
-        self.bundleId = bundleId
-        self.callbackUrl = callbackUrl
+        self.appId = appId
+        self.callback = callback
         
         // TODO: load from storage
-        self.privateKey = Curve25519.KeyAgreement.PrivateKey()
+        // OR, let SDK consumer inject secure storage?
+//        self.privateKey = Curve25519.KeyAgreement.PrivateKey()
     }
     
-    func handshakeRequest() {
+    public typealias PrivateKey = Curve25519.KeyAgreement.PrivateKey
+    
+    public func handshakeRequest(privateKey: PrivateKey) {
         let request = Handshake.Request(
-            appId: self.bundleId,
-            callback: self.callbackUrl,
-            publicKey: self.privateKey.publicKey
+            appId: self.appId,
+            callback: self.callback,
+            publicKey: privateKey.publicKey
         )
         
-        let encoded = try! request.encode()
+        let encoded = try! request.encodedString()
         print(encoded)
     }
 }

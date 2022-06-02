@@ -8,16 +8,27 @@
 import Foundation
 import CryptoKit
 
-enum Handshake {
-    
-    struct Request: Codable {
-        let appId: String
-        let callback: URL
-        let publicKey: Curve25519.KeyAgreement.PublicKey
+public enum Handshake {
+    public static let salt = "WalletSegue".data(using: .utf8)!
+
+    public struct Request: WalletSegueCodable {
+        public let appId: String
+        public let callback: URL
+        public let publicKey: Curve25519.KeyAgreement.PublicKey
     }
     
-    struct Response {
-        let sharedKey: SymmetricKey
+    public struct Response: WalletSegueCodable {
+        public let hostPublicKey: Curve25519.KeyAgreement.PublicKey
+        public let message: Data
+//        let accounts: [Account]?
+//        struct Account {
+//            let chainId: String
+//            let address: String
+//        }
+        
+        public init(hostPublicKey: Curve25519.KeyAgreement.PublicKey, message: Data) {
+            self.hostPublicKey = hostPublicKey
+            self.message = message
+        }
     }
-    
 }
