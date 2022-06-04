@@ -29,7 +29,7 @@ public class CoinbaseWalletSDK {
     
     public typealias PrivateKey = Curve25519.KeyAgreement.PrivateKey
     
-    public func handshakeRequest(privateKey: PrivateKey) {
+    public func handshakeRequest(privateKey: PrivateKey) -> String {
         let request = Handshake.Request(
             appId: self.appId,
             callback: self.callback,
@@ -37,6 +37,6 @@ public class CoinbaseWalletSDK {
         )
         
         let encoded = try! request.encodedString()
-        print(encoded)
+        return encoded
     }
 }
