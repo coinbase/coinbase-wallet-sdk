@@ -56,7 +56,8 @@
     "preact": "^10.5.9",
     "qs": "^6.10.3",
     "rxjs": "^6.6.3",
-    "stream-browserify": "^3.0.0"
+    "stream-browserify": "^3.0.0",
+    "util": "^0.12.4"
   },
   "devDependencies": {
     "@babel/core": "^7.17.9",

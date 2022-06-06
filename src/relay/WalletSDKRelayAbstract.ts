@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer';
 import { ethErrors, serializeError } from "eth-rpc-errors";
 
 import { JSONRPCRequest, JSONRPCResponse } from "../provider/JSONRPC";
