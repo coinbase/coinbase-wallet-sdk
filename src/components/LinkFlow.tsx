@@ -3,9 +3,7 @@
 
 import { h, render } from "preact";
 import { BehaviorSubject, Observable, Subscription } from "rxjs";
-import { first } from "rxjs/operators";
 
-import { LinkDialog } from "./LinkDialog";
 import { TryExtensionLinkDialog } from "./TryExtensionLinkDialog";
 
 export interface LinkFlowOptions {
@@ -52,22 +50,6 @@ export class LinkFlow {
     this.linkAPIUrl = options.linkAPIUrl;
     this.isParentConnection = options.isParentConnection;
     this.connected$ = options.connected$;
-
-    // Check if extension UI is enabled
-    fetch("https://api.wallet.coinbase.com/rpc/v2/getFeatureFlags")
-      .then(res => res.json())
-      .then(json => {
-        const enabled: boolean | undefined = json.result.desktop.extension_ui;
-        if (typeof enabled === "undefined") {
-          this.extensionUI$.next({ value: false });
-        } else {
-          this.extensionUI$.next({ value: enabled });
-        }
-      })
-      .catch(err => {
-        console.error("Couldn't fetch feature flags - ", err);
-        this.extensionUI$.next({ value: false });
-      });
   }
 
   public attach(el: Element): void {
@@ -82,7 +64,7 @@ export class LinkFlow {
           this.isConnected = v;
           this.render();
         }
-      })
+      }),
     );
   }
 
@@ -116,43 +98,27 @@ export class LinkFlow {
       return;
     }
 
-    const subscription = this.extensionUI$
-      .pipe(first(enabled => enabled.value !== undefined)) // wait for a valid value before rendering
-      .subscribe(enabled => {
-        if (!this.root) {
-          return;
-        }
+    const subscription = this.extensionUI$.subscribe(() => {
+      if (!this.root) {
+        return;
+      }
 
-        render(
-          enabled.value! ? (
-            <TryExtensionLinkDialog
-              darkMode={this.darkMode}
-              version={this.version}
-              sessionId={this.sessionId}
-              sessionSecret={this.sessionSecret}
-              linkAPIUrl={this.linkAPIUrl}
-              isOpen={this.isOpen}
-              isConnected={this.isConnected}
-              isParentConnection={this.isParentConnection}
-              onCancel={this.onCancel}
-              connectDisabled={this.connectDisabled}
-            />
-          ) : (
-            <LinkDialog
-              darkMode={this.darkMode}
-              version={this.version}
-              sessionId={this.sessionId}
-              sessionSecret={this.sessionSecret}
-              linkAPIUrl={this.linkAPIUrl}
-              isOpen={this.isOpen}
-              isConnected={this.isConnected}
-              isParentConnection={this.isParentConnection}
-              onCancel={this.onCancel}
-            />
-          ),
-          this.root
-        );
-      });
+      render(
+        <TryExtensionLinkDialog
+          darkMode={this.darkMode}
+          version={this.version}
+          sessionId={this.sessionId}
+          sessionSecret={this.sessionSecret}
+          linkAPIUrl={this.linkAPIUrl}
+          isOpen={this.isOpen}
+          isConnected={this.isConnected}
+          isParentConnection={this.isParentConnection}
+          onCancel={this.onCancel}
+          connectDisabled={this.connectDisabled}
+        />,
+        this.root,
+      );
+    });
 
     this.subscriptions.add(subscription);
   }

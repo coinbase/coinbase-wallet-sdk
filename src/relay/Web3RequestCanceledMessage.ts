@@ -9,7 +9,7 @@ export interface Web3RequestCanceledMessage
 }
 
 export function Web3RequestCanceledMessage(
-  id: string
+  id: string,
 ): Web3RequestCanceledMessage {
   return { type: RelayMessageType.WEB3_REQUEST_CANCELED, id };
 }

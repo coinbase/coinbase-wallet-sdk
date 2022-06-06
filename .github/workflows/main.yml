@@ -1,20 +1,18 @@
 name: CI
 
-on:
-  pull_request:
-    types: [review_requested]
+on: [push, pull_request]
 
 jobs:
   lint-check:
-    name: Check for ESLint, Formatting, and Types
+    name: Lint / Type Check
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Checkout node action
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version-file: ".nvmrc"
 
@@ -32,3 +30,27 @@ jobs:
 
       - name: Check Types
         run: yarn lint:types
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [14.x, 16.x, 18.x]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "yarn"
+
+      - name: Install NPM dependencies
+        run: yarn install
+
+      - name: Run Unit Tests
+        run: yarn test:unit

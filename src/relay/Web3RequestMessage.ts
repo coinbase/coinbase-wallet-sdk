@@ -11,7 +11,7 @@ export interface Web3RequestMessage
 }
 
 export function Web3RequestMessage(
-  params: Omit<Web3RequestMessage, "type">
+  params: Omit<Web3RequestMessage, "type">,
 ): Web3RequestMessage {
   return { type: RelayMessageType.WEB3_REQUEST, ...params };
 }

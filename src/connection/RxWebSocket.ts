@@ -7,14 +7,14 @@ import {
   Observable,
   of,
   Subject,
-  throwError
+  throwError,
 } from "rxjs";
 import { flatMap, take } from "rxjs/operators";
 
 export enum ConnectionState {
   DISCONNECTED,
   CONNECTING,
-  CONNECTED
+  CONNECTED,
 }
 
 /**
@@ -24,7 +24,7 @@ export class RxWebSocket<T = object> {
   private readonly url: string;
   private webSocket: WebSocket | null = null;
   private connectionStateSubject = new BehaviorSubject<ConnectionState>(
-    ConnectionState.DISCONNECTED
+    ConnectionState.DISCONNECTED,
   );
   private incomingDataSubject = new Subject<string>();
 
@@ -35,7 +35,7 @@ export class RxWebSocket<T = object> {
    */
   constructor(
     url: string,
-    private readonly WebSocketClass: typeof WebSocket = WebSocket
+    private readonly WebSocketClass: typeof WebSocket = WebSocket,
   ) {
     this.url = url.replace(/^http/, "ws");
   }
@@ -118,7 +118,7 @@ export class RxWebSocket<T = object> {
           return empty();
         }
         return of(j);
-      })
+      }),
     );
   }
 

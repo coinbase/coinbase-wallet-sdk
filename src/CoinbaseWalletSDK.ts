@@ -1,6 +1,8 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
+import { LogoType, walletLogo } from "./assets/wallet-logo";
+import { DiagnosticLogger } from "./connection/DiagnosticLogger";
 import { EventListener } from "./connection/EventListener";
 import { ScopedLocalStorage } from "./lib/ScopedLocalStorage";
 import { CoinbaseWalletProvider } from "./provider/CoinbaseWalletProvider";
@@ -27,13 +29,20 @@ export interface CoinbaseWalletSDKOptions {
   /** @optional an implementation of WalletUI; for most, leave it unspecified */
   uiConstructor?: (options: Readonly<WalletUIOptions>) => WalletUI;
   /** @optional an implementation of EventListener for debugging; for most, leave it unspecified  */
+  /** @deprecated in favor of diagnosticLogger */
   eventListener?: EventListener;
+  /** @optional a diagnostic tool for debugging; for most, leave it unspecified  */
+  diagnosticLogger?: DiagnosticLogger;
   /** @optional whether wallet link provider should override the isMetaMask property. */
   overrideIsMetaMask?: boolean;
   /** @optional whether wallet link provider should override the isCoinbaseWallet property. */
   overrideIsCoinbaseWallet?: boolean;
+  /** @optional whether coinbase wallet provider should override the isCoinbaseBrowser property. */
+  overrideIsCoinbaseBrowser?: boolean;
   /** @optional whether or not onboarding overlay popup should be displayed */
   headlessMode?: boolean;
+  /** @optional whether or not to reload dapp automatically after disconnect, defaults to true */
+  reloadOnDisconnect?: boolean;
 }
 
 export class CoinbaseWalletSDK {
@@ -46,7 +55,9 @@ export class CoinbaseWalletSDK {
   private _storage: ScopedLocalStorage;
   private _overrideIsMetaMask: boolean;
   private _overrideIsCoinbaseWallet: boolean;
-  private _eventListener?: EventListener;
+  private _overrideIsCoinbaseBrowser: boolean;
+  private _diagnosticLogger?: DiagnosticLogger;
+  private _reloadOnDisconnect?: boolean;
 
   /**
    * Constructor
@@ -68,8 +79,25 @@ export class CoinbaseWalletSDK {
     }
 
     this._overrideIsCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true;
+    this._overrideIsCoinbaseBrowser =
+      options.overrideIsCoinbaseBrowser ?? false;
 
-    this._eventListener = options.eventListener;
+    if (options.diagnosticLogger && options.eventListener) {
+      throw new Error(
+        "Can't have both eventListener and diagnosticLogger options, use only diagnosticLogger",
+      );
+    }
+
+    if (options.eventListener) {
+      this._diagnosticLogger = {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
+        log: options.eventListener.onEvent,
+      };
+    } else {
+      this._diagnosticLogger = options.diagnosticLogger;
+    }
+
+    this._reloadOnDisconnect = options.reloadOnDisconnect ?? true;
 
     const u = new URL(linkAPIUrl);
     const origin = `${u.protocol}//${u.host}`;
@@ -90,7 +118,7 @@ export class CoinbaseWalletSDK {
       uiConstructor,
       storage: this._storage,
       relayEventManager: this._relayEventManager,
-      eventListener: this._eventListener
+      diagnosticLogger: this._diagnosticLogger,
     });
     this.setAppInfo(options.appName, options.appLogoUrl);
 
@@ -107,13 +135,16 @@ export class CoinbaseWalletSDK {
    */
   public makeWeb3Provider(
     jsonRpcUrl = "",
-    chainId = 1
+    chainId = 1,
   ): CoinbaseWalletProvider {
     const extension = this.walletExtension;
     if (extension) {
       if (!this.isCipherProvider(extension)) {
         extension.setProviderInfo(jsonRpcUrl, chainId);
       }
+
+      if (this._reloadOnDisconnect === false)
+        extension.disableReloadOnDisconnect();
 
       return extension;
     }
@@ -132,9 +163,10 @@ export class CoinbaseWalletSDK {
       jsonRpcUrl,
       chainId,
       qrUrl: this.getQrUrl(),
-      eventListener: this._eventListener,
+      diagnosticLogger: this._diagnosticLogger,
       overrideIsMetaMask: this._overrideIsMetaMask,
-      overrideIsCoinbaseWallet: this._overrideIsCoinbaseWallet
+      overrideIsCoinbaseWallet: this._overrideIsCoinbaseWallet,
+      overrideIsCoinbaseBrowser: this._overrideIsCoinbaseBrowser,
     });
   }
 
@@ -145,7 +177,7 @@ export class CoinbaseWalletSDK {
    */
   public setAppInfo(
     appName: string | undefined,
-    appLogoUrl: string | null | undefined
+    appLogoUrl: string | null | undefined,
   ): void {
     this._appName = appName || "DApp";
     this._appLogoUrl = appLogoUrl || getFavicon();
@@ -167,7 +199,7 @@ export class CoinbaseWalletSDK {
   public disconnect(): void {
     const extension = this.walletExtension;
     if (extension) {
-      extension.close();
+      void extension.close();
     } else {
       this._relay?.resetAndReload();
     }
@@ -180,13 +212,22 @@ export class CoinbaseWalletSDK {
     return this._relay?.getQRCodeUrl() ?? null;
   }
 
+  /**
+   * Official Coinbase Wallet logo for developers to use on their frontend
+   * @param type Type of wallet logo: "standard" | "circle" | "text" | "textWithLogo" | "textLight" | "textWithLogoLight"
+   * @param width Width of the logo (Optional)
+   * @returns SVG Data URI
+   */
+  public getCoinbaseWalletLogo(type: LogoType, width = 240): string {
+    return walletLogo(type, width);
+  }
+
   private get walletExtension(): CoinbaseWalletProvider | undefined {
     return window.coinbaseWalletExtension ?? window.walletLinkExtension;
   }
 
   private isCipherProvider(provider: CoinbaseWalletProvider): boolean {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
+    // @ts-expect-error isCipher walletlink property
     return typeof provider.isCipher === "boolean" && provider.isCipher;
   }
 }

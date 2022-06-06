@@ -10,7 +10,7 @@ import {
   BigIntString,
   HexString,
   IntNumber,
-  RegExpString
+  RegExpString,
 } from "./types";
 
 const INT_STRING_REGEX = /^[0-9]*$/;
@@ -29,13 +29,13 @@ export function uint8ArrayToHex(value: Uint8Array) {
 
 export function hexStringToUint8Array(hexString: string): Uint8Array {
   return new Uint8Array(
-    hexString.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16))
+    hexString.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)),
   );
 }
 
 export function hexStringFromBuffer(
   buf: Buffer,
-  includePrefix = false
+  includePrefix = false,
 ): HexString {
   const hex = buf.toString("hex");
   return HexString(includePrefix ? "0x" + hex : hex);
@@ -47,7 +47,7 @@ export function bigIntStringFromBN(bn: BN): BigIntString {
 
 export function intNumberFromHexString(hex: HexString): IntNumber {
   return IntNumber(
-    new BN(ensureEvenLengthHexString(hex, false), 16).toNumber()
+    new BN(ensureEvenLengthHexString(hex, false), 16).toNumber(),
   );
 }
 
@@ -83,7 +83,7 @@ export function isHexString(hex: unknown): hex is HexString {
 
 export function ensureHexString(
   hex: unknown,
-  includePrefix = false
+  includePrefix = false,
 ): HexString {
   if (typeof hex === "string") {
     const s = strip0x(hex).toLowerCase();
@@ -96,7 +96,7 @@ export function ensureHexString(
 
 export function ensureEvenLengthHexString(
   hex: unknown,
-  includePrefix = false
+  includePrefix = false,
 ): HexString {
   let h = ensureHexString(hex, false);
   if (h.length % 2 === 1) {
@@ -140,7 +140,7 @@ export function ensureIntNumber(num: unknown): IntNumber {
     }
     if (isHexString(num)) {
       return IntNumber(
-        new BN(ensureEvenLengthHexString(num, false), 16).toNumber()
+        new BN(ensureEvenLengthHexString(num, false), 16).toNumber(),
       );
     }
   }
@@ -228,7 +228,7 @@ export function createQrUrl(
   sessionId: string,
   sessionSecret: string,
   serverUrl: string,
-  isParentConnection: boolean
+  isParentConnection: boolean,
 ): string {
   const sessionIdKey = isParentConnection ? "parent-id" : "id";
 
@@ -236,7 +236,7 @@ export function createQrUrl(
     [sessionIdKey]: sessionId,
     secret: sessionSecret,
     server: serverUrl,
-    v: "1"
+    v: "1",
   });
 
   const qrUrl = `${serverUrl}/#/link?${query}`;
