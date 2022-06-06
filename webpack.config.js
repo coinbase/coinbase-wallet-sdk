@@ -35,6 +35,8 @@ module.exports = {
     fallback: {
       fs: false,
       stream: require.resolve("stream-browserify"),
+      buffer: require.resolve("buffer/"),
+      util: require.resolve("util/"),
     },
     extensions: [".ts", ".tsx", ".js"],
     plugins: [],
@@ -54,6 +56,9 @@ module.exports = {
         LINK_API_URL: JSON.stringify(env.LINK_API_URL),
         SDK_VERSION: JSON.stringify(require("./package.json").version),
       },
+    }),
+    new webpack.ProvidePlugin({
+      Buffer: ["buffer", "Buffer"],
     }),
   ],
 };
