@@ -45,6 +45,7 @@
     "@metamask/safe-event-emitter": "2.0.0",
     "bind-decorator": "^1.0.11",
     "bn.js": "^5.1.1",
+    "buffer": "^6.0.3",
     "clsx": "^1.1.0",
     "eth-block-tracker": "4.4.3",
     "eth-json-rpc-filters": "4.2.2",
@@ -55,7 +56,8 @@
     "preact": "^10.5.9",
     "qs": "^6.10.3",
     "rxjs": "^6.6.3",
-    "stream-browserify": "^3.0.0"
+    "stream-browserify": "^3.0.0",
+    "util": "^0.12.4"
   },
   "devDependencies": {
     "@babel/core": "^7.17.9",
