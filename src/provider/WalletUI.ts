@@ -65,7 +65,7 @@ export interface WalletUI {
   selectProvider(options: {
     onCancel: (error?: Error) => void;
     onApprove: (selectedProvider: string) => void;
-    providers: any;
+    providerOptions: string[];
   }): void;
 
   switchEthereumChain(options: {

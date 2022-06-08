@@ -887,12 +887,14 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     return { promise, cancel };
   }
 
-  selectProvider(providers: any): CancelablePromise<SelectProviderResponse> {
+  selectProvider(
+    providerOptions: string[],
+  ): CancelablePromise<SelectProviderResponse> {
     console.log("inside selectprovider of relay");
     const request: Web3Request = {
       method: Web3Method.selectProvider,
       params: {
-        providers,
+        providerOptions,
       },
     };
 
@@ -920,11 +922,11 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         );
       };
 
-      const approve = (selectedProvider: string) => {
+      const approve = (selectedProviderKey: string) => {
         this.handleWeb3ResponseMessage(
           Web3ResponseMessage({
             id,
-            response: SelectProviderResponse(selectedProvider),
+            response: SelectProviderResponse(selectedProviderKey),
           }),
         );
       };
@@ -933,7 +935,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
       this.ui.selectProvider({
         onApprove: approve,
         onCancel: _cancel,
-        providers,
+        providerOptions,
       });
     });
 

@@ -57,7 +57,7 @@ export abstract class WalletSDKRelayAbstract {
   ): CancelablePromise<WatchAssetResponse>;
 
   abstract selectProvider(
-    providers: any,
+    providerOptions: string[],
   ): CancelablePromise<SelectProviderResponse>;
 
   abstract switchEthereumChain(

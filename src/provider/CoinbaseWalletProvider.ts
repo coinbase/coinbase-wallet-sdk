@@ -537,11 +537,10 @@ export class CoinbaseWalletProvider
     return res.result;
   }
 
-  public async selectProvider(providers: any): Promise<string> {
-    console.log("inside select provider");
+  // where is this used?
+  public async selectProvider(providerOptions: string[]): Promise<string> {
     const relay = await this.initializeRelay();
-    const res = await relay.selectProvider(providers).promise;
-    console.log("result from relay.selectProvider: ", res);
+    const res = await relay.selectProvider(providerOptions).promise;
     if (typeof res.result !== "string") {
       throw new Error("result was not a string");
     }

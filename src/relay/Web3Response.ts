@@ -72,9 +72,9 @@ export function WatchAssetReponse(success: boolean): WatchAssetResponse {
 }
 
 export function SelectProviderResponse(
-  selectedProvider: string
+  selectedProviderKey: string,
 ): SelectProviderResponse {
-  return { method: Web3Method.selectProvider, result: selectedProvider };
+  return { method: Web3Method.selectProvider, result: selectedProviderKey };
 }
 
 export function isRequestEthereumAccountsResponse(

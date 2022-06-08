@@ -111,7 +111,7 @@ export type GenericRequest = BaseWeb3Request<
 export type SelectProviderRequest = BaseWeb3Request<
   Web3Method.selectProvider,
   {
-    providers: any;
+    providerOptions: string[];
   }
 >;
 
