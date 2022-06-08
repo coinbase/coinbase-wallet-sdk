@@ -11,11 +11,11 @@ module.exports = function (config) {
     files: ["__tests__/**/*.js"],
 
     preprocessors: {
-      "__tests__/**/*.js": ["browserify"]
+      "__tests__/**/*.js": ["browserify"],
     },
 
     browserify: {
-      debug: true
-    }
+      debug: true,
+    },
   });
 };

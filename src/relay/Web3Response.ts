@@ -18,7 +18,7 @@ export interface ErrorResponse extends BaseWeb3Response<void> {
 export function ErrorResponse(
   method: Web3Method,
   errorMessage: string,
-  errorCode?: number
+  errorCode?: number,
 ): ErrorResponse {
   return { method, errorMessage, errorCode };
 }
@@ -37,11 +37,11 @@ export type AddResponse = {
 };
 
 export function AddEthereumChainResponse(
-  addResponse: AddResponse
+  addResponse: AddResponse,
 ): SwitchEthereumChainResponse {
   return {
     method: Web3Method.addEthereumChain,
-    result: addResponse
+    result: addResponse,
   };
 }
 
@@ -53,16 +53,16 @@ export type SwitchResponse = {
 };
 
 export function SwitchEthereumChainResponse(
-  switchResponse: SwitchResponse
+  switchResponse: SwitchResponse,
 ): SwitchEthereumChainResponse {
   return {
     method: Web3Method.switchEthereumChain,
-    result: switchResponse
+    result: switchResponse,
   };
 }
 
 export function RequestEthereumAccountsResponse(
-  addresses: AddressString[]
+  addresses: AddressString[],
 ): RequestEthereumAccountsResponse {
   return { method: Web3Method.requestEthereumAccounts, result: addresses };
 }
@@ -78,13 +78,13 @@ export function SelectProviderResponse(
 }
 
 export function isRequestEthereumAccountsResponse(
-  res: any
+  res: any,
 ): res is RequestEthereumAccountsResponse {
   return res && res.method === Web3Method.requestEthereumAccounts;
 }
 
 export function SignEthereumMessageResponse(
-  signature: HexString
+  signature: HexString,
 ): SignEthereumMessageResponse {
   return { method: Web3Method.signEthereumMessage, result: signature };
 }
@@ -92,7 +92,7 @@ export function SignEthereumMessageResponse(
 export type SignEthereumMessageResponse = BaseWeb3Response<HexString>; // signature
 
 export function SignEthereumTransactionResponse(
-  signedData: HexString
+  signedData: HexString,
 ): SignEthereumTransactionResponse {
   return { method: Web3Method.signEthereumTransaction, result: signedData };
 }
@@ -100,7 +100,7 @@ export function SignEthereumTransactionResponse(
 export type SignEthereumTransactionResponse = BaseWeb3Response<HexString>; // signed transaction
 
 export function SubmitEthereumTransactionResponse(
-  txHash: HexString
+  txHash: HexString,
 ): SubmitEthereumTransactionResponse {
   return { method: Web3Method.submitEthereumTransaction, result: txHash };
 }
@@ -108,11 +108,11 @@ export function SubmitEthereumTransactionResponse(
 export type SubmitEthereumTransactionResponse = BaseWeb3Response<HexString>; // transaction hash
 
 export function EthereumAddressFromSignedMessageResponse(
-  address: AddressString
+  address: AddressString,
 ): EthereumAddressFromSignedMessageResponse {
   return {
     method: Web3Method.ethereumAddressFromSignedMessage,
-    result: address
+    result: address,
   };
 }
 
@@ -121,7 +121,7 @@ export type EthereumAddressFromSignedMessageResponse =
 
 export type ScanQRCodeResponse = BaseWeb3Response<string>; // scanned string
 
-export type GenericResponse = BaseWeb3Response<object>; // response data
+export type GenericResponse = BaseWeb3Response<string>; // response data
 
 export type SelectProviderResponse = BaseWeb3Response<string>; // response data
 

@@ -7,6 +7,6 @@ export class WalletUIError extends Error {
 
   static SwitchEthereumChainUnsupportedChainId = new WalletUIError(
     "Unsupported chainId",
-    4902
+    4902,
   );
 }
