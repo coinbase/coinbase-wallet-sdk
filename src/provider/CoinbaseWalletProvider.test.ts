@@ -9,6 +9,7 @@ import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
 import { LOCAL_STORAGE_ADDRESSES_KEY } from "../relay/WalletSDKRelayAbstract";
 import { WalletSDKRelayEventManager } from "../relay/WalletSDKRelayEventManager";
 import { Web3Method } from "../relay/Web3Method";
+import { SelectedProviderKey } from "../types";
 import {
   CoinbaseWalletProvider,
   CoinbaseWalletProviderOptions,
@@ -136,6 +137,21 @@ describe("CoinbaseWalletProvider", () => {
     const action = "cbSignAndSubmit";
     const response = await provider.genericRequest(data, action);
     expect(response).toBe("Success");
+  });
+
+  it("handles making a select provider request", async () => {
+    const spy = jest.spyOn(MockRelayClass.prototype, "selectProvider");
+    const relay = new MockRelayClass();
+
+    const provider = setupCoinbaseWalletProvider({
+      relayProvider: async () => Promise.resolve(relay),
+    });
+    const providerOptions = [
+      SelectedProviderKey.coinbaseWallet,
+      SelectedProviderKey.metamask,
+    ];
+    await provider.selectProvider(providerOptions);
+    expect(spy).toHaveBeenCalledWith(providerOptions);
   });
 
   it("handles making a send with a string param", async () => {
