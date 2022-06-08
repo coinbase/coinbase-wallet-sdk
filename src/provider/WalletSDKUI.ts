@@ -22,8 +22,6 @@ export class WalletSDKUI implements WalletUI {
   private attached = false;
 
   constructor(options: Readonly<WalletUIOptions>) {
-    this.standalone = null;
-
     this.snackbar = new Snackbar({
       darkMode: options.darkMode,
     });
