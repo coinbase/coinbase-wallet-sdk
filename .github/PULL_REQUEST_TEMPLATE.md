@@ -1,9 +1,11 @@
-### *Summary*
+### _Summary_
+
 <!--
   What changed? Link to relevant issues.
 -->
 
-### *How did you test your changes?*
+### _How did you test your changes?_
+
 <!--
   Verify changes. Include relevant screenshots/videos
 -->

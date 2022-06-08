@@ -14,7 +14,7 @@ export interface Web3Provider {
   sendAsync(request: JSONRPCRequest, callback: Callback<JSONRPCResponse>): void;
   sendAsync(
     request: JSONRPCRequest[],
-    callback: Callback<JSONRPCResponse[]>
+    callback: Callback<JSONRPCResponse[]>,
   ): void;
 
   request<T>(args: RequestArguments): Promise<T>;

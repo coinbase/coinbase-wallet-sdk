@@ -79,22 +79,24 @@ export class Snackbar {
           ))}
         </SnackbarContainer>
       </div>,
-      this.root
+      this.root,
     );
   }
 }
 
-const SnackbarContainer: FunctionComponent<{ darkMode: boolean }> = props => (
+export const SnackbarContainer: FunctionComponent<{
+  darkMode: boolean;
+}> = props => (
   <div class={clsx("-cbwsdk-snackbar-container")}>
     <style>{css}</style>
     <div class="-cbwsdk-snackbar">{props.children}</div>
   </div>
 );
 
-const SnackbarInstance: FunctionComponent<SnackbarInstanceProps> = ({
+export const SnackbarInstance: FunctionComponent<SnackbarInstanceProps> = ({
   autoExpand,
   message,
-  menuItems
+  menuItems,
 }) => {
   const [hidden, setHidden] = useState(true);
   const [expanded, setExpanded] = useState(autoExpand ?? false);
@@ -106,7 +108,7 @@ const SnackbarInstance: FunctionComponent<SnackbarInstanceProps> = ({
       }, 1),
       window.setTimeout(() => {
         setExpanded(true);
-      }, 10000)
+      }, 10000),
     ];
 
     return () => {
@@ -123,7 +125,7 @@ const SnackbarInstance: FunctionComponent<SnackbarInstanceProps> = ({
       class={clsx(
         "-cbwsdk-snackbar-instance",
         hidden && "-cbwsdk-snackbar-instance-hidden",
-        expanded && "-cbwsdk-snackbar-instance-expanded"
+        expanded && "-cbwsdk-snackbar-instance-expanded",
       )}
     >
       <div class="-cbwsdk-snackbar-instance-header" onClick={toggleExpanded}>
@@ -150,7 +152,7 @@ const SnackbarInstance: FunctionComponent<SnackbarInstanceProps> = ({
             <div
               class={clsx(
                 "-cbwsdk-snackbar-instance-menu-item",
-                action.isRed && "-cbwsdk-snackbar-instance-menu-item-is-red"
+                action.isRed && "-cbwsdk-snackbar-instance-menu-item-is-red",
               )}
               onClick={action.onClick}
               key={i}
@@ -173,7 +175,7 @@ const SnackbarInstance: FunctionComponent<SnackbarInstanceProps> = ({
                 class={clsx(
                   "-cbwsdk-snackbar-instance-menu-item-info",
                   action.isRed &&
-                    "-cbwsdk-snackbar-instance-menu-item-info-is-red"
+                    "-cbwsdk-snackbar-instance-menu-item-info-is-red",
                 )}
               >
                 {action.info}

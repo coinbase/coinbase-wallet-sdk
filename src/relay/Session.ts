@@ -23,7 +23,7 @@ export class Session {
     storage: ScopedLocalStorage,
     id?: string,
     secret?: string,
-    linked?: boolean
+    linked?: boolean,
   ) {
     this._storage = storage;
     this._id = id || randomBytesHex(16);
@@ -56,8 +56,8 @@ export class Session {
       filter(evt => evt.key === STORAGE_KEY_SESSION_ID),
       map(evt => ({
         oldValue: evt.oldValue || null,
-        newValue: evt.newValue || null
-      }))
+        newValue: evt.newValue || null,
+      })),
     );
   }
 

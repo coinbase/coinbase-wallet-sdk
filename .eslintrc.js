@@ -3,31 +3,31 @@ module.exports = {
   env: {
     browser: true,
     es6: true,
-    node: true
+    node: true,
   },
   extends: [
     "plugin:@typescript-eslint/recommended",
     "plugin:@typescript-eslint/recommended-requiring-type-checking",
-    "prettier"
+    "prettier",
   ],
   parser: "@typescript-eslint/parser",
   parserOptions: {
     project: "tsconfig.json",
-    sourceType: "module"
+    sourceType: "module",
   },
   plugins: [
     "eslint-plugin-preact",
     "eslint-plugin-import",
     "@typescript-eslint",
-    "simple-import-sort"
+    "simple-import-sort",
   ],
   rules: {
     "@typescript-eslint/adjacent-overload-signatures": "error",
     "@typescript-eslint/array-type": [
       "error",
       {
-        default: "array"
-      }
+        default: "array",
+      },
     ],
     "@typescript-eslint/await-thenable": "off",
     "@typescript-eslint/ban-types": "error",
@@ -39,13 +39,13 @@ module.exports = {
       {
         multiline: {
           delimiter: "none",
-          requireLast: true
+          requireLast: true,
         },
         singleline: {
           delimiter: "semi",
-          requireLast: false
-        }
-      }
+          requireLast: false,
+        },
+      },
     ],
     "@typescript-eslint/member-ordering": "off",
     "@typescript-eslint/no-empty-function": "off",
@@ -58,8 +58,8 @@ module.exports = {
     "@typescript-eslint/no-shadow": [
       "error",
       {
-        hoist: "all"
-      }
+        hoist: "all",
+      },
     ],
     "@typescript-eslint/no-unsafe-assignment": "off",
     "@typescript-eslint/no-unsafe-argument": "off",
@@ -80,8 +80,8 @@ module.exports = {
       {
         path: "always",
         types: "prefer-import",
-        lib: "always"
-      }
+        lib: "always",
+      },
     ],
     "@typescript-eslint/type-annotation-spacing": "off",
     "@typescript-eslint/unified-signatures": "error",
@@ -104,7 +104,7 @@ module.exports = {
       "Boolean",
       "boolean",
       "Undefined",
-      "undefined"
+      "undefined",
     ],
     "id-match": "error",
     "import/order": "off",
@@ -144,19 +144,19 @@ module.exports = {
       "always",
       {
         objectsInObjects: true,
-        arraysInObjects: true
-      }
+        arraysInObjects: true,
+      },
     ],
     "object-shorthand": "error",
     "one-var": ["error", "never"],
     "padded-blocks": [
       "off",
       {
-        blocks: "never"
+        blocks: "never",
       },
       {
-        allowSingleLineBlocks: true
-      }
+        allowSingleLineBlocks: true,
+      },
     ],
     "prefer-arrow-callback": "error",
     "prefer-const": "error",
@@ -170,8 +170,8 @@ module.exports = {
       "off",
       {
         afterOpening: "allow",
-        closingSlash: "allow"
-      }
+        closingSlash: "allow",
+      },
     ],
     "react/jsx-wrap-multilines": "off",
     semi: "off",
@@ -189,9 +189,9 @@ module.exports = {
           ["^"],
           // Relative imports.
           // Anything that starts with a dot.
-          ["^\\."]
-        ]
-      }
+          ["^\\."],
+        ],
+      },
     ],
     "simple-import-sort/exports": "error",
     "space-before-function-paren": "off",
@@ -200,10 +200,10 @@ module.exports = {
       "error",
       "always",
       {
-        markers: ["/"]
-      }
+        markers: ["/"],
+      },
     ],
     "use-isnan": "error",
-    "valid-typeof": "off"
-  }
+    "valid-typeof": "off",
+  },
 };

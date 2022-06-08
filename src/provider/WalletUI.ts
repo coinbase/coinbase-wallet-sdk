@@ -5,13 +5,13 @@ import {
   EthereumAddressFromSignedMessageRequest,
   SignEthereumMessageRequest,
   SignEthereumTransactionRequest,
-  SubmitEthereumTransactionRequest
+  SubmitEthereumTransactionRequest,
 } from "../relay/Web3Request";
 import {
   EthereumAddressFromSignedMessageResponse,
   SignEthereumMessageResponse,
   SignEthereumTransactionResponse,
-  SubmitEthereumTransactionResponse
+  SubmitEthereumTransactionResponse,
 } from "../relay/Web3Response";
 import { AddressString } from "../types";
 
@@ -138,6 +138,11 @@ export interface WalletUI {
    * having to send a request to Coinbase Wallet mobile app
    */
   inlineSwitchEthereumChain(): boolean;
+
+  /**
+   * Set whether the UI is in standalone mode, to preserve context when disconnecting
+   */
+  setStandalone?(status: boolean): void;
 
   /**
    * If the extension is in standalone mode, it can handle signing locally
