@@ -321,7 +321,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         .subscribe({
           next: selectedAddress => {
             if (this.accountsCallback) {
-              this.accountsCallback([selectedAddress], true);
+              this.accountsCallback([selectedAddress]);
             }
 
             if (WalletSDKRelay.accountRequestCallbackIds.size > 0) {
