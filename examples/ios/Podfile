@@ -1,11 +1,14 @@
-# Uncomment the next line to define a global platform for your project
+workspace 'Examples.xcworkspace'
 platform :ios, '15.0'
+use_frameworks!
 
 target 'ClientApp' do
-  # Comment the next line if you don't want to use dynamic frameworks
-  use_frameworks!
-
-  # Pods for ClientApp
+  project 'ClientApp'
   pod 'WalletSegue', path: '../../client/ios/'
+end
 
+target 'HostApp' do
+  project 'HostApp'
+  # pod 'WalletSegue', path: '../../client/ios/'
+  # host libraries
 end
