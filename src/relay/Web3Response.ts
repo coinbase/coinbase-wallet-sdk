@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { AddressString, HexString } from "../types";
+import { AddressString, HexString, SelectedProviderKey } from "../types";
 import { Web3Method } from "./Web3Method";
 
 interface BaseWeb3Response<Result> {
@@ -30,6 +30,8 @@ export type RequestEthereumAccountsResponse = BaseWeb3Response<
 export type AddEthereumChainResponse = BaseWeb3Response<AddResponse>; // was request approved
 
 export type WatchAssetResponse = BaseWeb3Response<boolean>;
+
+export type SelectProviderResponse = BaseWeb3Response<SelectedProviderKey>;
 
 export type AddResponse = {
   isApproved: boolean;
@@ -72,7 +74,7 @@ export function WatchAssetReponse(success: boolean): WatchAssetResponse {
 }
 
 export function SelectProviderResponse(
-  selectedProviderKey: string,
+  selectedProviderKey: SelectedProviderKey,
 ): SelectProviderResponse {
   return { method: Web3Method.selectProvider, result: selectedProviderKey };
 }
@@ -122,8 +124,6 @@ export type EthereumAddressFromSignedMessageResponse =
 export type ScanQRCodeResponse = BaseWeb3Response<string>; // scanned string
 
 export type GenericResponse = BaseWeb3Response<string>; // response data
-
-export type SelectProviderResponse = BaseWeb3Response<string>; // response data
 
 export type MakeEthereumJSONRPCResponse = BaseWeb3Response<unknown>;
 

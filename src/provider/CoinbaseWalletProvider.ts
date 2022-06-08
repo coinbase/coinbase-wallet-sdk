@@ -19,7 +19,12 @@ import {
   RequestEthereumAccountsResponse,
   SwitchResponse,
 } from "../relay/Web3Response";
-import { AddressString, Callback, IntNumber } from "../types";
+import {
+  AddressString,
+  Callback,
+  IntNumber,
+  SelectedProviderKey,
+} from "../types";
 import {
   ensureAddressString,
   ensureBN,
@@ -537,8 +542,9 @@ export class CoinbaseWalletProvider
     return res.result;
   }
 
-  // where is this used?
-  public async selectProvider(providerOptions: string[]): Promise<string> {
+  public async selectProvider(
+    providerOptions: SelectedProviderKey[],
+  ): Promise<SelectedProviderKey> {
     const relay = await this.initializeRelay();
     const res = await relay.selectProvider(providerOptions).promise;
     if (typeof res.result !== "string") {

@@ -88,14 +88,6 @@ export class WalletSDKUI implements WalletUI {
     // no-op
   }
 
-  selectProvider(_options: {
-    onCancel: (error?: Error) => void;
-    onApprove: () => void;
-    providerOptions: string[];
-  }) {
-    // no-op
-  }
-
   /* istanbul ignore next */
   switchEthereumChain(_options: {
     onCancel: (error?: Error) => void;

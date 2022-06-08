@@ -23,7 +23,12 @@ import { WalletSDKConnection } from "../connection/WalletSDKConnection";
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
 import { WalletUI, WalletUIOptions } from "../provider/WalletUI";
 import { WalletUIError } from "../provider/WalletUIError";
-import { AddressString, IntNumber, RegExpString } from "../types";
+import {
+  AddressString,
+  IntNumber,
+  RegExpString,
+  SelectedProviderKey,
+} from "../types";
 import {
   bigIntStringFromBN,
   createQrUrl,
@@ -888,9 +893,8 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
   }
 
   selectProvider(
-    providerOptions: string[],
+    providerOptions: SelectedProviderKey[],
   ): CancelablePromise<SelectProviderResponse> {
-    console.log("inside selectprovider of relay");
     const request: Web3Request = {
       method: Web3Method.selectProvider,
       params: {
@@ -917,12 +921,12 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         this.handleWeb3ResponseMessage(
           Web3ResponseMessage({
             id,
-            response: SelectProviderResponse(""),
+            response: SelectProviderResponse(SelectedProviderKey.unselected),
           }),
         );
       };
 
-      const approve = (selectedProviderKey: string) => {
+      const approve = (selectedProviderKey: SelectedProviderKey) => {
         this.handleWeb3ResponseMessage(
           Web3ResponseMessage({
             id,
@@ -931,12 +935,12 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         );
       };
 
-      console.log("right before this.ui.select provider");
-      this.ui.selectProvider({
-        onApprove: approve,
-        onCancel: _cancel,
-        providerOptions,
-      });
+      if (this.ui.selectProvider)
+        this.ui.selectProvider({
+          onApprove: approve,
+          onCancel: _cancel,
+          providerOptions,
+        });
     });
 
     return { cancel, promise };
