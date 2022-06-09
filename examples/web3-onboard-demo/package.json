@@ -1,0 +1,54 @@
+{
+  "name": "web3-onboard-demo",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "keywords": [],
+  "main": "src/index.js",
+  "dependencies": {
+    "@chakra-ui/icons": "^2.0.2",
+    "@chakra-ui/react": "^2.2.1",
+    "@coinbase/wallet-sdk": "^3.2.0",
+    "@testing-library/jest-dom": "^5.16.4",
+    "@testing-library/react": "^13.3.0",
+    "@testing-library/user-event": "^13.5.0",
+    "@walletconnect/web3-provider": "^1.7.8",
+    "@web3-onboard/coinbase": "^2.0.3",
+    "@web3-onboard/core": "^2.2.10",
+    "@web3-onboard/injected-wallets": "^2.0.7",
+    "@web3-onboard/walletconnect": "^2.0.1",
+    "assert": "^2.0.0",
+    "ethers": "^5.6.8",
+    "react": "^18.1.0",
+    "react-app-rewired": "^2.2.1",
+    "react-dom": "^18.1.0",
+    "react-scripts": "5.0.1",
+    "stream-browserify": "^3.0.0",
+    "util": "^0.12.4",
+    "web3modal": "^1.9.7"
+  },
+  "scripts": {
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test",
+    "eject": "react-app-rewired eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
