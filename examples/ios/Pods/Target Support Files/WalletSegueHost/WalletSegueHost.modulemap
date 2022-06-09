@@ -1,0 +1,6 @@
+framework module WalletSegueHost {
+  umbrella header "WalletSegueHost-umbrella.h"
+
+  export *
+  module * { export * }
+}

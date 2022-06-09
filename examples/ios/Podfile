@@ -9,6 +9,6 @@ end
 
 target 'HostApp' do
   project 'HostApp'
-  # pod 'WalletSegue', path: '../../client/ios/'
-  # host libraries
+  pod 'WalletSegue', path: '../../client/ios/'
+  pod 'WalletSegueHost', path: '../../host/ios/'
 end

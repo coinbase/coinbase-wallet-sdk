@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		5DB3D5822849768F00E213EB /* HandshakeRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DB3D5812849768F00E213EB /* HandshakeRequestHandler.swift */; };
 		5DBA651E28370D6500E36D26 /* ClientAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DBA651D28370D6500E36D26 /* ClientAppApp.swift */; };
 		5DBA652028370D6500E36D26 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DBA651F28370D6500E36D26 /* ContentView.swift */; };
 		5DBA652228370D6600E36D26 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5DBA652128370D6600E36D26 /* Assets.xcassets */; };
@@ -19,7 +18,6 @@
 		3150212D2C3A0BC237AD6C37 /* Pods-ClientApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ClientApp.release.xcconfig"; path = "Target Support Files/Pods-ClientApp/Pods-ClientApp.release.xcconfig"; sourceTree = "<group>"; };
 		5D46EC7928370F1B009F5130 /* ClientApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ClientApp.entitlements; sourceTree = "<group>"; };
 		5D46EC7A28370FE0009F5130 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		5DB3D5812849768F00E213EB /* HandshakeRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandshakeRequestHandler.swift; sourceTree = "<group>"; };
 		5DBA651A28370D6500E36D26 /* ClientApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClientApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5DBA651D28370D6500E36D26 /* ClientAppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientAppApp.swift; sourceTree = "<group>"; };
 		5DBA651F28370D6500E36D26 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -76,7 +74,6 @@
 				5DBA651F28370D6500E36D26 /* ContentView.swift */,
 				5DBA652128370D6600E36D26 /* Assets.xcassets */,
 				5DBA652328370D6600E36D26 /* Preview Content */,
-				5DB3D5812849768F00E213EB /* HandshakeRequestHandler.swift */,
 			);
 			path = ClientApp;
 			sourceTree = "<group>";
@@ -214,7 +211,6 @@
 			files = (
 				5DBA652028370D6500E36D26 /* ContentView.swift in Sources */,
 				5DBA651E28370D6500E36D26 /* ClientAppApp.swift in Sources */,
-				5DB3D5822849768F00E213EB /* HandshakeRequestHandler.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

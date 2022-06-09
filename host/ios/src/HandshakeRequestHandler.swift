@@ -1,6 +1,6 @@
 //
 //  HandshakeRequestHandler.swift
-//  ClientApp
+//  WalletSegueHost
 //
 //  Created by Jungho Bang on 6/2/22.
 //
@@ -9,8 +9,10 @@ import Foundation
 import WalletSegue
 import CryptoKit
 
-class HandshakeRequestHandler {
-    func handle(request encodedString: String) -> Handshake.Response {
+public class HandshakeRequestHandler {
+    public init() {}
+    
+    public func handle(request encodedString: String) -> Handshake.Response {
         let request = try! Handshake.Request.decode(encodedString)
         
         let hostKey = Curve25519.KeyAgreement.PrivateKey()

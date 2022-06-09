@@ -1,2 +1,3 @@
 ${PODS_ROOT}/Target Support Files/Pods-HostApp/Pods-HostApp-frameworks.sh
 ${BUILT_PRODUCTS_DIR}/WalletSegue/WalletSegue.framework
+${BUILT_PRODUCTS_DIR}/WalletSegueHost/WalletSegueHost.framework

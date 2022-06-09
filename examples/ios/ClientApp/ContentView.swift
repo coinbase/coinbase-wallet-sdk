@@ -7,6 +7,7 @@
 
 import SwiftUI
 import WalletSegue
+
 import CryptoKit
 
 struct ContentView: View {
@@ -39,9 +40,9 @@ struct ContentView: View {
             
             VStack {
                 Button("(Host) Handle handshake request") {
-                    let handler = HandshakeRequestHandler()
-                    let response = handler.handle(request: self.request!)
-                    self.response = try! response.encodedString()
+//                    let handler = HandshakeRequestHandler()
+//                    let response = handler.handle(request: self.request!)
+//                    self.response = try! response.encodedString()
                 }
                 HStack {
                     Text("Response: ")

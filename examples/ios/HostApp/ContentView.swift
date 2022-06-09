@@ -6,11 +6,15 @@
 //
 
 import SwiftUI
+import WalletSegueHost
 
 struct ContentView: View {
     var body: some View {
-        Text("Hello, world!")
-            .padding()
+        Button("Host") {
+            let handler = HandshakeRequestHandler()
+//            let response = handler.handle(request: self.request!)
+//            self.response = try! response.encodedString()
+        }
     }
 }
 
