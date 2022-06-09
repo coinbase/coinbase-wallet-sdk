@@ -16,3 +16,7 @@ Coinbase Wallet Examples
 ### Integrate with web3-onboard
 [web3-onboard example](web3-onboard-demo/)
 - Related documentation: [Integrating with Web3-Onboard](https://docs.cloud.coinbase.com/wallet-sdk/docs/web3-onboard)
+
+### Integrate with wagmi
+[wagmi example](wagmi-demo/)
+- Related documentation: [Integrating with wagmi](https://docs.cloud.coinbase.com/wallet-sdk/docs/wagmi)
