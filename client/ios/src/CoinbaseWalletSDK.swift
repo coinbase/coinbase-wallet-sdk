@@ -9,6 +9,8 @@ import Foundation
 import CryptoKit
 
 public class CoinbaseWalletSDK {
+    public static let salt = "WalletSegue".data(using: .utf8)!
+    
     private let appId: String
     private let callback: URL
     
@@ -16,9 +18,7 @@ public class CoinbaseWalletSDK {
         callback: URL,
         appId: String? = nil
     ) {
-        guard let appId = appId ?? Bundle.main.bundleIdentifier else {
-            return nil
-        }
+        guard let appId = appId ?? Bundle.main.bundleIdentifier else { return nil }
         self.appId = appId
         self.callback = callback
         
@@ -27,9 +27,7 @@ public class CoinbaseWalletSDK {
 //        self.privateKey = Curve25519.KeyAgreement.PrivateKey()
     }
     
-    public typealias PrivateKey = Curve25519.KeyAgreement.PrivateKey
-    
-    public func handshakeRequest(privateKey: PrivateKey) -> String {
+    public func handshakeRequest(privateKey: WalletSegue.PrivateKey) -> String {
         let request = Handshake.Request(
             appId: self.appId,
             callback: self.callback,
@@ -38,5 +36,18 @@ public class CoinbaseWalletSDK {
         
         let encoded = try! request.encodedString()
         return encoded
+    }
+    
+    public func deriveSymmetricKey(
+        with ownPrivateKey: WalletSegue.PrivateKey,
+        _ peerPublicKey: WalletSegue.PublicKey
+    ) -> SymmetricKey {
+        let sharedSecret = try! ownPrivateKey.sharedSecretFromKeyAgreement(with: peerPublicKey)
+        return sharedSecret.hkdfDerivedSymmetricKey(
+            using: SHA256.self,
+            salt: CoinbaseWalletSDK.salt,
+            sharedInfo: Data(),
+            outputByteCount: 32
+        )
     }
 }

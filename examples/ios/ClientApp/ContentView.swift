@@ -70,14 +70,7 @@ struct ContentView: View {
             
             Button("Decrypt") {
                 // client derives symmetric key
-                let sharedSecret = try! self.clientPrivateKey.sharedSecretFromKeyAgreement(
-                    with: self.parsedResponse!.hostPublicKey)
-                let symmetricKey = sharedSecret.hkdfDerivedSymmetricKey(
-                    using: SHA256.self,
-                    salt: Handshake.salt,
-                    sharedInfo: Data(),
-                    outputByteCount: 32
-                )
+                let symmetricKey = sdk!.deriveSymmetricKey(with: self.clientPrivateKey, self.parsedResponse!.hostPublicKey)
                 
                 let sealedBox = try! AES.GCM.SealedBox(combined: self.parsedResponse!.message)
                 let decryptedData = try! AES.GCM.open(sealedBox, using: symmetricKey)
