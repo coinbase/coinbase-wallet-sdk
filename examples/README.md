@@ -20,3 +20,7 @@ Coinbase Wallet Examples
 ### Integrate with wagmi
 [wagmi example](wagmi-demo/)
 - Related documentation: [Integrating with wagmi](https://docs.cloud.coinbase.com/wallet-sdk/docs/wagmi)
+
+### Integrate with Rainbowkit
+[Rainbowkit example](rainbowkit-demo/)
+- Related documentation: [Integrating with rainbowkit](https://www.rainbowkit.com/docs/introduction)
