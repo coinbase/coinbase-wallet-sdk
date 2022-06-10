@@ -28,7 +28,7 @@ struct ContentView: View {
                 Text(String(data: self.clientPrivateKey.rawRepresentation, encoding: .ascii) ?? "(none)")
                 
                 Button("Initiate handshake request") {
-                    self.request = sdk?.handshakeRequest(privateKey: self.clientPrivateKey)
+                    self.request = try! sdk.handshakeRequest()
                 }
                 HStack {
                     Text("Request: ")
@@ -70,7 +70,7 @@ struct ContentView: View {
             
             Button("Decrypt") {
                 // client derives symmetric key
-                let symmetricKey = sdk!.deriveSymmetricKey(with: self.clientPrivateKey, self.parsedResponse!.hostPublicKey)
+                let symmetricKey = sdk.deriveSymmetricKey(with: self.clientPrivateKey, self.parsedResponse!.hostPublicKey)
                 
                 let sealedBox = try! AES.GCM.SealedBox(combined: self.parsedResponse!.message)
                 let decryptedData = try! AES.GCM.open(sealedBox, using: symmetricKey)

@@ -9,45 +9,40 @@ import Foundation
 import CryptoKit
 
 public class CoinbaseWalletSDK {
-    public static let salt = "WalletSegue".data(using: .utf8)!
     
-    private let appId: String
-    private let callback: URL
+    let appId: String
+    let host: URL
+    let callback: URL
     
-    public init?(
-        callback: URL,
-        appId: String? = nil
+    let keyManager = KeyManager()
+    let messageRenderer = MessageRenderer()
+    
+    public init(
+        host: URL = URL(string: "https://go.cb-w.com/")!,
+        callback: URL
     ) {
-        guard let appId = appId ?? Bundle.main.bundleIdentifier else { return nil }
-        self.appId = appId
+        self.appId = Bundle.main.bundleIdentifier!
+        self.host = host
         self.callback = callback
-        
-        // TODO: load from storage
-        // OR, let SDK consumer inject secure storage?
-//        self.privateKey = Curve25519.KeyAgreement.PrivateKey()
     }
     
-    public func handshakeRequest(privateKey: WalletSegue.PrivateKey) -> String {
-        let request = Handshake.Request(
+    public func handshakeRequest() throws -> String {
+        let publicKey = keyManager.publicKey
+        let request = HandshakeRequest(
             appId: self.appId,
             callback: self.callback,
-            publicKey: privateKey.publicKey
+            publicKey: publicKey
         )
-        
-        let encoded = try! request.encodedString()
-        return encoded
+        return try messageRenderer.render(
+            handshake: request,
+            sender: publicKey
+        )
     }
     
     public func deriveSymmetricKey(
         with ownPrivateKey: WalletSegue.PrivateKey,
         _ peerPublicKey: WalletSegue.PublicKey
     ) -> SymmetricKey {
-        let sharedSecret = try! ownPrivateKey.sharedSecretFromKeyAgreement(with: peerPublicKey)
-        return sharedSecret.hkdfDerivedSymmetricKey(
-            using: SHA256.self,
-            salt: CoinbaseWalletSDK.salt,
-            sharedInfo: Data(),
-            outputByteCount: 32
-        )
+        return keyManager.deriveSymmetricKey(with: ownPrivateKey, peerPublicKey, self.callback.dataRepresentation)
     }
 }

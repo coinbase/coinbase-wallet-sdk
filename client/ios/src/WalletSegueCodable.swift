@@ -1,14 +1,12 @@
 //
-//  Types.swift
+//  WalletSegueCodable.swift
 //  WalletSegue
 //
-//  Created by Jungho Bang on 6/9/22.
+//  Created by Jungho Bang on 6/2/22.
 //
 
 import Foundation
 import CryptoKit
-
-// MARK: - KeyAgreement
 
 public enum WalletSegue {
     public typealias PrivateKey = Curve25519.KeyAgreement.PrivateKey
@@ -28,7 +26,7 @@ extension WalletSegue.PublicKey: Codable {
     }
 }
 
-// MARK: - Codable
+// MARK: -
 
 public protocol WalletSegueCodable: Codable {
     func encodedString() throws -> String
