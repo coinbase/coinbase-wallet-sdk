@@ -6,7 +6,12 @@
 //
 
 import Foundation
-import CryptoKit
+
+struct HandshakeRequest: Codable {
+    let appId: String
+    let callback: URL
+    let publicKey: WalletSegue.PublicKey
+}
 
 public enum Handshake {
     public struct Response: WalletSegueCodable {

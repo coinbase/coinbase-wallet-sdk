@@ -33,10 +33,6 @@ public protocol WalletSegueCodable: Codable {
     static func decode(_ encodedString: String) throws -> Self
 }
 
-enum CodingError: Error {
-    case notBase64Encoded
-}
-
 public extension WalletSegueCodable {
     func encodedString() throws -> String {
         let data = try JSONEncoder().encode(self)
@@ -45,7 +41,7 @@ public extension WalletSegueCodable {
     
     static func decode(_ encodedString: String) throws -> Self {
         guard let data = Data(base64Encoded: encodedString) else {
-            throw CodingError.notBase64Encoded
+            throw WalletSegueError.notBase64Encoded
         }
         return try JSONDecoder().decode(Self.self, from: data)
     }

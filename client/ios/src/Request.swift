@@ -7,18 +7,19 @@
 
 import Foundation
 
-struct HandshakeRequest: Codable {
-    let appId: String
-    let callback: URL
-    let publicKey: WalletSegue.PublicKey
-}
-
-enum Request: Codable {
+struct Request: Codable {
     struct Action: Codable {
         let method: String
         let params: [String]
     }
     
-    case single(uuid: String, request: Action)
-    case batch(uuid: String, requests: [Action])
+    struct Account: Codable {
+        let chain: String
+        let networkId: UInt
+        let address: String
+    }
+    
+    let uuid: UUID
+    let actions: [Action]
+    let account: Account?
 }

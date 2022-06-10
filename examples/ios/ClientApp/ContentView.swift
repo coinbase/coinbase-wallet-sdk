@@ -14,7 +14,7 @@ struct ContentView: View {
     let sdk = CoinbaseWalletSDK(callback: URL(string: "https://go.cb-w.com/")!)
     
     let clientPrivateKey = Curve25519.KeyAgreement.PrivateKey()
-    @State var request: String?
+//    @State var request: String?
     
     @State var response: String?
     
@@ -28,12 +28,12 @@ struct ContentView: View {
                 Text(String(data: self.clientPrivateKey.rawRepresentation, encoding: .ascii) ?? "(none)")
                 
                 Button("Initiate handshake request") {
-                    self.request = try! sdk.handshakeRequest()
+                    try! sdk.initiateHandshake()
                 }
-                HStack {
-                    Text("Request: ")
-                    Text(self.request ?? "(none)")
-                }
+//                HStack {
+//                    Text("Request: ")
+//                    Text(self.request ?? "(none)")
+//                }
             }
             
             Spacer()
