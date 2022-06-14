@@ -6,6 +6,7 @@ import {
   BigIntString,
   HexString,
   IntNumber,
+  ProviderType,
   RegExpString,
 } from "../types";
 import { Web3Method } from "./Web3Method";
@@ -108,6 +109,11 @@ export type GenericRequest = BaseWeb3Request<
   }
 >;
 
+export type SelectProviderRequest = BaseWeb3Request<
+  Web3Method.selectProvider,
+  { providerOptions: ProviderType[] }
+>;
+
 export type MakeEthereumJSONRPCRequest = BaseWeb3Request<
   Web3Method.makeEthereumJSONRPCRequest,
   {
@@ -145,4 +151,5 @@ export type Web3Request =
   | AddEthereumChainRequest
   | SwitchEthereumChainRequest
   | MakeEthereumJSONRPCRequest
-  | WatchAssetRequest;
+  | WatchAssetRequest
+  | SelectProviderRequest;

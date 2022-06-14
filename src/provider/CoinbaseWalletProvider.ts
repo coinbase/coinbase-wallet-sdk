@@ -19,7 +19,7 @@ import {
   RequestEthereumAccountsResponse,
   SwitchResponse,
 } from "../relay/Web3Response";
-import { AddressString, Callback, IntNumber } from "../types";
+import { AddressString, Callback, IntNumber, ProviderType } from "../types";
 import {
   ensureAddressString,
   ensureBN,
@@ -531,6 +531,17 @@ export class CoinbaseWalletProvider
   public async genericRequest(data: object, action: string): Promise<string> {
     const relay = await this.initializeRelay();
     const res = await relay.genericRequest(data, action).promise;
+    if (typeof res.result !== "string") {
+      throw new Error("result was not a string");
+    }
+    return res.result;
+  }
+
+  public async selectProvider(
+    providerOptions: ProviderType[],
+  ): Promise<ProviderType> {
+    const relay = await this.initializeRelay();
+    const res = await relay.selectProvider(providerOptions).promise;
     if (typeof res.result !== "string") {
       throw new Error("result was not a string");
     }
