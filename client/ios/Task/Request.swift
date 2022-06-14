@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Request: Codable {
+public struct Request: Codable {
     struct Action: Codable {
         let method: String
         let params: [String]

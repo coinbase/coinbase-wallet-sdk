@@ -10,8 +10,8 @@ import Foundation
 public struct Message: URLCodable {
     enum Content: Codable {
         case handshake(appId: String, callback: URL)
-        case request(Data)
-        case response(Data)
+        case request(Data) // encrypted
+        case response(Data) // encrypted
     }
     
     let uuid: UUID

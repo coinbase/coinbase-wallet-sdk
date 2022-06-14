@@ -30,6 +30,15 @@ public class CoinbaseWalletSDK {
         self.version = sdkBundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
     }
     
+//    public private(set) static var shared: CoinbaseWalletSDK?
+//
+//    public static func setup(
+//        host: URL = URL(string: "https://go.cb-w.com/")!,
+//        callback: URL
+//    ) {
+//        CoinbaseWalletSDK.shared = CoinbaseWalletSDK(host: host, callback: callback)
+//    }
+    
     static func isCoinbaseWalletInstalled() -> Bool {
         return UIApplication.shared.canOpenURL(URL(string: "cbwallet://")!)
     }
@@ -47,33 +56,22 @@ public class CoinbaseWalletSDK {
         try self.send(message)
     }
     
-//    func render(
-//        request: Request,
-//        sender: KeyManager.PublicKey,
-//        recipient: URL,
-//        symmetricKey: SymmetricKey
-//    ) throws -> URL {
-//        let jsonData = try JSONEncoder().encode(request)
-//        let encryptedData = try AES.GCM.seal(jsonData, using: symmetricKey).combined!
-//        let message = Message(
-//            sender: sender,
-//            content: .encrypted(encryptedData),
-//            version: version
-//        )
-//        return try message.asURL(to: recipient)
-//    }
+    public func makeRequest(_ request: Request) throws {
+        let jsonData = try JSONEncoder().encode(request)
+        let encryptedData = try AES.GCM.seal(jsonData, using: symmetricKey).combined!
+        let message = Message(
+            uuid: UUID(),
+            sender: keyManager.publicKey,
+            content: .request(encryptedData),
+            version: version
+        )
+        try self.send(message)
+    }
     
     private func send(_ message: Message) throws {
         let url = try message.asURL(to: callback)
         UIApplication.shared.open(url, options: [.universalLinksOnly: true]) { result in
             print(result)
         }
-    }
-    
-    public func deriveSymmetricKey(
-        with ownPrivateKey: PrivateKey,
-        _ peerPublicKey: PublicKey
-    ) -> SymmetricKey {
-        return keyManager.deriveSymmetricKey(with: ownPrivateKey, peerPublicKey, self.callback.dataRepresentation)
     }
 }

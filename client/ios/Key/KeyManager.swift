@@ -18,15 +18,16 @@ class KeyManager {
         return privateKey.publicKey
     }
     
+    var peerPublicKey: PublicKey?
+    
     func deriveSymmetricKey(
         with ownPrivateKey: PrivateKey,
-        _ peerPublicKey: PublicKey,
-        _ salt: Data
+        _ peerPublicKey: PublicKey
     ) -> SymmetricKey {
         let sharedSecret = try! ownPrivateKey.sharedSecretFromKeyAgreement(with: peerPublicKey)
         return sharedSecret.hkdfDerivedSymmetricKey(
             using: SHA256.self,
-            salt: salt,
+            salt: Data(),
             sharedInfo: Data(),
             outputByteCount: 32
         )
