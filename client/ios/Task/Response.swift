@@ -14,3 +14,5 @@ struct Response: Codable {
     let requestId: UUID
     let results: [Result]
 }
+
+// TODO, handshake session expiration

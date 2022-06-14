@@ -35,8 +35,7 @@ public class CoinbaseWalletSDK {
     }
     
     private let keyManager = KeyManager()
-    // private let requestManager
-    // private let messageParser
+    private let executionManager = TaskManager()
     
     public func initiateHandshake() throws {
         let message = Message(

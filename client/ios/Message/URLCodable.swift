@@ -12,6 +12,12 @@ protocol URLCodable: Codable {
     static func decode(_ url: URL) throws -> Self
 }
 
+enum URLCodingError: Error {
+    case notBase64Encoded
+    case urlEncodingFailed
+    case malformedUrl
+}
+
 extension URLCodable {
     func asURL(to base: URL) throws -> URL {
         let data = try JSONEncoder().encode(self)
@@ -22,7 +28,7 @@ extension URLCodable {
         urlComponents?.queryItems = [URLQueryItem(name: "p", value: encodedString)]
         
         guard let url = urlComponents?.url else {
-            throw WalletSegueError.urlEncodingFailed
+            throw URLCodingError.urlEncodingFailed
         }
         
         return url
@@ -35,11 +41,11 @@ extension URLCodable {
             let queryItem = urlComponents.queryItems?.first(where: { $0.value == "p" }),
             let encodedString = queryItem.value
         else {
-            throw WalletSegueError.urlEncodingFailed
+            throw URLCodingError.malformedUrl
         }
         
         guard let data = Data(base64Encoded: encodedString) else {
-            throw WalletSegueError.notBase64Encoded
+            throw URLCodingError.notBase64Encoded
         }
         
         return try JSONDecoder().decode(Self.self, from: data)

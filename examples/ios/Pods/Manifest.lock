@@ -14,7 +14,7 @@ EXTERNAL SOURCES:
     :path: "../../host/ios/"
 
 SPEC CHECKSUMS:
-  WalletSegue: 954baf9dddacfaa944ed69989a957ce9515a081f
+  WalletSegue: c15b5591eb7dc9493141ae45dab6ce4425cb38d8
   WalletSegueHost: 5e04d435718bd8cf59be6d605ddb5a385bfa1aea
 
 PODFILE CHECKSUM: c1f8fcc63f71a8af67bc681f45d28420b5aaa55e
