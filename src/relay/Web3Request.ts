@@ -6,7 +6,7 @@ import {
   BigIntString,
   HexString,
   IntNumber,
-  ProviderName,
+  ProviderType,
   RegExpString,
 } from "../types";
 import { Web3Method } from "./Web3Method";
@@ -111,7 +111,7 @@ export type GenericRequest = BaseWeb3Request<
 
 export type SelectProviderRequest = BaseWeb3Request<
   Web3Method.selectProvider,
-  { providerOptions: ProviderName[] }
+  { providerOptions: ProviderType[] }
 >;
 
 export type MakeEthereumJSONRPCRequest = BaseWeb3Request<
