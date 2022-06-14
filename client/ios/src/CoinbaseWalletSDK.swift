@@ -50,7 +50,7 @@ public class CoinbaseWalletSDK {
     
 //    func render(
 //        request: Request,
-//        sender: WalletSegue.PublicKey,
+//        sender: KeyManager.PublicKey,
 //        recipient: URL,
 //        symmetricKey: SymmetricKey
 //    ) throws -> URL {
@@ -72,8 +72,8 @@ public class CoinbaseWalletSDK {
     }
     
     public func deriveSymmetricKey(
-        with ownPrivateKey: WalletSegue.PrivateKey,
-        _ peerPublicKey: WalletSegue.PublicKey
+        with ownPrivateKey: PrivateKey,
+        _ peerPublicKey: PublicKey
     ) -> SymmetricKey {
         return keyManager.deriveSymmetricKey(with: ownPrivateKey, peerPublicKey, self.callback.dataRepresentation)
     }

@@ -8,16 +8,19 @@
 import Foundation
 import CryptoKit
 
+public typealias PrivateKey = Curve25519.KeyAgreement.PrivateKey
+public typealias PublicKey = Curve25519.KeyAgreement.PublicKey
+
 class KeyManager {
-    let privateKey = WalletSegue.PrivateKey()
+    let privateKey = PrivateKey()
     
-    var publicKey: WalletSegue.PublicKey {
+    var publicKey: PublicKey {
         return privateKey.publicKey
     }
     
     func deriveSymmetricKey(
-        with ownPrivateKey: WalletSegue.PrivateKey,
-        _ peerPublicKey: WalletSegue.PublicKey,
+        with ownPrivateKey: PrivateKey,
+        _ peerPublicKey: PublicKey,
         _ salt: Data
     ) -> SymmetricKey {
         let sharedSecret = try! ownPrivateKey.sharedSecretFromKeyAgreement(with: peerPublicKey)

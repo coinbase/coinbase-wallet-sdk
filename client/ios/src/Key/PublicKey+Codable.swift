@@ -1,19 +1,13 @@
 //
-//  WalletSegueCodable.swift
+//  PublicKey+Codable.swift
 //  WalletSegue
 //
-//  Created by Jungho Bang on 6/2/22.
+//  Created by Jungho Bang on 6/13/22.
 //
 
 import Foundation
-import CryptoKit
 
-public enum WalletSegue {
-    public typealias PrivateKey = Curve25519.KeyAgreement.PrivateKey
-    public typealias PublicKey = Curve25519.KeyAgreement.PublicKey
-}
-
-extension WalletSegue.PublicKey: Codable {
+extension PublicKey: Codable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let data = try container.decode(Data.self)

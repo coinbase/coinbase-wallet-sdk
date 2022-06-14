@@ -15,7 +15,7 @@ public struct Message: URLCodable {
     }
     
     let uuid: UUID
-    let sender: WalletSegue.PublicKey
+    let sender: PublicKey
     let content: Content
     let version: String
 }
