@@ -870,8 +870,12 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
             onAccounts,
           });
         } else {
+          // Error if user closes TryExtensionLinkDialog without connecting
+          const err = ethErrors.provider.userRejectedRequest(
+            "User denied account authorization",
+          );
           this.ui.requestEthereumAccounts({
-            onCancel: cancel,
+            onCancel: () => cancel(err),
           });
         }
 
