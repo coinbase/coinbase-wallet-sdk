@@ -7,114 +7,118 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0185DA3001E44AFF2D379619E070BC4D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73010CC983E3809BECEE5348DA1BB8C6 /* Foundation.framework */; };
+		03268CCD16B8F4EA8FFDC62A3C4985F7 /* Response.swift in Sources */ = {isa = PBXBuildFile; fileRef = E60901D9329C996ABD042D9217F885AB /* Response.swift */; };
 		03412A7F9209D8CFE7F365018C9F1B70 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73010CC983E3809BECEE5348DA1BB8C6 /* Foundation.framework */; };
-		0484FB2A03A4C95C9F9B0BCF20153A6E /* HandshakeRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A34731EC63B64718DD8C2DE8B766CA7E /* HandshakeRequestHandler.swift */; };
+		0484FB2A03A4C95C9F9B0BCF20153A6E /* HandshakeRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 218F8BBC9D5A34AA60CB47DCF9DA224A /* HandshakeRequestHandler.swift */; };
 		0E58B0D22CED50817A223BB7CEED57C5 /* Pods-HostApp-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D3FF96184C265B117F00534F85080B6 /* Pods-HostApp-dummy.m */; };
-		112E8B5200FE2632F1EC2DC633BFE0A7 /* WalletSegueCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BEA192CC141056AF908B8A54B26A602 /* WalletSegueCodable.swift */; };
-		14E81E4E7B9A4586CB63AD0640EB2DD3 /* WalletSegue-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = D3C60A1F0AB497C0A7C472C31BC06A48 /* WalletSegue-dummy.m */; };
-		1B1D2F1FF435E9623BA40662B3C9CD2F /* Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = D005B1F322F9F9E7A1A80285890A1F35 /* Request.swift */; };
-		3221DFE4109BCDBA32C04A52225BFD21 /* MessageRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6A8C8DFC68E4EE396DA850E76119FA2 /* MessageRenderer.swift */; };
+		1A9643B075CFAE6B28DE7737573E61C6 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73010CC983E3809BECEE5348DA1BB8C6 /* Foundation.framework */; };
+		31121EBF5238A4AB03F40A77D39FD0E5 /* RequestManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B4620E6944325AE296FBF681EF32617 /* RequestManager.swift */; };
 		3741C2DB4CE51A880844437755A8DEBB /* Pods-HostApp-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = A4306C20558F9196E266E230DD5901B0 /* Pods-HostApp-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		4584DD76C0253CFABC3F3039F0489BBB /* CoinbaseWalletSDK.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03FD821750A5F4A8133B621EEAFFAEE8 /* CoinbaseWalletSDK.swift */; };
 		4678BC9121B508923EC25666428120BD /* Pods-ClientApp-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C1D6F940F24C23D6597250DE5D07933 /* Pods-ClientApp-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		467CBDE753FDF2771B8C68100CB54DCD /* Handshake.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EA96A33020D0E4C998872658EF7F8A4 /* Handshake.swift */; };
 		51BDE75823D439C1D474F7059FB4A93C /* Pods-ClientApp-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = AA49435D4F1F202466D3A4FDDEF4CE2E /* Pods-ClientApp-dummy.m */; };
-		53E2195F4C533F796FC1DA9099FBC831 /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F722985B531820D6C9FE2D1A40C0DFE /* Errors.swift */; };
-		59083BE3B4A3FC922D6FFD018EA6A14B /* WalletSegueHost-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = DDFEF67769F847E55FB37D9ACC53D689 /* WalletSegueHost-dummy.m */; };
+		59083BE3B4A3FC922D6FFD018EA6A14B /* WalletSegueHost-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = FC6D0DDCF15E47424D8156F698557623 /* WalletSegueHost-dummy.m */; };
+		5D38BBB3285860A600DCDABD /* Account.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D38BBB2285860A600DCDABD /* Account.swift */; };
+		5D38BBB72858651D00DCDABD /* URLCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D38BBB62858651D00DCDABD /* URLCodable.swift */; };
 		6EB13E5F69C1C61A1B71564FD33AAB18 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73010CC983E3809BECEE5348DA1BB8C6 /* Foundation.framework */; };
-		7B07D68C1AE3A93EA6E8D9787F53E9FC /* WalletSegue-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = ED23EA4C96DC6865A3FCC1B3D80143F3 /* WalletSegue-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A40F5CB14F8A00FF2A18C91D02BB5D1B /* RequestManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53E11E6444E05FA80F9121BB629A0BA1 /* RequestManager.swift */; };
-		A811E1F19BF28A79634074903F8E478E /* WalletSegueHost-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = AC32F7A45B9FEE221BD34624FC46A438 /* WalletSegueHost-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		AF347D635429D825CC491D738122D7EE /* KeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B478B435D827B3E74E2C67BC5097EA7 /* KeyManager.swift */; };
-		DCE9EEB96511F2E2224C72F07D9768A5 /* CoinbaseWalletSDK.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25DC29E661BA78BD34B19DE50739563C /* CoinbaseWalletSDK.swift */; };
+		6F46BC985BFC1235DD9ACEC6E5178D5C /* Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EB8E5C3DA23D6D09B412325B6B985D9 /* Request.swift */; };
+		732B7FF9D1173647FC06BF196C961709 /* WalletSegue-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = E5FEF67DFE78CF88B70326594C833C13 /* WalletSegue-dummy.m */; };
+		7A57DA38622AD77ACCF85299E54D0185 /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE1855060048050F34DDF0F00B43F678 /* Errors.swift */; };
+		80CAC6FE8DF754CE0D028E34C353EF92 /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = 774BE71941307DA3F5A6D4C93D6029DD /* Message.swift */; };
+		9475246946A842C1B1C95CA44A5A5C98 /* WalletSegue-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = E6378A2C6D75EA57EBD124681547C538 /* WalletSegue-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		9DAB242DB38DF993046805773EC4DC8B /* KeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 373E685A888B05707761119DE78CD61B /* KeyManager.swift */; };
+		A811E1F19BF28A79634074903F8E478E /* WalletSegueHost-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = 1420BF6BF746A4974BCBA0208FE76FDB /* WalletSegueHost-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B62FE0DF07D2B0C51B50FE05CD74449E /* WalletSegueCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCF4239F883AF923FCA83FF46AA0059D /* WalletSegueCodable.swift */; };
 		DE9DDF53A52310CC6885D92C750B0C66 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73010CC983E3809BECEE5348DA1BB8C6 /* Foundation.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		1F05D38993C9E18E7182D96E09A407EE /* PBXContainerItemProxy */ = {
+		372B26015F15836DE62A57E1ACD14A36 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BFDFE7DC352907FC980B868725387E98 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5D484A999C539BAE7D6A681D146C4E35;
+			remoteInfo = WalletSegue;
+		};
+		85B041D3E43ABE5E9689539A9DA2F721 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BFDFE7DC352907FC980B868725387E98 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5D484A999C539BAE7D6A681D146C4E35;
+			remoteInfo = WalletSegue;
+		};
+		8B028C9515B250FFB78B7D6700802BBE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BFDFE7DC352907FC980B868725387E98 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5D484A999C539BAE7D6A681D146C4E35;
+			remoteInfo = WalletSegue;
+		};
+		9E55813E9D8F11C9EAC7D2C367CE33DD /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = BFDFE7DC352907FC980B868725387E98 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 12AD9D643855F8E66CF4273D255C4870;
 			remoteInfo = WalletSegueHost;
 		};
-		8C03961C92BEC193659040A5AF6E8FC4 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = BFDFE7DC352907FC980B868725387E98 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 5D484A999C539BAE7D6A681D146C4E35;
-			remoteInfo = WalletSegue;
-		};
-		A74432D9EE0DA6ACAF15E5B13810D3AD /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = BFDFE7DC352907FC980B868725387E98 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 5D484A999C539BAE7D6A681D146C4E35;
-			remoteInfo = WalletSegue;
-		};
-		D94535B57BFD804B381A9B5C9893EBEB /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = BFDFE7DC352907FC980B868725387E98 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 5D484A999C539BAE7D6A681D146C4E35;
-			remoteInfo = WalletSegue;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		02FCE351921B8FD5C1585AB78E27AF49 /* WalletSegue */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = WalletSegue; path = WalletSegue.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		055D5C2160E04B50AA5D162FADF324A1 /* WalletSegue.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = WalletSegue.modulemap; sourceTree = "<group>"; };
+		03FD821750A5F4A8133B621EEAFFAEE8 /* CoinbaseWalletSDK.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CoinbaseWalletSDK.swift; path = src/CoinbaseWalletSDK.swift; sourceTree = "<group>"; };
 		0886C9B8BF4C803E32CB6919F75DAD9F /* Pods-ClientApp-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-ClientApp-Info.plist"; sourceTree = "<group>"; };
 		0A605A1B7E16A7D9F13C6C8FAF795987 /* Pods-ClientApp.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = "Pods-ClientApp.modulemap"; sourceTree = "<group>"; };
 		0C1D6F940F24C23D6597250DE5D07933 /* Pods-ClientApp-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-ClientApp-umbrella.h"; sourceTree = "<group>"; };
-		104CE7223F181ACECCD62D8F0D148E5F /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; path = README.md; sourceTree = "<group>"; };
-		1B478B435D827B3E74E2C67BC5097EA7 /* KeyManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = KeyManager.swift; path = src/KeyManager.swift; sourceTree = "<group>"; };
+		1420BF6BF746A4974BCBA0208FE76FDB /* WalletSegueHost-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "WalletSegueHost-umbrella.h"; sourceTree = "<group>"; };
+		218F8BBC9D5A34AA60CB47DCF9DA224A /* HandshakeRequestHandler.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = HandshakeRequestHandler.swift; path = src/HandshakeRequestHandler.swift; sourceTree = "<group>"; };
 		22C5E87E42770BA17014C9A907643BBE /* Pods-HostApp.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = "Pods-HostApp.modulemap"; sourceTree = "<group>"; };
+		237179A76799F0B3D6AD729778D1511A /* WalletSegue.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; path = WalletSegue.podspec; sourceTree = "<group>"; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		248D0AF26C725D5246D10FAD01C353A3 /* WalletSegueHost.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = WalletSegueHost.debug.xcconfig; sourceTree = "<group>"; };
 		24CFF43FAC954B9DE38EC72CC802F890 /* Pods-ClientApp */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = "Pods-ClientApp"; path = Pods_ClientApp.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		25DC29E661BA78BD34B19DE50739563C /* CoinbaseWalletSDK.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CoinbaseWalletSDK.swift; path = src/CoinbaseWalletSDK.swift; sourceTree = "<group>"; };
 		27A68FED2F215CE4A08D18994BD7BF4E /* Pods-ClientApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-ClientApp.debug.xcconfig"; sourceTree = "<group>"; };
-		3E94A259E6BAD00AB954161CEC611EA0 /* WalletSegueHost.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = WalletSegueHost.debug.xcconfig; sourceTree = "<group>"; };
-		3EA96A33020D0E4C998872658EF7F8A4 /* Handshake.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Handshake.swift; path = src/Handshake.swift; sourceTree = "<group>"; };
+		29589B778B47E33280CF5AB8A774E230 /* WalletSegueHost-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "WalletSegueHost-Info.plist"; sourceTree = "<group>"; };
+		2DFA2A2912F4F3FBB3E7E501E42BE204 /* WalletSegue.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = WalletSegue.debug.xcconfig; sourceTree = "<group>"; };
+		32225EE3BB26EB2D942A62264D27E729 /* WalletSegueHost.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = WalletSegueHost.release.xcconfig; sourceTree = "<group>"; };
+		32C7ED07C83D96CA0171CE9F46E4188A /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		373E685A888B05707761119DE78CD61B /* KeyManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = KeyManager.swift; path = src/KeyManager.swift; sourceTree = "<group>"; };
+		37E7698A5D9802C3AA55A15D17907D3D /* WalletSegueHost.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = WalletSegueHost.modulemap; sourceTree = "<group>"; };
+		3E851023AB3208F04C24922E934ACC09 /* WalletSegue.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = WalletSegue.modulemap; sourceTree = "<group>"; };
 		44128E15BE8456FABDE08D5BB22945BF /* Pods-HostApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-HostApp.release.xcconfig"; sourceTree = "<group>"; };
-		53E11E6444E05FA80F9121BB629A0BA1 /* RequestManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RequestManager.swift; path = src/RequestManager.swift; sourceTree = "<group>"; };
-		55AA09D69524AC8848B9F91CF71AA04E /* WalletSegue-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "WalletSegue-Info.plist"; sourceTree = "<group>"; };
-		5C60181374B50C9A801F914998867C61 /* WalletSegueHost.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = WalletSegueHost.modulemap; sourceTree = "<group>"; };
-		5F562015A52A572D3B0EC7618D33DC4F /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; path = LICENSE; sourceTree = "<group>"; };
+		478137A518DEEBD86BD558DB8860B9C8 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		5D38BBB2285860A600DCDABD /* Account.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Account.swift; path = src/Account.swift; sourceTree = "<group>"; };
+		5D38BBB62858651D00DCDABD /* URLCodable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLCodable.swift; sourceTree = "<group>"; };
 		5F567AC4005DFFE3A498ABDF0B2E7CA3 /* Pods-ClientApp-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-ClientApp-acknowledgements.markdown"; sourceTree = "<group>"; };
 		61FC729BFBF243D5C846357346CFB625 /* Pods-ClientApp-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-ClientApp-frameworks.sh"; sourceTree = "<group>"; };
-		669131377C9E560E5AC8A6FA1B547261 /* WalletSegue.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; lastKnownFileType = text; path = WalletSegue.podspec; sourceTree = "<group>"; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		689F1A3E881F933EC516DAE97666AE65 /* WalletSegueHost-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "WalletSegueHost-prefix.pch"; sourceTree = "<group>"; };
+		6B4620E6944325AE296FBF681EF32617 /* RequestManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RequestManager.swift; path = src/RequestManager.swift; sourceTree = "<group>"; };
 		6CB1B6B3E9805A4364A2953ECC2770C0 /* WalletSegueHost */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = WalletSegueHost; path = WalletSegueHost.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6D2C0E874B076E39E5E173DF545F39C2 /* Pods-HostApp-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-HostApp-acknowledgements.plist"; sourceTree = "<group>"; };
+		6EB09FFEA9B4AD0E14477941EA685CC7 /* WalletSegueHost.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; path = WalletSegueHost.podspec; sourceTree = "<group>"; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		6EB1DC1986456C3F39119EDD236F617C /* Pods-ClientApp-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-ClientApp-acknowledgements.plist"; sourceTree = "<group>"; };
-		7299A7C86CB469941C4832DF6334B22F /* WalletSegue-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "WalletSegue-prefix.pch"; sourceTree = "<group>"; };
 		73010CC983E3809BECEE5348DA1BB8C6 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS14.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
-		77D641AB8F8D26AC1EB32B3BA7D76B30 /* WalletSegueHost.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; lastKnownFileType = text; path = WalletSegueHost.podspec; sourceTree = "<group>"; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
-		7BEA192CC141056AF908B8A54B26A602 /* WalletSegueCodable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WalletSegueCodable.swift; path = src/WalletSegueCodable.swift; sourceTree = "<group>"; };
+		774BE71941307DA3F5A6D4C93D6029DD /* Message.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
+		78A8A5CB1057D772515FF913B1D72A3C /* WalletSegue-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "WalletSegue-Info.plist"; sourceTree = "<group>"; };
 		7D3FF96184C265B117F00534F85080B6 /* Pods-HostApp-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-HostApp-dummy.m"; sourceTree = "<group>"; };
-		7F722985B531820D6C9FE2D1A40C0DFE /* Errors.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Errors.swift; path = src/Errors.swift; sourceTree = "<group>"; };
-		8C8A8D9809749FBCC7D92516645C12B9 /* WalletSegueHost-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "WalletSegueHost-prefix.pch"; sourceTree = "<group>"; };
-		9CE8939E5A359631EB297BB291211B89 /* WalletSegue.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = WalletSegue.debug.xcconfig; sourceTree = "<group>"; };
-		9D940727FF8FB9C785EB98E56350EF41 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; lastKnownFileType = text; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		804D868AEB4107CCF33DDA85EE3E6482 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		8EB8E5C3DA23D6D09B412325B6B985D9 /* Request.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Request.swift; sourceTree = "<group>"; };
+		9D940727FF8FB9C785EB98E56350EF41 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		9DC2AB605CDF70E9E3CFF6D09003D999 /* Pods-HostApp-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-HostApp-Info.plist"; sourceTree = "<group>"; };
-		A34731EC63B64718DD8C2DE8B766CA7E /* HandshakeRequestHandler.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = HandshakeRequestHandler.swift; path = src/HandshakeRequestHandler.swift; sourceTree = "<group>"; };
+		9DEF647E8362CD81E0242932EE6178C1 /* WalletSegue-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "WalletSegue-prefix.pch"; sourceTree = "<group>"; };
 		A4306C20558F9196E266E230DD5901B0 /* Pods-HostApp-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-HostApp-umbrella.h"; sourceTree = "<group>"; };
-		A6A8C8DFC68E4EE396DA850E76119FA2 /* MessageRenderer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MessageRenderer.swift; path = src/MessageRenderer.swift; sourceTree = "<group>"; };
-		A74AC8EB5E3168541ADEFFEDCD64A87B /* WalletSegue.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = WalletSegue.release.xcconfig; sourceTree = "<group>"; };
 		AA49435D4F1F202466D3A4FDDEF4CE2E /* Pods-ClientApp-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-ClientApp-dummy.m"; sourceTree = "<group>"; };
-		AC32F7A45B9FEE221BD34624FC46A438 /* WalletSegueHost-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "WalletSegueHost-umbrella.h"; sourceTree = "<group>"; };
-		B0380622E7B7C875EAB786FA19D9CC3B /* WalletSegueHost-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "WalletSegueHost-Info.plist"; sourceTree = "<group>"; };
 		B2144160A666F726B882218E5E1B14C7 /* Pods-HostApp-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-HostApp-frameworks.sh"; sourceTree = "<group>"; };
 		B8C839F81207F7DCB632F5986B654F9A /* Pods-ClientApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-ClientApp.release.xcconfig"; sourceTree = "<group>"; };
 		BF942D74E5E49AB616E1E6C9DC405072 /* Pods-HostApp-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-HostApp-acknowledgements.markdown"; sourceTree = "<group>"; };
 		C090517DE19AB3ABA0E4892BF8189B6A /* Pods-HostApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-HostApp.debug.xcconfig"; sourceTree = "<group>"; };
-		D005B1F322F9F9E7A1A80285890A1F35 /* Request.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Request.swift; path = src/Request.swift; sourceTree = "<group>"; };
-		D305D85BDCAA130EA4F49F48ED3F4EBF /* WalletSegueHost.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = WalletSegueHost.release.xcconfig; sourceTree = "<group>"; };
-		D3C60A1F0AB497C0A7C472C31BC06A48 /* WalletSegue-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "WalletSegue-dummy.m"; sourceTree = "<group>"; };
-		DDFEF67769F847E55FB37D9ACC53D689 /* WalletSegueHost-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "WalletSegueHost-dummy.m"; sourceTree = "<group>"; };
+		CCF4239F883AF923FCA83FF46AA0059D /* WalletSegueCodable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WalletSegueCodable.swift; path = src/WalletSegueCodable.swift; sourceTree = "<group>"; };
+		E28A7D530247ECAF7E8133FEB8AF11B3 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		E5FEF67DFE78CF88B70326594C833C13 /* WalletSegue-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "WalletSegue-dummy.m"; sourceTree = "<group>"; };
+		E60901D9329C996ABD042D9217F885AB /* Response.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Response.swift; sourceTree = "<group>"; };
+		E6378A2C6D75EA57EBD124681547C538 /* WalletSegue-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "WalletSegue-umbrella.h"; sourceTree = "<group>"; };
 		ED00F87B053026A542BE85D0CA39F88F /* Pods-HostApp */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = "Pods-HostApp"; path = Pods_HostApp.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		ED23EA4C96DC6865A3FCC1B3D80143F3 /* WalletSegue-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "WalletSegue-umbrella.h"; sourceTree = "<group>"; };
-		EDC513C28BD98A2AF04FE6BC2DA7D510 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; path = LICENSE; sourceTree = "<group>"; };
-		F43354CE414AE4C3F19CB23B3D7582D1 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; path = README.md; sourceTree = "<group>"; };
+		EE1855060048050F34DDF0F00B43F678 /* Errors.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Errors.swift; path = src/Errors.swift; sourceTree = "<group>"; };
+		FC6D0DDCF15E47424D8156F698557623 /* WalletSegueHost-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "WalletSegueHost-dummy.m"; sourceTree = "<group>"; };
+		FFE3FB04360BB4B2693FBD4A321C5474 /* WalletSegue.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = WalletSegue.release.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -126,11 +130,11 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		88B18D28092A864CD0589FE30841B29D /* Frameworks */ = {
+		3E7DDBBEAA762171310AAD5D9F428F0C /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0185DA3001E44AFF2D379619E070BC4D /* Foundation.framework in Frameworks */,
+				1A9643B075CFAE6B28DE7737573E61C6 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -162,6 +166,15 @@
 			name = "Targets Support Files";
 			sourceTree = "<group>";
 		};
+		260DA0BD12FADE6FF24BF6785CA1DCB9 /* Development Pods */ = {
+			isa = PBXGroup;
+			children = (
+				309C5E9843AA5FB6F2C8C4D4D2CD4B65 /* WalletSegue */,
+				2FB4056BCE84B51BC48D90E6445CE769 /* WalletSegueHost */,
+			);
+			name = "Development Pods";
+			sourceTree = "<group>";
+		};
 		2709B45D53AB0AC50E2FB7EEC6C794FB /* Pods-HostApp */ = {
 			isa = PBXGroup;
 			children = (
@@ -179,37 +192,59 @@
 			path = "Target Support Files/Pods-HostApp";
 			sourceTree = "<group>";
 		};
-		3533C093F592F3213274C91C118436AC /* Support Files */ = {
+		2FB4056BCE84B51BC48D90E6445CE769 /* WalletSegueHost */ = {
 			isa = PBXGroup;
 			children = (
-				055D5C2160E04B50AA5D162FADF324A1 /* WalletSegue.modulemap */,
-				D3C60A1F0AB497C0A7C472C31BC06A48 /* WalletSegue-dummy.m */,
-				55AA09D69524AC8848B9F91CF71AA04E /* WalletSegue-Info.plist */,
-				7299A7C86CB469941C4832DF6334B22F /* WalletSegue-prefix.pch */,
-				ED23EA4C96DC6865A3FCC1B3D80143F3 /* WalletSegue-umbrella.h */,
-				9CE8939E5A359631EB297BB291211B89 /* WalletSegue.debug.xcconfig */,
-				A74AC8EB5E3168541ADEFFEDCD64A87B /* WalletSegue.release.xcconfig */,
+				218F8BBC9D5A34AA60CB47DCF9DA224A /* HandshakeRequestHandler.swift */,
+				B60FA3D4ED110A1375AF2189FD5D93D1 /* Pod */,
+				63CE24891476C7C6E5BC0D260D518C90 /* Support Files */,
+			);
+			name = WalletSegueHost;
+			path = ../../../host/ios;
+			sourceTree = "<group>";
+		};
+		309C5E9843AA5FB6F2C8C4D4D2CD4B65 /* WalletSegue */ = {
+			isa = PBXGroup;
+			children = (
+				03FD821750A5F4A8133B621EEAFFAEE8 /* CoinbaseWalletSDK.swift */,
+				EE1855060048050F34DDF0F00B43F678 /* Errors.swift */,
+				373E685A888B05707761119DE78CD61B /* KeyManager.swift */,
+				6B4620E6944325AE296FBF681EF32617 /* RequestManager.swift */,
+				CCF4239F883AF923FCA83FF46AA0059D /* WalletSegueCodable.swift */,
+				4A7F66AC187E84B6AB342B9EEE0D61EC /* Message */,
+				C5096FAAADD8F5A5ED122765640F7B9B /* Pod */,
+				4650771E8910FC49942C880E9F2CEF53 /* Support Files */,
+				5D38BBB2285860A600DCDABD /* Account.swift */,
+			);
+			name = WalletSegue;
+			path = ../../../client/ios;
+			sourceTree = "<group>";
+		};
+		4650771E8910FC49942C880E9F2CEF53 /* Support Files */ = {
+			isa = PBXGroup;
+			children = (
+				3E851023AB3208F04C24922E934ACC09 /* WalletSegue.modulemap */,
+				E5FEF67DFE78CF88B70326594C833C13 /* WalletSegue-dummy.m */,
+				78A8A5CB1057D772515FF913B1D72A3C /* WalletSegue-Info.plist */,
+				9DEF647E8362CD81E0242932EE6178C1 /* WalletSegue-prefix.pch */,
+				E6378A2C6D75EA57EBD124681547C538 /* WalletSegue-umbrella.h */,
+				2DFA2A2912F4F3FBB3E7E501E42BE204 /* WalletSegue.debug.xcconfig */,
+				FFE3FB04360BB4B2693FBD4A321C5474 /* WalletSegue.release.xcconfig */,
 			);
 			name = "Support Files";
 			path = "../../examples/ios/Pods/Target Support Files/WalletSegue";
 			sourceTree = "<group>";
 		};
-		3F3DE85F9BE9A15ECBBCCAA1F9CC45BF /* WalletSegue */ = {
+		4A7F66AC187E84B6AB342B9EEE0D61EC /* Message */ = {
 			isa = PBXGroup;
 			children = (
-				25DC29E661BA78BD34B19DE50739563C /* CoinbaseWalletSDK.swift */,
-				7F722985B531820D6C9FE2D1A40C0DFE /* Errors.swift */,
-				3EA96A33020D0E4C998872658EF7F8A4 /* Handshake.swift */,
-				1B478B435D827B3E74E2C67BC5097EA7 /* KeyManager.swift */,
-				A6A8C8DFC68E4EE396DA850E76119FA2 /* MessageRenderer.swift */,
-				D005B1F322F9F9E7A1A80285890A1F35 /* Request.swift */,
-				53E11E6444E05FA80F9121BB629A0BA1 /* RequestManager.swift */,
-				7BEA192CC141056AF908B8A54B26A602 /* WalletSegueCodable.swift */,
-				CAC1E5FBDF383590789350BCFF51D21E /* Pod */,
-				3533C093F592F3213274C91C118436AC /* Support Files */,
+				774BE71941307DA3F5A6D4C93D6029DD /* Message.swift */,
+				8EB8E5C3DA23D6D09B412325B6B985D9 /* Request.swift */,
+				E60901D9329C996ABD042D9217F885AB /* Response.swift */,
+				5D38BBB62858651D00DCDABD /* URLCodable.swift */,
 			);
-			name = WalletSegue;
-			path = ../../../client/ios;
+			name = Message;
+			path = src/Message;
 			sourceTree = "<group>";
 		};
 		578452D2E740E91742655AC8F1636D1F /* iOS */ = {
@@ -231,6 +266,21 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		63CE24891476C7C6E5BC0D260D518C90 /* Support Files */ = {
+			isa = PBXGroup;
+			children = (
+				37E7698A5D9802C3AA55A15D17907D3D /* WalletSegueHost.modulemap */,
+				FC6D0DDCF15E47424D8156F698557623 /* WalletSegueHost-dummy.m */,
+				29589B778B47E33280CF5AB8A774E230 /* WalletSegueHost-Info.plist */,
+				689F1A3E881F933EC516DAE97666AE65 /* WalletSegueHost-prefix.pch */,
+				1420BF6BF746A4974BCBA0208FE76FDB /* WalletSegueHost-umbrella.h */,
+				248D0AF26C725D5246D10FAD01C353A3 /* WalletSegueHost.debug.xcconfig */,
+				32225EE3BB26EB2D942A62264D27E729 /* WalletSegueHost.release.xcconfig */,
+			);
+			name = "Support Files";
+			path = "../../examples/ios/Pods/Target Support Files/WalletSegueHost";
+			sourceTree = "<group>";
+		};
 		77FB36B3D4C255A1B86863E02A35C936 /* Pods-ClientApp */ = {
 			isa = PBXGroup;
 			children = (
@@ -248,57 +298,22 @@
 			path = "Target Support Files/Pods-ClientApp";
 			sourceTree = "<group>";
 		};
-		8425050B34335467F07897F2AE1B27BE /* Pod */ = {
+		B60FA3D4ED110A1375AF2189FD5D93D1 /* Pod */ = {
 			isa = PBXGroup;
 			children = (
-				5F562015A52A572D3B0EC7618D33DC4F /* LICENSE */,
-				F43354CE414AE4C3F19CB23B3D7582D1 /* README.md */,
-				77D641AB8F8D26AC1EB32B3BA7D76B30 /* WalletSegueHost.podspec */,
+				478137A518DEEBD86BD558DB8860B9C8 /* LICENSE */,
+				32C7ED07C83D96CA0171CE9F46E4188A /* README.md */,
+				6EB09FFEA9B4AD0E14477941EA685CC7 /* WalletSegueHost.podspec */,
 			);
 			name = Pod;
 			sourceTree = "<group>";
 		};
-		8626F5F03C2593CD383700165E606D90 /* Support Files */ = {
+		C5096FAAADD8F5A5ED122765640F7B9B /* Pod */ = {
 			isa = PBXGroup;
 			children = (
-				5C60181374B50C9A801F914998867C61 /* WalletSegueHost.modulemap */,
-				DDFEF67769F847E55FB37D9ACC53D689 /* WalletSegueHost-dummy.m */,
-				B0380622E7B7C875EAB786FA19D9CC3B /* WalletSegueHost-Info.plist */,
-				8C8A8D9809749FBCC7D92516645C12B9 /* WalletSegueHost-prefix.pch */,
-				AC32F7A45B9FEE221BD34624FC46A438 /* WalletSegueHost-umbrella.h */,
-				3E94A259E6BAD00AB954161CEC611EA0 /* WalletSegueHost.debug.xcconfig */,
-				D305D85BDCAA130EA4F49F48ED3F4EBF /* WalletSegueHost.release.xcconfig */,
-			);
-			name = "Support Files";
-			path = "../../examples/ios/Pods/Target Support Files/WalletSegueHost";
-			sourceTree = "<group>";
-		};
-		8D015887770C2326BD9A5D3903B9DDB1 /* Development Pods */ = {
-			isa = PBXGroup;
-			children = (
-				3F3DE85F9BE9A15ECBBCCAA1F9CC45BF /* WalletSegue */,
-				C53EA4FBFA767C84126A0699C7487798 /* WalletSegueHost */,
-			);
-			name = "Development Pods";
-			sourceTree = "<group>";
-		};
-		C53EA4FBFA767C84126A0699C7487798 /* WalletSegueHost */ = {
-			isa = PBXGroup;
-			children = (
-				A34731EC63B64718DD8C2DE8B766CA7E /* HandshakeRequestHandler.swift */,
-				8425050B34335467F07897F2AE1B27BE /* Pod */,
-				8626F5F03C2593CD383700165E606D90 /* Support Files */,
-			);
-			name = WalletSegueHost;
-			path = ../../../host/ios;
-			sourceTree = "<group>";
-		};
-		CAC1E5FBDF383590789350BCFF51D21E /* Pod */ = {
-			isa = PBXGroup;
-			children = (
-				EDC513C28BD98A2AF04FE6BC2DA7D510 /* LICENSE */,
-				104CE7223F181ACECCD62D8F0D148E5F /* README.md */,
-				669131377C9E560E5AC8A6FA1B547261 /* WalletSegue.podspec */,
+				804D868AEB4107CCF33DDA85EE3E6482 /* LICENSE */,
+				E28A7D530247ECAF7E8133FEB8AF11B3 /* README.md */,
+				237179A76799F0B3D6AD729778D1511A /* WalletSegue.podspec */,
 			);
 			name = Pod;
 			sourceTree = "<group>";
@@ -307,7 +322,7 @@
 			isa = PBXGroup;
 			children = (
 				9D940727FF8FB9C785EB98E56350EF41 /* Podfile */,
-				8D015887770C2326BD9A5D3903B9DDB1 /* Development Pods */,
+				260DA0BD12FADE6FF24BF6785CA1DCB9 /* Development Pods */,
 				D210D550F4EA176C3123ED886F8F87F5 /* Frameworks */,
 				5B2186C1753A70660EE7E3B9350BC328 /* Products */,
 				1AE9ED49F2D651CFFF85FFFDEE454B8A /* Targets Support Files */,
@@ -333,11 +348,11 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		B021B4CEA2152030F7AE47F028656B31 /* Headers */ = {
+		871CD7AD6D9587AD7C56E1D975BAC368 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7B07D68C1AE3A93EA6E8D9787F53E9FC /* WalletSegue-umbrella.h in Headers */,
+				9475246946A842C1B1C95CA44A5A5C98 /* WalletSegue-umbrella.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -372,7 +387,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				9DA586D3ECDE1092B0AEDAE34C908AF3 /* PBXTargetDependency */,
+				F27CA7CAA77D37B3ADEBF1E9BF1EB514 /* PBXTargetDependency */,
 			);
 			name = WalletSegueHost;
 			productName = WalletSegueHost;
@@ -391,7 +406,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				80A62E5606786B414F5B491CAEF4B7B9 /* PBXTargetDependency */,
+				890F22D19377A4D2FAF6700EE1817031 /* PBXTargetDependency */,
 			);
 			name = "Pods-ClientApp";
 			productName = Pods_ClientApp;
@@ -400,12 +415,12 @@
 		};
 		5D484A999C539BAE7D6A681D146C4E35 /* WalletSegue */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A19EECF3A6B020F15FDE5609D064DA34 /* Build configuration list for PBXNativeTarget "WalletSegue" */;
+			buildConfigurationList = EF94927E58ACDE35862914960D10368B /* Build configuration list for PBXNativeTarget "WalletSegue" */;
 			buildPhases = (
-				B021B4CEA2152030F7AE47F028656B31 /* Headers */,
-				5E0C93B3E30A8591274D98840F6D4A2B /* Sources */,
-				88B18D28092A864CD0589FE30841B29D /* Frameworks */,
-				A639B54B314834511A796FE90B52DB20 /* Resources */,
+				871CD7AD6D9587AD7C56E1D975BAC368 /* Headers */,
+				F8912071E7A2D63B0A1C7D0F1784E831 /* Sources */,
+				3E7DDBBEAA762171310AAD5D9F428F0C /* Frameworks */,
+				8626B9ED323959158348F0C7798EFCEF /* Resources */,
 			);
 			buildRules = (
 			);
@@ -428,8 +443,8 @@
 			buildRules = (
 			);
 			dependencies = (
-				24DCB98CE81659A94FA0B0AFCF486585 /* PBXTargetDependency */,
-				63A54BF0D8DF545B9EE718FDA1A59969 /* PBXTargetDependency */,
+				69FEDAC47547B6C157EB7E95957CD096 /* PBXTargetDependency */,
+				713688F4D1F296A822B556AA9006397E /* PBXTargetDependency */,
 			);
 			name = "Pods-HostApp";
 			productName = Pods_HostApp;
@@ -474,7 +489,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A639B54B314834511A796FE90B52DB20 /* Resources */ = {
+		8626B9ED323959158348F0C7798EFCEF /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -507,22 +522,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		5E0C93B3E30A8591274D98840F6D4A2B /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				DCE9EEB96511F2E2224C72F07D9768A5 /* CoinbaseWalletSDK.swift in Sources */,
-				53E2195F4C533F796FC1DA9099FBC831 /* Errors.swift in Sources */,
-				467CBDE753FDF2771B8C68100CB54DCD /* Handshake.swift in Sources */,
-				AF347D635429D825CC491D738122D7EE /* KeyManager.swift in Sources */,
-				3221DFE4109BCDBA32C04A52225BFD21 /* MessageRenderer.swift in Sources */,
-				1B1D2F1FF435E9623BA40662B3C9CD2F /* Request.swift in Sources */,
-				A40F5CB14F8A00FF2A18C91D02BB5D1B /* RequestManager.swift in Sources */,
-				14E81E4E7B9A4586CB63AD0640EB2DD3 /* WalletSegue-dummy.m in Sources */,
-				112E8B5200FE2632F1EC2DC633BFE0A7 /* WalletSegueCodable.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		755AD504E062C6419BFE06280595D9CE /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -539,32 +538,50 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F8912071E7A2D63B0A1C7D0F1784E831 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4584DD76C0253CFABC3F3039F0489BBB /* CoinbaseWalletSDK.swift in Sources */,
+				5D38BBB3285860A600DCDABD /* Account.swift in Sources */,
+				7A57DA38622AD77ACCF85299E54D0185 /* Errors.swift in Sources */,
+				9DAB242DB38DF993046805773EC4DC8B /* KeyManager.swift in Sources */,
+				80CAC6FE8DF754CE0D028E34C353EF92 /* Message.swift in Sources */,
+				5D38BBB72858651D00DCDABD /* URLCodable.swift in Sources */,
+				6F46BC985BFC1235DD9ACEC6E5178D5C /* Request.swift in Sources */,
+				31121EBF5238A4AB03F40A77D39FD0E5 /* RequestManager.swift in Sources */,
+				03268CCD16B8F4EA8FFDC62A3C4985F7 /* Response.swift in Sources */,
+				732B7FF9D1173647FC06BF196C961709 /* WalletSegue-dummy.m in Sources */,
+				B62FE0DF07D2B0C51B50FE05CD74449E /* WalletSegueCodable.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		24DCB98CE81659A94FA0B0AFCF486585 /* PBXTargetDependency */ = {
+		69FEDAC47547B6C157EB7E95957CD096 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = WalletSegue;
 			target = 5D484A999C539BAE7D6A681D146C4E35 /* WalletSegue */;
-			targetProxy = 8C03961C92BEC193659040A5AF6E8FC4 /* PBXContainerItemProxy */;
+			targetProxy = 8B028C9515B250FFB78B7D6700802BBE /* PBXContainerItemProxy */;
 		};
-		63A54BF0D8DF545B9EE718FDA1A59969 /* PBXTargetDependency */ = {
+		713688F4D1F296A822B556AA9006397E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = WalletSegueHost;
 			target = 12AD9D643855F8E66CF4273D255C4870 /* WalletSegueHost */;
-			targetProxy = 1F05D38993C9E18E7182D96E09A407EE /* PBXContainerItemProxy */;
+			targetProxy = 9E55813E9D8F11C9EAC7D2C367CE33DD /* PBXContainerItemProxy */;
 		};
-		80A62E5606786B414F5B491CAEF4B7B9 /* PBXTargetDependency */ = {
+		890F22D19377A4D2FAF6700EE1817031 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = WalletSegue;
 			target = 5D484A999C539BAE7D6A681D146C4E35 /* WalletSegue */;
-			targetProxy = D94535B57BFD804B381A9B5C9893EBEB /* PBXContainerItemProxy */;
+			targetProxy = 372B26015F15836DE62A57E1ACD14A36 /* PBXContainerItemProxy */;
 		};
-		9DA586D3ECDE1092B0AEDAE34C908AF3 /* PBXTargetDependency */ = {
+		F27CA7CAA77D37B3ADEBF1E9BF1EB514 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = WalletSegue;
 			target = 5D484A999C539BAE7D6A681D146C4E35 /* WalletSegue */;
-			targetProxy = A74432D9EE0DA6ACAF15E5B13810D3AD /* PBXContainerItemProxy */;
+			targetProxy = 85B041D3E43ABE5E9689539A9DA2F721 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -647,7 +664,7 @@
 		};
 		626656D99AB45BA0C38CE38C7B61AD95 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 3E94A259E6BAD00AB954161CEC611EA0 /* WalletSegueHost.debug.xcconfig */;
+			baseConfigurationReference = 248D0AF26C725D5246D10FAD01C353A3 /* WalletSegueHost.debug.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
@@ -680,44 +697,9 @@
 			};
 			name = Debug;
 		};
-		67E571A29C6F1ED06881AC8E6C87B77B /* Debug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9CE8939E5A359631EB297BB291211B89 /* WalletSegue.debug.xcconfig */;
-			buildSettings = {
-				CLANG_ENABLE_OBJC_WEAK = NO;
-				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
-				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
-				CURRENT_PROJECT_VERSION = 1;
-				DEFINES_MODULE = YES;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				GCC_PREFIX_HEADER = "Target Support Files/WalletSegue/WalletSegue-prefix.pch";
-				INFOPLIST_FILE = "Target Support Files/WalletSegue/WalletSegue-Info.plist";
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				MODULEMAP_FILE = "Target Support Files/WalletSegue/WalletSegue.modulemap";
-				PRODUCT_MODULE_NAME = WalletSegue;
-				PRODUCT_NAME = WalletSegue;
-				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				VERSIONING_SYSTEM = "apple-generic";
-				VERSION_INFO_PREFIX = "";
-			};
-			name = Debug;
-		};
 		832825B2371864B184165E66DC6E7F54 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D305D85BDCAA130EA4F49F48ED3F4EBF /* WalletSegueHost.release.xcconfig */;
+			baseConfigurationReference = 32225EE3BB26EB2D942A62264D27E729 /* WalletSegueHost.release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
@@ -953,9 +935,9 @@
 			};
 			name = Debug;
 		};
-		E5FAC390BE636060DE56FE0EA84B8EB8 /* Release */ = {
+		D347B6C60EDD06E4F5EEF746CB102BC7 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A74AC8EB5E3168541ADEFFEDCD64A87B /* WalletSegue.release.xcconfig */;
+			baseConfigurationReference = FFE3FB04360BB4B2693FBD4A321C5474 /* WalletSegue.release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
@@ -989,6 +971,41 @@
 			};
 			name = Release;
 		};
+		E145946DCE8CC9EBC915252E120AF687 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2DFA2A2912F4F3FBB3E7E501E42BE204 /* WalletSegue.debug.xcconfig */;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_PREFIX_HEADER = "Target Support Files/WalletSegue/WalletSegue-prefix.pch";
+				INFOPLIST_FILE = "Target Support Files/WalletSegue/WalletSegue-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MODULEMAP_FILE = "Target Support Files/WalletSegue/WalletSegue.modulemap";
+				PRODUCT_MODULE_NAME = WalletSegue;
+				PRODUCT_NAME = WalletSegue;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1010,20 +1027,20 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		A19EECF3A6B020F15FDE5609D064DA34 /* Build configuration list for PBXNativeTarget "WalletSegue" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				67E571A29C6F1ED06881AC8E6C87B77B /* Debug */,
-				E5FAC390BE636060DE56FE0EA84B8EB8 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		DCC6983D7DB1E056E46BA3CDF9408A27 /* Build configuration list for PBXNativeTarget "WalletSegueHost" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				626656D99AB45BA0C38CE38C7B61AD95 /* Debug */,
 				832825B2371864B184165E66DC6E7F54 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		EF94927E58ACDE35862914960D10368B /* Build configuration list for PBXNativeTarget "WalletSegue" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E145946DCE8CC9EBC915252E120AF687 /* Debug */,
+				D347B6C60EDD06E4F5EEF746CB102BC7 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

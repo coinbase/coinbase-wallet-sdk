@@ -25,24 +25,3 @@ extension WalletSegue.PublicKey: Codable {
         try container.encode(self.rawRepresentation)
     }
 }
-
-// MARK: -
-
-public protocol WalletSegueCodable: Codable {
-    func encodedString() throws -> String
-    static func decode(_ encodedString: String) throws -> Self
-}
-
-public extension WalletSegueCodable {
-    func encodedString() throws -> String {
-        let data = try JSONEncoder().encode(self)
-        return data.base64EncodedString()
-    }
-    
-    static func decode(_ encodedString: String) throws -> Self {
-        guard let data = Data(base64Encoded: encodedString) else {
-            throw WalletSegueError.notBase64Encoded
-        }
-        return try JSONDecoder().decode(Self.self, from: data)
-    }
-}

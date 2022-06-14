@@ -18,7 +18,7 @@ struct ContentView: View {
     
     @State var response: String?
     
-    @State var parsedResponse: Handshake.Response?
+    @State var parsedResponse: Message?
     @State var decryptedMessage: String?
     
     var body: some View {
@@ -54,15 +54,15 @@ struct ContentView: View {
             
             VStack(alignment: .leading) {
                 Button("Parse handshake response from Host") {
-                    self.parsedResponse = try! Handshake.Response.decode(self.response!)
+//                    self.parsedResponse = try! HandshakeResponse.decode(self.response!)
                 }
                 HStack {
                     Text("Message: ")
-                    Text(String(data: self.parsedResponse?.message ?? Data(), encoding: .ascii) ?? "(none)")
+//                    Text(String(data: self.parsedResponse?.message ?? Data(), encoding: .ascii) ?? "(none)")
                 }
                 HStack {
                     Text("Host Pub Key: ")
-                    Text(String(data: self.parsedResponse?.hostPublicKey.rawRepresentation ?? Data(), encoding: .ascii) ?? "(none)")
+//                    Text(String(data: self.parsedResponse?.hostPublicKey.rawRepresentation ?? Data(), encoding: .ascii) ?? "(none)")
                 }
             }
             
@@ -70,11 +70,11 @@ struct ContentView: View {
             
             Button("Decrypt") {
                 // client derives symmetric key
-                let symmetricKey = sdk.deriveSymmetricKey(with: self.clientPrivateKey, self.parsedResponse!.hostPublicKey)
-                
-                let sealedBox = try! AES.GCM.SealedBox(combined: self.parsedResponse!.message)
-                let decryptedData = try! AES.GCM.open(sealedBox, using: symmetricKey)
-                self.decryptedMessage = String(data: decryptedData, encoding: .utf8)
+//                let symmetricKey = sdk.deriveSymmetricKey(with: self.clientPrivateKey, self.parsedResponse!.hostPublicKey)
+//                
+//                let sealedBox = try! AES.GCM.SealedBox(combined: self.parsedResponse!.message)
+//                let decryptedData = try! AES.GCM.open(sealedBox, using: symmetricKey)
+//                self.decryptedMessage = String(data: decryptedData, encoding: .utf8)
             }
             Text(self.decryptedMessage ?? "(none)")
                 .lineLimit(nil)

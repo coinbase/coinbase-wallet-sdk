@@ -27,11 +27,11 @@ class RequestManager {
     
     func createRequest(
         action: Request.Action,
-        account: Request.Account?,
+        account: Account?,
         responseHandler: @escaping ResponseHandler
     ) -> Request {
         let uuid = UUID()
-        let request = Request(uuid: uuid, actions: [action], account: account)
+        let request = Request(actions: [action], account: account)
         
         executions[uuid] = Execution(
             request: request,

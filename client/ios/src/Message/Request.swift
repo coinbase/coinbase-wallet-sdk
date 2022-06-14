@@ -13,13 +13,11 @@ struct Request: Codable {
         let params: [String]
     }
     
-    struct Account: Codable {
-        let chain: String
-        let networkId: UInt
-        let address: String
-    }
-    
-    let uuid: UUID
     let actions: [Action]
     let account: Account?
+    
+    init(actions: [Action], account: Account? = nil) {
+        self.actions = actions
+        self.account = account
+    }
 }

@@ -12,6 +12,7 @@ public class CoinbaseWalletSDK {
     let appId: String
     let host: URL
     let callback: URL
+    let version: String
     
     /// Instantiate Coinbase Wallet SDK
     /// - Parameters:
@@ -24,6 +25,9 @@ public class CoinbaseWalletSDK {
         self.appId = Bundle.main.bundleIdentifier!
         self.host = host
         self.callback = callback
+        
+        let sdkBundle = Bundle(for: Self.self)
+        self.version = sdkBundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
     }
     
     static func isCoinbaseWalletInstalled() -> Bool {
@@ -31,21 +35,38 @@ public class CoinbaseWalletSDK {
     }
     
     private let keyManager = KeyManager()
-    private let messageRenderer = MessageRenderer()
+    // private let requestManager
+    // private let messageParser
     
     public func initiateHandshake() throws {
-        let publicKey = keyManager.publicKey
-        let request = HandshakeRequest(
-            appId: self.appId,
-            callback: self.callback,
-            publicKey: publicKey
+        let message = Message(
+            uuid: UUID(),
+            sender: keyManager.publicKey,
+            content: .handshake(appId: appId, callback: callback),
+            version: version
         )
-        let message = try messageRenderer.render(
-            handshake: request,
-            sender: publicKey,
-            recipient: self.host
-        )
-        UIApplication.shared.open(message, options: [.universalLinksOnly: true]) { result in
+        try self.send(message)
+    }
+    
+//    func render(
+//        request: Request,
+//        sender: WalletSegue.PublicKey,
+//        recipient: URL,
+//        symmetricKey: SymmetricKey
+//    ) throws -> URL {
+//        let jsonData = try JSONEncoder().encode(request)
+//        let encryptedData = try AES.GCM.seal(jsonData, using: symmetricKey).combined!
+//        let message = Message(
+//            sender: sender,
+//            content: .encrypted(encryptedData),
+//            version: version
+//        )
+//        return try message.asURL(to: recipient)
+//    }
+    
+    private func send(_ message: Message) throws {
+        let url = try message.asURL(to: callback)
+        UIApplication.shared.open(url, options: [.universalLinksOnly: true]) { result in
             print(result)
         }
     }
