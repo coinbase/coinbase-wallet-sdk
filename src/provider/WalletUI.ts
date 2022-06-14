@@ -13,7 +13,7 @@ import {
   SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse,
 } from "../relay/Web3Response";
-import { AddressString, SelectedProviderKey } from "../types";
+import { AddressString, ProviderName } from "../types";
 
 export interface WalletUIOptions {
   linkAPIUrl: string;
@@ -64,8 +64,8 @@ export interface WalletUI {
 
   selectProvider?(options: {
     onCancel: (error?: Error) => void;
-    onApprove: (selectedProviderKey: SelectedProviderKey) => void;
-    providerOptions: SelectedProviderKey[];
+    onApprove: (selectedProviderKey: ProviderName) => void;
+    providerOptions: ProviderName[];
   }): void;
 
   switchEthereumChain(options: {

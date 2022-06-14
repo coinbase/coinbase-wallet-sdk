@@ -31,8 +31,8 @@ export const RegExpString = OpaqueType<RegExpString>();
 
 export type Callback<T> = (err: Error | null, result: T | null) => void;
 
-export enum SelectedProviderKey {
-  coinbaseWallet = "CoinbaseWallet",
-  metamask = "MetaMask",
-  unselected = "",
+export enum ProviderName {
+  CoinbaseWallet = "CoinbaseWallet",
+  MetaMask = "MetaMask",
+  Unselected = "",
 }

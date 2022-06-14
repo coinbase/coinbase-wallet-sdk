@@ -9,7 +9,7 @@ import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
 import { LOCAL_STORAGE_ADDRESSES_KEY } from "../relay/WalletSDKRelayAbstract";
 import { WalletSDKRelayEventManager } from "../relay/WalletSDKRelayEventManager";
 import { Web3Method } from "../relay/Web3Method";
-import { SelectedProviderKey } from "../types";
+import { ProviderName } from "../types";
 import {
   CoinbaseWalletProvider,
   CoinbaseWalletProviderOptions,
@@ -147,8 +147,8 @@ describe("CoinbaseWalletProvider", () => {
       relayProvider: async () => Promise.resolve(relay),
     });
     const providerOptions = [
-      SelectedProviderKey.coinbaseWallet,
-      SelectedProviderKey.metamask,
+      ProviderName.CoinbaseWallet,
+      ProviderName.MetaMask,
     ];
     await provider.selectProvider(providerOptions);
     expect(spy).toHaveBeenCalledWith(providerOptions);

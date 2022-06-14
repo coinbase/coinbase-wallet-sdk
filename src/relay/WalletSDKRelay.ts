@@ -23,12 +23,7 @@ import { WalletSDKConnection } from "../connection/WalletSDKConnection";
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
 import { WalletUI, WalletUIOptions } from "../provider/WalletUI";
 import { WalletUIError } from "../provider/WalletUIError";
-import {
-  AddressString,
-  IntNumber,
-  RegExpString,
-  SelectedProviderKey,
-} from "../types";
+import { AddressString, IntNumber, RegExpString, ProviderName } from "../types";
 import {
   bigIntStringFromBN,
   createQrUrl,
@@ -893,7 +888,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
   }
 
   selectProvider(
-    providerOptions: SelectedProviderKey[],
+    providerOptions: ProviderName[],
   ): CancelablePromise<SelectProviderResponse> {
     const request: Web3Request = {
       method: Web3Method.selectProvider,
@@ -921,12 +916,12 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         this.handleWeb3ResponseMessage(
           Web3ResponseMessage({
             id,
-            response: SelectProviderResponse(SelectedProviderKey.unselected),
+            response: SelectProviderResponse(ProviderName.Unselected),
           }),
         );
       };
 
-      const approve = (selectedProviderKey: SelectedProviderKey) => {
+      const approve = (selectedProviderKey: ProviderName) => {
         this.handleWeb3ResponseMessage(
           Web3ResponseMessage({
             id,

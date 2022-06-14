@@ -19,12 +19,7 @@ import {
   RequestEthereumAccountsResponse,
   SwitchResponse,
 } from "../relay/Web3Response";
-import {
-  AddressString,
-  Callback,
-  IntNumber,
-  SelectedProviderKey,
-} from "../types";
+import { AddressString, Callback, IntNumber, ProviderName } from "../types";
 import {
   ensureAddressString,
   ensureBN,
@@ -543,8 +538,8 @@ export class CoinbaseWalletProvider
   }
 
   public async selectProvider(
-    providerOptions: SelectedProviderKey[],
-  ): Promise<SelectedProviderKey> {
+    providerOptions: ProviderName[],
+  ): Promise<ProviderName> {
     const relay = await this.initializeRelay();
     const res = await relay.selectProvider(providerOptions).promise;
     if (typeof res.result !== "string") {

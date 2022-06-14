@@ -1,12 +1,7 @@
 import { ethErrors, serializeError } from "eth-rpc-errors";
 
 import { JSONRPCRequest, JSONRPCResponse } from "../provider/JSONRPC";
-import {
-  AddressString,
-  IntNumber,
-  RegExpString,
-  SelectedProviderKey,
-} from "../types";
+import { AddressString, IntNumber, ProviderName, RegExpString } from "../types";
 import { EthereumTransactionParams } from "./EthereumTransactionParams";
 import { Session } from "./Session";
 import { Web3Request } from "./Web3Request";
@@ -62,7 +57,7 @@ export abstract class WalletSDKRelayAbstract {
   ): CancelablePromise<WatchAssetResponse>;
 
   abstract selectProvider(
-    providerOptions: SelectedProviderKey[],
+    providerOptions: ProviderName[],
   ): CancelablePromise<SelectProviderResponse>;
 
   abstract switchEthereumChain(

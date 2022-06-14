@@ -20,7 +20,7 @@ import {
   WatchAssetResponse,
   Web3Response,
 } from "../relay/Web3Response";
-import { AddressString, HexString, SelectedProviderKey } from "../types";
+import { AddressString, HexString, ProviderName } from "../types";
 
 function makeMockReturn<T>(returnValue?: T) {
   return { cancel: () => {}, promise: Promise.resolve(returnValue as T) };
@@ -61,7 +61,7 @@ export class MockRelayClass extends WalletSDKRelayAbstract {
   selectProvider(): CancelablePromise<SelectProviderResponse> {
     return makeMockReturn<SelectProviderResponse>({
       method: Web3Method.selectProvider,
-      result: SelectedProviderKey.coinbaseWallet,
+      result: ProviderName.CoinbaseWallet,
     });
   }
 
