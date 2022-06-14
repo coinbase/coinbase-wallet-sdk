@@ -25,7 +25,7 @@ class RequestManager {
 
     private var executions = [UUID: Execution]()
     
-    func creatRequest(
+    func createRequest(
         action: Request.Action,
         account: Request.Account?,
         responseHandler: @escaping ResponseHandler

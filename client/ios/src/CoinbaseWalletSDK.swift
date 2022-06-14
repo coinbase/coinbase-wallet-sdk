@@ -26,6 +26,10 @@ public class CoinbaseWalletSDK {
         self.callback = callback
     }
     
+    static func isCoinbaseWalletInstalled() -> Bool {
+        return UIApplication.shared.canOpenURL(URL(string: "cbwallet://")!)
+    }
+    
     private let keyManager = KeyManager()
     private let messageRenderer = MessageRenderer()
     
