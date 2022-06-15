@@ -6,10 +6,11 @@
 //
 
 import Foundation
+import CryptoKit
 
-struct Message {
-    enum Content {
-        case handshake(appId: String, callback: URL)
+struct Message: Codable {
+    enum Content: Codable {
+        case handshake(Handshake)
         case request(Request)
         case response(Response)
         case error(String)
@@ -18,4 +19,5 @@ struct Message {
     let uuid: UUID
     let sender: PublicKey
     let content: Content
+    let version: String
 }

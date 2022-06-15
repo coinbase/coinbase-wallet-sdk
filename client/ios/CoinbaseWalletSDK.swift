@@ -47,7 +47,8 @@ public class CoinbaseWalletSDK {
         let message = Message(
             uuid: UUID(),
             sender: keyManager.publicKey,
-            content: .handshake(appId: appId, callback: callback)
+            content: .handshake(Handshake(appId: appId, callback: callback)),
+            version: ""
         )
         try self.send(message)
     }
@@ -56,7 +57,8 @@ public class CoinbaseWalletSDK {
         let message = Message(
             uuid: UUID(),
             sender: keyManager.publicKey,
-            content: .request(request)
+            content: .request(request),
+            version: ""
         )
         try self.send(message)
     }

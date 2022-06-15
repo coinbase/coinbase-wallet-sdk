@@ -28,26 +28,10 @@ class MessageRenderer {
         to base: URL,
         with symmetricKey: SymmetricKey? = nil
     ) throws -> URL {
-        let content: EncryptedMessage.Content
-        switch message.content {
-        case .handshake(let appId, let callback):
-            content = .handshake(appId: appId, callback: callback)
-        case .error(let errorMessage):
-            content = .error(errorMessage)
-        case .request(let request):
-            content = try .request(self.encrypt(request, with: symmetricKey))
-        case .response(let response):
-            content = try .response(self.encrypt(response, with: symmetricKey))
-        }
+        let encoder = JSONEncoder()
+        encoder.userInfo[kSymmetricKeyUserInfoKey] = symmetricKey
         
-        let encryptedMessage = EncryptedMessage(
-            uuid: message.uuid,
-            sender: message.sender,
-            content: content,
-            version: version
-        )
-        
-        let data = try JSONEncoder().encode(encryptedMessage)
+        let data = try JSONEncoder().encode(message)
         let encodedString = data.base64EncodedString()
         
         var urlComponents = URLComponents(url: base, resolvingAgainstBaseURL: true)
@@ -78,49 +62,106 @@ class MessageRenderer {
             throw MessageRenderingError.notBase64Encoded
         }
         
-        let encryptedMessage = try JSONDecoder().decode(EncryptedMessage.self, from: data)
+        let decoder = JSONDecoder()
+        decoder.userInfo[kSymmetricKeyUserInfoKey] = symmetricKey
         
-        let content: Message.Content
-        switch encryptedMessage.content {
-        case .handshake(let appId, let callback):
-            content = .handshake(appId: appId, callback: callback)
-        case .error(let errorMessage):
-            content = .error(errorMessage)
-        case .request(let request):
-            content = try .request(self.decrypt(request, with: symmetricKey))
-        case .response(let response):
-            content = try .response(self.decrypt(response, with: symmetricKey))
-        }
-        
-        return Message(
-            uuid: encryptedMessage.uuid,
-            sender: encryptedMessage.sender,
-            content: content
-        )
+        return try decoder.decode(Message.self, from: data)
+    }
+}
+
+private var kSymmetricKeyUserInfoKey: CodingUserInfoKey {
+    return CodingUserInfoKey(rawValue: "kSymmetricKey")!
+}
+
+extension Message.Content {
+    enum CodingKeys: String, CodingKey {
+        case handshake, request, response, error
     }
     
-    private func encrypt<C: Encodable>(
-        _ content: C,
-        with symmetricKey: SymmetricKey?
-    ) throws -> Data {
-        guard let symmetricKey = symmetricKey else {
+    // Encoding
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        if let handshake = try container.decodeIfPresent(Handshake.self, forKey: .handshake) {
+            self = .handshake(handshake)
+        }
+        else if let error = try container.decodeIfPresent(String.self, forKey: .error) {
+            self = .error(error)
+        }
+        else if let encryptedRequest = try container.decodeIfPresent(Data.self, forKey: .request) {
+            self = .request(
+                try Self.decrypt(encryptedRequest, from: decoder)
+            )
+        }
+        else if let encryptedResponse = try container.decodeIfPresent(Data.self, forKey: .response) {
+            self = .response(
+                try Self.decrypt(encryptedResponse, from: decoder)
+            )
+        }
+        else {
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: [],
+                    debugDescription: "Content decoding error"
+                )
+            )
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case let .handshake(handshake):
+            try container.encode(handshake, forKey: .handshake)
+        case let .error(error):
+            try container.encode(error, forKey: .error)
+        case let .request(request):
+            try container.encode(
+                Self.encrypt(request, to: encoder),
+                forKey: .request
+            )
+        case let .response(response):
+            try container.encode(
+                Self.encrypt(response, to: encoder),
+                forKey: .request
+            )
+        }
+    }
+    
+    // Encryption
+    
+    static private func symmetricKey(from userInfo: [CodingUserInfoKey : Any]) throws -> SymmetricKey {
+        guard
+            let symmetricKey = userInfo[kSymmetricKeyUserInfoKey] as? SymmetricKey
+        else {
             throw MessageRenderingError.missingSymmetricKey
         }
+        return symmetricKey
+    }
+    
+    static private func encrypt<C: Encodable>(
+        _ content: C,
+        to encoder: Encoder
+    ) throws -> Data {
+        let symmetricKey = try self.symmetricKey(from: encoder.userInfo)
         
         let jsonData = try JSONEncoder().encode(content)
-        return try AES.GCM.seal(jsonData, using: symmetricKey).combined!
+        let encrypted = try AES.GCM.seal(jsonData, using: symmetricKey).combined!
+        
+        return encrypted
     }
     
-    private func decrypt<C: Decodable>(
+    static private func decrypt<C: Decodable>(
         _ data: Data,
-        with symmetricKey: SymmetricKey?
+        from decoder: Decoder
     ) throws -> C {
-        guard let symmetricKey = symmetricKey else {
-            throw MessageRenderingError.missingSymmetricKey
-        }
+        let symmetricKey = try self.symmetricKey(from: decoder.userInfo)
         
         let sealedBox = try AES.GCM.SealedBox(combined: data)
-        let decryptedData = try AES.GCM.open(sealedBox, using: symmetricKey)
-        return try JSONDecoder().decode(C.self, from: decryptedData)
+        let decrypted = try AES.GCM.open(sealedBox, using: symmetricKey)
+        
+        return try JSONDecoder().decode(C.self, from: decrypted)
     }
+    
 }
