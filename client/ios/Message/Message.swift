@@ -7,15 +7,15 @@
 
 import Foundation
 
-public struct Message: URLCodable {
-    enum Content: Codable {
+struct Message {
+    enum Content {
         case handshake(appId: String, callback: URL)
-        case request(Data) // encrypted
-        case response(Data) // encrypted
+        case request(Request)
+        case response(Response)
+        case error(String)
     }
     
     let uuid: UUID
     let sender: PublicKey
     let content: Content
-    let version: String
 }

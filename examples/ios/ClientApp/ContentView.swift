@@ -18,7 +18,7 @@ struct ContentView: View {
     
     @State var response: String?
     
-    @State var parsedResponse: Message?
+    @State var parsedResponse: Data?
     @State var decryptedMessage: String?
     
     var body: some View {

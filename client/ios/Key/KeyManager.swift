@@ -20,6 +20,8 @@ class KeyManager {
     
     var peerPublicKey: PublicKey?
     
+    var symmetricKey: SymmetricKey?
+    
     func deriveSymmetricKey(
         with ownPrivateKey: PrivateKey,
         _ peerPublicKey: PublicKey
