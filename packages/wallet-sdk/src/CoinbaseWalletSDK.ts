@@ -119,6 +119,7 @@ export class CoinbaseWalletSDK {
       storage: this._storage,
       relayEventManager: this._relayEventManager,
       diagnosticLogger: this._diagnosticLogger,
+      reloadOnDisconnect: this._reloadOnDisconnect,
     });
     this.setAppInfo(options.appName, options.appLogoUrl);
 
