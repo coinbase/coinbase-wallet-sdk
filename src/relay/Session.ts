@@ -1,9 +1,9 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { sha256 } from "js-sha256";
 import { fromEvent, Observable } from "rxjs";
 import { filter, map } from "rxjs/operators";
+import { sha256 } from "sha.js";
 
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
 import { randomBytesHex } from "../util";
@@ -29,9 +29,9 @@ export class Session {
     this._id = id || randomBytesHex(16);
     this._secret = secret || randomBytesHex(32);
 
-    const hash = sha256.create();
-    hash.update(`${this._id}, ${this._secret} WalletLink`); // ensure old sessions stay connected
-    this._key = hash.hex();
+    this._key = new sha256()
+      .update(`${this._id}, ${this._secret} WalletLink`) // ensure old sessions stay connected
+      .digest("hex");
 
     this._linked = !!linked;
   }
@@ -66,8 +66,7 @@ export class Session {
    * @param sessionId session ID
    */
   public static hash(sessionId: string): string {
-    const hash = sha256.create();
-    return hash.update(sessionId).hex();
+    return new sha256().update(sessionId).digest("hex");
   }
 
   public get id(): string {
