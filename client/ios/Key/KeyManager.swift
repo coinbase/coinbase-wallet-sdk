@@ -8,59 +8,64 @@
 import Foundation
 import CryptoKit
 
-typealias PrivateKey = Curve25519.KeyAgreement.PrivateKey
-typealias PublicKey = Curve25519.KeyAgreement.PublicKey
+public typealias PrivateKey = Curve25519.KeyAgreement.PrivateKey
+public typealias PublicKey = Curve25519.KeyAgreement.PublicKey
 
 class KeyManager {
-    private(set) var ownPrivateKey: PrivateKey {
-        didSet {
-            try? storage.store(ownPrivateKey, at: .ownPrivateKey)
-        }
-    }
-    private var peerPublicKey: PublicKey? {
-        didSet {
-            guard let publicKey = self.peerPublicKey else {
-                self.symmetricKey = nil
-                try? storage.delete(.peerPublicKey)
-                return
-            }
-            
-            self.symmetricKey = Self.deriveSymmetricKey(
-                with: self.ownPrivateKey,
-                publicKey
-            )
-            try? storage.store(publicKey, at: .peerPublicKey)
-        }
-    }
-    private(set) var symmetricKey: SymmetricKey?
-    
     private let storage = KeyStorage()
     
-    init() throws {
-        guard let storedKey = try storage.read(.ownPrivateKey) else {
-            // generate new private key
-            self.ownPrivateKey = PrivateKey()
-            return
-        }
-        self.ownPrivateKey = storedKey
-        
-        self.peerPublicKey = try storage.read(.peerPublicKey)
-    }
+    // MARK: own key pair
     
+    private(set) var ownPrivateKey: PrivateKey
     var ownPublicKey: PublicKey {
         return ownPrivateKey.publicKey
     }
     
-    func regenerateOwnPrivateKey() {
-        self.ownPrivateKey = PrivateKey()
+    // MARK: peer key
+    
+    private(set) var peerPublicKey: PublicKey? {
+        willSet { _symmetricKey = nil }
+    }
+    
+    // MARK: derived symmetric key
+    
+    private var _symmetricKey: SymmetricKey?
+    var symmetricKey: SymmetricKey? {
+        if _symmetricKey == nil, let peerPublicKey = peerPublicKey {
+            _symmetricKey = Self.deriveSymmetricKey(
+                with: ownPrivateKey, peerPublicKey
+            )
+        }
+        return _symmetricKey
+    }
+    
+    // MARK: methods
+    
+    init() {
+        guard let storedKey = try? storage.read(.ownPrivateKey) else {
+            // generate new private key
+            self.ownPrivateKey = PrivateKey()
+            try? self.resetOwnPrivateKey(with: ownPrivateKey)
+            return
+        }
+        self.ownPrivateKey = storedKey
+        
+        self.peerPublicKey = try? storage.read(.peerPublicKey)
+    }
+    
+    func resetOwnPrivateKey(with key: PrivateKey = PrivateKey()) throws {
         self.peerPublicKey = nil
+        self.ownPrivateKey = key
+        try storage.store(key, at: .ownPrivateKey)
+        try storage.delete(.peerPublicKey)
     }
     
-    func storePeerPublicKey(_ key: PublicKey) {
+    func storePeerPublicKey(_ key: PublicKey) throws {
         self.peerPublicKey = key
+        try storage.store(key, at: .peerPublicKey)
     }
     
-    static func deriveSymmetricKey(
+    static private func deriveSymmetricKey(
         with ownPrivateKey: PrivateKey,
         _ peerPublicKey: PublicKey
     ) -> SymmetricKey {

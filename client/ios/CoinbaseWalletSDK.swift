@@ -35,7 +35,7 @@ public class CoinbaseWalletSDK {
 //        CoinbaseWalletSDK.shared = CoinbaseWalletSDK(host: host, callback: callback)
 //    }
     
-    let keyManager: KeyManager = try! KeyManager()
+    let keyManager: KeyManager = KeyManager()
     let messageConverter = MessageConverter()
     let taskManager = TaskManager()
     
