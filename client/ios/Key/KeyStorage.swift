@@ -8,10 +8,17 @@
 import Foundation
 
 class KeyStorage {
+    private let service: String
+    
+    init(host: URL) {
+        service = "wsegue.keystorage.\(host.host!)"
+    }
+    
     func store<K>(_ data: K, at item: KeyStorageItem<K>) throws {
         let query = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrAccount: item.name,
+            kSecAttrService: service,
             kSecAttrAccessible: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
             kSecUseDataProtectionKeychain: true,
             kSecValueData: data.rawRepresentation
@@ -27,6 +34,7 @@ class KeyStorage {
         let query = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrAccount: item.name,
+            kSecAttrService: service,
             kSecUseDataProtectionKeychain: true,
             kSecReturnData: true
         ] as [String: Any]
@@ -47,7 +55,8 @@ class KeyStorage {
         let query = [
             kSecClass: kSecClassGenericPassword,
             kSecUseDataProtectionKeychain: true,
-            kSecAttrAccount: item.name
+            kSecAttrAccount: item.name,
+            kSecAttrService: service
         ] as [String: Any]
         
         switch SecItemDelete(query as CFDictionary) {

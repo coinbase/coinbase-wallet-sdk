@@ -13,6 +13,10 @@ public class CoinbaseWalletSDK {
     let host: URL
     let callback: URL
     
+    let keyManager: KeyManager
+    let messageConverter: MessageConverter
+    let taskManager: TaskManager
+    
     /// Instantiate Coinbase Wallet SDK
     /// - Parameters:
     ///   - host: universal link url of the host wallet to interact with
@@ -24,6 +28,10 @@ public class CoinbaseWalletSDK {
         self.appId = Bundle.main.bundleIdentifier!
         self.host = host
         self.callback = callback
+        
+        self.keyManager = KeyManager(host: host)
+        self.messageConverter = MessageConverter()
+        self.taskManager = TaskManager()
     }
     
 //    public private(set) static var shared: CoinbaseWalletSDK?
@@ -35,9 +43,7 @@ public class CoinbaseWalletSDK {
 //        CoinbaseWalletSDK.shared = CoinbaseWalletSDK(host: host, callback: callback)
 //    }
     
-    let keyManager: KeyManager = KeyManager()
-    let messageConverter = MessageConverter()
-    let taskManager = TaskManager()
+    // MARK: - Send message
     
     public func initiateHandshake(onResponse: @escaping ResponseHandler) {
         let message = Message(
@@ -77,6 +83,23 @@ public class CoinbaseWalletSDK {
             self.taskManager.registerResponseHandler(for: message, onResponse)
         }
     }
+    
+    // MARK: - Session
+    
+    public func isConnected() -> Bool {
+        return keyManager.symmetricKey != nil
+    }
+    
+    public func resetConnection() -> Result<Void, Error> {
+        do {
+            try keyManager.resetOwnPrivateKey()
+            return .success(())
+        } catch {
+            return .failure(error)
+        }
+    }
+    
+    // MARK: - static methods
     
     public static func isCoinbaseWalletInstalled() -> Bool {
         return UIApplication.shared.canOpenURL(URL(string: "cbwallet://")!)

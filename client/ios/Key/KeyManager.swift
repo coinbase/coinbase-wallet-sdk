@@ -12,8 +12,6 @@ public typealias PrivateKey = Curve25519.KeyAgreement.PrivateKey
 public typealias PublicKey = Curve25519.KeyAgreement.PublicKey
 
 class KeyManager {
-    private let storage = KeyStorage()
-    
     // MARK: own key pair
     
     private(set) var ownPrivateKey: PrivateKey
@@ -41,7 +39,11 @@ class KeyManager {
     
     // MARK: methods
     
-    init() {
+    private let storage: KeyStorage
+    
+    init(host: URL) {
+        self.storage = KeyStorage(host: host)
+        
         guard let storedKey = try? storage.read(.ownPrivateKey) else {
             // generate new private key
             self.ownPrivateKey = PrivateKey()

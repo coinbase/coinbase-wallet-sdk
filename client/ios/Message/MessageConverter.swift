@@ -18,7 +18,7 @@ class MessageConverter {
     
     func encode(
         _ message: Message,
-        to base: URL,
+        to recipient: URL,
         with symmetricKey: SymmetricKey? = nil
     ) throws -> URL {
         let encoder = JSONEncoder()
@@ -27,8 +27,10 @@ class MessageConverter {
         let data = try JSONEncoder().encode(message)
         let encodedString = data.base64EncodedString()
         
-        var urlComponents = URLComponents(url: base, resolvingAgainstBaseURL: true)
-        urlComponents?.path = "wsegue"
+        var urlComponents = URLComponents(url: recipient, resolvingAgainstBaseURL: true)
+        if recipient.path.isEmpty {
+            urlComponents?.path = "wsegue"
+        }
         urlComponents?.queryItems = [URLQueryItem(name: "p", value: encodedString)]
         
         guard let url = urlComponents?.url else {

@@ -17,10 +17,10 @@ struct KeyStorageItem<K: RawRepresentableKey> {
 
 extension KeyStorageItem {
     static var ownPrivateKey: KeyStorageItem<PrivateKey> {
-        return KeyStorageItem<PrivateKey>("wsegue.coinbasewallet.ownPrivateKey")
+        return KeyStorageItem<PrivateKey>("wsegue.ownPrivateKey")
     }
     static var peerPublicKey: KeyStorageItem<PublicKey> {
-        return KeyStorageItem<PublicKey>("wsegue.coinbasewallet.peerPublicKey")
+        return KeyStorageItem<PublicKey>("wsegue.peerPublicKey")
     }
 }
 
