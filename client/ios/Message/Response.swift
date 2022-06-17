@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Response: Codable {
+public struct Response: Codable {
     // TODO
     typealias Result = String
     
@@ -15,4 +15,4 @@ struct Response: Codable {
     let results: [Result]
 }
 
-// TODO, handshake session expiration
+public typealias ResponseHandler = (Result<Response, Error>) -> Void

@@ -35,38 +35,50 @@ public class CoinbaseWalletSDK {
 //        CoinbaseWalletSDK.shared = CoinbaseWalletSDK(host: host, callback: callback)
 //    }
     
-    static func isCoinbaseWalletInstalled() -> Bool {
-        return UIApplication.shared.canOpenURL(URL(string: "cbwallet://")!)
-    }
+    let keyManager = KeyManager()
+    let messageConverter = MessageConverter()
+    let taskManager = TaskManager()
     
-    private let keyManager = KeyManager()
-    private let messageRenderer = MessageRenderer()
-    private let executionManager = TaskManager()
-    
-    public func initiateHandshake() throws {
+    public func initiateHandshake(onResponse: @escaping ResponseHandler) {
         let message = Message(
             uuid: UUID(),
             sender: keyManager.publicKey,
             content: .handshake(Handshake(appId: appId, callback: callback)),
             version: ""
         )
-        try self.send(message)
+        self.send(message, onResponse)
     }
     
-    public func makeRequest(_ request: Request) throws {
+    public func makeRequest(_ request: Request, onResponse: @escaping ResponseHandler) {
         let message = Message(
             uuid: UUID(),
             sender: keyManager.publicKey,
             content: .request(request),
             version: ""
         )
-        try self.send(message)
+        self.send(message, onResponse)
     }
     
-    private func send(_ message: Message) throws {
-        let url = try messageRenderer.encode(message, to: host, with: keyManager.symmetricKey)
-        UIApplication.shared.open(url, options: [.universalLinksOnly: true]) { result in
-            print(result)
+    private func send(_ message: Message, _ onResponse: @escaping ResponseHandler) {
+        let url: URL
+        do {
+            url = try self.messageConverter.encode(message, to: host, with: keyManager.symmetricKey)
+        } catch {
+            onResponse(.failure(error))
+            return
         }
+        
+        UIApplication.shared.open(url, options: [.universalLinksOnly: true]) { result in
+            guard result == true else {
+                onResponse(.failure(CoinbaseWalletSDKError.openUrlFailed))
+                return
+            }
+            
+            self.taskManager.registerResponseHandler(for: message, onResponse)
+        }
+    }
+    
+    public static func isCoinbaseWalletInstalled() -> Bool {
+        return UIApplication.shared.canOpenURL(URL(string: "cbwallet://")!)
     }
 }

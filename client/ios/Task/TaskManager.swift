@@ -10,8 +10,8 @@ import Foundation
 class TaskManager {
     private var tasks = [UUID: Task]()
     
-    func onResponse(
-        to requestMessage: Message,
+    func registerResponseHandler(
+        for requestMessage: Message,
         _ handler: @escaping ResponseHandler
     ) {
         let uuid = requestMessage.uuid

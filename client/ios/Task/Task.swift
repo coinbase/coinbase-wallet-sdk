@@ -7,8 +7,6 @@
 
 import Foundation
 
-typealias ResponseHandler = (Request, Response) -> Void
-
 struct Task {
     let message: Message
     let handler: ResponseHandler
