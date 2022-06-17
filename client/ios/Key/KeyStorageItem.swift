@@ -7,11 +7,20 @@
 
 import Foundation
 
-class KeyStorageItem<K: RawRepresentableKey> {
+struct KeyStorageItem<K: RawRepresentableKey> {
     let name: String
     
     init(_ name: String) {
         self.name = name
+    }
+}
+
+extension KeyStorageItem {
+    static var ownPrivateKey: KeyStorageItem<PrivateKey> {
+        return KeyStorageItem<PrivateKey>("wsegue.coinbasewallet.ownPrivateKey")
+    }
+    static var peerPublicKey: KeyStorageItem<PublicKey> {
+        return KeyStorageItem<PublicKey>("wsegue.coinbasewallet.peerPublicKey")
     }
 }
 

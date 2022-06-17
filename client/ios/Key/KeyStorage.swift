@@ -8,13 +8,13 @@
 import Foundation
 
 class KeyStorage {
-    func storeKey<K>(_ key: K, to item: KeyStorageItem<K>) throws {
+    func store<K>(_ data: K, at item: KeyStorageItem<K>) throws {
         let query = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrAccount: item.name,
             kSecAttrAccessible: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
             kSecUseDataProtectionKeychain: true,
-            kSecValueData: key.rawRepresentation
+            kSecValueData: data.rawRepresentation
         ] as [String: Any]
         
         let status = SecItemAdd(query as CFDictionary, nil)
@@ -23,7 +23,7 @@ class KeyStorage {
         }
     }
     
-    func readKey<K>(from item: KeyStorageItem<K>) throws -> K? {
+    func read<K>(_ item: KeyStorageItem<K>) throws -> K? {
         let query = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrAccount: item.name,
@@ -43,7 +43,7 @@ class KeyStorage {
         }
     }
     
-    func deleteKey<K>(_ item: KeyStorageItem<K>) throws {
+    func delete<K>(_ item: KeyStorageItem<K>) throws {
         let query = [
             kSecClass: kSecClassGenericPassword,
             kSecUseDataProtectionKeychain: true,

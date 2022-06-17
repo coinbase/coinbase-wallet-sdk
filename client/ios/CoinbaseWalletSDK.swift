@@ -35,14 +35,14 @@ public class CoinbaseWalletSDK {
 //        CoinbaseWalletSDK.shared = CoinbaseWalletSDK(host: host, callback: callback)
 //    }
     
-    let keyManager = KeyManager()
+    let keyManager: KeyManager = try! KeyManager()
     let messageConverter = MessageConverter()
     let taskManager = TaskManager()
     
     public func initiateHandshake(onResponse: @escaping ResponseHandler) {
         let message = Message(
             uuid: UUID(),
-            sender: keyManager.publicKey,
+            sender: keyManager.ownPublicKey,
             content: .handshake(Handshake(appId: appId, callback: callback)),
             version: ""
         )
@@ -52,7 +52,7 @@ public class CoinbaseWalletSDK {
     public func makeRequest(_ request: Request, onResponse: @escaping ResponseHandler) {
         let message = Message(
             uuid: UUID(),
-            sender: keyManager.publicKey,
+            sender: keyManager.ownPublicKey,
             content: .request(request),
             version: ""
         )

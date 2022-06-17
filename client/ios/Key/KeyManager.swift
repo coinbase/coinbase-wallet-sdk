@@ -8,24 +8,28 @@
 import Foundation
 import CryptoKit
 
-public typealias PrivateKey = Curve25519.KeyAgreement.PrivateKey
-public typealias PublicKey = Curve25519.KeyAgreement.PublicKey
-
-let kOwnPrivateKey = KeyStorageItem<PrivateKey>("wsegue.coinbasewallet.ownPrivateKey")
-let kPeerPublicKey = KeyStorageItem<PublicKey>("wsegue.coinbasewallet.peerPublicKey")
+typealias PrivateKey = Curve25519.KeyAgreement.PrivateKey
+typealias PublicKey = Curve25519.KeyAgreement.PublicKey
 
 class KeyManager {
-    private(set) var ownPrivateKey: PrivateKey
-    private(set) var peerPublicKey: PublicKey? {
+    private(set) var ownPrivateKey: PrivateKey {
         didSet {
-            guard let peerPublicKey = self.peerPublicKey else {
+            try? storage.store(ownPrivateKey, at: .ownPrivateKey)
+        }
+    }
+    private var peerPublicKey: PublicKey? {
+        didSet {
+            guard let publicKey = self.peerPublicKey else {
                 self.symmetricKey = nil
+                try? storage.delete(.peerPublicKey)
                 return
             }
+            
             self.symmetricKey = Self.deriveSymmetricKey(
                 with: self.ownPrivateKey,
-                peerPublicKey
+                publicKey
             )
+            try? storage.store(publicKey, at: .peerPublicKey)
         }
     }
     private(set) var symmetricKey: SymmetricKey?
@@ -33,33 +37,27 @@ class KeyManager {
     private let storage = KeyStorage()
     
     init() throws {
-        guard let storedKey = try storage.readKey(from: kOwnPrivateKey) else {
+        guard let storedKey = try storage.read(.ownPrivateKey) else {
             // generate new private key
             self.ownPrivateKey = PrivateKey()
-            try storage.storeKey(ownPrivateKey, to: kOwnPrivateKey)
-            try storage.deleteKey(kPeerPublicKey)
             return
         }
         self.ownPrivateKey = storedKey
         
-        self.peerPublicKey = try storage.readKey(from: kPeerPublicKey)
+        self.peerPublicKey = try storage.read(.peerPublicKey)
     }
     
     var ownPublicKey: PublicKey {
         return ownPrivateKey.publicKey
     }
     
-    func regenerateOwnPrivateKey() throws {
+    func regenerateOwnPrivateKey() {
         self.ownPrivateKey = PrivateKey()
-        try storage.storeKey(ownPrivateKey, to: kOwnPrivateKey)
-        
         self.peerPublicKey = nil
-        try storage.deleteKey(kPeerPublicKey)
     }
     
-    func storePeerPublicKey(_ key: PublicKey) throws {
+    func storePeerPublicKey(_ key: PublicKey) {
         self.peerPublicKey = key
-        try storage.storeKey(key, to: kPeerPublicKey)
     }
     
     static func deriveSymmetricKey(
