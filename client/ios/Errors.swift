@@ -13,4 +13,5 @@ enum CoinbaseWalletSDKError: Error {
     case malformedUrl
     case missingSymmetricKey
     case openUrlFailed
+    case keyStoreFailed(String)
 }

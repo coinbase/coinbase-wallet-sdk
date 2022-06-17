@@ -21,6 +21,8 @@
 		5D38BBC528595D3700DCDABD /* MessageConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D38BBC428595D3700DCDABD /* MessageConverter.swift */; };
 		5D38BBC9285975D200DCDABD /* Handshake.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D38BBC8285975D200DCDABD /* Handshake.swift */; };
 		5D76BCDD285C1A8F00637927 /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D76BCDC285C1A8F00637927 /* Errors.swift */; };
+		5D76BCDF285CFC9D00637927 /* KeyStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D76BCDE285CFC9D00637927 /* KeyStorage.swift */; };
+		5D76BCE1285D067F00637927 /* KeyStorageItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D76BCE0285D067F00637927 /* KeyStorageItem.swift */; };
 		6EB13E5F69C1C61A1B71564FD33AAB18 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73010CC983E3809BECEE5348DA1BB8C6 /* Foundation.framework */; };
 		76F0ABD9F1B579693855B82884D93ED6 /* Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = 570E3A0CEAB3B3C09460DE162F3F29A3 /* Request.swift */; };
 		9475246946A842C1B1C95CA44A5A5C98 /* WalletSegue-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = 3E99E1DCEA1913F3196157A2F54A5F95 /* WalletSegue-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -87,6 +89,8 @@
 		5D38BBC428595D3700DCDABD /* MessageConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageConverter.swift; sourceTree = "<group>"; };
 		5D38BBC8285975D200DCDABD /* Handshake.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Handshake.swift; sourceTree = "<group>"; };
 		5D76BCDC285C1A8F00637927 /* Errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Errors.swift; sourceTree = "<group>"; };
+		5D76BCDE285CFC9D00637927 /* KeyStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyStorage.swift; sourceTree = "<group>"; };
+		5D76BCE0285D067F00637927 /* KeyStorageItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyStorageItem.swift; sourceTree = "<group>"; };
 		5F567AC4005DFFE3A498ABDF0B2E7CA3 /* Pods-ClientApp-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-ClientApp-acknowledgements.markdown"; sourceTree = "<group>"; };
 		61FC729BFBF243D5C846357346CFB625 /* Pods-ClientApp-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-ClientApp-frameworks.sh"; sourceTree = "<group>"; };
 		63D170C77FB12CD08F310FF0552C3CE0 /* Response.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Response.swift; sourceTree = "<group>"; };
@@ -261,6 +265,8 @@
 			children = (
 				FAB123813646C523ECDBC3B2C2580411 /* KeyManager.swift */,
 				2BBF5E33C729D7CE3DE342EA4136DE4C /* PublicKey+Codable.swift */,
+				5D76BCDE285CFC9D00637927 /* KeyStorage.swift */,
+				5D76BCE0285D067F00637927 /* KeyStorageItem.swift */,
 			);
 			path = Key;
 			sourceTree = "<group>";
@@ -568,8 +574,10 @@
 				AFE4B7EF10EF0BFB14668C6E5FB4C503 /* KeyManager.swift in Sources */,
 				DE31186D3CD78783D2C549B512F88919 /* Message.swift in Sources */,
 				B658B2071DDB1209C27D0D38AD316E7D /* PublicKey+Codable.swift in Sources */,
+				5D76BCDF285CFC9D00637927 /* KeyStorage.swift in Sources */,
 				5D38BBC9285975D200DCDABD /* Handshake.swift in Sources */,
 				76F0ABD9F1B579693855B82884D93ED6 /* Request.swift in Sources */,
+				5D76BCE1285D067F00637927 /* KeyStorageItem.swift in Sources */,
 				5D76BCDD285C1A8F00637927 /* Errors.swift in Sources */,
 				982AFB3CEE3435A9ACF37C59D7AF24E3 /* Response.swift in Sources */,
 				5D38BBC528595D3700DCDABD /* MessageConverter.swift in Sources */,
