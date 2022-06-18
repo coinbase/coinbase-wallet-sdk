@@ -7,16 +7,16 @@
 
 import Foundation
 
-struct ResponseMessage: DecodableMessage {
-    enum Content: Decodable {
+public struct ResponseMessage: DecodableMessage {
+    public enum Content: Decodable {
         case response(Response)
         case error(ErrorContent)
     }
     
-    let uuid: UUID
-    let sender: PublicKey
-    let content: Content
-    let version: String
+    public let uuid: UUID
+    public let sender: PublicKey
+    public let content: Content
+    public let version: String
 }
 
 extension ResponseMessage.Content {
@@ -24,7 +24,7 @@ extension ResponseMessage.Content {
         case response, error
     }
     
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         if let error = try container.decodeIfPresent(ErrorContent.self, forKey: .error) {
@@ -36,12 +36,7 @@ extension ResponseMessage.Content {
             )
         }
         else {
-            throw DecodingError.dataCorrupted(
-                DecodingError.Context(
-                    codingPath: [],
-                    debugDescription: "Content decoding error"
-                )
-            )
+            throw CoinbaseWalletSDKError.decodingFailed
         }
     }
 }
@@ -57,7 +52,7 @@ public struct Response: Codable {
 public typealias ResponseResult = Result<Response, Error>
 public typealias ResponseHandler = (ResponseResult) -> Void
 
-struct ErrorContent: Codable, Error {
+public struct ErrorContent: Codable, Error {
     let requestId: UUID
     let description: String
 }

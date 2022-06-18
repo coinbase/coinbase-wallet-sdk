@@ -8,8 +8,8 @@
 import Foundation
 import CryptoKit
 
-class MessageConverter {
-    static func encode<M: EncodableMessage>(
+public final class MessageConverter {
+    public static func encode<M: EncodableMessage>(
         _ message: M,
         to recipient: URL,
         with symmetricKey: SymmetricKey?
@@ -30,7 +30,7 @@ class MessageConverter {
         return url
     }
     
-    static func decode<M: DecodableMessage>(
+    public static func decode<M: DecodableMessage>(
         _ url: URL,
         with symmetricKey: SymmetricKey?
     ) throws -> M {

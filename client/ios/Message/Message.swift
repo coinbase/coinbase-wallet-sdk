@@ -7,17 +7,15 @@
 
 import Foundation
 
-protocol Message {
+public protocol Message {
     associatedtype Content
     
     var uuid: UUID { get }
     var sender: PublicKey { get }
     var content: Content { get }
     var version: String { get }
-    
-    init(uuid: UUID, sender: PublicKey, content: Content, version: String)
 }
 
-protocol EncodableMessage: Message, Encodable where Content: Encodable {}
+public protocol EncodableMessage: Message, Encodable where Content: Encodable {}
 
-protocol DecodableMessage: Message, Decodable where Content: Decodable {}
+public protocol DecodableMessage: Message, Decodable where Content: Decodable {}

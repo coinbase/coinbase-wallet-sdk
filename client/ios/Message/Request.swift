@@ -7,16 +7,16 @@
 
 import Foundation
 
-struct RequestMessage: EncodableMessage {
-    enum Content: Encodable {
+public struct RequestMessage: EncodableMessage {
+    public enum Content: Encodable {
         case handshake(Handshake)
         case request(Request)
     }
     
-    let uuid: UUID
-    let sender: PublicKey
-    let content: Content
-    let version: String
+    public let uuid: UUID
+    public let sender: PublicKey
+    public let content: Content
+    public let version: String
 }
 
 extension RequestMessage.Content {
@@ -24,7 +24,7 @@ extension RequestMessage.Content {
         case handshake, request
     }
     
-    func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         switch self {
         case let .handshake(handshake):
@@ -53,7 +53,7 @@ public struct Request: Codable {
     }
 }
 
-struct Handshake: Codable {
+public struct Handshake: Codable {
     let appId: String
     let callback: URL
 }
