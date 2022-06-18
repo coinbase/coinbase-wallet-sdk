@@ -9,20 +9,13 @@ import Foundation
 import CryptoKit
 
 class MessageConverter {
-    let version: String
-    
-    init() {
-        let sdkBundle = Bundle(for: Self.self)
-        self.version = sdkBundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
-    }
-    
-    func encode(
-        _ message: Message,
+    static func encode<M: EncodableMessage>(
+        _ message: M,
         to recipient: URL,
         with symmetricKey: SymmetricKey?
     ) throws -> URL {
         let encoder = JSONEncoder()
-        encoder.userInfo[kSymmetricKeyUserInfoKey] = symmetricKey
+        encoder.userInfo[Cryptography.kSymmetricKeyUserInfoKey] = symmetricKey
         
         let data = try JSONEncoder().encode(message)
         let encodedString = data.base64EncodedString()
@@ -37,10 +30,10 @@ class MessageConverter {
         return url
     }
     
-    func decode(
+    static func decode<M: DecodableMessage>(
         _ url: URL,
         with symmetricKey: SymmetricKey?
-    ) throws -> Message {
+    ) throws -> M {
         guard
             let urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false),
             let queryItem = urlComponents.queryItems?.first(where: { $0.value == "p" }),
@@ -54,8 +47,8 @@ class MessageConverter {
         }
         
         let decoder = JSONDecoder()
-        decoder.userInfo[kSymmetricKeyUserInfoKey] = symmetricKey
+        decoder.userInfo[Cryptography.kSymmetricKeyUserInfoKey] = symmetricKey
         
-        return try decoder.decode(Message.self, from: data)
+        return try decoder.decode(M.self, from: data)
     }
 }

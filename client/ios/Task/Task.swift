@@ -8,7 +8,7 @@
 import Foundation
 
 struct Task {
-    let message: Message
+    let request: RequestMessage
     let handler: ResponseHandler
     let timestamp: Date
 }
