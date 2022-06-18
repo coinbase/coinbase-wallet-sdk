@@ -13,46 +13,59 @@ public class CoinbaseWalletSDK {
     let host: URL
     let callback: URL
     
-    let keyManager: KeyManager
-    let messageConverter: MessageConverter
-    let taskManager: TaskManager
+    lazy var keyManager: KeyManager = {
+        KeyManager(host: self.host)
+    }()
+    lazy var messageConverter: MessageConverter = {
+        MessageConverter()
+    }()
+    lazy var taskManager: TaskManager = {
+        TaskManager()
+    }()
     
     /// Instantiate Coinbase Wallet SDK
     /// - Parameters:
     ///   - host: universal link url of the host wallet to interact with
     ///   - callback: own url to get responses back
     public init(
-        host: URL = URL(string: "https://go.cb-w.com/")!,
+        host: URL = URL(string: "https://go.cb-w.com/wsegue")!,
         callback: URL
     ) {
         self.appId = Bundle.main.bundleIdentifier!
         self.host = host
-        self.callback = callback
-        
-        self.keyManager = KeyManager(host: host)
-        self.messageConverter = MessageConverter()
-        self.taskManager = TaskManager()
+        if callback.pathComponents.count < 2 { // [] or ["/"]
+            self.callback = callback.appendingPathComponent("wsegue")
+        } else {
+            self.callback = callback
+        }
     }
-    
-//    public private(set) static var shared: CoinbaseWalletSDK?
-//
-//    public static func setup(
-//        host: URL = URL(string: "https://go.cb-w.com/")!,
-//        callback: URL
-//    ) {
-//        CoinbaseWalletSDK.shared = CoinbaseWalletSDK(host: host, callback: callback)
-//    }
     
     // MARK: - Send message
     
-    public func initiateHandshake(onResponse: @escaping ResponseHandler) {
+    public func initiateHandshake(completion: @escaping (Error?) -> Void) {
         let message = Message(
             uuid: UUID(),
             sender: keyManager.ownPublicKey,
             content: .handshake(Handshake(appId: appId, callback: callback)),
             version: ""
         )
-        self.send(message, onResponse)
+        self.send(message) { result in
+            switch result {
+            case .success(let response):
+                guard
+                    let encodedPeerPublicKey = response.results.first,
+                    let data = Data(base64Encoded: encodedPeerPublicKey),
+                    let peerPublicKey = try? PublicKey(rawRepresentation: data)
+                else {
+                    completion(CoinbaseWalletSDKError.decodingFailed)
+                    return
+                }
+                try! self.keyManager.storePeerPublicKey(peerPublicKey)
+                
+            case .failure(let error):
+                completion(error)
+            }
+        }
     }
     
     public func makeRequest(_ request: Request, onResponse: @escaping ResponseHandler) {
@@ -68,7 +81,7 @@ public class CoinbaseWalletSDK {
     private func send(_ message: Message, _ onResponse: @escaping ResponseHandler) {
         let url: URL
         do {
-            url = try self.messageConverter.encode(message, to: host, with: keyManager.symmetricKey)
+            url = try messageConverter.encode(message, to: host, with: keyManager.symmetricKey)
         } catch {
             onResponse(.failure(error))
             return
@@ -82,6 +95,29 @@ public class CoinbaseWalletSDK {
             
             self.taskManager.registerResponseHandler(for: message, onResponse)
         }
+    }
+    
+    // MARK: - Receive message
+    
+    private func isWalletSegueMessage(_ url: URL) -> Bool {
+        return url.host == callback.host && url.path == callback.path
+    }
+    
+    public func handleResponse(_ url: URL) -> Result<Bool, Error> {
+        guard isWalletSegueMessage(url) else {
+            return .success(false)
+        }
+        
+        let message: Message
+        do {
+            message = try messageConverter.decode(url, with: keyManager.symmetricKey)
+        } catch {
+            return .failure(error)
+        }
+        
+        taskManager.handleMessage(message)
+        
+        return .success(true)
     }
     
     // MARK: - Session

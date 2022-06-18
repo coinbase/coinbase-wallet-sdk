@@ -8,10 +8,9 @@
 import Foundation
 
 enum CoinbaseWalletSDKError: Error {
-    case notBase64Encoded
-    case urlEncodingFailed
-    case malformedUrl
+    case encodingFailed
+    case decodingFailed
     case missingSymmetricKey
     case openUrlFailed
-    case keyStoreFailed(String)
+    case walletReturnedError(String)
 }

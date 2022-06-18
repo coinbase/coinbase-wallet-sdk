@@ -10,12 +10,5 @@ import Foundation
 struct Task {
     let message: Message
     let handler: ResponseHandler
-    
-    enum State {
-        case created
-        case executed
-        case failed
-    }
-    
-    var state: State = .created
+    let timestamp: Date
 }

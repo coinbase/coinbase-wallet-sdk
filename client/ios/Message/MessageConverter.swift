@@ -13,13 +13,13 @@ class MessageConverter {
     
     init() {
         let sdkBundle = Bundle(for: Self.self)
-        self.version = sdkBundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
+        self.version = sdkBundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
     }
     
     func encode(
         _ message: Message,
         to recipient: URL,
-        with symmetricKey: SymmetricKey? = nil
+        with symmetricKey: SymmetricKey?
     ) throws -> URL {
         let encoder = JSONEncoder()
         encoder.userInfo[kSymmetricKeyUserInfoKey] = symmetricKey
@@ -28,13 +28,10 @@ class MessageConverter {
         let encodedString = data.base64EncodedString()
         
         var urlComponents = URLComponents(url: recipient, resolvingAgainstBaseURL: true)
-        if recipient.path.isEmpty {
-            urlComponents?.path = "wsegue"
-        }
         urlComponents?.queryItems = [URLQueryItem(name: "p", value: encodedString)]
         
         guard let url = urlComponents?.url else {
-            throw CoinbaseWalletSDKError.urlEncodingFailed
+            throw CoinbaseWalletSDKError.encodingFailed
         }
         
         return url
@@ -42,19 +39,18 @@ class MessageConverter {
     
     func decode(
         _ url: URL,
-        with symmetricKey: SymmetricKey? = nil
+        with symmetricKey: SymmetricKey?
     ) throws -> Message {
         guard
             let urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false),
-            urlComponents.path == "wsegue",
             let queryItem = urlComponents.queryItems?.first(where: { $0.value == "p" }),
             let encodedString = queryItem.value
         else {
-            throw CoinbaseWalletSDKError.malformedUrl
+            throw CoinbaseWalletSDKError.decodingFailed
         }
         
         guard let data = Data(base64Encoded: encodedString) else {
-            throw CoinbaseWalletSDKError.notBase64Encoded
+            throw CoinbaseWalletSDKError.decodingFailed
         }
         
         let decoder = JSONDecoder()

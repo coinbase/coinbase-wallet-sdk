@@ -15,4 +15,5 @@ public struct Response: Codable {
     let results: [Result]
 }
 
-public typealias ResponseHandler = (Result<Response, Error>) -> Void
+public typealias ResponseResult = Result<Response, Error>
+public typealias ResponseHandler = (ResponseResult) -> Void

@@ -7,6 +7,12 @@
 
 import Foundation
 
+enum KeyStorageError: Error {
+    case storeFailed(OSStatus)
+    case readFailed(OSStatus)
+    case deleteFailed(OSStatus)
+}
+
 class KeyStorage {
     private let service: String
     
@@ -26,7 +32,7 @@ class KeyStorage {
         
         let status = SecItemAdd(query as CFDictionary, nil)
         guard status == errSecSuccess else {
-            throw CoinbaseWalletSDKError.keyStoreFailed("Unable to store item: \(status.message)")
+            throw KeyStorageError.storeFailed(status)
         }
     }
     
@@ -47,7 +53,7 @@ class KeyStorage {
         case errSecItemNotFound:
             return nil
         case let status:
-            throw CoinbaseWalletSDKError.keyStoreFailed("Keychain read failed: \(status.message)")
+            throw KeyStorageError.readFailed(status)
         }
     }
     
@@ -63,13 +69,7 @@ class KeyStorage {
         case errSecItemNotFound, errSecSuccess:
             break // Okay to ignore
         case let status:
-            throw CoinbaseWalletSDKError.keyStoreFailed("Unexpected deletion error: \(status.message)")
+            throw KeyStorageError.deleteFailed(status)
         }
-    }
-}
-
-extension OSStatus {
-    var message: String {
-        return (SecCopyErrorMessageString(self, nil) as String?) ?? String(self)
     }
 }

@@ -28,9 +28,9 @@ struct ContentView: View {
                 Text(String(data: self.clientPrivateKey.rawRepresentation, encoding: .ascii) ?? "(none)")
                 
                 Button("Initiate handshake request") {
-                    sdk.initiateHandshake(onResponse: { result in
+                    sdk.initiateHandshake{ result in
                         print(result)
-                    })
+                    }
                 }
 //                HStack {
 //                    Text("Request: ")

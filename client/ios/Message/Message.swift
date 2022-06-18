@@ -13,7 +13,7 @@ struct Message: Codable {
         case handshake(Handshake)
         case request(Request)
         case response(Response)
-        case error(String)
+        case error(ErrorContent)
     }
     
     let uuid: UUID
@@ -39,7 +39,7 @@ extension Message.Content {
         if let handshake = try container.decodeIfPresent(Handshake.self, forKey: .handshake) {
             self = .handshake(handshake)
         }
-        else if let error = try container.decodeIfPresent(String.self, forKey: .error) {
+        else if let error = try container.decodeIfPresent(ErrorContent.self, forKey: .error) {
             self = .error(error)
         }
         else if let encryptedRequest = try container.decodeIfPresent(Data.self, forKey: .request) {
