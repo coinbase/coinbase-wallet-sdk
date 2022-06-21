@@ -11,7 +11,7 @@ import CryptoKit
 public typealias PrivateKey = Curve25519.KeyAgreement.PrivateKey
 public typealias PublicKey = Curve25519.KeyAgreement.PublicKey
 
-class KeyManager {
+public class KeyManager {
     // MARK: own key pair
     
     private(set) var ownPrivateKey: PrivateKey
@@ -67,7 +67,7 @@ class KeyManager {
         try storage.store(key, at: .peerPublicKey)
     }
     
-    static private func deriveSymmetricKey(
+    static public func deriveSymmetricKey(
         with ownPrivateKey: PrivateKey,
         _ peerPublicKey: PublicKey
     ) -> SymmetricKey {

@@ -11,32 +11,30 @@ import CryptoKit
 
 public class HandshakeRequestHandler {
     public init() {}
-    
-    public func handle(request encodedString: String) -> Handshake.Response {
-        let request = try! Handshake.Request.decode(encodedString)
+
+    public func handle(request encodedURL: URL) -> URL? {
+        let request: RequestMessage = try! MessageConverter.decode(encodedURL, with: nil)
         
+        guard case .handshake(let handshake) = request.content else {
+            return nil
+        }
+
         let hostKey = Curve25519.KeyAgreement.PrivateKey()
         
-        // Host derives symmetric key
-        let sharedSecret = try! hostKey.sharedSecretFromKeyAgreement(
-            with: request.publicKey)
-        let symmetricKey = sharedSecret.hkdfDerivedSymmetricKey(
-            using: SHA256.self,
-            salt: Handshake.salt,
-            sharedInfo: Data(),
-            outputByteCount: 32
+        let symmetricKey = KeyManager.deriveSymmetricKey(
+            with: hostKey, request.sender
         )
-        
-        let message = "This is encrypted message using shared key derived from public keys of client and host".data(using: .utf8)!
-        
-        // sender encrypts data
-        let encryptedData = try! AES.GCM.seal(message, using: symmetricKey).combined
-        
-        let response = Handshake.Response(
-            hostPublicKey: hostKey.publicKey,
-            message: encryptedData!
+
+        let message = ResponseMessage(
+            uuid: UUID(),
+            sender: hostKey.publicKey,
+            content: .response(Response(
+                requestId: request.uuid,
+                results: [])
+            ),
+            version: "0.0"
         )
-        
-        return response
+
+        return try! MessageConverter.encode(message, to: handshake.callback, with: symmetricKey)
     }
 }

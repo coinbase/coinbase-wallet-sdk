@@ -8,8 +8,8 @@
 import Foundation
 import CryptoKit
 
-public final class Cryptography {
-    public static func encrypt<C: Encodable>(
+class Cryptography {
+    static func encrypt<C: Encodable>(
         _ content: C,
         to encoder: Encoder
     ) throws -> Data {
@@ -21,7 +21,7 @@ public final class Cryptography {
         return encrypted
     }
     
-    public static func decrypt<C: Decodable>(
+    static func decrypt<C: Decodable>(
         _ data: Data,
         from decoder: Decoder
     ) throws -> C {

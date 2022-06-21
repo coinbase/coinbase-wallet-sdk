@@ -12,8 +12,7 @@ struct ContentView: View {
     var body: some View {
         Button("Host") {
             let handler = HandshakeRequestHandler()
-//            let response = handler.handle(request: self.request!)
-//            self.response = try! response.encodedString()
+//            handler.handle(request: <#T##URL#>)
         }
     }
 }
