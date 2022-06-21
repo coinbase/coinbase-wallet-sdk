@@ -39,7 +39,7 @@ extension RequestMessage.Content {
 }
 
 public struct Request: Codable {
-    struct Action: Codable {
+    public struct Action: Codable {
         let method: String
         let params: [String]
     }
@@ -47,7 +47,7 @@ public struct Request: Codable {
     let actions: [Action]
     let account: Account?
     
-    init(actions: [Action], account: Account? = nil) {
+    public init(actions: [Action], account: Account? = nil) {
         self.actions = actions
         self.account = account
     }
@@ -56,4 +56,12 @@ public struct Request: Codable {
 public struct Handshake: Codable {
     let appId: String
     let callback: URL
+    
+    let initialRequest: Request?
+    
+    public init(appId: String, callback: URL, initialRequest: Request?) {
+        self.appId = appId
+        self.callback = callback
+        self.initialRequest = initialRequest
+    }
 }

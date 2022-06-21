@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Account: Codable {
+public struct Account: Codable {
     let chain: String
     let networkId: UInt
     let address: String
