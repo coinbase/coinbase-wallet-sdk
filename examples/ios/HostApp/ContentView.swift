@@ -9,10 +9,15 @@ import SwiftUI
 import WalletSegueHost
 
 struct ContentView: View {
+    let handler = HandshakeRequestHandler()
+    
     var body: some View {
         Button("Host") {
-            let handler = HandshakeRequestHandler()
-//            handler.handle(request: <#T##URL#>)
+            
+        }.onOpenURL { url in
+            let response = self.handler.handle(request: url)
+            print(response!)
+            UIApplication.shared.open(response!)
         }
     }
 }

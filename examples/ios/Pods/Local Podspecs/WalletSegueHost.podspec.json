@@ -14,7 +14,7 @@
   "platforms": {
     "ios": "13.0"
   },
-  "source_files": "src/**/*",
+  "source_files": "**/*.swift",
   "dependencies": {
     "WalletSegue": [
 

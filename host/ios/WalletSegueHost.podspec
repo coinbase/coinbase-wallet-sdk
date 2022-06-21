@@ -30,7 +30,7 @@ TODO: Add long description of the pod here.
 
   s.ios.deployment_target = '13.0'
 
-  s.source_files = 'src/**/*'
+  s.source_files = '**/*.swift'
   
   # s.resource_bundles = {
   #   'WalletSegue-host' => ['ios/Assets/*.png']
