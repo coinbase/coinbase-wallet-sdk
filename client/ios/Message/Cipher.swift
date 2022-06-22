@@ -32,9 +32,9 @@ public class Cipher {
     public static func deriveSymmetricKey(
         with ownPrivateKey: PrivateKey,
         _ peerPublicKey: PublicKey
-    ) -> SymmetricKey? {
-        let sharedSecret = try? ownPrivateKey.sharedSecretFromKeyAgreement(with: peerPublicKey)
-        return sharedSecret?.hkdfDerivedSymmetricKey(
+    ) throws -> SymmetricKey {
+        let sharedSecret = try ownPrivateKey.sharedSecretFromKeyAgreement(with: peerPublicKey)
+        return sharedSecret.hkdfDerivedSymmetricKey(
             using: SHA256.self,
             salt: Data(),
             sharedInfo: Data(),

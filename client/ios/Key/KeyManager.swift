@@ -12,32 +12,16 @@ public typealias PrivateKey = Curve25519.KeyAgreement.PrivateKey
 public typealias PublicKey = Curve25519.KeyAgreement.PublicKey
 
 final class KeyManager {
-    // MARK: own key pair
-    
     private(set) var ownPrivateKey: PrivateKey
     var ownPublicKey: PublicKey {
         return ownPrivateKey.publicKey
     }
     
-    // MARK: peer key
+    private(set) var peerPublicKey: PublicKey?
     
-    private(set) var peerPublicKey: PublicKey? {
-        willSet { _symmetricKey = nil }
-    }
+    private(set) var symmetricKey: SymmetricKey?
     
-    // MARK: derived symmetric key
-    
-    private var _symmetricKey: SymmetricKey?
-    var symmetricKey: SymmetricKey? {
-        if _symmetricKey == nil, let peerPublicKey = peerPublicKey {
-            _symmetricKey = Cipher.deriveSymmetricKey(
-                with: ownPrivateKey, peerPublicKey
-            )
-        }
-        return _symmetricKey
-    }
-    
-    // MARK: methods
+    // MARK: - methods
     
     private let storage: KeyStorage
     
@@ -56,6 +40,7 @@ final class KeyManager {
     }
     
     func resetOwnPrivateKey(with key: PrivateKey = PrivateKey()) throws {
+        self.symmetricKey = nil
         self.peerPublicKey = nil
         self.ownPrivateKey = key
         try storage.store(key, at: .ownPrivateKey)
@@ -64,6 +49,8 @@ final class KeyManager {
     
     func storePeerPublicKey(_ key: PublicKey) throws {
         self.peerPublicKey = key
+        self.symmetricKey = try Cipher.deriveSymmetricKey(with: ownPrivateKey, key)
+        
         try storage.store(key, at: .peerPublicKey)
     }
 }
