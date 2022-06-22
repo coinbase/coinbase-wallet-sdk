@@ -11,7 +11,7 @@ import CryptoKit
 public typealias PrivateKey = Curve25519.KeyAgreement.PrivateKey
 public typealias PublicKey = Curve25519.KeyAgreement.PublicKey
 
-public class KeyManager {
+final class KeyManager {
     // MARK: own key pair
     
     private(set) var ownPrivateKey: PrivateKey
@@ -30,7 +30,7 @@ public class KeyManager {
     private var _symmetricKey: SymmetricKey?
     var symmetricKey: SymmetricKey? {
         if _symmetricKey == nil, let peerPublicKey = peerPublicKey {
-            _symmetricKey = Self.deriveSymmetricKey(
+            _symmetricKey = Cipher.deriveSymmetricKey(
                 with: ownPrivateKey, peerPublicKey
             )
         }
@@ -65,18 +65,5 @@ public class KeyManager {
     func storePeerPublicKey(_ key: PublicKey) throws {
         self.peerPublicKey = key
         try storage.store(key, at: .peerPublicKey)
-    }
-    
-    static public func deriveSymmetricKey(
-        with ownPrivateKey: PrivateKey,
-        _ peerPublicKey: PublicKey
-    ) -> SymmetricKey {
-        let sharedSecret = try! ownPrivateKey.sharedSecretFromKeyAgreement(with: peerPublicKey)
-        return sharedSecret.hkdfDerivedSymmetricKey(
-            using: SHA256.self,
-            salt: Data(),
-            sharedInfo: Data(),
-            outputByteCount: 32
-        )
     }
 }

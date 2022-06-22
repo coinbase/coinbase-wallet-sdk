@@ -8,14 +8,14 @@
 import Foundation
 import CryptoKit
 
-public final class MessageConverter {
-    public static func encode<M: EncodableMessage>(
+public class MessageConverter {
+    public static func encode<M: Encodable>(
         _ message: M,
         to recipient: URL,
         with symmetricKey: SymmetricKey?
     ) throws -> URL {
         let encoder = JSONEncoder()
-        encoder.userInfo[Cryptography.kSymmetricKeyUserInfoKey] = symmetricKey
+        encoder.userInfo[Cipher.kSymmetricKeyUserInfoKey] = symmetricKey
         
         let data = try JSONEncoder().encode(message)
         let encodedString = data.base64EncodedString()
@@ -30,7 +30,7 @@ public final class MessageConverter {
         return url
     }
     
-    public static func decode<M: DecodableMessage>(
+    public static func decode<M: Decodable>(
         _ url: URL,
         with symmetricKey: SymmetricKey?
     ) throws -> M {
@@ -47,7 +47,7 @@ public final class MessageConverter {
         }
         
         let decoder = JSONDecoder()
-        decoder.userInfo[Cryptography.kSymmetricKeyUserInfoKey] = symmetricKey
+        decoder.userInfo[Cipher.kSymmetricKeyUserInfoKey] = symmetricKey
         
         return try decoder.decode(M.self, from: data)
     }

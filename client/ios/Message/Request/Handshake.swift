@@ -13,7 +13,7 @@ public struct Handshake: Codable {
     
     public let initialRequest: Request?
     
-    public init(appId: String, callback: URL, initialRequest: Request? = nil) {
+    public init(appId: String, callback: URL, initialRequest: Request?) {
         self.appId = appId
         self.callback = callback
         self.initialRequest = initialRequest

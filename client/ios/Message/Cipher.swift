@@ -8,13 +8,11 @@
 import Foundation
 import CryptoKit
 
-class Cryptography {
+public class Cipher {
     static func encrypt<C: Encodable>(
         _ content: C,
-        to encoder: Encoder
+        with symmetricKey: SymmetricKey
     ) throws -> Data {
-        let symmetricKey = try self.symmetricKey(from: encoder.userInfo)
-        
         let jsonData = try JSONEncoder().encode(content)
         let encrypted = try AES.GCM.seal(jsonData, using: symmetricKey).combined!
         
@@ -23,14 +21,43 @@ class Cryptography {
     
     static func decrypt<C: Decodable>(
         _ data: Data,
-        from decoder: Decoder
+        with symmetricKey: SymmetricKey
     ) throws -> C {
-        let symmetricKey = try self.symmetricKey(from: decoder.userInfo)
-        
         let sealedBox = try AES.GCM.SealedBox(combined: data)
         let decrypted = try AES.GCM.open(sealedBox, using: symmetricKey)
         
         return try JSONDecoder().decode(C.self, from: decrypted)
+    }
+    
+    public static func deriveSymmetricKey(
+        with ownPrivateKey: PrivateKey,
+        _ peerPublicKey: PublicKey
+    ) -> SymmetricKey? {
+        let sharedSecret = try? ownPrivateKey.sharedSecretFromKeyAgreement(with: peerPublicKey)
+        return sharedSecret?.hkdfDerivedSymmetricKey(
+            using: SHA256.self,
+            salt: Data(),
+            sharedInfo: Data(),
+            outputByteCount: 32
+        )
+    }
+}
+
+extension Cipher {
+    static func encrypt<C: Encodable>(
+        _ content: C,
+        encoder: Encoder
+    ) throws -> Data {
+        let symmetricKey = try self.symmetricKey(from: encoder.userInfo)
+        return try encrypt(content, with: symmetricKey)
+    }
+    
+    static func decrypt<C: Decodable>(
+        _ data: Data,
+        decoder: Decoder
+    ) throws -> C {
+        let symmetricKey = try self.symmetricKey(from: decoder.userInfo)
+        return try decrypt(data, with: symmetricKey)
     }
     
     static var kSymmetricKeyUserInfoKey: CodingUserInfoKey {

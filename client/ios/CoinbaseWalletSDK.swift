@@ -44,22 +44,14 @@ public class CoinbaseWalletSDK {
     
     // MARK: - Send message
     
-    public func initiateHandshake(completion: @escaping (Result<Void,Error>) -> Void) {
+    public func initiateHandshake(initialRequest: Request? = nil, onResponse: @escaping ResponseHandler) {
         let message = RequestMessage(
             uuid: UUID(),
             sender: keyManager.ownPublicKey,
-            content: .handshake(Handshake(appId: appId, callback: callback)),
+            content: .handshake(Handshake(appId: appId, callback: callback, initialRequest: initialRequest)),
             version: version
         )
-        self.send(message) { result in
-            switch result {
-            case .success(let response):
-                let result = self.handleNewSession(response)
-                completion(result)
-            case .failure(let error):
-                completion(.failure(error))
-            }
-        }
+        self.send(message, onResponse)
     }
     
     public func makeRequest(_ request: Request, onResponse: @escaping ResponseHandler) {
@@ -97,21 +89,36 @@ public class CoinbaseWalletSDK {
         return url.host == callback.host && url.path == callback.path
     }
     
-    public func handleResponse(_ url: URL) -> Result<Bool, Error> {
+    public func handleResponse(_ url: URL) -> (handled: Bool, Error?) {
         guard isWalletSegueMessage(url) else {
-            return .success(false)
+            return (false, nil)
         }
         
-        let message: ResponseMessage
         do {
-            message = try MessageConverter.decode(url, with: keyManager.symmetricKey)
+            let response = try decodeResponse(url)
+            taskManager.handleResponseMessage(response)
         } catch {
-            return .failure(error)
+            return (true, error)
         }
         
-        taskManager.handleMessage(message)
-        
-        return .success(true)
+        return (true, nil)
+    }
+    
+    private func decodeResponse(_ url: URL) throws -> ResponseMessage {
+        let response: ResponseMessage
+        if let symmetricKey = keyManager.symmetricKey {
+            response = try MessageConverter.decode(url, with: symmetricKey)
+        } else {
+            let encrypted: EncryptedResponseMessage = try MessageConverter.decode(url, with: nil)
+            try keyManager.storePeerPublicKey(encrypted.sender)
+            
+            guard let symmetricKey = keyManager.symmetricKey else {
+                throw CoinbaseWalletSDKError.missingSymmetricKey
+            }
+            
+            response = try ResponseMessage(decrypt: encrypted, with: symmetricKey)
+        }
+        return response
     }
     
     // MARK: - Session
@@ -123,23 +130,6 @@ public class CoinbaseWalletSDK {
     public func resetConnection() -> Result<Void, Error> {
         do {
             try keyManager.resetOwnPrivateKey()
-            return .success(())
-        } catch {
-            return .failure(error)
-        }
-    }
-    
-    private func handleNewSession(_ response: Response) -> Result<Void, Error> {
-        guard
-            let encodedPeerPublicKey = response.results.first,
-            let data = Data(base64Encoded: encodedPeerPublicKey),
-            let peerPublicKey = try? PublicKey(rawRepresentation: data)
-        else {
-            return .failure(CoinbaseWalletSDKError.decodingFailed)
-        }
-        
-        do {
-            try self.keyManager.storePeerPublicKey(peerPublicKey)
             return .success(())
         } catch {
             return .failure(error)

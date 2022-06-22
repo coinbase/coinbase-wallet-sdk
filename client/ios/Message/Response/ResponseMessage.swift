@@ -6,27 +6,77 @@
 //
 
 import Foundation
+import CryptoKit
 
-public struct ResponseMessage: Codable {
-    public enum Content {
-        case response(Response)
-        case error(ErrorContent)
+public typealias ResponseMessage = Message<ResponseContent>
+
+public enum ResponseContent {
+    case response(Response)
+    case error(ErrorContent)
+}
+
+extension ResponseContent: Codable {
+    enum CodingKeys: String, CodingKey {
+        case response, error
     }
     
-    public let uuid: UUID
-    public let sender: PublicKey
-    public let content: Content
-    public let version: String
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        if let error = try container.decodeIfPresent(ErrorContent.self, forKey: .error) {
+            self = .error(error)
+        }
+        else if let encryptedResponse = try container.decodeIfPresent(Data.self, forKey: .response) {
+            self = .response(
+                try Cipher.decrypt(encryptedResponse, decoder: decoder)
+            )
+        }
+        else {
+            throw CoinbaseWalletSDKError.decodingFailed
+        }
+    }
     
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case let .error(error):
+            try container.encode(error, forKey: .error)
+        case let .response(response):
+            try container.encode(
+                Cipher.encrypt(response, encoder: encoder),
+                forKey: .response
+            )
+        }
+    }
+}
+
+extension ResponseMessage {
     public init(
         uuid: UUID,
         sender: PublicKey,
-        content: ResponseMessage.Content,
+        content: ResponseContent,
         version: String
     ) {
         self.uuid = uuid
         self.sender = sender
         self.content = content
         self.version = version
+    }
+    
+    init(decrypt encrypted: EncryptedResponseMessage, with symmetricKey: SymmetricKey) throws {
+        let content: ResponseContent
+        switch encrypted.content {
+        case .response(let response):
+            content = try Cipher.decrypt(response, with: symmetricKey)
+        case .error(let error):
+            content = .error(error)
+        }
+        
+        self.init(
+            uuid: encrypted.uuid,
+            sender: encrypted.sender,
+            content: content,
+            version: encrypted.version
+        )
     }
 }

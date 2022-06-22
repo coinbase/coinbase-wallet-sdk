@@ -22,7 +22,7 @@ class TaskManager {
         )
     }
     
-    @discardableResult func handleMessage(_ message: ResponseMessage) -> Bool {
+    @discardableResult func handleResponseMessage(_ message: ResponseMessage) -> Bool {
         let requestId: UUID
         let result: ResponseResult
         switch message.content {

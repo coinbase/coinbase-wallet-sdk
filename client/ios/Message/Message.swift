@@ -7,15 +7,9 @@
 
 import Foundation
 
-public protocol Message {
-    associatedtype Content
-    
-    var uuid: UUID { get }
-    var sender: PublicKey { get }
-    var content: Content { get }
-    var version: String { get }
+public struct Message<C: Codable>: Codable {
+    public let uuid: UUID
+    public let sender: PublicKey
+    public let content: C
+    public let version: String
 }
-
-public protocol EncodableMessage: Message, Encodable where Content: Encodable {}
-
-public protocol DecodableMessage: Message, Decodable where Content: Decodable {}

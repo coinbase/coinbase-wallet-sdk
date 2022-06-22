@@ -21,7 +21,7 @@ public class HandshakeRequestHandler {
 
         let hostKey = Curve25519.KeyAgreement.PrivateKey()
         
-        let symmetricKey = KeyManager.deriveSymmetricKey(
+        let symmetricKey = Cipher.deriveSymmetricKey(
             with: hostKey, request.sender
         )
 
