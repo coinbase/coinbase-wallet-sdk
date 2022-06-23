@@ -9,6 +9,7 @@ import Foundation
 import CoinbaseWalletSDK
 import CryptoKit
 
+@available(iOS 13.0, *)
 public class HandshakeRequestHandler {
     public init() {}
 

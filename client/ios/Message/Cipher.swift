@@ -8,7 +8,8 @@
 import Foundation
 import CryptoKit
 
-public class Cipher {
+@available(iOS 13.0, *)
+public final class Cipher {
     static func encrypt<C: Encodable>(
         _ content: C,
         with symmetricKey: SymmetricKey
@@ -30,8 +31,8 @@ public class Cipher {
     }
     
     public static func deriveSymmetricKey(
-        with ownPrivateKey: PrivateKey,
-        _ peerPublicKey: PublicKey
+        with ownPrivateKey: CoinbaseWalletSDK.PrivateKey,
+        _ peerPublicKey: CoinbaseWalletSDK.PublicKey
     ) throws -> SymmetricKey {
         let sharedSecret = try ownPrivateKey.sharedSecretFromKeyAgreement(with: peerPublicKey)
         return sharedSecret.hkdfDerivedSymmetricKey(
@@ -41,9 +42,7 @@ public class Cipher {
             outputByteCount: 32
         )
     }
-}
 
-extension Cipher {
     static func encrypt<C: Encodable>(
         _ content: C,
         encoder: Encoder

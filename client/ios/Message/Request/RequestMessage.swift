@@ -7,6 +7,7 @@
 
 import Foundation
 
+@available(iOS 13.0, *)
 public typealias RequestMessage = Message<RequestContent>
 
 public enum RequestContent {
@@ -14,6 +15,7 @@ public enum RequestContent {
     case request(Request)
 }
 
+@available(iOS 13.0, *)
 extension RequestContent: Codable {
     enum CodingKeys: String, CodingKey {
         case handshake, request

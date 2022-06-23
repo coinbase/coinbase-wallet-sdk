@@ -7,6 +7,7 @@
 
 import Foundation
 
+@available(iOS 13.0, *)
 typealias EncryptedResponseMessage = Message<EncryptedResponseContent>
 
 enum EncryptedResponseContent: Codable {

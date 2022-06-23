@@ -7,20 +7,20 @@
 
 import Foundation
 
+@available(iOS 13.0, *)
 struct KeyStorageItem<K: RawRepresentableKey> {
     let name: String
     
     init(_ name: String) {
         self.name = name
     }
-}
 
-extension KeyStorageItem {
-    static var ownPrivateKey: KeyStorageItem<PrivateKey> {
-        return KeyStorageItem<PrivateKey>("wsegue.ownPrivateKey")
+    static var ownPrivateKey: KeyStorageItem<CoinbaseWalletSDK.PrivateKey> {
+        return KeyStorageItem<CoinbaseWalletSDK.PrivateKey>("wsegue.ownPrivateKey")
     }
-    static var peerPublicKey: KeyStorageItem<PublicKey> {
-        return KeyStorageItem<PublicKey>("wsegue.peerPublicKey")
+    
+    static var peerPublicKey: KeyStorageItem<CoinbaseWalletSDK.PublicKey> {
+        return KeyStorageItem<CoinbaseWalletSDK.PublicKey>("wsegue.peerPublicKey")
     }
 }
 
@@ -31,5 +31,7 @@ protocol RawRepresentableKey {
     var rawRepresentation: Data { get }
 }
 
-extension PrivateKey: RawRepresentableKey {}
-extension PublicKey: RawRepresentableKey {}
+@available(iOS 13.0, *)
+extension CoinbaseWalletSDK.PrivateKey: RawRepresentableKey {}
+@available(iOS 13.0, *)
+extension CoinbaseWalletSDK.PublicKey: RawRepresentableKey {}

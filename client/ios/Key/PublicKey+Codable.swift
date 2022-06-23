@@ -1,5 +1,5 @@
 //
-//  PublicKey+Codable.swift
+//  CoinbaseWalletSDK.PublicKey+Codable.swift
 //  WalletSegue
 //
 //  Created by Jungho Bang on 6/13/22.
@@ -7,7 +7,8 @@
 
 import Foundation
 
-extension PublicKey: Codable {
+@available(iOS 13.0, *)
+extension CoinbaseWalletSDK.PublicKey: Codable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let data = try container.decode(Data.self)

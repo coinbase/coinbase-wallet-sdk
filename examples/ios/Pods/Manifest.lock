@@ -14,9 +14,9 @@ EXTERNAL SOURCES:
     :path: "../../host/ios/"
 
 SPEC CHECKSUMS:
-  CoinbaseWalletSDK: 43c531b80bd1e0cc4cb49d16eae8aab25b22d6a8
-  NativeSDKHost: d2594eeefc04794436510598ff41581c03560da2
+  CoinbaseWalletSDK: 9380ebbe921037b1cc6ed27fc1bde6d6ed45d192
+  NativeSDKHost: 549ba9b0e707d83f9db8e107d9c56607aac35d17
 
-PODFILE CHECKSUM: ced71fed17da620117ead22f4abf6386ddc6679a
+PODFILE CHECKSUM: d468f544960ccd75f047fdfcd67efb4f6fcc964c
 
 COCOAPODS: 1.11.3

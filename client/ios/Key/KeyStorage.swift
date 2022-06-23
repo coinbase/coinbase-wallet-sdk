@@ -13,7 +13,8 @@ enum KeyStorageError: Error {
     case deleteFailed(OSStatus)
 }
 
-class KeyStorage {
+@available(iOS 13.0, *)
+final class KeyStorage {
     private let service: String
     
     init(host: URL) {

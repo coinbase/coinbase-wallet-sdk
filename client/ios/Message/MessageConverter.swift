@@ -8,6 +8,7 @@
 import Foundation
 import CryptoKit
 
+@available(iOS 13.0, *)
 public class MessageConverter {
     public static func encode<M: Encodable>(
         _ message: M,

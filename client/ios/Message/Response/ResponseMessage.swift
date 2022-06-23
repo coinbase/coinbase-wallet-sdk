@@ -8,6 +8,7 @@
 import Foundation
 import CryptoKit
 
+@available(iOS 13.0, *)
 public typealias ResponseMessage = Message<ResponseContent>
 
 public enum ResponseContent {
@@ -15,6 +16,7 @@ public enum ResponseContent {
     case error(ErrorContent)
 }
 
+@available(iOS 13.0, *)
 extension ResponseContent: Codable {
     enum CodingKeys: String, CodingKey {
         case response, error
@@ -50,10 +52,11 @@ extension ResponseContent: Codable {
     }
 }
 
+@available(iOS 13.0, *)
 extension ResponseMessage {
     public init(
         uuid: UUID,
-        sender: PublicKey,
+        sender: CoinbaseWalletSDK.PublicKey,
         content: ResponseContent,
         version: String
     ) {

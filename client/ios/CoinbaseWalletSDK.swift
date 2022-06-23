@@ -8,6 +8,7 @@
 import Foundation
 import CryptoKit
 
+@available(iOS 13.0, *)
 public class CoinbaseWalletSDK {
     let appId: String
     let host: URL
