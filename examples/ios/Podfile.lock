@@ -4,19 +4,19 @@ PODS:
     - CoinbaseWalletSDK
 
 DEPENDENCIES:
-  - CoinbaseWalletSDK (from `../../client/ios/`)
+  - CoinbaseWalletSDK (from `../../`)
   - NativeSDKHost (from `../../host/ios/`)
 
 EXTERNAL SOURCES:
   CoinbaseWalletSDK:
-    :path: "../../client/ios/"
+    :path: "../../"
   NativeSDKHost:
     :path: "../../host/ios/"
 
 SPEC CHECKSUMS:
-  CoinbaseWalletSDK: c909ac2562dba134c0bd33d278bf249a35d98cc7
+  CoinbaseWalletSDK: 43c531b80bd1e0cc4cb49d16eae8aab25b22d6a8
   NativeSDKHost: d2594eeefc04794436510598ff41581c03560da2
 
-PODFILE CHECKSUM: a950c986bc44192d57af63b5c96342f089aaaff5
+PODFILE CHECKSUM: ced71fed17da620117ead22f4abf6386ddc6679a
 
 COCOAPODS: 1.11.3
