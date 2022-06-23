@@ -10,15 +10,15 @@ import CryptoKit
 
 @available(iOS 13.0, *)
 public class MessageConverter {
-    public static func encode<M: Encodable>(
-        _ message: M,
+    public static func encode<C>(
+        _ message: Message<C>,
         to recipient: URL,
         with symmetricKey: SymmetricKey?
     ) throws -> URL {
-        let encoder = JSONEncoder()
-        encoder.userInfo[Cipher.kSymmetricKeyUserInfoKey] = symmetricKey
+        let encrypted = try EncryptedMessage<C.Encrypted>.init(encrypt: message, with: symmetricKey)
         
-        let data = try JSONEncoder().encode(message)
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(encrypted)
         let encodedString = data.base64EncodedString()
         
         var urlComponents = URLComponents(url: recipient, resolvingAgainstBaseURL: true)
@@ -31,10 +31,18 @@ public class MessageConverter {
         return url
     }
     
-    public static func decode<M: Decodable>(
+    public static func decode<C>(
         _ url: URL,
         with symmetricKey: SymmetricKey?
-    ) throws -> M {
+    ) throws -> Message<C> {
+        let encrypted: EncryptedMessage<C.Encrypted> = try self.decodeWithoutDecryption(url)
+        
+        return try Message<C>.init(decrypt: encrypted, with: symmetricKey)
+    }
+    
+    static func decodeWithoutDecryption<C>(
+        _ url: URL
+    ) throws -> EncryptedMessage<C> {
         guard
             let urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false),
             let queryItem = urlComponents.queryItems?.first(where: { $0.value == "p" }),
@@ -48,8 +56,6 @@ public class MessageConverter {
         }
         
         let decoder = JSONDecoder()
-        decoder.userInfo[Cipher.kSymmetricKeyUserInfoKey] = symmetricKey
-        
-        return try decoder.decode(M.self, from: data)
+        return try decoder.decode(EncryptedMessage<C>.self, from: data)
     }
 }

@@ -42,33 +42,4 @@ public final class Cipher {
             outputByteCount: 32
         )
     }
-
-    static func encrypt<C: Encodable>(
-        _ content: C,
-        encoder: Encoder
-    ) throws -> Data {
-        let symmetricKey = try self.symmetricKey(from: encoder.userInfo)
-        return try encrypt(content, with: symmetricKey)
-    }
-    
-    static func decrypt<C: Decodable>(
-        _ data: Data,
-        decoder: Decoder
-    ) throws -> C {
-        let symmetricKey = try self.symmetricKey(from: decoder.userInfo)
-        return try decrypt(data, with: symmetricKey)
-    }
-    
-    static var kSymmetricKeyUserInfoKey: CodingUserInfoKey {
-        return CodingUserInfoKey(rawValue: "kSymmetricKey")!
-    }
-
-    static private func symmetricKey(from userInfo: [CodingUserInfoKey : Any]) throws -> SymmetricKey {
-        guard
-            let symmetricKey = userInfo[kSymmetricKeyUserInfoKey] as? SymmetricKey
-        else {
-            throw CoinbaseWalletSDKError.missingSymmetricKey
-        }
-        return symmetricKey
-    }
 }

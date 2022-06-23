@@ -110,7 +110,7 @@ public class CoinbaseWalletSDK {
         if let symmetricKey = keyManager.symmetricKey {
             response = try MessageConverter.decode(url, with: symmetricKey)
         } else {
-            let encrypted: EncryptedResponseMessage = try MessageConverter.decode(url, with: nil)
+            let encrypted: EncryptedResponseMessage = try MessageConverter.decodeWithoutDecryption(url)
             try keyManager.storePeerPublicKey(encrypted.sender)
             
             guard let symmetricKey = keyManager.symmetricKey else {
