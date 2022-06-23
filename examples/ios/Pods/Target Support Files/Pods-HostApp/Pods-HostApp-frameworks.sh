@@ -176,12 +176,12 @@ code_sign_if_enabled() {
 }
 
 if [[ "$CONFIGURATION" == "Debug" ]]; then
-  install_framework "${BUILT_PRODUCTS_DIR}/WalletSegue/WalletSegue.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/WalletSegueHost/WalletSegueHost.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/CoinbaseWalletSDK/CoinbaseWalletSDK.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/NativeSDKHost/NativeSDKHost.framework"
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
-  install_framework "${BUILT_PRODUCTS_DIR}/WalletSegue/WalletSegue.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/WalletSegueHost/WalletSegueHost.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/CoinbaseWalletSDK/CoinbaseWalletSDK.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/NativeSDKHost/NativeSDKHost.framework"
 fi
 if [ "${COCOAPODS_PARALLEL_CODE_SIGN}" == "true" ]; then
   wait

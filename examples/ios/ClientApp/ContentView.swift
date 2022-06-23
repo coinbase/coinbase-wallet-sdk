@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import WalletSegue
+import CoinbaseWalletSDK
 
 import CryptoKit
 

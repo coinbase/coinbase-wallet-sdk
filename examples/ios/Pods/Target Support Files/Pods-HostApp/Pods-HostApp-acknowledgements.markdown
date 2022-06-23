@@ -1,7 +1,7 @@
 # Acknowledgements
 This application makes use of the following third party libraries:
 
-## WalletSegue
+## CoinbaseWalletSDK
 
 Copyright (c) 2022 bangtoven <jungho.bang@coinbase.com>
 
@@ -24,7 +24,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 
-## WalletSegueHost
+## NativeSDKHost
 
 Copyright (c) 2022 bangtoven <jungho.bang@coinbase.com>
 

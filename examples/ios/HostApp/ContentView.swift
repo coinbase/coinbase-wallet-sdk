@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import WalletSegueHost
+import NativeSDKHost
 
 struct ContentView: View {
     let handler = HandshakeRequestHandler()

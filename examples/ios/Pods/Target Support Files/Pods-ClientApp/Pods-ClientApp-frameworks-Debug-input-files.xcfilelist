@@ -1,2 +1,2 @@
 ${PODS_ROOT}/Target Support Files/Pods-ClientApp/Pods-ClientApp-frameworks.sh
-${BUILT_PRODUCTS_DIR}/WalletSegue/WalletSegue.framework
+${BUILT_PRODUCTS_DIR}/CoinbaseWalletSDK/CoinbaseWalletSDK.framework

@@ -4,11 +4,11 @@ use_frameworks!
 
 target 'ClientApp' do
   project 'ClientApp'
-  pod 'WalletSegue', path: '../../client/ios/'
+  pod 'CoinbaseWalletSDK', path: '../../client/ios/'
 end
 
 target 'HostApp' do
   project 'HostApp'
-  pod 'WalletSegue', path: '../../client/ios/'
-  pod 'WalletSegueHost', path: '../../host/ios/'
+  pod 'CoinbaseWalletSDK', path: '../../client/ios/'
+  pod 'NativeSDKHost', path: '../../host/ios/'
 end

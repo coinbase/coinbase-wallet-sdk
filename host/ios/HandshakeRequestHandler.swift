@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import WalletSegue
+import CoinbaseWalletSDK
 import CryptoKit
 
 public class HandshakeRequestHandler {

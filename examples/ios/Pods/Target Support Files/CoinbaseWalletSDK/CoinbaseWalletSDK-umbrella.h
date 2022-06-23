@@ -11,6 +11,6 @@
 #endif
 
 
-FOUNDATION_EXPORT double WalletSegueHostVersionNumber;
-FOUNDATION_EXPORT const unsigned char WalletSegueHostVersionString[];
+FOUNDATION_EXPORT double CoinbaseWalletSDKVersionNumber;
+FOUNDATION_EXPORT const unsigned char CoinbaseWalletSDKVersionString[];
 

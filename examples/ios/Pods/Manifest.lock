@@ -1,22 +1,22 @@
 PODS:
-  - WalletSegue (0.1.0)
-  - WalletSegueHost (0.1.0):
-    - WalletSegue
+  - CoinbaseWalletSDK (0.1.0)
+  - NativeSDKHost (0.1.0):
+    - CoinbaseWalletSDK
 
 DEPENDENCIES:
-  - WalletSegue (from `../../client/ios/`)
-  - WalletSegueHost (from `../../host/ios/`)
+  - CoinbaseWalletSDK (from `../../client/ios/`)
+  - NativeSDKHost (from `../../host/ios/`)
 
 EXTERNAL SOURCES:
-  WalletSegue:
+  CoinbaseWalletSDK:
     :path: "../../client/ios/"
-  WalletSegueHost:
+  NativeSDKHost:
     :path: "../../host/ios/"
 
 SPEC CHECKSUMS:
-  WalletSegue: c15b5591eb7dc9493141ae45dab6ce4425cb38d8
-  WalletSegueHost: 7f254a014e540316b12060b710a1f8aef8b1e02d
+  CoinbaseWalletSDK: c909ac2562dba134c0bd33d278bf249a35d98cc7
+  NativeSDKHost: d2594eeefc04794436510598ff41581c03560da2
 
-PODFILE CHECKSUM: c1f8fcc63f71a8af67bc681f45d28420b5aaa55e
+PODFILE CHECKSUM: a950c986bc44192d57af63b5c96342f089aaaff5
 
 COCOAPODS: 1.11.3

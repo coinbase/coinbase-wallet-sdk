@@ -11,6 +11,6 @@
 #endif
 
 
-FOUNDATION_EXPORT double WalletSegueVersionNumber;
-FOUNDATION_EXPORT const unsigned char WalletSegueVersionString[];
+FOUNDATION_EXPORT double NativeSDKHostVersionNumber;
+FOUNDATION_EXPORT const unsigned char NativeSDKHostVersionString[];
 

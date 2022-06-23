@@ -1,5 +1,5 @@
 #
-# Be sure to run `pod lib lint WalletSegueHost.podspec' to ensure this is a
+# Be sure to run `pod lib lint NativeSDKHost.podspec' to ensure this is a
 # valid spec before submitting.
 #
 # Any lines starting with a # are optional, but their use is encouraged
@@ -7,9 +7,9 @@
 #
 
 Pod::Spec.new do |s|
-  s.name             = 'WalletSegueHost'
+  s.name             = 'NativeSDKHost'
   s.version          = '0.1.0'
-  s.summary          = 'A short description of WalletSegueHost.'
+  s.summary          = 'A short description of NativeSDKHost.'
 
 # This description is used to generate tags and improve search results.
 #   * Think: What does it do? Why did you write it? What is the focus?
@@ -21,22 +21,18 @@ Pod::Spec.new do |s|
 TODO: Add long description of the pod here.
                        DESC
 
-  s.homepage         = 'https://github.com/bangtoven/WalletSegueHost'
+  s.homepage         = 'https://github.com/coinbase/NativeSDKHost'
   # s.screenshots     = 'www.example.com/screenshots_1', 'www.example.com/screenshots_2'
   # s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'bangtoven' => 'jungho.bang@coinbase.com' }
-  s.source           = { :git => 'https://github.com/bangtoven/WalletSegueHost.git', :tag => s.version.to_s }
+  s.source           = { :git => 'https://github.com/coinbase/NativeSDKHost.git', :tag => s.version.to_s }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
   s.ios.deployment_target = '13.0'
 
   s.source_files = '**/*.swift'
   
-  # s.resource_bundles = {
-  #   'WalletSegue-host' => ['ios/Assets/*.png']
-  # }
-
   # s.public_header_files = 'Pod/Classes/**/*.h'
   # s.frameworks = 'UIKit', 'MapKit'
-  s.dependency 'WalletSegue'
+  s.dependency 'CoinbaseWalletSDK'
 end
