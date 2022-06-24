@@ -45,7 +45,7 @@ public class MessageConverter {
     ) throws -> EncryptedMessage<C> {
         guard
             let urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false),
-            let queryItem = urlComponents.queryItems?.first(where: { $0.value == "p" }),
+            let queryItem = urlComponents.queryItems?.first(where: { $0.name == "p" }),
             let encodedString = queryItem.value
         else {
             throw CoinbaseWalletSDKError.decodingFailed
