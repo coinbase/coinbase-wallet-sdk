@@ -23,15 +23,3 @@ struct KeyStorageItem<K: RawRepresentableKey> {
         return KeyStorageItem<CoinbaseWalletSDK.PublicKey>("wsegue.peerPublicKey")
     }
 }
-
-// MARK: -
-
-public protocol RawRepresentableKey {
-    init<D>(rawRepresentation data: D) throws where D: ContiguousBytes
-    var rawRepresentation: Data { get }
-}
-
-@available(iOS 13.0, *)
-extension CoinbaseWalletSDK.PrivateKey: RawRepresentableKey {}
-@available(iOS 13.0, *)
-extension CoinbaseWalletSDK.PublicKey: RawRepresentableKey {}

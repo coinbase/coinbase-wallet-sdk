@@ -24,7 +24,7 @@
 		64E00AD9D3E37C11B0196D145BBAC3C8 /* Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1EE87C66E10344CB76E99F260D07BED /* Request.swift */; };
 		69E79BD618319D56B29D0EEAFDB56610 /* CoinbaseWalletSDK-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = 500A5D6E902E8495990AB95F7551220E /* CoinbaseWalletSDK-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6C9E37F92E612D999D64F3CD5D31CC23 /* KeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF8617A0519BDCA7C4E985D27935D9FE /* KeyManager.swift */; };
-		6CD4AF88194993B1C1C8278AD8304076 /* PublicKey+Codable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AAC121E08DF81B8BD5A03F18E4CE09D /* PublicKey+Codable.swift */; };
+		6CD4AF88194993B1C1C8278AD8304076 /* Key+RawRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AAC121E08DF81B8BD5A03F18E4CE09D /* Key+RawRepresentable.swift */; };
 		788317EEFCB96666C5945B4D0DAF2F24 /* ErrorContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75FEB5B13BAAFC4522A4ECDE4B5FF3BB /* ErrorContent.swift */; };
 		8783B4982B1DD9B57B757E2DF5368D11 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73010CC983E3809BECEE5348DA1BB8C6 /* Foundation.framework */; };
 		8B311ACD6FD2DF8E02D6267447F698D0 /* NativeSDKHost-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = 93A2498F6C69AA59FF7542E0B60EE2F5 /* NativeSDKHost-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -82,7 +82,7 @@
 		0C1D6F940F24C23D6597250DE5D07933 /* Pods-ClientApp-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-ClientApp-umbrella.h"; sourceTree = "<group>"; };
 		0C78B2194DE614A356F0E7B8308976B3 /* NativeSDKHost */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = NativeSDKHost; path = NativeSDKHost.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		188604A060ABDF3DBBFCD16B40A53200 /* HandshakeRequestHandler.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HandshakeRequestHandler.swift; sourceTree = "<group>"; };
-		1AAC121E08DF81B8BD5A03F18E4CE09D /* PublicKey+Codable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "PublicKey+Codable.swift"; sourceTree = "<group>"; };
+		1AAC121E08DF81B8BD5A03F18E4CE09D /* Key+RawRepresentable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "Key+RawRepresentable.swift"; sourceTree = "<group>"; };
 		1EF67FED3A4D8574C418E597B5275E86 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		22C5E87E42770BA17014C9A907643BBE /* Pods-HostApp.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = "Pods-HostApp.modulemap"; sourceTree = "<group>"; };
 		24CFF43FAC954B9DE38EC72CC802F890 /* Pods-ClientApp */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = "Pods-ClientApp"; path = Pods_ClientApp.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -364,7 +364,7 @@
 				FF8617A0519BDCA7C4E985D27935D9FE /* KeyManager.swift */,
 				7C99CDB3CC72FFD58BE84572C6CF5297 /* KeyStorage.swift */,
 				64E07A8662E887C7E3F939F408C00C0C /* KeyStorageItem.swift */,
-				1AAC121E08DF81B8BD5A03F18E4CE09D /* PublicKey+Codable.swift */,
+				1AAC121E08DF81B8BD5A03F18E4CE09D /* Key+RawRepresentable.swift */,
 			);
 			name = Key;
 			path = client/ios/Key;
@@ -601,7 +601,7 @@
 				AB974C491BC2C562479D034269C9E2E5 /* Message.swift in Sources */,
 				EB14981344F73ED27B49F30046EF762C /* MessageConverter.swift in Sources */,
 				5DA9B3A2286520350089D6DB /* EncryptedMessage.swift in Sources */,
-				6CD4AF88194993B1C1C8278AD8304076 /* PublicKey+Codable.swift in Sources */,
+				6CD4AF88194993B1C1C8278AD8304076 /* Key+RawRepresentable.swift in Sources */,
 				64E00AD9D3E37C11B0196D145BBAC3C8 /* Request.swift in Sources */,
 				2A34ED405B9E3309698B4789729E7971 /* RequestMessage.swift in Sources */,
 				620148202D4BD3F4C06821B2DC9DEA6A /* Response.swift in Sources */,
