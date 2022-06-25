@@ -20,34 +20,45 @@ struct HostAppApp: App {
         let sPublicKey = sPrivateKey.publicKey
         let rPublicKey = rPrivateKey.publicKey
 
-        let initialRequest = [Action(method: "eth_someMethod", params: ["param1", "param2"])]
+        let initialRequest = [Action(method: "eth_someMethod", params: ["param1", "param2"]), Action(method: "eth_someMethod2", params: ["param1", "param2"])]
 
-        let requestMessage = RequestMessage(
+//        let requestMessage = RequestMessage(
+//            uuid: UUID(),
+//            sender: sPublicKey,
+//            content: .request(actions: initialRequest, account: Account(
+//                chain: "eth",
+//                networkId: 17,
+//                address: "0x12345678ABCD")),
+//            version: "1.2.3"
+//        )
+        let responseMessage = ResponseMessage(
             uuid: UUID(),
-            sender: sPublicKey,
-            content: .handshake(
-                appId: "com.myapp.package.id",
-                callback: callbackURL,
-                initialActions: initialRequest
+            sender: rPublicKey,
+            content: .error(
+                requestId: UUID(),
+                description: "error message from host"
             ),
-            version: "1.2.3"
+            version: "7.13.1"
         )
+        
+        let symmetricKey = try! Cipher.deriveSymmetricKey(with: sPrivateKey, rPublicKey)
 
-        let encodedRequest = try! MessageConverter.encode(requestMessage, to: URL(string: "https://go.cb-w.com/wsegue")!, with: nil)
+        let encodedRequest = try! MessageConverter.encode(responseMessage, to: URL(string: "https://myapp.xyz/native-sdk")!, with: symmetricKey)
+        
+        print(encodedRequest)
 
-
-        let hostSDK = NativeSDKSupport()
-        hostSDK.decodeRequest(
-            encodedRequest.absoluteString,
-            ownPrivateKeyStr: rPrivateKey.base64EncodedString(),
-            peerPublicKeyStr: sPublicKey.base64EncodedString(),
-            resolve: { result in
-                print(result)
-            }, reject: { _,err,e in
-                print(err)
-                print(e)
-            }
-        )
+//        let hostSDK = NativeSDKSupport()
+//        hostSDK.decodeRequest(
+//            encodedRequest.absoluteString,
+//            ownPrivateKeyStr: rPrivateKey.base64EncodedString(),
+//            peerPublicKeyStr: sPublicKey.base64EncodedString(),
+//            resolve: { result in
+//                print(result)
+//            }, reject: { _,err,e in
+//                print(err)
+//                print(e)
+//            }
+//        )
 
     }
     var body: some Scene {

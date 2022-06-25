@@ -11,7 +11,7 @@ import CryptoKit
 @available(iOS 13.0, *)
 public enum EncryptedRequestContent: EncryptedContent {
     case handshake(appId: String, callback: URL, initialActions: [Action]?)
-    case request(Data)
+    case request(data: Data)
     
     public init(encrypt unencrypted: RequestContent, with symmetricKey: SymmetricKey?) throws {
         switch unencrypted {
@@ -22,7 +22,7 @@ public enum EncryptedRequestContent: EncryptedContent {
                 throw CoinbaseWalletSDKError.missingSymmetricKey
             }
             let request = Request(actions: actions, account: account)
-            self = .request(try Cipher.encrypt(request, with: symmetricKey))
+            self = .request(data: try Cipher.encrypt(request, with: symmetricKey))
         }
     }
 }

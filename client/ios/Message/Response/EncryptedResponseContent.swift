@@ -10,7 +10,7 @@ import CryptoKit
 
 @available(iOS 13.0, *)
 public enum EncryptedResponseContent: EncryptedContent {
-    case response(requestId: UUID, Data)
+    case response(requestId: UUID, data: Data)
     case error(requestId: UUID, description: String)
     
     public init(encrypt unencrypted: ResponseContent, with symmetricKey: SymmetricKey?) throws {
@@ -20,7 +20,7 @@ public enum EncryptedResponseContent: EncryptedContent {
                 throw CoinbaseWalletSDKError.missingSymmetricKey
             }
             let encrypted = try Cipher.encrypt(results, with: symmetricKey)
-            self = .response(requestId: requestId, encrypted)
+            self = .response(requestId: requestId, data: encrypted)
         case let .error(requestId, description):
             self = .error(requestId: requestId, description: description)
         }
