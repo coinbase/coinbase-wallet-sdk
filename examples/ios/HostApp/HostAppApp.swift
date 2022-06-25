@@ -20,17 +20,15 @@ struct HostAppApp: App {
         let sPublicKey = sPrivateKey.publicKey
         let rPublicKey = rPrivateKey.publicKey
 
-        let initialRequest = Request(actions: [Request.Action(method: "eth_someMethod", params: ["param1", "param2"])], account: Account(chain: "eth", networkId: 3, address: "0x1234ABCD"))
+        let initialRequest = [Action(method: "eth_someMethod", params: ["param1", "param2"])]
 
         let requestMessage = RequestMessage(
             uuid: UUID(),
             sender: sPublicKey,
             content: .handshake(
-              Handshake(
                 appId: "com.myapp.package.id",
                 callback: callbackURL,
-                initialRequest: initialRequest
-              )
+                initialActions: initialRequest
             ),
             version: "1.2.3"
         )

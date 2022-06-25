@@ -45,11 +45,15 @@ public class CoinbaseWalletSDK {
     
     // MARK: - Send message
     
-    public func initiateHandshake(initialRequest: Request? = nil, onResponse: @escaping ResponseHandler) {
+    public func initiateHandshake(initialActions: [Action]? = nil, onResponse: @escaping ResponseHandler) {
         let message = RequestMessage(
             uuid: UUID(),
             sender: keyManager.ownPublicKey,
-            content: .handshake(.init(appId: appId, callback: callback, initialRequest: initialRequest)),
+            content: .handshake(
+                appId: appId,
+                callback: callback,
+                initialActions: initialActions
+            ),
             version: version
         )
         self.send(message, onResponse)
@@ -59,7 +63,7 @@ public class CoinbaseWalletSDK {
         let message = RequestMessage(
             uuid: UUID(),
             sender: keyManager.ownPublicKey,
-            content: .request(request),
+            content: .request(actions: request.actions, account: request.account),
             version: version
         )
         self.send(message, onResponse)

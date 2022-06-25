@@ -9,8 +9,8 @@ import Foundation
 
 @available(iOS 13.0, *)
 public enum ResponseContent: UnencryptedContent {
-    case response(Response)
-    case error(ErrorContent)
+    case response(requestId: UUID, values: [ReturnValue])
+    case error(requestId: UUID, description: String)
 }
 
 @available(iOS 13.0, *)

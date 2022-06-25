@@ -29,9 +29,9 @@ public class HandshakeRequestHandler {
         let message = ResponseMessage(
             uuid: UUID(),
             sender: hostKey.publicKey,
-            content: .response(Response(
+            content: .response(
                 requestId: request.uuid,
-                results: [])
+                values: []
             ),
             version: "0.0"
         )
