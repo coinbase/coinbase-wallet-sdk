@@ -5,7 +5,7 @@
 ### handshake
 - URL
 `https://go.cb-w.com/wsegue?p=eyJ2ZXJzaW9uIjoiMS4yLjMiLCJzZW5kZXIiOiI0UG9QTEFDUjNCb0VxWTJBdSthamRISGRSZStvU0ZaUVwvSkpDU091bHpTYz0iLCJjb250ZW50Ijp7ImhhbmRzaGFrZSI6eyJhcHBJZCI6ImNvbS5teWFwcC5wYWNrYWdlLmlkIiwiY2FsbGJhY2siOiJodHRwczpcL1wvbXlhcHAueHl6XC9uYXRpdmUtc2RrIiwiaW5pdGlhbEFjdGlvbnMiOlt7Im1ldGhvZCI6ImV0aF9zb21lTWV0aG9kIiwicGFyYW1zIjpbInBhcmFtMSIsInBhcmFtMiJdfV19fSwidXVpZCI6IjExMUYzRTI2LTE2N0YtNEJGNS1BQzM4LTZEOTNBNjU2RTMyQiJ9`
-- JSON (handshake messages are not encrypted)
+- JSON (decoded the URL above. handshake messages are not encrypted)
 ```json
 {
   "version": "1.2.3",
