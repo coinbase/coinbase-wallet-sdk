@@ -9,12 +9,12 @@ import Foundation
 
 public struct Response: Codable {
     // TODO
-    public typealias Result = String
+    public typealias ActionResult = String
     
     public let requestId: UUID
-    public let results: [Result]
+    public let results: [ActionResult]
     
-    public init(requestId: UUID, results: [Response.Result]) {
+    public init(requestId: UUID, results: [ActionResult]) {
         self.requestId = requestId
         self.results = results
     }

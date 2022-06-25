@@ -8,6 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		398054B609FD964F02FF4E61 /* Pods_HostApp.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B5B1D2F6BF25D6D4C12FBDE2 /* Pods_HostApp.framework */; };
+		5DA9B3B2286678EF0089D6DB /* NativeSDKSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA9B3B0286678EF0089D6DB /* NativeSDKSupport.swift */; };
+		5DA9B3B92866792C0089D6DB /* URL.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA9B3B82866792C0089D6DB /* URL.swift */; };
+		5DA9B3BA2866792C0089D6DB /* Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA9B3B52866792C0089D6DB /* Dictionary.swift */; };
+		5DA9B3BB2866792C0089D6DB /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA9B3B72866792C0089D6DB /* Errors.swift */; };
+		5DA9B3BC2866792C0089D6DB /* KeyPair.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA9B3B62866792C0089D6DB /* KeyPair.swift */; };
+		5DA9B3BD2866792C0089D6DB /* RawRepresentableKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA9B3B42866792C0089D6DB /* RawRepresentableKey.swift */; };
 		5DB3D5942851680100E213EB /* HostAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DB3D5932851680100E213EB /* HostAppApp.swift */; };
 		5DB3D5962851680100E213EB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DB3D5952851680100E213EB /* ContentView.swift */; };
 		5DB3D5982851680200E213EB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5DB3D5972851680200E213EB /* Assets.xcassets */; };
@@ -15,6 +21,12 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		5DA9B3B0286678EF0089D6DB /* NativeSDKSupport.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NativeSDKSupport.swift; sourceTree = "<group>"; };
+		5DA9B3B42866792C0089D6DB /* RawRepresentableKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RawRepresentableKey.swift; sourceTree = "<group>"; };
+		5DA9B3B52866792C0089D6DB /* Dictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictionary.swift; sourceTree = "<group>"; };
+		5DA9B3B62866792C0089D6DB /* KeyPair.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyPair.swift; sourceTree = "<group>"; };
+		5DA9B3B72866792C0089D6DB /* Errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Errors.swift; sourceTree = "<group>"; };
+		5DA9B3B82866792C0089D6DB /* URL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URL.swift; sourceTree = "<group>"; };
 		5DB3D5902851680100E213EB /* HostApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HostApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5DB3D5932851680100E213EB /* HostAppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostAppApp.swift; sourceTree = "<group>"; };
 		5DB3D5952851680100E213EB /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -51,7 +63,6 @@
 				804590EA53A2502B6CD83B22 /* Pods-HostApp.debug.xcconfig */,
 				E140164623F51106D71DE055 /* Pods-HostApp.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -76,6 +87,12 @@
 		5DB3D5922851680100E213EB /* HostApp */ = {
 			isa = PBXGroup;
 			children = (
+				5DA9B3B52866792C0089D6DB /* Dictionary.swift */,
+				5DA9B3B72866792C0089D6DB /* Errors.swift */,
+				5DA9B3B62866792C0089D6DB /* KeyPair.swift */,
+				5DA9B3B42866792C0089D6DB /* RawRepresentableKey.swift */,
+				5DA9B3B82866792C0089D6DB /* URL.swift */,
+				5DA9B3B0286678EF0089D6DB /* NativeSDKSupport.swift */,
 				5DB3D5932851680100E213EB /* HostAppApp.swift */,
 				5DB3D5952851680100E213EB /* ContentView.swift */,
 				5DB3D5972851680200E213EB /* Assets.xcassets */,
@@ -207,7 +224,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				5DB3D5962851680100E213EB /* ContentView.swift in Sources */,
+				5DA9B3BA2866792C0089D6DB /* Dictionary.swift in Sources */,
+				5DA9B3BC2866792C0089D6DB /* KeyPair.swift in Sources */,
+				5DA9B3BD2866792C0089D6DB /* RawRepresentableKey.swift in Sources */,
+				5DA9B3B2286678EF0089D6DB /* NativeSDKSupport.swift in Sources */,
 				5DB3D5942851680100E213EB /* HostAppApp.swift in Sources */,
+				5DA9B3BB2866792C0089D6DB /* Errors.swift in Sources */,
+				5DA9B3B92866792C0089D6DB /* URL.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

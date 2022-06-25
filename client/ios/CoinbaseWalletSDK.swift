@@ -49,7 +49,7 @@ public class CoinbaseWalletSDK {
         let message = RequestMessage(
             uuid: UUID(),
             sender: keyManager.ownPublicKey,
-            content: .handshake(Handshake(appId: appId, callback: callback, initialRequest: initialRequest)),
+            content: .handshake(.init(appId: appId, callback: callback, initialRequest: initialRequest)),
             version: version
         )
         self.send(message, onResponse)
