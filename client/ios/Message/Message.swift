@@ -21,6 +21,7 @@ public protocol UnencryptedContent: BaseContent {
 // MARK: - base types
 
 public protocol BaseContent: Codable {}
+extension Array : BaseContent where Element : BaseContent {}
 
 @available(iOS 13.0, *)
 public struct BaseMessage<C: BaseContent>: Codable {

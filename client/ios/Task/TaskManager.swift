@@ -24,22 +24,13 @@ class TaskManager {
     }
     
     @discardableResult func handleResponseMessage(_ message: ResponseMessage) -> Bool {
-        let requestId: UUID
-        let result: ResponseResult
-        switch message.content {
-        case .response(let response):
-            requestId = response.requestId
-            result = .success(response)
-        case .error(let error):
-            requestId = error.requestId
-            result = .failure(CoinbaseWalletSDKError.walletReturnedError(error.description))
-        }
+        let requestId = message.requestId
         
         guard let task = tasks[requestId] else {
             return false
         }
         
-        task.handler(result)
+        task.handler(message.result)
         tasks.removeValue(forKey: requestId)
         return true
     }
