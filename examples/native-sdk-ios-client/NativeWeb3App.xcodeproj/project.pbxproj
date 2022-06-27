@@ -7,132 +7,129 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		5DBA651E28370D6500E36D26 /* ClientAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DBA651D28370D6500E36D26 /* ClientAppApp.swift */; };
-		5DBA652028370D6500E36D26 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DBA651F28370D6500E36D26 /* ContentView.swift */; };
-		5DBA652228370D6600E36D26 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5DBA652128370D6600E36D26 /* Assets.xcassets */; };
-		5DBA652528370D6600E36D26 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5DBA652428370D6600E36D26 /* Preview Assets.xcassets */; };
-		D7AAE9FAA88F8D8B39B06229 /* Pods_ClientApp.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F4E671F4BAC6578097EC2B2 /* Pods_ClientApp.framework */; };
+		5DA9B3CF286A755E0089D6DB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA9B3CE286A755E0089D6DB /* AppDelegate.swift */; };
+		5DA9B3D1286A755E0089D6DB /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA9B3D0286A755E0089D6DB /* SceneDelegate.swift */; };
+		5DA9B3D3286A755E0089D6DB /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA9B3D2286A755E0089D6DB /* ViewController.swift */; };
+		5DA9B3D6286A755E0089D6DB /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 5DA9B3D4286A755E0089D6DB /* Main.storyboard */; };
+		5DA9B3D8286A755F0089D6DB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5DA9B3D7286A755F0089D6DB /* Assets.xcassets */; };
+		5DA9B3DB286A755F0089D6DB /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 5DA9B3D9286A755F0089D6DB /* LaunchScreen.storyboard */; };
+		9A156AE0D18D300163D57907 /* Pods_NativeWeb3App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 333C157DDC56839FC68B8E8F /* Pods_NativeWeb3App.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		3150212D2C3A0BC237AD6C37 /* Pods-ClientApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ClientApp.release.xcconfig"; path = "Target Support Files/Pods-ClientApp/Pods-ClientApp.release.xcconfig"; sourceTree = "<group>"; };
-		5D46EC7928370F1B009F5130 /* ClientApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ClientApp.entitlements; sourceTree = "<group>"; };
-		5D46EC7A28370FE0009F5130 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		5DBA651A28370D6500E36D26 /* ClientApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClientApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		5DBA651D28370D6500E36D26 /* ClientAppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientAppApp.swift; sourceTree = "<group>"; };
-		5DBA651F28370D6500E36D26 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		5DBA652128370D6600E36D26 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		5DBA652428370D6600E36D26 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		9F4E671F4BAC6578097EC2B2 /* Pods_ClientApp.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ClientApp.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		E1CF19B7325B24C8E434EA10 /* Pods-ClientApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ClientApp.debug.xcconfig"; path = "Target Support Files/Pods-ClientApp/Pods-ClientApp.debug.xcconfig"; sourceTree = "<group>"; };
+		333C157DDC56839FC68B8E8F /* Pods_NativeWeb3App.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_NativeWeb3App.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		5DA9B3CB286A755E0089D6DB /* NativeWeb3App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NativeWeb3App.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5DA9B3CE286A755E0089D6DB /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		5DA9B3D0286A755E0089D6DB /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		5DA9B3D2286A755E0089D6DB /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		5DA9B3D5286A755E0089D6DB /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		5DA9B3D7286A755F0089D6DB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		5DA9B3DA286A755F0089D6DB /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		5DA9B3DC286A755F0089D6DB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AD64CFD01D3AB9B726DF335B /* Pods-NativeWeb3App.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NativeWeb3App.release.xcconfig"; path = "Target Support Files/Pods-NativeWeb3App/Pods-NativeWeb3App.release.xcconfig"; sourceTree = "<group>"; };
+		FC120F48CB37E5C1FAFE2CAE /* Pods-NativeWeb3App.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NativeWeb3App.debug.xcconfig"; path = "Target Support Files/Pods-NativeWeb3App/Pods-NativeWeb3App.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		5DBA651728370D6500E36D26 /* Frameworks */ = {
+		5DA9B3C8286A755E0089D6DB /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D7AAE9FAA88F8D8B39B06229 /* Pods_ClientApp.framework in Frameworks */,
+				9A156AE0D18D300163D57907 /* Pods_NativeWeb3App.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		3AF5171766E1278EC7449ABA /* Frameworks */ = {
+		3E18EF9C1E2A7D3BF660A5CD /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				9F4E671F4BAC6578097EC2B2 /* Pods_ClientApp.framework */,
+				333C157DDC56839FC68B8E8F /* Pods_NativeWeb3App.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		5DBA651128370D6500E36D26 = {
+		51AC5D6DCCB61B979D9D716E /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				5D46EC7A28370FE0009F5130 /* README.md */,
-				5DBA651C28370D6500E36D26 /* ClientApp */,
-				5DBA651B28370D6500E36D26 /* Products */,
-				D395F0A5161996BBF7D08CC0 /* Pods */,
-				3AF5171766E1278EC7449ABA /* Frameworks */,
+				FC120F48CB37E5C1FAFE2CAE /* Pods-NativeWeb3App.debug.xcconfig */,
+				AD64CFD01D3AB9B726DF335B /* Pods-NativeWeb3App.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		5DA9B3C2286A755E0089D6DB = {
+			isa = PBXGroup;
+			children = (
+				5DA9B3CD286A755E0089D6DB /* NativeWeb3App */,
+				5DA9B3CC286A755E0089D6DB /* Products */,
+				51AC5D6DCCB61B979D9D716E /* Pods */,
+				3E18EF9C1E2A7D3BF660A5CD /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
-		5DBA651B28370D6500E36D26 /* Products */ = {
+		5DA9B3CC286A755E0089D6DB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				5DBA651A28370D6500E36D26 /* ClientApp.app */,
+				5DA9B3CB286A755E0089D6DB /* NativeWeb3App.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		5DBA651C28370D6500E36D26 /* ClientApp */ = {
+		5DA9B3CD286A755E0089D6DB /* NativeWeb3App */ = {
 			isa = PBXGroup;
 			children = (
-				5D46EC7928370F1B009F5130 /* ClientApp.entitlements */,
-				5DBA651D28370D6500E36D26 /* ClientAppApp.swift */,
-				5DBA651F28370D6500E36D26 /* ContentView.swift */,
-				5DBA652128370D6600E36D26 /* Assets.xcassets */,
-				5DBA652328370D6600E36D26 /* Preview Content */,
+				5DA9B3CE286A755E0089D6DB /* AppDelegate.swift */,
+				5DA9B3D0286A755E0089D6DB /* SceneDelegate.swift */,
+				5DA9B3D2286A755E0089D6DB /* ViewController.swift */,
+				5DA9B3D4286A755E0089D6DB /* Main.storyboard */,
+				5DA9B3D7286A755F0089D6DB /* Assets.xcassets */,
+				5DA9B3D9286A755F0089D6DB /* LaunchScreen.storyboard */,
+				5DA9B3DC286A755F0089D6DB /* Info.plist */,
 			);
-			path = ClientApp;
-			sourceTree = "<group>";
-		};
-		5DBA652328370D6600E36D26 /* Preview Content */ = {
-			isa = PBXGroup;
-			children = (
-				5DBA652428370D6600E36D26 /* Preview Assets.xcassets */,
-			);
-			path = "Preview Content";
-			sourceTree = "<group>";
-		};
-		D395F0A5161996BBF7D08CC0 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				E1CF19B7325B24C8E434EA10 /* Pods-ClientApp.debug.xcconfig */,
-				3150212D2C3A0BC237AD6C37 /* Pods-ClientApp.release.xcconfig */,
-			);
-			path = Pods;
+			path = NativeWeb3App;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		5DBA651928370D6500E36D26 /* ClientApp */ = {
+		5DA9B3CA286A755E0089D6DB /* NativeWeb3App */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 5DBA652828370D6600E36D26 /* Build configuration list for PBXNativeTarget "ClientApp" */;
+			buildConfigurationList = 5DA9B3DF286A755F0089D6DB /* Build configuration list for PBXNativeTarget "NativeWeb3App" */;
 			buildPhases = (
-				BDD6A186A6BF043CB2B26091 /* [CP] Check Pods Manifest.lock */,
-				5DBA651628370D6500E36D26 /* Sources */,
-				5DBA651728370D6500E36D26 /* Frameworks */,
-				5DBA651828370D6500E36D26 /* Resources */,
-				203B8C75716CF6CFFDC800E6 /* [CP] Embed Pods Frameworks */,
+				29FDABA7E59E1339DA4167A7 /* [CP] Check Pods Manifest.lock */,
+				5DA9B3C7286A755E0089D6DB /* Sources */,
+				5DA9B3C8286A755E0089D6DB /* Frameworks */,
+				5DA9B3C9286A755E0089D6DB /* Resources */,
+				4A2E3B84F8F828F77205E15C /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = ClientApp;
-			productName = ClientApp;
-			productReference = 5DBA651A28370D6500E36D26 /* ClientApp.app */;
+			name = NativeWeb3App;
+			productName = NativeWeb3App;
+			productReference = 5DA9B3CB286A755E0089D6DB /* NativeWeb3App.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		5DBA651228370D6500E36D26 /* Project object */ = {
+		5DA9B3C3286A755E0089D6DB /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1330;
 				LastUpgradeCheck = 1330;
 				TargetAttributes = {
-					5DBA651928370D6500E36D26 = {
+					5DA9B3CA286A755E0089D6DB = {
 						CreatedOnToolsVersion = 13.3.1;
 					};
 				};
 			};
-			buildConfigurationList = 5DBA651528370D6500E36D26 /* Build configuration list for PBXProject "ClientApp" */;
+			buildConfigurationList = 5DA9B3C6286A755E0089D6DB /* Build configuration list for PBXProject "NativeWeb3App" */;
 			compatibilityVersion = "Xcode 13.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -140,47 +137,31 @@
 				en,
 				Base,
 			);
-			mainGroup = 5DBA651128370D6500E36D26;
-			productRefGroup = 5DBA651B28370D6500E36D26 /* Products */;
+			mainGroup = 5DA9B3C2286A755E0089D6DB;
+			productRefGroup = 5DA9B3CC286A755E0089D6DB /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				5DBA651928370D6500E36D26 /* ClientApp */,
+				5DA9B3CA286A755E0089D6DB /* NativeWeb3App */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		5DBA651828370D6500E36D26 /* Resources */ = {
+		5DA9B3C9286A755E0089D6DB /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5DBA652528370D6600E36D26 /* Preview Assets.xcassets in Resources */,
-				5DBA652228370D6600E36D26 /* Assets.xcassets in Resources */,
+				5DA9B3DB286A755F0089D6DB /* LaunchScreen.storyboard in Resources */,
+				5DA9B3D8286A755F0089D6DB /* Assets.xcassets in Resources */,
+				5DA9B3D6286A755E0089D6DB /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		203B8C75716CF6CFFDC800E6 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-ClientApp/Pods-ClientApp-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-ClientApp/Pods-ClientApp-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ClientApp/Pods-ClientApp-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		BDD6A186A6BF043CB2B26091 /* [CP] Check Pods Manifest.lock */ = {
+		29FDABA7E59E1339DA4167A7 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -195,29 +176,66 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-ClientApp-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-NativeWeb3App-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
+		4A2E3B84F8F828F77205E15C /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-NativeWeb3App/Pods-NativeWeb3App-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-NativeWeb3App/Pods-NativeWeb3App-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-NativeWeb3App/Pods-NativeWeb3App-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		5DBA651628370D6500E36D26 /* Sources */ = {
+		5DA9B3C7286A755E0089D6DB /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5DBA652028370D6500E36D26 /* ContentView.swift in Sources */,
-				5DBA651E28370D6500E36D26 /* ClientAppApp.swift in Sources */,
+				5DA9B3D3286A755E0089D6DB /* ViewController.swift in Sources */,
+				5DA9B3CF286A755E0089D6DB /* AppDelegate.swift in Sources */,
+				5DA9B3D1286A755E0089D6DB /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXVariantGroup section */
+		5DA9B3D4286A755E0089D6DB /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				5DA9B3D5286A755E0089D6DB /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		5DA9B3D9286A755F0089D6DB /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				5DA9B3DA286A755F0089D6DB /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin XCBuildConfiguration section */
-		5DBA652628370D6600E36D26 /* Debug */ = {
+		5DA9B3DD286A755F0089D6DB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -277,7 +295,7 @@
 			};
 			name = Debug;
 		};
-		5DBA652728370D6600E36D26 /* Release */ = {
+		5DA9B3DE286A755F0089D6DB /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -331,22 +349,20 @@
 			};
 			name = Release;
 		};
-		5DBA652928370D6600E36D26 /* Debug */ = {
+		5DA9B3E0286A755F0089D6DB /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E1CF19B7325B24C8E434EA10 /* Pods-ClientApp.debug.xcconfig */;
+			baseConfigurationReference = FC120F48CB37E5C1FAFE2CAE /* Pods-NativeWeb3App.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = ClientApp/ClientApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"ClientApp/Preview Content\"";
 				DEVELOPMENT_TEAM = B7Y3D73M65;
-				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_FILE = NativeWeb3App/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -354,7 +370,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.coinbase.prime.dev;
+				PRODUCT_BUNDLE_IDENTIFIER = com.coinbase.NativeWeb3App;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -362,22 +378,20 @@
 			};
 			name = Debug;
 		};
-		5DBA652A28370D6600E36D26 /* Release */ = {
+		5DA9B3E1286A755F0089D6DB /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 3150212D2C3A0BC237AD6C37 /* Pods-ClientApp.release.xcconfig */;
+			baseConfigurationReference = AD64CFD01D3AB9B726DF335B /* Pods-NativeWeb3App.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = ClientApp/ClientApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"ClientApp/Preview Content\"";
 				DEVELOPMENT_TEAM = B7Y3D73M65;
-				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_FILE = NativeWeb3App/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -385,7 +399,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.coinbase.prime.dev;
+				PRODUCT_BUNDLE_IDENTIFIER = com.coinbase.NativeWeb3App;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -396,25 +410,25 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		5DBA651528370D6500E36D26 /* Build configuration list for PBXProject "ClientApp" */ = {
+		5DA9B3C6286A755E0089D6DB /* Build configuration list for PBXProject "NativeWeb3App" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				5DBA652628370D6600E36D26 /* Debug */,
-				5DBA652728370D6600E36D26 /* Release */,
+				5DA9B3DD286A755F0089D6DB /* Debug */,
+				5DA9B3DE286A755F0089D6DB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		5DBA652828370D6600E36D26 /* Build configuration list for PBXNativeTarget "ClientApp" */ = {
+		5DA9B3DF286A755F0089D6DB /* Build configuration list for PBXNativeTarget "NativeWeb3App" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				5DBA652928370D6600E36D26 /* Debug */,
-				5DBA652A28370D6600E36D26 /* Release */,
+				5DA9B3E0286A755F0089D6DB /* Debug */,
+				5DA9B3E1286A755F0089D6DB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 5DBA651228370D6500E36D26 /* Project object */;
+	rootObject = 5DA9B3C3286A755E0089D6DB /* Project object */;
 }
