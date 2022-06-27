@@ -17,6 +17,7 @@
       "initialActions": [
         {
           "method": "eth_someMethod",
+          "optional": false,
           "params": [
             "param1",
             "param2"
@@ -55,6 +56,7 @@
       "actions": [
         {
           "method": "eth_someMethod",
+          "optional": false,
           "params": [
             "param1",
             "param2"
@@ -62,6 +64,7 @@
         },
         {
           "method": "eth_someMethod2",
+          "optional": true,
           "params": [
             "param1",
             "param2"
