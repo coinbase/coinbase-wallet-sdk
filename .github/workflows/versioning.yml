@@ -38,6 +38,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: ".nvmrc"
+          cache-dependency-path: '**/yarn.lock'
 
       - name: Update version
         run: yarn version --new-version ${{ env.PACKAGE_VERSION }} --no-git-tag-version
