@@ -21,7 +21,7 @@ on:
     - cron: "45 14 * * 6"
 
 # paths-ignore:
-#   - packages/native-sdk
+#   - packages/wallet-native-sdk
 
 jobs:
   analyze:
