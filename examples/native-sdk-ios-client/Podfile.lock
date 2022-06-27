@@ -1,0 +1,16 @@
+PODS:
+  - CoinbaseWalletSDK (0.1.0)
+
+DEPENDENCIES:
+  - CoinbaseWalletSDK (from `../../`)
+
+EXTERNAL SOURCES:
+  CoinbaseWalletSDK:
+    :path: "../../"
+
+SPEC CHECKSUMS:
+  CoinbaseWalletSDK: ed33baf8bb6b0899bca0bf636120408e29fe30e6
+
+PODFILE CHECKSUM: 0e53073fbb044af3a9d51183e62d8608507896bb
+
+COCOAPODS: 1.11.3

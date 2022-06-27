@@ -21,16 +21,16 @@ Pod::Spec.new do |s|
 TODO: Add long description of the pod here.
                        DESC
 
-  s.homepage         = 'https://github.com/coinbase/CoinbaseWalletSDK'
+  s.homepage         = 'https://github.com/coinbase/coinbase-wallet-sdk'
   # s.screenshots     = 'www.example.com/screenshots_1', 'www.example.com/screenshots_2'
   # s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'bangtoven' => 'jungho.bang@coinbase.com' }
-  s.source           = { :git => 'https://github.com/coinbase/CoinbaseWalletSDK.git', :tag => s.version.to_s }
+  s.source           = { :git => 'https://github.com/coinbase/coinbase-wallet-sdk', :tag => s.version.to_s }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
   s.ios.deployment_target = '12.0'
 
-  s.source_files = 'client/ios/**/*.swift'
+  s.source_files = 'packages/wallet-native-sdk/ios/**/*.swift'
   
   # s.public_header_files = 'Pod/Classes/**/*.h'
   # s.frameworks = 'UIKit', 'MapKit'
