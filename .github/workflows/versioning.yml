@@ -23,6 +23,9 @@ jobs:
   version:
     name: Updates package version
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./packages/wallet-sdk
     needs: [authorize]
     env:
       PACKAGE_VERSION: ${{ github.event.inputs.packageVersion }}
@@ -30,9 +33,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: cd into `wallet-sdk`
-        run: cd packages/wallet-sdk
 
       - name: Use Node.js
         uses: actions/setup-node@v3

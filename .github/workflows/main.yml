@@ -6,13 +6,13 @@ jobs:
   lint-check:
     name: Lint / Type Check
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./packages/wallet-sdk
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: cd into `wallet-sdk`
-        run: cd packages/wallet-sdk
 
       - name: Checkout node action
         uses: actions/setup-node@v3
@@ -37,6 +37,9 @@ jobs:
   tests:
     name: Tests
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./packages/wallet-sdk
 
     strategy:
       matrix:
@@ -45,9 +48,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: cd into `wallet-sdk`
-        run: cd packages/wallet-sdk
 
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
