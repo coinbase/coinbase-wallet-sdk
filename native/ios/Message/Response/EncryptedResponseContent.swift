@@ -10,18 +10,19 @@ import CryptoKit
 
 @available(iOS 13.0, *)
 public enum EncryptedResponseContent: EncryptedContent {
-    case response(Data)
-    case error(ErrorContent)
+    case response(requestId: UUID, data: Data)
+    case error(requestId: UUID, description: String)
     
     public init(encrypt unencrypted: ResponseContent, with symmetricKey: SymmetricKey?) throws {
         switch unencrypted {
-        case .response(let response):
+        case let .response(requestId, results):
             guard let symmetricKey = symmetricKey else {
                 throw CoinbaseWalletSDKError.missingSymmetricKey
             }
-            self = .response(try Cipher.encrypt(response, with: symmetricKey))
-        case .error(let errorContent):
-            self = .error(errorContent)
+            let encrypted = try Cipher.encrypt(results, with: symmetricKey)
+            self = .response(requestId: requestId, data: encrypted)
+        case let .error(requestId, description):
+            self = .error(requestId: requestId, description: description)
         }
     }
 }
@@ -30,13 +31,14 @@ public enum EncryptedResponseContent: EncryptedContent {
 extension ResponseContent {
     public init(decrypt encrypted: EncryptedResponseContent, with symmetricKey: SymmetricKey?) throws {
         switch encrypted {
-        case .response(let data):
+        case let .response(requestId, encryptedResults):
             guard let symmetricKey = symmetricKey else {
                 throw CoinbaseWalletSDKError.missingSymmetricKey
             }
-            self = .response(try Cipher.decrypt(data, with: symmetricKey))
-        case .error(let errorContent):
-            self = .error(errorContent)
+            let values: [ReturnValue] = try Cipher.decrypt(encryptedResults, with: symmetricKey)
+            self = .response(requestId: requestId, values: values)
+        case let .error(requestId, description):
+            self = .error(requestId: requestId, description: description)
         }
     }
 }
