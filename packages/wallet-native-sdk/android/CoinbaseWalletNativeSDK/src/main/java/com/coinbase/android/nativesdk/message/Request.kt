@@ -19,12 +19,16 @@ import kotlinx.serialization.json.put
 @Serializable
 sealed interface Request {
     @Serializable
-    class Handshake(val domain: String, val initialRequest: Request? = null) :
-        com.coinbase.android.nativesdk.message.Request
+    class Handshake(
+        val callback: String,
+        val initialActions: List<Action>? = null
+    ) : com.coinbase.android.nativesdk.message.Request
 
     @Serializable
-    class Request(val actions: List<Action>, val account: Account? = null) :
-        com.coinbase.android.nativesdk.message.Request
+    class Request(
+        val actions: List<Action>,
+        val account: Account? = null
+    ) : com.coinbase.android.nativesdk.message.Request
 }
 
 @Serializable

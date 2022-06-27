@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import com.coinbase.android.nativesdk.key.KeyManager
+import com.coinbase.android.nativesdk.message.Action
 import com.coinbase.android.nativesdk.message.Content
 import com.coinbase.android.nativesdk.message.Message
 import com.coinbase.android.nativesdk.message.MessageConverter
@@ -46,15 +47,18 @@ class CoinbaseWalletSDK(
         }
     }
 
-    fun initiateHandshake(initialRequest: Request.Request? = null, onResponse: ResponseHandler) {
+    fun initiateHandshake(
+        initialActions: List<Action>? = null,
+        onResponse: ResponseHandler
+    ) {
         val message = Message(
             uuid = UUID.randomUUID().toString(),
             version = sdkVersion,
             sender = keyManager.ownPublicKey,
             content = Content.RequestContent(
                 request = Request.Handshake(
-                    domain = domain.toString(),
-                    initialRequest = initialRequest
+                    callback = domain.toString(),
+                    initialActions = initialActions
                 )
             )
         )
@@ -99,12 +103,18 @@ class CoinbaseWalletSDK(
     }
 
     private fun send(message: Message, onResponse: ResponseHandler) {
-        val uri = MessageConverter.encode(
-            message = message,
-            recipient = Uri.parse(CBW_SCHEME),
-            ownPrivateKey = keyManager.ownPrivateKey,
-            peerPublicKey = keyManager.peerPublicKey
-        )
+        val uri: Uri
+        try {
+            uri = MessageConverter.encode(
+                message = message,
+                recipient = Uri.parse(CBW_SCHEME),
+                ownPrivateKey = keyManager.ownPrivateKey,
+                peerPublicKey = keyManager.peerPublicKey
+            )
+        } catch (e: Throwable) {
+            onResponse(Result.failure(CoinbaseWalletSDKError.EncodingFailed))
+            return
+        }
 
         val intent = launchWalletIntent
         if (intent == null) {

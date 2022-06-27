@@ -22,11 +22,16 @@ typealias ResponseHandler = (ResponseResult) -> Unit
 @Serializable
 sealed interface Response {
     @Serializable
-    class Response(val requestUUID: String, val results: List<String>) :
-        com.coinbase.android.nativesdk.message.Response
+    class Response(
+        val requestId: String,
+        val results: List<String>
+    ) : com.coinbase.android.nativesdk.message.Response
 
     @Serializable
-    class Error(val requestUUID: String, val value: String) : com.coinbase.android.nativesdk.message.Response
+    class Error(
+        val requestId: String,
+        val description: String
+    ) : com.coinbase.android.nativesdk.message.Response
 }
 
 internal class ResponseContentSerializer(private val sharedSecret: ByteArray?) : KSerializer<Response> {
