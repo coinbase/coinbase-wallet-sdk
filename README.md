@@ -3,6 +3,7 @@
 ## Packages
 
 - [wallet-sdk](packages/wallet-sdk/): web
+- [wallet-native-sdk](packages/wallet-native-sdk/): native
 
 ## License
 
