@@ -1,0 +1,380 @@
+// Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
+// Licensed under the Apache License, version 2.0
+
+.-cbwsdk-css-reset {
+  .-cbwsdk-extension-dialog {
+    z-index: 2147483647;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    $blue-normal: #1652f0;
+    $blue-dark: rgb(55, 115, 245);
+    $wash: #fafbfc;
+    $white: #fff;
+    $black: #000;
+    $grey-50: #aaa;
+    $background-alt-dark: rgb(20, 21, 25);
+
+    $elevation-z3: 0px 4px 12px rgba($black, 0.1);
+    $elevation-z4: 0px 0px 8px rgba($black, 0.04),
+      0px 16px 24px rgba($black, 0.06);
+
+    &-backdrop {
+      z-index: 2147483647;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      transition: opacity 0.25s;
+
+      &.light {
+        background-color: rgba($black, 0.5);
+      }
+
+      &.dark {
+        background-color: rgba(50, 53, 61, 0.4);
+      }
+
+      &-hidden {
+        opacity: 0;
+      }
+    }
+
+    &-box {
+      display: flex;
+      position: relative;
+      max-width: 500px;
+      flex-direction: column;
+      transform: scale(1);
+      transition: opacity 0.25s, transform 0.25s;
+
+      &-hidden {
+        opacity: 0;
+        transform: scale(0.85);
+      }
+
+      &-top {
+        display: flex;
+        flex-direction: row;
+        border-radius: 8px;
+        overflow: hidden;
+        min-height: 300px;
+
+        &.dark {
+          color: $white;
+          background-color: $black;
+          box-shadow: 0 4px 16px rgba(255, 255, 255, 0.05);
+        }
+
+        &.light {
+          background-color: $white;
+        }
+
+        &-subtext {
+          margin-top: 15px;
+          font-size: 12px;
+          line-height: 1.5;
+        }
+
+        &-install-region {
+          display: flex;
+          flex-basis: 50%;
+          flex-direction: column;
+          justify-content: center;
+          padding: 32px;
+
+          button {
+            display: block;
+            border-radius: 8px;
+            background-color: $blue-normal;
+            color: $white;
+            width: 90%;
+            min-width: fit-content;
+            height: 44px;
+            margin-top: 16px;
+            font-size: 16px;
+            padding-left: 16px;
+            padding-right: 16px;
+            cursor: pointer;
+            font-weight: 500;
+            text-align: center;
+
+            &.dark {
+              background-color: $blue-dark;
+            }
+          }
+        }
+
+        &-info-region {
+          display: flex;
+          flex-basis: 50%;
+          flex-direction: column;
+          justify-content: center;
+
+          &.light {
+            background-color: $wash;
+          }
+
+          &.dark {
+            background-color: $background-alt-dark;
+          }
+        }
+
+        &-description {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          padding-top: 14px;
+          padding-bottom: 14px;
+          padding-left: 24px;
+          padding-right: 32px;
+
+          &-icon-wrapper {
+            display: block;
+            position: relative;
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+            flex-grow: 0;
+            border-radius: 20px;
+            background-color: $white;
+            box-shadow: $elevation-z4;
+
+            img {
+              position: absolute;
+              top: 0;
+              bottom: 0;
+              left: 0;
+              right: 0;
+              margin: auto;
+            }
+          }
+
+          &-text {
+            margin-left: 16px;
+            flex-grow: 1;
+            font-size: 13px;
+            line-height: 19px;
+            align-self: center;
+
+            &.light {
+              color: $black;
+            }
+
+            &.dark {
+              color: white;
+            }
+          }
+        }
+      }
+
+      &-bottom {
+        display: flex;
+        flex-direction: row;
+        overflow: hidden;
+        border-radius: 8px;
+        margin-top: 8px;
+
+        &.light {
+          background-color: $white;
+        }
+
+        &.dark {
+          background-color: $black;
+          box-shadow: 0 4px 16px rgba(255, 255, 255, 0.05);
+        }
+
+        &-description-region {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          padding: 32px;
+          flex-grow: 1;
+        }
+
+        &-description {
+          font-size: 13px;
+          line-height: 19px;
+          margin-top: 12px;
+          color: $grey-50;
+
+          &.dark {
+            color: $white;
+
+            a {
+              color: $blue-dark;
+            }
+          }
+
+          a {
+            font-size: inherit;
+            line-height: inherit;
+            color: $blue-normal;
+            cursor: pointer;
+          }
+        }
+
+        &-qr-region {
+          position: relative;
+          flex-shrink: 0;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          padding-left: 24px;
+          padding-right: 24px;
+          padding-top: 16px;
+          padding-bottom: 16px;
+        }
+
+        &-qr-wrapper {
+          position: relative;
+          display: block;
+          padding: 8px;
+          border-radius: 8px;
+          box-shadow: $elevation-z3;
+          background-color: $white;
+
+          img {
+            display: block;
+          }
+        }
+
+        &-qr-connecting {
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+
+          &.light {
+            background-color: rgba($white, 0.95);
+            > p {
+              color: $black;
+            }
+          }
+
+          &.dark {
+            background-color: rgba($background-alt-dark, 0.9);
+            > p {
+              color: $white;
+            }
+          }
+
+          > p {
+            font-size: 12px;
+            font-weight: bold;
+
+            margin-top: 16px;
+          }
+        }
+      }
+
+      &-cancel {
+        position: absolute;
+        -webkit-appearance: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        top: 16px;
+        right: 16px;
+        width: 24px;
+        height: 24px;
+        border-radius: 12px;
+
+        cursor: pointer;
+
+        &.light {
+          background-color: $wash;
+        }
+
+        &.dark {
+          background-color: $background-alt-dark;
+        }
+
+        &-x {
+          position: relative;
+          display: block;
+          cursor: pointer;
+
+          &.light {
+            &::before,
+            &::after {
+              background-color: $black;
+            }
+          }
+
+          &.dark {
+            &::before,
+            &::after {
+              background-color: $white;
+            }
+          }
+
+          &::before,
+          &::after {
+            content: "";
+            position: absolute;
+            display: block;
+            top: -1px;
+            left: -7px;
+            width: 14px;
+            height: 1px;
+            transition: background-color 0.2s;
+          }
+
+          &::before {
+            transform: rotate(45deg);
+          }
+
+          &::after {
+            transform: rotate(135deg);
+          }
+        }
+
+        &:hover {
+          .-cbwsdk-link-dialog-box-cancel-x {
+            &-a,
+            &-b {
+              background-color: #000;
+            }
+          }
+        }
+      }
+    }
+
+    &-container {
+      display: block;
+
+      &-hidden {
+        display: none;
+      }
+    }
+
+    h2 {
+      display: block;
+      text-align: left;
+      font-size: 22px;
+      font-weight: 600;
+      line-height: 28px;
+
+      &.light {
+        color: $black;
+      }
+
+      &.dark {
+        color: $white;
+      }
+    }
+  }
+}
