@@ -87,50 +87,70 @@
 ```json
 {
   "version": "7.13.1",
-  "sender": "XDB/privdU+ixLKnMSjpgoeHZkoa6v+fRaF8ZS9/VFU=",
+  "sender": "u9IB3p8tN8P4U2LvYfaCphd8/bXRN34eTnuQPO4g6zQ=",
   "content": {
     "response": {
-      "requestId": "0BEA47B9-12BF-477C-ADF0-FFA3D445A642",
+      "requestId": "9D34C731-397B-473B-9850-C6F0261BC085",
       "values": [
-        "result1",
-        "result2"
+        {
+          "result": {
+            "value": "return value 1"
+          }
+        },
+        {
+          "result": {
+            "value": "return value 2"
+          }
+        },
+        {
+          "error": {
+            "message": "error 1",
+            "code": 1
+          }
+        },
+        {
+          "error": {
+            "message": "error 2",
+            "code": 2
+          }
+        }
       ]
     }
   },
-  "uuid": "BAB3DCA9-F27B-420C-AC8B-E80C0D7D013B"
+  "uuid": "C5CDDCF7-7A31-4185-BB6B-7A3B8F9B19BA"
 }
 ```
 - encrypted JSON (encrypted the JSON object above)
 ```json
 {
   "version": "7.13.1",
-  "sender": "igdPSvLYYW+itJnSjE1WzVeEoxdIceZ46PTRKYzP4Do=",
+  "sender": "u9IB3p8tN8P4U2LvYfaCphd8/bXRN34eTnuQPO4g6zQ=",
   "content": {
     "response": {
-      "requestId": "ED7C15A1-BB7A-48BF-990A-14E3A1156DF3",
-      "data": "2sfm8MzgrNUUtVRK3Rc1sewPx7K4HwL+SoNkczkAyvzLvihzP17Em6RU3yjPTqOO5A=="
+      "requestId": "9D34C731-397B-473B-9850-C6F0261BC085",
+      "data": "uXqgB78alErYBFXie8gP397igJ18dx+mcQcUV7K44W+96OQxNxJGm3WxEgsGMxeS8Wg1wiiRaXYRghFbwlnJuOLNpIvAiQYMOzJ1IAlFg452hwG7PrCCn6e9/xU5Hc+kzZYio355zSxSuXByo1bItCgNdjp5aocX1kUnZceV7dGjIGv66/z1k93hxGYooH0uCeI2wQ7qaZzJKfUJLgO0NFmj1fbTciv7CoVd8/mQAfHzlgaIhkHB+j4mAw=="
     }
   },
-  "uuid": "B14E7554-90B0-48EC-BD7D-90EB0E7C0775"
+  "uuid": "C5CDDCF7-7A31-4185-BB6B-7A3B8F9B19BA"
 }
 ```
 - URL
-`https://myapp.xyz/native-sdk?p=eyJ2ZXJzaW9uIjoiNy4xMy4xIiwic2VuZGVyIjoiWERCXC9wcml2ZFUraXhMS25NU2pwZ29lSFprb2E2ditmUmFGOFpTOVwvVkZVPSIsImNvbnRlbnQiOnsicmVzcG9uc2UiOnsicmVxdWVzdElkIjoiMEJFQTQ3QjktMTJCRi00NzdDLUFERjAtRkZBM0Q0NDVBNjQyIiwiXzEiOiJEbitVSWdlNGlPaW8xZmVZb1wvaFAwdHBsSkZCcEd2ZjVjMWR5UkdoZzFUNWdZREFcL1lvSTYyYWlTWkhHRmRCa0xPZz09In19LCJ1dWlkIjoiQkFCM0RDQTktRjI3Qi00MjBDLUFDOEItRTgwQzBEN0QwMTNCIn0%3D`
+`https://myapp.xyz/native-sdk?p=eyJ2ZXJzaW9uIjoiNy4xMy4xIiwic2VuZGVyIjoidTlJQjNwOHROOFA0VTJMdllmYUNwaGQ4XC9iWFJOMzRlVG51UVBPNGc2elE9IiwiY29udGVudCI6eyJyZXNwb25zZSI6eyJyZXF1ZXN0SWQiOiI5RDM0QzczMS0zOTdCLTQ3M0ItOTg1MC1DNkYwMjYxQkMwODUiLCJkYXRhIjoidVhxZ0I3OGFsRXJZQkZYaWU4Z1AzOTdpZ0oxOGR4K21jUWNVVjdLNDRXKzk2T1F4TnhKR20zV3hFZ3NHTXhlUzhXZzF3aWlSYVhZUmdoRmJ3bG5KdU9MTnBJdkFpUVlNT3pKMUlBbEZnNDUyaHdHN1ByQ0NuNmU5XC94VTVIYytrelpZaW8zNTV6U3hTdVhCeW8xYkl0Q2dOZGpwNWFvY1gxa1VuWmNlVjdkR2pJR3Y2NlwvejFrOTNoeEdZb29IMHVDZUkyd1E3cWFaekpLZlVKTGdPME5GbWoxZmJUY2l2N0NvVmQ4XC9tUUFmSHpsZ2FJaGtIQitqNG1Bdz09In19LCJ1dWlkIjoiQzVDRERDRjctN0EzMS00MTg1LUJCNkItN0EzQjhGOUIxOUJBIn0%3D`
 
 ### error
 - JSON (error messages are not encrypted)
 ```json
 {
   "version": "7.13.1",
-  "sender": "aCcPTQ3z9XjYLAtfOmD2YwJVWwbkWwxuyVfuSV+yNjc=",
+  "sender": "OzXg53x+wwIW1YCEbvP3sya7MmZT5yCQcArK3GbLmDo=",
   "content": {
-    "error": {
-      "requestId": "CC4A4AD2-3881-41E3-A80F-99A18BEB83D5",
+    "failure": {
+      "requestId": "6C7706C2-B17F-4E96-8D52-C6876C09AECB",
       "description": "error message from host"
     }
   },
-  "uuid": "14287B37-0F47-4104-8124-A388B9B70F81"
+  "uuid": "C6900BD5-25EE-46F4-AB01-EBB8FAB1AC76"
 }
 ```
 - URL
-`https://myapp.xyz/native-sdk?p=eyJ2ZXJzaW9uIjoiNy4xMy4xIiwic2VuZGVyIjoiYUNjUFRRM3o5WGpZTEF0Zk9tRDJZd0pWV3dia1d3eHV5VmZ1U1YreU5qYz0iLCJjb250ZW50Ijp7ImVycm9yIjp7InJlcXVlc3RJZCI6IkNDNEE0QUQyLTM4ODEtNDFFMy1BODBGLTk5QTE4QkVCODNENSIsImRlc2NyaXB0aW9uIjoiZXJyb3IgbWVzc2FnZSBmcm9tIGhvc3QifX0sInV1aWQiOiIxNDI4N0IzNy0wRjQ3LTQxMDQtODEyNC1BMzg4QjlCNzBGODEifQ%3D%3D`
+`https://myapp.xyz/native-sdk?p=eyJ2ZXJzaW9uIjoiNy4xMy4xIiwic2VuZGVyIjoiT3pYZzUzeCt3d0lXMVlDRWJ2UDNzeWE3TW1aVDV5Q1FjQXJLM0diTG1Ebz0iLCJjb250ZW50Ijp7ImZhaWx1cmUiOnsicmVxdWVzdElkIjoiNkM3NzA2QzItQjE3Ri00RTk2LThENTItQzY4NzZDMDlBRUNCIiwiZGVzY3JpcHRpb24iOiJlcnJvciBtZXNzYWdlIGZyb20gaG9zdCJ9fSwidXVpZCI6IkM2OTAwQkQ1LTI1RUUtNDZGNC1BQjAxLUVCQjhGQUIxQUM3NiJ9`
