@@ -12,19 +12,20 @@ public struct Action: Codable {
     let paramsJson: String
     let optional: Bool
     
-    public init(method: String, params: [String: String], optional: Bool = false) {
+    public init(method: String, params: [String: Any], optional: Bool = false) {
         self.method = method
-        self.paramsJson = String(data: try! JSONEncoder().encode(params), encoding: .utf8) ?? ""
+        self.paramsJson = String(data: try! JSONSerialization.data(withJSONObject: params), encoding: .utf8) ?? ""
         self.optional = optional
     }
 }
 
 extension Action {
     public init(jsonRpc: Web3JSONRPC, optional: Bool = false) {
-        self.optional = optional
-        
-        let (method, paramsJson) = jsonRpc.rawValues
-        self.method = method
-        self.paramsJson = paramsJson
+        let (method, params) = jsonRpc.rawValues
+        self.init(
+            method: method,
+            params: params,
+            optional: optional
+        )
     }
 }

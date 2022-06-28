@@ -64,16 +64,13 @@ public enum Web3JSONRPC: Codable {
         options: WatchAssetOptions
     )
     
-    var rawValues: (method: String, paramsJson: String) {
+    var rawValues: (method: String, params: [String: Any]) {
         let json = try! JSONEncoder().encode(self)
-        let dictionary = try! JSONSerialization.jsonObject(with: json) as! [String: Any]
+        let dictionary = try! JSONSerialization.jsonObject(with: json) as! [String: [String: Any]]
         
         let method = dictionary.keys.first!
-        
         let params = dictionary[method]!
-        let paramsJson = String(data: try! JSONSerialization.data(withJSONObject: params), encoding: .utf8) ?? ""
-        
-        return (method, paramsJson)
+        return (method, params)
     }
 }
 
