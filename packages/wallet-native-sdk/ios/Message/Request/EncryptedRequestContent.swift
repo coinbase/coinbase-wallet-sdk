@@ -13,32 +13,32 @@ public enum EncryptedRequestContent: EncryptedContent {
     case handshake(appId: String, callback: URL, initialActions: [Action]?)
     case request(data: Data)
     
-    public init(encrypt unencrypted: RequestContent, with symmetricKey: SymmetricKey?) throws {
-        switch unencrypted {
+    public func decrypt(with symmetricKey: SymmetricKey?) throws -> RequestContent {
+        switch self {
         case let .handshake(appId, callback, initialActions):
-            self = .handshake(appId: appId, callback: callback, initialActions: initialActions)
-        case let .request(actions, account):
+            return .handshake(appId: appId, callback: callback, initialActions: initialActions)
+        case let .request(data):
             guard let symmetricKey = symmetricKey else {
                 throw CoinbaseWalletSDKError.missingSymmetricKey
             }
-            let request = Request(actions: actions, account: account)
-            self = .request(data: try Cipher.encrypt(request, with: symmetricKey))
+            let request: Request = try Cipher.decrypt(data, with: symmetricKey)
+            return .request(actions: request.actions, account: request.account)
         }
     }
 }
 
 @available(iOS 13.0, *)
 extension RequestContent {
-    public init(decrypt encrypted: EncryptedRequestContent, with symmetricKey: SymmetricKey?) throws {
-        switch encrypted {
+    public func encrypt(with symmetricKey: SymmetricKey?) throws -> EncryptedRequestContent {
+        switch self {
         case let .handshake(appId, callback, initialActions):
-            self = .handshake(appId: appId, callback: callback, initialActions: initialActions)
-        case let .request(data):
+            return .handshake(appId: appId, callback: callback, initialActions: initialActions)
+        case let .request(actions, account):
             guard let symmetricKey = symmetricKey else {
                 throw CoinbaseWalletSDKError.missingSymmetricKey
             }
-            let request: Request = try Cipher.decrypt(data, with: symmetricKey)
-            self = .request(actions: request.actions, account: request.account)
+            let request = Request(actions: actions, account: account)
+            return .request(data: try Cipher.encrypt(request, with: symmetricKey))
         }
     }
 }

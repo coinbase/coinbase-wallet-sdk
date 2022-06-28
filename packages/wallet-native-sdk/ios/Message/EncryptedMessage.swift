@@ -12,7 +12,7 @@ import CryptoKit
 public protocol EncryptedContent: BaseContent {
     associatedtype Unencrypted: UnencryptedContent where Unencrypted.Encrypted == Self
     
-    init(encrypt unencrypted: Unencrypted, with symmetricKey: SymmetricKey?) throws
+    func decrypt(with symmetricKey: SymmetricKey?) throws -> Unencrypted
 }
 
 @available(iOS 13.0, *)
@@ -22,24 +22,24 @@ typealias EncryptedMessage<C> = BaseMessage<C> where C: EncryptedContent
 
 @available(iOS 13.0, *)
 extension EncryptedMessage {
-    init(encrypt unencrypted: Message<C.Unencrypted>, with symmetricKey: SymmetricKey?) throws {
-        self.init(
-            uuid: unencrypted.uuid,
-            sender: unencrypted.sender,
-            content: try C.init(encrypt: unencrypted.content, with: symmetricKey),
-            version: unencrypted.version
+    func decrypt(with symmetricKey: SymmetricKey?) throws -> Message<C.Unencrypted> {
+        return Message<C.Unencrypted>(
+            uuid: self.uuid,
+            sender: self.sender,
+            content: try self.content.decrypt(with: symmetricKey),
+            version: self.version
         )
     }
 }
 
 @available(iOS 13.0, *)
 extension Message {
-    init(decrypt encrypted: EncryptedMessage<C.Encrypted>, with symmetricKey: SymmetricKey?) throws {
-        self.init(
-            uuid: encrypted.uuid,
-            sender: encrypted.sender,
-            content: try C.init(decrypt: encrypted.content, with: symmetricKey),
-            version: encrypted.version
+    func encrypt(with symmetricKey: SymmetricKey?) throws -> EncryptedMessage<C.Encrypted> {
+        return EncryptedMessage<C.Encrypted>(
+            uuid: self.uuid,
+            sender: self.sender,
+            content: try self.content.encrypt(with: symmetricKey),
+            version: self.version
         )
     }
 }
