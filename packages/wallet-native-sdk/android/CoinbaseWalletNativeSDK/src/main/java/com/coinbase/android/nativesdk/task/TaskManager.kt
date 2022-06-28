@@ -28,9 +28,9 @@ internal class TaskManager {
         val result: ResponseResult = when (val response = message.content.response) {
             is Response.Response -> {
                 requestId = response.requestId
-                Result.success(response)
+                Result.success(response.results)
             }
-            is Response.Error -> {
+            is Response.Failure -> {
                 requestId = response.requestId
                 Result.failure(CoinbaseWalletSDKError.WalletReturnedError(response.description))
             }

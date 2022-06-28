@@ -32,7 +32,11 @@ sealed interface Request {
 }
 
 @Serializable
-class Action(val method: String, val params: List<String>)
+class Action(
+    val method: String,
+    val params: List<String>,
+    val optional: Boolean? = false
+)
 
 internal class RequestContentSerializer(private val sharedSecret: ByteArray?) : KSerializer<Request> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("RequestContent", PrimitiveKind.STRING)
