@@ -16,17 +16,31 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
-typealias ResponseResult = Result<Response.Response>
+typealias ResponseResult = Result<List<ReturnValue>>
 typealias ResponseHandler = (ResponseResult) -> Unit
+
+@Serializable
+sealed interface ReturnValue {
+    @Serializable
+    class Result(val value: String) : ReturnValue
+
+    @Serializable
+    class Error(val code: Long, val message: String) : ReturnValue
+}
 
 @Serializable
 sealed interface Response {
     @Serializable
-    class Response(val requestUUID: String, val results: List<String>) :
-        com.coinbase.android.nativesdk.message.Response
+    class Response(
+        val requestId: String,
+        val results: List<ReturnValue>
+    ) : com.coinbase.android.nativesdk.message.Response
 
     @Serializable
-    class Error(val requestUUID: String, val value: String) : com.coinbase.android.nativesdk.message.Response
+    class Failure(
+        val requestId: String,
+        val description: String
+    ) : com.coinbase.android.nativesdk.message.Response
 }
 
 internal class ResponseContentSerializer(private val sharedSecret: ByteArray?) : KSerializer<Response> {
@@ -34,8 +48,8 @@ internal class ResponseContentSerializer(private val sharedSecret: ByteArray?) :
 
     override fun serialize(encoder: Encoder, value: Response) {
         val json = when (value) {
-            is Response.Error -> buildJsonObject {
-                put("error", Json.encodeToString(value))
+            is Response.Failure -> buildJsonObject {
+                put("failure", Json.encodeToString(value))
             }
             is Response.Response -> buildJsonObject {
                 val encrypted = Cipher.encrypt(
@@ -53,9 +67,9 @@ internal class ResponseContentSerializer(private val sharedSecret: ByteArray?) :
         val json = (decoder as JsonDecoder).decodeJsonElement().jsonObject
 
         return when (val key = json.keys.firstOrNull()) {
-            "error" -> {
+            "failure" -> {
                 val jsonString = requireNotNull(json[key]?.jsonPrimitive?.content)
-                Json.decodeFromString<Response.Error>(jsonString)
+                Json.decodeFromString<Response.Failure>(jsonString)
             }
             "response" -> {
                 val encoded = requireNotNull(json[key]?.jsonPrimitive?.content)
