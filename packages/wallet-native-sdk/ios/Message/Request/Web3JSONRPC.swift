@@ -11,14 +11,17 @@ public typealias BigInt = String
 
 public enum Web3JSONRPC: Codable {
     case eth_requestAccounts
+    
     case personal_sign(
         fromAddress: String,
         data: Data
     )
+    
 //    case eth_signTypedData(
 //        fromAddress: String,
 //        data: Data
 //    )
+    
     case eth_signTransaction(
         fromAddress: String,
         toAddress: String?,
@@ -31,6 +34,7 @@ public enum Web3JSONRPC: Codable {
         gasLimit: BigInt?,
         chainId: Int
     )
+    
     case eth_sendTransaction(
         fromAddress: String,
         toAddress: String?,
@@ -43,20 +47,21 @@ public enum Web3JSONRPC: Codable {
         gasLimit: BigInt?,
         chainId: Int
     )
+    
+    case wallet_switchEthereumChain(chainId: Int)
+    
     case wallet_addEthereumChain(
         chainId: Int,
-        chainName: String?,
         blockExplorerUrls: [String]?,
+        chainName: String?,
         iconUrls: [String]?,
+        nativeCurrency: AddChainNativeCurrency?,
         rpcUrls: [String]
     )
-    case wallet_switchEthereumChain(chainId: Int)
+    
     case wallet_watchAsset(
-        chainId: Int?,
-        address: String,
-        symbol: String?,
-        decimals: Int?,
-        image: String?
+        type: String,
+        options: WatchAssetOptions
     )
     
     var rawValues: (method: String, paramsJson: String) {
@@ -69,5 +74,31 @@ public enum Web3JSONRPC: Codable {
         let paramsJson = String(data: try! JSONSerialization.data(withJSONObject: params), encoding: .utf8) ?? ""
         
         return (method, paramsJson)
+    }
+}
+
+public struct AddChainNativeCurrency: Codable {
+    let name: String
+    let symbol: String
+    let decimals: Int
+    
+    public init(name: String, symbol: String, decimals: Int) {
+        self.name = name
+        self.symbol = symbol
+        self.decimals = decimals
+    }
+}
+
+public struct WatchAssetOptions: Codable {
+    let address: String
+    let symbol: String?
+    let decimals: Int?
+    let image: String?
+    
+    public init(address: String, symbol: String?, decimals: Int?, image: String?) {
+        self.address = address
+        self.symbol = symbol
+        self.decimals = decimals
+        self.image = image
     }
 }
