@@ -75,6 +75,8 @@ object MessageConverter {
     }
 
     private fun getJsonFormatter(sharedSecret: ByteArray?): Json {
-        return Json { serializersModule = serializersModuleOf(MessageContentSerializer(sharedSecret)) }
+        return Json {
+            serializersModule = serializersModuleOf(MessageContentSerializer(sharedSecret))
+        }
     }
 }

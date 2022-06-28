@@ -1,0 +1,20 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "ClientApp"
+include ':app', ':nativesdk'
+
+project(":nativesdk").projectDir = new File("../../packages/wallet-native-sdk/android/CoinbaseWalletNativeSDK")
