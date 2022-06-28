@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import CoinbaseWalletSDK
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {

@@ -9,7 +9,7 @@ import Foundation
 import CryptoKit
 
 @available(iOS 13.0, *)
-protocol EncryptedContent: BaseContent {
+public protocol EncryptedContent: BaseContent {
     associatedtype Unencrypted: UnencryptedContent where Unencrypted.Encrypted == Self
     
     init(encrypt unencrypted: Unencrypted, with symmetricKey: SymmetricKey?) throws

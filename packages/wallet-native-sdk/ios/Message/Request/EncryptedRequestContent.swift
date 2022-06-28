@@ -9,11 +9,11 @@ import Foundation
 import CryptoKit
 
 @available(iOS 13.0, *)
-enum EncryptedRequestContent: EncryptedContent {
+public enum EncryptedRequestContent: EncryptedContent {
     case handshake(appId: String, callback: URL, initialActions: [Action]?)
     case request(data: Data)
     
-    init(encrypt unencrypted: RequestContent, with symmetricKey: SymmetricKey?) throws {
+    public init(encrypt unencrypted: RequestContent, with symmetricKey: SymmetricKey?) throws {
         switch unencrypted {
         case let .handshake(appId, callback, initialActions):
             self = .handshake(appId: appId, callback: callback, initialActions: initialActions)
@@ -29,7 +29,7 @@ enum EncryptedRequestContent: EncryptedContent {
 
 @available(iOS 13.0, *)
 extension RequestContent {
-    init(decrypt encrypted: EncryptedRequestContent, with symmetricKey: SymmetricKey?) throws {
+    public init(decrypt encrypted: EncryptedRequestContent, with symmetricKey: SymmetricKey?) throws {
         switch encrypted {
         case let .handshake(appId, callback, initialActions):
             self = .handshake(appId: appId, callback: callback, initialActions: initialActions)
