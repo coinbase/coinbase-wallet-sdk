@@ -9,12 +9,22 @@ import Foundation
 
 public struct Action: Codable {
     let method: String
-    let params: [String]
+    let paramsJson: String
     let optional: Bool
     
-    public init(method: String, params: [String], optional: Bool = false) {
+    public init(method: String, params: [String: String], optional: Bool = false) {
         self.method = method
-        self.params = params
+        self.paramsJson = String(data: try! JSONEncoder().encode(params), encoding: .utf8) ?? ""
         self.optional = optional
+    }
+}
+
+extension Action {
+    public init(jsonRpc: Web3JSONRPC, optional: Bool = false) {
+        self.optional = optional
+        
+        let (method, paramsJson) = jsonRpc.rawValues
+        self.method = method
+        self.paramsJson = paramsJson
     }
 }
