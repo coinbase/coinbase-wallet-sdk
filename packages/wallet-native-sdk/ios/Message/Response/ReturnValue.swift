@@ -7,9 +7,10 @@
 
 import Foundation
 
-// TODO
-public typealias ReturnValue = String
-extension ReturnValue: BaseContent {}
+public enum ReturnValue: BaseContent {
+    case result(value: String)
+    case error(code: Int, message: String)
+}
 
 @available(iOS 13.0, *)
 public typealias ResponseResult = Result<BaseMessage<[ReturnValue]>, Error>
@@ -22,7 +23,7 @@ extension ResponseMessage {
     var requestId: UUID {
         switch self.content {
         case .response(let requestId, _),
-                .error(let requestId, _):
+             .failure(let requestId, _):
             return requestId
         }
     }
@@ -38,7 +39,7 @@ extension ResponseMessage {
                     version: self.version
                 )
             )
-        case .error(_, let description):
+        case .failure(_, let description):
             return .failure(CoinbaseWalletSDKError.walletReturnedError(description))
         }
     }
