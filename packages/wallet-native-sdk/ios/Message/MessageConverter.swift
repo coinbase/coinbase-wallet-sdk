@@ -15,7 +15,7 @@ public class MessageConverter {
         to recipient: URL,
         with symmetricKey: SymmetricKey?
     ) throws -> URL {
-        let encrypted = try EncryptedMessage<C.Encrypted>.init(encrypt: message, with: symmetricKey)
+        let encrypted = try message.encrypt(with: symmetricKey)
         
         let encoder = JSONEncoder()
         let data = try encoder.encode(encrypted)
@@ -37,7 +37,7 @@ public class MessageConverter {
     ) throws -> Message<C> {
         let encrypted: EncryptedMessage<C.Encrypted> = try self.decodeWithoutDecryption(url)
         
-        return try Message<C>.init(decrypt: encrypted, with: symmetricKey)
+        return try encrypted.decrypt(with: symmetricKey)
     }
     
     static func decodeWithoutDecryption<C>(

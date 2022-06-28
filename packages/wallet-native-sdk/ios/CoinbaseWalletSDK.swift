@@ -121,7 +121,7 @@ public class CoinbaseWalletSDK {
                 throw CoinbaseWalletSDKError.missingSymmetricKey
             }
             
-            response = try ResponseMessage(decrypt: encrypted, with: symmetricKey)
+            response = try encrypted.decrypt(with: symmetricKey)
         }
         return response
     }

@@ -15,7 +15,7 @@ public typealias Message<C> = BaseMessage<C> where C: UnencryptedContent
 public protocol UnencryptedContent: BaseContent {
     associatedtype Encrypted: EncryptedContent where Encrypted.Unencrypted == Self
     
-    init(decrypt encrypted: Encrypted, with symmetricKey: SymmetricKey?) throws
+    func encrypt(with symmetricKey: SymmetricKey?) throws -> Encrypted
 }
 
 // MARK: - base types
