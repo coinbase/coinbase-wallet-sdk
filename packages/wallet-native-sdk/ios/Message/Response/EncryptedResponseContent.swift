@@ -9,11 +9,11 @@ import Foundation
 import CryptoKit
 
 @available(iOS 13.0, *)
-enum EncryptedResponseContent: EncryptedContent {
+public enum EncryptedResponseContent: EncryptedContent {
     case response(requestId: UUID, data: Data)
     case failure(requestId: UUID, description: String)
     
-    init(encrypt unencrypted: ResponseContent, with symmetricKey: SymmetricKey?) throws {
+    public init(encrypt unencrypted: ResponseContent, with symmetricKey: SymmetricKey?) throws {
         switch unencrypted {
         case let .response(requestId, results):
             guard let symmetricKey = symmetricKey else {
@@ -29,7 +29,7 @@ enum EncryptedResponseContent: EncryptedContent {
 
 @available(iOS 13.0, *)
 extension ResponseContent {
-    init(decrypt encrypted: EncryptedResponseContent, with symmetricKey: SymmetricKey?) throws {
+    public init(decrypt encrypted: EncryptedResponseContent, with symmetricKey: SymmetricKey?) throws {
         switch encrypted {
         case let .response(requestId, encryptedResults):
             guard let symmetricKey = symmetricKey else {
