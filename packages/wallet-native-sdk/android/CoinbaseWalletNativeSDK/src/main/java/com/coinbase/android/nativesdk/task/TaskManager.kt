@@ -1,17 +1,17 @@
 package com.coinbase.android.nativesdk.task
 
 import com.coinbase.android.nativesdk.CoinbaseWalletSDKError
-import com.coinbase.android.nativesdk.message.Content
-import com.coinbase.android.nativesdk.message.Message
-import com.coinbase.android.nativesdk.message.Response
-import com.coinbase.android.nativesdk.message.ResponseHandler
-import com.coinbase.android.nativesdk.message.ResponseResult
+import com.coinbase.android.nativesdk.message.request.RequestMessage
+import com.coinbase.android.nativesdk.message.response.ResponseContent
+import com.coinbase.android.nativesdk.message.response.ResponseHandler
+import com.coinbase.android.nativesdk.message.response.ResponseMessage
+import com.coinbase.android.nativesdk.message.response.ResponseResult
 import java.util.Date
 
 internal class TaskManager {
     private val tasks = HashMap<String, Task>()
 
-    fun registerResponseHandler(message: Message, handler: ResponseHandler) {
+    fun registerResponseHandler(message: RequestMessage, handler: ResponseHandler) {
         tasks[message.uuid] = Task(
             request = message,
             handler = handler,
@@ -19,18 +19,14 @@ internal class TaskManager {
         )
     }
 
-    fun handleResponse(message: Message): Boolean {
-        if (message.content !is Content.ResponseContent) {
-            return false
-        }
-
+    fun handleResponse(message: ResponseMessage): Boolean {
         val requestId: String
-        val result: ResponseResult = when (val response = message.content.response) {
-            is Response.Response -> {
+        val result: ResponseResult = when (val response = message.content) {
+            is ResponseContent.Response -> {
                 requestId = response.requestId
-                Result.success(response.results)
+                Result.success(response.values)
             }
-            is Response.Failure -> {
+            is ResponseContent.Failure -> {
                 requestId = response.requestId
                 Result.failure(CoinbaseWalletSDKError.WalletReturnedError(response.description))
             }
