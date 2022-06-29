@@ -9,8 +9,8 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.coinbase.android.nativesdk.CoinbaseWalletSDK
-import com.coinbase.android.nativesdk.message.Action
-import com.coinbase.android.nativesdk.message.Request
+import com.coinbase.android.nativesdk.message.request.Action
+import com.coinbase.android.nativesdk.message.request.RequestContent
 
 class MainActivity : AppCompatActivity() {
     private val connectWalletButton
@@ -67,7 +67,7 @@ class MainActivity : AppCompatActivity() {
 
         personalSign.setOnClickListener {
             client.makeRequest(
-                request = Request.Request(
+                request = RequestContent.Request(
                     actions = listOf(Action(method = "personal_sign", params = listOf("")))
                 )
             ) { result ->
