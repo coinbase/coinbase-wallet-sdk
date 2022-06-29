@@ -27,7 +27,8 @@ extension EncryptedMessage {
             uuid: self.uuid,
             sender: self.sender,
             content: try self.content.decrypt(with: symmetricKey),
-            version: self.version
+            version: self.version,
+            timestamp: self.timestamp
         )
     }
 }
@@ -39,7 +40,8 @@ extension Message {
             uuid: self.uuid,
             sender: self.sender,
             content: try self.content.encrypt(with: symmetricKey),
-            version: self.version
+            version: self.version,
+            timestamp: self.timestamp
         )
     }
 }

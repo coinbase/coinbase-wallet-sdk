@@ -81,7 +81,8 @@ public class CoinbaseWalletSDK {
                 callback: callback,
                 initialActions: initialActions
             ),
-            version: version
+            version: version,
+            timestamp: Date()
         )
         return self.send(message, onResponse)
     }
@@ -92,7 +93,8 @@ public class CoinbaseWalletSDK {
             uuid: UUID(),
             sender: keyManager.ownPublicKey,
             content: .request(actions: request.actions, account: request.account),
-            version: version
+            version: version,
+            timestamp: Date()
         )
         return self.send(message, onResponse)
     }

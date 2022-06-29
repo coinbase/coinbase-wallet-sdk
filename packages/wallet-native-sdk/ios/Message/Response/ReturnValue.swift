@@ -36,7 +36,8 @@ extension ResponseMessage {
                     uuid: self.uuid,
                     sender: self.sender,
                     content: results,
-                    version: self.version
+                    version: self.version,
+                    timestamp: self.timestamp
                 )
             )
         case .failure(_, let description):
