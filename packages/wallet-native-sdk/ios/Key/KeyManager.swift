@@ -41,7 +41,10 @@ final class KeyManager {
         self.symmetricKey = nil
         self.peerPublicKey = nil
         self.ownPrivateKey = key
+        
+        try storage.delete(.ownPrivateKey)
         try storage.store(key, at: .ownPrivateKey)
+        
         try storage.delete(.peerPublicKey)
     }
     
