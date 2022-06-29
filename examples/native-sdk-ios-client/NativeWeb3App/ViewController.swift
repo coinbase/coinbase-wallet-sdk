@@ -6,14 +6,31 @@
 //
 
 import UIKit
+import CoinbaseWalletSDK
 
-class ViewController: UIViewController {
-
+class ViewController: UITableViewController {
+    
+    @IBOutlet weak var isCBWalletInstalledLabel: UILabel!
+    @IBOutlet weak var isConnectedLabel: UILabel!
+    @IBOutlet weak var encodedURLTextView: UITextView!
+    
+    let cbwallet = CoinbaseWalletSDK.shared
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
+        self.isCBWalletInstalledLabel.text = "\(CoinbaseWalletSDK.isCoinbaseWalletInstalled())"
+        self.isConnectedLabel.text = "\(cbwallet.isConnected())"
     }
-
-
+    
+    @IBAction func initiateHandshake(_ sender: Any) {
+        let rawRequestURLForDebugging = cbwallet.initiateHandshake { result in
+            print(result)
+        }
+        
+        encodedURLTextView.text = rawRequestURLForDebugging?.absoluteString
+    }
+    
+    @IBAction func resetConnection(_ sender: Any) {
+    }
 }
 
