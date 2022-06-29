@@ -10,27 +10,20 @@ import CryptoKit
 
 @available(iOS 13.0, *)
 public class CoinbaseWalletSDK {
-    let appId: String
-    let host: URL
-    let callback: URL
-    let version: String
     
-    lazy var keyManager: KeyManager = {
-        KeyManager(host: self.host)
-    }()
-    lazy var taskManager: TaskManager = {
-        TaskManager()
-    }()
+    // MARK: - Constructor
     
-    /// Instantiate Coinbase Wallet SDK
-    /// - Parameters:
-    ///   - host: universal link url of the host wallet to interact with
-    ///   - callback: own url to get responses back
-    public init(
+    static private var host: URL?
+    static private var callback: URL?
+    
+    static public func configure(
         host: URL = URL(string: "https://go.cb-w.com/wsegue")!,
         callback: URL
     ) {
-        self.appId = Bundle.main.bundleIdentifier!
+        guard self.host == nil && self.callback == nil else {
+            assertionFailure("`CoinbaseWalletSDK.configure` should be called only once.")
+            return
+        }
         
         self.host = host
         if callback.pathComponents.count < 2 { // [] or ["/"]
@@ -38,6 +31,39 @@ public class CoinbaseWalletSDK {
         } else {
             self.callback = callback
         }
+    }
+    
+    static public var shared: CoinbaseWalletSDK = {
+        guard let host = CoinbaseWalletSDK.host,
+              let callback = CoinbaseWalletSDK.callback else {
+            preconditionFailure("Missing configuration: call `CoinbaseWalletSDK.configure` before accessing the shared instance")
+        }
+        
+        return CoinbaseWalletSDK(host: host, callback: callback)
+    }()
+    
+    // MARK: - Properties
+    
+    private let appId: String
+    private let host: URL
+    private let callback: URL
+    private let version: String
+    
+    private lazy var keyManager: KeyManager = {
+        KeyManager(host: self.host)
+    }()
+    private lazy var taskManager: TaskManager = {
+        TaskManager()
+    }()
+    
+    private init(
+        host: URL,
+        callback: URL
+    ) {
+        self.host = host
+        self.callback = callback
+        
+        self.appId = Bundle.main.bundleIdentifier!
         
         let sdkBundle = Bundle(for: Self.self)
         self.version = sdkBundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
