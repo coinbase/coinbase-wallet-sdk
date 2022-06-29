@@ -8,9 +8,15 @@
 import Foundation
 
 enum KeyStorageError: Error {
-    case storeFailed(OSStatus)
-    case readFailed(OSStatus)
-    case deleteFailed(OSStatus)
+    case storeFailed(String)
+    case readFailed(String)
+    case deleteFailed(String)
+}
+
+extension OSStatus {
+    var message: String {
+        return (SecCopyErrorMessageString(self, nil) as String?) ?? String(self)
+    }
 }
 
 @available(iOS 13.0, *)
@@ -18,7 +24,7 @@ final class KeyStorage {
     private let service: String
     
     init(host: URL) {
-        service = "wsegue.keystorage.\(host.host!)"
+        service = "wsegue.keystorage.\((host.isHttp ? host.host : host.scheme) ?? host.absoluteString)"
     }
     
     func store<K>(_ data: K, at item: KeyStorageItem<K>) throws {
@@ -33,7 +39,7 @@ final class KeyStorage {
         
         let status = SecItemAdd(query as CFDictionary, nil)
         guard status == errSecSuccess else {
-            throw KeyStorageError.storeFailed(status)
+            throw KeyStorageError.storeFailed(status.message)
         }
     }
     
@@ -54,7 +60,7 @@ final class KeyStorage {
         case errSecItemNotFound:
             return nil
         case let status:
-            throw KeyStorageError.readFailed(status)
+            throw KeyStorageError.readFailed(status.message)
         }
     }
     
@@ -70,7 +76,7 @@ final class KeyStorage {
         case errSecItemNotFound, errSecSuccess:
             break // Okay to ignore
         case let status:
-            throw KeyStorageError.deleteFailed(status)
+            throw KeyStorageError.deleteFailed(status.message)
         }
     }
 }

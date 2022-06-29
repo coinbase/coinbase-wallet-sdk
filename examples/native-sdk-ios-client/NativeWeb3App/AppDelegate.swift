@@ -13,7 +13,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
-        CoinbaseWalletSDK.configure(callback: URL(string: "https://myapp.xyz/mycallback")!)
+        CoinbaseWalletSDK.configure(
+            callback: URL(string: "https://myapp.xyz/mycallback")!
+        )
         
         return true
     }
