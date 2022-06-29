@@ -49,7 +49,7 @@ public class CoinbaseWalletSDK {
     private let callback: URL
     private let version: String
     
-    private lazy var keyManager: KeyManager = {
+    public lazy var keyManager: KeyManager = {
         KeyManager(host: self.host)
     }()
     private lazy var taskManager: TaskManager = {
@@ -160,10 +160,6 @@ public class CoinbaseWalletSDK {
     
     public func isConnected() -> Bool {
         return keyManager.symmetricKey != nil
-    }
-    
-    public var sessionPublicKey: PublicKey {
-        return keyManager.ownPublicKey
     }
     
     @discardableResult

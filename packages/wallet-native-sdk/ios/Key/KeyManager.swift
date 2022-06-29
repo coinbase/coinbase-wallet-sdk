@@ -9,13 +9,13 @@ import Foundation
 import CryptoKit
 
 @available(iOS 13.0, *)
-final class KeyManager {
+public final class KeyManager {
     private(set) var ownPrivateKey: CoinbaseWalletSDK.PrivateKey
-    var ownPublicKey: CoinbaseWalletSDK.PublicKey {
+    public var ownPublicKey: CoinbaseWalletSDK.PublicKey {
         return ownPrivateKey.publicKey
     }
     
-    private(set) var peerPublicKey: CoinbaseWalletSDK.PublicKey?
+    public private(set) var peerPublicKey: CoinbaseWalletSDK.PublicKey?
     
     private(set) var symmetricKey: SymmetricKey?
     

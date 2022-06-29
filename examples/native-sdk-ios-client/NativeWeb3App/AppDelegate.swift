@@ -21,8 +21,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-        let cbwallet = CoinbaseWalletSDK.shared
-        if (try? cbwallet.handleResponse(url)) == true {
+        if (try? CoinbaseWalletSDK.shared.handleResponse(url)) == true {
+            return true
+        }
+        
+        // handle other types of deep links
+        return false
+    }
+    
+    func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool {
+        if let url = userActivity.webpageURL,
+           (try? CoinbaseWalletSDK.shared.handleResponse(url)) == true {
             return true
         }
         

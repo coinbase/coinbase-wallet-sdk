@@ -11,8 +11,10 @@ import CoinbaseWalletSDK
 class ViewController: UITableViewController {
     
     @IBOutlet weak var isCBWalletInstalledLabel: UILabel!
-    @IBOutlet weak var sessionPubKeyLabel: UILabel!
     @IBOutlet weak var isConnectedLabel: UILabel!
+    @IBOutlet weak var ownPubKeyLabel: UILabel!
+    @IBOutlet weak var peerPubKeyLabel: UILabel!
+    
     @IBOutlet weak var logTextView: UITextView!
     
     private let cbwallet = CoinbaseWalletSDK.shared
@@ -24,38 +26,54 @@ class ViewController: UITableViewController {
         updateIsConnected()
     }
     
-    @IBAction func initiateHandshake(_ sender: Any) {
+    @IBAction func initiateHandshake() {
         let rawRequestURLForDebugging = cbwallet.initiateHandshake(
             initialActions: [
                 Action(jsonRpc: .eth_requestAccounts),
                 Action(jsonRpc: .personal_sign(fromAddress: "", data: "message".data(using: .utf8)!))
             ]
         ) { result in
-            print(result)
+            
             self.updateIsConnected()
         }
         
         printRawRequestURL(rawRequestURLForDebugging)
     }
     
-    @IBAction func resetConnection(_ sender: Any) {
+    @IBAction func resetConnection() {
         let result = cbwallet.resetSession()
-        logTextView.text = "\(result)"
+        self.log("\(result)")
         
         updateSessionPubKey()
+    }
+    
+    @IBAction func makeRequest() {
+        let rawRequestURLForDebugging = cbwallet.makeRequest(
+            Request(actions: [
+            ])
+        ) { result in
+            self.log("\(result)")
+        }
+        
+        printRawRequestURL(rawRequestURLForDebugging)
     }
     
     // i should have chosen SwiftUI template...
     
     private func updateSessionPubKey() {
-        sessionPubKeyLabel.text = cbwallet.sessionPublicKey.rawRepresentation.base64EncodedString()
+        DispatchQueue.main.async {
+            self.ownPubKeyLabel.text = self.cbwallet.keyManager.ownPublicKey.rawRepresentation.base64EncodedString()
+            self.peerPubKeyLabel.text = self.cbwallet.keyManager.peerPublicKey?.rawRepresentation.base64EncodedString() ?? "(nil)"
+        }
     }
     
     private func updateIsConnected() {
-        isConnectedLabel.text = "\(cbwallet.isConnected())"
+        DispatchQueue.main.async {
+            self.isConnectedLabel.text = "\(self.cbwallet.isConnected())"
+        }
     }
     
-    private func printRawRequestURL(_ url: URL?) {
+    private func printRawRequestURL(_ url: URL?, function: String = #function) {
         guard let url = url else { return }
         
         do {
@@ -65,9 +83,15 @@ class ViewController: UITableViewController {
             let data = try encoder.encode(message)
             let jsonString = String(data: data, encoding: .utf8)!
             
-            logTextView.text = "URL: \(url)\nJSON:\n\(jsonString)"
+            self.log("\(url)\nJSON:\n\(jsonString)", function: function)
         } catch {
             print(error)
+        }
+    }
+    
+    private func log(_ text: String, function: String = #function) {
+        DispatchQueue.main.async {
+            self.logTextView.text = "\(function): \(text)\n\n\(self.logTextView.text ?? "")"
         }
     }
 }
