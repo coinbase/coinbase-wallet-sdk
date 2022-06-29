@@ -16,7 +16,7 @@ import java.util.UUID
 
 const val CBW_APP_LINK = "go.cb-w.com"
 const val CBW_PACKAGE_NAME = "org.toshi"
-const val CBW_SCHEME = "cbwallet://"
+const val CBW_SCHEME = "cbwallet://wsegue"
 
 typealias OpenIntentCallback = (Intent) -> Unit
 
