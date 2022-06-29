@@ -40,7 +40,7 @@ extension ResponseMessage {
                 )
             )
         case .failure(_, let description):
-            return .failure(CoinbaseWalletSDKError.walletReturnedError(description))
+            return .failure(CoinbaseWalletSDK.Error.walletReturnedError(description))
         }
     }
 }

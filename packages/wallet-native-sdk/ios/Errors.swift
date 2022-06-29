@@ -7,10 +7,13 @@
 
 import Foundation
 
-enum CoinbaseWalletSDKError: Error {
-    case encodingFailed
-    case decodingFailed
-    case missingSymmetricKey
-    case openUrlFailed
-    case walletReturnedError(String)
+@available(iOS 13.0, *)
+extension CoinbaseWalletSDK {
+    enum Error: Swift.Error {
+        case encodingFailed
+        case decodingFailed
+        case missingSymmetricKey
+        case openUrlFailed
+        case walletReturnedError(String)
+    }
 }
