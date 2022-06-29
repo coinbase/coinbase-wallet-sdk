@@ -19,7 +19,7 @@ public enum EncryptedRequestContent: EncryptedContent {
             return .handshake(appId: appId, callback: callback, initialActions: initialActions)
         case let .request(data):
             guard let symmetricKey = symmetricKey else {
-                throw CoinbaseWalletSDKError.missingSymmetricKey
+                throw CoinbaseWalletSDK.Error.missingSymmetricKey
             }
             let request: Request = try Cipher.decrypt(data, with: symmetricKey)
             return .request(actions: request.actions, account: request.account)
@@ -35,7 +35,7 @@ extension RequestContent {
             return .handshake(appId: appId, callback: callback, initialActions: initialActions)
         case let .request(actions, account):
             guard let symmetricKey = symmetricKey else {
-                throw CoinbaseWalletSDKError.missingSymmetricKey
+                throw CoinbaseWalletSDK.Error.missingSymmetricKey
             }
             let request = Request(actions: actions, account: account)
             return .request(data: try Cipher.encrypt(request, with: symmetricKey))

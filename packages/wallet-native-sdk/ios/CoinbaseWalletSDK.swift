@@ -36,7 +36,7 @@ public class CoinbaseWalletSDK {
     static public var shared: CoinbaseWalletSDK = {
         guard let host = CoinbaseWalletSDK.host,
               let callback = CoinbaseWalletSDK.callback else {
-            preconditionFailure("Missing configuration: call `CoinbaseWalletSDK.configure` before accessing the shared instance")
+            preconditionFailure("Missing configuration: call `CoinbaseWalletSDK.configure` before accessing the `shared` instance.")
         }
         
         return CoinbaseWalletSDK(host: host, callback: callback)
@@ -71,7 +71,8 @@ public class CoinbaseWalletSDK {
     
     // MARK: - Send message
     
-    public func initiateHandshake(initialActions: [Action]? = nil, onResponse: @escaping ResponseHandler) {
+    @discardableResult
+    public func initiateHandshake(initialActions: [Action]? = nil, onResponse: @escaping ResponseHandler) -> URL? {
         let message = RequestMessage(
             uuid: UUID(),
             sender: keyManager.ownPublicKey,
@@ -82,36 +83,42 @@ public class CoinbaseWalletSDK {
             ),
             version: version
         )
-        self.send(message, onResponse)
+        return self.send(message, onResponse)
     }
     
-    public func makeRequest(_ request: Request, onResponse: @escaping ResponseHandler) {
+    @discardableResult
+    public func makeRequest(_ request: Request, onResponse: @escaping ResponseHandler) -> URL? {
         let message = RequestMessage(
             uuid: UUID(),
             sender: keyManager.ownPublicKey,
             content: .request(actions: request.actions, account: request.account),
             version: version
         )
-        self.send(message, onResponse)
+        return self.send(message, onResponse)
     }
     
-    private func send(_ message: RequestMessage, _ onResponse: @escaping ResponseHandler) {
+    private func send(_ message: RequestMessage, _ onResponse: @escaping ResponseHandler) -> URL? {
         let url: URL
         do {
             url = try MessageConverter.encode(message, to: host, with: keyManager.symmetricKey)
         } catch {
             onResponse(.failure(error))
-            return
+            return nil
         }
         
-        UIApplication.shared.open(url, options: [.universalLinksOnly: true]) { result in
+        UIApplication.shared.open(
+            url,
+            options: [.universalLinksOnly: true]
+        ) { result in
             guard result == true else {
-                onResponse(.failure(CoinbaseWalletSDKError.openUrlFailed))
+                onResponse(.failure(Error.openUrlFailed))
                 return
             }
             
             self.taskManager.registerResponseHandler(for: message, onResponse)
         }
+        
+        return url
     }
     
     // MARK: - Receive message
@@ -120,19 +127,14 @@ public class CoinbaseWalletSDK {
         return url.host == callback.host && url.path == callback.path
     }
     
-    public func handleResponse(_ url: URL) -> (handled: Bool, Error?) {
+    public func handleResponse(_ url: URL) throws -> Bool {
         guard isWalletSegueMessage(url) else {
-            return (false, nil)
+            return false
         }
         
-        do {
-            let response = try decodeResponse(url)
-            taskManager.handleResponseMessage(response)
-        } catch {
-            return (true, error)
-        }
-        
-        return (true, nil)
+        let response = try decodeResponse(url)
+        taskManager.handleResponseMessage(response)
+        return true
     }
     
     private func decodeResponse(_ url: URL) throws -> ResponseMessage {
@@ -144,7 +146,7 @@ public class CoinbaseWalletSDK {
             try keyManager.storePeerPublicKey(encrypted.sender)
             
             guard let symmetricKey = keyManager.symmetricKey else {
-                throw CoinbaseWalletSDKError.missingSymmetricKey
+                throw Error.missingSymmetricKey
             }
             
             response = try encrypted.decrypt(with: symmetricKey)
@@ -158,7 +160,7 @@ public class CoinbaseWalletSDK {
         return keyManager.symmetricKey != nil
     }
     
-    public func resetConnection() -> Result<Void, Error> {
+    public func resetConnection() -> Result<Void, Swift.Error> {
         do {
             try keyManager.resetOwnPrivateKey()
             return .success(())
