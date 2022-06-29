@@ -7,18 +7,6 @@
 
 import Foundation
 
-enum KeyStorageError: Error {
-    case storeFailed(String)
-    case readFailed(String)
-    case deleteFailed(String)
-}
-
-extension OSStatus {
-    var message: String {
-        return (SecCopyErrorMessageString(self, nil) as String?) ?? String(self)
-    }
-}
-
 @available(iOS 13.0, *)
 final class KeyStorage {
     private let service: String
@@ -39,7 +27,7 @@ final class KeyStorage {
         
         let status = SecItemAdd(query as CFDictionary, nil)
         guard status == errSecSuccess else {
-            throw KeyStorageError.storeFailed(status.message)
+            throw KeyStorage.Error.storeFailed(status.message)
         }
     }
     
@@ -60,7 +48,7 @@ final class KeyStorage {
         case errSecItemNotFound:
             return nil
         case let status:
-            throw KeyStorageError.readFailed(status.message)
+            throw KeyStorage.Error.readFailed(status.message)
         }
     }
     
@@ -76,7 +64,22 @@ final class KeyStorage {
         case errSecItemNotFound, errSecSuccess:
             break // Okay to ignore
         case let status:
-            throw KeyStorageError.deleteFailed(status.message)
+            throw KeyStorage.Error.deleteFailed(status.message)
         }
+    }
+}
+
+@available(iOS 13.0, *)
+extension KeyStorage {
+    enum Error: Swift.Error {
+        case storeFailed(String)
+        case readFailed(String)
+        case deleteFailed(String)
+    }
+}
+
+extension OSStatus {
+    var message: String {
+        return (SecCopyErrorMessageString(self, nil) as String?) ?? String(self)
     }
 }
