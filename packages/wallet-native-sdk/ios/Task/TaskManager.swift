@@ -35,4 +35,8 @@ class TaskManager {
         return true
     }
     
+    func reset() {
+        tasks.removeAll()
+    }
+    
 }
