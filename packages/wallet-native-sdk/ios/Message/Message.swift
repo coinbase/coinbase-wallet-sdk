@@ -29,4 +29,5 @@ public struct BaseMessage<C: BaseContent>: Codable {
     public let sender: CoinbaseWalletSDK.PublicKey
     public let content: C
     public let version: String
+    public let timestamp: Date
 }

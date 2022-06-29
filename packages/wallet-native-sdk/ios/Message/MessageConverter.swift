@@ -18,6 +18,7 @@ public class MessageConverter {
         let encrypted = try message.encrypt(with: symmetricKey)
         
         let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .millisecondsSince1970
         let data = try encoder.encode(encrypted)
         let encodedString = data.base64EncodedString()
         
@@ -56,6 +57,7 @@ public class MessageConverter {
         }
         
         let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .millisecondsSince1970
         return try decoder.decode(EncryptedMessage<C>.self, from: data)
     }
 }
