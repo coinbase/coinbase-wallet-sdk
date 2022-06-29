@@ -25,11 +25,17 @@ class ViewController: UITableViewController {
     }
     
     @IBAction func initiateHandshake(_ sender: Any) {
-        let rawRequestURLForDebugging = cbwallet.initiateHandshake { result in
+        let rawRequestURLForDebugging = cbwallet.initiateHandshake(
+            initialActions: [
+                Action(jsonRpc: .eth_requestAccounts),
+                Action(jsonRpc: .personal_sign(fromAddress: "", data: "message".data(using: .utf8)!))
+            ]
+        ) { result in
             print(result)
             self.updateIsConnected()
         }
-        logTextView.text = rawRequestURLForDebugging?.absoluteString
+        
+        printRawRequestURL(rawRequestURLForDebugging)
     }
     
     @IBAction func resetConnection(_ sender: Any) {
@@ -47,6 +53,22 @@ class ViewController: UITableViewController {
     
     private func updateIsConnected() {
         isConnectedLabel.text = "\(cbwallet.isConnected())"
+    }
+    
+    private func printRawRequestURL(_ url: URL?) {
+        guard let url = url else { return }
+        
+        do {
+            let message: RequestMessage = try MessageConverter.decode(url, with: nil)
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            let data = try encoder.encode(message)
+            let jsonString = String(data: data, encoding: .utf8)!
+            
+            logTextView.text = "URL: \(url)\nJSON:\n\(jsonString)"
+        } catch {
+            print(error)
+        }
     }
 }
 

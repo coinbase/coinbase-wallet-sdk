@@ -8,25 +8,27 @@
 - JSON (decoded the URL above. handshake messages are not encrypted)
 ```json
 {
-  "version": "1.2.3",
-  "sender": "6qyKihWKHU6pL3A/dzjo5Lq8cbKOuoJbBR/7k918vCg=",
-  "content": {
-    "handshake": {
-      "appId": "com.myapp.package.id",
-      "callback": "https://myapp.xyz/native-sdk",
-      "initialActions": [
+  "version" : "0.1.0",
+  "sender" : "bwf9U+VbjmvfBr3p3aoJyOEKS6mq7sSrg56V6FDYMBs=",
+  "content" : {
+    "handshake" : {
+      "appId" : "com.coinbase.NativeWeb3App",
+      "callback" : "https:\/\/myapp.xyz\/mycallback",
+      "initialActions" : [
         {
-          "method": "eth_someMethod",
-          "optional": false,
-          "params": [
-            "param1",
-            "param2"
-          ]
+          "paramsJson" : "{}",
+          "method" : "eth_requestAccounts",
+          "optional" : false
+        },
+        {
+          "paramsJson" : "{\"fromAddress\":\"\",\"data\":\"bWVzc2FnZQ==\"}",
+          "method" : "personal_sign",
+          "optional" : false
         }
       ]
     }
   },
-  "uuid": "249CCFBA-5D94-4564-8D6F-7BB54D73CDB9"
+  "uuid" : "634A5C15-0316-4FD1-86FB-4818DBD6C12D"
 }
 ```
 
@@ -55,20 +57,14 @@
     "request": {
       "actions": [
         {
-          "method": "eth_someMethod",
-          "optional": false,
-          "params": [
-            "param1",
-            "param2"
-          ]
+          "paramsJson" : "{}",
+          "method" : "eth_requestAccounts",
+          "optional" : false
         },
         {
-          "method": "eth_someMethod2",
-          "optional": true,
-          "params": [
-            "param1",
-            "param2"
-          ]
+          "paramsJson" : "{\"fromAddress\":\"\",\"data\":\"bWVzc2FnZQ==\"}",
+          "method" : "personal_sign",
+          "optional" : false
         }
       ],
       "account": {
