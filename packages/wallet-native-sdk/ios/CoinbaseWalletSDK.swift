@@ -110,7 +110,7 @@ public class CoinbaseWalletSDK {
         
         UIApplication.shared.open(
             url,
-            options: [.universalLinksOnly: true]
+            options: [.universalLinksOnly: url.isHttp]
         ) { result in
             guard result == true else {
                 onResponse(.failure(Error.openUrlFailed))
