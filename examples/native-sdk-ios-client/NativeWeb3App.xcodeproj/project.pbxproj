@@ -56,7 +56,6 @@
 				FC120F48CB37E5C1FAFE2CAE /* Pods-NativeWeb3App.debug.xcconfig */,
 				AD64CFD01D3AB9B726DF335B /* Pods-NativeWeb3App.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
