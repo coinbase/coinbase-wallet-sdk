@@ -1,75 +1,57 @@
 package com.coinbase.android.nativesdk.message
 
+import com.coinbase.android.nativesdk.CoinbaseWalletSDKError
 import com.coinbase.android.nativesdk.key.PublicKeySerializer
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import java.security.PublicKey
 
-sealed interface Content {
-    class RequestContent(val request: Request) : Content
-    class ResponseContent(val response: Response) : Content
-}
-
 @Serializable
-class Message(
+class Message<Content>(
     val uuid: String,
     val version: String,
     @Serializable(with = PublicKeySerializer::class)
     val sender: PublicKey,
-    @Contextual
     val content: Content
 )
 
-internal class MessageContentSerializer(private val sharedSecret: ByteArray?) : KSerializer<Content> {
+class MessageSerializer<Content>(private val contentSerializer: KSerializer<Content>) : KSerializer<Message<Content>> {
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("RequestMessage")
 
-    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MessageContent", PrimitiveKind.STRING)
+    override fun serialize(encoder: Encoder, value: Message<Content>) {
+        val output = encoder as? JsonEncoder ?: throw CoinbaseWalletSDKError.EncodingFailed
+        val formatter = output.json
 
-    override fun serialize(encoder: Encoder, value: Content) {
-        val jsonObject = when (value) {
-            is Content.RequestContent -> buildJsonObject {
-                val json = Json.encodeToJsonElement(RequestContentSerializer(sharedSecret), value.request)
-                put("request", json)
-            }
-            is Content.ResponseContent -> buildJsonObject {
-                val json = Json.encodeToJsonElement(ResponseContentSerializer(sharedSecret), value.response)
-                put("response", json)
-            }
+        val messageJson = buildJsonObject {
+            put("uuid", value.uuid)
+            put("version", value.version)
+            put("sender", formatter.encodeToJsonElement(PublicKeySerializer, value.sender))
+            put("content", formatter.encodeToJsonElement(contentSerializer, value.content))
         }
 
-        encoder.encodeString(jsonObject.toString())
+        output.encodeJsonElement(messageJson)
     }
 
-    override fun deserialize(decoder: Decoder): Content {
-        val json = Json.parseToJsonElement(decoder.decodeString()).jsonObject
+    override fun deserialize(decoder: Decoder): Message<Content> {
+        val input = decoder as? JsonDecoder ?: throw CoinbaseWalletSDKError.DecodingFailed
+        val json = input.decodeJsonElement().jsonObject
+        val formatter = input.json
 
-        return when (val key = json.keys.firstOrNull()) {
-            "request" -> {
-                val jsonString = requireNotNull(json[key]?.jsonPrimitive?.content)
-                val request = Json.decodeFromJsonElement(
-                    RequestContentSerializer(sharedSecret),
-                    Json.parseToJsonElement(jsonString)
-                )
-                Content.RequestContent(request)
-            }
-            "response" -> {
-                val jsonString = requireNotNull(json[key]?.jsonPrimitive?.content)
-                val response = Json.decodeFromJsonElement(
-                    ResponseContentSerializer(sharedSecret),
-                    Json.parseToJsonElement(jsonString)
-                )
-                Content.ResponseContent(response)
-            }
-            else -> throw Error("Unsupported message content: $key")
-        }
+        return Message(
+            uuid = formatter.decodeFromJsonElement(json.getValue("uuid")),
+            version = formatter.decodeFromJsonElement(json.getValue("version")),
+            sender = formatter.decodeFromJsonElement(PublicKeySerializer, json.getValue("sender")),
+            content = formatter.decodeFromJsonElement(contentSerializer, json.getValue("content"))
+        )
     }
 }

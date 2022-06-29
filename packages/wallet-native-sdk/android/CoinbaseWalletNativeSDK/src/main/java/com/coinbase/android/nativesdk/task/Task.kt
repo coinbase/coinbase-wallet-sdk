@@ -1,11 +1,11 @@
 package com.coinbase.android.nativesdk.task
 
-import com.coinbase.android.nativesdk.message.Message
-import com.coinbase.android.nativesdk.message.ResponseHandler
+import com.coinbase.android.nativesdk.message.request.RequestMessage
+import com.coinbase.android.nativesdk.message.response.ResponseHandler
 import java.util.Date
 
 internal class Task(
-    val request: Message,
+    val request: RequestMessage,
     val handler: ResponseHandler,
     val timestamp: Date
 )

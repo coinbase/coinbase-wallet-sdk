@@ -4,19 +4,18 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import com.coinbase.android.nativesdk.key.KeyManager
-import com.coinbase.android.nativesdk.message.Action
-import com.coinbase.android.nativesdk.message.Content
-import com.coinbase.android.nativesdk.message.Message
+import com.coinbase.android.nativesdk.message.request.Action
 import com.coinbase.android.nativesdk.message.MessageConverter
-import com.coinbase.android.nativesdk.message.Request
-import com.coinbase.android.nativesdk.message.ResponseHandler
+import com.coinbase.android.nativesdk.message.request.RequestContent
+import com.coinbase.android.nativesdk.message.request.RequestMessage
+import com.coinbase.android.nativesdk.message.response.ResponseHandler
 import com.coinbase.android.nativesdk.task.TaskManager
 import java.security.interfaces.ECPublicKey
 import java.util.UUID
 
-const val CBW_APP_LINK = "go.cb-w.com"
-const val CBW_PACKAGE_NAME = "org.toshi"
-const val CBW_SCHEME = "cbwallet://wsegue"
+private const val CBW_APP_LINK = "go.cb-w.com"
+private const val CBW_PACKAGE_NAME = "org.toshi"
+private const val CBW_SCHEME = "cbwallet://wsegue"
 
 typealias OpenIntentCallback = (Intent) -> Unit
 
@@ -51,15 +50,14 @@ class CoinbaseWalletSDK(
         initialActions: List<Action>? = null,
         onResponse: ResponseHandler
     ) {
-        val message = Message(
+        val message = RequestMessage(
             uuid = UUID.randomUUID().toString(),
             version = sdkVersion,
             sender = keyManager.ownPublicKey,
-            content = Content.RequestContent(
-                request = Request.Handshake(
-                    callback = domain.toString(),
-                    initialActions = initialActions
-                )
+            content = RequestContent.Handshake(
+                appId = appContext.packageName,
+                callback = domain.toString(),
+                initialActions = initialActions
             )
         )
 
@@ -67,14 +65,14 @@ class CoinbaseWalletSDK(
     }
 
     fun makeRequest(
-        request: Request.Request,
+        request: RequestContent.Request,
         onResponse: ResponseHandler
     ) {
-        val message = Message(
+        val message = RequestMessage(
             uuid = UUID.randomUUID().toString(),
             sender = keyManager.ownPublicKey,
             version = sdkVersion,
-            content = Content.RequestContent(request)
+            content = request
         )
 
         send(message, onResponse)
@@ -88,7 +86,7 @@ class CoinbaseWalletSDK(
         val ownPublicKey = keyManager.ownPublicKey
         val peerPublicKey = keyManager.peerPublicKey
 
-        val message = MessageConverter.decode(
+        val message = MessageConverter.decodeResponse(
             url = url,
             ownPublicKey = ownPublicKey,
             ownPrivateKey = keyManager.ownPrivateKey,
@@ -102,10 +100,10 @@ class CoinbaseWalletSDK(
         return taskManager.handleResponse(message)
     }
 
-    private fun send(message: Message, onResponse: ResponseHandler) {
+    private fun send(message: RequestMessage, onResponse: ResponseHandler) {
         val uri: Uri
         try {
-            uri = MessageConverter.encode(
+            uri = MessageConverter.encodeRequest(
                 message = message,
                 recipient = Uri.parse(CBW_SCHEME),
                 ownPrivateKey = keyManager.ownPrivateKey,
