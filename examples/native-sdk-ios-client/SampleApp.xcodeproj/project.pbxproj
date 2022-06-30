@@ -62,7 +62,7 @@
 		5DA9B3C2286A755E0089D6DB = {
 			isa = PBXGroup;
 			children = (
-				5DA9B3CD286A755E0089D6DB /* NativeWeb3App */,
+				5DA9B3CD286A755E0089D6DB /* SampleApp */,
 				5DA9B3CC286A755E0089D6DB /* Products */,
 				51AC5D6DCCB61B979D9D716E /* Pods */,
 				3E18EF9C1E2A7D3BF660A5CD /* Frameworks */,
@@ -77,7 +77,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		5DA9B3CD286A755E0089D6DB /* NativeWeb3App */ = {
+		5DA9B3CD286A755E0089D6DB /* SampleApp */ = {
 			isa = PBXGroup;
 			children = (
 				5DA9B3CE286A755E0089D6DB /* AppDelegate.swift */,
@@ -88,7 +88,7 @@
 				5DA9B3D9286A755F0089D6DB /* LaunchScreen.storyboard */,
 				5DA9B3DC286A755F0089D6DB /* Info.plist */,
 			);
-			path = NativeWeb3App;
+			path = SampleApp;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -128,7 +128,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 5DA9B3C6286A755E0089D6DB /* Build configuration list for PBXProject "NativeWeb3App" */;
+			buildConfigurationList = 5DA9B3C6286A755E0089D6DB /* Build configuration list for PBXProject "SampleApp" */;
 			compatibilityVersion = "Xcode 13.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -358,7 +358,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = B7Y3D73M65;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = NativeWeb3App/Info.plist;
+				INFOPLIST_FILE = SampleApp/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -387,7 +387,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = B7Y3D73M65;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = NativeWeb3App/Info.plist;
+				INFOPLIST_FILE = SampleApp/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -409,7 +409,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		5DA9B3C6286A755E0089D6DB /* Build configuration list for PBXProject "NativeWeb3App" */ = {
+		5DA9B3C6286A755E0089D6DB /* Build configuration list for PBXProject "SampleApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				5DA9B3DD286A755F0089D6DB /* Debug */,

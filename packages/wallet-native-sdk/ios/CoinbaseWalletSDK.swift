@@ -53,7 +53,7 @@ public final class CoinbaseWalletSDK {
     private let callback: URL
     private let version: String
     
-    private lazy var keyManager: KeyManager = {
+    public lazy var keyManager: KeyManager = {
         KeyManager(host: self.host)
     }()
     private lazy var taskManager: TaskManager = {
