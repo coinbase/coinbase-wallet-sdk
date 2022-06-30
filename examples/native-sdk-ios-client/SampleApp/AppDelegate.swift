@@ -1,6 +1,6 @@
 //
 //  AppDelegate.swift
-//  NativeWeb3App
+//  SampleWeb3App
 //
 //  Created by Jungho Bang on 6/27/22.
 //

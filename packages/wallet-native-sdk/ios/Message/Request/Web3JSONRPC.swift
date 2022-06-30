@@ -1,6 +1,6 @@
 //
 //  Web3JSONRPC.swift
-//  CoinbaseWalletSDK
+//  WalletSegue
 //
 //  Created by Jungho Bang on 6/28/22.
 //
