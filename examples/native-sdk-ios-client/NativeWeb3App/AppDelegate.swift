@@ -14,7 +14,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
         CoinbaseWalletSDK.configure(
-            callback: URL(string: "https://myapp.xyz/mycallback")!
+            callback: URL(string: "myappxyz://mycallback")!
         )
         
         return true
@@ -24,7 +24,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if (try? CoinbaseWalletSDK.shared.handleResponse(url)) == true {
             return true
         }
-        
         // handle other types of deep links
         return false
     }
@@ -34,7 +33,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
            (try? CoinbaseWalletSDK.shared.handleResponse(url)) == true {
             return true
         }
-        
         // handle other types of deep links
         return false
     }

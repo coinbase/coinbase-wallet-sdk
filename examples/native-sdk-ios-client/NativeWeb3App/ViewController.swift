@@ -30,14 +30,19 @@ class ViewController: UITableViewController {
         let rawRequestURLForDebugging = cbwallet.initiateHandshake(
             initialActions: [
                 Action(jsonRpc: .eth_requestAccounts),
-                Action(jsonRpc: .personal_sign(fromAddress: "", data: "message".data(using: .utf8)!))
+                Action(jsonRpc: .personal_sign(address: "", message: "message".data(using: .utf8)!))
             ]
         ) { result in
-            
+            switch result {
+            case .success(let response):
+                self.logObject(response)
+            case .failure(let error):
+                self.log("\(error)")
+            }
             self.updateIsConnected()
         }
         
-        printRawRequestURL(rawRequestURLForDebugging)
+        logRawRequestURL(rawRequestURLForDebugging)
     }
     
     @IBAction func resetConnection() {
@@ -55,7 +60,7 @@ class ViewController: UITableViewController {
             self.log("\(result)")
         }
         
-        printRawRequestURL(rawRequestURLForDebugging)
+        logRawRequestURL(rawRequestURLForDebugging)
     }
     
     // i should have chosen SwiftUI template...
@@ -69,21 +74,31 @@ class ViewController: UITableViewController {
     
     private func updateIsConnected() {
         DispatchQueue.main.async {
-            self.isConnectedLabel.text = "\(self.cbwallet.isConnected())"
+            let isConnected = self.cbwallet.isConnected()
+            self.isConnectedLabel.textColor = isConnected ? .green : .red
+            self.isConnectedLabel.text = "\(isConnected)"
         }
     }
     
-    private func printRawRequestURL(_ url: URL?, function: String = #function) {
+    private func logRawRequestURL(_ url: URL?, function: String = #function) {
         guard let url = url else { return }
         
         do {
             let message: RequestMessage = try MessageConverter.decode(url, with: nil)
+            self.log("URL: \(url)", function: function)
+            self.logObject(message, function: function)
+        } catch {
+            print(error)
+        }
+    }
+    
+    private func logObject<T: Encodable>(_ object: T, function: String = #function) {
+        do {
             let encoder = JSONEncoder()
             encoder.outputFormatting = .prettyPrinted
-            let data = try encoder.encode(message)
+            let data = try encoder.encode(object)
             let jsonString = String(data: data, encoding: .utf8)!
-            
-            self.log("\(url)\nJSON:\n\(jsonString)", function: function)
+            self.log("JSON:\n\(jsonString)", function: function)
         } catch {
             print(error)
         }
@@ -92,6 +107,8 @@ class ViewController: UITableViewController {
     private func log(_ text: String, function: String = #function) {
         DispatchQueue.main.async {
             self.logTextView.text = "\(function): \(text)\n\n\(self.logTextView.text ?? "")"
+//            self.logTextView.text += "\(function): \(text)\n\n"
+//            self.logTextView.scrollRangeToVisible(NSMakeRange(self.logTextView.text.count - 1, 1))
         }
     }
 }

@@ -11,7 +11,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.coinbase.android.nativesdk.CoinbaseWalletSDK
 import com.coinbase.android.nativesdk.message.request.Action
 import com.coinbase.android.nativesdk.message.request.RequestContent
-import com.coinbase.android.nativesdk.message.request.Web3JsonRPC
 
 class MainActivity : AppCompatActivity() {
     private val connectWalletButton
@@ -49,7 +48,10 @@ class MainActivity : AppCompatActivity() {
         connectWalletButton.setOnClickListener {
             client.initiateHandshake(
                 initialActions = listOf(
-                    Action(Web3JsonRPC.eth_requestAccounts)
+                    Action(
+                        method = "eth_requestAccounts",
+                        params = listOf()
+                    )
                 )
             ) { result ->
                 result.fold(
@@ -66,11 +68,7 @@ class MainActivity : AppCompatActivity() {
         personalSign.setOnClickListener {
             client.makeRequest(
                 request = RequestContent.Request(
-                    actions = listOf(
-                        Action(
-                            Web3JsonRPC.personal_sign("0xabcdefabcdefabcdefabcdefabcdefabcdef", "Hello world")
-                        )
-                    )
+                    actions = listOf(Action(method = "personal_sign", params = listOf("")))
                 )
             ) { result ->
                 result.fold(
