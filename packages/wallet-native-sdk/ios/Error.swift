@@ -1,5 +1,5 @@
 //
-//  Errors.swift
+//  Error.swift
 //  WalletSegue
 //
 //  Created by Jungho Bang on 6/16/22.

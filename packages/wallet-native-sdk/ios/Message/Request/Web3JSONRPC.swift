@@ -27,11 +27,6 @@ public enum Web3JSONRPC: Codable {
         message: Data
     )
     
-//    case eth_signTypedData(
-//        fromAddress: String,
-//        data: Data
-//    )
-    
     case eth_signTransaction(
         fromAddress: String,
         toAddress: String?,
