@@ -4,13 +4,14 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import com.coinbase.android.nativesdk.key.KeyManager
-import com.coinbase.android.nativesdk.message.request.Action
 import com.coinbase.android.nativesdk.message.MessageConverter
+import com.coinbase.android.nativesdk.message.request.Action
 import com.coinbase.android.nativesdk.message.request.RequestContent
 import com.coinbase.android.nativesdk.message.request.RequestMessage
 import com.coinbase.android.nativesdk.message.response.ResponseHandler
 import com.coinbase.android.nativesdk.task.TaskManager
 import java.security.interfaces.ECPublicKey
+import java.util.Date
 import java.util.UUID
 
 private const val CBW_APP_LINK = "go.cb-w.com"
@@ -53,6 +54,7 @@ class CoinbaseWalletSDK(
         val message = RequestMessage(
             uuid = UUID.randomUUID().toString(),
             version = sdkVersion,
+            timestamp = Date(),
             sender = keyManager.ownPublicKey,
             content = RequestContent.Handshake(
                 appId = appContext.packageName,
@@ -70,8 +72,9 @@ class CoinbaseWalletSDK(
     ) {
         val message = RequestMessage(
             uuid = UUID.randomUUID().toString(),
-            sender = keyManager.ownPublicKey,
             version = sdkVersion,
+            timestamp = Date(),
+            sender = keyManager.ownPublicKey,
             content = request
         )
 
@@ -110,7 +113,10 @@ class CoinbaseWalletSDK(
                 peerPublicKey = keyManager.peerPublicKey
             )
         } catch (e: Throwable) {
-            onResponse(Result.failure(CoinbaseWalletSDKError.EncodingFailed))
+            when (e) {
+                is CoinbaseWalletSDKError -> onResponse(Result.failure(e))
+                else -> onResponse(Result.failure(CoinbaseWalletSDKError.EncodingFailed))
+            }
             return
         }
 

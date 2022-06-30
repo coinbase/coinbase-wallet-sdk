@@ -15,7 +15,7 @@ internal class TaskManager {
         tasks[message.uuid] = Task(
             request = message,
             handler = handler,
-            timestamp = Date()
+            timestamp = message.timestamp
         )
     }
 

@@ -16,7 +16,8 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
 
-class EncryptedRequestSerializer(private val sharedSecret: ByteArray?) : KSerializer<RequestContent> {
+class EncryptedRequestSerializer(sharedSecret: ByteArray?) : KSerializer<RequestContent> {
+    private val sharedSecret = sharedSecret ?: throw CoinbaseWalletSDKError.MissingSharedSecret
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor("RequestContent")
 
     override fun serialize(encoder: Encoder, value: RequestContent) {
@@ -30,7 +31,7 @@ class EncryptedRequestSerializer(private val sharedSecret: ByteArray?) : KSerial
                 }
                 is RequestContent.Request -> {
                     val encryptedData = Cipher.encrypt(
-                        secret = requireNotNull(sharedSecret),
+                        secret = sharedSecret,
                         message = formatter.encodeToString(value)
                     )
                     put("request", formatter.encodeToJsonElement(EncryptedRequest(encryptedData)))
@@ -54,7 +55,7 @@ class EncryptedRequestSerializer(private val sharedSecret: ByteArray?) : KSerial
             "request" -> {
                 val encryptedRequest: EncryptedRequest = formatter.decodeFromJsonElement(json.getValue(key))
                 val requestJsonString = Cipher.decrypt(
-                    secret = requireNotNull(sharedSecret),
+                    secret = sharedSecret,
                     encryptedMessage = encryptedRequest.data
                 )
                 formatter.decodeFromString<RequestContent.Request>(requestJsonString)

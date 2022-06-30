@@ -3,8 +3,21 @@ package com.coinbase.android.nativesdk.message.request
 import kotlinx.serialization.Serializable
 
 @Serializable
-class Action(
-    val method: String,
-    val params: List<String>,
-    val optional: Boolean? = false
-)
+class Action {
+    val method: String
+    val paramsJson: String
+    val optional: Boolean
+
+    constructor(method: String, paramsJson: String, optional: Boolean = false) {
+        this.method = method
+        this.paramsJson = paramsJson
+        this.optional = optional
+    }
+
+    constructor(rpc: Web3JsonRPC, optional: Boolean = false) {
+        val (method, paramsJson) = rpc.asJson
+        this.method = method
+        this.paramsJson = paramsJson
+        this.optional = optional
+    }
+}
