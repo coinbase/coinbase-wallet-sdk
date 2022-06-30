@@ -14,17 +14,17 @@ public enum Web3JSONRPC: Codable {
     
     case personal_sign(
         address: String,
-        message: String
+        message: Data
     )
     
     case eth_signTypedData_v3(
         address: String,
-        message: String
+        message: Data
     )
 
     case eth_signTypedData_v4(
         address: String,
-        message: String
+        message: Data
     )
     
     case eth_signTransaction(

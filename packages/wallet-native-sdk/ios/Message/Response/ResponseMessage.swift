@@ -11,6 +11,14 @@ import Foundation
 public enum ResponseContent: UnencryptedContent {
     case response(requestId: UUID, values: [ReturnValue])
     case failure(requestId: UUID, description: String)
+    
+    var requestId: UUID {
+        switch self {
+        case .response(let requestId, _),
+             .failure(let requestId, _):
+            return requestId
+        }
+    }
 }
 
 @available(iOS 13.0, *)

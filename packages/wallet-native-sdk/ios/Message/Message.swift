@@ -30,4 +30,14 @@ public struct BaseMessage<C: BaseContent>: Codable {
     public let content: C
     public let version: String
     public let timestamp: Date
+
+    static func copy<T>(_ orig: BaseMessage<T>, replaceContentWith content: C) -> BaseMessage<C> {
+        return BaseMessage<C>.init(
+            uuid: orig.uuid,
+            sender: orig.sender,
+            content: content,
+            version: orig.version,
+            timestamp: orig.timestamp
+        )
+    }
 }

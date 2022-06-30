@@ -25,6 +25,14 @@ public enum EncryptedResponseContent: EncryptedContent {
             return .failure(requestId: requestId, description: description)
         }
     }
+    
+    var requestId: UUID {
+        switch self {
+        case .response(let requestId, _),
+             .failure(let requestId, _):
+            return requestId
+        }
+    }
 }
 
 @available(iOS 13.0, *)
