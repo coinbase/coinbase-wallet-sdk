@@ -9,13 +9,19 @@ import Foundation
 import CryptoKit
 
 @available(iOS 13.0, *)
-final class KeyManager {
+extension CoinbaseWalletSDK {
+    public typealias PrivateKey = Curve25519.KeyAgreement.PrivateKey
+    public typealias PublicKey = Curve25519.KeyAgreement.PublicKey
+}
+
+@available(iOS 13.0, *)
+public final class KeyManager {
     private(set) var ownPrivateKey: CoinbaseWalletSDK.PrivateKey
-    var ownPublicKey: CoinbaseWalletSDK.PublicKey {
+    public var ownPublicKey: CoinbaseWalletSDK.PublicKey {
         return ownPrivateKey.publicKey
     }
     
-    private(set) var peerPublicKey: CoinbaseWalletSDK.PublicKey?
+    public private(set) var peerPublicKey: CoinbaseWalletSDK.PublicKey?
     
     private(set) var symmetricKey: SymmetricKey?
     
@@ -46,7 +52,6 @@ final class KeyManager {
         self.peerPublicKey = nil
         self.ownPrivateKey = key
         
-        try storage.delete(.ownPrivateKey)
         try storage.store(key, at: .ownPrivateKey)
         
         try storage.delete(.peerPublicKey)
