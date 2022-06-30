@@ -1,6 +1,0 @@
-framework module NativeSDKHost {
-  umbrella header "NativeSDKHost-umbrella.h"
-
-  export *
-  module * { export * }
-}
