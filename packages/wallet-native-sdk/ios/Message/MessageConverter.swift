@@ -9,7 +9,7 @@ import Foundation
 import CryptoKit
 
 @available(iOS 13.0, *)
-public class MessageConverter {
+public final class MessageConverter {
     public static func encode<C>(
         _ message: Message<C>,
         to recipient: URL,

@@ -35,6 +35,10 @@ final class KeyManager {
         self.ownPrivateKey = storedKey
         
         self.peerPublicKey = try? storage.read(.peerPublicKey)
+        
+        if let peerPublicKey = self.peerPublicKey {
+            self.symmetricKey = try? Cipher.deriveSymmetricKey(with: ownPrivateKey, peerPublicKey)
+        }
     }
     
     func resetOwnPrivateKey(with key: CoinbaseWalletSDK.PrivateKey = CoinbaseWalletSDK.PrivateKey()) throws {

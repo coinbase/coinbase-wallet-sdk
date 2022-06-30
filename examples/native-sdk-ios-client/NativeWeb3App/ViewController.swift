@@ -22,12 +22,11 @@ class ViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         isCBWalletInstalledLabel.text = "\(CoinbaseWalletSDK.isCoinbaseWalletInstalled())"
-        updateSessionPubKey()
-        updateIsConnected()
+        updateSessionStatus()
     }
     
     @IBAction func initiateHandshake() {
-        let rawRequestURLForDebugging = cbwallet.initiateHandshake(
+        cbwallet.initiateHandshake(
             initialActions: [
                 Action(jsonRpc: .eth_requestAccounts),
                 Action(jsonRpc: .personal_sign(address: "", message: "message".data(using: .utf8)!))
@@ -35,73 +34,64 @@ class ViewController: UITableViewController {
         ) { result in
             switch result {
             case .success(let response):
-                self.logObject(response)
+                self.logObject(label: "Response:\n", response)
             case .failure(let error):
                 self.log("\(error)")
             }
-            self.updateIsConnected()
+            self.updateSessionStatus()
         }
-        
-        logRawRequestURL(rawRequestURLForDebugging)
     }
     
     @IBAction func resetConnection() {
         let result = cbwallet.resetSession()
         self.log("\(result)")
         
-        updateSessionPubKey()
+        updateSessionStatus()
     }
     
     @IBAction func makeRequest() {
-        let rawRequestURLForDebugging = cbwallet.makeRequest(
+        cbwallet.makeRequest(
             Request(actions: [
             ])
         ) { result in
             self.log("\(result)")
         }
-        
-        logRawRequestURL(rawRequestURLForDebugging)
     }
     
     // i should have chosen SwiftUI template...
     
-    private func updateSessionPubKey() {
+    private func updateSessionStatus() {
         DispatchQueue.main.async {
+            let isConnected = self.cbwallet.isConnected()
+            self.isConnectedLabel.textColor = isConnected ? .green : .red
+            self.isConnectedLabel.text = "\(isConnected)"
+            
             self.ownPubKeyLabel.text = self.cbwallet.keyManager.ownPublicKey.rawRepresentation.base64EncodedString()
             self.peerPubKeyLabel.text = self.cbwallet.keyManager.peerPublicKey?.rawRepresentation.base64EncodedString() ?? "(nil)"
         }
     }
     
-    private func updateIsConnected() {
-        DispatchQueue.main.async {
-            let isConnected = self.cbwallet.isConnected()
-            self.isConnectedLabel.textColor = isConnected ? .green : .red
-            self.isConnectedLabel.text = "\(isConnected)"
-        }
-    }
-    
-    private func logRawRequestURL(_ url: URL?, function: String = #function) {
-        guard let url = url else { return }
-        
-        do {
-            let message: RequestMessage = try MessageConverter.decode(url, with: nil)
-            self.log("URL: \(url)", function: function)
-            self.logObject(message, function: function)
-        } catch {
-            print(error)
-        }
-    }
-    
-    private func logObject<T: Encodable>(_ object: T, function: String = #function) {
+    private func logObject<T: Encodable>(label: String = "", _ object: T, function: String = #function) {
         do {
             let encoder = JSONEncoder()
             encoder.outputFormatting = .prettyPrinted
             let data = try encoder.encode(object)
             let jsonString = String(data: data, encoding: .utf8)!
-            self.log("JSON:\n\(jsonString)", function: function)
+            self.log("\(label)\(jsonString)", function: function)
         } catch {
-            print(error)
+            self.log("\(error)")
         }
+    }
+    
+    func logURL(_ url: URL?, function: String = #function) {
+        guard let url = url else { return }
+        self.log("URL: \(url)", function: function)
+        
+        guard
+            !cbwallet.isConnected(),
+            let message: RequestMessage = try? MessageConverter.decode(url, with: nil)
+        else { return }
+        self.logObject(message, function: function)
     }
     
     private func log(_ text: String, function: String = #function) {
