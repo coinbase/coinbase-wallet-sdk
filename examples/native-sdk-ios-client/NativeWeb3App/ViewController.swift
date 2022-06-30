@@ -28,8 +28,7 @@ class ViewController: UITableViewController {
     @IBAction func initiateHandshake() {
         cbwallet.initiateHandshake(
             initialActions: [
-                Action(jsonRpc: .eth_requestAccounts),
-                Action(jsonRpc: .personal_sign(address: "", message: "message".data(using: .utf8)!))
+                Action(jsonRpc: .eth_requestAccounts)
             ]
         ) { result in
             switch result {
@@ -52,6 +51,8 @@ class ViewController: UITableViewController {
     @IBAction func makeRequest() {
         cbwallet.makeRequest(
             Request(actions: [
+                Action(jsonRpc: .personal_sign(address: "", message: "message".data(using: .utf8)!)),
+                Action(jsonRpc: .eth_signTypedData_v3(address: "", message: Data()))
             ])
         ) { result in
             self.log("\(result)")
