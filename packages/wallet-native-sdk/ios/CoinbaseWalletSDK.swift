@@ -9,7 +9,11 @@ import Foundation
 import CryptoKit
 
 @available(iOS 13.0, *)
-public class CoinbaseWalletSDK {
+public final class CoinbaseWalletSDK {
+    
+    public static func isCoinbaseWalletInstalled() -> Bool {
+        return UIApplication.shared.canOpenURL(URL(string: "cbwallet://")!)
+    }
     
     // MARK: - Constructor
     
@@ -71,8 +75,8 @@ public class CoinbaseWalletSDK {
     
     // MARK: - Send message
     
-    @discardableResult
-    public func initiateHandshake(initialActions: [Action]? = nil, onResponse: @escaping ResponseHandler) -> URL? {
+    public func initiateHandshake(initialActions: [Action]? = nil, onResponse: @escaping ResponseHandler) {
+        try? keyManager.resetOwnPrivateKey()
         let message = RequestMessage(
             uuid: UUID(),
             sender: keyManager.ownPublicKey,
@@ -84,11 +88,10 @@ public class CoinbaseWalletSDK {
             version: version,
             timestamp: Date()
         )
-        return self.send(message, onResponse)
+        self.send(message, onResponse)
     }
     
-    @discardableResult
-    public func makeRequest(_ request: Request, onResponse: @escaping ResponseHandler) -> URL? {
+    public func makeRequest(_ request: Request, onResponse: @escaping ResponseHandler) {
         let message = RequestMessage(
             uuid: UUID(),
             sender: keyManager.ownPublicKey,
@@ -99,36 +102,25 @@ public class CoinbaseWalletSDK {
         return self.send(message, onResponse)
     }
     
-    private func send(_ message: RequestMessage, _ onResponse: @escaping ResponseHandler) -> URL? {
+    private func send(_ request: RequestMessage, _ onResponse: @escaping ResponseHandler) {
         let url: URL
         do {
-            url = try MessageConverter.encode(message, to: host, with: keyManager.symmetricKey)
-            try openURLSynchronously(url)
+            url = try MessageConverter.encode(request, to: host, with: keyManager.symmetricKey)
         } catch {
             onResponse(.failure(error))
-            return nil
+            return
         }
         
-        taskManager.registerResponseHandler(for: message, onResponse)
-        return url
-    }
-    
-    private func openURLSynchronously(_ url: URL) throws {
-        var openURLResult: Bool?
-        
-        let dispatchGroup = DispatchGroup()
-        dispatchGroup.enter()
         UIApplication.shared.open(
             url,
             options: [.universalLinksOnly: url.isHttp]
         ) { result in
-            openURLResult = result
-            dispatchGroup.leave()
-        }
-        dispatchGroup.wait()
-        
-        guard openURLResult == true else {
-            throw Error.openUrlFailed
+            guard result == true else {
+                onResponse(.failure(Error.openUrlFailed))
+                return
+            }
+            
+            self.taskManager.registerResponseHandler(for: request, onResponse)
         }
     }
     
@@ -161,13 +153,9 @@ public class CoinbaseWalletSDK {
             throw Error.missingSymmetricKey
         }
         
-        handleNewSession(encryptedResponse)
+        try handleHandshakeResponse(encryptedResponse)
         
-        guard let symmetricKey = keyManager.symmetricKey else {
-            throw Error.missingSymmetricKey
-        }
-        
-        return try encryptedResponse.decrypt(with: symmetricKey)
+        return try encryptedResponse.decrypt(with: keyManager.symmetricKey)
     }
     
     // MARK: - Session
@@ -187,13 +175,11 @@ public class CoinbaseWalletSDK {
         }
     }
     
-    private func handleNewSession(_ response: EncryptedResponseMessage) {
+    private func handleHandshakeResponse(_ response: EncryptedResponseMessage) throws {
+        if case .failure = response.content {
+            return
+        }
         
-    }
-    
-    // MARK: - static methods
-    
-    public static func isCoinbaseWalletInstalled() -> Bool {
-        return UIApplication.shared.canOpenURL(URL(string: "cbwallet://")!)
+        try keyManager.storePeerPublicKey(response.sender)
     }
 }
