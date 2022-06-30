@@ -20,25 +20,11 @@ public typealias ResponseHandler = (ResponseResult) -> Void
 
 @available(iOS 13.0, *)
 extension ResponseMessage {
-    var requestId: UUID {
-        switch self.content {
-        case .response(let requestId, _),
-             .failure(let requestId, _):
-            return requestId
-        }
-    }
-    
     var result: ResponseResult {
         switch self.content {
         case .response(_, let results):
             return .success(
-                BaseMessage<[ReturnValue]>(
-                    uuid: self.uuid,
-                    sender: self.sender,
-                    content: results,
-                    version: self.version,
-                    timestamp: self.timestamp
-                )
+                BaseMessage<[ReturnValue]>.copy(self, replaceContentWith: results)
             )
         case .failure(_, let description):
             return .failure(CoinbaseWalletSDK.Error.walletReturnedError(description))

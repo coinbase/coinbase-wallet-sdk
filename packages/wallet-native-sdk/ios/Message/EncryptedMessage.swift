@@ -18,17 +18,12 @@ public protocol EncryptedContent: BaseContent {
 @available(iOS 13.0, *)
 typealias EncryptedMessage<C> = BaseMessage<C> where C: EncryptedContent
 
-// MARK: - helper initializers
-
 @available(iOS 13.0, *)
 extension EncryptedMessage {
     func decrypt(with symmetricKey: SymmetricKey?) throws -> Message<C.Unencrypted> {
-        return Message<C.Unencrypted>(
-            uuid: self.uuid,
-            sender: self.sender,
-            content: try self.content.decrypt(with: symmetricKey),
-            version: self.version,
-            timestamp: self.timestamp
+        return Message<C.Unencrypted>.copy(
+            self,
+            replaceContentWith: try self.content.decrypt(with: symmetricKey)
         )
     }
 }
@@ -36,12 +31,9 @@ extension EncryptedMessage {
 @available(iOS 13.0, *)
 extension Message {
     func encrypt(with symmetricKey: SymmetricKey?) throws -> EncryptedMessage<C.Encrypted> {
-        return EncryptedMessage<C.Encrypted>(
-            uuid: self.uuid,
-            sender: self.sender,
-            content: try self.content.encrypt(with: symmetricKey),
-            version: self.version,
-            timestamp: self.timestamp
+        return EncryptedMessage<C.Encrypted>.copy(
+            self,
+            replaceContentWith: try self.content.encrypt(with: symmetricKey)
         )
     }
 }

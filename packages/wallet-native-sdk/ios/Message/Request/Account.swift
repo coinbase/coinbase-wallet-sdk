@@ -8,9 +8,9 @@
 import Foundation
 
 public struct Account: Codable {
-    let chain: String
-    let networkId: UInt
-    let address: String
+    public let chain: String
+    public let networkId: UInt
+    public let address: String
     
     public init(chain: String, networkId: UInt, address: String) {
         self.chain = chain

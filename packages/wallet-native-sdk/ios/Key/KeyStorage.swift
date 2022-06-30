@@ -16,6 +16,8 @@ final class KeyStorage {
     }
     
     func store<K>(_ data: K, at item: KeyStorageItem<K>) throws {
+        try? self.delete(item)
+        
         let query = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrAccount: item.name,
