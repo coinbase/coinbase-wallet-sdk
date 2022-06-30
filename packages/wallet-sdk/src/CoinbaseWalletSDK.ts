@@ -143,7 +143,10 @@ export class CoinbaseWalletSDK {
         extension.setProviderInfo(jsonRpcUrl, chainId);
       }
 
-      if (this._reloadOnDisconnect === false)
+      if (
+        this._reloadOnDisconnect === false &&
+        typeof extension.disableReloadOnDisconnect === "function"
+      )
         extension.disableReloadOnDisconnect();
 
       return extension;

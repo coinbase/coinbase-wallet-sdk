@@ -14,4 +14,5 @@ export enum Web3Method {
   switchEthereumChain = "switchEthereumChain",
   makeEthereumJSONRPCRequest = "makeEthereumJSONRPCRequest",
   watchAsset = "watchAsset",
+  selectProvider = "selectProvider",
 }

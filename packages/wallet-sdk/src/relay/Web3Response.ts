@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { AddressString, HexString } from "../types";
+import { AddressString, HexString, ProviderType } from "../types";
 import { Web3Method } from "./Web3Method";
 
 interface BaseWeb3Response<Result> {
@@ -30,6 +30,8 @@ export type RequestEthereumAccountsResponse = BaseWeb3Response<
 export type AddEthereumChainResponse = BaseWeb3Response<AddResponse>; // was request approved
 
 export type WatchAssetResponse = BaseWeb3Response<boolean>;
+
+export type SelectProviderResponse = BaseWeb3Response<ProviderType>;
 
 export type AddResponse = {
   isApproved: boolean;
@@ -69,6 +71,12 @@ export function RequestEthereumAccountsResponse(
 
 export function WatchAssetReponse(success: boolean): WatchAssetResponse {
   return { method: Web3Method.watchAsset, result: success };
+}
+
+export function SelectProviderResponse(
+  selectedProviderKey: ProviderType,
+): SelectProviderResponse {
+  return { method: Web3Method.selectProvider, result: selectedProviderKey };
 }
 
 export function isRequestEthereumAccountsResponse(

@@ -12,6 +12,7 @@ import {
   GenericResponse,
   RequestEthereumAccountsResponse,
   ScanQRCodeResponse,
+  SelectProviderResponse,
   SignEthereumMessageResponse,
   SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse,
@@ -19,7 +20,7 @@ import {
   WatchAssetResponse,
   Web3Response,
 } from "../relay/Web3Response";
-import { AddressString, HexString } from "../types";
+import { AddressString, HexString, ProviderType } from "../types";
 
 function makeMockReturn<T>(returnValue?: T) {
   return { cancel: () => {}, promise: Promise.resolve(returnValue as T) };
@@ -54,6 +55,13 @@ export class MockRelayClass extends WalletSDKRelayAbstract {
     return makeMockReturn<WatchAssetResponse>({
       method: Web3Method.watchAsset,
       result: true,
+    });
+  }
+
+  selectProvider(): CancelablePromise<SelectProviderResponse> {
+    return makeMockReturn<SelectProviderResponse>({
+      method: Web3Method.selectProvider,
+      result: ProviderType.CoinbaseWallet,
     });
   }
 

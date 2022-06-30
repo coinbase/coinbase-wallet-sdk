@@ -6,6 +6,9 @@ jobs:
   lint-check:
     name: Lint / Type Check
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./packages/wallet-sdk
 
     steps:
       - name: Checkout
@@ -14,7 +17,8 @@ jobs:
       - name: Checkout node action
         uses: actions/setup-node@v3
         with:
-          node-version-file: ".nvmrc"
+          node-version-file: '.nvmrc'
+          cache-dependency-path: '**/yarn.lock'
 
       - name: Install NPM dependencies
         run: yarn install
@@ -34,6 +38,9 @@ jobs:
   tests:
     name: Tests
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./packages/wallet-sdk
 
     strategy:
       matrix:
@@ -47,7 +54,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "yarn"
+          cache-dependency-path: '**/yarn.lock'
 
       - name: Install NPM dependencies
         run: yarn install
