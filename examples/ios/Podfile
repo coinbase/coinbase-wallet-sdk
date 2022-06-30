@@ -1,0 +1,14 @@
+workspace 'Examples.xcworkspace'
+platform :ios, '12.0'
+use_frameworks!
+
+target 'ClientApp' do
+  project 'ClientApp'
+  pod 'CoinbaseWalletSDK', path: '../../'
+end
+
+target 'HostApp' do
+  project 'HostApp'
+  pod 'CoinbaseWalletSDK', path: '../../'
+  pod 'NativeSDKHost', path: '../../host/ios/'
+end
