@@ -11,8 +11,10 @@ import CoinbaseWalletSDK
 class ViewController: UITableViewController {
     
     @IBOutlet weak var isCBWalletInstalledLabel: UILabel!
-    @IBOutlet weak var sessionPubKeyLabel: UILabel!
     @IBOutlet weak var isConnectedLabel: UILabel!
+    @IBOutlet weak var ownPubKeyLabel: UILabel!
+    @IBOutlet weak var peerPubKeyLabel: UILabel!
+    
     @IBOutlet weak var logTextView: UITextView!
     
     private let cbwallet = CoinbaseWalletSDK.shared
@@ -24,50 +26,89 @@ class ViewController: UITableViewController {
         updateIsConnected()
     }
     
-    @IBAction func initiateHandshake(_ sender: Any) {
+    @IBAction func initiateHandshake() {
         let rawRequestURLForDebugging = cbwallet.initiateHandshake(
             initialActions: [
                 Action(jsonRpc: .eth_requestAccounts),
-                Action(jsonRpc: .personal_sign(fromAddress: "", data: "message".data(using: .utf8)!))
+                Action(jsonRpc: .personal_sign(address: "", message: "message".data(using: .utf8)!))
             ]
         ) { result in
-            print(result)
+            switch result {
+            case .success(let response):
+                self.logObject(response)
+            case .failure(let error):
+                self.log("\(error)")
+            }
             self.updateIsConnected()
         }
         
-        printRawRequestURL(rawRequestURLForDebugging)
+        logRawRequestURL(rawRequestURLForDebugging)
     }
     
-    @IBAction func resetConnection(_ sender: Any) {
+    @IBAction func resetConnection() {
         let result = cbwallet.resetSession()
-        logTextView.text = "\(result)"
+        self.log("\(result)")
         
         updateSessionPubKey()
+    }
+    
+    @IBAction func makeRequest() {
+        let rawRequestURLForDebugging = cbwallet.makeRequest(
+            Request(actions: [
+            ])
+        ) { result in
+            self.log("\(result)")
+        }
+        
+        logRawRequestURL(rawRequestURLForDebugging)
     }
     
     // i should have chosen SwiftUI template...
     
     private func updateSessionPubKey() {
-        sessionPubKeyLabel.text = cbwallet.sessionPublicKey.rawRepresentation.base64EncodedString()
+        DispatchQueue.main.async {
+            self.ownPubKeyLabel.text = self.cbwallet.keyManager.ownPublicKey.rawRepresentation.base64EncodedString()
+            self.peerPubKeyLabel.text = self.cbwallet.keyManager.peerPublicKey?.rawRepresentation.base64EncodedString() ?? "(nil)"
+        }
     }
     
     private func updateIsConnected() {
-        isConnectedLabel.text = "\(cbwallet.isConnected())"
+        DispatchQueue.main.async {
+            let isConnected = self.cbwallet.isConnected()
+            self.isConnectedLabel.textColor = isConnected ? .green : .red
+            self.isConnectedLabel.text = "\(isConnected)"
+        }
     }
     
-    private func printRawRequestURL(_ url: URL?) {
+    private func logRawRequestURL(_ url: URL?, function: String = #function) {
         guard let url = url else { return }
         
         do {
             let message: RequestMessage = try MessageConverter.decode(url, with: nil)
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = .prettyPrinted
-            let data = try encoder.encode(message)
-            let jsonString = String(data: data, encoding: .utf8)!
-            
-            logTextView.text = "URL: \(url)\nJSON:\n\(jsonString)"
+            self.log("URL: \(url)", function: function)
+            self.logObject(message, function: function)
         } catch {
             print(error)
+        }
+    }
+    
+    private func logObject<T: Encodable>(_ object: T, function: String = #function) {
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            let data = try encoder.encode(object)
+            let jsonString = String(data: data, encoding: .utf8)!
+            self.log("JSON:\n\(jsonString)", function: function)
+        } catch {
+            print(error)
+        }
+    }
+    
+    private func log(_ text: String, function: String = #function) {
+        DispatchQueue.main.async {
+            self.logTextView.text = "\(function): \(text)\n\n\(self.logTextView.text ?? "")"
+//            self.logTextView.text += "\(function): \(text)\n\n"
+//            self.logTextView.scrollRangeToVisible(NSMakeRange(self.logTextView.text.count - 1, 1))
         }
     }
 }
