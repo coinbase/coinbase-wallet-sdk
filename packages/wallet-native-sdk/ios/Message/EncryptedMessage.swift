@@ -1,6 +1,6 @@
 //
 //  EncryptedMessage.swift
-//  CoinbaseWalletSDK
+//  WalletSegue
 //
 //  Created by Jungho Bang on 6/23/22.
 //

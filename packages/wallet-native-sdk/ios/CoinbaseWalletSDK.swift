@@ -164,6 +164,10 @@ public final class CoinbaseWalletSDK {
         return keyManager.symmetricKey != nil
     }
     
+    public var sessionPublicKey: PublicKey {
+        return keyManager.ownPublicKey
+    }
+    
     @discardableResult
     public func resetSession() -> Result<Void, Swift.Error> {
         do {
