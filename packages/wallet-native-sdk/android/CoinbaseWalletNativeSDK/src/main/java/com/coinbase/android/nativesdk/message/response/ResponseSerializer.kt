@@ -16,8 +16,10 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
 
-class EncryptedResponseSerializer(sharedSecret: ByteArray?) : KSerializer<ResponseContent> {
-    private val sharedSecret = sharedSecret ?: throw CoinbaseWalletSDKError.MissingSharedSecret
+class ResponseSerializer(
+    private val sharedSecret: ByteArray? = null,
+    private val encrypted: Boolean = true
+) : KSerializer<ResponseContent> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor("ResponseContent")
 
     override fun serialize(encoder: Encoder, value: ResponseContent) {
@@ -30,11 +32,17 @@ class EncryptedResponseSerializer(sharedSecret: ByteArray?) : KSerializer<Respon
                     put("failure", formatter.encodeToJsonElement(value))
                 }
                 is ResponseContent.Response -> {
-                    val encryptedData = Cipher.encrypt(
-                        secret = sharedSecret,
-                        message = formatter.encodeToString(value)
-                    )
-                    put("response", formatter.encodeToJsonElement(EncryptedResponse(encryptedData)))
+                    val response = if (encrypted) {
+                        val encryptedData = Cipher.encrypt(
+                            secret = sharedSecret ?: throw CoinbaseWalletSDKError.MissingSharedSecret,
+                            message = formatter.encodeToString(value)
+                        )
+                        formatter.encodeToJsonElement(EncryptedResponse(encryptedData))
+                    } else {
+                        formatter.encodeToJsonElement(value)
+                    }
+
+                    put("response", response)
                 }
             }
         }
@@ -52,12 +60,16 @@ class EncryptedResponseSerializer(sharedSecret: ByteArray?) : KSerializer<Respon
                 formatter.decodeFromJsonElement<ResponseContent.Failure>(json.getValue(key))
             }
             "response" -> {
-                val encryptedResponse: EncryptedResponse = formatter.decodeFromJsonElement(json.getValue(key))
-                val responseJsonString = Cipher.decrypt(
-                    secret = sharedSecret,
-                    encryptedMessage = encryptedResponse.data
-                )
-                formatter.decodeFromString<ResponseContent.Response>(responseJsonString)
+                if (encrypted) {
+                    val encryptedResponse: EncryptedResponse = formatter.decodeFromJsonElement(json.getValue(key))
+                    val responseJsonString = Cipher.decrypt(
+                        secret = sharedSecret ?: throw CoinbaseWalletSDKError.MissingSharedSecret,
+                        encryptedMessage = encryptedResponse.data
+                    )
+                    formatter.decodeFromString<ResponseContent.Response>(responseJsonString)
+                } else {
+                    formatter.decodeFromJsonElement<ResponseContent.Response>(json.getValue(key))
+                }
             }
             else -> throw CoinbaseWalletSDKError.DecodingFailed
         }

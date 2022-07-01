@@ -1,5 +1,6 @@
 package com.coinbase.android.nativesdk.message.request
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -10,28 +11,33 @@ private typealias BigInt = String
 sealed class Web3JsonRPC {
 
     @Serializable
-    object eth_requestAccounts : Web3JsonRPC()
+    @SerialName("eth_requestAccounts")
+    class RequestAccounts : Web3JsonRPC()
 
     @Serializable
-    class personal_sign(
+    @SerialName("personal_sign")
+    class PersonalSign(
         val address: String,
         val message: String
     ) : Web3JsonRPC()
 
     @Serializable
-    class eth_signTypedData_v3(
+    @SerialName("eth_signTypedData_v3")
+    class SignTypedDataV3(
         val address: String,
         val typedDataJson: String
     ) : Web3JsonRPC()
 
     @Serializable
-    class eth_signTypedData_v4(
+    @SerialName("eth_signTypedData_v4")
+    class SignTypedDataV4(
         val address: String,
         val typedDataJson: String
     ) : Web3JsonRPC()
 
     @Serializable
-    class eth_signTransaction(
+    @SerialName("eth_signTransaction")
+    class SignTransaction(
         val fromAddress: String,
         val toAddress: String?,
         val weiValue: BigInt,
@@ -45,7 +51,8 @@ sealed class Web3JsonRPC {
     ) : Web3JsonRPC()
 
     @Serializable
-    class eth_sendTransaction(
+    @SerialName("eth_sendTransaction")
+    class SendTransaction(
         val fromAddress: String,
         val toAddress: String?,
         val weiValue: BigInt,
@@ -59,10 +66,12 @@ sealed class Web3JsonRPC {
     ) : Web3JsonRPC()
 
     @Serializable
-    class wallet_switchEthereumChain(val chainId: Int) : Web3JsonRPC()
+    @SerialName("wallet_switchEthereumChain")
+    class SwitchEthereumChain(val chainId: Int) : Web3JsonRPC()
 
     @Serializable
-    class wallet_addEthereumChain(
+    @SerialName("wallet_addEthereumChain")
+    class AddEthereumChain(
         val chainId: Int,
         val blockExplorerUrls: List<String>?,
         val chainName: String?,
@@ -72,28 +81,33 @@ sealed class Web3JsonRPC {
     ) : Web3JsonRPC()
 
     @Serializable
-    class wallet_watchAsset(
+    @SerialName("wallet_watchAsset")
+    class WatchAsset(
         val type: String,
         val options: WatchAssetOptions
     ) : Web3JsonRPC()
 
-    val asJson: Pair<String, String>
+    internal val asJson: Pair<String, String>
         get() {
             val json = Json.encodeToString(this)
             val method = when (this) {
-                is eth_requestAccounts -> "eth_requestAccounts"
-                is eth_sendTransaction -> "eth_sendTransaction"
-                is eth_signTransaction -> "eth_signTransaction"
-                is personal_sign -> "personal_sign"
-                is eth_signTypedData_v3 -> "eth_signTypedData_v3"
-                is eth_signTypedData_v4 -> "eth_signTypedData_v4"
-                is wallet_addEthereumChain -> "wallet_addEthereumChain"
-                is wallet_switchEthereumChain -> "wallet_switchEthereumChain"
-                is wallet_watchAsset -> "wallet_watchAsset"
+                is RequestAccounts -> "eth_requestAccounts"
+                is SendTransaction -> "eth_sendTransaction"
+                is SignTransaction -> "eth_signTransaction"
+                is PersonalSign -> "personal_sign"
+                is SignTypedDataV3 -> "eth_signTypedData_v3"
+                is SignTypedDataV4 -> "eth_signTypedData_v4"
+                is AddEthereumChain -> "wallet_addEthereumChain"
+                is SwitchEthereumChain -> "wallet_switchEthereumChain"
+                is WatchAsset -> "wallet_watchAsset"
             }
 
             return Pair(method, json)
         }
+
+    fun action(optional: Boolean = false): Action {
+        return Action(rpc = this, optional = optional)
+    }
 }
 
 @Serializable

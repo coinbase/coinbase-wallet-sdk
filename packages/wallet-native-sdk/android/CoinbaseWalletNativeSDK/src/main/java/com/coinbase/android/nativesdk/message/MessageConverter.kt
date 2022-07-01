@@ -2,10 +2,10 @@ package com.coinbase.android.nativesdk.message
 
 import android.net.Uri
 import com.coinbase.android.nativesdk.key.PublicKeySerializer
-import com.coinbase.android.nativesdk.message.request.EncryptedRequestSerializer
+import com.coinbase.android.nativesdk.message.request.RequestSerializer
 import com.coinbase.android.nativesdk.message.request.RequestContent
 import com.coinbase.android.nativesdk.message.request.RequestMessage
-import com.coinbase.android.nativesdk.message.response.EncryptedResponseSerializer
+import com.coinbase.android.nativesdk.message.response.ResponseSerializer
 import com.coinbase.android.nativesdk.message.response.ResponseContent
 import com.coinbase.android.nativesdk.message.response.ResponseMessage
 import com.google.crypto.tink.subtle.Base64
@@ -115,12 +115,12 @@ object MessageConverter {
     }
 
     private fun encryptedRequestSerializer(sharedSecret: ByteArray?): MessageSerializer<RequestContent> {
-        val contentSerializer = EncryptedRequestSerializer(sharedSecret)
+        val contentSerializer = RequestSerializer(sharedSecret)
         return MessageSerializer(contentSerializer)
     }
 
     private fun encryptedResponseSerializer(sharedSecret: ByteArray?): MessageSerializer<ResponseContent> {
-        val contentSerializer = EncryptedResponseSerializer(sharedSecret)
+        val contentSerializer = ResponseSerializer(sharedSecret)
         return MessageSerializer(contentSerializer)
     }
 }

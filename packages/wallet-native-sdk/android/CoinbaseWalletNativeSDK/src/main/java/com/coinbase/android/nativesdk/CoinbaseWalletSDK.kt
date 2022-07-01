@@ -8,7 +8,9 @@ import com.coinbase.android.nativesdk.message.MessageConverter
 import com.coinbase.android.nativesdk.message.request.Action
 import com.coinbase.android.nativesdk.message.request.RequestContent
 import com.coinbase.android.nativesdk.message.request.RequestMessage
+import com.coinbase.android.nativesdk.message.response.FailureResponseCallback
 import com.coinbase.android.nativesdk.message.response.ResponseHandler
+import com.coinbase.android.nativesdk.message.response.SuccessResponseCallback
 import com.coinbase.android.nativesdk.task.TaskManager
 import java.security.interfaces.ECPublicKey
 import java.util.Date
@@ -64,6 +66,18 @@ class CoinbaseWalletSDK(
         )
 
         send(message, onResponse)
+    }
+
+    fun initiateHandshake(
+        initialActions: List<Action>? = null,
+        onSuccess: SuccessResponseCallback,
+        onFailure: FailureResponseCallback
+    ) {
+        initiateHandshake(initialActions) { result ->
+            result
+                .onSuccess { onSuccess.call(it) }
+                .onFailure { onFailure.call(it) }
+        }
     }
 
     fun makeRequest(

@@ -15,16 +15,17 @@ import java.security.interfaces.ECPublicKey
 private const val PUBLIC_KEY_ALIAS = "public_key"
 private const val PRIVATE_KEY_ALIAS = "private_key"
 private const val PEER_PUBLIC_KEY_ALIAS = "peer_public_key"
+private const val OWN_KEY_PAIR_ALIAS = "own_key_pair"
 
 internal class KeyManager(appContext: Context, host: String) {
 
     private val encryptedStore: SharedPreferences
 
     val ownPublicKey: ECPublicKey
-        get() = getOrCreateKeyPair(alias = "own_key_pair").public as ECPublicKey
+        get() = getOrCreateKeyPair(OWN_KEY_PAIR_ALIAS).public as ECPublicKey
 
     val ownPrivateKey: ECPrivateKey
-        get() = getOrCreateKeyPair(alias = "own_key_pair").private as ECPrivateKey
+        get() = getOrCreateKeyPair(OWN_KEY_PAIR_ALIAS).private as ECPrivateKey
 
     val peerPublicKey: ECPublicKey?
         get() {
@@ -60,9 +61,29 @@ internal class KeyManager(appContext: Context, host: String) {
             .commit()
     }
 
+    fun resetKeys() {
+        // Delete own keypair
+        deleteKeyPair(OWN_KEY_PAIR_ALIAS)
+
+        // Delete peer public key
+        encryptedStore.edit()
+            .remove(PEER_PUBLIC_KEY_ALIAS)
+            .commit()
+
+        // Create new KeyPair
+        getOrCreateKeyPair(OWN_KEY_PAIR_ALIAS)
+    }
+
     private fun deleteKeyPair(alias: String) {
         val publicKeyAlias = "$alias-$PUBLIC_KEY_ALIAS"
         val privateKeyAlias = "$alias-$PRIVATE_KEY_ALIAS"
+
+        if (
+            !encryptedStore.contains(publicKeyAlias) &&
+            !encryptedStore.contains(privateKeyAlias)
+        ) {
+            return
+        }
 
         encryptedStore.edit()
             .remove(publicKeyAlias)
