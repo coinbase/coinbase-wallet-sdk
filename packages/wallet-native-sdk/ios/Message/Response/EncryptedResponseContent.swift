@@ -19,7 +19,7 @@ public enum EncryptedResponseContent: EncryptedContent {
             guard let symmetricKey = symmetricKey else {
                 throw CoinbaseWalletSDK.Error.missingSymmetricKey
             }
-            let values: [ReturnValue] = try Cipher.decrypt(encryptedResults, with: symmetricKey)
+            let values: [ResponseContent.Value] = try Cipher.decrypt(encryptedResults, with: symmetricKey)
             return .response(requestId: requestId, values: values)
         case let .failure(requestId, description):
             return .failure(requestId: requestId, description: description)

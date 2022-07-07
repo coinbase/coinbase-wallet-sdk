@@ -8,16 +8,19 @@
 import UIKit
 import CoinbaseWalletSDK
 
+extension CoinbaseWalletSDK.Response: Encodable {}
+
 class ViewController: UITableViewController {
     
     @IBOutlet weak var isCBWalletInstalledLabel: UILabel!
     @IBOutlet weak var isConnectedLabel: UILabel!
     @IBOutlet weak var ownPubKeyLabel: UILabel!
     @IBOutlet weak var peerPubKeyLabel: UILabel!
-    
     @IBOutlet weak var logTextView: UITextView!
     
     private let cbwallet = CoinbaseWalletSDK.shared
+    
+    private var address: String?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -30,10 +33,16 @@ class ViewController: UITableViewController {
             initialActions: [
                 Action(jsonRpc: .eth_requestAccounts)
             ]
-        ) { result in
+        ) { result, account in
             switch result {
             case .success(let response):
                 self.logObject(label: "Response:\n", response)
+                
+                guard let account = account else { return }
+                self.logObject(label: "Account:\n", account)
+                self.address = account.address
+                self.log("Address: \(self.address)")
+                
             case .failure(let error):
                 self.log("\(error)")
             }
@@ -50,12 +59,19 @@ class ViewController: UITableViewController {
     
     @IBAction func makeRequest() {
         cbwallet.makeRequest(
-            Request(actions: [
-                Action(jsonRpc: .personal_sign(address: "", message: "message".data(using: .utf8)!)),
-                Action(jsonRpc: .eth_signTypedData_v3(address: "", message: Data()))
-            ])
+            Request(
+                actions: [
+                    Action(jsonRpc: .personal_sign(address: self.address ?? "", message: "message".data(using: .utf8)!)),
+                ]
+//              , account: Account(chain: "eth", networkId: 1, address: self.address)
+            )
         ) { result in
-            self.log("\(result)")
+            switch result {
+            case .success(let response):
+                self.logObject(response)
+            case .failure(let error):
+                self.log("\(error)")
+            }
         }
     }
     

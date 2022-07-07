@@ -75,7 +75,10 @@ public final class CoinbaseWalletSDK {
     
     // MARK: - Send message
     
-    public func initiateHandshake(initialActions: [Action]? = nil, onResponse: @escaping ResponseHandler) {
+    public func initiateHandshake(
+        initialActions: [Action]? = [Action(jsonRpc: .eth_requestAccounts)],
+        onResponse: @escaping (ResponseResult, Account?) -> Void
+    ) {
         try? keyManager.resetOwnPrivateKey()
         let message = RequestMessage(
             uuid: UUID(),
@@ -88,7 +91,23 @@ public final class CoinbaseWalletSDK {
             version: version,
             timestamp: Date()
         )
-        self.send(message, onResponse)
+        self.send(message) { result in
+            let account: Account?
+            
+            switch initialActions?.first?.method {
+            case "eth_requestAccounts":
+                guard let address = try? result.get().content.first?.get() else {
+                    account = nil
+                    break
+                }
+                account = Account(chain: "eth", networkId: 1, address: address)
+            default:
+                account = nil
+            }
+            
+            onResponse(result, account)
+        
+        }
     }
     
     public func makeRequest(_ request: Request, onResponse: @escaping ResponseHandler) {
