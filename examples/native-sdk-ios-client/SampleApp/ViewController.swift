@@ -8,8 +8,6 @@
 import UIKit
 import CoinbaseWalletSDK
 
-extension CoinbaseWalletSDK.Response: Encodable {}
-
 class ViewController: UITableViewController {
     
     @IBOutlet weak var isCBWalletInstalledLabel: UILabel!
@@ -36,12 +34,15 @@ class ViewController: UITableViewController {
         ) { result, account in
             switch result {
             case .success(let response):
-                self.logObject(label: "Response:\n", response)
+                self.logObject(label: "Response:\n", [
+                    "sender": response.sender.rawRepresentation.base64EncodedString(),
+                    "content": "\(response.content)"
+                ])
                 
                 guard let account = account else { return }
                 self.logObject(label: "Account:\n", account)
                 self.address = account.address
-                self.log("Address: \(self.address)")
+                self.log("Address: \(self.address!)")
                 
             case .failure(let error):
                 self.log("\(error)")
