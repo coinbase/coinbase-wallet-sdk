@@ -3,26 +3,19 @@ package com.coinbase.android.beta
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.widget.Button
-import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
+import com.coinbase.android.beta.databinding.ActivityMainBinding
 import com.coinbase.android.nativesdk.CoinbaseWalletSDK
-import com.coinbase.android.nativesdk.message.request.Action
 import com.coinbase.android.nativesdk.message.request.RequestContent
 import com.coinbase.android.nativesdk.message.request.Web3JsonRPC
+import com.coinbase.android.nativesdk.message.response.ReturnValue
 
 class MainActivity : AppCompatActivity() {
-    private val connectWalletButton
-        get() = findViewById<Button>(R.id.connectWalletButton)
 
-    private val textArea
-        get() = findViewById<TextView>(R.id.textArea)
-
-    private val personalSign
-        get() = findViewById<Button>(R.id.personalSign)
-
+    private lateinit var binding: ActivityMainBinding
     private lateinit var launcher: ActivityResultLauncher<Intent>
 
     private val client by lazy {
@@ -35,7 +28,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             val uri = result.data?.data ?: return@registerForActivityResult
@@ -43,23 +37,33 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onStart() {
+    override fun onStart() = with(binding) {
         super.onStart()
 
+        setVisibility()
         connectWalletButton.setOnClickListener {
             client.initiateHandshake(
                 initialActions = listOf(
-                    Web3JsonRPC.RequestAccounts().action(),
-                    Web3JsonRPC.SwitchEthereumChain(420).action()
+                    Web3JsonRPC.RequestAccounts().action(), //Web3JsonRPC.SwitchEthereumChain(420).action()
                 )
-            ) { result ->
+            ) { result: Result<List<ReturnValue>> ->
                 result
-                    .onSuccess { res ->
-                        // textArea.text = "Handshake Successful: \n${res.results.joinToString()}"
-
+                    .onSuccess { returnValues: List<ReturnValue> ->
+                        textArea.text = buildString {
+                            append("Handshake Successful\n\n")
+                            returnValues.forEach { returnValue ->
+                                if (returnValue is ReturnValue.Result) {
+                                    append("Result: ${returnValue.value}")
+                                }
+                            }
+                        }
+                        setVisibility()
                     }
                     .onFailure { err ->
-                        textArea.text = "Handshake Error: \n${err.message}"
+                        textArea.text = buildString {
+                            append("Handshake Error: \n\n")
+                            append(err.message)
+                        }
                     }
             }
         }
@@ -68,15 +72,15 @@ class MainActivity : AppCompatActivity() {
             client.makeRequest(
                 request = RequestContent.Request(
                     actions = listOf(
-                        Action(
-                            Web3JsonRPC.PersonalSign("0xabcdefabcdefabcdefabcdefabcdefabcdef", "Hello world")
-                        )
+                        //                        Web3JsonRPC.SwitchEthereumChain(420).action(),
+                        //                        Web3JsonRPC.RequestAccounts().action(),
+                        Web3JsonRPC.PersonalSign("0xabcdefabcdefabcdefabcdefabcdefabcdef", "Hello world").action()
                     )
                 )
             ) { result ->
                 result.fold(
                     onSuccess = { res ->
-//                        textArea.text = "Request Successful: \n${res.results.joinToString()}"
+                        //                        textArea.text = "Request Successful: \n${res.results.joinToString()}"
                     },
                     onFailure = { err ->
                         textArea.text = "Request Error: \n${err.message}"
@@ -84,5 +88,16 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         }
+
+        removeAccount.setOnClickListener {
+            client.resetSession()
+            setVisibility()
+        }
+    }
+
+    private fun setVisibility() = with(binding) {
+        val isConnected = client.hasEstablishedConnection
+        connectContainer.isVisible = !isConnected
+        requestContainer.isVisible = isConnected
     }
 }

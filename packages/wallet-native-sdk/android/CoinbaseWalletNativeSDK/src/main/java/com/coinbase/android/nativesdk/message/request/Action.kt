@@ -4,9 +4,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 class Action {
-    val method: String
-    val paramsJson: String
-    val optional: Boolean
+    private val method: String
+    private val paramsJson: String
+    private val optional: Boolean
 
     constructor(method: String, paramsJson: String, optional: Boolean = false) {
         this.method = method

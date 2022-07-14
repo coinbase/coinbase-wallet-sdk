@@ -56,9 +56,7 @@ internal class KeyManager(appContext: Context, host: String) {
 
     fun storePeerPublicKey(key: ECPublicKey) {
         val encoded = Base64.encode(key.encoded)
-        encryptedStore.edit()
-            .putString(PEER_PUBLIC_KEY_ALIAS, encoded)
-            .commit()
+        encryptedStore.edit().putString(PEER_PUBLIC_KEY_ALIAS, encoded).apply()
     }
 
     fun resetKeys() {
@@ -66,9 +64,7 @@ internal class KeyManager(appContext: Context, host: String) {
         deleteKeyPair(OWN_KEY_PAIR_ALIAS)
 
         // Delete peer public key
-        encryptedStore.edit()
-            .remove(PEER_PUBLIC_KEY_ALIAS)
-            .commit()
+        encryptedStore.edit().remove(PEER_PUBLIC_KEY_ALIAS).apply()
 
         // Create new KeyPair
         getOrCreateKeyPair(OWN_KEY_PAIR_ALIAS)
@@ -78,17 +74,14 @@ internal class KeyManager(appContext: Context, host: String) {
         val publicKeyAlias = "$alias-$PUBLIC_KEY_ALIAS"
         val privateKeyAlias = "$alias-$PRIVATE_KEY_ALIAS"
 
-        if (
-            !encryptedStore.contains(publicKeyAlias) &&
-            !encryptedStore.contains(privateKeyAlias)
-        ) {
+        if (!encryptedStore.contains(publicKeyAlias) && !encryptedStore.contains(privateKeyAlias)) {
             return
         }
 
         encryptedStore.edit()
             .remove(publicKeyAlias)
             .remove(privateKeyAlias)
-            .commit()
+            .apply()
     }
 
     private fun getOrCreateKeyPair(alias: String): KeyPair {
@@ -115,7 +108,7 @@ internal class KeyManager(appContext: Context, host: String) {
                 .edit()
                 .putString(publicKeyAlias, Base64.encode(keyPair.public.encoded))
                 .putString(privateKeyAlias, Base64.encode(keyPair.private.encoded))
-                .commit()
+                .apply()
 
             return keyPair
         }

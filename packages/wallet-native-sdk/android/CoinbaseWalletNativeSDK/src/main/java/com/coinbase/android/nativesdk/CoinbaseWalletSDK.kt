@@ -36,8 +36,8 @@ class CoinbaseWalletSDK(
     private val launchWalletIntent: Intent?
         get() = appContext.packageManager.getLaunchIntentForPackage(hostPackageName)
 
-    val isWalletInstalled
-        get() = launchWalletIntent != null
+    val isWalletInstalled get() = launchWalletIntent != null
+    val hasEstablishedConnection: Boolean get() = keyManager.peerPublicKey != null
 
     init {
         this.domain = if (domain.pathSegments.size < 2) {
@@ -154,5 +154,10 @@ class CoinbaseWalletSDK(
 
     private fun isWalletSegueResponseURL(uri: Uri): Boolean {
         return uri.host == domain.host && uri.path == domain.path && uri.getQueryParameter("p") != null
+    }
+
+    fun resetSession(){
+        taskManager.reset()
+        keyManager.resetKeys()
     }
 }

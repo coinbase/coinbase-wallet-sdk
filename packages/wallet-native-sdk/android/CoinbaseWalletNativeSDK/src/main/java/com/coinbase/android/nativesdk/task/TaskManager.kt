@@ -38,4 +38,8 @@ internal class TaskManager {
         tasks.remove(requestId)
         return true
     }
+
+    fun reset(){
+        tasks.clear()
+    }
 }
