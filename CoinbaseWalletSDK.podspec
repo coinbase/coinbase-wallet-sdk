@@ -11,7 +11,7 @@ Decentralized verification of participating apps' authenticity without centraliz
   s.homepage         = 'https://www.coinbase.com/wallet/developers'
   s.license          = { :type => 'Apache', :file => 'LICENSE' }
   s.author           = { 'Coinbase Wallet' => 'wallet-build-squad@coinbase.com' }
-  s.source           = { :git => 'https://github.com/coinbase/coinbase-wallet-sdk.git', :tag => "ios-v#{s.version}" }
+  s.source           = { :git => 'https://github.com/coinbase/coinbase-wallet-sdk.git', :tag => s.version }
   s.social_media_url = 'https://twitter.com/CoinbaseWallet'
   s.ios.deployment_target = '12.0'
   s.swift_version = '5.0'
