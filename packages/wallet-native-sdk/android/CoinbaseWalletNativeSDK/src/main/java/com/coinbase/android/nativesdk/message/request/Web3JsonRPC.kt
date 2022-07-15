@@ -101,8 +101,8 @@ sealed class Web3JsonRPC {
             val json = Json.encodeToString(this)
             val method = when (this) {
                 is RequestAccounts -> WEB3_JSON_RPC_ETH_REQUEST_ACCOUNTS
-                is SendTransaction -> WEB3_JSON_RPC_ETH_SIGN_TRANSACTION
-                is SignTransaction -> WEB3_JSON_RPC_ETH_SEND_TRANSACTION
+                is SendTransaction -> WEB3_JSON_RPC_ETH_SEND_TRANSACTION
+                is SignTransaction -> WEB3_JSON_RPC_ETH_SIGN_TRANSACTION
                 is PersonalSign -> WEB3_JSON_RPC_PERSONAL_SIGN
                 is SignTypedDataV3 -> WEB3_JSON_RPC_ETH_SIGN_TYPED_DATA_V3
                 is SignTypedDataV4 -> WEB3_JSON_RPC_ETH_SIGN_TYPED_DATA_V4
