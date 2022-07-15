@@ -16,17 +16,15 @@ import java.security.interfaces.ECPublicKey
 import java.util.Date
 import java.util.UUID
 
+const val CBW_PACKAGE_NAME = "org.toshi"
 private const val CBW_APP_LINK = "go.cb-w.com"
-private const val CBW_PACKAGE_NAME = "org.toshi"
 private const val CBW_SCHEME = "cbwallet://wsegue"
-
-typealias OpenIntentCallback = (Intent) -> Unit
 
 class CoinbaseWalletSDK(
     domain: Uri,
     private val appContext: Context,
     private val hostPackageName: String = CBW_PACKAGE_NAME,
-    private val openIntent: OpenIntentCallback
+    private val openIntent: (Intent) -> Unit
 ) {
     private val domain: Uri
     private val sdkVersion = BuildConfig.LIBRARY_VERSION_NAME
@@ -49,10 +47,23 @@ class CoinbaseWalletSDK(
         }
     }
 
+    constructor(
+        domain: Uri,
+        appContext: Context,
+        hostPackageName: String,
+        openIntent: OpenIntentCallback
+    ) : this(
+        domain,
+        appContext,
+        hostPackageName,
+        { intent -> openIntent.call(intent) }
+    )
+
     fun initiateHandshake(
         initialActions: List<Action>? = null,
         onResponse: ResponseHandler
     ) {
+        resetSession()
         val message = RequestMessage(
             uuid = UUID.randomUUID().toString(),
             version = sdkVersion,
@@ -95,6 +106,18 @@ class CoinbaseWalletSDK(
         send(message, onResponse)
     }
 
+    fun makeRequest(
+        request: RequestContent.Request,
+        onSuccess: SuccessResponseCallback,
+        onFailure: FailureResponseCallback
+    ) {
+        makeRequest(request) { result ->
+            result
+                .onSuccess { onSuccess.call(it) }
+                .onFailure { onFailure.call(it) }
+        }
+    }
+
     fun handleResponse(url: Uri): Boolean {
         if (!isWalletSegueResponseURL(url)) {
             return false
@@ -115,6 +138,11 @@ class CoinbaseWalletSDK(
         }
 
         return taskManager.handleResponse(message)
+    }
+
+    fun resetSession() {
+        taskManager.reset()
+        keyManager.resetKeys()
     }
 
     private fun send(message: RequestMessage, onResponse: ResponseHandler) {
@@ -156,8 +184,5 @@ class CoinbaseWalletSDK(
         return uri.host == domain.host && uri.path == domain.path && uri.getQueryParameter("p") != null
     }
 
-    fun resetSession(){
-        taskManager.reset()
-        keyManager.resetKeys()
-    }
+
 }

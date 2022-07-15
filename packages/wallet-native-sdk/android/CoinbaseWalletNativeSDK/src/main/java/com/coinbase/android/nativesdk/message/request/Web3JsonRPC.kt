@@ -1,9 +1,9 @@
 package com.coinbase.android.nativesdk.message.request
 
+import com.coinbase.android.nativesdk.message.JSON
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 private typealias BigInt = String
 const val WEB3_JSON_RPC_ETH_REQUEST_ACCOUNTS = "eth_requestAccounts"
@@ -98,7 +98,7 @@ sealed class Web3JsonRPC {
 
     internal val asJson: Pair<String, String>
         get() {
-            val json = Json.encodeToString(this)
+            val json = JSON.encodeToString(this)
             val method = when (this) {
                 is RequestAccounts -> WEB3_JSON_RPC_ETH_REQUEST_ACCOUNTS
                 is SendTransaction -> WEB3_JSON_RPC_ETH_SEND_TRANSACTION

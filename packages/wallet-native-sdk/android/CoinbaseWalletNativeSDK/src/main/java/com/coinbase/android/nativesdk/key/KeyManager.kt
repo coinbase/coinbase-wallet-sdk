@@ -20,12 +20,21 @@ private const val OWN_KEY_PAIR_ALIAS = "own_key_pair"
 internal class KeyManager(appContext: Context, host: String) {
 
     private val encryptedStore: SharedPreferences
+    private var ownKeyPair: KeyPair? = null
 
     val ownPublicKey: ECPublicKey
-        get() = getOrCreateKeyPair(OWN_KEY_PAIR_ALIAS).public as ECPublicKey
+        get() {
+            val own = ownKeyPair ?: getOrCreateKeyPair(OWN_KEY_PAIR_ALIAS)
+            if (ownKeyPair == null) ownKeyPair = own
+            return own.public as ECPublicKey
+        }
 
     val ownPrivateKey: ECPrivateKey
-        get() = getOrCreateKeyPair(OWN_KEY_PAIR_ALIAS).private as ECPrivateKey
+        get() {
+            val own = ownKeyPair ?: getOrCreateKeyPair(OWN_KEY_PAIR_ALIAS)
+            if (ownKeyPair == null) ownKeyPair = own
+            return own.private as ECPrivateKey
+        }
 
     val peerPublicKey: ECPublicKey?
         get() {
@@ -67,7 +76,7 @@ internal class KeyManager(appContext: Context, host: String) {
         encryptedStore.edit().remove(PEER_PUBLIC_KEY_ALIAS).commit()
 
         // Create new KeyPair
-        getOrCreateKeyPair(OWN_KEY_PAIR_ALIAS)
+        ownKeyPair = getOrCreateKeyPair(OWN_KEY_PAIR_ALIAS)
     }
 
     private fun deleteKeyPair(alias: String) {

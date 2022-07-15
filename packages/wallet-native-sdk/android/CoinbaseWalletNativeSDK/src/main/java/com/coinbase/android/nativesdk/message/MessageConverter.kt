@@ -17,7 +17,6 @@ import java.security.interfaces.ECPrivateKey
 import java.security.interfaces.ECPublicKey
 
 object MessageConverter {
-    private val formatter by lazy { Json { encodeDefaults = true } }
 
     fun encodeRequest(
         message: RequestMessage,
@@ -27,7 +26,7 @@ object MessageConverter {
     ): Uri {
         val sharedSecret = getSharedSecret(ownPrivateKey, peerPublicKey)
         val encryptedSerializer = encryptedRequestSerializer(sharedSecret)
-        val json = formatter.encodeToString(encryptedSerializer, message)
+        val json = JSON.encodeToString(encryptedSerializer, message)
 
         return recipient.buildUpon()
             .appendQueryParameter("p", Base64.encode(json.toByteArray()))
@@ -42,7 +41,7 @@ object MessageConverter {
     ): Uri {
         val sharedSecret = getSharedSecret(ownPrivateKey, peerPublicKey)
         val encryptedSerializer = encryptedResponseSerializer(sharedSecret)
-        val json = formatter.encodeToString(encryptedSerializer, message)
+        val json = JSON.encodeToString(encryptedSerializer, message)
 
         return recipient.buildUpon()
             .appendQueryParameter("p", Base64.encode(json.toByteArray()))
@@ -57,11 +56,11 @@ object MessageConverter {
     ): RequestMessage {
         val encodedMessage = requireNotNull(url.getQueryParameter("p"))
         val messageJsonString = String(Base64.decode(encodedMessage))
-        val messageJson = formatter.parseToJsonElement(messageJsonString)
+        val messageJson = JSON.parseToJsonElement(messageJsonString)
         val sharedSecret = getSharedSecret(messageJson, ownPublicKey, ownPrivateKey, peerPublicKey)
 
         val encryptedSerializer = encryptedRequestSerializer(sharedSecret)
-        return formatter.decodeFromJsonElement(encryptedSerializer, messageJson)
+        return JSON.decodeFromJsonElement(encryptedSerializer, messageJson)
     }
 
     fun decodeResponse(
@@ -72,11 +71,11 @@ object MessageConverter {
     ): ResponseMessage {
         val encodedMessage = requireNotNull(url.getQueryParameter("p"))
         val messageJsonString = String(Base64.decode(encodedMessage))
-        val messageJson = formatter.parseToJsonElement(messageJsonString)
+        val messageJson = JSON.parseToJsonElement(messageJsonString)
         val sharedSecret = getSharedSecret(messageJson, ownPublicKey, ownPrivateKey, peerPublicKey)
 
         val encryptedSerializer = encryptedResponseSerializer(sharedSecret)
-        return formatter.decodeFromJsonElement(encryptedSerializer, messageJson)
+        return JSON.decodeFromJsonElement(encryptedSerializer, messageJson)
     }
 
     private fun getSharedSecret(
@@ -104,7 +103,7 @@ object MessageConverter {
             peerPublicKey
         } else {
             val senderJsonObject = messageJson.jsonObject["sender"] ?: return null
-            formatter.decodeFromJsonElement(PublicKeySerializer, senderJsonObject) as ECPublicKey
+            JSON.decodeFromJsonElement(PublicKeySerializer, senderJsonObject) as ECPublicKey
         }
 
         if (otherPublicKey == ownPublicKey) {

@@ -1,5 +1,7 @@
 package com.coinbase.android.beta;
 
+import static com.coinbase.android.nativesdk.CoinbaseWalletSDKKt.CBW_PACKAGE_NAME;
+
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -28,10 +30,9 @@ public class SecondActivity extends AppCompatActivity {
         client = new CoinbaseWalletSDK(
                 Uri.parse("https://www.coinbase.com"),
                 getApplicationContext(),
-                "org.toshi",
+                CBW_PACKAGE_NAME,
                 intent -> {
                     startActivityForResult(intent, CBW_ACTIVITY_RESULT_CODE);
-                    return null;
                 }
         );
     }
