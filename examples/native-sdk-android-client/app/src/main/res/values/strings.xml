@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">WalletSDK ClientApp</string>
+    <string name="connect_wallet">Connect Wallet</string>
+    <string name="request_personal_sign">Request personal_sign</string>
+    <string name="remove_account">Remove Account</string>
+    <string name="select_an_option">Select an option</string>
+</resources>
