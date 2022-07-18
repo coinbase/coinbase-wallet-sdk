@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 
 private typealias BigInt = String
+
 const val WEB3_JSON_RPC_ETH_REQUEST_ACCOUNTS = "eth_requestAccounts"
 const val WEB3_JSON_RPC_PERSONAL_SIGN = "personal_sign"
 const val WEB3_JSON_RPC_ETH_SIGN_TYPED_DATA_V3 = "eth_signTypedData_v3"
@@ -16,6 +17,7 @@ const val WEB3_JSON_RPC_WALLET_SWITCH_ETHEREUM_CHAIN = "wallet_switchEthereumCha
 const val WEB3_JSON_RPC_WALLET_ADD_ETHEREUM_CHAIN = "wallet_addEthereumChain"
 const val WEB3_JSON_RPC_WALLET_WATCH_ASSET = "wallet_watchAsset"
 
+@Suppress("unused")
 @Serializable
 sealed class Web3JsonRPC {
 
@@ -56,7 +58,7 @@ sealed class Web3JsonRPC {
         val maxFeePerGas: BigInt?,
         val maxPriorityFeePerGas: BigInt?,
         val gasLimit: BigInt?,
-        val chainId: Int
+        val chainId: String
     ) : Web3JsonRPC()
 
     @Serializable
@@ -71,22 +73,22 @@ sealed class Web3JsonRPC {
         val maxFeePerGas: BigInt?,
         val maxPriorityFeePerGas: BigInt?,
         val gasLimit: BigInt?,
-        val chainId: Int
+        val chainId: String
     ) : Web3JsonRPC()
 
     @Serializable
     @SerialName(WEB3_JSON_RPC_WALLET_SWITCH_ETHEREUM_CHAIN)
-    class SwitchEthereumChain(val chainId: Int) : Web3JsonRPC()
+    class SwitchEthereumChain(val chainId: String) : Web3JsonRPC()
 
     @Serializable
     @SerialName(WEB3_JSON_RPC_WALLET_ADD_ETHEREUM_CHAIN)
     class AddEthereumChain(
-        val chainId: Int,
-        val blockExplorerUrls: List<String>?,
-        val chainName: String?,
-        val iconUrls: List<String>?,
-        val nativeCurrency: AddChainNativeCurrency?,
-        val rpcUrls: List<String>
+        val chainId: String,
+        val blockExplorerUrls: List<String>? = null,
+        val chainName: String? = null,
+        val iconUrls: List<String>? = null,
+        val nativeCurrency: AddChainNativeCurrency? = null,
+        val rpcUrls: List<String> = emptyList()
     ) : Web3JsonRPC()
 
     @Serializable
@@ -111,7 +113,7 @@ sealed class Web3JsonRPC {
                 is WatchAsset -> WEB3_JSON_RPC_WALLET_WATCH_ASSET
             }
 
-            return Pair(method, json)
+            return method to json
         }
 
     fun action(optional: Boolean = false): Action = Action(rpc = this, optional = optional)
