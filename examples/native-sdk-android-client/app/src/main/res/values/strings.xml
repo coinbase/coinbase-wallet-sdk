@@ -4,4 +4,7 @@
     <string name="request_personal_sign">Request personal_sign</string>
     <string name="remove_account">Remove Account</string>
     <string name="select_an_option">Select an option</string>
+    <string name="connection_removed">Connection Removed</string>
+    <string name="connected_state">Connected: %s</string>
+    <string name="unconnected_state">Not Connected</string>
 </resources>

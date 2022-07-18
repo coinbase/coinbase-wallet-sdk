@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 class Action {
-    private val method: String
+    val method: String
     private val paramsJson: String
     private val optional: Boolean
 
