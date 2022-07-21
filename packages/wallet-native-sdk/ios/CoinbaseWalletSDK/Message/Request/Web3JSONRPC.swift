@@ -14,49 +14,49 @@ public enum Web3JSONRPC: Codable {
     
     case personal_sign(
         address: String,
-        message: Data
+        message: String
     )
     
     case eth_signTypedData_v3(
         address: String,
-        message: Data
+        typedDataJson: String
     )
 
     case eth_signTypedData_v4(
         address: String,
-        message: Data
+        typedDataJson: String
     )
     
     case eth_signTransaction(
         fromAddress: String,
         toAddress: String?,
         weiValue: BigInt,
-        data: Data,
+        data: String,
         nonce: Int?,
         gasPriceInWei: BigInt?,
         maxFeePerGas: BigInt?,
         maxPriorityFeePerGas: BigInt?,
         gasLimit: BigInt?,
-        chainId: Int
+        chainId: String
     )
     
     case eth_sendTransaction(
         fromAddress: String,
         toAddress: String?,
         weiValue: BigInt,
-        data: Data,
+        data: String,
         nonce: Int?,
         gasPriceInWei: BigInt?,
         maxFeePerGas: BigInt?,
         maxPriorityFeePerGas: BigInt?,
         gasLimit: BigInt?,
-        chainId: Int
+        chainId: String
     )
     
     case wallet_switchEthereumChain(chainId: Int)
     
     case wallet_addEthereumChain(
-        chainId: Int,
+        chainId: String,
         blockExplorerUrls: [String]?,
         chainName: String?,
         iconUrls: [String]?,
