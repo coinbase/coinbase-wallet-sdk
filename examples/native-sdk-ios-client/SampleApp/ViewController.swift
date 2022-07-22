@@ -18,6 +18,69 @@ class ViewController: UITableViewController {
     @IBOutlet weak var logTextView: UITextView!
     
     private let cbwallet = CoinbaseWalletSDK.shared
+    private let typedData = """
+        {
+          \"types\": {
+            \"EIP712Domain\": [
+              {
+                \"name\": \"name\",
+                \"type\": \"string\"
+              },
+              {
+                \"name\": \"version\",
+                \"type\": \"string\"
+              },
+              {
+                \"name\": \"chainId\",
+                \"type\": \"uint256\"
+              },
+              {
+                \"name\": \"verifyingContract\",
+                \"type\": \"address\"
+              },
+              {
+                \"name\": \"salt\",
+                \"type\": \"bytes32\"
+              }
+            ],
+            \"Bid\": [
+              {
+                \"name\": \"amount\",
+                \"type\": \"uint256\"
+              },
+              {
+                \"name\": \"bidder\",
+                \"type\": \"Identity\"
+              }
+            ],
+            \"Identity\": [
+              {
+                \"name\": \"userId\",
+                \"type\": \"uint256\"
+              },
+              {
+                \"name\": \"wallet\",
+                \"type\": \"address\"
+              }
+            ]
+          },
+          \"domain\": {
+            \"name\": \"DApp Browser Test DApp\",
+            \"version\": \"1\",
+            \"chainId\": 1,
+            \"verifyingContract\": \"0x1C56346CD2A2Bf3202F771f50d3D14a367B48070\",
+            \"salt\": \"0xf2d857f4a3edcb9b78b4d503bfe733db1e3f6cdc2b7971ee739626c97e86a558\"
+          },
+          \"primaryType\": \"Bid\",
+          \"message\": {
+            \"amount\": 100,
+            \"bidder\": {
+              \"userId\": 323,
+              \"wallet\": \"0x3333333333333333333333333333333333333333\"
+            }
+          }
+        }
+        """
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -51,8 +114,8 @@ class ViewController: UITableViewController {
     @IBAction func makeRequest() {
         cbwallet.makeRequest(
             Request(actions: [
-                Action(jsonRpc: .personal_sign(address: "", message: "message".data(using: .utf8)!)),
-                Action(jsonRpc: .eth_signTypedData_v3(address: "", message: Data()))
+                Action(jsonRpc: .personal_sign(address: "", message: "message")),
+                Action(jsonRpc: .eth_signTypedData_v3(address: "", typedDataJson: typedData))
             ])
         ) { result in
             self.log("\(result)")
@@ -98,8 +161,8 @@ class ViewController: UITableViewController {
     private func log(_ text: String, function: String = #function) {
         DispatchQueue.main.async {
             self.logTextView.text = "\(function): \(text)\n\n\(self.logTextView.text ?? "")"
-//            self.logTextView.text += "\(function): \(text)\n\n"
-//            self.logTextView.scrollRangeToVisible(NSMakeRange(self.logTextView.text.count - 1, 1))
+            //  self.logTextView.text += "\(function): \(text)\n\n"
+            //  self.logTextView.scrollRangeToVisible(NSMakeRange(self.logTextView.text.count - 1, 1))
         }
     }
 }
