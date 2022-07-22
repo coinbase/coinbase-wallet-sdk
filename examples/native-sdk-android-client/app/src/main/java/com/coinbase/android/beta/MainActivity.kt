@@ -123,7 +123,7 @@ class MainActivity : AppCompatActivity() {
 
 
         with(connectedStatus) {
-            val radius = 48f
+            val radius = 28f
             val shapeAppearanceModel = ShapeAppearanceModel()
                 .toBuilder()
                 .setAllCorners(CornerFamily.ROUNDED, radius)
@@ -135,15 +135,15 @@ class MainActivity : AppCompatActivity() {
             if (isConnected) {
                 text = getString(
                     R.string.connected_state,
-                    "${SharedPrefsManager.account.take(6)}...${SharedPrefsManager.account.takeLast(4)}"
+                    "${SharedPrefsManager.account.take(5)}...${SharedPrefsManager.account.takeLast(4)}"
                 )
                 setTextColor(getColor(R.color.teal_200))
-                shapeDrawable.setStroke(2.0f, getColor(R.color.teal_200));
+                shapeDrawable.setStroke(2.0f, getColor(R.color.teal_200))
 
             } else {
-                text = getString(R.string.unconnected_state)
+                setText(R.string.unconnected_state)
                 setTextColor(getColor(R.color.red_error))
-                shapeDrawable.setStroke(2.0f, getColor(R.color.red_error));
+                shapeDrawable.setStroke(2.0f, getColor(R.color.red_error))
             }
         }
     }
