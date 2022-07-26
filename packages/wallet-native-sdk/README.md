@@ -1,3 +1,5 @@
+> :warning: **Native Wallet SDK**: is a WIP. Full integration with the Coinbase Wallet app is scheduled for mid August 2022
+
 # Coinbase Wallet SDK for native mobile apps
 
 ## Example data

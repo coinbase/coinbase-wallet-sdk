@@ -3,6 +3,8 @@
 ## Packages
 
 - [wallet-sdk](packages/wallet-sdk/): web
+
+> :warning: **Native Wallet SDK**: is a WIP. Full integration with the Coinbase Wallet app is scheduled for mid August 2022
 - [wallet-native-sdk](packages/wallet-native-sdk/): native
 
 ## License
