@@ -154,6 +154,7 @@ describe("CoinbaseWalletSDK", () => {
       }
 
       const mockCipherProvider = new MockCipherProviderClass({
+        chainId: 1,
         jsonRpcUrl: "url",
         overrideIsMetaMask: false,
         relayEventManager: new WalletSDKRelayEventManager(),

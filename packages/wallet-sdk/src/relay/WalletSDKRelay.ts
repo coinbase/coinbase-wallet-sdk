@@ -103,6 +103,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
   private chainCallback:
     | ((chainId: string, jsonRpcUrl: string) => void)
     | null = null;
+  private dappDefaultChainCallback: (() => void) | null = null;
   private readonly options: WalletSDKRelayOptions;
 
   private ui: WalletUI;
@@ -279,9 +280,49 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         .pipe(
           filter(
             c =>
+              c.metadata && c.metadata.respectDappDefaultNetwork !== undefined,
+          ),
+        )
+        .pipe(
+          mergeMap(c =>
+            aes256gcm.decrypt(
+              c.metadata.respectDappDefaultNetwork!,
+              session.secret,
+            ),
+          ),
+        )
+        .subscribe({
+          next: respectDappDefaultNetwork => {
+            console.log(respectDappDefaultNetwork);
+            console.log(this.dappDefaultChainCallback);
+            if (
+              respectDappDefaultNetwork === "true" &&
+              this.dappDefaultChainCallback
+            ) {
+              console.log("HEYHEYHEYHEY");
+              this.dappDefaultChainCallback();
+            }
+          },
+          error: () => {
+            //TODO felix - log
+            // this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
+            //   message: "Had error decrypting",
+            //   value: "noNetworkPreference",
+            // });
+          },
+        }),
+    );
+
+    //TODO felix: backward compatible code, to remove in Nov. 2022
+    this.subscriptions.add(
+      connection.sessionConfig$
+        .pipe(
+          filter(
+            c =>
               c.metadata &&
               c.metadata.ChainId !== undefined &&
-              c.metadata.JsonRpcUrl !== undefined,
+              c.metadata.JsonRpcUrl !== undefined &&
+              c.metadata.respectDappDefaultNetwork === undefined,
           ),
         )
         .pipe(
@@ -663,6 +704,10 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     chainCallback: (chainId: string, jsonRpcUrl: string) => void,
   ) {
     this.chainCallback = chainCallback;
+  }
+
+  public setDappDefaultChainCallback(dappDefaultChainCallback: () => void) {
+    this.dappDefaultChainCallback = dappDefaultChainCallback;
   }
 
   private publishWeb3RequestEvent(id: string, request: Web3Request): void {

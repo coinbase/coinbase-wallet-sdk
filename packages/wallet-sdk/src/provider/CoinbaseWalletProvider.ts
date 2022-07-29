@@ -48,7 +48,8 @@ const HAS_CHAIN_BEEN_SWITCHED_KEY = "HasChainBeenSwitched";
 const HAS_CHAIN_OVERRIDDEN_FROM_RELAY = "HasChainOverriddenFromRelay";
 
 export interface CoinbaseWalletProviderOptions {
-  chainId?: number;
+  // TODO felix: confirm chainId to be number!, a default of 1 is provided at CoinbaseWalletSDK.ts
+  chainId: number;
   jsonRpcUrl: string;
   qrUrl?: string | null;
   overrideIsCoinbaseWallet?: boolean;
@@ -109,6 +110,7 @@ export class CoinbaseWalletProvider
   private readonly _relayEventManager: WalletSDKRelayEventManager;
   private readonly diagnostic?: DiagnosticLogger;
 
+  private _chainIdFromOpts: number;
   private _jsonRpcUrlFromOpts: string;
   private readonly _overrideIsMetaMask: boolean;
 
@@ -134,6 +136,7 @@ export class CoinbaseWalletProvider
     this.scanQRCode = this.scanQRCode.bind(this);
     this.genericRequest = this.genericRequest.bind(this);
 
+    this._chainIdFromOpts = options.chainId;
     this._jsonRpcUrlFromOpts = options.jsonRpcUrl;
     this._overrideIsMetaMask = options.overrideIsMetaMask;
     this._relayProvider = options.relayProvider;
@@ -252,6 +255,7 @@ export class CoinbaseWalletProvider
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   public setProviderInfo(jsonRpcUrl: string, chainId?: number) {
+    //TODO felix: to sunset isChainOverridden
     if (this.isChainOverridden) return;
     this.updateProviderInfo(jsonRpcUrl, this.getChainId(), false);
   }
@@ -261,6 +265,7 @@ export class CoinbaseWalletProvider
     chainId: number,
     fromRelay: boolean,
   ) {
+    //TODO felix: to sunset hasChainSwitched
     const hasChainSwitched =
       this._storage.getItem(HAS_CHAIN_BEEN_SWITCHED_KEY) === "true";
     if (hasChainSwitched && fromRelay) return;
@@ -929,7 +934,12 @@ export class CoinbaseWalletProvider
   }
 
   private getChainId(): IntNumber {
-    const chainIdStr = this._storage.getItem(DEFAULT_CHAIN_ID_KEY) || "1";
+    const chainIdStr = this._storage.getItem(DEFAULT_CHAIN_ID_KEY);
+
+    if (!chainIdStr) {
+      return ensureIntNumber(this._chainIdFromOpts);
+    }
+
     const chainId = parseInt(chainIdStr, 10);
     return ensureIntNumber(chainId);
   }
@@ -1263,6 +1273,13 @@ export class CoinbaseWalletProvider
       );
       relay.setChainCallback((chainId, jsonRpcUrl) => {
         this.updateProviderInfo(jsonRpcUrl, parseInt(chainId, 10), true);
+      });
+      relay.setDappDefaultChainCallback(() => {
+        this.updateProviderInfo(
+          this._jsonRpcUrlFromOpts,
+          this._chainIdFromOpts,
+          true,
+        );
       });
       this._relay = relay;
       return relay;

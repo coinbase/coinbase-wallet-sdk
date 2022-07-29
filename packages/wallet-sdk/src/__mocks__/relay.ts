@@ -141,6 +141,10 @@ export class MockRelayClass extends WalletSDKRelayAbstract {
     return;
   }
 
+  setDappDefaultChainCallback(): void {
+    return;
+  }
+
   get session() {
     return new Session(new ScopedLocalStorage("session-test"));
   }

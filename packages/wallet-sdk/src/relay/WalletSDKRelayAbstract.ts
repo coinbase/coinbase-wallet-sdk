@@ -113,6 +113,10 @@ export abstract class WalletSDKRelayAbstract {
     chainIdCallback: (chainId: string, jsonRpcUrl: string) => void,
   ): void;
 
+  abstract setDappDefaultChainCallback(
+    dappDefaultChainCallback: () => void,
+  ): void;
+
   /**
    * Whether the relay supports the add ethereum chain call without
    * needing to be connected to the mobile client.

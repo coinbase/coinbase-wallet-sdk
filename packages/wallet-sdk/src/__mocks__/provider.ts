@@ -25,6 +25,7 @@ export class MockProviderClass extends CoinbaseWalletProvider {
 }
 
 export const mockExtensionProvider = new MockProviderClass({
+  chainId: 1,
   jsonRpcUrl: "jsonrpc-url",
   overrideIsMetaMask: false,
   relayEventManager: new WalletSDKRelayEventManager(),
