@@ -1,0 +1,63 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  lint-check:
+    name: Lint / Type Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./packages/wallet-sdk
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Checkout node action
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+          cache-dependency-path: '**/yarn.lock'
+
+      - name: Install NPM dependencies
+        run: yarn install
+
+      - name: Check ESLint
+        run: yarn lint:eslint
+
+      - name: Check prettier formatting
+        run: yarn lint:prettier
+
+      - name: Runs compile asset script
+        run: node ./compile-assets.js
+
+      - name: Check Types
+        run: yarn lint:types
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./packages/wallet-sdk
+
+    strategy:
+      matrix:
+        node-version: [14.x, 16.x, 18.x]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache-dependency-path: '**/yarn.lock'
+
+      - name: Install NPM dependencies
+        run: yarn install
+
+      - name: Run Unit Tests
+        run: yarn test:unit

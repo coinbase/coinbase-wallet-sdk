@@ -1,5 +1,0 @@
-package.json
-yarn.lock
-**/build
-**/dist
-**/node_modules
