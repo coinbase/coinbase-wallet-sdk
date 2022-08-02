@@ -73,7 +73,8 @@ class CoinbaseWalletSDK(
                 appId = appContext.packageName,
                 callback = domain.toString(),
                 initialActions = initialActions
-            )
+            ),
+            callbackUrl = domain.toString()
         )
 
         send(message, onResponse)
@@ -100,7 +101,8 @@ class CoinbaseWalletSDK(
             version = sdkVersion,
             timestamp = Date(),
             sender = keyManager.ownPublicKey,
-            content = request
+            content = request,
+            callbackUrl = domain.toString()
         )
 
         send(message, onResponse)
@@ -183,6 +185,5 @@ class CoinbaseWalletSDK(
     private fun isWalletSegueResponseURL(uri: Uri): Boolean {
         return uri.host == domain.host && uri.path == domain.path && uri.getQueryParameter("p") != null
     }
-
 
 }

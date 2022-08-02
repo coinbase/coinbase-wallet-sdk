@@ -87,7 +87,8 @@ public final class CoinbaseWalletSDK {
                 initialActions: initialActions
             ),
             version: version,
-            timestamp: Date()
+            timestamp: Date(),
+            callbackUrl: callback
         )
         self.send(message, onResponse)
     }
@@ -98,7 +99,8 @@ public final class CoinbaseWalletSDK {
             sender: keyManager.ownPublicKey,
             content: .request(actions: request.actions, account: request.account),
             version: version,
-            timestamp: Date()
+            timestamp: Date(),
+            callbackUrl: callback
         )
         return self.send(message, onResponse)
     }

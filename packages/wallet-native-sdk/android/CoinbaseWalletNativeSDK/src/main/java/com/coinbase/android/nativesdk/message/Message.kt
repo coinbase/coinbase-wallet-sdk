@@ -25,7 +25,8 @@ class Message<Content>(
     val sender: PublicKey,
     val content: Content,
     @Serializable(with = DateSerializer::class)
-    val timestamp: Date
+    val timestamp: Date,
+    val callbackUrl: String
 )
 
 class MessageSerializer<Content>(private val contentSerializer: KSerializer<Content>) : KSerializer<Message<Content>> {
@@ -41,6 +42,7 @@ class MessageSerializer<Content>(private val contentSerializer: KSerializer<Cont
             put("sender", formatter.encodeToJsonElement(PublicKeySerializer, value.sender))
             put("content", formatter.encodeToJsonElement(contentSerializer, value.content))
             put("timestamp", formatter.encodeToJsonElement(DateSerializer, value.timestamp))
+            put("callbackUrl", value.callbackUrl)
         }
 
         output.encodeJsonElement(messageJson)
@@ -56,7 +58,8 @@ class MessageSerializer<Content>(private val contentSerializer: KSerializer<Cont
             version = formatter.decodeFromJsonElement(json.getValue("version")),
             sender = formatter.decodeFromJsonElement(PublicKeySerializer, json.getValue("sender")),
             content = formatter.decodeFromJsonElement(contentSerializer, json.getValue("content")),
-            timestamp = formatter.decodeFromJsonElement(DateSerializer, json.getValue("timestamp"))
+            timestamp = formatter.decodeFromJsonElement(DateSerializer, json.getValue("timestamp")),
+            callbackUrl = formatter.decodeFromJsonElement(json.getValue("callbackUrl"))
         )
     }
 }
