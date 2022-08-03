@@ -280,26 +280,29 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         .pipe(
           filter(
             c =>
-              c.metadata && c.metadata.respectDappDefaultNetwork !== undefined,
+              c.metadata &&
+              c.metadata.ChainId !== undefined &&
+              c.metadata.JsonRpcUrl !== undefined &&
+              c.metadata.overrideNetwork !== undefined,
           ),
         )
         .pipe(
           mergeMap(c =>
-            aes256gcm.decrypt(
-              c.metadata.respectDappDefaultNetwork!,
-              session.secret,
+            zip(
+              aes256gcm.decrypt(c.metadata.ChainId!, session.secret),
+              aes256gcm.decrypt(c.metadata.JsonRpcUrl!, session.secret),
+              aes256gcm.decrypt(c.metadata.overrideNetwork!, session.secret),
             ),
           ),
         )
         .subscribe({
-          next: respectDappDefaultNetwork => {
-            console.log(respectDappDefaultNetwork);
-            console.log(this.dappDefaultChainCallback);
-            if (
-              respectDappDefaultNetwork === "true" &&
+          next: ([chainId, jsonRpcUrl, overrideNetwork]) => {
+            if (overrideNetwork === "true" && this.chainCallback) {
+              this.chainCallback(chainId, jsonRpcUrl);
+            } else if (
+              overrideNetwork === "false" &&
               this.dappDefaultChainCallback
             ) {
-              console.log("HEYHEYHEYHEY");
               this.dappDefaultChainCallback();
             }
           },
@@ -322,7 +325,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
               c.metadata &&
               c.metadata.ChainId !== undefined &&
               c.metadata.JsonRpcUrl !== undefined &&
-              c.metadata.respectDappDefaultNetwork === undefined,
+              c.metadata.overrideNetwork === undefined,
           ),
         )
         .pipe(
