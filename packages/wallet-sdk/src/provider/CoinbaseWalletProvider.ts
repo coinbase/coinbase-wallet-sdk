@@ -1,25 +1,25 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import SafeEventEmitter from '@metamask/safe-event-emitter';
-import BN from 'bn.js';
-import { ethErrors } from 'eth-rpc-errors';
+import SafeEventEmitter from "@metamask/safe-event-emitter";
+import BN from "bn.js";
+import { ethErrors } from "eth-rpc-errors";
 
-import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { EthereumTransactionParams } from '../relay/EthereumTransactionParams';
-import { Session } from '../relay/Session';
+import { DiagnosticLogger, EVENTS } from "../connection/DiagnosticLogger";
+import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
+import { EthereumTransactionParams } from "../relay/EthereumTransactionParams";
+import { Session } from "../relay/Session";
 import {
   LOCAL_STORAGE_ADDRESSES_KEY,
   WalletSDKRelayAbstract,
-} from '../relay/WalletSDKRelayAbstract';
-import { WalletSDKRelayEventManager } from '../relay/WalletSDKRelayEventManager';
+} from "../relay/WalletSDKRelayAbstract";
+import { WalletSDKRelayEventManager } from "../relay/WalletSDKRelayEventManager";
 import {
   ErrorResponse,
   RequestEthereumAccountsResponse,
   SwitchResponse,
-} from '../relay/Web3Response';
-import { AddressString, Callback, IntNumber, ProviderType } from '../types';
+} from "../relay/Web3Response";
+import { AddressString, Callback, IntNumber, ProviderType } from "../types";
 import {
   ensureAddressString,
   ensureBN,
@@ -30,22 +30,22 @@ import {
   ensureRegExpString,
   hexStringFromIntNumber,
   prepend0x,
-} from '../util';
-import eip712 from '../vendor-js/eth-eip712-util';
-import { FilterPolyfill } from './FilterPolyfill';
-import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from './JSONRPC';
+} from "../util";
+import eip712 from "../vendor-js/eth-eip712-util";
+import { FilterPolyfill } from "./FilterPolyfill";
+import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from "./JSONRPC";
 import {
   SubscriptionManager,
   SubscriptionNotification,
   SubscriptionResult,
-} from './SubscriptionManager';
-import { RequestArguments, Web3Provider } from './Web3Provider';
+} from "./SubscriptionManager";
+import { RequestArguments, Web3Provider } from "./Web3Provider";
 
-const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
-const DEFAULT_JSON_RPC_URL = 'DefaultJsonRpcUrl';
+const DEFAULT_CHAIN_ID_KEY = "DefaultChainId";
+const DEFAULT_JSON_RPC_URL = "DefaultJsonRpcUrl";
 // Indicates chain has been switched by switchEthereumChain or addEthereumChain request
-const HAS_CHAIN_BEEN_SWITCHED_KEY = 'HasChainBeenSwitched';
-const HAS_CHAIN_OVERRIDDEN_FROM_RELAY = 'HasChainOverriddenFromRelay';
+const HAS_CHAIN_BEEN_SWITCHED_KEY = "HasChainBeenSwitched";
+const HAS_CHAIN_OVERRIDDEN_FROM_RELAY = "HasChainOverriddenFromRelay";
 
 export interface CoinbaseWalletProviderOptions {
   chainId?: number;
@@ -88,7 +88,10 @@ interface WatchAssetParams {
   };
 }
 
-export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Provider {
+export class CoinbaseWalletProvider
+  extends SafeEventEmitter
+  implements Web3Provider
+{
   // So dapps can easily identify Coinbase Wallet for enabling features like 3085 network switcher menus
   public readonly isCoinbaseWallet: boolean;
   // So dapps can easily identify Coinbase Dapp Browser for enabling dapp browser specific features
@@ -149,21 +152,23 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
     const chainId = this.getChainId();
     const chainIdStr = prepend0x(chainId.toString(16));
     // indicate that we've connected, for EIP-1193 compliance
-    this.emit('connect', { chainIdStr });
+    this.emit("connect", { chainIdStr });
 
     const cachedAddresses = this._storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
     if (cachedAddresses) {
-      const addresses = cachedAddresses.split(' ') as AddressString[];
-      if (addresses[0] !== '') {
-        this._addresses = addresses.map((address) => ensureAddressString(address));
-        this.emit('accountsChanged', addresses);
+      const addresses = cachedAddresses.split(" ") as AddressString[];
+      if (addresses[0] !== "") {
+        this._addresses = addresses.map(address =>
+          ensureAddressString(address),
+        );
+        this.emit("accountsChanged", addresses);
       }
     }
 
     this._subscriptionManager.events.on(
-      'notification',
+      "notification",
       (notification: SubscriptionNotification) => {
-        this.emit('message', {
+        this.emit("message", {
           type: notification.method,
           data: notification.params,
         });
@@ -174,10 +179,10 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
       void this.initializeRelay();
     }
 
-    window.addEventListener('message', (event) => {
-      if (event.data.type !== 'walletLinkMessage') return; // compatibility with CBW extension
+    window.addEventListener("message", event => {
+      if (event.data.type !== "walletLinkMessage") return; // compatibility with CBW extension
 
-      if (event.data.data.action === 'defaultChainChanged') {
+      if (event.data.data.action === "defaultChainChanged") {
         const _chainId = event.data.data.chainId;
         const jsonRpcUrl = event.data.data.jsonRpcUrl ?? this.jsonRpcUrl;
         this.updateProviderInfo(jsonRpcUrl, Number(_chainId), true);
@@ -223,7 +228,9 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
   }
 
   private get jsonRpcUrl(): string {
-    return this._storage.getItem(DEFAULT_JSON_RPC_URL) ?? this._jsonRpcUrlFromOpts;
+    return (
+      this._storage.getItem(DEFAULT_JSON_RPC_URL) ?? this._jsonRpcUrlFromOpts
+    );
   }
 
   private set jsonRpcUrl(value: string) {
@@ -231,7 +238,7 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
   }
 
   private get isChainOverridden(): boolean {
-    return this._storage.getItem(HAS_CHAIN_OVERRIDDEN_FROM_RELAY) === 'true';
+    return this._storage.getItem(HAS_CHAIN_OVERRIDDEN_FROM_RELAY) === "true";
   }
 
   private set isChainOverridden(value: boolean) {
@@ -249,8 +256,13 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
     this.updateProviderInfo(jsonRpcUrl, this.getChainId(), false);
   }
 
-  private updateProviderInfo(jsonRpcUrl: string, chainId: number, fromRelay: boolean) {
-    const hasChainSwitched = this._storage.getItem(HAS_CHAIN_BEEN_SWITCHED_KEY) === 'true';
+  private updateProviderInfo(
+    jsonRpcUrl: string,
+    chainId: number,
+    fromRelay: boolean,
+  ) {
+    const hasChainSwitched =
+      this._storage.getItem(HAS_CHAIN_BEEN_SWITCHED_KEY) === "true";
     if (hasChainSwitched && fromRelay) return;
     if (fromRelay) {
       this.isChainOverridden = true;
@@ -263,7 +275,7 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
     this._storage.setItem(DEFAULT_CHAIN_ID_KEY, chainId.toString(10));
     const chainChanged = ensureIntNumber(chainId) !== originalChainId;
     if (chainChanged || !this.hasMadeFirstChainChangedEmission) {
-      this.emit('chainChanged', this.getChainId());
+      this.emit("chainChanged", this.getChainId());
       this.hasMadeFirstChainChangedEmission = true;
     }
   }
@@ -306,7 +318,9 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
     }
 
     const relay = await this.initializeRelay();
-    const isWhitelistedNetworkOrStandalone = relay.inlineAddEthereumChain(chainId.toString());
+    const isWhitelistedNetworkOrStandalone = relay.inlineAddEthereumChain(
+      chainId.toString(),
+    );
 
     if (!this._isAuthorized() && !isWhitelistedNetworkOrStandalone) {
       await relay.requestEthereumAccounts().promise;
@@ -322,7 +336,7 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
     ).promise;
 
     if (res.result?.isApproved === true) {
-      this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, 'true');
+      this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true");
       this.updateProviderInfo(rpcUrls[0], chainId, false);
     }
 
@@ -345,20 +359,24 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
 
     const switchResponse = res.result as SwitchResponse;
     if (switchResponse.isApproved && switchResponse.rpcUrl.length > 0) {
-      this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, 'true');
+      this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true");
       this.updateProviderInfo(switchResponse.rpcUrl, chainId, false);
     }
   }
 
   public setAppInfo(appName: string, appLogoUrl: string | null): void {
-    void this.initializeRelay().then((relay) => relay.setAppInfo(appName, appLogoUrl));
+    void this.initializeRelay().then(relay =>
+      relay.setAppInfo(appName, appLogoUrl),
+    );
   }
 
   public async enable(): Promise<AddressString[]> {
     this.diagnostic?.log(EVENTS.ETH_ACCOUNTS_STATE, {
-      method: 'provider::enable',
+      method: "provider::enable",
       addresses_length: this._addresses.length,
-      sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : undefined,
+      sessionIdHash: this._relay
+        ? Session.hash(this._relay.session.id)
+        : undefined,
     });
 
     if (this._addresses.length > 0) {
@@ -375,15 +393,25 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
 
   public send(request: JSONRPCRequest): JSONRPCResponse;
   public send(request: JSONRPCRequest[]): JSONRPCResponse[];
-  public send(request: JSONRPCRequest, callback: Callback<JSONRPCResponse>): void;
-  public send(request: JSONRPCRequest[], callback: Callback<JSONRPCResponse[]>): void;
+  public send(
+    request: JSONRPCRequest,
+    callback: Callback<JSONRPCResponse>,
+  ): void;
+  public send(
+    request: JSONRPCRequest[],
+    callback: Callback<JSONRPCResponse[]>,
+  ): void;
   public send<T = any>(method: string, params?: any[] | any): Promise<T>;
   public send(
     requestOrMethod: JSONRPCRequest | JSONRPCRequest[] | string,
-    callbackOrParams?: Callback<JSONRPCResponse> | Callback<JSONRPCResponse[]> | any[] | any,
+    callbackOrParams?:
+      | Callback<JSONRPCResponse>
+      | Callback<JSONRPCResponse[]>
+      | any[]
+      | any,
   ): JSONRPCResponse | JSONRPCResponse[] | void | Promise<any> {
     // send<T>(method, params): Promise<T>
-    if (typeof requestOrMethod === 'string') {
+    if (typeof requestOrMethod === "string") {
       const method = requestOrMethod;
       const params = Array.isArray(callbackOrParams)
         ? callbackOrParams
@@ -391,16 +419,16 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
         ? [callbackOrParams]
         : [];
       const request: JSONRPCRequest = {
-        jsonrpc: '2.0',
+        jsonrpc: "2.0",
         id: 0,
         method,
         params,
       };
-      return this._sendRequestAsync(request).then((res) => res.result);
+      return this._sendRequestAsync(request).then(res => res.result);
     }
 
     // send(JSONRPCRequest | JSONRPCRequest[], callback): void
-    if (typeof callbackOrParams === 'function') {
+    if (typeof callbackOrParams === "function") {
       const request = requestOrMethod as any;
       const callback = callbackOrParams;
       return this._sendAsync(request, callback);
@@ -409,7 +437,7 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
     // send(JSONRPCRequest[]): JSONRPCResponse[]
     if (Array.isArray(requestOrMethod)) {
       const requests = requestOrMethod;
-      return requests.map((r) => this._sendRequest(r));
+      return requests.map(r => this._sendRequest(r));
     }
 
     // send(JSONRPCRequest): JSONRPCResponse
@@ -417,43 +445,49 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
     return this._sendRequest(req);
   }
 
-  public sendAsync(request: JSONRPCRequest, callback: Callback<JSONRPCResponse>): void;
-  public sendAsync(request: JSONRPCRequest[], callback: Callback<JSONRPCResponse[]>): void;
+  public sendAsync(
+    request: JSONRPCRequest,
+    callback: Callback<JSONRPCResponse>,
+  ): void;
+  public sendAsync(
+    request: JSONRPCRequest[],
+    callback: Callback<JSONRPCResponse[]>,
+  ): void;
   public async sendAsync(
     request: JSONRPCRequest | JSONRPCRequest[],
     callback: Callback<JSONRPCResponse> | Callback<JSONRPCResponse[]>,
   ): Promise<void> {
-    if (typeof callback !== 'function') {
-      throw new Error('callback is required');
+    if (typeof callback !== "function") {
+      throw new Error("callback is required");
     }
 
     // send(JSONRPCRequest[], callback): void
     if (Array.isArray(request)) {
       const arrayCb = callback as Callback<JSONRPCResponse[]>;
       this._sendMultipleRequestsAsync(request)
-        .then((responses) => arrayCb(null, responses))
-        .catch((err) => arrayCb(err, null));
+        .then(responses => arrayCb(null, responses))
+        .catch(err => arrayCb(err, null));
       return;
     }
 
     // send(JSONRPCRequest, callback): void
     const cb = callback as Callback<JSONRPCResponse>;
     return this._sendRequestAsync(request)
-      .then((response) => cb(null, response))
-      .catch((err) => cb(err, null));
+      .then(response => cb(null, response))
+      .catch(err => cb(err, null));
   }
 
   public async request<T>(args: RequestArguments): Promise<T> {
-    if (!args || typeof args !== 'object' || Array.isArray(args)) {
+    if (!args || typeof args !== "object" || Array.isArray(args)) {
       throw ethErrors.rpc.invalidRequest({
-        message: 'Expected a single, non-array, object argument.',
+        message: "Expected a single, non-array, object argument.",
         data: args,
       });
     }
 
     const { method, params } = args;
 
-    if (typeof method !== 'string' || method.length === 0) {
+    if (typeof method !== "string" || method.length === 0) {
       throw ethErrors.rpc.invalidRequest({
         message: "'args.method' must be a non-empty string.",
         data: args,
@@ -463,7 +497,7 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
     if (
       params !== undefined &&
       !Array.isArray(params) &&
-      (typeof params !== 'object' || params === null)
+      (typeof params !== "object" || params === null)
     ) {
       throw ethErrors.rpc.invalidRequest({
         message: "'args.params' must be an object or array if provided.",
@@ -478,7 +512,7 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
     const result = await this._sendRequestAsync({
       method,
       params: newParams,
-      jsonrpc: '2.0',
+      jsonrpc: "2.0",
       id,
     });
 
@@ -488,8 +522,8 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
   public async scanQRCode(match?: RegExp): Promise<string> {
     const relay = await this.initializeRelay();
     const res = await relay.scanQRCode(ensureRegExpString(match)).promise;
-    if (typeof res.result !== 'string') {
-      throw new Error('result was not a string');
+    if (typeof res.result !== "string") {
+      throw new Error("result was not a string");
     }
     return res.result;
   }
@@ -497,17 +531,19 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
   public async genericRequest(data: object, action: string): Promise<string> {
     const relay = await this.initializeRelay();
     const res = await relay.genericRequest(data, action).promise;
-    if (typeof res.result !== 'string') {
-      throw new Error('result was not a string');
+    if (typeof res.result !== "string") {
+      throw new Error("result was not a string");
     }
     return res.result;
   }
 
-  public async selectProvider(providerOptions: ProviderType[]): Promise<ProviderType> {
+  public async selectProvider(
+    providerOptions: ProviderType[],
+  ): Promise<ProviderType> {
     const relay = await this.initializeRelay();
     const res = await relay.selectProvider(providerOptions).promise;
-    if (typeof res.result !== 'string') {
-      throw new Error('result was not a string');
+    if (typeof res.result !== "string") {
+      throw new Error("result was not a string");
     }
     return res.result;
   }
@@ -517,11 +553,11 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
   }
 
   public subscribe(): void {
-    throw new Error('Subscriptions are not supported');
+    throw new Error("Subscriptions are not supported");
   }
 
   public unsubscribe(): void {
-    throw new Error('Subscriptions are not supported');
+    throw new Error("Subscriptions are not supported");
   }
 
   public disconnect(): boolean {
@@ -533,7 +569,7 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
 
   private _sendRequest(request: JSONRPCRequest): JSONRPCResponse {
     const response: JSONRPCResponse = {
-      jsonrpc: '2.0',
+      jsonrpc: "2.0",
       id: request.id,
     };
     const { method } = request;
@@ -553,16 +589,20 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
 
   private _setAddresses(addresses: string[], isDisconnect?: boolean): void {
     if (!Array.isArray(addresses)) {
-      throw new Error('addresses is not an array');
+      throw new Error("addresses is not an array");
     }
 
-    const newAddresses = addresses.map((address) => ensureAddressString(address));
+    const newAddresses = addresses.map(address => ensureAddressString(address));
 
     if (JSON.stringify(newAddresses) === JSON.stringify(this._addresses)) {
       return;
     }
 
-    if (this._addresses.length > 0 && this.supportsAddressSwitching === false && !isDisconnect) {
+    if (
+      this._addresses.length > 0 &&
+      this.supportsAddressSwitching === false &&
+      !isDisconnect
+    ) {
       /**
        * The extension currently doesn't support switching selected wallet index
        * make sure walletlink doesn't update it's address in this case
@@ -571,8 +611,8 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
     }
 
     this._addresses = newAddresses;
-    this.emit('accountsChanged', this._addresses);
-    this._storage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, newAddresses.join(' '));
+    this.emit("accountsChanged", this._addresses);
+    this._storage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, newAddresses.join(" "));
   }
 
   private _sendRequestAsync(request: JSONRPCRequest): Promise<JSONRPCResponse> {
@@ -581,7 +621,7 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
         const syncResult = this._handleSynchronousMethods(request);
         if (syncResult !== undefined) {
           return resolve({
-            jsonrpc: '2.0',
+            jsonrpc: "2.0",
             id: request.id,
             result: syncResult,
           });
@@ -590,22 +630,22 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
         const filterPromise = this._handleAsynchronousFilterMethods(request);
         if (filterPromise !== undefined) {
           filterPromise
-            .then((res) => resolve({ ...res, id: request.id }))
-            .catch((err) => reject(err));
+            .then(res => resolve({ ...res, id: request.id }))
+            .catch(err => reject(err));
           return;
         }
 
         const subscriptionPromise = this._handleSubscriptionMethods(request);
         if (subscriptionPromise !== undefined) {
           subscriptionPromise
-            .then((res) =>
+            .then(res =>
               resolve({
-                jsonrpc: '2.0',
+                jsonrpc: "2.0",
                 id: request.id,
                 result: res.result,
               }),
             )
-            .catch((err) => reject(err));
+            .catch(err => reject(err));
           return;
         }
       } catch (err: any) {
@@ -613,13 +653,15 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
       }
 
       this._handleAsynchronousMethods(request)
-        .then((res) => res && resolve({ ...res, id: request.id }))
-        .catch((err) => reject(err));
+        .then(res => res && resolve({ ...res, id: request.id }))
+        .catch(err => reject(err));
     });
   }
 
-  private _sendMultipleRequestsAsync(requests: JSONRPCRequest[]): Promise<JSONRPCResponse[]> {
-    return Promise.all(requests.map((r) => this._sendRequestAsync(r)));
+  private _sendMultipleRequestsAsync(
+    requests: JSONRPCRequest[],
+  ): Promise<JSONRPCResponse[]> {
+    return Promise.all(requests.map(r => this._sendRequestAsync(r)));
   }
 
   private _handleSynchronousMethods(request: JSONRPCRequest) {
@@ -749,7 +791,9 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
   private _isKnownAddress(addressString: string): boolean {
     try {
       const addressStr = ensureAddressString(addressString);
-      const lowercaseAddresses = this._addresses.map((address) => ensureAddressString(address));
+      const lowercaseAddresses = this._addresses.map(address =>
+        ensureAddressString(address),
+      );
       return lowercaseAddresses.includes(addressStr);
     } catch {}
     return false;
@@ -758,7 +802,7 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
   private _ensureKnownAddress(addressString: string): void {
     if (!this._isKnownAddress(addressString)) {
       this.diagnostic?.log(EVENTS.UNKNOWN_ADDRESS_ENCOUNTERED);
-      throw new Error('Unknown Ethereum address');
+      throw new Error("Unknown Ethereum address");
     }
   }
 
@@ -773,9 +817,11 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
     data?: unknown;
     nonce?: unknown;
   }): EthereumTransactionParams {
-    const fromAddress = tx.from ? ensureAddressString(tx.from) : this.selectedAddress;
+    const fromAddress = tx.from
+      ? ensureAddressString(tx.from)
+      : this.selectedAddress;
     if (!fromAddress) {
-      throw new Error('Ethereum address is unavailable');
+      throw new Error("Ethereum address is unavailable");
     }
 
     this._ensureKnownAddress(fromAddress);
@@ -785,9 +831,12 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
     const data = tx.data ? ensureBuffer(tx.data) : Buffer.alloc(0);
     const nonce = tx.nonce != null ? ensureIntNumber(tx.nonce) : null;
     const gasPriceInWei = tx.gasPrice != null ? ensureBN(tx.gasPrice) : null;
-    const maxFeePerGas = tx.maxFeePerGas != null ? ensureBN(tx.maxFeePerGas) : null;
+    const maxFeePerGas =
+      tx.maxFeePerGas != null ? ensureBN(tx.maxFeePerGas) : null;
     const maxPriorityFeePerGas =
-      tx.maxPriorityFeePerGas != null ? ensureBN(tx.maxPriorityFeePerGas) : null;
+      tx.maxPriorityFeePerGas != null
+        ? ensureBN(tx.maxPriorityFeePerGas)
+        : null;
     const gasLimit = tx.gas != null ? ensureBN(tx.gas) : null;
     const chainId = this.getChainId();
 
@@ -829,12 +878,21 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
 
     try {
       const relay = await this.initializeRelay();
-      const res = await relay.signEthereumMessage(message, address, addPrefix, typedDataJson)
-        .promise;
-      return { jsonrpc: '2.0', id: 0, result: res.result };
+      const res = await relay.signEthereumMessage(
+        message,
+        address,
+        addPrefix,
+        typedDataJson,
+      ).promise;
+      return { jsonrpc: "2.0", id: 0, result: res.result };
     } catch (err: any) {
-      if (typeof err.message === 'string' && err.message.match(/(denied|rejected)/i)) {
-        throw ethErrors.provider.userRejectedRequest('User denied message signature');
+      if (
+        typeof err.message === "string" &&
+        err.message.match(/(denied|rejected)/i)
+      ) {
+        throw ethErrors.provider.userRejectedRequest(
+          "User denied message signature",
+        );
       }
       throw err;
     }
@@ -846,8 +904,12 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
     addPrefix: boolean,
   ): Promise<JSONRPCResponse> {
     const relay = await this.initializeRelay();
-    const res = await relay.ethereumAddressFromSignedMessage(message, signature, addPrefix).promise;
-    return { jsonrpc: '2.0', id: 0, result: res.result };
+    const res = await relay.ethereumAddressFromSignedMessage(
+      message,
+      signature,
+      addPrefix,
+    ).promise;
+    return { jsonrpc: "2.0", id: 0, result: res.result };
   }
 
   private _eth_accounts(): string[] {
@@ -867,21 +929,23 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
   }
 
   private getChainId(): IntNumber {
-    const chainIdStr = this._storage.getItem(DEFAULT_CHAIN_ID_KEY) || '1';
+    const chainIdStr = this._storage.getItem(DEFAULT_CHAIN_ID_KEY) || "1";
     const chainId = parseInt(chainIdStr, 10);
     return ensureIntNumber(chainId);
   }
 
   private async _eth_requestAccounts(): Promise<JSONRPCResponse> {
     this.diagnostic?.log(EVENTS.ETH_ACCOUNTS_STATE, {
-      method: 'provider::_eth_requestAccounts',
+      method: "provider::_eth_requestAccounts",
       addresses_length: this._addresses.length,
-      sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : undefined,
+      sessionIdHash: this._relay
+        ? Session.hash(this._relay.session.id)
+        : undefined,
     });
 
     if (this._addresses.length > 0) {
       return Promise.resolve({
-        jsonrpc: '2.0',
+        jsonrpc: "2.0",
         id: 0,
         result: this._addresses,
       });
@@ -892,18 +956,23 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
       const relay = await this.initializeRelay();
       res = await relay.requestEthereumAccounts().promise;
     } catch (err: any) {
-      if (typeof err.message === 'string' && err.message.match(/(denied|rejected)/i)) {
-        throw ethErrors.provider.userRejectedRequest('User denied account authorization');
+      if (
+        typeof err.message === "string" &&
+        err.message.match(/(denied|rejected)/i)
+      ) {
+        throw ethErrors.provider.userRejectedRequest(
+          "User denied account authorization",
+        );
       }
       throw err;
     }
 
     if (!res.result) {
-      throw new Error('accounts received is empty');
+      throw new Error("accounts received is empty");
     }
 
     this._setAddresses(res.result);
-    return { jsonrpc: '2.0', id: 0, result: this._addresses };
+    return { jsonrpc: "2.0", id: 0, result: this._addresses };
   }
 
   private _eth_sign(params: unknown[]): Promise<JSONRPCResponse> {
@@ -935,44 +1004,65 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
     return this._ethereumAddressFromSignedMessage(message, signature, true);
   }
 
-  private async _eth_signTransaction(params: unknown[]): Promise<JSONRPCResponse> {
+  private async _eth_signTransaction(
+    params: unknown[],
+  ): Promise<JSONRPCResponse> {
     this._requireAuthorization();
     const tx = this._prepareTransactionParams((params[0] as any) || {});
     try {
       const relay = await this.initializeRelay();
       const res = await relay.signEthereumTransaction(tx).promise;
-      return { jsonrpc: '2.0', id: 0, result: res.result };
+      return { jsonrpc: "2.0", id: 0, result: res.result };
     } catch (err: any) {
-      if (typeof err.message === 'string' && err.message.match(/(denied|rejected)/i)) {
-        throw ethErrors.provider.userRejectedRequest('User denied transaction signature');
+      if (
+        typeof err.message === "string" &&
+        err.message.match(/(denied|rejected)/i)
+      ) {
+        throw ethErrors.provider.userRejectedRequest(
+          "User denied transaction signature",
+        );
       }
       throw err;
     }
   }
 
-  private async _eth_sendRawTransaction(params: unknown[]): Promise<JSONRPCResponse> {
+  private async _eth_sendRawTransaction(
+    params: unknown[],
+  ): Promise<JSONRPCResponse> {
     const signedTransaction = ensureBuffer(params[0]);
     const relay = await this.initializeRelay();
-    const res = await relay.submitEthereumTransaction(signedTransaction, this.getChainId()).promise;
-    return { jsonrpc: '2.0', id: 0, result: res.result };
+    const res = await relay.submitEthereumTransaction(
+      signedTransaction,
+      this.getChainId(),
+    ).promise;
+    return { jsonrpc: "2.0", id: 0, result: res.result };
   }
 
-  private async _eth_sendTransaction(params: unknown[]): Promise<JSONRPCResponse> {
+  private async _eth_sendTransaction(
+    params: unknown[],
+  ): Promise<JSONRPCResponse> {
     this._requireAuthorization();
     const tx = this._prepareTransactionParams((params[0] as any) || {});
     try {
       const relay = await this.initializeRelay();
       const res = await relay.signAndSubmitEthereumTransaction(tx).promise;
-      return { jsonrpc: '2.0', id: 0, result: res.result };
+      return { jsonrpc: "2.0", id: 0, result: res.result };
     } catch (err: any) {
-      if (typeof err.message === 'string' && err.message.match(/(denied|rejected)/i)) {
-        throw ethErrors.provider.userRejectedRequest('User denied transaction signature');
+      if (
+        typeof err.message === "string" &&
+        err.message.match(/(denied|rejected)/i)
+      ) {
+        throw ethErrors.provider.userRejectedRequest(
+          "User denied transaction signature",
+        );
       }
       throw err;
     }
   }
 
-  private async _eth_signTypedData_v1(params: unknown[]): Promise<JSONRPCResponse> {
+  private async _eth_signTypedData_v1(
+    params: unknown[],
+  ): Promise<JSONRPCResponse> {
     this._requireAuthorization();
     const typedData = ensureParsedJSONObject(params[0]);
     const address = ensureAddressString(params[1]);
@@ -985,7 +1075,9 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
     return this._signEthereumMessage(message, address, false, typedDataJSON);
   }
 
-  private async _eth_signTypedData_v3(params: unknown[]): Promise<JSONRPCResponse> {
+  private async _eth_signTypedData_v3(
+    params: unknown[],
+  ): Promise<JSONRPCResponse> {
     this._requireAuthorization();
     const address = ensureAddressString(params[0]);
     const typedData = ensureParsedJSONObject(params[1]);
@@ -998,7 +1090,9 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
     return this._signEthereumMessage(message, address, false, typedDataJSON);
   }
 
-  private async _eth_signTypedData_v4(params: unknown[]): Promise<JSONRPCResponse> {
+  private async _eth_signTypedData_v4(
+    params: unknown[],
+  ): Promise<JSONRPCResponse> {
     this._requireAuthorization();
     const address = ensureAddressString(params[0]);
     const typedData = ensureParsedJSONObject(params[1]);
@@ -1012,43 +1106,47 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
   }
 
   /** @deprecated */
-  private async _cbwallet_arbitrary(params: unknown[]): Promise<JSONRPCResponse> {
+  private async _cbwallet_arbitrary(
+    params: unknown[],
+  ): Promise<JSONRPCResponse> {
     const action = params[0];
     const data = params[1];
-    if (typeof data !== 'string') {
-      throw new Error('parameter must be a string');
+    if (typeof data !== "string") {
+      throw new Error("parameter must be a string");
     }
 
-    if (typeof action !== 'object' || action === null) {
-      throw new Error('parameter must be an object');
+    if (typeof action !== "object" || action === null) {
+      throw new Error("parameter must be an object");
     }
 
     const result = await this.genericRequest(action, data);
-    return { jsonrpc: '2.0', id: 0, result };
+    return { jsonrpc: "2.0", id: 0, result };
   }
 
-  private async _wallet_addEthereumChain(params: unknown[]): Promise<JSONRPCResponse> {
+  private async _wallet_addEthereumChain(
+    params: unknown[],
+  ): Promise<JSONRPCResponse> {
     const request = params[0] as AddEthereumChainParams;
 
     if (request.rpcUrls?.length === 0) {
       return {
-        jsonrpc: '2.0',
+        jsonrpc: "2.0",
         id: 0,
         error: { code: 2, message: `please pass in at least 1 rpcUrl` },
       };
     }
 
-    if (!request.chainName || request.chainName.trim() === '') {
+    if (!request.chainName || request.chainName.trim() === "") {
       throw ethErrors.provider.custom({
         code: 0,
-        message: 'chainName is a required field',
+        message: "chainName is a required field",
       });
     }
 
     if (!request.nativeCurrency) {
       throw ethErrors.provider.custom({
         code: 0,
-        message: 'nativeCurrency is a required field',
+        message: "nativeCurrency is a required field",
       });
     }
 
@@ -1062,31 +1160,35 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
       request.nativeCurrency,
     );
     if (success) {
-      return { jsonrpc: '2.0', id: 0, result: null };
+      return { jsonrpc: "2.0", id: 0, result: null };
     } else {
       return {
-        jsonrpc: '2.0',
+        jsonrpc: "2.0",
         id: 0,
         error: { code: 2, message: `unable to add ethereum chain` },
       };
     }
   }
 
-  private async _wallet_switchEthereumChain(params: unknown[]): Promise<JSONRPCResponse> {
+  private async _wallet_switchEthereumChain(
+    params: unknown[],
+  ): Promise<JSONRPCResponse> {
     const request = params[0] as SwitchEthereumChainParams;
     await this.switchEthereumChain(parseInt(request.chainId, 16));
-    return { jsonrpc: '2.0', id: 0, result: null };
+    return { jsonrpc: "2.0", id: 0, result: null };
   }
 
   private async _wallet_watchAsset(params: unknown): Promise<JSONRPCResponse> {
-    const request = (Array.isArray(params) ? params[0] : params) as WatchAssetParams;
+    const request = (
+      Array.isArray(params) ? params[0] : params
+    ) as WatchAssetParams;
     if (!request.type) {
       throw ethErrors.rpc.invalidParams({
-        message: 'Type is required',
+        message: "Type is required",
       });
     }
 
-    if (request?.type !== 'ERC20') {
+    if (request?.type !== "ERC20") {
       throw ethErrors.rpc.invalidParams({
         message: `Asset of type '${request.type}' is not supported`,
       });
@@ -1094,22 +1196,29 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
 
     if (!request?.options) {
       throw ethErrors.rpc.invalidParams({
-        message: 'Options are required',
+        message: "Options are required",
       });
     }
 
     if (!request?.options.address) {
       throw ethErrors.rpc.invalidParams({
-        message: 'Address is required',
+        message: "Address is required",
       });
     }
 
     const chainId = this.getChainId();
     const { address, symbol, image, decimals } = request.options;
 
-    const res = await this.watchAsset(request.type, address, symbol, decimals, image, chainId);
+    const res = await this.watchAsset(
+      request.type,
+      address,
+      symbol,
+      decimals,
+      image,
+      chainId,
+    );
 
-    return { jsonrpc: '2.0', id: 0, result: res };
+    return { jsonrpc: "2.0", id: 0, result: res };
   }
 
   private _eth_uninstallFilter(params: unknown[]): boolean {
@@ -1120,17 +1229,17 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
   private async _eth_newFilter(params: unknown[]): Promise<JSONRPCResponse> {
     const param = params[0] as any;
     const filterId = await this._filterPolyfill.newFilter(param);
-    return { jsonrpc: '2.0', id: 0, result: filterId };
+    return { jsonrpc: "2.0", id: 0, result: filterId };
   }
 
   private async _eth_newBlockFilter(): Promise<JSONRPCResponse> {
     const filterId = await this._filterPolyfill.newBlockFilter();
-    return { jsonrpc: '2.0', id: 0, result: filterId };
+    return { jsonrpc: "2.0", id: 0, result: filterId };
   }
 
   private async _eth_newPendingTransactionFilter(): Promise<JSONRPCResponse> {
     const filterId = await this._filterPolyfill.newPendingTransactionFilter();
-    return { jsonrpc: '2.0', id: 0, result: filterId };
+    return { jsonrpc: "2.0", id: 0, result: filterId };
   }
 
   private _eth_getFilterChanges(params: unknown[]): Promise<JSONRPCResponse> {
@@ -1148,7 +1257,7 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
       return Promise.resolve(this._relay);
     }
 
-    return this._relayProvider().then((relay) => {
+    return this._relayProvider().then(relay => {
       relay.setAccountsCallback((accounts, isDisconnect) =>
         this._setAddresses(accounts, isDisconnect),
       );
