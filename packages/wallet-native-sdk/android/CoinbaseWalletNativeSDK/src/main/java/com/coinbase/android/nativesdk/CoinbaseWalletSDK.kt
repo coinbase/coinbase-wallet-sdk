@@ -8,6 +8,7 @@ import com.coinbase.android.nativesdk.message.MessageConverter
 import com.coinbase.android.nativesdk.message.request.Action
 import com.coinbase.android.nativesdk.message.request.RequestContent
 import com.coinbase.android.nativesdk.message.request.RequestMessage
+import com.coinbase.android.nativesdk.message.request.nonHandshakeActions
 import com.coinbase.android.nativesdk.message.response.FailureResponseCallback
 import com.coinbase.android.nativesdk.message.response.ResponseHandler
 import com.coinbase.android.nativesdk.message.response.SuccessResponseCallback
@@ -64,6 +65,13 @@ class CoinbaseWalletSDK(
         onResponse: ResponseHandler
     ) {
         resetSession()
+
+        val hasIllegalAction = initialActions?.any { nonHandshakeActions.contains(it.method) } == true
+        if (hasIllegalAction) {
+            onResponse(Result.failure(CoinbaseWalletSDKError.InvalidHandshakeRequest))
+            return
+        }
+
         val message = RequestMessage(
             uuid = UUID.randomUUID().toString(),
             version = sdkVersion,
@@ -185,5 +193,4 @@ class CoinbaseWalletSDK(
     private fun isWalletSegueResponseURL(uri: Uri): Boolean {
         return uri.host == domain.host && uri.path == domain.path && uri.getQueryParameter("p") != null
     }
-
 }

@@ -77,6 +77,18 @@ public final class CoinbaseWalletSDK {
     // MARK: - Send message
     
     public func initiateHandshake(initialActions: [Action]? = nil, onResponse: @escaping ResponseHandler) {
+        
+        let hasUnsupportedAction = initialActions?.contains(where: {
+            let action = $0
+            return unsupportedHandShakeMethod.contains(where: {action.method == $0 })
+            
+        })
+        
+        guard hasUnsupportedAction != true else {
+            onResponse(.failure(Error.invalidHandshakeRequest))
+            return
+        }
+        
         try? keyManager.resetOwnPrivateKey()
         let message = RequestMessage(
             uuid: UUID(),
@@ -88,7 +100,7 @@ public final class CoinbaseWalletSDK {
             ),
             version: version,
             timestamp: Date(),
-            callbackUrl: callback
+            callbackUrl: callback.absoluteString
         )
         self.send(message, onResponse)
     }
@@ -100,7 +112,7 @@ public final class CoinbaseWalletSDK {
             content: .request(actions: request.actions, account: request.account),
             version: version,
             timestamp: Date(),
-            callbackUrl: callback
+            callbackUrl: callback.absoluteString
         )
         return self.send(message, onResponse)
     }
@@ -132,7 +144,7 @@ public final class CoinbaseWalletSDK {
     private func isWalletSegueMessage(_ url: URL) -> Bool {
         return url.host == callback.host && url.path == callback.path
     }
-    
+
     @discardableResult
     public func handleResponse(_ url: URL) throws -> Bool {
         guard isWalletSegueMessage(url) else {

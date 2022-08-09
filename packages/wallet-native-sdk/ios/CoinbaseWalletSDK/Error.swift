@@ -13,6 +13,7 @@ extension CoinbaseWalletSDK {
         case encodingFailed
         case decodingFailed
         case missingSymmetricKey
+        case invalidHandshakeRequest
         case openUrlFailed
         case walletReturnedError(String)
     }
