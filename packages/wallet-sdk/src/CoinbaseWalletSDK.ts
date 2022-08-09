@@ -235,15 +235,19 @@ export class CoinbaseWalletSDK {
   }
 
   private get coinbaseBrowser(): CoinbaseWalletProvider | undefined {
-    // Coinbase DApp browser does not inject into iframes so grab provider from top frame if it exists
-    const ethereum = (window.ethereum ?? window.top?.ethereum) as any;
-    if (!ethereum) {
-      return undefined;
-    }
+    try {
+      // Coinbase DApp browser does not inject into iframes so grab provider from top frame if it exists
+      const ethereum = (window.ethereum ?? window.top?.ethereum) as any;
+      if (!ethereum) {
+        return undefined;
+      }
 
-    if ("isCoinbaseBrowser" in ethereum && ethereum.isCoinbaseBrowser) {
-      return ethereum;
-    } else {
+      if ("isCoinbaseBrowser" in ethereum && ethereum.isCoinbaseBrowser) {
+        return ethereum;
+      } else {
+        return undefined;
+      }
+    } catch (e) {
       return undefined;
     }
   }
