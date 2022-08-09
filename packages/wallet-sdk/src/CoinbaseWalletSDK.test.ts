@@ -204,8 +204,7 @@ describe("CoinbaseWalletSDK", () => {
 
       beforeAll(() => {
         window.ethereum = undefined;
-        window.top = window;
-        window.ethereum = mockCoinbaseBrowserProvider;
+        window.top!.ethereum = mockCoinbaseBrowserProvider;
       });
 
       test("@makeWeb3Provider", () => {
