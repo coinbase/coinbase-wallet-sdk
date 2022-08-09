@@ -9,6 +9,8 @@ import Foundation
 
 public typealias BigInt = String
 
+public let unsupportedHandShakeMethod: [String] = ["eth_signTransaction", "eth_sendTransaction"]
+
 public enum Web3JSONRPC: Codable {
     case eth_requestAccounts
     

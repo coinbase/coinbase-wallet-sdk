@@ -17,6 +17,8 @@ const val WEB3_JSON_RPC_WALLET_SWITCH_ETHEREUM_CHAIN = "wallet_switchEthereumCha
 const val WEB3_JSON_RPC_WALLET_ADD_ETHEREUM_CHAIN = "wallet_addEthereumChain"
 const val WEB3_JSON_RPC_WALLET_WATCH_ASSET = "wallet_watchAsset"
 
+val nonHandshakeActions = listOf(WEB3_JSON_RPC_ETH_SEND_TRANSACTION, WEB3_JSON_RPC_ETH_SIGN_TRANSACTION)
+
 @Suppress("unused")
 @Serializable
 sealed class Web3JsonRPC {
