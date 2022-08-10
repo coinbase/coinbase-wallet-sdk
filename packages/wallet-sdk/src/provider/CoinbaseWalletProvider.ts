@@ -1274,13 +1274,7 @@ export class CoinbaseWalletProvider
       relay.setChainCallback((chainId, jsonRpcUrl) => {
         this.updateProviderInfo(jsonRpcUrl, parseInt(chainId, 10), true);
       });
-      relay.setDappDefaultChainCallback(() => {
-        this.updateProviderInfo(
-          this._jsonRpcUrlFromOpts,
-          this._chainIdFromOpts,
-          true,
-        );
-      });
+      relay.setDappDefaultChainCallback(this._chainIdFromOpts);
       this._relay = relay;
       return relay;
     });

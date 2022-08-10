@@ -103,7 +103,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
   private chainCallback:
     | ((chainId: string, jsonRpcUrl: string) => void)
     | null = null;
-  private dappDefaultChainCallback: (() => void) | null = null;
+  private dappDefaultChain: number | null = null;
   private readonly options: WalletSDKRelayOptions;
 
   private ui: WalletUI;
@@ -299,11 +299,8 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
           next: ([chainId, jsonRpcUrl, overrideNetwork]) => {
             if (overrideNetwork === "true" && this.chainCallback) {
               this.chainCallback(chainId, jsonRpcUrl);
-            } else if (
-              overrideNetwork === "false" &&
-              this.dappDefaultChainCallback
-            ) {
-              this.dappDefaultChainCallback();
+            } else if (overrideNetwork === "false" && this.dappDefaultChain) {
+              this.switchEthereumChain(this.dappDefaultChain.toString());
             }
           },
           error: () => {
@@ -709,8 +706,8 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     this.chainCallback = chainCallback;
   }
 
-  public setDappDefaultChainCallback(dappDefaultChainCallback: () => void) {
-    this.dappDefaultChainCallback = dappDefaultChainCallback;
+  public setDappDefaultChainCallback(chainId: number) {
+    this.dappDefaultChain = chainId;
   }
 
   private publishWeb3RequestEvent(id: string, request: Web3Request): void {
