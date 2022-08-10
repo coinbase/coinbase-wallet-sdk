@@ -242,3 +242,11 @@ export function createQrUrl(
 
   return qrUrl;
 }
+
+export function isInIFrame(): boolean {
+  try {
+    return window.frameElement !== null;
+  } catch (e) {
+    return false;
+  }
+}
