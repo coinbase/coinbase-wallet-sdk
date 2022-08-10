@@ -8,15 +8,14 @@ import { SOLANA_PROVIDER_ID, SolanaProvider } from "./SolanaProvider";
 
 jest.mock("../util");
 
-jest.spyOn(ScopedLocalStorage.prototype, "setItem");
-jest.spyOn(ScopedLocalStorage.prototype, "clear");
-
 const mockAddress = "26vuBULhY7LbToM91actoETkSLZGsupiwDT7X3hEdwkP";
 const mockSolanaPublicKey = new PublicKey(mockAddress);
 const mockSolanaUnsignedTransaction = new Transaction();
 const mockSolanaSignedTransaction = new Transaction();
 
 const mockTransactionBuffer = Buffer.from([1]);
+
+const scopedStorageCopy = new ScopedLocalStorage("coinbaseSolana");
 
 jest
   .spyOn(mockSolanaSignedTransaction, "signature", "get")
@@ -66,6 +65,10 @@ describe("Solana Provider", () => {
     };
   });
 
+  afterEach(() => {
+    scopedStorageCopy.clear();
+  });
+
   it("should post request and handle response for connect", async () => {
     jest.spyOn(window, "postMessage");
     jest.spyOn(solanaProvider, "disconnect");
@@ -80,6 +83,7 @@ describe("Solana Provider", () => {
 
     expect(window.postMessage).toHaveBeenCalledWith(firstConnectMessage, "*");
     expect(window.postMessage).toHaveBeenCalledWith(requestMessage, "*");
+    expect(scopedStorageCopy.getItem("Addresses")).toBe(null);
 
     solanaProvider.handleResponse(responseMessage);
 
@@ -87,8 +91,8 @@ describe("Solana Provider", () => {
 
     expect(solanaProvider.isConnected).toBe(true);
     expect(solanaProvider.publicKey).toEqual(mockSolanaPublicKey);
-    expect(ScopedLocalStorage.prototype.setItem).toHaveBeenCalledWith(
-      "Addresses",
+
+    expect(scopedStorageCopy.getItem("Addresses")).toEqual(
       JSON.stringify([mockAddress]),
     );
   });
@@ -122,13 +126,9 @@ describe("Solana Provider", () => {
 
     responseMessage.data.data.action = SolanaWeb3Response.parentDisconnected;
 
-    expect(solanaProvider.disconnect).not.toHaveBeenCalled();
-    expect(ScopedLocalStorage.prototype.clear).not.toHaveBeenCalled();
-
     solanaProvider.handleResponse(responseMessage);
 
-    expect(ScopedLocalStorage.prototype.clear).toHaveBeenCalled();
-    expect(solanaProvider.disconnect).toHaveBeenCalled();
+    expect(scopedStorageCopy.getItem("Addresses")).toEqual(null);
     expect(solanaProvider.isConnected).toBe(false);
     expect(solanaProvider.publicKey).toBeFalsy();
   });
@@ -415,19 +415,6 @@ describe("Solana Provider", () => {
 
       return expect(signAllTransactionsPromise).rejects.toEqual(
         new Error("Could not build native transaction"),
-      );
-    });
-    it("should call signAndSendTransaction for sendTransaction", async () => {
-      jest.spyOn(solanaProvider, "signAndSendTransaction");
-      solanaProvider.sendTransaction(
-        mockSolanaUnsignedTransaction,
-        undefined,
-        {},
-      );
-      expect(solanaProvider.signAndSendTransaction).toHaveBeenCalled();
-      expect(solanaProvider.signAndSendTransaction).toHaveBeenCalledWith(
-        mockSolanaUnsignedTransaction,
-        {},
       );
     });
     it("should post and handle response for send transaction", async () => {
