@@ -1,10 +1,10 @@
+import { PublicKey, Transaction } from "@solana/web3.js";
+
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
-import { SolanaProvider, SOLANA_PROVIDER_ID } from "./SolanaProvider";
 import { SolanaWeb3Method } from "../relay/solana/SolanaWeb3Method";
 import { SolanaWeb3Response } from "../relay/solana/SolanaWeb3Response";
-import { Transaction, PublicKey } from "@solana/web3.js";
-
 import { randomBytesHex } from "../util";
+import { SOLANA_PROVIDER_ID, SolanaProvider } from "./SolanaProvider";
 
 jest.mock("../util");
 
@@ -28,16 +28,11 @@ jest
   .spyOn(Transaction.prototype, "serialize")
   .mockReturnValue(mockTransactionBuffer);
 
-// @ts-expect-error
-window.__REQUEST_PROVIDER__ = "";
-
 describe("Solana Provider", () => {
   const eventId = "testUUID";
   let solanaProvider: SolanaProvider;
   let requestMessage: any;
   let responseMessage: any;
-
-  const mockAddress = mockSolanaPublicKey.toString();
 
   const firstConnectMessage = {
     type: "solanaProviderRequest",
@@ -46,7 +41,7 @@ describe("Solana Provider", () => {
     },
   };
 
-  beforeEach(async () => {
+  beforeEach(() => {
     solanaProvider = new SolanaProvider();
     jest.spyOn(window, "postMessage");
     (randomBytesHex as jest.Mock).mockReturnValue(eventId);
@@ -90,7 +85,6 @@ describe("Solana Provider", () => {
 
     await expect(connectionPromise).resolves.toBeUndefined();
 
-    expect(solanaProvider.disconnect).not.toHaveBeenCalled();
     expect(solanaProvider.isConnected).toBe(true);
     expect(solanaProvider.publicKey).toEqual(mockSolanaPublicKey);
     expect(ScopedLocalStorage.prototype.setItem).toHaveBeenCalledWith(
@@ -111,8 +105,6 @@ describe("Solana Provider", () => {
 
     const connectionPromise = solanaProvider.connect();
 
-    expect(solanaProvider.disconnect).not.toHaveBeenCalled();
-
     solanaProvider.handleResponse(responseMessage);
 
     await expect(connectionPromise).rejects.toEqual({
@@ -120,28 +112,25 @@ describe("Solana Provider", () => {
       method: "connect",
     });
 
-    expect(solanaProvider.disconnect).toHaveBeenCalled();
     expect(solanaProvider.isConnected).toBe(false);
     expect(solanaProvider.publicKey).toBeFalsy();
   });
 
-  it("should handle parentDisconnected event", async () => {
+  it("should handle parentDisconnected event", () => {
     jest.spyOn(solanaProvider, "disconnect");
-    jest.spyOn(solanaProvider, "parentDisconnect");
     jest.spyOn(solanaProvider, "emit");
 
     responseMessage.data.data.action = SolanaWeb3Response.parentDisconnected;
 
     expect(solanaProvider.disconnect).not.toHaveBeenCalled();
-    expect(solanaProvider.parentDisconnect).not.toHaveBeenCalled();
+    expect(ScopedLocalStorage.prototype.clear).not.toHaveBeenCalled();
 
     solanaProvider.handleResponse(responseMessage);
 
-    expect(solanaProvider.parentDisconnect).toHaveBeenCalled();
+    expect(ScopedLocalStorage.prototype.clear).toHaveBeenCalled();
     expect(solanaProvider.disconnect).toHaveBeenCalled();
     expect(solanaProvider.isConnected).toBe(false);
     expect(solanaProvider.publicKey).toBeFalsy();
-    expect(ScopedLocalStorage.prototype.clear).toHaveBeenCalled();
   });
 
   describe("Testing web3 methods after connect wallet", () => {
@@ -151,7 +140,7 @@ describe("Solana Provider", () => {
       solanaProvider.isConnected = true;
     });
 
-    it("Should set pubkey when connection response success", async () => {
+    it("Should set pubkey when connection response success", () => {
       expect(solanaProvider.publicKey).toBeTruthy();
       expect(solanaProvider.publicKey).toEqual(mockSolanaPublicKey);
     });
@@ -480,39 +469,31 @@ describe("Solana Provider", () => {
     it("should throw connection error if connect is not called first", async () => {
       await expect(
         solanaProvider.signMessage(new Uint8Array(Buffer.from("message"))),
-      ).rejects.toEqual(
-        solanaProvider.getErrorResponse(
-          "signMessage",
-          "Wallet is not connected",
-        ),
-      );
+      ).rejects.toEqual({
+        method: "signMessage",
+        message: "Wallet is not connected",
+      });
 
       await expect(
         solanaProvider.signTransaction(mockSolanaUnsignedTransaction),
-      ).rejects.toEqual(
-        solanaProvider.getErrorResponse(
-          "signTransaction",
-          "Wallet is not connected",
-        ),
-      );
+      ).rejects.toEqual({
+        method: "signTransaction",
+        message: "Wallet is not connected",
+      });
 
       await expect(
         solanaProvider.signAllTransactions([mockSolanaUnsignedTransaction]),
-      ).rejects.toEqual(
-        solanaProvider.getErrorResponse(
-          "signAllTransactions",
-          "Wallet is not connected",
-        ),
-      );
+      ).rejects.toEqual({
+        method: "signAllTransactions",
+        message: "Wallet is not connected",
+      });
 
       await expect(
         solanaProvider.signAndSendTransaction(mockSolanaUnsignedTransaction),
-      ).rejects.toEqual(
-        solanaProvider.getErrorResponse(
-          "sendTransaction",
-          "Wallet is not connected",
-        ),
-      );
+      ).rejects.toEqual({
+        method: "sendTransaction",
+        message: "Wallet is not connected",
+      });
     });
   });
 });

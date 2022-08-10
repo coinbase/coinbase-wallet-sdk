@@ -1,13 +1,14 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
-import { RequestArguments } from "./Web3Provider";
 import SafeEventEmitter from "@metamask/safe-event-emitter";
-import { Transaction, PublicKey, SendOptions } from "@solana/web3.js";
-import { randomBytesHex } from "../util";
+import { PublicKey, SendOptions, Transaction } from "@solana/web3.js";
+
+import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
 import { SolanaWeb3Method } from "../relay/solana/SolanaWeb3Method";
 import { SolanaWeb3Response } from "../relay/solana/SolanaWeb3Response";
+import { randomBytesHex } from "../util";
+import { RequestArguments } from "./Web3Provider";
 export const SOLANA_PROVIDER_ID = "window.coinbaseSolana";
 
 type ErrorResponse = {
@@ -36,8 +37,8 @@ export class SolanaProvider
   extends SafeEventEmitter
   implements SolanaWeb3Provider
 {
-  private eventManager = new Map<string, any>();
-  private storage: ScopedLocalStorage = new ScopedLocalStorage(
+  private _eventManager = new Map<string, any>();
+  private _storage: ScopedLocalStorage = new ScopedLocalStorage(
     "coinbaseSolana",
   );
   isConnected: boolean;
@@ -45,11 +46,14 @@ export class SolanaProvider
 
   public constructor() {
     super();
+
     this.connect = this.connect.bind(this);
+    this.disconnect = this.disconnect.bind(this);
+    this._parentDisconnect = this._parentDisconnect.bind(this);
     this.sendTransaction = this.sendTransaction.bind(this);
     this.signMessage = this.signMessage.bind(this);
     this.signTransaction = this.signTransaction.bind(this);
-    this.request = this.request.bind(this);
+    this._request = this._request.bind(this);
     this.isConnected = false;
     this.publicKey = null;
     window.addEventListener("message", this.handleResponse);
@@ -64,7 +68,7 @@ export class SolanaProvider
     const callback = this.getCallback(id);
 
     if (callback) {
-      this.eventManager.delete(id);
+      this._eventManager.delete(id);
 
       switch (action) {
         case SolanaWeb3Response.web3RequestCanceled:
@@ -107,7 +111,7 @@ export class SolanaProvider
           break;
         case SolanaWeb3Response.featureFlagOff:
           callback(null, new Error("Feature flag is off"));
-          this.parentDisconnect();
+          this._parentDisconnect();
           break;
         default:
           // should never get here, no-op
@@ -115,24 +119,24 @@ export class SolanaProvider
           break;
       }
     } else if (action === SolanaWeb3Response.parentDisconnected) {
-      this.parentDisconnect();
+      this._parentDisconnect();
     } else {
-      console.log("call back is not register for ID", id, this.eventManager);
+      console.log("call back is not register for ID", id, this._eventManager);
     }
   };
 
   getCallback(id: string) {
-    return this.eventManager.get(id);
+    return this._eventManager.get(id);
   }
 
-  parentDisconnect() {
+  private _parentDisconnect = () => {
     // storage should only be cleared when the extension sends a disconnect event
-    this.storage.clear();
+    this._storage.clear();
 
-    this.disconnect().then(() => {
+    void this.disconnect().then(() => {
       this.emit("disconnect");
     });
-  }
+  };
 
   public async connect(): Promise<void> {
     const method = SolanaWeb3Method.connect;
@@ -146,23 +150,23 @@ export class SolanaProvider
       "*",
     );
     return new Promise((resolve, reject) => {
-      this.request({ method }, (addresses: string[], error: any) => {
+      this._request({ method }, (addresses: string[], error: any) => {
         if (!error) {
           try {
             this.isConnected = true;
             this.publicKey = new PublicKey(addresses[0]);
 
-            this.storage.setItem("Addresses", JSON.stringify(addresses));
+            this._storage.setItem("Addresses", JSON.stringify(addresses));
 
             return resolve();
           } catch (e) {
-            this.disconnect().then(() => {
-              return reject(this.getErrorResponse(method, "Connection error"));
+            void this.disconnect().then(() => {
+              return reject(this._getErrorResponse(method, "Connection error"));
             });
           }
         }
-        this.disconnect().then(() => {
-          return reject(this.getErrorResponse(method, "Connection error"));
+        void this.disconnect().then(() => {
+          return reject(this._getErrorResponse(method, "Connection error"));
         });
       });
     });
@@ -190,7 +194,7 @@ export class SolanaProvider
     options?: SendOptions,
   ): Promise<{ signature: string }> {
     const method = SolanaWeb3Method.sendTransaction;
-    this.checkWalletConnected(method);
+    this._checkWalletConnected(method);
 
     return new Promise((resolve, reject) => {
       try {
@@ -198,7 +202,7 @@ export class SolanaProvider
           verifySignatures: false,
         });
 
-        this.request(
+        this._request(
           {
             method,
             params: {
@@ -212,7 +216,7 @@ export class SolanaProvider
             }
             return reject(
               error ??
-                this.getErrorResponse(method, "Could not send transactions"),
+                this._getErrorResponse(method, "Could not send transactions"),
             );
           },
         );
@@ -227,9 +231,9 @@ export class SolanaProvider
   ): Promise<{ signature: Uint8Array } | Error> {
     const method = SolanaWeb3Method.signMessage;
     const message = Buffer.from(msg).toString();
-    this.checkWalletConnected(method);
+    this._checkWalletConnected(method);
     return new Promise((resolve, reject) => {
-      this.request(
+      this._request(
         {
           method,
           params: {
@@ -252,13 +256,13 @@ export class SolanaProvider
     transactions: Transaction[],
   ): Promise<Transaction[]> {
     const method = SolanaWeb3Method.signAllTransactions;
-    this.checkWalletConnected(method);
+    this._checkWalletConnected(method);
     return new Promise((resolve, reject) => {
       try {
         const serializedTransactions = transactions.map(transaction => {
           return [...transaction.serialize({ verifySignatures: false })];
         });
-        this.request(
+        this._request(
           {
             method,
             params: {
@@ -285,7 +289,7 @@ export class SolanaProvider
             }
             return reject(
               error ??
-                this.getErrorResponse(method, "Could not sign transactions"),
+                this._getErrorResponse(method, "Could not sign transactions"),
             );
           },
         );
@@ -297,13 +301,13 @@ export class SolanaProvider
 
   public async signTransaction(transaction: Transaction): Promise<Transaction> {
     const method = SolanaWeb3Method.signTransaction;
-    this.checkWalletConnected(method);
+    this._checkWalletConnected(method);
     return new Promise((resolve, reject) => {
       try {
         const serializedTransaction = transaction.serialize({
           verifySignatures: false,
         });
-        this.request(
+        this._request(
           {
             method,
             params: {
@@ -325,7 +329,7 @@ export class SolanaProvider
             }
             return reject(
               error ??
-                this.getErrorResponse(method, "Could not sign transaction"),
+                this._getErrorResponse(method, "Could not sign transaction"),
             );
           },
         );
@@ -335,22 +339,25 @@ export class SolanaProvider
     });
   }
 
-  getErrorResponse(method: string, errorMessage: string): ErrorResponse {
+  private _getErrorResponse(
+    method: string,
+    errorMessage: string,
+  ): ErrorResponse {
     return { method, message: errorMessage };
   }
 
-  private checkWalletConnected(method: string) {
+  private _checkWalletConnected(method: string) {
     if (!this.isConnected)
-      throw this.getErrorResponse(method, "Wallet is not connected");
+      throw this._getErrorResponse(method, "Wallet is not connected");
   }
 
-  private async request(args: RequestArguments, callback: any) {
+  private _request(args: RequestArguments, callback: any) {
     const id = randomBytesHex(8);
-    this.eventManager.set(id, callback);
-    this.postMessage(args, id);
+    this._eventManager.set(id, callback);
+    this._postMessage(args, id);
   }
 
-  private postMessage(args: RequestArguments, id: string) {
+  private _postMessage(args: RequestArguments, id: string) {
     window.postMessage(
       {
         type: "extensionUIRequest",
