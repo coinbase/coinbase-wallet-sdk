@@ -66,7 +66,7 @@ afterEvaluate {
 
                 pom {
                     name = 'coinbase-wallet-sdk'
-                    description = 'Coinbase NativeWallet SDK'
+                    description = 'Coinbase Native Wallet SDK'
                     url = 'https://github.com/coinbase/coinbase-wallet-sdk'
                     licenses {
                         license {
@@ -88,7 +88,7 @@ afterEvaluate {
                         developer {
                             id = 'vishnumad'
                             name = 'Vishnu Mad'
-                            email = ''
+                            email = 'vishnu.madhusoodanan@coinbase.com'
                         }
                     }
                     scm {
