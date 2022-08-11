@@ -2,6 +2,8 @@ plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
     id 'org.jetbrains.kotlin.plugin.serialization' version '1.6.21'
+    id 'maven-publish'
+    id 'signing'
 }
 
 android {
@@ -34,6 +36,13 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
 }
 
 dependencies {
@@ -44,4 +53,59 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3"
     implementation 'androidx.security:security-crypto:1.0.0'
     implementation 'com.google.crypto.tink:tink-android:1.6.1'
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+                groupId 'com.coinbase'
+                artifactId 'coinbase-wallet-sdk'
+                version = android.defaultConfig.versionName
+
+                pom {
+                    name = 'coinbase-wallet-sdk'
+                    description = 'Coinbase NativeWallet SDK'
+                    url = 'https://github.com/coinbase/coinbase-wallet-sdk'
+                    licenses {
+                        license {
+                            name = 'Coinbase License'
+                            url = 'https://github.com/coinbase/coinbase-wallet-sdk/blob/master/LICENSE'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = 'amitgoelny'
+                            name = 'Amit Goel'
+                            email = 'amit.nyc@gmail.com'
+                        }
+                        developer {
+                            id = 'bangtoven'
+                            name = 'Jungho Bang'
+                            email = 'me@bangtoven.com'
+                        }
+                        developer {
+                            id = 'vishnumad'
+                            name = 'Vishnu Mad'
+                            email = ''
+                        }
+                    }
+                    scm {
+                        developerConnection = 'scm:git@github.com:coinbase/coinbase-wallet-sdk.git'
+                        url = 'https://github.com/coinbase/coinbase-wallet-sdk/tree/main'
+                    }
+                }
+            }
+        }
+    }
+}
+
+signing {
+    useInMemoryPgpKeys(
+        rootProject.ext["signing.keyId"],
+        rootProject.ext["signing.key"],
+        rootProject.ext["signing.password"],
+    )
+    sign publishing.publications
 }
