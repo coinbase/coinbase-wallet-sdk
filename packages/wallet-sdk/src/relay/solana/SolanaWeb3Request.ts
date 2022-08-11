@@ -1,7 +1,8 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { Transaction, SendOptions, Signer } from "@solana/web3.js";
+import { SendOptions, Signer, Transaction } from "@solana/web3.js";
+
 import { SolanaWeb3Method } from "./SolanaWeb3Method";
 
 interface BaseSolanaWeb3Request<
