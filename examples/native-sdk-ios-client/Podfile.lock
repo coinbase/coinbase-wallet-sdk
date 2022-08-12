@@ -1,5 +1,5 @@
 PODS:
-  - CoinbaseWalletSDK (0.1.2)
+  - CoinbaseWalletSDK (0.1.3)
 
 DEPENDENCIES:
   - CoinbaseWalletSDK (from `../../`)
@@ -9,7 +9,7 @@ EXTERNAL SOURCES:
     :path: "../../"
 
 SPEC CHECKSUMS:
-  CoinbaseWalletSDK: 38c0cdc6943a05ab710b98901cef2e5bb1b7ec61
+  CoinbaseWalletSDK: fa81f7a9402302045222b8ec79ed3f25cec16dc9
 
 PODFILE CHECKSUM: 258b9c0ec0f0d17a701912e5f713afb0de91d709
 

@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'CoinbaseWalletSDK'
-  s.version          = '0.1.2'
+  s.version          = '0.1.3'
   s.summary          = 'Swift SDK to interact with Coinbase Wallet iOS app'
   s.description      = <<-DESC
 Swift implementation of WalletSegue protocol for iOS web3 apps to interact with web3 wallets.
