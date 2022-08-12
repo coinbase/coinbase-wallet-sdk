@@ -33,6 +33,7 @@ export class WalletSDKUI implements WalletUI {
       sessionSecret: options.session.secret,
       linkAPIUrl: options.linkAPIUrl,
       connected$: options.connected$,
+      chainId$: options.chainId$,
       isParentConnection: false,
     });
   }

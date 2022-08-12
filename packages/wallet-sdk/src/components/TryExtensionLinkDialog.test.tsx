@@ -17,6 +17,7 @@ const renderTryExtensionLinkDialog = ({
       isOpen
       isConnected={isConnected}
       isParentConnection={false}
+      chainId={1}
       connectDisabled={connectDisabled}
       onCancel={null}
     />,

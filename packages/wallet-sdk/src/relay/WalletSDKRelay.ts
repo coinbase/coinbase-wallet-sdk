@@ -3,7 +3,7 @@
 
 import bind from "bind-decorator";
 import { ethErrors } from "eth-rpc-errors";
-import { Observable, of, Subscription, zip } from "rxjs";
+import { BehaviorSubject, Observable, of, Subscription, zip } from "rxjs";
 import {
   catchError,
   distinctUntilChanged,
@@ -103,7 +103,8 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
   private chainCallback:
     | ((chainId: string, jsonRpcUrl: string) => void)
     | null = null;
-  private dappDefaultChain: number | null = null;
+  private dappDefaultChainSubject = new BehaviorSubject(1);
+  private dappDefaultChain: number = 1;
   private readonly options: WalletSDKRelayOptions;
 
   private ui: WalletUI;
@@ -149,6 +150,14 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
   }
 
   public subscribe() {
+    this.subscriptions.add(
+      this.dappDefaultChainSubject.subscribe(chainId => {
+        if (this.dappDefaultChain !== chainId) {
+          this.dappDefaultChain = chainId;
+        }
+      }),
+    );
+
     const session =
       Session.load(this.storage) || new Session(this.storage).save();
 
@@ -282,47 +291,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
             c =>
               c.metadata &&
               c.metadata.ChainId !== undefined &&
-              c.metadata.JsonRpcUrl !== undefined &&
-              c.metadata.overrideNetwork !== undefined,
-          ),
-        )
-        .pipe(
-          mergeMap(c =>
-            zip(
-              aes256gcm.decrypt(c.metadata.ChainId!, session.secret),
-              aes256gcm.decrypt(c.metadata.JsonRpcUrl!, session.secret),
-              aes256gcm.decrypt(c.metadata.overrideNetwork!, session.secret),
-            ),
-          ),
-        )
-        .subscribe({
-          next: ([chainId, jsonRpcUrl, overrideNetwork]) => {
-            if (overrideNetwork === "true" && this.chainCallback) {
-              this.chainCallback(chainId, jsonRpcUrl);
-            } else if (overrideNetwork === "false" && this.dappDefaultChain) {
-              this.switchEthereumChain(this.dappDefaultChain.toString());
-            }
-          },
-          error: () => {
-            //TODO felix - log
-            // this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-            //   message: "Had error decrypting",
-            //   value: "noNetworkPreference",
-            // });
-          },
-        }),
-    );
-
-    //TODO felix: backward compatible code, to remove in Nov. 2022
-    this.subscriptions.add(
-      connection.sessionConfig$
-        .pipe(
-          filter(
-            c =>
-              c.metadata &&
-              c.metadata.ChainId !== undefined &&
-              c.metadata.JsonRpcUrl !== undefined &&
-              c.metadata.overrideNetwork === undefined,
+              c.metadata.JsonRpcUrl !== undefined,
           ),
         )
         .pipe(
@@ -398,6 +367,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
       darkMode: this.options.darkMode,
       session,
       connected$: connection.connected$,
+      chainId$: this.dappDefaultChainSubject,
     });
 
     connection.connect();
@@ -628,6 +598,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
       this._session.secret,
       this.linkAPIUrl,
       false,
+      this.dappDefaultChain,
     );
   }
 
@@ -707,7 +678,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
   }
 
   public setDappDefaultChainCallback(chainId: number) {
-    this.dappDefaultChain = chainId;
+    this.dappDefaultChainSubject.next(chainId);
   }
 
   private publishWeb3RequestEvent(id: string, request: Web3Request): void {

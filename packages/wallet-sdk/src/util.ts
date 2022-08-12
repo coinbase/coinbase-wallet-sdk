@@ -228,6 +228,7 @@ export function createQrUrl(
   sessionSecret: string,
   serverUrl: string,
   isParentConnection: boolean,
+  chainId: number,
 ): string {
   const sessionIdKey = isParentConnection ? "parent-id" : "id";
 
@@ -236,6 +237,7 @@ export function createQrUrl(
     secret: sessionSecret,
     server: serverUrl,
     v: "1",
+    chainId: chainId,
   });
 
   const qrUrl = `${serverUrl}/#/link?${query}`;
