@@ -17,7 +17,7 @@ class ViewController: UITableViewController {
     
     @IBOutlet weak var logTextView: UITextView!
     
-    private let cbwallet = CoinbaseWalletSDK.shared
+    private lazy var cbwallet = { CoinbaseWalletSDK.shared }()
     private let typedData = """
         {
           \"types\": {
