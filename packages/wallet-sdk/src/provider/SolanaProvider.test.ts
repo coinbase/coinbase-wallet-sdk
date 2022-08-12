@@ -67,6 +67,8 @@ describe("Solana Provider", () => {
 
   afterEach(() => {
     scopedStorageCopy.clear();
+    // @ts-expect-error need this to be null for most tests
+    window.__CIPHER_BRIDGE__ = null;
   });
 
   it("should post request and handle response for connect", async () => {
@@ -131,6 +133,38 @@ describe("Solana Provider", () => {
     expect(scopedStorageCopy.getItem("Addresses")).toEqual(null);
     expect(solanaProvider.isConnected).toBe(false);
     expect(solanaProvider.publicKey).toBeFalsy();
+  });
+
+  it("should send messages over injected bridge if it is present", async () => {
+    const mockedCipherBridge = jest.fn();
+
+    window.__CIPHER_BRIDGE__ = {
+      postMessage: mockedCipherBridge,
+    };
+
+    requestMessage.type = "browserRequest";
+    requestMessage.data.action = SolanaWeb3Method.connect;
+    requestMessage.data.request = {
+      method: SolanaWeb3Method.connect,
+    };
+    responseMessage.data.type = "WEB3_RESPONSE";
+    responseMessage.data.data.action = SolanaWeb3Response.connectionSuccess;
+    responseMessage.data.data.addresses = [mockAddress];
+
+    const connectionPromise = solanaProvider.connect();
+
+    solanaProvider.handleResponse(responseMessage);
+
+    await expect(connectionPromise).resolves.toBeUndefined();
+
+    // cipher bridge requests are stringified, we need to
+    // parse the passed argument to compare that it's correct
+    const cipherBridgeCallArgs = JSON.parse(
+      mockedCipherBridge.mock.calls[0][0],
+    );
+
+    expect(cipherBridgeCallArgs).toEqual(requestMessage);
+    expect(mockedCipherBridge).toHaveBeenCalled();
   });
 
   describe("Testing web3 methods after connect wallet", () => {

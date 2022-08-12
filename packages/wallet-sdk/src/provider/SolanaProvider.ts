@@ -16,6 +16,22 @@ type ErrorResponse = {
   message: string;
 };
 
+type RequestMessage = {
+  type?: "extensionUIRequest" | "browserRequest";
+  provider: string;
+  data: {
+    action: string;
+    request: {
+      method: string;
+      params: any;
+    };
+    id: string;
+    dappInfo: {
+      dappLogoURL: string;
+    };
+  };
+};
+
 type SolanaWeb3Provider = {
   publicKey: PublicKey | null;
   isConnected: boolean;
@@ -32,6 +48,14 @@ type SolanaWeb3Provider = {
   ) => Promise<{ signature: Uint8Array } | Error>;
   handleResponse: (event: any) => void;
 };
+
+declare global {
+  interface Window {
+    __CIPHER_BRIDGE__?: {
+      postMessage(message: string): void;
+    };
+  }
+}
 
 export class SolanaProvider
   extends SafeEventEmitter
@@ -60,7 +84,10 @@ export class SolanaProvider
   }
 
   public handleResponse = (event: any) => {
-    if (event.data.type !== "extensionUIResponse") return;
+    if (!["extensionUIResponse", "WEB3_RESPONSE"].includes(event.data.type)) {
+      return;
+    }
+
     const data = event.data.data;
     const id = data.id;
     const action = data.action;
@@ -115,13 +142,10 @@ export class SolanaProvider
           break;
         default:
           // should never get here, no-op
-          console.log("unknown action with id ", id, action);
           break;
       }
     } else if (action === SolanaWeb3Response.parentDisconnected) {
       this._parentDisconnect();
-    } else {
-      console.log("call back is not register for ID", id, this._eventManager);
     }
   };
 
@@ -140,15 +164,17 @@ export class SolanaProvider
 
   public async connect(): Promise<void> {
     const method = SolanaWeb3Method.connect;
-    window.postMessage(
-      {
-        type: "solanaProviderRequest",
-        data: {
-          action: "firstConnectRequest",
+    if (!window.__CIPHER_BRIDGE__) {
+      window.postMessage(
+        {
+          type: "solanaProviderRequest",
+          data: {
+            action: "firstConnectRequest",
+          },
         },
-      },
-      "*",
-    );
+        "*",
+      );
+    }
     return new Promise((resolve, reject) => {
       this._request({ method }, (addresses: string[], error: any) => {
         if (!error) {
@@ -358,23 +384,27 @@ export class SolanaProvider
   }
 
   private _postMessage(args: RequestArguments, id: string) {
-    window.postMessage(
-      {
-        type: "extensionUIRequest",
-        provider: SOLANA_PROVIDER_ID,
-        data: {
-          action: args.method,
-          request: {
-            method: args.method,
-            params: args.params,
-          },
-          id,
-          dappInfo: {
-            dappLogoURL: "",
-          },
+    const message: RequestMessage = {
+      provider: SOLANA_PROVIDER_ID,
+      data: {
+        action: args.method,
+        request: {
+          method: args.method,
+          params: args.params,
+        },
+        id,
+        dappInfo: {
+          dappLogoURL: "",
         },
       },
-      "*",
-    );
+    };
+
+    if (window.__CIPHER_BRIDGE__) {
+      message.type = "browserRequest";
+      window.__CIPHER_BRIDGE__.postMessage(JSON.stringify(message));
+    } else {
+      message.type = "extensionUIRequest";
+      window.postMessage(message, "*");
+    }
   }
 }
