@@ -1161,14 +1161,6 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
       hideSnackbarItem?.();
     };
 
-    if (!this.ui.inlineSwitchEthereumChain()) {
-      hideSnackbarItem = this.ui.showConnecting({
-        isUnlinkedErrorState: this.isUnlinkedErrorState,
-        onCancel: cancel,
-        onResetConnection: this.resetAndReload, // eslint-disable-line @typescript-eslint/unbound-method
-      });
-    }
-
     const promise = new Promise<SwitchEthereumChainResponse>(
       (resolve, reject) => {
         this.relayEventManager.callbacks.set(id, response => {
