@@ -18,6 +18,7 @@ class ViewController: UITableViewController {
     @IBOutlet weak var logTextView: UITextView!
     
     private lazy var cbwallet = { CoinbaseWalletSDK.shared }()
+    private var address: String?
     private let typedData = """
         {
           \"types\": {
@@ -93,10 +94,15 @@ class ViewController: UITableViewController {
             initialActions: [
                 Action(jsonRpc: .eth_requestAccounts)
             ]
-        ) { result in
+        ) { result, account in
             switch result {
             case .success(let response):
                 self.logObject(label: "Response:\n", response)
+                
+                guard let account = account else { return }
+                self.logObject(label: "Account:\n", account)
+                self.address = account.address
+                
             case .failure(let error):
                 self.log("\(error)")
             }
