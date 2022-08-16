@@ -187,7 +187,7 @@ export class CoinbaseWalletProvider
         const jsonRpcUrl = event.data.data.jsonRpcUrl ?? this.jsonRpcUrl;
         this.updateProviderInfo(jsonRpcUrl, Number(_chainId), true);
       }
-      
+
       if (event.data.data.action === "addressChanged") {
         this._setAddresses([event.data.data.address]);
       }
