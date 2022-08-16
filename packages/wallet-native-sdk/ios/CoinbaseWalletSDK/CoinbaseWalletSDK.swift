@@ -115,7 +115,6 @@ public final class CoinbaseWalletSDK {
             }
             
             let ethAccount = Account(chain: "eth", networkId: nil, address: address)
-            
             onResponse(result, ethAccount)
         }
     }
