@@ -76,16 +76,17 @@ public final class CoinbaseWalletSDK {
     
     // MARK: - Send message
     
-    public func initiateHandshake(initialActions: [Action]? = nil, onResponse: @escaping ResponseHandler) {
-        
+    public func initiateHandshake(
+        initialActions: [Action]? = [Action(jsonRpc: .eth_requestAccounts)],
+        onResponse: @escaping (ResponseResult, Account?) -> Void
+    ) {
         let hasUnsupportedAction = initialActions?.contains(where: {
             let action = $0
             return unsupportedHandShakeMethod.contains(where: {action.method == $0 })
-            
         })
         
         guard hasUnsupportedAction != true else {
-            onResponse(.failure(Error.invalidHandshakeRequest))
+            onResponse(.failure(Error.invalidHandshakeRequest), nil)
             return
         }
         
@@ -102,7 +103,20 @@ public final class CoinbaseWalletSDK {
             timestamp: Date(),
             callbackUrl: callback.absoluteString
         )
-        self.send(message, onResponse)
+        self.send(message) { result in
+            guard
+                let requestAccountsIndex = initialActions?.firstIndex(where: { $0.method == "eth_requestAccounts" }),
+                let content = try? result.get().content,
+                content.indices.contains(requestAccountsIndex),
+                case .result(let address) = content[requestAccountsIndex]
+            else {
+                onResponse(result, nil)
+                return
+            }
+            
+            let ethAccount = Account(chain: "eth", networkId: nil, address: address)
+            onResponse(result, ethAccount)
+        }
     }
     
     public func makeRequest(_ request: Request, onResponse: @escaping ResponseHandler) {
