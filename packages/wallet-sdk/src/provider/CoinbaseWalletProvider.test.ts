@@ -1,3 +1,5 @@
+import { fireEvent } from "@testing-library/preact";
+
 import { MockRelayClass } from "../__mocks__/relay";
 import {
   MOCK_ADDERESS,
@@ -231,6 +233,34 @@ describe("CoinbaseWalletProvider", () => {
 
     const result = await provider.genericRequest(data, action);
     expect(result).toBe("Success");
+  });
+
+  it("updates the providers address on a postMessage's 'addressChanged' event", () => {
+    const provider = setupCoinbaseWalletProvider();
+
+    // @ts-expect-error _addresses is private
+    expect(provider._addresses).not.toEqual([
+      "0x0000000000000000000000000000000000001010",
+    ]);
+
+    fireEvent(
+      window,
+      new MessageEvent("message", {
+        data: {
+          data: {
+            action: "addressChanged",
+            address: "0x0000000000000000000000000000000000001010",
+          },
+          type: "walletLinkMessage",
+        },
+        origin: "dapp.finance",
+      }),
+    );
+
+    // @ts-expect-error _addresses is private
+    expect(provider._addresses).toEqual([
+      "0x0000000000000000000000000000000000001010",
+    ]);
   });
 
   it("handles error responses with generic requests", async () => {
