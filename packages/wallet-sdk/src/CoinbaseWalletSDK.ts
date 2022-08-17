@@ -140,7 +140,7 @@ export class CoinbaseWalletSDK {
     const extension = this.walletExtension;
     if (extension) {
       if (!this.isCipherProvider(extension)) {
-        extension.setProviderInfo(jsonRpcUrl, chainId);
+        extension.setDappDefultChainInfo(chainId, jsonRpcUrl);
       }
 
       if (

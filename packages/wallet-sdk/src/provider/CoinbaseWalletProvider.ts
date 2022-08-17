@@ -252,6 +252,12 @@ export class CoinbaseWalletProvider
     this.reloadOnDisconnect = false;
   }
 
+  public setDappDefultChainInfo(chainId: number, jsonRpcUrl: string) {
+    this._chainIdFromOpts = chainId;
+    this._jsonRpcUrlFromOpts = jsonRpcUrl;
+    this.updateProviderInfo(jsonRpcUrl, chainId, false);
+  }
+
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   public setProviderInfo(jsonRpcUrl: string, chainId?: number) {
