@@ -108,14 +108,15 @@ public final class CoinbaseWalletSDK {
                 let requestAccountsIndex = initialActions?.firstIndex(where: { $0.method == "eth_requestAccounts" }),
                 let content = try? result.get().content,
                 content.indices.contains(requestAccountsIndex),
-                case .result(let address) = content[requestAccountsIndex]
+                case .result(let accountJson) = content[requestAccountsIndex],
+                let data = accountJson.data(using: .utf8),
+                let account = try? JSONDecoder().decode(Account.self, from: data)
             else {
                 onResponse(result, nil)
                 return
             }
             
-            let ethAccount = Account(chain: "eth", networkId: nil, address: address)
-            onResponse(result, ethAccount)
+            onResponse(result, account)
         }
     }
     
