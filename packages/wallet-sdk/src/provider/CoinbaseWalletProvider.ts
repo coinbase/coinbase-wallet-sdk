@@ -43,8 +43,6 @@ import { RequestArguments, Web3Provider } from "./Web3Provider";
 
 const DEFAULT_CHAIN_ID_KEY = "DefaultChainId";
 const DEFAULT_JSON_RPC_URL = "DefaultJsonRpcUrl";
-// Indicates chain has been switched by switchEthereumChain or addEthereumChain request
-const HAS_CHAIN_BEEN_SWITCHED_KEY = "HasChainBeenSwitched";
 const HAS_CHAIN_OVERRIDDEN_FROM_RELAY = "HasChainOverriddenFromRelay";
 
 export interface CoinbaseWalletProviderOptions {
@@ -271,10 +269,6 @@ export class CoinbaseWalletProvider
     chainId: number,
     fromRelay: boolean,
   ) {
-    //TODO felix: to sunset hasChainSwitched
-    const hasChainSwitched =
-      this._storage.getItem(HAS_CHAIN_BEEN_SWITCHED_KEY) === "true";
-    if (hasChainSwitched && fromRelay) return;
     if (fromRelay) {
       this.isChainOverridden = true;
     }
@@ -347,7 +341,6 @@ export class CoinbaseWalletProvider
     ).promise;
 
     if (res.result?.isApproved === true) {
-      this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true");
       this.updateProviderInfo(rpcUrls[0], chainId, false);
     }
 
@@ -370,7 +363,6 @@ export class CoinbaseWalletProvider
 
     const switchResponse = res.result as SwitchResponse;
     if (switchResponse.isApproved && switchResponse.rpcUrl.length > 0) {
-      this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true");
       this.updateProviderInfo(switchResponse.rpcUrl, chainId, false);
     }
   }
