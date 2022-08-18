@@ -142,11 +142,15 @@ describe("Solana Provider", () => {
       postMessage: mockedCipherBridge,
     };
 
-    requestMessage.type = "browserRequest";
-    requestMessage.data.action = SolanaWeb3Method.connect;
-    requestMessage.data.request = {
-      method: SolanaWeb3Method.connect,
+    const cipherRequestMessage = {
+      id: eventId,
+      type: "browserRequest",
+      request: {
+        method: SolanaWeb3Method.connect,
+      },
+      provider: SOLANA_PROVIDER_ID,
     };
+
     responseMessage.data.type = "WEB3_RESPONSE";
     responseMessage.data.data.action = SolanaWeb3Response.connectionSuccess;
     responseMessage.data.data.addresses = [mockAddress];
@@ -163,7 +167,7 @@ describe("Solana Provider", () => {
       mockedCipherBridge.mock.calls[0][0],
     );
 
-    expect(cipherBridgeCallArgs).toEqual(requestMessage);
+    expect(cipherBridgeCallArgs).toEqual(cipherRequestMessage);
     expect(mockedCipherBridge).toHaveBeenCalled();
   });
 
@@ -193,7 +197,7 @@ describe("Solana Provider", () => {
       };
 
       responseMessage.data.data.action = SolanaWeb3Response.signMessageSuccess;
-      responseMessage.data.data.response = { signature: signedMessageResponse };
+      responseMessage.data.data.signature = signedMessageResponse;
 
       const signMessagePromise = solanaProvider.signMessage(message);
 
@@ -220,9 +224,7 @@ describe("Solana Provider", () => {
       };
 
       responseMessage.data.data.action = SolanaWeb3Response.signMessageSuccess;
-      responseMessage.data.data.response = {
-        signature: invalidSignedMessageResponse,
-      };
+      responseMessage.data.data.signature = invalidSignedMessageResponse;
 
       const signMessagePromise = solanaProvider.signMessage(message);
 
