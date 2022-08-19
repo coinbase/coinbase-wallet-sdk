@@ -1,6 +1,0 @@
-platform :ios, '13.0'
-use_frameworks!
-
-target 'NativeWeb3App' do
-  pod 'CoinbaseWalletSDK', path: '../../'
-end
