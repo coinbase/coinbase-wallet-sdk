@@ -43,7 +43,10 @@ import { RequestArguments, Web3Provider } from "./Web3Provider";
 
 const DEFAULT_CHAIN_ID_KEY = "DefaultChainId";
 const DEFAULT_JSON_RPC_URL = "DefaultJsonRpcUrl";
-const HAS_CHAIN_OVERRIDDEN_FROM_RELAY = "HasChainOverriddenFromRelay";
+const WHITELISTED_NETWORK_CHAIN_ID = [
+  1, 10, 137, 61, 56, 250, 42161, 100, 43114, 3, 4, 5, 42, 69, 80001, 97, 4002,
+  421611, 43113,
+];
 
 export interface CoinbaseWalletProviderOptions {
   // TODO felix: confirm chainId to be number!, a default of 1 is provided at CoinbaseWalletSDK.ts
@@ -186,7 +189,7 @@ export class CoinbaseWalletProvider
       if (event.data.data.action === "defaultChainChanged") {
         const _chainId = event.data.data.chainId;
         const jsonRpcUrl = event.data.data.jsonRpcUrl ?? this.jsonRpcUrl;
-        this.updateProviderInfo(jsonRpcUrl, Number(_chainId), true);
+        this.updateProviderInfo(jsonRpcUrl, Number(_chainId));
       }
     });
   }
@@ -238,41 +241,19 @@ export class CoinbaseWalletProvider
     this._storage.setItem(DEFAULT_JSON_RPC_URL, value);
   }
 
-  private get isChainOverridden(): boolean {
-    return this._storage.getItem(HAS_CHAIN_OVERRIDDEN_FROM_RELAY) === "true";
-  }
-
-  private set isChainOverridden(value: boolean) {
-    this._storage.setItem(HAS_CHAIN_OVERRIDDEN_FROM_RELAY, value.toString());
-  }
-
   public disableReloadOnDisconnect() {
     this.reloadOnDisconnect = false;
   }
 
-  public setDappDefultChainInfo(chainId: number, jsonRpcUrl: string) {
-    this._chainIdFromOpts = chainId;
-    this._jsonRpcUrlFromOpts = jsonRpcUrl;
-    this.updateProviderInfo(jsonRpcUrl, chainId, false);
-  }
-
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  public setProviderInfo(jsonRpcUrl: string, chainId?: number) {
-    //TODO felix: to sunset isChainOverridden
-    if (this.isChainOverridden) return;
-    this.updateProviderInfo(jsonRpcUrl, this.getChainId(), false);
+  public setProviderInfo(jsonRpcUrl: string, chainId: number) {
+    this._chainIdFromOpts = chainId;
+    this._jsonRpcUrlFromOpts = jsonRpcUrl;
+    this.updateProviderInfo(jsonRpcUrl, chainId);
   }
 
-  private updateProviderInfo(
-    jsonRpcUrl: string,
-    chainId: number,
-    fromRelay: boolean,
-  ) {
-    if (fromRelay) {
-      this.isChainOverridden = true;
-    }
-
+  private updateProviderInfo(jsonRpcUrl: string, chainId: number) {
     this.jsonRpcUrl = jsonRpcUrl;
 
     // emit chainChanged event if necessary
@@ -341,15 +322,16 @@ export class CoinbaseWalletProvider
     ).promise;
 
     if (res.result?.isApproved === true) {
-      this.updateProviderInfo(rpcUrls[0], chainId, false);
+      this.updateProviderInfo(rpcUrls[0], chainId);
     }
 
     return res.result?.isApproved === true;
   }
 
   private async switchEthereumChain(chainId: number) {
-    if (ensureIntNumber(chainId) === this.getChainId()) {
-      return;
+    if (WHITELISTED_NETWORK_CHAIN_ID.includes(chainId)) {
+      // for whitelisted network that we know we can switch to, switch it right away
+      this.updateProviderInfo(this.jsonRpcUrl, chainId);
     }
 
     const relay = await this.initializeRelay();
@@ -363,7 +345,7 @@ export class CoinbaseWalletProvider
 
     const switchResponse = res.result as SwitchResponse;
     if (switchResponse.isApproved && switchResponse.rpcUrl.length > 0) {
-      this.updateProviderInfo(switchResponse.rpcUrl, chainId, false);
+      this.updateProviderInfo(switchResponse.rpcUrl, chainId);
     }
   }
 
@@ -980,6 +962,8 @@ export class CoinbaseWalletProvider
     }
 
     this._setAddresses(res.result);
+    this.switchEthereumChain(this.getChainId());
+
     return { jsonrpc: "2.0", id: 0, result: this._addresses };
   }
 
@@ -1270,7 +1254,7 @@ export class CoinbaseWalletProvider
         this._setAddresses(accounts, isDisconnect),
       );
       relay.setChainCallback((chainId, jsonRpcUrl) => {
-        this.updateProviderInfo(jsonRpcUrl, parseInt(chainId, 10), true);
+        this.updateProviderInfo(jsonRpcUrl, parseInt(chainId, 10));
       });
       relay.setDappDefaultChainCallback(this._chainIdFromOpts);
       this._relay = relay;
