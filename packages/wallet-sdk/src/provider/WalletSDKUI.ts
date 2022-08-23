@@ -94,6 +94,7 @@ export class WalletSDKUI implements WalletUI {
     onCancel: (error?: Error) => void;
     onApprove: () => void;
     chainId: string;
+    address?: string;
   }) {
     // no-op
   }

@@ -334,7 +334,7 @@ export class CoinbaseWalletProvider
     }
 
     const relay = await this.initializeRelay();
-    const res = await relay.switchEthereumChain(chainId.toString(10)).promise;
+    const res = await relay.switchEthereumChain(chainId.toString(10), this.selectedAddress || undefined).promise;
 
     if ((res as ErrorResponse).errorCode) {
       throw ethErrors.provider.custom({
