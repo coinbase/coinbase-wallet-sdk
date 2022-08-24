@@ -237,7 +237,7 @@ export function createQrUrl(
     secret: sessionSecret,
     server: serverUrl,
     v: "1",
-    chainId: chainId,
+    chainId,
   });
 
   const qrUrl = `${serverUrl}/#/link?${query}`;

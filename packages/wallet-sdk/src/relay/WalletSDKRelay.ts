@@ -104,7 +104,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     | ((chainId: string, jsonRpcUrl: string) => void)
     | null = null;
   private dappDefaultChainSubject = new BehaviorSubject(1);
-  private dappDefaultChain: number = 1;
+  private dappDefaultChain = 1;
   private readonly options: WalletSDKRelayOptions;
 
   private ui: WalletUI;
@@ -1152,20 +1152,16 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
       },
     };
 
-    let hideSnackbarItem: (() => void) | null = null;
     const id = randomBytesHex(8);
 
     const cancel = (error?: Error) => {
       this.publishWeb3RequestCanceledEvent(id);
       this.handleErrorResponse(id, request.method, error);
-      hideSnackbarItem?.();
     };
 
     const promise = new Promise<SwitchEthereumChainResponse>(
       (resolve, reject) => {
         this.relayEventManager.callbacks.set(id, response => {
-          hideSnackbarItem?.();
-
           if (response.errorMessage && (response as ErrorResponse).errorCode) {
             return reject(
               ethErrors.provider.custom({

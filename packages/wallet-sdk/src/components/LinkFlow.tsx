@@ -2,7 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 import { h, render } from "preact";
-import { BehaviorSubject, Observable, Subscription, Subject } from "rxjs";
+import { BehaviorSubject, Observable, Subject,Subscription } from "rxjs";
 
 import { TryExtensionLinkDialog } from "./TryExtensionLinkDialog";
 
@@ -36,7 +36,7 @@ export class LinkFlow {
   private readonly subscriptions = new Subscription();
 
   private isConnected = false;
-  private chainId: number = 1;
+  private chainId = 1;
   private isOpen = false;
   private onCancel: (() => void) | null = null;
 
