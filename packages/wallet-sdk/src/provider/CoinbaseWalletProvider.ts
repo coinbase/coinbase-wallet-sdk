@@ -49,7 +49,6 @@ const WHITELISTED_NETWORK_CHAIN_ID = [
 ];
 
 export interface CoinbaseWalletProviderOptions {
-  // TODO felix: confirm chainId to be number!, a default of 1 is provided at CoinbaseWalletSDK.ts
   chainId: number;
   jsonRpcUrl: string;
   qrUrl?: string | null;
