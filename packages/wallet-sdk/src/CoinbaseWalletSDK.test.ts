@@ -75,7 +75,7 @@ describe("CoinbaseWalletSDK", () => {
         const url = new URL(qrUrl);
 
         expect(url.hostname).toEqual("www.walletlink.org");
-        expect(url.hash.split("=")).toHaveLength(5);
+        expect(url.hash.split("=")).toHaveLength(6);
       });
 
       test("@getCoinbaseWalletLogo", () => {
