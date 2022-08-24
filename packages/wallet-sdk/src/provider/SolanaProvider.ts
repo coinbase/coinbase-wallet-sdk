@@ -16,22 +16,6 @@ type ErrorResponse = {
   message: string;
 };
 
-type RequestMessage = {
-  type?: "extensionUIRequest" | "browserRequest";
-  provider: string;
-  data: {
-    action: string;
-    request: {
-      method: string;
-      params: any;
-    };
-    id: string;
-    dappInfo: {
-      dappLogoURL: string;
-    };
-  };
-};
-
 type SolanaWeb3Provider = {
   publicKey: PublicKey | null;
   isConnected: boolean;
@@ -109,8 +93,8 @@ export class SolanaProvider
           callback(null, new Error("Connection error"));
           break;
         case SolanaWeb3Response.signMessageSuccess:
-          if (data.response.signature) {
-            const signature = data.response.signature;
+          if (data.signature) {
+            const signature = data.signature;
             if (Array.isArray(signature)) {
               callback(signature);
               return;
@@ -384,26 +368,34 @@ export class SolanaProvider
   }
 
   private _postMessage(args: RequestArguments, id: string) {
-    const message: RequestMessage = {
-      provider: SOLANA_PROVIDER_ID,
-      data: {
-        action: args.method,
+    if (window.__CIPHER_BRIDGE__) {
+      const message = {
+        id,
+        type: "browserRequest",
         request: {
           method: args.method,
           params: args.params,
         },
-        id,
-        dappInfo: {
-          dappLogoURL: "",
-        },
-      },
-    };
+        provider: SOLANA_PROVIDER_ID,
+      };
 
-    if (window.__CIPHER_BRIDGE__) {
-      message.type = "browserRequest";
       window.__CIPHER_BRIDGE__.postMessage(JSON.stringify(message));
     } else {
-      message.type = "extensionUIRequest";
+      const message = {
+        type: "extensionUIRequest",
+        provider: SOLANA_PROVIDER_ID,
+        data: {
+          action: args.method,
+          request: {
+            method: args.method,
+            params: args.params,
+          },
+          id,
+          dappInfo: {
+            dappLogoURL: "",
+          },
+        },
+      };
       window.postMessage(message, "*");
     }
   }
