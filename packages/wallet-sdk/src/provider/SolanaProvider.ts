@@ -251,7 +251,7 @@ export class SolanaProvider
             message,
             address: this.publicKey!.toString(),
           },
-        } as SolanaSignMessageRequest,
+        },
         (signatureArray: any, error: any) => {
           if (!error) {
             const signature = new Uint8Array(signatureArray);
