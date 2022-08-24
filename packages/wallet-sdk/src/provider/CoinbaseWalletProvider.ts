@@ -185,7 +185,7 @@ export class CoinbaseWalletProvider
     window.addEventListener("message", event => {
       if (event.data.type !== "walletLinkMessage") return; // compatibility with CBW extension
 
-      if (event.data.data.action === "defaultChainChanged") {
+      if (event.data.data.action === "defaultChainChanged" || event.data.data.action === "dappChainSwitched") {
         const _chainId = event.data.data.chainId;
         const jsonRpcUrl = event.data.data.jsonRpcUrl ?? this.jsonRpcUrl;
         this.updateProviderInfo(jsonRpcUrl, Number(_chainId));
