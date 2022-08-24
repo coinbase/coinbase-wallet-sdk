@@ -6,7 +6,6 @@ import { PublicKey, SendOptions, Transaction } from "@solana/web3.js";
 
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
 import { SolanaWeb3Method } from "../relay/solana/SolanaWeb3Method";
-import { SolanaSignMessageRequest } from "../relay/solana/SolanaWeb3Request";
 import { SolanaWeb3Response } from "../relay/solana/SolanaWeb3Response";
 import { randomBytesHex } from "../util";
 import { RequestArguments } from "./Web3Provider";
