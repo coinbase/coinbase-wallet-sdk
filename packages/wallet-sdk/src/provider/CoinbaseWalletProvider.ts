@@ -962,6 +962,7 @@ export class CoinbaseWalletProvider
 
     this._setAddresses(res.result);
     this.switchEthereumChain(this.getChainId());
+
     return { jsonrpc: "2.0", id: 0, result: this._addresses };
   }
 
