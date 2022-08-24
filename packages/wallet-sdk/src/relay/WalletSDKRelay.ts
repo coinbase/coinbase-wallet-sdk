@@ -1144,16 +1144,17 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
 
   switchEthereumChain(
     chainId: string,
-    address?: string
+    address?: string,
   ): CancelablePromise<SwitchEthereumChainResponse> {
     const request: Web3Request = {
       method: Web3Method.switchEthereumChain,
       params: {
         chainId,
-        ...{ address }
+        ...{ address },
       },
     };
 
+    const hideSnackbarItem: (() => void) | null = null;
     const id = randomBytesHex(8);
 
     const cancel = (error?: Error) => {
