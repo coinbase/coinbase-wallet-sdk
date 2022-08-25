@@ -1154,7 +1154,6 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
       },
     };
 
-    const hideSnackbarItem: (() => void) | null = null;
     const id = randomBytesHex(8);
 
     const cancel = (error?: Error) => {
