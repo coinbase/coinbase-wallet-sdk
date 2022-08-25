@@ -28,6 +28,7 @@ import {
   bigIntStringFromBN,
   createQrUrl,
   hexStringFromBuffer,
+  isInIFrame,
   randomBytesHex,
 } from "../util";
 import * as aes256gcm from "./aes256gcm";
@@ -895,8 +896,19 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
             userAgent,
           )
         ) {
-          window.location.href = `https://go.cb-w.com/xoXnYwQimhb?cb_url=${encodeURIComponent(
-            window.location.href,
+          let location: Location;
+          try {
+            if (isInIFrame() && window.top) {
+              location = window.top.location;
+            } else {
+              location = window.location;
+            }
+          } catch (e) {
+            location = window.location;
+          }
+
+          location.href = `https://go.cb-w.com/xoXnYwQimhb?cb_url=${encodeURIComponent(
+            location.href,
           )}`;
           return;
         }
