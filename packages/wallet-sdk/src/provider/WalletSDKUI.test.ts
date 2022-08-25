@@ -1,6 +1,6 @@
 import { render } from "@testing-library/preact";
 import { Session } from "inspector";
-import { Observable } from "rxjs";
+import { Observable, Subject } from "rxjs";
 
 import { LinkFlow } from "../components/LinkFlow";
 import { Snackbar } from "../components/Snackbar";
@@ -14,6 +14,7 @@ describe("WalletSDKUI", () => {
     session: new Session(),
     linkAPIUrl: "http://link-url.com",
     connected$: new Observable(),
+    chainId$: new Subject(),
   });
 
   render("<div />");

@@ -33,6 +33,7 @@ export class WalletSDKUI implements WalletUI {
       sessionSecret: options.session.secret,
       linkAPIUrl: options.linkAPIUrl,
       connected$: options.connected$,
+      chainId$: options.chainId$,
       isParentConnection: false,
     });
   }
@@ -93,6 +94,7 @@ export class WalletSDKUI implements WalletUI {
     onCancel: (error?: Error) => void;
     onApprove: () => void;
     chainId: string;
+    address?: string;
   }) {
     // no-op
   }

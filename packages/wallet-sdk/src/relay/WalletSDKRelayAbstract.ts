@@ -62,6 +62,7 @@ export abstract class WalletSDKRelayAbstract {
 
   abstract switchEthereumChain(
     chainId: string,
+    address?: string,
   ): CancelablePromise<SwitchEthereumChainResponse>;
 
   abstract signEthereumMessage(
@@ -112,6 +113,8 @@ export abstract class WalletSDKRelayAbstract {
   abstract setChainCallback(
     chainIdCallback: (chainId: string, jsonRpcUrl: string) => void,
   ): void;
+
+  abstract setDappDefaultChainCallback(chainId: number): void;
 
   /**
    * Whether the relay supports the add ethereum chain call without

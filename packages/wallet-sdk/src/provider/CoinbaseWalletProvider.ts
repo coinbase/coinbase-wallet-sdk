@@ -43,12 +43,13 @@ import { RequestArguments, Web3Provider } from "./Web3Provider";
 
 const DEFAULT_CHAIN_ID_KEY = "DefaultChainId";
 const DEFAULT_JSON_RPC_URL = "DefaultJsonRpcUrl";
-// Indicates chain has been switched by switchEthereumChain or addEthereumChain request
-const HAS_CHAIN_BEEN_SWITCHED_KEY = "HasChainBeenSwitched";
-const HAS_CHAIN_OVERRIDDEN_FROM_RELAY = "HasChainOverriddenFromRelay";
+const WHITELISTED_NETWORK_CHAIN_ID = [
+  1, 10, 137, 61, 56, 250, 42161, 100, 43114, 3, 4, 5, 42, 69, 80001, 97, 4002,
+  421611, 43113,
+];
 
 export interface CoinbaseWalletProviderOptions {
-  chainId?: number;
+  chainId: number;
   jsonRpcUrl: string;
   qrUrl?: string | null;
   overrideIsCoinbaseWallet?: boolean;
@@ -109,6 +110,7 @@ export class CoinbaseWalletProvider
   private readonly _relayEventManager: WalletSDKRelayEventManager;
   private readonly diagnostic?: DiagnosticLogger;
 
+  private _chainIdFromOpts: number;
   private _jsonRpcUrlFromOpts: string;
   private readonly _overrideIsMetaMask: boolean;
 
@@ -134,6 +136,7 @@ export class CoinbaseWalletProvider
     this.scanQRCode = this.scanQRCode.bind(this);
     this.genericRequest = this.genericRequest.bind(this);
 
+    this._chainIdFromOpts = options.chainId;
     this._jsonRpcUrlFromOpts = options.jsonRpcUrl;
     this._overrideIsMetaMask = options.overrideIsMetaMask;
     this._relayProvider = options.relayProvider;
@@ -182,10 +185,13 @@ export class CoinbaseWalletProvider
     window.addEventListener("message", event => {
       if (event.data.type !== "walletLinkMessage") return; // compatibility with CBW extension
 
-      if (event.data.data.action === "defaultChainChanged") {
+      if (
+        event.data.data.action === "defaultChainChanged" ||
+        event.data.data.action === "dappChainSwitched"
+      ) {
         const _chainId = event.data.data.chainId;
         const jsonRpcUrl = event.data.data.jsonRpcUrl ?? this.jsonRpcUrl;
-        this.updateProviderInfo(jsonRpcUrl, Number(_chainId), true);
+        this.updateProviderInfo(jsonRpcUrl, Number(_chainId));
       }
 
       if (event.data.data.action === "addressChanged") {
@@ -241,37 +247,17 @@ export class CoinbaseWalletProvider
     this._storage.setItem(DEFAULT_JSON_RPC_URL, value);
   }
 
-  private get isChainOverridden(): boolean {
-    return this._storage.getItem(HAS_CHAIN_OVERRIDDEN_FROM_RELAY) === "true";
-  }
-
-  private set isChainOverridden(value: boolean) {
-    this._storage.setItem(HAS_CHAIN_OVERRIDDEN_FROM_RELAY, value.toString());
-  }
-
   public disableReloadOnDisconnect() {
     this.reloadOnDisconnect = false;
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  public setProviderInfo(jsonRpcUrl: string, chainId?: number) {
-    if (this.isChainOverridden) return;
-    this.updateProviderInfo(jsonRpcUrl, this.getChainId(), false);
+  public setProviderInfo(jsonRpcUrl: string, chainId: number) {
+    this._chainIdFromOpts = chainId;
+    this._jsonRpcUrlFromOpts = jsonRpcUrl;
+    this.updateProviderInfo(jsonRpcUrl, chainId);
   }
 
-  private updateProviderInfo(
-    jsonRpcUrl: string,
-    chainId: number,
-    fromRelay: boolean,
-  ) {
-    const hasChainSwitched =
-      this._storage.getItem(HAS_CHAIN_BEEN_SWITCHED_KEY) === "true";
-    if (hasChainSwitched && fromRelay) return;
-    if (fromRelay) {
-      this.isChainOverridden = true;
-    }
-
+  private updateProviderInfo(jsonRpcUrl: string, chainId: number) {
     this.jsonRpcUrl = jsonRpcUrl;
 
     // emit chainChanged event if necessary
@@ -340,20 +326,23 @@ export class CoinbaseWalletProvider
     ).promise;
 
     if (res.result?.isApproved === true) {
-      this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true");
-      this.updateProviderInfo(rpcUrls[0], chainId, false);
+      this.updateProviderInfo(rpcUrls[0], chainId);
     }
 
     return res.result?.isApproved === true;
   }
 
   private async switchEthereumChain(chainId: number) {
-    if (ensureIntNumber(chainId) === this.getChainId()) {
-      return;
+    if (WHITELISTED_NETWORK_CHAIN_ID.includes(chainId)) {
+      // for whitelisted network that we know we can switch to, switch it right away
+      this.updateProviderInfo(this.jsonRpcUrl, chainId);
     }
 
     const relay = await this.initializeRelay();
-    const res = await relay.switchEthereumChain(chainId.toString(10)).promise;
+    const res = await relay.switchEthereumChain(
+      chainId.toString(10),
+      this.selectedAddress || undefined,
+    ).promise;
 
     if ((res as ErrorResponse).errorCode) {
       throw ethErrors.provider.custom({
@@ -363,8 +352,7 @@ export class CoinbaseWalletProvider
 
     const switchResponse = res.result as SwitchResponse;
     if (switchResponse.isApproved && switchResponse.rpcUrl.length > 0) {
-      this._storage.setItem(HAS_CHAIN_BEEN_SWITCHED_KEY, "true");
-      this.updateProviderInfo(switchResponse.rpcUrl, chainId, false);
+      this.updateProviderInfo(switchResponse.rpcUrl, chainId);
     }
   }
 
@@ -933,7 +921,12 @@ export class CoinbaseWalletProvider
   }
 
   private getChainId(): IntNumber {
-    const chainIdStr = this._storage.getItem(DEFAULT_CHAIN_ID_KEY) || "1";
+    const chainIdStr = this._storage.getItem(DEFAULT_CHAIN_ID_KEY);
+
+    if (!chainIdStr) {
+      return ensureIntNumber(this._chainIdFromOpts);
+    }
+
     const chainId = parseInt(chainIdStr, 10);
     return ensureIntNumber(chainId);
   }
@@ -976,6 +969,8 @@ export class CoinbaseWalletProvider
     }
 
     this._setAddresses(res.result);
+    await this.switchEthereumChain(this.getChainId());
+
     return { jsonrpc: "2.0", id: 0, result: this._addresses };
   }
 
@@ -1266,8 +1261,9 @@ export class CoinbaseWalletProvider
         this._setAddresses(accounts, isDisconnect),
       );
       relay.setChainCallback((chainId, jsonRpcUrl) => {
-        this.updateProviderInfo(jsonRpcUrl, parseInt(chainId, 10), true);
+        this.updateProviderInfo(jsonRpcUrl, parseInt(chainId, 10));
       });
+      relay.setDappDefaultChainCallback(this._chainIdFromOpts);
       this._relay = relay;
       return relay;
     });

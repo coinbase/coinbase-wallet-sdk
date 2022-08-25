@@ -76,7 +76,7 @@ describe("CoinbaseWalletSDK", () => {
         const url = new URL(qrUrl);
 
         expect(url.hostname).toEqual("www.walletlink.org");
-        expect(url.hash.split("=")).toHaveLength(5);
+        expect(url.hash.split("=")).toHaveLength(6);
       });
 
       test("@getCoinbaseWalletLogo", () => {
@@ -155,6 +155,7 @@ describe("CoinbaseWalletSDK", () => {
       }
 
       const mockCipherProvider = new MockCipherProviderClass({
+        chainId: 1,
         jsonRpcUrl: "url",
         overrideIsMetaMask: false,
         relayEventManager: new WalletSDKRelayEventManager(),
@@ -195,6 +196,7 @@ describe("CoinbaseWalletSDK", () => {
       }
 
       const mockCoinbaseBrowserProvider = new MockCoinbaseBrowserProvider({
+        chainId: 1,
         jsonRpcUrl: "url",
         overrideIsMetaMask: false,
         relayEventManager: new WalletSDKRelayEventManager(),

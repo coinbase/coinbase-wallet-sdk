@@ -2,7 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 import { h, render } from "preact";
-import { BehaviorSubject, Observable, Subscription } from "rxjs";
+import { BehaviorSubject, Observable, Subject, Subscription } from "rxjs";
 
 import { TryExtensionLinkDialog } from "./TryExtensionLinkDialog";
 
@@ -13,6 +13,7 @@ export interface LinkFlowOptions {
   sessionSecret: string;
   linkAPIUrl: string;
   isParentConnection: boolean;
+  chainId$: Subject<number>;
   connected$: Observable<boolean>;
 }
 
@@ -29,11 +30,13 @@ export class LinkFlow {
   private readonly isParentConnection: boolean;
 
   private readonly connected$: Observable<boolean>;
+  private readonly chainId$: Subject<number>;
   private readonly extensionUI$: BehaviorSubject<Optional<boolean>> =
     new BehaviorSubject({});
   private readonly subscriptions = new Subscription();
 
   private isConnected = false;
+  private chainId = 1;
   private isOpen = false;
   private onCancel: (() => void) | null = null;
 
@@ -50,6 +53,7 @@ export class LinkFlow {
     this.linkAPIUrl = options.linkAPIUrl;
     this.isParentConnection = options.isParentConnection;
     this.connected$ = options.connected$;
+    this.chainId$ = options.chainId$;
   }
 
   public attach(el: Element): void {
@@ -62,6 +66,15 @@ export class LinkFlow {
       this.connected$.subscribe(v => {
         if (this.isConnected !== v) {
           this.isConnected = v;
+          this.render();
+        }
+      }),
+    );
+
+    this.subscriptions.add(
+      this.chainId$.subscribe(chainId => {
+        if (this.chainId !== chainId) {
+          this.chainId = chainId;
           this.render();
         }
       }),
@@ -113,6 +126,7 @@ export class LinkFlow {
           isOpen={this.isOpen}
           isConnected={this.isConnected}
           isParentConnection={this.isParentConnection}
+          chainId={this.chainId}
           onCancel={this.onCancel}
           connectDisabled={this.connectDisabled}
         />,

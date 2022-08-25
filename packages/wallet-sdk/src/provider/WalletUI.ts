@@ -1,4 +1,4 @@
-import { Observable } from "rxjs";
+import { Observable, Subject } from "rxjs";
 
 import { Session } from "../relay/Session";
 import {
@@ -21,6 +21,7 @@ export interface WalletUIOptions {
   darkMode: boolean;
   session: Session;
   connected$: Observable<boolean>;
+  chainId$: Subject<number>;
 }
 
 export interface WalletUI {
@@ -72,6 +73,7 @@ export interface WalletUI {
     onCancel: (error?: Error) => void;
     onApprove: (rpcUrl: string) => void;
     chainId: string;
+    address?: string;
   }): void;
 
   signEthereumMessage(options: {

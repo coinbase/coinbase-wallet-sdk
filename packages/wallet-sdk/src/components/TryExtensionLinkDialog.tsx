@@ -21,6 +21,7 @@ export const TryExtensionLinkDialog: FunctionComponent<{
   isOpen: boolean;
   isConnected: boolean;
   isParentConnection: boolean;
+  chainId: number;
   connectDisabled: boolean;
   onCancel: (() => void) | null;
 }> = props => {
@@ -92,6 +93,7 @@ export const TryExtensionLinkDialog: FunctionComponent<{
               linkAPIUrl={props.linkAPIUrl}
               isConnected={props.isConnected}
               isParentConnection={props.isParentConnection}
+              chainId={props.chainId}
             />
           ) : null}
 
@@ -164,12 +166,14 @@ const ScanQRBox: FunctionComponent<{
   linkAPIUrl: string;
   isConnected: boolean;
   isParentConnection: boolean;
+  chainId: number;
 }> = props => {
   const qrUrl = createQrUrl(
     props.sessionId,
     props.sessionSecret,
     props.linkAPIUrl,
     props.isParentConnection,
+    props.chainId,
   );
 
   const theme = props.darkMode ? "dark" : "light";

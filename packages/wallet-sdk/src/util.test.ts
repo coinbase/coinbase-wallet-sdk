@@ -223,9 +223,10 @@ describe("util", () => {
         "b9a1d5933eae7064fc6e1a673235f648",
         "https://www.walletlink.org",
         false,
+        1,
       ),
     ).toEqual(
-      "https://www.walletlink.org/#/link?id=1dc7878268586cbcaf041c6817d446d3&secret=b9a1d5933eae7064fc6e1a673235f648&server=https%3A%2F%2Fwww.walletlink.org&v=1",
+      "https://www.walletlink.org/#/link?id=1dc7878268586cbcaf041c6817d446d3&secret=b9a1d5933eae7064fc6e1a673235f648&server=https%3A%2F%2Fwww.walletlink.org&v=1&chainId=1",
     );
     expect(
       createQrUrl(
@@ -233,9 +234,10 @@ describe("util", () => {
         "b9a1d5933eae7064fc6e1a673235f648",
         "https://www.walletlink.org",
         true,
+        1,
       ),
     ).toEqual(
-      "https://www.walletlink.org/#/link?parent-id=1dc7878268586cbcaf041c6817d446d3&secret=b9a1d5933eae7064fc6e1a673235f648&server=https%3A%2F%2Fwww.walletlink.org&v=1",
+      "https://www.walletlink.org/#/link?parent-id=1dc7878268586cbcaf041c6817d446d3&secret=b9a1d5933eae7064fc6e1a673235f648&server=https%3A%2F%2Fwww.walletlink.org&v=1&chainId=1",
     );
   });
 });

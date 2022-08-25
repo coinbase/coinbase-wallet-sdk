@@ -1,6 +1,6 @@
 import { render } from "@testing-library/preact";
 import { h } from "preact";
-import { Observable } from "rxjs";
+import { Observable, Subject } from "rxjs";
 
 import { LinkFlow } from "./LinkFlow";
 
@@ -13,6 +13,7 @@ describe("LinkFlow", () => {
     linkAPIUrl: "http://link-url.com",
     isParentConnection: false,
     connected$: new Observable(),
+    chainId$: new Subject(),
   });
 
   test("initialize", () => {
@@ -90,6 +91,7 @@ describe("LinkFlow", () => {
         linkAPIUrl: "http://link-url.com",
         isParentConnection: false,
         connected$: new Observable(),
+        chainId$: new Subject(),
       });
       linkFlow1.detach();
 

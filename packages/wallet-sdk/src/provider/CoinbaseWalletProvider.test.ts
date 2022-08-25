@@ -79,7 +79,7 @@ describe("CoinbaseWalletProvider", () => {
   it("handles setting provider info", () => {
     const url = "https://new.jsonRpcUrl.com";
     const provider = setupCoinbaseWalletProvider();
-    provider.setProviderInfo(url);
+    provider.setProviderInfo(url, 1);
     expect(provider.host).toBe(url);
   });
 
