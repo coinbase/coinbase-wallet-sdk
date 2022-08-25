@@ -73,6 +73,7 @@ export interface WalletUI {
     onCancel: (error?: Error) => void;
     onApprove: (rpcUrl: string) => void;
     chainId: string;
+    address?: string;
   }): void;
 
   signEthereumMessage(options: {

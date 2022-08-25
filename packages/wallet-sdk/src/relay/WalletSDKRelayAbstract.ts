@@ -62,6 +62,7 @@ export abstract class WalletSDKRelayAbstract {
 
   abstract switchEthereumChain(
     chainId: string,
+    address?: string,
   ): CancelablePromise<SwitchEthereumChainResponse>;
 
   abstract signEthereumMessage(

@@ -47,6 +47,7 @@ export type SwitchEthereumChainRequest = BaseWeb3Request<
   Web3Method.switchEthereumChain,
   {
     chainId: string;
+    address?: string;
   }
 >;
 
