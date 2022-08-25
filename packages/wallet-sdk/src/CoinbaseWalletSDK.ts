@@ -105,7 +105,7 @@ export class CoinbaseWalletSDK {
 
     this._storage.setItem("version", CoinbaseWalletSDK.VERSION);
 
-    if (this.walletExtension) {
+    if (this.walletExtension || this.coinbaseBrowser) {
       return;
     }
 
@@ -150,6 +150,11 @@ export class CoinbaseWalletSDK {
         extension.disableReloadOnDisconnect();
 
       return extension;
+    }
+
+    const dappBrowser = this.coinbaseBrowser;
+    if (dappBrowser) {
+      return dappBrowser;
     }
 
     const relay = this._relay;
@@ -227,6 +232,24 @@ export class CoinbaseWalletSDK {
 
   private get walletExtension(): CoinbaseWalletProvider | undefined {
     return window.coinbaseWalletExtension ?? window.walletLinkExtension;
+  }
+
+  private get coinbaseBrowser(): CoinbaseWalletProvider | undefined {
+    try {
+      // Coinbase DApp browser does not inject into iframes so grab provider from top frame if it exists
+      const ethereum = (window.ethereum ?? window.top?.ethereum) as any;
+      if (!ethereum) {
+        return undefined;
+      }
+
+      if ("isCoinbaseBrowser" in ethereum && ethereum.isCoinbaseBrowser) {
+        return ethereum;
+      } else {
+        return undefined;
+      }
+    } catch (e) {
+      return undefined;
+    }
   }
 
   private isCipherProvider(provider: CoinbaseWalletProvider): boolean {
