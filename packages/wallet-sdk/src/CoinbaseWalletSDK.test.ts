@@ -196,6 +196,7 @@ describe("CoinbaseWalletSDK", () => {
       }
 
       const mockCoinbaseBrowserProvider = new MockCoinbaseBrowserProvider({
+        chainId: 1,
         jsonRpcUrl: "url",
         overrideIsMetaMask: false,
         relayEventManager: new WalletSDKRelayEventManager(),
