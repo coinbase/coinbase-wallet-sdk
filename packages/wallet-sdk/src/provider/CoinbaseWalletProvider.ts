@@ -60,6 +60,7 @@ export interface CoinbaseWalletProviderOptions {
   storage: ScopedLocalStorage;
   diagnosticLogger?: DiagnosticLogger;
   supportsAddressSwitching?: boolean;
+  isLedger?: boolean;
 }
 
 interface AddEthereumChainParams {
@@ -120,6 +121,8 @@ export class CoinbaseWalletProvider
 
   private supportsAddressSwitching?: boolean;
 
+  private isLedger?: boolean;
+
   constructor(options: Readonly<CoinbaseWalletProviderOptions>) {
     super();
 
@@ -151,6 +154,7 @@ export class CoinbaseWalletProvider
     this.qrUrl = options.qrUrl;
 
     this.supportsAddressSwitching = options.supportsAddressSwitching;
+    this.isLedger = options.isLedger;
 
     const chainId = this.getChainId();
     const chainIdStr = prepend0x(chainId.toString(16));
@@ -969,7 +973,9 @@ export class CoinbaseWalletProvider
     }
 
     this._setAddresses(res.result);
-    await this.switchEthereumChain(this.getChainId());
+    if (!this.isLedger) {
+      await this.switchEthereumChain(this.getChainId());
+    }
 
     return { jsonrpc: "2.0", id: 0, result: this._addresses };
   }
