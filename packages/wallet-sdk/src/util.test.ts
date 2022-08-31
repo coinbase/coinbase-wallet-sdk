@@ -223,6 +223,7 @@ describe("util", () => {
         "b9a1d5933eae7064fc6e1a673235f648",
         "https://www.walletlink.org",
         false,
+        "1",
         1,
       ),
     ).toEqual(
@@ -234,6 +235,7 @@ describe("util", () => {
         "b9a1d5933eae7064fc6e1a673235f648",
         "https://www.walletlink.org",
         true,
+        "1",
         1,
       ),
     ).toEqual(

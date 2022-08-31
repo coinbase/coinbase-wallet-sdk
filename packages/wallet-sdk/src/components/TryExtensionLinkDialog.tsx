@@ -173,6 +173,7 @@ const ScanQRBox: FunctionComponent<{
     props.sessionSecret,
     props.linkAPIUrl,
     props.isParentConnection,
+    props.version,
     props.chainId,
   );
 
