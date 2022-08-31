@@ -599,6 +599,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
       this._session.secret,
       this.linkAPIUrl,
       false,
+      this.options.version,
       this.dappDefaultChain,
     );
   }
