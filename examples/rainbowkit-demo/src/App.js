@@ -10,7 +10,7 @@ import {
 import { CheckCircleIcon, WarningIcon } from "@chakra-ui/icons";
 import { Tooltip } from "@chakra-ui/react";
 import { truncateAddress } from "./utils";
-import { useAccount, useConnect, useNetwork, useSignMessage } from "wagmi";
+import { useAccount, useNetwork, useSignMessage } from "wagmi";
 import { verifyMessage } from 'ethers/lib/utils'
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import '@rainbow-me/rainbowkit/styles.css';
@@ -21,9 +21,8 @@ export default function Home() {
   const [verified, setVerified] = useState(undefined);
 
   // wagmi Hooks
-  const { activeConnector } = useConnect();
-  const { data: accountData } = useAccount();
-  const { activeChain } = useNetwork();
+  const { address, isConnected } = useAccount();
+  const { chain } = useNetwork();
   const { signMessage } = useSignMessage({
     message,
     onSuccess(data) {
@@ -37,8 +36,8 @@ export default function Home() {
   };
 
   const verify = async () => {
-    const address = verifyMessage(message, signature);
-    setVerified(address.toLowerCase() === accountData.address.toLowerCase());
+    const resp = verifyMessage(message, signature);
+    setVerified(resp.toLowerCase() === address.toLowerCase());
   };
 
   const refreshState = () => {
@@ -49,7 +48,7 @@ export default function Home() {
 
   useEffect(() => {
     refreshState();
-  }, [accountData, activeChain]);
+  }, [address, chain]);
 
   return (
     <>
@@ -83,7 +82,7 @@ export default function Home() {
         <HStack>
           <ConnectButton />
         </HStack>
-        {activeConnector && (
+        {isConnected && (
           <HStack justifyContent="flex-start" alignItems="flex-start" padding="15px 0">
             <Box
               maxW="sm"
