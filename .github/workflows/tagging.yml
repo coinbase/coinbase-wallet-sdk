@@ -6,26 +6,40 @@ on:
       - master
 
 jobs:
+  authorize:
+    name: Authorize
+    runs-on: ubuntu-latest
+    steps:
+      - name: ${{ github.actor }} permission check to update release version
+        uses: "lannonbr/repo-permission-check-action@2.0.2"
+        with:
+          permission: "write"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   tag_merged_version:
+    name: Tag merged version
     if: startsWith(github.event.head_commit.message, 'v')
     runs-on: ubuntu-latest
+    needs: [authorize]
+    env:
+      COMMIT_MSG: ${{ github.event.head_commit.message }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Setup Tag Match
+        uses: actions-ecosystem/action-regex-match@v2
         id: check-tag
-        run: |
-          if [[ "${{ github.event.head_commit.message }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
-            echo ::set-output name=match::true
-          fi
+        with:
+          text: ${{ env.COMMIT_MSG }}
+          regex: '^v[0-9]+\.[0-9]+\.[0-9]+'
 
       - name: Set Tag Value
-        if: steps.check-tag.outputs.match == 'true'
+        if: ${{ steps.check-tag.outputs.match != '' }}
         id: tag
         run: |
-          COMMIT_MSG="${{ github.event.head_commit.message }}"
           TAG=$(echo $COMMIT_MSG | sed -e '1!d' -e 's/\(^v[[:digit:]]*.[[:digit:]]*.[[:digit:]]*\).*$/\1/' )
           echo "PARSED_TAG=$TAG" >> $GITHUB_ENV
 
