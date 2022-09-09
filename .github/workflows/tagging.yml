@@ -6,50 +6,13 @@ on:
       - master
 
 jobs:
-  authorize:
-    name: Authorize
+  autotag:
     runs-on: ubuntu-latest
     steps:
-      - name: ${{ github.actor }} permission check to update release version
-        uses: "lannonbr/repo-permission-check-action@2.0.2"
-        with:
-          permission: "write"
+      - uses: actions/checkout@v2
+      - uses: butlerlogic/action-autotag@stable
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  tag_merged_version:
-    name: Tag merged version
-    if: startsWith(github.event.head_commit.message, 'v')
-    runs-on: ubuntu-latest
-    needs: [authorize]
-    env:
-      COMMIT_MSG: ${{ github.event.head_commit.message }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Setup Tag Match
-        uses: actions-ecosystem/action-regex-match@v2
-        id: check-tag
         with:
-          text: ${{ env.COMMIT_MSG }}
-          regex: '^v[0-9]+\.[0-9]+\.[0-9]+'
-
-      - name: Set Tag Value
-        if: ${{ steps.check-tag.outputs.match != '' }}
-        id: tag
-        run: |
-          TAG=$(echo $COMMIT_MSG | sed -e '1!d' -e 's/\(^v[[:digit:]]*.[[:digit:]]*.[[:digit:]]*\).*$/\1/' )
-          echo "PARSED_TAG=$TAG" >> $GITHUB_ENV
-
-      - name: Tag
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: "refs/tags/${{ env.PARSED_TAG }}",
-              sha: context.sha
-            })
+          root: "./packages/wallet-sdk"
+          tag_prefix: "v"
