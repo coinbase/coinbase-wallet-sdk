@@ -99,10 +99,9 @@ export class CoinbaseWalletSDK {
 
     this._reloadOnDisconnect = options.reloadOnDisconnect ?? true;
 
-    const u = new URL(linkAPIUrl);
-    const origin = `${u.protocol}//${u.host}`;
+    const url = new URL(linkAPIUrl);
+    const origin = `${url.protocol}//${url.host}`;
     this._storage = new ScopedLocalStorage(`-walletlink:${origin}`); // needs migration to preserve local states
-
     this._storage.setItem("version", CoinbaseWalletSDK.VERSION);
 
     if (this.walletExtension || this.coinbaseBrowser) {
