@@ -255,10 +255,18 @@ export class CoinbaseWalletProvider
     this.reloadOnDisconnect = false;
   }
 
+  /**
+   * this function is called when coinbase provider is being injected to a dapp
+   * standalone + walletlinked extension, ledger, in-app browser using cipher-web-view
+   */
   public setProviderInfo(jsonRpcUrl: string, chainId: number) {
-    this._chainIdFromOpts = chainId;
-    this._jsonRpcUrlFromOpts = jsonRpcUrl;
-    this.updateProviderInfo(jsonRpcUrl, chainId);
+    // extension tend to use the chianId from the dapp, while in-app browser and ledger overrides the default network
+    if (!(this.isLedger || this.isCoinbaseBrowser)) {
+      this._chainIdFromOpts = chainId;
+      this._jsonRpcUrlFromOpts = jsonRpcUrl;
+    }
+
+    this.updateProviderInfo(this._jsonRpcUrlFromOpts, this._chainIdFromOpts);
   }
 
   private updateProviderInfo(jsonRpcUrl: string, chainId: number) {
@@ -973,7 +981,7 @@ export class CoinbaseWalletProvider
     }
 
     this._setAddresses(res.result);
-    if (!this.isLedger) {
+    if (!(this.isLedger || this.isCoinbaseBrowser)) {
       await this.switchEthereumChain(this.getChainId());
     }
 
