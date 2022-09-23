@@ -257,11 +257,11 @@ export class CoinbaseWalletProvider
 
   /**
    * this function is called when coinbase provider is being injected to a dapp
-   * standalone + walletlinked extension, in-app browser using cipher-web-view
+   * standalone + walletlinked extension, ledger, in-app browser using cipher-web-view
    */
   public setProviderInfo(jsonRpcUrl: string, chainId: number) {
-    // extension tend to use the chianId from the dapp, while in-app browser overrides the default network
-    if (!this.isCoinbaseBrowser) {
+    // extension tend to use the chianId from the dapp, while in-app browser and ledger overrides the default network
+    if (!(this.isLedger || this.isCoinbaseBrowser)) {
       this._chainIdFromOpts = chainId;
       this._jsonRpcUrlFromOpts = jsonRpcUrl;
     }
