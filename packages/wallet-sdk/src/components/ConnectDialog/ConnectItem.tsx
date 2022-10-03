@@ -25,14 +25,14 @@ export function ConnectItem({
       <style>{css}</style>
       <div
         onClick={onClick}
-        className={clsx("connect-item", theme, { selected })}
+        class={clsx("connect-item", theme, { selected })}
       >
         <div>
           <img src={icon} alt={title} />
         </div>
-        <div className="connect-item-copy-container">
-          <h3 className="connect-item-title">{title}</h3>
-          <p className="connect-item-description">{description}</p>
+        <div class="connect-item-copy-container">
+          <h3 class="connect-item-title">{title}</h3>
+          <p class="connect-item-description">{description}</p>
         </div>
       </div>
     </>

@@ -59,13 +59,20 @@
   }
 
   &-list-item {
+    display: flex;
+    align-items: center;
     margin-top: 12px;
     font-weight: 400;
     font-size: 14px;
     line-height: 20px;
     color: $foreground-muted;
+
     &:first-of-type {
       margin-top: 0;
     }
+  }
+
+  &-list-item-icon {
+    margin-right: 12px;
   }
 }

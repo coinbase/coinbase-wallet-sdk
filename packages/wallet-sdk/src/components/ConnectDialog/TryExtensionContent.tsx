@@ -1,7 +1,9 @@
 import clsx from "clsx";
 import { useCallback, useState } from "preact/hooks";
 
-import arrowLeft from "../icons/arrow-left-svg";
+import arrowLeftIcon from "../icons/arrow-left-svg";
+import laptopIcon from "../icons/laptop-icon-svg";
+import safeIcon from "../icons/safe-icon-svg";
 import css from "./TryExtensionContent-css";
 import { Theme } from "./types";
 
@@ -30,37 +32,53 @@ export function TryExtensionContent({ theme }: TryExtensionContentProps) {
 
   return (
     <>
-      <style>
-        {css}
-      </style>
-      <div className={clsx("try-extension", theme)}>
-        <div className="try-extension-column-half">
-          <h3 className="try-extension-heading">
+      <style>{css}</style>
+      <div class={clsx("try-extension", theme)}>
+        <div class="try-extension-column-half">
+          <h3 class="try-extension-heading">
             Or try the Coinbase Wallet browser extension
           </h3>
-          <div className="try-extension-cta-container">
-            <button className="try-extension-cta" onClick={handleClick}>
+          <div class="try-extension-cta-container">
+            <button class="try-extension-cta" onClick={handleClick}>
               {clicked ? "Refresh" : "Install"}
             </button>
             <div>
               {!clicked && (
                 <img
-                  className="try-extension-cta-icon"
-                  src={arrowLeft}
+                  class="try-extension-cta-icon"
+                  src={arrowLeftIcon}
                   alt="arrow-left-icon"
                 />
               )}
             </div>
           </div>
         </div>
-        <div className="try-extension-column-half">
-          <ul className="try-extension-list">
-            <li className="try-extension-list-item">
-              Connect with dapps with just one click on your desktop browser
+        <div class="try-extension-column-half">
+          <ul class="try-extension-list">
+            <li class="try-extension-list-item">
+              <div>
+                <img
+                  class="try-extension-list-item-icon"
+                  src={laptopIcon}
+                  alt="laptop-icon"
+                />
+              </div>
+              <div>
+                Connect with dapps with just one click on your desktop browser
+              </div>
             </li>
-            <li className="try-extension-list-item">
-              Add an additional layer of security by using a supported Ledger
-              hardware wallet
+            <li class="try-extension-list-item">
+              <div>
+                <img
+                  class="try-extension-list-item-icon"
+                  src={safeIcon}
+                  alt="safe-icon"
+                />
+              </div>
+              <div>
+                Add an additional layer of security by using a supported Ledger
+                hardware wallet
+              </div>
             </li>
           </ul>
         </div>
