@@ -1,11 +1,14 @@
+// Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
+// Licensed under the Apache License, version 2.0
+
 import clsx from "clsx";
 import { useCallback, useState } from "preact/hooks";
 
 import arrowLeftIcon from "../icons/arrow-left-svg";
 import laptopIcon from "../icons/laptop-icon-svg";
 import safeIcon from "../icons/safe-icon-svg";
+import { Theme } from "../types";
 import css from "./TryExtensionContent-css";
-import { Theme } from "./types";
 
 type TryExtensionContentProps = {
   theme: Theme;
@@ -33,19 +36,19 @@ export function TryExtensionContent({ theme }: TryExtensionContentProps) {
   return (
     <>
       <style>{css}</style>
-      <div class={clsx("try-extension", theme)}>
-        <div class="try-extension-column-half">
-          <h3 class="try-extension-heading">
+      <div class={clsx("-cbwsdk-try-extension", theme)}>
+        <div class="-cbwsdk-try-extension-column-half">
+          <h3 class="-cbwsdk-try-extension-heading">
             Or try the Coinbase Wallet browser extension
           </h3>
-          <div class="try-extension-cta-container">
-            <button class="try-extension-cta" onClick={handleClick}>
+          <div class="-cbwsdk-try-extension-cta-container">
+            <button class="-cbwsdk-try-extension-cta" onClick={handleClick}>
               {clicked ? "Refresh" : "Install"}
             </button>
             <div>
               {!clicked && (
                 <img
-                  class="try-extension-cta-icon"
+                  class="-cbwsdk-try-extension-cta-icon"
                   src={arrowLeftIcon}
                   alt="arrow-left-icon"
                 />
@@ -53,12 +56,12 @@ export function TryExtensionContent({ theme }: TryExtensionContentProps) {
             </div>
           </div>
         </div>
-        <div class="try-extension-column-half">
-          <ul class="try-extension-list">
-            <li class="try-extension-list-item">
+        <div class="-cbwsdk-try-extension-column-half">
+          <ul class="-cbwsdk-try-extension-list">
+            <li class="-cbwsdk-try-extension-list-item">
               <div>
                 <img
-                  class="try-extension-list-item-icon"
+                  class="-cbwsdk-try-extension-list-item-icon"
                   src={laptopIcon}
                   alt="laptop-icon"
                 />
@@ -67,10 +70,10 @@ export function TryExtensionContent({ theme }: TryExtensionContentProps) {
                 Connect with dapps with just one click on your desktop browser
               </div>
             </li>
-            <li class="try-extension-list-item">
+            <li class="-cbwsdk-try-extension-list-item">
               <div>
                 <img
-                  class="try-extension-list-item-icon"
+                  class="-cbwsdk-try-extension-list-item-icon"
                   src={safeIcon}
                   alt="safe-icon"
                 />

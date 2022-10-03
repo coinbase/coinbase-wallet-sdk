@@ -1,0 +1,172 @@
+// Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
+// Licensed under the Apache License, version 2.0
+
+@import "../theme.scss";
+
+.-cbwsdk-css-reset {
+  .-cbwsdk-connect-content {
+    width: 700px;
+    margin: auto;
+    border-radius: 12px;
+    padding: 30px;
+
+    &.light {
+      background: $white;
+    }
+
+    &.dark {
+      background: $black;
+    }
+
+    &-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 0 0 30px;
+    }
+
+    &-heading {
+      font-style: normal;
+      font-weight: 500;
+      font-size: 28px;
+      line-height: 36px;
+      margin: 0;
+    }
+
+    &-layout {
+      display: flex;
+      flex-direction: row;
+    }
+
+    &-column-left {
+      margin-right: 30px;
+    }
+
+    &-column-right {
+      flex: 25%;
+      margin-right: 34px;
+    }
+
+    &-qr-connecting {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
+      &.light {
+        background-color: rgba($white, 0.95);
+
+        >p {
+          color: $black;
+        }
+      }
+
+      &.dark {
+        background-color: rgba($background-alt-dark, 0.9);
+
+        >p {
+          color: $white;
+        }
+      }
+
+      >p {
+        font-size: 12px;
+        font-weight: bold;
+
+        margin-top: 16px;
+      }
+    }
+  }
+
+  .-cbwsdk-cancel-button {
+    -webkit-appearance: none;
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+
+    &-x {
+      position: relative;
+      display: block;
+      cursor: pointer;
+
+      &.light {
+        fill: $black;
+      }
+
+      &.dark {
+        fill: $white;
+      }
+    }
+  }
+
+  .-cbwsdk-wallet-steps {
+    padding: 0 0 0 20px;
+    margin: 0;
+    width: 100%;
+    list-style-type: lower-alpha;
+
+    &-item {
+      font-style: normal;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 24px;
+      margin-top: 12px;
+    }
+
+    &-item-wrapper {
+      display: flex;
+      align-items: center;
+    }
+
+    &-pad-left {
+      margin-left: 6px;
+    }
+  }
+
+  .-cbwsdk-connect-item {
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+    padding: 16px 24px;
+    gap: 12px;
+    cursor: pointer;
+
+    &.light {
+      color: $black;
+    }
+
+    &.dark {
+      color: $white;
+    }
+
+    &.selected {
+      background: $blue-wash;
+      border-radius: 100px;
+      color: $blue-dark;
+    }
+
+    &-copy-wrapper {
+      margin-left: 8px;
+    }
+
+    &-title {
+      margin: 0 0 0;
+      font-size: 16px;
+      line-height: 24px;
+    }
+
+    &-description {
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 20px;
+      margin: 0;
+    }
+  }
+}

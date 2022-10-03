@@ -4,7 +4,7 @@
 import { render } from "preact";
 import { BehaviorSubject, Observable, Subject, Subscription } from "rxjs";
 
-import { TryExtensionLinkDialog } from "./TryExtensionLinkDialog";
+import { ConnectDialog } from "./ConnectDialog/ConnectDialog";
 
 export interface LinkFlowOptions {
   darkMode: boolean;
@@ -117,7 +117,7 @@ export class LinkFlow {
       }
 
       render(
-        <TryExtensionLinkDialog
+        <ConnectDialog
           darkMode={this.darkMode}
           version={this.version}
           sessionId={this.sessionId}

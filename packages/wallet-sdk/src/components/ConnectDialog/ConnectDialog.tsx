@@ -1,192 +1,94 @@
-import clsx from "clsx";
-import { useCallback, useState } from "preact/hooks";
+// Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
+// Licensed under the Apache License, version 2.0
 
-import { createQrUrl } from "../../util";
-import closeIcon from "../icons/close-icon-svg";
-import coinbaseRound from "../icons/coinbase-round-svg";
-import coinbaseWalletRound from "../icons/coinbase-wallet-round-svg";
-import moreIcon from "../icons/more-icon-svg";
-import coinbaseLogo from "../icons/QRLogoCoinbase";
-import walletLogo from "../icons/QRLogoWallet";
-import scanIcon from "../icons/scan-icon-svg";
-import { QRCode } from "../QRCode";
+import clsx from "clsx";
+import { useEffect, useState } from "preact/hooks";
+
+import { ConnectContent } from "../ConnectContent/ConnectContent";
+import { TryExtensionContent } from "../TryExtensionContent/TryExtensionContent";
 import css from "./ConnectDialog-css";
-import { ConnectItem } from "./ConnectItem";
-import { Theme } from "./types";
 
 type ConnectDialogProps = {
-  theme: Theme;
+  darkMode: boolean;
   version: string;
   sessionId: string;
   sessionSecret: string;
   linkAPIUrl: string;
+  isOpen: boolean;
   isConnected: boolean;
   isParentConnection: boolean;
   chainId: number;
+  connectDisabled: boolean;
   onCancel: (() => void) | null;
 };
 
-const wallets = {
-  "coinbase-wallet-app": {
-    title: "Coinbase Wallet app",
-    description: "Connect with your self-custody wallet",
-    icon: coinbaseWalletRound,
-    steps: CoinbaseWalletSteps,
-  },
-  "coinbase-app": {
-    title: "Coinbase app",
-    description: "Connect with your Coinbase account",
-    icon: coinbaseRound,
-    steps: CoinbaseAppSteps,
-  },
-};
+export const ConnectDialog = (props: ConnectDialogProps) => {
+  const { isOpen, darkMode } = props;
+  const [isContainerHidden, setContainerHidden] = useState(!isOpen);
+  const [isDialogHidden, setDialogHidden] = useState(!isOpen);
 
-type WalletType = keyof typeof wallets;
+  useEffect(() => {
+    const timers = [
+      window.setTimeout(() => {
+        setDialogHidden(!isOpen);
+      }, 10),
+    ];
 
-const makeQrCodeImage = (app: string) => {
-  switch (app) {
-    case "coinbase-app":
-      return coinbaseLogo;
-    case "coinbase-wallet-app":
-    default:
-      return walletLogo;
-  }
-};
-
-export function ConnectDialog(props: ConnectDialogProps) {
-  const { theme } = props;
-  const [selected, setSelected] = useState<WalletType>("coinbase-wallet-app");
-
-  const handleSelect = useCallback((id: WalletType) => {
-    setSelected(id);
-  }, []);
-
-  const qrUrl = createQrUrl(
-    props.sessionId,
-    props.sessionSecret,
-    props.linkAPIUrl,
-    false,
-    props.version,
-    1,
-  );
-
-    const wallet = wallets[selected];
-    if (!selected) {
-      return null;
+    if (isOpen) {
+      setContainerHidden(false);
+    } else {
+      timers.push(
+        window.setTimeout(() => {
+          setContainerHidden(true);
+        }, 360),
+      );
     }
-    const WalletSteps = wallet.steps;
+
+    return () => {
+      timers.forEach(window.clearTimeout);
+    };
+  }, [props.isOpen]);
+
+  const theme = darkMode ? "dark" : "light";
 
   return (
-    <>
+    <div
+      class={clsx(
+        "-cbwsdk-extension-dialog-container",
+        isContainerHidden && "-cbwsdk-extension-dialog-container-hidden",
+      )}
+    >
       <style>{css}</style>
-      <div class={clsx("sdk-connect-dialog")}>
-        <div class={clsx("sdk-connect-dialog-container", theme)}>
-          <div class="sdk-connect-dialog-header">
-            <h2 class={clsx("sdk-connect-dialog-heading", theme)}>
-              Scan to connect with one of our mobile apps
-            </h2>
-            {props.onCancel && (
-              <button
-                type="button"
-                className={"sdk-cancel-button"}
-                onClick={props.onCancel}
-              >
-                <img
-                  className={clsx("sdk-cancel-button-x", theme)}
-                  src={closeIcon}
-                  alt=""
-                />
-              </button>
-            )}
-          </div>
-          <div class="sdk-connect-dialog-layout">
-            <div class="sdk-connect-dialog-column-left">
-              {Object.entries(wallets).map(([key, value]) => {
-                return (
-                  <ConnectItem
-                    key={key}
-                    title={value.title}
-                    description={value.description}
-                    icon={value.icon}
-                    selected={selected === key}
-                    onClick={() => handleSelect(key as WalletType)}
-                    theme={theme}
-                  />
-                );
-              })}
-            </div>
-            <div class="sdk-connect-dialog-column-right">
-              <QRCode
-                content={qrUrl}
-                width={212}
-                height={212}
-                fgColor="#000"
-                bgColor="transparent"
-                image={{
-                  svg: makeQrCodeImage(selected),
-                  width: 34,
-                  height: 34,
-                }}
-              />
-              <WalletSteps />
-            </div>
-          </div>
+      <div
+        class={clsx(
+          "-cbwsdk-extension-dialog-backdrop",
+          theme,
+          isDialogHidden && "-cbwsdk-extension-dialog-backdrop-hidden",
+        )}
+      />
+      <div class="-cbwsdk-extension-dialog">
+        <div
+          class={clsx(
+            "-cbwsdk-extension-dialog-box",
+            isDialogHidden && "-cbwsdk-extension-dialog-box-hidden",
+          )}
+        >
+          {!props.connectDisabled ? (
+            <ConnectContent
+              theme={theme}
+              version={props.version}
+              sessionId={props.sessionId}
+              sessionSecret={props.sessionSecret}
+              linkAPIUrl={props.linkAPIUrl}
+              isConnected={props.isConnected}
+              isParentConnection={props.isParentConnection}
+              chainId={props.chainId}
+              onCancel={props.onCancel}
+            />
+          ) : null}
+          <TryExtensionContent theme={theme} />
         </div>
       </div>
-    </>
+    </div>
   );
-}
-
-export function CoinbaseWalletSteps() {
-  return (
-    <ol class="sdk-wallet-steps">
-      <li class="sdk-wallet-steps-item">
-        <div class="sdk-wallet-steps-item-container">
-          Open Coinbase Wallet app
-        </div>
-      </li>
-      <li class="sdk-wallet-steps-item">
-        <div class="sdk-wallet-steps-item-container">
-          <span>
-            Tap <strong>Scan</strong>{" "}
-          </span>
-          <img
-            class="sdk-wallet-steps-pad-left"
-            src={scanIcon}
-            alt="scan-icon"
-          />
-        </div>
-      </li>
-    </ol>
-  );
-}
-
-export function CoinbaseAppSteps() {
-  return (
-    <ol class="sdk-wallet-steps">
-      <li class="sdk-wallet-steps-item">
-        <div class="sdk-wallet-steps-item-container">Open Coinbase app</div>
-      </li>
-      <li class="sdk-wallet-steps-item">
-        <div class="sdk-wallet-steps-item-container">
-          <span>
-            Tap <strong>More</strong>
-          </span>
-          <img
-            class="sdk-wallet-steps-pad-left"
-            src={moreIcon}
-            alt="more-icon"
-          />
-          <span class="sdk-wallet-steps-pad-left">
-            then <strong>Scan</strong>
-          </span>
-          <img
-            class="sdk-wallet-steps-pad-left"
-            src={scanIcon}
-            alt="scan-icon"
-          />
-        </div>
-      </li>
-    </ol>
-  );
-}
+};

@@ -1,13 +1,13 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/preact";
 
-import { TryExtensionLinkDialog } from "./TryExtensionLinkDialog";
+import { ConnectDialog } from "./ConnectDialog";
 
 const renderTryExtensionLinkDialog = ({
   connectDisabled = false,
   isConnected = true,
 }) => {
   return render(
-    <TryExtensionLinkDialog
+    <ConnectDialog
       darkMode={false}
       version="1"
       sessionId="abcd"
