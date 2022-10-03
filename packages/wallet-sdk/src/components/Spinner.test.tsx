@@ -1,5 +1,4 @@
 import { render } from "@testing-library/preact";
-import { h } from "preact";
 
 import { Spinner } from "./Spinner";
 

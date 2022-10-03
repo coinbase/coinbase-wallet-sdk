@@ -1,0 +1,61 @@
+@import "./theme.scss";
+
+.connect-dialog {
+  width: 700px;
+  // height: 430px;
+  margin: auto;
+
+  &-container {
+    border-radius: 12px;
+    padding: 30px;
+
+    &.light {
+      background: $white;
+    }
+
+    &.dark {
+      background: $black;
+    }
+  }
+
+
+  // z-index: 2147483647;
+  // position: fixed;
+  // top: 0;
+  // left: 0;
+  // right: 0;
+  // bottom: 0;
+  // display: flex;
+  // align-items: center;
+  // justify-content: center;
+
+  &-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 0 30px;
+  }
+
+  &-heading {
+    font-style: normal;
+    font-weight: 500;
+    font-size: 28px;
+    line-height: 36px;
+    margin: 0;
+  }
+
+  &-layout {
+    display: flex;
+    flex-direction: row;
+  }
+
+  &-column-left {
+    margin-right: 30px;
+    flex: 75%;
+  }
+
+  &-column-right {
+    flex: 25%;
+    margin-right: 34px;
+  }
+}

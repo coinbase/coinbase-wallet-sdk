@@ -1,5 +1,4 @@
 import { render, screen, waitFor } from "@testing-library/preact";
-import { h } from "preact";
 
 import { Snackbar } from "./Snackbar";
 

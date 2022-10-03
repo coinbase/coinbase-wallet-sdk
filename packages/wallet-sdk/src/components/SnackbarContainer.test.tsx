@@ -1,5 +1,4 @@
 import { fireEvent, render, screen } from "@testing-library/preact";
-import { h } from "preact";
 
 import {
   SnackbarContainer,

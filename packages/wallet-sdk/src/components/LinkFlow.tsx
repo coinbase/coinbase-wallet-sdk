@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { h, render } from "preact";
+import { render } from "preact";
 import { BehaviorSubject, Observable, Subject, Subscription } from "rxjs";
 
 import { TryExtensionLinkDialog } from "./TryExtensionLinkDialog";

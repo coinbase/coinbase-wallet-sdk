@@ -2,7 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 import clsx from "clsx";
-import { FunctionComponent, h, render } from "preact";
+import { FunctionComponent, render } from "preact";
 import { useEffect, useState } from "preact/hooks";
 
 import css from "./Snackbar-css";

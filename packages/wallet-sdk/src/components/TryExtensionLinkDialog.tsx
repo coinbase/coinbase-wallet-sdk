@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { FunctionComponent, h } from "preact";
+import { FunctionComponent } from "preact";
 import { useCallback, useEffect, useState } from "preact/hooks";
 
 import { createQrUrl } from "../util";
@@ -7,7 +7,7 @@ import { LIB_VERSION } from "../version";
 import globeIcon from "./icons/globe-icon-svg";
 import linkIcon from "./icons/link-icon-svg";
 import lockIcon from "./icons/lock-icon-svg";
-import walletLogo from "./icons/QRLogo";
+import walletLogo from "./icons/QRLogoWallet";
 import { QRCode } from "./QRCode";
 import { Spinner } from "./Spinner";
 import css from "./TryExtensionLinkDialog-css";

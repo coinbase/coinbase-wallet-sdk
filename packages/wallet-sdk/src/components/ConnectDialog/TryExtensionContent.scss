@@ -1,0 +1,71 @@
+@import "./theme.scss";
+
+.try-extension {
+  display: flex;
+  border-radius: 12px;
+  margin-top: 12px;
+  padding: 30px;
+
+  &.light {
+    background: $white;
+  }
+
+  &.dark {
+    background: $black;
+  }
+
+  &-column-half {
+    flex: 50%;
+  }
+
+  &-heading {
+    margin: 0;
+    max-width: 172px;
+  }
+
+  &-cta {
+    appearance: none;
+    border: none;
+    background: none;
+    color: $primary;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: none;
+    display: block;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  &-cta-container {
+    display: flex;
+    align-items: center;
+    margin-top: 12px;
+  }
+
+  &-cta-icon {
+    display: block;
+    margin-left: 4px;
+    height: 14px;
+  }
+
+  &-list {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &-list-item {
+    margin-top: 12px;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: $foreground-muted;
+    &:first-of-type {
+      margin-top: 0;
+    }
+  }
+}

@@ -1,5 +1,4 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/preact";
-import { h } from "preact";
 
 import { TryExtensionLinkDialog } from "./TryExtensionLinkDialog";
 
