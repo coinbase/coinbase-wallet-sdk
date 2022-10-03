@@ -6,8 +6,9 @@
 .-cbwsdk-css-reset {
   .-cbwsdk-try-extension {
     display: flex;
-    border-radius: 12px;
     margin-top: 12px;
+    width: 700px;
+    border-radius: 12px;
     padding: 30px;
   
     &.light {

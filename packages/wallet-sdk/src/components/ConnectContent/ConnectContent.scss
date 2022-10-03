@@ -6,7 +6,6 @@
 .-cbwsdk-css-reset {
   .-cbwsdk-connect-content {
     width: 700px;
-    margin: auto;
     border-radius: 12px;
     padding: 30px;
 
@@ -110,7 +109,6 @@
     padding: 0 0 0 20px;
     margin: 0;
     width: 100%;
-    list-style-type: lower-alpha;
 
     &-item {
       font-style: normal;
@@ -153,7 +151,7 @@
     }
 
     &-copy-wrapper {
-      margin-left: 8px;
+      margin: 0 4px 0 8px;
     }
 
     &-title {
