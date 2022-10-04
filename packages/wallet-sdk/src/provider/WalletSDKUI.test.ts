@@ -2,7 +2,7 @@ import { render } from "@testing-library/preact";
 import { Session } from "inspector";
 import { Observable, Subject } from "rxjs";
 
-import { LinkFlow } from "../components/LinkFlow";
+import { LinkFlow } from "../components/LinkFlow/LinkFlow";
 import { Snackbar } from "../components/Snackbar/Snackbar";
 import { WalletSDKUI } from "./WalletSDKUI";
 
