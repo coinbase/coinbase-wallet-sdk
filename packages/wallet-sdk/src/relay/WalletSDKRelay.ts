@@ -370,7 +370,6 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         )
         .subscribe({
           next: ([appSrc]) => {
-            // const value = "coinbase-app"
             this.ui.setAppSrc(appSrc);
           },
           error: () => {
