@@ -7,7 +7,8 @@ import { useCallback, useState } from "preact/hooks";
 
 import { createQrUrl } from "../../util";
 import { LIB_VERSION } from "../../version";
-import closeIcon from "../icons/close-icon-svg";
+import closeIconDark from "../icons/close-icon-dark-svg";
+import closeIcon from "../icons/close-icon-svg"; 
 import coinbaseRound from "../icons/coinbase-round-svg";
 import coinbaseWalletRound from "../icons/coinbase-wallet-round-svg";
 import moreIcon from "../icons/more-icon-svg";
@@ -96,8 +97,8 @@ export function ConnectContent(props: ConnectContentProps) {
           >
             <img
               class={clsx("-cbwsdk-cancel-button-x", theme)}
-              src={closeIcon}
-              alt=""
+              src={theme === 'light' ? closeIcon : closeIconDark}
+              alt="close icon"
             />
           </button>
         )}
@@ -119,21 +120,23 @@ export function ConnectContent(props: ConnectContentProps) {
           })}
         </div>
         <div class="-cbwsdk-connect-content-column-right">
-          <QRCode
-            content={qrUrl}
-            width={212}
-            height={212}
-            fgColor="#000"
-            bgColor="transparent"
-            image={{
-              svg: makeQrCodeImage(selected),
-              width: 34,
-              height: 34,
-            }}
-          />
-          <WalletSteps />
-          <input type="hidden" name="cbw-cbwsdk-version" value={LIB_VERSION} />
-          <input type="hidden" value={qrUrl} />
+          <div class="-cbwsdk-connect-content-qr-wrapper">
+            <QRCode
+              content={qrUrl}
+              width={212}
+              height={212}
+              fgColor="#000"
+              bgColor="transparent"
+              image={{
+                svg: makeQrCodeImage(selected),
+                width: 34,
+                height: 34,
+              }}
+            />
+            <input type="hidden" name="cbw-cbwsdk-version" value={LIB_VERSION} />
+            <input type="hidden" value={qrUrl} />
+          </div>
+          <WalletSteps theme={theme} />
           {!props.isConnected && (
             <div
               data-testid="connecting-spinner"
@@ -182,15 +185,19 @@ export function ConnectItem({
   );
 }
 
-export function CoinbaseWalletSteps() {
+type WalletStepsProps = {
+  theme: Theme
+}
+
+export function CoinbaseWalletSteps({ theme }: WalletStepsProps) {
   return (
     <ol class="-cbwsdk-wallet-steps">
-      <li class="-cbwsdk-wallet-steps-item">
+      <li class={clsx("-cbwsdk-wallet-steps-item", theme)}>
         <div class="-cbwsdk-wallet-steps-item-wrapper">
           Open Coinbase Wallet app
         </div>
       </li>
-      <li class="-cbwsdk-wallet-steps-item">
+      <li class={clsx("-cbwsdk-wallet-steps-item", theme)}>
         <div class="-cbwsdk-wallet-steps-item-wrapper">
           <span>
             Tap <strong>Scan</strong>{" "}
@@ -206,13 +213,13 @@ export function CoinbaseWalletSteps() {
   );
 }
 
-export function CoinbaseAppSteps() {
+export function CoinbaseAppSteps({ theme }: WalletStepsProps) {
   return (
     <ol class="-cbwsdk-wallet-steps">
-      <li class="-cbwsdk-wallet-steps-item">
+      <li class={clsx("-cbwsdk-wallet-steps-item", theme)}>
         <div class="-cbwsdk-wallet-steps-item-wrapper">Open Coinbase app</div>
       </li>
-      <li class="-cbwsdk-wallet-steps-item">
+      <li class={clsx("-cbwsdk-wallet-steps-item", theme)}>
         <div class="-cbwsdk-wallet-steps-item-wrapper">
           <span>
             Tap <strong>More</strong>

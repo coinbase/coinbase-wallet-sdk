@@ -38,7 +38,7 @@ export function TryExtensionContent({ theme }: TryExtensionContentProps) {
     <div class={clsx("-cbwsdk-try-extension", theme)}>
       <style>{css}</style>
       <div class="-cbwsdk-try-extension-column-half">
-        <h3 class="-cbwsdk-try-extension-heading">
+        <h3 class={clsx("-cbwsdk-try-extension-heading", theme)}>
           Or try the Coinbase Wallet browser extension
         </h3>
         <div class="-cbwsdk-try-extension-cta-wrapper">

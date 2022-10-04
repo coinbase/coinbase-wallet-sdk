@@ -7,6 +7,7 @@
   .-cbwsdk-try-extension {
     display: flex;
     margin-top: 12px;
+    height: 202px;
     width: 700px;
     border-radius: 12px;
     padding: 30px;
@@ -30,6 +31,13 @@
       line-height: 32px;
       margin: 0;
       max-width: 204px;
+      &.light {
+        color: $black;
+      }
+      
+      &.dark {
+        color: $white;
+      }
     }
 
     &-cta {
