@@ -14,7 +14,7 @@ import coinbaseLogo from "../icons/QRLogoCoinbase";
 import walletLogo from "../icons/QRLogoWallet";
 import scanIcon from "../icons/scan-icon-svg";
 import { QRCode } from "../QRCode";
-import { Spinner } from "../Spinner";
+import { Spinner } from "../Spinner/Spinner";
 import { Theme } from "../types";
 import css from "./ConnectContent-css";
 

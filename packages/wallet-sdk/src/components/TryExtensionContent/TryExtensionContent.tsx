@@ -41,7 +41,7 @@ export function TryExtensionContent({ theme }: TryExtensionContentProps) {
           <h3 class="-cbwsdk-try-extension-heading">
             Or try the Coinbase Wallet browser extension
           </h3>
-          <div class="-cbwsdk-try-extension-cta-container">
+          <div class="-cbwsdk-try-extension-cta-wrapper">
             <button class="-cbwsdk-try-extension-cta" onClick={handleClick}>
               {clicked ? "Refresh" : "Install"}
             </button>
@@ -59,26 +59,18 @@ export function TryExtensionContent({ theme }: TryExtensionContentProps) {
         <div class="-cbwsdk-try-extension-column-half">
           <ul class="-cbwsdk-try-extension-list">
             <li class="-cbwsdk-try-extension-list-item">
-              <div>
-                <img
-                  class="-cbwsdk-try-extension-list-item-icon"
-                  src={laptopIcon}
-                  alt="laptop-icon"
-                />
+              <div class="-cbwsdk-try-extension-list-item-icon">
+                <img src={laptopIcon} alt="laptop-icon" />
               </div>
-              <div>
+              <div class="-cbwsdk-try-extension-list-item-copy">
                 Connect with dapps with just one click on your desktop browser
               </div>
             </li>
             <li class="-cbwsdk-try-extension-list-item">
-              <div>
-                <img
-                  class="-cbwsdk-try-extension-list-item-icon"
-                  src={safeIcon}
-                  alt="safe-icon"
-                />
+              <div class="-cbwsdk-try-extension-list-item-icon">
+                <img src={safeIcon} alt="safe-icon" />
               </div>
-              <div>
+              <div class="-cbwsdk-try-extension-list-item-copy">
                 Add an additional layer of security by using a supported Ledger
                 hardware wallet
               </div>

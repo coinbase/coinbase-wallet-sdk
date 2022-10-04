@@ -109,8 +109,11 @@
     padding: 0 0 0 20px;
     margin: 0;
     width: 100%;
+    list-style: decimal;
 
     &-item {
+      list-style-type: decimal;
+      display: list-item;
       font-style: normal;
       font-weight: 400;
       font-size: 16px;
@@ -148,6 +151,7 @@
       background: $blue-wash;
       border-radius: 100px;
       color: $blue-dark;
+      font-weight: 600;
     }
 
     &-copy-wrapper {
@@ -158,6 +162,7 @@
       margin: 0 0 0;
       font-size: 16px;
       line-height: 24px;
+      font-weight: 500;
     }
 
     &-description {
