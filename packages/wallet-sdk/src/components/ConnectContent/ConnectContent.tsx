@@ -8,7 +8,7 @@ import { useCallback, useState } from "preact/hooks";
 import { createQrUrl } from "../../util";
 import { LIB_VERSION } from "../../version";
 import closeIconDark from "../icons/close-icon-dark-svg";
-import closeIcon from "../icons/close-icon-svg"; 
+import closeIcon from "../icons/close-icon-svg";
 import coinbaseRound from "../icons/coinbase-round-svg";
 import coinbaseWalletRound from "../icons/coinbase-wallet-round-svg";
 import moreIcon from "../icons/more-icon-svg";
@@ -97,7 +97,7 @@ export function ConnectContent(props: ConnectContentProps) {
           >
             <img
               class={clsx("-cbwsdk-cancel-button-x", theme)}
-              src={theme === 'light' ? closeIcon : closeIconDark}
+              src={theme === "light" ? closeIcon : closeIconDark}
               alt="close icon"
             />
           </button>
@@ -133,7 +133,11 @@ export function ConnectContent(props: ConnectContentProps) {
                 height: 34,
               }}
             />
-            <input type="hidden" name="cbw-cbwsdk-version" value={LIB_VERSION} />
+            <input
+              type="hidden"
+              name="cbw-cbwsdk-version"
+              value={LIB_VERSION}
+            />
             <input type="hidden" value={qrUrl} />
           </div>
           <WalletSteps theme={theme} />
@@ -186,8 +190,8 @@ export function ConnectItem({
 }
 
 type WalletStepsProps = {
-  theme: Theme
-}
+  theme: Theme;
+};
 
 export function CoinbaseWalletSteps({ theme }: WalletStepsProps) {
   return (

@@ -158,7 +158,7 @@ export interface WalletUI {
   isStandalone(): boolean;
 
   /**
-   * Set the UI's app src for different apps 
+   * Set the UI's app src for different apps
    */
   setAppSrc(src: string): void;
 

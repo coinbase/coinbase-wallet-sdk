@@ -34,7 +34,7 @@
       &.light {
         color: $black;
       }
-      
+
       &.dark {
         color: $white;
       }
@@ -125,11 +125,11 @@
       font-size: 16px;
       line-height: 24px;
       margin-top: 20px;
-      
+
       &.light {
         color: $black;
       }
-      
+
       &.dark {
         color: $white;
       }
@@ -162,7 +162,7 @@
 
     &.dark {
       color: $white;
-      &.selected{
+      &.selected {
         background: $gray-90;
       }
     }

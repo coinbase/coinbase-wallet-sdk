@@ -365,11 +365,13 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     this.subscriptions.add(
       connection.sessionConfig$
         .pipe(filter(c => c.metadata && c.metadata.AppSrc !== undefined))
-        .pipe(mergeMap(c => aes256gcm.decrypt(c.metadata.AppSrc!, session.secret)))
+        .pipe(
+          mergeMap(c => aes256gcm.decrypt(c.metadata.AppSrc!, session.secret)),
+        )
         .subscribe({
           next: ([appSrc]) => {
             // const value = "coinbase-app"
-            this.ui.setAppSrc(appSrc)
+            this.ui.setAppSrc(appSrc);
           },
           error: () => {
             this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
