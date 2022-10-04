@@ -3,7 +3,7 @@ import { Session } from "inspector";
 import { Observable, Subject } from "rxjs";
 
 import { LinkFlow } from "../components/LinkFlow";
-import { Snackbar } from "../components/Snackbar";
+import { Snackbar } from "../components/Snackbar/Snackbar";
 import { WalletSDKUI } from "./WalletSDKUI";
 
 describe("WalletSDKUI", () => {

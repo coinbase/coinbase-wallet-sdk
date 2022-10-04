@@ -1,5 +1,5 @@
 import { LinkFlow } from "../components/LinkFlow";
-import { Snackbar, SnackbarInstanceProps } from "../components/Snackbar";
+import { Snackbar, SnackbarInstanceProps } from "../components/Snackbar/Snackbar";
 import { injectCssReset } from "../lib/cssReset";
 import {
   EthereumAddressFromSignedMessageRequest,
