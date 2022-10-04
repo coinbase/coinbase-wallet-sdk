@@ -83,7 +83,7 @@ export function ConnectContent(props: ConnectContentProps) {
   const WalletSteps = wallet.steps;
 
   return (
-    <div class={clsx("-cbwsdk-connect-content", theme)}>
+    <div data-testid="connect-content" class={clsx("-cbwsdk-connect-content", theme)}>
       <style>{css}</style>
       <div class="-cbwsdk-connect-content-header">
         <h2 class={clsx("-cbwsdk-connect-content-heading", theme)}>
