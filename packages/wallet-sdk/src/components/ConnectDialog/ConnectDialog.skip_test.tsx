@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/preact";
+import { h } from "preact";
 
 import { ConnectDialog } from "./ConnectDialog";
 

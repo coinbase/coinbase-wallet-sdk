@@ -2,6 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 import clsx from "clsx";
+import { h } from "preact";
 import { useEffect, useState } from "preact/hooks";
 
 import { ConnectContent } from "../ConnectContent/ConnectContent";
@@ -54,23 +55,23 @@ export const ConnectDialog = (props: ConnectDialogProps) => {
   return (
     <div
       class={clsx(
-        "-cbwsdk-extension-dialog-container",
-        isContainerHidden && "-cbwsdk-extension-dialog-container-hidden",
+        "-cbwsdk-connect-dialog-container",
+        isContainerHidden && "-cbwsdk-connect-dialog-container-hidden",
       )}
     >
       <style>{css}</style>
       <div
         class={clsx(
-          "-cbwsdk-extension-dialog-backdrop",
+          "-cbwsdk-connect-dialog-backdrop",
           theme,
-          isDialogHidden && "-cbwsdk-extension-dialog-backdrop-hidden",
+          isDialogHidden && "-cbwsdk-connect-dialog-backdrop-hidden",
         )}
       />
-      <div class="-cbwsdk-extension-dialog">
+      <div class="-cbwsdk-connect-dialog">
         <div
           class={clsx(
-            "-cbwsdk-extension-dialog-box",
-            isDialogHidden && "-cbwsdk-extension-dialog-box-hidden",
+            "-cbwsdk-connect-dialog-box",
+            isDialogHidden && "-cbwsdk-connect-dialog-box-hidden",
           )}
         >
           {!props.connectDisabled ? (

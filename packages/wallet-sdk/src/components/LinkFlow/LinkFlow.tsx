@@ -1,10 +1,10 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { render } from "preact";
+import { h, render } from "preact";
 import { BehaviorSubject, Observable, Subject, Subscription } from "rxjs";
 
-import { ConnectDialog } from "./ConnectDialog/ConnectDialog";
+import { ConnectDialog } from "../ConnectDialog/ConnectDialog";
 
 export interface LinkFlowOptions {
   darkMode: boolean;

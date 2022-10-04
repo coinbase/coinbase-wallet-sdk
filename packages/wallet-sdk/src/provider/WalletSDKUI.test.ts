@@ -44,6 +44,7 @@ describe("WalletSDKUI", () => {
 
     expect(snackbarMock).toHaveBeenCalledWith({
       message: "Confirm on phone",
+      appSrc: null,
       menuItems: [
         {
           isRed: true,
@@ -83,6 +84,7 @@ describe("WalletSDKUI", () => {
     expect(snackbarMock).toHaveBeenCalledWith({
       autoExpand: true,
       message: "Connection lost",
+      appSrc: null,
       menuItems: [
         {
           isRed: false,

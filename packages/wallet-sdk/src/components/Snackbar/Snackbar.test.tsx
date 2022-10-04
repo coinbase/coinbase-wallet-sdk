@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/preact";
+import { h } from "preact";
 
 import { Snackbar } from "./Snackbar";
 
@@ -25,6 +26,7 @@ describe("Snackbar", () => {
     test("@presentItem", async () => {
       snackbar.presentItem({
         message: "Confirm on phone",
+        appSrc: "coinbase-wallet",
         menuItems: [
           {
             isRed: true,

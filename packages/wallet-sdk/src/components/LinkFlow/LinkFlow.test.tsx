@@ -1,4 +1,5 @@
 import { render } from "@testing-library/preact";
+import { h } from "preact";
 import { Observable, Subject } from "rxjs";
 
 import { LinkFlow } from "./LinkFlow";

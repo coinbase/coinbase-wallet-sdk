@@ -2,6 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 import clsx from "clsx";
+import { h } from "preact";
 import { useCallback, useState } from "preact/hooks";
 
 import { createQrUrl } from "../../util";
@@ -81,76 +82,70 @@ export function ConnectContent(props: ConnectContentProps) {
   const WalletSteps = wallet.steps;
 
   return (
-    <>
+    <div class={clsx("-cbwsdk-connect-content", theme)}>
       <style>{css}</style>
-      <div class={clsx("-cbwsdk-connect-content", theme)}>
-        <div class="-cbwsdk-connect-content-header">
-          <h2 class={clsx("-cbwsdk-connect-content-heading", theme)}>
-            Scan to connect with one of our mobile apps
-          </h2>
-          {props.onCancel && (
-            <button
-              type="button"
-              class={"-cbwsdk-cancel-button"}
-              onClick={props.onCancel}
-            >
-              <img
-                class={clsx("-cbwsdk-cancel-button-x", theme)}
-                src={closeIcon}
-                alt=""
+      <div class="-cbwsdk-connect-content-header">
+        <h2 class={clsx("-cbwsdk-connect-content-heading", theme)}>
+          Scan to connect with one of our mobile apps
+        </h2>
+        {props.onCancel && (
+          <button
+            type="button"
+            class={"-cbwsdk-cancel-button"}
+            onClick={props.onCancel}
+          >
+            <img
+              class={clsx("-cbwsdk-cancel-button-x", theme)}
+              src={closeIcon}
+              alt=""
+            />
+          </button>
+        )}
+      </div>
+      <div class="-cbwsdk-connect-content-layout">
+        <div class="-cbwsdk-connect-content-column-left">
+          {Object.entries(wallets).map(([key, value]) => {
+            return (
+              <ConnectItem
+                key={key}
+                title={value.title}
+                description={value.description}
+                icon={value.icon}
+                selected={selected === key}
+                onClick={() => handleSelect(key as WalletType)}
+                theme={theme}
               />
-            </button>
+            );
+          })}
+        </div>
+        <div class="-cbwsdk-connect-content-column-right">
+          <QRCode
+            content={qrUrl}
+            width={212}
+            height={212}
+            fgColor="#000"
+            bgColor="transparent"
+            image={{
+              svg: makeQrCodeImage(selected),
+              width: 34,
+              height: 34,
+            }}
+          />
+          <WalletSteps />
+          <input type="hidden" name="cbw-cbwsdk-version" value={LIB_VERSION} />
+          <input type="hidden" value={qrUrl} />
+          {!props.isConnected && (
+            <div
+              data-testid="connecting-spinner"
+              class={clsx("-cbwsdk-connect-content-qr-connecting", theme)}
+            >
+              <Spinner size={36} color={theme === "dark" ? "#FFF" : "#000"} />
+              <p>Connecting...</p>
+            </div>
           )}
         </div>
-        <div class="-cbwsdk-connect-content-layout">
-          <div class="-cbwsdk-connect-content-column-left">
-            {Object.entries(wallets).map(([key, value]) => {
-              return (
-                <ConnectItem
-                  key={key}
-                  title={value.title}
-                  description={value.description}
-                  icon={value.icon}
-                  selected={selected === key}
-                  onClick={() => handleSelect(key as WalletType)}
-                  theme={theme}
-                />
-              );
-            })}
-          </div>
-          <div class="-cbwsdk-connect-content-column-right">
-            <QRCode
-              content={qrUrl}
-              width={212}
-              height={212}
-              fgColor="#000"
-              bgColor="transparent"
-              image={{
-                svg: makeQrCodeImage(selected),
-                width: 34,
-                height: 34,
-              }}
-            />
-            <WalletSteps />
-            <input
-              type="hidden"
-              name="cbw-cbwsdk-version"
-              value={LIB_VERSION}
-            />
-            <input type="hidden" value={qrUrl} />
-            {!props.isConnected && (
-              <div
-                data-testid="connecting-spinner"
-                class={clsx("-cbwsdk-connect-content-qr-connecting", theme)}
-              >
-                <Spinner size={36} color={theme === "dark" ? "#FFF" : "#000"} />
-                <p>Connecting...</p>
-              </div>
-            )}
-          </div>
-        </div>
       </div>
-    </>
+    </div>
   );
 }
 
