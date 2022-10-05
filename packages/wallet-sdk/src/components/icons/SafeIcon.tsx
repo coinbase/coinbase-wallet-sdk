@@ -1,4 +1,3 @@
-
 import { h } from "preact";
 
 export function SafeIcon(props: h.JSX.SVGAttributes<SVGSVGElement>) {
@@ -18,5 +17,3 @@ export function SafeIcon(props: h.JSX.SVGAttributes<SVGSVGElement>) {
     </svg>
   );
 }
-
-

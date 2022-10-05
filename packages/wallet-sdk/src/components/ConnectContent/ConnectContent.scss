@@ -79,7 +79,7 @@
       &.light {
         background-color: rgba($white, 0.95);
 
-        >p {
+        > p {
           color: $black;
         }
       }
@@ -87,12 +87,12 @@
       &.dark {
         background-color: rgba($background-dark, 0.9);
 
-        >p {
+        > p {
           color: $white;
         }
       }
 
-      >p {
+      > p {
         font-size: 12px;
         font-weight: bold;
         margin-top: 16px;

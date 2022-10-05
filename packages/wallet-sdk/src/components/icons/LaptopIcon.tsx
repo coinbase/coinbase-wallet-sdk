@@ -1,4 +1,3 @@
-
 import { h } from "preact";
 
 export function LaptopIcon(props: h.JSX.SVGAttributes<SVGSVGElement>) {
@@ -15,5 +14,3 @@ export function LaptopIcon(props: h.JSX.SVGAttributes<SVGSVGElement>) {
     </svg>
   );
 }
-
-
