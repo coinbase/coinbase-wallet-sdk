@@ -5,9 +5,9 @@ import clsx from "clsx";
 import { h } from "preact";
 import { useCallback, useState } from "preact/hooks";
 
-import arrowLeftIcon from "../icons/arrow-left-svg";
-import laptopIcon from "../icons/laptop-icon-svg";
-import safeIcon from "../icons/safe-icon-svg";
+import { ArrowLeftIcon } from "../icons/ArrowLeftIcon";
+import { LaptopIcon } from "../icons/LaptopIcon";
+import { SafeIcon } from "../icons/SafeIcon";
 import { Theme } from "../types";
 import css from "./TryExtensionContent-css";
 
@@ -42,15 +42,17 @@ export function TryExtensionContent({ theme }: TryExtensionContentProps) {
           Or try the Coinbase Wallet browser extension
         </h3>
         <div class="-cbwsdk-try-extension-cta-wrapper">
-          <button class="-cbwsdk-try-extension-cta" onClick={handleClick}>
+          <button
+            class={clsx("-cbwsdk-try-extension-cta", theme)}
+            onClick={handleClick}
+          >
             {clicked ? "Refresh" : "Install"}
           </button>
           <div>
             {!clicked && (
-              <img
+              <ArrowLeftIcon
                 class="-cbwsdk-try-extension-cta-icon"
-                src={arrowLeftIcon}
-                alt="arrow-left-icon"
+                fill={theme === "light" ? "#0052FF" : "#588AF5"}
               />
             )}
           </div>
@@ -59,18 +61,22 @@ export function TryExtensionContent({ theme }: TryExtensionContentProps) {
       <div class="-cbwsdk-try-extension-column-half">
         <ul class="-cbwsdk-try-extension-list">
           <li class="-cbwsdk-try-extension-list-item">
-            <div class="-cbwsdk-try-extension-list-item-icon">
-              <img src={laptopIcon} alt="laptop-icon" />
+            <div class="-cbwsdk-try-extension-list-item-icon-wrapper">
+              <span class={clsx("-cbwsdk-try-extension-list-item-icon", theme)}>
+                <LaptopIcon fill={theme === "light" ? "#0A0B0D" : "#FFFFFF"} />
+              </span>
             </div>
-            <div class="-cbwsdk-try-extension-list-item-copy">
+            <div class={clsx("-cbwsdk-try-extension-list-item-copy", theme)}>
               Connect with dapps with just one click on your desktop browser
             </div>
           </li>
           <li class="-cbwsdk-try-extension-list-item">
-            <div class="-cbwsdk-try-extension-list-item-icon">
-              <img src={safeIcon} alt="safe-icon" />
+            <div class="-cbwsdk-try-extension-list-item-icon-wrapper">
+              <span class={clsx("-cbwsdk-try-extension-list-item-icon", theme)}>
+                <SafeIcon fill={theme === "light" ? "#0A0B0D" : "#FFFFFF"} />
+              </span>
             </div>
-            <div class="-cbwsdk-try-extension-list-item-copy">
+            <div class={clsx("-cbwsdk-try-extension-list-item-copy", theme)}>
               Add an additional layer of security by using a supported Ledger
               hardware wallet
             </div>

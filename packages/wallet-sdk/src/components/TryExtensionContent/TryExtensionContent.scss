@@ -31,6 +31,7 @@
       line-height: 32px;
       margin: 0;
       max-width: 204px;
+
       &.light {
         color: $black;
       }
@@ -52,6 +53,14 @@
       font-weight: 600;
       font-size: 16px;
       line-height: 24px;
+
+      &.light {
+        color: $primary;
+      }
+
+      &.dark {
+        color: $primary-dark;
+      }
     }
 
     &-cta-wrapper {
@@ -88,17 +97,45 @@
       }
     }
 
-    &-list-item-icon {
+    &-list-item-icon-wrapper {
       display: block;
     }
+
+    &-list-item-icon {
+      display: flex;
+      height: 32px;
+      width: 32px;
+      border-radius: 50%;
+
+      svg {
+        margin: auto;
+        display: block;
+      }
+
+      &.light {
+        background: $background-alt;
+      }
+
+      &.dark {
+        background: $background-alt-dark;
+      }
+    }
+
 
     &-list-item-copy {
       display: block;
       font-weight: 400;
       font-size: 14px;
       line-height: 20px;
-      color: $foreground-muted;
       padding-left: 12px;
+
+      &.light {
+        color: $foreground-muted;
+      }
+
+      &.dark {
+        color: $foreground-muted-dark;
+      }
     }
   }
 }
