@@ -7,14 +7,13 @@ import { useCallback, useState } from "preact/hooks";
 
 import { createQrUrl } from "../../util";
 import { LIB_VERSION } from "../../version";
-import closeIconDark from "../icons/close-icon-dark-svg";
-import closeIcon from "../icons/close-icon-svg";
+import { CloseIcon } from "../icons/CloseIcon";
 import coinbaseRound from "../icons/coinbase-round-svg";
 import coinbaseWalletRound from "../icons/coinbase-wallet-round-svg";
-import moreIcon from "../icons/more-icon-svg";
+import { QRCodeIcon } from "../icons/QRCodeIcon";
 import coinbaseLogo from "../icons/QRLogoCoinbase";
 import walletLogo from "../icons/QRLogoWallet";
-import scanIcon from "../icons/scan-icon-svg";
+import { StatusDotIcon } from "../icons/StatusDotIcon";
 import { QRCode } from "../QRCode";
 import { Spinner } from "../Spinner/Spinner";
 import { Theme } from "../types";
@@ -59,6 +58,10 @@ const makeQrCodeImage = (app: string) => {
   }
 };
 
+const makeIconColor = (theme: Theme) => {
+  return theme === "light" ? "#FFFFFF" : "#0A0B0D";
+};
+
 export function ConnectContent(props: ConnectContentProps) {
   const { theme } = props;
   const [selected, setSelected] = useState<WalletType>("coinbase-wallet-app");
@@ -98,11 +101,7 @@ export function ConnectContent(props: ConnectContentProps) {
             class={"-cbwsdk-cancel-button"}
             onClick={props.onCancel}
           >
-            <img
-              class={clsx("-cbwsdk-cancel-button-x", theme)}
-              src={theme === "light" ? closeIcon : closeIconDark}
-              alt="close icon"
-            />
+            <CloseIcon fill={theme === "light" ? "#0A0B0D" : "#FFFFFF"} />
           </button>
         )}
       </div>
@@ -126,14 +125,14 @@ export function ConnectContent(props: ConnectContentProps) {
           <div class="-cbwsdk-connect-content-qr-wrapper">
             <QRCode
               content={qrUrl}
-              width={212}
-              height={212}
+              width={200}
+              height={200}
               fgColor="#000"
               bgColor="transparent"
               image={{
                 svg: makeQrCodeImage(selected),
-                width: 34,
-                height: 34,
+                width: 25,
+                height: 25,
               }}
             />
             <input
@@ -209,11 +208,15 @@ export function CoinbaseWalletSteps({ theme }: WalletStepsProps) {
           <span>
             Tap <strong>Scan</strong>{" "}
           </span>
-          <img
-            class="-cbwsdk-wallet-steps-pad-left"
-            src={scanIcon}
-            alt="scan-icon"
-          />
+          <span
+            class={clsx(
+              "-cbwsdk-wallet-steps-pad-left",
+              "-cbwsdk-wallet-steps-icon",
+              theme,
+            )}
+          >
+            <QRCodeIcon fill={makeIconColor(theme)} />
+          </span>
         </div>
       </li>
     </ol>
@@ -231,19 +234,27 @@ export function CoinbaseAppSteps({ theme }: WalletStepsProps) {
           <span>
             Tap <strong>More</strong>
           </span>
-          <img
-            class="-cbwsdk-wallet-steps-pad-left"
-            src={moreIcon}
-            alt="more-icon"
-          />
+          <span
+            class={clsx(
+              "-cbwsdk-wallet-steps-pad-left",
+              "-cbwsdk-wallet-steps-icon",
+              theme,
+            )}
+          >
+            <StatusDotIcon fill={makeIconColor(theme)} />
+          </span>
           <span class="-cbwsdk-wallet-steps-pad-left">
             then <strong>Scan</strong>
           </span>
-          <img
-            class="-cbwsdk-wallet-steps-pad-left"
-            src={scanIcon}
-            alt="scan-icon"
-          />
+          <span
+            class={clsx(
+              "-cbwsdk-wallet-steps-pad-left",
+              "-cbwsdk-wallet-steps-icon",
+              theme,
+            )}
+          >
+            <QRCodeIcon fill={makeIconColor(theme)} />
+          </span>
         </div>
       </li>
     </ol>

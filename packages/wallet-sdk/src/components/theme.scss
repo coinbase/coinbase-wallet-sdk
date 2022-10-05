@@ -1,16 +1,15 @@
-$primary: #0052ff;
-$blue-normal: #1652f0;
-$blue-dark: rgb(55, 115, 245);
-$blue-wash: #f5f8ff;
-$gray-90: #1e2025;
+$primary: #0052FF;
+$primary-dark: #588AF5;
+
+$primary-wash: #f5f8ff;
+$primary-wash-dark: #001033;
 
 $foreground-muted: #5b636e;
 
-$wash: #fafbfc;
-$white: #fff;
+$white: #FFF;
 $black: #000;
-$grey-50: #aaa;
-$background-alt-dark: rgb(20, 21, 25);
 
-$elevation-z3: 0px 4px 12px rgba($black, 0.1);
-$elevation-z4: 0px 0px 8px rgba($black, 0.04), 0px 16px 24px rgba($black, 0.06);
+$grey-50: #aaa;
+
+$background: $white;
+$background-dark: #0A0B0D;

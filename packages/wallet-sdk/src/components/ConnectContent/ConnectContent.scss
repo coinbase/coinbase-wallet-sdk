@@ -31,6 +31,7 @@
       font-size: 28px;
       line-height: 36px;
       margin: 0;
+
       &.light {
         color: $black;
       }
@@ -55,8 +56,9 @@
     }
 
     &-qr-wrapper {
-      width: 216px;
-      height: 216px;
+      width: 220px;
+      height: 220px;
+      border-radius: 12px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -76,19 +78,21 @@
 
       &.light {
         background-color: rgba($white, 0.95);
-        > p {
+
+        >p {
           color: $black;
         }
       }
 
       &.dark {
-        background-color: rgba($background-alt-dark, 0.9);
-        > p {
+        background-color: rgba($background-dark, 0.9);
+
+        >p {
           color: $white;
         }
       }
 
-      > p {
+      >p {
         font-size: 12px;
         font-weight: bold;
         margin-top: 16px;
@@ -143,6 +147,26 @@
     &-pad-left {
       margin-left: 6px;
     }
+
+    &-icon {
+      display: flex;
+      border-radius: 50%;
+      height: 24px;
+      width: 24px;
+
+      svg {
+        margin: auto;
+        display: block;
+      }
+
+      &.light {
+        background: $primary;
+      }
+
+      &.dark {
+        background: $primary-dark;
+      }
+    }
   }
 
   .-cbwsdk-connect-item {
@@ -155,21 +179,24 @@
 
     &.light {
       color: $black;
+
       &.selected {
-        background: $blue-wash;
+        background: $primary-wash;
+        color: $primary;
       }
     }
 
     &.dark {
       color: $white;
+
       &.selected {
-        background: $gray-90;
+        background: $primary-wash-dark;
+        color: $primary-dark;
       }
     }
 
     &.selected {
       border-radius: 100px;
-      color: $blue-dark;
       font-weight: 600;
     }
 
