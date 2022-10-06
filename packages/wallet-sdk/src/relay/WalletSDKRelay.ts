@@ -369,14 +369,10 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
           return c.metadata && c.metadata.AppSrc !== undefined
         }))
         .pipe(
-          mergeMap(c => {
-            console.log('mergeMap c.metadata', c.metadata);
-            return aes256gcm.decrypt(c.metadata.AppSrc!, session.secret)
-          }),
+          mergeMap(c => aes256gcm.decrypt(c.metadata.AppSrc!, session.secret)),
         )
         .subscribe({
-          next: ([appSrc]) => {
-            console.log('next appSrc', appSrc);
+          next: (appSrc) => {
             this.ui.setAppSrc(appSrc);
           },
           error: () => {
