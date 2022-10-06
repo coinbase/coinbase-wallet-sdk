@@ -364,12 +364,19 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
 
     this.subscriptions.add(
       connection.sessionConfig$
-        .pipe(filter(c => c.metadata && c.metadata.AppSrc !== undefined))
+        .pipe(filter(c => {
+          console.log('filter c.metadata', c.metadata);
+          return c.metadata && c.metadata.AppSrc !== undefined
+        }))
         .pipe(
-          mergeMap(c => aes256gcm.decrypt(c.metadata.AppSrc!, session.secret)),
+          mergeMap(c => {
+            console.log('mergeMap c.metadata', c.metadata);
+            return aes256gcm.decrypt(c.metadata.AppSrc!, session.secret)
+          }),
         )
         .subscribe({
           next: ([appSrc]) => {
+            console.log('next appSrc', appSrc);
             this.ui.setAppSrc(appSrc);
           },
           error: () => {
@@ -1334,5 +1341,5 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     }
   }
 
-  protected onSessionConfigChanged(_nextSessionConfig: SessionConfig): void {}
+  protected onSessionConfigChanged(_nextSessionConfig: SessionConfig): void { }
 }
