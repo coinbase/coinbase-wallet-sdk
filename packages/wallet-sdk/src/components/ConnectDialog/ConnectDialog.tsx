@@ -25,8 +25,8 @@ type ConnectDialogProps = {
 
 export const ConnectDialog = (props: ConnectDialogProps) => {
   const { isOpen, darkMode } = props;
-  const [isContainerHidden, setContainerHidden] = useState(!isOpen);
-  const [isDialogHidden, setDialogHidden] = useState(!isOpen);
+  const [containerHidden, setContainerHidden] = useState(!isOpen);
+  const [dialogHidden, setDialogHidden] = useState(!isOpen);
 
   useEffect(() => {
     const timers = [
@@ -56,7 +56,7 @@ export const ConnectDialog = (props: ConnectDialogProps) => {
     <div
       class={clsx(
         "-cbwsdk-connect-dialog-container",
-        isContainerHidden && "-cbwsdk-connect-dialog-container-hidden",
+        containerHidden && "-cbwsdk-connect-dialog-container-hidden",
       )}
     >
       <style>{css}</style>
@@ -64,14 +64,14 @@ export const ConnectDialog = (props: ConnectDialogProps) => {
         class={clsx(
           "-cbwsdk-connect-dialog-backdrop",
           theme,
-          isDialogHidden && "-cbwsdk-connect-dialog-backdrop-hidden",
+          dialogHidden && "-cbwsdk-connect-dialog-backdrop-hidden",
         )}
       />
       <div class="-cbwsdk-connect-dialog">
         <div
           class={clsx(
             "-cbwsdk-connect-dialog-box",
-            isDialogHidden && "-cbwsdk-connect-dialog-box-hidden",
+            dialogHidden && "-cbwsdk-connect-dialog-box-hidden",
           )}
         >
           {!props.connectDisabled ? (
