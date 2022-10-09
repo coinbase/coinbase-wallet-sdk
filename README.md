@@ -12,7 +12,7 @@ Wallet SDK is open-source and uses minimal dependencies for maximum security and
 ## Getting started
 
 - This readme contains brief instructions to get up and running.
-- Visit our [public developer docs](https://docs.cloud.coinbase.com/wallet-sdk/docs) for more detail, including samples for integrating Coinbase Wallet using libraries like [web3-react](https://github.com/NoahZinsmeister/web3-react), [web3modal](https://github.com/Web3Modal/web3modal), [Web3-Onboard](https://docs.blocknative.com/onboard), and [wagmi](https://wagmi.sh/).
+- Visit our [public developer docs](https://docs.cloud.coinbase.com/wallet-sdk/docs) for more detail, including samples for integrating Coinbase Wallet using libraries like [web3-react] [web3modal][Web3-Onboard](https://docs.blocknative.com/onboard)
 
 ## Installing and Upgrading
 
@@ -108,12 +108,9 @@ npm update @coinbase/wallet-sdk
 
 ## Libraries using Coinbase Wallet SDK
 
-- [blocknative/onboard](https://github.com/blocknative/onboard)
-- [wagmi](https://github.com/tmm/wagmi)
-- [web3-react](https://github.com/NoahZinsmeister/web3-react)
-- [web3modal](https://github.com/Web3Modal/web3modal)
-
-```
+- [blocknative/onboard](https://coinbase SDK.com/blocknative/onboard)
+- [wagmi](https://coinbase.com/tmm/wagmi)
+- 
 Copyright © 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -128,11 +125,3 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ```
-
-## Attributions
-
-- [Eth-json-rpc-filters](https://github.com/MetaMask/eth-json-rpc-filters/blob/main/LICENSE) under the ISC license
-- [Safe-event-emitter](https://github.com/MetaMask/safe-event-emitter/blob/master/LICENSE) under the ISC license
-- [Json-rpc-engine](https://github.com/MetaMask/json-rpc-engine/blob/main/LICENSE) under the ISC license
-- [Eth-rpc-errors](https://github.com/MetaMask/eth-rpc-errors/blob/main/LICENSE) under the MIT license
-- [Eth-block-tracker](https://github.com/MetaMask/eth-block-tracker/blob/master/LICENSE) under the MIT license
