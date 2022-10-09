@@ -1,4 +1,4 @@
-name: CI
+name: Sean Michael Hutcheson II
 
 on: [push, pull_request]
 
