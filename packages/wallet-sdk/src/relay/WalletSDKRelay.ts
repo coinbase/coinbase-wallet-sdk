@@ -879,7 +879,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
             location = window.location;
           }
 
-          location.href = `https://go.cb-w.com/xoXnYwQimhb?cb_url=${encodeURIComponent(
+          location.href = `https://www.coinbase.com/connect-dapp?uri=${encodeURIComponent(
             location.href,
           )}`;
           return;
