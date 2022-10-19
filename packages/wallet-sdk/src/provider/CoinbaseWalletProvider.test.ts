@@ -254,6 +254,7 @@ describe("CoinbaseWalletProvider", () => {
           type: "walletLinkMessage",
         },
         origin: "dapp.finance",
+        source: window,
       }),
     );
 
@@ -261,6 +262,32 @@ describe("CoinbaseWalletProvider", () => {
     expect(provider._addresses).toEqual([
       "0x0000000000000000000000000000000000001010",
     ]);
+  });
+
+  it("returns empty address on a postMessage's 'addressChanged' event when window is unspecified", () => {
+    const provider = setupCoinbaseWalletProvider();
+
+    // @ts-expect-error _addresses is private
+    expect(provider._addresses).not.toEqual([
+      "0x0000000000000000000000000000000000001010",
+    ]);
+
+    fireEvent(
+      window,
+      new MessageEvent("message", {
+        data: {
+          data: {
+            action: "addressChanged",
+            address: "0x0000000000000000000000000000000000001010",
+          },
+          type: "walletLinkMessage",
+        },
+        origin: "dapp.finance",
+      }),
+    );
+
+    // @ts-expect-error _addresses is private
+    expect(provider._addresses).toEqual([]);
   });
 
   it("handles error responses with generic requests", async () => {

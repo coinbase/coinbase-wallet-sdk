@@ -62,6 +62,7 @@ describe("Solana Provider", () => {
         type: "extensionUIResponse",
         data: { id: eventId },
       },
+      source: window,
     };
   });
 
@@ -98,6 +99,7 @@ describe("Solana Provider", () => {
       JSON.stringify([mockAddress]),
     );
   });
+
 
   it("should resolve to error when connectionSuccess returns invalid address", async () => {
     jest.spyOn(solanaProvider, "disconnect");
