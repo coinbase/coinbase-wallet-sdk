@@ -100,7 +100,6 @@ describe("Solana Provider", () => {
     );
   });
 
-
   it("should resolve to error when connectionSuccess returns invalid address", async () => {
     jest.spyOn(solanaProvider, "disconnect");
 
