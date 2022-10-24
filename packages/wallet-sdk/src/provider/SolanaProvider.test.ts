@@ -62,6 +62,7 @@ describe("Solana Provider", () => {
         type: "extensionUIResponse",
         data: { id: eventId },
       },
+      source: window,
     };
   });
 

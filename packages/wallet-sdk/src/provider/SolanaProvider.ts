@@ -68,6 +68,11 @@ export class SolanaProvider
   }
 
   public handleResponse = (event: any) => {
+    // Used to verify the source and window are correct before proceeding
+    if (event.source !== window) {
+      return;
+    }
+
     if (!["extensionUIResponse", "WEB3_RESPONSE"].includes(event.data.type)) {
       return;
     }
