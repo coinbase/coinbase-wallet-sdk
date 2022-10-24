@@ -187,6 +187,11 @@ export class CoinbaseWalletProvider
     }
 
     window.addEventListener("message", event => {
+      // Used to verify the source and window are correct before proceeding
+      if (event.source !== window) {
+        return;
+      }
+
       if (event.data.type !== "walletLinkMessage") return; // compatibility with CBW extension
 
       if (
