@@ -243,6 +243,8 @@ describe("CoinbaseWalletProvider", () => {
       "0x0000000000000000000000000000000000001010",
     ]);
 
+    const url = "dapp.finance";
+    Object.defineProperty(window, "location", { value: { origin: url } });
     fireEvent(
       window,
       new MessageEvent("message", {
@@ -253,7 +255,7 @@ describe("CoinbaseWalletProvider", () => {
           },
           type: "walletLinkMessage",
         },
-        origin: "dapp.finance",
+        origin: url,
         source: window,
       }),
     );
@@ -283,6 +285,36 @@ describe("CoinbaseWalletProvider", () => {
           type: "walletLinkMessage",
         },
         origin: "dapp.finance",
+      }),
+    );
+
+    // @ts-expect-error _addresses is private
+    expect(provider._addresses).toEqual([]);
+  });
+
+  it("returns empty address on a postMessage's 'addressChanged' event when location's origin is mismatched", () => {
+    const provider = setupCoinbaseWalletProvider();
+
+    // @ts-expect-error _addresses is private
+    expect(provider._addresses).not.toEqual([
+      "0x0000000000000000000000000000000000001010",
+    ]);
+
+    Object.defineProperty(location, "origin", {
+      value: { origin: "not.dapp.finance" },
+    });
+    fireEvent(
+      window,
+      new MessageEvent("message", {
+        data: {
+          data: {
+            action: "addressChanged",
+            address: "0x0000000000000000000000000000000000001010",
+          },
+          type: "walletLinkMessage",
+        },
+        origin: "dapp.finance",
+        source: window,
       }),
     );
 

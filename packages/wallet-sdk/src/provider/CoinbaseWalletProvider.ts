@@ -188,7 +188,7 @@ export class CoinbaseWalletProvider
 
     window.addEventListener("message", event => {
       // Used to verify the source and window are correct before proceeding
-      if (event.source !== window) {
+      if (event.origin !== location.origin || event.source !== window) {
         return;
       }
 
