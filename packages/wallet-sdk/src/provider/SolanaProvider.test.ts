@@ -45,6 +45,8 @@ describe("Solana Provider", () => {
     jest.spyOn(window, "postMessage");
     (randomBytesHex as jest.Mock).mockReturnValue(eventId);
 
+    const url = "dapp.finance";
+    Object.defineProperty(window, "location", { value: { origin: url } });
     requestMessage = {
       type: "extensionUIRequest",
       provider: SOLANA_PROVIDER_ID,
@@ -63,6 +65,7 @@ describe("Solana Provider", () => {
         data: { id: eventId },
       },
       source: window,
+      origin: url,
     };
   });
 
