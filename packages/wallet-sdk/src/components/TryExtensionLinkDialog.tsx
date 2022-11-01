@@ -243,7 +243,7 @@ const DescriptionItem: FunctionComponent<{
   return (
     <div class="-cbwsdk-extension-dialog-box-top-description">
       <div class="-cbwsdk-extension-dialog-box-top-description-icon-wrapper">
-        <img src={props.icon} />
+        <img src={props.icon} alt="" aria-hidden="true" />
       </div>
       <body
         class={clsx("-cbwsdk-extension-dialog-box-top-description-text", theme)}
