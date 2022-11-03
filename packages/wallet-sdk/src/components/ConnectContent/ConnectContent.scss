@@ -48,6 +48,9 @@
 
     &-column-left {
       margin-right: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
     &-column-right {
@@ -96,6 +99,24 @@
         font-size: 12px;
         font-weight: bold;
         margin-top: 16px;
+      }
+    }
+
+    &-update-app {
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 20px;
+      padding: 12px;
+      width: 339px;
+
+      &.light { 
+        background: $background-alt;
+        color: $foreground-muted;
+      }
+      
+      &.dark {
+        background: $background-alt-dark;
+        color: $foreground-muted-dark;
       }
     }
   }

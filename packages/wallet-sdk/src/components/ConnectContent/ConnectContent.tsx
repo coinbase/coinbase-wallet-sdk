@@ -84,6 +84,7 @@ export function ConnectContent(props: ConnectContentProps) {
     return null;
   }
   const WalletSteps = wallet.steps;
+  const coinbaseApp = selected === "coinbase-app";
 
   return (
     <div
@@ -107,19 +108,27 @@ export function ConnectContent(props: ConnectContentProps) {
       </div>
       <div class="-cbwsdk-connect-content-layout">
         <div class="-cbwsdk-connect-content-column-left">
-          {Object.entries(wallets).map(([key, value]) => {
-            return (
-              <ConnectItem
-                key={key}
-                title={value.title}
-                description={value.description}
-                icon={value.icon}
-                selected={selected === key}
-                onClick={() => handleSelect(key as WalletType)}
-                theme={theme}
-              />
-            );
-          })}
+          <div>
+            {Object.entries(wallets).map(([key, value]) => {
+              return (
+                <ConnectItem
+                  key={key}
+                  title={value.title}
+                  description={value.description}
+                  icon={value.icon}
+                  selected={selected === key}
+                  onClick={() => handleSelect(key as WalletType)}
+                  theme={theme}
+                />
+              );
+            })}
+          </div>
+          {coinbaseApp && (
+            <div class={clsx("-cbwsdk-connect-content-update-app", theme)}>
+              Don’t see a <strong>Scan</strong> option? Update your Coinbase app
+              to the latest version and try again.
+            </div>
+          )}
         </div>
         <div class="-cbwsdk-connect-content-column-right">
           <div class="-cbwsdk-connect-content-qr-wrapper">
