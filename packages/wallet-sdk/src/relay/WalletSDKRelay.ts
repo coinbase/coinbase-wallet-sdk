@@ -898,7 +898,9 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
             location = window.location;
           }
 
-          location.href = `https://www.coinbase.com/connect-dapp?uri=${encodeURIComponent(location.href,)}`;
+          location.href = `https://www.coinbase.com/connect-dapp?uri=${encodeURIComponent(
+            location.href,
+          )}`;
           return;
         }
 
