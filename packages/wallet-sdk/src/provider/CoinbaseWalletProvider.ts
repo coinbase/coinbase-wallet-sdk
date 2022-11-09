@@ -266,10 +266,12 @@ export class CoinbaseWalletProvider
    */
   public setProviderInfo(jsonRpcUrl: string, chainId: number) {
     // extension tend to use the chianId from the dapp, while in-app browser and ledger overrides the default network
-    if (!(this.isLedger || this.isCoinbaseBrowser)) {
-      this._chainIdFromOpts = chainId;
-      this._jsonRpcUrlFromOpts = jsonRpcUrl;
-    }
+    const isLedgerOrBrowser = this.isLedger || this.isCoinbaseBrowser;
+
+    this._jsonRpcUrlFromOpts = !isLedgerOrBrowser
+      ? jsonRpcUrl
+      : this.jsonRpcUrl;
+    this._chainIdFromOpts = !isLedgerOrBrowser ? chainId : this.getChainId();
 
     this.updateProviderInfo(this._jsonRpcUrlFromOpts, this._chainIdFromOpts);
   }
