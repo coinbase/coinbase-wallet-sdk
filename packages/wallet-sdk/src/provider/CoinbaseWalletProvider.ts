@@ -271,7 +271,7 @@ export class CoinbaseWalletProvider
       this._jsonRpcUrlFromOpts = jsonRpcUrl;
     }
 
-    this.updateProviderInfo(this._jsonRpcUrlFromOpts, this._chainIdFromOpts);
+    this.updateProviderInfo(this.jsonRpcUrl, this.getChainId());
   }
 
   private updateProviderInfo(jsonRpcUrl: string, chainId: number) {
