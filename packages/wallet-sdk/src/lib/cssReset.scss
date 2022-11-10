@@ -55,7 +55,6 @@
     border-top-right-radius: 0;
     border-top-style: none;
     border-top-width: medium;
-    bottom: auto;
     box-shadow: none;
     box-sizing: border-box;
     caption-side: top;
@@ -72,12 +71,9 @@
     column-rule-width: none;
     column-span: 1;
     column-width: auto;
-    content: normal;
     counter-increment: none;
     counter-reset: none;
-    cursor: auto;
     direction: ltr;
-    display: block;
     empty-cells: show;
     float: none;
     font: normal;
@@ -89,7 +85,6 @@
     font-weight: normal;
     height: auto;
     hyphens: none;
-    left: auto;
     letter-spacing: normal;
     line-height: normal;
     list-style: none;
@@ -101,10 +96,6 @@
     margin-left: 0;
     margin-right: 0;
     margin-top: 0;
-    max-height: none;
-    max-width: none;
-    min-height: 0;
-    min-width: 0;
     opacity: 1;
     orphans: 0;
     outline: 0;
@@ -127,7 +118,6 @@
     pointer-events: auto;
     position: static;
     quotes: "\\201C""\\201D""\\2018""\\2019";
-    right: auto;
     tab-size: 8;
     table-layout: auto;
     text-align: inherit;
@@ -139,7 +129,6 @@
     text-indent: 0;
     text-shadow: none;
     text-transform: none;
-    top: auto;
     transform: none;
     transform-style: flat;
     transition: none;
@@ -152,14 +141,16 @@
     visibility: visible;
     white-space: normal;
     widows: 0;
-    width: auto;
     word-spacing: normal;
     z-index: auto;
   }
 
+  strong {
+    font-weight: bold;
+  }
+
   * {
     box-sizing: border-box;
-    display: initial;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue",
       Arial, sans-serif;
     line-height: 1;

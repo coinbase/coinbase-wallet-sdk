@@ -362,6 +362,25 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         }),
     );
 
+    this.subscriptions.add(
+      connection.sessionConfig$
+        .pipe(filter(c => c.metadata && c.metadata.AppSrc !== undefined))
+        .pipe(
+          mergeMap(c => aes256gcm.decrypt(c.metadata.AppSrc!, session.secret)),
+        )
+        .subscribe({
+          next: appSrc => {
+            this.ui.setAppSrc(appSrc);
+          },
+          error: () => {
+            this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
+              message: "Had error decrypting",
+              value: "appSrc",
+            });
+          },
+        }),
+    );
+
     const ui = this.options.uiConstructor({
       linkAPIUrl: this.options.linkAPIUrl,
       version: this.options.version,
@@ -879,7 +898,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
             location = window.location;
           }
 
-          location.href = `https://go.cb-w.com/xoXnYwQimhb?cb_url=${encodeURIComponent(
+          location.href = `https://www.coinbase.com/connect-dapp?uri=${encodeURIComponent(
             location.href,
           )}`;
           return;

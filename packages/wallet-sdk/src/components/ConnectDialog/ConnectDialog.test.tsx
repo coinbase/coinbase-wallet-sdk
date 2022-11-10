@@ -1,14 +1,14 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/preact";
 import { h } from "preact";
 
-import { TryExtensionLinkDialog } from "./TryExtensionLinkDialog";
+import { ConnectDialog } from "./ConnectDialog";
 
-const renderTryExtensionLinkDialog = ({
+const renderConnectDialog = ({
   connectDisabled = false,
   isConnected = true,
 }) => {
   return render(
-    <TryExtensionLinkDialog
+    <ConnectDialog
       darkMode={false}
       version="1"
       sessionId="abcd"
@@ -28,23 +28,23 @@ const windowOpenSpy = jest.spyOn(window, "open");
 
 describe("TryExtensionLinkDialog", () => {
   test("should show scan QR box when connectDisabled is false", async () => {
-    renderTryExtensionLinkDialog({ connectDisabled: false });
+    renderConnectDialog({ connectDisabled: false });
 
     await waitFor(() => {
-      expect(screen.queryByTestId("scan-qr-box")).toBeTruthy();
+      expect(screen.queryByTestId("connect-content")).toBeTruthy();
     });
   });
 
   test("should not show scan QR box when connectDisabled is true", async () => {
-    renderTryExtensionLinkDialog({ connectDisabled: true });
+    renderConnectDialog({ connectDisabled: true });
 
     await waitFor(() => {
-      expect(screen.queryByTestId("scan-qr-box")).toBeNull();
+      expect(screen.queryByTestId("connect-content")).toBeNull();
     });
   });
 
   test("should show connecting spinner when not connected", async () => {
-    renderTryExtensionLinkDialog({ isConnected: false });
+    renderConnectDialog({ isConnected: false });
 
     await waitFor(() => {
       expect(screen.queryByTestId("connecting-spinner")).toBeTruthy();
@@ -55,7 +55,7 @@ describe("TryExtensionLinkDialog", () => {
     const mockedWindowOpen = jest.fn();
     windowOpenSpy.mockImplementation(mockedWindowOpen);
 
-    renderTryExtensionLinkDialog({});
+    renderConnectDialog({});
 
     await waitFor(async () => {
       const button = await screen.findByRole("button", { name: "Install" });
@@ -70,7 +70,7 @@ describe("TryExtensionLinkDialog", () => {
   test("should show refresh button after pressing install", async () => {
     windowOpenSpy.mockImplementation(() => null);
 
-    renderTryExtensionLinkDialog({});
+    renderConnectDialog({});
 
     await waitFor(async () => {
       const button = await screen.findByRole("button", { name: "Install" });

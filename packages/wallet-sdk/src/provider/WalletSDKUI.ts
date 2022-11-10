@@ -1,5 +1,8 @@
-import { LinkFlow } from "../components/LinkFlow";
-import { Snackbar, SnackbarInstanceProps } from "../components/Snackbar";
+import { LinkFlow } from "../components/LinkFlow/LinkFlow";
+import {
+  Snackbar,
+  SnackbarInstanceProps,
+} from "../components/Snackbar/Snackbar";
 import { injectCssReset } from "../lib/cssReset";
 import {
   EthereumAddressFromSignedMessageRequest,
@@ -20,6 +23,7 @@ export class WalletSDKUI implements WalletUI {
   private readonly snackbar: Snackbar;
   private standalone: boolean | null = null;
   private attached = false;
+  private appSrc: string | null = null;
 
   constructor(options: Readonly<WalletUIOptions>) {
     this.snackbar = new Snackbar({
@@ -154,6 +158,7 @@ export class WalletSDKUI implements WalletUI {
       snackbarProps = {
         autoExpand: true,
         message: "Connection lost",
+        appSrc: this.appSrc,
         menuItems: [
           {
             isRed: false,
@@ -170,6 +175,7 @@ export class WalletSDKUI implements WalletUI {
     } else {
       snackbarProps = {
         message: "Confirm on phone",
+        appSrc: this.appSrc,
         menuItems: [
           {
             isRed: true,
@@ -196,6 +202,11 @@ export class WalletSDKUI implements WalletUI {
     }
 
     return this.snackbar.presentItem(snackbarProps);
+  }
+
+  /* istanbul ignore next */
+  setAppSrc(appSrc: string): void {
+    this.appSrc = appSrc;
   }
 
   /* istanbul ignore next */

@@ -1,0 +1,242 @@
+// Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
+// Licensed under the Apache License, version 2.0
+
+@import "../theme.scss";
+
+.-cbwsdk-css-reset {
+  .-cbwsdk-connect-content {
+    height: 430px;
+    width: 700px;
+    border-radius: 12px;
+    padding: 30px;
+
+    &.light {
+      background: $white;
+    }
+
+    &.dark {
+      background: $black;
+    }
+
+    &-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 0 0 30px;
+    }
+
+    &-heading {
+      font-style: normal;
+      font-weight: 500;
+      font-size: 28px;
+      line-height: 36px;
+      margin: 0;
+
+      &.light {
+        color: $black;
+      }
+
+      &.dark {
+        color: $white;
+      }
+    }
+
+    &-layout {
+      display: flex;
+      flex-direction: row;
+    }
+
+    &-column-left {
+      margin-right: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    &-column-right {
+      flex: 25%;
+      margin-right: 34px;
+    }
+
+    &-qr-wrapper {
+      width: 220px;
+      height: 220px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: $white;
+    }
+
+    &-qr-connecting {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
+      &.light {
+        background-color: rgba($white, 0.95);
+
+        > p {
+          color: $black;
+        }
+      }
+
+      &.dark {
+        background-color: rgba($background-dark, 0.9);
+
+        > p {
+          color: $white;
+        }
+      }
+
+      > p {
+        font-size: 12px;
+        font-weight: bold;
+        margin-top: 16px;
+      }
+    }
+
+    &-update-app {
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 20px;
+      padding: 12px;
+      width: 339px;
+
+      &.light {
+        background: $background-alt;
+        color: $foreground-muted;
+      }
+
+      &.dark {
+        background: $background-alt-dark;
+        color: $foreground-muted-dark;
+      }
+    }
+  }
+
+  .-cbwsdk-cancel-button {
+    -webkit-appearance: none;
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+
+    &-x {
+      position: relative;
+      display: block;
+      cursor: pointer;
+    }
+  }
+
+  .-cbwsdk-wallet-steps {
+    padding: 0 0 0 16px;
+    margin: 0;
+    width: 100%;
+    list-style: decimal;
+
+    &-item {
+      list-style-type: decimal;
+      display: list-item;
+      font-style: normal;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 24px;
+      margin-top: 20px;
+
+      &.light {
+        color: $black;
+      }
+
+      &.dark {
+        color: $white;
+      }
+    }
+
+    &-item-wrapper {
+      display: flex;
+      align-items: center;
+    }
+
+    &-pad-left {
+      margin-left: 6px;
+    }
+
+    &-icon {
+      display: flex;
+      border-radius: 50%;
+      height: 24px;
+      width: 24px;
+
+      svg {
+        margin: auto;
+        display: block;
+      }
+
+      &.light {
+        background: $primary;
+      }
+
+      &.dark {
+        background: $primary-dark;
+      }
+    }
+  }
+
+  .-cbwsdk-connect-item {
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+    padding: 16px 24px;
+    gap: 12px;
+    cursor: pointer;
+
+    &.light {
+      color: $black;
+
+      &.selected {
+        background: $primary-wash;
+        color: $primary;
+      }
+    }
+
+    &.dark {
+      color: $white;
+
+      &.selected {
+        background: $primary-wash-dark;
+        color: $primary-dark;
+      }
+    }
+
+    &.selected {
+      border-radius: 100px;
+      font-weight: 600;
+    }
+
+    &-copy-wrapper {
+      margin: 0 4px 0 8px;
+    }
+
+    &-title {
+      margin: 0 0 0;
+      font-size: 16px;
+      line-height: 24px;
+      font-weight: 500;
+    }
+
+    &-description {
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 20px;
+      margin: 0;
+    }
+  }
+}

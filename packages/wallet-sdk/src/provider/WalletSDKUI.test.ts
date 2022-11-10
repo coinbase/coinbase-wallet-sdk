@@ -2,8 +2,8 @@ import { render } from "@testing-library/preact";
 import { Session } from "inspector";
 import { Observable, Subject } from "rxjs";
 
-import { LinkFlow } from "../components/LinkFlow";
-import { Snackbar } from "../components/Snackbar";
+import { LinkFlow } from "../components/LinkFlow/LinkFlow";
+import { Snackbar } from "../components/Snackbar/Snackbar";
 import { WalletSDKUI } from "./WalletSDKUI";
 
 describe("WalletSDKUI", () => {
@@ -44,6 +44,7 @@ describe("WalletSDKUI", () => {
 
     expect(snackbarMock).toHaveBeenCalledWith({
       message: "Confirm on phone",
+      appSrc: null,
       menuItems: [
         {
           isRed: true,
@@ -83,6 +84,7 @@ describe("WalletSDKUI", () => {
     expect(snackbarMock).toHaveBeenCalledWith({
       autoExpand: true,
       message: "Connection lost",
+      appSrc: null,
       menuItems: [
         {
           isRed: false,
