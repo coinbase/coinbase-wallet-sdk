@@ -43,10 +43,6 @@ import { RequestArguments, Web3Provider } from "./Web3Provider";
 
 const DEFAULT_CHAIN_ID_KEY = "DefaultChainId";
 const DEFAULT_JSON_RPC_URL = "DefaultJsonRpcUrl";
-const WHITELISTED_NETWORK_CHAIN_ID = [
-  1, 10, 137, 61, 56, 250, 42161, 100, 43114, 3, 4, 5, 42, 69, 80001, 97, 4002,
-  421611, 43113,
-];
 
 export interface CoinbaseWalletProviderOptions {
   chainId: number;
@@ -271,7 +267,7 @@ export class CoinbaseWalletProvider
       this._jsonRpcUrlFromOpts = jsonRpcUrl;
     }
 
-    this.updateProviderInfo(this._jsonRpcUrlFromOpts, this._chainIdFromOpts);
+    this.updateProviderInfo(this.jsonRpcUrl, this.getChainId());
   }
 
   private updateProviderInfo(jsonRpcUrl: string, chainId: number) {
@@ -350,11 +346,6 @@ export class CoinbaseWalletProvider
   }
 
   private async switchEthereumChain(chainId: number) {
-    if (WHITELISTED_NETWORK_CHAIN_ID.includes(chainId)) {
-      // for whitelisted network that we know we can switch to, switch it right away
-      this.updateProviderInfo(this.jsonRpcUrl, chainId);
-    }
-
     const relay = await this.initializeRelay();
     const res = await relay.switchEthereumChain(
       chainId.toString(10),
