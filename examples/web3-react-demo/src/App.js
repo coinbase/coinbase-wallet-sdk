@@ -168,9 +168,8 @@ export default function Home() {
                   Switch Network
                 </Button>
                 <Select placeholder="Select network" onChange={handleNetwork}>
-                  <option value="3">Ropsten</option>
-                  <option value="4">Rinkeby</option>
-                  <option value="42">Kovan</option>
+                  <option value="5">Görli</option>
+                  <option value="11155111">Sepolia</option>
                   <option value="1666600000">Harmony</option>
                   <option value="42220">Celo</option>
                 </Select>
