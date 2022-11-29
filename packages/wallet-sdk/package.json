@@ -2,6 +2,7 @@
   "name": "@coinbase/wallet-sdk",
   "version": "3.6.0",
   "description": "Coinbase Wallet JavaScript SDK",
+  "sideEffects": false,
   "keywords": [
     "cipher",
     "cipherbrowser",
