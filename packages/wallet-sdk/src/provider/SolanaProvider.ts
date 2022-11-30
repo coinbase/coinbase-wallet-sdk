@@ -64,15 +64,16 @@ export class SolanaProvider
     this._request = this._request.bind(this);
     this.isConnected = false;
     this.publicKey = null;
-    window.addEventListener("message", this.handleResponse);
+
+    window.addEventListener("message", event => {
+      // Used to verify the source and window are correct before proceeding
+      if (event.origin === location.origin && event.source === window) {
+        this.handleResponse(event);
+      }
+    });
   }
 
   public handleResponse = (event: any) => {
-    // Used to verify the source and window are correct before proceeding
-    if (event.origin !== location.origin || event.source !== window) {
-      return;
-    }
-
     if (!["extensionUIResponse", "WEB3_RESPONSE"].includes(event.data.type)) {
       return;
     }
