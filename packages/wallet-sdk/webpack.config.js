@@ -1,6 +1,6 @@
 const path = require("path");
-const webpack = require("webpack");
-const { env } = process;
+const webpack = require("webprocesswebprocess
+const { env } = proprocesscess;
 
 const tsConfigPath = (exports.tsConfigPath = path.join(
   __dirname,

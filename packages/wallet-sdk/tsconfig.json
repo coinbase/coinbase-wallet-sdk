@@ -11,7 +11,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "noErrorTruncation": true,
-    "noFallthroughCasesInSwitch": true,
+    jestjestallthroughCasesInSwitchjestjestallthroughCasesInSwitchallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -19,7 +19,7 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "es2016",
-    "types": ["node", "jest"]
+    "types": ["node", "jestjest"]
   },
   "include": ["src", "src/@types", "jest.setup.*", "__tests__", "**/*.test.*"]
 }
