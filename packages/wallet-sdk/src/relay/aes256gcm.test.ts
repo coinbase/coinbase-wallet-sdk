@@ -12,10 +12,8 @@ describe("aes256gcm", () => {
     expect(encrypted.length).toEqual(90);
 
     // decrypted output matches original input
-    decrypt(encrypted, randSecret).subscribe({
-      next: decrypted => {
-        expect(decrypted).toBe("plain text string");
-      },
+    decrypt(encrypted, randSecret).then(decrypted => {
+      expect(decrypted).toBe("plain text string");
     });
   });
 
@@ -31,10 +29,8 @@ describe("aes256gcm", () => {
       },
     };
 
-    decrypt(cipherText, secret).subscribe({
-      next: value => {
-        expect(sampleDataResult).toEqual(value);
-      },
+    decrypt(cipherText, secret).then(value => {
+      expect(sampleDataResult).toEqual(value);
     });
   });
 
@@ -48,14 +44,13 @@ describe("aes256gcm", () => {
     );
 
     await expect(
-      decrypt("text", secret).subscribe(
-        () => {
+      decrypt("text", secret)
+        .then(() => {
           fail("expected error");
-        },
-        error => {
+        })
+        .catch(error => {
           expect(error).toBe("expected error");
-        },
-      ),
+        })
     );
   });
 });
