@@ -34,7 +34,7 @@ describe("aes256gcm", () => {
 
     decrypt(cipherText, secret).then(
       value => {
-        expect(sampleDataResult).toEqual(value);
+        expect(sampleDataResult).toEqual(JSON.parse(value));
       },
       () => {},
     );
