@@ -64,10 +64,7 @@ export async function encrypt(
  *
  * TODO: Update rxjs for promises
  */
-export function decrypt(
-  cipherText: string,
-  secret: string,
-): Promise<string> {
+export function decrypt(cipherText: string, secret: string): Promise<string> {
   if (secret.length !== 64) throw Error(`secret must be 256 bits`);
   return new Promise<string>((resolve, reject) => {
     void (async function () {

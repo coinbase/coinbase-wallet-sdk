@@ -12,9 +12,12 @@ describe("aes256gcm", () => {
     expect(encrypted.length).toEqual(90);
 
     // decrypted output matches original input
-    decrypt(encrypted, randSecret).then(decrypted => {
-      expect(decrypted).toBe("plain text string");
-    }, () => {});
+    decrypt(encrypted, randSecret).then(
+      decrypted => {
+        expect(decrypted).toBe("plain text string");
+      },
+      () => {},
+    );
   });
 
   test("decrypt", () => {
@@ -29,9 +32,12 @@ describe("aes256gcm", () => {
       },
     };
 
-    decrypt(cipherText, secret).then(value => {
-      expect(sampleDataResult).toEqual(value);
-    }, () => {});
+    decrypt(cipherText, secret).then(
+      value => {
+        expect(sampleDataResult).toEqual(value);
+      },
+      () => {},
+    );
   });
 
   test("errors", async () => {
@@ -50,7 +56,7 @@ describe("aes256gcm", () => {
         })
         .catch(error => {
           expect(error).toBe("expected error");
-        })
+        }),
     );
   });
 });
