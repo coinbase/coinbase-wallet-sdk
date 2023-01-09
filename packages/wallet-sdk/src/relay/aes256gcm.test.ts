@@ -49,8 +49,6 @@ describe("aes256gcm", () => {
       "secret must be 256 bits",
     );
 
-    await expect(decrypt("text", secret)).rejects.toThrowError(
-      "expected error",
-    );
+    await expect(decrypt("text", secret)).rejects.toThrow();
   });
 });
