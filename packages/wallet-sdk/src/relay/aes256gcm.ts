@@ -61,8 +61,6 @@ export async function encrypt(
  * @param cipherText hex string representation of bytes in the order: initialization vector (iv),
  * auth tag, encrypted plaintext. IV is 12 bytes. Auth tag is 16 bytes.
  * @param secret hex string representation of 32-byte secret
- *
- * TODO: Update rxjs for promises
  */
 export function decrypt(cipherText: string, secret: string): Promise<string> {
   if (secret.length !== 64) throw Error(`secret must be 256 bits`);
