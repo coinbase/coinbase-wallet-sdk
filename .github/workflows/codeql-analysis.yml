@@ -20,6 +20,9 @@ on:
   schedule:
     - cron: "45 14 * * 6"
 
+# paths-ignore:
+#   - packages/wallet-native-sdk
+
 jobs:
   analyze:
     name: Analyze
