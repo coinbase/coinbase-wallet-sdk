@@ -3,7 +3,7 @@
 
 import bind from "bind-decorator";
 import { ethErrors } from "eth-rpc-errors";
-import { BehaviorSubject, Observable, of, Subscription, zip } from "rxjs";
+import { BehaviorSubject, Observable, from, of, Subscription, zip } from "rxjs";
 import {
   catchError,
   distinctUntilChanged,
@@ -777,8 +777,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
   private handleIncomingEvent(event: ServerMessageEvent): void {
     try {
       this.subscriptions.add(
-        aes256gcm
-          .decrypt(event.data, this.session.secret)
+        from(aes256gcm.decrypt(event.data, this.session.secret))
           .pipe(map(c => JSON.parse(c)))
           .subscribe({
             next: json => {
