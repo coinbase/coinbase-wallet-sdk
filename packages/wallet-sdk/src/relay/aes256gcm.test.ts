@@ -12,7 +12,7 @@ describe("aes256gcm", () => {
     expect(encrypted.length).toEqual(90);
 
     // decrypted output matches original input
-    decrypt(encrypted, randSecret).then(
+    return decrypt(encrypted, randSecret).then(
       decrypted => {
         expect(decrypted).toBe("plain text string");
       },
@@ -32,7 +32,7 @@ describe("aes256gcm", () => {
       },
     };
 
-    decrypt(cipherText, secret).then(
+    return decrypt(cipherText, secret).then(
       value => {
         expect(sampleDataResult).toEqual(JSON.parse(value));
       },
