@@ -3,7 +3,7 @@
 
 import bind from "bind-decorator";
 import { ethErrors } from "eth-rpc-errors";
-import { BehaviorSubject, Observable, from, of, Subscription, zip } from "rxjs";
+import { BehaviorSubject, from, Observable, of, Subscription, zip } from "rxjs";
 import {
   catchError,
   distinctUntilChanged,

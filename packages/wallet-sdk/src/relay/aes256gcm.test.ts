@@ -14,7 +14,7 @@ describe("aes256gcm", () => {
     // decrypted output matches original input
     decrypt(encrypted, randSecret).then(decrypted => {
       expect(decrypted).toBe("plain text string");
-    });
+    }, () => {});
   });
 
   test("decrypt", () => {
@@ -31,7 +31,7 @@ describe("aes256gcm", () => {
 
     decrypt(cipherText, secret).then(value => {
       expect(sampleDataResult).toEqual(value);
-    });
+    }, () => {});
   });
 
   test("errors", async () => {
