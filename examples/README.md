@@ -11,3 +11,9 @@
 [Rainbowkit example](rainbowkit-demo/)
 
 - Related documentation: [Integrating with rainbowkit](https://www.rainbowkit.com/docs/introduction)
+
+### Integrate with web3-onboard
+
+[web3-onboard example](web3-onboard-demo/)
+
+- Related documentation: [Integrating with Web3-Onboard](https://docs.cloud.coinbase.com/wallet-sdk/docs/web3-onboard)
