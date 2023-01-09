@@ -11,3 +11,9 @@
 [web3-react example](web3-react-demo/)
 
 - Related documentation: [Integrating with Web3-React](https://docs.cloud.coinbase.com/wallet-sdk/docs/web3-react)
+
+### Integrate with web3-onboard
+
+[web3-onboard example](web3-onboard-demo/)
+
+- Related documentation: [Integrating with Web3-Onboard](https://docs.cloud.coinbase.com/wallet-sdk/docs/web3-onboard)

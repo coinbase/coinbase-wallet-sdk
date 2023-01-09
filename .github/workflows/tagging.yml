@@ -6,36 +6,13 @@ on:
       - master
 
 jobs:
-  tag_merged_version:
-    if: startsWith(github.event.head_commit.message, 'v')
+  autotag:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Setup Tag Match
-        id: check-tag
-        run: |
-          if [[ "${{ github.event.head_commit.message }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
-            echo ::set-output name=match::true
-          fi
-
-      - name: Set Tag Value
-        if: steps.check-tag.outputs.match == 'true'
-        id: tag
-        run: |
-          COMMIT_MSG="${{ github.event.head_commit.message }}"
-          TAG=$(echo $COMMIT_MSG | sed -e '1!d' -e 's/\(^v[[:digit:]]*.[[:digit:]]*.[[:digit:]]*\).*$/\1/' )
-          echo "PARSED_TAG=$TAG" >> $GITHUB_ENV
-
-      - name: Tag
-        uses: actions/github-script@v6
+      - uses: actions/checkout@v2
+      - uses: butlerlogic/action-autotag@stable
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          script: |
-            github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: "refs/tags/${{ env.PARSED_TAG }}",
-              sha: context.sha
-            })
+          root: "./packages/wallet-sdk"
+          tag_prefix: "v"
