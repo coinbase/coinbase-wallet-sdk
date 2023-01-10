@@ -13,7 +13,7 @@ describe("aes256gcm", () => {
 
     // decrypted output matches original input
     const decrypted = await decrypt(encrypted, randSecret);
-    
+
     expect(decrypted).toBe("plain text string");
   });
 
@@ -30,7 +30,7 @@ describe("aes256gcm", () => {
     };
 
     const decrypted = await decrypt(cipherText, secret);
-    
+
     expect(sampleDataResult).toEqual(JSON.parse(decrypted));
   });
 
