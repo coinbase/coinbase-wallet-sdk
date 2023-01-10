@@ -12,15 +12,12 @@ describe("aes256gcm", () => {
     expect(encrypted.length).toEqual(90);
 
     // decrypted output matches original input
-    return decrypt(encrypted, randSecret).then(
-      decrypted => {
-        expect(decrypted).toBe("plain text string");
-      },
-      () => {},
-    );
+    const decrypted = await decrypt(encrypted, randSecret);
+    
+    expect(decrypted).toBe("plain text string");
   });
 
-  test("decrypt", () => {
+  test("decrypt", async () => {
     const cipherText =
       "06593325a922a928913b5c6ea26f848c4545bcea4e26c4f5ee745316ff22b2780aeccc565730514b2820a94b03f5f89fe7542a35bbdd87a1d52a4352f49482781113db09266c668696778e0a94bc9f866f1e92e7262fd0bb811838284cc64cbc4552b33e9c6fb2582cea4f49471d6d46a16a5c8ac83ee8483ed4dc01f1fde3bfd7a2f173715e0a8d09dd4907483f096a845bff698831ea277c1ca4223d3f6073174cb35119d0a795c1a9cb4f32ee1dcc254d8931";
     const sampleDataResult = {
@@ -32,12 +29,9 @@ describe("aes256gcm", () => {
       },
     };
 
-    return decrypt(cipherText, secret).then(
-      value => {
-        expect(sampleDataResult).toEqual(JSON.parse(value));
-      },
-      () => {},
-    );
+    const decrypted = await decrypt(cipherText, secret);
+    
+    expect(sampleDataResult).toEqual(JSON.parse(decrypted));
   });
 
   test("errors", async () => {
