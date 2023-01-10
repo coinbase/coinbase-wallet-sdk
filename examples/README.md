@@ -6,6 +6,12 @@
 
 - Related documentation: [Deep Linking into the Coinbase Wallet Dapp Browser](https://docs.cloud.coinbase.com/wallet-sdk/docs/deep-link-into-dapp-browser)
 
+### Integrate with Rainbowkit
+
+[Rainbowkit example](rainbowkit-demo/)
+
+- Related documentation: [Integrating with rainbowkit](https://www.rainbowkit.com/docs/introduction)
+
 ### Integrate with web3modal
 
 [web3modal example](web3modal-demo/)
