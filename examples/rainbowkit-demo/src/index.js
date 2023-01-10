@@ -8,9 +8,9 @@ import {
 import { 
   WagmiConfig, 
   createClient, 
-  configureChains, 
-  defaultChains
+  configureChains
 } from "wagmi";
+import { arbitrum, avalanche, bsc, fantom, goerli, mainnet, optimism, polygon, sepolia } from 'wagmi/chains';
 import { infuraProvider } from 'wagmi/providers/infura'
 import { publicProvider } from 'wagmi/providers/public'
 import App from "./App";
@@ -20,10 +20,13 @@ import App from "./App";
 const infuraId = process.env.INFURA_ID;
 
 // Configure chains for connectors to support
-const { chains, provider } = configureChains(defaultChains, [
-  infuraProvider({ infuraId }),
-  publicProvider(),
-])
+const { chains, provider } = configureChains(
+  [ arbitrum, avalanche, bsc, fantom, goerli, mainnet, optimism, polygon, sepolia ],
+  [
+    infuraProvider({ infuraId }),
+    publicProvider(),
+  ]
+);
 
 export const { connectors } = getDefaultWallets({
   appName: 'RainbowKit Demo',
