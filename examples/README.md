@@ -12,11 +12,11 @@
 
 - Related documentation: [Integrating with rainbowkit](https://www.rainbowkit.com/docs/introduction)
 
-### Integrate with web3modal
+### Integrate with wagmi
 
-[web3modal example](web3modal-demo/)
+[wagmi example](wagmi-demo/)
 
-- Related documentation: [Integrating with Web3Modal](https://docs.cloud.coinbase.com/wallet-sdk/docs/web3modal)
+- Related documentation: [Integrating with wagmi](https://docs.cloud.coinbase.com/wallet-sdk/docs/wagmi)
 
 ### Integrate with web3-react
 
@@ -24,11 +24,11 @@
 
 - Related documentation: [Integrating with Web3-React](https://docs.cloud.coinbase.com/wallet-sdk/docs/web3-react)
 
-### Integrate with wagmi
+### Integrate with web3modal
 
-[wagmi example](wagmi-demo/)
+[web3modal example](web3modal-demo/)
 
-- Related documentation: [Integrating with wagmi](https://docs.cloud.coinbase.com/wallet-sdk/docs/wagmi)
+- Related documentation: [Integrating with Web3Modal](https://docs.cloud.coinbase.com/wallet-sdk/docs/web3modal)
 
 ### Integrate with web3-onboard
 
