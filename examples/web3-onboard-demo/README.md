@@ -4,11 +4,11 @@ This sample application demonstrates how to integrate Coinbase Wallet into a dec
 
 Install packages:
 
-`yarn install`
+`npm install`
 
 Run app:
 
-`yarn start`
+`npm start`
 
 Open app:
 
