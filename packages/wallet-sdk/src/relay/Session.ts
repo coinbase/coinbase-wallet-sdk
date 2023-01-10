@@ -1,8 +1,6 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { fromEvent, Observable } from "rxjs";
-import { filter, map } from "rxjs/operators";
 import { sha256 } from "sha.js";
 
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
@@ -46,19 +44,6 @@ export class Session {
     }
 
     return null;
-  }
-
-  public static get persistedSessionIdChange$(): Observable<{
-    oldValue: string | null;
-    newValue: string | null;
-  }> {
-    return fromEvent<StorageEvent>(window, "storage").pipe(
-      filter(evt => evt.key === STORAGE_KEY_SESSION_ID),
-      map(evt => ({
-        oldValue: evt.oldValue || null,
-        newValue: evt.newValue || null,
-      })),
-    );
   }
 
   /**
