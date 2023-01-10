@@ -12,6 +12,12 @@
 
 - Related documentation: [Integrating with Web3Modal](https://docs.cloud.coinbase.com/wallet-sdk/docs/web3modal)
 
+### Integrate with web3-react
+
+[web3-react example](web3-react-demo/)
+
+- Related documentation: [Integrating with Web3-React](https://docs.cloud.coinbase.com/wallet-sdk/docs/web3-react)
+
 ### Integrate with web3-onboard
 
 [web3-onboard example](web3-onboard-demo/)
