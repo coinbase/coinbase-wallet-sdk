@@ -18,6 +18,11 @@
   "devDependencies": {
     "react-app-rewired": "^2.2.1"
   },
+  "overrides": {
+    "react-scripts": {
+      "nth-check": "^2.0.1"
+    }
+  },
   "scripts": {
     "start": "react-app-rewired start",
     "build": "react-app-rewired build",
