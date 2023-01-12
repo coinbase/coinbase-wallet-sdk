@@ -8,9 +8,6 @@
   "dependencies": {
     "@chakra-ui/icons": "^2.0.2",
     "@chakra-ui/react": "^2.2.1",
-    "@testing-library/jest-dom": "^5.16.4",
-    "@testing-library/react": "^13.3.0",
-    "@testing-library/user-event": "^13.5.0",
     "@web3-react/core": "^6.1.9",
     "@web3-react/injected-connector": "^6.0.7",
     "@web3-react/walletconnect-connector": "^6.2.13",
@@ -18,11 +15,13 @@
     "buffer": "^6.0.3",
     "ethers": "^5.6.8",
     "react": "^18.1.0",
-    "react-app-rewired": "^2.2.1",
     "react-dom": "^18.1.0",
-    "react-scripts": "5.0.1",
     "util": "^0.12.4",
     "web-vitals": "^2.1.4"
+  },
+  "devDependencies": {
+    "react-app-rewired": "^2.2.1",
+    "react-scripts": "^5.0.1"
   },
   "scripts": {
     "start": "react-app-rewired start",
