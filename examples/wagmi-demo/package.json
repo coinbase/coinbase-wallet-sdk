@@ -16,8 +16,7 @@
     "wagmi": "^0.4.10"
   },
   "devDependencies": {
-    "react-app-rewired": "^2.2.1",
-    "react-scripts": "^5.0.1"
+    "react-app-rewired": "^2.2.1"
   },
   "scripts": {
     "start": "react-app-rewired start",
