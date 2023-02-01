@@ -1,3 +1,5 @@
+[![npm](https://img.shields.io/npm/v/@coinbase/wallet-sdk)](https://www.npmjs.com/package/@coinbase/wallet-sdk)
+
 # Coinbase Wallet SDK
 
 Coinbase Wallet SDK (formerly WalletLink) lets developers connect their dapps to Coinbase Wallet
