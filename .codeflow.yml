@@ -3,4 +3,5 @@ secure:
   upstream_repository: coinbase/coinbase-wallet-sdk
 operate:
   slack_channels:
-    - "#wallet-sdk"
+    - "#wallet-squad-build"
+    - "#wallet-feedback"
