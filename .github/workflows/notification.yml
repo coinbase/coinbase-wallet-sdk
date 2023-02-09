@@ -76,7 +76,7 @@ jobs:
 
     - name: Set channel and mention
       run: |
-        if [${{ contains(join(github.event.issue.labels.*.name), 'type:') }} == 'true']; then
+        if ${{ contains(join(github.event.issue.labels.*.name), 'type:') }}; then
           echo "channel=${{ env.CHANNEL_WALLET_FEEDBACK }}" >> $GITHUB_ENV
           echo "mention=!subteam^${{ env.ON_CALL_WALLET }}" >> $GITHUB_ENV
         else
