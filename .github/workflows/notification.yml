@@ -49,17 +49,21 @@ jobs:
     steps:
     - name: Set pull request details
       if: ${{ github.event_name == 'pull_request' }}
+      env:
+        title: ${{ github.event.pull_request.title }}
       run: |
         echo "event=PR ${{ github.event.action }}" >> $GITHUB_ENV
-        echo "title=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
+        echo "title=${{ env.title }}" >> $GITHUB_ENV
         echo "url=${{ github.event.pull_request.html_url }}" >> $GITHUB_ENV
         echo "author=${{ github.event.pull_request.user.login }}" >> $GITHUB_ENV        
 
     - name: Set issue details
       if: ${{ github.event_name == 'issues' }}
+      env:
+        title: ${{ github.event.issue.title }}
       run: |
         echo "event=Issue ${{ github.event.action }}" >> $GITHUB_ENV
-        echo "title=${{ github.event.issue.title }}" >> $GITHUB_ENV
+        echo "title=${{ env.title }}" >> $GITHUB_ENV
         echo "url=${{ github.event.issue.html_url }}" >> $GITHUB_ENV
         echo "author=${{ github.event.issue.user.login }}" >> $GITHUB_ENV
         
