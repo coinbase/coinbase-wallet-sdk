@@ -86,13 +86,14 @@ jobs:
 
     - name: Set text
       run: |
-        text=$(cat .github/workflows/slack_template.txt)
+        text=$(echo "${{ vars.SLACK_TEMPLATE }}")
         text=${text//'{{event}}'/${{ needs.parse-event-details.outputs.event }}}
         text=${text//'{{title}}'/${{ needs.parse-event-details.outputs.title }}}
         text=${text//'{{url}}'/${{ needs.parse-event-details.outputs.url }}}
         text=${text//'{{author}}'/${{ needs.parse-event-details.outputs.author }}}
         text=${text//'{{mention}}'/${{ env.mention }}}
         text=${text//'{{repo}}'/${{ github.repository }}}
+        text="${text//$'\r\n'/'\n'}"
         text="${text//$'\n'/'\n'}"
         echo "text=$text" >> $GITHUB_ENV
 
