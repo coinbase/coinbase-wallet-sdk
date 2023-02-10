@@ -1,0 +1,4 @@
+*<{{url}}|{{title}}>*
+> {{event}} on <https://github.com/{{repo}}|{{repo}}> by <https://github.com/{{author}}|{{author}}>
+> Please review the issue and proceed with the appropriate steps outlined in the <http://go/wallet-sdk-oncall-runbook|runbook> 
+> cc <{{mention}}>
