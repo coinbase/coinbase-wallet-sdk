@@ -40,9 +40,6 @@ jobs:
     needs: checks
     if: ${{ vars.SLACK_ENABLED == 'true' && needs.checks.outputs.skip != 'true' }}
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
     - name: Set channel and mention
       run: |
         if ${{ contains(join(github.event.issue.labels.*.name), 'type:') }}; then
@@ -66,8 +63,8 @@ jobs:
         echo "text=$text" >> $GITHUB_ENV
       env:
         action: ${{ github.event.action }}
-        url: ${{ github.event.issue.html_url }}
         author: ${{ github.event.issue.user.login }}
+        url: ${{ github.event.issue.html_url }}
 
     - name: Notify Slack
       uses: slackapi/slack-github-action@v1.23.0
