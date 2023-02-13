@@ -1,8 +1,6 @@
 name: Slack notifications for PRs and Issues
 
 on:
-  pull_request:
-    types: [opened, reopened]
   issues:
     types: [opened, reopened]
 
@@ -36,44 +34,12 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         REPO: ${{ github.repository }}
         USER: ${{ github.actor }}
-
-  parse-event-details:
-    runs-on: ubuntu-latest
-    needs: checks
-    if: ${{ vars.SLACK_ENABLED == 'true' && needs.checks.outputs.skip != 'true' }}
-    outputs:
-      event: ${{ env.event }}
-      title: ${{ env.title }}
-      url: ${{ env.url }}
-      author: ${{ env.author }}
-    steps:
-    - name: Set pull request details
-      if: ${{ github.event_name == 'pull_request' }}
-      env:
-        title: ${{ github.event.pull_request.title }}
-      run: |
-        echo "event=PR ${{ github.event.action }}" >> $GITHUB_ENV
-        echo "title=${{ env.title }}" >> $GITHUB_ENV
-        echo "url=${{ github.event.pull_request.html_url }}" >> $GITHUB_ENV
-        echo "author=${{ github.event.pull_request.user.login }}" >> $GITHUB_ENV        
-
-    - name: Set issue details
-      if: ${{ github.event_name == 'issues' }}
-      env:
-        title: ${{ github.event.issue.title }}
-      run: |
-        echo "event=Issue ${{ github.event.action }}" >> $GITHUB_ENV
-        echo "title=${{ env.title }}" >> $GITHUB_ENV
-        echo "url=${{ github.event.issue.html_url }}" >> $GITHUB_ENV
-        echo "author=${{ github.event.issue.user.login }}" >> $GITHUB_ENV
         
   notify:
     runs-on: ubuntu-latest
-    needs: parse-event-details
+    needs: checks
+    if: ${{ vars.SLACK_ENABLED == 'true' && needs.checks.outputs.skip != 'true' }}
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
     - name: Set channel and mention
       run: |
         if ${{ contains(join(github.event.issue.labels.*.name), 'type:') }}; then
@@ -87,15 +53,18 @@ jobs:
     - name: Set text
       run: |
         text=$(echo "${{ vars.SLACK_TEMPLATE }}")
-        text=${text//'{{event}}'/${{ needs.parse-event-details.outputs.event }}}
-        text=${text//'{{title}}'/${{ needs.parse-event-details.outputs.title }}}
-        text=${text//'{{url}}'/${{ needs.parse-event-details.outputs.url }}}
-        text=${text//'{{author}}'/${{ needs.parse-event-details.outputs.author }}}
+        text=${text//'{{event}}'/Issue ${{ env.action }}}
+        text=${text//'{{author}}'/${{ env.author }}}
+        text=${text//'{{url}}'/${{ env.url }}}
         text=${text//'{{mention}}'/${{ env.mention }}}
         text=${text//'{{repo}}'/${{ github.repository }}}
         text="${text//$'\r\n'/'\n'}"
         text="${text//$'\n'/'\n'}"
         echo "text=$text" >> $GITHUB_ENV
+      env:
+        action: ${{ github.event.action }}
+        author: ${{ github.event.issue.user.login }}
+        url: ${{ github.event.issue.html_url }}
 
     - name: Notify Slack
       uses: slackapi/slack-github-action@v1.23.0
@@ -103,8 +72,9 @@ jobs:
         payload: |
           {
             "channel": "#${{ env.channel }}",
-            "text": "${{ env.text }}",
+            "text": "*${{ env.tilte }}*\n${{ env.text }}",
             "icon_emoji": ":${{ vars.ICON_EMOJI }}:"
           }
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        title: ${{ github.event.issue.title }}
