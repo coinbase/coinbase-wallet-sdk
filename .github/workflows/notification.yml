@@ -72,7 +72,7 @@ jobs:
         payload: |
           {
             "channel": "#${{ env.channel }}",
-            "text": "*${{ env.tilte }}*\n${{ env.text }}",
+            "text": "*${{ env.title }}*\n${{ env.text }}",
             "icon_emoji": ":${{ vars.ICON_EMOJI }}:"
           }
       env:
