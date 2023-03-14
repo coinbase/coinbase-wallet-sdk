@@ -21,19 +21,6 @@ jobs:
       run: |
         echo "skip=true" >> $GITHUB_ENV
         echo "::error:: Spam label found."
-    - name: Check write permission
-      run: |
-        permission=$(curl -s -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/repos/$REPO/collaborators/$USER/permission | jq -r '.permission')
-        if [ "$permission" != "admin" ] && [ "$permission" != "write" ]; then
-          echo "::notice:: User $USER has $permission permission."
-          exit 0
-        fi
-        echo "skip=true" >> $GITHUB_ENV
-        echo "::error:: User $USER has $permission permission. No slack alert required."
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        REPO: ${{ github.repository }}
-        USER: ${{ github.actor }}
         
   notify:
     runs-on: ubuntu-latest
