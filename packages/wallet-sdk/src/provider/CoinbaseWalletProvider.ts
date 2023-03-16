@@ -480,9 +480,9 @@ export class CoinbaseWalletProvider
     try {
       return this._sendAsync(request, callback).catch(error => {
         throw serializeError(error);
-      });  
+      });
     } catch (error) {
-      throw serializeError(error);
+      return Promise.reject(serializeError(error));
     }
   }
   private async _sendAsync(

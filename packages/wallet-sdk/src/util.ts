@@ -2,7 +2,10 @@
 // Licensed under the Apache License, version 2.0
 
 import BN from "bn.js";
-import { EthereumProviderError, serializeError as serialize } from "eth-rpc-errors";
+import {
+  EthereumProviderError,
+  serializeError as serialize,
+} from "eth-rpc-errors";
 import { stringify } from "qs";
 
 import {
@@ -263,7 +266,7 @@ interface SerializedRpcError {
 }
 
 export function serializeError(error: unknown): SerializedRpcError {
-  console.error("serializeError", error);
-  const serialized = (error instanceof EthereumProviderError) ? error.serialize() : serialize(error);
-  return serialized;
+  return error instanceof EthereumProviderError
+    ? error.serialize()
+    : serialize(error);
 }
