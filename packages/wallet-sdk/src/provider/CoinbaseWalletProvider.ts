@@ -30,6 +30,7 @@ import {
   ensureRegExpString,
   hexStringFromIntNumber,
   prepend0x,
+  serializeError,
 } from "../util";
 import eip712 from "../vendor-js/eth-eip712-util";
 import { FilterPolyfill } from "./FilterPolyfill";
@@ -383,7 +384,7 @@ export class CoinbaseWalletProvider
       return [...this._addresses];
     }
 
-    return await this._send<AddressString[]>(JSONRPCMethod.eth_requestAccounts);
+    return await this.send<AddressString[]>(JSONRPCMethod.eth_requestAccounts);
   }
 
   public async close() {
@@ -411,6 +412,20 @@ export class CoinbaseWalletProvider
       | any,
   ): JSONRPCResponse | JSONRPCResponse[] | void | Promise<any> {
     // send<T>(method, params): Promise<T>
+    try {
+      return this._send(requestOrMethod, callbackOrParams);  
+    } catch (error) {
+      throw serializeError(error);
+    }
+  }
+  private _send(
+    requestOrMethod: JSONRPCRequest | JSONRPCRequest[] | string,
+    callbackOrParams?:
+      | Callback<JSONRPCResponse>
+      | Callback<JSONRPCResponse[]>
+      | any[]
+      | any,
+  ): JSONRPCResponse | JSONRPCResponse[] | void | Promise<any> {
     if (typeof requestOrMethod === "string") {
       const method = requestOrMethod;
       const params = Array.isArray(callbackOrParams)
@@ -454,6 +469,16 @@ export class CoinbaseWalletProvider
     callback: Callback<JSONRPCResponse[]>,
   ): void;
   public async sendAsync(
+    request: JSONRPCRequest | JSONRPCRequest[],
+    callback: Callback<JSONRPCResponse> | Callback<JSONRPCResponse[]>,
+  ): Promise<void> {
+    try {
+      return this._sendAsync(request, callback);  
+    } catch (error) {
+      throw serializeError(error);
+    }
+  }
+  private async _sendAsync(
     request: JSONRPCRequest | JSONRPCRequest[],
     callback: Callback<JSONRPCResponse> | Callback<JSONRPCResponse[]>,
   ): Promise<void> {
@@ -563,9 +588,6 @@ export class CoinbaseWalletProvider
   public disconnect(): boolean {
     return true;
   }
-
-  private _send = this.send.bind(this);
-  private _sendAsync = this.sendAsync.bind(this);
 
   private _sendRequest(request: JSONRPCRequest): JSONRPCResponse {
     const response: JSONRPCResponse = {
