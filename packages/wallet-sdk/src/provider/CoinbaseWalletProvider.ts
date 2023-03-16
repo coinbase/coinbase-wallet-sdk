@@ -413,7 +413,12 @@ export class CoinbaseWalletProvider
   ): JSONRPCResponse | JSONRPCResponse[] | void | Promise<any> {
     // send<T>(method, params): Promise<T>
     try {
-      return this._send(requestOrMethod, callbackOrParams);  
+      const result = this._send(requestOrMethod, callbackOrParams);
+      if (result instanceof Promise) {
+        return result.catch(error => {
+          throw serializeError(error);
+        });
+      }
     } catch (error) {
       throw serializeError(error);
     }
@@ -473,7 +478,9 @@ export class CoinbaseWalletProvider
     callback: Callback<JSONRPCResponse> | Callback<JSONRPCResponse[]>,
   ): Promise<void> {
     try {
-      return this._sendAsync(request, callback);  
+      return this._sendAsync(request, callback).catch(error => {
+        throw serializeError(error);
+      });  
     } catch (error) {
       throw serializeError(error);
     }
