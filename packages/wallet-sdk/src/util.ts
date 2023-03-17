@@ -2,10 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 import BN from "bn.js";
-import {
-  EthereumProviderError,
-  serializeError as serialize,
-} from "eth-rpc-errors";
+import { serializeError as serialize } from "eth-rpc-errors";
 import { stringify } from "qs";
 
 import {
@@ -258,15 +255,9 @@ export function isInIFrame(): boolean {
   }
 }
 
-interface SerializedRpcError {
-  code: number;
-  message: string;
-  data?: unknown;
-  stack?: string;
-}
-
-export function serializeError(error: unknown): SerializedRpcError {
-  return error instanceof EthereumProviderError
-    ? error.serialize()
-    : serialize(error);
+export function serializeError(error: unknown) {
+  return {
+    ...serialize(error, { shouldIncludeStack: true }),
+    supportURL: "asdf",
+  };
 }

@@ -12,16 +12,21 @@ global.TextDecoder = TextDecoder;
 
 expect.extend({
   toThrowEIPError(received, code, message) {
+    const expected = expect.objectContaining({
+      code,
+      message,
+      supportURL: expect.any(String),
+    });
     return {
-      pass: this.equals(received, expect.objectContaining({ code, message })),
+      pass: this.equals(received, expected),
       message: () =>
-        `Expected: ${this.utils.printExpected({
-          code,
-          message,
-        })}\nReceived: ${this.utils.printReceived({
-          code: received.code,
-          message: received.message,
-        })}`,
+        this.utils.printDiffOrStringify(
+          expected,
+          received,
+          "Expected",
+          "Received",
+          true,
+        ),
     };
   },
 });
