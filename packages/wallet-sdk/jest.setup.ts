@@ -12,15 +12,16 @@ global.TextDecoder = TextDecoder;
 
 expect.extend({
   toThrowEIPError(received, code, message) {
-    expect(received).not.toBeInstanceOf(Error);
-    expect(received).toMatchObject({ code, message });
     return {
-      pass: !this.isNot,
+      pass: this.equals(received, expect.objectContaining({ code, message })),
       message: () =>
         `Expected: ${this.utils.printExpected({
           code,
           message,
-        })}\nReceived: ${this.utils.printReceived(received)}`,
+        })}\nReceived: ${this.utils.printReceived({
+          code: received.code,
+          message: received.message,
+        })}`,
     };
   },
 });
