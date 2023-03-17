@@ -206,14 +206,17 @@ export class CoinbaseWalletProvider
     });
   }
 
+  /** @deprecated Use `.request({ method: 'eth_accounts' })` instead. */
   public get selectedAddress(): AddressString | undefined {
     return this._addresses[0] || undefined;
   }
 
+  /** @deprecated Use the chain ID. If you still need the network ID, use `.request({ method: 'net_version' })`. */
   public get networkVersion(): string {
     return this.getChainId().toString(10);
   }
 
+  /** @deprecated Use `.request({ method: 'eth_chainId' })` instead. */
   public get chainId(): string {
     return prepend0x(this.getChainId().toString(16));
   }
@@ -371,6 +374,7 @@ export class CoinbaseWalletProvider
     );
   }
 
+  /** @deprecated Use `.request({ method: 'eth_requestAccounts' })` instead. */
   public async enable(): Promise<AddressString[]> {
     this.diagnostic?.log(EVENTS.ETH_ACCOUNTS_STATE, {
       method: "provider::enable",
@@ -392,6 +396,7 @@ export class CoinbaseWalletProvider
     relay.resetAndReload();
   }
 
+  /** @deprecated Use `.request(...)` instead. */
   public send(request: JSONRPCRequest): JSONRPCResponse;
   public send(request: JSONRPCRequest[]): JSONRPCResponse[];
   public send(
@@ -465,6 +470,7 @@ export class CoinbaseWalletProvider
     return this._sendRequest(req);
   }
 
+  /** @deprecated Use `.request(...)` instead. */
   public sendAsync(
     request: JSONRPCRequest,
     callback: Callback<JSONRPCResponse>,
