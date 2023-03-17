@@ -9,3 +9,11 @@ global.TextEncoder = TextEncoder;
 
 // @ts-expect-error Use util TextDecoder
 global.TextDecoder = TextDecoder;
+
+expect.extend({
+  toThrowEIPError(received, code, message) {
+    expect(received).not.toBeInstanceOf(Error);
+    expect(received).toMatchObject({ code, message });
+    return { pass: !this.isNot, message: () => "" };
+  },
+});

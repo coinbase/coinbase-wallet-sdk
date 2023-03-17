@@ -361,7 +361,8 @@ describe("CoinbaseWalletProvider", () => {
       },
     });
 
-    await expect(() => provider.enable()).rejects.toThrowError(
+    await expect(() => provider.enable()).rejects.toThrowEIPError(
+      4001,
       "User denied account authorization",
     );
   });
@@ -379,7 +380,10 @@ describe("CoinbaseWalletProvider", () => {
       },
     });
 
-    await expect(() => provider.enable()).rejects.toThrowError("Unknown");
+    await expect(() => provider.enable()).rejects.toThrowEIPError(
+      -32603,
+      "Unknown",
+    );
   });
 
   it("returns the users address on future eth_requestAccounts calls", async () => {
