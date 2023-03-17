@@ -535,7 +535,10 @@ describe("CoinbaseWalletProvider", () => {
           method: "eth_sign",
           params: ["0x123456789abcdef", "Super safe message"],
         }),
-      ).rejects.toThrowError("Invalid Ethereum address: 0x123456789abcdef");
+      ).rejects.toThrowEIPError(
+        -32603,
+        "Invalid Ethereum address: 0x123456789abcdef",
+      );
     });
 
     test("eth_sign fail bad message format", async () => {
@@ -544,7 +547,7 @@ describe("CoinbaseWalletProvider", () => {
           method: "eth_sign",
           params: [MOCK_ADDERESS.toLowerCase(), 123456789],
         }),
-      ).rejects.toThrowError("Not binary data: 123456789");
+      ).rejects.toThrowEIPError(-32603, "Not binary data: 123456789");
     });
 
     test("eth_ecRecover", async () => {
@@ -569,7 +572,10 @@ describe("CoinbaseWalletProvider", () => {
           method: "personal_sign",
           params: ["0x123456789abcdef", "Super safe message"],
         }),
-      ).rejects.toThrowError("Invalid Ethereum address: Super safe message");
+      ).rejects.toThrowEIPError(
+        -32603,
+        "Invalid Ethereum address: Super safe message",
+      );
     });
 
     test("personal_ecRecover", async () => {
@@ -642,8 +648,9 @@ describe("CoinbaseWalletProvider", () => {
           method: "eth_signTypedData_v2",
           params: [],
         }),
-      ).rejects.toThrowError(
-        "The requested method is not supported by this Ethereum provider",
+      ).rejects.toThrowEIPError(
+        4200,
+        "The requested method is not supported by this Ethereum provider.",
       );
     });
 
@@ -706,7 +713,8 @@ describe("CoinbaseWalletProvider", () => {
           method: "wallet_addEthereumChain",
           params: [{}],
         });
-      }).rejects.toThrowError(
+      }).rejects.toThrowEIPError(
+        -32603,
         '"code" must be an integer such that: 1000 <= code <= 4999',
       );
     });
@@ -722,7 +730,8 @@ describe("CoinbaseWalletProvider", () => {
             },
           ],
         });
-      }).rejects.toThrowError(
+      }).rejects.toThrowEIPError(
+        -32603,
         '"code" must be an integer such that: 1000 <= code <= 4999',
       );
     });
@@ -762,7 +771,7 @@ describe("CoinbaseWalletProvider", () => {
             },
           ],
         });
-      }).rejects.toThrowError();
+      }).rejects.toThrowEIPError(-32603, '"message" must be a nonempty string');
     });
 
     test("wallet_watchAsset", async () => {
@@ -786,7 +795,7 @@ describe("CoinbaseWalletProvider", () => {
           method: "wallet_watchAsset",
           params: [{}],
         }),
-      ).rejects.toThrowError("Type is required");
+      ).rejects.toThrowEIPError(-32602, "Type is required");
     });
 
     test("wallet_watchAsset w/o valid asset type", async () => {
@@ -799,7 +808,10 @@ describe("CoinbaseWalletProvider", () => {
             },
           ],
         }),
-      ).rejects.toThrowError("Asset of type 'ERC721' is not supported");
+      ).rejects.toThrowEIPError(
+        -32602,
+        "Asset of type 'ERC721' is not supported",
+      );
     });
 
     test("wallet_watchAsset", async () => {
@@ -812,7 +824,7 @@ describe("CoinbaseWalletProvider", () => {
             },
           ],
         }),
-      ).rejects.toThrowError("Options are required");
+      ).rejects.toThrowEIPError(-32602, "Options are required");
     });
 
     test("wallet_watchAsset", async () => {
@@ -826,7 +838,7 @@ describe("CoinbaseWalletProvider", () => {
             },
           ],
         }),
-      ).rejects.toThrowError("Address is required");
+      ).rejects.toThrowEIPError(-32602, "Address is required");
     });
 
     test("eth_newFilter", async () => {
