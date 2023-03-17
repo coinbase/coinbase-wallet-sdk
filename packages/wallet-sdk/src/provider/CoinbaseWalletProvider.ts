@@ -510,6 +510,15 @@ export class CoinbaseWalletProvider
   }
 
   public async request<T>(args: RequestArguments): Promise<T> {
+    try {
+      return this._request<T>(args).catch(error => {
+        throw serializeError(error);
+      });
+    } catch (error) {
+      return Promise.reject(serializeError(error));
+    }
+  }
+  private async _request<T>(args: RequestArguments): Promise<T> {
     if (!args || typeof args !== "object" || Array.isArray(args)) {
       throw ethErrors.rpc.invalidRequest({
         message: "Expected a single, non-array, object argument.",
