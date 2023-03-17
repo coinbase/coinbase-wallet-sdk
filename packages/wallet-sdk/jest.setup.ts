@@ -14,6 +14,13 @@ expect.extend({
   toThrowEIPError(received, code, message) {
     expect(received).not.toBeInstanceOf(Error);
     expect(received).toMatchObject({ code, message });
-    return { pass: !this.isNot, message: () => "" };
+    return {
+      pass: !this.isNot,
+      message: () =>
+        `Expected: ${this.utils.printExpected({
+          code,
+          message,
+        })}\nReceived: ${this.utils.printReceived(received)}`,
+    };
   },
 });
