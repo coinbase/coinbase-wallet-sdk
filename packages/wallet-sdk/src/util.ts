@@ -2,8 +2,9 @@
 // Licensed under the Apache License, version 2.0
 
 import BN from "bn.js";
-import { serializeError as serialize } from "eth-rpc-errors";
+import { serializeError } from "eth-rpc-errors";
 import { stringify } from "qs";
+import { CoinbaseWalletSDK } from "./CoinbaseWalletSDK";
 
 import {
   AddressString,
@@ -255,9 +256,18 @@ export function isInIFrame(): boolean {
   }
 }
 
-export function serializeError(error: unknown) {
+export function standardizeError(error: unknown) {
+  const serialized = serializeError(error, { shouldIncludeStack: true });
+  const version: string = CoinbaseWalletSDK.VERSION;
+  const docUrl = `https://docs.cloud.coinbase.com/wallet-sdk/docs/errors?code=${serialized.code}&version=${version}`;
+  const data = {
+    ...Object(serialized.data),
+    version,
+    docUrl,
+  };
+
   return {
-    ...serialize(error, { shouldIncludeStack: true }),
-    supportURL: "asdf",
+    ...serialized,
+    data,
   };
 }

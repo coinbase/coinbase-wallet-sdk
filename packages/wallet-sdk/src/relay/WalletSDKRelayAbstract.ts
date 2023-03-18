@@ -1,7 +1,8 @@
-import { ethErrors, serializeError } from "eth-rpc-errors";
+import { ethErrors } from "eth-rpc-errors";
 
 import { JSONRPCRequest, JSONRPCResponse } from "../provider/JSONRPC";
 import { AddressString, IntNumber, ProviderType, RegExpString } from "../types";
+import { standardizeError } from "../util";
 import { EthereumTransactionParams } from "./EthereumTransactionParams";
 import { Session } from "./Session";
 import { Web3Request } from "./Web3Request";
@@ -142,7 +143,7 @@ export abstract class WalletSDKRelayAbstract {
         const response = json as JSONRPCResponse;
         const { error } = response;
         if (error) {
-          throw serializeError(error);
+          throw standardizeError(error);
         }
         return response;
       });

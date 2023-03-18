@@ -30,7 +30,7 @@ import {
   ensureRegExpString,
   hexStringFromIntNumber,
   prepend0x,
-  serializeError,
+  standardizeError,
 } from "../util";
 import eip712 from "../vendor-js/eth-eip712-util";
 import { FilterPolyfill } from "./FilterPolyfill";
@@ -421,11 +421,11 @@ export class CoinbaseWalletProvider
       const result = this._send(requestOrMethod, callbackOrParams);
       if (result instanceof Promise) {
         return result.catch(error => {
-          throw serializeError(error);
+          throw standardizeError(error);
         });
       }
     } catch (error) {
-      throw serializeError(error);
+      throw standardizeError(error);
     }
   }
   private _send(
@@ -485,10 +485,10 @@ export class CoinbaseWalletProvider
   ): Promise<void> {
     try {
       return this._sendAsync(request, callback).catch(error => {
-        throw serializeError(error);
+        throw standardizeError(error);
       });
     } catch (error) {
-      return Promise.reject(serializeError(error));
+      return Promise.reject(standardizeError(error));
     }
   }
   private async _sendAsync(
@@ -518,10 +518,10 @@ export class CoinbaseWalletProvider
   public async request<T>(args: RequestArguments): Promise<T> {
     try {
       return this._request<T>(args).catch(error => {
-        throw serializeError(error);
+        throw standardizeError(error);
       });
     } catch (error) {
-      return Promise.reject(serializeError(error));
+      return Promise.reject(standardizeError(error));
     }
   }
   private async _request<T>(args: RequestArguments): Promise<T> {
