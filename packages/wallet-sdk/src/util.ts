@@ -256,18 +256,21 @@ export function isInIFrame(): boolean {
   }
 }
 
-export function standardizeError(error: unknown) {
-  const serialized = serializeError(error, { shouldIncludeStack: true });
+export function standardizeError(error: unknown, errorCode?: number) {
+  const serialized = serializeError(
+    typeof error === "string" ? new Error(error) : error,
+    { shouldIncludeStack: true },
+  );
+
   const version: string = CoinbaseWalletSDK.VERSION;
   const docUrl = `https://docs.cloud.coinbase.com/wallet-sdk/docs/errors?code=${serialized.code}&version=${version}`;
-  const data = {
+
+  serialized.data = {
     ...Object(serialized.data),
     version,
     docUrl,
   };
+  serialized.code = errorCode || serialized.code;
 
-  return {
-    ...serialized,
-    data,
-  };
+  return serialized;
 }

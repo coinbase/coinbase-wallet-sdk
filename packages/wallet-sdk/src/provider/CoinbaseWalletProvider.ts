@@ -570,7 +570,7 @@ export class CoinbaseWalletProvider
     const relay = await this.initializeRelay();
     const res = await relay.scanQRCode(ensureRegExpString(match)).promise;
     if (typeof res.result !== "string") {
-      throw new Error("result was not a string");
+      throw standardizeError(res.errorMessage ?? "result was not a string");
     }
     return res.result;
   }
@@ -579,7 +579,7 @@ export class CoinbaseWalletProvider
     const relay = await this.initializeRelay();
     const res = await relay.genericRequest(data, action).promise;
     if (typeof res.result !== "string") {
-      throw new Error("result was not a string");
+      throw standardizeError(res.errorMessage ?? "result was not a string");
     }
     return res.result;
   }
@@ -590,7 +590,7 @@ export class CoinbaseWalletProvider
     const relay = await this.initializeRelay();
     const res = await relay.selectProvider(providerOptions).promise;
     if (typeof res.result !== "string") {
-      throw new Error("result was not a string");
+      throw standardizeError(res.errorMessage ?? "result was not a string");
     }
     return res.result;
   }
@@ -600,11 +600,15 @@ export class CoinbaseWalletProvider
   }
 
   public subscribe(): void {
-    throw new Error("Subscriptions are not supported");
+    throw standardizeError(
+      ethErrors.rpc.methodNotSupported("Subscriptions are not supported"),
+    );
   }
 
   public unsubscribe(): void {
-    throw new Error("Subscriptions are not supported");
+    throw standardizeError(
+      ethErrors.rpc.methodNotSupported("Subscriptions are not supported"),
+    );
   }
 
   public disconnect(): boolean {

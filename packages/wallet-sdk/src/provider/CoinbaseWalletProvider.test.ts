@@ -345,7 +345,7 @@ describe("CoinbaseWalletProvider", () => {
 
     await expect(() =>
       provider.genericRequest(data, action),
-    ).rejects.toThrowError("result was not a string");
+    ).rejects.toThrowEIPError(-32603, "result was not a string");
   });
 
   it("handles user rejecting enable call", async () => {
@@ -440,7 +440,7 @@ describe("CoinbaseWalletProvider", () => {
 
     await expect(() =>
       provider.scanQRCode(new RegExp("cbwallet://cool")),
-    ).rejects.toThrowError("result was not a string");
+    ).rejects.toThrowEIPError(-32603, "result was not a string");
   });
 
   it("handles scanning QR code", async () => {
