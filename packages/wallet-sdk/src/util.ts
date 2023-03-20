@@ -4,8 +4,8 @@
 import BN from "bn.js";
 import { serializeError } from "eth-rpc-errors";
 import { stringify } from "qs";
-import { CoinbaseWalletSDK } from "./CoinbaseWalletSDK";
 
+import { CoinbaseWalletSDK } from "./CoinbaseWalletSDK";
 import {
   AddressString,
   BigIntString,
