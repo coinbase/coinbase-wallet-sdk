@@ -452,6 +452,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
             this.accountsCallback([], true);
           }
 
+          this.subscriptions = new Subscription();
           const { session, ui, connection } = this.subscribe();
           this._session = session;
           this.connection = connection;
