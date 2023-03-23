@@ -32,7 +32,7 @@ import {
   prepend0x,
   standardErrorCodes,
   standardErrors,
-  standardizeError,
+  serializeError,
 } from "../util";
 import eip712 from "../vendor-js/eth-eip712-util";
 import { FilterPolyfill } from "./FilterPolyfill";
@@ -429,11 +429,11 @@ export class CoinbaseWalletProvider
       const result = this._send(requestOrMethod, callbackOrParams);
       if (result instanceof Promise) {
         return result.catch(error => {
-          throw standardizeError(error);
+          throw serializeError(error);
         });
       }
     } catch (error) {
-      throw standardizeError(error);
+      throw serializeError(error);
     }
   }
   private _send(
@@ -493,10 +493,10 @@ export class CoinbaseWalletProvider
   ): Promise<void> {
     try {
       return this._sendAsync(request, callback).catch(error => {
-        throw standardizeError(error);
+        throw serializeError(error);
       });
     } catch (error) {
-      return Promise.reject(standardizeError(error));
+      return Promise.reject(serializeError(error));
     }
   }
   private async _sendAsync(
@@ -526,10 +526,10 @@ export class CoinbaseWalletProvider
   public async request<T>(args: RequestArguments): Promise<T> {
     try {
       return this._request<T>(args).catch(error => {
-        throw standardizeError(error);
+        throw serializeError(error);
       });
     } catch (error) {
-      return Promise.reject(standardizeError(error));
+      return Promise.reject(serializeError(error));
     }
   }
   private async _request<T>(args: RequestArguments): Promise<T> {
@@ -578,7 +578,7 @@ export class CoinbaseWalletProvider
     const relay = await this.initializeRelay();
     const res = await relay.scanQRCode(ensureRegExpString(match)).promise;
     if (typeof res.result !== "string") {
-      throw standardizeError(res.errorMessage ?? "result was not a string");
+      throw serializeError(res.errorMessage ?? "result was not a string");
     }
     return res.result;
   }
@@ -587,7 +587,7 @@ export class CoinbaseWalletProvider
     const relay = await this.initializeRelay();
     const res = await relay.genericRequest(data, action).promise;
     if (typeof res.result !== "string") {
-      throw standardizeError(res.errorMessage ?? "result was not a string");
+      throw serializeError(res.errorMessage ?? "result was not a string");
     }
     return res.result;
   }
@@ -598,7 +598,7 @@ export class CoinbaseWalletProvider
     const relay = await this.initializeRelay();
     const res = await relay.selectProvider(providerOptions).promise;
     if (typeof res.result !== "string") {
-      throw standardizeError(res.errorMessage ?? "result was not a string");
+      throw serializeError(res.errorMessage ?? "result was not a string");
     }
     return res.result;
   }
@@ -608,13 +608,13 @@ export class CoinbaseWalletProvider
   }
 
   public subscribe(): void {
-    throw standardizeError(
+    throw serializeError(
       standardErrors.rpc.methodNotSupported("Subscriptions are not supported"),
     );
   }
 
   public unsubscribe(): void {
-    throw standardizeError(
+    throw serializeError(
       standardErrors.rpc.methodNotSupported("Subscriptions are not supported"),
     );
   }

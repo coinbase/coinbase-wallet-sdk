@@ -29,6 +29,7 @@ import {
   isInIFrame,
   randomBytesHex,
   standardErrorCodes,
+  standardErrorMessage,
   standardErrors,
 } from "../util";
 import * as aes256gcm from "./aes256gcm";
@@ -827,12 +828,13 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     error?: Error,
     errorCode?: number,
   ) {
+    const errorMessage = error?.message ?? standardErrorMessage(errorCode ?? 0);
     this.handleWeb3ResponseMessage(
       Web3ResponseMessage({
         id,
         response: {
           method,
-          errorMessage: error?.message ?? "User rejected request",
+          errorMessage,
           errorCode,
         },
       }),

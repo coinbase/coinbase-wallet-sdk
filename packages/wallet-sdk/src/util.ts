@@ -2,7 +2,12 @@
 // Licensed under the Apache License, version 2.0
 
 import BN from "bn.js";
-import { errorCodes, ethErrors, serializeError } from "eth-rpc-errors";
+import {
+  errorCodes,
+  ethErrors,
+  getMessageFromCode,
+  serializeError as serialize,
+} from "eth-rpc-errors";
 import { stringify } from "qs";
 
 import { CoinbaseWalletSDK } from "./CoinbaseWalletSDK";
@@ -270,6 +275,10 @@ export const standardErrorCodes = {
   },
 };
 
+export function standardErrorMessage(code?: number): string {
+  return code ? getMessageFromCode(code) : "Unknown error";
+}
+
 export const standardErrors = {
   ...ethErrors,
   provider: {
@@ -282,8 +291,8 @@ export const standardErrors = {
   },
 };
 
-export function standardizeError(error: unknown) {
-  const serialized = serializeError(
+export function serializeError(error: unknown) {
+  const serialized = serialize(
     typeof error === "string" ? new Error(error) : error,
     { shouldIncludeStack: true },
   );
