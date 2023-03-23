@@ -605,15 +605,11 @@ export class CoinbaseWalletProvider
   }
 
   public subscribe(): void {
-    throw serializeError(
-      standardErrors.rpc.methodNotSupported("Subscriptions are not supported"),
-    );
+    throw new Error("Subscriptions are not supported");
   }
 
   public unsubscribe(): void {
-    throw serializeError(
-      standardErrors.rpc.methodNotSupported("Subscriptions are not supported"),
-    );
+    throw new Error("Subscriptions are not supported");
   }
 
   public disconnect(): boolean {
