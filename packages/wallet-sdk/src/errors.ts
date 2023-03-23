@@ -49,3 +49,26 @@ export function serializeError(error: unknown) {
 
   return serialized;
 }
+
+interface ErrorWithCode {
+  code?: number;
+  errorCode?: number;
+}
+
+function isErrorWithCode(error: unknown): error is ErrorWithCode {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    ("code" in error || "errorCode" in error)
+  );
+}
+
+export function getErrorCode(error: unknown): number | undefined {
+  if (typeof error === "number") {
+    return error;
+  } else if (isErrorWithCode(error)) {
+    return error.code ?? error.errorCode ?? undefined;
+  } else {
+    return undefined;
+  }
+}

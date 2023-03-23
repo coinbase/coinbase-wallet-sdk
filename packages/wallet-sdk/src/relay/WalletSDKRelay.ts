@@ -19,7 +19,12 @@ import { EventListener } from "../connection/EventListener";
 import { ServerMessageEvent } from "../connection/ServerMessage";
 import { SessionConfig } from "../connection/SessionConfig";
 import { WalletSDKConnection } from "../connection/WalletSDKConnection";
-import { standardErrorCodes, standardErrors } from "../errors";
+import {
+  getErrorCode,
+  standardErrorCodes,
+  standardErrorMessage,
+  standardErrors,
+} from "../errors";
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
 import { WalletUI, WalletUIOptions } from "../provider/WalletUI";
 import { AddressString, IntNumber, ProviderType, RegExpString } from "../types";
@@ -1213,14 +1218,9 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         const _cancel = (error?: Error | number) => {
           if (error) {
             // backward compatibility
-            const errorCode = (() => {
-              if (typeof error === "number") return error;
-              if ("errorCode" in error && typeof error.errorCode === "number")
-                return error.errorCode;
-              if ("code" in error && typeof error.code === "number")
-                return error.code;
-              return standardErrorCodes.provider.unsupportedChain;
-            })();
+            const errorCode =
+              getErrorCode(error) ??
+              standardErrorCodes.provider.unsupportedChain;
 
             this.handleErrorResponse(
               id,
@@ -1334,9 +1334,4 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
   }
 
   protected onSessionConfigChanged(_nextSessionConfig: SessionConfig): void {}
-}
-function standardErrorMessage(
-  errorCode: number | undefined,
-): string | undefined {
-  throw new Error("Function not implemented.");
 }
