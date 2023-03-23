@@ -1194,17 +1194,11 @@ export class CoinbaseWalletProvider
     }
 
     if (!request.chainName || request.chainName.trim() === "") {
-      throw ethErrors.provider.custom({
-        code: 0,
-        message: "chainName is a required field",
-      });
+      throw ethErrors.rpc.invalidParams("chainName is a required field");
     }
 
     if (!request.nativeCurrency) {
-      throw ethErrors.provider.custom({
-        code: 0,
-        message: "nativeCurrency is a required field",
-      });
+      throw ethErrors.rpc.invalidParams("nativeCurrency is a required field");
     }
 
     const chainIdNumber = parseInt(request.chainId, 16);
@@ -1240,27 +1234,21 @@ export class CoinbaseWalletProvider
       Array.isArray(params) ? params[0] : params
     ) as WatchAssetParams;
     if (!request.type) {
-      throw ethErrors.rpc.invalidParams({
-        message: "Type is required",
-      });
+      throw ethErrors.rpc.invalidParams("Type is required");
     }
 
     if (request?.type !== "ERC20") {
-      throw ethErrors.rpc.invalidParams({
-        message: `Asset of type '${request.type}' is not supported`,
-      });
+      throw ethErrors.rpc.invalidParams(
+        `Asset of type '${request.type}' is not supported`,
+      );
     }
 
     if (!request?.options) {
-      throw ethErrors.rpc.invalidParams({
-        message: "Options are required",
-      });
+      throw ethErrors.rpc.invalidParams("Options are required");
     }
 
     if (!request?.options.address) {
-      throw ethErrors.rpc.invalidParams({
-        message: "Address is required",
-      });
+      throw ethErrors.rpc.invalidParams("Address is required");
     }
 
     const chainId = this.getChainId();

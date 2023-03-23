@@ -1,4 +1,5 @@
 import { fireEvent } from "@testing-library/preact";
+import { ethErrors } from "eth-rpc-errors";
 
 import { MockRelayClass } from "../__mocks__/relay";
 import {
@@ -536,7 +537,7 @@ describe("CoinbaseWalletProvider", () => {
           params: ["0x123456789abcdef", "Super safe message"],
         }),
       ).rejects.toThrowEIPError(
-        -32603,
+        -32602,
         "Invalid Ethereum address: 0x123456789abcdef",
       );
     });
@@ -547,7 +548,7 @@ describe("CoinbaseWalletProvider", () => {
           method: "eth_sign",
           params: [MOCK_ADDERESS.toLowerCase(), 123456789],
         }),
-      ).rejects.toThrowEIPError(-32603, "Not binary data: 123456789");
+      ).rejects.toThrowEIPError(-32602, "Not binary data: 123456789");
     });
 
     test("eth_ecRecover", async () => {
@@ -573,7 +574,7 @@ describe("CoinbaseWalletProvider", () => {
           params: ["0x123456789abcdef", "Super safe message"],
         }),
       ).rejects.toThrowEIPError(
-        -32603,
+        -32602,
         "Invalid Ethereum address: Super safe message",
       );
     });
@@ -713,10 +714,7 @@ describe("CoinbaseWalletProvider", () => {
           method: "wallet_addEthereumChain",
           params: [{}],
         });
-      }).rejects.toThrowEIPError(
-        -32603,
-        '"code" must be an integer such that: 1000 <= code <= 4999',
-      );
+      }).rejects.toThrowEIPError(-32602, "chainName is a required field");
     });
 
     test("wallet_addEthereumChain native currency", async () => {
@@ -730,10 +728,7 @@ describe("CoinbaseWalletProvider", () => {
             },
           ],
         });
-      }).rejects.toThrowEIPError(
-        -32603,
-        '"code" must be an integer such that: 1000 <= code <= 4999',
-      );
+      }).rejects.toThrowEIPError(-32602, "nativeCurrency is a required field");
     });
 
     test("wallet_switchEthereumChain", async () => {
@@ -751,12 +746,13 @@ describe("CoinbaseWalletProvider", () => {
     test("wallet_switchEthereumChain w/ error code", async () => {
       const relay = new MockRelayClass();
 
+      const errorMessage = "custom error message";
+
       jest.spyOn(relay, "switchEthereumChain").mockReturnValue({
         cancel: () => {},
-        promise: Promise.resolve({
-          method: Web3Method.switchEthereumChain,
-          errorCode: 4092,
-        }),
+        promise: Promise.reject(
+          ethErrors.provider.custom({ code: 4902, message: errorMessage }),
+        ),
       });
       const localProvider = setupCoinbaseWalletProvider({
         relayProvider: () => Promise.resolve(relay),
@@ -771,7 +767,7 @@ describe("CoinbaseWalletProvider", () => {
             },
           ],
         });
-      }).rejects.toThrowEIPError(-32603, '"message" must be a nonempty string');
+      }).rejects.toThrowEIPError(4902, errorMessage);
     });
 
     test("wallet_watchAsset", async () => {

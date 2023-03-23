@@ -138,7 +138,7 @@ export abstract class WalletSDKRelayAbstract {
       .then(res => res.json())
       .then(json => {
         if (!json) {
-          throw ethErrors.rpc.parse({});
+          throw ethErrors.rpc.parse("Invalid JSON");
         }
         const response = json as JSONRPCResponse;
         const { error } = response;
