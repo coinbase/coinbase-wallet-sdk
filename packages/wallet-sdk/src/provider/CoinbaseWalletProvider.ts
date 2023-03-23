@@ -30,6 +30,7 @@ import {
   ensureRegExpString,
   hexStringFromIntNumber,
   prepend0x,
+  standardErrors,
   standardizeError,
 } from "../util";
 import eip712 from "../vendor-js/eth-eip712-util";
@@ -358,7 +359,9 @@ export class CoinbaseWalletProvider
 
     if ((res as ErrorResponse).errorCode) {
       throw ethErrors.provider.custom({
-        message: (res as ErrorResponse).errorMessage || "Unknown error",
+        message:
+          (res as ErrorResponse).errorMessage ||
+          standardErrors.provider.unsupportedChain(chainId).message,
         code: (res as ErrorResponse).errorCode!,
       });
     }
