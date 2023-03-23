@@ -828,7 +828,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     error?: Error,
     errorCode?: number,
   ) {
-    const errorMessage = error?.message ?? standardErrorMessage(errorCode ?? 0);
+    const errorMessage = error?.message ?? standardErrorMessage(errorCode);
     this.handleWeb3ResponseMessage(
       Web3ResponseMessage({
         id,
