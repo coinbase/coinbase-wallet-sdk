@@ -358,6 +358,7 @@ export class CoinbaseWalletProvider
 
     if ((res as ErrorResponse).errorCode) {
       throw ethErrors.provider.custom({
+        message: (res as ErrorResponse).errorMessage || "Unknown error",
         code: (res as ErrorResponse).errorCode!,
       });
     }
