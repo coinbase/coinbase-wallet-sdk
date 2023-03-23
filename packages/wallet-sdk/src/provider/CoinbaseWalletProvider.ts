@@ -5,6 +5,7 @@ import SafeEventEmitter from "@metamask/safe-event-emitter";
 import BN from "bn.js";
 
 import { DiagnosticLogger, EVENTS } from "../connection/DiagnosticLogger";
+import { serializeError, standardErrorCodes, standardErrors } from "../errors";
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
 import { EthereumTransactionParams } from "../relay/EthereumTransactionParams";
 import { Session } from "../relay/Session";
@@ -14,7 +15,6 @@ import {
 } from "../relay/WalletSDKRelayAbstract";
 import { WalletSDKRelayEventManager } from "../relay/WalletSDKRelayEventManager";
 import {
-  ErrorResponse,
   isErrorResponse,
   RequestEthereumAccountsResponse,
   SwitchResponse,
@@ -30,9 +30,6 @@ import {
   ensureRegExpString,
   hexStringFromIntNumber,
   prepend0x,
-  serializeError,
-  standardErrorCodes,
-  standardErrors,
 } from "../util";
 import eip712 from "../vendor-js/eth-eip712-util";
 import { FilterPolyfill } from "./FilterPolyfill";

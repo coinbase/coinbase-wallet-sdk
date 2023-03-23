@@ -19,6 +19,7 @@ import { EventListener } from "../connection/EventListener";
 import { ServerMessageEvent } from "../connection/ServerMessage";
 import { SessionConfig } from "../connection/SessionConfig";
 import { WalletSDKConnection } from "../connection/WalletSDKConnection";
+import { standardErrorCodes, standardErrors } from "../errors";
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
 import { WalletUI, WalletUIOptions } from "../provider/WalletUI";
 import { AddressString, IntNumber, ProviderType, RegExpString } from "../types";
@@ -28,9 +29,6 @@ import {
   hexStringFromBuffer,
   isInIFrame,
   randomBytesHex,
-  standardErrorCodes,
-  standardErrorMessage,
-  standardErrors,
 } from "../util";
 import * as aes256gcm from "./aes256gcm";
 import { EthereumTransactionParams } from "./EthereumTransactionParams";
@@ -58,7 +56,6 @@ import { Web3RequestCanceledMessage } from "./Web3RequestCanceledMessage";
 import { Web3RequestMessage } from "./Web3RequestMessage";
 import {
   AddEthereumChainResponse,
-  ErrorResponse,
   EthereumAddressFromSignedMessageResponse,
   GenericResponse,
   isErrorResponse,
@@ -1337,4 +1334,9 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
   }
 
   protected onSessionConfigChanged(_nextSessionConfig: SessionConfig): void {}
+}
+function standardErrorMessage(
+  errorCode: number | undefined,
+): string | undefined {
+  throw new Error("Function not implemented.");
 }

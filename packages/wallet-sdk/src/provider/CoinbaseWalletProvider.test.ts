@@ -1,6 +1,7 @@
 import { fireEvent } from "@testing-library/preact";
 
 import { MockRelayClass } from "../__mocks__/relay";
+import { standardErrorCodes, standardErrors } from "../errors";
 import {
   MOCK_ADDERESS,
   MOCK_SIGNED_TX,
@@ -12,7 +13,6 @@ import { LOCAL_STORAGE_ADDRESSES_KEY } from "../relay/WalletSDKRelayAbstract";
 import { WalletSDKRelayEventManager } from "../relay/WalletSDKRelayEventManager";
 import { Web3Method } from "../relay/Web3Method";
 import { ProviderType } from "../types";
-import { standardErrorCodes, standardErrors } from "../util";
 import {
   CoinbaseWalletProvider,
   CoinbaseWalletProviderOptions,

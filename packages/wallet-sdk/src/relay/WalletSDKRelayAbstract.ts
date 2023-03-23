@@ -1,6 +1,6 @@
+import { serializeError, standardErrors } from "../errors";
 import { JSONRPCRequest, JSONRPCResponse } from "../provider/JSONRPC";
 import { AddressString, IntNumber, ProviderType, RegExpString } from "../types";
-import { serializeError,standardErrors } from "../util";
 import { EthereumTransactionParams } from "./EthereumTransactionParams";
 import { Session } from "./Session";
 import { Web3Request } from "./Web3Request";
