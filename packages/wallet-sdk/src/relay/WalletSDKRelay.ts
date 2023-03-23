@@ -2,7 +2,6 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator";
-import { ethErrors } from "eth-rpc-errors";
 import { BehaviorSubject, from, Observable, of, Subscription, zip } from "rxjs";
 import {
   catchError,
@@ -29,6 +28,7 @@ import {
   hexStringFromBuffer,
   isInIFrame,
   randomBytesHex,
+  standardErrorCodes,
   standardErrors,
 } from "../util";
 import * as aes256gcm from "./aes256gcm";
@@ -60,6 +60,7 @@ import {
   ErrorResponse,
   EthereumAddressFromSignedMessageResponse,
   GenericResponse,
+  isErrorResponse,
   isRequestEthereumAccountsResponse,
   RequestEthereumAccountsResponse,
   ScanQRCodeResponse,
@@ -920,7 +921,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
           });
         } else {
           // Error if user closes TryExtensionLinkDialog without connecting
-          const err = ethErrors.provider.userRejectedRequest(
+          const err = standardErrors.provider.userRejectedRequest(
             "User denied account authorization",
           );
           this.ui.requestEthereumAccounts({
@@ -1196,10 +1197,10 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     const promise = new Promise<SwitchEthereumChainResponse>(
       (resolve, reject) => {
         this.relayEventManager.callbacks.set(id, response => {
-          if (response.errorMessage && (response as ErrorResponse).errorCode) {
+          if (isErrorResponse(response) && response.errorCode) {
             return reject(
-              ethErrors.provider.custom({
-                code: (response as ErrorResponse).errorCode!,
+              standardErrors.provider.custom({
+                code: response.errorCode,
                 message: `Unrecognized chain ID. Try adding the chain using addEthereumChain first.`,
               }),
             );
@@ -1211,35 +1212,23 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         });
 
         const _cancel = (error?: Error | number) => {
-          if (typeof error === "number") {
-            // backward compatibility
-            const errorCode: number = error;
-            this.handleWeb3ResponseMessage(
-              Web3ResponseMessage({
-                id,
-                response: {
-                  method: Web3Method.switchEthereumChain,
-                  errorMessage:
-                    standardErrors.provider.unsupportedChain(chainId).message,
-                  errorCode,
-                },
-              }),
-            );
-          } else if (error) {
+          if (error) {
             // backward compatibility
             const errorCode = (() => {
-              if ("errorCode" in error && typeof error.errorCode === "number") {
+              if (typeof error === "number") return error;
+              if ("errorCode" in error && typeof error.errorCode === "number")
                 return error.errorCode;
-              }
-              if ("code" in error && typeof error.code === "number") {
+              if ("code" in error && typeof error.code === "number")
                 return error.code;
-              }
-              return standardErrors.provider.unsupportedChain().code;
+              return standardErrorCodes.provider.unsupportedChain;
             })();
+
             this.handleErrorResponse(
               id,
               Web3Method.switchEthereumChain,
-              error,
+              error instanceof Error
+                ? error
+                : standardErrors.provider.unsupportedChain(chainId),
               errorCode,
             );
           } else {

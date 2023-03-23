@@ -1,8 +1,6 @@
-import { ethErrors } from "eth-rpc-errors";
-
 import { JSONRPCRequest, JSONRPCResponse } from "../provider/JSONRPC";
 import { AddressString, IntNumber, ProviderType, RegExpString } from "../types";
-import { standardizeError } from "../util";
+import { standardErrors, standardizeError } from "../util";
 import { EthereumTransactionParams } from "./EthereumTransactionParams";
 import { Session } from "./Session";
 import { Web3Request } from "./Web3Request";
@@ -138,7 +136,7 @@ export abstract class WalletSDKRelayAbstract {
       .then(res => res.json())
       .then(json => {
         if (!json) {
-          throw ethErrors.rpc.parse("Invalid JSON");
+          throw standardErrors.rpc.parse("Invalid JSON");
         }
         const response = json as JSONRPCResponse;
         const { error } = response;

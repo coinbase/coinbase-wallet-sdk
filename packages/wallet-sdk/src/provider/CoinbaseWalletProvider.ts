@@ -30,6 +30,7 @@ import {
   ensureRegExpString,
   hexStringFromIntNumber,
   prepend0x,
+  standardErrorCodes,
   standardErrors,
   standardizeError,
 } from "../util";
@@ -359,9 +360,8 @@ export class CoinbaseWalletProvider
 
     // backward compatibility
     if (isErrorResponse(res) && res.errorCode) {
-      const standardError = standardErrors.provider.unsupportedChain(chainId);
-      if (res.errorCode === standardError.code) {
-        throw standardError;
+      if (res.errorCode === standardErrorCodes.provider.unsupportedChain) {
+        throw standardErrors.provider.unsupportedChain(chainId);
       } else {
         throw standardErrors.provider.custom({
           message: res.errorMessage,

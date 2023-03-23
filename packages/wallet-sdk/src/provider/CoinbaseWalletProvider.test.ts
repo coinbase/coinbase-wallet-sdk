@@ -1,5 +1,4 @@
 import { fireEvent } from "@testing-library/preact";
-import { ethErrors } from "eth-rpc-errors";
 
 import { MockRelayClass } from "../__mocks__/relay";
 import {
@@ -13,6 +12,7 @@ import { LOCAL_STORAGE_ADDRESSES_KEY } from "../relay/WalletSDKRelayAbstract";
 import { WalletSDKRelayEventManager } from "../relay/WalletSDKRelayEventManager";
 import { Web3Method } from "../relay/Web3Method";
 import { ProviderType } from "../types";
+import { standardErrorCodes, standardErrors } from "../util";
 import {
   CoinbaseWalletProvider,
   CoinbaseWalletProviderOptions,
@@ -346,7 +346,10 @@ describe("CoinbaseWalletProvider", () => {
 
     await expect(() =>
       provider.genericRequest(data, action),
-    ).rejects.toThrowEIPError(-32603, "result was not a string");
+    ).rejects.toThrowEIPError(
+      standardErrorCodes.rpc.internal,
+      "result was not a string",
+    );
   });
 
   it("handles user rejecting enable call", async () => {
@@ -363,7 +366,7 @@ describe("CoinbaseWalletProvider", () => {
     });
 
     await expect(() => provider.enable()).rejects.toThrowEIPError(
-      4001,
+      standardErrorCodes.provider.userRejectedRequest,
       "User denied account authorization",
     );
   });
@@ -382,7 +385,7 @@ describe("CoinbaseWalletProvider", () => {
     });
 
     await expect(() => provider.enable()).rejects.toThrowEIPError(
-      -32603,
+      standardErrorCodes.rpc.internal,
       "Unknown",
     );
   });
@@ -441,7 +444,10 @@ describe("CoinbaseWalletProvider", () => {
 
     await expect(() =>
       provider.scanQRCode(new RegExp("cbwallet://cool")),
-    ).rejects.toThrowEIPError(-32603, "result was not a string");
+    ).rejects.toThrowEIPError(
+      standardErrorCodes.rpc.internal,
+      "result was not a string",
+    );
   });
 
   it("handles scanning QR code", async () => {
@@ -537,7 +543,7 @@ describe("CoinbaseWalletProvider", () => {
           params: ["0x123456789abcdef", "Super safe message"],
         }),
       ).rejects.toThrowEIPError(
-        -32602,
+        standardErrorCodes.rpc.invalidParams,
         "Invalid Ethereum address: 0x123456789abcdef",
       );
     });
@@ -548,7 +554,10 @@ describe("CoinbaseWalletProvider", () => {
           method: "eth_sign",
           params: [MOCK_ADDERESS.toLowerCase(), 123456789],
         }),
-      ).rejects.toThrowEIPError(-32602, "Not binary data: 123456789");
+      ).rejects.toThrowEIPError(
+        standardErrorCodes.rpc.invalidParams,
+        "Not binary data: 123456789",
+      );
     });
 
     test("eth_ecRecover", async () => {
@@ -574,7 +583,7 @@ describe("CoinbaseWalletProvider", () => {
           params: ["0x123456789abcdef", "Super safe message"],
         }),
       ).rejects.toThrowEIPError(
-        -32602,
+        standardErrorCodes.rpc.invalidParams,
         "Invalid Ethereum address: Super safe message",
       );
     });
@@ -650,7 +659,7 @@ describe("CoinbaseWalletProvider", () => {
           params: [],
         }),
       ).rejects.toThrowEIPError(
-        4200,
+        standardErrorCodes.provider.unsupportedMethod,
         "The requested method is not supported by this Ethereum provider.",
       );
     });
@@ -714,7 +723,10 @@ describe("CoinbaseWalletProvider", () => {
           method: "wallet_addEthereumChain",
           params: [{}],
         });
-      }).rejects.toThrowEIPError(-32602, "chainName is a required field");
+      }).rejects.toThrowEIPError(
+        standardErrorCodes.rpc.invalidParams,
+        "chainName is a required field",
+      );
     });
 
     test("wallet_addEthereumChain native currency", async () => {
@@ -728,7 +740,10 @@ describe("CoinbaseWalletProvider", () => {
             },
           ],
         });
-      }).rejects.toThrowEIPError(-32602, "nativeCurrency is a required field");
+      }).rejects.toThrowEIPError(
+        standardErrorCodes.rpc.invalidParams,
+        "nativeCurrency is a required field",
+      );
     });
 
     test("wallet_switchEthereumChain", async () => {
@@ -746,13 +761,9 @@ describe("CoinbaseWalletProvider", () => {
     test("wallet_switchEthereumChain w/ error code", async () => {
       const relay = new MockRelayClass();
 
-      const errorMessage = "custom error message";
-
       jest.spyOn(relay, "switchEthereumChain").mockReturnValue({
         cancel: () => {},
-        promise: Promise.reject(
-          ethErrors.provider.custom({ code: 4902, message: errorMessage }),
-        ),
+        promise: Promise.reject(standardErrors.provider.unsupportedChain()),
       });
       const localProvider = setupCoinbaseWalletProvider({
         relayProvider: () => Promise.resolve(relay),
@@ -767,7 +778,10 @@ describe("CoinbaseWalletProvider", () => {
             },
           ],
         });
-      }).rejects.toThrowEIPError(4902, errorMessage);
+      }).rejects.toThrowEIPError(
+        standardErrorCodes.provider.unsupportedChain,
+        expect.stringContaining("Unrecognized chain ID"),
+      );
     });
 
     test("wallet_watchAsset", async () => {
@@ -791,7 +805,10 @@ describe("CoinbaseWalletProvider", () => {
           method: "wallet_watchAsset",
           params: [{}],
         }),
-      ).rejects.toThrowEIPError(-32602, "Type is required");
+      ).rejects.toThrowEIPError(
+        standardErrorCodes.rpc.invalidParams,
+        "Type is required",
+      );
     });
 
     test("wallet_watchAsset w/o valid asset type", async () => {
@@ -805,7 +822,7 @@ describe("CoinbaseWalletProvider", () => {
           ],
         }),
       ).rejects.toThrowEIPError(
-        -32602,
+        standardErrorCodes.rpc.invalidParams,
         "Asset of type 'ERC721' is not supported",
       );
     });
@@ -820,7 +837,10 @@ describe("CoinbaseWalletProvider", () => {
             },
           ],
         }),
-      ).rejects.toThrowEIPError(-32602, "Options are required");
+      ).rejects.toThrowEIPError(
+        standardErrorCodes.rpc.invalidParams,
+        "Options are required",
+      );
     });
 
     test("wallet_watchAsset", async () => {
@@ -834,7 +854,10 @@ describe("CoinbaseWalletProvider", () => {
             },
           ],
         }),
-      ).rejects.toThrowEIPError(-32602, "Address is required");
+      ).rejects.toThrowEIPError(
+        standardErrorCodes.rpc.invalidParams,
+        "Address is required",
+      );
     });
 
     test("eth_newFilter", async () => {

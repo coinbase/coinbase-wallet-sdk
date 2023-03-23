@@ -2,7 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 import BN from "bn.js";
-import { ethErrors, serializeError } from "eth-rpc-errors";
+import { errorCodes, ethErrors, serializeError } from "eth-rpc-errors";
 import { stringify } from "qs";
 
 import { CoinbaseWalletSDK } from "./CoinbaseWalletSDK";
@@ -92,7 +92,7 @@ export function ensureHexString(
       return HexString(includePrefix ? "0x" + s : s);
     }
   }
-  throw ethErrors.rpc.invalidParams(
+  throw standardErrors.rpc.invalidParams(
     `"${String(hex)}" is not a hexadecimal string`,
   );
 }
@@ -115,7 +115,9 @@ export function ensureAddressString(str: unknown): AddressString {
       return AddressString(prepend0x(s));
     }
   }
-  throw ethErrors.rpc.invalidParams(`Invalid Ethereum address: ${String(str)}`);
+  throw standardErrors.rpc.invalidParams(
+    `Invalid Ethereum address: ${String(str)}`,
+  );
 }
 
 export function ensureBuffer(str: unknown): Buffer {
@@ -130,7 +132,7 @@ export function ensureBuffer(str: unknown): Buffer {
       return Buffer.from(str, "utf8");
     }
   }
-  throw ethErrors.rpc.invalidParams(`Not binary data: ${String(str)}`);
+  throw standardErrors.rpc.invalidParams(`Not binary data: ${String(str)}`);
 }
 
 export function ensureIntNumber(num: unknown): IntNumber {
@@ -147,14 +149,14 @@ export function ensureIntNumber(num: unknown): IntNumber {
       );
     }
   }
-  throw ethErrors.rpc.invalidParams(`Not an integer: ${String(num)}`);
+  throw standardErrors.rpc.invalidParams(`Not an integer: ${String(num)}`);
 }
 
 export function ensureRegExpString(regExp: unknown): RegExpString {
   if (regExp instanceof RegExp) {
     return RegExpString(regExp.toString());
   }
-  throw ethErrors.rpc.invalidParams(`Not a RegExp: ${String(regExp)}`);
+  throw standardErrors.rpc.invalidParams(`Not a RegExp: ${String(regExp)}`);
 }
 
 export function ensureBN(val: unknown): BN {
@@ -172,7 +174,7 @@ export function ensureBN(val: unknown): BN {
       return new BN(ensureEvenLengthHexString(val, false), 16);
     }
   }
-  throw ethErrors.rpc.invalidParams(`Not an integer: ${String(val)}`);
+  throw standardErrors.rpc.invalidParams(`Not an integer: ${String(val)}`);
 }
 
 export function ensureParsedJSONObject<T extends object>(val: unknown): T {
@@ -184,7 +186,7 @@ export function ensureParsedJSONObject<T extends object>(val: unknown): T {
     return val as T;
   }
 
-  throw ethErrors.rpc.invalidParams(
+  throw standardErrors.rpc.invalidParams(
     `Not a JSON string or an object: ${String(val)}`,
   );
 }
@@ -260,14 +262,22 @@ export function isInIFrame(): boolean {
   }
 }
 
+export const standardErrorCodes = {
+  ...errorCodes,
+  provider: {
+    ...errorCodes.provider,
+    unsupportedChain: 4902, // To-be-standardized "unrecognized chain ID" error
+  },
+};
+
 export const standardErrors = {
   ...ethErrors,
   provider: {
     ...ethErrors.provider,
     unsupportedChain: (chainId: string | number = "") =>
       ethErrors.provider.custom({
-        code: 4902, // To-be-standardized "unrecognized chain ID" error
-        message: `Unrecognized chain ID "${chainId}". Try adding the chain using wallet_addEthereumChain first.`,
+        code: standardErrorCodes.provider.unsupportedChain,
+        message: `Unrecognized chain ID ${chainId}. Try adding the chain using wallet_addEthereumChain first.`,
       }),
   },
 };
