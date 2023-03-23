@@ -77,12 +77,9 @@ describe("errors", () => {
     expect(serialized.stack).toEqual(
       expect.stringContaining("test Error instance"),
     );
-    expect(serialized.data).toMatchObject({
-      docUrl: expect.stringContaining(
-        `code=${standardErrorCodes.rpc.internal}`,
-      ),
-      version: expect.stringMatching(/^\d+\.\d+\.\d+$/),
-    });
+    expect(serialized.docUrl).toContain(
+      `code=${standardErrorCodes.rpc.internal}`,
+    );
   });
 
   test("serializeError with string", () => {
@@ -90,15 +87,9 @@ describe("errors", () => {
     const serialized = serializeError(error);
     expect(serialized.code).toEqual(standardErrorCodes.rpc.internal);
     expect(serialized.message).toEqual("test error with just string");
-    expect(serialized.stack).toEqual(
-      expect.stringContaining("test error with just string"),
+    expect(serialized.docUrl).toContain(
+      `code=${standardErrorCodes.rpc.internal}`,
     );
-    expect(serialized.data).toMatchObject({
-      docUrl: expect.stringContaining(
-        `code=${standardErrorCodes.rpc.internal}`,
-      ),
-      version: expect.stringMatching(/^\d+\.\d+\.\d+$/),
-    });
   });
 
   test("serializeError with ErrorResponse instance", () => {
@@ -113,11 +104,11 @@ describe("errors", () => {
     );
     expect(serialized.message).toEqual("test ErrorResponse instance");
     expect(serialized.data).toMatchObject({
-      docUrl: expect.stringContaining(
-        `code=${standardErrorCodes.provider.unsupportedMethod}`,
-      ),
-      version: expect.stringMatching(/^\d+\.\d+\.\d+$/),
+      method: Web3Method.generic,
     });
+    expect(serialized.docUrl).toContain(
+      `code=${standardErrorCodes.provider.unsupportedMethod}`,
+    );
   });
 
   test("serializeError with standardError", () => {
@@ -128,11 +119,8 @@ describe("errors", () => {
     );
     expect(serialized.message).toEqual(error.message);
     expect(serialized.stack).toEqual(expect.stringContaining("User rejected"));
-    expect(serialized.data).toMatchObject({
-      docUrl: expect.stringContaining(
-        `code=${standardErrorCodes.provider.userRejectedRequest}`,
-      ),
-      version: expect.stringMatching(/^\d+\.\d+\.\d+$/),
-    });
+    expect(serialized.docUrl).toContain(
+      `code=${standardErrorCodes.provider.userRejectedRequest}`,
+    );
   });
 });

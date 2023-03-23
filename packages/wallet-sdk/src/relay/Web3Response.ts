@@ -17,10 +17,8 @@ export interface ErrorResponse extends BaseWeb3Response<void> {
 
 export function isErrorResponse(response: unknown): response is ErrorResponse {
   return (
-    typeof response === "object" &&
-    response !== null &&
-    "method" in response &&
-    "errorMessage" in response
+    (response as ErrorResponse)?.method !== undefined &&
+    (response as ErrorResponse)?.errorMessage !== undefined
   );
 }
 

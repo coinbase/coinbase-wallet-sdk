@@ -15,12 +15,9 @@ expect.extend({
     const expected = expect.objectContaining({
       code,
       message,
-      data: expect.objectContaining({
-        docUrl: expect.stringMatching(
-          /https:\/\/.*coinbase\.com\/.*code=-?\d+/,
-        ),
-        version: expect.stringMatching(/^\d+\.\d+\.\d+$/),
-      }),
+      docUrl: expect.stringMatching(
+        /^https:\/\/.*coinbase\.com\/.*version=\d+\.\d+\.\d+.*code=-?\d+.*$/,
+      ),
     });
     return {
       pass: this.equals(received, expected),
