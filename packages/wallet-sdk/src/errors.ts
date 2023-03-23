@@ -7,6 +7,7 @@ import {
 } from "eth-rpc-errors";
 
 import { CoinbaseWalletSDK } from "./CoinbaseWalletSDK";
+import { isErrorResponse } from "./relay/Web3Response";
 
 export const standardErrorCodes = {
   ...errorCodes,
@@ -16,8 +17,8 @@ export const standardErrorCodes = {
   },
 };
 
-export function standardErrorMessage(code?: number): string {
-  return code ? getMessageFromCode(code) : "Unknown error";
+export function standardErrorMessage(code: number | undefined): string {
+  return code !== undefined ? getMessageFromCode(code) : "Unknown error";
 }
 
 export const standardErrors = {
@@ -33,10 +34,19 @@ export const standardErrors = {
 };
 
 export function serializeError(error: unknown) {
-  const serialized = serialize(
-    typeof error === "string" ? new Error(error) : error,
-    { shouldIncludeStack: true },
-  );
+  const errorObject = (() => {
+    if (typeof error === "string") return new Error(error);
+
+    if (isErrorResponse(error))
+      return {
+        ...error,
+        message: error.errorMessage,
+        code: error.errorCode,
+      };
+
+    return error;
+  })();
+  const serialized = serialize(errorObject, { shouldIncludeStack: true });
 
   const version: string = CoinbaseWalletSDK.VERSION;
   const docUrl = `https://docs.cloud.coinbase.com/wallet-sdk/docs/errors?code=${serialized.code}&version=${version}`;
@@ -67,8 +77,12 @@ export function getErrorCode(error: unknown): number | undefined {
   if (typeof error === "number") {
     return error;
   } else if (isErrorWithCode(error)) {
-    return error.code ?? error.errorCode ?? undefined;
-  } else {
-    return undefined;
+    if (typeof error.code === "number") {
+      return error.code;
+    } else if (typeof error.errorCode === "number") {
+      return error.errorCode;
+    }
   }
+
+  return undefined;
 }

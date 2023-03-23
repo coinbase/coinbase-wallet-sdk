@@ -16,7 +16,9 @@ expect.extend({
       code,
       message,
       data: expect.objectContaining({
-        docUrl: expect.stringContaining("https://docs.cloud.coinbase.com/"),
+        docUrl: expect.stringMatching(
+          /https:\/\/.*coinbase\.com\/.*code=-?\d+/,
+        ),
         version: expect.stringMatching(/^\d+\.\d+\.\d+$/),
       }),
     });
