@@ -15,12 +15,10 @@ export interface ErrorResponse extends BaseWeb3Response<void> {
   errorMessage: string;
 }
 
-export function ErrorResponse(
-  method: Web3Method,
-  errorMessage: string,
-  errorCode?: number,
-): ErrorResponse {
-  return { method, errorMessage, errorCode };
+export function isErrorResponse(
+  response: BaseWeb3Response<any>,
+): response is ErrorResponse {
+  return response.errorMessage !== undefined;
 }
 
 export type RequestEthereumAccountsResponse = BaseWeb3Response<

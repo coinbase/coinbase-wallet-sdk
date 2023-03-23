@@ -264,7 +264,7 @@ export const standardErrors = {
   ...ethErrors,
   provider: {
     ...ethErrors.provider,
-    unsupportedChain: (chainId: string | number) =>
+    unsupportedChain: (chainId: string | number = "") =>
       ethErrors.provider.custom({
         code: 4902, // To-be-standardized "unrecognized chain ID" error
         message: `Unrecognized chain ID "${chainId}". Try adding the chain using wallet_addEthereumChain first.`,

@@ -3,7 +3,6 @@
 
 import SafeEventEmitter from "@metamask/safe-event-emitter";
 import BN from "bn.js";
-import { ethErrors } from "eth-rpc-errors";
 
 import { DiagnosticLogger, EVENTS } from "../connection/DiagnosticLogger";
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
@@ -16,6 +15,7 @@ import {
 import { WalletSDKRelayEventManager } from "../relay/WalletSDKRelayEventManager";
 import {
   ErrorResponse,
+  isErrorResponse,
   RequestEthereumAccountsResponse,
   SwitchResponse,
 } from "../relay/Web3Response";
@@ -357,13 +357,17 @@ export class CoinbaseWalletProvider
       this.selectedAddress || undefined,
     ).promise;
 
-    if ((res as ErrorResponse).errorCode) {
-      throw ethErrors.provider.custom({
-        message:
-          (res as ErrorResponse).errorMessage ||
-          standardErrors.provider.unsupportedChain(chainId).message,
-        code: (res as ErrorResponse).errorCode!,
-      });
+    // backward compatibility
+    if (isErrorResponse(res) && res.errorCode) {
+      const standardError = standardErrors.provider.unsupportedChain(chainId);
+      if (res.errorCode === standardError.code) {
+        throw standardError;
+      } else {
+        throw standardErrors.provider.custom({
+          message: res.errorMessage,
+          code: res.errorCode,
+        });
+      }
     }
 
     const switchResponse = res.result as SwitchResponse;
@@ -530,7 +534,7 @@ export class CoinbaseWalletProvider
   }
   private async _request<T>(args: RequestArguments): Promise<T> {
     if (!args || typeof args !== "object" || Array.isArray(args)) {
-      throw ethErrors.rpc.invalidRequest({
+      throw standardErrors.rpc.invalidRequest({
         message: "Expected a single, non-array, object argument.",
         data: args,
       });
@@ -539,7 +543,7 @@ export class CoinbaseWalletProvider
     const { method, params } = args;
 
     if (typeof method !== "string" || method.length === 0) {
-      throw ethErrors.rpc.invalidRequest({
+      throw standardErrors.rpc.invalidRequest({
         message: "'args.method' must be a non-empty string.",
         data: args,
       });
@@ -550,7 +554,7 @@ export class CoinbaseWalletProvider
       !Array.isArray(params) &&
       (typeof params !== "object" || params === null)
     ) {
-      throw ethErrors.rpc.invalidRequest({
+      throw standardErrors.rpc.invalidRequest({
         message: "'args.params' must be an object or array if provided.",
         data: args,
       });
@@ -605,13 +609,13 @@ export class CoinbaseWalletProvider
 
   public subscribe(): void {
     throw standardizeError(
-      ethErrors.rpc.methodNotSupported("Subscriptions are not supported"),
+      standardErrors.rpc.methodNotSupported("Subscriptions are not supported"),
     );
   }
 
   public unsubscribe(): void {
     throw standardizeError(
-      ethErrors.rpc.methodNotSupported("Subscriptions are not supported"),
+      standardErrors.rpc.methodNotSupported("Subscriptions are not supported"),
     );
   }
 
@@ -912,12 +916,12 @@ export class CoinbaseWalletProvider
 
   private _requireAuthorization(): void {
     if (!this._isAuthorized()) {
-      throw ethErrors.provider.unauthorized({});
+      throw standardErrors.provider.unauthorized({});
     }
   }
 
   private _throwUnsupportedMethodError(): Promise<JSONRPCResponse> {
-    throw ethErrors.provider.unsupportedMethod({});
+    throw standardErrors.provider.unsupportedMethod({});
   }
 
   private async _signEthereumMessage(
@@ -942,7 +946,7 @@ export class CoinbaseWalletProvider
         typeof err.message === "string" &&
         err.message.match(/(denied|rejected)/i)
       ) {
-        throw ethErrors.provider.userRejectedRequest(
+        throw standardErrors.provider.userRejectedRequest(
           "User denied message signature",
         );
       }
@@ -1017,7 +1021,7 @@ export class CoinbaseWalletProvider
         typeof err.message === "string" &&
         err.message.match(/(denied|rejected)/i)
       ) {
-        throw ethErrors.provider.userRejectedRequest(
+        throw standardErrors.provider.userRejectedRequest(
           "User denied account authorization",
         );
       }
@@ -1079,7 +1083,7 @@ export class CoinbaseWalletProvider
         typeof err.message === "string" &&
         err.message.match(/(denied|rejected)/i)
       ) {
-        throw ethErrors.provider.userRejectedRequest(
+        throw standardErrors.provider.userRejectedRequest(
           "User denied transaction signature",
         );
       }
@@ -1113,7 +1117,7 @@ export class CoinbaseWalletProvider
         typeof err.message === "string" &&
         err.message.match(/(denied|rejected)/i)
       ) {
-        throw ethErrors.provider.userRejectedRequest(
+        throw standardErrors.provider.userRejectedRequest(
           "User denied transaction signature",
         );
       }
@@ -1198,11 +1202,13 @@ export class CoinbaseWalletProvider
     }
 
     if (!request.chainName || request.chainName.trim() === "") {
-      throw ethErrors.rpc.invalidParams("chainName is a required field");
+      throw standardErrors.rpc.invalidParams("chainName is a required field");
     }
 
     if (!request.nativeCurrency) {
-      throw ethErrors.rpc.invalidParams("nativeCurrency is a required field");
+      throw standardErrors.rpc.invalidParams(
+        "nativeCurrency is a required field",
+      );
     }
 
     const chainIdNumber = parseInt(request.chainId, 16);
@@ -1238,21 +1244,21 @@ export class CoinbaseWalletProvider
       Array.isArray(params) ? params[0] : params
     ) as WatchAssetParams;
     if (!request.type) {
-      throw ethErrors.rpc.invalidParams("Type is required");
+      throw standardErrors.rpc.invalidParams("Type is required");
     }
 
     if (request?.type !== "ERC20") {
-      throw ethErrors.rpc.invalidParams(
+      throw standardErrors.rpc.invalidParams(
         `Asset of type '${request.type}' is not supported`,
       );
     }
 
     if (!request?.options) {
-      throw ethErrors.rpc.invalidParams("Options are required");
+      throw standardErrors.rpc.invalidParams("Options are required");
     }
 
     if (!request?.options.address) {
-      throw ethErrors.rpc.invalidParams("Address is required");
+      throw standardErrors.rpc.invalidParams("Address is required");
     }
 
     const chainId = this.getChainId();

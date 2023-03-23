@@ -829,11 +829,11 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     this.handleWeb3ResponseMessage(
       Web3ResponseMessage({
         id,
-        response: ErrorResponse(
+        response: {
           method,
-          error?.message ?? "User rejected request",
+          errorMessage: error?.message ?? "User rejected request",
           errorCode,
-        ),
+        },
       }),
     );
   }
@@ -1217,11 +1217,12 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
             this.handleWeb3ResponseMessage(
               Web3ResponseMessage({
                 id,
-                response: ErrorResponse(
-                  Web3Method.switchEthereumChain,
-                  standardErrors.provider.unsupportedChain(chainId).message,
+                response: {
+                  method: Web3Method.switchEthereumChain,
+                  errorMessage:
+                    standardErrors.provider.unsupportedChain(chainId).message,
                   errorCode,
-                ),
+                },
               }),
             );
           } else if (error) {
@@ -1233,7 +1234,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
               if ("code" in error && typeof error.code === "number") {
                 return error.code;
               }
-              return standardErrors.provider.unsupportedChain(chainId).code;
+              return standardErrors.provider.unsupportedChain().code;
             })();
             this.handleErrorResponse(
               id,
