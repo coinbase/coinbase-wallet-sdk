@@ -30,9 +30,9 @@ import {
   ensureRegExpString,
   hexStringFromIntNumber,
   prepend0x,
+  serializeError,
   standardErrorCodes,
   standardErrors,
-  serializeError,
 } from "../util";
 import eip712 from "../vendor-js/eth-eip712-util";
 import { FilterPolyfill } from "./FilterPolyfill";
