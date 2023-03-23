@@ -22,7 +22,6 @@ import { SessionConfig } from "../connection/SessionConfig";
 import { WalletSDKConnection } from "../connection/WalletSDKConnection";
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
 import { WalletUI, WalletUIOptions } from "../provider/WalletUI";
-import { WalletUIError } from "../provider/WalletUIError";
 import { AddressString, IntNumber, ProviderType, RegExpString } from "../types";
 import {
   bigIntStringFromBN,
@@ -30,6 +29,7 @@ import {
   hexStringFromBuffer,
   isInIFrame,
   randomBytesHex,
+  standardErrors,
 } from "../util";
 import * as aes256gcm from "./aes256gcm";
 import { EthereumTransactionParams } from "./EthereumTransactionParams";
@@ -831,7 +831,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         id,
         response: ErrorResponse(
           method,
-          (error ?? WalletUIError.UserRejectedRequest).message,
+          error?.message ?? "User rejected request",
           errorCode,
         ),
       }),
@@ -1219,17 +1219,27 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
                 id,
                 response: ErrorResponse(
                   Web3Method.switchEthereumChain,
-                  WalletUIError.SwitchEthereumChainUnsupportedChainId.message,
+                  standardErrors.provider.unsupportedChain(chainId).message,
                   errorCode,
                 ),
               }),
             );
-          } else if (error instanceof WalletUIError) {
+          } else if (error) {
+            // backward compatibility
+            const errorCode = (() => {
+              if ("errorCode" in error && typeof error.errorCode === "number") {
+                return error.errorCode;
+              }
+              if ("code" in error && typeof error.code === "number") {
+                return error.code;
+              }
+              return standardErrors.provider.unsupportedChain(chainId).code;
+            })();
             this.handleErrorResponse(
               id,
               Web3Method.switchEthereumChain,
               error,
-              error.errorCode,
+              errorCode,
             );
           } else {
             this.handleWeb3ResponseMessage(

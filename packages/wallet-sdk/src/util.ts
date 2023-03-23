@@ -260,6 +260,18 @@ export function isInIFrame(): boolean {
   }
 }
 
+export const standardErrors = {
+  ...ethErrors,
+  provider: {
+    ...ethErrors.provider,
+    unsupportedChain: (chainId: string | number) =>
+      ethErrors.provider.custom({
+        code: 4902, // To-be-standardized "unrecognized chain ID" error
+        message: `Unrecognized chain ID "${chainId}". Try adding the chain using wallet_addEthereumChain first.`,
+      }),
+  },
+};
+
 export function standardizeError(error: unknown) {
   const serialized = serializeError(
     typeof error === "string" ? new Error(error) : error,
