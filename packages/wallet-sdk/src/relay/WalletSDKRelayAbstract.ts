@@ -141,7 +141,7 @@ export abstract class WalletSDKRelayAbstract {
         const response = json as JSONRPCResponse;
         const { error } = response;
         if (error) {
-          throw serializeError(error);
+          throw serializeError(error, request.method);
         }
         return response;
       });

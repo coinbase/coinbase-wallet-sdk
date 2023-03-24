@@ -14,6 +14,7 @@ import {
   WalletSDKRelayAbstract,
 } from "../relay/WalletSDKRelayAbstract";
 import { WalletSDKRelayEventManager } from "../relay/WalletSDKRelayEventManager";
+import { Web3Method } from "../relay/Web3Method";
 import {
   isErrorResponse,
   RequestEthereumAccountsResponse,
@@ -426,11 +427,11 @@ export class CoinbaseWalletProvider
       const result = this._send(requestOrMethod, callbackOrParams);
       if (result instanceof Promise) {
         return result.catch(error => {
-          throw serializeError(error);
+          throw serializeError(error, requestOrMethod);
         });
       }
     } catch (error) {
-      throw serializeError(error);
+      throw serializeError(error, requestOrMethod);
     }
   }
   private _send(
@@ -490,10 +491,10 @@ export class CoinbaseWalletProvider
   ): Promise<void> {
     try {
       return this._sendAsync(request, callback).catch(error => {
-        throw serializeError(error);
+        throw serializeError(error, request);
       });
     } catch (error) {
-      return Promise.reject(serializeError(error));
+      return Promise.reject(serializeError(error, request));
     }
   }
   private async _sendAsync(
@@ -523,10 +524,10 @@ export class CoinbaseWalletProvider
   public async request<T>(args: RequestArguments): Promise<T> {
     try {
       return this._request<T>(args).catch(error => {
-        throw serializeError(error);
+        throw serializeError(error, args.method);
       });
     } catch (error) {
-      return Promise.reject(serializeError(error));
+      return Promise.reject(serializeError(error, args.method));
     }
   }
   private async _request<T>(args: RequestArguments): Promise<T> {
@@ -575,7 +576,10 @@ export class CoinbaseWalletProvider
     const relay = await this.initializeRelay();
     const res = await relay.scanQRCode(ensureRegExpString(match)).promise;
     if (typeof res.result !== "string") {
-      throw serializeError(res.errorMessage ?? "result was not a string");
+      throw serializeError(
+        res.errorMessage ?? "result was not a string",
+        Web3Method.scanQRCode,
+      );
     }
     return res.result;
   }
@@ -584,7 +588,10 @@ export class CoinbaseWalletProvider
     const relay = await this.initializeRelay();
     const res = await relay.genericRequest(data, action).promise;
     if (typeof res.result !== "string") {
-      throw serializeError(res.errorMessage ?? "result was not a string");
+      throw serializeError(
+        res.errorMessage ?? "result was not a string",
+        Web3Method.generic,
+      );
     }
     return res.result;
   }
@@ -595,7 +602,10 @@ export class CoinbaseWalletProvider
     const relay = await this.initializeRelay();
     const res = await relay.selectProvider(providerOptions).promise;
     if (typeof res.result !== "string") {
-      throw serializeError(res.errorMessage ?? "result was not a string");
+      throw serializeError(
+        res.errorMessage ?? "result was not a string",
+        Web3Method.selectProvider,
+      );
     }
     return res.result;
   }

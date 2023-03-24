@@ -71,7 +71,7 @@ describe("errors", () => {
 
   test("serializeError with Error instance", () => {
     const error = new Error("test Error instance");
-    const serialized = serializeError(error);
+    const serialized = serializeError(error, "test request");
     expect(serialized.code).toEqual(standardErrorCodes.rpc.internal);
     expect(serialized.message).toEqual("test Error instance");
     expect(serialized.stack).toEqual(
@@ -85,7 +85,7 @@ describe("errors", () => {
 
   test("serializeError with string", () => {
     const error = "test error with just string";
-    const serialized = serializeError(error);
+    const serialized = serializeError(error, "test request");
     expect(serialized.code).toEqual(standardErrorCodes.rpc.internal);
     expect(serialized.message).toEqual("test error with just string");
     expect(serialized.docUrl).toMatch(/.*version=\d+\.\d+\.\d+.*/);
@@ -100,7 +100,7 @@ describe("errors", () => {
       errorMessage: "test ErrorResponse instance",
       errorCode: standardErrorCodes.provider.unsupportedMethod,
     };
-    const serialized = serializeError(errorResponse);
+    const serialized = serializeError(errorResponse, "");
     expect(serialized.code).toEqual(
       standardErrorCodes.provider.unsupportedMethod,
     );
@@ -116,7 +116,7 @@ describe("errors", () => {
 
   test("serializeError with standardError", () => {
     const error = standardErrors.provider.userRejectedRequest({});
-    const serialized = serializeError(error);
+    const serialized = serializeError(error, "test request");
     expect(serialized.code).toEqual(
       standardErrorCodes.provider.userRejectedRequest,
     );
