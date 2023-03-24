@@ -82,8 +82,10 @@ export function serializeError(error: unknown): SerializedError {
   docUrl.searchParams.set("version", CoinbaseWalletSDK.VERSION);
   docUrl.searchParams.set("code", serialized.code.toString());
   docUrl.searchParams.set("message", serialized.message);
-  const detail = serialized.data?.toString();
-  if (detail) docUrl.searchParams.set("detail", detail);
+  const method = (serialized.data as { method: string })?.method;
+  if (method) {
+    docUrl.searchParams.set("method", method);
+  }
 
   return {
     ...serialized,

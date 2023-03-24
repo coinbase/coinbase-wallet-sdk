@@ -77,6 +77,7 @@ describe("errors", () => {
     expect(serialized.stack).toEqual(
       expect.stringContaining("test Error instance"),
     );
+    expect(serialized.docUrl).toMatch(/.*version=\d+\.\d+\.\d+.*/);
     expect(serialized.docUrl).toContain(
       `code=${standardErrorCodes.rpc.internal}`,
     );
@@ -87,6 +88,7 @@ describe("errors", () => {
     const serialized = serializeError(error);
     expect(serialized.code).toEqual(standardErrorCodes.rpc.internal);
     expect(serialized.message).toEqual("test error with just string");
+    expect(serialized.docUrl).toMatch(/.*version=\d+\.\d+\.\d+.*/);
     expect(serialized.docUrl).toContain(
       `code=${standardErrorCodes.rpc.internal}`,
     );
@@ -106,6 +108,7 @@ describe("errors", () => {
     expect(serialized.data).toMatchObject({
       method: Web3Method.generic,
     });
+    expect(serialized.docUrl).toMatch(/.*version=\d+\.\d+\.\d+.*/);
     expect(serialized.docUrl).toContain(
       `code=${standardErrorCodes.provider.unsupportedMethod}`,
     );
@@ -119,6 +122,7 @@ describe("errors", () => {
     );
     expect(serialized.message).toEqual(error.message);
     expect(serialized.stack).toEqual(expect.stringContaining("User rejected"));
+    expect(serialized.docUrl).toMatch(/.*version=\d+\.\d+\.\d+.*/);
     expect(serialized.docUrl).toContain(
       `code=${standardErrorCodes.provider.userRejectedRequest}`,
     );
