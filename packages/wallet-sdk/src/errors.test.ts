@@ -5,6 +5,7 @@ import {
   standardErrorMessage,
   standardErrors,
 } from "./errors";
+import { JSONRPCRequest } from "./provider/JSONRPC";
 import { Web3Method } from "./relay/Web3Method";
 import { ErrorResponse, isErrorResponse } from "./relay/Web3Response";
 
@@ -68,55 +69,31 @@ describe("errors", () => {
       expect.stringContaining("Unrecognized chain ID 1234"),
     );
   });
+});
 
-  test("serializeError with Error instance", () => {
-    const error = new Error("test Error instance");
-    const serialized = serializeError(error, "test request");
-    expect(serialized.code).toEqual(standardErrorCodes.rpc.internal);
-    expect(serialized.message).toEqual("test Error instance");
-    expect(serialized.stack).toEqual(
-      expect.stringContaining("test Error instance"),
-    );
-    expect(serialized.docUrl).toMatch(/.*version=\d+\.\d+\.\d+.*/);
-    expect(serialized.docUrl).toContain(
-      `code=${standardErrorCodes.rpc.internal}`,
-    );
-  });
-
-  test("serializeError with string", () => {
-    const error = "test error with just string";
-    const serialized = serializeError(error, "test request");
-    expect(serialized.code).toEqual(standardErrorCodes.rpc.internal);
-    expect(serialized.message).toEqual("test error with just string");
-    expect(serialized.docUrl).toMatch(/.*version=\d+\.\d+\.\d+.*/);
-    expect(serialized.docUrl).toContain(
-      `code=${standardErrorCodes.rpc.internal}`,
-    );
-  });
-
-  test("serializeError with ErrorResponse instance", () => {
+describe("serializeError", () => {
+  test("with ErrorResponse object", () => {
     const errorResponse: ErrorResponse = {
       method: Web3Method.generic,
-      errorMessage: "test ErrorResponse instance",
+      errorMessage: "test ErrorResponse object",
       errorCode: standardErrorCodes.provider.unsupportedMethod,
     };
+
     const serialized = serializeError(errorResponse, "");
     expect(serialized.code).toEqual(
       standardErrorCodes.provider.unsupportedMethod,
     );
-    expect(serialized.message).toEqual("test ErrorResponse instance");
-    expect(serialized.data).toMatchObject({
-      method: Web3Method.generic,
-    });
+    expect(serialized.message).toEqual("test ErrorResponse object");
     expect(serialized.docUrl).toMatch(/.*version=\d+\.\d+\.\d+.*/);
     expect(serialized.docUrl).toContain(
       `code=${standardErrorCodes.provider.unsupportedMethod}`,
     );
   });
 
-  test("serializeError with standardError", () => {
+  test("with standardError", () => {
     const error = standardErrors.provider.userRejectedRequest({});
-    const serialized = serializeError(error, "test request");
+
+    const serialized = serializeError(error, "test_request");
     expect(serialized.code).toEqual(
       standardErrorCodes.provider.userRejectedRequest,
     );
@@ -125,6 +102,104 @@ describe("errors", () => {
     expect(serialized.docUrl).toMatch(/.*version=\d+\.\d+\.\d+.*/);
     expect(serialized.docUrl).toContain(
       `code=${standardErrorCodes.provider.userRejectedRequest}`,
+    );
+  });
+
+  test("with Error object", () => {
+    const error = new Error("test Error object");
+
+    const serialized = serializeError(error, "test_request");
+    expect(serialized.code).toEqual(standardErrorCodes.rpc.internal);
+    expect(serialized.message).toEqual("test Error object");
+    expect(serialized.stack).toEqual(
+      expect.stringContaining("test Error object"),
+    );
+    expect(serialized.docUrl).toMatch(/.*version=\d+\.\d+\.\d+.*/);
+    expect(serialized.docUrl).toContain(
+      `code=${standardErrorCodes.rpc.internal}`,
+    );
+  });
+
+  test("with string", () => {
+    const error = "test error with just string";
+
+    const serialized = serializeError(error, "test_request");
+    expect(serialized.code).toEqual(standardErrorCodes.rpc.internal);
+    expect(serialized.message).toEqual("test error with just string");
+    expect(serialized.docUrl).toMatch(/.*version=\d+\.\d+\.\d+.*/);
+    expect(serialized.docUrl).toContain(
+      `code=${standardErrorCodes.rpc.internal}`,
+    );
+  });
+
+  test("with unknown type", () => {
+    const error = { unknown: "error" };
+    const serialized = serializeError(error, "test_request");
+    expect(serialized.code).toEqual(standardErrorCodes.rpc.internal);
+    expect(serialized.message).toEqual("Internal JSON-RPC error.");
+    expect(serialized.docUrl).toMatch(/.*version=\d+\.\d+\.\d+.*/);
+    expect(serialized.docUrl).toContain(
+      `code=${standardErrorCodes.rpc.internal}`,
+    );
+  });
+});
+
+describe("serializeError to retrieve the request method", () => {
+  test("with JSONRPCRequest object", () => {
+    const jsonRpcRequest: JSONRPCRequest = {
+      jsonrpc: "2.0",
+      id: 1,
+      method: Web3Method.requestEthereumAccounts,
+      params: [],
+    };
+
+    const error = standardErrors.provider.userRejectedRequest({});
+
+    const serialized = serializeError(error, jsonRpcRequest);
+    expect(serialized.code).toEqual(
+      standardErrorCodes.provider.userRejectedRequest,
+    );
+    expect(serialized.docUrl).toContain(
+      `method=${Web3Method.requestEthereumAccounts}`,
+    );
+  });
+
+  test("with string", () => {
+    const method = "test_method";
+
+    const error = standardErrors.provider.userRejectedRequest({});
+
+    const serialized = serializeError(error, method);
+    expect(serialized.code).toEqual(
+      standardErrorCodes.provider.userRejectedRequest,
+    );
+    expect(serialized.docUrl).toContain(`method=${method}`);
+  });
+
+  test("with JSONRPCRequest array", () => {
+    const jsonRpcRequests: JSONRPCRequest[] = [
+      {
+        jsonrpc: "2.0",
+        id: 1,
+        method: Web3Method.requestEthereumAccounts,
+        params: [],
+      },
+      {
+        jsonrpc: "2.0",
+        id: 1,
+        method: Web3Method.signEthereumMessage,
+        params: [],
+      },
+    ];
+
+    const error = standardErrors.provider.userRejectedRequest({});
+
+    const serialized = serializeError(error, jsonRpcRequests);
+    expect(serialized.code).toEqual(
+      standardErrorCodes.provider.userRejectedRequest,
+    );
+    expect(serialized.docUrl).toContain(
+      `method=${Web3Method.requestEthereumAccounts}`,
     );
   });
 });
