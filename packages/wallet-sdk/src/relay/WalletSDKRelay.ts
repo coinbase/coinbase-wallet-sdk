@@ -2,7 +2,6 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from "bind-decorator";
-import { ethErrors } from "eth-rpc-errors";
 import { BehaviorSubject, from, Observable, of, Subscription, zip } from "rxjs";
 import {
   catchError,
@@ -20,9 +19,14 @@ import { EventListener } from "../connection/EventListener";
 import { ServerMessageEvent } from "../connection/ServerMessage";
 import { SessionConfig } from "../connection/SessionConfig";
 import { WalletSDKConnection } from "../connection/WalletSDKConnection";
+import {
+  getErrorCode,
+  standardErrorCodes,
+  standardErrorMessage,
+  standardErrors,
+} from "../errors";
 import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
 import { WalletUI, WalletUIOptions } from "../provider/WalletUI";
-import { WalletUIError } from "../provider/WalletUIError";
 import { AddressString, IntNumber, ProviderType, RegExpString } from "../types";
 import {
   bigIntStringFromBN,
@@ -57,9 +61,9 @@ import { Web3RequestCanceledMessage } from "./Web3RequestCanceledMessage";
 import { Web3RequestMessage } from "./Web3RequestMessage";
 import {
   AddEthereumChainResponse,
-  ErrorResponse,
   EthereumAddressFromSignedMessageResponse,
   GenericResponse,
+  isErrorResponse,
   isRequestEthereumAccountsResponse,
   RequestEthereumAccountsResponse,
   ScanQRCodeResponse,
@@ -826,14 +830,15 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     error?: Error,
     errorCode?: number,
   ) {
+    const errorMessage = error?.message ?? standardErrorMessage(errorCode);
     this.handleWeb3ResponseMessage(
       Web3ResponseMessage({
         id,
-        response: ErrorResponse(
+        response: {
           method,
-          (error ?? WalletUIError.UserRejectedRequest).message,
+          errorMessage,
           errorCode,
-        ),
+        },
       }),
     );
   }
@@ -920,7 +925,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
           });
         } else {
           // Error if user closes TryExtensionLinkDialog without connecting
-          const err = ethErrors.provider.userRejectedRequest(
+          const err = standardErrors.provider.userRejectedRequest(
             "User denied account authorization",
           );
           this.ui.requestEthereumAccounts({
@@ -1196,10 +1201,10 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     const promise = new Promise<SwitchEthereumChainResponse>(
       (resolve, reject) => {
         this.relayEventManager.callbacks.set(id, response => {
-          if (response.errorMessage && (response as ErrorResponse).errorCode) {
+          if (isErrorResponse(response) && response.errorCode) {
             return reject(
-              ethErrors.provider.custom({
-                code: (response as ErrorResponse).errorCode!,
+              standardErrors.provider.custom({
+                code: response.errorCode,
                 message: `Unrecognized chain ID. Try adding the chain using addEthereumChain first.`,
               }),
             );
@@ -1211,25 +1216,19 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
         });
 
         const _cancel = (error?: Error | number) => {
-          if (typeof error === "number") {
+          if (error) {
             // backward compatibility
-            const errorCode: number = error;
-            this.handleWeb3ResponseMessage(
-              Web3ResponseMessage({
-                id,
-                response: ErrorResponse(
-                  Web3Method.switchEthereumChain,
-                  WalletUIError.SwitchEthereumChainUnsupportedChainId.message,
-                  errorCode,
-                ),
-              }),
-            );
-          } else if (error instanceof WalletUIError) {
+            const errorCode =
+              getErrorCode(error) ??
+              standardErrorCodes.provider.unsupportedChain;
+
             this.handleErrorResponse(
               id,
               Web3Method.switchEthereumChain,
-              error,
-              error.errorCode,
+              error instanceof Error
+                ? error
+                : standardErrors.provider.unsupportedChain(chainId),
+              errorCode,
             );
           } else {
             this.handleWeb3ResponseMessage(

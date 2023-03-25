@@ -13,6 +13,7 @@ module.exports = {
   parser: "@typescript-eslint/parser",
   parserOptions: {
     project: "tsconfig.json",
+    tsconfigRootDir: __dirname,
     sourceType: "module",
   },
   plugins: [
@@ -194,6 +195,7 @@ module.exports = {
       },
     ],
     "simple-import-sort/exports": "error",
+    "no-restricted-imports": ["error", "eth-rpc-errors"],
     "space-before-function-paren": "off",
     "space-in-parens": ["off", "never"],
     "spaced-comment": [
