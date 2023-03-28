@@ -237,7 +237,8 @@ export class CoinbaseWalletSDK {
   private get coinbaseBrowser(): CoinbaseWalletProvider | undefined {
     try {
       // Coinbase DApp browser does not inject into iframes so grab provider from top frame if it exists
-      const ethereum = (window.ethereum ?? window.top?.ethereum) as any;
+      const ethereum =
+        (window as any).ethereum ?? (window as any).top?.ethereum;
       if (!ethereum) {
         return undefined;
       }
