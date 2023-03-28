@@ -15,7 +15,7 @@ declare global {
     /**
      * For CoinbaseWalletSDK, window.ethereum is `CoinbaseWalletProvider`
      */
-    ethereum?: unknown;
+    ethereum?: any;
     coinbaseWalletExtension?: CoinbaseWalletProvider;
 
     /**
