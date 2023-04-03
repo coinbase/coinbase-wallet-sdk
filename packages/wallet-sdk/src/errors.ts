@@ -1,6 +1,7 @@
 // eslint-disable-next-line no-restricted-imports
 import {
   errorCodes,
+  EthereumProviderError,
   ethErrors,
   getMessageFromCode,
   serializeError as serialize,
@@ -11,6 +12,14 @@ import { JSONRPCRequest } from "./provider/JSONRPC";
 import { isErrorResponse } from "./relay/Web3Response";
 
 // ----------------- standard errors -----------------
+
+declare type StandardErrorsType = typeof ethErrors & {
+  provider: {
+    unsupportedChain: (
+      chainId?: string | number,
+    ) => EthereumProviderError<undefined>;
+  };
+};
 
 export const standardErrorCodes = Object.freeze({
   ...errorCodes,
@@ -24,12 +33,12 @@ export function standardErrorMessage(code: number | undefined): string {
   return code !== undefined ? getMessageFromCode(code) : "Unknown error";
 }
 
-export const standardErrors = Object.freeze({
+export const standardErrors: StandardErrorsType = Object.freeze({
   ...ethErrors,
   provider: Object.freeze({
     ...ethErrors.provider,
     unsupportedChain: (chainId: string | number = "") =>
-      ethErrors.provider.custom({
+      ethErrors.provider.custom<undefined>({
         code: standardErrorCodes.provider.unsupportedChain,
         message: `Unrecognized chain ID ${chainId}. Try adding the chain using wallet_addEthereumChain first.`,
       }),
