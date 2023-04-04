@@ -3,6 +3,7 @@ import {
   Snackbar,
   SnackbarInstanceProps,
 } from "../components/Snackbar/Snackbar";
+import { ErrorHandler } from "../errors";
 import { injectCssReset } from "../lib/cssReset";
 import {
   EthereumAddressFromSignedMessageRequest,
@@ -64,7 +65,7 @@ export class WalletSDKUI implements WalletUI {
 
   /* istanbul ignore next */
   addEthereumChain(_options: {
-    onCancel: (error?: Error) => void;
+    onCancel: ErrorHandler;
     onApprove: () => void;
     chainId: string;
     rpcUrls: string[];
@@ -82,7 +83,7 @@ export class WalletSDKUI implements WalletUI {
 
   /* istanbul ignore next */
   watchAsset(_options: {
-    onCancel: (error?: Error) => void;
+    onCancel: ErrorHandler;
     onApprove: () => void;
     type: string;
     address: string;
@@ -95,7 +96,7 @@ export class WalletSDKUI implements WalletUI {
 
   /* istanbul ignore next */
   switchEthereumChain(_options: {
-    onCancel: (error?: Error) => void;
+    onCancel: ErrorHandler;
     onApprove: () => void;
     chainId: string;
     address?: string;
@@ -103,9 +104,7 @@ export class WalletSDKUI implements WalletUI {
     // no-op
   }
 
-  requestEthereumAccounts(options: {
-    onCancel: (error?: Error) => void;
-  }): void {
+  requestEthereumAccounts(options: { onCancel: ErrorHandler }): void {
     this.linkFlow.open({ onCancel: options.onCancel });
   }
 
@@ -117,7 +116,7 @@ export class WalletSDKUI implements WalletUI {
   signEthereumMessage(_: {
     request: SignEthereumMessageRequest;
     onSuccess: (response: SignEthereumMessageResponse) => void;
-    onCancel: (error?: Error) => void;
+    onCancel: ErrorHandler;
   }): void {
     // No-op
   }
@@ -126,7 +125,7 @@ export class WalletSDKUI implements WalletUI {
   signEthereumTransaction(_: {
     request: SignEthereumTransactionRequest;
     onSuccess: (response: SignEthereumTransactionResponse) => void;
-    onCancel: (error?: Error) => void;
+    onCancel: ErrorHandler;
   }): void {
     // No-op
   }
@@ -135,7 +134,7 @@ export class WalletSDKUI implements WalletUI {
   submitEthereumTransaction(_: {
     request: SubmitEthereumTransactionRequest;
     onSuccess: (response: SubmitEthereumTransactionResponse) => void;
-    onCancel: (error?: Error) => void;
+    onCancel: ErrorHandler;
   }): void {
     // No-op
   }
@@ -150,7 +149,7 @@ export class WalletSDKUI implements WalletUI {
 
   showConnecting(options: {
     isUnlinkedErrorState?: boolean;
-    onCancel: (error?: Error) => void;
+    onCancel: ErrorHandler;
     onResetConnection: () => void;
   }): () => void {
     let snackbarProps: SnackbarInstanceProps;

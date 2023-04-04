@@ -1,5 +1,6 @@
 import { Observable, Subject } from "rxjs";
 
+import { ErrorHandler } from "../errors";
 import { Session } from "../relay/Session";
 import {
   EthereumAddressFromSignedMessageRequest,
@@ -33,12 +34,12 @@ export interface WalletUI {
    *
    */
   requestEthereumAccounts(options: {
-    onCancel: (error?: Error) => void;
+    onCancel: ErrorHandler;
     onAccounts?: (accounts: [AddressString]) => void;
   }): void;
 
   addEthereumChain(options: {
-    onCancel: (error?: Error) => void;
+    onCancel: ErrorHandler;
     onApprove: (rpcUrl: string) => void;
     chainId: string;
     rpcUrls: string[];
@@ -53,7 +54,7 @@ export interface WalletUI {
   }): void;
 
   watchAsset(options: {
-    onCancel: (error?: Error) => void;
+    onCancel: ErrorHandler;
     onApprove: () => void;
     type: string;
     address: string;
@@ -64,13 +65,13 @@ export interface WalletUI {
   }): void;
 
   selectProvider?(options: {
-    onCancel: (error?: Error) => void;
+    onCancel: ErrorHandler;
     onApprove: (selectedProviderKey: ProviderType) => void;
     providerOptions: ProviderType[];
   }): void;
 
   switchEthereumChain(options: {
-    onCancel: (error?: Error) => void;
+    onCancel: ErrorHandler;
     onApprove: (rpcUrl: string) => void;
     chainId: string;
     address?: string;
@@ -79,19 +80,19 @@ export interface WalletUI {
   signEthereumMessage(options: {
     request: SignEthereumMessageRequest;
     onSuccess: (response: SignEthereumMessageResponse) => void;
-    onCancel: (error?: Error) => void;
+    onCancel: ErrorHandler;
   }): void;
 
   signEthereumTransaction(options: {
     request: SignEthereumTransactionRequest;
     onSuccess: (response: SignEthereumTransactionResponse) => void;
-    onCancel: (error?: Error) => void;
+    onCancel: ErrorHandler;
   }): void;
 
   submitEthereumTransaction(options: {
     request: SubmitEthereumTransactionRequest;
     onSuccess: (response: SubmitEthereumTransactionResponse) => void;
-    onCancel: (error?: Error) => void;
+    onCancel: ErrorHandler;
   }): void;
 
   ethereumAddressFromSignedMessage(options: {
@@ -113,7 +114,7 @@ export interface WalletUI {
    */
   showConnecting(options: {
     isUnlinkedErrorState?: boolean;
-    onCancel: (error?: Error) => void;
+    onCancel: ErrorHandler;
     onResetConnection: () => void;
   }): () => void;
 

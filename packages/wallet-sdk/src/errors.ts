@@ -55,6 +55,9 @@ interface SerializedError {
   stack?: string;
 }
 
+export type ErrorType = Error | SerializedError;
+export type ErrorHandler = (error?: ErrorType) => void;
+
 /**
  * Serializes an error to a format that is compatible with the Ethereum JSON RPC error format.
  * See https://docs.cloud.coinbase.com/wallet-sdk/docs/errors
@@ -62,7 +65,7 @@ interface SerializedError {
  */
 export function serializeError(
   error: unknown,
-  requestOrMethod: JSONRPCRequest | JSONRPCRequest[] | string,
+  requestOrMethod?: JSONRPCRequest | JSONRPCRequest[] | string,
 ): SerializedError {
   const serialized = serialize(getErrorObject(error), {
     shouldIncludeStack: true,
@@ -111,11 +114,15 @@ function getErrorObject(error: unknown) {
  */
 function getMethod(
   serializedData: unknown,
-  request: JSONRPCRequest | JSONRPCRequest[] | string,
+  request?: JSONRPCRequest | JSONRPCRequest[] | string,
 ): string | undefined {
   const methodInData = (serializedData as { method: string })?.method;
   if (methodInData) {
     return methodInData;
+  }
+
+  if (request === undefined) {
+    return undefined;
   } else if (typeof request === "string") {
     return request;
   } else if (!Array.isArray(request)) {

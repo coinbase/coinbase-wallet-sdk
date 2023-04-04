@@ -1,4 +1,4 @@
-import { serializeError, standardErrors } from "../errors";
+import { ErrorHandler, serializeError, standardErrors } from "../errors";
 import { JSONRPCRequest, JSONRPCResponse } from "../provider/JSONRPC";
 import { AddressString, IntNumber, ProviderType, RegExpString } from "../types";
 import { EthereumTransactionParams } from "./EthereumTransactionParams";
@@ -25,7 +25,7 @@ export const APP_VERSION_KEY = "AppVersion";
 
 export type CancelablePromise<T> = {
   promise: Promise<T>;
-  cancel: (error?: Error) => void;
+  cancel: ErrorHandler;
 };
 
 export abstract class WalletSDKRelayAbstract {
