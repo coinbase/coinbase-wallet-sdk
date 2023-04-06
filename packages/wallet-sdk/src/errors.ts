@@ -7,9 +7,9 @@ import {
   serializeError as serialize,
 } from "eth-rpc-errors";
 
-import { CoinbaseWalletSDK } from "./CoinbaseWalletSDK";
 import { JSONRPCRequest } from "./provider/JSONRPC";
 import { isErrorResponse } from "./relay/Web3Response";
+import { LIB_VERSION } from "./version";
 
 // ----------------- standard errors -----------------
 
@@ -74,7 +74,7 @@ export function serializeError(
   const docUrl = new URL(
     "https://docs.cloud.coinbase.com/wallet-sdk/docs/errors",
   );
-  docUrl.searchParams.set("version", CoinbaseWalletSDK.VERSION);
+  docUrl.searchParams.set("version", LIB_VERSION);
   docUrl.searchParams.set("code", serialized.code.toString());
   const method = getMethod(serialized.data, requestOrMethod);
   if (method) {
