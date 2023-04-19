@@ -49,7 +49,7 @@
     "bn.js": "^5.1.1",
     "buffer": "^6.0.3",
     "clsx": "^1.1.0",
-    "eth-block-tracker": "4.4.3",
+    "eth-block-tracker": "6.1.0",
     "eth-json-rpc-filters": "5.1.0",
     "eth-rpc-errors": "4.0.2",
     "json-rpc-engine": "6.1.0",

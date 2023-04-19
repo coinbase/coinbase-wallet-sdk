@@ -1,4 +1,5 @@
 import SafeEventEmitter from "@metamask/safe-event-emitter";
+import { PollingBlockTracker, Provider } from "eth-block-tracker";
 import {
   JsonRpcEngineEndCallback,
   JsonRpcEngineNextCallback,
@@ -6,7 +7,6 @@ import {
 
 import { RequestArguments, Web3Provider } from "./Web3Provider";
 
-const PollingBlockTracker = require("eth-block-tracker");
 const createSubscriptionManager = require("eth-json-rpc-filters/subscriptionManager");
 const noop = () => {};
 
@@ -26,9 +26,9 @@ export class SubscriptionManager {
   private readonly subscriptionMiddleware: SubscriptionMiddleware;
   readonly events: SafeEventEmitter;
 
-  constructor(provider: Web3Provider) {
+  constructor(provider: Web3Provider & SafeEventEmitter) {
     const blockTracker = new PollingBlockTracker({
-      provider,
+      provider: provider as Provider,
       pollingInterval: 15 * 1000, // 15 sec
       setSkipCacheFlag: true,
     });
