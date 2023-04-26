@@ -765,7 +765,13 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     return new Observable<string>(subscriber => {
       void aes256gcm
         .encrypt(
-          JSON.stringify({ ...message, origin: location.origin }),
+          JSON.stringify({
+            ...message,
+            origin: location.origin,
+            relaySource: !!window.coinbaseWalletExtension
+              ? "injected_sdk"
+              : "sdk",
+          }),
           secret,
         )
         .then((encrypted: string) => {
