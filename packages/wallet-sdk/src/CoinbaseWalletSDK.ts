@@ -6,7 +6,7 @@ import { DiagnosticLogger } from "./connection/DiagnosticLogger";
 import { EventListener } from "./connection/EventListener";
 import { ScopedLocalStorage } from "./lib/ScopedLocalStorage";
 import { CoinbaseWalletProvider } from "./provider/CoinbaseWalletProvider";
-import { WalletSDKUI } from "./provider/WalletSDKUI";
+import { WalletLinkRelayUI } from "./provider/WalletLinkRelayUI";
 import { WalletUI, WalletUIOptions } from "./provider/WalletUI";
 import { MobileRelay } from "./relay/MobileRelay";
 import { WalletLinkRelay } from "./relay/WalletLinkRelay";
@@ -70,7 +70,7 @@ export class CoinbaseWalletSDK {
     const linkAPIUrl = options.linkAPIUrl || LINK_API_URL;
     let uiConstructor: (options: Readonly<WalletUIOptions>) => WalletUI;
     if (!options.uiConstructor) {
-      uiConstructor = opts => new WalletSDKUI(opts);
+      uiConstructor = opts => new WalletLinkRelayUI(opts);
     } else {
       uiConstructor = options.uiConstructor;
     }
