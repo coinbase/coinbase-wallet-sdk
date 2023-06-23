@@ -12,7 +12,7 @@ import {
   CoinbaseWalletProvider,
   CoinbaseWalletProviderOptions,
 } from "./provider/CoinbaseWalletProvider";
-import { WalletSDKRelay } from "./relay/WalletSDKRelay";
+import { WalletLinkRelay } from "./relay/WalletLinkRelay";
 import { WalletSDKRelayEventManager } from "./relay/WalletSDKRelayEventManager";
 
 jest.mock("./provider/WalletSDKUI");
@@ -52,7 +52,7 @@ describe("CoinbaseWalletSDK", () => {
 
       test("@disconnect", () => {
         const relayResetMock = jest
-          .spyOn(WalletSDKRelay.prototype, "resetAndReload")
+          .spyOn(WalletLinkRelay.prototype, "resetAndReload")
           .mockImplementation(() => "resetAndReload");
         coinbaseWalletSDK2.disconnect();
 
@@ -61,7 +61,7 @@ describe("CoinbaseWalletSDK", () => {
 
       test("@setAppInfo", () => {
         const relaySetAppInfoMock = jest
-          .spyOn(WalletSDKRelay.prototype, "setAppInfo")
+          .spyOn(WalletLinkRelay.prototype, "setAppInfo")
           .mockImplementation(() => "setAppInfo");
         coinbaseWalletSDK2.setAppInfo("sdk", "http://sdk-image.png");
 
@@ -179,7 +179,7 @@ describe("CoinbaseWalletSDK", () => {
 
       test("@setAppInfo", () => {
         const relaySetAppInfoMock = jest
-          .spyOn(WalletSDKRelay.prototype, "setAppInfo")
+          .spyOn(WalletLinkRelay.prototype, "setAppInfo")
           .mockImplementation(() => "setAppInfo");
         coinbaseWalletSDK2.setAppInfo("cipher", "http://cipher-image.png");
         expect(relaySetAppInfoMock).not.toBeCalled();

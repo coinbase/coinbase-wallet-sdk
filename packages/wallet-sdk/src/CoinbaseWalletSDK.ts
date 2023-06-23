@@ -8,7 +8,7 @@ import { ScopedLocalStorage } from "./lib/ScopedLocalStorage";
 import { CoinbaseWalletProvider } from "./provider/CoinbaseWalletProvider";
 import { WalletSDKUI } from "./provider/WalletSDKUI";
 import { WalletUI, WalletUIOptions } from "./provider/WalletUI";
-import { WalletSDKRelay } from "./relay/WalletSDKRelay";
+import { WalletLinkRelay } from "./relay/WalletLinkRelay";
 import { WalletSDKRelayEventManager } from "./relay/WalletSDKRelayEventManager";
 import { getFavicon } from "./util";
 
@@ -50,7 +50,7 @@ export class CoinbaseWalletSDK {
 
   private _appName = "";
   private _appLogoUrl: string | null = null;
-  private _relay: WalletSDKRelay | null = null;
+  private _relay: WalletLinkRelay | null = null;
   private _relayEventManager: WalletSDKRelayEventManager | null = null;
   private _storage: ScopedLocalStorage;
   private _overrideIsMetaMask: boolean;
@@ -110,7 +110,7 @@ export class CoinbaseWalletSDK {
 
     this._relayEventManager = new WalletSDKRelayEventManager();
 
-    this._relay = new WalletSDKRelay({
+    this._relay = new WalletLinkRelay({
       linkAPIUrl,
       version: SDK_VERSION,
       darkMode: !!options.darkMode,
