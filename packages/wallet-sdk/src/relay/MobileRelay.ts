@@ -4,16 +4,16 @@ import { CancelablePromise } from "./WalletSDKRelayAbstract";
 import { RequestEthereumAccountsResponse } from "./Web3Response";
 
 export class MobileRelay extends WalletLinkRelay {
-  private _useMobileWalletLink: boolean;
+  private _enableMobileWalletLink: boolean;
 
   constructor(options: Readonly<WalletLinkRelayOptions>) {
     super(options);
-    this._useMobileWalletLink = options.useMobileWalletLink ?? false;
+    this._enableMobileWalletLink = options.enableMobileWalletLink ?? false;
   }
 
   // override
   public requestEthereumAccounts(): CancelablePromise<RequestEthereumAccountsResponse> {
-    if (this._useMobileWalletLink) {
+    if (this._enableMobileWalletLink) {
       return super.requestEthereumAccounts();
     }
 

@@ -45,7 +45,7 @@ export interface CoinbaseWalletSDKOptions {
   /** @optional whether or not to reload dapp automatically after disconnect, defaults to true */
   reloadOnDisconnect?: boolean;
   /** @optional whether to connect mobile web app via WalletLink, defaults to false */
-  useMobileWalletLink?: boolean;
+  enableMobileWalletLink?: boolean;
 }
 
 export class CoinbaseWalletSDK {
@@ -122,7 +122,7 @@ export class CoinbaseWalletSDK {
       relayEventManager: this._relayEventManager,
       diagnosticLogger: this._diagnosticLogger,
       reloadOnDisconnect: this._reloadOnDisconnect,
-      useMobileWalletLink: options.useMobileWalletLink,
+      enableMobileWalletLink: options.enableMobileWalletLink,
     };
 
     this._relay = isMobileWeb()

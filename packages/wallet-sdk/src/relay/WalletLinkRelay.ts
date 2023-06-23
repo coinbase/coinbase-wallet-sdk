@@ -91,7 +91,7 @@ export interface WalletLinkRelayOptions {
   diagnosticLogger?: DiagnosticLogger;
   eventListener?: EventListener;
   reloadOnDisconnect?: boolean;
-  useMobileWalletLink?: boolean;
+  enableMobileWalletLink?: boolean;
 }
 
 export class WalletLinkRelay extends WalletSDKRelayAbstract {
