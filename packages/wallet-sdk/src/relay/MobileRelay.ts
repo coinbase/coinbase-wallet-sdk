@@ -1,0 +1,41 @@
+import { isInIFrame } from "../util";
+import { WalletLinkRelay, WalletLinkRelayOptions } from "./WalletLinkRelay";
+import { CancelablePromise } from "./WalletSDKRelayAbstract";
+import { RequestEthereumAccountsResponse } from "./Web3Response";
+
+export class MobileRelay extends WalletLinkRelay {
+  private _useMobileWalletLink: boolean;
+
+  constructor(options: Readonly<WalletLinkRelayOptions>) {
+    super(options);
+    this._useMobileWalletLink = options.useMobileWalletLink ?? false;
+  }
+
+  // override
+  public requestEthereumAccounts(): CancelablePromise<RequestEthereumAccountsResponse> {
+    if (this._useMobileWalletLink) {
+      return super.requestEthereumAccounts();
+    }
+
+    // navigate to wallet picker page on https://www.coinbase.com/connect-dapp
+    return {
+      promise: new Promise(() => {
+        let location: Location;
+        try {
+          if (isInIFrame() && window.top) {
+            location = window.top.location;
+          } else {
+            location = window.location;
+          }
+        } catch (e) {
+          location = window.location;
+        }
+
+        location.href = `https://www.coinbase.com/connect-dapp?uri=${encodeURIComponent(
+          location.href,
+        )}`;
+      }),
+      cancel: () => {},
+    };
+  }
+}

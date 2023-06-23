@@ -33,7 +33,6 @@ import {
   bigIntStringFromBN,
   createQrUrl,
   hexStringFromBuffer,
-  isInIFrame,
   randomBytesHex,
 } from "../util";
 import * as aes256gcm from "./aes256gcm";
@@ -92,6 +91,7 @@ export interface WalletLinkRelayOptions {
   diagnosticLogger?: DiagnosticLogger;
   eventListener?: EventListener;
   reloadOnDisconnect?: boolean;
+  useMobileWalletLink?: boolean;
 }
 
 export class WalletLinkRelay extends WalletSDKRelayAbstract {
@@ -891,30 +891,6 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
           }
           resolve(response as RequestEthereumAccountsResponse);
         });
-
-        const userAgent = window?.navigator?.userAgent || null;
-        if (
-          userAgent &&
-          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-            userAgent,
-          )
-        ) {
-          let location: Location;
-          try {
-            if (isInIFrame() && window.top) {
-              location = window.top.location;
-            } else {
-              location = window.location;
-            }
-          } catch (e) {
-            location = window.location;
-          }
-
-          location.href = `https://www.coinbase.com/connect-dapp?uri=${encodeURIComponent(
-            location.href,
-          )}`;
-          return;
-        }
 
         if (this.ui.inlineAccountsResponse()) {
           const onAccounts = (accounts: [AddressString]) => {
