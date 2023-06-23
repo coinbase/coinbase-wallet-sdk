@@ -8,9 +8,10 @@ import { ScopedLocalStorage } from "./lib/ScopedLocalStorage";
 import { CoinbaseWalletProvider } from "./provider/CoinbaseWalletProvider";
 import { WalletSDKUI } from "./provider/WalletSDKUI";
 import { WalletUI, WalletUIOptions } from "./provider/WalletUI";
-import { WalletSDKRelay } from "./relay/WalletSDKRelay";
+import { MobileRelay } from "./relay/MobileRelay";
+import { WalletLinkRelay } from "./relay/WalletLinkRelay";
 import { WalletSDKRelayEventManager } from "./relay/WalletSDKRelayEventManager";
-import { getFavicon } from "./util";
+import { getFavicon, isMobileWeb } from "./util";
 
 const LINK_API_URL = process.env.LINK_API_URL || "https://www.walletlink.org";
 const SDK_VERSION =
@@ -43,6 +44,8 @@ export interface CoinbaseWalletSDKOptions {
   headlessMode?: boolean;
   /** @optional whether or not to reload dapp automatically after disconnect, defaults to true */
   reloadOnDisconnect?: boolean;
+  /** @optional whether to connect mobile web app via WalletLink, defaults to false */
+  useMobileWalletLink?: boolean;
 }
 
 export class CoinbaseWalletSDK {
@@ -50,7 +53,7 @@ export class CoinbaseWalletSDK {
 
   private _appName = "";
   private _appLogoUrl: string | null = null;
-  private _relay: WalletSDKRelay | null = null;
+  private _relay: WalletLinkRelay | null = null;
   private _relayEventManager: WalletSDKRelayEventManager | null = null;
   private _storage: ScopedLocalStorage;
   private _overrideIsMetaMask: boolean;
@@ -110,7 +113,7 @@ export class CoinbaseWalletSDK {
 
     this._relayEventManager = new WalletSDKRelayEventManager();
 
-    this._relay = new WalletSDKRelay({
+    const relayOption = {
       linkAPIUrl,
       version: SDK_VERSION,
       darkMode: !!options.darkMode,
@@ -119,7 +122,13 @@ export class CoinbaseWalletSDK {
       relayEventManager: this._relayEventManager,
       diagnosticLogger: this._diagnosticLogger,
       reloadOnDisconnect: this._reloadOnDisconnect,
-    });
+      useMobileWalletLink: options.useMobileWalletLink,
+    };
+
+    this._relay = isMobileWeb()
+      ? new MobileRelay(relayOption)
+      : new WalletLinkRelay(relayOption);
+
     this.setAppInfo(options.appName, options.appLogoUrl);
 
     if (!!options.headlessMode) return;

@@ -260,3 +260,9 @@ export function isInIFrame(): boolean {
     return false;
   }
 }
+
+export function isMobileWeb(): boolean {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    window?.navigator?.userAgent,
+  );
+}
