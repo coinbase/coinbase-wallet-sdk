@@ -17,7 +17,7 @@ export class MobileRelay extends WalletLinkRelay {
       return super.requestEthereumAccounts();
     }
 
-    // navigate to wallet picker page on https://www.coinbase.com/connect-dapp
+    // TODO: Implement & present in-page wallet picker instead of navigating to www.coinbase.com/connect-dapp
     return {
       promise: new Promise(() => {
         let location: Location;
