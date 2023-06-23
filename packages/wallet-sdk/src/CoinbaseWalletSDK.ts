@@ -6,6 +6,7 @@ import { DiagnosticLogger } from "./connection/DiagnosticLogger";
 import { EventListener } from "./connection/EventListener";
 import { ScopedLocalStorage } from "./lib/ScopedLocalStorage";
 import { CoinbaseWalletProvider } from "./provider/CoinbaseWalletProvider";
+import { MobileRelayUI } from "./provider/MobileRelayUI";
 import { WalletLinkRelayUI } from "./provider/WalletLinkRelayUI";
 import { WalletUI, WalletUIOptions } from "./provider/WalletUI";
 import { MobileRelay } from "./relay/MobileRelay";
@@ -68,12 +69,6 @@ export class CoinbaseWalletSDK {
    */
   constructor(options: Readonly<CoinbaseWalletSDKOptions>) {
     const linkAPIUrl = options.linkAPIUrl || LINK_API_URL;
-    let uiConstructor: (options: Readonly<WalletUIOptions>) => WalletUI;
-    if (!options.uiConstructor) {
-      uiConstructor = opts => new WalletLinkRelayUI(opts);
-    } else {
-      uiConstructor = options.uiConstructor;
-    }
 
     if (typeof options.overrideIsMetaMask === "undefined") {
       this._overrideIsMetaMask = false;
@@ -113,6 +108,11 @@ export class CoinbaseWalletSDK {
 
     this._relayEventManager = new WalletSDKRelayEventManager();
 
+    const isMobile = isMobileWeb();
+    const uiConstructor =
+      options.uiConstructor ||
+      (opts => (isMobile ? new MobileRelayUI() : new WalletLinkRelayUI(opts)));
+
     const relayOption = {
       linkAPIUrl,
       version: SDK_VERSION,
@@ -125,9 +125,7 @@ export class CoinbaseWalletSDK {
       enableMobileWalletLink: options.enableMobileWalletLink,
     };
 
-    this._relay = isMobileWeb()
-      ? new MobileRelay(relayOption)
-      : new WalletLinkRelay(relayOption);
+    this._relay = new (isMobile ? MobileRelay : WalletLinkRelay)(relayOption);
 
     this.setAppInfo(options.appName, options.appLogoUrl);
 
