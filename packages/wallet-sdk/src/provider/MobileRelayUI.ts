@@ -15,15 +15,30 @@ import { AddressString, ProviderType } from "../types";
 import { WalletUI } from "./WalletUI";
 
 export class MobileRelayUI implements WalletUI {
-  attach(): void {
-    throw new Error("Method not implemented.");
+  private openCoinbaseWalletDeeplink(extraParams?: {
+    [key: string]: string;
+  }): void {
+    const url = new URL("https://go.cb-w.com/walletlink");
+
+    const param = {
+      redirect_url: window.location.href,
+      ...extraParams,
+    };
+    Object.entries(param).forEach(([key, value]) => {
+      url.searchParams.append(key, value);
+    });
+
+    window.open(url.href, "_blank");
   }
+
   requestEthereumAccounts(_options: {
     onCancel: ErrorHandler;
     onAccounts?: ((accounts: [AddressString]) => void) | undefined;
   }): void {
-    throw new Error("Method not implemented.");
+    const wl_url = "TODO";
+    this.openCoinbaseWalletDeeplink({ wl_url });
   }
+
   addEthereumChain(_options: {
     onCancel: ErrorHandler;
     onApprove: (rpcUrl: string) => void;
@@ -36,8 +51,9 @@ export class MobileRelayUI implements WalletUI {
       | { name: string; symbol: string; decimals: number }
       | undefined;
   }): void {
-    throw new Error("Method not implemented.");
+    this.openCoinbaseWalletDeeplink();
   }
+
   watchAsset(_options: {
     onCancel: ErrorHandler;
     onApprove: () => void;
@@ -48,85 +64,94 @@ export class MobileRelayUI implements WalletUI {
     image?: string | undefined;
     chainId?: string | undefined;
   }): void {
-    throw new Error("Method not implemented.");
+    this.openCoinbaseWalletDeeplink();
   }
+
   selectProvider?(_options: {
     onCancel: ErrorHandler;
     onApprove: (selectedProviderKey: ProviderType) => void;
     providerOptions: ProviderType[];
   }): void {
-    throw new Error("Method not implemented.");
+    this.openCoinbaseWalletDeeplink();
   }
+
   switchEthereumChain(_options: {
     onCancel: ErrorHandler;
     onApprove: (rpcUrl: string) => void;
     chainId: string;
     address?: string | undefined;
   }): void {
-    throw new Error("Method not implemented.");
+    this.openCoinbaseWalletDeeplink();
   }
+
   signEthereumMessage(_options: {
     request: SignEthereumMessageRequest;
     onSuccess: (response: SignEthereumMessageResponse) => void;
     onCancel: ErrorHandler;
   }): void {
-    throw new Error("Method not implemented.");
+    this.openCoinbaseWalletDeeplink();
   }
+
   signEthereumTransaction(_options: {
     request: SignEthereumTransactionRequest;
     onSuccess: (response: SignEthereumTransactionResponse) => void;
     onCancel: ErrorHandler;
   }): void {
-    throw new Error("Method not implemented.");
+    this.openCoinbaseWalletDeeplink();
   }
+
   submitEthereumTransaction(_options: {
     request: SubmitEthereumTransactionRequest;
     onSuccess: (response: SubmitEthereumTransactionResponse) => void;
     onCancel: ErrorHandler;
   }): void {
-    throw new Error("Method not implemented.");
+    this.openCoinbaseWalletDeeplink();
   }
+
   ethereumAddressFromSignedMessage(_options: {
     request: EthereumAddressFromSignedMessageRequest;
     onSuccess: (response: EthereumAddressFromSignedMessageResponse) => void;
   }): void {
-    throw new Error("Method not implemented.");
+    this.openCoinbaseWalletDeeplink();
   }
-  hideRequestEthereumAccounts(): void {
-    throw new Error("Method not implemented.");
-  }
+
+  attach() {} // no-op
+
+  reloadUI() {} // no-op
+
+  hideRequestEthereumAccounts() {} // no-op
+
+  setStandalone?(_status: boolean) {} // no-op
+
+  setAppSrc(_src: string) {} // no-op
+
+  setConnectDisabled(_: boolean) {} // no-op
+
   showConnecting(_options: {
     isUnlinkedErrorState?: boolean | undefined;
     onCancel: ErrorHandler;
     onResetConnection: () => void;
   }): () => void {
-    throw new Error("Method not implemented.");
+    return () => {}; // no-op
   }
-  reloadUI(): void {
-    throw new Error("Method not implemented.");
-  }
+
   inlineAccountsResponse(): boolean {
-    throw new Error("Method not implemented.");
+    return false;
   }
+
   inlineAddEthereumChain(_chainId: string): boolean {
-    throw new Error("Method not implemented.");
+    return false;
   }
+
   inlineWatchAsset(): boolean {
-    throw new Error("Method not implemented.");
+    return false;
   }
+
   inlineSwitchEthereumChain(): boolean {
-    throw new Error("Method not implemented.");
+    return false;
   }
-  setStandalone?(_status: boolean): void {
-    throw new Error("Method not implemented.");
-  }
+
   isStandalone(): boolean {
-    throw new Error("Method not implemented.");
-  }
-  setAppSrc(_src: string): void {
-    throw new Error("Method not implemented.");
-  }
-  setConnectDisabled(_: boolean): void {
-    throw new Error("Method not implemented.");
+    return false;
   }
 }
