@@ -7,7 +7,7 @@ import { Snackbar } from "../components/Snackbar/Snackbar";
 import { WalletLinkRelayUI } from "./WalletLinkRelayUI";
 
 describe("WalletLinkRelayUI", () => {
-  const walletSDKUI = new WalletLinkRelayUI({
+  const WalletLinkRelayUI = new WalletLinkRelayUI({
     darkMode: false,
     version: "1.2.1",
     // @ts-expect-error mock session
@@ -20,9 +20,9 @@ describe("WalletLinkRelayUI", () => {
   render("<div />");
 
   test("@attach", () => {
-    walletSDKUI.attach();
+    WalletLinkRelayUI.attach();
 
-    expect(walletSDKUI).toMatchObject({
+    expect(WalletLinkRelayUI).toMatchObject({
       attached: true,
     });
 
@@ -37,7 +37,7 @@ describe("WalletLinkRelayUI", () => {
 
     const onResetConnection = () => {};
     const onCancel = () => {};
-    walletSDKUI.showConnecting({
+    WalletLinkRelayUI.showConnecting({
       onResetConnection,
       onCancel,
     });
@@ -75,7 +75,7 @@ describe("WalletLinkRelayUI", () => {
 
     const onResetConnection = () => {};
     const onCancel = () => {};
-    walletSDKUI.showConnecting({
+    WalletLinkRelayUI.showConnecting({
       isUnlinkedErrorState: true,
       onResetConnection,
       onCancel,
@@ -102,7 +102,7 @@ describe("WalletLinkRelayUI", () => {
 
   test("@setConnectDisabled", () => {
     const linkFlowMock = jest.spyOn(LinkFlow.prototype, "setConnectDisabled");
-    walletSDKUI.setConnectDisabled(true);
+    WalletLinkRelayUI.setConnectDisabled(true);
 
     expect(linkFlowMock).toBeCalledWith(true);
   });
@@ -110,14 +110,14 @@ describe("WalletLinkRelayUI", () => {
   test("@requestEthereumAccounts", () => {
     const linkFlowMock = jest.spyOn(LinkFlow.prototype, "open");
     const onCancel = () => {};
-    walletSDKUI.requestEthereumAccounts({ onCancel });
+    WalletLinkRelayUI.requestEthereumAccounts({ onCancel });
 
     expect(linkFlowMock).toBeCalledWith({ onCancel });
   });
 
   test("@hideEthereumAccounts", () => {
     const linkFlowMock = jest.spyOn(LinkFlow.prototype, "close");
-    walletSDKUI.hideRequestEthereumAccounts();
+    WalletLinkRelayUI.hideRequestEthereumAccounts();
 
     expect(linkFlowMock).toBeCalled();
   });
