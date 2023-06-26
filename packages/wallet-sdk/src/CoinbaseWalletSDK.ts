@@ -111,7 +111,7 @@ export class CoinbaseWalletSDK {
     const isMobile = isMobileWeb();
     const uiConstructor =
       options.uiConstructor ||
-      (opts => (isMobile ? new MobileRelayUI() : new WalletLinkRelayUI(opts)));
+      (opts => new (isMobile ? MobileRelayUI : WalletLinkRelayUI)(opts));
 
     const relayOption = {
       linkAPIUrl,

@@ -1,3 +1,5 @@
+import { Observable, Subject, Subscription } from "rxjs";
+
 import { ErrorHandler } from "../errors";
 import {
   EthereumAddressFromSignedMessageRequest,
@@ -12,9 +14,66 @@ import {
   SubmitEthereumTransactionResponse,
 } from "../relay/Web3Response";
 import { AddressString, ProviderType } from "../types";
-import { WalletUI } from "./WalletUI";
+import { createQrUrl } from "../util";
+import { WalletUI, WalletUIOptions } from "./WalletUI";
 
 export class MobileRelayUI implements WalletUI {
+  private readonly version: string;
+  private readonly sessionId: string;
+  private readonly sessionSecret: string;
+  private readonly linkAPIUrl: string;
+
+  private readonly connected$: Observable<boolean>;
+  private readonly chainId$: Subject<number>;
+  private readonly subscriptions = new Subscription();
+
+  private isConnected = false;
+  private chainId = 1;
+  private walletLinkUrl: string | null = null;
+
+  constructor(options: Readonly<WalletUIOptions>) {
+    this.version = options.version;
+    this.sessionId = options.session.id;
+    this.sessionSecret = options.session.secret;
+    this.linkAPIUrl = options.linkAPIUrl;
+    this.connected$ = options.connected$;
+    this.chainId$ = options.chainId$;
+  }
+
+  attach() {
+    this.createWalletLinkUrl();
+
+    this.subscriptions.add(
+      this.connected$.subscribe(v => {
+        if (this.isConnected !== v) {
+          this.isConnected = v;
+          this.createWalletLinkUrl();
+        }
+      }),
+    );
+
+    this.subscriptions.add(
+      this.chainId$.subscribe(chainId => {
+        if (this.chainId !== chainId) {
+          this.chainId = chainId;
+          this.createWalletLinkUrl();
+        }
+      }),
+    );
+  }
+
+  private createWalletLinkUrl() {
+    this.walletLinkUrl = createQrUrl(
+      this.sessionId,
+      this.sessionSecret,
+      this.linkAPIUrl,
+      false,
+      this.version,
+      this.chainId,
+    );
+    console.log("walletLinkUrl", this.walletLinkUrl);
+  }
+
   private openCoinbaseWalletDeeplink(extraParams?: {
     [key: string]: string;
   }): void {
@@ -35,7 +94,11 @@ export class MobileRelayUI implements WalletUI {
     onCancel: ErrorHandler;
     onAccounts?: ((accounts: [AddressString]) => void) | undefined;
   }): void {
-    const wl_url = "TODO";
+    const wl_url = this.walletLinkUrl;
+    if (!wl_url) {
+      throw new Error("WalletLinkUrl is not set");
+    }
+
     this.openCoinbaseWalletDeeplink({ wl_url });
   }
 
@@ -114,8 +177,6 @@ export class MobileRelayUI implements WalletUI {
   }): void {
     this.openCoinbaseWalletDeeplink();
   }
-
-  attach() {} // no-op
 
   reloadUI() {} // no-op
 
