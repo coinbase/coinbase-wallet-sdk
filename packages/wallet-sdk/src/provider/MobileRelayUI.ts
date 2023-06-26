@@ -1,4 +1,4 @@
-import { Observable, Subject, Subscription } from "rxjs";
+import { Subject, Subscription } from "rxjs";
 
 import { ErrorHandler } from "../errors";
 import {
@@ -23,11 +23,9 @@ export class MobileRelayUI implements WalletUI {
   private readonly sessionSecret: string;
   private readonly linkAPIUrl: string;
 
-  private readonly connected$: Observable<boolean>;
   private readonly chainId$: Subject<number>;
   private readonly subscriptions = new Subscription();
 
-  private isConnected = false;
   private chainId = 1;
   private walletLinkUrl: string | null = null;
 
@@ -36,21 +34,11 @@ export class MobileRelayUI implements WalletUI {
     this.sessionId = options.session.id;
     this.sessionSecret = options.session.secret;
     this.linkAPIUrl = options.linkAPIUrl;
-    this.connected$ = options.connected$;
     this.chainId$ = options.chainId$;
   }
 
   attach() {
     this.createWalletLinkUrl();
-
-    this.subscriptions.add(
-      this.connected$.subscribe(v => {
-        if (this.isConnected !== v) {
-          this.isConnected = v;
-          this.createWalletLinkUrl();
-        }
-      }),
-    );
 
     this.subscriptions.add(
       this.chainId$.subscribe(chainId => {
@@ -63,7 +51,7 @@ export class MobileRelayUI implements WalletUI {
   }
 
   private createWalletLinkUrl() {
-    this.walletLinkUrl = createQrUrl(
+    const walletLinkUrl = createQrUrl(
       this.sessionId,
       this.sessionSecret,
       this.linkAPIUrl,
@@ -71,7 +59,10 @@ export class MobileRelayUI implements WalletUI {
       this.version,
       this.chainId,
     );
-    console.log("walletLinkUrl", this.walletLinkUrl);
+
+    if (this.walletLinkUrl !== walletLinkUrl) {
+      this.walletLinkUrl = walletLinkUrl;
+    }
   }
 
   private openCoinbaseWalletDeeplink(extraParams?: {
