@@ -1,6 +1,9 @@
-import { isInIFrame } from "../util";
+import { MobileRelayUI } from "../provider/MobileRelayUI";
+import { getLocation } from "../util";
 import { WalletLinkRelay, WalletLinkRelayOptions } from "./WalletLinkRelay";
 import { CancelablePromise } from "./WalletSDKRelayAbstract";
+import { Web3Method } from "./Web3Method";
+import { Web3Request } from "./Web3Request";
 import { RequestEthereumAccountsResponse } from "./Web3Response";
 
 export class MobileRelay extends WalletLinkRelay {
@@ -20,22 +23,40 @@ export class MobileRelay extends WalletLinkRelay {
     // TODO: Implement & present in-page wallet picker instead of navigating to www.coinbase.com/connect-dapp
     return {
       promise: new Promise(() => {
-        let location: Location;
-        try {
-          if (isInIFrame() && window.top) {
-            location = window.top.location;
-          } else {
-            location = window.location;
-          }
-        } catch (e) {
-          location = window.location;
-        }
-
+        const location = getLocation();
         location.href = `https://www.coinbase.com/connect-dapp?uri=${encodeURIComponent(
           location.href,
         )}`;
       }),
       cancel: () => {},
     };
+  }
+
+  // override
+  protected publishWeb3RequestEvent(id: string, request: Web3Request): void {
+    super.publishWeb3RequestEvent(id, request);
+
+    if (this._enableMobileWalletLink && this.ui instanceof MobileRelayUI) {
+      this.openCoinbaseWalletDeeplink(request, this.ui);
+    }
+  }
+
+  private openCoinbaseWalletDeeplink(
+    request: Web3Request,
+    mobileRelayUI: MobileRelayUI,
+  ): void {
+    const url = new URL("https://go.cb-w.com/walletlink");
+
+    url.searchParams.append("redirect_url", window.location.href);
+
+    if (request.method === Web3Method.requestEthereumAccounts) {
+      const wlUrl = mobileRelayUI?.walletLinkUrl;
+      if (!wlUrl) throw new Error("WalletLinkUrl is not set");
+      url.searchParams.append("wl_url", wlUrl);
+    }
+
+    this.diagnostic?.log(`Opening Coinbase Wallet deeplink ${url.href}`);
+
+    window.open(url.href, "_blank");
   }
 }

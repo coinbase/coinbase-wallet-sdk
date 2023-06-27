@@ -23,11 +23,15 @@ export class MobileRelayUI implements WalletUI {
   private readonly sessionSecret: string;
   private readonly linkAPIUrl: string;
 
+  private chainId = 1;
   private readonly chainId$: Subject<number>;
   private readonly subscriptions = new Subscription();
 
-  private chainId = 1;
-  private walletLinkUrl: string | null = null;
+  private _walletLinkUrl: string | null = null;
+
+  get walletLinkUrl(): string | null {
+    return this._walletLinkUrl;
+  }
 
   constructor(options: Readonly<WalletUIOptions>) {
     this.version = options.version;
@@ -38,19 +42,19 @@ export class MobileRelayUI implements WalletUI {
   }
 
   attach() {
-    this.createWalletLinkUrl();
+    this.getWalletLinkUrl();
 
     this.subscriptions.add(
       this.chainId$.subscribe(chainId => {
         if (this.chainId !== chainId) {
           this.chainId = chainId;
-          this.createWalletLinkUrl();
+          this.getWalletLinkUrl();
         }
       }),
     );
   }
 
-  private createWalletLinkUrl() {
+  private getWalletLinkUrl() {
     const walletLinkUrl = createQrUrl(
       this.sessionId,
       this.sessionSecret,
@@ -61,37 +65,16 @@ export class MobileRelayUI implements WalletUI {
     );
 
     if (this.walletLinkUrl !== walletLinkUrl) {
-      this.walletLinkUrl = walletLinkUrl;
+      this._walletLinkUrl = walletLinkUrl;
     }
   }
 
-  private openCoinbaseWalletDeeplink(extraParams?: {
-    [key: string]: string;
-  }): void {
-    const url = new URL("https://go.cb-w.com/walletlink");
-
-    const param = {
-      redirect_url: window.location.href,
-      ...extraParams,
-    };
-    Object.entries(param).forEach(([key, value]) => {
-      url.searchParams.append(key, value);
-    });
-
-    window.open(url.href, "_blank");
-  }
+  // no-op
 
   requestEthereumAccounts(_options: {
     onCancel: ErrorHandler;
     onAccounts?: ((accounts: [AddressString]) => void) | undefined;
-  }): void {
-    const wl_url = this.walletLinkUrl;
-    if (!wl_url) {
-      throw new Error("WalletLinkUrl is not set");
-    }
-
-    this.openCoinbaseWalletDeeplink({ wl_url });
-  }
+  }): void {} // no-op
 
   addEthereumChain(_options: {
     onCancel: ErrorHandler;
@@ -104,9 +87,7 @@ export class MobileRelayUI implements WalletUI {
     nativeCurrency?:
       | { name: string; symbol: string; decimals: number }
       | undefined;
-  }): void {
-    this.openCoinbaseWalletDeeplink();
-  }
+  }): void {} // no-op
 
   watchAsset(_options: {
     onCancel: ErrorHandler;
@@ -117,57 +98,43 @@ export class MobileRelayUI implements WalletUI {
     decimals?: number | undefined;
     image?: string | undefined;
     chainId?: string | undefined;
-  }): void {
-    this.openCoinbaseWalletDeeplink();
-  }
+  }): void {} // no-op
 
   selectProvider?(_options: {
     onCancel: ErrorHandler;
     onApprove: (selectedProviderKey: ProviderType) => void;
     providerOptions: ProviderType[];
-  }): void {
-    this.openCoinbaseWalletDeeplink();
-  }
+  }): void {} // no-op
 
   switchEthereumChain(_options: {
     onCancel: ErrorHandler;
     onApprove: (rpcUrl: string) => void;
     chainId: string;
     address?: string | undefined;
-  }): void {
-    this.openCoinbaseWalletDeeplink();
-  }
+  }): void {} // no-op
 
   signEthereumMessage(_options: {
     request: SignEthereumMessageRequest;
     onSuccess: (response: SignEthereumMessageResponse) => void;
     onCancel: ErrorHandler;
-  }): void {
-    this.openCoinbaseWalletDeeplink();
-  }
+  }): void {} // no-op
 
   signEthereumTransaction(_options: {
     request: SignEthereumTransactionRequest;
     onSuccess: (response: SignEthereumTransactionResponse) => void;
     onCancel: ErrorHandler;
-  }): void {
-    this.openCoinbaseWalletDeeplink();
-  }
+  }): void {} // no-op
 
   submitEthereumTransaction(_options: {
     request: SubmitEthereumTransactionRequest;
     onSuccess: (response: SubmitEthereumTransactionResponse) => void;
     onCancel: ErrorHandler;
-  }): void {
-    this.openCoinbaseWalletDeeplink();
-  }
+  }): void {} // no-op
 
   ethereumAddressFromSignedMessage(_options: {
     request: EthereumAddressFromSignedMessageRequest;
     onSuccess: (response: EthereumAddressFromSignedMessageResponse) => void;
-  }): void {
-    this.openCoinbaseWalletDeeplink();
-  }
+  }): void {} // no-op
 
   reloadUI() {} // no-op
 

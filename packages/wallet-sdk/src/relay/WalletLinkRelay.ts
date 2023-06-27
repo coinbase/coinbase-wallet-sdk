@@ -113,7 +113,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   private dappDefaultChain = 1;
   private readonly options: WalletLinkRelayOptions;
 
-  private ui: WalletUI;
+  protected ui: WalletUI;
 
   private appName = "";
   private appLogoUrl: string | null = null;
@@ -708,7 +708,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
     this.dappDefaultChainSubject.next(chainId);
   }
 
-  private publishWeb3RequestEvent(id: string, request: Web3Request): void {
+  protected publishWeb3RequestEvent(id: string, request: Web3Request): void {
     const message = Web3RequestMessage({ id, request });
     const storedSession = Session.load(this.storage);
     this.diagnostic?.log(EVENTS.WEB3_REQUEST, {
