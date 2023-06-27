@@ -1,8 +1,12 @@
+import { Observable } from "rxjs";
+
 import { getLocation } from "../util";
+import { RelayMessage, RelayMessageType } from "./RelayMessage";
 import { WalletLinkRelay, WalletLinkRelayOptions } from "./WalletLinkRelay";
 import { CancelablePromise } from "./WalletSDKRelayAbstract";
 import { Web3Method } from "./Web3Method";
 import { Web3Request } from "./Web3Request";
+import { Web3RequestMessage } from "./Web3RequestMessage";
 import { RequestEthereumAccountsResponse } from "./Web3Response";
 
 export class MobileRelay extends WalletLinkRelay {
@@ -32,12 +36,23 @@ export class MobileRelay extends WalletLinkRelay {
   }
 
   // override
-  protected publishWeb3RequestEvent(id: string, request: Web3Request): void {
-    super.publishWeb3RequestEvent(id, request);
+  protected publishEvent(
+    event: string,
+    message: RelayMessage,
+    callWebhook: boolean,
+  ): Observable<string> {
+    const observable = super.publishEvent(event, message, callWebhook);
 
-    if (this._enableMobileWalletLink) {
-      this.openCoinbaseWalletDeeplink(request);
+    if (
+      this._enableMobileWalletLink &&
+      event === "Web3Request" &&
+      message.type === RelayMessageType.WEB3_REQUEST
+    ) {
+      const web3RequestMessage = message as Web3RequestMessage;
+      this.openCoinbaseWalletDeeplink(web3RequestMessage.request);
     }
+
+    return observable;
   }
 
   private openCoinbaseWalletDeeplink(request: Web3Request): void {
