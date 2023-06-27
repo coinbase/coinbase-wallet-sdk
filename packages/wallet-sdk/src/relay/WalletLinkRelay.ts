@@ -113,7 +113,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   private dappDefaultChain = 1;
   private readonly options: WalletLinkRelayOptions;
 
-  protected ui: WalletUI;
+  private ui: WalletUI;
 
   private appName = "";
   private appLogoUrl: string | null = null;

@@ -1,5 +1,3 @@
-import { Subject, Subscription } from "rxjs";
-
 import { ErrorHandler } from "../errors";
 import {
   EthereumAddressFromSignedMessageRequest,
@@ -14,62 +12,13 @@ import {
   SubmitEthereumTransactionResponse,
 } from "../relay/Web3Response";
 import { AddressString, ProviderType } from "../types";
-import { createQrUrl } from "../util";
 import { WalletUI, WalletUIOptions } from "./WalletUI";
 
+// TODO: Implement & present in-page wallet picker instead of navigating to www.coinbase.com/connect-dapp
 export class MobileRelayUI implements WalletUI {
-  private readonly version: string;
-  private readonly sessionId: string;
-  private readonly sessionSecret: string;
-  private readonly linkAPIUrl: string;
+  constructor(_options: Readonly<WalletUIOptions>) {}
 
-  private chainId = 1;
-  private readonly chainId$: Subject<number>;
-  private readonly subscriptions = new Subscription();
-
-  private _walletLinkUrl: string | null = null;
-
-  get walletLinkUrl(): string | null {
-    return this._walletLinkUrl;
-  }
-
-  constructor(options: Readonly<WalletUIOptions>) {
-    this.version = options.version;
-    this.sessionId = options.session.id;
-    this.sessionSecret = options.session.secret;
-    this.linkAPIUrl = options.linkAPIUrl;
-    this.chainId$ = options.chainId$;
-  }
-
-  attach() {
-    this.getWalletLinkUrl();
-
-    this.subscriptions.add(
-      this.chainId$.subscribe(chainId => {
-        if (this.chainId !== chainId) {
-          this.chainId = chainId;
-          this.getWalletLinkUrl();
-        }
-      }),
-    );
-  }
-
-  private getWalletLinkUrl() {
-    const walletLinkUrl = createQrUrl(
-      this.sessionId,
-      this.sessionSecret,
-      this.linkAPIUrl,
-      false,
-      this.version,
-      this.chainId,
-    );
-
-    if (this.walletLinkUrl !== walletLinkUrl) {
-      this._walletLinkUrl = walletLinkUrl;
-    }
-  }
-
-  // no-op
+  attach() {} // no-op
 
   requestEthereumAccounts(_options: {
     onCancel: ErrorHandler;

@@ -1,4 +1,3 @@
-import { MobileRelayUI } from "../provider/MobileRelayUI";
 import { getLocation } from "../util";
 import { WalletLinkRelay, WalletLinkRelayOptions } from "./WalletLinkRelay";
 import { CancelablePromise } from "./WalletSDKRelayAbstract";
@@ -36,21 +35,18 @@ export class MobileRelay extends WalletLinkRelay {
   protected publishWeb3RequestEvent(id: string, request: Web3Request): void {
     super.publishWeb3RequestEvent(id, request);
 
-    if (this._enableMobileWalletLink && this.ui instanceof MobileRelayUI) {
-      this.openCoinbaseWalletDeeplink(request, this.ui);
+    if (this._enableMobileWalletLink) {
+      this.openCoinbaseWalletDeeplink(request);
     }
   }
 
-  private openCoinbaseWalletDeeplink(
-    request: Web3Request,
-    mobileRelayUI: MobileRelayUI,
-  ): void {
+  private openCoinbaseWalletDeeplink(request: Web3Request): void {
     const url = new URL("https://go.cb-w.com/walletlink");
 
     url.searchParams.append("redirect_url", window.location.href);
 
     if (request.method === Web3Method.requestEthereumAccounts) {
-      const wlUrl = mobileRelayUI?.walletLinkUrl;
+      const wlUrl = this.getQRCodeUrl();
       if (!wlUrl) throw new Error("WalletLinkUrl is not set");
       url.searchParams.append("wl_url", wlUrl);
     }
