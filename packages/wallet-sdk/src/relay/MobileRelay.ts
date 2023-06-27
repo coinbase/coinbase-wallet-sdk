@@ -36,7 +36,9 @@ export class MobileRelay extends WalletLinkRelay {
     super.publishWeb3RequestEvent(id, request);
 
     if (this._enableMobileWalletLink) {
-      this.openCoinbaseWalletDeeplink(request);
+      setTimeout(() => {
+        this.openCoinbaseWalletDeeplink(request);
+      }, 499);
     }
   }
 
