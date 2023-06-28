@@ -19,12 +19,31 @@ interface BaseWeb3Request<
   params: Params;
 }
 
+type RequestEthereumAccountsBaseParams = {
+  appName: string;
+  appLogoUrl: string | null;
+};
+
 export type RequestEthereumAccountsRequest = BaseWeb3Request<
   Web3Method.requestEthereumAccounts,
-  {
-    appName: string;
-    appLogoUrl: string | null;
-  }
+  RequestEthereumAccountsBaseParams
+>;
+
+export type ConnectAndSignInParams = {
+  domain: string;
+  aud: string;
+  version: string;
+  type: string;
+  nonce: string;
+  iat: string;
+  chainId: string;
+  statement?: string;
+  resources?: string[];
+};
+
+export type ConnectAndSignInRequest = BaseWeb3Request<
+  Web3Method.connectAndSignIn,
+  RequestEthereumAccountsBaseParams & ConnectAndSignInParams
 >;
 
 export type AddEthereumChainRequest = BaseWeb3Request<
@@ -143,6 +162,7 @@ export type WatchAssetRequest = BaseWeb3Request<
 
 export type Web3Request =
   | RequestEthereumAccountsRequest
+  | ConnectAndSignInRequest
   | SignEthereumMessageRequest
   | SignEthereumTransactionRequest
   | SubmitEthereumTransactionRequest
