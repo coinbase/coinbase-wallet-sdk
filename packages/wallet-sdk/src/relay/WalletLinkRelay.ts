@@ -863,7 +863,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   // WIP
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  private connectAndSignIn(_params: {
+  private connectAndSignIn(params: {
     nonce: string;
     statement?: string;
     resources?: string[];
@@ -878,11 +878,11 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
         aud: window.location.href,
         version: "1",
         type: "eip4361",
-        nonce: _params.nonce,
+        nonce: params.nonce,
         iat: new Date().toISOString(),
         chainId: `eip155:${this.dappDefaultChain}`,
-        statement: _params.statement,
-        resources: _params.resources,
+        statement: params.statement,
+        resources: params.resources,
       },
     });
   }
