@@ -1,4 +1,9 @@
+import {
+  RedirectDialog,
+  RedirectDialogProps,
+} from "../components/RedirectDialog/RedirectDialog";
 import { ErrorHandler } from "../errors";
+import { injectCssReset } from "../lib/cssReset";
 import {
   EthereumAddressFromSignedMessageRequest,
   SignEthereumMessageRequest,
@@ -16,9 +21,44 @@ import { WalletUI, WalletUIOptions } from "./WalletUI";
 
 // TODO: Implement & present in-page wallet picker instead of navigating to www.coinbase.com/connect-dapp
 export class MobileRelayUI implements WalletUI {
-  constructor(_options: Readonly<WalletUIOptions>) {}
+  private readonly redirectDialog: RedirectDialog;
+  private attached = false;
 
-  attach() {} // no-op
+  constructor(options: Readonly<WalletUIOptions>) {
+    this.redirectDialog = new RedirectDialog({ darkMode: options.darkMode });
+  }
+
+  attach() {
+    if (this.attached) {
+      throw new Error("Coinbase Wallet SDK UI is already attached");
+    }
+    const el = document.documentElement;
+    const container = document.createElement("div");
+    container.className = "-cbwsdk-css-reset";
+    el.appendChild(container);
+
+    this.redirectDialog.attach(container);
+    this.attached = true;
+
+    injectCssReset();
+  }
+
+  showConnecting(_options: {
+    isUnlinkedErrorState?: boolean | undefined;
+    onCancel: ErrorHandler;
+    onResetConnection: () => void;
+  }): () => void {
+    const redirectDialogProps: RedirectDialogProps = {
+      message: "Connecting to Coinbase Wallet...",
+      redirectUrl: "https://www.coinbase.com/connect-dapp",
+    };
+
+    this.redirectDialog.presentItem(redirectDialogProps);
+
+    return () => {
+      this.redirectDialog.clear();
+    };
+  }
 
   requestEthereumAccounts(_options: {
     onCancel: ErrorHandler;
@@ -94,14 +134,6 @@ export class MobileRelayUI implements WalletUI {
   setAppSrc(_src: string) {} // no-op
 
   setConnectDisabled(_: boolean) {} // no-op
-
-  showConnecting(_options: {
-    isUnlinkedErrorState?: boolean | undefined;
-    onCancel: ErrorHandler;
-    onResetConnection: () => void;
-  }): () => void {
-    return () => {}; // no-op
-  }
 
   inlineAccountsResponse(): boolean {
     return false;
