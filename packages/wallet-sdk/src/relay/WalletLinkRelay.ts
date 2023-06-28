@@ -49,6 +49,7 @@ import {
 import { WalletSDKRelayEventManager } from "./WalletSDKRelayEventManager";
 import { Web3Method } from "./Web3Method";
 import {
+  ConnectAndSignInRequest,
   EthereumAddressFromSignedMessageRequest,
   GenericRequest,
   ScanQRCodeRequest,
@@ -61,6 +62,7 @@ import { Web3RequestCanceledMessage } from "./Web3RequestCanceledMessage";
 import { Web3RequestMessage } from "./Web3RequestMessage";
 import {
   AddEthereumChainResponse,
+  ConnectAndSignInResponse,
   EthereumAddressFromSignedMessageResponse,
   GenericResponse,
   isErrorResponse,
@@ -856,6 +858,33 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       callback(message.response);
       this.relayEventManager.callbacks.delete(message.id);
     }
+  }
+
+  // WIP
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  private connectAndSignIn(_params: {
+    nonce: string;
+    statement?: string;
+    resources?: string[];
+  }): CancelablePromise<ConnectAndSignInResponse> {
+    return this.sendRequest<ConnectAndSignInRequest, ConnectAndSignInResponse>({
+      method: Web3Method.connectAndSignIn,
+      params: {
+        appName: this.appName,
+        appLogoUrl: this.appLogoUrl,
+
+        domain: window.location.hostname,
+        aud: window.location.href,
+        version: "1",
+        type: "eip4361",
+        nonce: _params.nonce,
+        iat: new Date().toISOString(),
+        chainId: `eip155:${this.dappDefaultChain}`,
+        statement: _params.statement,
+        resources: _params.resources,
+      },
+    });
   }
 
   public requestEthereumAccounts(): CancelablePromise<RequestEthereumAccountsResponse> {
