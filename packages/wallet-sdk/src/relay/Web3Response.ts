@@ -26,6 +26,12 @@ export type RequestEthereumAccountsResponse = BaseWeb3Response<
   AddressString[] // an array of ethereum addresses
 >;
 
+export type ConnectAndSignInResponse = BaseWeb3Response<{
+  addresses: AddressString[];
+  message: string;
+  signature: HexString;
+}>;
+
 export type AddEthereumChainResponse = BaseWeb3Response<AddResponse>; // was request approved
 
 export type WatchAssetResponse = BaseWeb3Response<boolean>;
@@ -129,6 +135,7 @@ export type MakeEthereumJSONRPCResponse = BaseWeb3Response<unknown>;
 export type Web3Response =
   | ErrorResponse
   | RequestEthereumAccountsResponse
+  | ConnectAndSignInResponse
   | SignEthereumMessageResponse
   | SignEthereumTransactionResponse
   | SubmitEthereumTransactionResponse
