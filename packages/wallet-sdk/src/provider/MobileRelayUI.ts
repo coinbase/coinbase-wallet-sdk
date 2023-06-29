@@ -69,7 +69,6 @@ export class MobileRelayUI implements WalletUI {
   }
 
   hideRequestEthereumAccounts() {
-    console.log("hideRequestEthereumAccounts on mobilerealyui.ts");
     this.redirectDialog.clear();
   }
 
