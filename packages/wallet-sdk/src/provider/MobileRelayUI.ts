@@ -20,7 +20,7 @@ export class MobileRelayUI implements WalletUI {
   private readonly redirectDialog: RedirectDialog;
   private attached = false;
 
-  constructor(_options: Readonly<WalletUIOptions>) {
+  constructor() {
     this.redirectDialog = new RedirectDialog();
   }
 
