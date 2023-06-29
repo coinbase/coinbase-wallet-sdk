@@ -13,15 +13,17 @@ import {
   SubmitEthereumTransactionResponse,
 } from "../relay/Web3Response";
 import { AddressString, ProviderType } from "../types";
-import { WalletUI } from "./WalletUI";
+import { WalletUI, WalletUIOptions } from "./WalletUI";
 
 // TODO: Implement & present in-page wallet picker instead of navigating to www.coinbase.com/connect-dapp
 export class MobileRelayUI implements WalletUI {
   private readonly redirectDialog: RedirectDialog;
   private attached = false;
+  private darkMode = false;
 
-  constructor() {
+  constructor(options: Readonly<WalletUIOptions>) {
     this.redirectDialog = new RedirectDialog();
+    this.darkMode = options.darkMode;
   }
 
   attach() {
@@ -47,6 +49,7 @@ export class MobileRelayUI implements WalletUI {
     this.redirectDialog.present({
       title: "Redirecting to Coinbase Wallet...",
       buttonText: "Open",
+      darkMode: this.darkMode,
       onButtonClick: () => {
         this.redirectToCoinbaseWallet(walletLinkUrl);
       },

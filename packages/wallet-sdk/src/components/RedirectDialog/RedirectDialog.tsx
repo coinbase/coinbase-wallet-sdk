@@ -8,6 +8,7 @@ import css from "./RedirectDialog-css";
 type RedirectDialogProps = {
   title: string;
   buttonText: string;
+  darkMode: boolean;
   onButtonClick: () => void;
 };
 
@@ -51,13 +52,15 @@ const RedirectDialogContent: FunctionComponent<
   RedirectDialogProps & {
     onDismiss: () => void;
   }
-> = ({ title, buttonText, onButtonClick, onDismiss }) => {
+> = ({ title, buttonText, darkMode, onButtonClick, onDismiss }) => {
+  const theme = darkMode ? "dark" : "light";
+
   return (
-    <SnackbarContainer darkMode={false}>
-      <div class={clsx("-cbwsdk-redirect-dialog")}>
+    <SnackbarContainer darkMode={darkMode}>
+      <div class="-cbwsdk-redirect-dialog">
         <style>{css}</style>
         <div class="-cbwsdk-redirect-dialog-backdrop" onClick={onDismiss} />
-        <div class="-cbwsdk-redirect-dialog-box">
+        <div class={(clsx("-cbwsdk-redirect-dialog-box"), theme)}>
           <p>{title}</p>
           <button onClick={onButtonClick}>{buttonText}</button>
         </div>
