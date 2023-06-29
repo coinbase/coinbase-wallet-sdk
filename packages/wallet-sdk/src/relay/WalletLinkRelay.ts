@@ -93,7 +93,7 @@ export interface WalletLinkRelayOptions {
   diagnosticLogger?: DiagnosticLogger;
   eventListener?: EventListener;
   reloadOnDisconnect?: boolean;
-  useMobileWalletLink?: boolean;
+  enableMobileWalletLink?: boolean;
 }
 
 export class WalletLinkRelay extends WalletSDKRelayAbstract {
@@ -115,7 +115,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   private dappDefaultChain = 1;
   private readonly options: WalletLinkRelayOptions;
 
-  private ui: WalletUI;
+  protected ui: WalletUI;
 
   private appName = "";
   private appLogoUrl: string | null = null;
@@ -710,7 +710,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
     this.dappDefaultChainSubject.next(chainId);
   }
 
-  private publishWeb3RequestEvent(id: string, request: Web3Request): void {
+  protected publishWeb3RequestEvent(id: string, request: Web3Request): void {
     const message = Web3RequestMessage({ id, request });
     const storedSession = Session.load(this.storage);
     this.diagnostic?.log(EVENTS.WEB3_REQUEST, {
@@ -863,7 +863,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   // WIP
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  private connectAndSignIn(_params: {
+  private connectAndSignIn(params: {
     nonce: string;
     statement?: string;
     resources?: string[];
@@ -878,11 +878,11 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
         aud: window.location.href,
         version: "1",
         type: "eip4361",
-        nonce: _params.nonce,
+        nonce: params.nonce,
         iat: new Date().toISOString(),
         chainId: `eip155:${this.dappDefaultChain}`,
-        statement: _params.statement,
-        resources: _params.resources,
+        statement: params.statement,
+        resources: params.resources,
       },
     });
   }

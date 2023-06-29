@@ -22,7 +22,7 @@ export default {
     "./src/provider/SolanaProvider.ts",
     "./src/provider/FilterPolyfill.ts",
     "./src/provider/SubscriptionManager.ts",
-    "./src/provider/WalletSDKUI.ts",
+    "./src/provider/WalletLinkRelayUI.ts",
     "./src/relay/aes256gcm.ts",
     "./src/relay/Session.ts",
     "./src/relay/WalletSDKRelay.ts",
