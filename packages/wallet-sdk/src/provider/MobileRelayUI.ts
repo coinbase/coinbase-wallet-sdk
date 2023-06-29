@@ -32,34 +32,49 @@ export class MobileRelayUI implements WalletUI {
     this.attached = true;
   }
 
+  private redirectToCoinbaseWallet(walletLinkUrl?: string): void {
+    const url = new URL("https://go.cb-w.com/walletlink");
+
+    url.searchParams.append("redirect_url", window.location.href);
+    if (walletLinkUrl) {
+      url.searchParams.append("wl_url", walletLinkUrl);
+    }
+
+    window.open(url.href, "_blank");
+  }
+
+  openCoinbaseWalletDeeplink(walletLinkUrl?: string): void {
+    this.redirectDialog.present({
+      title: "Redirecting to Coinbase Wallet...",
+      buttonText: "Open",
+      onButtonClick: () => {
+        this.redirectToCoinbaseWallet(walletLinkUrl);
+      },
+    });
+
+    setTimeout(() => {
+      this.redirectToCoinbaseWallet(walletLinkUrl);
+    }, 99);
+  }
+
   showConnecting(_options: {
     isUnlinkedErrorState?: boolean | undefined;
     onCancel: ErrorHandler;
     onResetConnection: () => void;
   }): () => void {
-    this.redirectDialog.present(() => {
-      this.openCoinbaseWalletDeeplink();
-    });
-
+    // it uses the return callback to clear the dialog
     return () => {
       this.redirectDialog.clear();
     };
   }
 
-  openCoinbaseWalletDeeplink(extraParams?: { [key: string]: string }): void {
-    const url = new URL("https://go.cb-w.com/walletlink");
-    const param = {
-      redirect_url: window.location.href,
-      ...extraParams,
-    };
-    Object.entries(param).forEach(([key, value]) => {
-      url.searchParams.append(key, value);
-    });
-
-    window.open(url.href, "_blank");
+  hideRequestEthereumAccounts() {
+    console.log("hideRequestEthereumAccounts on mobilerealyui.ts");
+    this.redirectDialog.clear();
   }
 
-  // This method is to show ConnectDialog, which is not needed for mobile
+  // -- Methods below are not needed for mobile
+
   requestEthereumAccounts(_options: {
     onCancel: ErrorHandler;
     onAccounts?: ((accounts: [AddressString]) => void) | undefined;
@@ -126,8 +141,6 @@ export class MobileRelayUI implements WalletUI {
   }): void {} // no-op
 
   reloadUI() {} // no-op
-
-  hideRequestEthereumAccounts() {} // no-op
 
   setStandalone?(_status: boolean) {} // no-op
 

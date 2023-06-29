@@ -40,11 +40,16 @@ export class MobileRelay extends WalletLinkRelay {
       return;
 
     // For mobile relay requests, open the Coinbase Wallet app
-    const extraParams =
-      request.method === Web3Method.requestEthereumAccounts
-        ? { wl_url: this.getQRCodeUrl() }
-        : undefined;
-
-    this.ui.openCoinbaseWalletDeeplink(extraParams);
+    switch (request.method) {
+      case Web3Method.requestEthereumAccounts:
+        this.ui.openCoinbaseWalletDeeplink(this.getQRCodeUrl());
+        break;
+      case Web3Method.switchEthereumChain:
+        // switchEthereumChain doesn't need to open the app
+        return;
+      default:
+        this.ui.openCoinbaseWalletDeeplink();
+        break;
+    }
   }
 }
