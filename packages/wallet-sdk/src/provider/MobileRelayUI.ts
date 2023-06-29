@@ -1,9 +1,5 @@
-import {
-  RedirectDialog,
-  RedirectDialogProps,
-} from "../components/RedirectDialog/RedirectDialog";
+import { RedirectDialog } from "../components/RedirectDialog/RedirectDialog";
 import { ErrorHandler } from "../errors";
-import { injectCssReset } from "../lib/cssReset";
 import {
   EthereumAddressFromSignedMessageRequest,
   SignEthereumMessageRequest,
@@ -24,23 +20,16 @@ export class MobileRelayUI implements WalletUI {
   private readonly redirectDialog: RedirectDialog;
   private attached = false;
 
-  constructor(options: Readonly<WalletUIOptions>) {
-    this.redirectDialog = new RedirectDialog({ darkMode: options.darkMode });
+  constructor(_options: Readonly<WalletUIOptions>) {
+    this.redirectDialog = new RedirectDialog();
   }
 
   attach() {
     if (this.attached) {
       throw new Error("Coinbase Wallet SDK UI is already attached");
     }
-    const el = document.documentElement;
-    const container = document.createElement("div");
-    container.className = "-cbwsdk-css-reset";
-    el.appendChild(container);
-
-    this.redirectDialog.attach(container);
+    this.redirectDialog.attach();
     this.attached = true;
-
-    injectCssReset();
   }
 
   showConnecting(_options: {
@@ -48,18 +37,29 @@ export class MobileRelayUI implements WalletUI {
     onCancel: ErrorHandler;
     onResetConnection: () => void;
   }): () => void {
-    const redirectDialogProps: RedirectDialogProps = {
-      message: "Connecting to Coinbase Wallet...",
-      redirectUrl: "https://www.coinbase.com/connect-dapp",
-    };
-
-    this.redirectDialog.presentItem(redirectDialogProps);
+    this.redirectDialog.present(() => {
+      this.openCoinbaseWalletDeeplink();
+    });
 
     return () => {
       this.redirectDialog.clear();
     };
   }
 
+  openCoinbaseWalletDeeplink(extraParams?: { [key: string]: string }): void {
+    const url = new URL("https://go.cb-w.com/walletlink");
+    const param = {
+      redirect_url: window.location.href,
+      ...extraParams,
+    };
+    Object.entries(param).forEach(([key, value]) => {
+      url.searchParams.append(key, value);
+    });
+
+    window.open(url.href, "_blank");
+  }
+
+  // This method is to show ConnectDialog, which is not needed for mobile
   requestEthereumAccounts(_options: {
     onCancel: ErrorHandler;
     onAccounts?: ((accounts: [AddressString]) => void) | undefined;

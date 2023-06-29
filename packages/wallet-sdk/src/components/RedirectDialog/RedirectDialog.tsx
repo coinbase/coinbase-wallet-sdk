@@ -1,6 +1,5 @@
 import clsx from "clsx";
 import { FunctionComponent, h, render } from "preact";
-import { useCallback } from "preact/hooks";
 
 import { injectCssReset } from "../../lib/cssReset";
 import { SnackbarContainer } from "../Snackbar";
@@ -18,24 +17,24 @@ export class RedirectDialog {
     injectCssReset();
   }
 
-  public presentItem(redirectUrl: string): void {
-    this.render(redirectUrl);
+  public present(onClick: () => void): void {
+    this.render(onClick);
   }
 
   public clear(): void {
     this.render(null);
   }
 
-  private render(redirectUrl: string | null): void {
+  private render(onClick: (() => void) | null): void {
     if (!this.root) return;
     render(null, this.root);
 
-    if (!redirectUrl) return;
+    if (!onClick) return;
     render(
       <RedirectDialogContainer>
         <RedirectDialogContent
-          redirectUrl={redirectUrl}
-          onCancel={() => {
+          onClick={onClick}
+          onDismiss={() => {
             this.clear();
           }}
         />
@@ -50,17 +49,13 @@ const RedirectDialogContainer: FunctionComponent = props => (
 );
 
 const RedirectDialogContent: FunctionComponent<{
-  redirectUrl: string;
-  onCancel: () => void;
-}> = ({ redirectUrl, onCancel }) => {
-  const onClick = useCallback(() => {
-    console.log("redirecting to", redirectUrl);
-  }, []);
-
+  onClick: () => void;
+  onDismiss: () => void;
+}> = ({ onClick, onDismiss }) => {
   return (
     <div class={clsx("-cbwsdk-redirect-dialog")}>
       <style>{css}</style>
-      <div class="-cbwsdk-redirect-dialog-backdrop" onClick={onCancel} />
+      <div class="-cbwsdk-redirect-dialog-backdrop" onClick={onDismiss} />
       <div class="-cbwsdk-redirect-dialog-box">
         <p>Redirecting to Coinbase Wallet ...</p>
         <button onClick={onClick}>Open</button>

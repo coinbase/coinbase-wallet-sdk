@@ -1,3 +1,4 @@
+import { MobileRelayUI } from "../provider/MobileRelayUI";
 import { getLocation } from "../util";
 import { WalletLinkRelay, WalletLinkRelayOptions } from "./WalletLinkRelay";
 import { CancelablePromise } from "./WalletSDKRelayAbstract";
@@ -35,26 +36,15 @@ export class MobileRelay extends WalletLinkRelay {
   protected publishWeb3RequestEvent(id: string, request: Web3Request): void {
     super.publishWeb3RequestEvent(id, request);
 
-    if (this._enableMobileWalletLink) {
-      setTimeout(() => {
-        this.openCoinbaseWalletDeeplink(request);
-      }, 499);
-    }
-  }
+    if (!(this._enableMobileWalletLink && this.ui instanceof MobileRelayUI))
+      return;
 
-  private openCoinbaseWalletDeeplink(request: Web3Request): void {
-    const url = new URL("https://go.cb-w.com/walletlink");
+    // For mobile relay requests, open the Coinbase Wallet app
+    const extraParams =
+      request.method === Web3Method.requestEthereumAccounts
+        ? { wl_url: this.getQRCodeUrl() }
+        : undefined;
 
-    url.searchParams.append("redirect_url", window.location.href);
-
-    if (request.method === Web3Method.requestEthereumAccounts) {
-      const wlUrl = this.getQRCodeUrl();
-      if (!wlUrl) throw new Error("WalletLinkUrl is not set");
-      url.searchParams.append("wl_url", wlUrl);
-    }
-
-    this.diagnostic?.log(`Opening Coinbase Wallet deeplink ${url.href}`);
-
-    window.open(url.href, "_blank");
+    this.ui.openCoinbaseWalletDeeplink(extraParams);
   }
 }
