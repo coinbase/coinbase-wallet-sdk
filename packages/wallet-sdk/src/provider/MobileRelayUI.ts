@@ -13,7 +13,7 @@ import {
   SubmitEthereumTransactionResponse,
 } from "../relay/Web3Response";
 import { AddressString, ProviderType } from "../types";
-import { WalletUI, WalletUIOptions } from "./WalletUI";
+import { WalletUI } from "./WalletUI";
 
 // TODO: Implement & present in-page wallet picker instead of navigating to www.coinbase.com/connect-dapp
 export class MobileRelayUI implements WalletUI {
