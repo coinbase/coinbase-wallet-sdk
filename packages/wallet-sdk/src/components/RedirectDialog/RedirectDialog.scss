@@ -49,9 +49,18 @@
         line-height: 24px;
       }
 
-      &-dark {
+      &.dark {
         background-color: $black;
         color: $white;
+
+        button {
+          color: $primary;
+        }
+      }
+
+      &.light {
+        background-color: $white;
+        color: $black;
 
         button {
           color: $primary;

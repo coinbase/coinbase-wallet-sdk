@@ -60,7 +60,7 @@ const RedirectDialogContent: FunctionComponent<
       <div class="-cbwsdk-redirect-dialog">
         <style>{css}</style>
         <div class="-cbwsdk-redirect-dialog-backdrop" onClick={onDismiss} />
-        <div class={(clsx("-cbwsdk-redirect-dialog-box"), theme)}>
+        <div class={clsx("-cbwsdk-redirect-dialog-box", theme)}>
           <p>{title}</p>
           <button onClick={onButtonClick}>{buttonText}</button>
         </div>
