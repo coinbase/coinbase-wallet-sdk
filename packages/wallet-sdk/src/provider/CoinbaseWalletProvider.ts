@@ -16,6 +16,7 @@ import {
 import { WalletSDKRelayEventManager } from "../relay/WalletSDKRelayEventManager";
 import { Web3Method } from "../relay/Web3Method";
 import {
+  ConnectAndSignInResponse,
   isErrorResponse,
   RequestEthereumAccountsResponse,
   SwitchResponse,
@@ -593,7 +594,12 @@ export class CoinbaseWalletProvider
   }
 
   /**
-   * @beta This method is currently in beta. While it is available for use, please note that it is still under testing and may undergo significant changes.
+   * @beta
+   * This method is currently in beta. While it is available for use, please note that it is still under testing and may undergo significant changes.
+   *
+   * @remarks
+   * IMPORTANT: Signature validation is not performed by this method. Users of this method are advised to perform their own signature validation.
+   * Common web3 frontend libraries such as ethers.js and viem provide the `verifyMessage` utility function that can be used for signature validation.
    *
    * It combines `eth_requestAccounts` and "Sign-In with Ethereum" (EIP-4361) into a single call.
    * The returned account and signed message can be used to authenticate the user.
@@ -611,15 +617,49 @@ export class CoinbaseWalletProvider
     nonce: string;
     statement?: string;
     resources?: string[];
-  }): Promise<boolean> {
-    const relay = await this.initializeRelay();
-    const res = await relay.connectAndSignIn(params).promise;
-    if (typeof res.result !== "string") {
-      throw serializeError(
-        res.errorMessage ?? "result was not a string",
-        Web3Method.generic,
-      );
+  }): Promise<{
+    accounts: AddressString[];
+    message: string;
+    signature: string;
+  }> {
+    // NOTE: It was intentionally built by following the pattern of the existing eth_requestAccounts method
+    // to maintain consistency and avoid introducing a new pattern.
+    // We acknowledge the need for a better design, and it is planned to address and improve it in a future refactor.
+
+    this.diagnostic?.log(EVENTS.ETH_ACCOUNTS_STATE, {
+      method: "provider::connectAndSignIn",
+      sessionIdHash: this._relay
+        ? Session.hash(this._relay.session.id)
+        : undefined,
+    });
+
+    let res: ConnectAndSignInResponse;
+    try {
+      const relay = await this.initializeRelay();
+      res = await relay.connectAndSignIn(params).promise;
+    } catch (err: any) {
+      if (
+        typeof err.message === "string" &&
+        err.message.match(/(denied|rejected)/i)
+      ) {
+        throw standardErrors.provider.userRejectedRequest(
+          "User denied account authorization",
+        );
+      }
+      throw err;
     }
+
+    if (!res.result) {
+      throw new Error("accounts received is empty");
+    }
+
+    const { accounts } = res.result;
+
+    this._setAddresses(accounts);
+    if (!(this.isLedger || this.isCoinbaseBrowser)) {
+      await this.switchEthereumChain(this.getChainId());
+    }
+
     return res.result;
   }
 
