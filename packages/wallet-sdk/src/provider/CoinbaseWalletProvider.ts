@@ -596,6 +596,37 @@ export class CoinbaseWalletProvider
     return res.result;
   }
 
+  /**
+   * @beta This method is currently in beta. While it is available for use, please note that it is still under testing and may undergo significant changes.
+   *
+   * It combines `eth_requestAccounts` and "Sign-In with Ethereum" (EIP-4361) into a single call.
+   * The returned account and signed message can be used to authenticate the user.
+   *
+   * @param {string} params.nonce - A unique string to prevent replay attacks.
+   * @param {string} [params.statement] - An optional human-readable ASCII assertion that the user will sign.
+   * @param {string[]} [params.resources] - An optional list of information the user wishes to have resolved as part of authentication by the relying party.
+   *
+   * @returns {Promise<ConnectAndSignInResponse>} A promise that resolves to an object with the following properties:
+   * - `accounts`: The Ethereum accounts of the user.
+   * - `message`: The overall message that the user signed.
+   * - `signature`: The signature of the message, signed with the user's private key.
+   */
+  public async connectAndSignIn(params: {
+    nonce: string;
+    statement?: string;
+    resources?: string[];
+  }): Promise<boolean> {
+    const relay = await this.initializeRelay();
+    const res = await relay.connectAndSignIn(params).promise;
+    if (typeof res.result !== "string") {
+      throw serializeError(
+        res.errorMessage ?? "result was not a string",
+        Web3Method.generic,
+      );
+    }
+    return res.result;
+  }
+
   public async selectProvider(
     providerOptions: ProviderType[],
   ): Promise<ProviderType> {
