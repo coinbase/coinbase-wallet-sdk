@@ -1,14 +1,9 @@
 import SafeEventEmitter from "@metamask/safe-event-emitter";
-import { PollingBlockTracker, Provider } from "eth-block-tracker";
-import {
-  JsonRpcEngineEndCallback,
-  JsonRpcEngineNextCallback,
-} from "json-rpc-engine";
 
-import { RequestArguments, Web3Provider } from "./Web3Provider";
+import { Web3Provider } from "./Web3Provider";
 
-const createSubscriptionManager = require("eth-json-rpc-filters/subscriptionManager");
-const noop = () => {};
+// const createSubscriptionManager = require("eth-json-rpc-filters/subscriptionManager");
+// const noop = () => {};
 
 export interface SubscriptionResult {
   result?: unknown;
@@ -23,46 +18,47 @@ export interface SubscriptionNotification {
 }
 
 export class SubscriptionManager {
-  private readonly subscriptionMiddleware: SubscriptionMiddleware;
-  readonly events: SafeEventEmitter;
+  // private readonly subscriptionMiddleware: SubscriptionMiddleware;
+  // readonly events: SafeEventEmitter;
 
-  constructor(provider: Web3Provider & SafeEventEmitter) {
-    const blockTracker = new PollingBlockTracker({
-      provider: provider as Provider,
-      pollingInterval: 15 * 1000, // 15 sec
-      setSkipCacheFlag: true,
-    });
+  constructor(_: Web3Provider & SafeEventEmitter) {
+    // const blockTracker = new PollingBlockTracker({
+    //   provider: provider as any,
+    //   pollingInterval: 15 * 1000, // 15 sec
+    //   setSkipCacheFlag: true,
+    // });
 
-    const { events, middleware } = createSubscriptionManager({
-      blockTracker,
-      provider,
-    });
+    // const { events, middleware } = createSubscriptionManager({
+    //   blockTracker,
+    //   provider,
+    // });
 
-    this.events = events;
-    this.subscriptionMiddleware = middleware;
+    // this.events = events;
+    // this.subscriptionMiddleware = middleware;
   }
 
-  public async handleRequest(request: {
+  public async handleRequest(_: {
     method: string;
     params: any[];
   }): Promise<SubscriptionResult> {
     const result = {};
-    await this.subscriptionMiddleware(request, result, noop, noop);
+    await Promise.resolve();
+    // await this.subscriptionMiddleware(request, result, noop, noop);
     return result;
   }
 
   public destroy() {
-    this.subscriptionMiddleware.destroy();
+    // this.subscriptionMiddleware.destroy();
   }
 }
 
-interface SubscriptionMiddleware {
-  (
-    req: RequestArguments,
-    res: SubscriptionResult,
-    next: JsonRpcEngineNextCallback,
-    end: JsonRpcEngineEndCallback,
-  ): Promise<void>;
+// interface SubscriptionMiddleware {
+//   (
+//     req: RequestArguments,
+//     res: SubscriptionResult,
+//     next: JsonRpcEngineNextCallback,
+//     end: JsonRpcEngineEndCallback,
+//   ): Promise<void>;
 
-  destroy(): void;
-}
+//   destroy(): void;
+// }

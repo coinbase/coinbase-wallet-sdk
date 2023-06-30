@@ -1,8 +1,8 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import SafeEventEmitter from "@metamask/safe-event-emitter";
 import BN from "bn.js";
+import EventEmitter from "events";
 
 import { DiagnosticLogger, EVENTS } from "../connection/DiagnosticLogger";
 import { serializeError, standardErrorCodes, standardErrors } from "../errors";
@@ -35,11 +35,7 @@ import {
 import eip712 from "../vendor-js/eth-eip712-util";
 import { FilterPolyfill } from "./FilterPolyfill";
 import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from "./JSONRPC";
-import {
-  SubscriptionManager,
-  SubscriptionNotification,
-  SubscriptionResult,
-} from "./SubscriptionManager";
+import { SubscriptionManager, SubscriptionResult } from "./SubscriptionManager";
 import { RequestArguments, Web3Provider } from "./Web3Provider";
 
 const DEFAULT_CHAIN_ID_KEY = "DefaultChainId";
@@ -88,7 +84,7 @@ interface WatchAssetParams {
 }
 
 export class CoinbaseWalletProvider
-  extends SafeEventEmitter
+  extends EventEmitter
   implements Web3Provider
 {
   // So dapps can easily identify Coinbase Wallet for enabling features like 3085 network switcher menus
@@ -169,15 +165,15 @@ export class CoinbaseWalletProvider
       }
     }
 
-    this._subscriptionManager.events.on(
-      "notification",
-      (notification: SubscriptionNotification) => {
-        this.emit("message", {
-          type: notification.method,
-          data: notification.params,
-        });
-      },
-    );
+    // this._subscriptionManager.events.on(
+    //   "notification",
+    //   (notification: SubscriptionNotification) => {
+    //     this.emit("message", {
+    //       type: notification.method,
+    //       data: notification.params,
+    //     });
+    //   },
+    // );
 
     if (this._addresses.length > 0) {
       void this.initializeRelay();
