@@ -860,10 +860,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
     }
   }
 
-  // WIP
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  private connectAndSignIn(params: {
+  connectAndSignIn(params: {
     nonce: string;
     statement?: string;
     resources?: string[];
