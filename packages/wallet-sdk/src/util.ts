@@ -2,7 +2,6 @@
 // Licensed under the Apache License, version 2.0
 
 import BN from "bn.js";
-import { stringify } from "qs";
 
 import { standardErrors } from "./errors";
 import {
@@ -239,16 +238,17 @@ export function createQrUrl(
   chainId: number,
 ): string {
   const sessionIdKey = isParentConnection ? "parent-id" : "id";
-
-  const query: string = stringify({
+  const query = {
     [sessionIdKey]: sessionId,
     secret: sessionSecret,
     server: serverUrl,
     v: version,
     chainId,
-  });
+  };
 
-  const qrUrl = `${serverUrl}/#/link?${query}`;
+  const qrUrl = `${serverUrl}/#/link?${Object.keys(query)
+    .map(key => `${key}=${encodeURIComponent(query[key])}`)
+    .join("&")}`;
 
   return qrUrl;
 }
