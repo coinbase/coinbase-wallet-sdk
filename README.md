@@ -116,7 +116,7 @@ npm update @coinbase/wallet-sdk
 - [web3modal](https://github.com/Web3Modal/web3modal)
 
 ```
-Copyright © 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
+Copyright © 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

@@ -18,7 +18,7 @@ import { DiagnosticLogger, EVENTS } from "../connection/DiagnosticLogger";
 import { EventListener } from "../connection/EventListener";
 import { ServerMessageEvent } from "../connection/ServerMessage";
 import { SessionConfig } from "../connection/SessionConfig";
-import { WalletSDKConnection } from "../connection/WalletSDKConnection";
+import { WalletLinkConnection } from "../connection/WalletLinkConnection";
 import {
   ErrorType,
   getErrorCode,
@@ -33,7 +33,6 @@ import {
   bigIntStringFromBN,
   createQrUrl,
   hexStringFromBuffer,
-  isInIFrame,
   randomBytesHex,
 } from "../util";
 import * as aes256gcm from "./aes256gcm";
@@ -50,6 +49,7 @@ import {
 import { WalletSDKRelayEventManager } from "./WalletSDKRelayEventManager";
 import { Web3Method } from "./Web3Method";
 import {
+  ConnectAndSignInRequest,
   EthereumAddressFromSignedMessageRequest,
   GenericRequest,
   ScanQRCodeRequest,
@@ -62,6 +62,7 @@ import { Web3RequestCanceledMessage } from "./Web3RequestCanceledMessage";
 import { Web3RequestMessage } from "./Web3RequestMessage";
 import {
   AddEthereumChainResponse,
+  ConnectAndSignInResponse,
   EthereumAddressFromSignedMessageResponse,
   GenericResponse,
   isErrorResponse,
@@ -82,7 +83,7 @@ import {
   Web3ResponseMessage,
 } from "./Web3ResponseMessage";
 
-export interface WalletSDKRelayOptions {
+export interface WalletLinkRelayOptions {
   linkAPIUrl: string;
   version: string;
   darkMode: boolean;
@@ -92,9 +93,10 @@ export interface WalletSDKRelayOptions {
   diagnosticLogger?: DiagnosticLogger;
   eventListener?: EventListener;
   reloadOnDisconnect?: boolean;
+  enableMobileWalletLink?: boolean;
 }
 
-export class WalletSDKRelay extends WalletSDKRelayAbstract {
+export class WalletLinkRelay extends WalletSDKRelayAbstract {
   private static accountRequestCallbackIds = new Set<string>();
 
   private readonly linkAPIUrl: string;
@@ -102,7 +104,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
   private _session: Session;
   private readonly relayEventManager: WalletSDKRelayEventManager;
   protected readonly diagnostic?: DiagnosticLogger;
-  private connection: WalletSDKConnection;
+  private connection: WalletLinkConnection;
   private accountsCallback:
     | ((account: string[], isDisconnect?: boolean) => void)
     | null = null;
@@ -111,9 +113,9 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     | null = null;
   private dappDefaultChainSubject = new BehaviorSubject(1);
   private dappDefaultChain = 1;
-  private readonly options: WalletSDKRelayOptions;
+  private readonly options: WalletLinkRelayOptions;
 
-  private ui: WalletUI;
+  protected ui: WalletUI;
 
   private appName = "";
   private appLogoUrl: string | null = null;
@@ -122,7 +124,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
   isLinked: boolean | undefined;
   isUnlinkedErrorState: boolean | undefined;
 
-  constructor(options: Readonly<WalletSDKRelayOptions>) {
+  constructor(options: Readonly<WalletLinkRelayOptions>) {
     super();
     this.linkAPIUrl = options.linkAPIUrl;
     this.storage = options.storage;
@@ -167,7 +169,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     const session =
       Session.load(this.storage) || new Session(this.storage).save();
 
-    const connection = new WalletSDKConnection(
+    const connection = new WalletLinkConnection(
       session.id,
       session.key,
       this.linkAPIUrl,
@@ -340,12 +342,12 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
               this.accountsCallback([selectedAddress]);
             }
 
-            if (WalletSDKRelay.accountRequestCallbackIds.size > 0) {
+            if (WalletLinkRelay.accountRequestCallbackIds.size > 0) {
               // We get the ethereum address from the metadata.  If for whatever
               // reason we don't get a response via an explicit web3 message
               // we can still fulfill the eip1102 request.
               Array.from(
-                WalletSDKRelay.accountRequestCallbackIds.values(),
+                WalletLinkRelay.accountRequestCallbackIds.values(),
               ).forEach(id => {
                 const message = Web3ResponseMessage({
                   id,
@@ -355,7 +357,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
                 });
                 this.invokeCallback({ ...message, id });
               });
-              WalletSDKRelay.accountRequestCallbackIds.clear();
+              WalletLinkRelay.accountRequestCallbackIds.clear();
             }
           },
           error: () => {
@@ -708,7 +710,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
     this.dappDefaultChainSubject.next(chainId);
   }
 
-  private publishWeb3RequestEvent(id: string, request: Web3Request): void {
+  protected publishWeb3RequestEvent(id: string, request: Web3Request): void {
     const message = Web3RequestMessage({ id, request });
     const storedSession = Session.load(this.storage);
     this.diagnostic?.log(EVENTS.WEB3_REQUEST, {
@@ -821,10 +823,10 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
       sessionIdHash: this.getSessionIdHash(),
     });
     if (isRequestEthereumAccountsResponse(response)) {
-      WalletSDKRelay.accountRequestCallbackIds.forEach(id =>
+      WalletLinkRelay.accountRequestCallbackIds.forEach(id =>
         this.invokeCallback({ ...message, id }),
       );
-      WalletSDKRelay.accountRequestCallbackIds.clear();
+      WalletLinkRelay.accountRequestCallbackIds.clear();
       return;
     }
 
@@ -856,6 +858,30 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
       callback(message.response);
       this.relayEventManager.callbacks.delete(message.id);
     }
+  }
+
+  connectAndSignIn(params: {
+    nonce: string;
+    statement?: string;
+    resources?: string[];
+  }): CancelablePromise<ConnectAndSignInResponse> {
+    return this.sendRequest<ConnectAndSignInRequest, ConnectAndSignInResponse>({
+      method: Web3Method.connectAndSignIn,
+      params: {
+        appName: this.appName,
+        appLogoUrl: this.appLogoUrl,
+
+        domain: window.location.hostname,
+        aud: window.location.href,
+        version: "1",
+        type: "eip4361",
+        nonce: params.nonce,
+        iat: new Date().toISOString(),
+        chainId: `eip155:${this.dappDefaultChain}`,
+        statement: params.statement,
+        resources: params.resources,
+      },
+    });
   }
 
   public requestEthereumAccounts(): CancelablePromise<RequestEthereumAccountsResponse> {
@@ -892,30 +918,6 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
           resolve(response as RequestEthereumAccountsResponse);
         });
 
-        const userAgent = window?.navigator?.userAgent || null;
-        if (
-          userAgent &&
-          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-            userAgent,
-          )
-        ) {
-          let location: Location;
-          try {
-            if (isInIFrame() && window.top) {
-              location = window.top.location;
-            } else {
-              location = window.location;
-            }
-          } catch (e) {
-            location = window.location;
-          }
-
-          location.href = `https://www.coinbase.com/connect-dapp?uri=${encodeURIComponent(
-            location.href,
-          )}`;
-          return;
-        }
-
         if (this.ui.inlineAccountsResponse()) {
           const onAccounts = (accounts: [AddressString]) => {
             this.handleWeb3ResponseMessage(
@@ -940,7 +942,7 @@ export class WalletSDKRelay extends WalletSDKRelayAbstract {
           });
         }
 
-        WalletSDKRelay.accountRequestCallbackIds.add(id);
+        WalletLinkRelay.accountRequestCallbackIds.add(id);
 
         if (!this.ui.inlineAccountsResponse() && !this.ui.isStandalone()) {
           this.publishWeb3RequestEvent(id, request);

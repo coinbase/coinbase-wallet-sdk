@@ -58,7 +58,7 @@ const REQUEST_TIMEOUT = 60000;
 /**
  * Coinbase Wallet Connection
  */
-export class WalletSDKConnection {
+export class WalletLinkConnection {
   private ws: RxWebSocket<ServerMessage>;
   private subscriptions = new Subscription();
   private destroyed = false;

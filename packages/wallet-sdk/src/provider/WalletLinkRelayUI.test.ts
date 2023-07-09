@@ -4,10 +4,10 @@ import { Observable, Subject } from "rxjs";
 
 import { LinkFlow } from "../components/LinkFlow/LinkFlow";
 import { Snackbar } from "../components/Snackbar/Snackbar";
-import { WalletSDKUI } from "./WalletSDKUI";
+import { WalletLinkRelayUI } from "./WalletLinkRelayUI";
 
-describe("WalletSDKUI", () => {
-  const walletSDKUI = new WalletSDKUI({
+describe("WalletLinkRelayUI", () => {
+  const walletSDKUI = new WalletLinkRelayUI({
     darkMode: false,
     version: "1.2.1",
     // @ts-expect-error mock session

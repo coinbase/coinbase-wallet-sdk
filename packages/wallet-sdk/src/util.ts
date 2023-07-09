@@ -260,3 +260,21 @@ export function isInIFrame(): boolean {
     return false;
   }
 }
+
+export function getLocation(): Location {
+  try {
+    if (isInIFrame() && window.top) {
+      return window.top.location;
+    } else {
+      return window.location;
+    }
+  } catch (e) {
+    return window.location;
+  }
+}
+
+export function isMobileWeb(): boolean {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    window?.navigator?.userAgent,
+  );
+}
