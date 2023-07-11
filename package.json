@@ -1,0 +1,13 @@
+{
+  "name": "coinbase-wallet-sdk",
+  "version": "0.0.0",
+  "main": "index.js",
+  "repository": "git@oss.github.com:coinbase/coinbase-wallet-sdk.git",
+  "author": "Coinbase, Inc.",
+  "license": "MIT",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ]
+}
