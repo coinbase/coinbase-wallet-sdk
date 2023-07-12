@@ -21,13 +21,7 @@ import {
   RequestEthereumAccountsResponse,
   SwitchResponse,
 } from '../relay/Web3Response';
-import {
-  AddressString,
-  Callback,
-  HexString,
-  IntNumber,
-  ProviderType,
-} from '../types';
+import { AddressString, Callback, HexString, IntNumber, ProviderType } from '../types';
 import {
   ensureAddressString,
   ensureBN,
