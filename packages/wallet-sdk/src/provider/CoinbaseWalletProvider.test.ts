@@ -308,6 +308,7 @@ describe('CoinbaseWalletProvider', () => {
     const relay = new MockRelayClass();
     jest.spyOn(relay, 'genericRequest').mockReturnValue({
       cancel: () => {},
+      // @ts-expect-error result should be a string
       promise: Promise.resolve({
         method: Web3Method.generic,
         result: { foo: 'bar' },
@@ -407,6 +408,7 @@ describe('CoinbaseWalletProvider', () => {
     const relay = new MockRelayClass();
     jest.spyOn(relay, 'scanQRCode').mockReturnValue({
       cancel: () => {},
+      // @ts-expect-error result should be a string
       promise: Promise.resolve({
         method: Web3Method.scanQRCode,
         result: { foo: 'bar' },

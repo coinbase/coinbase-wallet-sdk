@@ -27,7 +27,7 @@ jobs:
         run: yarn lint:eslint
 
   lint-check:
-    name: Lint / Type Check
+    name: Type Check
     runs-on: ubuntu-latest
     defaults:
       run:
