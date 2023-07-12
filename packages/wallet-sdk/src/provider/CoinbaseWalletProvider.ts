@@ -20,8 +20,8 @@ import {
   isErrorResponse,
   RequestEthereumAccountsResponse,
   SwitchResponse,
-} from "../relay/Web3Response";
-import { AddressString, Callback, IntNumber, ProviderType } from "../types";
+} from '../relay/Web3Response';
+import { AddressString, Callback, HexString, IntNumber, ProviderType } from '../types';
 import {
   ensureAddressString,
   ensureBN,
@@ -608,14 +608,15 @@ export class CoinbaseWalletProvider
    * It combines `eth_requestAccounts` and "Sign-In with Ethereum" (EIP-4361) into a single call.
    * The returned account and signed message can be used to authenticate the user.
    *
-   * @param {string} params.nonce - A unique string to prevent replay attacks.
-   * @param {string} [params.statement] - An optional human-readable ASCII assertion that the user will sign.
-   * @param {string[]} [params.resources] - An optional list of information the user wishes to have resolved as part of authentication by the relying party.
+   * @param {Object} params - An object with the following properties:
+   * - `nonce` {string}: A unique string to prevent replay attacks.
+   * - `statement` {string}: An optional human-readable ASCII assertion that the user will sign.
+   * - `resources` {string[]}: An optional list of information the user wishes to have resolved as part of authentication by the relying party.
    *
    * @returns {Promise<ConnectAndSignInResponse>} A promise that resolves to an object with the following properties:
-   * - `accounts`: The Ethereum accounts of the user.
-   * - `message`: The overall message that the user signed.
-   * - `signature`: The signature of the message, signed with the user's private key.
+   * - `accounts` {string[]}: The Ethereum accounts of the user.
+   * - `message` {string}: The overall message that the user signed. Hex encoded.
+   * - `signature` {string}: The signature of the message, signed with the user's private key. Hex encoded.
    */
   public async connectAndSignIn(params: {
     nonce: string;
@@ -623,8 +624,8 @@ export class CoinbaseWalletProvider
     resources?: string[];
   }): Promise<{
     accounts: AddressString[];
-    message: string;
-    signature: string;
+    message: HexString;
+    signature: HexString;
   }> {
     // NOTE: It was intentionally built by following the pattern of the existing eth_requestAccounts method
     // to maintain consistency and avoid introducing a new pattern.

@@ -28,7 +28,7 @@ export type RequestEthereumAccountsResponse = BaseWeb3Response<
 
 export type ConnectAndSignInResponse = BaseWeb3Response<{
   accounts: AddressString[];
-  message: string;
+  message: HexString;
   signature: HexString;
 }>;
 
