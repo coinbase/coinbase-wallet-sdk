@@ -8,6 +8,7 @@ import { WalletSDKRelayEventManager } from '../relay/WalletSDKRelayEventManager'
 export const mockSetAppInfo = jest.fn();
 
 export class MockProviderClass extends CoinbaseWalletProvider {
+  // eslint-disable-next-line no-useless-constructor
   constructor(opts: Readonly<CoinbaseWalletProviderOptions>) {
     super(opts);
   }

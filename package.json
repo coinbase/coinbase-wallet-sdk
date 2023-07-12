@@ -9,7 +9,7 @@
     "packages/*"
   ],
   "scripts": {
-    "lint": "eslint ./packages --ext .ts,.tsx"
+    "lint": "eslint . --ext .ts,.tsx"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.0.0",

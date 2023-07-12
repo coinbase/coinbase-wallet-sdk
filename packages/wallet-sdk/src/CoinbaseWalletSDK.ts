@@ -245,9 +245,8 @@ export class CoinbaseWalletSDK {
 
       if ('isCoinbaseBrowser' in ethereum && ethereum.isCoinbaseBrowser) {
         return ethereum;
-      } else {
-        return undefined;
       }
+      return undefined;
     } catch (e) {
       return undefined;
     }

@@ -100,9 +100,8 @@ function getErrorObject(error: unknown) {
       code: error.errorCode,
       data: { method: error.method, result: error.result },
     };
-  } else {
-    return error;
   }
+  return error;
 }
 
 /**
@@ -125,9 +124,8 @@ function getMethod(
     return request.method;
   } else if (request.length > 0) {
     return request[0].method;
-  } else {
-    return undefined;
   }
+  return undefined;
 }
 
 // ----------------- getErrorCode -----------------

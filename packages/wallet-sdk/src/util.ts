@@ -27,7 +27,7 @@ export function hexStringToUint8Array(hexString: string): Uint8Array {
 
 export function hexStringFromBuffer(buf: Buffer, includePrefix = false): HexString {
   const hex = buf.toString('hex');
-  return HexString(includePrefix ? '0x' + hex : hex);
+  return HexString(includePrefix ? `0x${hex}` : hex);
 }
 
 export function bigIntStringFromBN(bn: BN): BigIntString {
@@ -39,7 +39,7 @@ export function intNumberFromHexString(hex: HexString): IntNumber {
 }
 
 export function hexStringFromIntNumber(num: IntNumber): HexString {
-  return HexString('0x' + new BN(num).toString(16));
+  return HexString(`0x${new BN(num).toString(16)}`);
 }
 
 export function has0xPrefix(str: string): boolean {
@@ -55,9 +55,9 @@ export function strip0x(hex: string): string {
 
 export function prepend0x(hex: string): string {
   if (has0xPrefix(hex)) {
-    return '0x' + hex.slice(2);
+    return `0x${hex.slice(2)}`;
   }
-  return '0x' + hex;
+  return `0x${hex}`;
 }
 
 export function isHexString(hex: unknown): hex is HexString {
@@ -72,7 +72,7 @@ export function ensureHexString(hex: unknown, includePrefix = false): HexString 
   if (typeof hex === 'string') {
     const s = strip0x(hex).toLowerCase();
     if (HEXADECIMAL_STRING_REGEX.test(s)) {
-      return HexString(includePrefix ? '0x' + s : s);
+      return HexString(includePrefix ? `0x${s}` : s);
     }
   }
   throw standardErrors.rpc.invalidParams(`"${String(hex)}" is not a hexadecimal string`);
@@ -81,9 +81,9 @@ export function ensureHexString(hex: unknown, includePrefix = false): HexString 
 export function ensureEvenLengthHexString(hex: unknown, includePrefix = false): HexString {
   let h = ensureHexString(hex, false);
   if (h.length % 2 === 1) {
-    h = HexString('0' + h);
+    h = HexString(`0${h}`);
   }
-  return includePrefix ? HexString('0x' + h) : h;
+  return includePrefix ? HexString(`0x${h}`) : h;
 }
 
 export function ensureAddressString(str: unknown): AddressString {
@@ -104,9 +104,8 @@ export function ensureBuffer(str: unknown): Buffer {
     if (isHexString(str)) {
       const s = ensureEvenLengthHexString(str, false);
       return Buffer.from(s, 'hex');
-    } else {
-      return Buffer.from(str, 'utf8');
     }
+    return Buffer.from(str, 'utf8');
   }
   throw standardErrors.rpc.invalidParams(`Not binary data: ${String(str)}`);
 }
@@ -231,9 +230,8 @@ export function getLocation(): Location {
   try {
     if (isInIFrame() && window.top) {
       return window.top.location;
-    } else {
-      return window.location;
     }
+    return window.location;
   } catch (e) {
     return window.location;
   }

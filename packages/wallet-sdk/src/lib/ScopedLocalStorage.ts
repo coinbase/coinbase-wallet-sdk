@@ -2,6 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 export class ScopedLocalStorage {
+  // eslint-disable-next-line no-useless-constructor
   constructor(private scope: string) {}
 
   public setItem(key: string, value: string): void {

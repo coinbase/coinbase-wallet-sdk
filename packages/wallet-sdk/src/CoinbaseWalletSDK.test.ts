@@ -135,6 +135,7 @@ describe('CoinbaseWalletSDK', () => {
       class MockCipherProviderClass extends MockProviderClass {
         public isCipher = true;
 
+        // eslint-disable-next-line no-useless-constructor
         constructor(opts: Readonly<CoinbaseWalletProviderOptions>) {
           super(opts);
         }
@@ -173,7 +174,7 @@ describe('CoinbaseWalletSDK', () => {
     describe('coinbase browser iframe', () => {
       class MockCoinbaseBrowserProvider extends MockProviderClass {
         public isCoinbaseBrowser = true;
-
+        // eslint-disable-next-line no-useless-constructor
         constructor(opts: Readonly<CoinbaseWalletProviderOptions>) {
           super(opts);
         }

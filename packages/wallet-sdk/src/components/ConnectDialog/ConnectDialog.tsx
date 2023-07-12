@@ -48,7 +48,7 @@ export const ConnectDialog = (props: ConnectDialogProps) => {
     return () => {
       timers.forEach(window.clearTimeout);
     };
-  }, [props.isOpen]);
+  }, [isOpen]);
 
   const theme = darkMode ? 'dark' : 'light';
 

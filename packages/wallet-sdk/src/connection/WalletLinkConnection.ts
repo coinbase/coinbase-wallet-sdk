@@ -82,7 +82,7 @@ export class WalletLinkConnection {
     private diagnostic?: DiagnosticLogger,
     WebSocketClass: typeof WebSocket = WebSocket
   ) {
-    const ws = new RxWebSocket<ServerMessage>(linkAPIUrl + '/rpc', WebSocketClass);
+    const ws = new RxWebSocket<ServerMessage>(`${linkAPIUrl}/rpc`, WebSocketClass);
     this.ws = ws;
 
     // attempt to reconnect every 5 seconds when disconnected

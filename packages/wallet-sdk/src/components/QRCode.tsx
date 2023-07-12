@@ -32,7 +32,7 @@ export const QRCode: FunctionComponent<QRCodeProps> = (props) => {
     });
     const base64 = Buffer.from(qrcode.svg(), 'utf8').toString('base64');
     setSvg(`data:image/svg+xml;base64,${base64}`);
-  });
+  }, [props.bgColor, props.content, props.fgColor, props.height, props.image, props.width]);
 
   return svg ? <img src={svg} alt="QR Code" /> : null;
 };

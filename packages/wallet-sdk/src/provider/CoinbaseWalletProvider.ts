@@ -1186,13 +1186,12 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
     );
     if (success) {
       return { jsonrpc: '2.0', id: 0, result: null };
-    } else {
-      return {
-        jsonrpc: '2.0',
-        id: 0,
-        error: { code: 2, message: `unable to add ethereum chain` },
-      };
     }
+    return {
+      jsonrpc: '2.0',
+      id: 0,
+      error: { code: 2, message: `unable to add ethereum chain` },
+    };
   }
 
   private async _wallet_switchEthereumChain(params: unknown[]): Promise<JSONRPCResponse> {
