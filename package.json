@@ -1,0 +1,11 @@
+{
+  "name": "coinbase-wallet-sdk",
+  "version": "1.0.0",
+  "repository": "https://github.com/coinbase/coinbase-wallet-sdk",
+  "author": "Coinbase, Inc.",
+  "license": "MIT",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ]
+}
