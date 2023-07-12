@@ -1,22 +1,23 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { LogoType, walletLogo } from "./assets/wallet-logo";
-import { DiagnosticLogger } from "./connection/DiagnosticLogger";
-import { EventListener } from "./connection/EventListener";
-import { ScopedLocalStorage } from "./lib/ScopedLocalStorage";
-import { CoinbaseWalletProvider } from "./provider/CoinbaseWalletProvider";
-import { MobileRelayUI } from "./provider/MobileRelayUI";
-import { WalletLinkRelayUI } from "./provider/WalletLinkRelayUI";
-import { WalletUI, WalletUIOptions } from "./provider/WalletUI";
-import { MobileRelay } from "./relay/MobileRelay";
-import { WalletLinkRelay } from "./relay/WalletLinkRelay";
-import { WalletSDKRelayEventManager } from "./relay/WalletSDKRelayEventManager";
-import { getFavicon, isMobileWeb } from "./util";
+import { LogoType, walletLogo } from './assets/wallet-logo';
+import { DiagnosticLogger } from './connection/DiagnosticLogger';
+import { EventListener } from './connection/EventListener';
+import { ScopedLocalStorage } from './lib/ScopedLocalStorage';
+import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
+import { MobileRelayUI } from './provider/MobileRelayUI';
+import { WalletLinkRelayUI } from './provider/WalletLinkRelayUI';
+import { WalletUI, WalletUIOptions } from './provider/WalletUI';
+import { MobileRelay } from './relay/MobileRelay';
+import { WalletLinkRelay } from './relay/WalletLinkRelay';
+import { WalletSDKRelayEventManager } from './relay/WalletSDKRelayEventManager';
+import { getFavicon, isMobileWeb } from './util';
 
-const LINK_API_URL = process.env.LINK_API_URL || "https://www.walletlink.org";
-const SDK_VERSION =
-  process.env.SDK_VERSION! || require("../package.json").version || "unknown";
+const LINK_API_URL = process.env.LINK_API_URL || 'https://www.walletlink.org';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const SDK_VERSION = process.env.SDK_VERSION! || require('../package.json').version || 'unknown';
 
 /** Coinbase Wallet SDK Constructor Options */
 export interface CoinbaseWalletSDKOptions {
@@ -52,7 +53,7 @@ export interface CoinbaseWalletSDKOptions {
 export class CoinbaseWalletSDK {
   public static VERSION = SDK_VERSION;
 
-  private _appName = "";
+  private _appName = '';
   private _appLogoUrl: string | null = null;
   private _relay: WalletLinkRelay | null = null;
   private _relayEventManager: WalletSDKRelayEventManager | null = null;
@@ -70,19 +71,18 @@ export class CoinbaseWalletSDK {
   constructor(options: Readonly<CoinbaseWalletSDKOptions>) {
     const linkAPIUrl = options.linkAPIUrl || LINK_API_URL;
 
-    if (typeof options.overrideIsMetaMask === "undefined") {
+    if (typeof options.overrideIsMetaMask === 'undefined') {
       this._overrideIsMetaMask = false;
     } else {
       this._overrideIsMetaMask = options.overrideIsMetaMask;
     }
 
     this._overrideIsCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true;
-    this._overrideIsCoinbaseBrowser =
-      options.overrideIsCoinbaseBrowser ?? false;
+    this._overrideIsCoinbaseBrowser = options.overrideIsCoinbaseBrowser ?? false;
 
     if (options.diagnosticLogger && options.eventListener) {
       throw new Error(
-        "Can't have both eventListener and diagnosticLogger options, use only diagnosticLogger",
+        "Can't have both eventListener and diagnosticLogger options, use only diagnosticLogger"
       );
     }
 
@@ -100,7 +100,7 @@ export class CoinbaseWalletSDK {
     const url = new URL(linkAPIUrl);
     const origin = `${url.protocol}//${url.host}`;
     this._storage = new ScopedLocalStorage(`-walletlink:${origin}`); // needs migration to preserve local states
-    this._storage.setItem("version", CoinbaseWalletSDK.VERSION);
+    this._storage.setItem('version', CoinbaseWalletSDK.VERSION);
 
     if (this.walletExtension || this.coinbaseBrowser) {
       return;
@@ -111,8 +111,7 @@ export class CoinbaseWalletSDK {
     const isMobile = isMobileWeb();
     const uiConstructor =
       options.uiConstructor ||
-      (opts =>
-        isMobile ? new MobileRelayUI(opts) : new WalletLinkRelayUI(opts));
+      ((opts) => (isMobile ? new MobileRelayUI(opts) : new WalletLinkRelayUI(opts)));
 
     const relayOption = {
       linkAPIUrl,
@@ -126,13 +125,11 @@ export class CoinbaseWalletSDK {
       enableMobileWalletLink: options.enableMobileWalletLink,
     };
 
-    this._relay = isMobile
-      ? new MobileRelay(relayOption)
-      : new WalletLinkRelay(relayOption);
+    this._relay = isMobile ? new MobileRelay(relayOption) : new WalletLinkRelay(relayOption);
 
     this.setAppInfo(options.appName, options.appLogoUrl);
 
-    if (!!options.headlessMode) return;
+    if (options.headlessMode) return;
 
     this._relay.attachUI();
   }
@@ -143,10 +140,7 @@ export class CoinbaseWalletSDK {
    * @param chainId Ethereum Chain ID (Default: 1)
    * @returns A Web3 Provider
    */
-  public makeWeb3Provider(
-    jsonRpcUrl = "",
-    chainId = 1,
-  ): CoinbaseWalletProvider {
+  public makeWeb3Provider(jsonRpcUrl = '', chainId = 1): CoinbaseWalletProvider {
     const extension = this.walletExtension;
     if (extension) {
       if (!this.isCipherProvider(extension)) {
@@ -155,7 +149,7 @@ export class CoinbaseWalletSDK {
 
       if (
         this._reloadOnDisconnect === false &&
-        typeof extension.disableReloadOnDisconnect === "function"
+        typeof extension.disableReloadOnDisconnect === 'function'
       )
         extension.disableReloadOnDisconnect();
 
@@ -169,7 +163,7 @@ export class CoinbaseWalletSDK {
 
     const relay = this._relay;
     if (!relay || !this._relayEventManager || !this._storage) {
-      throw new Error("Relay not initialized, should never happen");
+      throw new Error('Relay not initialized, should never happen');
     }
 
     if (!jsonRpcUrl) relay.setConnectDisabled(true);
@@ -193,11 +187,8 @@ export class CoinbaseWalletSDK {
    * @param appName Application name
    * @param appLogoUrl Application logo image URL
    */
-  public setAppInfo(
-    appName: string | undefined,
-    appLogoUrl: string | null | undefined,
-  ): void {
-    this._appName = appName || "DApp";
+  public setAppInfo(appName: string | undefined, appLogoUrl: string | null | undefined): void {
+    this._appName = appName || 'DApp';
     this._appLogoUrl = appLogoUrl || getFavicon();
 
     const extension = this.walletExtension;
@@ -247,17 +238,15 @@ export class CoinbaseWalletSDK {
   private get coinbaseBrowser(): CoinbaseWalletProvider | undefined {
     try {
       // Coinbase DApp browser does not inject into iframes so grab provider from top frame if it exists
-      const ethereum =
-        (window as any).ethereum ?? (window as any).top?.ethereum;
+      const ethereum = (window as any).ethereum ?? (window as any).top?.ethereum;
       if (!ethereum) {
         return undefined;
       }
 
-      if ("isCoinbaseBrowser" in ethereum && ethereum.isCoinbaseBrowser) {
+      if ('isCoinbaseBrowser' in ethereum && ethereum.isCoinbaseBrowser) {
         return ethereum;
-      } else {
-        return undefined;
       }
+      return undefined;
     } catch (e) {
       return undefined;
     }
@@ -265,6 +254,6 @@ export class CoinbaseWalletSDK {
 
   private isCipherProvider(provider: CoinbaseWalletProvider): boolean {
     // @ts-expect-error isCipher walletlink property
-    return typeof provider.isCipher === "boolean" && provider.isCipher;
+    return typeof provider.isCipher === 'boolean' && provider.isCipher;
   }
 }

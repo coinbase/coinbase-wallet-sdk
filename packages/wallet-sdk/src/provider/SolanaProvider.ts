@@ -1,15 +1,15 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import SafeEventEmitter from "@metamask/safe-event-emitter";
-import { PublicKey, SendOptions, Transaction } from "@solana/web3.js";
+import SafeEventEmitter from '@metamask/safe-event-emitter';
+import { PublicKey, SendOptions, Transaction } from '@solana/web3.js';
 
-import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
-import { SolanaWeb3Method } from "../relay/solana/SolanaWeb3Method";
-import { SolanaWeb3Response } from "../relay/solana/SolanaWeb3Response";
-import { randomBytesHex } from "../util";
-import { RequestArguments } from "./Web3Provider";
-export const SOLANA_PROVIDER_ID = "window.coinbaseSolana";
+import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
+import { SolanaWeb3Method } from '../relay/solana/SolanaWeb3Method';
+import { SolanaWeb3Response } from '../relay/solana/SolanaWeb3Response';
+import { randomBytesHex } from '../util';
+import { RequestArguments } from './Web3Provider';
+export const SOLANA_PROVIDER_ID = 'window.coinbaseSolana';
 
 type ErrorResponse = {
   method: string;
@@ -25,11 +25,9 @@ type SolanaWeb3Provider = {
   signAllTransactions: (transactions: Transaction[]) => Promise<Transaction[]>;
   signAndSendTransaction: (
     transaction: Transaction,
-    options?: SendOptions,
+    options?: SendOptions
   ) => Promise<{ signature: string }>;
-  signMessage: (
-    message: Uint8Array,
-  ) => Promise<{ signature: Uint8Array } | Error>;
+  signMessage: (message: Uint8Array) => Promise<{ signature: Uint8Array } | Error>;
   handleResponse: (event: any) => void;
 };
 
@@ -41,14 +39,9 @@ declare global {
   }
 }
 
-export class SolanaProvider
-  extends SafeEventEmitter
-  implements SolanaWeb3Provider
-{
+export class SolanaProvider extends SafeEventEmitter implements SolanaWeb3Provider {
   private _eventManager = new Map<string, any>();
-  private _storage: ScopedLocalStorage = new ScopedLocalStorage(
-    "coinbaseSolana",
-  );
+  private _storage: ScopedLocalStorage = new ScopedLocalStorage('coinbaseSolana');
   isConnected: boolean;
   publicKey: PublicKey | null;
 
@@ -65,7 +58,7 @@ export class SolanaProvider
     this.isConnected = false;
     this.publicKey = null;
 
-    window.addEventListener("message", event => {
+    window.addEventListener('message', (event) => {
       // Used to verify the source and window are correct before proceeding
       if (event.origin === location.origin && event.source === window) {
         this.handleResponse(event);
@@ -74,7 +67,7 @@ export class SolanaProvider
   }
 
   public handleResponse = (event: any) => {
-    if (!["extensionUIResponse", "WEB3_RESPONSE"].includes(event.data.type)) {
+    if (!['extensionUIResponse', 'WEB3_RESPONSE'].includes(event.data.type)) {
       return;
     }
 
@@ -89,14 +82,14 @@ export class SolanaProvider
 
       switch (action) {
         case SolanaWeb3Response.web3RequestCanceled:
-          callback(undefined, new Error("User canceled request"));
+          callback(undefined, new Error('User canceled request'));
           break;
         case SolanaWeb3Response.connectionSuccess:
           if (Array.isArray(data?.addresses)) {
             callback(data.addresses);
             return;
           }
-          callback(null, new Error("Connection error"));
+          callback(null, new Error('Connection error'));
           break;
         case SolanaWeb3Response.signMessageSuccess:
           if (data.signature) {
@@ -106,28 +99,25 @@ export class SolanaProvider
               return;
             }
           }
-          callback(null, new Error("Invalid signature"));
+          callback(null, new Error('Invalid signature'));
           break;
         case SolanaWeb3Response.signTransactionSuccess:
         case SolanaWeb3Response.signAllTransactionsSuccess:
-          if (
-            data.signedTransactionData &&
-            Array.isArray(data.signedTransactionData)
-          ) {
+          if (data.signedTransactionData && Array.isArray(data.signedTransactionData)) {
             callback(data.signedTransactionData);
             return;
           }
-          callback(null, new Error("Invalid transaction data"));
+          callback(null, new Error('Invalid transaction data'));
           break;
         case SolanaWeb3Response.sendTransactionSuccess:
           if (data.txHash) {
             callback(data.txHash);
             return;
           }
-          callback(null, new Error("Invalid transaction hash response"));
+          callback(null, new Error('Invalid transaction hash response'));
           break;
         case SolanaWeb3Response.featureFlagOff:
-          callback(null, new Error("Feature flag is off"));
+          callback(null, new Error('Feature flag is off'));
           this._parentDisconnect();
           break;
         default:
@@ -148,7 +138,7 @@ export class SolanaProvider
     this._storage.clear();
 
     void this.disconnect().then(() => {
-      this.emit("disconnect");
+      this.emit('disconnect');
     });
   };
 
@@ -157,12 +147,12 @@ export class SolanaProvider
     if (!window.__CIPHER_BRIDGE__) {
       window.postMessage(
         {
-          type: "solanaProviderRequest",
+          type: 'solanaProviderRequest',
           data: {
-            action: "firstConnectRequest",
+            action: 'firstConnectRequest',
           },
         },
-        "*",
+        '*'
       );
     }
     return new Promise((resolve, reject) => {
@@ -172,17 +162,17 @@ export class SolanaProvider
             this.isConnected = true;
             this.publicKey = new PublicKey(addresses[0]);
 
-            this._storage.setItem("Addresses", JSON.stringify(addresses));
+            this._storage.setItem('Addresses', JSON.stringify(addresses));
 
             return resolve();
           } catch (e) {
             void this.disconnect().then(() => {
-              return reject(this._getErrorResponse(method, "Connection error"));
+              return reject(this._getErrorResponse(method, 'Connection error'));
             });
           }
         }
         void this.disconnect().then(() => {
-          return reject(this._getErrorResponse(method, "Connection error"));
+          return reject(this._getErrorResponse(method, 'Connection error'));
         });
       });
     });
@@ -195,11 +185,7 @@ export class SolanaProvider
     return Promise.resolve();
   }
 
-  public async sendTransaction(
-    transaction: Transaction,
-    _connection: any,
-    options: SendOptions,
-  ) {
+  public async sendTransaction(transaction: Transaction, _connection: any, options: SendOptions) {
     // We do not currently support custom connection so we ignore this arg
     // and forward the request to signAndSendTransaction
     return this.signAndSendTransaction(transaction, options);
@@ -207,7 +193,7 @@ export class SolanaProvider
 
   public async signAndSendTransaction(
     transaction: Transaction,
-    options?: SendOptions,
+    options?: SendOptions
   ): Promise<{ signature: string }> {
     const method = SolanaWeb3Method.sendTransaction;
     this._checkWalletConnected(method);
@@ -230,11 +216,8 @@ export class SolanaProvider
             if (!error) {
               return resolve({ signature });
             }
-            return reject(
-              error ??
-                this._getErrorResponse(method, "Could not send transactions"),
-            );
-          },
+            return reject(error ?? this._getErrorResponse(method, 'Could not send transactions'));
+          }
         );
       } catch (err) {
         reject(err);
@@ -242,9 +225,7 @@ export class SolanaProvider
     });
   }
 
-  public async signMessage(
-    msg: Uint8Array,
-  ): Promise<{ signature: Uint8Array } | Error> {
+  public async signMessage(msg: Uint8Array): Promise<{ signature: Uint8Array } | Error> {
     const method = SolanaWeb3Method.signMessage;
     const message = Buffer.from(msg).toString();
     this._checkWalletConnected(method);
@@ -263,19 +244,17 @@ export class SolanaProvider
             return resolve({ signature });
           }
           return reject(error);
-        },
+        }
       );
     });
   }
 
-  public async signAllTransactions(
-    transactions: Transaction[],
-  ): Promise<Transaction[]> {
+  public async signAllTransactions(transactions: Transaction[]): Promise<Transaction[]> {
     const method = SolanaWeb3Method.signAllTransactions;
     this._checkWalletConnected(method);
     return new Promise((resolve, reject) => {
       try {
-        const serializedTransactions = transactions.map(transaction => {
+        const serializedTransactions = transactions.map((transaction) => {
           return [...transaction.serialize({ verifySignatures: false })];
         });
         this._request(
@@ -288,14 +267,10 @@ export class SolanaProvider
           (signedTransactionsArray: number[][], error: any) => {
             if (!error) {
               try {
-                const parsedTransactions = signedTransactionsArray.map(
-                  (txArray: number[]) => {
-                    return Transaction.from(txArray);
-                  },
-                );
-                const allTransactionsAreSigned = parsedTransactions.every(
-                  tx => tx.signature,
-                );
+                const parsedTransactions = signedTransactionsArray.map((txArray: number[]) => {
+                  return Transaction.from(txArray);
+                });
+                const allTransactionsAreSigned = parsedTransactions.every((tx) => tx.signature);
                 if (allTransactionsAreSigned) {
                   resolve(parsedTransactions);
                 }
@@ -303,11 +278,8 @@ export class SolanaProvider
                 reject(e);
               }
             }
-            return reject(
-              error ??
-                this._getErrorResponse(method, "Could not sign transactions"),
-            );
-          },
+            return reject(error ?? this._getErrorResponse(method, 'Could not sign transactions'));
+          }
         );
       } catch (error) {
         reject(error);
@@ -333,8 +305,7 @@ export class SolanaProvider
           (transactionDataArray: number[], error: any) => {
             if (!error) {
               try {
-                const parsedTransaction =
-                  Transaction.from(transactionDataArray);
+                const parsedTransaction = Transaction.from(transactionDataArray);
 
                 if (parsedTransaction?.signature) {
                   resolve(parsedTransaction);
@@ -343,11 +314,8 @@ export class SolanaProvider
                 reject(e);
               }
             }
-            return reject(
-              error ??
-                this._getErrorResponse(method, "Could not sign transaction"),
-            );
-          },
+            return reject(error ?? this._getErrorResponse(method, 'Could not sign transaction'));
+          }
         );
       } catch (error) {
         reject(error);
@@ -355,16 +323,12 @@ export class SolanaProvider
     });
   }
 
-  private _getErrorResponse(
-    method: string,
-    errorMessage: string,
-  ): ErrorResponse {
+  private _getErrorResponse(method: string, errorMessage: string): ErrorResponse {
     return { method, message: errorMessage };
   }
 
   private _checkWalletConnected(method: string) {
-    if (!this.isConnected)
-      throw this._getErrorResponse(method, "Wallet is not connected");
+    if (!this.isConnected) throw this._getErrorResponse(method, 'Wallet is not connected');
   }
 
   private _request(args: RequestArguments, callback: any) {
@@ -377,7 +341,7 @@ export class SolanaProvider
     if (window.__CIPHER_BRIDGE__) {
       const message = {
         id,
-        type: "browserRequest",
+        type: 'browserRequest',
         request: {
           method: args.method,
           params: args.params,
@@ -388,7 +352,7 @@ export class SolanaProvider
       window.__CIPHER_BRIDGE__.postMessage(JSON.stringify(message));
     } else {
       const message = {
-        type: "extensionUIRequest",
+        type: 'extensionUIRequest',
         provider: SOLANA_PROVIDER_ID,
         data: {
           action: args.method,
@@ -398,11 +362,11 @@ export class SolanaProvider
           },
           id,
           dappInfo: {
-            dappLogoURL: "",
+            dappLogoURL: '',
           },
         },
       };
-      window.postMessage(message, "*");
+      window.postMessage(message, '*');
     }
   }
 }

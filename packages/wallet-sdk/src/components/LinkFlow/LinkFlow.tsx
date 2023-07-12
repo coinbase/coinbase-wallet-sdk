@@ -1,10 +1,10 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { h, render } from "preact";
-import { BehaviorSubject, Observable, Subject, Subscription } from "rxjs";
+import { h, render } from 'preact';
+import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 
-import { ConnectDialog } from "../ConnectDialog/ConnectDialog";
+import { ConnectDialog } from '../ConnectDialog/ConnectDialog';
 
 export interface LinkFlowOptions {
   darkMode: boolean;
@@ -31,8 +31,7 @@ export class LinkFlow {
 
   private readonly connected$: Observable<boolean>;
   private readonly chainId$: Subject<number>;
-  private readonly extensionUI$: BehaviorSubject<Optional<boolean>> =
-    new BehaviorSubject({});
+  private readonly extensionUI$: BehaviorSubject<Optional<boolean>> = new BehaviorSubject({});
   private readonly subscriptions = new Subscription();
 
   private isConnected = false;
@@ -57,27 +56,27 @@ export class LinkFlow {
   }
 
   public attach(el: Element): void {
-    this.root = document.createElement("div");
-    this.root.className = "-cbwsdk-link-flow-root";
+    this.root = document.createElement('div');
+    this.root.className = '-cbwsdk-link-flow-root';
     el.appendChild(this.root);
     this.render();
 
     this.subscriptions.add(
-      this.connected$.subscribe(v => {
+      this.connected$.subscribe((v) => {
         if (this.isConnected !== v) {
           this.isConnected = v;
           this.render();
         }
-      }),
+      })
     );
 
     this.subscriptions.add(
-      this.chainId$.subscribe(chainId => {
+      this.chainId$.subscribe((chainId) => {
         if (this.chainId !== chainId) {
           this.chainId = chainId;
           this.render();
         }
-      }),
+      })
     );
   }
 
@@ -130,7 +129,7 @@ export class LinkFlow {
           onCancel={this.onCancel}
           connectDisabled={this.connectDisabled}
         />,
-        this.root,
+        this.root
       );
     });
 

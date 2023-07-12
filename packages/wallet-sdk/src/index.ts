@@ -1,11 +1,11 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { CoinbaseWalletSDK } from "./CoinbaseWalletSDK";
-import { CoinbaseWalletProvider } from "./provider/CoinbaseWalletProvider";
+import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
+import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
 
-export { CoinbaseWalletSDK } from "./CoinbaseWalletSDK";
-export { CoinbaseWalletProvider } from "./provider/CoinbaseWalletProvider";
+export { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
+export { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
 export default CoinbaseWalletSDK;
 
 declare global {
@@ -33,7 +33,7 @@ declare global {
   }
 }
 
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
   window.CoinbaseWalletSDK = CoinbaseWalletSDK;
   window.CoinbaseWalletProvider = CoinbaseWalletProvider;
 

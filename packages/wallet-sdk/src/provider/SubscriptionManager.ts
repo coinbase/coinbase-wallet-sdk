@@ -1,13 +1,12 @@
-import SafeEventEmitter from "@metamask/safe-event-emitter";
-import { PollingBlockTracker, Provider } from "eth-block-tracker";
-import {
-  JsonRpcEngineEndCallback,
-  JsonRpcEngineNextCallback,
-} from "json-rpc-engine";
+import SafeEventEmitter from '@metamask/safe-event-emitter';
+import { PollingBlockTracker, Provider } from 'eth-block-tracker';
+import { JsonRpcEngineEndCallback, JsonRpcEngineNextCallback } from 'json-rpc-engine';
 
-import { RequestArguments, Web3Provider } from "./Web3Provider";
+import { RequestArguments, Web3Provider } from './Web3Provider';
 
-const createSubscriptionManager = require("eth-json-rpc-filters/subscriptionManager");
+// TODO: When we update this package we should be able to fix this
+//  eslint-disable-next-line @typescript-eslint/no-var-requires
+const createSubscriptionManager = require('eth-json-rpc-filters/subscriptionManager');
 const noop = () => {};
 
 export interface SubscriptionResult {
@@ -61,7 +60,7 @@ interface SubscriptionMiddleware {
     req: RequestArguments,
     res: SubscriptionResult,
     next: JsonRpcEngineNextCallback,
-    end: JsonRpcEngineEndCallback,
+    end: JsonRpcEngineEndCallback
   ): Promise<void>;
 
   destroy(): void;

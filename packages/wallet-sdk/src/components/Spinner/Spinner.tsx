@@ -1,16 +1,16 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { FunctionComponent, h } from "preact";
+import { FunctionComponent, h } from 'preact';
 
-import css from "./Spinner-css";
+import css from './Spinner-css';
 
 export const Spinner: FunctionComponent<{
   size?: number;
   color?: string;
-}> = props => {
+}> = (props) => {
   const size = props.size ?? 64;
-  const color = props.color || "#000";
+  const color = props.color || '#000';
 
   return (
     <div class="-cbwsdk-spinner">

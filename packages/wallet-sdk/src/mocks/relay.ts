@@ -1,11 +1,8 @@
-import { MOCK_ADDERESS, MOCK_TX } from "../fixtures/provider";
-import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
-import { Session } from "../relay/Session";
-import {
-  CancelablePromise,
-  WalletSDKRelayAbstract,
-} from "../relay/WalletSDKRelayAbstract";
-import { Web3Method } from "../relay/Web3Method";
+import { MOCK_ADDERESS, MOCK_TX } from '../fixtures/provider';
+import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
+import { Session } from '../relay/Session';
+import { CancelablePromise, WalletSDKRelayAbstract } from '../relay/WalletSDKRelayAbstract';
+import { Web3Method } from '../relay/Web3Method';
 import {
   AddEthereumChainResponse,
   ConnectAndSignInResponse,
@@ -20,8 +17,8 @@ import {
   SwitchEthereumChainResponse,
   WatchAssetResponse,
   Web3Response,
-} from "../relay/Web3Response";
-import { AddressString, HexString, ProviderType } from "../types";
+} from '../relay/Web3Response';
+import { AddressString, HexString, ProviderType } from '../types';
 
 function makeMockReturn<T>(returnValue?: T) {
   return { cancel: () => {}, promise: Promise.resolve(returnValue as T) };
@@ -47,7 +44,7 @@ export class MockRelayClass extends WalletSDKRelayAbstract {
       method: Web3Method.addEthereumChain,
       result: {
         isApproved: true,
-        rpcUrl: "https://node.ethchain.com",
+        rpcUrl: 'https://node.ethchain.com',
       },
     });
   }
@@ -71,7 +68,7 @@ export class MockRelayClass extends WalletSDKRelayAbstract {
       method: Web3Method.switchEthereumChain,
       result: {
         isApproved: true,
-        rpcUrl: "https://node.ethchain.com",
+        rpcUrl: 'https://node.ethchain.com',
       },
     });
   }
@@ -79,7 +76,7 @@ export class MockRelayClass extends WalletSDKRelayAbstract {
   signEthereumMessage(): CancelablePromise<SignEthereumMessageResponse> {
     return makeMockReturn<SignEthereumMessageResponse>({
       method: Web3Method.signEthereumMessage,
-      result: HexString("0x"),
+      result: HexString('0x'),
     });
   }
 
@@ -118,7 +115,7 @@ export class MockRelayClass extends WalletSDKRelayAbstract {
   genericRequest(): CancelablePromise<GenericResponse> {
     return makeMockReturn<GenericResponse>({
       method: Web3Method.generic,
-      result: "Success",
+      result: 'Success',
     });
   }
 
@@ -151,6 +148,6 @@ export class MockRelayClass extends WalletSDKRelayAbstract {
   }
 
   get session() {
-    return new Session(new ScopedLocalStorage("session-test"));
+    return new Session(new ScopedLocalStorage('session-test'));
   }
 }

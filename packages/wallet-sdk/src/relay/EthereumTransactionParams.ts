@@ -1,6 +1,6 @@
-import BN from "bn.js";
+import BN from 'bn.js';
 
-import { AddressString, IntNumber } from "../types";
+import { AddressString, IntNumber } from '../types';
 
 export interface EthereumTransactionParams {
   fromAddress: AddressString;

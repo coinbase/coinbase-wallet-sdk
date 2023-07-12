@@ -13,12 +13,20 @@ Wallet SDK is open-source and uses minimal dependencies for maximum security and
 
 ## Getting started
 
-- This readme contains brief instructions to get up and running.
-- Visit our [public developer docs](https://docs.cloud.coinbase.com/wallet-sdk/docs) for more detail, including samples for integrating Coinbase Wallet using libraries like [web3-react](https://github.com/NoahZinsmeister/web3-react), [web3modal](https://github.com/Web3Modal/web3modal), [Web3-Onboard](https://docs.blocknative.com/onboard), and [wagmi](https://wagmi.sh/).
+This repo uses a yarn workspace. To get started, run:
+
+```shell
+yarn install
+
+yarn workspace @coinbase/wallet-sdk "<command>"
+```
 
 ## Installing and Upgrading
 
 > The installation package for **Coinbase Wallet SDK** (formerly WalletLink) is now named `@coinbase/wallet-sdk`.
+
+- This readme contains brief instructions to get up and running.
+- Visit our [public developer docs](https://docs.cloud.coinbase.com/wallet-sdk/docs) for more detail, including samples for integrating Coinbase Wallet using libraries like [web3-react](https://github.com/Uniswap/web3-react), [web3modal](https://github.com/Web3Modal/web3modal), [Web3-Onboard](https://docs.blocknative.com/onboard), and [wagmi](https://wagmi.sh/).
 
 ### Installing Wallet SDK
 

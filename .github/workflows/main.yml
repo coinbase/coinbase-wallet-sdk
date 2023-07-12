@@ -3,8 +3,31 @@ name: CI
 on: [push, pull_request]
 
 jobs:
+  lint:
+    name: Lint Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Checkout node action
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+          cache-dependency-path: 'yarn.lock'
+
+      - name: Install NPM dependencies
+        run: yarn install
+
+      - name: Check ESLint
+        run: yarn lint:eslint
+
   lint-check:
-    name: Lint / Type Check
+    name: Type Check
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -23,12 +46,6 @@ jobs:
       - name: Install NPM dependencies
         run: yarn install
 
-      - name: Check ESLint
-        run: yarn lint:eslint
-
-      - name: Check prettier formatting
-        run: yarn lint:prettier
-
       - name: Runs compile asset script
         run: node ./compile-assets.js
 
@@ -44,7 +61,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [14.x, 16.x, 18.x]
+        node-version: [16.x, 18.x, 20.x]
 
     steps:
       - name: Checkout

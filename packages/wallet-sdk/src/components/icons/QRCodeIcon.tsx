@@ -1,14 +1,8 @@
-import { h } from "preact";
+import { h } from 'preact';
 
 export function QRCodeIcon(props: h.JSX.SVGAttributes<SVGSVGElement>) {
   return (
-    <svg
-      width="10"
-      height="10"
-      viewBox="0 0 10 10"
-      xmlns="http://www.w3.org/2000/svg"
-      {...props}
-    >
+    <svg width="10" height="10" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" {...props}>
       <path d="M8.2271 1.77124L7.0271 1.77124V2.97124H8.2271V1.77124Z" />
       <path d="M5.44922 0.199219L5.44922 4.54922L9.79922 4.54922V0.199219L5.44922 0.199219ZM8.89922 3.64922L6.34922 3.64922L6.34922 1.09922L8.89922 1.09922V3.64922Z" />
       <path d="M2.97124 1.77124L1.77124 1.77124L1.77124 2.97124H2.97124V1.77124Z" />

@@ -1,9 +1,9 @@
-import clsx from "clsx";
-import { FunctionComponent, h, render } from "preact";
+import clsx from 'clsx';
+import { FunctionComponent, h, render } from 'preact';
 
-import { injectCssReset } from "../../lib/cssReset";
-import { SnackbarContainer } from "../Snackbar";
-import css from "./RedirectDialog-css";
+import { injectCssReset } from '../../lib/cssReset';
+import { SnackbarContainer } from '../Snackbar';
+import css from './RedirectDialog-css';
 
 type RedirectDialogProps = {
   title: string;
@@ -17,8 +17,8 @@ export class RedirectDialog {
 
   public attach(): void {
     const el = document.documentElement;
-    this.root = document.createElement("div");
-    this.root.className = "-cbwsdk-css-reset";
+    this.root = document.createElement('div');
+    this.root.className = '-cbwsdk-css-reset';
     el.appendChild(this.root);
     injectCssReset();
   }
@@ -43,7 +43,7 @@ export class RedirectDialog {
           this.clear();
         }}
       />,
-      this.root,
+      this.root
     );
   }
 }
@@ -53,14 +53,14 @@ const RedirectDialogContent: FunctionComponent<
     onDismiss: () => void;
   }
 > = ({ title, buttonText, darkMode, onButtonClick, onDismiss }) => {
-  const theme = darkMode ? "dark" : "light";
+  const theme = darkMode ? 'dark' : 'light';
 
   return (
     <SnackbarContainer darkMode={darkMode}>
       <div class="-cbwsdk-redirect-dialog">
         <style>{css}</style>
         <div class="-cbwsdk-redirect-dialog-backdrop" onClick={onDismiss} />
-        <div class={clsx("-cbwsdk-redirect-dialog-box", theme)}>
+        <div class={clsx('-cbwsdk-redirect-dialog-box', theme)}>
           <p>{title}</p>
           <button onClick={onButtonClick}>{buttonText}</button>
         </div>

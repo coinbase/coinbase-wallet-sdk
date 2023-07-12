@@ -1,13 +1,14 @@
-import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
+import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import {
   CoinbaseWalletProvider,
   CoinbaseWalletProviderOptions,
-} from "../provider/CoinbaseWalletProvider";
-import { WalletSDKRelayEventManager } from "../relay/WalletSDKRelayEventManager";
+} from '../provider/CoinbaseWalletProvider';
+import { WalletSDKRelayEventManager } from '../relay/WalletSDKRelayEventManager';
 
 export const mockSetAppInfo = jest.fn();
 
 export class MockProviderClass extends CoinbaseWalletProvider {
+  // eslint-disable-next-line no-useless-constructor
   constructor(opts: Readonly<CoinbaseWalletProviderOptions>) {
     super(opts);
   }
@@ -26,9 +27,9 @@ export class MockProviderClass extends CoinbaseWalletProvider {
 
 export const mockExtensionProvider = new MockProviderClass({
   chainId: 1,
-  jsonRpcUrl: "jsonrpc-url",
+  jsonRpcUrl: 'jsonrpc-url',
   overrideIsMetaMask: false,
   relayEventManager: new WalletSDKRelayEventManager(),
   relayProvider: jest.fn(),
-  storage: new ScopedLocalStorage("-walletlink"),
+  storage: new ScopedLocalStorage('-walletlink'),
 });

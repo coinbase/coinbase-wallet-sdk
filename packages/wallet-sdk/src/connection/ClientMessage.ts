@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { IntNumber } from "../types";
+import { IntNumber } from '../types';
 
 export interface ClientMessage {
   type: string;
@@ -9,41 +9,41 @@ export interface ClientMessage {
 }
 
 export interface ClientMessageHostSession extends ClientMessage {
-  type: "HostSession";
+  type: 'HostSession';
   sessionId: string;
   sessionKey: string;
 }
 
 export function ClientMessageHostSession(
-  params: Omit<ClientMessageHostSession, "type">,
+  params: Omit<ClientMessageHostSession, 'type'>
 ): ClientMessageHostSession {
-  return { type: "HostSession", ...params };
+  return { type: 'HostSession', ...params };
 }
 
 export interface ClientMessageIsLinked extends ClientMessage {
-  type: "IsLinked";
+  type: 'IsLinked';
   sessionId: string;
 }
 
 export function ClientMessageIsLinked(
-  params: Omit<ClientMessageIsLinked, "type">,
+  params: Omit<ClientMessageIsLinked, 'type'>
 ): ClientMessageIsLinked {
-  return { type: "IsLinked", ...params };
+  return { type: 'IsLinked', ...params };
 }
 
 export interface ClientMessageGetSessionConfig extends ClientMessage {
-  type: "GetSessionConfig";
+  type: 'GetSessionConfig';
   sessionId: string;
 }
 
 export function ClientMessageGetSessionConfig(
-  params: Omit<ClientMessageGetSessionConfig, "type">,
+  params: Omit<ClientMessageGetSessionConfig, 'type'>
 ): ClientMessageGetSessionConfig {
-  return { type: "GetSessionConfig", ...params };
+  return { type: 'GetSessionConfig', ...params };
 }
 
 export interface ClientMessageSetSessionConfig extends ClientMessage {
-  type: "SetSessionConfig";
+  type: 'SetSessionConfig';
   id: IntNumber;
   sessionId: string;
   webhookId?: string | null;
@@ -52,13 +52,13 @@ export interface ClientMessageSetSessionConfig extends ClientMessage {
 }
 
 export function ClientMessageSetSessionConfig(
-  params: Omit<ClientMessageSetSessionConfig, "type">,
+  params: Omit<ClientMessageSetSessionConfig, 'type'>
 ): ClientMessageSetSessionConfig {
-  return { type: "SetSessionConfig", ...params };
+  return { type: 'SetSessionConfig', ...params };
 }
 
 export interface ClientMessagePublishEvent extends ClientMessage {
-  type: "PublishEvent";
+  type: 'PublishEvent';
   sessionId: string;
   event: string;
   data: string;
@@ -66,7 +66,7 @@ export interface ClientMessagePublishEvent extends ClientMessage {
 }
 
 export function ClientMessagePublishEvent(
-  params: Omit<ClientMessagePublishEvent, "type">,
+  params: Omit<ClientMessagePublishEvent, 'type'>
 ): ClientMessagePublishEvent {
-  return { type: "PublishEvent", ...params };
+  return { type: 'PublishEvent', ...params };
 }
