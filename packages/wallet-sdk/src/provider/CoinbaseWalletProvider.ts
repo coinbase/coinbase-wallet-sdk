@@ -21,7 +21,13 @@ import {
   RequestEthereumAccountsResponse,
   SwitchResponse,
 } from "../relay/Web3Response";
-import { AddressString, Callback, IntNumber, ProviderType } from "../types";
+import {
+  AddressString,
+  Callback,
+  HexString,
+  IntNumber,
+  ProviderType,
+} from "../types";
 import {
   ensureAddressString,
   ensureBN,
@@ -613,9 +619,9 @@ export class CoinbaseWalletProvider
    * @param {string[]} [params.resources] - An optional list of information the user wishes to have resolved as part of authentication by the relying party.
    *
    * @returns {Promise<ConnectAndSignInResponse>} A promise that resolves to an object with the following properties:
-   * - `accounts`: The Ethereum accounts of the user.
-   * - `message`: The overall message that the user signed.
-   * - `signature`: The signature of the message, signed with the user's private key.
+   * - `accounts` {AddressString[]}: The Ethereum accounts of the user.
+   * - `message` {HexString}: The overall message that the user signed.
+   * - `signature` {HexString}: The signature of the message, signed with the user's private key.
    */
   public async connectAndSignIn(params: {
     nonce: string;
@@ -623,8 +629,8 @@ export class CoinbaseWalletProvider
     resources?: string[];
   }): Promise<{
     accounts: AddressString[];
-    message: string;
-    signature: string;
+    message: HexString;
+    signature: HexString;
   }> {
     // NOTE: It was intentionally built by following the pattern of the existing eth_requestAccounts method
     // to maintain consistency and avoid introducing a new pattern.
