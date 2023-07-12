@@ -1,20 +1,20 @@
-import { Observable, Subject } from "rxjs";
+import { Observable, Subject } from 'rxjs';
 
-import { ErrorHandler } from "../errors";
-import { Session } from "../relay/Session";
+import { ErrorHandler } from '../errors';
+import { Session } from '../relay/Session';
 import {
   EthereumAddressFromSignedMessageRequest,
   SignEthereumMessageRequest,
   SignEthereumTransactionRequest,
   SubmitEthereumTransactionRequest,
-} from "../relay/Web3Request";
+} from '../relay/Web3Request';
 import {
   EthereumAddressFromSignedMessageResponse,
   SignEthereumMessageResponse,
   SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse,
-} from "../relay/Web3Response";
-import { AddressString, ProviderType } from "../types";
+} from '../relay/Web3Response';
+import { AddressString, ProviderType } from '../types';
 
 export interface WalletUIOptions {
   linkAPIUrl: string;

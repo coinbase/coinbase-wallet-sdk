@@ -1,18 +1,17 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { RelayMessage, RelayMessageType } from "./RelayMessage";
-import { Web3Response } from "./Web3Response";
+import { RelayMessage, RelayMessageType } from './RelayMessage';
+import { Web3Response } from './Web3Response';
 
-export interface Web3ResponseMessage
-  extends RelayMessage<RelayMessageType.WEB3_RESPONSE> {
+export interface Web3ResponseMessage extends RelayMessage<RelayMessageType.WEB3_RESPONSE> {
   type: RelayMessageType.WEB3_RESPONSE;
   id: string;
   response: Web3Response;
 }
 
 export function Web3ResponseMessage(
-  params: Omit<Web3ResponseMessage, "type">,
+  params: Omit<Web3ResponseMessage, 'type'>
 ): Web3ResponseMessage {
   return { type: RelayMessageType.WEB3_RESPONSE, ...params };
 }

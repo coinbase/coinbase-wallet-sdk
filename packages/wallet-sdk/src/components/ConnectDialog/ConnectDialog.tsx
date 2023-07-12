@@ -1,13 +1,13 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import clsx from "clsx";
-import { h } from "preact";
-import { useEffect, useState } from "preact/hooks";
+import clsx from 'clsx';
+import { h } from 'preact';
+import { useEffect, useState } from 'preact/hooks';
 
-import { ConnectContent } from "../ConnectContent/ConnectContent";
-import { TryExtensionContent } from "../TryExtensionContent/TryExtensionContent";
-import css from "./ConnectDialog-css";
+import { ConnectContent } from '../ConnectContent/ConnectContent';
+import { TryExtensionContent } from '../TryExtensionContent/TryExtensionContent';
+import css from './ConnectDialog-css';
 
 type ConnectDialogProps = {
   darkMode: boolean;
@@ -41,7 +41,7 @@ export const ConnectDialog = (props: ConnectDialogProps) => {
       timers.push(
         window.setTimeout(() => {
           setContainerHidden(true);
-        }, 360),
+        }, 360)
       );
     }
 
@@ -50,28 +50,28 @@ export const ConnectDialog = (props: ConnectDialogProps) => {
     };
   }, [props.isOpen]);
 
-  const theme = darkMode ? "dark" : "light";
+  const theme = darkMode ? 'dark' : 'light';
 
   return (
     <div
       class={clsx(
-        "-cbwsdk-connect-dialog-container",
-        containerHidden && "-cbwsdk-connect-dialog-container-hidden",
+        '-cbwsdk-connect-dialog-container',
+        containerHidden && '-cbwsdk-connect-dialog-container-hidden'
       )}
     >
       <style>{css}</style>
       <div
         class={clsx(
-          "-cbwsdk-connect-dialog-backdrop",
+          '-cbwsdk-connect-dialog-backdrop',
           theme,
-          dialogHidden && "-cbwsdk-connect-dialog-backdrop-hidden",
+          dialogHidden && '-cbwsdk-connect-dialog-backdrop-hidden'
         )}
       />
       <div class="-cbwsdk-connect-dialog">
         <div
           class={clsx(
-            "-cbwsdk-connect-dialog-box",
-            dialogHidden && "-cbwsdk-connect-dialog-box-hidden",
+            '-cbwsdk-connect-dialog-box',
+            dialogHidden && '-cbwsdk-connect-dialog-box-hidden'
           )}
         >
           {!props.connectDisabled ? (

@@ -1,14 +1,14 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { sha256 } from "sha.js";
+import { sha256 } from 'sha.js';
 
-import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
-import { randomBytesHex } from "../util";
+import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
+import { randomBytesHex } from '../util';
 
-const STORAGE_KEY_SESSION_ID = "session:id";
-const STORAGE_KEY_SESSION_SECRET = "session:secret";
-const STORAGE_KEY_SESSION_LINKED = "session:linked";
+const STORAGE_KEY_SESSION_ID = 'session:id';
+const STORAGE_KEY_SESSION_SECRET = 'session:secret';
+const STORAGE_KEY_SESSION_LINKED = 'session:linked';
 
 export class Session {
   private readonly _id: string;
@@ -17,19 +17,14 @@ export class Session {
   private readonly _storage: ScopedLocalStorage;
   private _linked: boolean;
 
-  constructor(
-    storage: ScopedLocalStorage,
-    id?: string,
-    secret?: string,
-    linked?: boolean,
-  ) {
+  constructor(storage: ScopedLocalStorage, id?: string, secret?: string, linked?: boolean) {
     this._storage = storage;
     this._id = id || randomBytesHex(16);
     this._secret = secret || randomBytesHex(32);
 
     this._key = new sha256()
       .update(`${this._id}, ${this._secret} WalletLink`) // ensure old sessions stay connected
-      .digest("hex");
+      .digest('hex');
 
     this._linked = !!linked;
   }
@@ -40,7 +35,7 @@ export class Session {
     const secret = storage.getItem(STORAGE_KEY_SESSION_SECRET);
 
     if (id && secret) {
-      return new Session(storage, id, secret, linked === "1");
+      return new Session(storage, id, secret, linked === '1');
     }
 
     return null;
@@ -51,7 +46,7 @@ export class Session {
    * @param sessionId session ID
    */
   public static hash(sessionId: string): string {
-    return new sha256().update(sessionId).digest("hex");
+    return new sha256().update(sessionId).digest('hex');
   }
 
   public get id(): string {
@@ -83,6 +78,6 @@ export class Session {
   }
 
   private persistLinked(): void {
-    this._storage.setItem(STORAGE_KEY_SESSION_LINKED, this._linked ? "1" : "0");
+    this._storage.setItem(STORAGE_KEY_SESSION_LINKED, this._linked ? '1' : '0');
   }
 }

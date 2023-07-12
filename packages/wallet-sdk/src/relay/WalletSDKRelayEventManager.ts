@@ -1,5 +1,5 @@
-import { prepend0x } from "../util";
-import { Web3Response } from "./Web3Response";
+import { prepend0x } from '../util';
+import { Web3Response } from './Web3Response';
 
 type ResponseCallback = (response: Web3Response) => void;
 

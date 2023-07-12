@@ -1,14 +1,8 @@
-import { h } from "preact";
+import { h } from 'preact';
 
 export function StatusDotIcon(props: h.JSX.SVGAttributes<SVGSVGElement>) {
   return (
-    <svg
-      width="10"
-      height="10"
-      viewBox="0 0 10 10"
-      xmlns="http://www.w3.org/2000/svg"
-      {...props}
-    >
+    <svg width="10" height="10" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" {...props}>
       <path
         fill-rule="evenodd"
         clip-rule="evenodd"

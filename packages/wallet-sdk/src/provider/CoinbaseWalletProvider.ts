@@ -1,27 +1,27 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import SafeEventEmitter from "@metamask/safe-event-emitter";
-import BN from "bn.js";
+import SafeEventEmitter from '@metamask/safe-event-emitter';
+import BN from 'bn.js';
 
-import { DiagnosticLogger, EVENTS } from "../connection/DiagnosticLogger";
-import { serializeError, standardErrorCodes, standardErrors } from "../errors";
-import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
-import { EthereumTransactionParams } from "../relay/EthereumTransactionParams";
-import { Session } from "../relay/Session";
+import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
+import { serializeError, standardErrorCodes, standardErrors } from '../errors';
+import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
+import { EthereumTransactionParams } from '../relay/EthereumTransactionParams';
+import { Session } from '../relay/Session';
 import {
   LOCAL_STORAGE_ADDRESSES_KEY,
   WalletSDKRelayAbstract,
-} from "../relay/WalletSDKRelayAbstract";
-import { WalletSDKRelayEventManager } from "../relay/WalletSDKRelayEventManager";
-import { Web3Method } from "../relay/Web3Method";
+} from '../relay/WalletSDKRelayAbstract';
+import { WalletSDKRelayEventManager } from '../relay/WalletSDKRelayEventManager';
+import { Web3Method } from '../relay/Web3Method';
 import {
   ConnectAndSignInResponse,
   isErrorResponse,
   RequestEthereumAccountsResponse,
   SwitchResponse,
-} from "../relay/Web3Response";
-import { AddressString, Callback, IntNumber, ProviderType } from "../types";
+} from '../relay/Web3Response';
+import { AddressString, Callback, IntNumber, ProviderType } from '../types';
 import {
   ensureAddressString,
   ensureBN,
@@ -32,19 +32,19 @@ import {
   ensureRegExpString,
   hexStringFromIntNumber,
   prepend0x,
-} from "../util";
-import eip712 from "../vendor-js/eth-eip712-util";
-import { FilterPolyfill } from "./FilterPolyfill";
-import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from "./JSONRPC";
+} from '../util';
+import eip712 from '../vendor-js/eth-eip712-util';
+import { FilterPolyfill } from './FilterPolyfill';
+import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from './JSONRPC';
 import {
   SubscriptionManager,
   SubscriptionNotification,
   SubscriptionResult,
-} from "./SubscriptionManager";
-import { RequestArguments, Web3Provider } from "./Web3Provider";
+} from './SubscriptionManager';
+import { RequestArguments, Web3Provider } from './Web3Provider';
 
-const DEFAULT_CHAIN_ID_KEY = "DefaultChainId";
-const DEFAULT_JSON_RPC_URL = "DefaultJsonRpcUrl";
+const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
+const DEFAULT_JSON_RPC_URL = 'DefaultJsonRpcUrl';
 
 export interface CoinbaseWalletProviderOptions {
   chainId: number;
@@ -88,10 +88,7 @@ interface WatchAssetParams {
   };
 }
 
-export class CoinbaseWalletProvider
-  extends SafeEventEmitter
-  implements Web3Provider
-{
+export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Provider {
   // So dapps can easily identify Coinbase Wallet for enabling features like 3085 network switcher menus
   public readonly isCoinbaseWallet: boolean;
   // So dapps can easily identify Coinbase Dapp Browser for enabling dapp browser specific features
@@ -157,51 +154,49 @@ export class CoinbaseWalletProvider
     const chainId = this.getChainId();
     const chainIdStr = prepend0x(chainId.toString(16));
     // indicate that we've connected, for EIP-1193 compliance
-    this.emit("connect", { chainIdStr });
+    this.emit('connect', { chainIdStr });
 
     const cachedAddresses = this._storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
     if (cachedAddresses) {
-      const addresses = cachedAddresses.split(" ") as AddressString[];
-      if (addresses[0] !== "") {
-        this._addresses = addresses.map(address =>
-          ensureAddressString(address),
-        );
-        this.emit("accountsChanged", addresses);
+      const addresses = cachedAddresses.split(' ') as AddressString[];
+      if (addresses[0] !== '') {
+        this._addresses = addresses.map((address) => ensureAddressString(address));
+        this.emit('accountsChanged', addresses);
       }
     }
 
     this._subscriptionManager.events.on(
-      "notification",
+      'notification',
       (notification: SubscriptionNotification) => {
-        this.emit("message", {
+        this.emit('message', {
           type: notification.method,
           data: notification.params,
         });
-      },
+      }
     );
 
     if (this._addresses.length > 0) {
       void this.initializeRelay();
     }
 
-    window.addEventListener("message", event => {
+    window.addEventListener('message', (event) => {
       // Used to verify the source and window are correct before proceeding
       if (event.origin !== location.origin || event.source !== window) {
         return;
       }
 
-      if (event.data.type !== "walletLinkMessage") return; // compatibility with CBW extension
+      if (event.data.type !== 'walletLinkMessage') return; // compatibility with CBW extension
 
       if (
-        event.data.data.action === "defaultChainChanged" ||
-        event.data.data.action === "dappChainSwitched"
+        event.data.data.action === 'defaultChainChanged' ||
+        event.data.data.action === 'dappChainSwitched'
       ) {
         const _chainId = event.data.data.chainId;
         const jsonRpcUrl = event.data.data.jsonRpcUrl ?? this.jsonRpcUrl;
         this.updateProviderInfo(jsonRpcUrl, Number(_chainId));
       }
 
-      if (event.data.data.action === "addressChanged") {
+      if (event.data.data.action === 'addressChanged') {
         this._setAddresses([event.data.data.address]);
       }
     });
@@ -248,9 +243,7 @@ export class CoinbaseWalletProvider
   }
 
   private get jsonRpcUrl(): string {
-    return (
-      this._storage.getItem(DEFAULT_JSON_RPC_URL) ?? this._jsonRpcUrlFromOpts
-    );
+    return this._storage.getItem(DEFAULT_JSON_RPC_URL) ?? this._jsonRpcUrlFromOpts;
   }
 
   private set jsonRpcUrl(value: string) {
@@ -283,7 +276,7 @@ export class CoinbaseWalletProvider
     this._storage.setItem(DEFAULT_CHAIN_ID_KEY, chainId.toString(10));
     const chainChanged = ensureIntNumber(chainId) !== originalChainId;
     if (chainChanged || !this.hasMadeFirstChainChangedEmission) {
-      this.emit("chainChanged", this.getChainId());
+      this.emit('chainChanged', this.getChainId());
       this.hasMadeFirstChainChangedEmission = true;
     }
   }
@@ -294,7 +287,7 @@ export class CoinbaseWalletProvider
     symbol?: string,
     decimals?: number,
     image?: string,
-    chainId?: number,
+    chainId?: number
   ): Promise<boolean> {
     const relay = await this.initializeRelay();
     const result = await relay.watchAsset(
@@ -303,7 +296,7 @@ export class CoinbaseWalletProvider
       symbol,
       decimals,
       image,
-      chainId?.toString(),
+      chainId?.toString()
     ).promise;
 
     return !!result.result;
@@ -319,16 +312,14 @@ export class CoinbaseWalletProvider
       name: string;
       symbol: string;
       decimals: number;
-    },
+    }
   ): Promise<boolean> {
     if (ensureIntNumber(chainId) === this.getChainId()) {
       return false;
     }
 
     const relay = await this.initializeRelay();
-    const isWhitelistedNetworkOrStandalone = relay.inlineAddEthereumChain(
-      chainId.toString(),
-    );
+    const isWhitelistedNetworkOrStandalone = relay.inlineAddEthereumChain(chainId.toString());
 
     if (!this._isAuthorized() && !isWhitelistedNetworkOrStandalone) {
       await relay.requestEthereumAccounts().promise;
@@ -340,7 +331,7 @@ export class CoinbaseWalletProvider
       iconUrls,
       blockExplorerUrls,
       chainName,
-      nativeCurrency,
+      nativeCurrency
     ).promise;
 
     if (res.result?.isApproved === true) {
@@ -354,7 +345,7 @@ export class CoinbaseWalletProvider
     const relay = await this.initializeRelay();
     const res = await relay.switchEthereumChain(
       chainId.toString(10),
-      this.selectedAddress || undefined,
+      this.selectedAddress || undefined
     ).promise;
 
     // backward compatibility
@@ -376,19 +367,15 @@ export class CoinbaseWalletProvider
   }
 
   public setAppInfo(appName: string, appLogoUrl: string | null): void {
-    void this.initializeRelay().then(relay =>
-      relay.setAppInfo(appName, appLogoUrl),
-    );
+    void this.initializeRelay().then((relay) => relay.setAppInfo(appName, appLogoUrl));
   }
 
   /** @deprecated Use `.request({ method: 'eth_requestAccounts' })` instead. */
   public async enable(): Promise<AddressString[]> {
     this.diagnostic?.log(EVENTS.ETH_ACCOUNTS_STATE, {
-      method: "provider::enable",
+      method: 'provider::enable',
       addresses_length: this._addresses.length,
-      sessionIdHash: this._relay
-        ? Session.hash(this._relay.session.id)
-        : undefined,
+      sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : undefined,
     });
 
     if (this._addresses.length > 0) {
@@ -406,28 +393,18 @@ export class CoinbaseWalletProvider
   /** @deprecated Use `.request(...)` instead. */
   public send(request: JSONRPCRequest): JSONRPCResponse;
   public send(request: JSONRPCRequest[]): JSONRPCResponse[];
-  public send(
-    request: JSONRPCRequest,
-    callback: Callback<JSONRPCResponse>,
-  ): void;
-  public send(
-    request: JSONRPCRequest[],
-    callback: Callback<JSONRPCResponse[]>,
-  ): void;
+  public send(request: JSONRPCRequest, callback: Callback<JSONRPCResponse>): void;
+  public send(request: JSONRPCRequest[], callback: Callback<JSONRPCResponse[]>): void;
   public send<T = any>(method: string, params?: any[] | any): Promise<T>;
   public send(
     requestOrMethod: JSONRPCRequest | JSONRPCRequest[] | string,
-    callbackOrParams?:
-      | Callback<JSONRPCResponse>
-      | Callback<JSONRPCResponse[]>
-      | any[]
-      | any,
+    callbackOrParams?: Callback<JSONRPCResponse> | Callback<JSONRPCResponse[]> | any[] | any
   ): JSONRPCResponse | JSONRPCResponse[] | void | Promise<any> {
     // send<T>(method, params): Promise<T>
     try {
       const result = this._send(requestOrMethod, callbackOrParams);
       if (result instanceof Promise) {
-        return result.catch(error => {
+        return result.catch((error) => {
           throw serializeError(error, requestOrMethod);
         });
       }
@@ -437,13 +414,9 @@ export class CoinbaseWalletProvider
   }
   private _send(
     requestOrMethod: JSONRPCRequest | JSONRPCRequest[] | string,
-    callbackOrParams?:
-      | Callback<JSONRPCResponse>
-      | Callback<JSONRPCResponse[]>
-      | any[]
-      | any,
+    callbackOrParams?: Callback<JSONRPCResponse> | Callback<JSONRPCResponse[]> | any[] | any
   ): JSONRPCResponse | JSONRPCResponse[] | void | Promise<any> {
-    if (typeof requestOrMethod === "string") {
+    if (typeof requestOrMethod === 'string') {
       const method = requestOrMethod;
       const params = Array.isArray(callbackOrParams)
         ? callbackOrParams
@@ -451,16 +424,16 @@ export class CoinbaseWalletProvider
         ? [callbackOrParams]
         : [];
       const request: JSONRPCRequest = {
-        jsonrpc: "2.0",
+        jsonrpc: '2.0',
         id: 0,
         method,
         params,
       };
-      return this._sendRequestAsync(request).then(res => res.result);
+      return this._sendRequestAsync(request).then((res) => res.result);
     }
 
     // send(JSONRPCRequest | JSONRPCRequest[], callback): void
-    if (typeof callbackOrParams === "function") {
+    if (typeof callbackOrParams === 'function') {
       const request = requestOrMethod as any;
       const callback = callbackOrParams;
       return this._sendAsync(request, callback);
@@ -469,7 +442,7 @@ export class CoinbaseWalletProvider
     // send(JSONRPCRequest[]): JSONRPCResponse[]
     if (Array.isArray(requestOrMethod)) {
       const requests = requestOrMethod;
-      return requests.map(r => this._sendRequest(r));
+      return requests.map((r) => this._sendRequest(r));
     }
 
     // send(JSONRPCRequest): JSONRPCResponse
@@ -478,20 +451,14 @@ export class CoinbaseWalletProvider
   }
 
   /** @deprecated Use `.request(...)` instead. */
-  public sendAsync(
-    request: JSONRPCRequest,
-    callback: Callback<JSONRPCResponse>,
-  ): void;
-  public sendAsync(
-    request: JSONRPCRequest[],
-    callback: Callback<JSONRPCResponse[]>,
-  ): void;
+  public sendAsync(request: JSONRPCRequest, callback: Callback<JSONRPCResponse>): void;
+  public sendAsync(request: JSONRPCRequest[], callback: Callback<JSONRPCResponse[]>): void;
   public async sendAsync(
     request: JSONRPCRequest | JSONRPCRequest[],
-    callback: Callback<JSONRPCResponse> | Callback<JSONRPCResponse[]>,
+    callback: Callback<JSONRPCResponse> | Callback<JSONRPCResponse[]>
   ): Promise<void> {
     try {
-      return this._sendAsync(request, callback).catch(error => {
+      return this._sendAsync(request, callback).catch((error) => {
         throw serializeError(error, request);
       });
     } catch (error) {
@@ -500,31 +467,31 @@ export class CoinbaseWalletProvider
   }
   private async _sendAsync(
     request: JSONRPCRequest | JSONRPCRequest[],
-    callback: Callback<JSONRPCResponse> | Callback<JSONRPCResponse[]>,
+    callback: Callback<JSONRPCResponse> | Callback<JSONRPCResponse[]>
   ): Promise<void> {
-    if (typeof callback !== "function") {
-      throw new Error("callback is required");
+    if (typeof callback !== 'function') {
+      throw new Error('callback is required');
     }
 
     // send(JSONRPCRequest[], callback): void
     if (Array.isArray(request)) {
       const arrayCb = callback as Callback<JSONRPCResponse[]>;
       this._sendMultipleRequestsAsync(request)
-        .then(responses => arrayCb(null, responses))
-        .catch(err => arrayCb(err, null));
+        .then((responses) => arrayCb(null, responses))
+        .catch((err) => arrayCb(err, null));
       return;
     }
 
     // send(JSONRPCRequest, callback): void
     const cb = callback as Callback<JSONRPCResponse>;
     return this._sendRequestAsync(request)
-      .then(response => cb(null, response))
-      .catch(err => cb(err, null));
+      .then((response) => cb(null, response))
+      .catch((err) => cb(err, null));
   }
 
   public async request<T>(args: RequestArguments): Promise<T> {
     try {
-      return this._request<T>(args).catch(error => {
+      return this._request<T>(args).catch((error) => {
         throw serializeError(error, args.method);
       });
     } catch (error) {
@@ -532,16 +499,16 @@ export class CoinbaseWalletProvider
     }
   }
   private async _request<T>(args: RequestArguments): Promise<T> {
-    if (!args || typeof args !== "object" || Array.isArray(args)) {
+    if (!args || typeof args !== 'object' || Array.isArray(args)) {
       throw standardErrors.rpc.invalidRequest({
-        message: "Expected a single, non-array, object argument.",
+        message: 'Expected a single, non-array, object argument.',
         data: args,
       });
     }
 
     const { method, params } = args;
 
-    if (typeof method !== "string" || method.length === 0) {
+    if (typeof method !== 'string' || method.length === 0) {
       throw standardErrors.rpc.invalidRequest({
         message: "'args.method' must be a non-empty string.",
         data: args,
@@ -551,7 +518,7 @@ export class CoinbaseWalletProvider
     if (
       params !== undefined &&
       !Array.isArray(params) &&
-      (typeof params !== "object" || params === null)
+      (typeof params !== 'object' || params === null)
     ) {
       throw standardErrors.rpc.invalidRequest({
         message: "'args.params' must be an object or array if provided.",
@@ -566,7 +533,7 @@ export class CoinbaseWalletProvider
     const result = await this._sendRequestAsync({
       method,
       params: newParams,
-      jsonrpc: "2.0",
+      jsonrpc: '2.0',
       id,
     });
 
@@ -576,11 +543,8 @@ export class CoinbaseWalletProvider
   public async scanQRCode(match?: RegExp): Promise<string> {
     const relay = await this.initializeRelay();
     const res = await relay.scanQRCode(ensureRegExpString(match)).promise;
-    if (typeof res.result !== "string") {
-      throw serializeError(
-        res.errorMessage ?? "result was not a string",
-        Web3Method.scanQRCode,
-      );
+    if (typeof res.result !== 'string') {
+      throw serializeError(res.errorMessage ?? 'result was not a string', Web3Method.scanQRCode);
     }
     return res.result;
   }
@@ -588,11 +552,8 @@ export class CoinbaseWalletProvider
   public async genericRequest(data: object, action: string): Promise<string> {
     const relay = await this.initializeRelay();
     const res = await relay.genericRequest(data, action).promise;
-    if (typeof res.result !== "string") {
-      throw serializeError(
-        res.errorMessage ?? "result was not a string",
-        Web3Method.generic,
-      );
+    if (typeof res.result !== 'string') {
+      throw serializeError(res.errorMessage ?? 'result was not a string', Web3Method.generic);
     }
     return res.result;
   }
@@ -631,10 +592,8 @@ export class CoinbaseWalletProvider
     // We acknowledge the need for a better design, and it is planned to address and improve it in a future refactor.
 
     this.diagnostic?.log(EVENTS.ETH_ACCOUNTS_STATE, {
-      method: "provider::connectAndSignIn",
-      sessionIdHash: this._relay
-        ? Session.hash(this._relay.session.id)
-        : undefined,
+      method: 'provider::connectAndSignIn',
+      sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : undefined,
     });
 
     let res: ConnectAndSignInResponse;
@@ -642,19 +601,14 @@ export class CoinbaseWalletProvider
       const relay = await this.initializeRelay();
       res = await relay.connectAndSignIn(params).promise;
     } catch (err: any) {
-      if (
-        typeof err.message === "string" &&
-        err.message.match(/(denied|rejected)/i)
-      ) {
-        throw standardErrors.provider.userRejectedRequest(
-          "User denied account authorization",
-        );
+      if (typeof err.message === 'string' && err.message.match(/(denied|rejected)/i)) {
+        throw standardErrors.provider.userRejectedRequest('User denied account authorization');
       }
       throw err;
     }
 
     if (!res.result) {
-      throw new Error("accounts received is empty");
+      throw new Error('accounts received is empty');
     }
 
     const { accounts } = res.result;
@@ -667,15 +621,13 @@ export class CoinbaseWalletProvider
     return res.result;
   }
 
-  public async selectProvider(
-    providerOptions: ProviderType[],
-  ): Promise<ProviderType> {
+  public async selectProvider(providerOptions: ProviderType[]): Promise<ProviderType> {
     const relay = await this.initializeRelay();
     const res = await relay.selectProvider(providerOptions).promise;
-    if (typeof res.result !== "string") {
+    if (typeof res.result !== 'string') {
       throw serializeError(
-        res.errorMessage ?? "result was not a string",
-        Web3Method.selectProvider,
+        res.errorMessage ?? 'result was not a string',
+        Web3Method.selectProvider
       );
     }
     return res.result;
@@ -686,11 +638,11 @@ export class CoinbaseWalletProvider
   }
 
   public subscribe(): void {
-    throw new Error("Subscriptions are not supported");
+    throw new Error('Subscriptions are not supported');
   }
 
   public unsubscribe(): void {
-    throw new Error("Subscriptions are not supported");
+    throw new Error('Subscriptions are not supported');
   }
 
   public disconnect(): boolean {
@@ -699,7 +651,7 @@ export class CoinbaseWalletProvider
 
   private _sendRequest(request: JSONRPCRequest): JSONRPCResponse {
     const response: JSONRPCResponse = {
-      jsonrpc: "2.0",
+      jsonrpc: '2.0',
       id: request.id,
     };
     const { method } = request;
@@ -710,7 +662,7 @@ export class CoinbaseWalletProvider
       throw new Error(
         `Coinbase Wallet does not support calling ${method} synchronously without ` +
           `a callback. Please provide a callback parameter to call ${method} ` +
-          `asynchronously.`,
+          `asynchronously.`
       );
     }
 
@@ -719,20 +671,16 @@ export class CoinbaseWalletProvider
 
   private _setAddresses(addresses: string[], isDisconnect?: boolean): void {
     if (!Array.isArray(addresses)) {
-      throw new Error("addresses is not an array");
+      throw new Error('addresses is not an array');
     }
 
-    const newAddresses = addresses.map(address => ensureAddressString(address));
+    const newAddresses = addresses.map((address) => ensureAddressString(address));
 
     if (JSON.stringify(newAddresses) === JSON.stringify(this._addresses)) {
       return;
     }
 
-    if (
-      this._addresses.length > 0 &&
-      this.supportsAddressSwitching === false &&
-      !isDisconnect
-    ) {
+    if (this._addresses.length > 0 && this.supportsAddressSwitching === false && !isDisconnect) {
       /**
        * The extension currently doesn't support switching selected wallet index
        * make sure walletlink doesn't update it's address in this case
@@ -741,8 +689,8 @@ export class CoinbaseWalletProvider
     }
 
     this._addresses = newAddresses;
-    this.emit("accountsChanged", this._addresses);
-    this._storage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, newAddresses.join(" "));
+    this.emit('accountsChanged', this._addresses);
+    this._storage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, newAddresses.join(' '));
   }
 
   private _sendRequestAsync(request: JSONRPCRequest): Promise<JSONRPCResponse> {
@@ -751,7 +699,7 @@ export class CoinbaseWalletProvider
         const syncResult = this._handleSynchronousMethods(request);
         if (syncResult !== undefined) {
           return resolve({
-            jsonrpc: "2.0",
+            jsonrpc: '2.0',
             id: request.id,
             result: syncResult,
           });
@@ -760,22 +708,22 @@ export class CoinbaseWalletProvider
         const filterPromise = this._handleAsynchronousFilterMethods(request);
         if (filterPromise !== undefined) {
           filterPromise
-            .then(res => resolve({ ...res, id: request.id }))
-            .catch(err => reject(err));
+            .then((res) => resolve({ ...res, id: request.id }))
+            .catch((err) => reject(err));
           return;
         }
 
         const subscriptionPromise = this._handleSubscriptionMethods(request);
         if (subscriptionPromise !== undefined) {
           subscriptionPromise
-            .then(res =>
+            .then((res) =>
               resolve({
-                jsonrpc: "2.0",
+                jsonrpc: '2.0',
                 id: request.id,
                 result: res.result,
-              }),
+              })
             )
-            .catch(err => reject(err));
+            .catch((err) => reject(err));
           return;
         }
       } catch (err: any) {
@@ -783,15 +731,13 @@ export class CoinbaseWalletProvider
       }
 
       this._handleAsynchronousMethods(request)
-        .then(res => res && resolve({ ...res, id: request.id }))
-        .catch(err => reject(err));
+        .then((res) => res && resolve({ ...res, id: request.id }))
+        .catch((err) => reject(err));
     });
   }
 
-  private _sendMultipleRequestsAsync(
-    requests: JSONRPCRequest[],
-  ): Promise<JSONRPCResponse[]> {
-    return Promise.all(requests.map(r => this._sendRequestAsync(r)));
+  private _sendMultipleRequestsAsync(requests: JSONRPCRequest[]): Promise<JSONRPCResponse[]> {
+    return Promise.all(requests.map((r) => this._sendRequestAsync(r)));
   }
 
   private _handleSynchronousMethods(request: JSONRPCRequest) {
@@ -820,7 +766,7 @@ export class CoinbaseWalletProvider
   }
 
   private async _handleAsynchronousMethods(
-    request: JSONRPCRequest,
+    request: JSONRPCRequest
   ): Promise<JSONRPCResponse | void> {
     const { method } = request;
     const params = request.params || [];
@@ -881,7 +827,7 @@ export class CoinbaseWalletProvider
   }
 
   private _handleAsynchronousFilterMethods(
-    request: JSONRPCRequest,
+    request: JSONRPCRequest
   ): Promise<JSONRPCResponse> | undefined {
     const { method } = request;
     const params = request.params || [];
@@ -907,7 +853,7 @@ export class CoinbaseWalletProvider
   }
 
   private _handleSubscriptionMethods(
-    request: JSONRPCRequest,
+    request: JSONRPCRequest
   ): Promise<SubscriptionResult> | undefined {
     switch (request.method) {
       case JSONRPCMethod.eth_subscribe:
@@ -921,18 +867,18 @@ export class CoinbaseWalletProvider
   private _isKnownAddress(addressString: string): boolean {
     try {
       const addressStr = ensureAddressString(addressString);
-      const lowercaseAddresses = this._addresses.map(address =>
-        ensureAddressString(address),
-      );
+      const lowercaseAddresses = this._addresses.map((address) => ensureAddressString(address));
       return lowercaseAddresses.includes(addressStr);
-    } catch {}
+    } catch {
+      // noop
+    }
     return false;
   }
 
   private _ensureKnownAddress(addressString: string): void {
     if (!this._isKnownAddress(addressString)) {
       this.diagnostic?.log(EVENTS.UNKNOWN_ADDRESS_ENCOUNTERED);
-      throw new Error("Unknown Ethereum address");
+      throw new Error('Unknown Ethereum address');
     }
   }
 
@@ -947,11 +893,9 @@ export class CoinbaseWalletProvider
     data?: unknown;
     nonce?: unknown;
   }): EthereumTransactionParams {
-    const fromAddress = tx.from
-      ? ensureAddressString(tx.from)
-      : this.selectedAddress;
+    const fromAddress = tx.from ? ensureAddressString(tx.from) : this.selectedAddress;
     if (!fromAddress) {
-      throw new Error("Ethereum address is unavailable");
+      throw new Error('Ethereum address is unavailable');
     }
 
     this._ensureKnownAddress(fromAddress);
@@ -961,12 +905,9 @@ export class CoinbaseWalletProvider
     const data = tx.data ? ensureBuffer(tx.data) : Buffer.alloc(0);
     const nonce = tx.nonce != null ? ensureIntNumber(tx.nonce) : null;
     const gasPriceInWei = tx.gasPrice != null ? ensureBN(tx.gasPrice) : null;
-    const maxFeePerGas =
-      tx.maxFeePerGas != null ? ensureBN(tx.maxFeePerGas) : null;
+    const maxFeePerGas = tx.maxFeePerGas != null ? ensureBN(tx.maxFeePerGas) : null;
     const maxPriorityFeePerGas =
-      tx.maxPriorityFeePerGas != null
-        ? ensureBN(tx.maxPriorityFeePerGas)
-        : null;
+      tx.maxPriorityFeePerGas != null ? ensureBN(tx.maxPriorityFeePerGas) : null;
     const gasLimit = tx.gas != null ? ensureBN(tx.gas) : null;
     const chainId = this.getChainId();
 
@@ -1002,27 +943,18 @@ export class CoinbaseWalletProvider
     message: Buffer,
     address: AddressString,
     addPrefix: boolean,
-    typedDataJson?: string | null,
+    typedDataJson?: string | null
   ): Promise<JSONRPCResponse> {
     this._ensureKnownAddress(address);
 
     try {
       const relay = await this.initializeRelay();
-      const res = await relay.signEthereumMessage(
-        message,
-        address,
-        addPrefix,
-        typedDataJson,
-      ).promise;
-      return { jsonrpc: "2.0", id: 0, result: res.result };
+      const res = await relay.signEthereumMessage(message, address, addPrefix, typedDataJson)
+        .promise;
+      return { jsonrpc: '2.0', id: 0, result: res.result };
     } catch (err: any) {
-      if (
-        typeof err.message === "string" &&
-        err.message.match(/(denied|rejected)/i)
-      ) {
-        throw standardErrors.provider.userRejectedRequest(
-          "User denied message signature",
-        );
+      if (typeof err.message === 'string' && err.message.match(/(denied|rejected)/i)) {
+        throw standardErrors.provider.userRejectedRequest('User denied message signature');
       }
       throw err;
     }
@@ -1031,15 +963,11 @@ export class CoinbaseWalletProvider
   private async _ethereumAddressFromSignedMessage(
     message: Buffer,
     signature: Buffer,
-    addPrefix: boolean,
+    addPrefix: boolean
   ): Promise<JSONRPCResponse> {
     const relay = await this.initializeRelay();
-    const res = await relay.ethereumAddressFromSignedMessage(
-      message,
-      signature,
-      addPrefix,
-    ).promise;
-    return { jsonrpc: "2.0", id: 0, result: res.result };
+    const res = await relay.ethereumAddressFromSignedMessage(message, signature, addPrefix).promise;
+    return { jsonrpc: '2.0', id: 0, result: res.result };
   }
 
   private _eth_accounts(): string[] {
@@ -1071,16 +999,14 @@ export class CoinbaseWalletProvider
 
   private async _eth_requestAccounts(): Promise<JSONRPCResponse> {
     this.diagnostic?.log(EVENTS.ETH_ACCOUNTS_STATE, {
-      method: "provider::_eth_requestAccounts",
+      method: 'provider::_eth_requestAccounts',
       addresses_length: this._addresses.length,
-      sessionIdHash: this._relay
-        ? Session.hash(this._relay.session.id)
-        : undefined,
+      sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : undefined,
     });
 
     if (this._addresses.length > 0) {
       return Promise.resolve({
-        jsonrpc: "2.0",
+        jsonrpc: '2.0',
         id: 0,
         result: this._addresses,
       });
@@ -1091,19 +1017,14 @@ export class CoinbaseWalletProvider
       const relay = await this.initializeRelay();
       res = await relay.requestEthereumAccounts().promise;
     } catch (err: any) {
-      if (
-        typeof err.message === "string" &&
-        err.message.match(/(denied|rejected)/i)
-      ) {
-        throw standardErrors.provider.userRejectedRequest(
-          "User denied account authorization",
-        );
+      if (typeof err.message === 'string' && err.message.match(/(denied|rejected)/i)) {
+        throw standardErrors.provider.userRejectedRequest('User denied account authorization');
       }
       throw err;
     }
 
     if (!res.result) {
-      throw new Error("accounts received is empty");
+      throw new Error('accounts received is empty');
     }
 
     this._setAddresses(res.result);
@@ -1111,7 +1032,7 @@ export class CoinbaseWalletProvider
       await this.switchEthereumChain(this.getChainId());
     }
 
-    return { jsonrpc: "2.0", id: 0, result: this._addresses };
+    return { jsonrpc: '2.0', id: 0, result: this._addresses };
   }
 
   private _eth_sign(params: unknown[]): Promise<JSONRPCResponse> {
@@ -1143,65 +1064,44 @@ export class CoinbaseWalletProvider
     return this._ethereumAddressFromSignedMessage(message, signature, true);
   }
 
-  private async _eth_signTransaction(
-    params: unknown[],
-  ): Promise<JSONRPCResponse> {
+  private async _eth_signTransaction(params: unknown[]): Promise<JSONRPCResponse> {
     this._requireAuthorization();
     const tx = this._prepareTransactionParams((params[0] as any) || {});
     try {
       const relay = await this.initializeRelay();
       const res = await relay.signEthereumTransaction(tx).promise;
-      return { jsonrpc: "2.0", id: 0, result: res.result };
+      return { jsonrpc: '2.0', id: 0, result: res.result };
     } catch (err: any) {
-      if (
-        typeof err.message === "string" &&
-        err.message.match(/(denied|rejected)/i)
-      ) {
-        throw standardErrors.provider.userRejectedRequest(
-          "User denied transaction signature",
-        );
+      if (typeof err.message === 'string' && err.message.match(/(denied|rejected)/i)) {
+        throw standardErrors.provider.userRejectedRequest('User denied transaction signature');
       }
       throw err;
     }
   }
 
-  private async _eth_sendRawTransaction(
-    params: unknown[],
-  ): Promise<JSONRPCResponse> {
+  private async _eth_sendRawTransaction(params: unknown[]): Promise<JSONRPCResponse> {
     const signedTransaction = ensureBuffer(params[0]);
     const relay = await this.initializeRelay();
-    const res = await relay.submitEthereumTransaction(
-      signedTransaction,
-      this.getChainId(),
-    ).promise;
-    return { jsonrpc: "2.0", id: 0, result: res.result };
+    const res = await relay.submitEthereumTransaction(signedTransaction, this.getChainId()).promise;
+    return { jsonrpc: '2.0', id: 0, result: res.result };
   }
 
-  private async _eth_sendTransaction(
-    params: unknown[],
-  ): Promise<JSONRPCResponse> {
+  private async _eth_sendTransaction(params: unknown[]): Promise<JSONRPCResponse> {
     this._requireAuthorization();
     const tx = this._prepareTransactionParams((params[0] as any) || {});
     try {
       const relay = await this.initializeRelay();
       const res = await relay.signAndSubmitEthereumTransaction(tx).promise;
-      return { jsonrpc: "2.0", id: 0, result: res.result };
+      return { jsonrpc: '2.0', id: 0, result: res.result };
     } catch (err: any) {
-      if (
-        typeof err.message === "string" &&
-        err.message.match(/(denied|rejected)/i)
-      ) {
-        throw standardErrors.provider.userRejectedRequest(
-          "User denied transaction signature",
-        );
+      if (typeof err.message === 'string' && err.message.match(/(denied|rejected)/i)) {
+        throw standardErrors.provider.userRejectedRequest('User denied transaction signature');
       }
       throw err;
     }
   }
 
-  private async _eth_signTypedData_v1(
-    params: unknown[],
-  ): Promise<JSONRPCResponse> {
+  private async _eth_signTypedData_v1(params: unknown[]): Promise<JSONRPCResponse> {
     this._requireAuthorization();
     const typedData = ensureParsedJSONObject(params[0]);
     const address = ensureAddressString(params[1]);
@@ -1214,9 +1114,7 @@ export class CoinbaseWalletProvider
     return this._signEthereumMessage(message, address, false, typedDataJSON);
   }
 
-  private async _eth_signTypedData_v3(
-    params: unknown[],
-  ): Promise<JSONRPCResponse> {
+  private async _eth_signTypedData_v3(params: unknown[]): Promise<JSONRPCResponse> {
     this._requireAuthorization();
     const address = ensureAddressString(params[0]);
     const typedData = ensureParsedJSONObject(params[1]);
@@ -1229,9 +1127,7 @@ export class CoinbaseWalletProvider
     return this._signEthereumMessage(message, address, false, typedDataJSON);
   }
 
-  private async _eth_signTypedData_v4(
-    params: unknown[],
-  ): Promise<JSONRPCResponse> {
+  private async _eth_signTypedData_v4(params: unknown[]): Promise<JSONRPCResponse> {
     this._requireAuthorization();
     const address = ensureAddressString(params[0]);
     const typedData = ensureParsedJSONObject(params[1]);
@@ -1245,44 +1141,38 @@ export class CoinbaseWalletProvider
   }
 
   /** @deprecated */
-  private async _cbwallet_arbitrary(
-    params: unknown[],
-  ): Promise<JSONRPCResponse> {
+  private async _cbwallet_arbitrary(params: unknown[]): Promise<JSONRPCResponse> {
     const action = params[0];
     const data = params[1];
-    if (typeof data !== "string") {
-      throw new Error("parameter must be a string");
+    if (typeof data !== 'string') {
+      throw new Error('parameter must be a string');
     }
 
-    if (typeof action !== "object" || action === null) {
-      throw new Error("parameter must be an object");
+    if (typeof action !== 'object' || action === null) {
+      throw new Error('parameter must be an object');
     }
 
     const result = await this.genericRequest(action, data);
-    return { jsonrpc: "2.0", id: 0, result };
+    return { jsonrpc: '2.0', id: 0, result };
   }
 
-  private async _wallet_addEthereumChain(
-    params: unknown[],
-  ): Promise<JSONRPCResponse> {
+  private async _wallet_addEthereumChain(params: unknown[]): Promise<JSONRPCResponse> {
     const request = params[0] as AddEthereumChainParams;
 
     if (request.rpcUrls?.length === 0) {
       return {
-        jsonrpc: "2.0",
+        jsonrpc: '2.0',
         id: 0,
         error: { code: 2, message: `please pass in at least 1 rpcUrl` },
       };
     }
 
-    if (!request.chainName || request.chainName.trim() === "") {
-      throw standardErrors.rpc.invalidParams("chainName is a required field");
+    if (!request.chainName || request.chainName.trim() === '') {
+      throw standardErrors.rpc.invalidParams('chainName is a required field');
     }
 
     if (!request.nativeCurrency) {
-      throw standardErrors.rpc.invalidParams(
-        "nativeCurrency is a required field",
-      );
+      throw standardErrors.rpc.invalidParams('nativeCurrency is a required field');
     }
 
     const chainIdNumber = parseInt(request.chainId, 16);
@@ -1292,62 +1182,49 @@ export class CoinbaseWalletProvider
       request.blockExplorerUrls ?? [],
       request.chainName,
       request.iconUrls ?? [],
-      request.nativeCurrency,
+      request.nativeCurrency
     );
     if (success) {
-      return { jsonrpc: "2.0", id: 0, result: null };
+      return { jsonrpc: '2.0', id: 0, result: null };
     } else {
       return {
-        jsonrpc: "2.0",
+        jsonrpc: '2.0',
         id: 0,
         error: { code: 2, message: `unable to add ethereum chain` },
       };
     }
   }
 
-  private async _wallet_switchEthereumChain(
-    params: unknown[],
-  ): Promise<JSONRPCResponse> {
+  private async _wallet_switchEthereumChain(params: unknown[]): Promise<JSONRPCResponse> {
     const request = params[0] as SwitchEthereumChainParams;
     await this.switchEthereumChain(parseInt(request.chainId, 16));
-    return { jsonrpc: "2.0", id: 0, result: null };
+    return { jsonrpc: '2.0', id: 0, result: null };
   }
 
   private async _wallet_watchAsset(params: unknown): Promise<JSONRPCResponse> {
-    const request = (
-      Array.isArray(params) ? params[0] : params
-    ) as WatchAssetParams;
+    const request = (Array.isArray(params) ? params[0] : params) as WatchAssetParams;
     if (!request.type) {
-      throw standardErrors.rpc.invalidParams("Type is required");
+      throw standardErrors.rpc.invalidParams('Type is required');
     }
 
-    if (request?.type !== "ERC20") {
-      throw standardErrors.rpc.invalidParams(
-        `Asset of type '${request.type}' is not supported`,
-      );
+    if (request?.type !== 'ERC20') {
+      throw standardErrors.rpc.invalidParams(`Asset of type '${request.type}' is not supported`);
     }
 
     if (!request?.options) {
-      throw standardErrors.rpc.invalidParams("Options are required");
+      throw standardErrors.rpc.invalidParams('Options are required');
     }
 
     if (!request?.options.address) {
-      throw standardErrors.rpc.invalidParams("Address is required");
+      throw standardErrors.rpc.invalidParams('Address is required');
     }
 
     const chainId = this.getChainId();
     const { address, symbol, image, decimals } = request.options;
 
-    const res = await this.watchAsset(
-      request.type,
-      address,
-      symbol,
-      decimals,
-      image,
-      chainId,
-    );
+    const res = await this.watchAsset(request.type, address, symbol, decimals, image, chainId);
 
-    return { jsonrpc: "2.0", id: 0, result: res };
+    return { jsonrpc: '2.0', id: 0, result: res };
   }
 
   private _eth_uninstallFilter(params: unknown[]): boolean {
@@ -1358,17 +1235,17 @@ export class CoinbaseWalletProvider
   private async _eth_newFilter(params: unknown[]): Promise<JSONRPCResponse> {
     const param = params[0] as any;
     const filterId = await this._filterPolyfill.newFilter(param);
-    return { jsonrpc: "2.0", id: 0, result: filterId };
+    return { jsonrpc: '2.0', id: 0, result: filterId };
   }
 
   private async _eth_newBlockFilter(): Promise<JSONRPCResponse> {
     const filterId = await this._filterPolyfill.newBlockFilter();
-    return { jsonrpc: "2.0", id: 0, result: filterId };
+    return { jsonrpc: '2.0', id: 0, result: filterId };
   }
 
   private async _eth_newPendingTransactionFilter(): Promise<JSONRPCResponse> {
     const filterId = await this._filterPolyfill.newPendingTransactionFilter();
-    return { jsonrpc: "2.0", id: 0, result: filterId };
+    return { jsonrpc: '2.0', id: 0, result: filterId };
   }
 
   private _eth_getFilterChanges(params: unknown[]): Promise<JSONRPCResponse> {
@@ -1386,9 +1263,9 @@ export class CoinbaseWalletProvider
       return Promise.resolve(this._relay);
     }
 
-    return this._relayProvider().then(relay => {
+    return this._relayProvider().then((relay) => {
       relay.setAccountsCallback((accounts, isDisconnect) =>
-        this._setAddresses(accounts, isDisconnect),
+        this._setAddresses(accounts, isDisconnect)
       );
       relay.setChainCallback((chainId, jsonRpcUrl) => {
         this.updateProviderInfo(jsonRpcUrl, parseInt(chainId, 10));

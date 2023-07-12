@@ -6,11 +6,16 @@ module.exports = {
     commonjs: true,
   },
   extends: [
+    "preact",
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:prettier/recommended",
-    "plugin:@next/next/recommended",
   ],
+  settings: {
+    react: {
+      pragma: "h",
+    },
+  },
   parser: "@typescript-eslint/parser",
   parserOptions: {
     ecmaVersion: "latest",
@@ -21,17 +26,9 @@ module.exports = {
     "simple-import-sort",
     "unused-imports",
     "prettier",
-    "react-hooks",
   ],
   rules: {
     "@typescript-eslint/no-unused-vars": "off",
-    "react-hooks/rules-of-hooks": "error",
-    "react-hooks/exhaustive-deps": [
-      "error",
-      {
-        additionalHooks: "(useRecoilCallback|useRecoilTransaction_UNSTABLE)",
-      },
-    ],
     "simple-import-sort/imports": [
       "error",
       {
@@ -72,5 +69,7 @@ module.exports = {
         useTabs: false,
       },
     ],
+    // TODO: change this back to error
+    "@typescript-eslint/no-explicit-any": "warn",
   },
 };

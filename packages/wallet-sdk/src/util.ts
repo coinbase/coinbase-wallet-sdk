@@ -1,17 +1,11 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import BN from "bn.js";
-import { stringify } from "qs";
+import BN from 'bn.js';
+import { stringify } from 'qs';
 
-import { standardErrors } from "./errors";
-import {
-  AddressString,
-  BigIntString,
-  HexString,
-  IntNumber,
-  RegExpString,
-} from "./types";
+import { standardErrors } from './errors';
+import { AddressString, BigIntString, HexString, IntNumber, RegExpString } from './types';
 
 const INT_STRING_REGEX = /^[0-9]*$/;
 const HEXADECIMAL_STRING_REGEX = /^[a-f0-9]*$/;
@@ -24,21 +18,16 @@ export function randomBytesHex(length: number): string {
 }
 
 export function uint8ArrayToHex(value: Uint8Array) {
-  return [...value].map(b => b.toString(16).padStart(2, "0")).join("");
+  return [...value].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 export function hexStringToUint8Array(hexString: string): Uint8Array {
-  return new Uint8Array(
-    hexString.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)),
-  );
+  return new Uint8Array(hexString.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)));
 }
 
-export function hexStringFromBuffer(
-  buf: Buffer,
-  includePrefix = false,
-): HexString {
-  const hex = buf.toString("hex");
-  return HexString(includePrefix ? "0x" + hex : hex);
+export function hexStringFromBuffer(buf: Buffer, includePrefix = false): HexString {
+  const hex = buf.toString('hex');
+  return HexString(includePrefix ? '0x' + hex : hex);
 }
 
 export function bigIntStringFromBN(bn: BN): BigIntString {
@@ -46,17 +35,15 @@ export function bigIntStringFromBN(bn: BN): BigIntString {
 }
 
 export function intNumberFromHexString(hex: HexString): IntNumber {
-  return IntNumber(
-    new BN(ensureEvenLengthHexString(hex, false), 16).toNumber(),
-  );
+  return IntNumber(new BN(ensureEvenLengthHexString(hex, false), 16).toNumber());
 }
 
 export function hexStringFromIntNumber(num: IntNumber): HexString {
-  return HexString("0x" + new BN(num).toString(16));
+  return HexString('0x' + new BN(num).toString(16));
 }
 
 export function has0xPrefix(str: string): boolean {
-  return str.startsWith("0x") || str.startsWith("0X");
+  return str.startsWith('0x') || str.startsWith('0X');
 }
 
 export function strip0x(hex: string): string {
@@ -68,84 +55,72 @@ export function strip0x(hex: string): string {
 
 export function prepend0x(hex: string): string {
   if (has0xPrefix(hex)) {
-    return "0x" + hex.slice(2);
+    return '0x' + hex.slice(2);
   }
-  return "0x" + hex;
+  return '0x' + hex;
 }
 
 export function isHexString(hex: unknown): hex is HexString {
-  if (typeof hex !== "string") {
+  if (typeof hex !== 'string') {
     return false;
   }
   const s = strip0x(hex).toLowerCase();
   return HEXADECIMAL_STRING_REGEX.test(s);
 }
 
-export function ensureHexString(
-  hex: unknown,
-  includePrefix = false,
-): HexString {
-  if (typeof hex === "string") {
+export function ensureHexString(hex: unknown, includePrefix = false): HexString {
+  if (typeof hex === 'string') {
     const s = strip0x(hex).toLowerCase();
     if (HEXADECIMAL_STRING_REGEX.test(s)) {
-      return HexString(includePrefix ? "0x" + s : s);
+      return HexString(includePrefix ? '0x' + s : s);
     }
   }
-  throw standardErrors.rpc.invalidParams(
-    `"${String(hex)}" is not a hexadecimal string`,
-  );
+  throw standardErrors.rpc.invalidParams(`"${String(hex)}" is not a hexadecimal string`);
 }
 
-export function ensureEvenLengthHexString(
-  hex: unknown,
-  includePrefix = false,
-): HexString {
+export function ensureEvenLengthHexString(hex: unknown, includePrefix = false): HexString {
   let h = ensureHexString(hex, false);
   if (h.length % 2 === 1) {
-    h = HexString("0" + h);
+    h = HexString('0' + h);
   }
-  return includePrefix ? HexString("0x" + h) : h;
+  return includePrefix ? HexString('0x' + h) : h;
 }
 
 export function ensureAddressString(str: unknown): AddressString {
-  if (typeof str === "string") {
+  if (typeof str === 'string') {
     const s = strip0x(str).toLowerCase();
     if (isHexString(s) && s.length === 40) {
       return AddressString(prepend0x(s));
     }
   }
-  throw standardErrors.rpc.invalidParams(
-    `Invalid Ethereum address: ${String(str)}`,
-  );
+  throw standardErrors.rpc.invalidParams(`Invalid Ethereum address: ${String(str)}`);
 }
 
 export function ensureBuffer(str: unknown): Buffer {
   if (Buffer.isBuffer(str)) {
     return str;
   }
-  if (typeof str === "string") {
+  if (typeof str === 'string') {
     if (isHexString(str)) {
       const s = ensureEvenLengthHexString(str, false);
-      return Buffer.from(s, "hex");
+      return Buffer.from(s, 'hex');
     } else {
-      return Buffer.from(str, "utf8");
+      return Buffer.from(str, 'utf8');
     }
   }
   throw standardErrors.rpc.invalidParams(`Not binary data: ${String(str)}`);
 }
 
 export function ensureIntNumber(num: unknown): IntNumber {
-  if (typeof num === "number" && Number.isInteger(num)) {
+  if (typeof num === 'number' && Number.isInteger(num)) {
     return IntNumber(num);
   }
-  if (typeof num === "string") {
+  if (typeof num === 'string') {
     if (INT_STRING_REGEX.test(num)) {
       return IntNumber(Number(num));
     }
     if (isHexString(num)) {
-      return IntNumber(
-        new BN(ensureEvenLengthHexString(num, false), 16).toNumber(),
-      );
+      return IntNumber(new BN(ensureEvenLengthHexString(num, false), 16).toNumber());
     }
   }
   throw standardErrors.rpc.invalidParams(`Not an integer: ${String(num)}`);
@@ -162,10 +137,10 @@ export function ensureBN(val: unknown): BN {
   if (val !== null && (BN.isBN(val) || isBigNumber(val))) {
     return new BN((val as any).toString(10), 10);
   }
-  if (typeof val === "number") {
+  if (typeof val === 'number') {
     return new BN(ensureIntNumber(val));
   }
-  if (typeof val === "string") {
+  if (typeof val === 'string') {
     if (INT_STRING_REGEX.test(val)) {
       return new BN(val, 10);
     }
@@ -177,28 +152,23 @@ export function ensureBN(val: unknown): BN {
 }
 
 export function ensureParsedJSONObject<T extends object>(val: unknown): T {
-  if (typeof val === "string") {
+  if (typeof val === 'string') {
     return JSON.parse(val) as T;
   }
 
-  if (typeof val === "object") {
+  if (typeof val === 'object') {
     return val as T;
   }
 
-  throw standardErrors.rpc.invalidParams(
-    `Not a JSON string or an object: ${String(val)}`,
-  );
+  throw standardErrors.rpc.invalidParams(`Not a JSON string or an object: ${String(val)}`);
 }
 
 export function isBigNumber(val: unknown): boolean {
-  if (val == null || typeof (val as any).constructor !== "function") {
+  if (val == null || typeof (val as any).constructor !== 'function') {
     return false;
   }
   const { constructor } = val as any;
-  return (
-    typeof constructor.config === "function" &&
-    typeof constructor.EUCLID === "number"
-  );
+  return typeof constructor.config === 'function' && typeof constructor.EUCLID === 'number';
 }
 
 export function range(start: number, stop: number): number[] {
@@ -213,18 +183,14 @@ export function getFavicon(): string | null {
     document.querySelector('link[rel="shortcut icon"]');
 
   const { protocol, host } = document.location;
-  const href = el ? el.getAttribute("href") : null;
-  if (!href || href.startsWith("javascript:")) {
+  const href = el ? el.getAttribute('href') : null;
+  if (!href || href.startsWith('javascript:')) {
     return null;
   }
-  if (
-    href.startsWith("http://") ||
-    href.startsWith("https://") ||
-    href.startsWith("data:")
-  ) {
+  if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('data:')) {
     return href;
   }
-  if (href.startsWith("//")) {
+  if (href.startsWith('//')) {
     return protocol + href;
   }
   return `${protocol}//${host}${href}`;
@@ -236,9 +202,9 @@ export function createQrUrl(
   serverUrl: string,
   isParentConnection: boolean,
   version: string,
-  chainId: number,
+  chainId: number
 ): string {
-  const sessionIdKey = isParentConnection ? "parent-id" : "id";
+  const sessionIdKey = isParentConnection ? 'parent-id' : 'id';
 
   const query: string = stringify({
     [sessionIdKey]: sessionId,
@@ -275,6 +241,6 @@ export function getLocation(): Location {
 
 export function isMobileWeb(): boolean {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    window?.navigator?.userAgent,
+    window?.navigator?.userAgent
   );
 }

@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { IntNumber } from "../types";
+import { IntNumber } from '../types';
 
 export interface ServerMessage {
   type: string;
@@ -9,13 +9,13 @@ export interface ServerMessage {
 }
 
 export interface ServerMessageOK extends ServerMessage {
-  type: "OK";
+  type: 'OK';
   id: IntNumber;
   sessionId: string;
 }
 
 export interface ServerMessageFail extends ServerMessage {
-  type: "Fail";
+  type: 'Fail';
   id: IntNumber;
   sessionId: string;
   error: string;
@@ -24,15 +24,15 @@ export interface ServerMessageFail extends ServerMessage {
 export function isServerMessageFail(msg: any): msg is ServerMessageFail {
   return (
     msg &&
-    msg.type === "Fail" &&
-    typeof msg.id === "number" &&
-    typeof msg.sessionId === "string" &&
-    typeof msg.error === "string"
+    msg.type === 'Fail' &&
+    typeof msg.id === 'number' &&
+    typeof msg.sessionId === 'string' &&
+    typeof msg.error === 'string'
   );
 }
 
 export interface ServerMessageIsLinkedOK extends ServerMessage {
-  type: "IsLinkedOK";
+  type: 'IsLinkedOK';
   id: IntNumber;
   sessionId: string;
   linked: boolean;
@@ -40,13 +40,13 @@ export interface ServerMessageIsLinkedOK extends ServerMessage {
 }
 
 export interface ServerMessageLinked extends ServerMessage {
-  type: "Linked";
+  type: 'Linked';
   sessionId: string;
   onlineGuests: number;
 }
 
 export interface ServerMessageGetSessionConfigOK extends ServerMessage {
-  type: "GetSessionConfigOK";
+  type: 'GetSessionConfigOK';
   id: IntNumber;
   sessionId: string;
   webhookId: string;
@@ -55,7 +55,7 @@ export interface ServerMessageGetSessionConfigOK extends ServerMessage {
 }
 
 export interface ServerMessageSessionConfigUpdated extends ServerMessage {
-  type: "SessionConfigUpdated";
+  type: 'SessionConfigUpdated';
   sessionId: string;
   webhookId: string;
   webhookUrl: string;
@@ -63,14 +63,14 @@ export interface ServerMessageSessionConfigUpdated extends ServerMessage {
 }
 
 export interface ServerMessagePublishEventOK extends ServerMessage {
-  type: "PublishEventOK";
+  type: 'PublishEventOK';
   id: IntNumber;
   sessionId: string;
   eventId: string;
 }
 
 export interface ServerMessageEvent extends ServerMessage {
-  type: "Event";
+  type: 'Event';
   sessionId: string;
   eventId: string;
   event: string;

@@ -1,7 +1,7 @@
-import "@testing-library/jest-dom";
+import '@testing-library/jest-dom';
 
-import { Crypto } from "@peculiar/webcrypto";
-import { TextDecoder, TextEncoder } from "util";
+import { Crypto } from '@peculiar/webcrypto';
+import { TextDecoder, TextEncoder } from 'util';
 
 global.crypto = new Crypto();
 
@@ -16,19 +16,13 @@ expect.extend({
       code,
       message,
       docUrl: expect.stringMatching(
-        /^https:\/\/.*coinbase\.com\/.*version=\d+\.\d+\.\d+.*code=-?\d+.*$/,
+        /^https:\/\/.*coinbase\.com\/.*version=\d+\.\d+\.\d+.*code=-?\d+.*$/
       ),
     });
     return {
       pass: this.equals(received, expected),
       message: () =>
-        this.utils.printDiffOrStringify(
-          expected,
-          received,
-          "Expected",
-          "Received",
-          true,
-        ),
+        this.utils.printDiffOrStringify(expected, received, 'Expected', 'Received', true),
     };
   },
 });

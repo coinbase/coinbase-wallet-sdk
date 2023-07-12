@@ -1,15 +1,8 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import {
-  BehaviorSubject,
-  empty,
-  Observable,
-  of,
-  Subject,
-  throwError,
-} from "rxjs";
-import { flatMap, take } from "rxjs/operators";
+import { BehaviorSubject, empty, Observable, of, Subject, throwError } from 'rxjs';
+import { flatMap, take } from 'rxjs/operators';
 
 export enum ConnectionState {
   DISCONNECTED,
@@ -24,7 +17,7 @@ export class RxWebSocket<T = object> {
   private readonly url: string;
   private webSocket: WebSocket | null = null;
   private connectionStateSubject = new BehaviorSubject<ConnectionState>(
-    ConnectionState.DISCONNECTED,
+    ConnectionState.DISCONNECTED
   );
   private incomingDataSubject = new Subject<string>();
 
@@ -35,9 +28,9 @@ export class RxWebSocket<T = object> {
    */
   constructor(
     url: string,
-    private readonly WebSocketClass: typeof WebSocket = WebSocket,
+    private readonly WebSocketClass: typeof WebSocket = WebSocket
   ) {
-    this.url = url.replace(/^http/, "ws");
+    this.url = url.replace(/^http/, 'ws');
   }
 
   /**
@@ -46,9 +39,9 @@ export class RxWebSocket<T = object> {
    */
   public connect(): Observable<void> {
     if (this.webSocket) {
-      return throwError(new Error("webSocket object is not null"));
+      return throwError(new Error('webSocket object is not null'));
     }
-    return new Observable<void>(obs => {
+    return new Observable<void>((obs) => {
       let webSocket: WebSocket;
       try {
         this.webSocket = webSocket = new this.WebSocketClass(this.url);
@@ -57,17 +50,17 @@ export class RxWebSocket<T = object> {
         return;
       }
       this.connectionStateSubject.next(ConnectionState.CONNECTING);
-      webSocket.onclose = evt => {
+      webSocket.onclose = (evt) => {
         this.clearWebSocket();
         obs.error(new Error(`websocket error ${evt.code}: ${evt.reason}`));
         this.connectionStateSubject.next(ConnectionState.DISCONNECTED);
       };
-      webSocket.onopen = _ => {
+      webSocket.onopen = (_) => {
         obs.next();
         obs.complete();
         this.connectionStateSubject.next(ConnectionState.CONNECTED);
       };
-      webSocket.onmessage = evt => {
+      webSocket.onmessage = (evt) => {
         this.incomingDataSubject.next(evt.data as string);
       };
     }).pipe(take(1));
@@ -85,7 +78,9 @@ export class RxWebSocket<T = object> {
     this.connectionStateSubject.next(ConnectionState.DISCONNECTED);
     try {
       webSocket.close();
-    } catch {}
+    } catch {
+      // noop
+    }
   }
 
   /**
@@ -110,7 +105,7 @@ export class RxWebSocket<T = object> {
    */
   public get incomingJSONData$(): Observable<T> {
     return this.incomingData$.pipe(
-      flatMap(m => {
+      flatMap((m) => {
         let j: any;
         try {
           j = JSON.parse(m);
@@ -118,7 +113,7 @@ export class RxWebSocket<T = object> {
           return empty();
         }
         return of(j);
-      }),
+      })
     );
   }
 
@@ -129,7 +124,7 @@ export class RxWebSocket<T = object> {
   public sendData(data: string): void {
     const { webSocket } = this;
     if (!webSocket) {
-      throw new Error("websocket is not connected");
+      throw new Error('websocket is not connected');
     }
     webSocket.send(data);
   }
