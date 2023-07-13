@@ -5,19 +5,17 @@ import {
   ethErrors,
   getMessageFromCode,
   serializeError as serialize,
-} from "eth-rpc-errors";
+} from 'eth-rpc-errors';
 
-import { JSONRPCRequest } from "./provider/JSONRPC";
-import { isErrorResponse } from "./relay/Web3Response";
-import { LIB_VERSION } from "./version";
+import { JSONRPCRequest } from './provider/JSONRPC';
+import { isErrorResponse } from './relay/Web3Response';
+import { LIB_VERSION } from './version';
 
 // ----------------- standard errors -----------------
 
 declare type StandardErrorsType = typeof ethErrors & {
   provider: {
-    unsupportedChain: (
-      chainId?: string | number,
-    ) => EthereumProviderError<undefined>;
+    unsupportedChain: (chainId?: string | number) => EthereumProviderError<undefined>;
   };
 };
 
@@ -30,14 +28,14 @@ export const standardErrorCodes = Object.freeze({
 });
 
 export function standardErrorMessage(code: number | undefined): string {
-  return code !== undefined ? getMessageFromCode(code) : "Unknown error";
+  return code !== undefined ? getMessageFromCode(code) : 'Unknown error';
 }
 
 export const standardErrors: StandardErrorsType = Object.freeze({
   ...ethErrors,
   provider: Object.freeze({
     ...ethErrors.provider,
-    unsupportedChain: (chainId: string | number = "") =>
+    unsupportedChain: (chainId: string | number = '') =>
       ethErrors.provider.custom<undefined>({
         code: standardErrorCodes.provider.unsupportedChain,
         message: `Unrecognized chain ID ${chainId}. Try adding the chain using wallet_addEthereumChain first.`,
@@ -65,22 +63,20 @@ export type ErrorHandler = (error?: ErrorType) => void;
  */
 export function serializeError(
   error: unknown,
-  requestOrMethod?: JSONRPCRequest | JSONRPCRequest[] | string,
+  requestOrMethod?: JSONRPCRequest | JSONRPCRequest[] | string
 ): SerializedError {
   const serialized = serialize(getErrorObject(error), {
     shouldIncludeStack: true,
   });
 
-  const docUrl = new URL(
-    "https://docs.cloud.coinbase.com/wallet-sdk/docs/errors",
-  );
-  docUrl.searchParams.set("version", LIB_VERSION);
-  docUrl.searchParams.set("code", serialized.code.toString());
+  const docUrl = new URL('https://docs.cloud.coinbase.com/wallet-sdk/docs/errors');
+  docUrl.searchParams.set('version', LIB_VERSION);
+  docUrl.searchParams.set('code', serialized.code.toString());
   const method = getMethod(serialized.data, requestOrMethod);
   if (method) {
-    docUrl.searchParams.set("method", method);
+    docUrl.searchParams.set('method', method);
   }
-  docUrl.searchParams.set("message", serialized.message);
+  docUrl.searchParams.set('message', serialized.message);
 
   return {
     ...serialized,
@@ -92,7 +88,7 @@ export function serializeError(
  * Converts an error to a serializable object.
  */
 function getErrorObject(error: unknown) {
-  if (typeof error === "string") {
+  if (typeof error === 'string') {
     return {
       message: error,
       code: standardErrorCodes.rpc.internal,
@@ -104,9 +100,8 @@ function getErrorObject(error: unknown) {
       code: error.errorCode,
       data: { method: error.method, result: error.result },
     };
-  } else {
-    return error;
   }
+  return error;
 }
 
 /**
@@ -114,7 +109,7 @@ function getErrorObject(error: unknown) {
  */
 function getMethod(
   serializedData: unknown,
-  request?: JSONRPCRequest | JSONRPCRequest[] | string,
+  request?: JSONRPCRequest | JSONRPCRequest[] | string
 ): string | undefined {
   const methodInData = (serializedData as { method: string })?.method;
   if (methodInData) {
@@ -123,15 +118,14 @@ function getMethod(
 
   if (request === undefined) {
     return undefined;
-  } else if (typeof request === "string") {
+  } else if (typeof request === 'string') {
     return request;
   } else if (!Array.isArray(request)) {
     return request.method;
   } else if (request.length > 0) {
     return request[0].method;
-  } else {
-    return undefined;
   }
+  return undefined;
 }
 
 // ----------------- getErrorCode -----------------
@@ -140,7 +134,7 @@ function getMethod(
  * Returns the error code from an error object.
  */
 export function getErrorCode(error: unknown): number | undefined {
-  if (typeof error === "number") {
+  if (typeof error === 'number') {
     return error;
   } else if (isErrorWithCode(error)) {
     return error.code ?? error.errorCode;
@@ -156,9 +150,9 @@ interface ErrorWithCode {
 
 function isErrorWithCode(error: unknown): error is ErrorWithCode {
   return (
-    typeof error === "object" &&
+    typeof error === 'object' &&
     error !== null &&
-    (typeof (error as ErrorWithCode).code === "number" ||
-      typeof (error as ErrorWithCode).errorCode === "number")
+    (typeof (error as ErrorWithCode).code === 'number' ||
+      typeof (error as ErrorWithCode).errorCode === 'number')
   );
 }

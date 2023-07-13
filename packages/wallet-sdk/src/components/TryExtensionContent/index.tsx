@@ -1,1 +1,1 @@
-export * from "./TryExtensionContent";
+export * from './TryExtensionContent';

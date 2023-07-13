@@ -13,55 +13,55 @@ declare class QRCode {
    * Create a QRCode with the default options and the passed content.
    * @param content The content to encode in the QRCode.
    */
-  constructor(content: string)
+  constructor(content: string);
   /**
    * Create a QRCode by specifying its options. Any values not passed in the
    *   options object will be inferred as the defaults.
    * @param options The options with which to create the QRCode.
    */
   // eslint-disable-next-line @typescript-eslint/unified-signatures
-  constructor(options: QRCode.Options)
+  constructor(options: QRCode.Options);
 
   /** The raw model of this QRCode. */
-  qrcode: QRCode.Model
+  qrcode: QRCode.Model;
 
   /** The options that were used to create this QRCode. */
-  options: QRCode.Options
+  options: QRCode.Options;
 
   /**
    * Generates an SVG image of this QRCode
    * @param  opt Set the container. Defaults to `{ container: "svg" }`.
    * @return The svg string.
    */
-  svg(opt?: { container: "svg" | "g" | "none" }): string
+  svg(opt?: { container: 'svg' | 'g' | 'none' }): string;
 }
 
 declare namespace QRCode {
   interface Options {
     /** QR Code content, the only **required** parameter. */
-    content: string
+    content: string;
     /** White space padding. `0` for no border. Default is `4`. */
-    padding?: number
+    padding?: number;
     /** QR Code width in pixels. Default is `256`. */
-    width?: number
+    width?: number;
     /** QR Code height in pixels. Default is `256`. */
-    height?: number
+    height?: number;
     /** Color of modules (squares), color name or hex string. Default is `#000000`. */
-    color?: string
+    color?: string;
     /** Color of background, color name or hex string. Default is `#fffff`. */
-    background?: string
+    background?: string;
     /** Error correction level. Default is `"M"`. */
-    ecl?: "L" | "M" | "H" | "Q"
+    ecl?: 'L' | 'M' | 'H' | 'Q';
     /** Join modules (squares) into one shape, into the SVG path element, **recommended** for web and responsive use. Default is `false`. */
-    join?: boolean
+    join?: boolean;
     /** To create a squares as pattern, then populate the canvas. Default is `false`. */
-    predefined?: boolean
+    predefined?: boolean;
     /** Apply indents and new lines. Default is `true`. */
-    pretty?: boolean
+    pretty?: boolean;
     /** Swap X and Y modules, only if you have issues with some QR readers. Default is `false`. */
-    swap?: boolean
+    swap?: boolean;
     /** Prepend XML declaration to the SVG document, i.e. ```<?xml version="1.0" standalone="yes"?>```. Default is `true`. */
-    xmlDeclaration?: boolean
+    xmlDeclaration?: boolean;
     /**
      * Wrapping element. Default is `svg`. \
      * `svg`: Populate squares in a SVG document with `width` and `height` attribute.
@@ -72,9 +72,9 @@ declare namespace QRCode {
      * Useful when you need to put multiple QR Codes in a single SVG document \
      * `none`: No wrapper.
      */
-    container?: "svg" | "svg-viewbox" | "g" | "none"
+    container?: 'svg' | 'svg-viewbox' | 'g' | 'none';
     /** image option for logo in the center of the QR code */
-    image?: SvgLogo
+    image?: SvgLogo;
   }
 
   interface SvgLogo {
@@ -89,40 +89,40 @@ declare namespace QRCode {
      * of `moduleCount` x `moduleCount` size. True in a given slot means
      * that spot is filled in in the QRCode visualization.
      */
-    modules: boolean[][]
+    modules: boolean[][];
     /** The calculated type number for this QRCode. */
-    typeNumber: number
+    typeNumber: number;
     /** The numerical error correction level for this QRCode. */
-    errorCorrectLevel: number
+    errorCorrectLevel: number;
     /** The width/length of this QRCode's modules matrix. */
-    moduleCount: number
+    moduleCount: number;
     /** The cache used to store data during the creation of this QRCode. */
-    dataCache: number[] | null
+    dataCache: number[] | null;
     /** A list of the data added to this QRCode. */
     dataList: {
-      data: string
-      mode: number
-      parsedData: number[]
-    }[]
+      data: string;
+      mode: number;
+      parsedData: number[];
+    }[];
 
     /**
      * Queue data up to be added to this QRCode. `make` needs to be called
      *   to actually generate the QRCode from the data.
      * @param data The data to queue up in this QRCode.
      */
-    addData(data: string): void
+    addData(data: string): void;
     /**
      * Whether a given coordinate is filled in in this QRCode's matrix.
      * @param  row The row to check.
      * @param  col The column to check.
      * @return True if the coordinate is filled in, false otherwise.
      */
-    isDark(row: number, col: number): boolean
+    isDark(row: number, col: number): boolean;
     /** Returns the length/width of this QRCode's matrix. */
-    getModuleCount(): number
+    getModuleCount(): number;
     /** Generate this QRCode's matrix from the queued data. */
-    make(): void
+    make(): void;
   }
 }
 
-export = QRCode
+export = QRCode;

@@ -1,26 +1,26 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { HexString, IntNumber } from "../types";
+import { HexString, IntNumber } from '../types';
 import {
   ensureHexString,
   hexStringFromIntNumber,
   intNumberFromHexString,
   isHexString,
   range,
-} from "../util";
-import { JSONRPCRequest, JSONRPCResponse } from "./JSONRPC";
-import { Web3Provider } from "./Web3Provider";
+} from '../util';
+import { JSONRPCRequest, JSONRPCResponse } from './JSONRPC';
+import { Web3Provider } from './Web3Provider';
 
 const TIMEOUT = 5 * 60 * 1000; // 5 minutes
-const JSONRPC_TEMPLATE: { jsonrpc: "2.0"; id: number } = {
-  jsonrpc: "2.0",
+const JSONRPC_TEMPLATE: { jsonrpc: '2.0'; id: number } = {
+  jsonrpc: '2.0',
   id: 0,
 };
 
-type RawHexBlockHeight = HexString | "earliest" | "latest" | "pending";
-type HexBlockHeight = HexString | "latest";
-type IntBlockHeight = IntNumber | "latest";
+type RawHexBlockHeight = HexString | 'earliest' | 'latest' | 'pending';
+type HexBlockHeight = HexString | 'latest';
+type IntBlockHeight = IntNumber | 'latest';
 
 export interface FilterParam {
   fromBlock: RawHexBlockHeight | undefined;
@@ -53,12 +53,7 @@ export class FilterPolyfill {
     const filter = filterFromParam(param);
     const id = this.makeFilterId();
     const cursor = await this.setInitialCursorPosition(id, filter.fromBlock);
-    console.log(
-      `Installing new log filter(${id}):`,
-      filter,
-      "initial cursor position:",
-      cursor,
-    );
+    console.info(`Installing new log filter(${id}):`, filter, 'initial cursor position:', cursor);
     this.logFilters.set(id, filter);
     this.setFilterTimeout(id);
     return hexStringFromIntNumber(id);
@@ -66,11 +61,8 @@ export class FilterPolyfill {
 
   public async newBlockFilter(): Promise<HexString> {
     const id = this.makeFilterId();
-    const cursor = await this.setInitialCursorPosition(id, "latest");
-    console.log(
-      `Installing new block filter (${id}) with initial cursor position:`,
-      cursor,
-    );
+    const cursor = await this.setInitialCursorPosition(id, 'latest');
+    console.info(`Installing new block filter (${id}) with initial cursor position:`, cursor);
     this.blockFilters.add(id);
     this.setFilterTimeout(id);
     return hexStringFromIntNumber(id);
@@ -78,11 +70,8 @@ export class FilterPolyfill {
 
   public async newPendingTransactionFilter(): Promise<HexString> {
     const id = this.makeFilterId();
-    const cursor = await this.setInitialCursorPosition(id, "latest");
-    console.log(
-      `Installing new block filter (${id}) with initial cursor position:`,
-      cursor,
-    );
+    const cursor = await this.setInitialCursorPosition(id, 'latest');
+    console.info(`Installing new block filter (${id}) with initial cursor position:`, cursor);
     this.pendingTransactionFilters.add(id);
     this.setFilterTimeout(id);
     return hexStringFromIntNumber(id);
@@ -90,7 +79,7 @@ export class FilterPolyfill {
 
   public uninstallFilter(filterId: HexString): boolean {
     const id = intNumberFromHexString(filterId);
-    console.log(`Uninstalling filter (${id})`);
+    console.info(`Uninstalling filter (${id})`);
     this.deleteFilter(id);
     return true;
   }
@@ -119,7 +108,7 @@ export class FilterPolyfill {
     }
     return this.sendAsyncPromise({
       ...JSONRPC_TEMPLATE,
-      method: "eth_getLogs",
+      method: 'eth_getLogs',
       params: [paramFromFilter(filter)],
     });
   }
@@ -135,11 +124,7 @@ export class FilterPolyfill {
           return reject(err);
         }
         if (Array.isArray(response) || response == null) {
-          return reject(
-            new Error(
-              `unexpected response received: ${JSON.stringify(response)}`,
-            ),
-          );
+          return reject(new Error(`unexpected response received: ${JSON.stringify(response)}`));
         }
         resolve(response);
       });
@@ -147,7 +132,7 @@ export class FilterPolyfill {
   }
 
   private deleteFilter(id: IntNumber): void {
-    console.log(`Deleting filter (${id})`);
+    console.info(`Deleting filter (${id})`);
     this.logFilters.delete(id);
     this.blockFilters.delete(id);
     this.pendingTransactionFilters.delete(id);
@@ -162,23 +147,20 @@ export class FilterPolyfill {
       return filterNotFoundError();
     }
     const currentBlockHeight = await this.getCurrentBlockHeight();
-    const toBlock =
-      filter.toBlock === "latest" ? currentBlockHeight : filter.toBlock;
+    const toBlock = filter.toBlock === 'latest' ? currentBlockHeight : filter.toBlock;
 
     if (cursorPosition > currentBlockHeight) {
       return emptyResult();
     }
-    if (cursorPosition > filter.toBlock) {
+    if (cursorPosition > Number(filter.toBlock)) {
       return emptyResult();
     }
 
-    console.log(
-      `Fetching logs from ${cursorPosition} to ${toBlock} for filter ${id}`,
-    );
+    console.info(`Fetching logs from ${cursorPosition} to ${toBlock} for filter ${id}`);
 
     const response = await this.sendAsyncPromise({
       ...JSONRPC_TEMPLATE,
-      method: "eth_getLogs",
+      method: 'eth_getLogs',
       params: [
         paramFromFilter({
           ...filter,
@@ -189,14 +171,12 @@ export class FilterPolyfill {
     });
 
     if (Array.isArray(response.result)) {
-      const blocks = response.result.map(log =>
-        intNumberFromHexString(log.blockNumber || "0x0"),
-      );
+      const blocks = response.result.map((log) => intNumberFromHexString(log.blockNumber || '0x0'));
       const highestBlock = Math.max(...blocks);
       if (highestBlock && highestBlock > cursorPosition) {
         const newCursorPosition = IntNumber(highestBlock + 1);
-        console.log(
-          `Moving cursor position for filter (${id}) from ${cursorPosition} to ${newCursorPosition}`,
+        console.info(
+          `Moving cursor position for filter (${id}) from ${cursorPosition} to ${newCursorPosition}`
         );
         this.cursors.set(id, newCursorPosition);
       }
@@ -214,41 +194,39 @@ export class FilterPolyfill {
       return emptyResult();
     }
 
-    console.log(
-      `Fetching blocks from ${cursorPosition} to ${currentBlockHeight} for filter (${id})`,
+    console.info(
+      `Fetching blocks from ${cursorPosition} to ${currentBlockHeight} for filter (${id})`
     );
     const blocks = (
       await Promise.all(
         // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-        range(cursorPosition, currentBlockHeight + 1).map(i =>
-          this.getBlockHashByNumber(IntNumber(i)),
-        ),
+        range(cursorPosition, currentBlockHeight + 1).map((i) =>
+          this.getBlockHashByNumber(IntNumber(i))
+        )
       )
-    ).filter(hash => !!hash);
+    ).filter((hash) => !!hash);
 
     // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
     const newCursorPosition = IntNumber(cursorPosition + blocks.length);
-    console.log(
-      `Moving cursor position for filter (${id}) from ${cursorPosition} to ${newCursorPosition}`,
+    console.info(
+      `Moving cursor position for filter (${id}) from ${cursorPosition} to ${newCursorPosition}`
     );
     this.cursors.set(id, newCursorPosition);
     return { ...JSONRPC_TEMPLATE, result: blocks };
   }
 
-  private async getPendingTransactionFilterChanges(
-    _id: IntNumber,
-  ): Promise<JSONRPCResponse> {
+  private async getPendingTransactionFilterChanges(_id: IntNumber): Promise<JSONRPCResponse> {
     // pending transaction filters are not supported
     return Promise.resolve(emptyResult());
   }
 
   private async setInitialCursorPosition(
     id: IntNumber,
-    startBlock: IntBlockHeight,
+    startBlock: IntBlockHeight
   ): Promise<number> {
     const currentBlockHeight = await this.getCurrentBlockHeight();
     const initialCursorPosition =
-      typeof startBlock === "number" && startBlock > currentBlockHeight
+      typeof startBlock === 'number' && startBlock > currentBlockHeight
         ? startBlock
         : currentBlockHeight;
     this.cursors.set(id, initialCursorPosition);
@@ -261,7 +239,7 @@ export class FilterPolyfill {
       window.clearTimeout(existing);
     }
     const timeout = window.setTimeout(() => {
-      console.log(`Filter (${id}) timed out`);
+      console.info(`Filter (${id}) timed out`);
       this.deleteFilter(id);
     }, TIMEOUT);
     this.timeouts.set(id, timeout);
@@ -270,21 +248,19 @@ export class FilterPolyfill {
   private async getCurrentBlockHeight(): Promise<IntNumber> {
     const { result } = await this.sendAsyncPromise({
       ...JSONRPC_TEMPLATE,
-      method: "eth_blockNumber",
+      method: 'eth_blockNumber',
       params: [],
     });
     return intNumberFromHexString(ensureHexString(result));
   }
 
-  private async getBlockHashByNumber(
-    blockNumber: IntNumber,
-  ): Promise<HexString | null> {
+  private async getBlockHashByNumber(blockNumber: IntNumber): Promise<HexString | null> {
     const response = await this.sendAsyncPromise({
       ...JSONRPC_TEMPLATE,
-      method: "eth_getBlockByNumber",
+      method: 'eth_getBlockByNumber',
       params: [hexStringFromIntNumber(blockNumber), false],
     });
-    if (response.result && typeof response.result.hash === "string") {
+    if (response.result && typeof response.result.hash === 'string') {
       return ensureHexString(response.result.hash);
     }
     return null;
@@ -318,11 +294,11 @@ function paramFromFilter(filter: Filter): FilterParam {
 }
 
 function intBlockHeightFromHexBlockHeight(
-  value: RawHexBlockHeight | HexBlockHeight | undefined,
+  value: RawHexBlockHeight | HexBlockHeight | undefined
 ): IntBlockHeight {
-  if (value === undefined || value === "latest" || value === "pending") {
-    return "latest";
-  } else if (value === "earliest") {
+  if (value === undefined || value === 'latest' || value === 'pending') {
+    return 'latest';
+  } else if (value === 'earliest') {
     return IntNumber(0);
   } else if (isHexString(value)) {
     return intNumberFromHexString(value);
@@ -330,10 +306,8 @@ function intBlockHeightFromHexBlockHeight(
   throw new Error(`Invalid block option: ${String(value)}`);
 }
 
-function hexBlockHeightFromIntBlockHeight(
-  value: IntBlockHeight,
-): HexBlockHeight {
-  if (value === "latest") {
+function hexBlockHeightFromIntBlockHeight(value: IntBlockHeight): HexBlockHeight {
+  if (value === 'latest') {
     return value;
   }
   return hexStringFromIntNumber(value);
@@ -342,7 +316,7 @@ function hexBlockHeightFromIntBlockHeight(
 function filterNotFoundError(): JSONRPCResponse {
   return {
     ...JSONRPC_TEMPLATE,
-    error: { code: -32000, message: "filter not found" },
+    error: { code: -32000, message: 'filter not found' },
   };
 }
 

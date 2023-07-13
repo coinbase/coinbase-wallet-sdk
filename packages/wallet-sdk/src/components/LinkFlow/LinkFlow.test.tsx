@@ -1,59 +1,59 @@
-import { render } from "@testing-library/preact";
-import { h } from "preact";
-import { Observable, Subject } from "rxjs";
+import { render } from '@testing-library/preact';
+import { h } from 'preact';
+import { Observable, Subject } from 'rxjs';
 
-import { LinkFlow } from "./LinkFlow";
+import { LinkFlow } from './LinkFlow';
 
-describe("LinkFlow", () => {
+describe('LinkFlow', () => {
   const linkFlow = new LinkFlow({
     darkMode: false,
-    version: "1.2.1",
-    sessionId: "session123",
-    sessionSecret: "sessionSecret",
-    linkAPIUrl: "http://link-url.com",
+    version: '1.2.1',
+    sessionId: 'session123',
+    sessionSecret: 'sessionSecret',
+    linkAPIUrl: 'http://link-url.com',
     isParentConnection: false,
     connected$: new Observable(),
     chainId$: new Subject(),
   });
 
-  test("initialize", () => {
+  test('initialize', () => {
     expect(linkFlow).toMatchObject({
       connectDisabled: false,
       darkMode: false,
       isConnected: false,
       isOpen: false,
       isParentConnection: false,
-      linkAPIUrl: "http://link-url.com",
+      linkAPIUrl: 'http://link-url.com',
       onCancel: null,
       root: null,
-      sessionId: "session123",
-      sessionSecret: "sessionSecret",
-      version: "1.2.1",
+      sessionId: 'session123',
+      sessionSecret: 'sessionSecret',
+      version: '1.2.1',
     });
   });
 
-  const attachedEl = document.getElementsByClassName("-cbwsdk-link-flow-root");
+  const attachedEl = document.getElementsByClassName('-cbwsdk-link-flow-root');
 
-  describe("public methods", () => {
+  describe('public methods', () => {
     beforeEach(() => {
       render(<div id="attach-here" />);
-      const ele = document.getElementById("attach-here");
+      const ele = document.getElementById('attach-here');
       if (ele) {
         linkFlow.attach(ele);
       }
     });
 
-    test("@attach", () => {
+    test('@attach', () => {
       expect(attachedEl.length).toEqual(1);
     });
 
-    test("@detach", () => {
+    test('@detach', () => {
       linkFlow.detach();
 
       expect(attachedEl.length).toEqual(0);
     });
 
-    test("@setConnectDisabled", () => {
+    test('@setConnectDisabled', () => {
       linkFlow.setConnectDisabled(true);
 
       expect(linkFlow).toMatchObject({
@@ -61,7 +61,7 @@ describe("LinkFlow", () => {
       });
     });
 
-    test("@open", () => {
+    test('@open', () => {
       linkFlow.open({
         onCancel: () => {},
       });
@@ -71,7 +71,7 @@ describe("LinkFlow", () => {
       });
     });
 
-    test("@close", () => {
+    test('@close', () => {
       linkFlow.close();
 
       expect(linkFlow).toMatchObject({
@@ -81,14 +81,14 @@ describe("LinkFlow", () => {
     });
   });
 
-  describe("without root element", () => {
-    test("@detach", () => {
+  describe('without root element', () => {
+    test('@detach', () => {
       const linkFlow1 = new LinkFlow({
         darkMode: true,
-        version: "1.2.1",
-        sessionId: "session123",
-        sessionSecret: "sessionSecret",
-        linkAPIUrl: "http://link-url.com",
+        version: '1.2.1',
+        sessionId: 'session123',
+        sessionSecret: 'sessionSecret',
+        linkAPIUrl: 'http://link-url.com',
         isParentConnection: false,
         connected$: new Observable(),
         chainId$: new Subject(),

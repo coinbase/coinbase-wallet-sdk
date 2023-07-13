@@ -1,19 +1,19 @@
-import { RedirectDialog } from "../components/RedirectDialog/RedirectDialog";
-import { ErrorHandler } from "../errors";
+import { RedirectDialog } from '../components/RedirectDialog/RedirectDialog';
+import { ErrorHandler } from '../errors';
 import {
   EthereumAddressFromSignedMessageRequest,
   SignEthereumMessageRequest,
   SignEthereumTransactionRequest,
   SubmitEthereumTransactionRequest,
-} from "../relay/Web3Request";
+} from '../relay/Web3Request';
 import {
   EthereumAddressFromSignedMessageResponse,
   SignEthereumMessageResponse,
   SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse,
-} from "../relay/Web3Response";
-import { AddressString, ProviderType } from "../types";
-import { WalletUI, WalletUIOptions } from "./WalletUI";
+} from '../relay/Web3Response';
+import { AddressString, ProviderType } from '../types';
+import { WalletUI, WalletUIOptions } from './WalletUI';
 
 // TODO: Implement & present in-page wallet picker instead of navigating to www.coinbase.com/connect-dapp
 export class MobileRelayUI implements WalletUI {
@@ -28,27 +28,27 @@ export class MobileRelayUI implements WalletUI {
 
   attach() {
     if (this.attached) {
-      throw new Error("Coinbase Wallet SDK UI is already attached");
+      throw new Error('Coinbase Wallet SDK UI is already attached');
     }
     this.redirectDialog.attach();
     this.attached = true;
   }
 
   private redirectToCoinbaseWallet(walletLinkUrl?: string): void {
-    const url = new URL("https://go.cb-w.com/walletlink");
+    const url = new URL('https://go.cb-w.com/walletlink');
 
-    url.searchParams.append("redirect_url", window.location.href);
+    url.searchParams.append('redirect_url', window.location.href);
     if (walletLinkUrl) {
-      url.searchParams.append("wl_url", walletLinkUrl);
+      url.searchParams.append('wl_url', walletLinkUrl);
     }
 
-    window.open(url.href, "_blank");
+    window.open(url.href, '_blank');
   }
 
   openCoinbaseWalletDeeplink(walletLinkUrl?: string): void {
     this.redirectDialog.present({
-      title: "Redirecting to Coinbase Wallet...",
-      buttonText: "Open",
+      title: 'Redirecting to Coinbase Wallet...',
+      buttonText: 'Open',
       darkMode: this.darkMode,
       onButtonClick: () => {
         this.redirectToCoinbaseWallet(walletLinkUrl);
@@ -90,9 +90,7 @@ export class MobileRelayUI implements WalletUI {
     blockExplorerUrls?: string[] | undefined;
     chainName?: string | undefined;
     iconUrls?: string[] | undefined;
-    nativeCurrency?:
-      | { name: string; symbol: string; decimals: number }
-      | undefined;
+    nativeCurrency?: { name: string; symbol: string; decimals: number } | undefined;
   }): void {} // no-op
 
   watchAsset(_options: {

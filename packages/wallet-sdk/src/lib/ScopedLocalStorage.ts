@@ -2,6 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 export class ScopedLocalStorage {
+  // eslint-disable-next-line no-useless-constructor
   constructor(private scope: string) {}
 
   public setItem(key: string, value: string): void {
@@ -17,15 +18,15 @@ export class ScopedLocalStorage {
   }
 
   public clear(): void {
-    const prefix = this.scopedKey("");
+    const prefix = this.scopedKey('');
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (typeof key === "string" && key.startsWith(prefix)) {
+      if (typeof key === 'string' && key.startsWith(prefix)) {
         keysToRemove.push(key);
       }
     }
-    keysToRemove.forEach(key => localStorage.removeItem(key));
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
   }
 
   private scopedKey(key: string): string {

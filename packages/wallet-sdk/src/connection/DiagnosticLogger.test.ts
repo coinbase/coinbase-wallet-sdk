@@ -1,12 +1,7 @@
-import {
-  DiagnosticLogger,
-  EVENTS,
-  EventType,
-  LogProperties,
-} from "./DiagnosticLogger";
+import { DiagnosticLogger, EVENTS, EventType, LogProperties } from './DiagnosticLogger';
 
-describe("DiagnosticLogger", () => {
-  describe("log", () => {
+describe('DiagnosticLogger', () => {
+  describe('log', () => {
     let event: string;
     let props: LogProperties | undefined;
 
@@ -17,10 +12,10 @@ describe("DiagnosticLogger", () => {
       }
     }
     const diagnostic = new diagnosticLogger();
-    test("calls the log function", () => {
+    test('calls the log function', () => {
       const logProperties = {
-        message: "a message",
-        value: "a value",
+        message: 'a message',
+        value: 'a value',
       };
       diagnostic.log(EVENTS.CONNECTED_STATE_CHANGE, logProperties);
 
