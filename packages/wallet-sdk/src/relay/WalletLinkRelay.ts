@@ -49,7 +49,6 @@ import {
 import { WalletSDKRelayEventManager } from "./WalletSDKRelayEventManager";
 import { Web3Method } from "./Web3Method";
 import {
-  ConnectAndSignInRequest,
   EthereumAddressFromSignedMessageRequest,
   GenericRequest,
   ScanQRCodeRequest,
@@ -62,7 +61,6 @@ import { Web3RequestCanceledMessage } from "./Web3RequestCanceledMessage";
 import { Web3RequestMessage } from "./Web3RequestMessage";
 import {
   AddEthereumChainResponse,
-  ConnectAndSignInResponse,
   EthereumAddressFromSignedMessageResponse,
   GenericResponse,
   isErrorResponse,
@@ -112,13 +110,13 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
     | ((chainId: string, jsonRpcUrl: string) => void)
     | null = null;
   private dappDefaultChainSubject = new BehaviorSubject(1);
-  private dappDefaultChain = 1;
+  protected dappDefaultChain = 1;
   private readonly options: WalletLinkRelayOptions;
 
   protected ui: WalletUI;
 
-  private appName = "";
-  private appLogoUrl: string | null = null;
+  protected appName = '';
+  protected appLogoUrl: string | null = null;
   private subscriptions = new Subscription();
   private _reloadOnDisconnect: boolean;
   isLinked: boolean | undefined;
@@ -858,30 +856,6 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       callback(message.response);
       this.relayEventManager.callbacks.delete(message.id);
     }
-  }
-
-  connectAndSignIn(params: {
-    nonce: string;
-    statement?: string;
-    resources?: string[];
-  }): CancelablePromise<ConnectAndSignInResponse> {
-    return this.sendRequest<ConnectAndSignInRequest, ConnectAndSignInResponse>({
-      method: Web3Method.connectAndSignIn,
-      params: {
-        appName: this.appName,
-        appLogoUrl: this.appLogoUrl,
-
-        domain: window.location.hostname,
-        aud: window.location.href,
-        version: "1",
-        type: "eip4361",
-        nonce: params.nonce,
-        iat: new Date().toISOString(),
-        chainId: `eip155:${this.dappDefaultChain}`,
-        statement: params.statement,
-        resources: params.resources,
-      },
-    });
   }
 
   public requestEthereumAccounts(): CancelablePromise<RequestEthereumAccountsResponse> {

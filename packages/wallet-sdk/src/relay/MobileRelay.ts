@@ -1,10 +1,10 @@
-import { MobileRelayUI } from "../provider/MobileRelayUI";
-import { getLocation } from "../util";
-import { WalletLinkRelay, WalletLinkRelayOptions } from "./WalletLinkRelay";
-import { CancelablePromise } from "./WalletSDKRelayAbstract";
-import { Web3Method } from "./Web3Method";
-import { Web3Request } from "./Web3Request";
-import { RequestEthereumAccountsResponse } from "./Web3Response";
+import { MobileRelayUI } from '../provider/MobileRelayUI';
+import { getLocation } from '../util';
+import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay';
+import { CancelablePromise } from './WalletSDKRelayAbstract';
+import { Web3Method } from './Web3Method';
+import { ConnectAndSignInRequest, Web3Request } from './Web3Request';
+import { ConnectAndSignInResponse, RequestEthereumAccountsResponse } from './Web3Response';
 
 export class MobileRelay extends WalletLinkRelay {
   private _enableMobileWalletLink: boolean;
@@ -52,5 +52,33 @@ export class MobileRelay extends WalletLinkRelay {
         this.ui.openCoinbaseWalletDeeplink();
         break;
     }
+  }
+
+  connectAndSignIn(params: {
+    nonce: string;
+    statement?: string;
+    resources?: string[];
+  }): CancelablePromise<ConnectAndSignInResponse> {
+    if (!this._enableMobileWalletLink) {
+      throw new Error('connectAndSignIn is supported only when enableMobileWalletLink is on');
+    }
+
+    return this.sendRequest<ConnectAndSignInRequest, ConnectAndSignInResponse>({
+      method: Web3Method.connectAndSignIn,
+      params: {
+        appName: this.appName,
+        appLogoUrl: this.appLogoUrl,
+
+        domain: window.location.hostname,
+        aud: window.location.href,
+        version: '1',
+        type: 'eip4361',
+        nonce: params.nonce,
+        iat: new Date().toISOString(),
+        chainId: `eip155:${this.dappDefaultChain}`,
+        statement: params.statement,
+        resources: params.resources,
+      },
+    });
   }
 }

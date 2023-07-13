@@ -4,11 +4,12 @@
 import SafeEventEmitter from "@metamask/safe-event-emitter";
 import BN from "bn.js";
 
-import { DiagnosticLogger, EVENTS } from "../connection/DiagnosticLogger";
-import { serializeError, standardErrorCodes, standardErrors } from "../errors";
-import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
-import { EthereumTransactionParams } from "../relay/EthereumTransactionParams";
-import { Session } from "../relay/Session";
+import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
+import { serializeError, standardErrorCodes, standardErrors } from '../errors';
+import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
+import { EthereumTransactionParams } from '../relay/EthereumTransactionParams';
+import { MobileRelay } from '../relay/MobileRelay';
+import { Session } from '../relay/Session';
 import {
   LOCAL_STORAGE_ADDRESSES_KEY,
   WalletSDKRelayAbstract,
@@ -641,6 +642,9 @@ export class CoinbaseWalletProvider
     let res: ConnectAndSignInResponse;
     try {
       const relay = await this.initializeRelay();
+      if (!(relay instanceof MobileRelay)) {
+        throw new Error('connectAndSignIn is only supported on mobile');
+      }
       res = await relay.connectAndSignIn(params).promise;
     } catch (err: any) {
       if (
