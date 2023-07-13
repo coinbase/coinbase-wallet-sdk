@@ -8,6 +8,7 @@ import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
 import { serializeError, standardErrorCodes, standardErrors } from '../errors';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { EthereumTransactionParams } from '../relay/EthereumTransactionParams';
+import { MobileRelay } from '../relay/MobileRelay';
 import { Session } from '../relay/Session';
 import {
   LOCAL_STORAGE_ADDRESSES_KEY,
@@ -600,6 +601,9 @@ export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Prov
     let res: ConnectAndSignInResponse;
     try {
       const relay = await this.initializeRelay();
+      if (!(relay instanceof MobileRelay)) {
+        throw new Error('connectAndSignIn is only supported on mobile');
+      }
       res = await relay.connectAndSignIn(params).promise;
     } catch (err: any) {
       if (typeof err.message === 'string' && err.message.match(/(denied|rejected)/i)) {

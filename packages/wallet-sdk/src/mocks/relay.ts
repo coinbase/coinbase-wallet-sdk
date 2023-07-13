@@ -5,7 +5,6 @@ import { CancelablePromise, WalletSDKRelayAbstract } from '../relay/WalletSDKRel
 import { Web3Method } from '../relay/Web3Method';
 import {
   AddEthereumChainResponse,
-  ConnectAndSignInResponse,
   EthereumAddressFromSignedMessageResponse,
   GenericResponse,
   RequestEthereumAccountsResponse,
@@ -141,10 +140,6 @@ export class MockRelayClass extends WalletSDKRelayAbstract {
 
   setDappDefaultChainCallback(): void {
     return;
-  }
-
-  connectAndSignIn(): CancelablePromise<ConnectAndSignInResponse> {
-    return makeMockReturn<ConnectAndSignInResponse>();
   }
 
   get session() {
