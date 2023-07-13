@@ -27,7 +27,7 @@
     "test:unit": "jest",
     "test:unit:coverage": "yarn test:unit && open coverage/lcov-report/index.html",
     "test:karma": "yarn build-npm && karma start",
-    "prebuild": "rm -rf ./build && node -p \"'export const LIB_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
+    "prebuild": "rm -rf ./build && node -p \"'export const LIB_VERSION = \\'' + require('./package.json').version + '\\';'\" > src/version.ts",
     "build": "node compile-assets.js && webpack --config webpack.config.js",
     "build-npm": "tsc -p ./tsconfig.build.json",
     "build:dev": "export LINK_API_URL='http://localhost:3000'; yarn build",
