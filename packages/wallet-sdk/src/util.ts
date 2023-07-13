@@ -209,12 +209,10 @@ export function createQrUrl(
     secret: sessionSecret,
     server: serverUrl,
     v: version,
-    chainId,
+    chainId: chainId.toString(),
   };
 
-  const qrUrl = `${serverUrl}/#/link?${Object.keys(query)
-    .map(key => `${key}=${encodeURIComponent(query[key])}`)
-    .join("&")}`;
+  const qrUrl = `${serverUrl}/#/link?${new URLSearchParams(query).toString()}`;
 
   return qrUrl;
 }
