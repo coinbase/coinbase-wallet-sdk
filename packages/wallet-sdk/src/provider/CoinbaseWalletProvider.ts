@@ -4,12 +4,12 @@
 import SafeEventEmitter from "@metamask/safe-event-emitter";
 import BN from "bn.js";
 
-import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
-import { serializeError, standardErrorCodes, standardErrors } from '../errors';
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { EthereumTransactionParams } from '../relay/EthereumTransactionParams';
-import { MobileRelay } from '../relay/MobileRelay';
-import { Session } from '../relay/Session';
+import { DiagnosticLogger, EVENTS } from "../connection/DiagnosticLogger";
+import { serializeError, standardErrorCodes, standardErrors } from "../errors";
+import { ScopedLocalStorage } from "../lib/ScopedLocalStorage";
+import { EthereumTransactionParams } from "../relay/EthereumTransactionParams";
+import { MobileRelay } from "../relay/MobileRelay";
+import { Session } from "../relay/Session";
 import {
   LOCAL_STORAGE_ADDRESSES_KEY,
   WalletSDKRelayAbstract,
@@ -21,8 +21,8 @@ import {
   isErrorResponse,
   RequestEthereumAccountsResponse,
   SwitchResponse,
-} from '../relay/Web3Response';
-import { AddressString, Callback, HexString, IntNumber, ProviderType } from '../types';
+} from "../relay/Web3Response";
+import { AddressString, Callback, HexString, IntNumber, ProviderType } from "../types";
 import {
   ensureAddressString,
   ensureBN,
