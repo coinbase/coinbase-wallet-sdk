@@ -25,7 +25,7 @@ if [ $branch == $mainBranch ]; then
   rm -rf ./node_modules
   echo -e "yarn install"
   yarn install
-  echo -e "yarn build:prod"
+  echo -e "yarn workspace @coinbase/wallet-sdk build:prod"
   yarn build:prod
   echo "================================================="
   echo -e " ${GREEN}cd build/npm and run 'npm publish'"

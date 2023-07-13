@@ -1,0 +1,26 @@
+{
+    "extends": "./tsconfig.base.json",
+    // Options for projects being built as npm packages
+    "compilerOptions": {
+      "baseUrl": ".",
+      "declaration": true,
+      "emitDeclarationOnly": true,
+      "resolveJsonModule": true,
+      "sourceMap": false
+    }
+  }
+  
+
+  // {
+  //   "extends": "./tsconfig",
+  //   "compilerOptions": {
+  //     "declaration": true,
+  //     "module": "commonjs",
+  //     "moduleResolution": "node",
+  //     "outDir": "./build/npm/dist",
+  //     "target": "es2017"
+  //   },
+  //   "include": ["src", "src/@types"],
+  //   "exclude": ["**/*.test.*", "__tests__", "examples"]
+  // }
+  

@@ -1,25 +1,10 @@
 {
-  "compilerOptions": {
-    "allowJs": false,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "experimentalDecorators": true,
-    "forceConsistentCasingInFileNames": true,
-    "jsx": "react",
-    "jsxFactory": "h",
-    "lib": ["dom", "dom.iterable", "es2016"],
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "noErrorTruncation": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "target": "es2016",
-    "types": ["node", "jest"]
-  },
-  "include": ["src", "src/@types", "jest.setup.*", "__tests__", "**/*.test.*"]
+  "extends": "../../tsconfig.json",
+  "include": [
+    "**/*"
+  ],
+  "exclude": [
+    "dts",
+    "lib"
+  ]
 }
