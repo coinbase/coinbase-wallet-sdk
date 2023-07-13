@@ -6,7 +6,6 @@ import { Session } from './Session';
 import { Web3Request } from './Web3Request';
 import {
   AddEthereumChainResponse,
-  ConnectAndSignInResponse,
   EthereumAddressFromSignedMessageResponse,
   GenericResponse,
   RequestEthereumAccountsResponse,
@@ -114,12 +113,6 @@ export abstract class WalletSDKRelayAbstract {
    * needing to be connected to the mobile client.
    */
   abstract inlineAddEthereumChain(chainId: string): boolean;
-
-  abstract connectAndSignIn(params: {
-    nonce: string;
-    statement?: string;
-    resources?: string[];
-  }): CancelablePromise<ConnectAndSignInResponse>;
 
   public async makeEthereumJSONRPCRequest(
     request: JSONRPCRequest,
