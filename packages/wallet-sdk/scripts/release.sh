@@ -26,9 +26,9 @@ if [ $branch == $mainBranch ]; then
   echo -e "yarn install"
   yarn install
   echo -e "yarn workspace @coinbase/wallet-sdk build:prod"
-  yarn build:prod
+  yarn workspace @coinbase/wallet-sdk build:prod
   echo "================================================="
-  echo -e " ${GREEN}cd build/npm and run 'npm publish'"
+  echo -e " ${GREEN}cd build and run 'npm publish'"
   echo "================================================="
 else
   echo -e "${RED}⚠️  Need to publish from ${mainBranch} branch"
