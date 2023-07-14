@@ -11,7 +11,7 @@
   "scripts": {
     "lint": "yarn lint:eslint",
     "lint:eslint": "eslint . --ext .ts,.tsx",
-    "typecheck": "yarn workspaces run typecheck"
+    "typecheck": "yarn workspaces foreach -pt run typecheck"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.0.0",

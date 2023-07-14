@@ -4,7 +4,9 @@
     "**/*"
   ],
   "exclude": [
-    "dts",
-    "lib"
+    "dist",
+    "build",
+    "**/*.test.*",
+    "__tests__"
   ]
 }

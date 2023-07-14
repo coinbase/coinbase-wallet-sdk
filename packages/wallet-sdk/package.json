@@ -32,7 +32,7 @@
     "build:npm": "tsc -p ./tsconfig.build.json",
     "build:prod": "yarn build && yarn build:npm && cp ./package.json ../../README.md ./LICENSE build/npm && cp -a src/vendor-js build/npm/dist",
     "postbuild:prod": "sed -i.bak 's|  \"private\": true,||g' build/npm/package.json && rm -f build/npm/package.json.bak",
-    "lint:types": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "lint": "yarn lint:types",
     "release": "./scripts/release.sh"
   },
