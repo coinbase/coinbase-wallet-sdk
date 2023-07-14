@@ -1,25 +1,10 @@
 module.exports = {
+  root: true,
   env: {
     browser: true,
     es2021: true,
     node: true,
     commonjs: true,
-  },
-  extends: [
-    "preact",
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:prettier/recommended",
-  ],
-  settings: {
-    react: {
-      pragma: "h",
-    },
-  },
-  parser: "@typescript-eslint/parser",
-  parserOptions: {
-    ecmaVersion: "latest",
-    sourceType: "module",
   },
   plugins: [
     "@typescript-eslint",
@@ -27,6 +12,16 @@ module.exports = {
     "unused-imports",
     "prettier",
   ],
+  extends: [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended",
+  ],
+  parser: "@typescript-eslint/parser",
+  parserOptions: {
+    ecmaVersion: "latest",
+    sourceType: "module",
+  },
   rules: {
     "@typescript-eslint/no-unused-vars": "off",
     "simple-import-sort/imports": [

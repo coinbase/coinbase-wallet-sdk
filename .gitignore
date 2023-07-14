@@ -31,3 +31,10 @@ yarn-error.log*
 *-css.ts
 
 examples/**/yarn.lock
+
+.pnp.*
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions

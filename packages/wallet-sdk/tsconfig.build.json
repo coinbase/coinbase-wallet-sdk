@@ -1,12 +1,17 @@
 {
-  "extends": "./tsconfig",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "declaration": true,
-    "module": "commonjs",
-    "moduleResolution": "node",
     "outDir": "./build/npm/dist",
     "target": "es2017"
   },
-  "include": ["src", "src/@types"],
-  "exclude": ["**/*.test.*", "__tests__", "examples"]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "dist",
+    "build",
+    "**/*.test.*",
+    "__tests__"
+  ]
 }
