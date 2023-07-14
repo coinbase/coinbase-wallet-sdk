@@ -18,7 +18,14 @@ This repo uses a yarn workspace. To get started, run:
 ```shell
 yarn install
 
+# To interact with the SDK
 yarn workspace @coinbase/wallet-sdk "<command>"
+
+# To lint all files
+yarn lint
+
+# To typecheck all files
+yarn typecheck
 ```
 
 ## Installing and Upgrading
