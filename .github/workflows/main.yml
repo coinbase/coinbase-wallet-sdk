@@ -21,7 +21,7 @@ jobs:
           cache-dependency-path: 'yarn.lock'
 
       - name: Install NPM dependencies
-        run: yarn install --verbose
+        run: yarn install
 
       - name: Check ESLint
         run: yarn lint
@@ -44,7 +44,7 @@ jobs:
           cache-dependency-path: '**/yarn.lock'
 
       - name: Install NPM dependencies
-        run: yarn install --verbose
+        run: yarn install
 
       - name: Runs compile asset script
         working-directory: ./packages/wallet-sdk
@@ -75,7 +75,7 @@ jobs:
           cache-dependency-path: '**/yarn.lock'
 
       - name: Install NPM dependencies
-        run: yarn install --verbose
+        run: yarn install
 
       - name: Runs compile asset script
         run: node ./compile-assets.js
