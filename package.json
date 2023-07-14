@@ -9,8 +9,7 @@
     "packages/*"
   ],
   "scripts": {
-    "lint": "yarn lint:eslint",
-    "lint:eslint": "eslint . --ext .ts,.tsx",
+    "lint": "yarn workspaces foreach -pt run lint",
     "typecheck": "yarn workspaces foreach -pt run typecheck"
   },
   "devDependencies": {
