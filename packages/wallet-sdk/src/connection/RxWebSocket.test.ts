@@ -1,5 +1,5 @@
 import WS from 'jest-websocket-mock';
-import { Observable } from 'rxjs';
+import { lastValueFrom, Observable } from 'rxjs';
 
 import { ConnectionState, RxWebSocket } from './RxWebSocket';
 
@@ -20,7 +20,7 @@ describe('RxWebSocket', () => {
       const client = rxWS.connect();
 
       expect(client).toBeInstanceOf(Observable);
-      await client.toPromise();
+      await lastValueFrom(client);
       await server.connected;
 
       // @ts-expect-error test private methods
@@ -67,31 +67,31 @@ describe('RxWebSocket', () => {
 
       test('@connect throws error when connecting again', async () => {
         const client = rxWS.connect();
-        await client.toPromise();
+        await lastValueFrom(client);
 
-        await expect(rxWS.connect().toPromise()).rejects.toThrow('webSocket object is not null');
+        await expect(lastValueFrom(rxWS.connect())).rejects.toThrow('webSocket object is not null');
       });
 
       test('@connect throws error & fails to set websocket instance', async () => {
         const errorConnect = new RxWebSocket('');
 
-        await expect(errorConnect.connect().toPromise()).rejects.toThrow(
+        await expect(lastValueFrom(errorConnect.connect())).rejects.toThrow(
           "Failed to construct 'WebSocket': 1 argument required, but only 0 present."
         );
       });
 
       test('onclose event throws error', async () => {
         const client = rxWS.connect();
-        await client.toPromise();
+        await lastValueFrom(client);
         await server.connected;
         server.error();
 
-        await expect(rxWS.connect().toPromise()).rejects.toThrow('websocket error 1000: ');
+        await expect(lastValueFrom(rxWS.connect())).rejects.toThrow('websocket error 1000: ');
       });
 
       test('onmessage event emits message', async () => {
         const client = rxWS.connect();
-        await client.toPromise();
+        await lastValueFrom(client);
         await server.connected;
 
         // @ts-expect-error test private methods

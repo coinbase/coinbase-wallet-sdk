@@ -2,17 +2,22 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from 'bind-decorator';
-import { BehaviorSubject, from, Observable, of, Subscription, zip } from 'rxjs';
 import {
+  BehaviorSubject,
   catchError,
   distinctUntilChanged,
   filter,
+  from,
   map,
   mergeMap,
+  Observable,
+  of,
   skip,
+  Subscription,
   tap,
   timeout,
-} from 'rxjs/operators';
+  zip,
+} from 'rxjs';
 
 import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
 import { EventListener } from '../connection/EventListener';

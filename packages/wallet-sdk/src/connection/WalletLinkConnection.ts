@@ -3,28 +3,27 @@
 
 import {
   BehaviorSubject,
-  iif,
-  Observable,
-  of,
-  ReplaySubject,
-  Subscription,
-  throwError,
-  timer,
-} from 'rxjs';
-import {
   catchError,
   delay,
   distinctUntilChanged,
+  EMPTY,
   filter,
-  flatMap,
+  iif,
   map,
+  mergeMap,
+  Observable,
+  of,
+  ReplaySubject,
   retry,
   skip,
+  Subscription,
   switchMap,
   take,
   tap,
-  timeoutWith,
-} from 'rxjs/operators';
+  throwError,
+  timeout,
+  timer,
+} from 'rxjs';
 
 import { Session } from '../relay/Session';
 import { IntNumber } from '../types';
@@ -105,7 +104,7 @@ export class WalletLinkConnection {
           // check whether it's destroyed again
           filter((_) => !this.destroyed),
           // reconnect
-          flatMap((_) => ws.connect()),
+          mergeMap((_) => ws.connect()),
           retry()
         )
         .subscribe()
@@ -146,7 +145,8 @@ export class WalletLinkConnection {
             iif(
               () => cs === ConnectionState.CONNECTED,
               // if CONNECTED, start the heartbeat timer
-              timer(0, HEARTBEAT_INTERVAL)
+              timer(0, HEARTBEAT_INTERVAL),
+              EMPTY
             )
           )
         )
@@ -312,7 +312,7 @@ export class WalletLinkConnection {
     });
 
     return this.onceConnected$.pipe(
-      flatMap((_) => this.makeRequest<ServerMessageOK | ServerMessageFail>(message)),
+      mergeMap((_) => this.makeRequest<ServerMessageOK | ServerMessageFail>(message)),
       map((res) => {
         if (isServerMessageFail(res)) {
           throw new Error(res.error || 'failed to set session metadata');
@@ -338,7 +338,7 @@ export class WalletLinkConnection {
     });
 
     return this.onceLinked$.pipe(
-      flatMap((_) => this.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(message)),
+      mergeMap((_) => this.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(message)),
       map((res) => {
         if (isServerMessageFail(res)) {
           throw new Error(res.error || 'failed to publish event');
@@ -370,18 +370,21 @@ export class WalletLinkConnection {
 
   private makeRequest<T extends ServerMessage>(
     message: ClientMessage,
-    timeout: number = REQUEST_TIMEOUT
+    requestTimeout: number = REQUEST_TIMEOUT
   ): Observable<T> {
     const reqId = message.id;
     try {
       this.sendData(message);
     } catch (err) {
-      return throwError(err);
+      return throwError(() => err);
     }
 
     // await server message with corresponding id
     return (this.ws.incomingJSONData$ as Observable<T>).pipe(
-      timeoutWith(timeout, throwError(new Error(`request ${reqId} timed out`))),
+      timeout({
+        each: requestTimeout,
+        with: () => throwError(() => new Error(`request ${reqId} timed out`)),
+      }),
       filter((m) => m.id === reqId),
       take(1)
     );

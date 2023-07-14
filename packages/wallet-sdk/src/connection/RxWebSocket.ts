@@ -1,8 +1,7 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { BehaviorSubject, empty, Observable, of, Subject, throwError } from 'rxjs';
-import { flatMap, take } from 'rxjs/operators';
+import { BehaviorSubject, EMPTY, mergeMap, Observable, of, Subject, take, throwError } from 'rxjs';
 
 export enum ConnectionState {
   DISCONNECTED,
@@ -39,7 +38,7 @@ export class RxWebSocket<T = object> {
    */
   public connect(): Observable<void> {
     if (this.webSocket) {
-      return throwError(new Error('webSocket object is not null'));
+      return throwError(() => new Error('webSocket object is not null'));
     }
     return new Observable<void>((obs) => {
       let webSocket: WebSocket;
@@ -105,12 +104,12 @@ export class RxWebSocket<T = object> {
    */
   public get incomingJSONData$(): Observable<T> {
     return this.incomingData$.pipe(
-      flatMap((m) => {
+      mergeMap((m) => {
         let j: any;
         try {
           j = JSON.parse(m);
         } catch (err) {
-          return empty();
+          return EMPTY;
         }
         return of(j);
       })
