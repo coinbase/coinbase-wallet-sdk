@@ -13,11 +13,12 @@ import { MobileRelay } from './relay/MobileRelay';
 import { WalletLinkRelay } from './relay/WalletLinkRelay';
 import { WalletSDKRelayEventManager } from './relay/WalletSDKRelayEventManager';
 import { getFavicon, isMobileWeb } from './util';
+import { LIB_VERSION } from './version';
 
-const LINK_API_URL = process.env.LINK_API_URL || 'https://www.walletlink.org';
+const LINK_API_URL =
+  (typeof process !== 'undefined' && process.env?.LINK_API_URL) || 'https://www.walletlink.org';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const SDK_VERSION = process.env.SDK_VERSION! || require('../package.json').version || 'unknown';
+const SDK_VERSION = (typeof process !== 'undefined' && process.env?.SDK_VERSION) || LIB_VERSION;
 
 /** Coinbase Wallet SDK Constructor Options */
 export interface CoinbaseWalletSDKOptions {
