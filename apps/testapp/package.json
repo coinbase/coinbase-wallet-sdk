@@ -1,5 +1,5 @@
 {
-  "name": "wallet-sdk-development",
+  "name": "@coinbase/wallet-sdk-testapp",
   "packageManager": "yarn@3.6.1",
   "scripts": {
     "dev": "next dev",
@@ -7,6 +7,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@coinbase/wallet-sdk": "workspace:^",
     "next": "^13.4.10",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
