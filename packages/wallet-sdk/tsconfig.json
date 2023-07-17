@@ -1,5 +1,10 @@
 {
   "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    // For Preact
+    "jsx": "react",
+    "jsxFactory": "h",
+  },
   "include": [
     "**/*"
   ],
