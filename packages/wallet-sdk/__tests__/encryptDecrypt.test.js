@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable jest/no-done-callback */
-const { encrypt, decrypt } = require('../build/npm/dist/relay/aes256gcm');
-const { randomBytesHex } = require('../build/npm/dist/util');
+const { encrypt, decrypt } = require('../dist/relay/aes256gcm');
+const { randomBytesHex } = require('../dist/util');
 
 describe('encryption and decryption tests', () => {
   it('decrypted output matches original input', (done) => {

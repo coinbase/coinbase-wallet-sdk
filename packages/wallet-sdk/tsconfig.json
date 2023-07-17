@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    // For Preact
+    "outDir": "./dist",
     "jsx": "react",
     "jsxFactory": "h",
   },

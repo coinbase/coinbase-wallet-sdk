@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable jest/no-done-callback */
-const { ensureAddressString } = require('../build/npm/dist/util');
-const { CoinbaseWalletSDK } = require('../build/npm/dist');
+const { ensureAddressString } = require('../dist/util');
+const { CoinbaseWalletSDK } = require('../dist');
 
 describe('address storage tests', () => {
   it('ensureAddressString returns lowercase string', () => {
