@@ -1470,7 +1470,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@coinbase/wallet-sdk@workspace:packages/wallet-sdk":
+"@coinbase/wallet-sdk-testapp@workspace:apps/testapp":
+  version: 0.0.0-use.local
+  resolution: "@coinbase/wallet-sdk-testapp@workspace:apps/testapp"
+  dependencies:
+    "@coinbase/wallet-sdk": "workspace:^"
+    "@types/react": 18.2.15
+    next: ^13.4.10
+    react: ^18.2.0
+    react-dom: ^18.2.0
+  languageName: unknown
+  linkType: soft
+
+"@coinbase/wallet-sdk@workspace:^, @coinbase/wallet-sdk@workspace:packages/wallet-sdk":
   version: 0.0.0-use.local
   resolution: "@coinbase/wallet-sdk@workspace:packages/wallet-sdk"
   dependencies:
@@ -11539,17 +11551,6 @@ __metadata:
   checksum: ad7a257ea1e662e57ef2e018f97b3c02a7240ad5093c392186ce0bcf1f1a60bbadd520d073b9beb921ed99f64f065efb63dfc8eec689a80e569f93c1c5d5e16c
   languageName: node
   linkType: hard
-
-"wallet-sdk-development@workspace:apps/development":
-  version: 0.0.0-use.local
-  resolution: "wallet-sdk-development@workspace:apps/development"
-  dependencies:
-    "@types/react": 18.2.15
-    next: ^13.4.10
-    react: ^18.2.0
-    react-dom: ^18.2.0
-  languageName: unknown
-  linkType: soft
 
 "watchify@npm:4.0.0":
   version: 4.0.0
