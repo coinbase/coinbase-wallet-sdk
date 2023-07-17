@@ -70,7 +70,6 @@ export class CoinbaseWalletSDK {
    */
   constructor(options: Readonly<CoinbaseWalletSDKOptions>) {
     const linkAPIUrl = options.linkAPIUrl || LINK_API_URL;
-
     if (typeof options.overrideIsMetaMask === 'undefined') {
       this._overrideIsMetaMask = false;
     } else {

@@ -1,6 +1,5 @@
 {
   "verbose": true,
-  "restartable": "rs",
   "colours": true,
   "ignore": [
     ".git",
