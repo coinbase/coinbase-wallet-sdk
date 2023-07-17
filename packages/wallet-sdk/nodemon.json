@@ -1,0 +1,21 @@
+{
+  "verbose": true,
+  "restartable": "rs",
+  "colours": true,
+  "ignore": [
+    ".git",
+    "node_modules/**/node_modules",
+    "__tests__/**",
+    "**.test.*",
+    "**.spec.*",
+    "src/**/*-css.ts",
+    "src/**/*-svg.ts"
+  ],
+  "execMap": {
+    "ts": "yarn run build:prod"
+  },
+  "ext": "js,jsx,ts,tsx,json,css,scss,svg",
+  "watch": [
+    "src"
+  ]
+}

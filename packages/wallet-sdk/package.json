@@ -32,6 +32,7 @@
     "build:npm": "tsc -p ./tsconfig.build.json",
     "build:prod": "yarn build && yarn build:npm && cp ./package.json ../../README.md ./LICENSE build/npm && cp -a src/vendor-js build/npm/dist",
     "postbuild:prod": "sed -i.bak 's|  \"private\": true,||g' build/npm/package.json && rm -f build/npm/package.json.bak",
+    "dev": "nodemon --config nodemon.json",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx --fix",
     "release": "./scripts/release.sh"
