@@ -1,3 +1,4 @@
+import { Button, Container } from '@chakra-ui/react';
 import { CoinbaseWalletProvider, CoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import React, { useCallback, useEffect } from 'react';
 
@@ -25,9 +26,10 @@ export default function Home() {
   }, [provider]);
 
   return (
-    <div>
-      <h1>Connect</h1>
-      <button onClick={connect}>Connect</button>
-    </div>
+    <Container maxW="container.xl">
+      <Button mt={4} onClick={connect}>
+        Connect
+      </Button>
+    </Container>
   );
 }
