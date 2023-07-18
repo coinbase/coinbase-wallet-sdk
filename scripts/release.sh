@@ -23,10 +23,14 @@ if [ $branch == $mainBranch ]; then
   echo "================================================="
   echo -e "rm -rf ./node_modules"
   rm -rf ./node_modules
+  echo -e "rm -rf ./dist"
+  rm -rf ./dist
   echo -e "yarn install"
   yarn install
-  echo -e "yarn workspace @coinbase/wallet-sdk build:prod"
-  yarn workspace @coinbase/wallet-sdk build:prod
+  echo -e "yarn workspace @coinbase/wallet-sdk build"
+  yarn workspace @coinbase/wallet-sdk build
+  echo -e "cd ./packages/wallet-sdk"
+  cd ./packages/wallet-sdk
   echo "================================================="
   echo -e " ${GREEN} run 'npm publish'"
   echo "================================================="
