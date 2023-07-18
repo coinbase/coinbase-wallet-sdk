@@ -38,3 +38,6 @@ examples/**/yarn.lock
 !.yarn/plugins
 !.yarn/sdks
 !.yarn/versions
+
+# next.js
+.next

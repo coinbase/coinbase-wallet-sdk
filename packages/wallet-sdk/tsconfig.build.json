@@ -2,8 +2,11 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "declaration": true,
-    "outDir": "./build/npm/dist",
-    "target": "es2017"
+    "outDir": "./dist",
+    "target": "es2017",
+    // For Preact
+    "jsx": "react",
+    "jsxFactory": "h",
   },
   "include": [
     "src"

@@ -6,11 +6,14 @@
   "license": "MIT",
   "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "scripts": {
     "lint": "yarn workspaces foreach -pt run lint",
-    "typecheck": "yarn workspaces foreach -pt run typecheck"
+    "typecheck": "yarn workspaces foreach -pt run typecheck",
+    "dev": "yarn workspaces foreach -ipv run dev",
+    "release": "./scripts/release.sh"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.0.0",

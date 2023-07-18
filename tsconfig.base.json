@@ -27,13 +27,13 @@
     "noUnusedParameters": true,
     "target": "es2016",
     "types": ["node", "jest"],
-    // For Preact
-    "jsx": "react",
-    "jsxFactory": "h",
     // Paths
     "paths": {
       ":wallet-sdk/*": [
         "packages/wallet-sdk/*"
+      ],
+      ":wallet-sdk-testapp/*": [
+        "apps/testapp/*"
       ],
     }
   }
