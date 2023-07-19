@@ -32,6 +32,8 @@ export function RpcMethodCard({ connected, format, method, params }) {
 
   const submit = useCallback(
     async (data: Record<string, unknown>) => {
+      setError(null);
+      setResponse(null);
       if (!provider) return;
       let values = data;
       if (format) {
