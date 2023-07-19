@@ -9,7 +9,7 @@ export function Layout({ children }: LayoutProps) {
     <Box>
       <Box shadow="lg" py={6}>
         <Container maxW="container.xl">
-          <Heading>Coinbase Wallet SDK</Heading>
+          <Heading>Coinbase Wallet SDK - Playground</Heading>
         </Container>
       </Box>
       <Box as="main" mt={6}>
