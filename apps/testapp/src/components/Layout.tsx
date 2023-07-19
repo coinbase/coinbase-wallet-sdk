@@ -7,10 +7,14 @@ type LayoutProps = {
 export function Layout({ children }: LayoutProps) {
   return (
     <Box>
-      <Container maxW="container.xl">
-        <Heading>Coinbase Wallet SDK</Heading>
-      </Container>
-      <Box as="main">{children}</Box>
+      <Box shadow="lg" py={6}>
+        <Container maxW="container.xl">
+          <Heading>Coinbase Wallet SDK</Heading>
+        </Container>
+      </Box>
+      <Box as="main" mt={6}>
+        {children}
+      </Box>
     </Box>
   );
 }
