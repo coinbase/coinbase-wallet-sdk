@@ -1,0 +1,4 @@
+{
+  "name": "safe-event-emitter",
+  "packageManager": "yarn@3.6.1"
+}

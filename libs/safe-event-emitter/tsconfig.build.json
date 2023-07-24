@@ -3,10 +3,7 @@
   "compilerOptions": {
     "declaration": true,
     "outDir": "./dist",
-    "target": "es2017",
-    // For Preact
-    "jsx": "react",
-    "jsxFactory": "h"
+    "target": "es2017"
   },
   "include": ["src"],
   "exclude": ["dist", "build", "**/*.test.*"]
