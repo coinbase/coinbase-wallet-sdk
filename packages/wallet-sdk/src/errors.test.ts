@@ -89,6 +89,17 @@ describe('serializeError', () => {
     expect(serialized.docUrl).toContain(`code=${standardErrorCodes.provider.userRejectedRequest}`);
   });
 
+  test('with unsupportedChain', () => {
+    const error = standardErrors.provider.unsupportedChain();
+
+    const serialized = serializeError(error);
+    expect(serialized.code).toEqual(standardErrorCodes.provider.unsupportedChain);
+    expect(serialized.message).toEqual(error.message);
+    expect(serialized.stack).toEqual(expect.stringContaining('Unrecognized chain ID'));
+    expect(serialized.docUrl).toMatch(/.*version=\d+\.\d+\.\d+.*/);
+    expect(serialized.docUrl).toContain(`code=${standardErrorCodes.provider.unsupportedChain}`);
+  });
+  
   test('with Error object', () => {
     const error = new Error('test Error object');
 
