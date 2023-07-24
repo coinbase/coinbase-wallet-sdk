@@ -18,7 +18,10 @@ This repo uses a yarn workspace. To get started, run:
 ```shell
 yarn install
 
-# To interact with the SDK
+# To start the development server. This starts a nextjs app on port 3000. Any changes in the SDK become available through the app
+yarn dev
+
+# To interact with the SDK directly:
 yarn workspace @coinbase/wallet-sdk "<command>"
 
 # To lint all files
