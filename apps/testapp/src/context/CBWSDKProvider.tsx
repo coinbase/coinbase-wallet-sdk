@@ -16,7 +16,6 @@ export function CBWSDKProvider({ children }: CBWSDKProviderProps) {
     });
     setSdk(cbwsdk);
     const cbwprovider = cbwsdk.makeWeb3Provider('http');
-    console.info('provider', cbwprovider);
     setProvider(cbwprovider);
   }, []);
 

@@ -2,7 +2,7 @@
   "name": "@coinbase/wallet-sdk-testapp",
   "packageManager": "yarn@3.6.1",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --port 3001",
     "build": "next build",
     "start": "next start"
   },

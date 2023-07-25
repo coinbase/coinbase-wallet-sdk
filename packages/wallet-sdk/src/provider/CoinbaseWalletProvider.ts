@@ -1,8 +1,8 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import SafeEventEmitter from '@metamask/safe-event-emitter';
 import BN from 'bn.js';
+import { EventEmitter } from 'eventemitter3';
 
 import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
 import { serializeError, standardErrorCodes, standardErrors } from '../errors';
@@ -89,7 +89,7 @@ interface WatchAssetParams {
   };
 }
 
-export class CoinbaseWalletProvider extends SafeEventEmitter implements Web3Provider {
+export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider {
   // So dapps can easily identify Coinbase Wallet for enabling features like 3085 network switcher menus
   public readonly isCoinbaseWallet: boolean;
   // So dapps can easily identify Coinbase Dapp Browser for enabling dapp browser specific features

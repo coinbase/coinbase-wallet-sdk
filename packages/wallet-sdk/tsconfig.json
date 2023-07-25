@@ -20,7 +20,6 @@
       "build",
       "**/*.test.*",
     ],
-    "excludeFiles": ["build/fileWhichChangesOften.ts"]
   },
   "include": [
     "./src"
