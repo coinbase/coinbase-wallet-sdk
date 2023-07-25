@@ -19,26 +19,6 @@ export function CBWSDKProvider({ children }: CBWSDKProviderProps) {
     setProvider(cbwprovider);
   }, []);
 
-  useEffect(() => {
-    if (provider) {
-      provider.on('connect', (info) => {
-        console.info('connect', info);
-      });
-      provider.on('close', (error) => {
-        console.info('close', error);
-      });
-      provider.on('accountsChanged', (accounts) => {
-        console.info('accountsChanged', accounts);
-      });
-      provider.on('chainChanged', (chainId) => {
-        console.info('chainChanged', chainId);
-      });
-      provider.on('networkChanged', (networkId) => {
-        console.info('networkChanged', networkId);
-      });
-    }
-  }, [provider]);
-
   const ctx = useMemo(
     () => ({
       sdk,
