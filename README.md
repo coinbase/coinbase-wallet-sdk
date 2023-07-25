@@ -18,7 +18,7 @@ This repo uses a yarn workspace. To get started, run:
 ```shell
 yarn install
 
-# To start the development server. This starts a nextjs app on port 3000. Any changes in the SDK become available through the app
+# To start the development server run the following command. This starts a nextjs app on port 3001. Any changes in the SDK become available through the app.
 yarn dev
 
 # To interact with the SDK directly:
