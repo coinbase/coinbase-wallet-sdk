@@ -1,8 +1,8 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import SafeEventEmitter from '@metamask/safe-event-emitter';
 import { PublicKey, SendOptions, Transaction } from '@solana/web3.js';
+import { EventEmitter } from 'eventemitter3';
 
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { SolanaWeb3Method } from '../relay/solana/SolanaWeb3Method';
@@ -39,7 +39,7 @@ declare global {
   }
 }
 
-export class SolanaProvider extends SafeEventEmitter implements SolanaWeb3Provider {
+export class SolanaProvider extends EventEmitter implements SolanaWeb3Provider {
   private _eventManager = new Map<string, any>();
   private _storage: ScopedLocalStorage = new ScopedLocalStorage('coinbaseSolana');
   isConnected: boolean;

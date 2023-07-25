@@ -205,7 +205,7 @@ export class CoinbaseWalletSDK {
    * all potential stale state is cleared.
    */
   public disconnect(): void {
-    const extension = this.walletExtension;
+    const extension = this?.walletExtension;
     if (extension) {
       void extension.close();
     } else {
