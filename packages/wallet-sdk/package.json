@@ -34,7 +34,6 @@
     "lint": "eslint . --ext .ts,.tsx --fix"
   },
   "dependencies": {
-    "@metamask/safe-event-emitter": "2.0.0",
     "@solana/web3.js": "^1.78.0",
     "bind-decorator": "^1.0.11",
     "bn.js": "^5.2.1",
