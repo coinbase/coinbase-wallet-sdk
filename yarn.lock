@@ -2701,7 +2701,6 @@ __metadata:
     bn.js: ^5.2.1
     buffer: ^6.0.3
     clsx: ^1.2.1
-    core-js: ^3.31.1
     eth-block-tracker: 6.1.0
     eth-json-rpc-filters: 5.1.0
     eth-rpc-errors: 4.0.3
@@ -5287,13 +5286,6 @@ __metadata:
   version: 3.31.1
   resolution: "core-js-pure@npm:3.31.1"
   checksum: 93c3dd28471755cb81ec4828f5617bd32a7c682295d88671534a6733a0d41dae9e28f8f8000ddd1f1e597a3bec4602db5f906a03c9ba1a360534f7ae2519db7c
-  languageName: node
-  linkType: hard
-
-"core-js@npm:^3.31.1":
-  version: 3.31.1
-  resolution: "core-js@npm:3.31.1"
-  checksum: 14519213a63c55cf188bdd2f4dece54583feaf6b90e75d6c65e07f509cd487055bf64898aeda7c97c36029ac1ea2f2ed8e4b02281553f6a257e7143a32a14015
   languageName: node
   linkType: hard
 
