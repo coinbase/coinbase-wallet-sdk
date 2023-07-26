@@ -2693,7 +2693,6 @@ __metadata:
     "@testing-library/jest-dom": ^5.17.0
     "@testing-library/preact": ^2.0.1
     "@types/bn.js": ^4.11.6
-    "@types/eventemitter3": ^2.0.2
     "@types/jest": ^27.5.2
     "@types/node": ^14.18.54
     "@types/sha.js": ^2.4.1
@@ -2714,7 +2713,6 @@ __metadata:
     keccak: ^3.0.3
     preact: ^10.16.0
     prettier: ^2.8.8
-    regenerator-runtime: ^0.13.11
     rxjs: ^6.6.3
     sass: ^1.64.1
     sha.js: ^2.4.11
@@ -2725,7 +2723,6 @@ __metadata:
     tslib: ^2.6.0
     typescript: ^5.1.6
     util: ^0.12.5
-    whatwg-fetch: ^3.5.0
   languageName: unknown
   linkType: soft
 
@@ -2912,9 +2909,9 @@ __metadata:
   linkType: hard
 
 "@eslint-community/regexpp@npm:^4.4.0, @eslint-community/regexpp@npm:^4.5.1":
-  version: 4.6.1
-  resolution: "@eslint-community/regexpp@npm:4.6.1"
-  checksum: 5741f457f5cc4ec89389d185c44c511fc85ef3630c6ce033a64c779e72f7aa3a7d5bcdc45d54612989f0dc6ea958438c02d363797b3e4f87952fc6878481da0e
+  version: 4.6.2
+  resolution: "@eslint-community/regexpp@npm:4.6.2"
+  checksum: a3c341377b46b54fa228f455771b901d1a2717f95d47dcdf40199df30abc000ba020f747f114f08560d119e979d882a94cf46cfc51744544d54b00319c0f2724
   languageName: node
   linkType: hard
 
@@ -3323,9 +3320,9 @@ __metadata:
   linkType: hard
 
 "@mdn/browser-compat-data@npm:^5.2.34, @mdn/browser-compat-data@npm:^5.2.47":
-  version: 5.3.5
-  resolution: "@mdn/browser-compat-data@npm:5.3.5"
-  checksum: d6b10fa7096d6ee6439131c62b47bdb997acfe1059408c78eddde5cb52397dbb15160281661ed8659c0985cdc32c8e679ee2e0b45e946f0d436ed0e5714ba7d5
+  version: 5.3.6
+  resolution: "@mdn/browser-compat-data@npm:5.3.6"
+  checksum: 71ddfc1296d83b3ae5b70797c876fb024be4977190defef3a7fa408e90760776dada840a0df473a2b0fe78e442554edb2f2b102a5b22e36798be2db0b28c5593
   languageName: node
   linkType: hard
 
@@ -3791,15 +3788,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/eventemitter3@npm:^2.0.2":
-  version: 2.0.2
-  resolution: "@types/eventemitter3@npm:2.0.2"
-  dependencies:
-    eventemitter3: "*"
-  checksum: 8fb5031eab566ac7689092eaebfbd76a043154ed2b7bc806730c6c543de4fa2b25b73a69574b8bdbfdb4e238de1144061ae482d1bda540540ca9479f7efc7bb7
-  languageName: node
-  linkType: hard
-
 "@types/filesystem@npm:*":
   version: 0.0.32
   resolution: "@types/filesystem@npm:0.0.32"
@@ -3894,9 +3882,9 @@ __metadata:
   linkType: hard
 
 "@types/lodash@npm:*":
-  version: 4.14.195
-  resolution: "@types/lodash@npm:4.14.195"
-  checksum: 39b75ca635b3fa943d17d3d3aabc750babe4c8212485a4df166fe0516e39288e14b0c60afc6e21913cc0e5a84734633c71e617e2bd14eaa1cf51b8d7799c432e
+  version: 4.14.196
+  resolution: "@types/lodash@npm:4.14.196"
+  checksum: 201d17c3e62ae02a93c99ec78e024b2be9bd75564dd8fd8c26f6ac51a985ab280d28ce2688c3bcdfe785b0991cd9814edff19ee000234c7b45d9a697f09feb6a
   languageName: node
   linkType: hard
 
@@ -5681,9 +5669,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.4.431":
-  version: 1.4.470
-  resolution: "electron-to-chromium@npm:1.4.470"
-  checksum: 0b1749f07b5e97b9d8f805cac6950574017cf2cf19a05cbc3dc46e7397be1d51485a5ece69478e7b12766f4643f45530b6bcebefa8916096a50f6a38dca381ca
+  version: 1.4.471
+  resolution: "electron-to-chromium@npm:1.4.471"
+  checksum: c62ac1f2e9e0395b3095899c7d07a723611a6ca9bc754935101f9f659d7fc3f564f4e47cacb5639abdc172265db041923679942c72055fc8d6522e1b57f755df
   languageName: node
   linkType: hard
 
@@ -6221,17 +6209,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eventemitter3@npm:*, eventemitter3@npm:^5.0.1":
-  version: 5.0.1
-  resolution: "eventemitter3@npm:5.0.1"
-  checksum: 543d6c858ab699303c3c32e0f0f47fc64d360bf73c3daf0ac0b5079710e340d6fe9f15487f94e66c629f5f82cd1a8678d692f3dbb6f6fcd1190e1b97fcad36f8
-  languageName: node
-  linkType: hard
-
 "eventemitter3@npm:^4.0.7":
   version: 4.0.7
   resolution: "eventemitter3@npm:4.0.7"
   checksum: 1875311c42fcfe9c707b2712c32664a245629b42bb0a5a84439762dd0fd637fc54d078155ea83c2af9e0323c9ac13687e03cfba79b03af9f40c89b4960099374
+  languageName: node
+  linkType: hard
+
+"eventemitter3@npm:^5.0.1":
+  version: 5.0.1
+  resolution: "eventemitter3@npm:5.0.1"
+  checksum: 543d6c858ab699303c3c32e0f0f47fc64d360bf73c3daf0ac0b5079710e340d6fe9f15487f94e66c629f5f82cd1a8678d692f3dbb6f6fcd1190e1b97fcad36f8
   languageName: node
   linkType: hard
 
@@ -10877,13 +10865,6 @@ __metadata:
   dependencies:
     iconv-lite: 0.4.24
   checksum: 5be4efe111dce29ddee3448d3915477fcc3b28f991d9cf1300b4e50d6d189010d47bca2f51140a844cf9b726e8f066f4aee72a04d687bfe4f2ee2767b2f5b1e6
-  languageName: node
-  linkType: hard
-
-"whatwg-fetch@npm:^3.5.0":
-  version: 3.6.17
-  resolution: "whatwg-fetch@npm:3.6.17"
-  checksum: 0a8785dc2d1515c17ee9365d3f6438cf8fd281567426652fc6c55fc99e58cc6287ae5d1add5b8b1dd665f149e38d3de4ebe3812fd7170438ba0681d03b88b4dd
   languageName: node
   linkType: hard
 

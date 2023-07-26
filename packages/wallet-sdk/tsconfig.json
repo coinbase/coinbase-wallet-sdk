@@ -22,12 +22,11 @@
     ],
   },
   "include": [
-    "./src"
+    "./src",
+    "**/*.test.*",
   ],
   "exclude": [
     "dist",
     "build",
-    "**/*.test.*",
-    "__tests__"
   ]
 }
