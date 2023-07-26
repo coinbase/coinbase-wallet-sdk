@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-// Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
+// Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
 const fs = require('fs');
@@ -8,7 +8,7 @@ const sass = require('sass');
 const { optimize } = require('svgo');
 
 const COPYRIGHT = `
-  // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
+  // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
   // Licensed under the Apache License, version 2.0
 `;
 
