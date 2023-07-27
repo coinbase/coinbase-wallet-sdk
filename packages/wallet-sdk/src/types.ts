@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
+// Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
 interface Tag<T extends string, RealType> {
@@ -8,8 +8,8 @@ interface Tag<T extends string, RealType> {
 
 export type OpaqueType<T extends string, U> = U & Tag<T, U>;
 
-export function OpaqueType<T extends Tag<any, any>>() {
-  return (value: T extends Tag<any, infer U> ? U : never): T => value as T;
+export function OpaqueType<T extends Tag<string, unknown>>() {
+  return (value: T extends Tag<string, infer U> ? U : never): T => value as T;
 }
 
 export type HexString = OpaqueType<'HexString', string>;

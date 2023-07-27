@@ -104,7 +104,6 @@ describe('CoinbaseWalletSDK', () => {
       });
 
       afterAll(() => {
-        // @ts-expect-error mocked provider
         window.coinbaseWalletExtension = undefined;
       });
 
@@ -156,7 +155,6 @@ describe('CoinbaseWalletSDK', () => {
       });
 
       afterAll(() => {
-        // @ts-expect-error mocked provider
         window.coinbaseWalletExtension = undefined;
       });
 
@@ -192,9 +190,7 @@ describe('CoinbaseWalletSDK', () => {
       });
 
       beforeAll(() => {
-        // @ts-expect-error mocked provider
         window.ethereum = undefined;
-        // @ts-expect-error mocked provider
         window.top!.ethereum = mockCoinbaseBrowserProvider;
       });
 

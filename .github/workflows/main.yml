@@ -83,4 +83,4 @@ jobs:
 
       - name: Run Unit Tests
         working-directory: ./packages/wallet-sdk
-        run: yarn test:unit
+        run: yarn test
