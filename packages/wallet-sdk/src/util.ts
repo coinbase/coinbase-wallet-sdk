@@ -13,7 +13,7 @@ const HEXADECIMAL_STRING_REGEX = /^[a-f0-9]*$/;
  * @param length number of bytes
  */
 export function randomBytesHex(length: number): string {
-  return uint8ArrayToHex(crypto.getRandomValues(new Uint8Array(length)));
+  return uint8ArrayToHex(window.crypto.getRandomValues(new Uint8Array(length)));
 }
 
 export function uint8ArrayToHex(value: Uint8Array) {
