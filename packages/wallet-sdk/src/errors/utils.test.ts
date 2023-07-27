@@ -40,9 +40,7 @@ describe('errors', () => {
     );
 
     // non-standard error code
-    expect(getMessageFromCode(0)).toEqual(
-      'Unspecified error message. This is a bug, please report it.'
-    );
+    expect(getMessageFromCode(0)).toEqual('Unspecified error message.');
   });
 
   test('unsupportedChain error', () => {
