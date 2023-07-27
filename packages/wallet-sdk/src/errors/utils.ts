@@ -118,16 +118,12 @@ export function serialize(
   } else {
     serialized.code = standardErrorCodes.rpc.internal;
 
-    const message = (error as any)?.message;
-
-    serialized.message = message && typeof message === 'string' ? message : FALLBACK_MESSAGE;
+    serialized.message = hasStringProperty(error, 'message') ? error.message : FALLBACK_MESSAGE;
     serialized.data = { originalError: assignOriginalError(error) };
   }
 
-  const stack = (error as any)?.stack;
-
-  if (shouldIncludeStack && error && stack && typeof stack === 'string') {
-    serialized.stack = stack;
+  if (shouldIncludeStack) {
+    serialized.stack = hasStringProperty(error, 'stack') ? error.stack : undefined;
   }
   return serialized as SerializedEthereumRpcError;
 }
@@ -147,4 +143,10 @@ function assignOriginalError(error: unknown): unknown {
 
 function hasKey(obj: Record<string, unknown>, key: string) {
   return Object.prototype.hasOwnProperty.call(obj, key);
+}
+
+function hasStringProperty<T>(obj: unknown, prop: keyof T): obj is T {
+  return (
+    typeof obj === 'object' && obj !== null && prop in obj && typeof (obj as T)[prop] === 'string'
+  );
 }
