@@ -67,7 +67,7 @@ describe('serializeError', () => {
     const error = { unknown: 'error' };
     const serialized = serializeError(error, 'test_request');
     expect(serialized.code).toEqual(standardErrorCodes.rpc.internal);
-    expect(serialized.message).toEqual('Internal JSON-RPC error.');
+    expect(serialized.message).toEqual('Unspecified error message.');
     expect(serialized.docUrl).toMatch(/.*version=\d+\.\d+\.\d+.*/);
     expect(serialized.docUrl).toContain(`code=${standardErrorCodes.rpc.internal}`);
   });
