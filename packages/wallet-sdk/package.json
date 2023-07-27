@@ -41,7 +41,6 @@
     "clsx": "^1.2.1",
     "eth-block-tracker": "6.1.0",
     "eth-json-rpc-filters": "5.1.0",
-    "eth-rpc-errors": "4.0.3",
     "eventemitter3": "^5.0.1",
     "json-rpc-engine": "6.1.0",
     "keccak": "^3.0.3",

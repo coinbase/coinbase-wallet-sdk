@@ -22,8 +22,8 @@ import { WalletLinkConnection } from '../connection/WalletLinkConnection';
 import {
   ErrorType,
   getErrorCode,
+  getMessageFromCode,
   standardErrorCodes,
-  standardErrorMessage,
   standardErrors,
 } from '../errors';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
@@ -760,7 +760,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
     error?: ErrorType,
     errorCode?: number
   ) {
-    const errorMessage = error?.message ?? standardErrorMessage(errorCode);
+    const errorMessage = error?.message ?? getMessageFromCode(errorCode);
     this.handleWeb3ResponseMessage(
       Web3ResponseMessage({
         id,
