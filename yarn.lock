@@ -2703,7 +2703,6 @@ __metadata:
     clsx: ^1.2.1
     eth-block-tracker: 6.1.0
     eth-json-rpc-filters: 5.1.0
-    eth-rpc-errors: 4.0.3
     eventemitter3: ^5.0.1
     jest: ^27.5.1
     jest-chrome: ^0.7.2
@@ -6190,7 +6189,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eth-rpc-errors@npm:4.0.3, eth-rpc-errors@npm:^4.0.2":
+"eth-rpc-errors@npm:^4.0.2":
   version: 4.0.3
   resolution: "eth-rpc-errors@npm:4.0.3"
   dependencies:
