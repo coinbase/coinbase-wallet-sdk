@@ -4,6 +4,7 @@
 import { LogoType, walletLogo } from './assets/wallet-logo';
 import { DiagnosticLogger } from './connection/DiagnosticLogger';
 import { EventListener } from './connection/EventListener';
+import { LINK_API_URL } from './constants';
 import { ScopedLocalStorage } from './lib/ScopedLocalStorage';
 import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
 import { MobileRelayUI } from './provider/MobileRelayUI';
@@ -13,11 +14,7 @@ import { MobileRelay } from './relay/MobileRelay';
 import { WalletLinkRelay } from './relay/WalletLinkRelay';
 import { WalletSDKRelayEventManager } from './relay/WalletSDKRelayEventManager';
 import { getFavicon, isMobileWeb } from './util';
-
-const LINK_API_URL = process.env.LINK_API_URL || 'https://www.walletlink.org';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const SDK_VERSION = process.env.SDK_VERSION! || require('../package.json').version || 'unknown';
+import { LIB_VERSION } from './version';
 
 /** Coinbase Wallet SDK Constructor Options */
 export interface CoinbaseWalletSDKOptions {
@@ -51,7 +48,7 @@ export interface CoinbaseWalletSDKOptions {
 }
 
 export class CoinbaseWalletSDK {
-  public static VERSION = SDK_VERSION;
+  public static VERSION = LIB_VERSION;
 
   private _appName = '';
   private _appLogoUrl: string | null = null;
@@ -114,7 +111,7 @@ export class CoinbaseWalletSDK {
 
     const relayOption = {
       linkAPIUrl,
-      version: SDK_VERSION,
+      version: LIB_VERSION,
       darkMode: !!options.darkMode,
       uiConstructor,
       storage: this._storage,
