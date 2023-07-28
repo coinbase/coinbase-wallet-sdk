@@ -359,7 +359,7 @@ export class CoinbaseWalletProvider
     // backward compatibility
     if (isErrorResponse(res) && res.errorCode) {
       if (res.errorCode === standardErrorCodes.provider.unsupportedChain) {
-        throw standardErrors.provider.unsupportedChain(chainId);
+        throw standardErrors.provider.unsupportedChain();
       } else {
         throw standardErrors.provider.custom({
           message: res.errorMessage,
