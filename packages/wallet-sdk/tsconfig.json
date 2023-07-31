@@ -23,7 +23,6 @@
   "include": [
     "./src",
     "**/*.test.*",
-    "global.d.ts",
   ],
   "exclude": [
     "dist",
