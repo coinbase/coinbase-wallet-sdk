@@ -1,8 +1,9 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "allowJs": true,
     "outDir": "./dist",
-    "rootDir": ".",
+    "rootDir": "./src",
     "target": "es2017",
     "jsx": "react",
     "jsxFactory": "h",
@@ -15,20 +16,16 @@
     "synchronousWatchDirectory": true,
     "excludeDirectories": [
       "**/node_modules",
-      "__tests__",
       "dist",
-      "build",
       "**/*.test.*",
     ],
   },
   "include": [
     "./src",
     "**/*.test.*",
-    "./jest.setup.ts"
   ],
   "exclude": [
     "dist",
-    "build",
   ]
 }
  
