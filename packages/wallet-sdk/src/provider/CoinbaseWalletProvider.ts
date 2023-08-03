@@ -42,9 +42,10 @@ import {
 } from "./SubscriptionManager";
 import { RequestArguments, Web3Provider } from "./Web3Provider";
 
-const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
-const DEFAULT_JSON_RPC_URL = 'DefaultJsonRpcUrl';
-const SUPPORT_ADDRESS_SWITCHING = 'IsStandaloneSigning';
+const DEFAULT_CHAIN_ID_KEY = "DefaultChainId";
+const DEFAULT_JSON_RPC_URL = "DefaultJsonRpcUrl";
+
+const SUPPORT_ADDRESS_SWITCHING = "IsStandaloneSigning";
 
 export interface CoinbaseWalletProviderOptions {
   chainId: number;
@@ -245,7 +246,7 @@ export class CoinbaseWalletProvider
   }
 
   private get supportsAddressSwitching(): boolean {
-    return this._storage.getItem(SUPPORT_ADDRESS_SWITCHING) === 'true';
+    return this._storage.getItem(SUPPORT_ADDRESS_SWITCHING) === "true";
   }
 
   private get jsonRpcUrl(): string {
