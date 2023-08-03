@@ -42,8 +42,9 @@ import {
 } from "./SubscriptionManager";
 import { RequestArguments, Web3Provider } from "./Web3Provider";
 
-const DEFAULT_CHAIN_ID_KEY = "DefaultChainId";
-const DEFAULT_JSON_RPC_URL = "DefaultJsonRpcUrl";
+const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
+const DEFAULT_JSON_RPC_URL = 'DefaultJsonRpcUrl';
+const SUPPORT_ADDRESS_SWITCHING = 'IsStandaloneSigning';
 
 export interface CoinbaseWalletProviderOptions {
   chainId: number;
@@ -116,8 +117,6 @@ export class CoinbaseWalletProvider
 
   private hasMadeFirstChainChangedEmission = false;
 
-  private supportsAddressSwitching?: boolean;
-
   private isLedger?: boolean;
 
   constructor(options: Readonly<CoinbaseWalletProviderOptions>) {
@@ -150,7 +149,6 @@ export class CoinbaseWalletProvider
 
     this.qrUrl = options.qrUrl;
 
-    this.supportsAddressSwitching = options.supportsAddressSwitching;
     this.isLedger = options.isLedger;
 
     const chainId = this.getChainId();
@@ -244,6 +242,10 @@ export class CoinbaseWalletProvider
 
   public isConnected(): boolean {
     return true;
+  }
+
+  private get supportsAddressSwitching(): boolean {
+    return this._storage.getItem(SUPPORT_ADDRESS_SWITCHING) === 'true';
   }
 
   private get jsonRpcUrl(): string {
