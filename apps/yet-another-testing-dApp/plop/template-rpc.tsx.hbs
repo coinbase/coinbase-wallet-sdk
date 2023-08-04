@@ -1,0 +1,45 @@
+"use client";
+
+import { useState } from "react";
+
+import { Button, Flex } from "@chakra-ui/react";
+
+import { Results } from "@/app/components/Results";
+import { Section } from "@/app/components/Section";
+import { windowEthereum } from "@/app/utils/windowEthereum";
+
+
+/**
+ * EIP-3085
+ *
+ * `wallet_{{camelCase name}}`
+ */
+export const {{properCase name}} = () => {
+  const [results, setResults] = useState("");
+
+  const handleRequest = async () => {
+    try {
+      const result = await windowEthereum?.request({
+        method: "wallet_{{camelCase name}}",
+        params: [],
+      });
+      setResults(result);
+    } catch (error) {
+      setResults(error.message);
+    }
+  };
+
+  return (
+    <Section
+      title="wallet_{{camelCase name}}"
+      results={<Results result={results} />}
+      refLink="https://eips.ethereum.org/EIPS/eip-3085" // Update link to EIP
+    >
+      <Flex flex={1} justify="center" align="center" minH="200">
+        <Button onClick={handleRequest} fontSize="sm" rounded="full" colorScheme="teal">
+          Placeholder Button
+        </Button>
+      </Flex>
+    </Section>
+  )
+}

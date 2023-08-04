@@ -33,7 +33,7 @@ yarn-error.log*
 examples/**/yarn.lock
 
 .pnp.*
-.yarn/*
+**/.yarn/*
 !.yarn/releases
 !.yarn/plugins
 !.yarn/sdks
@@ -41,3 +41,9 @@ examples/**/yarn.lock
 
 # next.js
 .next
+
+# other
+/test-results/
+/playwright-report/
+/playwright/.cache/
+.netlify
