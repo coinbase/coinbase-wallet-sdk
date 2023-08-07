@@ -37,6 +37,7 @@
     "eslint": "8.44.0",
     "eslint-config-next": "13.4.9",
     "framer-motion": "^10.12.20",
+    "lokijs": "1.x",
     "next": "^13.4.10-canary.8",
     "node-stream-zip": "^1.15.0",
     "pino-pretty": "^10.2.0",
@@ -48,7 +49,6 @@
   },
   "resolutions": {
     "encoding": "^0.1.13",
-    "lokijs": "^1.5.12",
     "@coinbase/wallet-sdk": "^3.7.1"
   },
   "devDependencies": {

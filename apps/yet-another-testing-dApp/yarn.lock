@@ -5675,6 +5675,7 @@ __metadata:
     eslint-config-next: 13.4.9
     eslint-plugin-prettier: ^5.0.0
     framer-motion: ^10.12.20
+    lokijs: 1.x
     next: ^13.4.10-canary.8
     node-stream-zip: ^1.15.0
     pino-pretty: ^10.2.0
@@ -9177,6 +9178,13 @@ __metadata:
     chalk: ^5.0.0
     is-unicode-supported: ^1.1.0
   checksum: 7291b6e7f1b3df6865bdaeb9b59605c832668ac2fa0965c63b1e7dd3700349aec09c1d7d40c368d5041ff58b7f89461a56e4009471921301af7b3609cbff9a29
+  languageName: node
+  linkType: hard
+
+"lokijs@npm:1.x":
+  version: 1.5.12
+  resolution: "lokijs@npm:1.5.12"
+  checksum: 5cd45facb890048e83977de1451a7b70e1f9e4cfe41c40d2212dfc160df7919b821072f95b10d692f6932c1080193e0715e8fe18dee332f04da4fda0f08984b6
   languageName: node
   linkType: hard
 
