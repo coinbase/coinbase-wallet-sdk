@@ -1,6 +1,6 @@
-name: e2e
+name: e2e tests
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   test:
@@ -9,15 +9,22 @@ jobs:
         working-directory: ./apps/yet-another-testing-dApp
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.36.0-jammy
     steps:
       - uses: actions/checkout@v3
+
       - uses: actions/setup-node@v3
         with:
           node-version-file: ".nvmrc"
           cache-dependency-path: "yarn.lock"
+
       - name: Install dependencies
         run: yarn install --immutable
-      - name: Run Playwright tests
+
+      - name: Run e2e tests
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: yarn test
       - uses: actions/upload-artifact@v3
         if: always()

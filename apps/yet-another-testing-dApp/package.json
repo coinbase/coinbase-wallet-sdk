@@ -9,6 +9,7 @@
     "lint": "next lint",
     "format": "prettier . --write",
     "test": "playwright test",
+    "test:ci": "playwright test --headed --timeout 200000",
     "test:report": "playwright show-report",
     "test:ui": "playwright test --ui",
     "plop": "plop"
