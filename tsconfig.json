@@ -1,11 +1,11 @@
 {
-    "extends": "./tsconfig.base.json",
-    "include": [],
-    "files": [],
-    "references": [
-      {
-        "path": "packages/wallet-sdk"
-      }
-    ]
-  }
-  
+  "extends": "./tsconfig.base.json",
+  "include": [],
+  "exclude": ["apps/yet-another-testing-dApp"],
+  "files": [],
+  "references": [
+    {
+      "path": "packages/wallet-sdk"
+    }
+  ]
+}
