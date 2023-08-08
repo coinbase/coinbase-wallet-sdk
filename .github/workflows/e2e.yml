@@ -19,12 +19,12 @@ jobs:
           node-version-file: ".nvmrc"
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: yarn install
 
       - name: Run e2e tests
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: yarn test:ci
+        run: xvfb-run --auto-servernum yarn test:ci
       - uses: actions/upload-artifact@v3
         if: always()
         with:
