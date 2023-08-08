@@ -10,7 +10,7 @@ jobs:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:v1.35.0-focal
+      image: mcr.microsoft.com/playwright:v1.36.2-focal
     steps:
       - uses: actions/checkout@v3
 
@@ -19,7 +19,7 @@ jobs:
           node-version-file: ".nvmrc"
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Run e2e tests
         env:
