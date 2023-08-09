@@ -8,6 +8,7 @@ import {
   ConnectAndSignInResponse,
   RequestEthereumAccountsResponse,
 } from "./Web3Response";
+import { Web3ResponseMessage } from "./Web3ResponseMessage";
 
 export class MobileRelay extends WalletLinkRelay {
   private _enableMobileWalletLink: boolean;
@@ -57,13 +58,24 @@ export class MobileRelay extends WalletLinkRelay {
     }
   }
 
+  // override
+  protected handleWeb3ResponseMessage(message: Web3ResponseMessage) {
+    super.handleWeb3ResponseMessage(message);
+
+    if (this._enableMobileWalletLink && this.ui instanceof MobileRelayUI) {
+      this.ui.closeOpenedWindow();
+    }
+  }
+
   connectAndSignIn(params: {
     nonce: string;
     statement?: string;
     resources?: string[];
   }): CancelablePromise<ConnectAndSignInResponse> {
     if (!this._enableMobileWalletLink) {
-      throw new Error('connectAndSignIn is supported only when enableMobileWalletLink is on');
+      throw new Error(
+        "connectAndSignIn is supported only when enableMobileWalletLink is on",
+      );
     }
 
     return this.sendRequest<ConnectAndSignInRequest, ConnectAndSignInResponse>({
@@ -74,8 +86,8 @@ export class MobileRelay extends WalletLinkRelay {
 
         domain: window.location.hostname,
         aud: window.location.href,
-        version: '1',
-        type: 'eip4361',
+        version: "1",
+        type: "eip4361",
         nonce: params.nonce,
         iat: new Date().toISOString(),
         chainId: `eip155:${this.dappDefaultChain}`,

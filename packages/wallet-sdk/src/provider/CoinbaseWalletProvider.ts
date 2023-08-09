@@ -22,7 +22,13 @@ import {
   RequestEthereumAccountsResponse,
   SwitchResponse,
 } from "../relay/Web3Response";
-import { AddressString, Callback, HexString, IntNumber, ProviderType } from "../types";
+import {
+  AddressString,
+  Callback,
+  HexString,
+  IntNumber,
+  ProviderType,
+} from "../types";
 import {
   ensureAddressString,
   ensureBN,
@@ -643,7 +649,7 @@ export class CoinbaseWalletProvider
     try {
       const relay = await this.initializeRelay();
       if (!(relay instanceof MobileRelay)) {
-        throw new Error('connectAndSignIn is only supported on mobile');
+        throw new Error("connectAndSignIn is only supported on mobile");
       }
       res = await relay.connectAndSignIn(params).promise;
     } catch (err: any) {
