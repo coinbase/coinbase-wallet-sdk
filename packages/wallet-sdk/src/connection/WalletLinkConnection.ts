@@ -208,6 +208,10 @@ export class WalletLinkConnection {
     );
   }
 
+  get connectionState(): Promise<ConnectionState> {
+    return this.ws.connectionState$.toPromise();
+  }
+
   /**
    * Make a connection to the server
    */

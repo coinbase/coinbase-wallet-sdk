@@ -16,6 +16,22 @@ export class MobileRelay extends WalletLinkRelay {
   constructor(options: Readonly<WalletLinkRelayOptions>) {
     super(options);
     this._enableMobileWalletLink = options.enableMobileWalletLink ?? false;
+
+    if (this.ui instanceof MobileRelayUI) {
+      this.ui.onReconnect = () => {
+        this.reconnectWebSocket();
+      };
+    }
+  }
+
+  async reconnectWebSocket() {
+    if (!this._enableMobileWalletLink) return;
+
+    const status = await this.connection.connectionState;
+    // eslint-disable-next-line no-console
+    console.log('connection state', status);
+
+    this.connection.connect();
   }
 
   // override

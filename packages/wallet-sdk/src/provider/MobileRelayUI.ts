@@ -22,6 +22,8 @@ export class MobileRelayUI implements WalletUI {
   private darkMode = false;
   private openedWindow: Window | null = null;
 
+  onReconnect: (() => void) | undefined;
+
   constructor(options: Readonly<WalletUIOptions>) {
     this.redirectDialog = new RedirectDialog();
     this.darkMode = options.darkMode;
@@ -57,10 +59,10 @@ export class MobileRelayUI implements WalletUI {
   openCoinbaseWalletDeeplink(walletLinkUrl?: string): void {
     this.redirectDialog.present({
       title: "Redirecting to Coinbase Wallet...",
-      buttonText: "Open",
+      buttonText: "Reconnect",
       darkMode: this.darkMode,
       onButtonClick: () => {
-        this.redirectToCoinbaseWallet(walletLinkUrl);
+        this.onReconnect?.();
       },
     });
 
