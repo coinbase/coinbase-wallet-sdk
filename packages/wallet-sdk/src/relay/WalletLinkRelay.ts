@@ -813,7 +813,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
     }
   }
 
-  private handleWeb3ResponseMessage(message: Web3ResponseMessage) {
+  protected handleWeb3ResponseMessage(message: Web3ResponseMessage) {
     const { response } = message;
     this.diagnostic?.log(EVENTS.WEB3_RESPONSE, {
       eventId: message.id,
