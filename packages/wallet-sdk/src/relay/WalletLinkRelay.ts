@@ -352,9 +352,21 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       version: this.options.version,
       darkMode: this.options.darkMode,
       session,
-      connected$: connection.connected$,
-      chainId$: this.dappDefaultChainSubject,
+      connected: false,
+      chainId: this.dappDefaultChain,
     });
+
+    this.subscriptions.add(
+      connection.connected$.subscribe((connected) => {
+        ui.setConnected(connected);
+      })
+    );
+
+    this.subscriptions.add(
+      this.dappDefaultChainSubject.subscribe((chainId) => {
+        ui.setChainId(chainId);
+      })
+    );
 
     connection.connect();
 

@@ -167,4 +167,7 @@ export class MobileRelayUI implements WalletUI {
   isStandalone(): boolean {
     return false;
   }
+
+  setConnected(_connected: boolean): void {} // no-op
+  setChainId(_chainId: number): void {} // no-op
 }

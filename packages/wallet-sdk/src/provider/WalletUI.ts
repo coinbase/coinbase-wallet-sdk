@@ -1,5 +1,3 @@
-import { Observable, Subject } from 'rxjs';
-
 import { ErrorHandler } from '../errors';
 import { Session } from '../relay/Session';
 import {
@@ -21,8 +19,8 @@ export interface WalletUIOptions {
   version: string;
   darkMode: boolean;
   session: Session;
-  connected$: Observable<boolean>;
-  chainId$: Subject<number>;
+  connected: boolean;
+  chainId: number;
 }
 
 export interface WalletUI {
@@ -167,4 +165,8 @@ export interface WalletUI {
    * We want to disable showing the qr code for in-page connection if the dapp hasn't provided a json rpc url
    */
   setConnectDisabled(_: boolean): void;
+
+  // WIP: replacing RxJS subscriptions
+  setConnected(connected: boolean): void;
+  setChainId(chainId: number): void;
 }

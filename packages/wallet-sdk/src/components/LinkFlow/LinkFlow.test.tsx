@@ -1,6 +1,5 @@
 import { render } from '@testing-library/preact';
 import { h } from 'preact';
-import { Observable, Subject } from 'rxjs';
 
 import { LinkFlow } from './LinkFlow';
 
@@ -12,8 +11,8 @@ describe('LinkFlow', () => {
     sessionSecret: 'sessionSecret',
     linkAPIUrl: 'http://link-url.com',
     isParentConnection: false,
-    connected$: new Observable(),
-    chainId$: new Subject(),
+    connected: false,
+    chainId: 1,
   });
 
   test('initialize', () => {
@@ -90,8 +89,8 @@ describe('LinkFlow', () => {
         sessionSecret: 'sessionSecret',
         linkAPIUrl: 'http://link-url.com',
         isParentConnection: false,
-        connected$: new Observable(),
-        chainId$: new Subject(),
+        connected: false,
+        chainId: 1,
       });
       linkFlow1.detach();
 
