@@ -93,7 +93,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
 
   protected ui: WalletUI;
 
-  protected appName = '';
+  protected appName = "";
   protected appLogoUrl: string | null = null;
   private _reloadOnDisconnect: boolean;
   isLinked: boolean | undefined;
