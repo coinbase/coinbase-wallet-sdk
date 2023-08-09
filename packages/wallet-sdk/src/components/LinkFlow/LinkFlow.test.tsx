@@ -19,7 +19,7 @@ describe('LinkFlow', () => {
     expect(linkFlow).toMatchObject({
       connectDisabled: false,
       darkMode: false,
-      isConnected: false,
+      connected: false,
       isOpen: false,
       isParentConnection: false,
       linkAPIUrl: 'http://link-url.com',

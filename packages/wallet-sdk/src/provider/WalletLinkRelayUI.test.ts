@@ -1,6 +1,5 @@
 import { render } from '@testing-library/preact';
 import { Session } from 'inspector';
-import { Observable, Subject } from 'rxjs';
 
 import { LinkFlow } from '../components/LinkFlow/LinkFlow';
 import { Snackbar } from '../components/Snackbar/Snackbar';
@@ -13,8 +12,8 @@ describe('WalletLinkRelayUI', () => {
     // @ts-expect-error mock session
     session: new Session(),
     linkAPIUrl: 'http://link-url.com',
-    connected$: new Observable(),
-    chainId$: new Subject(),
+    connected: false,
+    chainId: 1,
   });
 
   render('<div />');
