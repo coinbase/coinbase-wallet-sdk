@@ -19,6 +19,8 @@ export interface WalletUIOptions {
   version: string;
   darkMode: boolean;
   session: Session;
+  connected: boolean;
+  chainId: number;
 }
 
 export interface WalletUI {

@@ -353,6 +353,8 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       version: this.options.version,
       darkMode: this.options.darkMode,
       session,
+      connected: false,
+      chainId: this.dappDefaultChain,
     });
 
     this.subscriptions.add(
