@@ -50,7 +50,7 @@ export class MobileRelayUI implements WalletUI {
 
     this.openedWindow = window.open(url.href, "cbw-opener");
     if (this.openedWindow) {
-      setTimeout(() => this.closeOpenedWindow(), 5000)
+      setTimeout(() => this.closeOpenedWindow(), 5000);
     }
   }
 

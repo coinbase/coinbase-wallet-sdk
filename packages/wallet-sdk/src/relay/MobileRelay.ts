@@ -73,7 +73,9 @@ export class MobileRelay extends WalletLinkRelay {
     resources?: string[];
   }): CancelablePromise<ConnectAndSignInResponse> {
     if (!this._enableMobileWalletLink) {
-      throw new Error('connectAndSignIn is supported only when enableMobileWalletLink is on');
+      throw new Error(
+        "connectAndSignIn is supported only when enableMobileWalletLink is on",
+      );
     }
 
     return this.sendRequest<ConnectAndSignInRequest, ConnectAndSignInResponse>({
@@ -84,8 +86,8 @@ export class MobileRelay extends WalletLinkRelay {
 
         domain: window.location.hostname,
         aud: window.location.href,
-        version: '1',
-        type: 'eip4361',
+        version: "1",
+        type: "eip4361",
         nonce: params.nonce,
         iat: new Date().toISOString(),
         chainId: `eip155:${this.dappDefaultChain}`,
