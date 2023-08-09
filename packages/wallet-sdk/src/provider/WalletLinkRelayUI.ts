@@ -34,8 +34,8 @@ export class WalletLinkRelayUI implements WalletUI {
       sessionId: options.session.id,
       sessionSecret: options.session.secret,
       linkAPIUrl: options.linkAPIUrl,
-      connected$: options.connected$,
-      chainId$: options.chainId$,
+      connected: options.connected,
+      chainId: options.chainId,
       isParentConnection: false,
     });
   }
@@ -54,6 +54,14 @@ export class WalletLinkRelayUI implements WalletUI {
     this.attached = true;
 
     injectCssReset();
+  }
+
+  setConnected(connected: boolean) {
+    this.linkFlow.setConnected(connected);
+  }
+
+  setChainId(chainId: number) {
+    this.linkFlow.setChainId(chainId);
   }
 
   setConnectDisabled(connectDisabled: boolean) {

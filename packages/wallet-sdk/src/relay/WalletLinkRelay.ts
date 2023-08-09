@@ -27,6 +27,7 @@ import {
   standardErrors,
 } from '../errors';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
+import { WalletLinkRelayUI } from '../provider/WalletLinkRelayUI';
 import { WalletUI, WalletUIOptions } from '../provider/WalletUI';
 import { AddressString, IntNumber, ProviderType, RegExpString } from '../types';
 import { bigIntStringFromBN, createQrUrl, hexStringFromBuffer, randomBytesHex } from '../util';
@@ -352,9 +353,21 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       version: this.options.version,
       darkMode: this.options.darkMode,
       session,
-      connected$: connection.connected$,
-      chainId$: this.dappDefaultChainSubject,
+      connected: false,
+      chainId: this.dappDefaultChain,
     });
+
+    this.subscriptions.add(
+      connection.connected$.subscribe((connected) => {
+        (ui as WalletLinkRelayUI).setConnected(connected);
+      })
+    );
+
+    this.subscriptions.add(
+      this.dappDefaultChainSubject.subscribe((chainId) => {
+        (ui as WalletLinkRelayUI).setChainId(chainId);
+      })
+    );
 
     connection.connect();
 

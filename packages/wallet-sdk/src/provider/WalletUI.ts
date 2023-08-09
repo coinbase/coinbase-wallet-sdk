@@ -1,5 +1,3 @@
-import { Observable, Subject } from 'rxjs';
-
 import { ErrorHandler } from '../errors';
 import { Session } from '../relay/Session';
 import {
@@ -21,8 +19,8 @@ export interface WalletUIOptions {
   version: string;
   darkMode: boolean;
   session: Session;
-  connected$: Observable<boolean>;
-  chainId$: Subject<number>;
+  connected: boolean;
+  chainId: number;
 }
 
 export interface WalletUI {
