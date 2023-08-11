@@ -220,7 +220,9 @@ export class WalletLinkConnection {
           headers: {
             Authorization: auth,
           },
-        }).catch(e => console.error("Unabled to mark event as failed:", e));
+        }).catch(error =>
+          console.error("Unabled to mark event as failed:", error),
+        );
       }),
     );
   }
