@@ -46,7 +46,7 @@ export function RpcMethodCard({ connected, format, method, params }) {
         }
         const response = await provider.request({
           method,
-          params: [values],
+          params: values,
         });
         setResponse(response);
       } catch (err) {
