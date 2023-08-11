@@ -84,7 +84,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   private _session: Session;
   private readonly relayEventManager: WalletSDKRelayEventManager;
   protected readonly diagnostic?: DiagnosticLogger;
-  private connection: WalletLinkConnection;
+  protected connection: WalletLinkConnection;
   private accountsCallback: ((account: string[], isDisconnect?: boolean) => void) | null = null;
   private chainCallbackParams = { chainId: '', jsonRpcUrl: '' }; // to implement distinctUntilChanged
   private chainCallback: ((chainId: string, jsonRpcUrl: string) => void) | null = null;
@@ -93,7 +93,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
 
   protected ui: WalletUI;
 
-  protected appName = "";
+  protected appName = '';
   protected appLogoUrl: string | null = null;
   private _reloadOnDisconnect: boolean;
   isLinked: boolean | undefined;

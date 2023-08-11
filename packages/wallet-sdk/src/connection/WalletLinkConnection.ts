@@ -1,7 +1,16 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
-
-import { BehaviorSubject, iif, Observable, of, Subscription, throwError, timer } from 'rxjs';
+import {
+  BehaviorSubject,
+  iif,
+  merge,
+  Observable,
+  of,
+  Subject,
+  Subscription,
+  throwError,
+  timer,
+} from 'rxjs';
 import {
   catchError,
   delay,
@@ -57,6 +66,7 @@ export class WalletLinkConnection {
   private nextReqId = IntNumber(1);
   private connectedSubject = new BehaviorSubject(false);
   private linkedSubject = new BehaviorSubject(false);
+  private unseenEventsSubject = new Subject<ServerMessageEvent>();
 
   private sessionConfigListener?: (_: SessionConfig) => void;
   setSessionConfigListener(listener: (_: SessionConfig) => void): void {
@@ -87,7 +97,7 @@ export class WalletLinkConnection {
   constructor(
     private sessionId: string,
     private sessionKey: string,
-    linkAPIUrl: string,
+    private linkAPIUrl: string,
     private diagnostic?: DiagnosticLogger,
     WebSocketClass: typeof WebSocket = WebSocket
   ) {
@@ -209,6 +219,21 @@ export class WalletLinkConnection {
           });
         })
     );
+
+    // mark unseen events as seen
+    this.subscriptions.add(
+      this.unseenEventsSubject.subscribe((e) => {
+        const credentials = `${this.sessionId}:${this.sessionKey}`;
+        const auth = `Basic ${btoa(credentials)}`;
+
+        fetch(`${this.linkAPIUrl}/events/${e.eventId}/seen`, {
+          method: 'POST',
+          headers: {
+            Authorization: auth,
+          },
+        }).catch((error) => console.error('Unabled to mark event as failed:', error));
+      })
+    );
   }
 
   /**
@@ -288,7 +313,7 @@ export class WalletLinkConnection {
   private subscribeIncomingEvent(listener: (_: ServerMessageEvent) => void): void {
     this.incomingEventSub?.unsubscribe();
 
-    this.incomingEventSub = this.ws.incomingJSONData$
+    this.incomingEventSub = merge(this.ws.incomingJSONData$, this.unseenEventsSubject)
       .pipe(
         filter((m) => {
           if (m.type !== 'Event') {
@@ -307,6 +332,47 @@ export class WalletLinkConnection {
       .subscribe((m) => {
         listener(m);
       });
+  }
+
+  public async checkUnseenEvents() {
+    const credentials = `${this.sessionId}:${this.sessionKey}`;
+    const auth = `Basic ${btoa(credentials)}`;
+
+    const response = await fetch(`${this.linkAPIUrl}/events?unseen=true`, {
+      headers: {
+        Authorization: auth,
+      },
+    });
+
+    if (response.ok) {
+      const { events, error } = (await response.json()) as {
+        events?: {
+          id: string;
+          event: 'Web3Request' | 'Web3Response' | 'Web3RequestCanceled';
+          data: string;
+        }[];
+        timestamp: number;
+        error?: string;
+      };
+
+      if (error) {
+        throw new Error(`Check unseen events failed: ${error}`);
+      }
+
+      const responseEvents: ServerMessageEvent[] =
+        events
+          ?.filter((e) => e.event === 'Web3Response')
+          .map((e) => ({
+            type: 'Event',
+            sessionId: this.sessionId,
+            eventId: e.id,
+            event: e.event,
+            data: e.data,
+          })) ?? [];
+      responseEvents.forEach((e) => this.unseenEventsSubject.next(e));
+    } else {
+      throw new Error(`Check unseen events failed: ${response.status}`);
+    }
   }
 
   /**
