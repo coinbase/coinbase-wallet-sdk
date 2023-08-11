@@ -20,6 +20,7 @@ export class MobileRelayUI implements WalletUI {
   private readonly redirectDialog: RedirectDialog;
   private attached = false;
   private darkMode = false;
+  private openedWindow: Window | null = null;
 
   constructor(options: Readonly<WalletUIOptions>) {
     this.redirectDialog = new RedirectDialog();
@@ -34,6 +35,11 @@ export class MobileRelayUI implements WalletUI {
     this.attached = true;
   }
 
+  closeOpenedWindow() {
+    this.openedWindow?.close();
+    this.openedWindow = null;
+  }
+
   private redirectToCoinbaseWallet(walletLinkUrl?: string): void {
     const url = new URL('https://go.cb-w.com/walletlink');
 
@@ -42,7 +48,10 @@ export class MobileRelayUI implements WalletUI {
       url.searchParams.append('wl_url', walletLinkUrl);
     }
 
-    window.open(url.href, '_blank');
+    this.openedWindow = window.open(url.href, 'cbw-opener');
+    if (this.openedWindow) {
+      setTimeout(() => this.closeOpenedWindow(), 5000);
+    }
   }
 
   openCoinbaseWalletDeeplink(walletLinkUrl?: string): void {
@@ -67,11 +76,13 @@ export class MobileRelayUI implements WalletUI {
   }): () => void {
     // it uses the return callback to clear the dialog
     return () => {
+      this.closeOpenedWindow();
       this.redirectDialog.clear();
     };
   }
 
   hideRequestEthereumAccounts() {
+    this.closeOpenedWindow();
     this.redirectDialog.clear();
   }
 

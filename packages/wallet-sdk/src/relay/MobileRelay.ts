@@ -5,6 +5,7 @@ import { CancelablePromise } from './WalletSDKRelayAbstract';
 import { Web3Method } from './Web3Method';
 import { ConnectAndSignInRequest, Web3Request } from './Web3Request';
 import { ConnectAndSignInResponse, RequestEthereumAccountsResponse } from './Web3Response';
+import { Web3ResponseMessage } from './Web3ResponseMessage';
 
 export class MobileRelay extends WalletLinkRelay {
   private _enableMobileWalletLink: boolean;
@@ -50,6 +51,15 @@ export class MobileRelay extends WalletLinkRelay {
       default:
         this.ui.openCoinbaseWalletDeeplink();
         break;
+    }
+  }
+
+  // override
+  protected handleWeb3ResponseMessage(message: Web3ResponseMessage) {
+    super.handleWeb3ResponseMessage(message);
+
+    if (this._enableMobileWalletLink && this.ui instanceof MobileRelayUI) {
+      this.ui.closeOpenedWindow();
     }
   }
 
