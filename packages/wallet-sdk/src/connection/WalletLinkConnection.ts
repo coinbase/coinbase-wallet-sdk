@@ -1,12 +1,13 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
-
 import {
   BehaviorSubject,
   iif,
+  merge,
   Observable,
   of,
   ReplaySubject,
+  Subject,
   Subscription,
   throwError,
   timer,
@@ -67,6 +68,7 @@ export class WalletLinkConnection {
   private connectedSubject = new BehaviorSubject(false);
   private linkedSubject = new BehaviorSubject(false);
   private sessionConfigSubject = new ReplaySubject<SessionConfig>(1);
+  private unseenEventsSubject = new Subject<ServerMessageEvent>();
 
   /**
    * Constructor
@@ -78,7 +80,7 @@ export class WalletLinkConnection {
   constructor(
     private sessionId: string,
     private sessionKey: string,
-    linkAPIUrl: string,
+    private linkAPIUrl: string,
     private diagnostic?: DiagnosticLogger,
     WebSocketClass: typeof WebSocket = WebSocket,
   ) {
@@ -206,6 +208,21 @@ export class WalletLinkConnection {
           });
         }),
     );
+
+    // mark unseen events as seen
+    this.subscriptions.add(
+      this.unseenEventsSubject.subscribe(async e => {
+        const credentials = `${this.sessionId}:${this.sessionKey}`;
+        const auth = `Basic ${btoa(credentials)}`;
+
+        await fetch(`${this.linkAPIUrl}/events/${e.eventId}/seen`, {
+          method: "POST",
+          headers: {
+            Authorization: auth,
+          },
+        });
+      }),
+    );
   }
 
   /**
@@ -291,7 +308,7 @@ export class WalletLinkConnection {
    * @returns an Observable for the messages
    */
   public get incomingEvent$(): Observable<ServerMessageEvent> {
-    return this.ws.incomingJSONData$.pipe(
+    return merge(this.ws.incomingJSONData$, this.unseenEventsSubject).pipe(
       filter(m => {
         if (m.type !== "Event") {
           return false;
@@ -306,6 +323,47 @@ export class WalletLinkConnection {
       }),
       map(m => m as ServerMessageEvent),
     );
+  }
+
+  public async checkUnseenEvents() {
+    const credentials = `${this.sessionId}:${this.sessionKey}`;
+    const auth = `Basic ${btoa(credentials)}`;
+    
+    const response = await fetch(`${this.linkAPIUrl}/events?unseen=true`, {
+      headers: {
+        Authorization: auth,
+      },
+    });
+
+    if (response.ok) {
+      const { events, error } = (await response.json()) as {
+        events?: {
+          id: string;
+          event: "Web3Request" | "Web3Response" | "Web3RequestCanceled";
+          data: string;
+        }[];
+        timestamp: number;
+        error?: string;
+      };
+
+      if (error) {
+        throw new Error(`Check unseen events failed: ${error}`);
+      }
+
+      const responseEvents: ServerMessageEvent[] =
+        events
+          ?.filter(e => e.event === "Web3Response")
+          .map(e => ({
+            type: "Event",
+            sessionId: this.sessionId,
+            eventId: e.id,
+            event: e.event,
+            data: e.data,
+          })) ?? [];
+      responseEvents.forEach(e => this.unseenEventsSubject.next(e));
+    } else {
+      throw new Error(`Check unseen events failed: ${response.status}`);
+    }
   }
 
   /**
