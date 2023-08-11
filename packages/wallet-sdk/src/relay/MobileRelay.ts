@@ -70,13 +70,13 @@ export class MobileRelay extends WalletLinkRelay {
           window.addEventListener(
             "focus",
             () => {
-              this.connection.onceConnected$.subscribe(async () => {
+              this.connection.onceConnected$.subscribe(() => {
                 setTimeout(() => {
-                  try {
-                    this.connection.checkUnseenEvents();
-                  } catch (e) {
-                    console.error("Unable to check for unseen events", e);
-                  }
+                  this.connection
+                    .checkUnseenEvents()
+                    .catch(e =>
+                      console.error("Unable to check for unseen events", e),
+                    );
                 }, 250);
               });
             },

@@ -215,16 +215,12 @@ export class WalletLinkConnection {
         const credentials = `${this.sessionId}:${this.sessionKey}`;
         const auth = `Basic ${btoa(credentials)}`;
 
-        try {
-          fetch(`${this.linkAPIUrl}/events/${e.eventId}/seen`, {
-            method: "POST",
-            headers: {
-              Authorization: auth,
-            },
-          });
-        } catch (e) {
-          console.error("Unabled to mark event as failed:", e);
-        }
+        fetch(`${this.linkAPIUrl}/events/${e.eventId}/seen`, {
+          method: "POST",
+          headers: {
+            Authorization: auth,
+          },
+        }).catch(e => console.error("Unabled to mark event as failed:", e));
       }),
     );
   }
