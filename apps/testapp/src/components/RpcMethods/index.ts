@@ -50,9 +50,19 @@ const addEthereumChain = {
   }),
 };
 
+const personal_sign = {
+  method: 'personal_sign',
+  params: [
+    { key: 'message', required: true },
+    { key: 'address', required: true },
+  ],
+  format: (data: Record<string, string>) => [Buffer.from(data.message, 'utf8'), data.address],
+};
+
 export const methods: RpcMethod[] = [
   ethRequestAccounts,
   ethAccounts,
   addEthereumChain,
   switchEthereumChain,
+  personal_sign,
 ];
