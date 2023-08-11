@@ -211,16 +211,20 @@ export class WalletLinkConnection {
 
     // mark unseen events as seen
     this.subscriptions.add(
-      this.unseenEventsSubject.subscribe(async e => {
+      this.unseenEventsSubject.subscribe(e => {
         const credentials = `${this.sessionId}:${this.sessionKey}`;
         const auth = `Basic ${btoa(credentials)}`;
 
-        await fetch(`${this.linkAPIUrl}/events/${e.eventId}/seen`, {
-          method: "POST",
-          headers: {
-            Authorization: auth,
-          },
-        });
+        try {
+          fetch(`${this.linkAPIUrl}/events/${e.eventId}/seen`, {
+            method: "POST",
+            headers: {
+              Authorization: auth,
+            },
+          });
+        } catch (e) {
+          console.error("Unabled to mark event as failed:", e);
+        }
       }),
     );
   }
@@ -328,7 +332,7 @@ export class WalletLinkConnection {
   public async checkUnseenEvents() {
     const credentials = `${this.sessionId}:${this.sessionKey}`;
     const auth = `Basic ${btoa(credentials)}`;
-    
+
     const response = await fetch(`${this.linkAPIUrl}/events?unseen=true`, {
       headers: {
         Authorization: auth,
