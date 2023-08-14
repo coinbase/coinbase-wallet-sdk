@@ -3,13 +3,13 @@ import type {
   JsonRpcEngineNextCallback,
 } from '@metamask/json-rpc-engine';
 import { PollingBlockTracker } from 'eth-block-tracker';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import createSubscriptionManager from 'eth-json-rpc-filters/subscriptionManager';
 import { EventEmitter } from 'eventemitter3';
 
 import { RequestArguments, Web3Provider } from './Web3Provider';
 
-// TODO: When we update this package we should be able to fix this
-//  eslint-disable-next-line @typescript-eslint/no-var-requires
-const createSubscriptionManager = require('eth-json-rpc-filters/subscriptionManager');
 const noop = () => {};
 
 export interface SubscriptionResult {

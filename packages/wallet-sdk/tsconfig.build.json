@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "allowJs": true,
     "declaration": true,
     "outDir": "./dist",
     "target": "es2017",

@@ -1,8 +1,9 @@
 // Extracted from https://github.com/ethereumjs/ethereumjs-abi and stripped out irrelevant code
 // Original code licensed under the MIT License - Copyright (c) 2015 Alex Beregszaszi
 
-const util = require('./util')
-const BN = require('bn.js')
+import BN from 'bn.js';
+
+import util from './util';
 
 // Convert from short to canonical names
 // FIXME: optimise or make this nicer?
@@ -265,7 +266,7 @@ function soliditySHA3 (types, values) {
   return util.keccak(solidityPack(types, values))
 }
 
-module.exports = {
+export default {
   rawEncode,
   solidityPack,
   soliditySHA3

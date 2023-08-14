@@ -1,8 +1,8 @@
 // Extracted from https://github.com/ethereumjs/ethereumjs-util and stripped out irrelevant code
 // Original code licensed under the Mozilla Public License Version 2.0
 
-const createKeccakHash = require('keccak/js')
-const BN = require('bn.js')
+import BN from 'bn.js';
+import createKeccakHash from 'keccak/js';
 
 /**
  * Returns a buffer filled with 0s
@@ -120,7 +120,7 @@ function stripHexPrefix (str) {
   return str
 }
 
-module.exports = {
+export default {
   zeros,
   setLength,
   setLengthRight,

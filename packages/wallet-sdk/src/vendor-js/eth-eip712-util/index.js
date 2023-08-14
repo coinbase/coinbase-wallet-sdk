@@ -1,5 +1,5 @@
-const util = require('./util')
-const abi = require('./abi')
+import abi from './abi';
+import util from './util';
 
 const TYPED_MESSAGE_SCHEMA = {
   type: 'object',
@@ -213,7 +213,7 @@ const TypedDataUtils = {
   },
 }
 
-module.exports = {
+export default {
   TYPED_MESSAGE_SCHEMA,
   TypedDataUtils,
 
