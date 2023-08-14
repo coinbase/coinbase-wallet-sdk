@@ -253,7 +253,7 @@ export class FilterPolyfill {
 
     if (
       !this.currentBlock ||
-      now.getTime() - this.currentBlock.timestamp.getTime() > 10000 /* 10s */
+      now.getTime() - this.currentBlock.timestamp.getTime() > 1000 /* 1s */
     ) {
       const height = await this._getCurrentBlockHeight();
       this.currentBlock = { height, timestamp: now };
