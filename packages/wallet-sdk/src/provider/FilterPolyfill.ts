@@ -245,7 +245,24 @@ export class FilterPolyfill {
     this.timeouts.set(id, timeout);
   }
 
+  private currentBlock?: { height: IntNumber; timestamp: Date };
+
+  // throttle eth_blockNumber requests
   private async getCurrentBlockHeight(): Promise<IntNumber> {
+    const now = new Date();
+
+    if (
+      !this.currentBlock ||
+      now.getTime() - this.currentBlock.timestamp.getTime() > 10000 /* 10s */
+    ) {
+      const height = await this._getCurrentBlockHeight();
+      this.currentBlock = { height, timestamp: now };
+    }
+
+    return this.currentBlock.height;
+  }
+
+  private async _getCurrentBlockHeight(): Promise<IntNumber> {
     const { result } = await this.sendAsyncPromise({
       ...JSONRPC_TEMPLATE,
       method: 'eth_blockNumber',
