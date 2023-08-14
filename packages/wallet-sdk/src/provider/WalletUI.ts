@@ -1,18 +1,18 @@
-import { ErrorHandler } from '../errors';
-import { Session } from '../relay/Session';
+import { ErrorHandler } from '../errors/index.js';
+import { Session } from '../relay/Session.js';
 import {
   EthereumAddressFromSignedMessageRequest,
   SignEthereumMessageRequest,
   SignEthereumTransactionRequest,
   SubmitEthereumTransactionRequest,
-} from '../relay/Web3Request';
+} from '../relay/Web3Request.js';
 import {
   EthereumAddressFromSignedMessageResponse,
   SignEthereumMessageResponse,
   SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse,
-} from '../relay/Web3Response';
-import { AddressString, ProviderType } from '../types';
+} from '../relay/Web3Response.js';
+import { AddressString, ProviderType } from '../types.js';
 
 export interface WalletUIOptions {
   linkAPIUrl: string;

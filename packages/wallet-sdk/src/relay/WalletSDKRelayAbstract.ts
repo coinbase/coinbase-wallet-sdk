@@ -1,9 +1,9 @@
-import { ErrorHandler, serializeError, standardErrors } from '../errors';
-import { JSONRPCRequest, JSONRPCResponse } from '../provider/JSONRPC';
-import { AddressString, IntNumber, ProviderType, RegExpString } from '../types';
-import { EthereumTransactionParams } from './EthereumTransactionParams';
-import { Session } from './Session';
-import { Web3Request } from './Web3Request';
+import { ErrorHandler, serializeError, standardErrors } from '../errors/index.js';
+import { JSONRPCRequest, JSONRPCResponse } from '../provider/JSONRPC.js';
+import { AddressString, IntNumber, ProviderType, RegExpString } from '../types.js';
+import { EthereumTransactionParams } from './EthereumTransactionParams.js';
+import { Session } from './Session.js';
+import { Web3Request } from './Web3Request.js';
 import {
   AddEthereumChainResponse,
   EthereumAddressFromSignedMessageResponse,
@@ -17,7 +17,7 @@ import {
   SwitchEthereumChainResponse,
   WatchAssetResponse,
   Web3Response,
-} from './Web3Response';
+} from './Web3Response.js';
 
 export const WALLET_USER_NAME_KEY = 'walletUsername';
 export const LOCAL_STORAGE_ADDRESSES_KEY = 'Addresses';

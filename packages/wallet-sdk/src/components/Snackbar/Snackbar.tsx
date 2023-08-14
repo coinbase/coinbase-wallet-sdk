@@ -1,11 +1,11 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import { FunctionComponent, h, render } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 
-import css from './Snackbar-css';
+import css from './Snackbar-css.js';
 
 const gearIcon = `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEyIDYuNzV2LTEuNWwtMS43Mi0uNTdjLS4wOC0uMjctLjE5LS41Mi0uMzItLjc3bC44MS0xLjYyLTEuMDYtMS4wNi0xLjYyLjgxYy0uMjQtLjEzLS41LS4yNC0uNzctLjMyTDYuNzUgMGgtMS41bC0uNTcgMS43MmMtLjI3LjA4LS41My4xOS0uNzcuMzJsLTEuNjItLjgxLTEuMDYgMS4wNi44MSAxLjYyYy0uMTMuMjQtLjI0LjUtLjMyLjc3TDAgNS4yNXYxLjVsMS43Mi41N2MuMDguMjcuMTkuNTMuMzIuNzdsLS44MSAxLjYyIDEuMDYgMS4wNiAxLjYyLS44MWMuMjQuMTMuNS4yMy43Ny4zMkw1LjI1IDEyaDEuNWwuNTctMS43MmMuMjctLjA4LjUyLS4xOS43Ny0uMzJsMS42Mi44MSAxLjA2LTEuMDYtLjgxLTEuNjJjLjEzLS4yNC4yMy0uNS4zMi0uNzdMMTIgNi43NXpNNiA4LjVhMi41IDIuNSAwIDAxMC01IDIuNSAyLjUgMCAwMTAgNXoiIGZpbGw9IiMwNTBGMTkiLz48L3N2Zz4=`;
 
@@ -96,7 +96,7 @@ export class Snackbar {
 
 export const SnackbarContainer: FunctionComponent<{
   darkMode: boolean;
-}> = (props) => (
+}> = props => (
   <div class={clsx('-cbwsdk-snackbar-container')}>
     <style>{css}</style>
     <div class="-cbwsdk-snackbar">{props.children}</div>
@@ -140,7 +140,10 @@ export const SnackbarInstance: FunctionComponent<SnackbarInstanceProps> = ({
       )}
     >
       <div class="-cbwsdk-snackbar-instance-header" onClick={toggleExpanded}>
-        <img src={makeSnackbarIcon(appSrc)} class="-cbwsdk-snackbar-instance-header-cblogo" />
+        <img
+          src={makeSnackbarIcon(appSrc)}
+          class="-cbwsdk-snackbar-instance-header-cblogo"
+        />
         <div class="-cbwsdk-snackbar-instance-header-message">{message}</div>
         <div class="-gear-container">
           {!expanded && (
@@ -185,7 +188,8 @@ export const SnackbarInstance: FunctionComponent<SnackbarInstanceProps> = ({
               <span
                 class={clsx(
                   '-cbwsdk-snackbar-instance-menu-item-info',
-                  action.isRed && '-cbwsdk-snackbar-instance-menu-item-info-is-red'
+                  action.isRed &&
+                    '-cbwsdk-snackbar-instance-menu-item-info-is-red'
                 )}
               >
                 {action.info}

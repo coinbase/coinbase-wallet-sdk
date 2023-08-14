@@ -1,20 +1,20 @@
-import { LinkFlow } from '../components/LinkFlow/LinkFlow';
-import { Snackbar, SnackbarInstanceProps } from '../components/Snackbar/Snackbar';
-import { ErrorHandler } from '../errors';
-import { injectCssReset } from '../lib/cssReset';
+import { LinkFlow } from '../components/LinkFlow/LinkFlow.js';
+import { Snackbar, SnackbarInstanceProps } from '../components/Snackbar/Snackbar.js';
+import { ErrorHandler } from '../errors/index.js';
+import { injectCssReset } from '../lib/cssReset.js';
 import {
   EthereumAddressFromSignedMessageRequest,
   SignEthereumMessageRequest,
   SignEthereumTransactionRequest,
   SubmitEthereumTransactionRequest,
-} from '../relay/Web3Request';
+} from '../relay/Web3Request.js';
 import {
   EthereumAddressFromSignedMessageResponse,
   SignEthereumMessageResponse,
   SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse,
-} from '../relay/Web3Response';
-import { WalletUI, WalletUIOptions } from './WalletUI';
+} from '../relay/Web3Response.js';
+import { WalletUI, WalletUIOptions } from './WalletUI.js';
 
 export class WalletLinkRelayUI implements WalletUI {
   private readonly linkFlow: LinkFlow;

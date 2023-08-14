@@ -3,7 +3,7 @@
 
 import { h, render } from 'preact';
 
-import { ConnectDialog } from '../ConnectDialog/ConnectDialog';
+import { ConnectDialog } from '../ConnectDialog/ConnectDialog.js';
 
 export interface LinkFlowOptions {
   darkMode: boolean;

@@ -1,8 +1,8 @@
-import { MOCK_ADDERESS, MOCK_TX } from '../fixtures/provider';
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { Session } from '../relay/Session';
-import { CancelablePromise, WalletSDKRelayAbstract } from '../relay/WalletSDKRelayAbstract';
-import { Web3Method } from '../relay/Web3Method';
+import { MOCK_ADDERESS, MOCK_TX } from '../fixtures/provider.js';
+import { ScopedLocalStorage } from '../lib/ScopedLocalStorage.js';
+import { Session } from '../relay/Session.js';
+import { CancelablePromise, WalletSDKRelayAbstract } from '../relay/WalletSDKRelayAbstract.js';
+import { Web3Method } from '../relay/Web3Method.js';
 import {
   AddEthereumChainResponse,
   EthereumAddressFromSignedMessageResponse,
@@ -16,8 +16,8 @@ import {
   SwitchEthereumChainResponse,
   WatchAssetResponse,
   Web3Response,
-} from '../relay/Web3Response';
-import { AddressString, HexString, ProviderType } from '../types';
+} from '../relay/Web3Response.js';
+import { AddressString, HexString, ProviderType } from '../types.js';
 
 function makeMockReturn<T>(returnValue?: T) {
   return { cancel: () => {}, promise: Promise.resolve(returnValue as T) };

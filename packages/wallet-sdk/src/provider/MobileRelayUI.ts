@@ -1,19 +1,19 @@
-import { RedirectDialog } from '../components/RedirectDialog/RedirectDialog';
-import { ErrorHandler } from '../errors';
+import { RedirectDialog } from '../components/RedirectDialog/RedirectDialog.js';
+import { ErrorHandler } from '../errors/index.js';
 import {
   EthereumAddressFromSignedMessageRequest,
   SignEthereumMessageRequest,
   SignEthereumTransactionRequest,
   SubmitEthereumTransactionRequest,
-} from '../relay/Web3Request';
+} from '../relay/Web3Request.js';
 import {
   EthereumAddressFromSignedMessageResponse,
   SignEthereumMessageResponse,
   SignEthereumTransactionResponse,
   SubmitEthereumTransactionResponse,
-} from '../relay/Web3Response';
-import { AddressString, ProviderType } from '../types';
-import { WalletUI, WalletUIOptions } from './WalletUI';
+} from '../relay/Web3Response.js';
+import { AddressString, ProviderType } from '../types.js';
+import { WalletUI, WalletUIOptions } from './WalletUI.js';
 
 // TODO: Implement & present in-page wallet picker instead of navigating to www.coinbase.com/connect-dapp
 export class MobileRelayUI implements WalletUI {

@@ -3,36 +3,36 @@
 
 import bind from 'bind-decorator';
 
-import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
-import { EventListener } from '../connection/EventListener';
-import { ServerMessageEvent } from '../connection/ServerMessage';
-import { SessionConfig } from '../connection/SessionConfig';
-import { WalletLinkConnection } from '../connection/WalletLinkConnection';
+import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger.js';
+import { EventListener } from '../connection/EventListener.js';
+import type { ServerMessageEvent } from '../connection/ServerMessage.js';
+import { SessionConfig } from '../connection/SessionConfig.js';
+import { WalletLinkConnection } from '../connection/WalletLinkConnection.js';
 import {
   ErrorType,
   getErrorCode,
   getMessageFromCode,
   standardErrorCodes,
   standardErrors,
-} from '../errors';
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { WalletLinkRelayUI } from '../provider/WalletLinkRelayUI';
-import { WalletUI, WalletUIOptions } from '../provider/WalletUI';
-import { AddressString, IntNumber, ProviderType, RegExpString } from '../types';
-import { bigIntStringFromBN, createQrUrl, hexStringFromBuffer, randomBytesHex } from '../util';
-import * as aes256gcm from './aes256gcm';
-import { EthereumTransactionParams } from './EthereumTransactionParams';
-import { RelayMessage } from './RelayMessage';
-import { Session } from './Session';
+} from '../errors/index.js';
+import { ScopedLocalStorage } from '../lib/ScopedLocalStorage.js';
+import { WalletLinkRelayUI } from '../provider/WalletLinkRelayUI.js';
+import { WalletUI, WalletUIOptions } from '../provider/WalletUI.js';
+import { AddressString, IntNumber, ProviderType, RegExpString } from '../types.js';
+import { bigIntStringFromBN, createQrUrl, hexStringFromBuffer, randomBytesHex } from '../util.js';
+import * as aes256gcm from './aes256gcm.js';
+import { EthereumTransactionParams } from './EthereumTransactionParams.js';
+import { RelayMessage } from './RelayMessage.js';
+import { Session } from './Session.js';
 import {
   APP_VERSION_KEY,
   CancelablePromise,
   LOCAL_STORAGE_ADDRESSES_KEY,
   WALLET_USER_NAME_KEY,
   WalletSDKRelayAbstract,
-} from './WalletSDKRelayAbstract';
-import { WalletSDKRelayEventManager } from './WalletSDKRelayEventManager';
-import { Web3Method } from './Web3Method';
+} from './WalletSDKRelayAbstract.js';
+import { WalletSDKRelayEventManager } from './WalletSDKRelayEventManager.js';
+import { Web3Method } from './Web3Method.js';
 import {
   EthereumAddressFromSignedMessageRequest,
   GenericRequest,
@@ -41,9 +41,9 @@ import {
   SignEthereumTransactionRequest,
   SubmitEthereumTransactionRequest,
   Web3Request,
-} from './Web3Request';
-import { Web3RequestCanceledMessage } from './Web3RequestCanceledMessage';
-import { Web3RequestMessage } from './Web3RequestMessage';
+} from './Web3Request.js';
+import { Web3RequestCanceledMessage } from './Web3RequestCanceledMessage.js';
+import { Web3RequestMessage } from './Web3RequestMessage.js';
 import {
   AddEthereumChainResponse,
   EthereumAddressFromSignedMessageResponse,
@@ -60,8 +60,8 @@ import {
   WatchAssetReponse,
   WatchAssetResponse,
   Web3Response,
-} from './Web3Response';
-import { isWeb3ResponseMessage, Web3ResponseMessage } from './Web3ResponseMessage';
+} from './Web3Response.js';
+import { isWeb3ResponseMessage, Web3ResponseMessage } from './Web3ResponseMessage.js';
 
 export interface WalletLinkRelayOptions {
   linkAPIUrl: string;

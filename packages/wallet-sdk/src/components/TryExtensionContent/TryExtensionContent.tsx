@@ -1,15 +1,15 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import { h } from 'preact';
 import { useCallback, useState } from 'preact/hooks';
 
-import { ArrowLeftIcon } from '../icons/ArrowLeftIcon';
-import { LaptopIcon } from '../icons/LaptopIcon';
-import { SafeIcon } from '../icons/SafeIcon';
-import { Theme } from '../types';
-import css from './TryExtensionContent-css';
+import { ArrowLeftIcon } from '../icons/ArrowLeftIcon.js';
+import { LaptopIcon } from '../icons/LaptopIcon.js';
+import { SafeIcon } from '../icons/SafeIcon.js';
+import { Theme } from '../types.js';
+import css from './TryExtensionContent-css.js';
 
 type TryExtensionContentProps = {
   theme: Theme;
@@ -19,7 +19,10 @@ export function TryExtensionContent({ theme }: TryExtensionContentProps) {
   const [clicked, setClicked] = useState(false);
 
   const handleInstallClick = useCallback(() => {
-    window.open('https://api.wallet.coinbase.com/rpc/v2/desktop/chrome', '_blank');
+    window.open(
+      'https://api.wallet.coinbase.com/rpc/v2/desktop/chrome',
+      '_blank'
+    );
   }, []);
 
   const handleClick = useCallback(() => {
@@ -39,7 +42,10 @@ export function TryExtensionContent({ theme }: TryExtensionContentProps) {
           Or try the Coinbase Wallet browser extension
         </h3>
         <div class="-cbwsdk-try-extension-cta-wrapper">
-          <button class={clsx('-cbwsdk-try-extension-cta', theme)} onClick={handleClick}>
+          <button
+            class={clsx('-cbwsdk-try-extension-cta', theme)}
+            onClick={handleClick}
+          >
             {clicked ? 'Refresh' : 'Install'}
           </button>
           <div>
@@ -71,7 +77,8 @@ export function TryExtensionContent({ theme }: TryExtensionContentProps) {
               </span>
             </div>
             <div class={clsx('-cbwsdk-try-extension-list-item-copy', theme)}>
-              Add an additional layer of security by using a supported Ledger hardware wallet
+              Add an additional layer of security by using a supported Ledger
+              hardware wallet
             </div>
           </li>
         </ul>

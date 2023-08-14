@@ -1,7 +1,7 @@
-import { isErrorResponse } from '../relay/Web3Response';
-import { LIB_VERSION } from '../version';
-import { standardErrorCodes } from './constants';
-import { serialize, SerializedEthereumRpcError } from './utils';
+import { isErrorResponse } from '../relay/Web3Response.js';
+import { LIB_VERSION } from '../version.js';
+import { standardErrorCodes } from './constants.js';
+import { serialize, SerializedEthereumRpcError } from './utils.js';
 
 /**
  * Serializes an error to a format that is compatible with the Ethereum JSON RPC error format.

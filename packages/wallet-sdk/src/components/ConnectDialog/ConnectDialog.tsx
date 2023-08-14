@@ -1,13 +1,13 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import { h } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 
-import { ConnectContent } from '../ConnectContent/ConnectContent';
-import { TryExtensionContent } from '../TryExtensionContent/TryExtensionContent';
-import css from './ConnectDialog-css';
+import { ConnectContent } from '../ConnectContent/ConnectContent.js';
+import { TryExtensionContent } from '../TryExtensionContent/TryExtensionContent.js';
+import css from './ConnectDialog-css.js';
 
 type ConnectDialogProps = {
   darkMode: boolean;

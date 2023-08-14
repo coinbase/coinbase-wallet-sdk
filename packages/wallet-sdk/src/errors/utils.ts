@@ -1,4 +1,4 @@
-import { errorValues, standardErrorCodes } from './constants';
+import { errorValues, standardErrorCodes } from './constants.js';
 
 const FALLBACK_MESSAGE = 'Unspecified error message.';
 

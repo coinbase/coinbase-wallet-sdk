@@ -3,8 +3,8 @@
 
 import BN from 'bn.js';
 
-import { standardErrors } from './errors';
-import { AddressString, BigIntString, HexString, IntNumber, RegExpString } from './types';
+import { standardErrors } from './errors/index.js';
+import { AddressString, BigIntString, HexString, IntNumber, RegExpString } from './types.js';
 
 const INT_STRING_REGEX = /^[0-9]*$/;
 const HEXADECIMAL_STRING_REGEX = /^[a-f0-9]*$/;

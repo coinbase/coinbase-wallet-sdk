@@ -125,4 +125,4 @@ declare namespace QRCode {
   }
 }
 
-export = QRCode;
+export default QRCode;

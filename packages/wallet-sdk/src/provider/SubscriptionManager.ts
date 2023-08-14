@@ -8,7 +8,7 @@ import { PollingBlockTracker } from 'eth-block-tracker';
 import createSubscriptionManager from 'eth-json-rpc-filters/subscriptionManager';
 import { EventEmitter } from 'eventemitter3';
 
-import { RequestArguments, Web3Provider } from './Web3Provider';
+import { RequestArguments, Web3Provider } from './Web3Provider.js';
 
 const noop = () => {};
 

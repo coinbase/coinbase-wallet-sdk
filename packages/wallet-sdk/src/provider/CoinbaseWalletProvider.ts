@@ -4,25 +4,25 @@
 import BN from 'bn.js';
 import { EventEmitter } from 'eventemitter3';
 
-import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
-import { serializeError, standardErrorCodes, standardErrors } from '../errors';
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { EthereumTransactionParams } from '../relay/EthereumTransactionParams';
-import { MobileRelay } from '../relay/MobileRelay';
-import { Session } from '../relay/Session';
+import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger.js';
+import { serializeError, standardErrorCodes, standardErrors } from '../errors/index.js';
+import { ScopedLocalStorage } from '../lib/ScopedLocalStorage.js';
+import { EthereumTransactionParams } from '../relay/EthereumTransactionParams.js';
+import { MobileRelay } from '../relay/MobileRelay.js';
+import { Session } from '../relay/Session.js';
 import {
   LOCAL_STORAGE_ADDRESSES_KEY,
   WalletSDKRelayAbstract,
-} from '../relay/WalletSDKRelayAbstract';
-import { WalletSDKRelayEventManager } from '../relay/WalletSDKRelayEventManager';
-import { Web3Method } from '../relay/Web3Method';
+} from '../relay/WalletSDKRelayAbstract.js';
+import { WalletSDKRelayEventManager } from '../relay/WalletSDKRelayEventManager.js';
+import { Web3Method } from '../relay/Web3Method.js';
 import {
   ConnectAndSignInResponse,
   isErrorResponse,
   RequestEthereumAccountsResponse,
   SwitchResponse,
-} from '../relay/Web3Response';
-import { AddressString, Callback, HexString, IntNumber, ProviderType } from '../types';
+} from '../relay/Web3Response.js';
+import { AddressString, Callback, HexString, IntNumber, ProviderType } from '../types.js';
 import {
   ensureAddressString,
   ensureBN,
@@ -33,16 +33,16 @@ import {
   ensureRegExpString,
   hexStringFromIntNumber,
   prepend0x,
-} from '../util';
-import eip712 from '../vendor-js/eth-eip712-util';
-import { FilterPolyfill } from './FilterPolyfill';
-import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from './JSONRPC';
+} from '../util.js';
+import eip712 from '../vendor-js/eth-eip712-util/index.js';
+import { FilterPolyfill } from './FilterPolyfill.js';
+import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from './JSONRPC.js';
 import {
   SubscriptionManager,
   SubscriptionNotification,
   SubscriptionResult,
-} from './SubscriptionManager';
-import { RequestArguments, Web3Provider } from './Web3Provider';
+} from './SubscriptionManager.js';
+import { RequestArguments, Web3Provider } from './Web3Provider.js';
 
 const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
 const DEFAULT_JSON_RPC_URL = 'DefaultJsonRpcUrl';

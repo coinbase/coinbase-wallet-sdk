@@ -26,8 +26,8 @@ import {
   timeoutWith,
 } from 'rxjs/operators';
 
-import { Session } from '../relay/Session';
-import { IntNumber } from '../types';
+import { Session } from '../relay/Session.js';
+import { IntNumber } from '../types.js';
 import {
   ClientMessage,
   ClientMessageGetSessionConfig,
@@ -35,9 +35,9 @@ import {
   ClientMessageIsLinked,
   ClientMessagePublishEvent,
   ClientMessageSetSessionConfig,
-} from './ClientMessage';
-import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
-import { ConnectionState, RxWebSocket } from './RxWebSocket';
+} from './ClientMessage.js';
+import { DiagnosticLogger, EVENTS } from './DiagnosticLogger.js';
+import { ConnectionState, RxWebSocket } from './RxWebSocket.js';
 import {
   isServerMessageFail,
   ServerMessage,
@@ -49,8 +49,8 @@ import {
   ServerMessageOK,
   ServerMessagePublishEventOK,
   ServerMessageSessionConfigUpdated,
-} from './ServerMessage';
-import { SessionConfig } from './SessionConfig';
+} from './ServerMessage.js';
+import { SessionConfig } from './SessionConfig.js';
 
 const HEARTBEAT_INTERVAL = 10000;
 const REQUEST_TIMEOUT = 60000;

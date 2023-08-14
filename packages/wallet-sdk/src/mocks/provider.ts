@@ -1,9 +1,9 @@
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
+import { ScopedLocalStorage } from '../lib/ScopedLocalStorage.js';
 import {
   CoinbaseWalletProvider,
   CoinbaseWalletProviderOptions,
-} from '../provider/CoinbaseWalletProvider';
-import { WalletSDKRelayEventManager } from '../relay/WalletSDKRelayEventManager';
+} from '../provider/CoinbaseWalletProvider.js';
+import { WalletSDKRelayEventManager } from '../relay/WalletSDKRelayEventManager.js';
 
 export const mockSetAppInfo = jest.fn();
 

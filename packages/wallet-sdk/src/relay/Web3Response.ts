@@ -1,8 +1,8 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { AddressString, HexString, ProviderType } from '../types';
-import { Web3Method } from './Web3Method';
+import { AddressString, HexString, ProviderType } from '../types.js';
+import { Web3Method } from './Web3Method.js';
 
 interface BaseWeb3Response<Result> {
   method: Web3Method;

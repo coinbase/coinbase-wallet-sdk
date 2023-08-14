@@ -1,9 +1,9 @@
 // DiagnosticLogger for debugging purposes only
 
-import { Web3RequestMessage } from '../relay/Web3RequestMessage';
-import { Web3ResponseMessage } from '../relay/Web3ResponseMessage';
-import { ConnectionState } from './RxWebSocket';
-import { ServerMessage, ServerMessageIsLinkedOK } from './ServerMessage';
+import { Web3RequestMessage } from '../relay/Web3RequestMessage.js';
+import { Web3ResponseMessage } from '../relay/Web3ResponseMessage.js';
+import { ConnectionState } from './RxWebSocket.js';
+import { ServerMessage, ServerMessageIsLinkedOK } from './ServerMessage.js';
 
 export type LogProperties = {
   addresses_length?: number; // number of eth addresses

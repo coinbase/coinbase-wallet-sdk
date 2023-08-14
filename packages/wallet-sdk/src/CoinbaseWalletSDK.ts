@@ -1,20 +1,20 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { LogoType, walletLogo } from './assets/wallet-logo';
-import { DiagnosticLogger } from './connection/DiagnosticLogger';
-import { EventListener } from './connection/EventListener';
-import { LINK_API_URL } from './constants';
-import { ScopedLocalStorage } from './lib/ScopedLocalStorage';
-import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
-import { MobileRelayUI } from './provider/MobileRelayUI';
-import { WalletLinkRelayUI } from './provider/WalletLinkRelayUI';
-import { WalletUI, WalletUIOptions } from './provider/WalletUI';
-import { MobileRelay } from './relay/MobileRelay';
-import { WalletLinkRelay } from './relay/WalletLinkRelay';
-import { WalletSDKRelayEventManager } from './relay/WalletSDKRelayEventManager';
-import { getFavicon, isMobileWeb } from './util';
-import { LIB_VERSION } from './version';
+import { LogoType, walletLogo } from './assets/wallet-logo.js';
+import { DiagnosticLogger } from './connection/DiagnosticLogger.js';
+import { EventListener } from './connection/EventListener.js';
+import { LINK_API_URL } from './constants.js';
+import { ScopedLocalStorage } from './lib/ScopedLocalStorage.js';
+import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider.js';
+import { MobileRelayUI } from './provider/MobileRelayUI.js';
+import { WalletLinkRelayUI } from './provider/WalletLinkRelayUI.js';
+import { WalletUI, WalletUIOptions } from './provider/WalletUI.js';
+import { MobileRelay } from './relay/MobileRelay.js';
+import { WalletLinkRelay } from './relay/WalletLinkRelay.js';
+import { WalletSDKRelayEventManager } from './relay/WalletSDKRelayEventManager.js';
+import { getFavicon, isMobileWeb } from './util.js';
+import { LIB_VERSION } from './version.js';
 
 /** Coinbase Wallet SDK Constructor Options */
 export interface CoinbaseWalletSDKOptions {

@@ -3,7 +3,7 @@
 
 import { FunctionComponent, h } from 'preact';
 
-import css from './Spinner-css';
+import css from './Spinner-css.js';
 
 export const Spinner: FunctionComponent<{
   size?: number;

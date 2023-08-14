@@ -20,19 +20,27 @@
   "type": "module",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
-  "types": "dist/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "sideEffects": false,
   "repository": "https://github.com/coinbase/coinbase-wallet-sdk.git",
   "author": "Coinbase, Inc.",
   "license": "Apache-2.0",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "default": "./dist/cjs/index.js"
+    }
+  },
   "scripts": {
     "pretest": "node compile-assets.cjs",
     "test": "jest",
     "test:coverage": "yarn test:unit && open coverage/lcov-report/index.html",
     "prebuild": "rm -rf ./build && node -p \"'export const LIB_VERSION = \\'' + require('./package.json').version + '\\';'\" > src/version.ts",
-    "build": "node compile-assets.cjs && yarn build:cjs && yarn build:esm",
+    "build": "node compile-assets.cjs && yarn build:cjs && yarn build:esm && yarn build:types",
     "build:cjs": "tsc --project ./tsconfig.build.json --module commonjs --outDir ./dist/cjs && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
     "build:esm": "tsc --project ./tsconfig.build.json --module es2015 --outDir ./dist/esm && echo '{\"type\": \"module\",\"sideEffects\": false}' > ./dist/esm/package.json",
+    "build:types": "tsc --project ./tsconfig.build.json --module esnext --declarationDir ./dist/types --emitDeclarationOnly --declaration --declarationMap",
     "dev": "node compile-assets.cjs && tsc --watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx --fix"

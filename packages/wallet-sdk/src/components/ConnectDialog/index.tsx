@@ -1,1 +1,1 @@
-export * from './ConnectDialog';
+export * from './ConnectDialog.js';

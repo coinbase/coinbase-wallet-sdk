@@ -8,8 +8,8 @@ import {
   IntNumber,
   ProviderType,
   RegExpString,
-} from '../types';
-import { Web3Method } from './Web3Method';
+} from '../types.js';
+import { Web3Method } from './Web3Method.js';
 
 interface BaseWeb3Request<
   Method extends Web3Method,
