@@ -2,7 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from 'bind-decorator';
-import { BehaviorSubject, from, of, Subscription, zip } from 'rxjs';
+import { from, of, Subscription, zip } from 'rxjs';
 import {
   catchError,
   distinctUntilChanged,
@@ -98,7 +98,6 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   private connection: WalletLinkConnection;
   private accountsCallback: ((account: string[], isDisconnect?: boolean) => void) | null = null;
   private chainCallback: ((chainId: string, jsonRpcUrl: string) => void) | null = null;
-  private dappDefaultChainSubject = new BehaviorSubject(1);
   protected dappDefaultChain = 1;
   private readonly options: WalletLinkRelayOptions;
 
@@ -145,14 +144,6 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   }
 
   public subscribe() {
-    this.subscriptions.add(
-      this.dappDefaultChainSubject.subscribe((chainId) => {
-        if (this.dappDefaultChain !== chainId) {
-          this.dappDefaultChain = chainId;
-        }
-      })
-    );
-
     const session = Session.load(this.storage) || new Session(this.storage).save();
 
     const connection = new WalletLinkConnection(
@@ -360,12 +351,6 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
     this.subscriptions.add(
       connection.connected$.subscribe((connected) => {
         (ui as WalletLinkRelayUI).setConnected(connected);
-      })
-    );
-
-    this.subscriptions.add(
-      this.dappDefaultChainSubject.subscribe((chainId) => {
-        (ui as WalletLinkRelayUI).setChainId(chainId);
       })
     );
 
@@ -649,7 +634,8 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   }
 
   public setDappDefaultChainCallback(chainId: number) {
-    this.dappDefaultChainSubject.next(chainId);
+    this.dappDefaultChain = chainId;
+    (this.ui as WalletLinkRelayUI).setChainId(chainId);
   }
 
   protected publishWeb3RequestEvent(id: string, request: Web3Request): void {

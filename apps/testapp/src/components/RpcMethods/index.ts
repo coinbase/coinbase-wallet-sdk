@@ -18,9 +18,11 @@ const ethAccounts = {
 const switchEthereumChain = {
   method: 'wallet_switchEthereumChain',
   params: [{ key: 'chainId', required: true }],
-  format: (data: Record<string, string>) => ({
-    chainId: `0x${Number(data.chainId).toString(16)}`,
-  }),
+  format: (data: Record<string, string>) => [
+    {
+      chainId: `0x${Number(data.chainId).toString(16)}`,
+    },
+  ],
 };
 
 const addEthereumChain = {
