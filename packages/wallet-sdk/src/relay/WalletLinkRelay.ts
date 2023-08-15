@@ -2,12 +2,11 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from 'bind-decorator';
-import { from, of, Subscription, zip } from 'rxjs';
+import { of, Subscription, zip } from 'rxjs';
 import {
   catchError,
   distinctUntilChanged,
   filter,
-  map,
   mergeMap,
   skip,
   tap,
@@ -699,30 +698,24 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
 
   @bind
   private handleIncomingEvent(event: ServerMessageEvent): void {
-    try {
-      this.subscriptions.add(
-        from(aes256gcm.decrypt(event.data, this.session.secret))
-          .pipe(map((c) => JSON.parse(c)))
-          .subscribe({
-            next: (json) => {
-              const message = isWeb3ResponseMessage(json) ? json : null;
-              if (!message) {
-                return;
-              }
+    aes256gcm
+      .decrypt(event.data, this.session.secret)
+      .then((decryptedData) => {
+        const json = JSON.parse(decryptedData);
+        const message = isWeb3ResponseMessage(json) ? json : null;
 
-              this.handleWeb3ResponseMessage(message);
-            },
-            error: () => {
-              this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-                message: 'Had error decrypting',
-                value: 'incomingEvent',
-              });
-            },
-          })
-      );
-    } catch {
-      return;
-    }
+        if (!message) {
+          return;
+        }
+
+        this.handleWeb3ResponseMessage(message);
+      })
+      .catch((_) => {
+        this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
+          message: 'Had error decrypting',
+          value: 'incomingEvent',
+        });
+      });
   }
 
   protected handleWeb3ResponseMessage(message: Web3ResponseMessage) {
