@@ -1,7 +1,7 @@
 import { render } from '@testing-library/preact';
 import { h } from 'preact';
 
-import { Spinner } from './Spinner';
+import { Spinner } from './Spinner.js';
 
 const renderSpinner = (props: { size?: number; color?: string }) => render(<Spinner {...props} />);
 

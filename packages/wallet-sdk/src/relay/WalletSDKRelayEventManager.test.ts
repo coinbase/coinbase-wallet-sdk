@@ -1,4 +1,4 @@
-import { WalletSDKRelayEventManager } from './WalletSDKRelayEventManager';
+import { WalletSDKRelayEventManager } from './WalletSDKRelayEventManager.js';
 
 describe('WalletSDKRelayEventManager', () => {
   test('@makeRequestId', () => {

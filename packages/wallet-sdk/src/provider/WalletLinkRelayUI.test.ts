@@ -1,9 +1,9 @@
 import { render } from '@testing-library/preact';
 import { Session } from 'inspector';
 
-import { LinkFlow } from '../components/LinkFlow/LinkFlow';
-import { Snackbar } from '../components/Snackbar/Snackbar';
-import { WalletLinkRelayUI } from './WalletLinkRelayUI';
+import { LinkFlow } from '../components/LinkFlow/LinkFlow.js';
+import { Snackbar } from '../components/Snackbar/Snackbar.js';
+import { WalletLinkRelayUI } from './WalletLinkRelayUI.js';
 
 describe('WalletLinkRelayUI', () => {
   const walletSDKUI = new WalletLinkRelayUI({

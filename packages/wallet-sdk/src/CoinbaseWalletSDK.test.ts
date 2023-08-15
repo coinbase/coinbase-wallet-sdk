@@ -1,15 +1,15 @@
 // eslint-disable-next-line max-classes-per-file
 import { waitFor } from '@testing-library/preact';
 
-import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
-import { ScopedLocalStorage } from './lib/ScopedLocalStorage';
-import { mockExtensionProvider, MockProviderClass, mockSetAppInfo } from './mocks/provider';
+import { CoinbaseWalletSDK } from './CoinbaseWalletSDK.js';
+import { ScopedLocalStorage } from './lib/ScopedLocalStorage.js';
+import { mockExtensionProvider, MockProviderClass, mockSetAppInfo } from './mocks/provider.js';
 import {
   CoinbaseWalletProvider,
   CoinbaseWalletProviderOptions,
-} from './provider/CoinbaseWalletProvider';
-import { WalletLinkRelay } from './relay/WalletLinkRelay';
-import { WalletSDKRelayEventManager } from './relay/WalletSDKRelayEventManager';
+} from './provider/CoinbaseWalletProvider.js';
+import { WalletLinkRelay } from './relay/WalletLinkRelay.js';
+import { WalletSDKRelayEventManager } from './relay/WalletSDKRelayEventManager.js';
 
 jest.mock('./provider/WalletLinkRelayUI');
 

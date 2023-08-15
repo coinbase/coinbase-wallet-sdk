@@ -1,6 +1,6 @@
 import BN from 'bn.js';
 
-import { HexString, IntNumber } from './types';
+import { HexString, IntNumber } from './types.js';
 import {
   bigIntStringFromBN,
   createQrUrl,
@@ -25,7 +25,7 @@ import {
   range,
   strip0x,
   uint8ArrayToHex,
-} from './util';
+} from './util.js';
 
 const uint8ArrVal = new Uint8Array(6);
 const hexString = 'E556B9bfEFDd5B190c67b521ED0A7d19Ab89a311';

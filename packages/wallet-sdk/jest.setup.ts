@@ -4,6 +4,8 @@ import { Crypto } from '@peculiar/webcrypto';
 import { TextDecoder, TextEncoder } from 'util';
 
 global.crypto = new Crypto();
+// @ts-ignore https://github.com/jsdom/jsdom/issues/3455#issuecomment-1333567714
+global.crypto.subtle = new Crypto().subtle;
 
 global.TextEncoder = TextEncoder;
 

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/preact';
 import { h } from 'preact';
 
-import { SnackbarContainer, SnackbarInstance, SnackbarInstanceProps } from './Snackbar';
+import { SnackbarContainer, SnackbarInstance, SnackbarInstanceProps } from './Snackbar.js';
 
 const renderSnackbarContainer = (props?: SnackbarInstanceProps) =>
   render(

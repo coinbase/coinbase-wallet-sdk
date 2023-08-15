@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/preact';
 import { h } from 'preact';
 
-import { Snackbar } from './Snackbar';
+import { Snackbar } from './Snackbar.js';
 
 const attachedEl = document.getElementsByClassName('-cbwsdk-snackbar-root');
 

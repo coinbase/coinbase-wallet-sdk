@@ -1,7 +1,7 @@
-import WS from 'jest-websocket-mock';
+import { WS } from 'jest-websocket-mock';
 import { Observable } from 'rxjs';
 
-import { ConnectionState, RxWebSocket } from './RxWebSocket';
+import { ConnectionState, RxWebSocket } from './RxWebSocket.js';
 
 describe('RxWebSocket', () => {
   let server: WS;

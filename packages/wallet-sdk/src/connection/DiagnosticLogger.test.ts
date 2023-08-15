@@ -1,4 +1,4 @@
-import { DiagnosticLogger, EVENTS, EventType, LogProperties } from './DiagnosticLogger';
+import { DiagnosticLogger, EVENTS, EventType, LogProperties } from './DiagnosticLogger.js';
 
 describe('DiagnosticLogger', () => {
   describe('log', () => {

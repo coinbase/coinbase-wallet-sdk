@@ -1,14 +1,14 @@
 import { fireEvent } from '@testing-library/preact';
 
-import { standardErrorCodes, standardErrors } from '../errors';
-import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from '../fixtures/provider';
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { MockRelayClass } from '../mocks/relay';
-import { LOCAL_STORAGE_ADDRESSES_KEY } from '../relay/WalletSDKRelayAbstract';
-import { WalletSDKRelayEventManager } from '../relay/WalletSDKRelayEventManager';
-import { Web3Method } from '../relay/Web3Method';
-import { ProviderType } from '../types';
-import { CoinbaseWalletProvider, CoinbaseWalletProviderOptions } from './CoinbaseWalletProvider';
+import { standardErrorCodes, standardErrors } from '../errors/index.js';
+import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from '../fixtures/provider.js';
+import { ScopedLocalStorage } from '../lib/ScopedLocalStorage.js';
+import { MockRelayClass } from '../mocks/relay.js';
+import { LOCAL_STORAGE_ADDRESSES_KEY } from '../relay/WalletSDKRelayAbstract.js';
+import { WalletSDKRelayEventManager } from '../relay/WalletSDKRelayEventManager.js';
+import { Web3Method } from '../relay/Web3Method.js';
+import { ProviderType } from '../types.js';
+import { CoinbaseWalletProvider, CoinbaseWalletProviderOptions } from './CoinbaseWalletProvider.js';
 
 const storage = new ScopedLocalStorage('CoinbaseWalletProvider');
 

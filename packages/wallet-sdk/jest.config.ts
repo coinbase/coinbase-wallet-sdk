@@ -48,10 +48,14 @@ export default {
 
   // An array of file extensions your modules use
   moduleFileExtensions: ['js', 'jsx', 'ts', 'tsx', 'json', 'node'],
+  transformIgnorePatterns: [
+    '/node_modules/(?!@testing-library/preact|preact|uuid)',
+  ],
 
   // A map from regular expressions to module names or to arrays of module names that allow to stub out resources with a single module
   moduleNameMapper: {
     '^src/(.*)$': '<rootDir>/src/$1',
+    '^(\\.{1,2}/.*)\\.js$': '$1',
   },
 
   // A list of paths to directories that Jest should use to search for files in

@@ -1,8 +1,8 @@
-import { Web3Method } from '../relay/Web3Method';
-import { ErrorResponse, isErrorResponse } from '../relay/Web3Response';
-import { standardErrorCodes } from './constants';
-import { standardErrors } from './errors';
-import { getErrorCode, getMessageFromCode } from './utils';
+import { Web3Method } from '../relay/Web3Method.js';
+import { ErrorResponse, isErrorResponse } from '../relay/Web3Response.js';
+import { standardErrorCodes } from './constants.js';
+import { standardErrors } from './errors.js';
+import { getErrorCode, getMessageFromCode } from './utils.js';
 
 describe('errors', () => {
   test('getErrorCode', () => {

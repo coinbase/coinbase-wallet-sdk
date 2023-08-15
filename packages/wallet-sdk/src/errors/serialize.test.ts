@@ -1,9 +1,9 @@
-import { JSONRPCRequest } from '../provider/JSONRPC';
-import { Web3Method } from '../relay/Web3Method';
-import { ErrorResponse } from '../relay/Web3Response';
-import { standardErrorCodes } from './constants';
-import { standardErrors } from './errors';
-import { serializeError } from './serialize';
+import { JSONRPCRequest } from '../provider/JSONRPC.js';
+import { Web3Method } from '../relay/Web3Method.js';
+import { ErrorResponse } from '../relay/Web3Response.js';
+import { standardErrorCodes } from './constants.js';
+import { standardErrors } from './errors.js';
+import { serializeError } from './serialize.js';
 
 describe('serializeError', () => {
   test('with ErrorResponse object', () => {

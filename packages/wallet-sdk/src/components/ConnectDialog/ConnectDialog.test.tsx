@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/preact';
 import { h } from 'preact';
 
-import { ConnectDialog } from './ConnectDialog';
+import { ConnectDialog } from './ConnectDialog.js';
 
 const renderConnectDialog = ({ connectDisabled = false, isConnected = true }) => {
   return render(

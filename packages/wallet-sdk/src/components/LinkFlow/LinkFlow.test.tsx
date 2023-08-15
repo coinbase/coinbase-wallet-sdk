@@ -1,7 +1,7 @@
 import { render } from '@testing-library/preact';
 import { h } from 'preact';
 
-import { LinkFlow } from './LinkFlow';
+import { LinkFlow } from './LinkFlow.js';
 
 describe('LinkFlow', () => {
   const linkFlow = new LinkFlow({
