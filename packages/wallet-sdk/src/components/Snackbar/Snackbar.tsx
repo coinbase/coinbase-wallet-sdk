@@ -96,7 +96,7 @@ export class Snackbar {
 
 export const SnackbarContainer: FunctionComponent<{
   darkMode: boolean;
-}> = props => (
+}> = (props) => (
   <div class={clsx('-cbwsdk-snackbar-container')}>
     <style>{css}</style>
     <div class="-cbwsdk-snackbar">{props.children}</div>
@@ -140,10 +140,7 @@ export const SnackbarInstance: FunctionComponent<SnackbarInstanceProps> = ({
       )}
     >
       <div class="-cbwsdk-snackbar-instance-header" onClick={toggleExpanded}>
-        <img
-          src={makeSnackbarIcon(appSrc)}
-          class="-cbwsdk-snackbar-instance-header-cblogo"
-        />
+        <img src={makeSnackbarIcon(appSrc)} class="-cbwsdk-snackbar-instance-header-cblogo" />
         <div class="-cbwsdk-snackbar-instance-header-message">{message}</div>
         <div class="-gear-container">
           {!expanded && (
@@ -188,8 +185,7 @@ export const SnackbarInstance: FunctionComponent<SnackbarInstanceProps> = ({
               <span
                 class={clsx(
                   '-cbwsdk-snackbar-instance-menu-item-info',
-                  action.isRed &&
-                    '-cbwsdk-snackbar-instance-menu-item-info-is-red'
+                  action.isRed && '-cbwsdk-snackbar-instance-menu-item-info-is-red'
                 )}
               >
                 {action.info}

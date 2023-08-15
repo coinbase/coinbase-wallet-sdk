@@ -4,6 +4,7 @@ import { Crypto } from '@peculiar/webcrypto';
 import { TextDecoder, TextEncoder } from 'util';
 
 global.crypto = new Crypto();
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore https://github.com/jsdom/jsdom/issues/3455#issuecomment-1333567714
 global.crypto.subtle = new Crypto().subtle;
 
