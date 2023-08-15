@@ -304,21 +304,21 @@ export class WalletLinkConnection {
    * @param value
    * @returns an Observable that completes when successful
    */
-  public setSessionMetadata(key: string, value: string | null): Observable<void> {
+  public setSessionMetadata(key: string, value: string | null): Promise<void> {
     const message = ClientMessageSetSessionConfig({
       id: IntNumber(this.nextReqId++),
       sessionId: this.sessionId,
       metadata: { [key]: value },
     });
 
-    return this.onceConnected$.pipe(
-      flatMap((_) => this.makeRequest<ServerMessageOK | ServerMessageFail>(message)),
-      map((res) => {
+    return this.onceConnected$
+      .toPromise()
+      .then(() => this.makeRequest<ServerMessageOK | ServerMessageFail>(message).toPromise())
+      .then((res) => {
         if (isServerMessageFail(res)) {
           throw new Error(res.error || 'failed to set session metadata');
         }
-      })
-    );
+      });
   }
 
   /**
