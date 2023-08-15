@@ -40,12 +40,22 @@ export class MobileRelayUI implements WalletUI {
     this.openedWindow = null;
   }
 
+  private useLocationMethod = false;
+  setUseLocationMethod(useLocationMethod: boolean): void {
+    this.useLocationMethod = useLocationMethod;
+  }
+
   private redirectToCoinbaseWallet(walletLinkUrl?: string): void {
     const url = new URL("https://go.cb-w.com/walletlink");
 
     url.searchParams.append("redirect_url", window.location.href);
     if (walletLinkUrl) {
       url.searchParams.append("wl_url", walletLinkUrl);
+    }
+
+    if (this.useLocationMethod) {
+      window.location.href = url.href;
+      return;
     }
 
     this.openedWindow = window.open(url.href, "cbw-opener");
