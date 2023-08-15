@@ -2,7 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from 'bind-decorator';
-import { BehaviorSubject, from, Observable, of, Subscription, zip } from 'rxjs';
+import { BehaviorSubject, from, of, Subscription, zip } from 'rxjs';
 import {
   catchError,
   distinctUntilChanged,
@@ -663,62 +663,52 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       isSessionMismatched: (storedSession?.id !== this._session.id).toString(),
     });
 
-    this.subscriptions.add(
-      this.publishEvent('Web3Request', message, true).subscribe({
-        next: (_) => {
-          this.diagnostic?.log(EVENTS.WEB3_REQUEST_PUBLISHED, {
-            eventId: message.id,
-            method: `relay::${message.request.method}`,
-            sessionIdHash: this.getSessionIdHash(),
-            storedSessionIdHash: storedSession ? Session.hash(storedSession.id) : '',
-            isSessionMismatched: (storedSession?.id !== this._session.id).toString(),
-          });
-        },
-        error: (err) => {
-          this.handleWeb3ResponseMessage(
-            Web3ResponseMessage({
-              id: message.id,
-              response: {
-                method: message.request.method,
-                errorMessage: err.message,
-              },
-            })
-          );
-        },
+    this.publishEvent('Web3Request', message, true)
+      .then((_) => {
+        this.diagnostic?.log(EVENTS.WEB3_REQUEST_PUBLISHED, {
+          eventId: message.id,
+          method: `relay::${message.request.method}`,
+          sessionIdHash: this.getSessionIdHash(),
+          storedSessionIdHash: storedSession ? Session.hash(storedSession.id) : '',
+          isSessionMismatched: (storedSession?.id !== this._session.id).toString(),
+        });
       })
-    );
+      .catch((err) => {
+        this.handleWeb3ResponseMessage(
+          Web3ResponseMessage({
+            id: message.id,
+            response: {
+              method: message.request.method,
+              errorMessage: err.message,
+            },
+          })
+        );
+      });
   }
 
   private publishWeb3RequestCanceledEvent(id: string) {
     const message = Web3RequestCanceledMessage(id);
-    this.subscriptions.add(this.publishEvent('Web3RequestCanceled', message, false).subscribe());
+    this.publishEvent('Web3RequestCanceled', message, false).then();
   }
 
-  protected publishEvent(
+  private publishEvent(
     event: string,
     message: RelayMessage,
     callWebhook: boolean
-  ): Observable<string> {
+  ): Promise<string> {
     const secret = this.session.secret;
-    return new Observable<string>((subscriber) => {
-      void aes256gcm
-        .encrypt(
-          JSON.stringify({
-            ...message,
-            origin: location.origin,
-            relaySource: window.coinbaseWalletExtension ? 'injected_sdk' : 'sdk',
-          }),
-          secret
-        )
-        .then((encrypted: string) => {
-          subscriber.next(encrypted);
-          subscriber.complete();
-        });
-    }).pipe(
-      mergeMap((encrypted: string) => {
-        return this.connection.publishEvent(event, encrypted, callWebhook);
-      })
-    );
+    return aes256gcm
+      .encrypt(
+        JSON.stringify({
+          ...message,
+          origin: location.origin,
+          relaySource: window.coinbaseWalletExtension ? 'injected_sdk' : 'sdk',
+        }),
+        secret
+      )
+      .then((encrypted: string) =>
+        this.connection.publishEvent(event, encrypted, callWebhook).toPromise()
+      );
   }
 
   @bind
