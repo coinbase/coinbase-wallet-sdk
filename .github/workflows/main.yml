@@ -48,7 +48,7 @@ jobs:
 
       - name: Runs compile asset script
         working-directory: ./packages/wallet-sdk
-        run: node ./compile-assets.js
+        run: node ./compile-assets.cjs
 
       - name: Check Types
         run: yarn typecheck
@@ -79,7 +79,7 @@ jobs:
 
       - name: Runs compile asset script
         working-directory: ./packages/wallet-sdk
-        run: node ./compile-assets.js
+        run: node ./compile-assets.cjs
 
       - name: Run Unit Tests
         working-directory: ./packages/wallet-sdk
