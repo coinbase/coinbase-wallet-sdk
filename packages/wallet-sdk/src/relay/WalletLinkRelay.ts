@@ -2,7 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from 'bind-decorator';
-import { of, Subscription, zip } from 'rxjs';
+import { of, Subscription } from 'rxjs';
 import {
   catchError,
   distinctUntilChanged,
@@ -262,17 +262,15 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
           filter(
             (c) =>
               c.metadata && c.metadata.ChainId !== undefined && c.metadata.JsonRpcUrl !== undefined
-          )
-        )
-        .pipe(
+          ),
           mergeMap((c) =>
-            zip(
+            Promise.all([
               aes256gcm.decrypt(c.metadata.ChainId!, session.secret),
-              aes256gcm.decrypt(c.metadata.JsonRpcUrl!, session.secret)
-            )
-          )
+              aes256gcm.decrypt(c.metadata.JsonRpcUrl!, session.secret),
+            ])
+          ),
+          distinctUntilChanged()
         )
-        .pipe(distinctUntilChanged())
         .subscribe({
           next: ([chainId, jsonRpcUrl]) => {
             if (this.chainCallback) {
