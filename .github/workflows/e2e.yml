@@ -13,7 +13,7 @@ jobs:
       image: mcr.microsoft.com/playwright:v1.36.2-focal
     steps:
       - uses: actions/checkout@v3
-
+      - run: corepack enable
       - uses: actions/setup-node@v3
         with:
           node-version-file: ".nvmrc"

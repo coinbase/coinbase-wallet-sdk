@@ -20,7 +20,6 @@
     "@coinbase/wallet-sdk": "^3.7.1",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
-    "@playwright/test": "^1.36.2",
     "@rainbow-me/rainbowkit": "^1.0.7",
     "@tenkeylabs/dappwright": "^2.3.3",
     "@thirdweb-dev/wallets": "^1.1.1",
@@ -52,6 +51,7 @@
     "@coinbase/wallet-sdk": "^3.7.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.37.0",
     "@trivago/prettier-plugin-sort-imports": "^4.2.0",
     "eslint-plugin-prettier": "^5.0.0",
     "plop": "^3.1.2",
