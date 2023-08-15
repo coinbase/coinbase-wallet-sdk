@@ -40,7 +40,12 @@ export class MobileRelayUI implements WalletUI {
     this.openedWindow = null;
   }
 
-  private getCoinbaseWalletURL(walletLinkUrl?: string): string {
+  private useLocationMethod = false;
+  setUseLocationMethod(useLocationMethod: boolean): void {
+    this.useLocationMethod = useLocationMethod;
+  }
+
+  private redirectToCoinbaseWallet(walletLinkUrl?: string): void {
     const url = new URL("https://go.cb-w.com/walletlink");
 
     url.searchParams.append("redirect_url", window.location.href);
@@ -48,26 +53,29 @@ export class MobileRelayUI implements WalletUI {
       url.searchParams.append("wl_url", walletLinkUrl);
     }
 
-    return url.href;
+    if (this.useLocationMethod) {
+      window.location.href = url.href;
+      return;
+    }
+
+    this.openedWindow = window.open(url.href, "cbw-opener");
+    if (this.openedWindow) {
+      setTimeout(() => this.closeOpenedWindow(), 5000);
+    }
   }
 
   openCoinbaseWalletDeeplink(walletLinkUrl?: string): void {
-    const url = this.getCoinbaseWalletURL(walletLinkUrl);
-
     this.redirectDialog.present({
       title: "Redirecting to Coinbase Wallet...",
       buttonText: "Open",
       darkMode: this.darkMode,
       onButtonClick: () => {
-        window.location.href = url;
+        this.redirectToCoinbaseWallet(walletLinkUrl);
       },
     });
 
     setTimeout(() => {
-      this.openedWindow = window.open(url, "cbw-opener");
-      if (this.openedWindow) {
-        setTimeout(() => this.closeOpenedWindow(), 5000);
-      }
+      this.redirectToCoinbaseWallet(walletLinkUrl);
     }, 99);
   }
 
