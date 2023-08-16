@@ -42,13 +42,13 @@ export class MobileRelayUI implements WalletUI {
 
   private useLocationMethod = false;
   private useCustomScheme = false;
-  
+
   setDeepLinkConfig({
-    useCustomScheme,
-    useLocationMethod,
+    useCustomScheme = false,
+    useLocationMethod = false,
   }: {
-    useLocationMethod: boolean;
-    useCustomScheme: boolean;
+    useLocationMethod?: boolean;
+    useCustomScheme?: boolean;
   }): void {
     this.useLocationMethod = useLocationMethod;
     this.useCustomScheme = useCustomScheme;
@@ -63,12 +63,14 @@ export class MobileRelayUI implements WalletUI {
       url.searchParams.append("wl_url", walletLinkUrl);
     }
 
+    console.log('Redirecting to Coinbase Wallet', url.href);
+
     if (this.useLocationMethod) {
       window.location.href = url.href;
       return;
     }
 
-    this.openedWindow = window.open(url.href, "cbw-opener");
+    this.openedWindow = window.open(url.href, 'cbw-opener');
     if (this.openedWindow) {
       setTimeout(() => this.closeOpenedWindow(), 5000);
     }

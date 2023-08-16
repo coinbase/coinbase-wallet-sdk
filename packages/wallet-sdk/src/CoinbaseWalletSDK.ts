@@ -210,10 +210,7 @@ export class CoinbaseWalletSDK {
     }
   }
 
-  setDeepLinkConfig(config: {
-    useLocationMethod: boolean;
-    useCustomScheme: boolean;
-  }): void {
+  setDeepLinkConfig(config: { useLocationMethod?: boolean; useCustomScheme?: boolean }): void {
     if (!(this._relay instanceof MobileRelay)) return;
 
     this._relay.setDeepLinkConfig(config);
