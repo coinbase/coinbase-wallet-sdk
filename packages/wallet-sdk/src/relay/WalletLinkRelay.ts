@@ -340,7 +340,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   public resetAndReload(): void {
     Promise.race([
       this.connection.setSessionMetadata('__destroyed', '1'),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 1000)),
+      new Promise((resolve) => setTimeout(() => resolve(null), 1000)),
     ])
       .then((_) => {
         const isStandalone = this.ui.isStandalone();
