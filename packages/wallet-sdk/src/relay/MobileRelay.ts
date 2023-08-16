@@ -127,9 +127,12 @@ export class MobileRelay extends WalletLinkRelay {
     });
   }
 
-  setUseLocationMethod(useLocationMethod: boolean): void {
+  setDeepLinkConfig(config: {
+    useLocationMethod: boolean;
+    useCustomScheme: boolean;
+  }): void {
     if (!(this.ui instanceof MobileRelayUI)) return;
 
-    this.ui.setUseLocationMethod(useLocationMethod);
+    this.ui.setDeepLinkConfig(config);
   }
 }
