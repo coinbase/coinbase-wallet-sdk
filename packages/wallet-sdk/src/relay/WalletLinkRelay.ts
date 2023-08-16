@@ -3,7 +3,7 @@
 
 import bind from 'bind-decorator';
 import { Subscription } from 'rxjs';
-import { distinctUntilChanged, filter, mergeMap, skip, tap } from 'rxjs/operators';
+import { filter, skip, tap } from 'rxjs/operators';
 
 import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
 import { EventListener } from '../connection/EventListener';
@@ -88,6 +88,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   protected readonly diagnostic?: DiagnosticLogger;
   private connection: WalletLinkConnection;
   private accountsCallback: ((account: string[], isDisconnect?: boolean) => void) | null = null;
+  private chainCallbackParams = { chainId: '', jsonRpcUrl: '' };
   private chainCallback: ((chainId: string, jsonRpcUrl: string) => void) | null = null;
   protected dappDefaultChain = 1;
   private readonly options: WalletLinkRelayOptions;
@@ -145,19 +146,6 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
     );
 
     this.subscriptions.add(
-      connection.sessionConfig$.subscribe({
-        next: (sessionConfig) => {
-          this.onSessionConfigChanged(sessionConfig);
-        },
-        error: () => {
-          this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-            message: 'error while invoking session config callback',
-          });
-        },
-      })
-    );
-
-    this.subscriptions.add(
       connection.incomingEvent$
         .pipe(filter((m) => m.event === 'Web3Response'))
         .subscribe({ next: this.handleIncomingEvent }) // eslint-disable-line @typescript-eslint/unbound-method
@@ -200,90 +188,89 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
         .subscribe()
     );
 
-    // if session is marked destroyed, reset and reload
-    this.subscriptions.add(
-      connection.sessionConfig$
-        .pipe(filter((c) => !!c.metadata && c.metadata.__destroyed === '1'))
-        .subscribe(() => {
-          const alreadyDestroyed = connection.isDestroyed;
-          this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
-            alreadyDestroyed,
-            sessionIdHash: this.getSessionIdHash(),
-          });
-          return this.resetAndReload();
-        })
-    );
+    connection.setSessionConfigListner((c: SessionConfig) => {
+      try {
+        this.onSessionConfigChanged(c);
+      } catch {
+        this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
+          message: 'error while invoking session config callback',
+        });
+      }
 
-    this.subscriptions.add(
-      connection.sessionConfig$
-        .pipe(filter((c) => c.metadata && c.metadata.WalletUsername !== undefined))
-        .pipe(mergeMap((c) => aes256gcm.decrypt(c.metadata.WalletUsername!, session.secret)))
-        .subscribe({
-          next: (walletUsername) => {
+      if (!c.metadata) return;
+
+      // if session is marked destroyed, reset and reload
+      if (c.metadata.__destroyed === '1') {
+        const alreadyDestroyed = connection.isDestroyed;
+        this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
+          alreadyDestroyed,
+          sessionIdHash: this.getSessionIdHash(),
+        });
+        this.resetAndReload();
+      }
+
+      if (c.metadata.WalletUsername !== undefined) {
+        aes256gcm
+          .decrypt(c.metadata.WalletUsername!, session.secret)
+          .then((walletUsername) => {
             this.storage.setItem(WALLET_USER_NAME_KEY, walletUsername);
-          },
-          error: () => {
+          })
+          .catch(() => {
             this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
               message: 'Had error decrypting',
               value: 'username',
             });
-          },
-        })
-    );
+          });
+      }
 
-    this.subscriptions.add(
-      connection.sessionConfig$
-        .pipe(filter((c) => c.metadata && c.metadata.AppVersion !== undefined))
-        .pipe(mergeMap((c) => aes256gcm.decrypt(c.metadata.AppVersion!, session.secret)))
-        .subscribe({
-          next: (appVersion) => {
+      if (c.metadata.AppVersion !== undefined) {
+        aes256gcm
+          .decrypt(c.metadata.AppVersion!, session.secret)
+          .then((appVersion) => {
             this.storage.setItem(APP_VERSION_KEY, appVersion);
-          },
-          error: () => {
+          })
+          .catch(() => {
             this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
               message: 'Had error decrypting',
               value: 'appversion',
             });
-          },
-        })
-    );
+          });
+      }
 
-    this.subscriptions.add(
-      connection.sessionConfig$
-        .pipe(
-          filter(
-            (c) =>
-              c.metadata && c.metadata.ChainId !== undefined && c.metadata.JsonRpcUrl !== undefined
-          ),
-          mergeMap((c) =>
-            Promise.all([
-              aes256gcm.decrypt(c.metadata.ChainId!, session.secret),
-              aes256gcm.decrypt(c.metadata.JsonRpcUrl!, session.secret),
-            ])
-          ),
-          distinctUntilChanged()
-        )
-        .subscribe({
-          next: ([chainId, jsonRpcUrl]) => {
+      if (c.metadata.ChainId !== undefined && c.metadata.JsonRpcUrl !== undefined) {
+        Promise.all([
+          aes256gcm.decrypt(c.metadata.ChainId!, session.secret),
+          aes256gcm.decrypt(c.metadata.JsonRpcUrl!, session.secret),
+        ])
+          .then(([chainId, jsonRpcUrl]) => {
+            // custom distinctUntilChanged
+            if (
+              this.chainCallbackParams.chainId === chainId &&
+              this.chainCallbackParams.jsonRpcUrl === jsonRpcUrl
+            ) {
+              return;
+            }
+            this.chainCallbackParams = {
+              chainId,
+              jsonRpcUrl,
+            };
+
             if (this.chainCallback) {
               this.chainCallback(chainId, jsonRpcUrl);
             }
-          },
-          error: () => {
+          })
+          .catch(() => {
             this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
               message: 'Had error decrypting',
               value: 'chainId|jsonRpcUrl',
             });
-          },
-        })
-    );
+          });
+      }
 
-    this.subscriptions.add(
-      connection.sessionConfig$
-        .pipe(filter((c) => c.metadata && c.metadata.EthereumAddress !== undefined))
-        .pipe(mergeMap((c) => aes256gcm.decrypt(c.metadata.EthereumAddress!, session.secret)))
-        .subscribe({
-          next: (selectedAddress) => {
+      if (c.metadata.EthereumAddress !== undefined) {
+        aes256gcm
+          .decrypt(c.metadata.EthereumAddress!, session.secret)
+          .then((selectedAddress) => {
             if (this.accountsCallback) {
               this.accountsCallback([selectedAddress]);
             }
@@ -301,32 +288,29 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
               });
               WalletLinkRelay.accountRequestCallbackIds.clear();
             }
-          },
-          error: () => {
+          })
+          .catch(() => {
             this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
               message: 'Had error decrypting',
-              value: 'selectedAddress',
+              value: 'ethereumAddress',
             });
-          },
-        })
-    );
+          });
+      }
 
-    this.subscriptions.add(
-      connection.sessionConfig$
-        .pipe(filter((c) => c.metadata && c.metadata.AppSrc !== undefined))
-        .pipe(mergeMap((c) => aes256gcm.decrypt(c.metadata.AppSrc!, session.secret)))
-        .subscribe({
-          next: (appSrc) => {
+      if (c.metadata.AppSrc !== undefined) {
+        aes256gcm
+          .decrypt(c.metadata.AppSrc!, session.secret)
+          .then((appSrc) => {
             this.ui.setAppSrc(appSrc);
-          },
-          error: () => {
+          })
+          .catch(() => {
             this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
               message: 'Had error decrypting',
               value: 'appSrc',
             });
-          },
-        })
-    );
+          });
+      }
+    });
 
     const ui = this.options.uiConstructor({
       linkAPIUrl: this.options.linkAPIUrl,

@@ -1,16 +1,7 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import {
-  BehaviorSubject,
-  iif,
-  Observable,
-  of,
-  ReplaySubject,
-  Subscription,
-  throwError,
-  timer,
-} from 'rxjs';
+import { BehaviorSubject, iif, Observable, of, Subscription, throwError, timer } from 'rxjs';
 import {
   catchError,
   delay,
@@ -66,7 +57,7 @@ export class WalletLinkConnection {
   private nextReqId = IntNumber(1);
   private connectedSubject = new BehaviorSubject(false);
   private linkedSubject = new BehaviorSubject(false);
-  private sessionConfigSubject = new ReplaySubject<SessionConfig>(1);
+  private sessionConfigListner?: (_: SessionConfig) => void;
 
   /**
    * Constructor
@@ -189,7 +180,7 @@ export class WalletLinkConnection {
             sessionIdHash: Session.hash(sessionId),
             metadata_keys: msg && msg.metadata ? Object.keys(msg.metadata) : undefined,
           });
-          this.sessionConfigSubject.next({
+          this.sessionConfigListner?.({
             webhookId: msg.webhookId,
             webhookUrl: msg.webhookUrl,
             metadata: msg.metadata,
@@ -268,12 +259,8 @@ export class WalletLinkConnection {
     );
   }
 
-  /**
-   * Emit current session config if available, and subsequent updates
-   * @returns an Observable for the session config
-   */
-  public get sessionConfig$(): Observable<SessionConfig> {
-    return this.sessionConfigSubject.asObservable();
+  setSessionConfigListner(listner: (_: SessionConfig) => void) {
+    this.sessionConfigListner = listner;
   }
 
   /**
