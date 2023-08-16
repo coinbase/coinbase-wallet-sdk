@@ -55,7 +55,9 @@ export class MobileRelayUI implements WalletUI {
   }
 
   private redirectToCoinbaseWallet(walletLinkUrl?: string): void {
-    const baseUrl = this.useCustomScheme ? "cbwallet://" : "https://go.cb-w.com/";
+    const baseUrl = this.useCustomScheme
+      ? "cbwallet://"
+      : "https://go.cb-w.com/";
     const url = new URL("walletlink", baseUrl);
 
     url.searchParams.append("redirect_url", window.location.href);
@@ -63,14 +65,12 @@ export class MobileRelayUI implements WalletUI {
       url.searchParams.append("wl_url", walletLinkUrl);
     }
 
-    console.log('Redirecting to Coinbase Wallet', url.href);
-
     if (this.useLocationMethod) {
       window.location.href = url.href;
       return;
     }
 
-    this.openedWindow = window.open(url.href, 'cbw-opener');
+    this.openedWindow = window.open(url.href, "cbw-opener");
     if (this.openedWindow) {
       setTimeout(() => this.closeOpenedWindow(), 5000);
     }
