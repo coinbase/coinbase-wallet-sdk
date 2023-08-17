@@ -3,7 +3,6 @@
 
 import bind from 'bind-decorator';
 import { Subscription } from 'rxjs';
-import { skip, tap } from 'rxjs/operators';
 
 import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
 import { EventListener } from '../connection/EventListener';
@@ -151,42 +150,29 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       }
     };
 
-    this.subscriptions.add(
-      connection.linked$
-        .pipe(
-          skip(1),
-          tap((linked: boolean) => {
-            this.isLinked = linked;
-            const cachedAddresses = this.storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
+    connection.linkedListner = (linked: boolean) => {
+      this.isLinked = linked;
+      const cachedAddresses = this.storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
 
-            if (linked) {
-              // Only set linked session variable one way
-              this.session.linked = linked;
-            }
+      if (linked) {
+        // Only set linked session variable one way
+        this.session.linked = linked;
+      }
 
-            this.isUnlinkedErrorState = false;
+      this.isUnlinkedErrorState = false;
 
-            if (cachedAddresses) {
-              const addresses = cachedAddresses.split(' ') as AddressString[];
-              const wasConnectedViaStandalone =
-                this.storage.getItem('IsStandaloneSigning') === 'true';
-              if (
-                addresses[0] !== '' &&
-                !linked &&
-                this.session.linked &&
-                !wasConnectedViaStandalone
-              ) {
-                this.isUnlinkedErrorState = true;
-                const sessionIdHash = this.getSessionIdHash();
-                this.diagnostic?.log(EVENTS.UNLINKED_ERROR_STATE, {
-                  sessionIdHash,
-                });
-              }
-            }
-          })
-        )
-        .subscribe()
-    );
+      if (cachedAddresses) {
+        const addresses = cachedAddresses.split(' ') as AddressString[];
+        const wasConnectedViaStandalone = this.storage.getItem('IsStandaloneSigning') === 'true';
+        if (addresses[0] !== '' && !linked && this.session.linked && !wasConnectedViaStandalone) {
+          this.isUnlinkedErrorState = true;
+          const sessionIdHash = this.getSessionIdHash();
+          this.diagnostic?.log(EVENTS.UNLINKED_ERROR_STATE, {
+            sessionIdHash,
+          });
+        }
+      }
+    };
 
     connection.sessionConfigListner = (c: SessionConfig) => {
       try {

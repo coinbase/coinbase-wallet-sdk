@@ -60,6 +60,7 @@ export class WalletLinkConnection {
 
   sessionConfigListner?: (_: SessionConfig) => void;
   incomingEventListner?: (_: ServerMessageEvent) => void;
+  linkedListner?: (_: boolean) => void;
 
   /**
    * Constructor
@@ -167,7 +168,7 @@ export class WalletLinkConnection {
             type: m.type,
             onlineGuests: msg.onlineGuests,
           });
-          this.linkedSubject.next(msg.linked || msg.onlineGuests > 0);
+          this.linkedListner?.(msg.linked || msg.onlineGuests > 0);
         })
     );
 
