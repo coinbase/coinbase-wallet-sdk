@@ -14,9 +14,9 @@ import { WalletLinkRelay } from "./relay/WalletLinkRelay";
 import { WalletSDKRelayEventManager } from "./relay/WalletSDKRelayEventManager";
 import { getFavicon, isMobileWeb } from "./util";
 
-const LINK_API_URL = process.env.LINK_API_URL || "https://www.walletlink.org";
+const LINK_API_URL = process?.env.LINK_API_URL || "https://www.walletlink.org";
 const SDK_VERSION =
-  process.env.SDK_VERSION! || require("../package.json").version || "unknown";
+  process?.env.SDK_VERSION! || require("../package.json").version || "unknown";
 
 /** Coinbase Wallet SDK Constructor Options */
 export interface CoinbaseWalletSDKOptions {
