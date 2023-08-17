@@ -63,11 +63,6 @@ export class WalletLinkConnection {
     this.sessionConfigListner = listener;
   }
 
-  private incomingEventListner?: (_: ServerMessageEvent) => void;
-  setIncomingEventListner(listener: (_: ServerMessageEvent) => void): void {
-    this.incomingEventListner = listener;
-  }
-
   private linkedListner?: (_: boolean) => void;
   setLinkedListner(listener: (_: boolean) => void): void {
     this.linkedListner = listener;
@@ -76,6 +71,10 @@ export class WalletLinkConnection {
   private connectedListner?: (_: boolean) => void;
   setConnectedListner(listener: (_: boolean) => void): void {
     this.connectedListner = listener;
+  }
+
+  setIncomingEventListner(listener: (_: ServerMessageEvent) => void): void {
+    this.subscribeIncomingEvent(listener);
   }
 
   /**
@@ -210,8 +209,6 @@ export class WalletLinkConnection {
           });
         })
     );
-
-    this.subscribeIncomingEvent();
   }
 
   /**
@@ -287,28 +284,29 @@ export class WalletLinkConnection {
   /**
    * Subscribe to incoming Event messages
    */
-  private subscribeIncomingEvent(): void {
-    this.subscriptions.add(
-      this.ws.incomingJSONData$
-        .pipe(
-          filter((m) => {
-            if (m.type !== 'Event') {
-              return false;
-            }
-            const sme = m as ServerMessageEvent;
-            return (
-              typeof sme.sessionId === 'string' &&
-              typeof sme.eventId === 'string' &&
-              typeof sme.event === 'string' &&
-              typeof sme.data === 'string'
-            );
-          }),
-          map((m) => m as ServerMessageEvent)
-        )
-        .subscribe((m) => {
-          this.incomingEventListner?.(m);
-        })
-    );
+  private incomingEventSub?: Subscription;
+  private subscribeIncomingEvent(listener: (_: ServerMessageEvent) => void): void {
+    this.incomingEventSub?.unsubscribe();
+
+    this.incomingEventSub = this.ws.incomingJSONData$
+      .pipe(
+        filter((m) => {
+          if (m.type !== 'Event') {
+            return false;
+          }
+          const sme = m as ServerMessageEvent;
+          return (
+            typeof sme.sessionId === 'string' &&
+            typeof sme.eventId === 'string' &&
+            typeof sme.event === 'string' &&
+            typeof sme.data === 'string'
+          );
+        }),
+        map((m) => m as ServerMessageEvent)
+      )
+      .subscribe((m) => {
+        listener(m);
+      });
   }
 
   /**
