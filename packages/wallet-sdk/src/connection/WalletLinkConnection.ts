@@ -211,11 +211,7 @@ export class WalletLinkConnection {
         })
     );
 
-    this.subscriptions.add(
-      this.incomingEvent$.subscribe((m) => {
-        this.incomingEventListner?.(m);
-      })
-    );
+    this.subscribeIncomingEvent();
   }
 
   /**
@@ -289,24 +285,29 @@ export class WalletLinkConnection {
   }
 
   /**
-   * Emit incoming Event messages
-   * @returns an Observable for the messages
+   * Subscribe to incoming Event messages
    */
-  private get incomingEvent$(): Observable<ServerMessageEvent> {
-    return this.ws.incomingJSONData$.pipe(
-      filter((m) => {
-        if (m.type !== 'Event') {
-          return false;
-        }
-        const sme = m as ServerMessageEvent;
-        return (
-          typeof sme.sessionId === 'string' &&
-          typeof sme.eventId === 'string' &&
-          typeof sme.event === 'string' &&
-          typeof sme.data === 'string'
-        );
-      }),
-      map((m) => m as ServerMessageEvent)
+  private subscribeIncomingEvent(): void {
+    this.subscriptions.add(
+      this.ws.incomingJSONData$
+        .pipe(
+          filter((m) => {
+            if (m.type !== 'Event') {
+              return false;
+            }
+            const sme = m as ServerMessageEvent;
+            return (
+              typeof sme.sessionId === 'string' &&
+              typeof sme.eventId === 'string' &&
+              typeof sme.event === 'string' &&
+              typeof sme.data === 'string'
+            );
+          }),
+          map((m) => m as ServerMessageEvent)
+        )
+        .subscribe((m) => {
+          this.incomingEventListner?.(m);
+        })
     );
   }
 
