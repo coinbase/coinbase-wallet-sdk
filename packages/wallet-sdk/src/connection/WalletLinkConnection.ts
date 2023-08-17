@@ -57,7 +57,16 @@ export class WalletLinkConnection {
   private nextReqId = IntNumber(1);
   private connectedSubject = new BehaviorSubject(false);
   private linkedSubject = new BehaviorSubject(false);
+
   private sessionConfigListner?: (_: SessionConfig) => void;
+  setSessionConfigListner(listner: (_: SessionConfig) => void) {
+    this.sessionConfigListner = listner;
+  }
+
+  private incomingEventListner?: (_: ServerMessageEvent) => void;
+  setIncomingEventListner(listner: (_: ServerMessageEvent) => void) {
+    this.incomingEventListner = listner;
+  }
 
   /**
    * Constructor
@@ -187,6 +196,8 @@ export class WalletLinkConnection {
           });
         })
     );
+
+    this.subscriptions.add(this.incomingEvent$.subscribe((m) => this.incomingEventListner?.(m)));
   }
 
   /**
@@ -207,6 +218,9 @@ export class WalletLinkConnection {
    * instance of WalletSDKConnection
    */
   public destroy(): void {
+    this.setSessionConfigListner(undefined);
+    this.setIncomingEventListner(undefined);
+
     this.subscriptions.unsubscribe();
     this.ws.disconnect();
     this.diagnostic?.log(EVENTS.DISCONNECTED, {
@@ -259,15 +273,11 @@ export class WalletLinkConnection {
     );
   }
 
-  setSessionConfigListner(listner: (_: SessionConfig) => void) {
-    this.sessionConfigListner = listner;
-  }
-
   /**
    * Emit incoming Event messages
    * @returns an Observable for the messages
    */
-  public get incomingEvent$(): Observable<ServerMessageEvent> {
+  private get incomingEvent$(): Observable<ServerMessageEvent> {
     return this.ws.incomingJSONData$.pipe(
       filter((m) => {
         if (m.type !== 'Event') {

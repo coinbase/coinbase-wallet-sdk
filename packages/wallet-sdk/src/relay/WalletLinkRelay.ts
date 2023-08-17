@@ -3,7 +3,7 @@
 
 import bind from 'bind-decorator';
 import { Subscription } from 'rxjs';
-import { filter, skip, tap } from 'rxjs/operators';
+import { skip, tap } from 'rxjs/operators';
 
 import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
 import { EventListener } from '../connection/EventListener';
@@ -145,11 +145,11 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       this.diagnostic
     );
 
-    this.subscriptions.add(
-      connection.incomingEvent$
-        .pipe(filter((m) => m.event === 'Web3Response'))
-        .subscribe({ next: this.handleIncomingEvent }) // eslint-disable-line @typescript-eslint/unbound-method
-    );
+    connection.setIncomingEventListner((m: ServerMessageEvent) => {
+      if (m.event !== 'Web3Response') return;
+
+      this.handleIncomingEvent(m);
+    });
 
     this.subscriptions.add(
       connection.linked$
