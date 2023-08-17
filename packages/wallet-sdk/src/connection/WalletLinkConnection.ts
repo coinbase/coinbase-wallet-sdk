@@ -58,10 +58,25 @@ export class WalletLinkConnection {
   private connectedSubject = new BehaviorSubject(false);
   private linkedSubject = new BehaviorSubject(false);
 
-  sessionConfigListner?: (_: SessionConfig) => void;
-  incomingEventListner?: (_: ServerMessageEvent) => void;
-  linkedListner?: (_: boolean) => void;
-  connectedListner?: (_: boolean) => void;
+  private sessionConfigListner?: (_: SessionConfig) => void;
+  setSessionConfigListner(listener: (_: SessionConfig) => void): void {
+    this.sessionConfigListner = listener;
+  }
+
+  private incomingEventListner?: (_: ServerMessageEvent) => void;
+  setIncomingEventListner(listener: (_: ServerMessageEvent) => void): void {
+    this.incomingEventListner = listener;
+  }
+
+  private linkedListner?: (_: boolean) => void;
+  setLinkedListner(listener: (_: boolean) => void): void {
+    this.linkedListner = listener;
+  }
+
+  private connectedListner?: (_: boolean) => void;
+  setConnectedListner(listener: (_: boolean) => void): void {
+    this.connectedListner = listener;
+  }
 
   /**
    * Constructor

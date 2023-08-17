@@ -142,13 +142,13 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       this.diagnostic
     );
 
-    connection.incomingEventListner = (m: ServerMessageEvent) => {
+    connection.setIncomingEventListner((m: ServerMessageEvent) => {
       if (m.event === 'Web3Response') {
         this.handleIncomingEvent(m);
       }
-    };
+    });
 
-    connection.linkedListner = (linked: boolean) => {
+    connection.setLinkedListner((linked: boolean) => {
       this.isLinked = linked;
       const cachedAddresses = this.storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
 
@@ -170,9 +170,9 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
           });
         }
       }
-    };
+    });
 
-    connection.sessionConfigListner = (c: SessionConfig) => {
+    connection.setSessionConfigListner((c: SessionConfig) => {
       try {
         this.onSessionConfigChanged(c);
       } catch {
@@ -294,7 +294,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
             });
           });
       }
-    };
+    });
 
     const ui = this.options.uiConstructor({
       linkAPIUrl: this.options.linkAPIUrl,
@@ -305,9 +305,9 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       chainId: this.dappDefaultChain,
     });
 
-    connection.connectedListner = (connected) => {
+    connection.setConnectedListner((connected) => {
       (ui as WalletLinkRelayUI).setConnected(connected);
-    };
+    });
 
     connection.connect();
 
