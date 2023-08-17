@@ -221,9 +221,6 @@ export class WalletLinkConnection {
    * instance of WalletSDKConnection
    */
   public destroy(): void {
-    this.sessionConfigListner = undefined;
-    this.incomingEventListner = undefined;
-
     this.subscriptions.unsubscribe();
     this.ws.disconnect();
     this.diagnostic?.log(EVENTS.DISCONNECTED, {

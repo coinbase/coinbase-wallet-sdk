@@ -87,7 +87,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   protected readonly diagnostic?: DiagnosticLogger;
   private connection: WalletLinkConnection;
   private accountsCallback: ((account: string[], isDisconnect?: boolean) => void) | null = null;
-  private chainCallbackParams = { chainId: '', jsonRpcUrl: '' };
+  private chainCallbackParams = { chainId: '', jsonRpcUrl: '' }; // to implement distinctUntilChanged
   private chainCallback: ((chainId: string, jsonRpcUrl: string) => void) | null = null;
   protected dappDefaultChain = 1;
   private readonly options: WalletLinkRelayOptions;
