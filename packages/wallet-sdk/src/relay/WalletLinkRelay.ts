@@ -2,7 +2,6 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from 'bind-decorator';
-import { Subscription } from 'rxjs';
 
 import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
 import { EventListener } from '../connection/EventListener';
@@ -96,7 +95,6 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
 
   protected appName = '';
   protected appLogoUrl: string | null = null;
-  private subscriptions = new Subscription();
   private _reloadOnDisconnect: boolean;
   isLinked: boolean | undefined;
   isUnlinkedErrorState: boolean | undefined;
@@ -329,14 +327,6 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       .then((_) => {
         const isStandalone = this.ui.isStandalone();
 
-        try {
-          this.subscriptions.unsubscribe();
-        } catch (err) {
-          this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-            message: 'Had error unsubscribing',
-          });
-        }
-
         this.diagnostic?.log(EVENTS.SESSION_STATE_CHANGE, {
           method: 'relay::resetAndReload',
           sessionMetadataChange: '__destroyed, 1',
@@ -370,7 +360,6 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
           this.accountsCallback([], true);
         }
 
-        this.subscriptions = new Subscription();
         const { session, ui, connection } = this.subscribe();
         this._session = session;
         this.connection = connection;
