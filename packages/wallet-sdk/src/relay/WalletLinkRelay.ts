@@ -145,11 +145,11 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       this.diagnostic
     );
 
-    connection.setIncomingEventListner((m: ServerMessageEvent) => {
-      if (m.event !== 'Web3Response') return;
-
-      this.handleIncomingEvent(m);
-    });
+    connection.incomingEventListner = (m: ServerMessageEvent) => {
+      if (m.event === 'Web3Response') {
+        this.handleIncomingEvent(m);
+      }
+    };
 
     this.subscriptions.add(
       connection.linked$
@@ -188,7 +188,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
         .subscribe()
     );
 
-    connection.setSessionConfigListner((c: SessionConfig) => {
+    connection.sessionConfigListner = (c: SessionConfig) => {
       try {
         this.onSessionConfigChanged(c);
       } catch {
@@ -310,7 +310,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
             });
           });
       }
-    });
+    };
 
     const ui = this.options.uiConstructor({
       linkAPIUrl: this.options.linkAPIUrl,

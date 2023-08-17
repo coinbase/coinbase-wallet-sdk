@@ -58,15 +58,8 @@ export class WalletLinkConnection {
   private connectedSubject = new BehaviorSubject(false);
   private linkedSubject = new BehaviorSubject(false);
 
-  private sessionConfigListner?: (_: SessionConfig) => void;
-  setSessionConfigListner(listner: (_: SessionConfig) => void) {
-    this.sessionConfigListner = listner;
-  }
-
-  private incomingEventListner?: (_: ServerMessageEvent) => void;
-  setIncomingEventListner(listner: (_: ServerMessageEvent) => void) {
-    this.incomingEventListner = listner;
-  }
+  sessionConfigListner?: (_: SessionConfig) => void;
+  incomingEventListner?: (_: ServerMessageEvent) => void;
 
   /**
    * Constructor
@@ -197,7 +190,11 @@ export class WalletLinkConnection {
         })
     );
 
-    this.subscriptions.add(this.incomingEvent$.subscribe((m) => this.incomingEventListner?.(m)));
+    this.subscriptions.add(
+      this.incomingEvent$.subscribe((m) => {
+        this.incomingEventListner?.(m);
+      })
+    );
   }
 
   /**
@@ -218,8 +215,8 @@ export class WalletLinkConnection {
    * instance of WalletSDKConnection
    */
   public destroy(): void {
-    this.setSessionConfigListner(undefined);
-    this.setIncomingEventListner(undefined);
+    this.sessionConfigListner = undefined;
+    this.incomingEventListner = undefined;
 
     this.subscriptions.unsubscribe();
     this.ws.disconnect();
