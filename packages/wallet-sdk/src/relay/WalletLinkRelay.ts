@@ -307,11 +307,9 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       chainId: this.dappDefaultChain,
     });
 
-    this.subscriptions.add(
-      connection.connected$.subscribe((connected) => {
-        (ui as WalletLinkRelayUI).setConnected(connected);
-      })
-    );
+    connection.connectedListner = (connected) => {
+      (ui as WalletLinkRelayUI).setConnected(connected);
+    };
 
     connection.connect();
 
