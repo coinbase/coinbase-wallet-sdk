@@ -61,6 +61,7 @@ export class WalletLinkConnection {
   sessionConfigListner?: (_: SessionConfig) => void;
   incomingEventListner?: (_: ServerMessageEvent) => void;
   linkedListner?: (_: boolean) => void;
+  connectedListner?: (_: boolean) => void;
 
   /**
    * Constructor
@@ -127,7 +128,10 @@ export class WalletLinkConnection {
           distinctUntilChanged(),
           catchError((_) => of(false))
         )
-        .subscribe((connected) => this.connectedSubject.next(connected))
+        .subscribe((connected) => {
+          this.connectedSubject.next(connected);
+          this.connectedListner?.(connected);
+        })
     );
 
     // send heartbeat every n seconds while connected
@@ -168,6 +172,7 @@ export class WalletLinkConnection {
             type: m.type,
             onlineGuests: msg.onlineGuests,
           });
+          this.linkedSubject.next(msg.linked || msg.onlineGuests > 0);
           this.linkedListner?.(msg.linked || msg.onlineGuests > 0);
         })
     );
