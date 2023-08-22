@@ -366,7 +366,7 @@ export class SolanaProvider extends EventEmitter implements SolanaWeb3Provider {
           },
         },
       };
-      window.postMessage(message, '*');
+      window.postMessage(message, window.origin);
     }
   }
 }
