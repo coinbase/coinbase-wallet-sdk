@@ -84,7 +84,7 @@ describe('Solana Provider', () => {
     const connectionPromise = solanaProvider.connect();
 
     expect(window.postMessage).toHaveBeenCalledWith(firstConnectMessage, '*');
-    expect(window.postMessage).toHaveBeenCalledWith(requestMessage, '*');
+    expect(window.postMessage).toHaveBeenCalledWith(requestMessage, 'http://localhost');
     expect(scopedStorageCopy.getItem('Addresses')).toBe(null);
 
     solanaProvider.handleResponse(responseMessage);
@@ -197,7 +197,7 @@ describe('Solana Provider', () => {
 
       const signMessagePromise = solanaProvider.signMessage(message);
 
-      expect(window.postMessage).toHaveBeenCalledWith(requestMessage, '*');
+      expect(window.postMessage).toHaveBeenCalledWith(requestMessage, 'http://localhost');
 
       solanaProvider.handleResponse(responseMessage);
 
@@ -245,7 +245,7 @@ describe('Solana Provider', () => {
 
       solanaProvider.handleResponse(responseMessage);
 
-      expect(window.postMessage).toHaveBeenCalledWith(requestMessage, '*');
+      expect(window.postMessage).toHaveBeenCalledWith(requestMessage, 'http://localhost');
       expect(solanaProvider.getCallback(eventId)).toBeFalsy();
       return expect(signTransactionPromise).resolves.toBe(mockSolanaSignedTransaction);
     });
@@ -322,7 +322,7 @@ describe('Solana Provider', () => {
 
       solanaProvider.handleResponse(responseMessage);
 
-      expect(window.postMessage).toHaveBeenCalledWith(requestMessage, '*');
+      expect(window.postMessage).toHaveBeenCalledWith(requestMessage, 'http://localhost');
       expect(solanaProvider.getCallback(eventId)).toBeFalsy();
       return expect(signAllTransactionsPromise).resolves.toEqual(solSignedTransactions);
     });
@@ -435,7 +435,7 @@ describe('Solana Provider', () => {
 
       solanaProvider.handleResponse(responseMessage);
 
-      expect(window.postMessage).toHaveBeenCalledWith(requestMessage, '*');
+      expect(window.postMessage).toHaveBeenCalledWith(requestMessage, 'http://localhost');
       expect(solanaProvider.getCallback(eventId)).toBeFalsy();
       return expect(sendTransactionPromise).resolves.toEqual({
         signature: mockTxHash,
