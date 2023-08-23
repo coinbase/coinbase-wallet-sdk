@@ -276,7 +276,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
           .catch(() => {
             this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
               message: 'Had error decrypting',
-              value: 'ethereumAddress',
+              value: 'selectedAddress',
             });
           });
       }
@@ -305,9 +305,11 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       chainId: this.dappDefaultChain,
     });
 
-    connection.setConnectedListner((connected) => {
-      (ui as WalletLinkRelayUI).setConnected(connected);
-    });
+    if (ui instanceof WalletLinkRelayUI) {
+      connection.setConnectedListner((connected) => {
+        ui.setConnected(connected);
+      });
+    }
 
     connection.connect();
 
@@ -577,7 +579,9 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
 
   public setDappDefaultChainCallback(chainId: number) {
     this.dappDefaultChain = chainId;
-    (this.ui as WalletLinkRelayUI).setChainId(chainId);
+    if (this.ui instanceof WalletLinkRelayUI) {
+      this.ui.setChainId(chainId);
+    }
   }
 
   protected publishWeb3RequestEvent(id: string, request: Web3Request): void {
