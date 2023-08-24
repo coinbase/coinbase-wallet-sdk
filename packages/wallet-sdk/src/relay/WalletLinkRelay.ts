@@ -326,7 +326,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       this.connection.setSessionMetadata('__destroyed', '1'),
       new Promise((resolve) => setTimeout(() => resolve(null), 1000)),
     ])
-      .then((_) => {
+      .then(() => {
         const isStandalone = this.ui.isStandalone();
 
         this.diagnostic?.log(EVENTS.SESSION_STATE_CHANGE, {
