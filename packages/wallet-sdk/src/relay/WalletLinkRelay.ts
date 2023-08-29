@@ -2,17 +2,6 @@
 // Licensed under the Apache License, version 2.0
 
 import bind from 'bind-decorator';
-import { BehaviorSubject, from, Observable, of, Subscription, zip } from 'rxjs';
-import {
-  catchError,
-  distinctUntilChanged,
-  filter,
-  map,
-  mergeMap,
-  skip,
-  tap,
-  timeout,
-} from 'rxjs/operators';
 
 import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
 import { EventListener } from '../connection/EventListener';
@@ -97,8 +86,8 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   protected readonly diagnostic?: DiagnosticLogger;
   private connection: WalletLinkConnection;
   private accountsCallback: ((account: string[], isDisconnect?: boolean) => void) | null = null;
+  private chainCallbackParams = { chainId: '', jsonRpcUrl: '' }; // to implement distinctUntilChanged
   private chainCallback: ((chainId: string, jsonRpcUrl: string) => void) | null = null;
-  private dappDefaultChainSubject = new BehaviorSubject(1);
   protected dappDefaultChain = 1;
   private readonly options: WalletLinkRelayOptions;
 
@@ -106,7 +95,6 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
 
   protected appName = '';
   protected appLogoUrl: string | null = null;
-  private subscriptions = new Subscription();
   private _reloadOnDisconnect: boolean;
   isLinked: boolean | undefined;
   isUnlinkedErrorState: boolean | undefined;
@@ -145,14 +133,6 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   }
 
   public subscribe() {
-    this.subscriptions.add(
-      this.dappDefaultChainSubject.subscribe((chainId) => {
-        if (this.dappDefaultChain !== chainId) {
-          this.dappDefaultChain = chainId;
-        }
-      })
-    );
-
     const session = Session.load(this.storage) || new Session(this.storage).save();
 
     const connection = new WalletLinkConnection(
@@ -162,148 +142,119 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       this.diagnostic
     );
 
-    this.subscriptions.add(
-      connection.sessionConfig$.subscribe({
-        next: (sessionConfig) => {
-          this.onSessionConfigChanged(sessionConfig);
-        },
-        error: () => {
-          this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-            message: 'error while invoking session config callback',
+    connection.setIncomingEventListener((m: ServerMessageEvent) => {
+      if (m.event === 'Web3Response') {
+        this.handleIncomingEvent(m);
+      }
+    });
+
+    connection.setLinkedListener((linked: boolean) => {
+      this.isLinked = linked;
+      const cachedAddresses = this.storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
+
+      if (linked) {
+        // Only set linked session variable one way
+        this.session.linked = linked;
+      }
+
+      this.isUnlinkedErrorState = false;
+
+      if (cachedAddresses) {
+        const addresses = cachedAddresses.split(' ') as AddressString[];
+        const wasConnectedViaStandalone = this.storage.getItem('IsStandaloneSigning') === 'true';
+        if (addresses[0] !== '' && !linked && this.session.linked && !wasConnectedViaStandalone) {
+          this.isUnlinkedErrorState = true;
+          const sessionIdHash = this.getSessionIdHash();
+          this.diagnostic?.log(EVENTS.UNLINKED_ERROR_STATE, {
+            sessionIdHash,
           });
-        },
-      })
-    );
+        }
+      }
+    });
 
-    this.subscriptions.add(
-      connection.incomingEvent$
-        .pipe(filter((m) => m.event === 'Web3Response'))
-        .subscribe({ next: this.handleIncomingEvent }) // eslint-disable-line @typescript-eslint/unbound-method
-    );
+    connection.setSessionConfigListener((c: SessionConfig) => {
+      try {
+        this.onSessionConfigChanged(c);
+      } catch {
+        this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
+          message: 'error while invoking session config callback',
+        });
+      }
 
-    this.subscriptions.add(
-      connection.linked$
-        .pipe(
-          skip(1),
-          tap((linked: boolean) => {
-            this.isLinked = linked;
-            const cachedAddresses = this.storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
+      if (!c.metadata) return;
 
-            if (linked) {
-              // Only set linked session variable one way
-              this.session.linked = linked;
-            }
+      // if session is marked destroyed, reset and reload
+      if (c.metadata.__destroyed === '1') {
+        const alreadyDestroyed = connection.isDestroyed;
+        this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
+          alreadyDestroyed,
+          sessionIdHash: this.getSessionIdHash(),
+        });
+        this.resetAndReload();
+      }
 
-            this.isUnlinkedErrorState = false;
-
-            if (cachedAddresses) {
-              const addresses = cachedAddresses.split(' ') as AddressString[];
-              const wasConnectedViaStandalone =
-                this.storage.getItem('IsStandaloneSigning') === 'true';
-              if (
-                addresses[0] !== '' &&
-                !linked &&
-                this.session.linked &&
-                !wasConnectedViaStandalone
-              ) {
-                this.isUnlinkedErrorState = true;
-                const sessionIdHash = this.getSessionIdHash();
-                this.diagnostic?.log(EVENTS.UNLINKED_ERROR_STATE, {
-                  sessionIdHash,
-                });
-              }
-            }
-          })
-        )
-        .subscribe()
-    );
-
-    // if session is marked destroyed, reset and reload
-    this.subscriptions.add(
-      connection.sessionConfig$
-        .pipe(filter((c) => !!c.metadata && c.metadata.__destroyed === '1'))
-        .subscribe(() => {
-          const alreadyDestroyed = connection.isDestroyed;
-          this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
-            alreadyDestroyed,
-            sessionIdHash: this.getSessionIdHash(),
-          });
-          return this.resetAndReload();
-        })
-    );
-
-    this.subscriptions.add(
-      connection.sessionConfig$
-        .pipe(filter((c) => c.metadata && c.metadata.WalletUsername !== undefined))
-        .pipe(mergeMap((c) => aes256gcm.decrypt(c.metadata.WalletUsername!, session.secret)))
-        .subscribe({
-          next: (walletUsername) => {
+      if (c.metadata.WalletUsername !== undefined) {
+        aes256gcm
+          .decrypt(c.metadata.WalletUsername!, session.secret)
+          .then((walletUsername) => {
             this.storage.setItem(WALLET_USER_NAME_KEY, walletUsername);
-          },
-          error: () => {
+          })
+          .catch(() => {
             this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
               message: 'Had error decrypting',
               value: 'username',
             });
-          },
-        })
-    );
+          });
+      }
 
-    this.subscriptions.add(
-      connection.sessionConfig$
-        .pipe(filter((c) => c.metadata && c.metadata.AppVersion !== undefined))
-        .pipe(mergeMap((c) => aes256gcm.decrypt(c.metadata.AppVersion!, session.secret)))
-        .subscribe({
-          next: (appVersion) => {
+      if (c.metadata.AppVersion !== undefined) {
+        aes256gcm
+          .decrypt(c.metadata.AppVersion!, session.secret)
+          .then((appVersion) => {
             this.storage.setItem(APP_VERSION_KEY, appVersion);
-          },
-          error: () => {
+          })
+          .catch(() => {
             this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
               message: 'Had error decrypting',
               value: 'appversion',
             });
-          },
-        })
-    );
+          });
+      }
 
-    this.subscriptions.add(
-      connection.sessionConfig$
-        .pipe(
-          filter(
-            (c) =>
-              c.metadata && c.metadata.ChainId !== undefined && c.metadata.JsonRpcUrl !== undefined
-          )
-        )
-        .pipe(
-          mergeMap((c) =>
-            zip(
-              aes256gcm.decrypt(c.metadata.ChainId!, session.secret),
-              aes256gcm.decrypt(c.metadata.JsonRpcUrl!, session.secret)
-            )
-          )
-        )
-        .pipe(distinctUntilChanged())
-        .subscribe({
-          next: ([chainId, jsonRpcUrl]) => {
+      if (c.metadata.ChainId !== undefined && c.metadata.JsonRpcUrl !== undefined) {
+        Promise.all([
+          aes256gcm.decrypt(c.metadata.ChainId!, session.secret),
+          aes256gcm.decrypt(c.metadata.JsonRpcUrl!, session.secret),
+        ])
+          .then(([chainId, jsonRpcUrl]) => {
+            // custom distinctUntilChanged
+            if (
+              this.chainCallbackParams.chainId === chainId &&
+              this.chainCallbackParams.jsonRpcUrl === jsonRpcUrl
+            ) {
+              return;
+            }
+            this.chainCallbackParams = {
+              chainId,
+              jsonRpcUrl,
+            };
+
             if (this.chainCallback) {
               this.chainCallback(chainId, jsonRpcUrl);
             }
-          },
-          error: () => {
+          })
+          .catch(() => {
             this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
               message: 'Had error decrypting',
               value: 'chainId|jsonRpcUrl',
             });
-          },
-        })
-    );
+          });
+      }
 
-    this.subscriptions.add(
-      connection.sessionConfig$
-        .pipe(filter((c) => c.metadata && c.metadata.EthereumAddress !== undefined))
-        .pipe(mergeMap((c) => aes256gcm.decrypt(c.metadata.EthereumAddress!, session.secret)))
-        .subscribe({
-          next: (selectedAddress) => {
+      if (c.metadata.EthereumAddress !== undefined) {
+        aes256gcm
+          .decrypt(c.metadata.EthereumAddress!, session.secret)
+          .then((selectedAddress) => {
             if (this.accountsCallback) {
               this.accountsCallback([selectedAddress]);
             }
@@ -321,32 +272,29 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
               });
               WalletLinkRelay.accountRequestCallbackIds.clear();
             }
-          },
-          error: () => {
+          })
+          .catch(() => {
             this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
               message: 'Had error decrypting',
               value: 'selectedAddress',
             });
-          },
-        })
-    );
+          });
+      }
 
-    this.subscriptions.add(
-      connection.sessionConfig$
-        .pipe(filter((c) => c.metadata && c.metadata.AppSrc !== undefined))
-        .pipe(mergeMap((c) => aes256gcm.decrypt(c.metadata.AppSrc!, session.secret)))
-        .subscribe({
-          next: (appSrc) => {
+      if (c.metadata.AppSrc !== undefined) {
+        aes256gcm
+          .decrypt(c.metadata.AppSrc!, session.secret)
+          .then((appSrc) => {
             this.ui.setAppSrc(appSrc);
-          },
-          error: () => {
+          })
+          .catch(() => {
             this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
               message: 'Had error decrypting',
               value: 'appSrc',
             });
-          },
-        })
-    );
+          });
+      }
+    });
 
     const ui = this.options.uiConstructor({
       linkAPIUrl: this.options.linkAPIUrl,
@@ -357,17 +305,11 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       chainId: this.dappDefaultChain,
     });
 
-    this.subscriptions.add(
-      connection.connected$.subscribe((connected) => {
-        (ui as WalletLinkRelayUI).setConnected(connected);
-      })
-    );
-
-    this.subscriptions.add(
-      this.dappDefaultChainSubject.subscribe((chainId) => {
-        (ui as WalletLinkRelayUI).setChainId(chainId);
-      })
-    );
+    if (ui instanceof WalletLinkRelayUI) {
+      connection.setConnectedListener((connected) => {
+        ui.setConnected(connected);
+      });
+    }
 
     connection.connect();
 
@@ -380,75 +322,62 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
 
   @bind
   public resetAndReload(): void {
-    this.connection
-      .setSessionMetadata('__destroyed', '1')
-      .pipe(
-        timeout(1000),
-        catchError((_) => of(null))
-      )
-      .subscribe(
-        (_) => {
-          const isStandalone = this.ui.isStandalone();
+    Promise.race([
+      this.connection.setSessionMetadata('__destroyed', '1'),
+      new Promise((resolve) => setTimeout(() => resolve(null), 1000)),
+    ])
+      .then(() => {
+        const isStandalone = this.ui.isStandalone();
 
-          try {
-            this.subscriptions.unsubscribe();
-          } catch (err) {
-            this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-              message: 'Had error unsubscribing',
-            });
-          }
-
-          this.diagnostic?.log(EVENTS.SESSION_STATE_CHANGE, {
-            method: 'relay::resetAndReload',
-            sessionMetadataChange: '__destroyed, 1',
+        this.diagnostic?.log(EVENTS.SESSION_STATE_CHANGE, {
+          method: 'relay::resetAndReload',
+          sessionMetadataChange: '__destroyed, 1',
+          sessionIdHash: this.getSessionIdHash(),
+        });
+        this.connection.destroy();
+        /**
+         * Only clear storage if the session id we have in memory matches the one on disk
+         * Otherwise, in the case where we have 2 tabs, another tab might have cleared
+         * storage already.  In that case if we clear storage again, the user will be in
+         * a state where the first tab allows the user to connect but the session that
+         * was used isn't persisted.  This leaves the user in a state where they aren't
+         * connected to the mobile app.
+         */
+        const storedSession = Session.load(this.storage);
+        if (storedSession?.id === this._session.id) {
+          this.storage.clear();
+        } else if (storedSession) {
+          this.diagnostic?.log(EVENTS.SKIPPED_CLEARING_SESSION, {
             sessionIdHash: this.getSessionIdHash(),
-          });
-          this.connection.destroy();
-          /**
-           * Only clear storage if the session id we have in memory matches the one on disk
-           * Otherwise, in the case where we have 2 tabs, another tab might have cleared
-           * storage already.  In that case if we clear storage again, the user will be in
-           * a state where the first tab allows the user to connect but the session that
-           * was used isn't persisted.  This leaves the user in a state where they aren't
-           * connected to the mobile app.
-           */
-          const storedSession = Session.load(this.storage);
-          if (storedSession?.id === this._session.id) {
-            this.storage.clear();
-          } else if (storedSession) {
-            this.diagnostic?.log(EVENTS.SKIPPED_CLEARING_SESSION, {
-              sessionIdHash: this.getSessionIdHash(),
-              storedSessionIdHash: Session.hash(storedSession.id),
-            });
-          }
-
-          if (this._reloadOnDisconnect) {
-            this.ui.reloadUI();
-            return;
-          }
-
-          if (this.accountsCallback) {
-            this.accountsCallback([], true);
-          }
-
-          this.subscriptions = new Subscription();
-          const { session, ui, connection } = this.subscribe();
-          this._session = session;
-          this.connection = connection;
-          this.ui = ui;
-
-          if (isStandalone && this.ui.setStandalone) this.ui.setStandalone(true);
-
-          this.attachUI();
-        },
-        (err: string) => {
-          this.diagnostic?.log(EVENTS.FAILURE, {
-            method: 'relay::resetAndReload',
-            message: `failed to reset and reload with ${err}`,
-            sessionIdHash: this.getSessionIdHash(),
+            storedSessionIdHash: Session.hash(storedSession.id),
           });
         }
-      );
+
+        if (this._reloadOnDisconnect) {
+          this.ui.reloadUI();
+          return;
+        }
+
+        if (this.accountsCallback) {
+          this.accountsCallback([], true);
+        }
+
+        const { session, ui, connection } = this.subscribe();
+        this._session = session;
+        this.connection = connection;
+        this.ui = ui;
+
+        if (isStandalone && this.ui.setStandalone) this.ui.setStandalone(true);
+
+        this.attachUI();
+      })
+      .catch((err: string) => {
+        this.diagnostic?.log(EVENTS.FAILURE, {
+          method: 'relay::resetAndReload',
+          message: `failed to reset and reload with ${err}`,
+          sessionIdHash: this.getSessionIdHash(),
+        });
+      });
   }
 
   public setAppInfo(appName: string, appLogoUrl: string | null): void {
@@ -649,7 +578,10 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   }
 
   public setDappDefaultChainCallback(chainId: number) {
-    this.dappDefaultChainSubject.next(chainId);
+    this.dappDefaultChain = chainId;
+    if (this.ui instanceof WalletLinkRelayUI) {
+      this.ui.setChainId(chainId);
+    }
   }
 
   protected publishWeb3RequestEvent(id: string, request: Web3Request): void {
@@ -663,90 +595,74 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       isSessionMismatched: (storedSession?.id !== this._session.id).toString(),
     });
 
-    this.subscriptions.add(
-      this.publishEvent('Web3Request', message, true).subscribe({
-        next: (_) => {
-          this.diagnostic?.log(EVENTS.WEB3_REQUEST_PUBLISHED, {
-            eventId: message.id,
-            method: `relay::${message.request.method}`,
-            sessionIdHash: this.getSessionIdHash(),
-            storedSessionIdHash: storedSession ? Session.hash(storedSession.id) : '',
-            isSessionMismatched: (storedSession?.id !== this._session.id).toString(),
-          });
-        },
-        error: (err) => {
-          this.handleWeb3ResponseMessage(
-            Web3ResponseMessage({
-              id: message.id,
-              response: {
-                method: message.request.method,
-                errorMessage: err.message,
-              },
-            })
-          );
-        },
+    this.publishEvent('Web3Request', message, true)
+      .then((_) => {
+        this.diagnostic?.log(EVENTS.WEB3_REQUEST_PUBLISHED, {
+          eventId: message.id,
+          method: `relay::${message.request.method}`,
+          sessionIdHash: this.getSessionIdHash(),
+          storedSessionIdHash: storedSession ? Session.hash(storedSession.id) : '',
+          isSessionMismatched: (storedSession?.id !== this._session.id).toString(),
+        });
       })
-    );
+      .catch((err) => {
+        this.handleWeb3ResponseMessage(
+          Web3ResponseMessage({
+            id: message.id,
+            response: {
+              method: message.request.method,
+              errorMessage: err.message,
+            },
+          })
+        );
+      });
   }
 
   private publishWeb3RequestCanceledEvent(id: string) {
     const message = Web3RequestCanceledMessage(id);
-    this.subscriptions.add(this.publishEvent('Web3RequestCanceled', message, false).subscribe());
+    this.publishEvent('Web3RequestCanceled', message, false).then();
   }
 
-  protected publishEvent(
+  private publishEvent(
     event: string,
     message: RelayMessage,
     callWebhook: boolean
-  ): Observable<string> {
+  ): Promise<string> {
     const secret = this.session.secret;
-    return new Observable<string>((subscriber) => {
-      void aes256gcm
-        .encrypt(
-          JSON.stringify({
-            ...message,
-            origin: location.origin,
-            relaySource: window.coinbaseWalletExtension ? 'injected_sdk' : 'sdk',
-          }),
-          secret
-        )
-        .then((encrypted: string) => {
-          subscriber.next(encrypted);
-          subscriber.complete();
-        });
-    }).pipe(
-      mergeMap((encrypted: string) => {
-        return this.connection.publishEvent(event, encrypted, callWebhook);
-      })
-    );
+    return aes256gcm
+      .encrypt(
+        JSON.stringify({
+          ...message,
+          origin: location.origin,
+          relaySource: window.coinbaseWalletExtension ? 'injected_sdk' : 'sdk',
+        }),
+        secret
+      )
+      .then((encrypted: string) =>
+        this.connection.publishEvent(event, encrypted, callWebhook).toPromise()
+      );
   }
 
   @bind
   private handleIncomingEvent(event: ServerMessageEvent): void {
-    try {
-      this.subscriptions.add(
-        from(aes256gcm.decrypt(event.data, this.session.secret))
-          .pipe(map((c) => JSON.parse(c)))
-          .subscribe({
-            next: (json) => {
-              const message = isWeb3ResponseMessage(json) ? json : null;
-              if (!message) {
-                return;
-              }
+    aes256gcm
+      .decrypt(event.data, this.session.secret)
+      .then((decryptedData) => {
+        const json = JSON.parse(decryptedData);
+        const message = isWeb3ResponseMessage(json) ? json : null;
 
-              this.handleWeb3ResponseMessage(message);
-            },
-            error: () => {
-              this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-                message: 'Had error decrypting',
-                value: 'incomingEvent',
-              });
-            },
-          })
-      );
-    } catch {
-      return;
-    }
+        if (!message) {
+          return;
+        }
+
+        this.handleWeb3ResponseMessage(message);
+      })
+      .catch(() => {
+        this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
+          message: 'Had error decrypting',
+          value: 'incomingEvent',
+        });
+      });
   }
 
   protected handleWeb3ResponseMessage(message: Web3ResponseMessage) {

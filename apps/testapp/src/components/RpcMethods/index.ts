@@ -2,7 +2,7 @@ export type RpcMethod = {
   connected?: boolean;
   method: string;
   params: Array<{ key: string; required?: boolean }>;
-  format?: (data: Record<string, string>) => Record<string, string>;
+  format?: (data: Record<string, string>) => [Record<string, string>];
 };
 
 const ethRequestAccounts = {
@@ -18,9 +18,11 @@ const ethAccounts = {
 const switchEthereumChain = {
   method: 'wallet_switchEthereumChain',
   params: [{ key: 'chainId', required: true }],
-  format: (data: Record<string, string>) => ({
-    chainId: `0x${Number(data.chainId).toString(16)}`,
-  }),
+  format: (data: Record<string, string>) => [
+    {
+      chainId: `0x${Number(data.chainId).toString(16)}`,
+    },
+  ],
 };
 
 const addEthereumChain = {
@@ -36,18 +38,20 @@ const addEthereumChain = {
     { key: 'blockExplorerUrl' },
     { key: 'iconUrl' },
   ],
-  format: (data: Record<string, string>) => ({
-    chainId: `0x${Number(data.chainId).toString(16)}`,
-    chainName: data.chainName,
-    rpcUrls: [data.rpcUrl],
-    blockExplorerUrls: [data.blockExplorerUrls],
-    iconUrls: [data.iconUrl],
-    nativeCurrency: {
-      name: 'ETH',
-      symbol: 'ETH',
-      decimals: 18,
+  format: (data: Record<string, string>) => [
+    {
+      chainId: `0x${Number(data.chainId).toString(16)}`,
+      chainName: data.chainName,
+      rpcUrls: [data.rpcUrl],
+      blockExplorerUrls: [data.blockExplorerUrls],
+      iconUrls: [data.iconUrl],
+      nativeCurrency: {
+        name: 'ETH',
+        symbol: 'ETH',
+        decimals: 18,
+      },
     },
-  }),
+  ],
 };
 
 const personal_sign = {

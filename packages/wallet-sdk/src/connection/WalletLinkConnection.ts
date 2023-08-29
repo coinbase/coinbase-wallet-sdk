@@ -1,16 +1,7 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import {
-  BehaviorSubject,
-  iif,
-  Observable,
-  of,
-  ReplaySubject,
-  Subscription,
-  throwError,
-  timer,
-} from 'rxjs';
+import { BehaviorSubject, iif, Observable, of, Subscription, throwError, timer } from 'rxjs';
 import {
   catchError,
   delay,
@@ -66,7 +57,25 @@ export class WalletLinkConnection {
   private nextReqId = IntNumber(1);
   private connectedSubject = new BehaviorSubject(false);
   private linkedSubject = new BehaviorSubject(false);
-  private sessionConfigSubject = new ReplaySubject<SessionConfig>(1);
+
+  private sessionConfigListener?: (_: SessionConfig) => void;
+  setSessionConfigListener(listener: (_: SessionConfig) => void): void {
+    this.sessionConfigListener = listener;
+  }
+
+  private linkedListener?: (_: boolean) => void;
+  setLinkedListener(listener: (_: boolean) => void): void {
+    this.linkedListener = listener;
+  }
+
+  private connectedListener?: (_: boolean) => void;
+  setConnectedListener(listener: (_: boolean) => void): void {
+    this.connectedListener = listener;
+  }
+
+  setIncomingEventListener(listener: (_: ServerMessageEvent) => void): void {
+    this.subscribeIncomingEvent(listener);
+  }
 
   /**
    * Constructor
@@ -133,7 +142,10 @@ export class WalletLinkConnection {
           distinctUntilChanged(),
           catchError((_) => of(false))
         )
-        .subscribe((connected) => this.connectedSubject.next(connected))
+        .subscribe((connected) => {
+          this.connectedSubject.next(connected);
+          this.connectedListener?.(connected);
+        })
     );
 
     // send heartbeat every n seconds while connected
@@ -175,6 +187,7 @@ export class WalletLinkConnection {
             onlineGuests: msg.onlineGuests,
           });
           this.linkedSubject.next(msg.linked || msg.onlineGuests > 0);
+          this.linkedListener?.(msg.linked || msg.onlineGuests > 0);
         })
     );
 
@@ -189,7 +202,7 @@ export class WalletLinkConnection {
             sessionIdHash: Session.hash(sessionId),
             metadata_keys: msg && msg.metadata ? Object.keys(msg.metadata) : undefined,
           });
-          this.sessionConfigSubject.next({
+          this.sessionConfigListener?.({
             webhookId: msg.webhookId,
             webhookUrl: msg.webhookUrl,
             metadata: msg.metadata,
@@ -269,33 +282,31 @@ export class WalletLinkConnection {
   }
 
   /**
-   * Emit current session config if available, and subsequent updates
-   * @returns an Observable for the session config
+   * Subscribe to incoming Event messages
    */
-  public get sessionConfig$(): Observable<SessionConfig> {
-    return this.sessionConfigSubject.asObservable();
-  }
+  private incomingEventSub?: Subscription;
+  private subscribeIncomingEvent(listener: (_: ServerMessageEvent) => void): void {
+    this.incomingEventSub?.unsubscribe();
 
-  /**
-   * Emit incoming Event messages
-   * @returns an Observable for the messages
-   */
-  public get incomingEvent$(): Observable<ServerMessageEvent> {
-    return this.ws.incomingJSONData$.pipe(
-      filter((m) => {
-        if (m.type !== 'Event') {
-          return false;
-        }
-        const sme = m as ServerMessageEvent;
-        return (
-          typeof sme.sessionId === 'string' &&
-          typeof sme.eventId === 'string' &&
-          typeof sme.event === 'string' &&
-          typeof sme.data === 'string'
-        );
-      }),
-      map((m) => m as ServerMessageEvent)
-    );
+    this.incomingEventSub = this.ws.incomingJSONData$
+      .pipe(
+        filter((m) => {
+          if (m.type !== 'Event') {
+            return false;
+          }
+          const sme = m as ServerMessageEvent;
+          return (
+            typeof sme.sessionId === 'string' &&
+            typeof sme.eventId === 'string' &&
+            typeof sme.event === 'string' &&
+            typeof sme.data === 'string'
+          );
+        }),
+        map((m) => m as ServerMessageEvent)
+      )
+      .subscribe((m) => {
+        listener(m);
+      });
   }
 
   /**
@@ -304,21 +315,21 @@ export class WalletLinkConnection {
    * @param value
    * @returns an Observable that completes when successful
    */
-  public setSessionMetadata(key: string, value: string | null): Observable<void> {
+  public setSessionMetadata(key: string, value: string | null): Promise<void> {
     const message = ClientMessageSetSessionConfig({
       id: IntNumber(this.nextReqId++),
       sessionId: this.sessionId,
       metadata: { [key]: value },
     });
 
-    return this.onceConnected$.pipe(
-      flatMap((_) => this.makeRequest<ServerMessageOK | ServerMessageFail>(message)),
-      map((res) => {
+    return this.onceConnected$
+      .toPromise()
+      .then(() => this.makeRequest<ServerMessageOK | ServerMessageFail>(message).toPromise())
+      .then((res) => {
         if (isServerMessageFail(res)) {
           throw new Error(res.error || 'failed to set session metadata');
         }
-      })
-    );
+      });
   }
 
   /**
