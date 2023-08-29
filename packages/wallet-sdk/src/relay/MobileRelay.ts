@@ -39,19 +39,90 @@ export class MobileRelay extends WalletLinkRelay {
 
     if (!(this._enableMobileWalletLink && this.ui instanceof MobileRelayUI)) return;
 
+    let navigatedToCBW = false;
+
     // For mobile relay requests, open the Coinbase Wallet app
     switch (request.method) {
       case Web3Method.requestEthereumAccounts:
       case Web3Method.connectAndSignIn:
+        navigatedToCBW = true;
         this.ui.openCoinbaseWalletDeeplink(this.getQRCodeUrl());
         break;
       case Web3Method.switchEthereumChain:
         // switchEthereumChain doesn't need to open the app
         return;
       default:
+        navigatedToCBW = true;
         this.ui.openCoinbaseWalletDeeplink();
         break;
     }
+
+    // If the user navigated to the Coinbase Wallet app, then we need to check
+    // for unseen events once the user returns to the browser
+    if (navigatedToCBW) {
+      window.addEventListener(
+        'blur',
+        () => {
+          window.addEventListener(
+            'focus',
+            () => {
+              this.connection.onceConnected$.subscribe(() => {
+                setTimeout(() => {
+                  this.connection
+                    .checkUnseenEvents()
+                    .catch((e) => console.error('Unable to check for unseen events', e));
+                }, 250);
+              });
+            },
+            { once: true }
+          );
+        },
+        { once: true }
+      );
+    }
+  }
+
+  // override
+  protected handleWeb3ResponseMessage(message: Web3ResponseMessage) {
+    super.handleWeb3ResponseMessage(message);
+
+    if (this._enableMobileWalletLink && this.ui instanceof MobileRelayUI) {
+      this.ui.closeOpenedWindow();
+    }
+  }
+
+  connectAndSignIn(params: {
+    nonce: string;
+    statement?: string;
+    resources?: string[];
+  }): CancelablePromise<ConnectAndSignInResponse> {
+    if (!this._enableMobileWalletLink) {
+      throw new Error('connectAndSignIn is supported only when enableMobileWalletLink is on');
+    }
+
+    return this.sendRequest<ConnectAndSignInRequest, ConnectAndSignInResponse>({
+      method: Web3Method.connectAndSignIn,
+      params: {
+        appName: this.appName,
+        appLogoUrl: this.appLogoUrl,
+
+        domain: window.location.hostname,
+        aud: window.location.href,
+        version: '1',
+        type: 'eip4361',
+        nonce: params.nonce,
+        iat: new Date().toISOString(),
+        chainId: `eip155:${this.dappDefaultChain}`,
+        statement: params.statement,
+        resources: params.resources,
+      },
+    });
+  }
+
+  setUseLocationMethod(useLocationMethod: boolean): void {
+    if (!(this.ui instanceof MobileRelayUI)) return;
+
+    this.ui.setUseLocationMethod(useLocationMethod);
   }
 
   // override

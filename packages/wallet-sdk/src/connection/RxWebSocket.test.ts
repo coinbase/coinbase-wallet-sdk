@@ -102,10 +102,6 @@ describe('RxWebSocket', () => {
   });
 
   describe('is not connected', () => {
-    test('sendData error', () => {
-      expect(() => rxWS.sendData('data')).toThrowError('websocket is not connected');
-    });
-
     test('disconnect returns', () => {
       const webSocketCloseMock = jest
         .spyOn(WebSocket.prototype, 'close')

@@ -40,6 +40,11 @@ export class MobileRelayUI implements WalletUI {
     this.openedWindow = null;
   }
 
+  private useLocationMethod = false;
+  setUseLocationMethod(useLocationMethod: boolean): void {
+    this.useLocationMethod = useLocationMethod;
+  }
+
   private redirectToCoinbaseWallet(walletLinkUrl?: string): void {
     const url = new URL('https://go.cb-w.com/walletlink');
 
@@ -48,7 +53,12 @@ export class MobileRelayUI implements WalletUI {
       url.searchParams.append('wl_url', walletLinkUrl);
     }
 
-    this.openedWindow = window.open(url.href, 'cbw-opener');
+    if (this.useLocationMethod) {
+      window.location.href = url.href;
+      return;
+    }
+
+    this.openedWindow = window.open(url.href, "cbw-opener");
     if (this.openedWindow) {
       setTimeout(() => this.closeOpenedWindow(), 5000);
     }
