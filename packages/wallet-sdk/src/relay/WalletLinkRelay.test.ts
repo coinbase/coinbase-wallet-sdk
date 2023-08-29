@@ -50,29 +50,29 @@ describe('WalletLinkRelay', () => {
         data: 'data',
       };
 
-      const setIncomingEventListnerSpy = jest.spyOn(
+      const setIncomingEventListenerSpy = jest.spyOn(
         WalletLinkConnection.prototype,
-        'setIncomingEventListner'
+        'setIncomingEventListener'
       );
 
       const relay = new WalletLinkRelay(options);
 
       const handleIncomingEventSpy = jest.spyOn(relay, <any>'handleIncomingEvent');
 
-      expect(setIncomingEventListnerSpy).toHaveBeenCalled();
+      expect(setIncomingEventListenerSpy).toHaveBeenCalled();
 
       (relay as any).connection.ws.incomingDataSubject.next(JSON.stringify(serverMessageEvent));
 
       expect(handleIncomingEventSpy).toHaveBeenCalledWith(serverMessageEvent);
     });
 
-    it('should set isLinked with LinkedListner', async () => {
-      const setLinkedListnerSpy = jest.spyOn(WalletLinkConnection.prototype, 'setLinkedListner');
+    it('should set isLinked with LinkedListener', async () => {
+      const setLinkedListenerSpy = jest.spyOn(WalletLinkConnection.prototype, 'setLinkedListener');
 
       const relay = new WalletLinkRelay(options);
       expect(relay.isLinked).toBeFalsy();
 
-      expect(setLinkedListnerSpy).toHaveBeenCalled();
+      expect(setLinkedListenerSpy).toHaveBeenCalled();
 
       (relay as any).connection.ws.incomingDataSubject.next(
         JSON.stringify({
@@ -85,16 +85,16 @@ describe('WalletLinkRelay', () => {
     });
   });
 
-  describe('setSessionConfigListner', () => {
-    it('should call setSessionConfigListner', async () => {
-      const setSessionConfigListnerSpy = jest.spyOn(
+  describe('setSessionConfigListener', () => {
+    it('should call setSessionConfigListener', async () => {
+      const setSessionConfigListenerSpy = jest.spyOn(
         WalletLinkConnection.prototype,
-        'setSessionConfigListner'
+        'setSessionConfigListener'
       );
 
       new WalletLinkRelay(options);
 
-      expect(setSessionConfigListnerSpy).toHaveBeenCalled();
+      expect(setSessionConfigListenerSpy).toHaveBeenCalled();
     });
 
     it('should handle session config changes', async () => {
@@ -118,7 +118,7 @@ describe('WalletLinkRelay', () => {
       expect(onSessionConfigChangedSpy).toHaveBeenCalledWith(sessionConfig);
     });
 
-    it('should update metadata with setSessionConfigListner', async () => {
+    it('should update metadata with setSessionConfigListener', async () => {
       const sessionConfig: SessionConfig = {
         webhookId: 'webhookId',
         webhookUrl: 'webhookUrl',

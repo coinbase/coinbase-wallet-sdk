@@ -58,22 +58,22 @@ export class WalletLinkConnection {
   private connectedSubject = new BehaviorSubject(false);
   private linkedSubject = new BehaviorSubject(false);
 
-  private sessionConfigListner?: (_: SessionConfig) => void;
-  setSessionConfigListner(listener: (_: SessionConfig) => void): void {
-    this.sessionConfigListner = listener;
+  private sessionConfigListener?: (_: SessionConfig) => void;
+  setSessionConfigListener(listener: (_: SessionConfig) => void): void {
+    this.sessionConfigListener = listener;
   }
 
-  private linkedListner?: (_: boolean) => void;
-  setLinkedListner(listener: (_: boolean) => void): void {
-    this.linkedListner = listener;
+  private linkedListener?: (_: boolean) => void;
+  setLinkedListener(listener: (_: boolean) => void): void {
+    this.linkedListener = listener;
   }
 
-  private connectedListner?: (_: boolean) => void;
-  setConnectedListner(listener: (_: boolean) => void): void {
-    this.connectedListner = listener;
+  private connectedListener?: (_: boolean) => void;
+  setConnectedListener(listener: (_: boolean) => void): void {
+    this.connectedListener = listener;
   }
 
-  setIncomingEventListner(listener: (_: ServerMessageEvent) => void): void {
+  setIncomingEventListener(listener: (_: ServerMessageEvent) => void): void {
     this.subscribeIncomingEvent(listener);
   }
 
@@ -144,7 +144,7 @@ export class WalletLinkConnection {
         )
         .subscribe((connected) => {
           this.connectedSubject.next(connected);
-          this.connectedListner?.(connected);
+          this.connectedListener?.(connected);
         })
     );
 
@@ -187,7 +187,7 @@ export class WalletLinkConnection {
             onlineGuests: msg.onlineGuests,
           });
           this.linkedSubject.next(msg.linked || msg.onlineGuests > 0);
-          this.linkedListner?.(msg.linked || msg.onlineGuests > 0);
+          this.linkedListener?.(msg.linked || msg.onlineGuests > 0);
         })
     );
 
@@ -202,7 +202,7 @@ export class WalletLinkConnection {
             sessionIdHash: Session.hash(sessionId),
             metadata_keys: msg && msg.metadata ? Object.keys(msg.metadata) : undefined,
           });
-          this.sessionConfigListner?.({
+          this.sessionConfigListener?.({
             webhookId: msg.webhookId,
             webhookUrl: msg.webhookUrl,
             metadata: msg.metadata,
