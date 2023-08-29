@@ -138,5 +138,58 @@ describe('WalletLinkRelay', () => {
         expect.anything()
       );
     });
+
+    it('should update chainId and jsonRpcUrl only when distinct', async () => {
+      jest.spyOn(aes256gcm, 'decrypt').mockImplementation(async (input, _secret) => {
+        return input;
+      });
+
+      const callback = jest.fn();
+      const relay = new WalletLinkRelay(options);
+      relay.setChainCallback(callback);
+
+      const sessionConfig: SessionConfig = {
+        webhookId: 'webhookId',
+        webhookUrl: 'webhookUrl',
+        metadata: {
+          ChainId: 'ChainId',
+          JsonRpcUrl: 'JsonRpcUrl',
+        },
+      };
+
+      // initial chain id and json rpc url
+      (relay as any).connection.ws.incomingDataSubject.next(
+        JSON.stringify({
+          ...sessionConfig,
+          type: 'GetSessionConfigOK',
+        })
+      );
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(callback).toHaveBeenCalledWith('ChainId', 'JsonRpcUrl');
+
+      // same chain id and json rpc url
+      (relay as any).connection.ws.incomingDataSubject.next(
+        JSON.stringify({
+          ...sessionConfig,
+          type: 'SessionConfigUpdated',
+        })
+      );
+      expect(callback).toHaveBeenCalledTimes(1); // distinctUntilChanged
+
+      // different chain id and json rpc url
+      (relay as any).connection.ws.incomingDataSubject.next(
+        JSON.stringify({
+          ...sessionConfig,
+          metadata: {
+            ChainId: 'ChainId2',
+            JsonRpcUrl: 'JsonRpcUrl2',
+          },
+          type: 'SessionConfigUpdated',
+        })
+      );
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(callback).toHaveBeenCalledWith('ChainId2', 'JsonRpcUrl2');
+      expect(callback).toHaveBeenCalledTimes(2);
+    });
   });
 });
