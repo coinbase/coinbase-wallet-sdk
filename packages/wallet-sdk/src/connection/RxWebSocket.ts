@@ -20,6 +20,7 @@ export class RxWebSocket<T = object> {
     ConnectionState.DISCONNECTED
   );
   private incomingDataSubject = new Subject<string>();
+  private pendingData: string[] = [];
 
   /**
    * Constructor
@@ -59,6 +60,12 @@ export class RxWebSocket<T = object> {
         obs.next();
         obs.complete();
         this.connectionStateSubject.next(ConnectionState.CONNECTED);
+
+        if (this.pendingData.length > 0) {
+          const pending = [...this.pendingData];
+          pending.forEach(data => this.sendData(data));
+          this.pendingData = [];
+        }
       };
       webSocket.onmessage = (evt) => {
         this.incomingDataSubject.next(evt.data as string);
@@ -124,7 +131,9 @@ export class RxWebSocket<T = object> {
   public sendData(data: string): void {
     const { webSocket } = this;
     if (!webSocket) {
-      throw new Error('websocket is not connected');
+      this.pendingData.push(data);
+      this.connect().subscribe();
+      return;
     }
     webSocket.send(data);
   }
