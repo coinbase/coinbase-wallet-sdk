@@ -400,7 +400,7 @@ export class WalletLinkConnection {
 
     return this.onceConnected$
       .toPromise()
-      .then(() => this.makeRequest<ServerMessageOK | ServerMessageFail>(message).toPromise())
+      .then(() => this.makeRequest<ServerMessageOK | ServerMessageFail>(message))
       .then((res) => {
         if (isServerMessageFail(res)) {
           throw new Error(res.error || 'failed to set session metadata');
@@ -415,7 +415,7 @@ export class WalletLinkConnection {
    * @param callWebhook whether the webhook should be invoked
    * @returns an Observable that emits event ID when successful
    */
-  public publishEvent(event: string, data: string, callWebhook = false): Observable<string> {
+  public publishEvent(event: string, data: string, callWebhook = false): Promise<string> {
     const message = ClientMessagePublishEvent({
       id: IntNumber(this.nextReqId++),
       sessionId: this.sessionId,
@@ -424,15 +424,15 @@ export class WalletLinkConnection {
       callWebhook,
     });
 
-    return this.onceLinked$.pipe(
-      flatMap((_) => this.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(message)),
-      map((res) => {
+    return this.onceLinked$
+      .toPromise()
+      .then(() => this.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(message))
+      .then((res) => {
         if (isServerMessageFail(res)) {
           throw new Error(res.error || 'failed to publish event');
         }
         return res.eventId;
-      })
-    );
+      });
   }
 
   private sendData(message: ClientMessage): void {
@@ -458,20 +458,18 @@ export class WalletLinkConnection {
   private makeRequest<T extends ServerMessage>(
     message: ClientMessage,
     timeout: number = REQUEST_TIMEOUT
-  ): Observable<T> {
+  ): Promise<T> {
     const reqId = message.id;
-    try {
-      this.sendData(message);
-    } catch (err) {
-      return throwError(err);
-    }
+    this.sendData(message);
 
     // await server message with corresponding id
-    return (this.ws.incomingJSONData$ as Observable<T>).pipe(
-      timeoutWith(timeout, throwError(new Error(`request ${reqId} timed out`))),
-      filter((m) => m.id === reqId),
-      take(1)
-    );
+    return (this.ws.incomingJSONData$ as Observable<T>)
+      .pipe(
+        timeoutWith(timeout, throwError(new Error(`request ${reqId} timed out`))),
+        filter((m) => m.id === reqId),
+        take(1)
+      )
+      .toPromise();
   }
 
   private authenticate(): Observable<void> {
