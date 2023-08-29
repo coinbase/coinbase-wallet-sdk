@@ -657,7 +657,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
 
         this.handleWeb3ResponseMessage(message);
       })
-      .catch((_) => {
+      .catch(() => {
         this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
           message: 'Had error decrypting',
           value: 'incomingEvent',
