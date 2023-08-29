@@ -197,12 +197,6 @@ export class CoinbaseWalletSDK {
     }
   }
 
-  setUseLocationMethod(useLocationMethod: boolean): void {
-    if (!(this._relay instanceof MobileRelay)) return;
-
-    this._relay.setUseLocationMethod(useLocationMethod);
-  }
-
   /**
    * Disconnect. After disconnecting, this will reload the web page to ensure
    * all potential stale state is cleared.
