@@ -232,7 +232,7 @@ export class WalletLinkConnection {
           headers: {
             Authorization: auth,
           },
-        }).catch((error) => console.error('Unabled to mark event as failed:', error));
+        }).catch((error) => console.error('Unabled to mark event as seen:', error));
       })
     );
   }
