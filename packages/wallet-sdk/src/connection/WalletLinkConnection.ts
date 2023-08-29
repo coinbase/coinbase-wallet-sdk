@@ -335,11 +335,13 @@ export class WalletLinkConnection {
   }
 
   public async checkUnseenEvents() {
-    return this.onceConnected$
-      .toPromise()
-      .then(() => new Promise((resolve) => setTimeout(resolve, 250)))
-      .then(() => this.fetchUnseenEventsAPI())
-      .catch((e) => console.error('Unable to check for unseen events', e));
+    await this.onceConnected$.toPromise();
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    try {
+      await this.fetchUnseenEventsAPI();
+    } catch (e) {
+      console.error('Unable to check for unseen events', e);
+    }
   }
 
   private async fetchUnseenEventsAPI() {

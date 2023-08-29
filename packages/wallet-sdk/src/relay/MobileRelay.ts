@@ -65,8 +65,8 @@ export class MobileRelay extends WalletLinkRelay {
         () => {
           window.addEventListener(
             'focus',
-            async () => {
-              await this.connection.checkUnseenEvents();
+            () => {
+              this.connection.checkUnseenEvents();
             },
             { once: true }
           );
