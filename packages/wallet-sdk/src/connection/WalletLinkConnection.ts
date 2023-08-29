@@ -270,7 +270,7 @@ export class WalletLinkConnection {
    * Emit true if connected and authenticated, else false
    * @returns an Observable
    */
-  public get connected$(): Observable<boolean> {
+  private get connected$(): Observable<boolean> {
     return this.connectedSubject.asObservable();
   }
 
@@ -278,7 +278,7 @@ export class WalletLinkConnection {
    * Emit once connected
    * @returns an Observable
    */
-  public get onceConnected$(): Observable<void> {
+  private get onceConnected$(): Observable<void> {
     return this.connected$.pipe(
       filter((v) => v),
       take(1),
@@ -290,7 +290,7 @@ export class WalletLinkConnection {
    * Emit true if linked (a guest has joined before)
    * @returns an Observable
    */
-  public get linked$(): Observable<boolean> {
+  private get linked$(): Observable<boolean> {
     return this.linkedSubject.asObservable();
   }
 
@@ -298,7 +298,7 @@ export class WalletLinkConnection {
    * Emit once when linked
    * @returns an Observable
    */
-  public get onceLinked$(): Observable<void> {
+  private get onceLinked$(): Observable<void> {
     return this.linked$.pipe(
       filter((v) => v),
       take(1),
@@ -335,6 +335,16 @@ export class WalletLinkConnection {
   }
 
   public async checkUnseenEvents() {
+    await this.onceConnected$.toPromise();
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    try {
+      await this.fetchUnseenEventsAPI();
+    } catch (e) {
+      console.error('Unable to check for unseen events', e);
+    }
+  }
+
+  private async fetchUnseenEventsAPI() {
     const credentials = `${this.sessionId}:${this.sessionKey}`;
     const auth = `Basic ${btoa(credentials)}`;
 
