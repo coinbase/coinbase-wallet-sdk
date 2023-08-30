@@ -23,9 +23,6 @@ jobs:
   version:
     name: Updates package version
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./packages/wallet-sdk
     needs: [authorize]
     env:
       PACKAGE_VERSION: ${{ github.event.inputs.packageVersion }}
@@ -42,6 +39,7 @@ jobs:
 
       - name: Update version
         run: yarn version --new-version ${{ env.PACKAGE_VERSION }} --no-git-tag-version
+        working-directory: ./packages/wallet-sdk
 
       - name: Update version.ts file
         run: yarn prebuild
