@@ -140,11 +140,11 @@ export class WalletLinkConnection {
             iif(
               () => cs === ConnectionState.CONNECTED,
               // if CONNECTED, authenticate, and then check link status
-              this.authenticate().pipe(
-                tap((_) => this.sendIsLinked()),
-                tap((_) => this.sendGetSessionConfig()),
-                map((_) => true)
-              ),
+              this.authenticate().then(() => {
+                this.sendIsLinked();
+                this.sendGetSessionConfig();
+                return true;
+              }),
               // if not CONNECTED, emit false immediately
               of(false)
             )
@@ -472,19 +472,17 @@ export class WalletLinkConnection {
       .toPromise();
   }
 
-  private authenticate(): Observable<void> {
+  private authenticate(): Promise<void> {
     const msg = ClientMessageHostSession({
       id: IntNumber(this.nextReqId++),
       sessionId: this.sessionId,
       sessionKey: this.sessionKey,
     });
-    return this.makeRequest<ServerMessageOK | ServerMessageFail>(msg).pipe(
-      map((res) => {
-        if (isServerMessageFail(res)) {
-          throw new Error(res.error || 'failed to authentcate');
-        }
-      })
-    );
+    return this.makeRequest<ServerMessageOK | ServerMessageFail>(msg).then((res) => {
+      if (isServerMessageFail(res)) {
+        throw new Error(res.error || 'failed to authentcate');
+      }
+    });
   }
 
   private sendIsLinked(): void {
