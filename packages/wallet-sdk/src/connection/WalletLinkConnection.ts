@@ -268,42 +268,32 @@ export class WalletLinkConnection {
 
   /**
    * Emit true if connected and authenticated, else false
-   * @returns an Observable
-   */
-  private get connected$(): Observable<boolean> {
-    return this.connectedSubject.asObservable();
-  }
-
-  /**
    * Emit once connected
-   * @returns an Observable
+   * @returns an Promise
    */
-  private get onceConnected$(): Observable<void> {
-    return this.connected$.pipe(
-      filter((v) => v),
-      take(1),
-      map(() => void 0)
-    );
+  private get onceConnected$(): Promise<void> {
+    return this.connectedSubject
+      .pipe(
+        filter((v) => v),
+        take(1),
+        map(() => void 0)
+      )
+      .toPromise();
   }
 
   /**
    * Emit true if linked (a guest has joined before)
-   * @returns an Observable
-   */
-  private get linked$(): Observable<boolean> {
-    return this.linkedSubject.asObservable();
-  }
-
-  /**
    * Emit once when linked
    * @returns an Observable
    */
-  private get onceLinked$(): Observable<void> {
-    return this.linked$.pipe(
-      filter((v) => v),
-      take(1),
-      map(() => void 0)
-    );
+  private get onceLinked$(): Promise<void> {
+    return this.linkedSubject
+      .pipe(
+        filter((v) => v),
+        take(1),
+        map(() => void 0)
+      )
+      .toPromise();
   }
 
   /**
@@ -335,7 +325,7 @@ export class WalletLinkConnection {
   }
 
   public async checkUnseenEvents() {
-    await this.onceConnected$.toPromise();
+    await this.onceConnected$;
     await new Promise((resolve) => setTimeout(resolve, 250));
     try {
       await this.fetchUnseenEventsAPI();
@@ -399,7 +389,6 @@ export class WalletLinkConnection {
     });
 
     return this.onceConnected$
-      .toPromise()
       .then(() => this.makeRequest<ServerMessageOK | ServerMessageFail>(message))
       .then((res) => {
         if (isServerMessageFail(res)) {
@@ -425,7 +414,6 @@ export class WalletLinkConnection {
     });
 
     return this.onceLinked$
-      .toPromise()
       .then(() => this.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(message))
       .then((res) => {
         if (isServerMessageFail(res)) {
