@@ -19,7 +19,6 @@ export default {
     './src/connection/WalletSDKConnection.ts',
     './src/lib/ScopedLocalStorage.ts',
     './src/provider/CoinbaseWalletProvider.ts',
-    './src/provider/SolanaProvider.ts',
     './src/provider/FilterPolyfill.ts',
     './src/provider/SubscriptionManager.ts',
     './src/provider/WalletLinkRelayUI.ts',
