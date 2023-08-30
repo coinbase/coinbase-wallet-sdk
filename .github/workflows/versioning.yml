@@ -45,7 +45,9 @@ jobs:
 
       - name: Update version
         working-directory: ./packages/wallet-sdk
-        run: yarn version --new-version ${{ env.PACKAGE_VERSION }} --no-git-tag-version
+        run: |
+          yarn plugin import version
+          yarn version --new-version ${{ env.PACKAGE_VERSION }} --no-git-tag-version
 
       - name: Update version.ts file
         run: yarn prebuild
