@@ -23,8 +23,9 @@ if [ $branch == $mainBranch ]; then
   echo "================================================="
   echo -e "rm -rf ./node_modules"
   rm -rf ./node_modules
+  rm -rf ./packages/wallet-sdk/node_modules
   echo -e "rm -rf ./dist"
-  rm -rf ./dist
+  rm -rf ./packages/wallet-sdk/dist
   echo -e "yarn install"
   yarn install
   echo -e "yarn workspace @coinbase/wallet-sdk build"
