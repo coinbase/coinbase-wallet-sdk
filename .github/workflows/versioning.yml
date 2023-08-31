@@ -38,10 +38,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: '.nvmrc'
-          cache-dependency-path: 'yarn.lock'
+          cache-dependency-path: '**/yarn.lock'
 
       - name: Update version
-        run: npm version ${{ env.PACKAGE_VERSION }}
+        run: npm version ${{ env.PACKAGE_VERSION }} --no-git-tag-version --workspaces-update=false
 
       - name: Update version.ts file
         run: yarn prebuild
