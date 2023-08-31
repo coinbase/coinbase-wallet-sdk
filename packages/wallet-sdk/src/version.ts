@@ -1,1 +1,1 @@
-export const LIB_VERSION = '3.9.0-canary.0';
+export const LIB_VERSION = '3.9.0-canary.1';
