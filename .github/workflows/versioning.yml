@@ -43,6 +43,9 @@ jobs:
       - name: Update version
         run: npm version ${{ env.PACKAGE_VERSION }} --no-git-tag-version --workspaces-update=false
 
+      - name: Install NPM dependencies
+        run: yarn install --immutable
+  
       - name: Update version.ts file
         run: yarn prebuild
 
