@@ -12,6 +12,9 @@ jobs:
   authorize:
     name: Authorize
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./packages/wallet-sdk
     steps:
       - name: ${{ github.actor }} permission check to update release version
         uses: "lannonbr/repo-permission-check-action@2.0.2"
@@ -38,7 +41,6 @@ jobs:
           cache-dependency-path: '**/yarn.lock'
 
       - name: Update version
-        working-directory: ./packages/wallet-sdk
         run: npm version ${{ env.PACKAGE_VERSION }}
 
       - name: Update version.ts file
