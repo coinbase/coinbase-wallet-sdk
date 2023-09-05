@@ -63,7 +63,7 @@ export class RxWebSocket<T = object> {
 
         if (this.pendingData.length > 0) {
           const pending = [...this.pendingData];
-          pending.forEach(data => this.sendData(data));
+          pending.forEach((data) => this.sendData(data));
           this.pendingData = [];
         }
       };

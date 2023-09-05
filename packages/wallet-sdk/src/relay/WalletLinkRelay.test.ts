@@ -2,14 +2,14 @@
 
 import { Observable } from 'rxjs';
 
-import { RxWebSocket } from '../connection/RxWebSocket';
-import { ServerMessageEvent } from '../connection/ServerMessage';
-import { SessionConfig } from '../connection/SessionConfig';
-import { WalletLinkConnection } from '../connection/WalletLinkConnection';
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import * as aes256gcm from './aes256gcm';
-import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay';
-import { WalletSDKRelayEventManager } from './WalletSDKRelayEventManager';
+import { RxWebSocket } from '../connection/RxWebSocket.js';
+import { ServerMessageEvent } from '../connection/ServerMessage.js';
+import { SessionConfig } from '../connection/SessionConfig.js';
+import { WalletLinkConnection } from '../connection/WalletLinkConnection.js';
+import { ScopedLocalStorage } from '../lib/ScopedLocalStorage.js';
+import * as aes256gcm from './aes256gcm.js';
+import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay.js';
+import { WalletSDKRelayEventManager } from './WalletSDKRelayEventManager.js';
 
 describe('WalletLinkRelay', () => {
   const options: WalletLinkRelayOptions = {

@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import bind from 'bind-decorator';
+import { bind } from 'bind-decorator';
 
 import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger.js';
 import { EventListener } from '../connection/EventListener.js';
