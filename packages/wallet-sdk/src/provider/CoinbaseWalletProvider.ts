@@ -58,8 +58,6 @@ export interface CoinbaseWalletProviderOptions {
   relayProvider: () => Promise<WalletSDKRelayAbstract>;
   storage: ScopedLocalStorage;
   diagnosticLogger?: DiagnosticLogger;
-  supportsAddressSwitching?: boolean;
-  isLedger?: boolean;
 }
 
 interface AddEthereumChainParams {
@@ -115,10 +113,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
 
   private hasMadeFirstChainChangedEmission = false;
 
-  private supportsAddressSwitching?: boolean;
-
-  private isLedger?: boolean;
-
   constructor(options: Readonly<CoinbaseWalletProviderOptions>) {
     super();
 
@@ -149,9 +143,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
 
     this.qrUrl = options.qrUrl;
 
-    this.supportsAddressSwitching = options.supportsAddressSwitching;
-    this.isLedger = options.isLedger;
-
     const chainId = this.getChainId();
     const chainIdStr = prepend0x(chainId.toString(16));
     // indicate that we've connected, for EIP-1193 compliance
@@ -176,7 +167,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
       }
     );
 
-    if (this._addresses.length > 0) {
+    if (this._isAuthorized()) {
       void this.initializeRelay();
     }
 
@@ -189,7 +180,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
       if (event.data.type !== 'walletLinkMessage') return; // compatibility with CBW extension
 
       if (
-        event.data.data.action === 'defaultChainChanged' ||
         event.data.data.action === 'dappChainSwitched'
       ) {
         const _chainId = event.data.data.chainId;
@@ -255,13 +245,8 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     this.reloadOnDisconnect = false;
   }
 
-  /**
-   * this function is called when coinbase provider is being injected to a dapp
-   * standalone + walletlinked extension, ledger, in-app browser using cipher-web-view
-   */
   public setProviderInfo(jsonRpcUrl: string, chainId: number) {
-    // extension tend to use the chianId from the dapp, while in-app browser and ledger overrides the default network
-    if (!(this.isLedger || this.isCoinbaseBrowser)) {
+    if (!this.isCoinbaseBrowser) {
       this._chainIdFromOpts = chainId;
       this._jsonRpcUrlFromOpts = jsonRpcUrl;
     }
@@ -379,7 +364,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
       sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : undefined,
     });
 
-    if (this._addresses.length > 0) {
+    if (this._isAuthorized()) {
       return [...this._addresses];
     }
 
@@ -619,7 +604,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     const { accounts } = res.result;
 
     this._setAddresses(accounts);
-    if (!(this.isLedger || this.isCoinbaseBrowser)) {
+    if (!this.isCoinbaseBrowser) {
       await this.switchEthereumChain(this.getChainId());
     }
 
@@ -674,7 +659,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     return response;
   }
 
-  private _setAddresses(addresses: string[], isDisconnect?: boolean): void {
+  protected _setAddresses(addresses: string[], _?: boolean): void {
     if (!Array.isArray(addresses)) {
       throw new Error('addresses is not an array');
     }
@@ -682,14 +667,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     const newAddresses = addresses.map((address) => ensureAddressString(address));
 
     if (JSON.stringify(newAddresses) === JSON.stringify(this._addresses)) {
-      return;
-    }
-
-    if (this._addresses.length > 0 && this.supportsAddressSwitching === false && !isDisconnect) {
-      /**
-       * The extension currently doesn't support switching selected wallet index
-       * make sure walletlink doesn't update it's address in this case
-       */
       return;
     }
 
@@ -930,7 +907,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     };
   }
 
-  private _isAuthorized(): boolean {
+  protected _isAuthorized(): boolean {
     return this._addresses.length > 0;
   }
 
@@ -1009,7 +986,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
       sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : undefined,
     });
 
-    if (this._addresses.length > 0) {
+    if (this._isAuthorized()) {
       return Promise.resolve({
         jsonrpc: '2.0',
         id: 0,
@@ -1033,7 +1010,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     }
 
     this._setAddresses(res.result);
-    if (!(this.isLedger || this.isCoinbaseBrowser)) {
+    if (!this.isCoinbaseBrowser) {
       await this.switchEthereumChain(this.getChainId());
     }
 
