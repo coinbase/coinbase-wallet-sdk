@@ -1,13 +1,13 @@
 import WS from 'jest-websocket-mock';
 
-import { ConnectionState, RxWebSocket } from './RxWebSocket';
+import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket';
 
 describe('RxWebSocket', () => {
   let server: WS;
-  let rxWS: RxWebSocket;
+  let rxWS: WalletLinkWebSocket;
   beforeEach(() => {
     server = new WS('ws://localhost:1234');
-    rxWS = new RxWebSocket('http://localhost:1234');
+    rxWS = new WalletLinkWebSocket('http://localhost:1234');
   });
 
   afterEach(() => {
@@ -49,7 +49,7 @@ describe('RxWebSocket', () => {
       });
 
       test('@connect throws error & fails to set websocket instance', async () => {
-        const errorConnect = new RxWebSocket('');
+        const errorConnect = new WalletLinkWebSocket('');
 
         await expect(errorConnect.connect()).rejects.toThrow(
           "Failed to construct 'WebSocket': 1 argument required, but only 0 present."
