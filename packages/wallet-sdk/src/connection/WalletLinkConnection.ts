@@ -12,6 +12,7 @@ import {
   ClientMessageSetSessionConfig,
 } from './ClientMessage';
 import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
+import { ConnectionState, RxWebSocket } from './RxWebSocket';
 import {
   isServerMessageFail,
   ServerMessage,
@@ -25,7 +26,6 @@ import {
   ServerMessageSessionConfigUpdated,
 } from './ServerMessage';
 import { SessionConfig } from './SessionConfig';
-import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket';
 
 const HEARTBEAT_INTERVAL = 10000;
 const REQUEST_TIMEOUT = 60000;
@@ -34,7 +34,7 @@ const REQUEST_TIMEOUT = 60000;
  * Coinbase Wallet Connection
  */
 export class WalletLinkConnection {
-  private ws: WalletLinkWebSocket;
+  private ws: RxWebSocket;
   private destroyed = false;
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
@@ -75,7 +75,7 @@ export class WalletLinkConnection {
     private diagnostic?: DiagnosticLogger,
     WebSocketClass: typeof WebSocket = WebSocket
   ) {
-    const ws = new WalletLinkWebSocket(`${linkAPIUrl}/rpc`, WebSocketClass);
+    const ws = new RxWebSocket(`${linkAPIUrl}/rpc`, WebSocketClass);
     this.ws = ws;
 
     this.ws.setConnectionStateListener(async (state) => {

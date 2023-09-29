@@ -9,7 +9,7 @@ export enum ConnectionState {
   CONNECTED,
 }
 
-export class WalletLinkWebSocket {
+export class RxWebSocket {
   private readonly url: string;
   private webSocket: WebSocket | null = null;
   private pendingData: string[] = [];
