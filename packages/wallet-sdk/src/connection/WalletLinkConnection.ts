@@ -326,7 +326,7 @@ export class WalletLinkConnection {
 
   public async checkUnseenEvents() {
     await this.onceConnected$;
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    await delay(250);
     try {
       await this.fetchUnseenEventsAPI();
     } catch (e) {
