@@ -41,7 +41,7 @@ export class WalletLinkConnection {
   private destroyed = false;
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
-  private connectedSubject = new BehaviorSubject(false);
+  private connected = false;
   private linkedSubject = new BehaviorSubject(false);
   private unseenEventsSubject = new Subject<ServerMessageEvent>();
 
@@ -138,11 +138,11 @@ export class WalletLinkConnection {
           break;
       }
 
-      // distinctUntilChanged()
-      if (connected !== this.connectedSubject.value) {
-        this.connectedSubject.next(connected);
-        this.connectedListener?.(connected);
-      }
+      // distinctUntilChanged
+      if (connected === this.connected) return;
+
+      this.connectedListener?.(connected);
+      this.connected = connected;
     });
 
     // handle server's heartbeat responses
