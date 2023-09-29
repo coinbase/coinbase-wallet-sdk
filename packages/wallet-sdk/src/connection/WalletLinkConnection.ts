@@ -1,6 +1,6 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
-import { BehaviorSubject, merge, Observable, Subject, Subscription, throwError } from 'rxjs';
+import { merge, Observable, Subject, Subscription, throwError } from 'rxjs';
 import { filter, map, take, timeoutWith } from 'rxjs/operators';
 
 import { Session } from '../relay/Session';
@@ -42,7 +42,7 @@ export class WalletLinkConnection {
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
   private connected = false;
-  private linkedSubject = new BehaviorSubject(false);
+  private linked = false;
   private unseenEventsSubject = new Subject<ServerMessageEvent>();
 
   private sessionConfigListener?: (_: SessionConfig) => void;
@@ -141,8 +141,8 @@ export class WalletLinkConnection {
       // distinctUntilChanged
       if (connected === this.connected) return;
 
-      this.connectedListener?.(connected);
       this.connected = connected;
+      this.connectedListener?.(connected);
     });
 
     // handle server's heartbeat responses
@@ -162,8 +162,9 @@ export class WalletLinkConnection {
             type: m.type,
             onlineGuests: msg.onlineGuests,
           });
-          this.linkedSubject.next(msg.linked || msg.onlineGuests > 0);
-          this.linkedListener?.(msg.linked || msg.onlineGuests > 0);
+
+          this.linked = msg.linked || msg.onlineGuests > 0;
+          this.linkedListener?.(this.linked);
         })
     );
 
@@ -230,21 +231,6 @@ export class WalletLinkConnection {
 
   public get isDestroyed(): boolean {
     return this.destroyed;
-  }
-
-  /**
-   * Emit true if linked (a guest has joined before)
-   * Emit once when linked
-   * @returns an Observable
-   */
-  private get onceLinked$(): Promise<void> {
-    return this.linkedSubject
-      .pipe(
-        filter((v) => v),
-        take(1),
-        map(() => void 0)
-      )
-      .toPromise();
   }
 
   /**
@@ -359,7 +345,11 @@ export class WalletLinkConnection {
    * @param callWebhook whether the webhook should be invoked
    * @returns an Observable that emits event ID when successful
    */
-  public publishEvent(event: string, data: string, callWebhook = false): Promise<string> {
+  public async publishEvent(event: string, data: string, callWebhook = false) {
+    if (!this.linked) {
+      return Promise.reject();
+    }
+
     const message = ClientMessagePublishEvent({
       id: IntNumber(this.nextReqId++),
       sessionId: this.sessionId,
@@ -368,14 +358,11 @@ export class WalletLinkConnection {
       callWebhook,
     });
 
-    return this.onceLinked$
-      .then(() => this.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(message))
-      .then((res) => {
-        if (isServerMessageFail(res)) {
-          throw new Error(res.error || 'failed to publish event');
-        }
-        return res.eventId;
-      });
+    const res = await this.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(message);
+    if (isServerMessageFail(res)) {
+      throw new Error(res.error || 'failed to publish event');
+    }
+    return res.eventId;
   }
 
   private sendData(message: ClientMessage): void {
@@ -391,14 +378,9 @@ export class WalletLinkConnection {
       this.ws.disconnect();
       return;
     }
-    try {
-      this.ws.sendData('h');
-    } catch {
-      // noop
-    }
   }
 
-  private makeRequest<T extends ServerMessage>(
+  private async makeRequest<T extends ServerMessage>(
     message: ClientMessage,
     timeout: number = REQUEST_TIMEOUT
   ): Promise<T> {
@@ -415,17 +397,16 @@ export class WalletLinkConnection {
       .toPromise();
   }
 
-  private authenticate(): Promise<void> {
+  private async authenticate() {
     const msg = ClientMessageHostSession({
       id: IntNumber(this.nextReqId++),
       sessionId: this.sessionId,
       sessionKey: this.sessionKey,
     });
-    return this.makeRequest<ServerMessageOK | ServerMessageFail>(msg).then((res) => {
-      if (isServerMessageFail(res)) {
-        throw new Error(res.error || 'failed to authentcate');
-      }
-    });
+    const res = await this.makeRequest<ServerMessageOK | ServerMessageFail>(msg);
+    if (isServerMessageFail(res)) {
+      throw new Error(res.error || 'failed to authentcate');
+    }
   }
 
   private sendIsLinked(): void {
