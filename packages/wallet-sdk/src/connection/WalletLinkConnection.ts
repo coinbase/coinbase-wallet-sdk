@@ -193,6 +193,23 @@ export class WalletLinkConnection {
     });
   }
 
+  // mark unseen events as seen
+  private markUnseenEventsAsSeen(events: ServerMessageEvent[]) {
+    const credentials = `${this.sessionId}:${this.sessionKey}`;
+    const auth = `Basic ${btoa(credentials)}`;
+
+    Promise.all(
+      events.map((e) =>
+        fetch(`${this.linkAPIUrl}/events/${e.eventId}/seen`, {
+          method: 'POST',
+          headers: {
+            Authorization: auth,
+          },
+        })
+      )
+    ).catch((error) => console.error('Unabled to mark event as failed:', error));
+  }
+
   /**
    * Make a connection to the server
    */
@@ -293,17 +310,7 @@ export class WalletLinkConnection {
           })) ?? [];
       responseEvents.forEach((e) => this.handleIncomingEvent(e));
 
-      // mark unseen events as seen
-      Promise.all(
-        responseEvents.map((e) =>
-          fetch(`${this.linkAPIUrl}/events/${e.eventId}/seen`, {
-            method: 'POST',
-            headers: {
-              Authorization: auth,
-            },
-          })
-        )
-      ).catch((error) => console.error('Unabled to mark event as failed:', error));
+      this.markUnseenEventsAsSeen(responseEvents);
     } else {
       throw new Error(`Check unseen events failed: ${response.status}`);
     }
