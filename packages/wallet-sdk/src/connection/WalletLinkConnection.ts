@@ -5,7 +5,6 @@ import { filter, map, take, timeoutWith } from 'rxjs/operators';
 
 import { Session } from '../relay/Session';
 import { IntNumber } from '../types';
-import { delay } from '../util';
 import {
   ClientMessage,
   ClientMessageGetSessionConfig,
@@ -96,7 +95,7 @@ export class WalletLinkConnection {
           if (!this.destroyed) {
             const reconnect = async () => {
               // wait 5 seconds
-              await delay(5000);
+              await new Promise((resolve) => setTimeout(resolve, 5000));
               // check whether it's destroyed again
               if (!this.destroyed) {
                 try {
@@ -291,7 +290,7 @@ export class WalletLinkConnection {
 
   public async checkUnseenEvents() {
     await this.onceConnected$;
-    await delay(250);
+    await new Promise((resolve) => setTimeout(resolve, 250));
     try {
       await this.fetchUnseenEventsAPI();
     } catch (e) {
