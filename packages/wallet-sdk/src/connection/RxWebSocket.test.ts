@@ -19,9 +19,7 @@ describe('RxWebSocket', () => {
       const connectionStateListener = jest.fn();
       rxWS.setConnectionStateListener(connectionStateListener);
 
-      const client = rxWS.connect();
-
-      await client;
+      await rxWS.connect();
       await server.connected;
 
       expect(connectionStateListener).toHaveBeenCalledWith(ConnectionState.CONNECTED);
@@ -45,8 +43,7 @@ describe('RxWebSocket', () => {
       afterEach(() => rxWS.disconnect());
 
       test('@connect throws error when connecting again', async () => {
-        const client = rxWS.connect();
-        await client;
+        await rxWS.connect();
 
         await expect(rxWS.connect()).rejects.toThrow('webSocket object is not null');
       });
@@ -60,8 +57,7 @@ describe('RxWebSocket', () => {
       });
 
       test('onclose event throws error', async () => {
-        const client = rxWS.connect();
-        await client;
+        await rxWS.connect();
         await server.connected;
         server.error();
 
@@ -72,8 +68,7 @@ describe('RxWebSocket', () => {
         const incomingDataListener = jest.fn();
         rxWS.setIncomingDataListener(incomingDataListener);
 
-        const client = rxWS.connect();
-        await client;
+        await rxWS.connect();
         await server.connected;
 
         const message = {
@@ -89,8 +84,7 @@ describe('RxWebSocket', () => {
         const incomingDataListener = jest.fn();
         rxWS.setIncomingDataListener(incomingDataListener);
 
-        const client = rxWS.connect();
-        await client;
+        await rxWS.connect();
         await server.connected;
 
         server.send('h');
