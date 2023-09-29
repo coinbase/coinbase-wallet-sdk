@@ -1,7 +1,5 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
-import { Observable, throwError } from 'rxjs';
-import { filter, take, timeoutWith } from 'rxjs/operators';
 
 import { Session } from '../relay/Session';
 import { IntNumber } from '../types';
@@ -189,6 +187,11 @@ export class WalletLinkConnection {
           this.handleIncomingEvent(m);
           break;
         }
+      }
+
+      // resolve request promises
+      if (m.id !== undefined) {
+        this.requestResolutions.get(m.id)?.(m);
       }
     });
   }
@@ -386,6 +389,8 @@ export class WalletLinkConnection {
     }
   }
 
+  private requestResolutions = new Map<IntNumber, (_: ServerMessage) => void>();
+
   private async makeRequest<T extends ServerMessage>(
     message: ClientMessage,
     timeout: number = REQUEST_TIMEOUT
@@ -394,13 +399,21 @@ export class WalletLinkConnection {
     this.sendData(message);
 
     // await server message with corresponding id
-    return (this.ws.incomingJSONData$ as Observable<T>)
-      .pipe(
-        timeoutWith(timeout, throwError(new Error(`request ${reqId} timed out`))),
-        filter((m) => m.id === reqId),
-        take(1)
-      )
-      .toPromise();
+    let timeoutId: number;
+    return Promise.race([
+      new Promise<T>((_, reject) => {
+        timeoutId = window.setTimeout(() => {
+          reject(new Error(`request ${reqId} timed out`));
+        }, timeout);
+      }),
+      new Promise<T>((resolve) => {
+        this.requestResolutions.set(reqId, (m) => {
+          clearTimeout(timeoutId); // clear the timeout
+          resolve(m as T);
+          this.requestResolutions.delete(reqId);
+        });
+      }),
+    ]);
   }
 
   private async authenticate() {
