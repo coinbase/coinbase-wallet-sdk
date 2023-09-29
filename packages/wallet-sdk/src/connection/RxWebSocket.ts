@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { BehaviorSubject, empty, Observable, of, Subject, throwError } from 'rxjs';
+import { empty, Observable, of, Subject, throwError } from 'rxjs';
 import { flatMap, take } from 'rxjs/operators';
 
 export enum ConnectionState {
@@ -16,11 +16,13 @@ export enum ConnectionState {
 export class RxWebSocket<T = object> {
   private readonly url: string;
   private webSocket: WebSocket | null = null;
-  private connectionStateSubject = new BehaviorSubject<ConnectionState>(
-    ConnectionState.DISCONNECTED
-  );
   private incomingDataSubject = new Subject<string>();
   private pendingData: string[] = [];
+
+  private connectionStateListener?: (_: ConnectionState) => void;
+  setConnectionStateListener(listener: (_: ConnectionState) => void): void {
+    this.connectionStateListener = listener;
+  }
 
   /**
    * Constructor
@@ -50,20 +52,20 @@ export class RxWebSocket<T = object> {
         obs.error(err);
         return;
       }
-      this.connectionStateSubject.next(ConnectionState.CONNECTING);
+      this.connectionStateListener?.(ConnectionState.CONNECTING);
       webSocket.onclose = (evt) => {
         this.clearWebSocket();
         obs.error(new Error(`websocket error ${evt.code}: ${evt.reason}`));
-        this.connectionStateSubject.next(ConnectionState.DISCONNECTED);
+        this.connectionStateListener?.(ConnectionState.DISCONNECTED);
       };
       webSocket.onopen = (_) => {
         obs.next();
         obs.complete();
-        this.connectionStateSubject.next(ConnectionState.CONNECTED);
+        this.connectionStateListener?.(ConnectionState.CONNECTED);
 
         if (this.pendingData.length > 0) {
           const pending = [...this.pendingData];
-          pending.forEach(data => this.sendData(data));
+          pending.forEach((data) => this.sendData(data));
           this.pendingData = [];
         }
       };
@@ -82,20 +84,12 @@ export class RxWebSocket<T = object> {
       return;
     }
     this.clearWebSocket();
-    this.connectionStateSubject.next(ConnectionState.DISCONNECTED);
+    this.connectionStateListener?.(ConnectionState.DISCONNECTED);
     try {
       webSocket.close();
     } catch {
       // noop
     }
-  }
-
-  /**
-   * Emit current connection state and subsequent changes
-   * @returns an Observable for the connection state
-   */
-  public get connectionState$(): Observable<ConnectionState> {
-    return this.connectionStateSubject.asObservable();
   }
 
   /**
