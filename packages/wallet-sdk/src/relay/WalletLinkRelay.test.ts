@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { RxWebSocket } from '../connection/RxWebSocket';
+import { WalletLinkWebSocket } from '../connection/RxWebSocket';
 import { ServerMessageEvent } from '../connection/ServerMessage';
 import { SessionConfig } from '../connection/SessionConfig';
 import { WalletLinkConnection } from '../connection/WalletLinkConnection';
@@ -21,7 +21,7 @@ describe('WalletLinkRelay', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(RxWebSocket.prototype, 'connect').mockReturnValue(Promise.resolve());
+    jest.spyOn(WalletLinkWebSocket.prototype, 'connect').mockReturnValue(Promise.resolve());
   });
 
   describe('resetAndReload', () => {
