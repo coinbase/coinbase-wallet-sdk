@@ -36,7 +36,7 @@ const REQUEST_TIMEOUT = 60000;
  * Coinbase Wallet Connection
  */
 export class WalletLinkConnection {
-  private ws: RxWebSocket<ServerMessage>;
+  private ws: RxWebSocket;
   private subscriptions = new Subscription();
   private destroyed = false;
   private lastHeartbeatResponse = 0;
@@ -78,7 +78,7 @@ export class WalletLinkConnection {
     private diagnostic?: DiagnosticLogger,
     WebSocketClass: typeof WebSocket = WebSocket
   ) {
-    const ws = new RxWebSocket<ServerMessage>(`${linkAPIUrl}/rpc`, WebSocketClass);
+    const ws = new RxWebSocket(`${linkAPIUrl}/rpc`, WebSocketClass);
     this.ws = ws;
 
     this.ws.setConnectionStateListener(async (state) => {
@@ -100,7 +100,7 @@ export class WalletLinkConnection {
               if (!this.destroyed) {
                 try {
                   // reconnect
-                  await ws.connect().toPromise();
+                  await ws.connect();
                 } catch {
                   // retry()
                   connect();
@@ -214,7 +214,7 @@ export class WalletLinkConnection {
     this.diagnostic?.log(EVENTS.STARTED_CONNECTING, {
       sessionIdHash: Session.hash(this.sessionId),
     });
-    this.ws.connect().subscribe();
+    this.ws.connect().then();
   }
 
   /**

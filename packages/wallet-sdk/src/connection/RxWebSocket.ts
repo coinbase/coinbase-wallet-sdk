@@ -1,8 +1,7 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { empty, Observable, of, Subject, throwError } from 'rxjs';
-import { flatMap, take } from 'rxjs/operators';
+import { ServerMessage } from './ServerMessage';
 
 export enum ConnectionState {
   DISCONNECTED,
@@ -10,18 +9,19 @@ export enum ConnectionState {
   CONNECTED,
 }
 
-/**
- * Rx-ified WebSocket
- */
-export class RxWebSocket<T = object> {
+export class RxWebSocket {
   private readonly url: string;
   private webSocket: WebSocket | null = null;
-  private incomingDataSubject = new Subject<string>();
   private pendingData: string[] = [];
 
   private connectionStateListener?: (_: ConnectionState) => void;
   setConnectionStateListener(listener: (_: ConnectionState) => void): void {
     this.connectionStateListener = listener;
+  }
+
+  private incomingDataListener?: (_: ServerMessage) => void;
+  setIncomingDataListener(listener: (_: ServerMessage) => void): void {
+    this.incomingDataListener = listener;
   }
 
   /**
@@ -38,29 +38,28 @@ export class RxWebSocket<T = object> {
 
   /**
    * Make a websocket connection
-   * @returns an Observable that completes when connected
+   * @returns a Promise that resolves when connected
    */
-  public connect(): Observable<void> {
+  public async connect() {
     if (this.webSocket) {
-      return throwError(new Error('webSocket object is not null'));
+      throw new Error('webSocket object is not null');
     }
-    return new Observable<void>((obs) => {
+    return new Promise<void>((resolve, reject) => {
       let webSocket: WebSocket;
       try {
         this.webSocket = webSocket = new this.WebSocketClass(this.url);
       } catch (err) {
-        obs.error(err);
+        reject(err);
         return;
       }
       this.connectionStateListener?.(ConnectionState.CONNECTING);
       webSocket.onclose = (evt) => {
         this.clearWebSocket();
-        obs.error(new Error(`websocket error ${evt.code}: ${evt.reason}`));
+        reject(new Error(`websocket error ${evt.code}: ${evt.reason}`));
         this.connectionStateListener?.(ConnectionState.DISCONNECTED);
       };
       webSocket.onopen = (_) => {
-        obs.next();
-        obs.complete();
+        resolve();
         this.connectionStateListener?.(ConnectionState.CONNECTED);
 
         if (this.pendingData.length > 0) {
@@ -70,9 +69,20 @@ export class RxWebSocket<T = object> {
         }
       };
       webSocket.onmessage = (evt) => {
-        this.incomingDataSubject.next(evt.data as string);
+        if (evt.data === 'h') {
+          this.incomingDataListener?.({
+            type: 'Heartbeat',
+          });
+        } else {
+          try {
+            const message = JSON.parse(evt.data) as ServerMessage;
+            this.incomingDataListener?.(message);
+          } catch {
+            /* empty */
+          }
+        }
       };
-    }).pipe(take(1));
+    });
   }
 
   /**
@@ -93,32 +103,6 @@ export class RxWebSocket<T = object> {
   }
 
   /**
-   * Emit incoming data from server
-   * @returns an Observable for the data received
-   */
-  public get incomingData$(): Observable<string> {
-    return this.incomingDataSubject.asObservable();
-  }
-
-  /**
-   * Emit incoming JSON data from server. non-JSON data are ignored
-   * @returns an Observable for parsed JSON data
-   */
-  public get incomingJSONData$(): Observable<T> {
-    return this.incomingData$.pipe(
-      flatMap((m) => {
-        let j: any;
-        try {
-          j = JSON.parse(m);
-        } catch (err) {
-          return empty();
-        }
-        return of(j);
-      })
-    );
-  }
-
-  /**
    * Send data to server
    * @param data text to send
    */
@@ -126,7 +110,7 @@ export class RxWebSocket<T = object> {
     const { webSocket } = this;
     if (!webSocket) {
       this.pendingData.push(data);
-      this.connect().subscribe();
+      this.connect().then();
       return;
     }
     webSocket.send(data);
