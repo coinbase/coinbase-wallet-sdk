@@ -233,21 +233,6 @@ export class WalletLinkConnection {
   }
 
   /**
-   * Emit true if connected and authenticated, else false
-   * Emit once connected
-   * @returns an Promise
-   */
-  private get onceConnected$(): Promise<void> {
-    return this.connectedSubject
-      .pipe(
-        filter((v) => v),
-        take(1),
-        map(() => void 0)
-      )
-      .toPromise();
-  }
-
-  /**
    * Emit true if linked (a guest has joined before)
    * Emit once when linked
    * @returns an Observable
@@ -291,7 +276,10 @@ export class WalletLinkConnection {
   }
 
   public async checkUnseenEvents() {
-    await this.onceConnected$;
+    if (!this.connected) {
+      return;
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 250));
     try {
       await this.fetchUnseenEventsAPI();
@@ -347,20 +335,21 @@ export class WalletLinkConnection {
    * @param value
    * @returns an Observable that completes when successful
    */
-  public setSessionMetadata(key: string, value: string | null): Promise<void> {
+  public async setSessionMetadata(key: string, value: string | null) {
+    if (!this.connected) {
+      return;
+    }
+
     const message = ClientMessageSetSessionConfig({
       id: IntNumber(this.nextReqId++),
       sessionId: this.sessionId,
       metadata: { [key]: value },
     });
 
-    return this.onceConnected$
-      .then(() => this.makeRequest<ServerMessageOK | ServerMessageFail>(message))
-      .then((res) => {
-        if (isServerMessageFail(res)) {
-          throw new Error(res.error || 'failed to set session metadata');
-        }
-      });
+    const res = await this.makeRequest<ServerMessageOK | ServerMessageFail>(message);
+    if (isServerMessageFail(res)) {
+      throw new Error(res.error || 'failed to set session metadata');
+    }
   }
 
   /**
