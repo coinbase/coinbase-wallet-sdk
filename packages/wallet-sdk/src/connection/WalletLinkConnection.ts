@@ -93,7 +93,7 @@ export class WalletLinkConnection {
         case ConnectionState.DISCONNECTED:
           // if DISCONNECTED and not destroyed
           if (!this.destroyed) {
-            const reconnect = async () => {
+            const connect = async () => {
               // wait 5 seconds
               await new Promise((resolve) => setTimeout(resolve, 5000));
               // check whether it's destroyed again
@@ -102,11 +102,12 @@ export class WalletLinkConnection {
                   // reconnect
                   await ws.connect().toPromise();
                 } catch {
-                  reconnect();
+                  // retry()
+                  connect();
                 }
               }
             };
-            reconnect();
+            connect();
           }
           break;
 
@@ -319,7 +320,7 @@ export class WalletLinkConnection {
    * Set session metadata in SessionConfig object
    * @param key
    * @param value
-   * @returns an Observable that completes when successful
+   * @returns a Promise that completes when successful
    */
   public async setSessionMetadata(key: string, value: string | null) {
     if (!this.connected) {
@@ -343,7 +344,7 @@ export class WalletLinkConnection {
    * @param event event name
    * @param data event data
    * @param callWebhook whether the webhook should be invoked
-   * @returns an Observable that emits event ID when successful
+   * @returns a Promise that emits event ID when successful
    */
   public async publishEvent(event: string, data: string, callWebhook = false) {
     if (!this.linked) {
@@ -377,6 +378,11 @@ export class WalletLinkConnection {
     if (Date.now() - this.lastHeartbeatResponse > HEARTBEAT_INTERVAL * 2) {
       this.ws.disconnect();
       return;
+    }
+    try {
+      this.ws.sendData('h');
+    } catch {
+      // noop
     }
   }
 
