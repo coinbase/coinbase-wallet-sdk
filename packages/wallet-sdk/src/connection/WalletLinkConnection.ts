@@ -244,10 +244,10 @@ export class WalletLinkConnection {
 
   private handleIncomingEvent(m: ServerMessage) {
     function isServerMessageEvent(msg: ServerMessage): msg is ServerMessageEvent {
-      if (m.type !== 'Event') {
+      if (msg.type !== 'Event') {
         return false;
       }
-      const sme = m as ServerMessageEvent;
+      const sme = msg as ServerMessageEvent;
       return (
         typeof sme.sessionId === 'string' &&
         typeof sme.eventId === 'string' &&
