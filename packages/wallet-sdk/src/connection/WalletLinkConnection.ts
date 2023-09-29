@@ -1,33 +1,11 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
-import {
-  BehaviorSubject,
-  iif,
-  merge,
-  Observable,
-  of,
-  Subject,
-  Subscription,
-  throwError,
-  timer,
-} from 'rxjs';
-import {
-  catchError,
-  delay,
-  distinctUntilChanged,
-  filter,
-  flatMap,
-  map,
-  retry,
-  skip,
-  switchMap,
-  take,
-  tap,
-  timeoutWith,
-} from 'rxjs/operators';
+import { BehaviorSubject, merge, Observable, Subject, Subscription, throwError } from 'rxjs';
+import { filter, map, take, timeoutWith } from 'rxjs/operators';
 
 import { Session } from '../relay/Session';
 import { IntNumber } from '../types';
+import { delay } from '../util';
 import {
   ClientMessage,
   ClientMessageGetSessionConfig,
@@ -104,80 +82,67 @@ export class WalletLinkConnection {
     const ws = new RxWebSocket<ServerMessage>(`${linkAPIUrl}/rpc`, WebSocketClass);
     this.ws = ws;
 
-    // attempt to reconnect every 5 seconds when disconnected
-    this.subscriptions.add(
-      ws.connectionState$
-        .pipe(
-          tap(
-            (state) =>
-              this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
-                state,
-                sessionIdHash: Session.hash(sessionId),
-              })
-          ),
-          // ignore initial DISCONNECTED state
-          skip(1),
+    this.ws.setConnectionStateListener(async (state) => {
+      // attempt to reconnect every 5 seconds when disconnected
+      this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
+        state,
+        sessionIdHash: Session.hash(sessionId),
+      });
+
+      let connected = false;
+      switch (state) {
+        case ConnectionState.DISCONNECTED:
           // if DISCONNECTED and not destroyed
-          filter((cs) => cs === ConnectionState.DISCONNECTED && !this.destroyed),
-          // wait 5 seconds
-          delay(5000),
-          // check whether it's destroyed again
-          filter((_) => !this.destroyed),
-          // reconnect
-          flatMap((_) => ws.connect()),
-          retry()
-        )
-        .subscribe()
-    );
+          if (!this.destroyed) {
+            const reconnect = async () => {
+              // wait 5 seconds
+              await delay(5000);
+              // check whether it's destroyed again
+              if (!this.destroyed) {
+                try {
+                  // reconnect
+                  await ws.connect().toPromise();
+                } catch {
+                  reconnect();
+                }
+              }
+            };
+            reconnect();
+          }
+          break;
 
-    // perform authentication upon connection
-    this.subscriptions.add(
-      ws.connectionState$
-        .pipe(
-          // ignore initial DISCONNECTED and CONNECTING states
-          skip(2),
-          switchMap((cs) =>
-            iif(
-              () => cs === ConnectionState.CONNECTED,
-              // if CONNECTED, authenticate, and then check link status
-              this.authenticate().then(() => {
-                this.sendIsLinked();
-                this.sendGetSessionConfig();
-                return true;
-              }),
-              // if not CONNECTED, emit false immediately
-              of(false)
-            )
-          ),
-          distinctUntilChanged(),
-          catchError((_) => of(false))
-        )
-        .subscribe((connected) => {
-          this.connectedSubject.next(connected);
-          this.connectedListener?.(connected);
-        })
-    );
+        case ConnectionState.CONNECTED:
+          // perform authentication upon connection
+          // if CONNECTED, authenticate, and then check link status
+          try {
+            await this.authenticate();
 
-    // send heartbeat every n seconds while connected
-    this.subscriptions.add(
-      ws.connectionState$
-        .pipe(
-          // ignore initial DISCONNECTED state
-          skip(1),
-          switchMap((cs) =>
-            iif(
-              () => cs === ConnectionState.CONNECTED,
-              // if CONNECTED, start the heartbeat timer
-              timer(0, HEARTBEAT_INTERVAL)
-            )
-          )
-        )
-        .subscribe((i) =>
-          // first timer event updates lastHeartbeat timestamp
-          // subsequent calls send heartbeat message
-          i === 0 ? this.updateLastHeartbeat() : this.heartbeat()
-        )
-    );
+            this.sendIsLinked();
+            this.sendGetSessionConfig();
+            connected = true;
+          } catch {
+            /* empty */
+          }
+
+          // send heartbeat every n seconds while connected
+          // if CONNECTED, start the heartbeat timer
+          this.updateLastHeartbeat();
+          setInterval(() => {
+            this.heartbeat();
+          }, HEARTBEAT_INTERVAL);
+
+          break;
+
+        case ConnectionState.CONNECTING:
+          break;
+      }
+
+      // distinctUntilChanged()
+      if (connected !== this.connectedSubject.value) {
+        this.connectedSubject.next(connected);
+        this.connectedListener?.(connected);
+      }
+    });
 
     // handle server's heartbeat responses
     this.subscriptions.add(
