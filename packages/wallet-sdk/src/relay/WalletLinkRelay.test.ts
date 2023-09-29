@@ -59,7 +59,7 @@ describe('WalletLinkRelay', () => {
 
       expect(setIncomingEventListenerSpy).toHaveBeenCalled();
 
-      (relay as any).connection.ws.incomingDataSubject.next(JSON.stringify(serverMessageEvent));
+      (relay as any).connection.ws.incomingDataListener?.(serverMessageEvent);
 
       expect(handleIncomingEventSpy).toHaveBeenCalledWith(serverMessageEvent);
     });
@@ -72,12 +72,10 @@ describe('WalletLinkRelay', () => {
 
       expect(setLinkedListenerSpy).toHaveBeenCalled();
 
-      (relay as any).connection.ws.incomingDataSubject.next(
-        JSON.stringify({
-          type: 'IsLinkedOK',
-          linked: true,
-        })
-      );
+      (relay as any).connection.ws.incomingDataListener?.({
+        type: 'IsLinkedOK',
+        linked: true,
+      });
 
       expect(relay.isLinked).toEqual(true);
     });
@@ -106,12 +104,10 @@ describe('WalletLinkRelay', () => {
 
       const onSessionConfigChangedSpy = jest.spyOn(relay, <any>'onSessionConfigChanged');
 
-      (relay as any).connection.ws.incomingDataSubject.next(
-        JSON.stringify({
-          ...sessionConfig,
-          type: 'GetSessionConfigOK',
-        })
-      );
+      (relay as any).connection.ws.incomingDataListener?.({
+        ...sessionConfig,
+        type: 'GetSessionConfigOK',
+      });
 
       expect(onSessionConfigChangedSpy).toHaveBeenCalledWith(sessionConfig);
     });
@@ -129,12 +125,10 @@ describe('WalletLinkRelay', () => {
 
       const relay = new WalletLinkRelay(options);
 
-      (relay as any).connection.ws.incomingDataSubject.next(
-        JSON.stringify({
-          ...sessionConfig,
-          type: 'SessionConfigUpdated',
-        })
-      );
+      (relay as any).connection.ws.incomingDataListener?.({
+        ...sessionConfig,
+        type: 'SessionConfigUpdated',
+      });
 
       expect(decryptSpy).toHaveBeenCalledWith(
         sessionConfig.metadata.WalletUsername,
@@ -161,35 +155,29 @@ describe('WalletLinkRelay', () => {
       };
 
       // initial chain id and json rpc url
-      (relay as any).connection.ws.incomingDataSubject.next(
-        JSON.stringify({
-          ...sessionConfig,
-          type: 'GetSessionConfigOK',
-        })
-      );
+      (relay as any).connection.ws.incomingDataListener?.({
+        ...sessionConfig,
+        type: 'GetSessionConfigOK',
+      });
       await new Promise((resolve) => setTimeout(resolve, 0));
       expect(callback).toHaveBeenCalledWith('ChainId', 'JsonRpcUrl');
 
       // same chain id and json rpc url
-      (relay as any).connection.ws.incomingDataSubject.next(
-        JSON.stringify({
-          ...sessionConfig,
-          type: 'SessionConfigUpdated',
-        })
-      );
+      (relay as any).connection.ws.incomingDataListener?.({
+        ...sessionConfig,
+        type: 'SessionConfigUpdated',
+      });
       expect(callback).toHaveBeenCalledTimes(1); // distinctUntilChanged
 
       // different chain id and json rpc url
-      (relay as any).connection.ws.incomingDataSubject.next(
-        JSON.stringify({
-          ...sessionConfig,
-          metadata: {
-            ChainId: 'ChainId2',
-            JsonRpcUrl: 'JsonRpcUrl2',
-          },
-          type: 'SessionConfigUpdated',
-        })
-      );
+      (relay as any).connection.ws.incomingDataListener?.({
+        ...sessionConfig,
+        metadata: {
+          ChainId: 'ChainId2',
+          JsonRpcUrl: 'JsonRpcUrl2',
+        },
+        type: 'SessionConfigUpdated',
+      });
       await new Promise((resolve) => setTimeout(resolve, 0));
       expect(callback).toHaveBeenCalledWith('ChainId2', 'JsonRpcUrl2');
       expect(callback).toHaveBeenCalledTimes(2);
