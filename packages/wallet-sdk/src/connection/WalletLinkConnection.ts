@@ -125,6 +125,8 @@ export class WalletLinkConnection {
 
           // send heartbeat every n seconds while connected
           // if CONNECTED, start the heartbeat timer
+          // first timer event updates lastHeartbeat timestamp
+          // subsequent calls send heartbeat message
           this.updateLastHeartbeat();
           setInterval(() => {
             this.heartbeat();
