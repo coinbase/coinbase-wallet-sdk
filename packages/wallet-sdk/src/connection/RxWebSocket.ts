@@ -110,7 +110,7 @@ export class WalletLinkWebSocket {
     const { webSocket } = this;
     if (!webSocket) {
       this.pendingData.push(data);
-      this.connect().then();
+      this.connect();
       return;
     }
     webSocket.send(data);

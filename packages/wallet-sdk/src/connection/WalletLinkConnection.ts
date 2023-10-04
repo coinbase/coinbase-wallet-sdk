@@ -95,13 +95,10 @@ export class WalletLinkConnection {
               await new Promise((resolve) => setTimeout(resolve, 5000));
               // check whether it's destroyed again
               if (!this.destroyed) {
-                try {
-                  // reconnect
-                  await ws.connect();
-                } catch {
-                  // retry()
+                // reconnect
+                ws.connect().catch(() => {
                   connect();
-                }
+                });
               }
             };
             connect();
@@ -223,7 +220,7 @@ export class WalletLinkConnection {
     this.diagnostic?.log(EVENTS.STARTED_CONNECTING, {
       sessionIdHash: Session.hash(this.sessionId),
     });
-    this.ws.connect().then();
+    this.ws.connect();
   }
 
   /**
