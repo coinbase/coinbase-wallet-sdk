@@ -38,7 +38,6 @@ export class WalletLinkConnection {
   private destroyed = false;
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
-  private connected = false;
 
   private sessionConfigListener?: (_: SessionConfig) => void;
   setSessionConfigListener(listener: (_: SessionConfig) => void): void {
@@ -132,11 +131,7 @@ export class WalletLinkConnection {
           break;
       }
 
-      // distinctUntilChanged
-      if (connected === this.connected) return;
-
       this.connected = connected;
-      this.connectedListener?.(connected);
     });
 
     ws.setIncomingDataListener((m) => {
@@ -238,6 +233,38 @@ export class WalletLinkConnection {
   }
 
   /**
+   * true if connected and authenticated, else false
+   * runs listener when connected status changes
+   */
+  private _connected = false;
+  private get connected(): boolean {
+    return this._connected;
+  }
+  private set connected(connected: boolean) {
+    if (connected === this.connected) return; // distinctUntilChanged
+    this._connected = connected;
+    if (connected) {
+      this.onceConnected?.();
+      this.onceConnected = undefined;
+    }
+    this.connectedListener?.(connected);
+  }
+
+  /**
+   * Execute once when connected
+   */
+  private onceConnected?: () => void;
+  private setOnceConnected<T>(callback: () => Promise<T>): Promise<T> {
+    return new Promise<T>((resolve) => {
+      if (this.connected) {
+        callback().then(resolve);
+      } else {
+        this.onceConnected = () => callback().then(resolve);
+      }
+    });
+  }
+
+  /**
    * true if linked (a guest has joined before)
    * runs listener when linked status changes
    */
@@ -258,6 +285,15 @@ export class WalletLinkConnection {
    * Execute once when linked
    */
   private onceLinked?: () => void;
+  private setOnceLinked<T>(callback: () => Promise<T>): Promise<T> {
+    return new Promise<T>((resolve) => {
+      if (this.linked) {
+        callback().then(resolve);
+      } else {
+        this.onceLinked = () => callback().then(resolve);
+      }
+    });
+  }
 
   private handleIncomingEvent(m: ServerMessage) {
     function isServerMessageEvent(msg: ServerMessage): msg is ServerMessageEvent {
@@ -343,20 +379,18 @@ export class WalletLinkConnection {
    * @returns a Promise that completes when successful
    */
   public async setSessionMetadata(key: string, value: string | null) {
-    if (!this.connected) {
-      return;
-    }
-
     const message = ClientMessageSetSessionConfig({
       id: IntNumber(this.nextReqId++),
       sessionId: this.sessionId,
       metadata: { [key]: value },
     });
 
-    const res = await this.makeRequest<ServerMessageOK | ServerMessageFail>(message);
-    if (isServerMessageFail(res)) {
-      throw new Error(res.error || 'failed to set session metadata');
-    }
+    return this.setOnceConnected(async () => {
+      const res = await this.makeRequest<ServerMessageOK | ServerMessageFail>(message);
+      if (isServerMessageFail(res)) {
+        throw new Error(res.error || 'failed to set session metadata');
+      }
+    });
   }
 
   /**
@@ -375,22 +409,12 @@ export class WalletLinkConnection {
       callWebhook,
     });
 
-    return new Promise<string>((resolve) => {
-      const publish = async () => {
-        const res = await this.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(
-          message
-        );
-        if (isServerMessageFail(res)) {
-          throw new Error(res.error || 'failed to publish event');
-        }
-        resolve(res.eventId);
-      };
-
-      if (this.linked) {
-        publish();
-      } else {
-        this.onceLinked = () => publish();
+    return this.setOnceLinked(async () => {
+      const res = await this.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(message);
+      if (isServerMessageFail(res)) {
+        throw new Error(res.error || 'failed to publish event');
       }
+      return res.eventId;
     });
   }
 
