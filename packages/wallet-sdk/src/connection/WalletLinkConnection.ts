@@ -110,10 +110,6 @@ export class WalletLinkConnection {
             await this.authenticate();
             this.sendIsLinked();
             this.sendGetSessionConfig();
-            // check for unseen events
-            if (this.shouldFetchUnseenEventsOnConnect) {
-              this.fetchUnseenEventsAPI();
-            }
             connected = true;
           } catch {
             /* empty */
@@ -128,6 +124,10 @@ export class WalletLinkConnection {
             this.heartbeat();
           }, HEARTBEAT_INTERVAL);
 
+          // check for unseen events
+          if (this.shouldFetchUnseenEventsOnConnect) {
+            this.fetchUnseenEventsAPI();
+          }
           break;
 
         case ConnectionState.CONNECTING:
@@ -135,8 +135,9 @@ export class WalletLinkConnection {
       }
 
       // distinctUntilChanged
-      if (connected === this.connected) return;
-      this.connected = connected;
+      if (this.connected !== connected) {
+        this.connected = connected;
+      }
     });
 
     ws.setIncomingDataListener((m) => {
