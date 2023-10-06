@@ -39,7 +39,6 @@ export class WalletLinkConnection {
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
   private connected = false;
-  private linked = false;
 
   private sessionConfigListener?: (_: SessionConfig) => void;
   setSessionConfigListener(listener: (_: SessionConfig) => void): void {
@@ -159,7 +158,6 @@ export class WalletLinkConnection {
           });
 
           this.linked = msg.linked || msg.onlineGuests > 0;
-          this.linkedListener?.(this.linked);
           break;
         }
 
@@ -238,6 +236,28 @@ export class WalletLinkConnection {
   public get isDestroyed(): boolean {
     return this.destroyed;
   }
+
+  /**
+   * true if linked (a guest has joined before)
+   * runs listener when linked status changes
+   */
+  private _linked = false;
+  private get linked(): boolean {
+    return this._linked;
+  }
+  private set linked(linked: boolean) {
+    this._linked = linked;
+    if (linked) {
+      this.onceLinked?.();
+      this.onceLinked = undefined;
+    }
+    this.linkedListener?.(linked);
+  }
+
+  /**
+   * Execute once when linked
+   */
+  private onceLinked?: () => void;
 
   private handleIncomingEvent(m: ServerMessage) {
     function isServerMessageEvent(msg: ServerMessage): msg is ServerMessageEvent {
@@ -347,10 +367,6 @@ export class WalletLinkConnection {
    * @returns a Promise that emits event ID when successful
    */
   public async publishEvent(event: string, data: string, callWebhook = false) {
-    if (!this.linked) {
-      return Promise.reject();
-    }
-
     const message = ClientMessagePublishEvent({
       id: IntNumber(this.nextReqId++),
       sessionId: this.sessionId,
@@ -359,11 +375,23 @@ export class WalletLinkConnection {
       callWebhook,
     });
 
-    const res = await this.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(message);
-    if (isServerMessageFail(res)) {
-      throw new Error(res.error || 'failed to publish event');
-    }
-    return res.eventId;
+    return new Promise<string>((resolve) => {
+      const publish = async () => {
+        const res = await this.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(
+          message
+        );
+        if (isServerMessageFail(res)) {
+          throw new Error(res.error || 'failed to publish event');
+        }
+        resolve(res.eventId);
+      };
+
+      if (this.linked) {
+        publish();
+      } else {
+        this.onceLinked = () => publish();
+      }
+    });
   }
 
   private sendData(message: ClientMessage): void {
