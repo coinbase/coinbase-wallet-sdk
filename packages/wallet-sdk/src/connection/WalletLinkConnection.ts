@@ -131,6 +131,8 @@ export class WalletLinkConnection {
           break;
       }
 
+      // distinctUntilChanged
+      if (connected === this.connected) return;
       this.connected = connected;
     });
 
@@ -241,12 +243,8 @@ export class WalletLinkConnection {
     return this._connected;
   }
   private set connected(connected: boolean) {
-    if (connected === this.connected) return; // distinctUntilChanged
     this._connected = connected;
-    if (connected) {
-      this.onceConnected?.();
-      this.onceConnected = undefined;
-    }
+    if (connected) this.onceConnected?.();
     this.connectedListener?.(connected);
   }
 
@@ -259,7 +257,10 @@ export class WalletLinkConnection {
       if (this.connected) {
         callback().then(resolve);
       } else {
-        this.onceConnected = () => callback().then(resolve);
+        this.onceConnected = () => {
+          callback().then(resolve);
+          this.onceConnected = undefined;
+        };
       }
     });
   }
@@ -274,10 +275,7 @@ export class WalletLinkConnection {
   }
   private set linked(linked: boolean) {
     this._linked = linked;
-    if (linked) {
-      this.onceLinked?.();
-      this.onceLinked = undefined;
-    }
+    if (linked) this.onceLinked?.();
     this.linkedListener?.(linked);
   }
 
@@ -290,7 +288,10 @@ export class WalletLinkConnection {
       if (this.linked) {
         callback().then(resolve);
       } else {
-        this.onceLinked = () => callback().then(resolve);
+        this.onceLinked = () => {
+          callback().then(resolve);
+          this.onceLinked = undefined;
+        };
       }
     });
   }
