@@ -105,12 +105,15 @@ export class WalletLinkConnection {
 
         case ConnectionState.CONNECTED:
           // perform authentication upon connection
-          // if CONNECTED, authenticate, and then check link status
           try {
+            // if CONNECTED, authenticate, and then check link status
             await this.authenticate();
-
             this.sendIsLinked();
             this.sendGetSessionConfig();
+            // check for unseen events
+            if (this.shouldFetchUnseenEventsOnConnect) {
+              this.fetchUnseenEventsAPI();
+            }
             connected = true;
           } catch {
             /* empty */
@@ -317,8 +320,11 @@ export class WalletLinkConnection {
     this.incomingEventListener?.(m);
   }
 
+  private shouldFetchUnseenEventsOnConnect = false;
+
   public async checkUnseenEvents() {
     if (!this.connected) {
+      this.shouldFetchUnseenEventsOnConnect = true;
       return;
     }
 
@@ -331,6 +337,8 @@ export class WalletLinkConnection {
   }
 
   private async fetchUnseenEventsAPI() {
+    this.shouldFetchUnseenEventsOnConnect = false;
+
     const credentials = `${this.sessionId}:${this.sessionKey}`;
     const auth = `Basic ${btoa(credentials)}`;
 
