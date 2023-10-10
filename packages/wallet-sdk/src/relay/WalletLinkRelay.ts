@@ -1,8 +1,6 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import bind from 'bind-decorator';
-
 import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
 import { EventListener } from '../connection/EventListener';
 import { ServerMessageEvent } from '../connection/ServerMessage';
@@ -101,6 +99,9 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
 
   constructor(options: Readonly<WalletLinkRelayOptions>) {
     super();
+    this.resetAndReload = this.resetAndReload.bind(this);
+    this.handleIncomingEvent = this.handleIncomingEvent.bind(this);
+
     this.linkAPIUrl = options.linkAPIUrl;
     this.storage = options.storage;
     this.options = options;
@@ -320,7 +321,6 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
     this.ui.attach();
   }
 
-  @bind
   public resetAndReload(): void {
     Promise.race([
       this.connection.setSessionMetadata('__destroyed', '1'),
@@ -643,7 +643,6 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       );
   }
 
-  @bind
   private handleIncomingEvent(event: ServerMessageEvent): void {
     aes256gcm
       .decrypt(event.data, this.session.secret)

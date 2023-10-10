@@ -2697,7 +2697,6 @@ __metadata:
     "@types/node": ^14.18.54
     "@types/sha.js": ^2.4.1
     babel-jest: ^27.5.1
-    bind-decorator: ^1.0.11
     bn.js: ^5.2.1
     buffer: ^6.0.3
     clsx: ^1.2.1
@@ -4811,13 +4810,6 @@ __metadata:
   version: 2.2.0
   resolution: "binary-extensions@npm:2.2.0"
   checksum: ccd267956c58d2315f5d3ea6757cf09863c5fc703e50fbeb13a7dc849b812ef76e3cf9ca8f35a0c48498776a7478d7b4a0418e1e2b8cb9cb9731f2922aaad7f8
-  languageName: node
-  linkType: hard
-
-"bind-decorator@npm:^1.0.11":
-  version: 1.0.11
-  resolution: "bind-decorator@npm:1.0.11"
-  checksum: 41b6c69af51ee7e6e01ea6f2939df94c9c760383f89f5befda0890951657baedbf499a0b96a789fd85cb77252465134f4e6184aae6639ed60cf59549ef15353d
   languageName: node
   linkType: hard
 

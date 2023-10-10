@@ -46,7 +46,7 @@ describe('CoinbaseWalletSDK', () => {
 
       test('@disconnect', () => {
         const relayResetMock = jest
-          .spyOn(WalletLinkRelay.prototype, 'resetAndReload')
+          .spyOn((coinbaseWalletSDK2 as any)._relay, 'resetAndReload')
           .mockImplementation(() => 'resetAndReload');
         coinbaseWalletSDK2.disconnect();
 
