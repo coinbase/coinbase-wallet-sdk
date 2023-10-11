@@ -42,7 +42,6 @@
     "eventemitter3": "^5.0.1",
     "keccak": "^3.0.3",
     "preact": "^10.16.0",
-    "rxjs": "^6.6.3",
     "sha.js": "^2.4.11"
   },
   "devDependencies": {

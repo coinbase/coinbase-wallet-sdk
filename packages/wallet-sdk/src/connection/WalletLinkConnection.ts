@@ -1,30 +1,5 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
-import {
-  BehaviorSubject,
-  iif,
-  merge,
-  Observable,
-  of,
-  Subject,
-  Subscription,
-  throwError,
-  timer,
-} from 'rxjs';
-import {
-  catchError,
-  delay,
-  distinctUntilChanged,
-  filter,
-  flatMap,
-  map,
-  retry,
-  skip,
-  switchMap,
-  take,
-  tap,
-  timeoutWith,
-} from 'rxjs/operators';
 
 import { Session } from '../relay/Session';
 import { IntNumber } from '../types';
@@ -37,7 +12,7 @@ import {
   ClientMessageSetSessionConfig,
 } from './ClientMessage';
 import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
-import { ConnectionState, RxWebSocket } from './RxWebSocket';
+import { ConnectionState, WalletLinkWebSocket } from './RxWebSocket';
 import {
   isServerMessageFail,
   ServerMessage,
@@ -59,14 +34,10 @@ const REQUEST_TIMEOUT = 60000;
  * Coinbase Wallet Connection
  */
 export class WalletLinkConnection {
-  private ws: RxWebSocket<ServerMessage>;
-  private subscriptions = new Subscription();
+  private ws: WalletLinkWebSocket;
   private destroyed = false;
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
-  private connectedSubject = new BehaviorSubject(false);
-  private linkedSubject = new BehaviorSubject(false);
-  private unseenEventsSubject = new Subject<ServerMessageEvent>();
 
   private sessionConfigListener?: (_: SessionConfig) => void;
   setSessionConfigListener(listener: (_: SessionConfig) => void): void {
@@ -83,8 +54,9 @@ export class WalletLinkConnection {
     this.connectedListener = listener;
   }
 
+  private incomingEventListener?: (_: ServerMessageEvent) => void;
   setIncomingEventListener(listener: (_: ServerMessageEvent) => void): void {
-    this.subscribeIncomingEvent(listener);
+    this.incomingEventListener = listener;
   }
 
   /**
@@ -101,94 +73,83 @@ export class WalletLinkConnection {
     private diagnostic?: DiagnosticLogger,
     WebSocketClass: typeof WebSocket = WebSocket
   ) {
-    const ws = new RxWebSocket<ServerMessage>(`${linkAPIUrl}/rpc`, WebSocketClass);
+    const ws = new WalletLinkWebSocket(`${linkAPIUrl}/rpc`, WebSocketClass);
     this.ws = ws;
 
-    // attempt to reconnect every 5 seconds when disconnected
-    this.subscriptions.add(
-      ws.connectionState$
-        .pipe(
-          tap(
-            (state) =>
-              this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
-                state,
-                sessionIdHash: Session.hash(sessionId),
-              })
-          ),
-          // ignore initial DISCONNECTED state
-          skip(1),
+    this.ws.setConnectionStateListener(async (state) => {
+      // attempt to reconnect every 5 seconds when disconnected
+      this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
+        state,
+        sessionIdHash: Session.hash(sessionId),
+      });
+
+      let connected = false;
+      switch (state) {
+        case ConnectionState.DISCONNECTED:
           // if DISCONNECTED and not destroyed
-          filter((cs) => cs === ConnectionState.DISCONNECTED && !this.destroyed),
-          // wait 5 seconds
-          delay(5000),
-          // check whether it's destroyed again
-          filter((_) => !this.destroyed),
-          // reconnect
-          flatMap((_) => ws.connect()),
-          retry()
-        )
-        .subscribe()
-    );
+          if (!this.destroyed) {
+            const connect = async () => {
+              // wait 5 seconds
+              await new Promise((resolve) => setTimeout(resolve, 5000));
+              // check whether it's destroyed again
+              if (!this.destroyed) {
+                // reconnect
+                ws.connect().catch(() => {
+                  connect();
+                });
+              }
+            };
+            connect();
+          }
+          break;
 
-    // perform authentication upon connection
-    this.subscriptions.add(
-      ws.connectionState$
-        .pipe(
-          // ignore initial DISCONNECTED and CONNECTING states
-          skip(2),
-          switchMap((cs) =>
-            iif(
-              () => cs === ConnectionState.CONNECTED,
-              // if CONNECTED, authenticate, and then check link status
-              this.authenticate().pipe(
-                tap((_) => this.sendIsLinked()),
-                tap((_) => this.sendGetSessionConfig()),
-                map((_) => true)
-              ),
-              // if not CONNECTED, emit false immediately
-              of(false)
-            )
-          ),
-          distinctUntilChanged(),
-          catchError((_) => of(false))
-        )
-        .subscribe((connected) => {
-          this.connectedSubject.next(connected);
-          this.connectedListener?.(connected);
-        })
-    );
+        case ConnectionState.CONNECTED:
+          // perform authentication upon connection
+          try {
+            // if CONNECTED, authenticate, and then check link status
+            await this.authenticate();
+            this.sendIsLinked();
+            this.sendGetSessionConfig();
+            connected = true;
+          } catch {
+            /* empty */
+          }
 
-    // send heartbeat every n seconds while connected
-    this.subscriptions.add(
-      ws.connectionState$
-        .pipe(
-          // ignore initial DISCONNECTED state
-          skip(1),
-          switchMap((cs) =>
-            iif(
-              () => cs === ConnectionState.CONNECTED,
-              // if CONNECTED, start the heartbeat timer
-              timer(0, HEARTBEAT_INTERVAL)
-            )
-          )
-        )
-        .subscribe((i) =>
+          // send heartbeat every n seconds while connected
+          // if CONNECTED, start the heartbeat timer
           // first timer event updates lastHeartbeat timestamp
           // subsequent calls send heartbeat message
-          i === 0 ? this.updateLastHeartbeat() : this.heartbeat()
-        )
-    );
+          this.updateLastHeartbeat();
+          setInterval(() => {
+            this.heartbeat();
+          }, HEARTBEAT_INTERVAL);
 
-    // handle server's heartbeat responses
-    this.subscriptions.add(
-      ws.incomingData$.pipe(filter((m) => m === 'h')).subscribe((_) => this.updateLastHeartbeat())
-    );
+          // check for unseen events
+          if (this.shouldFetchUnseenEventsOnConnect) {
+            this.fetchUnseenEventsAPI();
+          }
+          break;
 
-    // handle link status updates
-    this.subscriptions.add(
-      ws.incomingJSONData$
-        .pipe(filter((m) => ['IsLinkedOK', 'Linked'].includes(m.type)))
-        .subscribe((m) => {
+        case ConnectionState.CONNECTING:
+          break;
+      }
+
+      // distinctUntilChanged
+      if (this.connected !== connected) {
+        this.connected = connected;
+      }
+    });
+
+    ws.setIncomingDataListener((m) => {
+      switch (m.type) {
+        // handle server's heartbeat responses
+        case 'Heartbeat':
+          this.updateLastHeartbeat();
+          return;
+
+        // handle link status updates
+        case 'IsLinkedOK':
+        case 'Linked': {
           const msg = m as Omit<ServerMessageIsLinkedOK, 'type'> & ServerMessageLinked;
           this.diagnostic?.log(EVENTS.LINKED, {
             sessionIdHash: Session.hash(sessionId),
@@ -196,16 +157,14 @@ export class WalletLinkConnection {
             type: m.type,
             onlineGuests: msg.onlineGuests,
           });
-          this.linkedSubject.next(msg.linked || msg.onlineGuests > 0);
-          this.linkedListener?.(msg.linked || msg.onlineGuests > 0);
-        })
-    );
 
-    // handle session config updates
-    this.subscriptions.add(
-      ws.incomingJSONData$
-        .pipe(filter((m) => ['GetSessionConfigOK', 'SessionConfigUpdated'].includes(m.type)))
-        .subscribe((m) => {
+          this.linked = msg.linked || msg.onlineGuests > 0;
+          break;
+        }
+
+        // handle session config updates
+        case 'GetSessionConfigOK':
+        case 'SessionConfigUpdated': {
           const msg = m as Omit<ServerMessageGetSessionConfigOK, 'type'> &
             ServerMessageSessionConfigUpdated;
           this.diagnostic?.log(EVENTS.SESSION_CONFIG_RECEIVED, {
@@ -217,23 +176,37 @@ export class WalletLinkConnection {
             webhookUrl: msg.webhookUrl,
             metadata: msg.metadata,
           });
-        })
-    );
+          break;
+        }
 
-    // mark unseen events as seen
-    this.subscriptions.add(
-      this.unseenEventsSubject.subscribe((e) => {
-        const credentials = `${this.sessionId}:${this.sessionKey}`;
-        const auth = `Basic ${btoa(credentials)}`;
+        case 'Event': {
+          this.handleIncomingEvent(m);
+          break;
+        }
+      }
 
+      // resolve request promises
+      if (m.id !== undefined) {
+        this.requestResolutions.get(m.id)?.(m);
+      }
+    });
+  }
+
+  // mark unseen events as seen
+  private markUnseenEventsAsSeen(events: ServerMessageEvent[]) {
+    const credentials = `${this.sessionId}:${this.sessionKey}`;
+    const auth = `Basic ${btoa(credentials)}`;
+
+    Promise.all(
+      events.map((e) =>
         fetch(`${this.linkAPIUrl}/events/${e.eventId}/seen`, {
           method: 'POST',
           headers: {
             Authorization: auth,
           },
-        }).catch((error) => console.error('Unabled to mark event as failed:', error));
-      })
-    );
+        })
+      )
+    ).catch((error) => console.error('Unabled to mark event as failed:', error));
   }
 
   /**
@@ -246,7 +219,7 @@ export class WalletLinkConnection {
     this.diagnostic?.log(EVENTS.STARTED_CONNECTING, {
       sessionIdHash: Session.hash(this.sessionId),
     });
-    this.ws.connect().subscribe();
+    this.ws.connect();
   }
 
   /**
@@ -254,7 +227,6 @@ export class WalletLinkConnection {
    * instance of WalletSDKConnection
    */
   public destroy(): void {
-    this.subscriptions.unsubscribe();
     this.ws.disconnect();
     this.diagnostic?.log(EVENTS.DISCONNECTED, {
       sessionIdHash: Session.hash(this.sessionId),
@@ -267,75 +239,96 @@ export class WalletLinkConnection {
   }
 
   /**
-   * Emit true if connected and authenticated, else false
-   * @returns an Observable
+   * true if connected and authenticated, else false
+   * runs listener when connected status changes
    */
-  private get connected$(): Observable<boolean> {
-    return this.connectedSubject.asObservable();
+  private _connected = false;
+  private get connected(): boolean {
+    return this._connected;
+  }
+  private set connected(connected: boolean) {
+    this._connected = connected;
+    if (connected) this.onceConnected?.();
+    this.connectedListener?.(connected);
   }
 
   /**
-   * Emit once connected
-   * @returns an Observable
+   * Execute once when connected
    */
-  private get onceConnected$(): Observable<void> {
-    return this.connected$.pipe(
-      filter((v) => v),
-      take(1),
-      map(() => void 0)
-    );
+  private onceConnected?: () => void;
+  private setOnceConnected<T>(callback: () => Promise<T>): Promise<T> {
+    return new Promise<T>((resolve) => {
+      if (this.connected) {
+        callback().then(resolve);
+      } else {
+        this.onceConnected = () => {
+          callback().then(resolve);
+          this.onceConnected = undefined;
+        };
+      }
+    });
   }
 
   /**
-   * Emit true if linked (a guest has joined before)
-   * @returns an Observable
+   * true if linked (a guest has joined before)
+   * runs listener when linked status changes
    */
-  private get linked$(): Observable<boolean> {
-    return this.linkedSubject.asObservable();
+  private _linked = false;
+  private get linked(): boolean {
+    return this._linked;
+  }
+  private set linked(linked: boolean) {
+    this._linked = linked;
+    if (linked) this.onceLinked?.();
+    this.linkedListener?.(linked);
   }
 
   /**
-   * Emit once when linked
-   * @returns an Observable
+   * Execute once when linked
    */
-  private get onceLinked$(): Observable<void> {
-    return this.linked$.pipe(
-      filter((v) => v),
-      take(1),
-      map(() => void 0)
-    );
+  private onceLinked?: () => void;
+  private setOnceLinked<T>(callback: () => Promise<T>): Promise<T> {
+    return new Promise<T>((resolve) => {
+      if (this.linked) {
+        callback().then(resolve);
+      } else {
+        this.onceLinked = () => {
+          callback().then(resolve);
+          this.onceLinked = undefined;
+        };
+      }
+    });
   }
 
-  /**
-   * Subscribe to incoming Event messages
-   */
-  private incomingEventSub?: Subscription;
-  private subscribeIncomingEvent(listener: (_: ServerMessageEvent) => void): void {
-    this.incomingEventSub?.unsubscribe();
+  private handleIncomingEvent(m: ServerMessage) {
+    function isServerMessageEvent(msg: ServerMessage): msg is ServerMessageEvent {
+      if (msg.type !== 'Event') {
+        return false;
+      }
+      const sme = msg as ServerMessageEvent;
+      return (
+        typeof sme.sessionId === 'string' &&
+        typeof sme.eventId === 'string' &&
+        typeof sme.event === 'string' &&
+        typeof sme.data === 'string'
+      );
+    }
 
-    this.incomingEventSub = merge(this.ws.incomingJSONData$, this.unseenEventsSubject)
-      .pipe(
-        filter((m) => {
-          if (m.type !== 'Event') {
-            return false;
-          }
-          const sme = m as ServerMessageEvent;
-          return (
-            typeof sme.sessionId === 'string' &&
-            typeof sme.eventId === 'string' &&
-            typeof sme.event === 'string' &&
-            typeof sme.data === 'string'
-          );
-        }),
-        map((m) => m as ServerMessageEvent)
-      )
-      .subscribe((m) => {
-        listener(m);
-      });
+    if (!isServerMessageEvent(m)) {
+      return;
+    }
+
+    this.incomingEventListener?.(m);
   }
+
+  private shouldFetchUnseenEventsOnConnect = false;
 
   public async checkUnseenEvents() {
-    await this.onceConnected$.toPromise();
+    if (!this.connected) {
+      this.shouldFetchUnseenEventsOnConnect = true;
+      return;
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 250));
     try {
       await this.fetchUnseenEventsAPI();
@@ -345,6 +338,8 @@ export class WalletLinkConnection {
   }
 
   private async fetchUnseenEventsAPI() {
+    this.shouldFetchUnseenEventsOnConnect = false;
+
     const credentials = `${this.sessionId}:${this.sessionKey}`;
     const auth = `Basic ${btoa(credentials)}`;
 
@@ -379,7 +374,9 @@ export class WalletLinkConnection {
             event: e.event,
             data: e.data,
           })) ?? [];
-      responseEvents.forEach((e) => this.unseenEventsSubject.next(e));
+      responseEvents.forEach((e) => this.handleIncomingEvent(e));
+
+      this.markUnseenEventsAsSeen(responseEvents);
     } else {
       throw new Error(`Check unseen events failed: ${response.status}`);
     }
@@ -389,23 +386,21 @@ export class WalletLinkConnection {
    * Set session metadata in SessionConfig object
    * @param key
    * @param value
-   * @returns an Observable that completes when successful
+   * @returns a Promise that completes when successful
    */
-  public setSessionMetadata(key: string, value: string | null): Promise<void> {
+  public async setSessionMetadata(key: string, value: string | null) {
     const message = ClientMessageSetSessionConfig({
       id: IntNumber(this.nextReqId++),
       sessionId: this.sessionId,
       metadata: { [key]: value },
     });
 
-    return this.onceConnected$
-      .toPromise()
-      .then(() => this.makeRequest<ServerMessageOK | ServerMessageFail>(message).toPromise())
-      .then((res) => {
-        if (isServerMessageFail(res)) {
-          throw new Error(res.error || 'failed to set session metadata');
-        }
-      });
+    return this.setOnceConnected(async () => {
+      const res = await this.makeRequest<ServerMessageOK | ServerMessageFail>(message);
+      if (isServerMessageFail(res)) {
+        throw new Error(res.error || 'failed to set session metadata');
+      }
+    });
   }
 
   /**
@@ -413,9 +408,9 @@ export class WalletLinkConnection {
    * @param event event name
    * @param data event data
    * @param callWebhook whether the webhook should be invoked
-   * @returns an Observable that emits event ID when successful
+   * @returns a Promise that emits event ID when successful
    */
-  public publishEvent(event: string, data: string, callWebhook = false): Observable<string> {
+  public async publishEvent(event: string, data: string, callWebhook = false) {
     const message = ClientMessagePublishEvent({
       id: IntNumber(this.nextReqId++),
       sessionId: this.sessionId,
@@ -424,15 +419,13 @@ export class WalletLinkConnection {
       callWebhook,
     });
 
-    return this.onceLinked$.pipe(
-      flatMap((_) => this.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(message)),
-      map((res) => {
-        if (isServerMessageFail(res)) {
-          throw new Error(res.error || 'failed to publish event');
-        }
-        return res.eventId;
-      })
-    );
+    return this.setOnceLinked(async () => {
+      const res = await this.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(message);
+      if (isServerMessageFail(res)) {
+        throw new Error(res.error || 'failed to publish event');
+      }
+      return res.eventId;
+    });
   }
 
   private sendData(message: ClientMessage): void {
@@ -455,38 +448,43 @@ export class WalletLinkConnection {
     }
   }
 
-  private makeRequest<T extends ServerMessage>(
+  private requestResolutions = new Map<IntNumber, (_: ServerMessage) => void>();
+
+  private async makeRequest<T extends ServerMessage>(
     message: ClientMessage,
     timeout: number = REQUEST_TIMEOUT
-  ): Observable<T> {
+  ): Promise<T> {
     const reqId = message.id;
-    try {
-      this.sendData(message);
-    } catch (err) {
-      return throwError(err);
-    }
+    this.sendData(message);
 
     // await server message with corresponding id
-    return (this.ws.incomingJSONData$ as Observable<T>).pipe(
-      timeoutWith(timeout, throwError(new Error(`request ${reqId} timed out`))),
-      filter((m) => m.id === reqId),
-      take(1)
-    );
+    let timeoutId: number;
+    return Promise.race([
+      new Promise<T>((_, reject) => {
+        timeoutId = window.setTimeout(() => {
+          reject(new Error(`request ${reqId} timed out`));
+        }, timeout);
+      }),
+      new Promise<T>((resolve) => {
+        this.requestResolutions.set(reqId, (m) => {
+          clearTimeout(timeoutId); // clear the timeout
+          resolve(m as T);
+          this.requestResolutions.delete(reqId);
+        });
+      }),
+    ]);
   }
 
-  private authenticate(): Observable<void> {
+  private async authenticate() {
     const msg = ClientMessageHostSession({
       id: IntNumber(this.nextReqId++),
       sessionId: this.sessionId,
       sessionKey: this.sessionKey,
     });
-    return this.makeRequest<ServerMessageOK | ServerMessageFail>(msg).pipe(
-      map((res) => {
-        if (isServerMessageFail(res)) {
-          throw new Error(res.error || 'failed to authentcate');
-        }
-      })
-    );
+    const res = await this.makeRequest<ServerMessageOK | ServerMessageFail>(msg);
+    if (isServerMessageFail(res)) {
+      throw new Error(res.error || 'failed to authentcate');
+    }
   }
 
   private sendIsLinked(): void {

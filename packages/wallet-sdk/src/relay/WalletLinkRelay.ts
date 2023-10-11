@@ -638,9 +638,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
         }),
         secret
       )
-      .then((encrypted: string) =>
-        this.connection.publishEvent(event, encrypted, callWebhook).toPromise()
-      );
+      .then((encrypted: string) => this.connection.publishEvent(event, encrypted, callWebhook));
   }
 
   private handleIncomingEvent(event: ServerMessageEvent): void {
