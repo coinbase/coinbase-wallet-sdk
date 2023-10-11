@@ -11,8 +11,6 @@ describe('LinkFlow', () => {
     sessionSecret: 'sessionSecret',
     linkAPIUrl: 'http://link-url.com',
     isParentConnection: false,
-    connected: false,
-    chainId: 1,
   });
 
   test('initialize', () => {
@@ -89,8 +87,6 @@ describe('LinkFlow', () => {
         sessionSecret: 'sessionSecret',
         linkAPIUrl: 'http://link-url.com',
         isParentConnection: false,
-        connected: false,
-        chainId: 1,
       });
       linkFlow1.detach();
 

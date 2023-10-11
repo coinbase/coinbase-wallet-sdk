@@ -12,8 +12,6 @@ describe('WalletLinkRelayUI', () => {
     // @ts-expect-error mock session
     session: new Session(),
     linkAPIUrl: 'http://link-url.com',
-    connected: false,
-    chainId: 1,
   });
 
   render('<div />');
