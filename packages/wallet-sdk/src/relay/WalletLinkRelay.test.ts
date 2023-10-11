@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { WalletLinkWebSocket } from '../connection/RxWebSocket';
 import { ServerMessageEvent } from '../connection/ServerMessage';
 import { SessionConfig } from '../connection/SessionConfig';
 import { WalletLinkConnection } from '../connection/WalletLinkConnection';
+import { WalletLinkWebSocket } from '../connection/WalletLinkWebSocket';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import * as aes256gcm from './aes256gcm';
 import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay';

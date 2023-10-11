@@ -12,7 +12,6 @@ import {
   ClientMessageSetSessionConfig,
 } from './ClientMessage';
 import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
-import { ConnectionState, WalletLinkWebSocket } from './RxWebSocket';
 import {
   isServerMessageFail,
   ServerMessage,
@@ -26,6 +25,7 @@ import {
   ServerMessageSessionConfigUpdated,
 } from './ServerMessage';
 import { SessionConfig } from './SessionConfig';
+import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket';
 
 const HEARTBEAT_INTERVAL = 10000;
 const REQUEST_TIMEOUT = 60000;
