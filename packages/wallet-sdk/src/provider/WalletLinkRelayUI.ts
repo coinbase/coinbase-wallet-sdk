@@ -34,8 +34,6 @@ export class WalletLinkRelayUI implements WalletUI {
       sessionId: options.session.id,
       sessionSecret: options.session.secret,
       linkAPIUrl: options.linkAPIUrl,
-      connected: false,
-      chainId: 1,
       isParentConnection: false,
     });
   }

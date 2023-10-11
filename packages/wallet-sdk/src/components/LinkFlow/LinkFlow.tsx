@@ -12,8 +12,6 @@ export interface LinkFlowOptions {
   sessionSecret: string;
   linkAPIUrl: string;
   isParentConnection: boolean;
-  chainId: number;
-  connected: boolean;
 }
 
 export class LinkFlow {
@@ -24,8 +22,8 @@ export class LinkFlow {
   private readonly linkAPIUrl: string;
   private readonly isParentConnection: boolean;
 
-  private connected: boolean;
-  private chainId: number;
+  private connected: boolean = false;
+  private chainId: number = 1;
   private isOpen = false;
   private onCancel: (() => void) | null = null;
 
@@ -41,8 +39,6 @@ export class LinkFlow {
     this.sessionSecret = options.sessionSecret;
     this.linkAPIUrl = options.linkAPIUrl;
     this.isParentConnection = options.isParentConnection;
-    this.connected = options.connected;
-    this.chainId = options.chainId;
   }
 
   public attach(el: Element): void {
