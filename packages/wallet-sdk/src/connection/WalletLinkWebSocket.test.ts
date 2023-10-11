@@ -1,6 +1,6 @@
 import WS from 'jest-websocket-mock';
 
-import { ConnectionState, WalletLinkWebSocket } from './RxWebSocket';
+import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket';
 
 describe('WalletLinkWebSocket', () => {
   let server: WS;
