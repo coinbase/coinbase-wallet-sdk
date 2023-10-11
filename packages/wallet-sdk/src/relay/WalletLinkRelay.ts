@@ -302,8 +302,6 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       version: this.options.version,
       darkMode: this.options.darkMode,
       session,
-      connected: false,
-      chainId: this.dappDefaultChain,
     });
 
     if (ui instanceof WalletLinkRelayUI) {
@@ -623,7 +621,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
     this.publishEvent('Web3RequestCanceled', message, false).then();
   }
 
-  private publishEvent(
+  protected publishEvent(
     event: string,
     message: RelayMessage,
     callWebhook: boolean
