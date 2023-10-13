@@ -9,7 +9,7 @@ import { RequestArguments, Web3Provider } from './Web3Provider';
 
 // TODO: When we update this package we should be able to fix this
 //  eslint-disable-next-line @typescript-eslint/no-var-requires
-const createSubscriptionManager = require('eth-json-rpc-filters/subscriptionManager');
+const createSubscriptionMiddleware = require('@metamask/eth-json-rpc-filters/subscriptionManager');
 const noop = () => {};
 
 export interface SubscriptionResult {
@@ -35,7 +35,7 @@ export class SubscriptionManager {
       setSkipCacheFlag: true,
     });
 
-    const { events, middleware } = createSubscriptionManager({
+    const { events, middleware } = createSubscriptionMiddleware({
       blockTracker,
       provider,
     });
