@@ -38,7 +38,7 @@
     "bn.js": "^5.2.1",
     "buffer": "^6.0.3",
     "clsx": "^1.2.1",
-    "eth-block-tracker": "^7.1.0",
+    "eth-block-tracker": "^8.1.0",
     "eventemitter3": "^5.0.1",
     "keccak": "^3.0.3",
     "preact": "^10.16.0",
