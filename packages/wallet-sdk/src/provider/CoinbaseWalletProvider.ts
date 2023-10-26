@@ -804,6 +804,11 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
         return this._wallet_watchAsset(params);
     }
 
+    this.diagnostic?.log(EVENTS.METHOD_NOT_IMPLEMENTED, {
+      method: request.method,
+      sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : undefined,
+    });
+
     const relay = await this.initializeRelay();
     return relay.makeEthereumJSONRPCRequest(request, this.jsonRpcUrl);
   }
