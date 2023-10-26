@@ -8,10 +8,12 @@ import { useCallback, useState } from 'preact/hooks';
 import { createQrUrl } from '../../util';
 import { LIB_VERSION } from '../../version';
 import { CloseIcon } from '../icons/CloseIcon';
+import coinbaseRound from '../icons/coinbase-round-svg';
 import coinbaseWalletRound from '../icons/coinbase-wallet-round-svg';
 import { QRCodeIcon } from '../icons/QRCodeIcon';
 import coinbaseLogo from '../icons/QRLogoCoinbase';
 import walletLogo from '../icons/QRLogoWallet';
+import { StatusDotIcon } from '../icons/StatusDotIcon';
 import { QRCode } from '../QRCode';
 import { Spinner } from '../Spinner/Spinner';
 import { Theme } from '../types';
@@ -35,6 +37,12 @@ const wallets = {
     description: 'Connect with your self-custody wallet',
     icon: coinbaseWalletRound,
     steps: CoinbaseWalletSteps,
+  },
+  'coinbase-app': {
+    title: 'Coinbase app',
+    description: 'Connect with your Coinbase account',
+    icon: coinbaseRound,
+    steps: CoinbaseAppSteps,
   },
 };
 
@@ -76,13 +84,14 @@ export function ConnectContent(props: ConnectContentProps) {
     return null;
   }
   const WalletSteps = wallet.steps;
+  const coinbaseApp = selected === 'coinbase-app';
 
   return (
     <div data-testid="connect-content" className={clsx('-cbwsdk-connect-content', theme)}>
       <style>{css}</style>
       <div className="-cbwsdk-connect-content-header">
         <h2 className={clsx('-cbwsdk-connect-content-heading', theme)}>
-          Scan to connect with our mobile app
+          Scan to connect with one of our mobile apps
         </h2>
         {props.onCancel && (
           <button type="button" className={'-cbwsdk-cancel-button'} onClick={props.onCancel}>
@@ -107,6 +116,12 @@ export function ConnectContent(props: ConnectContentProps) {
               );
             })}
           </div>
+          {coinbaseApp && (
+            <div className={clsx('-cbwsdk-connect-content-update-app', theme)}>
+              Don’t see a <strong>Scan</strong> option? Update your Coinbase app to the latest
+              version and try again.
+            </div>
+          )}
         </div>
         <div className="-cbwsdk-connect-content-column-right">
           <div className="-cbwsdk-connect-content-qr-wrapper">
@@ -185,6 +200,36 @@ export function CoinbaseWalletSteps({ theme }: WalletStepsProps) {
         <div className="-cbwsdk-wallet-steps-item-wrapper">
           <span>
             Tap <strong>Scan</strong>{' '}
+          </span>
+          <span
+            className={clsx('-cbwsdk-wallet-steps-pad-left', '-cbwsdk-wallet-steps-icon', theme)}
+          >
+            <QRCodeIcon fill={makeIconColor(theme)} />
+          </span>
+        </div>
+      </li>
+    </ol>
+  );
+}
+
+export function CoinbaseAppSteps({ theme }: WalletStepsProps) {
+  return (
+    <ol className="-cbwsdk-wallet-steps">
+      <li className={clsx('-cbwsdk-wallet-steps-item', theme)}>
+        <div className="-cbwsdk-wallet-steps-item-wrapper">Open Coinbase app</div>
+      </li>
+      <li className={clsx('-cbwsdk-wallet-steps-item', theme)}>
+        <div className="-cbwsdk-wallet-steps-item-wrapper">
+          <span>
+            Tap <strong>More</strong>
+          </span>
+          <span
+            className={clsx('-cbwsdk-wallet-steps-pad-left', '-cbwsdk-wallet-steps-icon', theme)}
+          >
+            <StatusDotIcon fill={makeIconColor(theme)} />
+          </span>
+          <span className="-cbwsdk-wallet-steps-pad-left">
+            then <strong>Scan</strong>
           </span>
           <span
             className={clsx('-cbwsdk-wallet-steps-pad-left', '-cbwsdk-wallet-steps-icon', theme)}
