@@ -8,7 +8,7 @@ TEAL='\033[0;36m'
 GREEN='\033[1;32m'
 
 gitMessage=$(git log --oneline -n 1)
-mainBranch="master"
+mainBranch="v3.7"
 branch=$(git rev-parse --abbrev-ref HEAD)
 
 if [ $branch == $mainBranch ]; then

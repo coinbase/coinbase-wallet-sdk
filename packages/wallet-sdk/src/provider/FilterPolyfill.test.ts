@@ -1,4 +1,4 @@
-import { mockExtensionProvider } from '../mocks/provider';
+import { mockExtensionProvider } from '../__mocks__/provider';
 import { IntNumber } from '../types';
 import { FilterPolyfill } from './FilterPolyfill';
 
