@@ -94,6 +94,7 @@ export class WalletLinkWebSocket {
       return;
     }
     this.clearWebSocket();
+
     this.connectionStateListener?.(ConnectionState.DISCONNECTED);
     this.connectionStateListener = undefined;
     this.incomingDataListener = undefined;
