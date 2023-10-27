@@ -227,11 +227,17 @@ export class WalletLinkConnection {
    * instance of WalletSDKConnection
    */
   public destroy(): void {
+    this.destroyed = true;
+
     this.ws.disconnect();
     this.diagnostic?.log(EVENTS.DISCONNECTED, {
       sessionIdHash: Session.hash(this.sessionId),
     });
-    this.destroyed = true;
+
+    this.sessionConfigListener = undefined;
+    this.connectedListener = undefined;
+    this.linkedListener = undefined;
+    this.incomingEventListener = undefined;
   }
 
   public get isDestroyed(): boolean {
