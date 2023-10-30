@@ -886,6 +886,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     value?: unknown;
     data?: unknown;
     nonce?: unknown;
+    chainId?: unknown;
   }): EthereumTransactionParams {
     const fromAddress = tx.from ? ensureAddressString(tx.from) : this.selectedAddress;
     if (!fromAddress) {
@@ -903,7 +904,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     const maxPriorityFeePerGas =
       tx.maxPriorityFeePerGas != null ? ensureBN(tx.maxPriorityFeePerGas) : null;
     const gasLimit = tx.gas != null ? ensureBN(tx.gas) : null;
-    const chainId = this.getChainId();
+    const chainId = tx.chainId ? ensureIntNumber(tx.chainId) : this.getChainId();
 
     return {
       fromAddress,
