@@ -187,8 +187,8 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
         this.updateProviderInfo(jsonRpcUrl, Number(_chainId));
       }
 
-      if (event.data.data.action === 'addressChanged') {
-        this._setAddresses([event.data.data.address]);
+      if (event.data.data.action === 'addressesChanged') {
+        this._setAddresses(event.data.data.addresses);
       }
     });
   }

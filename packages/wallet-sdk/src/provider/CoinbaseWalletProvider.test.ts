@@ -225,7 +225,7 @@ describe('CoinbaseWalletProvider', () => {
     expect(result).toBe('Success');
   });
 
-  it("updates the providers address on a postMessage's 'addressChanged' event", () => {
+  it("updates the providers address on a postMessage's 'addressesChanged' event", () => {
     const provider = setupCoinbaseWalletProvider();
 
     // @ts-expect-error _addresses is private
@@ -238,8 +238,8 @@ describe('CoinbaseWalletProvider', () => {
       new MessageEvent('message', {
         data: {
           data: {
-            action: 'addressChanged',
-            address: '0x0000000000000000000000000000000000001010',
+            action: 'addressesChanged',
+            addresses: ['0x0000000000000000000000000000000000001010'],
           },
           type: 'walletLinkMessage',
         },
@@ -252,7 +252,7 @@ describe('CoinbaseWalletProvider', () => {
     expect(provider._addresses).toEqual(['0x0000000000000000000000000000000000001010']);
   });
 
-  it("returns empty address on a postMessage's 'addressChanged' event when window is unspecified", () => {
+  it("returns empty address on a postMessage's 'addressesChanged' event when window is unspecified", () => {
     const provider = setupCoinbaseWalletProvider();
 
     // @ts-expect-error _addresses is private
@@ -263,8 +263,8 @@ describe('CoinbaseWalletProvider', () => {
       new MessageEvent('message', {
         data: {
           data: {
-            action: 'addressChanged',
-            address: '0x0000000000000000000000000000000000001010',
+            action: 'addressesChanged',
+            address: ['0x0000000000000000000000000000000000001010'],
           },
           type: 'walletLinkMessage',
         },
@@ -276,7 +276,7 @@ describe('CoinbaseWalletProvider', () => {
     expect(provider._addresses).toEqual([]);
   });
 
-  it("returns empty address on a postMessage's 'addressChanged' event when location's origin is mismatched", () => {
+  it("returns empty address on a postMessage's 'addressesChanged' event when location's origin is mismatched", () => {
     const provider = setupCoinbaseWalletProvider();
 
     // @ts-expect-error _addresses is private
@@ -290,8 +290,8 @@ describe('CoinbaseWalletProvider', () => {
       new MessageEvent('message', {
         data: {
           data: {
-            action: 'addressChanged',
-            address: '0x0000000000000000000000000000000000001010',
+            action: 'addressesChanged',
+            address: ['0x0000000000000000000000000000000000001010'],
           },
           type: 'walletLinkMessage',
         },
