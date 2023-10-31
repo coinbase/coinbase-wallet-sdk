@@ -264,7 +264,7 @@ describe('CoinbaseWalletProvider', () => {
         data: {
           data: {
             action: 'addressesChanged',
-            address: ['0x0000000000000000000000000000000000001010'],
+            addresses: ['0x0000000000000000000000000000000000001010'],
           },
           type: 'walletLinkMessage',
         },
@@ -291,7 +291,7 @@ describe('CoinbaseWalletProvider', () => {
         data: {
           data: {
             action: 'addressesChanged',
-            address: ['0x0000000000000000000000000000000000001010'],
+            addresses: ['0x0000000000000000000000000000000000001010'],
           },
           type: 'walletLinkMessage',
         },
