@@ -875,6 +875,7 @@ export class CoinbaseWalletProvider
     value?: unknown;
     data?: unknown;
     nonce?: unknown;
+    chainId?: unknown;
   }): EthereumTransactionParams {
     const fromAddress = tx.from
       ? ensureAddressString(tx.from)
@@ -897,7 +898,7 @@ export class CoinbaseWalletProvider
         ? ensureBN(tx.maxPriorityFeePerGas)
         : null;
     const gasLimit = tx.gas != null ? ensureBN(tx.gas) : null;
-    const chainId = this.getChainId();
+    const chainId = tx.chainId ? ensureIntNumber(tx.chainId) : this.getChainId();
 
     return {
       fromAddress,
