@@ -225,11 +225,11 @@ describe('CoinbaseWalletProvider', () => {
     expect(result).toBe('Success');
   });
 
-  it("updates the providers address on a postMessage's 'addressesChanged' event", () => {
+  it("does NOT update the providers address on a postMessage's 'addressesChanged' event", () => {
     const provider = setupCoinbaseWalletProvider();
 
     // @ts-expect-error _addresses is private
-    expect(provider._addresses).not.toEqual(['0x0000000000000000000000000000000000001010']);
+    expect(provider._addresses).toEqual([])
 
     const url = 'dapp.finance';
     Object.defineProperty(window, 'location', { value: { origin: url } });
@@ -249,60 +249,9 @@ describe('CoinbaseWalletProvider', () => {
     );
 
     // @ts-expect-error _addresses is private
-    expect(provider._addresses).toEqual(['0x0000000000000000000000000000000000001010']);
+    expect(provider._addresses).toEqual([])
   });
 
-  it("returns empty address on a postMessage's 'addressesChanged' event when window is unspecified", () => {
-    const provider = setupCoinbaseWalletProvider();
-
-    // @ts-expect-error _addresses is private
-    expect(provider._addresses).not.toEqual(['0x0000000000000000000000000000000000001010']);
-
-    fireEvent(
-      window,
-      new MessageEvent('message', {
-        data: {
-          data: {
-            action: 'addressesChanged',
-            addresses: ['0x0000000000000000000000000000000000001010'],
-          },
-          type: 'walletLinkMessage',
-        },
-        origin: 'dapp.finance',
-      })
-    );
-
-    // @ts-expect-error _addresses is private
-    expect(provider._addresses).toEqual([]);
-  });
-
-  it("returns empty address on a postMessage's 'addressesChanged' event when location's origin is mismatched", () => {
-    const provider = setupCoinbaseWalletProvider();
-
-    // @ts-expect-error _addresses is private
-    expect(provider._addresses).not.toEqual(['0x0000000000000000000000000000000000001010']);
-
-    Object.defineProperty(location, 'origin', {
-      value: { origin: 'not.dapp.finance' },
-    });
-    fireEvent(
-      window,
-      new MessageEvent('message', {
-        data: {
-          data: {
-            action: 'addressesChanged',
-            addresses: ['0x0000000000000000000000000000000000001010'],
-          },
-          type: 'walletLinkMessage',
-        },
-        origin: 'dapp.finance',
-        source: window,
-      })
-    );
-
-    // @ts-expect-error _addresses is private
-    expect(provider._addresses).toEqual([]);
-  });
 
   it('handles error responses with generic requests', async () => {
     const relay = new MockRelayClass();
