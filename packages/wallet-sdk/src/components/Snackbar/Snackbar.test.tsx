@@ -26,7 +26,6 @@ describe('Snackbar', () => {
     test('@presentItem', async () => {
       snackbar.presentItem({
         message: 'Confirm on phone',
-        appSrc: 'coinbase-wallet',
         menuItems: [
           {
             isRed: true,

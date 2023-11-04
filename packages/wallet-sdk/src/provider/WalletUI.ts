@@ -155,11 +155,6 @@ export interface WalletUI {
   isStandalone(): boolean;
 
   /**
-   * Set the UI's app src for different apps
-   */
-  setAppSrc(src: string): void;
-
-  /**
    * We want to disable showing the qr code for in-page connection if the dapp hasn't provided a json rpc url
    */
   setConnectDisabled(_: boolean): void;
