@@ -56,8 +56,6 @@ export interface CoinbaseWalletProviderOptions {
   relayProvider: () => Promise<WalletSDKRelayAbstract>;
   storage: ScopedLocalStorage;
   diagnosticLogger?: DiagnosticLogger;
-  supportsAddressSwitching?: boolean;
-  isLedger?: boolean;
 }
 
 interface AddEthereumChainParams {
@@ -116,10 +114,6 @@ export class CoinbaseWalletProvider
 
   private hasMadeFirstChainChangedEmission = false;
 
-  private supportsAddressSwitching?: boolean;
-
-  private isLedger?: boolean;
-
   constructor(options: Readonly<CoinbaseWalletProviderOptions>) {
     super();
 
@@ -150,9 +144,6 @@ export class CoinbaseWalletProvider
 
     this.qrUrl = options.qrUrl;
 
-    this.supportsAddressSwitching = options.supportsAddressSwitching;
-    this.isLedger = options.isLedger;
-
     const chainId = this.getChainId();
     const chainIdStr = prepend0x(chainId.toString(16));
     // indicate that we've connected, for EIP-1193 compliance
@@ -179,7 +170,7 @@ export class CoinbaseWalletProvider
       },
     );
 
-    if (this._addresses.length > 0) {
+    if (this._isAuthorized()) {
       void this.initializeRelay();
     }
 
@@ -191,10 +182,7 @@ export class CoinbaseWalletProvider
 
       if (event.data.type !== "walletLinkMessage") return; // compatibility with CBW extension
 
-      if (
-        event.data.data.action === "defaultChainChanged" ||
-        event.data.data.action === "dappChainSwitched"
-      ) {
+      if (event.data.data.action === "dappChainSwitched") {
         const _chainId = event.data.data.chainId;
         const jsonRpcUrl = event.data.data.jsonRpcUrl ?? this.jsonRpcUrl;
         this.updateProviderInfo(jsonRpcUrl, Number(_chainId));
@@ -260,13 +248,8 @@ export class CoinbaseWalletProvider
     this.reloadOnDisconnect = false;
   }
 
-  /**
-   * this function is called when coinbase provider is being injected to a dapp
-   * standalone + walletlinked extension, ledger, in-app browser using cipher-web-view
-   */
   public setProviderInfo(jsonRpcUrl: string, chainId: number) {
-    // extension tend to use the chianId from the dapp, while in-app browser and ledger overrides the default network
-    if (!(this.isLedger || this.isCoinbaseBrowser)) {
+    if (!this.isCoinbaseBrowser) {
       this._chainIdFromOpts = chainId;
       this._jsonRpcUrlFromOpts = jsonRpcUrl;
     }
@@ -390,7 +373,7 @@ export class CoinbaseWalletProvider
         : undefined,
     });
 
-    if (this._addresses.length > 0) {
+    if (this._isAuthorized()) {
       return [...this._addresses];
     }
 
@@ -646,7 +629,7 @@ export class CoinbaseWalletProvider
     return response;
   }
 
-  private _setAddresses(addresses: string[], isDisconnect?: boolean): void {
+  protected _setAddresses(addresses: string[], _?: boolean): void {
     if (!Array.isArray(addresses)) {
       throw new Error("addresses is not an array");
     }
@@ -654,18 +637,6 @@ export class CoinbaseWalletProvider
     const newAddresses = addresses.map(address => ensureAddressString(address));
 
     if (JSON.stringify(newAddresses) === JSON.stringify(this._addresses)) {
-      return;
-    }
-
-    if (
-      this._addresses.length > 0 &&
-      this.supportsAddressSwitching === false &&
-      !isDisconnect
-    ) {
-      /**
-       * The extension currently doesn't support switching selected wallet index
-       * make sure walletlink doesn't update it's address in this case
-       */
       return;
     }
 
@@ -914,7 +885,7 @@ export class CoinbaseWalletProvider
     };
   }
 
-  private _isAuthorized(): boolean {
+  protected _isAuthorized(): boolean {
     return this._addresses.length > 0;
   }
 
@@ -1008,7 +979,7 @@ export class CoinbaseWalletProvider
         : undefined,
     });
 
-    if (this._addresses.length > 0) {
+    if (this._isAuthorized()) {
       return Promise.resolve({
         jsonrpc: "2.0",
         id: 0,
@@ -1037,7 +1008,7 @@ export class CoinbaseWalletProvider
     }
 
     this._setAddresses(res.result);
-    if (!(this.isLedger || this.isCoinbaseBrowser)) {
+    if (!this.isCoinbaseBrowser) {
       await this.switchEthereumChain(this.getChainId());
     }
 
