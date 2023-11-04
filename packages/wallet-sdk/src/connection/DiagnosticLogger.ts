@@ -46,5 +46,6 @@ export const EVENTS = {
   WEB3_REQUEST: 'walletlink_sdk.web3.request',
   WEB3_REQUEST_PUBLISHED: 'walletlink_sdk.web3.request_published',
   WEB3_RESPONSE: 'walletlink_sdk.web3.response',
+  METHOD_NOT_IMPLEMENTED: 'walletlink_sdk.method_not_implemented',
   UNKNOWN_ADDRESS_ENCOUNTERED: 'walletlink_sdk.unknown_address_encountered',
 };
