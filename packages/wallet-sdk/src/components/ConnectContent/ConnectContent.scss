@@ -199,27 +199,17 @@
     cursor: pointer;
 
     &.light {
-      color: $black;
-
-      &.selected {
-        background: $primary-wash;
-        color: $primary;
-      }
+      background: $primary-wash;
+      color: $primary;
     }
 
     &.dark {
-      color: $white;
-
-      &.selected {
-        background: $primary-wash-dark;
-        color: $primary-dark;
-      }
+      background: $primary-wash-dark;
+      color: $primary-dark;
     }
 
-    &.selected {
-      border-radius: 100px;
-      font-weight: 600;
-    }
+    border-radius: 100px;
+    font-weight: 600;
 
     &-copy-wrapper {
       margin: 0 4px 0 8px;

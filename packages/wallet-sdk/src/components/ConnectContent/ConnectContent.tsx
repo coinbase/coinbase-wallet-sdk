@@ -3,14 +3,12 @@
 
 import clsx from 'clsx';
 import { h } from 'preact';
-import { useCallback, useState } from 'preact/hooks';
 
 import { createQrUrl } from '../../util';
 import { LIB_VERSION } from '../../version';
 import { CloseIcon } from '../icons/CloseIcon';
 import coinbaseWalletRound from '../icons/coinbase-wallet-round-svg';
 import { QRCodeIcon } from '../icons/QRCodeIcon';
-import coinbaseLogo from '../icons/QRLogoCoinbase';
 import walletLogo from '../icons/QRLogoWallet';
 import { QRCode } from '../QRCode';
 import { Spinner } from '../Spinner/Spinner';
@@ -29,25 +27,11 @@ type ConnectContentProps = {
   onCancel: (() => void) | null;
 };
 
-const wallets = {
-  'coinbase-wallet-app': {
-    title: 'Coinbase Wallet app',
-    description: 'Connect with your self-custody wallet',
-    icon: coinbaseWalletRound,
-    steps: CoinbaseWalletSteps,
-  },
-};
-
-type WalletType = keyof typeof wallets;
-
-const makeQrCodeImage = (app: string) => {
-  switch (app) {
-    case 'coinbase-app':
-      return coinbaseLogo;
-    case 'coinbase-wallet-app':
-    default:
-      return walletLogo;
-  }
+const wallet = {
+  title: 'Coinbase Wallet app',
+  description: 'Connect with your self-custody wallet',
+  icon: coinbaseWalletRound,
+  steps: CoinbaseWalletSteps,
 };
 
 const makeIconColor = (theme: Theme) => {
@@ -56,11 +40,6 @@ const makeIconColor = (theme: Theme) => {
 
 export function ConnectContent(props: ConnectContentProps) {
   const { theme } = props;
-  const [selected, setSelected] = useState<WalletType>('coinbase-wallet-app');
-
-  const handleSelect = useCallback((id: WalletType) => {
-    setSelected(id);
-  }, []);
 
   const qrUrl = createQrUrl(
     props.sessionId,
@@ -71,10 +50,6 @@ export function ConnectContent(props: ConnectContentProps) {
     props.chainId
   );
 
-  const wallet = wallets[selected];
-  if (!selected) {
-    return null;
-  }
   const WalletSteps = wallet.steps;
 
   return (
@@ -92,21 +67,12 @@ export function ConnectContent(props: ConnectContentProps) {
       </div>
       <div className="-cbwsdk-connect-content-layout">
         <div className="-cbwsdk-connect-content-column-left">
-          <div>
-            {Object.entries(wallets).map(([key, value]) => {
-              return (
-                <ConnectItem
-                  key={key}
-                  title={value.title}
-                  description={value.description}
-                  icon={value.icon}
-                  selected={selected === key}
-                  onClick={() => handleSelect(key as WalletType)}
-                  theme={theme}
-                />
-              );
-            })}
-          </div>
+          <ConnectItem
+            title={wallet.title}
+            description={wallet.description}
+            icon={wallet.icon}
+            theme={theme}
+          />
         </div>
         <div className="-cbwsdk-connect-content-column-right">
           <div className="-cbwsdk-connect-content-qr-wrapper">
@@ -117,7 +83,7 @@ export function ConnectContent(props: ConnectContentProps) {
               fgColor="#000"
               bgColor="transparent"
               image={{
-                svg: makeQrCodeImage(selected),
+                svg: walletLogo,
                 width: 25,
                 height: 25,
               }}
@@ -145,21 +111,12 @@ type ConnectItemProps = {
   title: string;
   description: string;
   icon: string;
-  selected: boolean;
-  onClick(): void;
   theme: Theme;
 };
 
-export function ConnectItem({
-  title,
-  description,
-  icon,
-  selected,
-  theme,
-  onClick,
-}: ConnectItemProps) {
+export function ConnectItem({ title, description, icon, theme }: ConnectItemProps) {
   return (
-    <div onClick={onClick} className={clsx('-cbwsdk-connect-item', theme, { selected })}>
+    <div className={clsx('-cbwsdk-connect-item', theme)}>
       <div>
         <img src={icon} alt={title} />
       </div>
