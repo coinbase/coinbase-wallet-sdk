@@ -25,9 +25,7 @@ export class MobileRelay extends WalletLinkRelay {
     return {
       promise: new Promise(() => {
         const location = getLocation();
-        location.href = `https://www.coinbase.com/connect-dapp?uri=${encodeURIComponent(
-          location.href
-        )}`;
+        location.href = `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(location.href)}`;
       }),
       cancel: () => {},
     };

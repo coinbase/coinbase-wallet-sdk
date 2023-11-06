@@ -281,20 +281,6 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
             });
           });
       }
-
-      if (c.metadata.AppSrc !== undefined) {
-        aes256gcm
-          .decrypt(c.metadata.AppSrc!, session.secret)
-          .then((appSrc) => {
-            this.ui.setAppSrc(appSrc);
-          })
-          .catch(() => {
-            this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-              message: 'Had error decrypting',
-              value: 'appSrc',
-            });
-          });
-      }
     });
 
     const ui = this.options.uiConstructor({

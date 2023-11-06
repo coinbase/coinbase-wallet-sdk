@@ -155,8 +155,6 @@ export class MobileRelayUI implements WalletUI {
 
   setStandalone?(_status: boolean) {} // no-op
 
-  setAppSrc(_src: string) {} // no-op
-
   setConnectDisabled(_: boolean) {} // no-op
 
   inlineAccountsResponse(): boolean {
