@@ -4,7 +4,6 @@
 import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
 import { EventListener } from '../connection/EventListener';
 import { ServerMessageEvent } from '../connection/ServerMessage';
-import { SessionConfig } from '../connection/SessionConfig';
 import { WalletLinkConnection } from '../connection/WalletLinkConnection';
 import {
   ErrorType,
@@ -23,10 +22,8 @@ import { EthereumTransactionParams } from './EthereumTransactionParams';
 import { RelayMessage } from './RelayMessage';
 import { Session } from './Session';
 import {
-  APP_VERSION_KEY,
   CancelablePromise,
   LOCAL_STORAGE_ADDRESSES_KEY,
-  WALLET_USER_NAME_KEY,
   WalletSDKRelayAbstract,
 } from './WalletSDKRelayAbstract';
 import { WalletSDKRelayEventManager } from './WalletSDKRelayEventManager';
@@ -84,7 +81,6 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   protected readonly diagnostic?: DiagnosticLogger;
   protected connection: WalletLinkConnection;
   private accountsCallback: ((account: string[], isDisconnect?: boolean) => void) | null = null;
-  private chainCallbackParams = { chainId: '', jsonRpcUrl: '' }; // to implement distinctUntilChanged
   private chainCallback: ((chainId: string, jsonRpcUrl: string) => void) | null = null;
   protected dappDefaultChain = 1;
   private readonly options: WalletLinkRelayOptions;
@@ -137,9 +133,9 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
     const session = Session.load(this.storage) || new Session(this.storage).save();
 
     const connection = new WalletLinkConnection(
-      session.id,
-      session.key,
+      session,
       this.linkAPIUrl,
+      this.storage,
       this.diagnostic
     );
 
@@ -173,105 +169,23 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       }
     });
 
-    connection.setSessionConfigListener((c: SessionConfig) => {
-      if (!c.metadata) return;
+    connection.setSelectedAccountListener((selectedAddress: string) => {
+      if (this.accountsCallback) {
+        this.accountsCallback([selectedAddress]);
+      }
 
-      // if session is marked destroyed, reset and reload
-      if (c.metadata.__destroyed === '1') {
-        const alreadyDestroyed = connection.isDestroyed;
-        this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
-          alreadyDestroyed,
-          sessionIdHash: this.getSessionIdHash(),
+      if (WalletLinkRelay.accountRequestCallbackIds.size > 0) {
+        // We get the ethereum address from the metadata.  If for whatever
+        // reason we don't get a response via an explicit web3 message
+        // we can still fulfill the eip1102 request.
+        Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach((id) => {
+          const message = Web3ResponseMessage({
+            id,
+            response: RequestEthereumAccountsResponse([selectedAddress as AddressString]),
+          });
+          this.invokeCallback({ ...message, id });
         });
-        this.resetAndReload();
-      }
-
-      if (c.metadata.WalletUsername !== undefined) {
-        aes256gcm
-          .decrypt(c.metadata.WalletUsername!, session.secret)
-          .then((walletUsername) => {
-            this.storage.setItem(WALLET_USER_NAME_KEY, walletUsername);
-          })
-          .catch(() => {
-            this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-              message: 'Had error decrypting',
-              value: 'username',
-            });
-          });
-      }
-
-      if (c.metadata.AppVersion !== undefined) {
-        aes256gcm
-          .decrypt(c.metadata.AppVersion!, session.secret)
-          .then((appVersion) => {
-            this.storage.setItem(APP_VERSION_KEY, appVersion);
-          })
-          .catch(() => {
-            this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-              message: 'Had error decrypting',
-              value: 'appversion',
-            });
-          });
-      }
-
-      if (c.metadata.ChainId !== undefined && c.metadata.JsonRpcUrl !== undefined) {
-        Promise.all([
-          aes256gcm.decrypt(c.metadata.ChainId!, session.secret),
-          aes256gcm.decrypt(c.metadata.JsonRpcUrl!, session.secret),
-        ])
-          .then(([chainId, jsonRpcUrl]) => {
-            // custom distinctUntilChanged
-            if (
-              this.chainCallbackParams.chainId === chainId &&
-              this.chainCallbackParams.jsonRpcUrl === jsonRpcUrl
-            ) {
-              return;
-            }
-            this.chainCallbackParams = {
-              chainId,
-              jsonRpcUrl,
-            };
-
-            if (this.chainCallback) {
-              this.chainCallback(chainId, jsonRpcUrl);
-            }
-          })
-          .catch(() => {
-            this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-              message: 'Had error decrypting',
-              value: 'chainId|jsonRpcUrl',
-            });
-          });
-      }
-
-      if (c.metadata.EthereumAddress !== undefined) {
-        aes256gcm
-          .decrypt(c.metadata.EthereumAddress!, session.secret)
-          .then((selectedAddress) => {
-            if (this.accountsCallback) {
-              this.accountsCallback([selectedAddress]);
-            }
-
-            if (WalletLinkRelay.accountRequestCallbackIds.size > 0) {
-              // We get the ethereum address from the metadata.  If for whatever
-              // reason we don't get a response via an explicit web3 message
-              // we can still fulfill the eip1102 request.
-              Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach((id) => {
-                const message = Web3ResponseMessage({
-                  id,
-                  response: RequestEthereumAccountsResponse([selectedAddress as AddressString]),
-                });
-                this.invokeCallback({ ...message, id });
-              });
-              WalletLinkRelay.accountRequestCallbackIds.clear();
-            }
-          })
-          .catch(() => {
-            this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-              message: 'Had error decrypting',
-              value: 'selectedAddress',
-            });
-          });
+        WalletLinkRelay.accountRequestCallbackIds.clear();
       }
     });
 
