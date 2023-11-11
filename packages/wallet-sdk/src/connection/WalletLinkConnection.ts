@@ -464,23 +464,19 @@ export class WalletLinkConnection {
     this.storage.setItem(key, decryptedValue);
   }
 
-  private handleChainChanged(chainId: string, jsonRpcUrl: string) {
-    // custom distinctUntilChanged
-    if (
-      this.chainCallbackParams.chainId === chainId &&
-      this.chainCallbackParams.jsonRpcUrl === jsonRpcUrl
-    ) {
-      return;
-    }
-    this.chainCallbackParams = {
-      chainId,
-      jsonRpcUrl,
-    };
+  private async handleChainChanged(encryptedChainId: string, encryptedJsonRpcUrl: string) {
+    const chainId = await this.cipher.decrypt(encryptedChainId);
+    const jsonRpcUrl = await this.cipher.decrypt(encryptedJsonRpcUrl);
 
+    if (this.chainId === chainId && this.jsonRpcUrl === jsonRpcUrl) return;
+
+    this.chainId = chainId;
+    this.jsonRpcUrl = jsonRpcUrl;
     this.listener?.connectionChainChanged(chainId, jsonRpcUrl);
   }
 
-  private chainCallbackParams = { chainId: '', jsonRpcUrl: '' }; // to implement distinctUntilChanged
+  private chainId = '';
+  private jsonRpcUrl = '';
 
   // SessionConfigListener
   private sessionConfigListener(sessionConfig: SessionConfig) {
@@ -497,26 +493,15 @@ export class WalletLinkConnection {
         sessionIdHash: Session.hash(this.sessionId),
       });
     }
-
     if (WalletUsername !== undefined) {
       this.handleMetadataChanged(WALLET_USER_NAME_KEY, WalletUsername);
     }
-
     if (AppVersion !== undefined) {
       this.handleMetadataChanged(APP_VERSION_KEY, AppVersion);
     }
-
     if (ChainId !== undefined && JsonRpcUrl !== undefined) {
-      Promise.all([this.cipher.decrypt(ChainId), this.cipher.decrypt(JsonRpcUrl)])
-        .then(([chainId, jsonRpcUrl]) => {})
-        .catch(() => {
-          this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-            message: 'Had error decrypting',
-            value: 'chainId|jsonRpcUrl',
-          });
-        });
+      this.handleChainChanged(ChainId, JsonRpcUrl);
     }
-
     if (EthereumAddress !== undefined) {
       this.cipher
         .decrypt(EthereumAddress)
