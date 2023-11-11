@@ -480,11 +480,14 @@ export class WalletLinkConnection {
   private chainCallbackParams = { chainId: '', jsonRpcUrl: '' }; // to implement distinctUntilChanged
 
   // SessionConfigListener
-  private sessionConfigListener(c: SessionConfig) {
-    if (!c.metadata) return;
+  private sessionConfigListener(sessionConfig: SessionConfig) {
+    const { metadata } = sessionConfig;
+    if (!metadata) return;
 
-    // if session is marked destroyed, reset and reload
-    if (c.metadata.__destroyed === '1') {
+    const { __destroyed, WalletUsername, AppVersion, ChainId, JsonRpcUrl, EthereumAddress } =
+      metadata;
+
+    if (__destroyed === '1') {
       const alreadyDestroyed = this.isDestroyed;
       this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
         alreadyDestroyed,
@@ -492,8 +495,6 @@ export class WalletLinkConnection {
       });
       this.listener?.resetAndReload();
     }
-
-    const { WalletUsername, AppVersion } = c.metadata;
 
     if (WalletUsername !== undefined) {
       this.handleMetadata(WALLET_USER_NAME_KEY, WalletUsername);
@@ -503,11 +504,8 @@ export class WalletLinkConnection {
       this.handleMetadata(APP_VERSION_KEY, AppVersion);
     }
 
-    if (c.metadata.ChainId !== undefined && c.metadata.JsonRpcUrl !== undefined) {
-      Promise.all([
-        this.cipher.decrypt(c.metadata.ChainId!),
-        this.cipher.decrypt(c.metadata.JsonRpcUrl!),
-      ])
+    if (ChainId !== undefined && JsonRpcUrl !== undefined) {
+      Promise.all([this.cipher.decrypt(ChainId), this.cipher.decrypt(JsonRpcUrl)])
         .then(([chainId, jsonRpcUrl]) => {
           // custom distinctUntilChanged
           if (
@@ -531,9 +529,9 @@ export class WalletLinkConnection {
         });
     }
 
-    if (c.metadata.EthereumAddress !== undefined) {
+    if (EthereumAddress !== undefined) {
       this.cipher
-        .decrypt(c.metadata.EthereumAddress!)
+        .decrypt(EthereumAddress)
         .then((selectedAddress) => {
           this.listener?.connectionAccountChanged(selectedAddress);
         })
