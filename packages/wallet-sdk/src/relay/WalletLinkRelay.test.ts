@@ -93,25 +93,6 @@ describe('WalletLinkRelay', () => {
       expect(setSessionConfigListenerSpy).toHaveBeenCalled();
     });
 
-    it('should handle session config changes', async () => {
-      const sessionConfig: SessionConfig = {
-        webhookId: 'webhookId',
-        webhookUrl: 'webhookUrl',
-        metadata: {},
-      };
-
-      const relay = new WalletLinkRelay(options);
-
-      const onSessionConfigChangedSpy = jest.spyOn(relay, <any>'onSessionConfigChanged');
-
-      (relay as any).connection.ws.incomingDataListener?.({
-        ...sessionConfig,
-        type: 'GetSessionConfigOK',
-      });
-
-      expect(onSessionConfigChangedSpy).toHaveBeenCalledWith(sessionConfig);
-    });
-
     it('should update metadata with setSessionConfigListener', async () => {
       const sessionConfig: SessionConfig = {
         webhookId: 'webhookId',

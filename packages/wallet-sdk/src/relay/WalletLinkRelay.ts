@@ -174,14 +174,6 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
     });
 
     connection.setSessionConfigListener((c: SessionConfig) => {
-      try {
-        this.onSessionConfigChanged(c);
-      } catch {
-        this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-          message: 'error while invoking session config callback',
-        });
-      }
-
       if (!c.metadata) return;
 
       // if session is marked destroyed, reset and reload
@@ -1138,6 +1130,4 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
         break;
     }
   }
-
-  protected onSessionConfigChanged(_nextSessionConfig: SessionConfig): void {}
 }
