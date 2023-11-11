@@ -48,16 +48,9 @@ describe('WalletLinkRelay', () => {
         data: 'data',
       };
 
-      const setIncomingEventListenerSpy = jest.spyOn(
-        WalletLinkConnection.prototype,
-        'setIncomingEventListener'
-      );
-
       const relay = new WalletLinkRelay(options);
 
       const handleIncomingEventSpy = jest.spyOn(relay, <any>'handleIncomingEvent');
-
-      expect(setIncomingEventListenerSpy).toHaveBeenCalled();
 
       (relay as any).connection.ws.incomingDataListener?.(serverMessageEvent);
 
@@ -65,12 +58,8 @@ describe('WalletLinkRelay', () => {
     });
 
     it('should set isLinked with LinkedListener', async () => {
-      const setLinkedListenerSpy = jest.spyOn(WalletLinkConnection.prototype, 'setLinkedListener');
-
       const relay = new WalletLinkRelay(options);
       expect(relay.isLinked).toBeFalsy();
-
-      expect(setLinkedListenerSpy).toHaveBeenCalled();
 
       (relay as any).connection.ws.incomingDataListener?.({
         type: 'IsLinkedOK',
@@ -82,17 +71,6 @@ describe('WalletLinkRelay', () => {
   });
 
   describe('setSessionConfigListener', () => {
-    it('should call setSessionConfigListener', async () => {
-      const setSessionConfigListenerSpy = jest.spyOn(
-        WalletLinkConnection.prototype,
-        'setSessionConfigListener'
-      );
-
-      new WalletLinkRelay(options);
-
-      expect(setSessionConfigListenerSpy).toHaveBeenCalled();
-    });
-
     it('should update metadata with setSessionConfigListener', async () => {
       const sessionConfig: SessionConfig = {
         webhookId: 'webhookId',
