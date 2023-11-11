@@ -58,13 +58,10 @@ export class WalletLinkConnection {
   private readonly sessionId: string;
   private readonly sessionKey: string;
   private readonly cipher: WalletLinkConnectionCipher;
-  /**
-   * Constructor
-   * @param sessionId Session ID
-   * @param sessionKey Session Key
-   * @param linkAPIUrl Coinbase Wallet link server URL
-   * @param [WebSocketClass] Custom WebSocket implementation
-   */
+
+  private chainId = '';
+  private jsonRpcUrl = '';
+
   constructor(
     linkAPIUrl: string,
     session: Session,
@@ -224,7 +221,6 @@ export class WalletLinkConnection {
       sessionIdHash: Session.hash(this.sessionId),
     });
 
-    // this.sessionConfigListener = undefined;
     this.listener = undefined;
   }
 
@@ -459,26 +455,8 @@ export class WalletLinkConnection {
     this.sendData(msg);
   }
 
-  private async handleMetadataChanged(key: string, metadataValue: string) {
-    const decryptedValue = await this.cipher.decrypt(metadataValue);
-    this.storage.setItem(key, decryptedValue);
-  }
-
-  private async handleChainChanged(encryptedChainId: string, encryptedJsonRpcUrl: string) {
-    const chainId = await this.cipher.decrypt(encryptedChainId);
-    const jsonRpcUrl = await this.cipher.decrypt(encryptedJsonRpcUrl);
-
-    if (this.chainId === chainId && this.jsonRpcUrl === jsonRpcUrl) return;
-
-    this.chainId = chainId;
-    this.jsonRpcUrl = jsonRpcUrl;
-    this.listener?.connectionChainChanged(chainId, jsonRpcUrl);
-  }
-
-  private chainId = '';
-  private jsonRpcUrl = '';
-
   // SessionConfigListener
+
   private sessionConfigListener(sessionConfig: SessionConfig) {
     const { metadata } = sessionConfig;
     if (!metadata) return;
@@ -503,25 +481,36 @@ export class WalletLinkConnection {
       this.handleChainChanged(ChainId, JsonRpcUrl);
     }
     if (EthereumAddress !== undefined) {
-      this.cipher
-        .decrypt(EthereumAddress)
-        .then((selectedAddress) => {
-          this.listener?.connectionAccountChanged(selectedAddress);
-        })
-        .catch(() => {
-          this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-            message: 'Had error decrypting',
-            value: 'selectedAddress',
-          });
-        });
+      this.handleAccountChanged(EthereumAddress);
     }
+  }
+
+  private async handleMetadataChanged(key: string, metadataValue: string) {
+    const decryptedValue = await this.cipher.decrypt(metadataValue);
+    this.storage.setItem(key, decryptedValue);
+  }
+
+  private async handleChainChanged(encryptedChainId: string, encryptedJsonRpcUrl: string) {
+    const chainId = await this.cipher.decrypt(encryptedChainId);
+    const jsonRpcUrl = await this.cipher.decrypt(encryptedJsonRpcUrl);
+
+    if (this.chainId === chainId && this.jsonRpcUrl === jsonRpcUrl) return;
+
+    this.chainId = chainId;
+    this.jsonRpcUrl = jsonRpcUrl;
+    this.listener?.connectionChainChanged(chainId, jsonRpcUrl);
+  }
+
+  private async handleAccountChanged(encryptedSelectedAddress: string) {
+    const selectedAddress = await this.cipher.decrypt(encryptedSelectedAddress);
+    this.listener?.connectionAccountChanged(selectedAddress);
   }
 }
 
 class WalletLinkConnectionCipher {
   constructor(private readonly secret: string) {}
 
-  decrypt(cipherText: string): Promise<string> {
+  async decrypt(cipherText: string): Promise<string> {
     return aes256gcm.decrypt(cipherText, this.secret);
   }
 }

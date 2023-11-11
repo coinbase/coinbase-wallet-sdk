@@ -5,4 +5,7 @@ module.exports = {
       pragma: "h",
     },
   },
+  rules: {
+    'no-useless-constructor': 'off',
+  },
 };
