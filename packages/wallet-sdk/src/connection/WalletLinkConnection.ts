@@ -78,6 +78,8 @@ export class WalletLinkConnection {
     const ws = new WalletLinkWebSocket(`${linkAPIUrl}/rpc`, WebSocketClass);
     this.ws = ws;
 
+    this.http = new WalletLinkHTTP(linkAPIUrl, sessionId, sessionKey);
+
     this.ws.setConnectionStateListener(async (state) => {
       // attempt to reconnect every 5 seconds when disconnected
       this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
@@ -192,8 +194,6 @@ export class WalletLinkConnection {
         this.requestResolutions.get(m.id)?.(m);
       }
     });
-
-    this.http = new WalletLinkHTTP(linkAPIUrl, sessionId, sessionKey, this.handleIncomingEvent);
   }
 
   /**
