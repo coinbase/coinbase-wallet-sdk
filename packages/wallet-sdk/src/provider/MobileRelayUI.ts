@@ -35,6 +35,8 @@ export class MobileRelayUI implements WalletUI {
     this.attached = true;
   }
 
+  setConnected(_: boolean): void {} // no-op
+
   closeOpenedWindow() {
     this.openedWindow?.close();
     this.openedWindow = null;

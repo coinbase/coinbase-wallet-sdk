@@ -209,9 +209,7 @@ export class WalletLinkRelay
   }
 
   connectionConnectedUpdated(connected: boolean) {
-    if (this.ui instanceof WalletLinkRelayUI) {
-      this.ui.setConnected(connected);
-    }
+    this.ui.setConnected(connected);
   }
   connectionChainChanged(chainId: string, jsonRpcUrl: string) {
     this.chainCallback?.(chainId, jsonRpcUrl);
