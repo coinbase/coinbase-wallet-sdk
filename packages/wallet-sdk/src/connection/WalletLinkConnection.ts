@@ -35,14 +35,14 @@ const REQUEST_TIMEOUT = 60000;
 export const WALLET_USER_NAME_KEY = 'walletUsername';
 export const APP_VERSION_KEY = 'AppVersion';
 
-export interface WalletLinkConnectionListener {
-  connectionLinkedUpdated: (linked: boolean) => void;
-  connectionConnectedUpdated: (connected: boolean) => void;
-  connectionIncomingEvent: (event: ServerMessageEvent) => void;
-  connectionChainChanged: (chainId: string, jsonRpcUrl: string) => void;
-  connectionAccountChanged: (selectedAddress: string) => void;
-  connectionMetadataChanged: (key: string, metadataValue: string) => void;
-  connectionResetAndReload: () => void;
+export interface WalletLinkConnectionUpdateListener {
+  linkedUpdated: (linked: boolean) => void;
+  connectedUpdated: (connected: boolean) => void;
+  incomingEvent: (event: ServerMessageEvent) => void;
+  chainUpdated: (chainId: string, jsonRpcUrl: string) => void;
+  accountUpdated: (selectedAddress: string) => void;
+  metadataUpdated: (key: string, metadataValue: string) => void;
+  resetAndReload: () => void;
 }
 
 /**
@@ -64,7 +64,7 @@ export class WalletLinkConnection {
   constructor(
     session: Session,
     linkAPIUrl: string,
-    private listener?: WalletLinkConnectionListener,
+    private listener?: WalletLinkConnectionUpdateListener,
     private diagnostic?: DiagnosticLogger,
     WebSocketClass: typeof WebSocket = WebSocket
   ) {
@@ -174,7 +174,7 @@ export class WalletLinkConnection {
             metadata_keys: msg && msg.metadata ? Object.keys(msg.metadata) : undefined,
           });
           if (msg.metadata) {
-            this.handleMetadataUpdated(msg.metadata);
+            this.handleSessionConfigUpdated(msg.metadata);
           }
           break;
         }
@@ -235,7 +235,7 @@ export class WalletLinkConnection {
   private set connected(connected: boolean) {
     this._connected = connected;
     if (connected) this.onceConnected?.();
-    this.listener?.connectionConnectedUpdated(connected);
+    this.listener?.connectedUpdated(connected);
   }
 
   /**
@@ -266,7 +266,7 @@ export class WalletLinkConnection {
   private set linked(linked: boolean) {
     this._linked = linked;
     if (linked) this.onceLinked?.();
-    this.listener?.connectionLinkedUpdated(linked);
+    this.listener?.linkedUpdated(linked);
   }
 
   /**
@@ -304,7 +304,7 @@ export class WalletLinkConnection {
       return;
     }
 
-    this.listener?.connectionIncomingEvent(m);
+    this.listener?.incomingEvent(m);
   }
 
   private shouldFetchUnseenEventsOnConnect = false;
@@ -451,7 +451,7 @@ export class WalletLinkConnection {
     this.sendData(msg);
   }
 
-  private handleMetadataUpdated(metadata: SessionConfig['metadata']) {
+  private handleSessionConfigUpdated(metadata: SessionConfig['metadata']) {
     const { __destroyed, WalletUsername, AppVersion, ChainId, JsonRpcUrl, EthereumAddress } =
       metadata;
 
@@ -459,33 +459,33 @@ export class WalletLinkConnection {
       this.handleDestroyed();
     }
     if (WalletUsername !== undefined) {
-      this.handleMetadataChanged(WALLET_USER_NAME_KEY, WalletUsername);
+      this.handleMetadataUpdated(WALLET_USER_NAME_KEY, WalletUsername);
     }
     if (AppVersion !== undefined) {
-      this.handleMetadataChanged(APP_VERSION_KEY, AppVersion);
+      this.handleMetadataUpdated(APP_VERSION_KEY, AppVersion);
     }
     if (ChainId !== undefined && JsonRpcUrl !== undefined) {
-      this.handleChainChanged(ChainId, JsonRpcUrl);
+      this.handleChainUpdated(ChainId, JsonRpcUrl);
     }
     if (EthereumAddress !== undefined) {
-      this.handleAccountChanged(EthereumAddress);
+      this.handleAccountUpdated(EthereumAddress);
     }
   }
 
   private handleDestroyed() {
-    this.listener?.connectionResetAndReload();
+    this.listener?.resetAndReload();
     this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
       alreadyDestroyed: this.isDestroyed,
       sessionIdHash: Session.hash(this.sessionId),
     });
   }
 
-  private async handleMetadataChanged(key: string, metadataValue: string) {
+  private async handleMetadataUpdated(key: string, metadataValue: string) {
     const decryptedValue = await this.decrypt(metadataValue);
-    this.listener?.connectionMetadataChanged(key, decryptedValue);
+    this.listener?.metadataUpdated(key, decryptedValue);
   }
 
-  private async handleChainChanged(encryptedChainId: string, encryptedJsonRpcUrl: string) {
+  private async handleChainUpdated(encryptedChainId: string, encryptedJsonRpcUrl: string) {
     const chainId = await this.decrypt(encryptedChainId);
     const jsonRpcUrl = await this.decrypt(encryptedJsonRpcUrl);
 
@@ -493,11 +493,11 @@ export class WalletLinkConnection {
 
     this.chainId = chainId;
     this.jsonRpcUrl = jsonRpcUrl;
-    this.listener?.connectionChainChanged(chainId, jsonRpcUrl);
+    this.listener?.chainUpdated(chainId, jsonRpcUrl);
   }
 
-  private async handleAccountChanged(encryptedSelectedAddress: string) {
+  private async handleAccountUpdated(encryptedSelectedAddress: string) {
     const selectedAddress = await this.decrypt(encryptedSelectedAddress);
-    this.listener?.connectionAccountChanged(selectedAddress);
+    this.listener?.accountUpdated(selectedAddress);
   }
 }

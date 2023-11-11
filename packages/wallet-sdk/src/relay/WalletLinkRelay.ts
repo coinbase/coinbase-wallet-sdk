@@ -6,7 +6,7 @@ import { EventListener } from '../connection/EventListener';
 import { ServerMessageEvent } from '../connection/ServerMessage';
 import {
   WalletLinkConnection,
-  WalletLinkConnectionListener,
+  WalletLinkConnectionUpdateListener,
 } from '../connection/WalletLinkConnection';
 import {
   ErrorType,
@@ -138,7 +138,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
     const connection = new WalletLinkConnection(
       session,
       this.linkAPIUrl,
-      this.connectionListener,
+      this.listener,
       this.diagnostic
     );
 
@@ -154,13 +154,13 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
     return { session, ui, connection };
   }
 
-  private connectionListener: WalletLinkConnectionListener = {
-    connectionIncomingEvent: (m: ServerMessageEvent) => {
+  private listener: WalletLinkConnectionUpdateListener = {
+    incomingEvent: (m: ServerMessageEvent) => {
       if (m.event === 'Web3Response') {
         this.handleIncomingEvent(m);
       }
     },
-    connectionLinkedUpdated: (linked: boolean) => {
+    linkedUpdated: (linked: boolean) => {
       this.isLinked = linked;
       const cachedAddresses = this.storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
 
@@ -183,8 +183,8 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
         }
       }
     },
-    connectionMetadataChanged: (key: string, value: string) => this.storage.setItem(key, value),
-    connectionAccountChanged: (selectedAddress: string) => {
+    metadataUpdated: (key: string, value: string) => this.storage.setItem(key, value),
+    accountUpdated: (selectedAddress: string) => {
       if (this.accountsCallback) {
         this.accountsCallback([selectedAddress]);
       }
@@ -203,10 +203,9 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
         WalletLinkRelay.accountRequestCallbackIds.clear();
       }
     },
-    connectionConnectedUpdated: (connected: boolean) => this.ui.setConnected(connected),
-    connectionChainChanged: (chainId: string, rpcUrl: string) =>
-      this.chainCallback?.(chainId, rpcUrl),
-    connectionResetAndReload: () => this.resetAndReload(),
+    connectedUpdated: (connected: boolean) => this.ui.setConnected(connected),
+    chainUpdated: (chainId: string, rpcUrl: string) => this.chainCallback?.(chainId, rpcUrl),
+    resetAndReload: () => this.resetAndReload(),
   };
 
   public attachUI() {
