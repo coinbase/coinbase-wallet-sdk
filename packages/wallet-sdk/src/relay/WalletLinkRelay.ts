@@ -74,10 +74,7 @@ export interface WalletLinkRelayOptions {
   enableMobileWalletLink?: boolean;
 }
 
-export class WalletLinkRelay
-  extends WalletSDKRelayAbstract
-  implements WalletLinkConnectionListener
-{
+export class WalletLinkRelay extends WalletSDKRelayAbstract {
   private static accountRequestCallbackIds = new Set<string>();
 
   private readonly linkAPIUrl: string;
@@ -138,7 +135,12 @@ export class WalletLinkRelay
   public subscribe() {
     const session = Session.load(this.storage) || new Session(this.storage).save();
 
-    const connection = new WalletLinkConnection(this.linkAPIUrl, session, this, this.diagnostic);
+    const connection = new WalletLinkConnection(
+      session,
+      this.linkAPIUrl,
+      this.connectionListener,
+      this.diagnostic
+    );
 
     const ui = this.options.uiConstructor({
       linkAPIUrl: this.options.linkAPIUrl,
@@ -152,70 +154,60 @@ export class WalletLinkRelay
     return { session, ui, connection };
   }
 
-  connectionResetAndReload() {
-    this.resetAndReload();
-  }
-
-  connectionIncomingEvent(m: ServerMessageEvent) {
-    if (m.event === 'Web3Response') {
-      this.handleIncomingEvent(m);
-    }
-  }
-
-  connectionLinkedUpdated(linked: boolean) {
-    this.isLinked = linked;
-    const cachedAddresses = this.storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
-
-    if (linked) {
-      // Only set linked session variable one way
-      this.session.linked = linked;
-    }
-
-    this.isUnlinkedErrorState = false;
-
-    if (cachedAddresses) {
-      const addresses = cachedAddresses.split(' ') as AddressString[];
-      const wasConnectedViaStandalone = this.storage.getItem('IsStandaloneSigning') === 'true';
-      if (addresses[0] !== '' && !linked && this.session.linked && !wasConnectedViaStandalone) {
-        this.isUnlinkedErrorState = true;
-        const sessionIdHash = this.getSessionIdHash();
-        this.diagnostic?.log(EVENTS.UNLINKED_ERROR_STATE, {
-          sessionIdHash,
-        });
+  private connectionListener: WalletLinkConnectionListener = {
+    connectionIncomingEvent: (m: ServerMessageEvent) => {
+      if (m.event === 'Web3Response') {
+        this.handleIncomingEvent(m);
       }
-    }
-  }
+    },
+    connectionLinkedUpdated: (linked: boolean) => {
+      this.isLinked = linked;
+      const cachedAddresses = this.storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
 
-  connectionAccountChanged(selectedAddress: string) {
-    if (this.accountsCallback) {
-      this.accountsCallback([selectedAddress]);
-    }
+      if (linked) {
+        // Only set linked session variable one way
+        this.session.linked = linked;
+      }
 
-    if (WalletLinkRelay.accountRequestCallbackIds.size > 0) {
-      // We get the ethereum address from the metadata.  If for whatever
-      // reason we don't get a response via an explicit web3 message
-      // we can still fulfill the eip1102 request.
-      Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach((id) => {
-        const message = Web3ResponseMessage({
-          id,
-          response: RequestEthereumAccountsResponse([selectedAddress as AddressString]),
+      this.isUnlinkedErrorState = false;
+
+      if (cachedAddresses) {
+        const addresses = cachedAddresses.split(' ') as AddressString[];
+        const wasConnectedViaStandalone = this.storage.getItem('IsStandaloneSigning') === 'true';
+        if (addresses[0] !== '' && !linked && this.session.linked && !wasConnectedViaStandalone) {
+          this.isUnlinkedErrorState = true;
+          const sessionIdHash = this.getSessionIdHash();
+          this.diagnostic?.log(EVENTS.UNLINKED_ERROR_STATE, {
+            sessionIdHash,
+          });
+        }
+      }
+    },
+    connectionMetadataChanged: (key: string, value: string) => this.storage.setItem(key, value),
+    connectionAccountChanged: (selectedAddress: string) => {
+      if (this.accountsCallback) {
+        this.accountsCallback([selectedAddress]);
+      }
+
+      if (WalletLinkRelay.accountRequestCallbackIds.size > 0) {
+        // We get the ethereum address from the metadata.  If for whatever
+        // reason we don't get a response via an explicit web3 message
+        // we can still fulfill the eip1102 request.
+        Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach((id) => {
+          const message = Web3ResponseMessage({
+            id,
+            response: RequestEthereumAccountsResponse([selectedAddress as AddressString]),
+          });
+          this.invokeCallback({ ...message, id });
         });
-        this.invokeCallback({ ...message, id });
-      });
-      WalletLinkRelay.accountRequestCallbackIds.clear();
-    }
-  }
-
-  connectionMetadataChanged(key: string, metadataValue: string) {
-    this.storage.setItem(key, metadataValue);
-  }
-
-  connectionConnectedUpdated(connected: boolean) {
-    this.ui.setConnected(connected);
-  }
-  connectionChainChanged(chainId: string, jsonRpcUrl: string) {
-    this.chainCallback?.(chainId, jsonRpcUrl);
-  }
+        WalletLinkRelay.accountRequestCallbackIds.clear();
+      }
+    },
+    connectionConnectedUpdated: (connected: boolean) => this.ui.setConnected(connected),
+    connectionChainChanged: (chainId: string, rpcUrl: string) =>
+      this.chainCallback?.(chainId, rpcUrl),
+    connectionResetAndReload: () => this.resetAndReload(),
+  };
 
   public attachUI() {
     this.ui.attach();

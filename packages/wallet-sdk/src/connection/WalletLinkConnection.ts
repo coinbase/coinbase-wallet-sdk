@@ -63,8 +63,8 @@ export class WalletLinkConnection {
   private jsonRpcUrl = '';
 
   constructor(
-    linkAPIUrl: string,
     session: Session,
+    linkAPIUrl: string,
     private listener?: WalletLinkConnectionListener,
     private diagnostic?: DiagnosticLogger,
     WebSocketClass: typeof WebSocket = WebSocket
