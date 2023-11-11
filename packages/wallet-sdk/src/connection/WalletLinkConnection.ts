@@ -459,18 +459,9 @@ export class WalletLinkConnection {
     this.sendData(msg);
   }
 
-  private handleMetadata(key: string, metadataValue: string) {
-    this.cipher
-      .decrypt(metadataValue)
-      .then((decryptedValue) => {
-        this.storage.setItem(key, decryptedValue);
-      })
-      .catch(() => {
-        this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-          message: 'Had error decrypting',
-          value: key,
-        });
-      });
+  private async handleMetadataChanged(key: string, metadataValue: string) {
+    const decryptedValue = await this.cipher.decrypt(metadataValue);
+    this.storage.setItem(key, decryptedValue);
   }
 
   private handleChainChanged(chainId: string, jsonRpcUrl: string) {
@@ -508,11 +499,11 @@ export class WalletLinkConnection {
     }
 
     if (WalletUsername !== undefined) {
-      this.handleMetadata(WALLET_USER_NAME_KEY, WalletUsername);
+      this.handleMetadataChanged(WALLET_USER_NAME_KEY, WalletUsername);
     }
 
     if (AppVersion !== undefined) {
-      this.handleMetadata(APP_VERSION_KEY, AppVersion);
+      this.handleMetadataChanged(APP_VERSION_KEY, AppVersion);
     }
 
     if (ChainId !== undefined && JsonRpcUrl !== undefined) {
