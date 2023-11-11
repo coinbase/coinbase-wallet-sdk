@@ -55,6 +55,9 @@ export class WalletLinkConnection {
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
 
+  private readonly sessionId: string;
+  private readonly sessionKey: string;
+  private readonly sessionSecret: string;
   /**
    * Constructor
    * @param sessionId Session ID
@@ -64,22 +67,29 @@ export class WalletLinkConnection {
    */
   constructor(
     linkAPIUrl: string,
-    private readonly session: Session,
+    session: Session,
     private readonly storage: ScopedLocalStorage,
     private listener?: WalletLinkConnectionListener,
     private diagnostic?: DiagnosticLogger,
     WebSocketClass: typeof WebSocket = WebSocket
   ) {
+    const sessionId = session.id;
+    const sessionKey = session.key;
+
+    this.sessionId = sessionId;
+    this.sessionKey = sessionKey;
+    this.sessionSecret = session.secret;
+
     const ws = new WalletLinkWebSocket(`${linkAPIUrl}/rpc`, WebSocketClass);
     this.ws = ws;
 
-    this.http = new WalletLinkHTTP(linkAPIUrl, session.id, session.key);
+    this.http = new WalletLinkHTTP(linkAPIUrl, sessionId, sessionKey);
 
     this.ws.setConnectionStateListener(async (state) => {
       // attempt to reconnect every 5 seconds when disconnected
       this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
         state,
-        sessionIdHash: Session.hash(session.id),
+        sessionIdHash: Session.hash(sessionId),
       });
 
       let connected = false;
@@ -151,7 +161,7 @@ export class WalletLinkConnection {
         case 'Linked': {
           const msg = m as Omit<ServerMessageIsLinkedOK, 'type'> & ServerMessageLinked;
           this.diagnostic?.log(EVENTS.LINKED, {
-            sessionIdHash: Session.hash(session.id),
+            sessionIdHash: Session.hash(sessionId),
             linked: msg.linked,
             type: m.type,
             onlineGuests: msg.onlineGuests,
@@ -167,7 +177,7 @@ export class WalletLinkConnection {
           const msg = m as Omit<ServerMessageGetSessionConfigOK, 'type'> &
             ServerMessageSessionConfigUpdated;
           this.diagnostic?.log(EVENTS.SESSION_CONFIG_RECEIVED, {
-            sessionIdHash: Session.hash(session.id),
+            sessionIdHash: Session.hash(sessionId),
             metadata_keys: msg && msg.metadata ? Object.keys(msg.metadata) : undefined,
           });
           this.sessionConfigListener?.({
@@ -199,7 +209,7 @@ export class WalletLinkConnection {
       throw new Error('instance is destroyed');
     }
     this.diagnostic?.log(EVENTS.STARTED_CONNECTING, {
-      sessionIdHash: Session.hash(this.session.id),
+      sessionIdHash: Session.hash(this.sessionId),
     });
     this.ws.connect();
   }
@@ -213,7 +223,7 @@ export class WalletLinkConnection {
 
     this.ws.disconnect();
     this.diagnostic?.log(EVENTS.DISCONNECTED, {
-      sessionIdHash: Session.hash(this.session.id),
+      sessionIdHash: Session.hash(this.sessionId),
     });
 
     // this.sessionConfigListener = undefined;
@@ -339,7 +349,7 @@ export class WalletLinkConnection {
   public async setSessionMetadata(key: string, value: string | null) {
     const message = ClientMessageSetSessionConfig({
       id: IntNumber(this.nextReqId++),
-      sessionId: this.session.id,
+      sessionId: this.sessionId,
       metadata: { [key]: value },
     });
 
@@ -361,7 +371,7 @@ export class WalletLinkConnection {
   public async publishEvent(event: string, data: string, callWebhook = false) {
     const message = ClientMessagePublishEvent({
       id: IntNumber(this.nextReqId++),
-      sessionId: this.session.id,
+      sessionId: this.sessionId,
       event,
       data,
       callWebhook,
@@ -426,8 +436,8 @@ export class WalletLinkConnection {
   private async authenticate() {
     const msg = ClientMessageHostSession({
       id: IntNumber(this.nextReqId++),
-      sessionId: this.session.id,
-      sessionKey: this.session.key,
+      sessionId: this.sessionId,
+      sessionKey: this.sessionKey,
     });
     const res = await this.makeRequest<ServerMessageOK | ServerMessageFail>(msg);
     if (isServerMessageFail(res)) {
@@ -438,7 +448,7 @@ export class WalletLinkConnection {
   private sendIsLinked(): void {
     const msg = ClientMessageIsLinked({
       id: IntNumber(this.nextReqId++),
-      sessionId: this.session.id,
+      sessionId: this.sessionId,
     });
     this.sendData(msg);
   }
@@ -446,13 +456,13 @@ export class WalletLinkConnection {
   private sendGetSessionConfig(): void {
     const msg = ClientMessageGetSessionConfig({
       id: IntNumber(this.nextReqId++),
-      sessionId: this.session.id,
+      sessionId: this.sessionId,
     });
     this.sendData(msg);
   }
 
   private getSessionIdHash(): string {
-    return Session.hash(this.session.id);
+    return Session.hash(this.sessionId);
   }
 
   private chainCallbackParams = { chainId: '', jsonRpcUrl: '' }; // to implement distinctUntilChanged
@@ -473,7 +483,7 @@ export class WalletLinkConnection {
 
     if (c.metadata.WalletUsername !== undefined) {
       aes256gcm
-        .decrypt(c.metadata.WalletUsername!, this.session.secret)
+        .decrypt(c.metadata.WalletUsername!, this.sessionSecret)
         .then((walletUsername) => {
           this.storage.setItem(WALLET_USER_NAME_KEY, walletUsername);
         })
@@ -487,7 +497,7 @@ export class WalletLinkConnection {
 
     if (c.metadata.AppVersion !== undefined) {
       aes256gcm
-        .decrypt(c.metadata.AppVersion!, this.session.secret)
+        .decrypt(c.metadata.AppVersion!, this.sessionSecret)
         .then((appVersion) => {
           this.storage.setItem(APP_VERSION_KEY, appVersion);
         })
@@ -501,8 +511,8 @@ export class WalletLinkConnection {
 
     if (c.metadata.ChainId !== undefined && c.metadata.JsonRpcUrl !== undefined) {
       Promise.all([
-        aes256gcm.decrypt(c.metadata.ChainId!, this.session.secret),
-        aes256gcm.decrypt(c.metadata.JsonRpcUrl!, this.session.secret),
+        aes256gcm.decrypt(c.metadata.ChainId!, this.sessionSecret),
+        aes256gcm.decrypt(c.metadata.JsonRpcUrl!, this.sessionSecret),
       ])
         .then(([chainId, jsonRpcUrl]) => {
           // custom distinctUntilChanged
@@ -529,7 +539,7 @@ export class WalletLinkConnection {
 
     if (c.metadata.EthereumAddress !== undefined) {
       aes256gcm
-        .decrypt(c.metadata.EthereumAddress!, this.session.secret)
+        .decrypt(c.metadata.EthereumAddress!, this.sessionSecret)
         .then((selectedAddress) => {
           this.listener?.connectionAccountChanged(selectedAddress);
         })
