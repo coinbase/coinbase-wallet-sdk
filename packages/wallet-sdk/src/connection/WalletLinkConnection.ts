@@ -459,10 +459,6 @@ export class WalletLinkConnection {
     this.sendData(msg);
   }
 
-  private getSessionIdHash(): string {
-    return Session.hash(this.sessionId);
-  }
-
   private handleMetadata(key: string, metadataValue: string) {
     this.cipher
       .decrypt(metadataValue)
@@ -488,12 +484,11 @@ export class WalletLinkConnection {
       metadata;
 
     if (__destroyed === '1') {
-      const alreadyDestroyed = this.isDestroyed;
-      this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
-        alreadyDestroyed,
-        sessionIdHash: this.getSessionIdHash(),
-      });
       this.listener?.resetAndReload();
+      this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
+        alreadyDestroyed: this.isDestroyed,
+        sessionIdHash: Session.hash(this.sessionId),
+      });
     }
 
     if (WalletUsername !== undefined) {
