@@ -473,6 +473,22 @@ export class WalletLinkConnection {
       });
   }
 
+  private handleChainChanged(chainId: string, jsonRpcUrl: string) {
+    // custom distinctUntilChanged
+    if (
+      this.chainCallbackParams.chainId === chainId &&
+      this.chainCallbackParams.jsonRpcUrl === jsonRpcUrl
+    ) {
+      return;
+    }
+    this.chainCallbackParams = {
+      chainId,
+      jsonRpcUrl,
+    };
+
+    this.listener?.connectionChainChanged(chainId, jsonRpcUrl);
+  }
+
   private chainCallbackParams = { chainId: '', jsonRpcUrl: '' }; // to implement distinctUntilChanged
 
   // SessionConfigListener
@@ -501,21 +517,7 @@ export class WalletLinkConnection {
 
     if (ChainId !== undefined && JsonRpcUrl !== undefined) {
       Promise.all([this.cipher.decrypt(ChainId), this.cipher.decrypt(JsonRpcUrl)])
-        .then(([chainId, jsonRpcUrl]) => {
-          // custom distinctUntilChanged
-          if (
-            this.chainCallbackParams.chainId === chainId &&
-            this.chainCallbackParams.jsonRpcUrl === jsonRpcUrl
-          ) {
-            return;
-          }
-          this.chainCallbackParams = {
-            chainId,
-            jsonRpcUrl,
-          };
-
-          this.listener?.connectionChainChanged(chainId, jsonRpcUrl);
-        })
+        .then(([chainId, jsonRpcUrl]) => {})
         .catch(() => {
           this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
             message: 'Had error decrypting',
