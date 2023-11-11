@@ -26,7 +26,7 @@ export class WalletLinkHTTP {
     ).catch((error) => console.error('Unabled to mark event as failed:', error));
   }
 
-  async fetchUnseenEventsAPI(): Promise<ServerMessageEvent[]> {
+  async fetchUnseenEvents(): Promise<ServerMessageEvent[]> {
     const response = await fetch(`${this.linkAPIUrl}/events?unseen=true`, {
       headers: {
         Authorization: this.auth,

@@ -332,7 +332,9 @@ export class WalletLinkConnection {
 
   private async fetchUnseenEventsAPI() {
     this.shouldFetchUnseenEventsOnConnect = false;
-    this.http.fetchUnseenEventsAPI();
+
+    const responseEvents = await this.http.fetchUnseenEvents();
+    responseEvents.forEach((e) => this.handleIncomingEvent(e));
   }
 
   /**
