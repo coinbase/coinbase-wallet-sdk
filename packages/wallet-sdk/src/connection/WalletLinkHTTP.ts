@@ -1,37 +1,35 @@
-import { ServerMessage, ServerMessageEvent } from './ServerMessage';
+import { ServerMessageEvent } from './ServerMessage';
 
 export class WalletLinkHTTP {
+  private readonly auth: string;
+
   constructor(
     private readonly linkAPIUrl: string,
     private readonly sessionId: string,
-    private readonly sessionKey: string,
-    private readonly handleIncomingEvent: (_: ServerMessage) => void
-  ) {}
+    sessionKey: string
+  ) {
+    const credentials = `${sessionId}:${sessionKey}`;
+    this.auth = `Basic ${btoa(credentials)}`;
+  }
 
   // mark unseen events as seen
   private markUnseenEventsAsSeen(events: ServerMessageEvent[]) {
-    const credentials = `${this.sessionId}:${this.sessionKey}`;
-    const auth = `Basic ${btoa(credentials)}`;
-
     Promise.all(
       events.map((e) =>
         fetch(`${this.linkAPIUrl}/events/${e.eventId}/seen`, {
           method: 'POST',
           headers: {
-            Authorization: auth,
+            Authorization: this.auth,
           },
         })
       )
     ).catch((error) => console.error('Unabled to mark event as failed:', error));
   }
 
-  async fetchUnseenEventsAPI() {
-    const credentials = `${this.sessionId}:${this.sessionKey}`;
-    const auth = `Basic ${btoa(credentials)}`;
-
+  async fetchUnseenEventsAPI(): Promise<ServerMessageEvent[]> {
     const response = await fetch(`${this.linkAPIUrl}/events?unseen=true`, {
       headers: {
-        Authorization: auth,
+        Authorization: this.auth,
       },
     });
 
@@ -60,11 +58,11 @@ export class WalletLinkHTTP {
             event: e.event,
             data: e.data,
           })) ?? [];
-      responseEvents.forEach((e) => this.handleIncomingEvent(e));
 
       this.markUnseenEventsAsSeen(responseEvents);
-    } else {
-      throw new Error(`Check unseen events failed: ${response.status}`);
+
+      return responseEvents;
     }
+    throw new Error(`Check unseen events failed: ${response.status}`);
   }
 }
