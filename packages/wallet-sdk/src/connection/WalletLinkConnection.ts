@@ -57,8 +57,7 @@ export class WalletLinkConnection {
 
   private readonly sessionId: string;
   private readonly sessionKey: string;
-  private readonly cipher: WalletLinkConnectionCipher;
-
+  private readonly decrypt: (_: string) => Promise<string>;
   private chainId = '';
   private jsonRpcUrl = '';
 
@@ -72,7 +71,7 @@ export class WalletLinkConnection {
     const sessionId = (this.sessionId = session.id);
     const sessionKey = (this.sessionKey = session.key);
 
-    this.cipher = new WalletLinkConnectionCipher(session.secret);
+    this.decrypt = (cipherText: string) => aes256gcm.decrypt(cipherText, session.secret);
 
     const ws = new WalletLinkWebSocket(`${linkAPIUrl}/rpc`, WebSocketClass);
     this.ws = ws;
@@ -174,11 +173,9 @@ export class WalletLinkConnection {
             sessionIdHash: Session.hash(sessionId),
             metadata_keys: msg && msg.metadata ? Object.keys(msg.metadata) : undefined,
           });
-          this.sessionConfigListener?.({
-            webhookId: msg.webhookId,
-            webhookUrl: msg.webhookUrl,
-            metadata: msg.metadata,
-          });
+          if (msg.metadata) {
+            this.handleMetadataUpdated(msg.metadata);
+          }
           break;
         }
 
@@ -454,21 +451,12 @@ export class WalletLinkConnection {
     this.sendData(msg);
   }
 
-  // SessionConfigListener
-
-  private sessionConfigListener(sessionConfig: SessionConfig) {
-    const { metadata } = sessionConfig;
-    if (!metadata) return;
-
+  private handleMetadataUpdated(metadata: SessionConfig['metadata']) {
     const { __destroyed, WalletUsername, AppVersion, ChainId, JsonRpcUrl, EthereumAddress } =
       metadata;
 
     if (__destroyed === '1') {
-      this.listener?.connectionResetAndReload();
-      this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
-        alreadyDestroyed: this.isDestroyed,
-        sessionIdHash: Session.hash(this.sessionId),
-      });
+      this.handleDestroyed();
     }
     if (WalletUsername !== undefined) {
       this.handleMetadataChanged(WALLET_USER_NAME_KEY, WalletUsername);
@@ -484,14 +472,22 @@ export class WalletLinkConnection {
     }
   }
 
+  private handleDestroyed() {
+    this.listener?.connectionResetAndReload();
+    this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
+      alreadyDestroyed: this.isDestroyed,
+      sessionIdHash: Session.hash(this.sessionId),
+    });
+  }
+
   private async handleMetadataChanged(key: string, metadataValue: string) {
-    const decryptedValue = await this.cipher.decrypt(metadataValue);
+    const decryptedValue = await this.decrypt(metadataValue);
     this.listener?.connectionMetadataChanged(key, decryptedValue);
   }
 
   private async handleChainChanged(encryptedChainId: string, encryptedJsonRpcUrl: string) {
-    const chainId = await this.cipher.decrypt(encryptedChainId);
-    const jsonRpcUrl = await this.cipher.decrypt(encryptedJsonRpcUrl);
+    const chainId = await this.decrypt(encryptedChainId);
+    const jsonRpcUrl = await this.decrypt(encryptedJsonRpcUrl);
 
     if (this.chainId === chainId && this.jsonRpcUrl === jsonRpcUrl) return;
 
@@ -501,15 +497,7 @@ export class WalletLinkConnection {
   }
 
   private async handleAccountChanged(encryptedSelectedAddress: string) {
-    const selectedAddress = await this.cipher.decrypt(encryptedSelectedAddress);
+    const selectedAddress = await this.decrypt(encryptedSelectedAddress);
     this.listener?.connectionAccountChanged(selectedAddress);
-  }
-}
-
-class WalletLinkConnectionCipher {
-  constructor(private readonly secret: string) {}
-
-  async decrypt(cipherText: string): Promise<string> {
-    return aes256gcm.decrypt(cipherText, this.secret);
   }
 }
