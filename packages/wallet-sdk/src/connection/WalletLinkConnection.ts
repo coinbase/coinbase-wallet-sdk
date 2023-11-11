@@ -32,8 +32,8 @@ import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket';
 const HEARTBEAT_INTERVAL = 10000;
 const REQUEST_TIMEOUT = 60000;
 
-export const WALLET_USER_NAME_KEY = 'walletUsername';
-export const APP_VERSION_KEY = 'AppVersion';
+const WALLET_USER_NAME_KEY = 'walletUsername';
+const APP_VERSION_KEY = 'AppVersion';
 
 export interface WalletLinkConnectionUpdateListener {
   linkedUpdated: (linked: boolean) => void;
