@@ -57,7 +57,7 @@ export class WalletLinkConnection {
 
   private readonly sessionId: string;
   private readonly sessionKey: string;
-  private readonly sessionSecret: string;
+  private readonly cipher: WalletLinkConnectionCipher;
   /**
    * Constructor
    * @param sessionId Session ID
@@ -73,12 +73,10 @@ export class WalletLinkConnection {
     private diagnostic?: DiagnosticLogger,
     WebSocketClass: typeof WebSocket = WebSocket
   ) {
-    const sessionId = session.id;
-    const sessionKey = session.key;
+    const sessionId = (this.sessionId = session.id);
+    const sessionKey = (this.sessionKey = session.key);
 
-    this.sessionId = sessionId;
-    this.sessionKey = sessionKey;
-    this.sessionSecret = session.secret;
+    this.cipher = new WalletLinkConnectionCipher(session.secret);
 
     const ws = new WalletLinkWebSocket(`${linkAPIUrl}/rpc`, WebSocketClass);
     this.ws = ws;
@@ -482,8 +480,9 @@ export class WalletLinkConnection {
     }
 
     if (c.metadata.WalletUsername !== undefined) {
-      aes256gcm
-        .decrypt(c.metadata.WalletUsername!, this.sessionSecret)
+      aes256gcm;
+      this.cipher
+        .decrypt(c.metadata.WalletUsername!)
         .then((walletUsername) => {
           this.storage.setItem(WALLET_USER_NAME_KEY, walletUsername);
         })
@@ -496,8 +495,8 @@ export class WalletLinkConnection {
     }
 
     if (c.metadata.AppVersion !== undefined) {
-      aes256gcm
-        .decrypt(c.metadata.AppVersion!, this.sessionSecret)
+      this.cipher
+        .decrypt(c.metadata.AppVersion!)
         .then((appVersion) => {
           this.storage.setItem(APP_VERSION_KEY, appVersion);
         })
@@ -511,8 +510,8 @@ export class WalletLinkConnection {
 
     if (c.metadata.ChainId !== undefined && c.metadata.JsonRpcUrl !== undefined) {
       Promise.all([
-        aes256gcm.decrypt(c.metadata.ChainId!, this.sessionSecret),
-        aes256gcm.decrypt(c.metadata.JsonRpcUrl!, this.sessionSecret),
+        this.cipher.decrypt(c.metadata.ChainId!),
+        this.cipher.decrypt(c.metadata.JsonRpcUrl!),
       ])
         .then(([chainId, jsonRpcUrl]) => {
           // custom distinctUntilChanged
@@ -538,8 +537,8 @@ export class WalletLinkConnection {
     }
 
     if (c.metadata.EthereumAddress !== undefined) {
-      aes256gcm
-        .decrypt(c.metadata.EthereumAddress!, this.sessionSecret)
+      this.cipher
+        .decrypt(c.metadata.EthereumAddress!)
         .then((selectedAddress) => {
           this.listener?.connectionAccountChanged(selectedAddress);
         })
@@ -550,5 +549,13 @@ export class WalletLinkConnection {
           });
         });
     }
+  }
+}
+
+class WalletLinkConnectionCipher {
+  constructor(private readonly secret: string) {}
+
+  decrypt(cipherText: string): Promise<string> {
+    return aes256gcm.decrypt(cipherText, this.secret);
   }
 }
