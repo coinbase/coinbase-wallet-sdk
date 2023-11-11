@@ -1,7 +1,6 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import * as aes256gcm from '../relay/aes256gcm';
 import { Session } from '../relay/Session';
 import { IntNumber } from '../types';
@@ -42,7 +41,8 @@ export interface WalletLinkConnectionListener {
   connectionIncomingEvent: (event: ServerMessageEvent) => void;
   connectionChainChanged: (chainId: string, jsonRpcUrl: string) => void;
   connectionAccountChanged: (selectedAddress: string) => void;
-  resetAndReload: () => void;
+  connectionMetadataChanged: (key: string, metadataValue: string) => void;
+  connectionResetAndReload: () => void;
 }
 
 /**
@@ -65,7 +65,6 @@ export class WalletLinkConnection {
   constructor(
     linkAPIUrl: string,
     session: Session,
-    private readonly storage: ScopedLocalStorage,
     private listener?: WalletLinkConnectionListener,
     private diagnostic?: DiagnosticLogger,
     WebSocketClass: typeof WebSocket = WebSocket
@@ -465,7 +464,7 @@ export class WalletLinkConnection {
       metadata;
 
     if (__destroyed === '1') {
-      this.listener?.resetAndReload();
+      this.listener?.connectionResetAndReload();
       this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
         alreadyDestroyed: this.isDestroyed,
         sessionIdHash: Session.hash(this.sessionId),
@@ -487,7 +486,7 @@ export class WalletLinkConnection {
 
   private async handleMetadataChanged(key: string, metadataValue: string) {
     const decryptedValue = await this.cipher.decrypt(metadataValue);
-    this.storage.setItem(key, decryptedValue);
+    this.listener?.connectionMetadataChanged(key, decryptedValue);
   }
 
   private async handleChainChanged(encryptedChainId: string, encryptedJsonRpcUrl: string) {

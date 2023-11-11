@@ -138,13 +138,7 @@ export class WalletLinkRelay
   public subscribe() {
     const session = Session.load(this.storage) || new Session(this.storage).save();
 
-    const connection = new WalletLinkConnection(
-      this.linkAPIUrl,
-      session,
-      this.storage,
-      this,
-      this.diagnostic
-    );
+    const connection = new WalletLinkConnection(this.linkAPIUrl, session, this, this.diagnostic);
 
     const ui = this.options.uiConstructor({
       linkAPIUrl: this.options.linkAPIUrl,
@@ -156,6 +150,10 @@ export class WalletLinkRelay
     connection.connect();
 
     return { session, ui, connection };
+  }
+
+  connectionResetAndReload() {
+    this.resetAndReload();
   }
 
   connectionIncomingEvent(m: ServerMessageEvent) {
@@ -206,6 +204,10 @@ export class WalletLinkRelay
       });
       WalletLinkRelay.accountRequestCallbackIds.clear();
     }
+  }
+
+  connectionMetadataChanged(key: string, metadataValue: string) {
+    this.storage.setItem(key, metadataValue);
   }
 
   connectionConnectedUpdated(connected: boolean) {
