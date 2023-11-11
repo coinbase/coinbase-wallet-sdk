@@ -71,7 +71,7 @@ export class WalletLinkConnection {
   constructor(
     private sessionId: string,
     private sessionKey: string,
-    private linkAPIUrl: string,
+    linkAPIUrl: string,
     private diagnostic?: DiagnosticLogger,
     WebSocketClass: typeof WebSocket = WebSocket
   ) {
