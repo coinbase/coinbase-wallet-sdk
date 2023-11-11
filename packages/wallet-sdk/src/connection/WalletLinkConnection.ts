@@ -463,6 +463,20 @@ export class WalletLinkConnection {
     return Session.hash(this.sessionId);
   }
 
+  private handleMetadata(key: string, metadataValue: string) {
+    this.cipher
+      .decrypt(metadataValue)
+      .then((decryptedValue) => {
+        this.storage.setItem(key, decryptedValue);
+      })
+      .catch(() => {
+        this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
+          message: 'Had error decrypting',
+          value: key,
+        });
+      });
+  }
+
   private chainCallbackParams = { chainId: '', jsonRpcUrl: '' }; // to implement distinctUntilChanged
 
   // SessionConfigListener
@@ -479,33 +493,14 @@ export class WalletLinkConnection {
       this.listener?.resetAndReload();
     }
 
-    if (c.metadata.WalletUsername !== undefined) {
-      aes256gcm;
-      this.cipher
-        .decrypt(c.metadata.WalletUsername!)
-        .then((walletUsername) => {
-          this.storage.setItem(WALLET_USER_NAME_KEY, walletUsername);
-        })
-        .catch(() => {
-          this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-            message: 'Had error decrypting',
-            value: 'username',
-          });
-        });
+    const { WalletUsername, AppVersion } = c.metadata;
+
+    if (WalletUsername !== undefined) {
+      this.handleMetadata(WALLET_USER_NAME_KEY, WalletUsername);
     }
 
-    if (c.metadata.AppVersion !== undefined) {
-      this.cipher
-        .decrypt(c.metadata.AppVersion!)
-        .then((appVersion) => {
-          this.storage.setItem(APP_VERSION_KEY, appVersion);
-        })
-        .catch(() => {
-          this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-            message: 'Had error decrypting',
-            value: 'appversion',
-          });
-        });
+    if (AppVersion !== undefined) {
+      this.handleMetadata(APP_VERSION_KEY, AppVersion);
     }
 
     if (c.metadata.ChainId !== undefined && c.metadata.JsonRpcUrl !== undefined) {
