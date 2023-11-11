@@ -36,6 +36,15 @@ const REQUEST_TIMEOUT = 60000;
 export const WALLET_USER_NAME_KEY = 'walletUsername';
 export const APP_VERSION_KEY = 'AppVersion';
 
+export interface WalletLinkConnectionListener {
+  connectionLinkedUpdated: (linked: boolean) => void;
+  connectionConnectedUpdated: (connected: boolean) => void;
+  connectionIncomingEvent: (event: ServerMessageEvent) => void;
+  connectionChainChanged: (chainId: string, jsonRpcUrl: string) => void;
+  connectionAccountChanged: (selectedAddress: string) => void;
+  resetAndReload: () => void;
+}
+
 /**
  * Coinbase Wallet Connection
  */
@@ -46,36 +55,6 @@ export class WalletLinkConnection {
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
 
-  // private sessionConfigListener?: (_: SessionConfig) => void;
-  setSessionConfigListener(listener: (_: SessionConfig) => void): void {
-    this.sessionConfigListener = listener;
-  }
-
-  private linkedListener?: (_: boolean) => void;
-  setLinkedListener(listener: (_: boolean) => void): void {
-    this.linkedListener = listener;
-  }
-
-  private connectedListener?: (_: boolean) => void;
-  setConnectedListener(listener: (_: boolean) => void): void {
-    this.connectedListener = listener;
-  }
-
-  private incomingEventListener?: (_: ServerMessageEvent) => void;
-  setIncomingEventListener(listener: (_: ServerMessageEvent) => void): void {
-    this.incomingEventListener = listener;
-  }
-
-  private chainCallback: ((chainId: string, jsonRpcUrl: string) => void) | null = null;
-  public setChainCallback(chainCallback: (chainId: string, jsonRpcUrl: string) => void) {
-    this.chainCallback = chainCallback;
-  }
-
-  private selectedAccountListener: ((selectedAddress: string) => void) | null = null;
-  public setSelectedAccountListener(selectedAccountListener: (selectedAddress: string) => void) {
-    this.selectedAccountListener = selectedAccountListener;
-  }
-
   /**
    * Constructor
    * @param sessionId Session ID
@@ -84,9 +63,10 @@ export class WalletLinkConnection {
    * @param [WebSocketClass] Custom WebSocket implementation
    */
   constructor(
-    private session: Session,
     linkAPIUrl: string,
+    private readonly session: Session,
     private readonly storage: ScopedLocalStorage,
+    private listener?: WalletLinkConnectionListener,
     private diagnostic?: DiagnosticLogger,
     WebSocketClass: typeof WebSocket = WebSocket
   ) {
@@ -237,9 +217,7 @@ export class WalletLinkConnection {
     });
 
     // this.sessionConfigListener = undefined;
-    this.connectedListener = undefined;
-    this.linkedListener = undefined;
-    this.incomingEventListener = undefined;
+    this.listener = undefined;
   }
 
   public get isDestroyed(): boolean {
@@ -257,7 +235,7 @@ export class WalletLinkConnection {
   private set connected(connected: boolean) {
     this._connected = connected;
     if (connected) this.onceConnected?.();
-    this.connectedListener?.(connected);
+    this.listener?.connectionConnectedUpdated(connected);
   }
 
   /**
@@ -288,7 +266,7 @@ export class WalletLinkConnection {
   private set linked(linked: boolean) {
     this._linked = linked;
     if (linked) this.onceLinked?.();
-    this.linkedListener?.(linked);
+    this.listener?.connectionLinkedUpdated(linked);
   }
 
   /**
@@ -326,7 +304,7 @@ export class WalletLinkConnection {
       return;
     }
 
-    this.incomingEventListener?.(m);
+    this.listener?.connectionIncomingEvent(m);
   }
 
   private shouldFetchUnseenEventsOnConnect = false;
@@ -490,7 +468,7 @@ export class WalletLinkConnection {
         alreadyDestroyed,
         sessionIdHash: this.getSessionIdHash(),
       });
-      this.resetAndReload(); // TODO!!!
+      this.listener?.resetAndReload();
     }
 
     if (c.metadata.WalletUsername !== undefined) {
@@ -539,9 +517,7 @@ export class WalletLinkConnection {
             jsonRpcUrl,
           };
 
-          if (this.chainCallback) {
-            this.chainCallback(chainId, jsonRpcUrl);
-          }
+          this.listener?.connectionChainChanged(chainId, jsonRpcUrl);
         })
         .catch(() => {
           this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
@@ -555,7 +531,7 @@ export class WalletLinkConnection {
       aes256gcm
         .decrypt(c.metadata.EthereumAddress!, this.session.secret)
         .then((selectedAddress) => {
-          this.selectedAccountListener?.(selectedAddress);
+          this.listener?.connectionAccountChanged(selectedAddress);
         })
         .catch(() => {
           this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
