@@ -25,6 +25,7 @@ import {
   ServerMessageSessionConfigUpdated,
 } from './ServerMessage';
 import { SessionConfig } from './SessionConfig';
+import { WalletLinkHTTP } from './WalletLinkHTTP';
 import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket';
 
 const HEARTBEAT_INTERVAL = 10000;
@@ -35,6 +36,7 @@ const REQUEST_TIMEOUT = 60000;
  */
 export class WalletLinkConnection {
   private ws: WalletLinkWebSocket;
+  private http: WalletLinkHTTP;
   private destroyed = false;
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
@@ -190,23 +192,8 @@ export class WalletLinkConnection {
         this.requestResolutions.get(m.id)?.(m);
       }
     });
-  }
 
-  // mark unseen events as seen
-  private markUnseenEventsAsSeen(events: ServerMessageEvent[]) {
-    const credentials = `${this.sessionId}:${this.sessionKey}`;
-    const auth = `Basic ${btoa(credentials)}`;
-
-    Promise.all(
-      events.map((e) =>
-        fetch(`${this.linkAPIUrl}/events/${e.eventId}/seen`, {
-          method: 'POST',
-          headers: {
-            Authorization: auth,
-          },
-        })
-      )
-    ).catch((error) => console.error('Unabled to mark event as failed:', error));
+    this.http = new WalletLinkHTTP(linkAPIUrl, sessionId, sessionKey, this.handleIncomingEvent);
   }
 
   /**
@@ -345,6 +332,7 @@ export class WalletLinkConnection {
 
   private async fetchUnseenEventsAPI() {
     this.shouldFetchUnseenEventsOnConnect = false;
+    this.http.fetchUnseenEventsAPI();
   }
 
   /**
