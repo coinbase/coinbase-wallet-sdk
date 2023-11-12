@@ -3,6 +3,7 @@
 
 import * as aes256gcm from '../relay/aes256gcm';
 import { Session } from '../relay/Session';
+import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../relay/WalletSDKRelayAbstract';
 import { IntNumber } from '../types';
 import {
   ClientMessage,
@@ -489,12 +490,10 @@ export class WalletLinkConnection {
   }
 
   private async handleWalletUsernameUpdated(walletUsername: string) {
-    const WALLET_USER_NAME_KEY = 'walletUsername';
     this.handleMetadataUpdated(WALLET_USER_NAME_KEY, walletUsername);
   }
 
   private async handleAppVersionUpdated(appVersion: string) {
-    const APP_VERSION_KEY = 'AppVersion';
     this.handleMetadataUpdated(APP_VERSION_KEY, appVersion);
   }
 

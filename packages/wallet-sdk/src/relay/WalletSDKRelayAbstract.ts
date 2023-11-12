@@ -19,7 +19,9 @@ import {
   Web3Response,
 } from './Web3Response';
 
+export const WALLET_USER_NAME_KEY = 'walletUsername';
 export const LOCAL_STORAGE_ADDRESSES_KEY = 'Addresses';
+export const APP_VERSION_KEY = 'AppVersion';
 
 export type CancelablePromise<T> = {
   promise: Promise<T>;
