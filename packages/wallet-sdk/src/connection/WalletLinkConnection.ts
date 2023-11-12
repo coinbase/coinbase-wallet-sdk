@@ -449,6 +449,7 @@ export class WalletLinkConnection {
   }
 
   private handleSessionConfigUpdated(metadata: SessionConfig['metadata']) {
+    // Map of metadata key to handler function
     const handlers = new Map<string, (value: string) => void>([
       ['__destroyed', this.handleDestroyed],
       ['EthereumAddress', this.handleAccountUpdated],
@@ -460,6 +461,7 @@ export class WalletLinkConnection {
       ],
     ]);
 
+    // call handler for each metadata key if value is defined
     handlers.forEach((handler, key) => {
       const value = metadata[key];
       if (value === undefined) return;
@@ -475,6 +477,11 @@ export class WalletLinkConnection {
       alreadyDestroyed: this.isDestroyed,
       sessionIdHash: Session.hash(this.sessionId),
     });
+  }
+
+  private async handleAccountUpdated(encryptedEthereumAddress: string) {
+    const address = await this.decrypt(encryptedEthereumAddress);
+    this.listener?.accountUpdated(address);
   }
 
   private async handleMetadataUpdated(key: string, encryptedMetadataValue: string) {
@@ -501,10 +508,5 @@ export class WalletLinkConnection {
     this.chainId = chainId;
     this.jsonRpcUrl = jsonRpcUrl;
     this.listener?.chainUpdated(chainId, jsonRpcUrl);
-  }
-
-  private async handleAccountUpdated(encryptedEthereumAddress: string) {
-    const address = await this.decrypt(encryptedEthereumAddress);
-    this.listener?.accountUpdated(address);
   }
 }
