@@ -1,9 +1,10 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import * as aes256gcm from '../relay/aes256gcm';
+import { RelayMessage } from '../relay/RelayMessage';
 import { Session } from '../relay/Session';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../relay/WalletSDKRelayAbstract';
+import { isWeb3ResponseMessage, Web3ResponseMessage } from '../relay/Web3ResponseMessage';
 import { IntNumber } from '../types';
 import {
   ClientMessage,
@@ -27,6 +28,7 @@ import {
   ServerMessageSessionConfigUpdated,
 } from './ServerMessage';
 import { SessionConfig } from './SessionConfig';
+import { WalletLinkConnectionCipher } from './WalletLinkConnectionCipher';
 import { WalletLinkHTTP } from './WalletLinkHTTP';
 import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket';
 
@@ -36,7 +38,7 @@ const REQUEST_TIMEOUT = 60000;
 export interface WalletLinkConnectionUpdateListener {
   linkedUpdated: (linked: boolean) => void;
   connectedUpdated: (connected: boolean) => void;
-  incomingEvent: (event: ServerMessageEvent) => void;
+  handleResponseMessage: (message: Web3ResponseMessage) => void;
   chainUpdated: (chainId: string, jsonRpcUrl: string) => void;
   accountUpdated: (selectedAddress: string) => void;
   metadataUpdated: (key: string, metadataValue: string) => void;
@@ -49,6 +51,7 @@ export interface WalletLinkConnectionUpdateListener {
 export class WalletLinkConnection {
   private ws: WalletLinkWebSocket;
   private http: WalletLinkHTTP;
+  private cipher: WalletLinkConnectionCipher;
   private listener?: WalletLinkConnectionUpdateListener;
   private destroyed = false;
   private lastHeartbeatResponse = 0;
@@ -66,9 +69,9 @@ export class WalletLinkConnection {
   ) {
     const sessionId = (this.sessionId = session.id);
     const sessionKey = (this.sessionKey = session.key);
+    this.cipher = new WalletLinkConnectionCipher(session.secret);
 
     this.listener = listener;
-    this.decrypt = (cipherText: string) => aes256gcm.decrypt(cipherText, session.secret);
 
     const ws = new WalletLinkWebSocket(`${linkAPIUrl}/rpc`, WebSocketClass);
     ws.setConnectionStateListener(async (state) => {
@@ -281,7 +284,7 @@ export class WalletLinkConnection {
     });
   }
 
-  private handleIncomingEvent(m: ServerMessage) {
+  private async handleIncomingEvent(m: ServerMessage) {
     function isServerMessageEvent(msg: ServerMessage): msg is ServerMessageEvent {
       if (msg.type !== 'Event') {
         return false;
@@ -299,7 +302,20 @@ export class WalletLinkConnection {
       return;
     }
 
-    this.listener?.incomingEvent(m);
+    if (m.event !== 'Web3Response') {
+      return;
+    }
+
+    const decryptedData = await this.cipher.decrypt(m.data);
+
+    const json = JSON.parse(decryptedData);
+    const message = isWeb3ResponseMessage(json) ? json : null;
+
+    if (!message) {
+      return;
+    }
+
+    this.listener?.handleResponseMessage(message);
   }
 
   private shouldFetchUnseenEventsOnConnect = false;
@@ -349,11 +365,19 @@ export class WalletLinkConnection {
   /**
    * Publish an event and emit event ID when successful
    * @param event event name
-   * @param data event data
+   * @param unencryptedMessage unencrypted event message
    * @param callWebhook whether the webhook should be invoked
    * @returns a Promise that emits event ID when successful
    */
-  public async publishEvent(event: string, data: string, callWebhook = false) {
+  public async publishEvent(event: string, unencryptedMessage: RelayMessage, callWebhook = false) {
+    const data = await this.cipher.encrypt(
+      JSON.stringify({
+        ...unencryptedMessage,
+        origin: location.origin,
+        relaySource: window.coinbaseWalletExtension ? 'injected_sdk' : 'sdk',
+      })
+    );
+
     const message = ClientMessagePublishEvent({
       id: IntNumber(this.nextReqId++),
       sessionId: this.sessionId,
@@ -477,15 +501,13 @@ export class WalletLinkConnection {
     });
   }
 
-  private readonly decrypt: (_: string) => Promise<string>;
-
   private async handleAccountUpdated(encryptedEthereumAddress: string) {
-    const address = await this.decrypt(encryptedEthereumAddress);
+    const address = await this.cipher.decrypt(encryptedEthereumAddress);
     this.listener?.accountUpdated(address);
   }
 
   private async handleMetadataUpdated(key: string, encryptedMetadataValue: string) {
-    const decryptedValue = await this.decrypt(encryptedMetadataValue);
+    const decryptedValue = await this.cipher.decrypt(encryptedMetadataValue);
     this.listener?.metadataUpdated(key, decryptedValue);
   }
 
@@ -498,8 +520,8 @@ export class WalletLinkConnection {
   }
 
   private async handleChainUpdated(encryptedChainId: string, encryptedJsonRpcUrl: string) {
-    const chainId = await this.decrypt(encryptedChainId);
-    const jsonRpcUrl = await this.decrypt(encryptedJsonRpcUrl);
+    const chainId = await this.cipher.decrypt(encryptedChainId);
+    const jsonRpcUrl = await this.cipher.decrypt(encryptedJsonRpcUrl);
     this.listener?.chainUpdated(chainId, jsonRpcUrl);
   }
 }

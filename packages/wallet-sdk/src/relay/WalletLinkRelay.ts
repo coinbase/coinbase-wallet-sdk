@@ -3,7 +3,6 @@
 
 import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
 import { EventListener } from '../connection/EventListener';
-import { ServerMessageEvent } from '../connection/ServerMessage';
 import {
   WalletLinkConnection,
   WalletLinkConnectionUpdateListener,
@@ -20,7 +19,6 @@ import { WalletLinkRelayUI } from '../provider/WalletLinkRelayUI';
 import { WalletUI, WalletUIOptions } from '../provider/WalletUI';
 import { AddressString, IntNumber, ProviderType, RegExpString } from '../types';
 import { bigIntStringFromBN, createQrUrl, hexStringFromBuffer, randomBytesHex } from '../util';
-import * as aes256gcm from './aes256gcm';
 import { EthereumTransactionParams } from './EthereumTransactionParams';
 import { RelayMessage } from './RelayMessage';
 import { Session } from './Session';
@@ -59,7 +57,7 @@ import {
   WatchAssetResponse,
   Web3Response,
 } from './Web3Response';
-import { isWeb3ResponseMessage, Web3ResponseMessage } from './Web3ResponseMessage';
+import { Web3ResponseMessage } from './Web3ResponseMessage';
 
 export interface WalletLinkRelayOptions {
   linkAPIUrl: string;
@@ -100,7 +98,6 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   constructor(options: Readonly<WalletLinkRelayOptions>) {
     super();
     this.resetAndReload = this.resetAndReload.bind(this);
-    this.handleIncomingEvent = this.handleIncomingEvent.bind(this);
 
     this.linkAPIUrl = options.linkAPIUrl;
     this.storage = options.storage;
@@ -156,11 +153,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   }
 
   private listener: WalletLinkConnectionUpdateListener = {
-    incomingEvent: (m: ServerMessageEvent) => {
-      if (m.event === 'Web3Response') {
-        this.handleIncomingEvent(m);
-      }
-    },
+    handleResponseMessage: this.handleWeb3ResponseMessage,
     linkedUpdated: (linked: boolean) => {
       this.isLinked = linked;
       const cachedAddresses = this.storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
@@ -535,38 +528,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
     message: RelayMessage,
     callWebhook: boolean
   ): Promise<string> {
-    const secret = this.session.secret;
-    return aes256gcm
-      .encrypt(
-        JSON.stringify({
-          ...message,
-          origin: location.origin,
-          relaySource: window.coinbaseWalletExtension ? 'injected_sdk' : 'sdk',
-        }),
-        secret
-      )
-      .then((encrypted: string) => this.connection.publishEvent(event, encrypted, callWebhook));
-  }
-
-  private handleIncomingEvent(event: ServerMessageEvent): void {
-    aes256gcm
-      .decrypt(event.data, this.session.secret)
-      .then((decryptedData) => {
-        const json = JSON.parse(decryptedData);
-        const message = isWeb3ResponseMessage(json) ? json : null;
-
-        if (!message) {
-          return;
-        }
-
-        this.handleWeb3ResponseMessage(message);
-      })
-      .catch(() => {
-        this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-          message: 'Had error decrypting',
-          value: 'incomingEvent',
-        });
-      });
+    return this.connection.publishEvent(event, message, callWebhook);
   }
 
   protected handleWeb3ResponseMessage(message: Web3ResponseMessage) {

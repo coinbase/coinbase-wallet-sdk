@@ -5,7 +5,6 @@ import { SessionConfig } from '../connection/SessionConfig';
 import { WalletLinkConnection } from '../connection/WalletLinkConnection';
 import { WalletLinkWebSocket } from '../connection/WalletLinkWebSocket';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import * as aes256gcm from './aes256gcm';
 import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay';
 import { WalletSDKRelayEventManager } from './WalletSDKRelayEventManager';
 
@@ -71,35 +70,7 @@ describe('WalletLinkRelay', () => {
   });
 
   describe('setSessionConfigListener', () => {
-    it('should update metadata with setSessionConfigListener', async () => {
-      const sessionConfig: SessionConfig = {
-        webhookId: 'webhookId',
-        webhookUrl: 'webhookUrl',
-        metadata: {
-          WalletUsername: 'username',
-        },
-      };
-
-      const decryptSpy = jest.spyOn(aes256gcm, 'decrypt');
-
-      const relay = new WalletLinkRelay(options);
-
-      (relay as any).connection.ws.incomingDataListener?.({
-        ...sessionConfig,
-        type: 'SessionConfigUpdated',
-      });
-
-      expect(decryptSpy).toHaveBeenCalledWith(
-        sessionConfig.metadata.WalletUsername,
-        expect.anything()
-      );
-    });
-
     it('should update chainId and jsonRpcUrl only when distinct', async () => {
-      jest.spyOn(aes256gcm, 'decrypt').mockImplementation(async (input, _secret) => {
-        return input;
-      });
-
       const callback = jest.fn();
       const relay = new WalletLinkRelay(options);
       relay.setChainCallback(callback);

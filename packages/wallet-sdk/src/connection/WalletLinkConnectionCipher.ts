@@ -3,6 +3,19 @@
 
 import { hexStringToUint8Array, uint8ArrayToHex } from '../util';
 
+export class WalletLinkConnectionCipher {
+  // @param secret hex representation of 32-byte secret
+  constructor(private readonly secret: string) {}
+
+  async encrypt(plainText: string): Promise<string> {
+    return encrypt(plainText, this.secret);
+  }
+
+  async decrypt(cipherText: string): Promise<string> {
+    return decrypt(cipherText, this.secret);
+  }
+}
+
 /**
  *
  * @param plainText string to be encrypted
