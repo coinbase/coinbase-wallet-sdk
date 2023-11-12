@@ -55,9 +55,6 @@ export class WalletLinkConnection {
 
   private readonly sessionId: string;
   private readonly sessionKey: string;
-  private readonly decrypt: (_: string) => Promise<string>;
-  private chainId = '';
-  private jsonRpcUrl = '';
 
   constructor(
     session: Session,
@@ -479,6 +476,8 @@ export class WalletLinkConnection {
     });
   }
 
+  private readonly decrypt: (_: string) => Promise<string>;
+
   private async handleAccountUpdated(encryptedEthereumAddress: string) {
     const address = await this.decrypt(encryptedEthereumAddress);
     this.listener?.accountUpdated(address);
@@ -502,11 +501,6 @@ export class WalletLinkConnection {
   private async handleChainUpdated(encryptedChainId: string, encryptedJsonRpcUrl: string) {
     const chainId = await this.decrypt(encryptedChainId);
     const jsonRpcUrl = await this.decrypt(encryptedJsonRpcUrl);
-
-    if (this.chainId === chainId && this.jsonRpcUrl === jsonRpcUrl) return;
-
-    this.chainId = chainId;
-    this.jsonRpcUrl = jsonRpcUrl;
     this.listener?.chainUpdated(chainId, jsonRpcUrl);
   }
 }

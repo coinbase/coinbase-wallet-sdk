@@ -84,6 +84,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   protected readonly diagnostic?: DiagnosticLogger;
   protected connection: WalletLinkConnection;
   private accountsCallback: ((account: string[], isDisconnect?: boolean) => void) | null = null;
+  private chainCallbackParams = { chainId: '', jsonRpcUrl: '' }; // to implement distinctUntilChanged
   private chainCallback: ((chainId: string, jsonRpcUrl: string) => void) | null = null;
   protected dappDefaultChain = 1;
   private readonly options: WalletLinkRelayOptions;
@@ -184,6 +185,22 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       }
     },
     metadataUpdated: (key: string, value: string) => this.storage.setItem(key, value),
+    chainUpdated: (chainId: string, jsonRpcUrl: string) => {
+      if (
+        this.chainCallbackParams.chainId === chainId &&
+        this.chainCallbackParams.jsonRpcUrl === jsonRpcUrl
+      ) {
+        return;
+      }
+      this.chainCallbackParams = {
+        chainId,
+        jsonRpcUrl,
+      };
+
+      if (this.chainCallback) {
+        this.chainCallback(chainId, jsonRpcUrl);
+      }
+    },
     accountUpdated: (selectedAddress: string) => {
       if (this.accountsCallback) {
         this.accountsCallback([selectedAddress]);
@@ -204,7 +221,6 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       }
     },
     connectedUpdated: (connected: boolean) => this.ui.setConnected(connected),
-    chainUpdated: (chainId: string, rpcUrl: string) => this.chainCallback?.(chainId, rpcUrl),
     resetAndReload: () => this.resetAndReload(),
   };
 
