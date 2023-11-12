@@ -48,6 +48,7 @@ export interface WalletLinkConnectionUpdateListener {
 export class WalletLinkConnection {
   private ws: WalletLinkWebSocket;
   private http: WalletLinkHTTP;
+  private listener?: WalletLinkConnectionUpdateListener;
   private destroyed = false;
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
@@ -61,21 +62,18 @@ export class WalletLinkConnection {
   constructor(
     session: Session,
     linkAPIUrl: string,
-    private listener?: WalletLinkConnectionUpdateListener,
+    listener: WalletLinkConnectionUpdateListener,
     private diagnostic?: DiagnosticLogger,
     WebSocketClass: typeof WebSocket = WebSocket
   ) {
     const sessionId = (this.sessionId = session.id);
     const sessionKey = (this.sessionKey = session.key);
 
+    this.listener = listener;
     this.decrypt = (cipherText: string) => aes256gcm.decrypt(cipherText, session.secret);
 
     const ws = new WalletLinkWebSocket(`${linkAPIUrl}/rpc`, WebSocketClass);
-    this.ws = ws;
-
-    this.http = new WalletLinkHTTP(linkAPIUrl, sessionId, sessionKey);
-
-    this.ws.setConnectionStateListener(async (state) => {
+    ws.setConnectionStateListener(async (state) => {
       // attempt to reconnect every 5 seconds when disconnected
       this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
         state,
@@ -138,7 +136,6 @@ export class WalletLinkConnection {
         this.connected = connected;
       }
     });
-
     ws.setIncomingDataListener((m) => {
       switch (m.type) {
         // handle server's heartbeat responses
@@ -187,6 +184,9 @@ export class WalletLinkConnection {
         this.requestResolutions.get(m.id)?.(m);
       }
     });
+    this.ws = ws;
+
+    this.http = new WalletLinkHTTP(linkAPIUrl, sessionId, sessionKey);
   }
 
   /**
@@ -448,7 +448,7 @@ export class WalletLinkConnection {
     this.sendData(msg);
   }
 
-  private handleSessionConfigUpdated(metadata: SessionConfig['metadata']) {
+  handleSessionConfigUpdated(metadata: SessionConfig['metadata']) {
     // Map of metadata key to handler function
     const handlers = new Map<string, (value: string) => void>([
       ['__destroyed', this.handleDestroyed],
