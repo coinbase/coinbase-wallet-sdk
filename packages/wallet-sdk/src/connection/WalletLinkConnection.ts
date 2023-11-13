@@ -175,9 +175,7 @@ export class WalletLinkConnection {
             sessionIdHash: Session.hash(sessionId),
             metadata_keys: msg && msg.metadata ? Object.keys(msg.metadata) : undefined,
           });
-          if (msg.metadata) {
-            this.handleSessionConfigUpdated(msg.metadata);
-          }
+          this.handleSessionMetadataUpdated(msg.metadata);
           break;
         }
 
@@ -462,7 +460,9 @@ export class WalletLinkConnection {
     this.sendData(msg);
   }
 
-  private handleSessionConfigUpdated = (metadata: SessionConfig['metadata']) => {
+  private handleSessionMetadataUpdated = (metadata: SessionConfig['metadata']) => {
+    if (!metadata) return;
+
     // Map of metadata key to handler function
     const handlers = new Map<string, (value: string) => void>([
       ['__destroyed', this.handleDestroyed],

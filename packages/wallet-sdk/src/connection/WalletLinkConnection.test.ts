@@ -30,10 +30,10 @@ describe('WalletLinkConnection', () => {
   });
 
   describe('incomingDataListener', () => {
-    it('should call handleSessionConfigUpdated when session config is updated', async () => {
-      const handleSessionConfigUpdatedSpy = jest.spyOn(
+    it('should call handleSessionMetadataUpdated when session config is updated', async () => {
+      const handleSessionMetadataUpdatedSpy = jest.spyOn(
         connection as any,
-        'handleSessionConfigUpdated'
+        'handleSessionMetadataUpdated'
       );
 
       const sessionConfig: SessionConfig = {
@@ -49,13 +49,13 @@ describe('WalletLinkConnection', () => {
         type: 'SessionConfigUpdated',
       });
 
-      expect(handleSessionConfigUpdatedSpy).toHaveBeenCalledWith(sessionConfig.metadata);
+      expect(handleSessionMetadataUpdatedSpy).toHaveBeenCalledWith(sessionConfig.metadata);
     });
   });
 
-  describe('handleSessionConfigUpdated', () => {
-    function invoke_handleSessionConfigUpdated(metadata: SessionConfig['metadata']) {
-      (connection as any).handleSessionConfigUpdated(metadata);
+  describe('handleSessionMetadataUpdated', () => {
+    function invoke_handleSessionMetadataUpdated(metadata: SessionConfig['metadata']) {
+      (connection as any).handleSessionMetadataUpdated(metadata);
     }
 
     it('should call listner.metadataUpdated when WalletUsername updated', async () => {
@@ -63,7 +63,7 @@ describe('WalletLinkConnection', () => {
 
       const newUsername = 'new username';
 
-      invoke_handleSessionConfigUpdated({ WalletUsername: newUsername });
+      invoke_handleSessionMetadataUpdated({ WalletUsername: newUsername });
 
       expect(cipher.decrypt).toHaveBeenCalledWith(newUsername);
       expect(listener_metadataUpdatedSpy).toHaveBeenCalledWith(
@@ -77,7 +77,7 @@ describe('WalletLinkConnection', () => {
 
       const newAppVersion = 'new app version';
 
-      invoke_handleSessionConfigUpdated({ AppVersion: newAppVersion });
+      invoke_handleSessionMetadataUpdated({ AppVersion: newAppVersion });
 
       expect(listener_metadataUpdatedSpy).toHaveBeenCalledWith(
         APP_VERSION_KEY,
@@ -88,7 +88,7 @@ describe('WalletLinkConnection', () => {
     it('should call listner.resetAndReload when __destroyed: 1 is received', async () => {
       const listener_resetAndReloadSpy = jest.spyOn(listener, 'resetAndReload');
 
-      invoke_handleSessionConfigUpdated({ __destroyed: '1' });
+      invoke_handleSessionMetadataUpdated({ __destroyed: '1' });
 
       expect(listener_resetAndReloadSpy).toHaveBeenCalled();
     });
@@ -98,7 +98,7 @@ describe('WalletLinkConnection', () => {
 
       const newAccount = 'new account';
 
-      invoke_handleSessionConfigUpdated({ EthereumAddress: newAccount });
+      invoke_handleSessionMetadataUpdated({ EthereumAddress: newAccount });
 
       expect(listener_accountUpdatedSpy).toHaveBeenCalledWith(await cipher.decrypt(newAccount));
     });
@@ -110,8 +110,8 @@ describe('WalletLinkConnection', () => {
         const chainIdUpdate = { ChainId: 'new chain id' };
         const jsonRpcUrlUpdate = { JsonRpcUrl: 'new json rpc url' };
 
-        invoke_handleSessionConfigUpdated(chainIdUpdate);
-        invoke_handleSessionConfigUpdated(jsonRpcUrlUpdate);
+        invoke_handleSessionMetadataUpdated(chainIdUpdate);
+        invoke_handleSessionMetadataUpdated(jsonRpcUrlUpdate);
 
         await cipher.decrypt(chainIdUpdate.ChainId);
 
@@ -126,7 +126,7 @@ describe('WalletLinkConnection', () => {
           JsonRpcUrl: 'new json rpc url',
         };
 
-        invoke_handleSessionConfigUpdated(update);
+        invoke_handleSessionMetadataUpdated(update);
 
         expect(listener_chainUpdatedSpy).toHaveBeenCalledWith(
           await cipher.decrypt(update.ChainId),
