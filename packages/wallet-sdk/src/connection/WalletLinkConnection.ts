@@ -455,7 +455,7 @@ export class WalletLinkConnection {
     this.sendData(msg);
   }
 
-  handleSessionConfigUpdated(metadata: SessionConfig['metadata']) {
+  private handleSessionConfigUpdated(metadata: SessionConfig['metadata']) {
     // Map of metadata key to handler function
     const handlers = new Map<string, (value: string) => void>([
       ['__destroyed', this.handleDestroyed],
@@ -476,7 +476,7 @@ export class WalletLinkConnection {
     });
   }
 
-  private async handleDestroyed(__destroyed: string) {
+  private handleDestroyed = (__destroyed: string) => {
     if (__destroyed !== '1') return;
 
     this.listener?.resetAndReload();
@@ -484,9 +484,9 @@ export class WalletLinkConnection {
       alreadyDestroyed: this.isDestroyed,
       sessionIdHash: Session.hash(this.sessionId),
     });
-  }
+  };
 
-  private async handleAccountUpdated(encryptedEthereumAddress: string) {
+  private handleAccountUpdated = async (encryptedEthereumAddress: string) => {
     try {
       const address = await this.cipher.decrypt(encryptedEthereumAddress);
       this.listener?.accountUpdated(address);
@@ -496,9 +496,9 @@ export class WalletLinkConnection {
         value: 'selectedAddress',
       });
     }
-  }
+  };
 
-  private async handleMetadataUpdated(key: string, encryptedMetadataValue: string) {
+  private handleMetadataUpdated = async (key: string, encryptedMetadataValue: string) => {
     try {
       const decryptedValue = await this.cipher.decrypt(encryptedMetadataValue);
       this.listener?.metadataUpdated(key, decryptedValue);
@@ -508,17 +508,17 @@ export class WalletLinkConnection {
         value: key,
       });
     }
-  }
+  };
 
-  private async handleWalletUsernameUpdated(walletUsername: string) {
+  private handleWalletUsernameUpdated = async (walletUsername: string) => {
     this.handleMetadataUpdated(WALLET_USER_NAME_KEY, walletUsername);
-  }
+  };
 
-  private async handleAppVersionUpdated(appVersion: string) {
+  private handleAppVersionUpdated = async (appVersion: string) => {
     this.handleMetadataUpdated(APP_VERSION_KEY, appVersion);
-  }
+  };
 
-  private async handleChainUpdated(encryptedChainId: string, encryptedJsonRpcUrl: string) {
+  private handleChainUpdated = async (encryptedChainId: string, encryptedJsonRpcUrl: string) => {
     try {
       const chainId = await this.cipher.decrypt(encryptedChainId);
       const jsonRpcUrl = await this.cipher.decrypt(encryptedJsonRpcUrl);
@@ -529,5 +529,5 @@ export class WalletLinkConnection {
         value: 'chainId|jsonRpcUrl',
       });
     }
-  }
+  };
 }
