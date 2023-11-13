@@ -25,6 +25,7 @@ import {
   ServerMessageSessionConfigUpdated,
 } from './ServerMessage';
 import { SessionConfig } from './SessionConfig';
+import { WalletLinkHTTP } from './WalletLinkHTTP';
 import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket';
 
 const HEARTBEAT_INTERVAL = 10000;
@@ -35,6 +36,7 @@ const REQUEST_TIMEOUT = 60000;
  */
 export class WalletLinkConnection {
   private ws: WalletLinkWebSocket;
+  private http: WalletLinkHTTP;
   private destroyed = false;
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
@@ -69,14 +71,12 @@ export class WalletLinkConnection {
   constructor(
     private sessionId: string,
     private sessionKey: string,
-    private linkAPIUrl: string,
+    linkAPIUrl: string,
     private diagnostic?: DiagnosticLogger,
     WebSocketClass: typeof WebSocket = WebSocket
   ) {
     const ws = new WalletLinkWebSocket(`${linkAPIUrl}/rpc`, WebSocketClass);
-    this.ws = ws;
-
-    this.ws.setConnectionStateListener(async (state) => {
+    ws.setConnectionStateListener(async (state) => {
       // attempt to reconnect every 5 seconds when disconnected
       this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
         state,
@@ -139,7 +139,6 @@ export class WalletLinkConnection {
         this.connected = connected;
       }
     });
-
     ws.setIncomingDataListener((m) => {
       switch (m.type) {
         // handle server's heartbeat responses
@@ -190,23 +189,9 @@ export class WalletLinkConnection {
         this.requestResolutions.get(m.id)?.(m);
       }
     });
-  }
+    this.ws = ws;
 
-  // mark unseen events as seen
-  private markUnseenEventsAsSeen(events: ServerMessageEvent[]) {
-    const credentials = `${this.sessionId}:${this.sessionKey}`;
-    const auth = `Basic ${btoa(credentials)}`;
-
-    Promise.all(
-      events.map((e) =>
-        fetch(`${this.linkAPIUrl}/events/${e.eventId}/seen`, {
-          method: 'POST',
-          headers: {
-            Authorization: auth,
-          },
-        })
-      )
-    ).catch((error) => console.error('Unabled to mark event as failed:', error));
+    this.http = new WalletLinkHTTP(linkAPIUrl, sessionId, sessionKey);
   }
 
   /**
@@ -346,46 +331,8 @@ export class WalletLinkConnection {
   private async fetchUnseenEventsAPI() {
     this.shouldFetchUnseenEventsOnConnect = false;
 
-    const credentials = `${this.sessionId}:${this.sessionKey}`;
-    const auth = `Basic ${btoa(credentials)}`;
-
-    const response = await fetch(`${this.linkAPIUrl}/events?unseen=true`, {
-      headers: {
-        Authorization: auth,
-      },
-    });
-
-    if (response.ok) {
-      const { events, error } = (await response.json()) as {
-        events?: {
-          id: string;
-          event: 'Web3Request' | 'Web3Response' | 'Web3RequestCanceled';
-          data: string;
-        }[];
-        timestamp: number;
-        error?: string;
-      };
-
-      if (error) {
-        throw new Error(`Check unseen events failed: ${error}`);
-      }
-
-      const responseEvents: ServerMessageEvent[] =
-        events
-          ?.filter((e) => e.event === 'Web3Response')
-          .map((e) => ({
-            type: 'Event',
-            sessionId: this.sessionId,
-            eventId: e.id,
-            event: e.event,
-            data: e.data,
-          })) ?? [];
-      responseEvents.forEach((e) => this.handleIncomingEvent(e));
-
-      this.markUnseenEventsAsSeen(responseEvents);
-    } else {
-      throw new Error(`Check unseen events failed: ${response.status}`);
-    }
+    const responseEvents = await this.http.fetchUnseenEvents();
+    responseEvents.forEach((e) => this.handleIncomingEvent(e));
   }
 
   /**
