@@ -8,4 +8,12 @@ module.exports = {
   rules: {
     'no-useless-constructor': 'off',
   },
+  overrides: [
+    {
+      files: ["**/*.test.*"],
+      rules: {
+        "@typescript-eslint/no-explicit-any": "off"
+      }
+    }
+  ]
 };
