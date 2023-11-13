@@ -54,53 +54,85 @@ describe('WalletLinkConnection', () => {
   });
 
   describe('handleSessionConfigUpdated', () => {
-    function handleSessionConfigUpdated(metadata: SessionConfig['metadata']) {
+    function invoke_handleSessionConfigUpdated(metadata: SessionConfig['metadata']) {
       (connection as any).handleSessionConfigUpdated(metadata);
     }
 
-    it('should call listner.metadataUpdated when WalletUsername changed', async () => {
+    it('should call listner.metadataUpdated when WalletUsername updated', async () => {
+      const listener_metadataUpdatedSpy = jest.spyOn(listener, 'metadataUpdated');
+
       const newUsername = 'new username';
 
-      const listenerMetadataUpdatedSpy = jest.spyOn(listener, 'metadataUpdated');
-
-      handleSessionConfigUpdated({ WalletUsername: newUsername });
+      invoke_handleSessionConfigUpdated({ WalletUsername: newUsername });
 
       expect(cipher.decrypt).toHaveBeenCalledWith(newUsername);
-      expect(listenerMetadataUpdatedSpy).toHaveBeenCalledWith(
+      expect(listener_metadataUpdatedSpy).toHaveBeenCalledWith(
         WALLET_USER_NAME_KEY,
         await cipher.decrypt(newUsername)
       );
     });
 
-    it('should call listner.metadataUpdated when AppVersion changed', async () => {
+    it('should call listner.metadataUpdated when AppVersion updated', async () => {
+      const listener_metadataUpdatedSpy = jest.spyOn(listener, 'metadataUpdated');
+
       const newAppVersion = 'new app version';
 
-      const listenerMetadataUpdatedSpy = jest.spyOn(listener, 'metadataUpdated');
+      invoke_handleSessionConfigUpdated({ AppVersion: newAppVersion });
 
-      handleSessionConfigUpdated({ AppVersion: newAppVersion });
-
-      expect(listenerMetadataUpdatedSpy).toHaveBeenCalledWith(
+      expect(listener_metadataUpdatedSpy).toHaveBeenCalledWith(
         APP_VERSION_KEY,
         await cipher.decrypt(newAppVersion)
       );
     });
 
     it('should call listner.resetAndReload when __destroyed: 1 is received', async () => {
-      const listenerResetAndReloadSpy = jest.spyOn(listener, 'resetAndReload');
+      const listener_resetAndReloadSpy = jest.spyOn(listener, 'resetAndReload');
 
-      handleSessionConfigUpdated({ __destroyed: '1' });
+      invoke_handleSessionConfigUpdated({ __destroyed: '1' });
 
-      expect(listenerResetAndReloadSpy).toHaveBeenCalled();
+      expect(listener_resetAndReloadSpy).toHaveBeenCalled();
     });
 
-    it('should call listner.chainUpdated when ChainId changed', async () => {
-      const newChainId = 'new chain id';
+    it('should call listner.accountUpdated when Account updated', async () => {
+      const listener_accountUpdatedSpy = jest.spyOn(listener, 'accountUpdated');
 
-      const listenerChainUpdatedSpy = jest.spyOn(listener, 'chainUpdated');
+      const newAccount = 'new account';
 
-      handleSessionConfigUpdated({ ChainId: newChainId });
+      invoke_handleSessionConfigUpdated({ EthereumAddress: newAccount });
 
-      expect(listenerChainUpdatedSpy).toHaveBeenCalledWith(await cipher.decrypt(newChainId));
+      expect(listener_accountUpdatedSpy).toHaveBeenCalledWith(await cipher.decrypt(newAccount));
+    });
+
+    describe('chain updates', () => {
+      it('should NOT call listner.chainUpdated when only one changed', async () => {
+        const listener_chainUpdatedSpy = jest.spyOn(listener, 'chainUpdated');
+
+        const chainIdUpdate = { ChainId: 'new chain id' };
+        const jsonRpcUrlUpdate = { JsonRpcUrl: 'new json rpc url' };
+
+        invoke_handleSessionConfigUpdated(chainIdUpdate);
+        invoke_handleSessionConfigUpdated(jsonRpcUrlUpdate);
+
+        await cipher.decrypt(chainIdUpdate.ChainId);
+
+        expect(listener_chainUpdatedSpy).not.toHaveBeenCalled();
+      });
+
+      it('should call listner.chainUpdated when both ChainId and JsonRpcUrl changed', async () => {
+        const listener_chainUpdatedSpy = jest.spyOn(listener, 'chainUpdated');
+
+        const update = {
+          ChainId: 'new chain id',
+          JsonRpcUrl: 'new json rpc url',
+        };
+
+        invoke_handleSessionConfigUpdated(update);
+
+        expect(listener_chainUpdatedSpy).toHaveBeenCalledWith(
+          await cipher.decrypt(update.ChainId),
+          await cipher.decrypt(update.JsonRpcUrl)
+        );
+      });
     });
   });
 });
