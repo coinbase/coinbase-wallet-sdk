@@ -52,14 +52,21 @@ export class WalletLinkConnection {
   private ws: WalletLinkWebSocket;
   private http: WalletLinkHTTP;
   private cipher: WalletLinkConnectionCipher;
-  private listener?: WalletLinkConnectionUpdateListener;
   private destroyed = false;
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
 
-  private readonly sessionId: string;
-  private readonly sessionKey: string;
+  private listener?: WalletLinkConnectionUpdateListener;
 
+  /**
+   * Constructor
+   * @param session Session
+   * @param linkAPIUrl Coinbase Wallet link server URL
+   * @param listener WalletLinkConnectionUpdateListener
+   * @param [WebSocketClass] Custom WebSocket implementation
+   */
+  private sessionId: string;
+  private sessionKey: string;
   constructor(
     session: Session,
     linkAPIUrl: string,
