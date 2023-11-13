@@ -2,31 +2,32 @@ import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { Session } from '../relay/Session';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../relay/WalletSDKRelayAbstract';
 import { SessionConfig } from './SessionConfig';
-import { WalletLinkConnection } from './WalletLinkConnection';
+import { WalletLinkConnection, WalletLinkConnectionUpdateListener } from './WalletLinkConnection';
+import { WalletLinkConnectionCipher } from './WalletLinkConnectionCipher';
+
+const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`decrypted ${text}`));
+
+jest.spyOn(WalletLinkConnectionCipher.prototype, 'decrypt').mockImplementation(decryptMock);
 
 describe('WalletLinkConnection', () => {
   const session = new Session(new ScopedLocalStorage('test'));
 
-  const listener = {
-    linkedUpdated: jest.fn(),
-    connectedUpdated: jest.fn(),
-    handleResponseMessage: jest.fn(),
-    chainUpdated: jest.fn(),
-    accountUpdated: jest.fn(),
-    metadataUpdated: jest.fn(),
-    resetAndReload: jest.fn(),
-  };
-  const cipher = {
-    encrypt: jest.fn().mockImplementation((text) => Promise.resolve(`encrypted ${text}`)),
-    decrypt: jest.fn().mockImplementation((text) => Promise.resolve(`decrypted ${text}`)),
-  };
   let connection: WalletLinkConnection;
+  let listener: WalletLinkConnectionUpdateListener;
 
   beforeEach(() => {
     jest.clearAllMocks();
 
-    connection = new WalletLinkConnection(session, 'http://link-api-url', listener);
-    (connection as any).cipher = cipher;
+    connection = new WalletLinkConnection(session, 'http://link-api-url', {
+      linkedUpdated: jest.fn(),
+      connectedUpdated: jest.fn(),
+      handleResponseMessage: jest.fn(),
+      chainUpdated: jest.fn(),
+      accountUpdated: jest.fn(),
+      metadataUpdated: jest.fn(),
+      resetAndReload: jest.fn(),
+    });
+    listener = (connection as any).listener;
   });
 
   describe('incomingDataListener', () => {
@@ -65,10 +66,9 @@ describe('WalletLinkConnection', () => {
 
       invoke_handleSessionMetadataUpdated({ WalletUsername: newUsername });
 
-      expect(cipher.decrypt).toHaveBeenCalledWith(newUsername);
       expect(listener_metadataUpdatedSpy).toHaveBeenCalledWith(
         WALLET_USER_NAME_KEY,
-        await cipher.decrypt(newUsername)
+        await decryptMock(newUsername)
       );
     });
 
@@ -81,7 +81,7 @@ describe('WalletLinkConnection', () => {
 
       expect(listener_metadataUpdatedSpy).toHaveBeenCalledWith(
         APP_VERSION_KEY,
-        await cipher.decrypt(newAppVersion)
+        await decryptMock(newAppVersion)
       );
     });
 
@@ -100,7 +100,7 @@ describe('WalletLinkConnection', () => {
 
       invoke_handleSessionMetadataUpdated({ EthereumAddress: newAccount });
 
-      expect(listener_accountUpdatedSpy).toHaveBeenCalledWith(await cipher.decrypt(newAccount));
+      expect(listener_accountUpdatedSpy).toHaveBeenCalledWith(await decryptMock(newAccount));
     });
 
     describe('chain updates', () => {
@@ -113,7 +113,7 @@ describe('WalletLinkConnection', () => {
         invoke_handleSessionMetadataUpdated(chainIdUpdate);
         invoke_handleSessionMetadataUpdated(jsonRpcUrlUpdate);
 
-        await cipher.decrypt(chainIdUpdate.ChainId);
+        await decryptMock(chainIdUpdate.ChainId);
 
         expect(listener_chainUpdatedSpy).not.toHaveBeenCalled();
       });
@@ -129,8 +129,8 @@ describe('WalletLinkConnection', () => {
         invoke_handleSessionMetadataUpdated(update);
 
         expect(listener_chainUpdatedSpy).toHaveBeenCalledWith(
-          await cipher.decrypt(update.ChainId),
-          await cipher.decrypt(update.JsonRpcUrl)
+          await decryptMock(update.ChainId),
+          await decryptMock(update.JsonRpcUrl)
         );
       });
     });

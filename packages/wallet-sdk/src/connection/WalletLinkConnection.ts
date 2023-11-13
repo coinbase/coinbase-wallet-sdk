@@ -299,6 +299,7 @@ export class WalletLinkConnection {
       const message = JSON.parse(decryptedData);
 
       if (!isWeb3ResponseMessage(message)) return;
+
       this.listener?.handleResponseMessage(message);
     } catch {
       this.diagnostic?.log(EVENTS.GENERAL_ERROR, {

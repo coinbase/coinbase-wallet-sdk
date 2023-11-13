@@ -153,6 +153,8 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   }
 
   private listener: WalletLinkConnectionUpdateListener = {
+    handleResponseMessage: this.handleWeb3ResponseMessage,
+
     linkedUpdated: (linked: boolean) => {
       this.isLinked = linked;
       const cachedAddresses = this.storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
@@ -220,7 +222,6 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
         ui.setConnected(connected);
       }
     },
-    handleResponseMessage: this.handleWeb3ResponseMessage,
     resetAndReload: this.resetAndReload,
   };
 
