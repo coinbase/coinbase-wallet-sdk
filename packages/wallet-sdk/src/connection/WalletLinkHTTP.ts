@@ -13,8 +13,8 @@ export class WalletLinkHTTP {
   }
 
   // mark unseen events as seen
-  private markUnseenEventsAsSeen(events: ServerMessageEvent[]) {
-    Promise.all(
+  private async markUnseenEventsAsSeen(events: ServerMessageEvent[]) {
+    return Promise.all(
       events.map((e) =>
         fetch(`${this.linkAPIUrl}/events/${e.eventId}/seen`, {
           method: 'POST',
