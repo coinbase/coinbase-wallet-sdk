@@ -177,7 +177,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       }
     },
     metadataUpdated: (key: string, value: string) => {
-      this.storage.setItem(key, value); // e.g. this.storage.setItem(WALLET_USER_NAME_KEY, walletUsername);
+      this.storage.setItem(key, value);
     },
     chainUpdated: (chainId: string, jsonRpcUrl: string) => {
       if (
@@ -215,7 +215,10 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
       }
     },
     connectedUpdated: (connected: boolean) => {
-      this.ui.setConnected(connected);
+      const { ui } = this;
+      if (ui instanceof WalletLinkRelayUI) {
+        ui.setConnected(connected);
+      }
     },
     handleResponseMessage: this.handleWeb3ResponseMessage,
     resetAndReload: this.resetAndReload,

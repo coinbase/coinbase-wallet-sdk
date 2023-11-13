@@ -24,8 +24,6 @@ export interface WalletUIOptions {
 export interface WalletUI {
   attach(): void;
 
-  setConnected(connected: boolean): void;
-
   /**
    * Opens a qr code or auth page to connect with Coinbase Wallet mobile app
    * @param options onCancel callback
