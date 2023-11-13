@@ -56,6 +56,8 @@ export class WalletLinkConnection {
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
 
+  private readonly session: Session;
+
   private listener?: WalletLinkConnectionUpdateListener;
 
   /**
@@ -76,16 +78,18 @@ export class WalletLinkConnection {
   ) {
     const sessionId = (this.sessionId = session.id);
     const sessionKey = (this.sessionKey = session.key);
+    this.session = session;
     this.cipher = new WalletLinkConnectionCipher(session.secret);
 
     this.listener = listener;
+    this.diagnostic = diagnostic;
 
     const ws = new WalletLinkWebSocket(`${linkAPIUrl}/rpc`, WebSocketClass);
     ws.setConnectionStateListener(async (state) => {
       // attempt to reconnect every 5 seconds when disconnected
       this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
         state,
-        sessionIdHash: Session.hash(sessionId),
+        sessionIdHash: Session.hash(session.id),
       });
 
       let connected = false;
@@ -156,7 +160,7 @@ export class WalletLinkConnection {
         case 'Linked': {
           const msg = m as Omit<ServerMessageIsLinkedOK, 'type'> & ServerMessageLinked;
           this.diagnostic?.log(EVENTS.LINKED, {
-            sessionIdHash: Session.hash(sessionId),
+            sessionIdHash: Session.hash(session.id),
             linked: msg.linked,
             type: m.type,
             onlineGuests: msg.onlineGuests,
@@ -172,7 +176,7 @@ export class WalletLinkConnection {
           const msg = m as Omit<ServerMessageGetSessionConfigOK, 'type'> &
             ServerMessageSessionConfigUpdated;
           this.diagnostic?.log(EVENTS.SESSION_CONFIG_RECEIVED, {
-            sessionIdHash: Session.hash(sessionId),
+            sessionIdHash: Session.hash(session.id),
             metadata_keys: msg && msg.metadata ? Object.keys(msg.metadata) : undefined,
           });
           this.handleSessionMetadataUpdated(msg.metadata);
@@ -192,7 +196,7 @@ export class WalletLinkConnection {
     });
     this.ws = ws;
 
-    this.http = new WalletLinkHTTP(linkAPIUrl, sessionId, sessionKey);
+    this.http = new WalletLinkHTTP(linkAPIUrl, session.id, session.key);
   }
 
   /**
@@ -203,7 +207,7 @@ export class WalletLinkConnection {
       throw new Error('instance is destroyed');
     }
     this.diagnostic?.log(EVENTS.STARTED_CONNECTING, {
-      sessionIdHash: Session.hash(this.sessionId),
+      sessionIdHash: Session.hash(this.session.id),
     });
     this.ws.connect();
   }
@@ -217,7 +221,7 @@ export class WalletLinkConnection {
 
     this.ws.disconnect();
     this.diagnostic?.log(EVENTS.DISCONNECTED, {
-      sessionIdHash: Session.hash(this.sessionId),
+      sessionIdHash: Session.hash(this.session.id),
     });
 
     this.listener = undefined;
@@ -341,7 +345,7 @@ export class WalletLinkConnection {
   public async setSessionMetadata(key: string, value: string | null) {
     const message = ClientMessageSetSessionConfig({
       id: IntNumber(this.nextReqId++),
-      sessionId: this.sessionId,
+      sessionId: this.session.id,
       metadata: { [key]: value },
     });
 
@@ -371,7 +375,7 @@ export class WalletLinkConnection {
 
     const message = ClientMessagePublishEvent({
       id: IntNumber(this.nextReqId++),
-      sessionId: this.sessionId,
+      sessionId: this.session.id,
       event,
       data,
       callWebhook,
@@ -436,8 +440,8 @@ export class WalletLinkConnection {
   private async authenticate() {
     const msg = ClientMessageHostSession({
       id: IntNumber(this.nextReqId++),
-      sessionId: this.sessionId,
-      sessionKey: this.sessionKey,
+      sessionId: this.session.id,
+      sessionKey: this.session.key,
     });
     const res = await this.makeRequest<ServerMessageOK | ServerMessageFail>(msg);
     if (isServerMessageFail(res)) {
@@ -448,7 +452,7 @@ export class WalletLinkConnection {
   private sendIsLinked(): void {
     const msg = ClientMessageIsLinked({
       id: IntNumber(this.nextReqId++),
-      sessionId: this.sessionId,
+      sessionId: this.session.id,
     });
     this.sendData(msg);
   }
@@ -456,7 +460,7 @@ export class WalletLinkConnection {
   private sendGetSessionConfig(): void {
     const msg = ClientMessageGetSessionConfig({
       id: IntNumber(this.nextReqId++),
-      sessionId: this.sessionId,
+      sessionId: this.session.id,
     });
     this.sendData(msg);
   }
@@ -490,7 +494,7 @@ export class WalletLinkConnection {
     this.listener?.resetAndReload();
     this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
       alreadyDestroyed: this.isDestroyed,
-      sessionIdHash: Session.hash(this.sessionId),
+      sessionIdHash: Session.hash(this.session.id),
     });
   };
 
