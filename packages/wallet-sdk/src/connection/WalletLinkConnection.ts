@@ -455,7 +455,7 @@ export class WalletLinkConnection {
     this.sendData(msg);
   }
 
-  private handleSessionConfigUpdated(metadata: SessionConfig['metadata']) {
+  private handleSessionConfigUpdated = (metadata: SessionConfig['metadata']) => {
     // Map of metadata key to handler function
     const handlers = new Map<string, (value: string) => void>([
       ['__destroyed', this.handleDestroyed],
@@ -474,7 +474,7 @@ export class WalletLinkConnection {
       if (value === undefined) return;
       handler(value);
     });
-  }
+  };
 
   private handleDestroyed = (__destroyed: string) => {
     if (__destroyed !== '1') return;
