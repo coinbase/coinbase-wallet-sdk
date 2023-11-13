@@ -2,35 +2,28 @@ import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { Session } from '../relay/Session';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../relay/WalletSDKRelayAbstract';
 import { SessionConfig } from './SessionConfig';
-import { WalletLinkConnection, WalletLinkConnectionUpdateListener } from './WalletLinkConnection';
-import { WalletLinkConnectionCipher } from './WalletLinkConnectionCipher';
+import { WalletLinkConnection } from './WalletLinkConnection';
 
 describe('WalletLinkConnection', () => {
   const session = new Session(new ScopedLocalStorage('test'));
 
+  const listener = {
+    linkedUpdated: jest.fn(),
+    connectedUpdated: jest.fn(),
+    handleResponseMessage: jest.fn(),
+    chainUpdated: jest.fn(),
+    accountUpdated: jest.fn(),
+    metadataUpdated: jest.fn(),
+    resetAndReload: jest.fn(),
+  };
+  const cipher = {
+    encrypt: jest.fn().mockImplementation((text) => Promise.resolve(`encrypted ${text}`)),
+    decrypt: jest.fn().mockImplementation((text) => Promise.resolve(`decrypted ${text}`)),
+  };
   let connection: WalletLinkConnection;
-  let cipher: WalletLinkConnectionCipher;
-  let listener: WalletLinkConnectionUpdateListener;
 
   beforeEach(() => {
     jest.clearAllMocks();
-
-    listener = {
-      linkedUpdated: jest.fn(),
-      connectedUpdated: jest.fn(),
-      handleResponseMessage: jest.fn(),
-      chainUpdated: jest.fn(),
-      accountUpdated: jest.fn(),
-      metadataUpdated: jest.fn(),
-      resetAndReload: jest.fn(),
-    };
-
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    cipher = {
-      encrypt: jest.fn().mockImplementation((text) => Promise.resolve(`encrypted ${text}`)),
-      decrypt: jest.fn().mockImplementation((text) => Promise.resolve(`decrypted ${text}`)),
-    };
 
     connection = new WalletLinkConnection(session, 'http://link-api-url', listener);
     (connection as any).cipher = cipher;
@@ -61,11 +54,9 @@ describe('WalletLinkConnection', () => {
   });
 
   describe('handleSessionConfigUpdated', () => {
-    let handleSessionConfigUpdated: (metadata: SessionConfig['metadata']) => void;
-
-    beforeEach(() => {
-      handleSessionConfigUpdated = (connection as any).handleSessionConfigUpdated;
-    });
+    function handleSessionConfigUpdated(metadata: SessionConfig['metadata']) {
+      (connection as any).handleSessionConfigUpdated(metadata);
+    }
 
     it('should call listner.metadataUpdated when WalletUsername changed', async () => {
       const newUsername = 'new username';
@@ -100,6 +91,16 @@ describe('WalletLinkConnection', () => {
       handleSessionConfigUpdated({ __destroyed: '1' });
 
       expect(listenerResetAndReloadSpy).toHaveBeenCalled();
+    });
+
+    it('should call listner.chainUpdated when ChainId changed', async () => {
+      const newChainId = 'new chain id';
+
+      const listenerChainUpdatedSpy = jest.spyOn(listener, 'chainUpdated');
+
+      handleSessionConfigUpdated({ ChainId: newChainId });
+
+      expect(listenerChainUpdatedSpy).toHaveBeenCalledWith(await cipher.decrypt(newChainId));
     });
   });
 });
