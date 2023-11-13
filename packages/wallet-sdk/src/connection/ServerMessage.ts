@@ -76,3 +76,14 @@ export interface ServerMessageEvent extends ServerMessage {
   event: string;
   data: string;
 }
+
+export function isServerMessageEvent(msg: any): msg is ServerMessageEvent {
+  return (
+    msg &&
+    msg.type === 'Event' &&
+    typeof msg.sessionId === 'string' &&
+    typeof msg.eventId === 'string' &&
+    typeof msg.event === 'string' &&
+    typeof msg.data === 'string'
+  );
+}

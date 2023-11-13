@@ -3,9 +3,10 @@
 
 import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
 import { EventListener } from '../connection/EventListener';
-import { ServerMessageEvent } from '../connection/ServerMessage';
-import { SessionConfig } from '../connection/SessionConfig';
-import { WalletLinkConnection } from '../connection/WalletLinkConnection';
+import {
+  WalletLinkConnection,
+  WalletLinkConnectionUpdateListener,
+} from '../connection/WalletLinkConnection';
 import {
   ErrorType,
   getErrorCode,
@@ -18,15 +19,12 @@ import { WalletLinkRelayUI } from '../provider/WalletLinkRelayUI';
 import { WalletUI, WalletUIOptions } from '../provider/WalletUI';
 import { AddressString, IntNumber, ProviderType, RegExpString } from '../types';
 import { bigIntStringFromBN, createQrUrl, hexStringFromBuffer, randomBytesHex } from '../util';
-import * as aes256gcm from './aes256gcm';
 import { EthereumTransactionParams } from './EthereumTransactionParams';
 import { RelayMessage } from './RelayMessage';
 import { Session } from './Session';
 import {
-  APP_VERSION_KEY,
   CancelablePromise,
   LOCAL_STORAGE_ADDRESSES_KEY,
-  WALLET_USER_NAME_KEY,
   WalletSDKRelayAbstract,
 } from './WalletSDKRelayAbstract';
 import { WalletSDKRelayEventManager } from './WalletSDKRelayEventManager';
@@ -59,7 +57,7 @@ import {
   WatchAssetResponse,
   Web3Response,
 } from './Web3Response';
-import { isWeb3ResponseMessage, Web3ResponseMessage } from './Web3ResponseMessage';
+import { Web3ResponseMessage } from './Web3ResponseMessage';
 
 export interface WalletLinkRelayOptions {
   linkAPIUrl: string;
@@ -100,7 +98,6 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   constructor(options: Readonly<WalletLinkRelayOptions>) {
     super();
     this.resetAndReload = this.resetAndReload.bind(this);
-    this.handleIncomingEvent = this.handleIncomingEvent.bind(this);
 
     this.linkAPIUrl = options.linkAPIUrl;
     this.storage = options.storage;
@@ -137,19 +134,28 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
     const session = Session.load(this.storage) || new Session(this.storage).save();
 
     const connection = new WalletLinkConnection(
-      session.id,
-      session.key,
+      session,
       this.linkAPIUrl,
+      this.listener,
       this.diagnostic
     );
 
-    connection.setIncomingEventListener((m: ServerMessageEvent) => {
-      if (m.event === 'Web3Response') {
-        this.handleIncomingEvent(m);
-      }
+    const ui = this.options.uiConstructor({
+      linkAPIUrl: this.options.linkAPIUrl,
+      version: this.options.version,
+      darkMode: this.options.darkMode,
+      session,
     });
 
-    connection.setLinkedListener((linked: boolean) => {
+    connection.connect();
+
+    return { session, ui, connection };
+  }
+
+  private listener: WalletLinkConnectionUpdateListener = {
+    handleResponseMessage: this.handleWeb3ResponseMessage,
+
+    linkedUpdated: (linked: boolean) => {
       this.isLinked = linked;
       const cachedAddresses = this.storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
 
@@ -171,135 +177,53 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
           });
         }
       }
-    });
+    },
+    metadataUpdated: (key: string, value: string) => {
+      this.storage.setItem(key, value);
+    },
+    chainUpdated: (chainId: string, jsonRpcUrl: string) => {
+      if (
+        this.chainCallbackParams.chainId === chainId &&
+        this.chainCallbackParams.jsonRpcUrl === jsonRpcUrl
+      ) {
+        return;
+      }
+      this.chainCallbackParams = {
+        chainId,
+        jsonRpcUrl,
+      };
 
-    connection.setSessionConfigListener((c: SessionConfig) => {
-      try {
-        this.onSessionConfigChanged(c);
-      } catch {
-        this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-          message: 'error while invoking session config callback',
+      if (this.chainCallback) {
+        this.chainCallback(chainId, jsonRpcUrl);
+      }
+    },
+    accountUpdated: (selectedAddress: string) => {
+      if (this.accountsCallback) {
+        this.accountsCallback([selectedAddress]);
+      }
+
+      if (WalletLinkRelay.accountRequestCallbackIds.size > 0) {
+        // We get the ethereum address from the metadata.  If for whatever
+        // reason we don't get a response via an explicit web3 message
+        // we can still fulfill the eip1102 request.
+        Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach((id) => {
+          const message = Web3ResponseMessage({
+            id,
+            response: RequestEthereumAccountsResponse([selectedAddress as AddressString]),
+          });
+          this.invokeCallback({ ...message, id });
         });
+        WalletLinkRelay.accountRequestCallbackIds.clear();
       }
-
-      if (!c.metadata) return;
-
-      // if session is marked destroyed, reset and reload
-      if (c.metadata.__destroyed === '1') {
-        const alreadyDestroyed = connection.isDestroyed;
-        this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
-          alreadyDestroyed,
-          sessionIdHash: this.getSessionIdHash(),
-        });
-        this.resetAndReload();
-      }
-
-      if (c.metadata.WalletUsername !== undefined) {
-        aes256gcm
-          .decrypt(c.metadata.WalletUsername!, session.secret)
-          .then((walletUsername) => {
-            this.storage.setItem(WALLET_USER_NAME_KEY, walletUsername);
-          })
-          .catch(() => {
-            this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-              message: 'Had error decrypting',
-              value: 'username',
-            });
-          });
-      }
-
-      if (c.metadata.AppVersion !== undefined) {
-        aes256gcm
-          .decrypt(c.metadata.AppVersion!, session.secret)
-          .then((appVersion) => {
-            this.storage.setItem(APP_VERSION_KEY, appVersion);
-          })
-          .catch(() => {
-            this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-              message: 'Had error decrypting',
-              value: 'appversion',
-            });
-          });
-      }
-
-      if (c.metadata.ChainId !== undefined && c.metadata.JsonRpcUrl !== undefined) {
-        Promise.all([
-          aes256gcm.decrypt(c.metadata.ChainId!, session.secret),
-          aes256gcm.decrypt(c.metadata.JsonRpcUrl!, session.secret),
-        ])
-          .then(([chainId, jsonRpcUrl]) => {
-            // custom distinctUntilChanged
-            if (
-              this.chainCallbackParams.chainId === chainId &&
-              this.chainCallbackParams.jsonRpcUrl === jsonRpcUrl
-            ) {
-              return;
-            }
-            this.chainCallbackParams = {
-              chainId,
-              jsonRpcUrl,
-            };
-
-            if (this.chainCallback) {
-              this.chainCallback(chainId, jsonRpcUrl);
-            }
-          })
-          .catch(() => {
-            this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-              message: 'Had error decrypting',
-              value: 'chainId|jsonRpcUrl',
-            });
-          });
-      }
-
-      if (c.metadata.EthereumAddress !== undefined) {
-        aes256gcm
-          .decrypt(c.metadata.EthereumAddress!, session.secret)
-          .then((selectedAddress) => {
-            if (this.accountsCallback) {
-              this.accountsCallback([selectedAddress]);
-            }
-
-            if (WalletLinkRelay.accountRequestCallbackIds.size > 0) {
-              // We get the ethereum address from the metadata.  If for whatever
-              // reason we don't get a response via an explicit web3 message
-              // we can still fulfill the eip1102 request.
-              Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach((id) => {
-                const message = Web3ResponseMessage({
-                  id,
-                  response: RequestEthereumAccountsResponse([selectedAddress as AddressString]),
-                });
-                this.invokeCallback({ ...message, id });
-              });
-              WalletLinkRelay.accountRequestCallbackIds.clear();
-            }
-          })
-          .catch(() => {
-            this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-              message: 'Had error decrypting',
-              value: 'selectedAddress',
-            });
-          });
-      }
-    });
-
-    const ui = this.options.uiConstructor({
-      linkAPIUrl: this.options.linkAPIUrl,
-      version: this.options.version,
-      darkMode: this.options.darkMode,
-      session,
-    });
-
-    if (ui instanceof WalletLinkRelayUI) {
-      connection.setConnectedListener((connected) => {
+    },
+    connectedUpdated: (connected: boolean) => {
+      const { ui } = this;
+      if (ui instanceof WalletLinkRelayUI) {
         ui.setConnected(connected);
-      });
-    }
-
-    connection.connect();
-
-    return { session, ui, connection };
-  }
+      }
+    },
+    resetAndReload: this.resetAndReload,
+  };
 
   public attachUI() {
     this.ui.attach();
@@ -612,38 +536,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
     message: RelayMessage,
     callWebhook: boolean
   ): Promise<string> {
-    const secret = this.session.secret;
-    return aes256gcm
-      .encrypt(
-        JSON.stringify({
-          ...message,
-          origin: location.origin,
-          relaySource: window.coinbaseWalletExtension ? 'injected_sdk' : 'sdk',
-        }),
-        secret
-      )
-      .then((encrypted: string) => this.connection.publishEvent(event, encrypted, callWebhook));
-  }
-
-  private handleIncomingEvent(event: ServerMessageEvent): void {
-    aes256gcm
-      .decrypt(event.data, this.session.secret)
-      .then((decryptedData) => {
-        const json = JSON.parse(decryptedData);
-        const message = isWeb3ResponseMessage(json) ? json : null;
-
-        if (!message) {
-          return;
-        }
-
-        this.handleWeb3ResponseMessage(message);
-      })
-      .catch(() => {
-        this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-          message: 'Had error decrypting',
-          value: 'incomingEvent',
-        });
-      });
+    return this.connection.publishEvent(event, message, callWebhook);
   }
 
   protected handleWeb3ResponseMessage(message: Web3ResponseMessage) {
@@ -1138,6 +1031,4 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
         break;
     }
   }
-
-  protected onSessionConfigChanged(_nextSessionConfig: SessionConfig): void {}
 }
