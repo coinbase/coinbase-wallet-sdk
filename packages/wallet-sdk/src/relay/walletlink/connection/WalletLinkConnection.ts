@@ -123,9 +123,6 @@ export class WalletLinkConnection {
             this.fetchUnseenEventsAPI();
           }
           break;
-
-        case ConnectionState.CONNECTING:
-          break;
       }
 
       // distinctUntilChanged

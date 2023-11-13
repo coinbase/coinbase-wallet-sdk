@@ -5,7 +5,6 @@ import { ServerMessage } from '../type/ServerMessage';
 
 export enum ConnectionState {
   DISCONNECTED,
-  CONNECTING,
   CONNECTED,
 }
 
