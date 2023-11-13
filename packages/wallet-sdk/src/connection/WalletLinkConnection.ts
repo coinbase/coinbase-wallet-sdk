@@ -16,9 +16,9 @@ import {
 } from './ClientMessage';
 import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
 import {
+  isServerMessageEvent,
   isServerMessageFail,
   ServerMessage,
-  ServerMessageEvent,
   ServerMessageFail,
   ServerMessageGetSessionConfigOK,
   ServerMessageIsLinkedOK,
@@ -285,37 +285,22 @@ export class WalletLinkConnection {
   }
 
   private async handleIncomingEvent(m: ServerMessage) {
-    function isServerMessageEvent(msg: ServerMessage): msg is ServerMessageEvent {
-      if (msg.type !== 'Event') {
-        return false;
-      }
-      const sme = msg as ServerMessageEvent;
-      return (
-        typeof sme.sessionId === 'string' &&
-        typeof sme.eventId === 'string' &&
-        typeof sme.event === 'string' &&
-        typeof sme.data === 'string'
-      );
-    }
-
-    if (!isServerMessageEvent(m)) {
+    if (!isServerMessageEvent(m) || m.event !== 'Web3Response') {
       return;
     }
 
-    if (m.event !== 'Web3Response') {
-      return;
+    try {
+      const decryptedData = await this.cipher.decrypt(m.data);
+      const message = JSON.parse(decryptedData);
+
+      if (!isWeb3ResponseMessage(message)) return;
+      this.listener?.handleResponseMessage(message);
+    } catch {
+      this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
+        message: 'Had error decrypting',
+        value: 'incomingEvent',
+      });
     }
-
-    const decryptedData = await this.cipher.decrypt(m.data);
-
-    const json = JSON.parse(decryptedData);
-    const message = isWeb3ResponseMessage(json) ? json : null;
-
-    if (!message) {
-      return;
-    }
-
-    this.listener?.handleResponseMessage(message);
   }
 
   private shouldFetchUnseenEventsOnConnect = false;
