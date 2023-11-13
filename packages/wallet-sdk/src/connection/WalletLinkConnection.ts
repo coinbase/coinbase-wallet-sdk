@@ -45,13 +45,18 @@ export interface WalletLinkConnectionUpdateListener {
   resetAndReload: () => void;
 }
 
+interface WalletLinkConnectionParams {
+  session: Session;
+  linkAPIUrl: string;
+  listener: WalletLinkConnectionUpdateListener;
+  diagnostic?: DiagnosticLogger;
+  WebSocketClass?: typeof WebSocket;
+}
+
 /**
  * Coinbase Wallet Connection
  */
 export class WalletLinkConnection {
-  private ws: WalletLinkWebSocket;
-  private http: WalletLinkHTTP;
-  private cipher: WalletLinkConnectionCipher;
   private destroyed = false;
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
@@ -59,6 +64,10 @@ export class WalletLinkConnection {
   private readonly session: Session;
 
   private listener?: WalletLinkConnectionUpdateListener;
+  private diagnostic?: DiagnosticLogger;
+  private cipher: WalletLinkConnectionCipher;
+  private ws: WalletLinkWebSocket;
+  private http: WalletLinkHTTP;
 
   /**
    * Constructor
@@ -67,17 +76,13 @@ export class WalletLinkConnection {
    * @param listener WalletLinkConnectionUpdateListener
    * @param [WebSocketClass] Custom WebSocket implementation
    */
-  private sessionId: string;
-  private sessionKey: string;
-  constructor(
-    session: Session,
-    linkAPIUrl: string,
-    listener: WalletLinkConnectionUpdateListener,
-    private diagnostic?: DiagnosticLogger,
-    WebSocketClass: typeof WebSocket = WebSocket
-  ) {
-    const sessionId = (this.sessionId = session.id);
-    const sessionKey = (this.sessionKey = session.key);
+  constructor({
+    session,
+    linkAPIUrl,
+    listener,
+    diagnostic,
+    WebSocketClass = WebSocket,
+  }: WalletLinkConnectionParams) {
     this.session = session;
     this.cipher = new WalletLinkConnectionCipher(session.secret);
 

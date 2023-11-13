@@ -133,12 +133,12 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   public subscribe() {
     const session = Session.load(this.storage) || new Session(this.storage).save();
 
-    const connection = new WalletLinkConnection(
+    const connection = new WalletLinkConnection({
       session,
-      this.linkAPIUrl,
-      this.listener,
-      this.diagnostic
-    );
+      linkAPIUrl: this.linkAPIUrl,
+      diagnostic: this.diagnostic,
+      listener: this.listener, // TODO
+    });
 
     const ui = this.options.uiConstructor({
       linkAPIUrl: this.options.linkAPIUrl,
