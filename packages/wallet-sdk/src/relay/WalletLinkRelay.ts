@@ -153,7 +153,6 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   }
 
   private listener: WalletLinkConnectionUpdateListener = {
-    handleResponseMessage: this.handleWeb3ResponseMessage,
     linkedUpdated: (linked: boolean) => {
       this.isLinked = linked;
       const cachedAddresses = this.storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
@@ -177,7 +176,9 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
         }
       }
     },
-    metadataUpdated: (key: string, value: string) => this.storage.setItem(key, value),
+    metadataUpdated: (key: string, value: string) => {
+      this.storage.setItem(key, value); // e.g. this.storage.setItem(WALLET_USER_NAME_KEY, walletUsername);
+    },
     chainUpdated: (chainId: string, jsonRpcUrl: string) => {
       if (
         this.chainCallbackParams.chainId === chainId &&
@@ -213,8 +214,11 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
         WalletLinkRelay.accountRequestCallbackIds.clear();
       }
     },
-    connectedUpdated: (connected: boolean) => this.ui.setConnected(connected),
-    resetAndReload: () => this.resetAndReload(),
+    connectedUpdated: (connected: boolean) => {
+      this.ui.setConnected(connected);
+    },
+    handleResponseMessage: this.handleWeb3ResponseMessage,
+    resetAndReload: this.resetAndReload,
   };
 
   public attachUI() {
