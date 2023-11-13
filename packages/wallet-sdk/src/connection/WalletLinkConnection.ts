@@ -487,13 +487,27 @@ export class WalletLinkConnection {
   }
 
   private async handleAccountUpdated(encryptedEthereumAddress: string) {
-    const address = await this.cipher.decrypt(encryptedEthereumAddress);
-    this.listener?.accountUpdated(address);
+    try {
+      const address = await this.cipher.decrypt(encryptedEthereumAddress);
+      this.listener?.accountUpdated(address);
+    } catch {
+      this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
+        message: 'Had error decrypting',
+        value: 'selectedAddress',
+      });
+    }
   }
 
   private async handleMetadataUpdated(key: string, encryptedMetadataValue: string) {
-    const decryptedValue = await this.cipher.decrypt(encryptedMetadataValue);
-    this.listener?.metadataUpdated(key, decryptedValue);
+    try {
+      const decryptedValue = await this.cipher.decrypt(encryptedMetadataValue);
+      this.listener?.metadataUpdated(key, decryptedValue);
+    } catch {
+      this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
+        message: 'Had error decrypting',
+        value: key,
+      });
+    }
   }
 
   private async handleWalletUsernameUpdated(walletUsername: string) {
@@ -505,8 +519,15 @@ export class WalletLinkConnection {
   }
 
   private async handleChainUpdated(encryptedChainId: string, encryptedJsonRpcUrl: string) {
-    const chainId = await this.cipher.decrypt(encryptedChainId);
-    const jsonRpcUrl = await this.cipher.decrypt(encryptedJsonRpcUrl);
-    this.listener?.chainUpdated(chainId, jsonRpcUrl);
+    try {
+      const chainId = await this.cipher.decrypt(encryptedChainId);
+      const jsonRpcUrl = await this.cipher.decrypt(encryptedJsonRpcUrl);
+      this.listener?.chainUpdated(chainId, jsonRpcUrl);
+    } catch {
+      this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
+        message: 'Had error decrypting',
+        value: 'chainId|jsonRpcUrl',
+      });
+    }
   }
 }
