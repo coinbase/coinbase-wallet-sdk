@@ -3,8 +3,14 @@
 
 import { ServerMessage } from '../type/ServerMessage';
 
+export enum ConnectionState {
+  DISCONNECTED,
+  CONNECTING,
+  CONNECTED,
+}
+
 export interface WalletLinkWebSocketUpdateListener {
-  websocketConnectionUpdated(connected: boolean): void;
+  websocketConnectionStateUpdated(state: ConnectionState): void;
   websocketMessageReceived(message: ServerMessage): void;
 }
 
@@ -50,14 +56,15 @@ export class WalletLinkWebSocket {
         reject(err);
         return;
       }
+      this.listener?.websocketConnectionStateUpdated(ConnectionState.CONNECTING);
       webSocket.onclose = (evt) => {
         this.clearWebSocket();
         reject(new Error(`websocket error ${evt.code}: ${evt.reason}`));
-        this.listener?.websocketConnectionUpdated(false);
+        this.listener?.websocketConnectionStateUpdated(ConnectionState.DISCONNECTED);
       };
       webSocket.onopen = (_) => {
         resolve();
-        this.listener?.websocketConnectionUpdated(true);
+        this.listener?.websocketConnectionStateUpdated(ConnectionState.CONNECTED);
 
         if (this.pendingData.length > 0) {
           const pending = [...this.pendingData];
@@ -92,7 +99,7 @@ export class WalletLinkWebSocket {
     }
     this.clearWebSocket();
 
-    this.listener?.websocketConnectionUpdated(false);
+    this.listener?.websocketConnectionStateUpdated(ConnectionState.DISCONNECTED);
     this.listener = undefined;
 
     try {
