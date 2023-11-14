@@ -15,6 +15,7 @@ export type LogProperties = {
   onlineGuests?: number; // number of online guests (should be 0 or 1)
   sessionIdHash?: string; // anonymous session id for debugging specific sessions
   sessionMetadataChange?: string; // change in session metadata
+  state?: number; // 0: DISCONNECTED, 1: CONNECTING, 2: CONNECTED
   storedSessionIdHash?: string; // anonymous session id from localStorage
   type?: ServerMessage['type'];
   value?: string; // error value associated with the message
@@ -29,7 +30,7 @@ export interface DiagnosticLogger {
 
 export const EVENTS = {
   STARTED_CONNECTING: 'walletlink_sdk.started.connecting',
-  CONNECTED: 'walletlink_sdk.connected',
+  CONNECTED_STATE_CHANGE: 'walletlink_sdk.connected',
   DISCONNECTED: 'walletlink_sdk.disconnected',
   METADATA_DESTROYED: 'walletlink_sdk_metadata_destroyed',
   LINKED: 'walletlink_sdk.linked',
