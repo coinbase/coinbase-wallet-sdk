@@ -1,18 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Cipher } from '../../lib/Cipher';
-import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
-import { WALLET_USER_NAME_KEY } from '../RelayAbstract';
-import { RelayEventManager } from '../RelayEventManager';
-import { WalletLinkConnection } from './connection/WalletLinkConnection';
-import { WalletLinkWebSocket } from './connection/WalletLinkWebSocket';
-import { ServerMessage } from './type/ServerMessage';
-import { SessionConfig } from './type/SessionConfig';
+import { ServerMessageEvent } from '../connection/ServerMessage';
+import { WalletLinkConnection } from '../connection/WalletLinkConnection';
+import { WalletLinkConnectionCipher } from '../connection/WalletLinkConnectionCipher';
+import { WalletLinkWebSocket } from '../connection/WalletLinkWebSocket';
+import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay';
+import { WALLET_USER_NAME_KEY } from './WalletSDKRelayAbstract';
+import { WalletSDKRelayEventManager } from './WalletSDKRelayEventManager';
+
+// mock isWeb3ResponseMessage to return true
+jest.mock('./Web3ResponseMessage', () => ({
+  isWeb3ResponseMessage: jest.fn().mockReturnValue(true),
+}));
 
 const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`"decrypted ${text}"`));
 
-jest.spyOn(Cipher.prototype, 'decrypt').mockImplementation(decryptMock);
+jest.spyOn(WalletLinkConnectionCipher.prototype, 'decrypt').mockImplementation(decryptMock);
 
 describe('WalletLinkRelay', () => {
   const options: WalletLinkRelayOptions = {
@@ -20,7 +24,7 @@ describe('WalletLinkRelay', () => {
     version: '0.0.0',
     darkMode: false,
     storage: new ScopedLocalStorage('test'),
-    relayEventManager: new RelayEventManager(),
+    relayEventManager: new WalletSDKRelayEventManager(),
     uiConstructor: jest.fn(),
   };
 
@@ -45,20 +49,13 @@ describe('WalletLinkRelay', () => {
 
   describe('subscribe', () => {
     it('should call handleIncomingEvent', async () => {
-      const serverMessageEvent: ServerMessage = {
+      const serverMessageEvent: ServerMessageEvent = {
         type: 'Event',
         sessionId: 'sessionId',
         eventId: 'eventId',
         event: 'Web3Response',
         data: 'data',
       };
-
-      jest.spyOn(JSON, 'parse').mockImplementation(() => {
-        return {
-          type: 'WEB3_RESPONSE',
-          data: 'decrypted data',
-        };
-      });
 
       const relay = new WalletLinkRelay(options);
       const connection: WalletLinkConnection = (relay as any).connection;
@@ -85,12 +82,8 @@ describe('WalletLinkRelay', () => {
 
   describe('setSessionConfigListener', () => {
     it('should update metadata with setSessionConfigListener', async () => {
-      const sessionConfig: SessionConfig = {
-        webhookId: 'webhookId',
-        webhookUrl: 'webhookUrl',
-        metadata: {
-          WalletUsername: 'username',
-        },
+      const metadata = {
+        WalletUsername: 'username',
       };
 
       const relay = new WalletLinkRelay(options);
@@ -98,14 +91,11 @@ describe('WalletLinkRelay', () => {
 
       const metadataUpdatedSpy = jest.spyOn(relay, 'metadataUpdated');
 
-      connection.websocketServerMessageReceived({
-        ...sessionConfig,
-        type: 'SessionConfigUpdated',
-      });
+      connection.websocketSessionMetadataUpdated(metadata);
 
       expect(metadataUpdatedSpy).toHaveBeenCalledWith(
         WALLET_USER_NAME_KEY,
-        await decryptMock(sessionConfig.metadata.WalletUsername)
+        await decryptMock(metadata.WalletUsername)
       );
     });
 
@@ -136,7 +126,7 @@ describe('WalletLinkRelay', () => {
         ChainId: 'ChainId2',
         JsonRpcUrl: 'JsonRpcUrl2',
       };
-      connection.websocketSessionMetadataUpdated(metadata);
+      connection.websocketSessionMetadataUpdated(newMetadata);
 
       expect(callback).toHaveBeenCalledWith(
         await decryptMock(newMetadata.ChainId),
