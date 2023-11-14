@@ -1,13 +1,19 @@
 import WS from 'jest-websocket-mock';
 
-import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket';
+import { WalletLinkWebSocket, WalletLinkWebSocketUpdateListener } from './WalletLinkWebSocket';
 
 describe('WalletLinkWebSocket', () => {
   let server: WS;
-  let rxWS: WalletLinkWebSocket;
+  let wlWebsocket: WalletLinkWebSocket;
+  let listener: WalletLinkWebSocketUpdateListener;
+
   beforeEach(() => {
     server = new WS('ws://localhost:1234');
-    rxWS = new WalletLinkWebSocket('http://localhost:1234');
+    wlWebsocket = new WalletLinkWebSocket({
+      url: 'http://localhost:1234',
+      listener: { websocketConnectionUpdated: jest.fn(), websocketMessageReceived: jest.fn() },
+    });
+    listener = (wlWebsocket as any).listener;
   });
 
   afterEach(() => {
@@ -16,40 +22,42 @@ describe('WalletLinkWebSocket', () => {
 
   describe('is connected', () => {
     test('@connect & @disconnect', async () => {
-      const connectionStateListener = jest.fn();
-      rxWS.setConnectionStateListener(connectionStateListener);
+      const connectionStateListener = jest.spyOn(listener, 'websocketConnectionUpdated');
 
-      await rxWS.connect();
+      await wlWebsocket.connect();
       await server.connected;
 
-      expect(connectionStateListener).toHaveBeenCalledWith(ConnectionState.CONNECTED);
+      expect(connectionStateListener).toHaveBeenCalledWith(true);
 
       // Sends data
       const webSocketSendMock = jest
         .spyOn(WebSocket.prototype, 'send')
         .mockImplementation(() => {});
 
-      rxWS.sendData('data');
+      wlWebsocket.sendData('data');
       expect(webSocketSendMock).toHaveBeenCalledWith('data');
 
       // Disconnects
-      rxWS.disconnect();
-      expect(connectionStateListener).toHaveBeenCalledWith(ConnectionState.DISCONNECTED);
+      wlWebsocket.disconnect();
+      expect(connectionStateListener).toHaveBeenCalledWith(false);
       // @ts-expect-error test private methods
-      expect(rxWS.webSocket).toBe(null);
+      expect(wlWebsocket.webSocket).toBe(null);
     });
 
     describe('errors & event listeners', () => {
-      afterEach(() => rxWS.disconnect());
+      afterEach(() => wlWebsocket.disconnect());
 
       test('@connect throws error when connecting again', async () => {
-        await rxWS.connect();
+        await wlWebsocket.connect();
 
-        await expect(rxWS.connect()).rejects.toThrow('webSocket object is not null');
+        await expect(wlWebsocket.connect()).rejects.toThrow('webSocket object is not null');
       });
 
       test('@connect throws error & fails to set websocket instance', async () => {
-        const errorConnect = new WalletLinkWebSocket('');
+        const errorConnect = new WalletLinkWebSocket({
+          url: '',
+          listener: { websocketConnectionUpdated: jest.fn(), websocketMessageReceived: jest.fn() },
+        });
 
         await expect(errorConnect.connect()).rejects.toThrow(
           "Failed to construct 'WebSocket': 1 argument required, but only 0 present."
@@ -57,18 +65,17 @@ describe('WalletLinkWebSocket', () => {
       });
 
       test('onclose event throws error', async () => {
-        await rxWS.connect();
+        await wlWebsocket.connect();
         await server.connected;
         server.error();
 
-        await expect(rxWS.connect()).rejects.toThrow('websocket error 1000: ');
+        await expect(wlWebsocket.connect()).rejects.toThrow('websocket error 1000: ');
       });
 
       test('onmessage event emits message', async () => {
-        const incomingDataListener = jest.fn();
-        rxWS.setIncomingDataListener(incomingDataListener);
+        const incomingDataListener = jest.spyOn(listener, 'websocketMessageReceived');
 
-        await rxWS.connect();
+        await wlWebsocket.connect();
         await server.connected;
 
         const message = {
@@ -81,10 +88,9 @@ describe('WalletLinkWebSocket', () => {
       });
 
       test('onmessage event emits heartbeat message', async () => {
-        const incomingDataListener = jest.fn();
-        rxWS.setIncomingDataListener(incomingDataListener);
+        const incomingDataListener = jest.spyOn(listener, 'websocketMessageReceived');
 
-        await rxWS.connect();
+        await wlWebsocket.connect();
         await server.connected;
 
         server.send('h');
@@ -101,7 +107,7 @@ describe('WalletLinkWebSocket', () => {
         .spyOn(WebSocket.prototype, 'close')
         .mockImplementation(() => {});
 
-      rxWS.disconnect();
+      wlWebsocket.disconnect();
       expect(webSocketCloseMock).not.toBeCalled();
     });
   });

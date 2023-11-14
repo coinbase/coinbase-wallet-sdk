@@ -22,11 +22,6 @@ export class WalletLinkWebSocket {
 
   private listener?: WalletLinkWebSocketUpdateListener;
 
-  private incomingDataListener?: (_: ServerMessage) => void;
-  setIncomingDataListener(listener: (_: ServerMessage) => void): void {
-    this.incomingDataListener = listener;
-  }
-
   /**
    * Constructor
    * @param url WebSocket server URL
@@ -71,13 +66,13 @@ export class WalletLinkWebSocket {
       };
       webSocket.onmessage = (evt) => {
         if (evt.data === 'h') {
-          this.incomingDataListener?.({
+          this.listener?.websocketMessageReceived({
             type: 'Heartbeat',
           });
         } else {
           try {
             const message = JSON.parse(evt.data) as ServerMessage;
-            this.incomingDataListener?.(message);
+            this.listener?.websocketMessageReceived(message);
           } catch {
             /* empty */
           }
@@ -98,7 +93,6 @@ export class WalletLinkWebSocket {
 
     this.listener?.websocketConnectionUpdated(false);
     this.listener = undefined;
-    this.incomingDataListener = undefined;
 
     try {
       webSocket.close();

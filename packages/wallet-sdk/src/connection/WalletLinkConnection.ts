@@ -100,7 +100,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
   websocketConnectionUpdated = async (state: boolean) => {
     // attempt to reconnect every 5 seconds when disconnected
     this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
-      connected: state,
+      state,
       sessionIdHash: Session.hash(this.session.id),
     });
 

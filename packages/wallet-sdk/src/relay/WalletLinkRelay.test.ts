@@ -62,7 +62,7 @@ describe('WalletLinkRelay', () => {
 
       const handleWeb3ResponseMessageSpy = jest.spyOn(relay, 'handleWeb3ResponseMessage');
 
-      (relay as any).connection.ws.incomingDataListener?.(serverMessageEvent);
+      (relay as any).connection.websocketMessageReceived(serverMessageEvent);
 
       expect(handleWeb3ResponseMessageSpy).toHaveBeenCalledWith(
         JSON.parse(await decryptMock(serverMessageEvent.data))
@@ -73,7 +73,7 @@ describe('WalletLinkRelay', () => {
       const relay = new WalletLinkRelay(options);
       expect(relay.isLinked).toBeFalsy();
 
-      (relay as any).connection.ws.incomingDataListener?.({
+      (relay as any).connection.websocketMessageReceived({
         type: 'IsLinkedOK',
         linked: true,
       });
@@ -96,7 +96,7 @@ describe('WalletLinkRelay', () => {
 
       const metadataUpdatedSpy = jest.spyOn(relay, 'metadataUpdated');
 
-      (relay as any).connection.ws.incomingDataListener?.({
+      (relay as any).connection.websocketMessageReceived({
         ...sessionConfig,
         type: 'SessionConfigUpdated',
       });
@@ -122,7 +122,7 @@ describe('WalletLinkRelay', () => {
       };
 
       // initial chain id and json rpc url
-      (relay as any).connection.ws.incomingDataListener?.({
+      (relay as any).connection.websocketMessageReceived({
         ...sessionConfig,
         type: 'GetSessionConfigOK',
       });
@@ -132,7 +132,7 @@ describe('WalletLinkRelay', () => {
       );
 
       // same chain id and json rpc url
-      (relay as any).connection.ws.incomingDataListener?.({
+      (relay as any).connection.websocketMessageReceived({
         ...sessionConfig,
         type: 'SessionConfigUpdated',
       });
@@ -147,7 +147,7 @@ describe('WalletLinkRelay', () => {
         },
       };
 
-      (relay as any).connection.ws.incomingDataListener?.({
+      (relay as any).connection.websocketMessageReceived({
         ...newSessionConfig,
         type: 'SessionConfigUpdated',
       });
