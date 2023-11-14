@@ -1,6 +1,10 @@
 import WS from 'jest-websocket-mock';
 
-import { WalletLinkWebSocket, WalletLinkWebSocketUpdateListener } from './WalletLinkWebSocket';
+import {
+  ConnectionState,
+  WalletLinkWebSocket,
+  WalletLinkWebSocketUpdateListener,
+} from './WalletLinkWebSocket';
 
 describe('WalletLinkWebSocket', () => {
   let server: WS;
@@ -11,7 +15,7 @@ describe('WalletLinkWebSocket', () => {
     server = new WS('ws://localhost:1234');
     wlWebsocket = new WalletLinkWebSocket({
       url: 'http://localhost:1234',
-      listener: { websocketConnectionUpdated: jest.fn(), websocketMessageReceived: jest.fn() },
+      listener: { websocketConnectionStateUpdated: jest.fn(), websocketMessageReceived: jest.fn() },
     });
     listener = (wlWebsocket as any).listener;
   });
@@ -22,12 +26,12 @@ describe('WalletLinkWebSocket', () => {
 
   describe('is connected', () => {
     test('@connect & @disconnect', async () => {
-      const connectionStateListener = jest.spyOn(listener, 'websocketConnectionUpdated');
+      const connectionStateListener = jest.spyOn(listener, 'websocketConnectionStateUpdated');
 
       await wlWebsocket.connect();
       await server.connected;
 
-      expect(connectionStateListener).toHaveBeenCalledWith(true);
+      expect(connectionStateListener).toHaveBeenCalledWith(ConnectionState.CONNECTED);
 
       // Sends data
       const webSocketSendMock = jest
@@ -39,7 +43,7 @@ describe('WalletLinkWebSocket', () => {
 
       // Disconnects
       wlWebsocket.disconnect();
-      expect(connectionStateListener).toHaveBeenCalledWith(false);
+      expect(connectionStateListener).toHaveBeenCalledWith(ConnectionState.DISCONNECTED);
       // @ts-expect-error test private methods
       expect(wlWebsocket.webSocket).toBe(null);
     });
@@ -56,7 +60,10 @@ describe('WalletLinkWebSocket', () => {
       test('@connect throws error & fails to set websocket instance', async () => {
         const errorConnect = new WalletLinkWebSocket({
           url: '',
-          listener: { websocketConnectionUpdated: jest.fn(), websocketMessageReceived: jest.fn() },
+          listener: {
+            websocketConnectionStateUpdated: jest.fn(),
+            websocketMessageReceived: jest.fn(),
+          },
         });
 
         await expect(errorConnect.connect()).rejects.toThrow(
