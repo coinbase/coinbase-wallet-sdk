@@ -23,12 +23,6 @@ import {
 } from './ServerMessage';
 import { SessionConfig } from './SessionConfig';
 
-export enum ConnectionState {
-  DISCONNECTED,
-  CONNECTING,
-  CONNECTED,
-}
-
 export interface WalletLinkWebSocketUpdateListener {
   websocketConnectionStateUpdated(state: ConnectionState): void;
   websocketLinkedUpdated(linked: boolean, message: Partial<ServerMessageIsLinkedOK>): void;
@@ -41,6 +35,12 @@ interface WalletLinkWebSocketParams {
   session: Session;
   listener: WalletLinkWebSocketUpdateListener;
   WebSocketClass?: typeof WebSocket;
+}
+
+export enum ConnectionState {
+  DISCONNECTED,
+  CONNECTING,
+  CONNECTED,
 }
 
 const REQUEST_TIMEOUT = 60000;
@@ -94,8 +94,6 @@ export class WalletLinkWebSocket {
       }
       this.listener?.websocketConnectionStateUpdated(ConnectionState.CONNECTING);
 
-      webSocket.onmessage = this.onmessage;
-
       webSocket.onclose = (evt) => {
         this.clearWebSocket();
         reject(new Error(`websocket error ${evt.code}: ${evt.reason}`));
@@ -114,7 +112,17 @@ export class WalletLinkWebSocket {
         this.sendHeartbeat();
         this.sendPendingMessages();
       };
+
+      webSocket.onmessage = this.onmessage;
     });
+  }
+
+  private sendPendingMessages() {
+    if (this.pendingData.length > 0) {
+      const pending = [...this.pendingData];
+      pending.forEach((data) => this.sendMessage(data));
+      this.pendingData = [];
+    }
   }
 
   // perform authentication upon connection
@@ -134,14 +142,6 @@ export class WalletLinkWebSocket {
     setInterval(() => {
       this.heartbeat();
     }, HEARTBEAT_INTERVAL);
-  }
-
-  private sendPendingMessages() {
-    if (this.pendingData.length > 0) {
-      const pending = [...this.pendingData];
-      pending.forEach((data) => this.sendMessage(data));
-      this.pendingData = [];
-    }
   }
 
   private onmessage = (evt: MessageEvent) => {
