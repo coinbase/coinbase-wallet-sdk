@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { ServerMessageEvent } from '../connection/ServerMessage';
-import { SessionConfig } from '../connection/SessionConfig';
 import { WalletLinkConnection } from '../connection/WalletLinkConnection';
 import { WalletLinkConnectionCipher } from '../connection/WalletLinkConnectionCipher';
 import { WalletLinkWebSocket } from '../connection/WalletLinkWebSocket';
@@ -83,12 +82,8 @@ describe('WalletLinkRelay', () => {
 
   describe('setSessionConfigListener', () => {
     it('should update metadata with setSessionConfigListener', async () => {
-      const sessionConfig: SessionConfig = {
-        webhookId: 'webhookId',
-        webhookUrl: 'webhookUrl',
-        metadata: {
-          WalletUsername: 'username',
-        },
+      const metadata = {
+        WalletUsername: 'username',
       };
 
       const relay = new WalletLinkRelay(options);
@@ -96,14 +91,11 @@ describe('WalletLinkRelay', () => {
 
       const metadataUpdatedSpy = jest.spyOn(relay, 'metadataUpdated');
 
-      connection.websocketServerMessageReceived({
-        ...sessionConfig,
-        type: 'SessionConfigUpdated',
-      });
+      connection.websocketSessionMetadataUpdated(metadata);
 
       expect(metadataUpdatedSpy).toHaveBeenCalledWith(
         WALLET_USER_NAME_KEY,
-        await decryptMock(sessionConfig.metadata.WalletUsername)
+        await decryptMock(metadata.WalletUsername)
       );
     });
 
@@ -134,7 +126,7 @@ describe('WalletLinkRelay', () => {
         ChainId: 'ChainId2',
         JsonRpcUrl: 'JsonRpcUrl2',
       };
-      connection.websocketSessionMetadataUpdated(metadata);
+      connection.websocketSessionMetadataUpdated(newMetadata);
 
       expect(callback).toHaveBeenCalledWith(
         await decryptMock(newMetadata.ChainId),
