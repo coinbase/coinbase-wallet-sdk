@@ -1,12 +1,13 @@
 import WS from 'jest-websocket-mock';
 
-import {
-  ConnectionState,
-  WalletLinkWebSocket,
-  WalletLinkWebSocketUpdateListener,
-} from './WalletLinkWebSocket';
+import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
+import { Session } from '../relay/Session';
+import { IntNumber } from '../types';
+import { WalletLinkWebSocket, WalletLinkWebSocketUpdateListener } from './WalletLinkWebSocket';
 
 describe('WalletLinkWebSocket', () => {
+  const session = new Session(new ScopedLocalStorage('test'));
+
   let server: WS;
   let wlWebsocket: WalletLinkWebSocket;
   let listener: WalletLinkWebSocketUpdateListener;
@@ -15,7 +16,12 @@ describe('WalletLinkWebSocket', () => {
     server = new WS('ws://localhost:1234/rpc');
     wlWebsocket = new WalletLinkWebSocket({
       linkAPIUrl: 'http://localhost:1234',
-      listener: { websocketConnectionStateUpdated: jest.fn(), websocketMessageReceived: jest.fn() },
+      session,
+      listener: {
+        websocketConnectedUpdated: jest.fn(),
+        websocketMessageReceived: jest.fn(),
+        websocketConnected: jest.fn(),
+      },
     });
     listener = (wlWebsocket as any).listener;
   });
@@ -26,24 +32,27 @@ describe('WalletLinkWebSocket', () => {
 
   describe('is connected', () => {
     test('@connect & @disconnect', async () => {
-      const connectionStateListener = jest.spyOn(listener, 'websocketConnectionStateUpdated');
+      const connectionStateListener = jest.spyOn(listener, 'websocketConnectedUpdated');
 
       await wlWebsocket.connect();
       await server.connected;
 
-      expect(connectionStateListener).toHaveBeenCalledWith(ConnectionState.CONNECTED);
+      expect(connectionStateListener).toHaveBeenCalledWith(true);
 
       // Sends data
       const webSocketSendMock = jest
         .spyOn(WebSocket.prototype, 'send')
         .mockImplementation(() => {});
 
-      wlWebsocket.sendData('data');
-      expect(webSocketSendMock).toHaveBeenCalledWith('data');
+      wlWebsocket.sendMessage({
+        type: 'ClientMessageType',
+        id: IntNumber(1),
+      });
+      expect(webSocketSendMock).toHaveBeenCalled();
 
       // Disconnects
       wlWebsocket.disconnect();
-      expect(connectionStateListener).toHaveBeenCalledWith(ConnectionState.DISCONNECTED);
+      expect(connectionStateListener).toHaveBeenCalledWith(false);
       // @ts-expect-error test private methods
       expect(wlWebsocket.webSocket).toBe(null);
     });
@@ -60,10 +69,8 @@ describe('WalletLinkWebSocket', () => {
       test('@connect throws error & fails to set websocket instance', async () => {
         const errorConnect = new WalletLinkWebSocket({
           linkAPIUrl: '',
-          listener: {
-            websocketConnectionStateUpdated: jest.fn(),
-            websocketMessageReceived: jest.fn(),
-          },
+          session,
+          listener,
         });
 
         await expect(errorConnect.connect()).rejects.toThrow("Failed to construct 'WebSocket':");
