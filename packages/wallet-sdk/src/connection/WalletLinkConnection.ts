@@ -80,21 +80,14 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
    * @param listener WalletLinkConnectionUpdateListener
    * @param [WebSocketClass] Custom WebSocket implementation
    */
-  constructor({
-    session,
-    linkAPIUrl,
-    listener,
-    diagnostic,
-    WebSocketClass = WebSocket,
-  }: WalletLinkConnectionParams) {
+  constructor({ session, linkAPIUrl, listener, diagnostic }: WalletLinkConnectionParams) {
     this.session = session;
     this.cipher = new WalletLinkConnectionCipher(session.secret);
     this.diagnostic = diagnostic;
     this.listener = listener;
 
     this.ws = new WalletLinkWebSocket({
-      url: `${linkAPIUrl}/rpc`,
-      WebSocketClass,
+      linkAPIUrl,
       listener: this,
     });
 
