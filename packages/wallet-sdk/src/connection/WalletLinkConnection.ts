@@ -12,6 +12,7 @@ import {
   isServerMessageFail,
   ServerMessage,
   ServerMessageFail,
+  ServerMessageIsLinkedOK,
   ServerMessageOK,
 } from './ServerMessage';
 import { SessionConfig } from './SessionConfig';
@@ -141,6 +142,11 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
         break;
       }
     }
+
+    // resolve request promises
+    if (m.id !== undefined) {
+      this.requestResolutions.get(m.id)?.(m);
+    }
   };
 
   /**
@@ -202,9 +208,16 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
     });
   }
 
-  websocketLinkedUpdated(linked: boolean): void {
+  websocketLinkedUpdated = (linked: boolean, msg: Partial<ServerMessageIsLinkedOK>) => {
+    this.diagnostic?.log(EVENTS.LINKED, {
+      sessionIdHash: Session.hash(this.session.id),
+      linked: msg.linked,
+      type: msg.type,
+      onlineGuests: msg.onlineGuests,
+    });
+
     this.listener?.linkedUpdated(linked);
-  }
+  };
 
   private async handleIncomingEvent(m: ServerMessage) {
     if (!isServerMessageEvent(m) || m.event !== 'Web3Response') {
@@ -308,6 +321,11 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
   }
 
   websocketSessionMetadataUpdated = (metadata: SessionConfig['metadata']) => {
+    this.diagnostic?.log(EVENTS.SESSION_CONFIG_RECEIVED, {
+      sessionIdHash: Session.hash(this.session.id),
+      metadata_keys: metadata ? Object.keys(metadata) : undefined,
+    });
+
     if (!metadata) return;
 
     // Map of metadata key to handler function
