@@ -42,11 +42,19 @@ const REQUEST_TIMEOUT = 60000;
 export interface WalletLinkConnectionUpdateListener {
   linkedUpdated: (linked: boolean) => void;
   connectedUpdated: (connected: boolean) => void;
-  handleResponseMessage: (message: Web3ResponseMessage) => void;
+  handleWeb3ResponseMessage: (message: Web3ResponseMessage) => void;
   chainUpdated: (chainId: string, jsonRpcUrl: string) => void;
   accountUpdated: (selectedAddress: string) => void;
   metadataUpdated: (key: string, metadataValue: string) => void;
   resetAndReload: () => void;
+}
+
+interface WalletLinkConnectionParams {
+  session: Session;
+  linkAPIUrl: string;
+  listener: WalletLinkConnectionUpdateListener;
+  diagnostic?: DiagnosticLogger;
+  WebSocketClass?: typeof WebSocket;
 }
 
 /**
@@ -57,7 +65,13 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
 
+  private readonly session: Session;
+
   private listener?: WalletLinkConnectionUpdateListener;
+  private diagnostic?: DiagnosticLogger;
+  private cipher: WalletLinkConnectionCipher;
+  private ws: WalletLinkWebSocket;
+  private http: WalletLinkHTTP;
 
   /**
    * Constructor
@@ -66,28 +80,18 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
    * @param listener WalletLinkConnectionUpdateListener
    * @param [WebSocketClass] Custom WebSocket implementation
    */
-  private sessionId: string;
-  private sessionKey: string;
-  constructor(
-    session: Session,
-    linkAPIUrl: string,
-    listener: WalletLinkConnectionUpdateListener,
-    private diagnostic?: DiagnosticLogger,
-    WebSocketClass: typeof WebSocket = WebSocket
-  ) {
-    const sessionId = (this.sessionId = session.id);
-    const sessionKey = (this.sessionKey = session.key);
+  constructor({ session, linkAPIUrl, listener, diagnostic }: WalletLinkConnectionParams) {
+    this.session = session;
     this.cipher = new WalletLinkConnectionCipher(session.secret);
-
+    this.diagnostic = diagnostic;
     this.listener = listener;
 
     this.ws = new WalletLinkWebSocket({
-      url: `${linkAPIUrl}/rpc`,
-      WebSocketClass,
+      linkAPIUrl,
       listener: this,
     });
 
-    this.http = new WalletLinkHTTP(linkAPIUrl, sessionId, sessionKey);
+    this.http = new WalletLinkHTTP(linkAPIUrl, session.id, session.key);
   }
 
   websocketConnectionStateUpdated = async (state: ConnectionState) => {
@@ -209,7 +213,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
       throw new Error('instance is destroyed');
     }
     this.diagnostic?.log(EVENTS.STARTED_CONNECTING, {
-      sessionIdHash: Session.hash(this.sessionId),
+      sessionIdHash: Session.hash(this.session.id),
     });
     this.ws.connect();
   }
@@ -223,7 +227,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
 
     this.ws.disconnect();
     this.diagnostic?.log(EVENTS.DISCONNECTED, {
-      sessionIdHash: Session.hash(this.sessionId),
+      sessionIdHash: Session.hash(this.session.id),
     });
 
     this.listener = undefined;
@@ -306,7 +310,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
 
       if (!isWeb3ResponseMessage(message)) return;
 
-      this.listener?.handleResponseMessage(message);
+      this.listener?.handleWeb3ResponseMessage(message);
     } catch {
       this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
         message: 'Had error decrypting',
@@ -347,7 +351,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
   public async setSessionMetadata(key: string, value: string | null) {
     const message = ClientMessageSetSessionConfig({
       id: IntNumber(this.nextReqId++),
-      sessionId: this.sessionId,
+      sessionId: this.session.id,
       metadata: { [key]: value },
     });
 
@@ -377,7 +381,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
 
     const message = ClientMessagePublishEvent({
       id: IntNumber(this.nextReqId++),
-      sessionId: this.sessionId,
+      sessionId: this.session.id,
       event,
       data,
       callWebhook,
@@ -442,8 +446,8 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
   private async authenticate() {
     const msg = ClientMessageHostSession({
       id: IntNumber(this.nextReqId++),
-      sessionId: this.sessionId,
-      sessionKey: this.sessionKey,
+      sessionId: this.session.id,
+      sessionKey: this.session.key,
     });
     const res = await this.makeRequest<ServerMessageOK | ServerMessageFail>(msg);
     if (isServerMessageFail(res)) {
@@ -454,7 +458,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
   private sendIsLinked(): void {
     const msg = ClientMessageIsLinked({
       id: IntNumber(this.nextReqId++),
-      sessionId: this.sessionId,
+      sessionId: this.session.id,
     });
     this.sendData(msg);
   }
@@ -462,7 +466,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
   private sendGetSessionConfig(): void {
     const msg = ClientMessageGetSessionConfig({
       id: IntNumber(this.nextReqId++),
-      sessionId: this.sessionId,
+      sessionId: this.session.id,
     });
     this.sendData(msg);
   }
@@ -496,7 +500,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
     this.listener?.resetAndReload();
     this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
       alreadyDestroyed: this.isDestroyed,
-      sessionIdHash: Session.hash(this.sessionId),
+      sessionIdHash: Session.hash(this.session.id),
     });
   };
 

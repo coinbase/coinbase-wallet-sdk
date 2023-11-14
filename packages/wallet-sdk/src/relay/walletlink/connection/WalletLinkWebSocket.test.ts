@@ -12,9 +12,9 @@ describe('WalletLinkWebSocket', () => {
   let listener: WalletLinkWebSocketUpdateListener;
 
   beforeEach(() => {
-    server = new WS('ws://localhost:1234');
+    server = new WS('ws://localhost:1234/rpc');
     wlWebsocket = new WalletLinkWebSocket({
-      url: 'http://localhost:1234',
+      linkAPIUrl: 'http://localhost:1234',
       listener: { websocketConnectionStateUpdated: jest.fn(), websocketMessageReceived: jest.fn() },
     });
     listener = (wlWebsocket as any).listener;
@@ -59,16 +59,14 @@ describe('WalletLinkWebSocket', () => {
 
       test('@connect throws error & fails to set websocket instance', async () => {
         const errorConnect = new WalletLinkWebSocket({
-          url: '',
+          linkAPIUrl: '',
           listener: {
             websocketConnectionStateUpdated: jest.fn(),
             websocketMessageReceived: jest.fn(),
           },
         });
 
-        await expect(errorConnect.connect()).rejects.toThrow(
-          "Failed to construct 'WebSocket': 1 argument required, but only 0 present."
-        );
+        await expect(errorConnect.connect()).rejects.toThrow("Failed to construct 'WebSocket':");
       });
 
       test('onclose event throws error', async () => {
