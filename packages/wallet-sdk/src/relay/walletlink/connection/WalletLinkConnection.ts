@@ -12,14 +12,9 @@ import {
   isServerMessageFail,
   ServerMessage,
   ServerMessageFail,
-  ServerMessageGetSessionConfigOK,
-  ServerMessageIsLinkedOK,
-  ServerMessageLinked,
   ServerMessageOK,
-  ServerMessagePublishEventOK,
   ServerMessageSessionConfigUpdated,
 } from './ServerMessage';
-import { SessionConfig } from './SessionConfig';
 import { WalletLinkConnectionCipher } from './WalletLinkConnectionCipher';
 import { WalletLinkHTTP } from './WalletLinkHTTP';
 import { WalletLinkWebSocket, WalletLinkWebSocketUpdateListener } from './WalletLinkWebSocket';
@@ -116,10 +111,6 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
   };
 
   websocketConnected(): void {
-    this.diagnostic?.log(EVENTS.CONNECTED, {
-      sessionIdHash: Session.hash(this.session.id),
-    });
-
     // check for unseen events
     if (this.shouldFetchUnseenEventsOnConnect) {
       this.fetchUnseenEventsAPI();
@@ -131,41 +122,8 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
     }
   }
 
-  websocketMessageReceived = (m: ServerMessage) => {
+  websocketServerMessageReceived = (m: ServerMessage) => {
     switch (m.type) {
-      // handle server's heartbeat responses
-      case 'Heartbeat':
-        // this.updateLastHeartbeat();
-        return;
-
-      // handle link status updates
-      case 'IsLinkedOK':
-      case 'Linked': {
-        const msg = m as Omit<ServerMessageIsLinkedOK, 'type'> & ServerMessageLinked;
-        this.diagnostic?.log(EVENTS.LINKED, {
-          sessionIdHash: Session.hash(this.session.id),
-          linked: msg.linked,
-          type: m.type,
-          onlineGuests: msg.onlineGuests,
-        });
-
-        this.linked = msg.linked || msg.onlineGuests > 0;
-        break;
-      }
-
-      // handle session config updates
-      case 'GetSessionConfigOK':
-      case 'SessionConfigUpdated': {
-        const msg = m as Omit<ServerMessageGetSessionConfigOK, 'type'> &
-          ServerMessageSessionConfigUpdated;
-        this.diagnostic?.log(EVENTS.SESSION_CONFIG_RECEIVED, {
-          sessionIdHash: Session.hash(this.session.id),
-          metadata_keys: msg && msg.metadata ? Object.keys(msg.metadata) : undefined,
-        });
-        this.handleSessionMetadataUpdated(msg.metadata);
-        break;
-      }
-
       case 'Event': {
         this.handleIncomingEvent(m);
         break;
@@ -227,35 +185,8 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
     });
   }
 
-  /**
-   * true if linked (a guest has joined before)
-   * runs listener when linked status changes
-   */
-  private _linked = false;
-  private get linked(): boolean {
-    return this._linked;
-  }
-  private set linked(linked: boolean) {
-    this._linked = linked;
-    if (linked) this.onceLinked?.();
+  websocketLinkedUpdated(linked: boolean): void {
     this.listener?.linkedUpdated(linked);
-  }
-
-  /**
-   * Execute once when linked
-   */
-  private onceLinked?: () => void;
-  private setOnceLinked<T>(callback: () => Promise<T>): Promise<T> {
-    return new Promise<T>((resolve) => {
-      if (this.linked) {
-        callback().then(resolve);
-      } else {
-        this.onceLinked = () => {
-          callback().then(resolve);
-          this.onceLinked = undefined;
-        };
-      }
-    });
   }
 
   private async handleIncomingEvent(m: ServerMessage) {
@@ -346,18 +277,20 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
       type: 'PublishEvent',
     };
 
-    return this.setOnceLinked(async () => {
-      const res = await this.ws.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(
-        message
-      );
-      if (isServerMessageFail(res)) {
-        throw new Error(res.error || 'failed to publish event');
-      }
-      return res.eventId;
-    });
+    // this.setOnceLinked(async () => {
+    //   const res = await this.ws.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(
+    //     message
+    //   );
+    //   if (isServerMessageFail(res)) {
+    //     throw new Error(res.error || 'failed to publish event');
+    //   }
+    //   return res.eventId;
+    // });
+
+    return this.ws.makeRequestOnceConnected(message);
   }
 
-  private handleSessionMetadataUpdated = (metadata: SessionConfig['metadata']) => {
+  websocketSessionMetadataUpdated = (metadata: ServerMessageSessionConfigUpdated['metadata']) => {
     if (!metadata) return;
 
     // Map of metadata key to handler function
