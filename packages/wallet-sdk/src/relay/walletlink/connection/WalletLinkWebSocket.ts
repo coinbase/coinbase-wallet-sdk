@@ -1,80 +1,41 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { Session } from '../relay/Session';
-import { IntNumber } from '../types';
-import {
-  ClientMessage,
-  ClientMessageGetSessionConfig,
-  ClientMessageHostSession,
-  ClientMessageIsLinked,
-} from './ClientMessage';
-import {
-  isServerMessageFail,
-  ServerMessage,
-  ServerMessageFail,
-  ServerMessageGetSessionConfigOK,
-  ServerMessageIsLinkedOK,
-  ServerMessageLinked,
-  ServerMessageOK,
-  ServerMessagePublishEventOK,
-  ServerMessageSessionConfigUpdated,
-} from './ServerMessage';
-import { SessionConfig } from './SessionConfig';
+import { ServerMessage } from '../type/ServerMessage';
 
 export interface WalletLinkWebSocketUpdateListener {
-  websocketConnectionStateUpdated(state: ConnectionState): void;
-  websocketLinkedUpdated(
-    linked: boolean,
-    message: ServerMessageIsLinkedOK | ServerMessageLinked
-  ): void;
-  websocketSessionMetadataUpdated(metadata: SessionConfig['metadata']): void;
-  websocketServerMessageReceived(message: ServerMessage): void;
+  websocketConnectionUpdated(connected: boolean): void;
+  websocketMessageReceived(message: ServerMessage): void;
 }
 
 interface WalletLinkWebSocketParams {
-  linkAPIUrl: string;
-  session: Session;
+  url: string;
   listener: WalletLinkWebSocketUpdateListener;
   WebSocketClass?: typeof WebSocket;
 }
 
-export enum ConnectionState {
-  DISCONNECTED,
-  CONNECTED,
-}
-
-const REQUEST_TIMEOUT = 60000;
-const HEARTBEAT_INTERVAL = 10000;
-
 export class WalletLinkWebSocket {
-  private readonly session: Session;
+  private readonly url: string;
+  private readonly WebSocketClass: typeof WebSocket;
   private webSocket: WebSocket | null = null;
-  private pendingData: ClientMessage[] = [];
-  private readonly createWebSocket: () => WebSocket;
+  private pendingData: string[] = [];
+
   private listener?: WalletLinkWebSocketUpdateListener;
 
-  private lastHeartbeatResponse = 0;
-  private nextReqId = IntNumber(1);
+  private incomingDataListener?: (_: ServerMessage) => void;
+  setIncomingDataListener(listener: (_: ServerMessage) => void): void {
+    this.incomingDataListener = listener;
+  }
 
   /**
    * Constructor
-   * @param linkAPIUrl Coinbase Wallet link server URL
-   * @param session Session
-   * @param listener WalletLinkWebSocketUpdateListener
+   * @param url WebSocket server URL
    * @param [WebSocketClass] Custom WebSocket implementation
    */
-  constructor({
-    linkAPIUrl,
-    session,
-    listener,
-    WebSocketClass = WebSocket,
-  }: WalletLinkWebSocketParams) {
-    this.session = session;
+  constructor({ url, listener, WebSocketClass = WebSocket }: WalletLinkWebSocketParams) {
+    this.url = url.replace(/^http/, 'ws');
     this.listener = listener;
-
-    const url = linkAPIUrl.replace(/^http/, 'ws').concat('/rpc');
-    this.createWebSocket = () => new WebSocketClass(url);
+    this.WebSocketClass = WebSocketClass;
   }
 
   /**
@@ -88,56 +49,42 @@ export class WalletLinkWebSocket {
     return new Promise<void>((resolve, reject) => {
       let webSocket: WebSocket;
       try {
-        this.webSocket = webSocket = this.createWebSocket();
+        this.webSocket = webSocket = new this.WebSocketClass(this.url);
       } catch (err) {
         reject(err);
         return;
       }
-      this.listener?.websocketConnectionStateUpdated(ConnectionState.CONNECTING);
-
       webSocket.onclose = (evt) => {
-        this.handleClose();
+        this.clearWebSocket();
         reject(new Error(`websocket error ${evt.code}: ${evt.reason}`));
-        this.listener?.websocketConnectionStateUpdated(ConnectionState.DISCONNECTED);
+        this.listener?.websocketConnectionUpdated(false);
       };
-
-      webSocket.onopen = async (_) => {
-        this.handleOpen();
+      webSocket.onopen = (_) => {
         resolve();
-        this.listener?.websocketConnectionStateUpdated(ConnectionState.CONNECTED);
-      };
+        this.listener?.websocketConnectionUpdated(true);
 
-      webSocket.onmessage = this.onmessage;
+        if (this.pendingData.length > 0) {
+          const pending = [...this.pendingData];
+          pending.forEach((data) => this.sendData(data));
+          this.pendingData = [];
+        }
+      };
+      webSocket.onmessage = (evt) => {
+        if (evt.data === 'h') {
+          this.incomingDataListener?.({
+            type: 'Heartbeat',
+          });
+        } else {
+          try {
+            const message = JSON.parse(evt.data) as ServerMessage;
+            this.incomingDataListener?.(message);
+          } catch {
+            /* empty */
+          }
+        }
+      };
     });
   }
-
-  private sendPendingMessages() {
-    if (this.pendingData.length > 0) {
-      const pending = [...this.pendingData];
-      pending.forEach((data) => this.sendMessage(data));
-      this.pendingData = [];
-    }
-  }
-
-  private onmessage = (evt: MessageEvent) => {
-    if (evt.data === 'h') {
-      this.listener?.websocketServerMessageReceived({
-        type: 'Heartbeat',
-      });
-    } else {
-      try {
-        const message = JSON.parse(evt.data) as ServerMessage;
-        const m = message as ServerMessage;
-        // resolve request promises
-        if (m.id !== undefined) {
-          this.requestResolutions.get(m.id)?.(m);
-        }
-        this.websocketMessageReceived(m);
-      } catch {
-        /* empty */
-      }
-    }
-  };
 
   /**
    * Disconnect from server
@@ -147,10 +94,11 @@ export class WalletLinkWebSocket {
     if (!webSocket) {
       return;
     }
-    this.handleClose();
+    this.clearWebSocket();
 
-    this.listener?.websocketConnectionStateUpdated(ConnectionState.DISCONNECTED);
+    this.listener?.websocketConnectionUpdated(false);
     this.listener = undefined;
+    this.incomingDataListener = undefined;
 
     try {
       webSocket.close();
@@ -163,47 +111,17 @@ export class WalletLinkWebSocket {
    * Send data to server
    * @param data text to send
    */
-  public sendMessage(message: ClientMessage): void {
+  public sendData(data: string): void {
     const { webSocket } = this;
     if (!webSocket) {
-      this.pendingData.push(message);
+      this.pendingData.push(data);
       this.connect();
       return;
     }
-    const data = JSON.stringify(message);
     webSocket.send(data);
   }
 
-  private async handleOpen() {
-    try {
-      await this.authenticateUponConnection();
-    } catch {
-      // noop
-    }
-    this.sendHeartbeat();
-    this.sendPendingMessages();
-  }
-
-  // perform authentication upon connection
-  private async authenticateUponConnection() {
-    // if CONNECTED, authenticate, and then check link status
-    await this.authenticate();
-    this.sendIsLinked();
-    this.sendGetSessionConfig();
-  }
-
-  private sendHeartbeat() {
-    // send heartbeat every n seconds while connected
-    // if CONNECTED, start the heartbeat timer
-    // first timer event updates lastHeartbeat timestamp
-    // subsequent calls send heartbeat message
-    this.updateLastHeartbeat();
-    setInterval(() => {
-      this.heartbeat();
-    }, HEARTBEAT_INTERVAL);
-  }
-
-  private handleClose(): void {
+  private clearWebSocket(): void {
     const { webSocket } = this;
     if (!webSocket) {
       return;
@@ -213,154 +131,5 @@ export class WalletLinkWebSocket {
     webSocket.onerror = null;
     webSocket.onmessage = null;
     webSocket.onopen = null;
-  }
-
-  websocketMessageReceived = (m: ServerMessage) => {
-    switch (m.type) {
-      // handle server's heartbeat responses
-      case 'Heartbeat':
-        // this.updateLastHeartbeat();
-        return;
-
-      // handle link status updates
-      case 'IsLinkedOK':
-      case 'Linked': {
-        const msg = m as ServerMessageIsLinkedOK | ServerMessageLinked;
-        const linked = (msg.type === 'IsLinkedOK' ? msg.linked : false) || msg.onlineGuests > 0;
-        this.listener?.websocketLinkedUpdated(linked, msg);
-        this.linked = linked;
-        break;
-      }
-
-      // handle session config updates
-      case 'GetSessionConfigOK':
-      case 'SessionConfigUpdated': {
-        const msg = m as Omit<ServerMessageGetSessionConfigOK, 'type'> &
-          ServerMessageSessionConfigUpdated;
-        this.listener?.websocketSessionMetadataUpdated(msg.metadata);
-        break;
-      }
-
-      case 'Event': {
-        this.listener?.websocketServerMessageReceived(m);
-        break;
-      }
-    }
-  };
-
-  /**
-   * true if linked (a guest has joined before)
-   * runs listener when linked status changes
-   */
-  private _linked = false;
-  private get linked(): boolean {
-    return this._linked;
-  }
-  private set linked(linked: boolean) {
-    this._linked = linked;
-    if (linked) this.onceLinked?.();
-  }
-
-  /**
-   * Execute once when linked
-   */
-  private onceLinked?: () => void;
-  private setOnceLinked<T>(callback: () => Promise<T>): Promise<T> {
-    return new Promise<T>((resolve) => {
-      if (this.linked) {
-        callback().then(resolve);
-      } else {
-        this.onceLinked = () => {
-          callback().then(resolve);
-          this.onceLinked = undefined;
-        };
-      }
-    });
-  }
-
-  async makeRequestOnceConnected(
-    message: Omit<ClientMessage, 'id'>,
-    timeout: number = REQUEST_TIMEOUT
-  ): Promise<ServerMessagePublishEventOK | ServerMessageFail> {
-    return this.setOnceLinked(async () => {
-      const res = await this.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(
-        message,
-        timeout
-      );
-      if (isServerMessageFail(res)) {
-        throw new Error(res.error || 'failed to publish event');
-      }
-      return res;
-    });
-  }
-
-  private requestResolutions = new Map<IntNumber, (_: ServerMessage) => void>();
-
-  async makeRequest<T extends ServerMessage>(
-    message: Omit<ClientMessage, 'id'>,
-    timeout: number = REQUEST_TIMEOUT
-  ): Promise<T> {
-    const reqId = IntNumber(this.nextReqId++);
-    this.sendMessage({
-      ...message,
-      id: reqId,
-    });
-
-    // await server message with corresponding id
-    let timeoutId: number;
-    return Promise.race([
-      new Promise<T>((_, reject) => {
-        timeoutId = window.setTimeout(() => {
-          reject(new Error(`request ${reqId} timed out`));
-        }, timeout);
-      }),
-      new Promise<T>((resolve) => {
-        this.requestResolutions.set(reqId, (m) => {
-          clearTimeout(timeoutId); // clear the timeout
-          resolve(m as T);
-          this.requestResolutions.delete(reqId);
-        });
-      }),
-    ]);
-  }
-
-  private async authenticate() {
-    const msg = ClientMessageHostSession({
-      id: IntNumber(this.nextReqId++),
-      sessionId: this.session.id,
-      sessionKey: this.session.key,
-    });
-    const res = await this.makeRequest<ServerMessageOK | ServerMessageFail>(msg);
-    if (isServerMessageFail(res)) {
-      throw new Error(res.error || 'failed to authentcate');
-    }
-  }
-
-  private sendIsLinked(): void {
-    const msg = ClientMessageIsLinked({
-      id: IntNumber(this.nextReqId++),
-      sessionId: this.session.id,
-    });
-    this.sendMessage(msg);
-  }
-
-  private sendGetSessionConfig(): void {
-    const msg = ClientMessageGetSessionConfig({
-      id: IntNumber(this.nextReqId++),
-      sessionId: this.session.id,
-    });
-    this.sendMessage(msg);
-  }
-
-  private updateLastHeartbeat(): void {
-    this.lastHeartbeatResponse = Date.now();
-  }
-
-  private heartbeat(): void {
-    if (Date.now() - this.lastHeartbeatResponse > HEARTBEAT_INTERVAL * 2) {
-      this.disconnect();
-      return;
-    }
-    this.webSocket?.send('h');
   }
 }
