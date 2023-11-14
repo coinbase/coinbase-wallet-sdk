@@ -150,7 +150,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
    * Make a connection to the server
    */
   public connect(): void {
-    if (this.isDestroyed) {
+    if (this.destroyed) {
       throw new Error('instance is destroyed');
     }
     this.diagnostic?.log(EVENTS.STARTED_CONNECTING, {
@@ -172,10 +172,6 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
     });
 
     this.listener = undefined;
-  }
-
-  public get isDestroyed(): boolean {
-    return this.destroyed;
   }
 
   /**
@@ -367,7 +363,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
 
     this.listener?.resetAndReload();
     this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
-      alreadyDestroyed: this.isDestroyed,
+      alreadyDestroyed: this.destroyed,
       sessionIdHash: Session.hash(this.session.id),
     });
   };

@@ -38,7 +38,7 @@ export class WalletLinkWebSocket {
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
   private webSocket: WebSocket | null = null;
-  private pendingData: ClientMessage[] = [];
+  private pendingMessage: ClientMessage[] = [];
 
   private readonly session: Session;
   private listener?: WalletLinkWebSocketUpdateListener;
@@ -83,6 +83,7 @@ export class WalletLinkWebSocket {
         return;
       }
       webSocket.onclose = (evt) => {
+        this.clearWebSocket();
         reject(new Error(`websocket error ${evt.code}: ${evt.reason}`));
         this.handleWebsocketClose();
       };
@@ -95,20 +96,19 @@ export class WalletLinkWebSocket {
   }
 
   private handleWebsocketClose() {
-    this.clearWebSocket();
-
     this.listener?.websocketConnectedUpdated(false);
   }
 
   private async handleWebsocketOpen() {
+    this.listener?.websocketConnectedUpdated(true);
     // perform authentication upon connection
-    let connected = false;
+    // const connected = false;
     try {
       // if CONNECTED, authenticate, and then check link status
       await this.authenticate();
       this.sendIsLinked();
       this.sendGetSessionConfig();
-      connected = true;
+      // connected = true;
     } catch {
       /* empty */
     }
@@ -122,17 +122,15 @@ export class WalletLinkWebSocket {
       this.heartbeat();
     }, HEARTBEAT_INTERVAL);
 
-    if (this.pendingData.length > 0) {
-      const pending = [...this.pendingData];
+    if (this.pendingMessage.length > 0) {
+      const pending = [...this.pendingMessage];
       pending.forEach((data) => this.sendMessage(data));
-      this.pendingData = [];
+      this.pendingMessage = [];
     }
 
     this.diagnostic?.log(EVENTS.CONNECTED, {
       sessionIdHash: Session.hash(this.session.id),
     });
-
-    this.listener?.websocketConnectedUpdated(connected);
   }
 
   onmessage = (evt: MessageEvent) => {
@@ -166,6 +164,7 @@ export class WalletLinkWebSocket {
     }
     this.clearWebSocket();
 
+    this.listener?.websocketConnectedUpdated(false);
     this.listener = undefined;
 
     try {
@@ -182,7 +181,7 @@ export class WalletLinkWebSocket {
   sendMessage(message: ClientMessage): void {
     const { webSocket } = this;
     if (!webSocket) {
-      this.pendingData.push(message);
+      this.pendingMessage.push(message);
       this.connect();
       return;
     }
