@@ -25,6 +25,7 @@ export class WalletLinkWebSocket {
   /**
    * Constructor
    * @param url WebSocket server URL
+   * @param listener WalletLinkWebSocketUpdateListener
    * @param [WebSocketClass] Custom WebSocket implementation
    */
   constructor({ url, listener, WebSocketClass = WebSocket }: WalletLinkWebSocketParams) {
