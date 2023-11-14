@@ -17,18 +17,17 @@ import {
   ServerMessageOK,
 } from './ServerMessage';
 
-const REQUEST_TIMEOUT = 60000;
-const HEARTBEAT_INTERVAL = 10000;
-
 enum ConnectionState {
   DISCONNECTED,
   CONNECTING,
   CONNECTED,
 }
 
+const REQUEST_TIMEOUT = 60000;
+const HEARTBEAT_INTERVAL = 10000;
+
 export interface WalletLinkWebSocketUpdateListener {
   websocketMessageReceived(message: ServerMessage): void;
-  websocketConnected(): void;
 
   websocketConnectedUpdated(connected: boolean): void;
 }
@@ -83,26 +82,26 @@ export class WalletLinkWebSocket {
       throw new Error('webSocket object is not null');
     }
     return new Promise<void>((resolve, reject) => {
+      let webSocket: WebSocket;
       try {
-        const webSocket = this.createWebSocket();
-        this.handleConnectionStateChange(ConnectionState.CONNECTING);
-
-        webSocket.onclose = (evt: CloseEvent) => {
-          this.handleConnectionStateChange(ConnectionState.DISCONNECTED);
-          this.isDestroyed
-            ? resolve()
-            : reject(new Error(`websocket error ${evt.code}: ${evt.reason}`));
-        };
-        webSocket.onopen = () => {
-          this.handleConnectionStateChange(ConnectionState.CONNECTED);
-          resolve();
-        };
-        webSocket.onmessage = this.onmessage;
-
-        this.webSocket = webSocket;
+        this.webSocket = webSocket = this.createWebSocket();
       } catch (err) {
         reject(err);
+        return;
       }
+      this.handleConnectionStateChange(ConnectionState.CONNECTING);
+      webSocket.onclose = (evt) => {
+        this.clearWebSocket();
+        this.isDestroyed
+          ? resolve()
+          : reject(new Error(`websocket error ${evt.code}: ${evt.reason}`));
+        this.handleConnectionStateChange(ConnectionState.DISCONNECTED);
+      };
+      webSocket.onopen = (_) => {
+        resolve();
+        this.handleConnectionStateChange(ConnectionState.CONNECTED);
+      };
+      webSocket.onmessage = this.onmessage;
     });
   }
 
@@ -116,7 +115,6 @@ export class WalletLinkWebSocket {
     switch (state) {
       case ConnectionState.DISCONNECTED:
         this.clearWebSocket();
-
         // attempt to reconnect every 5 seconds when disconnected
         // if DISCONNECTED and not destroyed
         if (!this.destroyed) {
@@ -155,8 +153,6 @@ export class WalletLinkWebSocket {
         setInterval(() => {
           this.heartbeat();
         }, HEARTBEAT_INTERVAL);
-
-        this.listener?.websocketConnected();
 
         if (this.pendingData.length > 0) {
           const pending = [...this.pendingData];
@@ -203,6 +199,8 @@ export class WalletLinkWebSocket {
     if (!webSocket) {
       return;
     }
+    this.clearWebSocket();
+
     this.connectionStateUpdated(ConnectionState.DISCONNECTED);
     this.listener = undefined;
 
