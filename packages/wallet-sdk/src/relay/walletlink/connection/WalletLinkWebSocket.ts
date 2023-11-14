@@ -9,7 +9,6 @@ import {
   ClientMessageHostSession,
   ClientMessageIsLinked,
 } from './ClientMessage';
-import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
 import {
   isServerMessageFail,
   ServerMessage,
@@ -30,7 +29,6 @@ interface WalletLinkWebSocketParams {
   linkAPIUrl: string;
   session: Session;
   listener: WalletLinkWebSocketUpdateListener;
-  diagnostic?: DiagnosticLogger;
   WebSocketClass?: typeof WebSocket;
 }
 
@@ -42,7 +40,6 @@ export class WalletLinkWebSocket {
 
   private readonly session: Session;
   private listener?: WalletLinkWebSocketUpdateListener;
-  private diagnostic?: DiagnosticLogger;
   private readonly createWebSocket: () => WebSocket;
 
   /**
@@ -55,12 +52,10 @@ export class WalletLinkWebSocket {
     linkAPIUrl,
     session,
     listener,
-    diagnostic,
     WebSocketClass = WebSocket,
   }: WalletLinkWebSocketParams) {
     this.session = session;
     this.listener = listener;
-    this.diagnostic = diagnostic;
 
     const url = linkAPIUrl.replace(/^http/, 'ws').concat('/rpc');
     this.createWebSocket = () => new WebSocketClass(url);
@@ -123,10 +118,6 @@ export class WalletLinkWebSocket {
       pending.forEach((data) => this.sendMessage(data));
       this.pendingMessage = [];
     }
-
-    this.diagnostic?.log(EVENTS.CONNECTED, {
-      sessionIdHash: Session.hash(this.session.id),
-    });
   }
 
   onmessage = (evt: MessageEvent) => {
