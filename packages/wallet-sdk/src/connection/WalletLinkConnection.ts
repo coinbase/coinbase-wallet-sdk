@@ -13,6 +13,7 @@ import {
   ServerMessage,
   ServerMessageFail,
   ServerMessageIsLinkedOK,
+  ServerMessageLinked,
   ServerMessageOK,
 } from './ServerMessage';
 import { SessionConfig } from './SessionConfig';
@@ -143,10 +144,13 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
    * Only for logging
    * TODO: Revisit if this is necessary
    */
-  websocketLinkedUpdated = (linked: boolean, msg: Partial<ServerMessageIsLinkedOK>) => {
+  websocketLinkedUpdated = (
+    linked: boolean,
+    msg: ServerMessageIsLinkedOK | ServerMessageLinked
+  ) => {
     this.diagnostic?.log(EVENTS.LINKED, {
       sessionIdHash: Session.hash(this.session.id),
-      linked: msg.linked,
+      linked: msg.type === 'IsLinkedOK' ? msg.linked : false,
       type: msg.type,
       onlineGuests: msg.onlineGuests,
     });
