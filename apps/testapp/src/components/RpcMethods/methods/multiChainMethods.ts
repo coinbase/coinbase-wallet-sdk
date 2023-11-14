@@ -1,21 +1,11 @@
-export type RpcMethod = {
-  connected?: boolean;
-  method: string;
-  params: Array<{ key: string; required?: boolean }>;
-  format?: (data: Record<string, string>) => [Record<string, string>];
-};
+import { RpcMethod } from '../RpcMethod';
 
-const ethRequestAccounts = {
-  method: 'eth_requestAccounts',
+const ethChainId = {
+  method: 'eth_chainId',
   params: [],
 };
 
-const ethAccounts = {
-  method: 'eth_accounts',
-  params: [],
-};
-
-const switchEthereumChain = {
+const walletSwitchEthereumChain = {
   method: 'wallet_switchEthereumChain',
   params: [{ key: 'chainId', required: true }],
   format: (data: Record<string, string>) => [
@@ -25,7 +15,7 @@ const switchEthereumChain = {
   ],
 };
 
-const addEthereumChain = {
+const walletAddEthereumChain = {
   connected: true,
   method: 'wallet_addEthereumChain',
   params: [
@@ -54,19 +44,29 @@ const addEthereumChain = {
   ],
 };
 
-const personal_sign = {
-  method: 'personal_sign',
+const walletWatchAsset = {
+  method: 'wallet_watchAsset',
   params: [
-    { key: 'message', required: true },
     { key: 'address', required: true },
+    { key: 'symbol', required: false },
+    { key: 'decimals', required: false },
   ],
-  format: (data: Record<string, string>) => [Buffer.from(data.message, 'utf8'), data.address],
+  format: (data: Record<string, string>) => [
+    {
+      // eslint-disable-next-line prettier/prettier
+      type: "ERC20",
+      options: {
+        address: data.address,
+        symbol: data.symbol,
+        decimals: Number(data.decimals),
+      },
+    },
+  ],
 };
 
-export const methods: RpcMethod[] = [
-  ethRequestAccounts,
-  ethAccounts,
-  addEthereumChain,
-  switchEthereumChain,
-  personal_sign,
+export const multiChainMethods: RpcMethod[] = [
+  ethChainId,
+  walletSwitchEthereumChain,
+  walletAddEthereumChain,
+  walletWatchAsset,
 ];
