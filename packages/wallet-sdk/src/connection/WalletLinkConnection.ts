@@ -38,7 +38,7 @@ const REQUEST_TIMEOUT = 60000;
 export interface WalletLinkConnectionUpdateListener {
   linkedUpdated: (linked: boolean) => void;
   connectedUpdated: (connected: boolean) => void;
-  handleResponseMessage: (message: Web3ResponseMessage) => void;
+  handleWeb3ResponseMessage: (message: Web3ResponseMessage) => void;
   chainUpdated: (chainId: string, jsonRpcUrl: string) => void;
   accountUpdated: (selectedAddress: string) => void;
   metadataUpdated: (key: string, metadataValue: string) => void;
@@ -309,7 +309,7 @@ export class WalletLinkConnection {
 
       if (!isWeb3ResponseMessage(message)) return;
 
-      this.listener?.handleResponseMessage(message);
+      this.listener?.handleWeb3ResponseMessage(message);
     } catch {
       this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
         message: 'Had error decrypting',

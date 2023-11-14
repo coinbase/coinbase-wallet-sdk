@@ -157,7 +157,6 @@ export class WalletLinkRelay
     return { session, ui, connection };
   }
 
-    handleResponseMessage: this.handleWeb3ResponseMessage,
   linkedUpdated = (linked: boolean) => {
     this.isLinked = linked;
     const cachedAddresses = this.storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
@@ -541,7 +540,7 @@ export class WalletLinkRelay
     return this.connection.publishEvent(event, message, callWebhook);
   }
 
-  protected handleWeb3ResponseMessage(message: Web3ResponseMessage) {
+  handleWeb3ResponseMessage(message: Web3ResponseMessage) {
     const { response } = message;
     this.diagnostic?.log(EVENTS.WEB3_RESPONSE, {
       eventId: message.id,

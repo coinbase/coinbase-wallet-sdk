@@ -24,7 +24,7 @@ describe('WalletLinkConnection', () => {
       listener: {
         linkedUpdated: jest.fn(),
         connectedUpdated: jest.fn(),
-        handleResponseMessage: jest.fn(),
+        handleWeb3ResponseMessage: jest.fn(),
         chainUpdated: jest.fn(),
         accountUpdated: jest.fn(),
         metadataUpdated: jest.fn(),
