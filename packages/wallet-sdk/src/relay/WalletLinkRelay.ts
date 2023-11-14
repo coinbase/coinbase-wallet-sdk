@@ -2,7 +2,6 @@
 // Licensed under the Apache License, version 2.0
 
 import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
-import { EventListener } from '../connection/EventListener';
 import {
   WalletLinkConnection,
   WalletLinkConnectionUpdateListener,
@@ -67,7 +66,6 @@ export interface WalletLinkRelayOptions {
   relayEventManager: WalletSDKRelayEventManager;
   uiConstructor: (options: Readonly<WalletUIOptions>) => WalletUI;
   diagnosticLogger?: DiagnosticLogger;
-  eventListener?: EventListener;
   reloadOnDisconnect?: boolean;
   enableMobileWalletLink?: boolean;
 }
@@ -113,20 +111,7 @@ export class WalletLinkRelay
 
     this.relayEventManager = options.relayEventManager;
 
-    if (options.diagnosticLogger && options.eventListener) {
-      throw new Error(
-        "Can't have both eventListener and diagnosticLogger options, use only diagnosticLogger"
-      );
-    }
-
-    if (options.eventListener) {
-      this.diagnostic = {
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        log: options.eventListener.onEvent,
-      };
-    } else {
-      this.diagnostic = options.diagnosticLogger;
-    }
+    this.diagnostic = options.diagnosticLogger;
 
     this._reloadOnDisconnect = options.reloadOnDisconnect ?? true;
 
