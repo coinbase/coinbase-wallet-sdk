@@ -84,6 +84,13 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
     this.http = new WalletLinkHTTP(linkAPIUrl, session.id, session.key);
   }
 
+  /**
+   * This section of code implements a reconnect behavior that was ported from a legacy system.
+   * Preserving original comments to maintain the rationale and context provided by the original author.
+   * https://github.com/coinbase/coinbase-wallet-sdk/commit/2087ee4a7d40936cd965011bfacdb76ce3462894#diff-dd71e86752e2c20c0620eb0ba4c4b21674e55ae8afeb005b82906a3821e5023cR84
+   * TOOD: revisit this logic to assess its validity in the current system context.
+   */
+
   // attempt to reconnect every 5 seconds when disconnected
   websocketDisconnected(): void {
     this.diagnostic?.log(EVENTS.DISCONNECTED, {
