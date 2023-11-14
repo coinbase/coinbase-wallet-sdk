@@ -125,6 +125,10 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
       this.fetchUnseenEventsAPI();
     }
 
+    this.diagnostic?.log(EVENTS.CONNECTED, {
+      sessionIdHash: Session.hash(this.session.id),
+    });
+
     // distinctUntilChanged
     if (this.connected !== true) {
       this.connected = true;
