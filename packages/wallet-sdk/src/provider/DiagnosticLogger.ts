@@ -1,22 +1,22 @@
 // DiagnosticLogger for debugging purposes only
 
-import { ConnectionState } from '../relay/walletlink/connection/WalletLinkWebSocket';
-import { ServerMessage } from '../relay/walletlink/type/ServerMessage';
-import { WalletLinkEventData } from '../relay/walletlink/type/WalletLinkEventData';
+import { Web3RequestMessage } from '../relay/Web3RequestMessage';
+import { Web3ResponseMessage } from '../relay/Web3ResponseMessage';
+import { ServerMessage, ServerMessageIsLinkedOK } from './ServerMessage';
 
 export type LogProperties = {
   addresses_length?: number; // number of eth addresses
   alreadyDestroyed?: boolean; // error flag if metadata is already destroyed on resetAndReload
-  eventId?: WalletLinkEventData['id'];
+  eventId?: Web3RequestMessage['id'] | Web3ResponseMessage['id'];
   isSessionMismatched?: string; // storedSession does not match sessionId
-  linked?: ServerMessage<'IsLinkedOK'>['linked'];
+  linked?: ServerMessageIsLinkedOK['linked'];
   message?: string; // error message
   metadata_keys?: string[]; // session config metadata keys
   method?: string; // method throwing error message
   onlineGuests?: number; // number of online guests (should be 0 or 1)
   sessionIdHash?: string; // anonymous session id for debugging specific sessions
   sessionMetadataChange?: string; // change in session metadata
-  state?: ConnectionState;
+  connected?: boolean;
   storedSessionIdHash?: string; // anonymous session id from localStorage
   type?: ServerMessage['type'];
   value?: string; // error value associated with the message
@@ -43,7 +43,6 @@ export const EVENTS = {
   SKIPPED_CLEARING_SESSION: 'walletlink_sdk.skipped_clearing_session',
   GENERAL_ERROR: 'walletlink_sdk.general_error',
   WEB3_REQUEST: 'walletlink_sdk.web3.request',
-  GET_SESSION_CONFIG_REQUEST: 'walletlink_sdk.session_config.request',
   WEB3_REQUEST_PUBLISHED: 'walletlink_sdk.web3.request_published',
   WEB3_RESPONSE: 'walletlink_sdk.web3.response',
   METHOD_NOT_IMPLEMENTED: 'walletlink_sdk.method_not_implemented',
