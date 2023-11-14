@@ -35,7 +35,6 @@ interface WalletLinkWebSocketParams {
 }
 
 export class WalletLinkWebSocket {
-  private destroyed = false;
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
   private webSocket: WebSocket | null = null;
@@ -84,9 +83,7 @@ export class WalletLinkWebSocket {
         return;
       }
       webSocket.onclose = (evt) => {
-        this.isDestroyed
-          ? resolve()
-          : reject(new Error(`websocket error ${evt.code}: ${evt.reason}`));
+        reject(new Error(`websocket error ${evt.code}: ${evt.reason}`));
         this.handleWebsocketClose();
       };
       webSocket.onopen = (_) => {
@@ -99,24 +96,8 @@ export class WalletLinkWebSocket {
 
   private handleWebsocketClose() {
     this.clearWebSocket();
-    // attempt to reconnect every 5 seconds when disconnected
-    // if DISCONNECTED and not destroyed
-    if (!this.destroyed) {
-      const connect = async () => {
-        // wait 5 seconds
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-        // check whether it's destroyed again
-        if (!this.destroyed) {
-          // reconnect
-          this.connect().catch(() => {
-            connect();
-          });
-        }
-      };
-      connect();
 
-      this.listener?.websocketConnectedUpdated(false);
-    }
+    this.listener?.websocketConnectedUpdated(false);
   }
 
   private async handleWebsocketOpen() {
@@ -179,8 +160,6 @@ export class WalletLinkWebSocket {
    * Disconnect from server
    */
   public disconnect(): void {
-    this.destroyed = true;
-
     const { webSocket } = this;
     if (!webSocket) {
       return;
@@ -194,10 +173,6 @@ export class WalletLinkWebSocket {
     } catch {
       // noop
     }
-  }
-
-  get isDestroyed(): boolean {
-    return this.destroyed;
   }
 
   /**
