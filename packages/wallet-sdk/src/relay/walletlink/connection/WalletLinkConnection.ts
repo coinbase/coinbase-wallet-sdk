@@ -5,15 +5,7 @@ import { RelayMessage } from '../relay/RelayMessage';
 import { Session } from '../relay/Session';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../relay/WalletSDKRelayAbstract';
 import { isWeb3ResponseMessage, Web3ResponseMessage } from '../relay/Web3ResponseMessage';
-import { IntNumber } from '../types';
-import {
-  ClientMessage,
-  ClientMessageGetSessionConfig,
-  ClientMessageHostSession,
-  ClientMessageIsLinked,
-  ClientMessagePublishEvent,
-  ClientMessageSetSessionConfig,
-} from './ClientMessage';
+import { ClientMessagePublishEvent, ClientMessageSetSessionConfig } from './ClientMessage';
 import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
 import {
   isServerMessageEvent,
@@ -30,14 +22,7 @@ import {
 import { SessionConfig } from './SessionConfig';
 import { WalletLinkConnectionCipher } from './WalletLinkConnectionCipher';
 import { WalletLinkHTTP } from './WalletLinkHTTP';
-import {
-  ConnectionState,
-  WalletLinkWebSocket,
-  WalletLinkWebSocketUpdateListener,
-} from './WalletLinkWebSocket';
-
-const HEARTBEAT_INTERVAL = 10000;
-const REQUEST_TIMEOUT = 60000;
+import { WalletLinkWebSocket, WalletLinkWebSocketUpdateListener } from './WalletLinkWebSocket';
 
 export interface WalletLinkConnectionUpdateListener {
   linkedUpdated: (linked: boolean) => void;
@@ -50,23 +35,17 @@ export interface WalletLinkConnectionUpdateListener {
 }
 
 interface WalletLinkConnectionParams {
-  session: Session;
   linkAPIUrl: string;
+  session: Session;
   listener: WalletLinkConnectionUpdateListener;
   diagnostic?: DiagnosticLogger;
-  WebSocketClass?: typeof WebSocket;
 }
 
 /**
  * Coinbase Wallet Connection
  */
 export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
-  private destroyed = false;
-  private lastHeartbeatResponse = 0;
-  private nextReqId = IntNumber(1);
-
   private readonly session: Session;
-
   private listener?: WalletLinkConnectionUpdateListener;
   private diagnostic?: DiagnosticLogger;
   private cipher: WalletLinkConnectionCipher;
@@ -75,8 +54,8 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
 
   /**
    * Constructor
-   * @param session Session
    * @param linkAPIUrl Coinbase Wallet link server URL
+   * @param session Session
    * @param listener WalletLinkConnectionUpdateListener
    * @param [WebSocketClass] Custom WebSocket implementation
    */
@@ -88,81 +67,23 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
 
     this.ws = new WalletLinkWebSocket({
       linkAPIUrl,
+      session,
       listener: this,
     });
 
     this.http = new WalletLinkHTTP(linkAPIUrl, session.id, session.key);
   }
-
-  websocketConnectionStateUpdated = async (state: ConnectionState) => {
-    // attempt to reconnect every 5 seconds when disconnected
-    this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
-      state,
-      sessionIdHash: Session.hash(this.session.id),
-    });
-
-    let connected = false;
-    switch (state) {
-      case ConnectionState.DISCONNECTED:
-        // if DISCONNECTED and not destroyed
-        if (!this.destroyed) {
-          const connect = async () => {
-            // wait 5 seconds
-            await new Promise((resolve) => setTimeout(resolve, 5000));
-            // check whether it's destroyed again
-            if (!this.destroyed) {
-              // reconnect
-              this.ws.connect().catch(() => {
-                connect();
-              });
-            }
-          };
-          connect();
-        }
-        break;
-
-      case ConnectionState.CONNECTED:
-        // perform authentication upon connection
-        try {
-          // if CONNECTED, authenticate, and then check link status
-          await this.authenticate();
-          this.sendIsLinked();
-          this.sendGetSessionConfig();
-          connected = true;
-        } catch {
-          /* empty */
-        }
-
-        // send heartbeat every n seconds while connected
-        // if CONNECTED, start the heartbeat timer
-        // first timer event updates lastHeartbeat timestamp
-        // subsequent calls send heartbeat message
-        this.updateLastHeartbeat();
-        setInterval(() => {
-          this.heartbeat();
-        }, HEARTBEAT_INTERVAL);
-
-        // check for unseen events
-        if (this.shouldFetchUnseenEventsOnConnect) {
-          this.fetchUnseenEventsAPI();
-        }
-        break;
-
-      case ConnectionState.CONNECTING:
-        break;
-    }
-
+  websocketConnectedUpdated(connected: boolean): void {
     // distinctUntilChanged
     if (this.connected !== connected) {
       this.connected = connected;
     }
-  };
-
+  }
   websocketMessageReceived = (m: ServerMessage) => {
     switch (m.type) {
       // handle server's heartbeat responses
       case 'Heartbeat':
-        this.updateLastHeartbeat();
+        // this.updateLastHeartbeat();
         return;
 
       // handle link status updates
@@ -198,18 +119,20 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
         break;
       }
     }
-
-    // resolve request promises
-    if (m.id !== undefined) {
-      this.requestResolutions.get(m.id)?.(m);
-    }
   };
+
+  websocketConnected(): void {
+    // check for unseen events
+    if (this.shouldFetchUnseenEventsOnConnect) {
+      this.fetchUnseenEventsAPI();
+    }
+  }
 
   /**
    * Make a connection to the server
    */
   public connect(): void {
-    if (this.destroyed) {
+    if (this.ws.isDestroyed) {
       throw new Error('instance is destroyed');
     }
     this.diagnostic?.log(EVENTS.STARTED_CONNECTING, {
@@ -223,18 +146,12 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
    * instance of WalletSDKConnection
    */
   public destroy(): void {
-    this.destroyed = true;
-
     this.ws.disconnect();
     this.diagnostic?.log(EVENTS.DISCONNECTED, {
       sessionIdHash: Session.hash(this.session.id),
     });
 
     this.listener = undefined;
-  }
-
-  public get isDestroyed(): boolean {
-    return this.destroyed;
   }
 
   /**
@@ -349,14 +266,14 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
    * @returns a Promise that completes when successful
    */
   public async setSessionMetadata(key: string, value: string | null) {
-    const message = ClientMessageSetSessionConfig({
-      id: IntNumber(this.nextReqId++),
+    const message: Omit<ClientMessageSetSessionConfig, 'id'> = {
       sessionId: this.session.id,
       metadata: { [key]: value },
-    });
+      type: 'SetSessionConfig',
+    };
 
     return this.setOnceConnected(async () => {
-      const res = await this.makeRequest<ServerMessageOK | ServerMessageFail>(message);
+      const res = await this.ws.makeRequest<ServerMessageOK | ServerMessageFail>(message);
       if (isServerMessageFail(res)) {
         throw new Error(res.error || 'failed to set session metadata');
       }
@@ -379,96 +296,23 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
       })
     );
 
-    const message = ClientMessagePublishEvent({
-      id: IntNumber(this.nextReqId++),
+    const message: Omit<ClientMessagePublishEvent, 'id'> = {
       sessionId: this.session.id,
       event,
       data,
       callWebhook,
-    });
+      type: 'PublishEvent',
+    };
 
     return this.setOnceLinked(async () => {
-      const res = await this.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(message);
+      const res = await this.ws.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(
+        message
+      );
       if (isServerMessageFail(res)) {
         throw new Error(res.error || 'failed to publish event');
       }
       return res.eventId;
     });
-  }
-
-  private sendData(message: ClientMessage): void {
-    this.ws.sendData(JSON.stringify(message));
-  }
-
-  private updateLastHeartbeat(): void {
-    this.lastHeartbeatResponse = Date.now();
-  }
-
-  private heartbeat(): void {
-    if (Date.now() - this.lastHeartbeatResponse > HEARTBEAT_INTERVAL * 2) {
-      this.ws.disconnect();
-      return;
-    }
-    try {
-      this.ws.sendData('h');
-    } catch {
-      // noop
-    }
-  }
-
-  private requestResolutions = new Map<IntNumber, (_: ServerMessage) => void>();
-
-  private async makeRequest<T extends ServerMessage>(
-    message: ClientMessage,
-    timeout: number = REQUEST_TIMEOUT
-  ): Promise<T> {
-    const reqId = message.id;
-    this.sendData(message);
-
-    // await server message with corresponding id
-    let timeoutId: number;
-    return Promise.race([
-      new Promise<T>((_, reject) => {
-        timeoutId = window.setTimeout(() => {
-          reject(new Error(`request ${reqId} timed out`));
-        }, timeout);
-      }),
-      new Promise<T>((resolve) => {
-        this.requestResolutions.set(reqId, (m) => {
-          clearTimeout(timeoutId); // clear the timeout
-          resolve(m as T);
-          this.requestResolutions.delete(reqId);
-        });
-      }),
-    ]);
-  }
-
-  private async authenticate() {
-    const msg = ClientMessageHostSession({
-      id: IntNumber(this.nextReqId++),
-      sessionId: this.session.id,
-      sessionKey: this.session.key,
-    });
-    const res = await this.makeRequest<ServerMessageOK | ServerMessageFail>(msg);
-    if (isServerMessageFail(res)) {
-      throw new Error(res.error || 'failed to authentcate');
-    }
-  }
-
-  private sendIsLinked(): void {
-    const msg = ClientMessageIsLinked({
-      id: IntNumber(this.nextReqId++),
-      sessionId: this.session.id,
-    });
-    this.sendData(msg);
-  }
-
-  private sendGetSessionConfig(): void {
-    const msg = ClientMessageGetSessionConfig({
-      id: IntNumber(this.nextReqId++),
-      sessionId: this.session.id,
-    });
-    this.sendData(msg);
   }
 
   private handleSessionMetadataUpdated = (metadata: SessionConfig['metadata']) => {
@@ -499,7 +343,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
 
     this.listener?.resetAndReload();
     this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
-      alreadyDestroyed: this.isDestroyed,
+      alreadyDestroyed: this.ws.isDestroyed,
       sessionIdHash: Session.hash(this.session.id),
     });
   };

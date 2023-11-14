@@ -94,8 +94,8 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
 
     const { linkAPIUrl, diagnostic } = this;
     const connection = new WalletLinkConnection({
-      session,
       linkAPIUrl,
+      session,
       diagnostic,
       listener: this,
     });
@@ -103,9 +103,9 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
     const { version, darkMode } = this.options;
     const ui = this.options.uiConstructor({
       linkAPIUrl,
+      session,
       version,
       darkMode,
-      session,
     });
 
     connection.connect();
