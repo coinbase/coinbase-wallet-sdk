@@ -45,6 +45,8 @@ interface WalletLinkConnectionParams {
  * Coinbase Wallet Connection
  */
 export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
+  private destroyed = false;
+
   private readonly session: Session;
   private listener?: WalletLinkConnectionUpdateListener;
   private diagnostic?: DiagnosticLogger;
@@ -75,15 +77,30 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
   }
 
   websocketConnectedUpdated(connected: boolean): void {
-    if (connected) {
-      if (this.shouldFetchUnseenEventsOnConnect) {
+    if (connected === false) {
+      // attempt to reconnect every 5 seconds when disconnected
+      // if DISCONNECTED and not destroyed
+      if (!this.destroyed) {
+        const connect = async () => {
+          // wait 5 seconds
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+          // check whether it's destroyed again
+          if (!this.destroyed) {
+            // reconnect
+            this.ws.connect().catch(() => {
+              connect();
+            });
+          }
+        };
+        connect();
+      } else if (this.shouldFetchUnseenEventsOnConnect) {
         this.fetchUnseenEventsAPI();
       }
-    }
 
-    // distinctUntilChanged
-    if (this.connected !== connected) {
-      this.connected = connected;
+      // distinctUntilChanged
+      if (this.connected !== connected) {
+        this.connected = connected;
+      }
     }
   }
 
@@ -133,7 +150,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
    * Make a connection to the server
    */
   public connect(): void {
-    if (this.ws.isDestroyed) {
+    if (this.isDestroyed) {
       throw new Error('instance is destroyed');
     }
     this.diagnostic?.log(EVENTS.STARTED_CONNECTING, {
@@ -147,12 +164,18 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
    * instance of WalletSDKConnection
    */
   public destroy(): void {
+    this.destroyed = true;
+
     this.ws.disconnect();
     this.diagnostic?.log(EVENTS.DISCONNECTED, {
       sessionIdHash: Session.hash(this.session.id),
     });
 
     this.listener = undefined;
+  }
+
+  public get isDestroyed(): boolean {
+    return this.destroyed;
   }
 
   /**
@@ -344,7 +367,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
 
     this.listener?.resetAndReload();
     this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
-      alreadyDestroyed: this.ws.isDestroyed,
+      alreadyDestroyed: this.isDestroyed,
       sessionIdHash: Session.hash(this.session.id),
     });
   };
