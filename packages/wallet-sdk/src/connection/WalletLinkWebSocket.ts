@@ -31,9 +31,9 @@ export enum ConnectionState {
 
 export interface WalletLinkWebSocketUpdateListener {
   websocketConnectionStateUpdated(state: ConnectionState): void;
-  websocketLinkedUpdated(linked: boolean): void;
-  websocketServerMessageReceived(message: ServerMessage): void;
+  websocketLinkedUpdated(linked: boolean, message: Partial<ServerMessageIsLinkedOK>): void;
   websocketSessionMetadataUpdated(metadata: SessionConfig['metadata']): void;
+  websocketServerMessageReceived(message: ServerMessage): void;
 }
 
 interface WalletLinkWebSocketParams {
