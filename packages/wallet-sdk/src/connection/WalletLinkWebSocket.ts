@@ -20,7 +20,7 @@ import {
 const REQUEST_TIMEOUT = 60000;
 const HEARTBEAT_INTERVAL = 10000;
 
-export enum ConnectionState {
+enum ConnectionState {
   DISCONNECTED,
   CONNECTING,
   CONNECTED,
@@ -83,51 +83,58 @@ export class WalletLinkWebSocket {
       throw new Error('webSocket object is not null');
     }
     return new Promise<void>((resolve, reject) => {
-      let webSocket: WebSocket;
       try {
-        this.webSocket = webSocket = this.createWebSocket();
+        const webSocket = this.createWebSocket();
+        this.connectionStateUpdated(ConnectionState.CONNECTING);
+
+        webSocket.onclose = this.onclose(reject);
+        webSocket.onopen = this.onopen(resolve);
+        webSocket.onmessage = this.onmessage;
+
+        this.webSocket = webSocket;
       } catch (err) {
         reject(err);
-        return;
       }
-      this.websocketConnectionStateUpdated(ConnectionState.CONNECTING);
-      webSocket.onclose = (evt) => {
-        this.clearWebSocket();
-        reject(new Error(`websocket error ${evt.code}: ${evt.reason}`));
-        this.websocketConnectionStateUpdated(ConnectionState.DISCONNECTED);
-      };
-      webSocket.onopen = (_) => {
-        resolve();
-        this.websocketConnectionStateUpdated(ConnectionState.CONNECTED);
-
-        if (this.pendingData.length > 0) {
-          const pending = [...this.pendingData];
-          pending.forEach((m) => this.sendMessage(m));
-          this.pendingData = [];
-        }
-      };
-      webSocket.onmessage = (evt) => {
-        if (evt.data === 'h') {
-          this.listener?.websocketMessageReceived({
-            type: 'Heartbeat',
-          });
-        } else {
-          try {
-            const message = JSON.parse(evt.data) as ServerMessage;
-            this.listener?.websocketMessageReceived(message);
-
-            const m = message as ServerMessage;
-            // resolve request promises
-            if (m.id !== undefined) {
-              this.requestResolutions.get(m.id)?.(m);
-            }
-          } catch {
-            /* empty */
-          }
-        }
-      };
     });
   }
+
+  onclose = (reject: (reason?: Error) => void) => (evt: CloseEvent) => {
+    this.clearWebSocket();
+    reject(new Error(`websocket error ${evt.code}: ${evt.reason}`));
+    this.connectionStateUpdated(ConnectionState.DISCONNECTED);
+  };
+
+  onopen = (resolve: () => void) => () => {
+    resolve();
+    this.connectionStateUpdated(ConnectionState.CONNECTED);
+
+    if (this.pendingData.length > 0) {
+      const pending = [...this.pendingData];
+      pending.forEach((data) => this.sendMessage(data));
+      this.pendingData = [];
+    }
+  };
+
+  onmessage = (evt: MessageEvent) => {
+    if (evt.data === 'h') {
+      this.listener?.websocketMessageReceived({
+        type: 'Heartbeat',
+      });
+    } else {
+      try {
+        const message = JSON.parse(evt.data) as ServerMessage;
+        this.listener?.websocketMessageReceived(message);
+
+        const m = message as ServerMessage;
+        // resolve request promises
+        if (m.id !== undefined) {
+          this.requestResolutions.get(m.id)?.(m);
+        }
+      } catch {
+        /* empty */
+      }
+    }
+  };
 
   /**
    * Disconnect from server
@@ -141,7 +148,7 @@ export class WalletLinkWebSocket {
     }
     this.clearWebSocket();
 
-    this.websocketConnectionStateUpdated(ConnectionState.DISCONNECTED);
+    this.connectionStateUpdated(ConnectionState.DISCONNECTED);
     this.listener = undefined;
 
     try {
@@ -200,7 +207,7 @@ export class WalletLinkWebSocket {
     ]);
   }
 
-  websocketConnectionStateUpdated = async (state: ConnectionState) => {
+  connectionStateUpdated = async (state: ConnectionState) => {
     // attempt to reconnect every 5 seconds when disconnected
     this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
       state,
@@ -210,6 +217,8 @@ export class WalletLinkWebSocket {
     let connected = false;
     switch (state) {
       case ConnectionState.DISCONNECTED:
+        this.clearWebSocket();
+
         // if DISCONNECTED and not destroyed
         if (!this.destroyed) {
           const connect = async () => {
