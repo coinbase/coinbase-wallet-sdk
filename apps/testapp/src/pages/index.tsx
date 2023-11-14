@@ -36,6 +36,7 @@ function MethodsSection({ title, methods }: { title: string; methods: RpcMethod[
               params={rpc.params}
               connected={rpc.connected}
               format={rpc.format}
+              shortcuts={rpc.shortcuts}
             />
           </GridItem>
         ))}

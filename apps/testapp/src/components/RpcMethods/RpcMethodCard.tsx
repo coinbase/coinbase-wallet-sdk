@@ -7,6 +7,7 @@ import {
   FormControl,
   FormErrorMessage,
   Heading,
+  HStack,
   Input,
   InputGroup,
   InputLeftAddon,
@@ -17,7 +18,7 @@ import { useForm } from 'react-hook-form';
 
 import { useCBWSDK } from '../../context/CBWSDKProvider';
 
-export function RpcMethodCard({ connected, format, method, params }) {
+export function RpcMethodCard({ connected, format, method, params, shortcuts }) {
   const [response, setResponse] = React.useState<Record<string, unknown> | string | number | null>(
     null
   );
@@ -83,7 +84,7 @@ export function RpcMethodCard({ connected, format, method, params }) {
               {params.map((param) => {
                 const err = errors[param.key];
                 return (
-                  <FormControl key={param.key} isInvalid={!!err}>
+                  <FormControl key={param.key} isInvalid={!!err} isRequired={param.required}>
                     <InputGroup size="sm">
                       <InputLeftAddon>{param.key}</InputLeftAddon>
                       <Input
@@ -99,7 +100,19 @@ export function RpcMethodCard({ connected, format, method, params }) {
             </VStack>
           </>
         )}
-        <VStack mt={4}>
+        {shortcuts?.length && (
+          <>
+            <Heading as="h3" size="sm" mt={8}>
+              Shortcuts
+            </Heading>
+            <HStack spacing={2} mt={2}>
+              {shortcuts.map((shortcut) => (
+                <Button key={shortcut.key}>{shortcut.key}</Button>
+              ))}
+            </HStack>
+          </>
+        )}
+        <VStack mt={8}>
           {response && (
             <Code as="pre" p={4} wordBreak="break-word" whiteSpace="pre-wrap" w="100%">
               {JSON.stringify(response, null, 2)}

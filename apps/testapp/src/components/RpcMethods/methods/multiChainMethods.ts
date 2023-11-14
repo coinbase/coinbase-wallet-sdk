@@ -13,6 +13,14 @@ const walletSwitchEthereumChain = {
       chainId: `0x${Number(data.chainId).toString(16)}`,
     },
   ],
+  shortcuts: [
+    {
+      key: 'Ethereum',
+      data: {
+        chainId: '1',
+      },
+    },
+  ],
 };
 
 const walletAddEthereumChain = {

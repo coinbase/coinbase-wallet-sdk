@@ -3,4 +3,5 @@ export type RpcMethod = {
   method: string;
   params: Array<{ key: string; required?: boolean }>;
   format?: (data: Record<string, string>) => [Record<string, string>];
+  shortcuts?: Record<string, string>[][];
 };
