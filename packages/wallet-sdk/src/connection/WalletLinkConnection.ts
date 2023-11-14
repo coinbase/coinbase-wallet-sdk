@@ -94,13 +94,14 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
   }
 
   websocketConnected(): void {
-    if (this.shouldFetchUnseenEventsOnConnect) {
-      this.fetchUnseenEventsAPI();
-    }
-
     this.diagnostic?.log(EVENTS.CONNECTED, {
       sessionIdHash: Session.hash(this.session.id),
     });
+
+    // check for unseen events
+    if (this.shouldFetchUnseenEventsOnConnect) {
+      this.fetchUnseenEventsAPI();
+    }
 
     // distinctUntilChanged
     if (this.connected !== true) {
