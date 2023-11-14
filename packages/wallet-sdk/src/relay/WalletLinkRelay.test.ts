@@ -60,10 +60,7 @@ describe('WalletLinkRelay', () => {
 
       const relay = new WalletLinkRelay(options);
 
-      const handleWeb3ResponseMessageSpy = jest.spyOn(
-        (relay as any).listener,
-        'handleResponseMessage'
-      );
+      const handleWeb3ResponseMessageSpy = jest.spyOn(relay, 'handleWeb3ResponseMessage');
 
       (relay as any).connection.ws.incomingDataListener?.(serverMessageEvent);
 
@@ -97,7 +94,7 @@ describe('WalletLinkRelay', () => {
 
       const relay = new WalletLinkRelay(options);
 
-      const metadataUpdatedSpy = jest.spyOn((relay as any).listener, 'metadataUpdated');
+      const metadataUpdatedSpy = jest.spyOn(relay, 'metadataUpdated');
 
       (relay as any).connection.ws.incomingDataListener?.({
         ...sessionConfig,

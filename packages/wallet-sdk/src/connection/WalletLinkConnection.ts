@@ -85,9 +85,8 @@ export class WalletLinkConnection {
   }: WalletLinkConnectionParams) {
     this.session = session;
     this.cipher = new WalletLinkConnectionCipher(session.secret);
-
-    this.listener = listener;
     this.diagnostic = diagnostic;
+    this.listener = listener;
 
     const ws = new WalletLinkWebSocket(`${linkAPIUrl}/rpc`, WebSocketClass);
     ws.setConnectionStateListener(async (state) => {
