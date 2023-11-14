@@ -39,6 +39,7 @@ interface WalletLinkConnectionParams {
   linkAPIUrl: string;
   listener: WalletLinkConnectionUpdateListener;
   diagnostic?: DiagnosticLogger;
+  WebSocketClass?: typeof WebSocket;
 }
 
 /**
@@ -61,7 +62,13 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
    * @param listener WalletLinkConnectionUpdateListener
    * @param [WebSocketClass] Custom WebSocket implementation
    */
-  constructor({ session, linkAPIUrl, listener, diagnostic }: WalletLinkConnectionParams) {
+  constructor({
+    session,
+    linkAPIUrl,
+    listener,
+    diagnostic,
+    WebSocketClass = WebSocket,
+  }: WalletLinkConnectionParams) {
     this.session = session;
     this.cipher = new WalletLinkConnectionCipher(session.secret);
     this.diagnostic = diagnostic;
@@ -70,6 +77,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
     this.ws = new WalletLinkWebSocket({
       linkAPIUrl,
       session,
+      WebSocketClass,
       listener: this,
     });
 
