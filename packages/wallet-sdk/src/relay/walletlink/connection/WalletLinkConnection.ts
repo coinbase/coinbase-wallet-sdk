@@ -79,8 +79,8 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
 
     this.ws = new WalletLinkWebSocket({
       url: `${linkAPIUrl}/rpc`,
-      listener: this,
       WebSocketClass,
+      listener: this,
     });
 
     this.http = new WalletLinkHTTP(linkAPIUrl, sessionId, sessionKey);
@@ -94,51 +94,48 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
     });
 
     let connected = false;
-    switch (state) {
-      case false:
-        // if DISCONNECTED and not destroyed
-        if (!this.destroyed) {
-          const connect = async () => {
-            // wait 5 seconds
-            await new Promise((resolve) => setTimeout(resolve, 5000));
-            // check whether it's destroyed again
-            if (!this.destroyed) {
-              // reconnect
-              this.ws.connect().catch(() => {
-                connect();
-              });
-            }
-          };
-          connect();
-        }
-        break;
 
-      case true:
-        // perform authentication upon connection
-        try {
-          // if CONNECTED, authenticate, and then check link status
-          await this.authenticate();
-          this.sendIsLinked();
-          this.sendGetSessionConfig();
-          connected = true;
-        } catch {
-          /* empty */
-        }
+    if (state === false) {
+      // if DISCONNECTED and not destroyed
+      if (!this.destroyed) {
+        const connect = async () => {
+          // wait 5 seconds
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+          // check whether it's destroyed again
+          if (!this.destroyed) {
+            // reconnect
+            this.ws.connect().catch(() => {
+              connect();
+            });
+          }
+        };
+        connect();
+      }
+    } else {
+      // perform authentication upon connection
+      try {
+        // if CONNECTED, authenticate, and then check link status
+        await this.authenticate();
+        this.sendIsLinked();
+        this.sendGetSessionConfig();
+        connected = true;
+      } catch {
+        /* empty */
+      }
 
-        // send heartbeat every n seconds while connected
-        // if CONNECTED, start the heartbeat timer
-        // first timer event updates lastHeartbeat timestamp
-        // subsequent calls send heartbeat message
-        this.updateLastHeartbeat();
-        setInterval(() => {
-          this.heartbeat();
-        }, HEARTBEAT_INTERVAL);
+      // send heartbeat every n seconds while connected
+      // if CONNECTED, start the heartbeat timer
+      // first timer event updates lastHeartbeat timestamp
+      // subsequent calls send heartbeat message
+      this.updateLastHeartbeat();
+      setInterval(() => {
+        this.heartbeat();
+      }, HEARTBEAT_INTERVAL);
 
-        // check for unseen events
-        if (this.shouldFetchUnseenEventsOnConnect) {
-          this.fetchUnseenEventsAPI();
-        }
-        break;
+      // check for unseen events
+      if (this.shouldFetchUnseenEventsOnConnect) {
+        this.fetchUnseenEventsAPI();
+      }
     }
 
     // distinctUntilChanged
