@@ -33,18 +33,18 @@ interface WalletLinkWebSocketParams {
 }
 
 export class WalletLinkWebSocket {
+  private readonly session: Session;
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
   private webSocket: WebSocket | null = null;
   private pendingData: ClientMessage[] = [];
-
-  private readonly session: Session;
   private listener?: WalletLinkWebSocketUpdateListener;
   private readonly createWebSocket: () => WebSocket;
 
   /**
    * Constructor
    * @param linkAPIUrl Coinbase Wallet link server URL
+   * @param session Session
    * @param listener WalletLinkWebSocketUpdateListener
    * @param [WebSocketClass] Custom WebSocket implementation
    */
@@ -83,27 +83,30 @@ export class WalletLinkWebSocket {
         reject(new Error(`websocket error ${evt.code}: ${evt.reason}`));
         this.listener?.websocketDisconnected();
       };
-      webSocket.onopen = (_) => {
+      webSocket.onopen = async (_) => {
         resolve();
         this.listener?.websocketConnected();
-        this.handleWebsocketOpen();
+
+        try {
+          await this.authenticateUponConnection();
+        } catch {
+          // noop
+        }
+        this.sendHeartbeat();
+        this.sendPendingMessages();
       };
     });
   }
 
-  private async handleWebsocketOpen() {
-    // perform authentication upon connection
-    // const connected = false;
-    try {
-      // if CONNECTED, authenticate, and then check link status
-      await this.authenticate();
-      this.sendIsLinked();
-      this.sendGetSessionConfig();
-      // connected = true;
-    } catch {
-      /* empty */
-    }
+  // perform authentication upon connection
+  private async authenticateUponConnection() {
+    // if CONNECTED, authenticate, and then check link status
+    await this.authenticate();
+    this.sendIsLinked();
+    this.sendGetSessionConfig();
+  }
 
+  private sendHeartbeat() {
     // send heartbeat every n seconds while connected
     // if CONNECTED, start the heartbeat timer
     // first timer event updates lastHeartbeat timestamp
@@ -112,8 +115,6 @@ export class WalletLinkWebSocket {
     setInterval(() => {
       this.heartbeat();
     }, HEARTBEAT_INTERVAL);
-
-    this.sendPendingMessages();
   }
 
   private sendPendingMessages() {
@@ -124,7 +125,7 @@ export class WalletLinkWebSocket {
     }
   }
 
-  onmessage = (evt: MessageEvent) => {
+  private onmessage = (evt: MessageEvent) => {
     if (evt.data === 'h') {
       this.listener?.websocketMessageReceived({
         type: 'Heartbeat',
@@ -132,13 +133,12 @@ export class WalletLinkWebSocket {
     } else {
       try {
         const message = JSON.parse(evt.data) as ServerMessage;
-        this.listener?.websocketMessageReceived(message);
-
         const m = message as ServerMessage;
         // resolve request promises
         if (m.id !== undefined) {
           this.requestResolutions.get(m.id)?.(m);
         }
+        this.listener?.websocketMessageReceived(m);
       } catch {
         /* empty */
       }
