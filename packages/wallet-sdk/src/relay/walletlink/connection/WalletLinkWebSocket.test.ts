@@ -18,17 +18,19 @@ describe('WalletLinkWebSocket', () => {
 
   beforeEach(() => {
     server = new WS('ws://localhost:1234/rpc');
+
+    listener = {
+      websocketConnectionStateUpdated: jest.fn(),
+      websocketLinkedUpdated: jest.fn(),
+      websocketServerMessageReceived: jest.fn(),
+      websocketSessionMetadataUpdated: jest.fn(),
+    };
+
     wlWebsocket = new WalletLinkWebSocket({
       linkAPIUrl: 'http://localhost:1234',
       session,
-      listener: {
-        websocketConnectionStateUpdated: jest.fn(),
-        websocketLinkedUpdated: jest.fn(),
-        websocketServerMessageReceived: jest.fn(),
-        websocketSessionMetadataUpdated: jest.fn(),
-      },
+      listener,
     });
-    listener = (wlWebsocket as any).listener;
   });
 
   afterEach(() => {
