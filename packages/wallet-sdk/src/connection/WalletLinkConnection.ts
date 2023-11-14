@@ -77,6 +77,10 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
   }
 
   websocketDisconnected(): void {
+    this.diagnostic?.log(EVENTS.DISCONNECTED, {
+      sessionIdHash: Session.hash(this.session.id),
+    });
+
     if (this.destroyed) return;
 
     const connect = async () => {
@@ -170,12 +174,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
    */
   public destroy(): void {
     this.destroyed = true;
-
     this.ws.disconnect();
-    this.diagnostic?.log(EVENTS.DISCONNECTED, {
-      sessionIdHash: Session.hash(this.session.id),
-    });
-
     this.listener = undefined;
   }
 
