@@ -84,6 +84,13 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
     this.http = new WalletLinkHTTP(linkAPIUrl, session.id, session.key);
   }
 
+  /**
+   * @param state ConnectionState;
+   * ConnectionState.CONNECTING is used for logging only
+   * TODO:
+   *  Revisit if the logging is necessary.
+   *  If not, deprecate the enum and use boolean instead.
+   */
   websocketConnectionStateUpdated = (state: ConnectionState) => {
     /**
      * This section of code implements a reconnect behavior that was ported from a legacy system.
@@ -136,8 +143,9 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
   }
 
   /**
-   * @param linked
-   * @param msg Only for logging; TODO: revisit if this is necessary.
+   * @param msg Partial<ServerMessageIsLinkedOK>
+   * Only for logging
+   *  TODO: Revisit if this is necessary
    */
   websocketLinkedUpdated = (linked: boolean, msg: Partial<ServerMessageIsLinkedOK>) => {
     this.diagnostic?.log(EVENTS.LINKED, {
