@@ -207,10 +207,6 @@ export class WalletLinkConnection {
     this.listener = undefined;
   }
 
-  public get isDestroyed(): boolean {
-    return this.destroyed;
-  }
-
   /**
    * true if connected and authenticated, else false
    * runs listener when connected status changes
@@ -482,7 +478,7 @@ export class WalletLinkConnection {
 
     this.listener?.resetAndReload();
     this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
-      alreadyDestroyed: this.isDestroyed,
+      alreadyDestroyed: this.destroyed,
       sessionIdHash: Session.hash(this.session.id),
     });
   };
