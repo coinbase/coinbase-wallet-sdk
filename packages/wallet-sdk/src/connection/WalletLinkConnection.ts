@@ -87,9 +87,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
   /**
    * @param state ConnectionState;
    * ConnectionState.CONNECTING is used for logging only
-   * TODO:
-   *  Revisit if the logging is necessary.
-   *  If not, deprecate the enum and use boolean instead.
+   * TODO: Revisit if the logging is necessary. If not, deprecate the enum and use boolean instead.
    */
   websocketConnectionStateUpdated = (state: ConnectionState) => {
     this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
@@ -114,7 +112,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
    * This section of code implements a reconnect behavior that was ported from a legacy system.
    * Preserving original comments to maintain the rationale and context provided by the original author.
    * https://github.com/coinbase/coinbase-wallet-sdk/commit/2087ee4a7d40936cd965011bfacdb76ce3462894#diff-dd71e86752e2c20c0620eb0ba4c4b21674e55ae8afeb005b82906a3821e5023cR84
-   * TOOD: revisit this logic to assess its validity in the current system context.
+   * TOOD: Revisit this logic to assess its validity in the current system context.
    */
   private reconnect = async () => {
     // wait 5 seconds
@@ -143,7 +141,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
   /**
    * @param msg Partial<ServerMessageIsLinkedOK>
    * Only for logging
-   *  TODO: Revisit if this is necessary
+   * TODO: Revisit if this is necessary
    */
   websocketLinkedUpdated = (linked: boolean, msg: Partial<ServerMessageIsLinkedOK>) => {
     this.diagnostic?.log(EVENTS.LINKED, {
@@ -154,6 +152,19 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
     });
 
     this.listener?.linkedUpdated(linked);
+  };
+
+  /**
+   * Only for logging
+   * TODO: Revisit if this is necessary. If not, call handleSessionMetadataUpdated directly.
+   */
+  websocketSessionMetadataUpdated = (metadata: SessionConfig['metadata']) => {
+    this.diagnostic?.log(EVENTS.SESSION_CONFIG_RECEIVED, {
+      sessionIdHash: Session.hash(this.session.id),
+      metadata_keys: metadata ? Object.keys(metadata) : undefined,
+    });
+
+    this.handleSessionMetadataUpdated(metadata);
   };
 
   websocketServerMessageReceived = (m: ServerMessage) => {
@@ -330,12 +341,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
     return this.ws.makeRequestOnceConnected(message);
   }
 
-  websocketSessionMetadataUpdated = (metadata: SessionConfig['metadata']) => {
-    this.diagnostic?.log(EVENTS.SESSION_CONFIG_RECEIVED, {
-      sessionIdHash: Session.hash(this.session.id),
-      metadata_keys: metadata ? Object.keys(metadata) : undefined,
-    });
-
+  private handleSessionMetadataUpdated = (metadata: SessionConfig['metadata']) => {
     if (!metadata) return;
 
     // Map of metadata key to handler function
