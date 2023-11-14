@@ -15,29 +15,29 @@ export interface WalletLinkWebSocketUpdateListener {
 }
 
 interface WalletLinkWebSocketParams {
-  url: string;
+  linkAPIUrl: string;
   listener: WalletLinkWebSocketUpdateListener;
   WebSocketClass?: typeof WebSocket;
 }
 
 export class WalletLinkWebSocket {
-  private readonly url: string;
-  private readonly WebSocketClass: typeof WebSocket;
   private webSocket: WebSocket | null = null;
   private pendingData: string[] = [];
 
   private listener?: WalletLinkWebSocketUpdateListener;
+  private readonly createWebSocket: () => WebSocket;
 
   /**
    * Constructor
-   * @param url WebSocket server URL
+   * @param linkAPIUrl Coinbase Wallet link server URL
    * @param listener WalletLinkWebSocketUpdateListener
    * @param [WebSocketClass] Custom WebSocket implementation
    */
-  constructor({ url, listener, WebSocketClass = WebSocket }: WalletLinkWebSocketParams) {
-    this.url = url.replace(/^http/, 'ws');
+  constructor({ linkAPIUrl, listener, WebSocketClass = WebSocket }: WalletLinkWebSocketParams) {
     this.listener = listener;
-    this.WebSocketClass = WebSocketClass;
+
+    const url = linkAPIUrl.replace(/^http/, 'ws').concat('/rpc');
+    this.createWebSocket = () => new WebSocketClass(url);
   }
 
   /**
@@ -51,7 +51,7 @@ export class WalletLinkWebSocket {
     return new Promise<void>((resolve, reject) => {
       let webSocket: WebSocket;
       try {
-        this.webSocket = webSocket = new this.WebSocketClass(this.url);
+        this.webSocket = webSocket = this.createWebSocket();
       } catch (err) {
         reject(err);
         return;
