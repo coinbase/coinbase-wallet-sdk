@@ -17,7 +17,11 @@ import {
 } from './ServerMessage';
 import { WalletLinkConnectionCipher } from './WalletLinkConnectionCipher';
 import { WalletLinkHTTP } from './WalletLinkHTTP';
-import { WalletLinkWebSocket, WalletLinkWebSocketUpdateListener } from './WalletLinkWebSocket';
+import {
+  ConnectionState,
+  WalletLinkWebSocket,
+  WalletLinkWebSocketUpdateListener,
+} from './WalletLinkWebSocket';
 
 export interface WalletLinkConnectionUpdateListener {
   linkedUpdated: (linked: boolean) => void;
@@ -79,24 +83,32 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
     this.http = new WalletLinkHTTP(linkAPIUrl, session.id, session.key);
   }
 
-  /**
-   * This section of code implements a reconnect behavior that was ported from a legacy system.
-   * Preserving original comments to maintain the rationale and context provided by the original author.
-   * https://github.com/coinbase/coinbase-wallet-sdk/commit/2087ee4a7d40936cd965011bfacdb76ce3462894#diff-dd71e86752e2c20c0620eb0ba4c4b21674e55ae8afeb005b82906a3821e5023cR84
-   * TOOD: revisit this logic to assess its validity in the current system context.
-   */
+  websocketConnectionStateUpdated = (state: ConnectionState) => {
+    /**
+     * This section of code implements a reconnect behavior that was ported from a legacy system.
+     * Preserving original comments to maintain the rationale and context provided by the original author.
+     * https://github.com/coinbase/coinbase-wallet-sdk/commit/2087ee4a7d40936cd965011bfacdb76ce3462894#diff-dd71e86752e2c20c0620eb0ba4c4b21674e55ae8afeb005b82906a3821e5023cR84
+     * TOOD: revisit this logic to assess its validity in the current system context.
+     */
 
-  // attempt to reconnect every 5 seconds when disconnected
-  websocketDisconnected(): void {
-    this.diagnostic?.log(EVENTS.DISCONNECTED, {
+    // attempt to reconnect every 5 seconds when disconnected
+    this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
+      state,
       sessionIdHash: Session.hash(this.session.id),
     });
 
-    // if DISCONNECTED and not destroyed
-    if (this.destroyed) return;
-
-    this.reconnect();
-  }
+    switch (state) {
+      case ConnectionState.DISCONNECTED:
+        if (this.destroyed) return;
+        this.reconnect();
+        break;
+      case ConnectionState.CONNECTED:
+        this.websocketConnected();
+        break;
+      case ConnectionState.CONNECTING:
+        break;
+    }
+  };
 
   private reconnect = async () => {
     // wait 5 seconds
@@ -110,7 +122,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
     }
   };
 
-  websocketConnected(): void {
+  private websocketConnected(): void {
     // check for unseen events
     if (this.shouldFetchUnseenEventsOnConnect) {
       this.fetchUnseenEventsAPI();
@@ -150,7 +162,12 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
    */
   public destroy(): void {
     this.destroyed = true;
+
     this.ws.disconnect();
+    this.diagnostic?.log(EVENTS.DISCONNECTED, {
+      sessionIdHash: Session.hash(this.session.id),
+    });
+
     this.listener = undefined;
   }
 
