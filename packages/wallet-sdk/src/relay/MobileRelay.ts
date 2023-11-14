@@ -75,7 +75,7 @@ export class MobileRelay extends WalletLinkRelay {
   }
 
   // override
-  protected handleWeb3ResponseMessage(message: Web3ResponseMessage) {
+  handleWeb3ResponseMessage(message: Web3ResponseMessage) {
     super.handleWeb3ResponseMessage(message);
 
     if (this._enableMobileWalletLink && this.ui instanceof MobileRelayUI) {

@@ -2,7 +2,6 @@
 // Licensed under the Apache License, version 2.0
 
 import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
-import { EventListener } from '../connection/EventListener';
 import {
   WalletLinkConnection,
   WalletLinkConnectionUpdateListener,
@@ -67,12 +66,14 @@ export interface WalletLinkRelayOptions {
   relayEventManager: WalletSDKRelayEventManager;
   uiConstructor: (options: Readonly<WalletUIOptions>) => WalletUI;
   diagnosticLogger?: DiagnosticLogger;
-  eventListener?: EventListener;
   reloadOnDisconnect?: boolean;
   enableMobileWalletLink?: boolean;
 }
 
-export class WalletLinkRelay extends WalletSDKRelayAbstract {
+export class WalletLinkRelay
+  extends WalletSDKRelayAbstract
+  implements WalletLinkConnectionUpdateListener
+{
   private static accountRequestCallbackIds = new Set<string>();
 
   private readonly linkAPIUrl: string;
@@ -110,20 +111,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
 
     this.relayEventManager = options.relayEventManager;
 
-    if (options.diagnosticLogger && options.eventListener) {
-      throw new Error(
-        "Can't have both eventListener and diagnosticLogger options, use only diagnosticLogger"
-      );
-    }
-
-    if (options.eventListener) {
-      this.diagnostic = {
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        log: options.eventListener.onEvent,
-      };
-    } else {
-      this.diagnostic = options.diagnosticLogger;
-    }
+    this.diagnostic = options.diagnosticLogger;
 
     this._reloadOnDisconnect = options.reloadOnDisconnect ?? true;
 
@@ -133,17 +121,19 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
   public subscribe() {
     const session = Session.load(this.storage) || new Session(this.storage).save();
 
-    const connection = new WalletLinkConnection(
+    const { linkAPIUrl, diagnostic } = this;
+    const connection = new WalletLinkConnection({
       session,
-      this.linkAPIUrl,
-      this.listener,
-      this.diagnostic
-    );
+      linkAPIUrl,
+      diagnostic,
+      listener: this,
+    });
 
+    const { version, darkMode } = this.options;
     const ui = this.options.uiConstructor({
-      linkAPIUrl: this.options.linkAPIUrl,
-      version: this.options.version,
-      darkMode: this.options.darkMode,
+      linkAPIUrl,
+      version,
+      darkMode,
       session,
     });
 
@@ -152,77 +142,73 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
     return { session, ui, connection };
   }
 
-  private listener: WalletLinkConnectionUpdateListener = {
-    handleResponseMessage: this.handleWeb3ResponseMessage,
+  linkedUpdated = (linked: boolean) => {
+    this.isLinked = linked;
+    const cachedAddresses = this.storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
 
-    linkedUpdated: (linked: boolean) => {
-      this.isLinked = linked;
-      const cachedAddresses = this.storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
+    if (linked) {
+      // Only set linked session variable one way
+      this.session.linked = linked;
+    }
 
-      if (linked) {
-        // Only set linked session variable one way
-        this.session.linked = linked;
-      }
+    this.isUnlinkedErrorState = false;
 
-      this.isUnlinkedErrorState = false;
-
-      if (cachedAddresses) {
-        const addresses = cachedAddresses.split(' ') as AddressString[];
-        const wasConnectedViaStandalone = this.storage.getItem('IsStandaloneSigning') === 'true';
-        if (addresses[0] !== '' && !linked && this.session.linked && !wasConnectedViaStandalone) {
-          this.isUnlinkedErrorState = true;
-          const sessionIdHash = this.getSessionIdHash();
-          this.diagnostic?.log(EVENTS.UNLINKED_ERROR_STATE, {
-            sessionIdHash,
-          });
-        }
-      }
-    },
-    metadataUpdated: (key: string, value: string) => {
-      this.storage.setItem(key, value);
-    },
-    chainUpdated: (chainId: string, jsonRpcUrl: string) => {
-      if (
-        this.chainCallbackParams.chainId === chainId &&
-        this.chainCallbackParams.jsonRpcUrl === jsonRpcUrl
-      ) {
-        return;
-      }
-      this.chainCallbackParams = {
-        chainId,
-        jsonRpcUrl,
-      };
-
-      if (this.chainCallback) {
-        this.chainCallback(chainId, jsonRpcUrl);
-      }
-    },
-    accountUpdated: (selectedAddress: string) => {
-      if (this.accountsCallback) {
-        this.accountsCallback([selectedAddress]);
-      }
-
-      if (WalletLinkRelay.accountRequestCallbackIds.size > 0) {
-        // We get the ethereum address from the metadata.  If for whatever
-        // reason we don't get a response via an explicit web3 message
-        // we can still fulfill the eip1102 request.
-        Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach((id) => {
-          const message = Web3ResponseMessage({
-            id,
-            response: RequestEthereumAccountsResponse([selectedAddress as AddressString]),
-          });
-          this.invokeCallback({ ...message, id });
+    if (cachedAddresses) {
+      const addresses = cachedAddresses.split(' ') as AddressString[];
+      const wasConnectedViaStandalone = this.storage.getItem('IsStandaloneSigning') === 'true';
+      if (addresses[0] !== '' && !linked && this.session.linked && !wasConnectedViaStandalone) {
+        this.isUnlinkedErrorState = true;
+        const sessionIdHash = this.getSessionIdHash();
+        this.diagnostic?.log(EVENTS.UNLINKED_ERROR_STATE, {
+          sessionIdHash,
         });
-        WalletLinkRelay.accountRequestCallbackIds.clear();
       }
-    },
-    connectedUpdated: (connected: boolean) => {
-      const { ui } = this;
-      if (ui instanceof WalletLinkRelayUI) {
-        ui.setConnected(connected);
-      }
-    },
-    resetAndReload: this.resetAndReload,
+    }
+  };
+
+  metadataUpdated = (key: string, value: string) => {
+    this.storage.setItem(key, value);
+  };
+
+  chainUpdated = (chainId: string, jsonRpcUrl: string) => {
+    if (
+      this.chainCallbackParams.chainId === chainId &&
+      this.chainCallbackParams.jsonRpcUrl === jsonRpcUrl
+    ) {
+      return;
+    }
+    this.chainCallbackParams = {
+      chainId,
+      jsonRpcUrl,
+    };
+
+    if (this.chainCallback) {
+      this.chainCallback(chainId, jsonRpcUrl);
+    }
+  };
+
+  accountUpdated = (selectedAddress: string) => {
+    if (this.accountsCallback) {
+      this.accountsCallback([selectedAddress]);
+    }
+
+    if (WalletLinkRelay.accountRequestCallbackIds.size > 0) {
+      // We get the ethereum address from the metadata.  If for whatever
+      // reason we don't get a response via an explicit web3 message
+      // we can still fulfill the eip1102 request.
+      Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach((id) => {
+        const message = Web3ResponseMessage({
+          id,
+          response: RequestEthereumAccountsResponse([selectedAddress as AddressString]),
+        });
+        this.invokeCallback({ ...message, id });
+      });
+      WalletLinkRelay.accountRequestCallbackIds.clear();
+    }
+  };
+
+  connectedUpdated = (connected: boolean) => {
+    this.ui.setConnected(connected);
   };
 
   public attachUI() {
@@ -539,7 +525,7 @@ export class WalletLinkRelay extends WalletSDKRelayAbstract {
     return this.connection.publishEvent(event, message, callWebhook);
   }
 
-  protected handleWeb3ResponseMessage(message: Web3ResponseMessage) {
+  handleWeb3ResponseMessage(message: Web3ResponseMessage) {
     const { response } = message;
     this.diagnostic?.log(EVENTS.WEB3_RESPONSE, {
       eventId: message.id,
