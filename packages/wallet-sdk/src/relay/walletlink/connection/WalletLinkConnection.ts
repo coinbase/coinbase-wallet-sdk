@@ -89,7 +89,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
    * ConnectionState.CONNECTING is used for logging only
    * TODO: Revisit if the logging is necessary. If not, deprecate the enum and use boolean instead.
    */
-  websocketConnectionStateUpdated = (state: ConnectionState) => {
+  websocketConnectionStateUpdated = async (state: ConnectionState) => {
     this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
       state,
       sessionIdHash: Session.hash(this.session.id),
