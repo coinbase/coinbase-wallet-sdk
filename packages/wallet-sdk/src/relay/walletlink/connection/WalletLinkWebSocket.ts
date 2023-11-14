@@ -16,9 +16,6 @@ import {
   ServerMessageOK,
 } from './ServerMessage';
 
-const REQUEST_TIMEOUT = 60000;
-const HEARTBEAT_INTERVAL = 10000;
-
 export interface WalletLinkWebSocketUpdateListener {
   websocketConnected(): void;
   websocketDisconnected(): void;
@@ -32,14 +29,18 @@ interface WalletLinkWebSocketParams {
   WebSocketClass?: typeof WebSocket;
 }
 
+const REQUEST_TIMEOUT = 60000;
+const HEARTBEAT_INTERVAL = 10000;
+
 export class WalletLinkWebSocket {
   private readonly session: Session;
-  private lastHeartbeatResponse = 0;
-  private nextReqId = IntNumber(1);
   private webSocket: WebSocket | null = null;
   private pendingData: ClientMessage[] = [];
-  private listener?: WalletLinkWebSocketUpdateListener;
   private readonly createWebSocket: () => WebSocket;
+  private listener?: WalletLinkWebSocketUpdateListener;
+
+  private lastHeartbeatResponse = 0;
+  private nextReqId = IntNumber(1);
 
   /**
    * Constructor
