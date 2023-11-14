@@ -9,7 +9,6 @@ import {
   ClientMessageHostSession,
   ClientMessageIsLinked,
 } from './ClientMessage';
-import { EVENTS } from './DiagnosticLogger';
 import {
   isServerMessageFail,
   ServerMessage,
@@ -25,7 +24,10 @@ import { SessionConfig } from './SessionConfig';
 
 export interface WalletLinkWebSocketUpdateListener {
   websocketConnectionStateUpdated(state: ConnectionState): void;
-  websocketLinkedUpdated(linked: boolean, message: Partial<ServerMessageIsLinkedOK>): void;
+  websocketLinkedUpdated(
+    linked: boolean,
+    message: ServerMessageIsLinkedOK | ServerMessageLinked
+  ): void;
   websocketSessionMetadataUpdated(metadata: SessionConfig['metadata']): void;
   websocketServerMessageReceived(message: ServerMessage): void;
 }
@@ -95,22 +97,15 @@ export class WalletLinkWebSocket {
       this.listener?.websocketConnectionStateUpdated(ConnectionState.CONNECTING);
 
       webSocket.onclose = (evt) => {
-        this.clearWebSocket();
+        this.handleClose();
         reject(new Error(`websocket error ${evt.code}: ${evt.reason}`));
         this.listener?.websocketConnectionStateUpdated(ConnectionState.DISCONNECTED);
       };
 
       webSocket.onopen = async (_) => {
+        this.handleOpen();
         resolve();
         this.listener?.websocketConnectionStateUpdated(ConnectionState.CONNECTED);
-
-        try {
-          await this.authenticateUponConnection();
-        } catch {
-          // noop
-        }
-        this.sendHeartbeat();
-        this.sendPendingMessages();
       };
 
       webSocket.onmessage = this.onmessage;
@@ -123,25 +118,6 @@ export class WalletLinkWebSocket {
       pending.forEach((data) => this.sendMessage(data));
       this.pendingData = [];
     }
-  }
-
-  // perform authentication upon connection
-  private async authenticateUponConnection() {
-    // if CONNECTED, authenticate, and then check link status
-    await this.authenticate();
-    this.sendIsLinked();
-    this.sendGetSessionConfig();
-  }
-
-  private sendHeartbeat() {
-    // send heartbeat every n seconds while connected
-    // if CONNECTED, start the heartbeat timer
-    // first timer event updates lastHeartbeat timestamp
-    // subsequent calls send heartbeat message
-    this.updateLastHeartbeat();
-    setInterval(() => {
-      this.heartbeat();
-    }, HEARTBEAT_INTERVAL);
   }
 
   private onmessage = (evt: MessageEvent) => {
@@ -172,7 +148,7 @@ export class WalletLinkWebSocket {
     if (!webSocket) {
       return;
     }
-    this.clearWebSocket();
+    this.handleClose();
 
     this.listener?.websocketConnectionStateUpdated(ConnectionState.DISCONNECTED);
     this.listener = undefined;
@@ -188,7 +164,7 @@ export class WalletLinkWebSocket {
    * Send data to server
    * @param data text to send
    */
-  sendMessage(message: ClientMessage): void {
+  public sendMessage(message: ClientMessage): void {
     const { webSocket } = this;
     if (!webSocket) {
       this.pendingData.push(message);
@@ -199,7 +175,36 @@ export class WalletLinkWebSocket {
     webSocket.send(data);
   }
 
-  private clearWebSocket(): void {
+  private async handleOpen() {
+    try {
+      await this.authenticateUponConnection();
+    } catch {
+      // noop
+    }
+    this.sendHeartbeat();
+    this.sendPendingMessages();
+  }
+
+  // perform authentication upon connection
+  private async authenticateUponConnection() {
+    // if CONNECTED, authenticate, and then check link status
+    await this.authenticate();
+    this.sendIsLinked();
+    this.sendGetSessionConfig();
+  }
+
+  private sendHeartbeat() {
+    // send heartbeat every n seconds while connected
+    // if CONNECTED, start the heartbeat timer
+    // first timer event updates lastHeartbeat timestamp
+    // subsequent calls send heartbeat message
+    this.updateLastHeartbeat();
+    setInterval(() => {
+      this.heartbeat();
+    }, HEARTBEAT_INTERVAL);
+  }
+
+  private handleClose(): void {
     const { webSocket } = this;
     if (!webSocket) {
       return;
@@ -221,15 +226,10 @@ export class WalletLinkWebSocket {
       // handle link status updates
       case 'IsLinkedOK':
       case 'Linked': {
-        const msg = m as Omit<ServerMessageIsLinkedOK, 'type'> & ServerMessageLinked;
-        this.diagnostic?.log(EVENTS.LINKED, {
-          sessionIdHash: Session.hash(this.session.id),
-          linked: msg.linked,
-          type: m.type,
-          onlineGuests: msg.onlineGuests,
-        });
-
-        this.linked = msg.linked || msg.onlineGuests > 0;
+        const msg = m as ServerMessageIsLinkedOK | ServerMessageLinked;
+        const linked = (msg.type === 'IsLinkedOK' ? msg.linked : false) || msg.onlineGuests > 0;
+        this.listener?.websocketLinkedUpdated(linked, msg);
+        this.linked = linked;
         break;
       }
 
@@ -238,10 +238,6 @@ export class WalletLinkWebSocket {
       case 'SessionConfigUpdated': {
         const msg = m as Omit<ServerMessageGetSessionConfigOK, 'type'> &
           ServerMessageSessionConfigUpdated;
-        this.diagnostic?.log(EVENTS.SESSION_CONFIG_RECEIVED, {
-          sessionIdHash: Session.hash(this.session.id),
-          metadata_keys: msg && msg.metadata ? Object.keys(msg.metadata) : undefined,
-        });
         this.listener?.websocketSessionMetadataUpdated(msg.metadata);
         break;
       }
@@ -264,7 +260,6 @@ export class WalletLinkWebSocket {
   private set linked(linked: boolean) {
     this._linked = linked;
     if (linked) this.onceLinked?.();
-    this.listener?.websocketLinkedUpdated(linked);
   }
 
   /**
