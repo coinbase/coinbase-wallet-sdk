@@ -73,18 +73,20 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
 
     this.http = new WalletLinkHTTP(linkAPIUrl, session.id, session.key);
   }
-  websocketConnectedUpdated(connected: boolean): void {
-    // distinctUntilChanged
-    if (this.connected !== connected) {
-      this.connected = connected;
-    }
 
+  websocketConnectedUpdated(connected: boolean): void {
     if (connected) {
       if (this.shouldFetchUnseenEventsOnConnect) {
         this.fetchUnseenEventsAPI();
       }
     }
+
+    // distinctUntilChanged
+    if (this.connected !== connected) {
+      this.connected = connected;
+    }
   }
+
   websocketMessageReceived = (m: ServerMessage) => {
     switch (m.type) {
       // handle server's heartbeat responses
