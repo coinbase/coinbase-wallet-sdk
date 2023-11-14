@@ -76,31 +76,31 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
     this.http = new WalletLinkHTTP(linkAPIUrl, session.id, session.key);
   }
 
-  websocketConnectedUpdated(connected: boolean): void {
-    if (connected === false) {
-      // attempt to reconnect every 5 seconds when disconnected
-      // if DISCONNECTED and not destroyed
-      if (!this.destroyed) {
-        const connect = async () => {
-          // wait 5 seconds
-          await new Promise((resolve) => setTimeout(resolve, 5000));
-          // check whether it's destroyed again
-          if (!this.destroyed) {
-            // reconnect
-            this.ws.connect().catch(() => {
-              connect();
-            });
-          }
-        };
-        connect();
-      } else if (this.shouldFetchUnseenEventsOnConnect) {
-        this.fetchUnseenEventsAPI();
-      }
+  websocketDisconnected(): void {
+    if (this.destroyed) return;
 
-      // distinctUntilChanged
-      if (this.connected !== connected) {
-        this.connected = connected;
+    const connect = async () => {
+      // wait 5 seconds
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      // check whether it's destroyed again
+      if (!this.destroyed) {
+        // reconnect
+        this.ws.connect().catch(() => {
+          connect();
+        });
       }
+    };
+    connect();
+  }
+
+  websocketConnected(): void {
+    if (this.shouldFetchUnseenEventsOnConnect) {
+      this.fetchUnseenEventsAPI();
+    }
+
+    // distinctUntilChanged
+    if (this.connected !== true) {
+      this.connected = true;
     }
   }
 

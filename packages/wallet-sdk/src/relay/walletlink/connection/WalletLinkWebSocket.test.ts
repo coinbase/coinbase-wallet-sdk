@@ -18,7 +18,8 @@ describe('WalletLinkWebSocket', () => {
       linkAPIUrl: 'http://localhost:1234',
       session,
       listener: {
-        websocketConnectedUpdated: jest.fn(),
+        websocketConnected: jest.fn(),
+        websocketDisconnected: jest.fn(),
         websocketMessageReceived: jest.fn(),
       },
     });
@@ -31,12 +32,12 @@ describe('WalletLinkWebSocket', () => {
 
   describe('is connected', () => {
     test('@connect & @disconnect', async () => {
-      const connectionStateListener = jest.spyOn(listener, 'websocketConnectedUpdated');
+      const websocketConnectedSpy = jest.spyOn(listener, 'websocketConnected');
 
       await wlWebsocket.connect();
       await server.connected;
 
-      expect(connectionStateListener).toHaveBeenCalledWith(true);
+      expect(websocketConnectedSpy).toHaveBeenCalled();
 
       // Sends data
       const webSocketSendMock = jest
@@ -50,8 +51,10 @@ describe('WalletLinkWebSocket', () => {
       expect(webSocketSendMock).toHaveBeenCalled();
 
       // Disconnects
+      const websocketDisconnectedSpy = jest.spyOn(listener, 'websocketDisconnected');
+
       wlWebsocket.disconnect();
-      expect(connectionStateListener).toHaveBeenCalledWith(false);
+      expect(websocketDisconnectedSpy).toHaveBeenCalled();
       // @ts-expect-error test private methods
       expect(wlWebsocket.webSocket).toBe(null);
     });
