@@ -18,20 +18,21 @@ describe('WalletLinkConnection', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
+    listener = {
+      linkedUpdated: jest.fn(),
+      connectedUpdated: jest.fn(),
+      handleWeb3ResponseMessage: jest.fn(),
+      chainUpdated: jest.fn(),
+      accountUpdated: jest.fn(),
+      metadataUpdated: jest.fn(),
+      resetAndReload: jest.fn(),
+    };
+
     connection = new WalletLinkConnection({
       session,
       linkAPIUrl: 'http://link-api-url',
-      listener: {
-        linkedUpdated: jest.fn(),
-        connectedUpdated: jest.fn(),
-        handleWeb3ResponseMessage: jest.fn(),
-        chainUpdated: jest.fn(),
-        accountUpdated: jest.fn(),
-        metadataUpdated: jest.fn(),
-        resetAndReload: jest.fn(),
-      },
+      listener,
     });
-    listener = (connection as any).listener;
   });
 
   describe('handleSessionMetadataUpdated', () => {
