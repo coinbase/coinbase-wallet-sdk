@@ -3,7 +3,11 @@ import WS from 'jest-websocket-mock';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { Session } from '../relay/Session';
 import { IntNumber } from '../types';
-import { WalletLinkWebSocket, WalletLinkWebSocketUpdateListener } from './WalletLinkWebSocket';
+import {
+  ConnectionState,
+  WalletLinkWebSocket,
+  WalletLinkWebSocketUpdateListener,
+} from './WalletLinkWebSocket';
 
 describe('WalletLinkWebSocket', () => {
   const session = new Session(new ScopedLocalStorage('test'));
@@ -18,10 +22,9 @@ describe('WalletLinkWebSocket', () => {
       linkAPIUrl: 'http://localhost:1234',
       session,
       listener: {
-        websocketConnected: jest.fn(),
-        websocketDisconnected: jest.fn(),
-        websocketServerMessageReceived: jest.fn(),
+        websocketConnectionStateUpdated: jest.fn(),
         websocketLinkedUpdated: jest.fn(),
+        websocketServerMessageReceived: jest.fn(),
         websocketSessionMetadataUpdated: jest.fn(),
       },
     });
@@ -34,12 +37,12 @@ describe('WalletLinkWebSocket', () => {
 
   describe('is connected', () => {
     test('@connect & @disconnect', async () => {
-      const websocketConnectedSpy = jest.spyOn(listener, 'websocketConnected');
+      const connectionStateListener = jest.spyOn(listener, 'websocketConnectionStateUpdated');
 
       await wlWebsocket.connect();
       await server.connected;
 
-      expect(websocketConnectedSpy).toHaveBeenCalled();
+      expect(connectionStateListener).toHaveBeenCalledWith(ConnectionState.CONNECTED);
 
       // Sends data
       const webSocketSendMock = jest
@@ -53,10 +56,8 @@ describe('WalletLinkWebSocket', () => {
       expect(webSocketSendMock).toHaveBeenCalled();
 
       // Disconnects
-      const websocketDisconnectedSpy = jest.spyOn(listener, 'websocketDisconnected');
-
       wlWebsocket.disconnect();
-      expect(websocketDisconnectedSpy).toHaveBeenCalled();
+      expect(connectionStateListener).toHaveBeenCalledWith(ConnectionState.DISCONNECTED);
       // @ts-expect-error test private methods
       expect(wlWebsocket.webSocket).toBe(null);
     });
