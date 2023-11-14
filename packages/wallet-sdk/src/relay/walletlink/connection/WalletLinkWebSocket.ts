@@ -85,10 +85,18 @@ export class WalletLinkWebSocket {
     return new Promise<void>((resolve, reject) => {
       try {
         const webSocket = this.createWebSocket();
-        this.connectionStateUpdated(ConnectionState.CONNECTING);
+        this.handleConnectionStateChange(ConnectionState.CONNECTING);
 
-        webSocket.onclose = this.onclose(reject);
-        webSocket.onopen = this.onopen(resolve);
+        webSocket.onclose = (evt: CloseEvent) => {
+          this.handleConnectionStateChange(ConnectionState.DISCONNECTED);
+          this.isDestroyed
+            ? resolve()
+            : reject(new Error(`websocket error ${evt.code}: ${evt.reason}`));
+        };
+        webSocket.onopen = () => {
+          this.handleConnectionStateChange(ConnectionState.CONNECTED);
+          resolve();
+        };
         webSocket.onmessage = this.onmessage;
 
         this.webSocket = webSocket;
@@ -98,21 +106,70 @@ export class WalletLinkWebSocket {
     });
   }
 
-  onclose = (reject: (reason?: Error) => void) => (evt: CloseEvent) => {
-    this.clearWebSocket();
-    reject(new Error(`websocket error ${evt.code}: ${evt.reason}`));
-    this.connectionStateUpdated(ConnectionState.DISCONNECTED);
-  };
+  private handleConnectionStateChange = async (state: ConnectionState) => {
+    this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
+      state,
+      sessionIdHash: Session.hash(this.session.id),
+    });
 
-  onopen = (resolve: () => void) => () => {
-    resolve();
-    this.connectionStateUpdated(ConnectionState.CONNECTED);
+    let connected = false;
+    switch (state) {
+      case ConnectionState.DISCONNECTED:
+        this.clearWebSocket();
 
-    if (this.pendingData.length > 0) {
-      const pending = [...this.pendingData];
-      pending.forEach((data) => this.sendMessage(data));
-      this.pendingData = [];
+        // attempt to reconnect every 5 seconds when disconnected
+        // if DISCONNECTED and not destroyed
+        if (!this.destroyed) {
+          const connect = async () => {
+            // wait 5 seconds
+            await new Promise((resolve) => setTimeout(resolve, 5000));
+            // check whether it's destroyed again
+            if (!this.destroyed) {
+              // reconnect
+              this.connect().catch(() => {
+                connect();
+              });
+            }
+          };
+          connect();
+        }
+        break;
+
+      case ConnectionState.CONNECTED:
+        // perform authentication upon connection
+        try {
+          // if CONNECTED, authenticate, and then check link status
+          await this.authenticate();
+          this.sendIsLinked();
+          this.sendGetSessionConfig();
+          connected = true;
+        } catch {
+          /* empty */
+        }
+
+        // send heartbeat every n seconds while connected
+        // if CONNECTED, start the heartbeat timer
+        // first timer event updates lastHeartbeat timestamp
+        // subsequent calls send heartbeat message
+        this.updateLastHeartbeat();
+        setInterval(() => {
+          this.heartbeat();
+        }, HEARTBEAT_INTERVAL);
+
+        this.listener?.websocketConnected();
+
+        if (this.pendingData.length > 0) {
+          const pending = [...this.pendingData];
+          pending.forEach((data) => this.sendMessage(data));
+          this.pendingData = [];
+        }
+        break;
+
+      case ConnectionState.CONNECTING:
+        break;
     }
+
+    this.listener?.websocketConnectedUpdated(connected);
   };
 
   onmessage = (evt: MessageEvent) => {
@@ -146,8 +203,6 @@ export class WalletLinkWebSocket {
     if (!webSocket) {
       return;
     }
-    this.clearWebSocket();
-
     this.connectionStateUpdated(ConnectionState.DISCONNECTED);
     this.listener = undefined;
 
@@ -213,58 +268,6 @@ export class WalletLinkWebSocket {
       state,
       sessionIdHash: Session.hash(this.session.id),
     });
-
-    let connected = false;
-    switch (state) {
-      case ConnectionState.DISCONNECTED:
-        this.clearWebSocket();
-
-        // if DISCONNECTED and not destroyed
-        if (!this.destroyed) {
-          const connect = async () => {
-            // wait 5 seconds
-            await new Promise((resolve) => setTimeout(resolve, 5000));
-            // check whether it's destroyed again
-            if (!this.destroyed) {
-              // reconnect
-              this.connect().catch(() => {
-                connect();
-              });
-            }
-          };
-          connect();
-        }
-        break;
-
-      case ConnectionState.CONNECTED:
-        // perform authentication upon connection
-        try {
-          // if CONNECTED, authenticate, and then check link status
-          await this.authenticate();
-          this.sendIsLinked();
-          this.sendGetSessionConfig();
-          connected = true;
-        } catch {
-          /* empty */
-        }
-
-        // send heartbeat every n seconds while connected
-        // if CONNECTED, start the heartbeat timer
-        // first timer event updates lastHeartbeat timestamp
-        // subsequent calls send heartbeat message
-        this.updateLastHeartbeat();
-        setInterval(() => {
-          this.heartbeat();
-        }, HEARTBEAT_INTERVAL);
-
-        this.listener?.websocketConnected();
-        break;
-
-      case ConnectionState.CONNECTING:
-        break;
-    }
-
-    this.listener?.websocketConnectedUpdated(connected);
   };
 
   private async authenticate() {
