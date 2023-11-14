@@ -20,7 +20,9 @@ describe('WalletLinkWebSocket', () => {
       listener: {
         websocketConnected: jest.fn(),
         websocketDisconnected: jest.fn(),
-        websocketMessageReceived: jest.fn(),
+        websocketServerMessageReceived: jest.fn(),
+        websocketLinkedUpdated: jest.fn(),
+        websocketSessionMetadataUpdated: jest.fn(),
       },
     });
     listener = (wlWebsocket as any).listener;
@@ -87,13 +89,13 @@ describe('WalletLinkWebSocket', () => {
       });
 
       test('onmessage event emits message', async () => {
-        const incomingDataListener = jest.spyOn(listener, 'websocketMessageReceived');
+        const incomingDataListener = jest.spyOn(listener, 'websocketServerMessageReceived');
 
         await wlWebsocket.connect();
         await server.connected;
 
         const message = {
-          type: 'ServerMessageType',
+          type: 'Event',
           data: 'hello world',
         };
 
@@ -102,7 +104,7 @@ describe('WalletLinkWebSocket', () => {
       });
 
       test('onmessage event emits heartbeat message', async () => {
-        const incomingDataListener = jest.spyOn(listener, 'websocketMessageReceived');
+        const incomingDataListener = jest.spyOn(listener, 'websocketServerMessageReceived');
 
         await wlWebsocket.connect();
         await server.connected;

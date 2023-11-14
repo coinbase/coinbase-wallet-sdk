@@ -9,24 +9,39 @@ import {
   ClientMessageHostSession,
   ClientMessageIsLinked,
 } from './ClientMessage';
+import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
 import {
   isServerMessageFail,
   ServerMessage,
   ServerMessageFail,
+  ServerMessageGetSessionConfigOK,
+  ServerMessageIsLinkedOK,
+  ServerMessageLinked,
   ServerMessageOK,
+  ServerMessagePublishEventOK,
+  ServerMessageSessionConfigUpdated,
 } from './ServerMessage';
 
 export interface WalletLinkWebSocketUpdateListener {
   websocketConnected(): void;
   websocketDisconnected(): void;
-  websocketMessageReceived(message: ServerMessage): void;
+  websocketLinkedUpdated(linked: boolean): void;
+  websocketServerMessageReceived(message: ServerMessage): void;
+  websocketSessionMetadataUpdated(metadata: ServerMessageSessionConfigUpdated['metadata']): void;
 }
 
 interface WalletLinkWebSocketParams {
   linkAPIUrl: string;
   session: Session;
   listener: WalletLinkWebSocketUpdateListener;
+  diagnostic?: DiagnosticLogger;
   WebSocketClass?: typeof WebSocket;
+}
+
+enum ConnectionState {
+  DISCONNECTED,
+  CONNECTING,
+  CONNECTED,
 }
 
 const REQUEST_TIMEOUT = 60000;
@@ -38,6 +53,7 @@ export class WalletLinkWebSocket {
   private pendingData: ClientMessage[] = [];
   private readonly createWebSocket: () => WebSocket;
   private listener?: WalletLinkWebSocketUpdateListener;
+  private diagnostic?: DiagnosticLogger;
 
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
@@ -53,10 +69,12 @@ export class WalletLinkWebSocket {
     linkAPIUrl,
     session,
     listener,
+    diagnostic,
     WebSocketClass = WebSocket,
   }: WalletLinkWebSocketParams) {
     this.session = session;
     this.listener = listener;
+    this.diagnostic = diagnostic;
 
     const url = linkAPIUrl.replace(/^http/, 'ws').concat('/rpc');
     this.createWebSocket = () => new WebSocketClass(url);
@@ -78,15 +96,18 @@ export class WalletLinkWebSocket {
         reject(err);
         return;
       }
+      this.diagnoseConnectionStateUpdate(ConnectionState.CONNECTING);
       webSocket.onmessage = this.onmessage;
       webSocket.onclose = (evt) => {
         this.clearWebSocket();
         reject(new Error(`websocket error ${evt.code}: ${evt.reason}`));
         this.listener?.websocketDisconnected();
+        this.diagnoseConnectionStateUpdate(ConnectionState.DISCONNECTED);
       };
       webSocket.onopen = async (_) => {
         resolve();
         this.listener?.websocketConnected();
+        this.diagnoseConnectionStateUpdate(ConnectionState.CONNECTED);
 
         try {
           await this.authenticateUponConnection();
@@ -98,6 +119,13 @@ export class WalletLinkWebSocket {
       };
     });
   }
+
+  private diagnoseConnectionStateUpdate = (state: ConnectionState) => {
+    this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
+      state,
+      sessionIdHash: Session.hash(this.session.id),
+    });
+  };
 
   // perform authentication upon connection
   private async authenticateUponConnection() {
@@ -128,7 +156,7 @@ export class WalletLinkWebSocket {
 
   private onmessage = (evt: MessageEvent) => {
     if (evt.data === 'h') {
-      this.listener?.websocketMessageReceived({
+      this.listener?.websocketServerMessageReceived({
         type: 'Heartbeat',
       });
     } else {
@@ -139,7 +167,7 @@ export class WalletLinkWebSocket {
         if (m.id !== undefined) {
           this.requestResolutions.get(m.id)?.(m);
         }
-        this.listener?.websocketMessageReceived(m);
+        this.websocketMessageReceived(m);
       } catch {
         /* empty */
       }
@@ -179,6 +207,107 @@ export class WalletLinkWebSocket {
     }
     const data = JSON.stringify(message);
     webSocket.send(data);
+  }
+
+  private clearWebSocket(): void {
+    const { webSocket } = this;
+    if (!webSocket) {
+      return;
+    }
+    this.webSocket = null;
+    webSocket.onclose = null;
+    webSocket.onerror = null;
+    webSocket.onmessage = null;
+    webSocket.onopen = null;
+  }
+
+  websocketMessageReceived = (m: ServerMessage) => {
+    switch (m.type) {
+      // handle server's heartbeat responses
+      case 'Heartbeat':
+        // this.updateLastHeartbeat();
+        return;
+
+      // handle link status updates
+      case 'IsLinkedOK':
+      case 'Linked': {
+        const msg = m as Omit<ServerMessageIsLinkedOK, 'type'> & ServerMessageLinked;
+        this.diagnostic?.log(EVENTS.LINKED, {
+          sessionIdHash: Session.hash(this.session.id),
+          linked: msg.linked,
+          type: m.type,
+          onlineGuests: msg.onlineGuests,
+        });
+
+        this.linked = msg.linked || msg.onlineGuests > 0;
+        break;
+      }
+
+      // handle session config updates
+      case 'GetSessionConfigOK':
+      case 'SessionConfigUpdated': {
+        const msg = m as Omit<ServerMessageGetSessionConfigOK, 'type'> &
+          ServerMessageSessionConfigUpdated;
+        this.diagnostic?.log(EVENTS.SESSION_CONFIG_RECEIVED, {
+          sessionIdHash: Session.hash(this.session.id),
+          metadata_keys: msg && msg.metadata ? Object.keys(msg.metadata) : undefined,
+        });
+        this.listener?.websocketSessionMetadataUpdated(msg.metadata);
+        break;
+      }
+
+      case 'Event': {
+        this.listener?.websocketServerMessageReceived(m);
+        break;
+      }
+    }
+  };
+
+  /**
+   * true if linked (a guest has joined before)
+   * runs listener when linked status changes
+   */
+  private _linked = false;
+  private get linked(): boolean {
+    return this._linked;
+  }
+  private set linked(linked: boolean) {
+    this._linked = linked;
+    if (linked) this.onceLinked?.();
+    this.listener?.websocketLinkedUpdated(linked);
+  }
+
+  /**
+   * Execute once when linked
+   */
+  private onceLinked?: () => void;
+  private setOnceLinked<T>(callback: () => Promise<T>): Promise<T> {
+    return new Promise<T>((resolve) => {
+      if (this.linked) {
+        callback().then(resolve);
+      } else {
+        this.onceLinked = () => {
+          callback().then(resolve);
+          this.onceLinked = undefined;
+        };
+      }
+    });
+  }
+
+  async makeRequestOnceConnected(
+    message: Omit<ClientMessage, 'id'>,
+    timeout: number = REQUEST_TIMEOUT
+  ): Promise<ServerMessagePublishEventOK | ServerMessageFail> {
+    return this.setOnceLinked(async () => {
+      const res = await this.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(
+        message,
+        timeout
+      );
+      if (isServerMessageFail(res)) {
+        throw new Error(res.error || 'failed to publish event');
+      }
+      return res;
+    });
   }
 
   private requestResolutions = new Map<IntNumber, (_: ServerMessage) => void>();
@@ -248,22 +377,6 @@ export class WalletLinkWebSocket {
       this.disconnect();
       return;
     }
-    try {
-      this.webSocket?.send('h');
-    } catch {
-      // noop
-    }
-  }
-
-  private clearWebSocket(): void {
-    const { webSocket } = this;
-    if (!webSocket) {
-      return;
-    }
-    this.webSocket = null;
-    webSocket.onclose = null;
-    webSocket.onerror = null;
-    webSocket.onmessage = null;
-    webSocket.onopen = null;
+    this.webSocket?.send('h');
   }
 }
