@@ -36,7 +36,7 @@ export class WalletLinkWebSocket {
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
   private webSocket: WebSocket | null = null;
-  private pendingMessage: ClientMessage[] = [];
+  private pendingData: ClientMessage[] = [];
 
   private readonly session: Session;
   private listener?: WalletLinkWebSocketUpdateListener;
@@ -113,10 +113,14 @@ export class WalletLinkWebSocket {
       this.heartbeat();
     }, HEARTBEAT_INTERVAL);
 
-    if (this.pendingMessage.length > 0) {
-      const pending = [...this.pendingMessage];
+    this.sendPendingMessages();
+  }
+
+  private sendPendingMessages() {
+    if (this.pendingData.length > 0) {
+      const pending = [...this.pendingData];
       pending.forEach((data) => this.sendMessage(data));
-      this.pendingMessage = [];
+      this.pendingData = [];
     }
   }
 
@@ -168,7 +172,7 @@ export class WalletLinkWebSocket {
   sendMessage(message: ClientMessage): void {
     const { webSocket } = this;
     if (!webSocket) {
-      this.pendingMessage.push(message);
+      this.pendingData.push(message);
       this.connect();
       return;
     }
