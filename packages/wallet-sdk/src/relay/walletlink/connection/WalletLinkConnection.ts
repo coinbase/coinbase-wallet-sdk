@@ -135,6 +135,21 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
     }
   }
 
+  /**
+   * @param linked
+   * @param msg Only for logging; TODO: revisit if this is necessary.
+   */
+  websocketLinkedUpdated = (linked: boolean, msg: Partial<ServerMessageIsLinkedOK>) => {
+    this.diagnostic?.log(EVENTS.LINKED, {
+      sessionIdHash: Session.hash(this.session.id),
+      linked: msg.linked,
+      type: msg.type,
+      onlineGuests: msg.onlineGuests,
+    });
+
+    this.listener?.linkedUpdated(linked);
+  };
+
   websocketServerMessageReceived = (m: ServerMessage) => {
     switch (m.type) {
       case 'Event': {
@@ -143,10 +158,10 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
       }
     }
 
-    // resolve request promises
-    if (m.id !== undefined) {
-      this.requestResolutions.get(m.id)?.(m);
-    }
+    // // resolve request promises
+    // if (m.id !== undefined) {
+    //   this.requestResolutions.get(m.id)?.(m);
+    // }
   };
 
   /**
@@ -207,17 +222,6 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
       }
     });
   }
-
-  websocketLinkedUpdated = (linked: boolean, msg: Partial<ServerMessageIsLinkedOK>) => {
-    this.diagnostic?.log(EVENTS.LINKED, {
-      sessionIdHash: Session.hash(this.session.id),
-      linked: msg.linked,
-      type: msg.type,
-      onlineGuests: msg.onlineGuests,
-    });
-
-    this.listener?.linkedUpdated(linked);
-  };
 
   private async handleIncomingEvent(m: ServerMessage) {
     if (!isServerMessageEvent(m) || m.event !== 'Web3Response') {
