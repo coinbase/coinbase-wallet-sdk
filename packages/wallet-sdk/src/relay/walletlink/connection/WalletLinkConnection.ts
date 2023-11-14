@@ -35,8 +35,8 @@ export interface WalletLinkConnectionUpdateListener {
 }
 
 interface WalletLinkConnectionParams {
-  linkAPIUrl: string;
   session: Session;
+  linkAPIUrl: string;
   listener: WalletLinkConnectionUpdateListener;
   diagnostic?: DiagnosticLogger;
 }
@@ -54,8 +54,8 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
 
   /**
    * Constructor
-   * @param linkAPIUrl Coinbase Wallet link server URL
    * @param session Session
+   * @param linkAPIUrl Coinbase Wallet link server URL
    * @param listener WalletLinkConnectionUpdateListener
    * @param [WebSocketClass] Custom WebSocket implementation
    */
