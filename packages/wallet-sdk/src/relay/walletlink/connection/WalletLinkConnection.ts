@@ -92,14 +92,6 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
    *  If not, deprecate the enum and use boolean instead.
    */
   websocketConnectionStateUpdated = (state: ConnectionState) => {
-    /**
-     * This section of code implements a reconnect behavior that was ported from a legacy system.
-     * Preserving original comments to maintain the rationale and context provided by the original author.
-     * https://github.com/coinbase/coinbase-wallet-sdk/commit/2087ee4a7d40936cd965011bfacdb76ce3462894#diff-dd71e86752e2c20c0620eb0ba4c4b21674e55ae8afeb005b82906a3821e5023cR84
-     * TOOD: revisit this logic to assess its validity in the current system context.
-     */
-
-    // attempt to reconnect every 5 seconds when disconnected
     this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
       state,
       sessionIdHash: Session.hash(this.session.id),
@@ -118,6 +110,12 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
     }
   };
 
+  /**
+   * This section of code implements a reconnect behavior that was ported from a legacy system.
+   * Preserving original comments to maintain the rationale and context provided by the original author.
+   * https://github.com/coinbase/coinbase-wallet-sdk/commit/2087ee4a7d40936cd965011bfacdb76ce3462894#diff-dd71e86752e2c20c0620eb0ba4c4b21674e55ae8afeb005b82906a3821e5023cR84
+   * TOOD: revisit this logic to assess its validity in the current system context.
+   */
   private reconnect = async () => {
     // wait 5 seconds
     await new Promise((resolve) => setTimeout(resolve, 5000));
