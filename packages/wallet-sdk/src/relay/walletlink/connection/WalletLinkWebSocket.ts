@@ -21,9 +21,9 @@ const REQUEST_TIMEOUT = 60000;
 const HEARTBEAT_INTERVAL = 10000;
 
 export interface WalletLinkWebSocketUpdateListener {
+  websocketConnected(): void;
+  websocketDisconnected(): void;
   websocketMessageReceived(message: ServerMessage): void;
-
-  websocketConnectedUpdated(connected: boolean): void;
 }
 
 interface WalletLinkWebSocketParams {
@@ -82,25 +82,21 @@ export class WalletLinkWebSocket {
         reject(err);
         return;
       }
+      webSocket.onmessage = this.onmessage;
       webSocket.onclose = (evt) => {
         this.clearWebSocket();
         reject(new Error(`websocket error ${evt.code}: ${evt.reason}`));
-        this.handleWebsocketClose();
+        this.listener?.websocketDisconnected();
       };
       webSocket.onopen = (_) => {
         resolve();
+        this.listener?.websocketConnected();
         this.handleWebsocketOpen();
       };
-      webSocket.onmessage = this.onmessage;
     });
   }
 
-  private handleWebsocketClose() {
-    this.listener?.websocketConnectedUpdated(false);
-  }
-
   private async handleWebsocketOpen() {
-    this.listener?.websocketConnectedUpdated(true);
     // perform authentication upon connection
     // const connected = false;
     try {
@@ -164,7 +160,7 @@ export class WalletLinkWebSocket {
     }
     this.clearWebSocket();
 
-    this.listener?.websocketConnectedUpdated(false);
+    this.listener?.websocketDisconnected();
     this.listener = undefined;
 
     try {
