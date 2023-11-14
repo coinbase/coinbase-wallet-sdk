@@ -49,7 +49,7 @@ describe('WalletLinkConnection', () => {
         },
       };
 
-      (connection as any).ws.incomingDataListener?.({
+      connection.websocketMessageReceived({
         ...sessionConfig,
         type: 'SessionConfigUpdated',
       });
