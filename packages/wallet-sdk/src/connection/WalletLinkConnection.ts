@@ -13,8 +13,8 @@ import {
   ServerMessage,
   ServerMessageFail,
   ServerMessageOK,
-  ServerMessageSessionConfigUpdated,
 } from './ServerMessage';
+import { SessionConfig } from './SessionConfig';
 import { WalletLinkConnectionCipher } from './WalletLinkConnectionCipher';
 import { WalletLinkHTTP } from './WalletLinkHTTP';
 import {
@@ -307,7 +307,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
     return this.ws.makeRequestOnceConnected(message);
   }
 
-  websocketSessionMetadataUpdated = (metadata: ServerMessageSessionConfigUpdated['metadata']) => {
+  websocketSessionMetadataUpdated = (metadata: SessionConfig['metadata']) => {
     if (!metadata) return;
 
     // Map of metadata key to handler function

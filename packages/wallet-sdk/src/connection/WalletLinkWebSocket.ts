@@ -21,6 +21,7 @@ import {
   ServerMessagePublishEventOK,
   ServerMessageSessionConfigUpdated,
 } from './ServerMessage';
+import { SessionConfig } from './SessionConfig';
 
 export enum ConnectionState {
   DISCONNECTED,
@@ -32,7 +33,7 @@ export interface WalletLinkWebSocketUpdateListener {
   websocketConnectionStateUpdated(state: ConnectionState): void;
   websocketLinkedUpdated(linked: boolean): void;
   websocketServerMessageReceived(message: ServerMessage): void;
-  websocketSessionMetadataUpdated(metadata: ServerMessageSessionConfigUpdated['metadata']): void;
+  websocketSessionMetadataUpdated(metadata: SessionConfig['metadata']): void;
 }
 
 interface WalletLinkWebSocketParams {

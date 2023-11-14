@@ -1,7 +1,7 @@
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { Session } from '../relay/Session';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../relay/WalletSDKRelayAbstract';
-import { ServerMessageSessionConfigUpdated } from './ServerMessage';
+import { SessionConfig } from './SessionConfig';
 import { WalletLinkConnection, WalletLinkConnectionUpdateListener } from './WalletLinkConnection';
 import { WalletLinkConnectionCipher } from './WalletLinkConnectionCipher';
 
@@ -36,9 +36,7 @@ describe('WalletLinkConnection', () => {
   });
 
   describe('handleSessionMetadataUpdated', () => {
-    function invoke_handleSessionMetadataUpdated(
-      metadata: ServerMessageSessionConfigUpdated['metadata']
-    ) {
+    function invoke_handleSessionMetadataUpdated(metadata: SessionConfig['metadata']) {
       connection.websocketSessionMetadataUpdated(metadata);
     }
 
