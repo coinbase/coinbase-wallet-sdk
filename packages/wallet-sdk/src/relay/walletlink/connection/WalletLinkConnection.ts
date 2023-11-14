@@ -78,6 +78,12 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
     if (this.connected !== connected) {
       this.connected = connected;
     }
+
+    if (connected) {
+      if (this.shouldFetchUnseenEventsOnConnect) {
+        this.fetchUnseenEventsAPI();
+      }
+    }
   }
   websocketMessageReceived = (m: ServerMessage) => {
     switch (m.type) {
@@ -120,13 +126,6 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
       }
     }
   };
-
-  websocketConnected(): void {
-    // check for unseen events
-    if (this.shouldFetchUnseenEventsOnConnect) {
-      this.fetchUnseenEventsAPI();
-    }
-  }
 
   /**
    * Make a connection to the server
