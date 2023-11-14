@@ -17,9 +17,9 @@ describe('DiagnosticLogger', () => {
         message: 'a message',
         value: 'a value',
       };
-      diagnostic.log(EVENTS.CONNECTED, logProperties);
+      diagnostic.log(EVENTS.CONNECTED_STATE_CHANGE, logProperties);
 
-      expect(event).toEqual(EVENTS.CONNECTED);
+      expect(event).toEqual(EVENTS.CONNECTED_STATE_CHANGE);
       expect(props).toEqual(logProperties);
     });
   });
