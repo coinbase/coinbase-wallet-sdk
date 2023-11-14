@@ -20,7 +20,6 @@ describe('WalletLinkWebSocket', () => {
       listener: {
         websocketConnectedUpdated: jest.fn(),
         websocketMessageReceived: jest.fn(),
-        websocketConnected: jest.fn(),
       },
     });
     listener = (wlWebsocket as any).listener;
