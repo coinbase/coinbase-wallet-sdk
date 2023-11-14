@@ -9,7 +9,7 @@ import {
   ClientMessageHostSession,
   ClientMessageIsLinked,
 } from './ClientMessage';
-import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
+import { EVENTS } from './DiagnosticLogger';
 import {
   isServerMessageFail,
   ServerMessage,
@@ -22,9 +22,14 @@ import {
   ServerMessageSessionConfigUpdated,
 } from './ServerMessage';
 
+export enum ConnectionState {
+  DISCONNECTED,
+  CONNECTING,
+  CONNECTED,
+}
+
 export interface WalletLinkWebSocketUpdateListener {
-  websocketConnected(): void;
-  websocketDisconnected(): void;
+  websocketConnectionStateUpdated(state: ConnectionState): void;
   websocketLinkedUpdated(linked: boolean): void;
   websocketServerMessageReceived(message: ServerMessage): void;
   websocketSessionMetadataUpdated(metadata: ServerMessageSessionConfigUpdated['metadata']): void;
@@ -34,14 +39,7 @@ interface WalletLinkWebSocketParams {
   linkAPIUrl: string;
   session: Session;
   listener: WalletLinkWebSocketUpdateListener;
-  diagnostic?: DiagnosticLogger;
   WebSocketClass?: typeof WebSocket;
-}
-
-enum ConnectionState {
-  DISCONNECTED,
-  CONNECTING,
-  CONNECTED,
 }
 
 const REQUEST_TIMEOUT = 60000;
@@ -53,7 +51,6 @@ export class WalletLinkWebSocket {
   private pendingData: ClientMessage[] = [];
   private readonly createWebSocket: () => WebSocket;
   private listener?: WalletLinkWebSocketUpdateListener;
-  private diagnostic?: DiagnosticLogger;
 
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
@@ -69,12 +66,10 @@ export class WalletLinkWebSocket {
     linkAPIUrl,
     session,
     listener,
-    diagnostic,
     WebSocketClass = WebSocket,
   }: WalletLinkWebSocketParams) {
     this.session = session;
     this.listener = listener;
-    this.diagnostic = diagnostic;
 
     const url = linkAPIUrl.replace(/^http/, 'ws').concat('/rpc');
     this.createWebSocket = () => new WebSocketClass(url);
@@ -96,18 +91,19 @@ export class WalletLinkWebSocket {
         reject(err);
         return;
       }
-      this.diagnoseConnectionStateUpdate(ConnectionState.CONNECTING);
+      this.listener?.websocketConnectionStateUpdated(ConnectionState.CONNECTING);
+
       webSocket.onmessage = this.onmessage;
+
       webSocket.onclose = (evt) => {
         this.clearWebSocket();
         reject(new Error(`websocket error ${evt.code}: ${evt.reason}`));
-        this.listener?.websocketDisconnected();
-        this.diagnoseConnectionStateUpdate(ConnectionState.DISCONNECTED);
+        this.listener?.websocketConnectionStateUpdated(ConnectionState.DISCONNECTED);
       };
+
       webSocket.onopen = async (_) => {
         resolve();
-        this.listener?.websocketConnected();
-        this.diagnoseConnectionStateUpdate(ConnectionState.CONNECTED);
+        this.listener?.websocketConnectionStateUpdated(ConnectionState.CONNECTED);
 
         try {
           await this.authenticateUponConnection();
@@ -119,13 +115,6 @@ export class WalletLinkWebSocket {
       };
     });
   }
-
-  private diagnoseConnectionStateUpdate = (state: ConnectionState) => {
-    this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
-      state,
-      sessionIdHash: Session.hash(this.session.id),
-    });
-  };
 
   // perform authentication upon connection
   private async authenticateUponConnection() {
@@ -184,7 +173,7 @@ export class WalletLinkWebSocket {
     }
     this.clearWebSocket();
 
-    this.listener?.websocketDisconnected();
+    this.listener?.websocketConnectionStateUpdated(ConnectionState.DISCONNECTED);
     this.listener = undefined;
 
     try {
