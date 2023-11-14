@@ -3,20 +3,24 @@
 
 import { ServerMessage } from './ServerMessage';
 
-export enum ConnectionState {
-  DISCONNECTED,
-  CONNECTED,
+export interface WalletLinkWebSocketUpdateListener {
+  websocketConnectionUpdated(connected: boolean): void;
+  websocketMessageReceived(message: ServerMessage): void;
+}
+
+interface WalletLinkWebSocketParams {
+  url: string;
+  listener: WalletLinkWebSocketUpdateListener;
+  WebSocketClass?: typeof WebSocket;
 }
 
 export class WalletLinkWebSocket {
   private readonly url: string;
+  private readonly WebSocketClass: typeof WebSocket;
   private webSocket: WebSocket | null = null;
   private pendingData: string[] = [];
 
-  private connectionStateListener?: (_: ConnectionState) => void;
-  setConnectionStateListener(listener: (_: ConnectionState) => void): void {
-    this.connectionStateListener = listener;
-  }
+  private listener?: WalletLinkWebSocketUpdateListener;
 
   private incomingDataListener?: (_: ServerMessage) => void;
   setIncomingDataListener(listener: (_: ServerMessage) => void): void {
@@ -28,11 +32,10 @@ export class WalletLinkWebSocket {
    * @param url WebSocket server URL
    * @param [WebSocketClass] Custom WebSocket implementation
    */
-  constructor(
-    url: string,
-    private readonly WebSocketClass: typeof WebSocket = WebSocket
-  ) {
+  constructor({ url, listener, WebSocketClass = WebSocket }: WalletLinkWebSocketParams) {
     this.url = url.replace(/^http/, 'ws');
+    this.listener = listener;
+    this.WebSocketClass = WebSocketClass;
   }
 
   /**
@@ -51,15 +54,14 @@ export class WalletLinkWebSocket {
         reject(err);
         return;
       }
-      this.connectionStateListener?.(ConnectionState.CONNECTING);
       webSocket.onclose = (evt) => {
         this.clearWebSocket();
         reject(new Error(`websocket error ${evt.code}: ${evt.reason}`));
-        this.connectionStateListener?.(ConnectionState.DISCONNECTED);
+        this.listener?.websocketConnectionUpdated(false);
       };
       webSocket.onopen = (_) => {
         resolve();
-        this.connectionStateListener?.(ConnectionState.CONNECTED);
+        this.listener?.websocketConnectionUpdated(true);
 
         if (this.pendingData.length > 0) {
           const pending = [...this.pendingData];
@@ -94,8 +96,8 @@ export class WalletLinkWebSocket {
     }
     this.clearWebSocket();
 
-    this.connectionStateListener?.(ConnectionState.DISCONNECTED);
-    this.connectionStateListener = undefined;
+    this.listener?.websocketConnectionUpdated(false);
+    this.listener = undefined;
     this.incomingDataListener = undefined;
 
     try {

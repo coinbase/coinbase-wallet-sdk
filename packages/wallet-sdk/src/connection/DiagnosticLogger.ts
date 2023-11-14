@@ -3,7 +3,6 @@
 import { Web3RequestMessage } from '../relay/Web3RequestMessage';
 import { Web3ResponseMessage } from '../relay/Web3ResponseMessage';
 import { ServerMessage, ServerMessageIsLinkedOK } from './ServerMessage';
-import { ConnectionState } from './WalletLinkWebSocket';
 
 export type LogProperties = {
   addresses_length?: number; // number of eth addresses
@@ -17,7 +16,7 @@ export type LogProperties = {
   onlineGuests?: number; // number of online guests (should be 0 or 1)
   sessionIdHash?: string; // anonymous session id for debugging specific sessions
   sessionMetadataChange?: string; // change in session metadata
-  state?: ConnectionState;
+  connected?: boolean;
   storedSessionIdHash?: string; // anonymous session id from localStorage
   type?: ServerMessage['type'];
   value?: string; // error value associated with the message

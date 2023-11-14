@@ -30,7 +30,7 @@ import {
 import { SessionConfig } from './SessionConfig';
 import { WalletLinkConnectionCipher } from './WalletLinkConnectionCipher';
 import { WalletLinkHTTP } from './WalletLinkHTTP';
-import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket';
+import { WalletLinkWebSocket, WalletLinkWebSocketUpdateListener } from './WalletLinkWebSocket';
 
 const HEARTBEAT_INTERVAL = 10000;
 const REQUEST_TIMEOUT = 60000;
@@ -48,10 +48,7 @@ export interface WalletLinkConnectionUpdateListener {
 /**
  * Coinbase Wallet Connection
  */
-export class WalletLinkConnection {
-  private ws: WalletLinkWebSocket;
-  private http: WalletLinkHTTP;
-  private cipher: WalletLinkConnectionCipher;
+export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
   private destroyed = false;
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
@@ -80,117 +77,122 @@ export class WalletLinkConnection {
 
     this.listener = listener;
 
-    const ws = new WalletLinkWebSocket(`${linkAPIUrl}/rpc`, WebSocketClass);
-    ws.setConnectionStateListener(async (state) => {
-      // attempt to reconnect every 5 seconds when disconnected
-      this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
-        state,
-        sessionIdHash: Session.hash(sessionId),
-      });
-
-      let connected = false;
-      switch (state) {
-        case ConnectionState.DISCONNECTED:
-          // if DISCONNECTED and not destroyed
-          if (!this.destroyed) {
-            const connect = async () => {
-              // wait 5 seconds
-              await new Promise((resolve) => setTimeout(resolve, 5000));
-              // check whether it's destroyed again
-              if (!this.destroyed) {
-                // reconnect
-                ws.connect().catch(() => {
-                  connect();
-                });
-              }
-            };
-            connect();
-          }
-          break;
-
-        case ConnectionState.CONNECTED:
-          // perform authentication upon connection
-          try {
-            // if CONNECTED, authenticate, and then check link status
-            await this.authenticate();
-            this.sendIsLinked();
-            this.sendGetSessionConfig();
-            connected = true;
-          } catch {
-            /* empty */
-          }
-
-          // send heartbeat every n seconds while connected
-          // if CONNECTED, start the heartbeat timer
-          // first timer event updates lastHeartbeat timestamp
-          // subsequent calls send heartbeat message
-          this.updateLastHeartbeat();
-          setInterval(() => {
-            this.heartbeat();
-          }, HEARTBEAT_INTERVAL);
-
-          // check for unseen events
-          if (this.shouldFetchUnseenEventsOnConnect) {
-            this.fetchUnseenEventsAPI();
-          }
-          break;
-      }
-
-      // distinctUntilChanged
-      if (this.connected !== connected) {
-        this.connected = connected;
-      }
+    this.ws = new WalletLinkWebSocket({
+      url: `${linkAPIUrl}/rpc`,
+      listener: this,
+      WebSocketClass,
     });
-    ws.setIncomingDataListener((m) => {
-      switch (m.type) {
-        // handle server's heartbeat responses
-        case 'Heartbeat':
-          this.updateLastHeartbeat();
-          return;
-
-        // handle link status updates
-        case 'IsLinkedOK':
-        case 'Linked': {
-          const msg = m as Omit<ServerMessageIsLinkedOK, 'type'> & ServerMessageLinked;
-          this.diagnostic?.log(EVENTS.LINKED, {
-            sessionIdHash: Session.hash(sessionId),
-            linked: msg.linked,
-            type: m.type,
-            onlineGuests: msg.onlineGuests,
-          });
-
-          this.linked = msg.linked || msg.onlineGuests > 0;
-          break;
-        }
-
-        // handle session config updates
-        case 'GetSessionConfigOK':
-        case 'SessionConfigUpdated': {
-          const msg = m as Omit<ServerMessageGetSessionConfigOK, 'type'> &
-            ServerMessageSessionConfigUpdated;
-          this.diagnostic?.log(EVENTS.SESSION_CONFIG_RECEIVED, {
-            sessionIdHash: Session.hash(sessionId),
-            metadata_keys: msg && msg.metadata ? Object.keys(msg.metadata) : undefined,
-          });
-          this.handleSessionMetadataUpdated(msg.metadata);
-          break;
-        }
-
-        case 'Event': {
-          this.handleIncomingEvent(m);
-          break;
-        }
-      }
-
-      // resolve request promises
-      if (m.id !== undefined) {
-        this.requestResolutions.get(m.id)?.(m);
-      }
-    });
-    this.ws = ws;
 
     this.http = new WalletLinkHTTP(linkAPIUrl, sessionId, sessionKey);
   }
+
+  websocketConnectionUpdated = async (state: boolean) => {
+    // attempt to reconnect every 5 seconds when disconnected
+    this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
+      connected: state,
+      sessionIdHash: Session.hash(this.session.id),
+    });
+
+    let connected = false;
+    switch (state) {
+      case false:
+        // if DISCONNECTED and not destroyed
+        if (!this.destroyed) {
+          const connect = async () => {
+            // wait 5 seconds
+            await new Promise((resolve) => setTimeout(resolve, 5000));
+            // check whether it's destroyed again
+            if (!this.destroyed) {
+              // reconnect
+              this.ws.connect().catch(() => {
+                connect();
+              });
+            }
+          };
+          connect();
+        }
+        break;
+
+      case true:
+        // perform authentication upon connection
+        try {
+          // if CONNECTED, authenticate, and then check link status
+          await this.authenticate();
+          this.sendIsLinked();
+          this.sendGetSessionConfig();
+          connected = true;
+        } catch {
+          /* empty */
+        }
+
+        // send heartbeat every n seconds while connected
+        // if CONNECTED, start the heartbeat timer
+        // first timer event updates lastHeartbeat timestamp
+        // subsequent calls send heartbeat message
+        this.updateLastHeartbeat();
+        setInterval(() => {
+          this.heartbeat();
+        }, HEARTBEAT_INTERVAL);
+
+        // check for unseen events
+        if (this.shouldFetchUnseenEventsOnConnect) {
+          this.fetchUnseenEventsAPI();
+        }
+        break;
+    }
+
+    // distinctUntilChanged
+    if (this.connected !== connected) {
+      this.connected = connected;
+    }
+  };
+
+  websocketMessageReceived = (m: ServerMessage) => {
+    switch (m.type) {
+      // handle server's heartbeat responses
+      case 'Heartbeat':
+        this.updateLastHeartbeat();
+        return;
+
+      // handle link status updates
+      case 'IsLinkedOK':
+      case 'Linked': {
+        const msg = m as Omit<ServerMessageIsLinkedOK, 'type'> & ServerMessageLinked;
+        this.diagnostic?.log(EVENTS.LINKED, {
+          sessionIdHash: Session.hash(this.session.id),
+          linked: msg.linked,
+          type: m.type,
+          onlineGuests: msg.onlineGuests,
+        });
+
+        this.linked = msg.linked || msg.onlineGuests > 0;
+        break;
+      }
+
+      // handle session config updates
+      case 'GetSessionConfigOK':
+      case 'SessionConfigUpdated': {
+        const msg = m as Omit<ServerMessageGetSessionConfigOK, 'type'> &
+          ServerMessageSessionConfigUpdated;
+        this.diagnostic?.log(EVENTS.SESSION_CONFIG_RECEIVED, {
+          sessionIdHash: Session.hash(this.session.id),
+          metadata_keys: msg && msg.metadata ? Object.keys(msg.metadata) : undefined,
+        });
+        this.handleSessionMetadataUpdated(msg.metadata);
+        break;
+      }
+
+      case 'Event': {
+        this.handleIncomingEvent(m);
+        break;
+      }
+    }
+
+    // resolve request promises
+    if (m.id !== undefined) {
+      this.requestResolutions.get(m.id)?.(m);
+    }
+  };
 
   /**
    * Make a connection to the server
