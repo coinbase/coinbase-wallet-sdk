@@ -1,13 +1,13 @@
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { Session } from '../relay/Session';
-import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../relay/WalletSDKRelayAbstract';
-import { SessionConfig } from './SessionConfig';
+import { Cipher } from '../../../lib/Cipher';
+import { ScopedLocalStorage } from '../../../lib/ScopedLocalStorage';
+import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../../RelayAbstract';
+import { Session } from '../../Session';
+import { SessionConfig } from '../type/SessionConfig';
 import { WalletLinkConnection, WalletLinkConnectionUpdateListener } from './WalletLinkConnection';
-import { WalletLinkConnectionCipher } from './WalletLinkConnectionCipher';
 
 const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`decrypted ${text}`));
 
-jest.spyOn(WalletLinkConnectionCipher.prototype, 'decrypt').mockImplementation(decryptMock);
+jest.spyOn(Cipher.prototype, 'decrypt').mockImplementation(decryptMock);
 
 describe('WalletLinkConnection', () => {
   const session = new Session(new ScopedLocalStorage('test'));
@@ -18,26 +18,49 @@ describe('WalletLinkConnection', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    listener = {
-      linkedUpdated: jest.fn(),
-      connectedUpdated: jest.fn(),
-      handleWeb3ResponseMessage: jest.fn(),
-      chainUpdated: jest.fn(),
-      accountUpdated: jest.fn(),
-      metadataUpdated: jest.fn(),
-      resetAndReload: jest.fn(),
-    };
-
     connection = new WalletLinkConnection({
       session,
       linkAPIUrl: 'http://link-api-url',
-      listener,
+      listener: {
+        linkedUpdated: jest.fn(),
+        connectedUpdated: jest.fn(),
+        handleWeb3ResponseMessage: jest.fn(),
+        chainUpdated: jest.fn(),
+        accountUpdated: jest.fn(),
+        metadataUpdated: jest.fn(),
+        resetAndReload: jest.fn(),
+      },
+    });
+    listener = (connection as any).listener;
+  });
+
+  describe('incomingDataListener', () => {
+    it('should call handleSessionMetadataUpdated when session config is updated', async () => {
+      const handleSessionMetadataUpdatedSpy = jest.spyOn(
+        connection as any,
+        'handleSessionMetadataUpdated'
+      );
+
+      const sessionConfig: SessionConfig = {
+        webhookId: 'webhookId',
+        webhookUrl: 'webhookUrl',
+        metadata: {
+          WalletUsername: 'new username',
+        },
+      };
+
+      connection.websocketMessageReceived({
+        ...sessionConfig,
+        type: 'SessionConfigUpdated',
+      });
+
+      expect(handleSessionMetadataUpdatedSpy).toHaveBeenCalledWith(sessionConfig.metadata);
     });
   });
 
   describe('handleSessionMetadataUpdated', () => {
     function invoke_handleSessionMetadataUpdated(metadata: SessionConfig['metadata']) {
-      connection.websocketSessionMetadataUpdated(metadata);
+      (connection as any).handleSessionMetadataUpdated(metadata);
     }
 
     it('should call listner.metadataUpdated when WalletUsername updated', async () => {

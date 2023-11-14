@@ -1,18 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { ServerMessage } from '../connection/ServerMessage';
-import { SessionConfig } from '../connection/SessionConfig';
-import { WalletLinkConnection } from '../connection/WalletLinkConnection';
-import { WalletLinkConnectionCipher } from '../connection/WalletLinkConnectionCipher';
-import { WalletLinkWebSocket } from '../connection/WalletLinkWebSocket';
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
+import { Cipher } from '../../lib/Cipher';
+import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
+import { WALLET_USER_NAME_KEY } from '../RelayAbstract';
+import { RelayEventManager } from '../RelayEventManager';
+import { WalletLinkConnection } from './connection/WalletLinkConnection';
+import { WalletLinkWebSocket } from './connection/WalletLinkWebSocket';
+import { ServerMessage } from './type/ServerMessage';
+import { SessionConfig } from './type/SessionConfig';
 import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay';
-import { WALLET_USER_NAME_KEY } from './WalletSDKRelayAbstract';
-import { WalletSDKRelayEventManager } from './WalletSDKRelayEventManager';
 
 const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`"decrypted ${text}"`));
 
-jest.spyOn(WalletLinkConnectionCipher.prototype, 'decrypt').mockImplementation(decryptMock);
+jest.spyOn(Cipher.prototype, 'decrypt').mockImplementation(decryptMock);
 
 describe('WalletLinkRelay', () => {
   const options: WalletLinkRelayOptions = {
@@ -20,7 +20,7 @@ describe('WalletLinkRelay', () => {
     version: '0.0.0',
     darkMode: false,
     storage: new ScopedLocalStorage('test'),
-    relayEventManager: new WalletSDKRelayEventManager(),
+    relayEventManager: new RelayEventManager(),
     uiConstructor: jest.fn(),
   };
 
@@ -61,11 +61,10 @@ describe('WalletLinkRelay', () => {
       });
 
       const relay = new WalletLinkRelay(options);
-      const connection: WalletLinkConnection = (relay as any).connection;
 
       const handleWeb3ResponseMessageSpy = jest.spyOn(relay, 'handleWeb3ResponseMessage');
 
-      connection.websocketServerMessageReceived(serverMessageEvent);
+      (relay as any).connection.websocketMessageReceived(serverMessageEvent);
 
       expect(handleWeb3ResponseMessageSpy).toHaveBeenCalledWith(
         JSON.parse(await decryptMock(serverMessageEvent.data))
@@ -74,10 +73,12 @@ describe('WalletLinkRelay', () => {
 
     it('should set isLinked with LinkedListener', async () => {
       const relay = new WalletLinkRelay(options);
-      const connection: WalletLinkConnection = (relay as any).connection;
       expect(relay.isLinked).toBeFalsy();
 
-      connection.websocketLinkedUpdated(true);
+      (relay as any).connection.websocketMessageReceived({
+        type: 'IsLinkedOK',
+        linked: true,
+      });
 
       expect(relay.isLinked).toEqual(true);
     });
@@ -85,55 +86,77 @@ describe('WalletLinkRelay', () => {
 
   describe('setSessionConfigListener', () => {
     it('should update metadata with setSessionConfigListener', async () => {
-      const metadata = {
-        WalletUsername: 'username',
+      const sessionConfig: SessionConfig = {
+        webhookId: 'webhookId',
+        webhookUrl: 'webhookUrl',
+        metadata: {
+          WalletUsername: 'username',
+        },
       };
 
       const relay = new WalletLinkRelay(options);
-      const connection: WalletLinkConnection = (relay as any).connection;
 
       const metadataUpdatedSpy = jest.spyOn(relay, 'metadataUpdated');
 
-      connection.websocketSessionMetadataUpdated(metadata);
+      (relay as any).connection.websocketMessageReceived({
+        ...sessionConfig,
+        type: 'SessionConfigUpdated',
+      });
 
       expect(metadataUpdatedSpy).toHaveBeenCalledWith(
         WALLET_USER_NAME_KEY,
-        await decryptMock(metadata.WalletUsername)
+        await decryptMock(sessionConfig.metadata.WalletUsername)
       );
     });
 
     it('should update chainId and jsonRpcUrl only when distinct', async () => {
       const callback = jest.fn();
       const relay = new WalletLinkRelay(options);
-      const connection: WalletLinkConnection = (relay as any).connection;
       relay.setChainCallback(callback);
 
-      const metadata = {
-        ChainId: 'ChainId',
-        JsonRpcUrl: 'JsonRpcUrl',
+      const sessionConfig: SessionConfig = {
+        webhookId: 'webhookId',
+        webhookUrl: 'webhookUrl',
+        metadata: {
+          ChainId: 'ChainId',
+          JsonRpcUrl: 'JsonRpcUrl',
+        },
       };
 
       // initial chain id and json rpc url
-      connection.websocketSessionMetadataUpdated(metadata);
+      (relay as any).connection.websocketMessageReceived({
+        ...sessionConfig,
+        type: 'GetSessionConfigOK',
+      });
       expect(callback).toHaveBeenCalledWith(
-        await decryptMock(metadata.ChainId),
-        await decryptMock(metadata.JsonRpcUrl)
+        await decryptMock(sessionConfig.metadata.ChainId),
+        await decryptMock(sessionConfig.metadata.JsonRpcUrl)
       );
 
       // same chain id and json rpc url
-      connection.websocketSessionMetadataUpdated(metadata);
+      (relay as any).connection.websocketMessageReceived({
+        ...sessionConfig,
+        type: 'SessionConfigUpdated',
+      });
       expect(callback).toHaveBeenCalledTimes(1); // distinctUntilChanged
 
       // different chain id and json rpc url
-      const newMetadata = {
-        ChainId: 'ChainId2',
-        JsonRpcUrl: 'JsonRpcUrl2',
+      const newSessionConfig = {
+        ...sessionConfig,
+        metadata: {
+          ChainId: 'ChainId2',
+          JsonRpcUrl: 'JsonRpcUrl2',
+        },
       };
-      connection.websocketSessionMetadataUpdated(newMetadata);
+
+      (relay as any).connection.websocketMessageReceived({
+        ...newSessionConfig,
+        type: 'SessionConfigUpdated',
+      });
 
       expect(callback).toHaveBeenCalledWith(
-        await decryptMock(newMetadata.ChainId),
-        await decryptMock(newMetadata.JsonRpcUrl)
+        await decryptMock(newSessionConfig.metadata.ChainId),
+        await decryptMock(newSessionConfig.metadata.JsonRpcUrl)
       );
       expect(callback).toHaveBeenCalledTimes(2);
     });
