@@ -1,13 +1,8 @@
 import WS from 'jest-websocket-mock';
 
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { Session } from '../relay/Session';
 import { IntNumber } from '../types';
-import {
-  ConnectionState,
-  WalletLinkWebSocket,
-  WalletLinkWebSocketUpdateListener,
-} from './WalletLinkWebSocket';
+import { ServerMessage } from './ServerMessage';
+import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket';
 
 describe('WalletLinkWebSocket', () => {
   const session = new Session(new ScopedLocalStorage('test'));
@@ -97,9 +92,10 @@ describe('WalletLinkWebSocket', () => {
         await wlWebsocket.connect();
         await server.connected;
 
-        const message = {
-          type: 'Event',
-          data: 'hello world',
+        const message: ServerMessage = {
+          type: 'OK',
+          id: IntNumber(1),
+          sessionId: '123',
         };
 
         server.send(JSON.stringify(message));
