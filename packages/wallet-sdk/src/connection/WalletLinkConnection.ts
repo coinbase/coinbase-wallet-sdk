@@ -344,18 +344,18 @@ export class WalletLinkConnection {
   /**
    * Publish an event and emit event ID when successful
    * @param event event name
-   * @param unencryptedMessage unencrypted event message
+   * @param unencryptedData unencrypted event data
    * @param callWebhook whether the webhook should be invoked
    * @returns a Promise that emits event ID when successful
    */
   public async publishEvent(
     event: string,
-    unencryptedMessage: WalletLinkEventData,
+    unencryptedData: WalletLinkEventData,
     callWebhook = false
   ) {
     const data = await this.cipher.encrypt(
       JSON.stringify({
-        ...unencryptedMessage,
+        ...unencryptedData,
         origin: location.origin,
         relaySource: window.coinbaseWalletExtension ? 'injected_sdk' : 'sdk',
       })
