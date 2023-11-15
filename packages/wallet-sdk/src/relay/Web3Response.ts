@@ -5,19 +5,19 @@ import { AddressString, HexString, ProviderType } from '../types';
 import { Web3Method } from './Web3Method';
 
 type ErrorResponse = {
-  errorMessage: string;
   errorCode?: number;
+  errorMessage: string;
 };
+
+export function isErrorResponse(response: Web3Response) {
+  return (response as ErrorResponse).errorMessage !== undefined;
+}
 
 export type Web3Response =
   | ({
       method: Web3Method;
       result: unknown;
     } & (
-      | {
-          method: 'requestEthereumAccounts';
-          result: AddressString[];
-        }
       | {
           method: 'connectAndSignIn';
           result: {
@@ -39,6 +39,10 @@ export type Web3Response =
             isApproved: boolean;
             rpcUrl: string;
           };
+        }
+      | {
+          method: 'requestEthereumAccounts';
+          result: AddressString[];
         }
       | {
           method: 'watchAsset';
@@ -78,7 +82,3 @@ export type Web3Response =
         }
     ))
   | ErrorResponse;
-
-export function isErrorResponse(response: Web3Response) {
-  return (response as ErrorResponse).errorMessage !== undefined;
-}
