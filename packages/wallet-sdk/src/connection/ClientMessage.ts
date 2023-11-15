@@ -3,70 +3,41 @@
 
 import { IntNumber } from '../types';
 
-export interface ClientMessage {
-  type: string;
-  id: IntNumber;
-}
+type _ClientMessage =
+  | {
+      type: 'HostSession';
+      id: IntNumber;
+      sessionId: string;
+      sessionKey: string;
+    }
+  | {
+      type: 'IsLinked';
+      id: IntNumber;
+      sessionId: string;
+    }
+  | {
+      type: 'GetSessionConfig';
+      id: IntNumber;
+      sessionId: string;
+    }
+  | {
+      type: 'SetSessionConfig';
+      id: IntNumber;
+      sessionId: string;
+      webhookId?: string | null;
+      webhookUrl?: string | null;
+      metadata?: { [key: string]: string | null };
+    }
+  | {
+      type: 'PublishEvent';
+      id: IntNumber;
+      sessionId: string;
+      event: string;
+      data: string;
+      callWebhook: boolean;
+    };
 
-export interface ClientMessageHostSession extends ClientMessage {
-  type: 'HostSession';
-  sessionId: string;
-  sessionKey: string;
-}
+type Type = _ClientMessage['type'];
+export type ClientMessageType = Type;
 
-export function ClientMessageHostSession(
-  params: Omit<ClientMessageHostSession, 'type'>
-): ClientMessageHostSession {
-  return { type: 'HostSession', ...params };
-}
-
-export interface ClientMessageIsLinked extends ClientMessage {
-  type: 'IsLinked';
-  sessionId: string;
-}
-
-export function ClientMessageIsLinked(
-  params: Omit<ClientMessageIsLinked, 'type'>
-): ClientMessageIsLinked {
-  return { type: 'IsLinked', ...params };
-}
-
-export interface ClientMessageGetSessionConfig extends ClientMessage {
-  type: 'GetSessionConfig';
-  sessionId: string;
-}
-
-export function ClientMessageGetSessionConfig(
-  params: Omit<ClientMessageGetSessionConfig, 'type'>
-): ClientMessageGetSessionConfig {
-  return { type: 'GetSessionConfig', ...params };
-}
-
-export interface ClientMessageSetSessionConfig extends ClientMessage {
-  type: 'SetSessionConfig';
-  id: IntNumber;
-  sessionId: string;
-  webhookId?: string | null;
-  webhookUrl?: string | null;
-  metadata?: { [key: string]: string | null };
-}
-
-export function ClientMessageSetSessionConfig(
-  params: Omit<ClientMessageSetSessionConfig, 'type'>
-): ClientMessageSetSessionConfig {
-  return { type: 'SetSessionConfig', ...params };
-}
-
-export interface ClientMessagePublishEvent extends ClientMessage {
-  type: 'PublishEvent';
-  sessionId: string;
-  event: string;
-  data: string;
-  callWebhook: boolean;
-}
-
-export function ClientMessagePublishEvent(
-  params: Omit<ClientMessagePublishEvent, 'type'>
-): ClientMessagePublishEvent {
-  return { type: 'PublishEvent', ...params };
-}
+export type ClientMessage<T extends Type = Type> = Extract<_ClientMessage, { type: T }>;
