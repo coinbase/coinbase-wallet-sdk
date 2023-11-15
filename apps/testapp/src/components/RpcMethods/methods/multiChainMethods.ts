@@ -1,10 +1,5 @@
 import { RpcMethod } from '../RpcMethod';
 
-const ethChainId = {
-  method: 'eth_chainId',
-  params: [],
-};
-
 const walletSwitchEthereumChain = {
   method: 'wallet_switchEthereumChain',
   params: [{ key: 'chainId', required: true }],
@@ -27,9 +22,9 @@ const walletSwitchEthereumChain = {
       },
     },
     {
-      key: 'Polygon',
+      key: 'Arbitrum',
       data: {
-        chainId: '137',
+        chainId: '42161',
       },
     },
     {
@@ -76,7 +71,7 @@ const walletAddEthereumChain = {
         chainName: 'Harmony Mainnet',
         currencyName: 'ONE',
         currencySymbol: 'ONE',
-        decimals: 18,
+        decimals: '18',
         rpcUrl: 'https://api.harmony.one',
         blockExplorerUrl: 'https://explorer.harmony.one',
         iconUrl: '',
@@ -89,7 +84,7 @@ const walletWatchAsset = {
   method: 'wallet_watchAsset',
   params: [
     { key: 'type', required: true },
-    { key: 'address', required: true },
+    { key: 'contractAddress', required: true },
     { key: 'symbol', required: false },
     { key: 'decimals', required: false },
     { key: 'tokenId', required: false },
@@ -98,7 +93,7 @@ const walletWatchAsset = {
     {
       type: data.type,
       options: {
-        address: data.address,
+        address: data.contractAddress,
         symbol: data.symbol,
         decimals: Number(data.decimals),
         tokenId: data.tokenId,
@@ -110,16 +105,15 @@ const walletWatchAsset = {
       key: 'WONE on Harmony',
       data: {
         type: 'ERC20',
-        address: '0xcf664087a5bb0237a0bad6742852ec6c8d69a27a',
+        contractAddress: '0xcf664087a5bb0237a0bad6742852ec6c8d69a27a',
         symbol: 'WONE',
-        decimals: 18,
+        decimals: '18',
       },
     },
   ],
 };
 
 export const multiChainMethods: RpcMethod[] = [
-  ethChainId,
   walletSwitchEthereumChain,
   walletAddEthereumChain,
   walletWatchAsset,

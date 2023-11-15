@@ -5,6 +5,7 @@ import { EventListenersCard } from '../components/EventListeners/EventListenersC
 import { WIDTH_2XL } from '../components/Layout';
 import { connectionMethods } from '../components/RpcMethods/methods/connectionMethods';
 import { multiChainMethods } from '../components/RpcMethods/methods/multiChainMethods';
+import { sendMethods } from '../components/RpcMethods/methods/sendMethods';
 import { signMessageMethods } from '../components/RpcMethods/methods/signMessageMethods';
 import { RpcMethod } from '../components/RpcMethods/RpcMethod';
 import { RpcMethodCard } from '../components/RpcMethods/RpcMethodCard';
@@ -21,6 +22,7 @@ export default function Home() {
       <MethodsSection title="Wallet Connection" methods={connectionMethods} />
       <MethodsSection title="Switch/Add Chain" methods={multiChainMethods} />
       <MethodsSection title="Sign Message" methods={signMessageMethods} />
+      <MethodsSection title="Send" methods={sendMethods} />
     </Container>
   );
 }
