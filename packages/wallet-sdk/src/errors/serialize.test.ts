@@ -1,14 +1,13 @@
 import { JSONRPCRequest } from '../provider/JSONRPC';
-import { Web3Method } from '../relay/Web3Method';
-import { ErrorResponse } from '../relay/Web3Response';
+import { Web3Response } from '../relay/Web3Response';
 import { standardErrorCodes } from './constants';
 import { standardErrors } from './errors';
 import { serializeError } from './serialize';
 
 describe('serializeError', () => {
   test('with ErrorResponse object', () => {
-    const errorResponse: ErrorResponse = {
-      method: Web3Method.generic,
+    const errorResponse: Web3Response = {
+      method: 'generic',
       errorMessage: 'test ErrorResponse object',
       errorCode: standardErrorCodes.provider.unsupportedMethod,
     };
@@ -78,7 +77,7 @@ describe('serializeError to retrieve the request method', () => {
     const jsonRpcRequest: JSONRPCRequest = {
       jsonrpc: '2.0',
       id: 1,
-      method: Web3Method.requestEthereumAccounts,
+      method: 'requestEthereumAccounts',
       params: [],
     };
 
@@ -86,7 +85,7 @@ describe('serializeError to retrieve the request method', () => {
 
     const serialized = serializeError(error, jsonRpcRequest);
     expect(serialized.code).toEqual(standardErrorCodes.provider.userRejectedRequest);
-    expect(serialized.docUrl).toContain(`method=${Web3Method.requestEthereumAccounts}`);
+    expect(serialized.docUrl).toContain('method=requestEthereumAccounts');
   });
 
   test('with string', () => {
@@ -104,13 +103,13 @@ describe('serializeError to retrieve the request method', () => {
       {
         jsonrpc: '2.0',
         id: 1,
-        method: Web3Method.requestEthereumAccounts,
+        method: 'requestEthereumAccounts',
         params: [],
       },
       {
         jsonrpc: '2.0',
         id: 1,
-        method: Web3Method.signEthereumMessage,
+        method: 'signEthereumMessage',
         params: [],
       },
     ];
@@ -119,6 +118,6 @@ describe('serializeError to retrieve the request method', () => {
 
     const serialized = serializeError(error, jsonRpcRequests);
     expect(serialized.code).toEqual(standardErrorCodes.provider.userRejectedRequest);
-    expect(serialized.docUrl).toContain(`method=${Web3Method.requestEthereumAccounts}`);
+    expect(serialized.docUrl).toContain('method=requestEthereumAccounts');
   });
 });

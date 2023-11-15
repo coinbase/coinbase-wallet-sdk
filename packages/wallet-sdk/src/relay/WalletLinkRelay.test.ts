@@ -53,6 +53,13 @@ describe('WalletLinkRelay', () => {
         data: 'data',
       };
 
+      jest.spyOn(JSON, 'parse').mockImplementation(() => {
+        return {
+          type: 'WEB3_RESPONSE',
+          data: 'decrypted data',
+        };
+      });
+
       const relay = new WalletLinkRelay(options);
 
       const handleWeb3ResponseMessageSpy = jest.spyOn(relay, 'handleWeb3ResponseMessage');

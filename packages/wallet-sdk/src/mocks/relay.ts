@@ -1,26 +1,13 @@
 import { MOCK_ADDERESS, MOCK_TX } from '../fixtures/provider';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { Session } from '../relay/Session';
-import { CancelablePromise, WalletSDKRelayAbstract } from '../relay/WalletSDKRelayAbstract';
-import { Web3Method } from '../relay/Web3Method';
-import {
-  AddEthereumChainResponse,
-  EthereumAddressFromSignedMessageResponse,
-  GenericResponse,
-  RequestEthereumAccountsResponse,
-  ScanQRCodeResponse,
-  SelectProviderResponse,
-  SignEthereumMessageResponse,
-  SignEthereumTransactionResponse,
-  SubmitEthereumTransactionResponse,
-  SwitchEthereumChainResponse,
-  WatchAssetResponse,
-  Web3Response,
-} from '../relay/Web3Response';
+import { WalletSDKRelayAbstract } from '../relay/WalletSDKRelayAbstract';
+import { Web3Method as SupportedWeb3Method, Web3Method } from '../relay/Web3Method';
+import { Web3Response } from '../relay/Web3Response';
 import { AddressString, HexString, ProviderType } from '../types';
 
-function makeMockReturn<T>(returnValue?: T) {
-  return { cancel: () => {}, promise: Promise.resolve(returnValue as T) };
+function makeMockReturn<T extends SupportedWeb3Method>(response: Web3Response<T>) {
+  return { cancel: () => {}, promise: Promise.resolve<Web3Response<T>>(response) };
 }
 
 export class MockRelayClass extends WalletSDKRelayAbstract {
@@ -31,16 +18,16 @@ export class MockRelayClass extends WalletSDKRelayAbstract {
 
   resetAndReload(): void {}
 
-  requestEthereumAccounts(): CancelablePromise<RequestEthereumAccountsResponse> {
-    return makeMockReturn<RequestEthereumAccountsResponse>({
-      method: Web3Method.requestEthereumAccounts,
+  requestEthereumAccounts() {
+    return makeMockReturn({
+      method: 'requestEthereumAccounts',
       result: [AddressString(MOCK_ADDERESS)],
     });
   }
 
-  addEthereumChain(): CancelablePromise<AddEthereumChainResponse> {
-    return makeMockReturn<AddEthereumChainResponse>({
-      method: Web3Method.addEthereumChain,
+  addEthereumChain() {
+    return makeMockReturn({
+      method: 'addEthereumChain',
       result: {
         isApproved: true,
         rpcUrl: 'https://node.ethchain.com',
@@ -48,23 +35,23 @@ export class MockRelayClass extends WalletSDKRelayAbstract {
     });
   }
 
-  watchAsset(): CancelablePromise<WatchAssetResponse> {
-    return makeMockReturn<WatchAssetResponse>({
-      method: Web3Method.watchAsset,
+  watchAsset() {
+    return makeMockReturn({
+      method: 'watchAsset',
       result: true,
     });
   }
 
-  selectProvider(): CancelablePromise<SelectProviderResponse> {
-    return makeMockReturn<SelectProviderResponse>({
-      method: Web3Method.selectProvider,
+  selectProvider() {
+    return makeMockReturn({
+      method: 'selectProvider',
       result: ProviderType.CoinbaseWallet,
     });
   }
 
-  switchEthereumChain(): CancelablePromise<SwitchEthereumChainResponse> {
-    return makeMockReturn<SwitchEthereumChainResponse>({
-      method: Web3Method.switchEthereumChain,
+  switchEthereumChain() {
+    return makeMockReturn({
+      method: 'switchEthereumChain',
       result: {
         isApproved: true,
         rpcUrl: 'https://node.ethchain.com',
@@ -72,54 +59,57 @@ export class MockRelayClass extends WalletSDKRelayAbstract {
     });
   }
 
-  signEthereumMessage(): CancelablePromise<SignEthereumMessageResponse> {
-    return makeMockReturn<SignEthereumMessageResponse>({
-      method: Web3Method.signEthereumMessage,
+  signEthereumMessage() {
+    return makeMockReturn({
+      method: 'signEthereumMessage',
       result: HexString('0x'),
     });
   }
 
-  ethereumAddressFromSignedMessage(): CancelablePromise<EthereumAddressFromSignedMessageResponse> {
-    return makeMockReturn<EthereumAddressFromSignedMessageResponse>({
-      method: Web3Method.ethereumAddressFromSignedMessage,
+  ethereumAddressFromSignedMessage() {
+    return makeMockReturn({
+      method: 'ethereumAddressFromSignedMessage',
       result: AddressString(MOCK_ADDERESS),
     });
   }
 
-  signEthereumTransaction(): CancelablePromise<SignEthereumTransactionResponse> {
-    return makeMockReturn<SignEthereumTransactionResponse>({
-      method: Web3Method.signEthereumTransaction,
+  signEthereumTransaction() {
+    return makeMockReturn({
+      method: 'signEthereumTransaction',
       result: HexString(MOCK_TX),
     });
   }
 
-  signAndSubmitEthereumTransaction(): CancelablePromise<SubmitEthereumTransactionResponse> {
-    return makeMockReturn<SubmitEthereumTransactionResponse>({
-      method: Web3Method.submitEthereumTransaction,
+  signAndSubmitEthereumTransaction() {
+    return makeMockReturn({
+      method: 'submitEthereumTransaction',
       result: HexString(MOCK_TX),
     });
   }
 
-  submitEthereumTransaction(): CancelablePromise<SubmitEthereumTransactionResponse> {
-    return makeMockReturn<SubmitEthereumTransactionResponse>({
-      method: Web3Method.submitEthereumTransaction,
+  submitEthereumTransaction() {
+    return makeMockReturn({
+      method: 'submitEthereumTransaction',
       result: HexString(MOCK_TX),
     });
   }
 
-  scanQRCode(): CancelablePromise<ScanQRCodeResponse> {
-    return makeMockReturn<ScanQRCodeResponse>();
-  }
-
-  genericRequest(): CancelablePromise<GenericResponse> {
-    return makeMockReturn<GenericResponse>({
-      method: Web3Method.generic,
+  scanQRCode() {
+    return makeMockReturn({
+      method: 'scanQRCode',
       result: 'Success',
     });
   }
 
-  sendRequest<_, U extends Web3Response>(): CancelablePromise<U> {
-    return makeMockReturn<U>();
+  genericRequest() {
+    return makeMockReturn({
+      method: 'generic',
+      result: 'Success',
+    });
+  }
+
+  sendRequest<_, T extends Web3Method>() {
+    return { cancel: () => {}, promise: Promise.reject<Web3Response<T>>() };
   }
 
   setAppInfo() {

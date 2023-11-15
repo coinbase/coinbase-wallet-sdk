@@ -526,7 +526,9 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     const relay = await this.initializeRelay();
     const res = await relay.scanQRCode(ensureRegExpString(match)).promise;
     if (isErrorResponse(res)) {
-      throw serializeError(res.errorMessage ?? 'result was not a string', 'scanQRCode');
+      throw serializeError(res.errorMessage, 'scanQRCode');
+    } else if (typeof res.result !== 'string') {
+      throw serializeError('result was not a string', 'scanQRCode');
     }
     return res.result;
   }
@@ -535,7 +537,9 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     const relay = await this.initializeRelay();
     const res = await relay.genericRequest(data, action).promise;
     if (isErrorResponse(res)) {
-      throw serializeError(res.errorMessage ?? 'result was not a string', 'generic');
+      throw serializeError(res.errorMessage, 'generic');
+    } else if (typeof res.result !== 'string') {
+      throw serializeError('result was not a string', 'generic');
     }
     return res.result;
   }
