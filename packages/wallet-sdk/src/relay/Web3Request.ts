@@ -11,9 +11,9 @@ import {
 } from '../types';
 import { Web3Method } from './Web3Method';
 
-export type Web3Request<T extends Web3Method = Web3Method> = Extract<_Web3Request, { method: T }>;
+export type Web3Request<M extends Web3Method = Web3Method> = Extract<_Web3Request, { method: M }>;
 
-export const SupportedWeb3Methods = _Web3Request['method'];
+export type SupportedWeb3Method = Extract<Web3Method, _Web3Request['method']>;
 
 type _Web3Request =
   | {

@@ -3,7 +3,7 @@ import { JSONRPCRequest, JSONRPCResponse } from '../provider/JSONRPC';
 import { AddressString, IntNumber, ProviderType, RegExpString } from '../types';
 import { EthereumTransactionParams } from './EthereumTransactionParams';
 import { Session } from './Session';
-import { Web3Request } from './Web3Request';
+import { SupportedWeb3Method, Web3Request } from './Web3Request';
 import { Web3Response } from './Web3Response';
 
 export const WALLET_USER_NAME_KEY = 'walletUsername';
@@ -68,9 +68,15 @@ export abstract class WalletSDKRelayAbstract {
     params: EthereumTransactionParams
   ): CancelablePromise<Web3Response<'signEthereumTransaction'>>;
 
+  /**
+   * Note: While 'submitEthereumTransaction' would be the appropriate method to use,
+   * we've historically used 'signEthereumTransaction' since its introduction in 2019.
+   * https://github.com/coinbase/coinbase-wallet-sdk/blame/874fb5e63218b85561d56bf7412d1f2fc5b82044/js/src/WalletLinkRelay.ts#L148
+   * To ensure backwards compatibility, we continue to use 'signEthereumTransaction'.
+   */
   abstract signAndSubmitEthereumTransaction(
     params: EthereumTransactionParams
-  ): CancelablePromise<Web3Response<'submitEthereumTransaction'>>;
+  ): CancelablePromise<Web3Response<'signEthereumTransaction'>>;
 
   abstract submitEthereumTransaction(
     signedTransaction: Buffer,
@@ -81,9 +87,9 @@ export abstract class WalletSDKRelayAbstract {
 
   abstract genericRequest(data: object, action: string): CancelablePromise<Web3Response<'generic'>>;
 
-  abstract sendRequest<T extends Web3Request, U extends Web3Response>(
-    request: T
-  ): CancelablePromise<U>;
+  public abstract sendRequest<M extends SupportedWeb3Method>(
+    request: Web3Request<M>
+  ): CancelablePromise<Web3Response<M>>;
 
   abstract setAppInfo(appName: string, appLogoUrl: string | null): void;
 

@@ -4,6 +4,19 @@
 import { RelayMessage } from './RelayMessage';
 import { Web3Response } from './Web3Response';
 
+export interface Web3ResponseMessage<M extends Web3Method = Web3Method>
+  extends RelayMessage<RelayMessageType.WEB3_RESPONSE> {
+  type: RelayMessageType.WEB3_RESPONSE;
+  id: string;
+  response: Web3Response<M>;
+}
+
+export function Web3ResponseMessage<M extends Web3Method>(
+  params: Omit<Web3ResponseMessage<M>, 'type'>
+): Web3ResponseMessage<M> {
+  return { type: RelayMessageType.WEB3_RESPONSE, ...params };
+}
+
 export function Web3ResponseMessage(params: { id: string; response: Web3Response }): RelayMessage {
   return { type: 'WEB3_RESPONSE', ...params };
 }

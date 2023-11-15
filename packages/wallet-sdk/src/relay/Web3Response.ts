@@ -4,12 +4,16 @@
 import { AddressString, HexString, ProviderType } from '../types';
 import { Web3Method } from './Web3Method';
 
+export type Web3Response<M extends Web3Method = Web3Method> =
+  | Extract<_Web3Response, { method: M }>
+  | ErrorResponse;
+
 type ErrorResponse = {
   errorCode?: number;
   errorMessage: string;
 };
 
-export function isErrorResponse(response: Web3Response) {
+export function isErrorResponse(response: Web3Response): response is ErrorResponse {
   return (response as ErrorResponse).errorMessage !== undefined;
 }
 
@@ -80,7 +84,3 @@ type _Web3Response = {
       result: unknown;
     }
 );
-
-export type Web3Response<T extends Web3Method = Web3Method> =
-  | Extract<_Web3Response, { method: T }>
-  | ErrorResponse;
