@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { ServerMessageEvent } from '../connection/ServerMessage';
+import { ServerMessage } from '../connection/ServerMessage';
 import { SessionConfig } from '../connection/SessionConfig';
 import { WalletLinkConnection } from '../connection/WalletLinkConnection';
 import { WalletLinkConnectionCipher } from '../connection/WalletLinkConnectionCipher';
@@ -50,7 +50,7 @@ describe('WalletLinkRelay', () => {
 
   describe('subscribe', () => {
     it('should call handleIncomingEvent', async () => {
-      const serverMessageEvent: ServerMessageEvent = {
+      const serverMessageEvent: ServerMessage = {
         type: 'Event',
         sessionId: 'sessionId',
         eventId: 'eventId',

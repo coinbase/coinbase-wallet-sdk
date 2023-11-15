@@ -6,14 +6,7 @@ import { Session } from '../relay/Session';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../relay/WalletSDKRelayAbstract';
 import { isWeb3ResponseMessage, Web3ResponseMessage } from '../relay/Web3ResponseMessage';
 import { IntNumber } from '../types';
-import {
-  ClientMessage,
-  ClientMessageGetSessionConfig,
-  ClientMessageHostSession,
-  ClientMessageIsLinked,
-  ClientMessagePublishEvent,
-  ClientMessageSetSessionConfig,
-} from './ClientMessage';
+import { ClientMessage } from './ClientMessage';
 import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
 import { ServerMessage, ServerMessageType } from './ServerMessage';
 import { SessionConfig } from './SessionConfig';
@@ -334,14 +327,15 @@ export class WalletLinkConnection {
    * @returns a Promise that completes when successful
    */
   public async setSessionMetadata(key: string, value: string | null) {
-    const message = ClientMessageSetSessionConfig({
+    const message: ClientMessage = {
+      type: 'SetSessionConfig',
       id: IntNumber(this.nextReqId++),
       sessionId: this.session.id,
       metadata: { [key]: value },
-    });
+    };
 
     return this.setOnceConnected(async () => {
-      const res = await this.makeRequest(message);
+      const res = await this.makeRequest<'OK' | 'Fail'>(message);
       if (res.type === 'Fail') {
         throw new Error(res.error || 'failed to set session metadata');
       }
@@ -364,13 +358,14 @@ export class WalletLinkConnection {
       })
     );
 
-    const message = ClientMessagePublishEvent({
+    const message: ClientMessage = {
+      type: 'PublishEvent',
       id: IntNumber(this.nextReqId++),
       sessionId: this.session.id,
       event,
       data,
       callWebhook,
-    });
+    };
 
     return this.setOnceLinked(async () => {
       const res = await this.makeRequest<'PublishEventOK' | 'Fail'>(message);
@@ -429,11 +424,12 @@ export class WalletLinkConnection {
   }
 
   private async authenticate() {
-    const m = ClientMessageHostSession({
+    const m: ClientMessage = {
+      type: 'HostSession',
       id: IntNumber(this.nextReqId++),
       sessionId: this.session.id,
       sessionKey: this.session.key,
-    });
+    };
     const res = await this.makeRequest<'OK' | 'Fail'>(m);
     if (res.type === 'Fail') {
       throw new Error(res.error || 'failed to authentcate');
@@ -441,18 +437,20 @@ export class WalletLinkConnection {
   }
 
   private sendIsLinked(): void {
-    const m = ClientMessageIsLinked({
+    const m: ClientMessage = {
+      type: 'IsLinked',
       id: IntNumber(this.nextReqId++),
       sessionId: this.session.id,
-    });
+    };
     this.sendData(m);
   }
 
   private sendGetSessionConfig(): void {
-    const m = ClientMessageGetSessionConfig({
+    const m: ClientMessage = {
+      type: 'GetSessionConfig',
       id: IntNumber(this.nextReqId++),
       sessionId: this.session.id,
-    });
+    };
     this.sendData(m);
   }
 

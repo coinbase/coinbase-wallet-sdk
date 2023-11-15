@@ -3,7 +3,7 @@
 
 import { IntNumber } from '../types';
 
-type _ClientMessage =
+export type ClientMessage =
   | {
       type: 'HostSession';
       id: IntNumber;
@@ -36,8 +36,3 @@ type _ClientMessage =
       data: string;
       callWebhook: boolean;
     };
-
-type Type = _ClientMessage['type'];
-export type ClientMessageType = Type;
-
-export type ClientMessage<T extends Type = Type> = Extract<_ClientMessage, { type: T }>;
