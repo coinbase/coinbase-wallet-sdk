@@ -3,21 +3,8 @@ import { JSONRPCRequest, JSONRPCResponse } from '../provider/JSONRPC';
 import { AddressString, IntNumber, ProviderType, RegExpString } from '../types';
 import { EthereumTransactionParams } from './EthereumTransactionParams';
 import { Session } from './Session';
-import { Web3Request } from './Web3Request';
-import {
-  AddEthereumChainResponse,
-  EthereumAddressFromSignedMessageResponse,
-  GenericResponse,
-  RequestEthereumAccountsResponse,
-  ScanQRCodeResponse,
-  SelectProviderResponse,
-  SignEthereumMessageResponse,
-  SignEthereumTransactionResponse,
-  SubmitEthereumTransactionResponse,
-  SwitchEthereumChainResponse,
-  WatchAssetResponse,
-  Web3Response,
-} from './Web3Response';
+import { SupportedWeb3Method, Web3Request } from './Web3Request';
+import { Web3Response } from './Web3Response';
 
 export const WALLET_USER_NAME_KEY = 'walletUsername';
 export const LOCAL_STORAGE_ADDRESSES_KEY = 'Addresses';
@@ -31,7 +18,7 @@ export type CancelablePromise<T> = {
 export abstract class WalletSDKRelayAbstract {
   abstract resetAndReload(): void;
 
-  abstract requestEthereumAccounts(): CancelablePromise<RequestEthereumAccountsResponse>;
+  abstract requestEthereumAccounts(): CancelablePromise<Web3Response<'requestEthereumAccounts'>>;
 
   abstract addEthereumChain(
     chainId: string,
@@ -44,7 +31,7 @@ export abstract class WalletSDKRelayAbstract {
       symbol: string;
       decimals: number;
     }
-  ): CancelablePromise<AddEthereumChainResponse>;
+  ): CancelablePromise<Web3Response<'addEthereumChain'>>;
 
   abstract watchAsset(
     type: string,
@@ -53,50 +40,51 @@ export abstract class WalletSDKRelayAbstract {
     decimals?: number,
     image?: string,
     chainId?: string
-  ): CancelablePromise<WatchAssetResponse>;
+  ): CancelablePromise<Web3Response<'watchAsset'>>;
 
   abstract selectProvider(
     providerOptions: ProviderType[]
-  ): CancelablePromise<SelectProviderResponse>;
+  ): CancelablePromise<Web3Response<'selectProvider'>>;
 
   abstract switchEthereumChain(
     chainId: string,
     address?: string
-  ): CancelablePromise<SwitchEthereumChainResponse>;
+  ): CancelablePromise<Web3Response<'switchEthereumChain'>>;
 
   abstract signEthereumMessage(
     message: Buffer,
     address: AddressString,
     addPrefix: boolean,
     typedDataJson?: string | null
-  ): CancelablePromise<SignEthereumMessageResponse>;
+  ): CancelablePromise<Web3Response<'signEthereumMessage'>>;
 
   abstract ethereumAddressFromSignedMessage(
     message: Buffer,
     signature: Buffer,
     addPrefix: boolean
-  ): CancelablePromise<EthereumAddressFromSignedMessageResponse>;
+  ): CancelablePromise<Web3Response<'ethereumAddressFromSignedMessage'>>;
 
   abstract signEthereumTransaction(
     params: EthereumTransactionParams
-  ): CancelablePromise<SignEthereumTransactionResponse>;
+  ): CancelablePromise<Web3Response<'signEthereumTransaction'>>;
 
   abstract signAndSubmitEthereumTransaction(
     params: EthereumTransactionParams
-  ): CancelablePromise<SubmitEthereumTransactionResponse>;
+  ): CancelablePromise<Web3Response<'submitEthereumTransaction'>>;
 
   abstract submitEthereumTransaction(
     signedTransaction: Buffer,
     chainId: IntNumber
-  ): CancelablePromise<SubmitEthereumTransactionResponse>;
+  ): CancelablePromise<Web3Response<'submitEthereumTransaction'>>;
 
-  abstract scanQRCode(regExp: RegExpString): CancelablePromise<ScanQRCodeResponse>;
+  abstract scanQRCode(regExp: RegExpString): CancelablePromise<Web3Response<'scanQRCode'>>;
 
-  abstract genericRequest(data: object, action: string): CancelablePromise<GenericResponse>;
+  abstract genericRequest(data: object, action: string): CancelablePromise<Web3Response<'generic'>>;
 
-  abstract sendRequest<T extends Web3Request, U extends Web3Response>(
-    request: T
-  ): CancelablePromise<U>;
+  abstract sendRequest<
+    RequestMethod extends SupportedWeb3Method,
+    ResponseMethod extends SupportedWeb3Method = RequestMethod,
+  >(request: Web3Request<RequestMethod>): CancelablePromise<Web3Response<ResponseMethod>>;
 
   abstract setAppInfo(appName: string, appLogoUrl: string | null): void;
 

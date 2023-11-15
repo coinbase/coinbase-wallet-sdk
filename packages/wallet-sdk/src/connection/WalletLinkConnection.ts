@@ -1,21 +1,13 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { RelayMessage } from '../relay/RelayMessage';
+import { WalletLinkEventData, WalletLinkResponseEventData } from '../relay/RelayMessage';
 import { Session } from '../relay/Session';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../relay/WalletSDKRelayAbstract';
-import { isWeb3ResponseMessage, Web3ResponseMessage } from '../relay/Web3ResponseMessage';
-import { ClientMessagePublishEvent, ClientMessageSetSessionConfig } from './ClientMessage';
+import { IntNumber } from '../types';
+import { ClientMessage } from './ClientMessage';
 import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
-import {
-  isServerMessageEvent,
-  isServerMessageFail,
-  ServerMessage,
-  ServerMessageFail,
-  ServerMessageIsLinkedOK,
-  ServerMessageLinked,
-  ServerMessageOK,
-} from './ServerMessage';
+import { ServerMessage, ServerMessageType } from './ServerMessage';
 import { SessionConfig } from './SessionConfig';
 import { WalletLinkConnectionCipher } from './WalletLinkConnectionCipher';
 import { WalletLinkHTTP } from './WalletLinkHTTP';
@@ -28,7 +20,7 @@ import {
 export interface WalletLinkConnectionUpdateListener {
   linkedUpdated: (linked: boolean) => void;
   connectedUpdated: (connected: boolean) => void;
-  handleWeb3ResponseMessage: (message: Web3ResponseMessage) => void;
+  handleWeb3ResponseMessage: (message: WalletLinkResponseEventData) => void;
   chainUpdated: (chainId: string, jsonRpcUrl: string) => void;
   accountUpdated: (selectedAddress: string) => void;
   metadataUpdated: (key: string, metadataValue: string) => void;
@@ -245,7 +237,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
   }
 
   private async handleIncomingEvent(m: ServerMessage) {
-    if (!isServerMessageEvent(m) || m.event !== 'Web3Response') {
+    if (m.type !== 'Event' || m.event !== 'Web3Response') {
       return;
     }
 
@@ -253,7 +245,7 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
       const decryptedData = await this.cipher.decrypt(m.data);
       const message = JSON.parse(decryptedData);
 
-      if (!isWeb3ResponseMessage(message)) return;
+      if (message.type !== 'WEB3_RESPONSE') return;
 
       this.listener?.handleWeb3ResponseMessage(message);
     } catch {
@@ -294,15 +286,17 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
    * @returns a Promise that completes when successful
    */
   public async setSessionMetadata(key: string, value: string | null) {
-    const message: Omit<ClientMessageSetSessionConfig, 'id'> = {
+    const message: ClientMessage = {
+      type: 'SetSessionConfig',
+      id: IntNumber(this.nextReqId++),
       sessionId: this.session.id,
       metadata: { [key]: value },
       type: 'SetSessionConfig',
     };
 
     return this.setOnceConnected(async () => {
-      const res = await this.ws.makeRequest<ServerMessageOK | ServerMessageFail>(message);
-      if (isServerMessageFail(res)) {
+      const res = await this.makeRequest<'OK' | 'Fail'>(message);
+      if (res.type === 'Fail') {
         throw new Error(res.error || 'failed to set session metadata');
       }
     });
@@ -311,20 +305,26 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
   /**
    * Publish an event and emit event ID when successful
    * @param event event name
-   * @param unencryptedMessage unencrypted event message
+   * @param unencryptedData unencrypted event data
    * @param callWebhook whether the webhook should be invoked
    * @returns a Promise that emits event ID when successful
    */
-  public async publishEvent(event: string, unencryptedMessage: RelayMessage, callWebhook = false) {
+  public async publishEvent(
+    event: string,
+    unencryptedData: WalletLinkEventData,
+    callWebhook = false
+  ) {
     const data = await this.cipher.encrypt(
       JSON.stringify({
-        ...unencryptedMessage,
+        ...unencryptedData,
         origin: location.origin,
         relaySource: window.coinbaseWalletExtension ? 'injected_sdk' : 'sdk',
       })
     );
 
-    const message: Omit<ClientMessagePublishEvent, 'id'> = {
+    const message: ClientMessage = {
+      type: 'PublishEvent',
+      id: IntNumber(this.nextReqId++),
       sessionId: this.session.id,
       event,
       data,

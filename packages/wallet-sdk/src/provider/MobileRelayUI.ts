@@ -1,18 +1,5 @@
 import { RedirectDialog } from '../components/RedirectDialog/RedirectDialog';
 import { ErrorHandler } from '../errors';
-import {
-  EthereumAddressFromSignedMessageRequest,
-  SignEthereumMessageRequest,
-  SignEthereumTransactionRequest,
-  SubmitEthereumTransactionRequest,
-} from '../relay/Web3Request';
-import {
-  EthereumAddressFromSignedMessageResponse,
-  SignEthereumMessageResponse,
-  SignEthereumTransactionResponse,
-  SubmitEthereumTransactionResponse,
-} from '../relay/Web3Response';
-import { AddressString, ProviderType } from '../types';
 import { WalletUI, WalletUIOptions } from './WalletUI';
 
 // TODO: Implement & present in-page wallet picker instead of navigating to www.coinbase.com/connect-dapp
@@ -90,80 +77,35 @@ export class MobileRelayUI implements WalletUI {
 
   // -- Methods below are not needed for mobile
 
-  requestEthereumAccounts(_options: {
-    onCancel: ErrorHandler;
-    onAccounts?: ((accounts: [AddressString]) => void) | undefined;
-  }): void {} // no-op
+  requestEthereumAccounts() {} // no-op
 
-  addEthereumChain(_options: {
-    onCancel: ErrorHandler;
-    onApprove: (rpcUrl: string) => void;
-    chainId: string;
-    rpcUrls: string[];
-    blockExplorerUrls?: string[] | undefined;
-    chainName?: string | undefined;
-    iconUrls?: string[] | undefined;
-    nativeCurrency?: { name: string; symbol: string; decimals: number } | undefined;
-  }): void {} // no-op
+  addEthereumChain() {} // no-op
 
-  watchAsset(_options: {
-    onCancel: ErrorHandler;
-    onApprove: () => void;
-    type: string;
-    address: string;
-    symbol?: string | undefined;
-    decimals?: number | undefined;
-    image?: string | undefined;
-    chainId?: string | undefined;
-  }): void {} // no-op
+  watchAsset() {} // no-op
 
-  selectProvider?(_options: {
-    onCancel: ErrorHandler;
-    onApprove: (selectedProviderKey: ProviderType) => void;
-    providerOptions: ProviderType[];
-  }): void {} // no-op
+  selectProvider?() {} // no-op
 
-  switchEthereumChain(_options: {
-    onCancel: ErrorHandler;
-    onApprove: (rpcUrl: string) => void;
-    chainId: string;
-    address?: string | undefined;
-  }): void {} // no-op
+  switchEthereumChain() {} // no-op
 
-  signEthereumMessage(_options: {
-    request: SignEthereumMessageRequest;
-    onSuccess: (response: SignEthereumMessageResponse) => void;
-    onCancel: ErrorHandler;
-  }): void {} // no-op
+  signEthereumMessage() {} // no-op
 
-  signEthereumTransaction(_options: {
-    request: SignEthereumTransactionRequest;
-    onSuccess: (response: SignEthereumTransactionResponse) => void;
-    onCancel: ErrorHandler;
-  }): void {} // no-op
+  signEthereumTransaction() {} // no-op
 
-  submitEthereumTransaction(_options: {
-    request: SubmitEthereumTransactionRequest;
-    onSuccess: (response: SubmitEthereumTransactionResponse) => void;
-    onCancel: ErrorHandler;
-  }): void {} // no-op
+  submitEthereumTransaction() {} // no-op
 
-  ethereumAddressFromSignedMessage(_options: {
-    request: EthereumAddressFromSignedMessageRequest;
-    onSuccess: (response: EthereumAddressFromSignedMessageResponse) => void;
-  }): void {} // no-op
+  ethereumAddressFromSignedMessage() {} // no-op
 
   reloadUI() {} // no-op
 
-  setStandalone?(_status: boolean) {} // no-op
+  setStandalone?() {} // no-op
 
-  setConnectDisabled(_: boolean) {} // no-op
+  setConnectDisabled() {} // no-op
 
   inlineAccountsResponse(): boolean {
     return false;
   }
 
-  inlineAddEthereumChain(_chainId: string): boolean {
+  inlineAddEthereumChain(): boolean {
     return false;
   }
 

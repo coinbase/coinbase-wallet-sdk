@@ -6,7 +6,6 @@ import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { MockRelayClass } from '../mocks/relay';
 import { LOCAL_STORAGE_ADDRESSES_KEY } from '../relay/WalletSDKRelayAbstract';
 import { WalletSDKRelayEventManager } from '../relay/WalletSDKRelayEventManager';
-import { Web3Method } from '../relay/Web3Method';
 import { ProviderType } from '../types';
 import { CoinbaseWalletProvider, CoinbaseWalletProviderOptions } from './CoinbaseWalletProvider';
 
@@ -206,7 +205,7 @@ describe('CoinbaseWalletProvider', () => {
     jest.spyOn(relay, 'genericRequest').mockReturnValue({
       cancel: () => {},
       promise: Promise.resolve({
-        method: Web3Method.generic,
+        method: 'generic',
         result: 'Success',
       }),
     });
@@ -229,7 +228,7 @@ describe('CoinbaseWalletProvider', () => {
     const provider = setupCoinbaseWalletProvider();
 
     // @ts-expect-error _addresses is private
-    expect(provider._addresses).toEqual([])
+    expect(provider._addresses).toEqual([]);
 
     const url = 'dapp.finance';
     Object.defineProperty(window, 'location', { value: { origin: url } });
@@ -249,9 +248,8 @@ describe('CoinbaseWalletProvider', () => {
     );
 
     // @ts-expect-error _addresses is private
-    expect(provider._addresses).toEqual([])
+    expect(provider._addresses).toEqual([]);
   });
-
 
   it('handles error responses with generic requests', async () => {
     const relay = new MockRelayClass();
@@ -259,7 +257,7 @@ describe('CoinbaseWalletProvider', () => {
       cancel: () => {},
       // @ts-expect-error result should be a string
       promise: Promise.resolve({
-        method: Web3Method.generic,
+        method: 'generic',
         result: { foo: 'bar' },
       }),
     });
@@ -359,7 +357,7 @@ describe('CoinbaseWalletProvider', () => {
       cancel: () => {},
       // @ts-expect-error result should be a string
       promise: Promise.resolve({
-        method: Web3Method.scanQRCode,
+        method: 'scanQRCode',
         result: { foo: 'bar' },
       }),
     });
@@ -378,7 +376,7 @@ describe('CoinbaseWalletProvider', () => {
     jest.spyOn(relay, 'scanQRCode').mockReturnValue({
       cancel: () => {},
       promise: Promise.resolve({
-        method: Web3Method.scanQRCode,
+        method: 'scanQRCode',
         result: 'cbwallet://result',
       }),
     });
