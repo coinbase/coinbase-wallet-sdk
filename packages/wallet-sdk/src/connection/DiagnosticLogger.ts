@@ -1,16 +1,15 @@
 // DiagnosticLogger for debugging purposes only
 
-import { Web3RequestMessage } from '../relay/Web3RequestMessage';
-import { Web3ResponseMessage } from '../relay/Web3ResponseMessage';
-import { ServerMessage, ServerMessageIsLinkedOK } from './ServerMessage';
+import { WalletLinkEventData } from '../relay/RelayMessage';
+import { ServerMessage } from './ServerMessage';
 import { ConnectionState } from './WalletLinkWebSocket';
 
 export type LogProperties = {
   addresses_length?: number; // number of eth addresses
   alreadyDestroyed?: boolean; // error flag if metadata is already destroyed on resetAndReload
-  eventId?: Web3RequestMessage['id'] | Web3ResponseMessage['id'];
+  eventId?: WalletLinkEventData['id'];
   isSessionMismatched?: string; // storedSession does not match sessionId
-  linked?: ServerMessageIsLinkedOK['linked'];
+  linked?: ServerMessage<'IsLinkedOK'>['linked'];
   message?: string; // error message
   metadata_keys?: string[]; // session config metadata keys
   method?: string; // method throwing error message
