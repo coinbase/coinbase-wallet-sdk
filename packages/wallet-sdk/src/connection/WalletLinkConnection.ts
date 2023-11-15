@@ -1,8 +1,8 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
+import { WalletLinkEventData, Web3ResponseMessage } from '../relay/RelayMessage';
 import { Session } from '../relay/Session';
-import { WalletLinkEventData, Web3ResponseMessage } from '../relay/WalletLinkEvent';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../relay/WalletSDKRelayAbstract';
 import { IntNumber } from '../types';
 import { ClientMessage } from './ClientMessage';

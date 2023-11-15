@@ -19,8 +19,8 @@ import { WalletUI, WalletUIOptions } from '../provider/WalletUI';
 import { AddressString, IntNumber, ProviderType, RegExpString } from '../types';
 import { bigIntStringFromBN, createQrUrl, hexStringFromBuffer, randomBytesHex } from '../util';
 import { EthereumTransactionParams } from './EthereumTransactionParams';
+import { WalletLinkEventData, Web3ResponseMessage } from './RelayMessage';
 import { Session } from './Session';
-import { WalletLinkEventData, Web3ResponseMessage } from './WalletLinkEvent';
 import {
   CancelablePromise,
   LOCAL_STORAGE_ADDRESSES_KEY,
