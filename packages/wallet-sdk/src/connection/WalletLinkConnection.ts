@@ -4,7 +4,7 @@
 import { RelayMessage } from '../relay/RelayMessage';
 import { Session } from '../relay/Session';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../relay/WalletSDKRelayAbstract';
-import { isWeb3ResponseMessage, Web3ResponseMessage } from '../relay/Web3ResponseMessage';
+import { Web3ResponseMessage } from '../relay/Web3ResponseMessage';
 import { IntNumber } from '../types';
 import { ClientMessage } from './ClientMessage';
 import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
@@ -286,7 +286,7 @@ export class WalletLinkConnection {
       const decryptedData = await this.cipher.decrypt(m.data);
       const message = JSON.parse(decryptedData);
 
-      if (!isWeb3ResponseMessage(message)) return;
+      if (message.type !== 'WEB3_RESPONSE') return;
 
       this.listener?.handleWeb3ResponseMessage(message);
     } catch {

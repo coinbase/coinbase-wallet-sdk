@@ -10,11 +10,6 @@ import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay';
 import { WALLET_USER_NAME_KEY } from './WalletSDKRelayAbstract';
 import { WalletSDKRelayEventManager } from './WalletSDKRelayEventManager';
 
-// mock isWeb3ResponseMessage to return true
-jest.mock('./Web3ResponseMessage', () => ({
-  isWeb3ResponseMessage: jest.fn().mockReturnValue(true),
-}));
-
 const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`"decrypted ${text}"`));
 
 jest.spyOn(WalletLinkConnectionCipher.prototype, 'decrypt').mockImplementation(decryptMock);
