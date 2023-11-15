@@ -4,11 +4,12 @@
 import { AddressString, HexString, ProviderType } from '../types';
 import { Web3Method } from './Web3Method';
 
-export type Web3Response<M extends Web3Method = Web3Method> = {
-  method?: Web3Method;
-} & (Extract<_Web3Response, { method: M }> | ErrorResponse);
+export type Web3Response<M extends Web3Method = Web3Method> =
+  | Extract<_Web3Response, { method: M }>
+  | ErrorResponse;
 
 type ErrorResponse = {
+  method: unknown;
   errorCode?: number;
   errorMessage: string;
 };
@@ -17,9 +18,7 @@ export function isErrorResponse(response: Web3Response): response is ErrorRespon
   return (response as ErrorResponse).errorMessage !== undefined;
 }
 
-type _Web3Response = {
-  method: Web3Method;
-} & (
+type _Web3Response =
   | {
       method: 'connectAndSignIn';
       result: {
@@ -81,5 +80,4 @@ type _Web3Response = {
   | {
       method: 'makeEthereumJSONRPCRequest';
       result: unknown;
-    }
-);
+    };
