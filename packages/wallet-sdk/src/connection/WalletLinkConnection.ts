@@ -144,7 +144,7 @@ export class WalletLinkConnection {
         // handle link status updates
         case 'IsLinkedOK':
         case 'Linked': {
-          const linked = m.type === 'IsLinkedOK' ? m.linked : false;
+          const linked = m.type === 'IsLinkedOK' ? m.linked : undefined;
           this.diagnostic?.log(EVENTS.LINKED, {
             sessionIdHash: Session.hash(session.id),
             linked,
