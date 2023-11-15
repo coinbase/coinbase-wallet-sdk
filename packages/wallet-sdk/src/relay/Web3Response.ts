@@ -13,72 +13,74 @@ export function isErrorResponse(response: Web3Response) {
   return (response as ErrorResponse).errorMessage !== undefined;
 }
 
-export type Web3Response =
-  | ({
-      method: Web3Method;
+type _Web3Response = {
+  method: Web3Method;
+  result: unknown;
+} & (
+  | {
+      method: 'connectAndSignIn';
+      result: {
+        accounts: AddressString[];
+        message: HexString;
+        signature: HexString;
+      };
+    }
+  | {
+      method: 'addEthereumChain';
+      result: {
+        isApproved: boolean;
+        rpcUrl: string;
+      };
+    }
+  | {
+      method: 'switchEthereumChain';
+      result: {
+        isApproved: boolean;
+        rpcUrl: string;
+      };
+    }
+  | {
+      method: 'requestEthereumAccounts';
+      result: AddressString[];
+    }
+  | {
+      method: 'watchAsset';
+      result: boolean;
+    }
+  | {
+      method: 'selectProvider';
+      result: ProviderType;
+    }
+  | {
+      method: 'signEthereumMessage';
+      result: HexString;
+    }
+  | {
+      method: 'signEthereumTransaction';
+      result: HexString;
+    }
+  | {
+      method: 'submitEthereumTransaction';
+      result: HexString;
+    }
+  | {
+      method: 'ethereumAddressFromSignedMessage';
+      result: AddressString;
+    }
+  | {
+      method: 'scanQRCode';
+      result: string;
+    }
+  | {
+      method: 'generic';
+      result: string;
+    }
+  | {
+      method: 'makeEthereumJSONRPCRequest';
       result: unknown;
-    } & (
-      | {
-          method: 'connectAndSignIn';
-          result: {
-            accounts: AddressString[];
-            message: HexString;
-            signature: HexString;
-          };
-        }
-      | {
-          method: 'addEthereumChain';
-          result: {
-            isApproved: boolean;
-            rpcUrl: string;
-          };
-        }
-      | {
-          method: 'switchEthereumChain';
-          result: {
-            isApproved: boolean;
-            rpcUrl: string;
-          };
-        }
-      | {
-          method: 'requestEthereumAccounts';
-          result: AddressString[];
-        }
-      | {
-          method: 'watchAsset';
-          result: boolean;
-        }
-      | {
-          method: 'selectProvider';
-          result: ProviderType;
-        }
-      | {
-          method: 'signEthereumMessage';
-          result: HexString;
-        }
-      | {
-          method: 'signEthereumTransaction';
-          result: HexString;
-        }
-      | {
-          method: 'submitEthereumTransaction';
-          result: HexString;
-        }
-      | {
-          method: 'ethereumAddressFromSignedMessage';
-          result: AddressString;
-        }
-      | {
-          method: 'scanQRCode';
-          result: string;
-        }
-      | {
-          method: 'generic';
-          result: string;
-        }
-      | {
-          method: 'makeEthereumJSONRPCRequest';
-          result: unknown;
-        }
-    ))
+    }
+);
+
+export type Web3Response<T extends Web3Method = Web3Method> =
+  | Extract<_Web3Response, { method: T }>
   | ErrorResponse;

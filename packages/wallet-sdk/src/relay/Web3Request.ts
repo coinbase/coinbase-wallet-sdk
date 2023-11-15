@@ -11,10 +11,11 @@ import {
 } from '../types';
 import { Web3Method } from './Web3Method';
 
+type ParamType = string | number | boolean | null | { [key: string]: ParamType } | ParamType[];
+
 export type Web3Request = {
   method: Web3Method;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  params: { [key: string]: any };
+  params: { [key: string]: ParamType };
 } & (
   | {
       method: 'requestEthereumAccounts';
