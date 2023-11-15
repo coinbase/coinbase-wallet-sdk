@@ -11,12 +11,11 @@ import {
 } from '../types';
 import { Web3Method } from './Web3Method';
 
-type ParamType = string | number | boolean | null | { [key: string]: ParamType } | ParamType[];
+export type Web3Request<T extends Web3Method = Web3Method> = Extract<_Web3Request, { method: T }>;
 
-export type Web3Request = {
-  method: Web3Method;
-  params: { [key: string]: ParamType };
-} & (
+export const SupportedWeb3Methods = _Web3Request['method'];
+
+type _Web3Request =
   | {
       method: 'requestEthereumAccounts';
       params: {
@@ -132,5 +131,4 @@ export type Web3Request = {
         decimals?: number;
         image?: string;
       };
-    }
-);
+    };
