@@ -4,9 +4,9 @@
 import { AddressString, HexString, ProviderType } from '../types';
 import { Web3Method } from './Web3Method';
 
-export type Web3Response<M extends Web3Method = Web3Method> =
-  | Extract<_Web3Response, { method: M }>
-  | ErrorResponse;
+export type Web3Response<M extends Web3Method = Web3Method> = {
+  method?: Web3Method;
+} & (Extract<_Web3Response, { method: M }> | ErrorResponse);
 
 type ErrorResponse = {
   errorCode?: number;
@@ -19,7 +19,6 @@ export function isErrorResponse(response: Web3Response): response is ErrorRespon
 
 type _Web3Response = {
   method: Web3Method;
-  result: unknown;
 } & (
   | {
       method: 'connectAndSignIn';

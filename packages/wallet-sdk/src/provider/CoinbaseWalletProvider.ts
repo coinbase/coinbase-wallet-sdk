@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// TODO: Address linting issues
+
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
@@ -16,12 +19,7 @@ import {
 } from '../relay/WalletSDKRelayAbstract';
 import { WalletSDKRelayEventManager } from '../relay/WalletSDKRelayEventManager';
 import { Web3Method } from '../relay/Web3Method';
-import {
-  ConnectAndSignInResponse,
-  isErrorResponse,
-  RequestEthereumAccountsResponse,
-  SwitchResponse,
-} from '../relay/Web3Response';
+import { isErrorResponse, Web3Response } from '../relay/Web3Response';
 import { AddressString, Callback, HexString, IntNumber, ProviderType } from '../types';
 import {
   ensureAddressString,
@@ -179,9 +177,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
 
       if (event.data.type !== 'walletLinkMessage') return; // compatibility with CBW extension
 
-      if (
-        event.data.data.action === 'dappChainSwitched'
-      ) {
+      if (event.data.data.action === 'dappChainSwitched') {
         const _chainId = event.data.data.chainId;
         const jsonRpcUrl = event.data.data.jsonRpcUrl ?? this.jsonRpcUrl;
         this.updateProviderInfo(jsonRpcUrl, Number(_chainId));
@@ -579,7 +575,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
       sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : undefined,
     });
 
-    let res: ConnectAndSignInResponse;
+    let res: Web3Response<'connectAndSignIn'>;
     try {
       const relay = await this.initializeRelay();
       if (!(relay instanceof MobileRelay)) {

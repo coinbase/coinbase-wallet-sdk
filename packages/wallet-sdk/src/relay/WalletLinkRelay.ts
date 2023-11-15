@@ -19,7 +19,7 @@ import { WalletUI, WalletUIOptions } from '../provider/WalletUI';
 import { AddressString, IntNumber, ProviderType, RegExpString } from '../types';
 import { bigIntStringFromBN, createQrUrl, hexStringFromBuffer, randomBytesHex } from '../util';
 import { EthereumTransactionParams } from './EthereumTransactionParams';
-import { RelayMessage, RelayMessageType } from './RelayMessage';
+import { RelayMessage } from './RelayMessage';
 import { Session } from './Session';
 import {
   CancelablePromise,
@@ -29,10 +29,7 @@ import {
 import { WalletSDKRelayEventManager } from './WalletSDKRelayEventManager';
 import { Web3Method } from './Web3Method';
 import { SupportedWeb3Method, Web3Request } from './Web3Request';
-import { Web3RequestCanceledMessage } from './Web3RequestCanceledMessage';
-import { Web3RequestMessage } from './Web3RequestMessage';
 import { isErrorResponse, Web3Response } from './Web3Response';
-import { Web3ResponseMessage } from './Web3ResponseMessage';
 
 export interface WalletLinkRelayOptions {
   linkAPIUrl: string;
@@ -93,7 +90,6 @@ export class WalletLinkRelay
 
     this.ui = ui;
   }
-  handleWeb3ResponseMessage: (message: Web3ResponseMessage) => void;
 
   public subscribe() {
     const session = Session.load(this.storage) || new Session(this.storage).save();
@@ -174,13 +170,14 @@ export class WalletLinkRelay
       // reason we don't get a response via an explicit web3 message
       // we can still fulfill the eip1102 request.
       Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach((id) => {
-        const message = Web3ResponseMessage({
+        const message: RelayMessage = {
+          type: 'WEB3_RESPONSE',
           id,
           response: {
             method: 'requestEthereumAccounts',
             result: [selectedAddress as AddressString],
           },
-        });
+        };
         this.invokeCallback({ ...message, id });
       });
       WalletLinkRelay.accountRequestCallbackIds.clear();
@@ -451,11 +448,11 @@ export class WalletLinkRelay
   }
 
   protected publishWeb3RequestEvent(id: string, request: Web3Request): void {
-    const message = Web3RequestMessage({ id, request });
+    const message: RelayMessage = { type: 'WEB3_REQUEST', id, request };
     const storedSession = Session.load(this.storage);
     this.diagnostic?.log(EVENTS.WEB3_REQUEST, {
       eventId: message.id,
-      method: `relay::${message.request.method}`,
+      method: `relay::${request.method}`,
       sessionIdHash: this.getSessionIdHash(),
       storedSessionIdHash: storedSession ? Session.hash(storedSession.id) : '',
       isSessionMismatched: (storedSession?.id !== this._session.id).toString(),
@@ -465,7 +462,7 @@ export class WalletLinkRelay
       .then((_) => {
         this.diagnostic?.log(EVENTS.WEB3_REQUEST_PUBLISHED, {
           eventId: message.id,
-          method: `relay::${message.request.method}`,
+          method: `relay::${request.method}`,
           sessionIdHash: this.getSessionIdHash(),
           storedSessionIdHash: storedSession ? Session.hash(storedSession.id) : '',
           isSessionMismatched: (storedSession?.id !== this._session.id).toString(),
@@ -473,10 +470,10 @@ export class WalletLinkRelay
       })
       .catch((err) => {
         this.handleWeb3ResponseMessage({
-          type: RelayMessageType.WEB3_RESPONSE,
+          type: 'WEB3_RESPONSE',
           id: message.id,
           response: {
-            method: message.request.method,
+            method: request.method,
             errorMessage: err.message,
           },
         });
@@ -484,7 +481,10 @@ export class WalletLinkRelay
   }
 
   private publishWeb3RequestCanceledEvent(id: string) {
-    const message = Web3RequestCanceledMessage(id);
+    const message: RelayMessage = {
+      type: 'WEB3_REQUEST_CANCELED',
+      id,
+    };
     this.publishEvent('Web3RequestCanceled', message, false).then();
   }
 
@@ -496,11 +496,8 @@ export class WalletLinkRelay
     return this.connection.publishEvent(event, message, callWebhook);
   }
 
-  handleWeb3ResponseMessage(message: Web3ResponseMessage) {
+  handleWeb3ResponseMessage(message: RelayMessage & { type: 'WEB3_RESPONSE' }) {
     const { response } = message;
-
-    // only for type safety
-    if (isErrorResponse(response)) return;
 
     this.diagnostic?.log(EVENTS.WEB3_RESPONSE, {
       eventId: message.id,
@@ -526,7 +523,7 @@ export class WalletLinkRelay
   ) {
     const errorMessage = error?.message ?? getMessageFromCode(errorCode);
     this.handleWeb3ResponseMessage({
-      type: RelayMessageType.WEB3_RESPONSE,
+      type: 'WEB3_RESPONSE',
       id,
       response: {
         method,
@@ -536,7 +533,7 @@ export class WalletLinkRelay
     });
   }
 
-  private invokeCallback(message: Web3ResponseMessage) {
+  private invokeCallback(message: RelayMessage & { type: 'WEB3_RESPONSE' }) {
     const callback = this.relayEventManager.callbacks.get(message.id);
     if (callback) {
       callback(message.response);
@@ -544,9 +541,9 @@ export class WalletLinkRelay
     }
   }
 
-  public requestEthereumAccounts(): CancelablePromise<RequestEthereumAccountsResponse> {
+  public requestEthereumAccounts() {
     const request: Web3Request = {
-      method: Web3Method.requestEthereumAccounts,
+      method: 'requestEthereumAccounts',
       params: {
         appName: this.appName,
         appLogoUrl: this.appLogoUrl || null,
@@ -564,27 +561,26 @@ export class WalletLinkRelay
       hideSnackbarItem?.();
     };
 
-    const promise = new Promise<RequestEthereumAccountsResponse>((resolve, reject) => {
+    const promise = new Promise<Web3Response<'requestEthereumAccounts'>>((resolve, reject) => {
       this.relayEventManager.callbacks.set(id, (response) => {
         this.ui.hideRequestEthereumAccounts();
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         hideSnackbarItem?.();
 
-        if (response.errorMessage) {
+        if (isErrorResponse(response)) {
           return reject(new Error(response.errorMessage));
         }
-        resolve(response as RequestEthereumAccountsResponse);
+        resolve(response as Web3Response<'requestEthereumAccounts'>);
       });
 
       if (this.ui.inlineAccountsResponse()) {
         const onAccounts = (accounts: [AddressString]) => {
-          this.handleWeb3ResponseMessage(
-            Web3ResponseMessage({
-              id,
-              response: RequestEthereumAccountsResponse(accounts),
-            })
-          );
+          this.handleWeb3ResponseMessage({
+            type: 'WEB3_RESPONSE',
+            id,
+            response: { method: 'requestEthereumAccounts', result: accounts },
+          });
         };
 
         this.ui.requestEthereumAccounts({
@@ -611,9 +607,9 @@ export class WalletLinkRelay
     return { promise, cancel };
   }
 
-  selectProvider(providerOptions: ProviderType[]): CancelablePromise<SelectProviderResponse> {
+  selectProvider(providerOptions: ProviderType[]) {
     const request: Web3Request = {
-      method: Web3Method.selectProvider,
+      method: 'selectProvider',
       params: {
         providerOptions,
       },
@@ -626,30 +622,28 @@ export class WalletLinkRelay
       this.handleErrorResponse(id, request.method, error);
     };
 
-    const promise = new Promise<SelectProviderResponse>((resolve, reject) => {
+    const promise = new Promise<Web3Response<'selectProvider'>>((resolve, reject) => {
       this.relayEventManager.callbacks.set(id, (response) => {
-        if (response.errorMessage) {
+        if (isErrorResponse(response)) {
           return reject(new Error(response.errorMessage));
         }
-        resolve(response as SelectProviderResponse);
+        resolve(response as Web3Response<'selectProvider'>);
       });
 
       const _cancel = (_error?: ErrorType) => {
-        this.handleWeb3ResponseMessage(
-          Web3ResponseMessage({
-            id,
-            response: SelectProviderResponse(ProviderType.Unselected),
-          })
-        );
+        this.handleWeb3ResponseMessage({
+          type: 'WEB3_RESPONSE',
+          id,
+          response: { method: 'selectProvider', result: ProviderType.Unselected },
+        });
       };
 
       const approve = (selectedProviderKey: ProviderType) => {
-        this.handleWeb3ResponseMessage(
-          Web3ResponseMessage({
-            id,
-            response: SelectProviderResponse(selectedProviderKey),
-          })
-        );
+        this.handleWeb3ResponseMessage({
+          type: 'WEB3_RESPONSE',
+          id,
+          response: { method: 'selectProvider', result: selectedProviderKey },
+        });
       };
 
       if (this.ui.selectProvider)
@@ -670,9 +664,9 @@ export class WalletLinkRelay
     decimals?: number,
     image?: string,
     chainId?: string
-  ): CancelablePromise<WatchAssetResponse> {
+  ): CancelablePromise<Web3Response<'watchAsset'>> {
     const request: Web3Request = {
-      method: Web3Method.watchAsset,
+      method: 'watchAsset',
       params: {
         type,
         options: {
@@ -702,32 +696,36 @@ export class WalletLinkRelay
       });
     }
 
-    const promise = new Promise<WatchAssetResponse>((resolve, reject) => {
+    const promise = new Promise<Web3Response<'watchAsset'>>((resolve, reject) => {
       this.relayEventManager.callbacks.set(id, (response) => {
         hideSnackbarItem?.();
 
-        if (response.errorMessage) {
+        if (isErrorResponse(response)) {
           return reject(new Error(response.errorMessage));
         }
-        resolve(response as WatchAssetResponse);
+        resolve(response as Web3Response<'watchAsset'>);
       });
 
       const _cancel = (_error?: ErrorType) => {
-        this.handleWeb3ResponseMessage(
-          Web3ResponseMessage({
-            id,
-            response: WatchAssetReponse(false),
-          })
-        );
+        this.handleWeb3ResponseMessage({
+          type: 'WEB3_RESPONSE',
+          id,
+          response: {
+            method: 'watchAsset',
+            result: false,
+          },
+        });
       };
 
       const approve = () => {
-        this.handleWeb3ResponseMessage(
-          Web3ResponseMessage({
-            id,
-            response: WatchAssetReponse(true),
-          })
-        );
+        this.handleWeb3ResponseMessage({
+          type: 'WEB3_RESPONSE',
+          id,
+          response: {
+            method: 'watchAsset',
+            result: true,
+          },
+        });
       };
 
       if (this.ui.inlineWatchAsset()) {
@@ -764,7 +762,7 @@ export class WalletLinkRelay
     }
   ) {
     const request: Web3Request = {
-      method: Web3Method.addEthereumChain,
+      method: 'addEthereumChain',
       params: {
         chainId,
         rpcUrls,
@@ -792,35 +790,42 @@ export class WalletLinkRelay
       });
     }
 
-    const promise = new Promise<AddEthereumChainResponse>((resolve, reject) => {
+    const promise = new Promise<Web3Response<'addEthereumChain'>>((resolve, reject) => {
       this.relayEventManager.callbacks.set(id, (response) => {
         hideSnackbarItem?.();
 
-        if (response.errorMessage) {
+        if (isErrorResponse(response)) {
           return reject(new Error(response.errorMessage));
         }
-        resolve(response as AddEthereumChainResponse);
+        resolve(response as Web3Response<'addEthereumChain'>);
       });
 
       const _cancel = (_error?: ErrorType) => {
-        this.handleWeb3ResponseMessage(
-          Web3ResponseMessage({
-            id,
-            response: AddEthereumChainResponse({
+        this.handleWeb3ResponseMessage({
+          type: 'WEB3_RESPONSE',
+          id,
+          response: {
+            method: 'addEthereumChain',
+            result: {
               isApproved: false,
               rpcUrl: '',
-            }),
-          })
-        );
+            },
+          },
+        });
       };
 
       const approve = (rpcUrl: string) => {
-        this.handleWeb3ResponseMessage(
-          Web3ResponseMessage({
-            id,
-            response: AddEthereumChainResponse({ isApproved: true, rpcUrl }),
-          })
-        );
+        this.handleWeb3ResponseMessage({
+          type: 'WEB3_RESPONSE',
+          id,
+          response: {
+            method: 'addEthereumChain',
+            result: {
+              isApproved: true,
+              rpcUrl,
+            },
+          },
+        });
       };
 
       if (this.ui.inlineAddEthereumChain(chainId)) {
@@ -847,9 +852,9 @@ export class WalletLinkRelay
   switchEthereumChain(
     chainId: string,
     address?: string
-  ): CancelablePromise<SwitchEthereumChainResponse> {
+  ): CancelablePromise<Web3Response<'switchEthereumChain'>> {
     const request: Web3Request = {
-      method: Web3Method.switchEthereumChain,
+      method: 'switchEthereumChain',
       params: {
         chainId,
         ...{ address },
@@ -863,7 +868,7 @@ export class WalletLinkRelay
       this.handleErrorResponse(id, request.method, error);
     };
 
-    const promise = new Promise<SwitchEthereumChainResponse>((resolve, reject) => {
+    const promise = new Promise<Web3Response<'switchEthereumChain'>>((resolve, reject) => {
       this.relayEventManager.callbacks.set(id, (response) => {
         if (isErrorResponse(response) && response.errorCode) {
           return reject(
@@ -872,11 +877,11 @@ export class WalletLinkRelay
               message: `Unrecognized chain ID. Try adding the chain using addEthereumChain first.`,
             })
           );
-        } else if (response.errorMessage) {
+        } else if (isErrorResponse(response)) {
           return reject(new Error(response.errorMessage));
         }
 
-        resolve(response as SwitchEthereumChainResponse);
+        resolve(response as Web3Response<'switchEthereumChain'>);
       });
 
       const _cancel = (error?: ErrorType | number) => {
@@ -886,33 +891,37 @@ export class WalletLinkRelay
 
           this.handleErrorResponse(
             id,
-            Web3Method.switchEthereumChain,
+            'switchEthereumChain',
             error instanceof Error ? error : standardErrors.provider.unsupportedChain(chainId),
             errorCode
           );
         } else {
-          this.handleWeb3ResponseMessage(
-            Web3ResponseMessage({
-              id,
-              response: SwitchEthereumChainResponse({
+          this.handleWeb3ResponseMessage({
+            type: 'WEB3_RESPONSE',
+            id,
+            response: {
+              method: 'switchEthereumChain',
+              result: {
                 isApproved: false,
                 rpcUrl: '',
-              }),
-            })
-          );
+              },
+            },
+          });
         }
       };
 
       const approve = (rpcUrl: string) => {
-        this.handleWeb3ResponseMessage(
-          Web3ResponseMessage({
-            id,
-            response: SwitchEthereumChainResponse({
+        this.handleWeb3ResponseMessage({
+          type: 'WEB3_RESPONSE',
+          id,
+          response: {
+            method: 'switchEthereumChain',
+            result: {
               isApproved: true,
               rpcUrl,
-            }),
-          })
-        );
+            },
+          },
+        });
       };
 
       this.ui.switchEthereumChain({
@@ -944,43 +953,43 @@ export class WalletLinkRelay
     };
 
     const onSuccess = (
-      response:
-        | SignEthereumMessageResponse
-        | SignEthereumTransactionResponse
-        | SubmitEthereumTransactionResponse
-        | EthereumAddressFromSignedMessageResponse
+      response: Web3Response<
+        | 'signEthereumMessage'
+        | 'signEthereumTransaction'
+        | 'submitEthereumTransaction'
+        | 'ethereumAddressFromSignedMessage'
+      >
     ) => {
-      this.handleWeb3ResponseMessage(
-        Web3ResponseMessage({
-          id,
-          response,
-        })
-      );
+      this.handleWeb3ResponseMessage({
+        type: 'WEB3_RESPONSE',
+        id,
+        response,
+      });
     };
 
     switch (request.method) {
-      case Web3Method.signEthereumMessage:
+      case 'signEthereumMessage':
         this.ui.signEthereumMessage({
           request,
           onSuccess,
           onCancel: _cancel,
         });
         break;
-      case Web3Method.signEthereumTransaction:
+      case 'signEthereumTransaction':
         this.ui.signEthereumTransaction({
           request,
           onSuccess,
           onCancel: _cancel,
         });
         break;
-      case Web3Method.submitEthereumTransaction:
+      case 'submitEthereumTransaction':
         this.ui.submitEthereumTransaction({
           request,
           onSuccess,
           onCancel: _cancel,
         });
         break;
-      case Web3Method.ethereumAddressFromSignedMessage:
+      case 'ethereumAddressFromSignedMessage':
         this.ui.ethereumAddressFromSignedMessage({
           request,
           onSuccess,

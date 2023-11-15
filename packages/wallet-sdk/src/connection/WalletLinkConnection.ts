@@ -4,7 +4,6 @@
 import { RelayMessage } from '../relay/RelayMessage';
 import { Session } from '../relay/Session';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../relay/WalletSDKRelayAbstract';
-import { Web3ResponseMessage } from '../relay/Web3ResponseMessage';
 import { IntNumber } from '../types';
 import { ClientMessage } from './ClientMessage';
 import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
@@ -20,7 +19,7 @@ const REQUEST_TIMEOUT = 60000;
 export interface WalletLinkConnectionUpdateListener {
   linkedUpdated: (linked: boolean) => void;
   connectedUpdated: (connected: boolean) => void;
-  handleWeb3ResponseMessage: (message: Web3ResponseMessage) => void;
+  handleWeb3ResponseMessage: (message: RelayMessage & { type: 'WEB3_RESPONSE' }) => void;
   chainUpdated: (chainId: string, jsonRpcUrl: string) => void;
   accountUpdated: (selectedAddress: string) => void;
   metadataUpdated: (key: string, metadataValue: string) => void;
