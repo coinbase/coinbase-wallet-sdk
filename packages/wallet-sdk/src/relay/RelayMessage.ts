@@ -4,7 +4,7 @@
 import { Web3Request } from './Web3Request';
 import { Web3Response } from './Web3Response';
 
-export type RelayMessageType =
+type RelayMessageType =
   | 'SESSION_ID_REQUEST'
   | 'SESSION_ID_RESPONSE'
   | 'LINKED'
