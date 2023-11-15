@@ -618,7 +618,9 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     const relay = await this.initializeRelay();
     const res = await relay.selectProvider(providerOptions).promise;
     if (isErrorResponse(res)) {
-      throw serializeError(res.errorMessage ?? 'result was not a string', 'selectProvider');
+      throw serializeError(res.errorMessage, 'selectProvider');
+    } else if (typeof res.result !== 'string') {
+      throw serializeError('result was not a string', 'selectProvider');
     }
     return res.result;
   }
