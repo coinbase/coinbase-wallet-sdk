@@ -18,14 +18,14 @@ export type RelayMessage = {
   id: string;
 } & (
   | {
+      type: 'WEB3_RESPONSE';
+      response: Web3Response;
+    }
+  | {
       type: 'WEB3_REQUEST';
       request: Web3Request;
     }
   | {
       type: 'WEB3_REQUEST_CANCELED';
-    }
-  | {
-      type: 'WEB3_RESPONSE';
-      response: Web3Response;
     }
 );
