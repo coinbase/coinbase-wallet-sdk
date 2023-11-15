@@ -19,8 +19,8 @@ import { WalletUI, WalletUIOptions } from '../provider/WalletUI';
 import { AddressString, IntNumber, ProviderType, RegExpString } from '../types';
 import { bigIntStringFromBN, createQrUrl, hexStringFromBuffer, randomBytesHex } from '../util';
 import { EthereumTransactionParams } from './EthereumTransactionParams';
-import { RelayMessage, Web3ResponseMessage } from './RelayMessage';
 import { Session } from './Session';
+import { WalletLinkEventData, Web3ResponseMessage } from './WalletLinkEvent';
 import {
   CancelablePromise,
   LOCAL_STORAGE_ADDRESSES_KEY,
@@ -170,7 +170,7 @@ export class WalletLinkRelay
       // reason we don't get a response via an explicit web3 message
       // we can still fulfill the eip1102 request.
       Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach((id) => {
-        const message: RelayMessage = {
+        const message: WalletLinkEventData = {
           type: 'WEB3_RESPONSE',
           id,
           response: {
@@ -448,7 +448,7 @@ export class WalletLinkRelay
   }
 
   protected publishWeb3RequestEvent(id: string, request: Web3Request): void {
-    const message: RelayMessage = { type: 'WEB3_REQUEST', id, request };
+    const message: WalletLinkEventData = { type: 'WEB3_REQUEST', id, request };
     const storedSession = Session.load(this.storage);
     this.diagnostic?.log(EVENTS.WEB3_REQUEST, {
       eventId: message.id,
@@ -481,7 +481,7 @@ export class WalletLinkRelay
   }
 
   private publishWeb3RequestCanceledEvent(id: string) {
-    const message: RelayMessage = {
+    const message: WalletLinkEventData = {
       type: 'WEB3_REQUEST_CANCELED',
       id,
     };
@@ -490,7 +490,7 @@ export class WalletLinkRelay
 
   protected publishEvent(
     event: string,
-    message: RelayMessage,
+    message: WalletLinkEventData,
     callWebhook: boolean
   ): Promise<string> {
     return this.connection.publishEvent(event, message, callWebhook);

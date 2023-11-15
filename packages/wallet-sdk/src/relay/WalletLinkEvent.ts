@@ -13,7 +13,7 @@ type RelayMessageType =
   | 'WEB3_REQUEST_CANCELED'
   | 'WEB3_RESPONSE';
 
-export type RelayMessage = {
+export type WalletLinkEventData = {
   type: RelayMessageType;
   id: string;
 } & (
@@ -30,4 +30,4 @@ export type RelayMessage = {
     }
 );
 
-export type Web3ResponseMessage = Extract<RelayMessage, { type: 'WEB3_RESPONSE' }>;
+export type Web3ResponseMessage = Extract<WalletLinkEventData, { type: 'WEB3_RESPONSE' }>;
