@@ -6,6 +6,8 @@ type LayoutProps = {
   children: React.ReactNode;
 };
 
+export const WIDTH_2XL = '1536px';
+
 export function Layout({ children }: LayoutProps) {
   const { sdk } = useCBWSDK();
   const handleDisconnect = () => {
@@ -16,7 +18,7 @@ export function Layout({ children }: LayoutProps) {
   return (
     <Box minH="100vh" bg="blackAlpha.100">
       <Box as="header" shadow="lg" py={6} bg="blackAlpha.900" color="whiteAlpha.900">
-        <Container maxW="container.xl">
+        <Container maxW={WIDTH_2XL}>
           <Flex justifyContent="space-between" alignItems="center">
             <Heading>Coinbase Wallet SDK - Playground</Heading>
             {/* TODO: There is an issue where `this` is undefined within the sdk instance. */}
