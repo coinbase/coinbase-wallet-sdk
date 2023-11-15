@@ -1,10 +1,10 @@
-import { ErrorHandler, serializeError, standardErrors } from '../core/error';
-import { AddressString, IntNumber, ProviderType, RegExpString } from '../core/type';
+import { ErrorHandler, serializeError, standardErrors } from '../errors';
 import { JSONRPCRequest, JSONRPCResponse } from '../provider/JSONRPC';
+import { AddressString, IntNumber, ProviderType, RegExpString } from '../types';
+import { EthereumTransactionParams } from './EthereumTransactionParams';
 import { Session } from './Session';
-import { EthereumTransactionParams } from './walletlink/type/EthereumTransactionParams';
-import { SupportedWeb3Method, Web3Request } from './walletlink/type/Web3Request';
-import { Web3Response } from './walletlink/type/Web3Response';
+import { SupportedWeb3Method, Web3Request } from './Web3Request';
+import { Web3Response } from './Web3Response';
 
 export const WALLET_USER_NAME_KEY = 'walletUsername';
 export const LOCAL_STORAGE_ADDRESSES_KEY = 'Addresses';
@@ -15,7 +15,7 @@ export type CancelablePromise<T> = {
   cancel: ErrorHandler;
 };
 
-export abstract class RelayAbstract {
+export abstract class WalletSDKRelayAbstract {
   abstract resetAndReload(): void;
 
   abstract requestEthereumAccounts(): CancelablePromise<Web3Response<'requestEthereumAccounts'>>;

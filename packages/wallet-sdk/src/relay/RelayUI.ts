@@ -1,17 +1,17 @@
-import { ErrorHandler } from '../core/error';
-import { AddressString, ProviderType } from '../core/type';
-import { Session } from './Session';
-import { Web3Request } from './walletlink/type/Web3Request';
-import { Web3Response } from './walletlink/type/Web3Response';
+import { ErrorHandler } from '../errors';
+import { Session } from '../relay/Session';
+import { Web3Request } from '../relay/Web3Request';
+import { Web3Response } from '../relay/Web3Response';
+import { AddressString, ProviderType } from '../types';
 
-export interface RelayUIOptions {
+export interface WalletUIOptions {
   linkAPIUrl: string;
   version: string;
   darkMode: boolean;
   session: Session;
 }
 
-export interface RelayUI {
+export interface WalletUI {
   attach(): void;
 
   setConnected(connected: boolean): void;

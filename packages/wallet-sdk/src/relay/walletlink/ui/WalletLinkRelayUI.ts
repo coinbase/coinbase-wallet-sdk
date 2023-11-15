@@ -1,18 +1,18 @@
-import { ErrorHandler } from '../../../core/error';
-import { injectCssReset } from '../../../lib/cssReset';
-import { RelayUI, RelayUIOptions } from '../../RelayUI';
-import {} from '../type/Web3Request';
-import {} from '../type/Web3Response';
-import { LinkFlow } from './components/LinkFlow/LinkFlow';
-import { Snackbar, SnackbarInstanceProps } from './components/Snackbar/Snackbar';
+import { LinkFlow } from '../components/LinkFlow/LinkFlow';
+import { Snackbar, SnackbarInstanceProps } from '../components/Snackbar/Snackbar';
+import { ErrorHandler } from '../errors';
+import { injectCssReset } from '../lib/cssReset';
+import {} from '../relay/Web3Request';
+import {} from '../relay/Web3Response';
+import { WalletUI, WalletUIOptions } from './WalletUI';
 
-export class WalletLinkRelayUI implements RelayUI {
+export class WalletLinkRelayUI implements WalletUI {
   private readonly linkFlow: LinkFlow;
   private readonly snackbar: Snackbar;
   private standalone: boolean | null = null;
   private attached = false;
 
-  constructor(options: Readonly<RelayUIOptions>) {
+  constructor(options: Readonly<WalletUIOptions>) {
     this.snackbar = new Snackbar({
       darkMode: options.darkMode,
     });

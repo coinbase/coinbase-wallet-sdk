@@ -7,8 +7,19 @@
 import BN from 'bn.js';
 import { EventEmitter } from 'eventemitter3';
 
-import { serializeError, standardErrorCodes, standardErrors } from '../core/error';
-import { AddressString, Callback, HexString, IntNumber, ProviderType } from '../core/type';
+import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
+import { serializeError, standardErrorCodes, standardErrors } from '../errors';
+import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
+import { EthereumTransactionParams } from '../relay/EthereumTransactionParams';
+import { MobileRelay } from '../relay/MobileRelay';
+import { Session } from '../relay/Session';
+import {
+  LOCAL_STORAGE_ADDRESSES_KEY,
+  WalletSDKRelayAbstract,
+} from '../relay/WalletSDKRelayAbstract';
+import { WalletSDKRelayEventManager } from '../relay/WalletSDKRelayEventManager';
+import { isErrorResponse, Web3Response } from '../relay/Web3Response';
+import { AddressString, Callback, HexString, IntNumber, ProviderType } from '../types';
 import {
   ensureAddressString,
   ensureBN,
@@ -19,18 +30,10 @@ import {
   ensureRegExpString,
   hexStringFromIntNumber,
   prepend0x,
-} from '../core/util';
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { MobileRelay } from '../relay/mobile/MobileRelay';
-import { LOCAL_STORAGE_ADDRESSES_KEY, RelayAbstract } from '../relay/RelayAbstract';
-import { RelayEventManager } from '../relay/RelayEventManager';
-import { Session } from '../relay/Session';
-import { EthereumTransactionParams } from '../relay/walletlink/type/EthereumTransactionParams';
-import { isErrorResponse, Web3Response } from '../relay/walletlink/type/Web3Response';
+} from '../util';
 import eip712 from '../vendor-js/eth-eip712-util';
-import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
 import { FilterPolyfill } from './FilterPolyfill';
-import { JSONRPCRequest, JSONRPCResponse } from './JSONRPC';
+import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from './JSONRPC';
 import {
   SubscriptionManager,
   SubscriptionNotification,
@@ -48,8 +51,8 @@ export interface CoinbaseWalletProviderOptions {
   overrideIsCoinbaseWallet?: boolean;
   overrideIsCoinbaseBrowser?: boolean;
   overrideIsMetaMask: boolean;
-  relayEventManager: RelayEventManager;
-  relayProvider: () => Promise<RelayAbstract>;
+  relayEventManager: WalletSDKRelayEventManager;
+  relayProvider: () => Promise<WalletSDKRelayAbstract>;
   storage: ScopedLocalStorage;
   diagnosticLogger?: DiagnosticLogger;
 }
@@ -93,10 +96,10 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
   private readonly _filterPolyfill = new FilterPolyfill(this);
   private readonly _subscriptionManager = new SubscriptionManager(this);
 
-  private readonly _relayProvider: () => Promise<RelayAbstract>;
-  private _relay: RelayAbstract | null = null;
+  private readonly _relayProvider: () => Promise<WalletSDKRelayAbstract>;
+  private _relay: WalletSDKRelayAbstract | null = null;
   private readonly _storage: ScopedLocalStorage;
-  private readonly _relayEventManager: RelayEventManager;
+  private readonly _relayEventManager: WalletSDKRelayEventManager;
   private readonly diagnostic?: DiagnosticLogger;
 
   private _chainIdFromOpts: number;
@@ -361,7 +364,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
       return [...this._addresses];
     }
 
-    return await this.send<AddressString[]>('eth_requestAccounts');
+    return await this.send<AddressString[]>(JSONRPCMethod.eth_requestAccounts);
   }
 
   public async close() {
@@ -726,19 +729,19 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     const params = request.params || [];
 
     switch (method) {
-      case 'eth_accounts':
+      case JSONRPCMethod.eth_accounts:
         return this._eth_accounts();
 
-      case 'eth_coinbase':
+      case JSONRPCMethod.eth_coinbase:
         return this._eth_coinbase();
 
-      case 'eth_uninstallFilter':
+      case JSONRPCMethod.eth_uninstallFilter:
         return this._eth_uninstallFilter(params);
 
-      case 'net_version':
+      case JSONRPCMethod.net_version:
         return this._net_version();
 
-      case 'eth_chainId':
+      case JSONRPCMethod.eth_chainId:
         return this._eth_chainId();
 
       default:
@@ -753,53 +756,53 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     const params = request.params || [];
 
     switch (method) {
-      case 'eth_requestAccounts':
+      case JSONRPCMethod.eth_requestAccounts:
         return this._eth_requestAccounts();
 
-      case 'eth_sign':
+      case JSONRPCMethod.eth_sign:
         return this._eth_sign(params);
 
-      case 'eth_ecRecover':
+      case JSONRPCMethod.eth_ecRecover:
         return this._eth_ecRecover(params);
 
-      case 'personal_sign':
+      case JSONRPCMethod.personal_sign:
         return this._personal_sign(params);
 
-      case 'personal_ecRecover':
+      case JSONRPCMethod.personal_ecRecover:
         return this._personal_ecRecover(params);
 
-      case 'eth_signTransaction':
+      case JSONRPCMethod.eth_signTransaction:
         return this._eth_signTransaction(params);
 
-      case 'eth_sendRawTransaction':
+      case JSONRPCMethod.eth_sendRawTransaction:
         return this._eth_sendRawTransaction(params);
 
-      case 'eth_sendTransaction':
+      case JSONRPCMethod.eth_sendTransaction:
         return this._eth_sendTransaction(params);
 
-      case 'eth_signTypedData_v1':
+      case JSONRPCMethod.eth_signTypedData_v1:
         return this._eth_signTypedData_v1(params);
 
-      case 'eth_signTypedData_v2':
+      case JSONRPCMethod.eth_signTypedData_v2:
         return this._throwUnsupportedMethodError();
 
-      case 'eth_signTypedData_v3':
+      case JSONRPCMethod.eth_signTypedData_v3:
         return this._eth_signTypedData_v3(params);
 
-      case 'eth_signTypedData_v4':
-      case 'eth_signTypedData':
+      case JSONRPCMethod.eth_signTypedData_v4:
+      case JSONRPCMethod.eth_signTypedData:
         return this._eth_signTypedData_v4(params);
 
-      case 'cbWallet_arbitrary':
+      case JSONRPCMethod.cbWallet_arbitrary:
         return this._cbwallet_arbitrary(params);
 
-      case 'wallet_addEthereumChain':
+      case JSONRPCMethod.wallet_addEthereumChain:
         return this._wallet_addEthereumChain(params);
 
-      case 'wallet_switchEthereumChain':
+      case JSONRPCMethod.wallet_switchEthereumChain:
         return this._wallet_switchEthereumChain(params);
 
-      case 'wallet_watchAsset':
+      case JSONRPCMethod.wallet_watchAsset:
         return this._wallet_watchAsset(params);
     }
 
@@ -826,19 +829,19 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     const params = request.params || [];
 
     switch (method) {
-      case 'eth_newFilter':
+      case JSONRPCMethod.eth_newFilter:
         return this._eth_newFilter(params);
 
-      case 'eth_newBlockFilter':
+      case JSONRPCMethod.eth_newBlockFilter:
         return this._eth_newBlockFilter();
 
-      case 'eth_newPendingTransactionFilter':
+      case JSONRPCMethod.eth_newPendingTransactionFilter:
         return this._eth_newPendingTransactionFilter();
 
-      case 'eth_getFilterChanges':
+      case JSONRPCMethod.eth_getFilterChanges:
         return this._eth_getFilterChanges(params);
 
-      case 'eth_getFilterLogs':
+      case JSONRPCMethod.eth_getFilterLogs:
         return this._eth_getFilterLogs(params);
     }
 
@@ -849,8 +852,8 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     request: JSONRPCRequest
   ): Promise<SubscriptionResult> | undefined {
     switch (request.method) {
-      case 'eth_subscribe':
-      case 'eth_unsubscribe':
+      case JSONRPCMethod.eth_subscribe:
+      case JSONRPCMethod.eth_unsubscribe:
         return this._subscriptionManager.handleRequest(request);
     }
 
@@ -1269,7 +1272,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     return this._filterPolyfill.getFilterLogs(filterId);
   }
 
-  private initializeRelay(): Promise<RelayAbstract> {
+  private initializeRelay(): Promise<WalletSDKRelayAbstract> {
     if (this._relay) {
       return Promise.resolve(this._relay);
     }

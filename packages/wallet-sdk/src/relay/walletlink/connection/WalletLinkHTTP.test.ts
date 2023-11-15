@@ -1,4 +1,4 @@
-import { ServerMessage } from '../type/ServerMessage';
+import { ServerMessage } from './ServerMessage';
 import { WalletLinkHTTP } from './WalletLinkHTTP';
 
 describe('WalletLinkHTTP', () => {

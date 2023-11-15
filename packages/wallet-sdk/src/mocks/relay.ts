@@ -1,16 +1,16 @@
-import { AddressString, HexString, ProviderType } from '../core/type';
+import { MOCK_ADDERESS, MOCK_TX } from '../fixtures/provider';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { RelayAbstract } from '../relay/RelayAbstract';
 import { Session } from '../relay/Session';
-import { Web3Method as SupportedWeb3Method, Web3Method } from '../relay/walletlink/type/Web3Method';
-import { Web3Response } from '../relay/walletlink/type/Web3Response';
-import { MOCK_ADDERESS, MOCK_TX } from './fixtures';
+import { WalletSDKRelayAbstract } from '../relay/WalletSDKRelayAbstract';
+import { Web3Method as SupportedWeb3Method, Web3Method } from '../relay/Web3Method';
+import { Web3Response } from '../relay/Web3Response';
+import { AddressString, HexString, ProviderType } from '../types';
 
 function makeMockReturn<T extends SupportedWeb3Method>(response: Web3Response<T>) {
   return { cancel: () => {}, promise: Promise.resolve<Web3Response<T>>(response) };
 }
 
-export class MockRelayClass extends RelayAbstract {
+export class MockRelayClass extends WalletSDKRelayAbstract {
   constructor() {
     super();
     this.requestEthereumAccounts = this.requestEthereumAccounts.bind(this);

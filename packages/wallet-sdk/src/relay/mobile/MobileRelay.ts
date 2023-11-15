@@ -1,10 +1,10 @@
-import { getLocation } from '../../core/util';
-import { CancelablePromise } from '../RelayAbstract';
-import { WalletLinkResponseEventData } from '../walletlink/type/WalletLinkEventData';
-import { Web3Request } from '../walletlink/type/Web3Request';
-import { Web3Response } from '../walletlink/type/Web3Response';
-import { WalletLinkRelay, WalletLinkRelayOptions } from '../walletlink/WalletLinkRelay';
-import { MobileRelayUI } from './MobileRelayUI';
+import { MobileRelayUI } from '../provider/MobileRelayUI';
+import { getLocation } from '../util';
+import { WalletLinkResponseEventData } from './RelayMessage';
+import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay';
+import { CancelablePromise } from './WalletSDKRelayAbstract';
+import { Web3Request } from './Web3Request';
+import { Web3Response } from './Web3Response';
 
 export class MobileRelay extends WalletLinkRelay {
   private _enableMobileWalletLink: boolean;
