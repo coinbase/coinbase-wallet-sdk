@@ -70,7 +70,7 @@ export abstract class WalletSDKRelayAbstract {
 
   abstract signAndSubmitEthereumTransaction(
     params: EthereumTransactionParams
-  ): CancelablePromise<Web3Response<'signEthereumTransaction'>>;
+  ): CancelablePromise<Web3Response<'submitEthereumTransaction'>>;
 
   abstract submitEthereumTransaction(
     signedTransaction: Buffer,
@@ -81,9 +81,10 @@ export abstract class WalletSDKRelayAbstract {
 
   abstract genericRequest(data: object, action: string): CancelablePromise<Web3Response<'generic'>>;
 
-  public abstract sendRequest<M extends SupportedWeb3Method>(
-    request: Web3Request<M>
-  ): CancelablePromise<Web3Response<M>>;
+  abstract sendRequest<
+    RequestMethod extends SupportedWeb3Method,
+    ResponseMethod extends SupportedWeb3Method = RequestMethod,
+  >(request: Web3Request<RequestMethod>): CancelablePromise<Web3Response<ResponseMethod>>;
 
   abstract setAppInfo(appName: string, appLogoUrl: string | null): void;
 

@@ -321,14 +321,7 @@ export class WalletLinkRelay
   }
 
   public signAndSubmitEthereumTransaction(params: EthereumTransactionParams) {
-    /**
-     * Note: While 'submitEthereumTransaction' would be the appropriate method to use,
-     * we've historically used 'signEthereumTransaction' since its introduction in 2019.
-     * https://github.com/coinbase/coinbase-wallet-sdk/blame/874fb5e63218b85561d56bf7412d1f2fc5b82044/js/src/WalletLinkRelay.ts#L148
-     * To ensure backwards compatibility, we continue to use 'signEthereumTransaction'.
-     */
-
-    return this.sendRequest({
+    return this.sendRequest<'signEthereumTransaction', 'submitEthereumTransaction'>({
       method: 'signEthereumTransaction',
       params: {
         fromAddress: params.fromAddress,
@@ -394,9 +387,11 @@ export class WalletLinkRelay
     return this.sendRequest(request);
   }
 
-  public sendRequest<M extends SupportedWeb3Method, Response = Web3Response<M>>(
-    request: Web3Request<M>
-  ): CancelablePromise<Response> {
+  public sendRequest<
+    RequestMethod extends SupportedWeb3Method,
+    ResponseMethod extends SupportedWeb3Method = RequestMethod,
+    Response = Web3Response<ResponseMethod>,
+  >(request: Web3Request<RequestMethod>): CancelablePromise<Response> {
     let hideSnackbarItem: (() => void) | null = null;
     const id = randomBytesHex(8);
 
