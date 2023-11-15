@@ -4,7 +4,7 @@
 import { Web3Request } from './Web3Request';
 import { Web3Response } from './Web3Response';
 
-type RelayMessageType =
+type WalletLinkEventType =
   | 'SESSION_ID_REQUEST'
   | 'SESSION_ID_RESPONSE'
   | 'LINKED'
@@ -14,7 +14,7 @@ type RelayMessageType =
   | 'WEB3_RESPONSE';
 
 export type WalletLinkEventData = {
-  type: RelayMessageType;
+  type: WalletLinkEventType;
   id: string;
 } & (
   | {
