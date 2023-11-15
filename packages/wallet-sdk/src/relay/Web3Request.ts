@@ -126,9 +126,13 @@ type _Web3Request =
   | {
       method: 'watchAsset';
       params: {
-        address: string;
-        symbol?: string;
-        decimals?: number;
-        image?: string;
+        type: string;
+        options: {
+          address: string;
+          symbol?: string;
+          decimals?: number;
+          image?: string;
+        };
+        chainId?: string;
       };
     };
