@@ -1,11 +1,10 @@
 import { MobileRelayUI } from '../provider/MobileRelayUI';
 import { getLocation } from '../util';
+import { WalletLinkResponseEventData } from './RelayMessage';
 import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay';
 import { CancelablePromise } from './WalletSDKRelayAbstract';
-import { Web3Method } from './Web3Method';
-import { ConnectAndSignInRequest, Web3Request } from './Web3Request';
-import { ConnectAndSignInResponse, RequestEthereumAccountsResponse } from './Web3Response';
-import { Web3ResponseMessage } from './Web3ResponseMessage';
+import { Web3Request } from './Web3Request';
+import { Web3Response } from './Web3Response';
 
 export class MobileRelay extends WalletLinkRelay {
   private _enableMobileWalletLink: boolean;
@@ -16,7 +15,7 @@ export class MobileRelay extends WalletLinkRelay {
   }
 
   // override
-  public requestEthereumAccounts(): CancelablePromise<RequestEthereumAccountsResponse> {
+  public requestEthereumAccounts(): CancelablePromise<Web3Response<'requestEthereumAccounts'>> {
     if (this._enableMobileWalletLink) {
       return super.requestEthereumAccounts();
     }
@@ -41,12 +40,12 @@ export class MobileRelay extends WalletLinkRelay {
 
     // For mobile relay requests, open the Coinbase Wallet app
     switch (request.method) {
-      case Web3Method.requestEthereumAccounts:
-      case Web3Method.connectAndSignIn:
+      case 'requestEthereumAccounts':
+      case 'connectAndSignIn':
         navigatedToCBW = true;
         this.ui.openCoinbaseWalletDeeplink(this.getQRCodeUrl());
         break;
-      case Web3Method.switchEthereumChain:
+      case 'switchEthereumChain':
         // switchEthereumChain doesn't need to open the app
         return;
       default:
@@ -75,7 +74,7 @@ export class MobileRelay extends WalletLinkRelay {
   }
 
   // override
-  handleWeb3ResponseMessage(message: Web3ResponseMessage) {
+  handleWeb3ResponseMessage(message: WalletLinkResponseEventData) {
     super.handleWeb3ResponseMessage(message);
 
     if (this._enableMobileWalletLink && this.ui instanceof MobileRelayUI) {
@@ -87,13 +86,13 @@ export class MobileRelay extends WalletLinkRelay {
     nonce: string;
     statement?: string;
     resources?: string[];
-  }): CancelablePromise<ConnectAndSignInResponse> {
+  }): CancelablePromise<Web3Response<'connectAndSignIn'>> {
     if (!this._enableMobileWalletLink) {
       throw new Error('connectAndSignIn is supported only when enableMobileWalletLink is on');
     }
 
-    return this.sendRequest<ConnectAndSignInRequest, ConnectAndSignInResponse>({
-      method: Web3Method.connectAndSignIn,
+    return this.sendRequest({
+      method: 'connectAndSignIn',
       params: {
         appName: this.appName,
         appLogoUrl: this.appLogoUrl,

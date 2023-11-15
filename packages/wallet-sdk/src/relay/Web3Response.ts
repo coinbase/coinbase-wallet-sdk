@@ -14,7 +14,8 @@ type ErrorResponse = {
   errorMessage: string;
 };
 
-export function isErrorResponse(response: Web3Response): response is ErrorResponse {
+// TODO: revisit if this is still needed
+export function isErrorResponse(response: unknown): response is ErrorResponse {
   return (response as ErrorResponse).errorMessage !== undefined;
 }
 

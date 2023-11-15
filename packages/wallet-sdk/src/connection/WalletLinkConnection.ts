@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { WalletLinkEventData, Web3ResponseMessage } from '../relay/RelayMessage';
+import { WalletLinkEventData, WalletLinkResponseEventData } from '../relay/RelayMessage';
 import { Session } from '../relay/Session';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../relay/WalletSDKRelayAbstract';
 import { IntNumber } from '../types';
@@ -19,7 +19,7 @@ const REQUEST_TIMEOUT = 60000;
 export interface WalletLinkConnectionUpdateListener {
   linkedUpdated: (linked: boolean) => void;
   connectedUpdated: (connected: boolean) => void;
-  handleWeb3ResponseMessage: (message: Web3ResponseMessage) => void;
+  handleWeb3ResponseMessage: (message: WalletLinkResponseEventData) => void;
   chainUpdated: (chainId: string, jsonRpcUrl: string) => void;
   accountUpdated: (selectedAddress: string) => void;
   metadataUpdated: (key: string, metadataValue: string) => void;

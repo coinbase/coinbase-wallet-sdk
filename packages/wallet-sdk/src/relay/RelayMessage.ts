@@ -30,4 +30,4 @@ export type WalletLinkEventData = {
     }
 );
 
-export type Web3ResponseMessage = Extract<WalletLinkEventData, { type: 'WEB3_RESPONSE' }>;
+export type WalletLinkResponseEventData = Extract<WalletLinkEventData, { type: 'WEB3_RESPONSE' }>;

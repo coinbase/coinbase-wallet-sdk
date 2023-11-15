@@ -1,4 +1,4 @@
-import { isErrorResponse } from '../relay/Web3Response';
+import { isErrorResponse, Web3Response } from '../relay/Web3Response';
 import { LIB_VERSION } from '../version';
 import { standardErrorCodes } from './constants';
 import { serialize, SerializedEthereumRpcError } from './utils';
@@ -34,7 +34,7 @@ export function serializeError(
 /**
  * Converts an error to a serializable object.
  */
-function getErrorObject(error: unknown) {
+function getErrorObject(error: string | Web3Response | unknown) {
   if (typeof error === 'string') {
     return {
       message: error,
@@ -45,7 +45,7 @@ function getErrorObject(error: unknown) {
       ...error,
       message: error.errorMessage,
       code: error.errorCode,
-      data: { method: error.method, result: error.result },
+      data: { method: error.method },
     };
   }
   return error;
