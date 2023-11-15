@@ -19,7 +19,7 @@ import { WalletUI, WalletUIOptions } from '../provider/WalletUI';
 import { AddressString, IntNumber, ProviderType, RegExpString } from '../types';
 import { bigIntStringFromBN, createQrUrl, hexStringFromBuffer, randomBytesHex } from '../util';
 import { EthereumTransactionParams } from './EthereumTransactionParams';
-import { RelayMessage } from './RelayMessage';
+import { RelayMessage, Web3ResponseMessage } from './RelayMessage';
 import { Session } from './Session';
 import {
   CancelablePromise,
@@ -496,7 +496,7 @@ export class WalletLinkRelay
     return this.connection.publishEvent(event, message, callWebhook);
   }
 
-  handleWeb3ResponseMessage(message: RelayMessage & { type: 'WEB3_RESPONSE' }) {
+  handleWeb3ResponseMessage(message: Web3ResponseMessage) {
     const { response } = message;
 
     this.diagnostic?.log(EVENTS.WEB3_RESPONSE, {
@@ -533,7 +533,7 @@ export class WalletLinkRelay
     });
   }
 
-  private invokeCallback(message: RelayMessage & { type: 'WEB3_RESPONSE' }) {
+  private invokeCallback(message: Web3ResponseMessage) {
     const callback = this.relayEventManager.callbacks.get(message.id);
     if (callback) {
       callback(message.response);

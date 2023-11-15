@@ -29,3 +29,5 @@ export type RelayMessage = {
       type: 'WEB3_REQUEST_CANCELED';
     }
 );
+
+export type Web3ResponseMessage = Extract<RelayMessage, { type: 'WEB3_RESPONSE' }>;

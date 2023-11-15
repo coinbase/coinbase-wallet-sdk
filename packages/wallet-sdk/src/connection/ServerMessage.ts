@@ -3,6 +3,11 @@
 
 import { IntNumber } from '../types';
 
+export type ServerMessage<T extends Type = Type> = Extract<_ServerMessage, { type: T }>;
+
+export type ServerMessageType = Type;
+type Type = _ServerMessage['type'];
+
 type _ServerMessage =
   | {
       type: 'Heartbeat'; // TODO: remove. it's client side only virtual message.
@@ -61,8 +66,3 @@ type _ServerMessage =
       event: string;
       data: string;
     };
-
-type Type = _ServerMessage['type'];
-export type ServerMessageType = Type;
-
-export type ServerMessage<T extends Type = Type> = Extract<_ServerMessage, { type: T }>;
