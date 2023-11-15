@@ -20,6 +20,24 @@ const walletSwitchEthereumChain = {
         chainId: '1',
       },
     },
+    {
+      key: 'OP Mainnet',
+      data: {
+        chainId: '10',
+      },
+    },
+    {
+      key: 'Polygon',
+      data: {
+        chainId: '137',
+      },
+    },
+    {
+      key: 'Harmony',
+      data: {
+        chainId: '1666600000',
+      },
+    },
   ],
 };
 
@@ -29,8 +47,8 @@ const walletAddEthereumChain = {
   params: [
     { key: 'chainId', required: true },
     { key: 'chainName', required: true },
-    { key: 'name', required: true },
-    { key: 'symbol', required: true },
+    { key: 'currencyName', required: true },
+    { key: 'currencySymbol', required: true },
     { key: 'decimals', required: true },
     { key: 'rpcUrl', required: true },
     { key: 'blockExplorerUrl' },
@@ -44,9 +62,24 @@ const walletAddEthereumChain = {
       blockExplorerUrls: [data.blockExplorerUrls],
       iconUrls: [data.iconUrl],
       nativeCurrency: {
-        name: 'ETH',
-        symbol: 'ETH',
+        name: data.currencyName,
+        symbol: data.currencySymbol,
         decimals: 18,
+      },
+    },
+  ],
+  shortcuts: [
+    {
+      key: 'Harmony',
+      data: {
+        chainId: '1666600000',
+        chainName: 'Harmony Mainnet',
+        currencyName: 'ONE',
+        currencySymbol: 'ONE',
+        decimals: 18,
+        rpcUrl: 'https://api.harmony.one',
+        blockExplorerUrl: 'https://explorer.harmony.one',
+        iconUrl: '',
       },
     },
   ],
@@ -55,18 +88,31 @@ const walletAddEthereumChain = {
 const walletWatchAsset = {
   method: 'wallet_watchAsset',
   params: [
+    { key: 'type', required: true },
     { key: 'address', required: true },
     { key: 'symbol', required: false },
     { key: 'decimals', required: false },
+    { key: 'tokenId', required: false },
   ],
   format: (data: Record<string, string>) => [
     {
-      // eslint-disable-next-line prettier/prettier
-      type: "ERC20",
+      type: data.type,
       options: {
         address: data.address,
         symbol: data.symbol,
         decimals: Number(data.decimals),
+        tokenId: data.tokenId,
+      },
+    },
+  ],
+  shortcuts: [
+    {
+      key: 'WONE on Harmony',
+      data: {
+        type: 'ERC20',
+        address: '0xcf664087a5bb0237a0bad6742852ec6c8d69a27a',
+        symbol: 'WONE',
+        decimals: 18,
       },
     },
   ],

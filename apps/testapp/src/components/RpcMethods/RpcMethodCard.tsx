@@ -1,4 +1,9 @@
 import {
+  Accordion,
+  AccordionButton,
+  AccordionIcon,
+  AccordionItem,
+  AccordionPanel,
   Button,
   Card,
   CardBody,
@@ -77,48 +82,66 @@ export function RpcMethodCard({ connected, format, method, params, shortcuts }) 
         </Flex>
         {hasParams && (
           <>
-            <Heading as="h3" size="sm" mt={4}>
-              Params
-            </Heading>
-            <VStack spacing={2} mt={2}>
-              {params.map((param) => {
-                const err = errors[param.key];
-                return (
-                  <FormControl key={param.key} isInvalid={!!err} isRequired={param.required}>
-                    <InputGroup size="sm">
-                      <InputLeftAddon>{param.key}</InputLeftAddon>
-                      <Input
-                        {...register(param.key, {
-                          required: param.required ? `${param.key} required` : false,
-                        })}
-                      />
-                    </InputGroup>
-                    <FormErrorMessage>{err?.message as string}</FormErrorMessage>
-                  </FormControl>
-                );
-              })}
-            </VStack>
+            <Accordion allowMultiple mt={4} defaultIndex={shortcuts ? [1] : [0]}>
+              <AccordionItem>
+                <AccordionButton>
+                  <Heading as="h3" size="sm" marginY={2} flex="1" textAlign="left">
+                    Params
+                  </Heading>
+                  <AccordionIcon />
+                </AccordionButton>
+                <AccordionPanel pb={4}>
+                  <VStack spacing={2} mt={2}>
+                    {params.map((param) => {
+                      const err = errors[param.key];
+                      return (
+                        <FormControl key={param.key} isInvalid={!!err} isRequired={param.required}>
+                          <InputGroup size="sm">
+                            <InputLeftAddon>{param.key}</InputLeftAddon>
+                            <Input
+                              {...register(param.key, {
+                                required: param.required ? `${param.key} required` : false,
+                              })}
+                            />
+                          </InputGroup>
+                          <FormErrorMessage>{err?.message as string}</FormErrorMessage>
+                        </FormControl>
+                      );
+                    })}
+                  </VStack>
+                </AccordionPanel>
+              </AccordionItem>
+              {shortcuts?.length && (
+                <AccordionItem>
+                  <AccordionButton>
+                    <Heading as="h3" size="sm" marginY={2} flex="1" textAlign="left">
+                      Shortcuts
+                    </Heading>
+                    <AccordionIcon />
+                  </AccordionButton>
+                  <AccordionPanel pb={4}>
+                    <HStack spacing={2}>
+                      {shortcuts.map((shortcut) => (
+                        <Button key={shortcut.key} onClick={() => submit(shortcut.data)}>
+                          {shortcut.key}
+                        </Button>
+                      ))}
+                    </HStack>
+                  </AccordionPanel>
+                </AccordionItem>
+              )}
+            </Accordion>
           </>
         )}
-        {shortcuts?.length && (
-          <>
-            <Heading as="h3" size="sm" mt={8}>
-              Shortcuts
-            </Heading>
-            <HStack spacing={2} mt={2}>
-              {shortcuts.map((shortcut) => (
-                <Button key={shortcut.key}>{shortcut.key}</Button>
-              ))}
-            </HStack>
-          </>
-        )}
-        <VStack mt={8}>
-          {response && (
+        {response && (
+          <VStack mt={4}>
             <Code as="pre" p={4} wordBreak="break-word" whiteSpace="pre-wrap" w="100%">
               {JSON.stringify(response, null, 2)}
             </Code>
-          )}
-          {error && (
+          </VStack>
+        )}
+        {error && (
+          <VStack mt={4}>
             <Code
               as="pre"
               colorScheme="red"
@@ -129,8 +152,8 @@ export function RpcMethodCard({ connected, format, method, params, shortcuts }) 
             >
               {JSON.stringify(error, null, 2)}
             </Code>
-          )}
-        </VStack>
+          </VStack>
+        )}
       </CardBody>
     </Card>
   );

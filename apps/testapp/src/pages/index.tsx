@@ -10,7 +10,7 @@ import { RpcMethodCard } from '../components/RpcMethods/RpcMethodCard';
 
 export default function Home() {
   return (
-    <Container maxW="container.xl">
+    <Container maxW="container.xl" mb={8}>
       <Box>
         <Heading size="md">Event Listeners</Heading>
         <Grid mt={2} templateColumns={{ base: '100%' }} gap={2}>
