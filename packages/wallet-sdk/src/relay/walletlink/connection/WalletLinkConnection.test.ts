@@ -1,13 +1,13 @@
+import { Cipher } from '../../../lib/Cipher';
 import { ScopedLocalStorage } from '../../../lib/ScopedLocalStorage';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../../RelayAbstract';
 import { Session } from '../../Session';
 import { SessionConfig } from '../type/SessionConfig';
 import { WalletLinkConnection, WalletLinkConnectionUpdateListener } from './WalletLinkConnection';
-import { WalletLinkConnectionCipher } from './WalletLinkConnectionCipher';
 
 const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`decrypted ${text}`));
 
-jest.spyOn(WalletLinkConnectionCipher.prototype, 'decrypt').mockImplementation(decryptMock);
+jest.spyOn(Cipher.prototype, 'decrypt').mockImplementation(decryptMock);
 
 describe('WalletLinkConnection', () => {
   const session = new Session(new ScopedLocalStorage('test'));

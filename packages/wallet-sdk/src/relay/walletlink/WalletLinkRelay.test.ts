@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { Cipher } from '../../lib/Cipher';
 import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
 import { WALLET_USER_NAME_KEY } from '../RelayAbstract';
 import { RelayEventManager } from '../RelayEventManager';
 import { WalletLinkConnection } from './connection/WalletLinkConnection';
-import { WalletLinkConnectionCipher } from './connection/WalletLinkConnectionCipher';
 import { WalletLinkWebSocket } from './connection/WalletLinkWebSocket';
 import { ServerMessage } from './type/ServerMessage';
 import { SessionConfig } from './type/SessionConfig';
@@ -12,7 +12,7 @@ import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay';
 
 const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`"decrypted ${text}"`));
 
-jest.spyOn(WalletLinkConnectionCipher.prototype, 'decrypt').mockImplementation(decryptMock);
+jest.spyOn(Cipher.prototype, 'decrypt').mockImplementation(decryptMock);
 
 describe('WalletLinkRelay', () => {
   const options: WalletLinkRelayOptions = {

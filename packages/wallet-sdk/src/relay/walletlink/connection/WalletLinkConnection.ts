@@ -2,6 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 import { IntNumber } from '../../../core/type';
+import { Cipher } from '../../../lib/Cipher';
 import { DiagnosticLogger, EVENTS } from '../../../provider/DiagnosticLogger';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../../RelayAbstract';
 import { Session } from '../../Session';
@@ -9,7 +10,6 @@ import { ClientMessage } from '../type/ClientMessage';
 import { ServerMessage, ServerMessageType } from '../type/ServerMessage';
 import { SessionConfig } from '../type/SessionConfig';
 import { WalletLinkEventData, WalletLinkResponseEventData } from '../type/WalletLinkEventData';
-import { WalletLinkConnectionCipher } from './WalletLinkConnectionCipher';
 import { WalletLinkHTTP } from './WalletLinkHTTP';
 import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket';
 
@@ -46,7 +46,7 @@ export class WalletLinkConnection {
 
   private listener?: WalletLinkConnectionUpdateListener;
   private diagnostic?: DiagnosticLogger;
-  private cipher: WalletLinkConnectionCipher;
+  private cipher: Cipher;
   private ws: WalletLinkWebSocket;
   private http: WalletLinkHTTP;
 
@@ -65,7 +65,7 @@ export class WalletLinkConnection {
     WebSocketClass = WebSocket,
   }: WalletLinkConnectionParams) {
     this.session = session;
-    this.cipher = new WalletLinkConnectionCipher(session.secret);
+    this.cipher = new Cipher(session.secret);
     this.diagnostic = diagnostic;
     this.listener = listener;
 
