@@ -9,12 +9,12 @@ type CBWSDKProviderProps = {
 
 const CBWSDKContext = React.createContext(null);
 
-export const sdkVersions = ['dev', '3.7', '3.9'] as const;
+export const sdkVersions = ['master', '3.9', '3.7'] as const;
 export type SDKVersionType = (typeof sdkVersions)[number];
 
 const dynamicallyImportSDK = (version: SDKVersionType) => {
   switch (version) {
-    case 'dev': {
+    case 'master': {
       return CoinbaseWalletSDKDev;
     }
     case '3.7': {
@@ -27,7 +27,7 @@ const dynamicallyImportSDK = (version: SDKVersionType) => {
 };
 
 export function CBWSDKProvider({ children }: CBWSDKProviderProps) {
-  const [version, setVersion] = React.useState<SDKVersionType>('3.9');
+  const [version, setVersion] = React.useState<SDKVersionType>('master');
   const [sdk, setSdk] = React.useState(null);
   const [provider, setProvider] = React.useState(null);
 
