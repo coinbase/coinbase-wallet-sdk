@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
-import { WALLET_USER_NAME_KEY } from '../WalletSDKRelayAbstract';
-import { WalletSDKRelayEventManager } from '../WalletSDKRelayEventManager';
+import { WALLET_USER_NAME_KEY } from '../RelayAbstract';
+import { RelayEventManager } from '../RelayEventManager';
 import { ServerMessage } from './ServerMessage';
 import { SessionConfig } from './SessionConfig';
 import { WalletLinkConnection } from './WalletLinkConnection';
@@ -20,7 +20,7 @@ describe('WalletLinkRelay', () => {
     version: '0.0.0',
     darkMode: false,
     storage: new ScopedLocalStorage('test'),
-    relayEventManager: new WalletSDKRelayEventManager(),
+    relayEventManager: new RelayEventManager(),
     uiConstructor: jest.fn(),
   };
 

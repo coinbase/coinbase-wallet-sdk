@@ -5,8 +5,8 @@ import { ProviderType } from '../core/types';
 import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from '../fixtures/provider';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { MockRelayClass } from '../mocks/relay';
-import { LOCAL_STORAGE_ADDRESSES_KEY } from '../relay/WalletSDKRelayAbstract';
-import { WalletSDKRelayEventManager } from '../relay/WalletSDKRelayEventManager';
+import { LOCAL_STORAGE_ADDRESSES_KEY } from '../relay/RelayAbstract';
+import { RelayEventManager } from '../relay/RelayEventManager';
 import { CoinbaseWalletProvider, CoinbaseWalletProviderOptions } from './CoinbaseWalletProvider';
 
 const storage = new ScopedLocalStorage('CoinbaseWalletProvider');
@@ -21,7 +21,7 @@ const setupCoinbaseWalletProvider = (options: Partial<CoinbaseWalletProviderOpti
     overrideIsCoinbaseWallet: true,
     overrideIsCoinbaseBrowser: false,
     overrideIsMetaMask: false,
-    relayEventManager: new WalletSDKRelayEventManager(),
+    relayEventManager: new RelayEventManager(),
     relayProvider: async () => Promise.resolve(new MockRelayClass()),
     storage,
     ...options,

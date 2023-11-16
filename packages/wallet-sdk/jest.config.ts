@@ -12,21 +12,11 @@ export default {
 
   // An array of glob patterns indicating a set of files for which coverage information should be collected
   collectCoverageFrom: [
-    './src/util.ts',
-    './src/errors.ts',
     './src/CoinbaseWalletSDK.ts',
-    './src/connection/RxWebSocket.ts',
-    './src/connection/WalletLinkConnection.ts',
-    './src/connection/WalletLinkHTTP.ts',
-    './src/connection/WalletLinkConnectionCipher.ts',
+    './src/core/**/*.ts',
     './src/lib/ScopedLocalStorage.ts',
-    './src/provider/CoinbaseWalletProvider.ts',
-    './src/provider/FilterPolyfill.ts',
-    './src/provider/SubscriptionManager.ts',
-    './src/provider/WalletLinkRelayUI.ts',
-    './src/relay/Session.ts',
-    './src/relay/WalletSDKRelay.ts',
-    './src/relay/WalletSDKRelayEventManager.ts',
+    './src/provider/**/*.ts',
+    './src/relay/**/*.ts',
     './src/components/**/*.tsx',
   ],
   // The directory where Jest should output its coverage files

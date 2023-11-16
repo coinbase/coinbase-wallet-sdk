@@ -3,7 +3,7 @@ import {
   CoinbaseWalletProvider,
   CoinbaseWalletProviderOptions,
 } from '../provider/CoinbaseWalletProvider';
-import { WalletSDKRelayEventManager } from '../relay/WalletSDKRelayEventManager';
+import { RelayEventManager } from '../relay/RelayEventManager';
 
 export const mockSetAppInfo = jest.fn();
 
@@ -29,7 +29,7 @@ export const mockExtensionProvider = new MockProviderClass({
   chainId: 1,
   jsonRpcUrl: 'jsonrpc-url',
   overrideIsMetaMask: false,
-  relayEventManager: new WalletSDKRelayEventManager(),
+  relayEventManager: new RelayEventManager(),
   relayProvider: jest.fn(),
   storage: new ScopedLocalStorage('-walletlink'),
 });

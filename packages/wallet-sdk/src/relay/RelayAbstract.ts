@@ -15,7 +15,7 @@ export type CancelablePromise<T> = {
   cancel: ErrorHandler;
 };
 
-export abstract class WalletSDKRelayAbstract {
+export abstract class RelayAbstract {
   abstract resetAndReload(): void;
 
   abstract requestEthereumAccounts(): CancelablePromise<Web3Response<'requestEthereumAccounts'>>;

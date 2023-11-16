@@ -20,14 +20,10 @@ import {
   randomBytesHex,
 } from '../../core/util';
 import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
+import { CancelablePromise, LOCAL_STORAGE_ADDRESSES_KEY, RelayAbstract } from '../RelayAbstract';
+import { RelayEventManager } from '../RelayEventManager';
 import { RelayUI, RelayUIOptions } from '../RelayUI';
 import { Session } from '../Session';
-import {
-  CancelablePromise,
-  LOCAL_STORAGE_ADDRESSES_KEY,
-  WalletSDKRelayAbstract,
-} from '../WalletSDKRelayAbstract';
-import { WalletSDKRelayEventManager } from '../WalletSDKRelayEventManager';
 import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
 import { WalletLinkRelayUI } from './ui/WalletLinkRelayUI';
 import { WalletLinkConnection, WalletLinkConnectionUpdateListener } from './WalletLinkConnection';
@@ -38,23 +34,20 @@ export interface WalletLinkRelayOptions {
   version: string;
   darkMode: boolean;
   storage: ScopedLocalStorage;
-  relayEventManager: WalletSDKRelayEventManager;
+  relayEventManager: RelayEventManager;
   uiConstructor: (options: Readonly<RelayUIOptions>) => RelayUI;
   diagnosticLogger?: DiagnosticLogger;
   reloadOnDisconnect?: boolean;
   enableMobileWalletLink?: boolean;
 }
 
-export class WalletLinkRelay
-  extends WalletSDKRelayAbstract
-  implements WalletLinkConnectionUpdateListener
-{
+export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnectionUpdateListener {
   private static accountRequestCallbackIds = new Set<string>();
 
   private readonly linkAPIUrl: string;
   protected readonly storage: ScopedLocalStorage;
   private _session: Session;
-  private readonly relayEventManager: WalletSDKRelayEventManager;
+  private readonly relayEventManager: RelayEventManager;
   protected readonly diagnostic?: DiagnosticLogger;
   protected connection: WalletLinkConnection;
   private accountsCallback: ((account: string[], isDisconnect?: boolean) => void) | null = null;

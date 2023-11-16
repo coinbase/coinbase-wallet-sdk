@@ -26,13 +26,10 @@ import {
 } from '../core/util';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { MobileRelay } from '../relay/mobile/MobileRelay';
+import { LOCAL_STORAGE_ADDRESSES_KEY, RelayAbstract } from '../relay/RelayAbstract';
+import { RelayEventManager } from '../relay/RelayEventManager';
 import { Session } from '../relay/Session';
 import { DiagnosticLogger, EVENTS } from '../relay/walletlink/DiagnosticLogger';
-import {
-  LOCAL_STORAGE_ADDRESSES_KEY,
-  WalletSDKRelayAbstract,
-} from '../relay/WalletSDKRelayAbstract';
-import { WalletSDKRelayEventManager } from '../relay/WalletSDKRelayEventManager';
 import eip712 from '../vendor-js/eth-eip712-util';
 import { FilterPolyfill } from './FilterPolyfill';
 import {
@@ -51,8 +48,8 @@ export interface CoinbaseWalletProviderOptions {
   overrideIsCoinbaseWallet?: boolean;
   overrideIsCoinbaseBrowser?: boolean;
   overrideIsMetaMask: boolean;
-  relayEventManager: WalletSDKRelayEventManager;
-  relayProvider: () => Promise<WalletSDKRelayAbstract>;
+  relayEventManager: RelayEventManager;
+  relayProvider: () => Promise<RelayAbstract>;
   storage: ScopedLocalStorage;
   diagnosticLogger?: DiagnosticLogger;
 }
@@ -96,10 +93,10 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
   private readonly _filterPolyfill = new FilterPolyfill(this);
   private readonly _subscriptionManager = new SubscriptionManager(this);
 
-  private readonly _relayProvider: () => Promise<WalletSDKRelayAbstract>;
-  private _relay: WalletSDKRelayAbstract | null = null;
+  private readonly _relayProvider: () => Promise<RelayAbstract>;
+  private _relay: RelayAbstract | null = null;
   private readonly _storage: ScopedLocalStorage;
-  private readonly _relayEventManager: WalletSDKRelayEventManager;
+  private readonly _relayEventManager: RelayEventManager;
   private readonly diagnostic?: DiagnosticLogger;
 
   private _chainIdFromOpts: number;
@@ -1272,7 +1269,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     return this._filterPolyfill.getFilterLogs(filterId);
   }
 
-  private initializeRelay(): Promise<WalletSDKRelayAbstract> {
+  private initializeRelay(): Promise<RelayAbstract> {
     if (this._relay) {
       return Promise.resolve(this._relay);
     }

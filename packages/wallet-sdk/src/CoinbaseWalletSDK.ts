@@ -8,11 +8,11 @@ import { ScopedLocalStorage } from './lib/ScopedLocalStorage';
 import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
 import { MobileRelay } from './relay/mobile/MobileRelay';
 import { MobileRelayUI } from './relay/mobile/MobileRelayUI';
+import { RelayEventManager } from './relay/RelayEventManager';
 import { RelayUI, RelayUIOptions } from './relay/RelayUI';
 import { DiagnosticLogger } from './relay/walletlink/DiagnosticLogger';
 import { WalletLinkRelayUI } from './relay/walletlink/ui/WalletLinkRelayUI';
 import { WalletLinkRelay } from './relay/walletlink/WalletLinkRelay';
-import { WalletSDKRelayEventManager } from './relay/WalletSDKRelayEventManager';
 import { LIB_VERSION } from './version';
 
 /** Coinbase Wallet SDK Constructor Options */
@@ -49,7 +49,7 @@ export class CoinbaseWalletSDK {
   private _appName = '';
   private _appLogoUrl: string | null = null;
   private _relay: WalletLinkRelay | null = null;
-  private _relayEventManager: WalletSDKRelayEventManager | null = null;
+  private _relayEventManager: RelayEventManager | null = null;
   private _storage: ScopedLocalStorage;
   private _overrideIsMetaMask: boolean;
   private _overrideIsCoinbaseWallet: boolean;
@@ -85,7 +85,7 @@ export class CoinbaseWalletSDK {
       return;
     }
 
-    this._relayEventManager = new WalletSDKRelayEventManager();
+    this._relayEventManager = new RelayEventManager();
 
     const isMobile = isMobileWeb();
     const uiConstructor =

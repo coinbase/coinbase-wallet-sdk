@@ -1,9 +1,9 @@
 import { Web3Request } from '../../core/types/Web3Request';
 import { Web3Response } from '../../core/types/Web3Response';
 import { getLocation } from '../../core/util';
+import { CancelablePromise } from '../RelayAbstract';
 import { WalletLinkResponseEventData } from '../walletlink/WalletLinkEventData';
 import { WalletLinkRelay, WalletLinkRelayOptions } from '../walletlink/WalletLinkRelay';
-import { CancelablePromise } from '../WalletSDKRelayAbstract';
 import { MobileRelayUI } from './MobileRelayUI';
 
 export class MobileRelay extends WalletLinkRelay {

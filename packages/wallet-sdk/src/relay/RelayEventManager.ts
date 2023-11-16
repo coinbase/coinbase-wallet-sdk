@@ -3,7 +3,7 @@ import { prepend0x } from '../core/util';
 
 type ResponseCallback = (response: Web3Response) => void;
 
-export class WalletSDKRelayEventManager {
+export class RelayEventManager {
   _nextRequestId = 0;
   callbacks = new Map<string, ResponseCallback>();
 

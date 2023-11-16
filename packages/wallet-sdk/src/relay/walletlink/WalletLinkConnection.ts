@@ -2,8 +2,8 @@
 // Licensed under the Apache License, version 2.0
 
 import { IntNumber } from '../../core/types';
+import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../RelayAbstract';
 import { Session } from '../Session';
-import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../WalletSDKRelayAbstract';
 import { ClientMessage } from './ClientMessage';
 import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
 import { ServerMessage, ServerMessageType } from './ServerMessage';
