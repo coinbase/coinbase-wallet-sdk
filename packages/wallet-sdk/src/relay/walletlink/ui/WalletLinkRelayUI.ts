@@ -4,15 +4,15 @@ import { ErrorHandler } from '../../../core/errors';
 import {} from '../../../core/types/Web3Request';
 import {} from '../../../core/types/Web3Response';
 import { injectCssReset } from '../../../lib/cssReset';
-import { WalletUI, WalletUIOptions } from '../../../ui/WalletUI';
+import { RelayUI, RelayUIOptions } from '../../RelayUI';
 
-export class WalletLinkRelayUI implements WalletUI {
+export class WalletLinkRelayUI implements RelayUI {
   private readonly linkFlow: LinkFlow;
   private readonly snackbar: Snackbar;
   private standalone: boolean | null = null;
   private attached = false;
 
-  constructor(options: Readonly<WalletUIOptions>) {
+  constructor(options: Readonly<RelayUIOptions>) {
     this.snackbar = new Snackbar({
       darkMode: options.darkMode,
     });

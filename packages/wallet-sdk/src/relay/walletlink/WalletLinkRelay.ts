@@ -20,7 +20,7 @@ import {
   randomBytesHex,
 } from '../../core/util';
 import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
-import { WalletUI, WalletUIOptions } from '../../ui/WalletUI';
+import { RelayUI, RelayUIOptions } from '../RelayUI';
 import { Session } from '../Session';
 import {
   CancelablePromise,
@@ -39,7 +39,7 @@ export interface WalletLinkRelayOptions {
   darkMode: boolean;
   storage: ScopedLocalStorage;
   relayEventManager: WalletSDKRelayEventManager;
-  uiConstructor: (options: Readonly<WalletUIOptions>) => WalletUI;
+  uiConstructor: (options: Readonly<RelayUIOptions>) => RelayUI;
   diagnosticLogger?: DiagnosticLogger;
   reloadOnDisconnect?: boolean;
   enableMobileWalletLink?: boolean;
@@ -63,7 +63,7 @@ export class WalletLinkRelay
   protected dappDefaultChain = 1;
   private readonly options: WalletLinkRelayOptions;
 
-  protected ui: WalletUI;
+  protected ui: RelayUI;
 
   protected appName = '';
   protected appLogoUrl: string | null = null;

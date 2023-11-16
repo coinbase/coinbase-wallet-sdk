@@ -2,16 +2,16 @@ import { ErrorHandler } from '../core/errors';
 import { AddressString, ProviderType } from '../core/types';
 import { Web3Request } from '../core/types/Web3Request';
 import { Web3Response } from '../core/types/Web3Response';
-import { Session } from '../relay/Session';
+import { Session } from './Session';
 
-export interface WalletUIOptions {
+export interface RelayUIOptions {
   linkAPIUrl: string;
   version: string;
   darkMode: boolean;
   session: Session;
 }
 
-export interface WalletUI {
+export interface RelayUI {
   attach(): void;
 
   setConnected(connected: boolean): void;

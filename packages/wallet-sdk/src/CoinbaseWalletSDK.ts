@@ -8,11 +8,11 @@ import { ScopedLocalStorage } from './lib/ScopedLocalStorage';
 import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
 import { MobileRelay } from './relay/mobile/MobileRelay';
 import { MobileRelayUI } from './relay/mobile/MobileRelayUI';
+import { RelayUI, RelayUIOptions } from './relay/RelayUI';
 import { DiagnosticLogger } from './relay/walletlink/DiagnosticLogger';
 import { WalletLinkRelayUI } from './relay/walletlink/ui/WalletLinkRelayUI';
 import { WalletLinkRelay } from './relay/walletlink/WalletLinkRelay';
 import { WalletSDKRelayEventManager } from './relay/WalletSDKRelayEventManager';
-import { WalletUI, WalletUIOptions } from './ui/WalletUI';
 import { LIB_VERSION } from './version';
 
 /** Coinbase Wallet SDK Constructor Options */
@@ -26,7 +26,7 @@ export interface CoinbaseWalletSDKOptions {
   /** @optional Coinbase Wallet link server URL; for most, leave it unspecified */
   linkAPIUrl?: string;
   /** @optional an implementation of WalletUI; for most, leave it unspecified */
-  uiConstructor?: (options: Readonly<WalletUIOptions>) => WalletUI;
+  uiConstructor?: (options: Readonly<RelayUIOptions>) => RelayUI;
   /** @optional a diagnostic tool for debugging; for most, leave it unspecified  */
   diagnosticLogger?: DiagnosticLogger;
   /** @optional whether wallet link provider should override the isMetaMask property. */

@@ -1,15 +1,15 @@
 import { RedirectDialog } from '../../components/RedirectDialog/RedirectDialog';
 import { ErrorHandler } from '../../core/errors';
-import { WalletUI, WalletUIOptions } from '../../ui/WalletUI';
+import { RelayUI, RelayUIOptions } from '../RelayUI';
 
 // TODO: Implement & present in-page wallet picker instead of navigating to www.coinbase.com/connect-dapp
-export class MobileRelayUI implements WalletUI {
+export class MobileRelayUI implements RelayUI {
   private readonly redirectDialog: RedirectDialog;
   private attached = false;
   private darkMode = false;
   private openedWindow: Window | null = null;
 
-  constructor(options: Readonly<WalletUIOptions>) {
+  constructor(options: Readonly<RelayUIOptions>) {
     this.redirectDialog = new RedirectDialog();
     this.darkMode = options.darkMode;
   }
