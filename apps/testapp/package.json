@@ -7,8 +7,11 @@
     "start": "next start"
   },
   "dependencies": {
+    "@chakra-ui/icons": "^2.1.1",
     "@chakra-ui/react": "^2.8.0",
     "@coinbase/wallet-sdk": "workspace:^",
+    "@coinbase/wallet-sdk-3.7": "npm:@coinbase/wallet-sdk@~3.7.2",
+    "@coinbase/wallet-sdk-3.9": "npm:@coinbase/wallet-sdk@~3.9.0-canary.4",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "framer-motion": "^10.13.1",
