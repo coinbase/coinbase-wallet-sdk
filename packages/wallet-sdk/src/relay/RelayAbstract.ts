@@ -1,10 +1,11 @@
-import { ErrorHandler, serializeError, standardErrors } from '../errors';
+import { ErrorHandler, serializeError, standardErrors } from '../core/error';
+import { AddressString, IntNumber, ProviderType, RegExpString } from '../core/type';
 import { JSONRPCRequest, JSONRPCResponse } from '../provider/JSONRPC';
-import { AddressString, IntNumber, ProviderType, RegExpString } from '../types';
-import { EthereumTransactionParams } from './EthereumTransactionParams';
 import { Session } from './Session';
-import { SupportedWeb3Method, Web3Request } from './Web3Request';
-import { Web3Response } from './Web3Response';
+import { EthereumTransactionParams } from './walletlink/type/EthereumTransactionParams';
+import { Web3Method } from './walletlink/type/Web3Method';
+import { Web3Request } from './walletlink/type/Web3Request';
+import { Web3Response } from './walletlink/type/Web3Response';
 
 export const WALLET_USER_NAME_KEY = 'walletUsername';
 export const LOCAL_STORAGE_ADDRESSES_KEY = 'Addresses';
@@ -15,7 +16,7 @@ export type CancelablePromise<T> = {
   cancel: ErrorHandler;
 };
 
-export abstract class WalletSDKRelayAbstract {
+export abstract class RelayAbstract {
   abstract resetAndReload(): void;
 
   abstract requestEthereumAccounts(): CancelablePromise<Web3Response<'requestEthereumAccounts'>>;
@@ -82,8 +83,8 @@ export abstract class WalletSDKRelayAbstract {
   abstract genericRequest(data: object, action: string): CancelablePromise<Web3Response<'generic'>>;
 
   abstract sendRequest<
-    RequestMethod extends SupportedWeb3Method,
-    ResponseMethod extends SupportedWeb3Method = RequestMethod,
+    RequestMethod extends Web3Method,
+    ResponseMethod extends Web3Method = RequestMethod,
   >(request: Web3Request<RequestMethod>): CancelablePromise<Web3Response<ResponseMethod>>;
 
   abstract setAppInfo(appName: string, appLogoUrl: string | null): void;

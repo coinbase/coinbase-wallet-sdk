@@ -1,58 +1,56 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
-import {
-  WalletLinkConnection,
-  WalletLinkConnectionUpdateListener,
-} from '../connection/WalletLinkConnection';
 import {
   ErrorType,
   getErrorCode,
   getMessageFromCode,
   standardErrorCodes,
   standardErrors,
-} from '../errors';
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { WalletLinkRelayUI } from '../provider/WalletLinkRelayUI';
-import { WalletUI, WalletUIOptions } from '../provider/WalletUI';
-import { AddressString, IntNumber, ProviderType, RegExpString } from '../types';
-import { bigIntStringFromBN, createQrUrl, hexStringFromBuffer, randomBytesHex } from '../util';
-import { EthereumTransactionParams } from './EthereumTransactionParams';
-import { WalletLinkEventData, WalletLinkResponseEventData } from './RelayMessage';
-import { Session } from './Session';
+} from '../../core/error';
+import { AddressString, IntNumber, ProviderType, RegExpString } from '../../core/type';
 import {
-  CancelablePromise,
-  LOCAL_STORAGE_ADDRESSES_KEY,
-  WalletSDKRelayAbstract,
-} from './WalletSDKRelayAbstract';
-import { WalletSDKRelayEventManager } from './WalletSDKRelayEventManager';
-import { Web3Method } from './Web3Method';
-import { SupportedWeb3Method, Web3Request } from './Web3Request';
-import { isErrorResponse, Web3Response } from './Web3Response';
+  bigIntStringFromBN,
+  createQrUrl,
+  hexStringFromBuffer,
+  randomBytesHex,
+} from '../../core/util';
+import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
+import { DiagnosticLogger, EVENTS } from '../../provider/DiagnosticLogger';
+import { CancelablePromise, LOCAL_STORAGE_ADDRESSES_KEY, RelayAbstract } from '../RelayAbstract';
+import { RelayEventManager } from '../RelayEventManager';
+import { RelayUI, RelayUIOptions } from '../RelayUI';
+import { Session } from '../Session';
+import {
+  WalletLinkConnection,
+  WalletLinkConnectionUpdateListener,
+} from './connection/WalletLinkConnection';
+import { EthereumTransactionParams } from './type/EthereumTransactionParams';
+import { WalletLinkEventData, WalletLinkResponseEventData } from './type/WalletLinkEventData';
+import { Web3Method } from './type/Web3Method';
+import { Web3Request } from './type/Web3Request';
+import { isErrorResponse, Web3Response } from './type/Web3Response';
+import { WalletLinkRelayUI } from './ui/WalletLinkRelayUI';
 
 export interface WalletLinkRelayOptions {
   linkAPIUrl: string;
   version: string;
   darkMode: boolean;
   storage: ScopedLocalStorage;
-  relayEventManager: WalletSDKRelayEventManager;
-  uiConstructor: (options: Readonly<WalletUIOptions>) => WalletUI;
+  relayEventManager: RelayEventManager;
+  uiConstructor: (options: Readonly<RelayUIOptions>) => RelayUI;
   diagnosticLogger?: DiagnosticLogger;
   reloadOnDisconnect?: boolean;
   enableMobileWalletLink?: boolean;
 }
 
-export class WalletLinkRelay
-  extends WalletSDKRelayAbstract
-  implements WalletLinkConnectionUpdateListener
-{
+export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnectionUpdateListener {
   private static accountRequestCallbackIds = new Set<string>();
 
   private readonly linkAPIUrl: string;
   protected readonly storage: ScopedLocalStorage;
   private _session: Session;
-  private readonly relayEventManager: WalletSDKRelayEventManager;
+  private readonly relayEventManager: RelayEventManager;
   protected readonly diagnostic?: DiagnosticLogger;
   protected connection: WalletLinkConnection;
   private accountsCallback: ((account: string[], isDisconnect?: boolean) => void) | null = null;
@@ -61,7 +59,7 @@ export class WalletLinkRelay
   protected dappDefaultChain = 1;
   private readonly options: WalletLinkRelayOptions;
 
-  protected ui: WalletUI;
+  protected ui: RelayUI;
 
   protected appName = '';
   protected appLogoUrl: string | null = null;
@@ -190,6 +188,23 @@ export class WalletLinkRelay
 
   public attachUI() {
     this.ui.attach();
+  }
+  public getSessionConfig() {
+    return this.connection
+      .sendGetSessionConfig()
+      .then((config) => {
+        this.diagnostic?.log(EVENTS.GET_SESSION_CONFIG_REQUEST, {
+          sessionIdHash: this.getSessionIdHash(),
+        });
+        return config;
+      })
+      .catch((err: string) => {
+        this.diagnostic?.log(EVENTS.FAILURE, {
+          method: 'relay::getSessionConfig',
+          message: `failed to get session config with ${err}`,
+          sessionIdHash: this.getSessionIdHash(),
+        });
+      });
   }
 
   public resetAndReload(): void {
@@ -385,8 +400,8 @@ export class WalletLinkRelay
   }
 
   public sendRequest<
-    RequestMethod extends SupportedWeb3Method,
-    ResponseMethod extends SupportedWeb3Method = RequestMethod,
+    RequestMethod extends Web3Method,
+    ResponseMethod extends Web3Method = RequestMethod,
     Response = Web3Response<ResponseMethod>,
   >(request: Web3Request<RequestMethod>): CancelablePromise<Response> {
     let hideSnackbarItem: (() => void) | null = null;
