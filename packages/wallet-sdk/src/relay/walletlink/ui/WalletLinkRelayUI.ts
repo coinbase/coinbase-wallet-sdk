@@ -1,10 +1,10 @@
-import { LinkFlow } from '../components/LinkFlow/LinkFlow';
-import { Snackbar, SnackbarInstanceProps } from '../components/Snackbar/Snackbar';
-import { ErrorHandler } from '../errors';
-import { injectCssReset } from '../lib/cssReset';
-import {} from '../relay/Web3Request';
-import {} from '../relay/Web3Response';
-import { WalletUI, WalletUIOptions } from './WalletUI';
+import { LinkFlow } from '../../../components/LinkFlow/LinkFlow';
+import { Snackbar, SnackbarInstanceProps } from '../../../components/Snackbar/Snackbar';
+import { ErrorHandler } from '../../../core/errors';
+import {} from '../../../core/types/Web3Request';
+import {} from '../../../core/types/Web3Response';
+import { injectCssReset } from '../../../lib/cssReset';
+import { WalletUI, WalletUIOptions } from '../../../ui/WalletUI';
 
 export class WalletLinkRelayUI implements WalletUI {
   private readonly linkFlow: LinkFlow;

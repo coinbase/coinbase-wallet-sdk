@@ -1,7 +1,7 @@
 // DiagnosticLogger for debugging purposes only
 
-import { WalletLinkEventData } from '../relay/RelayMessage';
 import { ServerMessage } from './ServerMessage';
+import { WalletLinkEventData } from './WalletLinkEventData';
 import { ConnectionState } from './WalletLinkWebSocket';
 
 export type LogProperties = {

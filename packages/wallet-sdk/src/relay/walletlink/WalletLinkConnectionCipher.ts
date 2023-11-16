@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { hexStringToUint8Array, uint8ArrayToHex } from '../util';
+import { hexStringToUint8Array, uint8ArrayToHex } from '../../core/util';
 
 export class WalletLinkConnectionCipher {
   // @param secret hex representation of 32-byte secret

@@ -1,35 +1,37 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
-import {
-  WalletLinkConnection,
-  WalletLinkConnectionUpdateListener,
-} from '../connection/WalletLinkConnection';
 import {
   ErrorType,
   getErrorCode,
   getMessageFromCode,
   standardErrorCodes,
   standardErrors,
-} from '../errors';
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { WalletLinkRelayUI } from '../provider/WalletLinkRelayUI';
-import { WalletUI, WalletUIOptions } from '../provider/WalletUI';
-import { AddressString, IntNumber, ProviderType, RegExpString } from '../types';
-import { bigIntStringFromBN, createQrUrl, hexStringFromBuffer, randomBytesHex } from '../util';
-import { EthereumTransactionParams } from './EthereumTransactionParams';
-import { WalletLinkEventData, WalletLinkResponseEventData } from './RelayMessage';
-import { Session } from './Session';
+} from '../../core/errors';
+import { AddressString, IntNumber, ProviderType, RegExpString } from '../../core/types';
+import { EthereumTransactionParams } from '../../core/types/EthereumTransactionParams';
+import { Web3Method } from '../../core/types/Web3Method';
+import { SupportedWeb3Method, Web3Request } from '../../core/types/Web3Request';
+import { isErrorResponse, Web3Response } from '../../core/types/Web3Response';
+import {
+  bigIntStringFromBN,
+  createQrUrl,
+  hexStringFromBuffer,
+  randomBytesHex,
+} from '../../core/util';
+import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
+import { WalletUI, WalletUIOptions } from '../../ui/WalletUI';
+import { Session } from '../Session';
 import {
   CancelablePromise,
   LOCAL_STORAGE_ADDRESSES_KEY,
   WalletSDKRelayAbstract,
-} from './WalletSDKRelayAbstract';
-import { WalletSDKRelayEventManager } from './WalletSDKRelayEventManager';
-import { Web3Method } from './Web3Method';
-import { SupportedWeb3Method, Web3Request } from './Web3Request';
-import { isErrorResponse, Web3Response } from './Web3Response';
+} from '../WalletSDKRelayAbstract';
+import { WalletSDKRelayEventManager } from '../WalletSDKRelayEventManager';
+import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
+import { WalletLinkRelayUI } from './ui/WalletLinkRelayUI';
+import { WalletLinkConnection, WalletLinkConnectionUpdateListener } from './WalletLinkConnection';
+import { WalletLinkEventData, WalletLinkResponseEventData } from './WalletLinkEventData';
 
 export interface WalletLinkRelayOptions {
   linkAPIUrl: string;

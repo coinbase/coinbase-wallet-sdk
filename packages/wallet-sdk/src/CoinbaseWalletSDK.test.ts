@@ -8,7 +8,7 @@ import {
   CoinbaseWalletProvider,
   CoinbaseWalletProviderOptions,
 } from './provider/CoinbaseWalletProvider';
-import { WalletLinkRelay } from './relay/WalletLinkRelay';
+import { WalletLinkRelay } from './relay/walletlink/WalletLinkRelay';
 import { WalletSDKRelayEventManager } from './relay/WalletSDKRelayEventManager';
 
 jest.mock('./provider/WalletLinkRelayUI');

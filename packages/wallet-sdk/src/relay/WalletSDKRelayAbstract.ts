@@ -1,10 +1,10 @@
-import { ErrorHandler, serializeError, standardErrors } from '../errors';
-import { JSONRPCRequest, JSONRPCResponse } from '../provider/JSONRPC';
-import { AddressString, IntNumber, ProviderType, RegExpString } from '../types';
-import { EthereumTransactionParams } from './EthereumTransactionParams';
+import { ErrorHandler, serializeError, standardErrors } from '../core/errors';
+import { AddressString, IntNumber, ProviderType, RegExpString } from '../core/types';
+import { EthereumTransactionParams } from '../core/types/EthereumTransactionParams';
+import { JSONRPCRequest, JSONRPCResponse } from '../core/types/JSONRPC';
+import { SupportedWeb3Method, Web3Request } from '../core/types/Web3Request';
+import { Web3Response } from '../core/types/Web3Response';
 import { Session } from './Session';
-import { SupportedWeb3Method, Web3Request } from './Web3Request';
-import { Web3Response } from './Web3Response';
 
 export const WALLET_USER_NAME_KEY = 'walletUsername';
 export const LOCAL_STORAGE_ADDRESSES_KEY = 'Addresses';

@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { ServerMessage } from '../connection/ServerMessage';
-import { SessionConfig } from '../connection/SessionConfig';
-import { WalletLinkConnection } from '../connection/WalletLinkConnection';
-import { WalletLinkConnectionCipher } from '../connection/WalletLinkConnectionCipher';
-import { WalletLinkWebSocket } from '../connection/WalletLinkWebSocket';
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
+import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
+import { WALLET_USER_NAME_KEY } from '../WalletSDKRelayAbstract';
+import { WalletSDKRelayEventManager } from '../WalletSDKRelayEventManager';
+import { ServerMessage } from './ServerMessage';
+import { SessionConfig } from './SessionConfig';
+import { WalletLinkConnection } from './WalletLinkConnection';
+import { WalletLinkConnectionCipher } from './WalletLinkConnectionCipher';
 import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay';
-import { WALLET_USER_NAME_KEY } from './WalletSDKRelayAbstract';
-import { WalletSDKRelayEventManager } from './WalletSDKRelayEventManager';
+import { WalletLinkWebSocket } from './WalletLinkWebSocket';
 
 const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`"decrypted ${text}"`));
 

@@ -1,10 +1,10 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { Web3Request } from './Web3Request';
-import { Web3Response } from './Web3Response';
+import { Web3Request } from '../../core/types/Web3Request';
+import { Web3Response } from '../../core/types/Web3Response';
 
-type WalletLinkEventType =
+type Type =
   | 'SESSION_ID_REQUEST'
   | 'SESSION_ID_RESPONSE'
   | 'LINKED'
@@ -14,7 +14,7 @@ type WalletLinkEventType =
   | 'WEB3_RESPONSE';
 
 export type WalletLinkEventData = {
-  type: WalletLinkEventType;
+  type: Type;
   id: string;
 } & (
   | {

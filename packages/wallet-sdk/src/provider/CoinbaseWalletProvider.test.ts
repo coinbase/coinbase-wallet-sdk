@@ -1,12 +1,12 @@
 import { fireEvent } from '@testing-library/preact';
 
-import { standardErrorCodes, standardErrors } from '../errors';
+import { standardErrorCodes, standardErrors } from '../core/errors';
+import { ProviderType } from '../core/types';
 import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from '../fixtures/provider';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { MockRelayClass } from '../mocks/relay';
 import { LOCAL_STORAGE_ADDRESSES_KEY } from '../relay/WalletSDKRelayAbstract';
 import { WalletSDKRelayEventManager } from '../relay/WalletSDKRelayEventManager';
-import { ProviderType } from '../types';
 import { CoinbaseWalletProvider, CoinbaseWalletProviderOptions } from './CoinbaseWalletProvider';
 
 const storage = new ScopedLocalStorage('CoinbaseWalletProvider');

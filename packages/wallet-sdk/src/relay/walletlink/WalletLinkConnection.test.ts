@@ -1,6 +1,6 @@
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { Session } from '../relay/Session';
-import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../relay/WalletSDKRelayAbstract';
+import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
+import { Session } from '../Session';
+import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../WalletSDKRelayAbstract';
 import { SessionConfig } from './SessionConfig';
 import { WalletLinkConnection, WalletLinkConnectionUpdateListener } from './WalletLinkConnection';
 import { WalletLinkConnectionCipher } from './WalletLinkConnectionCipher';

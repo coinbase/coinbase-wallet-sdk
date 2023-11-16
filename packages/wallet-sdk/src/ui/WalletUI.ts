@@ -1,8 +1,8 @@
-import { ErrorHandler } from '../errors';
+import { ErrorHandler } from '../core/errors';
+import { AddressString, ProviderType } from '../core/types';
+import { Web3Request } from '../core/types/Web3Request';
+import { Web3Response } from '../core/types/Web3Response';
 import { Session } from '../relay/Session';
-import { Web3Request } from '../relay/Web3Request';
-import { Web3Response } from '../relay/Web3Response';
-import { AddressString, ProviderType } from '../types';
 
 export interface WalletUIOptions {
   linkAPIUrl: string;

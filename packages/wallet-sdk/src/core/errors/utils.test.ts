@@ -1,4 +1,4 @@
-import { isErrorResponse, Web3Response } from '../relay/Web3Response';
+import { isErrorResponse, Web3Response } from '../types/Web3Response';
 import { standardErrorCodes } from './constants';
 import { standardErrors } from './errors';
 import { getErrorCode, getMessageFromCode } from './utils';

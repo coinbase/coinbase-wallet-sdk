@@ -2,17 +2,17 @@
 // Licensed under the Apache License, version 2.0
 
 import { LogoType, walletLogo } from './assets/wallet-logo';
-import { DiagnosticLogger } from './connection/DiagnosticLogger';
-import { LINK_API_URL } from './constants';
+import { LINK_API_URL } from './core/constants';
+import { getFavicon, isMobileWeb } from './core/util';
 import { ScopedLocalStorage } from './lib/ScopedLocalStorage';
 import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
-import { MobileRelayUI } from './provider/MobileRelayUI';
-import { WalletLinkRelayUI } from './provider/WalletLinkRelayUI';
-import { WalletUI, WalletUIOptions } from './provider/WalletUI';
-import { MobileRelay } from './relay/MobileRelay';
-import { WalletLinkRelay } from './relay/WalletLinkRelay';
+import { MobileRelay } from './relay/mobile/MobileRelay';
+import { MobileRelayUI } from './relay/mobile/MobileRelayUI';
+import { DiagnosticLogger } from './relay/walletlink/DiagnosticLogger';
+import { WalletLinkRelayUI } from './relay/walletlink/ui/WalletLinkRelayUI';
+import { WalletLinkRelay } from './relay/walletlink/WalletLinkRelay';
 import { WalletSDKRelayEventManager } from './relay/WalletSDKRelayEventManager';
-import { getFavicon, isMobileWeb } from './util';
+import { WalletUI, WalletUIOptions } from './ui/WalletUI';
 import { LIB_VERSION } from './version';
 
 /** Coinbase Wallet SDK Constructor Options */

@@ -7,19 +7,12 @@
 import BN from 'bn.js';
 import { EventEmitter } from 'eventemitter3';
 
-import { DiagnosticLogger, EVENTS } from '../connection/DiagnosticLogger';
-import { serializeError, standardErrorCodes, standardErrors } from '../errors';
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { EthereumTransactionParams } from '../relay/EthereumTransactionParams';
-import { MobileRelay } from '../relay/MobileRelay';
-import { Session } from '../relay/Session';
-import {
-  LOCAL_STORAGE_ADDRESSES_KEY,
-  WalletSDKRelayAbstract,
-} from '../relay/WalletSDKRelayAbstract';
-import { WalletSDKRelayEventManager } from '../relay/WalletSDKRelayEventManager';
-import { isErrorResponse, Web3Response } from '../relay/Web3Response';
-import { AddressString, Callback, HexString, IntNumber, ProviderType } from '../types';
+import { serializeError, standardErrorCodes, standardErrors } from '../core/errors';
+import { AddressString, Callback, HexString, IntNumber, ProviderType } from '../core/types';
+import { EthereumTransactionParams } from '../core/types/EthereumTransactionParams';
+import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from '../core/types/JSONRPC';
+import { RequestArguments, Web3Provider } from '../core/types/Web3Provider';
+import { isErrorResponse, Web3Response } from '../core/types/Web3Response';
 import {
   ensureAddressString,
   ensureBN,
@@ -30,16 +23,23 @@ import {
   ensureRegExpString,
   hexStringFromIntNumber,
   prepend0x,
-} from '../util';
+} from '../core/util';
+import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
+import { MobileRelay } from '../relay/mobile/MobileRelay';
+import { Session } from '../relay/Session';
+import { DiagnosticLogger, EVENTS } from '../relay/walletlink/DiagnosticLogger';
+import {
+  LOCAL_STORAGE_ADDRESSES_KEY,
+  WalletSDKRelayAbstract,
+} from '../relay/WalletSDKRelayAbstract';
+import { WalletSDKRelayEventManager } from '../relay/WalletSDKRelayEventManager';
 import eip712 from '../vendor-js/eth-eip712-util';
 import { FilterPolyfill } from './FilterPolyfill';
-import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from './JSONRPC';
 import {
   SubscriptionManager,
   SubscriptionNotification,
   SubscriptionResult,
 } from './SubscriptionManager';
-import { RequestArguments, Web3Provider } from './Web3Provider';
 
 const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
 const DEFAULT_JSON_RPC_URL = 'DefaultJsonRpcUrl';
