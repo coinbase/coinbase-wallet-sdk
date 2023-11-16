@@ -1,7 +1,7 @@
 import { RpcMethod } from '../RpcMethod';
 import { ADDR_TO_FILL } from './signMessageMethods';
 
-const ethSendTransactionLegacy = {
+const ethSendTransaction = {
   method: 'eth_sendTransaction',
   params: [
     { key: 'from', required: true },
@@ -39,4 +39,4 @@ const ethSendTransactionLegacy = {
   ],
 };
 
-export const sendMethods: RpcMethod[] = [ethSendTransactionLegacy];
+export const sendMethods: RpcMethod[] = [ethSendTransaction];

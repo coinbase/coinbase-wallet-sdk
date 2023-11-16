@@ -34,10 +34,9 @@ export function Layout({ children }: LayoutProps) {
           <Flex justifyContent="space-between" alignItems="center">
             <Heading>Coinbase Wallet SDK - Playground</Heading>
             <Flex justifyContent="space-between" alignItems="center" gap={4}>
-              {/* TODO: There is an issue where `this` is undefined within the sdk instance. */}
               <Menu>
                 <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
-                  SDK Version
+                  {`SDK: ${sdkVersion}`}
                 </MenuButton>
                 <MenuList>
                   {sdkVersions.map((version) => (
@@ -52,6 +51,7 @@ export function Layout({ children }: LayoutProps) {
                   ))}
                 </MenuList>
               </Menu>
+              {/* TODO: There is an issue where `this` is undefined within the sdk instance. */}
               <Button onClick={handleDisconnect}>Disconnect</Button>
             </Flex>
           </Flex>
