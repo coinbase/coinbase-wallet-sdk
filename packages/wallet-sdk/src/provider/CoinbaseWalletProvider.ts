@@ -23,7 +23,7 @@ import { RequestArguments, Web3Provider } from './Web3Provider';
 import { serializeError, standardErrorCodes, standardErrors } from ':core/error';
 import { AddressString, Callback, HexString, IntNumber, ProviderType } from ':core/type';
 import { EthereumTransactionParams } from ':core/type/EthereumTransactionParams';
-import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from ':core/type/JSONRPC';
+import { JSONRPCRequest, JSONRPCResponse } from ':core/type/JSONRPC';
 import { isErrorResponse, Web3Response } from ':core/type/Web3Response';
 import {
   ensureAddressString,
@@ -361,7 +361,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
       return [...this._addresses];
     }
 
-    return await this.send<AddressString[]>(JSONRPCMethod.eth_requestAccounts);
+    return await this.send<AddressString[]>('eth_requestAccounts');
   }
 
   public async close() {
@@ -726,19 +726,19 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     const params = request.params || [];
 
     switch (method) {
-      case JSONRPCMethod.eth_accounts:
+      case 'eth_accounts':
         return this._eth_accounts();
 
-      case JSONRPCMethod.eth_coinbase:
+      case 'eth_coinbase':
         return this._eth_coinbase();
 
-      case JSONRPCMethod.eth_uninstallFilter:
+      case 'eth_uninstallFilter':
         return this._eth_uninstallFilter(params);
 
-      case JSONRPCMethod.net_version:
+      case 'net_version':
         return this._net_version();
 
-      case JSONRPCMethod.eth_chainId:
+      case 'eth_chainId':
         return this._eth_chainId();
 
       default:
@@ -753,53 +753,53 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     const params = request.params || [];
 
     switch (method) {
-      case JSONRPCMethod.eth_requestAccounts:
+      case 'eth_requestAccounts':
         return this._eth_requestAccounts();
 
-      case JSONRPCMethod.eth_sign:
+      case 'eth_sign':
         return this._eth_sign(params);
 
-      case JSONRPCMethod.eth_ecRecover:
+      case 'eth_ecRecover':
         return this._eth_ecRecover(params);
 
-      case JSONRPCMethod.personal_sign:
+      case 'personal_sign':
         return this._personal_sign(params);
 
-      case JSONRPCMethod.personal_ecRecover:
+      case 'personal_ecRecover':
         return this._personal_ecRecover(params);
 
-      case JSONRPCMethod.eth_signTransaction:
+      case 'eth_signTransaction':
         return this._eth_signTransaction(params);
 
-      case JSONRPCMethod.eth_sendRawTransaction:
+      case 'eth_sendRawTransaction':
         return this._eth_sendRawTransaction(params);
 
-      case JSONRPCMethod.eth_sendTransaction:
+      case 'eth_sendTransaction':
         return this._eth_sendTransaction(params);
 
-      case JSONRPCMethod.eth_signTypedData_v1:
+      case 'eth_signTypedData_v1':
         return this._eth_signTypedData_v1(params);
 
-      case JSONRPCMethod.eth_signTypedData_v2:
+      case 'eth_signTypedData_v2':
         return this._throwUnsupportedMethodError();
 
-      case JSONRPCMethod.eth_signTypedData_v3:
+      case 'eth_signTypedData_v3':
         return this._eth_signTypedData_v3(params);
 
-      case JSONRPCMethod.eth_signTypedData_v4:
-      case JSONRPCMethod.eth_signTypedData:
+      case 'eth_signTypedData_v4':
+      case 'eth_signTypedData':
         return this._eth_signTypedData_v4(params);
 
-      case JSONRPCMethod.cbWallet_arbitrary:
+      case 'cbWallet_arbitrary':
         return this._cbwallet_arbitrary(params);
 
-      case JSONRPCMethod.wallet_addEthereumChain:
+      case 'wallet_addEthereumChain':
         return this._wallet_addEthereumChain(params);
 
-      case JSONRPCMethod.wallet_switchEthereumChain:
+      case 'wallet_switchEthereumChain':
         return this._wallet_switchEthereumChain(params);
 
-      case JSONRPCMethod.wallet_watchAsset:
+      case 'wallet_watchAsset':
         return this._wallet_watchAsset(params);
     }
 
@@ -826,19 +826,19 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     const params = request.params || [];
 
     switch (method) {
-      case JSONRPCMethod.eth_newFilter:
+      case 'eth_newFilter':
         return this._eth_newFilter(params);
 
-      case JSONRPCMethod.eth_newBlockFilter:
+      case 'eth_newBlockFilter':
         return this._eth_newBlockFilter();
 
-      case JSONRPCMethod.eth_newPendingTransactionFilter:
+      case 'eth_newPendingTransactionFilter':
         return this._eth_newPendingTransactionFilter();
 
-      case JSONRPCMethod.eth_getFilterChanges:
+      case 'eth_getFilterChanges':
         return this._eth_getFilterChanges(params);
 
-      case JSONRPCMethod.eth_getFilterLogs:
+      case 'eth_getFilterLogs':
         return this._eth_getFilterLogs(params);
     }
 
@@ -849,8 +849,8 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     request: JSONRPCRequest
   ): Promise<SubscriptionResult> | undefined {
     switch (request.method) {
-      case JSONRPCMethod.eth_subscribe:
-      case JSONRPCMethod.eth_unsubscribe:
+      case 'eth_subscribe':
+      case 'eth_unsubscribe':
         return this._subscriptionManager.handleRequest(request);
     }
 
