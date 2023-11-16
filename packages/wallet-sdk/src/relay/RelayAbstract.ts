@@ -3,7 +3,8 @@ import { AddressString, IntNumber, ProviderType, RegExpString } from '../core/ty
 import { JSONRPCRequest, JSONRPCResponse } from '../provider/JSONRPC';
 import { Session } from './Session';
 import { EthereumTransactionParams } from './walletlink/type/EthereumTransactionParams';
-import { SupportedWeb3Method, Web3Request } from './walletlink/type/Web3Request';
+import { Web3Method } from './walletlink/type/Web3Method';
+import { Web3Request } from './walletlink/type/Web3Request';
 import { Web3Response } from './walletlink/type/Web3Response';
 
 export const WALLET_USER_NAME_KEY = 'walletUsername';
@@ -82,8 +83,8 @@ export abstract class RelayAbstract {
   abstract genericRequest(data: object, action: string): CancelablePromise<Web3Response<'generic'>>;
 
   abstract sendRequest<
-    RequestMethod extends SupportedWeb3Method,
-    ResponseMethod extends SupportedWeb3Method = RequestMethod,
+    RequestMethod extends Web3Method,
+    ResponseMethod extends Web3Method = RequestMethod,
   >(request: Web3Request<RequestMethod>): CancelablePromise<Web3Response<ResponseMethod>>;
 
   abstract setAppInfo(appName: string, appLogoUrl: string | null): void;
