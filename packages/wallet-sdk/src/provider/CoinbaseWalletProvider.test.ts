@@ -11,8 +11,6 @@ import { CoinbaseWalletProvider, CoinbaseWalletProviderOptions } from './Coinbas
 
 const storage = new ScopedLocalStorage('CoinbaseWalletProvider');
 
-jest.mock('../relay/WalletLinkRelay');
-
 const setupCoinbaseWalletProvider = (options: Partial<CoinbaseWalletProviderOptions> = {}) => {
   return new CoinbaseWalletProvider({
     chainId: 1,

@@ -11,8 +11,6 @@ import {
 import { RelayEventManager } from './relay/RelayEventManager';
 import { WalletLinkRelay } from './relay/walletlink/WalletLinkRelay';
 
-jest.mock('./provider/WalletLinkRelayUI');
-
 describe('CoinbaseWalletSDK', () => {
   describe('initialize', () => {
     test('with defaults', () => {
