@@ -6,6 +6,7 @@
 
 import BN from 'bn.js';
 import { EventEmitter } from 'eventemitter3';
+import { JSONRPCRequest, JSONRPCResponse } from 'provider/JSONRPC';
 
 import { MobileRelay } from '../relay/mobile/MobileRelay';
 import { LOCAL_STORAGE_ADDRESSES_KEY, RelayAbstract } from '../relay/RelayAbstract';
@@ -23,7 +24,6 @@ import { RequestArguments, Web3Provider } from './Web3Provider';
 import { serializeError, standardErrorCodes, standardErrors } from ':core/error';
 import { AddressString, Callback, HexString, IntNumber, ProviderType } from ':core/type';
 import { EthereumTransactionParams } from ':core/type/EthereumTransactionParams';
-import { JSONRPCRequest, JSONRPCResponse } from ':core/type/JSONRPC';
 import { isErrorResponse, Web3Response } from ':core/type/Web3Response';
 import {
   ensureAddressString,

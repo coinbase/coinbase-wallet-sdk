@@ -1,9 +1,10 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
+import { JSONRPCRequest, JSONRPCResponse } from 'provider/JSONRPC';
+
 import { Web3Provider } from './Web3Provider';
 import { HexString, IntNumber } from ':core/type';
-import { JSONRPCRequest, JSONRPCResponse } from ':core/type/JSONRPC';
 import {
   ensureHexString,
   hexStringFromIntNumber,

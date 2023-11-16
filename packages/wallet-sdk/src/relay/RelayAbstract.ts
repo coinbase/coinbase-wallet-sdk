@@ -1,8 +1,9 @@
+import { JSONRPCRequest, JSONRPCResponse } from 'provider/JSONRPC';
+
 import { Session } from './Session';
 import { ErrorHandler, serializeError, standardErrors } from ':core/error';
 import { AddressString, IntNumber, ProviderType, RegExpString } from ':core/type';
 import { EthereumTransactionParams } from ':core/type/EthereumTransactionParams';
-import { JSONRPCRequest, JSONRPCResponse } from ':core/type/JSONRPC';
 import { SupportedWeb3Method, Web3Request } from ':core/type/Web3Request';
 import { Web3Response } from ':core/type/Web3Response';
 

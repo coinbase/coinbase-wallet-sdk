@@ -1,4 +1,4 @@
-import { JSONRPCRequest } from '../type/JSONRPC';
+import { JSONRPCRequest } from '../../provider/JSONRPC';
 import { Web3Response } from '../type/Web3Response';
 import { standardErrorCodes } from './constants';
 import { standardErrors } from './errors';
