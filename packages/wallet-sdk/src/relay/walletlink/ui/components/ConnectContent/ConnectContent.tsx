@@ -4,8 +4,8 @@
 import clsx from 'clsx';
 import { h } from 'preact';
 
-import { createQrUrl } from '../../core/util';
-import { LIB_VERSION } from '../../version';
+import { createQrUrl } from '../../../../../core/util';
+import { LIB_VERSION } from '../../../../../version';
 import { CloseIcon } from '../icons/CloseIcon';
 import coinbaseWalletRound from '../icons/coinbase-wallet-round-svg';
 import { QRCodeIcon } from '../icons/QRCodeIcon';

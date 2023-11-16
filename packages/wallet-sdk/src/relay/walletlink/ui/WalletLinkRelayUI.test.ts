@@ -1,8 +1,8 @@
 import { render } from '@testing-library/preact';
 import { Session } from 'inspector';
 
-import { LinkFlow } from '../../../components/LinkFlow/LinkFlow';
-import { Snackbar } from '../../../components/Snackbar/Snackbar';
+import { LinkFlow } from './components/LinkFlow/LinkFlow';
+import { Snackbar } from './components/Snackbar/Snackbar';
 import { WalletLinkRelayUI } from './WalletLinkRelayUI';
 
 describe('WalletLinkRelayUI', () => {
