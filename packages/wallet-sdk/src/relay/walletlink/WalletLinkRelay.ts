@@ -28,7 +28,7 @@ import {
 import { EthereumTransactionParams } from './type/EthereumTransactionParams';
 import { WalletLinkEventData, WalletLinkResponseEventData } from './type/WalletLinkEventData';
 import { Web3Method } from './type/Web3Method';
-import { SupportedWeb3Method, Web3Request } from './type/Web3Request';
+import { Web3Request } from './type/Web3Request';
 import { isErrorResponse, Web3Response } from './type/Web3Response';
 import { WalletLinkRelayUI } from './ui/WalletLinkRelayUI';
 
@@ -383,8 +383,8 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
   }
 
   public sendRequest<
-    RequestMethod extends SupportedWeb3Method,
-    ResponseMethod extends SupportedWeb3Method = RequestMethod,
+    RequestMethod extends Web3Method,
+    ResponseMethod extends Web3Method = RequestMethod,
     Response = Web3Response<ResponseMethod>,
   >(request: Web3Request<RequestMethod>): CancelablePromise<Response> {
     let hideSnackbarItem: (() => void) | null = null;
