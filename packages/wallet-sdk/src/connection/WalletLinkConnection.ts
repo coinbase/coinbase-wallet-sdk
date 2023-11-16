@@ -291,7 +291,6 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
       id: IntNumber(this.nextReqId++),
       sessionId: this.session.id,
       metadata: { [key]: value },
-      type: 'SetSessionConfig',
     };
 
     return this.setOnceConnected(async () => {
@@ -329,20 +328,93 @@ export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
       event,
       data,
       callWebhook,
-      type: 'PublishEvent',
     };
 
-    // this.setOnceLinked(async () => {
-    //   const res = await this.ws.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(
-    //     message
-    //   );
-    //   if (isServerMessageFail(res)) {
-    //     throw new Error(res.error || 'failed to publish event');
-    //   }
-    //   return res.eventId;
-    // });
+    return this.setOnceLinked(async () => {
+      const res = await this.makeRequest<'PublishEventOK' | 'Fail'>(message);
+      if (res.type === 'Fail') {
+        throw new Error(res.error || 'failed to publish event');
+      }
+      return res.eventId;
+    });
+  }
 
-    return this.ws.makeRequestOnceConnected(message);
+  private sendData(message: ClientMessage): void {
+    this.ws.sendData(JSON.stringify(message));
+  }
+
+  private updateLastHeartbeat(): void {
+    this.lastHeartbeatResponse = Date.now();
+  }
+
+  private heartbeat(): void {
+    if (Date.now() - this.lastHeartbeatResponse > HEARTBEAT_INTERVAL * 2) {
+      this.ws.disconnect();
+      return;
+    }
+    try {
+      this.ws.sendData('h');
+    } catch {
+      // noop
+    }
+  }
+
+  private requestResolutions = new Map<IntNumber, (_: ServerMessage) => void>();
+
+  private async makeRequest<T extends ServerMessageType, M = ServerMessage<T>>(
+    message: ClientMessage,
+    timeout: number = REQUEST_TIMEOUT
+  ): Promise<M> {
+    const reqId = message.id;
+    this.sendData(message);
+
+    // await server message with corresponding id
+    let timeoutId: number;
+    return Promise.race([
+      new Promise<M>((_, reject) => {
+        timeoutId = window.setTimeout(() => {
+          reject(new Error(`request ${reqId} timed out`));
+        }, timeout);
+      }),
+      new Promise<M>((resolve) => {
+        this.requestResolutions.set(reqId, (m) => {
+          clearTimeout(timeoutId); // clear the timeout
+          resolve(m as M);
+          this.requestResolutions.delete(reqId);
+        });
+      }),
+    ]);
+  }
+
+  private async authenticate() {
+    const m: ClientMessage = {
+      type: 'HostSession',
+      id: IntNumber(this.nextReqId++),
+      sessionId: this.session.id,
+      sessionKey: this.session.key,
+    };
+    const res = await this.makeRequest<'OK' | 'Fail'>(m);
+    if (res.type === 'Fail') {
+      throw new Error(res.error || 'failed to authentcate');
+    }
+  }
+
+  private sendIsLinked(): void {
+    const m: ClientMessage = {
+      type: 'IsLinked',
+      id: IntNumber(this.nextReqId++),
+      sessionId: this.session.id,
+    };
+    this.sendData(m);
+  }
+
+  private sendGetSessionConfig(): void {
+    const m: ClientMessage = {
+      type: 'GetSessionConfig',
+      id: IntNumber(this.nextReqId++),
+      sessionId: this.session.id,
+    };
+    this.sendData(m);
   }
 
   private handleSessionMetadataUpdated = (metadata: SessionConfig['metadata']) => {
