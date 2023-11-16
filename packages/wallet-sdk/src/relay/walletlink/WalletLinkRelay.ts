@@ -1,6 +1,25 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
+import {
+  ErrorType,
+  getErrorCode,
+  getMessageFromCode,
+  standardErrorCodes,
+  standardErrors,
+} from '../../core/error';
+import { AddressString, IntNumber, ProviderType, RegExpString } from '../../core/type';
+import { EthereumTransactionParams } from '../../core/type/EthereumTransactionParams';
+import { Web3Method } from '../../core/type/Web3Method';
+import { SupportedWeb3Method, Web3Request } from '../../core/type/Web3Request';
+import { isErrorResponse, Web3Response } from '../../core/type/Web3Response';
+import {
+  bigIntStringFromBN,
+  createQrUrl,
+  hexStringFromBuffer,
+  randomBytesHex,
+} from '../../core/util';
+import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
 import { DiagnosticLogger, EVENTS } from '../../provider/DiagnosticLogger';
 import { CancelablePromise, LOCAL_STORAGE_ADDRESSES_KEY, RelayAbstract } from '../RelayAbstract';
 import { RelayEventManager } from '../RelayEventManager';
@@ -12,20 +31,6 @@ import {
 } from './connection/WalletLinkConnection';
 import { WalletLinkEventData, WalletLinkResponseEventData } from './type/WalletLinkEventData';
 import { WalletLinkRelayUI } from './ui/WalletLinkRelayUI';
-import {
-  ErrorType,
-  getErrorCode,
-  getMessageFromCode,
-  standardErrorCodes,
-  standardErrors,
-} from ':core/error';
-import { AddressString, IntNumber, ProviderType, RegExpString } from ':core/type';
-import { EthereumTransactionParams } from ':core/type/EthereumTransactionParams';
-import { Web3Method } from ':core/type/Web3Method';
-import { SupportedWeb3Method, Web3Request } from ':core/type/Web3Request';
-import { isErrorResponse, Web3Response } from ':core/type/Web3Response';
-import { bigIntStringFromBN, createQrUrl, hexStringFromBuffer, randomBytesHex } from ':core/util';
-import { ScopedLocalStorage } from ':lib/ScopedLocalStorage';
 
 export interface WalletLinkRelayOptions {
   linkAPIUrl: string;

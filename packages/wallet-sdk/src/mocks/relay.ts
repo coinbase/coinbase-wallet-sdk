@@ -1,10 +1,10 @@
+import { AddressString, HexString, ProviderType } from '../core/type';
+import { Web3Method as SupportedWeb3Method, Web3Method } from '../core/type/Web3Method';
+import { Web3Response } from '../core/type/Web3Response';
+import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { RelayAbstract } from '../relay/RelayAbstract';
 import { Session } from '../relay/Session';
 import { MOCK_ADDERESS, MOCK_TX } from './fixtures';
-import { AddressString, HexString, ProviderType } from ':core/type';
-import { Web3Method as SupportedWeb3Method, Web3Method } from ':core/type/Web3Method';
-import { Web3Response } from ':core/type/Web3Response';
-import { ScopedLocalStorage } from ':lib/ScopedLocalStorage';
 
 function makeMockReturn<T extends SupportedWeb3Method>(response: Web3Response<T>) {
   return { cancel: () => {}, promise: Promise.resolve<Web3Response<T>>(response) };

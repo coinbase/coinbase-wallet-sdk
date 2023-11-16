@@ -1,10 +1,10 @@
+import { ErrorHandler } from '../../../core/error';
+import {} from '../../../core/type/Web3Request';
+import {} from '../../../core/type/Web3Response';
+import { injectCssReset } from '../../../lib/cssReset';
 import { RelayUI, RelayUIOptions } from '../../RelayUI';
 import { LinkFlow } from './components/LinkFlow/LinkFlow';
 import { Snackbar, SnackbarInstanceProps } from './components/Snackbar/Snackbar';
-import { ErrorHandler } from ':core/error';
-import {} from ':core/type/Web3Request';
-import {} from ':core/type/Web3Response';
-import { injectCssReset } from ':lib/cssReset';
 
 export class WalletLinkRelayUI implements RelayUI {
   private readonly linkFlow: LinkFlow;

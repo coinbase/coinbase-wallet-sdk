@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { IntNumber } from ':core/type';
+import { IntNumber } from '../../../core/type';
 
 export type ServerMessage<T extends Type = Type> = Extract<_ServerMessage, { type: T }>;
 
