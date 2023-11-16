@@ -1,5 +1,5 @@
+import { IntNumber } from '../core/type';
 import { mockExtensionProvider } from '../mocks/provider';
-import { IntNumber } from '../types';
 import { FilterPolyfill } from './FilterPolyfill';
 
 describe('FilterPolyfill', () => {

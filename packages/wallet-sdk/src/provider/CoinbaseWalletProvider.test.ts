@@ -1,17 +1,15 @@
 import { fireEvent } from '@testing-library/preact';
 
-import { standardErrorCodes, standardErrors } from '../errors';
-import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from '../fixtures/provider';
+import { standardErrorCodes, standardErrors } from '../core/error';
+import { ProviderType } from '../core/type';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
+import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from '../mocks/fixtures';
 import { MockRelayClass } from '../mocks/relay';
-import { LOCAL_STORAGE_ADDRESSES_KEY } from '../relay/WalletSDKRelayAbstract';
-import { WalletSDKRelayEventManager } from '../relay/WalletSDKRelayEventManager';
-import { ProviderType } from '../types';
+import { LOCAL_STORAGE_ADDRESSES_KEY } from '../relay/RelayAbstract';
+import { RelayEventManager } from '../relay/RelayEventManager';
 import { CoinbaseWalletProvider, CoinbaseWalletProviderOptions } from './CoinbaseWalletProvider';
 
 const storage = new ScopedLocalStorage('CoinbaseWalletProvider');
-
-jest.mock('../relay/WalletLinkRelay');
 
 const setupCoinbaseWalletProvider = (options: Partial<CoinbaseWalletProviderOptions> = {}) => {
   return new CoinbaseWalletProvider({
@@ -21,7 +19,7 @@ const setupCoinbaseWalletProvider = (options: Partial<CoinbaseWalletProviderOpti
     overrideIsCoinbaseWallet: true,
     overrideIsCoinbaseBrowser: false,
     overrideIsMetaMask: false,
-    relayEventManager: new WalletSDKRelayEventManager(),
+    relayEventManager: new RelayEventManager(),
     relayProvider: async () => Promise.resolve(new MockRelayClass()),
     storage,
     ...options,
