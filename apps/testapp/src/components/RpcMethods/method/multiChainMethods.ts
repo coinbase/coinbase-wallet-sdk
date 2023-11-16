@@ -1,6 +1,6 @@
-import { RpcMethod } from './RpcMethod';
+import { RpcRequestInput } from './RpcRequestInput';
 
-const walletSwitchEthereumChain = {
+const walletSwitchEthereumChain: RpcRequestInput = {
   method: 'wallet_switchEthereumChain',
   params: [{ key: 'chainId', required: true }],
   format: (data: Record<string, string>) => [
@@ -10,7 +10,7 @@ const walletSwitchEthereumChain = {
   ],
 };
 
-const walletAddEthereumChain = {
+const walletAddEthereumChain: RpcRequestInput = {
   connected: true,
   method: 'wallet_addEthereumChain',
   params: [
@@ -39,7 +39,7 @@ const walletAddEthereumChain = {
   ],
 };
 
-const walletWatchAsset = {
+const walletWatchAsset: RpcRequestInput = {
   method: 'wallet_watchAsset',
   params: [
     { key: 'type', required: true },
@@ -61,7 +61,7 @@ const walletWatchAsset = {
   ],
 };
 
-export const multiChainMethods: RpcMethod[] = [
+export const multiChainMethods = [
   walletSwitchEthereumChain,
   walletAddEthereumChain,
   walletWatchAsset,

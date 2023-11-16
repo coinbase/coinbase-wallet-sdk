@@ -8,9 +8,9 @@ import {
 } from '@metamask/eth-sig-util';
 
 import { parseMessage } from '../shortcut/ShortcutType';
-import { RpcMethod } from './RpcMethod';
+import { RpcRequestInput } from './RpcRequestInput';
 
-const ethSign = {
+const ethSign: RpcRequestInput = {
   method: 'eth_sign',
   params: [
     { key: 'message', required: true },
@@ -22,7 +22,7 @@ const ethSign = {
   ],
 };
 
-const personalSign = {
+const personalSign: RpcRequestInput = {
   method: 'personal_sign',
   params: [
     { key: 'message', required: true },
@@ -34,7 +34,7 @@ const personalSign = {
   ],
 };
 
-const ethSignTypedDataV1 = {
+const ethSignTypedDataV1: RpcRequestInput = {
   method: 'eth_signTypedData_v1',
   params: [
     { key: 'message', required: true },
@@ -43,7 +43,7 @@ const ethSignTypedDataV1 = {
   format: (data: Record<string, string>) => [parseMessage(data.message), data.address],
 };
 
-const ethSignTypedDataV3 = {
+const ethSignTypedDataV3: RpcRequestInput = {
   method: 'eth_signTypedData_v3',
   params: [
     { key: 'message', required: true },
@@ -52,7 +52,7 @@ const ethSignTypedDataV3 = {
   format: (data: Record<string, string>) => [data.address, parseMessage(data.message)],
 };
 
-const ethSignTypedDataV4 = {
+const ethSignTypedDataV4: RpcRequestInput = {
   method: 'eth_signTypedData_v4',
   params: [
     { key: 'message', required: true },
@@ -61,7 +61,7 @@ const ethSignTypedDataV4 = {
   format: (data: Record<string, string>) => [data.address, parseMessage(data.message)],
 };
 
-export const signMessageMethods: RpcMethod[] = [
+export const signMessageMethods = [
   ethSign,
   personalSign,
   ethSignTypedDataV1,

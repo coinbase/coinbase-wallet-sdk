@@ -53,7 +53,7 @@ const ethSignTypedDataV3Shortcuts: ShortcutType[] = [
         domain: {
           name: 'Ether Mail',
           version: '1',
-          chainId: '1',
+          chainId: 1,
           verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC',
         },
         message: {
@@ -79,7 +79,7 @@ const ethSignTypedDataV4Shortcuts: ShortcutType[] = [
     data: {
       message: {
         domain: {
-          chainId: '1',
+          chainId: 1,
           name: 'Ether Mail',
           verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC',
           version: '1',

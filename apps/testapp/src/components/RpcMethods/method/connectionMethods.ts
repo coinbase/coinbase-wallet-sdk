@@ -1,13 +1,13 @@
-import { RpcMethod } from './RpcMethod';
+import { RpcRequestInput } from './RpcRequestInput';
 
-const ethRequestAccounts = {
+const ethRequestAccounts: RpcRequestInput = {
   method: 'eth_requestAccounts',
   params: [],
 };
 
-const ethAccounts = {
+const ethAccounts: RpcRequestInput = {
   method: 'eth_accounts',
   params: [],
 };
 
-export const connectionMethods: RpcMethod[] = [ethRequestAccounts, ethAccounts];
+export const connectionMethods = [ethRequestAccounts, ethAccounts];

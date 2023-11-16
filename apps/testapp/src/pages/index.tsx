@@ -5,7 +5,7 @@ import { EventListenersCard } from '../components/EventListeners/EventListenersC
 import { WIDTH_2XL } from '../components/Layout';
 import { connectionMethods } from '../components/RpcMethods/method/connectionMethods';
 import { multiChainMethods } from '../components/RpcMethods/method/multiChainMethods';
-import { RpcMethod } from '../components/RpcMethods/method/RpcMethod';
+import { RpcMethod } from '../components/RpcMethods/method/RpcRequestInput';
 import { sendMethods } from '../components/RpcMethods/method/sendMethods';
 import { signMessageMethods } from '../components/RpcMethods/method/signMessageMethods';
 import { RpcMethodCard } from '../components/RpcMethods/RpcMethodCard';

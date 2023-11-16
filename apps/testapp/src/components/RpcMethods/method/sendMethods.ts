@@ -1,6 +1,6 @@
-import { RpcMethod } from './RpcMethod';
+import { RpcRequestInput } from './RpcRequestInput';
 
-const ethSendTransaction = {
+const ethSendTransaction: RpcRequestInput = {
   method: 'eth_sendTransaction',
   params: [
     { key: 'from', required: true },
@@ -24,4 +24,4 @@ const ethSendTransaction = {
   ],
 };
 
-export const sendMethods: RpcMethod[] = [ethSendTransaction];
+export const sendMethods = [ethSendTransaction];
