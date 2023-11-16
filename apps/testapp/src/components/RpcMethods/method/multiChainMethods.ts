@@ -1,4 +1,4 @@
-import { RpcMethod } from '../RpcMethod';
+import { RpcMethod } from './RpcMethod';
 
 const walletSwitchEthereumChain = {
   method: 'wallet_switchEthereumChain',
@@ -6,32 +6,6 @@ const walletSwitchEthereumChain = {
   format: (data: Record<string, string>) => [
     {
       chainId: `0x${Number(data.chainId).toString(16)}`,
-    },
-  ],
-  shortcuts: [
-    {
-      key: 'Ethereum',
-      data: {
-        chainId: '1',
-      },
-    },
-    {
-      key: 'OP Mainnet',
-      data: {
-        chainId: '10',
-      },
-    },
-    {
-      key: 'Arbitrum',
-      data: {
-        chainId: '42161',
-      },
-    },
-    {
-      key: 'Harmony',
-      data: {
-        chainId: '1666600000',
-      },
     },
   ],
 };
@@ -63,21 +37,6 @@ const walletAddEthereumChain = {
       },
     },
   ],
-  shortcuts: [
-    {
-      key: 'Harmony',
-      data: {
-        chainId: '1666600000',
-        chainName: 'Harmony Mainnet',
-        currencyName: 'ONE',
-        currencySymbol: 'ONE',
-        decimals: '18',
-        rpcUrl: 'https://api.harmony.one',
-        blockExplorerUrl: 'https://explorer.harmony.one',
-        iconUrl: '',
-      },
-    },
-  ],
 };
 
 const walletWatchAsset = {
@@ -97,17 +56,6 @@ const walletWatchAsset = {
         symbol: data.symbol,
         decimals: Number(data.decimals),
         tokenId: data.tokenId,
-      },
-    },
-  ],
-  shortcuts: [
-    {
-      key: 'WONE on Harmony',
-      data: {
-        type: 'ERC20',
-        contractAddress: '0xcf664087a5bb0237a0bad6742852ec6c8d69a27a',
-        symbol: 'WONE',
-        decimals: '18',
       },
     },
   ],

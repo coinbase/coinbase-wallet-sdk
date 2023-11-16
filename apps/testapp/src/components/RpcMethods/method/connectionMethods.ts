@@ -1,4 +1,4 @@
-import { RpcMethod } from '../RpcMethod';
+import { RpcMethod } from './RpcMethod';
 
 const ethRequestAccounts = {
   method: 'eth_requestAccounts',

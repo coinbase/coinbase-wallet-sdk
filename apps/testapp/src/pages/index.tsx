@@ -3,12 +3,16 @@ import React from 'react';
 
 import { EventListenersCard } from '../components/EventListeners/EventListenersCard';
 import { WIDTH_2XL } from '../components/Layout';
-import { connectionMethods } from '../components/RpcMethods/methods/connectionMethods';
-import { multiChainMethods } from '../components/RpcMethods/methods/multiChainMethods';
-import { sendMethods } from '../components/RpcMethods/methods/sendMethods';
-import { signMessageMethods } from '../components/RpcMethods/methods/signMessageMethods';
-import { RpcMethod } from '../components/RpcMethods/RpcMethod';
+import { connectionMethods } from '../components/RpcMethods/method/connectionMethods';
+import { multiChainMethods } from '../components/RpcMethods/method/multiChainMethods';
+import { RpcMethod } from '../components/RpcMethods/method/RpcMethod';
+import { sendMethods } from '../components/RpcMethods/method/sendMethods';
+import { signMessageMethods } from '../components/RpcMethods/method/signMessageMethods';
 import { RpcMethodCard } from '../components/RpcMethods/RpcMethodCard';
+import { multiChainShortcutsMap } from '../components/RpcMethods/shortcut/multipleChainShortcuts';
+import { sendShortcutsMap } from '../components/RpcMethods/shortcut/sendShortcuts';
+import { ShortcutType } from '../components/RpcMethods/shortcut/ShortcutType';
+import { signMessageShortcutsMap } from '../components/RpcMethods/shortcut/signMessageShortcuts';
 
 export default function Home() {
   return (
@@ -20,14 +24,30 @@ export default function Home() {
         </Grid>
       </Box>
       <MethodsSection title="Wallet Connection" methods={connectionMethods} />
-      <MethodsSection title="Switch/Add Chain" methods={multiChainMethods} />
-      <MethodsSection title="Sign Message" methods={signMessageMethods} />
-      <MethodsSection title="Send" methods={sendMethods} />
+      <MethodsSection
+        title="Switch/Add Chain"
+        methods={multiChainMethods}
+        shortcutsMap={multiChainShortcutsMap}
+      />
+      <MethodsSection
+        title="Sign Message"
+        methods={signMessageMethods}
+        shortcutsMap={signMessageShortcutsMap}
+      />
+      <MethodsSection title="Send" methods={sendMethods} shortcutsMap={sendShortcutsMap} />
     </Container>
   );
 }
 
-function MethodsSection({ title, methods }: { title: string; methods: RpcMethod[] }) {
+function MethodsSection({
+  title,
+  methods,
+  shortcutsMap,
+}: {
+  title: string;
+  methods: RpcMethod[];
+  shortcutsMap?: Record<string, ShortcutType[]>;
+}) {
   return (
     <Box mt={4}>
       <Heading size="md">{title}</Heading>
@@ -43,7 +63,7 @@ function MethodsSection({ title, methods }: { title: string; methods: RpcMethod[
               params={rpc.params}
               connected={rpc.connected}
               format={rpc.format}
-              shortcuts={rpc.shortcuts}
+              shortcuts={shortcutsMap?.[rpc.method]}
             />
           </GridItem>
         ))}

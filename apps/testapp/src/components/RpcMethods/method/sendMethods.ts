@@ -1,5 +1,4 @@
-import { RpcMethod } from '../RpcMethod';
-import { ADDR_TO_FILL } from './signMessageMethods';
+import { RpcMethod } from './RpcMethod';
 
 const ethSendTransaction = {
   method: 'eth_sendTransaction',
@@ -21,20 +20,6 @@ const ethSendTransaction = {
       gasPriceInWei: data.gasPriceInWei,
       maxFeePerGas: data.maxFeePerGas,
       maxPriorityFeePerGas: data.maxPriorityFeePerGas,
-    },
-  ],
-  shortcuts: [
-    {
-      key: 'Example Tx',
-      data: {
-        from: ADDR_TO_FILL,
-        to: ADDR_TO_FILL,
-        value: '0x0',
-        gasLimit: '0x5208',
-        gasPriceInWei: '0x2540be400',
-        maxFeePerGas: '0x2540be400',
-        maxPriorityFeePerGas: '0x3b9aca00',
-      },
     },
   ],
 };
