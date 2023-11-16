@@ -1,5 +1,6 @@
+// TODO: error should not depend on walletlink. revisit this.
+import { isErrorResponse, Web3Response } from '../../relay/walletlink/type/Web3Response';
 import { LIB_VERSION } from '../../version';
-import { isErrorResponse, Web3Response } from '../type/Web3Response';
 import { standardErrorCodes } from './constants';
 import { serialize, SerializedEthereumRpcError } from './utils';
 

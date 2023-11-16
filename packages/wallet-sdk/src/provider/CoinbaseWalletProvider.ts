@@ -6,13 +6,9 @@
 
 import BN from 'bn.js';
 import { EventEmitter } from 'eventemitter3';
-import { JSONRPCRequest, JSONRPCResponse } from 'provider/JSONRPC';
 
 import { serializeError, standardErrorCodes, standardErrors } from '../core/error';
 import { AddressString, Callback, HexString, IntNumber, ProviderType } from '../core/type';
-import { EthereumTransactionParams } from '../core/type/EthereumTransactionParams';
-import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from '../core/type/JSONRPC';
-import { isErrorResponse, Web3Response } from '../core/type/Web3Response';
 import {
   ensureAddressString,
   ensureBN,
@@ -29,9 +25,12 @@ import { MobileRelay } from '../relay/mobile/MobileRelay';
 import { LOCAL_STORAGE_ADDRESSES_KEY, RelayAbstract } from '../relay/RelayAbstract';
 import { RelayEventManager } from '../relay/RelayEventManager';
 import { Session } from '../relay/Session';
+import { EthereumTransactionParams } from '../relay/walletlink/type/EthereumTransactionParams';
+import { isErrorResponse, Web3Response } from '../relay/walletlink/type/Web3Response';
 import eip712 from '../vendor-js/eth-eip712-util';
 import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
 import { FilterPolyfill } from './FilterPolyfill';
+import { JSONRPCRequest, JSONRPCResponse } from './JSONRPC';
 import {
   SubscriptionManager,
   SubscriptionNotification,

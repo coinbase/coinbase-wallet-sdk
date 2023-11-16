@@ -1,8 +1,8 @@
 import { ErrorHandler } from '../core/error';
 import { AddressString, ProviderType } from '../core/type';
-import { Web3Request } from '../core/type/Web3Request';
-import { Web3Response } from '../core/type/Web3Response';
 import { Session } from './Session';
+import { Web3Request } from './walletlink/type/Web3Request';
+import { Web3Response } from './walletlink/type/Web3Response';
 
 export interface RelayUIOptions {
   linkAPIUrl: string;

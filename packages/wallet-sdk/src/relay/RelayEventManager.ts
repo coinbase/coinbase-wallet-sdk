@@ -1,5 +1,5 @@
-import { Web3Response } from '../core/type/Web3Response';
 import { prepend0x } from '../core/util';
+import { Web3Response } from './walletlink/type/Web3Response';
 
 type ResponseCallback = (response: Web3Response) => void;
 

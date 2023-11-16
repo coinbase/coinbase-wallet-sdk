@@ -2,7 +2,6 @@
 // Licensed under the Apache License, version 2.0
 
 import { HexString, IntNumber } from '../core/type';
-import { JSONRPCRequest, JSONRPCResponse } from '../core/type/JSONRPC';
 import {
   ensureHexString,
   hexStringFromIntNumber,
@@ -10,6 +9,7 @@ import {
   isHexString,
   range,
 } from '../core/util';
+import { JSONRPCRequest, JSONRPCResponse } from '../provider/JSONRPC';
 import { Web3Provider } from './Web3Provider';
 
 const TIMEOUT = 5 * 60 * 1000; // 5 minutes

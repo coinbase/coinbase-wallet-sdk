@@ -9,10 +9,6 @@ import {
   standardErrors,
 } from '../../core/error';
 import { AddressString, IntNumber, ProviderType, RegExpString } from '../../core/type';
-import { EthereumTransactionParams } from '../../core/type/EthereumTransactionParams';
-import { Web3Method } from '../../core/type/Web3Method';
-import { SupportedWeb3Method, Web3Request } from '../../core/type/Web3Request';
-import { isErrorResponse, Web3Response } from '../../core/type/Web3Response';
 import {
   bigIntStringFromBN,
   createQrUrl,
@@ -29,7 +25,11 @@ import {
   WalletLinkConnection,
   WalletLinkConnectionUpdateListener,
 } from './connection/WalletLinkConnection';
+import { EthereumTransactionParams } from './type/EthereumTransactionParams';
 import { WalletLinkEventData, WalletLinkResponseEventData } from './type/WalletLinkEventData';
+import { Web3Method } from './type/Web3Method';
+import { SupportedWeb3Method, Web3Request } from './type/Web3Request';
+import { isErrorResponse, Web3Response } from './type/Web3Response';
 import { WalletLinkRelayUI } from './ui/WalletLinkRelayUI';
 
 export interface WalletLinkRelayOptions {

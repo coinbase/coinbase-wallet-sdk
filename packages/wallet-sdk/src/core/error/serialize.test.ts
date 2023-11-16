@@ -1,5 +1,5 @@
 import { JSONRPCRequest } from '../../provider/JSONRPC';
-import { Web3Response } from '../type/Web3Response';
+import { Web3Response } from '../../relay/walletlink/type/Web3Response';
 import { standardErrorCodes } from './constants';
 import { standardErrors } from './errors';
 import { serializeError } from './serialize';
