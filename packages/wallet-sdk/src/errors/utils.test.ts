@@ -1,5 +1,4 @@
-import { Web3Method } from '../relay/Web3Method';
-import { ErrorResponse, isErrorResponse } from '../relay/Web3Response';
+import { isErrorResponse, Web3Response } from '../relay/Web3Response';
 import { standardErrorCodes } from './constants';
 import { standardErrors } from './errors';
 import { getErrorCode, getMessageFromCode } from './utils';
@@ -24,8 +23,8 @@ describe('errors', () => {
     expect(getErrorCode(null)).toEqual(undefined);
     expect(getErrorCode(undefined)).toEqual(undefined);
 
-    const errorResponse: ErrorResponse = {
-      method: Web3Method.generic,
+    const errorResponse: Web3Response = {
+      method: 'generic',
       errorMessage: 'test error message',
       errorCode: 4137,
     };

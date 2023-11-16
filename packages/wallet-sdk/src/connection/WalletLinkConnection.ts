@@ -1,32 +1,13 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { RelayMessage } from '../relay/RelayMessage';
+import { WalletLinkEventData, WalletLinkResponseEventData } from '../relay/RelayMessage';
 import { Session } from '../relay/Session';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../relay/WalletSDKRelayAbstract';
-import { isWeb3ResponseMessage, Web3ResponseMessage } from '../relay/Web3ResponseMessage';
 import { IntNumber } from '../types';
-import {
-  ClientMessage,
-  ClientMessageGetSessionConfig,
-  ClientMessageHostSession,
-  ClientMessageIsLinked,
-  ClientMessagePublishEvent,
-  ClientMessageSetSessionConfig,
-} from './ClientMessage';
+import { ClientMessage } from './ClientMessage';
 import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
-import {
-  isServerMessageEvent,
-  isServerMessageFail,
-  ServerMessage,
-  ServerMessageFail,
-  ServerMessageGetSessionConfigOK,
-  ServerMessageIsLinkedOK,
-  ServerMessageLinked,
-  ServerMessageOK,
-  ServerMessagePublishEventOK,
-  ServerMessageSessionConfigUpdated,
-} from './ServerMessage';
+import { ServerMessage, ServerMessageType } from './ServerMessage';
 import { SessionConfig } from './SessionConfig';
 import { WalletLinkConnectionCipher } from './WalletLinkConnectionCipher';
 import { WalletLinkHTTP } from './WalletLinkHTTP';
@@ -38,7 +19,7 @@ const REQUEST_TIMEOUT = 60000;
 export interface WalletLinkConnectionUpdateListener {
   linkedUpdated: (linked: boolean) => void;
   connectedUpdated: (connected: boolean) => void;
-  handleWeb3ResponseMessage: (message: Web3ResponseMessage) => void;
+  handleWeb3ResponseMessage: (message: WalletLinkResponseEventData) => void;
   chainUpdated: (chainId: string, jsonRpcUrl: string) => void;
   accountUpdated: (selectedAddress: string) => void;
   metadataUpdated: (key: string, metadataValue: string) => void;
@@ -162,28 +143,26 @@ export class WalletLinkConnection {
         // handle link status updates
         case 'IsLinkedOK':
         case 'Linked': {
-          const msg = m as Omit<ServerMessageIsLinkedOK, 'type'> & ServerMessageLinked;
+          const linked = m.type === 'IsLinkedOK' ? m.linked : undefined;
           this.diagnostic?.log(EVENTS.LINKED, {
             sessionIdHash: Session.hash(session.id),
-            linked: msg.linked,
+            linked,
             type: m.type,
-            onlineGuests: msg.onlineGuests,
+            onlineGuests: m.onlineGuests,
           });
 
-          this.linked = msg.linked || msg.onlineGuests > 0;
+          this.linked = linked || m.onlineGuests > 0;
           break;
         }
 
         // handle session config updates
         case 'GetSessionConfigOK':
         case 'SessionConfigUpdated': {
-          const msg = m as Omit<ServerMessageGetSessionConfigOK, 'type'> &
-            ServerMessageSessionConfigUpdated;
           this.diagnostic?.log(EVENTS.SESSION_CONFIG_RECEIVED, {
             sessionIdHash: Session.hash(session.id),
-            metadata_keys: msg && msg.metadata ? Object.keys(msg.metadata) : undefined,
+            metadata_keys: m && m.metadata ? Object.keys(m.metadata) : undefined,
           });
-          this.handleSessionMetadataUpdated(msg.metadata);
+          this.handleSessionMetadataUpdated(m.metadata);
           break;
         }
 
@@ -298,7 +277,7 @@ export class WalletLinkConnection {
   }
 
   private async handleIncomingEvent(m: ServerMessage) {
-    if (!isServerMessageEvent(m) || m.event !== 'Web3Response') {
+    if (m.type !== 'Event' || m.event !== 'Web3Response') {
       return;
     }
 
@@ -306,7 +285,7 @@ export class WalletLinkConnection {
       const decryptedData = await this.cipher.decrypt(m.data);
       const message = JSON.parse(decryptedData);
 
-      if (!isWeb3ResponseMessage(message)) return;
+      if (message.type !== 'WEB3_RESPONSE') return;
 
       this.listener?.handleWeb3ResponseMessage(message);
     } catch {
@@ -347,15 +326,16 @@ export class WalletLinkConnection {
    * @returns a Promise that completes when successful
    */
   public async setSessionMetadata(key: string, value: string | null) {
-    const message = ClientMessageSetSessionConfig({
+    const message: ClientMessage = {
+      type: 'SetSessionConfig',
       id: IntNumber(this.nextReqId++),
       sessionId: this.session.id,
       metadata: { [key]: value },
-    });
+    };
 
     return this.setOnceConnected(async () => {
-      const res = await this.makeRequest<ServerMessageOK | ServerMessageFail>(message);
-      if (isServerMessageFail(res)) {
+      const res = await this.makeRequest<'OK' | 'Fail'>(message);
+      if (res.type === 'Fail') {
         throw new Error(res.error || 'failed to set session metadata');
       }
     });
@@ -364,30 +344,35 @@ export class WalletLinkConnection {
   /**
    * Publish an event and emit event ID when successful
    * @param event event name
-   * @param unencryptedMessage unencrypted event message
+   * @param unencryptedData unencrypted event data
    * @param callWebhook whether the webhook should be invoked
    * @returns a Promise that emits event ID when successful
    */
-  public async publishEvent(event: string, unencryptedMessage: RelayMessage, callWebhook = false) {
+  public async publishEvent(
+    event: string,
+    unencryptedData: WalletLinkEventData,
+    callWebhook = false
+  ) {
     const data = await this.cipher.encrypt(
       JSON.stringify({
-        ...unencryptedMessage,
+        ...unencryptedData,
         origin: location.origin,
         relaySource: window.coinbaseWalletExtension ? 'injected_sdk' : 'sdk',
       })
     );
 
-    const message = ClientMessagePublishEvent({
+    const message: ClientMessage = {
+      type: 'PublishEvent',
       id: IntNumber(this.nextReqId++),
       sessionId: this.session.id,
       event,
       data,
       callWebhook,
-    });
+    };
 
     return this.setOnceLinked(async () => {
-      const res = await this.makeRequest<ServerMessagePublishEventOK | ServerMessageFail>(message);
-      if (isServerMessageFail(res)) {
+      const res = await this.makeRequest<'PublishEventOK' | 'Fail'>(message);
+      if (res.type === 'Fail') {
         throw new Error(res.error || 'failed to publish event');
       }
       return res.eventId;
@@ -416,25 +401,25 @@ export class WalletLinkConnection {
 
   private requestResolutions = new Map<IntNumber, (_: ServerMessage) => void>();
 
-  private async makeRequest<T extends ServerMessage>(
+  private async makeRequest<T extends ServerMessageType, M = ServerMessage<T>>(
     message: ClientMessage,
     timeout: number = REQUEST_TIMEOUT
-  ): Promise<T> {
+  ): Promise<M> {
     const reqId = message.id;
     this.sendData(message);
 
     // await server message with corresponding id
     let timeoutId: number;
     return Promise.race([
-      new Promise<T>((_, reject) => {
+      new Promise<M>((_, reject) => {
         timeoutId = window.setTimeout(() => {
           reject(new Error(`request ${reqId} timed out`));
         }, timeout);
       }),
-      new Promise<T>((resolve) => {
+      new Promise<M>((resolve) => {
         this.requestResolutions.set(reqId, (m) => {
           clearTimeout(timeoutId); // clear the timeout
-          resolve(m as T);
+          resolve(m as M);
           this.requestResolutions.delete(reqId);
         });
       }),
@@ -442,31 +427,34 @@ export class WalletLinkConnection {
   }
 
   private async authenticate() {
-    const msg = ClientMessageHostSession({
+    const m: ClientMessage = {
+      type: 'HostSession',
       id: IntNumber(this.nextReqId++),
       sessionId: this.session.id,
       sessionKey: this.session.key,
-    });
-    const res = await this.makeRequest<ServerMessageOK | ServerMessageFail>(msg);
-    if (isServerMessageFail(res)) {
+    };
+    const res = await this.makeRequest<'OK' | 'Fail'>(m);
+    if (res.type === 'Fail') {
       throw new Error(res.error || 'failed to authentcate');
     }
   }
 
   private sendIsLinked(): void {
-    const msg = ClientMessageIsLinked({
+    const m: ClientMessage = {
+      type: 'IsLinked',
       id: IntNumber(this.nextReqId++),
       sessionId: this.session.id,
-    });
-    this.sendData(msg);
+    };
+    this.sendData(m);
   }
 
   private sendGetSessionConfig(): void {
-    const msg = ClientMessageGetSessionConfig({
+    const m: ClientMessage = {
+      type: 'GetSessionConfig',
       id: IntNumber(this.nextReqId++),
       sessionId: this.session.id,
-    });
-    this.sendData(msg);
+    };
+    this.sendData(m);
   }
 
   private handleSessionMetadataUpdated = (metadata: SessionConfig['metadata']) => {

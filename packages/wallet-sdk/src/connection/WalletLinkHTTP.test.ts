@@ -1,4 +1,4 @@
-import { ServerMessageEvent } from './ServerMessage';
+import { ServerMessage } from './ServerMessage';
 import { WalletLinkHTTP } from './WalletLinkHTTP';
 
 describe('WalletLinkHTTP', () => {
@@ -82,7 +82,7 @@ describe('WalletLinkHTTP', () => {
     describe('markUnseenEventsAsSeen', () => {
       it('should mark all unseen events as seen', () => {
         const walletLinkHTTP = new WalletLinkHTTP(linkAPIUrl, sessionId, sessionKey);
-        const unseenEvents: ServerMessageEvent[] = [
+        const unseenEvents: ServerMessage[] = [
           {
             type: 'Event',
             sessionId: '1',

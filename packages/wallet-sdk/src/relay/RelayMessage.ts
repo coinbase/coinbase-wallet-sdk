@@ -1,16 +1,33 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-export enum RelayMessageType {
-  SESSION_ID_REQUEST = 'SESSION_ID_REQUEST',
-  SESSION_ID_RESPONSE = 'SESSION_ID_RESPONSE',
-  LINKED = 'LINKED',
-  UNLINKED = 'UNLINKED',
-  WEB3_REQUEST = 'WEB3_REQUEST',
-  WEB3_REQUEST_CANCELED = 'WEB3_REQUEST_CANCELED',
-  WEB3_RESPONSE = 'WEB3_RESPONSE',
-}
+import { Web3Request } from './Web3Request';
+import { Web3Response } from './Web3Response';
 
-export interface RelayMessage<T extends RelayMessageType = any> {
-  type: T;
-}
+type WalletLinkEventType =
+  | 'SESSION_ID_REQUEST'
+  | 'SESSION_ID_RESPONSE'
+  | 'LINKED'
+  | 'UNLINKED'
+  | 'WEB3_REQUEST'
+  | 'WEB3_REQUEST_CANCELED'
+  | 'WEB3_RESPONSE';
+
+export type WalletLinkEventData = {
+  type: WalletLinkEventType;
+  id: string;
+} & (
+  | {
+      type: 'WEB3_RESPONSE';
+      response: Web3Response;
+    }
+  | {
+      type: 'WEB3_REQUEST';
+      request: Web3Request;
+    }
+  | {
+      type: 'WEB3_REQUEST_CANCELED';
+    }
+);
+
+export type WalletLinkResponseEventData = Extract<WalletLinkEventData, { type: 'WEB3_RESPONSE' }>;

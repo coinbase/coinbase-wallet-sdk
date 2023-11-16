@@ -1,17 +1,7 @@
 import { ErrorHandler } from '../errors';
 import { Session } from '../relay/Session';
-import {
-  EthereumAddressFromSignedMessageRequest,
-  SignEthereumMessageRequest,
-  SignEthereumTransactionRequest,
-  SubmitEthereumTransactionRequest,
-} from '../relay/Web3Request';
-import {
-  EthereumAddressFromSignedMessageResponse,
-  SignEthereumMessageResponse,
-  SignEthereumTransactionResponse,
-  SubmitEthereumTransactionResponse,
-} from '../relay/Web3Response';
+import { Web3Request } from '../relay/Web3Request';
+import { Web3Response } from '../relay/Web3Response';
 import { AddressString, ProviderType } from '../types';
 
 export interface WalletUIOptions {
@@ -76,26 +66,26 @@ export interface WalletUI {
   }): void;
 
   signEthereumMessage(options: {
-    request: SignEthereumMessageRequest;
-    onSuccess: (response: SignEthereumMessageResponse) => void;
+    request: Web3Request<'signEthereumMessage'>;
+    onSuccess: (response: Web3Response<'signEthereumMessage'>) => void;
     onCancel: ErrorHandler;
   }): void;
 
   signEthereumTransaction(options: {
-    request: SignEthereumTransactionRequest;
-    onSuccess: (response: SignEthereumTransactionResponse) => void;
+    request: Web3Request<'signEthereumTransaction'>;
+    onSuccess: (response: Web3Response<'signEthereumTransaction'>) => void;
     onCancel: ErrorHandler;
   }): void;
 
   submitEthereumTransaction(options: {
-    request: SubmitEthereumTransactionRequest;
-    onSuccess: (response: SubmitEthereumTransactionResponse) => void;
+    request: Web3Request<'submitEthereumTransaction'>;
+    onSuccess: (response: Web3Response<'submitEthereumTransaction'>) => void;
     onCancel: ErrorHandler;
   }): void;
 
   ethereumAddressFromSignedMessage(options: {
-    request: EthereumAddressFromSignedMessageRequest;
-    onSuccess: (response: EthereumAddressFromSignedMessageResponse) => void;
+    request: Web3Request<'ethereumAddressFromSignedMessage'>;
+    onSuccess: (response: Web3Response<'ethereumAddressFromSignedMessage'>) => void;
   }): void;
 
   /**

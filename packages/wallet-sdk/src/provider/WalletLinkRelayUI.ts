@@ -2,18 +2,8 @@ import { LinkFlow } from '../components/LinkFlow/LinkFlow';
 import { Snackbar, SnackbarInstanceProps } from '../components/Snackbar/Snackbar';
 import { ErrorHandler } from '../errors';
 import { injectCssReset } from '../lib/cssReset';
-import {
-  EthereumAddressFromSignedMessageRequest,
-  SignEthereumMessageRequest,
-  SignEthereumTransactionRequest,
-  SubmitEthereumTransactionRequest,
-} from '../relay/Web3Request';
-import {
-  EthereumAddressFromSignedMessageResponse,
-  SignEthereumMessageResponse,
-  SignEthereumTransactionResponse,
-  SubmitEthereumTransactionResponse,
-} from '../relay/Web3Response';
+import {} from '../relay/Web3Request';
+import {} from '../relay/Web3Response';
 import { WalletUI, WalletUIOptions } from './WalletUI';
 
 export class WalletLinkRelayUI implements WalletUI {
@@ -66,45 +56,13 @@ export class WalletLinkRelayUI implements WalletUI {
   }
 
   /* istanbul ignore next */
-  addEthereumChain(_options: {
-    onCancel: ErrorHandler;
-    onApprove: () => void;
-    chainId: string;
-    rpcUrls: string[];
-    blockExplorerUrls?: string[];
-    chainName?: string;
-    iconUrls?: string[];
-    nativeCurrency?: {
-      name: string;
-      symbol: string;
-      decimals: number;
-    };
-  }) {
-    // no-op
-  }
+  addEthereumChain() {} // no-op
 
   /* istanbul ignore next */
-  watchAsset(_options: {
-    onCancel: ErrorHandler;
-    onApprove: () => void;
-    type: string;
-    address: string;
-    symbol?: string;
-    decimals?: number;
-    image?: string;
-  }) {
-    // no-op
-  }
+  watchAsset() {} // no-op
 
   /* istanbul ignore next */
-  switchEthereumChain(_options: {
-    onCancel: ErrorHandler;
-    onApprove: () => void;
-    chainId: string;
-    address?: string;
-  }) {
-    // no-op
-  }
+  switchEthereumChain() {} // no-op
 
   requestEthereumAccounts(options: { onCancel: ErrorHandler }): void {
     this.linkFlow.open({ onCancel: options.onCancel });
@@ -115,39 +73,16 @@ export class WalletLinkRelayUI implements WalletUI {
   }
 
   /* istanbul ignore next */
-  signEthereumMessage(_: {
-    request: SignEthereumMessageRequest;
-    onSuccess: (response: SignEthereumMessageResponse) => void;
-    onCancel: ErrorHandler;
-  }): void {
-    // No-op
-  }
+  signEthereumMessage() {} // no-op
 
   /* istanbul ignore next */
-  signEthereumTransaction(_: {
-    request: SignEthereumTransactionRequest;
-    onSuccess: (response: SignEthereumTransactionResponse) => void;
-    onCancel: ErrorHandler;
-  }): void {
-    // No-op
-  }
+  signEthereumTransaction() {} // no-op
 
   /* istanbul ignore next */
-  submitEthereumTransaction(_: {
-    request: SubmitEthereumTransactionRequest;
-    onSuccess: (response: SubmitEthereumTransactionResponse) => void;
-    onCancel: ErrorHandler;
-  }): void {
-    // No-op
-  }
+  submitEthereumTransaction() {} // no-op
 
   /* istanbul ignore next */
-  ethereumAddressFromSignedMessage(_: {
-    request: EthereumAddressFromSignedMessageRequest;
-    onSuccess: (response: EthereumAddressFromSignedMessageResponse) => void;
-  }): void {
-    // No-op
-  }
+  ethereumAddressFromSignedMessage() {} // no-op
 
   showConnecting(options: {
     isUnlinkedErrorState?: boolean;
@@ -214,7 +149,7 @@ export class WalletLinkRelayUI implements WalletUI {
   }
 
   /* istanbul ignore next */
-  inlineAddEthereumChain(_chainId: string): boolean {
+  inlineAddEthereumChain(): boolean {
     return false;
   }
 

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { ServerMessageEvent } from '../connection/ServerMessage';
+import { ServerMessage } from '../connection/ServerMessage';
 import { SessionConfig } from '../connection/SessionConfig';
 import { WalletLinkConnection } from '../connection/WalletLinkConnection';
 import { WalletLinkConnectionCipher } from '../connection/WalletLinkConnectionCipher';
@@ -9,11 +9,6 @@ import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay';
 import { WALLET_USER_NAME_KEY } from './WalletSDKRelayAbstract';
 import { WalletSDKRelayEventManager } from './WalletSDKRelayEventManager';
-
-// mock isWeb3ResponseMessage to return true
-jest.mock('./Web3ResponseMessage', () => ({
-  isWeb3ResponseMessage: jest.fn().mockReturnValue(true),
-}));
 
 const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`"decrypted ${text}"`));
 
@@ -50,13 +45,20 @@ describe('WalletLinkRelay', () => {
 
   describe('subscribe', () => {
     it('should call handleIncomingEvent', async () => {
-      const serverMessageEvent: ServerMessageEvent = {
+      const serverMessageEvent: ServerMessage = {
         type: 'Event',
         sessionId: 'sessionId',
         eventId: 'eventId',
         event: 'Web3Response',
         data: 'data',
       };
+
+      jest.spyOn(JSON, 'parse').mockImplementation(() => {
+        return {
+          type: 'WEB3_RESPONSE',
+          data: 'decrypted data',
+        };
+      });
 
       const relay = new WalletLinkRelay(options);
 

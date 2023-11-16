@@ -1,4 +1,4 @@
-import { ServerMessageEvent } from './ServerMessage';
+import { ServerMessage } from './ServerMessage';
 
 export class WalletLinkHTTP {
   private readonly auth: string;
@@ -13,7 +13,7 @@ export class WalletLinkHTTP {
   }
 
   // mark unseen events as seen
-  private async markUnseenEventsAsSeen(events: ServerMessageEvent[]) {
+  private async markUnseenEventsAsSeen(events: ServerMessage<'Event'>[]) {
     return Promise.all(
       events.map((e) =>
         fetch(`${this.linkAPIUrl}/events/${e.eventId}/seen`, {
@@ -26,7 +26,7 @@ export class WalletLinkHTTP {
     ).catch((error) => console.error('Unabled to mark event as failed:', error));
   }
 
-  async fetchUnseenEvents(): Promise<ServerMessageEvent[]> {
+  async fetchUnseenEvents(): Promise<ServerMessage<'Event'>[]> {
     const response = await fetch(`${this.linkAPIUrl}/events?unseen=true`, {
       headers: {
         Authorization: this.auth,
@@ -48,7 +48,7 @@ export class WalletLinkHTTP {
         throw new Error(`Check unseen events failed: ${error}`);
       }
 
-      const responseEvents: ServerMessageEvent[] =
+      const responseEvents: ServerMessage<'Event'>[] =
         events
           ?.filter((e) => e.event === 'Web3Response')
           .map((e) => ({
