@@ -3,12 +3,12 @@
 import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
 import { WALLET_USER_NAME_KEY } from '../RelayAbstract';
 import { RelayEventManager } from '../RelayEventManager';
-import { ServerMessage } from './ServerMessage';
-import { SessionConfig } from './SessionConfig';
-import { WalletLinkConnection } from './WalletLinkConnection';
-import { WalletLinkConnectionCipher } from './WalletLinkConnectionCipher';
+import { WalletLinkConnection } from './connection/WalletLinkConnection';
+import { WalletLinkConnectionCipher } from './connection/WalletLinkConnectionCipher';
+import { WalletLinkWebSocket } from './connection/WalletLinkWebSocket';
+import { ServerMessage } from './type/ServerMessage';
+import { SessionConfig } from './type/SessionConfig';
 import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay';
-import { WalletLinkWebSocket } from './WalletLinkWebSocket';
 
 const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`"decrypted ${text}"`));
 

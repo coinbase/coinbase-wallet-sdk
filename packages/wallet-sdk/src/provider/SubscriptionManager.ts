@@ -5,7 +5,7 @@ import type {
 import { PollingBlockTracker } from 'eth-block-tracker';
 import { EventEmitter } from 'eventemitter3';
 
-import { RequestArguments, Web3Provider } from '../core/types/Web3Provider';
+import { RequestArguments, Web3Provider } from './Web3Provider';
 
 // TODO: When we update this package we should be able to fix this
 //  eslint-disable-next-line @typescript-eslint/no-var-requires

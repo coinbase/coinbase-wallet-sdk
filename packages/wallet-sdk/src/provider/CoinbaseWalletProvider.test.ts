@@ -1,7 +1,7 @@
 import { fireEvent } from '@testing-library/preact';
 
-import { standardErrorCodes, standardErrors } from '../core/errors';
-import { ProviderType } from '../core/types';
+import { standardErrorCodes, standardErrors } from '../core/error';
+import { ProviderType } from '../core/type';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from '../mocks/fixtures';
 import { MockRelayClass } from '../mocks/relay';

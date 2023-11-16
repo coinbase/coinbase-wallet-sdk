@@ -1,8 +1,8 @@
 // DiagnosticLogger for debugging purposes only
 
-import { ServerMessage } from './ServerMessage';
-import { WalletLinkEventData } from './WalletLinkEventData';
-import { ConnectionState } from './WalletLinkWebSocket';
+import { ConnectionState } from '../relay/walletlink/connection/WalletLinkWebSocket';
+import { ServerMessage } from '../relay/walletlink/type/ServerMessage';
+import { WalletLinkEventData } from '../relay/walletlink/type/WalletLinkEventData';
 
 export type LogProperties = {
   addresses_length?: number; // number of eth addresses

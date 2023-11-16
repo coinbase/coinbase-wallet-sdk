@@ -1,8 +1,8 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { Web3Request } from '../../core/types/Web3Request';
-import { Web3Response } from '../../core/types/Web3Response';
+import { Web3Request } from '../../../core/type/Web3Request';
+import { Web3Response } from '../../../core/type/Web3Response';
 
 type Type =
   | 'SESSION_ID_REQUEST'

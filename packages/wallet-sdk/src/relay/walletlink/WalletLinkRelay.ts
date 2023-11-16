@@ -7,12 +7,12 @@ import {
   getMessageFromCode,
   standardErrorCodes,
   standardErrors,
-} from '../../core/errors';
-import { AddressString, IntNumber, ProviderType, RegExpString } from '../../core/types';
-import { EthereumTransactionParams } from '../../core/types/EthereumTransactionParams';
-import { Web3Method } from '../../core/types/Web3Method';
-import { SupportedWeb3Method, Web3Request } from '../../core/types/Web3Request';
-import { isErrorResponse, Web3Response } from '../../core/types/Web3Response';
+} from '../../core/error';
+import { AddressString, IntNumber, ProviderType, RegExpString } from '../../core/type';
+import { EthereumTransactionParams } from '../../core/type/EthereumTransactionParams';
+import { Web3Method } from '../../core/type/Web3Method';
+import { SupportedWeb3Method, Web3Request } from '../../core/type/Web3Request';
+import { isErrorResponse, Web3Response } from '../../core/type/Web3Response';
 import {
   bigIntStringFromBN,
   createQrUrl,
@@ -20,14 +20,17 @@ import {
   randomBytesHex,
 } from '../../core/util';
 import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
+import { DiagnosticLogger, EVENTS } from '../../provider/DiagnosticLogger';
 import { CancelablePromise, LOCAL_STORAGE_ADDRESSES_KEY, RelayAbstract } from '../RelayAbstract';
 import { RelayEventManager } from '../RelayEventManager';
 import { RelayUI, RelayUIOptions } from '../RelayUI';
 import { Session } from '../Session';
-import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
+import {
+  WalletLinkConnection,
+  WalletLinkConnectionUpdateListener,
+} from './connection/WalletLinkConnection';
+import { WalletLinkEventData, WalletLinkResponseEventData } from './type/WalletLinkEventData';
 import { WalletLinkRelayUI } from './ui/WalletLinkRelayUI';
-import { WalletLinkConnection, WalletLinkConnectionUpdateListener } from './WalletLinkConnection';
-import { WalletLinkEventData, WalletLinkResponseEventData } from './WalletLinkEventData';
 
 export interface WalletLinkRelayOptions {
   linkAPIUrl: string;

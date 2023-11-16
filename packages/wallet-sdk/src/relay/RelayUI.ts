@@ -1,7 +1,7 @@
-import { ErrorHandler } from '../core/errors';
-import { AddressString, ProviderType } from '../core/types';
-import { Web3Request } from '../core/types/Web3Request';
-import { Web3Response } from '../core/types/Web3Response';
+import { ErrorHandler } from '../core/error';
+import { AddressString, ProviderType } from '../core/type';
+import { Web3Request } from '../core/type/Web3Request';
+import { Web3Response } from '../core/type/Web3Response';
 import { Session } from './Session';
 
 export interface RelayUIOptions {

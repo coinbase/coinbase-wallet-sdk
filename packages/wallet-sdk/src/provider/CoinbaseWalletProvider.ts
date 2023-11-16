@@ -7,12 +7,11 @@
 import BN from 'bn.js';
 import { EventEmitter } from 'eventemitter3';
 
-import { serializeError, standardErrorCodes, standardErrors } from '../core/errors';
-import { AddressString, Callback, HexString, IntNumber, ProviderType } from '../core/types';
-import { EthereumTransactionParams } from '../core/types/EthereumTransactionParams';
-import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from '../core/types/JSONRPC';
-import { RequestArguments, Web3Provider } from '../core/types/Web3Provider';
-import { isErrorResponse, Web3Response } from '../core/types/Web3Response';
+import { serializeError, standardErrorCodes, standardErrors } from '../core/error';
+import { AddressString, Callback, HexString, IntNumber, ProviderType } from '../core/type';
+import { EthereumTransactionParams } from '../core/type/EthereumTransactionParams';
+import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from '../core/type/JSONRPC';
+import { isErrorResponse, Web3Response } from '../core/type/Web3Response';
 import {
   ensureAddressString,
   ensureBN,
@@ -29,14 +28,15 @@ import { MobileRelay } from '../relay/mobile/MobileRelay';
 import { LOCAL_STORAGE_ADDRESSES_KEY, RelayAbstract } from '../relay/RelayAbstract';
 import { RelayEventManager } from '../relay/RelayEventManager';
 import { Session } from '../relay/Session';
-import { DiagnosticLogger, EVENTS } from '../relay/walletlink/DiagnosticLogger';
 import eip712 from '../vendor-js/eth-eip712-util';
+import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
 import { FilterPolyfill } from './FilterPolyfill';
 import {
   SubscriptionManager,
   SubscriptionNotification,
   SubscriptionResult,
 } from './SubscriptionManager';
+import { RequestArguments, Web3Provider } from './Web3Provider';
 
 const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
 const DEFAULT_JSON_RPC_URL = 'DefaultJsonRpcUrl';

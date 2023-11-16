@@ -1,6 +1,6 @@
 import BN from 'bn.js';
 
-import { HexString, IntNumber } from './types';
+import { HexString, IntNumber } from './type';
 import {
   bigIntStringFromBN,
   createQrUrl,

@@ -1,15 +1,15 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { IntNumber } from '../../core/types';
-import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../RelayAbstract';
-import { Session } from '../Session';
-import { ClientMessage } from './ClientMessage';
-import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
-import { ServerMessage, ServerMessageType } from './ServerMessage';
-import { SessionConfig } from './SessionConfig';
+import { IntNumber } from '../../../core/type';
+import { DiagnosticLogger, EVENTS } from '../../../provider/DiagnosticLogger';
+import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../../RelayAbstract';
+import { Session } from '../../Session';
+import { ClientMessage } from '../type/ClientMessage';
+import { ServerMessage, ServerMessageType } from '../type/ServerMessage';
+import { SessionConfig } from '../type/SessionConfig';
+import { WalletLinkEventData, WalletLinkResponseEventData } from '../type/WalletLinkEventData';
 import { WalletLinkConnectionCipher } from './WalletLinkConnectionCipher';
-import { WalletLinkEventData, WalletLinkResponseEventData } from './WalletLinkEventData';
 import { WalletLinkHTTP } from './WalletLinkHTTP';
 import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket';
 

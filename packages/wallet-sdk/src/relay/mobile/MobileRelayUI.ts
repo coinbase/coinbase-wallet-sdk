@@ -1,5 +1,5 @@
 import { RedirectDialog } from '../../components/RedirectDialog/RedirectDialog';
-import { ErrorHandler } from '../../core/errors';
+import { ErrorHandler } from '../../core/error';
 import { RelayUI, RelayUIOptions } from '../RelayUI';
 
 // TODO: Implement & present in-page wallet picker instead of navigating to www.coinbase.com/connect-dapp

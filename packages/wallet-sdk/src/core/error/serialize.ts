@@ -1,5 +1,5 @@
 import { LIB_VERSION } from '../../version';
-import { isErrorResponse, Web3Response } from '../types/Web3Response';
+import { isErrorResponse, Web3Response } from '../type/Web3Response';
 import { standardErrorCodes } from './constants';
 import { serialize, SerializedEthereumRpcError } from './utils';
 

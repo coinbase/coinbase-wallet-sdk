@@ -1,9 +1,8 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { HexString, IntNumber } from '../core/types';
-import { JSONRPCRequest, JSONRPCResponse } from '../core/types/JSONRPC';
-import { Web3Provider } from '../core/types/Web3Provider';
+import { HexString, IntNumber } from '../core/type';
+import { JSONRPCRequest, JSONRPCResponse } from '../core/type/JSONRPC';
 import {
   ensureHexString,
   hexStringFromIntNumber,
@@ -11,6 +10,7 @@ import {
   isHexString,
   range,
 } from '../core/util';
+import { Web3Provider } from './Web3Provider';
 
 const TIMEOUT = 5 * 60 * 1000; // 5 minutes
 const JSONRPC_TEMPLATE: { jsonrpc: '2.0'; id: number } = {

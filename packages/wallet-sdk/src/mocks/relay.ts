@@ -1,6 +1,6 @@
-import { AddressString, HexString, ProviderType } from '../core/types';
-import { Web3Method as SupportedWeb3Method, Web3Method } from '../core/types/Web3Method';
-import { Web3Response } from '../core/types/Web3Response';
+import { AddressString, HexString, ProviderType } from '../core/type';
+import { Web3Method as SupportedWeb3Method, Web3Method } from '../core/type/Web3Method';
+import { Web3Response } from '../core/type/Web3Response';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { RelayAbstract } from '../relay/RelayAbstract';
 import { Session } from '../relay/Session';

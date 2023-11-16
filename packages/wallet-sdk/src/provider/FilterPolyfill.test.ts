@@ -1,4 +1,4 @@
-import { IntNumber } from '../core/types';
+import { IntNumber } from '../core/type';
 import { mockExtensionProvider } from '../mocks/provider';
 import { FilterPolyfill } from './FilterPolyfill';
 

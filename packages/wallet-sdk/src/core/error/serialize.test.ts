@@ -1,5 +1,5 @@
-import { JSONRPCRequest } from '../types/JSONRPC';
-import { Web3Response } from '../types/Web3Response';
+import { JSONRPCRequest } from '../type/JSONRPC';
+import { Web3Response } from '../type/Web3Response';
 import { standardErrorCodes } from './constants';
 import { standardErrors } from './errors';
 import { serializeError } from './serialize';
