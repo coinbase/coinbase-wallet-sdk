@@ -1,6 +1,6 @@
-import { ErrorHandler } from '../../core/error';
 import { RelayUI, RelayUIOptions } from '../RelayUI';
 import { RedirectDialog } from '../walletlink/ui/components/RedirectDialog/RedirectDialog';
+import { ErrorHandler } from ':core/error';
 
 // TODO: Implement & present in-page wallet picker instead of navigating to www.coinbase.com/connect-dapp
 export class MobileRelayUI implements RelayUI {

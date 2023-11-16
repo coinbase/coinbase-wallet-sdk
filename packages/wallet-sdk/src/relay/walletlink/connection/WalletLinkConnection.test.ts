@@ -1,9 +1,9 @@
-import { Cipher } from '../../../lib/Cipher';
-import { ScopedLocalStorage } from '../../../lib/ScopedLocalStorage';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../../RelayAbstract';
 import { Session } from '../../Session';
 import { SessionConfig } from '../type/SessionConfig';
 import { WalletLinkConnection, WalletLinkConnectionUpdateListener } from './WalletLinkConnection';
+import { Cipher } from ':lib/Cipher';
+import { ScopedLocalStorage } from ':lib/ScopedLocalStorage';
 
 const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`decrypted ${text}`));
 

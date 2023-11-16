@@ -7,23 +7,6 @@
 import BN from 'bn.js';
 import { EventEmitter } from 'eventemitter3';
 
-import { serializeError, standardErrorCodes, standardErrors } from '../core/error';
-import { AddressString, Callback, HexString, IntNumber, ProviderType } from '../core/type';
-import { EthereumTransactionParams } from '../core/type/EthereumTransactionParams';
-import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from '../core/type/JSONRPC';
-import { isErrorResponse, Web3Response } from '../core/type/Web3Response';
-import {
-  ensureAddressString,
-  ensureBN,
-  ensureBuffer,
-  ensureHexString,
-  ensureIntNumber,
-  ensureParsedJSONObject,
-  ensureRegExpString,
-  hexStringFromIntNumber,
-  prepend0x,
-} from '../core/util';
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { MobileRelay } from '../relay/mobile/MobileRelay';
 import { LOCAL_STORAGE_ADDRESSES_KEY, RelayAbstract } from '../relay/RelayAbstract';
 import { RelayEventManager } from '../relay/RelayEventManager';
@@ -37,6 +20,23 @@ import {
   SubscriptionResult,
 } from './SubscriptionManager';
 import { RequestArguments, Web3Provider } from './Web3Provider';
+import { serializeError, standardErrorCodes, standardErrors } from ':core/error';
+import { AddressString, Callback, HexString, IntNumber, ProviderType } from ':core/type';
+import { EthereumTransactionParams } from ':core/type/EthereumTransactionParams';
+import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from ':core/type/JSONRPC';
+import { isErrorResponse, Web3Response } from ':core/type/Web3Response';
+import {
+  ensureAddressString,
+  ensureBN,
+  ensureBuffer,
+  ensureHexString,
+  ensureIntNumber,
+  ensureParsedJSONObject,
+  ensureRegExpString,
+  hexStringFromIntNumber,
+  prepend0x,
+} from ':core/util';
+import { ScopedLocalStorage } from ':lib/ScopedLocalStorage';
 
 const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
 const DEFAULT_JSON_RPC_URL = 'DefaultJsonRpcUrl';

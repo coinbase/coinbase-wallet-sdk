@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Cipher } from '../../lib/Cipher';
-import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
 import { WALLET_USER_NAME_KEY } from '../RelayAbstract';
 import { RelayEventManager } from '../RelayEventManager';
 import { WalletLinkConnection } from './connection/WalletLinkConnection';
@@ -9,6 +7,8 @@ import { WalletLinkWebSocket } from './connection/WalletLinkWebSocket';
 import { ServerMessage } from './type/ServerMessage';
 import { SessionConfig } from './type/SessionConfig';
 import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay';
+import { Cipher } from ':lib/Cipher';
+import { ScopedLocalStorage } from ':lib/ScopedLocalStorage';
 
 const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`"decrypted ${text}"`));
 

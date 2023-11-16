@@ -1,9 +1,9 @@
 import clsx from 'clsx';
 import { FunctionComponent, h, render } from 'preact';
 
-import { injectCssReset } from '../../../../../lib/cssReset';
 import { SnackbarContainer } from '../Snackbar';
 import css from './RedirectDialog-css';
+import { injectCssReset } from ':lib/cssReset';
 
 type RedirectDialogProps = {
   title: string;

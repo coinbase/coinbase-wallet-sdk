@@ -1,5 +1,5 @@
-import { randomBytesHex } from '../core/util';
 import { Cipher } from './Cipher';
+import { randomBytesHex } from ':core/util';
 
 const secret = 'c356fe708ea7bbf7b1cc9ff9813c32772b6e0d16332da4c031ba9ea88be9b5ed';
 
