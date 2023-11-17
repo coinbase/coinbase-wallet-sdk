@@ -2,6 +2,9 @@
 
 # Coinbase Wallet SDK
 
+- [Playground](https://coinbase.github.io/coinbase-wallet-sdk/)
+- [Developer docs](https://docs.cloud.coinbase.com/wallet-sdk/docs)
+
 Coinbase Wallet SDK (formerly WalletLink) lets developers connect their dapps to Coinbase Wallet
 on both mobile web (for iOS and Android) and desktop:
 
