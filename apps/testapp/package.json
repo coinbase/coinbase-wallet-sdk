@@ -4,7 +4,8 @@
   "scripts": {
     "dev": "next dev --port 3001",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "export": "yarn workspace @coinbase/wallet-sdk run build && next build && next export"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
