@@ -790,9 +790,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
       case 'eth_signTypedData':
         return this._eth_signTypedData_v4(params);
 
-      case 'cbWallet_arbitrary':
-        return this._cbwallet_arbitrary(params);
-
       case 'wallet_addEthereumChain':
         return this._wallet_addEthereumChain(params);
 
@@ -1150,22 +1147,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     const typedDataJSON = JSON.stringify(typedData, null, 2);
 
     return this._signEthereumMessage(message, address, false, typedDataJSON);
-  }
-
-  /** @deprecated */
-  private async _cbwallet_arbitrary(params: unknown[]): Promise<JSONRPCResponse> {
-    const action = params[0];
-    const data = params[1];
-    if (typeof data !== 'string') {
-      throw new Error('parameter must be a string');
-    }
-
-    if (typeof action !== 'object' || action === null) {
-      throw new Error('parameter must be an object');
-    }
-
-    const result = await this.genericRequest(action, data);
-    return { jsonrpc: '2.0', id: 0, result };
   }
 
   private async _wallet_addEthereumChain(params: unknown[]): Promise<JSONRPCResponse> {
