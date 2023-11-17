@@ -11,6 +11,8 @@ on both mobile web (for iOS and Android) and desktop:
 
 Wallet SDK is open-source and uses minimal dependencies for maximum security and no code bloat. Simply drop a few lines of code into your dapp and Wallet SDK takes care of the rest.
 
+For e2e tests and manual QA, check out [Coinbase Wallet SDK Playground](/apps/testapp), which is also hosted at [here](https://coinbase.github.io/coinbase-wallet-sdk/).
+
 ## Getting started
 
 This repo uses a yarn workspace. To get started, run:

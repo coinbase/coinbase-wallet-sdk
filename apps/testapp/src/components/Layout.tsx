@@ -5,6 +5,7 @@ import {
   Container,
   Flex,
   Heading,
+  Link,
   Menu,
   MenuButton,
   MenuItem,
@@ -34,6 +35,9 @@ export function Layout({ children }: LayoutProps) {
           <Flex justifyContent="space-between" alignItems="center">
             <Heading>Coinbase Wallet SDK - Playground</Heading>
             <Flex justifyContent="space-between" alignItems="center" gap={4}>
+              <Button>
+                <Link href="https://cbdev.io/walletstart">Docs</Link>
+              </Button>
               <Menu>
                 <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
                   {`SDK: ${sdkVersion}`}
