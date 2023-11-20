@@ -26,8 +26,8 @@ export interface SnackbarMenuItem {
   svgWidth: string;
   svgHeight: string;
   path: string;
-  defaultFillRule: string;
-  defaultClipRule: string;
+  defaultFillRule: 'inherit' | 'evenodd';
+  defaultClipRule: 'inherit' | 'evenodd';
   onClick: () => void;
 }
 
