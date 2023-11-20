@@ -3,5 +3,12 @@ secure:
   upstream_repository: coinbase/coinbase-wallet-sdk
 operate:
   slack_channels:
-    - "#wallet-squad-build"
-    - "#wallet-feedback"
+    - "#wallet-squad-w3i"
+build:
+  engines:
+  - BaldurNode:
+      name: package-wallet-sdk
+      path: "./scripts/publish-canary.Dockerfile"
+      compute_type: BUILD_GENERAL1_SMALL
+      context: "./"
+      autobuild: true

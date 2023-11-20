@@ -35,6 +35,17 @@ if [ $branch == $mainBranch ]; then
   echo "================================================="
   echo -e " ${GREEN} run 'npm publish'"
   echo "================================================="
+elif [[ " $* " == *" canary "* ]]; then
+  echo -e "Preparing canary release..."
+  cd ./packages/wallet-sdk
+  timestamp=$(date +%s)
+  newVersion=$(jq -r '.version' package.json)"-canary.$timestamp"
+  jq ".version = \"$newVersion\"" package.json > temp.json && \
+  mv temp.json package.json
+  echo "Canary version updated to $newVersion"
+  
+  yarn install
+  yarn build
 else
   echo -e "${RED}⚠️  Need to publish from ${mainBranch} branch"
   echo -e "${REDBOLD}Checking out ${mainBranch}... "
