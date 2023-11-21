@@ -1,10 +1,10 @@
 import { AddressString, HexString } from '../core/type';
-import { JSONRPCMethod } from './JSONRPCMethod';
+import { JSONRPCMethodName } from './JSONRPC';
 
 export type JSONRPCResponse = {
   jsonrpc: '2.0';
   id: number;
-  method?: JSONRPCMethod;
+  method?: JSONRPCMethodName;
 } & (
   | {
       error: {
