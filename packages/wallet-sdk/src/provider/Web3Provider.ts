@@ -2,7 +2,8 @@
 // Licensed under the Apache License, version 2.0
 
 import { Callback } from '../core/type';
-import { JSONRPCRequest } from './JSONRPC';
+import { JSONRPCRequest } from './JSONRPCRequest';
+import { JSONRPCResponse } from './JSONRPCResponse';
 
 export interface Web3Provider {
   send(request: JSONRPCRequest): JSONRPCResponse;
