@@ -36,4 +36,7 @@ export type JSONRPCMethod =
   | 'eth_newBlockFilter'
   | 'eth_newPendingTransactionFilter'
   | 'eth_getFilterChanges'
-  | 'eth_getFilterLogs';
+  | 'eth_getFilterLogs'
+  | 'eth_getLogs'
+  | 'eth_blockNumber'
+  | 'eth_getBlockByNumber';
