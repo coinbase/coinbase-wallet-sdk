@@ -5,36 +5,45 @@ import BN from 'bn.js';
 
 import { AddressString, HexString, IntNumber } from '../core/type';
 
-export type JSONRPCMethodName = keyof typeof JSONRPCMethods;
+export type JSONRPCMethod = keyof typeof JSONRPCInterfaces;
 
-export function isValidJSONRPCMethod(method: string): method is JSONRPCMethodName {
-  return method in JSONRPCMethods;
+export type JSONRPCRequest<M extends JSONRPCMethod = JSONRPCMethod> = Extract<
+  _JSONRPCRequest<M>,
+  { method: M }
+>;
+
+export type JSONRPCResponse<M extends JSONRPCMethod = JSONRPCMethod> =
+  | Extract<_JSONRPCResponse<M>, { method: M }>
+  | _JSONRPCResponseError;
+
+export function isValidJSONRPCMethod(method: string): method is JSONRPCMethod {
+  return method in JSONRPCInterfaces;
 }
 
-export type JSONRPCRequest<M extends JSONRPCMethodName> = {
+type _JSONRPCRequest<M extends JSONRPCMethod> = {
   jsonrpc: '2.0';
   id: number;
   method: M;
-  params: (typeof JSONRPCMethods)[M]['params'];
+  params: (typeof JSONRPCInterfaces)[M]['params'];
 };
 
-export type JSONRPCResponse<M extends JSONRPCMethodName> = {
+type _JSONRPCResponse<M extends JSONRPCMethod> = {
   jsonrpc: '2.0';
   id: number;
-} & (
-  | {
-      error: {
-        code: number;
-        message: string;
-        data?: unknown;
-      };
-    }
-  | {
-      result: (typeof JSONRPCMethods)[M]['result'];
-    }
-);
+  result: (typeof JSONRPCInterfaces)[M]['result'];
+};
 
-const JSONRPCMethods = {
+type _JSONRPCResponseError = {
+  jsonrpc: '2.0';
+  id: number;
+  error: {
+    code: number;
+    message: string;
+    data?: unknown;
+  };
+};
+
+const JSONRPCInterfaces = {
   eth_accounts: {
     params: null,
     result: {} as AddressString[],
@@ -133,15 +142,7 @@ const JSONRPCMethods = {
     result: null,
   },
   wallet_watchAsset: {
-    params: {} as {
-      type: string;
-      options: {
-        address: string;
-        symbol: string;
-        decimals: number;
-        image?: string;
-      };
-    },
+    params: {} as WatchAssetParams | [WatchAssetParams],
     result: {} as boolean,
   },
   eth_subscribe: {
@@ -191,4 +192,14 @@ type EthereumTransactionParams = {
   maxPriorityFeePerGas?: BN; // in wei
   gasLimit?: BN;
   chainId: IntNumber;
+};
+
+type WatchAssetParams = {
+  type: string;
+  options: {
+    address: string;
+    symbol?: string;
+    decimals?: number;
+    image?: string;
+  };
 };
