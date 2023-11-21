@@ -34,19 +34,19 @@ export type JSONRPCResponse<M extends JSONRPCMethodName> = {
 
 const JSONRPCMethods = {
   eth_accounts: {
-    params: {} as never,
+    params: null,
     result: {} as AddressString[],
   },
   eth_coinbase: {
-    params: {} as never,
+    params: null,
     result: {} as AddressString,
   },
   net_version: {
-    params: {} as never,
+    params: null,
     result: {} as string,
   },
   eth_chainId: {
-    params: {} as never,
+    params: null,
     result: {} as string,
   },
   eth_uninstallFilter: {
@@ -54,7 +54,7 @@ const JSONRPCMethods = {
     result: {} as boolean,
   },
   eth_requestAccounts: {
-    params: {} as never,
+    params: null,
     result: {} as AddressString[],
   },
   eth_sign: {
@@ -90,7 +90,7 @@ const JSONRPCMethods = {
     result: {} as HexString,
   },
   eth_signTypedData_v2: {
-    params: {} as never,
+    params: null,
     result: {} as never,
   },
   eth_signTypedData_v3: {
@@ -161,11 +161,11 @@ const JSONRPCMethods = {
     result: {} as HexString,
   },
   eth_newBlockFilter: {
-    params: {} as never,
+    params: null,
     result: {} as HexString,
   },
   eth_newPendingTransactionFilter: {
-    params: {} as never,
+    params: null,
     result: {} as HexString,
   },
   eth_getFilterChanges: {
