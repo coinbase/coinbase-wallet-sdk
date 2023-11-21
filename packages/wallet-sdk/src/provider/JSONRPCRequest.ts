@@ -1,7 +1,7 @@
 import BN from 'bn.js';
 
 import { AddressString, HexString, IntNumber } from '../core/type';
-import { JSONRPCMethod } from './JSONRPCMethod';
+import { JSONRPCMethodName } from './JSONRPC';
 
 type EthereumTransactionParams = {
   fromAddress: AddressString;
@@ -44,7 +44,7 @@ type SubscriptionType = 'newHeads' | 'logs' | 'newPendingTransactions' | 'syncin
 export type JSONRPCRequest = {
   jsonrpc: '2.0';
   id: number;
-  method: JSONRPCMethod;
+  method: JSONRPCMethodName;
 } & (
   | {
       method: 'eth_accounts';
