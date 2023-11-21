@@ -9,7 +9,8 @@ import {
   isHexString,
   range,
 } from '../core/util';
-import { JSONRPCRequest, JSONRPCResponse } from '../provider/JSONRPC';
+import { JSONRPCRequest } from './JSONRPCRequest';
+import { JSONRPCResponse, JSONRPCResponseError } from './JSONRPCResponse';
 import { Web3Provider } from './Web3Provider';
 
 const TIMEOUT = 5 * 60 * 1000; // 5 minutes
@@ -84,7 +85,7 @@ export class FilterPolyfill {
     return true;
   }
 
-  public getFilterChanges(filterId: HexString): Promise<JSONRPCResponse> {
+  public getFilterChanges(filterId: HexString): Promise<JSONRPCResponse | JSONRPCResponseError> {
     const id = intNumberFromHexString(filterId);
     if (this.timeouts.has(id)) {
       // extend timeout
@@ -100,7 +101,7 @@ export class FilterPolyfill {
     return Promise.resolve(filterNotFoundError());
   }
 
-  public async getFilterLogs(filterId: HexString): Promise<JSONRPCResponse> {
+  public async getFilterLogs(filterId: HexString): Promise<JSONRPCResponse | JSONRPCResponseError> {
     const id = intNumberFromHexString(filterId);
     const filter = this.logFilters.get(id);
     if (!filter) {
@@ -140,7 +141,9 @@ export class FilterPolyfill {
     this.timeouts.delete(id);
   }
 
-  private async getLogFilterChanges(id: IntNumber): Promise<JSONRPCResponse> {
+  private async getLogFilterChanges(
+    id: IntNumber
+  ): Promise<JSONRPCResponse | JSONRPCResponseError> {
     const filter = this.logFilters.get(id);
     const cursorPosition = this.cursors.get(id);
     if (!cursorPosition || !filter) {
@@ -184,7 +187,9 @@ export class FilterPolyfill {
     return response;
   }
 
-  private async getBlockFilterChanges(id: IntNumber): Promise<JSONRPCResponse> {
+  private async getBlockFilterChanges(
+    id: IntNumber
+  ): Promise<JSONRPCResponse | JSONRPCResponseError> {
     const cursorPosition = this.cursors.get(id);
     if (!cursorPosition) {
       return filterNotFoundError();
@@ -280,11 +285,11 @@ export class FilterPolyfill {
   }
 
   private async getBlockHashByNumber(blockNumber: IntNumber): Promise<HexString | null> {
-    const response = await this.sendAsyncPromise({
+    const response = (await this.sendAsyncPromise({
       ...JSONRPC_TEMPLATE,
       method: 'eth_getBlockByNumber',
       params: [hexStringFromIntNumber(blockNumber), false],
-    });
+    })) as JSONRPCResponse<'eth_getBlockByNumber'>;
     if (response.result && typeof response.result.hash === 'string') {
       return ensureHexString(response.result.hash);
     }
@@ -338,7 +343,7 @@ function hexBlockHeightFromIntBlockHeight(value: IntBlockHeight): HexBlockHeight
   return hexStringFromIntNumber(value);
 }
 
-function filterNotFoundError(): JSONRPCResponse {
+function filterNotFoundError(): JSONRPCResponseError {
   return {
     ...JSONRPC_TEMPLATE,
     error: { code: -32000, message: 'filter not found' },

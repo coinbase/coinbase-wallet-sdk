@@ -1,18 +1,23 @@
 import { AddressString, HexString } from '../core/type';
-import { JSONRPCMethodName } from './JSONRPC';
+import { JSONRPCMethod } from './JSONRPCMethod';
 
-export type JSONRPCResponse = {
+export type JSONRPCResponse<M extends JSONRPCMethod = JSONRPCMethod> = {
   jsonrpc: '2.0';
   id: number;
-  method?: JSONRPCMethodName;
-} & (
-  | {
-      error: {
-        code: number;
-        message: string;
-        data?: unknown;
-      };
-    }
+  result: Extract<_JSONRPCResponse, { method: M }>['result'];
+};
+
+export type JSONRPCResponseError = {
+  jsonrpc: '2.0';
+  id: number;
+  error: {
+    code: number;
+    message: string;
+    data?: unknown;
+  };
+};
+
+type _JSONRPCResponse =
   | {
       method: 'eth_accounts';
       result: string[];
@@ -125,4 +130,7 @@ export type JSONRPCResponse = {
       method: 'eth_getFilterLogs';
       result: unknown;
     }
-);
+  | {
+      method: 'eth_getBlockByNumber';
+      result: { hash: string };
+    };

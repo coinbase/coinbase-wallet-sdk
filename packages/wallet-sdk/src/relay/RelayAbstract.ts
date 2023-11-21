@@ -1,6 +1,7 @@
 import { ErrorHandler, serializeError, standardErrors } from '../core/error';
 import { AddressString, IntNumber, ProviderType, RegExpString } from '../core/type';
-import { JSONRPCRequest, JSONRPCResponse } from '../provider/JSONRPC';
+import { JSONRPCRequest } from '../provider/JSONRPCRequest';
+import { JSONRPCResponse, JSONRPCResponseError } from '../provider/JSONRPCResponse';
 import { Session } from './Session';
 import { EthereumTransactionParams } from './walletlink/type/EthereumTransactionParams';
 import { Web3Method } from './walletlink/type/Web3Method';
@@ -106,7 +107,7 @@ export abstract class RelayAbstract {
   public async makeEthereumJSONRPCRequest(
     request: JSONRPCRequest,
     jsonRpcUrl: string
-  ): Promise<JSONRPCResponse | void> {
+  ): Promise<JSONRPCResponse> {
     if (!jsonRpcUrl) throw new Error('Error: No jsonRpcUrl provided');
     return window
       .fetch(jsonRpcUrl, {
@@ -120,10 +121,9 @@ export abstract class RelayAbstract {
         if (!json) {
           throw standardErrors.rpc.parse({});
         }
-        const response = json as JSONRPCResponse;
-        const { error } = response;
-        if (error) {
-          throw serializeError(error, request.method);
+        const response = json as JSONRPCResponse | JSONRPCResponseError;
+        if ('error' in response) {
+          throw serializeError(response.error, request.method);
         }
         return response;
       });
