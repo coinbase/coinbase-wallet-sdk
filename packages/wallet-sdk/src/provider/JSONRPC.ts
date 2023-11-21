@@ -1,7 +1,9 @@
 // Copyright (c) 2018-2022 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { AddressString, HexString } from '../core/type';
+import BN from 'bn.js';
+
+import { AddressString, HexString, IntNumber } from '../core/type';
 
 export type JSONRPCMethodName = keyof typeof JSONRPCMethods;
 
@@ -177,3 +179,16 @@ const JSONRPCMethods = {
     result: {} as unknown,
   },
 } as const;
+
+type EthereumTransactionParams = {
+  fromAddress: AddressString;
+  toAddress?: AddressString;
+  weiValue: BN;
+  data: Buffer;
+  nonce?: IntNumber;
+  gasPriceInWei?: BN;
+  maxFeePerGas?: BN; // in wei
+  maxPriorityFeePerGas?: BN; // in wei
+  gasLimit?: BN;
+  chainId: IntNumber;
+};
