@@ -14,7 +14,7 @@
       "dom.iterable",
       "es2016",
     ],
-    "module": "CommonJS",
+    "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "resolveJsonModule": true,
     "skipLibCheck": true,

@@ -1,15 +1,15 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { HexString, IntNumber } from '../types';
+import { HexString, IntNumber } from '../core/type';
 import {
   ensureHexString,
   hexStringFromIntNumber,
   intNumberFromHexString,
   isHexString,
   range,
-} from '../util';
-import { JSONRPCRequest, JSONRPCResponse } from './JSONRPC';
+} from '../core/util';
+import { JSONRPCRequest, JSONRPCResponse } from '../provider/JSONRPC';
 import { Web3Provider } from './Web3Provider';
 
 const TIMEOUT = 5 * 60 * 1000; // 5 minutes

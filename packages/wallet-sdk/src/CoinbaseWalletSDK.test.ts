@@ -8,10 +8,8 @@ import {
   CoinbaseWalletProvider,
   CoinbaseWalletProviderOptions,
 } from './provider/CoinbaseWalletProvider';
-import { WalletLinkRelay } from './relay/WalletLinkRelay';
-import { WalletSDKRelayEventManager } from './relay/WalletSDKRelayEventManager';
-
-jest.mock('./provider/WalletLinkRelayUI');
+import { RelayEventManager } from './relay/RelayEventManager';
+import { WalletLinkRelay } from './relay/walletlink/WalletLinkRelay';
 
 describe('CoinbaseWalletSDK', () => {
   describe('initialize', () => {
@@ -145,7 +143,7 @@ describe('CoinbaseWalletSDK', () => {
         chainId: 1,
         jsonRpcUrl: 'url',
         overrideIsMetaMask: false,
-        relayEventManager: new WalletSDKRelayEventManager(),
+        relayEventManager: new RelayEventManager(),
         relayProvider: jest.fn(),
         storage: new ScopedLocalStorage('-walletlink'),
       });
@@ -184,7 +182,7 @@ describe('CoinbaseWalletSDK', () => {
         chainId: 1,
         jsonRpcUrl: 'url',
         overrideIsMetaMask: false,
-        relayEventManager: new WalletSDKRelayEventManager(),
+        relayEventManager: new RelayEventManager(),
         relayProvider: jest.fn(),
         storage: new ScopedLocalStorage('-walletlink'),
       });

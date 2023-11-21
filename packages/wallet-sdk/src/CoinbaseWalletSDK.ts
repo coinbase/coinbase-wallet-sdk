@@ -2,17 +2,17 @@
 // Licensed under the Apache License, version 2.0
 
 import { LogoType, walletLogo } from './assets/wallet-logo';
-import { DiagnosticLogger } from './connection/DiagnosticLogger';
-import { LINK_API_URL } from './constants';
+import { LINK_API_URL } from './core/constants';
+import { getFavicon, isMobileWeb } from './core/util';
 import { ScopedLocalStorage } from './lib/ScopedLocalStorage';
 import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
-import { MobileRelayUI } from './provider/MobileRelayUI';
-import { WalletLinkRelayUI } from './provider/WalletLinkRelayUI';
-import { WalletUI, WalletUIOptions } from './provider/WalletUI';
-import { MobileRelay } from './relay/MobileRelay';
-import { WalletLinkRelay } from './relay/WalletLinkRelay';
-import { WalletSDKRelayEventManager } from './relay/WalletSDKRelayEventManager';
-import { getFavicon, isMobileWeb } from './util';
+import { DiagnosticLogger } from './provider/DiagnosticLogger';
+import { MobileRelay } from './relay/mobile/MobileRelay';
+import { MobileRelayUI } from './relay/mobile/MobileRelayUI';
+import { RelayEventManager } from './relay/RelayEventManager';
+import { RelayUI, RelayUIOptions } from './relay/RelayUI';
+import { WalletLinkRelayUI } from './relay/walletlink/ui/WalletLinkRelayUI';
+import { WalletLinkRelay } from './relay/walletlink/WalletLinkRelay';
 import { LIB_VERSION } from './version';
 
 /** Coinbase Wallet SDK Constructor Options */
@@ -26,7 +26,7 @@ export interface CoinbaseWalletSDKOptions {
   /** @optional Coinbase Wallet link server URL; for most, leave it unspecified */
   linkAPIUrl?: string;
   /** @optional an implementation of WalletUI; for most, leave it unspecified */
-  uiConstructor?: (options: Readonly<WalletUIOptions>) => WalletUI;
+  uiConstructor?: (options: Readonly<RelayUIOptions>) => RelayUI;
   /** @optional a diagnostic tool for debugging; for most, leave it unspecified  */
   diagnosticLogger?: DiagnosticLogger;
   /** @optional whether wallet link provider should override the isMetaMask property. */
@@ -49,7 +49,7 @@ export class CoinbaseWalletSDK {
   private _appName = '';
   private _appLogoUrl: string | null = null;
   private _relay: WalletLinkRelay | null = null;
-  private _relayEventManager: WalletSDKRelayEventManager | null = null;
+  private _relayEventManager: RelayEventManager | null = null;
   private _storage: ScopedLocalStorage;
   private _overrideIsMetaMask: boolean;
   private _overrideIsCoinbaseWallet: boolean;
@@ -85,7 +85,7 @@ export class CoinbaseWalletSDK {
       return;
     }
 
-    this._relayEventManager = new WalletSDKRelayEventManager();
+    this._relayEventManager = new RelayEventManager();
 
     const isMobile = isMobileWeb();
     const uiConstructor =

@@ -1,8 +1,8 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { Callback } from '../types';
-import { JSONRPCRequest, JSONRPCResponse } from './JSONRPC';
+import { Callback } from '../core/type';
+import { JSONRPCRequest, JSONRPCResponse } from '../provider/JSONRPC';
 
 export interface Web3Provider {
   send(request: JSONRPCRequest): JSONRPCResponse;
