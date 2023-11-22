@@ -1,8 +1,6 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import BN from 'bn.js';
-
 import { standardErrors } from './error';
 import { AddressString, BigIntString, HexString, IntNumber, RegExpString } from './type';
 
@@ -29,16 +27,16 @@ export function hexStringFromBuffer(buf: Buffer, includePrefix = false): HexStri
   return HexString(includePrefix ? `0x${hex}` : hex);
 }
 
-export function bigIntStringFromBN(bn: BN): BigIntString {
+export function bigIntStringFrombigint(bn: bigint): BigIntString {
   return BigIntString(bn.toString(10));
 }
 
 export function intNumberFromHexString(hex: HexString): IntNumber {
-  return IntNumber(new BN(ensureEvenLengthHexString(hex, false), 16).toNumber());
+  return IntNumber(parseInt(hex, 16));
 }
 
 export function hexStringFromIntNumber(num: IntNumber): HexString {
-  return HexString(`0x${new BN(num).toString(16)}`);
+  return HexString(ensureEvenLengthHexString(num.toString(16), true));
 }
 
 export function has0xPrefix(str: string): boolean {
@@ -118,7 +116,7 @@ export function ensureIntNumber(num: unknown): IntNumber {
       return IntNumber(Number(num));
     }
     if (isHexString(num)) {
-      return IntNumber(new BN(ensureEvenLengthHexString(num, false), 16).toNumber());
+      return intNumberFromHexString(num);
     }
   }
   throw standardErrors.rpc.invalidParams(`Not an integer: ${String(num)}`);
@@ -131,19 +129,19 @@ export function ensureRegExpString(regExp: unknown): RegExpString {
   throw standardErrors.rpc.invalidParams(`Not a RegExp: ${String(regExp)}`);
 }
 
-export function ensureBN(val: unknown): BN {
-  if (val !== null && (BN.isBN(val) || isBigNumber(val))) {
-    return new BN((val as any).toString(10), 10);
+export function ensureBigint(val: unknown): bigint {
+  if (typeof val === 'bigint') {
+    return val;
   }
   if (typeof val === 'number') {
-    return new BN(ensureIntNumber(val));
+    return BigInt(val);
   }
   if (typeof val === 'string') {
     if (INT_STRING_REGEX.test(val)) {
-      return new BN(val, 10);
+      return BigInt(val);
     }
     if (isHexString(val)) {
-      return new BN(ensureEvenLengthHexString(val, false), 16);
+      return BigInt(ensureEvenLengthHexString(val, true));
     }
   }
   throw standardErrors.rpc.invalidParams(`Not an integer: ${String(val)}`);
