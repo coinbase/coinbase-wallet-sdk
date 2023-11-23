@@ -15,6 +15,7 @@
     "@coinbase/wallet-sdk-3.9": "npm:@coinbase/wallet-sdk@~3.9.0-canary.5",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
+    "@metamask/eth-sig-util": "^7.0.0",
     "framer-motion": "^10.13.1",
     "next": "^13.5.0",
     "react": "^18.2.0",
