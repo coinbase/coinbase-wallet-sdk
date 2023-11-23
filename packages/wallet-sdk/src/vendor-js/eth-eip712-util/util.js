@@ -70,8 +70,8 @@ function toBuffer (v) {
       v = intToBuffer(v)
     } else if (v === null || v === undefined) {
       v = Buffer.allocUnsafe(0)
-    } else if (BN.isBN(v)) {
-      v = v.toArrayLike(Buffer)
+    } else if (typeof v === 'bigint') {
+      v = Buffer.from(padToEven(stripHexPrefix(v.toString(16))), 'hex')
     } else if (v.toArray) {
       // converts a BN to a Buffer
       v = Buffer.from(v.toArray())
