@@ -27,7 +27,7 @@ export function hexStringFromBuffer(buf: Buffer, includePrefix = false): HexStri
   return HexString(includePrefix ? `0x${hex}` : hex);
 }
 
-export function bigIntStringFrombigint(bn: bigint): BigIntString {
+export function bigIntStringFromBigint(bn: bigint): BigIntString {
   return BigIntString(bn.toString(10));
 }
 
@@ -36,7 +36,7 @@ export function intNumberFromHexString(hex: HexString): IntNumber {
 }
 
 export function hexStringFromIntNumber(num: IntNumber): HexString {
-  return HexString(ensureEvenLengthHexString(num.toString(16), true));
+  return HexString(ensureHexString(num.toString(16), true));
 }
 
 export function has0xPrefix(str: string): boolean {
