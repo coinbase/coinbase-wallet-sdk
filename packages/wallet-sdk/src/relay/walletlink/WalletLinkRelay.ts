@@ -10,7 +10,7 @@ import {
 } from '../../core/error';
 import { AddressString, IntNumber, ProviderType, RegExpString } from '../../core/type';
 import {
-  bigIntStringFromBN,
+  bigIntStringFrombigint,
   createQrUrl,
   hexStringFromBuffer,
   randomBytesHex,
@@ -300,15 +300,15 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
       params: {
         fromAddress: params.fromAddress,
         toAddress: params.toAddress,
-        weiValue: bigIntStringFromBN(params.weiValue),
+        weiValue: bigIntStringFrombigint(params.weiValue),
         data: hexStringFromBuffer(params.data, true),
         nonce: params.nonce,
-        gasPriceInWei: params.gasPriceInWei ? bigIntStringFromBN(params.gasPriceInWei) : null,
-        maxFeePerGas: params.gasPriceInWei ? bigIntStringFromBN(params.gasPriceInWei) : null,
+        gasPriceInWei: params.gasPriceInWei ? bigIntStringFrombigint(params.gasPriceInWei) : null,
+        maxFeePerGas: params.gasPriceInWei ? bigIntStringFrombigint(params.gasPriceInWei) : null,
         maxPriorityFeePerGas: params.gasPriceInWei
-          ? bigIntStringFromBN(params.gasPriceInWei)
+          ? bigIntStringFrombigint(params.gasPriceInWei)
           : null,
-        gasLimit: params.gasLimit ? bigIntStringFromBN(params.gasLimit) : null,
+        gasLimit: params.gasLimit ? bigIntStringFrombigint(params.gasLimit) : null,
         chainId: params.chainId,
         shouldSubmit: false,
       },
@@ -321,15 +321,15 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
       params: {
         fromAddress: params.fromAddress,
         toAddress: params.toAddress,
-        weiValue: bigIntStringFromBN(params.weiValue),
+        weiValue: bigIntStringFrombigint(params.weiValue),
         data: hexStringFromBuffer(params.data, true),
         nonce: params.nonce,
-        gasPriceInWei: params.gasPriceInWei ? bigIntStringFromBN(params.gasPriceInWei) : null,
-        maxFeePerGas: params.maxFeePerGas ? bigIntStringFromBN(params.maxFeePerGas) : null,
+        gasPriceInWei: params.gasPriceInWei ? bigIntStringFrombigint(params.gasPriceInWei) : null,
+        maxFeePerGas: params.maxFeePerGas ? bigIntStringFrombigint(params.maxFeePerGas) : null,
         maxPriorityFeePerGas: params.maxPriorityFeePerGas
-          ? bigIntStringFromBN(params.maxPriorityFeePerGas)
+          ? bigIntStringFrombigint(params.maxPriorityFeePerGas)
           : null,
-        gasLimit: params.gasLimit ? bigIntStringFromBN(params.gasLimit) : null,
+        gasLimit: params.gasLimit ? bigIntStringFrombigint(params.gasLimit) : null,
         chainId: params.chainId,
         shouldSubmit: true,
       },

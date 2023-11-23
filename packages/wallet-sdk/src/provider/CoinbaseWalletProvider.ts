@@ -4,14 +4,13 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import BN from 'bn.js';
 import { EventEmitter } from 'eventemitter3';
 
 import { serializeError, standardErrorCodes, standardErrors } from '../core/error';
 import { AddressString, Callback, HexString, IntNumber, ProviderType } from '../core/type';
 import {
   ensureAddressString,
-  ensureBN,
+  ensureBigint,
   ensureBuffer,
   ensureHexString,
   ensureIntNumber,
@@ -895,14 +894,14 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     this._ensureKnownAddress(fromAddress);
 
     const toAddress = tx.to ? ensureAddressString(tx.to) : null;
-    const weiValue = tx.value != null ? ensureBN(tx.value) : new BN(0);
+    const weiValue = tx.value != null ? ensureBigint(tx.value) : BigInt(0);
     const data = tx.data ? ensureBuffer(tx.data) : Buffer.alloc(0);
     const nonce = tx.nonce != null ? ensureIntNumber(tx.nonce) : null;
-    const gasPriceInWei = tx.gasPrice != null ? ensureBN(tx.gasPrice) : null;
-    const maxFeePerGas = tx.maxFeePerGas != null ? ensureBN(tx.maxFeePerGas) : null;
+    const gasPriceInWei = tx.gasPrice != null ? ensureBigint(tx.gasPrice) : null;
+    const maxFeePerGas = tx.maxFeePerGas != null ? ensureBigint(tx.maxFeePerGas) : null;
     const maxPriorityFeePerGas =
-      tx.maxPriorityFeePerGas != null ? ensureBN(tx.maxPriorityFeePerGas) : null;
-    const gasLimit = tx.gas != null ? ensureBN(tx.gas) : null;
+      tx.maxPriorityFeePerGas != null ? ensureBigint(tx.maxPriorityFeePerGas) : null;
+    const gasLimit = tx.gas != null ? ensureBigint(tx.gas) : null;
     const chainId = tx.chainId ? ensureIntNumber(tx.chainId) : this.getChainId();
 
     return {
