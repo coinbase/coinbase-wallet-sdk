@@ -2836,6 +2836,7 @@ __metadata:
     "@coinbase/wallet-sdk-3.9": "npm:@coinbase/wallet-sdk@~3.9.0-canary.5"
     "@emotion/react": ^11.11.1
     "@emotion/styled": ^11.11.0
+    "@metamask/eth-sig-util": ^7.0.0
     "@types/react": 18.2.15
     framer-motion: ^10.13.1
     next: ^13.5.0
@@ -5512,7 +5513,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "coinbase-wallet-sdk@workspace:."
   dependencies:
-    "@metamask/eth-sig-util": ^7.0.0
     "@typescript-eslint/eslint-plugin": ^6.2.0
     "@typescript-eslint/parser": ^6.2.0
     eslint: ^8.45.0
