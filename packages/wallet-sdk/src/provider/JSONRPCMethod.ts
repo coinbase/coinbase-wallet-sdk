@@ -23,7 +23,6 @@ export type JSONRPCMethod =
   | 'eth_signTypedData_v3'
   | 'eth_signTypedData_v4'
   | 'eth_signTypedData'
-  | 'walletlink_arbitrary' // compatibility
   | 'wallet_addEthereumChain'
   | 'wallet_switchEthereumChain'
   | 'wallet_watchAsset'
@@ -37,22 +36,7 @@ export type JSONRPCMethod =
   | 'eth_newBlockFilter'
   | 'eth_newPendingTransactionFilter'
   | 'eth_getFilterChanges'
-  | 'eth_getFilterLogs';
-
-export interface JSONRPCRequest<T = any> {
-  jsonrpc: '2.0';
-  id: number;
-  method: string;
-  params: T;
-}
-
-export interface JSONRPCResponse<T = any, U = any> {
-  jsonrpc: '2.0';
-  id: number;
-  result?: T;
-  error?: {
-    code: number;
-    message: string;
-    data?: U;
-  } | null;
-}
+  | 'eth_getFilterLogs'
+  | 'eth_getLogs'
+  | 'eth_blockNumber'
+  | 'eth_getBlockByNumber';

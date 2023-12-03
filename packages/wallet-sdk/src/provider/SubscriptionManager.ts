@@ -46,7 +46,7 @@ export class SubscriptionManager {
 
   public async handleRequest(request: {
     method: string;
-    params: unknown[];
+    params: unknown;
   }): Promise<SubscriptionResult> {
     const result = {};
     await this.subscriptionMiddleware(request, result, noop, noop);
