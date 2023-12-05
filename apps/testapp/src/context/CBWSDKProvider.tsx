@@ -8,6 +8,7 @@ type CBWSDKProviderProps = {
 };
 
 const CBWSDKContext = React.createContext(null);
+const SELECTED_SDK_KEY = 'selected_sdk_version';
 
 export const sdkVersions = ['master', '3.9', '3.7'] as const;
 export type SDKVersionType = (typeof sdkVersions)[number];
@@ -27,27 +28,41 @@ const dynamicallyImportSDK = (version: SDKVersionType) => {
 };
 
 export function CBWSDKProvider({ children }: CBWSDKProviderProps) {
-  const [version, setVersion] = React.useState<SDKVersionType>('master');
+  const [version, setVersion] = React.useState<SDKVersionType | undefined>(undefined);
   const [sdk, setSdk] = React.useState(null);
   const [provider, setProvider] = React.useState(null);
 
   useEffect(() => {
-    const selectedSDK = dynamicallyImportSDK(version);
-    const cbwsdk = new selectedSDK({
-      appName: 'Test App',
-      enableMobileWalletLink: true, // beta feature
-    });
-    setSdk(cbwsdk);
-    const cbwprovider = cbwsdk.makeWeb3Provider('http');
-    setProvider(cbwprovider);
+    if (version === undefined) {
+      const savedVersion = localStorage.getItem(SELECTED_SDK_KEY) as SDKVersionType;
+      setVersion(sdkVersions.includes(savedVersion) ? (savedVersion as SDKVersionType) : 'master');
+    }
   }, [version]);
+
+  useEffect(() => {
+    const selectedSDK = dynamicallyImportSDK(version);
+    if (selectedSDK) {
+      const cbwsdk = new selectedSDK({
+        appName: 'Test App',
+        enableMobileWalletLink: true, // beta feature
+      });
+      setSdk(cbwsdk);
+      const cbwprovider = cbwsdk.makeWeb3Provider('http');
+      setProvider(cbwprovider);
+    }
+  }, [version]);
+
+  const setSDKVersion = (version: SDKVersionType) => {
+    localStorage.setItem(SELECTED_SDK_KEY, version);
+    setVersion(version);
+  };
 
   const ctx = useMemo(
     () => ({
       sdk,
       provider,
       sdkVersion: version,
-      setSDKVersion: setVersion,
+      setSDKVersion,
     }),
     [sdk, provider]
   );

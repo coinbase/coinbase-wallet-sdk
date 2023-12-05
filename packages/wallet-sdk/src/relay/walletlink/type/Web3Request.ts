@@ -24,6 +24,9 @@ type _Web3Request =
       };
     }
   | {
+      method: 'childRequestEthereumAccounts';
+    }
+  | {
       method: 'connectAndSignIn';
       params: {
         appName: string;
