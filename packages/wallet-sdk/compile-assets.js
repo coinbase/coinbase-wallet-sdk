@@ -12,7 +12,7 @@ async function main() {
   for (const filePath of scssFiles) {
     console.info(`Compiling ${filePath}...`);
     const css = sass.renderSync({ file: filePath, outputStyle: 'compressed' }).css.toString('utf8');
-    const ts = `export default \`${css}\``;
+    const ts = `export default (() => \`${css}\`)();`;
     fs.writeFileSync(filePath.replace(/\.scss$/, '-css.ts'), ts, {
       mode: 0o644,
     });
