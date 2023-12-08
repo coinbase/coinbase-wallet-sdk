@@ -7,7 +7,7 @@ import { h } from 'preact';
 import { createQrUrl } from '../../../../../core/util';
 import { LIB_VERSION } from '../../../../../version';
 import { CloseIcon } from '../icons/CloseIcon';
-import coinbaseWalletRound from '../icons/coinbase-wallet-round-svg';
+import { CoinbaseWalletRound } from '../icons/coinbase-wallet-round';
 import { QRCodeIcon } from '../icons/QRCodeIcon';
 import walletLogo from '../icons/QRLogoWallet';
 import { QRCode } from '../QRCode';
@@ -30,7 +30,6 @@ type ConnectContentProps = {
 const wallet = {
   title: 'Coinbase Wallet app',
   description: 'Connect with your self-custody wallet',
-  icon: coinbaseWalletRound,
   steps: CoinbaseWalletSteps,
 };
 
@@ -67,12 +66,7 @@ export function ConnectContent(props: ConnectContentProps) {
       </div>
       <div className="-cbwsdk-connect-content-layout">
         <div className="-cbwsdk-connect-content-column-left">
-          <ConnectItem
-            title={wallet.title}
-            description={wallet.description}
-            icon={wallet.icon}
-            theme={theme}
-          />
+          <ConnectItem title={wallet.title} description={wallet.description} theme={theme} />
         </div>
         <div className="-cbwsdk-connect-content-column-right">
           <div className="-cbwsdk-connect-content-qr-wrapper">
@@ -110,15 +104,14 @@ export function ConnectContent(props: ConnectContentProps) {
 type ConnectItemProps = {
   title: string;
   description: string;
-  icon: string;
   theme: Theme;
 };
 
-export function ConnectItem({ title, description, icon, theme }: ConnectItemProps) {
+function ConnectItem({ title, description, theme }: ConnectItemProps) {
   return (
     <div className={clsx('-cbwsdk-connect-item', theme)}>
       <div>
-        <img src={icon} alt={title} />
+        <CoinbaseWalletRound />
       </div>
       <div className="-cbwsdk-connect-item-copy-wrapper">
         <h3 className="-cbwsdk-connect-item-title">{title}</h3>
