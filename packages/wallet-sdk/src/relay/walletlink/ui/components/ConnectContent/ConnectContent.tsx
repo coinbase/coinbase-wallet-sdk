@@ -7,7 +7,7 @@ import { h } from 'preact';
 import { createQrUrl } from '../../../../../core/util';
 import { LIB_VERSION } from '../../../../../version';
 import { CloseIcon } from '../icons/CloseIcon';
-import { CoinbaseWalletRound } from '../icons/coinbase-wallet-round';
+import { CoinbaseWalletRound } from '../icons/CoinbaseWalletRound';
 import { QRCodeIcon } from '../icons/QRCodeIcon';
 import walletLogo from '../icons/QRLogoWallet';
 import { QRCode } from '../QRCode';
