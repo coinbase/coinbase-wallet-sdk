@@ -9,7 +9,6 @@ import { LIB_VERSION } from '../../../../../version';
 import { CloseIcon } from '../icons/CloseIcon';
 import { CoinbaseWalletRound } from '../icons/CoinbaseWalletRound';
 import { QRCodeIcon } from '../icons/QRCodeIcon';
-import walletLogo from '../icons/QRLogoWallet';
 import { QRCode } from '../QRCode';
 import { Spinner } from '../Spinner/Spinner';
 import { Theme } from '../types';
@@ -70,18 +69,7 @@ export function ConnectContent(props: ConnectContentProps) {
         </div>
         <div className="-cbwsdk-connect-content-column-right">
           <div className="-cbwsdk-connect-content-qr-wrapper">
-            <QRCode
-              content={qrUrl}
-              width={200}
-              height={200}
-              fgColor="#000"
-              bgColor="transparent"
-              image={{
-                svg: walletLogo,
-                width: 25,
-                height: 25,
-              }}
-            />
+            <QRCode content={qrUrl} width={200} height={200} fgColor="#000" bgColor="transparent" />
             <input type="hidden" name="cbw-cbwsdk-version" value={LIB_VERSION} />
             <input type="hidden" value={qrUrl} />
           </div>
