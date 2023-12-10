@@ -1,6 +1,6 @@
 {
   "name": "@coinbase/wallet-sdk",
-  "version": "3.9.0",
+  "version": "3.9.1",
   "description": "Coinbase Wallet JavaScript SDK",
   "keywords": [
     "cipher",
@@ -64,7 +64,6 @@
     "jest-websocket-mock": "^2.4.0",
     "prettier": "^2.8.8",
     "sass": "^1.64.1",
-    "svgo": "^2.8.0",
     "ts-jest": "^27.1.5",
     "ts-node": "^10.9.1",
     "tslib": "^2.6.0",
