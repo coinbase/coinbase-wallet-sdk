@@ -189,6 +189,23 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
   public attachUI() {
     this.ui.attach();
   }
+  public getSessionConfig() {
+    return this.connection
+      .sendGetSessionConfig()
+      .then((config) => {
+        this.diagnostic?.log(EVENTS.GET_SESSION_CONFIG_REQUEST, {
+          sessionIdHash: this.getSessionIdHash(),
+        });
+        return config;
+      })
+      .catch((err: string) => {
+        this.diagnostic?.log(EVENTS.FAILURE, {
+          method: 'relay::getSessionConfig',
+          message: `failed to get session config with ${err}`,
+          sessionIdHash: this.getSessionIdHash(),
+        });
+      });
+  }
 
   public resetAndReload(): void {
     Promise.race([

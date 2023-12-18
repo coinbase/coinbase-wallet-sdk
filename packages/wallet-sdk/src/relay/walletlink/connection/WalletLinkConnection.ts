@@ -448,13 +448,13 @@ export class WalletLinkConnection {
     this.sendData(m);
   }
 
-  private sendGetSessionConfig(): void {
+  public sendGetSessionConfig(): Promise<ServerMessage> {
     const m: ClientMessage = {
       type: 'GetSessionConfig',
       id: IntNumber(this.nextReqId++),
       sessionId: this.session.id,
     };
-    this.sendData(m);
+    return this.makeRequest(m);
   }
 
   private handleSessionMetadataUpdated = (metadata: SessionConfig['metadata']) => {

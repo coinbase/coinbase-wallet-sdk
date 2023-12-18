@@ -10,6 +10,7 @@ export const web3Methods = [
   'scanQRCode',
   'generic',
   'childRequestEthereumAccounts',
+  'getSessionConfig',
   'addEthereumChain',
   'switchEthereumChain',
   'makeEthereumJSONRPCRequest',
