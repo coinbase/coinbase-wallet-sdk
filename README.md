@@ -1,4 +1,4 @@
-[![npm](https://img.shields.io/npm/v/@coinbase/wallet-sdk)](https://www.npmjs.com/package/@coinbase/wallet-sdk)
+[Codeflow](https://codeflow.cbhq.net/#/wallet/sdk-internal/)
 
 # Coinbase Wallet SDK
 
