@@ -11,7 +11,7 @@ RUN yarn install
 
 RUN yarn release -- canary
 
-RUN npm pack -w @coinbase/wallet-sdk 
+RUN npm pack -w @cbhq/wallet-sdk 
 
 RUN mv /sdk /shared
 

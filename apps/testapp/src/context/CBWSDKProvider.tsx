@@ -1,4 +1,4 @@
-import { CoinbaseWalletSDK as CoinbaseWalletSDKDev } from '@coinbase/wallet-sdk';
+import { CoinbaseWalletSDK as CoinbaseWalletSDKDev } from '@cbhq/wallet-sdk';
 import { CoinbaseWalletSDK as CoinbaseWalletSDK37 } from '@coinbase/wallet-sdk-3.7';
 import { CoinbaseWalletSDK as CoinbaseWalletSDK39 } from '@coinbase/wallet-sdk-3.9';
 import React, { useEffect, useMemo } from 'react';

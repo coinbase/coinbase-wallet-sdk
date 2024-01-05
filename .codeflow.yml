@@ -8,4 +8,4 @@ build:
       path: "./scripts/publish-canary.Dockerfile"
       compute_type: BUILD_GENERAL1_SMALL
       context: "./"
-      autobuild: false
+      autobuild: true
