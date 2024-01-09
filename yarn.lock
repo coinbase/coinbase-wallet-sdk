@@ -1567,6 +1567,45 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@cbhq/wallet-sdk@workspace:^, @cbhq/wallet-sdk@workspace:packages/wallet-sdk":
+  version: 0.0.0-use.local
+  resolution: "@cbhq/wallet-sdk@workspace:packages/wallet-sdk"
+  dependencies:
+    "@babel/core": ^7.22.9
+    "@babel/plugin-proposal-decorators": ^7.22.7
+    "@babel/plugin-transform-react-jsx": ^7.22.5
+    "@babel/preset-env": ^7.22.9
+    "@babel/preset-typescript": ^7.22.5
+    "@metamask/json-rpc-engine": ^7.0.0
+    "@peculiar/webcrypto": ^1.4.3
+    "@testing-library/jest-dom": ^5.17.0
+    "@testing-library/preact": ^2.0.1
+    "@types/bn.js": ^4.11.6
+    "@types/jest": ^27.5.2
+    "@types/node": ^14.18.54
+    "@types/sha.js": ^2.4.1
+    babel-jest: ^27.5.1
+    bn.js: ^5.2.1
+    buffer: ^6.0.3
+    clsx: ^1.2.1
+    eth-block-tracker: ^7.1.0
+    eth-json-rpc-filters: ^6.0.0
+    eventemitter3: ^5.0.1
+    jest: ^27.5.1
+    jest-chrome: ^0.7.2
+    jest-websocket-mock: ^2.4.0
+    keccak: ^3.0.3
+    preact: ^10.16.0
+    prettier: ^2.8.8
+    sass: ^1.64.1
+    sha.js: ^2.4.11
+    ts-jest: ^27.1.5
+    ts-node: ^10.9.1
+    tslib: ^2.6.0
+    typescript: ^5.1.6
+  languageName: unknown
+  linkType: soft
+
 "@chakra-ui/accordion@npm:2.3.0":
   version: 2.3.0
   resolution: "@chakra-ui/accordion@npm:2.3.0"
@@ -2808,52 +2847,30 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@coinbase/wallet-sdk-3.9@npm:@coinbase/wallet-sdk@~3.9.1, @coinbase/wallet-sdk@workspace:^, @coinbase/wallet-sdk@workspace:packages/wallet-sdk":
-  version: 0.0.0-use.local
-  resolution: "@coinbase/wallet-sdk@workspace:packages/wallet-sdk"
+"@coinbase/wallet-sdk-3.9@npm:@coinbase/wallet-sdk@~3.9.1":
+  version: 3.9.1
+  resolution: "@coinbase/wallet-sdk@npm:3.9.1"
   dependencies:
-    "@babel/core": ^7.22.9
-    "@babel/plugin-proposal-decorators": ^7.22.7
-    "@babel/plugin-transform-react-jsx": ^7.22.5
-    "@babel/preset-env": ^7.22.9
-    "@babel/preset-typescript": ^7.22.5
-    "@metamask/json-rpc-engine": ^7.0.0
-    "@peculiar/webcrypto": ^1.4.3
-    "@testing-library/jest-dom": ^5.17.0
-    "@testing-library/preact": ^2.0.1
-    "@types/bn.js": ^4.11.6
-    "@types/jest": ^27.5.2
-    "@types/node": ^14.18.54
-    "@types/sha.js": ^2.4.1
-    babel-jest: ^27.5.1
     bn.js: ^5.2.1
     buffer: ^6.0.3
     clsx: ^1.2.1
     eth-block-tracker: ^7.1.0
     eth-json-rpc-filters: ^6.0.0
     eventemitter3: ^5.0.1
-    jest: ^27.5.1
-    jest-chrome: ^0.7.2
-    jest-websocket-mock: ^2.4.0
     keccak: ^3.0.3
     preact: ^10.16.0
-    prettier: ^2.8.8
-    sass: ^1.64.1
     sha.js: ^2.4.11
-    ts-jest: ^27.1.5
-    ts-node: ^10.9.1
-    tslib: ^2.6.0
-    typescript: ^5.1.6
-  languageName: unknown
-  linkType: soft
+  checksum: 8e6ab9c1fdfe87c703e65e046c62b5d24821b103ae616646dd79b5639a6fef8861e5548a501598bd21d3b6884cd2ed86821b4517c1d3b90574f23f4ca4a459ba
+  languageName: node
+  linkType: hard
 
 "@coinbase/wallet-sdk-testapp@workspace:apps/testapp":
   version: 0.0.0-use.local
   resolution: "@coinbase/wallet-sdk-testapp@workspace:apps/testapp"
   dependencies:
+    "@cbhq/wallet-sdk": "workspace:^"
     "@chakra-ui/icons": ^2.1.1
     "@chakra-ui/react": ^2.8.0
-    "@coinbase/wallet-sdk": "workspace:^"
     "@coinbase/wallet-sdk-3.7": "npm:@coinbase/wallet-sdk@~3.7.2"
     "@coinbase/wallet-sdk-3.9": "npm:@coinbase/wallet-sdk@~3.9.1"
     "@emotion/react": ^11.11.1

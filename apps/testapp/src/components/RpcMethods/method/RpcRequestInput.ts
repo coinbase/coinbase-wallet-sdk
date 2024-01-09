@@ -1,4 +1,4 @@
-import { JSONRPCMethod } from '@coinbase/wallet-sdk/dist/provider/JSONRPC';
+import { JSONRPCMethod } from '@cbhq/wallet-sdk/dist/provider/JSONRPC';
 
 type FormattedParamsType = Record<string, unknown> | string;
 

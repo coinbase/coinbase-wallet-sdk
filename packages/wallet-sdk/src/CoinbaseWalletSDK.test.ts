@@ -1,5 +1,4 @@
 // eslint-disable-next-line max-classes-per-file
-import { waitFor } from '@testing-library/preact';
 
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
 import { ScopedLocalStorage } from './lib/ScopedLocalStorage';
@@ -123,9 +122,8 @@ describe('CoinbaseWalletSDK', () => {
       test('@setAppInfo', async () => {
         coinbaseWalletSDK2.setAppInfo('extension', 'http://extension-logo.png');
 
-        await waitFor(() => {
-          expect(mockSetAppInfo).toBeCalledWith('extension', 'http://extension-logo.png');
-        });
+        await new Promise((resolve) => setTimeout(resolve, 1));
+        expect(mockSetAppInfo).toBeCalledWith('extension', 'http://extension-logo.png');
       });
     });
 

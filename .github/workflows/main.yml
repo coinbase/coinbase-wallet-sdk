@@ -1,11 +1,17 @@
 name: CI
 
-on: [push, pull_request]
+on: 
+  pull_request:
+  push:
+    branches: [ master ]
 
 jobs:
   lint:
     name: Lint Check
-    runs-on: ubuntu-latest
+    runs-on:
+      - default-config
+      - xsmall
+      - wallet-org-runner
     defaults:
       run:
         working-directory: ./
@@ -20,6 +26,9 @@ jobs:
           node-version-file: '.nvmrc'
           cache-dependency-path: 'yarn.lock'
 
+      - name: Install yarn
+        run: corepack enable
+
       - name: Install NPM dependencies
         run: yarn install --immutable
 
@@ -28,7 +37,10 @@ jobs:
 
   typecheck:
     name: Type Check
-    runs-on: ubuntu-latest
+    runs-on:
+      - default-config
+      - xsmall
+      - wallet-org-runner
     defaults:
       run:
         working-directory: ./
@@ -43,6 +55,9 @@ jobs:
           node-version-file: '.nvmrc'
           cache-dependency-path: '**/yarn.lock'
 
+      - name: Install yarn
+        run: corepack enable
+  
       - name: Install NPM dependencies
         run: yarn install --immutable
 
@@ -55,7 +70,10 @@ jobs:
 
   tests:
     name: Tests
-    runs-on: ubuntu-latest
+    runs-on:
+      - default-config
+      - xsmall
+      - wallet-org-runner
     defaults:
       run:
         working-directory: ./
@@ -74,6 +92,9 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache-dependency-path: '**/yarn.lock'
 
+      - name: Install yarn
+        run: corepack enable
+            
       - name: Install NPM dependencies
         run: yarn install --immutable
 
