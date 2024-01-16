@@ -1,5 +1,3 @@
-import crypto from 'crypto';
-
 import { PopUpCommunicator } from './PopUpCommunicator';
 
 const mockUUID = `e499350a-eb54-433e-bcbe-ef14aefebb4e`;

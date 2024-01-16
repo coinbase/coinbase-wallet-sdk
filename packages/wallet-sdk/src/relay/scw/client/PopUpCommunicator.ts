@@ -1,4 +1,4 @@
-import { randomUUID, UUID } from 'crypto';
+import { UUID } from 'crypto';
 
 import { MessageEnvelope, MessageEnvelopeResponse } from '../type/PopUpCommunicatorMessage';
 
@@ -51,7 +51,9 @@ export class PopUpCommunicator {
           return;
         }
 
-        this.requestResolutions.get(event.data.id)?.(event.data);
+        const resolveFunction = this.requestResolutions.get(event.data.id);
+        this.requestResolutions.delete(event.data.id);
+        resolveFunction?.(event.data);
       });
     });
   }
@@ -62,13 +64,10 @@ export class PopUpCommunicator {
         reject(new Error('No pop up window found. Make sure to run .connect() before .send()'));
       }
 
-      const messageEnvelope: MessageEnvelope = { id: randomUUID(), content: requestMessage };
+      const messageEnvelope: MessageEnvelope = { id: crypto.randomUUID(), content: requestMessage };
       this.childWindow?.postMessage(messageEnvelope, new URL(this.url).origin);
 
-      this.requestResolutions.set(messageEnvelope.id, (response) => {
-        resolve(response);
-        this.requestResolutions.delete(messageEnvelope.id);
-      });
+      this.requestResolutions.set(messageEnvelope.id, resolve);
     });
   }
 
