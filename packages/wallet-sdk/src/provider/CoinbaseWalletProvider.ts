@@ -31,12 +31,12 @@ import eip712 from '../vendor-js/eth-eip712-util';
 import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
 import { FilterPolyfill } from './FilterPolyfill';
 import { JSONRPCRequest, JSONRPCResponse } from './JSONRPC';
+import { CBWSDKProvider, RequestArguments } from './ProviderInterface';
 import {
   SubscriptionManager,
   SubscriptionNotification,
   SubscriptionResult,
 } from './SubscriptionManager';
-import { RequestArguments, Web3Provider } from './Web3Provider';
 
 const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
 const DEFAULT_JSON_RPC_URL = 'DefaultJsonRpcUrl';
@@ -81,7 +81,7 @@ interface WatchAssetParams {
   };
 }
 
-export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider {
+export class CoinbaseWalletProvider extends EventEmitter implements CBWSDKProvider {
   // So dapps can easily identify Coinbase Wallet for enabling features like 3085 network switcher menus
   public readonly isCoinbaseWallet: boolean;
   // So dapps can easily identify Coinbase Dapp Browser for enabling dapp browser specific features
@@ -140,7 +140,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     const chainId = this.getChainId();
     const chainIdStr = prepend0x(chainId.toString(16));
     // indicate that we've connected, for EIP-1193 compliance
-    this.emit('connect', { chainIdStr });
+    this.emit('connect', { chainId: chainIdStr });
 
     const cachedAddresses = this._storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
     if (cachedAddresses) {

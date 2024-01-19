@@ -7,10 +7,12 @@ import { getFavicon, isMobileWeb } from './core/util';
 import { ScopedLocalStorage } from './lib/ScopedLocalStorage';
 import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
 import { DiagnosticLogger } from './provider/DiagnosticLogger';
+import { EIP1193Provider } from './provider/EIP1193Provider';
 import { MobileRelay } from './relay/mobile/MobileRelay';
 import { MobileRelayUI } from './relay/mobile/MobileRelayUI';
 import { RelayEventManager } from './relay/RelayEventManager';
 import { RelayUI, RelayUIOptions } from './relay/RelayUI';
+import { PopUpCommunicator } from './relay/scw/client/PopUpCommunicator';
 import { WalletLinkRelayUI } from './relay/walletlink/ui/WalletLinkRelayUI';
 import { WalletLinkRelay } from './relay/walletlink/WalletLinkRelay';
 import { LIB_VERSION } from './version';
@@ -56,13 +58,17 @@ export class CoinbaseWalletSDK {
   private _overrideIsCoinbaseBrowser: boolean;
   private _diagnosticLogger?: DiagnosticLogger;
   private _reloadOnDisconnect?: boolean;
+  private _enableMobileWalletLink: boolean;
+  private linkAPIUrl: string;
+  private popupCommunicator: PopUpCommunicator;
 
   /**
    * Constructor
    * @param options Coinbase Wallet SDK constructor options
    */
   constructor(options: Readonly<CoinbaseWalletSDKOptions>) {
-    const linkAPIUrl = options.linkAPIUrl || LINK_API_URL;
+    this._enableMobileWalletLink = options.enableMobileWalletLink ?? false;
+    this.linkAPIUrl = options.linkAPIUrl || LINK_API_URL;
     if (typeof options.overrideIsMetaMask === 'undefined') {
       this._overrideIsMetaMask = false;
     } else {
@@ -76,10 +82,12 @@ export class CoinbaseWalletSDK {
 
     this._reloadOnDisconnect = options.reloadOnDisconnect ?? true;
 
-    const url = new URL(linkAPIUrl);
+    const url = new URL(this.linkAPIUrl);
     const origin = `${url.protocol}//${url.host}`;
     this._storage = new ScopedLocalStorage(`-walletlink:${origin}`); // needs migration to preserve local states
     this._storage.setItem('version', CoinbaseWalletSDK.VERSION);
+
+    this.popupCommunicator = PopUpCommunicator.shared;
 
     if (this.walletExtension || this.coinbaseBrowser) {
       return;
@@ -93,7 +101,7 @@ export class CoinbaseWalletSDK {
       ((opts) => (isMobile ? new MobileRelayUI(opts) : new WalletLinkRelayUI(opts)));
 
     const relayOption = {
-      linkAPIUrl,
+      linkAPIUrl: this.linkAPIUrl,
       version: LIB_VERSION,
       darkMode: !!options.darkMode,
       uiConstructor,
@@ -101,7 +109,7 @@ export class CoinbaseWalletSDK {
       relayEventManager: this._relayEventManager,
       diagnosticLogger: this._diagnosticLogger,
       reloadOnDisconnect: this._reloadOnDisconnect,
-      enableMobileWalletLink: options.enableMobileWalletLink,
+      enableMobileWalletLink: this._enableMobileWalletLink,
     };
 
     this._relay = isMobile ? new MobileRelay(relayOption) : new WalletLinkRelay(relayOption);
@@ -119,7 +127,7 @@ export class CoinbaseWalletSDK {
    * @param chainId Ethereum Chain ID (Default: 1)
    * @returns A Web3 Provider
    */
-  public makeWeb3Provider(jsonRpcUrl = '', chainId = 1): CoinbaseWalletProvider {
+  public makeWeb3Provider(jsonRpcUrl = '', chainId = 1): EIP1193Provider | CoinbaseWalletProvider {
     const extension = this.walletExtension;
     if (extension) {
       if (!this.isCipherProvider(extension)) {
@@ -147,8 +155,8 @@ export class CoinbaseWalletSDK {
 
     if (!jsonRpcUrl) relay.setConnectDisabled(true);
 
-    return new CoinbaseWalletProvider({
-      relayProvider: () => Promise.resolve(relay),
+    // no interaction can happen before this is instantiated
+    return new EIP1193Provider({
       relayEventManager: this._relayEventManager,
       storage: this._storage,
       jsonRpcUrl,
@@ -158,6 +166,12 @@ export class CoinbaseWalletSDK {
       overrideIsMetaMask: this._overrideIsMetaMask,
       overrideIsCoinbaseWallet: this._overrideIsCoinbaseWallet,
       overrideIsCoinbaseBrowser: this._overrideIsCoinbaseBrowser,
+      reloadOnDisconnect: this._reloadOnDisconnect,
+      enableMobileWalletLink: this._enableMobileWalletLink,
+      linkAPIUrl: this.linkAPIUrl,
+      popupCommunicator: this.popupCommunicator,
+      appName: this._appName,
+      appLogoUrl: this._appLogoUrl,
     });
   }
 

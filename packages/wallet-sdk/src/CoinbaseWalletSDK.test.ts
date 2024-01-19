@@ -2,12 +2,10 @@
 
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
 import { ScopedLocalStorage } from './lib/ScopedLocalStorage';
-import { mockExtensionProvider, MockProviderClass, mockSetAppInfo } from './mocks/provider';
-import {
-  CoinbaseWalletProvider,
-  CoinbaseWalletProviderOptions,
-} from './provider/CoinbaseWalletProvider';
+import { MockEIP1193ProviderClass, mockExtensionProvider, mockSetAppInfo } from './mocks/provider';
+import { EIP1193Provider, EIP1193ProviderOptions } from './provider/EIP1193Provider';
 import { RelayEventManager } from './relay/RelayEventManager';
+import { PopUpCommunicator } from './relay/scw/client/PopUpCommunicator';
 import { WalletLinkRelay } from './relay/walletlink/WalletLinkRelay';
 
 describe('CoinbaseWalletSDK', () => {
@@ -38,7 +36,7 @@ describe('CoinbaseWalletSDK', () => {
 
     describe('sdk', () => {
       test('@makeWeb3Provider', () => {
-        expect(coinbaseWalletSDK2.makeWeb3Provider()).toBeInstanceOf(CoinbaseWalletProvider);
+        expect(coinbaseWalletSDK2.makeWeb3Provider()).toBeInstanceOf(EIP1193Provider);
       });
 
       test('@disconnect', () => {
@@ -128,23 +126,11 @@ describe('CoinbaseWalletSDK', () => {
     });
 
     describe('cipher provider', () => {
-      class MockCipherProviderClass extends MockProviderClass {
+      class MockCipherProviderClass {
         public isCipher = true;
-
-        // eslint-disable-next-line no-useless-constructor
-        constructor(opts: Readonly<CoinbaseWalletProviderOptions>) {
-          super(opts);
-        }
       }
 
-      const mockCipherProvider = new MockCipherProviderClass({
-        chainId: 1,
-        jsonRpcUrl: 'url',
-        overrideIsMetaMask: false,
-        relayEventManager: new RelayEventManager(),
-        relayProvider: jest.fn(),
-        storage: new ScopedLocalStorage('-walletlink'),
-      });
+      const mockCipherProvider = new MockCipherProviderClass();
       beforeAll(() => {
         // @ts-expect-error mocked provider
         window.coinbaseWalletExtension = mockCipherProvider;
@@ -168,21 +154,21 @@ describe('CoinbaseWalletSDK', () => {
     });
 
     describe('coinbase browser iframe', () => {
-      class MockCoinbaseBrowserProvider extends MockProviderClass {
+      class MockEIP1193Provider extends MockEIP1193ProviderClass {
         public isCoinbaseBrowser = true;
         // eslint-disable-next-line no-useless-constructor
-        constructor(opts: Readonly<CoinbaseWalletProviderOptions>) {
+        constructor(opts: Readonly<EIP1193ProviderOptions>) {
           super(opts);
         }
       }
 
-      const mockCoinbaseBrowserProvider = new MockCoinbaseBrowserProvider({
+      const mockCoinbaseBrowserProvider = new MockEIP1193Provider({
         chainId: 1,
         jsonRpcUrl: 'url',
         overrideIsMetaMask: false,
         relayEventManager: new RelayEventManager(),
-        relayProvider: jest.fn(),
         storage: new ScopedLocalStorage('-walletlink'),
+        popupCommunicator: PopUpCommunicator.shared,
       });
 
       beforeAll(() => {

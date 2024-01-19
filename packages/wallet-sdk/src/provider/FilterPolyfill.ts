@@ -10,7 +10,7 @@ import {
   range,
 } from '../core/util';
 import { JSONRPCRequest, JSONRPCResponse } from '../provider/JSONRPC';
-import { Web3Provider } from './Web3Provider';
+import { CBWSDKProvider } from './ProviderInterface';
 
 const TIMEOUT = 5 * 60 * 1000; // 5 minutes
 const JSONRPC_TEMPLATE: { jsonrpc: '2.0'; id: number } = {
@@ -37,7 +37,7 @@ export interface Filter {
 }
 
 export class FilterPolyfill {
-  private readonly provider: Web3Provider;
+  private readonly provider: CBWSDKProvider;
   private readonly logFilters = new Map<IntNumber, Filter>(); // <id, filter>
   private readonly blockFilters = new Set<IntNumber>(); // <id>
   private readonly pendingTransactionFilters = new Set<IntNumber>(); // <id, true>
@@ -45,7 +45,7 @@ export class FilterPolyfill {
   private readonly timeouts = new Map<IntNumber, number>(); // <id, setTimeout id>
   private nextFilterId = IntNumber(1);
 
-  constructor(provider: Web3Provider) {
+  constructor(provider: CBWSDKProvider) {
     this.provider = provider;
   }
 
