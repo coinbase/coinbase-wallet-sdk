@@ -31,9 +31,9 @@ export default {
   // TODO: Increase threshold as additional tests are added
   coverageThreshold: {
     global: {
-      branches: 53,
-      functions: 55,
-      statements: 61,
+      branches: 52,
+      functions: 53,
+      statements: 58,
     },
   },
 

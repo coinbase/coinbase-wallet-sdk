@@ -1,22 +1,26 @@
 import { UUID } from 'crypto';
 
-import { MessageEnvelope, MessageEnvelopeResponse } from '../type/PopUpCommunicatorMessage';
+import { POPUP_READY_MESSAGE, RequestEnvelope, ResponseEnvelope } from '../type/MessageEnvelope';
+import { SCWWeb3Request } from '../type/SCWWeb3Request';
 
 // TODO: how to set/change configurations?
 const POPUP_WIDTH = 688;
 const POPUP_HEIGHT = 621;
+const SCW_FE_URL = 'http://localhost:3000/';
 
 type PopUpCommunicatorOptions = {
   url: string;
 };
 
 export class PopUpCommunicator {
+  static shared: PopUpCommunicator = new PopUpCommunicator({ url: SCW_FE_URL });
+
   private childWindow: Window | null = null;
-  private requestResolutions = new Map<UUID, (_: MessageEnvelopeResponse) => void>();
+  private requestResolutions = new Map<UUID, (_: ResponseEnvelope) => void>();
 
   url: string;
 
-  constructor({ url }: PopUpCommunicatorOptions) {
+  private constructor({ url }: PopUpCommunicatorOptions) {
     this.url = url;
   }
 
@@ -39,7 +43,7 @@ export class PopUpCommunicator {
             return;
           }
 
-          if (event.data.message === 'popupReadyForRequest') {
+          if (event.data.type === POPUP_READY_MESSAGE.type) {
             resolve();
           }
         },
@@ -51,23 +55,48 @@ export class PopUpCommunicator {
           return;
         }
 
-        const resolveFunction = this.requestResolutions.get(event.data.id);
-        this.requestResolutions.delete(event.data.id);
+        const resolveFunction = this.requestResolutions.get(event.data.requestId);
+        this.requestResolutions.delete(event.data.requestId);
+
         resolveFunction?.(event.data);
       });
     });
   }
 
-  send(requestMessage: unknown): Promise<unknown> {
+  selectRelayType(): Promise<Extract<ResponseEnvelope, { type: 'relaySelected' }>> {
     return new Promise((resolve, reject) => {
       if (!this.childWindow) {
         reject(new Error('No pop up window found. Make sure to run .connect() before .send()'));
       }
 
-      const messageEnvelope: MessageEnvelope = { id: crypto.randomUUID(), content: requestMessage };
+      const messageEnvelope: RequestEnvelope = {
+        id: crypto.randomUUID(),
+        type: 'selectRelayType',
+      };
       this.childWindow?.postMessage(messageEnvelope, new URL(this.url).origin);
 
-      this.requestResolutions.set(messageEnvelope.id, resolve);
+      this.requestResolutions.set(messageEnvelope.id, (resEnv) =>
+        resolve(resEnv as Extract<ResponseEnvelope, { type: 'relaySelected' }>)
+      );
+    });
+  }
+
+  request(request: SCWWeb3Request): Promise<Extract<ResponseEnvelope, { type: 'web3Response' }>> {
+    return new Promise((resolve, reject) => {
+      if (!this.childWindow) {
+        reject(new Error('No pop up window found. Make sure to run .connect() before .send()'));
+      }
+
+      const messageEnvelope: RequestEnvelope = {
+        type: 'web3Request',
+        id: crypto.randomUUID(),
+        content: request,
+      };
+      this.childWindow?.postMessage(messageEnvelope, new URL(this.url).origin);
+
+      this.requestResolutions.set(messageEnvelope.id, (resEnv) =>
+        resolve(resEnv as Extract<ResponseEnvelope, { type: 'web3Response' }>)
+      );
     });
   }
 
