@@ -7,7 +7,7 @@ type CBWSDKProviderProps = {
   children: React.ReactNode;
 };
 
-const CBWSDKContext = React.createContext(null);
+const CBWSDKReactContext = React.createContext(null);
 const SELECTED_SDK_KEY = 'selected_sdk_version';
 
 export const sdkVersions = ['master', '3.9', '3.7'] as const;
@@ -27,7 +27,7 @@ const dynamicallyImportSDK = (version: SDKVersionType) => {
   }
 };
 
-export function CBWSDKProvider({ children }: CBWSDKProviderProps) {
+export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
   const [version, setVersion] = React.useState<SDKVersionType | undefined>(undefined);
   const [sdk, setSdk] = React.useState(null);
   const [provider, setProvider] = React.useState(null);
@@ -67,11 +67,11 @@ export function CBWSDKProvider({ children }: CBWSDKProviderProps) {
     [sdk, provider]
   );
 
-  return <CBWSDKContext.Provider value={ctx}>{children}</CBWSDKContext.Provider>;
+  return <CBWSDKReactContext.Provider value={ctx}>{children}</CBWSDKReactContext.Provider>;
 }
 
 export function useCBWSDK() {
-  const context = React.useContext(CBWSDKContext);
+  const context = React.useContext(CBWSDKReactContext);
   if (context === undefined) {
     throw new Error('useCBWSDK must be used within a CBWSDKProvider');
   }

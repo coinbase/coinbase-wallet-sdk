@@ -21,7 +21,7 @@ import {
 import React, { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 
-import { useCBWSDK } from '../../context/CBWSDKProvider';
+import { useCBWSDK } from '../../context/CBWSDKReactContextProvider';
 import { verifySignMsg } from './method/signMessageMethods';
 import { ADDR_TO_FILL } from './shortcut/const';
 

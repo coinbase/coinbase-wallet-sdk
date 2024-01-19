@@ -11,7 +11,7 @@ import {
   MenuList,
 } from '@chakra-ui/react';
 
-import { sdkVersions, useCBWSDK } from '../context/CBWSDKProvider';
+import { sdkVersions, useCBWSDK } from '../context/CBWSDKReactContextProvider';
 
 type LayoutProps = {
   children: React.ReactNode;
