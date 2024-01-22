@@ -14,11 +14,7 @@ import { WalletLinkRelayUI } from '../relay/walletlink/ui/WalletLinkRelayUI';
 import { WalletLinkRelay } from '../relay/walletlink/WalletLinkRelay';
 import { CoinbaseWalletProvider, CoinbaseWalletProviderOptions } from './CoinbaseWalletProvider';
 import { DiagnosticLogger } from './DiagnosticLogger';
-import {
-  EIP1193Provider as EIP1193ProviderInterface,
-  ProviderRpcError,
-  RequestArguments,
-} from './ProviderInterface';
+import { ProviderInterface, ProviderRpcError, RequestArguments } from './ProviderInterface';
 
 export interface EIP1193ProviderOptions
   extends Omit<CoinbaseWalletProviderOptions, 'relayProvider'> {
@@ -35,7 +31,7 @@ interface DisconnectInfo {
 
 type RelayType = 'scw' | 'walletLink';
 
-export class EIP1193Provider extends EventEmitter implements EIP1193ProviderInterface {
+export class EIP1193Provider extends EventEmitter implements ProviderInterface {
   private oldProvider!: CoinbaseWalletProvider;
   private storage: ScopedLocalStorage;
   private relayEventManager: RelayEventManager;

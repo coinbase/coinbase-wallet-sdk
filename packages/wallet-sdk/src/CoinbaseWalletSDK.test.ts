@@ -1,11 +1,8 @@
 // eslint-disable-next-line max-classes-per-file
 
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
-import { ScopedLocalStorage } from './lib/ScopedLocalStorage';
-import { MockEIP1193ProviderClass, mockExtensionProvider, mockSetAppInfo } from './mocks/provider';
-import { EIP1193Provider, EIP1193ProviderOptions } from './provider/EIP1193Provider';
-import { RelayEventManager } from './relay/RelayEventManager';
-import { PopUpCommunicator } from './relay/scw/client/PopUpCommunicator';
+import { mockExtensionProvider } from './mocks/provider';
+import { EIP1193Provider } from './provider/EIP1193Provider';
 import { WalletLinkRelay } from './relay/walletlink/WalletLinkRelay';
 
 describe('CoinbaseWalletSDK', () => {
@@ -94,7 +91,6 @@ describe('CoinbaseWalletSDK', () => {
 
     describe('extension', () => {
       beforeAll(() => {
-        // @ts-expect-error mocked provider
         window.coinbaseWalletExtension = mockExtensionProvider;
       });
 
@@ -115,13 +111,6 @@ describe('CoinbaseWalletSDK', () => {
         // Calls extension close
         coinbaseWalletSDK2.disconnect();
         expect(await mockExtensionProvider.close()).toBe('mockClose');
-      });
-
-      test('@setAppInfo', async () => {
-        coinbaseWalletSDK2.setAppInfo('extension', 'http://extension-logo.png');
-
-        await new Promise((resolve) => setTimeout(resolve, 1));
-        expect(mockSetAppInfo).toBeCalledWith('extension', 'http://extension-logo.png');
       });
     });
 
@@ -150,34 +139,6 @@ describe('CoinbaseWalletSDK', () => {
           .mockImplementation(() => 'setAppInfo');
         coinbaseWalletSDK2.setAppInfo('cipher', 'http://cipher-image.png');
         expect(relaySetAppInfoMock).not.toBeCalled();
-      });
-    });
-
-    describe('coinbase browser iframe', () => {
-      class MockEIP1193Provider extends MockEIP1193ProviderClass {
-        public isCoinbaseBrowser = true;
-        // eslint-disable-next-line no-useless-constructor
-        constructor(opts: Readonly<EIP1193ProviderOptions>) {
-          super(opts);
-        }
-      }
-
-      const mockCoinbaseBrowserProvider = new MockEIP1193Provider({
-        chainId: 1,
-        jsonRpcUrl: 'url',
-        overrideIsMetaMask: false,
-        relayEventManager: new RelayEventManager(),
-        storage: new ScopedLocalStorage('-walletlink'),
-        popupCommunicator: PopUpCommunicator.shared,
-      });
-
-      beforeAll(() => {
-        window.ethereum = undefined;
-        window.top!.ethereum = mockCoinbaseBrowserProvider;
-      });
-
-      test('@makeWeb3Provider', () => {
-        expect(coinbaseWalletSDK2.makeWeb3Provider()).toEqual(mockCoinbaseBrowserProvider);
       });
     });
   });

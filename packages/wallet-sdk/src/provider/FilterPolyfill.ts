@@ -10,7 +10,7 @@ import {
   range,
 } from '../core/util';
 import { JSONRPCRequest, JSONRPCResponse } from '../provider/JSONRPC';
-import { CBWSDKProvider } from './ProviderInterface';
+import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 
 const TIMEOUT = 5 * 60 * 1000; // 5 minutes
 const JSONRPC_TEMPLATE: { jsonrpc: '2.0'; id: number } = {
@@ -37,7 +37,7 @@ export interface Filter {
 }
 
 export class FilterPolyfill {
-  private readonly provider: CBWSDKProvider;
+  private readonly provider: CoinbaseWalletProvider;
   private readonly logFilters = new Map<IntNumber, Filter>(); // <id, filter>
   private readonly blockFilters = new Set<IntNumber>(); // <id>
   private readonly pendingTransactionFilters = new Set<IntNumber>(); // <id, true>
@@ -45,7 +45,7 @@ export class FilterPolyfill {
   private readonly timeouts = new Map<IntNumber, number>(); // <id, setTimeout id>
   private nextFilterId = IntNumber(1);
 
-  constructor(provider: CBWSDKProvider) {
+  constructor(provider: CoinbaseWalletProvider) {
     this.provider = provider;
   }
 

@@ -31,7 +31,7 @@ import eip712 from '../vendor-js/eth-eip712-util';
 import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
 import { FilterPolyfill } from './FilterPolyfill';
 import { JSONRPCRequest, JSONRPCResponse } from './JSONRPC';
-import { CBWSDKProvider, RequestArguments } from './ProviderInterface';
+import { ProviderInterface, RequestArguments } from './ProviderInterface';
 import {
   SubscriptionManager,
   SubscriptionNotification,
@@ -81,7 +81,7 @@ interface WatchAssetParams {
   };
 }
 
-export class CoinbaseWalletProvider extends EventEmitter implements CBWSDKProvider {
+export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
   // So dapps can easily identify Coinbase Wallet for enabling features like 3085 network switcher menus
   public readonly isCoinbaseWallet: boolean;
   // So dapps can easily identify Coinbase Dapp Browser for enabling dapp browser specific features
@@ -1269,7 +1269,8 @@ export class CoinbaseWalletProvider extends EventEmitter implements CBWSDKProvid
     return this._filterPolyfill.getFilterLogs(filterId);
   }
 
-  private initializeRelay(): Promise<RelayAbstract> {
+  // public for testing
+  public initializeRelay(): Promise<RelayAbstract> {
     if (this._relay) {
       return Promise.resolve(this._relay);
     }
