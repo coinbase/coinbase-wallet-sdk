@@ -1,6 +1,12 @@
 import { UUID } from 'crypto';
 
-import { POPUP_READY_MESSAGE, RequestEnvelope, ResponseEnvelope } from '../type/MessageEnvelope';
+import { CrossDomainCommunicator, Message } from '../../../lib/CrossDomainCommunicator';
+import {
+  isResponseEnvelope,
+  POPUP_READY_MESSAGE,
+  RequestEnvelope,
+  ResponseEnvelope,
+} from '../type/MessageEnvelope';
 import { SCWWeb3Request } from '../type/SCWWeb3Request';
 
 // TODO: how to set/change configurations?
@@ -8,38 +14,27 @@ const POPUP_WIDTH = 688;
 const POPUP_HEIGHT = 621;
 const SCW_FE_URL = 'http://localhost:3000/';
 
-type PopUpCommunicatorOptions = {
-  url: string;
-};
-
-export class PopUpCommunicator {
+export class PopUpCommunicator extends CrossDomainCommunicator {
   static shared: PopUpCommunicator = new PopUpCommunicator({ url: SCW_FE_URL });
 
-  private childWindow: Window | null = null;
   private requestResolutions = new Map<UUID, (_: ResponseEnvelope) => void>();
 
-  url: string;
-
-  private constructor({ url }: PopUpCommunicatorOptions) {
-    this.url = url;
-  }
-
-  connect(): Promise<void> {
+  protected onConnect(): Promise<void> {
     return new Promise((resolve, reject) => {
-      if (this.childWindow) {
+      if (this.peerWindow) {
         this.closeChildWindow();
       }
 
       this.openFixedSizePopUpWindow(this.url);
 
-      if (!this.childWindow) {
+      if (!this.peerWindow) {
         reject(new Error('No pop up window opened'));
       }
 
       window.addEventListener(
         'message',
         (event) => {
-          if (event.origin !== new URL(this.url).origin) {
+          if (event.origin !== this.url.origin) {
             return;
           }
 
@@ -49,23 +44,21 @@ export class PopUpCommunicator {
         },
         { once: true }
       );
-
-      window.addEventListener('message', (event) => {
-        if (event.origin !== new URL(this.url).origin) {
-          return;
-        }
-
-        const resolveFunction = this.requestResolutions.get(event.data.requestId);
-        this.requestResolutions.delete(event.data.requestId);
-
-        resolveFunction?.(event.data);
-      });
     });
+  }
+
+  protected onMessage(message: Message) {
+    if (!isResponseEnvelope(message)) return;
+
+    const requestId = message.requestId;
+    const resolveFunction = this.requestResolutions.get(requestId);
+    this.requestResolutions.delete(requestId);
+    resolveFunction?.(message);
   }
 
   selectRelayType(): Promise<Extract<ResponseEnvelope, { type: 'relaySelected' }>> {
     return new Promise((resolve, reject) => {
-      if (!this.childWindow) {
+      if (!this.peerWindow) {
         reject(new Error('No pop up window found. Make sure to run .connect() before .send()'));
       }
 
@@ -73,7 +66,7 @@ export class PopUpCommunicator {
         id: crypto.randomUUID(),
         type: 'selectRelayType',
       };
-      this.childWindow?.postMessage(messageEnvelope, new URL(this.url).origin);
+      this.peerWindow?.postMessage(messageEnvelope, this.url.origin);
 
       this.requestResolutions.set(messageEnvelope.id, (resEnv) =>
         resolve(resEnv as Extract<ResponseEnvelope, { type: 'relaySelected' }>)
@@ -83,7 +76,7 @@ export class PopUpCommunicator {
 
   request(request: SCWWeb3Request): Promise<Extract<ResponseEnvelope, { type: 'web3Response' }>> {
     return new Promise((resolve, reject) => {
-      if (!this.childWindow) {
+      if (!this.peerWindow) {
         reject(new Error('No pop up window found. Make sure to run .connect() before .send()'));
       }
 
@@ -92,7 +85,7 @@ export class PopUpCommunicator {
         id: crypto.randomUUID(),
         content: request,
       };
-      this.childWindow?.postMessage(messageEnvelope, new URL(this.url).origin);
+      this.postMessage(messageEnvelope);
 
       this.requestResolutions.set(messageEnvelope.id, (resEnv) =>
         resolve(resEnv as Extract<ResponseEnvelope, { type: 'web3Response' }>)
@@ -100,12 +93,12 @@ export class PopUpCommunicator {
     });
   }
 
-  disconnect() {
+  protected onDisconnect() {
     this.closeChildWindow();
     this.requestResolutions.clear();
   }
 
-  private openFixedSizePopUpWindow(url: string) {
+  private openFixedSizePopUpWindow(url: URL) {
     const left = (window.innerWidth - POPUP_WIDTH) / 2 + window.screenX;
     const top = (window.innerHeight - POPUP_HEIGHT) / 2 + window.screenY;
 
@@ -115,14 +108,14 @@ export class PopUpCommunicator {
       `width=${POPUP_WIDTH}, height=${POPUP_HEIGHT}, left=${left}, top=${top}`
     );
 
-    this.childWindow = popupWindow;
+    this.peerWindow = popupWindow;
     popupWindow?.focus();
   }
 
   private closeChildWindow() {
-    if (this.childWindow && !this.childWindow.closed) {
-      this.childWindow.close();
+    if (this.peerWindow && !this.peerWindow.closed) {
+      this.peerWindow.close();
     }
-    this.childWindow = null;
+    this.peerWindow = null;
   }
 }
