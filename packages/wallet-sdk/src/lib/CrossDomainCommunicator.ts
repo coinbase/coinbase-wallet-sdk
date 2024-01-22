@@ -10,8 +10,6 @@ export abstract class CrossDomainCommunicator {
 
   protected constructor({ url }: { url: string }) {
     this.url = new URL(url);
-
-    window.addEventListener('message', this.eventListener.bind(this));
   }
 
   protected abstract onConnect(): Promise<void>;
@@ -20,6 +18,7 @@ export abstract class CrossDomainCommunicator {
 
   async connect(): Promise<void> {
     await this.onConnect();
+    window.addEventListener('message', this.eventListener.bind(this));
     this.connected = true;
   }
 
