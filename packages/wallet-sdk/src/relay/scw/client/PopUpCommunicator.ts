@@ -12,7 +12,7 @@ import { SCWWeb3Request } from '../type/SCWWeb3Request';
 // TODO: how to set/change configurations?
 const POPUP_WIDTH = 688;
 const POPUP_HEIGHT = 621;
-const SCW_FE_URL = 'http://localhost:3000/';
+const SCW_FE_URL = 'https://scw-dev.cbhq.net/';
 
 export class PopUpCommunicator extends CrossDomainCommunicator {
   static shared: PopUpCommunicator = new PopUpCommunicator({ url: SCW_FE_URL });
@@ -25,7 +25,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
         this.closeChildWindow();
       }
 
-      this.openFixedSizePopUpWindow(this.url);
+      this.openFixedSizePopUpWindow();
 
       if (!this.peerWindow) {
         reject(new Error('No pop up window opened'));
@@ -98,12 +98,18 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     this.requestResolutions.clear();
   }
 
-  private openFixedSizePopUpWindow(url: URL) {
+  private openFixedSizePopUpWindow() {
     const left = (window.innerWidth - POPUP_WIDTH) / 2 + window.screenX;
     const top = (window.innerHeight - POPUP_HEIGHT) / 2 + window.screenY;
 
+    const urlParams = new URLSearchParams();
+    urlParams.append('opener', encodeURIComponent(window.location.href));
+
+    const popupUrl = new URL(this.url);
+    popupUrl.search = urlParams.toString();
+
     const popupWindow = window.open(
-      url,
+      popupUrl,
       'SCW Child Window',
       `width=${POPUP_WIDTH}, height=${POPUP_HEIGHT}, left=${left}, top=${top}`
     );

@@ -81,6 +81,10 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
 
   public async request(args: RequestArguments): Promise<unknown> {
     if (args.method == 'eth_requestAccounts' && !this.oldProvider) {
+      if (this.accounts) {
+        return Promise.resolve(this.accounts);
+      }
+
       await this.popupCommunicator.connect();
 
       const selectRelayTypeResponse = await this.popupCommunicator.selectRelayType();
