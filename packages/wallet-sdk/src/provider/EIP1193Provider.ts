@@ -1,19 +1,12 @@
 import EventEmitter from 'eventemitter3';
 
-import { CoinbaseWalletSDK } from '../CoinbaseWalletSDK';
-import { LINK_API_URL } from '../core/constants';
+import { PopUpCommunicator } from '../connector/scw/client/PopUpCommunicator';
+import { SCWConnector } from '../connector/scw/client/SCWConnector';
+import { Connector } from '../connector/scw/type/ConnectorInterface';
 import { standardErrors } from '../core/error';
-import { RegExpString } from '../core/type';
+import { prepend0x } from '../core/util';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { RelayEventManager } from '../relay/RelayEventManager';
-import { RelayUIOptions } from '../relay/RelayUI';
-import { PopUpCommunicator } from '../relay/scw/client/PopUpCommunicator';
-import { SCWRelay } from '../relay/scw/client/SCWRelay';
-import { isErrorResponse } from '../relay/walletlink/type/Web3Response';
-import { WalletLinkRelayUI } from '../relay/walletlink/ui/WalletLinkRelayUI';
-import { WalletLinkRelay } from '../relay/walletlink/WalletLinkRelay';
-import { CoinbaseWalletProvider, CoinbaseWalletProviderOptions } from './CoinbaseWalletProvider';
-import { DiagnosticLogger } from './DiagnosticLogger';
+import { CoinbaseWalletProviderOptions } from './CoinbaseWalletProvider';
 import { ProviderInterface, ProviderRpcError, RequestArguments } from './ProviderInterface';
 
 export interface EIP1193ProviderOptions
@@ -29,136 +22,105 @@ interface DisconnectInfo {
   error: ProviderRpcError;
 }
 
-type RelayType = 'scw' | 'walletLink';
-
 export class EIP1193Provider extends EventEmitter implements ProviderInterface {
-  private oldProvider!: CoinbaseWalletProvider;
+  // private oldProvider!: CoinbaseWalletProvider;
   private storage: ScopedLocalStorage;
-  private relayEventManager: RelayEventManager;
-  private diagnosticLogger?: DiagnosticLogger;
-  private reloadOnDisconnect: boolean;
-  private enableMobileWalletLink?: boolean;
   private popupCommunicator: PopUpCommunicator;
-  private linkAPIUrl: string;
 
   connected: boolean;
-  private walletLinkRelay: WalletLinkRelay | undefined;
   private accounts: string[] | undefined;
-  private relay: SCWRelay | undefined;
   private appName = '';
   private appLogoUrl: string | null = null;
+  // private options: Readonly<EIP1193ProviderOptions>;
+  private connector: Connector | undefined;
+  private connectionType: string | null;
+  private chainId: number;
 
   constructor(options: Readonly<EIP1193ProviderOptions>) {
     super();
 
     this.storage = options.storage;
-    this.linkAPIUrl = options.linkAPIUrl || LINK_API_URL;
-    this.relayEventManager = options.relayEventManager;
-    this.diagnosticLogger = options.diagnosticLogger;
-    this.reloadOnDisconnect = options.reloadOnDisconnect ?? true;
-    this.enableMobileWalletLink = options.enableMobileWalletLink;
     this.popupCommunicator = options.popupCommunicator;
     this.appName = options.appName ?? '';
     this.appLogoUrl = options.appLogoUrl ?? null;
-
-    // For now we are not emitting a 'connect' event since the old provider already emits one
-    // when we init old provider after relayType is selected
-    this.connected = true;
+    this.chainId = options.chainId;
+    this.connected = false;
+    const persistedConnectionType = this.storage.getItem('connectionType');
+    this.connectionType = persistedConnectionType;
+    if (persistedConnectionType === 'scw') {
+      this.initScwConnector();
+    }
   }
 
-  initOldProviderWithUserRelaySelection(relayType: RelayType) {
-    this.storage.setItem('relayType', relayType);
-    if (relayType === 'scw') {
-      this.relay = new SCWRelay({
-        appName: this.appName,
-        appLogoUrl: this.appLogoUrl,
-        puc: this.popupCommunicator,
-      });
-      this.relay.setAppInfo(this.appName, this.appLogoUrl);
-    }
+  private initScwConnector = () => {
+    this.connector = new SCWConnector({
+      appName: this.appName,
+      appLogoUrl: this.appLogoUrl,
+      puc: this.popupCommunicator,
+    });
+    this.emitConnectEvent();
+  };
 
-    // this.oldProvider = new CoinbaseWalletProvider({
-    //   relayProvider: () => Promise.resolve(this.relay),
-    //   ...this.options,
-    // });
+  private emitConnectEvent() {
+    this.connected = true;
+    const chainIdStr = prepend0x(this.chainId.toString(16));
+    // https://eips.ethereum.org/EIPS/eip-1193#connect
+    this.emit('connect', { chainId: chainIdStr });
   }
 
   public async request(args: RequestArguments): Promise<unknown> {
-    if (args.method == 'eth_requestAccounts' && !this.oldProvider) {
+    if (args.method == 'eth_requestAccounts') {
       if (this.accounts) {
         return Promise.resolve(this.accounts);
       }
-
-      await this.popupCommunicator.connect();
-
-      const selectRelayTypeResponse = await this.popupCommunicator.selectRelayType();
-
-      if (selectRelayTypeResponse?.relay === 'scw') {
-        this.initOldProviderWithUserRelaySelection('scw');
-        const ethAccountsResponse = await this.relay?.requestEthereumAccounts().promise;
-        if (isErrorResponse(ethAccountsResponse)) {
-          return;
+      if (!this.connectionType) {
+        // begin select connection type scw/walletlink/extension
+        await this.popupCommunicator.connect();
+        const selectRelayTypeResponse = await this.popupCommunicator.selectRelayType();
+        this.connectionType = selectRelayTypeResponse?.relay;
+        this.storage.setItem('connectionType', this.connectionType);
+        // end select connection type scw/walletlink/extension
+      }
+      if (this.connectionType === 'scw') {
+        this.initScwConnector();
+        const ethAddresses = (await this.connector?.handshake())?.result;
+        this.accounts = ethAddresses;
+        return Promise.resolve(this.accounts);
+      } else if (this.connectionType === 'walletlink') {
+        // TODO: walletlink
+        return Promise.reject(new Error('walletlink not supported yet'));
+        // TODO: handle user goback/cancel
+      } else if (this.connectionType === 'extension') {
+        // TODO: persist selection and use it for future requests
+        const extension = window.coinbaseWalletExtension;
+        if (!extension) {
+          throw new Error('Coinbase Wallet Extension not found');
         }
-        if (ethAccountsResponse?.result) {
-          this.accounts = ethAccountsResponse?.result;
+        const response = await extension.request({ method: 'eth_requestAccounts' });
+        if (Array.isArray(response)) {
+          this.accounts = response;
         }
         return Promise.resolve(this.accounts);
-      } else if (selectRelayTypeResponse?.relay === 'walletlink') {
-        return new Promise((resolve) => {
-          const wlRelay = this.initializeWalletLinkRelay();
-          wlRelay.setAccountsCallback((accounts) => {
-            this.accounts = accounts;
-            resolve(accounts);
-          });
-          const walletLinkQRCodeUrl = wlRelay.getQRCodeUrl();
-          this.relay?.scanQRCode(walletLinkQRCodeUrl as RegExpString);
-        });
-
-        // TODO: handle user goback/cancel
       }
     }
 
-    // something went wrong during relay selection, reject
-    if (!this.oldProvider) {
-      const error = standardErrors.provider.disconnected();
-      this.popupCommunicator.disconnect();
-      return Promise.reject(error);
+    if (this.connectionType === 'scw' && this.connector) {
+      const res = (await this.connector.request(args)).result;
+      return Promise.resolve(res);
     }
 
-    return this.oldProvider.request(args);
-  }
-
-  private initializeWalletLinkRelay(): WalletLinkRelay {
-    if (this.walletLinkRelay) return this.walletLinkRelay;
-
-    const uiConstructor = (opts: Readonly<RelayUIOptions>) => new WalletLinkRelayUI(opts);
-    const linkAPIUrl = this.linkAPIUrl || LINK_API_URL;
-    const walletLinkRelayOptions = {
-      linkAPIUrl,
-      version: CoinbaseWalletSDK.VERSION,
-      darkMode: false,
-      uiConstructor,
-      storage: this.storage,
-      relayEventManager: this.relayEventManager,
-      diagnosticLogger: this.diagnosticLogger,
-      reloadOnDisconnect: this.reloadOnDisconnect,
-      enableMobileWalletLink: this.enableMobileWalletLink,
-    };
-
-    this.walletLinkRelay = new WalletLinkRelay(walletLinkRelayOptions);
-    return this.walletLinkRelay;
+    // if type unhandled reject for now
+    return Promise.reject(`connectionType ${this.connectionType} not supported yet`);
   }
 
   // disconnect is not required, and not called by test app
   disconnect(): void {
-    if (this.connected) {
-      const disconnectInfo: DisconnectInfo = {
-        error: standardErrors.provider.disconnected('User initiated disconnection'),
-      };
-      this.storage.removeItem('relayType');
-      this.connected = false;
-      this.emit('disconnect', disconnectInfo);
-    }
+    const disconnectInfo: DisconnectInfo = {
+      error: standardErrors.provider.disconnected('User initiated disconnection'),
+    };
+    this.storage.removeItem('relayType');
+    this.connected = false;
+    this.emit('disconnect', disconnectInfo);
   }
 
   // *

@@ -1,8 +1,8 @@
 import { UUID } from 'crypto';
 
 import { Message } from '../../../lib/CrossDomainCommunicator';
-import { SCWWeb3Request } from './SCWWeb3Request';
-import { SCWWeb3Response } from './SCWWeb3Response';
+import { Request } from './Request';
+import { Response } from './Response';
 
 export type RequestEnvelope =
   | {
@@ -12,7 +12,7 @@ export type RequestEnvelope =
   | {
       type: 'web3Request';
       id: UUID;
-      content: SCWWeb3Request;
+      content: Request;
     };
 
 export const POPUP_READY_MESSAGE = { type: 'popupReadyForRequest' };
@@ -28,7 +28,7 @@ export type ResponseEnvelope =
       type: 'web3Response';
       id: UUID;
       requestId: UUID;
-      response: SCWWeb3Response;
+      response: Response;
     };
 
 export function isResponseEnvelope(message: Message): message is ResponseEnvelope {

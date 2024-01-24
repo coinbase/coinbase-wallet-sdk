@@ -7,7 +7,7 @@ import {
   RequestEnvelope,
   ResponseEnvelope,
 } from '../type/MessageEnvelope';
-import { SCWWeb3Request } from '../type/SCWWeb3Request';
+import { Request } from '../type/Request';
 
 // TODO: how to set/change configurations?
 const POPUP_WIDTH = 688;
@@ -21,7 +21,6 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
       if (this.peerWindow) {
         this.closeChildWindow();
       }
-
       this.openFixedSizePopUpWindow();
 
       if (!this.peerWindow) {
@@ -71,7 +70,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     });
   }
 
-  request(request: SCWWeb3Request): Promise<Extract<ResponseEnvelope, { type: 'web3Response' }>> {
+  request(request: Request): Promise<Extract<ResponseEnvelope, { type: 'web3Response' }>> {
     return new Promise((resolve, reject) => {
       if (!this.peerWindow) {
         reject(new Error('No pop up window found. Make sure to run .connect() before .send()'));
