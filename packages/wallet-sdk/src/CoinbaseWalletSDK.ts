@@ -43,6 +43,8 @@ export interface CoinbaseWalletSDKOptions {
   reloadOnDisconnect?: boolean;
   /** @optional whether to connect mobile web app via WalletLink, defaults to false */
   enableMobileWalletLink?: boolean;
+  /** @optional SCW FE URL */
+  scwUrl?: string;
 }
 
 export class CoinbaseWalletSDK {
@@ -87,7 +89,9 @@ export class CoinbaseWalletSDK {
     this._storage = new ScopedLocalStorage(`-walletlink:${origin}`); // needs migration to preserve local states
     this._storage.setItem('version', CoinbaseWalletSDK.VERSION);
 
-    this.popupCommunicator = PopUpCommunicator.shared;
+    this.popupCommunicator = new PopUpCommunicator({
+      url: options.scwUrl || 'https://scw-dev.cbhq.net/',
+    });
 
     if (this.walletExtension || this.coinbaseBrowser) {
       return;

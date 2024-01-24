@@ -8,7 +8,7 @@ export abstract class CrossDomainCommunicator {
   protected url: URL;
   protected connected = false;
 
-  protected constructor({ url }: { url: string }) {
+  constructor({ url }: { url: string }) {
     this.url = new URL(url);
   }
 

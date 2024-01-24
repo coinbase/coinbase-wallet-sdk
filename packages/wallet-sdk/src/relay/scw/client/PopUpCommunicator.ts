@@ -12,11 +12,8 @@ import { SCWWeb3Request } from '../type/SCWWeb3Request';
 // TODO: how to set/change configurations?
 const POPUP_WIDTH = 688;
 const POPUP_HEIGHT = 621;
-const SCW_FE_URL = 'https://scw-dev.cbhq.net/';
 
 export class PopUpCommunicator extends CrossDomainCommunicator {
-  static shared: PopUpCommunicator = new PopUpCommunicator({ url: SCW_FE_URL });
-
   private requestResolutions = new Map<UUID, (_: ResponseEnvelope) => void>();
 
   protected onConnect(): Promise<void> {

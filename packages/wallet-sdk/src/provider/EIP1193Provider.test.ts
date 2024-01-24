@@ -14,7 +14,7 @@ describe('EIP1193Provider', () => {
       overrideIsMetaMask: false,
       relayEventManager: new RelayEventManager(),
       storage: new ScopedLocalStorage('-walletlink'),
-      popupCommunicator: PopUpCommunicator.shared,
+      popupCommunicator: new PopUpCommunicator({ url: 'http://fooUrl.com' }),
     });
   });
 

@@ -11,6 +11,15 @@ export class SCWRelay extends RelayAbstract {
   protected appName = '';
   protected appLogoUrl: string | null = null;
 
+  private puc: PopUpCommunicator;
+
+  constructor(options: { appName: string; appLogoUrl: string | null; puc: PopUpCommunicator }) {
+    super();
+    this.appName = options.appName;
+    this.appLogoUrl = options.appLogoUrl;
+    this.puc = options.puc;
+  }
+
   resetAndReload(): void {
     throw new Error('Method not implemented.');
   }
@@ -103,7 +112,7 @@ export class SCWRelay extends RelayAbstract {
       actions: [request as Action],
     };
 
-    const promise = PopUpCommunicator.shared
+    const promise = this.puc
       .request(scwWeb3Request)
       .then(
         (responseEnvelope) =>

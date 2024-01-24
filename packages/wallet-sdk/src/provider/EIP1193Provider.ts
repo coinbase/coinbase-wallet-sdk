@@ -69,7 +69,11 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
   initOldProviderWithUserRelaySelection(relayType: RelayType) {
     this.storage.setItem('relayType', relayType);
     if (relayType === 'scw') {
-      this.relay = new SCWRelay();
+      this.relay = new SCWRelay({
+        appName: this.appName,
+        appLogoUrl: this.appLogoUrl,
+        puc: this.popupCommunicator,
+      });
       this.relay.setAppInfo(this.appName, this.appLogoUrl);
     }
 

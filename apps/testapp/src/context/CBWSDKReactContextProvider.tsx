@@ -1,6 +1,4 @@
-import { CoinbaseWalletSDK as CoinbaseWalletSDKDev } from '@cbhq/wallet-sdk';
-import { CoinbaseWalletSDK as CoinbaseWalletSDK37 } from '@coinbase/wallet-sdk-3.7';
-import { CoinbaseWalletSDK as CoinbaseWalletSDK39 } from '@coinbase/wallet-sdk-3.9';
+import CoinbaseWalletSDK from '@cbhq/wallet-sdk';
 import React, { useEffect, useMemo } from 'react';
 
 type CBWSDKProviderProps = {
@@ -8,61 +6,47 @@ type CBWSDKProviderProps = {
 };
 
 const CBWSDKReactContext = React.createContext(null);
-const SELECTED_SDK_KEY = 'selected_sdk_version';
+const SELECTED_URL_KEY = 'selected_scw_fe_url';
 
-export const sdkVersions = ['master', '3.9', '3.7'] as const;
-export type SDKVersionType = (typeof sdkVersions)[number];
-
-const dynamicallyImportSDK = (version: SDKVersionType) => {
-  switch (version) {
-    case 'master': {
-      return CoinbaseWalletSDKDev;
-    }
-    case '3.7': {
-      return CoinbaseWalletSDK37;
-    }
-    case '3.9': {
-      return CoinbaseWalletSDK39;
-    }
-  }
-};
+export const SCWPopupURLs = ['https://scw-dev.cbhq.net/', 'http://localhost:3000/'] as const;
+export type SCWPopupURLType = (typeof SCWPopupURLs)[number];
 
 export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
-  const [version, setVersion] = React.useState<SDKVersionType | undefined>(undefined);
+  const [scwURL, setScwURL] = React.useState<SCWPopupURLType | undefined>(undefined);
   const [sdk, setSdk] = React.useState(null);
   const [provider, setProvider] = React.useState(null);
 
   useEffect(() => {
-    if (version === undefined) {
-      const savedVersion = localStorage.getItem(SELECTED_SDK_KEY) as SDKVersionType;
-      setVersion(sdkVersions.includes(savedVersion) ? (savedVersion as SDKVersionType) : 'master');
+    if (scwURL === undefined) {
+      const savedURL = localStorage.getItem(SELECTED_URL_KEY) as SCWPopupURLType;
+      setSCWPopupURL(
+        SCWPopupURLs.includes(savedURL) ? (savedURL as SCWPopupURLType) : SCWPopupURLs[0]
+      );
     }
-  }, [version]);
+  }, [scwURL]);
 
   useEffect(() => {
-    const selectedSDK = dynamicallyImportSDK(version);
-    if (selectedSDK) {
-      const cbwsdk = new selectedSDK({
-        appName: 'Test App',
-        enableMobileWalletLink: true, // beta feature
-      });
-      setSdk(cbwsdk);
-      const cbwprovider = cbwsdk.makeWeb3Provider('http');
-      setProvider(cbwprovider);
-    }
-  }, [version]);
+    const cbwsdk = new CoinbaseWalletSDK({
+      appName: 'SDK Playground',
+      enableMobileWalletLink: true, // beta feature
+      scwUrl: scwURL,
+    });
+    setSdk(cbwsdk);
+    const cbwprovider = cbwsdk.makeWeb3Provider('http');
+    setProvider(cbwprovider);
+  }, [scwURL]);
 
-  const setSDKVersion = (version: SDKVersionType) => {
-    localStorage.setItem(SELECTED_SDK_KEY, version);
-    setVersion(version);
+  const setSCWPopupURL = (url: SCWPopupURLType) => {
+    localStorage.setItem(SELECTED_URL_KEY, url);
+    setScwURL(url);
   };
 
   const ctx = useMemo(
     () => ({
       sdk,
       provider,
-      sdkVersion: version,
-      setSDKVersion,
+      scwPopupURL: scwURL,
+      setSCWPopupURL,
     }),
     [sdk, provider]
   );

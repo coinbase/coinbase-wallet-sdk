@@ -11,7 +11,7 @@ import {
   MenuList,
 } from '@chakra-ui/react';
 
-import { sdkVersions, useCBWSDK } from '../context/CBWSDKReactContextProvider';
+import { SCWPopupURLs, useCBWSDK } from '../context/CBWSDKReactContextProvider';
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -20,7 +20,7 @@ type LayoutProps = {
 export const WIDTH_2XL = '1536px';
 
 export function Layout({ children }: LayoutProps) {
-  const { sdk, sdkVersion, setSDKVersion } = useCBWSDK();
+  const { sdk, scwPopupURL, setSCWPopupURL } = useCBWSDK();
 
   const handleClockDocs = () => {
     window.open('https://cbdev.io/walletstart', '_blank');
@@ -39,20 +39,19 @@ export function Layout({ children }: LayoutProps) {
           <Flex justifyContent="space-between" alignItems="center">
             <Heading>Coinbase Wallet SDK - Playground</Heading>
             <Flex justifyContent="space-between" alignItems="center" gap={4}>
-              <Button onClick={handleClockDocs}>Docs</Button>
               <Menu>
                 <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
-                  {`SDK: ${sdkVersion}`}
+                  {`SCW: ${scwPopupURL}`}
                 </MenuButton>
                 <MenuList>
-                  {sdkVersions.map((version) => (
+                  {SCWPopupURLs.map((url) => (
                     <MenuItem
                       color={'MenuText'}
-                      key={version}
-                      icon={version === sdkVersion ? <CheckIcon /> : null}
-                      onClick={() => setSDKVersion(version)}
+                      key={url}
+                      icon={url === scwPopupURL ? <CheckIcon /> : null}
+                      onClick={() => setSCWPopupURL(url)}
                     >
-                      {version}
+                      {url}
                     </MenuItem>
                   ))}
                 </MenuList>
