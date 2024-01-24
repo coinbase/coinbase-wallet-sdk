@@ -22,10 +22,6 @@ export const WIDTH_2XL = '1536px';
 export function Layout({ children }: LayoutProps) {
   const { sdk, scwPopupURL, setSCWPopupURL } = useCBWSDK();
 
-  const handleClockDocs = () => {
-    window.open('https://cbdev.io/walletstart', '_blank');
-  };
-
   const handleDisconnect = () => {
     if (sdk) {
       sdk.disconnect();
