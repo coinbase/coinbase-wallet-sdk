@@ -1687,11 +1687,14 @@ __metadata:
     jest: ^27.5.1
     jest-chrome: ^0.7.2
     prettier: ^2.8.8
-    react: 18.2.0
+    react: ^18.2.0
     ts-jest: ^27.1.5
     ts-node: ^10.9.1
     tslib: ^2.6.0
     typescript: ^5.1.6
+  peerDependencies:
+    "@cbhq/wallet-sdk": "*"
+    react: "*"
   languageName: unknown
   linkType: soft
 
@@ -9706,7 +9709,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:18.2.0, react@npm:^18.2.0":
+"react@npm:^18.2.0":
   version: 18.2.0
   resolution: "react@npm:18.2.0"
   dependencies:
