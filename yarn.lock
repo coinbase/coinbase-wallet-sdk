@@ -1678,7 +1678,6 @@ __metadata:
     "@babel/preset-env": ^7.22.9
     "@babel/preset-react": ^7.23.3
     "@babel/preset-typescript": ^7.22.5
-    "@cbhq/wallet-sdk": "workspace:^"
     "@testing-library/jest-dom": ^5.17.0
     "@testing-library/react": ^14.1.2
     "@types/jest": ^27.5.2
@@ -1687,14 +1686,13 @@ __metadata:
     jest: ^27.5.1
     jest-chrome: ^0.7.2
     prettier: ^2.8.8
-    react: ^18.2.0
     ts-jest: ^27.1.5
     ts-node: ^10.9.1
     tslib: ^2.6.0
     typescript: ^5.1.6
   peerDependencies:
     "@cbhq/wallet-sdk": "*"
-    react: "*"
+    react: ^18.2.0
   languageName: unknown
   linkType: soft
 
