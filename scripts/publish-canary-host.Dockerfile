@@ -9,9 +9,9 @@ WORKDIR /sdk
 
 RUN yarn install
 
-RUN yarn release --canary
+RUN yarn release --canary --package=scw-sdk-host
 
-RUN npm pack -w @cbhq/wallet-sdk 
+RUN npm pack -w @cbhq/scw-sdk-host
 
 RUN mv /sdk /shared
 

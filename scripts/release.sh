@@ -11,6 +11,23 @@ gitMessage=$(git log --oneline -n 1)
 mainBranch="master"
 branch=$(git rev-parse --abbrev-ref HEAD)
 
+packageName="wallet-sdk"
+for arg in "$@"; do
+  case $arg in
+    --package=*)
+      packageName="${arg#*=}"
+      shift
+      ;;
+    --canary)
+      canaryRelease=true
+      shift
+      ;;
+    *)
+      # Unknown option
+      ;;
+  esac
+done
+
 if [ $branch == $mainBranch ]; then
   echo -e "${PURPLE} Checking all branches are up-to-date..."
   echo -e "================================================="
@@ -35,11 +52,12 @@ if [ $branch == $mainBranch ]; then
   echo "================================================="
   echo -e " ${GREEN} run 'npm publish'"
   echo "================================================="
-elif [[ " $* " == *" canary "* ]]; then
+elif [ "$canaryRelease" == true ]; then
   echo -e "Preparing canary release..."
-  cd ./packages/wallet-sdk
-  timestamp=$(date +%s)
-  newVersion=$(jq -r '.version' package.json)"-canary.$timestamp"
+  echo "Updating package: $packageName"
+  cd "./packages/$packageName" || exit
+  commitCount=$(git rev-list --count HEAD)
+  newVersion=$(jq -r '.version' package.json)"-canary.$commitCount"
   jq ".version = \"$newVersion\"" package.json > temp.json && \
   mv temp.json package.json
   echo "Canary version updated to $newVersion"
