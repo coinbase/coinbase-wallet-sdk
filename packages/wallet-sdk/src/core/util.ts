@@ -241,3 +241,7 @@ export function isMobileWeb(): boolean {
     window?.navigator?.userAgent
   );
 }
+
+export function areAddressArraysEqual(arr1: AddressString[], arr2: AddressString[]): boolean {
+  return arr1.length === arr2.length && arr1.every((value, index) => value === arr2[index]);
+}

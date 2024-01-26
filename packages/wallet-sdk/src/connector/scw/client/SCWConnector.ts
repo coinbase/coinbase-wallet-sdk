@@ -1,7 +1,5 @@
-// Import necessary types and interfaces as needed
-
 import { standardErrors } from '../../../core/error';
-import { Action } from '../type/Action';
+import { Action, SupportedEthereumMethods } from '../type/Action';
 import { ActionResponse } from '../type/ActionResponse';
 import { Connector } from '../type/ConnectorInterface';
 import { Request } from '../type/Request';
@@ -31,23 +29,28 @@ export class SCWConnector implements Connector {
     });
   }
 
-  private isMethodSupported(method: string) {
-    const supportedMethods = ['eth_requestAccounts'];
-    return supportedMethods.includes(method);
+  private _checkMethod(method: string): boolean {
+    return Object.values(SupportedEthereumMethods).includes(method as SupportedEthereumMethods);
   }
 
   public async request(request: RequestArguments): Promise<ActionResponse> {
-    if (!this.isMethodSupported(request.method)) {
-      return Promise.reject(standardErrors.provider.unsupportedMethod);
+    if (!this._checkMethod(request.method)) {
+      return Promise.reject(
+        standardErrors.provider.unsupportedMethod(
+          `${request.method} is not supported for SCW at this time`
+        )
+      );
     }
-    if (!this.puc.connected) {
-      await this.puc.connect();
-    }
+    // TODO: this check makes sense, but connected isn't set properly so it prevents
+    // need to investigate
+    // if (!this.puc.connected) {
+    await this.puc.connect();
+    // }
 
     const pucRequest: Request = {
       uuid: crypto.randomUUID(),
       timestamp: Date.now(),
-      actions: [request as unknown as Action],
+      actions: [request as Action],
     };
 
     return this.puc

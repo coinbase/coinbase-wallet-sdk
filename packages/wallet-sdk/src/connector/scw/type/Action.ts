@@ -1,10 +1,19 @@
+export enum SupportedEthereumMethods {
+  EthRequestAccounts = 'eth_requestAccounts',
+  EthSendTransaction = 'eth_sendTransaction',
+  PersonalSign = 'personal_sign',
+  EthSign = 'eth_sign',
+  EthSignTypedDataV3 = 'eth_signTypedData_v3',
+  EthSignTypedDataV4 = 'eth_signTypedData_v4',
+}
+
 export type RequestAccountsAction = {
-  method: 'eth_requestAccounts';
+  method: SupportedEthereumMethods.EthRequestAccounts;
   params: Record<string, never>; // empty object
 };
 
 export type PersonalSignAction = {
-  method: 'personal_sign';
+  method: SupportedEthereumMethods.PersonalSign;
   params: {
     address: string;
     message: string;
@@ -12,7 +21,7 @@ export type PersonalSignAction = {
 };
 
 export type SignTypedDataV3Action = {
-  method: 'eth_signTypedData_v3';
+  method: SupportedEthereumMethods.EthSignTypedDataV3;
   params: {
     address: string;
     typedDataJson: string;
@@ -20,7 +29,7 @@ export type SignTypedDataV3Action = {
 };
 
 export type SignTypedDataV4Action = {
-  method: 'eth_signTypedData_v4';
+  method: SupportedEthereumMethods.EthSignTypedDataV4;
   params: {
     address: string;
     typedDataJson: string;
@@ -28,7 +37,7 @@ export type SignTypedDataV4Action = {
 };
 
 export type SignTransactionAction = {
-  method: 'eth_signTransaction';
+  method: SupportedEthereumMethods.EthSign;
   params: {
     fromAddress: string;
     toAddress: string | null;
@@ -44,7 +53,7 @@ export type SignTransactionAction = {
 };
 
 export type SendTransactionAction = {
-  method: 'eth_sendTransaction';
+  method: SupportedEthereumMethods.EthSendTransaction;
   params: {
     fromAddress: string;
     toAddress: string | null;
@@ -67,11 +76,7 @@ export type AllAction =
   | SignTransactionAction
   | SendTransactionAction;
 
-export type SupportedEthereumMethodsType = AllAction['method'];
-
-// export type ActionType<M extends SupportedEthereumMethodsType> = Extract<AllAction, { method: M }>;
-
 export type Action = {
-  method: SupportedEthereumMethodsType;
+  method: SupportedEthereumMethods;
   params: unknown; // json encoded params
 };
