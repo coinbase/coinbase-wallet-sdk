@@ -25,9 +25,10 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
 
   protected onConnect(): Promise<void> {
     return new Promise((resolve, reject) => {
-      if (this.peerWindow) {
-        this.closeChildWindow();
-      }
+      // TODO: understand this better and decide if we need it
+      // if (this.peerWindow) {
+      //   this.closeChildWindow();
+      // }
       this.openFixedSizePopUpWindow();
 
       if (!this.peerWindow) {

@@ -209,7 +209,10 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
   private async _completeConnectionTypeSelection() {
     await this._popupCommunicator.connect();
     const selectConnectionTypeResponse = await this._popupCommunicator.selectConnectionType();
-    this._connectionType = selectConnectionTypeResponse?.relay;
+    if (!(selectConnectionTypeResponse && selectConnectionTypeResponse.connection !== 'scw')) {
+      throw new Error(`Unsupported connection type: ${selectConnectionTypeResponse?.connection}`);
+    }
+    this._connectionType = selectConnectionTypeResponse?.connection;
     this._storage.setItem(CONNECTION_TYPE_KEY, this._connectionType);
   }
 

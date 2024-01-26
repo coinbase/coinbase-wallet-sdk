@@ -24,7 +24,7 @@ export type ResponseEnvelope =
       type: 'connectionTypeSelected';
       id: UUID;
       requestId: UUID;
-      relay: 'scw' | 'walletlink' | 'extension';
+      connection: 'scw' | 'walletlink' | 'extension';
     }
   | {
       type: 'web3Response';
