@@ -76,8 +76,8 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
       if (!this.connectionType) {
         // begin select connection type scw/walletlink/extension
         await this.popupCommunicator.connect();
-        const selectRelayTypeResponse = await this.popupCommunicator.selectRelayType();
-        this.connectionType = selectRelayTypeResponse?.relay;
+        const selectConnectionTypeResponse = await this.popupCommunicator.selectConnectionType();
+        this.connectionType = selectConnectionTypeResponse?.relay;
         this.storage.setItem('connectionType', this.connectionType);
         // end select connection type scw/walletlink/extension
       }

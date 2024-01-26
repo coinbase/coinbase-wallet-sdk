@@ -1,9 +1,10 @@
 // Import necessary types and interfaces as needed
 
 import { standardErrors } from '../../../core/error';
+import { Action } from '../type/Action';
+import { ActionResponse } from '../type/ActionResponse';
 import { Connector } from '../type/ConnectorInterface';
-import { Action, Request } from '../type/Request';
-import { ActionResponse } from '../type/Response';
+import { Request } from '../type/Request';
 import { PopUpCommunicator } from './PopUpCommunicator';
 import { RequestArguments } from ':wallet-sdk/src/provider/ProviderInterface';
 
@@ -39,7 +40,9 @@ export class SCWConnector implements Connector {
     if (!this.isMethodSupported(request.method)) {
       return Promise.reject(standardErrors.provider.unsupportedMethod);
     }
-    await this.puc.connect();
+    if (!this.puc.connected) {
+      await this.puc.connect();
+    }
 
     const pucRequest: Request = {
       uuid: crypto.randomUUID(),

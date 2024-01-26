@@ -5,36 +5,33 @@ export interface Message {
 }
 
 export abstract class CrossDomainCommunicator {
-  protected url: URL;
-  protected connected = false;
+  protected url: URL | undefined = undefined;
+  protected _connected = false;
 
-  constructor({ url }: { url: string }) {
-    this.url = new URL(url);
+  public get connected() {
+    return this._connected;
   }
 
   protected abstract onConnect(): Promise<void>;
   protected abstract onDisconnect(): void;
-  protected abstract onMessage(event: Message): void;
+  protected abstract onMessage(event: MessageEvent): void;
 
   async connect(): Promise<void> {
-    await this.onConnect();
     window.addEventListener('message', this.eventListener.bind(this));
-    this.connected = true;
+    await this.onConnect();
   }
 
   disconnect(): void {
-    this.connected = false;
+    this._connected = false;
     this.onDisconnect();
   }
 
-  private eventListener(event: MessageEvent) {
-    if (event.origin !== this.url.origin) return;
-    if (!this.connected) return;
-    this.onMessage(event.data);
+  protected eventListener(event: MessageEvent) {
+    this.onMessage(event);
   }
 
   protected peerWindow: Window | null = null;
   protected postMessage(message: Message) {
-    this.peerWindow?.postMessage(message, this.url.origin);
+    this.peerWindow?.postMessage(message, this.url?.origin ?? '*');
   }
 }

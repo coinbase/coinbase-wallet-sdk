@@ -6,7 +6,7 @@ import { Response } from './Response';
 
 export type RequestEnvelope =
   | {
-      type: 'selectRelayType';
+      type: 'selectConnectionType';
       id: UUID;
     }
   | {
@@ -15,11 +15,13 @@ export type RequestEnvelope =
       content: Request;
     };
 
+export const POPUP_LISTENER_ADDED_MESSAGE = { type: 'popupListenerAdded' };
+export const DAPP_ORIGIN_MESSAGE = { type: 'dappOriginMessage' };
 export const POPUP_READY_MESSAGE = { type: 'popupReadyForRequest' };
 
 export type ResponseEnvelope =
   | {
-      type: 'relaySelected';
+      type: 'connectionTypeSelected';
       id: UUID;
       requestId: UUID;
       relay: 'scw' | 'walletlink' | 'extension';

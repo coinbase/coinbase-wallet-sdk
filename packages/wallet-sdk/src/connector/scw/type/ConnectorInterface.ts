@@ -1,4 +1,4 @@
-import { ActionResponse } from './Response';
+import { ActionResponse } from './ActionResponse';
 import { RequestArguments } from ':wallet-sdk/src/provider/ProviderInterface';
 
 export interface Connector {
