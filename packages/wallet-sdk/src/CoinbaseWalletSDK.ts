@@ -90,7 +90,7 @@ export class CoinbaseWalletSDK {
     this._storage.setItem('version', CoinbaseWalletSDK.VERSION);
 
     this.popupCommunicator = new PopUpCommunicator({
-      url: options.scwUrl || 'https://scw-dev.cbhq.net/',
+      url: options.scwUrl || 'https://scw-dev.cbhq.net/connect',
     });
 
     if (this.walletExtension || this.coinbaseBrowser) {

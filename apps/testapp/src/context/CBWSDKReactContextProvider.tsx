@@ -11,8 +11,6 @@ const SELECTED_URL_KEY = 'selected_scw_fe_url';
 export const SCWPopupURLs = [
   'https://scw-dev.cbhq.net/connect',
   'http://localhost:3000/connect',
-  'https://scw-dev.cbhq.net/',
-  'http://localhost:3000/',
 ] as const;
 export type SCWPopupURLType = (typeof SCWPopupURLs)[number];
 
