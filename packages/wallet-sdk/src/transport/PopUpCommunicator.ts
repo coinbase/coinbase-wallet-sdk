@@ -1,22 +1,21 @@
 import { UUID } from 'crypto';
 
-import { CrossDomainCommunicator } from '../../../lib/CrossDomainCommunicator';
 import {
-  DAPP_ORIGIN_MESSAGE,
-  isResponseEnvelope,
-  POPUP_LISTENER_ADDED_MESSAGE,
-  POPUP_READY_MESSAGE,
-  RequestEnvelope,
-  ResponseEnvelope,
-} from '../type/MessageEnvelope';
-import { Request } from '../type/Request';
+  ClientConfigEventType,
+  ConfigMessage,
+  ConnectionType,
+  HostConfigEventType,
+  isConfigMessage,
+} from './ConfigMessage';
+import { CrossDomainCommunicator, Message } from './CrossDomainCommunicator';
+import { SCWRequestMessage, SCWResponseMessage } from './SCWMessage';
 
 // TODO: how to set/change configurations?
 const POPUP_WIDTH = 688;
 const POPUP_HEIGHT = 621;
 
 export class PopUpCommunicator extends CrossDomainCommunicator {
-  private requestResolutions = new Map<UUID, (_: ResponseEnvelope) => void>();
+  private requestResolutions = new Map<UUID, (_: Message) => void>();
 
   constructor({ url }: { url: string }) {
     super();
@@ -25,6 +24,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
 
   protected onConnect(): Promise<void> {
     return new Promise((resolve, reject) => {
+      this.resolvePopupReady = resolve;
       // TODO: understand this better and decide if we need it
       // if (this.peerWindow) {
       //   this.closeChildWindow();
@@ -34,76 +34,88 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
       if (!this.peerWindow) {
         reject(new Error('No pop up window opened'));
       }
-
-      window.addEventListener('message', (event) => {
-        if (event.origin !== this.url?.origin) {
-          return;
-        }
-
-        if (event.data.type === POPUP_LISTENER_ADDED_MESSAGE.type) {
-          // Handshake Step 2: After receiving POPUP_LISTENER_ADDED_MESSAGE from Dapp,
-          // Dapp sends DAPP_ORIGIN_MESSAGE to FE to help FE confirm the origin of the Dapp
-          const dappOriginMessage = { ...DAPP_ORIGIN_MESSAGE, id: crypto.randomUUID() };
-          this.postMessage(dappOriginMessage);
-        }
-
-        if (event.data.type === POPUP_READY_MESSAGE.type) {
-          // Handshake Step 4: After receiving POPUP_READY_MESSAGE from Dapp, FE knows that
-          // Dapp is ready to receive requests, handshake is done
-          this._connected = true;
-          resolve();
-        }
-      });
     });
   }
 
-  protected onMessage(messageEvent: MessageEvent) {
-    if (messageEvent.origin !== this.url?.origin) return;
+  protected onEvent(event: MessageEvent<Message>) {
+    if (event.origin !== this.url?.origin) return;
     if (!this._connected) return;
 
-    const message = messageEvent.data;
-    if (!isResponseEnvelope(message)) return;
+    const message = event.data;
 
-    const requestId = message.requestId;
+    if (isConfigMessage(message)) {
+      this.handleConfigMessage(message);
+      return;
+    }
+
+    if (!('requestId' in message)) return;
+
+    const requestId = message.requestId as UUID;
     const resolveFunction = this.requestResolutions.get(requestId);
     this.requestResolutions.delete(requestId);
     resolveFunction?.(message);
   }
 
-  selectConnectionType(): Promise<Extract<ResponseEnvelope, { type: 'connectionTypeSelected' }>> {
+  // TODO: move to ConnectionConfigurator
+  private resolvePopupReady?: () => void;
+  private resolveConnectionType?: (_: ConnectionType) => void;
+
+  private handleConfigMessage(message: ConfigMessage) {
+    switch (message.event.type) {
+      case HostConfigEventType.PopupListenerAdded:
+        this.postClientConfigMessage(ClientConfigEventType.DappOriginMessage);
+        break;
+      case HostConfigEventType.PopupReadyForRequest:
+        this.resolvePopupReady?.();
+        this.resolvePopupReady = undefined;
+        break;
+      case HostConfigEventType.ConnectionTypeSelected:
+        this.resolveConnectionType?.(message.event.value as ConnectionType);
+        this.resolveConnectionType = undefined;
+        break;
+    }
+  }
+
+  selectConnectionType(): Promise<ConnectionType> {
     return new Promise((resolve, reject) => {
       if (!this.peerWindow) {
         reject(new Error('No pop up window found. Make sure to run .connect() before .send()'));
       }
 
-      const messageEnvelope: RequestEnvelope = {
-        id: crypto.randomUUID(),
-        type: 'selectConnectionType',
-      };
-      this.postMessage(messageEnvelope);
-
-      this.requestResolutions.set(messageEnvelope.id, (resEnv) =>
-        resolve(resEnv as Extract<ResponseEnvelope, { type: 'connectionTypeSelected' }>)
-      );
+      this.resolveConnectionType = resolve;
+      this.postClientConfigMessage(ClientConfigEventType.SelectConnectionType);
     });
   }
 
-  request(request: Request): Promise<Extract<ResponseEnvelope, { type: 'web3Response' }>> {
+  private postClientConfigMessage(type: ClientConfigEventType) {
+    const configMessage: ConfigMessage = {
+      type: 'config',
+      id: crypto.randomUUID(),
+      event: {
+        type,
+      },
+    };
+    this.postMessage(configMessage);
+  }
+
+  request<T>(request: SCWRequestMessage['content']): Promise<SCWResponseMessage<T>> {
     return new Promise((resolve, reject) => {
       if (!this.peerWindow) {
         reject(new Error('No pop up window found. Make sure to run .connect() before .send()'));
       }
 
-      const messageEnvelope: RequestEnvelope = {
+      const requestMessage: SCWRequestMessage = {
         type: 'web3Request',
         id: crypto.randomUUID(),
         content: request,
+        timestamp: new Date(),
       };
-      this.postMessage(messageEnvelope);
 
-      this.requestResolutions.set(messageEnvelope.id, (resEnv) =>
-        resolve(resEnv as Extract<ResponseEnvelope, { type: 'web3Response' }>)
-      );
+      const requestId = this.postMessage(requestMessage);
+
+      this.requestResolutions.set(requestId, (resEnv) => {
+        resolve(resEnv as SCWResponseMessage<T>);
+      });
     });
   }
 

@@ -1,13 +1,12 @@
 import EventEmitter from 'eventemitter3';
 
-import { PopUpCommunicator } from '../connector/scw/client/PopUpCommunicator';
-import { SCWConnector } from '../connector/scw/client/SCWConnector';
-import { ActionResponse } from '../connector/scw/type/ActionResponse';
-import { Connector } from '../connector/scw/type/ConnectorInterface';
+import { Connector } from '../connector/ConnectorInterface';
+import { SCWConnector } from '../connector/scw/SCWConnector';
 import { standardErrors } from '../core/error';
 import { AddressString } from '../core/type';
 import { areAddressArraysEqual, prepend0x } from '../core/util';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
+import { PopUpCommunicator } from '../transport/PopUpCommunicator';
 import { CoinbaseWalletProviderOptions } from './CoinbaseWalletProvider';
 import { getErrorForInvalidRequestArgs } from './helpers/eip1193Utils';
 import { ProviderInterface, ProviderRpcError, RequestArguments } from './ProviderInterface';
@@ -84,8 +83,7 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
       throw invalidArgsError;
     }
 
-    const result = await this._handleRequest(args);
-    return result as T;
+    return this._handleRequest<T>(args);
   }
 
   // disconnect is not required, and not called by test app
@@ -112,16 +110,16 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
     console.warn(`EIP1193Provider: ${oldMethod} is deprecated. Please use ${newMethod} instead.`);
   }
 
-  private async _handleRequest(request: RequestArguments): Promise<ActionResponse['result']> {
-    return new Promise<ActionResponse['result']>((resolve, reject) => {
+  private async _handleRequest<T>(request: RequestArguments): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
       try {
         switch (request.method) {
           case 'eth_accounts':
-            return resolve(this._eth_accounts());
+            return resolve(this._eth_accounts() as T);
           case 'eth_requestAccounts':
-            return resolve(this._eth_requestAccounts());
+            return resolve(this._eth_requestAccounts() as T);
           default:
-            return resolve(this._genericConnectorRequest(request));
+            return resolve(this._genericConnectorRequest<T>(request));
         }
       } catch (error) {
         return reject(error);
@@ -129,9 +127,7 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
     });
   }
 
-  private async _genericConnectorRequest(
-    request: RequestArguments
-  ): Promise<ActionResponse['result']> {
+  private async _genericConnectorRequest<T>(request: RequestArguments): Promise<T> {
     if (!this._connector) {
       throw standardErrors.provider.unauthorized(
         "Must select scw as connection type and call 'eth_requestAccounts' before other methods"
@@ -139,7 +135,7 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
     }
 
     if (this._connectionType === 'scw') {
-      return (await this._connector.request(request))?.result;
+      return await this._connector.request(request);
     }
 
     throw standardErrors.provider.disconnected({
@@ -166,7 +162,7 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
 
     if (this._connectionType === 'scw') {
       this._initScwConnector();
-      const ethAddresses = (await this._connector?.handshake())?.result;
+      const ethAddresses = await this._connector?.handshake();
       if (Array.isArray(ethAddresses)) {
         this._setAccounts(ethAddresses);
         this._emitConnectEvent();
@@ -208,11 +204,11 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
 
   private async _completeConnectionTypeSelection() {
     await this._popupCommunicator.connect();
-    const selectConnectionTypeResponse = await this._popupCommunicator.selectConnectionType();
-    if (!selectConnectionTypeResponse || selectConnectionTypeResponse.connection !== 'scw') {
-      throw new Error(`Unsupported connection type: ${selectConnectionTypeResponse?.connection}`);
+    const connectionType = await this._popupCommunicator.selectConnectionType();
+    if (connectionType !== 'scw') {
+      throw new Error(`Unsupported connection type: ${connectionType}`);
     }
-    this._connectionType = selectConnectionTypeResponse?.connection;
+    this._connectionType = connectionType;
     this._storage.setItem(CONNECTION_TYPE_KEY, this._connectionType);
   }
 

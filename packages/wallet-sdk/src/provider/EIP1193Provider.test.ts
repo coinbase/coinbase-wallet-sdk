@@ -1,7 +1,7 @@
-import { PopUpCommunicator } from '../connector/scw/client/PopUpCommunicator';
 import { standardErrors } from '../core/error';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { RelayEventManager } from '../relay/RelayEventManager';
+import { PopUpCommunicator } from '../transport/PopUpCommunicator';
 import { EIP1193Provider } from './EIP1193Provider';
 
 describe('EIP1193Provider', () => {

@@ -1,9 +1,9 @@
-import { standardErrors } from '../../../core/error';
-import { Action, SupportedEthereumMethods } from '../type/Action';
-import { ActionResponse } from '../type/ActionResponse';
-import { Connector } from '../type/ConnectorInterface';
-import { Request } from '../type/Request';
-import { PopUpCommunicator } from './PopUpCommunicator';
+import { standardErrors } from '../../core/error';
+import { PopUpCommunicator } from '../../transport/PopUpCommunicator';
+import { Connector } from '../ConnectorInterface';
+import { Action, SupportedEthereumMethods } from './protocol/type/Action';
+import { Request } from './protocol/type/Request';
+import { AddressString } from ':wallet-sdk/src/core/type';
 import { RequestArguments } from ':wallet-sdk/src/provider/ProviderInterface';
 
 export class SCWConnector implements Connector {
@@ -23,7 +23,7 @@ export class SCWConnector implements Connector {
     // later: return spec-compliant errors for unsupported methods
 
     // request accounts
-    return await this.request({
+    return await this.request<AddressString[]>({
       method: 'eth_requestAccounts',
       params: { appName: this.appName, appLogoUrl: this.appLogoUrl },
     });
@@ -33,7 +33,7 @@ export class SCWConnector implements Connector {
     return Object.values(SupportedEthereumMethods).includes(method as SupportedEthereumMethods);
   }
 
-  public async request(request: RequestArguments): Promise<ActionResponse> {
+  public async request<T>(request: RequestArguments): Promise<T> {
     if (!this._checkMethod(request.method)) {
       return Promise.reject(
         standardErrors.provider.unsupportedMethod(
@@ -48,16 +48,17 @@ export class SCWConnector implements Connector {
     // }
 
     const pucRequest: Request = {
-      uuid: crypto.randomUUID(),
-      timestamp: Date.now(),
-      actions: [request as Action],
+      action: request as Action,
     };
 
-    return this.puc
-      .request(pucRequest)
-      .then((responseEnvelope) => responseEnvelope.response.actionResponses[0])
-      .catch((err) => {
-        throw new Error(err.errorMessage);
-      });
+    return this.puc.request<T>(pucRequest).then((response) => {
+      const result = response.content.result;
+
+      if ('error' in result) {
+        throw result.error;
+      }
+
+      return result.value;
+    });
   }
 }

@@ -1,6 +1,7 @@
 import { UUID } from 'crypto';
 
 export interface Message {
+  type: string;
   id: UUID;
 }
 
@@ -14,10 +15,10 @@ export abstract class CrossDomainCommunicator {
 
   protected abstract onConnect(): Promise<void>;
   protected abstract onDisconnect(): void;
-  protected abstract onMessage(event: MessageEvent): void;
+  protected abstract onEvent(event: MessageEvent<Message>): void;
 
   async connect(): Promise<void> {
-    window.addEventListener('message', this.eventListener.bind(this));
+    window.addEventListener('message', this.onEvent.bind(this));
     await this.onConnect();
   }
 
@@ -26,12 +27,16 @@ export abstract class CrossDomainCommunicator {
     this.onDisconnect();
   }
 
-  protected eventListener(event: MessageEvent) {
-    this.onMessage(event);
-  }
-
   protected peerWindow: Window | null = null;
-  protected postMessage(message: Message) {
-    this.peerWindow?.postMessage(message, this.url?.origin ?? '*');
+  protected postMessage(message: Message | Omit<Message, 'id'>): UUID {
+    const id = 'id' in message ? message.id : crypto.randomUUID();
+    this.peerWindow?.postMessage(
+      {
+        ...message,
+        id,
+      },
+      this.url?.origin ?? '*'
+    );
+    return id;
   }
 }

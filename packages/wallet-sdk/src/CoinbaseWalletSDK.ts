@@ -2,7 +2,6 @@
 // Licensed under the Apache License, version 2.0
 
 import { LogoType, walletLogo } from './assets/wallet-logo';
-import { PopUpCommunicator } from './connector/scw/client/PopUpCommunicator';
 import { LINK_API_URL } from './core/constants';
 import { getFavicon, isMobileWeb } from './core/util';
 import { ScopedLocalStorage } from './lib/ScopedLocalStorage';
@@ -15,6 +14,7 @@ import { RelayEventManager } from './relay/RelayEventManager';
 import { RelayUI, RelayUIOptions } from './relay/RelayUI';
 import { WalletLinkRelayUI } from './relay/walletlink/ui/WalletLinkRelayUI';
 import { WalletLinkRelay } from './relay/walletlink/WalletLinkRelay';
+import { PopUpCommunicator } from './transport/PopUpCommunicator';
 import { LIB_VERSION } from './version';
 
 /** Coinbase Wallet SDK Constructor Options */
