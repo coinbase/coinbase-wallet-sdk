@@ -8,7 +8,7 @@ import BN from 'bn.js';
 import { EventEmitter } from 'eventemitter3';
 
 import { serializeError, standardErrorCodes, standardErrors } from '../core/error';
-import { AddressString, Callback, HexString, IntNumber, ProviderType } from '../core/type';
+import { AddressString, Callback, HexString, IntNumber } from '../core/type';
 import {
   ensureAddressString,
   ensureBN,
@@ -24,7 +24,6 @@ import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { MobileRelay } from '../relay/mobile/MobileRelay';
 import { LOCAL_STORAGE_ADDRESSES_KEY, RelayAbstract } from '../relay/RelayAbstract';
 import { RelayEventManager } from '../relay/RelayEventManager';
-import { Session } from '../relay/Session';
 import { EthereumTransactionParams } from '../relay/walletlink/type/EthereumTransactionParams';
 import { isErrorResponse, Web3Response } from '../relay/walletlink/type/Web3Response';
 import eip712 from '../vendor-js/eth-eip712-util';
@@ -295,9 +294,8 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     }
 
     const relay = await this.initializeRelay();
-    const isWhitelistedNetworkOrStandalone = relay.inlineAddEthereumChain(chainId.toString());
 
-    if (!this._isAuthorized() && !isWhitelistedNetworkOrStandalone) {
+    if (!this._isAuthorized()) {
       await relay.requestEthereumAccounts().promise;
     }
 
@@ -354,7 +352,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     this.diagnostic?.log(EVENTS.ETH_ACCOUNTS_STATE, {
       method: 'provider::enable',
       addresses_length: this._addresses.length,
-      sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : undefined,
     });
 
     if (this._isAuthorized()) {
@@ -542,6 +539,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   }
 
   /**
+   * TODO: revisit if we want to support this method
    * @beta
    * This method is currently in beta. While it is available for use, please note that it is still under testing and may undergo significant changes.
    *
@@ -577,7 +575,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
     this.diagnostic?.log(EVENTS.ETH_ACCOUNTS_STATE, {
       method: 'provider::connectAndSignIn',
-      sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : undefined,
     });
 
     let res: Web3Response<'connectAndSignIn'>;
@@ -608,17 +605,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       await this.switchEthereumChain(this.getChainId());
     }
 
-    return res.result;
-  }
-
-  public async selectProvider(providerOptions: ProviderType[]): Promise<ProviderType> {
-    const relay = await this.initializeRelay();
-    const res = await relay.selectProvider(providerOptions).promise;
-    if (isErrorResponse(res)) {
-      throw serializeError(res.errorMessage, 'selectProvider');
-    } else if (typeof res.result !== 'string') {
-      throw serializeError('result was not a string', 'selectProvider');
-    }
     return res.result;
   }
 
@@ -811,7 +797,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       ) {
         this.diagnostic?.log(EVENTS.METHOD_NOT_IMPLEMENTED, {
           method: request.method,
-          sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : undefined,
         });
       }
 
@@ -1001,7 +986,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     this.diagnostic?.log(EVENTS.ETH_ACCOUNTS_STATE, {
       method: 'provider::_eth_requestAccounts',
       addresses_length: this._addresses.length,
-      sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : undefined,
     });
 
     if (this._isAuthorized()) {

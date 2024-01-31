@@ -1,29 +1,15 @@
 import { ErrorHandler } from '../../../core/error';
 import { injectCssReset } from '../../../lib/cssReset';
 import { RelayUI, RelayUIOptions } from '../../RelayUI';
-import {} from '../type/Web3Request';
-import {} from '../type/Web3Response';
-import { LinkFlow } from './components/LinkFlow/LinkFlow';
 import { Snackbar, SnackbarInstanceProps } from './components/Snackbar/Snackbar';
 
 export class WalletLinkRelayUI implements RelayUI {
-  private readonly linkFlow: LinkFlow;
   private readonly snackbar: Snackbar;
-  private standalone: boolean | null = null;
   private attached = false;
 
   constructor(options: Readonly<RelayUIOptions>) {
     this.snackbar = new Snackbar({
       darkMode: options.darkMode,
-    });
-
-    this.linkFlow = new LinkFlow({
-      darkMode: options.darkMode,
-      version: options.version,
-      sessionId: options.session.id,
-      sessionSecret: options.session.secret,
-      linkAPIUrl: options.linkAPIUrl,
-      isParentConnection: false,
     });
   }
 
@@ -36,53 +22,11 @@ export class WalletLinkRelayUI implements RelayUI {
     container.className = '-cbwsdk-css-reset';
     el.appendChild(container);
 
-    this.linkFlow.attach(container);
     this.snackbar.attach(container);
     this.attached = true;
 
     injectCssReset();
   }
-
-  setConnected(connected: boolean) {
-    this.linkFlow.setConnected(connected);
-  }
-
-  setChainId(chainId: number) {
-    this.linkFlow.setChainId(chainId);
-  }
-
-  setConnectDisabled(connectDisabled: boolean) {
-    this.linkFlow.setConnectDisabled(connectDisabled);
-  }
-
-  /* istanbul ignore next */
-  addEthereumChain() {} // no-op
-
-  /* istanbul ignore next */
-  watchAsset() {} // no-op
-
-  /* istanbul ignore next */
-  switchEthereumChain() {} // no-op
-
-  requestEthereumAccounts(options: { onCancel: ErrorHandler }): void {
-    this.linkFlow.open({ onCancel: options.onCancel });
-  }
-
-  hideRequestEthereumAccounts(): void {
-    this.linkFlow.close();
-  }
-
-  /* istanbul ignore next */
-  signEthereumMessage() {} // no-op
-
-  /* istanbul ignore next */
-  signEthereumTransaction() {} // no-op
-
-  /* istanbul ignore next */
-  submitEthereumTransaction() {} // no-op
-
-  /* istanbul ignore next */
-  ethereumAddressFromSignedMessage() {} // no-op
 
   showConnecting(options: {
     isUnlinkedErrorState?: boolean;
@@ -141,35 +85,5 @@ export class WalletLinkRelayUI implements RelayUI {
   /* istanbul ignore next */
   reloadUI(): void {
     document.location.reload();
-  }
-
-  /* istanbul ignore next */
-  inlineAccountsResponse(): boolean {
-    return false;
-  }
-
-  /* istanbul ignore next */
-  inlineAddEthereumChain(): boolean {
-    return false;
-  }
-
-  /* istanbul ignore next */
-  inlineWatchAsset(): boolean {
-    return false;
-  }
-
-  /* istanbul ignore next */
-  inlineSwitchEthereumChain(): boolean {
-    return false;
-  }
-
-  /* istanbul ignore next */
-  setStandalone(status: boolean): void {
-    this.standalone = status;
-  }
-
-  /* istanbul ignore next */
-  isStandalone(): boolean {
-    return this.standalone ?? false;
   }
 }

@@ -1,8 +1,8 @@
 import { ErrorHandler, serializeError, standardErrors } from '../core/error';
-import { AddressString, IntNumber, ProviderType, RegExpString } from '../core/type';
+import { AddressString, IntNumber, RegExpString } from '../core/type';
 import { JSONRPCRequest, JSONRPCResponse } from '../provider/JSONRPC';
-import { Session } from './Session';
 import { EthereumTransactionParams } from './walletlink/type/EthereumTransactionParams';
+import { WalletLinkSession } from './walletlink/type/WalletLinkSession';
 import { SupportedWeb3Method, Web3Request } from './walletlink/type/Web3Request';
 import { Web3Response } from './walletlink/type/Web3Response';
 
@@ -41,10 +41,6 @@ export abstract class RelayAbstract {
     image?: string,
     chainId?: string
   ): CancelablePromise<Web3Response<'watchAsset'>>;
-
-  abstract selectProvider(
-    providerOptions: ProviderType[]
-  ): CancelablePromise<Web3Response<'selectProvider'>>;
 
   abstract switchEthereumChain(
     chainId: string,
@@ -96,12 +92,6 @@ export abstract class RelayAbstract {
 
   abstract setDappDefaultChainCallback(chainId: number): void;
 
-  /**
-   * Whether the relay supports the add ethereum chain call without
-   * needing to be connected to the mobile client.
-   */
-  abstract inlineAddEthereumChain(chainId: string): boolean;
-
   public async makeEthereumJSONRPCRequest(
     request: JSONRPCRequest,
     jsonRpcUrl: string
@@ -128,5 +118,5 @@ export abstract class RelayAbstract {
       });
   }
 
-  abstract get session(): Session;
+  abstract get session(): WalletLinkSession;
 }

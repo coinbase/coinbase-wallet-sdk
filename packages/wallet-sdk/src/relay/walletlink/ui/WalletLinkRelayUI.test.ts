@@ -1,7 +1,6 @@
 import { render } from '@testing-library/preact';
 import { Session } from 'inspector';
 
-import { LinkFlow } from './components/LinkFlow/LinkFlow';
 import { Snackbar } from './components/Snackbar/Snackbar';
 import { WalletLinkRelayUI } from './WalletLinkRelayUI';
 
@@ -93,27 +92,5 @@ describe('WalletLinkRelayUI', () => {
         },
       ],
     });
-  });
-
-  test('@setConnectDisabled', () => {
-    const linkFlowMock = jest.spyOn(LinkFlow.prototype, 'setConnectDisabled');
-    walletSDKUI.setConnectDisabled(true);
-
-    expect(linkFlowMock).toBeCalledWith(true);
-  });
-
-  test('@requestEthereumAccounts', () => {
-    const linkFlowMock = jest.spyOn(LinkFlow.prototype, 'open');
-    const onCancel = () => {};
-    walletSDKUI.requestEthereumAccounts({ onCancel });
-
-    expect(linkFlowMock).toBeCalledWith({ onCancel });
-  });
-
-  test('@hideEthereumAccounts', () => {
-    const linkFlowMock = jest.spyOn(LinkFlow.prototype, 'close');
-    walletSDKUI.hideRequestEthereumAccounts();
-
-    expect(linkFlowMock).toBeCalled();
   });
 });

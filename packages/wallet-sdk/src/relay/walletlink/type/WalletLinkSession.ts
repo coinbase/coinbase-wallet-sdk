@@ -3,14 +3,14 @@
 
 import { sha256 } from 'sha.js';
 
-import { randomBytesHex } from '../core/util';
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
+import { ScopedLocalStorage } from '../../../lib/ScopedLocalStorage';
+import { randomBytesHex } from './util';
 
 const STORAGE_KEY_SESSION_ID = 'session:id';
 const STORAGE_KEY_SESSION_SECRET = 'session:secret';
 const STORAGE_KEY_SESSION_LINKED = 'session:linked';
 
-export class Session {
+export class WalletLinkSession {
   private readonly _id: string;
   private readonly _secret: string;
   private readonly _key: string;
@@ -29,13 +29,13 @@ export class Session {
     this._linked = !!linked;
   }
 
-  public static load(storage: ScopedLocalStorage): Session | null {
+  public static load(storage: ScopedLocalStorage): WalletLinkSession | null {
     const id = storage.getItem(STORAGE_KEY_SESSION_ID);
     const linked = storage.getItem(STORAGE_KEY_SESSION_LINKED);
     const secret = storage.getItem(STORAGE_KEY_SESSION_SECRET);
 
     if (id && secret) {
-      return new Session(storage, id, secret, linked === '1');
+      return new WalletLinkSession(storage, id, secret, linked === '1');
     }
 
     return null;
@@ -70,7 +70,7 @@ export class Session {
     this.persistLinked();
   }
 
-  public save(): Session {
+  public save(): WalletLinkSession {
     this._storage.setItem(STORAGE_KEY_SESSION_ID, this._id);
     this._storage.setItem(STORAGE_KEY_SESSION_SECRET, this._secret);
     this.persistLinked();

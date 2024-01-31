@@ -2,11 +2,12 @@ import { ErrorHandler } from '../../core/error';
 import { RelayUI, RelayUIOptions } from '../RelayUI';
 import { RedirectDialog } from '../walletlink/ui/components/RedirectDialog/RedirectDialog';
 
-// TODO: Implement & present in-page wallet picker instead of navigating to www.coinbase.com/connect-dapp
+// TODO: deprecate this class and remove it from CoinbaseWalletSDK
 export class MobileRelayUI implements RelayUI {
   private readonly redirectDialog: RedirectDialog;
   private attached = false;
   private darkMode = false;
+  private openedWindow: Window | null = null;
 
   constructor(options: Readonly<RelayUIOptions>) {
     this.redirectDialog = new RedirectDialog();
@@ -21,9 +22,14 @@ export class MobileRelayUI implements RelayUI {
     this.attached = true;
   }
 
-  setConnected(_connected: boolean) {} // no-op
+  closeOpenedWindow() {
+    this.openedWindow?.close();
+    this.openedWindow = null;
+  }
 
-
+  // TODO: move this to SCW FE
+  // on mobile, instead of rendering QR code,
+  // it should show a button to redirect to Coinbase Wallet with this format of deeplink:
   private redirectToCoinbaseWallet(walletLinkUrl?: string): void {
     const url = new URL('https://go.cb-w.com/walletlink');
 
@@ -32,11 +38,10 @@ export class MobileRelayUI implements RelayUI {
       url.searchParams.append('wl_url', walletLinkUrl);
     }
 
-    const anchorTag = document.createElement('a');
-    anchorTag.target = 'cbw-opener';
-    anchorTag.href = url.href;
-    anchorTag.rel = 'noreferrer noopener';
-    anchorTag.click();
+    this.openedWindow = window.open(url.href, 'cbw-opener');
+    if (this.openedWindow) {
+      setTimeout(() => this.closeOpenedWindow(), 5000);
+    }
   }
 
   openCoinbaseWalletDeeplink(walletLinkUrl?: string): void {
@@ -61,57 +66,10 @@ export class MobileRelayUI implements RelayUI {
   }): () => void {
     // it uses the return callback to clear the dialog
     return () => {
+      this.closeOpenedWindow();
       this.redirectDialog.clear();
     };
   }
 
-  hideRequestEthereumAccounts() {
-    this.redirectDialog.clear();
-  }
-
-  // -- Methods below are not needed for mobile
-
-  requestEthereumAccounts() {} // no-op
-
-  addEthereumChain() {} // no-op
-
-  watchAsset() {} // no-op
-
-  selectProvider?() {} // no-op
-
-  switchEthereumChain() {} // no-op
-
-  signEthereumMessage() {} // no-op
-
-  signEthereumTransaction() {} // no-op
-
-  submitEthereumTransaction() {} // no-op
-
-  ethereumAddressFromSignedMessage() {} // no-op
-
   reloadUI() {} // no-op
-
-  setStandalone?() {} // no-op
-
-  setConnectDisabled() {} // no-op
-
-  inlineAccountsResponse(): boolean {
-    return false;
-  }
-
-  inlineAddEthereumChain(): boolean {
-    return false;
-  }
-
-  inlineWatchAsset(): boolean {
-    return false;
-  }
-
-  inlineSwitchEthereumChain(): boolean {
-    return false;
-  }
-
-  isStandalone(): boolean {
-    return false;
-  }
 }

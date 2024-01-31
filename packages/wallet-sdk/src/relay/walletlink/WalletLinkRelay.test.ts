@@ -1,18 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Cipher } from '../../lib/Cipher';
 import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
 import { WALLET_USER_NAME_KEY } from '../RelayAbstract';
 import { RelayEventManager } from '../RelayEventManager';
+import { WalletLinkCipher } from './connection/WalletLinkCipher';
 import { WalletLinkConnection } from './connection/WalletLinkConnection';
 import { WalletLinkWebSocket } from './connection/WalletLinkWebSocket';
 import { ServerMessage } from './type/ServerMessage';
-import { SessionConfig } from './type/SessionConfig';
+import { WalletLinkSessionConfig } from './type/WalletLinkSessionConfig';
 import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay';
 
 const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`"decrypted ${text}"`));
 
-jest.spyOn(Cipher.prototype, 'decrypt').mockImplementation(decryptMock);
+jest.spyOn(WalletLinkCipher.prototype, 'decrypt').mockImplementation(decryptMock);
 
 describe('WalletLinkRelay', () => {
   const options: WalletLinkRelayOptions = {
@@ -86,7 +86,7 @@ describe('WalletLinkRelay', () => {
 
   describe('setSessionConfigListener', () => {
     it('should update metadata with setSessionConfigListener', async () => {
-      const sessionConfig: SessionConfig = {
+      const sessionConfig: WalletLinkSessionConfig = {
         webhookId: 'webhookId',
         webhookUrl: 'webhookUrl',
         metadata: {
@@ -114,7 +114,7 @@ describe('WalletLinkRelay', () => {
       const relay = new WalletLinkRelay(options);
       relay.setChainCallback(callback);
 
-      const sessionConfig: SessionConfig = {
+      const sessionConfig: WalletLinkSessionConfig = {
         webhookId: 'webhookId',
         webhookUrl: 'webhookUrl',
         metadata: {

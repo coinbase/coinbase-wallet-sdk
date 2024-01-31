@@ -4,34 +4,10 @@
 import BN from 'bn.js';
 
 import { standardErrors } from './error';
-import { AddressString, BigIntString, HexString, IntNumber, RegExpString } from './type';
+import { AddressString, HexString, IntNumber, RegExpString } from './type';
 
 const INT_STRING_REGEX = /^[0-9]*$/;
 const HEXADECIMAL_STRING_REGEX = /^[a-f0-9]*$/;
-
-/**
- * @param length number of bytes
- */
-export function randomBytesHex(length: number): string {
-  return uint8ArrayToHex(crypto.getRandomValues(new Uint8Array(length)));
-}
-
-export function uint8ArrayToHex(value: Uint8Array) {
-  return [...value].map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
-export function hexStringToUint8Array(hexString: string): Uint8Array {
-  return new Uint8Array(hexString.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)));
-}
-
-export function hexStringFromBuffer(buf: Buffer, includePrefix = false): HexString {
-  const hex = buf.toString('hex');
-  return HexString(includePrefix ? `0x${hex}` : hex);
-}
-
-export function bigIntStringFromBN(bn: BN): BigIntString {
-  return BigIntString(bn.toString(10));
-}
 
 export function intNumberFromHexString(hex: HexString): IntNumber {
   return IntNumber(new BN(ensureEvenLengthHexString(hex, false), 16).toNumber());

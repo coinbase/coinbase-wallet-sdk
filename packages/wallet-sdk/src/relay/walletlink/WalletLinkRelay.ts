@@ -1,36 +1,25 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import {
-  ErrorType,
-  getErrorCode,
-  getMessageFromCode,
-  standardErrorCodes,
-  standardErrors,
-} from '../../core/error';
-import { AddressString, IntNumber, ProviderType, RegExpString } from '../../core/type';
-import {
-  bigIntStringFromBN,
-  createQrUrl,
-  hexStringFromBuffer,
-  randomBytesHex,
-} from '../../core/util';
+import { ErrorType, getMessageFromCode, standardErrors } from '../../core/error';
+import { AddressString, IntNumber, RegExpString } from '../../core/type';
+import { createQrUrl } from '../../core/util';
 import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
 import { DiagnosticLogger, EVENTS } from '../../provider/DiagnosticLogger';
 import { CancelablePromise, LOCAL_STORAGE_ADDRESSES_KEY, RelayAbstract } from '../RelayAbstract';
 import { RelayEventManager } from '../RelayEventManager';
 import { RelayUI, RelayUIOptions } from '../RelayUI';
-import { Session } from '../Session';
 import {
   WalletLinkConnection,
   WalletLinkConnectionUpdateListener,
 } from './connection/WalletLinkConnection';
 import { EthereumTransactionParams } from './type/EthereumTransactionParams';
+import { bigIntStringFromBN, hexStringFromBuffer, randomBytesHex } from './type/util';
 import { WalletLinkEventData, WalletLinkResponseEventData } from './type/WalletLinkEventData';
+import { WalletLinkSession } from './type/WalletLinkSession';
 import { Web3Method } from './type/Web3Method';
 import { SupportedWeb3Method, Web3Request } from './type/Web3Request';
 import { isErrorResponse, Web3Response } from './type/Web3Response';
-import { WalletLinkRelayUI } from './ui/WalletLinkRelayUI';
 
 export interface WalletLinkRelayOptions {
   linkAPIUrl: string;
@@ -49,7 +38,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
 
   private readonly linkAPIUrl: string;
   protected readonly storage: ScopedLocalStorage;
-  private _session: Session;
+  private _session: WalletLinkSession;
   private readonly relayEventManager: RelayEventManager;
   protected readonly diagnostic?: DiagnosticLogger;
   protected connection: WalletLinkConnection;
@@ -90,7 +79,8 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
   }
 
   public subscribe() {
-    const session = Session.load(this.storage) || new Session(this.storage).save();
+    const session =
+      WalletLinkSession.load(this.storage) || new WalletLinkSession(this.storage).save();
 
     const { linkAPIUrl, diagnostic } = this;
     const connection = new WalletLinkConnection({
@@ -105,7 +95,6 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
       linkAPIUrl,
       version,
       darkMode,
-      session,
     });
 
     connection.connect();
@@ -182,10 +171,6 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
     }
   };
 
-  connectedUpdated = (connected: boolean) => {
-    this.ui.setConnected(connected);
-  };
-
   public attachUI() {
     this.ui.attach();
   }
@@ -196,8 +181,6 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
       new Promise((resolve) => setTimeout(() => resolve(null), 1000)),
     ])
       .then(() => {
-        const isStandalone = this.ui.isStandalone();
-
         this.diagnostic?.log(EVENTS.SESSION_STATE_CHANGE, {
           method: 'relay::resetAndReload',
           sessionMetadataChange: '__destroyed, 1',
@@ -212,13 +195,13 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
          * was used isn't persisted.  This leaves the user in a state where they aren't
          * connected to the mobile app.
          */
-        const storedSession = Session.load(this.storage);
+        const storedSession = WalletLinkSession.load(this.storage);
         if (storedSession?.id === this._session.id) {
           this.storage.clear();
         } else if (storedSession) {
           this.diagnostic?.log(EVENTS.SKIPPED_CLEARING_SESSION, {
             sessionIdHash: this.getSessionIdHash(),
-            storedSessionIdHash: Session.hash(storedSession.id),
+            storedSessionIdHash: WalletLinkSession.hash(storedSession.id),
           });
         }
 
@@ -235,8 +218,6 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
         this._session = session;
         this.connection = connection;
         this.ui = ui;
-
-        if (isStandalone && this.ui.setStandalone) this.ui.setStandalone(true);
 
         this.attachUI();
       })
@@ -258,7 +239,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
     return this.storage.getItem(key);
   }
 
-  public get session(): Session {
+  public get session(): WalletLinkSession {
     return this._session;
   }
 
@@ -397,7 +378,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
     };
 
     const promise = new Promise<Response>((resolve, reject) => {
-      if (!this.ui.isStandalone()) {
+      {
         hideSnackbarItem = this.ui.showConnecting({
           isUnlinkedErrorState: this.isUnlinkedErrorState,
           onCancel: cancel,
@@ -414,18 +395,10 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
         resolve(response as Response);
       });
 
-      if (this.ui.isStandalone()) {
-        this.sendRequestStandalone(id, request);
-      } else {
-        this.publishWeb3RequestEvent(id, request);
-      }
+      this.publishWeb3RequestEvent(id, request);
     });
 
     return { promise, cancel };
-  }
-
-  public setConnectDisabled(disabled: boolean) {
-    this.ui.setConnectDisabled(disabled);
   }
 
   public setAccountsCallback(
@@ -440,19 +413,16 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
 
   public setDappDefaultChainCallback(chainId: number) {
     this.dappDefaultChain = chainId;
-    if (this.ui instanceof WalletLinkRelayUI) {
-      this.ui.setChainId(chainId);
-    }
   }
 
   protected publishWeb3RequestEvent(id: string, request: Web3Request): void {
     const message: WalletLinkEventData = { type: 'WEB3_REQUEST', id, request };
-    const storedSession = Session.load(this.storage);
+    const storedSession = WalletLinkSession.load(this.storage);
     this.diagnostic?.log(EVENTS.WEB3_REQUEST, {
       eventId: message.id,
       method: `relay::${request.method}`,
       sessionIdHash: this.getSessionIdHash(),
-      storedSessionIdHash: storedSession ? Session.hash(storedSession.id) : '',
+      storedSessionIdHash: storedSession ? WalletLinkSession.hash(storedSession.id) : '',
       isSessionMismatched: (storedSession?.id !== this._session.id).toString(),
     });
 
@@ -462,7 +432,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
           eventId: message.id,
           method: `relay::${request.method}`,
           sessionIdHash: this.getSessionIdHash(),
-          storedSessionIdHash: storedSession ? Session.hash(storedSession.id) : '',
+          storedSessionIdHash: storedSession ? WalletLinkSession.hash(storedSession.id) : '',
           isSessionMismatched: (storedSession?.id !== this._session.id).toString(),
         });
       })
@@ -561,7 +531,6 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
 
     const promise = new Promise<Web3Response<'requestEthereumAccounts'>>((resolve, reject) => {
       this.relayEventManager.callbacks.set(id, (response) => {
-        this.ui.hideRequestEthereumAccounts();
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         hideSnackbarItem?.();
@@ -572,87 +541,12 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
         resolve(response as Web3Response<'requestEthereumAccounts'>);
       });
 
-      if (this.ui.inlineAccountsResponse()) {
-        const onAccounts = (accounts: [AddressString]) => {
-          this.handleWeb3ResponseMessage({
-            type: 'WEB3_RESPONSE',
-            id,
-            response: { method: 'requestEthereumAccounts', result: accounts },
-          });
-        };
-
-        this.ui.requestEthereumAccounts({
-          onCancel: cancel,
-          onAccounts,
-        });
-      } else {
-        // Error if user closes TryExtensionLinkDialog without connecting
-        const err = standardErrors.provider.userRejectedRequest(
-          'User denied account authorization'
-        );
-        this.ui.requestEthereumAccounts({
-          onCancel: () => cancel(err),
-        });
-      }
-
       WalletLinkRelay.accountRequestCallbackIds.add(id);
 
-      if (!this.ui.inlineAccountsResponse() && !this.ui.isStandalone()) {
-        this.publishWeb3RequestEvent(id, request);
-      }
+      this.publishWeb3RequestEvent(id, request);
     });
 
     return { promise, cancel };
-  }
-
-  selectProvider(providerOptions: ProviderType[]) {
-    const request: Web3Request = {
-      method: 'selectProvider',
-      params: {
-        providerOptions,
-      },
-    };
-
-    const id = randomBytesHex(8);
-
-    const cancel = (error?: ErrorType) => {
-      this.publishWeb3RequestCanceledEvent(id);
-      this.handleErrorResponse(id, request.method, error);
-    };
-
-    const promise = new Promise<Web3Response<'selectProvider'>>((resolve, reject) => {
-      this.relayEventManager.callbacks.set(id, (response) => {
-        if (isErrorResponse(response)) {
-          return reject(new Error(response.errorMessage));
-        }
-        resolve(response as Web3Response<'selectProvider'>);
-      });
-
-      const _cancel = (_error?: ErrorType) => {
-        this.handleWeb3ResponseMessage({
-          type: 'WEB3_RESPONSE',
-          id,
-          response: { method: 'selectProvider', result: ProviderType.Unselected },
-        });
-      };
-
-      const approve = (selectedProviderKey: ProviderType) => {
-        this.handleWeb3ResponseMessage({
-          type: 'WEB3_RESPONSE',
-          id,
-          response: { method: 'selectProvider', result: selectedProviderKey },
-        });
-      };
-
-      if (this.ui.selectProvider)
-        this.ui.selectProvider({
-          onApprove: approve,
-          onCancel: _cancel,
-          providerOptions,
-        });
-    });
-
-    return { cancel, promise };
   }
 
   watchAsset(
@@ -686,7 +580,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
       hideSnackbarItem?.();
     };
 
-    if (!this.ui.inlineWatchAsset()) {
+    {
       hideSnackbarItem = this.ui.showConnecting({
         isUnlinkedErrorState: this.isUnlinkedErrorState,
         onCancel: cancel,
@@ -704,44 +598,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
         resolve(response as Web3Response<'watchAsset'>);
       });
 
-      const _cancel = (_error?: ErrorType) => {
-        this.handleWeb3ResponseMessage({
-          type: 'WEB3_RESPONSE',
-          id,
-          response: {
-            method: 'watchAsset',
-            result: false,
-          },
-        });
-      };
-
-      const approve = () => {
-        this.handleWeb3ResponseMessage({
-          type: 'WEB3_RESPONSE',
-          id,
-          response: {
-            method: 'watchAsset',
-            result: true,
-          },
-        });
-      };
-
-      if (this.ui.inlineWatchAsset()) {
-        this.ui.watchAsset({
-          onApprove: approve,
-          onCancel: _cancel,
-          type,
-          address,
-          symbol,
-          decimals,
-          image,
-          chainId,
-        });
-      }
-
-      if (!this.ui.inlineWatchAsset() && !this.ui.isStandalone()) {
-        this.publishWeb3RequestEvent(id, request);
-      }
+      this.publishWeb3RequestEvent(id, request);
     });
 
     return { cancel, promise };
@@ -780,7 +637,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
       hideSnackbarItem?.();
     };
 
-    if (!this.ui.inlineAddEthereumChain(chainId)) {
+    {
       hideSnackbarItem = this.ui.showConnecting({
         isUnlinkedErrorState: this.isUnlinkedErrorState,
         onCancel: cancel,
@@ -798,50 +655,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
         resolve(response as Web3Response<'addEthereumChain'>);
       });
 
-      const _cancel = (_error?: ErrorType) => {
-        this.handleWeb3ResponseMessage({
-          type: 'WEB3_RESPONSE',
-          id,
-          response: {
-            method: 'addEthereumChain',
-            result: {
-              isApproved: false,
-              rpcUrl: '',
-            },
-          },
-        });
-      };
-
-      const approve = (rpcUrl: string) => {
-        this.handleWeb3ResponseMessage({
-          type: 'WEB3_RESPONSE',
-          id,
-          response: {
-            method: 'addEthereumChain',
-            result: {
-              isApproved: true,
-              rpcUrl,
-            },
-          },
-        });
-      };
-
-      if (this.ui.inlineAddEthereumChain(chainId)) {
-        this.ui.addEthereumChain({
-          onCancel: _cancel,
-          onApprove: approve,
-          chainId: request.params.chainId,
-          rpcUrls: request.params.rpcUrls,
-          blockExplorerUrls: request.params.blockExplorerUrls,
-          chainName: request.params.chainName,
-          iconUrls: request.params.iconUrls,
-          nativeCurrency: request.params.nativeCurrency,
-        });
-      }
-
-      if (!this.ui.inlineAddEthereumChain(chainId) && !this.ui.isStandalone()) {
-        this.publishWeb3RequestEvent(id, request);
-      }
+      this.publishWeb3RequestEvent(id, request);
     });
 
     return { promise, cancel };
@@ -882,120 +696,13 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
         resolve(response as Web3Response<'switchEthereumChain'>);
       });
 
-      const _cancel = (error?: ErrorType | number) => {
-        if (error) {
-          // backward compatibility
-          const errorCode = getErrorCode(error) ?? standardErrorCodes.provider.unsupportedChain;
-
-          this.handleErrorResponse(
-            id,
-            'switchEthereumChain',
-            error instanceof Error ? error : standardErrors.provider.unsupportedChain(chainId),
-            errorCode
-          );
-        } else {
-          this.handleWeb3ResponseMessage({
-            type: 'WEB3_RESPONSE',
-            id,
-            response: {
-              method: 'switchEthereumChain',
-              result: {
-                isApproved: false,
-                rpcUrl: '',
-              },
-            },
-          });
-        }
-      };
-
-      const approve = (rpcUrl: string) => {
-        this.handleWeb3ResponseMessage({
-          type: 'WEB3_RESPONSE',
-          id,
-          response: {
-            method: 'switchEthereumChain',
-            result: {
-              isApproved: true,
-              rpcUrl,
-            },
-          },
-        });
-      };
-
-      this.ui.switchEthereumChain({
-        onCancel: _cancel,
-        onApprove: approve,
-        chainId: request.params.chainId,
-        address: request.params.address,
-      });
-
-      if (!this.ui.inlineSwitchEthereumChain() && !this.ui.isStandalone()) {
-        this.publishWeb3RequestEvent(id, request);
-      }
+      this.publishWeb3RequestEvent(id, request);
     });
 
     return { promise, cancel };
   }
 
-  inlineAddEthereumChain(chainId: string): boolean {
-    return this.ui.inlineAddEthereumChain(chainId);
-  }
-
   private getSessionIdHash(): string {
-    return Session.hash(this._session.id);
-  }
-
-  private sendRequestStandalone<T extends Web3Request>(id: string, request: T) {
-    const _cancel = (error?: ErrorType) => {
-      this.handleErrorResponse(id, request.method, error);
-    };
-
-    const onSuccess = (
-      response: Web3Response<
-        | 'signEthereumMessage'
-        | 'signEthereumTransaction'
-        | 'submitEthereumTransaction'
-        | 'ethereumAddressFromSignedMessage'
-      >
-    ) => {
-      this.handleWeb3ResponseMessage({
-        type: 'WEB3_RESPONSE',
-        id,
-        response,
-      });
-    };
-
-    switch (request.method) {
-      case 'signEthereumMessage':
-        this.ui.signEthereumMessage({
-          request,
-          onSuccess,
-          onCancel: _cancel,
-        });
-        break;
-      case 'signEthereumTransaction':
-        this.ui.signEthereumTransaction({
-          request,
-          onSuccess,
-          onCancel: _cancel,
-        });
-        break;
-      case 'submitEthereumTransaction':
-        this.ui.submitEthereumTransaction({
-          request,
-          onSuccess,
-          onCancel: _cancel,
-        });
-        break;
-      case 'ethereumAddressFromSignedMessage':
-        this.ui.ethereumAddressFromSignedMessage({
-          request,
-          onSuccess,
-        });
-        break;
-      default:
-        _cancel();
-        break;
-    }
+    return WalletLinkSession.hash(this._session.id);
   }
 }

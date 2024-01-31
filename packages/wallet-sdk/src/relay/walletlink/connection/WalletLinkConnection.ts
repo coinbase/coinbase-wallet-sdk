@@ -2,14 +2,14 @@
 // Licensed under the Apache License, version 2.0
 
 import { IntNumber } from '../../../core/type';
-import { Cipher } from '../../../lib/Cipher';
 import { DiagnosticLogger, EVENTS } from '../../../provider/DiagnosticLogger';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../../RelayAbstract';
-import { Session } from '../../Session';
 import { ClientMessage } from '../type/ClientMessage';
 import { ServerMessage, ServerMessageType } from '../type/ServerMessage';
-import { SessionConfig } from '../type/SessionConfig';
 import { WalletLinkEventData, WalletLinkResponseEventData } from '../type/WalletLinkEventData';
+import { WalletLinkSession } from '../type/WalletLinkSession';
+import { WalletLinkSessionConfig } from '../type/WalletLinkSessionConfig';
+import { WalletLinkCipher } from './WalletLinkCipher';
 import { WalletLinkHTTP } from './WalletLinkHTTP';
 import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket';
 
@@ -18,7 +18,6 @@ const REQUEST_TIMEOUT = 60000;
 
 export interface WalletLinkConnectionUpdateListener {
   linkedUpdated: (linked: boolean) => void;
-  connectedUpdated: (connected: boolean) => void;
   handleWeb3ResponseMessage: (message: WalletLinkResponseEventData) => void;
   chainUpdated: (chainId: string, jsonRpcUrl: string) => void;
   accountUpdated: (selectedAddress: string) => void;
@@ -27,7 +26,7 @@ export interface WalletLinkConnectionUpdateListener {
 }
 
 interface WalletLinkConnectionParams {
-  session: Session;
+  session: WalletLinkSession;
   linkAPIUrl: string;
   listener: WalletLinkConnectionUpdateListener;
   diagnostic?: DiagnosticLogger;
@@ -42,11 +41,11 @@ export class WalletLinkConnection {
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
 
-  private readonly session: Session;
+  private readonly session: WalletLinkSession;
 
   private listener?: WalletLinkConnectionUpdateListener;
   private diagnostic?: DiagnosticLogger;
-  private cipher: Cipher;
+  private cipher: WalletLinkCipher;
   private ws: WalletLinkWebSocket;
   private http: WalletLinkHTTP;
 
@@ -65,7 +64,7 @@ export class WalletLinkConnection {
     WebSocketClass = WebSocket,
   }: WalletLinkConnectionParams) {
     this.session = session;
-    this.cipher = new Cipher(session.secret);
+    this.cipher = new WalletLinkCipher(session.secret);
     this.diagnostic = diagnostic;
     this.listener = listener;
 
@@ -74,7 +73,7 @@ export class WalletLinkConnection {
       // attempt to reconnect every 5 seconds when disconnected
       this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
         state,
-        sessionIdHash: Session.hash(session.id),
+        sessionIdHash: WalletLinkSession.hash(session.id),
       });
 
       let connected = false;
@@ -145,7 +144,7 @@ export class WalletLinkConnection {
         case 'Linked': {
           const linked = m.type === 'IsLinkedOK' ? m.linked : undefined;
           this.diagnostic?.log(EVENTS.LINKED, {
-            sessionIdHash: Session.hash(session.id),
+            sessionIdHash: WalletLinkSession.hash(session.id),
             linked,
             type: m.type,
             onlineGuests: m.onlineGuests,
@@ -159,7 +158,7 @@ export class WalletLinkConnection {
         case 'GetSessionConfigOK':
         case 'SessionConfigUpdated': {
           this.diagnostic?.log(EVENTS.SESSION_CONFIG_RECEIVED, {
-            sessionIdHash: Session.hash(session.id),
+            sessionIdHash: WalletLinkSession.hash(session.id),
             metadata_keys: m && m.metadata ? Object.keys(m.metadata) : undefined,
           });
           this.handleSessionMetadataUpdated(m.metadata);
@@ -190,7 +189,7 @@ export class WalletLinkConnection {
       throw new Error('instance is destroyed');
     }
     this.diagnostic?.log(EVENTS.STARTED_CONNECTING, {
-      sessionIdHash: Session.hash(this.session.id),
+      sessionIdHash: WalletLinkSession.hash(this.session.id),
     });
     this.ws.connect();
   }
@@ -204,7 +203,7 @@ export class WalletLinkConnection {
 
     this.ws.disconnect();
     this.diagnostic?.log(EVENTS.DISCONNECTED, {
-      sessionIdHash: Session.hash(this.session.id),
+      sessionIdHash: WalletLinkSession.hash(this.session.id),
     });
 
     this.listener = undefined;
@@ -225,7 +224,6 @@ export class WalletLinkConnection {
   private set connected(connected: boolean) {
     this._connected = connected;
     if (connected) this.onceConnected?.();
-    this.listener?.connectedUpdated(connected);
   }
 
   /**
@@ -457,7 +455,7 @@ export class WalletLinkConnection {
     this.sendData(m);
   }
 
-  private handleSessionMetadataUpdated = (metadata: SessionConfig['metadata']) => {
+  private handleSessionMetadataUpdated = (metadata: WalletLinkSessionConfig['metadata']) => {
     if (!metadata) return;
 
     // Map of metadata key to handler function
@@ -486,7 +484,7 @@ export class WalletLinkConnection {
     this.listener?.resetAndReload();
     this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
       alreadyDestroyed: this.isDestroyed,
-      sessionIdHash: Session.hash(this.session.id),
+      sessionIdHash: WalletLinkSession.hash(this.session.id),
     });
   };
 

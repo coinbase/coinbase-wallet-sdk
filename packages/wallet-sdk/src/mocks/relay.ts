@@ -1,7 +1,7 @@
-import { AddressString, HexString, ProviderType } from '../core/type';
+import { AddressString, HexString } from '../core/type';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { RelayAbstract } from '../relay/RelayAbstract';
-import { Session } from '../relay/Session';
+import { WalletLinkSession } from '../relay/walletlink/type/WalletLinkSession';
 import { Web3Method as SupportedWeb3Method, Web3Method } from '../relay/walletlink/type/Web3Method';
 import { Web3Response } from '../relay/walletlink/type/Web3Response';
 import { MOCK_ADDERESS, MOCK_TX } from './fixtures';
@@ -39,13 +39,6 @@ export class MockRelayClass extends RelayAbstract {
     return makeMockReturn({
       method: 'watchAsset',
       result: true,
-    });
-  }
-
-  selectProvider() {
-    return makeMockReturn({
-      method: 'selectProvider',
-      result: ProviderType.CoinbaseWallet,
     });
   }
 
@@ -116,10 +109,6 @@ export class MockRelayClass extends RelayAbstract {
     return;
   }
 
-  inlineAddEthereumChain() {
-    return false;
-  }
-
   setAccountsCallback(): void {
     return;
   }
@@ -133,6 +122,6 @@ export class MockRelayClass extends RelayAbstract {
   }
 
   get session() {
-    return new Session(new ScopedLocalStorage('session-test'));
+    return new WalletLinkSession(new ScopedLocalStorage('session-test'));
   }
 }

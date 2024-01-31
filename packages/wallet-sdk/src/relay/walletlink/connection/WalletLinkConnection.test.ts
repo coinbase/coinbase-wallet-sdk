@@ -1,16 +1,16 @@
-import { Cipher } from '../../../lib/Cipher';
 import { ScopedLocalStorage } from '../../../lib/ScopedLocalStorage';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../../RelayAbstract';
-import { Session } from '../../Session';
-import { SessionConfig } from '../type/SessionConfig';
+import { WalletLinkSession } from '../type/WalletLinkSession';
+import { WalletLinkSessionConfig } from '../type/WalletLinkSessionConfig';
+import { WalletLinkCipher } from './WalletLinkCipher';
 import { WalletLinkConnection, WalletLinkConnectionUpdateListener } from './WalletLinkConnection';
 
 const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`decrypted ${text}`));
 
-jest.spyOn(Cipher.prototype, 'decrypt').mockImplementation(decryptMock);
+jest.spyOn(WalletLinkCipher.prototype, 'decrypt').mockImplementation(decryptMock);
 
 describe('WalletLinkConnection', () => {
-  const session = new Session(new ScopedLocalStorage('test'));
+  const session = new WalletLinkSession(new ScopedLocalStorage('test'));
 
   let connection: WalletLinkConnection;
   let listener: WalletLinkConnectionUpdateListener;
@@ -23,7 +23,6 @@ describe('WalletLinkConnection', () => {
       linkAPIUrl: 'http://link-api-url',
       listener: {
         linkedUpdated: jest.fn(),
-        connectedUpdated: jest.fn(),
         handleWeb3ResponseMessage: jest.fn(),
         chainUpdated: jest.fn(),
         accountUpdated: jest.fn(),
@@ -41,7 +40,7 @@ describe('WalletLinkConnection', () => {
         'handleSessionMetadataUpdated'
       );
 
-      const sessionConfig: SessionConfig = {
+      const sessionConfig: WalletLinkSessionConfig = {
         webhookId: 'webhookId',
         webhookUrl: 'webhookUrl',
         metadata: {
@@ -59,7 +58,7 @@ describe('WalletLinkConnection', () => {
   });
 
   describe('handleSessionMetadataUpdated', () => {
-    function invoke_handleSessionMetadataUpdated(metadata: SessionConfig['metadata']) {
+    function invoke_handleSessionMetadataUpdated(metadata: WalletLinkSessionConfig['metadata']) {
       (connection as any).handleSessionMetadataUpdated(metadata);
     }
 

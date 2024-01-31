@@ -1,12 +1,12 @@
-import { randomBytesHex } from '../core/util';
-import { Cipher } from './Cipher';
+import { randomBytesHex } from '../type/util';
+import { WalletLinkCipher } from './WalletLinkCipher';
 
 const secret = 'c356fe708ea7bbf7b1cc9ff9813c32772b6e0d16332da4c031ba9ea88be9b5ed';
 
 describe('aes256gcm', () => {
   test('encrypt/decrypt', async () => {
     const randSecret = randomBytesHex(32);
-    const cipher = new Cipher(randSecret);
+    const cipher = new WalletLinkCipher(randSecret);
 
     const encrypted = await cipher.encrypt('plain text string');
 
@@ -30,7 +30,7 @@ describe('aes256gcm', () => {
       },
     };
 
-    const cipher = new Cipher(secret);
+    const cipher = new WalletLinkCipher(secret);
 
     const decrypted = await cipher.decrypt(cipherText);
 
@@ -38,7 +38,7 @@ describe('aes256gcm', () => {
   });
 
   test('errors', async () => {
-    const cipher = new Cipher('123456');
+    const cipher = new WalletLinkCipher('123456');
 
     await expect(cipher.encrypt('plain text string')).rejects.toThrowError(
       'secret must be 256 bits'
@@ -48,7 +48,7 @@ describe('aes256gcm', () => {
       'secret must be 256 bits'
     );
 
-    const differentCipher = new Cipher(secret);
+    const differentCipher = new WalletLinkCipher(secret);
 
     await expect(differentCipher.decrypt('text')).rejects.toThrow();
   });

@@ -157,8 +157,6 @@ export class CoinbaseWalletSDK {
       throw new Error('Relay not initialized, should never happen');
     }
 
-    if (!jsonRpcUrl) relay.setConnectDisabled(true);
-
     // no interaction can happen before this is instantiated
     return new EIP1193Provider({
       relayEventManager: this._relayEventManager,
