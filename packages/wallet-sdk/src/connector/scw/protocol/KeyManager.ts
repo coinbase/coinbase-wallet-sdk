@@ -1,87 +1,102 @@
-export abstract class KeyManager {
-  private privateKey: CryptoKey | null;
-  publicKey: CryptoKey | null;
-  private sharedSecret: CryptoKey | null;
+import { hexStringToUint8Array, uint8ArrayToHex } from '../../../core/util';
 
-  constructor() {
-    this.privateKey = null;
-    this.publicKey = null;
-    this.sharedSecret = null;
+export type EncryptedData = {
+  iv: Uint8Array;
+  cipherText: ArrayBuffer;
+};
+
+export async function generateKeyPair(): Promise<CryptoKeyPair> {
+  return crypto.subtle.generateKey(
+    {
+      name: 'ECDH',
+      namedCurve: 'P-256',
+    },
+    true,
+    ['deriveKey']
+  );
+}
+
+export async function deriveSharedSecret(
+  ownPrivateKey: CryptoKey,
+  peerPublicKey: CryptoKey
+): Promise<CryptoKey> {
+  return crypto.subtle.deriveKey(
+    {
+      name: 'ECDH',
+      public: peerPublicKey,
+    },
+    ownPrivateKey,
+    {
+      name: 'AES-GCM',
+      length: 256,
+    },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+export async function encrypt(sharedSecret: CryptoKey, plainText: string): Promise<EncryptedData> {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const cipherText = await crypto.subtle.encrypt(
+    {
+      name: 'AES-GCM',
+      iv,
+    },
+    sharedSecret,
+    new TextEncoder().encode(plainText)
+  );
+
+  return { iv, cipherText };
+}
+
+export async function decrypt(
+  sharedSecret: CryptoKey,
+  { iv, cipherText }: EncryptedData
+): Promise<string> {
+  const plainText = await crypto.subtle.decrypt(
+    {
+      name: 'AES-GCM',
+      iv,
+    },
+    sharedSecret,
+    cipherText
+  );
+
+  return new TextDecoder().decode(plainText);
+}
+
+function getFormat(keyType: 'public' | 'private') {
+  switch (keyType) {
+    case 'public':
+      return 'spki';
+    case 'private':
+      return 'pkcs8';
   }
+}
 
-  async generateKeyPair() {
-    const keyPair = await crypto.subtle.generateKey(
-      {
-        name: 'ECDH',
-        namedCurve: 'P-256',
-      },
-      false,
-      ['deriveKey']
-    );
+export async function exportKeyToHexString(
+  type: 'public' | 'private',
+  key: CryptoKey
+): Promise<string> {
+  const format = getFormat(type);
+  const exported = await crypto.subtle.exportKey(format, key);
+  return uint8ArrayToHex(new Uint8Array(exported));
+}
 
-    this.privateKey = keyPair.privateKey;
-    this.publicKey = keyPair.publicKey;
-  }
-
-  async deriveSharedSecret(otherPublicKey: CryptoKey) {
-    if (!this.privateKey) {
-      throw new Error('Private key not set, call generateKeyPair() first');
-    }
-    const sharedSecret = await crypto.subtle.deriveKey(
-      {
-        name: 'ECDH',
-        public: otherPublicKey,
-      },
-      this.privateKey,
-      {
-        name: 'AES-GCM',
-        length: 256,
-      },
-      false,
-      ['encrypt', 'decrypt']
-    );
-
-    this.sharedSecret = sharedSecret;
-  }
-
-  async encrypt(plainText: string | undefined) {
-    if (!this.sharedSecret) {
-      throw new Error('Shared secret not set, call deriveSharedSecret() first');
-    }
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    const cipherText = await crypto.subtle.encrypt(
-      {
-        name: 'AES-GCM',
-        iv,
-      },
-      this.sharedSecret,
-      new TextEncoder().encode(plainText)
-    );
-
-    return { iv, cipherText };
-  }
-
-  async decrypt({ iv, cipherText }: { iv: Uint8Array; cipherText: ArrayBuffer }) {
-    if (!this.sharedSecret) {
-      throw new Error('Shared secret not set, call deriveSharedSecret() first');
-    }
-    const plainText = await crypto.subtle.decrypt(
-      {
-        name: 'AES-GCM',
-        iv,
-      },
-      this.sharedSecret,
-      cipherText
-    );
-
-    return new TextDecoder().decode(plainText);
-  }
-
-  reset() {
-    this.privateKey = null;
-    this.publicKey = null;
-    this.sharedSecret = null;
-  }
-
-  public abstract storeSessionData(data: unknown): void;
+export async function importKeyFromHexString(
+  type: 'public' | 'private',
+  hexString: string
+): Promise<CryptoKey> {
+  const format = getFormat(type);
+  const arrayBuffer = hexStringToUint8Array(hexString).buffer;
+  return await crypto.subtle.importKey(
+    format,
+    arrayBuffer,
+    {
+      name: 'ECDH',
+      namedCurve: 'P-256',
+    },
+    true,
+    type === 'private' ? ['deriveKey'] : []
+  );
 }

@@ -3,7 +3,12 @@
 
 import { ErrorType, getMessageFromCode, standardErrors } from '../../core/error';
 import { AddressString, IntNumber, RegExpString } from '../../core/type';
-import { createQrUrl } from '../../core/util';
+import {
+  bigIntStringFromBN,
+  createQrUrl,
+  hexStringFromBuffer,
+  randomBytesHex,
+} from '../../core/util';
 import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
 import { DiagnosticLogger, EVENTS } from '../../provider/DiagnosticLogger';
 import { CancelablePromise, LOCAL_STORAGE_ADDRESSES_KEY, RelayAbstract } from '../RelayAbstract';
@@ -14,7 +19,6 @@ import {
   WalletLinkConnectionUpdateListener,
 } from './connection/WalletLinkConnection';
 import { EthereumTransactionParams } from './type/EthereumTransactionParams';
-import { bigIntStringFromBN, hexStringFromBuffer, randomBytesHex } from './type/util';
 import { WalletLinkEventData, WalletLinkResponseEventData } from './type/WalletLinkEventData';
 import { WalletLinkSession } from './type/WalletLinkSession';
 import { Web3Method } from './type/Web3Method';
