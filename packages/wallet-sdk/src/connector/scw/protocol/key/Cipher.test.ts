@@ -1,4 +1,4 @@
-import { decrypt, deriveSharedSecret, encrypt, generateKeyPair } from './KeyManager';
+import { decrypt, deriveSharedSecret, encrypt, generateKeyPair } from './Cipher';
 
 describe('SCWCipher', () => {
   describe('generateKeyPair', () => {

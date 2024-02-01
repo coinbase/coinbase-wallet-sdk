@@ -1,6 +1,7 @@
 import EventEmitter from 'eventemitter3';
 
 import { Connector } from '../connector/ConnectorInterface';
+import { KeyStorage } from '../connector/scw/protocol/key/KeyStorage';
 import { SCWConnector } from '../connector/scw/SCWConnector';
 import { standardErrors } from '../core/error';
 import { AddressString } from '../core/type';
@@ -64,6 +65,7 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
       appName: this._appName,
       appLogoUrl: this._appLogoUrl,
       puc: this._popupCommunicator,
+      keyStorage: new KeyStorage(this._storage),
     });
   };
 

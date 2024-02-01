@@ -1,5 +1,5 @@
 import { ScopedLocalStorage } from '../../../../lib/ScopedLocalStorage';
-import { generateKeyPair } from '../KeyManager';
+import { generateKeyPair } from './Cipher';
 import { KeyStorage } from './KeyStorage';
 
 describe('KeyStorage', () => {

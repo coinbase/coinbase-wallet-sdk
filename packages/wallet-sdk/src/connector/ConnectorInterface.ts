@@ -1,5 +1,5 @@
 import { AddressString } from '../core/type';
-import { RequestArguments } from ':wallet-sdk/src/provider/ProviderInterface';
+import { RequestArguments } from '../provider/ProviderInterface';
 
 export interface Connector {
   handshake(): Promise<AddressString[]>;

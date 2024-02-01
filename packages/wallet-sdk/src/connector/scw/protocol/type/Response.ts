@@ -1,5 +1,6 @@
 import { ActionResult } from './ActionResult';
 
-export type Response<T> = {
-  result: ActionResult<T>;
+export type SCWResponse<T> = {
+  result: ActionResult<T>; // JSON-RPC result
+  data?: unknown;
 };

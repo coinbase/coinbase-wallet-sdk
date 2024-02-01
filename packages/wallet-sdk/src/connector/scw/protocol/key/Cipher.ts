@@ -1,7 +1,7 @@
-import { hexStringToUint8Array, uint8ArrayToHex } from '../../../core/util';
+import { hexStringToUint8Array, uint8ArrayToHex } from '../../../../core/util';
 
 export type EncryptedData = {
-  iv: Uint8Array;
+  iv: ArrayBuffer;
   cipherText: ArrayBuffer;
 };
 

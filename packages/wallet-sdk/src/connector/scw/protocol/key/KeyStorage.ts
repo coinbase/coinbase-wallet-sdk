@@ -4,7 +4,7 @@ import {
   exportKeyToHexString,
   generateKeyPair,
   importKeyFromHexString,
-} from '../KeyManager';
+} from './Cipher';
 
 interface StorageItem {
   storageKey: string;

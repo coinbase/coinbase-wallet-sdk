@@ -8,7 +8,6 @@ import {
   isConfigMessage,
 } from './ConfigMessage';
 import { CrossDomainCommunicator, Message } from './CrossDomainCommunicator';
-import { SCWRequestMessage, SCWResponseMessage } from './SCWMessage';
 
 // TODO: how to set/change configurations?
 const POPUP_WIDTH = 688;
@@ -98,24 +97,16 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     this.postMessage(configMessage);
   }
 
-  request<T>(request: SCWRequestMessage['content']): Promise<SCWResponseMessage<T>> {
+  // Send message that expect to receive response
+  request(message: Message): Promise<Message> {
     return new Promise((resolve, reject) => {
       if (!this.peerWindow) {
         reject(new Error('No pop up window found. Make sure to run .connect() before .send()'));
       }
 
-      const requestMessage: SCWRequestMessage = {
-        type: 'web3Request',
-        id: crypto.randomUUID(),
-        content: request,
-        timestamp: new Date(),
-      };
+      this.postMessage(message);
 
-      const requestId = this.postMessage(requestMessage);
-
-      this.requestResolutions.set(requestId, (resEnv) => {
-        resolve(resEnv as SCWResponseMessage<T>);
-      });
+      this.requestResolutions.set(message.id, resolve);
     });
   }
 

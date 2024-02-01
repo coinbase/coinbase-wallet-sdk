@@ -1,7 +1,7 @@
 import { UUID } from 'crypto';
 
 export interface Message {
-  type: 'config' | 'web3Request' | 'web3Response';
+  type: 'config' | 'scw';
   id: UUID;
 }
 
@@ -28,15 +28,7 @@ export abstract class CrossDomainCommunicator {
   }
 
   protected peerWindow: Window | null = null;
-  protected postMessage(message: Message | Omit<Message, 'id'>): UUID {
-    const id = 'id' in message ? message.id : crypto.randomUUID();
-    this.peerWindow?.postMessage(
-      {
-        ...message,
-        id,
-      },
-      this.url?.origin ?? '*'
-    );
-    return id;
+  protected postMessage(message: Message) {
+    this.peerWindow?.postMessage(message, this.url?.origin ?? '*');
   }
 }
