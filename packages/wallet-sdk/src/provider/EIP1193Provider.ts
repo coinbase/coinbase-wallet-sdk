@@ -3,11 +3,16 @@ import EventEmitter from 'eventemitter3';
 import { Connector } from '../connector/ConnectorInterface';
 import { KeyStorage } from '../connector/scw/protocol/key/KeyStorage';
 import { SCWConnector } from '../connector/scw/SCWConnector';
+import { WalletLinkConnector } from '../connector/walletlink/WalletLinkConnector';
+import { LINK_API_URL } from '../core/constants';
 import { standardErrors } from '../core/error';
 import { AddressString } from '../core/type';
 import { areAddressArraysEqual, prepend0x } from '../core/util';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
+import { RelayEventManager } from '../relay/RelayEventManager';
+import { WalletLinkRelayUI } from '../relay/walletlink/ui/WalletLinkRelayUI';
 import { PopUpCommunicator } from '../transport/PopUpCommunicator';
+import { LIB_VERSION } from '../version';
 import { CoinbaseWalletProviderOptions } from './CoinbaseWalletProvider';
 import { getErrorForInvalidRequestArgs } from './helpers/eip1193Utils';
 import { ProviderInterface, ProviderRpcError, RequestArguments } from './ProviderInterface';
@@ -44,7 +49,6 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
 
   constructor(options: Readonly<EIP1193ProviderOptions>) {
     super();
-
     this._storage = options.storage;
     this._popupCommunicator = options.popupCommunicator;
     this._appName = options.appName ?? '';
@@ -56,18 +60,43 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
     const persistedConnectionType = this._storage.getItem(CONNECTION_TYPE_KEY);
     this._connectionType = persistedConnectionType;
     if (persistedConnectionType === 'scw') {
-      this._initScwConnector();
+      this._initConnector();
     }
+    this.getWalletLinkUrl = this.getWalletLinkUrl.bind(this);
   }
 
-  private _initScwConnector = () => {
-    this._connector = new SCWConnector({
-      appName: this._appName,
-      appLogoUrl: this._appLogoUrl,
-      puc: this._popupCommunicator,
-      keyStorage: new KeyStorage(this._storage),
-    });
+  private _initConnector = () => {
+    if (this._connectionType === 'scw') {
+      this._connector = new SCWConnector({
+        appName: this._appName,
+        appLogoUrl: this._appLogoUrl,
+        puc: this._popupCommunicator,
+        keyStorage: new KeyStorage(this._storage),
+      });
+    } else if (this._connectionType === 'walletlink') {
+      this.initWalletLinkConnector();
+    }
   };
+
+  private initWalletLinkConnector() {
+    const legacyRelayOptions = {
+      linkAPIUrl: LINK_API_URL,
+      version: LIB_VERSION,
+      darkMode: false,
+      uiConstructor: () =>
+        new WalletLinkRelayUI({
+          linkAPIUrl: LINK_API_URL,
+          version: LIB_VERSION,
+          darkMode: false,
+        }),
+      storage: this._storage,
+      relayEventManager: new RelayEventManager(),
+    };
+
+    this._connector = new WalletLinkConnector({
+      legacyRelayOptions,
+    });
+  }
 
   private get _chainIdStr(): string {
     return prepend0x(this._chainId.toString(16));
@@ -163,7 +192,7 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
     }
 
     if (this._connectionType === 'scw') {
-      this._initScwConnector();
+      this._initConnector();
       const ethAddresses = await this._connector?.handshake();
       if (Array.isArray(ethAddresses)) {
         this._setAccounts(ethAddresses);
@@ -173,7 +202,8 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
       return Promise.reject(new Error('No eth addresses found'));
     } else if (this._connectionType === 'walletlink') {
       // TODO: walletlink
-      return Promise.reject(new Error('walletlink not supported yet'));
+      // do we need to do anything here? Currently we're just waiting for
+      // a walletlinkQRCodeUrl request from the popup, then waiting for a scan
       // TODO: handle user goback/cancel
     } else if (this._connectionType === 'extension') {
       // TODO: persist selection and use it for future requests
@@ -204,7 +234,19 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
     this.emit('accountsChanged', this._accounts);
   }
 
+  // getWalletLinkUrl is be called by the popup communicator when
+  // it receives message.type === 'wlQRCodeUrl' from the popup
+  private getWalletLinkUrl() {
+    this.initWalletLinkConnector();
+
+    if (!(this._connector instanceof WalletLinkConnector)) {
+      throw new Error('Connector not initialized or Connector.getWalletLinkUrl not defined');
+    }
+    return this._connector.legacyRelay.getQRCodeUrl();
+  }
+
   private async _completeConnectionTypeSelection() {
+    this._popupCommunicator.setWLQRCodeUrlCallback(this.getWalletLinkUrl);
     await this._popupCommunicator.connect();
     const connectionType = await this._popupCommunicator.selectConnectionType();
     if (connectionType !== 'scw') {

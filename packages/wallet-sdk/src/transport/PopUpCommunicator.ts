@@ -15,10 +15,17 @@ const POPUP_HEIGHT = 621;
 
 export class PopUpCommunicator extends CrossDomainCommunicator {
   private requestResolutions = new Map<UUID, (_: Message) => void>();
+  // TODO: let's revisit this when we migrate all this to ConnectionConfigurator.
+  private _wlQRCodeUrlCallback?: () => string;
 
   constructor({ url }: { url: string }) {
     super();
     this.url = new URL(url);
+  }
+
+  // should be set before calling .connect()
+  setWLQRCodeUrlCallback(callback: () => string) {
+    this._wlQRCodeUrlCallback = callback;
   }
 
   protected onConnect(): Promise<void> {
@@ -34,6 +41,24 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
         reject(new Error('No pop up window opened'));
       }
     });
+  }
+
+  private respondToWlQRCodeUrlRequest() {
+    if (!this._wlQRCodeUrlCallback) {
+      throw new Error(
+        'PopUpCommunicator._wlQRCodeUrlCallback not set! make sure .setWLQRCodeUrlCallback is called first'
+      );
+    }
+    const wlQRCodeUrl = this._wlQRCodeUrlCallback();
+    const configMessage: ConfigMessage = {
+      type: 'config',
+      id: crypto.randomUUID(),
+      event: {
+        type: ClientConfigEventType.WalletLinkUrl,
+        value: wlQRCodeUrl,
+      },
+    };
+    this.postMessage(configMessage);
   }
 
   protected onEvent(event: MessageEvent<Message>) {
@@ -71,6 +96,12 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
       case HostConfigEventType.ConnectionTypeSelected:
         this.resolveConnectionType?.(message.event.value as ConnectionType);
         this.resolveConnectionType = undefined;
+        break;
+      case HostConfigEventType.RequestWalletLinkUrl:
+        if (!this._wlQRCodeUrlCallback) {
+          throw new Error('PopUpCommunicator._wlQRCodeUrlCallback not set! should never happen');
+        }
+        this.respondToWlQRCodeUrlRequest();
         break;
     }
   }

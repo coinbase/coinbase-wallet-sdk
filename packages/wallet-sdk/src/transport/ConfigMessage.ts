@@ -11,12 +11,14 @@ export interface ConfigMessage extends Message {
 export enum ClientConfigEventType {
   SelectConnectionType = 'selectConnectionType',
   DappOriginMessage = 'dappOriginMessage',
+  WalletLinkUrl = 'walletLinkUrl',
 }
 
 export enum HostConfigEventType {
   PopupListenerAdded = 'popupListenerAdded',
   PopupReadyForRequest = 'popupReadyForRequest',
   ConnectionTypeSelected = 'connectionTypeSelected',
+  RequestWalletLinkUrl = 'requestWalletLinkUrl',
 }
 
 export type ConnectionType = 'scw' | 'walletlink' | 'extension';
