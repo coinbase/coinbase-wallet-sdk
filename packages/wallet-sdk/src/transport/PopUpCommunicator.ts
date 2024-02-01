@@ -87,9 +87,14 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
   private handleConfigMessage(message: ConfigMessage) {
     switch (message.event.type) {
       case HostConfigEventType.PopupListenerAdded:
+        // Handshake Step 2: After receiving POPUP_LISTENER_ADDED_MESSAGE from Dapp,
+        // Dapp sends DAPP_ORIGIN_MESSAGE to FE to help FE confirm the origin of the Dapp
         this.postClientConfigMessage(ClientConfigEventType.DappOriginMessage);
         break;
       case HostConfigEventType.PopupReadyForRequest:
+        // Handshake Step 4: After receiving POPUP_READY_MESSAGE from Dapp, FE knows that
+        // Dapp is ready to receive requests, handshake is done
+        this._connected = true;
         this.resolvePopupReady?.();
         this.resolvePopupReady = undefined;
         break;
