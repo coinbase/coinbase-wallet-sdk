@@ -5,10 +5,10 @@
     "dev": "next dev --port 3001",
     "build": "next build",
     "start": "next start",
-    "export": "yarn workspace @cbhq/wallet-sdk run build && next build && next export"
+    "export": "next build && next export"
   },
   "dependencies": {
-    "@cbhq/wallet-sdk": "workspace:^",
+    "@cbhq/wallet-sdk": "4.0.0-canary.677",
     "@chakra-ui/icons": "^2.1.1",
     "@chakra-ui/react": "^2.8.0",
     "@emotion/react": "^11.11.1",

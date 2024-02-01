@@ -1696,7 +1696,24 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cbhq/wallet-sdk@workspace:^, @cbhq/wallet-sdk@workspace:packages/wallet-sdk":
+"@cbhq/wallet-sdk@npm:4.0.0-canary.677":
+  version: 4.0.0-canary.677
+  resolution: "@cbhq/wallet-sdk@npm:4.0.0-canary.677::__archiveUrl=https%3A%2F%2Fartifactory.cbhq.net%3A8081%2Fartifactory%2Fapi%2Fnpm%2Fcb-npm-master%2F%40cbhq%2Fwallet-sdk%2F-%2F%40cbhq%2Fwallet-sdk-4.0.0-canary.677.tgz"
+  dependencies:
+    bn.js: ^5.2.1
+    buffer: ^6.0.3
+    clsx: ^1.2.1
+    eth-block-tracker: ^7.1.0
+    eth-json-rpc-filters: ^6.0.0
+    eventemitter3: ^5.0.1
+    keccak: ^3.0.3
+    preact: ^10.16.0
+    sha.js: ^2.4.11
+  checksum: bfa503362260a21fc702ff589ca9ad4c8901a4f57ecfff2125d9d3ef826275f94d47355ecf63cad6f7ee2188a8b38c3056e76cd413d5f235aa6a1d6ae21cd590
+  languageName: node
+  linkType: hard
+
+"@cbhq/wallet-sdk@workspace:packages/wallet-sdk":
   version: 0.0.0-use.local
   resolution: "@cbhq/wallet-sdk@workspace:packages/wallet-sdk"
   dependencies:
@@ -2955,7 +2972,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@coinbase/wallet-sdk-testapp@workspace:apps/testapp"
   dependencies:
-    "@cbhq/wallet-sdk": "workspace:^"
+    "@cbhq/wallet-sdk": 4.0.0-canary.677
     "@chakra-ui/icons": ^2.1.1
     "@chakra-ui/react": ^2.8.0
     "@emotion/react": ^11.11.1
