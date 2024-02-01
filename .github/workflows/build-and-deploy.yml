@@ -34,8 +34,6 @@ jobs:
         run: corepack enable
       - name: Install dependencies
         run: sh scripts/ci-yarn-install.sh
-      - name: Build Canary SDK
-        run: yarn release --canary --package=wallet-sdk
       - name: Build and export with Next.js
         run: yarn workspace @coinbase/wallet-sdk-testapp run export
       - name: Upload artifact

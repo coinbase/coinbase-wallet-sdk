@@ -1,9 +1,7 @@
-import CoinbaseWalletSDK from '@cbhq/wallet-sdk';
 import { CheckIcon, ChevronDownIcon } from '@chakra-ui/icons';
 import {
   Box,
   Button,
-  Code,
   Container,
   Flex,
   Heading,
@@ -36,7 +34,6 @@ export function Layout({ children }: LayoutProps) {
         <Container maxW={WIDTH_2XL}>
           <Flex justifyContent="space-between" alignItems="center">
             <Heading>Coinbase Wallet SDK - Playground</Heading>
-            <Code>{CoinbaseWalletSDK.VERSION}</Code>
             <Flex justifyContent="space-between" alignItems="center" gap={4}>
               <Menu>
                 <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
