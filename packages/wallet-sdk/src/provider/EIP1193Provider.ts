@@ -95,6 +95,7 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
 
     this._connector = new WalletLinkConnector({
       legacyRelayOptions,
+      puc: this._popupCommunicator,
     });
   }
 
