@@ -63,15 +63,14 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
 
   protected onEvent(event: MessageEvent<Message>) {
     if (event.origin !== this.url?.origin) return;
-    if (!this._connected) return;
 
     const message = event.data;
-
     if (isConfigMessage(message)) {
       this.handleConfigMessage(message);
       return;
     }
 
+    if (!this._connected) return;
     if (!('requestId' in message)) return;
 
     const requestId = message.requestId as UUID;
@@ -99,10 +98,12 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
         this.resolvePopupReady = undefined;
         break;
       case HostConfigEventType.ConnectionTypeSelected:
+        if (!this._connected) return;
         this.resolveConnectionType?.(message.event.value as ConnectionType);
         this.resolveConnectionType = undefined;
         break;
       case HostConfigEventType.RequestWalletLinkUrl:
+        if (!this._connected) return;
         if (!this._wlQRCodeUrlCallback) {
           throw new Error('PopUpCommunicator._wlQRCodeUrlCallback not set! should never happen');
         }
