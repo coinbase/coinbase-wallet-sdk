@@ -14,7 +14,11 @@ export enum SupportedEthereumMethods {
 
 export type RequestAccountsAction = {
   method: SupportedEthereumMethods.EthRequestAccounts;
-  params: Record<string, never>; // empty object
+  params: {
+    dappName: string;
+    dappLogoUrl: string | null;
+    dappOrigin?: string;
+  };
 };
 
 export type SignAction = {
@@ -37,7 +41,7 @@ export type SignTypedDataV1Action = {
   method: SupportedEthereumMethods.EthSignTypedDataV1;
   params: {
     address: string;
-    typedDataJson: string;
+    message: string;
   };
 };
 
@@ -45,7 +49,7 @@ export type SignTypedDataV3Action = {
   method: SupportedEthereumMethods.EthSignTypedDataV3;
   params: {
     address: string;
-    typedDataJson: string;
+    message: string;
   };
 };
 
@@ -53,39 +57,37 @@ export type SignTypedDataV4Action = {
   method: SupportedEthereumMethods.EthSignTypedDataV4;
   params: {
     address: string;
-    typedDataJson: string;
+    message: string;
   };
 };
 
 export type SignTransactionAction = {
   method: SupportedEthereumMethods.EthSignTransaction;
   params: {
-    fromAddress: string;
-    toAddress: string | null;
-    weiValue: string;
+    from: string;
+    to: string | null;
+    value: string;
     data: string;
     nonce: number;
     gasPriceInWei: string | null;
     maxFeePerGas: string | null;
     maxPriorityFeePerGas: string | null;
     gasLimit: string | null;
-    chainId: string;
   };
 };
 
 export type SendTransactionAction = {
   method: SupportedEthereumMethods.EthSendTransaction;
   params: {
-    fromAddress: string;
-    toAddress: string | null;
-    weiValue: string;
+    from: string;
+    to: string | null;
+    value: string;
     data: string;
     nonce: number;
     gasPriceInWei: string | null;
     maxFeePerGas: string | null;
     maxPriorityFeePerGas: string | null;
     gasLimit: string | null;
-    chainId: string;
   };
 };
 

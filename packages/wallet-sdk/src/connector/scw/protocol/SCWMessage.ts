@@ -2,7 +2,7 @@ import { UUID } from 'crypto';
 
 import { Message } from '../../../transport/CrossDomainCommunicator';
 import { decrypt, encrypt, EncryptedData } from './key/Cipher';
-import { SupportedEthereumMethods } from './type/Action';
+import { RequestAccountsAction } from './type/Action';
 import { SCWRequest } from './type/Request';
 import { SCWResponse } from './type/Response';
 
@@ -18,13 +18,7 @@ interface SCWMessage extends Message {
 export interface SCWRequestMessage extends SCWMessage {
   content:
     | {
-        handshake: {
-          method: SupportedEthereumMethods.EthRequestAccounts;
-          params: {
-            appName: string;
-            appLogoUrl: string | null;
-          };
-        };
+        handshake: RequestAccountsAction;
       }
     | {
         encrypted: EncryptedData;

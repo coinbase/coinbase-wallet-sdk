@@ -43,8 +43,8 @@ export class SCWConnector implements Connector {
       handshake: {
         method: SupportedEthereumMethods.EthRequestAccounts,
         params: {
-          appName: this.appName,
-          appLogoUrl: this.appLogoUrl,
+          dappName: this.appName,
+          dappLogoUrl: this.appLogoUrl,
         },
       },
     });
