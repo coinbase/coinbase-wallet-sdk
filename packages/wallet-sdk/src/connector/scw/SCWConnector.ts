@@ -33,6 +33,8 @@ export class SCWConnector implements Connector {
     this.appLogoUrl = options.appLogoUrl;
     this.puc = options.puc;
     this.keyStorage = options.keyStorage;
+    this.createRequestMessage = this.createRequestMessage.bind(this);
+    this.decodeResponseMessage = this.decodeResponseMessage.bind(this);
   }
 
   public async handshake(): Promise<AddressString[]> {
