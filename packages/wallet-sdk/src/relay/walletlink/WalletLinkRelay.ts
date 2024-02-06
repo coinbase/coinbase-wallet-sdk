@@ -155,7 +155,6 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
     if (this.accountsCallback) {
       this.accountsCallback([selectedAddress]);
     }
-
     if (WalletLinkRelay.accountRequestCallbackIds.size > 0) {
       // We get the ethereum address from the metadata.  If for whatever
       // reason we don't get a response via an explicit web3 message
@@ -370,7 +369,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
   public sendRequest<
     RequestMethod extends SupportedWeb3Method,
     ResponseMethod extends SupportedWeb3Method = RequestMethod,
-    Response = Web3Response<ResponseMethod>,
+    Response = Web3Response<ResponseMethod>
   >(request: Web3Request<RequestMethod>): CancelablePromise<Response> {
     let hideSnackbarItem: (() => void) | null = null;
     const id = randomBytesHex(8);
@@ -538,15 +537,12 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         hideSnackbarItem?.();
-
         if (isErrorResponse(response)) {
           return reject(new Error(response.errorMessage));
         }
         resolve(response as Web3Response<'requestEthereumAccounts'>);
       });
-
       WalletLinkRelay.accountRequestCallbackIds.add(id);
-
       this.publishWeb3RequestEvent(id, request);
     });
 

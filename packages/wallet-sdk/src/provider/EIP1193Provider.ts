@@ -11,6 +11,7 @@ import { areAddressArraysEqual, prepend0x } from '../core/util';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { RelayEventManager } from '../relay/RelayEventManager';
 import { WalletLinkRelayUI } from '../relay/walletlink/ui/WalletLinkRelayUI';
+import { ConnectionType } from '../transport/ConfigMessage';
 import { PopUpCommunicator } from '../transport/PopUpCommunicator';
 import { LIB_VERSION } from '../version';
 import { CoinbaseWalletProviderOptions } from './CoinbaseWalletProvider';
@@ -46,11 +47,18 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
   private _connector: Connector | undefined;
   private _connectionType: string | null;
   private _chainId: number;
-
+  private _connectionTypeSelectionResolver: ((value: unknown) => void) | undefined;
   constructor(options: Readonly<EIP1193ProviderOptions>) {
     super();
     this._storage = options.storage;
     this._popupCommunicator = options.popupCommunicator;
+
+    // getWalletLinkUrl is called by the PopUpCommunicator when
+    // it receives message.type === 'wlQRCodeUrl' from the cb-wallet-scw popup
+    // its injected becuause we don't want to instantiate WalletLinkConnector until we have to
+    this.getWalletLinkUrl = this.getWalletLinkUrl.bind(this);
+    this._popupCommunicator.setWLQRCodeUrlCallback(this.getWalletLinkUrl);
+
     this._appName = options.appName ?? '';
     this._appLogoUrl = options.appLogoUrl ?? null;
     this._chainId = options.chainId;
@@ -59,26 +67,33 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
     this._accounts = persistedAccounts;
     const persistedConnectionType = this._storage.getItem(CONNECTION_TYPE_KEY);
     this._connectionType = persistedConnectionType;
-    if (persistedConnectionType === 'scw') {
+    if (persistedConnectionType) {
       this._initConnector();
     }
-    this.getWalletLinkUrl = this.getWalletLinkUrl.bind(this);
+
+    this._setConnectionType = this._setConnectionType.bind(this);
   }
 
   private _initConnector = () => {
     if (this._connectionType === 'scw') {
-      this._connector = new SCWConnector({
-        appName: this._appName,
-        appLogoUrl: this._appLogoUrl,
-        puc: this._popupCommunicator,
-        keyStorage: new KeyStorage(this._storage),
-      });
+      this._initScwConnector();
     } else if (this._connectionType === 'walletlink') {
-      this.initWalletLinkConnector();
+      this._initWalletLinkConnector();
     }
   };
 
-  private initWalletLinkConnector() {
+  private _initScwConnector() {
+    if (this._connector instanceof SCWConnector) return;
+    this._connector = new SCWConnector({
+      appName: this._appName,
+      appLogoUrl: this._appLogoUrl,
+      puc: this._popupCommunicator,
+      keyStorage: new KeyStorage(this._storage),
+    });
+  }
+
+  private _initWalletLinkConnector() {
+    if (this._connector instanceof WalletLinkConnector) return;
     const legacyRelayOptions = {
       linkAPIUrl: LINK_API_URL,
       version: LIB_VERSION,
@@ -96,6 +111,7 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
     this._connector = new WalletLinkConnector({
       legacyRelayOptions,
       puc: this._popupCommunicator,
+      _connectionTypeSelectionResolver: this._connectionTypeSelectionResolver,
     });
   }
 
@@ -159,20 +175,21 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
     });
   }
 
+  private _requireAuthorization() {
+    if (this._accounts.length < 0) {
+      throw standardErrors.provider.unauthorized({});
+    }
+  }
+
   private async _genericConnectorRequest<T>(request: RequestArguments): Promise<T> {
+    this._requireAuthorization();
     if (!this._connector) {
       throw standardErrors.provider.unauthorized(
-        "Must select scw as connection type and call 'eth_requestAccounts' before other methods"
+        "Must call 'eth_requestAccounts' before other methods"
       );
     }
 
-    if (this._connectionType === 'scw') {
-      return await this._connector.request(request);
-    }
-
-    throw standardErrors.provider.disconnected({
-      message: `Unsupported connection type: ${this._connectionType}`,
-    });
+    return await this._connector.request(request);
   }
 
   private _eth_accounts(): AddressString[] {
@@ -189,40 +206,30 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
       return Promise.resolve(this._accounts);
     }
     if (!this._connectionType) {
-      await this._completeConnectionTypeSelection();
+      // WL: this promise hangs until the QR code is scanned
+      // SCW: this promise hangs until the user signs in with passkey
+      const connectionType = await this._completeConnectionTypeSelection();
+      this._setConnectionType(connectionType as ConnectionType);
     }
 
-    if (this._connectionType === 'scw') {
-      this._initConnector();
+    // in the case of walletlink, this doesn't do anything since connector is initialized
+    // when the wallet link QR code url is requested
+    this._initConnector();
+
+    try {
       const ethAddresses = await this._connector?.handshake();
       if (Array.isArray(ethAddresses)) {
         this._setAccounts(ethAddresses);
         this._emitConnectEvent();
         return Promise.resolve(this._accounts);
       }
-      return Promise.reject(new Error('No eth addresses found'));
-    } else if (this._connectionType === 'walletlink') {
-      // TODO: walletlink
-      // do we need to do anything here? Currently we're just waiting for
-      // a walletlinkQRCodeUrl request from the popup, then waiting for a scan
-      // TODO: handle user goback/cancel
-    } else if (this._connectionType === 'extension') {
-      // TODO: persist selection and use it for future requests
-      const extension = window.coinbaseWalletExtension;
-      if (!extension) {
-        throw new Error('Coinbase Wallet Extension not found');
+      return Promise.reject(new Error('Accounts must be an array of addresses'));
+    } catch (err: any) {
+      if (typeof err.message === 'string' && err.message.match(/(denied|rejected)/i)) {
+        throw standardErrors.provider.userRejectedRequest('User denied account authorization');
       }
-      const response = await extension.request({ method: 'eth_requestAccounts' });
-      if (Array.isArray(response)) {
-        this._setAccounts(response);
-        this._emitConnectEvent();
-        return Promise.resolve(this._accounts);
-      }
-      return Promise.reject(new Error('No eth addresses found'));
+      throw err;
     }
-
-    // if type unhandled reject for now
-    return Promise.reject(`connectionType ${this._connectionType} not supported yet`);
   }
 
   private _setAccounts(accounts: AddressString[]) {
@@ -235,11 +242,8 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
     this.emit('accountsChanged', this._accounts);
   }
 
-  // getWalletLinkUrl is be called by the popup communicator when
-  // it receives message.type === 'wlQRCodeUrl' from the popup
   private getWalletLinkUrl() {
-    this.initWalletLinkConnector();
-
+    this._initWalletLinkConnector();
     if (!(this._connector instanceof WalletLinkConnector)) {
       throw new Error('Connector not initialized or Connector.getWalletLinkUrl not defined');
     }
@@ -247,17 +251,24 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
   }
 
   private async _completeConnectionTypeSelection() {
-    this._popupCommunicator.setWLQRCodeUrlCallback(this.getWalletLinkUrl);
     await this._popupCommunicator.connect();
-    const connectionType = await this._popupCommunicator.selectConnectionType();
-    if (connectionType !== 'scw') {
-      throw new Error(`Unsupported connection type: ${connectionType}`);
-    }
+
+    return new Promise((resolve) => {
+      this._connectionTypeSelectionResolver = resolve.bind(this);
+
+      this._popupCommunicator.selectConnectionType().then((connectionType) => {
+        resolve(connectionType);
+      });
+    });
+  }
+
+  // storage methods
+  private _setConnectionType(connectionType: string) {
+    if (this._connectionType === connectionType) return;
     this._connectionType = connectionType;
     this._storage.setItem(CONNECTION_TYPE_KEY, this._connectionType);
   }
 
-  // storage methods
   private _setStoredAccounts(accounts: AddressString[]) {
     try {
       this._storage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));

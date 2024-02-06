@@ -1,6 +1,7 @@
 import { AddressString } from '../../core/type';
 import { RequestArguments } from '../../provider/ProviderInterface';
 import { SupportedWeb3Method, Web3Request } from '../../relay/walletlink/type/Web3Request';
+import { isErrorResponse } from '../../relay/walletlink/type/Web3Response';
 import { WalletLinkRelay, WalletLinkRelayOptions } from '../../relay/walletlink/WalletLinkRelay';
 import { PopUpCommunicator } from '../../transport/PopUpCommunicator';
 import { Connector } from '../ConnectorInterface';
@@ -9,38 +10,45 @@ import { Connector } from '../ConnectorInterface';
 export class WalletLinkConnector implements Connector {
   legacyRelay: WalletLinkRelay;
   private resolveHandshake?: (accounts: AddressString[]) => void;
-  // private chainId?: string;
-  // private jsonRpcUrl?: string;
   private puc: PopUpCommunicator;
+  private dappDefaultChain = 1;
+  private _connectionTypeSelectionResolver: ((value: unknown) => void) | undefined;
 
   constructor({
     legacyRelayOptions,
     puc,
+    _connectionTypeSelectionResolver,
   }: {
     legacyRelayOptions: Readonly<WalletLinkRelayOptions>;
     puc: PopUpCommunicator;
+    _connectionTypeSelectionResolver: ((value: unknown) => void) | undefined;
   }) {
     this.legacyRelay = new WalletLinkRelay(legacyRelayOptions);
     this.puc = puc;
+    this._connectionTypeSelectionResolver = _connectionTypeSelectionResolver;
     this.accountsCallback = this.accountsCallback.bind(this);
     this.chainCallback = this.chainCallback.bind(this);
     this.legacyRelay.setAccountsCallback(this.accountsCallback);
     this.legacyRelay.setChainCallback(this.chainCallback);
+    this.legacyRelay.setDappDefaultChainCallback(this.dappDefaultChain);
   }
 
   public async handshake(): Promise<AddressString[]> {
-    return new Promise((resolve) => {
-      this.resolveHandshake = resolve;
-    });
+    const res = await this.legacyRelay.requestEthereumAccounts().promise;
+    if (isErrorResponse(res)) {
+      throw new Error(res.errorMessage);
+    }
+    // TODO: nate - send message to scw-fe and allow fe to show success
+    // and gracefully close the popup
+    this.puc.disconnect(); // temporary 'solution' for closing popup
+    return res.result;
   }
 
-  // private chainCallback(chainId: string, jsonRpcUrl: string) {
-  private chainCallback() {
-    // temp get modal to close for demo
-    // should updateProviderInfo and emit chainChanged event
-    this.puc.disconnect();
-    // this.chainId = chainId;
-    // this.jsonRpcUrl = jsonRpcUrl;
+  // The callback triggered by QR Code Scanning
+  private async chainCallback() {
+    // as soon as qr code is scanned, resolve hanging selection type promise
+    // since we never get a response for that in the case of walletlink
+    this._connectionTypeSelectionResolver?.('walletlink');
   }
 
   private accountsCallback(accounts: string[]) {
