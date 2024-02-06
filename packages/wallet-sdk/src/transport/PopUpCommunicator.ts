@@ -109,6 +109,10 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
         }
         this.respondToWlQRCodeUrlRequest();
         break;
+      case HostConfigEventType.ClosePopup:
+        if (!this._connected) return;
+        this.closeChildWindow();
+        break;
     }
   }
 
