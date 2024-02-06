@@ -3,16 +3,11 @@
 
 import { LogoType, walletLogo } from './assets/wallet-logo';
 import { LINK_API_URL } from './core/constants';
-import { getFavicon, isMobileWeb } from './core/util';
+import { getFavicon } from './core/util';
 import { ScopedLocalStorage } from './lib/ScopedLocalStorage';
 import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
-import { DiagnosticLogger } from './provider/DiagnosticLogger';
 import { EIP1193Provider } from './provider/EIP1193Provider';
-import { MobileRelay } from './relay/mobile/MobileRelay';
-import { MobileRelayUI } from './relay/mobile/MobileRelayUI';
-import { RelayEventManager } from './relay/RelayEventManager';
-import { RelayUI, RelayUIOptions } from './relay/RelayUI';
-import { WalletLinkRelayUI } from './relay/walletlink/ui/WalletLinkRelayUI';
+import { ProviderInterface } from './provider/ProviderInterface';
 import { WalletLinkRelay } from './relay/walletlink/WalletLinkRelay';
 import { PopUpCommunicator } from './transport/PopUpCommunicator';
 import { LIB_VERSION } from './version';
@@ -27,22 +22,6 @@ export interface CoinbaseWalletSDKOptions {
   darkMode?: boolean;
   /** @optional Coinbase Wallet link server URL; for most, leave it unspecified */
   linkAPIUrl?: string;
-  /** @optional an implementation of WalletUI; for most, leave it unspecified */
-  uiConstructor?: (options: Readonly<RelayUIOptions>) => RelayUI;
-  /** @optional a diagnostic tool for debugging; for most, leave it unspecified  */
-  diagnosticLogger?: DiagnosticLogger;
-  /** @optional whether wallet link provider should override the isMetaMask property. */
-  overrideIsMetaMask?: boolean;
-  /** @optional whether wallet link provider should override the isCoinbaseWallet property. */
-  overrideIsCoinbaseWallet?: boolean;
-  /** @optional whether coinbase wallet provider should override the isCoinbaseBrowser property. */
-  overrideIsCoinbaseBrowser?: boolean;
-  /** @optional whether or not onboarding overlay popup should be displayed */
-  headlessMode?: boolean;
-  /** @optional whether or not to reload dapp automatically after disconnect, defaults to true */
-  reloadOnDisconnect?: boolean;
-  /** @optional whether to connect mobile web app via WalletLink, defaults to false */
-  enableMobileWalletLink?: boolean;
   /** @optional SCW FE URL */
   scwUrl?: string;
 }
@@ -53,14 +32,7 @@ export class CoinbaseWalletSDK {
   private _appName = '';
   private _appLogoUrl: string | null = null;
   private _relay: WalletLinkRelay | null = null;
-  private _relayEventManager: RelayEventManager | null = null;
   private _storage: ScopedLocalStorage;
-  private _overrideIsMetaMask: boolean;
-  private _overrideIsCoinbaseWallet: boolean;
-  private _overrideIsCoinbaseBrowser: boolean;
-  private _diagnosticLogger?: DiagnosticLogger;
-  private _reloadOnDisconnect?: boolean;
-  private _enableMobileWalletLink: boolean;
   private linkAPIUrl: string;
   private popupCommunicator: PopUpCommunicator;
 
@@ -69,20 +41,7 @@ export class CoinbaseWalletSDK {
    * @param options Coinbase Wallet SDK constructor options
    */
   constructor(options: Readonly<CoinbaseWalletSDKOptions>) {
-    this._enableMobileWalletLink = options.enableMobileWalletLink ?? false;
     this.linkAPIUrl = options.linkAPIUrl || LINK_API_URL;
-    if (typeof options.overrideIsMetaMask === 'undefined') {
-      this._overrideIsMetaMask = false;
-    } else {
-      this._overrideIsMetaMask = options.overrideIsMetaMask;
-    }
-
-    this._overrideIsCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true;
-    this._overrideIsCoinbaseBrowser = options.overrideIsCoinbaseBrowser ?? false;
-
-    this._diagnosticLogger = options.diagnosticLogger;
-
-    this._reloadOnDisconnect = options.reloadOnDisconnect ?? true;
 
     const url = new URL(this.linkAPIUrl);
     const origin = `${url.protocol}//${url.host}`;
@@ -97,32 +56,7 @@ export class CoinbaseWalletSDK {
       return;
     }
 
-    this._relayEventManager = new RelayEventManager();
-
-    const isMobile = isMobileWeb();
-    const uiConstructor =
-      options.uiConstructor ||
-      ((opts) => (isMobile ? new MobileRelayUI(opts) : new WalletLinkRelayUI(opts)));
-
-    const relayOption = {
-      linkAPIUrl: this.linkAPIUrl,
-      version: LIB_VERSION,
-      darkMode: !!options.darkMode,
-      uiConstructor,
-      storage: this._storage,
-      relayEventManager: this._relayEventManager,
-      diagnosticLogger: this._diagnosticLogger,
-      reloadOnDisconnect: this._reloadOnDisconnect,
-      enableMobileWalletLink: this._enableMobileWalletLink,
-    };
-
-    this._relay = isMobile ? new MobileRelay(relayOption) : new WalletLinkRelay(relayOption);
-
     this.setAppInfo(options.appName, options.appLogoUrl);
-
-    if (options.headlessMode) return;
-
-    this._relay.attachUI();
   }
 
   /**
@@ -131,7 +65,7 @@ export class CoinbaseWalletSDK {
    * @param chainId Ethereum Chain ID (Default: 1)
    * @returns A Web3 Provider
    */
-  public makeWeb3Provider(jsonRpcUrl = '', chainId = 1): EIP1193Provider | CoinbaseWalletProvider {
+  public makeWeb3Provider(jsonRpcUrl = '', chainId = 1): EIP1193Provider | ProviderInterface {
     const extension = this.walletExtension;
     if (extension) {
       if (!this.isCipherProvider(extension)) {
@@ -152,24 +86,12 @@ export class CoinbaseWalletSDK {
       return dappBrowser;
     }
 
-    const relay = this._relay;
-    if (!relay || !this._relayEventManager || !this._storage) {
-      throw new Error('Relay not initialized, should never happen');
+    if (!this._storage) {
+      throw new Error('Storage not initialized, should never happen');
     }
 
-    // no interaction can happen before this is instantiated
     return new EIP1193Provider({
-      relayEventManager: this._relayEventManager,
       storage: this._storage,
-      jsonRpcUrl,
-      chainId,
-      qrUrl: this.getQrUrl(),
-      diagnosticLogger: this._diagnosticLogger,
-      overrideIsMetaMask: this._overrideIsMetaMask,
-      overrideIsCoinbaseWallet: this._overrideIsCoinbaseWallet,
-      overrideIsCoinbaseBrowser: this._overrideIsCoinbaseBrowser,
-      reloadOnDisconnect: this._reloadOnDisconnect,
-      enableMobileWalletLink: this._enableMobileWalletLink,
       linkAPIUrl: this.linkAPIUrl,
       popupCommunicator: this.popupCommunicator,
       appName: this._appName,
@@ -227,7 +149,7 @@ export class CoinbaseWalletSDK {
   }
 
   private get walletExtension(): CoinbaseWalletProvider | undefined {
-    return window.coinbaseWalletExtension ?? window.walletLinkExtension;
+    return window.coinbaseWalletExtension;
   }
 
   private get coinbaseBrowser(): CoinbaseWalletProvider | undefined {

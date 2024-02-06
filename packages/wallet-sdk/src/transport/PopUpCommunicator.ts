@@ -1,4 +1,4 @@
-import { UUID } from "crypto";
+import { UUID } from 'crypto';
 
 import {
   ClientConfigEventType,
@@ -6,8 +6,8 @@ import {
   ConnectionType,
   HostConfigEventType,
   isConfigMessage,
-} from "./ConfigMessage";
-import { CrossDomainCommunicator, Message } from "./CrossDomainCommunicator";
+} from './ConfigMessage';
+import { CrossDomainCommunicator, Message } from './CrossDomainCommunicator';
 
 // TODO: how to set/change configurations?
 const POPUP_WIDTH = 420;
@@ -38,7 +38,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
       this.openFixedSizePopUpWindow();
 
       if (!this.peerWindow) {
-        reject(new Error("No pop up window opened"));
+        reject(new Error('No pop up window opened'));
       }
     });
   }
@@ -46,12 +46,12 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
   private respondToWlQRCodeUrlRequest() {
     if (!this._wlQRCodeUrlCallback) {
       throw new Error(
-        "PopUpCommunicator._wlQRCodeUrlCallback not set! make sure .setWLQRCodeUrlCallback is called first"
+        'PopUpCommunicator._wlQRCodeUrlCallback not set! make sure .setWLQRCodeUrlCallback is called first'
       );
     }
     const wlQRCodeUrl = this._wlQRCodeUrlCallback();
     const configMessage: ConfigMessage = {
-      type: "config",
+      type: 'config',
       id: crypto.randomUUID(),
       event: {
         type: ClientConfigEventType.WalletLinkUrl,
@@ -71,7 +71,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     }
 
     if (!this._connected) return;
-    if (!("requestId" in message)) return;
+    if (!('requestId' in message)) return;
 
     const requestId = message.requestId as UUID;
     const resolveFunction = this.requestResolutions.get(requestId);
@@ -105,9 +105,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
       case HostConfigEventType.RequestWalletLinkUrl:
         if (!this._connected) return;
         if (!this._wlQRCodeUrlCallback) {
-          throw new Error(
-            "PopUpCommunicator._wlQRCodeUrlCallback not set! should never happen"
-          );
+          throw new Error('PopUpCommunicator._wlQRCodeUrlCallback not set! should never happen');
         }
         this.respondToWlQRCodeUrlRequest();
         break;
@@ -121,11 +119,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
   selectConnectionType(): Promise<ConnectionType> {
     return new Promise((resolve, reject) => {
       if (!this.peerWindow) {
-        reject(
-          new Error(
-            "No pop up window found. Make sure to run .connect() before .send()"
-          )
-        );
+        reject(new Error('No pop up window found. Make sure to run .connect() before .send()'));
       }
 
       this.resolveConnectionType = resolve;
@@ -135,7 +129,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
 
   private postClientConfigMessage(type: ClientConfigEventType) {
     const configMessage: ConfigMessage = {
-      type: "config",
+      type: 'config',
       id: crypto.randomUUID(),
       event: {
         type,
@@ -148,11 +142,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
   request(message: Message): Promise<Message> {
     return new Promise((resolve, reject) => {
       if (!this.peerWindow) {
-        reject(
-          new Error(
-            "No pop up window found. Make sure to run .connect() before .send()"
-          )
-        );
+        reject(new Error('No pop up window found. Make sure to run .connect() before .send()'));
       }
 
       this.postMessage(message);
@@ -171,17 +161,17 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     const top = (window.innerHeight - POPUP_HEIGHT) / 2 + window.screenY;
 
     const urlParams = new URLSearchParams();
-    urlParams.append("opener", encodeURIComponent(window.location.href));
+    urlParams.append('opener', encodeURIComponent(window.location.href));
 
     if (!this.url) {
-      throw new Error("No url provided in PopUpCommunicator");
+      throw new Error('No url provided in PopUpCommunicator');
     }
     const popupUrl = new URL(this.url);
     popupUrl.search = urlParams.toString();
 
     const popupWindow = window.open(
       popupUrl,
-      "SCW Child Window",
+      'SCW Child Window',
       `width=${POPUP_WIDTH}, height=${POPUP_HEIGHT}, left=${left}, top=${top}`
     );
 

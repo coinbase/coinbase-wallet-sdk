@@ -1,6 +1,5 @@
 import { standardErrors } from '../core/error';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { RelayEventManager } from '../relay/RelayEventManager';
 import { PopUpCommunicator } from '../transport/PopUpCommunicator';
 import { EIP1193Provider } from './EIP1193Provider';
 
@@ -9,10 +8,6 @@ describe('EIP1193Provider', () => {
 
   beforeEach(() => {
     provider = new EIP1193Provider({
-      chainId: 1,
-      jsonRpcUrl: 'fooUrl',
-      overrideIsMetaMask: false,
-      relayEventManager: new RelayEventManager(),
       storage: new ScopedLocalStorage('-walletlink'),
       popupCommunicator: new PopUpCommunicator({ url: 'http://fooUrl.com' }),
     });

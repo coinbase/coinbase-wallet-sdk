@@ -30,11 +30,9 @@ export interface WalletLinkRelayOptions {
   version: string;
   darkMode: boolean;
   storage: ScopedLocalStorage;
-  relayEventManager: RelayEventManager;
   uiConstructor: (options: Readonly<RelayUIOptions>) => RelayUI;
   diagnosticLogger?: DiagnosticLogger;
   reloadOnDisconnect?: boolean;
-  enableMobileWalletLink?: boolean;
 }
 
 export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnectionUpdateListener {
@@ -73,7 +71,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
     this._session = session;
     this.connection = connection;
 
-    this.relayEventManager = options.relayEventManager;
+    this.relayEventManager = new RelayEventManager();
 
     this.diagnostic = options.diagnosticLogger;
 
@@ -369,7 +367,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
   public sendRequest<
     RequestMethod extends SupportedWeb3Method,
     ResponseMethod extends SupportedWeb3Method = RequestMethod,
-    Response = Web3Response<ResponseMethod>
+    Response = Web3Response<ResponseMethod>,
   >(request: Web3Request<RequestMethod>): CancelablePromise<Response> {
     let hideSnackbarItem: (() => void) | null = null;
     const id = randomBytesHex(8);

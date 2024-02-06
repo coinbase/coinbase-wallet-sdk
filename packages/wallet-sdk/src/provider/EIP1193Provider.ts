@@ -9,23 +9,19 @@ import { standardErrors } from '../core/error';
 import { AddressString } from '../core/type';
 import { areAddressArraysEqual, prepend0x } from '../core/util';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { RelayEventManager } from '../relay/RelayEventManager';
 import { WalletLinkRelayUI } from '../relay/walletlink/ui/WalletLinkRelayUI';
 import { ConnectionType } from '../transport/ConfigMessage';
 import { PopUpCommunicator } from '../transport/PopUpCommunicator';
 import { LIB_VERSION } from '../version';
-import { CoinbaseWalletProviderOptions } from './CoinbaseWalletProvider';
 import { getErrorForInvalidRequestArgs } from './helpers/eip1193Utils';
 import { ProviderInterface, ProviderRpcError, RequestArguments } from './ProviderInterface';
 
-export interface EIP1193ProviderOptions
-  extends Omit<CoinbaseWalletProviderOptions, 'relayProvider'> {
-  reloadOnDisconnect?: boolean;
-  enableMobileWalletLink?: boolean;
-  linkAPIUrl?: string;
+export interface EIP1193ProviderOptions {
+  storage: ScopedLocalStorage;
   popupCommunicator: PopUpCommunicator;
   appName?: string;
   appLogoUrl?: string | null;
+  linkAPIUrl?: string;
 }
 interface DisconnectInfo {
   error: ProviderRpcError;
@@ -46,7 +42,7 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
   // private _options: Readonly<EIP1193ProviderOptions>;
   private _connector: Connector | undefined;
   private _connectionType: string | null;
-  private _chainId: number;
+  private _chainId: number | null = null;
   private _connectionTypeSelectionResolver: ((value: unknown) => void) | undefined;
   constructor(options: Readonly<EIP1193ProviderOptions>) {
     super();
@@ -61,7 +57,6 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
 
     this._appName = options.appName ?? '';
     this._appLogoUrl = options.appLogoUrl ?? null;
-    this._chainId = options.chainId;
     this.connected = false;
     const persistedAccounts = this._getStoredAccounts();
     this._accounts = persistedAccounts;
@@ -105,7 +100,6 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
           darkMode: false,
         }),
       storage: this._storage,
-      relayEventManager: new RelayEventManager(),
     };
 
     this._connector = new WalletLinkConnector({
@@ -116,6 +110,9 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
   }
 
   private get _chainIdStr(): string {
+    if (!this._chainId) {
+      throw new Error('_chainId not set');
+    }
     return prepend0x(this._chainId.toString(16));
   }
 

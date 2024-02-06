@@ -2,7 +2,6 @@
 
 import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
 import { WALLET_USER_NAME_KEY } from '../RelayAbstract';
-import { RelayEventManager } from '../RelayEventManager';
 import { WalletLinkCipher } from './connection/WalletLinkCipher';
 import { WalletLinkConnection } from './connection/WalletLinkConnection';
 import { WalletLinkWebSocket } from './connection/WalletLinkWebSocket';
@@ -20,7 +19,6 @@ describe('WalletLinkRelay', () => {
     version: '0.0.0',
     darkMode: false,
     storage: new ScopedLocalStorage('test'),
-    relayEventManager: new RelayEventManager(),
     uiConstructor: jest.fn(),
   };
 

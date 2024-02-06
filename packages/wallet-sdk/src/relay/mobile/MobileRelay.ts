@@ -11,7 +11,8 @@ export class MobileRelay extends WalletLinkRelay {
 
   constructor(options: Readonly<WalletLinkRelayOptions>) {
     super(options);
-    this._enableMobileWalletLink = options.enableMobileWalletLink ?? false;
+    // TODO: nate remove this whole file when we remove CoinbaseWalletProvider, this is dead code
+    this._enableMobileWalletLink = false;
   }
 
   // override
