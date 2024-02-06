@@ -6,10 +6,10 @@ const ethSendTransaction: RpcRequestInput = {
     { key: 'from', required: true },
     { key: 'to', required: true },
     { key: 'value', required: true },
-    { key: 'gasLimit', required: true },
-    { key: 'gasPriceInWei', required: true },
-    { key: 'maxFeePerGas', required: true },
-    { key: 'maxPriorityFeePerGas', required: true },
+    { key: 'gasLimit', required: false },
+    { key: 'gasPriceInWei', required: false },
+    { key: 'maxFeePerGas', required: false },
+    { key: 'maxPriorityFeePerGas', required: false },
   ],
   format: (data: Record<string, string>) => [
     {
