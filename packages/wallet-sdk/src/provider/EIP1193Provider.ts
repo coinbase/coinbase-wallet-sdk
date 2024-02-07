@@ -1,7 +1,6 @@
 import EventEmitter from 'eventemitter3';
 
-import { Connector } from '../connector/ConnectorInterface';
-import { KeyStorage } from '../connector/scw/protocol/key/KeyStorage';
+import { Connector, ConnectorUpdateListener } from '../connector/ConnectorInterface';
 import { SCWConnector } from '../connector/scw/SCWConnector';
 import { WalletLinkConnector } from '../connector/walletlink/WalletLinkConnector';
 import { LINK_API_URL } from '../core/constants';
@@ -27,11 +26,19 @@ interface DisconnectInfo {
   error: ProviderRpcError;
 }
 
+type Chain = {
+  id: number;
+  rpcUrl: string;
+};
+
 const ACCOUNTS_KEY = 'accounts';
 const CONNECTION_TYPE_KEY = 'connectionType';
-const CHAIN_ID_KEY = 'chainId';
+const CHAIN_STORAGE_KEY = 'Provider:chain';
 
-export class EIP1193Provider extends EventEmitter implements ProviderInterface {
+export class EIP1193Provider
+  extends EventEmitter
+  implements ProviderInterface, ConnectorUpdateListener
+{
   private _storage: ScopedLocalStorage;
   private _popupCommunicator: PopUpCommunicator;
 
@@ -41,10 +48,10 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
   private _appLogoUrl: string | null = null;
   private _connector: Connector | undefined;
   private _connectionType: string | null;
+  private _chain: Chain | undefined;
   private _connectionTypeSelectionResolver: ((value: unknown) => void) | undefined;
-  // private jsonRpcUrl: string;
+  // TODO: clean this up. utilize _chain being optional
   private hasMadeFirstChainChangedEmission: boolean = false;
-  private _chainId: number = 1;
 
   constructor(options: Readonly<EIP1193ProviderOptions>) {
     super();
@@ -62,6 +69,7 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
     this.connected = false;
     const persistedAccounts = this._getStoredAccounts();
     this._accounts = persistedAccounts;
+    this._chain = this._getStoredChain();
     const persistedConnectionType = this._storage.getItem(CONNECTION_TYPE_KEY);
     this._connectionType = persistedConnectionType;
     if (persistedConnectionType) {
@@ -69,8 +77,8 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
     }
 
     this._setConnectionType = this._setConnectionType.bind(this);
-    this._updateProviderInfo = this._updateProviderInfo.bind(this);
     this._initWalletLinkConnector = this._initWalletLinkConnector.bind(this);
+    this.onChainChanged = this.onChainChanged.bind(this);
   }
 
   private _initConnector = () => {
@@ -87,7 +95,8 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
       appName: this._appName,
       appLogoUrl: this._appLogoUrl,
       puc: this._popupCommunicator,
-      keyStorage: new KeyStorage(this._storage),
+      storage: this._storage,
+      updateListener: this,
     });
   }
 
@@ -111,25 +120,30 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
       puc: this._popupCommunicator,
       _connectionTypeSelectionResolver: this._connectionTypeSelectionResolver,
       _accounts: this._accounts,
-      _updateProviderInfo: this._updateProviderInfo,
+      updateListener: this,
     });
   }
 
-  private _updateProviderInfo({ chainId }: { jsonRpcUrl: string; chainId: number }) {
-    const originalChainId = this._chainId;
+  // ConnectorUpdateListener methods
+
+  onChainChanged(_: Connector, chainId: number, rpcUrl: string): void {
+    const originalChainId = this._chain?.id;
     const chainChanged = chainId !== originalChainId;
+
     if (this._connector && (chainChanged || !this.hasMadeFirstChainChangedEmission)) {
-      this._storage.setItem(CHAIN_ID_KEY, chainId.toString(10));
+      const chain = { id: chainId, rpcUrl };
+      this._chain = chain;
+      this._storage.setItem(CHAIN_STORAGE_KEY, JSON.stringify(chain));
       this.emit('chainChanged', this._chainIdStr);
       this.hasMadeFirstChainChangedEmission = true;
     }
   }
 
   private get _chainIdStr(): string {
-    if (!this._chainId) {
-      throw new Error('_chainId not set');
+    if (!this._chain) {
+      return '1';
     }
-    return prepend0x(this._chainId.toString(16));
+    return prepend0x(this._chain.id.toString(16));
   }
 
   private _emitConnectEvent() {
@@ -175,6 +189,8 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
     return new Promise<T>((resolve, reject) => {
       try {
         switch (request.method) {
+          case 'eth_chainId':
+            return resolve(this._chain?.id as T);
           case 'eth_accounts':
             return resolve(this._eth_accounts() as T);
           case 'eth_requestAccounts':
@@ -300,5 +316,10 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
       console.error('Error retrieving accounts from storage:', error);
       return [];
     }
+  }
+
+  private _getStoredChain(): Chain | undefined {
+    const storedChain = this._storage.getItem(CHAIN_STORAGE_KEY);
+    return storedChain ? JSON.parse(storedChain) : undefined;
   }
 }

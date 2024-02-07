@@ -2,5 +2,8 @@ import { ActionResult } from './ActionResult';
 
 export type SCWResponse<T> = {
   result: ActionResult<T>; // JSON-RPC result
-  data?: unknown;
+  data?: {
+    // optional data
+    chains?: { [key: number]: string };
+  };
 };

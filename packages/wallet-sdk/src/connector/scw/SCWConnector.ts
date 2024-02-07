@@ -1,8 +1,9 @@
 import { AddressString } from '../../core/type';
+import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
 import { RequestArguments } from '../../provider/ProviderInterface';
 import { PopUpCommunicator } from '../../transport/PopUpCommunicator';
 import { LIB_VERSION } from '../../version';
-import { Connector } from '../ConnectorInterface';
+import { Connector, ConnectorUpdateListener } from '../ConnectorInterface';
 import { exportKeyToHexString, importKeyFromHexString } from './protocol/key/Cipher';
 import { KeyStorage } from './protocol/key/KeyStorage';
 import {
@@ -14,25 +15,36 @@ import {
 import { Action, SupportedEthereumMethods } from './protocol/type/Action';
 import { SCWResponse } from './protocol/type/Response';
 
+const AVAILABLE_CHAINS_STORAGE_KEY = 'SCW:availableChains';
+
 export class SCWConnector implements Connector {
   private appName: string;
   private appLogoUrl: string | null;
   // TODO: handle chainId
   private activeChainId = 1;
+  private availableChains?: { [key: number]: string };
 
   private puc: PopUpCommunicator;
+  private storage: ScopedLocalStorage;
   private keyStorage: KeyStorage;
+  private updateListener: ConnectorUpdateListener;
 
   constructor(options: {
     appName: string;
     appLogoUrl: string | null;
     puc: PopUpCommunicator;
-    keyStorage: KeyStorage;
+    storage: ScopedLocalStorage;
+    updateListener: ConnectorUpdateListener;
   }) {
     this.appName = options.appName;
     this.appLogoUrl = options.appLogoUrl;
     this.puc = options.puc;
-    this.keyStorage = options.keyStorage;
+    this.storage = options.storage;
+    this.keyStorage = new KeyStorage(this.storage);
+    this.availableChains = this.loadAvailableChains();
+    this.updateListener = options.updateListener;
+    this.handshake = this.handshake.bind(this);
+    this.request = this.request.bind(this);
     this.createRequestMessage = this.createRequestMessage.bind(this);
     this.decryptResponseMessage = this.decryptResponseMessage.bind(this);
   }
@@ -69,6 +81,8 @@ export class SCWConnector implements Connector {
       throw result.error;
     }
 
+    this.handleAvailableChainsUpdate(decrypted.data?.chains);
+
     return result.value;
   }
 
@@ -100,6 +114,13 @@ export class SCWConnector implements Connector {
 
     if ('error' in result) {
       throw result.error;
+    }
+
+    if (
+      request.method === 'wallet_switchEthereumChain' ||
+      request.method === 'wallet_addEthereumChain'
+    ) {
+      this.handleAvailableChainsUpdate(decrypted.data?.chains);
     }
 
     return result.value;
@@ -134,5 +155,27 @@ export class SCWConnector implements Connector {
     }
 
     return decryptContent(content.encrypted, sharedSecret);
+  }
+
+  private handleAvailableChainsUpdate(chains: { [key: number]: string } | undefined) {
+    if (!chains) return;
+
+    this.availableChains = chains;
+
+    const chainsJson = JSON.stringify(chains);
+    this.storage.setItem(AVAILABLE_CHAINS_STORAGE_KEY, chainsJson);
+
+    // TODO: handle active chain
+    this.updateListener.onChainChanged(this, 1, this.getRpcUrl(1) || 'http://asdfasdf');
+  }
+
+  private getRpcUrl(chainId: number): string | undefined {
+    return this.availableChains?.[chainId];
+  }
+
+  private loadAvailableChains(): { [key: number]: string } | undefined {
+    const chainsJson = this.storage.getItem(AVAILABLE_CHAINS_STORAGE_KEY);
+    if (!chainsJson) return undefined;
+    return JSON.parse(chainsJson);
   }
 }

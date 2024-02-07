@@ -20,7 +20,7 @@ import { isErrorResponse, Web3Response } from '../../relay/walletlink/type/Web3R
 import { WalletLinkRelay, WalletLinkRelayOptions } from '../../relay/walletlink/WalletLinkRelay';
 import { PopUpCommunicator } from '../../transport/PopUpCommunicator';
 import eip712 from '../../vendor-js/eth-eip712-util';
-import { Connector } from '../ConnectorInterface';
+import { Connector, ConnectorUpdateListener } from '../ConnectorInterface';
 
 // For now this is just a wrapper around the legacy WalletLinkRelay
 export class WalletLinkConnector implements Connector {
@@ -31,26 +31,20 @@ export class WalletLinkConnector implements Connector {
   private _connectionTypeSelectionResolver: ((value: unknown) => void) | undefined;
   private _accounts: AddressString[] = [];
   private _chainId: number | undefined;
-  private _updateProviderInfo: ({
-    jsonRpcUrl,
-    chainId,
-  }: {
-    jsonRpcUrl: string;
-    chainId: number;
-  }) => void;
+  private updateListener: ConnectorUpdateListener;
 
   constructor({
     legacyRelayOptions,
     puc,
     _connectionTypeSelectionResolver,
     _accounts,
-    _updateProviderInfo,
+    updateListener,
   }: {
     legacyRelayOptions: Readonly<WalletLinkRelayOptions>;
     puc: PopUpCommunicator;
     _connectionTypeSelectionResolver: ((value: unknown) => void) | undefined;
     _accounts: AddressString[];
-    _updateProviderInfo: ({ jsonRpcUrl, chainId }: { jsonRpcUrl: string; chainId: number }) => void;
+    updateListener: ConnectorUpdateListener;
   }) {
     this.legacyRelay = new WalletLinkRelay(legacyRelayOptions);
     this.puc = puc;
@@ -61,7 +55,7 @@ export class WalletLinkConnector implements Connector {
     this.legacyRelay.setChainCallback(this.chainCallback);
     this.legacyRelay.setDappDefaultChainCallback(this.dappDefaultChain);
     this._accounts = _accounts;
-    this._updateProviderInfo = _updateProviderInfo;
+    this.updateListener = updateListener;
   }
 
   public async handshake(): Promise<AddressString[]> {
@@ -75,7 +69,7 @@ export class WalletLinkConnector implements Connector {
   // The callback triggered by QR Code Scanning
   private async chainCallback(chainId: string, rpcUrl: string) {
     this._chainId = parseInt(chainId, 10);
-    this._updateProviderInfo({ jsonRpcUrl: rpcUrl, chainId: this._chainId });
+    this.updateListener.onChainChanged(this, this._chainId, rpcUrl);
     // as soon as qr code is scanned, resolve hanging selection type promise
     // since we never get a response for that in the case of walletlink
     this._connectionTypeSelectionResolver?.('walletlink');
@@ -431,7 +425,7 @@ export class WalletLinkConnector implements Connector {
     if (isErrorResponse(res)) return false;
 
     if (res.result?.isApproved === true) {
-      this._updateProviderInfo({ jsonRpcUrl: rpcUrls[0], chainId });
+      this.updateListener.onChainChanged(this, chainId, rpcUrls[0]);
     }
 
     return res.result?.isApproved === true;
@@ -464,7 +458,7 @@ export class WalletLinkConnector implements Connector {
 
     const switchResponse = res.result;
     if (switchResponse.isApproved && switchResponse.rpcUrl.length > 0) {
-      this._updateProviderInfo({ jsonRpcUrl: switchResponse.rpcUrl, chainId });
+      this.updateListener.onChainChanged(this, chainId, switchResponse.rpcUrl);
     }
   }
 }
