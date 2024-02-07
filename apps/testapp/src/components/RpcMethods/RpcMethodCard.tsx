@@ -42,7 +42,7 @@ export function RpcMethodCard({ connected, format, method, params, shortcuts }) 
   const verify = useCallback(async (response: ResponseType, data: Record<string, string>) => {
     const verifyResult = verifySignMsg({
       method,
-      from: data.address,
+      from: data.address?.toLowerCase(),
       sign: response,
       message: data.message,
     });

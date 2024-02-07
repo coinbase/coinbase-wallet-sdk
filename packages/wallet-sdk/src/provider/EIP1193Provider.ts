@@ -29,9 +29,9 @@ interface DisconnectInfo {
 
 const ACCOUNTS_KEY = 'accounts';
 const CONNECTION_TYPE_KEY = 'connectionType';
+const CHAIN_ID_KEY = 'chainId';
 
 export class EIP1193Provider extends EventEmitter implements ProviderInterface {
-  // private _oldProvider!: CoinbaseWalletProvider;
   private _storage: ScopedLocalStorage;
   private _popupCommunicator: PopUpCommunicator;
 
@@ -39,11 +39,13 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
   private _accounts: AddressString[];
   private _appName = '';
   private _appLogoUrl: string | null = null;
-  // private _options: Readonly<EIP1193ProviderOptions>;
   private _connector: Connector | undefined;
   private _connectionType: string | null;
-  private _chainId: number | null = null;
   private _connectionTypeSelectionResolver: ((value: unknown) => void) | undefined;
+  // private jsonRpcUrl: string;
+  private hasMadeFirstChainChangedEmission: boolean = false;
+  private _chainId: number = 1;
+
   constructor(options: Readonly<EIP1193ProviderOptions>) {
     super();
     this._storage = options.storage;
@@ -67,6 +69,8 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
     }
 
     this._setConnectionType = this._setConnectionType.bind(this);
+    this._updateProviderInfo = this._updateProviderInfo.bind(this);
+    this._initWalletLinkConnector = this._initWalletLinkConnector.bind(this);
   }
 
   private _initConnector = () => {
@@ -106,7 +110,19 @@ export class EIP1193Provider extends EventEmitter implements ProviderInterface {
       legacyRelayOptions,
       puc: this._popupCommunicator,
       _connectionTypeSelectionResolver: this._connectionTypeSelectionResolver,
+      _accounts: this._accounts,
+      _updateProviderInfo: this._updateProviderInfo,
     });
+  }
+
+  private _updateProviderInfo({ chainId }: { jsonRpcUrl: string; chainId: number }) {
+    const originalChainId = this._chainId;
+    const chainChanged = chainId !== originalChainId;
+    if (this._connector && (chainChanged || !this.hasMadeFirstChainChangedEmission)) {
+      this._storage.setItem(CHAIN_ID_KEY, chainId.toString(10));
+      this.emit('chainChanged', this._chainIdStr);
+      this.hasMadeFirstChainChangedEmission = true;
+    }
   }
 
   private get _chainIdStr(): string {

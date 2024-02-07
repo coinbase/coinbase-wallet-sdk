@@ -53,7 +53,7 @@ export interface CoinbaseWalletProviderOptions {
   diagnosticLogger?: DiagnosticLogger;
 }
 
-interface AddEthereumChainParams {
+export interface AddEthereumChainParams {
   chainId: string;
   blockExplorerUrls?: string[];
   chainName?: string;
@@ -66,7 +66,7 @@ interface AddEthereumChainParams {
   };
 }
 
-interface SwitchEthereumChainParams {
+export interface SwitchEthereumChainParams {
   chainId: string;
 }
 
