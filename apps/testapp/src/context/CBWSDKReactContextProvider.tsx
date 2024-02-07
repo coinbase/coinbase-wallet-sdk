@@ -31,7 +31,6 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
   useEffect(() => {
     const cbwsdk = new CoinbaseWalletSDK({
       appName: 'SDK Playground',
-      enableMobileWalletLink: true, // beta feature
       scwUrl: scwURL,
     });
     setSdk(cbwsdk);
