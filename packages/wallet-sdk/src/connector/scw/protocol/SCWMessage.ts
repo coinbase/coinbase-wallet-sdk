@@ -32,7 +32,7 @@ export interface SCWResponseMessage extends SCWMessage {
         encrypted: EncryptedData;
       }
     | {
-        error: Error;
+        failure: Error;
       };
 }
 

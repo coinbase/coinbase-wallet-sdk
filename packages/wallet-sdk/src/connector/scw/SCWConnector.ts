@@ -54,8 +54,8 @@ export class SCWConnector implements Connector {
     const response = (await this.puc.request(handshakeMessage)) as SCWResponseMessage;
 
     // throw protocol level error
-    if ('error' in response.content) {
-      throw response.content.error;
+    if ('failure' in response.content) {
+      throw response.content.failure;
     }
 
     // take the peer's public key and store it
@@ -111,8 +111,8 @@ export class SCWConnector implements Connector {
     const content = message.content;
 
     // throw protocol level error
-    if ('error' in content) {
-      throw content.error;
+    if ('failure' in content) {
+      throw content.failure;
     }
 
     const sharedSecret = await this.keyStorage.getSharedSecret();

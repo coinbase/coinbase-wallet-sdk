@@ -18,6 +18,7 @@ export type RequestAccountsAction = {
     dappName: string;
     dappLogoUrl: string | null;
     dappOrigin?: string;
+    chainIds?: number[];
   };
 };
 
