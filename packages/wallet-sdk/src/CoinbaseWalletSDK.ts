@@ -128,6 +128,7 @@ export class CoinbaseWalletSDK {
       void extension.close();
     } else {
       this._relay?.resetAndReload();
+      this._storage.clear();
     }
   }
 
