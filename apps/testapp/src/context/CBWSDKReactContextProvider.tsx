@@ -34,7 +34,7 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
       scwUrl: scwURL,
     });
     setSdk(cbwsdk);
-    const cbwprovider = cbwsdk.makeWeb3Provider('http');
+    const cbwprovider = cbwsdk.makeWeb3Provider();
     setProvider(cbwprovider);
   }, [scwURL]);
 
