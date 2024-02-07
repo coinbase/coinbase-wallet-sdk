@@ -28,7 +28,15 @@ export abstract class CrossDomainCommunicator {
   }
 
   protected peerWindow: Window | null = null;
-  protected postMessage(message: Message) {
-    this.peerWindow?.postMessage(message, this.url?.origin ?? '*');
+  protected postMessage(message: Message, options?: { bypassTargetOriginCheck: boolean }) {
+    let targetOrigin = this.url?.origin;
+    if (targetOrigin === undefined) {
+      if (options?.bypassTargetOriginCheck) {
+        targetOrigin = '*';
+      } else {
+        throw new Error('No target origin');
+      }
+    }
+    this.peerWindow?.postMessage(message, targetOrigin);
   }
 }
