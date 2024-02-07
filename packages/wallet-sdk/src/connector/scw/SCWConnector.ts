@@ -34,7 +34,7 @@ export class SCWConnector implements Connector {
     this.puc = options.puc;
     this.keyStorage = options.keyStorage;
     this.createRequestMessage = this.createRequestMessage.bind(this);
-    this.decodeResponseMessage = this.decodeResponseMessage.bind(this);
+    this.decryptResponseMessage = this.decryptResponseMessage.bind(this);
   }
 
   public async handshake(): Promise<AddressString[]> {
@@ -62,7 +62,14 @@ export class SCWConnector implements Connector {
     const peerPublicKey = await importKeyFromHexString('public', response.sender);
     await this.keyStorage.setPeerPublicKey(peerPublicKey);
 
-    return this.decodeResponseMessage<AddressString[]>(response);
+    const decrypted = await this.decryptResponseMessage<AddressString[]>(response);
+    const result = decrypted.result;
+
+    if ('error' in result) {
+      throw result.error;
+    }
+
+    return result.value;
   }
 
   public async request<T>(request: RequestArguments): Promise<T> {
@@ -87,10 +94,15 @@ export class SCWConnector implements Connector {
     );
     const message = await this.createRequestMessage({ encrypted });
 
-    return this.puc
-      .request(message)
-      .then((response) => response as SCWResponseMessage)
-      .then(this.decodeResponseMessage<T>);
+    const response = (await this.puc.request(message)) as SCWResponseMessage;
+    const decrypted = await this.decryptResponseMessage<T>(response);
+    const result = decrypted.result;
+
+    if ('error' in result) {
+      throw result.error;
+    }
+
+    return result.value;
   }
 
   private async createRequestMessage(
@@ -107,7 +119,7 @@ export class SCWConnector implements Connector {
     };
   }
 
-  private async decodeResponseMessage<T>(message: SCWResponseMessage): Promise<T> {
+  private async decryptResponseMessage<T>(message: SCWResponseMessage): Promise<SCWResponse<T>> {
     const content = message.content;
 
     // throw protocol level error
@@ -121,14 +133,6 @@ export class SCWConnector implements Connector {
       throw new Error('Invalid session');
     }
 
-    const decrypted: SCWResponse<T> = await decryptContent(content.encrypted, sharedSecret);
-    const result = decrypted.result;
-
-    // check for ActionResult error
-    if ('error' in result) {
-      throw result.error;
-    }
-
-    return result.value;
+    return decryptContent(content.encrypted, sharedSecret);
   }
 }
