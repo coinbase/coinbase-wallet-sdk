@@ -1,5 +1,5 @@
 import { Box, Container, Grid, GridItem, Heading } from '@chakra-ui/react';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { EventListenersCard } from '../components/EventListeners/EventListenersCard';
 import { WIDTH_2XL } from '../components/Layout';
@@ -13,8 +13,18 @@ import { multiChainShortcutsMap } from '../components/RpcMethods/shortcut/multip
 import { sendShortcutsMap } from '../components/RpcMethods/shortcut/sendShortcuts';
 import { ShortcutType } from '../components/RpcMethods/shortcut/ShortcutType';
 import { signMessageShortcutsMap } from '../components/RpcMethods/shortcut/signMessageShortcuts';
+import { useCBWSDK } from '../context/CBWSDKReactContextProvider';
 
 export default function Home() {
+  const { provider } = useCBWSDK();
+  const [connected, setConnected] = React.useState(false);
+
+  useEffect(() => {
+    provider?.on('connect', () => {
+      setConnected(true);
+    });
+  }, [provider]);
+
   return (
     <Container maxW={WIDTH_2XL} mb={8}>
       <Box>
@@ -24,17 +34,21 @@ export default function Home() {
         </Grid>
       </Box>
       <MethodsSection title="Wallet Connection" methods={connectionMethods} />
-      <MethodsSection
-        title="Switch/Add Chain"
-        methods={multiChainMethods}
-        shortcutsMap={multiChainShortcutsMap}
-      />
-      <MethodsSection
-        title="Sign Message"
-        methods={signMessageMethods}
-        shortcutsMap={signMessageShortcutsMap}
-      />
-      <MethodsSection title="Send" methods={sendMethods} shortcutsMap={sendShortcutsMap} />
+      {connected && (
+        <>
+          <MethodsSection
+            title="Switch/Add Chain"
+            methods={multiChainMethods}
+            shortcutsMap={multiChainShortcutsMap}
+          />
+          <MethodsSection
+            title="Sign Message"
+            methods={signMessageMethods}
+            shortcutsMap={signMessageShortcutsMap}
+          />
+          <MethodsSection title="Send" methods={sendMethods} shortcutsMap={sendShortcutsMap} />
+        </>
+      )}
     </Container>
   );
 }
@@ -53,7 +67,11 @@ function MethodsSection({
       <Heading size="md">{title}</Heading>
       <Grid
         mt={2}
-        templateColumns={{ base: '100%', md: 'repeat(2, 50%)', xl: 'repeat(3, 33%)' }}
+        templateColumns={{
+          base: '100%',
+          md: 'repeat(2, 50%)',
+          xl: 'repeat(3, 33%)',
+        }}
         gap={2}
       >
         {methods.map((rpc) => (
