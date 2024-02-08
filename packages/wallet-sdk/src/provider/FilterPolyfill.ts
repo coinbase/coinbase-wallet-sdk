@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import { HexString, IntNumber } from '../core/type';
+import { Callback, HexString, IntNumber } from '../core/type';
 import {
   ensureHexString,
   hexStringFromIntNumber,
@@ -10,7 +10,7 @@ import {
   range,
 } from '../core/util';
 import { JSONRPCRequest, JSONRPCResponse } from '../provider/JSONRPC';
-import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
+import { ProviderInterface } from './ProviderInterface';
 
 const TIMEOUT = 5 * 60 * 1000; // 5 minutes
 const JSONRPC_TEMPLATE: { jsonrpc: '2.0'; id: number } = {
@@ -37,7 +37,7 @@ export interface Filter {
 }
 
 export class FilterPolyfill {
-  private readonly provider: CoinbaseWalletProvider;
+  private readonly provider: ProviderInterface;
   private readonly logFilters = new Map<IntNumber, Filter>(); // <id, filter>
   private readonly blockFilters = new Set<IntNumber>(); // <id>
   private readonly pendingTransactionFilters = new Set<IntNumber>(); // <id, true>
@@ -45,7 +45,7 @@ export class FilterPolyfill {
   private readonly timeouts = new Map<IntNumber, number>(); // <id, setTimeout id>
   private nextFilterId = IntNumber(1);
 
-  constructor(provider: CoinbaseWalletProvider) {
+  constructor(provider: ProviderInterface) {
     this.provider = provider;
   }
 
@@ -117,9 +117,24 @@ export class FilterPolyfill {
     return IntNumber(++this.nextFilterId);
   }
 
+  // to mimic the legacy provider's behavior
+  private async legacySendAsync(request: JSONRPCRequest, callback: Callback<JSONRPCResponse>) {
+    try {
+      const result = await this.provider.request(request);
+      const response = {
+        jsonrpc: '2.0',
+        id: request.id,
+        result,
+      } as JSONRPCResponse;
+      callback(null, response);
+    } catch (err) {
+      callback(err as Error, null);
+    }
+  }
+
   private sendAsyncPromise(request: JSONRPCRequest): Promise<JSONRPCResponse> {
     return new Promise((resolve, reject) => {
-      this.provider.sendAsync(request, (err, response) => {
+      this.legacySendAsync(request, (err, response) => {
         if (err) {
           return reject(err);
         }

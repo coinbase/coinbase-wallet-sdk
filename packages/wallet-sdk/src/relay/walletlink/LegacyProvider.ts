@@ -7,8 +7,8 @@
 import BN from 'bn.js';
 import { EventEmitter } from 'eventemitter3';
 
-import { serializeError, standardErrorCodes, standardErrors } from '../core/error';
-import { AddressString, Callback, HexString, IntNumber } from '../core/type';
+import { serializeError, standardErrorCodes, standardErrors } from '../../core/error';
+import { AddressString, Callback, HexString, IntNumber } from '../../core/type';
 import {
   ensureAddressString,
   ensureBN,
@@ -19,28 +19,27 @@ import {
   ensureRegExpString,
   hexStringFromIntNumber,
   prepend0x,
-} from '../core/util';
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { MobileRelay } from '../relay/mobile/MobileRelay';
-import { LOCAL_STORAGE_ADDRESSES_KEY, RelayAbstract } from '../relay/RelayAbstract';
-import { RelayEventManager } from '../relay/RelayEventManager';
-import { EthereumTransactionParams } from '../relay/walletlink/type/EthereumTransactionParams';
-import { isErrorResponse, Web3Response } from '../relay/walletlink/type/Web3Response';
-import eip712 from '../vendor-js/eth-eip712-util';
-import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
-import { FilterPolyfill } from './FilterPolyfill';
-import { JSONRPCRequest, JSONRPCResponse } from './JSONRPC';
-import { ProviderInterface, RequestArguments } from './ProviderInterface';
+} from '../../core/util';
+import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
+import { DiagnosticLogger, EVENTS } from '../../provider/DiagnosticLogger';
+import { FilterPolyfill } from '../../provider/FilterPolyfill';
+import { JSONRPCRequest, JSONRPCResponse } from '../../provider/JSONRPC';
+import { ProviderInterface, RequestArguments } from '../../provider/ProviderInterface';
 import {
   SubscriptionManager,
   SubscriptionNotification,
   SubscriptionResult,
-} from './SubscriptionManager';
+} from '../../provider/SubscriptionManager';
+import eip712 from '../../vendor-js/eth-eip712-util';
+import { LOCAL_STORAGE_ADDRESSES_KEY, RelayAbstract } from '../RelayAbstract';
+import { RelayEventManager } from '../RelayEventManager';
+import { EthereumTransactionParams } from './type/EthereumTransactionParams';
+import { isErrorResponse, Web3Response } from './type/Web3Response';
 
 const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
 const DEFAULT_JSON_RPC_URL = 'DefaultJsonRpcUrl';
 
-export interface CoinbaseWalletProviderOptions {
+export interface LegacyProviderOptions {
   chainId: number;
   jsonRpcUrl: string;
   qrUrl?: string | null;
@@ -80,7 +79,7 @@ interface WatchAssetParams {
   };
 }
 
-export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
+export class LegacyProvider extends EventEmitter implements ProviderInterface {
   // So dapps can easily identify Coinbase Wallet for enabling features like 3085 network switcher menus
   public readonly isCoinbaseWallet: boolean;
   // So dapps can easily identify Coinbase Dapp Browser for enabling dapp browser specific features
@@ -106,7 +105,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   private hasMadeFirstChainChangedEmission = false;
 
-  constructor(options: Readonly<CoinbaseWalletProviderOptions>) {
+  constructor(options: Readonly<LegacyProviderOptions>) {
     super();
 
     this.setProviderInfo = this.setProviderInfo.bind(this);
@@ -580,7 +579,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     let res: Web3Response<'connectAndSignIn'>;
     try {
       const relay = await this.initializeRelay();
-      if (!(relay instanceof MobileRelay)) {
+      if (!('connectAndSignIn' in relay && typeof relay.connectAndSignIn === 'function')) {
         throw new Error('connectAndSignIn is only supported on mobile');
       }
       res = await relay.connectAndSignIn(params).promise;

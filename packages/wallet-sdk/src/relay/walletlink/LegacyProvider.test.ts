@@ -1,17 +1,17 @@
 import { fireEvent } from '@testing-library/preact';
 
-import { standardErrorCodes, standardErrors } from '../core/error';
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from '../mocks/fixtures';
-import { MockRelayClass } from '../mocks/relay';
-import { LOCAL_STORAGE_ADDRESSES_KEY } from '../relay/RelayAbstract';
-import { RelayEventManager } from '../relay/RelayEventManager';
-import { CoinbaseWalletProvider, CoinbaseWalletProviderOptions } from './CoinbaseWalletProvider';
+import { standardErrorCodes, standardErrors } from '../../core/error';
+import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
+import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from '../../mocks/fixtures';
+import { MockRelayClass } from '../../mocks/relay';
+import { LOCAL_STORAGE_ADDRESSES_KEY } from '../RelayAbstract';
+import { RelayEventManager } from '../RelayEventManager';
+import { LegacyProvider, LegacyProviderOptions } from './LegacyProvider';
 
-const storage = new ScopedLocalStorage('CoinbaseWalletProvider');
+const storage = new ScopedLocalStorage('LegacyProvider');
 
-const setupCoinbaseWalletProvider = (options: Partial<CoinbaseWalletProviderOptions> = {}) => {
-  return new CoinbaseWalletProvider({
+const setupLegacyProvider = (options: Partial<LegacyProviderOptions> = {}) => {
+  return new LegacyProvider({
     chainId: 1,
     jsonRpcUrl: 'http://test.ethnode.com',
     qrUrl: null,
@@ -41,18 +41,18 @@ const mockSuccessfulFetchResponse = () => {
   });
 };
 
-describe('CoinbaseWalletProvider', () => {
+describe('LegacyProvider', () => {
   afterEach(() => {
     storage.clear();
   });
 
   it('instantiates', () => {
-    const provider = setupCoinbaseWalletProvider();
-    expect(provider).toBeInstanceOf(CoinbaseWalletProvider);
+    const provider = setupLegacyProvider();
+    expect(provider).toBeInstanceOf(LegacyProvider);
   });
 
   it('gives provider info', () => {
-    const provider = setupCoinbaseWalletProvider();
+    const provider = setupLegacyProvider();
     expect(provider.selectedAddress).toBe(undefined);
     expect(provider.networkVersion).toBe('1');
     expect(provider.chainId).toBe('0x1');
@@ -67,25 +67,25 @@ describe('CoinbaseWalletProvider', () => {
 
   it('handles setting provider info', () => {
     const url = 'https://new.jsonRpcUrl.com';
-    const provider = setupCoinbaseWalletProvider();
+    const provider = setupLegacyProvider();
     provider.setProviderInfo(url, 1);
     expect(provider.host).toBe(url);
   });
 
   it('handles setting the app info', () => {
-    const provider = setupCoinbaseWalletProvider();
+    const provider = setupLegacyProvider();
     provider.setAppInfo('Test Dapp', null);
     expect(provider.host).toBe('http://test.ethnode.com');
   });
 
   it('handles setting disable reload on disconnect flag', () => {
-    const provider = setupCoinbaseWalletProvider();
+    const provider = setupLegacyProvider();
     provider.disableReloadOnDisconnect();
     expect(provider.reloadOnDisconnect).toBe(false);
   });
 
   it('handles subscriptions', () => {
-    const provider = setupCoinbaseWalletProvider();
+    const provider = setupLegacyProvider();
     expect(provider.supportsSubscriptions()).toBe(false);
 
     expect(() => {
@@ -98,7 +98,7 @@ describe('CoinbaseWalletProvider', () => {
   });
 
   it('handles enabling the provider successfully', async () => {
-    const provider = setupCoinbaseWalletProvider();
+    const provider = setupLegacyProvider();
     const response = await provider.enable();
     expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
   });
@@ -107,7 +107,7 @@ describe('CoinbaseWalletProvider', () => {
     const spy = jest.spyOn(MockRelayClass.prototype, 'resetAndReload');
     const relay = new MockRelayClass();
 
-    const provider = setupCoinbaseWalletProvider({
+    const provider = setupLegacyProvider({
       relayProvider: async () => Promise.resolve(relay),
     });
     await provider.close();
@@ -115,12 +115,12 @@ describe('CoinbaseWalletProvider', () => {
   });
 
   it('handles disconnect', () => {
-    const provider = setupCoinbaseWalletProvider();
+    const provider = setupLegacyProvider();
     expect(provider.disconnect()).toBe(true);
   });
 
   it('handles making generic requests successfully', async () => {
-    const provider = setupCoinbaseWalletProvider();
+    const provider = setupLegacyProvider();
     const data = {
       from: MOCK_ADDERESS,
       to: MOCK_ADDERESS,
@@ -131,13 +131,13 @@ describe('CoinbaseWalletProvider', () => {
   });
 
   it('handles making a send with a string param', async () => {
-    const provider = setupCoinbaseWalletProvider();
+    const provider = setupLegacyProvider();
     const response = await provider.send('eth_requestAccounts');
     expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
   });
 
   it('handles making a rpc request', async () => {
-    const provider = setupCoinbaseWalletProvider();
+    const provider = setupLegacyProvider();
     const response = await provider.request<string[]>({
       method: 'eth_requestAccounts',
     });
@@ -146,7 +146,7 @@ describe('CoinbaseWalletProvider', () => {
 
   it('handles making a send with a rpc request', async () => {
     const mockCallback = jest.fn();
-    const provider = setupCoinbaseWalletProvider();
+    const provider = setupLegacyProvider();
     await provider.send(
       {
         jsonrpc: '2.0',
@@ -166,7 +166,7 @@ describe('CoinbaseWalletProvider', () => {
   });
 
   it('handles making a sendAsync with a string param', async () => {
-    const provider = setupCoinbaseWalletProvider();
+    const provider = setupLegacyProvider();
     const mockCallback = jest.fn();
     await provider.sendAsync(
       {
@@ -194,7 +194,7 @@ describe('CoinbaseWalletProvider', () => {
         result: 'Success',
       }),
     });
-    const provider = setupCoinbaseWalletProvider({
+    const provider = setupLegacyProvider({
       relayProvider: async () => {
         return Promise.resolve(relay);
       },
@@ -210,7 +210,7 @@ describe('CoinbaseWalletProvider', () => {
   });
 
   it("does NOT update the providers address on a postMessage's 'addressesChanged' event", () => {
-    const provider = setupCoinbaseWalletProvider();
+    const provider = setupLegacyProvider();
 
     // @ts-expect-error _addresses is private
     expect(provider._addresses).toEqual([]);
@@ -246,7 +246,7 @@ describe('CoinbaseWalletProvider', () => {
         result: { foo: 'bar' },
       }),
     });
-    const provider = setupCoinbaseWalletProvider({
+    const provider = setupLegacyProvider({
       relayProvider: async () => {
         return Promise.resolve(relay);
       },
@@ -269,7 +269,7 @@ describe('CoinbaseWalletProvider', () => {
       cancel: () => {},
       promise: Promise.reject(new Error('rejected')),
     });
-    const provider = setupCoinbaseWalletProvider({
+    const provider = setupLegacyProvider({
       storage: new ScopedLocalStorage('reject-info'),
       relayProvider: async () => {
         return Promise.resolve(relay);
@@ -288,7 +288,7 @@ describe('CoinbaseWalletProvider', () => {
       cancel: () => {},
       promise: Promise.reject(new Error('Unknown')),
     });
-    const provider = setupCoinbaseWalletProvider({
+    const provider = setupLegacyProvider({
       storage: new ScopedLocalStorage('unknown-error'),
       relayProvider: async () => {
         return Promise.resolve(relay);
@@ -302,7 +302,7 @@ describe('CoinbaseWalletProvider', () => {
   });
 
   it('returns the users address on future eth_requestAccounts calls', async () => {
-    const provider = setupCoinbaseWalletProvider();
+    const provider = setupLegacyProvider();
     // Set the account on the first request
     const response1 = await provider.request<string[]>({
       method: 'eth_requestAccounts',
@@ -322,7 +322,7 @@ describe('CoinbaseWalletProvider', () => {
   it('gets the users address from storage on init', async () => {
     const localStorage = new ScopedLocalStorage('test');
     localStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDERESS.toLowerCase());
-    const provider = setupCoinbaseWalletProvider({
+    const provider = setupLegacyProvider({
       storage: localStorage,
     });
 
@@ -346,7 +346,7 @@ describe('CoinbaseWalletProvider', () => {
         result: { foo: 'bar' },
       }),
     });
-    const provider = setupCoinbaseWalletProvider({
+    const provider = setupLegacyProvider({
       relayProvider: async () => Promise.resolve(relay),
     });
 
@@ -365,7 +365,7 @@ describe('CoinbaseWalletProvider', () => {
         result: 'cbwallet://result',
       }),
     });
-    const provider = setupCoinbaseWalletProvider({
+    const provider = setupLegacyProvider({
       relayProvider: async () => Promise.resolve(relay),
     });
     const result = await provider.scanQRCode(new RegExp('cbwallet://cool'));
@@ -373,12 +373,12 @@ describe('CoinbaseWalletProvider', () => {
   });
 
   describe('RPC Methods', () => {
-    let provider: CoinbaseWalletProvider | null = null;
+    let provider: LegacyProvider | null = null;
     let localStorage: ScopedLocalStorage;
     beforeEach(() => {
       localStorage = new ScopedLocalStorage('test');
       localStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDERESS.toLowerCase());
-      provider = setupCoinbaseWalletProvider({
+      provider = setupLegacyProvider({
         storage: localStorage,
       });
     });
@@ -670,7 +670,7 @@ describe('CoinbaseWalletProvider', () => {
         cancel: () => {},
         promise: Promise.reject(standardErrors.provider.unsupportedChain()),
       });
-      const localProvider = setupCoinbaseWalletProvider({
+      const localProvider = setupLegacyProvider({
         relayProvider: () => Promise.resolve(relay),
       });
 

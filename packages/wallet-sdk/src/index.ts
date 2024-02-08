@@ -2,11 +2,10 @@
 // Licensed under the Apache License, version 2.0
 
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
-import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
 import { EIP1193Provider } from './provider/EIP1193Provider';
+import { LegacyProviderInterface, ProviderInterface } from './provider/ProviderInterface';
 
 export { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
-export { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
 export default CoinbaseWalletSDK;
 
 declare global {
@@ -16,8 +15,8 @@ declare global {
     /**
      * For CoinbaseWalletSDK, window.ethereum is `CoinbaseWalletProvider`
      */
-    ethereum?: any;
-    coinbaseWalletExtension?: CoinbaseWalletProvider;
+    ethereum?: ProviderInterface;
+    coinbaseWalletExtension?: LegacyProviderInterface;
   }
 }
 

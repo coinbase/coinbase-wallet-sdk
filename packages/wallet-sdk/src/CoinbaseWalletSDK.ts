@@ -5,9 +5,8 @@ import { LogoType, walletLogo } from './assets/wallet-logo';
 import { LINK_API_URL } from './core/constants';
 import { getFavicon } from './core/util';
 import { ScopedLocalStorage } from './lib/ScopedLocalStorage';
-import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
 import { EIP1193Provider } from './provider/EIP1193Provider';
-import { ProviderInterface } from './provider/ProviderInterface';
+import { LegacyProviderInterface, ProviderInterface } from './provider/ProviderInterface';
 import { WalletLinkRelay } from './relay/walletlink/WalletLinkRelay';
 import { PopUpCommunicator } from './transport/PopUpCommunicator';
 import { LIB_VERSION } from './version';
@@ -149,11 +148,11 @@ export class CoinbaseWalletSDK {
     return walletLogo(type, width);
   }
 
-  private get walletExtension(): CoinbaseWalletProvider | undefined {
+  private get walletExtension(): LegacyProviderInterface | undefined {
     return window.coinbaseWalletExtension;
   }
 
-  private get coinbaseBrowser(): CoinbaseWalletProvider | undefined {
+  private get coinbaseBrowser(): LegacyProviderInterface | undefined {
     try {
       // Coinbase DApp browser does not inject into iframes so grab provider from top frame if it exists
       const ethereum = (window as any).ethereum ?? (window as any).top?.ethereum;
@@ -170,7 +169,7 @@ export class CoinbaseWalletSDK {
     }
   }
 
-  private isCipherProvider(provider: CoinbaseWalletProvider): boolean {
+  private isCipherProvider(provider: LegacyProviderInterface): boolean {
     // @ts-expect-error isCipher walletlink property
     return typeof provider.isCipher === 'boolean' && provider.isCipher;
   }

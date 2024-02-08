@@ -1,8 +1,8 @@
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { CoinbaseWalletProvider } from '../provider/CoinbaseWalletProvider';
 import { RelayEventManager } from '../relay/RelayEventManager';
+import { LegacyProvider } from '../relay/walletlink/LegacyProvider';
 
-export const mockExtensionProvider = new CoinbaseWalletProvider({
+export const mockExtensionProvider = new LegacyProvider({
   chainId: 1,
   jsonRpcUrl: 'jsonrpc-url',
   overrideIsMetaMask: false,

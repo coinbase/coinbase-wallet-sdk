@@ -5,8 +5,7 @@ import type {
 import { PollingBlockTracker } from 'eth-block-tracker';
 import { EventEmitter } from 'eventemitter3';
 
-import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
-import { RequestArguments } from './ProviderInterface';
+import { ProviderInterface, RequestArguments } from './ProviderInterface';
 
 // TODO: When we update this package we should be able to fix this
 //  eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -29,7 +28,7 @@ export class SubscriptionManager {
   private readonly subscriptionMiddleware: SubscriptionMiddleware;
   readonly events: EventEmitter;
 
-  constructor(provider: CoinbaseWalletProvider) {
+  constructor(provider: ProviderInterface) {
     const blockTracker = new PollingBlockTracker({
       provider: provider as unknown as never,
       pollingInterval: 15_000,

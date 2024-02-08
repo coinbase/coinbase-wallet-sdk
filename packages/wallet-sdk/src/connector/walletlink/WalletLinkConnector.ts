@@ -9,12 +9,12 @@ import {
   ensureIntNumber,
   ensureParsedJSONObject,
 } from '../../core/util';
+import { JSONRPCResponse } from '../../provider/JSONRPC';
+import { RequestArguments } from '../../provider/ProviderInterface';
 import {
   AddEthereumChainParams,
   SwitchEthereumChainParams,
-} from '../../provider/CoinbaseWalletProvider';
-import { JSONRPCResponse } from '../../provider/JSONRPC';
-import { RequestArguments } from '../../provider/ProviderInterface';
+} from '../../relay/walletlink/LegacyProvider';
 import { EthereumTransactionParams } from '../../relay/walletlink/type/EthereumTransactionParams';
 import { isErrorResponse, Web3Response } from '../../relay/walletlink/type/Web3Response';
 import { WalletLinkRelay, WalletLinkRelayOptions } from '../../relay/walletlink/WalletLinkRelay';
