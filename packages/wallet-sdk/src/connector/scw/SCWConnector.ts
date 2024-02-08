@@ -1,9 +1,12 @@
+import { standardErrors } from '../../core/error';
 import { AddressString } from '../../core/type';
+import { ensureIntNumber } from '../../core/util';
 import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
 import { RequestArguments } from '../../provider/ProviderInterface';
 import { PopUpCommunicator } from '../../transport/PopUpCommunicator';
 import { LIB_VERSION } from '../../version';
 import { Connector, ConnectorUpdateListener } from '../ConnectorInterface';
+import { ChainManager } from './ChainManager';
 import { exportKeyToHexString, importKeyFromHexString } from './protocol/key/Cipher';
 import { KeyStorage } from './protocol/key/KeyStorage';
 import {
@@ -12,22 +15,21 @@ import {
   SCWRequestMessage,
   SCWResponseMessage,
 } from './protocol/SCWMessage';
-import { Action, SupportedEthereumMethods } from './protocol/type/Action';
+import {
+  Action,
+  SupportedEthereumMethods,
+  SwitchEthereumChainAction,
+} from './protocol/type/Action';
 import { SCWResponse } from './protocol/type/Response';
-
-const AVAILABLE_CHAINS_STORAGE_KEY = 'SCW:availableChains';
 
 export class SCWConnector implements Connector {
   private appName: string;
   private appLogoUrl: string | null;
-  // TODO: handle chainId
-  private activeChainId = 1;
-  private availableChains?: { [key: number]: string };
 
   private puc: PopUpCommunicator;
   private storage: ScopedLocalStorage;
   private keyStorage: KeyStorage;
-  private updateListener: ConnectorUpdateListener;
+  private chainManager: ChainManager;
 
   constructor(options: {
     appName: string;
@@ -41,8 +43,10 @@ export class SCWConnector implements Connector {
     this.puc = options.puc;
     this.storage = options.storage;
     this.keyStorage = new KeyStorage(this.storage);
-    this.availableChains = this.loadAvailableChains();
-    this.updateListener = options.updateListener;
+    this.chainManager = new ChainManager(this.storage, (chain) =>
+      options.updateListener.onChainChanged(this, chain)
+    );
+
     this.handshake = this.handshake.bind(this);
     this.request = this.request.bind(this);
     this.createRequestMessage = this.createRequestMessage.bind(this);
@@ -50,7 +54,6 @@ export class SCWConnector implements Connector {
   }
 
   public async handshake(): Promise<AddressString[]> {
-    // TODO
     await this.puc.connect();
 
     const handshakeMessage = await this.createRequestMessage({
@@ -62,36 +65,57 @@ export class SCWConnector implements Connector {
         },
       },
     });
-
     const response = (await this.puc.request(handshakeMessage)) as SCWResponseMessage;
 
-    // throw protocol level error
-    if ('failure' in response.content) {
-      throw response.content.failure;
-    }
-
-    // take the peer's public key and store it
+    // store peer's public key
+    if ('failure' in response.content) throw response.content.failure;
     const peerPublicKey = await importKeyFromHexString('public', response.sender);
     await this.keyStorage.setPeerPublicKey(peerPublicKey);
 
     const decrypted = await this.decryptResponseMessage<AddressString[]>(response);
+    this.updateInternalState({ method: SupportedEthereumMethods.EthRequestAccounts }, decrypted);
+
     const result = decrypted.result;
-
-    if ('error' in result) {
-      throw result.error;
-    }
-
-    this.handleAvailableChainsUpdate(decrypted.data?.chains);
-
+    if ('error' in result) throw result.error;
     return result.value;
   }
 
   public async request<T>(request: RequestArguments): Promise<T> {
-    // TODO: this check makes sense, but connected isn't set properly so it prevents
-    // need to investigate
-    // if (!this.puc.connected) {
+    const localResult = this.tryLocalHandling<T>(request);
+    if (localResult !== undefined) {
+      if (localResult instanceof Error) throw localResult;
+      return localResult;
+    }
+
+    const response = await this.sendEncryptedRequest(request);
+    const decrypted = await this.decryptResponseMessage<T>(response);
+    this.updateInternalState(request, decrypted);
+
+    const result = decrypted.result;
+    if ('error' in result) throw result.error;
+    return result.value;
+  }
+
+  private tryLocalHandling<T>(request: RequestArguments): T | undefined {
+    switch (request.method) {
+      case SupportedEthereumMethods.WalletSwitchEthereumChain: {
+        const params = request.params as SwitchEthereumChainAction['params'];
+        if (!params || !params[0]?.chainId) {
+          throw standardErrors.rpc.invalidParams();
+        }
+        const chainId = ensureIntNumber(params[0].chainId);
+        const switched = this.chainManager.switchChain(chainId);
+        // "return null if the request was successful"
+        // https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
+        return switched ? (null as T) : undefined;
+      }
+      default:
+        return undefined;
+    }
+  }
+
+  private async sendEncryptedRequest(request: RequestArguments): Promise<SCWResponseMessage> {
     await this.puc.connect();
-    // }
 
     const sharedSecret = await this.keyStorage.getSharedSecret();
     if (!sharedSecret) {
@@ -102,28 +126,14 @@ export class SCWConnector implements Connector {
     const encrypted = await encryptContent(
       {
         action: request as Action,
-        chainId: this.activeChainId,
+        chainId: this.chainManager.activeChain.id,
       },
       sharedSecret
     );
     const message = await this.createRequestMessage({ encrypted });
 
     const response = (await this.puc.request(message)) as SCWResponseMessage;
-    const decrypted = await this.decryptResponseMessage<T>(response);
-    const result = decrypted.result;
-
-    if ('error' in result) {
-      throw result.error;
-    }
-
-    if (
-      request.method === 'wallet_switchEthereumChain' ||
-      request.method === 'wallet_addEthereumChain'
-    ) {
-      this.handleAvailableChainsUpdate(decrypted.data?.chains);
-    }
-
-    return result.value;
+    return response;
   }
 
   private async createRequestMessage(
@@ -157,25 +167,28 @@ export class SCWConnector implements Connector {
     return decryptContent(content.encrypted, sharedSecret);
   }
 
-  private handleAvailableChainsUpdate(chains: { [key: number]: string } | undefined) {
-    if (!chains) return;
+  private updateInternalState<T>(request: RequestArguments, response: SCWResponse<T>) {
+    switch (request.method) {
+      case SupportedEthereumMethods.EthRequestAccounts:
+      case SupportedEthereumMethods.WalletAddEthereumChain:
+        this.chainManager.updateAvailableChains(response.data?.chains);
+        break;
+      case SupportedEthereumMethods.WalletSwitchEthereumChain: {
+        this.chainManager.updateAvailableChains(response.data?.chains);
 
-    this.availableChains = chains;
+        const result = response.result;
+        if ('error' in result) return;
+        // "return null if the request was successful"
+        // https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
+        if (result.value !== null) return;
 
-    const chainsJson = JSON.stringify(chains);
-    this.storage.setItem(AVAILABLE_CHAINS_STORAGE_KEY, chainsJson);
-
-    // TODO: handle active chain
-    this.updateListener.onChainChanged(this, 1, this.getRpcUrl(1) || 'http://asdfasdf');
-  }
-
-  private getRpcUrl(chainId: number): string | undefined {
-    return this.availableChains?.[chainId];
-  }
-
-  private loadAvailableChains(): { [key: number]: string } | undefined {
-    const chainsJson = this.storage.getItem(AVAILABLE_CHAINS_STORAGE_KEY);
-    if (!chainsJson) return undefined;
-    return JSON.parse(chainsJson);
+        const params = request.params as SwitchEthereumChainAction['params'];
+        const chainId = ensureIntNumber(params[0].chainId);
+        this.chainManager.switchChain(chainId);
+        break;
+      }
+      default:
+        break;
+    }
   }
 }

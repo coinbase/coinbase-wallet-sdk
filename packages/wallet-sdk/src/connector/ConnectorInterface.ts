@@ -6,6 +6,11 @@ export interface Connector {
   request<T>(request: RequestArguments): Promise<T>;
 }
 
+export type Chain = {
+  id: number;
+  rpcUrl?: string;
+};
+
 export interface ConnectorUpdateListener {
-  onChainChanged(connector: Connector, chainId: number, rpcUrl: string): void;
+  onChainChanged(connector: Connector, chain: Chain): void;
 }

@@ -1,6 +1,6 @@
 import EventEmitter from 'eventemitter3';
 
-import { Connector, ConnectorUpdateListener } from '../connector/ConnectorInterface';
+import { Chain, Connector, ConnectorUpdateListener } from '../connector/ConnectorInterface';
 import { SCWConnector } from '../connector/scw/SCWConnector';
 import { WalletLinkConnector } from '../connector/walletlink/WalletLinkConnector';
 import { LINK_API_URL } from '../core/constants';
@@ -26,14 +26,8 @@ interface DisconnectInfo {
   error: ProviderRpcError;
 }
 
-type Chain = {
-  id: number;
-  rpcUrl: string;
-};
-
 const ACCOUNTS_KEY = 'accounts';
 const CONNECTION_TYPE_KEY = 'connectionType';
-const CHAIN_STORAGE_KEY = 'Provider:chain';
 
 export class EIP1193Provider
   extends EventEmitter
@@ -48,10 +42,10 @@ export class EIP1193Provider
   private _appLogoUrl: string | null = null;
   private _connector: Connector | undefined;
   private _connectionType: string | null;
-  private _chain: Chain | undefined;
+  private _chain: Chain = {
+    id: 1,
+  };
   private _connectionTypeSelectionResolver: ((value: unknown) => void) | undefined;
-  // TODO: clean this up. utilize _chain being optional
-  private hasMadeFirstChainChangedEmission: boolean = false;
 
   constructor(options: Readonly<EIP1193ProviderOptions>) {
     super();
@@ -69,7 +63,6 @@ export class EIP1193Provider
     this.connected = false;
     const persistedAccounts = this._getStoredAccounts();
     this._accounts = persistedAccounts;
-    this._chain = this._getStoredChain();
     const persistedConnectionType = this._storage.getItem(CONNECTION_TYPE_KEY);
     this._connectionType = persistedConnectionType;
     if (persistedConnectionType) {
@@ -124,32 +117,19 @@ export class EIP1193Provider
     });
   }
 
-  // ConnectorUpdateListener methods
-
-  onChainChanged(_: Connector, chainId: number, rpcUrl: string): void {
-    const originalChainId = this._chain?.id;
-    const chainChanged = chainId !== originalChainId;
-
-    if (this._connector && (chainChanged || !this.hasMadeFirstChainChangedEmission)) {
-      const chain = { id: chainId, rpcUrl };
-      this._chain = chain;
-      this._storage.setItem(CHAIN_STORAGE_KEY, JSON.stringify(chain));
-      this.emit('chainChanged', this._chainIdStr);
-      this.hasMadeFirstChainChangedEmission = true;
+  onChainChanged(_: Connector, chain: Chain): void {
+    // if (connector !== this._connector) return; // ignore events from inactive connectors
+    if (chain.id !== this._chain.id) {
+      this.emit('chainChanged', prepend0x(chain.id.toString(16)));
     }
-  }
 
-  private get _chainIdStr(): string {
-    if (!this._chain) {
-      return '1';
-    }
-    return prepend0x(this._chain.id.toString(16));
+    this._chain = chain;
   }
 
   private _emitConnectEvent() {
     this.connected = true;
     // https://eips.ethereum.org/EIPS/eip-1193#connect
-    this.emit('connect', { chainId: this._chainIdStr });
+    this.emit('connect', { chainId: prepend0x(this._chain.id.toString(16)) });
   }
 
   public async request<T>(args: RequestArguments): Promise<T> {
@@ -232,6 +212,7 @@ export class EIP1193Provider
 
   private async _eth_requestAccounts(): Promise<AddressString[]> {
     if (this._accounts.length > 0) {
+      this._emitConnectEvent();
       return Promise.resolve(this._accounts);
     }
     if (!this._connectionType) {
@@ -316,10 +297,5 @@ export class EIP1193Provider
       console.error('Error retrieving accounts from storage:', error);
       return [];
     }
-  }
-
-  private _getStoredChain(): Chain | undefined {
-    const storedChain = this._storage.getItem(CHAIN_STORAGE_KEY);
-    return storedChain ? JSON.parse(storedChain) : undefined;
   }
 }

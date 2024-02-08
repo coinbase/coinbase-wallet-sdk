@@ -10,6 +10,9 @@ export enum SupportedEthereumMethods {
   EthSignTypedDataV1 = 'eth_signTypedData_v1',
   EthSignTypedDataV3 = 'eth_signTypedData_v3',
   EthSignTypedDataV4 = 'eth_signTypedData_v4',
+  // Chain
+  WalletSwitchEthereumChain = 'wallet_switchEthereumChain',
+  WalletAddEthereumChain = 'wallet_addEthereumChain',
 }
 
 export type RequestAccountsAction = {
@@ -99,6 +102,31 @@ export type SendRawTransactionAction = {
   };
 };
 
+export type SwitchEthereumChainAction = {
+  method: SupportedEthereumMethods.WalletSwitchEthereumChain;
+  params: [
+    {
+      chainId: string;
+    },
+  ];
+};
+
+export type AddEthereumChainAction = {
+  method: SupportedEthereumMethods.WalletAddEthereumChain;
+  params: {
+    chainId: string;
+    blockExplorerUrls?: string[];
+    chainName?: string;
+    iconUrls?: string[];
+    nativeCurrency?: {
+      name: string;
+      symbol: string;
+      decimals: number;
+    };
+    rpcUrls?: string[];
+  };
+};
+
 export type AllAction =
   | RequestAccountsAction
   | SignAction
@@ -108,7 +136,9 @@ export type AllAction =
   | SignTypedDataV4Action
   | SignTransactionAction
   | SendTransactionAction
-  | SendRawTransactionAction;
+  | SendRawTransactionAction
+  | SwitchEthereumChainAction
+  | AddEthereumChainAction;
 
 export type Action = {
   method: SupportedEthereumMethods;

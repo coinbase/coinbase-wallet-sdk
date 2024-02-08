@@ -69,7 +69,10 @@ export class WalletLinkConnector implements Connector {
   // The callback triggered by QR Code Scanning
   private async chainCallback(chainId: string, rpcUrl: string) {
     this._chainId = parseInt(chainId, 10);
-    this.updateListener.onChainChanged(this, this._chainId, rpcUrl);
+    this.updateListener.onChainChanged(this, {
+      id: this._chainId,
+      rpcUrl,
+    });
     // as soon as qr code is scanned, resolve hanging selection type promise
     // since we never get a response for that in the case of walletlink
     this._connectionTypeSelectionResolver?.('walletlink');
@@ -425,7 +428,10 @@ export class WalletLinkConnector implements Connector {
     if (isErrorResponse(res)) return false;
 
     if (res.result?.isApproved === true) {
-      this.updateListener.onChainChanged(this, chainId, rpcUrls[0]);
+      this.updateListener.onChainChanged(this, {
+        id: chainId,
+        rpcUrl: rpcUrls[0],
+      });
     }
 
     return res.result?.isApproved === true;
@@ -458,7 +464,10 @@ export class WalletLinkConnector implements Connector {
 
     const switchResponse = res.result;
     if (switchResponse.isApproved && switchResponse.rpcUrl.length > 0) {
-      this.updateListener.onChainChanged(this, chainId, switchResponse.rpcUrl);
+      this.updateListener.onChainChanged(this, {
+        id: chainId,
+        rpcUrl: switchResponse.rpcUrl,
+      });
     }
   }
 }
