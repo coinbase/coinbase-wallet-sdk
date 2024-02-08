@@ -127,6 +127,10 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     });
   }
 
+  walletLinkQrScanned() {
+    this.postClientConfigMessage(ClientConfigEventType.WalletLinkQrScanned);
+  }
+
   private postClientConfigMessage(type: ClientConfigEventType) {
     const configMessage: ConfigMessage = {
       type: 'config',

@@ -12,6 +12,7 @@ export enum ClientConfigEventType {
   SelectConnectionType = 'selectConnectionType',
   DappOriginMessage = 'dappOriginMessage',
   WalletLinkUrl = 'walletLinkUrl',
+  WalletLinkQrScanned = 'walletLinkQrScanned',
 }
 
 export enum HostConfigEventType {

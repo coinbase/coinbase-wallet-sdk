@@ -18,7 +18,6 @@ import {
 import { EthereumTransactionParams } from '../../relay/walletlink/type/EthereumTransactionParams';
 import { isErrorResponse, Web3Response } from '../../relay/walletlink/type/Web3Response';
 import { WalletLinkRelay, WalletLinkRelayOptions } from '../../relay/walletlink/WalletLinkRelay';
-import { PopUpCommunicator } from '../../transport/PopUpCommunicator';
 import eip712 from '../../vendor-js/eth-eip712-util';
 import { Connector, ConnectorUpdateListener } from '../ConnectorInterface';
 
@@ -26,7 +25,6 @@ import { Connector, ConnectorUpdateListener } from '../ConnectorInterface';
 export class WalletLinkConnector implements Connector {
   legacyRelay: WalletLinkRelay;
   private resolveHandshake?: (accounts: AddressString[]) => void;
-  private puc: PopUpCommunicator;
   private dappDefaultChain = 1;
   private _connectionTypeSelectionResolver: ((value: unknown) => void) | undefined;
   private _accounts: AddressString[] = [];
@@ -35,19 +33,16 @@ export class WalletLinkConnector implements Connector {
 
   constructor({
     legacyRelayOptions,
-    puc,
     _connectionTypeSelectionResolver,
     _accounts,
     updateListener,
   }: {
     legacyRelayOptions: Readonly<WalletLinkRelayOptions>;
-    puc: PopUpCommunicator;
     _connectionTypeSelectionResolver: ((value: unknown) => void) | undefined;
     _accounts: AddressString[];
     updateListener: ConnectorUpdateListener;
   }) {
     this.legacyRelay = new WalletLinkRelay(legacyRelayOptions);
-    this.puc = puc;
     this._connectionTypeSelectionResolver = _connectionTypeSelectionResolver;
     this.accountsCallback = this.accountsCallback.bind(this);
     this.chainCallback = this.chainCallback.bind(this);
@@ -60,9 +55,6 @@ export class WalletLinkConnector implements Connector {
 
   public async handshake(): Promise<AddressString[]> {
     const accounts = await this._eth_requestAccounts();
-    // TODO: nate - send message to scw-fe and allow fe to show success
-    // and gracefully close the popup
-    this.puc.disconnect(); // temporary 'solution' for closing popup
     return accounts;
   }
 

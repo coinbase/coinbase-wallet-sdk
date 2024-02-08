@@ -110,7 +110,6 @@ export class EIP1193Provider
 
     this._connector = new WalletLinkConnector({
       legacyRelayOptions,
-      puc: this._popupCommunicator,
       _connectionTypeSelectionResolver: this._connectionTypeSelectionResolver,
       _accounts: this._accounts,
       updateListener: this,
@@ -229,6 +228,9 @@ export class EIP1193Provider
     try {
       const ethAddresses = await this._connector?.handshake();
       if (Array.isArray(ethAddresses)) {
+        if (this._connectionType === 'walletlink') {
+          this._popupCommunicator.walletLinkQrScanned();
+        }
         this._setAccounts(ethAddresses);
         this._emitConnectEvent();
         return Promise.resolve(this._accounts);
