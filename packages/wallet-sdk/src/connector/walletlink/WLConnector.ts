@@ -1,7 +1,7 @@
 import { AddressString } from '../../core/type';
 import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
 import { RequestArguments } from '../../provider/ProviderInterface';
-import { WLRelayAdapter, WLRelayUpdateListener } from '../../relay/walletlink/LegacyProvider';
+import { WLRelayAdapter, WLRelayUpdateListener } from '../../relay/walletlink/WLRelayAdapter';
 import { Chain, Connector, ConnectorUpdateListener } from '../ConnectorInterface';
 
 export class WLConnector implements Connector, WLRelayUpdateListener {

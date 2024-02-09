@@ -5,7 +5,7 @@ import { LogoType, walletLogo } from './assets/wallet-logo';
 import { LINK_API_URL } from './core/constants';
 import { getFavicon } from './core/util';
 import { ScopedLocalStorage } from './lib/ScopedLocalStorage';
-import { EIP1193Provider } from './provider/EIP1193Provider';
+import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
 import { LegacyProviderInterface, ProviderInterface } from './provider/ProviderInterface';
 import { WalletLinkRelay } from './relay/walletlink/WalletLinkRelay';
 import { PopUpCommunicator } from './transport/PopUpCommunicator';
@@ -64,7 +64,7 @@ export class CoinbaseWalletSDK {
    * @param chainId Ethereum Chain ID (Default: 1)
    * @returns A Web3 Provider
    */
-  public makeWeb3Provider(jsonRpcUrl = '', chainId = 1): EIP1193Provider | ProviderInterface {
+  public makeWeb3Provider(jsonRpcUrl = '', chainId = 1): CoinbaseWalletProvider | ProviderInterface {
     const extension = this.walletExtension;
     if (extension) {
       if (!this.isCipherProvider(extension)) {
@@ -89,7 +89,7 @@ export class CoinbaseWalletSDK {
       throw new Error('Storage not initialized, should never happen');
     }
 
-    return new EIP1193Provider({
+    return new CoinbaseWalletProvider({
       storage: this._storage,
       linkAPIUrl: this.linkAPIUrl,
       popupCommunicator: this.popupCommunicator,

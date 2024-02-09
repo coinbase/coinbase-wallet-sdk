@@ -2,7 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
-import { EIP1193Provider } from './provider/EIP1193Provider';
+import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
 import { LegacyProviderInterface, ProviderInterface } from './provider/ProviderInterface';
 
 export { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
@@ -11,7 +11,7 @@ export default CoinbaseWalletSDK;
 declare global {
   interface Window {
     CoinbaseWalletSDK: typeof CoinbaseWalletSDK;
-    CoinbaseWalletProvider: typeof EIP1193Provider;
+    CoinbaseWalletProvider: typeof CoinbaseWalletProvider;
     /**
      * For CoinbaseWalletSDK, window.ethereum is `CoinbaseWalletProvider`
      */
@@ -22,5 +22,5 @@ declare global {
 
 if (typeof window !== 'undefined') {
   window.CoinbaseWalletSDK = CoinbaseWalletSDK;
-  window.CoinbaseWalletProvider = EIP1193Provider;
+  window.CoinbaseWalletProvider = CoinbaseWalletProvider;
 }

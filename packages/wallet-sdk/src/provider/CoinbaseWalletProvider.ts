@@ -13,7 +13,7 @@ import { PopUpCommunicator } from '../transport/PopUpCommunicator';
 import { getErrorForInvalidRequestArgs } from './helpers/eip1193Utils';
 import { ProviderInterface, ProviderRpcError, RequestArguments } from './ProviderInterface';
 
-export interface EIP1193ProviderOptions {
+interface ConstructorOptions {
   storage: ScopedLocalStorage;
   popupCommunicator: PopUpCommunicator;
   appName?: string;
@@ -27,7 +27,7 @@ interface DisconnectInfo {
 const ACCOUNTS_KEY = 'accounts';
 const CONNECTION_TYPE_KEY = 'connectionType';
 
-export class EIP1193Provider
+export class CoinbaseWalletProvider
   extends EventEmitter
   implements ProviderInterface, ConnectorUpdateListener
 {
@@ -45,7 +45,7 @@ export class EIP1193Provider
   };
   private _connectionTypeSelectionResolver: ((value: unknown) => void) | undefined;
 
-  constructor(options: Readonly<EIP1193ProviderOptions>) {
+  constructor(options: Readonly<ConstructorOptions>) {
     super();
     this._storage = options.storage;
     this._popupCommunicator = options.popupCommunicator;

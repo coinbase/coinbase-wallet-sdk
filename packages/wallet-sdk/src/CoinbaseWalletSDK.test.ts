@@ -1,8 +1,8 @@
 // eslint-disable-next-line max-classes-per-file
 
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
-import { mockExtensionProvider } from './mocks/provider';
-import { EIP1193Provider } from './provider/EIP1193Provider';
+import { mockProvider } from './mocks/provider';
+import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
 
 describe('CoinbaseWalletSDK', () => {
   describe('initialize', () => {
@@ -30,7 +30,7 @@ describe('CoinbaseWalletSDK', () => {
 
     describe('sdk', () => {
       test('@makeWeb3Provider', () => {
-        expect(coinbaseWalletSDK2.makeWeb3Provider()).toBeInstanceOf(EIP1193Provider);
+        expect(coinbaseWalletSDK2.makeWeb3Provider()).toBeInstanceOf(CoinbaseWalletProvider);
       });
 
       // TODO: nate re-enable these tests
