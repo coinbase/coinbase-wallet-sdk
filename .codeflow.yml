@@ -9,9 +9,3 @@ build:
       compute_type: BUILD_GENERAL1_SMALL
       context: "./"
       autobuild: true
-  - BaldurNode:
-      name: package-scw-sdk-host
-      path: "./scripts/publish-canary-host.Dockerfile"
-      compute_type: BUILD_GENERAL1_SMALL
-      context: "./"
-      autobuild: true

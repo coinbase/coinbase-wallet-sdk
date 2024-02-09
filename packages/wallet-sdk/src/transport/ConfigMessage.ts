@@ -20,6 +20,7 @@ export enum HostConfigEventType {
   PopupReadyForRequest = 'popupReadyForRequest',
   ConnectionTypeSelected = 'connectionTypeSelected',
   RequestWalletLinkUrl = 'requestWalletLinkUrl',
+  PopupUnload = 'popupUnload',
   ClosePopup = 'closePopup',
 }
 

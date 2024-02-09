@@ -4,7 +4,8 @@ import EventEmitter from 'eventemitter3';
 import { Chain, Connector, ConnectorUpdateListener } from '../connector/ConnectorInterface';
 import { SCWConnector } from '../connector/scw/SCWConnector';
 import { WLConnector } from '../connector/walletlink/WLConnector';
-import { standardErrors } from '../core/error';
+import { standardErrorCodes, standardErrors } from '../core/error';
+import { SerializedEthereumRpcError } from '../core/error/utils';
 import { AddressString } from '../core/type';
 import { areAddressArraysEqual, prepend0x } from '../core/util';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
@@ -153,7 +154,9 @@ export class CoinbaseWalletProvider
   }
 
   private _showDeprecationWarning(oldMethod: string, newMethod: string): void {
-    console.warn(`EIP1193Provider: ${oldMethod} is deprecated. Please use ${newMethod} instead.`);
+    console.warn(
+      `CoinbaseWalletProvider: ${oldMethod} is deprecated. Please use ${newMethod} instead.`
+    );
   }
 
   private async _handleRequest<T>(request: RequestArguments): Promise<T> {
@@ -189,7 +192,14 @@ export class CoinbaseWalletProvider
       );
     }
 
-    return await this._connector.request(request);
+    try {
+      return await this._connector.request(request);
+    } catch (err) {
+      if ((err as SerializedEthereumRpcError).code === standardErrorCodes.provider.unauthorized) {
+        this.disconnect();
+      }
+      throw err;
+    }
   }
 
   private _eth_accounts(): AddressString[] {
@@ -227,7 +237,7 @@ export class CoinbaseWalletProvider
         this._emitConnectEvent();
         return Promise.resolve(this._accounts);
       }
-      return Promise.reject(new Error('Accounts must be an array of addresses'));
+      return Promise.reject(standardErrors.rpc.internal('Failed to get accounts'));
     } catch (err: any) {
       // TODO: remove this. we don't need this.
       if (typeof err.message === 'string' && err.message.match(/(denied|rejected)/i)) {
@@ -250,7 +260,9 @@ export class CoinbaseWalletProvider
   private getWalletLinkUrl() {
     this._initWalletLinkConnector();
     if (!(this._connector instanceof WLConnector)) {
-      throw new Error('Connector not initialized or Connector.getWalletLinkUrl not defined');
+      throw standardErrors.rpc.internal(
+        'Connector not initialized or Connector.getWalletLinkUrl not defined'
+      );
     }
     return this._connector.getQRCodeUrl();
   }

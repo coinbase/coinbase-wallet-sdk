@@ -1,4 +1,5 @@
-import { standardErrors } from '../../core/error';
+import { standardErrorCodes, standardErrors } from '../../core/error';
+import { SerializedEthereumRpcError } from '../../core/error/utils';
 import { AddressString } from '../../core/type';
 import { ensureIntNumber } from '../../core/util';
 import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
@@ -54,7 +55,9 @@ export class SCWConnector implements Connector {
   }
 
   public async handshake(): Promise<AddressString[]> {
-    await this.puc.connect();
+    if (!this.puc.connected) {
+      await this.puc.connect();
+    }
 
     const handshakeMessage = await this.createRequestMessage({
       handshake: {
@@ -88,12 +91,21 @@ export class SCWConnector implements Connector {
     }
 
     const response = await this.sendEncryptedRequest(request);
-    const decrypted = await this.decryptResponseMessage<T>(response);
-    this.updateInternalState(request, decrypted);
 
-    const result = decrypted.result;
-    if ('error' in result) throw result.error;
-    return result.value;
+    try {
+      const decrypted = await this.decryptResponseMessage<T>(response);
+      this.updateInternalState(request, decrypted);
+
+      const result = decrypted.result;
+      if ('error' in result) throw result.error;
+
+      return result.value;
+    } catch (err) {
+      if ((err as SerializedEthereumRpcError).code === standardErrorCodes.provider.unauthorized) {
+        this.keyStorage.resetKeys();
+      }
+      throw err;
+    }
   }
 
   private tryLocalHandling<T>(request: RequestArguments): T | undefined {
@@ -115,12 +127,15 @@ export class SCWConnector implements Connector {
   }
 
   private async sendEncryptedRequest(request: RequestArguments): Promise<SCWResponseMessage> {
-    await this.puc.connect();
+    if (!this.puc.connected) {
+      await this.puc.connect();
+    }
 
     const sharedSecret = await this.keyStorage.getSharedSecret();
     if (!sharedSecret) {
-      // TODO: better error
-      throw new Error('Invalid session');
+      throw standardErrors.provider.unauthorized(
+        'No valid session found, try requestAccounts before other methods'
+      );
     }
 
     const encrypted = await encryptContent(
@@ -160,8 +175,7 @@ export class SCWConnector implements Connector {
 
     const sharedSecret = await this.keyStorage.getSharedSecret();
     if (!sharedSecret) {
-      // TODO: better error
-      throw new Error('Invalid session');
+      throw standardErrors.provider.unauthorized('Invalid session');
     }
 
     return decryptContent(content.encrypted, sharedSecret);

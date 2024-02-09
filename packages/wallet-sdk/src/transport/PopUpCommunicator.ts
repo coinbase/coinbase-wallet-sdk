@@ -1,5 +1,6 @@
 import { UUID } from 'crypto';
 
+import { standardErrors } from '../core/error/errors';
 import {
   ClientConfigEventType,
   ConfigMessage,
@@ -13,8 +14,14 @@ import { CrossDomainCommunicator, Message } from './CrossDomainCommunicator';
 const POPUP_WIDTH = 420;
 const POPUP_HEIGHT = 540;
 
+type Fulfillment = {
+  message: Message;
+  resolve: (_: Message) => void;
+  reject: (_: Error) => void;
+};
+
 export class PopUpCommunicator extends CrossDomainCommunicator {
-  private requestResolutions = new Map<UUID, (_: Message) => void>();
+  private requestMap = new Map<UUID, Fulfillment>();
   // TODO: let's revisit this when we migrate all this to ConnectionConfigurator.
   private _wlQRCodeUrlCallback?: () => string;
 
@@ -31,21 +38,17 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
   protected onConnect(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.resolvePopupReady = resolve;
-      // TODO: understand this better and decide if we need it
-      // if (this.peerWindow) {
-      //   this.closeChildWindow();
-      // }
       this.openFixedSizePopUpWindow();
 
       if (!this.peerWindow) {
-        reject(new Error('No pop up window opened'));
+        reject(standardErrors.rpc.internal('No pop up window opened'));
       }
     });
   }
 
   private respondToWlQRCodeUrlRequest() {
     if (!this._wlQRCodeUrlCallback) {
-      throw new Error(
+      throw standardErrors.rpc.internal(
         'PopUpCommunicator._wlQRCodeUrlCallback not set! make sure .setWLQRCodeUrlCallback is called first'
       );
     }
@@ -74,8 +77,8 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     if (!('requestId' in message)) return;
 
     const requestId = message.requestId as UUID;
-    const resolveFunction = this.requestResolutions.get(requestId);
-    this.requestResolutions.delete(requestId);
+    const resolveFunction = this.requestMap.get(requestId)?.resolve;
+    this.requestMap.delete(requestId);
     resolveFunction?.(message);
   }
 
@@ -105,12 +108,16 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
       case HostConfigEventType.RequestWalletLinkUrl:
         if (!this._connected) return;
         if (!this._wlQRCodeUrlCallback) {
-          throw new Error('PopUpCommunicator._wlQRCodeUrlCallback not set! should never happen');
+          throw standardErrors.rpc.internal(
+            'PopUpCommunicator._wlQRCodeUrlCallback not set! should never happen'
+          );
         }
         this.respondToWlQRCodeUrlRequest();
         break;
+      case HostConfigEventType.PopupUnload:
+        this.disconnect();
+        break;
       case HostConfigEventType.ClosePopup:
-        if (!this._connected) return;
         this.closeChildWindow();
         break;
     }
@@ -119,7 +126,11 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
   selectConnectionType(): Promise<ConnectionType> {
     return new Promise((resolve, reject) => {
       if (!this.peerWindow) {
-        reject(new Error('No pop up window found. Make sure to run .connect() before .send()'));
+        reject(
+          standardErrors.rpc.internal(
+            'No pop up window found. Make sure to run .connect() before .send()'
+          )
+        );
       }
 
       this.resolveConnectionType = resolve;
@@ -146,18 +157,31 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
   request(message: Message): Promise<Message> {
     return new Promise((resolve, reject) => {
       if (!this.peerWindow) {
-        reject(new Error('No pop up window found. Make sure to run .connect() before .send()'));
+        reject(
+          standardErrors.rpc.internal(
+            'No pop up window found. Make sure to run .connect() before .send()'
+          )
+        );
       }
 
       this.postMessage(message);
 
-      this.requestResolutions.set(message.id, resolve);
+      const fulfillment: Fulfillment = {
+        message,
+        resolve,
+        reject,
+      };
+      this.requestMap.set(message.id, fulfillment);
     });
   }
 
   protected onDisconnect() {
+    this._connected = false;
     this.closeChildWindow();
-    this.requestResolutions.clear();
+    this.requestMap.forEach((fulfillment, uuid, map) => {
+      fulfillment.reject(standardErrors.provider.userRejectedRequest('Request rejected'));
+      map.delete(uuid);
+    });
   }
 
   private openFixedSizePopUpWindow() {
@@ -168,7 +192,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     urlParams.append('opener', encodeURIComponent(window.location.href));
 
     if (!this.url) {
-      throw new Error('No url provided in PopUpCommunicator');
+      throw standardErrors.rpc.internal('No url provided in PopUpCommunicator');
     }
     const popupUrl = new URL(this.url);
     popupUrl.search = urlParams.toString();

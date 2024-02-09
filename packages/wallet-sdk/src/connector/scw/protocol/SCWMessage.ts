@@ -1,5 +1,6 @@
 import { UUID } from 'crypto';
 
+import { SerializedEthereumRpcError } from '../../../core/error/utils';
 import { Message } from '../../../transport/CrossDomainCommunicator';
 import { decrypt, encrypt, EncryptedData } from './key/Cipher';
 import { RequestAccountsAction } from './type/Action';
@@ -32,15 +33,31 @@ export interface SCWResponseMessage extends SCWMessage {
         encrypted: EncryptedData;
       }
     | {
-        failure: Error;
+        failure: SerializedEthereumRpcError;
       };
+}
+
+function jsonFriendlyErrorReplacer(_: any, value: any) {
+  if (value instanceof Error) {
+    interface ExtendedError extends Error {
+      code?: string;
+    }
+    const error = value as ExtendedError;
+
+    return {
+      ...(error.code && { code: error.code }),
+      message: error.message,
+    };
+  }
+
+  return value;
 }
 
 export async function encryptContent<T>(
   content: SCWRequest | SCWResponse<T>,
   sharedSecret: CryptoKey
 ): Promise<EncryptedData> {
-  return encrypt(sharedSecret, JSON.stringify(content));
+  return encrypt(sharedSecret, JSON.stringify(content, jsonFriendlyErrorReplacer));
 }
 
 export async function decryptContent<R extends SCWRequest | SCWResponse<U>, U>(

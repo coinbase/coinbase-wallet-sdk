@@ -83,12 +83,8 @@ export function RpcMethodCard({ connected, format, method, params, shortcuts }) 
         setResponse(response);
         verify(response, data);
       } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          const { code, message } = err;
-          setError({ code, message });
-        }
+        const { code, message, data } = err;
+        setError({ code, message, data });
       }
     },
     [provider]

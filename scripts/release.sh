@@ -61,11 +61,6 @@ elif [ "$canaryRelease" == true ]; then
   jq ".version = \"$newVersion\"" package.json > temp.json && \
   mv temp.json package.json
   echo "Canary version updated to $newVersion"
-  if [ "$packageName" == "scw-sdk-host" ]; then
-    echo "Removing dependencies from package.json"
-    jq 'del(.dependencies)' package.json > temp.json && \
-    mv temp.json package.json
-  fi
   yarn install
   yarn build
 else

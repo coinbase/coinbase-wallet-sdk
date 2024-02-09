@@ -1,5 +1,7 @@
 import { UUID } from 'crypto';
 
+import { standardErrors } from '../core/error/errors';
+
 export interface Message {
   type: 'config' | 'scw';
   id: UUID;
@@ -34,7 +36,7 @@ export abstract class CrossDomainCommunicator {
       if (options?.bypassTargetOriginCheck) {
         targetOrigin = '*';
       } else {
-        throw new Error('No target origin');
+        throw standardErrors.rpc.internal('Communicator: No target origin');
       }
     }
     this.peerWindow?.postMessage(message, targetOrigin);
