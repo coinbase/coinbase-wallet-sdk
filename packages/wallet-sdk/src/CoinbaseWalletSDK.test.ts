@@ -1,8 +1,9 @@
 // eslint-disable-next-line max-classes-per-file
 
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
-import { mockProvider } from './mocks/provider';
+import { mockProvider as mockExtensionProvider } from './mocks/provider';
 import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
+import { WalletLinkRelay } from './relay/walletlink/WalletLinkRelay';
 
 describe('CoinbaseWalletSDK', () => {
   describe('initialize', () => {
@@ -102,10 +103,7 @@ describe('CoinbaseWalletSDK', () => {
       });
 
       test('@disconnect', async () => {
-        jest
-          .spyOn(mockExtensionProvider, 'close')
-          // @ts-expect-error expect string instead of void
-          .mockImplementation(() => 'mockClose');
+        jest.spyOn(mockExtensionProvider, 'close').mockImplementation(() => 'mockClose');
         // Calls extension close
         coinbaseWalletSDK2.disconnect();
         expect(await mockExtensionProvider.close()).toBe('mockClose');

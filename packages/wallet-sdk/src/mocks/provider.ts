@@ -1,4 +1,4 @@
-import { ProviderInterface } from '../provider/ProviderInterface';
+import { LegacyProviderInterface } from '../provider/ProviderInterface';
 
 export const mockProvider = {
   request: jest.fn(),
@@ -12,4 +12,9 @@ export const mockProvider = {
   removeListener: jest.fn(),
   off: jest.fn(),
   removeAllListeners: jest.fn(),
-} as ProviderInterface;
+  isCoinbaseWallet: true,
+  isCoinbaseBrowser: false,
+  setAppInfo: jest.fn(),
+  setProviderInfo: jest.fn(),
+  close: jest.fn(),
+} as LegacyProviderInterface;

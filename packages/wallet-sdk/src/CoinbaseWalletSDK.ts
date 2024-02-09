@@ -64,19 +64,12 @@ export class CoinbaseWalletSDK {
    * @param chainId Ethereum Chain ID (Default: 1)
    * @returns A Web3 Provider
    */
-  public makeWeb3Provider(jsonRpcUrl = '', chainId = 1): CoinbaseWalletProvider | ProviderInterface {
+  public makeWeb3Provider(jsonRpcUrl = '', chainId = 1): ProviderInterface {
     const extension = this.walletExtension;
     if (extension) {
       if (!this.isCipherProvider(extension)) {
         extension.setProviderInfo(jsonRpcUrl, chainId);
       }
-
-      if (
-        this._reloadOnDisconnect === false &&
-        typeof extension.disableReloadOnDisconnect === 'function'
-      )
-        extension.disableReloadOnDisconnect();
-
       return extension;
     }
 
@@ -148,13 +141,13 @@ export class CoinbaseWalletSDK {
   private get coinbaseBrowser(): LegacyProviderInterface | undefined {
     try {
       // Coinbase DApp browser does not inject into iframes so grab provider from top frame if it exists
-      const ethereum = (window as any).ethereum ?? (window as any).top?.ethereum;
+      const ethereum = window.ethereum ?? window.top?.ethereum;
       if (!ethereum) {
         return undefined;
       }
 
       if ('isCoinbaseBrowser' in ethereum && ethereum.isCoinbaseBrowser) {
-        return ethereum;
+        return ethereum as LegacyProviderInterface;
       }
       return undefined;
     } catch (e) {

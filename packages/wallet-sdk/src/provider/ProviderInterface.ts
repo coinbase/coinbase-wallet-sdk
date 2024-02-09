@@ -35,5 +35,6 @@ export interface LegacyProviderInterface extends ProviderInterface {
   readonly isCoinbaseWallet: boolean;
   readonly isCoinbaseBrowser: boolean;
   setAppInfo(appName: string, appLogoUrl: string | null): void;
+  setProviderInfo(jsonRpcUrl: string, chainId: number): void;
   close(): void;
 }
