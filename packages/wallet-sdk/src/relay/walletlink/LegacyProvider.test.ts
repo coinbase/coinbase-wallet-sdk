@@ -1,44 +1,33 @@
 import { fireEvent } from '@testing-library/preact';
 
 import { standardErrorCodes, standardErrors } from '../../core/error';
+import { AddressString } from '../../core/type';
 import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
 import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from '../../mocks/fixtures';
 import { MockRelayClass } from '../../mocks/relay';
 import { LOCAL_STORAGE_ADDRESSES_KEY } from '../RelayAbstract';
-import { RelayEventManager } from '../RelayEventManager';
-import { LegacyProvider, LegacyProviderOptions } from './LegacyProvider';
+import { WLRelayAdapter } from './LegacyProvider';
+
+jest.mock('./WalletLinkRelay', () => {
+  return {
+    WalletLinkRelay: MockRelayClass,
+  };
+});
 
 const storage = new ScopedLocalStorage('LegacyProvider');
 
-const setupLegacyProvider = (options: Partial<LegacyProviderOptions> = {}) => {
-  return new LegacyProvider({
-    chainId: 1,
-    jsonRpcUrl: 'http://test.ethnode.com',
-    qrUrl: null,
-    overrideIsCoinbaseWallet: true,
-    overrideIsCoinbaseBrowser: false,
-    overrideIsMetaMask: false,
-    relayEventManager: new RelayEventManager(),
-    relayProvider: async () => Promise.resolve(new MockRelayClass()),
-    storage,
-    ...options,
+const createWLConnectorToRelayAdapter = (options?: {
+  relay?: MockRelayClass;
+  storage?: ScopedLocalStorage;
+}) => {
+  const adapter = new WLRelayAdapter(options?.storage ?? storage, {
+    onAccountsChanged: jest.fn(),
+    onChainChanged: jest.fn(),
   });
-};
-
-const mockSuccessfulFetchResponse = () => {
-  global.fetch = jest.fn().mockImplementationOnce(() => {
-    return new Promise((resolve) => {
-      resolve({
-        ok: true,
-        json: () => ({
-          jsonrpc: '2.0',
-          id: 1,
-          method: 'eth_blockNumber',
-          result: '0x1',
-        }),
-      });
-    });
-  });
+  if (options?.relay) {
+    (adapter as any)._relay = options.relay;
+  }
+  return adapter;
 };
 
 describe('LegacyProvider', () => {
@@ -46,98 +35,28 @@ describe('LegacyProvider', () => {
     storage.clear();
   });
 
-  it('instantiates', () => {
-    const provider = setupLegacyProvider();
-    expect(provider).toBeInstanceOf(LegacyProvider);
-  });
-
-  it('gives provider info', () => {
-    const provider = setupLegacyProvider();
-    expect(provider.selectedAddress).toBe(undefined);
-    expect(provider.networkVersion).toBe('1');
-    expect(provider.chainId).toBe('0x1');
-    expect(provider.isWalletLink).toBe(true);
-    expect(provider.isCoinbaseWallet).toBe(true);
-    expect(provider.isCoinbaseBrowser).toBe(false);
-    expect(provider.isMetaMask).toBe(false);
-    expect(provider.host).toBe('http://test.ethnode.com');
-    expect(provider.connected).toBe(true);
-    expect(provider.isConnected()).toBe(true);
-  });
-
-  it('handles setting provider info', () => {
-    const url = 'https://new.jsonRpcUrl.com';
-    const provider = setupLegacyProvider();
-    provider.setProviderInfo(url, 1);
-    expect(provider.host).toBe(url);
-  });
-
-  it('handles setting the app info', () => {
-    const provider = setupLegacyProvider();
-    provider.setAppInfo('Test Dapp', null);
-    expect(provider.host).toBe('http://test.ethnode.com');
-  });
-
-  it('handles setting disable reload on disconnect flag', () => {
-    const provider = setupLegacyProvider();
-    provider.disableReloadOnDisconnect();
-    expect(provider.reloadOnDisconnect).toBe(false);
-  });
-
-  it('handles subscriptions', () => {
-    const provider = setupLegacyProvider();
-    expect(provider.supportsSubscriptions()).toBe(false);
-
-    expect(() => {
-      provider.subscribe();
-    }).toThrowError('Subscriptions are not supported');
-
-    expect(() => {
-      provider.unsubscribe();
-    }).toThrowError('Subscriptions are not supported');
-  });
-
   it('handles enabling the provider successfully', async () => {
-    const provider = setupLegacyProvider();
-    const response = await provider.enable();
+    const provider = createWLConnectorToRelayAdapter();
+    const response = await provider.request<AddressString[]>({ method: 'eth_requestAccounts' });
     expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
   });
 
   it('handles close', async () => {
     const spy = jest.spyOn(MockRelayClass.prototype, 'resetAndReload');
-    const relay = new MockRelayClass();
 
-    const provider = setupLegacyProvider({
-      relayProvider: async () => Promise.resolve(relay),
-    });
+    const provider = createWLConnectorToRelayAdapter();
     await provider.close();
     expect(spy).toHaveBeenCalled();
   });
 
-  it('handles disconnect', () => {
-    const provider = setupLegacyProvider();
-    expect(provider.disconnect()).toBe(true);
-  });
-
-  it('handles making generic requests successfully', async () => {
-    const provider = setupLegacyProvider();
-    const data = {
-      from: MOCK_ADDERESS,
-      to: MOCK_ADDERESS,
-    };
-    const action = 'cbSignAndSubmit';
-    const response = await provider.genericRequest(data, action);
-    expect(response).toBe('Success');
-  });
-
   it('handles making a send with a string param', async () => {
-    const provider = setupLegacyProvider();
+    const provider = createWLConnectorToRelayAdapter();
     const response = await provider.send('eth_requestAccounts');
     expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
   });
 
   it('handles making a rpc request', async () => {
-    const provider = setupLegacyProvider();
+    const provider = createWLConnectorToRelayAdapter();
     const response = await provider.request<string[]>({
       method: 'eth_requestAccounts',
     });
@@ -146,7 +65,7 @@ describe('LegacyProvider', () => {
 
   it('handles making a send with a rpc request', async () => {
     const mockCallback = jest.fn();
-    const provider = setupLegacyProvider();
+    const provider = createWLConnectorToRelayAdapter();
     await provider.send(
       {
         jsonrpc: '2.0',
@@ -166,7 +85,7 @@ describe('LegacyProvider', () => {
   });
 
   it('handles making a sendAsync with a string param', async () => {
-    const provider = setupLegacyProvider();
+    const provider = createWLConnectorToRelayAdapter();
     const mockCallback = jest.fn();
     await provider.sendAsync(
       {
@@ -185,32 +104,8 @@ describe('LegacyProvider', () => {
     );
   });
 
-  it('handles generic requests successfully', async () => {
-    const relay = new MockRelayClass();
-    jest.spyOn(relay, 'genericRequest').mockReturnValue({
-      cancel: () => {},
-      promise: Promise.resolve({
-        method: 'generic',
-        result: 'Success',
-      }),
-    });
-    const provider = setupLegacyProvider({
-      relayProvider: async () => {
-        return Promise.resolve(relay);
-      },
-    });
-    const data = {
-      from: MOCK_ADDERESS,
-      to: MOCK_ADDERESS,
-    };
-    const action = 'cbSignAndSubmit';
-
-    const result = await provider.genericRequest(data, action);
-    expect(result).toBe('Success');
-  });
-
   it("does NOT update the providers address on a postMessage's 'addressesChanged' event", () => {
-    const provider = setupLegacyProvider();
+    const provider = createWLConnectorToRelayAdapter();
 
     // @ts-expect-error _addresses is private
     expect(provider._addresses).toEqual([]);
@@ -236,47 +131,15 @@ describe('LegacyProvider', () => {
     expect(provider._addresses).toEqual([]);
   });
 
-  it('handles error responses with generic requests', async () => {
-    const relay = new MockRelayClass();
-    jest.spyOn(relay, 'genericRequest').mockReturnValue({
-      cancel: () => {},
-      // @ts-expect-error result should be a string
-      promise: Promise.resolve({
-        method: 'generic',
-        result: { foo: 'bar' },
-      }),
-    });
-    const provider = setupLegacyProvider({
-      relayProvider: async () => {
-        return Promise.resolve(relay);
-      },
-    });
-    const data = {
-      from: MOCK_ADDERESS,
-      to: MOCK_ADDERESS,
-    };
-    const action = 'cbSignAndSubmit';
-
-    await expect(() => provider.genericRequest(data, action)).rejects.toThrowEIPError(
-      standardErrorCodes.rpc.internal,
-      'result was not a string'
-    );
-  });
-
   it('handles user rejecting enable call', async () => {
     const relay = new MockRelayClass();
     jest.spyOn(relay, 'requestEthereumAccounts').mockReturnValue({
       cancel: () => {},
       promise: Promise.reject(new Error('rejected')),
     });
-    const provider = setupLegacyProvider({
-      storage: new ScopedLocalStorage('reject-info'),
-      relayProvider: async () => {
-        return Promise.resolve(relay);
-      },
-    });
+    const provider = createWLConnectorToRelayAdapter({ relay });
 
-    await expect(() => provider.enable()).rejects.toThrowEIPError(
+    await expect(() => provider.request({ method: 'eth_requestAccounts' })).rejects.toThrowEIPError(
       standardErrorCodes.provider.userRejectedRequest,
       'User denied account authorization'
     );
@@ -288,21 +151,16 @@ describe('LegacyProvider', () => {
       cancel: () => {},
       promise: Promise.reject(new Error('Unknown')),
     });
-    const provider = setupLegacyProvider({
-      storage: new ScopedLocalStorage('unknown-error'),
-      relayProvider: async () => {
-        return Promise.resolve(relay);
-      },
-    });
+    const provider = createWLConnectorToRelayAdapter({ relay });
 
-    await expect(() => provider.enable()).rejects.toThrowEIPError(
+    await expect(() => provider.request({ method: 'eth_requestAccounts' })).rejects.toThrowEIPError(
       standardErrorCodes.rpc.internal,
       'Unknown'
     );
   });
 
   it('returns the users address on future eth_requestAccounts calls', async () => {
-    const provider = setupLegacyProvider();
+    const provider = createWLConnectorToRelayAdapter();
     // Set the account on the first request
     const response1 = await provider.request<string[]>({
       method: 'eth_requestAccounts',
@@ -322,7 +180,7 @@ describe('LegacyProvider', () => {
   it('gets the users address from storage on init', async () => {
     const localStorage = new ScopedLocalStorage('test');
     localStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDERESS.toLowerCase());
-    const provider = setupLegacyProvider({
+    const provider = createWLConnectorToRelayAdapter({
       storage: localStorage,
     });
 
@@ -336,49 +194,13 @@ describe('LegacyProvider', () => {
     expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
   });
 
-  it('handles scanning QR code with bad response', async () => {
-    const relay = new MockRelayClass();
-    jest.spyOn(relay, 'scanQRCode').mockReturnValue({
-      cancel: () => {},
-      // @ts-expect-error result should be a string
-      promise: Promise.resolve({
-        method: 'scanQRCode',
-        result: { foo: 'bar' },
-      }),
-    });
-    const provider = setupLegacyProvider({
-      relayProvider: async () => Promise.resolve(relay),
-    });
-
-    await expect(() => provider.scanQRCode(new RegExp('cbwallet://cool'))).rejects.toThrowEIPError(
-      standardErrorCodes.rpc.internal,
-      'result was not a string'
-    );
-  });
-
-  it('handles scanning QR code', async () => {
-    const relay = new MockRelayClass();
-    jest.spyOn(relay, 'scanQRCode').mockReturnValue({
-      cancel: () => {},
-      promise: Promise.resolve({
-        method: 'scanQRCode',
-        result: 'cbwallet://result',
-      }),
-    });
-    const provider = setupLegacyProvider({
-      relayProvider: async () => Promise.resolve(relay),
-    });
-    const result = await provider.scanQRCode(new RegExp('cbwallet://cool'));
-    expect(result).toBe('cbwallet://result');
-  });
-
   describe('RPC Methods', () => {
-    let provider: LegacyProvider | null = null;
+    let provider: WLRelayAdapter | null = null;
     let localStorage: ScopedLocalStorage;
     beforeEach(() => {
       localStorage = new ScopedLocalStorage('test');
       localStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDERESS.toLowerCase());
-      provider = setupLegacyProvider({
+      provider = createWLConnectorToRelayAdapter({
         storage: localStorage,
       });
     });
@@ -414,14 +236,6 @@ describe('LegacyProvider', () => {
         method: 'eth_chainId',
       });
       expect(response).toEqual('0x1');
-    });
-
-    test('eth_uninstallFilter', async () => {
-      const response = await provider?.request<boolean>({
-        method: 'eth_uninstallFilter',
-        params: ['0xb'],
-      });
-      expect(response).toBe(true);
     });
 
     test('eth_requestAccounts', async () => {
@@ -670,9 +484,7 @@ describe('LegacyProvider', () => {
         cancel: () => {},
         promise: Promise.reject(standardErrors.provider.unsupportedChain()),
       });
-      const localProvider = setupLegacyProvider({
-        relayProvider: () => Promise.resolve(relay),
-      });
+      const localProvider = createWLConnectorToRelayAdapter({ relay });
 
       await expect(() => {
         return localProvider.request({
@@ -758,80 +570,6 @@ describe('LegacyProvider', () => {
             ],
           })
       ).rejects.toThrowEIPError(standardErrorCodes.rpc.invalidParams, 'Address is required');
-    });
-
-    test('eth_newFilter', async () => {
-      mockSuccessfulFetchResponse();
-      const response = await provider?.request({
-        method: 'eth_newFilter',
-        params: [
-          {
-            fromBlock: '0xa',
-            toBlock: '0xc',
-            address: MOCK_ADDERESS,
-          },
-        ],
-      });
-      expect(response).toBe('0x2');
-    });
-
-    test('eth_newBlockFilter', async () => {
-      mockSuccessfulFetchResponse();
-      const response = await provider?.request({
-        method: 'eth_newBlockFilter',
-      });
-      expect(response).toBe('0x2');
-    });
-
-    test('eth_newPendingTransactionFilter', async () => {
-      mockSuccessfulFetchResponse();
-      const response = await provider?.request({
-        method: 'eth_newPendingTransactionFilter',
-      });
-      expect(response).toBe('0x2');
-    });
-
-    test('eth_getFilterChanges', async () => {
-      mockSuccessfulFetchResponse();
-      await provider?.request({
-        method: 'eth_newFilter',
-        params: [
-          {
-            fromBlock: '0xa',
-            toBlock: '0xc',
-            address: MOCK_ADDERESS,
-          },
-        ],
-      });
-
-      mockSuccessfulFetchResponse();
-      const response = await provider?.request({
-        method: 'eth_getFilterChanges',
-        params: ['0x2'],
-      });
-
-      expect(response).toEqual([]); // expect empty result
-    });
-
-    test('eth_getFilterLogs', async () => {
-      mockSuccessfulFetchResponse();
-      await provider?.request({
-        method: 'eth_newFilter',
-        params: [
-          {
-            fromBlock: '0xa',
-            toBlock: '0xc',
-            address: MOCK_ADDERESS,
-          },
-        ],
-      });
-
-      mockSuccessfulFetchResponse();
-      const response = await provider?.request({
-        method: 'eth_getFilterLogs',
-        params: ['0x2'],
-      });
-      expect(response).toEqual('0x1');
     });
   });
 });

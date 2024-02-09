@@ -121,6 +121,10 @@ export class MockRelayClass extends RelayAbstract {
     return;
   }
 
+  attachUI() {
+    return;
+  }
+
   get session() {
     return new WalletLinkSession(new ScopedLocalStorage('session-test'));
   }

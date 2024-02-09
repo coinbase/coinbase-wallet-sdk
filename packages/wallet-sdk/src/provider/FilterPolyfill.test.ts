@@ -1,5 +1,5 @@
 import { IntNumber } from '../core/type';
-import { mockExtensionProvider } from '../mocks/provider';
+import { mockProvider } from '../mocks/provider';
 import { FilterPolyfill } from './FilterPolyfill';
 
 describe('FilterPolyfill', () => {
@@ -7,7 +7,7 @@ describe('FilterPolyfill', () => {
 
   beforeEach(() => {
     jest.useFakeTimers();
-    filter = new FilterPolyfill(mockExtensionProvider);
+    filter = new FilterPolyfill(mockProvider);
   });
 
   it('should throttle block height requests', async () => {

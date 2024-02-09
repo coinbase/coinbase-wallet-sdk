@@ -5,54 +5,35 @@
 // Licensed under the Apache License, version 2.0
 
 import BN from 'bn.js';
-import { EventEmitter } from 'eventemitter3';
 
+import { Chain } from '../../connector/ConnectorInterface';
+import { LINK_API_URL } from '../../core/constants';
 import { serializeError, standardErrorCodes, standardErrors } from '../../core/error';
-import { AddressString, Callback, HexString, IntNumber } from '../../core/type';
+import { AddressString, Callback, IntNumber } from '../../core/type';
 import {
   ensureAddressString,
   ensureBN,
   ensureBuffer,
-  ensureHexString,
   ensureIntNumber,
   ensureParsedJSONObject,
-  ensureRegExpString,
   hexStringFromIntNumber,
-  prepend0x,
 } from '../../core/util';
 import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
-import { DiagnosticLogger, EVENTS } from '../../provider/DiagnosticLogger';
-import { FilterPolyfill } from '../../provider/FilterPolyfill';
 import { JSONRPCRequest, JSONRPCResponse } from '../../provider/JSONRPC';
-import { ProviderInterface, RequestArguments } from '../../provider/ProviderInterface';
-import {
-  SubscriptionManager,
-  SubscriptionNotification,
-  SubscriptionResult,
-} from '../../provider/SubscriptionManager';
+import { RequestArguments } from '../../provider/ProviderInterface';
 import eip712 from '../../vendor-js/eth-eip712-util';
-import { LOCAL_STORAGE_ADDRESSES_KEY, RelayAbstract } from '../RelayAbstract';
+import { LIB_VERSION } from '../../version';
+import { LOCAL_STORAGE_ADDRESSES_KEY } from '../RelayAbstract';
 import { RelayEventManager } from '../RelayEventManager';
 import { EthereumTransactionParams } from './type/EthereumTransactionParams';
 import { isErrorResponse, Web3Response } from './type/Web3Response';
+import { WalletLinkRelayUI } from './ui/WalletLinkRelayUI';
+import { WalletLinkRelay } from './WalletLinkRelay';
 
 const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
 const DEFAULT_JSON_RPC_URL = 'DefaultJsonRpcUrl';
 
-export interface LegacyProviderOptions {
-  chainId: number;
-  jsonRpcUrl: string;
-  qrUrl?: string | null;
-  overrideIsCoinbaseWallet?: boolean;
-  overrideIsCoinbaseBrowser?: boolean;
-  overrideIsMetaMask: boolean;
-  relayEventManager: RelayEventManager;
-  relayProvider: () => Promise<RelayAbstract>;
-  storage: ScopedLocalStorage;
-  diagnosticLogger?: DiagnosticLogger;
-}
-
-export interface AddEthereumChainParams {
+interface AddEthereumChainParams {
   chainId: string;
   blockExplorerUrls?: string[];
   chainName?: string;
@@ -65,7 +46,7 @@ export interface AddEthereumChainParams {
   };
 }
 
-export interface SwitchEthereumChainParams {
+interface SwitchEthereumChainParams {
   chainId: string;
 }
 
@@ -79,144 +60,45 @@ interface WatchAssetParams {
   };
 }
 
-export class LegacyProvider extends EventEmitter implements ProviderInterface {
-  // So dapps can easily identify Coinbase Wallet for enabling features like 3085 network switcher menus
-  public readonly isCoinbaseWallet: boolean;
-  // So dapps can easily identify Coinbase Dapp Browser for enabling dapp browser specific features
-  public readonly isCoinbaseBrowser: boolean;
+export interface WLRelayUpdateListener {
+  onAccountsChanged: (accounts: AddressString[]) => void;
+  onChainChanged: (chain: Chain) => void;
+}
 
-  public readonly qrUrl?: string | null;
-  public reloadOnDisconnect: boolean;
-
-  private readonly _filterPolyfill = new FilterPolyfill(this);
-  private readonly _subscriptionManager = new SubscriptionManager(this);
-
-  private readonly _relayProvider: () => Promise<RelayAbstract>;
-  private _relay: RelayAbstract | null = null;
+export class WLRelayAdapter {
+  private _relay: WalletLinkRelay | null = null;
   private readonly _storage: ScopedLocalStorage;
   private readonly _relayEventManager: RelayEventManager;
-  private readonly diagnostic?: DiagnosticLogger;
-
-  private _chainIdFromOpts: number;
   private _jsonRpcUrlFromOpts: string;
-  private readonly _overrideIsMetaMask: boolean;
-
   private _addresses: AddressString[] = [];
-
   private hasMadeFirstChainChangedEmission = false;
+  private updateListener: WLRelayUpdateListener;
 
-  constructor(options: Readonly<LegacyProviderOptions>) {
-    super();
+  constructor(storage: ScopedLocalStorage, listener: WLRelayUpdateListener) {
+    this._storage = storage;
+    this.updateListener = listener;
 
-    this.setProviderInfo = this.setProviderInfo.bind(this);
-    this.updateProviderInfo = this.updateProviderInfo.bind(this);
-    this.getChainId = this.getChainId.bind(this);
-    this.setAppInfo = this.setAppInfo.bind(this);
-    this.enable = this.enable.bind(this);
-    this.close = this.close.bind(this);
-    this.send = this.send.bind(this);
-    this.sendAsync = this.sendAsync.bind(this);
-    this.request = this.request.bind(this);
-    this._setAddresses = this._setAddresses.bind(this);
-    this.scanQRCode = this.scanQRCode.bind(this);
-    this.genericRequest = this.genericRequest.bind(this);
-
-    this._chainIdFromOpts = options.chainId;
-    this._jsonRpcUrlFromOpts = options.jsonRpcUrl;
-    this._overrideIsMetaMask = options.overrideIsMetaMask;
-    this._relayProvider = options.relayProvider;
-    this._storage = options.storage;
-    this._relayEventManager = options.relayEventManager;
-    this.diagnostic = options.diagnosticLogger;
-    this.reloadOnDisconnect = true;
-
-    this.isCoinbaseWallet = options.overrideIsCoinbaseWallet ?? true;
-    this.isCoinbaseBrowser = options.overrideIsCoinbaseBrowser ?? false;
-
-    this.qrUrl = options.qrUrl;
-
-    const chainId = this.getChainId();
-    const chainIdStr = prepend0x(chainId.toString(16));
-    // indicate that we've connected, for EIP-1193 compliance
-    this.emit('connect', { chainId: chainIdStr });
+    this._relayEventManager = new RelayEventManager();
+    this._jsonRpcUrlFromOpts = '';
 
     const cachedAddresses = this._storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
     if (cachedAddresses) {
       const addresses = cachedAddresses.split(' ') as AddressString[];
       if (addresses[0] !== '') {
         this._addresses = addresses.map((address) => ensureAddressString(address));
-        this.emit('accountsChanged', addresses);
+        this.updateListener.onAccountsChanged(this._addresses);
       }
     }
+  }
 
-    this._subscriptionManager.events.on(
-      'notification',
-      (notification: SubscriptionNotification) => {
-        this.emit('message', {
-          type: notification.method,
-          data: notification.params,
-        });
-      }
-    );
-
-    if (this._isAuthorized()) {
-      void this.initializeRelay();
-    }
-
-    window.addEventListener('message', (event) => {
-      // Used to verify the source and window are correct before proceeding
-      if (event.origin !== location.origin || event.source !== window) {
-        return;
-      }
-
-      if (event.data.type !== 'walletLinkMessage') return; // compatibility with CBW extension
-
-      if (event.data.data.action === 'dappChainSwitched') {
-        const _chainId = event.data.data.chainId;
-        const jsonRpcUrl = event.data.data.jsonRpcUrl ?? this.jsonRpcUrl;
-        this.updateProviderInfo(jsonRpcUrl, Number(_chainId));
-      }
-    });
+  getQRCodeUrl(): string {
+    const relay = this.initializeRelay();
+    return relay.getQRCodeUrl();
   }
 
   /** @deprecated Use `.request({ method: 'eth_accounts' })` instead. */
   public get selectedAddress(): AddressString | undefined {
     return this._addresses[0] || undefined;
-  }
-
-  /** @deprecated Use the chain ID. If you still need the network ID, use `.request({ method: 'net_version' })`. */
-  public get networkVersion(): string {
-    return this.getChainId().toString(10);
-  }
-
-  /** @deprecated Use `.request({ method: 'eth_chainId' })` instead. */
-  public get chainId(): string {
-    return prepend0x(this.getChainId().toString(16));
-  }
-
-  public get isWalletLink(): boolean {
-    // backward compatibility
-    return true;
-  }
-
-  /**
-   * Some DApps (i.e. Alpha Homora) seem to require the window.ethereum object return
-   * true for this method.
-   */
-  public get isMetaMask(): boolean {
-    return this._overrideIsMetaMask;
-  }
-
-  public get host(): string {
-    return this.jsonRpcUrl;
-  }
-
-  public get connected(): boolean {
-    return true;
-  }
-
-  public isConnected(): boolean {
-    return true;
   }
 
   private get jsonRpcUrl(): string {
@@ -227,19 +109,6 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
     this._storage.setItem(DEFAULT_JSON_RPC_URL, value);
   }
 
-  public disableReloadOnDisconnect() {
-    this.reloadOnDisconnect = false;
-  }
-
-  public setProviderInfo(jsonRpcUrl: string, chainId: number) {
-    if (!this.isCoinbaseBrowser) {
-      this._chainIdFromOpts = chainId;
-      this._jsonRpcUrlFromOpts = jsonRpcUrl;
-    }
-
-    this.updateProviderInfo(this.jsonRpcUrl, this.getChainId());
-  }
-
   private updateProviderInfo(jsonRpcUrl: string, chainId: number) {
     this.jsonRpcUrl = jsonRpcUrl;
 
@@ -248,7 +117,7 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
     this._storage.setItem(DEFAULT_CHAIN_ID_KEY, chainId.toString(10));
     const chainChanged = ensureIntNumber(chainId) !== originalChainId;
     if (chainChanged || !this.hasMadeFirstChainChangedEmission) {
-      this.emit('chainChanged', this.getChainId());
+      this.updateListener.onChainChanged({ id: chainId, rpcUrl: jsonRpcUrl });
       this.hasMadeFirstChainChangedEmission = true;
     }
   }
@@ -261,7 +130,7 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
     image?: string,
     chainId?: number
   ): Promise<boolean> {
-    const relay = await this.initializeRelay();
+    const relay = this.initializeRelay();
     const result = await relay.watchAsset(
       type,
       address,
@@ -292,7 +161,7 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
       return false;
     }
 
-    const relay = await this.initializeRelay();
+    const relay = this.initializeRelay();
 
     if (!this._isAuthorized()) {
       await relay.requestEthereumAccounts().promise;
@@ -317,7 +186,7 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
   }
 
   private async switchEthereumChain(chainId: number) {
-    const relay = await this.initializeRelay();
+    const relay = this.initializeRelay();
     const res = await relay.switchEthereumChain(
       chainId.toString(10),
       this.selectedAddress || undefined
@@ -342,26 +211,8 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
     }
   }
 
-  public setAppInfo(appName: string, appLogoUrl: string | null): void {
-    void this.initializeRelay().then((relay) => relay.setAppInfo(appName, appLogoUrl));
-  }
-
-  /** @deprecated Use `.request({ method: 'eth_requestAccounts' })` instead. */
-  public async enable(): Promise<AddressString[]> {
-    this.diagnostic?.log(EVENTS.ETH_ACCOUNTS_STATE, {
-      method: 'provider::enable',
-      addresses_length: this._addresses.length,
-    });
-
-    if (this._isAuthorized()) {
-      return [...this._addresses];
-    }
-
-    return await this.send<AddressString[]>('eth_requestAccounts');
-  }
-
   public async close() {
-    const relay = await this.initializeRelay();
+    const relay = this.initializeRelay();
     relay.resetAndReload();
   }
 
@@ -515,114 +366,6 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
     return result.result as T;
   }
 
-  public async scanQRCode(match?: RegExp): Promise<string> {
-    const relay = await this.initializeRelay();
-    const res = await relay.scanQRCode(ensureRegExpString(match)).promise;
-    if (isErrorResponse(res)) {
-      throw serializeError(res.errorMessage, 'scanQRCode');
-    } else if (typeof res.result !== 'string') {
-      throw serializeError('result was not a string', 'scanQRCode');
-    }
-    return res.result;
-  }
-
-  public async genericRequest(data: object, action: string): Promise<string> {
-    const relay = await this.initializeRelay();
-    const res = await relay.genericRequest(data, action).promise;
-    if (isErrorResponse(res)) {
-      throw serializeError(res.errorMessage, 'generic');
-    } else if (typeof res.result !== 'string') {
-      throw serializeError('result was not a string', 'generic');
-    }
-    return res.result;
-  }
-
-  /**
-   * TODO: revisit if we want to support this method
-   * @beta
-   * This method is currently in beta. While it is available for use, please note that it is still under testing and may undergo significant changes.
-   *
-   * @remarks
-   * IMPORTANT: Signature validation is not performed by this method. Users of this method are advised to perform their own signature validation.
-   * Common web3 frontend libraries such as ethers.js and viem provide the `verifyMessage` utility function that can be used for signature validation.
-   *
-   * It combines `eth_requestAccounts` and "Sign-In with Ethereum" (EIP-4361) into a single call.
-   * The returned account and signed message can be used to authenticate the user.
-   *
-   * @param {Object} params - An object with the following properties:
-   * - `nonce` {string}: A unique string to prevent replay attacks.
-   * - `statement` {string}: An optional human-readable ASCII assertion that the user will sign.
-   * - `resources` {string[]}: An optional list of information the user wishes to have resolved as part of authentication by the relying party.
-   *
-   * @returns {Promise<ConnectAndSignInResponse>} A promise that resolves to an object with the following properties:
-   * - `accounts` {string[]}: The Ethereum accounts of the user.
-   * - `message` {string}: The overall message that the user signed. Hex encoded.
-   * - `signature` {string}: The signature of the message, signed with the user's private key. Hex encoded.
-   */
-  public async connectAndSignIn(params: {
-    nonce: string;
-    statement?: string;
-    resources?: string[];
-  }): Promise<{
-    accounts: AddressString[];
-    message: HexString;
-    signature: HexString;
-  }> {
-    // NOTE: It was intentionally built by following the pattern of the existing eth_requestAccounts method
-    // to maintain consistency and avoid introducing a new pattern.
-    // We acknowledge the need for a better design, and it is planned to address and improve it in a future refactor.
-
-    this.diagnostic?.log(EVENTS.ETH_ACCOUNTS_STATE, {
-      method: 'provider::connectAndSignIn',
-    });
-
-    let res: Web3Response<'connectAndSignIn'>;
-    try {
-      const relay = await this.initializeRelay();
-      if (!('connectAndSignIn' in relay && typeof relay.connectAndSignIn === 'function')) {
-        throw new Error('connectAndSignIn is only supported on mobile');
-      }
-      res = await relay.connectAndSignIn(params).promise;
-      if (isErrorResponse(res)) {
-        throw new Error(res.errorMessage);
-      }
-    } catch (err: any) {
-      if (typeof err.message === 'string' && err.message.match(/(denied|rejected)/i)) {
-        throw standardErrors.provider.userRejectedRequest('User denied account authorization');
-      }
-      throw err;
-    }
-
-    if (!res.result) {
-      throw new Error('accounts received is empty');
-    }
-
-    const { accounts } = res.result;
-
-    this._setAddresses(accounts);
-    if (!this.isCoinbaseBrowser) {
-      await this.switchEthereumChain(this.getChainId());
-    }
-
-    return res.result;
-  }
-
-  public supportsSubscriptions(): boolean {
-    return false;
-  }
-
-  public subscribe(): void {
-    throw new Error('Subscriptions are not supported');
-  }
-
-  public unsubscribe(): void {
-    throw new Error('Subscriptions are not supported');
-  }
-
-  public disconnect(): boolean {
-    return true;
-  }
-
   private _sendRequest(request: JSONRPCRequest): JSONRPCResponse {
     const response: JSONRPCResponse = {
       jsonrpc: '2.0',
@@ -655,7 +398,7 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
     }
 
     this._addresses = newAddresses;
-    this.emit('accountsChanged', this._addresses);
+    this.updateListener.onAccountsChanged(newAddresses);
     this._storage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, newAddresses.join(' '));
   }
 
@@ -669,28 +412,6 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
             id: request.id,
             result: syncResult,
           });
-        }
-
-        const filterPromise = this._handleAsynchronousFilterMethods(request);
-        if (filterPromise !== undefined) {
-          filterPromise
-            .then((res) => resolve({ ...res, id: request.id }))
-            .catch((err) => reject(err));
-          return;
-        }
-
-        const subscriptionPromise = this._handleSubscriptionMethods(request);
-        if (subscriptionPromise !== undefined) {
-          subscriptionPromise
-            .then((res) =>
-              resolve({
-                jsonrpc: '2.0',
-                id: request.id,
-                result: res.result,
-              })
-            )
-            .catch((err) => reject(err));
-          return;
         }
       } catch (err: any) {
         return reject(err);
@@ -708,7 +429,6 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
 
   private _handleSynchronousMethods(request: JSONRPCRequest) {
     const { method } = request;
-    const params = request.params || [];
 
     switch (method) {
       case 'eth_accounts':
@@ -716,9 +436,6 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
 
       case 'eth_coinbase':
         return this._eth_coinbase();
-
-      case 'eth_uninstallFilter':
-        return this._eth_uninstallFilter(params);
 
       case 'net_version':
         return this._net_version();
@@ -775,9 +492,6 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
       case 'eth_signTypedData':
         return this._eth_signTypedData_v4(params);
 
-      case 'cbWallet_arbitrary':
-        return this._cbwallet_arbitrary(params);
-
       case 'wallet_addEthereumChain':
         return this._wallet_addEthereumChain(params);
 
@@ -788,57 +502,10 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
         return this._wallet_watchAsset(params);
     }
 
-    const relay = await this.initializeRelay();
+    const relay = this.initializeRelay();
     return relay.makeEthereumJSONRPCRequest(request, this.jsonRpcUrl).catch((err) => {
-      if (
-        err.code === standardErrorCodes.rpc.methodNotFound ||
-        err.code === standardErrorCodes.rpc.methodNotSupported
-      ) {
-        this.diagnostic?.log(EVENTS.METHOD_NOT_IMPLEMENTED, {
-          method: request.method,
-        });
-      }
-
       throw err;
     });
-  }
-
-  private _handleAsynchronousFilterMethods(
-    request: JSONRPCRequest
-  ): Promise<JSONRPCResponse> | undefined {
-    const { method } = request;
-    const params = request.params || [];
-
-    switch (method) {
-      case 'eth_newFilter':
-        return this._eth_newFilter(params);
-
-      case 'eth_newBlockFilter':
-        return this._eth_newBlockFilter();
-
-      case 'eth_newPendingTransactionFilter':
-        return this._eth_newPendingTransactionFilter();
-
-      case 'eth_getFilterChanges':
-        return this._eth_getFilterChanges(params);
-
-      case 'eth_getFilterLogs':
-        return this._eth_getFilterLogs(params);
-    }
-
-    return undefined;
-  }
-
-  private _handleSubscriptionMethods(
-    request: JSONRPCRequest
-  ): Promise<SubscriptionResult> | undefined {
-    switch (request.method) {
-      case 'eth_subscribe':
-      case 'eth_unsubscribe':
-        return this._subscriptionManager.handleRequest(request);
-    }
-
-    return undefined;
   }
 
   private _isKnownAddress(addressString: string): boolean {
@@ -854,7 +521,6 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
 
   private _ensureKnownAddress(addressString: string): void {
     if (!this._isKnownAddress(addressString)) {
-      this.diagnostic?.log(EVENTS.UNKNOWN_ADDRESS_ENCOUNTERED);
       throw new Error('Unknown Ethereum address');
     }
   }
@@ -926,7 +592,7 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
     this._ensureKnownAddress(address);
 
     try {
-      const relay = await this.initializeRelay();
+      const relay = this.initializeRelay();
       const res = await relay.signEthereumMessage(message, address, addPrefix, typedDataJson)
         .promise;
       if (isErrorResponse(res)) {
@@ -946,7 +612,7 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
     signature: Buffer,
     addPrefix: boolean
   ): Promise<JSONRPCResponse> {
-    const relay = await this.initializeRelay();
+    const relay = this.initializeRelay();
     const res = await relay.ethereumAddressFromSignedMessage(message, signature, addPrefix).promise;
     if (isErrorResponse(res)) {
       throw new Error(res.errorMessage);
@@ -974,7 +640,7 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
     const chainIdStr = this._storage.getItem(DEFAULT_CHAIN_ID_KEY);
 
     if (!chainIdStr) {
-      return ensureIntNumber(this._chainIdFromOpts);
+      return ensureIntNumber(1); // default to mainnet
     }
 
     const chainId = parseInt(chainIdStr, 10);
@@ -982,11 +648,6 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
   }
 
   private async _eth_requestAccounts(): Promise<JSONRPCResponse> {
-    this.diagnostic?.log(EVENTS.ETH_ACCOUNTS_STATE, {
-      method: 'provider::_eth_requestAccounts',
-      addresses_length: this._addresses.length,
-    });
-
     if (this._isAuthorized()) {
       return Promise.resolve({
         jsonrpc: '2.0',
@@ -997,7 +658,7 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
 
     let res: Web3Response<'requestEthereumAccounts'>;
     try {
-      const relay = await this.initializeRelay();
+      const relay = this.initializeRelay();
       res = await relay.requestEthereumAccounts().promise;
       if (isErrorResponse(res)) {
         throw new Error(res.errorMessage);
@@ -1014,9 +675,6 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
     }
 
     this._setAddresses(res.result);
-    if (!this.isCoinbaseBrowser) {
-      await this.switchEthereumChain(this.getChainId());
-    }
 
     return { jsonrpc: '2.0', id: 0, result: this._addresses };
   }
@@ -1054,7 +712,7 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
     this._requireAuthorization();
     const tx = this._prepareTransactionParams((params[0] as any) || {});
     try {
-      const relay = await this.initializeRelay();
+      const relay = this.initializeRelay();
       const res = await relay.signEthereumTransaction(tx).promise;
       if (isErrorResponse(res)) {
         throw new Error(res.errorMessage);
@@ -1070,7 +728,7 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
 
   private async _eth_sendRawTransaction(params: unknown[]): Promise<JSONRPCResponse> {
     const signedTransaction = ensureBuffer(params[0]);
-    const relay = await this.initializeRelay();
+    const relay = this.initializeRelay();
     const res = await relay.submitEthereumTransaction(signedTransaction, this.getChainId()).promise;
     if (isErrorResponse(res)) {
       throw new Error(res.errorMessage);
@@ -1082,7 +740,7 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
     this._requireAuthorization();
     const tx = this._prepareTransactionParams((params[0] as any) || {});
     try {
-      const relay = await this.initializeRelay();
+      const relay = this.initializeRelay();
       const res = await relay.signAndSubmitEthereumTransaction(tx).promise;
       if (isErrorResponse(res)) {
         throw new Error(res.errorMessage);
@@ -1133,22 +791,6 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
     const typedDataJSON = JSON.stringify(typedData, null, 2);
 
     return this._signEthereumMessage(message, address, false, typedDataJSON);
-  }
-
-  /** @deprecated */
-  private async _cbwallet_arbitrary(params: unknown[]): Promise<JSONRPCResponse> {
-    const action = params[0];
-    const data = params[1];
-    if (typeof data !== 'string') {
-      throw new Error('parameter must be a string');
-    }
-
-    if (typeof action !== 'object' || action === null) {
-      throw new Error('parameter must be an object');
-    }
-
-    const result = await this.genericRequest(action, data);
-    return { jsonrpc: '2.0', id: 0, result };
   }
 
   private async _wallet_addEthereumChain(params: unknown[]): Promise<JSONRPCResponse> {
@@ -1221,53 +863,30 @@ export class LegacyProvider extends EventEmitter implements ProviderInterface {
     return { jsonrpc: '2.0', id: 0, result: res };
   }
 
-  private _eth_uninstallFilter(params: unknown[]): boolean {
-    const filterId = ensureHexString(params[0]);
-    return this._filterPolyfill.uninstallFilter(filterId);
-  }
+  private initializeRelay(): WalletLinkRelay {
+    if (!this._relay) {
+      const relay = new WalletLinkRelay({
+        linkAPIUrl: LINK_API_URL,
+        version: LIB_VERSION,
+        darkMode: false,
+        uiConstructor: () =>
+          new WalletLinkRelayUI({
+            linkAPIUrl: LINK_API_URL,
+            version: LIB_VERSION,
+            darkMode: false,
+          }),
+        storage: this._storage,
+      });
+      relay.attachUI();
 
-  private async _eth_newFilter(params: unknown[]): Promise<JSONRPCResponse> {
-    const param = params[0] as any;
-    const filterId = await this._filterPolyfill.newFilter(param);
-    return { jsonrpc: '2.0', id: 0, result: filterId };
-  }
-
-  private async _eth_newBlockFilter(): Promise<JSONRPCResponse> {
-    const filterId = await this._filterPolyfill.newBlockFilter();
-    return { jsonrpc: '2.0', id: 0, result: filterId };
-  }
-
-  private async _eth_newPendingTransactionFilter(): Promise<JSONRPCResponse> {
-    const filterId = await this._filterPolyfill.newPendingTransactionFilter();
-    return { jsonrpc: '2.0', id: 0, result: filterId };
-  }
-
-  private _eth_getFilterChanges(params: unknown[]): Promise<JSONRPCResponse> {
-    const filterId = ensureHexString(params[0]);
-    return this._filterPolyfill.getFilterChanges(filterId);
-  }
-
-  private _eth_getFilterLogs(params: unknown[]): Promise<JSONRPCResponse> {
-    const filterId = ensureHexString(params[0]);
-    return this._filterPolyfill.getFilterLogs(filterId);
-  }
-
-  // public for testing
-  public initializeRelay(): Promise<RelayAbstract> {
-    if (this._relay) {
-      return Promise.resolve(this._relay);
-    }
-
-    return this._relayProvider().then((relay) => {
       relay.setAccountsCallback((accounts, isDisconnect) =>
         this._setAddresses(accounts, isDisconnect)
       );
       relay.setChainCallback((chainId, jsonRpcUrl) => {
         this.updateProviderInfo(jsonRpcUrl, parseInt(chainId, 10));
       });
-      relay.setDappDefaultChainCallback(this._chainIdFromOpts);
       this._relay = relay;
-      return relay;
-    });
+    }
+    return this._relay;
   }
 }

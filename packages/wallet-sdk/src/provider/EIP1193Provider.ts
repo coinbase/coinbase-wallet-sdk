@@ -1,17 +1,15 @@
+/* eslint-disable jest/no-commented-out-tests */
 import EventEmitter from 'eventemitter3';
 
 import { Chain, Connector, ConnectorUpdateListener } from '../connector/ConnectorInterface';
 import { SCWConnector } from '../connector/scw/SCWConnector';
-import { WalletLinkConnector } from '../connector/walletlink/WalletLinkConnector';
-import { LINK_API_URL } from '../core/constants';
+import { WLConnector } from '../connector/walletlink/WLConnector';
 import { standardErrors } from '../core/error';
 import { AddressString } from '../core/type';
 import { areAddressArraysEqual, prepend0x } from '../core/util';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { WalletLinkRelayUI } from '../relay/walletlink/ui/WalletLinkRelayUI';
 import { ConnectionType } from '../transport/ConfigMessage';
 import { PopUpCommunicator } from '../transport/PopUpCommunicator';
-import { LIB_VERSION } from '../version';
 import { getErrorForInvalidRequestArgs } from './helpers/eip1193Utils';
 import { ProviderInterface, ProviderRpcError, RequestArguments } from './ProviderInterface';
 
@@ -94,30 +92,24 @@ export class EIP1193Provider
   }
 
   private _initWalletLinkConnector() {
-    if (this._connector instanceof WalletLinkConnector) return;
-    const legacyRelayOptions = {
-      linkAPIUrl: LINK_API_URL,
-      version: LIB_VERSION,
-      darkMode: false,
-      uiConstructor: () =>
-        new WalletLinkRelayUI({
-          linkAPIUrl: LINK_API_URL,
-          version: LIB_VERSION,
-          darkMode: false,
-        }),
-      storage: this._storage,
-    };
+    if (this._connector instanceof WLConnector) return;
 
-    this._connector = new WalletLinkConnector({
-      legacyRelayOptions,
-      _connectionTypeSelectionResolver: this._connectionTypeSelectionResolver,
-      _accounts: this._accounts,
+    this._connector = new WLConnector({
+      storage: this._storage,
       updateListener: this,
     });
   }
 
-  onChainChanged(_: Connector, chain: Chain): void {
+  onAccountsChanged(_: Connector, _accounts: AddressString[]) {
+    this._setAccounts(_accounts);
+  }
+
+  onChainChanged(connector: Connector, chain: Chain): void {
     // if (connector !== this._connector) return; // ignore events from inactive connectors
+    if (connector instanceof WLConnector) {
+      this._connectionTypeSelectionResolver?.('walletlink');
+    }
+
     if (chain.id !== this._chain.id) {
       this.emit('chainChanged', prepend0x(chain.id.toString(16)));
     }
@@ -237,6 +229,7 @@ export class EIP1193Provider
       }
       return Promise.reject(new Error('Accounts must be an array of addresses'));
     } catch (err: any) {
+      // TODO: remove this. we don't need this.
       if (typeof err.message === 'string' && err.message.match(/(denied|rejected)/i)) {
         throw standardErrors.provider.userRejectedRequest('User denied account authorization');
       }
@@ -256,10 +249,10 @@ export class EIP1193Provider
 
   private getWalletLinkUrl() {
     this._initWalletLinkConnector();
-    if (!(this._connector instanceof WalletLinkConnector)) {
+    if (!(this._connector instanceof WLConnector)) {
       throw new Error('Connector not initialized or Connector.getWalletLinkUrl not defined');
     }
-    return this._connector.legacyRelay.getQRCodeUrl();
+    return this._connector.getQRCodeUrl();
   }
 
   private async _completeConnectionTypeSelection() {

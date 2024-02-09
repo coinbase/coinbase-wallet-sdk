@@ -1,13 +1,15 @@
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { RelayEventManager } from '../relay/RelayEventManager';
-import { LegacyProvider } from '../relay/walletlink/LegacyProvider';
+import { ProviderInterface } from '../provider/ProviderInterface';
 
-export const mockExtensionProvider = new LegacyProvider({
-  chainId: 1,
-  jsonRpcUrl: 'jsonrpc-url',
-  overrideIsMetaMask: false,
-  relayEventManager: new RelayEventManager(),
-  relayProvider: jest.fn(),
-  storage: new ScopedLocalStorage('-walletlink'),
-});
-mockExtensionProvider.initializeRelay = jest.fn();
+export const mockProvider = {
+  request: jest.fn(),
+  on: jest.fn(),
+  eventNames: jest.fn(),
+  listeners: jest.fn(),
+  listenerCount: jest.fn(),
+  emit: jest.fn(),
+  addListener: jest.fn(),
+  once: jest.fn(),
+  removeListener: jest.fn(),
+  off: jest.fn(),
+  removeAllListeners: jest.fn(),
+} as ProviderInterface;

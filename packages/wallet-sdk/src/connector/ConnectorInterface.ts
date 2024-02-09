@@ -12,5 +12,6 @@ export type Chain = {
 };
 
 export interface ConnectorUpdateListener {
-  onChainChanged(connector: Connector, chain: Chain): void;
+  onAccountsChanged: (connector: Connector, accounts: AddressString[]) => void;
+  onChainChanged: (connector: Connector, chain: Chain) => void;
 }
