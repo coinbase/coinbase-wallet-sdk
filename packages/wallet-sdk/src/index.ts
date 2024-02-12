@@ -3,7 +3,7 @@
 
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
 import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
-import { LegacyProviderInterface, ProviderInterface } from './provider/ProviderInterface';
+import { ProviderInterface } from './provider/ProviderInterface';
 
 export { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
 export default CoinbaseWalletSDK;
@@ -16,7 +16,7 @@ declare global {
      * For CoinbaseWalletSDK, window.ethereum is `CoinbaseWalletProvider`
      */
     ethereum?: ProviderInterface;
-    coinbaseWalletExtension?: LegacyProviderInterface;
+    coinbaseWalletExtension?: ProviderInterface;
   }
 }
 

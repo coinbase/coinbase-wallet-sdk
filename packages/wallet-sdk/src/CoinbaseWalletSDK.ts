@@ -6,8 +6,7 @@ import { LINK_API_URL } from './core/constants';
 import { getFavicon } from './core/util';
 import { ScopedLocalStorage } from './lib/ScopedLocalStorage';
 import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
-import { LegacyProviderInterface, ProviderInterface } from './provider/ProviderInterface';
-import { WalletLinkRelay } from './relay/walletlink/WalletLinkRelay';
+import { ProviderInterface } from './provider/ProviderInterface';
 import { PopUpCommunicator } from './transport/PopUpCommunicator';
 import { LIB_VERSION } from './version';
 
@@ -30,7 +29,6 @@ export class CoinbaseWalletSDK {
 
   private _appName = '';
   private _appLogoUrl: string | null = null;
-  private _relay: WalletLinkRelay | null = null;
   private _storage: ScopedLocalStorage;
   private linkAPIUrl: string;
   private popupCommunicator: PopUpCommunicator;
@@ -51,10 +49,6 @@ export class CoinbaseWalletSDK {
       url: options.scwUrl || 'https://scw-dev.cbhq.net/connect',
     });
 
-    if (this.walletExtension || this.coinbaseBrowser) {
-      return;
-    }
-
     this.setAppInfo(options.appName, options.appLogoUrl);
   }
 
@@ -68,7 +62,7 @@ export class CoinbaseWalletSDK {
     const extension = this.walletExtension;
     if (extension) {
       if (!this.isCipherProvider(extension)) {
-        extension.setProviderInfo(jsonRpcUrl, chainId);
+        (extension as LegacyProviderInterface).setProviderInfo?.(jsonRpcUrl, chainId);
       }
       return extension;
     }
@@ -96,17 +90,15 @@ export class CoinbaseWalletSDK {
    * @param appName Application name
    * @param appLogoUrl Application logo image URL
    */
-  public setAppInfo(appName: string | undefined, appLogoUrl: string | null | undefined): void {
+  private setAppInfo(appName: string | undefined, appLogoUrl: string | null | undefined): void {
     this._appName = appName || 'DApp';
     this._appLogoUrl = appLogoUrl || getFavicon();
 
     const extension = this.walletExtension;
     if (extension) {
       if (!this.isCipherProvider(extension)) {
-        extension.setAppInfo(this._appName, this._appLogoUrl);
+        (extension as LegacyProviderInterface).setAppInfo?.(this._appName, this._appLogoUrl);
       }
-    } else {
-      this._relay?.setAppInfo(this._appName, this._appLogoUrl);
     }
   }
 
@@ -117,9 +109,8 @@ export class CoinbaseWalletSDK {
   public disconnect(): void {
     const extension = this?.walletExtension;
     if (extension) {
-      void extension.close();
+      (extension as LegacyProviderInterface).close?.();
     } else {
-      this._relay?.resetAndReload();
       this._storage.clear();
     }
   }
@@ -134,11 +125,11 @@ export class CoinbaseWalletSDK {
     return walletLogo(type, width);
   }
 
-  private get walletExtension(): LegacyProviderInterface | undefined {
+  private get walletExtension(): ProviderInterface | undefined {
     return window.coinbaseWalletExtension;
   }
 
-  private get coinbaseBrowser(): LegacyProviderInterface | undefined {
+  private get coinbaseBrowser(): ProviderInterface | undefined {
     try {
       // Coinbase DApp browser does not inject into iframes so grab provider from top frame if it exists
       const ethereum = window.ethereum ?? window.top?.ethereum;
@@ -147,7 +138,7 @@ export class CoinbaseWalletSDK {
       }
 
       if ('isCoinbaseBrowser' in ethereum && ethereum.isCoinbaseBrowser) {
-        return ethereum as LegacyProviderInterface;
+        return ethereum;
       }
       return undefined;
     } catch (e) {
@@ -155,8 +146,14 @@ export class CoinbaseWalletSDK {
     }
   }
 
-  private isCipherProvider(provider: LegacyProviderInterface): boolean {
+  private isCipherProvider(provider: ProviderInterface): boolean {
     // @ts-expect-error isCipher walletlink property
     return typeof provider.isCipher === 'boolean' && provider.isCipher;
   }
+}
+
+interface LegacyProviderInterface extends ProviderInterface {
+  setAppInfo?(appName: string, appLogoUrl: string | null): void;
+  setProviderInfo?(jsonRpcUrl: string, chainId: number): void;
+  close?(): void;
 }

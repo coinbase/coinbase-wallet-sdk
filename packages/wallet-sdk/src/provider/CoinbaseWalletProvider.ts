@@ -96,6 +96,8 @@ export class CoinbaseWalletProvider
     if (this._connector instanceof WLConnector) return;
 
     this._connector = new WLConnector({
+      appName: this._appName,
+      appLogoUrl: this._appLogoUrl,
       storage: this._storage,
       updateListener: this,
     });

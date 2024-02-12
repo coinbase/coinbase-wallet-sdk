@@ -66,6 +66,8 @@ export interface WLRelayUpdateListener {
 }
 
 export class WLRelayAdapter {
+  private _appName: string;
+  private _appLogoUrl: string | null;
   private _relay: WalletLinkRelay | null = null;
   private readonly _storage: ScopedLocalStorage;
   private readonly _relayEventManager: RelayEventManager;
@@ -74,9 +76,16 @@ export class WLRelayAdapter {
   private hasMadeFirstChainChangedEmission = false;
   private updateListener: WLRelayUpdateListener;
 
-  constructor(storage: ScopedLocalStorage, listener: WLRelayUpdateListener) {
-    this._storage = storage;
-    this.updateListener = listener;
+  constructor(options: {
+    appName: string;
+    appLogoUrl: string | null;
+    storage: ScopedLocalStorage;
+    updateListener: WLRelayUpdateListener;
+  }) {
+    this._appName = options.appName;
+    this._appLogoUrl = options.appLogoUrl;
+    this._storage = options.storage;
+    this.updateListener = options.updateListener;
 
     this._relayEventManager = new RelayEventManager();
     this._jsonRpcUrlFromOpts = '';
@@ -877,6 +886,7 @@ export class WLRelayAdapter {
           }),
         storage: this._storage,
       });
+      relay.setAppInfo(this._appName, this._appLogoUrl);
       relay.attachUI();
 
       relay.setAccountsCallback((accounts, isDisconnect) =>

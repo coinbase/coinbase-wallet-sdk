@@ -8,9 +8,17 @@ export class WLConnector implements Connector, WLRelayUpdateListener {
   private updateListener: ConnectorUpdateListener;
   private adapter: WLRelayAdapter;
 
-  constructor(options: { storage: ScopedLocalStorage; updateListener: ConnectorUpdateListener }) {
+  constructor(options: {
+    appName: string;
+    appLogoUrl: string | null;
+    storage: ScopedLocalStorage;
+    updateListener: ConnectorUpdateListener;
+  }) {
     this.updateListener = options.updateListener;
-    this.adapter = new WLRelayAdapter(options.storage, this);
+    this.adapter = new WLRelayAdapter({
+      ...options,
+      updateListener: this,
+    });
   }
 
   async handshake(): Promise<AddressString[]> {

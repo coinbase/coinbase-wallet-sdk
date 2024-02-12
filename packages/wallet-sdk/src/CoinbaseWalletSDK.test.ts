@@ -1,9 +1,8 @@
 // eslint-disable-next-line max-classes-per-file
 
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
-import { mockProvider as mockExtensionProvider } from './mocks/provider';
+import { mockProvider } from './mocks/provider';
 import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
-import { WalletLinkRelay } from './relay/walletlink/WalletLinkRelay';
 
 describe('CoinbaseWalletSDK', () => {
   describe('initialize', () => {
@@ -90,7 +89,7 @@ describe('CoinbaseWalletSDK', () => {
 
     describe('extension', () => {
       beforeAll(() => {
-        window.coinbaseWalletExtension = mockExtensionProvider;
+        window.coinbaseWalletExtension = mockProvider;
       });
 
       afterAll(() => {
@@ -99,10 +98,11 @@ describe('CoinbaseWalletSDK', () => {
 
       test('@makeWeb3Provider', () => {
         // Returns extension provider
-        expect(coinbaseWalletSDK2.makeWeb3Provider()).toEqual(mockExtensionProvider);
+        expect(coinbaseWalletSDK2.makeWeb3Provider()).toEqual(mockProvider);
       });
 
       test('@disconnect', async () => {
+        const mockExtensionProvider = mockProvider as unknown as { close: jest.Mock };
         jest.spyOn(mockExtensionProvider, 'close').mockImplementation(() => 'mockClose');
         // Calls extension close
         coinbaseWalletSDK2.disconnect();
@@ -127,14 +127,6 @@ describe('CoinbaseWalletSDK', () => {
 
       test('@makeWeb3Provider', () => {
         expect(coinbaseWalletSDK2.makeWeb3Provider()).toEqual(mockCipherProvider);
-      });
-
-      test('@setAppInfo', () => {
-        const relaySetAppInfoMock = jest
-          .spyOn(WalletLinkRelay.prototype, 'setAppInfo')
-          .mockImplementation(() => 'setAppInfo');
-        coinbaseWalletSDK2.setAppInfo('cipher', 'http://cipher-image.png');
-        expect(relaySetAppInfoMock).not.toBeCalled();
       });
     });
   });

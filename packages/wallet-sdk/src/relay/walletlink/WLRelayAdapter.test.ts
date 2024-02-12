@@ -20,9 +20,14 @@ const createWLConnectorToRelayAdapter = (options?: {
   relay?: MockRelayClass;
   storage?: ScopedLocalStorage;
 }) => {
-  const adapter = new WLRelayAdapter(options?.storage ?? storage, {
-    onAccountsChanged: jest.fn(),
-    onChainChanged: jest.fn(),
+  const adapter = new WLRelayAdapter({
+    appName: 'test',
+    appLogoUrl: null,
+    storage: options?.storage || storage,
+    updateListener: {
+      onAccountsChanged: () => {},
+      onChainChanged: () => {},
+    },
   });
   if (options?.relay) {
     (adapter as any)._relay = options.relay;
@@ -42,9 +47,10 @@ describe('LegacyProvider', () => {
   });
 
   it('handles close', async () => {
-    const spy = jest.spyOn(MockRelayClass.prototype, 'resetAndReload');
+    const relay = new MockRelayClass();
+    const spy = jest.spyOn(relay, 'resetAndReload');
 
-    const provider = createWLConnectorToRelayAdapter();
+    const provider = createWLConnectorToRelayAdapter({ relay });
     await provider.close();
     expect(spy).toHaveBeenCalled();
   });

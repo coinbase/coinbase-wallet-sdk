@@ -30,11 +30,3 @@ export interface ProviderInterface extends EventEmitter {
   on(event: 'accountsChanged', listener: (accounts: string[]) => void): this;
   on(event: 'message', listener: (message: ProviderMessage) => void): this;
 }
-
-export interface LegacyProviderInterface extends ProviderInterface {
-  readonly isCoinbaseWallet: boolean;
-  readonly isCoinbaseBrowser: boolean;
-  setAppInfo(appName: string, appLogoUrl: string | null): void;
-  setProviderInfo(jsonRpcUrl: string, chainId: number): void;
-  close(): void;
-}
