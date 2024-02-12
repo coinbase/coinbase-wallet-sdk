@@ -7,7 +7,7 @@ import { WLConnector } from '../connector/walletlink/WLConnector';
 import { standardErrorCodes, standardErrors } from '../core/error';
 import { SerializedEthereumRpcError } from '../core/error/utils';
 import { AddressString } from '../core/type';
-import { areAddressArraysEqual, prepend0x } from '../core/util';
+import { areAddressArraysEqual, prepend0x, showDeprecationWarning } from '../core/util';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { ConnectionType } from '../transport/ConfigMessage';
 import { PopUpCommunicator } from '../transport/PopUpCommunicator';
@@ -21,9 +21,6 @@ interface ConstructorOptions {
   appLogoUrl?: string | null;
   linkAPIUrl?: string;
 }
-interface DisconnectInfo {
-  error: ProviderRpcError;
-}
 
 const ACCOUNTS_KEY = 'accounts';
 const CONNECTION_TYPE_KEY = 'connectionType';
@@ -34,8 +31,6 @@ export class CoinbaseWalletProvider
 {
   private _storage: ScopedLocalStorage;
   private _popupCommunicator: PopUpCommunicator;
-
-  connected: boolean;
   private _accounts: AddressString[];
   private _appName = '';
   private _appLogoUrl: string | null = null;
@@ -59,7 +54,6 @@ export class CoinbaseWalletProvider
 
     this._appName = options.appName ?? '';
     this._appLogoUrl = options.appLogoUrl ?? null;
-    this.connected = false;
     const persistedAccounts = this._getStoredAccounts();
     this._accounts = persistedAccounts;
     const persistedConnectionType = this._storage.getItem(CONNECTION_TYPE_KEY);
@@ -121,7 +115,6 @@ export class CoinbaseWalletProvider
   }
 
   private _emitConnectEvent() {
-    this.connected = true;
     // https://eips.ethereum.org/EIPS/eip-1193#connect
     this.emit('connect', { chainId: prepend0x(this._chain.id.toString(16)) });
   }
@@ -135,13 +128,18 @@ export class CoinbaseWalletProvider
     return this._handleRequest<T>(args);
   }
 
-  // disconnect is not required, and not called by test app
+  public get connected() {
+    return this._accounts.length > 0;
+  }
+
   disconnect(): void {
-    const disconnectInfo: DisconnectInfo = {
-      error: standardErrors.provider.disconnected('User initiated disconnection'),
-    };
-    this._storage.clear();
-    this.connected = false;
+    const disconnectInfo: ProviderRpcError = standardErrors.provider.disconnected(
+      'User initiated disconnection'
+    );
+    this._accounts = [];
+    this._connectionType = null;
+    this._storage.clear(); // clear persisted accounts & connectionType
+    this._connector?.disconnect();
     this.emit('disconnect', disconnectInfo);
   }
 
@@ -149,16 +147,10 @@ export class CoinbaseWalletProvider
   //  deprecated methods - more methods will likely be added here later
   // *
   public async enable(): Promise<unknown> {
-    this._showDeprecationWarning('enable', 'request({ method: "eth_requestAccounts" })');
+    showDeprecationWarning('enable', 'use request({ method: "eth_requestAccounts" })');
     return await this.request({
       method: 'eth_requestAccounts',
     });
-  }
-
-  private _showDeprecationWarning(oldMethod: string, newMethod: string): void {
-    console.warn(
-      `CoinbaseWalletProvider: ${oldMethod} is deprecated. Please use ${newMethod} instead.`
-    );
   }
 
   private async _handleRequest<T>(request: RequestArguments): Promise<T> {

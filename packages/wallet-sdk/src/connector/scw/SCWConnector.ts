@@ -108,6 +108,10 @@ export class SCWConnector implements Connector {
     }
   }
 
+  disconnect() {
+    // TODO: implement
+  }
+
   private tryLocalHandling<T>(request: RequestArguments): T | undefined {
     switch (request.method) {
       case SupportedEthereumMethods.WalletSwitchEthereumChain: {

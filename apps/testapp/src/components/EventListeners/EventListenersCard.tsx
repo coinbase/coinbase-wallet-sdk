@@ -28,7 +28,7 @@ export function EventListenersCard() {
       setConnect(info);
     });
     provider.on('disconnect', (error) => {
-      setDisconnect(error);
+      setDisconnect({ code: error.code, message: error.message });
     });
     provider.on('accountsChanged', (accounts) => {
       setAccountsChanged(accounts);

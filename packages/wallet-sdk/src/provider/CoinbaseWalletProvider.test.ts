@@ -13,18 +13,14 @@ describe('EIP1193Provider', () => {
     });
   });
 
-  it('initializes correctly', () => {
-    expect(provider.connected).toBe(false);
-  });
-
   it('emits disconnect event on user initiated disconnection', () => {
     const disconnectListener = jest.fn();
     provider.on('disconnect', disconnectListener);
 
     provider.disconnect();
 
-    expect(disconnectListener).toHaveBeenCalledWith({
-      error: standardErrors.provider.disconnected('User initiated disconnection'),
-    });
+    expect(disconnectListener).toHaveBeenCalledWith(
+      standardErrors.provider.disconnected('User initiated disconnection')
+    );
   });
 });

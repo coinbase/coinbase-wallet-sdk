@@ -20,11 +20,11 @@ type LayoutProps = {
 export const WIDTH_2XL = '1536px';
 
 export function Layout({ children }: LayoutProps) {
-  const { sdk, scwPopupURL, setSCWPopupURL } = useCBWSDK();
+  const { scwPopupURL, setSCWPopupURL, provider } = useCBWSDK();
 
   const handleDisconnect = () => {
-    if (sdk) {
-      sdk.disconnect();
+    if (provider) {
+      provider.disconnect();
     }
   };
 
