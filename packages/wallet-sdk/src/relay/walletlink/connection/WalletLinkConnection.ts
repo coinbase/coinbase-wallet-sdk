@@ -11,10 +11,11 @@ import { ServerMessage, ServerMessageType } from '../type/ServerMessage';
 import { SessionConfig } from '../type/SessionConfig';
 import { WalletLinkEventData, WalletLinkResponseEventData } from '../type/WalletLinkEventData';
 import { WalletLinkHTTP } from './WalletLinkHTTP';
-import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket';
-
-const HEARTBEAT_INTERVAL = 10000;
-const REQUEST_TIMEOUT = 60000;
+import {
+  ConnectionState,
+  WalletLinkWebSocket,
+  WalletLinkWebSocketUpdateListener,
+} from './WalletLinkWebSocket';
 
 export interface WalletLinkConnectionUpdateListener {
   linkedUpdated: (linked: boolean) => void;
@@ -37,13 +38,10 @@ interface WalletLinkConnectionParams {
 /**
  * Coinbase Wallet Connection
  */
-export class WalletLinkConnection {
+export class WalletLinkConnection implements WalletLinkWebSocketUpdateListener {
   private destroyed = false;
-  private lastHeartbeatResponse = 0;
-  private nextReqId = IntNumber(1);
 
   private readonly session: Session;
-
   private listener?: WalletLinkConnectionUpdateListener;
   private diagnostic?: DiagnosticLogger;
   private cipher: Cipher;
@@ -69,118 +67,115 @@ export class WalletLinkConnection {
     this.diagnostic = diagnostic;
     this.listener = listener;
 
-    const ws = new WalletLinkWebSocket(`${linkAPIUrl}/rpc`, WebSocketClass);
-    ws.setConnectionStateListener(async (state) => {
-      // attempt to reconnect every 5 seconds when disconnected
-      this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
-        state,
-        sessionIdHash: Session.hash(session.id),
-      });
-
-      let connected = false;
-      switch (state) {
-        case ConnectionState.DISCONNECTED:
-          // if DISCONNECTED and not destroyed
-          if (!this.destroyed) {
-            const connect = async () => {
-              // wait 5 seconds
-              await new Promise((resolve) => setTimeout(resolve, 5000));
-              // check whether it's destroyed again
-              if (!this.destroyed) {
-                // reconnect
-                ws.connect().catch(() => {
-                  connect();
-                });
-              }
-            };
-            connect();
-          }
-          break;
-
-        case ConnectionState.CONNECTED:
-          // perform authentication upon connection
-          try {
-            // if CONNECTED, authenticate, and then check link status
-            await this.authenticate();
-            this.sendIsLinked();
-            this.sendGetSessionConfig();
-            connected = true;
-          } catch {
-            /* empty */
-          }
-
-          // send heartbeat every n seconds while connected
-          // if CONNECTED, start the heartbeat timer
-          // first timer event updates lastHeartbeat timestamp
-          // subsequent calls send heartbeat message
-          this.updateLastHeartbeat();
-          setInterval(() => {
-            this.heartbeat();
-          }, HEARTBEAT_INTERVAL);
-
-          // check for unseen events
-          if (this.shouldFetchUnseenEventsOnConnect) {
-            this.fetchUnseenEventsAPI();
-          }
-          break;
-
-        case ConnectionState.CONNECTING:
-          break;
-      }
-
-      // distinctUntilChanged
-      if (this.connected !== connected) {
-        this.connected = connected;
-      }
+    this.ws = new WalletLinkWebSocket({
+      linkAPIUrl,
+      session,
+      WebSocketClass,
+      listener: this,
     });
-    ws.setIncomingDataListener((m) => {
-      switch (m.type) {
-        // handle server's heartbeat responses
-        case 'Heartbeat':
-          this.updateLastHeartbeat();
-          return;
-
-        // handle link status updates
-        case 'IsLinkedOK':
-        case 'Linked': {
-          const linked = m.type === 'IsLinkedOK' ? m.linked : undefined;
-          this.diagnostic?.log(EVENTS.LINKED, {
-            sessionIdHash: Session.hash(session.id),
-            linked,
-            type: m.type,
-            onlineGuests: m.onlineGuests,
-          });
-
-          this.linked = linked || m.onlineGuests > 0;
-          break;
-        }
-
-        // handle session config updates
-        case 'GetSessionConfigOK':
-        case 'SessionConfigUpdated': {
-          this.diagnostic?.log(EVENTS.SESSION_CONFIG_RECEIVED, {
-            sessionIdHash: Session.hash(session.id),
-            metadata_keys: m && m.metadata ? Object.keys(m.metadata) : undefined,
-          });
-          this.handleSessionMetadataUpdated(m.metadata);
-          break;
-        }
-
-        case 'Event': {
-          this.handleIncomingEvent(m);
-          break;
-        }
-      }
-
-      // resolve request promises
-      if (m.id !== undefined) {
-        this.requestResolutions.get(m.id)?.(m);
-      }
-    });
-    this.ws = ws;
 
     this.http = new WalletLinkHTTP(linkAPIUrl, session.id, session.key);
   }
+
+  /**
+   * @param state ConnectionState;
+   * ConnectionState.CONNECTING is used for logging only
+   * TODO: Revisit if the logging is necessary. If not, deprecate the enum and use boolean instead.
+   */
+  websocketConnectionStateUpdated = async (state: ConnectionState) => {
+    this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
+      state,
+      sessionIdHash: Session.hash(this.session.id),
+    });
+
+    switch (state) {
+      case ConnectionState.DISCONNECTED:
+        if (this.destroyed) return;
+        this.reconnect();
+        break;
+      case ConnectionState.CONNECTED:
+        this.websocketConnected();
+        break;
+      case ConnectionState.CONNECTING:
+        break;
+    }
+  };
+
+  /**
+   * This section of code implements a reconnect behavior that was ported from a legacy system.
+   * Preserving original comments to maintain the rationale and context provided by the original author.
+   * https://github.com/coinbase/coinbase-wallet-sdk/commit/2087ee4a7d40936cd965011bfacdb76ce3462894#diff-dd71e86752e2c20c0620eb0ba4c4b21674e55ae8afeb005b82906a3821e5023cR84
+   * TOOD: Revisit this logic to assess its validity in the current system context.
+   */
+  private reconnect = async () => {
+    // wait 5 seconds
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    // check whether it's destroyed again
+    if (!this.destroyed) {
+      // reconnect
+      this.ws.connect().catch(() => {
+        this.reconnect();
+      });
+    }
+  };
+
+  private websocketConnected(): void {
+    // check for unseen events
+    if (this.shouldFetchUnseenEventsOnConnect) {
+      this.fetchUnseenEventsAPI();
+    }
+
+    // distinctUntilChanged
+    if (this.connected !== true) {
+      this.connected = true;
+    }
+  }
+
+  /**
+   * @param msg Partial<ServerMessageIsLinkedOK>
+   * Only for logging
+   * TODO: Revisit if this is necessary
+   */
+  websocketLinkedUpdated = (
+    linked: boolean,
+    msg: ServerMessageIsLinkedOK | ServerMessageLinked
+  ) => {
+    this.diagnostic?.log(EVENTS.LINKED, {
+      sessionIdHash: Session.hash(this.session.id),
+      linked: msg.type === 'IsLinkedOK' ? msg.linked : false,
+      type: msg.type,
+      onlineGuests: msg.onlineGuests,
+    });
+
+    this.listener?.linkedUpdated(linked);
+  };
+
+  /**
+   * Only for logging
+   * TODO: Revisit if this is necessary. If not, call handleSessionMetadataUpdated directly.
+   */
+  websocketSessionMetadataUpdated = (metadata: SessionConfig['metadata']) => {
+    this.diagnostic?.log(EVENTS.SESSION_CONFIG_RECEIVED, {
+      sessionIdHash: Session.hash(this.session.id),
+      metadata_keys: metadata ? Object.keys(metadata) : undefined,
+    });
+
+    this.handleSessionMetadataUpdated(metadata);
+  };
+
+  websocketServerMessageReceived = (m: ServerMessage) => {
+    switch (m.type) {
+      case 'Event': {
+        this.handleIncomingEvent(m);
+        break;
+      }
+    }
+
+    // // resolve request promises
+    // if (m.id !== undefined) {
+    //   this.requestResolutions.get(m.id)?.(m);
+    // }
+  };
 
   /**
    * Make a connection to the server
@@ -210,10 +205,6 @@ export class WalletLinkConnection {
     this.listener = undefined;
   }
 
-  public get isDestroyed(): boolean {
-    return this.destroyed;
-  }
-
   /**
    * true if connected and authenticated, else false
    * runs listener when connected status changes
@@ -240,37 +231,6 @@ export class WalletLinkConnection {
         this.onceConnected = () => {
           callback().then(resolve);
           this.onceConnected = undefined;
-        };
-      }
-    });
-  }
-
-  /**
-   * true if linked (a guest has joined before)
-   * runs listener when linked status changes
-   */
-  private _linked = false;
-  private get linked(): boolean {
-    return this._linked;
-  }
-  private set linked(linked: boolean) {
-    this._linked = linked;
-    if (linked) this.onceLinked?.();
-    this.listener?.linkedUpdated(linked);
-  }
-
-  /**
-   * Execute once when linked
-   */
-  private onceLinked?: () => void;
-  private setOnceLinked<T>(callback: () => Promise<T>): Promise<T> {
-    return new Promise<T>((resolve) => {
-      if (this.linked) {
-        callback().then(resolve);
-      } else {
-        this.onceLinked = () => {
-          callback().then(resolve);
-          this.onceLinked = undefined;
         };
       }
     });
@@ -485,7 +445,7 @@ export class WalletLinkConnection {
 
     this.listener?.resetAndReload();
     this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
-      alreadyDestroyed: this.isDestroyed,
+      alreadyDestroyed: this.destroyed,
       sessionIdHash: Session.hash(this.session.id),
     });
   };
