@@ -1,7 +1,7 @@
 import { ErrorHandler } from '../../../core/error';
 import { injectCssReset } from '../../../lib/cssReset';
 import { RelayUI, RelayUIOptions } from '../../RelayUI';
-import { Snackbar, SnackbarInstanceProps } from './components/Snackbar/Snackbar';
+import { Snackbar, SnackbarInstanceProps } from './component/Snackbar';
 
 export class WalletLinkRelayUI implements RelayUI {
   private readonly snackbar: Snackbar;
