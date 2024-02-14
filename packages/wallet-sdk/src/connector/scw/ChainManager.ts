@@ -20,7 +20,8 @@ export class ChainManager {
 
   switchChain(chainId: number): boolean {
     const chain = this.availableChains?.find((chain) => chain.id === chainId);
-    if (!chain || chain === this.activeChain) return false;
+    if (!chain) return false;
+    if (chain === this.activeChain) return true;
 
     this.activeChain = chain;
     this.storage.setItem(ACTIVE_CHAIN_STORAGE_KEY, JSON.stringify(chain));
