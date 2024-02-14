@@ -10,6 +10,8 @@ describe('EIP1193Provider', () => {
     provider = new CoinbaseWalletProvider({
       storage: new ScopedLocalStorage('-walletlink'),
       popupCommunicator: new PopUpCommunicator({ url: 'http://fooUrl.com' }),
+      appChainIds: [],
+      connectionPreference: 'default',
     });
   });
 

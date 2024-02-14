@@ -5,6 +5,7 @@ import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
 import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
 import { ProviderInterface } from './provider/ProviderInterface';
 
+export type { ConnectionPreference } from './CoinbaseWalletSDK';
 export { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
 export default CoinbaseWalletSDK;
 
@@ -17,6 +18,10 @@ declare global {
      */
     ethereum?: ProviderInterface;
     coinbaseWalletExtension?: ProviderInterface;
+    /**
+     * @deprecated Legacy API
+     */
+    walletLinkExtension?: ProviderInterface;
   }
 }
 

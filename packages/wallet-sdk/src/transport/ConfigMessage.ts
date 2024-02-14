@@ -21,7 +21,6 @@ export enum HostConfigEventType {
   ConnectionTypeSelected = 'connectionTypeSelected',
   RequestWalletLinkUrl = 'requestWalletLinkUrl',
   PopupUnload = 'popupUnload',
-  ClosePopup = 'closePopup',
 }
 
 export type ConnectionType = 'scw' | 'walletlink' | 'extension';

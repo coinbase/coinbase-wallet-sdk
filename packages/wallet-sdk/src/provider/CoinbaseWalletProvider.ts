@@ -1,6 +1,7 @@
 /* eslint-disable jest/no-commented-out-tests */
 import EventEmitter from 'eventemitter3';
 
+import { ConnectionPreference } from '../CoinbaseWalletSDK';
 import { Chain, Connector, ConnectorUpdateListener } from '../connector/ConnectorInterface';
 import { SCWConnector } from '../connector/scw/SCWConnector';
 import { WLConnector } from '../connector/walletlink/WLConnector';
@@ -19,6 +20,8 @@ interface ConstructorOptions {
   popupCommunicator: PopUpCommunicator;
   appName?: string;
   appLogoUrl?: string | null;
+  appChainIds: number[];
+  connectionPreference: ConnectionPreference;
 }
 
 const ACCOUNTS_KEY = 'Provider:accounts';
@@ -30,8 +33,10 @@ export class CoinbaseWalletProvider
   implements ProviderInterface, ConnectorUpdateListener
 {
   private _accounts: AddressString[];
-  private _appLogoUrl: string | null = null;
-  private _appName = '';
+  private _appName: string;
+  private _appLogoUrl: string | null;
+  private _appChainIds: number[];
+  private _connectionPreference: ConnectionPreference;
   private _chain: Chain = {
     id: 1,
   };
@@ -54,12 +59,15 @@ export class CoinbaseWalletProvider
 
     this._appName = options.appName ?? '';
     this._appLogoUrl = options.appLogoUrl ?? null;
+    this._appChainIds = options.appChainIds;
     const persistedAccounts = this._getStoredAccounts();
     this._accounts = persistedAccounts;
     const persistedChain = this._getStoredChain();
     this._chain = persistedChain;
     const persistedConnectionType = this._storage.getItem(CONNECTION_TYPE_KEY);
     this._connectionType = persistedConnectionType;
+    this._connectionPreference = options.connectionPreference;
+
     if (persistedConnectionType) {
       this._initConnector();
     }
@@ -82,6 +90,7 @@ export class CoinbaseWalletProvider
     this._connector = new SCWConnector({
       appName: this._appName,
       appLogoUrl: this._appLogoUrl,
+      appChainIds: this._appChainIds,
       puc: this._popupCommunicator,
       storage: this._storage,
       updateListener: this,
@@ -280,9 +289,13 @@ export class CoinbaseWalletProvider
     return new Promise((resolve) => {
       this._connectionTypeSelectionResolver = resolve.bind(this);
 
-      this._popupCommunicator.selectConnectionType().then((connectionType) => {
-        resolve(connectionType);
-      });
+      this._popupCommunicator
+        .selectConnectionType({
+          connectionPreference: this._connectionPreference,
+        })
+        .then((connectionType) => {
+          resolve(connectionType);
+        });
     });
   }
 

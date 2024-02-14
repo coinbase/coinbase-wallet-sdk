@@ -10,6 +10,9 @@ import { ProviderInterface } from './provider/ProviderInterface';
 import { PopUpCommunicator } from './transport/PopUpCommunicator';
 import { LIB_VERSION } from './version';
 
+export const ConnectionPreferences = ['default', 'external', 'embedded'] as const;
+export type ConnectionPreference = (typeof ConnectionPreferences)[number];
+
 /** Coinbase Wallet SDK Constructor Options */
 export interface CoinbaseWalletSDKOptions {
   /** Application name */
@@ -20,8 +23,13 @@ export interface CoinbaseWalletSDKOptions {
   darkMode?: boolean;
   /** @optional Coinbase Wallet link server URL; for most, leave it unspecified */
   linkAPIUrl?: string;
+  // TODO: to remove scwUrl before release
   /** @optional SCW FE URL */
   scwUrl?: string;
+  /** @optional Array of chainIds your dapp supports */
+  chainIds?: string[];
+  /** @optional Pre-select the wallet connection method */
+  connectionPreference?: ConnectionPreference;
 }
 
 export class CoinbaseWalletSDK {
@@ -30,6 +38,8 @@ export class CoinbaseWalletSDK {
   private _appName = '';
   private _appLogoUrl: string | null = null;
   private _storage: ScopedLocalStorage;
+  private _connectionPreference: ConnectionPreference;
+  private _chainIds: number[];
   private linkAPIUrl: string;
   private popupCommunicator: PopUpCommunicator;
 
@@ -44,6 +54,8 @@ export class CoinbaseWalletSDK {
     const origin = `${url.protocol}//${url.host}`;
     this._storage = new ScopedLocalStorage(`-walletlink:${origin}`); // needs migration to preserve local states
     this._storage.setItem('version', CoinbaseWalletSDK.VERSION);
+    this._connectionPreference = options.connectionPreference || 'default';
+    this._chainIds = options.chainIds ? options.chainIds.map(Number) : [];
 
     this.popupCommunicator = new PopUpCommunicator({
       url: options.scwUrl || 'https://scw-dev.cbhq.net/connect',
@@ -58,12 +70,10 @@ export class CoinbaseWalletSDK {
    * @param chainId Ethereum Chain ID (Default: 1)
    * @returns A Web3 Provider
    */
-  public makeWeb3Provider(jsonRpcUrl = '', chainId = 1): ProviderInterface {
+  // TODO: to clean up the param here
+  public makeWeb3Provider(): ProviderInterface {
     const extension = this.walletExtension;
     if (extension) {
-      if (!this.isCipherProvider(extension)) {
-        (extension as LegacyProviderInterface).setProviderInfo?.(jsonRpcUrl, chainId);
-      }
       return extension;
     }
 
@@ -81,6 +91,8 @@ export class CoinbaseWalletSDK {
       popupCommunicator: this.popupCommunicator,
       appName: this._appName,
       appLogoUrl: this._appLogoUrl,
+      appChainIds: this._chainIds,
+      connectionPreference: this._connectionPreference,
     });
   }
 
@@ -95,9 +107,7 @@ export class CoinbaseWalletSDK {
 
     const extension = this.walletExtension;
     if (extension) {
-      if (!this.isCipherProvider(extension)) {
-        (extension as LegacyProviderInterface).setAppInfo?.(this._appName, this._appLogoUrl);
-      }
+      (extension as LegacyProviderInterface).setAppInfo?.(this._appName, this._appLogoUrl);
     }
   }
 
@@ -125,7 +135,7 @@ export class CoinbaseWalletSDK {
   }
 
   private get walletExtension(): ProviderInterface | undefined {
-    return window.coinbaseWalletExtension;
+    return window.coinbaseWalletExtension ?? window.walletLinkExtension;
   }
 
   private get coinbaseBrowser(): ProviderInterface | undefined {
@@ -143,11 +153,6 @@ export class CoinbaseWalletSDK {
     } catch (e) {
       return undefined;
     }
-  }
-
-  private isCipherProvider(provider: ProviderInterface): boolean {
-    // @ts-expect-error isCipher walletlink property
-    return typeof provider.isCipher === 'boolean' && provider.isCipher;
   }
 }
 

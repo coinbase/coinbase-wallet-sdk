@@ -1,5 +1,6 @@
 import { UUID } from 'crypto';
 
+import { ConnectionPreference } from '../CoinbaseWalletSDK';
 import { standardErrors } from '../core/error/errors';
 import {
   ClientConfigEventType,
@@ -117,13 +118,14 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
       case HostConfigEventType.PopupUnload:
         this.disconnect();
         break;
-      case HostConfigEventType.ClosePopup:
-        this.closeChildWindow();
-        break;
     }
   }
 
-  selectConnectionType(): Promise<ConnectionType> {
+  selectConnectionType({
+    connectionPreference,
+  }: {
+    connectionPreference: ConnectionPreference;
+  }): Promise<ConnectionType> {
     return new Promise((resolve, reject) => {
       if (!this.peerWindow) {
         reject(
@@ -134,7 +136,9 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
       }
 
       this.resolveConnectionType = resolve;
-      this.postClientConfigMessage(ClientConfigEventType.SelectConnectionType);
+      this.postClientConfigMessage(ClientConfigEventType.SelectConnectionType, {
+        connectionPreference,
+      });
     });
   }
 
@@ -142,12 +146,17 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     this.postClientConfigMessage(ClientConfigEventType.WalletLinkQrScanned);
   }
 
-  private postClientConfigMessage(type: ClientConfigEventType) {
+  private postClientConfigMessage(type: ClientConfigEventType, options?: any) {
+    if (options && type !== ClientConfigEventType.SelectConnectionType) {
+      throw standardErrors.rpc.internal('ClientConfigEvent does not accept options');
+    }
+
     const configMessage: ConfigMessage = {
       type: 'config',
       id: crypto.randomUUID(),
       event: {
         type,
+        value: options,
       },
     };
     this.postMessage(configMessage);

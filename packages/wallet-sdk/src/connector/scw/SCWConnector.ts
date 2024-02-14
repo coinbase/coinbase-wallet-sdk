@@ -26,6 +26,7 @@ import { SCWResponse } from './protocol/type/Response';
 export class SCWConnector implements Connector {
   private appName: string;
   private appLogoUrl: string | null;
+  private appChainIds: number[];
 
   private puc: PopUpCommunicator;
   private storage: ScopedLocalStorage;
@@ -35,12 +36,14 @@ export class SCWConnector implements Connector {
   constructor(options: {
     appName: string;
     appLogoUrl: string | null;
+    appChainIds: number[];
     puc: PopUpCommunicator;
     storage: ScopedLocalStorage;
     updateListener: ConnectorUpdateListener;
   }) {
     this.appName = options.appName;
     this.appLogoUrl = options.appLogoUrl;
+    this.appChainIds = options.appChainIds;
     this.puc = options.puc;
     this.storage = options.storage;
     this.keyStorage = new KeyStorage(this.storage);
@@ -65,6 +68,7 @@ export class SCWConnector implements Connector {
         params: {
           dappName: this.appName,
           dappLogoUrl: this.appLogoUrl,
+          chainIds: this.appChainIds,
         },
       },
     });

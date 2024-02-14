@@ -1,3 +1,4 @@
+import { ConnectionPreferences } from '@cbhq/wallet-sdk/dist/CoinbaseWalletSDK';
 import { CheckIcon, ChevronDownIcon } from '@chakra-ui/icons';
 import {
   Box,
@@ -20,7 +21,8 @@ type LayoutProps = {
 export const WIDTH_2XL = '1536px';
 
 export function Layout({ children }: LayoutProps) {
-  const { scwPopupURL, setSCWPopupURL, provider } = useCBWSDK();
+  const { scwPopupURL, setSCWPopupURL, provider, connectionPreference, setPreference } =
+    useCBWSDK();
 
   const handleDisconnect = () => {
     if (provider) {
@@ -48,6 +50,23 @@ export function Layout({ children }: LayoutProps) {
                       onClick={() => setSCWPopupURL(url)}
                     >
                       {url}
+                    </MenuItem>
+                  ))}
+                </MenuList>
+              </Menu>
+              <Menu>
+                <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
+                  {`CntnPrfnce: ${connectionPreference}`}
+                </MenuButton>
+                <MenuList>
+                  {ConnectionPreferences.map((preference) => (
+                    <MenuItem
+                      color={'MenuText'}
+                      key={preference}
+                      icon={preference === connectionPreference ? <CheckIcon /> : null}
+                      onClick={() => setPreference(preference)}
+                    >
+                      {preference}
                     </MenuItem>
                   ))}
                 </MenuList>

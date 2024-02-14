@@ -1,4 +1,8 @@
 import CoinbaseWalletSDK from '@cbhq/wallet-sdk';
+import {
+  ConnectionPreference,
+  ConnectionPreferences,
+} from '@cbhq/wallet-sdk/dist/CoinbaseWalletSDK';
 import React, { useEffect, useMemo } from 'react';
 
 type CBWSDKProviderProps = {
@@ -7,6 +11,7 @@ type CBWSDKProviderProps = {
 
 const CBWSDKReactContext = React.createContext(null);
 const SELECTED_URL_KEY = 'selected_scw_fe_url';
+const PREFERRED_CONNECTION_KEY = 'preferred_connection';
 
 export const SCWPopupURLs = [
   'https://scw-dev.cbhq.net/connect',
@@ -16,6 +21,9 @@ export type SCWPopupURLType = (typeof SCWPopupURLs)[number];
 
 export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
   const [scwURL, setScwURL] = React.useState<SCWPopupURLType | undefined>(undefined);
+  const [connectionPreference, setConnectionPreference] = React.useState<
+    ConnectionPreference | undefined
+  >(undefined);
   const [sdk, setSdk] = React.useState(null);
   const [provider, setProvider] = React.useState(null);
 
@@ -26,21 +34,37 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
         SCWPopupURLs.includes(savedURL) ? (savedURL as SCWPopupURLType) : SCWPopupURLs[0]
       );
     }
-  }, [scwURL]);
+    if (connectionPreference === undefined) {
+      const savedPreference = localStorage.getItem(
+        PREFERRED_CONNECTION_KEY
+      ) as ConnectionPreference;
+      setConnectionPreference(
+        ConnectionPreferences.includes(savedPreference)
+          ? savedPreference
+          : ('default' as ConnectionPreference)
+      );
+    }
+  }, [scwURL, connectionPreference]);
 
   useEffect(() => {
     const cbwsdk = new CoinbaseWalletSDK({
       appName: 'SDK Playground',
       scwUrl: scwURL,
+      connectionPreference: connectionPreference ?? 'default',
     });
     setSdk(cbwsdk);
     const cbwprovider = cbwsdk.makeWeb3Provider();
     setProvider(cbwprovider);
-  }, [scwURL]);
+  }, [scwURL, connectionPreference]);
 
   const setSCWPopupURL = (url: SCWPopupURLType) => {
     localStorage.setItem(SELECTED_URL_KEY, url);
     setScwURL(url);
+  };
+
+  const setPreference = (connectionPreference: ConnectionPreference) => {
+    localStorage.setItem(PREFERRED_CONNECTION_KEY, connectionPreference);
+    setConnectionPreference(connectionPreference);
   };
 
   const ctx = useMemo(
@@ -49,6 +73,8 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
       provider,
       scwPopupURL: scwURL,
       setSCWPopupURL,
+      connectionPreference,
+      setPreference,
     }),
     [sdk, provider]
   );
