@@ -36,3 +36,30 @@ export function getErrorForInvalidRequestArgs(args: RequestArguments) {
   }
   return undefined;
 }
+
+const methodsThatRequireSigning = [
+  'eth_requestAccounts',
+  'eth_sign',
+  'eth_ecRecover',
+  'personal_sign',
+  'personal_ecRecover',
+  'eth_signTransaction',
+  'eth_sendRawTransaction',
+  'eth_sendTransaction',
+  'eth_signTypedData_v1',
+  'eth_signTypedData_v2',
+  'eth_signTypedData_v3',
+  'eth_signTypedData_v4',
+  'eth_signTypedData',
+  'wallet_addEthereumChain',
+  'wallet_switchEthereumChain',
+  'wallet_watchAsset',
+];
+
+export function requiresSigning(method: string) {
+  return (
+    methodsThatRequireSigning.includes(method) ||
+    method.startsWith('eth_send') ||
+    method.startsWith('eth_sign')
+  );
+}

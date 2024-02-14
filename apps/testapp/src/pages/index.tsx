@@ -5,11 +5,13 @@ import { EventListenersCard } from '../components/EventListeners/EventListenersC
 import { WIDTH_2XL } from '../components/Layout';
 import { connectionMethods } from '../components/RpcMethods/method/connectionMethods';
 import { multiChainMethods } from '../components/RpcMethods/method/multiChainMethods';
+import { readonlyJsonRpcMethods } from '../components/RpcMethods/method/readonlyJsonRpcMethods';
 import { RpcRequestInput } from '../components/RpcMethods/method/RpcRequestInput';
 import { sendMethods } from '../components/RpcMethods/method/sendMethods';
 import { signMessageMethods } from '../components/RpcMethods/method/signMessageMethods';
 import { RpcMethodCard } from '../components/RpcMethods/RpcMethodCard';
 import { multiChainShortcutsMap } from '../components/RpcMethods/shortcut/multipleChainShortcuts';
+import { readonlyJsonRpcShortcutsMap } from '../components/RpcMethods/shortcut/readonlyJsonRpcShortcuts';
 import { sendShortcutsMap } from '../components/RpcMethods/shortcut/sendShortcuts';
 import { ShortcutType } from '../components/RpcMethods/shortcut/ShortcutType';
 import { signMessageShortcutsMap } from '../components/RpcMethods/shortcut/signMessageShortcuts';
@@ -17,7 +19,7 @@ import { useCBWSDK } from '../context/CBWSDKReactContextProvider';
 
 export default function Home() {
   const { provider } = useCBWSDK();
-  const [connected, setConnected] = React.useState(false);
+  const [connected, setConnected] = React.useState(Boolean(provider?.connected));
 
   useEffect(() => {
     provider?.on('connect', () => {
@@ -47,6 +49,11 @@ export default function Home() {
             shortcutsMap={signMessageShortcutsMap}
           />
           <MethodsSection title="Send" methods={sendMethods} shortcutsMap={sendShortcutsMap} />
+          <MethodsSection
+            title="Read-only JSON-RPC Requests"
+            methods={readonlyJsonRpcMethods}
+            shortcutsMap={readonlyJsonRpcShortcutsMap}
+          />
         </>
       )}
     </Container>
@@ -79,7 +86,6 @@ function MethodsSection({
             <RpcMethodCard
               method={rpc.method}
               params={rpc.params}
-              connected={rpc.connected}
               format={rpc.format}
               shortcuts={shortcutsMap?.[rpc.method]}
             />

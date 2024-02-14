@@ -11,7 +11,7 @@ import { areAddressArraysEqual, prepend0x, showDeprecationWarning } from '../cor
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { ConnectionType } from '../transport/ConfigMessage';
 import { PopUpCommunicator } from '../transport/PopUpCommunicator';
-import { getErrorForInvalidRequestArgs } from './helpers/eip1193Utils';
+import { getErrorForInvalidRequestArgs, requiresSigning } from './helpers/eip1193Utils';
 import { ProviderInterface, ProviderRpcError, RequestArguments } from './ProviderInterface';
 
 interface ConstructorOptions {
@@ -19,27 +19,27 @@ interface ConstructorOptions {
   popupCommunicator: PopUpCommunicator;
   appName?: string;
   appLogoUrl?: string | null;
-  linkAPIUrl?: string;
 }
 
-const ACCOUNTS_KEY = 'accounts';
-const CONNECTION_TYPE_KEY = 'connectionType';
+const ACCOUNTS_KEY = 'Provider:accounts';
+const CONNECTION_TYPE_KEY = 'Provider:connectionType';
+const CHAIN_KEY = 'Provider:chain';
 
 export class CoinbaseWalletProvider
   extends EventEmitter
   implements ProviderInterface, ConnectorUpdateListener
 {
-  private _storage: ScopedLocalStorage;
-  private _popupCommunicator: PopUpCommunicator;
   private _accounts: AddressString[];
-  private _appName = '';
   private _appLogoUrl: string | null = null;
-  private _connector: Connector | undefined;
-  private _connectionType: string | null;
+  private _appName = '';
   private _chain: Chain = {
     id: 1,
   };
+  private _connectionType: string | null;
   private _connectionTypeSelectionResolver: ((value: unknown) => void) | undefined;
+  private _connector: Connector | undefined;
+  private _popupCommunicator: PopUpCommunicator;
+  private _storage: ScopedLocalStorage;
 
   constructor(options: Readonly<ConstructorOptions>) {
     super();
@@ -56,6 +56,8 @@ export class CoinbaseWalletProvider
     this._appLogoUrl = options.appLogoUrl ?? null;
     const persistedAccounts = this._getStoredAccounts();
     this._accounts = persistedAccounts;
+    const persistedChain = this._getStoredChain();
+    this._chain = persistedChain;
     const persistedConnectionType = this._storage.getItem(CONNECTION_TYPE_KEY);
     this._connectionType = persistedConnectionType;
     if (persistedConnectionType) {
@@ -107,11 +109,7 @@ export class CoinbaseWalletProvider
       this._connectionTypeSelectionResolver?.('walletlink');
     }
 
-    if (chain.id !== this._chain.id) {
-      this.emit('chainChanged', prepend0x(chain.id.toString(16)));
-    }
-
-    this._chain = chain;
+    this._setChain(chain);
   }
 
   private _emitConnectEvent() {
@@ -138,6 +136,7 @@ export class CoinbaseWalletProvider
     );
     this._accounts = [];
     this._connectionType = null;
+    this._chain = { id: 1 };
     this._storage.clear(); // clear persisted accounts & connectionType
     this._connector?.disconnect();
     this.emit('disconnect', disconnectInfo);
@@ -154,22 +153,19 @@ export class CoinbaseWalletProvider
   }
 
   private async _handleRequest<T>(request: RequestArguments): Promise<T> {
-    return new Promise<T>((resolve, reject) => {
-      try {
-        switch (request.method) {
-          case 'eth_chainId':
-            return resolve(this._chain?.id as T);
-          case 'eth_accounts':
-            return resolve(this._eth_accounts() as T);
-          case 'eth_requestAccounts':
-            return resolve(this._eth_requestAccounts() as T);
-          default:
-            return resolve(this._genericConnectorRequest<T>(request));
+    switch (request.method) {
+      case 'eth_chainId':
+        return this._chain?.id as T;
+      case 'eth_accounts':
+        return this._eth_accounts() as T;
+      case 'eth_requestAccounts':
+        return this._eth_requestAccounts() as T;
+      default:
+        if (!requiresSigning(request.method)) {
+          return this._makeReadonlyJsonRpcRequest<T>(request);
         }
-      } catch (error) {
-        return reject(error);
-      }
-    });
+        return this._genericConnectorRequest<T>(request);
+    }
   }
 
   private _requireAuthorization() {
@@ -194,6 +190,23 @@ export class CoinbaseWalletProvider
       }
       throw err;
     }
+  }
+
+  private async _makeReadonlyJsonRpcRequest<T>(request: RequestArguments): Promise<T> {
+    if (!this._chain.rpcUrl) throw standardErrors.rpc.internal('No RPC URL set for chain');
+    const requestBody = {
+      ...request,
+      jsonrpc: '2.0',
+      id: crypto.randomUUID(),
+    };
+    const res = await window.fetch(this._chain.rpcUrl, {
+      method: 'POST',
+      body: JSON.stringify(requestBody),
+      mode: 'cors',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const response = await res.json();
+    return response;
   }
 
   private _eth_accounts(): AddressString[] {
@@ -279,6 +292,12 @@ export class CoinbaseWalletProvider
     this._connectionType = connectionType;
     this._storage.setItem(CONNECTION_TYPE_KEY, this._connectionType);
   }
+  private _setChain(chain: Chain) {
+    if (chain.id === this._chain.id && chain.rpcUrl === this._chain.rpcUrl) return;
+    this._chain = chain;
+    this._storage.setItem(CHAIN_KEY, JSON.stringify(this._chain));
+    this.emit('chainChanged', prepend0x(chain.id.toString(16)));
+  }
 
   private _setStoredAccounts(accounts: AddressString[]) {
     try {
@@ -297,6 +316,17 @@ export class CoinbaseWalletProvider
       // TODO: error handling
       console.error('Error retrieving accounts from storage:', error);
       return [];
+    }
+  }
+  private _getStoredChain(): Chain {
+    const defaultChain = { id: 1 };
+    try {
+      const storedChain = this._storage.getItem(CHAIN_KEY);
+      return storedChain ? JSON.parse(storedChain) : defaultChain;
+    } catch (error) {
+      // TODO: error handling
+      console.error('Error retrieving accounts from storage:', error);
+      return defaultChain;
     }
   }
 }

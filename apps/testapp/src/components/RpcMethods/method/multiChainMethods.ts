@@ -11,7 +11,6 @@ const walletSwitchEthereumChain: RpcRequestInput = {
 };
 
 const walletAddEthereumChain: RpcRequestInput = {
-  connected: true,
   method: 'wallet_addEthereumChain',
   params: [
     { key: 'chainId', required: true },

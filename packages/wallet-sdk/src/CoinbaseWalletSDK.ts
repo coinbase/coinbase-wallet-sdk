@@ -78,7 +78,6 @@ export class CoinbaseWalletSDK {
 
     return new CoinbaseWalletProvider({
       storage: this._storage,
-      linkAPIUrl: this.linkAPIUrl,
       popupCommunicator: this.popupCommunicator,
       appName: this._appName,
       appLogoUrl: this._appLogoUrl,

@@ -27,7 +27,7 @@ import { ADDR_TO_FILL } from './shortcut/const';
 
 type ResponseType = string;
 
-export function RpcMethodCard({ connected, format, method, params, shortcuts }) {
+export function RpcMethodCard({ format, method, params, shortcuts }) {
   const [response, setResponse] = React.useState<Response | null>(null);
   const [verifyResult, setVerifyResult] = React.useState<string | null>(null);
   const [error, setError] = React.useState<Record<string, unknown> | string | number | null>(null);
@@ -73,9 +73,10 @@ export function RpcMethodCard({ connected, format, method, params, shortcuts }) 
       }
       try {
         // connection required
-        if (!connected) {
+        if (!provider?.connected) {
           await provider.enable();
         }
+
         const response = await provider.request({
           method,
           params: values,
