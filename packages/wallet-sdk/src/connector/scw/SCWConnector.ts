@@ -106,7 +106,7 @@ export class SCWConnector implements Connector {
       return result.value;
     } catch (err) {
       if ((err as SerializedEthereumRpcError).code === standardErrorCodes.provider.unauthorized) {
-        this.keyStorage.resetKeys();
+        await this.keyStorage.resetKeys();
       }
       throw err;
     }
