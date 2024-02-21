@@ -5,9 +5,8 @@ import { LogoType, walletLogo } from './assets/wallet-logo';
 import { LINK_API_URL } from './core/constants';
 import { getFavicon } from './core/util';
 import { ScopedLocalStorage } from './lib/ScopedLocalStorage';
-import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
+import { CoinbaseWalletProvider } from './provider/NewProvider';
 import { ProviderInterface } from './provider/ProviderInterface';
-import { PopUpCommunicator } from './transport/PopUpCommunicator';
 import { LIB_VERSION } from './version';
 
 export const ConnectionPreferences = ['default', 'external', 'embedded'] as const;
@@ -41,7 +40,7 @@ export class CoinbaseWalletSDK {
   private _connectionPreference: ConnectionPreference;
   private _chainIds: number[];
   private linkAPIUrl: string;
-  private popupCommunicator: PopUpCommunicator;
+  private scwUrl?: string;
 
   /**
    * Constructor
@@ -57,9 +56,8 @@ export class CoinbaseWalletSDK {
     this._connectionPreference = options.connectionPreference || 'default';
     this._chainIds = options.chainIds ? options.chainIds.map(Number) : [];
 
-    this.popupCommunicator = new PopUpCommunicator({
-      url: options.scwUrl || 'https://scw-dev.cbhq.net/connect',
-    });
+    // TODO: revisit arg name. update default url to production.
+    this.scwUrl = options.scwUrl || 'https://scw-dev.cbhq.net/connect';
 
     this.setAppInfo(options.appName, options.appLogoUrl);
   }
@@ -88,7 +86,7 @@ export class CoinbaseWalletSDK {
 
     return new CoinbaseWalletProvider({
       storage: this._storage,
-      popupCommunicator: this.popupCommunicator,
+      scwUrl: this.scwUrl,
       appName: this._appName,
       appLogoUrl: this._appLogoUrl,
       appChainIds: this._chainIds,

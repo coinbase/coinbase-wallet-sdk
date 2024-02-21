@@ -1,7 +1,6 @@
 import { standardErrors } from '../core/error';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { PopUpCommunicator } from '../transport/PopUpCommunicator';
-import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
+import { CoinbaseWalletProvider } from './NewProvider';
 
 describe('EIP1193Provider', () => {
   let provider: CoinbaseWalletProvider;
@@ -9,7 +8,7 @@ describe('EIP1193Provider', () => {
   beforeEach(() => {
     provider = new CoinbaseWalletProvider({
       storage: new ScopedLocalStorage('-walletlink'),
-      popupCommunicator: new PopUpCommunicator({ url: 'http://fooUrl.com' }),
+      scwUrl: 'http://fooUrl.com',
       appChainIds: [],
       connectionPreference: 'default',
     });

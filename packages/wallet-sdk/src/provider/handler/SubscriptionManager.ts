@@ -5,30 +5,25 @@ import type {
 import { PollingBlockTracker } from 'eth-block-tracker';
 import { EventEmitter } from 'eventemitter3';
 
-import { ProviderInterface, RequestArguments } from './ProviderInterface';
+import { Chain } from '../../connector/ConnectorInterface';
+import { AddressString } from '../../core/type';
+import { ProviderInterface, RequestArguments } from '../ProviderInterface';
+import { RequestHandler } from './RequestHandler';
 
 // TODO: When we update this package we should be able to fix this
 //  eslint-disable-next-line @typescript-eslint/no-var-requires
 const createSubscriptionManager = require('eth-json-rpc-filters/subscriptionManager');
 const noop = () => {};
 
-export interface SubscriptionResult {
+interface SubscriptionResult {
   result?: unknown;
 }
 
-export interface SubscriptionNotification {
-  method: string;
-  params: {
-    subscription: string;
-    result: unknown;
-  };
-}
-
-export class SubscriptionManager {
+export class SubscriptionRequestHandler implements RequestHandler {
   private readonly subscriptionMiddleware: SubscriptionMiddleware;
   readonly events: EventEmitter;
 
-  constructor(provider: ProviderInterface) {
+  constructor({ provider }: { provider: ProviderInterface }) {
     const blockTracker = new PollingBlockTracker({
       provider: provider as unknown as never,
       pollingInterval: 15_000,
@@ -44,16 +39,18 @@ export class SubscriptionManager {
     this.subscriptionMiddleware = middleware;
   }
 
-  public async handleRequest(request: {
-    method: string;
-    params: unknown[];
-  }): Promise<SubscriptionResult> {
+  canHandleRequest(request: RequestArguments): boolean {
+    const subscriptionMethods = ['eth_subscribe', 'eth_unsubscribe'];
+    return subscriptionMethods.includes(request.method);
+  }
+
+  async handleRequest(request: RequestArguments, _accounts: AddressString[], _chain: Chain) {
     const result = {};
     await this.subscriptionMiddleware(request, result, noop, noop);
     return result;
   }
 
-  public destroy() {
+  onDisconnect() {
     this.subscriptionMiddleware.destroy();
   }
 }

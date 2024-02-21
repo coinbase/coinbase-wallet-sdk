@@ -56,7 +56,7 @@ export function Layout({ children }: LayoutProps) {
               </Menu>
               <Menu>
                 <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
-                  {`CntnPrfnce: ${connectionPreference}`}
+                  {`Mode: ${connectionPreference}`}
                 </MenuButton>
                 <MenuList>
                   {ConnectionPreferences.map((preference) => (
