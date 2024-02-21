@@ -125,7 +125,7 @@ export class SignRequestHandler implements RequestHandler, ConnectorUpdateListen
   async handleRequest(request: RequestArguments, accounts: AddressString[], _chain: Chain) {
     try {
       if (request.method === 'eth_requestAccounts') {
-        return this._eth_requestAccounts(accounts);
+        return await this._eth_requestAccounts(accounts);
       }
 
       if (!this._connector || accounts.length <= 0) {
