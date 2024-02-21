@@ -59,19 +59,14 @@ export class CoinbaseWalletSDK {
     // TODO: revisit arg name. update default url to production.
     this.scwUrl = options.scwUrl || 'https://scw-dev.cbhq.net/connect';
 
-    this.setAppInfo(options.appName, options.appLogoUrl);
+    this._appName = options.appName || 'DApp';
+    this._appLogoUrl = options.appLogoUrl || getFavicon();
   }
 
-  /**
-   * Create a Web3 Provider object
-   * @param jsonRpcUrl Ethereum JSON RPC URL (Default: "")
-   * @param chainId Ethereum Chain ID (Default: 1)
-   * @returns A Web3 Provider
-   */
-  // TODO: to clean up the param here
   public makeWeb3Provider(): ProviderInterface {
     const extension = this.walletExtension;
     if (extension) {
+      extension.setAppInfo?.(this._appName, this._appLogoUrl);
       return extension;
     }
 
@@ -94,29 +89,10 @@ export class CoinbaseWalletSDK {
     });
   }
 
-  /**
-   * Set application information
-   * @param appName Application name
-   * @param appLogoUrl Application logo image URL
-   */
-  private setAppInfo(appName: string | undefined, appLogoUrl: string | null | undefined): void {
-    this._appName = appName || 'DApp';
-    this._appLogoUrl = appLogoUrl || getFavicon();
-
-    const extension = this.walletExtension;
-    if (extension) {
-      (extension as LegacyProviderInterface).setAppInfo?.(this._appName, this._appLogoUrl);
-    }
-  }
-
-  /**
-   * Disconnect. After disconnecting, this will reload the web page to ensure
-   * all potential stale state is cleared.
-   */
   public disconnect(): void {
     const extension = this?.walletExtension;
     if (extension) {
-      (extension as LegacyProviderInterface).close?.();
+      extension.close?.();
     } else {
       this._storage.clear();
     }
@@ -132,11 +108,11 @@ export class CoinbaseWalletSDK {
     return walletLogo(type, width);
   }
 
-  private get walletExtension(): ProviderInterface | undefined {
+  private get walletExtension(): LegacyProviderInterface | undefined {
     return window.coinbaseWalletExtension ?? window.walletLinkExtension;
   }
 
-  private get coinbaseBrowser(): ProviderInterface | undefined {
+  private get coinbaseBrowser(): LegacyProviderInterface | undefined {
     try {
       // Coinbase DApp browser does not inject into iframes so grab provider from top frame if it exists
       const ethereum = window.ethereum ?? window.top?.ethereum;
@@ -156,6 +132,5 @@ export class CoinbaseWalletSDK {
 
 interface LegacyProviderInterface extends ProviderInterface {
   setAppInfo?(appName: string, appLogoUrl: string | null): void;
-  setProviderInfo?(jsonRpcUrl: string, chainId: number): void;
   close?(): void;
 }
