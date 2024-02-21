@@ -43,7 +43,7 @@ export class WLConnector implements Connector, WLRelayUpdateListener {
     return this.adapter.getQRCodeUrl();
   }
 
-  disconnect() {
-    this.adapter.close();
+  async disconnect() {
+    await this.adapter.close();
   }
 }

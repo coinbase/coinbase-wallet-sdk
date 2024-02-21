@@ -9,5 +9,5 @@ export interface RequestHandler {
     accounts: AddressString[],
     chain: Chain
   ): Promise<unknown>;
-  onDisconnect?(): void;
+  onDisconnect?(): Promise<void>;
 }

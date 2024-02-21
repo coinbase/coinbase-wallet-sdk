@@ -7,10 +7,13 @@ import { standardErrors } from '../core/error';
 import { AddressString } from '../core/type';
 import { areAddressArraysEqual, prepend0x, showDeprecationWarning } from '../core/util';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { SignRequestHandler, SignRequestHandlingUpdateListener } from './CoinbaseWalletProvider';
 import { FilterRequestHandler } from './handler/FilterRequestHandler';
 import { JSONRPCRequestHandler } from './handler/JSONRPCRequestHandler';
 import { RequestHandler } from './handler/RequestHandler';
+import {
+  SignRequestHandler,
+  SignRequestHandlingUpdateListener,
+} from './handler/SignRequestHandler';
 import { StateRequestHandler } from './handler/StateRequestHandler';
 import { SubscriptionRequestHandler } from './handler/SubscriptionManager';
 import { getErrorForInvalidRequestArgs } from './helpers/eip1193Utils';
@@ -78,19 +81,25 @@ export class CoinbaseWalletProvider
     this._emitConnectEvent();
   }
 
+  onResetConnection(): void {
+    this.disconnect();
+  }
+
   public get connected() {
     return this._accounts.length > 0;
   }
 
-  disconnect(): void {
+  async disconnect(): Promise<void> {
     const disconnectInfo: ProviderRpcError = standardErrors.provider.disconnected(
       'User initiated disconnection'
     );
     this._accounts = [];
     this._chain = { id: 1 };
-    this.handlers.forEach((handler) => {
-      handler.onDisconnect?.();
-    });
+    await Promise.all(
+      this.handlers.map(async (handler) => {
+        await handler.onDisconnect?.();
+      })
+    );
     this._storage.clear(); // clear persisted accounts & connectionType
     this.emit('disconnect', disconnectInfo);
   }

@@ -1,20 +1,21 @@
-import { ConnectionPreference } from '../CoinbaseWalletSDK';
-import { Chain, Connector, ConnectorUpdateListener } from '../connector/ConnectorInterface';
-import { SCWConnector } from '../connector/scw/SCWConnector';
-import { WLConnector } from '../connector/walletlink/WLConnector';
-import { standardErrorCodes, standardErrors } from '../core/error';
-import { SerializedEthereumRpcError } from '../core/error/utils';
-import { AddressString } from '../core/type';
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { ConnectionType } from '../transport/ConfigMessage';
-import { PopUpCommunicator } from '../transport/PopUpCommunicator';
-import { RequestHandler } from './handler/RequestHandler';
-import { RequestArguments } from './ProviderInterface';
+import { ConnectionPreference } from '../../CoinbaseWalletSDK';
+import { Chain, Connector, ConnectorUpdateListener } from '../../connector/ConnectorInterface';
+import { SCWConnector } from '../../connector/scw/SCWConnector';
+import { WLConnector } from '../../connector/walletlink/WLConnector';
+import { standardErrorCodes, standardErrors } from '../../core/error';
+import { SerializedEthereumRpcError } from '../../core/error/utils';
+import { AddressString } from '../../core/type';
+import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
+import { ConnectionType } from '../../transport/ConfigMessage';
+import { PopUpCommunicator } from '../../transport/PopUpCommunicator';
+import { RequestArguments } from '../ProviderInterface';
+import { RequestHandler } from './RequestHandler';
 
 export interface SignRequestHandlingUpdateListener {
   onAccountsChanged: (accounts: AddressString[]) => void;
   onChainChanged: (chain: Chain) => void;
   onConnect: () => void;
+  onResetConnection: () => void;
 }
 
 interface SignRequestHandlerOptions {
@@ -116,27 +117,27 @@ export class SignRequestHandler implements RequestHandler, ConnectorUpdateListen
     });
   }
 
-  onDisconnect() {
+  async onDisconnect() {
     this._connectionType = null;
-    this._connector?.disconnect();
+    await this._connector?.disconnect();
   }
 
   async handleRequest(request: RequestArguments, accounts: AddressString[], _chain: Chain) {
-    if (request.method === 'eth_requestAccounts') {
-      return this._eth_requestAccounts(accounts);
-    }
-
-    if (!this._connector || accounts.length <= 0) {
-      throw standardErrors.provider.unauthorized(
-        "Must call 'eth_requestAccounts' before other methods"
-      );
-    }
-
     try {
+      if (request.method === 'eth_requestAccounts') {
+        return this._eth_requestAccounts(accounts);
+      }
+
+      if (!this._connector || accounts.length <= 0) {
+        throw standardErrors.provider.unauthorized(
+          "Must call 'eth_requestAccounts' before other methods"
+        );
+      }
+
       return await this._connector.request(request);
     } catch (err) {
       if ((err as SerializedEthereumRpcError).code === standardErrorCodes.provider.unauthorized) {
-        this.onDisconnect();
+        this._updateListener.onResetConnection();
       }
       throw err;
     }

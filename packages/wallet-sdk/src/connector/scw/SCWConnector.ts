@@ -1,5 +1,4 @@
-import { standardErrorCodes, standardErrors } from '../../core/error';
-import { SerializedEthereumRpcError } from '../../core/error/utils';
+import { standardErrors } from '../../core/error';
 import { AddressString } from '../../core/type';
 import { ensureIntNumber } from '../../core/util';
 import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
@@ -96,24 +95,17 @@ export class SCWConnector implements Connector {
 
     const response = await this.sendEncryptedRequest(request);
 
-    try {
-      const decrypted = await this.decryptResponseMessage<T>(response);
-      this.updateInternalState(request, decrypted);
+    const decrypted = await this.decryptResponseMessage<T>(response);
+    this.updateInternalState(request, decrypted);
 
-      const result = decrypted.result;
-      if ('error' in result) throw result.error;
+    const result = decrypted.result;
+    if ('error' in result) throw result.error;
 
-      return result.value;
-    } catch (err) {
-      if ((err as SerializedEthereumRpcError).code === standardErrorCodes.provider.unauthorized) {
-        await this.keyStorage.resetKeys();
-      }
-      throw err;
-    }
+    return result.value;
   }
 
-  disconnect() {
-    // TODO: implement
+  async disconnect() {
+    await this.keyStorage.resetKeys();
   }
 
   private tryLocalHandling<T>(request: RequestArguments): T | undefined {

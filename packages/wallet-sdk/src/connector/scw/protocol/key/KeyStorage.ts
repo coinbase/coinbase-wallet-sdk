@@ -55,9 +55,9 @@ export class KeyStorage {
     this.peerPublicKey = null;
     this.sharedSecret = null;
 
-    await this.storage.removeItem(OWN_PUBLIC_KEY.storageKey);
-    await this.storage.removeItem(OWN_PRIVATE_KEY.storageKey);
-    await this.storage.removeItem(PEER_PUBLIC_KEY.storageKey);
+    this.storage.removeItem(OWN_PUBLIC_KEY.storageKey);
+    this.storage.removeItem(OWN_PRIVATE_KEY.storageKey);
+    this.storage.removeItem(PEER_PUBLIC_KEY.storageKey);
 
     await this.generateKeyPair();
   }
@@ -96,7 +96,7 @@ export class KeyStorage {
   // storage methods
 
   private async loadKey(item: StorageItem): Promise<CryptoKey | null> {
-    const key = await this.storage.getItem(item.storageKey);
+    const key = this.storage.getItem(item.storageKey);
     if (!key) return null;
 
     return importKeyFromHexString(item.keyType, key);
@@ -104,6 +104,6 @@ export class KeyStorage {
 
   private async storeKey(item: StorageItem, key: CryptoKey) {
     const hexString = await exportKeyToHexString(item.keyType, key);
-    await this.storage.setItem(item.storageKey, hexString);
+    this.storage.setItem(item.storageKey, hexString);
   }
 }

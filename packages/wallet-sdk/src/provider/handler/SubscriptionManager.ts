@@ -50,7 +50,7 @@ export class SubscriptionRequestHandler implements RequestHandler {
     return result;
   }
 
-  onDisconnect() {
+  async onDisconnect() {
     this.subscriptionMiddleware.destroy();
   }
 }

@@ -14,11 +14,11 @@ describe('EIP1193Provider', () => {
     });
   });
 
-  it('emits disconnect event on user initiated disconnection', () => {
+  it('emits disconnect event on user initiated disconnection', async () => {
     const disconnectListener = jest.fn();
     provider.on('disconnect', disconnectListener);
 
-    provider.disconnect();
+    await provider.disconnect();
 
     expect(disconnectListener).toHaveBeenCalledWith(
       standardErrors.provider.disconnected('User initiated disconnection')

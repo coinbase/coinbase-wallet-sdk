@@ -4,7 +4,7 @@ import { RequestArguments } from '../provider/ProviderInterface';
 export interface Connector {
   handshake(): Promise<AddressString[]>;
   request<T>(request: RequestArguments): Promise<T>;
-  disconnect: () => void;
+  disconnect: () => Promise<void>;
 }
 
 export type Chain = {
