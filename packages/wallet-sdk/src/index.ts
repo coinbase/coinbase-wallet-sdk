@@ -2,7 +2,7 @@
 // Licensed under the Apache License, version 2.0
 
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
-import { CoinbaseWalletProvider } from './provider/NewProvider';
+import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
 import { ProviderInterface } from './provider/ProviderInterface';
 
 export type { ConnectionPreference } from './CoinbaseWalletSDK';

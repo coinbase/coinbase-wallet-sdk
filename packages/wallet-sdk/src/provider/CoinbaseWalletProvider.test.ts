@@ -1,6 +1,6 @@
 import { standardErrors } from '../core/error';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
-import { CoinbaseWalletProvider } from './NewProvider';
+import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 
 describe('EIP1193Provider', () => {
   let provider: CoinbaseWalletProvider;

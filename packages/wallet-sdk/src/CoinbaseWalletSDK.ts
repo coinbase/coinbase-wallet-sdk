@@ -5,7 +5,7 @@ import { LogoType, walletLogo } from './assets/wallet-logo';
 import { LINK_API_URL } from './core/constants';
 import { getFavicon } from './core/util';
 import { ScopedLocalStorage } from './lib/ScopedLocalStorage';
-import { CoinbaseWalletProvider } from './provider/NewProvider';
+import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
 import { ProviderInterface } from './provider/ProviderInterface';
 import { LIB_VERSION } from './version';
 

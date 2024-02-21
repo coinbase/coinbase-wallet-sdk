@@ -2,7 +2,7 @@
 
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
 import { mockProvider } from './mocks/provider';
-import { CoinbaseWalletProvider } from './provider/NewProvider';
+import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
 
 describe('CoinbaseWalletSDK', () => {
   describe('initialize', () => {
