@@ -1,6 +1,4 @@
-import { Chain } from '../../connector/ConnectorInterface';
 import { standardErrors } from '../../core/error';
-import { AddressString } from '../../core/type';
 import { ensureHexString } from '../../core/util';
 import { FilterPolyfill } from '../FilterPolyfill';
 import { JSONRPCResponse } from '../JSONRPC';
@@ -14,7 +12,7 @@ export class FilterRequestHandler implements RequestHandler {
     this.filterPolyfill = new FilterPolyfill(provider);
   }
 
-  handleRequest(request: RequestArguments, _accounts: AddressString[], _chain: Chain) {
+  handleRequest(request: RequestArguments) {
     const { method } = request;
     const params = request.params || [];
 

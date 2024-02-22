@@ -2,17 +2,17 @@ import { AddressString } from '../../core/type';
 import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
 import { RequestArguments } from '../../provider/ProviderInterface';
 import { WLRelayAdapter } from '../../relay/walletlink/WLRelayAdapter';
-import { Connector, ConnectorUpdateListener } from '../ConnectorInterface';
+import { Signer, SignerUpdateListener } from '../SignerInterface';
 
-export class WLConnector implements Connector {
-  private updateListener: ConnectorUpdateListener;
+export class WLSigner implements Signer {
+  private updateListener: SignerUpdateListener;
   private adapter: WLRelayAdapter;
 
   constructor(options: {
     appName: string;
     appLogoUrl: string | null;
     storage: ScopedLocalStorage;
-    updateListener: ConnectorUpdateListener;
+    updateListener: SignerUpdateListener;
   }) {
     this.updateListener = options.updateListener;
     this.adapter = new WLRelayAdapter({

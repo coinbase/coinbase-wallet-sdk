@@ -1,5 +1,4 @@
-import { Chain } from '../../connector/ConnectorInterface';
-import { AddressString } from '../../core/type';
+import { AddressString, Chain } from '../../core/type';
 import { RequestArguments } from '../ProviderInterface';
 
 export interface RequestHandler {

@@ -6,10 +6,9 @@
 
 import BN from 'bn.js';
 
-import { Chain } from '../../connector/ConnectorInterface';
 import { LINK_API_URL } from '../../core/constants';
 import { serializeError, standardErrorCodes, standardErrors } from '../../core/error';
-import { AddressString, Callback, IntNumber } from '../../core/type';
+import { AddressString, Callback, Chain, IntNumber } from '../../core/type';
 import {
   ensureAddressString,
   ensureBN,

@@ -2,9 +2,8 @@
 import EventEmitter from 'eventemitter3';
 
 import { ConnectionPreference } from '../CoinbaseWalletSDK';
-import { Chain } from '../connector/ConnectorInterface';
 import { standardErrors } from '../core/error';
-import { AddressString } from '../core/type';
+import { AddressString, Chain } from '../core/type';
 import { areAddressArraysEqual, prepend0x, showDeprecationWarning } from '../core/util';
 import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { FilterRequestHandler } from './handler/FilterRequestHandler';

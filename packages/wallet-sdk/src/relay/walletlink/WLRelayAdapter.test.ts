@@ -16,10 +16,7 @@ jest.mock('./WalletLinkRelay', () => {
 
 const storage = new ScopedLocalStorage('LegacyProvider');
 
-const createWLConnectorToRelayAdapter = (options?: {
-  relay?: MockRelayClass;
-  storage?: ScopedLocalStorage;
-}) => {
+const createAdapter = (options?: { relay?: MockRelayClass; storage?: ScopedLocalStorage }) => {
   const adapter = new WLRelayAdapter({
     appName: 'test',
     appLogoUrl: null,
@@ -41,7 +38,7 @@ describe('LegacyProvider', () => {
   });
 
   it('handles enabling the provider successfully', async () => {
-    const provider = createWLConnectorToRelayAdapter();
+    const provider = createAdapter();
     const response = await provider.request<AddressString[]>({ method: 'eth_requestAccounts' });
     expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
   });
@@ -50,19 +47,19 @@ describe('LegacyProvider', () => {
     const relay = new MockRelayClass();
     const spy = jest.spyOn(relay, 'resetAndReload');
 
-    const provider = createWLConnectorToRelayAdapter({ relay });
+    const provider = createAdapter({ relay });
     await provider.close();
     expect(spy).toHaveBeenCalled();
   });
 
   it('handles making a send with a string param', async () => {
-    const provider = createWLConnectorToRelayAdapter();
+    const provider = createAdapter();
     const response = await provider.send('eth_requestAccounts');
     expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
   });
 
   it('handles making a rpc request', async () => {
-    const provider = createWLConnectorToRelayAdapter();
+    const provider = createAdapter();
     const response = await provider.request<string[]>({
       method: 'eth_requestAccounts',
     });
@@ -71,7 +68,7 @@ describe('LegacyProvider', () => {
 
   it('handles making a send with a rpc request', async () => {
     const mockCallback = jest.fn();
-    const provider = createWLConnectorToRelayAdapter();
+    const provider = createAdapter();
     await provider.send(
       {
         jsonrpc: '2.0',
@@ -91,7 +88,7 @@ describe('LegacyProvider', () => {
   });
 
   it('handles making a sendAsync with a string param', async () => {
-    const provider = createWLConnectorToRelayAdapter();
+    const provider = createAdapter();
     const mockCallback = jest.fn();
     await provider.sendAsync(
       {
@@ -111,7 +108,7 @@ describe('LegacyProvider', () => {
   });
 
   it("does NOT update the providers address on a postMessage's 'addressesChanged' event", () => {
-    const provider = createWLConnectorToRelayAdapter();
+    const provider = createAdapter();
 
     // @ts-expect-error _addresses is private
     expect(provider._addresses).toEqual([]);
@@ -143,7 +140,7 @@ describe('LegacyProvider', () => {
       cancel: () => {},
       promise: Promise.reject(new Error('rejected')),
     });
-    const provider = createWLConnectorToRelayAdapter({ relay });
+    const provider = createAdapter({ relay });
 
     await expect(() => provider.request({ method: 'eth_requestAccounts' })).rejects.toThrowEIPError(
       standardErrorCodes.provider.userRejectedRequest,
@@ -157,7 +154,7 @@ describe('LegacyProvider', () => {
       cancel: () => {},
       promise: Promise.reject(new Error('Unknown')),
     });
-    const provider = createWLConnectorToRelayAdapter({ relay });
+    const provider = createAdapter({ relay });
 
     await expect(() => provider.request({ method: 'eth_requestAccounts' })).rejects.toThrowEIPError(
       standardErrorCodes.rpc.internal,
@@ -166,7 +163,7 @@ describe('LegacyProvider', () => {
   });
 
   it('returns the users address on future eth_requestAccounts calls', async () => {
-    const provider = createWLConnectorToRelayAdapter();
+    const provider = createAdapter();
     // Set the account on the first request
     const response1 = await provider.request<string[]>({
       method: 'eth_requestAccounts',
@@ -186,7 +183,7 @@ describe('LegacyProvider', () => {
   it('gets the users address from storage on init', async () => {
     const localStorage = new ScopedLocalStorage('test');
     localStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDERESS.toLowerCase());
-    const provider = createWLConnectorToRelayAdapter({
+    const provider = createAdapter({
       storage: localStorage,
     });
 
@@ -206,7 +203,7 @@ describe('LegacyProvider', () => {
     beforeEach(() => {
       localStorage = new ScopedLocalStorage('test');
       localStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDERESS.toLowerCase());
-      provider = createWLConnectorToRelayAdapter({
+      provider = createAdapter({
         storage: localStorage,
       });
     });
@@ -490,7 +487,7 @@ describe('LegacyProvider', () => {
         cancel: () => {},
         promise: Promise.reject(standardErrors.provider.unsupportedChain()),
       });
-      const localProvider = createWLConnectorToRelayAdapter({ relay });
+      const localProvider = createAdapter({ relay });
 
       await expect(() => {
         return localProvider.request({

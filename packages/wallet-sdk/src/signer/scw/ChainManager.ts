@@ -1,5 +1,5 @@
+import { Chain } from '../../core/type';
 import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
-import { Chain } from '../ConnectorInterface';
 
 const ACTIVE_CHAIN_STORAGE_KEY = 'SCW:activeChain';
 const AVAILABLE_CHAINS_STORAGE_KEY = 'SCW:availableChains';

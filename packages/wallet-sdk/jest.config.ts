@@ -18,7 +18,7 @@ export default {
     './src/provider/**/*.ts',
     './src/relay/**/*.ts',
     './src/components/**/*.tsx',
-    './src/connector/**/*.ts',
+    './src/signer/**/*.ts',
     './src/transport/**/*.ts',
   ],
   // The directory where Jest should output its coverage files

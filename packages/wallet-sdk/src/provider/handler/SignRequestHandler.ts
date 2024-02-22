@@ -1,11 +1,11 @@
 import { ConnectionPreference } from '../../CoinbaseWalletSDK';
-import { Chain, Connector, ConnectorUpdateListener } from '../../connector/ConnectorInterface';
-import { SCWConnector } from '../../connector/scw/SCWConnector';
-import { WLConnector } from '../../connector/walletlink/WLConnector';
 import { standardErrorCodes, standardErrors } from '../../core/error';
 import { SerializedEthereumRpcError } from '../../core/error/utils';
-import { AddressString } from '../../core/type';
+import { AddressString, Chain } from '../../core/type';
 import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
+import { SCWSigner } from '../../signer/scw/SCWSigner';
+import { Signer, SignerUpdateListener } from '../../signer/SignerInterface';
+import { WLSigner } from '../../signer/walletlink/WLSigner';
 import { ConnectionType } from '../../transport/ConfigMessage';
 import { PopUpCommunicator } from '../../transport/PopUpCommunicator';
 import { RequestArguments } from '../ProviderInterface';
@@ -38,7 +38,7 @@ export class SignRequestHandler implements RequestHandler {
 
   private connectionType: string | null;
   private connectionTypeSelectionResolver: ((value: unknown) => void) | undefined;
-  private connector: Connector | undefined;
+  private signer: Signer | undefined;
 
   private storage: ScopedLocalStorage;
   private popupCommunicator: PopUpCommunicator;
@@ -53,7 +53,7 @@ export class SignRequestHandler implements RequestHandler {
 
     // getWalletLinkUrl is called by the PopUpCommunicator when
     // it receives message.type === 'wlQRCodeUrl' from the cb-wallet-scw popup
-    // its injected because we don't want to instantiate WalletLinkConnector until we have to
+    // its injected because we don't want to instantiate WalletLinkSigner until we have to
     this.getWalletLinkUrl = this.getWalletLinkUrl.bind(this);
     this.popupCommunicator.setWLQRCodeUrlCallback(this.getWalletLinkUrl);
 
@@ -66,35 +66,35 @@ export class SignRequestHandler implements RequestHandler {
     this.connectionPreference = options.connectionPreference;
 
     if (persistedConnectionType) {
-      this.initConnector();
+      this.initSigner();
     }
 
     this.setConnectionType = this.setConnectionType.bind(this);
-    this.initWalletLinkConnector = this.initWalletLinkConnector.bind(this);
+    this.initWalletLinkSigner = this.initWalletLinkSigner.bind(this);
   }
 
-  private readonly updateRelay: ConnectorUpdateListener = {
+  private readonly updateRelay: SignerUpdateListener = {
     onAccountsChanged: (_, ...rest) => this.updateListener.onAccountsChanged(...rest),
-    onChainChanged: (connector, ...rest) => {
-      // if (connector !== this.connector) return; // ignore events from inactive connectors
-      if (connector instanceof WLConnector) {
+    onChainChanged: (signer, ...rest) => {
+      // if (signer !== this.signer) return; // ignore events from inactive signers
+      if (signer instanceof WLSigner) {
         this.connectionTypeSelectionResolver?.('walletlink');
       }
       this.updateListener.onChainChanged(...rest);
     },
   };
 
-  private initConnector = () => {
+  private initSigner = () => {
     if (this.connectionType === 'scw') {
-      this.initScwConnector();
+      this.initScwSigner();
     } else if (this.connectionType === 'walletlink') {
-      this.initWalletLinkConnector();
+      this.initWalletLinkSigner();
     }
   };
 
-  private initScwConnector() {
-    if (this.connector instanceof SCWConnector) return;
-    this.connector = new SCWConnector({
+  private initScwSigner() {
+    if (this.signer instanceof SCWSigner) return;
+    this.signer = new SCWSigner({
       appName: this.appName,
       appLogoUrl: this.appLogoUrl,
       appChainIds: this.appChainIds,
@@ -104,10 +104,10 @@ export class SignRequestHandler implements RequestHandler {
     });
   }
 
-  private initWalletLinkConnector() {
-    if (this.connector instanceof WLConnector) return;
+  private initWalletLinkSigner() {
+    if (this.signer instanceof WLSigner) return;
 
-    this.connector = new WLConnector({
+    this.signer = new WLSigner({
       appName: this.appName,
       appLogoUrl: this.appLogoUrl,
       storage: this.storage,
@@ -117,22 +117,22 @@ export class SignRequestHandler implements RequestHandler {
 
   async onDisconnect() {
     this.connectionType = null;
-    await this.connector?.disconnect();
+    await this.signer?.disconnect();
   }
 
-  async handleRequest(request: RequestArguments, accounts: AddressString[], _chain: Chain) {
+  async handleRequest(request: RequestArguments, accounts: AddressString[]) {
     try {
       if (request.method === 'eth_requestAccounts') {
         return await this.eth_requestAccounts(accounts);
       }
 
-      if (!this.connector || accounts.length <= 0) {
+      if (!this.signer || accounts.length <= 0) {
         throw standardErrors.provider.unauthorized(
           "Must call 'eth_requestAccounts' before other methods"
         );
       }
 
-      return await this.connector.request(request);
+      return await this.signer.request(request);
     } catch (err) {
       if ((err as SerializedEthereumRpcError).code === standardErrorCodes.provider.unauthorized) {
         this.updateListener.onResetConnection();
@@ -154,11 +154,11 @@ export class SignRequestHandler implements RequestHandler {
       this.setConnectionType(connectionType as ConnectionType);
     }
 
-    // in the case of walletlink, this doesn't do anything since connector is initialized
+    // in the case of walletlink, this doesn't do anything since signer is initialized
     // when the wallet link QR code url is requested
-    this.initConnector();
+    this.initSigner();
 
-    const ethAddresses = await this.connector?.handshake();
+    const ethAddresses = await this.signer?.handshake();
     if (Array.isArray(ethAddresses)) {
       if (this.connectionType === 'walletlink') {
         this.popupCommunicator.walletLinkQrScanned();
@@ -171,13 +171,13 @@ export class SignRequestHandler implements RequestHandler {
   }
 
   private getWalletLinkUrl() {
-    this.initWalletLinkConnector();
-    if (!(this.connector instanceof WLConnector)) {
+    this.initWalletLinkSigner();
+    if (!(this.signer instanceof WLSigner)) {
       throw standardErrors.rpc.internal(
-        'Connector not initialized or Connector.getWalletLinkUrl not defined'
+        'Signer not initialized or Signer.getWalletLinkUrl not defined'
       );
     }
-    return this.connector.getQRCodeUrl();
+    return this.signer.getQRCodeUrl();
   }
 
   private async completeConnectionTypeSelection() {

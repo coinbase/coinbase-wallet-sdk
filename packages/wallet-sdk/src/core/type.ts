@@ -36,3 +36,8 @@ export enum ProviderType {
   MetaMask = 'MetaMask',
   Unselected = '',
 }
+
+export type Chain = {
+  id: number;
+  rpcUrl?: string;
+};

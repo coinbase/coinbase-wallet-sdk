@@ -1,6 +1,5 @@
-import { Chain } from '../../connector/ConnectorInterface';
 import { standardErrors } from '../../core/error';
-import { AddressString } from '../../core/type';
+import { Chain } from '../../core/type';
 import { RequestArguments } from '../ProviderInterface';
 import { RequestHandler } from './RequestHandler';
 
@@ -9,7 +8,7 @@ export class JSONRPCRequestHandler implements RequestHandler {
     return true;
   }
 
-  async handleRequest(request: RequestArguments, _accounts: AddressString[], chain: Chain) {
+  async handleRequest(request: RequestArguments, _: unknown, chain: Chain) {
     if (!chain.rpcUrl) throw standardErrors.rpc.internal('No RPC URL set for chain');
 
     const requestBody = {

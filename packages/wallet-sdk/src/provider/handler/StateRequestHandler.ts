@@ -1,6 +1,5 @@
-import { Chain } from '../../connector/ConnectorInterface';
 import { standardErrors } from '../../core/error';
-import { AddressString } from '../../core/type';
+import { AddressString, Chain } from '../../core/type';
 import { RequestArguments } from '../ProviderInterface';
 import { RequestHandler } from './RequestHandler';
 

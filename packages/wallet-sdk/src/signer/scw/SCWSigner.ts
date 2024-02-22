@@ -5,7 +5,7 @@ import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
 import { RequestArguments } from '../../provider/ProviderInterface';
 import { PopUpCommunicator } from '../../transport/PopUpCommunicator';
 import { LIB_VERSION } from '../../version';
-import { Connector, ConnectorUpdateListener } from '../ConnectorInterface';
+import { Signer, SignerUpdateListener } from '../SignerInterface';
 import { ChainManager } from './ChainManager';
 import { exportKeyToHexString, importKeyFromHexString } from './protocol/key/Cipher';
 import { KeyStorage } from './protocol/key/KeyStorage';
@@ -22,7 +22,7 @@ import {
 } from './protocol/type/Action';
 import { SCWResponse } from './protocol/type/Response';
 
-export class SCWConnector implements Connector {
+export class SCWSigner implements Signer {
   private appName: string;
   private appLogoUrl: string | null;
   private appChainIds: number[];
@@ -38,7 +38,7 @@ export class SCWConnector implements Connector {
     appChainIds: number[];
     puc: PopUpCommunicator;
     storage: ScopedLocalStorage;
-    updateListener: ConnectorUpdateListener;
+    updateListener: SignerUpdateListener;
   }) {
     this.appName = options.appName;
     this.appLogoUrl = options.appLogoUrl;

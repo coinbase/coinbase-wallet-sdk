@@ -5,8 +5,6 @@ import type {
 import { PollingBlockTracker } from 'eth-block-tracker';
 import { EventEmitter } from 'eventemitter3';
 
-import { Chain } from '../../connector/ConnectorInterface';
-import { AddressString } from '../../core/type';
 import { ProviderInterface, RequestArguments } from '../ProviderInterface';
 import { RequestHandler } from './RequestHandler';
 
@@ -44,7 +42,7 @@ export class SubscriptionRequestHandler implements RequestHandler {
     return subscriptionMethods.includes(request.method);
   }
 
-  async handleRequest(request: RequestArguments, _accounts: AddressString[], _chain: Chain) {
+  async handleRequest(request: RequestArguments) {
     const result = {};
     await this.subscriptionMiddleware(request, result, noop, noop);
     return result;
