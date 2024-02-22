@@ -58,7 +58,7 @@ interface WatchAssetParams {
   };
 }
 
-export interface WLRelayUpdateListener {
+interface WLRelayUpdateListener {
   onAccountsChanged: (accounts: AddressString[]) => void;
   onChainChanged: (chain: Chain) => void;
 }

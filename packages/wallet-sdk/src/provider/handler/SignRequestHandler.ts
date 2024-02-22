@@ -11,7 +11,7 @@ import { PopUpCommunicator } from '../../transport/PopUpCommunicator';
 import { RequestArguments } from '../ProviderInterface';
 import { RequestHandler } from './RequestHandler';
 
-export interface SignRequestHandlingUpdateListener {
+interface SignRequestHandlingUpdateListener {
   onAccountsChanged: (accounts: AddressString[]) => void;
   onChainChanged: (chain: Chain) => void;
   onConnect: () => void;
@@ -30,7 +30,7 @@ interface SignRequestHandlerOptions {
 
 const CONNECTION_TYPE_KEY = 'SignRequestHandler:connectionType';
 
-export class SignRequestHandler implements RequestHandler, ConnectorUpdateListener {
+export class SignRequestHandler implements RequestHandler {
   private appName: string;
   private appLogoUrl: string | null;
   private appChainIds: number[];
@@ -73,18 +73,16 @@ export class SignRequestHandler implements RequestHandler, ConnectorUpdateListen
     this.initWalletLinkConnector = this.initWalletLinkConnector.bind(this);
   }
 
-  onAccountsChanged(_connector: Connector, accounts: AddressString[]) {
-    this.updateListener.onAccountsChanged(accounts);
-  }
-
-  onChainChanged(connector: Connector, chain: Chain): void {
-    // if (connector !== this.connector) return; // ignore events from inactive connectors
-    if (connector instanceof WLConnector) {
-      this.connectionTypeSelectionResolver?.('walletlink');
-    }
-
-    this.updateListener.onChainChanged(chain);
-  }
+  private readonly updateRelay: ConnectorUpdateListener = {
+    onAccountsChanged: (_, ...rest) => this.updateListener.onAccountsChanged(...rest),
+    onChainChanged: (connector, ...rest) => {
+      // if (connector !== this.connector) return; // ignore events from inactive connectors
+      if (connector instanceof WLConnector) {
+        this.connectionTypeSelectionResolver?.('walletlink');
+      }
+      this.updateListener.onChainChanged(...rest);
+    },
+  };
 
   private initConnector = () => {
     if (this.connectionType === 'scw') {
@@ -102,7 +100,7 @@ export class SignRequestHandler implements RequestHandler, ConnectorUpdateListen
       appChainIds: this.appChainIds,
       puc: this.popupCommunicator,
       storage: this.storage,
-      updateListener: this,
+      updateListener: this.updateRelay,
     });
   }
 
@@ -113,7 +111,7 @@ export class SignRequestHandler implements RequestHandler, ConnectorUpdateListen
       appName: this.appName,
       appLogoUrl: this.appLogoUrl,
       storage: this.storage,
-      updateListener: this,
+      updateListener: this.updateRelay,
     });
   }
 

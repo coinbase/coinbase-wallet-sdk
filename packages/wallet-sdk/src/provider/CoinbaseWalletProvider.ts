@@ -10,10 +10,7 @@ import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { FilterRequestHandler } from './handler/FilterRequestHandler';
 import { JSONRPCRequestHandler } from './handler/JSONRPCRequestHandler';
 import { RequestHandler } from './handler/RequestHandler';
-import {
-  SignRequestHandler,
-  SignRequestHandlingUpdateListener,
-} from './handler/SignRequestHandler';
+import { SignRequestHandler } from './handler/SignRequestHandler';
 import { StateRequestHandler } from './handler/StateRequestHandler';
 import { SubscriptionRequestHandler } from './handler/SubscriptionManager';
 import { getErrorForInvalidRequestArgs } from './helpers/eip1193Utils';
@@ -31,10 +28,7 @@ interface ConstructorOptions {
 const ACCOUNTS_KEY = 'Provider:accounts';
 const CHAIN_KEY = 'Provider:chain';
 
-export class CoinbaseWalletProvider
-  extends EventEmitter
-  implements ProviderInterface, SignRequestHandlingUpdateListener
-{
+export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
   private storage: ScopedLocalStorage;
 
   private accounts: AddressString[];
@@ -57,7 +51,12 @@ export class CoinbaseWalletProvider
       new StateRequestHandler(),
       new SignRequestHandler({
         ...options,
-        updateListener: this,
+        updateListener: {
+          onAccountsChanged: this.setAccounts.bind(this),
+          onChainChanged: this.setChain.bind(this),
+          onConnect: this.emitConnectEvent.bind(this),
+          onResetConnection: this.disconnect.bind(this),
+        },
       }),
       new FilterRequestHandler({
         provider: this,
@@ -67,22 +66,6 @@ export class CoinbaseWalletProvider
       }),
       new JSONRPCRequestHandler(), // should be last
     ];
-  }
-
-  onAccountsChanged(accounts: AddressString[]) {
-    this.setAccounts(accounts);
-  }
-
-  onChainChanged(chain: Chain): void {
-    this.setChain(chain);
-  }
-
-  onConnect(): void {
-    this.emitConnectEvent();
-  }
-
-  onResetConnection(): void {
-    this.disconnect();
   }
 
   public get connected() {
