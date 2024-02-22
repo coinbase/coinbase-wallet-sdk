@@ -22,12 +22,10 @@ import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
 import { JSONRPCRequest, JSONRPCResponse } from '../../provider/JSONRPC';
 import { RequestArguments } from '../../provider/ProviderInterface';
 import eip712 from '../../vendor-js/eth-eip712-util';
-import { LIB_VERSION } from '../../version';
 import { LOCAL_STORAGE_ADDRESSES_KEY } from '../RelayAbstract';
 import { RelayEventManager } from '../RelayEventManager';
 import { EthereumTransactionParams } from './type/EthereumTransactionParams';
 import { isErrorResponse, Web3Response } from './type/Web3Response';
-import { WalletLinkRelayUI } from './ui/WalletLinkRelayUI';
 import { WalletLinkRelay } from './WalletLinkRelay';
 
 const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
@@ -876,14 +874,6 @@ export class WLRelayAdapter {
     if (!this._relay) {
       const relay = new WalletLinkRelay({
         linkAPIUrl: LINK_API_URL,
-        version: LIB_VERSION,
-        darkMode: false,
-        uiConstructor: () =>
-          new WalletLinkRelayUI({
-            linkAPIUrl: LINK_API_URL,
-            version: LIB_VERSION,
-            darkMode: false,
-          }),
         storage: this._storage,
       });
       relay.setAppInfo(this._appName, this._appLogoUrl);

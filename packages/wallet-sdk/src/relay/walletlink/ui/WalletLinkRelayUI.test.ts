@@ -1,17 +1,10 @@
 import { render } from '@testing-library/preact';
-import { Session } from 'inspector';
 
-import { Snackbar } from './component/Snackbar';
+import { Snackbar } from './components/Snackbar/Snackbar';
 import { WalletLinkRelayUI } from './WalletLinkRelayUI';
 
 describe('WalletLinkRelayUI', () => {
-  const walletSDKUI = new WalletLinkRelayUI({
-    darkMode: false,
-    version: '1.2.1',
-    // @ts-expect-error mock session
-    session: new Session(),
-    linkAPIUrl: 'http://link-url.com',
-  });
+  const walletSDKUI = new WalletLinkRelayUI();
 
   render('<div />');
 

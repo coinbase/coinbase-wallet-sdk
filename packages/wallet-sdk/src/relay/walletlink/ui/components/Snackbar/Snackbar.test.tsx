@@ -6,9 +6,7 @@ import { Snackbar } from './Snackbar';
 const attachedEl = document.getElementsByClassName('-cbwsdk-snackbar-root');
 
 describe('Snackbar', () => {
-  const snackbar = new Snackbar({
-    darkMode: false,
-  });
+  const snackbar = new Snackbar();
 
   beforeEach(() => {
     render(<div id="attach-here" />);

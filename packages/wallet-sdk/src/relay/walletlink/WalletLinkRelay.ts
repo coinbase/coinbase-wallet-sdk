@@ -3,17 +3,13 @@
 
 import { ErrorType, getMessageFromCode, standardErrors } from '../../core/error';
 import { AddressString, IntNumber, RegExpString } from '../../core/type';
-import {
-  bigIntStringFromBN,
-  createQrUrl,
-  hexStringFromBuffer,
-  randomBytesHex,
-} from '../../core/util';
+import { bigIntStringFromBN, hexStringFromBuffer, randomBytesHex } from '../../core/util';
 import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
 import { DiagnosticLogger, EVENTS } from '../../provider/DiagnosticLogger';
+import { LIB_VERSION } from '../../version';
 import { CancelablePromise, LOCAL_STORAGE_ADDRESSES_KEY, RelayAbstract } from '../RelayAbstract';
 import { RelayEventManager } from '../RelayEventManager';
-import { RelayUI, RelayUIOptions } from '../RelayUI';
+import { RelayUI } from '../RelayUI';
 import {
   WalletLinkConnection,
   WalletLinkConnectionUpdateListener,
@@ -24,13 +20,13 @@ import { WalletLinkSession } from './type/WalletLinkSession';
 import { Web3Method } from './type/Web3Method';
 import { SupportedWeb3Method, Web3Request } from './type/Web3Request';
 import { isErrorResponse, Web3Response } from './type/Web3Response';
+import { createQrUrl, isMobileWeb } from './ui/util';
+import { WalletLinkRelayUI } from './ui/WalletLinkRelayUI';
+import { WLMobileRelayUI } from './ui/WLMobileRelayUI';
 
 export interface WalletLinkRelayOptions {
   linkAPIUrl: string;
-  version: string;
-  darkMode: boolean;
   storage: ScopedLocalStorage;
-  uiConstructor: (options: Readonly<RelayUIOptions>) => RelayUI;
   diagnosticLogger?: DiagnosticLogger;
   reloadOnDisconnect?: boolean;
 }
@@ -48,9 +44,9 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
   private chainCallbackParams = { chainId: '', jsonRpcUrl: '' }; // to implement distinctUntilChanged
   private chainCallback: ((chainId: string, jsonRpcUrl: string) => void) | null = null;
   protected dappDefaultChain = 1;
-  private readonly options: WalletLinkRelayOptions;
 
   protected ui: RelayUI;
+  private isMobileWeb = isMobileWeb();
 
   protected appName = '';
   protected appLogoUrl: string | null = null;
@@ -64,7 +60,6 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
 
     this.linkAPIUrl = options.linkAPIUrl;
     this.storage = options.storage;
-    this.options = options;
 
     const { session, ui, connection } = this.subscribe();
 
@@ -75,7 +70,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
 
     this.diagnostic = options.diagnosticLogger;
 
-    this._reloadOnDisconnect = options.reloadOnDisconnect ?? true;
+    this._reloadOnDisconnect = options.reloadOnDisconnect ?? false;
 
     this.ui = ui;
   }
@@ -92,12 +87,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
       listener: this,
     });
 
-    const { version, darkMode } = this.options;
-    const ui = this.options.uiConstructor({
-      linkAPIUrl,
-      version,
-      darkMode,
-    });
+    const ui = this.isMobileWeb ? new WLMobileRelayUI() : new WalletLinkRelayUI();
 
     connection.connect();
 
@@ -343,7 +333,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
       this._session.secret,
       this.linkAPIUrl,
       false,
-      this.options.version,
+      LIB_VERSION,
       this.dappDefaultChain
     );
   }
@@ -447,6 +437,46 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
           },
         });
       });
+
+    if (this.isMobileWeb) {
+      this.openCoinbaseWalletDeeplink(request.method);
+    }
+  }
+
+  // copied from MobileRelay
+  private openCoinbaseWalletDeeplink(method: SupportedWeb3Method) {
+    if (!(this.ui instanceof WLMobileRelayUI)) return;
+
+    let navigatedToCBW = false;
+
+    // For mobile relay requests, open the Coinbase Wallet app
+    switch (method) {
+      case 'requestEthereumAccounts': // requestEthereumAccounts is handled via popup
+      case 'switchEthereumChain': // switchEthereumChain doesn't need to open the app
+        return;
+      default:
+        navigatedToCBW = true;
+        this.ui.openCoinbaseWalletDeeplink();
+        break;
+    }
+
+    // If the user navigated to the Coinbase Wallet app, then we need to check
+    // for unseen events once the user returns to the browser
+    if (navigatedToCBW) {
+      window.addEventListener(
+        'blur',
+        () => {
+          window.addEventListener(
+            'focus',
+            () => {
+              this.connection.checkUnseenEvents();
+            },
+            { once: true }
+          );
+        },
+        { once: true }
+      );
+    }
   }
 
   private publishWeb3RequestCanceledEvent(id: string) {
@@ -482,6 +512,10 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
     }
 
     this.invokeCallback(message);
+
+    if (this.isMobileWeb && this.ui instanceof WLMobileRelayUI) {
+      this.ui.closeOpenedWindow();
+    }
   }
 
   private handleErrorResponse(

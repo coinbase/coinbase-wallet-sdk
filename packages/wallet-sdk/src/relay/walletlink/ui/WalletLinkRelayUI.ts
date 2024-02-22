@@ -1,16 +1,14 @@
 import { ErrorHandler } from '../../../core/error';
 import { injectCssReset } from '../../../lib/cssReset';
-import { RelayUI, RelayUIOptions } from '../../RelayUI';
-import { Snackbar, SnackbarInstanceProps } from './component/Snackbar';
+import { RelayUI } from '../../RelayUI';
+import { Snackbar, SnackbarInstanceProps } from './components/Snackbar/Snackbar';
 
 export class WalletLinkRelayUI implements RelayUI {
   private readonly snackbar: Snackbar;
   private attached = false;
 
-  constructor(options: Readonly<RelayUIOptions>) {
-    this.snackbar = new Snackbar({
-      darkMode: options.darkMode,
-    });
+  constructor() {
+    this.snackbar = new Snackbar();
   }
 
   attach(): void {
