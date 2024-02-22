@@ -4,7 +4,7 @@
 import { ErrorType, getMessageFromCode, standardErrors } from '../../core/error';
 import { ScopedLocalStorage } from '../../core/ScopedLocalStorage';
 import { AddressString, IntNumber, RegExpString } from '../../core/type';
-import { bigIntStringFromBN, hexStringFromBuffer, randomBytesHex } from '../../core/util';
+import { bigIntStringFromBigInt, hexStringFromBuffer, randomBytesHex } from '../../core/util';
 import { DiagnosticLogger, EVENTS } from '../../provider/DiagnosticLogger';
 import { LIB_VERSION } from '../../version';
 import { CancelablePromise, LOCAL_STORAGE_ADDRESSES_KEY, RelayAbstract } from '../RelayAbstract';
@@ -268,15 +268,15 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
       params: {
         fromAddress: params.fromAddress,
         toAddress: params.toAddress,
-        weiValue: bigIntStringFromBN(params.weiValue),
+        weiValue: bigIntStringFromBigInt(params.weiValue),
         data: hexStringFromBuffer(params.data, true),
         nonce: params.nonce,
-        gasPriceInWei: params.gasPriceInWei ? bigIntStringFromBN(params.gasPriceInWei) : null,
-        maxFeePerGas: params.gasPriceInWei ? bigIntStringFromBN(params.gasPriceInWei) : null,
+        gasPriceInWei: params.gasPriceInWei ? bigIntStringFromBigInt(params.gasPriceInWei) : null,
+        maxFeePerGas: params.gasPriceInWei ? bigIntStringFromBigInt(params.gasPriceInWei) : null,
         maxPriorityFeePerGas: params.gasPriceInWei
-          ? bigIntStringFromBN(params.gasPriceInWei)
+          ? bigIntStringFromBigInt(params.gasPriceInWei)
           : null,
-        gasLimit: params.gasLimit ? bigIntStringFromBN(params.gasLimit) : null,
+        gasLimit: params.gasLimit ? bigIntStringFromBigInt(params.gasLimit) : null,
         chainId: params.chainId,
         shouldSubmit: false,
       },
@@ -289,15 +289,15 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
       params: {
         fromAddress: params.fromAddress,
         toAddress: params.toAddress,
-        weiValue: bigIntStringFromBN(params.weiValue),
+        weiValue: bigIntStringFromBigInt(params.weiValue),
         data: hexStringFromBuffer(params.data, true),
         nonce: params.nonce,
-        gasPriceInWei: params.gasPriceInWei ? bigIntStringFromBN(params.gasPriceInWei) : null,
-        maxFeePerGas: params.maxFeePerGas ? bigIntStringFromBN(params.maxFeePerGas) : null,
+        gasPriceInWei: params.gasPriceInWei ? bigIntStringFromBigInt(params.gasPriceInWei) : null,
+        maxFeePerGas: params.maxFeePerGas ? bigIntStringFromBigInt(params.maxFeePerGas) : null,
         maxPriorityFeePerGas: params.maxPriorityFeePerGas
-          ? bigIntStringFromBN(params.maxPriorityFeePerGas)
+          ? bigIntStringFromBigInt(params.maxPriorityFeePerGas)
           : null,
-        gasLimit: params.gasLimit ? bigIntStringFromBN(params.gasLimit) : null,
+        gasLimit: params.gasLimit ? bigIntStringFromBigInt(params.gasLimit) : null,
         chainId: params.chainId,
         shouldSubmit: true,
       },

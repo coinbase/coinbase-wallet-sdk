@@ -4,14 +4,12 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
-import BN from 'bn.js';
-
 import { serializeError, standardErrorCodes, standardErrors } from '../../core/error';
 import { ScopedLocalStorage } from '../../core/ScopedLocalStorage';
 import { AddressString, Callback, Chain, IntNumber } from '../../core/type';
 import {
   ensureAddressString,
-  ensureBN,
+  ensureBigInt,
   ensureBuffer,
   ensureIntNumber,
   ensureParsedJSONObject,
@@ -552,14 +550,14 @@ export class WLRelayAdapter {
     this._ensureKnownAddress(fromAddress);
 
     const toAddress = tx.to ? ensureAddressString(tx.to) : null;
-    const weiValue = tx.value != null ? ensureBN(tx.value) : new BN(0);
+    const weiValue = tx.value != null ? ensureBigInt(tx.value) : BigInt(0);
     const data = tx.data ? ensureBuffer(tx.data) : Buffer.alloc(0);
     const nonce = tx.nonce != null ? ensureIntNumber(tx.nonce) : null;
-    const gasPriceInWei = tx.gasPrice != null ? ensureBN(tx.gasPrice) : null;
-    const maxFeePerGas = tx.maxFeePerGas != null ? ensureBN(tx.maxFeePerGas) : null;
+    const gasPriceInWei = tx.gasPrice != null ? ensureBigInt(tx.gasPrice) : null;
+    const maxFeePerGas = tx.maxFeePerGas != null ? ensureBigInt(tx.maxFeePerGas) : null;
     const maxPriorityFeePerGas =
-      tx.maxPriorityFeePerGas != null ? ensureBN(tx.maxPriorityFeePerGas) : null;
-    const gasLimit = tx.gas != null ? ensureBN(tx.gas) : null;
+      tx.maxPriorityFeePerGas != null ? ensureBigInt(tx.maxPriorityFeePerGas) : null;
+    const gasLimit = tx.gas != null ? ensureBigInt(tx.gas) : null;
     const chainId = tx.chainId ? ensureIntNumber(tx.chainId) : this.getChainId();
 
     return {

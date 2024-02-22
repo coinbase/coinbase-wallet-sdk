@@ -1,16 +1,14 @@
-import BN from 'bn.js';
-
 import { AddressString, IntNumber } from '../../../core/type';
 
 export interface EthereumTransactionParams {
   fromAddress: AddressString;
   toAddress: AddressString | null;
-  weiValue: BN;
+  weiValue: bigint;
   data: Buffer;
   nonce: IntNumber | null;
-  gasPriceInWei: BN | null;
-  maxFeePerGas: BN | null; // in wei
-  maxPriorityFeePerGas: BN | null; // in wei
-  gasLimit: BN | null;
+  gasPriceInWei: bigint | null;
+  maxFeePerGas: bigint | null; // in wei
+  maxPriorityFeePerGas: bigint | null; // in wei
+  gasLimit: bigint | null;
   chainId: IntNumber;
 }

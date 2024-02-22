@@ -1,10 +1,8 @@
-import BN from 'bn.js';
-
 import { HexString, IntNumber } from './type';
 import {
-  bigIntStringFromBN,
+  bigIntStringFromBigInt,
   ensureAddressString,
-  ensureBN,
+  ensureBigInt,
   ensureBuffer,
   ensureEvenLengthHexString,
   ensureHexString,
@@ -50,9 +48,9 @@ describe('util', () => {
     expect(hexStringFromBuffer(Buffer.alloc(3), true)).toEqual('0x000000');
   });
 
-  test('bigIntStringFromBN', () => {
+  test('bigIntStringFromBigInt', () => {
     expect(
-      bigIntStringFromBN(new BN(0b11111111111111111111111111111111111111111111111111111))
+      bigIntStringFromBigInt(BigInt(0b11111111111111111111111111111111111111111111111111111))
     ).toEqual('9007199254740991');
   });
 
@@ -146,13 +144,13 @@ describe('util', () => {
     expect(ensureRegExpString(HEXADECIMAL_STRING_REGEX)).toEqual('/^[a-f0-9]*$/');
   });
 
-  test('ensureBN', () => {
-    expect(ensureBN(12345678910).toString()).toEqual('12345678910');
-    expect(ensureBN(new BN(41234124)).toString()).toEqual('41234124');
-    expect(ensureBN('12345667').toNumber()).toEqual(12345667);
-    expect(ensureBN('ab12345667').toNumber()).toEqual(734744827495);
-    expect(() => ensureBN('ax123456')).toThrowError();
-    expect(() => ensureBN(['cat'])).toThrowError();
+  test('ensureBigInt', () => {
+    expect(ensureBigInt(12345678910).toString()).toEqual('12345678910');
+    expect(ensureBigInt(BigInt(41234124)).toString()).toEqual('41234124');
+    expect(Number(ensureBigInt('12345667'))).toEqual(12345667);
+    expect(Number(ensureBigInt('ab12345667'))).toEqual(734744827495);
+    expect(() => ensureBigInt('ax123456')).toThrowError();
+    expect(() => ensureBigInt(['cat'])).toThrowError();
   });
 
   test('ensureParsedJSONObject', () => {
