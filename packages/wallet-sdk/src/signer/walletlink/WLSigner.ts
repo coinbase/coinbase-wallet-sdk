@@ -1,5 +1,5 @@
+import { LINK_API_URL } from '../../core/constants';
 import { AddressString } from '../../core/type';
-import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
 import { RequestArguments } from '../../provider/ProviderInterface';
 import { WLRelayAdapter } from '../../relay/walletlink/WLRelayAdapter';
 import { Signer, SignerUpdateListener } from '../SignerInterface';
@@ -11,12 +11,12 @@ export class WLSigner implements Signer {
   constructor(options: {
     appName: string;
     appLogoUrl: string | null;
-    storage: ScopedLocalStorage;
     updateListener: SignerUpdateListener;
   }) {
     this.updateListener = options.updateListener;
     this.adapter = new WLRelayAdapter({
       ...options,
+      walletlinkUrl: LINK_API_URL,
       updateListener: {
         onAccountsChanged: (...args) => this.updateListener.onAccountsChanged(this, ...args),
         onChainChanged: (...args) => this.updateListener.onChainChanged(this, ...args),

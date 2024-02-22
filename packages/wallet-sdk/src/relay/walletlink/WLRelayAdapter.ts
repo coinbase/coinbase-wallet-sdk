@@ -6,8 +6,8 @@
 
 import BN from 'bn.js';
 
-import { LINK_API_URL } from '../../core/constants';
 import { serializeError, standardErrorCodes, standardErrors } from '../../core/error';
+import { ScopedLocalStorage } from '../../core/ScopedLocalStorage';
 import { AddressString, Callback, Chain, IntNumber } from '../../core/type';
 import {
   ensureAddressString,
@@ -17,7 +17,6 @@ import {
   ensureParsedJSONObject,
   hexStringFromIntNumber,
 } from '../../core/util';
-import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
 import { JSONRPCRequest, JSONRPCResponse } from '../../provider/JSONRPC';
 import { RequestArguments } from '../../provider/ProviderInterface';
 import eip712 from '../../vendor-js/eth-eip712-util';
@@ -66,6 +65,7 @@ export class WLRelayAdapter {
   private _appName: string;
   private _appLogoUrl: string | null;
   private _relay: WalletLinkRelay | null = null;
+  private readonly _walletlinkUrl: string;
   private readonly _storage: ScopedLocalStorage;
   private readonly _relayEventManager: RelayEventManager;
   private _jsonRpcUrlFromOpts: string;
@@ -76,12 +76,13 @@ export class WLRelayAdapter {
   constructor(options: {
     appName: string;
     appLogoUrl: string | null;
-    storage: ScopedLocalStorage;
+    walletlinkUrl: string;
     updateListener: WLRelayUpdateListener;
   }) {
     this._appName = options.appName;
     this._appLogoUrl = options.appLogoUrl;
-    this._storage = options.storage;
+    this._walletlinkUrl = options.walletlinkUrl;
+    this._storage = new ScopedLocalStorage('walletlink', this._walletlinkUrl);
     this.updateListener = options.updateListener;
 
     this._relayEventManager = new RelayEventManager();
@@ -872,7 +873,7 @@ export class WLRelayAdapter {
   private initializeRelay(): WalletLinkRelay {
     if (!this._relay) {
       const relay = new WalletLinkRelay({
-        linkAPIUrl: LINK_API_URL,
+        linkAPIUrl: this._walletlinkUrl,
         storage: this._storage,
       });
       relay.setAppInfo(this._appName, this._appLogoUrl);

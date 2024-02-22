@@ -1,4 +1,4 @@
-import { ScopedLocalStorage } from '../../../../lib/ScopedLocalStorage';
+import { ScopedLocalStorage } from '../../../../core/ScopedLocalStorage';
 import {
   deriveSharedSecret,
   exportKeyToHexString,
@@ -11,25 +11,24 @@ interface StorageItem {
   keyType: 'public' | 'private';
 }
 const OWN_PRIVATE_KEY = {
-  storageKey: 'SCW:ownPrivateKey',
+  storageKey: 'ownPrivateKey',
   keyType: 'private',
 } as const;
 const OWN_PUBLIC_KEY = {
-  storageKey: 'SCW:ownPublicKey',
+  storageKey: 'ownPublicKey',
   keyType: 'public',
 } as const;
 const PEER_PUBLIC_KEY = {
-  storageKey: 'SCW:peerPublicKey',
+  storageKey: 'peerPublicKey',
   keyType: 'public',
 } as const;
 
 export class KeyStorage {
+  private storage = new ScopedLocalStorage('CBWSDK', 'SCWKeyStorage');
   private ownPrivateKey: CryptoKey | null = null;
   private ownPublicKey: CryptoKey | null = null;
   private peerPublicKey: CryptoKey | null = null;
   private sharedSecret: CryptoKey | null = null;
-
-  constructor(private storage: ScopedLocalStorage) {}
 
   async getOwnPublicKey(): Promise<CryptoKey> {
     await this.loadKeysIfNeeded();

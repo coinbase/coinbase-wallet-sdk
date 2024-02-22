@@ -5,7 +5,6 @@ import { ConnectionPreference } from '../CoinbaseWalletSDK';
 import { standardErrors } from '../core/error';
 import { AddressString, Chain } from '../core/type';
 import { areAddressArraysEqual, prepend0x, showDeprecationWarning } from '../core/util';
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { FilterRequestHandler } from './handler/FilterRequestHandler';
 import { JSONRPCRequestHandler } from './handler/JSONRPCRequestHandler';
 import { RequestHandler } from './handler/RequestHandler';
@@ -16,7 +15,6 @@ import { getErrorForInvalidRequestArgs } from './helpers/eip1193Utils';
 import { ProviderInterface, ProviderRpcError, RequestArguments } from './ProviderInterface';
 
 interface ConstructorOptions {
-  storage: ScopedLocalStorage;
   scwUrl?: string;
   appName?: string;
   appLogoUrl?: string | null;
@@ -24,12 +22,7 @@ interface ConstructorOptions {
   connectionPreference: ConnectionPreference;
 }
 
-const ACCOUNTS_KEY = 'Provider:accounts';
-const CHAIN_KEY = 'Provider:chain';
-
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
-  private storage: ScopedLocalStorage;
-
   private accounts: AddressString[];
   private chain: Chain = {
     id: 1, // default to mainnet
@@ -39,12 +32,9 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   constructor(options: Readonly<ConstructorOptions>) {
     super();
-    this.storage = options.storage;
 
-    const persistedAccounts = this.getStoredAccounts();
-    this.accounts = persistedAccounts;
-    const persistedChain = this.getStoredChain();
-    this.chain = persistedChain;
+    // TODO!!!!!! implement load from storage
+    this.accounts = [];
 
     this.handlers = [
       new StateRequestHandler(),
@@ -82,7 +72,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
         await handler.onDisconnect?.();
       })
     );
-    this.storage.clear(); // clear persisted accounts & connectionType
     this.emit('disconnect', disconnectInfo);
   }
 
@@ -117,46 +106,12 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     }
 
     this.accounts = accounts;
-    this.setStoredAccounts(accounts);
     this.emit('accountsChanged', this.accounts);
   }
 
-  // storage methods
   private setChain(chain: Chain) {
     if (chain.id === this.chain.id && chain.rpcUrl === this.chain.rpcUrl) return;
     this.chain = chain;
-    this.storage.setItem(CHAIN_KEY, JSON.stringify(this.chain));
     this.emit('chainChanged', prepend0x(chain.id.toString(16)));
-  }
-
-  private setStoredAccounts(accounts: AddressString[]) {
-    try {
-      this.storage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
-    } catch (error) {
-      // TODO: error handling
-      console.error('Error storing accounts to local storage:', error);
-    }
-  }
-
-  private getStoredAccounts(): AddressString[] {
-    try {
-      const storedAccounts = this.storage.getItem(ACCOUNTS_KEY);
-      return storedAccounts ? JSON.parse(storedAccounts) : [];
-    } catch (error) {
-      // TODO: error handling
-      console.error('Error retrieving accounts from storage:', error);
-      return [];
-    }
-  }
-  private getStoredChain(): Chain {
-    const defaultChain = { id: 1 };
-    try {
-      const storedChain = this.storage.getItem(CHAIN_KEY);
-      return storedChain ? JSON.parse(storedChain) : defaultChain;
-    } catch (error) {
-      // TODO: error handling
-      console.error('Error retrieving accounts from storage:', error);
-      return defaultChain;
-    }
   }
 }

@@ -1,14 +1,11 @@
-import { ScopedLocalStorage } from '../../../../lib/ScopedLocalStorage';
 import { generateKeyPair } from './Cipher';
 import { KeyStorage } from './KeyStorage';
 
 describe('KeyStorage', () => {
-  let storage: ScopedLocalStorage;
   let keyStorage: KeyStorage;
 
   beforeEach(() => {
-    storage = new ScopedLocalStorage('test');
-    keyStorage = new KeyStorage(storage);
+    keyStorage = new KeyStorage();
   });
 
   describe('getOwnPublicKey', () => {
@@ -35,7 +32,7 @@ describe('KeyStorage', () => {
     it('should load the same public key from storage with new instance', async () => {
       const firstPublicKey = await keyStorage.getOwnPublicKey();
 
-      const anotherKeyStorage = new KeyStorage(storage);
+      const anotherKeyStorage = new KeyStorage();
       const secondPublicKey = await anotherKeyStorage.getOwnPublicKey();
 
       expect(firstPublicKey).toStrictEqual(secondPublicKey);
@@ -63,7 +60,7 @@ describe('KeyStorage', () => {
 
       const sharedSecret = await keyStorage.getSharedSecret();
 
-      const anotherKeyStorage = new KeyStorage(storage);
+      const anotherKeyStorage = new KeyStorage();
       const sharedSecretFromAnotherStorage = await anotherKeyStorage.getSharedSecret();
 
       expect(sharedSecret).toStrictEqual(sharedSecretFromAnotherStorage);

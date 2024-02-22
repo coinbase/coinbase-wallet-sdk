@@ -1,29 +1,31 @@
+import { ScopedLocalStorage } from '../../core/ScopedLocalStorage';
 import { Chain } from '../../core/type';
-import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
 
-const ACTIVE_CHAIN_STORAGE_KEY = 'SCW:activeChain';
-const AVAILABLE_CHAINS_STORAGE_KEY = 'SCW:availableChains';
+const ACTIVE_CHAIN_STORAGE_KEY = 'activeChain';
+const AVAILABLE_CHAINS_STORAGE_KEY = 'availableChains';
 
 export class ChainManager {
-  activeChain: Chain;
-  availableChains?: Chain[];
+  private storage = new ScopedLocalStorage('CBWSDK', 'SCWChainManager');
 
-  constructor(
-    private storage: ScopedLocalStorage,
-    private chainUpdatedListener: (_: Chain) => void
-  ) {
-    this.activeChain = this.loadItemFromStorage(ACTIVE_CHAIN_STORAGE_KEY) || { id: 1 };
+  private availableChains?: Chain[];
+  private _activeChain: Chain;
+  get activeChain() {
+    return this._activeChain;
+  }
+
+  constructor(private chainUpdatedListener: (_: Chain) => void) {
+    this._activeChain = this.loadItemFromStorage(ACTIVE_CHAIN_STORAGE_KEY) || { id: 1 };
     this.availableChains = this.loadItemFromStorage(AVAILABLE_CHAINS_STORAGE_KEY);
 
-    this.chainUpdatedListener(this.activeChain);
+    this.chainUpdatedListener(this._activeChain);
   }
 
   switchChain(chainId: number): boolean {
     const chain = this.availableChains?.find((chain) => chain.id === chainId);
     if (!chain) return false;
-    if (chain === this.activeChain) return true;
+    if (chain === this._activeChain) return true;
 
-    this.activeChain = chain;
+    this._activeChain = chain;
     this.storage.setItem(ACTIVE_CHAIN_STORAGE_KEY, JSON.stringify(chain));
     this.chainUpdatedListener(chain);
     return true;
@@ -36,7 +38,7 @@ export class ChainManager {
     this.availableChains = chains;
     this.storage.setItem(AVAILABLE_CHAINS_STORAGE_KEY, JSON.stringify(chains));
 
-    this.switchChain(this.activeChain.id);
+    this.switchChain(this._activeChain.id);
   }
 
   private loadItemFromStorage<T>(key: string): T | undefined {

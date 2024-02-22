@@ -2,8 +2,10 @@
 // Licensed under the Apache License, version 2.0
 
 export class ScopedLocalStorage {
-  // eslint-disable-next-line no-useless-constructor
-  constructor(private scope: string) {}
+  constructor(
+    private scope: 'CBWSDK' | 'walletlink',
+    private module?: string
+  ) {}
 
   public setItem(key: string, value: string): void {
     localStorage.setItem(this.scopedKey(key), value);
@@ -29,7 +31,12 @@ export class ScopedLocalStorage {
     keysToRemove.forEach((key) => localStorage.removeItem(key));
   }
 
-  private scopedKey(key: string): string {
-    return `${this.scope}:${key}`;
+  scopedKey(key: string): string {
+    return `-${this.scope}${this.module ? `:${this.module}` : ''}:${key}`;
+  }
+
+  static clearAll() {
+    new ScopedLocalStorage('CBWSDK').clear();
+    new ScopedLocalStorage('walletlink').clear();
   }
 }

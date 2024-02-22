@@ -2,7 +2,6 @@ import { ErrorHandler, serializeError, standardErrors } from '../core/error';
 import { AddressString, IntNumber, RegExpString } from '../core/type';
 import { JSONRPCRequest, JSONRPCResponse } from '../provider/JSONRPC';
 import { EthereumTransactionParams } from './walletlink/type/EthereumTransactionParams';
-import { WalletLinkSession } from './walletlink/type/WalletLinkSession';
 import { SupportedWeb3Method, Web3Request } from './walletlink/type/Web3Request';
 import { Web3Response } from './walletlink/type/Web3Response';
 
@@ -117,6 +116,4 @@ export abstract class RelayAbstract {
         return response;
       });
   }
-
-  abstract get session(): WalletLinkSession;
 }

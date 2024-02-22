@@ -1,4 +1,4 @@
-import { ScopedLocalStorage } from '../../../lib/ScopedLocalStorage';
+import { ScopedLocalStorage } from '../../../core/ScopedLocalStorage';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../../RelayAbstract';
 import { WalletLinkSession } from '../type/WalletLinkSession';
 import { WalletLinkSessionConfig } from '../type/WalletLinkSessionConfig';
@@ -10,7 +10,7 @@ const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`decr
 jest.spyOn(WalletLinkCipher.prototype, 'decrypt').mockImplementation(decryptMock);
 
 describe('WalletLinkConnection', () => {
-  const session = new WalletLinkSession(new ScopedLocalStorage('test'));
+  const session = new WalletLinkSession(new ScopedLocalStorage('walletlink', 'test'));
 
   let connection: WalletLinkConnection;
   let listener: WalletLinkConnectionUpdateListener;

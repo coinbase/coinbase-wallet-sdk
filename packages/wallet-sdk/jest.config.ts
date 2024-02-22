@@ -14,7 +14,6 @@ export default {
   collectCoverageFrom: [
     './src/CoinbaseWalletSDK.ts',
     './src/core/**/*.ts',
-    './src/lib/ScopedLocalStorage.ts',
     './src/provider/**/*.ts',
     './src/relay/**/*.ts',
     './src/components/**/*.tsx',

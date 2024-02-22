@@ -1,4 +1,4 @@
-import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
+import { ScopedLocalStorage } from '../../core/ScopedLocalStorage';
 import { ChainManager } from './ChainManager';
 
 describe('ChainManager', () => {
@@ -9,14 +9,13 @@ describe('ChainManager', () => {
   const AVAILABLE_CHAINS = { 7: 'https://chain7.com', 13: 'https://chain13.com' };
 
   let chainManager: ChainManager;
-  let storage: ScopedLocalStorage;
 
   beforeEach(() => {
-    storage = new ScopedLocalStorage('test');
-    chainManager = new ChainManager(storage, jest.fn());
+    chainManager = new ChainManager(jest.fn());
   });
 
   afterEach(() => {
+    const storage = new ScopedLocalStorage('CBWSDK', 'SCWChainManager');
     storage.clear();
   });
 
@@ -61,7 +60,7 @@ describe('ChainManager', () => {
     const chainUpdatedListener = jest.fn();
 
     beforeEach(() => {
-      chainManager = new ChainManager(storage, chainUpdatedListener);
+      chainManager = new ChainManager(chainUpdatedListener);
       chainManager.updateAvailableChains(AVAILABLE_CHAINS);
     });
 

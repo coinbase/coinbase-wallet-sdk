@@ -1,7 +1,6 @@
 import { standardErrors } from '../../core/error';
 import { AddressString } from '../../core/type';
 import { ensureIntNumber } from '../../core/util';
-import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
 import { RequestArguments } from '../../provider/ProviderInterface';
 import { PopUpCommunicator } from '../../transport/PopUpCommunicator';
 import { LIB_VERSION } from '../../version';
@@ -28,7 +27,6 @@ export class SCWSigner implements Signer {
   private appChainIds: number[];
 
   private puc: PopUpCommunicator;
-  private storage: ScopedLocalStorage;
   private keyStorage: KeyStorage;
   private chainManager: ChainManager;
 
@@ -37,16 +35,14 @@ export class SCWSigner implements Signer {
     appLogoUrl: string | null;
     appChainIds: number[];
     puc: PopUpCommunicator;
-    storage: ScopedLocalStorage;
     updateListener: SignerUpdateListener;
   }) {
     this.appName = options.appName;
     this.appLogoUrl = options.appLogoUrl;
     this.appChainIds = options.appChainIds;
     this.puc = options.puc;
-    this.storage = options.storage;
-    this.keyStorage = new KeyStorage(this.storage);
-    this.chainManager = new ChainManager(this.storage, (chain) =>
+    this.keyStorage = new KeyStorage();
+    this.chainManager = new ChainManager((chain) =>
       options.updateListener.onChainChanged(this, chain)
     );
 

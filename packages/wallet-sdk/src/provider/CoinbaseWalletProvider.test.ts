@@ -1,5 +1,4 @@
 import { standardErrors } from '../core/error';
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 
 describe('EIP1193Provider', () => {
@@ -7,7 +6,6 @@ describe('EIP1193Provider', () => {
 
   beforeEach(() => {
     provider = new CoinbaseWalletProvider({
-      storage: new ScopedLocalStorage('-walletlink'),
       scwUrl: 'http://fooUrl.com',
       appChainIds: [],
       connectionPreference: 'default',

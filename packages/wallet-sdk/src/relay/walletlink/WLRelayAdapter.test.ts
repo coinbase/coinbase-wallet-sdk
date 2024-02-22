@@ -1,8 +1,8 @@
 import { fireEvent } from '@testing-library/preact';
 
 import { standardErrorCodes, standardErrors } from '../../core/error';
+import { ScopedLocalStorage } from '../../core/ScopedLocalStorage';
 import { AddressString } from '../../core/type';
-import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
 import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from '../../mocks/fixtures';
 import { MockRelayClass } from '../../mocks/relay';
 import { LOCAL_STORAGE_ADDRESSES_KEY } from '../RelayAbstract';
@@ -14,13 +14,14 @@ jest.mock('./WalletLinkRelay', () => {
   };
 });
 
-const storage = new ScopedLocalStorage('LegacyProvider');
+const testWalletLinkUrl = 'http://walletlink-url';
+const testStorage = new ScopedLocalStorage('walletlink', testWalletLinkUrl);
 
-const createAdapter = (options?: { relay?: MockRelayClass; storage?: ScopedLocalStorage }) => {
+const createAdapter = (options?: { relay?: MockRelayClass }) => {
   const adapter = new WLRelayAdapter({
     appName: 'test',
     appLogoUrl: null,
-    storage: options?.storage || storage,
+    walletlinkUrl: testWalletLinkUrl,
     updateListener: {
       onAccountsChanged: () => {},
       onChainChanged: () => {},
@@ -34,7 +35,7 @@ const createAdapter = (options?: { relay?: MockRelayClass; storage?: ScopedLocal
 
 describe('LegacyProvider', () => {
   afterEach(() => {
-    storage.clear();
+    testStorage.clear();
   });
 
   it('handles enabling the provider successfully', async () => {
@@ -181,11 +182,8 @@ describe('LegacyProvider', () => {
   });
 
   it('gets the users address from storage on init', async () => {
-    const localStorage = new ScopedLocalStorage('test');
-    localStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDERESS.toLowerCase());
-    const provider = createAdapter({
-      storage: localStorage,
-    });
+    testStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDERESS.toLowerCase());
+    const provider = createAdapter();
 
     // @ts-expect-error accessing private value for test
     expect(provider._addresses).toEqual([MOCK_ADDERESS.toLowerCase()]);
@@ -199,18 +197,13 @@ describe('LegacyProvider', () => {
 
   describe('RPC Methods', () => {
     let provider: WLRelayAdapter | null = null;
-    let localStorage: ScopedLocalStorage;
     beforeEach(() => {
-      localStorage = new ScopedLocalStorage('test');
-      localStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDERESS.toLowerCase());
-      provider = createAdapter({
-        storage: localStorage,
-      });
+      testStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDERESS.toLowerCase());
+      provider = createAdapter();
     });
 
     afterEach(() => {
       provider = null;
-      localStorage?.clear();
     });
 
     test('eth_accounts', async () => {

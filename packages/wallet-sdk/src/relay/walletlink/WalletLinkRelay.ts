@@ -2,9 +2,9 @@
 // Licensed under the Apache License, version 2.0
 
 import { ErrorType, getMessageFromCode, standardErrors } from '../../core/error';
+import { ScopedLocalStorage } from '../../core/ScopedLocalStorage';
 import { AddressString, IntNumber, RegExpString } from '../../core/type';
 import { bigIntStringFromBN, hexStringFromBuffer, randomBytesHex } from '../../core/util';
-import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
 import { DiagnosticLogger, EVENTS } from '../../provider/DiagnosticLogger';
 import { LIB_VERSION } from '../../version';
 import { CancelablePromise, LOCAL_STORAGE_ADDRESSES_KEY, RelayAbstract } from '../RelayAbstract';
@@ -100,7 +100,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
 
     if (linked) {
       // Only set linked session variable one way
-      this.session.linked = linked;
+      this._session.linked = linked;
     }
 
     this.isUnlinkedErrorState = false;
@@ -108,7 +108,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
     if (cachedAddresses) {
       const addresses = cachedAddresses.split(' ') as AddressString[];
       const wasConnectedViaStandalone = this.storage.getItem('IsStandaloneSigning') === 'true';
-      if (addresses[0] !== '' && !linked && this.session.linked && !wasConnectedViaStandalone) {
+      if (addresses[0] !== '' && !linked && this._session.linked && !wasConnectedViaStandalone) {
         this.isUnlinkedErrorState = true;
         const sessionIdHash = this.getSessionIdHash();
         this.diagnostic?.log(EVENTS.UNLINKED_ERROR_STATE, {
@@ -228,10 +228,6 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
 
   public getStorageItem(key: string): string | null {
     return this.storage.getItem(key);
-  }
-
-  public get session(): WalletLinkSession {
-    return this._session;
   }
 
   public setStorageItem(key: string, value: string): void {

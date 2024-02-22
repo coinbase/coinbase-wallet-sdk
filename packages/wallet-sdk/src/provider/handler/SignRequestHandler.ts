@@ -1,8 +1,8 @@
 import { ConnectionPreference } from '../../CoinbaseWalletSDK';
 import { standardErrorCodes, standardErrors } from '../../core/error';
 import { SerializedEthereumRpcError } from '../../core/error/utils';
+import { ScopedLocalStorage } from '../../core/ScopedLocalStorage';
 import { AddressString, Chain } from '../../core/type';
-import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
 import { SCWSigner } from '../../signer/scw/SCWSigner';
 import { Signer, SignerUpdateListener } from '../../signer/SignerInterface';
 import { WLSigner } from '../../signer/walletlink/WLSigner';
@@ -19,7 +19,6 @@ interface SignRequestHandlingUpdateListener {
 }
 
 interface SignRequestHandlerOptions {
-  storage: ScopedLocalStorage;
   scwUrl?: string;
   appName?: string;
   appLogoUrl?: string | null;
@@ -28,7 +27,7 @@ interface SignRequestHandlerOptions {
   updateListener: SignRequestHandlingUpdateListener;
 }
 
-const CONNECTION_TYPE_KEY = 'SignRequestHandler:connectionType';
+const SIGNER_TYPE_KEY = 'SignerType';
 
 export class SignRequestHandler implements RequestHandler {
   private appName: string;
@@ -40,12 +39,12 @@ export class SignRequestHandler implements RequestHandler {
   private connectionTypeSelectionResolver: ((value: unknown) => void) | undefined;
   private signer: Signer | undefined;
 
-  private storage: ScopedLocalStorage;
+  // should be encapsulated under ConnectorConfigurator
+  private signerTypeStorage = new ScopedLocalStorage('CBWSDK', 'SignRequestHandler');
   private popupCommunicator: PopUpCommunicator;
   private updateListener: SignRequestHandlingUpdateListener;
 
   constructor(options: Readonly<SignRequestHandlerOptions>) {
-    this.storage = options.storage;
     this.popupCommunicator = new PopUpCommunicator({
       url: options.scwUrl || 'https://keys.coinbase.com/connect',
     });
@@ -61,7 +60,7 @@ export class SignRequestHandler implements RequestHandler {
     this.appLogoUrl = options.appLogoUrl ?? null;
     this.appChainIds = options.appChainIds;
 
-    const persistedConnectionType = this.storage.getItem(CONNECTION_TYPE_KEY);
+    const persistedConnectionType = this.signerTypeStorage.getItem(SIGNER_TYPE_KEY);
     this.connectionType = persistedConnectionType;
     this.connectionPreference = options.connectionPreference;
 
@@ -99,7 +98,6 @@ export class SignRequestHandler implements RequestHandler {
       appLogoUrl: this.appLogoUrl,
       appChainIds: this.appChainIds,
       puc: this.popupCommunicator,
-      storage: this.storage,
       updateListener: this.updateRelay,
     });
   }
@@ -110,7 +108,6 @@ export class SignRequestHandler implements RequestHandler {
     this.signer = new WLSigner({
       appName: this.appName,
       appLogoUrl: this.appLogoUrl,
-      storage: this.storage,
       updateListener: this.updateRelay,
     });
   }
@@ -200,7 +197,7 @@ export class SignRequestHandler implements RequestHandler {
   private setConnectionType(connectionType: string) {
     if (this.connectionType === connectionType) return;
     this.connectionType = connectionType;
-    this.storage.setItem(CONNECTION_TYPE_KEY, this.connectionType);
+    this.signerTypeStorage.setItem(SIGNER_TYPE_KEY, this.connectionType);
   }
 
   canHandleRequest(request: RequestArguments): boolean {

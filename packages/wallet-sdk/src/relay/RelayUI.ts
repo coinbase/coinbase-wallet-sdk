@@ -1,7 +1,6 @@
 import { ErrorHandler } from '../core/error';
 
 export interface RelayUIOptions {
-  linkAPIUrl: string;
   version: string;
   darkMode: boolean;
 }

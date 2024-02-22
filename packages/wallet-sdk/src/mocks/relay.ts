@@ -1,7 +1,5 @@
 import { AddressString, HexString } from '../core/type';
-import { ScopedLocalStorage } from '../lib/ScopedLocalStorage';
 import { RelayAbstract } from '../relay/RelayAbstract';
-import { WalletLinkSession } from '../relay/walletlink/type/WalletLinkSession';
 import { Web3Method as SupportedWeb3Method, Web3Method } from '../relay/walletlink/type/Web3Method';
 import { Web3Response } from '../relay/walletlink/type/Web3Response';
 import { MOCK_ADDERESS, MOCK_TX } from './fixtures';
@@ -123,9 +121,5 @@ export class MockRelayClass extends RelayAbstract {
 
   attachUI() {
     return;
-  }
-
-  get session() {
-    return new WalletLinkSession(new ScopedLocalStorage('session-test'));
   }
 }

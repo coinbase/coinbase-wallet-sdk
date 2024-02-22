@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { ScopedLocalStorage } from '../../lib/ScopedLocalStorage';
+import { ScopedLocalStorage } from '../../core/ScopedLocalStorage';
 import { WALLET_USER_NAME_KEY } from '../RelayAbstract';
 import { WalletLinkCipher } from './connection/WalletLinkCipher';
 import { WalletLinkConnection } from './connection/WalletLinkConnection';
@@ -16,7 +16,7 @@ jest.spyOn(WalletLinkCipher.prototype, 'decrypt').mockImplementation(decryptMock
 describe('WalletLinkRelay', () => {
   const options: WalletLinkRelayOptions = {
     linkAPIUrl: 'http://link-api-url',
-    storage: new ScopedLocalStorage('test'),
+    storage: new ScopedLocalStorage('walletlink', 'test'),
   };
 
   beforeEach(() => {
