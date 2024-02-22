@@ -8,15 +8,15 @@ const walletSwitchEthereumChainShortcuts: ShortcutType[] = [
     },
   },
   {
-    key: 'OP Mainnet',
+    key: 'Base',
     data: {
-      chainId: '10',
+      chainId: '8453',
     },
   },
   {
-    key: 'Arbitrum',
+    key: 'Base Sepolia',
     data: {
-      chainId: '42161',
+      chainId: '84532',
     },
   },
   {
