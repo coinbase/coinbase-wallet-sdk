@@ -24,7 +24,7 @@ type Fulfillment = {
 export class PopUpCommunicator extends CrossDomainCommunicator {
   private requestMap = new Map<UUID, Fulfillment>();
   // TODO: let's revisit this when we migrate all this to ConnectionConfigurator.
-  private _wlQRCodeUrlCallback?: () => string;
+  private wlQRCodeUrlCallback?: () => string;
 
   constructor({ url }: { url: string }) {
     super();
@@ -33,7 +33,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
 
   // should be set before calling .connect()
   setWLQRCodeUrlCallback(callback: () => string) {
-    this._wlQRCodeUrlCallback = callback;
+    this.wlQRCodeUrlCallback = callback;
   }
 
   protected onConnect(): Promise<void> {
@@ -48,12 +48,12 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
   }
 
   private respondToWlQRCodeUrlRequest() {
-    if (!this._wlQRCodeUrlCallback) {
+    if (!this.wlQRCodeUrlCallback) {
       throw standardErrors.rpc.internal(
-        'PopUpCommunicator._wlQRCodeUrlCallback not set! make sure .setWLQRCodeUrlCallback is called first'
+        'PopUpCommunicator.wlQRCodeUrlCallback not set! make sure .setWLQRCodeUrlCallback is called first'
       );
     }
-    const wlQRCodeUrl = this._wlQRCodeUrlCallback();
+    const wlQRCodeUrl = this.wlQRCodeUrlCallback();
     const configMessage: ConfigMessage = {
       type: 'config',
       id: crypto.randomUUID(),
@@ -108,9 +108,9 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
         break;
       case HostConfigEventType.RequestWalletLinkUrl:
         if (!this._connected) return;
-        if (!this._wlQRCodeUrlCallback) {
+        if (!this.wlQRCodeUrlCallback) {
           throw standardErrors.rpc.internal(
-            'PopUpCommunicator._wlQRCodeUrlCallback not set! should never happen'
+            'PopUpCommunicator.wlQRCodeUrlCallback not set! should never happen'
           );
         }
         this.respondToWlQRCodeUrlRequest();

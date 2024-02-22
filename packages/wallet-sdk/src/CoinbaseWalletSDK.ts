@@ -34,11 +34,11 @@ export interface CoinbaseWalletSDKOptions {
 export class CoinbaseWalletSDK {
   public static VERSION = LIB_VERSION;
 
-  private _appName = '';
-  private _appLogoUrl: string | null = null;
-  private _storage: ScopedLocalStorage;
-  private _connectionPreference: ConnectionPreference;
-  private _chainIds: number[];
+  private appName = '';
+  private appLogoUrl: string | null = null;
+  private storage: ScopedLocalStorage;
+  private connectionPreference: ConnectionPreference;
+  private chainIds: number[];
   private linkAPIUrl: string;
   private scwUrl?: string;
 
@@ -51,22 +51,22 @@ export class CoinbaseWalletSDK {
 
     const url = new URL(this.linkAPIUrl);
     const origin = `${url.protocol}//${url.host}`;
-    this._storage = new ScopedLocalStorage(`-walletlink:${origin}`); // needs migration to preserve local states
-    this._storage.setItem('version', CoinbaseWalletSDK.VERSION);
-    this._connectionPreference = options.connectionPreference || 'default';
-    this._chainIds = options.chainIds ? options.chainIds.map(Number) : [];
+    this.storage = new ScopedLocalStorage(`-walletlink:${origin}`); // needs migration to preserve local states
+    this.storage.setItem('version', CoinbaseWalletSDK.VERSION);
+    this.connectionPreference = options.connectionPreference || 'default';
+    this.chainIds = options.chainIds ? options.chainIds.map(Number) : [];
 
     // TODO: revisit arg name. update default url to production.
     this.scwUrl = options.scwUrl || 'https://scw-dev.cbhq.net/connect';
 
-    this._appName = options.appName || 'DApp';
-    this._appLogoUrl = options.appLogoUrl || getFavicon();
+    this.appName = options.appName || 'DApp';
+    this.appLogoUrl = options.appLogoUrl || getFavicon();
   }
 
   public makeWeb3Provider(): ProviderInterface {
     const extension = this.walletExtension;
     if (extension) {
-      extension.setAppInfo?.(this._appName, this._appLogoUrl);
+      extension.setAppInfo?.(this.appName, this.appLogoUrl);
       return extension;
     }
 
@@ -75,17 +75,17 @@ export class CoinbaseWalletSDK {
       return dappBrowser;
     }
 
-    if (!this._storage) {
+    if (!this.storage) {
       throw new Error('Storage not initialized, should never happen');
     }
 
     return new CoinbaseWalletProvider({
-      storage: this._storage,
+      storage: this.storage,
       scwUrl: this.scwUrl,
-      appName: this._appName,
-      appLogoUrl: this._appLogoUrl,
-      appChainIds: this._chainIds,
-      connectionPreference: this._connectionPreference,
+      appName: this.appName,
+      appLogoUrl: this.appLogoUrl,
+      appChainIds: this.chainIds,
+      connectionPreference: this.connectionPreference,
     });
   }
 
@@ -94,7 +94,7 @@ export class CoinbaseWalletSDK {
     if (extension) {
       extension.close?.();
     } else {
-      this._storage.clear();
+      this.storage.clear();
     }
   }
 

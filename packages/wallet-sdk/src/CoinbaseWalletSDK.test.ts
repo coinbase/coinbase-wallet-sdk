@@ -13,8 +13,8 @@ describe('CoinbaseWalletSDK', () => {
       });
 
       expect(coinbaseWalletSDK1).toMatchObject({
-        _appLogoUrl: null,
-        _appName: 'DApp',
+        appLogoUrl: null,
+        appName: 'DApp',
       });
     });
   });

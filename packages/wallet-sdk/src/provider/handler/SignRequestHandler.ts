@@ -31,166 +31,166 @@ interface SignRequestHandlerOptions {
 const CONNECTION_TYPE_KEY = 'SignRequestHandler:connectionType';
 
 export class SignRequestHandler implements RequestHandler, ConnectorUpdateListener {
-  private _appName: string;
-  private _appLogoUrl: string | null;
-  private _appChainIds: number[];
-  private _connectionPreference: ConnectionPreference;
+  private appName: string;
+  private appLogoUrl: string | null;
+  private appChainIds: number[];
+  private connectionPreference: ConnectionPreference;
 
-  private _connectionType: string | null;
-  private _connectionTypeSelectionResolver: ((value: unknown) => void) | undefined;
-  private _connector: Connector | undefined;
+  private connectionType: string | null;
+  private connectionTypeSelectionResolver: ((value: unknown) => void) | undefined;
+  private connector: Connector | undefined;
 
-  private _storage: ScopedLocalStorage;
-  private _popupCommunicator: PopUpCommunicator;
-  private _updateListener: SignRequestHandlingUpdateListener;
+  private storage: ScopedLocalStorage;
+  private popupCommunicator: PopUpCommunicator;
+  private updateListener: SignRequestHandlingUpdateListener;
 
   constructor(options: Readonly<SignRequestHandlerOptions>) {
-    this._storage = options.storage;
-    this._popupCommunicator = new PopUpCommunicator({
+    this.storage = options.storage;
+    this.popupCommunicator = new PopUpCommunicator({
       url: options.scwUrl || 'https://keys.coinbase.com/connect',
     });
-    this._updateListener = options.updateListener;
+    this.updateListener = options.updateListener;
 
     // getWalletLinkUrl is called by the PopUpCommunicator when
     // it receives message.type === 'wlQRCodeUrl' from the cb-wallet-scw popup
     // its injected because we don't want to instantiate WalletLinkConnector until we have to
     this.getWalletLinkUrl = this.getWalletLinkUrl.bind(this);
-    this._popupCommunicator.setWLQRCodeUrlCallback(this.getWalletLinkUrl);
+    this.popupCommunicator.setWLQRCodeUrlCallback(this.getWalletLinkUrl);
 
-    this._appName = options.appName ?? '';
-    this._appLogoUrl = options.appLogoUrl ?? null;
-    this._appChainIds = options.appChainIds;
+    this.appName = options.appName ?? '';
+    this.appLogoUrl = options.appLogoUrl ?? null;
+    this.appChainIds = options.appChainIds;
 
-    const persistedConnectionType = this._storage.getItem(CONNECTION_TYPE_KEY);
-    this._connectionType = persistedConnectionType;
-    this._connectionPreference = options.connectionPreference;
+    const persistedConnectionType = this.storage.getItem(CONNECTION_TYPE_KEY);
+    this.connectionType = persistedConnectionType;
+    this.connectionPreference = options.connectionPreference;
 
     if (persistedConnectionType) {
-      this._initConnector();
+      this.initConnector();
     }
 
-    this._setConnectionType = this._setConnectionType.bind(this);
-    this._initWalletLinkConnector = this._initWalletLinkConnector.bind(this);
+    this.setConnectionType = this.setConnectionType.bind(this);
+    this.initWalletLinkConnector = this.initWalletLinkConnector.bind(this);
   }
 
   onAccountsChanged(_connector: Connector, accounts: AddressString[]) {
-    this._updateListener.onAccountsChanged(accounts);
+    this.updateListener.onAccountsChanged(accounts);
   }
 
   onChainChanged(connector: Connector, chain: Chain): void {
-    // if (connector !== this._connector) return; // ignore events from inactive connectors
+    // if (connector !== this.connector) return; // ignore events from inactive connectors
     if (connector instanceof WLConnector) {
-      this._connectionTypeSelectionResolver?.('walletlink');
+      this.connectionTypeSelectionResolver?.('walletlink');
     }
 
-    this._updateListener.onChainChanged(chain);
+    this.updateListener.onChainChanged(chain);
   }
 
-  private _initConnector = () => {
-    if (this._connectionType === 'scw') {
-      this._initScwConnector();
-    } else if (this._connectionType === 'walletlink') {
-      this._initWalletLinkConnector();
+  private initConnector = () => {
+    if (this.connectionType === 'scw') {
+      this.initScwConnector();
+    } else if (this.connectionType === 'walletlink') {
+      this.initWalletLinkConnector();
     }
   };
 
-  private _initScwConnector() {
-    if (this._connector instanceof SCWConnector) return;
-    this._connector = new SCWConnector({
-      appName: this._appName,
-      appLogoUrl: this._appLogoUrl,
-      appChainIds: this._appChainIds,
-      puc: this._popupCommunicator,
-      storage: this._storage,
+  private initScwConnector() {
+    if (this.connector instanceof SCWConnector) return;
+    this.connector = new SCWConnector({
+      appName: this.appName,
+      appLogoUrl: this.appLogoUrl,
+      appChainIds: this.appChainIds,
+      puc: this.popupCommunicator,
+      storage: this.storage,
       updateListener: this,
     });
   }
 
-  private _initWalletLinkConnector() {
-    if (this._connector instanceof WLConnector) return;
+  private initWalletLinkConnector() {
+    if (this.connector instanceof WLConnector) return;
 
-    this._connector = new WLConnector({
-      appName: this._appName,
-      appLogoUrl: this._appLogoUrl,
-      storage: this._storage,
+    this.connector = new WLConnector({
+      appName: this.appName,
+      appLogoUrl: this.appLogoUrl,
+      storage: this.storage,
       updateListener: this,
     });
   }
 
   async onDisconnect() {
-    this._connectionType = null;
-    await this._connector?.disconnect();
+    this.connectionType = null;
+    await this.connector?.disconnect();
   }
 
   async handleRequest(request: RequestArguments, accounts: AddressString[], _chain: Chain) {
     try {
       if (request.method === 'eth_requestAccounts') {
-        return await this._eth_requestAccounts(accounts);
+        return await this.eth_requestAccounts(accounts);
       }
 
-      if (!this._connector || accounts.length <= 0) {
+      if (!this.connector || accounts.length <= 0) {
         throw standardErrors.provider.unauthorized(
           "Must call 'eth_requestAccounts' before other methods"
         );
       }
 
-      return await this._connector.request(request);
+      return await this.connector.request(request);
     } catch (err) {
       if ((err as SerializedEthereumRpcError).code === standardErrorCodes.provider.unauthorized) {
-        this._updateListener.onResetConnection();
+        this.updateListener.onResetConnection();
       }
       throw err;
     }
   }
 
-  async _eth_requestAccounts(accounts: AddressString[]): Promise<AddressString[]> {
+  async eth_requestAccounts(accounts: AddressString[]): Promise<AddressString[]> {
     if (accounts.length > 0) {
-      this._updateListener.onConnect();
+      this.updateListener.onConnect();
       return Promise.resolve(accounts);
     }
 
-    if (!this._connectionType) {
+    if (!this.connectionType) {
       // WL: this promise hangs until the QR code is scanned
       // SCW: this promise hangs until the user signs in with passkey
-      const connectionType = await this._completeConnectionTypeSelection();
-      this._setConnectionType(connectionType as ConnectionType);
+      const connectionType = await this.completeConnectionTypeSelection();
+      this.setConnectionType(connectionType as ConnectionType);
     }
 
     // in the case of walletlink, this doesn't do anything since connector is initialized
     // when the wallet link QR code url is requested
-    this._initConnector();
+    this.initConnector();
 
-    const ethAddresses = await this._connector?.handshake();
+    const ethAddresses = await this.connector?.handshake();
     if (Array.isArray(ethAddresses)) {
-      if (this._connectionType === 'walletlink') {
-        this._popupCommunicator.walletLinkQrScanned();
+      if (this.connectionType === 'walletlink') {
+        this.popupCommunicator.walletLinkQrScanned();
       }
-      this._updateListener.onAccountsChanged(ethAddresses);
-      this._updateListener.onConnect();
+      this.updateListener.onAccountsChanged(ethAddresses);
+      this.updateListener.onConnect();
       return Promise.resolve(ethAddresses);
     }
     return Promise.reject(standardErrors.rpc.internal('Failed to get accounts'));
   }
 
   private getWalletLinkUrl() {
-    this._initWalletLinkConnector();
-    if (!(this._connector instanceof WLConnector)) {
+    this.initWalletLinkConnector();
+    if (!(this.connector instanceof WLConnector)) {
       throw standardErrors.rpc.internal(
         'Connector not initialized or Connector.getWalletLinkUrl not defined'
       );
     }
-    return this._connector.getQRCodeUrl();
+    return this.connector.getQRCodeUrl();
   }
 
-  private async _completeConnectionTypeSelection() {
-    await this._popupCommunicator.connect();
+  private async completeConnectionTypeSelection() {
+    await this.popupCommunicator.connect();
 
     return new Promise((resolve) => {
-      this._connectionTypeSelectionResolver = resolve.bind(this);
+      this.connectionTypeSelectionResolver = resolve.bind(this);
 
-      this._popupCommunicator
+      this.popupCommunicator
         .selectConnectionType({
-          connectionPreference: this._connectionPreference,
+          connectionPreference: this.connectionPreference,
         })
         .then((connectionType) => {
           resolve(connectionType);
@@ -199,10 +199,10 @@ export class SignRequestHandler implements RequestHandler, ConnectorUpdateListen
   }
 
   // storage methods
-  private _setConnectionType(connectionType: string) {
-    if (this._connectionType === connectionType) return;
-    this._connectionType = connectionType;
-    this._storage.setItem(CONNECTION_TYPE_KEY, this._connectionType);
+  private setConnectionType(connectionType: string) {
+    if (this.connectionType === connectionType) return;
+    this.connectionType = connectionType;
+    this.storage.setItem(CONNECTION_TYPE_KEY, this.connectionType);
   }
 
   canHandleRequest(request: RequestArguments): boolean {

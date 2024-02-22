@@ -8,10 +8,10 @@ import { ProviderInterface, RequestArguments } from '../ProviderInterface';
 import { RequestHandler } from './RequestHandler';
 
 export class FilterRequestHandler implements RequestHandler {
-  private readonly _filterPolyfill: FilterPolyfill;
+  private readonly filterPolyfill: FilterPolyfill;
 
   constructor({ provider }: { provider: ProviderInterface }) {
-    this._filterPolyfill = new FilterPolyfill(provider);
+    this.filterPolyfill = new FilterPolyfill(provider);
   }
 
   handleRequest(request: RequestArguments, _accounts: AddressString[], _chain: Chain) {
@@ -20,57 +20,57 @@ export class FilterRequestHandler implements RequestHandler {
 
     switch (method) {
       case 'eth_newFilter':
-        return this._eth_newFilter(params as any);
+        return this.eth_newFilter(params as any);
 
       case 'eth_newBlockFilter':
-        return this._eth_newBlockFilter();
+        return this.eth_newBlockFilter();
 
       case 'eth_newPendingTransactionFilter':
-        return this._eth_newPendingTransactionFilter();
+        return this.eth_newPendingTransactionFilter();
 
       case 'eth_getFilterChanges':
-        return this._eth_getFilterChanges(params as any);
+        return this.eth_getFilterChanges(params as any);
 
       case 'eth_getFilterLogs':
-        return this._eth_getFilterLogs(params as any);
+        return this.eth_getFilterLogs(params as any);
 
       case 'eth_uninstallFilter':
-        return this._eth_uninstallFilter(params as any);
+        return this.eth_uninstallFilter(params as any);
     }
 
     return Promise.reject(standardErrors.rpc.methodNotFound());
   }
 
-  private async _eth_newFilter(params: unknown[]): Promise<JSONRPCResponse> {
+  private async eth_newFilter(params: unknown[]): Promise<JSONRPCResponse> {
     const param = params[0] as any;
-    const filterId = await this._filterPolyfill.newFilter(param);
+    const filterId = await this.filterPolyfill.newFilter(param);
     return { jsonrpc: '2.0', id: 0, result: filterId };
   }
 
-  private async _eth_newBlockFilter(): Promise<JSONRPCResponse> {
-    const filterId = await this._filterPolyfill.newBlockFilter();
+  private async eth_newBlockFilter(): Promise<JSONRPCResponse> {
+    const filterId = await this.filterPolyfill.newBlockFilter();
     return { jsonrpc: '2.0', id: 0, result: filterId };
   }
 
-  private async _eth_newPendingTransactionFilter(): Promise<JSONRPCResponse> {
-    const filterId = await this._filterPolyfill.newPendingTransactionFilter();
+  private async eth_newPendingTransactionFilter(): Promise<JSONRPCResponse> {
+    const filterId = await this.filterPolyfill.newPendingTransactionFilter();
     return { jsonrpc: '2.0', id: 0, result: filterId };
   }
 
-  private async _eth_uninstallFilter(params: unknown[]): Promise<JSONRPCResponse> {
+  private async eth_uninstallFilter(params: unknown[]): Promise<JSONRPCResponse> {
     const filterId = ensureHexString(params[0]);
-    const result = this._filterPolyfill.uninstallFilter(filterId);
+    const result = this.filterPolyfill.uninstallFilter(filterId);
     return { jsonrpc: '2.0', id: 0, result };
   }
 
-  private _eth_getFilterChanges(params: unknown[]): Promise<JSONRPCResponse> {
+  private eth_getFilterChanges(params: unknown[]): Promise<JSONRPCResponse> {
     const filterId = ensureHexString(params[0]);
-    return this._filterPolyfill.getFilterChanges(filterId);
+    return this.filterPolyfill.getFilterChanges(filterId);
   }
 
-  private _eth_getFilterLogs(params: unknown[]): Promise<JSONRPCResponse> {
+  private eth_getFilterLogs(params: unknown[]): Promise<JSONRPCResponse> {
     const filterId = ensureHexString(params[0]);
-    return this._filterPolyfill.getFilterLogs(filterId);
+    return this.filterPolyfill.getFilterLogs(filterId);
   }
 
   canHandleRequest(request: RequestArguments): boolean {

@@ -10,9 +10,9 @@ export class StateRequestHandler implements RequestHandler {
       case 'eth_chainId':
         return chain.id;
       case 'eth_accounts':
-        return this._eth_accounts(accounts);
+        return this.eth_accounts(accounts);
       case 'eth_coinbase':
-        return this._eth_accounts(accounts)[0];
+        return this.eth_accounts(accounts)[0];
       case 'net_version':
         return chain.id;
     }
@@ -20,7 +20,7 @@ export class StateRequestHandler implements RequestHandler {
     return Promise.reject(standardErrors.rpc.methodNotFound());
   }
 
-  private _eth_accounts(accounts: AddressString[]): AddressString[] {
+  private eth_accounts(accounts: AddressString[]): AddressString[] {
     if (!accounts) {
       throw standardErrors.provider.unauthorized(
         "Must call 'eth_requestAccounts' before 'eth_accounts'"
