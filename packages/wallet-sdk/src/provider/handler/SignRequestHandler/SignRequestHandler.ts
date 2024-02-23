@@ -1,22 +1,16 @@
-import { ConnectionPreference } from '../../CoinbaseWalletSDK';
-import { standardErrorCodes, standardErrors } from '../../core/error';
-import { SerializedEthereumRpcError } from '../../core/error/utils';
-import { ScopedLocalStorage } from '../../core/ScopedLocalStorage';
-import { AddressString, Chain } from '../../core/type';
-import { SCWSigner } from '../../signer/scw/SCWSigner';
-import { Signer, SignerUpdateListener } from '../../signer/SignerInterface';
-import { WLSigner } from '../../signer/walletlink/WLSigner';
-import { ConnectionType } from '../../transport/ConfigMessage';
-import { PopUpCommunicator } from '../../transport/PopUpCommunicator';
-import { RequestArguments } from '../ProviderInterface';
-import { RequestHandler } from './RequestHandler';
-
-interface SignRequestHandlingUpdateListener {
-  onAccountsChanged: (accounts: AddressString[]) => void;
-  onChainChanged: (chain: Chain) => void;
-  onConnect: () => void;
-  onResetConnection: () => void;
-}
+import { ConnectionPreference } from '../../../CoinbaseWalletSDK';
+import { standardErrorCodes, standardErrors } from '../../../core/error';
+import { SerializedEthereumRpcError } from '../../../core/error/utils';
+import { ScopedLocalStorage } from '../../../core/ScopedLocalStorage';
+import { AddressString } from '../../../core/type';
+import { SCWSigner } from '../../../signer/scw/SCWSigner';
+import { Signer, SignerUpdateListener } from '../../../signer/SignerInterface';
+import { WLSigner } from '../../../signer/walletlink/WLSigner';
+import { ConnectionType } from '../../../transport/ConfigMessage';
+import { PopUpCommunicator } from '../../../transport/PopUpCommunicator';
+import { RequestArguments } from '../../ProviderInterface';
+import { RequestHandler } from '../RequestHandler';
+import { SignRequestHandlerListener } from './UpdateListener';
 
 interface SignRequestHandlerOptions {
   scwUrl?: string;
@@ -24,7 +18,7 @@ interface SignRequestHandlerOptions {
   appLogoUrl?: string | null;
   appChainIds: number[];
   connectionPreference: ConnectionPreference;
-  updateListener: SignRequestHandlingUpdateListener;
+  updateListener: SignRequestHandlerListener;
 }
 
 const SIGNER_TYPE_KEY = 'SignerType';
@@ -42,7 +36,7 @@ export class SignRequestHandler implements RequestHandler {
   // should be encapsulated under ConnectorConfigurator
   private signerTypeStorage = new ScopedLocalStorage('CBWSDK', 'SignRequestHandler');
   private popupCommunicator: PopUpCommunicator;
-  private updateListener: SignRequestHandlingUpdateListener;
+  private updateListener: SignRequestHandlerListener;
 
   constructor(options: Readonly<SignRequestHandlerOptions>) {
     this.popupCommunicator = new PopUpCommunicator({
@@ -73,13 +67,16 @@ export class SignRequestHandler implements RequestHandler {
   }
 
   private readonly updateRelay: SignerUpdateListener = {
-    onAccountsChanged: (_, ...rest) => this.updateListener.onAccountsChanged(...rest),
-    onChainChanged: (signer, ...rest) => {
-      // if (signer !== this.signer) return; // ignore events from inactive signers
+    onAccountsUpdate: (signer, ...rest) => {
+      if (signer !== this.signer) return; // ignore events from inactive signers
+      this.updateListener.onAccountsUpdate(...rest);
+    },
+    onChainUpdate: (signer, ...rest) => {
+      if (signer !== this.signer) return; // ignore events from inactive signers
       if (signer instanceof WLSigner) {
         this.connectionTypeSelectionResolver?.('walletlink');
       }
-      this.updateListener.onChainChanged(...rest);
+      this.updateListener.onChainUpdate(...rest);
     },
   };
 
@@ -160,7 +157,6 @@ export class SignRequestHandler implements RequestHandler {
       if (this.connectionType === 'walletlink') {
         this.popupCommunicator.walletLinkQrScanned();
       }
-      this.updateListener.onAccountsChanged(ethAddresses);
       this.updateListener.onConnect();
       return Promise.resolve(ethAddresses);
     }

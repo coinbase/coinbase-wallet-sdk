@@ -1,4 +1,5 @@
-import { AddressString, Chain } from '../core/type';
+import { AddressString } from '../core/type';
+import { AccountsUpdate, ChainUpdate } from '../provider/handler/SignRequestHandler/UpdateListener';
 import { RequestArguments } from '../provider/ProviderInterface';
 
 export interface Signer {
@@ -8,6 +9,6 @@ export interface Signer {
 }
 
 export interface SignerUpdateListener {
-  onAccountsChanged: (signer: Signer, accounts: AddressString[]) => void;
-  onChainChanged: (signer: Signer, chain: Chain) => void;
+  onAccountsUpdate: (signer: Signer, update: AccountsUpdate) => void;
+  onChainUpdate: (signer: Signer, update: ChainUpdate) => void;
 }

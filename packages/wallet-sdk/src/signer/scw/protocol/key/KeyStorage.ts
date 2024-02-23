@@ -23,7 +23,7 @@ const PEER_PUBLIC_KEY = {
   keyType: 'public',
 } as const;
 
-export class KeyStorage {
+export class SCWKeyManager {
   private storage = new ScopedLocalStorage('CBWSDK', 'SCWKeyStorage');
   private ownPrivateKey: CryptoKey | null = null;
   private ownPublicKey: CryptoKey | null = null;

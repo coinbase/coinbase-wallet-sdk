@@ -1,17 +1,22 @@
 import { ScopedLocalStorage } from '../../core/ScopedLocalStorage';
-import { ChainManager } from './ChainManager';
+import { SCWStateManager } from './ChainManager';
 
-describe('ChainManager', () => {
+describe('SCWStateManager', () => {
   const DEFAULT_CHAIN = {
     id: 1,
     rpcUrl: undefined,
   };
   const AVAILABLE_CHAINS = { 7: 'https://chain7.com', 13: 'https://chain13.com' };
 
-  let chainManager: ChainManager;
+  let stateManager: SCWStateManager;
 
   beforeEach(() => {
-    chainManager = new ChainManager(jest.fn());
+    stateManager = new SCWStateManager({
+      updateListener: {
+        onAccountsUpdate: jest.fn(),
+        onChainUpdate: jest.fn(),
+      },
+    });
   });
 
   afterEach(() => {
@@ -21,38 +26,38 @@ describe('ChainManager', () => {
 
   describe('switchChain', () => {
     beforeEach(() => {
-      chainManager.updateAvailableChains(AVAILABLE_CHAINS);
+      stateManager.updateAvailableChains(AVAILABLE_CHAINS);
     });
 
     it('should switch the active chain when the chain is available', () => {
-      const switched = chainManager.switchChain(7);
+      const switched = stateManager.switchChain(7);
       expect(switched).toBe(true);
-      expect(chainManager.activeChain.id).toBe(7);
+      expect(stateManager.activeChain.id).toBe(7);
     });
 
     it('should not switch the active chain when the chain is not available', () => {
-      const switched = chainManager.switchChain(3);
+      const switched = stateManager.switchChain(3);
       expect(switched).toBe(false);
-      expect(chainManager.activeChain.id).toBe(DEFAULT_CHAIN.id);
+      expect(stateManager.activeChain.id).toBe(DEFAULT_CHAIN.id);
     });
 
     it('should not update the active chain when switching to the same chain', () => {
-      const switched = chainManager.switchChain(DEFAULT_CHAIN.id);
+      const switched = stateManager.switchChain(DEFAULT_CHAIN.id);
       expect(switched).toBe(false);
-      expect(chainManager.activeChain.id).toBe(DEFAULT_CHAIN.id);
+      expect(stateManager.activeChain.id).toBe(DEFAULT_CHAIN.id);
     });
   });
 
   describe('updateAvailableChains', () => {
     it('should update the active chain when the rpc url of the active chain is updated', () => {
-      expect(chainManager.activeChain.rpcUrl).toBeUndefined();
-      chainManager.updateAvailableChains({ 1: 'https://chain1.com' });
-      expect(chainManager.activeChain.rpcUrl).toBe('https://chain1.com');
+      expect(stateManager.activeChain.rpcUrl).toBeUndefined();
+      stateManager.updateAvailableChains({ 1: 'https://chain1.com' });
+      expect(stateManager.activeChain.rpcUrl).toBe('https://chain1.com');
     });
 
     it('should not update the active chain when available chains does not include the active chain', () => {
-      chainManager.updateAvailableChains({ 3: 'https://chain3.com' });
-      expect(chainManager.activeChain.id).toBe(DEFAULT_CHAIN.id);
+      stateManager.updateAvailableChains({ 3: 'https://chain3.com' });
+      expect(stateManager.activeChain.id).toBe(DEFAULT_CHAIN.id);
     });
   });
 
@@ -60,30 +65,45 @@ describe('ChainManager', () => {
     const chainUpdatedListener = jest.fn();
 
     beforeEach(() => {
-      chainManager = new ChainManager(chainUpdatedListener);
-      chainManager.updateAvailableChains(AVAILABLE_CHAINS);
+      stateManager = new SCWStateManager({
+        updateListener: {
+          onAccountsUpdate: jest.fn(),
+          onChainUpdate: chainUpdatedListener,
+        },
+      });
+      stateManager.updateAvailableChains(AVAILABLE_CHAINS);
     });
 
     describe('switchChain', () => {
       it('should call chainUpdatedListener when switching the active chain', () => {
-        chainManager.switchChain(7);
-        expect(chainUpdatedListener).toHaveBeenCalledWith({ id: 7, rpcUrl: 'https://chain7.com' });
+        stateManager.switchChain(7);
+        expect(chainUpdatedListener).toHaveBeenCalledWith({
+          chain: { id: 7, rpcUrl: 'https://chain7.com' },
+          source: 'wallet',
+        });
       });
 
       it('should not call chainUpdatedListener when switching to an unavailable chain', () => {
-        chainManager.switchChain(3);
-        expect(chainUpdatedListener).not.toHaveBeenCalledWith(expect.objectContaining({ id: 3 }));
+        stateManager.switchChain(3);
+        expect(chainUpdatedListener).not.toHaveBeenCalledWith(
+          expect.objectContaining({ source: 'wallet' })
+        );
       });
     });
 
     describe('updateAvailableChains', () => {
       it('should call chainUpdatedListener when updated available chains include the active chain', () => {
-        chainManager.updateAvailableChains({ 1: 'https://chain1.com' });
-        expect(chainUpdatedListener).toHaveBeenCalledWith({ id: 1, rpcUrl: 'https://chain1.com' });
+        stateManager.updateAvailableChains({ 1: 'https://chain1.com' });
+        expect(chainUpdatedListener).toHaveBeenCalledWith({
+          chain: { id: 1, rpcUrl: 'https://chain1.com' },
+          source: 'wallet',
+        });
       });
       it('should not call chainUpdatedListener when updated available chains does not include the active chain', () => {
-        chainManager.updateAvailableChains({ 3: 'https://chain3.com' });
-        expect(chainUpdatedListener).not.toHaveBeenCalledWith(expect.objectContaining({ id: 3 }));
+        stateManager.updateAvailableChains({ 3: 'https://chain3.com' });
+        expect(chainUpdatedListener).not.toHaveBeenCalledWith(
+          expect.objectContaining({ source: 'wallet' })
+        );
       });
     });
   });

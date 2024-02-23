@@ -8,7 +8,8 @@ import { areAddressArraysEqual, prepend0x, showDeprecationWarning } from '../cor
 import { FilterRequestHandler } from './handler/FilterRequestHandler';
 import { JSONRPCRequestHandler } from './handler/JSONRPCRequestHandler';
 import { RequestHandler } from './handler/RequestHandler';
-import { SignRequestHandler } from './handler/SignRequestHandler';
+import { SignRequestHandler } from './handler/SignRequestHandler/SignRequestHandler';
+import { AccountsUpdate, ChainUpdate } from './handler/SignRequestHandler/UpdateListener';
 import { StateRequestHandler } from './handler/StateRequestHandler';
 import { SubscriptionRequestHandler } from './handler/SubscriptionManager';
 import { getErrorForInvalidRequestArgs } from './helpers/eip1193Utils';
@@ -23,7 +24,7 @@ interface ConstructorOptions {
 }
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
-  private accounts: AddressString[];
+  private accounts: AddressString[] = [];
   private chain: Chain = {
     id: 1, // default to mainnet
   };
@@ -33,16 +34,13 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   constructor(options: Readonly<ConstructorOptions>) {
     super();
 
-    // TODO!!!!!! implement load from storage
-    this.accounts = [];
-
     this.handlers = [
       new StateRequestHandler(),
       new SignRequestHandler({
         ...options,
         updateListener: {
-          onAccountsChanged: this.setAccounts.bind(this),
-          onChainChanged: this.setChain.bind(this),
+          onAccountsUpdate: this.setAccounts.bind(this),
+          onChainUpdate: this.setChain.bind(this),
           onConnect: this.emitConnectEvent.bind(this),
           onResetConnection: this.disconnect.bind(this),
         },
@@ -100,18 +98,23 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     this.emit('connect', { chainId: prepend0x(this.chain.id.toString(16)) });
   }
 
-  private setAccounts(accounts: AddressString[]) {
+  private setAccounts({ accounts, source }: AccountsUpdate) {
     if (areAddressArraysEqual(this.accounts, accounts)) {
       return;
     }
 
     this.accounts = accounts;
+
+    if (source === 'storage') return;
     this.emit('accountsChanged', this.accounts);
   }
 
-  private setChain(chain: Chain) {
+  private setChain({ chain, source }: ChainUpdate) {
     if (chain.id === this.chain.id && chain.rpcUrl === this.chain.rpcUrl) return;
+
     this.chain = chain;
+
+    if (source === 'storage') return;
     this.emit('chainChanged', prepend0x(chain.id.toString(16)));
   }
 }

@@ -23,8 +23,8 @@ const createAdapter = (options?: { relay?: MockRelayClass }) => {
     appLogoUrl: null,
     walletlinkUrl: testWalletLinkUrl,
     updateListener: {
-      onAccountsChanged: () => {},
-      onChainChanged: () => {},
+      onAccountsUpdate: () => {},
+      onChainUpdate: () => {},
     },
   });
   if (options?.relay) {

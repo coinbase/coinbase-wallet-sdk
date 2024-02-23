@@ -6,7 +6,7 @@
 
 import { serializeError, standardErrorCodes, standardErrors } from '../../core/error';
 import { ScopedLocalStorage } from '../../core/ScopedLocalStorage';
-import { AddressString, Callback, Chain, IntNumber } from '../../core/type';
+import { AddressString, Callback, IntNumber } from '../../core/type';
 import {
   ensureAddressString,
   ensureBigInt,
@@ -15,6 +15,7 @@ import {
   ensureParsedJSONObject,
   hexStringFromIntNumber,
 } from '../../core/util';
+import { StateUpdateListener } from '../../provider/handler/SignRequestHandler/UpdateListener';
 import { JSONRPCRequest, JSONRPCResponse } from '../../provider/JSONRPC';
 import { RequestArguments } from '../../provider/ProviderInterface';
 import eip712 from '../../vendor-js/eth-eip712-util';
@@ -54,11 +55,6 @@ interface WatchAssetParams {
   };
 }
 
-interface WLRelayUpdateListener {
-  onAccountsChanged: (accounts: AddressString[]) => void;
-  onChainChanged: (chain: Chain) => void;
-}
-
 export class WLRelayAdapter {
   private _appName: string;
   private _appLogoUrl: string | null;
@@ -69,13 +65,13 @@ export class WLRelayAdapter {
   private _jsonRpcUrlFromOpts: string;
   private _addresses: AddressString[] = [];
   private hasMadeFirstChainChangedEmission = false;
-  private updateListener: WLRelayUpdateListener;
+  private updateListener: StateUpdateListener;
 
   constructor(options: {
     appName: string;
     appLogoUrl: string | null;
     walletlinkUrl: string;
-    updateListener: WLRelayUpdateListener;
+    updateListener: StateUpdateListener;
   }) {
     this._appName = options.appName;
     this._appLogoUrl = options.appLogoUrl;
@@ -91,8 +87,23 @@ export class WLRelayAdapter {
       const addresses = cachedAddresses.split(' ') as AddressString[];
       if (addresses[0] !== '') {
         this._addresses = addresses.map((address) => ensureAddressString(address));
-        this.updateListener.onAccountsChanged(this._addresses);
+        this.updateListener.onAccountsUpdate({
+          accounts: this._addresses,
+          source: 'storage',
+        });
       }
+    }
+
+    const cachedChainId = this._storage.getItem(DEFAULT_CHAIN_ID_KEY);
+    if (cachedChainId) {
+      this.updateListener.onChainUpdate({
+        chain: {
+          id: this.getChainId(),
+          rpcUrl: this.jsonRpcUrl,
+        },
+        source: 'storage',
+      });
+      this.hasMadeFirstChainChangedEmission = true;
     }
   }
 
@@ -122,7 +133,10 @@ export class WLRelayAdapter {
     this._storage.setItem(DEFAULT_CHAIN_ID_KEY, chainId.toString(10));
     const chainChanged = ensureIntNumber(chainId) !== originalChainId;
     if (chainChanged || !this.hasMadeFirstChainChangedEmission) {
-      this.updateListener.onChainChanged({ id: chainId, rpcUrl: jsonRpcUrl });
+      this.updateListener.onChainUpdate({
+        chain: { id: chainId, rpcUrl: jsonRpcUrl },
+        source: 'wallet',
+      });
       this.hasMadeFirstChainChangedEmission = true;
     }
   }
@@ -403,7 +417,10 @@ export class WLRelayAdapter {
     }
 
     this._addresses = newAddresses;
-    this.updateListener.onAccountsChanged(newAddresses);
+    this.updateListener.onAccountsUpdate({
+      accounts: newAddresses,
+      source: 'wallet',
+    });
     this._storage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, newAddresses.join(' '));
   }
 

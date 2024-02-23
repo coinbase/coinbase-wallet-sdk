@@ -5,7 +5,6 @@ import { WLRelayAdapter } from '../../relay/walletlink/WLRelayAdapter';
 import { Signer, SignerUpdateListener } from '../SignerInterface';
 
 export class WLSigner implements Signer {
-  private updateListener: SignerUpdateListener;
   private adapter: WLRelayAdapter;
 
   constructor(options: {
@@ -13,21 +12,18 @@ export class WLSigner implements Signer {
     appLogoUrl: string | null;
     updateListener: SignerUpdateListener;
   }) {
-    this.updateListener = options.updateListener;
     this.adapter = new WLRelayAdapter({
       ...options,
       walletlinkUrl: LINK_API_URL,
       updateListener: {
-        onAccountsChanged: (...args) => this.updateListener.onAccountsChanged(this, ...args),
-        onChainChanged: (...args) => this.updateListener.onChainChanged(this, ...args),
+        onAccountsUpdate: (...args) => options.updateListener.onAccountsUpdate(this, ...args),
+        onChainUpdate: (...args) => options.updateListener.onChainUpdate(this, ...args),
       },
     });
   }
 
   async handshake(): Promise<AddressString[]> {
-    const accounts = await this.request<AddressString[]>({ method: 'eth_requestAccounts' });
-    this.updateListener.onAccountsChanged(this, accounts);
-    return accounts;
+    return await this.request<AddressString[]>({ method: 'eth_requestAccounts' });
   }
 
   async request<T>(requestArgs: RequestArguments): Promise<T> {

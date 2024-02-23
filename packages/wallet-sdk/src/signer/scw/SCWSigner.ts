@@ -5,9 +5,9 @@ import { RequestArguments } from '../../provider/ProviderInterface';
 import { PopUpCommunicator } from '../../transport/PopUpCommunicator';
 import { LIB_VERSION } from '../../version';
 import { Signer, SignerUpdateListener } from '../SignerInterface';
-import { ChainManager } from './ChainManager';
+import { SCWStateManager } from './ChainManager';
 import { exportKeyToHexString, importKeyFromHexString } from './protocol/key/Cipher';
-import { KeyStorage } from './protocol/key/KeyStorage';
+import { SCWKeyManager } from './protocol/key/KeyStorage';
 import {
   decryptContent,
   encryptContent,
@@ -27,8 +27,8 @@ export class SCWSigner implements Signer {
   private appChainIds: number[];
 
   private puc: PopUpCommunicator;
-  private keyStorage: KeyStorage;
-  private chainManager: ChainManager;
+  private keyManager: SCWKeyManager;
+  private stateManager: SCWStateManager;
 
   constructor(options: {
     appName: string;
@@ -41,10 +41,13 @@ export class SCWSigner implements Signer {
     this.appLogoUrl = options.appLogoUrl;
     this.appChainIds = options.appChainIds;
     this.puc = options.puc;
-    this.keyStorage = new KeyStorage();
-    this.chainManager = new ChainManager((chain) =>
-      options.updateListener.onChainChanged(this, chain)
-    );
+    this.keyManager = new SCWKeyManager();
+    this.stateManager = new SCWStateManager({
+      updateListener: {
+        onAccountsUpdate: (...args) => options.updateListener.onAccountsUpdate(this, ...args),
+        onChainUpdate: (...args) => options.updateListener.onChainUpdate(this, ...args),
+      },
+    });
 
     this.handshake = this.handshake.bind(this);
     this.request = this.request.bind(this);
@@ -72,14 +75,15 @@ export class SCWSigner implements Signer {
     // store peer's public key
     if ('failure' in response.content) throw response.content.failure;
     const peerPublicKey = await importKeyFromHexString('public', response.sender);
-    await this.keyStorage.setPeerPublicKey(peerPublicKey);
+    await this.keyManager.setPeerPublicKey(peerPublicKey);
 
     const decrypted = await this.decryptResponseMessage<AddressString[]>(response);
     this.updateInternalState({ method: SupportedEthereumMethods.EthRequestAccounts }, decrypted);
 
     const result = decrypted.result;
     if ('error' in result) throw result.error;
-    return result.value;
+
+    return this.stateManager.accounts;
   }
 
   public async request<T>(request: RequestArguments): Promise<T> {
@@ -101,7 +105,8 @@ export class SCWSigner implements Signer {
   }
 
   async disconnect() {
-    await this.keyStorage.resetKeys();
+    this.stateManager.clear();
+    await this.keyManager.resetKeys();
   }
 
   private tryLocalHandling<T>(request: RequestArguments): T | undefined {
@@ -112,7 +117,7 @@ export class SCWSigner implements Signer {
           throw standardErrors.rpc.invalidParams();
         }
         const chainId = ensureIntNumber(params[0].chainId);
-        const switched = this.chainManager.switchChain(chainId);
+        const switched = this.stateManager.switchChain(chainId);
         // "return null if the request was successful"
         // https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
         return switched ? (null as T) : undefined;
@@ -127,7 +132,7 @@ export class SCWSigner implements Signer {
       await this.puc.connect();
     }
 
-    const sharedSecret = await this.keyStorage.getSharedSecret();
+    const sharedSecret = await this.keyManager.getSharedSecret();
     if (!sharedSecret) {
       throw standardErrors.provider.unauthorized(
         'No valid session found, try requestAccounts before other methods'
@@ -137,7 +142,7 @@ export class SCWSigner implements Signer {
     const encrypted = await encryptContent(
       {
         action: request as Action,
-        chainId: this.chainManager.activeChain.id,
+        chainId: this.stateManager.activeChain.id,
       },
       sharedSecret
     );
@@ -150,7 +155,7 @@ export class SCWSigner implements Signer {
   private async createRequestMessage(
     content: SCWRequestMessage['content']
   ): Promise<SCWRequestMessage> {
-    const publicKey = await exportKeyToHexString('public', await this.keyStorage.getOwnPublicKey());
+    const publicKey = await exportKeyToHexString('public', await this.keyManager.getOwnPublicKey());
     return {
       type: 'scw',
       id: crypto.randomUUID(),
@@ -169,7 +174,7 @@ export class SCWSigner implements Signer {
       throw content.failure;
     }
 
-    const sharedSecret = await this.keyStorage.getSharedSecret();
+    const sharedSecret = await this.keyManager.getSharedSecret();
     if (!sharedSecret) {
       throw standardErrors.provider.unauthorized('Invalid session');
     }
@@ -178,23 +183,28 @@ export class SCWSigner implements Signer {
   }
 
   private updateInternalState<T>(request: RequestArguments, response: SCWResponse<T>) {
-    switch (request.method) {
-      case SupportedEthereumMethods.EthRequestAccounts:
-      case SupportedEthereumMethods.WalletAddEthereumChain:
-        this.chainManager.updateAvailableChains(response.data?.chains);
-        break;
-      case SupportedEthereumMethods.WalletSwitchEthereumChain: {
-        this.chainManager.updateAvailableChains(response.data?.chains);
+    const availableChains = response.data?.chains;
+    if (availableChains) {
+      this.stateManager.updateAvailableChains(availableChains);
+    }
 
-        const result = response.result;
-        if ('error' in result) return;
+    const result = response.result;
+    if ('error' in result) return;
+
+    switch (request.method) {
+      case SupportedEthereumMethods.EthRequestAccounts: {
+        const accounts = result.value as AddressString[];
+        this.stateManager.updateAccounts(accounts);
+        break;
+      }
+      case SupportedEthereumMethods.WalletSwitchEthereumChain: {
         // "return null if the request was successful"
         // https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
         if (result.value !== null) return;
 
         const params = request.params as SwitchEthereumChainAction['params'];
         const chainId = ensureIntNumber(params[0].chainId);
-        this.chainManager.switchChain(chainId);
+        this.stateManager.switchChain(chainId);
         break;
       }
       default:

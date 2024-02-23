@@ -1,11 +1,11 @@
 import { generateKeyPair } from './Cipher';
-import { KeyStorage } from './KeyStorage';
+import { SCWKeyManager } from './KeyStorage';
 
 describe('KeyStorage', () => {
-  let keyStorage: KeyStorage;
+  let keyStorage: SCWKeyManager;
 
   beforeEach(() => {
-    keyStorage = new KeyStorage();
+    keyStorage = new SCWKeyManager();
   });
 
   describe('getOwnPublicKey', () => {
@@ -32,7 +32,7 @@ describe('KeyStorage', () => {
     it('should load the same public key from storage with new instance', async () => {
       const firstPublicKey = await keyStorage.getOwnPublicKey();
 
-      const anotherKeyStorage = new KeyStorage();
+      const anotherKeyStorage = new SCWKeyManager();
       const secondPublicKey = await anotherKeyStorage.getOwnPublicKey();
 
       expect(firstPublicKey).toStrictEqual(secondPublicKey);
@@ -60,7 +60,7 @@ describe('KeyStorage', () => {
 
       const sharedSecret = await keyStorage.getSharedSecret();
 
-      const anotherKeyStorage = new KeyStorage();
+      const anotherKeyStorage = new SCWKeyManager();
       const sharedSecretFromAnotherStorage = await anotherKeyStorage.getSharedSecret();
 
       expect(sharedSecret).toStrictEqual(sharedSecretFromAnotherStorage);
