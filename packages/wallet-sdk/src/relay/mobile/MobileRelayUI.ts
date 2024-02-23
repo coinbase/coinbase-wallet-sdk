@@ -37,10 +37,10 @@ export class MobileRelayUI implements RelayUI {
       url.searchParams.append('wl_url', walletLinkUrl);
     }
 
-    this.openedWindow = window.open(url.href, 'cbw-opener');
-    if (this.openedWindow) {
-      setTimeout(() => this.closeOpenedWindow(), 5000);
-    }
+    window.location.href = url.href;
+
+    setTimeout(() => this.closeOpenedWindow(), 5000);
+
   }
 
   openCoinbaseWalletDeeplink(walletLinkUrl?: string): void {
