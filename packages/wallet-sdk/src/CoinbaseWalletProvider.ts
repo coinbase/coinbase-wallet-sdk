@@ -14,7 +14,7 @@ import { areAddressArraysEqual, prepend0x, showDeprecationWarning } from './core
 import { FilterRequestHandler } from './filter/FilterRequestHandler';
 import { StateRequestHandler } from './internalState/StateRequestHandler';
 import { RPCFetchRequestHandler } from './rpcFetch/RPCFetchRequestHandler';
-import { SignRequestHandler } from './sign/SignRequestHanlder';
+import { SignRequestHandler } from './sign/SignRequestHandler';
 import { AccountsUpdate, ChainUpdate } from './sign/UpdateListenerInterface';
 import { SubscriptionRequestHandler } from './subscription/SubscriptionRequestHandler';
 import { ConnectionPreference } from ':core/communicator/ConnectionPreference';
