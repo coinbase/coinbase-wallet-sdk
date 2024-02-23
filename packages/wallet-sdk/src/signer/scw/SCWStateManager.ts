@@ -7,7 +7,7 @@ const ACTIVE_CHAIN_STORAGE_KEY = 'activeChain';
 const AVAILABLE_CHAINS_STORAGE_KEY = 'availableChains';
 
 export class SCWStateManager {
-  private storage = new ScopedLocalStorage('CBWSDK', 'SCWChainManager');
+  private storage = new ScopedLocalStorage('CBWSDK', 'SCWStateManager');
   private updateListener: StateUpdateListener;
 
   private availableChains?: Chain[];

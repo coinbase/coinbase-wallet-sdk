@@ -5,9 +5,8 @@ import { RequestArguments } from '../../provider/ProviderInterface';
 import { PopUpCommunicator } from '../../transport/PopUpCommunicator';
 import { LIB_VERSION } from '../../version';
 import { Signer, SignerUpdateListener } from '../SignerInterface';
-import { SCWStateManager } from './ChainManager';
 import { exportKeyToHexString, importKeyFromHexString } from './protocol/key/Cipher';
-import { SCWKeyManager } from './protocol/key/KeyStorage';
+import { SCWKeyManager } from './protocol/key/SCWKeyManager';
 import {
   decryptContent,
   encryptContent,
@@ -20,6 +19,7 @@ import {
   SwitchEthereumChainAction,
 } from './protocol/type/Action';
 import { SCWResponse } from './protocol/type/Response';
+import { SCWStateManager } from './SCWStateManager';
 
 export class SCWSigner implements Signer {
   private appName: string;

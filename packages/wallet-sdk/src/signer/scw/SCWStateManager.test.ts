@@ -1,5 +1,4 @@
-import { ScopedLocalStorage } from '../../core/ScopedLocalStorage';
-import { SCWStateManager } from './ChainManager';
+import { SCWStateManager } from './SCWStateManager';
 
 describe('SCWStateManager', () => {
   const DEFAULT_CHAIN = {
@@ -20,8 +19,7 @@ describe('SCWStateManager', () => {
   });
 
   afterEach(() => {
-    const storage = new ScopedLocalStorage('CBWSDK', 'SCWChainManager');
-    storage.clear();
+    stateManager.clear();
   });
 
   describe('switchChain', () => {
