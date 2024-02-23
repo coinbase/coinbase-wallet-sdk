@@ -35,6 +35,10 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   private readonly handlers: RequestHandler[];
 
+  public get chainId() {
+    return this.chain.id;
+  }
+
   constructor(options: Readonly<ConstructorOptions>) {
     super();
 
