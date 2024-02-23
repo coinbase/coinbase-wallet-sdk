@@ -1,8 +1,5 @@
 import CoinbaseWalletSDK from '@cbhq/wallet-sdk';
-import {
-  ConnectionPreference,
-  ConnectionPreferences,
-} from '@cbhq/wallet-sdk/dist/CoinbaseWalletSDK';
+import { ConnectionPreference } from '@cbhq/wallet-sdk/dist/core/communicator/ConnectionPreference';
 import React, { useEffect, useMemo } from 'react';
 
 type CBWSDKProviderProps = {
@@ -39,7 +36,7 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
         PREFERRED_CONNECTION_KEY
       ) as ConnectionPreference;
       setConnectionPreference(
-        ConnectionPreferences.includes(savedPreference)
+        ['default', 'embedded'].includes(savedPreference)
           ? savedPreference
           : ('default' as ConnectionPreference)
       );

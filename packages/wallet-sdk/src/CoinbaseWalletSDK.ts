@@ -2,14 +2,12 @@
 // Licensed under the Apache License, version 2.0
 
 import { LogoType, walletLogo } from './assets/wallet-logo';
-import { ScopedLocalStorage } from './core/ScopedLocalStorage';
+import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
+import { ScopedLocalStorage } from './core/storage/ScopedLocalStorage';
+import { ProviderInterface } from './core/type/ProviderInterface';
 import { getFavicon } from './core/util';
-import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
-import { ProviderInterface } from './provider/ProviderInterface';
 import { LIB_VERSION } from './version';
-
-export const ConnectionPreferences = ['default', 'external', 'embedded'] as const;
-export type ConnectionPreference = (typeof ConnectionPreferences)[number];
+import { ConnectionPreference } from ':core/communicator/ConnectionPreference';
 
 /** Coinbase Wallet SDK Constructor Options */
 export interface CoinbaseWalletSDKOptions {
@@ -40,10 +38,7 @@ export class CoinbaseWalletSDK {
   constructor(options: Readonly<CoinbaseWalletSDKOptions>) {
     this.connectionPreference = options.connectionPreference || 'default';
     this.chainIds = options.chainIds ? options.chainIds.map(Number) : [];
-
-    // TODO: revisit arg name. update default url to production.
-    this.scwUrl = options.scwUrl || 'https://scw-dev.cbhq.net/connect';
-
+    this.scwUrl = options.scwUrl;
     this.appName = options.appName || 'DApp';
     this.appLogoUrl = options.appLogoUrl || getFavicon();
 
@@ -96,7 +91,7 @@ export class CoinbaseWalletSDK {
   }
 
   private get walletExtension(): LegacyProviderInterface | undefined {
-    return window.coinbaseWalletExtension ?? window.walletLinkExtension;
+    return window.coinbaseWalletExtension;
   }
 
   private get coinbaseBrowser(): LegacyProviderInterface | undefined {

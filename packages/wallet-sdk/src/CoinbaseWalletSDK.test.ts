@@ -1,8 +1,8 @@
 // eslint-disable-next-line max-classes-per-file
 
+import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
-import { mockProvider } from './mocks/provider';
-import { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
+import { ProviderInterface } from './core/type/ProviderInterface';
 
 describe('CoinbaseWalletSDK', () => {
   describe('initialize', () => {
@@ -87,7 +87,10 @@ describe('CoinbaseWalletSDK', () => {
       });
     });
 
+    // TODO: revisit these tests
     describe('extension', () => {
+      const mockProvider = { close: jest.fn() } as unknown as ProviderInterface;
+
       beforeAll(() => {
         window.coinbaseWalletExtension = mockProvider;
       });

@@ -1,4 +1,3 @@
-import { ConnectionPreferences } from '@cbhq/wallet-sdk/dist/CoinbaseWalletSDK';
 import { CheckIcon, ChevronDownIcon } from '@chakra-ui/icons';
 import {
   Box,
@@ -59,7 +58,7 @@ export function Layout({ children }: LayoutProps) {
                   {`Mode: ${connectionPreference}`}
                 </MenuButton>
                 <MenuList>
-                  {ConnectionPreferences.map((preference) => (
+                  {['default', 'embedded'].map((preference) => (
                     <MenuItem
                       color={'MenuText'}
                       key={preference}
