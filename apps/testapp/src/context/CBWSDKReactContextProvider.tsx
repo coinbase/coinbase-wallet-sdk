@@ -11,6 +11,7 @@ const SELECTED_URL_KEY = 'selected_scw_fe_url';
 const PREFERRED_CONNECTION_KEY = 'preferred_connection';
 
 export const SCWPopupURLs = [
+  'https://keys.coinbase.com/connect',
   'https://scw-dev.cbhq.net/connect',
   'http://localhost:3005/connect',
 ] as const;
