@@ -33,7 +33,7 @@ export class MobileRelayUI implements RelayUI {
     }
 
     const anchorTag = document.createElement('a');
-    anchorTag.target = '_blank';
+    anchorTag.target = 'cbw-opener';
     anchorTag.href = url.href;
     anchorTag.rel = 'noreferrer noopener';
     anchorTag.click();
