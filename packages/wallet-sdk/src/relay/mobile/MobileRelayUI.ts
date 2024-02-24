@@ -32,8 +32,11 @@ export class MobileRelayUI implements RelayUI {
       url.searchParams.append('wl_url', walletLinkUrl);
     }
 
-    window.location.href = url.href;
-
+    const anchorTag = document.createElement('a');
+    anchorTag.target = '_blank';
+    anchorTag.href = url.href;
+    anchorTag.rel = 'noreferrer noopener';
+    anchorTag.click();
   }
 
   openCoinbaseWalletDeeplink(walletLinkUrl?: string): void {
