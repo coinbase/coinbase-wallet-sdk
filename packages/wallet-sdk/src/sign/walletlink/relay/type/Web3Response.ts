@@ -10,12 +10,12 @@ export type Web3Response<M extends Web3Method = Web3Method> =
 
 type ErrorResponse = {
   method: unknown;
-  code?: number;
-  message: string;
+  errorCode?: number;
+  errorMessage: string;
 };
 
 export function isErrorResponse(response: unknown): response is ErrorResponse {
-  return (response as ErrorResponse).message !== undefined;
+  return (response as ErrorResponse).errorMessage !== undefined;
 }
 
 type _Web3Response =

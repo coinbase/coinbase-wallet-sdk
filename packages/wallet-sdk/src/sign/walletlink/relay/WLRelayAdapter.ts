@@ -212,13 +212,13 @@ export class WLRelayAdapter {
 
     // backward compatibility
     if (isErrorResponse(res)) {
-      if (!res.code) return;
-      if (res.code === standardErrorCodes.provider.unsupportedChain) {
+      if (!res.errorCode) return;
+      if (res.errorCode === standardErrorCodes.provider.unsupportedChain) {
         throw standardErrors.provider.unsupportedChain();
       } else {
         throw standardErrors.provider.custom({
-          message: res.message,
-          code: res.code,
+          message: res.errorMessage,
+          code: res.errorCode,
         });
       }
     }
@@ -490,7 +490,7 @@ export class WLRelayAdapter {
       const res = await relay.signEthereumMessage(message, address, addPrefix, typedDataJson)
         .promise;
       if (isErrorResponse(res)) {
-        throw new Error(res.message);
+        throw new Error(res.errorMessage);
       }
       return { jsonrpc: '2.0', id: 0, result: res.result };
     } catch (err: any) {
@@ -509,7 +509,7 @@ export class WLRelayAdapter {
     const relay = this.initializeRelay();
     const res = await relay.ethereumAddressFromSignedMessage(message, signature, addPrefix).promise;
     if (isErrorResponse(res)) {
-      throw new Error(res.message);
+      throw new Error(res.errorMessage);
     }
     return { jsonrpc: '2.0', id: 0, result: res.result };
   }
@@ -555,7 +555,7 @@ export class WLRelayAdapter {
       const relay = this.initializeRelay();
       res = await relay.requestEthereumAccounts().promise;
       if (isErrorResponse(res)) {
-        throw new Error(res.message);
+        throw new Error(res.errorMessage);
       }
     } catch (err: any) {
       if (typeof err.message === 'string' && err.message.match(/(denied|rejected)/i)) {
@@ -609,7 +609,7 @@ export class WLRelayAdapter {
       const relay = this.initializeRelay();
       const res = await relay.signEthereumTransaction(tx).promise;
       if (isErrorResponse(res)) {
-        throw new Error(res.message);
+        throw new Error(res.errorMessage);
       }
       return { jsonrpc: '2.0', id: 0, result: res.result };
     } catch (err: any) {
@@ -625,7 +625,7 @@ export class WLRelayAdapter {
     const relay = this.initializeRelay();
     const res = await relay.submitEthereumTransaction(signedTransaction, this.getChainId()).promise;
     if (isErrorResponse(res)) {
-      throw new Error(res.message);
+      throw new Error(res.errorMessage);
     }
     return { jsonrpc: '2.0', id: 0, result: res.result };
   }
@@ -637,7 +637,7 @@ export class WLRelayAdapter {
       const relay = this.initializeRelay();
       const res = await relay.signAndSubmitEthereumTransaction(tx).promise;
       if (isErrorResponse(res)) {
-        throw new Error(res.message);
+        throw new Error(res.errorMessage);
       }
       return { jsonrpc: '2.0', id: 0, result: res.result };
     } catch (err: any) {

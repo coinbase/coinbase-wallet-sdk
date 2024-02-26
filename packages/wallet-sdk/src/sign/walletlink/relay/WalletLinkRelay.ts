@@ -376,7 +376,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
       this.relayEventManager.callbacks.set(id, (response) => {
         hideSnackbarItem?.();
         if (isErrorResponse(response)) {
-          return reject(new Error(response.message));
+          return reject(new Error(response.errorMessage));
         }
 
         resolve(response as Response);
@@ -429,7 +429,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
           id: message.id,
           response: {
             method: request.method,
-            message: err.message,
+            errorMessage: err.message,
           },
         });
       });
@@ -521,7 +521,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
       id,
       response: {
         method,
-        message: errorMessage,
+        errorMessage,
       },
     });
   }
@@ -560,7 +560,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
         // @ts-ignore
         hideSnackbarItem?.();
         if (isErrorResponse(response)) {
-          return reject(new Error(response.message));
+          return reject(new Error(response.errorMessage));
         }
         resolve(response as Web3Response<'requestEthereumAccounts'>);
       });
@@ -615,7 +615,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
         hideSnackbarItem?.();
 
         if (isErrorResponse(response)) {
-          return reject(new Error(response.message));
+          return reject(new Error(response.errorMessage));
         }
         resolve(response as Web3Response<'watchAsset'>);
       });
@@ -672,7 +672,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
         hideSnackbarItem?.();
 
         if (isErrorResponse(response)) {
-          return reject(new Error(response.message));
+          return reject(new Error(response.errorMessage));
         }
         resolve(response as Web3Response<'addEthereumChain'>);
       });
@@ -704,15 +704,15 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
 
     const promise = new Promise<Web3Response<'switchEthereumChain'>>((resolve, reject) => {
       this.relayEventManager.callbacks.set(id, (response) => {
-        if (isErrorResponse(response) && response.code) {
+        if (isErrorResponse(response) && response.errorCode) {
           return reject(
             standardErrors.provider.custom({
-              code: response.code,
+              code: response.errorCode,
               message: `Unrecognized chain ID. Try adding the chain using addEthereumChain first.`,
             })
           );
         } else if (isErrorResponse(response)) {
-          return reject(new Error(response.message));
+          return reject(new Error(response.errorMessage));
         }
 
         resolve(response as Web3Response<'switchEthereumChain'>);
