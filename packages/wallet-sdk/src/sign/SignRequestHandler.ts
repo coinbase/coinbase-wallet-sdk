@@ -68,11 +68,11 @@ export class SignRequestHandler implements RequestHandler {
 
   private readonly updateRelay: SignerUpdateListener = {
     onAccountsUpdate: (signer, ...rest) => {
-      if (signer !== this.signer) return; // ignore events from inactive signers
+      if (this.signer && signer !== this.signer) return; // ignore events from inactive signers
       this.updateListener.onAccountsUpdate(...rest);
     },
     onChainUpdate: (signer, ...rest) => {
-      if (signer !== this.signer) return; // ignore events from inactive signers
+      if (this.signer && signer !== this.signer) return; // ignore events from inactive signers
       if (signer instanceof WLSigner) {
         this.connectionTypeSelectionResolver?.('walletlink');
       }
