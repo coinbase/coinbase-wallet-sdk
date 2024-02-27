@@ -53,6 +53,9 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
     setSdk(cbwsdk);
     const cbwprovider = cbwsdk.makeWeb3Provider();
     setProvider(cbwprovider);
+    cbwprovider.on('disconnect', () => {
+      location.reload();
+    });
   }, [scwURL, connectionPreference]);
 
   const setSCWPopupURL = (url: SCWPopupURLType) => {
