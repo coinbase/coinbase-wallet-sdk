@@ -1,13 +1,10 @@
-import { MessageTypes, TypedDataV1, TypedMessage } from '@metamask/eth-sig-util';
-
-type messageType = TypedDataV1 | TypedMessage<MessageTypes>;
-
+import { SignTypedDataReturnType } from 'viem';
 export type ShortcutType = {
   key: string;
-  data: Record<string, string | messageType>;
+  data: Record<string, string> | any;
 };
 
-export const parseMessage = (message: string | messageType) => {
+export const parseMessage = (message: string | SignTypedDataReturnType) => {
   if (typeof message === 'string') {
     return JSON.parse(message);
   }
