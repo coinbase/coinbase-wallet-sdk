@@ -104,6 +104,18 @@ describe('CoinbaseWalletSDK', () => {
         expect(coinbaseWalletSDK2.makeWeb3Provider()).toEqual(mockProvider);
       });
 
+      test('@makeWeb3Provider, but with connectionPreference as embedded', () => {
+        const sdk = new CoinbaseWalletSDK({
+          appName: 'Test',
+          appLogoUrl: 'http://coinbase.com/wallet-logo.png',
+          connectionPreference: 'embedded',
+        });
+        // Returns extension provider
+        const provider = sdk.makeWeb3Provider();
+        expect(provider).toBeTruthy();
+        expect(provider).not.toEqual(mockProvider);
+      });
+
       test('@disconnect', async () => {
         const mockExtensionProvider = mockProvider as unknown as { close: jest.Mock };
         jest.spyOn(mockExtensionProvider, 'close').mockImplementation(() => 'mockClose');
@@ -115,21 +127,30 @@ describe('CoinbaseWalletSDK', () => {
 
     describe('cipher provider', () => {
       class MockCipherProviderClass {
-        public isCipher = true;
+        public isCoinbaseBrowser = true;
       }
 
       const mockCipherProvider = new MockCipherProviderClass();
       beforeAll(() => {
         // @ts-expect-error mocked provider
-        window.coinbaseWalletExtension = mockCipherProvider;
+        window.ethereum = mockCipherProvider;
       });
 
       afterAll(() => {
-        window.coinbaseWalletExtension = undefined;
+        window.ethereum = undefined;
       });
 
       test('@makeWeb3Provider', () => {
         expect(coinbaseWalletSDK2.makeWeb3Provider()).toEqual(mockCipherProvider);
+      });
+
+      test('@makeWeb3Provider, it should ignore embedded connectionPreference', () => {
+        const sdk = new CoinbaseWalletSDK({
+          appName: 'Test',
+          appLogoUrl: 'http://coinbase.com/wallet-logo.png',
+          connectionPreference: 'embedded',
+        });
+        expect(sdk.makeWeb3Provider()).toEqual(mockCipherProvider);
       });
     });
   });

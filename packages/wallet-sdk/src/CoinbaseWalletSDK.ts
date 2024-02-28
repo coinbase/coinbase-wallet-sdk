@@ -51,10 +51,12 @@ export class CoinbaseWalletSDK {
   }
 
   public makeWeb3Provider(): ProviderInterface {
-    const extension = this.walletExtension;
-    if (extension) {
-      extension.setAppInfo?.(this.appName, this.appLogoUrl);
-      return extension;
+    if (this.connectionPreference !== 'embedded') {
+      const extension = this.walletExtension;
+      if (extension) {
+        extension.setAppInfo?.(this.appName, this.appLogoUrl);
+        return extension;
+      }
     }
 
     const dappBrowser = this.coinbaseBrowser;
