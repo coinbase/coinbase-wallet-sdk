@@ -149,19 +149,28 @@ export class SignRequestHandler implements RequestHandler {
       this.setConnectionType(connectionType as ConnectionType);
     }
 
-    // in the case of walletlink, this doesn't do anything since signer is initialized
-    // when the wallet link QR code url is requested
-    this.initSigner();
+    try {
+      // in the case of walletlink, this doesn't do anything since signer is initialized
+      // when the wallet link QR code url is requested
+      this.initSigner();
 
-    const ethAddresses = await this.signer?.handshake();
-    if (Array.isArray(ethAddresses)) {
-      if (this.connectionType === 'walletlink') {
-        this.popupCommunicator.walletLinkQrScanned();
+      const ethAddresses = await this.signer?.handshake();
+      if (Array.isArray(ethAddresses)) {
+        if (this.connectionType === 'walletlink') {
+          this.popupCommunicator.walletLinkQrScanned();
+        }
+        this.updateListener.onConnect();
+        return Promise.resolve(ethAddresses);
       }
-      this.updateListener.onConnect();
-      return Promise.resolve(ethAddresses);
+
+      return Promise.reject(standardErrors.rpc.internal('Failed to get accounts'));
+    } catch (err) {
+      if (this.connectionType === 'walletlink') {
+        this.popupCommunicator.disconnect();
+        this.onDisconnect();
+      }
+      throw err;
     }
-    return Promise.reject(standardErrors.rpc.internal('Failed to get accounts'));
   }
 
   private getWalletLinkUrl() {
