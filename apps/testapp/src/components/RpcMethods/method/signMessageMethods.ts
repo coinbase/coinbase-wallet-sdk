@@ -1,4 +1,11 @@
-import { PublicClient } from 'viem/_types/clients/createPublicClient';
+import {
+  MessageTypes,
+  recoverPersonalSignature,
+  recoverTypedSignature,
+  SignTypedDataVersion,
+  TypedDataV1,
+  TypedMessage,
+} from '@metamask/eth-sig-util';
 
 import { parseMessage } from '../shortcut/ShortcutType';
 import { RpcRequestInput } from './RpcRequestInput';
@@ -21,7 +28,10 @@ const personalSign: RpcRequestInput = {
     { key: 'message', required: true },
     { key: 'address', required: true },
   ],
-  format: (data: Record<string, string>) => [data.message, data.address],
+  format: (data: Record<string, string>) => [
+    `0x${Buffer.from(data.message, 'utf8').toString('hex')}`,
+    data.address,
+  ],
 };
 
 const ethSignTypedDataV1: RpcRequestInput = {
@@ -59,79 +69,64 @@ export const signMessageMethods = [
   ethSignTypedDataV4,
 ];
 
-export const verifySignMsg = async ({
+export const verifySignMsg = ({
   method,
   from,
   sign,
   message,
-  viemPublicClient,
 }: {
   method: string;
   from: string;
   sign: string;
   message: unknown;
-  viemPublicClient: PublicClient;
 }) => {
   switch (method) {
     case 'personal_sign': {
-      const valid = await viemPublicClient.verifyMessage({
-        address: from,
-        message,
+      const msg = `0x${Buffer.from(message as string, 'utf8').toString('hex')}`;
+      const recoveredAddr = recoverPersonalSignature({
+        data: msg,
         signature: sign,
       });
-
-      if (valid) {
-        return `ViemPublicClient Successfully verified signer: ${from}`;
+      if (recoveredAddr === from) {
+        return `SigUtil Successfully verified signer as ${recoveredAddr}`;
       } else {
-        return `ViemPublicClient Failed to verify signer: ${from}`;
+        return `SigUtil Failed to verify signer when comparing ${recoveredAddr} to ${from}`;
       }
     }
     case 'eth_signTypedData_v1': {
-      const valid = await viemPublicClient.verifyTypedData({
-        address: from,
-        domain: message.domain,
-        types: message.types,
-        primaryType: message.primaryType,
-        message: message.message,
+      const recoveredAddr = recoverTypedSignature({
+        data: message as TypedDataV1,
         signature: sign,
+        version: SignTypedDataVersion.V1,
       });
-
-      if (valid) {
-        return `ViemPublicClient Successfully verified signer: ${from}`;
+      if (recoveredAddr === from) {
+        return `SigUtil Successfully verified signer as ${recoveredAddr}`;
       } else {
-        return `ViemPublicClient Failed to verify signer: ${from}`;
+        return `SigUtil Failed to verify signer when comparing ${recoveredAddr} to ${from}`;
       }
     }
     case 'eth_signTypedData_v3': {
-      const valid = await viemPublicClient.verifyTypedData({
-        address: from,
-        domain: message.domain,
-        types: message.types,
-        primaryType: message.primaryType,
-        message: message.message,
+      const recoveredAddr = recoverTypedSignature({
+        data: message as TypedMessage<MessageTypes>,
         signature: sign,
+        version: SignTypedDataVersion.V3,
       });
-
-      if (valid) {
-        return `ViemPublicClient Successfully verified signer: ${from}`;
+      if (recoveredAddr === from) {
+        return `SigUtil Successfully verified signer as ${recoveredAddr}`;
       } else {
-        return `ViemPublicClient Failed to verify signer: ${from}`;
+        return `SigUtil Failed to verify signer when comparing ${recoveredAddr} to ${from}`;
       }
     }
     case 'eth_signTypedData_v4': {
-      const valid = await viemPublicClient.verifyTypedData({
-        address: from,
-        domain: message.domain,
-        types: message.types,
-        primaryType: message.primaryType,
-        message: message.message,
+      const recoveredAddr = recoverTypedSignature({
+        data: message as TypedMessage<MessageTypes>,
         signature: sign,
+        version: SignTypedDataVersion.V4,
       });
-
-      if (valid) {
-        return `ViemPublicClient Successfully verified signer: ${from}`;
+      if (recoveredAddr === from) {
+        return `SigUtil Successfully verified signer as ${recoveredAddr}`;
       } else {
-        return `ViemPublicClient Failed to verify signer: ${from}`;
+        return `SigUtil Failed to verify signer when comparing ${recoveredAddr} to ${from}`;
       }
     }
     default:
