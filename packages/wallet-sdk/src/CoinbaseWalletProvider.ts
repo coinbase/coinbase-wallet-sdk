@@ -21,7 +21,7 @@ import { ConnectionPreference } from ':core/communicator/ConnectionPreference';
 
 interface ConstructorOptions {
   scwUrl?: string;
-  appName?: string;
+  appName: string;
   appLogoUrl?: string | null;
   appChainIds: number[];
   connectionPreference: ConnectionPreference;

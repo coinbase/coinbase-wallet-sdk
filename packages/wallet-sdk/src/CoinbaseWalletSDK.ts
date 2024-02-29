@@ -14,10 +14,7 @@ export interface CoinbaseWalletSDKOptions {
   /** Application name */
   appName: string;
   /** @optional Application logo image URL; favicon is used if unspecified */
-  appLogoUrl?: string | null;
-  // TODO: to remove scwUrl before release
-  /** @optional SCW FE URL */
-  scwUrl?: string;
+  appLogoUrl?: string;
   /** @optional Array of chainIds your dapp supports */
   chainIds?: string[];
   /** @optional Pre-select the wallet connection method */
@@ -25,11 +22,10 @@ export interface CoinbaseWalletSDKOptions {
 }
 
 export class CoinbaseWalletSDK {
-  private appName = '';
-  private appLogoUrl: string | null = null;
+  private appName: string;
+  private appLogoUrl: string | null;
   private connectionPreference: ConnectionPreference;
   private chainIds: number[];
-  private scwUrl?: string;
 
   /**
    * Constructor
@@ -38,7 +34,6 @@ export class CoinbaseWalletSDK {
   constructor(options: Readonly<CoinbaseWalletSDKOptions>) {
     this.connectionPreference = options.connectionPreference || 'default';
     this.chainIds = options.chainIds ? options.chainIds.map(Number) : [];
-    this.scwUrl = options.scwUrl;
     this.appName = options.appName || 'DApp';
     this.appLogoUrl = options.appLogoUrl || getFavicon();
 
@@ -65,7 +60,6 @@ export class CoinbaseWalletSDK {
     }
 
     return new CoinbaseWalletProvider({
-      scwUrl: this.scwUrl,
       appName: this.appName,
       appLogoUrl: this.appLogoUrl,
       appChainIds: this.chainIds,

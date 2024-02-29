@@ -5,7 +5,7 @@ import { Signer, SignerUpdateListener } from './SignerInterface';
 import { SignRequestHandlerListener } from './UpdateListenerInterface';
 import { WLSigner } from './walletlink/WLSigner';
 import { ConnectionPreference } from ':core/communicator/ConnectionPreference';
-import { SCW_CONNECT_URL } from ':core/constants';
+import { CB_KEYS_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { AddressString } from ':core/type';
@@ -14,7 +14,7 @@ import { RequestHandler } from ':core/type/RequestHandlerInterface';
 
 interface SignRequestHandlerOptions {
   scwUrl?: string;
-  appName?: string;
+  appName: string;
   appLogoUrl?: string | null;
   appChainIds: number[];
   connectionPreference: ConnectionPreference;
@@ -40,7 +40,7 @@ export class SignRequestHandler implements RequestHandler {
 
   constructor(options: Readonly<SignRequestHandlerOptions>) {
     this.popupCommunicator = new PopUpCommunicator({
-      url: options.scwUrl || SCW_CONNECT_URL,
+      url: options.scwUrl || CB_KEYS_URL,
     });
     this.updateListener = options.updateListener;
 
@@ -50,7 +50,7 @@ export class SignRequestHandler implements RequestHandler {
     this.getWalletLinkUrl = this.getWalletLinkUrl.bind(this);
     this.popupCommunicator.setWLQRCodeUrlCallback(this.getWalletLinkUrl);
 
-    this.appName = options.appName ?? '';
+    this.appName = options.appName;
     this.appLogoUrl = options.appLogoUrl ?? null;
     this.appChainIds = options.appChainIds;
 

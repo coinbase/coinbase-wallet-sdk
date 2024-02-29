@@ -7,6 +7,7 @@ describe('EIP1193Provider', () => {
   beforeEach(() => {
     provider = new CoinbaseWalletProvider({
       scwUrl: 'http://fooUrl.com',
+      appName: 'TestApp',
       appChainIds: [],
       connectionPreference: 'default',
     });
@@ -27,6 +28,7 @@ describe('EIP1193Provider', () => {
     it('uses the first chain id when appChainIds is not empty', () => {
       const provider = new CoinbaseWalletProvider({
         scwUrl: 'http://fooUrl.com',
+        appName: 'TestApp',
         appChainIds: [8453, 84532],
         connectionPreference: 'default',
       });
@@ -36,6 +38,7 @@ describe('EIP1193Provider', () => {
     it('fallback to 1 when appChainIds is empty', () => {
       const provider = new CoinbaseWalletProvider({
         scwUrl: 'http://fooUrl.com',
+        appName: 'TestApp',
         appChainIds: [],
         connectionPreference: 'default',
       });

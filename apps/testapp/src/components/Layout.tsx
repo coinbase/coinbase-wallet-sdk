@@ -11,7 +11,7 @@ import {
   MenuList,
 } from '@chakra-ui/react';
 
-import { SCWPopupURLs, useCBWSDK } from '../context/CBWSDKReactContextProvider';
+import { useCBWSDK } from '../context/CBWSDKReactContextProvider';
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -20,8 +20,7 @@ type LayoutProps = {
 export const WIDTH_2XL = '1536px';
 
 export function Layout({ children }: LayoutProps) {
-  const { scwPopupURL, setSCWPopupURL, provider, connectionPreference, setPreference } =
-    useCBWSDK();
+  const { provider, connectionPreference, setPreference } = useCBWSDK();
 
   const handleDisconnect = () => {
     if (provider) {
@@ -36,23 +35,6 @@ export function Layout({ children }: LayoutProps) {
           <Flex justifyContent="space-between" alignItems="center">
             <Heading>Coinbase Wallet SDK - Playground</Heading>
             <Flex justifyContent="space-between" alignItems="center" gap={4}>
-              <Menu>
-                <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
-                  {`SCW: ${scwPopupURL}`}
-                </MenuButton>
-                <MenuList>
-                  {SCWPopupURLs.map((url) => (
-                    <MenuItem
-                      color={'MenuText'}
-                      key={url}
-                      icon={url === scwPopupURL ? <CheckIcon /> : null}
-                      onClick={() => setSCWPopupURL(url)}
-                    >
-                      {url}
-                    </MenuItem>
-                  ))}
-                </MenuList>
-              </Menu>
               <Menu>
                 <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
                   {`Mode: ${connectionPreference}`}
