@@ -1,5 +1,4 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
-// Licensed under the Apache License, version 2.0
 
 import { LIB_VERSION } from '../../../version';
 import {
@@ -508,10 +507,6 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
     }
 
     this.invokeCallback(message);
-
-    if (this.isMobileWeb && this.ui instanceof WLMobileRelayUI) {
-      this.ui.closeOpenedWindow();
-    }
   }
 
   private handleErrorResponse(id: string, method: Web3Method, error?: Error) {

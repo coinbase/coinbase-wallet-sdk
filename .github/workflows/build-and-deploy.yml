@@ -33,7 +33,7 @@ jobs:
       - name: Install yarn
         run: corepack enable
       - name: Install dependencies
-        run: sh scripts/ci-yarn-install.sh
+        run: yarn install
       - name: Build and export with Next.js
         run: yarn workspace @coinbase/wallet-sdk-testapp run export
       - name: Upload artifact

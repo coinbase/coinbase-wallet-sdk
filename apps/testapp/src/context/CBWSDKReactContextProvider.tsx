@@ -1,5 +1,5 @@
-import CoinbaseWalletSDK from '@cbhq/wallet-sdk';
-import { ConnectionPreference } from '@cbhq/wallet-sdk/dist/core/communicator/ConnectionPreference';
+import CoinbaseWalletSDK from '@coinbase/wallet-sdk';
+import { ConnectionPreference } from '@coinbase/wallet-sdk/dist/core/communicator/ConnectionPreference';
 import React, { useEffect, useMemo } from 'react';
 
 type CBWSDKProviderProps = {

@@ -6,7 +6,6 @@ import { CBW_MOBILE_DEEPLINK_URL } from ':core/constants';
 export class WLMobileRelayUI implements RelayUI {
   private readonly redirectDialog: RedirectDialog;
   private attached = false;
-  private openedWindow: Window | null = null;
 
   constructor() {
     this.redirectDialog = new RedirectDialog();
@@ -20,11 +19,6 @@ export class WLMobileRelayUI implements RelayUI {
     this.attached = true;
   }
 
-  closeOpenedWindow() {
-    this.openedWindow?.close();
-    this.openedWindow = null;
-  }
-
   private redirectToCoinbaseWallet(walletLinkUrl?: string): void {
     const url = new URL(CBW_MOBILE_DEEPLINK_URL);
 
@@ -33,10 +27,11 @@ export class WLMobileRelayUI implements RelayUI {
       url.searchParams.append('wl_url', walletLinkUrl);
     }
 
-    this.openedWindow = window.open(url.href, 'cbw-opener');
-    if (this.openedWindow) {
-      setTimeout(() => this.closeOpenedWindow(), 5000);
-    }
+    const anchorTag = document.createElement('a');
+    anchorTag.target = 'cbw-opener';
+    anchorTag.href = url.href;
+    anchorTag.rel = 'noreferrer noopener';
+    anchorTag.click();
   }
 
   openCoinbaseWalletDeeplink(walletLinkUrl?: string): void {
@@ -60,7 +55,6 @@ export class WLMobileRelayUI implements RelayUI {
   }): () => void {
     // it uses the return callback to clear the dialog
     return () => {
-      this.closeOpenedWindow();
       this.redirectDialog.clear();
     };
   }

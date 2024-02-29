@@ -1,5 +1,4 @@
-// Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
-// Licensed under the Apache License, version 2.0
+// Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
 
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';

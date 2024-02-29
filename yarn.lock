@@ -1565,45 +1565,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cbhq/wallet-sdk@workspace:^, @cbhq/wallet-sdk@workspace:packages/wallet-sdk":
-  version: 0.0.0-use.local
-  resolution: "@cbhq/wallet-sdk@workspace:packages/wallet-sdk"
-  dependencies:
-    "@babel/core": ^7.22.9
-    "@babel/plugin-proposal-decorators": ^7.22.7
-    "@babel/plugin-transform-react-jsx": ^7.22.5
-    "@babel/preset-env": ^7.22.9
-    "@babel/preset-typescript": ^7.22.5
-    "@metamask/json-rpc-engine": ^7.0.0
-    "@peculiar/webcrypto": ^1.4.3
-    "@testing-library/jest-dom": ^5.17.0
-    "@testing-library/preact": ^2.0.1
-    "@types/jest": ^27.5.2
-    "@types/node": ^14.18.54
-    "@types/sha.js": ^2.4.1
-    babel-jest: ^27.5.1
-    buffer: ^6.0.3
-    clsx: ^1.2.1
-    eth-block-tracker: ^7.1.0
-    eth-json-rpc-filters: ^6.0.0
-    eventemitter3: ^5.0.1
-    jest: ^27.5.1
-    jest-chrome: ^0.7.2
-    jest-websocket-mock: ^2.4.0
-    keccak: ^3.0.3
-    nodemon: ^3.1.0
-    preact: ^10.16.0
-    prettier: ^2.8.8
-    sass: ^1.64.1
-    sha.js: ^2.4.11
-    ts-jest: ^27.1.5
-    ts-node: ^10.9.1
-    tsc-alias: ^1.8.8
-    tslib: ^2.6.0
-    typescript: ^5.1.6
-  languageName: unknown
-  linkType: soft
-
 "@chakra-ui/accordion@npm:2.3.0":
   version: 2.3.0
   resolution: "@chakra-ui/accordion@npm:2.3.0"
@@ -2824,9 +2785,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@coinbase/wallet-sdk-testapp@workspace:apps/testapp"
   dependencies:
-    "@cbhq/wallet-sdk": "workspace:^"
     "@chakra-ui/icons": ^2.1.1
     "@chakra-ui/react": ^2.8.0
+    "@coinbase/wallet-sdk": "workspace:^"
     "@emotion/react": ^11.11.1
     "@emotion/styled": ^11.11.0
     "@types/react": 18.2.15
@@ -2836,6 +2797,45 @@ __metadata:
     react-dom: ^18.2.0
     react-hook-form: ^7.45.2
     viem: ^2.7.15
+  languageName: unknown
+  linkType: soft
+
+"@coinbase/wallet-sdk@workspace:^, @coinbase/wallet-sdk@workspace:packages/wallet-sdk":
+  version: 0.0.0-use.local
+  resolution: "@coinbase/wallet-sdk@workspace:packages/wallet-sdk"
+  dependencies:
+    "@babel/core": ^7.22.9
+    "@babel/plugin-proposal-decorators": ^7.22.7
+    "@babel/plugin-transform-react-jsx": ^7.22.5
+    "@babel/preset-env": ^7.22.9
+    "@babel/preset-typescript": ^7.22.5
+    "@metamask/json-rpc-engine": ^7.0.0
+    "@peculiar/webcrypto": ^1.4.3
+    "@testing-library/jest-dom": ^5.17.0
+    "@testing-library/preact": ^2.0.1
+    "@types/jest": ^27.5.2
+    "@types/node": ^14.18.54
+    "@types/sha.js": ^2.4.1
+    babel-jest: ^27.5.1
+    buffer: ^6.0.3
+    clsx: ^1.2.1
+    eth-block-tracker: ^7.1.0
+    eth-json-rpc-filters: ^6.0.0
+    eventemitter3: ^5.0.1
+    jest: ^27.5.1
+    jest-chrome: ^0.7.2
+    jest-websocket-mock: ^2.4.0
+    keccak: ^3.0.3
+    nodemon: ^3.1.0
+    preact: ^10.16.0
+    prettier: ^2.8.8
+    sass: ^1.64.1
+    sha.js: ^2.4.11
+    ts-jest: ^27.1.5
+    ts-node: ^10.9.1
+    tsc-alias: ^1.8.8
+    tslib: ^2.6.0
+    typescript: ^5.1.6
   languageName: unknown
   linkType: soft
 

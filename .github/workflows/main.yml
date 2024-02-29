@@ -30,7 +30,7 @@ jobs:
         run: corepack enable
 
       - name: Install NPM dependencies
-        run: sh scripts/ci-yarn-install.sh
+        run: yarn install
 
       - name: Check ESLint
         run: yarn lint
@@ -59,7 +59,7 @@ jobs:
         run: corepack enable
 
       - name: Install NPM dependencies
-        run: sh scripts/ci-yarn-install.sh
+        run: yarn install
 
       - name: Runs compile asset script
         working-directory: ./packages/wallet-sdk
@@ -96,7 +96,7 @@ jobs:
         run: corepack enable
 
       - name: Install NPM dependencies
-        run: sh scripts/ci-yarn-install.sh
+        run: yarn install
 
       - name: Runs compile asset script
         working-directory: ./packages/wallet-sdk

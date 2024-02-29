@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// TODO: Address linting issues
 
-// Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
-// Licensed under the Apache License, version 2.0
+// Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
 
 import eip712 from '../../../vendor-js/eth-eip712-util';
 import { StateUpdateListener } from '../../UpdateListenerInterface';

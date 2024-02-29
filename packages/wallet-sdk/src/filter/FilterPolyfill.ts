@@ -1,5 +1,4 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
-// Licensed under the Apache License, version 2.0
 
 import { Callback, HexString, IntNumber } from ':core/type';
 import { ProviderInterface, RequestArguments } from ':core/type/ProviderInterface';

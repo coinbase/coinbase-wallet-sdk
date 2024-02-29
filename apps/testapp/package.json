@@ -5,12 +5,12 @@
     "dev": "next dev --port 3001",
     "build": "next build",
     "start": "next start",
-    "export": "yarn workspace @cbhq/wallet-sdk run build && next build && next export"
+    "export": "yarn workspace @coinbase/wallet-sdk run build && next build && next export"
   },
   "dependencies": {
-    "@cbhq/wallet-sdk": "workspace:^",
     "@chakra-ui/icons": "^2.1.1",
     "@chakra-ui/react": "^2.8.0",
+    "@coinbase/wallet-sdk": "workspace:^",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "framer-motion": "^10.13.1",
