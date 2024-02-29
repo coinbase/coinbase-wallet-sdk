@@ -1,4 +1,4 @@
-import { Box, Container, Grid, GridItem, Heading, Text } from '@chakra-ui/react';
+import { Box, Container, Grid, GridItem, Heading } from '@chakra-ui/react';
 import React, { useEffect } from 'react';
 
 import { EventListenersCard } from '../components/EventListeners/EventListenersCard';
@@ -16,7 +16,6 @@ import { sendShortcutsMap } from '../components/RpcMethods/shortcut/sendShortcut
 import { ShortcutType } from '../components/RpcMethods/shortcut/ShortcutType';
 import { signMessageShortcutsMap } from '../components/RpcMethods/shortcut/signMessageShortcuts';
 import { useCBWSDK } from '../context/CBWSDKReactContextProvider';
-import { ViemClientProvider } from '../ViemPublicClient/ViemClientContext';
 
 export default function Home() {
   const { provider } = useCBWSDK();
@@ -30,42 +29,36 @@ export default function Home() {
     });
   }, [provider]);
 
-  if (!provider) {
-    return <Text>Loading...</Text>;
-  }
-
   return (
-    <ViemClientProvider provider={provider}>
-      <Container maxW={WIDTH_2XL} mb={8}>
-        <Box>
-          <Heading size="md">Event Listeners</Heading>
-          <Grid mt={2} templateColumns={{ base: '100%' }} gap={2}>
-            <EventListenersCard />
-          </Grid>
-        </Box>
-        <MethodsSection title="Wallet Connection" methods={connectionMethods} />
-        {connected && (
-          <>
-            <MethodsSection
-              title="Switch/Add Chain"
-              methods={multiChainMethods}
-              shortcutsMap={multiChainShortcutsMap}
-            />
-            <MethodsSection
-              title="Sign Message"
-              methods={signMessageMethods}
-              shortcutsMap={signMessageShortcutsMap(provider?.chainId)}
-            />
-            <MethodsSection title="Send" methods={sendMethods} shortcutsMap={sendShortcutsMap} />
-            <MethodsSection
-              title="Read-only JSON-RPC Requests"
-              methods={readonlyJsonRpcMethods}
-              shortcutsMap={readonlyJsonRpcShortcutsMap}
-            />
-          </>
-        )}
-      </Container>
-    </ViemClientProvider>
+    <Container maxW={WIDTH_2XL} mb={8}>
+      <Box>
+        <Heading size="md">Event Listeners</Heading>
+        <Grid mt={2} templateColumns={{ base: '100%' }} gap={2}>
+          <EventListenersCard />
+        </Grid>
+      </Box>
+      <MethodsSection title="Wallet Connection" methods={connectionMethods} />
+      {connected && (
+        <>
+          <MethodsSection
+            title="Switch/Add Chain"
+            methods={multiChainMethods}
+            shortcutsMap={multiChainShortcutsMap}
+          />
+          <MethodsSection
+            title="Sign Message"
+            methods={signMessageMethods}
+            shortcutsMap={signMessageShortcutsMap(provider?.chainId)}
+          />
+          <MethodsSection title="Send" methods={sendMethods} shortcutsMap={sendShortcutsMap} />
+          <MethodsSection
+            title="Read-only JSON-RPC Requests"
+            methods={readonlyJsonRpcMethods}
+            shortcutsMap={readonlyJsonRpcShortcutsMap}
+          />
+        </>
+      )}
+    </Container>
   );
 }
 

@@ -27,7 +27,7 @@ const ethSignTypedDataV1Shortcuts: ShortcutType[] = [
   },
 ];
 
-const ethSignTypedDataV3Shortcuts: (chainId: number) => ShortcutType[] = (chainId: number) => [
+const ethSignTypedDataV3Shortcuts: (chainId) => ShortcutType[] = (chainId: number) => [
   {
     key: EXAMPLE_MESSAGE,
     data: {
