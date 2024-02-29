@@ -22,4 +22,24 @@ describe('EIP1193Provider', () => {
       standardErrors.provider.disconnected('User initiated disconnection')
     );
   });
+
+  describe('default chain id', () => {
+    it('uses the first chain id when appChainIds is not empty', () => {
+      const provider = new CoinbaseWalletProvider({
+        scwUrl: 'http://fooUrl.com',
+        appChainIds: [8453, 84532],
+        connectionPreference: 'default',
+      });
+      expect(provider.chainId).toBe(8453);
+    });
+
+    it('fallback to 1 when appChainIds is empty', () => {
+      const provider = new CoinbaseWalletProvider({
+        scwUrl: 'http://fooUrl.com',
+        appChainIds: [],
+        connectionPreference: 'default',
+      });
+      expect(provider.chainId).toBe(1);
+    });
+  });
 });

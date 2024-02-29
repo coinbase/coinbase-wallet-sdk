@@ -29,9 +29,7 @@ interface ConstructorOptions {
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
   private accounts: AddressString[] = [];
-  private chain: Chain = {
-    id: 1, // default to mainnet
-  };
+  private chain: Chain;
 
   private readonly handlers: RequestHandler[];
 
@@ -41,6 +39,10 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   constructor(options: Readonly<ConstructorOptions>) {
     super();
+
+    this.chain = {
+      id: options.appChainIds?.[0] ?? 1,
+    };
 
     this.handlers = [
       new StateRequestHandler(),
