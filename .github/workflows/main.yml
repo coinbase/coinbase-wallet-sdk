@@ -8,10 +8,7 @@ on:
 jobs:
   lint:
     name: Lint Check
-    runs-on:
-      - default-config
-      - xsmall
-      - wallet-org-runner
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./
@@ -23,24 +20,18 @@ jobs:
       - name: Checkout node action
         uses: actions/setup-node@v3
         with:
-          node-version-file: ".nvmrc"
-          cache-dependency-path: "yarn.lock"
-
-      - name: Install yarn
-        run: corepack enable
+          node-version-file: '.nvmrc'
+          cache-dependency-path: 'yarn.lock'
 
       - name: Install NPM dependencies
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Check ESLint
         run: yarn lint
 
   typecheck:
     name: Type Check
-    runs-on:
-      - default-config
-      - xsmall
-      - wallet-org-runner
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./
@@ -52,14 +43,11 @@ jobs:
       - name: Checkout node action
         uses: actions/setup-node@v3
         with:
-          node-version-file: ".nvmrc"
-          cache-dependency-path: "**/yarn.lock"
-
-      - name: Install yarn
-        run: corepack enable
+          node-version-file: '.nvmrc'
+          cache-dependency-path: '**/yarn.lock'
 
       - name: Install NPM dependencies
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Runs compile asset script
         working-directory: ./packages/wallet-sdk
@@ -70,10 +58,7 @@ jobs:
 
   tests:
     name: Tests
-    runs-on:
-      - default-config
-      - xsmall
-      - wallet-org-runner
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./
@@ -90,13 +75,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache-dependency-path: "**/yarn.lock"
-
-      - name: Install yarn
-        run: corepack enable
+          cache-dependency-path: '**/yarn.lock'
 
       - name: Install NPM dependencies
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Runs compile asset script
         working-directory: ./packages/wallet-sdk
