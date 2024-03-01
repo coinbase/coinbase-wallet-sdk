@@ -21,13 +21,13 @@ import {
 import React, { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 
-import { useCBWSDK } from '../../context/CBWSDKProvider';
+import { useCBWSDK } from '../../context/CBWSDKReactContextProvider';
 import { verifySignMsg } from './method/signMessageMethods';
 import { ADDR_TO_FILL } from './shortcut/const';
 
 type ResponseType = string;
 
-export function RpcMethodCard({ connected, format, method, params, shortcuts }) {
+export function RpcMethodCard({ format, method, params, shortcuts }) {
   const [response, setResponse] = React.useState<Response | null>(null);
   const [verifyResult, setVerifyResult] = React.useState<string | null>(null);
   const [error, setError] = React.useState<Record<string, unknown> | string | number | null>(null);
@@ -42,7 +42,7 @@ export function RpcMethodCard({ connected, format, method, params, shortcuts }) 
   const verify = useCallback(async (response: ResponseType, data: Record<string, string>) => {
     const verifyResult = verifySignMsg({
       method,
-      from: data.address,
+      from: data.address?.toLowerCase(),
       sign: response,
       message: data.message,
     });
@@ -73,9 +73,10 @@ export function RpcMethodCard({ connected, format, method, params, shortcuts }) 
       }
       try {
         // connection required
-        if (!connected) {
+        if (!provider?.connected) {
           await provider.enable();
         }
+
         const response = await provider.request({
           method,
           params: values,
@@ -83,12 +84,8 @@ export function RpcMethodCard({ connected, format, method, params, shortcuts }) 
         setResponse(response);
         verify(response, data);
       } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          const { code, message } = err;
-          setError({ code, message });
-        }
+        const { code, message, data } = err;
+        setError({ code, message, data });
       }
     },
     [provider]

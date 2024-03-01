@@ -3,7 +3,10 @@
   "compilerOptions": {
     "allowJs": true,
     "outDir": "./dist",
-    "rootDir": "./src",
+    "baseUrl": ".",
+    "paths": {
+      ":core/*": ["src/core/*"]
+    },
     "target": "es2017",
     "jsx": "react",
     "jsxFactory": "h",

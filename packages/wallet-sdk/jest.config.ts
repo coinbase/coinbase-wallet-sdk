@@ -14,10 +14,11 @@ export default {
   collectCoverageFrom: [
     './src/CoinbaseWalletSDK.ts',
     './src/core/**/*.ts',
-    './src/lib/ScopedLocalStorage.ts',
     './src/provider/**/*.ts',
     './src/relay/**/*.ts',
     './src/components/**/*.tsx',
+    './src/signer/**/*.ts',
+    './src/transport/**/*.ts',
   ],
   // The directory where Jest should output its coverage files
   coverageDirectory: 'coverage',
@@ -31,9 +32,9 @@ export default {
   // TODO: Increase threshold as additional tests are added
   coverageThreshold: {
     global: {
-      branches: 53,
-      functions: 55,
-      statements: 61,
+      branches: 40,
+      functions: 45,
+      statements: 40,
     },
   },
 
@@ -43,6 +44,7 @@ export default {
   // A map from regular expressions to module names or to arrays of module names that allow to stub out resources with a single module
   moduleNameMapper: {
     '^src/(.*)$': '<rootDir>/src/$1',
+    '^:core/(.*)$': '<rootDir>/src/core/$1',
   },
 
   // A list of paths to directories that Jest should use to search for files in

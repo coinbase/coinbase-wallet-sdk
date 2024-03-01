@@ -1,6 +1,6 @@
 {
   "name": "@coinbase/wallet-sdk",
-  "version": "3.9.1",
+  "version": "4.0.0-beta.0",
   "description": "Coinbase Wallet JavaScript SDK",
   "keywords": [
     "cipher",
@@ -28,13 +28,12 @@
     "test": "jest",
     "test:coverage": "yarn test:unit && open coverage/lcov-report/index.html",
     "prebuild": "rm -rf ./build && node -p \"'export const LIB_VERSION = \\'' + require('./package.json').version + '\\';'\" > src/version.ts",
-    "build": "node compile-assets.js && tsc -p ./tsconfig.build.json && cp -a src/vendor-js dist",
-    "dev": "node compile-assets.js && tsc --watch",
+    "build": "node compile-assets.js && tsc -p ./tsconfig.build.json && tsc-alias && cp -a src/vendor-js dist",
+    "dev": "node compile-assets.js && tsc --watch & nodemon --watch dist --delay 1 --exec tsc-alias",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx --fix"
   },
   "dependencies": {
-    "bn.js": "^5.2.1",
     "buffer": "^6.0.3",
     "clsx": "^1.2.1",
     "eth-block-tracker": "^7.1.0",
@@ -54,7 +53,6 @@
     "@peculiar/webcrypto": "^1.4.3",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/preact": "^2.0.1",
-    "@types/bn.js": "^4.11.6",
     "@types/jest": "^27.5.2",
     "@types/node": "^14.18.54",
     "@types/sha.js": "^2.4.1",
@@ -62,10 +60,12 @@
     "jest": "^27.5.1",
     "jest-chrome": "^0.7.2",
     "jest-websocket-mock": "^2.4.0",
+    "nodemon": "^3.1.0",
     "prettier": "^2.8.8",
     "sass": "^1.64.1",
     "ts-jest": "^27.1.5",
     "ts-node": "^10.9.1",
+    "tsc-alias": "^1.8.8",
     "tslib": "^2.6.0",
     "typescript": "^5.1.6"
   }
