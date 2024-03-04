@@ -7,7 +7,6 @@ import {
   HostConfigEventType,
   isConfigMessage,
 } from './ConfigMessage';
-import { ConnectionPreference } from ':core/communicator/ConnectionPreference';
 import { CrossDomainCommunicator } from ':core/communicator/CrossDomainCommunicator';
 import { Message } from ':core/communicator/Message';
 import { standardErrors } from ':core/error';
@@ -122,11 +121,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     }
   }
 
-  selectConnectionType({
-    connectionPreference,
-  }: {
-    connectionPreference: ConnectionPreference;
-  }): Promise<ConnectionType> {
+  selectConnectionType({ smartWalletOnly }: { smartWalletOnly: boolean }): Promise<ConnectionType> {
     return new Promise((resolve, reject) => {
       if (!this.peerWindow) {
         reject(
@@ -138,7 +133,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
 
       this.resolveConnectionType = resolve;
       this.postClientConfigMessage(ClientConfigEventType.SelectConnectionType, {
-        connectionPreference,
+        smartWalletOnly,
       });
     });
   }
