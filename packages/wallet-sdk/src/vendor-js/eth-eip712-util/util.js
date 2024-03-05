@@ -1,8 +1,9 @@
 // Extracted from https://github.com/ethereumjs/ethereumjs-util and stripped out irrelevant code
 // Original code licensed under the Mozilla Public License Version 2.0
 
+/* eslint-disable */
+//prettier-ignore
 const createKeccakHash = require('keccak/js')
-const BN = require('bn.js')
 
 /**
  * Returns a buffer filled with 0s
@@ -12,6 +13,41 @@ const BN = require('bn.js')
  */
 function zeros (bytes) {
   return Buffer.allocUnsafe(bytes).fill(0)
+}
+
+function bitLengthFromBigInt (num) {
+  return num.toString(2).length
+}
+
+function bufferBEFromBigInt(num, length) {
+  let hex = num.toString(16);
+  // Ensure the hex string length is even
+  if (hex.length % 2 !== 0) hex = '0' + hex;
+  // Convert hex string to a byte array
+  const byteArray = hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16));
+  // Ensure the byte array is of the specified length
+  while (byteArray.length < length) {
+    byteArray.unshift(0); // Prepend with zeroes if shorter than required length
+  }
+
+  return Buffer.from(byteArray);
+}
+
+function twosFromBigInt(value, width) {
+  const isNegative = value < 0n;
+  let result;
+  if (isNegative) {
+    // Prepare a mask for the specified width to perform NOT operation
+    const mask = (1n << BigInt(width)) - 1n;
+    // Invert bits (using NOT) and add one
+    result = (~value & mask) + 1n;
+  } else {
+    result = value;
+  }
+  // Ensure the result fits in the specified width
+  result &= (1n << BigInt(width)) - 1n;
+
+  return result;
 }
 
 /**
@@ -53,7 +89,7 @@ function setLengthRight (msg, length) {
 }
 
 /**
- * Attempts to turn a value into a `Buffer`. As input it supports `Buffer`, `String`, `Number`, null/undefined, `BN` and other objects with a `toArray()` method.
+ * Attempts to turn a value into a `Buffer`. As input it supports `Buffer`, `String`, `Number`, null/undefined, `BIgInt` and other objects with a `toArray()` method.
  * @param {*} v the value
  */
 function toBuffer (v) {
@@ -70,10 +106,11 @@ function toBuffer (v) {
       v = intToBuffer(v)
     } else if (v === null || v === undefined) {
       v = Buffer.allocUnsafe(0)
-    } else if (BN.isBN(v)) {
-      v = v.toArrayLike(Buffer)
+    } else if (typeof v === 'bigint') {
+      v = bufferBEFromBigInt(v)
     } else if (v.toArray) {
-      // converts a BN to a Buffer
+      // TODO: bigint should be handled above, may remove this duplicate
+      // converts a BigInt to a Buffer
       v = Buffer.from(v.toArray())
     } else {
       throw new Error('invalid type')
@@ -128,5 +165,8 @@ module.exports = {
   stripHexPrefix,
   toBuffer,
   bufferToHex,
-  keccak
+  keccak,
+  bitLengthFromBigInt,
+  bufferBEFromBigInt,
+  twosFromBigInt
 }

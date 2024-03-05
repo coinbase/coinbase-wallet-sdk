@@ -5,4 +5,15 @@ module.exports = {
       pragma: "h",
     },
   },
+  rules: {
+    'no-useless-constructor': 'off',
+  },
+  overrides: [
+    {
+      files: ["**/*.test.*"],
+      rules: {
+        "@typescript-eslint/no-explicit-any": "off"
+      }
+    }
+  ]
 };

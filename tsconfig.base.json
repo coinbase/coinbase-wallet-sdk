@@ -14,7 +14,7 @@
       "dom.iterable",
       "es2016",
     ],
-    "module": "CommonJS",
+    "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "resolveJsonModule": true,
     "skipLibCheck": true,
@@ -26,15 +26,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "target": "es2016",
-    "types": ["node", "jest"],
-    // Paths
-    "paths": {
-      ":wallet-sdk/*": [
-        "packages/wallet-sdk/*"
-      ],
-      ":wallet-sdk-testapp/*": [
-        "apps/testapp/*"
-      ],
-    }
+    "types": ["node", "jest", "@testing-library/jest-dom"],
   }
 }
