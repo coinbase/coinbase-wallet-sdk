@@ -12,65 +12,58 @@ export default {
 
   // An array of glob patterns indicating a set of files for which coverage information should be collected
   collectCoverageFrom: [
-    "./src/util.ts",
-    "./src/CoinbaseWalletSDK.ts",
-    "./src/connection/RxWebSocket.ts",
-    "./src/connection/WalletSDKConnection.ts",
-    "./src/lib/ScopedLocalStorage.ts",
-    "./src/provider/CoinbaseWalletProvider.ts",
-    "./src/provider/SolanaProvider.ts",
-    "./src/provider/FilterPolyfill.ts",
-    "./src/provider/SubscriptionManager.ts",
-    "./src/provider/WalletSDKUI.ts",
-    "./src/relay/aes256gcm.ts",
-    "./src/relay/Session.ts",
-    "./src/relay/WalletSDKRelay.ts",
-    "./src/relay/WalletSDKRelayEventManager.ts",
-    "./src/components/**/*.tsx",
+    './src/CoinbaseWalletSDK.ts',
+    './src/core/**/*.ts',
+    './src/provider/**/*.ts',
+    './src/relay/**/*.ts',
+    './src/components/**/*.tsx',
+    './src/signer/**/*.ts',
+    './src/transport/**/*.ts',
   ],
   // The directory where Jest should output its coverage files
-  coverageDirectory: "coverage",
+  coverageDirectory: 'coverage',
 
   // An array of regexp pattern strings used to skip coverage collection
-  coveragePathIgnorePatterns: ["/node_modules/"],
+  coveragePathIgnorePatterns: ['/node_modules/'],
 
   // A list of reporter names that Jest uses when writing coverage reports
-  coverageReporters: ["json", "text", "text-summary", "lcov"],
+  coverageReporters: ['json', 'text', 'text-summary', 'lcov'],
 
   // TODO: Increase threshold as additional tests are added
   coverageThreshold: {
     global: {
-      branches: 54,
-      functions: 55,
-      statements: 63,
+      branches: 40,
+      functions: 45,
+      statements: 40,
     },
   },
 
   // An array of file extensions your modules use
-  moduleFileExtensions: ["js", "jsx", "ts", "tsx", "json", "node"],
+  moduleFileExtensions: ['js', 'jsx', 'ts', 'tsx', 'json', 'node'],
 
   // A map from regular expressions to module names or to arrays of module names that allow to stub out resources with a single module
   moduleNameMapper: {
-    "^src/(.*)$": "<rootDir>/src/$1",
+    '^src/(.*)$': '<rootDir>/src/$1',
+    '^:core/(.*)$': '<rootDir>/src/core/$1',
   },
 
   // A list of paths to directories that Jest should use to search for files in
-  roots: ["<rootDir>/src"],
+  roots: ['<rootDir>/src'],
 
   // A list of paths to modules that run some code to configure or set up the testing framework before each test
-  setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
 
   // The test environment that will be used for testing
-  testEnvironment: "jsdom",
+  testEnvironment: 'jsdom',
 
   // The glob patterns Jest uses to detect test files
-  testMatch: ["<rootDir>/src/**/*.test.[tj]s?(x)"],
+  testMatch: ['<rootDir>/src/**/*.test.[tj]s?(x)'],
 
   // A map from regular expressions to paths to transformers
   transform: {
-    "^.+\\.(js|ts|tsx)$": ["babel-jest"],
+    '^.+\\.(js|ts|tsx)$': ['babel-jest'],
   },
 
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
-  testPathIgnorePatterns: ["/node_modules/", "/build/"],
+  testPathIgnorePatterns: ['/node_modules/', '/build/'],
 };

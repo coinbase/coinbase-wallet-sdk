@@ -1,0 +1,19 @@
+# Source
+src/**
+./node_modules/
+__tests__/**
+
+# Config
+tsconfig.json
+tsconfig.build.json
+.eslintrc.js
+babel.config.js
+webpack.config.js
+karma.conf.js
+
+# Jest
+jest.setup.ts
+jest.config.ts
+coverage/**
+
+compile-assets.js

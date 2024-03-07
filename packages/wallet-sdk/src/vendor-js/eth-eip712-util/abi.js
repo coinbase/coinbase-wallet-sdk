@@ -1,8 +1,9 @@
 // Extracted from https://github.com/ethereumjs/ethereumjs-abi and stripped out irrelevant code
 // Original code licensed under the MIT License - Copyright (c) 2015 Alex Beregszaszi
 
+/* eslint-disable */
+//prettier-ignore
 const util = require('./util')
-const BN = require('bn.js')
 
 // Convert from short to canonical names
 // FIXME: optimism or make this nicer?
@@ -49,16 +50,9 @@ function parseTypeArray (type) {
 
 function parseNumber (arg) {
   var type = typeof arg
-  if (type === 'string') {
-    if (util.isHexString(arg)) {
-      return new BN(util.stripHexPrefix(arg), 16)
-    } else {
-      return new BN(arg, 10)
-    }
-  } else if (type === 'number') {
-    return new BN(arg)
-  } else if (arg.toArray) {
-    // assume this is a BN for the moment, replace with BN.isBN soon
+  if (type === 'string' || type === 'number') {
+    return BigInt(arg)
+  } else if (type === 'bigint') {
     return arg
   } else {
     throw new Error('Argument is not a number')
@@ -123,15 +117,16 @@ function encodeSingle (type, arg) {
     }
 
     num = parseNumber(arg)
-    if (num.bitLength() > size) {
-      throw new Error('Supplied uint exceeds width: ' + size + ' vs ' + num.bitLength())
+    const bitLength = util.bitLengthFromBigInt(num)
+    if (bitLength > size) {
+      throw new Error('Supplied uint exceeds width: ' + size + ' vs ' + bitLength)
     }
 
     if (num < 0) {
       throw new Error('Supplied uint is negative')
     }
 
-    return num.toArrayLike(Buffer, 'be', 32)
+    return util.bufferBEFromBigInt(num, 32);
   } else if (type.startsWith('int')) {
     size = parseTypeN(type)
     if ((size % 8) || (size < 8) || (size > 256)) {
@@ -139,11 +134,14 @@ function encodeSingle (type, arg) {
     }
 
     num = parseNumber(arg)
-    if (num.bitLength() > size) {
-      throw new Error('Supplied int exceeds width: ' + size + ' vs ' + num.bitLength())
+    const bitLength = util.bitLengthFromBigInt(num)
+    if (bitLength > size) {
+      throw new Error('Supplied int exceeds width: ' + size + ' vs ' + bitLength)
     }
 
-    return num.toTwos(256).toArrayLike(Buffer, 'be', 32)
+    const twos = util.twosFromBigInt(num, 256);
+
+    return util.bufferBEFromBigInt(twos, 32);
   } else if (type.startsWith('ufixed')) {
     size = parseTypeNxM(type)
 
@@ -153,11 +151,11 @@ function encodeSingle (type, arg) {
       throw new Error('Supplied ufixed is negative')
     }
 
-    return encodeSingle('uint256', num.mul(new BN(2).pow(new BN(size[1]))))
+    return encodeSingle('uint256', num * BigInt(2) ** BigInt(size[1]))
   } else if (type.startsWith('fixed')) {
     size = parseTypeNxM(type)
 
-    return encodeSingle('int256', parseNumber(arg).mul(new BN(2).pow(new BN(size[1]))))
+    return encodeSingle('int256', parseNumber(arg) * BigInt(2) ** BigInt(size[1]))
   }
 
   throw new Error('Unsupported or invalid type: ' + type)
@@ -235,11 +233,12 @@ function solidityPack (types, values) {
       }
 
       num = parseNumber(value)
-      if (num.bitLength() > size) {
-        throw new Error('Supplied uint exceeds width: ' + size + ' vs ' + num.bitLength())
+      const bitLength = util.bitLengthFromBigInt(num)
+      if (bitLength > size) {
+        throw new Error('Supplied uint exceeds width: ' + size + ' vs ' + bitLength)
       }
 
-      ret.push(num.toArrayLike(Buffer, 'be', size / 8))
+      ret.push(util.bufferBEFromBigInt(num, size / 8))
     } else if (type.startsWith('int')) {
       size = parseTypeN(type)
       if ((size % 8) || (size < 8) || (size > 256)) {
@@ -247,11 +246,13 @@ function solidityPack (types, values) {
       }
 
       num = parseNumber(value)
-      if (num.bitLength() > size) {
-        throw new Error('Supplied int exceeds width: ' + size + ' vs ' + num.bitLength())
+      const bitLength = util.bitLengthFromBigInt(num)
+      if (bitLength > size) {
+        throw new Error('Supplied int exceeds width: ' + size + ' vs ' + bitLength)
       }
 
-      ret.push(num.toTwos(size).toArrayLike(Buffer, 'be', size / 8))
+      const twos = util.twosFromBigInt(num, size);
+      ret.push(util.bufferBEFromBigInt(twos, size / 8))
     } else {
       // FIXME: support all other types
       throw new Error('Unsupported or invalid type: ' + type)

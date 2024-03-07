@@ -1,0 +1,3 @@
+secure:
+  required_reviews: 1
+  upstream_repository: coinbase/coinbase-wallet-sdk

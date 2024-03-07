@@ -1,0 +1,67 @@
+name: Slack notifications for PRs and Issues
+
+on:
+  issues:
+    types: [opened, reopened]
+
+env:
+  CHANNEL_WALLET_FEEDBACK: ${{ vars.CHANNEL_WALLET_FEEDBACK }}
+  CHANNEL_WALLET_SQUAD_BUILD: ${{ vars.CHANNEL_WALLET_SQUAD_BUILD }}
+  ON_CALL_WALLET: ${{ vars.ON_CALL_WALLET }}
+  ON_CALL_BUILD_SQUAD: ${{ vars.ON_CALL_BUILD_SQUAD }}
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ env.skip }}
+    steps:
+    - name: Check spam labels
+      if: ${{ contains(github.event.*.labels.*.name, 'spam') }}
+      run: |
+        echo "skip=true" >> $GITHUB_ENV
+        echo "::error:: Spam label found."
+        
+  notify:
+    runs-on: ubuntu-latest
+    needs: checks
+    if: ${{ vars.SLACK_ENABLED == 'true' && needs.checks.outputs.skip != 'true' }}
+    steps:
+    - name: Set channel and mention
+      run: |
+        if ${{ contains(join(github.event.issue.labels.*.name), 'type:') }}; then
+          echo "channel=${{ env.CHANNEL_WALLET_FEEDBACK }}" >> $GITHUB_ENV
+          echo "mention=!subteam^${{ env.ON_CALL_WALLET }}" >> $GITHUB_ENV
+        else
+          echo "channel=${{ env.CHANNEL_WALLET_SQUAD_BUILD }}" >> $GITHUB_ENV
+          echo "mention=!subteam^${{ env.ON_CALL_BUILD_SQUAD }}" >> $GITHUB_ENV
+        fi
+
+    - name: Set text
+      run: |
+        text=$(echo "${{ vars.SLACK_TEMPLATE }}")
+        text=${text//'{{event}}'/Issue ${{ env.action }}}
+        text=${text//'{{author}}'/${{ env.author }}}
+        text=${text//'{{url}}'/${{ env.url }}}
+        text=${text//'{{mention}}'/${{ env.mention }}}
+        text=${text//'{{repo}}'/${{ github.repository }}}
+        text="${text//$'\r\n'/'\n'}"
+        text="${text//$'\n'/'\n'}"
+        echo "text=$text" >> $GITHUB_ENV
+      env:
+        action: ${{ github.event.action }}
+        author: ${{ github.event.issue.user.login }}
+        url: ${{ github.event.issue.html_url }}
+
+    - name: Notify Slack
+      uses: slackapi/slack-github-action@v1.23.0
+      with:
+        payload: |
+          {
+            "channel": "#${{ env.channel }}",
+            "text": "*${{ env.title }}*\n${{ env.text }}",
+            "icon_emoji": ":${{ vars.ICON_EMOJI }}:"
+          }
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        title: ${{ github.event.issue.title }}

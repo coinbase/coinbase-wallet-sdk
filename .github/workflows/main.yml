@@ -1,14 +1,40 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  pull_request:
+  push:
+    branches: [master]
 
 jobs:
-  lint-check:
-    name: Lint / Type Check
+  lint:
+    name: Lint Check
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./packages/wallet-sdk
+        working-directory: ./
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Checkout node action
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+          cache-dependency-path: 'yarn.lock'
+
+      - name: Install NPM dependencies
+        run: yarn install --immutable
+
+      - name: Check ESLint
+        run: yarn lint
+
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./
 
     steps:
       - name: Checkout
@@ -21,30 +47,25 @@ jobs:
           cache-dependency-path: '**/yarn.lock'
 
       - name: Install NPM dependencies
-        run: yarn install
-
-      - name: Check ESLint
-        run: yarn lint:eslint
-
-      - name: Check prettier formatting
-        run: yarn lint:prettier
+        run: yarn install --immutable
 
       - name: Runs compile asset script
+        working-directory: ./packages/wallet-sdk
         run: node ./compile-assets.js
 
       - name: Check Types
-        run: yarn lint:types
+        run: yarn typecheck
 
   tests:
     name: Tests
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./packages/wallet-sdk
+        working-directory: ./
 
     strategy:
       matrix:
-        node-version: [14.x, 16.x, 18.x]
+        node-version: [16.x, 18.x, 20.x]
 
     steps:
       - name: Checkout
@@ -57,7 +78,12 @@ jobs:
           cache-dependency-path: '**/yarn.lock'
 
       - name: Install NPM dependencies
-        run: yarn install
+        run: yarn install --immutable
+
+      - name: Runs compile asset script
+        working-directory: ./packages/wallet-sdk
+        run: node ./compile-assets.js
 
       - name: Run Unit Tests
-        run: yarn test:unit
+        working-directory: ./packages/wallet-sdk
+        run: yarn test
