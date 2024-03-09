@@ -1,7 +1,4 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
-// Licensed under the Apache License, version 2.0
-
-import BN from 'bn.js';
 
 import { standardErrors } from './error';
 import { AddressString, BigIntString, HexString, IntNumber, RegExpString } from './type';
@@ -29,16 +26,16 @@ export function hexStringFromBuffer(buf: Buffer, includePrefix = false): HexStri
   return HexString(includePrefix ? `0x${hex}` : hex);
 }
 
-export function bigIntStringFromBN(bn: BN): BigIntString {
-  return BigIntString(bn.toString(10));
+export function bigIntStringFromBigInt(bi: bigint): BigIntString {
+  return BigIntString(bi.toString(10));
 }
 
 export function intNumberFromHexString(hex: HexString): IntNumber {
-  return IntNumber(new BN(ensureEvenLengthHexString(hex, false), 16).toNumber());
+  return IntNumber(Number(BigInt(ensureEvenLengthHexString(hex, true))));
 }
 
 export function hexStringFromIntNumber(num: IntNumber): HexString {
-  return HexString(`0x${new BN(num).toString(16)}`);
+  return HexString(`0x${BigInt(num).toString(16)}`);
 }
 
 export function has0xPrefix(str: string): boolean {
@@ -118,7 +115,7 @@ export function ensureIntNumber(num: unknown): IntNumber {
       return IntNumber(Number(num));
     }
     if (isHexString(num)) {
-      return IntNumber(new BN(ensureEvenLengthHexString(num, false), 16).toNumber());
+      return IntNumber(Number(BigInt(ensureEvenLengthHexString(num, true))));
     }
   }
   throw standardErrors.rpc.invalidParams(`Not an integer: ${String(num)}`);
@@ -131,19 +128,19 @@ export function ensureRegExpString(regExp: unknown): RegExpString {
   throw standardErrors.rpc.invalidParams(`Not a RegExp: ${String(regExp)}`);
 }
 
-export function ensureBN(val: unknown): BN {
-  if (val !== null && (BN.isBN(val) || isBigNumber(val))) {
-    return new BN((val as any).toString(10), 10);
+export function ensureBigInt(val: unknown): bigint {
+  if (val !== null && (typeof val === 'bigint' || isBigNumber(val))) {
+    return BigInt((val as any).toString(10));
   }
   if (typeof val === 'number') {
-    return new BN(ensureIntNumber(val));
+    return BigInt(ensureIntNumber(val));
   }
   if (typeof val === 'string') {
     if (INT_STRING_REGEX.test(val)) {
-      return new BN(val, 10);
+      return BigInt(val);
     }
     if (isHexString(val)) {
-      return new BN(ensureEvenLengthHexString(val, false), 16);
+      return BigInt(ensureEvenLengthHexString(val, true));
     }
   }
   throw standardErrors.rpc.invalidParams(`Not an integer: ${String(val)}`);
@@ -194,50 +191,10 @@ export function getFavicon(): string | null {
   return `${protocol}//${host}${href}`;
 }
 
-export function createQrUrl(
-  sessionId: string,
-  sessionSecret: string,
-  serverUrl: string,
-  isParentConnection: boolean,
-  version: string,
-  chainId: number
-): string {
-  const sessionIdKey = isParentConnection ? 'parent-id' : 'id';
-
-  const query = new URLSearchParams({
-    [sessionIdKey]: sessionId,
-    secret: sessionSecret,
-    server: serverUrl,
-    v: version,
-    chainId: chainId.toString(),
-  }).toString();
-
-  const qrUrl = `${serverUrl}/#/link?${query}`;
-
-  return qrUrl;
+export function areAddressArraysEqual(arr1: AddressString[], arr2: AddressString[]): boolean {
+  return arr1.length === arr2.length && arr1.every((value, index) => value === arr2[index]);
 }
 
-export function isInIFrame(): boolean {
-  try {
-    return window.frameElement !== null;
-  } catch (e) {
-    return false;
-  }
-}
-
-export function getLocation(): Location {
-  try {
-    if (isInIFrame() && window.top) {
-      return window.top.location;
-    }
-    return window.location;
-  } catch (e) {
-    return window.location;
-  }
-}
-
-export function isMobileWeb(): boolean {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    window?.navigator?.userAgent
-  );
+export function showDeprecationWarning(oldMethod: string, instructions: string): void {
+  console.warn(`EIP1193Provider: ${oldMethod} is deprecated. Please ${instructions} instead.`);
 }

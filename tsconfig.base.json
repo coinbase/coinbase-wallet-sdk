@@ -27,14 +27,5 @@
     "noUnusedParameters": true,
     "target": "es2016",
     "types": ["node", "jest", "@testing-library/jest-dom"],
-    // Paths
-    "paths": {
-      ":wallet-sdk/*": [
-        "packages/wallet-sdk/*"
-      ],
-      ":wallet-sdk-testapp/*": [
-        "apps/testapp/*"
-      ],
-    }
   }
 }

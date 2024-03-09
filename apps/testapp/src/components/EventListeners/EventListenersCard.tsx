@@ -1,7 +1,7 @@
 import { Box, Card, CardBody, Code, Flex, Heading } from '@chakra-ui/react';
 import React, { useEffect } from 'react';
 
-import { useCBWSDK } from '../../context/CBWSDKProvider';
+import { useCBWSDK } from '../../context/CBWSDKReactContextProvider';
 
 export function EventListenersCard() {
   const [connect, setConnect] = React.useState<Record<string, unknown> | string | number | null>(
@@ -28,7 +28,7 @@ export function EventListenersCard() {
       setConnect(info);
     });
     provider.on('disconnect', (error) => {
-      setDisconnect(error);
+      setDisconnect({ code: error.code, message: error.message });
     });
     provider.on('accountsChanged', (accounts) => {
       setAccountsChanged(accounts);

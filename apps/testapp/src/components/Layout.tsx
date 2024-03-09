@@ -11,7 +11,7 @@ import {
   MenuList,
 } from '@chakra-ui/react';
 
-import { sdkVersions, useCBWSDK } from '../context/CBWSDKProvider';
+import { useCBWSDK } from '../context/CBWSDKReactContextProvider';
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -20,15 +20,11 @@ type LayoutProps = {
 export const WIDTH_2XL = '1536px';
 
 export function Layout({ children }: LayoutProps) {
-  const { sdk, sdkVersion, setSDKVersion } = useCBWSDK();
-
-  const handleClockDocs = () => {
-    window.open('https://cbdev.io/walletstart', '_blank');
-  };
+  const { provider, connectionPreference, setPreference } = useCBWSDK();
 
   const handleDisconnect = () => {
-    if (sdk) {
-      sdk.disconnect();
+    if (provider) {
+      provider.disconnect();
     }
   };
 
@@ -39,20 +35,19 @@ export function Layout({ children }: LayoutProps) {
           <Flex justifyContent="space-between" alignItems="center">
             <Heading>Coinbase Wallet SDK - Playground</Heading>
             <Flex justifyContent="space-between" alignItems="center" gap={4}>
-              <Button onClick={handleClockDocs}>Docs</Button>
               <Menu>
                 <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
-                  {`SDK: ${sdkVersion}`}
+                  {`Mode: ${connectionPreference}`}
                 </MenuButton>
                 <MenuList>
-                  {sdkVersions.map((version) => (
+                  {['default', 'embedded'].map((preference) => (
                     <MenuItem
                       color={'MenuText'}
-                      key={version}
-                      icon={version === sdkVersion ? <CheckIcon /> : null}
-                      onClick={() => setSDKVersion(version)}
+                      key={preference}
+                      icon={preference === connectionPreference ? <CheckIcon /> : null}
+                      onClick={() => setPreference(preference)}
                     >
-                      {version}
+                      {preference}
                     </MenuItem>
                   ))}
                 </MenuList>

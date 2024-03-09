@@ -27,7 +27,7 @@ const ethSignTypedDataV1Shortcuts: ShortcutType[] = [
   },
 ];
 
-const ethSignTypedDataV3Shortcuts: ShortcutType[] = [
+const ethSignTypedDataV3Shortcuts: (chainId) => ShortcutType[] = (chainId: number) => [
   {
     key: EXAMPLE_MESSAGE,
     data: {
@@ -53,7 +53,7 @@ const ethSignTypedDataV3Shortcuts: ShortcutType[] = [
         domain: {
           name: 'Ether Mail',
           version: '1',
-          chainId: 1,
+          chainId,
           verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC',
         },
         message: {
@@ -73,13 +73,13 @@ const ethSignTypedDataV3Shortcuts: ShortcutType[] = [
   },
 ];
 
-const ethSignTypedDataV4Shortcuts: ShortcutType[] = [
+const ethSignTypedDataV4Shortcuts: (chainId: number) => ShortcutType[] = (chainId: number) => [
   {
     key: EXAMPLE_MESSAGE,
     data: {
       message: {
         domain: {
-          chainId: 1,
+          chainId,
           name: 'Ether Mail',
           verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC',
           version: '1',
@@ -132,9 +132,9 @@ const ethSignTypedDataV4Shortcuts: ShortcutType[] = [
   },
 ];
 
-export const signMessageShortcutsMap = {
+export const signMessageShortcutsMap = (chainId: number) => ({
   personal_sign: personalSignShortcuts,
   eth_signTypedData_v1: ethSignTypedDataV1Shortcuts,
-  eth_signTypedData_v3: ethSignTypedDataV3Shortcuts,
-  eth_signTypedData_v4: ethSignTypedDataV4Shortcuts,
-};
+  eth_signTypedData_v3: ethSignTypedDataV3Shortcuts(chainId),
+  eth_signTypedData_v4: ethSignTypedDataV4Shortcuts(chainId),
+});
