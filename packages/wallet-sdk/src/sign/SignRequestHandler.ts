@@ -5,7 +5,6 @@ import { Signer, SignerUpdateListener } from './SignerInterface';
 import { SignRequestHandlerListener } from './UpdateListenerInterface';
 import { WLSigner } from './walletlink/WLSigner';
 import { ConnectionPreference } from ':core/communicator/ConnectionPreference';
-import { CB_KEYS_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { AddressString } from ':core/type';
@@ -40,7 +39,7 @@ export class SignRequestHandler implements RequestHandler {
 
   constructor(options: Readonly<SignRequestHandlerOptions>) {
     this.popupCommunicator = new PopUpCommunicator({
-      url: options.scwUrl || CB_KEYS_URL,
+      url: 'http://localhost:3005/connect',
     });
     this.updateListener = options.updateListener;
 
