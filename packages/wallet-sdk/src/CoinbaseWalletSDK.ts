@@ -96,6 +96,7 @@ export class CoinbaseWalletSDK {
       linkAPIUrl,
       version: LIB_VERSION,
       darkMode: !!options.darkMode,
+      headlessMode: !!options.headlessMode,
       uiConstructor,
       storage: this._storage,
       relayEventManager: this._relayEventManager,

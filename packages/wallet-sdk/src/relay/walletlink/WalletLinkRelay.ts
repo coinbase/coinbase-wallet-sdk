@@ -36,6 +36,7 @@ export interface WalletLinkRelayOptions {
   linkAPIUrl: string;
   version: string;
   darkMode: boolean;
+  headlessMode: boolean;
   storage: ScopedLocalStorage;
   relayEventManager: RelayEventManager;
   uiConstructor: (options: Readonly<RelayUIOptions>) => RelayUI;
@@ -238,7 +239,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
 
         if (isStandalone && this.ui.setStandalone) this.ui.setStandalone(true);
 
-        this.attachUI();
+        if (!this.options.headlessMode) this.attachUI();
       })
       .catch((err: string) => {
         this.diagnostic?.log(EVENTS.FAILURE, {
