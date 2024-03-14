@@ -17,6 +17,8 @@ import { AddressString } from ':core/type';
 import { RequestArguments } from ':core/type/ProviderInterface';
 import { ensureIntNumber } from ':core/util';
 
+const SCW_BACKEND_HANDLING_URL = 'https://keys.coinbase.com/scw_backend';
+
 export class SCWSigner implements Signer {
   private appName: string;
   private appLogoUrl: string | null;
@@ -89,6 +91,11 @@ export class SCWSigner implements Signer {
       return localResult;
     }
 
+    const backendResult = await this.tryBackendHandling<T>(request);
+    if (backendResult !== undefined) {
+      return backendResult;
+    }
+
     const response = await this.sendEncryptedRequest(request);
 
     const decrypted = await this.decryptResponseMessage<T>(response);
@@ -120,6 +127,28 @@ export class SCWSigner implements Signer {
       }
       case SupportedEthereumMethods.WalletGetCapacities: {
         return this.stateManager.walletCapabilities as T;
+      }
+      default:
+        return undefined;
+    }
+  }
+
+  private async tryBackendHandling<T>(request: RequestArguments): Promise<T | undefined> {
+    switch (request.method) {
+      case SupportedEthereumMethods.WalletGetTransactionStatus: {
+        const requestBody = {
+          ...request,
+          jsonrpc: '2.0',
+          id: crypto.randomUUID(),
+        };
+        const res = await window.fetch(SCW_BACKEND_HANDLING_URL, {
+          method: 'POST',
+          body: JSON.stringify(requestBody),
+          mode: 'cors',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        const response = await res.json();
+        return response as T;
       }
       default:
         return undefined;
