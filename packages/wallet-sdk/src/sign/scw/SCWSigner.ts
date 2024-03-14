@@ -118,6 +118,9 @@ export class SCWSigner implements Signer {
         // https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
         return switched ? (null as T) : undefined;
       }
+      case SupportedEthereumMethods.WalletGetCapacities: {
+        return this.stateManager.walletCapabilities as T;
+      }
       default:
         return undefined;
     }
@@ -182,6 +185,11 @@ export class SCWSigner implements Signer {
     const availableChains = response.data?.chains;
     if (availableChains) {
       this.stateManager.updateAvailableChains(availableChains);
+    }
+
+    const walletCapabilities = response.data?.capabilities;
+    if (walletCapabilities) {
+      this.stateManager.updateWalletCapabilities(walletCapabilities);
     }
 
     const result = response.result;

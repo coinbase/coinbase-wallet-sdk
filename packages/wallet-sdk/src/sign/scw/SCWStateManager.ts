@@ -5,12 +5,14 @@ import { AddressString, Chain } from ':core/type';
 const ACCOUNTS_KEY = 'accounts';
 const ACTIVE_CHAIN_STORAGE_KEY = 'activeChain';
 const AVAILABLE_CHAINS_STORAGE_KEY = 'availableChains';
+const WALLET_CAPABILITIES_STORAGE_KEY = 'walletCapabilities';
 
 export class SCWStateManager {
   private storage = new ScopedLocalStorage('CBWSDK', 'SCWStateManager');
   private updateListener: StateUpdateListener;
 
   private availableChains?: Chain[];
+  private _walletCapabilities?: object;
   private _accounts: AddressString[];
   private _activeChain: Chain;
   get accounts() {
@@ -19,11 +21,15 @@ export class SCWStateManager {
   get activeChain() {
     return this._activeChain;
   }
+  get walletCapabilities() {
+    return this._walletCapabilities;
+  }
 
   constructor(options: { updateListener: StateUpdateListener }) {
     this.updateListener = options.updateListener;
 
     this.availableChains = this.loadItemFromStorage(AVAILABLE_CHAINS_STORAGE_KEY);
+    this._walletCapabilities = this.loadItemFromStorage(WALLET_CAPABILITIES_STORAGE_KEY);
     const accounts = this.loadItemFromStorage<AddressString[]>(ACCOUNTS_KEY);
     const chain = this.loadItemFromStorage<Chain>(ACTIVE_CHAIN_STORAGE_KEY);
 
@@ -75,6 +81,11 @@ export class SCWStateManager {
     this.storeItemToStorage(AVAILABLE_CHAINS_STORAGE_KEY, chains);
 
     this.switchChain(this._activeChain.id);
+  }
+
+  updateWalletCapabilities(capabilities: object) {
+    this._walletCapabilities = capabilities;
+    this.storeItemToStorage(WALLET_CAPABILITIES_STORAGE_KEY, capabilities);
   }
 
   private storeItemToStorage<T>(key: string, item: T) {
