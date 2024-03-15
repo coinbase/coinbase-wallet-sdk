@@ -41,7 +41,7 @@ export class SCWStateManager {
     }
 
     this._accounts = accounts || [];
-    this._activeChain = chain || { id: options.appChainIds[0] };
+    this._activeChain = chain || { id: options.appChainIds?.[0] ?? 1 };
   }
 
   updateAccounts(accounts: AddressString[]) {
