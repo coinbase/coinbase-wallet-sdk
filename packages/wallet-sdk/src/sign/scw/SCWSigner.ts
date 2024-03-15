@@ -12,13 +12,11 @@ import { SCWResponse } from './message/type/Response';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWStateManager } from './SCWStateManager';
 import { PopUpCommunicator } from './transport/PopUpCommunicator';
+import { CB_KEYS_BACKEND_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
 import { AddressString } from ':core/type';
 import { RequestArguments } from ':core/type/ProviderInterface';
 import { ensureIntNumber } from ':core/util';
-
-const SCW_BACKEND_HANDLING_URL = 'https://keys.coinbase.com/scw_backend';
-
 export class SCWSigner implements Signer {
   private appName: string;
   private appLogoUrl: string | null;
@@ -141,7 +139,7 @@ export class SCWSigner implements Signer {
           jsonrpc: '2.0',
           id: crypto.randomUUID(),
         };
-        const res = await window.fetch(SCW_BACKEND_HANDLING_URL, {
+        const res = await window.fetch(CB_KEYS_BACKEND_URL, {
           method: 'POST',
           body: JSON.stringify(requestBody),
           mode: 'cors',
