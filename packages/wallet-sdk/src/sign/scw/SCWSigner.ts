@@ -39,6 +39,7 @@ export class SCWSigner implements Signer {
     this.puc = options.puc;
     this.keyManager = new SCWKeyManager();
     this.stateManager = new SCWStateManager({
+      appChainIds: this.appChainIds,
       updateListener: {
         onAccountsUpdate: (...args) => options.updateListener.onAccountsUpdate(this, ...args),
         onChainUpdate: (...args) => options.updateListener.onChainUpdate(this, ...args),
