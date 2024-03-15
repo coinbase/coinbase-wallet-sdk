@@ -153,12 +153,12 @@ export type WalletSendTransactionAction = {
 
 export type ShowTransactionStatusAction = {
   method: SupportedEthereumMethods.WalletShowTransactionStatus;
-  params: string;
+  params: [string];
 };
 
 export type GetTransactionStatusAction = {
   method: SupportedEthereumMethods.WalletGetTransactionStatus;
-  params: string;
+  params: [string];
 };
 
 export type AllAction =
