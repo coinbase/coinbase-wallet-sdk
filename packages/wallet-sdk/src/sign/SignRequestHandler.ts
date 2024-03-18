@@ -4,7 +4,6 @@ import { PopUpCommunicator } from './scw/transport/PopUpCommunicator';
 import { Signer, SignerUpdateListener } from './SignerInterface';
 import { SignRequestHandlerListener } from './UpdateListenerInterface';
 import { WLSigner } from './walletlink/WLSigner';
-import { ConnectionPreference } from ':core/communicator/ConnectionPreference';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
@@ -17,7 +16,7 @@ interface SignRequestHandlerOptions {
   appName: string;
   appLogoUrl?: string | null;
   appChainIds: number[];
-  connectionPreference: ConnectionPreference;
+  smartWalletOnly: boolean;
   updateListener: SignRequestHandlerListener;
 }
 
@@ -27,7 +26,7 @@ export class SignRequestHandler implements RequestHandler {
   private appName: string;
   private appLogoUrl: string | null;
   private appChainIds: number[];
-  private connectionPreference: ConnectionPreference;
+  private smartWalletOnly: boolean;
 
   private connectionType: string | null;
   private connectionTypeSelectionResolver: ((value: unknown) => void) | undefined;
@@ -56,7 +55,7 @@ export class SignRequestHandler implements RequestHandler {
 
     const persistedConnectionType = this.signerTypeStorage.getItem(SIGNER_TYPE_KEY);
     this.connectionType = persistedConnectionType;
-    this.connectionPreference = options.connectionPreference;
+    this.smartWalletOnly = options.smartWalletOnly;
 
     if (persistedConnectionType) {
       this.initSigner();
@@ -191,7 +190,7 @@ export class SignRequestHandler implements RequestHandler {
 
       this.popupCommunicator
         .selectConnectionType({
-          connectionPreference: this.connectionPreference,
+          smartWalletOnly: this.smartWalletOnly,
         })
         .then((connectionType) => {
           resolve(connectionType);

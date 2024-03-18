@@ -9,7 +9,7 @@ describe('EIP1193Provider', () => {
       scwUrl: 'http://fooUrl.com',
       appName: 'TestApp',
       appChainIds: [],
-      connectionPreference: 'default',
+      smartWalletOnly: false,
     });
   });
 
@@ -30,7 +30,7 @@ describe('EIP1193Provider', () => {
         scwUrl: 'http://fooUrl.com',
         appName: 'TestApp',
         appChainIds: [8453, 84532],
-        connectionPreference: 'default',
+        smartWalletOnly: false,
       });
       expect(provider.chainId).toBe(8453);
     });
@@ -40,7 +40,7 @@ describe('EIP1193Provider', () => {
         scwUrl: 'http://fooUrl.com',
         appName: 'TestApp',
         appChainIds: [],
-        connectionPreference: 'default',
+        smartWalletOnly: false,
       });
       expect(provider.chainId).toBe(1);
     });

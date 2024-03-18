@@ -20,7 +20,7 @@ type LayoutProps = {
 export const WIDTH_2XL = '1536px';
 
 export function Layout({ children }: LayoutProps) {
-  const { provider, connectionPreference, setPreference } = useCBWSDK();
+  const { provider, smartWalletOnly, setPreference } = useCBWSDK();
 
   const handleDisconnect = () => {
     if (provider) {
@@ -37,17 +37,17 @@ export function Layout({ children }: LayoutProps) {
             <Flex justifyContent="space-between" alignItems="center" gap={4}>
               <Menu>
                 <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
-                  {`Mode: ${connectionPreference}`}
+                  {`smartWalletOnly: ${smartWalletOnly}`}
                 </MenuButton>
                 <MenuList>
-                  {['default', 'embedded'].map((preference) => (
+                  {[true, false].map((b) => (
                     <MenuItem
                       color={'MenuText'}
-                      key={preference}
-                      icon={preference === connectionPreference ? <CheckIcon /> : null}
-                      onClick={() => setPreference(preference)}
+                      key={b.toString()}
+                      icon={b === smartWalletOnly ? <CheckIcon /> : null}
+                      onClick={() => setPreference(b)}
                     >
-                      {preference}
+                      {b.toString()}
                     </MenuItem>
                   ))}
                 </MenuList>
