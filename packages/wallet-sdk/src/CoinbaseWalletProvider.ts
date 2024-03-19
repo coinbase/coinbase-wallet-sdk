@@ -19,7 +19,6 @@ import { AccountsUpdate, ChainUpdate } from './sign/UpdateListenerInterface';
 import { SubscriptionRequestHandler } from './subscription/SubscriptionRequestHandler';
 
 interface ConstructorOptions {
-  scwUrl?: string;
   appName: string;
   appLogoUrl?: string | null;
   appChainIds: number[];
