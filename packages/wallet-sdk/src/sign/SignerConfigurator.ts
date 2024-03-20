@@ -47,11 +47,11 @@ export class SignerConfigurator {
     this.appChainIds = options.appChainIds;
     this.smartWalletOnly = options.smartWalletOnly;
 
-    // getWalletLinkUrl is called by the PopUpCommunicator when
+    // getWalletLinkQRCodeUrl is called by the PopUpCommunicator when
     // it receives message.type === 'wlQRCodeUrl' from the cb-wallet-scw popup
     // its injected because we don't want to instantiate WalletLinkSigner until we have to
-    this.getWalletLinkUrl = this.getWalletLinkUrl.bind(this);
-    this.popupCommunicator.setWLQRCodeUrlCallback(this.getWalletLinkUrl);
+    this.getWalletLinkQRCodeUrl = this.getWalletLinkQRCodeUrl.bind(this);
+    this.popupCommunicator.setGetWalletLinkQRCodeUrlCallback(this.getWalletLinkQRCodeUrl);
 
     this.setSignerType = this.setSignerType.bind(this);
     this.initWalletLinkSigner = this.initWalletLinkSigner.bind(this);
@@ -108,7 +108,7 @@ export class SignerConfigurator {
     this.signer = undefined;
   }
 
-  getWalletLinkUrl() {
+  getWalletLinkQRCodeUrl() {
     this.initWalletLinkSigner();
     if (!(this.signer instanceof WLSigner)) {
       throw standardErrors.rpc.internal(

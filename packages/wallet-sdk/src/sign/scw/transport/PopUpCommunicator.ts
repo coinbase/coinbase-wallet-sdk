@@ -1,12 +1,7 @@
 import { UUID } from 'crypto';
 
-import {
-  ClientConfigEventType,
-  ConfigMessage,
-  HostConfigEventType,
-  isConfigMessage,
-  SignerType,
-} from './ConfigMessage';
+import { ClientConfigEventType, isConfigMessage, SignerType } from './ConfigMessage';
+import { PopUpConfigurator } from './PopUpConfigurator';
 import { CrossDomainCommunicator } from ':core/communicator/CrossDomainCommunicator';
 import { Message } from ':core/communicator/Message';
 import { standardErrors } from ':core/error';
@@ -23,46 +18,22 @@ type Fulfillment = {
 
 export class PopUpCommunicator extends CrossDomainCommunicator {
   private requestMap = new Map<UUID, Fulfillment>();
-  // TODO: let's revisit this when we migrate all this to ConnectionConfigurator.
-  private wlQRCodeUrlCallback?: () => string;
+  private popUpConfigurator: PopUpConfigurator;
 
   constructor({ url }: { url: string }) {
     super();
     this.url = new URL(url);
-  }
-
-  // should be set before calling .connect()
-  setWLQRCodeUrlCallback(callback: () => string) {
-    this.wlQRCodeUrlCallback = callback;
+    this.popUpConfigurator = new PopUpConfigurator({ communicator: this });
   }
 
   protected onConnect(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.resolvePopupReady = resolve;
+    return new Promise((resolve) => {
+      this.popUpConfigurator.resolvePopupConnection = () => {
+        this.connected = true;
+        resolve();
+      };
       this.openFixedSizePopUpWindow();
-
-      if (!this.peerWindow) {
-        reject(standardErrors.rpc.internal('No pop up window opened'));
-      }
     });
-  }
-
-  private respondToWlQRCodeUrlRequest() {
-    if (!this.wlQRCodeUrlCallback) {
-      throw standardErrors.rpc.internal(
-        'PopUpCommunicator.wlQRCodeUrlCallback not set! make sure .setWLQRCodeUrlCallback is called first'
-      );
-    }
-    const wlQRCodeUrl = this.wlQRCodeUrlCallback();
-    const configMessage: ConfigMessage = {
-      type: 'config',
-      id: crypto.randomUUID(),
-      event: {
-        type: ClientConfigEventType.WalletLinkUrl,
-        value: wlQRCodeUrl,
-      },
-    };
-    this.postMessage(configMessage);
   }
 
   protected onEvent(event: MessageEvent<Message>) {
@@ -70,11 +41,11 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
 
     const message = event.data;
     if (isConfigMessage(message)) {
-      this.handleConfigMessage(message);
+      this.popUpConfigurator.handleConfigMessage(message);
       return;
     }
 
-    if (!this._connected) return;
+    if (!this.connected) return;
     if (!('requestId' in message)) return;
 
     const requestId = message.requestId as UUID;
@@ -83,92 +54,35 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     resolveFunction?.(message);
   }
 
-  // TODO: move to ConnectionConfigurator
-  private resolvePopupReady?: () => void;
-  private resolveSignerType?: (_: SignerType) => void;
+  protected onDisconnect() {
+    this.connected = false;
+    this.closeChildWindow();
+    this.requestMap.forEach((fulfillment, uuid, map) => {
+      fulfillment.reject(standardErrors.provider.userRejectedRequest('Request rejected'));
+      map.delete(uuid);
+    });
+    this.popUpConfigurator.onDisconnect();
+  }
 
-  private handleConfigMessage(message: ConfigMessage) {
-    switch (message.event.type) {
-      case HostConfigEventType.PopupListenerAdded:
-        // Handshake Step 2: After receiving POPUP_LISTENER_ADDED_MESSAGE from Dapp,
-        // Dapp sends DAPP_ORIGIN_MESSAGE to FE to help FE confirm the origin of the Dapp
-        this.postClientConfigMessage(ClientConfigEventType.DappOriginMessage);
-        break;
-      case HostConfigEventType.PopupReadyForRequest:
-        // Handshake Step 4: After receiving POPUP_READY_MESSAGE from Dapp, FE knows that
-        // Dapp is ready to receive requests, handshake is done
-        this._connected = true;
-        this.resolvePopupReady?.();
-        this.resolvePopupReady = undefined;
-        break;
-      case HostConfigEventType.ConnectionTypeSelected:
-        if (!this._connected) return;
-        this.resolveSignerType?.(message.event.value as SignerType);
-        this.resolveSignerType = undefined;
-        break;
-      case HostConfigEventType.RequestWalletLinkUrl:
-        if (!this._connected) return;
-        if (!this.wlQRCodeUrlCallback) {
-          throw standardErrors.rpc.internal(
-            'PopUpCommunicator.wlQRCodeUrlCallback not set! should never happen'
-          );
-        }
-        this.respondToWlQRCodeUrlRequest();
-        break;
-      case HostConfigEventType.PopupUnload:
-        this.disconnect();
-        break;
-    }
+  setGetWalletLinkQRCodeUrlCallback(callback: () => string) {
+    this.popUpConfigurator.getWalletLinkQRCodeUrlCallback = callback;
   }
 
   selectSignerType({ smartWalletOnly }: { smartWalletOnly: boolean }): Promise<SignerType> {
-    return new Promise((resolve, reject) => {
-      if (!this.peerWindow) {
-        reject(
-          standardErrors.rpc.internal(
-            'No pop up window found. Make sure to run .connect() before .send()'
-          )
-        );
-      }
-
-      this.resolveSignerType = resolve;
-      this.postClientConfigMessage(ClientConfigEventType.SelectConnectionType, {
+    return new Promise((resolve) => {
+      this.popUpConfigurator.resolveSignerTypeSelection = resolve;
+      this.popUpConfigurator.postClientConfigMessage(ClientConfigEventType.SelectConnectionType, {
         smartWalletOnly,
       });
     });
   }
 
   walletLinkQrScanned() {
-    this.postClientConfigMessage(ClientConfigEventType.WalletLinkQrScanned);
+    this.popUpConfigurator.postClientConfigMessage(ClientConfigEventType.WalletLinkQrScanned);
   }
 
-  private postClientConfigMessage(type: ClientConfigEventType, options?: any) {
-    if (options && type !== ClientConfigEventType.SelectConnectionType) {
-      throw standardErrors.rpc.internal('ClientConfigEvent does not accept options');
-    }
-
-    const configMessage: ConfigMessage = {
-      type: 'config',
-      id: crypto.randomUUID(),
-      event: {
-        type,
-        value: options,
-      },
-    };
-    this.postMessage(configMessage);
-  }
-
-  // Send message that expect to receive response
   request(message: Message): Promise<Message> {
     return new Promise((resolve, reject) => {
-      if (!this.peerWindow) {
-        reject(
-          standardErrors.rpc.internal(
-            'No pop up window found. Make sure to run .connect() before .send()'
-          )
-        );
-      }
-
       this.postMessage(message);
 
       const fulfillment: Fulfillment = {
@@ -180,14 +94,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     });
   }
 
-  protected onDisconnect() {
-    this._connected = false;
-    this.closeChildWindow();
-    this.requestMap.forEach((fulfillment, uuid, map) => {
-      fulfillment.reject(standardErrors.provider.userRejectedRequest('Request rejected'));
-      map.delete(uuid);
-    });
-  }
+  // Window Management
 
   private openFixedSizePopUpWindow() {
     const left = (window.innerWidth - POPUP_WIDTH) / 2 + window.screenX;
@@ -202,14 +109,17 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     const popupUrl = new URL(this.url);
     popupUrl.search = urlParams.toString();
 
-    const popupWindow = window.open(
+    this.peerWindow = window.open(
       popupUrl,
       'SCW Child Window',
       `width=${POPUP_WIDTH}, height=${POPUP_HEIGHT}, left=${left}, top=${top}`
     );
 
-    this.peerWindow = popupWindow;
-    popupWindow?.focus();
+    this.peerWindow?.focus();
+
+    if (!this.peerWindow) {
+      throw standardErrors.rpc.internal('Pop up window failed to open');
+    }
   }
 
   private closeChildWindow() {
