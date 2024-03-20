@@ -10,9 +10,13 @@ export enum SupportedEthereumMethods {
   EthSignTypedDataV1 = 'eth_signTypedData_v1',
   EthSignTypedDataV3 = 'eth_signTypedData_v3',
   EthSignTypedDataV4 = 'eth_signTypedData_v4',
-  // Chain
+  // Wallet
   WalletSwitchEthereumChain = 'wallet_switchEthereumChain',
   WalletAddEthereumChain = 'wallet_addEthereumChain',
+  WalletGetCapacities = 'wallet_getCapabilities',
+  WalletSendTransaction = 'wallet_sendTransaction',
+  WalletGetTransactionStatus = 'wallet_getTransactionStatus',
+  WalletShowTransactionStatus = 'wallet_showTransactionStatus',
 }
 
 export type RequestAccountsAction = {
@@ -107,7 +111,7 @@ export type SwitchEthereumChainAction = {
   params: [
     {
       chainId: string;
-    },
+    }
   ];
 };
 
@@ -127,6 +131,36 @@ export type AddEthereumChainAction = {
   };
 };
 
+export type GetCapacitiesAction = {
+  method: SupportedEthereumMethods.WalletGetCapacities;
+  params: null;
+};
+
+export type WalletSendTransactionAction = {
+  method: SupportedEthereumMethods.WalletSendTransaction;
+  params: {
+    chainId: number;
+    sender: string;
+    calls: {
+      target: string;
+      value: string;
+      data: string;
+      gas: string;
+    }[];
+    capabilities: object;
+  };
+};
+
+export type ShowTransactionStatusAction = {
+  method: SupportedEthereumMethods.WalletShowTransactionStatus;
+  params: [string];
+};
+
+export type GetTransactionStatusAction = {
+  method: SupportedEthereumMethods.WalletGetTransactionStatus;
+  params: [string];
+};
+
 export type AllAction =
   | RequestAccountsAction
   | SignAction
@@ -138,7 +172,11 @@ export type AllAction =
   | SendTransactionAction
   | SendRawTransactionAction
   | SwitchEthereumChainAction
-  | AddEthereumChainAction;
+  | AddEthereumChainAction
+  | GetCapacitiesAction
+  | WalletSendTransactionAction
+  | ShowTransactionStatusAction
+  | GetTransactionStatusAction;
 
 export type Action = {
   method: SupportedEthereumMethods;

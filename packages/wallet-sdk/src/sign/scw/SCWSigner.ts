@@ -12,11 +12,11 @@ import { SCWResponse } from './message/type/Response';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWStateManager } from './SCWStateManager';
 import { PopUpCommunicator } from './transport/PopUpCommunicator';
+import { CB_KEYS_BACKEND_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
 import { AddressString } from ':core/type';
 import { RequestArguments } from ':core/type/ProviderInterface';
 import { ensureIntNumber } from ':core/util';
-
 export class SCWSigner implements Signer {
   private appName: string;
   private appLogoUrl: string | null;
@@ -39,7 +39,6 @@ export class SCWSigner implements Signer {
     this.puc = options.puc;
     this.keyManager = new SCWKeyManager();
     this.stateManager = new SCWStateManager({
-      appChainIds: this.appChainIds,
       updateListener: {
         onAccountsUpdate: (...args) => options.updateListener.onAccountsUpdate(this, ...args),
         onChainUpdate: (...args) => options.updateListener.onChainUpdate(this, ...args),
@@ -90,6 +89,11 @@ export class SCWSigner implements Signer {
       return localResult;
     }
 
+    const backendResult = await this.tryBackendHandling<T>(request);
+    if (backendResult !== undefined) {
+      return backendResult;
+    }
+
     const response = await this.sendEncryptedRequest(request);
 
     const decrypted = await this.decryptResponseMessage<T>(response);
@@ -118,6 +122,31 @@ export class SCWSigner implements Signer {
         // "return null if the request was successful"
         // https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
         return switched ? (null as T) : undefined;
+      }
+      case SupportedEthereumMethods.WalletGetCapacities: {
+        return this.stateManager.walletCapabilities as T;
+      }
+      default:
+        return undefined;
+    }
+  }
+
+  private async tryBackendHandling<T>(request: RequestArguments): Promise<T | undefined> {
+    switch (request.method) {
+      case SupportedEthereumMethods.WalletGetTransactionStatus: {
+        const requestBody = {
+          ...request,
+          jsonrpc: '2.0',
+          id: crypto.randomUUID(),
+        };
+        const res = await window.fetch(CB_KEYS_BACKEND_URL, {
+          method: 'POST',
+          body: JSON.stringify(requestBody),
+          mode: 'cors',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        const response = await res.json();
+        return response as T;
       }
       default:
         return undefined;
@@ -183,6 +212,11 @@ export class SCWSigner implements Signer {
     const availableChains = response.data?.chains;
     if (availableChains) {
       this.stateManager.updateAvailableChains(availableChains);
+    }
+
+    const walletCapabilities = response.data?.capabilities;
+    if (walletCapabilities) {
+      this.stateManager.updateWalletCapabilities(walletCapabilities);
     }
 
     const result = response.result;
