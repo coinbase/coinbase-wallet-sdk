@@ -35,6 +35,10 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     return this.chain.id;
   }
 
+  public get isCoinbaseWallet() {
+    return true;
+  }
+
   constructor(options: Readonly<ConstructorOptions>) {
     super();
 
