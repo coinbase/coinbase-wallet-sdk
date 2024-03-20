@@ -31,10 +31,6 @@ export class SignRequestHandler implements RequestHandler {
     });
   }
 
-  async onDisconnect() {
-    await this.signerConfigurator.onDisconnect();
-  }
-
   async handleRequest(request: RequestArguments, accounts: AddressString[]) {
     try {
       if (request.method === 'eth_requestAccounts') {
@@ -56,7 +52,7 @@ export class SignRequestHandler implements RequestHandler {
     }
   }
 
-  async eth_requestAccounts(accounts: AddressString[]): Promise<AddressString[]> {
+  private async eth_requestAccounts(accounts: AddressString[]): Promise<AddressString[]> {
     if (accounts.length > 0) {
       this.updateListener.onConnect();
       return Promise.resolve(accounts);
@@ -112,5 +108,9 @@ export class SignRequestHandler implements RequestHandler {
     ];
 
     return methodsThatRequireSigning.includes(request.method);
+  }
+
+  async onDisconnect() {
+    await this.signerConfigurator.onDisconnect();
   }
 }
