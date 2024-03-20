@@ -62,10 +62,10 @@ export class SignRequestHandler implements RequestHandler {
       return Promise.resolve(accounts);
     }
 
-    if (!this.signerConfigurator.connectionType) {
+    if (!this.signerConfigurator.signerType) {
       // WL: this promise hangs until the QR code is scanned
       // SCW: this promise hangs until the user signs in with passkey
-      await this.signerConfigurator.completeConnectionTypeSelection();
+      await this.signerConfigurator.completeSignerTypeSelection();
     }
 
     try {
@@ -75,7 +75,7 @@ export class SignRequestHandler implements RequestHandler {
 
       const ethAddresses = await this.signerConfigurator.signer?.handshake();
       if (Array.isArray(ethAddresses)) {
-        if (this.signerConfigurator.connectionType === 'walletlink') {
+        if (this.signerConfigurator.signerType === 'walletlink') {
           this.popupCommunicator.walletLinkQrScanned();
         }
         this.updateListener.onConnect();
@@ -84,7 +84,7 @@ export class SignRequestHandler implements RequestHandler {
 
       return Promise.reject(standardErrors.rpc.internal('Failed to get accounts'));
     } catch (err) {
-      if (this.signerConfigurator.connectionType === 'walletlink') {
+      if (this.signerConfigurator.signerType === 'walletlink') {
         this.popupCommunicator.disconnect();
         await this.onDisconnect();
       }

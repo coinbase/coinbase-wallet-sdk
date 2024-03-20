@@ -27,18 +27,18 @@ export class SignerConfigurator {
   private updateListener: SignRequestHandlerListener;
 
   private signerTypeStorage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
-  private connectionTypeSelectionResolver: ((signerType: string) => void) | undefined;
+  private signerTypeSelectionResolver: ((signerType: string) => void) | undefined;
 
-  connectionType: string | null;
+  signerType: string | null;
   signer: Signer | undefined;
 
   constructor(options: Readonly<SignerConfiguratorOptions>) {
     this.popupCommunicator = options.popupCommunicator;
     this.updateListener = options.updateListener;
 
-    const persistedConnectionType = this.signerTypeStorage.getItem(SIGNER_TYPE_KEY);
-    this.connectionType = persistedConnectionType;
-    if (persistedConnectionType) {
+    const persistedSignerType = this.signerTypeStorage.getItem(SIGNER_TYPE_KEY);
+    this.signerType = persistedSignerType;
+    if (persistedSignerType) {
       this.initSigner();
     }
 
@@ -53,7 +53,7 @@ export class SignerConfigurator {
     this.getWalletLinkUrl = this.getWalletLinkUrl.bind(this);
     this.popupCommunicator.setWLQRCodeUrlCallback(this.getWalletLinkUrl);
 
-    this.setConnectionType = this.setConnectionType.bind(this);
+    this.setSignerType = this.setSignerType.bind(this);
     this.initWalletLinkSigner = this.initWalletLinkSigner.bind(this);
   }
 
@@ -65,16 +65,16 @@ export class SignerConfigurator {
     onChainUpdate: (signer, ...rest) => {
       if (this.signer && signer !== this.signer) return; // ignore events from inactive signers
       if (signer instanceof WLSigner) {
-        this.connectionTypeSelectionResolver?.('walletlink');
+        this.signerTypeSelectionResolver?.('walletlink');
       }
       this.updateListener.onChainUpdate(...rest);
     },
   };
 
   initSigner = () => {
-    if (this.connectionType === 'scw') {
+    if (this.signerType === 'scw') {
       this.initScwSigner();
-    } else if (this.connectionType === 'walletlink') {
+    } else if (this.signerType === 'walletlink') {
       this.initWalletLinkSigner();
     }
   };
@@ -102,7 +102,7 @@ export class SignerConfigurator {
   }
 
   async onDisconnect() {
-    this.connectionType = null;
+    this.signerType = null;
     this.signerTypeStorage.removeItem(SIGNER_TYPE_KEY);
     await this.signer?.disconnect();
     this.signer = undefined;
@@ -118,29 +118,29 @@ export class SignerConfigurator {
     return this.signer.getQRCodeUrl();
   }
 
-  async completeConnectionTypeSelection() {
+  async completeSignerTypeSelection() {
     await this.popupCommunicator.connect();
 
     return new Promise((resolve) => {
-      this.connectionTypeSelectionResolver = (signerType: string) => {
-        this.setConnectionType(signerType);
+      this.signerTypeSelectionResolver = (signerType: string) => {
+        this.setSignerType(signerType);
         resolve(signerType);
       };
 
       this.popupCommunicator
-        .selectConnectionType({
+        .selectSignerType({
           smartWalletOnly: this.smartWalletOnly,
         })
-        .then((connectionType) => {
-          this.connectionTypeSelectionResolver?.(connectionType);
+        .then((signerType) => {
+          this.signerTypeSelectionResolver?.(signerType);
         });
     });
   }
 
   // storage methods
-  private setConnectionType(connectionType: string) {
-    if (this.connectionType === connectionType) return;
-    this.connectionType = connectionType;
-    this.signerTypeStorage.setItem(SIGNER_TYPE_KEY, this.connectionType);
+  private setSignerType(signerType: string) {
+    if (this.signerType === signerType) return;
+    this.signerType = signerType;
+    this.signerTypeStorage.setItem(SIGNER_TYPE_KEY, this.signerType);
   }
 }

@@ -3,9 +3,9 @@ import { UUID } from 'crypto';
 import {
   ClientConfigEventType,
   ConfigMessage,
-  ConnectionType,
   HostConfigEventType,
   isConfigMessage,
+  SignerType,
 } from './ConfigMessage';
 import { CrossDomainCommunicator } from ':core/communicator/CrossDomainCommunicator';
 import { Message } from ':core/communicator/Message';
@@ -85,7 +85,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
 
   // TODO: move to ConnectionConfigurator
   private resolvePopupReady?: () => void;
-  private resolveConnectionType?: (_: ConnectionType) => void;
+  private resolveSignerType?: (_: SignerType) => void;
 
   private handleConfigMessage(message: ConfigMessage) {
     switch (message.event.type) {
@@ -103,8 +103,8 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
         break;
       case HostConfigEventType.ConnectionTypeSelected:
         if (!this._connected) return;
-        this.resolveConnectionType?.(message.event.value as ConnectionType);
-        this.resolveConnectionType = undefined;
+        this.resolveSignerType?.(message.event.value as SignerType);
+        this.resolveSignerType = undefined;
         break;
       case HostConfigEventType.RequestWalletLinkUrl:
         if (!this._connected) return;
@@ -121,7 +121,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     }
   }
 
-  selectConnectionType({ smartWalletOnly }: { smartWalletOnly: boolean }): Promise<ConnectionType> {
+  selectSignerType({ smartWalletOnly }: { smartWalletOnly: boolean }): Promise<SignerType> {
     return new Promise((resolve, reject) => {
       if (!this.peerWindow) {
         reject(
@@ -131,7 +131,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
         );
       }
 
-      this.resolveConnectionType = resolve;
+      this.resolveSignerType = resolve;
       this.postClientConfigMessage(ClientConfigEventType.SelectConnectionType, {
         smartWalletOnly,
       });
