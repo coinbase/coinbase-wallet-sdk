@@ -55,6 +55,8 @@ describe('CoinbaseWalletProvider', () => {
     });
 
     test('throws error when handling invalid request', async () => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error // testing invalid request args
       await expect(provider.request({})).rejects.toThrow();
     });
   });
