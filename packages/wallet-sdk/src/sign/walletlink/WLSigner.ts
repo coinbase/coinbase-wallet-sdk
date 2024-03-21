@@ -1,6 +1,7 @@
 import { Signer, SignerUpdateListener } from '../SignerInterface';
 import { WLRelayAdapter } from './relay/WLRelayAdapter';
 import { WALLETLINK_URL } from ':core/constants';
+import { standardErrors } from ':core/error';
 import { AddressString } from ':core/type';
 import { RequestArguments } from ':core/type/ProviderInterface';
 
@@ -27,6 +28,10 @@ export class WLSigner implements Signer {
   }
 
   async request<T>(requestArgs: RequestArguments): Promise<T> {
+    if (requestArgs.method === 'wallet_getCapabilities') {
+      // TODO: remove this check; pass this request to WLRelayAdapter
+      Promise.reject(standardErrors.rpc.methodNotSupported());
+    }
     return this.adapter.request<T>(requestArgs);
   }
 

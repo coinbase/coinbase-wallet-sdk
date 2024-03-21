@@ -124,7 +124,14 @@ export class SCWSigner implements Signer {
         return switched ? (null as T) : undefined;
       }
       case SupportedEthereumMethods.WalletGetCapacities: {
-        return this.stateManager.walletCapabilities as T;
+        const walletCapabilities = this.stateManager.walletCapabilities;
+        if (!walletCapabilities) {
+          // This should never be the case for scw connections as capabilities are set during handshake
+          throw standardErrors.provider.unauthorized(
+            'No wallet capabilities found, please disconnect and reconnect'
+          );
+        }
+        return walletCapabilities as T;
       }
       default:
         return undefined;
