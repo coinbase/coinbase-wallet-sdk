@@ -104,11 +104,11 @@ describe('CoinbaseWalletSDK', () => {
         expect(coinbaseWalletSDK2.makeWeb3Provider()).toEqual(mockProvider);
       });
 
-      test('@makeWeb3Provider, but with connectionPreference as embedded', () => {
+      test('@makeWeb3Provider, but with smartWalletOnly as true', () => {
         const sdk = new CoinbaseWalletSDK({
           appName: 'Test',
           appLogoUrl: 'http://coinbase.com/wallet-logo.png',
-          connectionPreference: 'embedded',
+          smartWalletOnly: true,
         });
         // Returns extension provider
         const provider = sdk.makeWeb3Provider();
@@ -144,11 +144,11 @@ describe('CoinbaseWalletSDK', () => {
         expect(coinbaseWalletSDK2.makeWeb3Provider()).toEqual(mockCipherProvider);
       });
 
-      test('@makeWeb3Provider, it should ignore embedded connectionPreference', () => {
+      test('@makeWeb3Provider, it should ignore smartWalletOnly true', () => {
         const sdk = new CoinbaseWalletSDK({
           appName: 'Test',
           appLogoUrl: 'http://coinbase.com/wallet-logo.png',
-          connectionPreference: 'embedded',
+          smartWalletOnly: true,
         });
         expect(sdk.makeWeb3Provider()).toEqual(mockCipherProvider);
       });

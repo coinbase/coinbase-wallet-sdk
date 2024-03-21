@@ -17,14 +17,12 @@ import { RPCFetchRequestHandler } from './rpcFetch/RPCFetchRequestHandler';
 import { SignRequestHandler } from './sign/SignRequestHandler';
 import { AccountsUpdate, ChainUpdate } from './sign/UpdateListenerInterface';
 import { SubscriptionRequestHandler } from './subscription/SubscriptionRequestHandler';
-import { ConnectionPreference } from ':core/communicator/ConnectionPreference';
 
 interface ConstructorOptions {
-  scwUrl?: string;
   appName: string;
   appLogoUrl?: string | null;
   appChainIds: number[];
-  connectionPreference: ConnectionPreference;
+  smartWalletOnly: boolean;
 }
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
@@ -35,6 +33,10 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   public get chainId() {
     return this.chain.id;
+  }
+
+  public get isCoinbaseWallet() {
+    return true;
   }
 
   constructor(options: Readonly<ConstructorOptions>) {

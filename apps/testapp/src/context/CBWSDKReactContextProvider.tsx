@@ -1,5 +1,4 @@
 import CoinbaseWalletSDK from '@coinbase/wallet-sdk';
-import { ConnectionPreference } from '@coinbase/wallet-sdk/dist/core/communicator/ConnectionPreference';
 import React, { useEffect, useMemo } from 'react';
 
 type CBWSDKProviderProps = {
@@ -7,32 +6,24 @@ type CBWSDKProviderProps = {
 };
 
 const CBWSDKReactContext = React.createContext(null);
-const PREFERRED_CONNECTION_KEY = 'preferred_connection';
+const SMART_WALLET_ONLY_KEY = 'smart_wallet_only';
 
 export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
-  const [connectionPreference, setConnectionPreference] = React.useState<
-    ConnectionPreference | undefined
-  >(undefined);
+  const [smartWalletOnly, setSmartWalletOnly] = React.useState<boolean | undefined>(undefined);
   const [sdk, setSdk] = React.useState(null);
   const [provider, setProvider] = React.useState(null);
 
   useEffect(() => {
-    if (connectionPreference === undefined) {
-      const savedPreference = localStorage.getItem(
-        PREFERRED_CONNECTION_KEY
-      ) as ConnectionPreference;
-      setConnectionPreference(
-        ['default', 'embedded'].includes(savedPreference)
-          ? savedPreference
-          : ('default' as ConnectionPreference)
-      );
+    if (smartWalletOnly === undefined) {
+      const smartWalletOnly = localStorage.getItem(SMART_WALLET_ONLY_KEY);
+      setSmartWalletOnly(smartWalletOnly === 'true' ? true : false);
     }
-  }, [connectionPreference]);
+  }, [smartWalletOnly]);
 
   useEffect(() => {
     const cbwsdk = new CoinbaseWalletSDK({
       appName: 'SDK Playground',
-      connectionPreference: connectionPreference ?? 'default',
+      smartWalletOnly,
     });
     setSdk(cbwsdk);
     const cbwprovider = cbwsdk.makeWeb3Provider();
@@ -40,18 +31,18 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
     cbwprovider.on('disconnect', () => {
       location.reload();
     });
-  }, [connectionPreference]);
+  }, [smartWalletOnly]);
 
-  const setPreference = (connectionPreference: ConnectionPreference) => {
-    localStorage.setItem(PREFERRED_CONNECTION_KEY, connectionPreference);
-    setConnectionPreference(connectionPreference);
+  const setPreference = (smartWalletOnly: boolean) => {
+    localStorage.setItem(SMART_WALLET_ONLY_KEY, smartWalletOnly.toString());
+    setSmartWalletOnly(smartWalletOnly);
   };
 
   const ctx = useMemo(
     () => ({
       sdk,
       provider,
-      connectionPreference,
+      smartWalletOnly,
       setPreference,
     }),
     [sdk, provider]
