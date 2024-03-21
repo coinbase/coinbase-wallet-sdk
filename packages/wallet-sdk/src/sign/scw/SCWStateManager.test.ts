@@ -11,7 +11,6 @@ describe('SCWStateManager', () => {
 
   beforeEach(() => {
     stateManager = new SCWStateManager({
-      appChainIds: [DEFAULT_CHAIN.id],
       updateListener: {
         onAccountsUpdate: jest.fn(),
         onChainUpdate: jest.fn(),
@@ -23,13 +22,10 @@ describe('SCWStateManager', () => {
     stateManager.clear();
   });
 
-  describe('fallback to appChainIds[0]', () => {
-    const appChainIds = [10];
-
+  describe('fallback to mainnet', () => {
     let stateManager: SCWStateManager;
     beforeEach(() => {
       stateManager = new SCWStateManager({
-        appChainIds,
         updateListener: {
           onAccountsUpdate: jest.fn(),
           onChainUpdate: jest.fn(),
@@ -37,12 +33,11 @@ describe('SCWStateManager', () => {
       });
     });
     it('should use the first chain id from appChainIds as the active chain', () => {
-      expect(stateManager.activeChain.id).toBe(appChainIds[0]);
+      expect(stateManager.activeChain.id).toBe(1);
     });
 
     it('should use the first chain id from appChainIds as the active chain when appChainIds is empty', () => {
       stateManager = new SCWStateManager({
-        appChainIds: [],
         updateListener: {
           onAccountsUpdate: jest.fn(),
           onChainUpdate: jest.fn(),
@@ -94,7 +89,6 @@ describe('SCWStateManager', () => {
 
     beforeEach(() => {
       stateManager = new SCWStateManager({
-        appChainIds: [1],
         updateListener: {
           onAccountsUpdate: jest.fn(),
           onChainUpdate: chainUpdatedListener,
