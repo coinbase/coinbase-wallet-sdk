@@ -150,7 +150,7 @@ export class SCWSigner implements Signer {
           method: 'POST',
           body: JSON.stringify(requestBody),
           mode: 'cors',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-Cbw-Sdk-Version': LIB_VERSION },
         });
         const response = await res.json();
         return response as T;
