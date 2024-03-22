@@ -13,7 +13,7 @@ export enum SupportedEthereumMethods {
   // Wallet
   WalletSwitchEthereumChain = 'wallet_switchEthereumChain',
   WalletAddEthereumChain = 'wallet_addEthereumChain',
-  WalletGetCapacities = 'wallet_getCapabilities',
+  WalletGetCapabilities = 'wallet_getCapabilities',
   WalletSendTransaction = 'wallet_sendTransaction',
   WalletGetTransactionStatus = 'wallet_getTransactionStatus',
   WalletShowTransactionStatus = 'wallet_showTransactionStatus',
@@ -131,9 +131,11 @@ export type AddEthereumChainAction = {
   };
 };
 
-export type GetCapacitiesAction = {
-  method: SupportedEthereumMethods.WalletGetCapacities;
-  params: null;
+export type GetCapabilitiesAction = {
+  method: SupportedEthereumMethods.WalletGetCapabilities;
+  params: {
+    chainId: string;
+  };
 };
 
 export type WalletSendTransactionAction = {
@@ -141,11 +143,12 @@ export type WalletSendTransactionAction = {
   params: {
     chainId: number;
     sender: string;
+    version: string;
+    gas?: string;
     calls: {
       target: string;
       value: string;
       data: string;
-      gas: string;
     }[];
     capabilities: object;
   };
@@ -173,7 +176,7 @@ export type AllAction =
   | SendRawTransactionAction
   | SwitchEthereumChainAction
   | AddEthereumChainAction
-  | GetCapacitiesAction
+  | GetCapabilitiesAction
   | WalletSendTransactionAction
   | ShowTransactionStatusAction
   | GetTransactionStatusAction;

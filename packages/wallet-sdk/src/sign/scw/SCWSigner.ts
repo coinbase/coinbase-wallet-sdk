@@ -123,7 +123,7 @@ export class SCWSigner implements Signer {
         // https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
         return switched ? (null as T) : undefined;
       }
-      case SupportedEthereumMethods.WalletGetCapacities: {
+      case SupportedEthereumMethods.WalletGetCapabilities: {
         const walletCapabilities = this.stateManager.walletCapabilities;
         if (!walletCapabilities) {
           // This should never be the case for scw connections as capabilities are set during handshake
