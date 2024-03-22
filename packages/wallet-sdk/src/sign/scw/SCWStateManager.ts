@@ -12,7 +12,7 @@ export class SCWStateManager {
   private updateListener: StateUpdateListener;
 
   private availableChains?: Chain[];
-  private _walletCapabilities?: object;
+  private _walletCapabilities?: Record<string, object>;
   private _accounts: AddressString[];
   private _activeChain: Chain;
   get accounts() {
@@ -83,7 +83,7 @@ export class SCWStateManager {
     this.switchChain(this._activeChain.id);
   }
 
-  updateWalletCapabilities(capabilities: object) {
+  updateWalletCapabilities(capabilities: Record<string, object>) {
     this._walletCapabilities = capabilities;
     this.storeItemToStorage(WALLET_CAPABILITIES_STORAGE_KEY, capabilities);
   }

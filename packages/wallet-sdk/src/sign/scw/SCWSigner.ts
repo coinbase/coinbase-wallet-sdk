@@ -7,7 +7,12 @@ import {
   importKeyFromHexString,
 } from './message/SCWCipher';
 import { SCWRequestMessage, SCWResponseMessage } from './message/SCWMessage';
-import { Action, SupportedEthereumMethods, SwitchEthereumChainAction } from './message/type/Action';
+import {
+  Action,
+  GetCapabilitiesAction,
+  SupportedEthereumMethods,
+  SwitchEthereumChainAction,
+} from './message/type/Action';
 import { SCWResponse } from './message/type/Response';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWStateManager } from './SCWStateManager';
@@ -124,7 +129,8 @@ export class SCWSigner implements Signer {
         return switched ? (null as T) : undefined;
       }
       case SupportedEthereumMethods.WalletGetCapabilities: {
-        const walletCapabilities = this.stateManager.walletCapabilities;
+        const params = request.params as GetCapabilitiesAction['params'];
+        const walletCapabilities = this.stateManager.walletCapabilities?.[params.chainId];
         if (!walletCapabilities) {
           // This should never be the case for scw connections as capabilities are set during handshake
           throw standardErrors.provider.unauthorized(
