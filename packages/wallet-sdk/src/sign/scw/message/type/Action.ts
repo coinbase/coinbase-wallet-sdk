@@ -16,7 +16,6 @@ export enum SupportedEthereumMethods {
   WalletGetCapabilities = 'wallet_getCapabilities',
   WalletSendTransaction = 'wallet_sendTransaction',
   WalletGetTransactionStatus = 'wallet_getTransactionStatus',
-  WalletShowTransactionStatus = 'wallet_showTransactionStatus',
 }
 
 export type RequestAccountsAction = {
@@ -154,11 +153,6 @@ export type WalletSendTransactionAction = {
   };
 };
 
-export type ShowTransactionStatusAction = {
-  method: SupportedEthereumMethods.WalletShowTransactionStatus;
-  params: [string];
-};
-
 export type GetTransactionStatusAction = {
   method: SupportedEthereumMethods.WalletGetTransactionStatus;
   params: [string];
@@ -178,7 +172,6 @@ export type AllAction =
   | AddEthereumChainAction
   | GetCapabilitiesAction
   | WalletSendTransactionAction
-  | ShowTransactionStatusAction
   | GetTransactionStatusAction;
 
 export type Action = {

@@ -34,15 +34,8 @@ const walletGetTransactionStatus: RpcRequestInput = {
   format: (data: Record<string, string>) => [data.params],
 };
 
-const walletShowTransactionStatus: RpcRequestInput = {
-  method: 'wallet_showTransactionStatus',
-  params: [{ key: 'params', required: true }],
-  format: (data: Record<string, string>) => [data.params],
-};
-
 export const walletTxMethods = [
   walletGetCapabilities,
   walletGetTransactionStatus,
-  walletShowTransactionStatus,
   walletSendTransaction,
 ];
