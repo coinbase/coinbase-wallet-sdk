@@ -108,7 +108,6 @@ export class SignRequestHandler implements RequestHandler {
       'wallet_getCapabilities',
       'wallet_sendTransaction',
       'wallet_getTransactionStatus',
-      'wallet_showTransactionStatus',
     ];
 
     return methodsThatRequireSigning.includes(request.method);
