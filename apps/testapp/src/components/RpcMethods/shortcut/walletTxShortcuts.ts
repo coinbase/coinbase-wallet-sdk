@@ -8,6 +8,7 @@ const walletSendTransactionShortcuts: ShortcutType[] = [
       chainId: '84532',
       sender: ADDR_TO_FILL,
       calls: [],
+      version: '1',
       capabilities: {
         paymaster: {
           url: 'https://paymaster.base.org',

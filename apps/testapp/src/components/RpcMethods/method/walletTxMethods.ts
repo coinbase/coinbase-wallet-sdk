@@ -12,13 +12,17 @@ const walletSendTransaction: RpcRequestInput = {
     { key: 'chainId', required: true },
     { key: 'sender', required: true },
     { key: 'calls', required: true },
-    { key: 'capabilities', required: true },
+    { key: 'version', required: true },
+    { key: 'gas', required: false },
+    { key: 'capabilities', required: false },
   ],
   format: (data: Record<string, string>) => [
     {
       chainId: data.chainId,
       sender: data.sender,
       calls: data.calls,
+      version: data.version,
+      gas: data.gas,
       capabilities: parseMessage(data.capabilities),
     },
   ],
