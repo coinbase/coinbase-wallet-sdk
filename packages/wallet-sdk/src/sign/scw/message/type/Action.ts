@@ -132,9 +132,6 @@ export type AddEthereumChainAction = {
 
 export type GetCapabilitiesAction = {
   method: SupportedEthereumMethods.WalletGetCapabilities;
-  params: {
-    chainId: string;
-  };
 };
 
 export type WalletSendTransactionAction = {
