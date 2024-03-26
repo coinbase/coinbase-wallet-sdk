@@ -4,7 +4,7 @@ type messageType = TypedDataV1 | TypedMessage<MessageTypes>;
 
 export type ShortcutType = {
   key: string;
-  data: Record<string, string | messageType>;
+  data: Record<string, string | messageType | object>;
 };
 
 export const parseMessage = (message: string | messageType) => {
