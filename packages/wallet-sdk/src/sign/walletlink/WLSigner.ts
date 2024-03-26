@@ -27,9 +27,17 @@ export class WLSigner implements Signer {
     return await this.request<AddressString[]>({ method: 'eth_requestAccounts' });
   }
 
+  // TODO: add WL support for new RPC methods
+  private isUnsupportedByWL(methodName: string) {
+    return [
+      'wallet_getCapabilities',
+      'wallet_sendTransaction',
+      'wallet_getTransactionStatus',
+    ].includes(methodName);
+  }
+
   async request<T>(requestArgs: RequestArguments): Promise<T> {
-    if (requestArgs.method === 'wallet_getCapabilities') {
-      // TODO: remove this check; pass this request to WLRelayAdapter
+    if (this.isUnsupportedByWL(requestArgs.method)) {
       Promise.reject(standardErrors.rpc.methodNotSupported());
     }
     return this.adapter.request<T>(requestArgs);
