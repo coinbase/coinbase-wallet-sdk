@@ -14,7 +14,7 @@ export interface CoinbaseWalletSDKOptions {
   /** @optional Application logo image URL; favicon is used if unspecified */
   appLogoUrl?: string;
   /** @optional Array of chainIds your dapp supports */
-  chainIds?: string[];
+  chainIds?: number[];
   /** @optional Pre-select the wallet connection method */
   smartWalletOnly?: boolean;
 }
