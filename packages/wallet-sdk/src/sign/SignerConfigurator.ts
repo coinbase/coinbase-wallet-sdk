@@ -36,16 +36,16 @@ export class SignerConfigurator {
     this.popupCommunicator = options.popupCommunicator;
     this.updateListener = options.updateListener;
 
+    this.appName = options.appName;
+    this.appLogoUrl = options.appLogoUrl ?? null;
+    this.appChainIds = options.appChainIds;
+    this.smartWalletOnly = options.smartWalletOnly;
+
     const persistedSignerType = this.signerTypeStorage.getItem(SIGNER_TYPE_KEY);
     this.signerType = persistedSignerType;
     if (persistedSignerType) {
       this.initSigner();
     }
-
-    this.appName = options.appName;
-    this.appLogoUrl = options.appLogoUrl ?? null;
-    this.appChainIds = options.appChainIds;
-    this.smartWalletOnly = options.smartWalletOnly;
 
     // getWalletLinkQRCodeUrl is called by the PopUpCommunicator when
     // it receives message.type === 'wlQRCodeUrl' from the cb-wallet-scw popup
