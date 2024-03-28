@@ -9,20 +9,33 @@ type CBWSDKProviderProps = {
 
 const CBWSDKReactContext = React.createContext(null);
 const SMART_WALLET_ONLY_KEY = 'smart_wallet_only';
+
 const SELECTED_SDK_KEY = 'selected_sdk_version';
 export const sdkVersions = ['4.0', '3.9', '3.7'] as const;
 export type SDKVersionType = (typeof sdkVersions)[number];
+
+const SELECTED_SCW_URL_KEY = 'scw_url';
+export const scwUrls = [
+  'https://keys.coinbase.com/connect',
+  'https://scw-dev.cbhq.net/connect',
+  'https://scw-staging.cbhq.net/connect',
+  'http://localhost:3005/connect',
+] as const;
+export type ScwUrlType = (typeof scwUrls)[number];
 
 export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
   const [version, setVersion] = React.useState<SDKVersionType | undefined>(undefined);
   const [smartWalletOnly, setSmartWalletOnly] = React.useState<boolean | undefined>(undefined);
   const [sdk, setSdk] = React.useState(null);
   const [provider, setProvider] = React.useState(null);
+  const [scwUrl, setScwUrl] = React.useState<ScwUrlType | undefined>(undefined);
 
   useEffect(() => {
     if (version === undefined) {
       const savedVersion = localStorage.getItem(SELECTED_SDK_KEY) as SDKVersionType;
-      setVersion(sdkVersions.includes(savedVersion) ? (savedVersion as SDKVersionType) : '4.0');
+      setVersion(
+        sdkVersions.includes(savedVersion) ? (savedVersion as SDKVersionType) : sdkVersions[0]
+      );
     }
   }, [version]);
 
@@ -32,6 +45,13 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
       setSmartWalletOnly(smartWalletOnly === 'true' ? true : false);
     }
   }, [smartWalletOnly]);
+
+  useEffect(() => {
+    if (scwUrl === undefined) {
+      const savedScwUrl = localStorage.getItem(SELECTED_SCW_URL_KEY) as ScwUrlType;
+      setScwUrl(scwUrls.includes(savedScwUrl) ? (savedScwUrl as ScwUrlType) : scwUrls[0]);
+    }
+  }, [scwUrl]);
 
   useEffect(() => {
     let cbwsdk;
@@ -59,6 +79,12 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
     setProvider(cbwprovider);
   }, [version, smartWalletOnly]);
 
+  useEffect(() => {
+    if (version === '4.0' && scwUrl) {
+      (window.ethereum as any).handlers[1].popupCommunicator.url = new URL(scwUrl);
+    }
+  }, [version, scwUrl, sdk]);
+
   const setPreference = (smartWalletOnly: boolean) => {
     localStorage.setItem(SMART_WALLET_ONLY_KEY, smartWalletOnly.toString());
     setSmartWalletOnly(smartWalletOnly);
@@ -69,6 +95,11 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
     setVersion(version);
   };
 
+  const setScwUrlAndSave = (url: ScwUrlType) => {
+    localStorage.setItem(SELECTED_SCW_URL_KEY, url);
+    setScwUrl(url);
+  };
+
   const ctx = useMemo(
     () => ({
       sdk,
@@ -77,8 +108,19 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
       setPreference,
       sdkVersion: version,
       setSDKVersion,
+      scwUrl,
+      setScwUrlAndSave,
     }),
-    [sdk, provider]
+    [
+      sdk,
+      provider,
+      smartWalletOnly,
+      setPreference,
+      version,
+      setSDKVersion,
+      scwUrl,
+      setScwUrlAndSave,
+    ]
   );
 
   return <CBWSDKReactContext.Provider value={ctx}>{children}</CBWSDKReactContext.Provider>;

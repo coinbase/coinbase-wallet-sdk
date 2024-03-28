@@ -19,7 +19,7 @@ import {
 } from '@chakra-ui/react';
 import { useMemo } from 'react';
 
-import { sdkVersions, useCBWSDK } from '../context/CBWSDKReactContextProvider';
+import { scwUrls, sdkVersions, useCBWSDK } from '../context/CBWSDKReactContextProvider';
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -28,9 +28,18 @@ type LayoutProps = {
 export const WIDTH_2XL = '1536px';
 
 export function Layout({ children }: LayoutProps) {
-  const { provider, smartWalletOnly, setPreference, sdkVersion, setSDKVersion } = useCBWSDK();
+  const {
+    provider,
+    smartWalletOnly,
+    setPreference,
+    sdkVersion,
+    setSDKVersion,
+    scwUrl,
+    setScwUrlAndSave,
+  } = useCBWSDK();
+
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const isMobile = useBreakpointValue({ base: true, md: false });
+  const isSmallScreen = useBreakpointValue({ base: true, xl: false });
 
   const handleClockDocs = () => {
     window.open('https://docs.cloud.coinbase.com/wallet-sdk/docs/welcome', '_blank');
@@ -64,27 +73,46 @@ export function Layout({ children }: LayoutProps) {
           </MenuList>
         </Menu>
         {sdkVersion === '4.0' && (
-          <Menu>
-            <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
-              {`smartWalletOnly: ${smartWalletOnly}`}
-            </MenuButton>
-            <MenuList>
-              {[true, false].map((b) => (
-                <MenuItem
-                  color={'MenuText'}
-                  key={b.toString()}
-                  icon={b === smartWalletOnly ? <CheckIcon /> : null}
-                  onClick={() => setPreference(b)}
-                >
-                  {b.toString()}
-                </MenuItem>
-              ))}
-            </MenuList>
-          </Menu>
+          <>
+            <Menu>
+              <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
+                {`smartWalletOnly: ${smartWalletOnly}`}
+              </MenuButton>
+              <MenuList>
+                {[true, false].map((b) => (
+                  <MenuItem
+                    color={'MenuText'}
+                    key={b.toString()}
+                    icon={b === smartWalletOnly ? <CheckIcon /> : null}
+                    onClick={() => setPreference(b)}
+                  >
+                    {b.toString()}
+                  </MenuItem>
+                ))}
+              </MenuList>
+            </Menu>
+            <Menu>
+              <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
+                {`SW URL: ${scwUrl}`}
+              </MenuButton>
+              <MenuList>
+                {scwUrls.map((url) => (
+                  <MenuItem
+                    color={'MenuText'}
+                    key={url}
+                    icon={url === scwUrl ? <CheckIcon /> : null}
+                    onClick={() => setScwUrlAndSave(url)}
+                  >
+                    {url.toString()}
+                  </MenuItem>
+                ))}
+              </MenuList>
+            </Menu>
+          </>
         )}
       </>
     );
-  }, [sdkVersion, smartWalletOnly, setPreference, setSDKVersion]);
+  }, [sdkVersion, smartWalletOnly, setPreference, setSDKVersion, scwUrl, setScwUrlAndSave]);
 
   return (
     <Box minH="100vh" bg="blackAlpha.100">
@@ -93,7 +121,7 @@ export function Layout({ children }: LayoutProps) {
           <Flex justifyContent="space-between" alignItems="center">
             <Heading>Coinbase Wallet SDK</Heading>
             <Flex justifyContent="space-between" alignItems="center" gap={4}>
-              {isMobile ? (
+              {isSmallScreen ? (
                 <Button colorScheme="telegram" onClick={onOpen}>
                   Config
                 </Button>
@@ -109,13 +137,19 @@ export function Layout({ children }: LayoutProps) {
           </Flex>
         </Container>
       </Box>
-      {isMobile && (
+      {isSmallScreen && (
         <Drawer placement="top" onClose={onClose} isOpen={isOpen}>
           <DrawerOverlay />
           <DrawerContent>
-            <DrawerHeader borderBottomWidth="1px">Basic Drawer</DrawerHeader>
+            <DrawerHeader borderBottomWidth="1px">Config</DrawerHeader>
             <DrawerBody>
-              <Flex justifyContent="flex-start" alignItems="center" gap={4} paddingY={2}>
+              <Flex
+                direction="column"
+                justifyContent="flex-start"
+                alignItems="flex-start"
+                gap={4}
+                paddingY={2}
+              >
                 {configs}
               </Flex>
             </DrawerBody>
