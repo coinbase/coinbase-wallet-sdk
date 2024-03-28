@@ -23,11 +23,9 @@ export default function Home() {
   const { provider } = useCBWSDK();
   const [connected, setConnected] = React.useState(Boolean(provider?.connected));
 
-  // const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
   useEffect(() => {
     provider?.on('connect', async () => {
       setConnected(true);
-      provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x14a34' }] });
     });
   }, [provider]);
 

@@ -23,6 +23,7 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
   useEffect(() => {
     const cbwsdk = new CoinbaseWalletSDK({
       appName: 'SDK Playground',
+      chainIds: [84532, 8452],
       smartWalletOnly,
     });
     setSdk(cbwsdk);
