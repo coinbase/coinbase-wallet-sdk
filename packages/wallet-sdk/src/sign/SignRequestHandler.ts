@@ -106,8 +106,8 @@ export class SignRequestHandler implements RequestHandler {
       'wallet_switchEthereumChain',
       'wallet_watchAsset',
       'wallet_getCapabilities',
-      'wallet_sendTransaction',
-      'wallet_getTransactionStatus',
+      'wallet_sendCalls',
+      'wallet_getCallsStatus',
     ];
 
     return methodsThatRequireSigning.includes(request.method);

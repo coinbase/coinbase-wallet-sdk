@@ -6,15 +6,14 @@ const walletGetCapabilities: RpcRequestInput = {
   params: [],
 };
 
-const walletSendTransaction: RpcRequestInput = {
-  method: 'wallet_sendTransaction',
+const walletSendCalls: RpcRequestInput = {
+  method: 'wallet_sendCalls',
   params: [
-    { key: 'chainId', required: true },
-    { key: 'sender', required: true },
-    { key: 'calls', required: true },
     { key: 'version', required: true },
-    { key: 'gas', required: false },
-    { key: 'capabilities', required: false },
+    { key: 'chainId', required: true },
+    { key: 'from', required: true },
+    { key: 'calls', required: true },
+    { key: 'capabilities', required: true },
   ],
   format: (data: Record<string, string>) => [
     {
@@ -22,20 +21,15 @@ const walletSendTransaction: RpcRequestInput = {
       sender: data.sender,
       calls: data.calls,
       version: data.version,
-      gas: data.gas,
       capabilities: parseMessage(data.capabilities),
     },
   ],
 };
 
-const walletGetTransactionStatus: RpcRequestInput = {
-  method: 'wallet_getTransactionStatus',
+const walletGetCallsStatus: RpcRequestInput = {
+  method: 'wallet_getCallsStatus',
   params: [{ key: 'params', required: true }],
   format: (data: Record<string, string>) => [data.params],
 };
 
-export const walletTxMethods = [
-  walletGetCapabilities,
-  walletGetTransactionStatus,
-  walletSendTransaction,
-];
+export const walletTxMethods = [walletGetCapabilities, walletGetCallsStatus, walletSendCalls];
