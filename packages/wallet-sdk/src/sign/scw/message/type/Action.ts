@@ -143,7 +143,7 @@ type WalletSendCallsParams = {
     data: `0x${string}`;
     value: `0x${string}`; // Hex value
   }[];
-  capabilities: Record<string, any>;
+  capabilities: Record<string, unknown>;
 };
 
 export type WalletSendCallsAction = {
