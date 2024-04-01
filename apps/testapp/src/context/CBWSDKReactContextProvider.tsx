@@ -1,4 +1,5 @@
 import { CoinbaseWalletSDK as CoinbaseWalletSDK40 } from '@coinbase/wallet-sdk';
+import { SignRequestHandler } from '@coinbase/wallet-sdk/dist/sign/SignRequestHandler';
 import { CoinbaseWalletSDK as CoinbaseWalletSDK37 } from '@coinbase/wallet-sdk-3.7';
 import { CoinbaseWalletSDK as CoinbaseWalletSDK39 } from '@coinbase/wallet-sdk-3.9';
 import React, { useEffect, useMemo } from 'react';
@@ -20,6 +21,21 @@ export const scwUrls = [
   'http://localhost:3005/connect',
 ] as const;
 export type ScwUrlType = (typeof scwUrls)[number];
+
+declare global {
+  interface Window {
+    setPopupUrl: (url: string) => void;
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.setPopupUrl = (url: string) => {
+    const handler = (window.ethereum as any).handlers.find(
+      (h: any) => h instanceof SignRequestHandler
+    );
+    handler.popupCommunicator.url = new URL(url);
+  };
+}
 
 export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
   const [version, setVersion] = React.useState<SDKVersionType | undefined>(undefined);
@@ -79,7 +95,7 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
 
   useEffect(() => {
     if (version === '4.0' && scwUrl) {
-      (window.ethereum as any).handlers[1].popupCommunicator.url = new URL(scwUrl);
+      window.setPopupUrl?.(scwUrl);
     }
   }, [version, scwUrl, sdk]);
 
