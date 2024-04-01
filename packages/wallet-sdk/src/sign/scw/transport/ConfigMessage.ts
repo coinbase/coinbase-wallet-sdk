@@ -23,7 +23,7 @@ export enum HostConfigEventType {
   PopupUnload = 'popupUnload',
 }
 
-export type SignerType = 'scw' | 'walletlink';
+export type SignerType = 'scw' | 'walletlink' | 'extension';
 
 export function isConfigMessage(msg: Message): msg is ConfigMessage {
   return msg.type === 'config' && 'event' in msg;

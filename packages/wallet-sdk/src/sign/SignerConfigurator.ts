@@ -1,3 +1,4 @@
+import { ExtSigner } from './extension/ExtSigner';
 import { SCWSigner } from './scw/SCWSigner';
 import { PopUpCommunicator } from './scw/transport/PopUpCommunicator';
 import { Signer, SignerUpdateListener } from './SignerInterface';
@@ -76,6 +77,8 @@ export class SignerConfigurator {
       this.initScwSigner();
     } else if (this.signerType === 'walletlink') {
       this.initWalletLinkSigner();
+    } else if (this.signerType === 'extension') {
+      this.initExtensionSigner();
     }
   };
 
@@ -95,6 +98,16 @@ export class SignerConfigurator {
     if (this.signer instanceof WLSigner) return;
 
     this.signer = new WLSigner({
+      appName: this.appName,
+      appLogoUrl: this.appLogoUrl,
+      updateListener: this.updateRelay,
+    });
+  }
+
+  private initExtensionSigner() {
+    if (this.signer instanceof ExtSigner) return;
+
+    this.signer = new ExtSigner({
       appName: this.appName,
       appLogoUrl: this.appLogoUrl,
       updateListener: this.updateRelay,

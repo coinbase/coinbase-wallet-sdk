@@ -44,14 +44,6 @@ export class CoinbaseWalletSDK {
   }
 
   public makeWeb3Provider(): ProviderInterface {
-    if (!this.smartWalletOnly) {
-      const extension = this.walletExtension;
-      if (extension) {
-        extension.setAppInfo?.(this.appName, this.appLogoUrl);
-        return extension;
-      }
-    }
-
     const dappBrowser = this.coinbaseBrowser;
     if (dappBrowser) {
       return dappBrowser;
