@@ -14,8 +14,8 @@ export enum SupportedEthereumMethods {
   WalletSwitchEthereumChain = 'wallet_switchEthereumChain',
   WalletAddEthereumChain = 'wallet_addEthereumChain',
   WalletGetCapabilities = 'wallet_getCapabilities',
-  WalletSendTransaction = 'wallet_sendTransaction',
-  WalletGetTransactionStatus = 'wallet_getTransactionStatus',
+  WalletSendCalls = 'wallet_sendCalls',
+  WalletGetCallsStatus = 'wallet_getCallsStatus',
 }
 
 export type RequestAccountsAction = {
@@ -109,8 +109,8 @@ export type SwitchEthereumChainAction = {
   method: SupportedEthereumMethods.WalletSwitchEthereumChain;
   params: [
     {
-      chainId: string;
-    }
+      chainId: `0x${string}`; // Hex chain id
+    },
   ];
 };
 
@@ -134,24 +134,25 @@ export type GetCapabilitiesAction = {
   method: SupportedEthereumMethods.WalletGetCapabilities;
 };
 
-export type WalletSendTransactionAction = {
-  method: SupportedEthereumMethods.WalletSendTransaction;
-  params: {
-    chainId: string;
-    sender: string;
-    version: string;
-    gas?: string;
-    calls: {
-      target: string;
-      value: string;
-      data: string;
-    }[];
-    capabilities: object;
-  };
+type WalletSendCallsParams = {
+  version: string;
+  chainId: `0x${string}`; // Hex chain id
+  from: `0x${string}`;
+  calls: {
+    to: `0x${string}`;
+    data: `0x${string}`;
+    value: `0x${string}`; // Hex value
+  }[];
+  capabilities: Record<string, unknown>;
 };
 
-export type GetTransactionStatusAction = {
-  method: SupportedEthereumMethods.WalletGetTransactionStatus;
+export type WalletSendCallsAction = {
+  method: SupportedEthereumMethods.WalletSendCalls;
+  params: WalletSendCallsParams;
+};
+
+export type GetCallsStatusAction = {
+  method: SupportedEthereumMethods.WalletGetCallsStatus;
   params: [string];
 };
 
@@ -168,8 +169,8 @@ export type AllAction =
   | SwitchEthereumChainAction
   | AddEthereumChainAction
   | GetCapabilitiesAction
-  | WalletSendTransactionAction
-  | GetTransactionStatusAction;
+  | WalletSendCallsAction
+  | GetCallsStatusAction;
 
 export type Action = {
   method: SupportedEthereumMethods;
