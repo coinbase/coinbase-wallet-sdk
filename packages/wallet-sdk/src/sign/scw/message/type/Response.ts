@@ -5,6 +5,6 @@ export type SCWResponse<T> = {
   data?: {
     // optional data
     chains?: { [key: number]: string };
-    capabilities?: Record<string, object>;
+    capabilities?: Record<`0x${string}`, Record<string, unknown>>;
   };
 };
