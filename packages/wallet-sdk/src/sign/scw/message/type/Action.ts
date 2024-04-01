@@ -110,7 +110,7 @@ export type SwitchEthereumChainAction = {
   params: [
     {
       chainId: `0x${string}`; // Hex chain id
-    }
+    },
   ];
 };
 

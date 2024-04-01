@@ -141,7 +141,7 @@ export class SCWSigner implements Signer {
 
   private async tryBackendHandling<T>(request: RequestArguments): Promise<T | undefined> {
     switch (request.method) {
-      case SupportedEthereumMethods.WalletGetTransactionStatus: {
+      case SupportedEthereumMethods.WalletGetCallsStatus: {
         const requestBody = {
           ...request,
           jsonrpc: '2.0',
