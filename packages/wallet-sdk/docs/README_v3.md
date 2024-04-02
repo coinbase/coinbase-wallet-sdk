@@ -1,6 +1,4 @@
-[![npm](https://img.shields.io/npm/v/@coinbase/wallet-sdk)](https://www.npmjs.com/package/@coinbase/wallet-sdk)
-
-# Coinbase Wallet SDK
+# Coinbase Wallet SDK v3.x.x
 
 - [Playground](https://coinbase.github.io/coinbase-wallet-sdk/)
 - [Developer docs](https://docs.cloud.coinbase.com/wallet-sdk/docs)
