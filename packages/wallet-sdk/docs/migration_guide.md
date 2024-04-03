@@ -1,8 +1,17 @@
 # Coinbase Wallet SDK Migration Guide (v3 to v4)
 
+## `CoinbaseWalletSDK` changes
+
+- `CoinbaseWalletSDK.disconnect()` public instance method is deprecated
+  - still in place but only clears storage and does not reset WalletLink
+  - dapps should call `CoinbaseWalletProvider.disconnect()` instead
+- `CoinbaseWalletSDK.setAppInfo()` public instance method is deprecated for non-extension use cases
+  - Dapps should pass in `appName` and `appLogoUrl` via `CoinbaseWalletSDKOptions` at SDK initialization
+
 ## `CoinbaseWalletSDKOptions` changes
 
 ```
+// v4
 export interface CoinbaseWalletSDKOptions {
   appName: string;
   appLogoUrl?: string;
@@ -11,7 +20,7 @@ export interface CoinbaseWalletSDKOptions {
 }
 ```
 
-### removed:
+### deprecated options from v3:
 
 - `enableMobileWalletLink`
 - `jsonRpcUrl`
@@ -23,7 +32,7 @@ export interface CoinbaseWalletSDKOptions {
 - `reloadOnDisconnect`
 - `headlessMode`
 
-### new:
+### new options included in v4:
 
 - `chainIds?: number[]`
   - An array of chain ids your dapp supports
@@ -34,7 +43,7 @@ export interface CoinbaseWalletSDKOptions {
   - If `true`, hides options to connect via Coinbase Wallet mobile and Coinbase Wallet extension
   - Default value is `false`
 
-### maintained
+### present in both v3 and v4
 
 - `appName: string`
   - Your dapp's name to display in wallet with requests
@@ -44,11 +53,15 @@ export interface CoinbaseWalletSDKOptions {
 
 ## `CoinbaseWalletProvider` changes
 
-### Eventing
+### Eventing fix
 
-- The `connect` event has been fixed to be [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193#connect) compliant in v4. - `on(event: 'connect', listener: (info: ProviderConnectInfo) => void): this;` - v3 returned `chainIdStr` - `interface ProviderConnectInfo {
+- The `connect` event has been fixed to be [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193#connect) compliant in v4.
+  - `on(event: 'connect', listener: (info: ProviderConnectInfo) => void): this;`
+  - v3 returned `chainIdStr` - `interface ProviderConnectInfo {
  readonly chainIdStr: string;
-}` - v4 returns `chainId` - `interface ProviderConnectInfo {
+}`
+- v4 returns `chainId`
+  - `interface ProviderConnectInfo {
  readonly chainId: string;
 }`
 
@@ -65,4 +78,19 @@ export interface CoinbaseWalletSDKOptions {
 - `isWalletLink`
 - `ismetaMask`
 - `host`
-- `
+
+### Removed public methods
+
+- `disableReloadOnDisconnect`
+- `setProviderInfo`
+- `setAppInfo`
+- `close` - still in use for extension connections
+- `send`
+- `sendAsync`
+- `scanQRCode`
+- `genericRequest`
+- `connectAndSignIn`
+- `selectProvider`
+- `supportsSubscriptions`
+- `subscribe`
+- `unsubscribe`
