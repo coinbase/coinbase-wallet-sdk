@@ -28,10 +28,7 @@ const personalSign: RpcRequestInput = {
     { key: 'message', required: true },
     { key: 'address', required: true },
   ],
-  format: (data: Record<string, string>) => [
-    `0x${Buffer.from(data.message, 'utf8').toString('hex')}`,
-    data.address,
-  ],
+  format: (data: Record<string, string>) => [data.message, data.address],
 };
 
 const ethSignTypedDataV1: RpcRequestInput = {
