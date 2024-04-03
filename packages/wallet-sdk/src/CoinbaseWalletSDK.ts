@@ -25,6 +25,8 @@ export class CoinbaseWalletSDK {
   private smartWalletOnly: boolean;
   private chainIds: number[];
 
+  private provider: ProviderInterface | undefined;
+
   /**
    * Constructor
    * @param options Coinbase Wallet SDK constructor options
@@ -49,21 +51,21 @@ export class CoinbaseWalletSDK {
       return dappBrowser;
     }
 
-    return new CoinbaseWalletProvider({
+    this.provider = new CoinbaseWalletProvider({
       appName: this.appName,
       appLogoUrl: this.appLogoUrl,
       appChainIds: this.chainIds,
       smartWalletOnly: this.smartWalletOnly,
     });
+    return this.provider;
   }
 
   public disconnect(): void {
-    const extension = this?.walletExtension;
-    if (extension) {
-      extension.close?.();
-    } else {
-      ScopedLocalStorage.clearAll();
+    const disconnect = this.provider && 'disconnect' in this.provider && this.provider?.disconnect;
+    if (typeof disconnect === 'function') {
+      disconnect();
     }
+    ScopedLocalStorage.clearAll();
   }
 
   /**
@@ -74,10 +76,6 @@ export class CoinbaseWalletSDK {
    */
   public getCoinbaseWalletLogo(type: LogoType, width = 240): string {
     return walletLogo(type, width);
-  }
-
-  private get walletExtension(): LegacyProviderInterface | undefined {
-    return window.coinbaseWalletExtension;
   }
 
   private get coinbaseBrowser(): LegacyProviderInterface | undefined {

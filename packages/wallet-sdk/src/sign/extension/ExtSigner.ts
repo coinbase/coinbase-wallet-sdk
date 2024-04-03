@@ -49,5 +49,7 @@ export class ExtSigner implements Signer {
     return response;
   }
 
-  async disconnect() {}
+  async disconnect() {
+    this.adapter.close?.();
+  }
 }
