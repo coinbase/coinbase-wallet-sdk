@@ -12,7 +12,10 @@ export class PopUpConfigurator {
 
   getWalletLinkQRCodeUrlCallback?: () => string;
   resolvePopupConnection?: () => void;
-  resolveSignerTypeSelection?: (_: SignerType) => void;
+  signerTypeSelectionFulfillment?: {
+    resolve: (_: SignerType) => void;
+    reject: (_: Error) => void;
+  };
 
   constructor({ communicator }: { communicator: PopUpCommunicator }) {
     this.communicator = communicator;
@@ -33,8 +36,8 @@ export class PopUpConfigurator {
         break;
       case HostConfigEventType.ConnectionTypeSelected:
         if (!this.communicator.connected) return;
-        this.resolveSignerTypeSelection?.(message.event.value as SignerType);
-        this.resolveSignerTypeSelection = undefined;
+        this.signerTypeSelectionFulfillment?.resolve(message.event.value as SignerType);
+        this.signerTypeSelectionFulfillment = undefined;
         break;
       case HostConfigEventType.RequestWalletLinkUrl:
         if (!this.communicator.connected) return;
@@ -67,7 +70,10 @@ export class PopUpConfigurator {
 
   onDisconnect() {
     this.resolvePopupConnection = undefined;
-    this.resolveSignerTypeSelection = undefined;
+    this.signerTypeSelectionFulfillment?.reject(
+      standardErrors.provider.userRejectedRequest('Request rejected')
+    );
+    this.signerTypeSelectionFulfillment = undefined;
   }
 
   private respondToWlQRCodeUrlRequest() {

@@ -98,7 +98,9 @@ export class CoinbaseWalletSDK {
   }
 }
 
-interface LegacyProviderInterface extends ProviderInterface {
+export interface LegacyProviderInterface extends ProviderInterface {
   setAppInfo?(appName: string, appLogoUrl: string | null): void;
   close?(): void;
+  chainId?: string;
+  jsonRpcUrl?: string;
 }

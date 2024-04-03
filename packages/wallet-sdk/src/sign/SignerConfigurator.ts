@@ -1,3 +1,5 @@
+import { LegacyProviderInterface } from 'src/CoinbaseWalletSDK';
+
 import { ExtSigner } from './extension/ExtSigner';
 import { SCWSigner } from './scw/SCWSigner';
 import { PopUpCommunicator } from './scw/transport/PopUpCommunicator';
@@ -44,8 +46,12 @@ export class SignerConfigurator {
 
     const persistedSignerType = this.signerTypeStorage.getItem(SIGNER_TYPE_KEY);
     this.signerType = persistedSignerType;
-    if (persistedSignerType) {
-      this.initSigner();
+    try {
+      if (persistedSignerType) {
+        this.initSigner();
+      }
+    } catch {
+      this.onDisconnect();
     }
 
     // getWalletLinkQRCodeUrl is called by the PopUpCommunicator when
@@ -56,6 +62,10 @@ export class SignerConfigurator {
 
     this.setSignerType = this.setSignerType.bind(this);
     this.initWalletLinkSigner = this.initWalletLinkSigner.bind(this);
+  }
+
+  private get walletExtension(): LegacyProviderInterface | undefined {
+    return window.coinbaseWalletExtension;
   }
 
   private readonly updateRelay: SignerUpdateListener = {
@@ -107,10 +117,15 @@ export class SignerConfigurator {
   private initExtensionSigner() {
     if (this.signer instanceof ExtSigner) return;
 
+    if (!this.walletExtension) {
+      throw standardErrors.rpc.internal('Coinbase Wallet extension not found');
+    }
+
     this.signer = new ExtSigner({
       appName: this.appName,
       appLogoUrl: this.appLogoUrl,
       updateListener: this.updateRelay,
+      adapter: this.walletExtension,
     });
   }
 
@@ -134,7 +149,9 @@ export class SignerConfigurator {
   async completeSignerTypeSelection() {
     await this.popupCommunicator.connect();
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+      // Promise can be resolved on either smart wallet onboarding flow or
+      // WalletLink WLSigner handshake
       this.signerTypeSelectionResolver = (signerType: string) => {
         this.setSignerType(signerType);
         resolve(signerType);
@@ -143,9 +160,13 @@ export class SignerConfigurator {
       this.popupCommunicator
         .selectSignerType({
           smartWalletOnly: this.smartWalletOnly,
+          isExtensionAvailable: !!this.walletExtension,
         })
         .then((signerType) => {
           this.signerTypeSelectionResolver?.(signerType);
+        })
+        .catch((err) => {
+          reject(err);
         });
     });
   }
