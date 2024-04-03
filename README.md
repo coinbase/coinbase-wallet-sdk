@@ -1,6 +1,6 @@
-# Coinbase Wallet SDK v4.x.x
+# Coinbase Wallet SDK v4
 
-### Upgrading from v3? Please see our [migration guide](packages/wallet-sdk/docs/migration_guide.md).
+### Still using v3.x.x? Please see our [migration guide](packages/wallet-sdk/docs/migration_guide.md) to upgrade to v4 and support smart wallets!
 
 Coinbase Wallet SDK lets developers connect their dapps to Coinbase Wallet in the following ways:
 
@@ -25,91 +25,134 @@ Coinbase Wallet SDK lets developers connect their dapps to Coinbase Wallet in th
 
 ### Installing Wallet SDK
 
-Install Coinbase Wallet SDK with yarn or npm.
+Install Coinbase Wallet SDK using yarn or npm.
 
-#### Yarn
-
-1. Check available versions of Wallet SDK.
+1. Check available versions:
 
 ```shell
+# yarn
 yarn info @coinbase/wallet-sdk versions
-```
 
-2. Install a specific version or the latest version.
-
-```shell
-#yarn add @coinbase/wallet-sdk@4.0.0
-yarn add @coinbase/wallet-sdk
-```
-
-3. Check your installed version.
-
-```shell
-yarn list @coinbase/wallet-sdk
-```
-
-#### Npm
-
-1. Check available versions of Wallet SDK.
-
-```shell
+# npm
 npm view @coinbase/wallet-sdk versions
 ```
 
-2. Install a specific version or the latest version.
+2. Install latest version:
 
 ```shell
-#npm install @coinbase/wallet-sdk@4.0.0
+# yarn
+yarn add @coinbase/wallet-sdk
+
+# npm
 npm install @coinbase/wallet-sdk
 ```
 
-3. Check your installed version.
+3. Check installed version:
 
 ```shell
+# yarn
+yarn list @coinbase/wallet-sdk
+
+# npm
 npm list @coinbase/wallet-sdk
 ```
 
 ### Upgrading Wallet SDK
 
-Upgrade Coinbase Wallet SDK with yarn or npm.
+Upgrade Coinbase Wallet SDK using yarn or npm.
 
-#### Yarn
+#### yarn/npm
 
-1. Compare your installed version of Coinbase Wallet SDK with the latest available version.
+1. Compare installed version with latest:
 
 ```shell
+# yarn
 yarn outdated @coinbase/wallet-sdk
-```
 
-2. Update Coinbase Wallet SDK to the latest.
-
-```shell
-yarn upgrade @coinbase/wallet-sdk --latest
-```
-
-#### Npm
-
-1. Compare your installed version of Coinbase Wallet SDK with the latest available version.
-
-```shell
+# npm
 npm outdated @coinbase/wallet-sdk
 ```
 
-2. If necessary, update `package.json` with the latest major version.
+2. Update to latest:
 
 ```shell
-{
-  "dependencies": {
-    "@coinbase/wallet-sdk": "^4.0.0"
-  }
-}
-```
+# yarn
+yarn upgrade @coinbase/wallet-sdk --latest
 
-3. Update Coinbase Wallet SDK to the latest available version.
-
-```shell
+# npm
 npm update @coinbase/wallet-sdk
 ```
+
+### Basic Usage
+
+#### 1. Initialize SDK
+
+```
+const sdk = new CoinbaseWalletSDK40({
+  appName: 'SDK Playground'
+});
+```
+
+#### 2. Make web3 Provider
+
+```
+const provider = sdk.makeWeb3Provider();
+
+```
+
+#### 3. Request accounts to initialize connection to wallet
+
+```
+const addresses = provider.request('eth_requestAccounts')
+```
+
+#### 4. Make more requests
+
+```
+provider.request('personal_sign', ['test message', addresses[0]])
+```
+
+[See more example methods in apps/testapp/src/components/RpcMethods/method](apps/testapp/src/components/RpcMethods/method)
+
+#### 5. Handle provider events
+
+```
+provider.on('connect', (info) => {
+    setConnect(info);
+});
+
+provider.on('disconnect', (error) => {
+    setDisconnect({ code: error.code, message: error.message });
+});
+
+provider.on('accountsChanged', (accounts) => {
+    setAccountsChanged(accounts);
+});
+
+provider.on('chainChanged', (chainId) => {
+    setChainChanged(chainId);
+});
+
+provider.on('message', (message) => {
+    setMessage(message);
+});
+```
+
+### Developing locally and running the test dapp
+
+- The Coinbase Wallet SDK test dapp can be viewed here https://coinbase.github.io/coinbase-wallet-sdk/.
+- To run it locally and begin developing follow these steps:
+
+  1. Fork this repo and clone it
+  1. From the root dir run `yarn install`
+  1. `cd apps/testapp && yarn install` to install testapp dependencies
+  1. From the root dir run `yarn dev`
+
+  - starts two dev servers in parallel:
+    - `@coinbase/wallet-sdk-testapp`
+    - `@coinbase/wallet-sdk`
+
+  1. Visit localhost:3001 in your browser to view the testapp
 
 ## Attributions
 
