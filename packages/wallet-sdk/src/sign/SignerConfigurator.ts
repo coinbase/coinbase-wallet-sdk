@@ -83,12 +83,16 @@ export class SignerConfigurator {
   };
 
   initSigner = () => {
-    if (this.signerType === 'scw') {
-      this.initScwSigner();
-    } else if (this.signerType === 'walletlink') {
-      this.initWalletLinkSigner();
-    } else if (this.signerType === 'extension') {
-      this.initExtensionSigner();
+    switch (this.signerType) {
+      case 'scw':
+        this.initScwSigner();
+        break;
+      case 'walletlink':
+        this.initWalletLinkSigner();
+        break;
+      case 'extension':
+        this.initExtensionSigner();
+        break;
     }
   };
 
