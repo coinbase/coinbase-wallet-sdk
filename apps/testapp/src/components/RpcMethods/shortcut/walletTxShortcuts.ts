@@ -6,7 +6,7 @@ const walletSendCallsShortcuts: ShortcutType[] = [
     key: 'wallet_sendCalls',
     data: {
       chainId: '84532',
-      sender: ADDR_TO_FILL,
+      from: ADDR_TO_FILL,
       calls: [],
       version: '1',
       capabilities: {

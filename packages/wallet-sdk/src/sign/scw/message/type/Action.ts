@@ -15,7 +15,7 @@ export enum SupportedEthereumMethods {
   WalletAddEthereumChain = 'wallet_addEthereumChain',
   WalletGetCapabilities = 'wallet_getCapabilities',
   WalletSendCalls = 'wallet_sendCalls',
-  WalletGetCallsStatus = 'wallet_getCallsStatus',
+  WalletGetCallsReceipt = 'wallet_getCallsReceipt',
 }
 
 export type RequestAccountsAction = {
@@ -151,8 +151,8 @@ export type WalletSendCallsAction = {
   params: WalletSendCallsParams;
 };
 
-export type GetCallsStatusAction = {
-  method: SupportedEthereumMethods.WalletGetCallsStatus;
+export type GetCallsReceiptAction = {
+  method: SupportedEthereumMethods.WalletGetCallsReceipt;
   params: [string];
 };
 
@@ -170,7 +170,7 @@ export type AllAction =
   | AddEthereumChainAction
   | GetCapabilitiesAction
   | WalletSendCallsAction
-  | GetCallsStatusAction;
+  | GetCallsReceiptAction;
 
 export type Action = {
   method: SupportedEthereumMethods;

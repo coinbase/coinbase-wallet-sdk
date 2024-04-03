@@ -18,7 +18,7 @@ const walletSendCalls: RpcRequestInput = {
   format: (data: Record<string, string>) => [
     {
       chainId: data.chainId,
-      sender: data.sender,
+      from: data.from,
       calls: data.calls,
       version: data.version,
       capabilities: parseMessage(data.capabilities),
@@ -26,10 +26,10 @@ const walletSendCalls: RpcRequestInput = {
   ],
 };
 
-const walletGetCallsStatus: RpcRequestInput = {
-  method: 'wallet_getCallsStatus',
+const walletGetCallsReceipt: RpcRequestInput = {
+  method: 'wallet_getCallsReceipt',
   params: [{ key: 'params', required: true }],
   format: (data: Record<string, string>) => [data.params],
 };
 
-export const walletTxMethods = [walletGetCapabilities, walletGetCallsStatus, walletSendCalls];
+export const walletTxMethods = [walletGetCapabilities, walletGetCallsReceipt, walletSendCalls];
