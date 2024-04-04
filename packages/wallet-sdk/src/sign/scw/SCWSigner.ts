@@ -217,7 +217,7 @@ export class SCWSigner implements Signer {
 
     const backEndUrl = response.data?.backEndUrl;
     if (backEndUrl) {
-      this.stateManager.updateBackEndUrl(backEndUrl);
+      this.stateManager.updateBackendUrl(backEndUrl);
     }
 
     const walletCapabilities = response.data?.capabilities;
