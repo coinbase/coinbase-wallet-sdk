@@ -12,7 +12,6 @@ import { SCWResponse } from './message/type/Response';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWStateManager } from './SCWStateManager';
 import { PopUpCommunicator } from './transport/PopUpCommunicator';
-import { CB_KEYS_BACKEND_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
 import { AddressString } from ':core/type';
 import { RequestArguments } from ':core/type/ProviderInterface';
@@ -84,15 +83,10 @@ export class SCWSigner implements Signer {
   }
 
   public async request<T>(request: RequestArguments): Promise<T> {
-    const localResult = this.tryLocalHandling<T>(request);
+    const localResult = await this.tryNonPopupHandling<T>(request);
     if (localResult !== undefined) {
       if (localResult instanceof Error) throw localResult;
       return localResult;
-    }
-
-    const backendResult = await this.tryBackendHandling<T>(request);
-    if (backendResult !== undefined) {
-      return backendResult;
     }
 
     const response = await this.sendEncryptedRequest(request);
@@ -111,7 +105,7 @@ export class SCWSigner implements Signer {
     await this.keyManager.clear();
   }
 
-  private tryLocalHandling<T>(request: RequestArguments): T | undefined {
+  private async tryNonPopupHandling<T>(request: RequestArguments): Promise<T | undefined> {
     switch (request.method) {
       case SupportedEthereumMethods.WalletSwitchEthereumChain: {
         const params = request.params as SwitchEthereumChainAction['params'];
@@ -129,25 +123,24 @@ export class SCWSigner implements Signer {
         if (!walletCapabilities) {
           // This should never be the case for scw connections as capabilities are set during handshake
           throw standardErrors.provider.unauthorized(
-            'No wallet capabilities found, please disconnect and reconnect'
+            'No wallet capabilities found, please reconnect'
           );
         }
         return walletCapabilities as T;
       }
-      default:
-        return undefined;
-    }
-  }
-
-  private async tryBackendHandling<T>(request: RequestArguments): Promise<T | undefined> {
-    switch (request.method) {
       case SupportedEthereumMethods.WalletGetCallsReceipt: {
+        const backendUrl = this.stateManager.backendUrl;
+        if (!backendUrl) {
+          throw standardErrors.provider.unauthorized(
+            'No Smart Wallet backend url found, please reconnect'
+          );
+        }
         const requestBody = {
           ...request,
           jsonrpc: '2.0',
           id: crypto.randomUUID(),
         };
-        const res = await window.fetch(CB_KEYS_BACKEND_URL, {
+        const res = await window.fetch(backendUrl, {
           method: 'POST',
           body: JSON.stringify(requestBody),
           mode: 'cors',
@@ -220,6 +213,11 @@ export class SCWSigner implements Signer {
     const availableChains = response.data?.chains;
     if (availableChains) {
       this.stateManager.updateAvailableChains(availableChains);
+    }
+
+    const backEndUrl = response.data?.backEndUrl;
+    if (backEndUrl) {
+      this.stateManager.updateBackEndUrl(backEndUrl);
     }
 
     const walletCapabilities = response.data?.capabilities;
