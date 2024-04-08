@@ -154,7 +154,7 @@ export class SCWSigner implements Signer {
           headers: { 'Content-Type': 'application/json', 'X-Cbw-Sdk-Version': LIB_VERSION },
         });
         const response = await res.json();
-        return response as T;
+        return response.result as T;
       }
       default:
         return undefined;
