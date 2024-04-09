@@ -432,7 +432,7 @@ export class WalletLinkConnection {
     };
     const res = await this.makeRequest<'OK' | 'Fail'>(m);
     if (res.type === 'Fail') {
-      throw new Error(res.error || 'failed to authentcate');
+      throw new Error(res.error || 'failed to authenticate');
     }
   }
 
