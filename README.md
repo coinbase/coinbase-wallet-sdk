@@ -1,49 +1,162 @@
-[![npm](https://img.shields.io/npm/v/@coinbase/wallet-sdk)](https://www.npmjs.com/package/@coinbase/wallet-sdk)
+# Coinbase Wallet SDK v4
 
-# Coinbase Wallet SDK
+### Still using v3.x.x? Please see our [migration guide](packages/wallet-sdk/docs/migration_guide.md) to upgrade to v4 and support smart wallets!
 
-- [Playground](https://coinbase.github.io/coinbase-wallet-sdk/)
-- [Developer docs](https://docs.cloud.coinbase.com/wallet-sdk/docs)
+Coinbase Wallet SDK lets developers connect their dapps to Coinbase Wallet in the following ways:
 
-Coinbase Wallet SDK (formerly WalletLink) lets developers connect their dapps to Coinbase Wallet
-on both mobile web (for iOS and Android) and desktop:
-
-- **Mobile**: Users can connect to your mobile web dapp through a deeplink to the dapp browser in [Coinbase Wallet Mobile App](https://coinbase-wallet.onelink.me/q5Sx/fdb9b250).
-
-- **Desktop**: Users can connect to your desktop app with a QR code in the [Coinbase Wallet Mobile App](https://coinbase-wallet.onelink.me/q5Sx/fdb9b250) or with the [Coinbase Wallet Chrome Extension](https://coinbase-wallet.onelink.me/q5Sx/fdb9b250).
-
-Wallet SDK is open-source and uses minimal dependencies for maximum security and no code bloat. Simply drop a few lines of code into your dapp and Wallet SDK takes care of the rest.
-
-## Getting started
-
-This repo uses a yarn workspace. To get started, run:
-
-```shell
-yarn install
-
-# To start the development server run the following command. This starts a nextjs app on port 3001. Any changes in the SDK become available through the app.
-yarn dev
-
-# To interact with the SDK directly:
-yarn workspace @coinbase/wallet-sdk "<command>"
-
-# To lint all files
-yarn lint
-
-# To typecheck all files
-yarn typecheck
-```
+1. [Coinbase smart wallet](https://keys.coinbase.com/onboarding)
+   - EIP-4337 account abstraction using passkeys
+     - No passwords or PIN
+     - No seed phrase management
+     - No EOA wallet app
+     - Onboard in seconds
+   - Spend with Coinbase balance
+   - Desktop and mobile compatible
+1. Coinbase Wallet mobile for [Android](https://play.google.com/store/apps/details?id=org.toshi&referrer=utm_source%3DWallet_LP) and [iOS](https://apps.apple.com/app/apple-store/id1278383455?pt=118788940&ct=Wallet_LP&mt=8)
+   - Desktop: Users can connect to your dapp by scanning a QR code
+   - Mobile: Users can connect to your mobile dapp through a deeplink to the dapp browser
+1. Coinbase Wallet extension for [Chrome](https://chrome.google.com/webstore/detail/coinbase-wallet-extension/hnfanknocfeofbddgcijnmhnfnkdnaad?hl=en) and [Brave](https://chromewebstore.google.com/detail/coinbase-wallet-extension/hnfanknocfeofbddgcijnmhnfnkdnaad?hl=en)
+   - Desktop: Users can connect by clicking the connect with extension option.
 
 ## Installing and Upgrading
 
-> The installation package for **Coinbase Wallet SDK** (formerly WalletLink) is now named `@coinbase/wallet-sdk`.
-
-- This [readme](/packages/wallet-sdk/README.md) contains brief instructions to get up and running.
+- This readme contains brief instructions to get up and running.
 - Visit our [public developer docs](https://docs.cloud.coinbase.com/wallet-sdk/docs) for more detail, including samples for integrating Coinbase Wallet using libraries like [web3-react](https://github.com/Uniswap/web3-react), [web3modal](https://github.com/Web3Modal/web3modal), [Web3-Onboard](https://docs.blocknative.com/onboard), and [wagmi](https://wagmi.sh/).
 
-## Libraries using Coinbase Wallet SDK
+### Installing Wallet SDK
 
-- [blocknative/onboard](https://github.com/blocknative/onboard)
-- [wagmi](https://github.com/tmm/wagmi)
-- [web3-react](https://github.com/NoahZinsmeister/web3-react)
-- [web3modal](https://github.com/Web3Modal/web3modal)
+Install Coinbase Wallet SDK using yarn or npm.
+
+1. Check available versions:
+
+```shell
+# yarn
+yarn info @coinbase/wallet-sdk versions
+
+# npm
+npm view @coinbase/wallet-sdk versions
+```
+
+2. Install latest version:
+
+```shell
+# yarn
+yarn add @coinbase/wallet-sdk
+
+# npm
+npm install @coinbase/wallet-sdk
+```
+
+3. Check installed version:
+
+```shell
+# yarn
+yarn list @coinbase/wallet-sdk
+
+# npm
+npm list @coinbase/wallet-sdk
+```
+
+### Upgrading Wallet SDK
+
+Upgrade Coinbase Wallet SDK using yarn or npm.
+
+#### yarn/npm
+
+1. Compare installed version with latest:
+
+```shell
+# yarn
+yarn outdated @coinbase/wallet-sdk
+
+# npm
+npm outdated @coinbase/wallet-sdk
+```
+
+2. Update to latest:
+
+```shell
+# yarn
+yarn upgrade @coinbase/wallet-sdk --latest
+
+# npm
+npm update @coinbase/wallet-sdk
+```
+
+### Basic Usage
+
+#### 1. Initialize SDK
+
+```
+const sdk = new CoinbaseWalletSDK({
+  appName: 'SDK Playground'
+});
+```
+
+#### 2. Make web3 Provider
+
+```
+const provider = sdk.makeWeb3Provider();
+
+```
+
+#### 3. Request accounts to initialize connection to wallet
+
+```
+const addresses = provider.request('eth_requestAccounts')
+```
+
+#### 4. Make more requests
+
+```
+provider.request('personal_sign', [`0x${Buffer.from('test message', 'utf8').toString('hex')}`, addresses[0]])
+```
+
+[See more example methods in apps/testapp/src/components/RpcMethods/method](apps/testapp/src/components/RpcMethods/method)
+
+#### 5. Handle provider events
+
+```
+provider.on('connect', (info) => {
+    setConnect(info);
+});
+
+provider.on('disconnect', (error) => {
+    setDisconnect({ code: error.code, message: error.message });
+});
+
+provider.on('accountsChanged', (accounts) => {
+    setAccountsChanged(accounts);
+});
+
+provider.on('chainChanged', (chainId) => {
+    setChainChanged(chainId);
+});
+
+provider.on('message', (message) => {
+    setMessage(message);
+});
+```
+
+### Developing locally and running the test dapp
+
+- The Coinbase Wallet SDK test dapp can be viewed here https://coinbase.github.io/coinbase-wallet-sdk/.
+- To run it locally and begin developing follow these steps:
+
+  1. Fork this repo and clone it
+  1. From the root dir run `yarn install`
+  1. `cd apps/testapp && yarn install` to install testapp dependencies
+  1. From the root dir run `yarn dev`
+
+  - starts two dev servers in parallel:
+    - `@coinbase/wallet-sdk-testapp`
+    - `@coinbase/wallet-sdk`
+
+  1. Visit localhost:3001 in your browser to view the testapp
+
+## Attributions
+
+- [eth-json-rpc-filters](https://github.com/MetaMask/eth-json-rpc-filters/blob/main/LICENSE) under the ISC license
+- [@metamask/json-rpc-engine](https://github.com/MetaMask/json-rpc-engine/blob/main/LICENSE) under the ISC license
+- [eth-rpc-errors](https://github.com/MetaMask/eth-rpc-errors/blob/main/LICENSE) under the MIT license
+- [eth-block-tracker](https://github.com/MetaMask/eth-block-tracker/blob/master/LICENSE) under the MIT license
