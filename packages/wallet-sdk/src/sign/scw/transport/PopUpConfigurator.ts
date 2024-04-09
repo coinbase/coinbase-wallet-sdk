@@ -1,3 +1,4 @@
+import { LIB_VERSION } from '../../../version';
 import {
   ClientConfigEventType,
   ConfigMessage,
@@ -12,7 +13,10 @@ export class PopUpConfigurator {
 
   getWalletLinkQRCodeUrlCallback?: () => string;
   resolvePopupConnection?: () => void;
-  resolveSignerTypeSelection?: (_: SignerType) => void;
+  signerTypeSelectionFulfillment?: {
+    resolve: (_: SignerType) => void;
+    reject: (_: Error) => void;
+  };
 
   constructor({ communicator }: { communicator: PopUpCommunicator }) {
     this.communicator = communicator;
@@ -23,7 +27,9 @@ export class PopUpConfigurator {
       case HostConfigEventType.PopupListenerAdded:
         // Handshake Step 2: After receiving POPUP_LISTENER_ADDED_MESSAGE from Dapp,
         // Dapp sends DAPP_ORIGIN_MESSAGE to FE to help FE confirm the origin of the Dapp
-        this.postClientConfigMessage(ClientConfigEventType.DappOriginMessage);
+        this.postClientConfigMessage(ClientConfigEventType.DappOriginMessage, {
+          sdkVersion: LIB_VERSION,
+        });
         break;
       case HostConfigEventType.PopupReadyForRequest:
         // Handshake Step 4: After receiving POPUP_READY_MESSAGE from Dapp, FE knows that
@@ -33,8 +39,8 @@ export class PopUpConfigurator {
         break;
       case HostConfigEventType.ConnectionTypeSelected:
         if (!this.communicator.connected) return;
-        this.resolveSignerTypeSelection?.(message.event.value as SignerType);
-        this.resolveSignerTypeSelection = undefined;
+        this.signerTypeSelectionFulfillment?.resolve(message.event.value as SignerType);
+        this.signerTypeSelectionFulfillment = undefined;
         break;
       case HostConfigEventType.RequestWalletLinkUrl:
         if (!this.communicator.connected) return;
@@ -50,7 +56,11 @@ export class PopUpConfigurator {
   }
 
   postClientConfigMessage(type: ClientConfigEventType, options?: any) {
-    if (options && type !== ClientConfigEventType.SelectConnectionType) {
+    if (
+      options &&
+      type !== ClientConfigEventType.SelectConnectionType &&
+      type !== ClientConfigEventType.DappOriginMessage
+    ) {
       throw standardErrors.rpc.internal('ClientConfigEvent does not accept options');
     }
 
@@ -67,7 +77,10 @@ export class PopUpConfigurator {
 
   onDisconnect() {
     this.resolvePopupConnection = undefined;
-    this.resolveSignerTypeSelection = undefined;
+    this.signerTypeSelectionFulfillment?.reject(
+      standardErrors.provider.userRejectedRequest('Request rejected')
+    );
+    this.signerTypeSelectionFulfillment = undefined;
   }
 
   private respondToWlQRCodeUrlRequest() {

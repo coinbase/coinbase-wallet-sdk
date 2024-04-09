@@ -121,7 +121,7 @@ export class SignerConfigurator {
   async completeSignerTypeSelection() {
     await this.popupCommunicator.connect();
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       this.signerTypeSelectionResolver = (signerType: string) => {
         this.setSignerType(signerType);
         resolve(signerType);
@@ -133,6 +133,9 @@ export class SignerConfigurator {
         })
         .then((signerType) => {
           this.signerTypeSelectionResolver?.(signerType);
+        })
+        .catch((err) => {
+          reject(err);
         });
     });
   }
