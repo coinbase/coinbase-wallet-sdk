@@ -69,8 +69,8 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
   }
 
   selectSignerType({ smartWalletOnly }: { smartWalletOnly: boolean }): Promise<SignerType> {
-    return new Promise((resolve) => {
-      this.popUpConfigurator.resolveSignerTypeSelection = resolve;
+    return new Promise((resolve, reject) => {
+      this.popUpConfigurator.signerTypeSelectionFulfillment = { resolve, reject };
       this.popUpConfigurator.postClientConfigMessage(ClientConfigEventType.SelectConnectionType, {
         smartWalletOnly,
       });
