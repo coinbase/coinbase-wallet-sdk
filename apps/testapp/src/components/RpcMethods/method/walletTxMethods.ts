@@ -26,10 +26,10 @@ const walletSendCalls: RpcRequestInput = {
   ],
 };
 
-const walletGetCallsReceipt: RpcRequestInput = {
-  method: 'wallet_getCallsReceipt',
+const walletGetCallsStatus: RpcRequestInput = {
+  method: 'wallet_getCallsStatus',
   params: [{ key: 'params', required: true }],
   format: (data: Record<string, string>) => [data.params],
 };
 
-export const walletTxMethods = [walletGetCapabilities, walletGetCallsReceipt, walletSendCalls];
+export const walletTxMethods = [walletGetCapabilities, walletGetCallsStatus, walletSendCalls];
