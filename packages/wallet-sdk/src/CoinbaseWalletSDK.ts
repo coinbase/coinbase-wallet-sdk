@@ -46,11 +46,12 @@ export class CoinbaseWalletSDK {
 
   public makeWeb3Provider(): ProviderInterface {
     if (!this.smartWalletOnly) {
-      const shouldUseExtensionProvider = this.walletExtension && !this.walletExtensionSigner;
+      const extensionProvider = this.walletExtension;
+      const shouldUseExtensionProvider = extensionProvider && !this.walletExtensionSigner;
 
       if (shouldUseExtensionProvider) {
-        this.walletExtension.setAppInfo?.(this.appName, this.appLogoUrl);
-        return this.walletExtension;
+        extensionProvider.setAppInfo?.(this.appName, this.appLogoUrl);
+        return extensionProvider;
       }
     }
 
