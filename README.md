@@ -88,7 +88,7 @@ npm update @coinbase/wallet-sdk
 #### 1. Initialize SDK
 
 ```
-const sdk = new CoinbaseWalletSDK40({
+const sdk = new CoinbaseWalletSDK({
   appName: 'SDK Playground'
 });
 ```
@@ -109,7 +109,7 @@ const addresses = provider.request('eth_requestAccounts')
 #### 4. Make more requests
 
 ```
-provider.request('personal_sign', ['test message', addresses[0]])
+provider.request('personal_sign', [`0x${Buffer.from('test message', 'utf8').toString('hex')}`, addresses[0]])
 ```
 
 [See more example methods in apps/testapp/src/components/RpcMethods/method](apps/testapp/src/components/RpcMethods/method)

@@ -22,7 +22,7 @@ export interface CoinbaseWalletSDKOptions {
 
 ### deprecated options from v3:
 
-- `enableMobileWalletLink`
+- `enableMobileWalletLink` (enabled by default in v4)
 - `jsonRpcUrl`
 - `reloadOnDisconnect`
 - `uiConstructor`
