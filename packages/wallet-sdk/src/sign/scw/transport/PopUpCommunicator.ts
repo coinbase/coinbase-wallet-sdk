@@ -68,11 +68,18 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     this.popUpConfigurator.getWalletLinkQRCodeUrlCallback = callback;
   }
 
-  selectSignerType({ smartWalletOnly }: { smartWalletOnly: boolean }): Promise<SignerType> {
+  selectSignerType({
+    smartWalletOnly,
+    isExtensionSignerAvailable,
+  }: {
+    smartWalletOnly: boolean;
+    isExtensionSignerAvailable: boolean;
+  }): Promise<SignerType> {
     return new Promise((resolve, reject) => {
       this.popUpConfigurator.signerTypeSelectionFulfillment = { resolve, reject };
       this.popUpConfigurator.postClientConfigMessage(ClientConfigEventType.SelectConnectionType, {
         smartWalletOnly,
+        isExtensionSignerAvailable,
       });
     });
   }

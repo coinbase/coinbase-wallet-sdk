@@ -149,6 +149,7 @@ export class SignerConfigurator {
       this.popupCommunicator
         .selectSignerType({
           smartWalletOnly: this.smartWalletOnly,
+          isExtensionSignerAvailable: Boolean(window.coinbaseWalletExtensionSigner),
         })
         .then((signerType) => {
           this.signerTypeSelectionResolver?.(signerType);
