@@ -3,6 +3,7 @@
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
 import { ProviderInterface } from './core/type/ProviderInterface';
+import { Signer } from './sign/SignerInterface';
 
 describe('CoinbaseWalletSDK', () => {
   describe('initialize', () => {
@@ -97,11 +98,20 @@ describe('CoinbaseWalletSDK', () => {
 
       afterAll(() => {
         window.coinbaseWalletExtension = undefined;
+        window.coinbaseWalletExtensionSigner = undefined;
       });
 
-      test('@makeWeb3Provider', () => {
+      test('@makeWeb3Provider - only walletExtension injected', () => {
         // Returns extension provider
         expect(coinbaseWalletSDK2.makeWeb3Provider()).toEqual(mockProvider);
+      });
+
+      test('@makeWeb3Provider - both walletExtension and walletExtensionSigner injected', () => {
+        // Returns extension provider
+        window.coinbaseWalletExtensionSigner = {} as unknown as Signer;
+
+        const provider = coinbaseWalletSDK2.makeWeb3Provider();
+        expect(provider).not.toEqual(mockProvider);
       });
 
       test('@makeWeb3Provider, but with smartWalletOnly as true', () => {
