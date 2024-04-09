@@ -43,8 +43,12 @@ export class SignerConfigurator {
 
     const persistedSignerType = this.signerTypeStorage.getItem(SIGNER_TYPE_KEY);
     this.signerType = persistedSignerType;
-    if (persistedSignerType) {
-      this.initSigner();
+    try {
+      if (persistedSignerType) {
+        this.initSigner();
+      }
+    } catch {
+      this.onDisconnect();
     }
 
     // getWalletLinkQRCodeUrl is called by the PopUpCommunicator when
@@ -72,10 +76,16 @@ export class SignerConfigurator {
   };
 
   initSigner = () => {
-    if (this.signerType === 'scw') {
-      this.initScwSigner();
-    } else if (this.signerType === 'walletlink') {
-      this.initWalletLinkSigner();
+    switch (this.signerType) {
+      case 'scw':
+        this.initScwSigner();
+        break;
+      case 'walletlink':
+        this.initWalletLinkSigner();
+        break;
+      case 'extension':
+        this.initExtensionSigner();
+        break;
     }
   };
 
@@ -99,6 +109,15 @@ export class SignerConfigurator {
       appLogoUrl: this.appLogoUrl,
       updateListener: this.updateRelay,
     });
+  }
+
+  private initExtensionSigner() {
+    const extensionSigner = window.coinbaseWalletExtensionSigner;
+    if (!extensionSigner) {
+      throw standardErrors.provider.unauthorized('Coinbase Wallet extension signer not found');
+    }
+
+    this.signer = extensionSigner;
   }
 
   async onDisconnect() {

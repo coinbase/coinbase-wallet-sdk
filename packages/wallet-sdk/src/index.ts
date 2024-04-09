@@ -3,6 +3,7 @@
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
 import { ProviderInterface } from './core/type/ProviderInterface';
+import { Signer } from './sign/SignerInterface';
 
 export { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
 export default CoinbaseWalletSDK;
@@ -13,6 +14,7 @@ declare global {
     CoinbaseWalletProvider: typeof CoinbaseWalletProvider;
     ethereum?: ProviderInterface;
     coinbaseWalletExtension?: ProviderInterface;
+    coinbaseWalletExtensionSigner?: Signer;
   }
 }
 

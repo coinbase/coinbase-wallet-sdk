@@ -30,10 +30,12 @@ declare global {
 
 if (typeof window !== 'undefined') {
   window.setPopupUrl = (url: string) => {
-    const handler = (window.ethereum as any).handlers.find(
+    const handler = (window.ethereum as any).handlers?.find(
       (h: any) => h instanceof SignRequestHandler
     );
-    handler.popupCommunicator.url = new URL(url);
+    if (handler && handler.popupCommunicator) {
+      handler.popupCommunicator.url = new URL(url);
+    }
   };
 }
 
