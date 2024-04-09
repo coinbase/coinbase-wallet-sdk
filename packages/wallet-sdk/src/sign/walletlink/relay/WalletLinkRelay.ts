@@ -442,35 +442,27 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
   private openCoinbaseWalletDeeplink(method: SupportedWeb3Method) {
     if (!(this.ui instanceof WLMobileRelayUI)) return;
 
-    let navigatedToCBW = false;
-
     // For mobile relay requests, open the Coinbase Wallet app
     switch (method) {
       case 'requestEthereumAccounts': // requestEthereumAccounts is handled via popup
       case 'switchEthereumChain': // switchEthereumChain doesn't need to open the app
         return;
       default:
-        navigatedToCBW = true;
+        window.addEventListener(
+          'blur',
+          () => {
+            window.addEventListener(
+              'focus',
+              () => {
+                this.connection.checkUnseenEvents();
+              },
+              { once: true }
+            );
+          },
+          { once: true }
+        );
         this.ui.openCoinbaseWalletDeeplink();
         break;
-    }
-
-    // If the user navigated to the Coinbase Wallet app, then we need to check
-    // for unseen events once the user returns to the browser
-    if (navigatedToCBW) {
-      window.addEventListener(
-        'blur',
-        () => {
-          window.addEventListener(
-            'focus',
-            () => {
-              this.connection.checkUnseenEvents();
-            },
-            { once: true }
-          );
-        },
-        { once: true }
-      );
     }
   }
 
