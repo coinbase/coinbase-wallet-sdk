@@ -1,3 +1,4 @@
+import { LIB_VERSION } from '../../../version';
 import {
   ClientConfigEventType,
   ConfigMessage,
@@ -23,7 +24,9 @@ export class PopUpConfigurator {
       case HostConfigEventType.PopupListenerAdded:
         // Handshake Step 2: After receiving POPUP_LISTENER_ADDED_MESSAGE from Dapp,
         // Dapp sends DAPP_ORIGIN_MESSAGE to FE to help FE confirm the origin of the Dapp
-        this.postClientConfigMessage(ClientConfigEventType.DappOriginMessage);
+        this.postClientConfigMessage(ClientConfigEventType.DappOriginMessage, {
+          sdkVersion: LIB_VERSION,
+        });
         break;
       case HostConfigEventType.PopupReadyForRequest:
         // Handshake Step 4: After receiving POPUP_READY_MESSAGE from Dapp, FE knows that
@@ -50,7 +53,11 @@ export class PopUpConfigurator {
   }
 
   postClientConfigMessage(type: ClientConfigEventType, options?: any) {
-    if (options && type !== ClientConfigEventType.SelectConnectionType) {
+    if (
+      options &&
+      type !== ClientConfigEventType.SelectConnectionType &&
+      type !== ClientConfigEventType.DappOriginMessage
+    ) {
       throw standardErrors.rpc.internal('ClientConfigEvent does not accept options');
     }
 
