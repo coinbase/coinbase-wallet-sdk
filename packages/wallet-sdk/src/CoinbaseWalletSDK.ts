@@ -5,6 +5,7 @@ import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { ScopedLocalStorage } from './core/storage/ScopedLocalStorage';
 import { ProviderInterface } from './core/type/ProviderInterface';
 import { getFavicon } from './core/util';
+import { Signer } from './sign/SignerInterface';
 import { LIB_VERSION } from './version';
 
 /** Coinbase Wallet SDK Constructor Options */
@@ -45,10 +46,12 @@ export class CoinbaseWalletSDK {
 
   public makeWeb3Provider(): ProviderInterface {
     if (!this.smartWalletOnly) {
-      const extension = this.walletExtension;
-      if (extension) {
-        extension.setAppInfo?.(this.appName, this.appLogoUrl);
-        return extension;
+      const extensionProvider = this.walletExtension;
+      const shouldUseExtensionProvider = extensionProvider && !this.walletExtensionSigner;
+
+      if (shouldUseExtensionProvider) {
+        extensionProvider.setAppInfo?.(this.appName, this.appLogoUrl);
+        return extensionProvider;
       }
     }
 
@@ -86,6 +89,10 @@ export class CoinbaseWalletSDK {
 
   private get walletExtension(): LegacyProviderInterface | undefined {
     return window.coinbaseWalletExtension;
+  }
+
+  private get walletExtensionSigner(): Signer | undefined {
+    return window.coinbaseWalletExtensionSigner;
   }
 
   private get coinbaseBrowser(): LegacyProviderInterface | undefined {

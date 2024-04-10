@@ -23,6 +23,14 @@ export default function Home() {
   const { provider } = useCBWSDK();
   const [connected, setConnected] = React.useState(Boolean(provider?.connected));
 
+  // This is for Extension compatibility, Extension with SDK3.9 does not emit connect event
+  // correctly, so we manually check if the extension is connected, and set the connected state
+  useEffect(() => {
+    if (window.coinbaseWalletExtension && !window.coinbaseWalletExtensionSigner) {
+      setConnected(true);
+    }
+  }, []);
+
   useEffect(() => {
     provider?.on('connect', async () => {
       setConnected(true);
