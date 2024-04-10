@@ -3,7 +3,7 @@
 import { LogoType, walletLogo } from './assets/wallet-logo';
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { ScopedLocalStorage } from './core/storage/ScopedLocalStorage';
-import { ProviderInterface } from './core/type/ProviderInterface';
+import { LegacyProviderInterface, ProviderInterface } from './core/type/ProviderInterface';
 import { getFavicon } from './core/util';
 import { Signer } from './sign/SignerInterface';
 import { LIB_VERSION } from './version';
@@ -68,15 +68,6 @@ export class CoinbaseWalletSDK {
     });
   }
 
-  public disconnect(): void {
-    const extension = this?.walletExtension;
-    if (extension) {
-      extension.close?.();
-    } else {
-      ScopedLocalStorage.clearAll();
-    }
-  }
-
   /**
    * Official Coinbase Wallet logo for developers to use on their frontend
    * @param type Type of wallet logo: "standard" | "circle" | "text" | "textWithLogo" | "textLight" | "textWithLogoLight"
@@ -111,9 +102,4 @@ export class CoinbaseWalletSDK {
       return undefined;
     }
   }
-}
-
-interface LegacyProviderInterface extends ProviderInterface {
-  setAppInfo?(appName: string, appLogoUrl: string | null): void;
-  close?(): void;
 }

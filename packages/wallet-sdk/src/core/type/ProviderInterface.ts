@@ -22,11 +22,22 @@ interface ProviderConnectInfo {
 
 // properties explicitly required by EIP-1193 spec
 // + extends EventEmitter per spec recomendation
-export interface ProviderInterface extends EventEmitter {
+interface MinimalProviderInterface extends EventEmitter {
   request<T>(args: RequestArguments): Promise<T>;
   on(event: 'connect', listener: (info: ProviderConnectInfo) => void): this;
   on(event: 'disconnect', listener: (error: ProviderRpcError) => void): this;
   on(event: 'chainChanged', listener: (chainId: string) => void): this;
   on(event: 'accountsChanged', listener: (accounts: string[]) => void): this;
   on(event: 'message', listener: (message: ProviderMessage) => void): this;
+}
+
+//
+export interface ProviderInterface extends MinimalProviderInterface {
+  disconnect(): Promise<void>;
+}
+
+// Extension provider interface
+export interface LegacyProviderInterface extends MinimalProviderInterface {
+  setAppInfo?(appName: string, appLogoUrl: string | null): void;
+  close?(): void;
 }
