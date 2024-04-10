@@ -33,7 +33,7 @@ interface MinimalProviderInterface extends EventEmitter {
 
 //
 export interface ProviderInterface extends MinimalProviderInterface {
-  disconnect(): Promise<void>;
+  disconnect?(): Promise<void>;
 }
 
 // Extension provider interface
