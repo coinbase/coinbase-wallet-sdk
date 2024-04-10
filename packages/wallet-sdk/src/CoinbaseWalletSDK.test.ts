@@ -35,15 +35,6 @@ describe('CoinbaseWalletSDK', () => {
       });
 
       // TODO: nate re-enable these tests
-      // test('@disconnect', () => {
-      //   const relayResetMock = jest
-      //     .spyOn((coinbaseWalletSDK2 as any)._relay, 'resetAndReload')
-      //     .mockImplementation(() => 'resetAndReload');
-      //   coinbaseWalletSDK2.disconnect();
-
-      //   expect(relayResetMock).toHaveBeenCalled();
-      // });
-
       // test('@setAppInfo', () => {
       //   const relaySetAppInfoMock = jest
       //     .spyOn(WalletLinkRelay.prototype, 'setAppInfo')
@@ -124,14 +115,6 @@ describe('CoinbaseWalletSDK', () => {
         const provider = sdk.makeWeb3Provider();
         expect(provider).toBeTruthy();
         expect(provider).not.toEqual(mockProvider);
-      });
-
-      test('@disconnect', async () => {
-        const mockExtensionProvider = mockProvider as unknown as { close: jest.Mock };
-        jest.spyOn(mockExtensionProvider, 'close').mockImplementation(() => 'mockClose');
-        // Calls extension close
-        coinbaseWalletSDK2.disconnect();
-        expect(await mockExtensionProvider.close()).toBe('mockClose');
       });
     });
 
