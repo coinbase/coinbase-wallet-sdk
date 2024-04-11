@@ -34,24 +34,6 @@ describe('CoinbaseWalletSDK', () => {
         expect(coinbaseWalletSDK2.makeWeb3Provider()).toBeInstanceOf(CoinbaseWalletProvider);
       });
 
-      // TODO: nate re-enable these tests
-      // test('@setAppInfo', () => {
-      //   const relaySetAppInfoMock = jest
-      //     .spyOn(WalletLinkRelay.prototype, 'setAppInfo')
-      //     .mockImplementation(() => 'setAppInfo');
-      //   coinbaseWalletSDK2.setAppInfo('sdk', 'http://sdk-image.png');
-
-      //   expect(relaySetAppInfoMock).toHaveBeenCalledWith('sdk', 'http://sdk-image.png');
-      // });
-
-      // test('@getQrUrl', () => {
-      //   const qrUrl = coinbaseWalletSDK2.getQrUrl() || '';
-      //   const url = new URL(qrUrl);
-
-      //   expect(url.hostname).toEqual('www.walletlink.org');
-      //   expect(url.hash.split('=')).toHaveLength(6);
-      // });
-
       test('@getCoinbaseWalletLogo', () => {
         let svgUri;
 

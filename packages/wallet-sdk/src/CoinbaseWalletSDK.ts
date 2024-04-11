@@ -3,7 +3,7 @@
 import { LogoType, walletLogo } from './assets/wallet-logo';
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { ScopedLocalStorage } from './core/storage/ScopedLocalStorage';
-import { LegacyProviderInterface, ProviderInterface } from './core/type/ProviderInterface';
+import { ProviderInterface } from './core/type/ProviderInterface';
 import { getFavicon } from './core/util';
 import { Signer } from './sign/SignerInterface';
 import { LIB_VERSION } from './version';
@@ -78,7 +78,7 @@ export class CoinbaseWalletSDK {
     return walletLogo(type, width);
   }
 
-  private get walletExtension(): LegacyProviderInterface | undefined {
+  private get walletExtension(): ProviderInterface | undefined {
     return window.coinbaseWalletExtension;
   }
 
@@ -86,7 +86,7 @@ export class CoinbaseWalletSDK {
     return window.coinbaseWalletExtensionSigner;
   }
 
-  private get coinbaseBrowser(): LegacyProviderInterface | undefined {
+  private get coinbaseBrowser(): ProviderInterface | undefined {
     try {
       // Coinbase DApp browser does not inject into iframes so grab provider from top frame if it exists
       const ethereum = window.ethereum ?? window.top?.ethereum;
