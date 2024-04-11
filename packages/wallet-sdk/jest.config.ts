@@ -11,20 +11,12 @@ export default {
   collectCoverage: true,
 
   // An array of glob patterns indicating a set of files for which coverage information should be collected
-  collectCoverageFrom: [
-    './src/CoinbaseWalletSDK.ts',
-    './src/core/**/*.ts',
-    './src/provider/**/*.ts',
-    './src/relay/**/*.ts',
-    './src/components/**/*.tsx',
-    './src/signer/**/*.ts',
-    './src/transport/**/*.ts',
-  ],
+  collectCoverageFrom: ['./src/**/*.ts'],
   // The directory where Jest should output its coverage files
   coverageDirectory: 'coverage',
 
   // An array of regexp pattern strings used to skip coverage collection
-  coveragePathIgnorePatterns: ['/node_modules/'],
+  coveragePathIgnorePatterns: ['/node_modules/', 'vendor-js/', 'assets/', 'walletlink/relay/'],
 
   // A list of reporter names that Jest uses when writing coverage reports
   coverageReporters: ['json', 'text', 'text-summary', 'lcov'],
