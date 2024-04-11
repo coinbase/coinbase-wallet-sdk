@@ -16,7 +16,7 @@ export default {
   coverageDirectory: 'coverage',
 
   // An array of regexp pattern strings used to skip coverage collection
-  coveragePathIgnorePatterns: ['/node_modules/', 'vendor-js/', 'assets/'],
+  coveragePathIgnorePatterns: ['/node_modules/', 'vendor-js/', 'assets/', 'walletlink/relay/'],
 
   // A list of reporter names that Jest uses when writing coverage reports
   coverageReporters: ['json', 'text', 'text-summary', 'lcov'],
