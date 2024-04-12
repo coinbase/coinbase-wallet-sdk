@@ -20,10 +20,9 @@ interface ProviderConnectInfo {
   readonly chainId: string;
 }
 
-// properties explicitly required by EIP-1193 spec
-// + extends EventEmitter per spec recomendation
 export interface ProviderInterface extends EventEmitter {
   request<T>(args: RequestArguments): Promise<T>;
+  disconnect(): Promise<void>;
   on(event: 'connect', listener: (info: ProviderConnectInfo) => void): this;
   on(event: 'disconnect', listener: (error: ProviderRpcError) => void): this;
   on(event: 'chainChanged', listener: (chainId: string) => void): this;

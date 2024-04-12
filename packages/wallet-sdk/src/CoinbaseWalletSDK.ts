@@ -50,7 +50,12 @@ export class CoinbaseWalletSDK {
       const shouldUseExtensionProvider = extensionProvider && !this.walletExtensionSigner;
 
       if (shouldUseExtensionProvider) {
-        extensionProvider.setAppInfo?.(this.appName, this.appLogoUrl);
+        if (
+          'setAppInfo' in extensionProvider &&
+          typeof extensionProvider.setAppInfo === 'function'
+        ) {
+          extensionProvider.setAppInfo?.(this.appName, this.appLogoUrl);
+        }
         return extensionProvider;
       }
     }
@@ -68,15 +73,6 @@ export class CoinbaseWalletSDK {
     });
   }
 
-  public disconnect(): void {
-    const extension = this?.walletExtension;
-    if (extension) {
-      extension.close?.();
-    } else {
-      ScopedLocalStorage.clearAll();
-    }
-  }
-
   /**
    * Official Coinbase Wallet logo for developers to use on their frontend
    * @param type Type of wallet logo: "standard" | "circle" | "text" | "textWithLogo" | "textLight" | "textWithLogoLight"
@@ -87,7 +83,7 @@ export class CoinbaseWalletSDK {
     return walletLogo(type, width);
   }
 
-  private get walletExtension(): LegacyProviderInterface | undefined {
+  private get walletExtension(): ProviderInterface | undefined {
     return window.coinbaseWalletExtension;
   }
 
@@ -95,7 +91,7 @@ export class CoinbaseWalletSDK {
     return window.coinbaseWalletExtensionSigner;
   }
 
-  private get coinbaseBrowser(): LegacyProviderInterface | undefined {
+  private get coinbaseBrowser(): ProviderInterface | undefined {
     try {
       // Coinbase DApp browser does not inject into iframes so grab provider from top frame if it exists
       const ethereum = window.ethereum ?? window.top?.ethereum;
@@ -111,9 +107,4 @@ export class CoinbaseWalletSDK {
       return undefined;
     }
   }
-}
-
-interface LegacyProviderInterface extends ProviderInterface {
-  setAppInfo?(appName: string, appLogoUrl: string | null): void;
-  close?(): void;
 }
