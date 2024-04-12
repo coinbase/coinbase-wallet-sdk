@@ -9,23 +9,23 @@ import { readonlyJsonRpcMethods } from '../components/RpcMethods/method/readonly
 import { RpcRequestInput } from '../components/RpcMethods/method/RpcRequestInput';
 import { sendMethods } from '../components/RpcMethods/method/sendMethods';
 import { signMessageMethods } from '../components/RpcMethods/method/signMessageMethods';
+import { walletTxMethods } from '../components/RpcMethods/method/walletTxMethods';
 import { RpcMethodCard } from '../components/RpcMethods/RpcMethodCard';
 import { multiChainShortcutsMap } from '../components/RpcMethods/shortcut/multipleChainShortcuts';
 import { readonlyJsonRpcShortcutsMap } from '../components/RpcMethods/shortcut/readonlyJsonRpcShortcuts';
 import { sendShortcutsMap } from '../components/RpcMethods/shortcut/sendShortcuts';
 import { ShortcutType } from '../components/RpcMethods/shortcut/ShortcutType';
 import { signMessageShortcutsMap } from '../components/RpcMethods/shortcut/signMessageShortcuts';
+import { walletTxShortcutsMap } from '../components/RpcMethods/shortcut/walletTxShortcuts';
 import { useCBWSDK } from '../context/CBWSDKReactContextProvider';
 
 export default function Home() {
   const { provider } = useCBWSDK();
   const [connected, setConnected] = React.useState(Boolean(provider?.connected));
 
-  // const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
   useEffect(() => {
     provider?.on('connect', async () => {
       setConnected(true);
-      provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x14a34' }] });
     });
   }, [provider]);
 
@@ -51,6 +51,11 @@ export default function Home() {
             shortcutsMap={signMessageShortcutsMap(provider?.chainId)}
           />
           <MethodsSection title="Send" methods={sendMethods} shortcutsMap={sendShortcutsMap} />
+          <MethodsSection
+            title="Wallet Tx"
+            methods={walletTxMethods}
+            shortcutsMap={walletTxShortcutsMap}
+          />
           <MethodsSection
             title="Read-only JSON-RPC Requests"
             methods={readonlyJsonRpcMethods}

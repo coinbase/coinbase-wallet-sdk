@@ -5,7 +5,6 @@ import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
 import { ProviderInterface } from './core/type/ProviderInterface';
 
 export { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
-export type { ConnectionPreference } from './core/communicator/ConnectionPreference';
 export default CoinbaseWalletSDK;
 
 declare global {

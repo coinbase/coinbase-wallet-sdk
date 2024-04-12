@@ -230,6 +230,7 @@ export class WLRelayAdapter {
   public async close() {
     const relay = this.initializeRelay();
     relay.resetAndReload();
+    this._storage.clear();
   }
 
   public async request<T>(args: RequestArguments): Promise<T> {

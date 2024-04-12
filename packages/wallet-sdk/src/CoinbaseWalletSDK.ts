@@ -6,7 +6,6 @@ import { ScopedLocalStorage } from './core/storage/ScopedLocalStorage';
 import { ProviderInterface } from './core/type/ProviderInterface';
 import { getFavicon } from './core/util';
 import { LIB_VERSION } from './version';
-import { ConnectionPreference } from ':core/communicator/ConnectionPreference';
 
 /** Coinbase Wallet SDK Constructor Options */
 export interface CoinbaseWalletSDKOptions {
@@ -15,15 +14,15 @@ export interface CoinbaseWalletSDKOptions {
   /** @optional Application logo image URL; favicon is used if unspecified */
   appLogoUrl?: string;
   /** @optional Array of chainIds your dapp supports */
-  chainIds?: string[];
+  chainIds?: number[];
   /** @optional Pre-select the wallet connection method */
-  connectionPreference?: ConnectionPreference;
+  smartWalletOnly?: boolean;
 }
 
 export class CoinbaseWalletSDK {
   private appName: string;
   private appLogoUrl: string | null;
-  private connectionPreference: ConnectionPreference;
+  private smartWalletOnly: boolean;
   private chainIds: number[];
 
   /**
@@ -31,7 +30,7 @@ export class CoinbaseWalletSDK {
    * @param options Coinbase Wallet SDK constructor options
    */
   constructor(options: Readonly<CoinbaseWalletSDKOptions>) {
-    this.connectionPreference = options.connectionPreference || 'default';
+    this.smartWalletOnly = options.smartWalletOnly || false;
     this.chainIds = options.chainIds ? options.chainIds.map(Number) : [];
     this.appName = options.appName || 'DApp';
     this.appLogoUrl = options.appLogoUrl || getFavicon();
@@ -45,7 +44,7 @@ export class CoinbaseWalletSDK {
   }
 
   public makeWeb3Provider(): ProviderInterface {
-    if (this.connectionPreference !== 'embedded') {
+    if (!this.smartWalletOnly) {
       const extension = this.walletExtension;
       if (extension) {
         extension.setAppInfo?.(this.appName, this.appLogoUrl);
@@ -62,7 +61,7 @@ export class CoinbaseWalletSDK {
       appName: this.appName,
       appLogoUrl: this.appLogoUrl,
       appChainIds: this.chainIds,
-      connectionPreference: this.connectionPreference,
+      smartWalletOnly: this.smartWalletOnly,
     });
   }
 
