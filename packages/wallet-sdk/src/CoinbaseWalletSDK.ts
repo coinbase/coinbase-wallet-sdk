@@ -48,9 +48,8 @@ export class CoinbaseWalletSDK {
     if (!this.smartWalletOnly) {
       const extensionProvider = this.walletExtension;
       const shouldUseExtensionProvider = extensionProvider && !this.walletExtensionSigner;
-
       if (shouldUseExtensionProvider) {
-        extensionProvider.setAppInfo?.(this.appName, this.appLogoUrl);
+        (extensionProvider as ExtensionProvider).setAppInfo?.(this.appName, this.appLogoUrl);
         return extensionProvider;
       }
     }
@@ -102,4 +101,8 @@ export class CoinbaseWalletSDK {
       return undefined;
     }
   }
+}
+
+interface ExtensionProvider extends ProviderInterface {
+  setAppInfo?(appName: string, appLogoUrl: string | null): void;
 }

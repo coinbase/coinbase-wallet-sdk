@@ -23,7 +23,6 @@ interface ProviderConnectInfo {
 export interface ProviderInterface extends EventEmitter {
   request<T>(args: RequestArguments): Promise<T>;
   disconnect(): Promise<void>;
-  setAppInfo?(appName: string, appLogoUrl: string | null): void; // legacy extension only
   on(event: 'connect', listener: (info: ProviderConnectInfo) => void): this;
   on(event: 'disconnect', listener: (error: ProviderRpcError) => void): this;
   on(event: 'chainChanged', listener: (chainId: string) => void): this;
