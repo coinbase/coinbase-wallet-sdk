@@ -23,6 +23,6 @@ export class RPCFetchRequestHandler implements RequestHandler {
       headers: { 'Content-Type': 'application/json' },
     });
     const response = await res.json();
-    return response;
+    return response.result;
   }
 }
