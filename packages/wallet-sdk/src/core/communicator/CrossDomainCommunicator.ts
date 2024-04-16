@@ -1,4 +1,4 @@
-import { Message } from './Message';
+import { Message } from '../message/Message';
 import { standardErrors } from ':core/error';
 
 export abstract class CrossDomainCommunicator {

@@ -1,5 +1,5 @@
-import { SCWRequest } from './type/Request';
-import { SCWResponse } from './type/Response';
+import { SCWRequest } from ':core/message/Request';
+import { SCWResponse } from ':core/message/Response';
 import { hexStringToUint8Array, uint8ArrayToHex } from ':core/util';
 
 export type EncryptedData = {

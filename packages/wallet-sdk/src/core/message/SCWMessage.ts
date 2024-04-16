@@ -1,16 +1,15 @@
 import { UUID } from 'crypto';
 
-import { EncryptedData } from './SCWCipher';
-import { RequestAccountsAction } from './type/Action';
-import { Message } from ':core/communicator/Message';
+import { EncryptedData } from '../../sign/scw/SCWCipher';
+import { RequestAccountsAction } from './Action';
 import { SerializedEthereumRpcError } from ':core/error';
+import { Message } from ':core/message/Message';
 
 interface SCWMessage extends Message {
-  type: 'scw';
+  type: 'web3';
   id: UUID;
   sender: string; // hex encoded public key of the sender
   content: unknown;
-  version: string;
   timestamp: Date;
 }
 

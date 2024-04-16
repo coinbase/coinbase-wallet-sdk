@@ -1,4 +1,4 @@
-import { generateKeyPair } from './message/SCWCipher';
+import { generateKeyPair } from './SCWCipher';
 import { SCWKeyManager } from './SCWKeyManager';
 
 describe('KeyStorage', () => {

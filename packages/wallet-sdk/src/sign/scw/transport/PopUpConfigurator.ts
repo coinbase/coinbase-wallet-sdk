@@ -1,12 +1,12 @@
 import { LIB_VERSION } from '../../../version';
+import { PopUpCommunicator } from './PopUpCommunicator';
+import { standardErrors } from ':core/error';
 import {
   ClientConfigEventType,
   ConfigMessage,
   HostConfigEventType,
   SignerType,
-} from './ConfigMessage';
-import { PopUpCommunicator } from './PopUpCommunicator';
-import { standardErrors } from ':core/error';
+} from ':core/message/ConfigMessage';
 
 export class PopUpConfigurator {
   private communicator: PopUpCommunicator;

@@ -5,15 +5,15 @@ import {
   encryptContent,
   exportKeyToHexString,
   importKeyFromHexString,
-} from './message/SCWCipher';
-import { SCWRequestMessage, SCWResponseMessage } from './message/SCWMessage';
-import { Action, SupportedEthereumMethods, SwitchEthereumChainAction } from './message/type/Action';
-import { SCWResponse } from './message/type/Response';
+} from './SCWCipher';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWStateManager } from './SCWStateManager';
 import { PopUpCommunicator } from './transport/PopUpCommunicator';
 import { CB_KEYS_BACKEND_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
+import { Action, SupportedEthereumMethods, SwitchEthereumChainAction } from ':core/message/Action';
+import { SCWResponse } from ':core/message/Response';
+import { SCWRequestMessage, SCWResponseMessage } from ':core/message/SCWMessage';
 import { AddressString } from ':core/type';
 import { RequestArguments } from ':core/type/ProviderInterface';
 import { ensureIntNumber } from ':core/util';
