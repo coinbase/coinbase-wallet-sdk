@@ -18,7 +18,7 @@ export class CoinbaseWalletSDK {
    * Constructor
    * @param options Coinbase Wallet SDK constructor options
    */
-  constructor(options: Readonly<ConstructorOptions>) {
+  constructor(options: Readonly<Partial<ConstructorOptions>>) {
     this.smartWalletOnly = options.smartWalletOnly ?? false;
     this.chainIds = options.appChainIds?.map(Number) ?? [];
     this.appName = options.appName ?? 'DApp';

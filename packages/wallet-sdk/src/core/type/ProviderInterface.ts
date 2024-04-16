@@ -33,10 +33,10 @@ export interface ProviderInterface extends EventEmitter {
 export interface ConstructorOptions {
   /** Application name */
   appName: string;
-  /** @optional Application logo image URL; favicon is used if unspecified */
-  appLogoUrl?: string;
-  /** @optional Array of chainIds your dapp supports */
-  appChainIds?: number[];
-  /** @optional Pre-select the wallet connection method */
-  smartWalletOnly?: boolean;
+  /** Application logo image URL; favicon is used if unspecified */
+  appLogoUrl: string;
+  /** Array of chainIds your dapp supports */
+  appChainIds: number[];
+  /** Pre-select the wallet connection method */
+  smartWalletOnly: boolean;
 }

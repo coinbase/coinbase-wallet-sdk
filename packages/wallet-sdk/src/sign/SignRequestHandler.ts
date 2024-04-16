@@ -7,7 +7,7 @@ import { AddressString } from ':core/type';
 import { ConstructorOptions, RequestArguments } from ':core/type/ProviderInterface';
 import { RequestHandler } from ':core/type/RequestHandlerInterface';
 
-type SignRequestHandlerOptions = Required<ConstructorOptions> & {
+type SignRequestHandlerOptions = ConstructorOptions & {
   updateListener: SignRequestHandlerListener;
   keysUrl?: string;
 };

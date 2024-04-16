@@ -33,7 +33,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     return true;
   }
 
-  constructor(options: Readonly<Required<ConstructorOptions>>) {
+  constructor(options: Readonly<ConstructorOptions>) {
     super();
 
     this.chain = {
