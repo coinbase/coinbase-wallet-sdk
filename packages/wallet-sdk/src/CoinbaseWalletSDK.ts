@@ -10,7 +10,7 @@ import { LIB_VERSION } from './version';
 
 export class CoinbaseWalletSDK {
   private appName: string;
-  private appLogoUrl: string | undefined;
+  private appLogoUrl: string | null;
   private smartWalletOnly: boolean;
   private chainIds: number[];
 
@@ -19,10 +19,10 @@ export class CoinbaseWalletSDK {
    * @param options Coinbase Wallet SDK constructor options
    */
   constructor(options: Readonly<Partial<ConstructorOptions>>) {
-    this.smartWalletOnly = options.smartWalletOnly ?? false;
+    this.smartWalletOnly = options.smartWalletOnly || false;
     this.chainIds = options.appChainIds?.map(Number) ?? [];
-    this.appName = options.appName ?? 'DApp';
-    this.appLogoUrl = options.appLogoUrl ?? getFavicon() ?? undefined;
+    this.appName = options.appName || 'DApp';
+    this.appLogoUrl = options.appLogoUrl || getFavicon();
 
     this.storeLatestVersion();
   }
