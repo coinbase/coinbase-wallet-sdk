@@ -66,12 +66,12 @@ export class PopUpConfigurator {
 
     const configMessage: ConfigMessage = {
       type: 'config',
-      version: LIB_VERSION,
       id: crypto.randomUUID(),
       event: {
         type,
         value: options,
       },
+      version: LIB_VERSION,
     };
     this.communicator.postMessage(configMessage);
   }
@@ -91,12 +91,12 @@ export class PopUpConfigurator {
     const walletLinkQRCodeUrl = this.getWalletLinkQRCodeUrlCallback();
     const configMessage: ConfigMessage = {
       type: 'config',
-      version: LIB_VERSION,
       id: crypto.randomUUID(),
       event: {
         type: ClientConfigEventType.WalletLinkUrl,
         value: walletLinkQRCodeUrl,
       },
+      version: LIB_VERSION,
     };
     this.communicator.postMessage(configMessage);
   }
