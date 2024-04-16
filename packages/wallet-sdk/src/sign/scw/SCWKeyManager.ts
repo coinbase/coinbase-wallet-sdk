@@ -3,7 +3,7 @@ import {
   exportKeyToHexString,
   generateKeyPair,
   importKeyFromHexString,
-} from ':core/cipher/Cipher';
+} from ':core/message/Cipher';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 
 interface StorageItem {
