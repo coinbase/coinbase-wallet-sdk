@@ -1,20 +1,19 @@
 import { UUID } from 'crypto';
 
-import { EncryptedData } from './SCWCipher';
-import { RequestAccountsAction } from './type/Action';
-import { Message } from ':core/communicator/Message';
+import { Message } from '.';
+import { RequestAccountsAction } from './Action';
+import { EncryptedData } from './Cipher';
 import { SerializedEthereumRpcError } from ':core/error';
 
-interface SCWMessage extends Message {
+interface RPCMessage extends Message {
   type: 'scw';
   id: UUID;
   sender: string; // hex encoded public key of the sender
   content: unknown;
-  version: string;
   timestamp: Date;
 }
 
-export interface SCWRequestMessage extends SCWMessage {
+export interface RPCRequestMessage extends RPCMessage {
   content:
     | {
         handshake: RequestAccountsAction;
@@ -24,7 +23,7 @@ export interface SCWRequestMessage extends SCWMessage {
       };
 }
 
-export interface SCWResponseMessage extends SCWMessage {
+export interface RPCResponseMessage extends RPCMessage {
   requestId: UUID;
   content:
     | {

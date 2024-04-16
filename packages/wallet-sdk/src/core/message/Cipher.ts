@@ -1,5 +1,5 @@
-import { SCWRequest } from './type/Request';
-import { SCWResponse } from './type/Response';
+import { RPCRequest } from './RPCRequest';
+import { RPCResponse } from './RPCResponse';
 import { hexStringToUint8Array, uint8ArrayToHex } from ':core/util';
 
 export type EncryptedData = {
@@ -104,7 +104,7 @@ export async function importKeyFromHexString(
 }
 
 export async function encryptContent<T>(
-  content: SCWRequest | SCWResponse<T>,
+  content: RPCRequest | RPCResponse<T>,
   sharedSecret: CryptoKey
 ): Promise<EncryptedData> {
   const serialized = JSON.stringify(content, (_, value) => {
@@ -119,7 +119,7 @@ export async function encryptContent<T>(
   return encrypt(sharedSecret, serialized);
 }
 
-export async function decryptContent<R extends SCWRequest | SCWResponse<U>, U>(
+export async function decryptContent<R extends RPCRequest | RPCResponse<U>, U>(
   encryptedData: EncryptedData,
   sharedSecret: CryptoKey
 ): Promise<R> {

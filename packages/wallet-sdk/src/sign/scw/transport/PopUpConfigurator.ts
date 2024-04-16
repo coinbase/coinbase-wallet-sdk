@@ -1,12 +1,12 @@
 import { LIB_VERSION } from '../../../version';
+import { PopUpCommunicator } from './PopUpCommunicator';
+import { standardErrors } from ':core/error';
 import {
   ClientConfigEventType,
   ConfigMessage,
   HostConfigEventType,
   SignerType,
-} from './ConfigMessage';
-import { PopUpCommunicator } from './PopUpCommunicator';
-import { standardErrors } from ':core/error';
+} from ':core/message/ConfigMessage';
 
 export class PopUpConfigurator {
   private communicator: PopUpCommunicator;
@@ -71,6 +71,7 @@ export class PopUpConfigurator {
         type,
         value: options,
       },
+      version: LIB_VERSION,
     };
     this.communicator.postMessage(configMessage);
   }
@@ -95,6 +96,7 @@ export class PopUpConfigurator {
         type: ClientConfigEventType.WalletLinkUrl,
         value: walletLinkQRCodeUrl,
       },
+      version: LIB_VERSION,
     };
     this.communicator.postMessage(configMessage);
   }

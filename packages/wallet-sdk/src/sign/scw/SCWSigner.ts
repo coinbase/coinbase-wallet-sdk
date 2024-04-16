@@ -1,22 +1,23 @@
 import { LIB_VERSION } from '../../version';
 import { Signer, SignerUpdateListener } from '../SignerInterface';
-import {
-  decryptContent,
-  encryptContent,
-  exportKeyToHexString,
-  importKeyFromHexString,
-} from './message/SCWCipher';
-import { SCWRequestMessage, SCWResponseMessage } from './message/SCWMessage';
-import { Action, SupportedEthereumMethods, SwitchEthereumChainAction } from './message/type/Action';
-import { SCWResponse } from './message/type/Response';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWStateManager } from './SCWStateManager';
 import { PopUpCommunicator } from './transport/PopUpCommunicator';
 import { CB_KEYS_BACKEND_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
+import { Action, SupportedEthereumMethods, SwitchEthereumChainAction } from ':core/message/Action';
+import {
+  decryptContent,
+  encryptContent,
+  exportKeyToHexString,
+  importKeyFromHexString,
+} from ':core/message/Cipher';
+import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage';
+import { RPCResponse } from ':core/message/RPCResponse';
 import { AddressString } from ':core/type';
 import { RequestArguments } from ':core/type/ProviderInterface';
 import { ensureIntNumber } from ':core/util';
+
 export class SCWSigner implements Signer {
   private appName: string;
   private appLogoUrl: string | null;
@@ -67,7 +68,7 @@ export class SCWSigner implements Signer {
         },
       },
     });
-    const response = (await this.puc.request(handshakeMessage)) as SCWResponseMessage;
+    const response = (await this.puc.request(handshakeMessage)) as RPCResponseMessage;
 
     // store peer's public key
     if ('failure' in response.content) throw response.content.failure;
@@ -161,7 +162,7 @@ export class SCWSigner implements Signer {
     }
   }
 
-  private async sendEncryptedRequest(request: RequestArguments): Promise<SCWResponseMessage> {
+  private async sendEncryptedRequest(request: RequestArguments): Promise<RPCResponseMessage> {
     if (!this.puc.connected) {
       await this.puc.connect();
     }
@@ -182,13 +183,13 @@ export class SCWSigner implements Signer {
     );
     const message = await this.createRequestMessage({ encrypted });
 
-    const response = (await this.puc.request(message)) as SCWResponseMessage;
+    const response = (await this.puc.request(message)) as RPCResponseMessage;
     return response;
   }
 
   private async createRequestMessage(
-    content: SCWRequestMessage['content']
-  ): Promise<SCWRequestMessage> {
+    content: RPCRequestMessage['content']
+  ): Promise<RPCRequestMessage> {
     const publicKey = await exportKeyToHexString('public', await this.keyManager.getOwnPublicKey());
     return {
       type: 'scw',
@@ -200,7 +201,7 @@ export class SCWSigner implements Signer {
     };
   }
 
-  private async decryptResponseMessage<T>(message: SCWResponseMessage): Promise<SCWResponse<T>> {
+  private async decryptResponseMessage<T>(message: RPCResponseMessage): Promise<RPCResponse<T>> {
     const content = message.content;
 
     // throw protocol level error
@@ -216,7 +217,7 @@ export class SCWSigner implements Signer {
     return decryptContent(content.encrypted, sharedSecret);
   }
 
-  private updateInternalState<T>(request: RequestArguments, response: SCWResponse<T>) {
+  private updateInternalState<T>(request: RequestArguments, response: RPCResponse<T>) {
     const availableChains = response.data?.chains;
     if (availableChains) {
       this.stateManager.updateAvailableChains(availableChains);
