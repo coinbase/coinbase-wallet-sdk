@@ -29,3 +29,14 @@ export interface ProviderInterface extends EventEmitter {
   on(event: 'accountsChanged', listener: (accounts: string[]) => void): this;
   on(event: 'message', listener: (message: ProviderMessage) => void): this;
 }
+
+export interface ConstructorOptions {
+  /** Application name */
+  appName: string;
+  /** @optional Application logo image URL; favicon is used if unspecified */
+  appLogoUrl?: string;
+  /** @optional Array of chainIds your dapp supports */
+  appChainIds?: number[];
+  /** @optional Pre-select the wallet connection method */
+  smartWalletOnly?: boolean;
+}
