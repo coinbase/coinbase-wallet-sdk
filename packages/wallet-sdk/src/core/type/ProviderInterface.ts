@@ -34,7 +34,7 @@ export interface ConstructorOptions {
   /** Application name */
   appName: string;
   /** Application logo image URL; favicon is used if unspecified */
-  appLogoUrl: string | null;
+  appLogoUrl?: string | null;
   /** Array of chainIds your dapp supports */
   appChainIds: number[];
   /** Pre-select the wallet connection method */
