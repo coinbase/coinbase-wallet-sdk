@@ -1,7 +1,7 @@
 import { UUID } from 'crypto';
 
 export interface Message {
-  type: 'config' | 'web3';
+  type: 'config' | 'scw';
   id: UUID;
   version: string;
 }

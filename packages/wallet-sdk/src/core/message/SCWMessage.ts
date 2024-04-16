@@ -6,7 +6,7 @@ import { RequestAccountsAction } from './Action';
 import { SerializedEthereumRpcError } from ':core/error';
 
 interface SCWMessage extends Message {
-  type: 'web3';
+  type: 'scw';
   id: UUID;
   sender: string; // hex encoded public key of the sender
   content: unknown;
