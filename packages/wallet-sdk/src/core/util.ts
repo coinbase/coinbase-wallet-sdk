@@ -170,7 +170,7 @@ export function range(start: number, stop: number): number[] {
   return Array.from({ length: stop - start }, (_, i) => start + i);
 }
 
-export function getFavicon(): string | undefined {
+export function getFavicon(): string | null {
   const el =
     document.querySelector('link[sizes="192x192"]') ||
     document.querySelector('link[sizes="180x180"]') ||
@@ -180,7 +180,7 @@ export function getFavicon(): string | undefined {
   const { protocol, host } = document.location;
   const href = el ? el.getAttribute('href') : null;
   if (!href || href.startsWith('javascript:') || href.startsWith('vbscript:')) {
-    return undefined;
+    return null;
   }
   if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('data:')) {
     return href;

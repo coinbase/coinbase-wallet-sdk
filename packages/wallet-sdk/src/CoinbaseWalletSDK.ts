@@ -22,7 +22,7 @@ export class CoinbaseWalletSDK {
     this.smartWalletOnly = options.smartWalletOnly ?? false;
     this.chainIds = options.appChainIds?.map(Number) ?? [];
     this.appName = options.appName ?? 'DApp';
-    this.appLogoUrl = options.appLogoUrl ?? getFavicon();
+    this.appLogoUrl = options.appLogoUrl ?? getFavicon() ?? undefined;
 
     this.storeLatestVersion();
   }
