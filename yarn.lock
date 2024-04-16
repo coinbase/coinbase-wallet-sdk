@@ -2865,8 +2865,6 @@ __metadata:
     babel-jest: ^27.5.1
     buffer: ^6.0.3
     clsx: ^1.2.1
-    eth-block-tracker: ^7.1.0
-    eth-json-rpc-filters: ^6.0.0
     eventemitter3: ^5.0.1
     jest: ^27.5.1
     jest-chrome: ^0.7.2

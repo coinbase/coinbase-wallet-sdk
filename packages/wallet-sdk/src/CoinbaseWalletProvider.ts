@@ -17,7 +17,6 @@ import { StateRequestHandler } from './internalState/StateRequestHandler';
 import { RPCFetchRequestHandler } from './rpcFetch/RPCFetchRequestHandler';
 import { SignRequestHandler } from './sign/SignRequestHandler';
 import { AccountsUpdate, ChainUpdate } from './sign/UpdateListenerInterface';
-import { SubscriptionRequestHandler } from './subscription/SubscriptionRequestHandler';
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
   protected accounts: AddressString[] = [];
@@ -47,9 +46,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
         updateListener: this.updateListener,
       }),
       new FilterRequestHandler({
-        provider: this,
-      }),
-      new SubscriptionRequestHandler({
         provider: this,
       }),
       new RPCFetchRequestHandler(), // should be last
