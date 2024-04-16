@@ -1,5 +1,5 @@
-import { RPCRequest } from ':core/message/Request';
-import { RPCResponse } from ':core/message/RPCResponse';
+import { RPCRequest } from './RPCRequest';
+import { RPCResponse } from './RPCResponse';
 import { hexStringToUint8Array, uint8ArrayToHex } from ':core/util';
 
 export type EncryptedData = {
