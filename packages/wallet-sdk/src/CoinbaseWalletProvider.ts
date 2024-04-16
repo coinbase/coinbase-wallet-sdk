@@ -44,12 +44,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       new StateRequestHandler(),
       new SignRequestHandler({
         ...options,
-        updateListener: {
-          onAccountsUpdate: this.setAccounts.bind(this),
-          onChainUpdate: this.setChain.bind(this),
-          onConnect: this.emitConnectEvent.bind(this),
-          onResetConnection: this.disconnect.bind(this),
-        },
+        updateListener: this.updateListener,
       }),
       new FilterRequestHandler({
         provider: this,
@@ -60,6 +55,13 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       new RPCFetchRequestHandler(), // should be last
     ];
   }
+
+  protected updateListener = {
+    onAccountsUpdate: this.setAccounts.bind(this),
+    onChainUpdate: this.setChain.bind(this),
+    onConnect: this.emitConnectEvent.bind(this),
+    onResetConnection: this.disconnect.bind(this),
+  };
 
   public get connected() {
     return this.accounts.length > 0;
