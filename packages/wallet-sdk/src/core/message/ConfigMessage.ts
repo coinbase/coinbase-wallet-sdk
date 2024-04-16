@@ -1,4 +1,4 @@
-import { Message } from ':core/message/Message';
+import { Message } from '.';
 
 export interface ConfigMessage extends Message {
   type: 'config';

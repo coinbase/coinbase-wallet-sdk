@@ -3,8 +3,8 @@ import { UUID } from 'crypto';
 import { PopUpConfigurator } from './PopUpConfigurator';
 import { CrossDomainCommunicator } from ':core/communicator/CrossDomainCommunicator';
 import { standardErrors } from ':core/error';
+import { Message } from ':core/message';
 import { ClientConfigEventType, isConfigMessage, SignerType } from ':core/message/ConfigMessage';
-import { Message } from ':core/message/Message';
 
 // TODO: how to set/change configurations?
 const POPUP_WIDTH = 420;
