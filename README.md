@@ -9,13 +9,14 @@
 
 1. [Coinbase smart wallet](https://keys.coinbase.com/onboarding) (v4 only)
 
-   - Near instant onboarding
-   - Spend with Coinbase balance
-   - Batch transactions
    - EIP-4337 account abstraction using passkeys
      - No passwords or PIN
      - No seed phrase management
-     - No EOA wallet app
+     - No extension or app downloads
+   - Near instant onboarding
+   - Spend with Coinbase balance
+   - Gas sponsorship via paymasters
+   - Batch transactions
    - Desktop and mobile compatible
 
 1. Coinbase Wallet mobile for [Android](https://play.google.com/store/apps/details?id=org.toshi&referrer=utm_source%3DWallet_LP) and [iOS](https://apps.apple.com/app/apple-store/id1278383455?pt=118788940&ct=Wallet_LP&mt=8)
