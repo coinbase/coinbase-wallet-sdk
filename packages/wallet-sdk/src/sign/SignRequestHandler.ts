@@ -4,16 +4,13 @@ import { SignRequestHandlerListener } from './UpdateListenerInterface';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
 import { AddressString } from ':core/type';
-import { RequestArguments } from ':core/type/ProviderInterface';
+import { ConstructorOptions, RequestArguments } from ':core/type/ProviderInterface';
 import { RequestHandler } from ':core/type/RequestHandlerInterface';
 
-interface SignRequestHandlerOptions {
-  appName: string;
-  appLogoUrl?: string | null;
-  appChainIds: number[];
-  smartWalletOnly: boolean;
+type SignRequestHandlerOptions = ConstructorOptions & {
   updateListener: SignRequestHandlerListener;
-}
+  keysUrl?: string;
+};
 
 export class SignRequestHandler implements RequestHandler {
   private popupCommunicator: PopUpCommunicator;
@@ -22,7 +19,7 @@ export class SignRequestHandler implements RequestHandler {
 
   constructor(options: Readonly<SignRequestHandlerOptions>) {
     this.popupCommunicator = new PopUpCommunicator({
-      url: CB_KEYS_URL,
+      url: options.keysUrl ?? CB_KEYS_URL,
     });
     this.updateListener = options.updateListener;
     this.signerConfigurator = new SignerConfigurator({

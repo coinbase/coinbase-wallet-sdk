@@ -5,6 +5,7 @@ import { getErrorForInvalidRequestArgs } from './core/eip1193Utils';
 import { standardErrors } from './core/error';
 import { AddressString, Chain } from './core/type';
 import {
+  ConstructorOptions,
   ProviderInterface,
   ProviderRpcError,
   RequestArguments,
@@ -18,18 +19,11 @@ import { SignRequestHandler } from './sign/SignRequestHandler';
 import { AccountsUpdate, ChainUpdate } from './sign/UpdateListenerInterface';
 import { SubscriptionRequestHandler } from './subscription/SubscriptionRequestHandler';
 
-interface ConstructorOptions {
-  appName: string;
-  appLogoUrl?: string | null;
-  appChainIds: number[];
-  smartWalletOnly: boolean;
-}
-
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
-  private accounts: AddressString[] = [];
-  private chain: Chain;
+  protected accounts: AddressString[] = [];
+  protected chain: Chain;
 
-  private readonly handlers: RequestHandler[];
+  protected readonly handlers: RequestHandler[];
 
   public get chainId() {
     return this.chain.id;
@@ -50,12 +44,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       new StateRequestHandler(),
       new SignRequestHandler({
         ...options,
-        updateListener: {
-          onAccountsUpdate: this.setAccounts.bind(this),
-          onChainUpdate: this.setChain.bind(this),
-          onConnect: this.emitConnectEvent.bind(this),
-          onResetConnection: this.disconnect.bind(this),
-        },
+        updateListener: this.updateListener,
       }),
       new FilterRequestHandler({
         provider: this,
@@ -66,6 +55,13 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       new RPCFetchRequestHandler(), // should be last
     ];
   }
+
+  protected updateListener = {
+    onAccountsUpdate: this.setAccounts.bind(this),
+    onChainUpdate: this.setChain.bind(this),
+    onConnect: this.emitConnectEvent.bind(this),
+    onResetConnection: this.disconnect.bind(this),
+  };
 
   public get connected() {
     return this.accounts.length > 0;
