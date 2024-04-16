@@ -1,10 +1,13 @@
-# Coinbase Wallet SDK v4
+# Coinbase Wallet SDK
 
-### Still using v3.x.x? Please see our [migration guide](packages/wallet-sdk/docs/migration_guide.md) to upgrade to v4 and support smart wallets!
+[![npm](https://img.shields.io/npm/v/@coinbase/wallet-sdk.svg)](https://www.npmjs.com/package/@coinbase/wallet-sdk)
+[![npm](https://img.shields.io/npm/v/@coinbase/wallet-sdk/beta.svg)](https://www.npmjs.com/package/@coinbase/wallet-sdk/v/beta)
 
-Coinbase Wallet SDK lets developers connect their dapps to Coinbase Wallet in the following ways:
+> See our [Smart Wallet Setup](https://docs.cloud.coinbase.com/wallet-sdk/docs/sw-setup) documentation to try out smart wallets with v4 beta.
 
-1. [Coinbase smart wallet](https://keys.coinbase.com/onboarding)
+## Coinbase Wallet SDK lets developers connect their dapps to Coinbase Wallet in the following ways:
+
+1. [Coinbase smart wallet](https://keys.coinbase.com/onboarding) (v4 only)
    - EIP-4337 account abstraction using passkeys
      - No passwords or PIN
      - No seed phrase management
@@ -19,6 +22,8 @@ Coinbase Wallet SDK lets developers connect their dapps to Coinbase Wallet in th
    - Desktop: Users can connect by clicking the connect with extension option.
 
 ## Installing and Upgrading
+
+> Migrating from v3 to v4? Please see our [v4 migration guide](packages/wallet-sdk/docs/migration_guide.md) for a full list of breaking changes.
 
 - This readme contains brief instructions to get up and running.
 - Visit our [public developer docs](https://docs.cloud.coinbase.com/wallet-sdk/docs) for more detail, including samples for integrating Coinbase Wallet using libraries like [web3-react](https://github.com/Uniswap/web3-react), [web3modal](https://github.com/Web3Modal/web3modal), [Web3-Onboard](https://docs.blocknative.com/onboard), and [wagmi](https://wagmi.sh/).
@@ -83,65 +88,10 @@ yarn upgrade @coinbase/wallet-sdk --latest
 npm update @coinbase/wallet-sdk
 ```
 
-### Basic Usage
-
-#### 1. Initialize SDK
-
-```
-const sdk = new CoinbaseWalletSDK({
-  appName: 'SDK Playground'
-});
-```
-
-#### 2. Make web3 Provider
-
-```
-const provider = sdk.makeWeb3Provider();
-
-```
-
-#### 3. Request accounts to initialize connection to wallet
-
-```
-const addresses = provider.request('eth_requestAccounts')
-```
-
-#### 4. Make more requests
-
-```
-provider.request('personal_sign', [`0x${Buffer.from('test message', 'utf8').toString('hex')}`, addresses[0]])
-```
-
-[See more example methods in apps/testapp/src/components/RpcMethods/method](apps/testapp/src/components/RpcMethods/method)
-
-#### 5. Handle provider events
-
-```
-provider.on('connect', (info) => {
-    setConnect(info);
-});
-
-provider.on('disconnect', (error) => {
-    setDisconnect({ code: error.code, message: error.message });
-});
-
-provider.on('accountsChanged', (accounts) => {
-    setAccountsChanged(accounts);
-});
-
-provider.on('chainChanged', (chainId) => {
-    setChainChanged(chainId);
-});
-
-provider.on('message', (message) => {
-    setMessage(message);
-});
-```
-
 ### Developing locally and running the test dapp
 
 - The Coinbase Wallet SDK test dapp can be viewed here https://coinbase.github.io/coinbase-wallet-sdk/.
-- To run it locally and begin developing follow these steps:
+- To run it locally follow these steps:
 
   1. Fork this repo and clone it
   1. From the root dir run `yarn install`
