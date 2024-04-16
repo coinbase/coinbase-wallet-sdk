@@ -1,6 +1,6 @@
-import { decrypt, deriveSharedSecret, encrypt, generateKeyPair } from './SCWCipher';
+import { decrypt, deriveSharedSecret, encrypt, generateKeyPair } from './Cipher';
 
-describe('SCWCipher', () => {
+describe('Cipher', () => {
   describe('generateKeyPair', () => {
     it('should generate a unique key pair on each call', async () => {
       const firstPublicKey = (await generateKeyPair()).publicKey;

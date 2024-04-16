@@ -1,14 +1,14 @@
 import { LIB_VERSION } from '../../version';
 import { Signer, SignerUpdateListener } from '../SignerInterface';
+import { SCWKeyManager } from './SCWKeyManager';
+import { SCWStateManager } from './SCWStateManager';
+import { PopUpCommunicator } from './transport/PopUpCommunicator';
 import {
   decryptContent,
   encryptContent,
   exportKeyToHexString,
   importKeyFromHexString,
-} from './SCWCipher';
-import { SCWKeyManager } from './SCWKeyManager';
-import { SCWStateManager } from './SCWStateManager';
-import { PopUpCommunicator } from './transport/PopUpCommunicator';
+} from ':core/cipher/Cipher';
 import { CB_KEYS_BACKEND_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
 import { Action, SupportedEthereumMethods, SwitchEthereumChainAction } from ':core/message/Action';

@@ -1,8 +1,8 @@
 import { UUID } from 'crypto';
 
-import { EncryptedData } from '../../sign/scw/SCWCipher';
 import { Message } from '.';
 import { RequestAccountsAction } from './Action';
+import { EncryptedData } from ':core/cipher/Cipher';
 import { SerializedEthereumRpcError } from ':core/error';
 
 interface SCWMessage extends Message {
