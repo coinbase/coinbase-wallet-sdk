@@ -24,21 +24,20 @@ This quickstart guide walks through building a dapp for Coinbase smart wallet us
    ```
 5. **Configure the coinbaseWallet connector**
 
-   - Only to `baseSepolia` and `base` are supported by the scw frontend popup at this time. We'll need to replace `mainnet` and `sepolia` with supported chains.
+   - Only to `baseSepolia` is supported by http://keys.coinbase.com at this time.
    - Remove unecessary connectors
    - Edit `src/wagmi.ts` to look like this:
 
    ```typescript
    // src/wagmi.ts
    import { http, createConfig } from 'wagmi';
-   import { base, baseSepolia } from 'wagmi/chains';
+   import { baseSepolia } from 'wagmi/chains';
    import { coinbaseWallet } from 'wagmi/connectors';
 
    export const config = createConfig({
-     chains: [baseSepolia, base],
-     connectors: [coinbaseWallet({ appName: 'Create Wagmi', chainIds: [baseSepolia.id, base.id] })],
+     chains: [baseSepolia],
+     connectors: [coinbaseWallet({ appName: 'Create Wagmi', chainIds: [baseSepolia.id] })],
      transports: {
-       [base.id]: http(),
        [baseSepolia.id]: http(),
      },
    });
