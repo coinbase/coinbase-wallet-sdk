@@ -1,4 +1,4 @@
-import { getErrorForInvalidRequestArgs } from './eip1193Utils';
+import { getErrorForInvalidRequestArgs } from './providerUtils';
 import { standardErrors } from './error';
 
 // @ts-expect-error-next-line

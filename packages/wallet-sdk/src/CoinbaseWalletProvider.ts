@@ -1,7 +1,7 @@
 /* eslint-disable jest/no-commented-out-tests */
 import EventEmitter from 'eventemitter3';
 
-import { getErrorForInvalidRequestArgs } from './core/eip1193Utils';
+import { getErrorForInvalidRequestArgs } from './core/providerUtils';
 import { standardErrors } from './core/error';
 import { AddressString, Chain } from './core/type';
 import {
