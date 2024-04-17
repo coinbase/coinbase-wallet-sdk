@@ -3928,8 +3928,8 @@ __metadata:
   linkType: hard
 
 "@solana/web3.js@npm:^1.70.1":
-  version: 1.91.2
-  resolution: "@solana/web3.js@npm:1.91.2"
+  version: 1.91.6
+  resolution: "@solana/web3.js@npm:1.91.6"
   dependencies:
     "@babel/runtime": ^7.23.4
     "@noble/curves": ^1.2.0
@@ -3946,7 +3946,7 @@ __metadata:
     node-fetch: ^2.7.0
     rpc-websockets: ^7.5.1
     superstruct: ^0.14.2
-  checksum: 2a54b992145671add5d50fa1fd9938a35ba6937468b49bc1acaf4e77ba4fef0b1cea441ff736ca322fda22b624806783bfc5a9375fc430c160f1df566ea6e7d2
+  checksum: 95509d651c41abc71ea5732618b9aca3ff0baac7817549e913ade9eb9567e077472c2319cb422675dbeab13a22b26d036d2ce5b621b8786cb38dce076c188ab1
   languageName: node
   linkType: hard
 
