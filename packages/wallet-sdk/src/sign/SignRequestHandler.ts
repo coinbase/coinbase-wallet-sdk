@@ -1,8 +1,11 @@
 import { PopUpCommunicator } from './scw/transport/PopUpCommunicator';
 import { SignerConfigurator } from './SignerConfigurator';
+import { Signer } from './SignerInterface';
 import { SignRequestHandlerListener } from './UpdateListenerInterface';
+import { WLSigner } from './walletlink/WLSigner';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
+import { WalletLinkConfigEventType } from ':core/message/ConfigMessage';
 import { AddressString } from ':core/type';
 import { ConstructorOptions, RequestArguments } from ':core/type/ProviderInterface';
 import { RequestHandler } from ':core/type/RequestHandlerInterface';
@@ -13,6 +16,8 @@ type SignRequestHandlerOptions = ConstructorOptions & {
 };
 
 export class SignRequestHandler implements RequestHandler {
+  private _signer: Signer | undefined;
+
   private popupCommunicator: PopUpCommunicator;
   private updateListener: SignRequestHandlerListener;
   private signerConfigurator: SignerConfigurator;
@@ -26,6 +31,7 @@ export class SignRequestHandler implements RequestHandler {
       ...options,
       popupCommunicator: this.popupCommunicator,
     });
+    this.tryRestoringSignerFromPersistedType();
   }
 
   async handleRequest(request: RequestArguments, accounts: AddressString[]) {
@@ -34,13 +40,14 @@ export class SignRequestHandler implements RequestHandler {
         return await this.eth_requestAccounts(accounts);
       }
 
-      if (!this.signerConfigurator.signer || accounts.length <= 0) {
+      const signer = await this.useSigner();
+      if (accounts.length <= 0) {
         throw standardErrors.provider.unauthorized(
           "Must call 'eth_requestAccounts' before other methods"
         );
       }
 
-      return await this.signerConfigurator.signer.request(request);
+      return await signer.request(request);
     } catch (err) {
       if ((err as { code?: unknown })?.code === standardErrorCodes.provider.unauthorized) {
         this.updateListener.onResetConnection();
@@ -55,21 +62,14 @@ export class SignRequestHandler implements RequestHandler {
       return Promise.resolve(accounts);
     }
 
-    if (!this.signerConfigurator.signerType) {
-      // WL: this promise hangs until the QR code is scanned
-      // SCW: this promise hangs until the user signs in with passkey
-      await this.signerConfigurator.completeSignerTypeSelection();
-    }
-
     try {
-      // in the case of walletlink, this doesn't do anything since signer is initialized
-      // when the wallet link QR code url is requested
-      this.signerConfigurator.initSigner();
-
-      const ethAddresses = await this.signerConfigurator.signer?.handshake();
+      const signer = await this.useSigner();
+      const ethAddresses = await signer.handshake();
       if (Array.isArray(ethAddresses)) {
-        if (this.signerConfigurator.signerType === 'walletlink') {
-          this.popupCommunicator.walletLinkQrScanned();
+        if (signer instanceof WLSigner) {
+          this.popupCommunicator.postConfigMessage(
+            WalletLinkConfigEventType.DappWalletLinkConnected
+          );
         }
         this.updateListener.onConnect();
         return Promise.resolve(ethAddresses);
@@ -77,7 +77,7 @@ export class SignRequestHandler implements RequestHandler {
 
       return Promise.reject(standardErrors.rpc.internal('Failed to get accounts'));
     } catch (err) {
-      if (this.signerConfigurator.signerType === 'walletlink') {
+      if (this._signer instanceof WLSigner) {
         this.popupCommunicator.disconnect();
         await this.onDisconnect();
       }
@@ -111,6 +111,18 @@ export class SignRequestHandler implements RequestHandler {
   }
 
   async onDisconnect() {
+    this._signer = undefined;
     await this.signerConfigurator.onDisconnect();
+  }
+
+  private tryRestoringSignerFromPersistedType() {
+    this._signer = this.signerConfigurator.tryRestoringSignerFromPersistedType();
+  }
+
+  private async useSigner(): Promise<Signer> {
+    if (this._signer) return this._signer;
+
+    this._signer = await this.signerConfigurator.selectSigner();
+    return this._signer;
   }
 }

@@ -1,9 +1,9 @@
-// eslint-disable-next-line max-classes-per-file
-
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
-import { ProviderInterface } from './core/type/ProviderInterface';
-import { Signer } from './sign/SignerInterface';
+import { Window } from ':core/providerUtils';
+import { ProviderInterface } from ':core/type/ProviderInterface';
+
+const window = globalThis as Window;
 
 describe('CoinbaseWalletSDK', () => {
   describe('initialize', () => {
@@ -61,7 +61,6 @@ describe('CoinbaseWalletSDK', () => {
       });
     });
 
-    // TODO: revisit these tests
     describe('extension', () => {
       const mockProvider = { close: jest.fn() } as unknown as ProviderInterface;
 
@@ -71,7 +70,6 @@ describe('CoinbaseWalletSDK', () => {
 
       afterAll(() => {
         window.coinbaseWalletExtension = undefined;
-        window.coinbaseWalletExtensionSigner = undefined;
       });
 
       test('@makeWeb3Provider - only walletExtension injected', () => {
@@ -79,12 +77,16 @@ describe('CoinbaseWalletSDK', () => {
         expect(coinbaseWalletSDK2.makeWeb3Provider()).toEqual(mockProvider);
       });
 
-      test('@makeWeb3Provider - both walletExtension and walletExtensionSigner injected', () => {
+      test('@makeWeb3Provider - walletExtension.shouldUseSigner is true', () => {
         // Returns extension provider
-        window.coinbaseWalletExtensionSigner = {} as unknown as Signer;
+        const mockProvider2 = {
+          close: jest.fn(),
+          shouldUseSigner: true,
+        } as unknown as ProviderInterface;
+        window.coinbaseWalletExtension = mockProvider2;
 
         const provider = coinbaseWalletSDK2.makeWeb3Provider();
-        expect(provider).not.toEqual(mockProvider);
+        expect(provider).not.toEqual(mockProvider2);
       });
 
       test('@makeWeb3Provider, but with smartWalletOnly as true', () => {
@@ -105,9 +107,8 @@ describe('CoinbaseWalletSDK', () => {
         public isCoinbaseBrowser = true;
       }
 
-      const mockCipherProvider = new MockCipherProviderClass();
+      const mockCipherProvider = new MockCipherProviderClass() as unknown as ProviderInterface;
       beforeAll(() => {
-        // @ts-expect-error mocked provider
         window.ethereum = mockCipherProvider;
       });
 

@@ -1,5 +1,4 @@
 // Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
-
 interface Tag<T extends string, RealType> {
   __tag__: T;
   __realType__: RealType;

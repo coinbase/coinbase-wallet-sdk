@@ -1,10 +1,18 @@
 import { UUID } from 'crypto';
 
-import { PopUpConfigurator } from './PopUpConfigurator';
+import { LIB_VERSION } from '../../../version';
 import { CrossDomainCommunicator } from ':core/communicator/CrossDomainCommunicator';
 import { standardErrors } from ':core/error';
 import { Message } from ':core/message';
-import { ClientConfigEventType, isConfigMessage, SignerType } from ':core/message/ConfigMessage';
+import {
+  ConfigEventType,
+  ConfigMessage,
+  isConfigMessage,
+  PopupSetupEventType,
+  SignerConfigEventType,
+  SignerType,
+  WalletLinkConfigEventType,
+} from ':core/message/ConfigMessage';
 
 // TODO: how to set/change configurations?
 const POPUP_WIDTH = 420;
@@ -18,74 +26,25 @@ type Fulfillment = {
 
 export class PopUpCommunicator extends CrossDomainCommunicator {
   private requestMap = new Map<UUID, Fulfillment>();
-  private popUpConfigurator: PopUpConfigurator;
+  private resolveConnection?: () => void;
+
+  private selectSignerTypeFulfillment?: {
+    resolve: (_: SignerType) => void;
+    reject: (_: Error) => void;
+  };
 
   constructor({ url }: { url: string }) {
     super();
     this.url = new URL(url);
-    this.popUpConfigurator = new PopUpConfigurator({ communicator: this });
   }
 
-  protected onConnect(): Promise<void> {
-    return new Promise((resolve) => {
-      this.popUpConfigurator.resolvePopupConnection = () => {
-        this.connected = true;
-        resolve();
-      };
-      this.openFixedSizePopUpWindow();
-    });
-  }
-
-  protected onEvent(event: MessageEvent<Message>) {
-    if (event.origin !== this.url?.origin) return;
-
-    const message = event.data;
-    if (isConfigMessage(message)) {
-      this.popUpConfigurator.handleConfigMessage(message);
-      return;
-    }
-
-    if (!this.connected) return;
-    if (!('requestId' in message)) return;
-
-    const requestId = message.requestId as UUID;
-    const resolveFunction = this.requestMap.get(requestId)?.resolve;
-    this.requestMap.delete(requestId);
-    resolveFunction?.(message);
-  }
-
-  protected onDisconnect() {
-    this.connected = false;
-    this.closeChildWindow();
-    this.requestMap.forEach((fulfillment, uuid, map) => {
-      fulfillment.reject(standardErrors.provider.userRejectedRequest('Request rejected'));
-      map.delete(uuid);
-    });
-    this.popUpConfigurator.onDisconnect();
-  }
-
-  setGetWalletLinkQRCodeUrlCallback(callback: () => string) {
-    this.popUpConfigurator.getWalletLinkQRCodeUrlCallback = callback;
-  }
-
-  selectSignerType({
-    smartWalletOnly,
-    isExtensionSignerAvailable,
-  }: {
-    smartWalletOnly: boolean;
-    isExtensionSignerAvailable: boolean;
-  }): Promise<SignerType> {
+  selectSignerType(smartWalletOnly: boolean): Promise<SignerType> {
     return new Promise((resolve, reject) => {
-      this.popUpConfigurator.signerTypeSelectionFulfillment = { resolve, reject };
-      this.popUpConfigurator.postClientConfigMessage(ClientConfigEventType.SelectConnectionType, {
+      this.selectSignerTypeFulfillment = { resolve, reject };
+      this.postConfigMessage(SignerConfigEventType.DappSelectSignerType, {
         smartWalletOnly,
-        isExtensionSignerAvailable,
       });
     });
-  }
-
-  walletLinkQrScanned() {
-    this.popUpConfigurator.postClientConfigMessage(ClientConfigEventType.WalletLinkQrScanned);
   }
 
   request(message: Message): Promise<Message> {
@@ -101,14 +60,98 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     });
   }
 
+  postConfigMessage(type: ConfigEventType, options?: unknown) {
+    if (
+      options &&
+      type !== PopupSetupEventType.DappHello &&
+      type !== SignerConfigEventType.DappSelectSignerType &&
+      type !== WalletLinkConfigEventType.DappWalletLinkUrlResponse
+    ) {
+      throw standardErrors.rpc.internal('ClientConfigEvent does not accept options');
+    }
+
+    const configMessage: ConfigMessage = {
+      type: 'config',
+      id: crypto.randomUUID(),
+      event: type,
+      params: options,
+      version: LIB_VERSION,
+    };
+    this.postMessage(configMessage);
+  }
+
+  protected onConnect(): Promise<void> {
+    return new Promise((resolve) => {
+      this.resolveConnection = () => {
+        this.connected = true;
+        resolve();
+      };
+
+      this.openFixedSizePopUpWindow();
+    });
+  }
+
+  protected onEvent(event: MessageEvent<Message>) {
+    if (event.origin !== this.url?.origin) return;
+
+    const message = event.data;
+    if (isConfigMessage(message)) {
+      this.handleConfigMessage(message);
+      return;
+    }
+
+    if (!this.connected) return;
+    if (!('requestId' in message)) return;
+
+    const requestId = message.requestId as UUID;
+    const resolveFunction = this.requestMap.get(requestId)?.resolve;
+    this.requestMap.delete(requestId);
+    resolveFunction?.(message);
+  }
+
+  protected onDisconnect() {
+    this.connected = false;
+    this.resolveConnection = undefined;
+    this.closeChildWindow();
+    this.selectSignerTypeFulfillment?.reject(
+      standardErrors.provider.userRejectedRequest('Request rejected')
+    );
+    this.selectSignerTypeFulfillment = undefined;
+    this.requestMap.forEach((fulfillment, uuid, map) => {
+      fulfillment.reject(standardErrors.provider.userRejectedRequest('Request rejected'));
+      map.delete(uuid);
+    });
+  }
+
+  private handleConfigMessage(message: ConfigMessage) {
+    switch (message.event) {
+      case PopupSetupEventType.PopupHello:
+        // Handshake Step 2: After receiving PopupHello from popup, Dapp sends DappHello
+        // to FE to help FE confirm the origin of the Dapp, as well as SDK version.
+        this.postConfigMessage(PopupSetupEventType.DappHello, LIB_VERSION);
+        this.resolveConnection?.();
+        this.resolveConnection = undefined;
+        break;
+      case SignerConfigEventType.PopupSignerTypeSelected:
+        this.selectSignerTypeFulfillment?.resolve(message.params as SignerType);
+        break;
+      case PopupSetupEventType.PopupUnload:
+        this.disconnect();
+        break;
+    }
+  }
+
   // Window Management
 
-  private openFixedSizePopUpWindow() {
+  private openFixedSizePopUpWindow(params?: Record<string, unknown>) {
     const left = (window.innerWidth - POPUP_WIDTH) / 2 + window.screenX;
     const top = (window.innerHeight - POPUP_HEIGHT) / 2 + window.screenY;
 
     const urlParams = new URLSearchParams();
-    urlParams.append('opener', encodeURIComponent(window.location.href));
+    // urlParams.append('opener', encodeURIComponent(window.location.href));
+    Object.entries(params || {}).forEach(([key, value]) => {
+      urlParams.append(key, encodeURIComponent(JSON.stringify(value)));
+    });
 
     if (!this.url) {
       throw standardErrors.rpc.internal('No url provided in PopUpCommunicator');
@@ -118,7 +161,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
 
     this.peerWindow = window.open(
       popupUrl,
-      'SCW Child Window',
+      'Smart Wallet',
       `width=${POPUP_WIDTH}, height=${POPUP_HEIGHT}, left=${left}, top=${top}`
     );
 

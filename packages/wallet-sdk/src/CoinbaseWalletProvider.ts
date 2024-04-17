@@ -1,7 +1,7 @@
 /* eslint-disable jest/no-commented-out-tests */
 import EventEmitter from 'eventemitter3';
 
-import { getErrorForInvalidRequestArgs } from './core/eip1193Utils';
+import { getErrorForInvalidRequestArgs } from './core/providerUtils';
 import { standardErrors } from './core/error';
 import { AddressString, Chain } from './core/type';
 import {
@@ -24,14 +24,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   protected readonly handlers: RequestHandler[];
 
-  public get chainId() {
-    return this.chain.id;
-  }
-
-  public get isCoinbaseWallet() {
-    return true;
-  }
-
   constructor(options: Readonly<ConstructorOptions>) {
     super();
 
@@ -40,11 +32,11 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     };
 
     this.handlers = [
-      new StateRequestHandler(),
       new SignRequestHandler({
         ...options,
         updateListener: this.updateListener,
       }),
+      new StateRequestHandler(),
       new FilterRequestHandler({
         provider: this,
       }),
@@ -94,6 +86,8 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       method: 'eth_requestAccounts',
     });
   }
+
+  readonly isCoinbaseWallet = true;
 
   private emitConnectEvent() {
     this.emit('connect', { chainId: prepend0x(this.chain.id.toString(16)) });

@@ -23,26 +23,6 @@ describe('CoinbaseWalletProvider', () => {
     );
   });
 
-  describe('default chain id', () => {
-    it('uses the first chain id when appChainIds is not empty', () => {
-      const provider = new CoinbaseWalletProvider({
-        appName: 'TestApp',
-        appChainIds: [8453, 84532],
-        smartWalletOnly: false,
-      });
-      expect(provider.chainId).toBe(8453);
-    });
-
-    it('fallback to 1 when appChainIds is empty', () => {
-      const provider = new CoinbaseWalletProvider({
-        appName: 'TestApp',
-        appChainIds: [],
-        smartWalletOnly: false,
-      });
-      expect(provider.chainId).toBe(1);
-    });
-  });
-
   describe('Request Handling', () => {
     test('handles request correctly', async () => {
       const response1 = await provider.request({ method: 'eth_chainId' });

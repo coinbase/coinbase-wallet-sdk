@@ -1,5 +1,31 @@
 import { standardErrors } from './error';
-import { RequestArguments } from './type/ProviderInterface';
+import { ProviderInterface, RequestArguments } from './type/ProviderInterface';
+
+export interface Window {
+  top: Window;
+  ethereum?: ProviderInterface;
+  coinbaseWalletExtension?: ProviderInterface;
+}
+
+export function fetchCoinbaseInjectedProvider(
+  smartWalletOnly: boolean
+): ProviderInterface | undefined {
+  const window = globalThis as Window;
+
+  if (!smartWalletOnly) {
+    const extension = window.coinbaseWalletExtension;
+    if (extension && !('shouldUseSigner' in extension && extension.shouldUseSigner)) {
+      return extension;
+    }
+  }
+
+  const ethereum = window.ethereum ?? window.top?.ethereum;
+  if (ethereum && 'isCoinbaseBrowser' in ethereum && ethereum.isCoinbaseBrowser) {
+    return ethereum;
+  }
+
+  return undefined;
+}
 
 /**
  * Validates the arguments for an invalid request and returns an error if any validation fails.
