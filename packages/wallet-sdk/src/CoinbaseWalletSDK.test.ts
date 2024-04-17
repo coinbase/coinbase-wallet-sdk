@@ -1,6 +1,6 @@
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
-import { Window } from ':core/type/index';
+import { Window } from ':core/providerUtils';
 import { ProviderInterface } from ':core/type/ProviderInterface';
 
 const window = globalThis as Window;
