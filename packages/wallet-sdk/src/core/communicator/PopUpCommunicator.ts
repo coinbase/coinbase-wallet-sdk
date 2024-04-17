@@ -6,6 +6,7 @@ import { standardErrors } from ':core/error';
 import { Message } from ':core/message';
 import {
   ConfigEventType,
+  ConfigRequestMessage,
   PopupSetupEventType,
   SignerConfigEventType,
   SignerType,
@@ -17,7 +18,6 @@ const POPUP_WIDTH = 420;
 const POPUP_HEIGHT = 540;
 
 type Fulfillment = {
-  message: Message;
   resolve: (_: Message) => void;
   reject: (_: Error) => void;
 };
@@ -49,7 +49,6 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
       this.postMessage(message);
 
       const fulfillment: Fulfillment = {
-        message,
         resolve,
         reject,
       };
@@ -67,7 +66,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
       throw standardErrors.rpc.internal('ClientConfigEvent does not accept options');
     }
 
-    const configMessage: ConfigMessage = {
+    const configMessage: ConfigRequestMessage = {
       type: 'config',
       id: crypto.randomUUID(),
       event: type,
@@ -78,9 +77,6 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
   }
 
   protected async onConnect() {
-    // popup 연결되면 뭐 할지 정의 되어 있어야해.
-    // popup을 열어
-    // hello 오길 기다려. 받고 나면 resolve.
     this.openFixedSizePopUpWindow();
     await this.waitForPopupHello();
   }
@@ -90,7 +86,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
 
     const message = event.data;
     if (!('requestId' in message)) {
-      this.handleIncomingRequest(message);
+      this.handleIncomingRequest(message as ConfigRequestMessage);
       return;
     }
 
@@ -112,7 +108,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     });
   }
 
-  private handleIncomingRequest(message: Message) {
+  private handleIncomingRequest(message: ConfigRequestMessage) {
     switch (message.event) {
       case PopupSetupEventType.PopupHello:
         // Handshake Step 2: After receiving PopupHello from popup, Dapp sends DappHello
