@@ -3,7 +3,7 @@ import { UUID } from 'crypto';
 import { LIB_VERSION } from '../../version';
 import { CrossDomainCommunicator } from './CrossDomainCommunicator';
 import { standardErrors } from ':core/error';
-import { isResponseMessage, Message, ResponseMessage } from ':core/message';
+import { Message } from ':core/message';
 import {
   ConfigEventType,
   ConfigRequestMessage,
@@ -90,14 +90,13 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     if (event.origin !== this.url?.origin) return;
 
     const message = event.data;
-    if (isResponseMessage(message)) {
-      this.handleResponseMessage(message);
+    if (isConfigMessage(message)) {
+      this.handleConfigMessage(message);
+      return;
     }
 
-    this.handleConfigMessage(message);
-  }
+    if (!('requestId' in message)) return;
 
-  private handleResponseMessage(message: ResponseMessage) {
     const requestId = message.requestId as UUID;
     const resolveFunction = this.requestMap.get(requestId)?.resolve;
     this.requestMap.delete(requestId);
