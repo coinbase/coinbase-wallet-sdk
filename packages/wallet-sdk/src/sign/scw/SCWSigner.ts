@@ -1,9 +1,9 @@
 import { LIB_VERSION } from '../../version';
 import { Signer } from '../SignerInterface';
+import { PopUpCommunicator } from '../transport/PopUpCommunicator';
 import { StateUpdateListener } from '../UpdateListenerInterface';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWStateManager } from './SCWStateManager';
-import { PopUpCommunicator } from './transport/PopUpCommunicator';
 import { CB_KEYS_BACKEND_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
 import { Action, SupportedEthereumMethods, SwitchEthereumChainAction } from ':core/message/Action';
@@ -52,10 +52,6 @@ export class SCWSigner implements Signer {
   }
 
   public async handshake(): Promise<AddressString[]> {
-    if (!this.puc.connected) {
-      await this.puc.connect();
-    }
-
     const handshakeMessage = await this.createRequestMessage({
       handshake: {
         method: SupportedEthereumMethods.EthRequestAccounts,
@@ -148,10 +144,6 @@ export class SCWSigner implements Signer {
   }
 
   private async sendEncryptedRequest(request: RequestArguments): Promise<RPCResponseMessage> {
-    if (!this.puc.connected) {
-      await this.puc.connect();
-    }
-
     const sharedSecret = await this.keyManager.getSharedSecret();
     if (!sharedSecret) {
       throw standardErrors.provider.unauthorized(

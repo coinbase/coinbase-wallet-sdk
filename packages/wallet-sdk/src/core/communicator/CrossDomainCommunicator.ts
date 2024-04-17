@@ -3,27 +3,23 @@ import { standardErrors } from ':core/error';
 
 export abstract class CrossDomainCommunicator {
   protected url: URL | undefined = undefined;
-  protected _connected = false;
-
-  public get connected() {
-    return this._connected;
-  }
-
-  protected set connected(value: boolean) {
-    this._connected = value;
-  }
+  private connected = false;
 
   protected abstract onConnect(): Promise<void>;
   protected abstract onDisconnect(): void;
   protected abstract onEvent(event: MessageEvent<Message>): void;
 
   async connect(): Promise<void> {
+    if (this.connected) return;
     window.addEventListener('message', this.onEvent.bind(this));
-    await this.onConnect();
+    return this.onConnect().then(() => {
+      this.connected = true;
+    });
   }
 
   disconnect(): void {
     this.connected = false;
+    window.removeEventListener('message', this.onEvent.bind(this));
     this.onDisconnect();
   }
 

@@ -1,9 +1,19 @@
+import { UUID } from 'crypto';
+
 import { Message } from '.';
 
-export interface ConfigMessage extends Message {
+export interface ConfigRequestMessage extends Message {
   type: 'config';
+  id: UUID;
   event: ConfigEventType;
   params?: unknown;
+}
+
+export interface ConfigResponseMessage extends Message {
+  type: 'config';
+  id: UUID;
+  requestId: UUID;
+  response: unknown;
 }
 
 export type ConfigEventType =
@@ -39,7 +49,3 @@ export enum WalletLinkConfigEventType {
 }
 
 export type SignerType = 'scw' | 'walletlink' | 'extension';
-
-export function isConfigMessage(msg: Message): msg is ConfigMessage {
-  return msg.type === 'config' && 'event' in msg;
-}

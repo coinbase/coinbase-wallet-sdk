@@ -1,13 +1,12 @@
 import { UUID } from 'crypto';
 
-import { LIB_VERSION } from '../../../version';
+import { LIB_VERSION } from '../../version';
 import { CrossDomainCommunicator } from ':core/communicator/CrossDomainCommunicator';
 import { standardErrors } from ':core/error';
-import { Message } from ':core/message';
+import { isResponseMessage, Message, ResponseMessage } from ':core/message';
 import {
   ConfigEventType,
-  ConfigMessage,
-  isConfigMessage,
+  ConfigRequestMessage,
   PopupSetupEventType,
   SignerConfigEventType,
   SignerType,
@@ -26,7 +25,6 @@ type Fulfillment = {
 
 export class PopUpCommunicator extends CrossDomainCommunicator {
   private requestMap = new Map<UUID, Fulfillment>();
-  private resolveConnection?: () => void;
 
   private selectSignerTypeFulfillment?: {
     resolve: (_: SignerType) => void;
@@ -80,29 +78,26 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     this.postMessage(configMessage);
   }
 
-  protected onConnect(): Promise<void> {
-    return new Promise((resolve) => {
-      this.resolveConnection = () => {
-        this.connected = true;
-        resolve();
-      };
-
-      this.openFixedSizePopUpWindow();
-    });
+  protected async onConnect() {
+    // popup 연결되면 뭐 할지 정의 되어 있어야해.
+    // popup을 열어
+    // hello 오길 기다려. 받고 나면 resolve.
+    this.openFixedSizePopUpWindow();
+    await this.waitForPopupHello();
   }
 
   protected onEvent(event: MessageEvent<Message>) {
     if (event.origin !== this.url?.origin) return;
 
     const message = event.data;
-    if (isConfigMessage(message)) {
-      this.handleConfigMessage(message);
-      return;
+    if (isResponseMessage(message)) {
+      this.handleResponseMessage(message);
     }
 
-    if (!this.connected) return;
-    if (!('requestId' in message)) return;
+    this.handleConfigMessage(message);
+  }
 
+  private handleResponseMessage(message: ResponseMessage) {
     const requestId = message.requestId as UUID;
     const resolveFunction = this.requestMap.get(requestId)?.resolve;
     this.requestMap.delete(requestId);
@@ -110,8 +105,6 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
   }
 
   protected onDisconnect() {
-    this.connected = false;
-    this.resolveConnection = undefined;
     this.closeChildWindow();
     this.selectSignerTypeFulfillment?.reject(
       standardErrors.provider.userRejectedRequest('Request rejected')
@@ -123,14 +116,12 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     });
   }
 
-  private handleConfigMessage(message: ConfigMessage) {
+  private handleConfigMessage(message: ConfigRequestMessage) {
     switch (message.event) {
       case PopupSetupEventType.PopupHello:
         // Handshake Step 2: After receiving PopupHello from popup, Dapp sends DappHello
         // to FE to help FE confirm the origin of the Dapp, as well as SDK version.
         this.postConfigMessage(PopupSetupEventType.DappHello, LIB_VERSION);
-        this.resolveConnection?.();
-        this.resolveConnection = undefined;
         break;
       case SignerConfigEventType.PopupSignerTypeSelected:
         this.selectSignerTypeFulfillment?.resolve(message.params as SignerType);
@@ -143,22 +134,14 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
 
   // Window Management
 
-  private openFixedSizePopUpWindow(params?: Record<string, unknown>) {
+  private openFixedSizePopUpWindow() {
     const left = (window.innerWidth - POPUP_WIDTH) / 2 + window.screenX;
     const top = (window.innerHeight - POPUP_HEIGHT) / 2 + window.screenY;
-
-    const urlParams = new URLSearchParams();
-    // urlParams.append('opener', encodeURIComponent(window.location.href));
-    Object.entries(params || {}).forEach(([key, value]) => {
-      urlParams.append(key, encodeURIComponent(JSON.stringify(value)));
-    });
 
     if (!this.url) {
       throw standardErrors.rpc.internal('No url provided in PopUpCommunicator');
     }
     const popupUrl = new URL(this.url);
-    popupUrl.search = urlParams.toString();
-
     this.peerWindow = window.open(
       popupUrl,
       'Smart Wallet',
