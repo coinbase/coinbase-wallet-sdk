@@ -121,7 +121,7 @@ Upgrade Coinbase Wallet SDK using yarn or npm.
    ]);
    ```
 
-[See more example methods in apps/testapp/src/components/RpcMethods/method](apps/testapp/src/components/RpcMethods/method)
+   [See more example methods in apps/testapp/src/components/RpcMethods/method](apps/testapp/src/components/RpcMethods/method)
 
 5. Handle provider events
 
