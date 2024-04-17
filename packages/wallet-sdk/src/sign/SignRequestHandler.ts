@@ -1,8 +1,8 @@
 import { SignerConfigurator } from './SignerConfigurator';
 import { Signer } from './SignerInterface';
-import { PopUpCommunicator } from './transport/PopUpCommunicator';
 import { SignRequestHandlerListener } from './UpdateListenerInterface';
 import { WLSigner } from './walletlink/WLSigner';
+import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
 import { WalletLinkConfigEventType } from ':core/message/ConfigMessage';

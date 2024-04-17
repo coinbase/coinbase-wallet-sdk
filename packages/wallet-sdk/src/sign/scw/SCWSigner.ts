@@ -1,9 +1,9 @@
 import { LIB_VERSION } from '../../version';
 import { Signer } from '../SignerInterface';
-import { PopUpCommunicator } from '../transport/PopUpCommunicator';
 import { StateUpdateListener } from '../UpdateListenerInterface';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWStateManager } from './SCWStateManager';
+import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { standardErrors } from ':core/error';
 import { Action, SupportedEthereumMethods, SwitchEthereumChainAction } from ':core/message/Action';
 import {

@@ -1,8 +1,8 @@
 import { SCWSigner } from './scw/SCWSigner';
 import { Signer } from './SignerInterface';
-import { PopUpCommunicator } from './transport/PopUpCommunicator';
 import { SignRequestHandlerListener } from './UpdateListenerInterface';
 import { WLSigner } from './walletlink/WLSigner';
+import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { standardErrors } from ':core/error';
 import { SignerType, WalletLinkConfigEventType } from ':core/message/ConfigMessage';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
