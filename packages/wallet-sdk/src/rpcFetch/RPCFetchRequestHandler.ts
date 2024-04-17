@@ -1,3 +1,5 @@
+import { LIB_VERSION } from 'src/version';
+
 import { standardErrors } from ':core/error';
 import { Chain } from ':core/type';
 import { RequestArguments } from ':core/type/ProviderInterface';
@@ -20,7 +22,7 @@ export class RPCFetchRequestHandler implements RequestHandler {
       method: 'POST',
       body: JSON.stringify(requestBody),
       mode: 'cors',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Cbw-Sdk-Version': LIB_VERSION },
     });
     const response = await res.json();
     return response.result;
