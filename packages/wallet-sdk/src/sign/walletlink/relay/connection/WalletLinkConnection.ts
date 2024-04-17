@@ -354,7 +354,10 @@ export class WalletLinkConnection {
       JSON.stringify({
         ...unencryptedData,
         origin: location.origin,
-        relaySource: window.coinbaseWalletExtension ? 'injected_sdk' : 'sdk',
+        relaySource:
+          'coinbaseWalletExtension' in window && window.coinbaseWalletExtension
+            ? 'injected_sdk'
+            : 'sdk',
       })
     );
 

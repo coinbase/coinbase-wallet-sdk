@@ -1,4 +1,5 @@
-import { Signer, SignerUpdateListener } from '../SignerInterface';
+import { Signer } from '../SignerInterface';
+import { StateUpdateListener } from '../UpdateListenerInterface';
 import { WLRelayAdapter } from './relay/WLRelayAdapter';
 import { WALLETLINK_URL } from ':core/constants';
 import { AddressString } from ':core/type';
@@ -10,15 +11,12 @@ export class WLSigner implements Signer {
   constructor(options: {
     appName: string;
     appLogoUrl: string | null;
-    updateListener: SignerUpdateListener;
+    updateListener: StateUpdateListener;
   }) {
     this.adapter = new WLRelayAdapter({
       ...options,
       walletlinkUrl: WALLETLINK_URL,
-      updateListener: {
-        onAccountsUpdate: (...args) => options.updateListener.onAccountsUpdate(this, ...args),
-        onChainUpdate: (...args) => options.updateListener.onChainUpdate(this, ...args),
-      },
+      updateListener: options.updateListener,
     });
   }
 

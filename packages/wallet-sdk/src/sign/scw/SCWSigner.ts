@@ -1,5 +1,6 @@
 import { LIB_VERSION } from '../../version';
-import { Signer, SignerUpdateListener } from '../SignerInterface';
+import { Signer } from '../SignerInterface';
+import { StateUpdateListener } from '../UpdateListenerInterface';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWStateManager } from './SCWStateManager';
 import { PopUpCommunicator } from './transport/PopUpCommunicator';
@@ -32,7 +33,7 @@ export class SCWSigner implements Signer {
     appLogoUrl: string | null;
     appChainIds: number[];
     puc: PopUpCommunicator;
-    updateListener: SignerUpdateListener;
+    updateListener: StateUpdateListener;
   }) {
     this.appName = options.appName;
     this.appLogoUrl = options.appLogoUrl;
@@ -41,10 +42,7 @@ export class SCWSigner implements Signer {
     this.keyManager = new SCWKeyManager();
     this.stateManager = new SCWStateManager({
       appChainIds: this.appChainIds,
-      updateListener: {
-        onAccountsUpdate: (...args) => options.updateListener.onAccountsUpdate(this, ...args),
-        onChainUpdate: (...args) => options.updateListener.onChainUpdate(this, ...args),
-      },
+      updateListener: options.updateListener,
     });
 
     this.handshake = this.handshake.bind(this);
@@ -85,19 +83,13 @@ export class SCWSigner implements Signer {
   }
 
   public async request<T>(request: RequestArguments): Promise<T> {
-    const localResult = this.tryLocalHandling<T>(request);
+    const localResult = await this.tryLocalHandling<T>(request);
     if (localResult !== undefined) {
       if (localResult instanceof Error) throw localResult;
       return localResult;
     }
 
-    const backendResult = await this.tryBackendHandling<T>(request);
-    if (backendResult !== undefined) {
-      return backendResult;
-    }
-
     const response = await this.sendEncryptedRequest(request);
-
     const decrypted = await this.decryptResponseMessage<T>(response);
     this.updateInternalState(request, decrypted);
 
@@ -112,7 +104,7 @@ export class SCWSigner implements Signer {
     await this.keyManager.clear();
   }
 
-  private tryLocalHandling<T>(request: RequestArguments): T | undefined {
+  private async tryLocalHandling<T>(request: RequestArguments): Promise<T | undefined> {
     switch (request.method) {
       case SupportedEthereumMethods.WalletSwitchEthereumChain: {
         const params = request.params as SwitchEthereumChainAction['params'];
@@ -135,13 +127,6 @@ export class SCWSigner implements Signer {
         }
         return walletCapabilities as T;
       }
-      default:
-        return undefined;
-    }
-  }
-
-  private async tryBackendHandling<T>(request: RequestArguments): Promise<T | undefined> {
-    switch (request.method) {
       case SupportedEthereumMethods.WalletGetCallsStatus: {
         const requestBody = {
           ...request,
