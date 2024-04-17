@@ -24,6 +24,7 @@ type Fulfillment = {
 
 export class PopUpCommunicator extends CrossDomainCommunicator {
   private requestMap = new Map<UUID, Fulfillment>();
+  private resolveConnection?: () => void;
 
   private selectSignerTypeFulfillment?: {
     resolve: (_: SignerType) => void;
@@ -77,8 +78,13 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
   }
 
   protected async onConnect() {
+    const waitForPopupHello = new Promise<void>((resolve) => {
+      this.resolveConnection = resolve;
+    });
+
     this.openFixedSizePopUpWindow();
-    await this.waitForPopupHello();
+
+    await waitForPopupHello;
   }
 
   protected onEvent(event: MessageEvent<Message>) {
@@ -114,6 +120,8 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
         // Handshake Step 2: After receiving PopupHello from popup, Dapp sends DappHello
         // to FE to help FE confirm the origin of the Dapp, as well as SDK version.
         this.postConfigMessage(PopupSetupEventType.DappHello, LIB_VERSION);
+        this.resolveConnection?.();
+        this.resolveConnection = undefined;
         break;
       case SignerConfigEventType.PopupSignerTypeSelected:
         this.selectSignerTypeFulfillment?.resolve(message.params as SignerType);
