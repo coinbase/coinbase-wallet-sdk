@@ -6,7 +6,6 @@ import { standardErrors } from ':core/error';
 import { Message } from ':core/message';
 import {
   ConfigEventType,
-  ConfigRequestMessage,
   PopupSetupEventType,
   SignerConfigEventType,
   SignerType,
@@ -90,12 +89,10 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     if (event.origin !== this.url?.origin) return;
 
     const message = event.data;
-    if (isConfigMessage(message)) {
-      this.handleConfigMessage(message);
+    if (!('requestId' in message)) {
+      this.handleIncomingRequest(message);
       return;
     }
-
-    if (!('requestId' in message)) return;
 
     const requestId = message.requestId as UUID;
     const resolveFunction = this.requestMap.get(requestId)?.resolve;
@@ -115,7 +112,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     });
   }
 
-  private handleConfigMessage(message: ConfigRequestMessage) {
+  private handleIncomingRequest(message: Message) {
     switch (message.event) {
       case PopupSetupEventType.PopupHello:
         // Handshake Step 2: After receiving PopupHello from popup, Dapp sends DappHello
