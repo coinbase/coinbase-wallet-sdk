@@ -1,5 +1,3 @@
-// eslint-disable-next-line max-classes-per-file
-
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
 import { Window } from ':core/type/index';
@@ -122,7 +120,7 @@ describe('CoinbaseWalletSDK', () => {
         expect(coinbaseWalletSDK2.makeWeb3Provider()).toEqual(mockCipherProvider);
       });
 
-      test.skip('@makeWeb3Provider, it should ignore smartWalletOnly true', () => {
+      test('@makeWeb3Provider, it should ignore smartWalletOnly true', () => {
         const sdk = new CoinbaseWalletSDK({
           appName: 'Test',
           appLogoUrl: 'http://coinbase.com/wallet-logo.png',

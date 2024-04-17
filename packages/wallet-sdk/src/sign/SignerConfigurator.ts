@@ -1,10 +1,10 @@
 import { SCWSigner } from './scw/SCWSigner';
-import { SignerType, WalletLinkConfigEventType } from './scw/transport/ConfigMessage';
 import { PopUpCommunicator } from './scw/transport/PopUpCommunicator';
 import { Signer } from './SignerInterface';
 import { SignRequestHandlerListener } from './UpdateListenerInterface';
 import { WLSigner } from './walletlink/WLSigner';
 import { standardErrors } from ':core/error';
+import { SignerType, WalletLinkConfigEventType } from ':core/message/ConfigMessage';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 
 const SIGNER_TYPE_KEY = 'SignerType';
