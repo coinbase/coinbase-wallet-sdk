@@ -12,9 +12,8 @@ export abstract class CrossDomainCommunicator {
   async connect(): Promise<void> {
     if (this.connected) return;
     window.addEventListener('message', this.onEvent.bind(this));
-    return this.onConnect().then(() => {
-      this.connected = true;
-    });
+    await this.onConnect();
+    this.connected = true;
   }
 
   disconnect(): void {
