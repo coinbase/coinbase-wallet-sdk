@@ -4,14 +4,12 @@ import { Message } from '.';
 
 export interface ConfigRequestMessage extends Message {
   type: 'config';
-  id: UUID;
   event: ConfigEventType;
   params?: unknown;
 }
 
 export interface ConfigResponseMessage extends Message {
   type: 'config';
-  id: UUID;
   requestId: UUID;
   response: unknown;
 }
