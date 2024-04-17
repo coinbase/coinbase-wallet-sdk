@@ -4,7 +4,6 @@ import { StateUpdateListener } from '../UpdateListenerInterface';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWStateManager } from './SCWStateManager';
 import { PopUpCommunicator } from './transport/PopUpCommunicator';
-import { CB_KEYS_BACKEND_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
 import { Action, SupportedEthereumMethods, SwitchEthereumChainAction } from ':core/message/Action';
 import {
@@ -83,7 +82,7 @@ export class SCWSigner implements Signer {
   }
 
   public async request<T>(request: RequestArguments): Promise<T> {
-    const localResult = await this.tryLocalHandling<T>(request);
+    const localResult = this.tryLocalHandling<T>(request);
     if (localResult !== undefined) {
       if (localResult instanceof Error) throw localResult;
       return localResult;
@@ -104,7 +103,7 @@ export class SCWSigner implements Signer {
     await this.keyManager.clear();
   }
 
-  private async tryLocalHandling<T>(request: RequestArguments): Promise<T | undefined> {
+  private tryLocalHandling<T>(request: RequestArguments): T | undefined {
     switch (request.method) {
       case SupportedEthereumMethods.WalletSwitchEthereumChain: {
         const params = request.params as SwitchEthereumChainAction['params'];
@@ -126,21 +125,6 @@ export class SCWSigner implements Signer {
           );
         }
         return walletCapabilities as T;
-      }
-      case SupportedEthereumMethods.WalletGetCallsStatus: {
-        const requestBody = {
-          ...request,
-          jsonrpc: '2.0',
-          id: crypto.randomUUID(),
-        };
-        const res = await window.fetch(CB_KEYS_BACKEND_URL, {
-          method: 'POST',
-          body: JSON.stringify(requestBody),
-          mode: 'cors',
-          headers: { 'Content-Type': 'application/json', 'X-Cbw-Sdk-Version': LIB_VERSION },
-        });
-        const response = await res.json();
-        return response.result as T;
       }
       default:
         return undefined;
