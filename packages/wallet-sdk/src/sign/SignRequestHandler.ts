@@ -5,7 +5,7 @@ import { WLSigner } from './walletlink/WLSigner';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
-import { createConfigMessage, SignerConfigEvent } from ':core/message/ConfigMessage';
+import { ConfigEvent, createConfigMessage } from ':core/message/ConfigMessage';
 import { AddressString } from ':core/type';
 import { ConstructorOptions, RequestArguments } from ':core/type/ProviderInterface';
 import { RequestHandler } from ':core/type/RequestHandlerInterface';
@@ -68,7 +68,7 @@ export class SignRequestHandler implements RequestHandler {
       if (Array.isArray(ethAddresses)) {
         if (signer instanceof WLSigner) {
           this.popupCommunicator.postMessage(
-            createConfigMessage(SignerConfigEvent.WalletLinkUpdate, {
+            createConfigMessage(ConfigEvent.WalletLinkUpdate, {
               connected: true,
             })
           );

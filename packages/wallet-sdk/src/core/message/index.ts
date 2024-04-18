@@ -8,7 +8,7 @@ export interface Message {
 
 export function createMessage<T extends Message>(params: Omit<T, 'id'>): T {
   return {
-    ...params,
     id: crypto.randomUUID(),
+    ...params,
   } as T;
 }

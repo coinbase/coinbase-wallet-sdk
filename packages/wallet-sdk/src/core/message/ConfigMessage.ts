@@ -8,26 +8,24 @@ interface ConfigMessage extends Message {
 }
 
 export interface ConfigUpdateMessage extends ConfigMessage {
-  event: PopupSetupEvent | SignerConfigEvent;
+  event: ConfigEvent;
 }
 
 export interface ConfigResponseMessage extends ConfigMessage {
   requestId: UUID;
 }
 
-export enum PopupSetupEvent {
-  Loaded = 'PopupLoaded',
-  Unload = 'PopupUnload',
-}
+export enum ConfigEvent {
+  PopupLoaded = 'PopupLoaded',
+  PopupUnload = 'PopupUnload',
 
-export enum SignerConfigEvent {
   SelectSignerType = 'selectSignerType',
   WalletLinkUpdate = 'WalletLinkUpdate',
 }
 
 export type SignerType = 'scw' | 'walletlink' | 'extension';
 
-export function createConfigMessage(event: SignerConfigEvent, data?: unknown): ConfigUpdateMessage {
+export function createConfigMessage(event: ConfigEvent, data?: unknown): ConfigUpdateMessage {
   return createMessage({
     type: 'config',
     event,
