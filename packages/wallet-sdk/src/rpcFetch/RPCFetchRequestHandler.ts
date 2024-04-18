@@ -1,5 +1,4 @@
-import { LIB_VERSION } from 'src/version';
-
+import { LIB_VERSION } from '../version';
 import { standardErrors } from ':core/error';
 import { Chain } from ':core/type';
 import { RequestArguments } from ':core/type/ProviderInterface';
