@@ -4,7 +4,7 @@ import { SignRequestHandlerListener } from './UpdateListenerInterface';
 import { WLSigner } from './walletlink/WLSigner';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 
-jest.mock('./scw/transport/PopUpCommunicator');
+jest.mock(':core/communicator/PopUpCommunicator');
 
 const mockSetItem = jest.fn();
 const mockGetItem = jest.fn();
