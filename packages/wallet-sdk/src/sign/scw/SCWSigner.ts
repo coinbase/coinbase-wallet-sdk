@@ -51,6 +51,8 @@ export class SCWSigner implements Signer {
   }
 
   public async handshake(): Promise<AddressString[]> {
+    await this.puc.connect();
+
     const handshakeMessage = await this.createRequestMessage({
       handshake: {
         method: SupportedEthereumMethods.EthRequestAccounts,
@@ -78,6 +80,8 @@ export class SCWSigner implements Signer {
   }
 
   public async request<T>(request: RequestArguments): Promise<T> {
+    await this.puc.connect();
+
     const localResult = this.tryLocalHandling<T>(request);
     if (localResult !== undefined) {
       if (localResult instanceof Error) throw localResult;
