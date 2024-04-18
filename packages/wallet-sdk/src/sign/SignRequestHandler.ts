@@ -68,8 +68,11 @@ export class SignRequestHandler implements RequestHandler {
       if (Array.isArray(ethAddresses)) {
         if (signer instanceof WLSigner) {
           this.popupCommunicator.postMessage(
-            createConfigMessage(ConfigEvent.WalletLinkUpdate, {
-              connected: true,
+            createConfigMessage({
+              event: ConfigEvent.WalletLinkUpdate,
+              data: {
+                connected: true,
+              },
             })
           );
         }

@@ -27,7 +27,7 @@ export class SignerConfigurator {
   private appName: string;
   private appLogoUrl: string | null;
   private appChainIds: number[];
-  private selectSignerRequestParams: { smartWalletOnly: boolean };
+  private connectionPreference: { smartWalletOnly: boolean };
 
   private popupCommunicator: PopUpCommunicator;
   private updateListener: SignRequestHandlerListener;
@@ -41,7 +41,7 @@ export class SignerConfigurator {
     this.appName = options.appName;
     this.appLogoUrl = options.appLogoUrl ?? null;
     this.appChainIds = options.appChainIds;
-    this.selectSignerRequestParams = {
+    this.connectionPreference = {
       ...options,
     };
   }
@@ -67,8 +67,11 @@ export class SignerConfigurator {
 
       if (signer instanceof WLSigner) {
         this.popupCommunicator.postMessage(
-          createConfigMessage(ConfigEvent.WalletLinkUpdate, {
-            session: signer.getWalletLinkSession(),
+          createConfigMessage({
+            event: ConfigEvent.WalletLinkUpdate,
+            data: {
+              session: signer.getWalletLinkSession(),
+            },
           })
         );
       }
@@ -87,10 +90,10 @@ export class SignerConfigurator {
   private async selectSignerType(): Promise<SignerType> {
     await this.popupCommunicator.connect();
 
-    const request = createConfigMessage(
-      ConfigEvent.SelectSignerType,
-      this.selectSignerRequestParams
-    );
+    const request = createConfigMessage({
+      event: ConfigEvent.SelectSignerType,
+      data: this.connectionPreference,
+    });
     const response = (await this.popupCommunicator.request(request)) as ConfigResponseMessage;
     const signerType = response.data as SignerType;
     this.storeSignerType(signerType);

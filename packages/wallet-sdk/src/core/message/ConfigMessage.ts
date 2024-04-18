@@ -25,10 +25,12 @@ export enum ConfigEvent {
 
 export type SignerType = 'scw' | 'walletlink' | 'extension';
 
-export function createConfigMessage(event: ConfigEvent, data?: unknown): ConfigUpdateMessage {
+export function createConfigMessage(params: {
+  event: ConfigEvent;
+  data?: unknown;
+}): ConfigUpdateMessage {
   return createMessage({
     type: 'config',
-    event,
-    data,
+    ...params,
   });
 }
