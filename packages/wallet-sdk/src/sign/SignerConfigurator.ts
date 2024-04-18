@@ -68,7 +68,7 @@ export class SignerConfigurator {
       if (signer instanceof WLSigner) {
         this.popupCommunicator.postMessage(
           createConfigMessage(SignerConfigEvent.WalletLinkUpdate, {
-            url: signer.getQRCodeUrl(),
+            session: signer.getWalletLinkSession(),
           })
         );
       }

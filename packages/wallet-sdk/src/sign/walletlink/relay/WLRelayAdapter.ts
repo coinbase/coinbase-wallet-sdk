@@ -8,6 +8,7 @@ import { LOCAL_STORAGE_ADDRESSES_KEY } from './RelayAbstract';
 import { RelayEventManager } from './RelayEventManager';
 import { EthereumTransactionParams } from './type/EthereumTransactionParams';
 import { JSONRPCRequest, JSONRPCResponse } from './type/JSONRPC';
+import { WalletLinkSession } from './type/WalletLinkSession';
 import { isErrorResponse, Web3Response } from './type/Web3Response';
 import { WalletLinkRelay } from './WalletLinkRelay';
 import { standardErrorCodes, standardErrors } from ':core/error';
@@ -105,9 +106,9 @@ export class WLRelayAdapter {
     }
   }
 
-  getQRCodeUrl(): string {
+  getWalletLinkSession(): WalletLinkSession {
     const relay = this.initializeRelay();
-    return relay.getQRCodeUrl();
+    return relay.getWalletLinkSession();
   }
 
   get selectedAddress(): AddressString | undefined {

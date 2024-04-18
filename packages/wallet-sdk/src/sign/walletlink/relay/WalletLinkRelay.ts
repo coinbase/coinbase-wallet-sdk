@@ -1,6 +1,5 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
-import { LIB_VERSION } from '../../../version';
 import {
   WalletLinkConnection,
   WalletLinkConnectionUpdateListener,
@@ -14,7 +13,7 @@ import { WalletLinkSession } from './type/WalletLinkSession';
 import { Web3Method } from './type/Web3Method';
 import { SupportedWeb3Method, Web3Request } from './type/Web3Request';
 import { isErrorResponse, Web3Response } from './type/Web3Response';
-import { createQrUrl, isMobileWeb } from './ui/components/util';
+import { isMobileWeb } from './ui/components/util';
 import { RelayUI } from './ui/RelayUI';
 import { WalletLinkRelayUI } from './ui/WalletLinkRelayUI';
 import { WLMobileRelayUI } from './ui/WLMobileRelayUI';
@@ -322,15 +321,8 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
     });
   }
 
-  public getQRCodeUrl() {
-    return createQrUrl(
-      this._session.id,
-      this._session.secret,
-      this.linkAPIUrl,
-      false,
-      LIB_VERSION,
-      this.dappDefaultChain
-    );
+  public getWalletLinkSession() {
+    return this._session;
   }
 
   public genericRequest(data: object, action: string) {
