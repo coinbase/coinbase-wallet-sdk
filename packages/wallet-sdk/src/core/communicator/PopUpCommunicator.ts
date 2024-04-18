@@ -77,14 +77,11 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     this.postMessage(configMessage);
   }
 
-  protected async onConnect() {
-    const waitForPopupHello = new Promise<void>((resolve) => {
+  protected onConnect(): Promise<void> {
+    return new Promise((resolve) => {
       this.resolveConnection = resolve;
+      this.openFixedSizePopUpWindow();
     });
-
-    this.openFixedSizePopUpWindow();
-
-    await waitForPopupHello;
   }
 
   protected onEvent(event: MessageEvent<Message>) {
