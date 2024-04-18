@@ -19,7 +19,7 @@ export abstract class CrossDomainCommunicator {
   disconnect(): void {
     this.connected = false;
     window.removeEventListener('message', this.eventListner.bind(this));
-    this.resolveWaitingRequests();
+    this.rejectWaitingRequests();
     this.onDisconnect();
   }
 
@@ -77,7 +77,7 @@ export abstract class CrossDomainCommunicator {
     this.requestMap.delete(requestId);
   }
 
-  private resolveWaitingRequests() {
+  private rejectWaitingRequests() {
     this.requestMap.forEach(({ reject }) => {
       reject(standardErrors.provider.userRejectedRequest('Request rejected'));
     });
