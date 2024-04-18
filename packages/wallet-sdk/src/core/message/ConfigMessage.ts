@@ -8,6 +8,15 @@ export interface ConfigUpdateMessage extends Message {
   params?: unknown;
 }
 
+export function createConfigMessage(event: ConfigEvent, params?: unknown): ConfigUpdateMessage {
+  return {
+    type: 'config',
+    id: crypto.randomUUID(),
+    event,
+    params,
+  };
+}
+
 export enum ConfigEvent {
   PopupLoaded = 'popupLoaded',
   PopupUnload = 'popupUnload',

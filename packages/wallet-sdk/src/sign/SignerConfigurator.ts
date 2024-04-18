@@ -7,7 +7,7 @@ import { standardErrors } from ':core/error';
 import {
   ConfigEvent,
   ConfigResponseMessage,
-  ConfigUpdateMessage,
+  createConfigMessage,
   SignerType,
 } from ':core/message/ConfigMessage';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
@@ -64,14 +64,9 @@ export class SignerConfigurator {
       const signer = this.initSignerFromType(signerType);
 
       if (signer instanceof WLSigner) {
-        const update: ConfigUpdateMessage = {
-          type: 'config',
-          id: crypto.randomUUID(),
-          event: ConfigEvent.WalletLinkSession,
-          params: {
-            url: signer.getQRCodeUrl(),
-          },
-        };
+        const update = createConfigMessage(ConfigEvent.WalletLinkSession, {
+          url: signer.getQRCodeUrl(),
+        });
         this.popupCommunicator.postMessage(update);
       }
 
@@ -89,11 +84,9 @@ export class SignerConfigurator {
   private async selectSignerType(): Promise<SignerType> {
     await this.popupCommunicator.connect();
 
-    const request: ConfigUpdateMessage = {
-      type: 'config',
-      id: crypto.randomUUID(),
-      event: ConfigEvent.SelectSignerType,
-    };
+    const request = createConfigMessage(ConfigEvent.SelectSignerType, {
+      smartWalletOnly: this.smartWalletOnly,
+    });
     const response = (await this.popupCommunicator.request(
       request
     )) as ConfigResponseMessage<SignerType>;

@@ -5,7 +5,7 @@ import { WLSigner } from './walletlink/WLSigner';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
-import { ConfigEvent, ConfigUpdateMessage } from ':core/message/ConfigMessage';
+import { ConfigEvent, createConfigMessage } from ':core/message/ConfigMessage';
 import { AddressString } from ':core/type';
 import { ConstructorOptions, RequestArguments } from ':core/type/ProviderInterface';
 import { RequestHandler } from ':core/type/RequestHandlerInterface';
@@ -67,11 +67,7 @@ export class SignRequestHandler implements RequestHandler {
       const ethAddresses = await signer.handshake();
       if (Array.isArray(ethAddresses)) {
         if (signer instanceof WLSigner) {
-          const update: ConfigUpdateMessage = {
-            type: 'config',
-            id: crypto.randomUUID(),
-            event: ConfigEvent.WalletLinkConnected,
-          };
+          const update = createConfigMessage(ConfigEvent.WalletLinkConnected);
           this.popupCommunicator.postMessage(update);
         }
         this.updateListener.onConnect();
