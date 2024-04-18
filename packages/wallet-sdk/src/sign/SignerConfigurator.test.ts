@@ -1,8 +1,8 @@
-import { PopUpCommunicator } from '../core/communicator/PopUpCommunicator';
 import { SCWSigner } from './scw/SCWSigner';
 import { SignerConfigurator } from './SignerConfigurator';
 import { SignRequestHandlerListener } from './UpdateListenerInterface';
 import { WLSigner } from './walletlink/WLSigner';
+import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 
 jest.mock('./scw/transport/PopUpCommunicator');
 
