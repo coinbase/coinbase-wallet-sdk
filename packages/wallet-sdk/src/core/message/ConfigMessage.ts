@@ -17,21 +17,21 @@ export enum ConfigEvent {
   WalletLinkConnected = 'WalletLinkConnected',
 }
 
-export interface ConfigResponseMessage extends Message {
+export interface ConfigResponseMessage<T> extends Message {
   type: 'config';
   requestId: UUID;
-  response: unknown;
+  value: T;
 }
 
-export function responseForConfigUpdate(
+export function responseForConfigUpdate<T>(
   message: ConfigUpdateMessage,
-  response: unknown
-): ConfigResponseMessage {
+  response: T
+): ConfigResponseMessage<T> {
   return {
     type: 'config',
     id: crypto.randomUUID(),
     requestId: message.id,
-    response,
+    value: response,
   };
 }
 

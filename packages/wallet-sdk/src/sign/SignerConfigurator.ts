@@ -4,7 +4,12 @@ import { SignRequestHandlerListener } from './UpdateListenerInterface';
 import { WLSigner } from './walletlink/WLSigner';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { standardErrors } from ':core/error';
-import { ConfigEvent, ConfigUpdateMessage, SignerType } from ':core/message/ConfigMessage';
+import {
+  ConfigEvent,
+  ConfigResponseMessage,
+  ConfigUpdateMessage,
+  SignerType,
+} from ':core/message/ConfigMessage';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 
 const SIGNER_TYPE_KEY = 'SignerType';
@@ -84,7 +89,15 @@ export class SignerConfigurator {
   private async selectSignerType(): Promise<SignerType> {
     await this.popupCommunicator.connect();
 
-    const signerType = await this.popupCommunicator.selectSignerType(this.smartWalletOnly);
+    const request: ConfigUpdateMessage = {
+      type: 'config',
+      id: crypto.randomUUID(),
+      event: ConfigEvent.SelectSignerType,
+    };
+    const response = (await this.popupCommunicator.request(
+      request
+    )) as ConfigResponseMessage<SignerType>;
+    const signerType = response.value;
     this.storeSignerType(signerType);
 
     return signerType;
