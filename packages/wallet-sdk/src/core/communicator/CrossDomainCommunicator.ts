@@ -1,15 +1,9 @@
 import { createMessage, Message, MessageID, MessageWithOptionalId } from '../message';
 import { standardErrors } from ':core/error';
 
-type Fulfillment = {
-  resolve: (_: Message) => void;
-  reject: (_: Error) => void;
-};
-
 export abstract class CrossDomainCommunicator {
   protected url: URL | undefined = undefined;
   private connected = false;
-  private requestMap = new Map<MessageID, Fulfillment>();
 
   protected abstract onConnect(): Promise<void>;
   protected abstract onDisconnect(): void;
@@ -25,44 +19,24 @@ export abstract class CrossDomainCommunicator {
   disconnect(): void {
     this.connected = false;
     window.removeEventListener('message', this.eventListner.bind(this));
+    this.resolveWaitingRequests();
     this.onDisconnect();
-    this.requestMap.forEach((fulfillment, uuid, map) => {
-      fulfillment.reject(standardErrors.provider.userRejectedRequest('Request rejected'));
-      map.delete(uuid);
-    });
-  }
-
-  private eventListner(event: MessageEvent<Message>) {
-    if (event.origin !== this.url?.origin) return;
-
-    const message = event.data;
-    const { requestId } = message;
-    if (!requestId) {
-      this.onEvent(event);
-      return;
-    }
-
-    const resolveFunction = this.requestMap.get(requestId)?.resolve;
-    this.requestMap.delete(requestId);
-    resolveFunction?.(message);
   }
 
   protected peerWindow: Window | null = null;
+
+  private getTargetOrigin(options?: { bypassTargetOriginCheck: boolean }): string | undefined {
+    if (this.url) return this.url.origin;
+    if (options?.bypassTargetOriginCheck) return '*';
+    return undefined;
+  }
 
   postMessage<M extends Message>(
     params: MessageWithOptionalId<M>,
     options?: { bypassTargetOriginCheck: boolean }
   ) {
-    let targetOrigin = this.url?.origin;
-    if (targetOrigin === undefined) {
-      if (options?.bypassTargetOriginCheck) {
-        targetOrigin = '*';
-      } else {
-        throw standardErrors.rpc.internal('Communicator: No target origin');
-      }
-    }
-
-    if (!this.peerWindow) {
+    const targetOrigin = this.getTargetOrigin(options);
+    if (!targetOrigin || !this.peerWindow) {
       throw standardErrors.rpc.internal('Communicator: No peer window found');
     }
 
@@ -79,5 +53,34 @@ export abstract class CrossDomainCommunicator {
       });
       this.postMessage(params);
     });
+  }
+
+  private requestMap = new Map<
+    MessageID,
+    {
+      resolve: (_: Message) => void;
+      reject: (_: Error) => void;
+    }
+  >();
+
+  private eventListner(event: MessageEvent<Message>) {
+    if (event.origin !== this.url?.origin) return;
+
+    const message = event.data;
+    const { requestId } = message;
+    if (!requestId) {
+      this.onEvent(event);
+      return;
+    }
+
+    this.requestMap.get(requestId)?.resolve?.(message);
+    this.requestMap.delete(requestId);
+  }
+
+  private resolveWaitingRequests() {
+    this.requestMap.forEach(({ reject }) => {
+      reject(standardErrors.provider.userRejectedRequest('Request rejected'));
+    });
+    this.requestMap.clear();
   }
 }
