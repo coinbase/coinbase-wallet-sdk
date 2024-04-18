@@ -8,6 +8,7 @@ import {
   ConfigEvent,
   ConfigResponseMessage,
   createConfigMessage,
+  SignerConfigEvent,
   SignerType,
 } from ':core/message/ConfigMessage';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
@@ -64,7 +65,7 @@ export class SignerConfigurator {
       const signer = this.initSignerFromType(signerType);
 
       if (signer instanceof WLSigner) {
-        const update = createConfigMessage(ConfigEvent.WalletLinkSession, {
+        const update = createConfigMessage(SignerConfigEvent.WalletLinkSession, {
           url: signer.getQRCodeUrl(),
         });
         this.popupCommunicator.postMessage(update);

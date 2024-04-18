@@ -7,14 +7,17 @@ export interface ConfigUpdateMessage extends Message {
   event: ConfigEvent;
   params?: unknown;
 }
+export type ConfigEvent = PopupSetupEvent | SignerConfigEvent;
 
-export enum ConfigEvent {
-  PopupLoaded = 'update:PopupLoaded',
-  PopupUnload = 'update:PopupUnload',
+export enum PopupSetupEvent {
+  Loaded = 'PopupLoaded',
+  Unload = 'PopupUnload',
+}
 
-  SelectSignerType = 'request:selectSignerType',
-  WalletLinkSession = 'update:WalletLinkSession',
-  WalletLinkConnected = 'update:WalletLinkConnected',
+export enum SignerConfigEvent {
+  SelectSignerType = 'selectSignerType',
+  WalletLinkSession = 'WalletLinkSession',
+  WalletLinkConnected = 'WalletLinkConnected',
 }
 
 export function createConfigMessage(event: ConfigEvent, params?: unknown): ConfigUpdateMessage {
