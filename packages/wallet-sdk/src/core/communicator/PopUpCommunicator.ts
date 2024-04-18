@@ -77,10 +77,11 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
         // to FE to help FE confirm the origin of the Dapp, as well as SDK version.
         const response: ConfigResponseMessage = {
           type: 'config',
-          requestId: message.id,
-          response: null,
           id: crypto.randomUUID(),
-          version: LIB_VERSION,
+          requestId: message.id,
+          response: {
+            version: LIB_VERSION,
+          },
         };
         this.postMessage(response);
         this.resolveConnection?.();
