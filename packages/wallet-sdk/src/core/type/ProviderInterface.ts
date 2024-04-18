@@ -30,13 +30,18 @@ export interface ProviderInterface extends EventEmitter {
   on(event: 'message', listener: (message: ProviderMessage) => void): this;
 }
 
-export interface ConstructorOptions {
+export interface AppMetadata {
   /** Application name */
   appName: string;
   /** Application logo image URL; favicon is used if unspecified */
   appLogoUrl?: string | null;
   /** Array of chainIds your dapp supports */
   appChainIds: number[];
+}
+
+export interface ConnectionPreference {
   /** Pre-select the wallet connection method */
   smartWalletOnly: boolean;
 }
+
+export type ConstructorOptions = AppMetadata & ConnectionPreference;

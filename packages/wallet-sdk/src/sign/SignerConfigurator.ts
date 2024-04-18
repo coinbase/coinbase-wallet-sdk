@@ -11,6 +11,7 @@ import {
   SignerType,
 } from ':core/message/ConfigMessage';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
+import { ConnectionPreference } from ':core/type/ProviderInterface';
 
 const SIGNER_TYPE_KEY = 'SignerType';
 
@@ -27,7 +28,7 @@ export class SignerConfigurator {
   private appName: string;
   private appLogoUrl: string | null;
   private appChainIds: number[];
-  private selectSignerRequestParams: { smartWalletOnly: boolean };
+  private selectSignerRequestParams: ConnectionPreference;
 
   private popupCommunicator: PopUpCommunicator;
   private updateListener: SignRequestHandlerListener;
