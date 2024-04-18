@@ -89,7 +89,7 @@ export class SignerConfigurator {
   private async selectSignerType(): Promise<SignerType> {
     await this.popupCommunicator.connect();
 
-    const response = await this.popupCommunicator.request(
+    const response = await this.popupCommunicator.postMessageForResponse(
       createMessage<ConfigUpdateMessage>({
         event: ConfigEvent.SelectSignerType,
         data: this.connectionPreference,

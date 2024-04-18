@@ -1,6 +1,4 @@
-import { UUID } from 'crypto';
-
-import { Message } from '.';
+import { Message, MessageID } from '.';
 import { RequestAccountsAction } from './Action';
 import { EncryptedData } from './Cipher';
 import { SerializedEthereumRpcError } from ':core/error';
@@ -22,7 +20,7 @@ export interface RPCRequestMessage extends RPCMessage {
 }
 
 export interface RPCResponseMessage extends RPCMessage {
-  requestId: UUID;
+  requestId: MessageID;
   content:
     | {
         encrypted: EncryptedData;

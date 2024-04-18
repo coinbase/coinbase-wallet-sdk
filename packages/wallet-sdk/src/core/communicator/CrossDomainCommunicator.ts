@@ -1,4 +1,4 @@
-import { createMessage, Message } from '../message';
+import { createMessage, Message, MessageID, MessageWithOptionalId } from '../message';
 import { standardErrors } from ':core/error';
 
 export abstract class CrossDomainCommunicator {
@@ -11,37 +11,78 @@ export abstract class CrossDomainCommunicator {
 
   async connect(): Promise<void> {
     if (this.connected) return;
-    window.addEventListener('message', this.onEvent.bind(this));
+    window.addEventListener('message', this.eventListner.bind(this));
     await this.onConnect();
     this.connected = true;
   }
 
   disconnect(): void {
     this.connected = false;
-    window.removeEventListener('message', this.onEvent.bind(this));
+    window.removeEventListener('message', this.eventListner.bind(this));
+    this.rejectWaitingRequests();
     this.onDisconnect();
   }
 
   protected peerWindow: Window | null = null;
 
-  postMessage<T extends Message>(
-    params: Omit<T, 'id'>,
+  private getTargetOrigin(options?: { bypassTargetOriginCheck: boolean }): string | undefined {
+    if (this.url) return this.url.origin;
+    if (options?.bypassTargetOriginCheck) return '*';
+    return undefined;
+  }
+
+  postMessage<M extends Message>(
+    params: MessageWithOptionalId<M>,
     options?: { bypassTargetOriginCheck: boolean }
   ) {
-    let targetOrigin = this.url?.origin;
-    if (targetOrigin === undefined) {
-      if (options?.bypassTargetOriginCheck) {
-        targetOrigin = '*';
-      } else {
-        throw standardErrors.rpc.internal('Communicator: No target origin');
-      }
-    }
-
-    if (!this.peerWindow) {
+    const targetOrigin = this.getTargetOrigin(options);
+    if (!targetOrigin || !this.peerWindow) {
       throw standardErrors.rpc.internal('Communicator: No peer window found');
     }
 
     const message = createMessage(params);
     this.peerWindow.postMessage(message, targetOrigin);
+  }
+
+  async postMessageForResponse<M extends Message>(
+    params: MessageWithOptionalId<M>
+  ): Promise<Message> {
+    return new Promise((resolve, reject) => {
+      const message = createMessage(params);
+      this.requestMap.set(message.id, {
+        resolve,
+        reject,
+      });
+      this.postMessage(params);
+    });
+  }
+
+  private requestMap = new Map<
+    MessageID,
+    {
+      resolve: (_: Message) => void;
+      reject: (_: Error) => void;
+    }
+  >();
+
+  private eventListner(event: MessageEvent<Message>) {
+    if (event.origin !== this.url?.origin) return;
+
+    const message = event.data;
+    const { requestId } = message;
+    if (!requestId) {
+      this.onEvent(event);
+      return;
+    }
+
+    this.requestMap.get(requestId)?.resolve?.(message);
+    this.requestMap.delete(requestId);
+  }
+
+  private rejectWaitingRequests() {
+    this.requestMap.forEach(({ reject }) => {
+      reject(standardErrors.provider.userRejectedRequest('Request rejected'));
+    });
+    this.requestMap.clear();
   }
 }
