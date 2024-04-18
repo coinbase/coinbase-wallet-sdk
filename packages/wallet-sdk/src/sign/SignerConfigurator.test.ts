@@ -1,10 +1,10 @@
 import { SCWSigner } from './scw/SCWSigner';
-import { PopUpCommunicator } from './scw/transport/PopUpCommunicator';
 import { SignerConfigurator } from './SignerConfigurator';
 import { SignRequestHandlerListener } from './UpdateListenerInterface';
 import { WLSigner } from './walletlink/WLSigner';
+import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 
-jest.mock('./scw/transport/PopUpCommunicator');
+jest.mock(':core/communicator/PopUpCommunicator');
 
 const mockSetItem = jest.fn();
 const mockGetItem = jest.fn();
@@ -59,7 +59,9 @@ describe('SignerConfigurator', () => {
       popupCommunicator,
     });
 
-    (popupCommunicator.selectSignerType as jest.Mock).mockResolvedValue('scw');
+    (popupCommunicator.request as jest.Mock).mockResolvedValue({
+      data: 'scw',
+    });
 
     const signer = await signerConfigurator.selectSigner();
 

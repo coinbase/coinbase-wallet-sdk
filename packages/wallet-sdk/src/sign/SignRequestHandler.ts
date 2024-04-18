@@ -1,11 +1,11 @@
-import { PopUpCommunicator } from './scw/transport/PopUpCommunicator';
 import { SignerConfigurator } from './SignerConfigurator';
 import { Signer } from './SignerInterface';
 import { SignRequestHandlerListener } from './UpdateListenerInterface';
 import { WLSigner } from './walletlink/WLSigner';
+import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
-import { WalletLinkConfigEventType } from ':core/message/ConfigMessage';
+import { ConfigEvent, ConfigUpdateMessage } from ':core/message/ConfigMessage';
 import { AddressString } from ':core/type';
 import { ConstructorOptions, RequestArguments } from ':core/type/ProviderInterface';
 import { RequestHandler } from ':core/type/RequestHandlerInterface';
@@ -67,9 +67,12 @@ export class SignRequestHandler implements RequestHandler {
       const ethAddresses = await signer.handshake();
       if (Array.isArray(ethAddresses)) {
         if (signer instanceof WLSigner) {
-          this.popupCommunicator.postConfigMessage(
-            WalletLinkConfigEventType.DappWalletLinkConnected
-          );
+          this.popupCommunicator.postMessage<ConfigUpdateMessage>({
+            event: ConfigEvent.WalletLinkUpdate,
+            data: {
+              connected: true,
+            },
+          });
         }
         this.updateListener.onConnect();
         return Promise.resolve(ethAddresses);

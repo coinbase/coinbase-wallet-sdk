@@ -28,8 +28,12 @@ export class WLSigner implements Signer {
     return this.adapter.request<T>(requestArgs);
   }
 
-  getQRCodeUrl(): string {
-    return this.adapter.getQRCodeUrl();
+  getWalletLinkSession() {
+    const { id, secret } = this.adapter.getWalletLinkSession();
+    return {
+      id,
+      secret,
+    };
   }
 
   async disconnect() {

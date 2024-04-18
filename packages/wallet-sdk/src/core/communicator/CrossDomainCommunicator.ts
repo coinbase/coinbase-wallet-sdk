@@ -1,35 +1,33 @@
-import { Message } from '../message';
+import { createMessage, Message } from '../message';
 import { standardErrors } from ':core/error';
 
 export abstract class CrossDomainCommunicator {
   protected url: URL | undefined = undefined;
-  protected _connected = false;
-
-  public get connected() {
-    return this._connected;
-  }
-
-  protected set connected(value: boolean) {
-    this._connected = value;
-  }
+  private connected = false;
 
   protected abstract onConnect(): Promise<void>;
   protected abstract onDisconnect(): void;
   protected abstract onEvent(event: MessageEvent<Message>): void;
 
   async connect(): Promise<void> {
+    if (this.connected) return;
     window.addEventListener('message', this.onEvent.bind(this));
     await this.onConnect();
+    this.connected = true;
   }
 
   disconnect(): void {
     this.connected = false;
+    window.removeEventListener('message', this.onEvent.bind(this));
     this.onDisconnect();
   }
 
   protected peerWindow: Window | null = null;
 
-  postMessage(message: Message, options?: { bypassTargetOriginCheck: boolean }) {
+  postMessage<T extends Message>(
+    params: Omit<T, 'id'>,
+    options?: { bypassTargetOriginCheck: boolean }
+  ) {
     let targetOrigin = this.url?.origin;
     if (targetOrigin === undefined) {
       if (options?.bypassTargetOriginCheck) {
@@ -43,6 +41,7 @@ export abstract class CrossDomainCommunicator {
       throw standardErrors.rpc.internal('Communicator: No peer window found');
     }
 
+    const message = createMessage(params);
     this.peerWindow.postMessage(message, targetOrigin);
   }
 }

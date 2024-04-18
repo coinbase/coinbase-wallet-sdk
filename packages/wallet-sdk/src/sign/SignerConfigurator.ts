@@ -1,10 +1,16 @@
 import { SCWSigner } from './scw/SCWSigner';
-import { PopUpCommunicator } from './scw/transport/PopUpCommunicator';
 import { Signer } from './SignerInterface';
 import { SignRequestHandlerListener } from './UpdateListenerInterface';
 import { WLSigner } from './walletlink/WLSigner';
+import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { standardErrors } from ':core/error';
-import { SignerType, WalletLinkConfigEventType } from ':core/message/ConfigMessage';
+import { createMessage } from ':core/message';
+import {
+  ConfigEvent,
+  ConfigResponseMessage,
+  ConfigUpdateMessage,
+  SignerType,
+} from ':core/message/ConfigMessage';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 
 const SIGNER_TYPE_KEY = 'SignerType';
@@ -22,7 +28,7 @@ export class SignerConfigurator {
   private appName: string;
   private appLogoUrl: string | null;
   private appChainIds: number[];
-  private smartWalletOnly: boolean;
+  private connectionPreference: { smartWalletOnly: boolean };
 
   private popupCommunicator: PopUpCommunicator;
   private updateListener: SignRequestHandlerListener;
@@ -36,7 +42,9 @@ export class SignerConfigurator {
     this.appName = options.appName;
     this.appLogoUrl = options.appLogoUrl ?? null;
     this.appChainIds = options.appChainIds;
-    this.smartWalletOnly = options.smartWalletOnly;
+    this.connectionPreference = {
+      ...options,
+    };
   }
 
   tryRestoringSignerFromPersistedType(): Signer | undefined {
@@ -59,10 +67,12 @@ export class SignerConfigurator {
       const signer = this.initSignerFromType(signerType);
 
       if (signer instanceof WLSigner) {
-        this.popupCommunicator.postConfigMessage(
-          WalletLinkConfigEventType.DappWalletLinkUrlResponse,
-          signer.getQRCodeUrl()
-        );
+        this.popupCommunicator.postMessage<ConfigUpdateMessage>({
+          event: ConfigEvent.WalletLinkUpdate,
+          data: {
+            session: signer.getWalletLinkSession(),
+          },
+        });
       }
 
       return signer;
@@ -79,7 +89,13 @@ export class SignerConfigurator {
   private async selectSignerType(): Promise<SignerType> {
     await this.popupCommunicator.connect();
 
-    const signerType = await this.popupCommunicator.selectSignerType(this.smartWalletOnly);
+    const response = await this.popupCommunicator.request(
+      createMessage<ConfigUpdateMessage>({
+        event: ConfigEvent.SelectSignerType,
+        data: this.connectionPreference,
+      })
+    );
+    const signerType = (response as ConfigResponseMessage).data as SignerType;
     this.storeSignerType(signerType);
 
     return signerType;
@@ -102,7 +118,7 @@ export class SignerConfigurator {
           updateListener: this.updateListener,
         });
       default:
-        throw standardErrors.rpc.internal('SignerConfigurator: Unknown signer type');
+        throw standardErrors.rpc.internal(`SignerConfigurator: Unknown signer type ${signerType}`);
     }
   }
 

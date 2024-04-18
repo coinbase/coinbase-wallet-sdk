@@ -1,7 +1,13 @@
 import { UUID } from 'crypto';
 
 export interface Message {
-  type: 'config' | 'scw';
   id: UUID;
-  version: string;
+  requestId?: UUID;
+}
+
+export function createMessage<T extends Message>(params: Omit<T, 'id'>): T {
+  return {
+    id: crypto.randomUUID(),
+    ...params,
+  } as T;
 }

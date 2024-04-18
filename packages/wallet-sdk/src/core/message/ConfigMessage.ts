@@ -1,45 +1,23 @@
+import { UUID } from 'crypto';
+
 import { Message } from '.';
 
-export interface ConfigMessage extends Message {
-  type: 'config';
-  event: ConfigEventType;
-  params?: unknown;
+export interface ConfigUpdateMessage extends Message {
+  event: ConfigEvent;
+  data?: unknown;
 }
 
-export type ConfigEventType =
-  | PopupSetupEventType
-  | SignerConfigEventType
-  | WalletLinkConfigEventType;
-
-export enum PopupSetupEventType {
-  // 1. popup to dapp, after popup gets opened
-  PopupHello = 'popupHello',
-
-  // 2. dapp to popup, after PopupHello is received
-  DappHello = 'dappHello',
-
-  // X. at some point later.... when popup is about to close
-  PopupUnload = 'popupUnload',
+export interface ConfigResponseMessage extends Message {
+  requestId: UUID;
+  data?: unknown;
 }
 
-export enum SignerConfigEventType {
-  // 1. dapp to popup, after the popup setup process
-  DappSelectSignerType = 'dappSelectSignerType',
+export enum ConfigEvent {
+  PopupLoaded = 'PopupLoaded',
+  PopupUnload = 'PopupUnload',
 
-  // 2. popup to dapp, after user selected the signer
-  PopupSignerTypeSelected = 'popupSignerTypeSelected',
-}
-
-export enum WalletLinkConfigEventType {
-  // 1. dapp to popup, to respond with walletlink URL
-  DappWalletLinkUrlResponse = 'dappWalletLinkUrlResponse',
-
-  // 2. dapp to popup, walletlink scanned, closing the popup
-  DappWalletLinkConnected = 'dappWalletLinkConnected',
+  SelectSignerType = 'selectSignerType',
+  WalletLinkUpdate = 'WalletLinkUpdate',
 }
 
 export type SignerType = 'scw' | 'walletlink' | 'extension';
-
-export function isConfigMessage(msg: Message): msg is ConfigMessage {
-  return msg.type === 'config' && 'event' in msg;
-}

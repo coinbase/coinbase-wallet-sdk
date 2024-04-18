@@ -105,9 +105,9 @@ export class WLRelayAdapter {
     }
   }
 
-  getQRCodeUrl(): string {
+  getWalletLinkSession() {
     const relay = this.initializeRelay();
-    return relay.getQRCodeUrl();
+    return relay.getWalletLinkSession();
   }
 
   get selectedAddress(): AddressString | undefined {

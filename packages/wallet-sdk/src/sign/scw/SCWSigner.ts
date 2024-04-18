@@ -1,10 +1,10 @@
-import { LIB_VERSION } from '../../version';
 import { Signer } from '../SignerInterface';
 import { StateUpdateListener } from '../UpdateListenerInterface';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWStateManager } from './SCWStateManager';
-import { PopUpCommunicator } from './transport/PopUpCommunicator';
+import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { standardErrors } from ':core/error';
+import { createMessage } from ':core/message';
 import { Action, SupportedEthereumMethods, SwitchEthereumChainAction } from ':core/message/Action';
 import {
   decryptContent,
@@ -51,9 +51,7 @@ export class SCWSigner implements Signer {
   }
 
   public async handshake(): Promise<AddressString[]> {
-    if (!this.puc.connected) {
-      await this.puc.connect();
-    }
+    await this.puc.connect();
 
     const handshakeMessage = await this.createRequestMessage({
       handshake: {
@@ -82,6 +80,8 @@ export class SCWSigner implements Signer {
   }
 
   public async request<T>(request: RequestArguments): Promise<T> {
+    await this.puc.connect();
+
     const localResult = this.tryLocalHandling<T>(request);
     if (localResult !== undefined) {
       if (localResult instanceof Error) throw localResult;
@@ -132,10 +132,6 @@ export class SCWSigner implements Signer {
   }
 
   private async sendEncryptedRequest(request: RequestArguments): Promise<RPCResponseMessage> {
-    if (!this.puc.connected) {
-      await this.puc.connect();
-    }
-
     const sharedSecret = await this.keyManager.getSharedSecret();
     if (!sharedSecret) {
       throw standardErrors.provider.unauthorized(
@@ -160,14 +156,11 @@ export class SCWSigner implements Signer {
     content: RPCRequestMessage['content']
   ): Promise<RPCRequestMessage> {
     const publicKey = await exportKeyToHexString('public', await this.keyManager.getOwnPublicKey());
-    return {
-      type: 'scw',
-      id: crypto.randomUUID(),
+    return createMessage<RPCRequestMessage>({
       sender: publicKey,
       content,
-      version: LIB_VERSION,
       timestamp: new Date(),
-    };
+    });
   }
 
   private async decryptResponseMessage<T>(message: RPCResponseMessage): Promise<RPCResponse<T>> {
