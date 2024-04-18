@@ -7,7 +7,8 @@ export interface ConfigUpdateMessage extends Message {
   event: ConfigEvent;
   params?: unknown;
 }
-export type ConfigEvent = PopupSetupEvent | SignerConfigEvent;
+
+type ConfigEvent = PopupSetupEvent | SignerConfigEvent;
 
 export enum PopupSetupEvent {
   Loaded = 'PopupLoaded',
@@ -18,6 +19,8 @@ export enum SignerConfigEvent {
   SelectSignerType = 'selectSignerType',
   WalletLinkUpdate = 'WalletLinkUpdate',
 }
+
+export type SignerType = 'scw' | 'walletlink' | 'extension';
 
 export function createConfigMessage(event: ConfigEvent, params?: unknown): ConfigUpdateMessage {
   return {
@@ -45,5 +48,3 @@ export function responseForConfigUpdate<T>(
     value: response,
   };
 }
-
-export type SignerType = 'scw' | 'walletlink' | 'extension';
