@@ -1,18 +1,15 @@
 import { UUID } from 'crypto';
 
-import { createMessage, Message } from '.';
+import { Message } from '.';
 
-interface ConfigMessage extends Message {
-  type: 'config';
+export interface ConfigUpdateMessage extends Message {
+  event: ConfigEvent;
   data?: unknown;
 }
 
-export interface ConfigUpdateMessage extends ConfigMessage {
-  event: ConfigEvent;
-}
-
-export interface ConfigResponseMessage extends ConfigMessage {
+export interface ConfigResponseMessage extends Message {
   requestId: UUID;
+  data?: unknown;
 }
 
 export enum ConfigEvent {
@@ -24,13 +21,3 @@ export enum ConfigEvent {
 }
 
 export type SignerType = 'scw' | 'walletlink' | 'extension';
-
-export function createConfigMessage(params: {
-  event: ConfigEvent;
-  data?: unknown;
-}): ConfigUpdateMessage {
-  return createMessage({
-    type: 'config',
-    ...params,
-  });
-}

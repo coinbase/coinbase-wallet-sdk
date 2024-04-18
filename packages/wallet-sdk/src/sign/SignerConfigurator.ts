@@ -4,10 +4,11 @@ import { SignRequestHandlerListener } from './UpdateListenerInterface';
 import { WLSigner } from './walletlink/WLSigner';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { standardErrors } from ':core/error';
+import { createMessage } from ':core/message';
 import {
   ConfigEvent,
   ConfigResponseMessage,
-  createConfigMessage,
+  ConfigUpdateMessage,
   SignerType,
 } from ':core/message/ConfigMessage';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
@@ -66,14 +67,12 @@ export class SignerConfigurator {
       const signer = this.initSignerFromType(signerType);
 
       if (signer instanceof WLSigner) {
-        this.popupCommunicator.postMessage(
-          createConfigMessage({
-            event: ConfigEvent.WalletLinkUpdate,
-            data: {
-              session: signer.getWalletLinkSession(),
-            },
-          })
-        );
+        this.popupCommunicator.postMessage<ConfigUpdateMessage>({
+          event: ConfigEvent.WalletLinkUpdate,
+          data: {
+            session: signer.getWalletLinkSession(),
+          },
+        });
       }
 
       return signer;
@@ -90,7 +89,7 @@ export class SignerConfigurator {
   private async selectSignerType(): Promise<SignerType> {
     await this.popupCommunicator.connect();
 
-    const request = createConfigMessage({
+    const request = createMessage<ConfigUpdateMessage>({
       event: ConfigEvent.SelectSignerType,
       data: this.connectionPreference,
     });

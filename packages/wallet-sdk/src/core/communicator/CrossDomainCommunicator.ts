@@ -1,4 +1,4 @@
-import { Message } from '../message';
+import { createMessage, Message } from '../message';
 import { standardErrors } from ':core/error';
 
 export abstract class CrossDomainCommunicator {
@@ -24,7 +24,10 @@ export abstract class CrossDomainCommunicator {
 
   protected peerWindow: Window | null = null;
 
-  postMessage(message: Message, options?: { bypassTargetOriginCheck: boolean }) {
+  postMessage<T extends Message>(
+    params: Omit<T, 'id'>,
+    options?: { bypassTargetOriginCheck: boolean }
+  ) {
     let targetOrigin = this.url?.origin;
     if (targetOrigin === undefined) {
       if (options?.bypassTargetOriginCheck) {
@@ -38,6 +41,7 @@ export abstract class CrossDomainCommunicator {
       throw standardErrors.rpc.internal('Communicator: No peer window found');
     }
 
+    const message = createMessage(params);
     this.peerWindow.postMessage(message, targetOrigin);
   }
 }

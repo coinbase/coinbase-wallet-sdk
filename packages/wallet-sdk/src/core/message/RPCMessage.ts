@@ -6,7 +6,6 @@ import { EncryptedData } from './Cipher';
 import { SerializedEthereumRpcError } from ':core/error';
 
 interface RPCMessage extends Message {
-  type: 'rpc';
   sender: string; // hex encoded public key of the sender
   content: unknown;
   timestamp: Date;
