@@ -27,7 +27,7 @@ export class SignerConfigurator {
   private appName: string;
   private appLogoUrl: string | null;
   private appChainIds: number[];
-  private smartWalletOnly: boolean;
+  private selectSignerRequestParams: { smartWalletOnly: boolean };
 
   private popupCommunicator: PopUpCommunicator;
   private updateListener: SignRequestHandlerListener;
@@ -41,7 +41,9 @@ export class SignerConfigurator {
     this.appName = options.appName;
     this.appLogoUrl = options.appLogoUrl ?? null;
     this.appChainIds = options.appChainIds;
-    this.smartWalletOnly = options.smartWalletOnly;
+    this.selectSignerRequestParams = {
+      smartWalletOnly: options.smartWalletOnly,
+    };
   }
 
   tryRestoringSignerFromPersistedType(): Signer | undefined {
@@ -85,9 +87,10 @@ export class SignerConfigurator {
   private async selectSignerType(): Promise<SignerType> {
     await this.popupCommunicator.connect();
 
-    const request = createConfigMessage(SignerConfigEvent.SelectSignerType, {
-      smartWalletOnly: this.smartWalletOnly,
-    });
+    const request = createConfigMessage(
+      SignerConfigEvent.SelectSignerType,
+      this.selectSignerRequestParams
+    );
     const response = (await this.popupCommunicator.request(
       request
     )) as ConfigResponseMessage<SignerType>;
