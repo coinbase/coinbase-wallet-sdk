@@ -117,7 +117,7 @@ export class SignerConfigurator {
           updateListener: this.updateListener,
         });
       default:
-        throw standardErrors.rpc.internal('SignerConfigurator: Unknown signer type');
+        throw standardErrors.rpc.internal(`SignerConfigurator: Unknown signer type ${signerType}`);
     }
   }
 

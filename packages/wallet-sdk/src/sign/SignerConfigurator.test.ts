@@ -60,7 +60,7 @@ describe('SignerConfigurator', () => {
     });
 
     (popupCommunicator.request as jest.Mock).mockResolvedValue({
-      response: 'scw',
+      data: 'scw',
     });
 
     const signer = await signerConfigurator.selectSigner();
