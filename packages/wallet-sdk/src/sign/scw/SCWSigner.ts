@@ -152,13 +152,12 @@ export class SCWSigner implements Signer {
     content: RPCRequestMessage['content']
   ): Promise<RPCRequestMessage> {
     const publicKey = await exportKeyToHexString('public', await this.keyManager.getOwnPublicKey());
-    const message: RPCRequestMessage = createMessage({
+    return createMessage<RPCRequestMessage>({
       type: 'rpc',
       sender: publicKey,
       content,
       timestamp: new Date(),
     });
-    return message;
   }
 
   private async decryptResponseMessage<T>(message: RPCResponseMessage): Promise<RPCResponse<T>> {

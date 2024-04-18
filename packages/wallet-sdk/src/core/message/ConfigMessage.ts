@@ -8,14 +8,12 @@ interface ConfigMessage extends Message {
 }
 
 export interface ConfigUpdateMessage extends ConfigMessage {
-  event: ConfigEvent;
+  event: PopupSetupEvent | SignerConfigEvent;
 }
 
 export interface ConfigResponseMessage extends ConfigMessage {
   requestId: UUID;
 }
-
-type ConfigEvent = PopupSetupEvent | SignerConfigEvent;
 
 export enum PopupSetupEvent {
   Loaded = 'PopupLoaded',
@@ -29,7 +27,7 @@ export enum SignerConfigEvent {
 
 export type SignerType = 'scw' | 'walletlink' | 'extension';
 
-export function createConfigMessage(event: ConfigEvent, data?: unknown): ConfigUpdateMessage {
+export function createConfigMessage(event: SignerConfigEvent, data?: unknown): ConfigUpdateMessage {
   return createMessage({
     type: 'config',
     event,
