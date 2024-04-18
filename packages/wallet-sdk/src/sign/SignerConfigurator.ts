@@ -4,7 +4,7 @@ import { SignRequestHandlerListener } from './UpdateListenerInterface';
 import { WLSigner } from './walletlink/WLSigner';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { standardErrors } from ':core/error';
-import { SignerType, WalletLinkConfigEventType } from ':core/message/ConfigMessage';
+import { SignerType, WalletLinkEvent } from ':core/message/ConfigMessage';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 
 const SIGNER_TYPE_KEY = 'SignerType';
@@ -60,7 +60,7 @@ export class SignerConfigurator {
 
       if (signer instanceof WLSigner) {
         this.popupCommunicator.postConfigMessage(
-          WalletLinkConfigEventType.DappWalletLinkUrlResponse,
+          WalletLinkEvent.DappWalletLinkUrlResponse,
           signer.getQRCodeUrl()
         );
       }

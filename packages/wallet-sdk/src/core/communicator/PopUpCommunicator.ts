@@ -21,7 +21,7 @@ type Fulfillment = {
 
 export class PopUpCommunicator extends CrossDomainCommunicator {
   private requestMap = new Map<UUID, Fulfillment>();
-  private resolveConnection?: () => void;
+  private resolveWhenPopupLoaded?: () => void;
 
   constructor({ url }: { url: string }) {
     super();
@@ -42,7 +42,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
 
   protected onConnect(): Promise<void> {
     return new Promise((resolve) => {
-      this.resolveConnection = resolve;
+      this.resolveWhenPopupLoaded = resolve;
       this.openFixedSizePopUpWindow();
     });
   }
@@ -52,7 +52,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
 
     const message = event.data;
     if (!('requestId' in message)) {
-      this.handleIncomingRequest(message as ConfigRequestMessage);
+      this.handleConfigMessage(message as ConfigRequestMessage);
       return;
     }
 
@@ -70,25 +70,31 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     });
   }
 
-  private handleIncomingRequest(message: ConfigRequestMessage) {
+  private handleConfigMessage(message: ConfigRequestMessage) {
     switch (message.event) {
-      case PopupSetupEvent.Loaded: {
-        const response: ConfigResponseMessage = {
-          type: 'config',
-          id: crypto.randomUUID(),
-          version: LIB_VERSION,
-          requestId: message.id,
-          response: LIB_VERSION,
-        };
-        this.postMessage(response);
-        this.resolveConnection?.();
-        this.resolveConnection = undefined;
+      case PopupSetupEvent.Loaded:
+        // Handshake Step 2: After receiving PopupHello from popup, Dapp sends DappHello
+        // to FE to help FE confirm the origin of the Dapp, as well as SDK version.
+        this.handlePopupLoaded(message.id);
         break;
-      }
       case PopupSetupEvent.Unload:
         this.disconnect();
         break;
     }
+  }
+
+  private handlePopupLoaded(requestId: UUID) {
+    const message: ConfigResponseMessage = {
+      type: 'config',
+      requestId,
+      response: null,
+      id: crypto.randomUUID(),
+      version: LIB_VERSION,
+    };
+    this.postMessage(message);
+
+    this.resolveWhenPopupLoaded?.();
+    this.resolveWhenPopupLoaded = undefined;
   }
 
   // Window Management
