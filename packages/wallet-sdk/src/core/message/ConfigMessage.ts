@@ -8,6 +8,15 @@ export interface ConfigUpdateMessage extends Message {
   params?: unknown;
 }
 
+export enum ConfigEvent {
+  PopupLoaded = 'update:PopupLoaded',
+  PopupUnload = 'update:PopupUnload',
+
+  SelectSignerType = 'request:selectSignerType',
+  WalletLinkSession = 'update:WalletLinkSession',
+  WalletLinkConnected = 'update:WalletLinkConnected',
+}
+
 export function createConfigMessage(event: ConfigEvent, params?: unknown): ConfigUpdateMessage {
   return {
     type: 'config',
@@ -15,15 +24,6 @@ export function createConfigMessage(event: ConfigEvent, params?: unknown): Confi
     event,
     params,
   };
-}
-
-export enum ConfigEvent {
-  PopupLoaded = 'popupLoaded',
-  PopupUnload = 'popupUnload',
-
-  SelectSignerType = 'selectSignerType',
-  WalletLinkSession = 'WalletLinkSession',
-  WalletLinkConnected = 'WalletLinkConnected',
 }
 
 export interface ConfigResponseMessage<T> extends Message {
