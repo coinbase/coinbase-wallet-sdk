@@ -44,7 +44,9 @@ export abstract class CrossDomainCommunicator {
     this.peerWindow.postMessage(message, targetOrigin);
   }
 
-  async postMessageAndWait<M extends Message>(params: MessageWithOptionalId<M>): Promise<Message> {
+  async postMessageForResponse<M extends Message>(
+    params: MessageWithOptionalId<M>
+  ): Promise<Message> {
     return new Promise((resolve, reject) => {
       const message = createMessage(params);
       this.requestMap.set(message.id, {
