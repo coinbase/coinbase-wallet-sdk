@@ -1,5 +1,3 @@
-import { UUID } from 'crypto';
-
 import { LIB_VERSION } from '../../version';
 import { CrossDomainCommunicator } from ':core/communicator/CrossDomainCommunicator';
 import { standardErrors } from ':core/error';
@@ -8,65 +6,36 @@ import {
   ConfigEvent,
   ConfigResponseMessage,
   ConfigUpdateMessage,
+  isConfigUpdateMessage,
 } from ':core/message/ConfigMessage';
 
 const POPUP_WIDTH = 420;
 const POPUP_HEIGHT = 540;
 
-type Fulfillment = {
-  resolve: (_: Message) => void;
-  reject: (_: Error) => void;
-};
-
 export class PopUpCommunicator extends CrossDomainCommunicator {
-  private requestMap = new Map<UUID, Fulfillment>();
-  private resolveConnection?: () => void;
+  private resolveWhenPopupLoaded?: () => void;
 
   constructor({ url }: { url: string }) {
     super();
     this.url = new URL(url);
   }
 
-  request(message: Message): Promise<Message> {
-    return new Promise((resolve, reject) => {
-      this.postMessage(message);
-
-      const fulfillment: Fulfillment = {
-        resolve,
-        reject,
-      };
-      this.requestMap.set(message.id, fulfillment);
-    });
-  }
-
   protected onConnect(): Promise<void> {
     return new Promise((resolve) => {
-      this.resolveConnection = resolve;
+      this.resolveWhenPopupLoaded = resolve;
       this.openFixedSizePopUpWindow();
     });
   }
 
   protected onEvent(event: MessageEvent<Message>) {
-    if (event.origin !== this.url?.origin) return;
-
     const message = event.data;
-    const { requestId } = message;
-    if (!requestId) {
-      this.handleIncomingConfigUpdate(message as ConfigUpdateMessage);
-      return;
+    if (isConfigUpdateMessage(message)) {
+      this.handleIncomingConfigUpdate(message);
     }
-
-    const resolveFunction = this.requestMap.get(requestId)?.resolve;
-    this.requestMap.delete(requestId);
-    resolveFunction?.(message);
   }
 
   protected onDisconnect() {
     this.closeChildWindow();
-    this.requestMap.forEach((fulfillment, uuid, map) => {
-      fulfillment.reject(standardErrors.provider.userRejectedRequest('Request rejected'));
-      map.delete(uuid);
-    });
   }
 
   private handleIncomingConfigUpdate(message: ConfigUpdateMessage) {
@@ -78,8 +47,8 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
           requestId: message.id,
           data: { version: LIB_VERSION },
         });
-        this.resolveConnection?.();
-        this.resolveConnection = undefined;
+        this.resolveWhenPopupLoaded?.();
+        this.resolveWhenPopupLoaded = undefined;
         break;
 
       case ConfigEvent.PopupUnload:

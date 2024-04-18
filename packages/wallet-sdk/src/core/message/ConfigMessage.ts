@@ -7,6 +7,10 @@ export interface ConfigUpdateMessage extends Message {
   data?: unknown;
 }
 
+export function isConfigUpdateMessage(message: Message): message is ConfigUpdateMessage {
+  return (message as ConfigUpdateMessage).event !== undefined;
+}
+
 export interface ConfigResponseMessage extends Message {
   requestId: UUID;
   data?: unknown;

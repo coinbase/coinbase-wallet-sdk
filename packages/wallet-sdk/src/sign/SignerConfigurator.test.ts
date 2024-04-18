@@ -59,7 +59,7 @@ describe('SignerConfigurator', () => {
       popupCommunicator,
     });
 
-    (popupCommunicator.request as jest.Mock).mockResolvedValue({
+    (popupCommunicator.postMessageAndWait as jest.Mock).mockResolvedValue({
       data: 'scw',
     });
 

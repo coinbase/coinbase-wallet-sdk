@@ -5,9 +5,11 @@ export interface Message {
   requestId?: UUID;
 }
 
-export function createMessage<T extends Message>(params: Omit<T, 'id'>): T {
+export type MessageWithOptionalId<T extends Message> = Omit<T, 'id'> & Partial<Pick<T, 'id'>>;
+
+export function createMessage<T extends Message>(params: MessageWithOptionalId<T>): T {
   return {
-    id: crypto.randomUUID(),
     ...params,
+    id: params.id ?? crypto.randomUUID(),
   } as T;
 }
