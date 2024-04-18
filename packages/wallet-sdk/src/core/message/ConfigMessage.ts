@@ -1,6 +1,4 @@
-import { UUID } from 'crypto';
-
-import { Message } from '.';
+import { Message, MessageID } from '.';
 
 export interface ConfigUpdateMessage extends Message {
   event: ConfigEvent;
@@ -12,7 +10,7 @@ export function isConfigUpdateMessage(message: Message): message is ConfigUpdate
 }
 
 export interface ConfigResponseMessage extends Message {
-  requestId: UUID;
+  requestId: MessageID;
   data?: unknown;
 }
 

@@ -1,6 +1,4 @@
-import { UUID } from 'crypto';
-
-import { createMessage, Message, MessageWithOptionalId } from '../message';
+import { createMessage, Message, MessageID, MessageWithOptionalId } from '../message';
 import { standardErrors } from ':core/error';
 
 type Fulfillment = {
@@ -11,7 +9,7 @@ type Fulfillment = {
 export abstract class CrossDomainCommunicator {
   protected url: URL | undefined = undefined;
   private connected = false;
-  private requestMap = new Map<UUID, Fulfillment>();
+  private requestMap = new Map<MessageID, Fulfillment>();
 
   protected abstract onConnect(): Promise<void>;
   protected abstract onDisconnect(): void;
