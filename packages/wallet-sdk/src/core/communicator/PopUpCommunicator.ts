@@ -6,8 +6,8 @@ import { standardErrors } from ':core/error';
 import { Message } from ':core/message';
 import {
   ConfigEvent,
-  configResponseForUpdate,
   ConfigUpdateMessage,
+  responseForConfigUpdate,
 } from ':core/message/ConfigMessage';
 
 const POPUP_WIDTH = 420;
@@ -74,7 +74,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
       case ConfigEvent.PopupLoaded: {
         // Handshake Step 2: After receiving PopupHello from popup, Dapp sends DappHello
         // to FE to help FE confirm the origin of the Dapp, as well as SDK version.
-        const response = configResponseForUpdate(message, {
+        const response = responseForConfigUpdate(message, {
           version: LIB_VERSION,
         });
         this.postMessage(response);

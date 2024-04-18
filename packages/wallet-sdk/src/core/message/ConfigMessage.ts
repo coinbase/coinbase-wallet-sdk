@@ -23,14 +23,14 @@ export interface ConfigResponseMessage extends Message {
   response: unknown;
 }
 
-export function configResponseForUpdate(
-  request: ConfigUpdateMessage,
+export function responseForConfigUpdate(
+  message: ConfigUpdateMessage,
   response: unknown
 ): ConfigResponseMessage {
   return {
     type: 'config',
     id: crypto.randomUUID(),
-    requestId: request.id,
+    requestId: message.id,
     response,
   };
 }
