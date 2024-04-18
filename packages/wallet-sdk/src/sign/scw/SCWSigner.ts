@@ -4,6 +4,7 @@ import { SCWKeyManager } from './SCWKeyManager';
 import { SCWStateManager } from './SCWStateManager';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { standardErrors } from ':core/error';
+import { createMessage } from ':core/message';
 import { Action, SupportedEthereumMethods, SwitchEthereumChainAction } from ':core/message/Action';
 import {
   decryptContent,
@@ -151,13 +152,13 @@ export class SCWSigner implements Signer {
     content: RPCRequestMessage['content']
   ): Promise<RPCRequestMessage> {
     const publicKey = await exportKeyToHexString('public', await this.keyManager.getOwnPublicKey());
-    return {
+    const message: RPCRequestMessage = createMessage({
       type: 'rpc',
-      id: crypto.randomUUID(),
       sender: publicKey,
       content,
       timestamp: new Date(),
-    };
+    });
+    return message;
   }
 
   private async decryptResponseMessage<T>(message: RPCResponseMessage): Promise<RPCResponse<T>> {

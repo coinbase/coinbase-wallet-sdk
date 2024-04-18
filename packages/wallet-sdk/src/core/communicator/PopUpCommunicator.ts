@@ -3,11 +3,11 @@ import { UUID } from 'crypto';
 import { LIB_VERSION } from '../../version';
 import { CrossDomainCommunicator } from ':core/communicator/CrossDomainCommunicator';
 import { standardErrors } from ':core/error';
-import { Message } from ':core/message';
+import { createMessage, Message } from ':core/message';
 import {
+  ConfigResponseMessage,
   ConfigUpdateMessage,
   PopupSetupEvent,
-  responseForConfigUpdate,
 } from ':core/message/ConfigMessage';
 
 const POPUP_WIDTH = 420;
@@ -71,17 +71,19 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
 
   private handleConfigMessage(message: ConfigUpdateMessage) {
     switch (message.event) {
-      case PopupSetupEvent.Loaded:
+      case PopupSetupEvent.Loaded: {
         // Handshake Step 2: After receiving PopupHello from popup, Dapp sends DappHello
         // to FE to help FE confirm the origin of the Dapp, as well as SDK version.
-        this.postMessage(
-          responseForConfigUpdate(message, {
-            version: LIB_VERSION,
-          })
-        );
+        const response: ConfigResponseMessage = createMessage({
+          type: 'config',
+          requestId: message.id,
+          data: { version: LIB_VERSION },
+        });
+        this.postMessage(response);
         this.resolveConnection?.();
         this.resolveConnection = undefined;
         break;
+      }
       case PopupSetupEvent.Unload:
         this.disconnect();
         break;

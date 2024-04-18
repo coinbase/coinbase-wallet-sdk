@@ -1,11 +1,18 @@
 import { UUID } from 'crypto';
 
-import { Message } from '.';
+import { createMessage, Message } from '.';
 
-export interface ConfigUpdateMessage extends Message {
+interface ConfigMessage extends Message {
   type: 'config';
+  data?: unknown;
+}
+
+export interface ConfigUpdateMessage extends ConfigMessage {
   event: ConfigEvent;
-  params?: unknown;
+}
+
+export interface ConfigResponseMessage extends ConfigMessage {
+  requestId: UUID;
 }
 
 type ConfigEvent = PopupSetupEvent | SignerConfigEvent;
@@ -22,29 +29,10 @@ export enum SignerConfigEvent {
 
 export type SignerType = 'scw' | 'walletlink' | 'extension';
 
-export function createConfigMessage(event: ConfigEvent, params?: unknown): ConfigUpdateMessage {
-  return {
+export function createConfigMessage(event: ConfigEvent, data?: unknown): ConfigUpdateMessage {
+  return createMessage({
     type: 'config',
-    id: crypto.randomUUID(),
     event,
-    params,
-  };
-}
-
-export interface ConfigResponseMessage<T> extends Message {
-  type: 'config';
-  requestId: UUID;
-  value: T;
-}
-
-export function responseForConfigUpdate<T>(
-  message: ConfigUpdateMessage,
-  response: T
-): ConfigResponseMessage<T> {
-  return {
-    type: 'config',
-    id: crypto.randomUUID(),
-    requestId: message.id,
-    value: response,
-  };
+    data,
+  });
 }

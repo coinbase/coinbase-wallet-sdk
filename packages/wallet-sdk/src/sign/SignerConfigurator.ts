@@ -42,7 +42,7 @@ export class SignerConfigurator {
     this.appLogoUrl = options.appLogoUrl ?? null;
     this.appChainIds = options.appChainIds;
     this.selectSignerRequestParams = {
-      smartWalletOnly: options.smartWalletOnly,
+      ...options,
     };
   }
 
@@ -91,10 +91,8 @@ export class SignerConfigurator {
       SignerConfigEvent.SelectSignerType,
       this.selectSignerRequestParams
     );
-    const response = (await this.popupCommunicator.request(
-      request
-    )) as ConfigResponseMessage<SignerType>;
-    const signerType = response.value;
+    const response = (await this.popupCommunicator.request(request)) as ConfigResponseMessage;
+    const signerType = response.data as SignerType;
     this.storeSignerType(signerType);
 
     return signerType;
