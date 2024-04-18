@@ -21,7 +21,7 @@ type Fulfillment = {
 
 export class PopUpCommunicator extends CrossDomainCommunicator {
   private requestMap = new Map<UUID, Fulfillment>();
-  private resolveWhenPopupLoaded?: () => void;
+  private resolveConnection?: () => void;
 
   constructor({ url }: { url: string }) {
     super();
@@ -42,7 +42,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
 
   protected onConnect(): Promise<void> {
     return new Promise((resolve) => {
-      this.resolveWhenPopupLoaded = resolve;
+      this.resolveConnection = resolve;
       this.openFixedSizePopUpWindow();
     });
   }
@@ -72,29 +72,25 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
 
   private handleConfigMessage(message: ConfigRequestMessage) {
     switch (message.event) {
-      case PopupSetupEvent.Loaded:
+      case PopupSetupEvent.Loaded: {
         // Handshake Step 2: After receiving PopupHello from popup, Dapp sends DappHello
         // to FE to help FE confirm the origin of the Dapp, as well as SDK version.
-        this.handlePopupLoaded(message.id);
+        const response: ConfigResponseMessage = {
+          type: 'config',
+          requestId: message.id,
+          response: null,
+          id: crypto.randomUUID(),
+          version: LIB_VERSION,
+        };
+        this.postMessage(response);
+        this.resolveConnection?.();
+        this.resolveConnection = undefined;
         break;
+      }
       case PopupSetupEvent.Unload:
         this.disconnect();
         break;
     }
-  }
-
-  private handlePopupLoaded(requestId: UUID) {
-    const message: ConfigResponseMessage = {
-      type: 'config',
-      requestId,
-      response: null,
-      id: crypto.randomUUID(),
-      version: LIB_VERSION,
-    };
-    this.postMessage(message);
-
-    this.resolveWhenPopupLoaded?.();
-    this.resolveWhenPopupLoaded = undefined;
   }
 
   // Window Management
