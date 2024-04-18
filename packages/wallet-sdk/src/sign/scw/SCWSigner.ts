@@ -1,4 +1,3 @@
-import { LIB_VERSION } from '../../version';
 import { Signer } from '../SignerInterface';
 import { StateUpdateListener } from '../UpdateListenerInterface';
 import { SCWKeyManager } from './SCWKeyManager';
@@ -153,11 +152,10 @@ export class SCWSigner implements Signer {
   ): Promise<RPCRequestMessage> {
     const publicKey = await exportKeyToHexString('public', await this.keyManager.getOwnPublicKey());
     return {
-      type: 'scw',
+      type: 'rpc',
       id: crypto.randomUUID(),
       sender: publicKey,
       content,
-      version: LIB_VERSION,
       timestamp: new Date(),
     };
   }
