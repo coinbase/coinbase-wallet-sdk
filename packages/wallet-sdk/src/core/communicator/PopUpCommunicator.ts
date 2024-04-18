@@ -50,12 +50,12 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     if (event.origin !== this.url?.origin) return;
 
     const message = event.data;
-    if (!('requestId' in message)) {
-      this.handleConfigMessage(message as ConfigUpdateMessage);
+    if (!message.requestId) {
+      this.handleIncomingConfigUpdate(message as ConfigUpdateMessage);
       return;
     }
 
-    const requestId = message.requestId as UUID;
+    const requestId = message.requestId;
     const resolveFunction = this.requestMap.get(requestId)?.resolve;
     this.requestMap.delete(requestId);
     resolveFunction?.(message);
@@ -69,7 +69,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     });
   }
 
-  private handleConfigMessage(message: ConfigUpdateMessage) {
+  private handleIncomingConfigUpdate(message: ConfigUpdateMessage) {
     switch (message.event) {
       case PopupSetupEvent.Loaded: {
         // Handshake Step 2: After receiving PopupHello from popup, Dapp sends DappHello
