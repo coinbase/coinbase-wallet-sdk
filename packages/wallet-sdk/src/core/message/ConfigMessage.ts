@@ -16,8 +16,7 @@ export enum PopupSetupEvent {
 
 export enum SignerConfigEvent {
   SelectSignerType = 'selectSignerType',
-  WalletLinkSession = 'WalletLinkSession',
-  WalletLinkConnected = 'WalletLinkConnected',
+  WalletLinkUpdate = 'WalletLinkUpdate',
 }
 
 export function createConfigMessage(event: ConfigEvent, params?: unknown): ConfigUpdateMessage {

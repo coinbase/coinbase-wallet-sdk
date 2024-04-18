@@ -5,7 +5,6 @@ import { WLSigner } from './walletlink/WLSigner';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { standardErrors } from ':core/error';
 import {
-  ConfigEvent,
   ConfigResponseMessage,
   createConfigMessage,
   SignerConfigEvent,
@@ -65,7 +64,7 @@ export class SignerConfigurator {
       const signer = this.initSignerFromType(signerType);
 
       if (signer instanceof WLSigner) {
-        const update = createConfigMessage(SignerConfigEvent.WalletLinkSession, {
+        const update = createConfigMessage(SignerConfigEvent.WalletLinkUpdate, {
           url: signer.getQRCodeUrl(),
         });
         this.popupCommunicator.postMessage(update);
@@ -85,7 +84,7 @@ export class SignerConfigurator {
   private async selectSignerType(): Promise<SignerType> {
     await this.popupCommunicator.connect();
 
-    const request = createConfigMessage(ConfigEvent.SelectSignerType, {
+    const request = createConfigMessage(SignerConfigEvent.SelectSignerType, {
       smartWalletOnly: this.smartWalletOnly,
     });
     const response = (await this.popupCommunicator.request(
