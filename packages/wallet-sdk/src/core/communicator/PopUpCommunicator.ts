@@ -1,6 +1,6 @@
 import { UUID } from 'crypto';
 
-import { LIB_VERSION } from '../../../version';
+import { LIB_VERSION } from '../../version';
 import { CrossDomainCommunicator } from ':core/communicator/CrossDomainCommunicator';
 import { standardErrors } from ':core/error';
 import { Message } from ':core/message';

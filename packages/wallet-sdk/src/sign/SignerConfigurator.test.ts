@@ -1,5 +1,5 @@
+import { PopUpCommunicator } from '../core/communicator/PopUpCommunicator';
 import { SCWSigner } from './scw/SCWSigner';
-import { PopUpCommunicator } from './scw/transport/PopUpCommunicator';
 import { SignerConfigurator } from './SignerConfigurator';
 import { SignRequestHandlerListener } from './UpdateListenerInterface';
 import { WLSigner } from './walletlink/WLSigner';
