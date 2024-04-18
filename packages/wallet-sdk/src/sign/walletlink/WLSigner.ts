@@ -29,10 +29,10 @@ export class WLSigner implements Signer {
   }
 
   getWalletLinkSession() {
-    const session = this.adapter.getWalletLinkSession();
+    const { id, secret } = this.adapter.getWalletLinkSession();
     return {
-      id: session.id,
-      secret: session.secret,
+      id,
+      secret,
     };
   }
 
