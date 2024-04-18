@@ -4,8 +4,17 @@ import { Message } from '.';
 
 export interface ConfigRequestMessage extends Message {
   type: 'config';
-  event: ConfigEventType;
+  event: ConfigEvent;
   params?: unknown;
+}
+
+export enum ConfigEvent {
+  PopupLoaded = 'popupLoaded',
+  PopupUnload = 'popupUnload',
+
+  SelectSignerType = 'selectSignerType',
+  WalletLinkSession = 'WalletLinkSession',
+  WalletLinkConnected = 'WalletLinkConnected',
 }
 
 export interface ConfigResponseMessage extends Message {
@@ -14,20 +23,16 @@ export interface ConfigResponseMessage extends Message {
   response: unknown;
 }
 
-type ConfigEventType = PopupSetupEvent | SignerConfigEvent | WalletLinkEvent;
-
-export enum PopupSetupEvent {
-  Loaded = 'popupLoaded',
-  Unload = 'popupUnload',
-}
-
-export enum SignerConfigEvent {
-  SelectSignerType = 'selectSignerType',
-}
-
-export enum WalletLinkEvent {
-  RequestSession = 'WalletLinkSession',
-  Connected = 'WalletLinkConnected',
+export function configResponseForRequest(
+  request: ConfigRequestMessage,
+  response: unknown
+): ConfigResponseMessage {
+  return {
+    type: 'config',
+    id: crypto.randomUUID(),
+    requestId: request.id,
+    response,
+  };
 }
 
 export type SignerType = 'scw' | 'walletlink' | 'extension';

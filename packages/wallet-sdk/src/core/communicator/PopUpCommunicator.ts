@@ -5,9 +5,9 @@ import { CrossDomainCommunicator } from ':core/communicator/CrossDomainCommunica
 import { standardErrors } from ':core/error';
 import { Message } from ':core/message';
 import {
+  ConfigEvent,
   ConfigRequestMessage,
-  ConfigResponseMessage,
-  PopupSetupEvent,
+  configResponseForRequest,
 } from ':core/message/ConfigMessage';
 
 // TODO: how to set/change configurations?
@@ -72,23 +72,18 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
 
   private handleConfigMessage(message: ConfigRequestMessage) {
     switch (message.event) {
-      case PopupSetupEvent.Loaded: {
+      case ConfigEvent.PopupLoaded: {
         // Handshake Step 2: After receiving PopupHello from popup, Dapp sends DappHello
         // to FE to help FE confirm the origin of the Dapp, as well as SDK version.
-        const response: ConfigResponseMessage = {
-          type: 'config',
-          id: crypto.randomUUID(),
-          requestId: message.id,
-          response: {
-            version: LIB_VERSION,
-          },
-        };
+        const response = configResponseForRequest(message, {
+          version: LIB_VERSION,
+        });
         this.postMessage(response);
         this.resolveConnection?.();
         this.resolveConnection = undefined;
         break;
       }
-      case PopupSetupEvent.Unload:
+      case ConfigEvent.PopupUnload:
         this.disconnect();
         break;
     }
