@@ -14,7 +14,7 @@ export interface ConfigResponseMessage extends Message {
   response: unknown;
 }
 
-export type ConfigEventType = PopupSetupEvent | SignerConfigEvent | WalletLinkEvent;
+type ConfigEventType = PopupSetupEvent | SignerConfigEvent | WalletLinkEvent;
 
 export enum PopupSetupEvent {
   Loaded = 'popupLoaded',
