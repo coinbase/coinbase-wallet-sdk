@@ -5,12 +5,9 @@ import { CrossDomainCommunicator } from './CrossDomainCommunicator';
 import { standardErrors } from ':core/error';
 import { Message } from ':core/message';
 import {
-  ConfigEventType,
   ConfigRequestMessage,
-  PopupSetupEventType,
-  SignerConfigEventType,
-  SignerType,
-  WalletLinkConfigEventType,
+  ConfigResponseMessage,
+  PopupSetupEvent,
 } from ':core/message/ConfigMessage';
 
 // TODO: how to set/change configurations?
@@ -26,23 +23,9 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
   private requestMap = new Map<UUID, Fulfillment>();
   private resolveConnection?: () => void;
 
-  private selectSignerTypeFulfillment?: {
-    resolve: (_: SignerType) => void;
-    reject: (_: Error) => void;
-  };
-
   constructor({ url }: { url: string }) {
     super();
     this.url = new URL(url);
-  }
-
-  selectSignerType(smartWalletOnly: boolean): Promise<SignerType> {
-    return new Promise((resolve, reject) => {
-      this.selectSignerTypeFulfillment = { resolve, reject };
-      this.postConfigMessage(SignerConfigEventType.DappSelectSignerType, {
-        smartWalletOnly,
-      });
-    });
   }
 
   request(message: Message): Promise<Message> {
@@ -55,26 +38,6 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
       };
       this.requestMap.set(message.id, fulfillment);
     });
-  }
-
-  postConfigMessage(type: ConfigEventType, options?: unknown) {
-    if (
-      options &&
-      type !== PopupSetupEventType.DappHello &&
-      type !== SignerConfigEventType.DappSelectSignerType &&
-      type !== WalletLinkConfigEventType.DappWalletLinkUrlResponse
-    ) {
-      throw standardErrors.rpc.internal('ClientConfigEvent does not accept options');
-    }
-
-    const configMessage: ConfigRequestMessage = {
-      type: 'config',
-      id: crypto.randomUUID(),
-      event: type,
-      params: options,
-      version: LIB_VERSION,
-    };
-    this.postMessage(configMessage);
   }
 
   protected onConnect(): Promise<void> {
@@ -101,10 +64,6 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
 
   protected onDisconnect() {
     this.closeChildWindow();
-    this.selectSignerTypeFulfillment?.reject(
-      standardErrors.provider.userRejectedRequest('Request rejected')
-    );
-    this.selectSignerTypeFulfillment = undefined;
     this.requestMap.forEach((fulfillment, uuid, map) => {
       fulfillment.reject(standardErrors.provider.userRejectedRequest('Request rejected'));
       map.delete(uuid);
@@ -113,17 +72,20 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
 
   private handleIncomingRequest(message: ConfigRequestMessage) {
     switch (message.event) {
-      case PopupSetupEventType.PopupHello:
-        // Handshake Step 2: After receiving PopupHello from popup, Dapp sends DappHello
-        // to FE to help FE confirm the origin of the Dapp, as well as SDK version.
-        this.postConfigMessage(PopupSetupEventType.DappHello, LIB_VERSION);
+      case PopupSetupEvent.Loaded: {
+        const response: ConfigResponseMessage = {
+          type: 'config',
+          id: crypto.randomUUID(),
+          version: LIB_VERSION,
+          requestId: message.id,
+          response: LIB_VERSION,
+        };
+        this.postMessage(response);
         this.resolveConnection?.();
         this.resolveConnection = undefined;
         break;
-      case SignerConfigEventType.PopupSignerTypeSelected:
-        this.selectSignerTypeFulfillment?.resolve(message.params as SignerType);
-        break;
-      case PopupSetupEventType.PopupUnload:
+      }
+      case PopupSetupEvent.Unload:
         this.disconnect();
         break;
     }
