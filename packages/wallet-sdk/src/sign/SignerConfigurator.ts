@@ -64,10 +64,11 @@ export class SignerConfigurator {
       const signer = this.initSignerFromType(signerType);
 
       if (signer instanceof WLSigner) {
-        const update = createConfigMessage(SignerConfigEvent.WalletLinkUpdate, {
-          url: signer.getQRCodeUrl(),
-        });
-        this.popupCommunicator.postMessage(update);
+        this.popupCommunicator.postMessage(
+          createConfigMessage(SignerConfigEvent.WalletLinkUpdate, {
+            url: signer.getQRCodeUrl(),
+          })
+        );
       }
 
       return signer;

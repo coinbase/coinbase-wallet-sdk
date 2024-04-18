@@ -67,10 +67,11 @@ export class SignRequestHandler implements RequestHandler {
       const ethAddresses = await signer.handshake();
       if (Array.isArray(ethAddresses)) {
         if (signer instanceof WLSigner) {
-          const update = createConfigMessage(SignerConfigEvent.WalletLinkUpdate, {
-            connected: true,
-          });
-          this.popupCommunicator.postMessage(update);
+          this.popupCommunicator.postMessage(
+            createConfigMessage(SignerConfigEvent.WalletLinkUpdate, {
+              connected: true,
+            })
+          );
         }
         this.updateListener.onConnect();
         return Promise.resolve(ethAddresses);
