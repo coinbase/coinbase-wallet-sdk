@@ -161,7 +161,7 @@ export class SCWSigner implements Signer {
   ): Promise<RPCRequestMessage> {
     const publicKey = await exportKeyToHexString('public', await this.keyManager.getOwnPublicKey());
     return {
-      type: 'scw',
+      type: 'rpc',
       id: crypto.randomUUID(),
       sender: publicKey,
       content,

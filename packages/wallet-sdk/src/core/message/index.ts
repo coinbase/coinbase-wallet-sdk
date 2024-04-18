@@ -1,7 +1,7 @@
 import { UUID } from 'crypto';
 
 export interface Message {
-  type: 'config' | 'scw';
+  type: 'config' | 'rpc';
   id: UUID;
   version: string;
 }
