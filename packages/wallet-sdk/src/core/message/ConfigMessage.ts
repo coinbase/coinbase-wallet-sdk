@@ -2,7 +2,7 @@ import { UUID } from 'crypto';
 
 import { Message } from '.';
 
-export interface ConfigRequestMessage extends Message {
+export interface ConfigUpdateMessage extends Message {
   type: 'config';
   event: ConfigEvent;
   params?: unknown;
@@ -23,8 +23,8 @@ export interface ConfigResponseMessage extends Message {
   response: unknown;
 }
 
-export function configResponseForRequest(
-  request: ConfigRequestMessage,
+export function configResponseForUpdate(
+  request: ConfigUpdateMessage,
   response: unknown
 ): ConfigResponseMessage {
   return {

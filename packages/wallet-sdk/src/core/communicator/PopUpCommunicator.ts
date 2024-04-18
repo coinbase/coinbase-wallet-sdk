@@ -6,11 +6,10 @@ import { standardErrors } from ':core/error';
 import { Message } from ':core/message';
 import {
   ConfigEvent,
-  ConfigRequestMessage,
-  configResponseForRequest,
+  configResponseForUpdate,
+  ConfigUpdateMessage,
 } from ':core/message/ConfigMessage';
 
-// TODO: how to set/change configurations?
 const POPUP_WIDTH = 420;
 const POPUP_HEIGHT = 540;
 
@@ -52,7 +51,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
 
     const message = event.data;
     if (!('requestId' in message)) {
-      this.handleConfigMessage(message as ConfigRequestMessage);
+      this.handleConfigMessage(message as ConfigUpdateMessage);
       return;
     }
 
@@ -70,12 +69,12 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     });
   }
 
-  private handleConfigMessage(message: ConfigRequestMessage) {
+  private handleConfigMessage(message: ConfigUpdateMessage) {
     switch (message.event) {
       case ConfigEvent.PopupLoaded: {
         // Handshake Step 2: After receiving PopupHello from popup, Dapp sends DappHello
         // to FE to help FE confirm the origin of the Dapp, as well as SDK version.
-        const response = configResponseForRequest(message, {
+        const response = configResponseForUpdate(message, {
           version: LIB_VERSION,
         });
         this.postMessage(response);
