@@ -74,7 +74,7 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
     if (version === '4.0') {
       cbwsdk = new CoinbaseWalletSDK40({
         appName: 'SDK Playground',
-        chainIds: [84532, 8452],
+        appChainIds: [84532, 8452],
         smartWalletOnly,
       });
       setSdk(cbwsdk);
