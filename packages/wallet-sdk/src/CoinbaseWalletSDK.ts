@@ -9,7 +9,9 @@ import { fetchCoinbaseInjectedProvider } from ':core/providerUtils';
 import { getFavicon } from ':core/util';
 
 // for backwards compatibility
-type CoinbaseWalletSDKOptions = Partial<AppMetadata & Preference>;
+interface CoinbaseWalletSDKOptions extends Partial<AppMetadata> {
+  preference?: Preference;
+}
 
 export class CoinbaseWalletSDK {
   private options: CoinbaseWalletSDKOptions;
@@ -24,10 +26,10 @@ export class CoinbaseWalletSDK {
       appName = 'Dapp',
       appLogoUrl = getFavicon(),
       appChainIds = [],
-      options = 'all',
+      preference = { options: 'all' },
     } = this.options;
 
-    const provider = fetchCoinbaseInjectedProvider(options === 'smartWalletOnly');
+    const provider = fetchCoinbaseInjectedProvider(preference.options === 'smartWalletOnly');
     if (provider) {
       if ('setAppInfo' in provider && typeof provider.setAppInfo === 'function') {
         provider.setAppInfo(appName, appLogoUrl);
@@ -41,9 +43,7 @@ export class CoinbaseWalletSDK {
         appLogoUrl,
         appChainIds,
       },
-      preference: {
-        options,
-      },
+      preference,
     });
   }
 
