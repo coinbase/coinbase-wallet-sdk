@@ -1,5 +1,4 @@
-import { Signer } from './interface';
-import { SignRequestHandlerListener } from './interface';
+import { Signer, SignRequestHandlerListener } from './interface';
 import { SignerConfigurator } from './SignerConfigurator';
 import { WLSigner } from './walletlink/WLSigner';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
