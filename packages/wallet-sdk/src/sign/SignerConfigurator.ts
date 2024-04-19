@@ -24,11 +24,13 @@ interface SignerConfiguratorOptions {
   popupCommunicator: PopUpCommunicator;
 }
 
+export type ConnectionPreference = { smartWalletOnly: boolean };
+
 export class SignerConfigurator {
   private appName: string;
   private appLogoUrl: string | null;
   private appChainIds: number[];
-  private connectionPreference: { smartWalletOnly: boolean };
+  private connectionPreference: ConnectionPreference;
 
   private popupCommunicator: PopUpCommunicator;
   private updateListener: SignRequestHandlerListener;
@@ -43,7 +45,7 @@ export class SignerConfigurator {
     this.appLogoUrl = options.appLogoUrl ?? null;
     this.appChainIds = options.appChainIds;
     this.connectionPreference = {
-      ...options,
+      smartWalletOnly: options.smartWalletOnly,
     };
   }
 
@@ -89,12 +91,11 @@ export class SignerConfigurator {
   private async selectSignerType(): Promise<SignerType> {
     await this.popupCommunicator.connect();
 
-    const response = await this.popupCommunicator.postMessageForResponse(
-      createMessage<ConfigUpdateMessage>({
-        event: ConfigEvent.SelectSignerType,
-        data: this.connectionPreference,
-      })
-    );
+    const message = createMessage<ConfigUpdateMessage>({
+      event: ConfigEvent.SelectSignerType,
+      data: this.connectionPreference,
+    });
+    const response = await this.popupCommunicator.postMessageForResponse(message);
     const signerType = (response as ConfigResponseMessage).data as SignerType;
     this.storeSignerType(signerType);
 

@@ -50,7 +50,6 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
         this.resolveConnection?.();
         this.resolveConnection = undefined;
         break;
-
       case ConfigEvent.PopupUnload:
         this.disconnect();
         break;
