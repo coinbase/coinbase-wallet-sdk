@@ -19,7 +19,7 @@ import {
 } from '@chakra-ui/react';
 import { useMemo } from 'react';
 
-import { scwUrls, sdkVersions, useCBWSDK } from '../context/CBWSDKReactContextProvider';
+import { options, scwUrls, sdkVersions, useCBWSDK } from '../context/CBWSDKReactContextProvider';
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -28,15 +28,8 @@ type LayoutProps = {
 export const WIDTH_2XL = '1536px';
 
 export function Layout({ children }: LayoutProps) {
-  const {
-    provider,
-    smartWalletOnly,
-    setPreference,
-    sdkVersion,
-    setSDKVersion,
-    scwUrl,
-    setScwUrlAndSave,
-  } = useCBWSDK();
+  const { provider, option, setPreference, sdkVersion, setSDKVersion, scwUrl, setScwUrlAndSave } =
+    useCBWSDK();
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const isSmallScreen = useBreakpointValue({ base: true, xl: false });
@@ -76,14 +69,14 @@ export function Layout({ children }: LayoutProps) {
           <>
             <Menu>
               <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
-                {`smartWalletOnly: ${smartWalletOnly}`}
+                {`Option: ${option}`}
               </MenuButton>
               <MenuList>
-                {[true, false].map((b) => (
+                {options.map((b) => (
                   <MenuItem
                     color={'MenuText'}
                     key={b.toString()}
-                    icon={b === smartWalletOnly ? <CheckIcon /> : null}
+                    icon={b === option ? <CheckIcon /> : null}
                     onClick={() => setPreference(b)}
                   >
                     {b.toString()}
@@ -112,7 +105,7 @@ export function Layout({ children }: LayoutProps) {
         )}
       </>
     );
-  }, [sdkVersion, smartWalletOnly, setPreference, setSDKVersion, scwUrl, setScwUrlAndSave]);
+  }, [sdkVersion, option, setPreference, setSDKVersion, scwUrl, setScwUrlAndSave]);
 
   return (
     <Box minH="100vh" bg="blackAlpha.100">
