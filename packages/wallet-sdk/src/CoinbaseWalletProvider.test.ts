@@ -6,9 +6,14 @@ describe('CoinbaseWalletProvider', () => {
 
   beforeEach(() => {
     provider = new CoinbaseWalletProvider({
-      appName: 'TestApp',
-      appChainIds: [],
-      smartWalletOnly: false,
+      metadata: {
+        appName: 'TestApp',
+        appLogoUrl: null,
+        appChainIds: [],
+      },
+      preference: {
+        smartWalletOnly: false,
+      },
     });
   });
 

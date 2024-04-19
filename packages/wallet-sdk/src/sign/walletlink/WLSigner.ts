@@ -3,18 +3,16 @@ import { StateUpdateListener } from '../UpdateListenerInterface';
 import { WLRelayAdapter } from './relay/WLRelayAdapter';
 import { WALLETLINK_URL } from ':core/constants';
 import { AddressString } from ':core/type';
-import { RequestArguments } from ':core/type/ProviderInterface';
+import { AppMetadata, RequestArguments } from ':core/type/ProviderInterface';
 
 export class WLSigner implements Signer {
   private adapter: WLRelayAdapter;
 
-  constructor(options: {
-    appName: string;
-    appLogoUrl: string | null;
-    updateListener: StateUpdateListener;
-  }) {
+  constructor(options: { metadata: AppMetadata; updateListener: StateUpdateListener }) {
+    const { appName, appLogoUrl } = options.metadata;
     this.adapter = new WLRelayAdapter({
-      ...options,
+      appName,
+      appLogoUrl,
       walletlinkUrl: WALLETLINK_URL,
       updateListener: options.updateListener,
     });
