@@ -79,7 +79,9 @@ describe('CoinbaseWalletSDK', () => {
         const sdk = new CoinbaseWalletSDK({
           appName: 'Test',
           appLogoUrl: 'http://coinbase.com/wallet-logo.png',
-          smartWalletOnly: true,
+          preference: {
+            options: 'smartWalletOnly',
+          },
         });
         // Returns extension provider
         const provider = sdk.makeWeb3Provider();
@@ -110,7 +112,9 @@ describe('CoinbaseWalletSDK', () => {
         const sdk = new CoinbaseWalletSDK({
           appName: 'Test',
           appLogoUrl: 'http://coinbase.com/wallet-logo.png',
-          smartWalletOnly: true,
+          preference: {
+            options: 'smartWalletOnly',
+          },
         });
         expect(sdk.makeWeb3Provider()).toEqual(mockCipherProvider);
       });

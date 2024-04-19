@@ -37,7 +37,7 @@ describe('SignerConfigurator', () => {
     popupCommunicator = new PopUpCommunicator({ url: 'http://google.com' });
     signerConfigurator = new SignerConfigurator({
       metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1] },
-      preference: { smartWalletOnly: false },
+      preference: { options: 'all' },
       updateListener,
       popupCommunicator,
     });

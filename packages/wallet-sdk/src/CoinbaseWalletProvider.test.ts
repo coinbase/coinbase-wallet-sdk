@@ -12,7 +12,7 @@ describe('CoinbaseWalletProvider', () => {
         appChainIds: [],
       },
       preference: {
-        smartWalletOnly: false,
+        options: 'all',
       },
     });
   });
