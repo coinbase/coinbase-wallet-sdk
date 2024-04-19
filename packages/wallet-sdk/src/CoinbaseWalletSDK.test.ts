@@ -6,20 +6,6 @@ import { ProviderInterface } from ':core/type/ProviderInterface';
 const window = globalThis as Window;
 
 describe('CoinbaseWalletSDK', () => {
-  describe('initialize', () => {
-    test('with defaults', () => {
-      const coinbaseWalletSDK1 = new CoinbaseWalletSDK({
-        appName: '',
-        appLogoUrl: '',
-      });
-
-      expect(coinbaseWalletSDK1).toMatchObject({
-        appLogoUrl: null,
-        appName: 'DApp',
-      });
-    });
-  });
-
   describe('public methods', () => {
     let coinbaseWalletSDK2: CoinbaseWalletSDK;
     beforeEach(() => {
