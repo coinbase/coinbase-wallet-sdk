@@ -1,5 +1,4 @@
-import { StateUpdateListener } from '../interface';
-import { Signer } from '../SignerInterface';
+import { Signer, StateUpdateListener } from '../interface';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWStateManager } from './SCWStateManager';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';

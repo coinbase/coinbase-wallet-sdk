@@ -1,6 +1,5 @@
-import { SignRequestHandlerListener } from './interface';
+import { Signer, SignRequestHandlerListener } from './interface';
 import { SCWSigner } from './scw/SCWSigner';
-import { Signer } from './SignerInterface';
 import { WLSigner } from './walletlink/WLSigner';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { CB_KEYS_URL } from ':core/constants';
@@ -147,18 +146,16 @@ export class SignRequestHandler implements RequestHandler {
   }
 
   protected initSignerFromType(signerType: SignerType): Signer {
+    const constructorOptions = {
+      metadata: this.metadata,
+      puc: this.popupCommunicator,
+      updateListener: this.updateListener,
+    };
     switch (signerType) {
       case 'scw':
-        return new SCWSigner({
-          metadata: this.metadata,
-          puc: this.popupCommunicator,
-          updateListener: this.updateListener,
-        });
+        return new SCWSigner(constructorOptions);
       case 'walletlink':
-        return new WLSigner({
-          metadata: this.metadata,
-          updateListener: this.updateListener,
-        });
+        return new WLSigner(constructorOptions);
       default:
         throw standardErrors.rpc.internal(`SignerConfigurator: Unknown signer type ${signerType}`);
     }

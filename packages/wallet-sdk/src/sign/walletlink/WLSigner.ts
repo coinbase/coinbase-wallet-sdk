@@ -1,6 +1,6 @@
-import { StateUpdateListener } from '../interface';
-import { Signer } from '../SignerInterface';
+import { Signer, StateUpdateListener } from '../interface';
 import { WLRelayAdapter } from './relay/WLRelayAdapter';
+import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { WALLETLINK_URL } from ':core/constants';
 import { AddressString } from ':core/type';
 import { AppMetadata, RequestArguments } from ':core/type/ProviderInterface';
@@ -8,7 +8,11 @@ import { AppMetadata, RequestArguments } from ':core/type/ProviderInterface';
 export class WLSigner implements Signer {
   private adapter: WLRelayAdapter;
 
-  constructor(options: { metadata: AppMetadata; updateListener: StateUpdateListener }) {
+  constructor(options: {
+    metadata: AppMetadata;
+    puc: PopUpCommunicator;
+    updateListener: StateUpdateListener;
+  }) {
     const { appName, appLogoUrl } = options.metadata;
     this.adapter = new WLRelayAdapter({
       appName,
