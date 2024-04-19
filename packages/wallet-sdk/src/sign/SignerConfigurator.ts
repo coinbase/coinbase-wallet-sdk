@@ -1,6 +1,6 @@
+import { Signer } from './interface';
+import { SignRequestHandlerListener } from './interface';
 import { SCWSigner } from './scw/SCWSigner';
-import { Signer } from './SignerInterface';
-import { SignRequestHandlerListener } from './UpdateListenerInterface';
 import { WLSigner } from './walletlink/WLSigner';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { standardErrors } from ':core/error';

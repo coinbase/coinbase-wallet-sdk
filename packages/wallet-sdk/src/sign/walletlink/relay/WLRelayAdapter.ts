@@ -3,7 +3,7 @@
 // Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
 
 import eip712 from '../../../vendor-js/eth-eip712-util';
-import { StateUpdateListener } from '../../UpdateListenerInterface';
+import { StateUpdateListener } from '../../interface';
 import { LOCAL_STORAGE_ADDRESSES_KEY } from './RelayAbstract';
 import { RelayEventManager } from './RelayEventManager';
 import { EthereumTransactionParams } from './type/EthereumTransactionParams';

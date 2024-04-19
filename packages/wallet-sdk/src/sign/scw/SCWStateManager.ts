@@ -1,4 +1,4 @@
-import { StateUpdateListener } from '../UpdateListenerInterface';
+import { StateUpdateListener } from '../interface';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { AddressString, Chain } from ':core/type';
 

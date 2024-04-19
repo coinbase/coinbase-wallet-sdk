@@ -1,5 +1,5 @@
-import { Signer } from '../SignerInterface';
-import { StateUpdateListener } from '../UpdateListenerInterface';
+import { Signer } from '../interface';
+import { StateUpdateListener } from '../interface';
 import { WLRelayAdapter } from './relay/WLRelayAdapter';
 import { WALLETLINK_URL } from ':core/constants';
 import { AddressString } from ':core/type';
