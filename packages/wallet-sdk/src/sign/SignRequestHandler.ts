@@ -10,7 +10,7 @@ type SignRequestHandlerOptions = ConstructorOptions & {
 };
 
 export class SignRequestHandler implements RequestHandler {
-  private signer: Signer | undefined;
+  private _signer: Signer | undefined;
 
   private updateListener: SignRequestHandlerListener;
   private signerConfigurator: SignerConfigurator;
@@ -84,18 +84,18 @@ export class SignRequestHandler implements RequestHandler {
   }
 
   async onDisconnect() {
-    this.signer = undefined;
+    this._signer = undefined;
     this.signerConfigurator.clearStorage();
   }
 
   private tryRestoringSignerFromPersistedType() {
-    this.signer = this.signerConfigurator.tryRestoringSignerFromPersistedType();
+    this._signer = this.signerConfigurator.tryRestoringSignerFromPersistedType();
   }
 
   private async useSigner(): Promise<Signer> {
-    if (this.signer) return this.signer;
+    if (this._signer) return this._signer;
 
-    this.signer = await this.signerConfigurator.selectSigner();
-    return this.signer;
+    this._signer = await this.signerConfigurator.selectSigner();
+    return this._signer;
   }
 }
