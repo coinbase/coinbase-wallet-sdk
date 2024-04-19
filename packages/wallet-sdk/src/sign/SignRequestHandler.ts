@@ -24,7 +24,8 @@ export class SignRequestHandler implements RequestHandler {
   async handleRequest(request: RequestArguments, accounts: AddressString[]) {
     try {
       if (request.method === 'eth_requestAccounts') {
-        return await this.eth_requestAccounts(accounts);
+        if (accounts.length > 0) return accounts;
+        return await this.requestAccounts();
       }
 
       const signer = await this.useSigner();
@@ -43,20 +44,11 @@ export class SignRequestHandler implements RequestHandler {
     }
   }
 
-  private async eth_requestAccounts(accounts: AddressString[]): Promise<AddressString[]> {
-    if (accounts.length > 0) {
-      this.updateListener.onConnect();
-      return Promise.resolve(accounts);
-    }
-
-    try {
-      const signer = await this.useSigner();
-      const ethAddresses = await signer.handshake();
-      this.updateListener.onConnect();
-      return Promise.resolve(ethAddresses);
-    } catch (err) {
-      return Promise.reject(standardErrors.rpc.internal('Failed to get accounts'));
-    }
+  private async requestAccounts(): Promise<AddressString[]> {
+    const signer = await this.useSigner();
+    const ethAddresses = await signer.handshake();
+    this.updateListener.onConnect();
+    return ethAddresses;
   }
 
   canHandleRequest(request: RequestArguments): boolean {

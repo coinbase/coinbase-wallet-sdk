@@ -30,40 +30,29 @@ export class SignerConfigurator {
   private signerTypeStorage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
 
   constructor(options: Readonly<SignerConfiguratorOptions>) {
+    const { keysUrl, ...preferenceWithoutKeysUrl } = options.preference;
+    this.preference = preferenceWithoutKeysUrl;
     this.popupCommunicator = new PopUpCommunicator({
-      url: options.preference.keysUrl ?? CB_KEYS_URL,
+      url: keysUrl ?? CB_KEYS_URL,
     });
-
     this.updateListener = options.updateListener;
-
     this.metadata = options.metadata;
-    this.preference = options.preference;
   }
 
   tryRestoringSignerFromPersistedType(): Signer | undefined {
-    try {
-      const persistedSignerType = this.signerTypeStorage.getItem(SIGNER_TYPE_KEY) as SignerType;
-      if (persistedSignerType) {
-        return this.initSignerFromType(persistedSignerType);
-      }
-
-      return undefined;
-    } catch (err) {
-      this.clearStorage();
-      throw err;
+    const persistedSignerType = this.signerTypeStorage.getItem(SIGNER_TYPE_KEY) as SignerType;
+    if (persistedSignerType) {
+      return this.initSignerFromType(persistedSignerType);
     }
+
+    return undefined;
   }
 
   async selectSigner(): Promise<Signer> {
-    try {
-      const signerType = await this.selectSignerType();
-      const signer = this.initSignerFromType(signerType);
+    const signerType = await this.selectSignerType();
+    const signer = this.initSignerFromType(signerType);
 
-      return signer;
-    } catch (err) {
-      this.clearStorage();
-      throw err;
-    }
+    return signer;
   }
 
   clearStorage() {
@@ -79,7 +68,7 @@ export class SignerConfigurator {
     });
     const response = await this.popupCommunicator.postMessageForResponse(message);
     const signerType = (response as ConfigResponseMessage).data as SignerType;
-    this.storeSignerType(signerType);
+    this.signerTypeStorage.setItem(SIGNER_TYPE_KEY, signerType);
 
     return signerType;
   }
@@ -98,11 +87,5 @@ export class SignerConfigurator {
       default:
         throw standardErrors.rpc.internal(`SignerConfigurator: Unknown signer type ${signerType}`);
     }
-  }
-
-  // storage methods
-
-  private storeSignerType(signerType: SignerType) {
-    this.signerTypeStorage.setItem(SIGNER_TYPE_KEY, signerType);
   }
 }
