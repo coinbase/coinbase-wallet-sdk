@@ -24,10 +24,10 @@ export class CoinbaseWalletSDK {
       appName = 'Dapp',
       appLogoUrl = getFavicon(),
       appChainIds = [],
-      smartWalletOnly = false,
+      options = 'all',
     } = this.options;
 
-    const provider = fetchCoinbaseInjectedProvider(smartWalletOnly);
+    const provider = fetchCoinbaseInjectedProvider(options === 'smartWalletOnly');
     if (provider) {
       if ('setAppInfo' in provider && typeof provider.setAppInfo === 'function') {
         provider.setAppInfo(appName, appLogoUrl);
@@ -42,7 +42,7 @@ export class CoinbaseWalletSDK {
         appChainIds,
       },
       preference: {
-        smartWalletOnly,
+        options,
       },
     });
   }

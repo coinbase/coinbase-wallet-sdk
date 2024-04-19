@@ -40,8 +40,7 @@ export interface AppMetadata {
 }
 
 export interface Preference {
-  /** Pre-select the wallet connection method */
-  smartWalletOnly: boolean;
+  options: 'all' | 'smartWalletOnly' | 'eoaOnly';
 }
 
 export interface ConstructorOptions {
