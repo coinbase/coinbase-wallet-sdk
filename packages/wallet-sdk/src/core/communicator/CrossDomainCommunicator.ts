@@ -11,14 +11,14 @@ export abstract class CrossDomainCommunicator {
 
   async connect(): Promise<void> {
     if (this.connected) return;
-    window.addEventListener('message', this.eventListner.bind(this));
+    window.addEventListener('message', this.eventListener.bind(this));
     await this.onConnect();
     this.connected = true;
   }
 
   disconnect(): void {
     this.connected = false;
-    window.removeEventListener('message', this.eventListner.bind(this));
+    window.removeEventListener('message', this.eventListener.bind(this));
     this.rejectWaitingRequests();
     this.onDisconnect();
   }
@@ -65,7 +65,7 @@ export abstract class CrossDomainCommunicator {
     }
   >();
 
-  private eventListner(event: MessageEvent<Message>) {
+  private eventListener(event: MessageEvent<Message>) {
     if (event.origin !== this.url?.origin) return;
 
     const message = event.data;

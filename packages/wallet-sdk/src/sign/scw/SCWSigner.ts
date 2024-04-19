@@ -15,32 +15,25 @@ import {
 import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage';
 import { RPCResponse } from ':core/message/RPCResponse';
 import { AddressString } from ':core/type';
-import { RequestArguments } from ':core/type/ProviderInterface';
+import { AppMetadata, RequestArguments } from ':core/type/ProviderInterface';
 import { ensureIntNumber } from ':core/util';
 
 export class SCWSigner implements Signer {
-  private appName: string;
-  private appLogoUrl: string | null;
-  private appChainIds: number[];
-
+  private metadata: AppMetadata;
   private puc: PopUpCommunicator;
   private keyManager: SCWKeyManager;
   private stateManager: SCWStateManager;
 
   constructor(options: {
-    appName: string;
-    appLogoUrl: string | null;
-    appChainIds: number[];
+    metadata: AppMetadata;
     puc: PopUpCommunicator;
     updateListener: StateUpdateListener;
   }) {
-    this.appName = options.appName;
-    this.appLogoUrl = options.appLogoUrl;
-    this.appChainIds = options.appChainIds;
+    this.metadata = options.metadata;
     this.puc = options.puc;
     this.keyManager = new SCWKeyManager();
     this.stateManager = new SCWStateManager({
-      appChainIds: this.appChainIds,
+      appChainIds: this.metadata.appChainIds,
       updateListener: options.updateListener,
     });
 
@@ -56,11 +49,7 @@ export class SCWSigner implements Signer {
     const handshakeMessage = await this.createRequestMessage({
       handshake: {
         method: SupportedEthereumMethods.EthRequestAccounts,
-        params: {
-          dappName: this.appName,
-          dappLogoUrl: this.appLogoUrl,
-          chainIds: this.appChainIds,
-        },
+        params: this.metadata,
       },
     });
     const response = (await this.puc.postMessageForResponse(
