@@ -1,8 +1,6 @@
 import { Signer, SignRequestHandlerListener } from './interface';
 import { SignerConfigurator } from './SignerConfigurator';
 import { WLSigner } from './walletlink/WLSigner';
-import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
-import { CB_KEYS_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
 import { ConfigEvent, ConfigUpdateMessage } from ':core/message/ConfigMessage';
 import { AddressString } from ':core/type';
@@ -11,25 +9,17 @@ import { RequestHandler } from ':core/type/RequestHandlerInterface';
 
 type SignRequestHandlerOptions = ConstructorOptions & {
   updateListener: SignRequestHandlerListener;
-  keysUrl?: string;
 };
 
 export class SignRequestHandler implements RequestHandler {
   private _signer: Signer | undefined;
 
-  private popupCommunicator: PopUpCommunicator;
   private updateListener: SignRequestHandlerListener;
   private signerConfigurator: SignerConfigurator;
 
   constructor(options: Readonly<SignRequestHandlerOptions>) {
-    this.popupCommunicator = new PopUpCommunicator({
-      url: options.keysUrl ?? CB_KEYS_URL,
-    });
     this.updateListener = options.updateListener;
-    this.signerConfigurator = new SignerConfigurator({
-      ...options,
-      popupCommunicator: this.popupCommunicator,
-    });
+    this.signerConfigurator = new SignerConfigurator(options);
     this.tryRestoringSignerFromPersistedType();
   }
 
@@ -113,7 +103,7 @@ export class SignRequestHandler implements RequestHandler {
 
   async onDisconnect() {
     this._signer = undefined;
-    await this.signerConfigurator.onDisconnect();
+    await this.signerConfigurator.clearStorage();
   }
 
   private tryRestoringSignerFromPersistedType() {

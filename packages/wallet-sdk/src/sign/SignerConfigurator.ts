@@ -2,6 +2,7 @@ import { Signer, SignRequestHandlerListener } from './interface';
 import { SCWSigner } from './scw/SCWSigner';
 import { WLSigner } from './walletlink/WLSigner';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
+import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
 import { createMessage } from ':core/message';
 import {
@@ -17,7 +18,6 @@ const SIGNER_TYPE_KEY = 'SignerType';
 
 type SignerConfiguratorOptions = ConstructorOptions & {
   updateListener: SignRequestHandlerListener;
-  popupCommunicator: PopUpCommunicator;
 };
 
 export class SignerConfigurator {
@@ -30,7 +30,10 @@ export class SignerConfigurator {
   private signerTypeStorage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
 
   constructor(options: Readonly<SignerConfiguratorOptions>) {
-    this.popupCommunicator = options.popupCommunicator;
+    this.popupCommunicator = new PopUpCommunicator({
+      url: options.preference.keysUrl ?? CB_KEYS_URL,
+    });
+
     this.updateListener = options.updateListener;
 
     this.metadata = options.metadata;
@@ -46,7 +49,7 @@ export class SignerConfigurator {
 
       return undefined;
     } catch (err) {
-      this.onDisconnect();
+      this.clearStorage();
       throw err;
     }
   }
@@ -67,13 +70,13 @@ export class SignerConfigurator {
 
       return signer;
     } catch (err) {
-      this.onDisconnect();
+      this.clearStorage();
       throw err;
     }
   }
 
-  async onDisconnect() {
-    this.signerTypeStorage.removeItem(SIGNER_TYPE_KEY);
+  async clearStorage() {
+    this.signerTypeStorage.clear();
   }
 
   private async selectSignerType(): Promise<SignerType> {
