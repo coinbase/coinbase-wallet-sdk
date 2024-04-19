@@ -36,12 +36,6 @@ export class WLSigner implements Signer {
     return this.adapter.request<T>(requestArgs);
   }
 
-  async disconnect() {
-    await this.adapter.close();
-  }
-
-  // popup update
-
   private postWalletLinkSession() {
     const { id, secret } = this.adapter.getWalletLinkSession();
     this.postWalletLinkUpdate({ session: { id, secret } });
@@ -56,5 +50,9 @@ export class WLSigner implements Signer {
       event: ConfigEvent.WalletLinkUpdate,
       data,
     });
+  }
+
+  async disconnect() {
+    await this.adapter.close();
   }
 }
