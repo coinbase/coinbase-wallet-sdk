@@ -59,15 +59,6 @@ export class SignerConfigurator {
       const signerType = await this.selectSignerType();
       const signer = this.initSignerFromType(signerType);
 
-      if (signer instanceof WLSigner) {
-        this.popupCommunicator.postMessage<ConfigUpdateMessage>({
-          event: ConfigEvent.WalletLinkUpdate,
-          data: {
-            session: signer.getWalletLinkSession(),
-          },
-        });
-      }
-
       return signer;
     } catch (err) {
       this.clearStorage();
@@ -96,7 +87,7 @@ export class SignerConfigurator {
   protected initSignerFromType(signerType: SignerType): Signer {
     const constructorOptions = {
       metadata: this.metadata,
-      puc: this.popupCommunicator,
+      popupCommunicator: this.popupCommunicator,
       updateListener: this.updateListener,
     };
     switch (signerType) {

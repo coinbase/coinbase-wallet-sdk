@@ -23,36 +23,38 @@ export class WLSigner implements Signer {
       walletlinkUrl: WALLETLINK_URL,
       updateListener: options.updateListener,
     });
+    this.postWalletLinkSession();
   }
 
   async handshake(): Promise<AddressString[]> {
     const ethAddresses = await this.request<AddressString[]>({ method: 'eth_requestAccounts' });
-    this.onConnect();
+    this.postWalletLinkConnected();
     return ethAddresses;
-  }
-
-  private onConnect() {
-    this.popupCommunicator.postMessage<ConfigUpdateMessage>({
-      event: ConfigEvent.WalletLinkUpdate,
-      data: {
-        connected: true,
-      },
-    });
   }
 
   async request<T>(requestArgs: RequestArguments): Promise<T> {
     return this.adapter.request<T>(requestArgs);
   }
 
-  private getWalletLinkSession() {
-    const { id, secret } = this.adapter.getWalletLinkSession();
-    return {
-      id,
-      secret,
-    };
-  }
-
   async disconnect() {
     await this.adapter.close();
+  }
+
+  // popup update
+
+  private postWalletLinkSession() {
+    const { id, secret } = this.adapter.getWalletLinkSession();
+    this.postWalletLinkUpdate({ session: { id, secret } });
+  }
+
+  private postWalletLinkConnected() {
+    this.postWalletLinkUpdate({ connected: true });
+  }
+
+  private postWalletLinkUpdate(data: unknown) {
+    this.popupCommunicator.postMessage<ConfigUpdateMessage>({
+      event: ConfigEvent.WalletLinkUpdate,
+      data,
+    });
   }
 }
