@@ -44,19 +44,17 @@ export class SignerConfigurator {
     if (persistedSignerType) {
       return this.initSignerFromType(persistedSignerType);
     }
-
     return undefined;
   }
 
   async selectSigner(): Promise<Signer> {
     const signerType = await this.selectSignerType();
     const signer = this.initSignerFromType(signerType);
-
     return signer;
   }
 
   clearStorage() {
-    this.signerTypeStorage.clear();
+    this.signerTypeStorage.removeItem(SIGNER_TYPE_KEY);
   }
 
   private async selectSignerType(): Promise<SignerType> {

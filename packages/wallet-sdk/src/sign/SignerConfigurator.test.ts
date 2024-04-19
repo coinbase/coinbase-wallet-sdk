@@ -2,9 +2,6 @@ import { SignRequestHandlerListener } from './interface';
 import { SCWSigner } from './scw/SCWSigner';
 import { SignerConfigurator } from './SignerConfigurator';
 import { WLSigner } from './walletlink/WLSigner';
-import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
-
-jest.mock(':core/communicator/PopUpCommunicator');
 
 const mockSetItem = jest.fn();
 const mockGetItem = jest.fn();
@@ -22,8 +19,20 @@ jest.mock(':core/storage/ScopedLocalStorage', () => {
   };
 });
 
+const mockPostMessageForResponse = jest.fn();
+jest.mock(':core/communicator/PopUpCommunicator', () => {
+  return {
+    PopUpCommunicator: jest.fn().mockImplementation(() => {
+      return {
+        connect: jest.fn(),
+        postMessage: jest.fn(),
+        postMessageForResponse: mockPostMessageForResponse,
+      };
+    }),
+  };
+});
+
 describe('SignerConfigurator', () => {
-  let popupCommunicator: PopUpCommunicator;
   let signerConfigurator: SignerConfigurator;
 
   const updateListener: SignRequestHandlerListener = {
@@ -34,12 +43,10 @@ describe('SignerConfigurator', () => {
   };
 
   beforeEach(() => {
-    popupCommunicator = new PopUpCommunicator({ url: 'http://google.com' });
     signerConfigurator = new SignerConfigurator({
       metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1] },
       preference: { options: 'all' },
       updateListener,
-      popupCommunicator,
     });
   });
 
@@ -50,7 +57,7 @@ describe('SignerConfigurator', () => {
   });
 
   it('should complete signerType selection correctly', async () => {
-    (popupCommunicator.postMessageForResponse as jest.Mock).mockResolvedValue({
+    mockPostMessageForResponse.mockResolvedValue({
       data: 'scw',
     });
 
