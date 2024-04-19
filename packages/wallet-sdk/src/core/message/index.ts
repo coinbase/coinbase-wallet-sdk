@@ -1,4 +1,4 @@
-import { randomUUID, UUID } from 'crypto';
+import { UUID } from 'crypto';
 
 export type MessageID = UUID;
 
@@ -12,6 +12,6 @@ export type MessageWithOptionalId<T extends Message> = Omit<T, 'id'> & Partial<P
 export function createMessage<T extends Message>(params: MessageWithOptionalId<T>): T {
   return {
     ...params,
-    id: params.id ?? randomUUID(),
+    id: params.id ?? crypto.randomUUID(),
   } as T;
 }
