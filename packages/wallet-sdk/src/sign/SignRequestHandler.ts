@@ -1,6 +1,5 @@
+import { Signer, SignRequestHandlerListener } from './interface';
 import { SignerConfigurator } from './SignerConfigurator';
-import { Signer } from './SignerInterface';
-import { SignRequestHandlerListener } from './UpdateListenerInterface';
 import { WLSigner } from './walletlink/WLSigner';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { CB_KEYS_URL } from ':core/constants';
