@@ -1,8 +1,6 @@
 import { Signer, SignRequestHandlerListener } from './interface';
 import { SignerConfigurator } from './SignerConfigurator';
-import { WLSigner } from './walletlink/WLSigner';
 import { standardErrorCodes, standardErrors } from ':core/error';
-import { ConfigEvent, ConfigUpdateMessage } from ':core/message/ConfigMessage';
 import { AddressString } from ':core/type';
 import { ConstructorOptions, RequestArguments } from ':core/type/ProviderInterface';
 import { RequestHandler } from ':core/type/RequestHandlerInterface';
@@ -12,7 +10,7 @@ type SignRequestHandlerOptions = ConstructorOptions & {
 };
 
 export class SignRequestHandler implements RequestHandler {
-  private _signer: Signer | undefined;
+  private signer: Signer | undefined;
 
   private updateListener: SignRequestHandlerListener;
   private signerConfigurator: SignerConfigurator;
@@ -54,26 +52,10 @@ export class SignRequestHandler implements RequestHandler {
     try {
       const signer = await this.useSigner();
       const ethAddresses = await signer.handshake();
-      if (Array.isArray(ethAddresses)) {
-        if (signer instanceof WLSigner) {
-          this.popupCommunicator.postMessage<ConfigUpdateMessage>({
-            event: ConfigEvent.WalletLinkUpdate,
-            data: {
-              connected: true,
-            },
-          });
-        }
-        this.updateListener.onConnect();
-        return Promise.resolve(ethAddresses);
-      }
-
-      return Promise.reject(standardErrors.rpc.internal('Failed to get accounts'));
+      this.updateListener.onConnect();
+      return Promise.resolve(ethAddresses);
     } catch (err) {
-      if (this._signer instanceof WLSigner) {
-        this.popupCommunicator.disconnect();
-        await this.onDisconnect();
-      }
-      throw err;
+      return Promise.reject(standardErrors.rpc.internal('Failed to get accounts'));
     }
   }
 
@@ -102,18 +84,18 @@ export class SignRequestHandler implements RequestHandler {
   }
 
   async onDisconnect() {
-    this._signer = undefined;
-    await this.signerConfigurator.clearStorage();
+    this.signer = undefined;
+    this.signerConfigurator.clearStorage();
   }
 
   private tryRestoringSignerFromPersistedType() {
-    this._signer = this.signerConfigurator.tryRestoringSignerFromPersistedType();
+    this.signer = this.signerConfigurator.tryRestoringSignerFromPersistedType();
   }
 
   private async useSigner(): Promise<Signer> {
-    if (this._signer) return this._signer;
+    if (this.signer) return this.signer;
 
-    this._signer = await this.signerConfigurator.selectSigner();
-    return this._signer;
+    this.signer = await this.signerConfigurator.selectSigner();
+    return this.signer;
   }
 }

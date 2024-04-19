@@ -75,7 +75,7 @@ export class SignerConfigurator {
     }
   }
 
-  async clearStorage() {
+  clearStorage() {
     this.signerTypeStorage.clear();
   }
 

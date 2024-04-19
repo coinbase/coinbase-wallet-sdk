@@ -44,7 +44,7 @@ describe('SignerConfigurator', () => {
   });
 
   it('should handle disconnect correctly', async () => {
-    await signerConfigurator.clearStorage();
+    signerConfigurator.clearStorage();
 
     expect(mockRemoveItem).toHaveBeenCalled();
   });
