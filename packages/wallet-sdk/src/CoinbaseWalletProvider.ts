@@ -24,7 +24,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   protected readonly handlers: RequestHandler[];
 
-  constructor(options: ConstructorOptions) {
+  constructor(options: Readonly<ConstructorOptions>) {
     super();
 
     this.chain = {
