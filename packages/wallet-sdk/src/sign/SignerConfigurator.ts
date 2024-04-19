@@ -12,25 +12,18 @@ import {
   SignerType,
 } from ':core/message/ConfigMessage';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
+import { AppMetadata, ConstructorOptions, Preference } from ':core/type/ProviderInterface';
 
 const SIGNER_TYPE_KEY = 'SignerType';
 
-interface SignerConfiguratorOptions {
-  appName: string;
-  appLogoUrl?: string | null;
-  appChainIds: number[];
-  smartWalletOnly: boolean;
+type SignerConfiguratorOptions = ConstructorOptions & {
   updateListener: SignRequestHandlerListener;
   popupCommunicator: PopUpCommunicator;
-}
-
-export type ConnectionPreference = { smartWalletOnly: boolean };
+};
 
 export class SignerConfigurator {
-  private appName: string;
-  private appLogoUrl: string | null;
-  private appChainIds: number[];
-  private connectionPreference: ConnectionPreference;
+  private metadata: AppMetadata;
+  private preference: Preference;
 
   private popupCommunicator: PopUpCommunicator;
   private updateListener: SignRequestHandlerListener;
@@ -41,12 +34,8 @@ export class SignerConfigurator {
     this.popupCommunicator = options.popupCommunicator;
     this.updateListener = options.updateListener;
 
-    this.appName = options.appName;
-    this.appLogoUrl = options.appLogoUrl ?? null;
-    this.appChainIds = options.appChainIds;
-    this.connectionPreference = {
-      smartWalletOnly: options.smartWalletOnly,
-    };
+    this.metadata = options.metadata;
+    this.preference = options.preference;
   }
 
   tryRestoringSignerFromPersistedType(): Signer | undefined {
@@ -93,7 +82,7 @@ export class SignerConfigurator {
 
     const message = createMessage<ConfigUpdateMessage>({
       event: ConfigEvent.SelectSignerType,
-      data: this.connectionPreference,
+      data: this.preference,
     });
     const response = await this.popupCommunicator.postMessageForResponse(message);
     const signerType = (response as ConfigResponseMessage).data as SignerType;
@@ -106,16 +95,13 @@ export class SignerConfigurator {
     switch (signerType) {
       case 'scw':
         return new SCWSigner({
-          appName: this.appName,
-          appLogoUrl: this.appLogoUrl,
-          appChainIds: this.appChainIds,
+          metadata: this.metadata,
           puc: this.popupCommunicator,
           updateListener: this.updateListener,
         });
       case 'walletlink':
         return new WLSigner({
-          appName: this.appName,
-          appLogoUrl: this.appLogoUrl,
+          metadata: this.metadata,
           updateListener: this.updateListener,
         });
       default:

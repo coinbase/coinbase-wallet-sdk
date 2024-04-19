@@ -1,3 +1,5 @@
+import { AppMetadata } from ':core/type/ProviderInterface';
+
 export enum SupportedEthereumMethods {
   EthRequestAccounts = 'eth_requestAccounts',
   // Sign Transaction
@@ -19,12 +21,7 @@ export enum SupportedEthereumMethods {
 
 export type RequestAccountsAction = {
   method: SupportedEthereumMethods.EthRequestAccounts;
-  params: {
-    dappName: string;
-    dappLogoUrl: string | null;
-    dappOrigin?: string;
-    chainIds?: number[];
-  };
+  params: AppMetadata;
 };
 
 export type SignAction = {

@@ -28,7 +28,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     super();
 
     this.chain = {
-      id: options.appChainIds?.[0] ?? 1,
+      id: options.metadata.appChainIds?.[0] ?? 1,
     };
 
     this.handlers = [

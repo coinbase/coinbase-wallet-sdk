@@ -24,6 +24,7 @@ jest.mock(':core/storage/ScopedLocalStorage', () => {
 
 describe('SignerConfigurator', () => {
   let popupCommunicator: PopUpCommunicator;
+  let signerConfigurator: SignerConfigurator;
 
   const updateListener: SignRequestHandlerListener = {
     onAccountsUpdate: jest.fn(),
@@ -34,31 +35,21 @@ describe('SignerConfigurator', () => {
 
   beforeEach(() => {
     popupCommunicator = new PopUpCommunicator({ url: 'http://google.com' });
-  });
-
-  it('should handle disconnect correctly', async () => {
-    const signerConfigurator = new SignerConfigurator({
-      appName: 'Test App',
-      appChainIds: [1],
-      smartWalletOnly: false,
+    signerConfigurator = new SignerConfigurator({
+      metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1] },
+      preference: { smartWalletOnly: false },
       updateListener,
       popupCommunicator,
     });
+  });
 
+  it('should handle disconnect correctly', async () => {
     await signerConfigurator.onDisconnect();
 
     expect(mockRemoveItem).toHaveBeenCalled();
   });
 
   it('should complete signerType selection correctly', async () => {
-    const signerConfigurator = new SignerConfigurator({
-      appName: 'Test App',
-      appChainIds: [1],
-      smartWalletOnly: false,
-      updateListener,
-      popupCommunicator,
-    });
-
     (popupCommunicator.postMessageForResponse as jest.Mock).mockResolvedValue({
       data: 'scw',
     });
@@ -72,13 +63,6 @@ describe('SignerConfigurator', () => {
   describe('tryRestoringSignerFromPersistedType', () => {
     it('should init SCWSigner correctly', () => {
       mockGetItem.mockReturnValueOnce('scw');
-      const signerConfigurator = new SignerConfigurator({
-        appName: 'Test App',
-        appChainIds: [1],
-        smartWalletOnly: false,
-        updateListener,
-        popupCommunicator,
-      });
 
       const signer = signerConfigurator.tryRestoringSignerFromPersistedType();
       expect(signer).toBeInstanceOf(SCWSigner);
@@ -86,13 +70,6 @@ describe('SignerConfigurator', () => {
 
     it('should init WLSigner correctly', () => {
       mockGetItem.mockReturnValueOnce('walletlink');
-      const signerConfigurator = new SignerConfigurator({
-        appName: 'Test App',
-        appChainIds: [1],
-        smartWalletOnly: false,
-        updateListener,
-        popupCommunicator,
-      });
 
       const signer = signerConfigurator.tryRestoringSignerFromPersistedType();
       expect(signer).toBeInstanceOf(WLSigner);
