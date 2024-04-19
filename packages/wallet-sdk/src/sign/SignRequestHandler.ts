@@ -26,6 +26,7 @@ const SIGNER_TYPE_KEY = 'SignerType';
 
 type SignRequestHandlerOptions = ConstructorOptions & {
   updateListener: SignRequestHandlerListener;
+  keysUrl?: string;
 };
 
 export class SignRequestHandler implements RequestHandler {
@@ -38,7 +39,7 @@ export class SignRequestHandler implements RequestHandler {
 
   constructor(options: Readonly<SignRequestHandlerOptions>) {
     this.popupCommunicator = new PopUpCommunicator({
-      url: options.preference.keysUrl ?? CB_KEYS_URL,
+      url: options.keysUrl ?? CB_KEYS_URL,
     });
     this.updateListener = options.updateListener;
     this._signer = this.tryRestoringSignerFromPersistedType();
