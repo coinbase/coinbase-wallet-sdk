@@ -14,7 +14,12 @@ import {
 } from ':core/message/ConfigMessage';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { AddressString } from ':core/type';
-import { ConstructorOptions, RequestArguments } from ':core/type/ProviderInterface';
+import {
+  AppMetadata,
+  ConstructorOptions,
+  Preference,
+  RequestArguments,
+} from ':core/type/ProviderInterface';
 import { RequestHandler } from ':core/type/RequestHandlerInterface';
 
 const SIGNER_TYPE_KEY = 'SignerType';
@@ -29,6 +34,8 @@ export class SignRequestHandler implements RequestHandler {
 
   private popupCommunicator: PopUpCommunicator;
   private updateListener: SignRequestHandlerListener;
+  private metadata: AppMetadata;
+  private preference: Preference;
 
   constructor(options: Readonly<SignRequestHandlerOptions>) {
     this.popupCommunicator = new PopUpCommunicator({
@@ -36,12 +43,8 @@ export class SignRequestHandler implements RequestHandler {
     });
     this.updateListener = options.updateListener;
     this._signer = this.tryRestoringSignerFromPersistedType();
-    this.appName = options.appName;
-    this.appLogoUrl = options.appLogoUrl ?? null;
-    this.appChainIds = options.appChainIds;
-    this.connectionPreference = {
-      ...options,
-    };
+    this.metadata = options.metadata;
+    this.preference = options.preference;
   }
 
   async handleRequest(request: RequestArguments, accounts: AddressString[]) {
@@ -123,10 +126,6 @@ export class SignRequestHandler implements RequestHandler {
   }
 
   private signerTypeStorage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
-  private appName: string;
-  private appLogoUrl: string | null;
-  private appChainIds: number[];
-  private connectionPreference: { smartWalletOnly: boolean };
 
   async onDisconnect() {
     this._signer = undefined;
@@ -151,16 +150,13 @@ export class SignRequestHandler implements RequestHandler {
     switch (signerType) {
       case 'scw':
         return new SCWSigner({
-          appName: this.appName,
-          appLogoUrl: this.appLogoUrl,
-          appChainIds: this.appChainIds,
+          metadata: this.metadata,
           puc: this.popupCommunicator,
           updateListener: this.updateListener,
         });
       case 'walletlink':
         return new WLSigner({
-          appName: this.appName,
-          appLogoUrl: this.appLogoUrl,
+          metadata: this.metadata,
           updateListener: this.updateListener,
         });
       default:
@@ -202,7 +198,7 @@ export class SignRequestHandler implements RequestHandler {
     const response = await this.popupCommunicator.postMessageForResponse(
       createMessage<ConfigUpdateMessage>({
         event: ConfigEvent.SelectSignerType,
-        data: this.connectionPreference,
+        data: this.preference,
       })
     );
     const signerType = (response as ConfigResponseMessage).data as SignerType;
