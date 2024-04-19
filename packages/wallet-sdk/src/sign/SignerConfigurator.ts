@@ -72,18 +72,21 @@ export class SignerConfigurator {
   }
 
   protected initSignerFromType(signerType: SignerType): Signer {
-    const constructorOptions = {
+    const signerClasses = {
+      scw: SCWSigner,
+      walletlink: WLSigner,
+      extension: undefined,
+    };
+
+    const SignerClass = signerClasses[signerType];
+    if (!SignerClass) {
+      throw standardErrors.rpc.internal(`SignerConfigurator: Unknown signer type ${signerType}`);
+    }
+
+    return new SignerClass({
       metadata: this.metadata,
       popupCommunicator: this.popupCommunicator,
       updateListener: this.updateListener,
-    };
-    switch (signerType) {
-      case 'scw':
-        return new SCWSigner(constructorOptions);
-      case 'walletlink':
-        return new WLSigner(constructorOptions);
-      default:
-        throw standardErrors.rpc.internal(`SignerConfigurator: Unknown signer type ${signerType}`);
-    }
+    });
   }
 }
