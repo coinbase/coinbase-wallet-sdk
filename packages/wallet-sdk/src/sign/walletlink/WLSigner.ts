@@ -26,21 +26,25 @@ export class WLSigner implements Signer {
   }
 
   async handshake(): Promise<AddressString[]> {
-    const accounts = await this.request<AddressString[]>({ method: 'eth_requestAccounts' });
+    const ethAddresses = await this.request<AddressString[]>({ method: 'eth_requestAccounts' });
+    this.onConnect();
+    return ethAddresses;
+  }
+
+  private onConnect() {
     this.popupCommunicator.postMessage<ConfigUpdateMessage>({
       event: ConfigEvent.WalletLinkUpdate,
       data: {
         connected: true,
       },
     });
-    return accounts;
   }
 
   async request<T>(requestArgs: RequestArguments): Promise<T> {
     return this.adapter.request<T>(requestArgs);
   }
 
-  getWalletLinkSession() {
+  private getWalletLinkSession() {
     const { id, secret } = this.adapter.getWalletLinkSession();
     return {
       id,
