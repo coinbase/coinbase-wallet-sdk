@@ -154,14 +154,14 @@ Upgrade Coinbase Wallet SDK using yarn or npm.
 
   1. Fork this repo and clone it
   1. From the root dir run `yarn install`
-  1. `cd apps/testapp && yarn install` to install testapp dependencies
+  1. `cd apps/testapp && yarn install` to install test app dependencies
   1. From the root dir run `yarn dev`
 
   - starts two dev servers in parallel:
     - `@coinbase/wallet-sdk-testapp`
     - `@coinbase/wallet-sdk`
 
-  1. Visit localhost:3001 in your browser to view the testapp
+  1. Visit localhost:3001 in your browser to view the test app
 
 ## Attributions
 
