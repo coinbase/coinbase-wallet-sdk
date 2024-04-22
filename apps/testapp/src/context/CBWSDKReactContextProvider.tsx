@@ -36,8 +36,8 @@ if (typeof window !== 'undefined') {
     const handler = (window.ethereum as any).handlers?.find(
       (h: any) => h instanceof SignRequestHandler
     );
-    if (handler && handler.popupCommunicator) {
-      handler.popupCommunicator.url = new URL(url);
+    if (handler && handler.signerConfigurator && handler.signerConfigurator.popupCommunicator) {
+      handler.signerConfigurator.popupCommunicator.url = new URL(url);
     }
   };
 }
