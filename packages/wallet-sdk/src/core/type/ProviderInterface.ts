@@ -41,6 +41,7 @@ export interface AppMetadata {
 
 export interface Preference {
   options: 'all' | 'smartWalletOnly' | 'eoaOnly';
+  keysUrl?: string;
 }
 
 export interface ConstructorOptions {

@@ -1,42 +1,31 @@
 import { Signer, SignRequestHandlerListener } from './interface';
 import { SignerConfigurator } from './SignerConfigurator';
-import { WLSigner } from './walletlink/WLSigner';
-import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
-import { CB_KEYS_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
-import { ConfigEvent, ConfigUpdateMessage } from ':core/message/ConfigMessage';
 import { AddressString } from ':core/type';
 import { ConstructorOptions, RequestArguments } from ':core/type/ProviderInterface';
 import { RequestHandler } from ':core/type/RequestHandlerInterface';
 
 type SignRequestHandlerOptions = ConstructorOptions & {
   updateListener: SignRequestHandlerListener;
-  keysUrl?: string;
 };
 
 export class SignRequestHandler implements RequestHandler {
   private _signer: Signer | undefined;
 
-  private popupCommunicator: PopUpCommunicator;
   private updateListener: SignRequestHandlerListener;
   private signerConfigurator: SignerConfigurator;
 
   constructor(options: Readonly<SignRequestHandlerOptions>) {
-    this.popupCommunicator = new PopUpCommunicator({
-      url: options.keysUrl ?? CB_KEYS_URL,
-    });
     this.updateListener = options.updateListener;
-    this.signerConfigurator = new SignerConfigurator({
-      ...options,
-      popupCommunicator: this.popupCommunicator,
-    });
+    this.signerConfigurator = new SignerConfigurator(options);
     this.tryRestoringSignerFromPersistedType();
   }
 
   async handleRequest(request: RequestArguments, accounts: AddressString[]) {
     try {
       if (request.method === 'eth_requestAccounts') {
-        return await this.eth_requestAccounts(accounts);
+        if (accounts.length > 0) return accounts;
+        return await this.requestAccounts();
       }
 
       const signer = await this.useSigner();
@@ -55,36 +44,11 @@ export class SignRequestHandler implements RequestHandler {
     }
   }
 
-  private async eth_requestAccounts(accounts: AddressString[]): Promise<AddressString[]> {
-    if (accounts.length > 0) {
-      this.updateListener.onConnect();
-      return Promise.resolve(accounts);
-    }
-
-    try {
-      const signer = await this.useSigner();
-      const ethAddresses = await signer.handshake();
-      if (Array.isArray(ethAddresses)) {
-        if (signer instanceof WLSigner) {
-          this.popupCommunicator.postMessage<ConfigUpdateMessage>({
-            event: ConfigEvent.WalletLinkUpdate,
-            data: {
-              connected: true,
-            },
-          });
-        }
-        this.updateListener.onConnect();
-        return Promise.resolve(ethAddresses);
-      }
-
-      return Promise.reject(standardErrors.rpc.internal('Failed to get accounts'));
-    } catch (err) {
-      if (this._signer instanceof WLSigner) {
-        this.popupCommunicator.disconnect();
-        await this.onDisconnect();
-      }
-      throw err;
-    }
+  private async requestAccounts(): Promise<AddressString[]> {
+    const signer = await this.useSigner();
+    const ethAddresses = await signer.handshake();
+    this.updateListener.onConnect();
+    return ethAddresses;
   }
 
   canHandleRequest(request: RequestArguments): boolean {
@@ -113,7 +77,7 @@ export class SignRequestHandler implements RequestHandler {
 
   async onDisconnect() {
     this._signer = undefined;
-    await this.signerConfigurator.onDisconnect();
+    this.signerConfigurator.clearStorage();
   }
 
   private tryRestoringSignerFromPersistedType() {

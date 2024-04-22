@@ -2,6 +2,7 @@ import { Signer, SignRequestHandlerListener } from './interface';
 import { SCWSigner } from './scw/SCWSigner';
 import { WLSigner } from './walletlink/WLSigner';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
+import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
 import { createMessage } from ':core/message';
 import {
@@ -17,7 +18,6 @@ const SIGNER_TYPE_KEY = 'SignerType';
 
 type SignerConfiguratorOptions = ConstructorOptions & {
   updateListener: SignRequestHandlerListener;
-  popupCommunicator: PopUpCommunicator;
 };
 
 export class SignerConfigurator {
@@ -30,49 +30,30 @@ export class SignerConfigurator {
   private signerTypeStorage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
 
   constructor(options: Readonly<SignerConfiguratorOptions>) {
-    this.popupCommunicator = options.popupCommunicator;
+    const { keysUrl, ...preferenceWithoutKeysUrl } = options.preference;
+    this.preference = preferenceWithoutKeysUrl;
+    this.popupCommunicator = new PopUpCommunicator({
+      url: keysUrl ?? CB_KEYS_URL,
+    });
     this.updateListener = options.updateListener;
-
     this.metadata = options.metadata;
-    this.preference = options.preference;
   }
 
   tryRestoringSignerFromPersistedType(): Signer | undefined {
-    try {
-      const persistedSignerType = this.signerTypeStorage.getItem(SIGNER_TYPE_KEY) as SignerType;
-      if (persistedSignerType) {
-        return this.initSignerFromType(persistedSignerType);
-      }
-
-      return undefined;
-    } catch (err) {
-      this.onDisconnect();
-      throw err;
+    const persistedSignerType = this.signerTypeStorage.getItem(SIGNER_TYPE_KEY) as SignerType;
+    if (persistedSignerType) {
+      return this.initSignerFromType(persistedSignerType);
     }
+    return undefined;
   }
 
   async selectSigner(): Promise<Signer> {
-    try {
-      const signerType = await this.selectSignerType();
-      const signer = this.initSignerFromType(signerType);
-
-      if (signer instanceof WLSigner) {
-        this.popupCommunicator.postMessage<ConfigUpdateMessage>({
-          event: ConfigEvent.WalletLinkUpdate,
-          data: {
-            session: signer.getWalletLinkSession(),
-          },
-        });
-      }
-
-      return signer;
-    } catch (err) {
-      this.onDisconnect();
-      throw err;
-    }
+    const signerType = await this.selectSignerType();
+    const signer = this.initSignerFromType(signerType);
+    return signer;
   }
 
-  async onDisconnect() {
+  clearStorage() {
     this.signerTypeStorage.removeItem(SIGNER_TYPE_KEY);
   }
 
@@ -85,32 +66,27 @@ export class SignerConfigurator {
     });
     const response = await this.popupCommunicator.postMessageForResponse(message);
     const signerType = (response as ConfigResponseMessage).data as SignerType;
-    this.storeSignerType(signerType);
+    this.signerTypeStorage.setItem(SIGNER_TYPE_KEY, signerType);
 
     return signerType;
   }
 
   protected initSignerFromType(signerType: SignerType): Signer {
-    switch (signerType) {
-      case 'scw':
-        return new SCWSigner({
-          metadata: this.metadata,
-          puc: this.popupCommunicator,
-          updateListener: this.updateListener,
-        });
-      case 'walletlink':
-        return new WLSigner({
-          metadata: this.metadata,
-          updateListener: this.updateListener,
-        });
-      default:
-        throw standardErrors.rpc.internal(`SignerConfigurator: Unknown signer type ${signerType}`);
+    const signerClasses = {
+      scw: SCWSigner,
+      walletlink: WLSigner,
+      extension: undefined,
+    };
+
+    const SignerClass = signerClasses[signerType];
+    if (!SignerClass) {
+      throw standardErrors.rpc.internal(`SignerConfigurator: Unknown signer type ${signerType}`);
     }
-  }
 
-  // storage methods
-
-  private storeSignerType(signerType: SignerType) {
-    this.signerTypeStorage.setItem(SIGNER_TYPE_KEY, signerType);
+    return new SignerClass({
+      metadata: this.metadata,
+      popupCommunicator: this.popupCommunicator,
+      updateListener: this.updateListener,
+    });
   }
 }

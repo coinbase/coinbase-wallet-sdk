@@ -19,17 +19,17 @@ import { ensureIntNumber } from ':core/util';
 
 export class SCWSigner implements Signer {
   private metadata: AppMetadata;
-  private puc: PopUpCommunicator;
+  private popupCommunicator: PopUpCommunicator;
   private keyManager: SCWKeyManager;
   private stateManager: SCWStateManager;
 
   constructor(options: {
     metadata: AppMetadata;
-    puc: PopUpCommunicator;
+    popupCommunicator: PopUpCommunicator;
     updateListener: StateUpdateListener;
   }) {
     this.metadata = options.metadata;
-    this.puc = options.puc;
+    this.popupCommunicator = options.popupCommunicator;
     this.keyManager = new SCWKeyManager();
     this.stateManager = new SCWStateManager({
       appChainIds: this.metadata.appChainIds,
@@ -43,7 +43,7 @@ export class SCWSigner implements Signer {
   }
 
   public async handshake(): Promise<AddressString[]> {
-    await this.puc.connect();
+    await this.popupCommunicator.connect();
 
     const handshakeMessage = await this.createRequestMessage({
       handshake: {
@@ -51,7 +51,7 @@ export class SCWSigner implements Signer {
         params: this.metadata,
       },
     });
-    const response = (await this.puc.postMessageForResponse(
+    const response = (await this.popupCommunicator.postMessageForResponse(
       handshakeMessage
     )) as RPCResponseMessage;
 
@@ -76,7 +76,7 @@ export class SCWSigner implements Signer {
       return localResult;
     }
 
-    await this.puc.connect();
+    await this.popupCommunicator.connect();
     const response = await this.sendEncryptedRequest(request);
     const decrypted = await this.decryptResponseMessage<T>(response);
     this.updateInternalState(request, decrypted);
@@ -137,7 +137,9 @@ export class SCWSigner implements Signer {
     );
     const message = await this.createRequestMessage({ encrypted });
 
-    const response = (await this.puc.postMessageForResponse(message)) as RPCResponseMessage;
+    const response = (await this.popupCommunicator.postMessageForResponse(
+      message
+    )) as RPCResponseMessage;
     return response;
   }
 
