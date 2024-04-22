@@ -36,7 +36,7 @@ This quickstart guide walks through building a dapp for Coinbase smart wallet us
 
    export const config = createConfig({
      chains: [baseSepolia],
-     connectors: [coinbaseWallet({ appName: 'Create Wagmi', chainIds: [baseSepolia.id] })],
+     connectors: [coinbaseWallet({ appName: 'Create Wagmi', chainId: baseSepolia.id })],
      transports: {
        [baseSepolia.id]: http(),
      },
