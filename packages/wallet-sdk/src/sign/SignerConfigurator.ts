@@ -28,12 +28,16 @@ export class SignerConfigurator {
   private updateListener: SignRequestHandlerListener;
 
   private signerTypeStorage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
+  // temporary walletlink signer instance to handle WalletLinkSessionRequest
+  // will revisit this when refactoring the walletlink signer
+  private walletlinkSigner?: WLSigner;
 
   constructor(options: Readonly<SignerConfiguratorOptions>) {
     const { keysUrl, ...preferenceWithoutKeysUrl } = options.preference;
     this.preference = preferenceWithoutKeysUrl;
     this.popupCommunicator = new PopUpCommunicator({
       url: keysUrl ?? CB_KEYS_URL,
+      onConfigUpdateMessage: this.handleConfigUpdateMessage.bind(this),
     });
     this.updateListener = options.updateListener;
     this.metadata = options.metadata;
@@ -48,7 +52,10 @@ export class SignerConfigurator {
   }
 
   async selectSigner(): Promise<Signer> {
-    const signerType = await this.selectSignerType();
+    const signerType = await this.requestSignerSelection();
+    if (signerType === 'walletlink' && this.walletlinkSigner) {
+      return this.walletlinkSigner;
+    }
     const signer = this.initSignerFromType(signerType);
     return signer;
   }
@@ -57,7 +64,7 @@ export class SignerConfigurator {
     this.signerTypeStorage.removeItem(SIGNER_TYPE_KEY);
   }
 
-  private async selectSignerType(): Promise<SignerType> {
+  private async requestSignerSelection(): Promise<SignerType> {
     await this.popupCommunicator.connect();
 
     const message = createMessage<ConfigUpdateMessage>({
@@ -88,5 +95,16 @@ export class SignerConfigurator {
       popupCommunicator: this.popupCommunicator,
       updateListener: this.updateListener,
     });
+  }
+
+  private async handleConfigUpdateMessage(message: ConfigUpdateMessage) {
+    switch (message.event) {
+      case ConfigEvent.WalletLinkSessionRequest:
+        if (!this.walletlinkSigner) {
+          this.walletlinkSigner = this.initSignerFromType('walletlink') as WLSigner;
+        }
+        await this.walletlinkSigner.handleWalletLinkSessionRequest();
+        break;
+    }
   }
 }

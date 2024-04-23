@@ -23,17 +23,23 @@ export class WLSigner implements Signer {
       walletlinkUrl: WALLETLINK_URL,
       updateListener: options.updateListener,
     });
-    this.postWalletLinkSession();
   }
 
   async handshake(): Promise<AddressString[]> {
     const ethAddresses = await this.request<AddressString[]>({ method: 'eth_requestAccounts' });
-    this.postWalletLinkConnected();
     return ethAddresses;
   }
 
   async request<T>(requestArgs: RequestArguments): Promise<T> {
     return this.adapter.request<T>(requestArgs);
+  }
+
+  async handleWalletLinkSessionRequest() {
+    this.postWalletLinkSession();
+
+    // Wait for the wallet link session to be established
+    await this.handshake();
+    this.postWalletLinkConnected();
   }
 
   private postWalletLinkSession() {

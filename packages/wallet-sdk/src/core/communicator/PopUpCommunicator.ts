@@ -14,10 +14,12 @@ const POPUP_HEIGHT = 540;
 
 export class PopUpCommunicator extends CrossDomainCommunicator {
   private resolveConnection?: () => void;
+  private onConfigUpdateMessage: (_: ConfigUpdateMessage) => void;
 
-  constructor({ url }: { url: string }) {
+  constructor(options: { url: string; onConfigUpdateMessage: (_: ConfigUpdateMessage) => void }) {
     super();
-    this.url = new URL(url);
+    this.url = new URL(options.url);
+    this.onConfigUpdateMessage = options.onConfigUpdateMessage;
   }
 
   protected onConnect(): Promise<void> {
@@ -53,6 +55,8 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
       case ConfigEvent.PopupUnload:
         this.disconnect();
         break;
+      default: // handle non-popup config update messages
+        this.onConfigUpdateMessage(message);
     }
   }
 
