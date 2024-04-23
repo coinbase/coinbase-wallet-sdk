@@ -2,7 +2,7 @@ import { Signer, StateUpdateListener } from '../interface';
 import { WLRelayAdapter } from './relay/WLRelayAdapter';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { WALLETLINK_URL } from ':core/constants';
-import { ConfigEvent, ConfigUpdateMessage } from ':core/message/ConfigMessage';
+import { ConfigUpdateMessage, SignerConfigEvent } from ':core/message/ConfigMessage';
 import { AddressString } from ':core/type';
 import { AppMetadata, RequestArguments } from ':core/type/ProviderInterface';
 
@@ -23,17 +23,23 @@ export class WLSigner implements Signer {
       walletlinkUrl: WALLETLINK_URL,
       updateListener: options.updateListener,
     });
-    this.postWalletLinkSession();
   }
 
   async handshake(): Promise<AddressString[]> {
     const ethAddresses = await this.request<AddressString[]>({ method: 'eth_requestAccounts' });
-    this.postWalletLinkConnected();
     return ethAddresses;
   }
 
   async request<T>(requestArgs: RequestArguments): Promise<T> {
     return this.adapter.request<T>(requestArgs);
+  }
+
+  async handleWalletLinkSessionRequest() {
+    this.postWalletLinkSession();
+
+    // Wait for the wallet link session to be established
+    await this.handshake();
+    this.postWalletLinkConnected();
   }
 
   private postWalletLinkSession() {
@@ -47,7 +53,8 @@ export class WLSigner implements Signer {
 
   private postWalletLinkUpdate(data: unknown) {
     this.popupCommunicator.postMessage<ConfigUpdateMessage>({
-      event: ConfigEvent.WalletLinkUpdate,
+      scope: 'signer',
+      event: SignerConfigEvent.WalletLinkUpdate,
       data,
     });
   }
