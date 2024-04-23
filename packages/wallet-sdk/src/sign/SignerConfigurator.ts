@@ -28,6 +28,8 @@ export class SignerConfigurator {
   private updateListener: SignRequestHandlerListener;
 
   private signerTypeStorage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
+  // temporary walletlink signer instance to handle WalletLinkSessionRequest
+  // will revisit this when refactoring the walletlink signer
   private walletlinkSigner?: WLSigner;
 
   constructor(options: Readonly<SignerConfiguratorOptions>) {
