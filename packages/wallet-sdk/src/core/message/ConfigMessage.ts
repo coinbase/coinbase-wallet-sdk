@@ -17,6 +17,7 @@ export interface ConfigResponseMessage extends Message {
 export enum ConfigEvent {
   PopupLoaded = 'PopupLoaded',
   PopupUnload = 'PopupUnload',
+  WalletLinkSessionRequest = 'WalletLinkSessionRequest',
 
   SelectSignerType = 'selectSignerType',
   WalletLinkUpdate = 'WalletLinkUpdate',
