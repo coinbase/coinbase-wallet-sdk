@@ -3,10 +3,10 @@ import { CrossDomainCommunicator } from ':core/communicator/CrossDomainCommunica
 import { standardErrors } from ':core/error';
 import { Message } from ':core/message';
 import {
+  ConfigEvent,
   ConfigResponseMessage,
   ConfigUpdateMessage,
   isConfigUpdateMessage,
-  PopupConfigEvent,
 } from ':core/message/ConfigMessage';
 
 const POPUP_WIDTH = 420;
@@ -31,14 +31,8 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
 
   protected onEvent(event: MessageEvent<Message>) {
     const message = event.data;
-    if (!isConfigUpdateMessage(message)) return;
-    switch (message.scope) {
-      case 'popup': // handle popup-specific config updates
-        this.handlePopupConfigUpdate(message);
-        break;
-      default: // handle general config updates
-        this.onConfigUpdateMessage(message);
-        break;
+    if (isConfigUpdateMessage(message)) {
+      this.handleIncomingConfigUpdate(message);
     }
   }
 
@@ -46,9 +40,9 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     this.closeChildWindow();
   }
 
-  private handlePopupConfigUpdate(message: ConfigUpdateMessage & { event: PopupConfigEvent }) {
+  private handleIncomingConfigUpdate(message: ConfigUpdateMessage) {
     switch (message.event) {
-      case PopupConfigEvent.Loaded:
+      case ConfigEvent.PopupLoaded:
         // Handshake Step 2: After receiving PopupHello from popup, Dapp sends DappHello
         // to FE to help FE confirm the origin of the Dapp, as well as SDK version.
         this.postMessage<ConfigResponseMessage>({
@@ -58,9 +52,11 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
         this.resolveConnection?.();
         this.resolveConnection = undefined;
         break;
-      case PopupConfigEvent.Unload:
+      case ConfigEvent.PopupUnload:
         this.disconnect();
         break;
+      default:
+        this.onConfigUpdateMessage(message);
     }
   }
 
