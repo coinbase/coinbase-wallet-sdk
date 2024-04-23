@@ -9,25 +9,18 @@ import { fetchCoinbaseInjectedProvider } from ':core/providerUtils';
 import { getFavicon } from ':core/util';
 
 // for backwards compatibility
-interface CoinbaseWalletSDKOptions extends Partial<AppMetadata> {
-  preference?: Preference;
-}
+type CoinbaseWalletSDKOptions = Partial<AppMetadata>;
 
 export class CoinbaseWalletSDK {
-  private options: CoinbaseWalletSDKOptions;
+  private metadata: CoinbaseWalletSDKOptions;
 
-  constructor(options: Readonly<CoinbaseWalletSDKOptions>) {
-    this.options = options;
+  constructor(metadata: Readonly<CoinbaseWalletSDKOptions>) {
+    this.metadata = metadata;
     this.storeLatestVersion();
   }
 
-  public makeWeb3Provider(): ProviderInterface {
-    const {
-      appName = 'Dapp',
-      appLogoUrl = getFavicon(),
-      appChainIds = [],
-      preference = { options: 'all' },
-    } = this.options;
+  public makeWeb3Provider(preference: Preference = { options: 'all' }): ProviderInterface {
+    const { appName = 'Dapp', appLogoUrl = getFavicon(), appChainIds = [] } = this.metadata;
 
     const provider = fetchCoinbaseInjectedProvider(preference.options === 'smartWalletOnly');
     if (provider) {

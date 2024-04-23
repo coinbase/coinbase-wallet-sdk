@@ -74,14 +74,13 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
 
   useEffect(() => {
     let cbwsdk;
+    let preference;
     if (version === '4.0') {
       cbwsdk = new CoinbaseWalletSDK40({
         appName: 'SDK Playground',
         appChainIds: [84532, 8452],
-        preference: {
-          options: option,
-        },
       });
+      preference = { options: option };
       setSdk(cbwsdk);
     } else if (version === '3.9' || version === '3.7') {
       const SDK = version === '3.9' ? CoinbaseWalletSDK39 : CoinbaseWalletSDK37;
@@ -92,7 +91,7 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
       setSdk(cbwsdk);
     }
     if (!cbwsdk) return;
-    const cbwprovider = cbwsdk.makeWeb3Provider();
+    const cbwprovider = cbwsdk.makeWeb3Provider(preference);
     cbwprovider.on('disconnect', () => {
       location.reload();
     });
