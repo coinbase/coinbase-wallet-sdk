@@ -6,9 +6,9 @@ import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
 import { createMessage } from ':core/message';
 import {
+  ConfigEvent,
   ConfigResponseMessage,
   ConfigUpdateMessage,
-  SignerConfigEvent,
   SignerType,
 } from ':core/message/ConfigMessage';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
@@ -35,10 +35,7 @@ export class SignerConfigurator {
     this.preference = preferenceWithoutKeysUrl;
     this.popupCommunicator = new PopUpCommunicator({
       url: keysUrl ?? CB_KEYS_URL,
-      onConfigUpdateMessage: (message) => {
-        if (message.scope !== 'signer') return;
-        this.handleConfigUpdateMessage(message);
-      },
+      onConfigUpdateMessage: this.handleConfigUpdateMessage.bind(this),
     });
     this.updateListener = options.updateListener;
     this.metadata = options.metadata;
@@ -66,8 +63,7 @@ export class SignerConfigurator {
     await this.popupCommunicator.connect();
 
     const message = createMessage<ConfigUpdateMessage>({
-      scope: 'signer',
-      event: SignerConfigEvent.SelectSignerType,
+      event: ConfigEvent.SelectSignerType,
       data: this.preference,
     });
     const response = await this.popupCommunicator.postMessageForResponse(message);
@@ -81,8 +77,6 @@ export class SignerConfigurator {
     if (signerType === 'walletlink' && this.walletlinkSigner) {
       return this.walletlinkSigner;
     }
-    this.walletlinkSigner?.disconnect();
-    this.walletlinkSigner = undefined;
 
     const signerClasses = {
       scw: SCWSigner,
@@ -104,11 +98,10 @@ export class SignerConfigurator {
 
   private async handleConfigUpdateMessage(message: ConfigUpdateMessage) {
     switch (message.event) {
-      case SignerConfigEvent.WalletLinkSessionRequest:
+      case ConfigEvent.WalletLinkSessionRequest:
         if (!this.walletlinkSigner) {
           this.walletlinkSigner = this.initSignerFromType('walletlink') as WLSigner;
         }
-
         await this.walletlinkSigner.handleWalletLinkSessionRequest();
         break;
     }

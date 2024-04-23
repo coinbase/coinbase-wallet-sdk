@@ -2,7 +2,7 @@ import { Signer, StateUpdateListener } from '../interface';
 import { WLRelayAdapter } from './relay/WLRelayAdapter';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { WALLETLINK_URL } from ':core/constants';
-import { ConfigUpdateMessage, SignerConfigEvent } from ':core/message/ConfigMessage';
+import { ConfigEvent, ConfigUpdateMessage } from ':core/message/ConfigMessage';
 import { AddressString } from ':core/type';
 import { AppMetadata, RequestArguments } from ':core/type/ProviderInterface';
 
@@ -53,8 +53,7 @@ export class WLSigner implements Signer {
 
   private postWalletLinkUpdate(data: unknown) {
     this.popupCommunicator.postMessage<ConfigUpdateMessage>({
-      scope: 'signer',
-      event: SignerConfigEvent.WalletLinkUpdate,
+      event: ConfigEvent.WalletLinkUpdate,
       data,
     });
   }
