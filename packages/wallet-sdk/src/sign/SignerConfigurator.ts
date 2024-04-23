@@ -50,7 +50,10 @@ export class SignerConfigurator {
   }
 
   async selectSigner(): Promise<Signer> {
-    const signerType = await this.selectSignerType();
+    const signerType = await this.requestSignerSelection();
+    if (signerType === 'walletlink' && this.walletlinkSigner) {
+      return this.walletlinkSigner;
+    }
     const signer = this.initSignerFromType(signerType);
     return signer;
   }
@@ -59,7 +62,7 @@ export class SignerConfigurator {
     this.signerTypeStorage.removeItem(SIGNER_TYPE_KEY);
   }
 
-  private async selectSignerType(): Promise<SignerType> {
+  private async requestSignerSelection(): Promise<SignerType> {
     await this.popupCommunicator.connect();
 
     const message = createMessage<ConfigUpdateMessage>({
@@ -74,10 +77,6 @@ export class SignerConfigurator {
   }
 
   protected initSignerFromType(signerType: SignerType): Signer {
-    if (signerType === 'walletlink' && this.walletlinkSigner) {
-      return this.walletlinkSigner;
-    }
-
     const signerClasses = {
       scw: SCWSigner,
       walletlink: WLSigner,
