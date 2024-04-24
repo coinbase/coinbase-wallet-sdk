@@ -48,13 +48,10 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   public async request<T>(args: RequestArguments): Promise<T> {
     const invalidArgsError = checkErrorForInvalidRequestArgs(args);
-    if (invalidArgsError) {
-      throw invalidArgsError;
-    }
-
+    if (invalidArgsError) throw invalidArgsError;
+    // unrecognized methods are treated as fetch requests
     const category = determineMethodCategory(args.method) ?? 'fetch';
-    const handler = this.handlers[category];
-    return handler(args) as T;
+    return this.handlers[category](args) as T;
   }
 
   private readonly handlers = {
@@ -89,7 +86,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     },
 
     deprecated: ({ method }: RequestArguments) => {
-      standardErrors.rpc.methodNotSupported(`Method ${method} is deprecated.`);
+      standardErrors.rpc.methodNotSupported(`Method ${method} is deprecated for security reasons.`);
     },
 
     unsupported: ({ method }: RequestArguments) => {
