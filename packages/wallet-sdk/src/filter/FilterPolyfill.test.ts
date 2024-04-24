@@ -1,13 +1,12 @@
 import { FilterPolyfill } from './FilterPolyfill';
 import { IntNumber } from ':core/type';
-import { ProviderInterface } from ':core/type/ProviderInterface';
 
 describe('FilterPolyfill', () => {
   let filter: FilterPolyfill;
 
   beforeEach(() => {
     jest.useFakeTimers();
-    filter = new FilterPolyfill({} as ProviderInterface);
+    filter = new FilterPolyfill(jest.fn());
   });
 
   it('should throttle block height requests', async () => {

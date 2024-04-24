@@ -1,15 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { FilterPolyfill } from './FilterPolyfill';
 import { standardErrors } from ':core/error';
-import { ProviderInterface, RequestArguments } from ':core/type/ProviderInterface';
-import { RequestHandler } from ':core/type/RequestHandlerInterface';
+import { RequestArguments } from ':core/provider/interface';
 import { ensureHexString } from ':core/util';
 
-export class FilterRequestHandler implements RequestHandler {
+export class FilterRequestHandler {
   private readonly filterPolyfill: FilterPolyfill;
 
-  constructor({ provider }: { provider: ProviderInterface }) {
-    this.filterPolyfill = new FilterPolyfill(provider);
+  constructor(fetchRPCFunction: (request: RequestArguments) => Promise<unknown>) {
+    this.filterPolyfill = new FilterPolyfill(fetchRPCFunction);
   }
 
   handleRequest(request: RequestArguments) {
@@ -19,19 +18,14 @@ export class FilterRequestHandler implements RequestHandler {
     switch (method) {
       case 'eth_newFilter':
         return this.eth_newFilter(params as any);
-
       case 'eth_newBlockFilter':
         return this.eth_newBlockFilter();
-
       case 'eth_newPendingTransactionFilter':
         return this.eth_newPendingTransactionFilter();
-
       case 'eth_getFilterChanges':
         return this.eth_getFilterChanges(params as any);
-
       case 'eth_getFilterLogs':
         return this.eth_getFilterLogs(params as any);
-
       case 'eth_uninstallFilter':
         return this.eth_uninstallFilter(params as any);
     }
@@ -69,17 +63,5 @@ export class FilterRequestHandler implements RequestHandler {
   private eth_getFilterLogs(params: unknown[]) {
     const filterId = ensureHexString(params[0]);
     return this.filterPolyfill.getFilterLogs(filterId);
-  }
-
-  canHandleRequest(request: RequestArguments): boolean {
-    const filterMethods = [
-      'eth_newFilter',
-      'eth_newBlockFilter',
-      'eth_newPendingTransactionFilter',
-      'eth_getFilterChanges',
-      'eth_getFilterLogs',
-    ];
-
-    return filterMethods.includes(request.method);
   }
 }

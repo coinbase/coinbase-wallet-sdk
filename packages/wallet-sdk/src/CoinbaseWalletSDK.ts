@@ -2,10 +2,10 @@
 
 import { LogoType, walletLogo } from './assets/wallet-logo';
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
+import { AppMetadata, Preference, ProviderInterface } from './core/provider/interface';
 import { ScopedLocalStorage } from './core/storage/ScopedLocalStorage';
-import { AppMetadata, Preference, ProviderInterface } from './core/type/ProviderInterface';
 import { LIB_VERSION } from './version';
-import { fetchCoinbaseInjectedProvider } from ':core/providerUtils';
+import { getCoinbaseInjectedProvider } from ':core/provider/util';
 import { getFavicon } from ':core/util';
 
 // for backwards compatibility
@@ -22,7 +22,7 @@ export class CoinbaseWalletSDK {
   public makeWeb3Provider(preference: Preference = { options: 'all' }): ProviderInterface {
     const { appName = 'Dapp', appLogoUrl = getFavicon(), appChainIds = [] } = this.metadata;
 
-    const provider = fetchCoinbaseInjectedProvider(preference.options === 'smartWalletOnly');
+    const provider = getCoinbaseInjectedProvider(preference.options === 'smartWalletOnly');
     if (provider) {
       if ('setAppInfo' in provider && typeof provider.setAppInfo === 'function') {
         provider.setAppInfo(appName, appLogoUrl, appChainIds);

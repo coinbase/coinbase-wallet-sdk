@@ -2,54 +2,35 @@
 import EventEmitter from 'eventemitter3';
 
 import { standardErrors } from './core/error';
-import { getErrorForInvalidRequestArgs } from './core/providerUtils';
-import { AddressString, Chain } from './core/type';
 import {
   ConstructorOptions,
   ProviderInterface,
   ProviderRpcError,
   RequestArguments,
-} from './core/type/ProviderInterface';
-import { RequestHandler } from './core/type/RequestHandlerInterface';
+} from './core/provider/interface';
+import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './core/provider/util';
+import { AddressString, Chain } from './core/type';
 import { areAddressArraysEqual, prepend0x, showDeprecationWarning } from './core/util';
 import { FilterRequestHandler } from './filter/FilterRequestHandler';
-import { StateRequestHandler } from './internalState/StateRequestHandler';
-import { RPCFetchRequestHandler } from './rpcFetch/RPCFetchRequestHandler';
 import { AccountsUpdate, ChainUpdate } from './sign/interface';
 import { SignRequestHandler } from './sign/SignRequestHandler';
+import { determineMethodCategory } from ':core/provider/method';
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
   protected accounts: AddressString[] = [];
   protected chain: Chain;
-
-  protected readonly handlers: RequestHandler[];
+  private readonly signRequestHandler: SignRequestHandler;
 
   constructor(options: Readonly<ConstructorOptions>) {
     super();
-
     this.chain = {
       id: options.metadata.appChainIds?.[0] ?? 1,
     };
-
-    this.handlers = [
-      new SignRequestHandler({
-        ...options,
-        updateListener: this.updateListener,
-      }),
-      new StateRequestHandler(),
-      new FilterRequestHandler({
-        provider: this,
-      }),
-      new RPCFetchRequestHandler(), // should be last
-    ];
+    this.signRequestHandler = new SignRequestHandler({
+      ...options,
+      updateListener: this.updateListener,
+    });
   }
-
-  protected updateListener = {
-    onAccountsUpdate: this.setAccounts.bind(this),
-    onChainUpdate: this.setChain.bind(this),
-    onConnect: this.emitConnectEvent.bind(this),
-    onResetConnection: this.disconnect.bind(this),
-  };
 
   public get connected() {
     return this.accounts.length > 0;
@@ -61,23 +42,57 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     );
     this.accounts = [];
     this.chain = { id: 1 };
-    await Promise.all(
-      this.handlers.map(async (handler) => {
-        await handler.onDisconnect?.();
-      })
-    );
+    this.signRequestHandler.onDisconnect();
     this.emit('disconnect', disconnectInfo);
   }
 
   public async request<T>(args: RequestArguments): Promise<T> {
-    const invalidArgsError = getErrorForInvalidRequestArgs(args);
-    if (invalidArgsError) {
-      throw invalidArgsError;
-    }
-
-    const handler = this.handlers.find((h) => h.canHandleRequest(args));
-    return handler?.handleRequest(args, this.accounts, this.chain) as T;
+    const invalidArgsError = checkErrorForInvalidRequestArgs(args);
+    if (invalidArgsError) throw invalidArgsError;
+    // unrecognized methods are treated as fetch requests
+    const category = determineMethodCategory(args.method) ?? 'fetch';
+    return this.handlers[category](args) as T;
   }
+
+  private readonly handlers = {
+    fetch: (request: RequestArguments) => fetchRPCRequest(request, this.chain),
+
+    sign: (request: RequestArguments) =>
+      this.signRequestHandler.handleRequest(request, this.accounts),
+
+    filter: (request: RequestArguments) => {
+      const filterHandler = new FilterRequestHandler(this.handlers.fetch);
+      return filterHandler.handleRequest(request);
+    },
+
+    state: (request: RequestArguments) => {
+      const getConnectedAccounts = (): AddressString[] => {
+        if (this.connected) return this.accounts;
+        throw standardErrors.provider.unauthorized(
+          "Must call 'eth_requestAccounts' before other methods"
+        );
+      };
+      switch (request.method) {
+        case 'eth_chainId':
+        case 'net_version':
+          return this.chain.id;
+        case 'eth_accounts':
+          return getConnectedAccounts();
+        case 'eth_coinbase':
+          return getConnectedAccounts()[0];
+        default:
+          return this.handlers.unsupported(request);
+      }
+    },
+
+    deprecated: ({ method }: RequestArguments) => {
+      standardErrors.rpc.methodNotSupported(`Method ${method} is deprecated for security reasons.`);
+    },
+
+    unsupported: ({ method }: RequestArguments) => {
+      standardErrors.rpc.methodNotSupported(`Method ${method} is not supported.`);
+    },
+  };
 
   /** @deprecated Use `.request({ method: 'eth_requestAccounts' })` instead. */
   public async enable(): Promise<unknown> {
@@ -89,27 +104,24 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   readonly isCoinbaseWallet = true;
 
-  private emitConnectEvent() {
-    this.emit('connect', { chainId: prepend0x(this.chain.id.toString(16)) });
-  }
-
-  private setAccounts({ accounts, source }: AccountsUpdate) {
-    if (areAddressArraysEqual(this.accounts, accounts)) {
-      return;
-    }
-
-    this.accounts = accounts;
-
-    if (source === 'storage') return;
-    this.emit('accountsChanged', this.accounts);
-  }
-
-  private setChain({ chain, source }: ChainUpdate) {
-    if (chain.id === this.chain.id && chain.rpcUrl === this.chain.rpcUrl) return;
-
-    this.chain = chain;
-
-    if (source === 'storage') return;
-    this.emit('chainChanged', prepend0x(chain.id.toString(16)));
-  }
+  private updateListener = {
+    onConnect: () => {
+      this.emit('connect', { chainId: prepend0x(this.chain.id.toString(16)) });
+    },
+    onAccountsUpdate: ({ accounts, source }: AccountsUpdate) => {
+      if (areAddressArraysEqual(this.accounts, accounts)) return;
+      this.accounts = accounts;
+      if (source === 'storage') return;
+      this.emit('accountsChanged', this.accounts);
+    },
+    onChainUpdate: ({ chain, source }: ChainUpdate) => {
+      if (chain.id === this.chain.id && chain.rpcUrl === this.chain.rpcUrl) return;
+      this.chain = chain;
+      if (source === 'storage') return;
+      this.emit('chainChanged', prepend0x(chain.id.toString(16)));
+    },
+    onResetConnection: () => {
+      this.disconnect();
+    },
+  };
 }

@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
-import { Callback, HexString, IntNumber } from ':core/type';
-import { ProviderInterface, RequestArguments } from ':core/type/ProviderInterface';
+import { RequestArguments } from ':core/provider/interface';
+import { HexString, IntNumber } from ':core/type';
 import {
   ensureHexString,
   hexStringFromIntNumber,
@@ -31,7 +31,7 @@ export interface Filter {
 }
 
 export class FilterPolyfill {
-  private readonly provider: ProviderInterface;
+  private readonly sendAsyncPromise;
   private readonly logFilters = new Map<IntNumber, Filter>(); // <id, filter>
   private readonly blockFilters = new Set<IntNumber>(); // <id>
   private readonly pendingTransactionFilters = new Set<IntNumber>(); // <id, true>
@@ -39,8 +39,11 @@ export class FilterPolyfill {
   private readonly timeouts = new Map<IntNumber, number>(); // <id, setTimeout id>
   private nextFilterId = IntNumber(1);
 
-  constructor(provider: ProviderInterface) {
-    this.provider = provider;
+  constructor(fetchRPCFunction: (request: RequestArguments) => Promise<unknown>) {
+    this.sendAsyncPromise = async (request: RequestArguments) => {
+      const result = await fetchRPCFunction(request);
+      return { result };
+    };
   }
 
   public async newFilter(param: FilterParam): Promise<HexString> {
@@ -108,38 +111,6 @@ export class FilterPolyfill {
 
   private makeFilterId(): IntNumber {
     return IntNumber(++this.nextFilterId);
-  }
-
-  // to mimic the legacy provider's behavior
-  private async legacySendAsync(
-    request: RequestArguments,
-    callback: Callback<{
-      result: unknown;
-    }>
-  ) {
-    try {
-      const result = await this.provider.request(request);
-      const response = {
-        result,
-      };
-      callback(null, response);
-    } catch (err) {
-      callback(err as Error, null);
-    }
-  }
-
-  private sendAsyncPromise(request: RequestArguments): Promise<{ result: unknown }> {
-    return new Promise((resolve, reject) => {
-      this.legacySendAsync(request, (err, response) => {
-        if (err) {
-          return reject(err);
-        }
-        if (Array.isArray(response) || response == null) {
-          return reject(new Error(`unexpected response received: ${JSON.stringify(response)}`));
-        }
-        resolve(response);
-      });
-    });
   }
 
   private deleteFilter(id: IntNumber): void {

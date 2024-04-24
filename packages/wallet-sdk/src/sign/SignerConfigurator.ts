@@ -11,8 +11,8 @@ import {
   ConfigUpdateMessage,
   SignerType,
 } from ':core/message/ConfigMessage';
+import { AppMetadata, ConstructorOptions, Preference } from ':core/provider/interface';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
-import { AppMetadata, ConstructorOptions, Preference } from ':core/type/ProviderInterface';
 
 const SIGNER_TYPE_KEY = 'SignerType';
 
