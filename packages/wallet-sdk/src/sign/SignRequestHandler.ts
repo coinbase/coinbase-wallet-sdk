@@ -2,14 +2,13 @@ import { Signer, SignRequestHandlerListener } from './interface';
 import { SignerConfigurator } from './SignerConfigurator';
 import { standardErrorCodes, standardErrors } from ':core/error';
 import { ConstructorOptions, RequestArguments } from ':core/provider/interface';
-import { RequestHandler } from ':core/provider/RequestHandlerInterface';
 import { AddressString } from ':core/type';
 
 type SignRequestHandlerOptions = ConstructorOptions & {
   updateListener: SignRequestHandlerListener;
 };
 
-export class SignRequestHandler implements RequestHandler<'sign'> {
+export class SignRequestHandler {
   private _signer: Signer | undefined;
 
   private updateListener: SignRequestHandlerListener;

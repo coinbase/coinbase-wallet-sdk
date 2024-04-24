@@ -30,9 +30,8 @@ export interface Filter {
   topics: (string | string[])[];
 }
 
-type RequestFuncType = (request: RequestArguments) => Promise<{ result: unknown }>;
-
 export class FilterPolyfill {
+  private sendAsyncPromise;
   private readonly logFilters = new Map<IntNumber, Filter>(); // <id, filter>
   private readonly blockFilters = new Set<IntNumber>(); // <id>
   private readonly pendingTransactionFilters = new Set<IntNumber>(); // <id, true>
@@ -40,7 +39,6 @@ export class FilterPolyfill {
   private readonly timeouts = new Map<IntNumber, number>(); // <id, setTimeout id>
   private nextFilterId = IntNumber(1);
 
-  private sendAsyncPromise;
   constructor(fetchRPCFunction: (request: RequestArguments) => Promise<unknown>) {
     this.sendAsyncPromise = async (request: RequestArguments) => {
       const result = await fetchRPCFunction(request);
