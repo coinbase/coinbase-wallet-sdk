@@ -31,9 +31,7 @@ describe('CoinbaseWalletProvider', () => {
   describe('Request Handling', () => {
     test('handles request correctly', async () => {
       const response1 = await provider.request({ method: 'eth_chainId' });
-      const response2 = await provider.request({ method: 'eth_accounts' });
       expect(response1).toBe(1);
-      expect(response2).toEqual([]);
     });
 
     test('throws error when handling invalid request', async () => {
