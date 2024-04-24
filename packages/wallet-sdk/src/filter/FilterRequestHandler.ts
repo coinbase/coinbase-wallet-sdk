@@ -1,13 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { LIB_VERSION } from 'src/version';
 
 import { FilterPolyfill } from './FilterPolyfill';
+import { standardErrors } from ':core/error';
 import { RequestArguments } from ':core/provider/interface';
 import { ensureHexString } from ':core/util';
 
-export class FetchRequestHandler {
-  private readonly filterPolyfill = new FilterPolyfill(this.fetchRPCRequest.bind(this));
-  constructor(private readonly rpcUrl: string) {}
+export class FilterRequestHandler {
+  private readonly filterPolyfill = new FilterPolyfill(fetchRPCRequest.bind(this));
 
   handleRequest(request: RequestArguments) {
     const { method } = request;
@@ -26,26 +25,9 @@ export class FetchRequestHandler {
         return this.eth_getFilterLogs(params as any);
       case 'eth_uninstallFilter':
         return this.eth_uninstallFilter(params as any);
-      default:
-        return this.fetchRPCRequest(request);
     }
-  }
 
-  private async fetchRPCRequest(request: RequestArguments) {
-    const rpcUrl = this.rpcUrl;
-    const requestBody = {
-      ...request,
-      jsonrpc: '2.0',
-      id: crypto.randomUUID(),
-    };
-    const res = await window.fetch(rpcUrl, {
-      method: 'POST',
-      body: JSON.stringify(requestBody),
-      mode: 'cors',
-      headers: { 'Content-Type': 'application/json', 'X-Cbw-Sdk-Version': LIB_VERSION },
-    });
-    const response = await res.json();
-    return response.result;
+    return Promise.reject(standardErrors.rpc.methodNotFound());
   }
 
   private async eth_newFilter(params: unknown[]) {
