@@ -1,12 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { FilterPolyfill } from './FilterPolyfill';
 import { standardErrors } from ':core/error';
 import { RequestArguments } from ':core/provider/interface';
 import { ensureHexString } from ':core/util';
 
 export class FilterRequestHandler {
-  private readonly filterPolyfill = new FilterPolyfill(fetchRPCRequest.bind(this));
+  private readonly filterPolyfill: FilterPolyfill;
+
+  constructor(fetchRPCFunction: (request: RequestArguments) => Promise<unknown>) {
+    this.filterPolyfill = new FilterPolyfill(fetchRPCFunction);
+  }
 
   handleRequest(request: RequestArguments) {
     const { method } = request;

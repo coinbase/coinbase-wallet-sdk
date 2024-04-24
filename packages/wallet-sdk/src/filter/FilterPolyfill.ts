@@ -40,7 +40,13 @@ export class FilterPolyfill {
   private readonly timeouts = new Map<IntNumber, number>(); // <id, setTimeout id>
   private nextFilterId = IntNumber(1);
 
-  constructor(private sendAsyncPromise: RequestFuncType) {}
+  private sendAsyncPromise;
+  constructor(fetchRPCFunction: (request: RequestArguments) => Promise<unknown>) {
+    this.sendAsyncPromise = async (request: RequestArguments) => {
+      const result = await fetchRPCFunction(request);
+      return { result };
+    };
+  }
 
   public async newFilter(param: FilterParam): Promise<HexString> {
     const filter = filterFromParam(param);

@@ -8,18 +8,18 @@ import {
   ProviderRpcError,
   RequestArguments,
 } from './core/provider/interface';
-import { getErrorForInvalidRequestArgs } from './core/provider/util';
+import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './core/provider/util';
 import { AddressString, Chain } from './core/type';
 import { areAddressArraysEqual, prepend0x, showDeprecationWarning } from './core/util';
+import { FilterRequestHandler } from './filter/FilterRequestHandler';
 import { AccountsUpdate, ChainUpdate } from './sign/interface';
 import { SignRequestHandler } from './sign/SignRequestHandler';
-import { LIB_VERSION } from './version';
 import { determineMethodCategory } from ':core/provider/method';
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
   protected accounts: AddressString[] = [];
   protected chain: Chain;
-  protected readonly signRequestHandler: SignRequestHandler;
+  private readonly signRequestHandler: SignRequestHandler;
 
   constructor(options: Readonly<ConstructorOptions>) {
     super();
@@ -47,76 +47,55 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   }
 
   public async request<T>(args: RequestArguments): Promise<T> {
-    const invalidArgsError = getErrorForInvalidRequestArgs(args);
+    const invalidArgsError = checkErrorForInvalidRequestArgs(args);
     if (invalidArgsError) {
       throw invalidArgsError;
     }
 
     const category = determineMethodCategory(args.method) ?? 'fetch';
     const handler = this.handlers[category];
-    return handler(args);
+    return handler(args) as T;
   }
 
-  private handlers = {
-    fetch: this.handleRPCFetchRequest,
-    sign: this.handleSignRequest,
-    state: this.handleInternalStateRequest,
-    filter: this.handleFilterRequest,
-    deprecated: this.handleUnsupportedMethod,
-    unsupported: this.handleUnsupportedMethod,
+  private readonly handlers = {
+    fetch: (request: RequestArguments) => fetchRPCRequest(request, this.chain),
+
+    sign: (request: RequestArguments) =>
+      this.signRequestHandler.handleRequest(request, this.accounts),
+
+    filter: (request: RequestArguments) => {
+      const filterHandler = new FilterRequestHandler(this.handlers.fetch);
+      return filterHandler.handleRequest(request);
+    },
+
+    state: (request: RequestArguments) => {
+      const getConnectedAccounts = (): AddressString[] => {
+        if (this.connected) return this.accounts;
+        throw standardErrors.provider.unauthorized(
+          "Must call 'eth_requestAccounts' before other methods"
+        );
+      };
+      switch (request.method) {
+        case 'eth_chainId':
+        case 'net_version':
+          return this.chain.id;
+        case 'eth_accounts':
+          return getConnectedAccounts();
+        case 'eth_coinbase':
+          return getConnectedAccounts()[0];
+        default:
+          return this.handlers.unsupported(request);
+      }
+    },
+
+    deprecated: ({ method }: RequestArguments) => {
+      standardErrors.rpc.methodNotSupported(`Method ${method} is deprecated.`);
+    },
+
+    unsupported: ({ method }: RequestArguments) => {
+      standardErrors.rpc.methodNotSupported(`Method ${method} is not supported.`);
+    },
   };
-
-  private async handleSignRequest<T>(request: RequestArguments): Promise<T> {
-    return this.signRequestHandler.handleRequest(request, this.accounts) as T;
-  }
-
-  private async handleRPCFetchRequest(request: RequestArguments) {
-    const rpcUrl = this.chain.rpcUrl;
-    if (!rpcUrl) throw standardErrors.rpc.internal('No RPC URL set for chain');
-    const requestBody = {
-      ...request,
-      jsonrpc: '2.0',
-      id: crypto.randomUUID(),
-    };
-    const res = await window.fetch(rpcUrl, {
-      method: 'POST',
-      body: JSON.stringify(requestBody),
-      mode: 'cors',
-      headers: { 'Content-Type': 'application/json', 'X-Cbw-Sdk-Version': LIB_VERSION },
-    });
-    const response = await res.json();
-    return response.result;
-  }
-
-  private async handleFilterRequest<T>(request: RequestArguments): Promise<T> {
-    const rpcUrl = this.chain.rpcUrl;
-    if (!rpcUrl) throw standardErrors.rpc.internal('No RPC URL set for chain');
-    return fetchRequestHandler.handleRequest(request, rpcUrl);
-  }
-
-  private handleInternalStateRequest(request: RequestArguments) {
-    const getConnectedAccounts = (): AddressString[] => {
-      if (this.connected) return this.accounts;
-      throw standardErrors.provider.unauthorized(
-        "Must call 'eth_requestAccounts' before other methods"
-      );
-    };
-    switch (request.method) {
-      case 'eth_chainId':
-      case 'net_version':
-        return this.chain.id;
-      case 'eth_accounts':
-        return getConnectedAccounts();
-      case 'eth_coinbase':
-        return getConnectedAccounts()[0];
-      default:
-        return this.handleUnsupportedMethod(request);
-    }
-  }
-
-  private handleUnsupportedMethod(request: RequestArguments) {
-    throw standardErrors.rpc.methodNotSupported(`Method ${request.method} is not supported.`);
-  }
 
   /** @deprecated Use `.request({ method: 'eth_requestAccounts' })` instead. */
   public async enable(): Promise<unknown> {
