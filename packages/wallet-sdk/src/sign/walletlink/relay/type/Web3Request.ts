@@ -1,14 +1,7 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
 import { Web3Method } from './Web3Method';
-import {
-  AddressString,
-  BigIntString,
-  HexString,
-  IntNumber,
-  ProviderType,
-  RegExpString,
-} from ':core/type';
+import { AddressString, BigIntString, HexString, IntNumber, RegExpString } from ':core/type';
 
 export type Web3Request<M extends Web3Method = Web3Method> = Extract<_Web3Request, { method: M }>;
 
@@ -116,7 +109,6 @@ type _Web3Request =
         data: object;
       };
     }
-  | { method: 'selectProvider'; params: { providerOptions: ProviderType[] } }
   | {
       method: 'watchAsset';
       params: {
