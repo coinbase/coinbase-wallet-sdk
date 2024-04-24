@@ -3,7 +3,7 @@ import { RequestArguments } from ':core/provider/interface';
 import { RequestHandler } from ':core/provider/RequestHandlerInterface';
 import { AddressString, Chain } from ':core/type';
 
-export class StateRequestHandler implements RequestHandler {
+export class StateRequestHandler implements RequestHandler<'state'> {
   async handleRequest(request: RequestArguments, accounts: AddressString[], chain: Chain) {
     switch (request.method) {
       case 'eth_chainId':

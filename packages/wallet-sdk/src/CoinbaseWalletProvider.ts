@@ -8,7 +8,6 @@ import {
   ProviderRpcError,
   RequestArguments,
 } from './core/provider/interface';
-import { RequestHandler } from './core/provider/RequestHandlerInterface';
 import { getErrorForInvalidRequestArgs } from './core/provider/util';
 import { AddressString, Chain } from './core/type';
 import { areAddressArraysEqual, prepend0x, showDeprecationWarning } from './core/util';
@@ -17,12 +16,13 @@ import { StateRequestHandler } from './internalState/StateRequestHandler';
 import { RPCFetchRequestHandler } from './rpcFetch/RPCFetchRequestHandler';
 import { AccountsUpdate, ChainUpdate } from './sign/interface';
 import { SignRequestHandler } from './sign/SignRequestHandler';
+import { RequestHandler } from ':core/provider/RequestHandlerInterface';
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
   protected accounts: AddressString[] = [];
   protected chain: Chain;
 
-  protected readonly handlers: RequestHandler[];
+  protected readonly handlers;
 
   constructor(options: Readonly<ConstructorOptions>) {
     super();
@@ -31,17 +31,19 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       id: options.metadata.appChainIds?.[0] ?? 1,
     };
 
-    this.handlers = [
-      new SignRequestHandler({
+    this.handlers = {
+      sign: new SignRequestHandler({
         ...options,
         updateListener: this.updateListener,
       }),
-      new StateRequestHandler(),
-      new FilterRequestHandler({
+      state: new StateRequestHandler(),
+      filter: new FilterRequestHandler({
         provider: this,
       }),
-      new RPCFetchRequestHandler(), // should be last
-    ];
+      fetch: new RPCFetchRequestHandler(),
+      unsupported: new RPCFetchRequestHandler(),
+      deprecated: new RPCFetchRequestHandler(),
+    };
   }
 
   protected updateListener = {
@@ -62,8 +64,8 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     this.accounts = [];
     this.chain = { id: 1 };
     await Promise.all(
-      this.handlers.map(async (handler) => {
-        await handler.onDisconnect?.();
+      Object.values(this.handlers).map(async (handler) => {
+        await (handler as RequestHandler<any>).onDisconnect?.();
       })
     );
     this.emit('disconnect', disconnectInfo);
@@ -75,7 +77,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       throw invalidArgsError;
     }
 
-    const handler = this.handlers.find((h) => h.canHandleRequest(args));
+    const handler = Object.values(this.handlers).find((h) => h.canHandleRequest(args));
     return handler?.handleRequest(args, this.accounts, this.chain) as T;
   }
 

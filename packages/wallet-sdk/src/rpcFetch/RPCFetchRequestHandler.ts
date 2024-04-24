@@ -4,7 +4,7 @@ import { RequestArguments } from ':core/provider/interface';
 import { RequestHandler } from ':core/provider/RequestHandlerInterface';
 import { Chain } from ':core/type';
 
-export class RPCFetchRequestHandler implements RequestHandler {
+export class RPCFetchRequestHandler implements RequestHandler<'fetch'> {
   canHandleRequest(_: RequestArguments): boolean {
     return true;
   }

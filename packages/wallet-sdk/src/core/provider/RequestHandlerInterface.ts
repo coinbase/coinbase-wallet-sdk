@@ -1,10 +1,15 @@
 import { AddressString, Chain } from '../type';
 import { RequestArguments } from './interface';
+import { Method, MethodCategory } from './method';
 
-export interface RequestHandler {
-  canHandleRequest(request: RequestArguments): boolean;
+type RequestArgumentsExt<C extends MethodCategory> = RequestArguments & {
+  readonly method: Method<C>;
+};
+
+export interface RequestHandler<C extends MethodCategory> {
+  canHandleRequest(request: RequestArgumentsExt<C>): boolean;
   handleRequest(
-    request: RequestArguments,
+    request: RequestArgumentsExt<C>,
     accounts: AddressString[],
     chain: Chain
   ): Promise<unknown>;

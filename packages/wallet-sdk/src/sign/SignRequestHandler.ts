@@ -9,7 +9,7 @@ type SignRequestHandlerOptions = ConstructorOptions & {
   updateListener: SignRequestHandlerListener;
 };
 
-export class SignRequestHandler implements RequestHandler {
+export class SignRequestHandler implements RequestHandler<'sign'> {
   private _signer: Signer | undefined;
 
   private updateListener: SignRequestHandlerListener;

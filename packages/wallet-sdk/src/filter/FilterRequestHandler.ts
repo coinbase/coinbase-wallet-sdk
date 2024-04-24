@@ -5,7 +5,7 @@ import { ProviderInterface, RequestArguments } from ':core/provider/interface';
 import { RequestHandler } from ':core/provider/RequestHandlerInterface';
 import { ensureHexString } from ':core/util';
 
-export class FilterRequestHandler implements RequestHandler {
+export class FilterRequestHandler implements RequestHandler<'filter'> {
   private readonly filterPolyfill: FilterPolyfill;
 
   constructor({ provider }: { provider: ProviderInterface }) {
