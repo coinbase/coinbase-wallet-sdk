@@ -25,7 +25,7 @@ export class CoinbaseWalletSDK {
     const provider = fetchCoinbaseInjectedProvider(preference.options === 'smartWalletOnly');
     if (provider) {
       if ('setAppInfo' in provider && typeof provider.setAppInfo === 'function') {
-        provider.setAppInfo(appName, appLogoUrl);
+        provider.setAppInfo(appName, appLogoUrl, appChainIds);
       }
       return provider;
     }
