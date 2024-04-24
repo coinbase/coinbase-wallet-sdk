@@ -70,16 +70,4 @@ export class FilterRequestHandler implements RequestHandler<'filter'> {
     const filterId = ensureHexString(params[0]);
     return this.filterPolyfill.getFilterLogs(filterId);
   }
-
-  canHandleRequest(request: RequestArguments): boolean {
-    const filterMethods = [
-      'eth_newFilter',
-      'eth_newBlockFilter',
-      'eth_newPendingTransactionFilter',
-      'eth_getFilterChanges',
-      'eth_getFilterLogs',
-    ];
-
-    return filterMethods.includes(request.method);
-  }
 }

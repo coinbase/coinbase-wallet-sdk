@@ -51,30 +51,6 @@ export class SignRequestHandler implements RequestHandler<'sign'> {
     return ethAddresses;
   }
 
-  canHandleRequest(request: RequestArguments): boolean {
-    const methodsThatRequireSigning = [
-      'eth_requestAccounts',
-      'eth_sign',
-      'eth_ecRecover',
-      'personal_sign',
-      'personal_ecRecover',
-      'eth_signTransaction',
-      'eth_sendTransaction',
-      'eth_signTypedData_v1',
-      'eth_signTypedData_v2',
-      'eth_signTypedData_v3',
-      'eth_signTypedData_v4',
-      'eth_signTypedData',
-      'wallet_addEthereumChain',
-      'wallet_switchEthereumChain',
-      'wallet_watchAsset',
-      'wallet_getCapabilities',
-      'wallet_sendCalls',
-    ];
-
-    return methodsThatRequireSigning.includes(request.method);
-  }
-
   async onDisconnect() {
     this._signer = undefined;
     this.signerConfigurator.clearStorage();

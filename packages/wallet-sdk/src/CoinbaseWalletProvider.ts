@@ -11,11 +11,8 @@ import {
 import { getErrorForInvalidRequestArgs } from './core/provider/util';
 import { AddressString, Chain } from './core/type';
 import { areAddressArraysEqual, prepend0x, showDeprecationWarning } from './core/util';
-import { FilterRequestHandler } from './filter/FilterRequestHandler';
-import { StateRequestHandler } from './internalState/StateRequestHandler';
-import { RPCFetchRequestHandler } from './rpcFetch/RPCFetchRequestHandler';
 import { AccountsUpdate, ChainUpdate } from './sign/interface';
-import { SignRequestHandler } from './sign/SignRequestHandler';
+import { determineMethodCategory } from ':core/provider/method';
 import { RequestHandler } from ':core/provider/RequestHandlerInterface';
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
@@ -32,17 +29,12 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     };
 
     this.handlers = {
-      sign: new SignRequestHandler({
-        ...options,
-        updateListener: this.updateListener,
-      }),
-      state: new StateRequestHandler(),
-      filter: new FilterRequestHandler({
-        provider: this,
-      }),
-      fetch: new RPCFetchRequestHandler(),
-      unsupported: new RPCFetchRequestHandler(),
-      deprecated: new RPCFetchRequestHandler(),
+      sign: this.handleInternalStateRequest.bind(this),
+      state: this.handleInternalStateRequest.bind(this),
+      filter: this.handleInternalStateRequest.bind(this),
+      fetch: this.handleInternalStateRequest.bind(this),
+      unsupported: this.handleUnsupportedMethod.bind(this),
+      deprecated: this.handleUnsupportedMethod.bind(this),
     };
   }
 
@@ -76,9 +68,33 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     if (invalidArgsError) {
       throw invalidArgsError;
     }
+    const category = determineMethodCategory(args.method);
+    const handler = this.handlers[category] || this.handlers.unsupported;
+    return handler(args) as T;
+  }
 
-    const handler = Object.values(this.handlers).find((h) => h.canHandleRequest(args));
-    return handler?.handleRequest(args, this.accounts, this.chain) as T;
+  private handleInternalStateRequest(request: RequestArguments) {
+    const getConnectedAccounts = (): AddressString[] => {
+      if (this.connected) return this.accounts;
+      throw standardErrors.provider.unauthorized(
+        "Must call 'eth_requestAccounts' before other methods"
+      );
+    };
+    switch (request.method) {
+      case 'eth_chainId':
+      case 'net_version':
+        return this.chain.id;
+      case 'eth_accounts':
+        return getConnectedAccounts();
+      case 'eth_coinbase':
+        return getConnectedAccounts()[0];
+      default:
+        return this.handleUnsupportedMethod(request);
+    }
+  }
+
+  private handleUnsupportedMethod(request: RequestArguments) {
+    throw standardErrors.rpc.methodNotSupported(`Method ${request.method} is not supported.`);
   }
 
   /** @deprecated Use `.request({ method: 'eth_requestAccounts' })` instead. */
@@ -96,21 +112,15 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   }
 
   private setAccounts({ accounts, source }: AccountsUpdate) {
-    if (areAddressArraysEqual(this.accounts, accounts)) {
-      return;
-    }
-
+    if (areAddressArraysEqual(this.accounts, accounts)) return;
     this.accounts = accounts;
-
     if (source === 'storage') return;
     this.emit('accountsChanged', this.accounts);
   }
 
   private setChain({ chain, source }: ChainUpdate) {
     if (chain.id === this.chain.id && chain.rpcUrl === this.chain.rpcUrl) return;
-
     this.chain = chain;
-
     if (source === 'storage') return;
     this.emit('chainChanged', prepend0x(chain.id.toString(16)));
   }
