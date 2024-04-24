@@ -1,5 +1,5 @@
-import { standardErrors } from './error';
-import { ProviderInterface, RequestArguments } from './type/ProviderInterface';
+import { standardErrors } from '../error';
+import { ProviderInterface, RequestArguments } from '../type/ProviderInterface';
 
 export interface Window {
   top: Window;

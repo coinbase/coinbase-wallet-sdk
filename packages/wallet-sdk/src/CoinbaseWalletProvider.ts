@@ -2,7 +2,7 @@
 import EventEmitter from 'eventemitter3';
 
 import { standardErrors } from './core/error';
-import { getErrorForInvalidRequestArgs } from './core/providerUtils';
+import { getErrorForInvalidRequestArgs } from './core/provider/util';
 import { AddressString, Chain } from './core/type';
 import {
   ConstructorOptions,

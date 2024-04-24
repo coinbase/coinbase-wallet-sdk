@@ -1,5 +1,5 @@
-import { getErrorForInvalidRequestArgs } from './providerUtils';
-import { standardErrors } from './error';
+import { standardErrors } from '../error';
+import { getErrorForInvalidRequestArgs } from './util';
 
 // @ts-expect-error-next-line
 const invalidArgsError = (args) =>
