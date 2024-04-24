@@ -33,12 +33,12 @@ const mapping = {
 export type MethodCategory = keyof typeof mapping;
 export type Method<C extends MethodCategory> = (typeof mapping)[C][number];
 
-export function determineMethodCategory(method: string): MethodCategory {
+export function determineMethodCategory(method: string): MethodCategory | undefined {
   for (const c in mapping) {
     const category = c as MethodCategory;
     if ((mapping[category] as readonly string[]).includes(method)) {
       return category;
     }
   }
-  return 'fetch';
+  return undefined;
 }

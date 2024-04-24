@@ -1,5 +1,4 @@
 import { FilterPolyfill } from './FilterPolyfill';
-import { ProviderInterface } from ':core/provider/interface';
 import { IntNumber } from ':core/type';
 
 describe('FilterPolyfill', () => {
@@ -7,7 +6,7 @@ describe('FilterPolyfill', () => {
 
   beforeEach(() => {
     jest.useFakeTimers();
-    filter = new FilterPolyfill({} as ProviderInterface);
+    filter = new FilterPolyfill(jest.fn());
   });
 
   it('should throttle block height requests', async () => {

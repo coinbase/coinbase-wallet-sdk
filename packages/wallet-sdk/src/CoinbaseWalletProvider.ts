@@ -12,38 +12,25 @@ import { getErrorForInvalidRequestArgs } from './core/provider/util';
 import { AddressString, Chain } from './core/type';
 import { areAddressArraysEqual, prepend0x, showDeprecationWarning } from './core/util';
 import { AccountsUpdate, ChainUpdate } from './sign/interface';
+import { SignRequestHandler } from './sign/SignRequestHandler';
+import { LIB_VERSION } from './version';
 import { determineMethodCategory } from ':core/provider/method';
-import { RequestHandler } from ':core/provider/RequestHandlerInterface';
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
   protected accounts: AddressString[] = [];
   protected chain: Chain;
-
-  protected readonly handlers;
+  protected readonly signRequestHandler: SignRequestHandler;
 
   constructor(options: Readonly<ConstructorOptions>) {
     super();
-
     this.chain = {
       id: options.metadata.appChainIds?.[0] ?? 1,
     };
-
-    this.handlers = {
-      sign: this.handleInternalStateRequest.bind(this),
-      state: this.handleInternalStateRequest.bind(this),
-      filter: this.handleInternalStateRequest.bind(this),
-      fetch: this.handleInternalStateRequest.bind(this),
-      unsupported: this.handleUnsupportedMethod.bind(this),
-      deprecated: this.handleUnsupportedMethod.bind(this),
-    };
+    this.signRequestHandler = new SignRequestHandler({
+      ...options,
+      updateListener: this.updateListener,
+    });
   }
-
-  protected updateListener = {
-    onAccountsUpdate: this.setAccounts.bind(this),
-    onChainUpdate: this.setChain.bind(this),
-    onConnect: this.emitConnectEvent.bind(this),
-    onResetConnection: this.disconnect.bind(this),
-  };
 
   public get connected() {
     return this.accounts.length > 0;
@@ -55,11 +42,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     );
     this.accounts = [];
     this.chain = { id: 1 };
-    await Promise.all(
-      Object.values(this.handlers).map(async (handler) => {
-        await (handler as RequestHandler<any>).onDisconnect?.();
-      })
-    );
+    this.signRequestHandler.onDisconnect();
     this.emit('disconnect', disconnectInfo);
   }
 
@@ -68,9 +51,47 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     if (invalidArgsError) {
       throw invalidArgsError;
     }
-    const category = determineMethodCategory(args.method);
-    const handler = this.handlers[category] || this.handlers.unsupported;
-    return handler(args) as T;
+
+    const category = determineMethodCategory(args.method) ?? 'fetch';
+    const handler = this.handlers[category];
+    return handler(args);
+  }
+
+  private handlers = {
+    fetch: this.handleRPCFetchRequest,
+    sign: this.handleSignRequest,
+    state: this.handleInternalStateRequest,
+    filter: this.handleFilterRequest,
+    deprecated: this.handleUnsupportedMethod,
+    unsupported: this.handleUnsupportedMethod,
+  };
+
+  private async handleSignRequest<T>(request: RequestArguments): Promise<T> {
+    return this.signRequestHandler.handleRequest(request, this.accounts) as T;
+  }
+
+  private async handleRPCFetchRequest(request: RequestArguments) {
+    const rpcUrl = this.chain.rpcUrl;
+    if (!rpcUrl) throw standardErrors.rpc.internal('No RPC URL set for chain');
+    const requestBody = {
+      ...request,
+      jsonrpc: '2.0',
+      id: crypto.randomUUID(),
+    };
+    const res = await window.fetch(rpcUrl, {
+      method: 'POST',
+      body: JSON.stringify(requestBody),
+      mode: 'cors',
+      headers: { 'Content-Type': 'application/json', 'X-Cbw-Sdk-Version': LIB_VERSION },
+    });
+    const response = await res.json();
+    return response.result;
+  }
+
+  private async handleFilterRequest<T>(request: RequestArguments): Promise<T> {
+    const rpcUrl = this.chain.rpcUrl;
+    if (!rpcUrl) throw standardErrors.rpc.internal('No RPC URL set for chain');
+    return fetchRequestHandler.handleRequest(request, rpcUrl);
   }
 
   private handleInternalStateRequest(request: RequestArguments) {
@@ -107,21 +128,24 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   readonly isCoinbaseWallet = true;
 
-  private emitConnectEvent() {
-    this.emit('connect', { chainId: prepend0x(this.chain.id.toString(16)) });
-  }
-
-  private setAccounts({ accounts, source }: AccountsUpdate) {
-    if (areAddressArraysEqual(this.accounts, accounts)) return;
-    this.accounts = accounts;
-    if (source === 'storage') return;
-    this.emit('accountsChanged', this.accounts);
-  }
-
-  private setChain({ chain, source }: ChainUpdate) {
-    if (chain.id === this.chain.id && chain.rpcUrl === this.chain.rpcUrl) return;
-    this.chain = chain;
-    if (source === 'storage') return;
-    this.emit('chainChanged', prepend0x(chain.id.toString(16)));
-  }
+  private updateListener = {
+    onConnect: () => {
+      this.emit('connect', { chainId: prepend0x(this.chain.id.toString(16)) });
+    },
+    onAccountsUpdate: ({ accounts, source }: AccountsUpdate) => {
+      if (areAddressArraysEqual(this.accounts, accounts)) return;
+      this.accounts = accounts;
+      if (source === 'storage') return;
+      this.emit('accountsChanged', this.accounts);
+    },
+    onChainUpdate: ({ chain, source }: ChainUpdate) => {
+      if (chain.id === this.chain.id && chain.rpcUrl === this.chain.rpcUrl) return;
+      this.chain = chain;
+      if (source === 'storage') return;
+      this.emit('chainChanged', prepend0x(chain.id.toString(16)));
+    },
+    onResetConnection: () => {
+      this.disconnect();
+    },
+  };
 }
