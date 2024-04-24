@@ -57,8 +57,16 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   private readonly handlers = {
     fetch: (request: RequestArguments) => fetchRPCRequest(request, this.chain),
 
-    sign: (request: RequestArguments) =>
-      this.signRequestHandler.handleRequest(request, this.accounts),
+    sign: (request: RequestArguments) => {
+      if (request.method === 'eth_requestAccounts') {
+        if (this.connected) return this.accounts;
+      } else if (!this.connected) {
+        throw standardErrors.provider.unauthorized(
+          "Must call 'eth_requestAccounts' before other methods"
+        );
+      }
+      return this.signRequestHandler.handleRequest(request);
+    },
 
     filter: (request: RequestArguments) => {
       const filterHandler = new FilterRequestHandler(this.handlers.fetch);
