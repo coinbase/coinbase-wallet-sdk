@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { FilterPolyfill } from './FilterPolyfill';
 import { standardErrors } from ':core/error';
-import { ProviderInterface, RequestArguments } from ':core/type/ProviderInterface';
-import { RequestHandler } from ':core/type/RequestHandlerInterface';
+import { ProviderInterface, RequestArguments } from ':core/provider/interface';
+import { RequestHandler } from ':core/provider/RequestHandlerInterface';
 import { ensureHexString } from ':core/util';
 
 export class FilterRequestHandler implements RequestHandler {

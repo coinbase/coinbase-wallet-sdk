@@ -1,5 +1,5 @@
-import { AddressString, Chain } from '.';
-import { RequestArguments } from './ProviderInterface';
+import { AddressString, Chain } from '../type';
+import { RequestArguments } from './interface';
 
 export interface RequestHandler {
   canHandleRequest(request: RequestArguments): boolean;

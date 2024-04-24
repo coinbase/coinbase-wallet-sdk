@@ -13,8 +13,8 @@ import {
 } from ':core/message/Cipher';
 import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage';
 import { RPCResponse } from ':core/message/RPCResponse';
+import { AppMetadata, RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
-import { AppMetadata, RequestArguments } from ':core/type/ProviderInterface';
 import { ensureIntNumber } from ':core/util';
 
 export class SCWSigner implements Signer {

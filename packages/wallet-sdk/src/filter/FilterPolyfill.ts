@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
+import { ProviderInterface, RequestArguments } from ':core/provider/interface';
 import { Callback, HexString, IntNumber } from ':core/type';
-import { ProviderInterface, RequestArguments } from ':core/type/ProviderInterface';
 import {
   ensureHexString,
   hexStringFromIntNumber,

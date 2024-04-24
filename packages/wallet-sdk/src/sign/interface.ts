@@ -1,5 +1,5 @@
+import { RequestArguments } from ':core/provider/interface';
 import { AddressString, Chain } from ':core/type';
-import { RequestArguments } from ':core/type/ProviderInterface';
 
 export interface Signer {
   handshake(): Promise<AddressString[]>;

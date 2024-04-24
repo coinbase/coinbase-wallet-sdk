@@ -2,15 +2,15 @@
 import EventEmitter from 'eventemitter3';
 
 import { standardErrors } from './core/error';
-import { getErrorForInvalidRequestArgs } from './core/provider/util';
-import { AddressString, Chain } from './core/type';
 import {
   ConstructorOptions,
   ProviderInterface,
   ProviderRpcError,
   RequestArguments,
-} from './core/type/ProviderInterface';
-import { RequestHandler } from './core/type/RequestHandlerInterface';
+} from './core/provider/interface';
+import { RequestHandler } from './core/provider/RequestHandlerInterface';
+import { getErrorForInvalidRequestArgs } from './core/provider/util';
+import { AddressString, Chain } from './core/type';
 import { areAddressArraysEqual, prepend0x, showDeprecationWarning } from './core/util';
 import { FilterRequestHandler } from './filter/FilterRequestHandler';
 import { StateRequestHandler } from './internalState/StateRequestHandler';

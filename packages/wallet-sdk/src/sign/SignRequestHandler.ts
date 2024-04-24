@@ -1,9 +1,9 @@
 import { Signer, SignRequestHandlerListener } from './interface';
 import { SignerConfigurator } from './SignerConfigurator';
 import { standardErrorCodes, standardErrors } from ':core/error';
+import { ConstructorOptions, RequestArguments } from ':core/provider/interface';
+import { RequestHandler } from ':core/provider/RequestHandlerInterface';
 import { AddressString } from ':core/type';
-import { ConstructorOptions, RequestArguments } from ':core/type/ProviderInterface';
-import { RequestHandler } from ':core/type/RequestHandlerInterface';
 
 type SignRequestHandlerOptions = ConstructorOptions & {
   updateListener: SignRequestHandlerListener;

@@ -1,4 +1,4 @@
-import { AppMetadata } from ':core/type/ProviderInterface';
+import { AppMetadata } from ':core/provider/interface';
 
 export enum SupportedEthereumMethods {
   EthRequestAccounts = 'eth_requestAccounts',

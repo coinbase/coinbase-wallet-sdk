@@ -1,7 +1,7 @@
 import { standardErrors } from ':core/error';
+import { RequestArguments } from ':core/provider/interface';
+import { RequestHandler } from ':core/provider/RequestHandlerInterface';
 import { AddressString, Chain } from ':core/type';
-import { RequestArguments } from ':core/type/ProviderInterface';
-import { RequestHandler } from ':core/type/RequestHandlerInterface';
 
 export class StateRequestHandler implements RequestHandler {
   async handleRequest(request: RequestArguments, accounts: AddressString[], chain: Chain) {

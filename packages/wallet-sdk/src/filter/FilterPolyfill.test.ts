@@ -1,6 +1,6 @@
 import { FilterPolyfill } from './FilterPolyfill';
+import { ProviderInterface } from ':core/provider/interface';
 import { IntNumber } from ':core/type';
-import { ProviderInterface } from ':core/type/ProviderInterface';
 
 describe('FilterPolyfill', () => {
   let filter: FilterPolyfill;

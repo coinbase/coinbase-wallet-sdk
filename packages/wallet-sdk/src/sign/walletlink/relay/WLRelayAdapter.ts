@@ -11,9 +11,9 @@ import { JSONRPCRequest, JSONRPCResponse } from './type/JSONRPC';
 import { isErrorResponse, Web3Response } from './type/Web3Response';
 import { WalletLinkRelay } from './WalletLinkRelay';
 import { standardErrorCodes, standardErrors } from ':core/error';
+import { RequestArguments } from ':core/provider/interface';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { AddressString, IntNumber } from ':core/type';
-import { RequestArguments } from ':core/type/ProviderInterface';
 import {
   ensureAddressString,
   ensureBigInt,

@@ -1,8 +1,8 @@
 import { LIB_VERSION } from '../version';
 import { standardErrors } from ':core/error';
+import { RequestArguments } from ':core/provider/interface';
+import { RequestHandler } from ':core/provider/RequestHandlerInterface';
 import { Chain } from ':core/type';
-import { RequestArguments } from ':core/type/ProviderInterface';
-import { RequestHandler } from ':core/type/RequestHandlerInterface';
 
 export class RPCFetchRequestHandler implements RequestHandler {
   canHandleRequest(_: RequestArguments): boolean {

@@ -3,8 +3,8 @@ import { WLRelayAdapter } from './relay/WLRelayAdapter';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { WALLETLINK_URL } from ':core/constants';
 import { ConfigEvent, ConfigUpdateMessage } from ':core/message/ConfigMessage';
+import { AppMetadata, RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
-import { AppMetadata, RequestArguments } from ':core/type/ProviderInterface';
 
 export class WLSigner implements Signer {
   private popupCommunicator: PopUpCommunicator;

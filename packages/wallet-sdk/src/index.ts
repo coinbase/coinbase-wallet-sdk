@@ -2,4 +2,4 @@
 
 export type { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 export { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
-export type { ProviderInterface } from './core/type/ProviderInterface';
+export type { ProviderInterface } from './core/provider/interface';
