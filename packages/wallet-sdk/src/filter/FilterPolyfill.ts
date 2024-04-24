@@ -31,7 +31,7 @@ export interface Filter {
 }
 
 export class FilterPolyfill {
-  private sendAsyncPromise;
+  private readonly sendAsyncPromise;
   private readonly logFilters = new Map<IntNumber, Filter>(); // <id, filter>
   private readonly blockFilters = new Set<IntNumber>(); // <id>
   private readonly pendingTransactionFilters = new Set<IntNumber>(); // <id, true>
