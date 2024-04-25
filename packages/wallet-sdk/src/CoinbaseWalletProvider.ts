@@ -1,4 +1,3 @@
-/* eslint-disable no-lonely-if */
 import EventEmitter from 'eventemitter3';
 
 import { standardErrorCodes, standardErrors } from './core/error';
@@ -23,7 +22,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     };
     this.signHandler = new SignHandler({
       ...params,
-      listener: this.stateUpdateListener,
+      listener: this.updateListener,
     });
   }
 
@@ -116,7 +115,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   readonly isCoinbaseWallet = true;
 
-  private stateUpdateListener = {
+  private updateListener = {
     onAccountsUpdate: ({ accounts, source }: AccountsUpdate) => {
       if (areAddressArraysEqual(this.accounts, accounts)) return;
       this.accounts = accounts;
