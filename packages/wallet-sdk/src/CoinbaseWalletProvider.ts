@@ -6,7 +6,7 @@ import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './core/provide
 import { AddressString, Chain } from './core/type';
 import { areAddressArraysEqual, prepend0x, showDeprecationWarning } from './core/util';
 import { AccountsUpdate, ChainUpdate } from './sign/interface';
-import { SignHandler } from './sign/SignerConfigurator';
+import { SignHandler } from './sign/SignHandler';
 import { FilterPolyfill } from './vendor-js/filter/FilterPolyfill';
 import { determineMethodCategory } from ':core/provider/method';
 

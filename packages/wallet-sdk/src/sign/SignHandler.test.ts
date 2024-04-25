@@ -1,4 +1,4 @@
-import { SignHandler } from './SignerConfigurator';
+import { SignHandler } from './SignHandler';
 
 const mockGetItem = jest.fn();
 jest.mock(':core/storage/ScopedLocalStorage', () => {
