@@ -6,15 +6,16 @@ import { ConstructorOptions, ProviderInterface, RequestArguments } from './core/
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './core/provider/util';
 import { AddressString, Chain } from './core/type';
 import { areAddressArraysEqual, prepend0x, showDeprecationWarning } from './core/util';
-import { FilterRequestHandler } from './filter/FilterRequestHandler';
 import { AccountsUpdate, ChainUpdate } from './sign/interface';
 import { SignRequestHandler } from './sign/SignRequestHandler';
+import { FilterPolyfill } from './vendor-js/filter/FilterPolyfill';
 import { determineMethodCategory } from ':core/provider/method';
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
   protected accounts: AddressString[] = [];
   protected chain: Chain;
   protected signRequestHandler: SignRequestHandler;
+  private filterHandler: FilterPolyfill;
 
   constructor(options: Readonly<ConstructorOptions>) {
     super();
@@ -25,6 +26,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       ...options,
       updateListener: this.updateListener,
     });
+    this.filterHandler = new FilterPolyfill(this.handlers.fetch);
   }
 
   public get connected() {
@@ -55,11 +57,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       return this.signRequestHandler.handleRequest(request);
     },
 
-    filter: (request: RequestArguments) => {
-      const filterHandler = new FilterRequestHandler(this.handlers.fetch);
-      return filterHandler.handleRequest(request);
-    },
-
     state: (request: RequestArguments) => {
       const getConnectedAccounts = (): AddressString[] => {
         if (this.connected) return this.accounts;
@@ -80,12 +77,14 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       }
     },
 
+    filter: (request: RequestArguments) => this.filterHandler.request(request),
+
     deprecated: ({ method }: RequestArguments) => {
-      standardErrors.rpc.methodNotSupported(`Method ${method} is deprecated for security reasons.`);
+      throw standardErrors.rpc.methodNotSupported(`Method ${method} is deprecated.`);
     },
 
     unsupported: ({ method }: RequestArguments) => {
-      standardErrors.rpc.methodNotSupported(`Method ${method} is not supported.`);
+      throw standardErrors.rpc.methodNotSupported(`Method ${method} is not supported.`);
     },
   };
 
