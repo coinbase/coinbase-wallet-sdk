@@ -35,25 +35,6 @@ export class SignHandler {
   // will revisit this when refactoring the walletlink signer
   private walletlinkSigner?: WLSigner;
 
-  private _signer: Signer | undefined;
-
-  protected async useSigner(): Promise<Signer> {
-    if (this._signer) return this._signer;
-
-    this._signer = await this.selectSigner();
-    return this._signer;
-  }
-
-  async handshake() {
-    const signer = await this.useSigner();
-    return await signer.handshake();
-  }
-
-  async handleRequest(request: RequestArguments) {
-    const signer = await this.useSigner();
-    return await signer.request(request);
-  }
-
   constructor(options: Readonly<SignerConfiguratorOptions>) {
     const { keysUrl, ...preferenceWithoutKeysUrl } = options.preference;
     this.preference = preferenceWithoutKeysUrl;
@@ -68,6 +49,24 @@ export class SignHandler {
     if (persistedSignerType) {
       this._signer = this.initSignerFromType(persistedSignerType);
     }
+  }
+
+  private _signer: Signer | undefined;
+
+  protected async useSigner(): Promise<Signer> {
+    if (this._signer) return this._signer;
+    this._signer = await this.selectSigner();
+    return this._signer;
+  }
+
+  async handshake() {
+    const signer = await this.useSigner();
+    return await signer.handshake();
+  }
+
+  async handleRequest(request: RequestArguments) {
+    const signer = await this.useSigner();
+    return await signer.request(request);
   }
 
   protected async selectSigner(): Promise<Signer> {
