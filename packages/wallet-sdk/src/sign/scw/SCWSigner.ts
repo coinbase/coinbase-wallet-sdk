@@ -23,17 +23,17 @@ export class SCWSigner implements Signer {
   private keyManager: SCWKeyManager;
   private stateManager: SCWStateManager;
 
-  constructor(options: {
+  constructor(params: {
     metadata: AppMetadata;
     popupCommunicator: PopUpCommunicator;
     updateListener: StateUpdateListener;
   }) {
-    this.metadata = options.metadata;
-    this.popupCommunicator = options.popupCommunicator;
+    this.metadata = params.metadata;
+    this.popupCommunicator = params.popupCommunicator;
     this.keyManager = new SCWKeyManager();
     this.stateManager = new SCWStateManager({
       appChainIds: this.metadata.appChainIds,
-      updateListener: options.updateListener,
+      updateListener: params.updateListener,
     });
 
     this.handshake = this.handshake.bind(this);

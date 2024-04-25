@@ -16,13 +16,13 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   protected chain: Chain;
   protected signHandler: SignHandler;
 
-  constructor(options: Readonly<ConstructorOptions>) {
+  constructor(params: Readonly<ConstructorOptions>) {
     super();
     this.chain = {
-      id: options.metadata.appChainIds?.[0] ?? 1,
+      id: params.metadata.appChainIds?.[0] ?? 1,
     };
     this.signHandler = new SignHandler({
-      ...options,
+      ...params,
       listener: this.stateUpdateListener,
     });
   }
@@ -55,7 +55,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
         );
       }
       try {
-        return await this.signHandler.handleRequest(request);
+        return await this.signHandler.request(request);
       } catch (error) {
         const e = error as { code?: number };
         if (e.code === standardErrorCodes.provider.unauthorized) this.disconnect();

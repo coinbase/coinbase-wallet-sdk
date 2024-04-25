@@ -25,8 +25,8 @@ export class SCWStateManager {
     return this._walletCapabilities;
   }
 
-  constructor(options: { updateListener: StateUpdateListener; appChainIds: number[] }) {
-    this.updateListener = options.updateListener;
+  constructor(params: { updateListener: StateUpdateListener; appChainIds: number[] }) {
+    this.updateListener = params.updateListener;
 
     this.availableChains = this.loadItemFromStorage(AVAILABLE_CHAINS_STORAGE_KEY);
     this._walletCapabilities = this.loadItemFromStorage(WALLET_CAPABILITIES_STORAGE_KEY);
@@ -47,7 +47,7 @@ export class SCWStateManager {
     }
 
     this._accounts = accounts || [];
-    this._activeChain = chain || { id: options.appChainIds?.[0] ?? 1 };
+    this._activeChain = chain || { id: params.appChainIds?.[0] ?? 1 };
   }
 
   updateAccounts(accounts: AddressString[]) {
