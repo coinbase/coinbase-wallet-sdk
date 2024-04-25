@@ -1,4 +1,4 @@
-/* eslint-disable jest/no-commented-out-tests */
+/* eslint-disable no-lonely-if */
 import EventEmitter from 'eventemitter3';
 
 import { standardErrors } from './core/error';
@@ -46,7 +46,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       if (request.method === 'eth_requestAccounts') {
         if (this.connected) return this.accounts;
       } else {
-        // eslint-disable-next-line no-lonely-if
         if (!this.connected) {
           throw standardErrors.provider.unauthorized(
             "Must call 'eth_requestAccounts' before other methods"
