@@ -25,7 +25,7 @@ export class SignRequestHandler {
         this.updateListener.onConnect();
         return accounts;
       }
-      return signer.request(request);
+      return await signer.request(request);
     } catch (err) {
       if ((err as { code?: unknown })?.code === standardErrorCodes.provider.unauthorized) {
         this.updateListener.onResetConnection();
