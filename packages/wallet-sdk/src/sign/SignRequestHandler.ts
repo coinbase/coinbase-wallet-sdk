@@ -1,5 +1,6 @@
 import { Signer, SignRequestHandlerListener } from './interface';
 import { SignerConfigurator } from './SignerConfigurator';
+import { standardErrorCodes } from ':core/error';
 import { ConstructorOptions, RequestArguments } from ':core/provider/interface';
 
 type SignRequestHandlerOptions = ConstructorOptions & {
@@ -17,13 +18,20 @@ export class SignRequestHandler {
   }
 
   async handleRequest(request: RequestArguments) {
-    const signer = await this.useSigner();
-    if (request.method === 'eth_requestAccounts') {
-      const accounts = await signer.handshake();
-      this.updateListener.onConnect();
-      return accounts;
+    try {
+      const signer = await this.useSigner();
+      if (request.method === 'eth_requestAccounts') {
+        const accounts = await signer.handshake();
+        this.updateListener.onConnect();
+        return accounts;
+      }
+      return signer.request(request);
+    } catch (err) {
+      if ((err as { code?: unknown })?.code === standardErrorCodes.provider.unauthorized) {
+        this.updateListener.onResetConnection();
+      }
+      throw err;
     }
-    return signer.request(request);
   }
 
   async onDisconnect() {
