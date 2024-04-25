@@ -33,7 +33,6 @@ export class SignHandler {
   private readonly storage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
 
   constructor(params: Readonly<SignerConfiguratorOptions>) {
-    this.signer = this.loadSigner();
     this.metadata = params.metadata;
     this.listener = params.listener;
     const { keysUrl, ...preferenceWithoutKeysUrl } = params.preference;
@@ -42,6 +41,7 @@ export class SignHandler {
       url: keysUrl ?? CB_KEYS_URL,
       onConfigUpdateMessage: this.handleConfigUpdateMessage.bind(this),
     });
+    this.signer = this.loadSigner();
   }
 
   async handshake() {
