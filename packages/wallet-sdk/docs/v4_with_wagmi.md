@@ -2,6 +2,8 @@
 
 This quickstart guide walks through building a dapp for Coinbase smart wallet using wagmi.
 
+#### If you have any questions or feedback please [Join the Coinbase Developer Platform Discord Server!](https://discord.com/invite/cdp)
+
 ## Steps:
 
 1. **Create a new wagmi app**
@@ -67,11 +69,13 @@ This quickstart guide walks through building a dapp for Coinbase smart wallet us
      - Your dapp's logo
      - Favicon is used if unspecified
    - `chainIds?: number[]`
+     - _Note: you will see typescript warnings since wagmi hasn't been upgraded to use Coinbase Wallet SDK v4 yet_
      - An array of chain ids your dapp supports
      - The first chain in this array will be used as the default chain.
      - Removes the need for non-mainnet dapps to request switching chains immediately.
      - Default value is `[1]` (mainnet), which is not supported by scw fe at this time.
    - `smartWalletOnly?: boolean;`
+     - _Note: you will see typescript warnings since wagmi hasn't been upgraded to use Coinbase Wallet SDK v4 yet_
      - If `true`, hides options to connect via Coinbase Wallet mobile and Coinbase Wallet extension
      - Default value is `false`
 
