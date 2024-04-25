@@ -14,7 +14,7 @@ import { determineMethodCategory } from ':core/provider/method';
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
   protected accounts: AddressString[] = [];
   protected chain: Chain;
-  protected readonly signHandler: SignHandler;
+  protected signHandler: SignHandler;
 
   constructor(options: Readonly<ConstructorOptions>) {
     super();

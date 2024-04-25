@@ -1,8 +1,12 @@
 import { determineMethodCategory } from './method';
 
 describe('determineMethodCategory', () => {
+  test('should return "handshake" for handshake method', () => {
+    expect(determineMethodCategory('eth_requestAccounts')).toBe('handshake');
+  });
+
   test('should return "sign" for signing methods', () => {
-    const methods = ['eth_requestAccounts', 'eth_signTransaction', 'wallet_switchEthereumChain'];
+    const methods = ['eth_signTransaction', 'wallet_switchEthereumChain'];
     methods.forEach((method) => {
       expect(determineMethodCategory(method)).toBe('sign');
     });
