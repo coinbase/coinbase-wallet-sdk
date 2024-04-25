@@ -22,11 +22,10 @@ export class CoinbaseWalletSDK {
   public makeWeb3Provider(preference: Preference = { options: 'all' }): ProviderInterface {
     const { appName = 'Dapp', appLogoUrl = getFavicon(), appChainIds = [] } = this.metadata;
 
-    const provider = getCoinbaseInjectedProvider(preference.options === 'smartWalletOnly');
+    const provider = getCoinbaseInjectedProvider(preference);
     if (provider) {
-      if ('setAppInfo' in provider && typeof provider.setAppInfo === 'function') {
-        provider.setAppInfo(appName, appLogoUrl, appChainIds);
-      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (provider as any).setAppInfo?.(appName, appLogoUrl, appChainIds);
       return provider;
     }
 

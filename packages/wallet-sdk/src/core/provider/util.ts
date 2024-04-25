@@ -1,6 +1,6 @@
 import { LIB_VERSION } from '../../version';
 import { standardErrors } from '../error';
-import { ProviderInterface, RequestArguments } from './interface';
+import { Preference, ProviderInterface, RequestArguments } from './interface';
 import { Chain } from ':core/type';
 
 export async function fetchRPCRequest(request: RequestArguments, chain: Chain) {
@@ -27,12 +27,10 @@ export interface Window {
   coinbaseWalletExtension?: ProviderInterface;
 }
 
-export function getCoinbaseInjectedProvider(
-  smartWalletOnly: boolean
-): ProviderInterface | undefined {
+export function getCoinbaseInjectedProvider(preference: Preference): ProviderInterface | undefined {
   const window = globalThis as Window;
 
-  if (!smartWalletOnly) {
+  if (preference.options !== 'smartWalletOnly') {
     const extension = window.coinbaseWalletExtension;
     if (extension && !('shouldUseSigner' in extension && extension.shouldUseSigner)) {
       return extension;
