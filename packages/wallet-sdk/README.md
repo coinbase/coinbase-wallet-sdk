@@ -1,13 +1,8 @@
 # Coinbase Wallet SDK
 
-[![npm](https://img.shields.io/npm/v/@coinbase/wallet-sdk.svg)](https://www.npmjs.com/package/@coinbase/wallet-sdk)
-[![npm](https://img.shields.io/npm/v/@coinbase/wallet-sdk/beta.svg)](https://www.npmjs.com/package/@coinbase/wallet-sdk/v/beta)
-
-> If you'd like to build a dapp for Coinbase smart wallet using our v4 beta release, check out our [step by step instructions](docs/v4_with_wagmi.md) to get started with Coinbase Wallet SDK v4 and wagmi.
-
 ## Coinbase Wallet SDK lets developers connect their dapps to Coinbase Wallet in the following ways:
 
-1. [Coinbase smart wallet](https://keys.coinbase.com/onboarding) (v4 only)
+1. [Coinbase smart wallet](https://keys.coinbase.com/onboarding)
 
    - EIP-4337 account abstraction using passkeys
      - No passwords or PIN
@@ -27,10 +22,7 @@
 
 ## Installing and Upgrading
 
-> Migrating from v3 to v4? Please see our [v4 migration guide](docs/migration_guide.md) for a full list of breaking changes.
-
-- This readme contains brief instructions to get up and running.
-- Visit our [public developer docs](https://docs.cloud.coinbase.com/wallet-sdk/docs) for more detail, including samples for integrating Coinbase Wallet using libraries like [web3-react](https://github.com/Uniswap/web3-react), [web3modal](https://github.com/Web3Modal/web3modal), [Web3-Onboard](https://docs.blocknative.com/onboard), and [wagmi](https://wagmi.sh/).
+> Migrating from v3 to v4? Please see our [v4 migration guide](https://github.com/coinbase/coinbase-wallet-sdk/blob/docs/migration_guide.md) for a full list of breaking changes.
 
 ### Installing Wallet SDK
 

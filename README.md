@@ -1,1 +1,0 @@
-packages/wallet-sdk/README.md
