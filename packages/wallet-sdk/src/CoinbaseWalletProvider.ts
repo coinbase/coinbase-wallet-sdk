@@ -2,12 +2,7 @@
 import EventEmitter from 'eventemitter3';
 
 import { standardErrors } from './core/error';
-import {
-  ConstructorOptions,
-  ProviderInterface,
-  ProviderRpcError,
-  RequestArguments,
-} from './core/provider/interface';
+import { ConstructorOptions, ProviderInterface, RequestArguments } from './core/provider/interface';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './core/provider/util';
 import { AddressString, Chain } from './core/type';
 import { areAddressArraysEqual, prepend0x, showDeprecationWarning } from './core/util';
@@ -34,16 +29,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   public get connected() {
     return this.accounts.length > 0;
-  }
-
-  async disconnect(): Promise<void> {
-    const disconnectInfo: ProviderRpcError = standardErrors.provider.disconnected(
-      'User initiated disconnection'
-    );
-    this.accounts = [];
-    this.chain = { id: 1 };
-    this.signRequestHandler.onDisconnect();
-    this.emit('disconnect', disconnectInfo);
   }
 
   public async request<T>(args: RequestArguments): Promise<T> {
@@ -108,6 +93,13 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     return await this.request({
       method: 'eth_requestAccounts',
     });
+  }
+
+  async disconnect(): Promise<void> {
+    this.accounts = [];
+    this.chain = { id: 1 };
+    this.signRequestHandler.onDisconnect();
+    this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
 
   readonly isCoinbaseWallet = true;
