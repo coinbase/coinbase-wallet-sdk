@@ -45,7 +45,7 @@ describe('SignerConfigurator', () => {
     return new SignHandler({
       metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1] },
       preference: { options: 'all' },
-      updateListener: {
+      listener: {
         onAccountsUpdate: jest.fn(),
         onChainUpdate: jest.fn(),
       },
