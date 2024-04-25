@@ -1,9 +1,8 @@
-import { Signer, SignRequestHandlerListener } from './interface';
+import { Signer, StateUpdateListener } from './interface';
 import { SCWSigner } from './scw/SCWSigner';
 import { WLSigner } from './walletlink/WLSigner';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { CB_KEYS_URL } from ':core/constants';
-import { standardErrors } from ':core/error';
 import { createMessage } from ':core/message';
 import {
   ConfigEvent,
@@ -11,97 +10,104 @@ import {
   ConfigUpdateMessage,
   SignerType,
 } from ':core/message/ConfigMessage';
-import { AppMetadata, ConstructorOptions, Preference } from ':core/provider/interface';
+import {
+  AppMetadata,
+  ConstructorOptions,
+  Preference,
+  RequestArguments,
+} from ':core/provider/interface';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 
 const SIGNER_TYPE_KEY = 'SignerType';
 
 type SignerConfiguratorOptions = ConstructorOptions & {
-  updateListener: SignRequestHandlerListener;
+  listener: StateUpdateListener;
 };
 
-export class SignerConfigurator {
-  private metadata: AppMetadata;
-  private preference: Preference;
+export class SignHandler {
+  private signer: Signer | null;
+  private readonly metadata: AppMetadata;
+  private readonly preference: Preference;
+  private readonly listener: StateUpdateListener;
+  private readonly popupCommunicator: PopUpCommunicator;
+  private readonly storage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
 
-  private popupCommunicator: PopUpCommunicator;
-  private updateListener: SignRequestHandlerListener;
-
-  private signerTypeStorage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
-  // temporary walletlink signer instance to handle WalletLinkSessionRequest
-  // will revisit this when refactoring the walletlink signer
-  private walletlinkSigner?: WLSigner;
-
-  constructor(options: Readonly<SignerConfiguratorOptions>) {
-    const { keysUrl, ...preferenceWithoutKeysUrl } = options.preference;
+  constructor(params: Readonly<SignerConfiguratorOptions>) {
+    this.signer = this.loadSigner();
+    this.metadata = params.metadata;
+    this.listener = params.listener;
+    const { keysUrl, ...preferenceWithoutKeysUrl } = params.preference;
     this.preference = preferenceWithoutKeysUrl;
     this.popupCommunicator = new PopUpCommunicator({
       url: keysUrl ?? CB_KEYS_URL,
       onConfigUpdateMessage: this.handleConfigUpdateMessage.bind(this),
     });
-    this.updateListener = options.updateListener;
-    this.metadata = options.metadata;
   }
 
-  tryRestoringSignerFromPersistedType(): Signer | undefined {
-    const persistedSignerType = this.signerTypeStorage.getItem(SIGNER_TYPE_KEY) as SignerType;
-    if (persistedSignerType) {
-      return this.initSignerFromType(persistedSignerType);
+  async handshake() {
+    if (!this.signer) {
+      this.signer = await this.selectSigner();
     }
-    return undefined;
+    return this.signer.handshake();
   }
 
-  async selectSigner(): Promise<Signer> {
+  async request(request: RequestArguments) {
+    if (!this.signer) {
+      throw new Error('Signer is not initialized');
+    }
+    return this.signer.request(request);
+  }
+
+  disconnect() {
+    this.signer?.disconnect();
+    this.signer = null;
+    this.storage.removeItem(SIGNER_TYPE_KEY);
+  }
+
+  private loadSigner() {
+    const signerType = this.storage.getItem(SIGNER_TYPE_KEY) as SignerType;
+    return signerType ? this.initSigner(signerType) : null;
+  }
+
+  private async selectSigner(): Promise<Signer> {
     const signerType = await this.requestSignerSelection();
-    if (signerType === 'walletlink' && this.walletlinkSigner) {
-      return this.walletlinkSigner;
-    }
-    const signer = this.initSignerFromType(signerType);
-    return signer;
-  }
-
-  clearStorage() {
-    this.signerTypeStorage.removeItem(SIGNER_TYPE_KEY);
+    this.storage.setItem(SIGNER_TYPE_KEY, signerType);
+    if (signerType === 'walletlink' && this.walletlinkSigner) return this.walletlinkSigner;
+    return this.initSigner(signerType);
   }
 
   private async requestSignerSelection(): Promise<SignerType> {
     await this.popupCommunicator.connect();
-
     const message = createMessage<ConfigUpdateMessage>({
       event: ConfigEvent.SelectSignerType,
       data: this.preference,
     });
     const response = await this.popupCommunicator.postMessageForResponse(message);
-    const signerType = (response as ConfigResponseMessage).data as SignerType;
-    this.signerTypeStorage.setItem(SIGNER_TYPE_KEY, signerType);
-
-    return signerType;
+    return (response as ConfigResponseMessage).data as SignerType;
   }
 
-  protected initSignerFromType(signerType: SignerType): Signer {
-    const signerClasses = {
+  private initSigner(signerType: SignerType): Signer {
+    const SignerClasses = {
       scw: SCWSigner,
       walletlink: WLSigner,
       extension: undefined,
     };
-
-    const SignerClass = signerClasses[signerType];
-    if (!SignerClass) {
-      throw standardErrors.rpc.internal(`SignerConfigurator: Unknown signer type ${signerType}`);
-    }
-
-    return new SignerClass({
+    return new SignerClasses[signerType]!({
       metadata: this.metadata,
       popupCommunicator: this.popupCommunicator,
-      updateListener: this.updateListener,
+      updateListener: this.listener,
     });
   }
+
+  // temporary walletlink signer instance to handle WalletLinkSessionRequest
+  // will revisit this when refactoring the walletlink signer
+  private walletlinkSigner?: WLSigner;
 
   private async handleConfigUpdateMessage(message: ConfigUpdateMessage) {
     switch (message.event) {
       case ConfigEvent.WalletLinkSessionRequest:
         if (!this.walletlinkSigner) {
-          this.walletlinkSigner = this.initSignerFromType('walletlink') as WLSigner;
+          this.walletlinkSigner = this.initSigner('walletlink') as WLSigner;
         }
         await this.walletlinkSigner.handleWalletLinkSessionRequest();
         break;

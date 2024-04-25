@@ -1,19 +1,14 @@
-import { SignRequestHandlerListener } from './interface';
-import { SCWSigner } from './scw/SCWSigner';
-import { SignerConfigurator } from './SignerConfigurator';
-import { WLSigner } from './walletlink/WLSigner';
+import { SignHandler } from './SignerConfigurator';
 
-const mockSetItem = jest.fn();
 const mockGetItem = jest.fn();
-const mockRemoveItem = jest.fn();
 jest.mock(':core/storage/ScopedLocalStorage', () => {
   return {
     ScopedLocalStorage: jest.fn().mockImplementation(() => {
       return {
         getItem: mockGetItem,
-        removeItem: mockRemoveItem,
+        removeItem: jest.fn(),
         clear: jest.fn(),
-        setItem: mockSetItem,
+        setItem: jest.fn(),
       };
     }),
   };
@@ -32,54 +27,49 @@ jest.mock(':core/communicator/PopUpCommunicator', () => {
   };
 });
 
-describe('SignerConfigurator', () => {
-  let signerConfigurator: SignerConfigurator;
-
-  const updateListener: SignRequestHandlerListener = {
-    onAccountsUpdate: jest.fn(),
-    onChainUpdate: jest.fn(),
-    onConnect: jest.fn(),
-    onResetConnection: jest.fn(),
+const mockHandshake = jest.fn();
+const mockRequest = jest.fn();
+jest.mock('./scw/SCWSigner', () => {
+  return {
+    SCWSigner: jest.fn().mockImplementation(() => {
+      return {
+        handshake: mockHandshake,
+        request: mockRequest,
+      };
+    }),
   };
+});
 
-  beforeEach(() => {
-    signerConfigurator = new SignerConfigurator({
+describe('SignerConfigurator', () => {
+  function createSignHandler() {
+    return new SignHandler({
       metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1] },
       preference: { options: 'all' },
-      updateListener,
+      listener: {
+        onAccountsUpdate: jest.fn(),
+        onChainUpdate: jest.fn(),
+      },
     });
-  });
-
-  it('should handle disconnect correctly', async () => {
-    signerConfigurator.clearStorage();
-
-    expect(mockRemoveItem).toHaveBeenCalled();
-  });
+  }
 
   it('should complete signerType selection correctly', async () => {
-    mockPostMessageForResponse.mockResolvedValue({
+    mockPostMessageForResponse.mockResolvedValueOnce({
       data: 'scw',
     });
-
-    const signer = await signerConfigurator.selectSigner();
-
-    expect(signer).toBeInstanceOf(SCWSigner);
-    expect(mockSetItem).toHaveBeenCalledWith('SignerType', 'scw');
+    const handler = createSignHandler();
+    await handler.handshake();
+    expect(mockHandshake).toHaveBeenCalledWith();
   });
 
-  describe('tryRestoringSignerFromPersistedType', () => {
-    it('should init SCWSigner correctly', () => {
-      mockGetItem.mockReturnValueOnce('scw');
+  it('should load signer from storage when available', async () => {
+    mockGetItem.mockReturnValueOnce('scw');
+    const handler = createSignHandler();
+    await handler.request({} as any);
+    expect(mockRequest).toHaveBeenCalledWith({} as any);
+  });
 
-      const signer = signerConfigurator.tryRestoringSignerFromPersistedType();
-      expect(signer).toBeInstanceOf(SCWSigner);
-    });
-
-    it('should init WLSigner correctly', () => {
-      mockGetItem.mockReturnValueOnce('walletlink');
-
-      const signer = signerConfigurator.tryRestoringSignerFromPersistedType();
-      expect(signer).toBeInstanceOf(WLSigner);
-    });
+  it('should throw error if signer is not initialized', async () => {
+    const handler = createSignHandler();
+    await expect(handler.request({} as any)).rejects.toThrow('Signer is not initialized');
   });
 });

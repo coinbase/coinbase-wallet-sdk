@@ -10,18 +10,18 @@ export class WLSigner implements Signer {
   private popupCommunicator: PopUpCommunicator;
   private adapter: WLRelayAdapter;
 
-  constructor(options: {
+  constructor(params: {
     metadata: AppMetadata;
     popupCommunicator: PopUpCommunicator;
     updateListener: StateUpdateListener;
   }) {
-    const { appName, appLogoUrl } = options.metadata;
-    this.popupCommunicator = options.popupCommunicator;
+    const { appName, appLogoUrl } = params.metadata;
+    this.popupCommunicator = params.popupCommunicator;
     this.adapter = new WLRelayAdapter({
       appName,
       appLogoUrl,
       walletlinkUrl: WALLETLINK_URL,
-      updateListener: options.updateListener,
+      updateListener: params.updateListener,
     });
   }
 

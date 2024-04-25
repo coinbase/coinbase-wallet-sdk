@@ -23,8 +23,3 @@ export interface StateUpdateListener {
   onAccountsUpdate: (_: AccountsUpdate) => void;
   onChainUpdate: (_: ChainUpdate) => void;
 }
-
-export interface SignRequestHandlerListener extends StateUpdateListener {
-  onConnect: () => void;
-  onResetConnection: () => void;
-}

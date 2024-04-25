@@ -16,10 +16,10 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
   private resolveConnection?: () => void;
   private onConfigUpdateMessage: (_: ConfigUpdateMessage) => void;
 
-  constructor(options: { url: string; onConfigUpdateMessage: (_: ConfigUpdateMessage) => void }) {
+  constructor(params: { url: string; onConfigUpdateMessage: (_: ConfigUpdateMessage) => void }) {
     super();
-    this.url = new URL(options.url);
-    this.onConfigUpdateMessage = options.onConfigUpdateMessage;
+    this.url = new URL(params.url);
+    this.onConfigUpdateMessage = params.onConfigUpdateMessage;
   }
 
   protected onConnect(): Promise<void> {
