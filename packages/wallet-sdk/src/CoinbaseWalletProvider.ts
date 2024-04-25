@@ -14,7 +14,7 @@ import { determineMethodCategory } from ':core/provider/method';
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
   protected accounts: AddressString[] = [];
   protected chain: Chain;
-  private readonly signRequestHandler: SignRequestHandler;
+  protected signRequestHandler: SignRequestHandler;
 
   constructor(options: Readonly<ConstructorOptions>) {
     super();
@@ -106,7 +106,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   readonly isCoinbaseWallet = true;
 
-  private updateListener = {
+  protected updateListener = {
     onConnect: () => {
       this.emit('connect', { chainId: prepend0x(this.chain.id.toString(16)) });
     },

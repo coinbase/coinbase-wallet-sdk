@@ -1,5 +1,4 @@
 import { CoinbaseWalletSDK as CoinbaseWalletSDK40 } from '@coinbase/wallet-sdk';
-import { SignRequestHandler } from '@coinbase/wallet-sdk/dist/sign/SignRequestHandler';
 import { CoinbaseWalletSDK as CoinbaseWalletSDK37 } from '@coinbase/wallet-sdk-3.7';
 import { CoinbaseWalletSDK as CoinbaseWalletSDK39 } from '@coinbase/wallet-sdk-3.9';
 import React, { useEffect, useMemo } from 'react';
@@ -33,9 +32,7 @@ declare global {
 
 if (typeof window !== 'undefined') {
   window.setPopupUrl = (url: string) => {
-    const handler = (window.ethereum as any).handlers?.find(
-      (h: any) => h instanceof SignRequestHandler
-    );
+    const handler = (window.ethereum as any).signRequestHandler;
     if (handler && handler.signerConfigurator && handler.signerConfigurator.popupCommunicator) {
       handler.signerConfigurator.popupCommunicator.url = new URL(url);
     }
