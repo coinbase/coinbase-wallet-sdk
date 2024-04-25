@@ -1,16 +1,13 @@
 import { Signer, SignRequestHandlerListener } from './interface';
 import { SignerConfigurator } from './SignerConfigurator';
-import { standardErrorCodes, standardErrors } from ':core/error';
+import { standardErrorCodes } from ':core/error';
 import { ConstructorOptions, RequestArguments } from ':core/provider/interface';
-import { AddressString } from ':core/type';
 
 type SignRequestHandlerOptions = ConstructorOptions & {
   updateListener: SignRequestHandlerListener;
 };
 
 export class SignRequestHandler {
-  private _signer: Signer | undefined;
-
   private updateListener: SignRequestHandlerListener;
   private signerConfigurator: SignerConfigurator;
 
@@ -20,20 +17,14 @@ export class SignRequestHandler {
     this.tryRestoringSignerFromPersistedType();
   }
 
-  async handleRequest(request: RequestArguments, accounts: AddressString[]) {
+  async handleRequest(request: RequestArguments) {
     try {
-      if (request.method === 'eth_requestAccounts') {
-        if (accounts.length > 0) return accounts;
-        return await this.requestAccounts();
-      }
-
       const signer = await this.useSigner();
-      if (accounts.length <= 0) {
-        throw standardErrors.provider.unauthorized(
-          "Must call 'eth_requestAccounts' before other methods"
-        );
+      if (request.method === 'eth_requestAccounts') {
+        const accounts = await signer.handshake();
+        this.updateListener.onConnect();
+        return accounts;
       }
-
       return await signer.request(request);
     } catch (err) {
       if ((err as { code?: unknown })?.code === standardErrorCodes.provider.unauthorized) {
@@ -41,13 +32,6 @@ export class SignRequestHandler {
       }
       throw err;
     }
-  }
-
-  private async requestAccounts(): Promise<AddressString[]> {
-    const signer = await this.useSigner();
-    const ethAddresses = await signer.handshake();
-    this.updateListener.onConnect();
-    return ethAddresses;
   }
 
   async onDisconnect() {
@@ -59,6 +43,7 @@ export class SignRequestHandler {
     this._signer = this.signerConfigurator.tryRestoringSignerFromPersistedType();
   }
 
+  private _signer: Signer | undefined;
   private async useSigner(): Promise<Signer> {
     if (this._signer) return this._signer;
 

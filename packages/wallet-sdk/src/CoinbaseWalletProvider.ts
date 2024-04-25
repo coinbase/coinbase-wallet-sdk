@@ -1,13 +1,8 @@
-/* eslint-disable jest/no-commented-out-tests */
+/* eslint-disable no-lonely-if */
 import EventEmitter from 'eventemitter3';
 
 import { standardErrors } from './core/error';
-import {
-  ConstructorOptions,
-  ProviderInterface,
-  ProviderRpcError,
-  RequestArguments,
-} from './core/provider/interface';
+import { ConstructorOptions, ProviderInterface, RequestArguments } from './core/provider/interface';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './core/provider/util';
 import { AddressString, Chain } from './core/type';
 import { areAddressArraysEqual, prepend0x, showDeprecationWarning } from './core/util';
@@ -36,16 +31,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     return this.accounts.length > 0;
   }
 
-  async disconnect(): Promise<void> {
-    const disconnectInfo: ProviderRpcError = standardErrors.provider.disconnected(
-      'User initiated disconnection'
-    );
-    this.accounts = [];
-    this.chain = { id: 1 };
-    this.signRequestHandler.onDisconnect();
-    this.emit('disconnect', disconnectInfo);
-  }
-
   public async request<T>(args: RequestArguments): Promise<T> {
     const invalidArgsError = checkErrorForInvalidRequestArgs(args);
     if (invalidArgsError) throw invalidArgsError;
@@ -57,8 +42,18 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   private readonly handlers = {
     fetch: (request: RequestArguments) => fetchRPCRequest(request, this.chain),
 
-    sign: (request: RequestArguments) =>
-      this.signRequestHandler.handleRequest(request, this.accounts),
+    sign: (request: RequestArguments) => {
+      if (request.method === 'eth_requestAccounts') {
+        if (this.connected) return this.accounts;
+      } else {
+        if (!this.connected) {
+          throw standardErrors.provider.unauthorized(
+            "Must call 'eth_requestAccounts' before other methods"
+          );
+        }
+      }
+      return this.signRequestHandler.handleRequest(request);
+    },
 
     filter: (request: RequestArguments) => {
       const filterHandler = new FilterRequestHandler(this.handlers.fetch);
@@ -100,6 +95,13 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     return await this.request({
       method: 'eth_requestAccounts',
     });
+  }
+
+  async disconnect(): Promise<void> {
+    this.accounts = [];
+    this.chain = { id: 1 };
+    this.signRequestHandler.onDisconnect();
+    this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
 
   readonly isCoinbaseWallet = true;
