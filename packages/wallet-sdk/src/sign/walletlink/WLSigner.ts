@@ -7,8 +7,8 @@ import { AppMetadata, RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
 
 export class WLSigner implements Signer {
-  private popupCommunicator: PopUpCommunicator;
-  private adapter: WLRelayAdapter;
+  private readonly popupCommunicator: PopUpCommunicator;
+  private readonly adapter: WLRelayAdapter;
 
   constructor(params: {
     metadata: AppMetadata;
