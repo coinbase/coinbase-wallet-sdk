@@ -48,14 +48,14 @@ export class SignHandler {
     if (!this.signer) {
       this.signer = await this.selectSigner();
     }
-    return await this.signer.handshake();
+    return this.signer.handshake();
   }
 
   async request(request: RequestArguments) {
     if (!this.signer) {
       throw new Error('Signer is not initialized');
     }
-    return await this.signer.request(request);
+    return this.signer.request(request);
   }
 
   disconnect() {

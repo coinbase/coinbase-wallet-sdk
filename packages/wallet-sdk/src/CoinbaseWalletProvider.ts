@@ -43,10 +43,17 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   private readonly handlers = {
     // eth_requestAccounts
     handshake: async (_: RequestArguments): Promise<AddressString[]> => {
-      if (this.connected) return this.accounts;
-      const accounts = await this.signHandler.handshake();
-      this.emit('connect', { chainId: prepend0x(this.chain.id.toString(16)) });
-      return accounts;
+      if (this.connected) {
+        return this.accounts;
+      }
+      try {
+        const accounts = await this.signHandler.handshake();
+        this.emit('connect', { chainId: prepend0x(this.chain.id.toString(16)) });
+        return accounts;
+      } catch (error) {
+        this.handleUnauthorizedError(error);
+        throw error;
+      }
     },
 
     sign: async (request: RequestArguments) => {
@@ -58,8 +65,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       try {
         return await this.signHandler.request(request);
       } catch (error) {
-        const e = error as { code?: number };
-        if (e.code === standardErrorCodes.provider.unauthorized) this.disconnect();
+        this.handleUnauthorizedError(error);
         throw error;
       }
     },
@@ -96,6 +102,11 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       throw standardErrors.rpc.methodNotSupported(`Method ${method} is not supported.`);
     },
   };
+
+  private handleUnauthorizedError(error: unknown) {
+    const e = error as { code?: number };
+    if (e.code === standardErrorCodes.provider.unauthorized) this.disconnect();
+  }
 
   /** @deprecated Use `.request({ method: 'eth_requestAccounts' })` instead. */
   public async enable(): Promise<unknown> {
