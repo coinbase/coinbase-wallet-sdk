@@ -1,5 +1,5 @@
 import { SCWSigner } from './scw/SCWSigner';
-import { SignHandler } from './SignHandler';
+import { SignHandler } from './SignerConfigurator';
 
 const mockSetItem = jest.fn();
 const mockGetItem = jest.fn();
