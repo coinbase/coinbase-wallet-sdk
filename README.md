@@ -1,6 +1,7 @@
 # Coinbase Wallet SDK
 
 [![npm](https://img.shields.io/npm/v/@coinbase/wallet-sdk.svg)](https://www.npmjs.com/package/@coinbase/wallet-sdk)
+[![npm](https://img.shields.io/npm/v/@coinbase/wallet-sdk/rc.svg)](https://www.npmjs.com/package/@coinbase/wallet-sdk/v/rc)
 [![npm](https://img.shields.io/npm/v/@coinbase/wallet-sdk/beta.svg)](https://www.npmjs.com/package/@coinbase/wallet-sdk/v/beta)
 
 > If you'd like to build a dapp for Coinbase smart wallet using our v4 beta release, check out our [step by step instructions](docs/v4_with_wagmi.md) to get started with Coinbase Wallet SDK v4 and wagmi.
