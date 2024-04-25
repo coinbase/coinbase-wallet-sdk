@@ -4,25 +4,35 @@ This quickstart guide walks through building a dapp for Coinbase smart wallet us
 
 ## Steps:
 
-1. **Create a new wagmi project**
+1. **Create a new wagmi app**
    ```sh
    pnpm create wagmi
    ```
-2. **Add the following resolutions block to your `package.json` to force wagmi to use the latest v4 beta [![npm](https://img.shields.io/npm/v/@coinbase/wallet-sdk/beta.svg)](https://www.npmjs.com/package/@coinbase/wallet-sdk/v/beta)**
+1. **Select desired options**
+   ```sh
+   ✔ Project name: test-app-name
+   ✔ Select a framework: › React
+   ✔ Select a variant: › Vite
+   ```
+1. **Go to your new app directory**
+   ```sh
+   cd test-app-name
+   ```
+1. **Add the following resolutions block to your `package.json` to force wagmi to use version `4.0.0-beta.6`**
    ```json
    "resolutions": {
        "@coinbase/wallet-sdk": "4.0.0-beta.6"
    },
    ```
-3. **Install dependencies**
+1. **Install dependencies**
    ```sh
    pnpm install
    ```
-4. **Start the test app**
+1. **Start the test app**
    ```sh
    pnpm dev
    ```
-5. **Configure the coinbaseWallet connector**
+1. **Configure the coinbaseWallet connector**
 
    - Only to `baseSepolia` is supported by http://keys.coinbase.com at this time.
    - Remove unecessary connectors
@@ -65,7 +75,7 @@ This quickstart guide walks through building a dapp for Coinbase smart wallet us
      - If `true`, hides options to connect via Coinbase Wallet mobile and Coinbase Wallet extension
      - Default value is `false`
 
-6. **In the test app, click the 'Coinbase Wallet' button to open the smart wallet popup and connect!**
-7. **Make more requests!**
+1. **In the test app, click the 'Coinbase Wallet' button to open the smart wallet popup and connect!**
+1. **Make more requests!**
 
    See all wagmi hooks with examples here: https://wagmi.sh/react/api/hooks

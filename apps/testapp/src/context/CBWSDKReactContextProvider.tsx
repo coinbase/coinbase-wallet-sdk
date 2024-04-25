@@ -1,6 +1,8 @@
-import { CoinbaseWalletSDK as CoinbaseWalletSDK40 } from '@coinbase/wallet-sdk';
+import { CoinbaseWalletSDK as CoinbaseWalletSDKDev } from '@coinbase/wallet-sdk';
 import { CoinbaseWalletSDK as CoinbaseWalletSDK37 } from '@coinbase/wallet-sdk-3.7';
 import { CoinbaseWalletSDK as CoinbaseWalletSDK39 } from '@coinbase/wallet-sdk-3.9';
+import { CoinbaseWalletSDK as CoinbaseWalletSDK40beta7 } from '@coinbase/wallet-sdk-4.0-beta7';
+import { CoinbaseWalletSDK as CoinbaseWalletSDK40beta9 } from '@coinbase/wallet-sdk-4.0-beta9';
 import React, { useEffect, useMemo } from 'react';
 
 type CBWSDKProviderProps = {
@@ -10,7 +12,7 @@ type CBWSDKProviderProps = {
 const CBWSDKReactContext = React.createContext(null);
 
 const SELECTED_SDK_KEY = 'selected_sdk_version';
-export const sdkVersions = ['4.0', '3.9', '3.7'] as const;
+export const sdkVersions = ['dev', '4.0.0-beta.9', '4.0.0-beta.7', '3.9', '3.7'] as const;
 export type SDKVersionType = (typeof sdkVersions)[number];
 
 const SELECTED_SCW_URL_KEY = 'scw_url';
@@ -38,6 +40,8 @@ if (typeof window !== 'undefined') {
     }
   };
 }
+
+export const versionsOn4Point0 = ['dev', '4.0.0-beta.9', '4.0.0-beta.7'];
 
 export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
   const [version, setVersion] = React.useState<SDKVersionType | undefined>(undefined);
@@ -72,13 +76,19 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
   useEffect(() => {
     let cbwsdk;
     let preference;
-    if (version === '4.0') {
-      cbwsdk = new CoinbaseWalletSDK40({
+    if (version === 'dev' || version === '4.0.0-beta.9') {
+      const SDK = version === 'dev' ? CoinbaseWalletSDKDev : CoinbaseWalletSDK40beta9;
+      cbwsdk = new SDK({
         appName: 'SDK Playground',
         appChainIds: [84532, 8452],
       });
       preference = { options: option };
       setSdk(cbwsdk);
+    } else if (version === '4.0.0-beta.7') {
+      cbwsdk = new CoinbaseWalletSDK40beta7({
+        appName: 'SDK Playground',
+        appChainIds: [84532, 8452],
+      });
     } else if (version === '3.9' || version === '3.7') {
       const SDK = version === '3.9' ? CoinbaseWalletSDK39 : CoinbaseWalletSDK37;
       cbwsdk = new SDK({
@@ -97,8 +107,8 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
   }, [version, option]);
 
   useEffect(() => {
-    if (version === '4.0' && scwUrl) {
-      window.setPopupUrl?.(scwUrl);
+    if (versionsOn4Point0.includes(version)) {
+      if (scwUrl) window.setPopupUrl?.(scwUrl);
     }
   }, [version, scwUrl, sdk]);
 

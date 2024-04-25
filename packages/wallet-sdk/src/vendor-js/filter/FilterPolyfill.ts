@@ -1,5 +1,6 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
+import { standardErrors } from ':core/error';
 import { RequestArguments } from ':core/provider/interface';
 import { HexString, IntNumber } from ':core/type';
 import {
@@ -44,6 +45,27 @@ export class FilterPolyfill {
       const result = await fetchRPCFunction(request);
       return { result };
     };
+  }
+
+  async request(request: RequestArguments) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const params = (request.params as any[]) || [];
+    const filterIdParam = () => ensureHexString(params[0]);
+    switch (request.method) {
+      case 'eth_newFilter':
+        return { result: await this.newFilter(params[0]) };
+      case 'eth_newBlockFilter':
+        return { result: await this.newBlockFilter() };
+      case 'eth_newPendingTransactionFilter':
+        return { result: await this.newPendingTransactionFilter() };
+      case 'eth_getFilterChanges':
+        return this.getFilterChanges(filterIdParam());
+      case 'eth_getFilterLogs':
+        return this.getFilterLogs(filterIdParam());
+      case 'eth_uninstallFilter':
+        return { result: await this.uninstallFilter(filterIdParam()) };
+    }
+    return Promise.reject(standardErrors.rpc.methodNotFound());
   }
 
   public async newFilter(param: FilterParam): Promise<HexString> {
