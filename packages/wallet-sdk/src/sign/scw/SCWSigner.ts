@@ -18,10 +18,10 @@ import { AddressString } from ':core/type';
 import { ensureIntNumber } from ':core/util';
 
 export class SCWSigner implements Signer {
-  private metadata: AppMetadata;
-  private popupCommunicator: PopUpCommunicator;
-  private keyManager: SCWKeyManager;
-  private stateManager: SCWStateManager;
+  private readonly metadata: AppMetadata;
+  private readonly popupCommunicator: PopUpCommunicator;
+  private readonly keyManager: SCWKeyManager;
+  private readonly stateManager: SCWStateManager;
 
   constructor(params: {
     metadata: AppMetadata;
@@ -42,7 +42,7 @@ export class SCWSigner implements Signer {
     this.decryptResponseMessage = this.decryptResponseMessage.bind(this);
   }
 
-  public async handshake(): Promise<AddressString[]> {
+  async handshake(): Promise<AddressString[]> {
     await this.popupCommunicator.connect();
 
     const handshakeMessage = await this.createRequestMessage({
@@ -69,7 +69,7 @@ export class SCWSigner implements Signer {
     return this.stateManager.accounts;
   }
 
-  public async request<T>(request: RequestArguments): Promise<T> {
+  async request<T>(request: RequestArguments): Promise<T> {
     const localResult = this.tryLocalHandling<T>(request);
     if (localResult !== undefined) {
       if (localResult instanceof Error) throw localResult;

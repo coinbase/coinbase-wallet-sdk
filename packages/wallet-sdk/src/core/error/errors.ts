@@ -150,9 +150,9 @@ type CustomErrorArg<T> = ServerErrorOptions<T>;
 type EthErrorsArg<T> = EthereumErrorOptions<T> | string;
 
 class EthereumRpcError<T> extends Error {
-  public code: number;
+  code: number;
 
-  public data?: T;
+  data?: T;
 
   constructor(code: number, message: string, data?: T) {
     if (!Number.isInteger(code)) {

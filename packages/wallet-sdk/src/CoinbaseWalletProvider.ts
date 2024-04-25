@@ -40,7 +40,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     return this.handlers[category](args) as T;
   }
 
-  private readonly handlers = {
+  protected readonly handlers = {
     // eth_requestAccounts
     handshake: async (_: RequestArguments): Promise<AddressString[]> => {
       if (this.connected) {
@@ -125,7 +125,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   readonly isCoinbaseWallet = true;
 
-  private updateListener = {
+  private readonly updateListener = {
     onAccountsUpdate: ({ accounts, source }: AccountsUpdate) => {
       if (areAddressArraysEqual(this.accounts, accounts)) return;
       this.accounts = accounts;
