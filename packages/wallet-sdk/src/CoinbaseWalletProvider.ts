@@ -40,8 +40,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   }
 
   private readonly handlers = {
-    fetch: (request: RequestArguments) => fetchRPCRequest(request, this.chain),
-
     // eth_requestAccounts
     handshake: async (_: RequestArguments): Promise<AddressString[]> => {
       if (this.connected) return this.accounts;
@@ -64,6 +62,8 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
         throw error;
       }
     },
+
+    fetch: (request: RequestArguments) => fetchRPCRequest(request, this.chain),
 
     filter: (request: RequestArguments) => {
       const filterHandler = new FilterRequestHandler(this.handlers.fetch);

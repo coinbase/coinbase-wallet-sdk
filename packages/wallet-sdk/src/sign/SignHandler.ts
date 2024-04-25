@@ -26,11 +26,10 @@ type SignerConfiguratorOptions = ConstructorOptions & {
 };
 
 export class SignHandler {
-  private metadata: AppMetadata;
-  private preference: Preference;
-  private popupCommunicator: PopUpCommunicator;
-  private listener: StateUpdateListener;
-  private signerTypeStorage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
+  private readonly metadata: AppMetadata;
+  private readonly preference: Preference;
+  private readonly popupCommunicator: PopUpCommunicator;
+  private readonly listener: StateUpdateListener;
   // temporary walletlink signer instance to handle WalletLinkSessionRequest
   // will revisit this when refactoring the walletlink signer
   private walletlinkSigner?: WLSigner;
@@ -96,6 +95,8 @@ export class SignHandler {
 
     return signerType;
   }
+
+  private signerTypeStorage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
 
   private initSignerFromType(signerType: SignerType): Signer {
     const signerClasses = {
