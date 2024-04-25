@@ -1,7 +1,6 @@
 const mapping = {
-  fetch: [],
+  handshake: ['eth_requestAccounts'],
   sign: [
-    'eth_requestAccounts',
     'eth_ecRecover',
     'personal_sign',
     'personal_ecRecover',
@@ -28,6 +27,7 @@ const mapping = {
   ],
   deprecated: ['eth_sign', 'eth_signTypedData_v2'],
   unsupported: ['eth_subscribe', 'eth_unsubscribe'],
+  fetch: [],
 } as const;
 
 export type MethodCategory = keyof typeof mapping;

@@ -1,29 +1,29 @@
 /* eslint-disable no-lonely-if */
 import EventEmitter from 'eventemitter3';
 
-import { standardErrors } from './core/error';
+import { standardErrorCodes, standardErrors } from './core/error';
 import { ConstructorOptions, ProviderInterface, RequestArguments } from './core/provider/interface';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './core/provider/util';
 import { AddressString, Chain } from './core/type';
 import { areAddressArraysEqual, prepend0x, showDeprecationWarning } from './core/util';
 import { FilterRequestHandler } from './filter/FilterRequestHandler';
 import { AccountsUpdate, ChainUpdate } from './sign/interface';
-import { SignRequestHandler } from './sign/SignRequestHandler';
+import { SignHandler } from './sign/SignHandler';
 import { determineMethodCategory } from ':core/provider/method';
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
   protected accounts: AddressString[] = [];
   protected chain: Chain;
-  private readonly signRequestHandler: SignRequestHandler;
+  private readonly signHandler: SignHandler;
 
   constructor(options: Readonly<ConstructorOptions>) {
     super();
     this.chain = {
       id: options.metadata.appChainIds?.[0] ?? 1,
     };
-    this.signRequestHandler = new SignRequestHandler({
+    this.signHandler = new SignHandler({
       ...options,
-      updateListener: this.updateListener,
+      listener: this.stateUpdateListener,
     });
   }
 
@@ -42,17 +42,30 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   private readonly handlers = {
     fetch: (request: RequestArguments) => fetchRPCRequest(request, this.chain),
 
+    // eth_requestAccounts
+    handshake: (_: RequestArguments) => {
+      if (this.connected) return this.accounts;
+      return this.signHandler.handshake().then((_) => {
+        this.emit('connect', { chainId: prepend0x(this.chain.id.toString(16)) });
+      });
+    },
+
     sign: (request: RequestArguments) => {
-      if (request.method === 'eth_requestAccounts') {
-        if (this.connected) return this.accounts;
-      } else {
-        if (!this.connected) {
-          throw standardErrors.provider.unauthorized(
-            "Must call 'eth_requestAccounts' before other methods"
-          );
-        }
+      if (!this.connected) {
+        throw standardErrors.provider.unauthorized(
+          "Must call 'eth_requestAccounts' before other methods"
+        );
       }
-      return this.signRequestHandler.handleRequest(request);
+
+      try {
+        return this.signHandler.handleRequest(request);
+      } catch (e) {
+        const error = e as Error & { code?: number };
+        if (error.code === standardErrorCodes.provider.unauthorized) {
+          this.disconnect();
+        }
+        throw e;
+      }
     },
 
     filter: (request: RequestArguments) => {
@@ -100,16 +113,13 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   async disconnect(): Promise<void> {
     this.accounts = [];
     this.chain = { id: 1 };
-    this.signRequestHandler.onDisconnect();
+    this.signHandler.onDisconnect();
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
 
   readonly isCoinbaseWallet = true;
 
-  private updateListener = {
-    onConnect: () => {
-      this.emit('connect', { chainId: prepend0x(this.chain.id.toString(16)) });
-    },
+  private stateUpdateListener = {
     onAccountsUpdate: ({ accounts, source }: AccountsUpdate) => {
       if (areAddressArraysEqual(this.accounts, accounts)) return;
       this.accounts = accounts;
@@ -121,9 +131,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       this.chain = chain;
       if (source === 'storage') return;
       this.emit('chainChanged', prepend0x(chain.id.toString(16)));
-    },
-    onResetConnection: () => {
-      this.disconnect();
     },
   };
 }

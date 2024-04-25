@@ -1,4 +1,4 @@
-import { Signer, SignRequestHandlerListener } from './interface';
+import { Signer, StateUpdateListener } from './interface';
 import { SCWSigner } from './scw/SCWSigner';
 import { WLSigner } from './walletlink/WLSigner';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
@@ -11,26 +11,48 @@ import {
   ConfigUpdateMessage,
   SignerType,
 } from ':core/message/ConfigMessage';
-import { AppMetadata, ConstructorOptions, Preference } from ':core/provider/interface';
+import {
+  AppMetadata,
+  ConstructorOptions,
+  Preference,
+  RequestArguments,
+} from ':core/provider/interface';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 
 const SIGNER_TYPE_KEY = 'SignerType';
 
 type SignerConfiguratorOptions = ConstructorOptions & {
-  updateListener: SignRequestHandlerListener;
+  listener: StateUpdateListener;
 };
 
-export class SignerConfigurator {
+export class SignHandler {
   private metadata: AppMetadata;
   private preference: Preference;
-
   private popupCommunicator: PopUpCommunicator;
-  private updateListener: SignRequestHandlerListener;
-
+  private listener: StateUpdateListener;
   private signerTypeStorage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
   // temporary walletlink signer instance to handle WalletLinkSessionRequest
   // will revisit this when refactoring the walletlink signer
   private walletlinkSigner?: WLSigner;
+
+  private _signer: Signer | undefined;
+
+  protected async useSigner(): Promise<Signer> {
+    if (this._signer) return this._signer;
+
+    this._signer = await this.selectSigner();
+    return this._signer;
+  }
+
+  async handshake() {
+    const signer = await this.useSigner();
+    return await signer.handshake();
+  }
+
+  async handleRequest(request: RequestArguments) {
+    const signer = await this.useSigner();
+    return await signer.request(request);
+  }
 
   constructor(options: Readonly<SignerConfiguratorOptions>) {
     const { keysUrl, ...preferenceWithoutKeysUrl } = options.preference;
@@ -39,19 +61,16 @@ export class SignerConfigurator {
       url: keysUrl ?? CB_KEYS_URL,
       onConfigUpdateMessage: this.handleConfigUpdateMessage.bind(this),
     });
-    this.updateListener = options.updateListener;
+    this.listener = options.listener;
     this.metadata = options.metadata;
-  }
 
-  tryRestoringSignerFromPersistedType(): Signer | undefined {
     const persistedSignerType = this.signerTypeStorage.getItem(SIGNER_TYPE_KEY) as SignerType;
     if (persistedSignerType) {
-      return this.initSignerFromType(persistedSignerType);
+      this._signer = this.initSignerFromType(persistedSignerType);
     }
-    return undefined;
   }
 
-  async selectSigner(): Promise<Signer> {
+  protected async selectSigner(): Promise<Signer> {
     const signerType = await this.requestSignerSelection();
     if (signerType === 'walletlink' && this.walletlinkSigner) {
       return this.walletlinkSigner;
@@ -60,7 +79,8 @@ export class SignerConfigurator {
     return signer;
   }
 
-  clearStorage() {
+  async onDisconnect() {
+    this._signer = undefined;
     this.signerTypeStorage.removeItem(SIGNER_TYPE_KEY);
   }
 
@@ -78,7 +98,7 @@ export class SignerConfigurator {
     return signerType;
   }
 
-  protected initSignerFromType(signerType: SignerType): Signer {
+  private initSignerFromType(signerType: SignerType): Signer {
     const signerClasses = {
       scw: SCWSigner,
       walletlink: WLSigner,
@@ -93,7 +113,7 @@ export class SignerConfigurator {
     return new SignerClass({
       metadata: this.metadata,
       popupCommunicator: this.popupCommunicator,
-      updateListener: this.updateListener,
+      updateListener: this.listener,
     });
   }
 
