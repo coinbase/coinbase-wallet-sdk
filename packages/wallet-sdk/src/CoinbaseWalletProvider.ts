@@ -8,7 +8,7 @@ import { AddressString, Chain } from './core/type';
 import { areAddressArraysEqual, prepend0x, showDeprecationWarning } from './core/util';
 import { FilterRequestHandler } from './filter/FilterRequestHandler';
 import { AccountsUpdate, ChainUpdate } from './sign/interface';
-import { SignHandler } from './sign/SignHandler';
+import { SignHandler } from './sign/SignerConfigurator';
 import { determineMethodCategory } from ':core/provider/method';
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
@@ -110,7 +110,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   async disconnect(): Promise<void> {
     this.accounts = [];
     this.chain = { id: 1 };
-    this.signHandler.onDisconnect();
+    this.signHandler.disconnect();
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
 

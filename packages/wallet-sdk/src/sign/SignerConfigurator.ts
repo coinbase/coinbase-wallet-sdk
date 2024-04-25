@@ -33,6 +33,7 @@ export class SignHandler {
   private readonly storage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
 
   constructor(params: Readonly<SignerConfiguratorOptions>) {
+    this.signer = this.loadSigner();
     this.metadata = params.metadata;
     this.listener = params.listener;
     const { keysUrl, ...preferenceWithoutKeysUrl } = params.preference;
@@ -41,9 +42,6 @@ export class SignHandler {
       url: keysUrl ?? CB_KEYS_URL,
       onConfigUpdateMessage: this.handleConfigUpdateMessage.bind(this),
     });
-    // load signer from storage
-    const signerType = this.storage.getItem(SIGNER_TYPE_KEY) as SignerType;
-    this.signer = signerType ? this.initSigner(signerType) : null;
   }
 
   async handshake() {
@@ -60,16 +58,22 @@ export class SignHandler {
     return await this.signer.request(request);
   }
 
-  protected async selectSigner(): Promise<Signer> {
+  disconnect() {
+    this.signer?.disconnect();
+    this.signer = null;
+    this.storage.removeItem(SIGNER_TYPE_KEY);
+  }
+
+  private loadSigner() {
+    const signerType = this.storage.getItem(SIGNER_TYPE_KEY) as SignerType;
+    return signerType ? this.initSigner(signerType) : null;
+  }
+
+  private async selectSigner(): Promise<Signer> {
     const signerType = await this.requestSignerSelection();
     this.storage.setItem(SIGNER_TYPE_KEY, signerType);
     if (signerType === 'walletlink' && this.walletlinkSigner) return this.walletlinkSigner;
     return this.initSigner(signerType);
-  }
-
-  async onDisconnect() {
-    this.signer = null;
-    this.storage.removeItem(SIGNER_TYPE_KEY);
   }
 
   private async requestSignerSelection(): Promise<SignerType> {
