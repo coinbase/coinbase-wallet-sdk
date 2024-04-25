@@ -12,7 +12,7 @@ type CBWSDKProviderProps = {
 const CBWSDKReactContext = React.createContext(null);
 
 const SELECTED_SDK_KEY = 'selected_sdk_version';
-export const sdkVersions = ['dev', '4.0.0-beta.10', '4.0.0-beta.7', '3.9', '3.7'] as const;
+export const sdkVersions = ['dev', '4.0.0-beta.9', '4.0.0-beta.7', '3.9', '3.7'] as const;
 export type SDKVersionType = (typeof sdkVersions)[number];
 
 const SELECTED_SCW_URL_KEY = 'scw_url';
@@ -42,7 +42,7 @@ if (typeof window !== 'undefined') {
   };
 }
 
-export const versionsOn4Point0 = ['dev', '4.0.0-beta.10', '4.0.0-beta.7'];
+export const versionsOn4Point0 = ['dev', '4.0.0-beta.9', '4.0.0-beta.7'];
 
 export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
   const [version, setVersion] = React.useState<SDKVersionType | undefined>(undefined);
@@ -77,7 +77,7 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
   useEffect(() => {
     let cbwsdk;
     let preference;
-    if (version === 'dev' || version === '4.0.0-beta.10') {
+    if (version === 'dev' || version === '4.0.0-beta.9') {
       const SDK = version === 'dev' ? CoinbaseWalletSDKDev : CoinbaseWalletSDK40beta10;
       cbwsdk = new SDK({
         appName: 'SDK Playground',
