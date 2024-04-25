@@ -1,5 +1,7 @@
 # Coinbase Wallet SDK Migration Guide (v3 to v4)
 
+#### If you have any questions or feedback please [Join the Coinbase Developer Platform Discord Server!](https://discord.com/invite/cdp)
+
 ## `CoinbaseWalletSDK` changes
 
 - `CoinbaseWalletSDK.disconnect()` public instance method is deprecated
@@ -57,13 +59,14 @@ export interface CoinbaseWalletSDKOptions {
 
 - The `connect` event has been fixed to be [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193#connect) compliant in v4.
   - `on(event: 'connect', listener: (info: ProviderConnectInfo) => void): this;`
-  - v3 returned `chainIdStr` - `interface ProviderConnectInfo {
+  - v3 incorrectly returned `chainIdStr` 
+    - `interface ProviderConnectInfo {
  readonly chainIdStr: string;
 }`
-- v4 returns `chainId`
-  - `interface ProviderConnectInfo {
- readonly chainId: string;
-}`
+  - v4 returns `chainId`
+    - `interface ProviderConnectInfo {
+  readonly chainId: string;
+  }`
 
 ### Removed public instance properties
 
@@ -84,7 +87,7 @@ export interface CoinbaseWalletSDKOptions {
 - `disableReloadOnDisconnect`
 - `setProviderInfo`
 - `setAppInfo`
-- `close` - still in use for extension connections
+- `close`
 - `send`
 - `sendAsync`
 - `scanQRCode`
