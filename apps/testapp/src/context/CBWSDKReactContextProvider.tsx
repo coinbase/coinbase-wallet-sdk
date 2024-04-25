@@ -2,7 +2,7 @@ import { CoinbaseWalletSDK as CoinbaseWalletSDKDev } from '@coinbase/wallet-sdk'
 import { CoinbaseWalletSDK as CoinbaseWalletSDK37 } from '@coinbase/wallet-sdk-3.7';
 import { CoinbaseWalletSDK as CoinbaseWalletSDK39 } from '@coinbase/wallet-sdk-3.9';
 import { CoinbaseWalletSDK as CoinbaseWalletSDK40beta7 } from '@coinbase/wallet-sdk-4.0-beta7';
-import { CoinbaseWalletSDK as CoinbaseWalletSDK40beta10 } from '@coinbase/wallet-sdk-4.0-beta10';
+import { CoinbaseWalletSDK as CoinbaseWalletSDK40beta9 } from '@coinbase/wallet-sdk-4.0-beta9';
 import React, { useEffect, useMemo } from 'react';
 
 type CBWSDKProviderProps = {
@@ -78,7 +78,7 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
     let cbwsdk;
     let preference;
     if (version === 'dev' || version === '4.0.0-beta.9') {
-      const SDK = version === 'dev' ? CoinbaseWalletSDKDev : CoinbaseWalletSDK40beta10;
+      const SDK = version === 'dev' ? CoinbaseWalletSDKDev : CoinbaseWalletSDK40beta9;
       cbwsdk = new SDK({
         appName: 'SDK Playground',
         appChainIds: [84532, 8452],
