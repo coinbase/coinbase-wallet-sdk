@@ -1,76 +1,26 @@
 # Coinbase Wallet SDK Migration Guide (v3 to v4)
 
-#### If you have any questions or feedback please [Join the Coinbase Developer Platform Discord Server!](https://discord.com/invite/cdp)
-
 ## `CoinbaseWalletSDK` changes
 
-- `CoinbaseWalletSDK.disconnect()` is deprecated
+- `CoinbaseWalletSDK.disconnect()` public instance method is deprecated
+  - still in place but only clears storage and does not reset WalletLink
   - dapps should call `CoinbaseWalletProvider.disconnect()` instead
-- `CoinbaseWalletSDK.setAppInfo()` is deprecated
+- `CoinbaseWalletSDK.setAppInfo()` public instance method is deprecated for non-extension use cases
   - Dapps should pass in `appName` and `appLogoUrl` via `CoinbaseWalletSDKOptions` at SDK initialization
-- `CoinbaseWalletSDK.makeWeb3Provider()` changes
-  - v3:
-    ```ts
-    makeWeb3Provider(jsonRpcUrl?: string, chainId?: number): CoinbaseWalletProvider
-    ```
-  - v4:
-    ```ts
-    makeWeb3Provider(preference: Preference = { options: 'all' }): ProviderInterface
-    ```
-    - `Preference` details
-      ```ts
-      interface Preference {
-        options: 'all' | 'smartWalletOnly' | 'eoaOnly';
-        keysUrl?: string;
-      }
-      ```
-      - `options`
-        - `'all'` show both smart wallet and EOA options
-        - `'smartWalletOnly'` Coinbase Wallet connection popup will only show smart wallet option
-        - `'eoaOnly'` Coinbase wallet connection popup will only show EOA option
-      - `keysUrl`
-        - You probably don't need this. Use only if you'd like to use a frontend other than `"https://keys.coinbase.com/connect"` as your connection popup.
-    - `ProviderInterface` details
-      ```ts
-      export interface ProviderInterface extends EventEmitter {
-        request<T>(args: RequestArguments): Promise<T>;
-        disconnect(): Promise<void>;
-        on(event: 'connect', listener: (info: ProviderConnectInfo) => void): this;
-        on(event: 'disconnect', listener: (error: ProviderRpcError) => void): this;
-        on(event: 'chainChanged', listener: (chainId: string) => void): this;
-        on(event: 'accountsChanged', listener: (accounts: string[]) => void): this;
-        on(event: 'message', listener: (message: ProviderMessage) => void): this;
-      }
-      ```
 
 ## `CoinbaseWalletSDKOptions` changes
 
-```ts
+```
 // v4
-type CoinbaseWalletSDKOptions = {
-  appName?: string | undefined;
-  appLogoUrl?: string | null | undefined;
-  appChainIds?: number[] | undefined;
-};
+export interface CoinbaseWalletSDKOptions {
+  appName: string;
+  appLogoUrl?: string;
+  chainIds?: number[];
+  smartWalletOnly?: boolean;
+}
 ```
 
-### New (v4 only):
-
-- `appChainIds?: number[]`
-  - An array of chain IDs your dapp supports
-  - The first chain in this array will be used as the default chain.
-  - Removes the need for non-mainnet dapps to request switching chains before making first request.
-  - Default value is `[1]` (mainnet)
-
-### No Change (v4 and v3)
-
-- `appName: string`
-  - Your dapp's name to display in wallet with requests
-- `appLogoUrl?: string`
-  - Your dapp's logo
-  - Favicon is used if unspecified
-
-### Deprecated (v3 only):
+### deprecated options from v3:
 
 - `enableMobileWalletLink` (enabled by default in v4)
 - `jsonRpcUrl`
@@ -82,17 +32,37 @@ type CoinbaseWalletSDKOptions = {
 - `reloadOnDisconnect`
 - `headlessMode`
 
+### new options included in v4:
+
+- `chainIds?: number[]`
+  - An array of chain ids your dapp supports
+  - The first chain in this array will be used as the default chain.
+  - Removes the need for non-mainnet dapps to request switching chains immediately.
+  - Default value is `[1]` (mainnet)
+- `smartWalletOnly?: boolean;`
+  - If `true`, hides options to connect via Coinbase Wallet mobile and Coinbase Wallet extension
+  - Default value is `false`
+
+### present in both v3 and v4
+
+- `appName: string`
+  - Your dapp's name to display in wallet with requests
+- `appLogoUrl?: string`
+  - Your dapp's logo
+  - Favicon is used if unspecified
+
 ## `CoinbaseWalletProvider` changes
 
 ### Eventing fix
 
 - The `connect` event has been fixed to be [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193#connect) compliant in v4.
   - `on(event: 'connect', listener: (info: ProviderConnectInfo) => void): this;`
-  - v3 returned `chainIdStr` erroneously - `interface ProviderConnectInfo {
+  - v3 returned `chainIdStr` - `interface ProviderConnectInfo {
  readonly chainIdStr: string;
 }`
-  - v4 returns `chainId` - `interface ProviderConnectInfo {
-readonly chainId: string;
+- v4 returns `chainId`
+  - `interface ProviderConnectInfo {
+ readonly chainId: string;
 }`
 
 ### Removed public instance properties
@@ -114,7 +84,7 @@ readonly chainId: string;
 - `disableReloadOnDisconnect`
 - `setProviderInfo`
 - `setAppInfo`
-- `close`
+- `close` - still in use for extension connections
 - `send`
 - `sendAsync`
 - `scanQRCode`
