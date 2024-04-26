@@ -20,10 +20,10 @@ This quickstart guide walks through building a dapp for Coinbase smart wallet us
    ```sh
    cd test-app-name
    ```
-1. **Add the following resolutions block to your `package.json` to force wagmi to use version `4.0.0-rc.1`**
+1. **Add the following resolutions block to your `package.json` to force wagmi to use version `4.0.0-beta.12`**
    ```json
    "resolutions": {
-       "@coinbase/wallet-sdk": "4.0.0-rc.1"
+       "@coinbase/wallet-sdk": "4.0.0-beta.12"
    },
    ```
 1. **Install dependencies**
