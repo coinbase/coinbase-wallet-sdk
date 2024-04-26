@@ -20,10 +20,10 @@ This quickstart guide walks through building a dapp for Coinbase smart wallet us
    ```sh
    cd test-app-name
    ```
-1. **Add the following resolutions block to your `package.json` to force wagmi to use version `4.0.0-beta.6`**
+1. **Add the following resolutions block to your `package.json` to force wagmi to use version `4.0.0-rc.1`**
    ```json
    "resolutions": {
-       "@coinbase/wallet-sdk": "4.0.0-beta.6"
+       "@coinbase/wallet-sdk": "4.0.0-rc.1"
    },
    ```
 1. **Install dependencies**
@@ -41,14 +41,18 @@ This quickstart guide walks through building a dapp for Coinbase smart wallet us
    - Edit `src/wagmi.ts` to look like this:
 
    ```typescript
-   // src/wagmi.ts
    import { http, createConfig } from 'wagmi';
    import { baseSepolia } from 'wagmi/chains';
    import { coinbaseWallet } from 'wagmi/connectors';
 
    export const config = createConfig({
      chains: [baseSepolia],
-     connectors: [coinbaseWallet({ appName: 'Create Wagmi', chainIds: [baseSepolia.id] })],
+     connectors: [
+       coinbaseWallet({
+         appName: 'Create Wagmi',
+         appChainIds: [baseSepolia.id],
+       }),
+     ],
      transports: {
        [baseSepolia.id]: http(),
      },
@@ -74,10 +78,8 @@ This quickstart guide walks through building a dapp for Coinbase smart wallet us
      - The first chain in this array will be used as the default chain.
      - Removes the need for non-mainnet dapps to request switching chains immediately.
      - Default value is `[1]` (mainnet), which is not supported by scw fe at this time.
-   - `smartWalletOnly?: boolean;`
-     - _Note: you will see typescript warnings since wagmi hasn't been upgraded to use Coinbase Wallet SDK v4 yet_
-     - If `true`, hides options to connect via Coinbase Wallet mobile and Coinbase Wallet extension
-     - Default value is `false`
+
+There is an option to allow users to connect via smart wallet only or EOA wallet only, but that option will not be available to use via wagmi until wagmi has released a new version with Coinbase wallet SDK v4. More details in the [Migration Guide](migration_guide.md)
 
 1. **In the test app, click the 'Coinbase Wallet' button to open the smart wallet popup and connect!**
 1. **Make more requests!**
