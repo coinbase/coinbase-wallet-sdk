@@ -32,10 +32,11 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    provider?.on('connect', async () => {
-      const chainId = await provider.request({ method: 'eth_chainId' });
-      setChainId(chainId);
+    provider?.on('connect', () => {
       setConnected(true);
+    });
+    provider?.on('chainChanged', (newChainId) => {
+      setChainId(newChainId);
     });
   }, [provider]);
 
