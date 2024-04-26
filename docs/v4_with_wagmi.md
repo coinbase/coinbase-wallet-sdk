@@ -93,7 +93,7 @@ This quickstart guide walks through building a dapp for Coinbase smart wallet us
 
 1. **Take a look at `src/App.tsx` to see how things work, and edit as needed**
 
-   - For example, you may want to show different content depending on connection status. You can accomplish that by adding these few lines before the return statement in App.tsx.
+   - For example, you may want to show different content depending on connection status. You can accomplish that by adding these few lines _before_ the return statement in App.tsx.
 
      ```ts
      // src/App.tsx
