@@ -1,21 +1,24 @@
-# Add to an existing app
+# Add smart wallet connectivity to an existing app with wagmi
 
-1. Force wagmi to use Coinbase wallet SDKv4 beta by adding this to your `package.json`
+- This quickstart guide walks through add smart wallet connectivity to an existing app.
+- If you'd like to create a new app with smart wallet connectivity, [here are the instructions](v4_with_wagmi.md).
+
+1. **Force wagmi to use Coinbase wallet SDKv4 beta by adding this to your `package.json`**
    ```ts
    "resolutions": {
        "@coinbase/wallet-sdk": "4.0.0-beta.12"
    },
    ```
-1. Install dependencies
+1. **Install dependencies**
    ```sh
    pnpm add wagmi viem@2.x @tanstack/react-query
    ```
-   - Double check your lock file ot ensure `v4.0.0-beta.12` is being used
-1. Run your app (command may vary depending on your scripts)
+   - If not using pnpm, double check your lock file ot ensure `v4.0.0-beta.12` is being used
+1. **Run your app (command may vary depending on your scripts)**
    ```sh
    pnpm start
    ```
-1. Create a `config.ts` file that looks like this
+1. **Create a `config.ts` file that looks like this**
 
    ```ts
    import { http, createConfig } from 'wagmi';
@@ -36,7 +39,7 @@
    });
    ```
 
-1. Wrap your app in wagmi and query client providers
+1. **Wrap your app in wagmi and query client providers**
 
    ```ts
    import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -55,7 +58,7 @@
    }
    ```
 
-1. Start using wagmi and Coinbase wallet v4 in AppContent.
+1. **Start using wagmi and Coinbase wallet v4 in AppContent.**
 
 - Here's an example to get started.
 
@@ -104,8 +107,15 @@
   }
   ```
 
-7. Click the Coinbase Wallet button to connect
+7. **Click the Coinbase Wallet button to connect**
 
-8. Make more requests!
+   - If you have the Coinbase wallet extension enabled, that will be the default connection method. Disable it to see the option to connect via smart wallet.
+   - The Coinbase wallet popup will allow users to choose their connection method:
+     - Create and connect a new smart wallet
+     - Connect with an existing smart wallet via passkey
+     - Connect with Coinbase Wallet mobile app via QR code scan
+   - Once connected, your app will display the connected status, wallet address, the current chainId, and a disconnect button.
 
-- See all wagmi hooks with examples here: https://wagmi.sh/react/api/hooks
+1. **Make more requests!**
+
+   - You can find everything you need here: https://wagmi.sh/react/api/hooks

@@ -1,6 +1,7 @@
-# Using Coinbase Wallet SDK v4 beta with wagmi
+# Create a new app with Coinbase Wallet SDK v4 beta and wagmi
 
-This quickstart guide walks through building a dapp for Coinbase smart wallet using wagmi.
+- This quickstart guide walks through building a dapp for Coinbase smart wallet using wagmi.
+- If you'd like to add smart wallet connectivity to an existing app, [here are the instructions](add_to_existing_app.md).
 
 #### If you have any questions or feedback please [Join the Coinbase Developer Platform Discord Server!](https://discord.com/invite/cdp)
 
