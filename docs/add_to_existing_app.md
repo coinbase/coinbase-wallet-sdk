@@ -18,7 +18,7 @@
    ```sh
    pnpm start
    ```
-1. **Create a `config.ts` file that looks like this**
+1. **Create a `config.ts` file that looks like this (`config.js` if not using typescript)**
 
    ```ts
    import { http, createConfig } from 'wagmi';
@@ -47,6 +47,8 @@
    import { config } from './config';
    import { AppContent } from './AppContent';
 
+   const queryClient = new QueryClient();
+
    function App() {
      return (
        <WagmiProvider config={config}>
@@ -58,7 +60,7 @@
    }
    ```
 
-1. **Start using wagmi and Coinbase wallet v4 in AppContent.**
+1. **Start using wagmi and Coinbase wallet v4 in your `AppContent` component.**
 
 - Here's an example to get started.
 
