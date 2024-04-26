@@ -32,10 +32,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     return this.accounts.length > 0;
   }
 
-  public get chainId() {
-    return this.chain.id;
-  }
-
   public async request<T>(args: RequestArguments): Promise<T> {
     const invalidArgsError = checkErrorForInvalidRequestArgs(args);
     if (invalidArgsError) throw invalidArgsError;
