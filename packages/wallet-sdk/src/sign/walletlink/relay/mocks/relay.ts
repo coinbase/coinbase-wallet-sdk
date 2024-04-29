@@ -1,13 +1,18 @@
 import { Web3Method as SupportedWeb3Method, Web3Method } from '../type/Web3Method';
 import { Web3Response } from '../type/Web3Response';
+import { WalletLinkRelay } from '../WalletLinkRelay';
 import { MOCK_ADDERESS, MOCK_TX } from './fixtures';
 import { AddressString, HexString } from ':core/type';
+
+export function createWalletLinkRelayMock(): WalletLinkRelay {
+  return mock as unknown as WalletLinkRelay;
+}
 
 function makeMockReturn<T extends SupportedWeb3Method>(response: Web3Response<T>) {
   return Promise.resolve<Web3Response<T>>(response);
 }
 
-export const mockedRelay = {
+const mock = {
   resetAndReload(): void {},
   requestEthereumAccounts() {
     return makeMockReturn({
