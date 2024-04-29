@@ -40,14 +40,6 @@ export class WalletLinkSession {
     return null;
   }
 
-  /**
-   * Takes in a session ID and returns the sha256 hash of it.
-   * @param sessionId session ID
-   */
-  public static hash(sessionId: string): string {
-    return new sha256().update(sessionId).digest('hex');
-  }
-
   public get id(): string {
     return this._id;
   }

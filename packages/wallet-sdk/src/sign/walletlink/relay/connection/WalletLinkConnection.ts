@@ -1,6 +1,5 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
-import { DiagnosticLogger, EVENTS } from '../DiagnosticLogger';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../RelayAbstract';
 import { ClientMessage } from '../type/ClientMessage';
 import { ServerMessage, ServerMessageType } from '../type/ServerMessage';
@@ -28,7 +27,6 @@ interface WalletLinkConnectionParams {
   session: WalletLinkSession;
   linkAPIUrl: string;
   listener: WalletLinkConnectionUpdateListener;
-  diagnostic?: DiagnosticLogger;
   WebSocketClass?: typeof WebSocket;
 }
 
@@ -43,7 +41,6 @@ export class WalletLinkConnection {
   private readonly session: WalletLinkSession;
 
   private listener?: WalletLinkConnectionUpdateListener;
-  private diagnostic?: DiagnosticLogger;
   private cipher: WalletLinkCipher;
   private ws: WalletLinkWebSocket;
   private http: WalletLinkHTTP;
@@ -59,22 +56,15 @@ export class WalletLinkConnection {
     session,
     linkAPIUrl,
     listener,
-    diagnostic,
     WebSocketClass = WebSocket,
   }: WalletLinkConnectionParams) {
     this.session = session;
     this.cipher = new WalletLinkCipher(session.secret);
-    this.diagnostic = diagnostic;
     this.listener = listener;
 
     const ws = new WalletLinkWebSocket(`${linkAPIUrl}/rpc`, WebSocketClass);
     ws.setConnectionStateListener(async (state) => {
       // attempt to reconnect every 5 seconds when disconnected
-      this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
-        state,
-        sessionIdHash: WalletLinkSession.hash(session.id),
-      });
-
       let connected = false;
       switch (state) {
         case ConnectionState.DISCONNECTED:
@@ -142,13 +132,6 @@ export class WalletLinkConnection {
         case 'IsLinkedOK':
         case 'Linked': {
           const linked = m.type === 'IsLinkedOK' ? m.linked : undefined;
-          this.diagnostic?.log(EVENTS.LINKED, {
-            sessionIdHash: WalletLinkSession.hash(session.id),
-            linked,
-            type: m.type,
-            onlineGuests: m.onlineGuests,
-          });
-
           this.linked = linked || m.onlineGuests > 0;
           break;
         }
@@ -156,10 +139,6 @@ export class WalletLinkConnection {
         // handle session config updates
         case 'GetSessionConfigOK':
         case 'SessionConfigUpdated': {
-          this.diagnostic?.log(EVENTS.SESSION_CONFIG_RECEIVED, {
-            sessionIdHash: WalletLinkSession.hash(session.id),
-            metadata_keys: m && m.metadata ? Object.keys(m.metadata) : undefined,
-          });
           this.handleSessionMetadataUpdated(m.metadata);
           break;
         }
@@ -187,9 +166,6 @@ export class WalletLinkConnection {
     if (this.destroyed) {
       throw new Error('instance is destroyed');
     }
-    this.diagnostic?.log(EVENTS.STARTED_CONNECTING, {
-      sessionIdHash: WalletLinkSession.hash(this.session.id),
-    });
     this.ws.connect();
   }
 
@@ -199,12 +175,7 @@ export class WalletLinkConnection {
    */
   public destroy(): void {
     this.destroyed = true;
-
     this.ws.disconnect();
-    this.diagnostic?.log(EVENTS.DISCONNECTED, {
-      sessionIdHash: WalletLinkSession.hash(this.session.id),
-    });
-
     this.listener = undefined;
   }
 
@@ -278,18 +249,13 @@ export class WalletLinkConnection {
       return;
     }
 
-    try {
+    {
       const decryptedData = await this.cipher.decrypt(m.data);
       const message = JSON.parse(decryptedData);
 
       if (message.type !== 'WEB3_RESPONSE') return;
 
       this.listener?.handleWeb3ResponseMessage(message);
-    } catch {
-      this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-        message: 'Had error decrypting',
-        value: 'incomingEvent',
-      });
     }
   }
 
@@ -484,33 +450,19 @@ export class WalletLinkConnection {
     if (__destroyed !== '1') return;
 
     this.listener?.resetAndReload();
-    this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
-      alreadyDestroyed: this.isDestroyed,
-      sessionIdHash: WalletLinkSession.hash(this.session.id),
-    });
   };
 
   private handleAccountUpdated = async (encryptedEthereumAddress: string) => {
-    try {
+    {
       const address = await this.cipher.decrypt(encryptedEthereumAddress);
       this.listener?.accountUpdated(address);
-    } catch {
-      this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-        message: 'Had error decrypting',
-        value: 'selectedAddress',
-      });
     }
   };
 
   private handleMetadataUpdated = async (key: string, encryptedMetadataValue: string) => {
-    try {
+    {
       const decryptedValue = await this.cipher.decrypt(encryptedMetadataValue);
       this.listener?.metadataUpdated(key, decryptedValue);
-    } catch {
-      this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-        message: 'Had error decrypting',
-        value: key,
-      });
     }
   };
 
@@ -523,15 +475,10 @@ export class WalletLinkConnection {
   };
 
   private handleChainUpdated = async (encryptedChainId: string, encryptedJsonRpcUrl: string) => {
-    try {
+    {
       const chainId = await this.cipher.decrypt(encryptedChainId);
       const jsonRpcUrl = await this.cipher.decrypt(encryptedJsonRpcUrl);
       this.listener?.chainUpdated(chainId, jsonRpcUrl);
-    } catch {
-      this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-        message: 'Had error decrypting',
-        value: 'chainId|jsonRpcUrl',
-      });
     }
   };
 }

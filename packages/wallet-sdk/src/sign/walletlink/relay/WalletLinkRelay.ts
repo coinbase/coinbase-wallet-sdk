@@ -4,7 +4,6 @@ import {
   WalletLinkConnection,
   WalletLinkConnectionUpdateListener,
 } from './connection/WalletLinkConnection';
-import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
 import { CancelablePromise, LOCAL_STORAGE_ADDRESSES_KEY, RelayAbstract } from './RelayAbstract';
 import { RelayEventManager } from './RelayEventManager';
 import { EthereumTransactionParams } from './type/EthereumTransactionParams';
@@ -25,7 +24,6 @@ import { bigIntStringFromBigInt, hexStringFromBuffer, randomBytesHex } from ':co
 export interface WalletLinkRelayOptions {
   linkAPIUrl: string;
   storage: ScopedLocalStorage;
-  diagnosticLogger?: DiagnosticLogger;
   reloadOnDisconnect?: boolean;
 }
 
@@ -36,7 +34,6 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
   protected readonly storage: ScopedLocalStorage;
   private _session: WalletLinkSession;
   private readonly relayEventManager: RelayEventManager;
-  protected readonly diagnostic?: DiagnosticLogger;
   protected connection: WalletLinkConnection;
   private accountsCallback: ((account: string[], isDisconnect?: boolean) => void) | null = null;
   private chainCallbackParams = { chainId: '', jsonRpcUrl: '' }; // to implement distinctUntilChanged
@@ -66,8 +63,6 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
 
     this.relayEventManager = new RelayEventManager();
 
-    this.diagnostic = options.diagnosticLogger;
-
     this._reloadOnDisconnect = options.reloadOnDisconnect ?? false;
 
     this.ui = ui;
@@ -77,11 +72,10 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
     const session =
       WalletLinkSession.load(this.storage) || new WalletLinkSession(this.storage).save();
 
-    const { linkAPIUrl, diagnostic } = this;
+    const { linkAPIUrl } = this;
     const connection = new WalletLinkConnection({
       session,
       linkAPIUrl,
-      diagnostic,
       listener: this,
     });
 
@@ -108,10 +102,6 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
       const wasConnectedViaStandalone = this.storage.getItem('IsStandaloneSigning') === 'true';
       if (addresses[0] !== '' && !linked && this._session.linked && !wasConnectedViaStandalone) {
         this.isUnlinkedErrorState = true;
-        const sessionIdHash = this.getSessionIdHash();
-        this.diagnostic?.log(EVENTS.UNLINKED_ERROR_STATE, {
-          sessionIdHash,
-        });
       }
     }
   };
@@ -170,11 +160,6 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
       new Promise((resolve) => setTimeout(() => resolve(null), 1000)),
     ])
       .then(() => {
-        this.diagnostic?.log(EVENTS.SESSION_STATE_CHANGE, {
-          method: 'relay::resetAndReload',
-          sessionMetadataChange: '__destroyed, 1',
-          sessionIdHash: this.getSessionIdHash(),
-        });
         this.connection.destroy();
         /**
          * Only clear storage if the session id we have in memory matches the one on disk
@@ -187,11 +172,6 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
         const storedSession = WalletLinkSession.load(this.storage);
         if (storedSession?.id === this._session.id) {
           this.storage.clear();
-        } else if (storedSession) {
-          this.diagnostic?.log(EVENTS.SKIPPED_CLEARING_SESSION, {
-            sessionIdHash: this.getSessionIdHash(),
-            storedSessionIdHash: WalletLinkSession.hash(storedSession.id),
-          });
         }
 
         if (this._reloadOnDisconnect) {
@@ -210,13 +190,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
 
         this.attachUI();
       })
-      .catch((err: string) => {
-        this.diagnostic?.log(EVENTS.FAILURE, {
-          method: 'relay::resetAndReload',
-          message: `failed to reset and reload with ${err}`,
-          sessionIdHash: this.getSessionIdHash(),
-        });
-      });
+      .catch((_) => {});
   }
 
   public setAppInfo(appName: string, appLogoUrl: string | null): void {
@@ -395,25 +369,8 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
 
   protected publishWeb3RequestEvent(id: string, request: Web3Request): void {
     const message: WalletLinkEventData = { type: 'WEB3_REQUEST', id, request };
-    const storedSession = WalletLinkSession.load(this.storage);
-    this.diagnostic?.log(EVENTS.WEB3_REQUEST, {
-      eventId: message.id,
-      method: `relay::${request.method}`,
-      sessionIdHash: this.getSessionIdHash(),
-      storedSessionIdHash: storedSession ? WalletLinkSession.hash(storedSession.id) : '',
-      isSessionMismatched: (storedSession?.id !== this._session.id).toString(),
-    });
-
     this.publishEvent('Web3Request', message, true)
-      .then((_) => {
-        this.diagnostic?.log(EVENTS.WEB3_REQUEST_PUBLISHED, {
-          eventId: message.id,
-          method: `relay::${request.method}`,
-          sessionIdHash: this.getSessionIdHash(),
-          storedSessionIdHash: storedSession ? WalletLinkSession.hash(storedSession.id) : '',
-          isSessionMismatched: (storedSession?.id !== this._session.id).toString(),
-        });
-      })
+      .then((_) => {})
       .catch((err) => {
         this.handleWeb3ResponseMessage({
           type: 'WEB3_RESPONSE',
@@ -477,11 +434,6 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
   handleWeb3ResponseMessage(message: WalletLinkResponseEventData) {
     const { response } = message;
 
-    this.diagnostic?.log(EVENTS.WEB3_RESPONSE, {
-      eventId: message.id,
-      method: `relay::${response.method}`,
-      sessionIdHash: this.getSessionIdHash(),
-    });
     if (response.method === 'requestEthereumAccounts') {
       WalletLinkRelay.accountRequestCallbackIds.forEach((id) =>
         this.invokeCallback({ ...message, id })
@@ -701,9 +653,5 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
     });
 
     return { promise, cancel };
-  }
-
-  private getSessionIdHash(): string {
-    return WalletLinkSession.hash(this._session.id);
   }
 }
