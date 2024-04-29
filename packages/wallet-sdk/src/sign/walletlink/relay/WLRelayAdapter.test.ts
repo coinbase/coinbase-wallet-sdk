@@ -1,7 +1,7 @@
 import { fireEvent } from '@testing-library/preact';
 
 import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from './mocks/fixtures';
-import { mockedWalletLink } from './mocks/relay';
+import { mockedWalletLinkRelay } from './mocks/relay';
 import { LOCAL_STORAGE_ADDRESSES_KEY, WalletLinkRelay } from './WalletLinkRelay';
 import { WLRelayAdapter } from './WLRelayAdapter';
 import { standardErrorCodes, standardErrors } from ':core/error';
@@ -10,7 +10,7 @@ import { AddressString } from ':core/type';
 
 jest.mock('./WalletLinkRelay', () => {
   return {
-    WalletLinkRelay: mockedWalletLink,
+    WalletLinkRelay: mockedWalletLinkRelay,
   };
 });
 
@@ -45,7 +45,7 @@ describe('LegacyProvider', () => {
   });
 
   it('handles close', async () => {
-    const relay = mockedWalletLink();
+    const relay = mockedWalletLinkRelay();
     const spy = jest.spyOn(relay, 'resetAndReload');
 
     const provider = createAdapter({ relay });
@@ -399,7 +399,7 @@ describe('LegacyProvider', () => {
     });
 
     test('wallet_switchEthereumChain w/ error code', async () => {
-      const relay = mockedWalletLink();
+      const relay = mockedWalletLinkRelay();
       jest
         .spyOn(relay, 'switchEthereumChain')
         .mockReturnValue(Promise.reject(standardErrors.provider.unsupportedChain()));
