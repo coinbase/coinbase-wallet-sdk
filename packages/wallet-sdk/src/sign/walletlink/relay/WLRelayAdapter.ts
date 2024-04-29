@@ -4,11 +4,12 @@
 
 import eip712 from '../../../vendor-js/eth-eip712-util';
 import { StateUpdateListener } from '../../interface';
+import { LOCAL_STORAGE_ADDRESSES_KEY } from './constants';
 import { RelayEventManager } from './RelayEventManager';
 import { EthereumTransactionParams } from './type/EthereumTransactionParams';
 import { JSONRPCRequest, JSONRPCResponse } from './type/JSONRPC';
 import { isErrorResponse, Web3Response } from './type/Web3Response';
-import { LOCAL_STORAGE_ADDRESSES_KEY, WalletLinkRelay } from './WalletLinkRelay';
+import { WalletLinkRelay } from './WalletLinkRelay';
 import { standardErrorCodes, standardErrors } from ':core/error';
 import { RequestArguments } from ':core/provider/interface';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';

@@ -1,8 +1,9 @@
 import { fireEvent } from '@testing-library/preact';
 
+import { LOCAL_STORAGE_ADDRESSES_KEY } from './constants';
 import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from './mocks/fixtures';
 import { mockedWalletLinkRelay } from './mocks/relay';
-import { LOCAL_STORAGE_ADDRESSES_KEY, WalletLinkRelay } from './WalletLinkRelay';
+import { WalletLinkRelay } from './WalletLinkRelay';
 import { WLRelayAdapter } from './WLRelayAdapter';
 import { standardErrorCodes, standardErrors } from ':core/error';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';

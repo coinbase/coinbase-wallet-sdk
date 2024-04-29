@@ -1,3 +1,4 @@
+import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../constants';
 import { WalletLinkSession } from '../type/WalletLinkSession';
 import { WalletLinkSessionConfig } from '../type/WalletLinkSessionConfig';
 import { WalletLinkCipher } from './WalletLinkCipher';
@@ -69,7 +70,7 @@ describe('WalletLinkConnection', () => {
       invoke_handleSessionMetadataUpdated({ WalletUsername: newUsername });
 
       expect(listener_metadataUpdatedSpy).toHaveBeenCalledWith(
-        'walletUsername',
+        WALLET_USER_NAME_KEY,
         await decryptMock(newUsername)
       );
     });
@@ -82,7 +83,7 @@ describe('WalletLinkConnection', () => {
       invoke_handleSessionMetadataUpdated({ AppVersion: newAppVersion });
 
       expect(listener_metadataUpdatedSpy).toHaveBeenCalledWith(
-        'AppVersion',
+        APP_VERSION_KEY,
         await decryptMock(newAppVersion)
       );
     });

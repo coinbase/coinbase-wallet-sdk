@@ -4,6 +4,7 @@ import {
   WalletLinkConnection,
   WalletLinkConnectionUpdateListener,
 } from './connection/WalletLinkConnection';
+import { LOCAL_STORAGE_ADDRESSES_KEY } from './constants';
 import { RelayEventManager } from './RelayEventManager';
 import { EthereumTransactionParams } from './type/EthereumTransactionParams';
 import { WalletLinkEventData, WalletLinkResponseEventData } from './type/WalletLinkEventData';
@@ -19,8 +20,6 @@ import { standardErrors } from ':core/error';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { AddressString, IntNumber, RegExpString } from ':core/type';
 import { bigIntStringFromBigInt, hexStringFromBuffer, randomBytesHex } from ':core/util';
-
-export const LOCAL_STORAGE_ADDRESSES_KEY = 'Addresses';
 
 interface WalletLinkRelayOptions {
   linkAPIUrl: string;
