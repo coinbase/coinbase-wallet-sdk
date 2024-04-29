@@ -4,7 +4,7 @@
 
 import eip712 from '../../../vendor-js/eth-eip712-util';
 import { StateUpdateListener } from '../../interface';
-import { LOCAL_STORAGE_ADDRESSES_KEY } from './RelayAbstract';
+import { LOCAL_STORAGE_ADDRESSES_KEY } from './constants';
 import { RelayEventManager } from './RelayEventManager';
 import { EthereumTransactionParams } from './type/EthereumTransactionParams';
 import { JSONRPCRequest, JSONRPCResponse } from './type/JSONRPC';
@@ -154,7 +154,7 @@ export class WLRelayAdapter {
       decimals,
       image,
       chainId?.toString()
-    ).promise;
+    );
 
     if (isErrorResponse(result)) return false;
 
@@ -180,7 +180,7 @@ export class WLRelayAdapter {
     const relay = this.initializeRelay();
 
     if (!this._isAuthorized()) {
-      await relay.requestEthereumAccounts().promise;
+      await relay.requestEthereumAccounts();
     }
 
     const res = await relay.addEthereumChain(
@@ -190,7 +190,7 @@ export class WLRelayAdapter {
       blockExplorerUrls,
       chainName,
       nativeCurrency
-    ).promise;
+    );
 
     if (isErrorResponse(res)) return false;
 
@@ -206,7 +206,7 @@ export class WLRelayAdapter {
     const res = await relay.switchEthereumChain(
       chainId.toString(10),
       this.selectedAddress || undefined
-    ).promise;
+    );
 
     // backward compatibility
     if (isErrorResponse(res)) {
@@ -486,8 +486,7 @@ export class WLRelayAdapter {
 
     try {
       const relay = this.initializeRelay();
-      const res = await relay.signEthereumMessage(message, address, addPrefix, typedDataJson)
-        .promise;
+      const res = await relay.signEthereumMessage(message, address, addPrefix, typedDataJson);
       if (isErrorResponse(res)) {
         throw new Error(res.errorMessage);
       }
@@ -506,7 +505,7 @@ export class WLRelayAdapter {
     addPrefix: boolean
   ): Promise<JSONRPCResponse> {
     const relay = this.initializeRelay();
-    const res = await relay.ethereumAddressFromSignedMessage(message, signature, addPrefix).promise;
+    const res = await relay.ethereumAddressFromSignedMessage(message, signature, addPrefix);
     if (isErrorResponse(res)) {
       throw new Error(res.errorMessage);
     }
@@ -552,7 +551,7 @@ export class WLRelayAdapter {
     let res: Web3Response<'requestEthereumAccounts'>;
     try {
       const relay = this.initializeRelay();
-      res = await relay.requestEthereumAccounts().promise;
+      res = await relay.requestEthereumAccounts();
       if (isErrorResponse(res)) {
         throw new Error(res.errorMessage);
       }
@@ -606,7 +605,7 @@ export class WLRelayAdapter {
     const tx = this._prepareTransactionParams((params[0] as any) || {});
     try {
       const relay = this.initializeRelay();
-      const res = await relay.signEthereumTransaction(tx).promise;
+      const res = await relay.signEthereumTransaction(tx);
       if (isErrorResponse(res)) {
         throw new Error(res.errorMessage);
       }
@@ -622,7 +621,7 @@ export class WLRelayAdapter {
   private async _eth_sendRawTransaction(params: unknown[]): Promise<JSONRPCResponse> {
     const signedTransaction = ensureBuffer(params[0]);
     const relay = this.initializeRelay();
-    const res = await relay.submitEthereumTransaction(signedTransaction, this.getChainId()).promise;
+    const res = await relay.submitEthereumTransaction(signedTransaction, this.getChainId());
     if (isErrorResponse(res)) {
       throw new Error(res.errorMessage);
     }
@@ -634,7 +633,7 @@ export class WLRelayAdapter {
     const tx = this._prepareTransactionParams((params[0] as any) || {});
     try {
       const relay = this.initializeRelay();
-      const res = await relay.signAndSubmitEthereumTransaction(tx).promise;
+      const res = await relay.signAndSubmitEthereumTransaction(tx);
       if (isErrorResponse(res)) {
         throw new Error(res.errorMessage);
       }
