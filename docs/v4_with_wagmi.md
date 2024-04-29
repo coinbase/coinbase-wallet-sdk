@@ -36,8 +36,8 @@ This quickstart guide walks through building a dapp for Coinbase smart wallet us
    ```
 1. **Configure the coinbaseWallet connector**
 
-   - Only to `baseSepolia` is supported by http://keys.coinbase.com at this time.
-   - Remove unecessary connectors
+   - Only `baseSepolia` is supported by http://keys.coinbase.com at this time.
+   - Remove unecessary connectors.
    - Edit `src/wagmi.ts` to look like this:
 
    ```typescript
