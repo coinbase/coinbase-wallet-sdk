@@ -4,7 +4,7 @@ import { WalletLinkRelay } from '../WalletLinkRelay';
 import { MOCK_ADDERESS, MOCK_TX } from './fixtures';
 import { AddressString, HexString } from ':core/type';
 
-export function createWalletLinkRelayMock(): WalletLinkRelay {
+export function mockedWalletLink(): WalletLinkRelay {
   return mock as unknown as WalletLinkRelay;
 }
 
