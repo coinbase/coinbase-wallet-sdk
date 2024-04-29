@@ -1,6 +1,5 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
-import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../RelayAbstract';
 import { ClientMessage } from '../type/ClientMessage';
 import { ServerMessage, ServerMessageType } from '../type/ServerMessage';
 import { WalletLinkEventData, WalletLinkResponseEventData } from '../type/WalletLinkEventData';
@@ -13,6 +12,8 @@ import { IntNumber } from ':core/type';
 
 const HEARTBEAT_INTERVAL = 10000;
 const REQUEST_TIMEOUT = 60000;
+const WALLET_USER_NAME_KEY = 'walletUsername';
+const APP_VERSION_KEY = 'AppVersion';
 
 export interface WalletLinkConnectionUpdateListener {
   linkedUpdated: (linked: boolean) => void;

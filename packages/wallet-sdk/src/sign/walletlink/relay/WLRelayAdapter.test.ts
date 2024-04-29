@@ -1,23 +1,27 @@
 import { fireEvent } from '@testing-library/preact';
 
 import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from './mocks/fixtures';
-import { MockRelayClass } from './mocks/relay';
-import { LOCAL_STORAGE_ADDRESSES_KEY } from './RelayAbstract';
+import { mockedRelay } from './mocks/relay';
+import { LOCAL_STORAGE_ADDRESSES_KEY, WalletLinkRelay } from './WalletLinkRelay';
 import { WLRelayAdapter } from './WLRelayAdapter';
 import { standardErrorCodes, standardErrors } from ':core/error';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { AddressString } from ':core/type';
 
+function mockedWalletLinkRelay(): WalletLinkRelay {
+  return mockedRelay as unknown as WalletLinkRelay;
+}
+
 jest.mock('./WalletLinkRelay', () => {
   return {
-    WalletLinkRelay: MockRelayClass,
+    WalletLinkRelay: mockedWalletLinkRelay,
   };
 });
 
 const testWalletLinkUrl = 'http://test-url';
 const testStorage = new ScopedLocalStorage('walletlink', testWalletLinkUrl);
 
-const createAdapter = (options?: { relay?: MockRelayClass }) => {
+const createAdapter = (options?: { relay?: WalletLinkRelay }) => {
   const adapter = new WLRelayAdapter({
     appName: 'test',
     appLogoUrl: null,
@@ -45,7 +49,7 @@ describe('LegacyProvider', () => {
   });
 
   it('handles close', async () => {
-    const relay = new MockRelayClass();
+    const relay = mockedWalletLinkRelay();
     const spy = jest.spyOn(relay, 'resetAndReload');
 
     const provider = createAdapter({ relay });
@@ -399,12 +403,10 @@ describe('LegacyProvider', () => {
     });
 
     test('wallet_switchEthereumChain w/ error code', async () => {
-      const relay = new MockRelayClass();
-
-      jest.spyOn(relay, 'switchEthereumChain').mockReturnValue({
-        cancel: () => {},
-        promise: Promise.reject(standardErrors.provider.unsupportedChain()),
-      });
+      const relay = mockedWalletLinkRelay();
+      jest
+        .spyOn(relay, 'switchEthereumChain')
+        .mockReturnValue(Promise.reject(standardErrors.provider.unsupportedChain()));
       const localProvider = createAdapter({ relay });
 
       await expect(() => {

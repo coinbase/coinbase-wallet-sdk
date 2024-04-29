@@ -3,10 +3,9 @@
 import { WalletLinkCipher } from './connection/WalletLinkCipher';
 import { WalletLinkConnection } from './connection/WalletLinkConnection';
 import { WalletLinkWebSocket } from './connection/WalletLinkWebSocket';
-import { WALLET_USER_NAME_KEY } from './RelayAbstract';
 import { ServerMessage } from './type/ServerMessage';
 import { WalletLinkSessionConfig } from './type/WalletLinkSessionConfig';
-import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay';
+import { WalletLinkRelay } from './WalletLinkRelay';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 
 const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`"decrypted ${text}"`));
@@ -14,7 +13,7 @@ const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`"dec
 jest.spyOn(WalletLinkCipher.prototype, 'decrypt').mockImplementation(decryptMock);
 
 describe('WalletLinkRelay', () => {
-  const options: WalletLinkRelayOptions = {
+  const options = {
     linkAPIUrl: 'http://link-api-url',
     storage: new ScopedLocalStorage('walletlink', 'test'),
   };
@@ -101,7 +100,7 @@ describe('WalletLinkRelay', () => {
       });
 
       expect(metadataUpdatedSpy).toHaveBeenCalledWith(
-        WALLET_USER_NAME_KEY,
+        'walletUsername',
         await decryptMock(sessionConfig.metadata.WalletUsername)
       );
     });
