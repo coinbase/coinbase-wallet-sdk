@@ -59,7 +59,7 @@ describe('WalletLinkRelay', () => {
 
       const handleWeb3ResponseMessageSpy = jest
         .spyOn(relay, 'handleWeb3ResponseMessage')
-        .mockReturnValueOnce();
+        .mockReturnValue();
 
       (relay as any).connection.ws.incomingDataListener?.(serverMessageEvent);
 
