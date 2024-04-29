@@ -72,7 +72,7 @@ This quickstart guide walks through building a dapp for Coinbase smart wallet us
    - `appLogoUrl?: string`
      - Your dapp's logo
      - Favicon is used if unspecified
-   - `chainIds?: number[]`
+   - `appChainIds?: number[]`
 
      - _Note: you will see typescript warnings since wagmi hasn't been upgraded to use Coinbase Wallet SDK v4 yet_
      - An array of chain ids your dapp supports
