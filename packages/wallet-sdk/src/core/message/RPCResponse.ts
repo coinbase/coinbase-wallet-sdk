@@ -1,12 +1,4 @@
-import { SerializedEthereumRpcError } from ':core/error';
-
-type ActionResult<T> =
-  | {
-      value: T;
-    }
-  | {
-      error: SerializedEthereumRpcError;
-    };
+import { ActionResult } from './ActionResult';
 
 export type RPCResponse<T> = {
   result: ActionResult<T>; // JSON-RPC result

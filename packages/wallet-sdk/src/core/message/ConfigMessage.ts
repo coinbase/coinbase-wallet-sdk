@@ -1,4 +1,4 @@
-import { Message, MessageID } from './Message';
+import { Message, MessageID } from '.';
 
 export interface ConfigUpdateMessage extends Message {
   event: ConfigEvent;
