@@ -3,7 +3,6 @@ import { SCWKeyManager } from './SCWKeyManager';
 import { SCWStateManager } from './SCWStateManager';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { standardErrors } from ':core/error';
-import { createMessage } from ':core/message';
 import { Action, SupportedEthereumMethods, SwitchEthereumChainAction } from ':core/message/Action';
 import {
   decryptContent,
@@ -11,6 +10,7 @@ import {
   exportKeyToHexString,
   importKeyFromHexString,
 } from ':core/message/Cipher';
+import { createMessage } from ':core/message/Message';
 import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage';
 import { RPCResponse } from ':core/message/RPCResponse';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
