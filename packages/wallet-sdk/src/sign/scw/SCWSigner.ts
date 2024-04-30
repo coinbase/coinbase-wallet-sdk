@@ -4,7 +4,6 @@ import { SCWStateManager } from './SCWStateManager';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { standardErrors } from ':core/error';
 import { createMessage, RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
-import { SupportedEthereumMethods } from ':core/message/Action';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
 import { ensureIntNumber } from ':core/type/util';
@@ -51,7 +50,7 @@ export class SCWSigner implements Signer {
 
     const handshakeMessage = await this.createRequestMessage({
       handshake: {
-        method: SupportedEthereumMethods.EthRequestAccounts,
+        method: 'eth_requestAccounts',
         params: this.metadata,
       },
     });
@@ -65,7 +64,7 @@ export class SCWSigner implements Signer {
     await this.keyManager.setPeerPublicKey(peerPublicKey);
 
     const decrypted = await this.decryptResponseMessage<AddressString[]>(response);
-    this.updateInternalState({ method: SupportedEthereumMethods.EthRequestAccounts }, decrypted);
+    this.updateInternalState({ method: 'eth_requestAccounts' }, decrypted);
 
     const result = decrypted.result;
     if ('error' in result) throw result.error;
@@ -98,7 +97,7 @@ export class SCWSigner implements Signer {
 
   private tryLocalHandling<T>(request: RequestArguments): T | undefined {
     switch (request.method) {
-      case SupportedEthereumMethods.WalletSwitchEthereumChain: {
+      case 'wallet_switchEthereumChain': {
         const params = request.params as SwitchEthereumChainParam;
         if (!params || !params[0]?.chainId) {
           throw standardErrors.rpc.invalidParams();
@@ -109,7 +108,7 @@ export class SCWSigner implements Signer {
         // https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
         return switched ? (null as T) : undefined;
       }
-      case SupportedEthereumMethods.WalletGetCapabilities: {
+      case 'wallet_getCapabilities': {
         const walletCapabilities = this.stateManager.walletCapabilities;
         if (!walletCapabilities) {
           // This should never be the case for scw connections as capabilities are set during handshake
@@ -189,12 +188,12 @@ export class SCWSigner implements Signer {
     if ('error' in result) return;
 
     switch (request.method) {
-      case SupportedEthereumMethods.EthRequestAccounts: {
+      case 'eth_requestAccounts': {
         const accounts = result.value as AddressString[];
         this.stateManager.updateAccounts(accounts);
         break;
       }
-      case SupportedEthereumMethods.WalletSwitchEthereumChain: {
+      case 'wallet_switchEthereumChain': {
         // "return null if the request was successful"
         // https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
         if (result.value !== null) return;

@@ -1,7 +1,9 @@
 import { EventEmitter } from 'eventemitter3';
 
+import { Method } from './method';
+
 export interface RequestArguments {
-  readonly method: string;
+  readonly method: Method | string;
   readonly params?: readonly unknown[] | object;
 }
 
