@@ -4,7 +4,7 @@ import { SCWStateManager } from './SCWStateManager';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { standardErrors } from ':core/error';
 import { createMessage, RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
-import { Action, SupportedEthereumMethods, SwitchEthereumChainAction } from ':core/message/Action';
+import { SupportedEthereumMethods } from ':core/message/Action';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
 import { ensureIntNumber } from ':core/type/util';
@@ -14,6 +14,12 @@ import {
   exportKeyToHexString,
   importKeyFromHexString,
 } from ':util/cipher';
+
+type SwitchEthereumChainParam = [
+  {
+    chainId: `0x${string}`; // Hex chain id
+  },
+];
 
 export class SCWSigner implements Signer {
   private readonly metadata: AppMetadata;
@@ -93,7 +99,7 @@ export class SCWSigner implements Signer {
   private tryLocalHandling<T>(request: RequestArguments): T | undefined {
     switch (request.method) {
       case SupportedEthereumMethods.WalletSwitchEthereumChain: {
-        const params = request.params as SwitchEthereumChainAction['params'];
+        const params = request.params as SwitchEthereumChainParam;
         if (!params || !params[0]?.chainId) {
           throw standardErrors.rpc.invalidParams();
         }
@@ -128,7 +134,7 @@ export class SCWSigner implements Signer {
 
     const encrypted = await encryptContent(
       {
-        action: request as Action,
+        action: request,
         chainId: this.stateManager.activeChain.id,
       },
       sharedSecret
@@ -193,7 +199,7 @@ export class SCWSigner implements Signer {
         // https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
         if (result.value !== null) return;
 
-        const params = request.params as SwitchEthereumChainAction['params'];
+        const params = request.params as SwitchEthereumChainParam;
         const chainId = ensureIntNumber(params[0].chainId);
         this.stateManager.switchChain(chainId);
         break;
