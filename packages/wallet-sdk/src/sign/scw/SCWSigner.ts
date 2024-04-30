@@ -5,6 +5,7 @@ import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { standardErrors } from ':core/error';
 import { createMessage, RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
+import { Method } from ':core/provider/method';
 import { AddressString } from ':core/type';
 import { ensureIntNumber } from ':core/type/util';
 import {
@@ -96,7 +97,7 @@ export class SCWSigner implements Signer {
   }
 
   private tryLocalHandling<T>(request: RequestArguments): T | undefined {
-    switch (request.method) {
+    switch (request.method as Method) {
       case 'wallet_switchEthereumChain': {
         const params = request.params as SwitchEthereumChainParam;
         if (!params || !params[0]?.chainId) {
@@ -187,7 +188,7 @@ export class SCWSigner implements Signer {
     const result = response.result;
     if ('error' in result) return;
 
-    switch (request.method) {
+    switch (request.method as Method) {
       case 'eth_requestAccounts': {
         const accounts = result.value as AddressString[];
         this.stateManager.updateAccounts(accounts);
