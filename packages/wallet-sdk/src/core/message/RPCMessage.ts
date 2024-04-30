@@ -1,6 +1,6 @@
-import { Message, MessageID } from '.';
-import { RequestAccountsAction } from './Action';
+import { Message, MessageID } from './Message';
 import { SerializedEthereumRpcError } from ':core/error';
+import { AppMetadata } from ':core/provider/interface';
 
 interface RPCMessage extends Message {
   sender: string; // hex encoded public key of the sender
@@ -33,3 +33,8 @@ export interface RPCResponseMessage extends RPCMessage {
         failure: SerializedEthereumRpcError;
       };
 }
+
+type RequestAccountsAction = {
+  method: 'eth_requestAccounts';
+  params: AppMetadata;
+};

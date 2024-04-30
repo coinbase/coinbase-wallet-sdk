@@ -1,6 +1,6 @@
-import { Action } from './Action';
+import { RequestArguments } from ':core/provider/interface';
 
 export type RPCRequest = {
-  action: Action; // JSON-RPC call
+  action: RequestArguments; // JSON-RPC call
   chainId: number;
 };

@@ -31,7 +31,7 @@ const mapping = {
 } as const;
 
 export type MethodCategory = keyof typeof mapping;
-export type Method<C extends MethodCategory> = (typeof mapping)[C][number];
+export type Method<C extends MethodCategory = MethodCategory> = (typeof mapping)[C][number];
 
 export function determineMethodCategory(method: string): MethodCategory | undefined {
   for (const c in mapping) {
