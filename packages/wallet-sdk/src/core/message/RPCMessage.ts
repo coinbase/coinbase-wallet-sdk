@@ -1,6 +1,5 @@
 import { Message, MessageID } from '.';
 import { RequestAccountsAction } from './Action';
-import { EncryptedData } from './Cipher';
 import { SerializedEthereumRpcError } from ':core/error';
 
 interface RPCMessage extends Message {
@@ -8,6 +7,11 @@ interface RPCMessage extends Message {
   content: unknown;
   timestamp: Date;
 }
+
+export type EncryptedData = {
+  iv: ArrayBuffer;
+  cipherText: ArrayBuffer;
+};
 
 export interface RPCRequestMessage extends RPCMessage {
   content:

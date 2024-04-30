@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
-import { standardErrors } from './error';
-import { AddressString, BigIntString, HexString, IntNumber, RegExpString } from './type';
+import { standardErrors } from '../error';
+import { AddressString, BigIntString, HexString, IntNumber, RegExpString } from '.';
 
 const INT_STRING_REGEX = /^[0-9]*$/;
 const HEXADECIMAL_STRING_REGEX = /^[a-f0-9]*$/;
@@ -193,8 +193,4 @@ export function getFavicon(): string | null {
 
 export function areAddressArraysEqual(arr1: AddressString[], arr2: AddressString[]): boolean {
   return arr1.length === arr2.length && arr1.every((value, index) => value === arr2[index]);
-}
-
-export function showDeprecationWarning(oldMethod: string, instructions: string): void {
-  console.warn(`EIP1193Provider: ${oldMethod} is deprecated. Please ${instructions} instead.`);
 }

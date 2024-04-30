@@ -5,17 +5,17 @@ import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { standardErrors } from ':core/error';
 import { createMessage } from ':core/message';
 import { Action, SupportedEthereumMethods, SwitchEthereumChainAction } from ':core/message/Action';
+import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage';
+import { RPCResponse } from ':core/message/RPCResponse';
+import { AppMetadata, RequestArguments } from ':core/provider/interface';
+import { AddressString } from ':core/type';
+import { ensureIntNumber } from ':core/type/util';
 import {
   decryptContent,
   encryptContent,
   exportKeyToHexString,
   importKeyFromHexString,
-} from ':core/message/Cipher';
-import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage';
-import { RPCResponse } from ':core/message/RPCResponse';
-import { AppMetadata, RequestArguments } from ':core/provider/interface';
-import { AddressString } from ':core/type';
-import { ensureIntNumber } from ':core/util';
+} from ':util/cipher';
 
 export class SCWSigner implements Signer {
   private readonly metadata: AppMetadata;

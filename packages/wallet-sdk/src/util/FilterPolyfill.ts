@@ -9,7 +9,7 @@ import {
   intNumberFromHexString,
   isHexString,
   range,
-} from ':core/util';
+} from ':core/type/util';
 
 const TIMEOUT = 5 * 60 * 1000; // 5 minutes
 

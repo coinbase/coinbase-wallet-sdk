@@ -2,13 +2,13 @@ import EventEmitter from 'eventemitter3';
 
 import { standardErrorCodes, standardErrors } from './core/error';
 import { ConstructorOptions, ProviderInterface, RequestArguments } from './core/provider/interface';
-import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './core/provider/util';
-import { AddressString, Chain } from './core/type';
-import { areAddressArraysEqual, prepend0x, showDeprecationWarning } from './core/util';
+import { AddressString, Chain, IntNumber } from './core/type';
+import { areAddressArraysEqual, hexStringFromIntNumber } from './core/type/util';
 import { AccountsUpdate, ChainUpdate } from './sign/interface';
 import { SignHandler } from './sign/SignHandler';
-import { FilterPolyfill } from './vendor-js/filter/FilterPolyfill';
+import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './util/provider';
 import { determineMethodCategory } from ':core/provider/method';
+import { FilterPolyfill } from ':util/FilterPolyfill';
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
   protected accounts: AddressString[] = [];
@@ -43,13 +43,11 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   protected readonly handlers = {
     // eth_requestAccounts
     handshake: async (_: RequestArguments): Promise<AddressString[]> => {
-      if (this.connected) {
-        this.emit('connect', { chainId: prepend0x(this.chain.id.toString(16)) });
-        return this.accounts;
-      }
       try {
-        const accounts = await this.signHandler.handshake();
-        this.emit('connect', { chainId: prepend0x(this.chain.id.toString(16)) });
+        const accounts = this.connected // already connected
+          ? this.accounts
+          : await this.signHandler.handshake();
+        this.emit('connect', { chainId: hexStringFromIntNumber(IntNumber(this.chain.id)) });
         return accounts;
       } catch (error) {
         this.handleUnauthorizedError(error);
@@ -111,7 +109,9 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   /** @deprecated Use `.request({ method: 'eth_requestAccounts' })` instead. */
   public async enable(): Promise<unknown> {
-    showDeprecationWarning('enable', 'use request({ method: "eth_requestAccounts" })');
+    console.warn(
+      `.enable() has been deprecated. Please use .request({ method: "eth_requestAccounts" }) instead.`
+    );
     return await this.request({
       method: 'eth_requestAccounts',
     });
@@ -137,7 +137,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       if (chain.id === this.chain.id && chain.rpcUrl === this.chain.rpcUrl) return;
       this.chain = chain;
       if (source === 'storage') return;
-      this.emit('chainChanged', prepend0x(chain.id.toString(16)));
+      this.emit('chainChanged', hexStringFromIntNumber(IntNumber(chain.id)));
     },
   };
 }

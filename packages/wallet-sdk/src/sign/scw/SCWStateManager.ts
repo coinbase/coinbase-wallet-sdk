@@ -1,6 +1,6 @@
 import { StateUpdateListener } from '../interface';
-import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { AddressString, Chain } from ':core/type';
+import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 const ACCOUNTS_KEY = 'accounts';
 const ACTIVE_CHAIN_STORAGE_KEY = 'activeChain';

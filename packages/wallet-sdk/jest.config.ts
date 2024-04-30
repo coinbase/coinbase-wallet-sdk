@@ -37,6 +37,7 @@ export default {
   moduleNameMapper: {
     '^src/(.*)$': '<rootDir>/src/$1',
     '^:core/(.*)$': '<rootDir>/src/core/$1',
+    '^:util/(.*)$': '<rootDir>/src/util/$1',
   },
 
   // A list of paths to directories that Jest should use to search for files in

@@ -1,9 +1,8 @@
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
 import { ProviderInterface } from ':core/provider/interface';
-import { Window } from ':core/provider/util';
 
-const window = globalThis as Window;
+const window = globalThis as any;
 
 describe('CoinbaseWalletSDK', () => {
   describe('public methods', () => {

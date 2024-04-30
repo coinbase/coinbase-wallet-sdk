@@ -1,6 +1,6 @@
-import { LIB_VERSION } from '../../version';
-import { standardErrors } from '../error';
-import { Preference, ProviderInterface, RequestArguments } from './interface';
+import { LIB_VERSION } from '../version';
+import { standardErrors } from ':core/error';
+import { Preference, ProviderInterface, RequestArguments } from ':core/provider/interface';
 import { Chain } from ':core/type';
 
 export async function fetchRPCRequest(request: RequestArguments, chain: Chain) {
@@ -21,7 +21,7 @@ export async function fetchRPCRequest(request: RequestArguments, chain: Chain) {
   return response.result;
 }
 
-export interface Window {
+interface Window {
   top: Window;
   ethereum?: ProviderInterface;
   coinbaseWalletExtension?: ProviderInterface;

@@ -1,4 +1,4 @@
-import { HexString, IntNumber } from './type';
+import { HexString, IntNumber } from '.';
 import {
   bigIntStringFromBigInt,
   ensureAddressString,

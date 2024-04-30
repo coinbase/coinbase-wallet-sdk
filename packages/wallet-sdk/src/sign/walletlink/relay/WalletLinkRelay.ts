@@ -17,9 +17,9 @@ import { RelayUI } from './ui/RelayUI';
 import { WalletLinkRelayUI } from './ui/WalletLinkRelayUI';
 import { WLMobileRelayUI } from './ui/WLMobileRelayUI';
 import { standardErrors } from ':core/error';
-import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { AddressString, IntNumber, RegExpString } from ':core/type';
-import { bigIntStringFromBigInt, hexStringFromBuffer, randomBytesHex } from ':core/util';
+import { bigIntStringFromBigInt, hexStringFromBuffer, randomBytesHex } from ':core/type/util';
+import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 interface WalletLinkRelayOptions {
   linkAPIUrl: string;

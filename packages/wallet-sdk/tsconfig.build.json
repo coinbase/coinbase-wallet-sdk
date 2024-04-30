@@ -5,6 +5,7 @@
     "outDir": "./dist",
     "baseUrl": ".",
     "paths": {
+      ":util/*": ["src/util/*"],
       ":core/*": ["src/core/*"]
     },
     "target": "es2017",

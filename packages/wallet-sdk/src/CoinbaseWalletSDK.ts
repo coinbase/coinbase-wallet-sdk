@@ -3,10 +3,10 @@
 import { LogoType, walletLogo } from './assets/wallet-logo';
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { AppMetadata, Preference, ProviderInterface } from './core/provider/interface';
-import { ScopedLocalStorage } from './core/storage/ScopedLocalStorage';
+import { ScopedLocalStorage } from './util/ScopedLocalStorage';
 import { LIB_VERSION } from './version';
-import { getCoinbaseInjectedProvider } from ':core/provider/util';
-import { getFavicon } from ':core/util';
+import { getFavicon } from ':core/type/util';
+import { getCoinbaseInjectedProvider } from ':util/provider';
 
 // for backwards compatibility
 type CoinbaseWalletSDKOptions = Partial<AppMetadata>;
