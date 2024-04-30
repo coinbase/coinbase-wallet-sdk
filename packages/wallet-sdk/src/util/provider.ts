@@ -21,7 +21,7 @@ export async function fetchRPCRequest(request: RequestArguments, chain: Chain) {
   return response.result;
 }
 
-export interface Window {
+interface Window {
   top: Window;
   ethereum?: ProviderInterface;
   coinbaseWalletExtension?: ProviderInterface;
