@@ -2,8 +2,8 @@
 
 import { sha256 } from 'sha.js';
 
-import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { randomBytesHex } from ':core/util';
+import { ScopedLocalStorage } from ':util/storage/ScopedLocalStorage';
 
 const STORAGE_KEY_SESSION_ID = 'session:id';
 const STORAGE_KEY_SESSION_SECRET = 'session:secret';

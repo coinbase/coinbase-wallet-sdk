@@ -3,7 +3,7 @@
 import { LogoType, walletLogo } from './assets/wallet-logo';
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { AppMetadata, Preference, ProviderInterface } from './core/provider/interface';
-import { ScopedLocalStorage } from './core/storage/ScopedLocalStorage';
+import { ScopedLocalStorage } from './util/storage/ScopedLocalStorage';
 import { LIB_VERSION } from './version';
 import { getCoinbaseInjectedProvider } from ':core/provider/util';
 import { getFavicon } from ':core/util';

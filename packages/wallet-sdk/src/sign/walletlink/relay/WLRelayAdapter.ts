@@ -12,7 +12,6 @@ import { isErrorResponse, Web3Response } from './type/Web3Response';
 import { WalletLinkRelay } from './WalletLinkRelay';
 import { standardErrorCodes, standardErrors } from ':core/error';
 import { RequestArguments } from ':core/provider/interface';
-import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { AddressString, IntNumber } from ':core/type';
 import {
   ensureAddressString,
@@ -22,6 +21,7 @@ import {
   ensureParsedJSONObject,
   hexStringFromIntNumber,
 } from ':core/util';
+import { ScopedLocalStorage } from ':util/storage/ScopedLocalStorage';
 
 const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
 const DEFAULT_JSON_RPC_URL = 'DefaultJsonRpcUrl';

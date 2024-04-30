@@ -6,8 +6,8 @@ import { mockedWalletLinkRelay } from './mocks/relay';
 import { WalletLinkRelay } from './WalletLinkRelay';
 import { WLRelayAdapter } from './WLRelayAdapter';
 import { standardErrorCodes, standardErrors } from ':core/error';
-import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { AddressString } from ':core/type';
+import { ScopedLocalStorage } from ':util/storage/ScopedLocalStorage';
 
 jest.mock('./WalletLinkRelay', () => {
   return {

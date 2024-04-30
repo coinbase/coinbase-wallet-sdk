@@ -4,7 +4,7 @@ import {
   generateKeyPair,
   importKeyFromHexString,
 } from ':core/message/Cipher';
-import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
+import { ScopedLocalStorage } from ':util/storage/ScopedLocalStorage';
 
 interface StorageItem {
   storageKey: string;
