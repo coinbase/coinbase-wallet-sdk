@@ -1,5 +1,12 @@
-import { checkErrorForInvalidRequestArgs } from './provider';
+import { checkErrorForInvalidRequestArgs, getCoinbaseInjectedProvider } from './provider';
 import { standardErrors } from ':core/error';
+import { ProviderInterface } from ':core/provider/interface';
+
+const window = globalThis as {
+  top: Window;
+  ethereum?: ProviderInterface;
+  coinbaseWalletExtension?: ProviderInterface;
+};
 
 // @ts-expect-error-next-line
 const invalidArgsError = (args) =>
@@ -20,7 +27,128 @@ const invalidParamsError = (args) =>
     data: args,
   });
 
-describe('eip1193Utils', () => {
+describe('Utils', () => {
+  describe('getCoinbaseInjectedProvider', () => {
+    describe('Extension Provider', () => {
+      afterEach(() => {
+        window.coinbaseWalletExtension = undefined;
+      });
+
+      it('should return extension provider', () => {
+        const mockSetAppInfo = jest.fn();
+        const extensionProvider = {
+          shouldUseSigner: false,
+          setAppInfo: mockSetAppInfo,
+        } as unknown as ProviderInterface;
+
+        window.coinbaseWalletExtension = extensionProvider;
+
+        expect(
+          getCoinbaseInjectedProvider({
+            metadata: {
+              appName: 'Dapp',
+              appChainIds: [],
+              appLogoUrl: null,
+            },
+            preference: {
+              options: 'all',
+            },
+          })
+        ).toBe(extensionProvider);
+
+        expect(mockSetAppInfo).toHaveBeenCalledWith('Dapp', null, []);
+      });
+
+      it('shouldUseSigner as true - should return undefined', () => {
+        const extensionProvider = {
+          shouldUseSigner: true,
+        } as unknown as ProviderInterface;
+
+        window.coinbaseWalletExtension = extensionProvider;
+
+        expect(
+          getCoinbaseInjectedProvider({
+            metadata: {
+              appName: 'Dapp',
+              appChainIds: [],
+              appLogoUrl: null,
+            },
+            preference: {
+              options: 'all',
+            },
+          })
+        ).toBe(undefined);
+      });
+
+      it('smartWalletOnly - should return undefined', () => {
+        const extensionProvider = {
+          shouldUseSigner: false,
+          setAppInfo: jest.fn(),
+        } as unknown as ProviderInterface;
+
+        window.coinbaseWalletExtension = extensionProvider;
+
+        expect(
+          getCoinbaseInjectedProvider({
+            metadata: {
+              appName: 'Dapp',
+              appChainIds: [],
+              appLogoUrl: null,
+            },
+            preference: {
+              options: 'smartWalletOnly',
+            },
+          })
+        ).toBe(undefined);
+      });
+    });
+    describe('Browser Provider', () => {
+      class MockCipherProviderClass {
+        public isCoinbaseBrowser = true;
+      }
+
+      const mockCipherProvider = new MockCipherProviderClass() as unknown as ProviderInterface;
+
+      beforeAll(() => {
+        window.ethereum = mockCipherProvider;
+      });
+
+      afterAll(() => {
+        window.ethereum = undefined;
+      });
+
+      it('Should return injected browser provider', () => {
+        expect(
+          getCoinbaseInjectedProvider({
+            metadata: {
+              appName: 'Dapp',
+              appChainIds: [],
+              appLogoUrl: null,
+            },
+            preference: {
+              options: 'all',
+            },
+          })
+        ).toBe(mockCipherProvider);
+      });
+
+      it('smartWalletOnly - Should still return injected browser provider', () => {
+        expect(
+          getCoinbaseInjectedProvider({
+            metadata: {
+              appName: 'Dapp',
+              appChainIds: [],
+              appLogoUrl: null,
+            },
+            preference: {
+              options: 'smartWalletOnly',
+            },
+          })
+        ).toBe(mockCipherProvider);
+      });
+    });
+  });
+
   describe('getErrorForInvalidRequestArgs', () => {
     it('should throw if args is not an object', () => {
       const args = 'not an object';
