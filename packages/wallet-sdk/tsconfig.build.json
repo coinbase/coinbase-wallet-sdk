@@ -5,7 +5,8 @@
     "outDir": "./dist",
     "baseUrl": ".",
     "paths": {
-      ":core/*": ["src/core/*"]
+      ":core/*": ["src/core/*"],
+      ":util/*": ["src/util/*"],
     },
     "target": "es2017",
     "jsx": "react",
