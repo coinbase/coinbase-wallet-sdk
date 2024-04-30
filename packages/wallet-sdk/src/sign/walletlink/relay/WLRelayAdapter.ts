@@ -20,7 +20,7 @@ import {
   ensureIntNumber,
   ensureParsedJSONObject,
   hexStringFromIntNumber,
-} from ':core/util';
+} from ':core/type/util';
 import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';

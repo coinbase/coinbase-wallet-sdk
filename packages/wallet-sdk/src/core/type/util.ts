@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
-import { standardErrors } from './error';
-import { AddressString, BigIntString, HexString, IntNumber, RegExpString } from './type';
+import { standardErrors } from '../error';
+import { AddressString, BigIntString, HexString, IntNumber, RegExpString } from '.';
 
 const INT_STRING_REGEX = /^[0-9]*$/;
 const HEXADECIMAL_STRING_REGEX = /^[a-f0-9]*$/;

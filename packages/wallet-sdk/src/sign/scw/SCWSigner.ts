@@ -9,7 +9,7 @@ import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage'
 import { RPCResponse } from ':core/message/RPCResponse';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
-import { ensureIntNumber } from ':core/util';
+import { ensureIntNumber } from ':core/type/util';
 import {
   decryptContent,
   encryptContent,

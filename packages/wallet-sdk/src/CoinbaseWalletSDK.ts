@@ -5,7 +5,7 @@ import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { AppMetadata, Preference, ProviderInterface } from './core/provider/interface';
 import { ScopedLocalStorage } from './util/ScopedLocalStorage';
 import { LIB_VERSION } from './version';
-import { getFavicon } from ':core/util';
+import { getFavicon } from ':core/type/util';
 import { getCoinbaseInjectedProvider } from ':util/provider';
 
 // for backwards compatibility
