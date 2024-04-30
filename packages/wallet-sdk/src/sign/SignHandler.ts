@@ -7,9 +7,9 @@ import {
   ConfigEvent,
   ConfigResponseMessage,
   ConfigUpdateMessage,
+  createMessage,
   SignerType,
-} from ':core/message/ConfigMessage';
-import { createMessage } from ':core/message/Message';
+} from ':core/message';
 import {
   AppMetadata,
   ConstructorOptions,

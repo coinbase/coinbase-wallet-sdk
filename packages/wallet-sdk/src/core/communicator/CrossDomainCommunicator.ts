@@ -1,5 +1,5 @@
-import { createMessage, Message, MessageID, MessageWithOptionalId } from '../message/Message';
 import { standardErrors } from ':core/error';
+import { createMessage, Message, MessageID, MessageWithOptionalId } from ':core/message';
 
 export abstract class CrossDomainCommunicator {
   protected url: URL | undefined = undefined;

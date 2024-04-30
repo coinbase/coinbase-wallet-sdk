@@ -6,8 +6,8 @@ import {
   ConfigResponseMessage,
   ConfigUpdateMessage,
   isConfigUpdateMessage,
-} from ':core/message/ConfigMessage';
-import { Message } from ':core/message/Message';
+  Message,
+} from ':core/message';
 
 const POPUP_WIDTH = 420;
 const POPUP_HEIGHT = 540;
