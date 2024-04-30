@@ -1,13 +1,13 @@
 import { LIB_VERSION } from '../../version';
 import { CrossDomainCommunicator } from ':core/communicator/CrossDomainCommunicator';
 import { standardErrors } from ':core/error';
-import { Message } from ':core/message';
 import {
   ConfigEvent,
   ConfigResponseMessage,
   ConfigUpdateMessage,
   isConfigUpdateMessage,
-} from ':core/message/ConfigMessage';
+  Message,
+} from ':core/message';
 
 const POPUP_WIDTH = 420;
 const POPUP_HEIGHT = 540;

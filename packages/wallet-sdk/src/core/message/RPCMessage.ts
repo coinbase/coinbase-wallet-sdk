@@ -1,5 +1,5 @@
-import { Message, MessageID } from '.';
 import { RequestAccountsAction } from './Action';
+import { Message, MessageID } from './Message';
 import { SerializedEthereumRpcError } from ':core/error';
 
 interface RPCMessage extends Message {

@@ -3,13 +3,13 @@ import { SCWSigner } from './scw/SCWSigner';
 import { WLSigner } from './walletlink/WLSigner';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { CB_KEYS_URL } from ':core/constants';
-import { createMessage } from ':core/message';
 import {
   ConfigEvent,
   ConfigResponseMessage,
   ConfigUpdateMessage,
+  createMessage,
   SignerType,
-} from ':core/message/ConfigMessage';
+} from ':core/message';
 import {
   AppMetadata,
   ConstructorOptions,

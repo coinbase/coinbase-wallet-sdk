@@ -2,7 +2,7 @@ import { Signer, StateUpdateListener } from '../interface';
 import { WLRelayAdapter } from './relay/WLRelayAdapter';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { WALLETLINK_URL } from ':core/constants';
-import { ConfigEvent, ConfigUpdateMessage } from ':core/message/ConfigMessage';
+import { ConfigEvent, ConfigUpdateMessage } from ':core/message';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
 
