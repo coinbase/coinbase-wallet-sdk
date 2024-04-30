@@ -7,8 +7,8 @@ import { AddressString, Chain } from './core/type';
 import { areAddressArraysEqual, prepend0x, showDeprecationWarning } from './core/util';
 import { AccountsUpdate, ChainUpdate } from './sign/interface';
 import { SignHandler } from './sign/SignHandler';
-import { FilterPolyfill } from './vendor-js/filter/FilterPolyfill';
 import { determineMethodCategory } from ':core/provider/method';
+import { FilterPolyfill } from ':util/FilterPolyfill';
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
   protected accounts: AddressString[] = [];

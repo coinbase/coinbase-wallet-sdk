@@ -16,7 +16,7 @@ import {
   Preference,
   RequestArguments,
 } from ':core/provider/interface';
-import { ScopedLocalStorage } from ':util/storage/ScopedLocalStorage';
+import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 const SIGNER_TYPE_KEY = 'SignerType';
 

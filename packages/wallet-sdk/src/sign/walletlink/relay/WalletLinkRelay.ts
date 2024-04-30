@@ -19,7 +19,7 @@ import { WLMobileRelayUI } from './ui/WLMobileRelayUI';
 import { standardErrors } from ':core/error';
 import { AddressString, IntNumber, RegExpString } from ':core/type';
 import { bigIntStringFromBigInt, hexStringFromBuffer, randomBytesHex } from ':core/util';
-import { ScopedLocalStorage } from ':util/storage/ScopedLocalStorage';
+import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 interface WalletLinkRelayOptions {
   linkAPIUrl: string;

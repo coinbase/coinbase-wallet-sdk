@@ -7,7 +7,7 @@ import { WALLET_USER_NAME_KEY } from './constants';
 import { ServerMessage } from './type/ServerMessage';
 import { WalletLinkSessionConfig } from './type/WalletLinkSessionConfig';
 import { WalletLinkRelay } from './WalletLinkRelay';
-import { ScopedLocalStorage } from ':util/storage/ScopedLocalStorage';
+import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`"decrypted ${text}"`));
 

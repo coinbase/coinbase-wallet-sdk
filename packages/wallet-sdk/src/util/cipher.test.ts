@@ -1,4 +1,4 @@
-import { decrypt, deriveSharedSecret, encrypt, generateKeyPair } from './Cipher';
+import { decrypt, deriveSharedSecret, encrypt, generateKeyPair } from './cipher';
 
 describe('Cipher', () => {
   describe('generateKeyPair', () => {

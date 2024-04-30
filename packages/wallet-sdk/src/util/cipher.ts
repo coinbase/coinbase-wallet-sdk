@@ -1,11 +1,7 @@
-import { RPCRequest } from './RPCRequest';
-import { RPCResponse } from './RPCResponse';
+import { EncryptedData } from ':core/message/RPCMessage';
+import { RPCRequest } from ':core/message/RPCRequest';
+import { RPCResponse } from ':core/message/RPCResponse';
 import { hexStringToUint8Array, uint8ArrayToHex } from ':core/util';
-
-export type EncryptedData = {
-  iv: ArrayBuffer;
-  cipherText: ArrayBuffer;
-};
 
 export async function generateKeyPair(): Promise<CryptoKeyPair> {
   return crypto.subtle.generateKey(

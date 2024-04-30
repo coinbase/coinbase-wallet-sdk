@@ -3,8 +3,8 @@ import {
   exportKeyToHexString,
   generateKeyPair,
   importKeyFromHexString,
-} from ':core/message/Cipher';
-import { ScopedLocalStorage } from ':util/storage/ScopedLocalStorage';
+} from ':util/cipher';
+import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 interface StorageItem {
   storageKey: string;
