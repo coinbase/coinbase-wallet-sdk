@@ -8,13 +8,11 @@ import { AccountsUpdate, ChainUpdate } from './sign/interface';
 import { SignHandler } from './sign/SignHandler';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './util/provider';
 import { determineMethodCategory } from ':core/provider/method';
-import { FilterPolyfill } from ':util/FilterPolyfill';
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
   protected accounts: AddressString[] = [];
   protected chain: Chain;
   protected signHandler: SignHandler;
-  private filterHandler: FilterPolyfill;
 
   constructor(params: Readonly<ConstructorOptions>) {
     super();
@@ -25,7 +23,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       ...params,
       listener: this.updateListener,
     });
-    this.filterHandler = new FilterPolyfill(this.handlers.fetch);
   }
 
   public get connected() {
@@ -90,8 +87,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
           return this.handlers.unsupported(request);
       }
     },
-
-    filter: (request: RequestArguments) => this.filterHandler.request(request),
 
     deprecated: ({ method }: RequestArguments) => {
       throw standardErrors.rpc.methodNotSupported(`Method ${method} is deprecated.`);

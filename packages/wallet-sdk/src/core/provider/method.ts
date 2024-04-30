@@ -16,14 +16,12 @@ const mapping = {
     'wallet_getCapabilities',
     'wallet_sendCalls',
   ],
-  state: ['eth_chainId', 'eth_accounts', 'eth_coinbase', 'net_version'],
-  filter: [
-    'eth_newFilter',
-    'eth_newBlockFilter',
-    'eth_newPendingTransactionFilter',
-    'eth_getFilterChanges',
-    'eth_getFilterLogs',
-    'eth_uninstallFilter',
+  state: [
+    // internal state
+    'eth_chainId',
+    'eth_accounts',
+    'eth_coinbase',
+    'net_version',
   ],
   deprecated: ['eth_sign', 'eth_signTypedData_v2'],
   unsupported: ['eth_subscribe', 'eth_unsubscribe'],
