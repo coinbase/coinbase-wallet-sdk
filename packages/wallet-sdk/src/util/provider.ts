@@ -1,6 +1,6 @@
 import { LIB_VERSION } from '../version';
 import { standardErrors } from ':core/error';
-import { Preference, ProviderInterface, RequestArguments } from ':core/provider/interface';
+import { ConstructorOptions, ProviderInterface, RequestArguments } from ':core/provider/interface';
 import { Chain } from ':core/type';
 
 export async function fetchRPCRequest(request: RequestArguments, chain: Chain) {
@@ -27,12 +27,18 @@ interface Window {
   coinbaseWalletExtension?: ProviderInterface;
 }
 
-export function getCoinbaseInjectedProvider(preference: Preference): ProviderInterface | undefined {
+export function getCoinbaseInjectedProvider({
+  metadata,
+  preference,
+}: Readonly<ConstructorOptions>): ProviderInterface | undefined {
   const window = globalThis as Window;
 
   if (preference.options !== 'smartWalletOnly') {
     const extension = window.coinbaseWalletExtension;
     if (extension && !('shouldUseSigner' in extension && extension.shouldUseSigner)) {
+      const { appName, appLogoUrl, appChainIds } = metadata;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (extension as any).setAppInfo?.(appName, appLogoUrl, appChainIds);
       return extension;
     }
   }

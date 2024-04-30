@@ -12,31 +12,20 @@ import { getCoinbaseInjectedProvider } from ':util/provider';
 type CoinbaseWalletSDKOptions = Partial<AppMetadata>;
 
 export class CoinbaseWalletSDK {
-  private metadata: CoinbaseWalletSDKOptions;
+  private metadata: AppMetadata;
 
   constructor(metadata: Readonly<CoinbaseWalletSDKOptions>) {
-    this.metadata = metadata;
+    this.metadata = {
+      appName: metadata.appName || 'Dapp',
+      appLogoUrl: metadata.appLogoUrl || getFavicon(),
+      appChainIds: metadata.appChainIds || [],
+    };
     this.storeLatestVersion();
   }
 
   public makeWeb3Provider(preference: Preference = { options: 'all' }): ProviderInterface {
-    const { appName = 'Dapp', appLogoUrl = getFavicon(), appChainIds = [] } = this.metadata;
-
-    const provider = getCoinbaseInjectedProvider(preference);
-    if (provider) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (provider as any).setAppInfo?.(appName, appLogoUrl, appChainIds);
-      return provider;
-    }
-
-    return new CoinbaseWalletProvider({
-      metadata: {
-        appName,
-        appLogoUrl,
-        appChainIds,
-      },
-      preference,
-    });
+    const params = { metadata: this.metadata, preference };
+    return getCoinbaseInjectedProvider(params) ?? new CoinbaseWalletProvider(params);
   }
 
   /**
