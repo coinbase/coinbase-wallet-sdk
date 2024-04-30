@@ -1,7 +1,7 @@
 import { SignHandler } from './SignHandler';
 
 const mockGetItem = jest.fn();
-jest.mock(':core/storage/ScopedLocalStorage', () => {
+jest.mock(':util/ScopedLocalStorage', () => {
   return {
     ScopedLocalStorage: jest.fn().mockImplementation(() => {
       return {

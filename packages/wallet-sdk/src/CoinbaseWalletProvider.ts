@@ -2,11 +2,11 @@ import EventEmitter from 'eventemitter3';
 
 import { standardErrorCodes, standardErrors } from './core/error';
 import { ConstructorOptions, ProviderInterface, RequestArguments } from './core/provider/interface';
-import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './core/provider/util';
 import { AddressString, Chain } from './core/type';
 import { areAddressArraysEqual, prepend0x, showDeprecationWarning } from './core/util';
 import { AccountsUpdate, ChainUpdate } from './sign/interface';
 import { SignHandler } from './sign/SignHandler';
+import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './util/provider';
 import { determineMethodCategory } from ':core/provider/method';
 import { FilterPolyfill } from ':util/FilterPolyfill';
 
