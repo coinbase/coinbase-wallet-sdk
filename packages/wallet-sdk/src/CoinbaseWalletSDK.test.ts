@@ -4,8 +4,8 @@ import { ProviderInterface } from ':core/provider/interface';
 import { getFavicon } from ':core/type/util';
 import { getCoinbaseInjectedProvider } from ':util/provider';
 
-jest.mock(':core/util');
-jest.mock(':core/provider/util');
+jest.mock(':core/type/util');
+jest.mock(':util/provider');
 jest.mock('./CoinbaseWalletProvider');
 
 describe('CoinbaseWalletSDK', () => {
