@@ -8,6 +8,8 @@ import {
   ConfigResponseMessage,
   ConfigUpdateMessage,
   createMessage,
+  isConfigUpdateMessage,
+  Message,
   SignerType,
 } from ':core/message';
 import {
@@ -39,7 +41,7 @@ export class SignHandler {
     this.preference = preferenceWithoutKeysUrl;
     this.popupCommunicator = new PopUpCommunicator({
       url: keysUrl ?? CB_KEYS_URL,
-      onConfigUpdateMessage: this.handleConfigUpdateMessage.bind(this),
+      onConfigUpdateMessage: this.handleIncomingMessage.bind(this),
     });
     this.signer = this.loadSigner();
   }
@@ -103,14 +105,18 @@ export class SignHandler {
   // will revisit this when refactoring the walletlink signer
   private walletlinkSigner?: WLSigner;
 
-  private async handleConfigUpdateMessage(message: ConfigUpdateMessage) {
-    switch (message.event) {
-      case ConfigEvent.WalletLinkSessionRequest:
-        if (!this.walletlinkSigner) {
-          this.walletlinkSigner = this.initSigner('walletlink') as WLSigner;
-        }
-        await this.walletlinkSigner.handleWalletLinkSessionRequest();
-        break;
+  protected async handleIncomingMessage(message: Message): Promise<boolean> {
+    if (
+      !isConfigUpdateMessage(message) || //
+      message.event !== ConfigEvent.WalletLinkSessionRequest
+    ) {
+      return false;
     }
+
+    if (!this.walletlinkSigner) {
+      this.walletlinkSigner = this.initSigner('walletlink') as WLSigner;
+    }
+    await this.walletlinkSigner.handleWalletLinkSessionRequest();
+    return true;
   }
 }

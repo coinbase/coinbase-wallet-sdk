@@ -4,7 +4,7 @@ import { standardErrors } from ':core/error';
 import {
   ConfigEvent,
   ConfigResponseMessage,
-  ConfigUpdateMessage,
+  createMessage,
   isConfigUpdateMessage,
   Message,
 } from ':core/message';
@@ -14,50 +14,42 @@ const POPUP_HEIGHT = 540;
 
 export class PopUpCommunicator extends CrossDomainCommunicator {
   private resolveConnection?: () => void;
-  private onConfigUpdateMessage: (_: ConfigUpdateMessage) => void;
+  private onConfigUpdateMessage: (_: Message) => Promise<boolean>;
 
-  constructor(params: { url: string; onConfigUpdateMessage: (_: ConfigUpdateMessage) => void }) {
+  constructor(params: { url: string; onConfigUpdateMessage: (_: Message) => Promise<boolean> }) {
     super();
     this.url = new URL(params.url);
     this.onConfigUpdateMessage = params.onConfigUpdateMessage;
   }
 
-  protected onConnect(): Promise<void> {
-    return new Promise((resolve) => {
-      this.resolveConnection = resolve;
-      this.openFixedSizePopUpWindow();
-    });
+  protected async setupPeerWindow(): Promise<void> {
+    this.openFixedSizePopUpWindow();
+    return new Promise((resolve) => (this.resolveConnection = resolve));
   }
 
-  protected onEvent(event: MessageEvent<Message>) {
-    const message = event.data;
-    if (isConfigUpdateMessage(message)) {
-      this.handleIncomingConfigUpdate(message);
-    }
-  }
-
-  protected onDisconnect() {
-    this.closeChildWindow();
-  }
-
-  private handleIncomingConfigUpdate(message: ConfigUpdateMessage) {
+  protected async handleIncomingMessage(message: Message): Promise<boolean> {
+    if (!isConfigUpdateMessage(message)) return false;
     switch (message.event) {
       case ConfigEvent.PopupLoaded:
         // Handshake Step 2: After receiving PopupHello from popup, Dapp sends DappHello
         // to FE to help FE confirm the origin of the Dapp, as well as SDK version.
-        this.postMessage<ConfigResponseMessage>({
-          requestId: message.id,
-          data: { version: LIB_VERSION },
-        });
+        this.postMessage(
+          createMessage<ConfigResponseMessage>({
+            requestId: message.id,
+            data: { version: LIB_VERSION },
+          })
+        );
         this.resolveConnection?.();
         this.resolveConnection = undefined;
-        break;
+        return true;
       case ConfigEvent.PopupUnload:
         this.disconnect();
-        break;
+        this.closeChildWindow();
+        return true;
       default: // handle non-popup config update messages
         this.onConfigUpdateMessage(message);
     }
+    return false;
   }
 
   // Window Management
@@ -69,9 +61,8 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     if (!this.url) {
       throw standardErrors.rpc.internal('No url provided in PopUpCommunicator');
     }
-    const popupUrl = new URL(this.url);
     this.peerWindow = window.open(
-      popupUrl,
+      this.url,
       'Smart Wallet',
       `width=${POPUP_WIDTH}, height=${POPUP_HEIGHT}, left=${left}, top=${top}`
     );

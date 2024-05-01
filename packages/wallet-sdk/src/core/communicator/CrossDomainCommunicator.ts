@@ -1,26 +1,25 @@
-import { createMessage, Message, MessageID, MessageWithOptionalId } from '../message';
+import { Message, MessageID } from '../message';
 import { standardErrors } from ':core/error';
 
 export abstract class CrossDomainCommunicator {
   protected url: URL | undefined = undefined;
   private connected = false;
 
-  protected abstract onConnect(): Promise<void>;
-  protected abstract onDisconnect(): void;
-  protected abstract onEvent(event: MessageEvent<Message>): void;
+  protected abstract setupPeerWindow(): Promise<void>;
+  // returns true if the message is handled
+  protected abstract handleIncomingMessage(_: Message): Promise<boolean>;
 
-  async connect(): Promise<void> {
+  async connect() {
     if (this.connected) return;
     window.addEventListener('message', this.eventListener.bind(this));
-    await this.onConnect();
+    await this.setupPeerWindow();
     this.connected = true;
   }
 
-  disconnect(): void {
+  protected disconnect() {
     this.connected = false;
     window.removeEventListener('message', this.eventListener.bind(this));
     this.rejectWaitingRequests();
-    this.onDisconnect();
   }
 
   protected peerWindow: Window | null = null;
@@ -31,29 +30,21 @@ export abstract class CrossDomainCommunicator {
     return undefined;
   }
 
-  postMessage<M extends Message>(
-    params: MessageWithOptionalId<M>,
-    options?: { bypassTargetOriginCheck: boolean }
-  ) {
+  async postMessage(message: Message, options?: { bypassTargetOriginCheck: boolean }) {
     const targetOrigin = this.getTargetOrigin(options);
     if (!targetOrigin || !this.peerWindow) {
       throw standardErrors.rpc.internal('Communicator: No peer window found');
     }
-
-    const message = createMessage(params);
     this.peerWindow.postMessage(message, targetOrigin);
   }
 
-  async postMessageForResponse<M extends Message>(
-    params: MessageWithOptionalId<M>
-  ): Promise<Message> {
+  async postMessageForResponse(message: Message): Promise<Message> {
+    this.postMessage(message);
     return new Promise((resolve, reject) => {
-      const message = createMessage(params);
       this.requestMap.set(message.id, {
         resolve,
         reject,
       });
-      this.postMessage(params);
     });
   }
 
@@ -71,7 +62,7 @@ export abstract class CrossDomainCommunicator {
     const message = event.data;
     const { requestId } = message;
     if (!requestId) {
-      this.onEvent(event);
+      this.handleIncomingMessage(message);
       return;
     }
 
