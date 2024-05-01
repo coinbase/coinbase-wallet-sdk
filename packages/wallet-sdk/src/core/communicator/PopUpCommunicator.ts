@@ -8,6 +8,7 @@ import {
   createMessage,
   isConfigUpdateMessage,
   Message,
+  MessageID,
 } from ':core/message';
 
 const POPUP_WIDTH = 420;
@@ -23,13 +24,37 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     this.onConfigUpdateMessage = params.onConfigUpdateMessage;
   }
 
+  async postMessageForResponse(message: Message): Promise<Message> {
+    this.postMessage(message);
+    return new Promise((resolve, reject) => {
+      this.requestMap.set(message.id, {
+        resolve,
+        reject,
+      });
+    });
+  }
+
   protected setupPeerWindow(): Promise<void> {
     this.openFixedSizePopUpWindow();
     return new Promise((resolve) => (this.resolveWhenPopupLoaded = resolve));
   }
 
+  private requestMap = new Map<
+    MessageID,
+    {
+      resolve: (_: Message) => void;
+      reject: (_: Error) => void;
+    }
+  >();
+
   protected handleIncomingEvent(event: MessageEvent<Message>) {
     const message = event.data;
+    const { requestId } = message;
+    if (requestId) {
+      this.requestMap.get(requestId)?.resolve?.(message);
+      this.requestMap.delete(requestId);
+      return;
+    }
     if (isConfigUpdateMessage(message)) {
       this.handleIncomingConfigUpdate(message);
     }
@@ -50,12 +75,20 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
         break;
       }
       case ConfigEvent.PopupUnload:
-        this.closePeerWindow();
         this.disconnect();
+        this.rejectWaitingRequests();
+        this.closePeerWindow();
         break;
       default: // handle non-popup config update messages
         this.onConfigUpdateMessage(message);
     }
+  }
+
+  private rejectWaitingRequests() {
+    this.requestMap.forEach(({ reject }) => {
+      reject(standardErrors.provider.userRejectedRequest('Request rejected'));
+    });
+    this.requestMap.clear();
   }
 
   // Window Management
