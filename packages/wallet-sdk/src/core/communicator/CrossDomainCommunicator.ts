@@ -9,7 +9,7 @@ export abstract class CrossDomainCommunicator {
   // returns true if the message is handled
   protected abstract handleIncomingMessage(_: Message): Promise<boolean>;
 
-  protected async connect() {
+  async connect() {
     if (this.connected) return;
     window.addEventListener('message', this.eventListener.bind(this));
     await this.setupPeerWindow();
@@ -31,7 +31,6 @@ export abstract class CrossDomainCommunicator {
   }
 
   async postMessage(message: Message, options?: { bypassTargetOriginCheck: boolean }) {
-    await this.connect();
     const targetOrigin = this.getTargetOrigin(options);
     if (!targetOrigin || !this.peerWindow) {
       throw standardErrors.rpc.internal('Communicator: No peer window found');
