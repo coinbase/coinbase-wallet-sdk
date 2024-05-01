@@ -23,20 +23,16 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     this.onConfigUpdateMessage = params.onConfigUpdateMessage;
   }
 
-  protected onConnect(): Promise<void> {
+  protected setupPeerWindow(): Promise<void> {
     this.openFixedSizePopUpWindow();
     return new Promise((resolve) => (this.resolveWhenPopupLoaded = resolve));
   }
 
-  protected onEvent(event: MessageEvent<Message>) {
+  protected handleIncomingEvent(event: MessageEvent<Message>) {
     const message = event.data;
     if (isConfigUpdateMessage(message)) {
       this.handleIncomingConfigUpdate(message);
     }
-  }
-
-  protected onDisconnect() {
-    this.closeChildWindow();
   }
 
   private handleIncomingConfigUpdate(message: ConfigUpdateMessage) {
@@ -54,6 +50,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
         break;
       }
       case ConfigEvent.PopupUnload:
+        this.closeChildWindow();
         this.disconnect();
         break;
       default: // handle non-popup config update messages

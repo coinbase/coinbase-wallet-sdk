@@ -5,14 +5,13 @@ export abstract class CrossDomainCommunicator {
   protected url: URL | undefined = undefined;
   private connected = false;
 
-  protected abstract onConnect(): Promise<void>;
-  protected abstract onDisconnect(): void;
-  protected abstract onEvent(event: MessageEvent<Message>): void;
+  protected abstract setupPeerWindow(): Promise<void>;
+  protected abstract handleIncomingEvent(_: MessageEvent<Message>): void;
 
-  protected async connect(): Promise<void> {
+  private async connect(): Promise<void> {
     if (this.connected) return;
     window.addEventListener('message', this.eventListener.bind(this));
-    await this.onConnect();
+    await this.setupPeerWindow();
     this.connected = true;
   }
 
@@ -20,7 +19,6 @@ export abstract class CrossDomainCommunicator {
     this.connected = false;
     window.removeEventListener('message', this.eventListener.bind(this));
     this.rejectWaitingRequests();
-    this.onDisconnect();
   }
 
   protected peerWindow: Window | null = null;
@@ -64,7 +62,7 @@ export abstract class CrossDomainCommunicator {
     const message = event.data;
     const { requestId } = message;
     if (!requestId) {
-      this.onEvent(event);
+      this.handleIncomingEvent(event);
       return;
     }
 
