@@ -26,14 +26,8 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     return new Promise((resolve) => (this.resolveConnection = resolve));
   }
 
-  protected handleIncomingEvent(event: MessageEvent<Message>) {
-    const message = event.data;
-    if (isConfigUpdateMessage(message)) {
-      this.handleIncomingConfigUpdate(message);
-    }
-  }
-
-  private handleIncomingConfigUpdate(message: ConfigUpdateMessage) {
+  protected handleIncomingEvent({ data: message }: MessageEvent<Message>) {
+    if (!isConfigUpdateMessage(message)) return;
     switch (message.event) {
       case ConfigEvent.PopupLoaded:
         // Handshake Step 2: After receiving PopupHello from popup, Dapp sends DappHello
