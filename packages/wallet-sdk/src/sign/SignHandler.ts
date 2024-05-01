@@ -48,7 +48,7 @@ export class SignHandler {
 
   async handshake() {
     const signerType = await this.requestSignerSelection();
-    const signer = await this.initSigner(signerType);
+    const signer = this.initSigner(signerType);
     const accounts = await signer.handshake();
 
     this.storage.setItem(SIGNER_TYPE_KEY, signerType);
