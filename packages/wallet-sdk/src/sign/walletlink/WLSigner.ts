@@ -1,6 +1,5 @@
 import { Signer, StateUpdateListener } from '../interface';
 import { WLRelayAdapter } from './relay/WLRelayAdapter';
-import { CrossDomainCommunicator } from ':core/communicator/CrossDomainCommunicator';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { WALLETLINK_URL } from ':core/constants';
 import { ConfigEvent, ConfigUpdateMessage, createMessage } from ':core/message';
@@ -8,7 +7,7 @@ import { AppMetadata, RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
 
 export class WLSigner implements Signer {
-  private readonly popupCommunicator: CrossDomainCommunicator;
+  private readonly popupCommunicator: PopUpCommunicator;
   private readonly adapter: WLRelayAdapter;
 
   constructor(params: {
