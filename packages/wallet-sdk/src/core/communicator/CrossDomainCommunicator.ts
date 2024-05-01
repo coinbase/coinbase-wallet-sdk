@@ -13,6 +13,7 @@ export abstract class CrossDomainCommunicator {
   private connected = false;
 
   protected abstract setupPeerWindow(): Promise<void>;
+  protected abstract handleIncomingMessage(_: Message): Promise<boolean>;
 
   protected async connect() {
     if (this.connected) return;
@@ -55,10 +56,6 @@ export abstract class CrossDomainCommunicator {
       reject: (_: Error) => void;
     }
   >();
-
-  protected async handleIncomingMessage(_: Message) {
-    return false;
-  }
 
   private eventListener(event: MessageEvent<Message>) {
     if (event.origin !== this.url.origin) return;

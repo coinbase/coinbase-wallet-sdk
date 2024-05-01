@@ -8,6 +8,7 @@ import {
   ConfigResponseMessage,
   ConfigUpdateMessage,
   createMessage,
+  isConfigUpdateMessage,
   Message,
   SignerType,
 } from ':core/message';
@@ -102,13 +103,8 @@ export class SignHandler extends PopUpCommunicator {
   private walletlinkSigner?: WLSigner;
 
   protected async handleIncomingMessage(message: Message) {
-    return (
-      super.handleIncomingMessage(message) ||
-      this.handleConfigUpdateMessage(message as ConfigUpdateMessage)
-    );
-  }
-
-  private async handleConfigUpdateMessage(message: ConfigUpdateMessage) {
+    if (await super.handleIncomingMessage(message)) return true;
+    if (!isConfigUpdateMessage(message)) return false;
     switch (message.event) {
       case ConfigEvent.WalletLinkSessionRequest:
         if (!this.walletlinkSigner) {

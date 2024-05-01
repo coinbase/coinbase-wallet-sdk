@@ -20,7 +20,6 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
   }
 
   protected async handleIncomingMessage(message: Message) {
-    if (await super.handleIncomingMessage(message)) return true;
     if (!isConfigUpdateMessage(message)) return false;
     switch (message.event) {
       case ConfigEvent.PopupLoaded:
