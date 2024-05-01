@@ -1,6 +1,7 @@
 import { Signer, StateUpdateListener } from '../interface';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWStateManager } from './SCWStateManager';
+import { CrossDomainCommunicator } from ':core/communicator/CrossDomainCommunicator';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { standardErrors } from ':core/error';
 import { createMessage, RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
@@ -23,7 +24,7 @@ type SwitchEthereumChainParam = [
 
 export class SCWSigner implements Signer {
   private readonly metadata: AppMetadata;
-  private readonly popupCommunicator: PopUpCommunicator;
+  private readonly popupCommunicator: CrossDomainCommunicator;
   private readonly keyManager: SCWKeyManager;
   private readonly stateManager: SCWStateManager;
 

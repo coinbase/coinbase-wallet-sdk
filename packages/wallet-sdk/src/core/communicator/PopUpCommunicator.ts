@@ -3,7 +3,6 @@ import { CrossDomainCommunicator } from ':core/communicator/CrossDomainCommunica
 import {
   ConfigEvent,
   ConfigResponseMessage,
-  ConfigUpdateMessage,
   createMessage,
   isConfigUpdateMessage,
   Message,
@@ -14,20 +13,15 @@ const POPUP_HEIGHT = 540;
 
 export class PopUpCommunicator extends CrossDomainCommunicator {
   private resolveConnection?: () => void;
-  private onConfigUpdateMessage: (_: ConfigUpdateMessage) => void;
-
-  constructor(params: { url: string; onConfigUpdateMessage: (_: ConfigUpdateMessage) => void }) {
-    super(params);
-    this.onConfigUpdateMessage = params.onConfigUpdateMessage;
-  }
 
   protected setupPeerWindow(): Promise<void> {
     this.openFixedSizePopUpWindow();
     return new Promise((resolve) => (this.resolveConnection = resolve));
   }
 
-  protected handleIncomingEvent({ data: message }: MessageEvent<Message>) {
-    if (!isConfigUpdateMessage(message)) return;
+  protected async handleIncomingMessage(message: Message) {
+    if (await super.handleIncomingMessage(message)) return true;
+    if (!isConfigUpdateMessage(message)) return false;
     switch (message.event) {
       case ConfigEvent.PopupLoaded:
         // Handshake Step 2: After receiving PopupHello from popup, Dapp sends DappHello
@@ -40,14 +34,13 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
         );
         this.resolveConnection?.();
         this.resolveConnection = undefined;
-        break;
+        return true;
       case ConfigEvent.PopupUnload:
         this.disconnect();
         this.closeChildWindow();
-        break;
-      default: // handle non-popup config update messages
-        this.onConfigUpdateMessage(message);
+        return true;
     }
+    return false;
   }
 
   // Window Management
