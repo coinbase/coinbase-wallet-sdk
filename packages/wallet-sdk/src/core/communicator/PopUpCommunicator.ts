@@ -14,7 +14,7 @@ const POPUP_WIDTH = 420;
 const POPUP_HEIGHT = 540;
 
 export class PopUpCommunicator extends CrossDomainCommunicator {
-  private resolveWhenPopupLoaded: (() => void) | null = null;
+  private resolveConnection?: () => void;
   private onConfigUpdateMessage: (_: ConfigUpdateMessage) => void;
 
   constructor(params: { url: string; onConfigUpdateMessage: (_: ConfigUpdateMessage) => void }) {
@@ -25,7 +25,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
 
   protected onConnect(): Promise<void> {
     this.openFixedSizePopUpWindow();
-    return new Promise((resolve) => (this.resolveWhenPopupLoaded = resolve));
+    return new Promise((resolve) => (this.resolveConnection = resolve));
   }
 
   protected onEvent(event: MessageEvent<Message>) {
@@ -45,8 +45,8 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
           data: { version: LIB_VERSION },
         });
         this.postMessage(response);
-        this.resolveWhenPopupLoaded?.();
-        this.resolveWhenPopupLoaded = null;
+        this.resolveConnection?.();
+        this.resolveConnection = undefined;
         break;
       }
       case ConfigEvent.PopupUnload:
