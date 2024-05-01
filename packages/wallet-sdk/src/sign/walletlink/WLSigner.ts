@@ -52,11 +52,12 @@ export class WLSigner implements Signer {
   }
 
   private postWalletLinkUpdate(data: unknown) {
-    const message = createMessage<ConfigUpdateMessage>({
-      event: ConfigEvent.WalletLinkUpdate,
-      data,
-    });
-    this.popupCommunicator.postMessage(message);
+    this.popupCommunicator.postMessage(
+      createMessage<ConfigUpdateMessage>({
+        event: ConfigEvent.WalletLinkUpdate,
+        data,
+      })
+    );
   }
 
   async disconnect() {
