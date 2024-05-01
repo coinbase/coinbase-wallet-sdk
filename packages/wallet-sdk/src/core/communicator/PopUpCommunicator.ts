@@ -37,18 +37,18 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
 
   private handleIncomingConfigUpdate(message: ConfigUpdateMessage) {
     switch (message.event) {
-      case ConfigEvent.PopupLoaded: {
+      case ConfigEvent.PopupLoaded:
         // Handshake Step 2: After receiving PopupHello from popup, Dapp sends DappHello
         // to FE to help FE confirm the origin of the Dapp, as well as SDK version.
-        const response = createMessage<ConfigResponseMessage>({
-          requestId: message.id,
-          data: { version: LIB_VERSION },
-        });
-        this.postMessage(response);
+        this.postMessage(
+          createMessage<ConfigResponseMessage>({
+            requestId: message.id,
+            data: { version: LIB_VERSION },
+          })
+        );
         this.resolveConnection?.();
         this.resolveConnection = undefined;
         break;
-      }
       case ConfigEvent.PopupUnload:
         this.disconnect();
         this.closeChildWindow();
