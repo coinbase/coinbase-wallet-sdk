@@ -23,12 +23,12 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     this.onConfigUpdateMessage = params.onConfigUpdateMessage;
   }
 
-  protected setupPeerWindow(): Promise<void> {
+  protected onConnect(): Promise<void> {
     this.openFixedSizePopUpWindow();
     return new Promise((resolve) => (this.resolveWhenPopupLoaded = resolve));
   }
 
-  protected handleIncomingEvent(event: MessageEvent<Message>) {
+  protected onEvent(event: MessageEvent<Message>) {
     const message = event.data;
     if (isConfigUpdateMessage(message)) {
       this.handleIncomingConfigUpdate(message);
