@@ -1,4 +1,4 @@
-import { createMessage, Message, MessageID, MessageWithOptionalId } from '../message';
+import { Message, MessageID } from '../message';
 import { standardErrors } from ':core/error';
 
 export abstract class CrossDomainCommunicator {
@@ -9,14 +9,14 @@ export abstract class CrossDomainCommunicator {
   protected abstract onDisconnect(): void;
   protected abstract onEvent(event: MessageEvent<Message>): void;
 
-  async connect(): Promise<void> {
+  protected async connect(): Promise<void> {
     if (this.connected) return;
     window.addEventListener('message', this.eventListener.bind(this));
     await this.onConnect();
     this.connected = true;
   }
 
-  disconnect(): void {
+  protected disconnect(): void {
     this.connected = false;
     window.removeEventListener('message', this.eventListener.bind(this));
     this.rejectWaitingRequests();
@@ -31,29 +31,22 @@ export abstract class CrossDomainCommunicator {
     return undefined;
   }
 
-  postMessage<M extends Message>(
-    params: MessageWithOptionalId<M>,
-    options?: { bypassTargetOriginCheck: boolean }
-  ) {
+  postMessage(message: Message, options?: { bypassTargetOriginCheck: boolean }) {
     const targetOrigin = this.getTargetOrigin(options);
     if (!targetOrigin || !this.peerWindow) {
       throw standardErrors.rpc.internal('Communicator: No peer window found');
     }
-
-    const message = createMessage(params);
+    this.connect();
     this.peerWindow.postMessage(message, targetOrigin);
   }
 
-  async postMessageForResponse<M extends Message>(
-    params: MessageWithOptionalId<M>
-  ): Promise<Message> {
+  async postMessageForResponse(message: Message): Promise<Message> {
+    this.postMessage(message);
     return new Promise((resolve, reject) => {
-      const message = createMessage(params);
       this.requestMap.set(message.id, {
         resolve,
         reject,
       });
-      this.postMessage(params);
     });
   }
 
