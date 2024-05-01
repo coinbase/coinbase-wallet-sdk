@@ -50,8 +50,8 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
         break;
       }
       case ConfigEvent.PopupUnload:
-        this.closeChildWindow();
         this.disconnect();
+        this.closeChildWindow();
         break;
       default: // handle non-popup config update messages
         this.onConfigUpdateMessage(message);
