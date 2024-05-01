@@ -1,6 +1,5 @@
 import { LIB_VERSION } from '../../version';
 import { CrossDomainCommunicator } from ':core/communicator/CrossDomainCommunicator';
-import { standardErrors } from ':core/error';
 import {
   ConfigEvent,
   ConfigResponseMessage,

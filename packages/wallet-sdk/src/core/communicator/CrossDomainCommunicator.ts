@@ -4,12 +4,13 @@ import { standardErrors } from ':core/error';
 export abstract class CrossDomainCommunicator {
   protected url: URL;
   protected peerWindow: Window | null = null;
-  private connected = false;
 
   constructor(params: { url: string; peerWindow?: Window }) {
     this.url = new URL(params.url);
     this.peerWindow = params.peerWindow ?? null;
   }
+
+  private connected = false;
 
   protected abstract setupPeerWindow(): Promise<void>;
   protected abstract handleIncomingEvent(_: MessageEvent<Message>): void;
