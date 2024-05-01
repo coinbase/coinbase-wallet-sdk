@@ -24,6 +24,11 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     this.onConfigUpdateMessage = params.onConfigUpdateMessage;
   }
 
+  protected setupPeerWindow(): Promise<void> {
+    this.openFixedSizePopUpWindow();
+    return new Promise((resolve) => (this.resolveWhenPopupLoaded = resolve));
+  }
+
   async postMessageForResponse(message: Message): Promise<Message> {
     this.postMessage(message);
     return new Promise((resolve, reject) => {
@@ -32,11 +37,6 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
         reject,
       });
     });
-  }
-
-  protected setupPeerWindow(): Promise<void> {
-    this.openFixedSizePopUpWindow();
-    return new Promise((resolve) => (this.resolveWhenPopupLoaded = resolve));
   }
 
   private requestMap = new Map<
