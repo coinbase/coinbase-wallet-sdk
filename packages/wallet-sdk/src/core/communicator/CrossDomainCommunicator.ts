@@ -6,6 +6,7 @@ export abstract class CrossDomainCommunicator {
   private connected = false;
 
   protected abstract setupPeerWindow(): Promise<void>;
+  // returns true if the message is handled
   protected abstract handleIncomingMessage(_: Message): Promise<boolean>;
 
   protected async connect() {
