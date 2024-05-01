@@ -15,18 +15,6 @@ jest.mock(':util/ScopedLocalStorage', () => {
 });
 
 const mockPostMessageForResponse = jest.fn();
-jest.mock(':core/communicator/PopUpCommunicator', () => {
-  return {
-    PopUpCommunicator: jest.fn().mockImplementation(() => {
-      return {
-        connect: jest.fn(),
-        postMessage: jest.fn(),
-        postMessageForResponse: mockPostMessageForResponse,
-      };
-    }),
-  };
-});
-
 const mockHandshake = jest.fn();
 const mockRequest = jest.fn();
 jest.mock('./scw/SCWSigner', () => {
@@ -42,7 +30,7 @@ jest.mock('./scw/SCWSigner', () => {
 
 describe('SignerConfigurator', () => {
   function createSignHandler() {
-    return new SignHandler({
+    const handler = new SignHandler({
       metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1] },
       preference: { options: 'all' },
       listener: {
@@ -50,6 +38,9 @@ describe('SignerConfigurator', () => {
         onChainUpdate: jest.fn(),
       },
     });
+    handler.postMessage = jest.fn();
+    handler.postMessageForResponse = mockPostMessageForResponse;
+    return handler;
   }
 
   it('should complete signerType selection correctly', async () => {
