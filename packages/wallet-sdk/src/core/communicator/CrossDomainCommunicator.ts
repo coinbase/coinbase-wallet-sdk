@@ -2,40 +2,40 @@ import { Message, MessageID } from '../message';
 import { standardErrors } from ':core/error';
 
 export abstract class CrossDomainCommunicator {
-  protected url: URL | undefined = undefined;
+  protected url: URL;
+  protected peerWindow: Window | null = null;
   private connected = false;
+
+  constructor(params: { url: string; peerWindow?: Window }) {
+    this.url = new URL(params.url);
+    this.peerWindow = params.peerWindow ?? null;
+  }
 
   protected abstract setupPeerWindow(): Promise<void>;
   protected abstract handleIncomingEvent(_: MessageEvent<Message>): void;
 
-  protected async connect(): Promise<void> {
+  protected async connect() {
     if (this.connected) return;
     window.addEventListener('message', this.eventListener.bind(this));
     await this.setupPeerWindow();
     this.connected = true;
   }
 
-  protected disconnect(): void {
+  protected disconnect() {
     this.connected = false;
     window.removeEventListener('message', this.eventListener.bind(this));
     this.rejectWaitingRequests();
   }
 
-  protected peerWindow: Window | null = null;
-
-  private getTargetOrigin(options?: { bypassTargetOriginCheck: boolean }): string | undefined {
-    if (this.url) return this.url.origin;
-    if (options?.bypassTargetOriginCheck) return '*';
-    return undefined;
-  }
-
   async postMessage(message: Message, options?: { bypassTargetOriginCheck: boolean }) {
     await this.connect();
-    const targetOrigin = this.getTargetOrigin(options);
-    if (!targetOrigin || !this.peerWindow) {
+    if (!this.peerWindow) {
       throw standardErrors.rpc.internal('Communicator: No peer window found');
     }
-    this.peerWindow.postMessage(message, targetOrigin);
+    this.peerWindow.postMessage(
+      message, //
+      options?.bypassTargetOriginCheck ? '*' : this.url.origin
+    );
   }
 
   async postMessageForResponse(message: Message): Promise<Message> {
@@ -57,7 +57,7 @@ export abstract class CrossDomainCommunicator {
   >();
 
   private eventListener(event: MessageEvent<Message>) {
-    if (event.origin !== this.url?.origin) return;
+    if (event.origin !== this.url.origin) return;
 
     const message = event.data;
     const { requestId } = message;

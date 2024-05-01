@@ -17,10 +17,9 @@ const mapping = {
     'wallet_sendCalls',
   ],
   state: [
-    // internal state
     'eth_chainId',
     'eth_accounts',
-    'eth_coinbase',
+    'eth_coinbase', //
     'net_version',
   ],
   deprecated: ['eth_sign', 'eth_signTypedData_v2'],

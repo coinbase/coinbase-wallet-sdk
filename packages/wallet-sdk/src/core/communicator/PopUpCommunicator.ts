@@ -18,8 +18,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
   private onConfigUpdateMessage: (_: ConfigUpdateMessage) => void;
 
   constructor(params: { url: string; onConfigUpdateMessage: (_: ConfigUpdateMessage) => void }) {
-    super();
-    this.url = new URL(params.url);
+    super(params);
     this.onConfigUpdateMessage = params.onConfigUpdateMessage;
   }
 
@@ -64,21 +63,13 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     const left = (window.innerWidth - POPUP_WIDTH) / 2 + window.screenX;
     const top = (window.innerHeight - POPUP_HEIGHT) / 2 + window.screenY;
 
-    if (!this.url) {
-      throw standardErrors.rpc.internal('No url provided in PopUpCommunicator');
-    }
-    const popupUrl = new URL(this.url);
     this.peerWindow = window.open(
-      popupUrl,
+      this.url,
       'Smart Wallet',
       `width=${POPUP_WIDTH}, height=${POPUP_HEIGHT}, left=${left}, top=${top}`
     );
 
     this.peerWindow?.focus();
-
-    if (!this.peerWindow) {
-      throw standardErrors.rpc.internal('Pop up window failed to open');
-    }
   }
 
   private closePeerWindow() {
