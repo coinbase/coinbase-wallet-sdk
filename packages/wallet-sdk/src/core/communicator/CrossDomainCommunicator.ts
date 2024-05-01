@@ -8,7 +8,7 @@ export abstract class CrossDomainCommunicator {
   protected abstract setupPeerWindow(): Promise<void>;
   protected abstract handleIncomingEvent(_: MessageEvent<Message>): void;
 
-  private async connect(): Promise<void> {
+  protected async connect(): Promise<void> {
     if (this.connected) return;
     window.addEventListener('message', this.eventListener.bind(this));
     await this.setupPeerWindow();
