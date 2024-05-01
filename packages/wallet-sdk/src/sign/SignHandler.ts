@@ -104,15 +104,17 @@ export class SignHandler extends PopUpCommunicator {
 
   protected async handleIncomingMessage(message: Message) {
     if (await super.handleIncomingMessage(message)) return true;
-    if (!isConfigUpdateMessage(message)) return false;
-    switch (message.event) {
-      case ConfigEvent.WalletLinkSessionRequest:
-        if (!this.walletlinkSigner) {
-          this.walletlinkSigner = this.initSigner('walletlink') as WLSigner;
-        }
-        await this.walletlinkSigner.handleWalletLinkSessionRequest();
-        return true;
+    if (isConfigUpdateMessage(message) && message.event === ConfigEvent.WalletLinkSessionRequest) {
+      await this.handleWalletLinkSessionRequest();
+      return true;
     }
     return false;
+  }
+
+  private async handleWalletLinkSessionRequest() {
+    if (!this.walletlinkSigner) {
+      this.walletlinkSigner = this.initSigner('walletlink') as WLSigner;
+    }
+    await this.walletlinkSigner.handleWalletLinkSessionRequest();
   }
 }
