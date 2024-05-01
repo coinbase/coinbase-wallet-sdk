@@ -29,12 +29,12 @@ export abstract class CrossDomainCommunicator {
     return undefined;
   }
 
-  postMessage(message: Message, options?: { bypassTargetOriginCheck: boolean }) {
+  async postMessage(message: Message, options?: { bypassTargetOriginCheck: boolean }) {
+    await this.connect();
     const targetOrigin = this.getTargetOrigin(options);
     if (!targetOrigin || !this.peerWindow) {
       throw standardErrors.rpc.internal('Communicator: No peer window found');
     }
-    this.connect();
     this.peerWindow.postMessage(message, targetOrigin);
   }
 
