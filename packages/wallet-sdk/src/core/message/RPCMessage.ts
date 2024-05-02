@@ -3,6 +3,7 @@ import { SerializedEthereumRpcError } from ':core/error';
 import { AppMetadata } from ':core/provider/interface';
 
 interface RPCMessage extends Message {
+  id: MessageID;
   sender: string; // hex encoded public key of the sender
   content: unknown;
   timestamp: Date;

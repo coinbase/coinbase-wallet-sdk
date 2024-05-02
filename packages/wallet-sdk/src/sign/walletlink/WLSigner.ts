@@ -7,7 +7,7 @@ import { AddressString } from ':core/type';
 export class WLSigner implements Signer {
   private readonly adapter: WLRelayAdapter;
 
-  constructor(params: { metadata: AppMetadata; updateListener: StateUpdateListener }) {
+  constructor(params: { metadata: AppMetadata; updateListener?: StateUpdateListener }) {
     const { appName, appLogoUrl } = params.metadata;
     this.adapter = new WLRelayAdapter({
       appName,

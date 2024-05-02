@@ -1,17 +1,7 @@
-import { StateUpdateListener } from 'src/sign/interface';
 import { WLSigner } from 'src/sign/walletlink/WLSigner';
 import { LIB_VERSION } from 'src/version';
 
-import {
-  ConfigEvent,
-  ConfigResponseMessage,
-  ConfigUpdateMessage,
-  createMessage,
-  isConfigUpdateMessage,
-  Message,
-  MessageID,
-  SignerType,
-} from '../message';
+import { ConfigMessage, Message, SignerType } from '../message';
 import { standardErrors } from ':core/error';
 import { AppMetadata, Preference } from ':core/provider/interface';
 
@@ -21,43 +11,40 @@ const POPUP_HEIGHT = 540;
 export class PopUpCommunicator {
   private connected = false;
 
-  // temporary walletlink signer instance to handle WalletLinkSessionRequest
-  // will revisit this when refactoring the walletlink signer
-  private walletlinkSigner?: WLSigner;
-
-  private async onWalletLinkSessionRequest() {
-    if (!this.walletlinkSigner) {
-      this.walletlinkSigner = new WLSigner({
-        metadata: this.metadata,
-        updateListener: {} as StateUpdateListener,
-      });
-    }
-
-    this.postWalletLinkUpdate({ session: this.walletlinkSigner!.getWalletLinkSession() });
-    // Wait for the wallet link session to be established
-    await this.walletlinkSigner!.handshake();
-    this.postWalletLinkUpdate({ connected: true });
+  private listenForWalletLinkSessionRequest() {
+    this.onMessage<ConfigMessage>(({ event }) => event === 'WalletLinkSessionRequest').then(
+      async () => {
+        const walletlink = new WLSigner({
+          metadata: this.metadata,
+        });
+        this.postWalletLinkUpdate({ session: walletlink.getWalletLinkSession() });
+        // Wait for the wallet link session to be established
+        await walletlink.handshake();
+        this.postWalletLinkUpdate({ connected: true });
+      }
+    );
   }
 
-  private resolveConnection?: () => void;
-
   private postWalletLinkUpdate(data: unknown) {
-    this.postMessage(
-      createMessage<ConfigUpdateMessage>({
-        event: ConfigEvent.WalletLinkUpdate,
-        data,
-      })
-    );
+    this.postMessage({
+      event: 'WalletLinkUpdate',
+      data,
+    } as ConfigMessage);
   }
 
   async requestSignerSelection(preference: Preference): Promise<SignerType> {
     await this.connect();
-    const message = createMessage<ConfigUpdateMessage>({
-      event: ConfigEvent.SelectSignerType,
+
+    this.listenForWalletLinkSessionRequest();
+
+    const id = crypto.randomUUID();
+    this.postMessage({
+      id: crypto.randomUUID(),
+      event: 'selectSignerType',
       data: preference,
-    });
-    const response = await this.postMessageForResponse(message);
-    return (response as ConfigResponseMessage).data as SignerType;
+    } as ConfigMessage);
+    const response: ConfigMessage = await this.onMessage(({ requestId }) => requestId === id);
+    return response.data as SignerType;
   }
 
   private url: URL;
@@ -71,21 +58,14 @@ export class PopUpCommunicator {
 
   async connect() {
     if (this.connected) return;
-    window.addEventListener('message', this.eventListener.bind(this));
-    this.openFixedSizePopUpWindow();
-    await new Promise<void>((resolve) => (this.resolveConnection = resolve));
+    this.openFixedSizePopUpWindow(); // this sets this.peerWindow
+    await this.waitForPopupLoaded();
     this.connected = true;
-  }
-
-  protected disconnect() {
-    this.connected = false;
-    window.removeEventListener('message', this.eventListener.bind(this));
-    this.rejectWaitingRequests();
   }
 
   protected peerWindow: Window | null = null;
 
-  async postMessage(message: Message) {
+  private async postMessage<M extends Message>(message: M) {
     if (!this.peerWindow) {
       throw standardErrors.rpc.internal('Communicator: No peer window found');
     }
@@ -94,59 +74,38 @@ export class PopUpCommunicator {
 
   async postMessageForResponse(message: Message): Promise<Message> {
     this.postMessage(message);
-    return new Promise((resolve, reject) => {
-      this.requestMap.set(message.id, {
-        resolve,
-        reject,
+    const response = await this.onMessage(({ requestId }) => requestId === message.id);
+    return response;
+  }
+
+  private listeners: Array<(event: MessageEvent) => void> = [];
+
+  private async onMessage<M extends Message>(predicate: (_: Partial<M>) => boolean): Promise<M> {
+    return new Promise((resolve) => {
+      const listener = (event: MessageEvent<M>) => {
+        if (event.origin !== this.url.origin) return;
+        const message = event.data;
+        if (predicate(message)) {
+          resolve(message);
+          window.removeEventListener('message', listener);
+        }
+      };
+      window.addEventListener('message', listener);
+      this.listeners.push(listener);
+    });
+  }
+
+  private async waitForPopupLoaded() {
+    this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload').then(() =>
+      this.closeChildWindow()
+    );
+
+    return this.onMessage<ConfigMessage>(({ event }) => event === 'PopupLoaded').then((message) => {
+      this.postMessage({
+        requestId: message.id,
+        data: { version: LIB_VERSION },
       });
     });
-  }
-
-  private requestMap = new Map<
-    MessageID,
-    {
-      resolve: (_: Message) => void;
-      reject: (_: Error) => void;
-    }
-  >();
-
-  private eventListener(event: MessageEvent<Message>) {
-    if (event.origin !== this.url?.origin) return;
-
-    const message = event.data;
-    const { requestId } = message;
-    if (!requestId) {
-      if (!isConfigUpdateMessage(message)) return;
-      switch (message.event) {
-        case ConfigEvent.PopupLoaded:
-          this.postMessage(
-            createMessage<ConfigResponseMessage>({
-              requestId: message.id,
-              data: { version: LIB_VERSION },
-            })
-          );
-          this.resolveConnection?.();
-          this.resolveConnection = undefined;
-          break;
-        case ConfigEvent.PopupUnload:
-          this.disconnect();
-          this.closeChildWindow();
-          break;
-        case ConfigEvent.WalletLinkSessionRequest:
-          this.onWalletLinkSessionRequest();
-          break;
-      }
-    }
-
-    this.requestMap.get(requestId!)?.resolve?.(message);
-    this.requestMap.delete(requestId!);
-  }
-
-  private rejectWaitingRequests() {
-    this.requestMap.forEach(({ reject }) => {
-      reject(standardErrors.provider.userRejectedRequest('Request rejected'));
-    });
-    this.requestMap.clear();
   }
 
   private openFixedSizePopUpWindow() {
@@ -171,5 +130,10 @@ export class PopUpCommunicator {
       this.peerWindow.close();
     }
     this.peerWindow = null;
+
+    this.listeners.forEach((listener) => {
+      window.removeEventListener('message', listener);
+    });
+    this.listeners = [];
   }
 }
