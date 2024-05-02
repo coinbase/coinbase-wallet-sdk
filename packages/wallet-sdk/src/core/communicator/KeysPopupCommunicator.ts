@@ -1,5 +1,4 @@
-import { LIB_VERSION } from 'src/version';
-
+import { LIB_VERSION } from '../../version';
 import { ConfigMessage, Message } from '../message';
 import { closePopup, openPopup } from './PopUpCommunicator';
 import { CB_KEYS_URL } from ':core/constants';
