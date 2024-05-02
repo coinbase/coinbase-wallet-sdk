@@ -15,6 +15,11 @@ const POPUP_HEIGHT = 540;
 export class PopUpCommunicator extends CrossDomainCommunicator {
   private resolveConnection?: () => void;
 
+  constructor(params: { url: string }) {
+    super();
+    this.url = new URL(params.url);
+  }
+
   protected async setupPeerWindow(): Promise<void> {
     this.openFixedSizePopUpWindow();
     return new Promise((resolve) => (this.resolveConnection = resolve));
@@ -50,6 +55,9 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     const left = (window.innerWidth - POPUP_WIDTH) / 2 + window.screenX;
     const top = (window.innerHeight - POPUP_HEIGHT) / 2 + window.screenY;
 
+    if (!this.url) {
+      throw standardErrors.rpc.internal('No url provided in PopUpCommunicator');
+    }
     this.peerWindow = window.open(
       this.url,
       'Smart Wallet',

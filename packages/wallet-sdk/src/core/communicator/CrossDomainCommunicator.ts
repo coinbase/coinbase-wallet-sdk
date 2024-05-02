@@ -2,13 +2,8 @@ import { Message, MessageID } from '../message';
 import { standardErrors } from ':core/error';
 
 export abstract class CrossDomainCommunicator {
-  protected readonly url: URL;
+  protected url: URL | null = null;
   protected peerWindow: Window | null = null;
-
-  constructor(params: { url: string; peerWindow?: Window }) {
-    this.url = new URL(params.url);
-    this.peerWindow = params.peerWindow ?? null;
-  }
 
   private connected = false;
 
@@ -39,7 +34,8 @@ export abstract class CrossDomainCommunicator {
       throw standardErrors.rpc.internal('Communicator: No peer window found');
     }
 
-    this.peerWindow.postMessage(message, this.url.origin);
+    const targetOrigin = this.url ? this.url.origin : '*';
+    this.peerWindow.postMessage(message, targetOrigin);
     if (mode === 'sendOnly') return;
 
     return new Promise((resolve, reject) => {
@@ -59,7 +55,7 @@ export abstract class CrossDomainCommunicator {
   >();
 
   private eventListener(event: MessageEvent<Message>) {
-    if (event.origin !== this.url.origin) return;
+    if (event.origin !== this.url?.origin) return;
 
     const message = event.data;
     const { requestId } = message;
