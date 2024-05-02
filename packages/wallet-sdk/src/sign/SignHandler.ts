@@ -1,7 +1,7 @@
 import { Signer, StateUpdateListener } from './interface';
 import { SCWSigner } from './scw/SCWSigner';
 import { WLSigner } from './walletlink/WLSigner';
-import { PopUpCommunicator } from ':core/communicator/Communicator';
+import { KeysPopupCommunicator } from ':core/communicator/KeysPopupCommunicator';
 import { ConfigMessage, SignerType } from ':core/message';
 import {
   AppMetadata,
@@ -17,7 +17,7 @@ type SignerConfiguratorOptions = ConstructorOptions & {
   listener: StateUpdateListener;
 };
 
-export class SignHandler extends PopUpCommunicator {
+export class SignHandler extends KeysPopupCommunicator {
   private signer: Signer | null;
   private readonly metadata: AppMetadata;
   private readonly preference: Preference;

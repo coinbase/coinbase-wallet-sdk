@@ -4,7 +4,7 @@ import { ConfigMessage, Message } from '../message';
 import { closePopup, openPopup } from './PopUpCommunicator';
 import { CB_KEYS_URL } from ':core/constants';
 
-export class PopUpCommunicator {
+export class KeysPopupCommunicator {
   private url: URL;
   private popup: Window | null = null;
 
