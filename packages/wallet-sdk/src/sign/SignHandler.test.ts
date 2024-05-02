@@ -39,7 +39,6 @@ describe('SignerConfigurator', () => {
       },
     });
     handler.postMessage = jest.fn();
-    handler.connect = jest.fn();
     return handler;
   }
 

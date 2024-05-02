@@ -74,7 +74,6 @@ export class SignHandler extends PopUpCommunicator {
   }
 
   private async requestSignerSelection(): Promise<SignerType> {
-    await this.connect();
     const message = createMessage<ConfigUpdateMessage>({
       event: ConfigEvent.SelectSignerType,
       data: this.preference,
