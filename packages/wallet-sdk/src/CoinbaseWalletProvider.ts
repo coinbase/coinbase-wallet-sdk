@@ -3,7 +3,7 @@ import EventEmitter from 'eventemitter3';
 import { AccountsUpdate, ChainUpdate, Signer } from './sign/interface';
 import { SCWSigner } from './sign/scw/SCWSigner';
 import { WLSigner } from './sign/walletlink/WLSigner';
-import { KeysPopupCommunicator } from ':core/communicator/KeysPopupCommunicator';
+import { PopupCommunicator } from ':core/communicator/Communicator';
 import { standardErrorCodes, standardErrors } from ':core/error';
 import { ConfigMessage, SignerType } from ':core/message';
 import {
@@ -21,7 +21,7 @@ import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 const SIGNER_TYPE_KEY = 'SignerType';
 
-export class CoinbaseWalletProvider extends KeysPopupCommunicator implements ProviderInterface {
+export class CoinbaseWalletProvider implements ProviderInterface {
   readonly isCoinbaseWallet = true;
 
   accounts: AddressString[];
@@ -30,12 +30,13 @@ export class CoinbaseWalletProvider extends KeysPopupCommunicator implements Pro
   private signer: Signer | null;
   private readonly metadata: AppMetadata;
   private readonly preference: Preference;
+  private readonly communicator: PopupCommunicator;
   private readonly storage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
   private readonly eventEmitter = new EventEmitter();
 
   constructor(params: Readonly<ConstructorOptions>) {
     const { keysUrl, ...preferenceWithoutKeysUrl } = params.preference;
-    super(keysUrl);
+    this.communicator = new PopupCommunicator(keysUrl);
 
     this.accounts = [];
     this.chain = {
@@ -151,7 +152,7 @@ export class CoinbaseWalletProvider extends KeysPopupCommunicator implements Pro
     this.signer?.disconnect();
     this.signer = null;
     this.storage.removeItem(SIGNER_TYPE_KEY);
-    super.disconnect();
+    this.communicator.disconnect();
 
     this.eventEmitter.emit(
       'disconnect',
@@ -172,7 +173,7 @@ export class CoinbaseWalletProvider extends KeysPopupCommunicator implements Pro
       event: 'selectSignerType',
       data: this.preference,
     };
-    const { data } = await super.postMessage(request);
+    const { data } = await this.communicator.postMessage(request);
     return data as SignerType;
   }
 
@@ -188,7 +189,7 @@ export class CoinbaseWalletProvider extends KeysPopupCommunicator implements Pro
     };
     return new SignerClasses[signerType]!({
       metadata: this.metadata,
-      postMessageToPopup: super.postMessage.bind(this),
+      postMessageToPopup: this.communicator.postMessage.bind(this),
       updateListener: this.updateListener,
     });
   }
@@ -197,14 +198,14 @@ export class CoinbaseWalletProvider extends KeysPopupCommunicator implements Pro
   // will revisit this when refactoring the walletlink signer
   private walletlinkSigner?: WLSigner;
   private listenForWalletLinkSessionRequest() {
-    this.onMessage<ConfigMessage>(({ event }) => event === 'WalletLinkSessionRequest').then(
-      async () => {
+    this.communicator
+      .onMessage<ConfigMessage>(({ event }) => event === 'WalletLinkSessionRequest')
+      .then(async () => {
         if (!this.walletlinkSigner) {
           this.walletlinkSigner = this.initSigner('walletlink') as WLSigner;
         }
         await this.walletlinkSigner.handleWalletLinkSessionRequest();
-      }
-    );
+      });
   }
 
   protected readonly updateListener = {

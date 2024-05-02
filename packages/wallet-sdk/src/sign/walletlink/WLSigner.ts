@@ -1,18 +1,18 @@
 import { Signer, StateUpdateListener } from '../interface';
 import { WLRelayAdapter } from './relay/WLRelayAdapter';
-import { KeysPopupCommunicator } from ':core/communicator/KeysPopupCommunicator';
+import { PopupCommunicator } from ':core/communicator/Communicator';
 import { WALLETLINK_URL } from ':core/constants';
 import { ConfigMessage } from ':core/message';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
 
 export class WLSigner implements Signer {
-  private readonly postMessageToPopup: KeysPopupCommunicator['postMessage'];
+  private readonly postMessageToPopup: PopupCommunicator['postMessage'];
   private readonly adapter: WLRelayAdapter;
 
   constructor(params: {
     metadata: AppMetadata;
-    postMessageToPopup: KeysPopupCommunicator['postMessage'];
+    postMessageToPopup: PopupCommunicator['postMessage'];
     updateListener?: StateUpdateListener;
   }) {
     const { appName, appLogoUrl } = params.metadata;

@@ -16,6 +16,17 @@ jest.mock(':util/ScopedLocalStorage', () => {
 });
 
 const mockPostMessage = jest.fn();
+jest.mock(':core/communicator/PopUpCommunicator', () => {
+  return {
+    PopUpCommunicator: jest.fn().mockImplementation(() => {
+      return {
+        onMessage: jest.fn(),
+        postMessage: mockPostMessage,
+      };
+    }),
+  };
+});
+
 const mockHandshake = jest.fn();
 const mockRequest = jest.fn();
 jest.mock('./sign/scw/SCWSigner', () => {
@@ -35,7 +46,6 @@ describe('CoinbaseWalletProvider', () => {
       metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1] },
       preference: { options: 'all' },
     });
-    provider.postMessage = mockPostMessage;
     return provider;
   }
 

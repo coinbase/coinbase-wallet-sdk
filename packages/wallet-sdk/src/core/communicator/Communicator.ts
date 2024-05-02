@@ -1,10 +1,10 @@
 import { LIB_VERSION } from '../../version';
 import { ConfigMessage, Message } from '../message';
-import { closePopup, openPopup } from './PopUpCommunicator';
+import { closePopup, openPopup } from './util';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
 
-export class KeysPopupCommunicator {
+export class PopupCommunicator {
   private url: URL;
 
   constructor(url: string = CB_KEYS_URL) {
@@ -40,7 +40,7 @@ export class KeysPopupCommunicator {
 
   private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>();
 
-  protected disconnect() {
+  disconnect() {
     this.listeners.forEach(({ reject }, listener) => {
       reject(standardErrors.provider.userRejectedRequest('Request rejected'));
       window.removeEventListener('message', listener);
