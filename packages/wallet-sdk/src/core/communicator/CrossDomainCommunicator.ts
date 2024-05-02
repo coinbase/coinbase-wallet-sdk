@@ -2,7 +2,7 @@ import { Message, MessageID } from '../message';
 import { standardErrors } from ':core/error';
 
 export abstract class CrossDomainCommunicator {
-  protected url: URL;
+  protected readonly url: URL;
   protected peerWindow: Window | null = null;
 
   constructor(params: { url: string; peerWindow?: Window }) {
