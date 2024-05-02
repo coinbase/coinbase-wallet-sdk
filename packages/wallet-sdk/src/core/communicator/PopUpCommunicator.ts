@@ -9,8 +9,6 @@ const POPUP_WIDTH = 420;
 const POPUP_HEIGHT = 540;
 
 export class PopUpCommunicator {
-  private connected = false;
-
   private listenForWalletLinkSessionRequest() {
     this.onMessage<ConfigMessage>(({ event }) => event === 'WalletLinkSessionRequest').then(
       async () => {
@@ -33,8 +31,6 @@ export class PopUpCommunicator {
   }
 
   async requestSignerSelection(preference: Preference): Promise<SignerType> {
-    await this.connect();
-
     this.listenForWalletLinkSessionRequest();
 
     const id = crypto.randomUUID();
@@ -56,16 +52,15 @@ export class PopUpCommunicator {
     this.url = new URL(url);
   }
 
-  async connect() {
-    if (this.connected) return;
-    this.openFixedSizePopUpWindow(); // this sets this.peerWindow
+  private async connect() {
+    if (this.peerWindow) return;
     await this.waitForPopupLoaded();
-    this.connected = true;
   }
 
   protected peerWindow: Window | null = null;
 
   private async postMessage<M extends Message>(message: M) {
+    await this.connect();
     if (!this.peerWindow) {
       throw standardErrors.rpc.internal('Communicator: No peer window found');
     }
@@ -96,6 +91,7 @@ export class PopUpCommunicator {
   }
 
   private async waitForPopupLoaded() {
+    this.openFixedSizePopUpWindow(); // this sets this.peerWindow
     this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload').then(() =>
       this.closeChildWindow()
     );

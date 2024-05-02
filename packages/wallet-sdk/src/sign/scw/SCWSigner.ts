@@ -47,8 +47,6 @@ export class SCWSigner implements Signer {
   }
 
   async handshake(): Promise<AddressString[]> {
-    await this.popupCommunicator.connect();
-
     const handshakeMessage = await this.createRequestMessage({
       handshake: {
         method: 'eth_requestAccounts',
@@ -80,7 +78,6 @@ export class SCWSigner implements Signer {
       return localResult;
     }
 
-    await this.popupCommunicator.connect();
     const response = await this.sendEncryptedRequest(request);
     const decrypted = await this.decryptResponseMessage<T>(response);
     this.updateInternalState(request, decrypted);
