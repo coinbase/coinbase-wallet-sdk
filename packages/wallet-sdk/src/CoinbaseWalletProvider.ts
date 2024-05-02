@@ -2,7 +2,7 @@ import EventEmitter from 'eventemitter3';
 
 import { standardErrorCodes, standardErrors } from './core/error';
 import { ConstructorOptions, ProviderInterface, RequestArguments } from './core/provider/interface';
-import { AddressString, Chain, IntNumber } from './core/type';
+import { AddressString, IntNumber } from './core/type';
 import { areAddressArraysEqual, hexStringFromIntNumber } from './core/type/util';
 import { AccountsUpdate, ChainUpdate } from './sign/interface';
 import { SignHandler } from './sign/SignHandler';
@@ -10,23 +10,14 @@ import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './util/provide
 import { determineMethodCategory } from ':core/provider/method';
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
-  protected accounts: AddressString[] = [];
-  protected chain: Chain;
   protected signHandler: SignHandler;
 
   constructor(params: Readonly<ConstructorOptions>) {
     super();
-    this.chain = {
-      id: params.metadata.appChainIds?.[0] ?? 1,
-    };
     this.signHandler = new SignHandler({
       ...params,
       listener: this.updateListener,
     });
-  }
-
-  public get connected() {
-    return this.accounts.length > 0;
   }
 
   public async request<T>(args: RequestArguments): Promise<T> {
@@ -53,11 +44,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     },
 
     sign: async (request: RequestArguments) => {
-      if (!this.connected) {
-        throw standardErrors.provider.unauthorized(
-          "Must call 'eth_requestAccounts' before other methods"
-        );
-      }
       try {
         return await this.signHandler.request(request);
       } catch (error) {
@@ -66,11 +52,11 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       }
     },
 
-    fetch: (request: RequestArguments) => fetchRPCRequest(request, this.chain),
+    fetch: (request: RequestArguments) => fetchRPCRequest(request, this.signHandler.chain),
 
     state: (request: RequestArguments) => {
       const getConnectedAccounts = (): AddressString[] => {
-        if (this.connected) return this.accounts;
+        if (this.signHandler.connected) return this.signHandler.accounts;
         throw standardErrors.provider.unauthorized(
           "Must call 'eth_requestAccounts' before other methods"
         );
@@ -78,7 +64,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       switch (request.method) {
         case 'eth_chainId':
         case 'net_version':
-          return this.chain.id;
+          return this.signHandler.chain.id;
         case 'eth_accounts':
           return getConnectedAccounts();
         case 'eth_coinbase':

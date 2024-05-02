@@ -2,6 +2,7 @@ import { Signer, StateUpdateListener } from './interface';
 import { SCWSigner } from './scw/SCWSigner';
 import { WLSigner } from './walletlink/WLSigner';
 import { KeysPopupCommunicator } from ':core/communicator/KeysPopupCommunicator';
+import { standardErrors } from ':core/error';
 import { ConfigMessage, SignerType } from ':core/message';
 import {
   AppMetadata,
@@ -9,6 +10,7 @@ import {
   Preference,
   RequestArguments,
 } from ':core/provider/interface';
+import { AddressString, Chain } from ':core/type';
 import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 const SIGNER_TYPE_KEY = 'SignerType';
@@ -18,6 +20,9 @@ type SignerConfiguratorOptions = ConstructorOptions & {
 };
 
 export class SignHandler extends KeysPopupCommunicator {
+  accounts: AddressString[];
+  chain: Chain;
+
   private signer: Signer | null;
   private readonly metadata: AppMetadata;
   private readonly preference: Preference;
@@ -32,6 +37,15 @@ export class SignHandler extends KeysPopupCommunicator {
     this.metadata = params.metadata;
     this.listener = params.listener;
     this.signer = this.loadSigner();
+
+    this.accounts = [];
+    this.chain = {
+      id: params.metadata.appChainIds?.[0] ?? 1,
+    };
+  }
+
+  get connected() {
+    return this.accounts.length > 0;
   }
 
   async handshake() {
@@ -48,6 +62,11 @@ export class SignHandler extends KeysPopupCommunicator {
   async request(request: RequestArguments) {
     if (!this.signer) {
       throw new Error('Signer is not initialized');
+    }
+    if (!this.connected) {
+      throw standardErrors.provider.unauthorized(
+        "Must call 'eth_requestAccounts' before other methods"
+      );
     }
     return this.signer.request(request);
   }
