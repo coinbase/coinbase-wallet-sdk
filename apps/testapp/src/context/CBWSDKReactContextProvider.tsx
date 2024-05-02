@@ -17,6 +17,7 @@ export type SDKVersionType = (typeof sdkVersions)[number];
 const SELECTED_SCW_URL_KEY = 'scw_url';
 export const scwUrls = [
   'https://keys.coinbase.com/connect',
+  'https://keys-beta.coinbase.com/connect',
   'http://localhost:3005/connect',
 ] as const;
 export type ScwUrlType = (typeof scwUrls)[number];
