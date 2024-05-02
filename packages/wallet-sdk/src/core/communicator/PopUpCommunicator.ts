@@ -1,5 +1,6 @@
 import { LIB_VERSION } from '../../version';
 import { CrossDomainCommunicator } from ':core/communicator/CrossDomainCommunicator';
+import { standardErrors } from ':core/error';
 import {
   ConfigEvent,
   ConfigResponseMessage,
@@ -14,7 +15,7 @@ const POPUP_HEIGHT = 540;
 export class PopUpCommunicator extends CrossDomainCommunicator {
   private resolveConnection?: () => void;
 
-  protected setupPeerWindow(): Promise<void> {
+  protected async setupPeerWindow(): Promise<void> {
     this.openFixedSizePopUpWindow();
     return new Promise((resolve) => (this.resolveConnection = resolve));
   }
@@ -55,6 +56,10 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     );
 
     this.peerWindow?.focus();
+
+    if (!this.peerWindow) {
+      throw standardErrors.rpc.internal('Pop up window failed to open');
+    }
   }
 
   private closeChildWindow() {
