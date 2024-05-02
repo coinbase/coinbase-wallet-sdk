@@ -35,11 +35,19 @@ export class WLSigner implements Signer {
   }
 
   async handleWalletLinkSessionRequest() {
-    const { id, secret } = this.adapter.getWalletLinkSession();
-    this.postWalletLinkUpdate({ session: { id, secret } });
+    this.postWalletLinkSession();
 
     // Wait for the wallet link session to be established
     await this.handshake();
+    this.postWalletLinkConnected();
+  }
+
+  private postWalletLinkSession() {
+    const { id, secret } = this.adapter.getWalletLinkSession();
+    this.postWalletLinkUpdate({ session: { id, secret } });
+  }
+
+  private postWalletLinkConnected() {
     this.postWalletLinkUpdate({ connected: true });
   }
 
