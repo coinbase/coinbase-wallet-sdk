@@ -1,7 +1,7 @@
 import { Signer, StateUpdateListener } from './interface';
 import { SCWSigner } from './scw/SCWSigner';
 import { WLSigner } from './walletlink/WLSigner';
-import { PopupCommunicator } from ':core/communicator/PopupCommunicator';
+import { PopUpCommunicator } from ':core/communicator/Communicator';
 import { CB_KEYS_URL } from ':core/constants';
 import { ConfigMessage, SignerType } from ':core/message';
 import {
@@ -23,7 +23,7 @@ export class SignHandler {
   private readonly metadata: AppMetadata;
   private readonly preference: Preference;
   private readonly listener: StateUpdateListener;
-  private readonly popupCommunicator: PopupCommunicator;
+  private readonly popupCommunicator: PopUpCommunicator;
   private readonly storage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
 
   constructor(params: Readonly<SignerConfiguratorOptions>) {
@@ -31,7 +31,7 @@ export class SignHandler {
     this.listener = params.listener;
     const { keysUrl, ...preferenceWithoutKeysUrl } = params.preference;
     this.preference = preferenceWithoutKeysUrl;
-    this.popupCommunicator = new PopupCommunicator(new URL(keysUrl ?? CB_KEYS_URL));
+    this.popupCommunicator = new PopUpCommunicator(new URL(keysUrl ?? CB_KEYS_URL));
     this.signer = this.loadSigner();
   }
 

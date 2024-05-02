@@ -1,63 +1,28 @@
-import { LIB_VERSION } from 'src/version';
+import { standardErrors } from ':core/error';
 
-import { ConfigMessage, Message } from '../message';
-import { closePopup, openPopup } from './util';
+const POPUP_WIDTH = 420;
+const POPUP_HEIGHT = 540;
 
-export class PopupCommunicator {
-  protected popup: Window | null = null;
-  constructor(private url: URL) {}
+// Window Management
 
-  async postMessage<M extends Message>(request: Message): Promise<M> {
-    if (!this.popup) {
-      this.popup = await this.waitForPopupLoaded();
-    }
-    this.popup.postMessage(request, this.url.origin);
+export function openPopup(url: URL): Window {
+  const left = (window.innerWidth - POPUP_WIDTH) / 2 + window.screenX;
+  const top = (window.innerHeight - POPUP_HEIGHT) / 2 + window.screenY;
 
-    const { id } = request;
-    if (!id) return {} as M; // do not wait for response if no id
-    return this.onMessage<M>(({ requestId }) => requestId === id);
+  const popup = window.open(
+    url,
+    'Smart Wallet',
+    `width=${POPUP_WIDTH}, height=${POPUP_HEIGHT}, left=${left}, top=${top}`
+  );
+  popup?.focus();
+  if (!popup) {
+    throw standardErrors.rpc.internal('Pop up window failed to open');
   }
+  return popup;
+}
 
-  async onMessage<M extends Message>(predicate: (_: Partial<M>) => boolean): Promise<M> {
-    return new Promise((resolve) => {
-      const listener = (event: MessageEvent<M>) => {
-        if (event.origin !== this.url.origin) return; // origin validation
-
-        const message = event.data;
-        if (predicate(message)) {
-          resolve(message);
-          window.removeEventListener('message', listener);
-          this.listeners = this.listeners.filter((l) => l !== listener);
-        }
-      };
-
-      window.addEventListener('message', listener);
-      this.listeners.push(listener);
-    });
-  }
-
-  private listeners: Array<(event: MessageEvent) => void> = [];
-  private removeListeners() {
-    this.listeners.forEach((listener) => window.removeEventListener('message', listener));
-    this.listeners = [];
-  }
-
-  private async waitForPopupLoaded(): Promise<Window> {
-    const popup = openPopup(this.url);
-
-    this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload').then(() => {
-      closePopup(this.popup);
-      this.popup = null;
-      this.removeListeners();
-    });
-
-    return this.onMessage<ConfigMessage>(({ event }) => event === 'PopupLoaded')
-      .then((message) => {
-        this.postMessage({
-          requestId: message.id,
-          data: { version: LIB_VERSION },
-        });
-      })
-      .then(() => popup);
+export function closePopup(popup: Window | null) {
+  if (popup && !popup.closed) {
+    popup.close();
   }
 }
