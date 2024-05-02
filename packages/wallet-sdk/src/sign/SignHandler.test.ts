@@ -15,7 +15,6 @@ jest.mock(':util/ScopedLocalStorage', () => {
   };
 });
 
-const mockPostMessageForResponse = jest.fn();
 const mockHandshake = jest.fn();
 const mockRequest = jest.fn();
 jest.mock('./scw/SCWSigner', () => {
@@ -40,28 +39,29 @@ describe('SignerConfigurator', () => {
       },
     });
     handler.postMessage = jest.fn();
-    handler.postMessageForResponse = mockPostMessageForResponse;
+    handler.connect = jest.fn();
     return handler;
   }
 
   describe('handshake', () => {
     it('should complete signerType selection correctly', async () => {
       mockHandshake.mockResolvedValueOnce(['0x123']);
-      mockPostMessageForResponse.mockResolvedValueOnce({
-        data: 'scw',
-      });
 
       const handler = createSignHandler();
+      handler.postMessage = jest.fn().mockResolvedValueOnce({
+        data: 'scw',
+      });
       const accounts = await handler.handshake();
+
       expect(accounts).toEqual(['0x123']);
       expect(mockHandshake).toHaveBeenCalledWith();
     });
 
     it('should throw error if signer selection failed', async () => {
       const error = new Error('Signer selection failed');
-      mockPostMessageForResponse.mockRejectedValueOnce(error);
-
       const handler = createSignHandler();
+      handler.postMessage = jest.fn().mockRejectedValueOnce(error);
+
       await expect(handler.handshake()).rejects.toThrow(error);
       expect(mockHandshake).not.toHaveBeenCalled();
       expect(mockSetItem).not.toHaveBeenCalled();
@@ -72,11 +72,12 @@ describe('SignerConfigurator', () => {
     it('should not store signer type unless handshake is successful', async () => {
       const error = new Error('Handshake failed');
       mockHandshake.mockRejectedValueOnce(error);
-      mockPostMessageForResponse.mockResolvedValueOnce({
+
+      const handler = createSignHandler();
+      handler.postMessage = jest.fn().mockResolvedValueOnce({
         data: 'scw',
       });
 
-      const handler = createSignHandler();
       await expect(handler.handshake()).rejects.toThrow(error);
       expect(mockHandshake).toHaveBeenCalled();
       expect(mockSetItem).not.toHaveBeenCalled();
