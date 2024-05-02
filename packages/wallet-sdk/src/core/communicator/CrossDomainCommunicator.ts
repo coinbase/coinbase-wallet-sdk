@@ -1,8 +1,6 @@
 import { Message, MessageID } from '../message';
 import { standardErrors } from ':core/error';
 
-type PostMessageMode = 'sendOnly' | 'awaitResponse';
-
 export abstract class CrossDomainCommunicator {
   protected readonly url: URL;
   protected peerWindow: Window | null = null;
@@ -31,17 +29,17 @@ export abstract class CrossDomainCommunicator {
     this.rejectWaitingRequests();
   }
 
-  postMessage(message: Message, mode: 'sendOnly'): void;
-  postMessage<T>(message: Message, mode: 'awaitResponse'): Promise<T>;
+  postMessage(_: Message, mode: 'sendOnly'): void;
+  postMessage<T>(_: Message, mode: 'awaitResponse'): Promise<T>;
   postMessage<T extends Message>(
     message: Message,
-    mode: PostMessageMode = 'awaitResponse'
+    mode: 'sendOnly' | 'awaitResponse'
   ): Promise<T> | void {
     if (!this.peerWindow) {
       throw standardErrors.rpc.internal('Communicator: No peer window found');
     }
-    this.peerWindow.postMessage(message, this.url.origin);
 
+    this.peerWindow.postMessage(message, this.url.origin);
     if (mode === 'sendOnly') return;
 
     return new Promise((resolve, reject) => {
