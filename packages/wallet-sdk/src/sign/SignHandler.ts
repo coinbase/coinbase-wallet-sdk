@@ -45,10 +45,14 @@ export class SignHandler extends PopUpCommunicator {
   }
 
   async handshake() {
-    if (!this.signer) {
-      this.signer = await this.selectSigner();
-    }
-    return this.signer.handshake();
+    const signerType = await this.requestSignerSelection();
+    const signer = this.initSigner(signerType);
+    const accounts = await signer.handshake();
+
+    this.storage.setItem(SIGNER_TYPE_KEY, signerType);
+    this.signer = signer;
+
+    return accounts;
   }
 
   async request(request: RequestArguments) {
@@ -69,13 +73,6 @@ export class SignHandler extends PopUpCommunicator {
     return signerType ? this.initSigner(signerType) : null;
   }
 
-  private async selectSigner(): Promise<Signer> {
-    const signerType = await this.requestSignerSelection();
-    this.storage.setItem(SIGNER_TYPE_KEY, signerType);
-    if (signerType === 'walletlink' && this.walletlinkSigner) return this.walletlinkSigner;
-    return this.initSigner(signerType);
-  }
-
   private async requestSignerSelection(): Promise<SignerType> {
     const message = createMessage<ConfigUpdateMessage>({
       event: ConfigEvent.SelectSignerType,
@@ -86,6 +83,10 @@ export class SignHandler extends PopUpCommunicator {
   }
 
   private initSigner(signerType: SignerType): Signer {
+    if (signerType === 'walletlink' && this.walletlinkSigner) {
+      return this.walletlinkSigner;
+    }
+
     const SignerClasses = {
       scw: SCWSigner,
       walletlink: WLSigner,

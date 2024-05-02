@@ -13,9 +13,10 @@ export abstract class CrossDomainCommunicator {
   private connected = false;
 
   protected abstract setupPeerWindow(): Promise<void>;
+  // returns true if the message is handled
   protected abstract handleIncomingMessage(_: Message): Promise<boolean>;
 
-  protected async connect() {
+  async connect() {
     if (this.connected) return;
     window.addEventListener('message', this.eventListener.bind(this));
     await this.setupPeerWindow();
@@ -28,8 +29,7 @@ export abstract class CrossDomainCommunicator {
     this.rejectWaitingRequests();
   }
 
-  async postMessage(message: Message, options?: { bypassTargetOriginCheck: boolean }) {
-    await this.connect();
+  postMessage(message: Message, options?: { bypassTargetOriginCheck: boolean }) {
     if (!this.peerWindow) {
       throw standardErrors.rpc.internal('Communicator: No peer window found');
     }

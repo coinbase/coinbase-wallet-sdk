@@ -1,6 +1,7 @@
 import { SignHandler } from './SignHandler';
 
 const mockGetItem = jest.fn();
+const mockSetItem = jest.fn();
 jest.mock(':util/ScopedLocalStorage', () => {
   return {
     ScopedLocalStorage: jest.fn().mockImplementation(() => {
@@ -8,7 +9,7 @@ jest.mock(':util/ScopedLocalStorage', () => {
         getItem: mockGetItem,
         removeItem: jest.fn(),
         clear: jest.fn(),
-        setItem: jest.fn(),
+        setItem: mockSetItem,
       };
     }),
   };
@@ -43,13 +44,45 @@ describe('SignerConfigurator', () => {
     return handler;
   }
 
-  it('should complete signerType selection correctly', async () => {
-    mockPostMessageForResponse.mockResolvedValueOnce({
-      data: 'scw',
+  describe('handshake', () => {
+    it('should complete signerType selection correctly', async () => {
+      mockHandshake.mockResolvedValueOnce(['0x123']);
+      mockPostMessageForResponse.mockResolvedValueOnce({
+        data: 'scw',
+      });
+
+      const handler = createSignHandler();
+      const accounts = await handler.handshake();
+      expect(accounts).toEqual(['0x123']);
+      expect(mockHandshake).toHaveBeenCalledWith();
     });
-    const handler = createSignHandler();
-    await handler.handshake();
-    expect(mockHandshake).toHaveBeenCalledWith();
+
+    it('should throw error if signer selection failed', async () => {
+      const error = new Error('Signer selection failed');
+      mockPostMessageForResponse.mockRejectedValueOnce(error);
+
+      const handler = createSignHandler();
+      await expect(handler.handshake()).rejects.toThrow(error);
+      expect(mockHandshake).not.toHaveBeenCalled();
+      expect(mockSetItem).not.toHaveBeenCalled();
+
+      await expect(handler.request({} as any)).rejects.toThrow('Signer is not initialized');
+    });
+
+    it('should not store signer type unless handshake is successful', async () => {
+      const error = new Error('Handshake failed');
+      mockHandshake.mockRejectedValueOnce(error);
+      mockPostMessageForResponse.mockResolvedValueOnce({
+        data: 'scw',
+      });
+
+      const handler = createSignHandler();
+      await expect(handler.handshake()).rejects.toThrow(error);
+      expect(mockHandshake).toHaveBeenCalled();
+      expect(mockSetItem).not.toHaveBeenCalled();
+
+      await expect(handler.request({} as any)).rejects.toThrow('Signer is not initialized');
+    });
   });
 
   it('should load signer from storage when available', async () => {

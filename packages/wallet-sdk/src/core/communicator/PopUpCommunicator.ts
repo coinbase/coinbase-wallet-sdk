@@ -19,7 +19,7 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
     return new Promise((resolve) => (this.resolveConnection = resolve));
   }
 
-  protected async handleIncomingMessage(message: Message) {
+  protected async handleIncomingMessage(message: Message): Promise<boolean> {
     if (!isConfigUpdateMessage(message)) return false;
     switch (message.event) {
       case ConfigEvent.PopupLoaded:
