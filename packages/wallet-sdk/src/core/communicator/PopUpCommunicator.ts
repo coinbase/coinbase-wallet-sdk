@@ -30,7 +30,8 @@ export class PopUpCommunicator extends CrossDomainCommunicator {
           createMessage<ConfigResponseMessage>({
             requestId: message.id,
             data: { version: LIB_VERSION },
-          })
+          }),
+          'sendOnly'
         );
         this.resolveConnection?.();
         this.resolveConnection = undefined;

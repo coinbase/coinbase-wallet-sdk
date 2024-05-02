@@ -56,7 +56,8 @@ export class WLSigner implements Signer {
       createMessage<ConfigUpdateMessage>({
         event: ConfigEvent.WalletLinkUpdate,
         data,
-      })
+      }),
+      'sendOnly'
     );
   }
 
