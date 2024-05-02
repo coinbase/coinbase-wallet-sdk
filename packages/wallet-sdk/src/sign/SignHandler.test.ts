@@ -15,19 +15,7 @@ jest.mock(':util/ScopedLocalStorage', () => {
   };
 });
 
-const mockPostMessageForResponse = jest.fn();
-jest.mock(':core/communicator/PopUpCommunicator', () => {
-  return {
-    PopUpCommunicator: jest.fn().mockImplementation(() => {
-      return {
-        connect: jest.fn(),
-        postMessage: jest.fn(),
-        postMessageForResponse: mockPostMessageForResponse,
-      };
-    }),
-  };
-});
-
+const mockPostMessage = jest.fn();
 const mockHandshake = jest.fn();
 const mockRequest = jest.fn();
 jest.mock('./scw/SCWSigner', () => {
@@ -43,7 +31,7 @@ jest.mock('./scw/SCWSigner', () => {
 
 describe('SignerConfigurator', () => {
   function createSignHandler() {
-    return new SignHandler({
+    const handler = new SignHandler({
       metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1] },
       preference: { options: 'all' },
       listener: {
@@ -51,12 +39,14 @@ describe('SignerConfigurator', () => {
         onChainUpdate: jest.fn(),
       },
     });
+    handler.postMessage = mockPostMessage;
+    return handler;
   }
 
   describe('handshake', () => {
     it('should complete signerType selection correctly', async () => {
       mockHandshake.mockResolvedValueOnce(['0x123']);
-      mockPostMessageForResponse.mockResolvedValueOnce({
+      mockPostMessage.mockResolvedValueOnce({
         data: 'scw',
       });
 
@@ -68,7 +58,7 @@ describe('SignerConfigurator', () => {
 
     it('should throw error if signer selection failed', async () => {
       const error = new Error('Signer selection failed');
-      mockPostMessageForResponse.mockRejectedValueOnce(error);
+      mockPostMessage.mockRejectedValueOnce(error);
 
       const handler = createSignHandler();
       await expect(handler.handshake()).rejects.toThrow(error);
@@ -81,7 +71,7 @@ describe('SignerConfigurator', () => {
     it('should not store signer type unless handshake is successful', async () => {
       const error = new Error('Handshake failed');
       mockHandshake.mockRejectedValueOnce(error);
-      mockPostMessageForResponse.mockResolvedValueOnce({
+      mockPostMessage.mockResolvedValueOnce({
         data: 'scw',
       });
 

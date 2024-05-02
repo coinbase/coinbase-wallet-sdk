@@ -12,7 +12,7 @@ export class PopUpCommunicator {
     this.url = new URL(url);
   }
 
-  protected async postMessage<M extends Message>(request: Message): Promise<M> {
+  async postMessage<M extends Message>(request: Message): Promise<M> {
     if (!this.popup) {
       this.popup = await this.waitForPopupLoaded();
     }
@@ -23,7 +23,7 @@ export class PopUpCommunicator {
     return this.onMessage<M>(({ requestId }) => requestId === id);
   }
 
-  protected async onMessage<M extends Message>(predicate: (_: Partial<M>) => boolean): Promise<M> {
+  async onMessage<M extends Message>(predicate: (_: Partial<M>) => boolean): Promise<M> {
     return new Promise((resolve) => {
       const listener = (event: MessageEvent<M>) => {
         if (event.origin !== this.url.origin) return; // origin validation

@@ -7,8 +7,8 @@ export interface ConfigMessage extends Message {
 export type ConfigEvent =
   | 'PopupLoaded'
   | 'PopupUnload'
-  | 'WalletLinkSessionRequest'
   | 'selectSignerType'
+  | 'WalletLinkSessionRequest'
   | 'WalletLinkUpdate';
 
 export type SignerType = 'scw' | 'walletlink' | 'extension';
