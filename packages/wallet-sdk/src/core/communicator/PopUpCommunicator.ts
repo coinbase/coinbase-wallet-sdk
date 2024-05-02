@@ -1,28 +1,72 @@
+import { StateUpdateListener } from 'src/sign/interface';
+import { WLSigner } from 'src/sign/walletlink/WLSigner';
 import { LIB_VERSION } from 'src/version';
 
 import {
   ConfigEvent,
   ConfigResponseMessage,
+  ConfigUpdateMessage,
   createMessage,
   isConfigUpdateMessage,
   Message,
   MessageID,
+  SignerType,
 } from '../message';
 import { standardErrors } from ':core/error';
+import { AppMetadata, Preference } from ':core/provider/interface';
 
 const POPUP_WIDTH = 420;
 const POPUP_HEIGHT = 540;
 
 export class PopUpCommunicator {
-  protected url: URL;
   private connected = false;
 
-  private resolveConnection?: () => void;
-  private onConfigUpdateMessage: (_: Message) => Promise<boolean>;
+  // temporary walletlink signer instance to handle WalletLinkSessionRequest
+  // will revisit this when refactoring the walletlink signer
+  private walletlinkSigner?: WLSigner;
 
-  constructor(params: { url: string; onConfigUpdateMessage: (_: Message) => Promise<boolean> }) {
-    this.url = new URL(params.url);
-    this.onConfigUpdateMessage = params.onConfigUpdateMessage;
+  private async onWalletLinkSessionRequest() {
+    if (!this.walletlinkSigner) {
+      this.walletlinkSigner = new WLSigner({
+        metadata: this.metadata,
+        updateListener: {} as StateUpdateListener,
+      });
+    }
+
+    this.postWalletLinkUpdate({ session: this.walletlinkSigner!.getWalletLinkSession() });
+    // Wait for the wallet link session to be established
+    await this.walletlinkSigner!.handshake();
+    this.postWalletLinkUpdate({ connected: true });
+  }
+
+  private resolveConnection?: () => void;
+
+  private postWalletLinkUpdate(data: unknown) {
+    this.postMessage(
+      createMessage<ConfigUpdateMessage>({
+        event: ConfigEvent.WalletLinkUpdate,
+        data,
+      })
+    );
+  }
+
+  async requestSignerSelection(preference: Preference): Promise<SignerType> {
+    await this.connect();
+    const message = createMessage<ConfigUpdateMessage>({
+      event: ConfigEvent.SelectSignerType,
+      data: preference,
+    });
+    const response = await this.postMessageForResponse(message);
+    return (response as ConfigResponseMessage).data as SignerType;
+  }
+
+  private url: URL;
+
+  constructor(
+    url: string,
+    private metadata: AppMetadata
+  ) {
+    this.url = new URL(url);
   }
 
   async connect() {
@@ -88,8 +132,9 @@ export class PopUpCommunicator {
           this.disconnect();
           this.closeChildWindow();
           break;
-        default: // handle non-popup config update messages
-          this.onConfigUpdateMessage(message);
+        case ConfigEvent.WalletLinkSessionRequest:
+          this.onWalletLinkSessionRequest();
+          break;
       }
     }
 

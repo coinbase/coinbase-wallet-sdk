@@ -3,15 +3,7 @@ import { SCWSigner } from './scw/SCWSigner';
 import { WLSigner } from './walletlink/WLSigner';
 import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
 import { CB_KEYS_URL } from ':core/constants';
-import {
-  ConfigEvent,
-  ConfigResponseMessage,
-  ConfigUpdateMessage,
-  createMessage,
-  isConfigUpdateMessage,
-  Message,
-  SignerType,
-} from ':core/message';
+import { SignerType } from ':core/message';
 import {
   AppMetadata,
   ConstructorOptions,
@@ -39,15 +31,12 @@ export class SignHandler {
     this.listener = params.listener;
     const { keysUrl, ...preferenceWithoutKeysUrl } = params.preference;
     this.preference = preferenceWithoutKeysUrl;
-    this.popupCommunicator = new PopUpCommunicator({
-      url: keysUrl ?? CB_KEYS_URL,
-      onConfigUpdateMessage: this.handleIncomingMessage.bind(this),
-    });
+    this.popupCommunicator = new PopUpCommunicator(keysUrl ?? CB_KEYS_URL, params.metadata);
     this.signer = this.loadSigner();
   }
 
   async handshake() {
-    const signerType = await this.requestSignerSelection();
+    const signerType = await this.popupCommunicator.requestSignerSelection(this.preference);
     const signer = this.initSigner(signerType);
     const accounts = await signer.handshake();
 
@@ -75,21 +64,7 @@ export class SignHandler {
     return signerType ? this.initSigner(signerType) : null;
   }
 
-  private async requestSignerSelection(): Promise<SignerType> {
-    await this.popupCommunicator.connect();
-    const message = createMessage<ConfigUpdateMessage>({
-      event: ConfigEvent.SelectSignerType,
-      data: this.preference,
-    });
-    const response = await this.popupCommunicator.postMessageForResponse(message);
-    return (response as ConfigResponseMessage).data as SignerType;
-  }
-
   private initSigner(signerType: SignerType): Signer {
-    if (signerType === 'walletlink' && this.walletlinkSigner) {
-      return this.walletlinkSigner;
-    }
-
     const SignerClasses = {
       scw: SCWSigner,
       walletlink: WLSigner,
@@ -100,24 +75,5 @@ export class SignHandler {
       popupCommunicator: this.popupCommunicator,
       updateListener: this.listener,
     });
-  }
-
-  // temporary walletlink signer instance to handle WalletLinkSessionRequest
-  // will revisit this when refactoring the walletlink signer
-  private walletlinkSigner?: WLSigner;
-
-  protected async handleIncomingMessage(message: Message): Promise<boolean> {
-    if (
-      !isConfigUpdateMessage(message) || //
-      message.event !== ConfigEvent.WalletLinkSessionRequest
-    ) {
-      return false;
-    }
-
-    if (!this.walletlinkSigner) {
-      this.walletlinkSigner = this.initSigner('walletlink') as WLSigner;
-    }
-    await this.walletlinkSigner.handleWalletLinkSessionRequest();
-    return true;
   }
 }
