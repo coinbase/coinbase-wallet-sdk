@@ -2,12 +2,17 @@ import { LIB_VERSION } from 'src/version';
 
 import { ConfigMessage, Message } from '../message';
 import { closePopup, openPopup } from './PopUpCommunicator';
+import { CB_KEYS_URL } from ':core/constants';
 
 export class PopUpCommunicator {
-  protected popup: Window | null = null;
-  constructor(private url: URL) {}
+  private url: URL;
+  private popup: Window | null = null;
 
-  async postMessage<M extends Message>(request: Message): Promise<M> {
+  constructor(url: string = CB_KEYS_URL) {
+    this.url = new URL(url);
+  }
+
+  protected async postMessage<M extends Message>(request: Message): Promise<M> {
     if (!this.popup) {
       this.popup = await this.waitForPopupLoaded();
     }
@@ -18,7 +23,7 @@ export class PopUpCommunicator {
     return this.onMessage<M>(({ requestId }) => requestId === id);
   }
 
-  async onMessage<M extends Message>(predicate: (_: Partial<M>) => boolean): Promise<M> {
+  protected async onMessage<M extends Message>(predicate: (_: Partial<M>) => boolean): Promise<M> {
     return new Promise((resolve) => {
       const listener = (event: MessageEvent<M>) => {
         if (event.origin !== this.url.origin) return; // origin validation

@@ -23,17 +23,17 @@ type SwitchEthereumChainParam = [
 
 export class SCWSigner implements Signer {
   private readonly metadata: AppMetadata;
-  private readonly popupCommunicator: PopUpCommunicator;
+  private readonly postMessageToPopup: PopUpCommunicator['postMessage'];
   private readonly keyManager: SCWKeyManager;
   private readonly stateManager: SCWStateManager;
 
   constructor(params: {
     metadata: AppMetadata;
-    popupCommunicator: PopUpCommunicator;
+    postMessageToPopup: PopUpCommunicator['postMessage'];
     updateListener: StateUpdateListener;
   }) {
     this.metadata = params.metadata;
-    this.popupCommunicator = params.popupCommunicator;
+    this.postMessageToPopup = params.postMessageToPopup;
     this.keyManager = new SCWKeyManager();
     this.stateManager = new SCWStateManager({
       appChainIds: this.metadata.appChainIds,
@@ -53,7 +53,7 @@ export class SCWSigner implements Signer {
         params: this.metadata,
       },
     });
-    const response: RPCResponseMessage = await this.popupCommunicator.postMessage(handshakeMessage);
+    const response: RPCResponseMessage = await this.postMessageToPopup(handshakeMessage);
 
     // store peer's public key
     if ('failure' in response.content) throw response.content.failure;
@@ -136,7 +136,7 @@ export class SCWSigner implements Signer {
     );
     const message = await this.createRequestMessage({ encrypted });
 
-    return this.popupCommunicator.postMessage(message);
+    return this.postMessageToPopup(message);
   }
 
   private async createRequestMessage(

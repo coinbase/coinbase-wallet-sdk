@@ -1,14 +1,22 @@
 import { Signer, StateUpdateListener } from '../interface';
 import { WLRelayAdapter } from './relay/WLRelayAdapter';
+import { PopUpCommunicator } from ':core/communicator/Communicator';
 import { WALLETLINK_URL } from ':core/constants';
+import { ConfigMessage } from ':core/message';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
 
 export class WLSigner implements Signer {
+  private readonly postMessageToPopup: PopUpCommunicator['postMessage'];
   private readonly adapter: WLRelayAdapter;
 
-  constructor(params: { metadata: AppMetadata; updateListener?: StateUpdateListener }) {
+  constructor(params: {
+    metadata: AppMetadata;
+    postMessageToPopup: PopUpCommunicator['postMessage'];
+    updateListener?: StateUpdateListener;
+  }) {
     const { appName, appLogoUrl } = params.metadata;
+    this.postMessageToPopup = params.postMessageToPopup;
     this.adapter = new WLRelayAdapter({
       appName,
       appLogoUrl,
@@ -26,8 +34,21 @@ export class WLSigner implements Signer {
     return this.adapter.request<T>(requestArgs);
   }
 
-  getWalletLinkSession() {
-    return this.adapter.getWalletLinkSession();
+  async handleWalletLinkSessionRequest() {
+    const { id, secret } = this.adapter.getWalletLinkSession();
+    this.postWalletLinkUpdate({ session: { id, secret } });
+
+    // Wait for the wallet link session to be established
+    await this.handshake();
+    this.postWalletLinkUpdate({ connected: true });
+  }
+
+  private postWalletLinkUpdate(data: unknown) {
+    const update: ConfigMessage = {
+      event: 'WalletLinkUpdate',
+      data,
+    };
+    this.postMessageToPopup(update);
   }
 
   async disconnect() {

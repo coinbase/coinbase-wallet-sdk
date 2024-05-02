@@ -2,7 +2,6 @@ import { Signer, StateUpdateListener } from './interface';
 import { SCWSigner } from './scw/SCWSigner';
 import { WLSigner } from './walletlink/WLSigner';
 import { PopUpCommunicator } from ':core/communicator/Communicator';
-import { CB_KEYS_URL } from ':core/constants';
 import { ConfigMessage, SignerType } from ':core/message';
 import {
   AppMetadata,
@@ -18,20 +17,20 @@ type SignerConfiguratorOptions = ConstructorOptions & {
   listener: StateUpdateListener;
 };
 
-export class SignHandler {
+export class SignHandler extends PopUpCommunicator {
   private signer: Signer | null;
   private readonly metadata: AppMetadata;
   private readonly preference: Preference;
   private readonly listener: StateUpdateListener;
-  private readonly popupCommunicator: PopUpCommunicator;
   private readonly storage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
 
   constructor(params: Readonly<SignerConfiguratorOptions>) {
+    const { keysUrl, ...preferenceWithoutKeysUrl } = params.preference;
+    super(keysUrl);
+
+    this.preference = preferenceWithoutKeysUrl;
     this.metadata = params.metadata;
     this.listener = params.listener;
-    const { keysUrl, ...preferenceWithoutKeysUrl } = params.preference;
-    this.preference = preferenceWithoutKeysUrl;
-    this.popupCommunicator = new PopUpCommunicator(new URL(keysUrl ?? CB_KEYS_URL));
     this.signer = this.loadSigner();
   }
 
@@ -72,11 +71,15 @@ export class SignHandler {
       event: 'selectSignerType',
       data: this.preference,
     };
-    const { data } = await this.popupCommunicator.postMessage(request);
+    const { data } = await this.postMessage(request);
     return data as SignerType;
   }
 
   private initSigner(signerType: SignerType): Signer {
+    if (signerType === 'walletlink' && this.walletlinkSigner) {
+      return this.walletlinkSigner;
+    }
+
     const SignerClasses = {
       scw: SCWSigner,
       walletlink: WLSigner,
@@ -84,32 +87,22 @@ export class SignHandler {
     };
     return new SignerClasses[signerType]!({
       metadata: this.metadata,
-      popupCommunicator: this.popupCommunicator,
+      postMessageToPopup: this.postMessage.bind(this),
       updateListener: this.listener,
     });
   }
 
   // temporary walletlink signer instance to handle WalletLinkSessionRequest
   // will revisit this when refactoring the walletlink signer
+  private walletlinkSigner?: WLSigner;
   private listenForWalletLinkSessionRequest() {
-    this.popupCommunicator
-      .onMessage<ConfigMessage>(({ event }) => event === 'WalletLinkSessionRequest')
-      .then(async () => {
-        const walletlink = new WLSigner({
-          metadata: this.metadata,
-        });
-        this.postWalletLinkUpdate({ session: walletlink.getWalletLinkSession() });
-        // Wait for the wallet link session to be established
-        await walletlink.handshake();
-        this.postWalletLinkUpdate({ connected: true });
-      });
-  }
-
-  private postWalletLinkUpdate(data: unknown) {
-    const update: ConfigMessage = {
-      event: 'WalletLinkUpdate',
-      data,
-    };
-    this.popupCommunicator.postMessage(update);
+    this.onMessage<ConfigMessage>(({ event }) => event === 'WalletLinkSessionRequest').then(
+      async () => {
+        if (!this.walletlinkSigner) {
+          this.walletlinkSigner = this.initSigner('walletlink') as WLSigner;
+        }
+        await this.walletlinkSigner.handleWalletLinkSessionRequest();
+      }
+    );
   }
 }
