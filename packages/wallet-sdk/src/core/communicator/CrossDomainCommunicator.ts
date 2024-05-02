@@ -5,28 +5,37 @@ export abstract class CrossDomainCommunicator {
   protected url: URL | null = null;
   protected peerWindow: Window | null = null;
 
+  private connected = false;
+
   protected abstract setupPeerWindow(): Promise<void>;
   // returns true if the message is handled
   protected abstract handleIncomingMessage(_: Message): Promise<boolean>;
 
+  async connect() {
+    if (this.connected) return;
+    window.addEventListener('message', this.eventListener.bind(this));
+    await this.setupPeerWindow();
+    this.connected = true;
+  }
+
   protected disconnect() {
+    this.connected = false;
     window.removeEventListener('message', this.eventListener.bind(this));
     this.rejectWaitingRequests();
   }
 
   postMessage(_: Message, mode: 'sendOnly'): void;
   postMessage<T>(_: Message, mode: 'forResponse'): Promise<T>;
-  async postMessage<T extends Message>(
+  postMessage<T extends Message>(
     message: Message,
     mode: 'sendOnly' | 'forResponse'
-  ): Promise<Promise<T> | void> {
+  ): Promise<T> | void {
     if (!this.peerWindow) {
-      window.addEventListener('message', this.eventListener.bind(this));
-      await this.setupPeerWindow();
+      throw standardErrors.rpc.internal('Communicator: No peer window found');
     }
 
     const targetOrigin = this.url ? this.url.origin : '*';
-    this.peerWindow!.postMessage(message, targetOrigin);
+    this.peerWindow.postMessage(message, targetOrigin);
     if (mode === 'sendOnly') return;
 
     return new Promise((resolve, reject) => {
