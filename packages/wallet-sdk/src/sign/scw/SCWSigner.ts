@@ -53,9 +53,7 @@ export class SCWSigner implements Signer {
         params: this.metadata,
       },
     });
-    const response = (await this.popupCommunicator.postMessageForResponse(
-      handshakeMessage
-    )) as RPCResponseMessage;
+    const response: RPCResponseMessage = await this.popupCommunicator.postMessage(handshakeMessage);
 
     // store peer's public key
     if ('failure' in response.content) throw response.content.failure;
@@ -138,10 +136,7 @@ export class SCWSigner implements Signer {
     );
     const message = await this.createRequestMessage({ encrypted });
 
-    const response = (await this.popupCommunicator.postMessageForResponse(
-      message
-    )) as RPCResponseMessage;
-    return response;
+    return this.popupCommunicator.postMessage(message);
   }
 
   private async createRequestMessage(

@@ -24,23 +24,23 @@ export class PopUpCommunicator {
   }
 
   private postWalletLinkUpdate(data: unknown) {
-    this.postMessage({
+    const update: ConfigMessage = {
       event: 'WalletLinkUpdate',
       data,
-    } as ConfigMessage);
+    };
+    this.postMessage(update);
   }
 
   async requestSignerSelection(preference: Preference): Promise<SignerType> {
     this.listenForWalletLinkSessionRequest();
 
-    const id = crypto.randomUUID();
-    this.postMessage({
+    const request: ConfigMessage = {
       id: crypto.randomUUID(),
       event: 'selectSignerType',
       data: preference,
-    } as ConfigMessage);
-    const response: ConfigMessage = await this.onMessage(({ requestId }) => requestId === id);
-    return response.data as SignerType;
+    };
+    const { data } = await this.postMessage(request);
+    return data as SignerType;
   }
 
   private url: URL;
@@ -52,25 +52,17 @@ export class PopUpCommunicator {
     this.url = new URL(url);
   }
 
-  private async connect() {
-    if (this.peerWindow) return;
-    await this.waitForPopupLoaded();
-  }
-
   protected peerWindow: Window | null = null;
 
-  private async postMessage<M extends Message>(message: M) {
-    await this.connect();
+  async postMessage<M extends Message>(request: Message): Promise<M> {
     if (!this.peerWindow) {
-      throw standardErrors.rpc.internal('Communicator: No peer window found');
+      this.peerWindow = await this.waitForPopupLoaded();
     }
-    this.peerWindow.postMessage(message, this.url.origin);
-  }
+    this.peerWindow.postMessage(request, this.url.origin);
 
-  async postMessageForResponse(message: Message): Promise<Message> {
-    this.postMessage(message);
-    const response = await this.onMessage(({ requestId }) => requestId === message.id);
-    return response;
+    const { id } = request;
+    if (!id) return {} as M; // do not wait for response if no id
+    return this.onMessage<M>(({ requestId }) => requestId === id);
   }
 
   private listeners: Array<(event: MessageEvent) => void> = [];
@@ -90,35 +82,37 @@ export class PopUpCommunicator {
     });
   }
 
-  private async waitForPopupLoaded() {
-    this.openFixedSizePopUpWindow(); // this sets this.peerWindow
-    this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload').then(() =>
-      this.closeChildWindow()
+  private async waitForPopupLoaded(): Promise<Window> {
+    const popup = this.openPopup();
+
+    this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload').then(
+      this.closeChildWindow.bind(this)
     );
 
-    return this.onMessage<ConfigMessage>(({ event }) => event === 'PopupLoaded').then((message) => {
-      this.postMessage({
-        requestId: message.id,
-        data: { version: LIB_VERSION },
-      });
-    });
+    return this.onMessage<ConfigMessage>(({ event }) => event === 'PopupLoaded')
+      .then((message) => {
+        this.postMessage({
+          requestId: message.id,
+          data: { version: LIB_VERSION },
+        });
+      })
+      .then(() => popup);
   }
 
-  private openFixedSizePopUpWindow() {
+  private openPopup(): Window {
     const left = (window.innerWidth - POPUP_WIDTH) / 2 + window.screenX;
     const top = (window.innerHeight - POPUP_HEIGHT) / 2 + window.screenY;
 
-    this.peerWindow = window.open(
+    const popup = window.open(
       this.url,
       'Smart Wallet',
       `width=${POPUP_WIDTH}, height=${POPUP_HEIGHT}, left=${left}, top=${top}`
     );
-
-    this.peerWindow?.focus();
-
-    if (!this.peerWindow) {
+    popup?.focus();
+    if (!popup) {
       throw standardErrors.rpc.internal('Pop up window failed to open');
     }
+    return popup;
   }
 
   private closeChildWindow() {
