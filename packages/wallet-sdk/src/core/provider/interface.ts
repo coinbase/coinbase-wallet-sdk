@@ -1,5 +1,3 @@
-import { EventEmitter } from 'eventemitter3';
-
 import { Method } from './method';
 
 export interface RequestArguments {
@@ -13,23 +11,10 @@ export interface ProviderRpcError extends Error {
   data?: unknown;
 }
 
-interface ProviderMessage {
-  type: string;
-  data: unknown;
-}
-
-interface ProviderConnectInfo {
-  readonly chainId: string;
-}
-
-export interface ProviderInterface extends EventEmitter {
+export interface ProviderInterface {
   request<T>(args: RequestArguments): Promise<T>;
-  disconnect(): Promise<void>;
-  on(event: 'connect', listener: (info: ProviderConnectInfo) => void): this;
-  on(event: 'disconnect', listener: (error: ProviderRpcError) => void): this;
-  on(event: 'chainChanged', listener: (chainId: string) => void): this;
-  on(event: 'accountsChanged', listener: (accounts: string[]) => void): this;
-  on(event: 'message', listener: (message: ProviderMessage) => void): this;
+  disconnect(): void;
+  on<T>(event: string, listener: (_: T) => void): unknown;
 }
 
 export interface AppMetadata {

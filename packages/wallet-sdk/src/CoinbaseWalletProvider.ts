@@ -1,19 +1,54 @@
 import EventEmitter from 'eventemitter3';
 
-import { standardErrorCodes, standardErrors } from './core/error';
-import { ConstructorOptions, ProviderInterface, RequestArguments } from './core/provider/interface';
-import { AddressString, IntNumber } from './core/type';
-import { hexStringFromIntNumber } from './core/type/util';
-import { SignHandler } from './sign/SignHandler';
-import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './util/provider';
+import { AccountsUpdate, ChainUpdate, Signer } from './sign/interface';
+import { SCWSigner } from './sign/scw/SCWSigner';
+import { WLSigner } from './sign/walletlink/WLSigner';
+import { KeysPopupCommunicator } from ':core/communicator/KeysPopupCommunicator';
+import { standardErrorCodes, standardErrors } from ':core/error';
+import { ConfigMessage, SignerType } from ':core/message';
+import {
+  AppMetadata,
+  ConstructorOptions,
+  Preference,
+  ProviderInterface,
+  RequestArguments,
+} from ':core/provider/interface';
 import { determineMethodCategory } from ':core/provider/method';
+import { AddressString, Chain, IntNumber } from ':core/type';
+import { areAddressArraysEqual, hexStringFromIntNumber } from ':core/type/util';
+import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from ':util/provider';
+import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
-export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
-  protected signHandler: SignHandler;
+const SIGNER_TYPE_KEY = 'SignerType';
+
+export class CoinbaseWalletProvider extends KeysPopupCommunicator implements ProviderInterface {
+  readonly isCoinbaseWallet = true;
+
+  accounts: AddressString[];
+  chain: Chain;
+
+  private signer: Signer | null;
+  private readonly metadata: AppMetadata;
+  private readonly preference: Preference;
+  private readonly storage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
+  private readonly eventEmitter = new EventEmitter();
 
   constructor(params: Readonly<ConstructorOptions>) {
-    super();
-    this.signHandler = new SignHandler(params);
+    const { keysUrl, ...preferenceWithoutKeysUrl } = params.preference;
+    super(keysUrl);
+
+    this.accounts = [];
+    this.chain = {
+      id: params.metadata.appChainIds?.[0] ?? 1,
+    };
+
+    this.preference = preferenceWithoutKeysUrl;
+    this.metadata = params.metadata;
+    this.signer = this.loadSigner();
+  }
+
+  get connected() {
+    return this.accounts.length > 0;
   }
 
   public async request<T>(args: RequestArguments): Promise<T> {
@@ -28,9 +63,9 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     // eth_requestAccounts
     handshake: async (_: RequestArguments): Promise<AddressString[]> => {
       try {
-        const accounts = await this.signHandler.handshake();
-        this.emit('connect', {
-          chainId: hexStringFromIntNumber(IntNumber(this.signHandler.chain.id)),
+        const accounts = await this._handshake();
+        this.eventEmitter.emit('connect', {
+          chainId: hexStringFromIntNumber(IntNumber(this.chain.id)),
         });
         return accounts;
       } catch (error) {
@@ -41,18 +76,18 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
     sign: async (request: RequestArguments) => {
       try {
-        return await this.signHandler.request(request);
+        return await this._request(request);
       } catch (error) {
         this.handleUnauthorizedError(error);
         throw error;
       }
     },
 
-    fetch: (request: RequestArguments) => fetchRPCRequest(request, this.signHandler.chain),
+    fetch: (request: RequestArguments) => fetchRPCRequest(request, this.chain),
 
     state: (request: RequestArguments) => {
       const getConnectedAccounts = (): AddressString[] => {
-        if (this.signHandler.connected) return this.signHandler.accounts;
+        if (this.connected) return this.accounts;
         throw standardErrors.provider.unauthorized(
           "Must call 'eth_requestAccounts' before other methods"
         );
@@ -60,7 +95,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       switch (request.method) {
         case 'eth_chainId':
         case 'net_version':
-          return this.signHandler.chain.id;
+          return this.chain.id;
         case 'eth_accounts':
           return getConnectedAccounts();
         case 'eth_coinbase':
@@ -84,8 +119,115 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     if (e.code === standardErrorCodes.provider.unauthorized) this.disconnect();
   }
 
+  private async _handshake() {
+    if (this.connected) return this.accounts;
+
+    const signerType = await this.requestSignerSelection();
+    const signer = this.initSigner(signerType);
+    const accounts = await signer.handshake();
+
+    this.storage.setItem(SIGNER_TYPE_KEY, signerType);
+    this.signer = signer;
+
+    return accounts;
+  }
+
+  private async _request(request: RequestArguments) {
+    if (!this.signer) {
+      throw new Error('Signer is not initialized');
+    }
+    if (!this.connected) {
+      throw standardErrors.provider.unauthorized(
+        "Must call 'eth_requestAccounts' before other methods"
+      );
+    }
+    return this.signer.request(request);
+  }
+
+  disconnect() {
+    this.accounts = [];
+    this.chain = { id: 1 };
+
+    this.signer?.disconnect();
+    this.signer = null;
+    this.storage.removeItem(SIGNER_TYPE_KEY);
+    super.disconnect();
+
+    this.eventEmitter.emit(
+      'disconnect',
+      standardErrors.provider.disconnected('User initiated disconnection')
+    );
+  }
+
+  private loadSigner() {
+    const signerType = this.storage.getItem(SIGNER_TYPE_KEY) as SignerType;
+    return signerType ? this.initSigner(signerType) : null;
+  }
+
+  private async requestSignerSelection(): Promise<SignerType> {
+    this.listenForWalletLinkSessionRequest();
+
+    const request: ConfigMessage = {
+      id: crypto.randomUUID(),
+      event: 'selectSignerType',
+      data: this.preference,
+    };
+    const { data } = await super.postMessage(request);
+    return data as SignerType;
+  }
+
+  private initSigner(signerType: SignerType): Signer {
+    if (signerType === 'walletlink' && this.walletlinkSigner) {
+      return this.walletlinkSigner;
+    }
+
+    const SignerClasses = {
+      scw: SCWSigner,
+      walletlink: WLSigner,
+      extension: undefined,
+    };
+    return new SignerClasses[signerType]!({
+      metadata: this.metadata,
+      postMessageToPopup: super.postMessage.bind(this),
+      updateListener: this.updateListener,
+    });
+  }
+
+  // temporary walletlink signer instance to handle WalletLinkSessionRequest
+  // will revisit this when refactoring the walletlink signer
+  private walletlinkSigner?: WLSigner;
+  private listenForWalletLinkSessionRequest() {
+    this.onMessage<ConfigMessage>(({ event }) => event === 'WalletLinkSessionRequest').then(
+      async () => {
+        if (!this.walletlinkSigner) {
+          this.walletlinkSigner = this.initSigner('walletlink') as WLSigner;
+        }
+        await this.walletlinkSigner.handleWalletLinkSessionRequest();
+      }
+    );
+  }
+
+  protected readonly updateListener = {
+    onAccountsUpdate: ({ accounts, source }: AccountsUpdate) => {
+      if (areAddressArraysEqual(this.accounts, accounts)) return;
+      this.accounts = accounts;
+      if (source === 'storage') return;
+      this.eventEmitter.emit('accountsChanged', this.accounts);
+    },
+    onChainUpdate: ({ chain, source }: ChainUpdate) => {
+      if (chain.id === this.chain.id && chain.rpcUrl === this.chain.rpcUrl) return;
+      this.chain = chain;
+      if (source === 'storage') return;
+      this.eventEmitter.emit('chainChanged', hexStringFromIntNumber(IntNumber(chain.id)));
+    },
+  };
+
+  on<T>(event: string, listener: (_: T) => void): EventEmitter {
+    return this.eventEmitter.on(event, listener);
+  }
+
   /** @deprecated Use `.request({ method: 'eth_requestAccounts' })` instead. */
-  public async enable(): Promise<unknown> {
+  async enable(): Promise<unknown> {
     console.warn(
       `.enable() has been deprecated. Please use .request({ method: "eth_requestAccounts" }) instead.`
     );
@@ -93,11 +235,4 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       method: 'eth_requestAccounts',
     });
   }
-
-  async disconnect(): Promise<void> {
-    this.signHandler.disconnect();
-    this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
-  }
-
-  readonly isCoinbaseWallet = true;
 }
