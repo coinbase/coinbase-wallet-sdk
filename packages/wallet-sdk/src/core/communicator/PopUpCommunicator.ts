@@ -1,26 +1,22 @@
-import { WLSigner } from 'src/sign/walletlink/WLSigner';
 import { LIB_VERSION } from 'src/version';
 
-import { ConfigMessage, Message, SignerType } from '../message';
+import { ConfigMessage, Message } from '../message';
 import { standardErrors } from ':core/error';
-import { AppMetadata, Preference } from ':core/provider/interface';
+import { AppMetadata } from ':core/provider/interface';
 
 const POPUP_WIDTH = 420;
 const POPUP_HEIGHT = 540;
 
 export class PopUpCommunicator {
-  private listenForWalletLinkSessionRequest() {
-    this.onMessage<ConfigMessage>(({ event }) => event === 'WalletLinkSessionRequest').then(
-      async () => {
-        const walletlink = new WLSigner({
-          metadata: this.metadata,
-        });
-        this.postWalletLinkUpdate({ session: walletlink.getWalletLinkSession() });
-        // Wait for the wallet link session to be established
-        await walletlink.handshake();
-        this.postWalletLinkUpdate({ connected: true });
-      }
-    );
+  private url: URL;
+  protected peerWindow: Window | null = null;
+  private listeners: Array<(event: MessageEvent) => void> = [];
+
+  constructor(
+    url: string,
+    private metadata: AppMetadata
+  ) {
+    this.url = new URL(url);
   }
 
   private postWalletLinkUpdate(data: unknown) {
@@ -30,29 +26,6 @@ export class PopUpCommunicator {
     };
     this.postMessage(update);
   }
-
-  async requestSignerSelection(preference: Preference): Promise<SignerType> {
-    this.listenForWalletLinkSessionRequest();
-
-    const request: ConfigMessage = {
-      id: crypto.randomUUID(),
-      event: 'selectSignerType',
-      data: preference,
-    };
-    const { data } = await this.postMessage(request);
-    return data as SignerType;
-  }
-
-  private url: URL;
-
-  constructor(
-    url: string,
-    private metadata: AppMetadata
-  ) {
-    this.url = new URL(url);
-  }
-
-  protected peerWindow: Window | null = null;
 
   async postMessage<M extends Message>(request: Message): Promise<M> {
     if (!this.peerWindow) {
@@ -65,9 +38,7 @@ export class PopUpCommunicator {
     return this.onMessage<M>(({ requestId }) => requestId === id);
   }
 
-  private listeners: Array<(event: MessageEvent) => void> = [];
-
-  private async onMessage<M extends Message>(predicate: (_: Partial<M>) => boolean): Promise<M> {
+  async onMessage<M extends Message>(predicate: (_: Partial<M>) => boolean): Promise<M> {
     return new Promise((resolve) => {
       const listener = (event: MessageEvent<M>) => {
         if (event.origin !== this.url.origin) return;
