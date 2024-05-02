@@ -39,7 +39,8 @@ export class KeysPopupCommunicator {
   }
 
   private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>();
-  private rejectPendingListeners() {
+
+  protected disconnect() {
     this.listeners.forEach(({ reject }, listener) => {
       reject(standardErrors.provider.userRejectedRequest('Request rejected'));
       window.removeEventListener('message', listener);
@@ -56,7 +57,7 @@ export class KeysPopupCommunicator {
     this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload').then(() => {
       closePopup(this.popup);
       this.popup = null;
-      this.rejectPendingListeners();
+      this.disconnect();
     });
 
     return this.onMessage<ConfigMessage>(({ event }) => event === 'PopupLoaded')

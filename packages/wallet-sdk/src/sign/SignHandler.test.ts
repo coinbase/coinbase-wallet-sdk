@@ -34,10 +34,6 @@ describe('SignerConfigurator', () => {
     const handler = new SignHandler({
       metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1] },
       preference: { options: 'all' },
-      listener: {
-        onAccountsUpdate: jest.fn(),
-        onChainUpdate: jest.fn(),
-      },
     });
     handler.postMessage = mockPostMessage;
     return handler;

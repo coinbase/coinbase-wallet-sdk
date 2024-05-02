@@ -3,8 +3,7 @@ import EventEmitter from 'eventemitter3';
 import { standardErrorCodes, standardErrors } from './core/error';
 import { ConstructorOptions, ProviderInterface, RequestArguments } from './core/provider/interface';
 import { AddressString, IntNumber } from './core/type';
-import { areAddressArraysEqual, hexStringFromIntNumber } from './core/type/util';
-import { AccountsUpdate, ChainUpdate } from './sign/interface';
+import { hexStringFromIntNumber } from './core/type/util';
 import { SignHandler } from './sign/SignHandler';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './util/provider';
 import { determineMethodCategory } from ':core/provider/method';
@@ -14,10 +13,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   constructor(params: Readonly<ConstructorOptions>) {
     super();
-    this.signHandler = new SignHandler({
-      ...params,
-      listener: this.updateListener,
-    });
+    this.signHandler = new SignHandler(params);
   }
 
   public async request<T>(args: RequestArguments): Promise<T> {
@@ -32,10 +28,10 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     // eth_requestAccounts
     handshake: async (_: RequestArguments): Promise<AddressString[]> => {
       try {
-        const accounts = this.connected // already connected
-          ? this.accounts
-          : await this.signHandler.handshake();
-        this.emit('connect', { chainId: hexStringFromIntNumber(IntNumber(this.chain.id)) });
+        const accounts = await this.signHandler.handshake();
+        this.emit('connect', {
+          chainId: hexStringFromIntNumber(IntNumber(this.signHandler.chain.id)),
+        });
         return accounts;
       } catch (error) {
         this.handleUnauthorizedError(error);
@@ -99,26 +95,9 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   }
 
   async disconnect(): Promise<void> {
-    this.accounts = [];
-    this.chain = { id: 1 };
     this.signHandler.disconnect();
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
 
   readonly isCoinbaseWallet = true;
-
-  protected readonly updateListener = {
-    onAccountsUpdate: ({ accounts, source }: AccountsUpdate) => {
-      if (areAddressArraysEqual(this.accounts, accounts)) return;
-      this.accounts = accounts;
-      if (source === 'storage') return;
-      this.emit('accountsChanged', this.accounts);
-    },
-    onChainUpdate: ({ chain, source }: ChainUpdate) => {
-      if (chain.id === this.chain.id && chain.rpcUrl === this.chain.rpcUrl) return;
-      this.chain = chain;
-      if (source === 'storage') return;
-      this.emit('chainChanged', hexStringFromIntNumber(IntNumber(chain.id)));
-    },
-  };
 }

@@ -1,4 +1,4 @@
-import { Signer, StateUpdateListener } from './interface';
+import { AccountsUpdate, ChainUpdate, Signer } from './interface';
 import { SCWSigner } from './scw/SCWSigner';
 import { WLSigner } from './walletlink/WLSigner';
 import { KeysPopupCommunicator } from ':core/communicator/KeysPopupCommunicator';
@@ -10,14 +10,11 @@ import {
   Preference,
   RequestArguments,
 } from ':core/provider/interface';
-import { AddressString, Chain } from ':core/type';
+import { AddressString, Chain, IntNumber } from ':core/type';
+import { areAddressArraysEqual, hexStringFromIntNumber } from ':core/type/util';
 import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 const SIGNER_TYPE_KEY = 'SignerType';
-
-type SignerConfiguratorOptions = ConstructorOptions & {
-  listener: StateUpdateListener;
-};
 
 export class SignHandler extends KeysPopupCommunicator {
   accounts: AddressString[];
@@ -26,16 +23,14 @@ export class SignHandler extends KeysPopupCommunicator {
   private signer: Signer | null;
   private readonly metadata: AppMetadata;
   private readonly preference: Preference;
-  private readonly listener: StateUpdateListener;
   private readonly storage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
 
-  constructor(params: Readonly<SignerConfiguratorOptions>) {
+  constructor(params: Readonly<ConstructorOptions>) {
     const { keysUrl, ...preferenceWithoutKeysUrl } = params.preference;
     super(keysUrl);
 
     this.preference = preferenceWithoutKeysUrl;
     this.metadata = params.metadata;
-    this.listener = params.listener;
     this.signer = this.loadSigner();
 
     this.accounts = [];
@@ -49,6 +44,8 @@ export class SignHandler extends KeysPopupCommunicator {
   }
 
   async handshake() {
+    if (this.connected) return this.accounts;
+
     const signerType = await this.requestSignerSelection();
     const signer = this.initSigner(signerType);
     const accounts = await signer.handshake();
@@ -72,9 +69,13 @@ export class SignHandler extends KeysPopupCommunicator {
   }
 
   disconnect() {
+    this.accounts = [];
+    this.chain = { id: 1 };
+
     this.signer?.disconnect();
     this.signer = null;
     this.storage.removeItem(SIGNER_TYPE_KEY);
+    super.disconnect();
   }
 
   private loadSigner() {
@@ -90,7 +91,7 @@ export class SignHandler extends KeysPopupCommunicator {
       event: 'selectSignerType',
       data: this.preference,
     };
-    const { data } = await this.postMessage(request);
+    const { data } = await super.postMessage(request);
     return data as SignerType;
   }
 
@@ -106,8 +107,8 @@ export class SignHandler extends KeysPopupCommunicator {
     };
     return new SignerClasses[signerType]!({
       metadata: this.metadata,
-      postMessageToPopup: this.postMessage.bind(this),
-      updateListener: this.listener,
+      postMessageToPopup: super.postMessage.bind(this),
+      updateListener: this.updateListener,
     });
   }
 
@@ -123,5 +124,25 @@ export class SignHandler extends KeysPopupCommunicator {
         await this.walletlinkSigner.handleWalletLinkSessionRequest();
       }
     );
+  }
+
+  protected readonly updateListener = {
+    onAccountsUpdate: ({ accounts, source }: AccountsUpdate) => {
+      if (areAddressArraysEqual(this.accounts, accounts)) return;
+      this.accounts = accounts;
+      if (source === 'storage') return;
+      this.emit('accountsChanged', this.accounts);
+    },
+    onChainUpdate: ({ chain, source }: ChainUpdate) => {
+      if (chain.id === this.chain.id && chain.rpcUrl === this.chain.rpcUrl) return;
+      this.chain = chain;
+      if (source === 'storage') return;
+      this.emit('chainChanged', hexStringFromIntNumber(IntNumber(chain.id)));
+    },
+  };
+
+  emit(_: string, __: unknown) {
+    // TODO
+    throw new Error('Method not implemented.');
   }
 }
