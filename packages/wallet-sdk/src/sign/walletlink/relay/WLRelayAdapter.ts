@@ -63,13 +63,13 @@ export class WLRelayAdapter {
   private _jsonRpcUrlFromOpts: string;
   private _addresses: AddressString[] = [];
   private hasMadeFirstChainChangedEmission = false;
-  private updateListener: StateUpdateListener;
+  private updateListener?: StateUpdateListener;
 
   constructor(options: {
     appName: string;
     appLogoUrl: string | null;
     walletlinkUrl: string;
-    updateListener: StateUpdateListener;
+    updateListener?: StateUpdateListener;
   }) {
     this._appName = options.appName;
     this._appLogoUrl = options.appLogoUrl;
@@ -85,7 +85,7 @@ export class WLRelayAdapter {
       const addresses = cachedAddresses.split(' ') as AddressString[];
       if (addresses[0] !== '') {
         this._addresses = addresses.map((address) => ensureAddressString(address));
-        this.updateListener.onAccountsUpdate({
+        this.updateListener?.onAccountsUpdate({
           accounts: this._addresses,
           source: 'storage',
         });
@@ -94,7 +94,7 @@ export class WLRelayAdapter {
 
     const cachedChainId = this._storage.getItem(DEFAULT_CHAIN_ID_KEY);
     if (cachedChainId) {
-      this.updateListener.onChainUpdate({
+      this.updateListener?.onChainUpdate({
         chain: {
           id: this.getChainId(),
           rpcUrl: this.jsonRpcUrl,
@@ -130,7 +130,7 @@ export class WLRelayAdapter {
     this._storage.setItem(DEFAULT_CHAIN_ID_KEY, chainId.toString(10));
     const chainChanged = ensureIntNumber(chainId) !== originalChainId;
     if (chainChanged || !this.hasMadeFirstChainChangedEmission) {
-      this.updateListener.onChainUpdate({
+      this.updateListener?.onChainUpdate({
         chain: { id: chainId, rpcUrl: jsonRpcUrl },
         source: 'wallet',
       });
@@ -296,7 +296,7 @@ export class WLRelayAdapter {
     }
 
     this._addresses = newAddresses;
-    this.updateListener.onAccountsUpdate({
+    this.updateListener?.onAccountsUpdate({
       accounts: newAddresses,
       source: 'wallet',
     });

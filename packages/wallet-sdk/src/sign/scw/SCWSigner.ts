@@ -1,9 +1,9 @@
 import { Signer, StateUpdateListener } from '../interface';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWStateManager } from './SCWStateManager';
-import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
+import { KeysPopupCommunicator } from ':core/communicator/KeysPopupCommunicator';
 import { standardErrors } from ':core/error';
-import { createMessage, RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
+import { RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
 import { Method } from ':core/provider/method';
 import { AddressString } from ':core/type';
@@ -23,17 +23,17 @@ type SwitchEthereumChainParam = [
 
 export class SCWSigner implements Signer {
   private readonly metadata: AppMetadata;
-  private readonly popupCommunicator: PopUpCommunicator;
+  private readonly postMessageToPopup: KeysPopupCommunicator['postMessage'];
   private readonly keyManager: SCWKeyManager;
   private readonly stateManager: SCWStateManager;
 
   constructor(params: {
     metadata: AppMetadata;
-    popupCommunicator: PopUpCommunicator;
+    postMessageToPopup: KeysPopupCommunicator['postMessage'];
     updateListener: StateUpdateListener;
   }) {
     this.metadata = params.metadata;
-    this.popupCommunicator = params.popupCommunicator;
+    this.postMessageToPopup = params.postMessageToPopup;
     this.keyManager = new SCWKeyManager();
     this.stateManager = new SCWStateManager({
       appChainIds: this.metadata.appChainIds,
@@ -47,17 +47,13 @@ export class SCWSigner implements Signer {
   }
 
   async handshake(): Promise<AddressString[]> {
-    await this.popupCommunicator.connect();
-
     const handshakeMessage = await this.createRequestMessage({
       handshake: {
         method: 'eth_requestAccounts',
         params: this.metadata,
       },
     });
-    const response = (await this.popupCommunicator.postMessageForResponse(
-      handshakeMessage
-    )) as RPCResponseMessage;
+    const response: RPCResponseMessage = await this.postMessageToPopup(handshakeMessage);
 
     // store peer's public key
     if ('failure' in response.content) throw response.content.failure;
@@ -80,7 +76,6 @@ export class SCWSigner implements Signer {
       return localResult;
     }
 
-    await this.popupCommunicator.connect();
     const response = await this.sendEncryptedRequest(request);
     const decrypted = await this.decryptResponseMessage<T>(response);
     this.updateInternalState(request, decrypted);
@@ -141,21 +136,19 @@ export class SCWSigner implements Signer {
     );
     const message = await this.createRequestMessage({ encrypted });
 
-    const response = (await this.popupCommunicator.postMessageForResponse(
-      message
-    )) as RPCResponseMessage;
-    return response;
+    return this.postMessageToPopup(message);
   }
 
   private async createRequestMessage(
     content: RPCRequestMessage['content']
   ): Promise<RPCRequestMessage> {
     const publicKey = await exportKeyToHexString('public', await this.keyManager.getOwnPublicKey());
-    return createMessage<RPCRequestMessage>({
+    return {
+      id: crypto.randomUUID(),
       sender: publicKey,
       content,
       timestamp: new Date(),
-    });
+    };
   }
 
   private async decryptResponseMessage<T>(message: RPCResponseMessage): Promise<RPCResponse<T>> {

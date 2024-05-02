@@ -1,22 +1,22 @@
 import { Signer, StateUpdateListener } from '../interface';
 import { WLRelayAdapter } from './relay/WLRelayAdapter';
-import { PopUpCommunicator } from ':core/communicator/PopUpCommunicator';
+import { KeysPopupCommunicator } from ':core/communicator/KeysPopupCommunicator';
 import { WALLETLINK_URL } from ':core/constants';
-import { ConfigEvent, ConfigUpdateMessage, createMessage } from ':core/message';
+import { ConfigMessage } from ':core/message';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
 
 export class WLSigner implements Signer {
-  private readonly popupCommunicator: PopUpCommunicator;
+  private readonly postMessageToPopup: KeysPopupCommunicator['postMessage'];
   private readonly adapter: WLRelayAdapter;
 
   constructor(params: {
     metadata: AppMetadata;
-    popupCommunicator: PopUpCommunicator;
-    updateListener: StateUpdateListener;
+    postMessageToPopup: KeysPopupCommunicator['postMessage'];
+    updateListener?: StateUpdateListener;
   }) {
     const { appName, appLogoUrl } = params.metadata;
-    this.popupCommunicator = params.popupCommunicator;
+    this.postMessageToPopup = params.postMessageToPopup;
     this.adapter = new WLRelayAdapter({
       appName,
       appLogoUrl,
@@ -52,12 +52,11 @@ export class WLSigner implements Signer {
   }
 
   private postWalletLinkUpdate(data: unknown) {
-    this.popupCommunicator.postMessage(
-      createMessage<ConfigUpdateMessage>({
-        event: ConfigEvent.WalletLinkUpdate,
-        data,
-      })
-    );
+    const update: ConfigMessage = {
+      event: 'WalletLinkUpdate',
+      data,
+    };
+    this.postMessageToPopup(update);
   }
 
   async disconnect() {
