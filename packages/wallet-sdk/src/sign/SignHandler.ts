@@ -74,6 +74,7 @@ export class SignHandler extends PopUpCommunicator {
   }
 
   private async requestSignerSelection(): Promise<SignerType> {
+    await this.connect();
     const message = createMessage<ConfigUpdateMessage>({
       event: ConfigEvent.SelectSignerType,
       data: this.preference,
@@ -103,7 +104,7 @@ export class SignHandler extends PopUpCommunicator {
   // will revisit this when refactoring the walletlink signer
   private walletlinkSigner?: WLSigner;
 
-  protected async handleIncomingMessage(message: Message) {
+  protected async handleIncomingMessage(message: Message): Promise<boolean> {
     if (await super.handleIncomingMessage(message)) return true;
     if (isConfigUpdateMessage(message) && message.event === ConfigEvent.WalletLinkSessionRequest) {
       await this.handleWalletLinkSessionRequest();
