@@ -2,20 +2,18 @@ import { LIB_VERSION } from '../../version';
 import { ConfigMessage, Message } from '../message';
 import { closePopup, openPopup } from './PopUpCommunicator';
 import { CB_KEYS_URL } from ':core/constants';
+import { standardErrors } from ':core/error';
 
 export class KeysPopupCommunicator {
   private url: URL;
-  private popup: Window | null = null;
 
   constructor(url: string = CB_KEYS_URL) {
     this.url = new URL(url);
   }
 
   async postMessage<M extends Message>(request: Message): Promise<M> {
-    if (!this.popup) {
-      this.popup = await this.waitForPopupLoaded();
-    }
-    this.popup.postMessage(request, this.url.origin);
+    const popup = await this.waitForPopupLoaded();
+    popup.postMessage(request, this.url.origin);
 
     const { id } = request;
     if (!id) return {} as M; // do not wait for response if no id
@@ -46,8 +44,11 @@ export class KeysPopupCommunicator {
     this.listeners = [];
   }
 
+  private popup: Window | null = null;
   private async waitForPopupLoaded(): Promise<Window> {
-    const popup = openPopup(this.url);
+    if (this.popup) return this.popup;
+
+    this.popup = openPopup(this.url);
 
     this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload').then(() => {
       closePopup(this.popup);
@@ -62,6 +63,9 @@ export class KeysPopupCommunicator {
           data: { version: LIB_VERSION },
         });
       })
-      .then(() => popup);
+      .then(() => {
+        if (!this.popup) throw standardErrors.rpc.internal();
+        return this.popup;
+      });
   }
 }
