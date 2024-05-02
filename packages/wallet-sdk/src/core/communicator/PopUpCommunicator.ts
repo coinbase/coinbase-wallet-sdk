@@ -14,7 +14,7 @@ const POPUP_WIDTH = 420;
 const POPUP_HEIGHT = 540;
 
 export class PopUpCommunicator {
-  protected url: URL | undefined = undefined;
+  protected url: URL;
   private connected = false;
 
   private resolveConnection?: () => void;
@@ -41,18 +41,11 @@ export class PopUpCommunicator {
 
   protected peerWindow: Window | null = null;
 
-  private getTargetOrigin(options?: { bypassTargetOriginCheck: boolean }): string | undefined {
-    if (this.url) return this.url.origin;
-    if (options?.bypassTargetOriginCheck) return '*';
-    return undefined;
-  }
-
-  async postMessage(message: Message, options?: { bypassTargetOriginCheck: boolean }) {
-    const targetOrigin = this.getTargetOrigin(options);
-    if (!targetOrigin || !this.peerWindow) {
+  async postMessage(message: Message) {
+    if (!this.peerWindow) {
       throw standardErrors.rpc.internal('Communicator: No peer window found');
     }
-    this.peerWindow.postMessage(message, targetOrigin);
+    this.peerWindow.postMessage(message, this.url.origin);
   }
 
   async postMessageForResponse(message: Message): Promise<Message> {
@@ -79,32 +72,29 @@ export class PopUpCommunicator {
     const message = event.data;
     const { requestId } = message;
     if (!requestId) {
-      {
-        if (!isConfigUpdateMessage(message)) return false;
-        switch (message.event) {
-          case ConfigEvent.PopupLoaded:
-            this.postMessage(
-              createMessage<ConfigResponseMessage>({
-                requestId: message.id,
-                data: { version: LIB_VERSION },
-              })
-            );
-            this.resolveConnection?.();
-            this.resolveConnection = undefined;
-            return true;
-          case ConfigEvent.PopupUnload:
-            this.disconnect();
-            this.closeChildWindow();
-            return true;
-          default: // handle non-popup config update messages
-            this.onConfigUpdateMessage(message);
-        }
-        return false;
+      if (!isConfigUpdateMessage(message)) return;
+      switch (message.event) {
+        case ConfigEvent.PopupLoaded:
+          this.postMessage(
+            createMessage<ConfigResponseMessage>({
+              requestId: message.id,
+              data: { version: LIB_VERSION },
+            })
+          );
+          this.resolveConnection?.();
+          this.resolveConnection = undefined;
+          break;
+        case ConfigEvent.PopupUnload:
+          this.disconnect();
+          this.closeChildWindow();
+          break;
+        default: // handle non-popup config update messages
+          this.onConfigUpdateMessage(message);
       }
     }
 
-    this.requestMap.get(requestId)?.resolve?.(message);
-    this.requestMap.delete(requestId);
+    this.requestMap.get(requestId!)?.resolve?.(message);
+    this.requestMap.delete(requestId!);
   }
 
   private rejectWaitingRequests() {
@@ -118,9 +108,6 @@ export class PopUpCommunicator {
     const left = (window.innerWidth - POPUP_WIDTH) / 2 + window.screenX;
     const top = (window.innerHeight - POPUP_HEIGHT) / 2 + window.screenY;
 
-    if (!this.url) {
-      throw standardErrors.rpc.internal('No url provided in PopUpCommunicator');
-    }
     this.peerWindow = window.open(
       this.url,
       'Smart Wallet',
