@@ -21,7 +21,7 @@ export class KeysPopupCommunicator {
   }
 
   async onMessage<M extends Message>(predicate: (_: Partial<M>) => boolean): Promise<M> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const listener = (event: MessageEvent<M>) => {
         if (event.origin !== this.url.origin) return; // origin validation
 
@@ -29,19 +29,22 @@ export class KeysPopupCommunicator {
         if (predicate(message)) {
           resolve(message);
           window.removeEventListener('message', listener);
-          this.listeners = this.listeners.filter((l) => l !== listener);
+          this.listeners.delete(listener);
         }
       };
 
       window.addEventListener('message', listener);
-      this.listeners.push(listener);
+      this.listeners.set(listener, { reject });
     });
   }
 
-  private listeners: Array<(event: MessageEvent) => void> = [];
-  private removeListeners() {
-    this.listeners.forEach((listener) => window.removeEventListener('message', listener));
-    this.listeners = [];
+  private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>();
+  private rejectPendingListeners() {
+    this.listeners.forEach(({ reject }, listener) => {
+      reject(standardErrors.provider.userRejectedRequest('Request rejected'));
+      window.removeEventListener('message', listener);
+    });
+    this.listeners.clear();
   }
 
   private popup: Window | null = null;
@@ -53,7 +56,7 @@ export class KeysPopupCommunicator {
     this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload').then(() => {
       closePopup(this.popup);
       this.popup = null;
-      this.removeListeners();
+      this.rejectPendingListeners();
     });
 
     return this.onMessage<ConfigMessage>(({ event }) => event === 'PopupLoaded')
