@@ -9,24 +9,18 @@ import { SignHandler } from './sign/SignHandler';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './util/provider';
 import { determineMethodCategory } from ':core/provider/method';
 
-export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
-  protected accounts: AddressString[] = [];
-  protected chain: Chain;
-  protected signHandler: SignHandler;
+export class CoinbaseWalletProvider extends SignHandler implements ProviderInterface {
+  private accounts: AddressString[] = [];
+  private chain: Chain;
+  private eventEmitter: EventEmitter;
 
   constructor(params: Readonly<ConstructorOptions>) {
-    super();
+    super(params);
     this.chain = {
       id: params.metadata.appChainIds?.[0] ?? 1,
     };
-    this.signHandler = new SignHandler({
-      ...params,
-      listener: this.updateListener,
-    });
-  }
-
-  public get connected() {
-    return this.accounts.length > 0;
+    this.eventEmitter = new EventEmitter();
+    this.loadSigner();
   }
 
   public async request<T>(args: RequestArguments): Promise<T> {
@@ -37,14 +31,16 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     return this.handlers[category](args) as T;
   }
 
-  protected readonly handlers = {
+  private readonly handlers = {
     // eth_requestAccounts
     handshake: async (_: RequestArguments): Promise<AddressString[]> => {
       try {
         const accounts = this.connected // already connected
           ? this.accounts
-          : await this.signHandler.handshake();
-        this.emit('connect', { chainId: hexStringFromIntNumber(IntNumber(this.chain.id)) });
+          : await this.signHandshake();
+        this.eventEmitter.emit('connect', {
+          chainId: hexStringFromIntNumber(IntNumber(this.chain.id)),
+        });
         return accounts;
       } catch (error) {
         this.handleUnauthorizedError(error);
@@ -59,7 +55,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
         );
       }
       try {
-        return await this.signHandler.request(request);
+        return await this.signRequest(request);
       } catch (error) {
         this.handleUnauthorizedError(error);
         throw error;
@@ -97,9 +93,18 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     },
   };
 
-  private handleUnauthorizedError(error: unknown) {
-    const e = error as { code?: number };
-    if (e.code === standardErrorCodes.provider.unauthorized) this.disconnect();
+  async disconnect(): Promise<void> {
+    super.disconnect();
+    this.accounts = [];
+    this.chain = { id: 1 };
+    this.eventEmitter.emit(
+      'disconnect',
+      standardErrors.provider.disconnected('User initiated disconnection')
+    );
+  }
+
+  public on<T>(event: string, listener: (_: T) => void) {
+    return this.eventEmitter.on(event, listener);
   }
 
   /** @deprecated Use `.request({ method: 'eth_requestAccounts' })` instead. */
@@ -112,27 +117,29 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     });
   }
 
-  async disconnect(): Promise<void> {
-    this.accounts = [];
-    this.chain = { id: 1 };
-    this.signHandler.disconnect();
-    this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
+  public readonly isCoinbaseWallet = true;
+
+  public get connected() {
+    return this.accounts.length > 0;
   }
 
-  readonly isCoinbaseWallet = true;
-
-  protected readonly updateListener = {
+  protected readonly stateUpdateListener = {
     onAccountsUpdate: ({ accounts, source }: AccountsUpdate) => {
       if (areAddressArraysEqual(this.accounts, accounts)) return;
       this.accounts = accounts;
       if (source === 'storage') return;
-      this.emit('accountsChanged', this.accounts);
+      this.eventEmitter.emit('accountsChanged', this.accounts);
     },
     onChainUpdate: ({ chain, source }: ChainUpdate) => {
       if (chain.id === this.chain.id && chain.rpcUrl === this.chain.rpcUrl) return;
       this.chain = chain;
       if (source === 'storage') return;
-      this.emit('chainChanged', hexStringFromIntNumber(IntNumber(chain.id)));
+      this.eventEmitter.emit('chainChanged', hexStringFromIntNumber(IntNumber(chain.id)));
     },
   };
+
+  private handleUnauthorizedError(error: unknown) {
+    const e = error as { code?: number };
+    if (e.code === standardErrorCodes.provider.unauthorized) this.disconnect();
+  }
 }

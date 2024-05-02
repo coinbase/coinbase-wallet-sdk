@@ -13,28 +13,24 @@ import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 const SIGNER_TYPE_KEY = 'SignerType';
 
-type SignerConfiguratorOptions = ConstructorOptions & {
-  listener: StateUpdateListener;
-};
+export abstract class SignHandler extends KeysPopupCommunicator {
+  private signer: Signer | null = null;
 
-export class SignHandler extends KeysPopupCommunicator {
-  private signer: Signer | null;
+  private readonly storage = new ScopedLocalStorage('CBWSDK', 'SignHandler');
+
   private readonly metadata: AppMetadata;
   private readonly preference: Preference;
-  private readonly listener: StateUpdateListener;
-  private readonly storage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
 
-  constructor(params: Readonly<SignerConfiguratorOptions>) {
+  protected abstract stateUpdateListener: StateUpdateListener;
+
+  constructor(params: Readonly<ConstructorOptions>) {
     const { keysUrl, ...preferenceWithoutKeysUrl } = params.preference;
     super(keysUrl);
-
     this.preference = preferenceWithoutKeysUrl;
     this.metadata = params.metadata;
-    this.listener = params.listener;
-    this.signer = this.loadSigner();
   }
 
-  async handshake() {
+  async signHandshake() {
     const signerType = await this.requestSignerSelection();
     const signer = this.initSigner(signerType);
     const accounts = await signer.handshake();
@@ -45,7 +41,7 @@ export class SignHandler extends KeysPopupCommunicator {
     return accounts;
   }
 
-  async request(request: RequestArguments) {
+  async signRequest(request: RequestArguments) {
     if (!this.signer) {
       throw new Error('Signer is not initialized');
     }
@@ -58,9 +54,9 @@ export class SignHandler extends KeysPopupCommunicator {
     this.storage.removeItem(SIGNER_TYPE_KEY);
   }
 
-  private loadSigner() {
+  protected loadSigner() {
     const signerType = this.storage.getItem(SIGNER_TYPE_KEY) as SignerType;
-    return signerType ? this.initSigner(signerType) : null;
+    if (signerType) this.signer = this.initSigner(signerType);
   }
 
   private async requestSignerSelection(): Promise<SignerType> {
@@ -88,7 +84,7 @@ export class SignHandler extends KeysPopupCommunicator {
     return new SignerClasses[signerType]!({
       metadata: this.metadata,
       postMessageToPopup: this.postMessage.bind(this),
-      updateListener: this.listener,
+      updateListener: this.stateUpdateListener,
     });
   }
 
