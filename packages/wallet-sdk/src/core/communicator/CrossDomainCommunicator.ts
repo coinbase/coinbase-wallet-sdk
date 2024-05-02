@@ -25,10 +25,10 @@ export abstract class CrossDomainCommunicator {
   }
 
   postMessage(_: Message, mode: 'sendOnly'): void;
-  postMessage<T>(_: Message, mode: 'awaitResponse'): Promise<T>;
+  postMessage<T>(_: Message, mode: 'forResponse'): Promise<T>;
   postMessage<T extends Message>(
     message: Message,
-    mode: 'sendOnly' | 'awaitResponse'
+    mode: 'sendOnly' | 'forResponse'
   ): Promise<T> | void {
     if (!this.peerWindow) {
       throw standardErrors.rpc.internal('Communicator: No peer window found');

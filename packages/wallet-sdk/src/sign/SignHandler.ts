@@ -79,7 +79,7 @@ export class SignHandler extends PopUpCommunicator {
       event: ConfigEvent.SelectSignerType,
       data: this.preference,
     });
-    const response: ConfigResponseMessage = await this.postMessage(message, 'awaitResponse');
+    const response: ConfigResponseMessage = await this.postMessage(message, 'forResponse');
     return response.data as SignerType;
   }
 

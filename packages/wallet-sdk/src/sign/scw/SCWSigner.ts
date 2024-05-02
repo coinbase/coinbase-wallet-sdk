@@ -57,7 +57,7 @@ export class SCWSigner implements Signer {
     });
     const response: RPCResponseMessage = await this.popupCommunicator.postMessage(
       handshakeMessage,
-      'awaitResponse'
+      'forResponse'
     );
 
     // store peer's public key
@@ -142,7 +142,7 @@ export class SCWSigner implements Signer {
     );
     const message = await this.createRequestMessage({ encrypted });
 
-    return this.popupCommunicator.postMessage(message, 'awaitResponse');
+    return this.popupCommunicator.postMessage(message, 'forResponse');
   }
 
   private async createRequestMessage(
