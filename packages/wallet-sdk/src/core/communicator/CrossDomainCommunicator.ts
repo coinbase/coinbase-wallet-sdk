@@ -3,7 +3,6 @@ import { standardErrors } from ':core/error';
 
 export abstract class CrossDomainCommunicator {
   protected url: URL | null = null;
-  protected peerWindow: Window | null = null;
 
   private connected = false;
 
@@ -23,6 +22,8 @@ export abstract class CrossDomainCommunicator {
     window.removeEventListener('message', this.eventListener.bind(this));
     this.rejectWaitingRequests();
   }
+
+  protected peerWindow: Window | null = null;
 
   postMessage(_: Message, mode: 'sendOnly'): void;
   postMessage<T>(_: Message, mode: 'forResponse'): Promise<T>;
