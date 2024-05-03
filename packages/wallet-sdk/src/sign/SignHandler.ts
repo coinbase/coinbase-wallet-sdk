@@ -5,7 +5,7 @@ import { AppMetadata, Preference } from ':core/provider/interface';
 import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 const SIGNER_TYPE_KEY = 'SignerType';
-const storage = new ScopedLocalStorage('CBWSDK');
+const storage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
 
 export function loadSignerType(): SignerType | null {
   return storage.getItem(SIGNER_TYPE_KEY) as SignerType;

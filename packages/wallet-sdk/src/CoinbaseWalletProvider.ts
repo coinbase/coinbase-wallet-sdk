@@ -8,6 +8,7 @@ import { AccountsUpdate, ChainUpdate } from './sign/interface';
 import { SignHandler } from './sign/SignHandler';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './util/provider';
 import { determineMethodCategory } from ':core/provider/method';
+import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
   protected accounts: AddressString[] = [];
@@ -115,7 +116,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   async disconnect(): Promise<void> {
     this.accounts = [];
     this.chain = { id: 1 };
-    this.signHandler.disconnect();
+    ScopedLocalStorage.clearAll();
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
 
