@@ -24,7 +24,6 @@ import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 interface WalletLinkRelayOptions {
   linkAPIUrl: string;
   storage: ScopedLocalStorage;
-  reloadOnDisconnect?: boolean;
 }
 
 export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
@@ -45,7 +44,6 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
 
   protected appName = '';
   protected appLogoUrl: string | null = null;
-  private _reloadOnDisconnect: boolean;
   isLinked: boolean | undefined;
   isUnlinkedErrorState: boolean | undefined;
 
@@ -61,8 +59,6 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
     this.connection = connection;
 
     this.relayEventManager = new RelayEventManager();
-
-    this._reloadOnDisconnect = options.reloadOnDisconnect ?? false;
 
     this.ui = ui;
   }
@@ -170,24 +166,10 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
          */
         const storedSession = WalletLinkSession.load(this.storage);
         if (storedSession?.id === this._session.id) {
-          this.storage.clear();
+          ScopedLocalStorage.clearAll();
         }
 
-        if (this._reloadOnDisconnect) {
-          this.ui.reloadUI();
-          return;
-        }
-
-        if (this.accountsCallback) {
-          this.accountsCallback([], true);
-        }
-
-        const { session, ui, connection } = this.subscribe();
-        this._session = session;
-        this.connection = connection;
-        this.ui = ui;
-
-        this.attachUI();
+        document.location.reload();
       })
       .catch((_) => {});
   }

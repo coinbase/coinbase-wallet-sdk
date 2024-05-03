@@ -58,6 +58,4 @@ export class WLMobileRelayUI implements RelayUI {
       this.redirectDialog.clear();
     };
   }
-
-  reloadUI() {} // no-op
 }

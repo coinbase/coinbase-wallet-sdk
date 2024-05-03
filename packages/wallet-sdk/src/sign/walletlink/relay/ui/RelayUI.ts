@@ -18,9 +18,4 @@ export interface RelayUI {
     onCancel: (error?: Error) => void;
     onResetConnection: () => void;
   }): () => void;
-
-  /**
-   * Reload document ui
-   */
-  reloadUI(): void;
 }
