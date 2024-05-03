@@ -16,7 +16,7 @@ jest.mock('./WalletLinkRelay', () => {
 });
 
 const testWalletLinkUrl = 'http://test-url';
-const testStorage = new ScopedLocalStorage('walletlink');
+const testStorage = new ScopedLocalStorage('walletlink', testWalletLinkUrl);
 
 const createAdapter = (options?: { relay?: WalletLinkRelay }) => {
   const adapter = new WLRelayAdapter({

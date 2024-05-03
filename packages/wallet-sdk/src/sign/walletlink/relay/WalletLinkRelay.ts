@@ -197,6 +197,14 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
     this.appLogoUrl = appLogoUrl;
   }
 
+  public getStorageItem(key: string): string | null {
+    return this.storage.getItem(key);
+  }
+
+  public setStorageItem(key: string, value: string): void {
+    this.storage.setItem(key, value);
+  }
+
   public signEthereumMessage(
     message: Buffer,
     address: AddressString,

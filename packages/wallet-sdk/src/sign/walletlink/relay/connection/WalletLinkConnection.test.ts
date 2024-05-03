@@ -10,7 +10,7 @@ const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`decr
 jest.spyOn(WalletLinkCipher.prototype, 'decrypt').mockImplementation(decryptMock);
 
 describe('WalletLinkConnection', () => {
-  const session = new WalletLinkSession(new ScopedLocalStorage('walletlink'));
+  const session = new WalletLinkSession(new ScopedLocalStorage('walletlink', 'test'));
 
   let connection: WalletLinkConnection;
   let listener: WalletLinkConnectionUpdateListener;

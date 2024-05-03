@@ -74,7 +74,7 @@ export class WLRelayAdapter {
     this._appName = options.appName;
     this._appLogoUrl = options.appLogoUrl;
     this._walletlinkUrl = options.walletlinkUrl;
-    this._storage = new ScopedLocalStorage('walletlink');
+    this._storage = new ScopedLocalStorage('walletlink', this._walletlinkUrl);
     this.updateListener = options.updateListener;
 
     this._relayEventManager = new RelayEventManager();

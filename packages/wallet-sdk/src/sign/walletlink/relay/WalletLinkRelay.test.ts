@@ -16,7 +16,7 @@ jest.spyOn(WalletLinkCipher.prototype, 'decrypt').mockImplementation(decryptMock
 describe('WalletLinkRelay', () => {
   const options = {
     linkAPIUrl: 'http://link-api-url',
-    storage: new ScopedLocalStorage('walletlink'),
+    storage: new ScopedLocalStorage('walletlink', 'test'),
   };
 
   beforeEach(() => {
