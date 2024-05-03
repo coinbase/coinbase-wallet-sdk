@@ -4,6 +4,15 @@ import { closePopup, openPopup } from './util';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
 
+/**
+ * Communicates with a popup window for Coinbase keys.coinbase.com (or another url)
+ * to send and receive messages.
+ *
+ * This class is responsible for opening a popup window, posting messages to it,
+ * and listening for responses.
+ *
+ * It also handles cleanup of event listeners and the popup window itself when necessary.
+ */
 export class Communicator {
   private url: URL;
 
@@ -11,6 +20,9 @@ export class Communicator {
     this.url = new URL(url);
   }
 
+  /**
+   * Posts a message to the popup window and optionally waits for a response.
+   */
   async postMessage<M extends Message>(request: Message): Promise<M> {
     const popup = await this.waitForPopupLoaded();
     popup.postMessage(request, this.url.origin);
@@ -20,6 +32,9 @@ export class Communicator {
     return this.onMessage<M>(({ requestId }) => requestId === id);
   }
 
+  /**
+   * Listens for messages from the popup window that match a given predicate.
+   */
   async onMessage<M extends Message>(predicate: (_: Partial<M>) => boolean): Promise<M> {
     return new Promise((resolve, reject) => {
       const listener = (event: MessageEvent<M>) => {
@@ -40,6 +55,9 @@ export class Communicator {
 
   private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>();
 
+  /**
+   * Rejects all requests and clears the listeners
+   */
   disconnect() {
     this.listeners.forEach(({ reject }, listener) => {
       reject(standardErrors.provider.userRejectedRequest('Request rejected'));
@@ -49,6 +67,10 @@ export class Communicator {
   }
 
   private popup: Window | null = null;
+
+  /**
+   * Waits for the popup window to fully load and then sends a version message.
+   */
   private async waitForPopupLoaded(): Promise<Window> {
     if (this.popup) return this.popup;
 
