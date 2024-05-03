@@ -1,5 +1,5 @@
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
-import { Communicator } from ':core/communicator/Communicator';
+import { Communicator } from './core/communicator/Communicator';
 
 const mockGetItem = jest.fn();
 const mockSetItem = jest.fn();
