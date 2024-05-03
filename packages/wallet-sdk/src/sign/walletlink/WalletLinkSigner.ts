@@ -4,12 +4,12 @@
 
 import eip712 from '../../vendor-js/eth-eip712-util';
 import { Signer, StateUpdateListener } from '../interface';
-import { LOCAL_STORAGE_ADDRESSES_KEY } from './constants';
-import { RelayEventManager } from './RelayEventManager';
-import { EthereumTransactionParams } from './type/EthereumTransactionParams';
-import { JSONRPCRequest, JSONRPCResponse } from './type/JSONRPC';
-import { isErrorResponse, Web3Response } from './type/Web3Response';
-import { WalletLinkRelay } from './WalletLinkRelay';
+import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants';
+import { RelayEventManager } from './relay/RelayEventManager';
+import { EthereumTransactionParams } from './relay/type/EthereumTransactionParams';
+import { JSONRPCRequest, JSONRPCResponse } from './relay/type/JSONRPC';
+import { isErrorResponse, Web3Response } from './relay/type/Web3Response';
+import { WalletLinkRelay } from './relay/WalletLinkRelay';
 import { WALLETLINK_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
