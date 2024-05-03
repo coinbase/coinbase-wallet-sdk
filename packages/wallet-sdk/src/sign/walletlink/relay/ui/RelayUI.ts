@@ -1,8 +1,3 @@
-export interface RelayUIOptions {
-  version: string;
-  darkMode: boolean;
-}
-
 export interface RelayUI {
   attach(): void;
 
