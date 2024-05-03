@@ -8,7 +8,7 @@ const AVAILABLE_CHAINS_STORAGE_KEY = 'availableChains';
 const WALLET_CAPABILITIES_STORAGE_KEY = 'walletCapabilities';
 
 export class SCWStateManager {
-  private readonly storage = new ScopedLocalStorage('CBWSDK', 'SCWStateManager');
+  private readonly storage = new ScopedLocalStorage('CBWSDK');
   private readonly updateListener: StateUpdateListener;
 
   private availableChains?: Chain[];

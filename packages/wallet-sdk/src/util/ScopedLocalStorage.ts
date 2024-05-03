@@ -1,10 +1,7 @@
 // Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
 
 export class ScopedLocalStorage {
-  constructor(
-    private scope: 'CBWSDK' | 'walletlink',
-    private module?: string
-  ) {}
+  constructor(private scope: 'CBWSDK' | 'walletlink') {}
 
   public setItem(key: string, value: string): void {
     localStorage.setItem(this.scopedKey(key), value);
@@ -30,8 +27,8 @@ export class ScopedLocalStorage {
     keysToRemove.forEach((key) => localStorage.removeItem(key));
   }
 
-  scopedKey(key: string): string {
-    return `-${this.scope}${this.module ? `:${this.module}` : ''}:${key}`;
+  private scopedKey(key: string): string {
+    return `-${this.scope}:${key}`;
   }
 
   static clearAll() {

@@ -4,11 +4,11 @@ describe('ScopedLocalStorage', () => {
   describe('public methods', () => {
     afterEach(() => localStorage.clear());
 
-    const scopedLocalStorage = new ScopedLocalStorage('CBWSDK', 'testing');
+    const scopedLocalStorage = new ScopedLocalStorage('CBWSDK');
     test('@setItem', () => {
       scopedLocalStorage.setItem('foo', 'bar');
 
-      expect(localStorage.getItem('-CBWSDK:testing:foo')).toEqual('bar');
+      expect(localStorage.getItem('-CBWSDK:foo')).toEqual('bar');
       expect(localStorage.length).toEqual(1);
     });
 
