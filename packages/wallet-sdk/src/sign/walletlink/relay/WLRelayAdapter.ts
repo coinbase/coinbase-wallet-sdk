@@ -10,8 +10,9 @@ import { EthereumTransactionParams } from './type/EthereumTransactionParams';
 import { JSONRPCRequest, JSONRPCResponse } from './type/JSONRPC';
 import { isErrorResponse, Web3Response } from './type/Web3Response';
 import { WalletLinkRelay } from './WalletLinkRelay';
+import { WALLETLINK_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
-import { RequestArguments } from ':core/provider/interface';
+import { AppMetadata, RequestArguments } from ':core/provider/interface';
 import { AddressString, IntNumber } from ':core/type';
 import {
   ensureAddressString,
@@ -57,7 +58,6 @@ export class WLRelayAdapter {
   private _appName: string;
   private _appLogoUrl: string | null;
   private _relay: WalletLinkRelay | null = null;
-  private readonly _walletlinkUrl: string;
   private readonly _storage: ScopedLocalStorage;
   private readonly _relayEventManager: RelayEventManager;
   private _jsonRpcUrlFromOpts: string;
@@ -65,16 +65,11 @@ export class WLRelayAdapter {
   private hasMadeFirstChainChangedEmission = false;
   private updateListener?: StateUpdateListener;
 
-  constructor(options: {
-    appName: string;
-    appLogoUrl: string | null;
-    walletlinkUrl: string;
-    updateListener?: StateUpdateListener;
-  }) {
-    this._appName = options.appName;
-    this._appLogoUrl = options.appLogoUrl;
-    this._walletlinkUrl = options.walletlinkUrl;
-    this._storage = new ScopedLocalStorage('walletlink', this._walletlinkUrl);
+  constructor(options: { metadata: AppMetadata; updateListener?: StateUpdateListener }) {
+    const { appName, appLogoUrl } = options.metadata;
+    this._appName = appName;
+    this._appLogoUrl = appLogoUrl;
+    this._storage = new ScopedLocalStorage('walletlink', WALLETLINK_URL);
     this.updateListener = options.updateListener;
 
     this._relayEventManager = new RelayEventManager();
@@ -107,9 +102,15 @@ export class WLRelayAdapter {
     this.initializeRelay();
   }
 
-  getWalletLinkSession() {
+  async handshake(): Promise<AddressString[]> {
+    const ethAddresses = await this.request<AddressString[]>({ method: 'eth_requestAccounts' });
+    return ethAddresses;
+  }
+
+  getSession() {
     const relay = this.initializeRelay();
-    return relay.getWalletLinkSession();
+    const { id, secret } = relay.getWalletLinkSession();
+    return { id, secret };
   }
 
   get selectedAddress(): AddressString | undefined {
@@ -229,9 +230,10 @@ export class WLRelayAdapter {
     }
   }
 
-  public async close() {
-    const relay = this.initializeRelay();
-    relay.resetAndReload();
+  public async disconnect() {
+    if (this._relay) {
+      this._relay.resetAndReload();
+    }
     this._storage.clear();
   }
 
@@ -760,7 +762,7 @@ export class WLRelayAdapter {
   private initializeRelay(): WalletLinkRelay {
     if (!this._relay) {
       const relay = new WalletLinkRelay({
-        linkAPIUrl: this._walletlinkUrl,
+        linkAPIUrl: WALLETLINK_URL,
         storage: this._storage,
       });
       relay.setAppInfo(this._appName, this._appLogoUrl);
