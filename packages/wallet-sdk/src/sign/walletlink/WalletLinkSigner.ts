@@ -103,15 +103,15 @@ export class WalletLinkSigner implements Signer {
     this.initializeRelay();
   }
 
-  async handshake(): Promise<AddressString[]> {
-    const ethAddresses = await this.request<AddressString[]>({ method: 'eth_requestAccounts' });
-    return ethAddresses;
-  }
-
   getSession() {
     const relay = this.initializeRelay();
     const { id, secret } = relay.getWalletLinkSession();
     return { id, secret };
+  }
+
+  async handshake(): Promise<AddressString[]> {
+    const ethAddresses = await this.request<AddressString[]>({ method: 'eth_requestAccounts' });
+    return ethAddresses;
   }
 
   get selectedAddress(): AddressString | undefined {
