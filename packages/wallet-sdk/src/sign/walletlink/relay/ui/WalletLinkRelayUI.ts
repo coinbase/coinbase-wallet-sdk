@@ -78,9 +78,4 @@ export class WalletLinkRelayUI implements RelayUI {
 
     return this.snackbar.presentItem(snackbarProps);
   }
-
-  /* istanbul ignore next */
-  reloadUI(): void {
-    document.location.reload();
-  }
 }
