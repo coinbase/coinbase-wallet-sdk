@@ -56,6 +56,7 @@ export class SignHandler {
     this.signer?.disconnect();
     this.signer = null;
     this.storage.removeItem(SIGNER_TYPE_KEY);
+    this.communicator.disconnect();
   }
 
   private loadSigner() {
