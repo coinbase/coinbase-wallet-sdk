@@ -11,6 +11,9 @@ export class Communicator {
     this.url = new URL(url);
   }
 
+  /**
+   * Posts a message to the popup window and optionally waits for a response.
+   */
   async postMessage<M extends Message>(request: Message): Promise<M> {
     const popup = await this.waitForPopupLoaded();
     popup.postMessage(request, this.url.origin);
@@ -20,6 +23,9 @@ export class Communicator {
     return this.onMessage<M>(({ requestId }) => requestId === id);
   }
 
+  /**
+   * Listens for messages from the popup window that match a given predicate.
+   */
   async onMessage<M extends Message>(predicate: (_: Partial<M>) => boolean): Promise<M> {
     return new Promise((resolve, reject) => {
       const listener = (event: MessageEvent<M>) => {
@@ -49,6 +55,10 @@ export class Communicator {
   }
 
   private popup: Window | null = null;
+
+  /**
+   * Waits for the popup window to fully load and then sends a version message.
+   */
   private async waitForPopupLoaded(): Promise<Window> {
     if (this.popup) return this.popup;
 
