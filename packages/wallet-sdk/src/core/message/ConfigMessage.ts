@@ -11,4 +11,4 @@ export type ConfigEvent =
   | 'WalletLinkSessionRequest'
   | 'WalletLinkUpdate';
 
-export type SignerType = 'scw' | 'walletlink' | 'extension';
+export type SignerType = 'scw' | 'walletlink';

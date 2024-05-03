@@ -1,28 +1,45 @@
 import EventEmitter from 'eventemitter3';
 
 import { standardErrorCodes, standardErrors } from './core/error';
-import { ConstructorOptions, ProviderInterface, RequestArguments } from './core/provider/interface';
+import {
+  AppMetadata,
+  ConstructorOptions,
+  Preference,
+  ProviderInterface,
+  RequestArguments,
+} from './core/provider/interface';
 import { AddressString, Chain, IntNumber } from './core/type';
 import { areAddressArraysEqual, hexStringFromIntNumber } from './core/type/util';
-import { AccountsUpdate, ChainUpdate } from './sign/interface';
-import { SignHandler } from './sign/SignHandler';
+import { AccountsUpdate, ChainUpdate, Signer } from './sign/interface';
+import { SCWSigner } from './sign/scw/SCWSigner';
+import { fetchSignerType, loadSignerType, storeSignerType } from './sign/SignHandler';
+import { WLSigner } from './sign/walletlink/WLSigner';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './util/provider';
+import { Communicator } from ':core/communicator/Communicator';
+import { SignerType } from ':core/message';
 import { determineMethodCategory } from ':core/provider/method';
+import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
+  private readonly metadata: AppMetadata;
+  private readonly preference: Preference;
+  private readonly communicator: Communicator;
+
+  private signer: Signer | null;
   protected accounts: AddressString[] = [];
   protected chain: Chain;
-  protected signHandler: SignHandler;
 
-  constructor(params: Readonly<ConstructorOptions>) {
+  constructor({ metadata, preference: { keysUrl, ...preference } }: Readonly<ConstructorOptions>) {
     super();
+    this.metadata = metadata;
+    this.preference = preference;
+    this.communicator = new Communicator(keysUrl);
     this.chain = {
-      id: params.metadata.appChainIds?.[0] ?? 1,
+      id: metadata.appChainIds?.[0] ?? 1,
     };
-    this.signHandler = new SignHandler({
-      ...params,
-      listener: this.updateListener,
-    });
+    // Load states from storage
+    const signerType = loadSignerType();
+    this.signer = signerType ? this.initSigner(signerType) : null;
   }
 
   public get connected() {
@@ -41,9 +58,18 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     // eth_requestAccounts
     handshake: async (_: RequestArguments): Promise<AddressString[]> => {
       try {
-        const accounts = this.connected // already connected
-          ? this.accounts
-          : await this.signHandler.handshake();
+        if (this.connected) {
+          this.emit('connect', { chainId: hexStringFromIntNumber(IntNumber(this.chain.id)) });
+          return this.accounts;
+        }
+
+        const signerType = await this.requestSignerSelection();
+        const signer = this.initSigner(signerType);
+        const accounts = await signer.handshake();
+
+        this.signer = signer;
+        storeSignerType(signerType);
+
         this.emit('connect', { chainId: hexStringFromIntNumber(IntNumber(this.chain.id)) });
         return accounts;
       } catch (error) {
@@ -53,13 +79,13 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     },
 
     sign: async (request: RequestArguments) => {
-      if (!this.connected) {
+      if (!this.connected || !this.signer) {
         throw standardErrors.provider.unauthorized(
           "Must call 'eth_requestAccounts' before other methods"
         );
       }
       try {
-        return await this.signHandler.request(request);
+        return await this.signer.request(request);
       } catch (error) {
         this.handleUnauthorizedError(error);
         throw error;
@@ -115,7 +141,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   async disconnect(): Promise<void> {
     this.accounts = [];
     this.chain = { id: 1 };
-    this.signHandler.disconnect();
+    ScopedLocalStorage.clearAll();
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
 
@@ -135,4 +161,28 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       this.emit('chainChanged', hexStringFromIntNumber(IntNumber(chain.id)));
     },
   };
+
+  private requestSignerSelection(): Promise<SignerType> {
+    return fetchSignerType({
+      communicator: this.communicator,
+      preference: this.preference,
+      metadata: this.metadata,
+    });
+  }
+
+  private initSigner(signerType: SignerType): Signer {
+    switch (signerType) {
+      case 'scw':
+        return new SCWSigner({
+          metadata: this.metadata,
+          updateListener: this.updateListener,
+          postMessageToPopup: this.communicator.postMessage.bind(this),
+        });
+      case 'walletlink':
+        return new WLSigner({
+          metadata: this.metadata,
+          updateListener: this.updateListener,
+        });
+    }
+  }
 }

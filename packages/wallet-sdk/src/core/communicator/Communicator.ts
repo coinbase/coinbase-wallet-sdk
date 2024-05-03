@@ -18,6 +18,9 @@ export class Communicator {
 
   constructor(url: string = CB_KEYS_URL) {
     this.url = new URL(url);
+    this.postMessage = this.postMessage.bind(this);
+    this.onMessage = this.onMessage.bind(this);
+    this.disconnect = this.disconnect.bind(this);
   }
 
   /**
