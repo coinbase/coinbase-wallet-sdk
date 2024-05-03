@@ -2,8 +2,8 @@
 
 // Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
 
-import eip712 from '../../../vendor-js/eth-eip712-util';
-import { StateUpdateListener } from '../../interface';
+import eip712 from '../../vendor-js/eth-eip712-util';
+import { Signer, StateUpdateListener } from '../interface';
 import { LOCAL_STORAGE_ADDRESSES_KEY } from './constants';
 import { RelayEventManager } from './RelayEventManager';
 import { EthereumTransactionParams } from './type/EthereumTransactionParams';
@@ -54,7 +54,8 @@ interface WatchAssetParams {
   };
 }
 
-export class WLRelayAdapter {
+// original source: https://github.com/coinbase/coinbase-wallet-sdk/blob/v3.7.1/packages/wallet-sdk/src/provider/CoinbaseWalletProvider.ts
+export class WalletLinkSigner implements Signer {
   private _appName: string;
   private _appLogoUrl: string | null;
   private _relay: WalletLinkRelay | null = null;

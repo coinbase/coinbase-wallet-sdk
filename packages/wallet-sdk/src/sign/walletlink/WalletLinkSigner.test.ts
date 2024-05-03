@@ -4,7 +4,7 @@ import { LOCAL_STORAGE_ADDRESSES_KEY } from './constants';
 import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from './mocks/fixtures';
 import { mockedWalletLinkRelay } from './mocks/relay';
 import { WalletLinkRelay } from './WalletLinkRelay';
-import { WLRelayAdapter } from './WLRelayAdapter';
+import { WalletLinkSigner } from './WalletLinkSigner';
 import { standardErrorCodes, standardErrors } from ':core/error';
 import { AddressString } from ':core/type';
 import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
@@ -19,7 +19,7 @@ const testWalletLinkUrl = 'http://test-url';
 const testStorage = new ScopedLocalStorage('walletlink', testWalletLinkUrl);
 
 const createAdapter = (options?: { relay?: WalletLinkRelay }) => {
-  const adapter = new WLRelayAdapter({
+  const adapter = new WalletLinkSigner({
     appName: 'test',
     appLogoUrl: null,
     walletlinkUrl: testWalletLinkUrl,
@@ -122,7 +122,7 @@ describe('LegacyProvider', () => {
   });
 
   describe('RPC Methods', () => {
-    let provider: WLRelayAdapter | null = null;
+    let provider: WalletLinkSigner | null = null;
     beforeEach(() => {
       testStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDERESS.toLowerCase());
       provider = createAdapter();
