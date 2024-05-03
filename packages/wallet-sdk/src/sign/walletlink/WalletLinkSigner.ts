@@ -13,7 +13,7 @@ import { WalletLinkRelay } from './relay/WalletLinkRelay';
 import { WALLETLINK_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
-import { AddressString, IntNumber } from ':core/type';
+import { AddressString, Chain, IntNumber } from ':core/type';
 import {
   ensureAddressString,
   ensureBigInt,
@@ -102,6 +102,9 @@ export class WalletLinkSigner implements Signer {
 
     this.initializeRelay();
   }
+
+  accounts: AddressString[] = [];
+  chain: Chain = { id: 1 };
 
   getSession() {
     const relay = this.initializeRelay();

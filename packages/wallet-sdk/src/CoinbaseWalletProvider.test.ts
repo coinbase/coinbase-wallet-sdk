@@ -1,7 +1,7 @@
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { standardErrors } from './core/error';
+import { SCWSigner } from './sign/scw/SCWSigner';
 import { fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
-import { AddressString } from ':core/type';
 
 function createProvider() {
   return new CoinbaseWalletProvider({
@@ -50,6 +50,7 @@ jest.mock('./sign/scw/SCWSigner', () => {
   return {
     SCWSigner: jest.fn().mockImplementation(() => {
       return {
+        accounts: jest.fn(),
         handshake: mockHandshake,
         request: mockRequest,
       };
@@ -93,7 +94,7 @@ describe('signer configuration', () => {
     mockLoadSignerType.mockReturnValueOnce('scw');
     const provider = createProvider();
     // @ts-expect-error // TODO: should be able to mock cached accounts
-    provider.accounts = [AddressString('0x123')];
+    (provider.signer as SCWSigner).accounts = ['0x123'];
     const request = { method: 'personal_sign', params: ['0x123', '0xdeadbeef'] };
     provider.request(request);
     expect(mockRequest).toHaveBeenCalledWith(request);

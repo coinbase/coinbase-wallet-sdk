@@ -6,7 +6,7 @@ import { standardErrors } from ':core/error';
 import { RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
 import { Method } from ':core/provider/method';
-import { AddressString } from ':core/type';
+import { AddressString, Chain } from ':core/type';
 import { ensureIntNumber } from ':core/type/util';
 import {
   decryptContent,
@@ -45,6 +45,9 @@ export class SCWSigner implements Signer {
     this.createRequestMessage = this.createRequestMessage.bind(this);
     this.decryptResponseMessage = this.decryptResponseMessage.bind(this);
   }
+
+  accounts: AddressString[] = [];
+  chain: Chain = { id: 1 };
 
   async handshake(): Promise<AddressString[]> {
     const handshakeMessage = await this.createRequestMessage({
