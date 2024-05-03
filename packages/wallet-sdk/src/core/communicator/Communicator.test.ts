@@ -38,6 +38,9 @@ function queueMessageEvent({
   setTimeout(() => dispatchMessageEvent({ data, origin }), 200);
 }
 
+const addEventListenerSpy = jest.spyOn(window, 'addEventListener');
+const removeEventListenerSpy = jest.spyOn(window, 'removeEventListener');
+
 describe('Communicator', () => {
   let urlOrigin: string;
   let communicator: Communicator;
@@ -58,7 +61,7 @@ describe('Communicator', () => {
     (openPopup as jest.Mock).mockImplementation(() => mockPopup);
   });
 
-  it('should open a popup window', async () => {
+  test('@waitForPopupLoaded - should open a popup window and finish handshake', async () => {
     queueMessageEvent(popupLoadedMessage);
 
     await communicator.waitForPopupLoaded();
@@ -74,7 +77,22 @@ describe('Communicator', () => {
     );
   });
 
-  it('should post a message to the popup window', async () => {
+  test('@onMessage - should add and remove event listener', async () => {
+    const mockRequest: Message = {
+      requestId: 'mock-request-id-1-2',
+      data: 'test',
+    };
+
+    queueMessageEvent({ data: mockRequest });
+
+    const promise = communicator.onMessage(() => true);
+
+    expect(addEventListenerSpy).toHaveBeenCalled();
+    expect(await promise).toEqual(mockRequest);
+    expect(removeEventListenerSpy).toHaveBeenCalled();
+  });
+
+  test('@postMessage - should post a message to the popup window and wait for response', async () => {
     const mockRequest: Message = { id: 'mock-request-id-1-2', data: {} };
 
     queueMessageEvent(popupLoadedMessage);
@@ -84,7 +102,7 @@ describe('Communicator', () => {
       },
     });
 
-    await communicator.postMessage(mockRequest);
+    const response = await communicator.postMessage(mockRequest);
 
     expect(mockPopup.postMessage).toHaveBeenNthCalledWith(
       1,
@@ -96,6 +114,31 @@ describe('Communicator', () => {
       urlOrigin
     );
     expect(mockPopup.postMessage).toHaveBeenNthCalledWith(2, mockRequest, urlOrigin);
+
+    expect(response).toEqual({
+      requestId: mockRequest.id,
+    });
+  });
+
+  test('@postMessage - should post a response to the popup window and not wait for response', async () => {
+    const mockResponse: Message = { requestId: 'mock-request-id-1-2', data: {} };
+
+    queueMessageEvent(popupLoadedMessage);
+
+    const response = await communicator.postMessage(mockResponse);
+
+    expect(mockPopup.postMessage).toHaveBeenNthCalledWith(
+      1,
+      {
+        data: {
+          version: LIB_VERSION,
+        },
+      },
+      urlOrigin
+    );
+    expect(mockPopup.postMessage).toHaveBeenNthCalledWith(2, mockResponse, urlOrigin);
+
+    expect(response).toEqual({});
   });
 
   it('should not open a popup window if one is already open', async () => {
