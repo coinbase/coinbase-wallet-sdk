@@ -63,6 +63,8 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
         const signerType = await this.requestSignerSelection();
         const signer = this.initSigner(signerType);
         const accounts = await signer.handshake();
+
+        this.signer = signer;
         storeSignerType(signerType);
 
         this.emit('connect', { chainId: hexStringFromIntNumber(IntNumber(this.chain.id)) });
