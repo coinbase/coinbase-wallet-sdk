@@ -166,14 +166,18 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   }
 
   private initSigner(signerType: SignerType): Signer {
-    const SignerClasses = {
-      scw: SCWSigner,
-      walletlink: WLSigner,
-    };
-    return new SignerClasses[signerType]!({
-      metadata: this.metadata,
-      postMessageToPopup: this.communicator.postMessage.bind(this),
-      updateListener: this.updateListener,
-    });
+    switch (signerType) {
+      case 'scw':
+        return new SCWSigner({
+          metadata: this.metadata,
+          postMessageToPopup: this.communicator.postMessage.bind(this),
+          updateListener: this.updateListener,
+        });
+      case 'walletlink':
+        return new WLSigner({
+          metadata: this.metadata,
+          updateListener: this.updateListener,
+        });
+    }
   }
 }
