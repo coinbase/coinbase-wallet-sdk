@@ -3,7 +3,7 @@ import EventEmitter from 'eventemitter3';
 import { AccountsUpdate, ChainUpdate, Signer } from './sign/interface';
 import { SCWSigner } from './sign/scw/SCWSigner';
 import { WLSigner } from './sign/walletlink/WLSigner';
-import { PopupCommunicator } from ':core/communicator/Communicator';
+import { Communicator } from ':core/communicator/Communicator';
 import { standardErrorCodes, standardErrors } from ':core/error';
 import { ConfigMessage, SignerType } from ':core/message';
 import {
@@ -30,13 +30,13 @@ export class CoinbaseWalletProvider implements ProviderInterface {
   private signer: Signer | null;
   private readonly metadata: AppMetadata;
   private readonly preference: Preference;
-  private readonly communicator: PopupCommunicator;
+  private readonly communicator: Communicator;
   private readonly storage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
   private readonly eventEmitter = new EventEmitter();
 
   constructor(params: Readonly<ConstructorOptions>) {
     const { keysUrl, ...preferenceWithoutKeysUrl } = params.preference;
-    this.communicator = new PopupCommunicator(keysUrl);
+    this.communicator = new Communicator(keysUrl);
 
     this.accounts = [];
     this.chain = {

@@ -4,7 +4,7 @@ import { closePopup, openPopup } from './util';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
 
-export class PopupCommunicator {
+export class Communicator {
   private url: URL;
 
   constructor(url: string = CB_KEYS_URL) {

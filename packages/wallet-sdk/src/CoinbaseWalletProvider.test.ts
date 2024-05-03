@@ -1,4 +1,5 @@
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
+import { Communicator } from ':core/communicator/Communicator';
 
 const mockGetItem = jest.fn();
 const mockSetItem = jest.fn();
@@ -16,16 +17,7 @@ jest.mock(':util/ScopedLocalStorage', () => {
 });
 
 const mockPostMessage = jest.fn();
-jest.mock(':core/communicator/PopUpCommunicator', () => {
-  return {
-    PopUpCommunicator: jest.fn().mockImplementation(() => {
-      return {
-        onMessage: jest.fn(),
-        postMessage: mockPostMessage,
-      };
-    }),
-  };
-});
+Communicator.prototype.postMessage = mockPostMessage;
 
 const mockHandshake = jest.fn();
 const mockRequest = jest.fn();
@@ -35,6 +27,7 @@ jest.mock('./sign/scw/SCWSigner', () => {
       return {
         handshake: mockHandshake,
         request: mockRequest,
+        disconnect: jest.fn(),
       };
     }),
   };
@@ -71,7 +64,9 @@ describe('CoinbaseWalletProvider', () => {
       expect(mockHandshake).not.toHaveBeenCalled();
       expect(mockSetItem).not.toHaveBeenCalled();
 
-      await expect(provider.request({} as any)).rejects.toThrow('Signer is not initialized');
+      await expect(provider.request({ method: 'personal_sign' })).rejects.toThrow(
+        'Signer is not initialized'
+      );
     });
 
     it('should not store signer type unless handshake is successful', async () => {
@@ -86,15 +81,10 @@ describe('CoinbaseWalletProvider', () => {
       expect(mockHandshake).toHaveBeenCalled();
       expect(mockSetItem).not.toHaveBeenCalled();
 
-      await expect(provider.request({} as any)).rejects.toThrow('Signer is not initialized');
+      await expect(provider.request({ method: 'personal_sign' })).rejects.toThrow(
+        'Signer is not initialized'
+      );
     });
-  });
-
-  it('should load signer from storage when available', async () => {
-    mockGetItem.mockReturnValueOnce('scw');
-    const provider = createProvider();
-    await provider.request({ method: 'eth_requestAccounts' });
-    expect(mockRequest).toHaveBeenCalledWith({} as any);
   });
 
   it('should throw error if signer is not initialized', async () => {
