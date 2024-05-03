@@ -74,13 +74,13 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     },
 
     sign: async (request: RequestArguments) => {
-      if (!this.connected) {
+      if (!this.connected || !this.signer) {
         throw standardErrors.provider.unauthorized(
           "Must call 'eth_requestAccounts' before other methods"
         );
       }
       try {
-        return await this.signHandler.request(request);
+        return await this.signer.request(request);
       } catch (error) {
         this.handleUnauthorizedError(error);
         throw error;
