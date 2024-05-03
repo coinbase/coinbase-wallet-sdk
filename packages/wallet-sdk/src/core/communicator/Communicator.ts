@@ -71,8 +71,8 @@ export class Communicator {
   /**
    * Waits for the popup window to fully load and then sends a version message.
    */
-  private async waitForPopupLoaded(): Promise<Window> {
-    if (this.popup) return this.popup;
+  private waitForPopupLoaded = (): Promise<Window> => {
+    if (this.popup) return Promise.resolve(this.popup);
 
     this.popup = openPopup(this.url);
 
@@ -93,5 +93,5 @@ export class Communicator {
         if (!this.popup) throw standardErrors.rpc.internal();
         return this.popup;
       });
-  }
+  };
 }
