@@ -18,6 +18,9 @@ export class Communicator {
 
   constructor(url: string = CB_KEYS_URL) {
     this.url = new URL(url);
+    this.postMessage = this.postMessage.bind(this);
+    this.onMessage = this.onMessage.bind(this);
+    this.disconnect = this.disconnect.bind(this);
   }
 
   /**
@@ -71,8 +74,8 @@ export class Communicator {
   /**
    * Waits for the popup window to fully load and then sends a version message.
    */
-  private waitForPopupLoaded = (): Promise<Window> => {
-    if (this.popup) return Promise.resolve(this.popup);
+  private async waitForPopupLoaded(): Promise<Window> {
+    if (this.popup) return this.popup;
 
     this.popup = openPopup(this.url);
 
@@ -93,5 +96,5 @@ export class Communicator {
         if (!this.popup) throw standardErrors.rpc.internal();
         return this.popup;
       });
-  };
+  }
 }
