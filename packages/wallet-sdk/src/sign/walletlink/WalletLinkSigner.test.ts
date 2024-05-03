@@ -5,18 +5,18 @@ import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from './relay
 import { mockedWalletLinkRelay } from './relay/mocks/relay';
 import { WalletLinkRelay } from './relay/WalletLinkRelay';
 import { WalletLinkSigner } from './WalletLinkSigner';
+import { WALLETLINK_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
 import { AddressString } from ':core/type';
 import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
-jest.mock('./WalletLinkRelay', () => {
+jest.mock('./relay/WalletLinkRelay', () => {
   return {
     WalletLinkRelay: mockedWalletLinkRelay,
   };
 });
 
-const testWalletLinkUrl = 'http://test-url';
-const testStorage = new ScopedLocalStorage('walletlink', testWalletLinkUrl);
+const testStorage = new ScopedLocalStorage('walletlink', WALLETLINK_URL);
 
 const createAdapter = (options?: { relay?: WalletLinkRelay }) => {
   const adapter = new WalletLinkSigner({
