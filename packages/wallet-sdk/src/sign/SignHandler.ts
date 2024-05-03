@@ -36,7 +36,13 @@ async function listenForWalletLinkSessionRequest(
   communicator: Communicator,
   metadata: AppMetadata
 ) {
-  await communicator.onMessage<ConfigMessage>(({ event }) => event === 'WalletLinkSessionRequest');
+  try {
+    await communicator.onMessage<ConfigMessage>(
+      ({ event }) => event === 'WalletLinkSessionRequest'
+    );
+  } catch (_) {
+    return;
+  }
 
   // temporary walletlink signer instance to handle WalletLinkSessionRequest
   // will revisit this when refactoring the walletlink signer
