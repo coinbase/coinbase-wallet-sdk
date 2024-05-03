@@ -103,6 +103,8 @@ export class WLRelayAdapter {
       });
       this.hasMadeFirstChainChangedEmission = true;
     }
+
+    this.initializeRelay();
   }
 
   getWalletLinkSession() {
