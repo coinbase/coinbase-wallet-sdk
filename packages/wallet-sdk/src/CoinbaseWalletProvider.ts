@@ -22,9 +22,8 @@ import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 const SIGNER_TYPE_KEY = 'SignerType';
 
 export class CoinbaseWalletProvider implements ProviderInterface {
-  protected accounts: AddressString[] = [];
-  protected chain: Chain;
-
+  private accounts: AddressString[];
+  private chain: Chain;
   private signer: Signer | null;
   private readonly metadata: AppMetadata;
   private readonly preference: Preference;
@@ -36,14 +35,14 @@ export class CoinbaseWalletProvider implements ProviderInterface {
     const { keysUrl, ...preferenceWithoutKeysUrl } = params.preference;
     this.communicator = new Communicator(keysUrl);
 
+    this.preference = preferenceWithoutKeysUrl;
+    this.metadata = params.metadata;
+    this.signer = this.loadSigner();
+
     this.accounts = [];
     this.chain = {
       id: params.metadata.appChainIds?.[0] ?? 1,
     };
-
-    this.preference = preferenceWithoutKeysUrl;
-    this.metadata = params.metadata;
-    this.signer = this.loadSigner();
   }
 
   get connected() {
