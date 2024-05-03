@@ -1,4 +1,5 @@
 import { SignHandler } from './SignHandler';
+import { Communicator } from ':core/communicator/Communicator';
 
 const mockGetItem = jest.fn();
 const mockSetItem = jest.fn();
@@ -16,6 +17,8 @@ jest.mock(':util/ScopedLocalStorage', () => {
 });
 
 const mockPostMessage = jest.fn();
+Communicator.prototype.postMessage = mockPostMessage;
+
 const mockHandshake = jest.fn();
 const mockRequest = jest.fn();
 jest.mock('./scw/SCWSigner', () => {
@@ -39,7 +42,6 @@ describe('SignerConfigurator', () => {
         onChainUpdate: jest.fn(),
       },
     });
-    handler.postMessage = mockPostMessage;
     return handler;
   }
 

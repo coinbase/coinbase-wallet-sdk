@@ -1,7 +1,7 @@
 import { Signer, StateUpdateListener } from '../interface';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWStateManager } from './SCWStateManager';
-import { KeysPopupCommunicator } from ':core/communicator/KeysPopupCommunicator';
+import { Communicator } from ':core/communicator/Communicator';
 import { standardErrors } from ':core/error';
 import { RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
@@ -23,13 +23,13 @@ type SwitchEthereumChainParam = [
 
 export class SCWSigner implements Signer {
   private readonly metadata: AppMetadata;
-  private readonly postMessageToPopup: KeysPopupCommunicator['postMessage'];
+  private readonly postMessageToPopup: Communicator['postMessage'];
   private readonly keyManager: SCWKeyManager;
   private readonly stateManager: SCWStateManager;
 
   constructor(params: {
     metadata: AppMetadata;
-    postMessageToPopup: KeysPopupCommunicator['postMessage'];
+    postMessageToPopup: Communicator['postMessage'];
     updateListener: StateUpdateListener;
   }) {
     this.metadata = params.metadata;
