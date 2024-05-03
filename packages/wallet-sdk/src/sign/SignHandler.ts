@@ -1,7 +1,7 @@
 import { Signer, StateUpdateListener } from './interface';
 import { SCWSigner } from './scw/SCWSigner';
 import { WLSigner } from './walletlink/WLSigner';
-import { KeysPopupCommunicator } from ':core/communicator/KeysPopupCommunicator';
+import { Communicator } from ':core/communicator/Communicator';
 import { ConfigMessage, SignerType } from ':core/message';
 import {
   AppMetadata,
@@ -17,17 +17,17 @@ type SignerConfiguratorOptions = ConstructorOptions & {
   listener: StateUpdateListener;
 };
 
-export class SignHandler extends KeysPopupCommunicator {
+export class SignHandler {
   private signer: Signer | null;
   private readonly metadata: AppMetadata;
   private readonly preference: Preference;
   private readonly listener: StateUpdateListener;
+  private readonly communicator: Communicator;
   private readonly storage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
 
   constructor(params: Readonly<SignerConfiguratorOptions>) {
     const { keysUrl, ...preferenceWithoutKeysUrl } = params.preference;
-    super(keysUrl);
-
+    this.communicator = new Communicator(keysUrl);
     this.preference = preferenceWithoutKeysUrl;
     this.metadata = params.metadata;
     this.listener = params.listener;
@@ -56,6 +56,7 @@ export class SignHandler extends KeysPopupCommunicator {
     this.signer?.disconnect();
     this.signer = null;
     this.storage.removeItem(SIGNER_TYPE_KEY);
+    this.communicator.disconnect();
   }
 
   private loadSigner() {
@@ -71,7 +72,7 @@ export class SignHandler extends KeysPopupCommunicator {
       event: 'selectSignerType',
       data: this.preference,
     };
-    const { data } = await this.postMessage(request);
+    const { data } = await this.communicator.postMessage(request);
     return data as SignerType;
   }
 
@@ -87,7 +88,7 @@ export class SignHandler extends KeysPopupCommunicator {
     };
     return new SignerClasses[signerType]!({
       metadata: this.metadata,
-      postMessageToPopup: this.postMessage.bind(this),
+      postMessageToPopup: this.communicator.postMessage.bind(this),
       updateListener: this.listener,
     });
   }
@@ -96,13 +97,13 @@ export class SignHandler extends KeysPopupCommunicator {
   // will revisit this when refactoring the walletlink signer
   private walletlinkSigner?: WLSigner;
   private listenForWalletLinkSessionRequest() {
-    this.onMessage<ConfigMessage>(({ event }) => event === 'WalletLinkSessionRequest').then(
-      async () => {
+    this.communicator
+      .onMessage<ConfigMessage>(({ event }) => event === 'WalletLinkSessionRequest')
+      .then(async () => {
         if (!this.walletlinkSigner) {
           this.walletlinkSigner = this.initSigner('walletlink') as WLSigner;
         }
         await this.walletlinkSigner.handleWalletLinkSessionRequest();
-      }
-    );
+      });
   }
 }
