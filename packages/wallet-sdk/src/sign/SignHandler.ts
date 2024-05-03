@@ -42,7 +42,6 @@ async function listenForWalletLinkSessionRequest(
   // will revisit this when refactoring the walletlink signer
   const walletlink = new WLSigner({
     metadata,
-    postMessageToPopup: communicator.postMessage,
   });
 
   // send wallet link session to popup
