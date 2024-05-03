@@ -17,7 +17,6 @@ function dispatchMessageEvent({ data, origin }: { data: Record<string, any>; ori
   window.dispatchEvent(messageEvent);
 }
 
-// Dispatches an event indicating that the popup has loaded
 const popupLoadedMessage = {
   data: { event: 'PopupLoaded' },
 };

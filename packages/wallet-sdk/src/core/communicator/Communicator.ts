@@ -4,6 +4,15 @@ import { closePopup, openPopup } from './util';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
 
+/**
+ * Communicates with a popup window for Coinbase keys.coinbase.com (or another url)
+ * to send and receive messages.
+ *
+ * This class is responsible for opening a popup window, posting messages to it,
+ * and listening for responses.
+ *
+ * It also handles cleanup of event listeners and the popup window itself when necessary.
+ */
 export class Communicator {
   private url: URL;
 
@@ -46,6 +55,9 @@ export class Communicator {
 
   private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>();
 
+  /**
+   * Rejects all requests and clears the listeners
+   */
   disconnect() {
     this.listeners.forEach(({ reject }, listener) => {
       reject(standardErrors.provider.userRejectedRequest('Request rejected'));
