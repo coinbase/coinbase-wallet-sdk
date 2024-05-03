@@ -22,10 +22,8 @@ import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 const SIGNER_TYPE_KEY = 'SignerType';
 
 export class CoinbaseWalletProvider implements ProviderInterface {
-  readonly isCoinbaseWallet = true;
-
-  accounts: AddressString[];
-  chain: Chain;
+  protected accounts: AddressString[] = [];
+  protected chain: Chain;
 
   private signer: Signer | null;
   private readonly metadata: AppMetadata;
@@ -145,6 +143,16 @@ export class CoinbaseWalletProvider implements ProviderInterface {
     return this.signer.request(request);
   }
 
+  /** @deprecated Use `.request({ method: 'eth_requestAccounts' })` instead. */
+  async enable(): Promise<unknown> {
+    console.warn(
+      `.enable() has been deprecated. Please use .request({ method: "eth_requestAccounts" }) instead.`
+    );
+    return await this.request({
+      method: 'eth_requestAccounts',
+    });
+  }
+
   disconnect() {
     this.accounts = [];
     this.chain = { id: 1 };
@@ -208,6 +216,8 @@ export class CoinbaseWalletProvider implements ProviderInterface {
       });
   }
 
+  readonly isCoinbaseWallet = true;
+
   protected readonly updateListener = {
     onAccountsUpdate: ({ accounts, source }: AccountsUpdate) => {
       if (areAddressArraysEqual(this.accounts, accounts)) return;
@@ -225,15 +235,5 @@ export class CoinbaseWalletProvider implements ProviderInterface {
 
   on<T>(event: string, listener: (_: T) => void): EventEmitter {
     return this.eventEmitter.on(event, listener);
-  }
-
-  /** @deprecated Use `.request({ method: 'eth_requestAccounts' })` instead. */
-  async enable(): Promise<unknown> {
-    console.warn(
-      `.enable() has been deprecated. Please use .request({ method: "eth_requestAccounts" }) instead.`
-    );
-    return await this.request({
-      method: 'eth_requestAccounts',
-    });
   }
 }
