@@ -34,9 +34,9 @@ declare global {
 
 if (typeof window !== 'undefined') {
   window.setPopupUrl = (url: string) => {
-    const handler = (window.ethereum as any).signHandler;
-    if (handler && handler.popupCommunicator) {
-      handler.popupCommunicator.url = new URL(url);
+    const communicator = (window.ethereum as any).communicator;
+    if (communicator) {
+      communicator.url = new URL(url);
     }
   };
 }
