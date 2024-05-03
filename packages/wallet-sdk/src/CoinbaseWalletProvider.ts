@@ -13,7 +13,7 @@ import { areAddressArraysEqual, hexStringFromIntNumber } from './core/type/util'
 import { AccountsUpdate, ChainUpdate, Signer } from './sign/interface';
 import { SCWSigner } from './sign/scw/SCWSigner';
 import { fetchSignerType, loadSignerType, storeSignerType } from './sign/SignHandler';
-import { WLSigner } from './sign/walletlink/WLSigner';
+import { WalletLinkSigner } from './sign/walletlink/WalletLinkSigner';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './util/provider';
 import { Communicator } from ':core/communicator/Communicator';
 import { SignerType } from ':core/message';
@@ -179,7 +179,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
           postMessageToPopup: this.communicator.postMessage.bind(this),
         });
       case 'walletlink':
-        return new WLSigner({
+        return new WalletLinkSigner({
           metadata: this.metadata,
           updateListener: this.updateListener,
         });
