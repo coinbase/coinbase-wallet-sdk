@@ -3,8 +3,6 @@
 import { LogoType, walletLogo } from './assets/wallet-logo';
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { AppMetadata, Preference, ProviderInterface } from './core/provider/interface';
-import { ScopedLocalStorage } from './util/ScopedLocalStorage';
-import { LIB_VERSION } from './version';
 import { getFavicon } from ':core/type/util';
 import { getCoinbaseInjectedProvider } from ':util/provider';
 
@@ -20,7 +18,6 @@ export class CoinbaseWalletSDK {
       appLogoUrl: metadata.appLogoUrl || getFavicon(),
       appChainIds: metadata.appChainIds || [],
     };
-    this.storeLatestVersion();
   }
 
   public makeWeb3Provider(preference: Preference = { options: 'all' }): ProviderInterface {
@@ -36,10 +33,5 @@ export class CoinbaseWalletSDK {
    */
   public getCoinbaseWalletLogo(type: LogoType, width = 240): string {
     return walletLogo(type, width);
-  }
-
-  private storeLatestVersion() {
-    const versionStorage = new ScopedLocalStorage('CBWSDK');
-    versionStorage.setItem('VERSION', LIB_VERSION);
   }
 }
