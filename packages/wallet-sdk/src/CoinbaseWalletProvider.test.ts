@@ -50,7 +50,6 @@ jest.mock('./sign/scw/SCWSigner', () => {
   return {
     SCWSigner: jest.fn().mockImplementation(() => {
       return {
-        accounts: jest.fn(),
         handshake: mockHandshake,
         request: mockRequest,
       };

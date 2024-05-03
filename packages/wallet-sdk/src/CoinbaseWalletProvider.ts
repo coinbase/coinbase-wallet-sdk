@@ -26,6 +26,12 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   private readonly communicator: Communicator;
 
   private signer: Signer | null;
+  private get accounts(): AddressString[] {
+    return this.signer?.accounts ?? [];
+  }
+  private get chain(): Chain {
+    return this.signer?.chain ?? { id: 1 };
+  }
 
   constructor({ metadata, preference: { keysUrl, ...preference } }: Readonly<ConstructorOptions>) {
     super();
@@ -35,14 +41,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     // Load states from storage
     const signerType = loadSignerType();
     this.signer = signerType ? this.initSigner(signerType) : null;
-  }
-
-  private get accounts(): AddressString[] {
-    return this.signer?.accounts ?? [];
-  }
-
-  private get chain(): Chain {
-    return this.signer?.chain ?? { id: 1 };
   }
 
   public get connected() {
@@ -142,6 +140,8 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   }
 
   async disconnect(): Promise<void> {
+    if (!this.signer) return;
+    this.signer.disconnect();
     ScopedLocalStorage.clearAll();
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
