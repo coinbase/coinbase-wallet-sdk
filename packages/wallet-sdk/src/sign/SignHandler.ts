@@ -5,7 +5,7 @@ import { AppMetadata, Preference } from ':core/provider/interface';
 import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 const SIGNER_TYPE_KEY = 'SignerType';
-const storage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
+const storage = new ScopedLocalStorage('CBWSDK');
 
 export function loadSignerType(): SignerType | null {
   return storage.getItem(SIGNER_TYPE_KEY) as SignerType;
@@ -18,7 +18,7 @@ export function storeSignerType(signerType: SignerType) {
 export async function fetchSignerType(params: {
   communicator: Communicator;
   preference: Preference;
-  metadata: AppMetadata;
+  metadata: AppMetadata; // for WalletLink
 }): Promise<SignerType> {
   const { communicator, metadata } = params;
   listenForWalletLinkSessionRequest(communicator, metadata);
@@ -28,7 +28,7 @@ export async function fetchSignerType(params: {
     event: 'selectSignerType',
     data: params.preference,
   };
-  const { data } = await params.communicator.postMessage(request);
+  const { data } = await communicator.postMessage(request);
   return data as SignerType;
 }
 
