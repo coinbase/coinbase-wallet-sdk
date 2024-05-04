@@ -28,7 +28,8 @@ export async function fetchSignerType(params: {
     event: 'selectSignerType',
     data: params.preference,
   };
-  const { data } = await communicator.postMessage(request);
+  await communicator.post(request);
+  const { data } = await communicator.onMessage(({ requestId }) => requestId === request.id);
   return data as SignerType;
 }
 
@@ -51,7 +52,7 @@ async function listenForWalletLinkSessionRequest(
   });
 
   // send wallet link session to popup
-  communicator.postMessage({
+  communicator.post({
     event: 'WalletLinkUpdate',
     data: { session: walletlink.getSession() },
   } as ConfigMessage);
@@ -60,7 +61,7 @@ async function listenForWalletLinkSessionRequest(
   await walletlink.handshake();
 
   // send connected status to popup
-  communicator.postMessage({
+  communicator.post({
     event: 'WalletLinkUpdate',
     data: { connected: true },
   } as ConfigMessage);

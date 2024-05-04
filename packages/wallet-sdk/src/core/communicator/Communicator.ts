@@ -1,5 +1,5 @@
 import { LIB_VERSION } from '../../version';
-import { ConfigMessage, Message } from '../message';
+import { ConfigMessage, Message, RPCRequestMessage, RPCResponseMessage } from '../message';
 import { closePopup, openPopup } from './util';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
@@ -14,25 +14,44 @@ import { standardErrors } from ':core/error';
  * It also handles cleanup of event listeners and the popup window itself when necessary.
  */
 export class Communicator {
-  private url: URL;
+  private readonly url: URL;
+  private popup: Window | null = null;
+  private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>();
+  private requestQueue: Promise<unknown> = Promise.resolve();
 
   constructor(url: string = CB_KEYS_URL) {
     this.url = new URL(url);
-    this.postMessage = this.postMessage.bind(this);
+    this.postRPCRequest = this.postRPCRequest.bind(this);
+    this.post = this.post.bind(this);
     this.onMessage = this.onMessage.bind(this);
-    this.disconnect = this.disconnect.bind(this);
+    this.close = this.close.bind(this);
   }
 
   /**
-   * Posts a message to the popup window and optionally waits for a response.
+   * Posts a message to the popup window
    */
-  async postMessage<M extends Message>(request: Message): Promise<M> {
+  async post(message: Message) {
     const popup = await this.waitForPopupLoaded();
-    popup.postMessage(request, this.url.origin);
+    popup.postMessage(message, this.url.origin);
+  }
 
-    const { id } = request;
-    if (!id) return {} as M; // do not wait for response if no id
-    return this.onMessage<M>(({ requestId }) => requestId === id);
+  /**
+   * Posts a RPC request to the popup window and waits for a response
+   */
+  async postRPCRequest(request: RPCRequestMessage): Promise<RPCResponseMessage> {
+    return (this.requestQueue = this.requestQueue
+      .then(async () => {
+        await this.post(request);
+        const response: RPCResponseMessage = await this.onMessage(
+          ({ requestId }) => requestId === request.id
+        );
+        this.close();
+        return response;
+      })
+      .catch((error) => {
+        this.close();
+        throw error;
+      }));
   }
 
   /**
@@ -56,20 +75,19 @@ export class Communicator {
     });
   }
 
-  private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>();
-
   /**
-   * Rejects all requests and clears the listeners
+   * Close the popup window, rejects all requests and clears the listeners
    */
-  disconnect() {
+  close() {
+    closePopup(this.popup);
+    this.popup = null;
+
     this.listeners.forEach(({ reject }, listener) => {
       reject(standardErrors.provider.userRejectedRequest('Request rejected'));
       window.removeEventListener('message', listener);
     });
     this.listeners.clear();
   }
-
-  private popup: Window | null = null;
 
   /**
    * Waits for the popup window to fully load and then sends a version message.
@@ -80,14 +98,12 @@ export class Communicator {
     this.popup = openPopup(this.url);
 
     this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload').then(() => {
-      closePopup(this.popup);
-      this.popup = null;
-      this.disconnect();
+      this.close();
     });
 
     return this.onMessage<ConfigMessage>(({ event }) => event === 'PopupLoaded')
       .then((message) => {
-        this.postMessage({
+        this.post({
           requestId: message.id,
           data: { version: LIB_VERSION },
         });
