@@ -9,8 +9,8 @@ import {
   RequestArguments,
 } from './core/provider/interface';
 import { AddressString, Chain, IntNumber } from './core/type';
-import { areAddressArraysEqual, hexStringFromIntNumber } from './core/type/util';
-import { AccountsUpdate, ChainUpdate, Signer } from './sign/interface';
+import { hexStringFromIntNumber } from './core/type/util';
+import { Signer } from './sign/interface';
 import { SCWSigner } from './sign/scw/SCWSigner';
 import { fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
 import { WalletLinkSigner } from './sign/walletlink/WalletLinkSigner';
@@ -147,7 +147,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   }
 
   readonly isCoinbaseWallet = true;
-
+  /*
   protected readonly updateListener = {
     onAccountsUpdate: ({ accounts, source }: AccountsUpdate) => {
       if (areAddressArraysEqual(this.accounts, accounts)) return;
@@ -160,7 +160,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       this.emit('chainChanged', hexStringFromIntNumber(IntNumber(chain.id)));
     },
   };
-
+  */
   private requestSignerSelection(): Promise<SignerType> {
     return fetchSignerType({
       communicator: this.communicator,
@@ -174,13 +174,11 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       case 'scw':
         return new SCWSigner({
           metadata: this.metadata,
-          updateListener: this.updateListener,
           postMessageToPopup: this.communicator.postMessage.bind(this),
         });
       case 'walletlink':
         return new WalletLinkSigner({
           metadata: this.metadata,
-          updateListener: this.updateListener,
         });
     }
   }

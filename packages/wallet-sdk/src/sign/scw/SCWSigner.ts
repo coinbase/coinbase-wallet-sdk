@@ -1,4 +1,4 @@
-import { Signer, StateUpdateListener } from '../interface';
+import { Signer } from '../interface';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWStateManager } from './SCWStateManager';
 import { Communicator } from ':core/communicator/Communicator';
@@ -6,7 +6,7 @@ import { standardErrors } from ':core/error';
 import { RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
 import { Method } from ':core/provider/method';
-import { AddressString, Chain } from ':core/type';
+import { AddressString } from ':core/type';
 import { ensureIntNumber } from ':core/type/util';
 import {
   decryptContent,
@@ -27,17 +27,12 @@ export class SCWSigner implements Signer {
   private readonly keyManager: SCWKeyManager;
   private readonly stateManager: SCWStateManager;
 
-  constructor(params: {
-    metadata: AppMetadata;
-    postMessageToPopup: Communicator['postMessage'];
-    updateListener: StateUpdateListener;
-  }) {
+  constructor(params: { metadata: AppMetadata; postMessageToPopup: Communicator['postMessage'] }) {
     this.metadata = params.metadata;
     this.postMessageToPopup = params.postMessageToPopup;
     this.keyManager = new SCWKeyManager();
     this.stateManager = new SCWStateManager({
       appChainIds: this.metadata.appChainIds,
-      updateListener: params.updateListener,
     });
 
     this.handshake = this.handshake.bind(this);
@@ -46,8 +41,13 @@ export class SCWSigner implements Signer {
     this.decryptResponseMessage = this.decryptResponseMessage.bind(this);
   }
 
-  accounts: AddressString[] = [];
-  chain: Chain = { id: 1 };
+  get accounts() {
+    return this.stateManager.accounts;
+  }
+
+  get chain() {
+    return this.stateManager.activeChain;
+  }
 
   async handshake(): Promise<AddressString[]> {
     const handshakeMessage = await this.createRequestMessage({

@@ -3,7 +3,7 @@
 // Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
 
 import eip712 from '../../vendor-js/eth-eip712-util';
-import { Signer, StateUpdateListener } from '../interface';
+import { Signer } from '../interface';
 import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants';
 import { RelayEventManager } from './relay/RelayEventManager';
 import { EthereumTransactionParams } from './relay/type/EthereumTransactionParams';
@@ -64,14 +64,12 @@ export class WalletLinkSigner implements Signer {
   private _jsonRpcUrlFromOpts: string;
   private _addresses: AddressString[] = [];
   private hasMadeFirstChainChangedEmission = false;
-  private updateListener?: StateUpdateListener;
 
-  constructor(options: { metadata: AppMetadata; updateListener?: StateUpdateListener }) {
+  constructor(options: { metadata: AppMetadata /*updateListener?: StateUpdateListener */ }) {
     const { appName, appLogoUrl } = options.metadata;
     this._appName = appName;
     this._appLogoUrl = appLogoUrl;
     this._storage = new ScopedLocalStorage('walletlink', WALLETLINK_URL);
-    this.updateListener = options.updateListener;
 
     this._relayEventManager = new RelayEventManager();
     this._jsonRpcUrlFromOpts = '';

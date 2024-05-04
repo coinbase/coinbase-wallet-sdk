@@ -12,10 +12,6 @@ describe('SCWStateManager', () => {
   beforeEach(() => {
     stateManager = new SCWStateManager({
       appChainIds: [DEFAULT_CHAIN.id],
-      updateListener: {
-        onAccountsUpdate: jest.fn(),
-        onChainUpdate: jest.fn(),
-      },
     });
   });
 
@@ -30,10 +26,6 @@ describe('SCWStateManager', () => {
     beforeEach(() => {
       stateManager = new SCWStateManager({
         appChainIds,
-        updateListener: {
-          onAccountsUpdate: jest.fn(),
-          onChainUpdate: jest.fn(),
-        },
       });
     });
     it('should use the first chain id from appChainIds as the active chain', () => {
@@ -43,10 +35,6 @@ describe('SCWStateManager', () => {
     it('should use the first chain id from appChainIds as the active chain when appChainIds is empty', () => {
       stateManager = new SCWStateManager({
         appChainIds: [],
-        updateListener: {
-          onAccountsUpdate: jest.fn(),
-          onChainUpdate: jest.fn(),
-        },
       });
       expect(stateManager.activeChain.id).toBe(1);
     });
@@ -95,10 +83,6 @@ describe('SCWStateManager', () => {
     beforeEach(() => {
       stateManager = new SCWStateManager({
         appChainIds: [1],
-        updateListener: {
-          onAccountsUpdate: jest.fn(),
-          onChainUpdate: chainUpdatedListener,
-        },
       });
       stateManager.updateAvailableChains(AVAILABLE_CHAINS);
     });
