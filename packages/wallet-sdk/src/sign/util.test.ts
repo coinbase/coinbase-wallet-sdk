@@ -1,4 +1,4 @@
-import { fetchSignerType } from './SignHandler';
+import { fetchSignerType } from './util';
 import { Communicator } from ':core/communicator/Communicator';
 import { Preference } from ':core/provider/interface';
 
