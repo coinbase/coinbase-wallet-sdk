@@ -19,16 +19,16 @@ export class Communicator {
 
   constructor(url: string = CB_KEYS_URL) {
     this.url = new URL(url);
-    this.postRPCRequest = this.postRPCRequest.bind(this);
-    this.post = this.post.bind(this);
+    this.postMessage = this.postMessage.bind(this);
     this.onMessage = this.onMessage.bind(this);
     this.close = this.close.bind(this);
+    this.postRPCRequest = this.postRPCRequest.bind(this);
   }
 
   /**
    * Posts a message to the popup window
    */
-  async post(message: Message) {
+  async postMessage(message: Message) {
     const popup = await this.waitForPopupLoaded();
     popup.postMessage(message, this.url.origin);
   }
@@ -39,7 +39,7 @@ export class Communicator {
   async postRPCRequest(request: RPCRequestMessage): Promise<RPCResponseMessage> {
     return (this.requestQueue = this.requestQueue
       .then(async () => {
-        await this.post(request);
+        await this.postMessage(request);
         const response: RPCResponseMessage = await this.onMessage(
           ({ requestId }) => requestId === request.id
         );
@@ -105,7 +105,7 @@ export class Communicator {
 
     return this.onMessage<ConfigMessage>(({ event }) => event === 'PopupLoaded')
       .then((message) => {
-        this.post({
+        this.postMessage({
           requestId: message.id,
           data: { version: LIB_VERSION },
         });

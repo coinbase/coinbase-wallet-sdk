@@ -84,7 +84,7 @@ describe('Communicator', () => {
       },
     });
 
-    await communicator.post(mockRequest);
+    await communicator.postMessage(mockRequest);
 
     expect(mockPopup.postMessage).toHaveBeenNthCalledWith(
       1,
