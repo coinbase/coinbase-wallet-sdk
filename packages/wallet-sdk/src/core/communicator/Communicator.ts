@@ -15,8 +15,6 @@ import { standardErrors } from ':core/error';
  */
 export class Communicator {
   private readonly url: URL;
-  private popup: Window | null = null;
-  private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>();
   private requestQueue: Promise<unknown> = Promise.resolve();
 
   constructor(url: string = CB_KEYS_URL) {
@@ -43,36 +41,46 @@ export class Communicator {
       .then(async () => {
         await this.post(request);
         const response: RPCResponseMessage = await this.onMessage(
-          ({ requestId }) => requestId === request.id
+          ({ requestId }) => requestId === request.id,
+          { throwWhenPopupClose: true }
         );
         return response;
       })
       .finally(() => {
-        // unless FE popup can support batch requests, close the popup after each request
-        this.close();
+        // unless FE popup supports batch requests, close the popup after each request
+        // this.close();
       }));
   }
 
   /**
    * Listens for messages from the popup window that match a given predicate.
    */
-  async onMessage<M extends Message>(predicate: (_: Partial<M>) => boolean): Promise<M> {
+  async onMessage<M extends Message>(
+    predicate: (_: Partial<M>) => boolean,
+    option: { throwWhenPopupClose: boolean } = { throwWhenPopupClose: true }
+  ): Promise<M> {
     return new Promise((resolve, reject) => {
       const listener = (event: MessageEvent<M>) => {
         if (event.origin !== this.url.origin) return; // origin validation
-
         const message = event.data;
         if (predicate(message)) {
           resolve(message);
           window.removeEventListener('message', listener);
-          this.listeners.delete(listener);
         }
       };
-
       window.addEventListener('message', listener);
-      this.listeners.set(listener, { reject });
+
+      const removeListener = () => {
+        window.removeEventListener('message', listener);
+        if (option.throwWhenPopupClose) {
+          reject(standardErrors.provider.userRejectedRequest('Request rejected'));
+        }
+      };
+      this.pendingRemoveListeners.push(removeListener);
     });
   }
+
+  private pendingRemoveListeners = new Array<() => void>();
 
   /**
    * Close the popup window, rejects all requests and clears the listeners
@@ -81,12 +89,13 @@ export class Communicator {
     closePopup(this.popup);
     this.popup = null;
 
-    this.listeners.forEach(({ reject }, listener) => {
-      reject(standardErrors.provider.userRejectedRequest('Request rejected'));
-      window.removeEventListener('message', listener);
-    });
-    this.listeners.clear();
+    for (const removeListener of this.pendingRemoveListeners) {
+      removeListener();
+    }
+    this.pendingRemoveListeners = [];
   }
+
+  private popup: Window | null = null;
 
   /**
    * Waits for the popup window to fully load and then sends a version message.
