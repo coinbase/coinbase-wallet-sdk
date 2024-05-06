@@ -45,12 +45,11 @@ export class Communicator {
         const response: RPCResponseMessage = await this.onMessage(
           ({ requestId }) => requestId === request.id
         );
-        this.close();
         return response;
       })
-      .catch((error) => {
+      .finally(() => {
+        // unless FE popup can support batch requests, close the popup after each request
         this.close();
-        throw error;
       }));
   }
 
