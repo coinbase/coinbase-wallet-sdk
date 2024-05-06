@@ -41,8 +41,7 @@ export class Communicator {
       .then(async () => {
         await this.post(request);
         const response: RPCResponseMessage = await this.onMessage(
-          ({ requestId }) => requestId === request.id,
-          { throwWhenPopupClose: true }
+          ({ requestId }) => requestId === request.id
         );
         return response;
       })
@@ -55,10 +54,7 @@ export class Communicator {
   /**
    * Listens for messages from the popup window that match a given predicate.
    */
-  async onMessage<M extends Message>(
-    predicate: (_: Partial<M>) => boolean,
-    option: { throwWhenPopupClose: boolean } = { throwWhenPopupClose: true }
-  ): Promise<M> {
+  async onMessage<M extends Message>(predicate: (_: Partial<M>) => boolean): Promise<M> {
     return new Promise((resolve, reject) => {
       const listener = (event: MessageEvent<M>) => {
         if (event.origin !== this.url.origin) return; // origin validation
@@ -72,9 +68,7 @@ export class Communicator {
 
       const removeListener = () => {
         window.removeEventListener('message', listener);
-        if (option.throwWhenPopupClose) {
-          reject(standardErrors.provider.userRejectedRequest('Request rejected'));
-        }
+        reject(standardErrors.provider.userRejectedRequest('Request rejected'));
       };
       this.pendingRemoveListeners.push(removeListener);
     });
