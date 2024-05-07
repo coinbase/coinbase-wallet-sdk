@@ -176,7 +176,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
         return new SCWSigner({
           metadata: this.metadata,
           updateListener: this.updateListener,
-          communicator: this.communicator,
+          postMessageToPopup: this.communicator.postMessageToPopup,
         });
       case 'walletlink':
         return new WLSigner({

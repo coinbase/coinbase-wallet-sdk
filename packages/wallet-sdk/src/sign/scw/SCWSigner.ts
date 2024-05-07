@@ -23,17 +23,17 @@ type SwitchEthereumChainParam = [
 
 export class SCWSigner implements Signer {
   private readonly metadata: AppMetadata;
-  private readonly communicator: Communicator;
+  private readonly postMessageToPopup: Communicator['postMessageToPopup'];
   private readonly keyManager: SCWKeyManager;
   private readonly stateManager: SCWStateManager;
 
   constructor(params: {
     metadata: AppMetadata;
-    communicator: Communicator;
+    postMessageToPopup: Communicator['postMessageToPopup'];
     updateListener: StateUpdateListener;
   }) {
     this.metadata = params.metadata;
-    this.communicator = params.communicator;
+    this.postMessageToPopup = params.postMessageToPopup;
     this.keyManager = new SCWKeyManager();
     this.stateManager = new SCWStateManager({
       appChainIds: this.metadata.appChainIds,
@@ -45,29 +45,6 @@ export class SCWSigner implements Signer {
     this.createRequestMessage = this.createRequestMessage.bind(this);
     this.decryptResponseMessage = this.decryptResponseMessage.bind(this);
   }
-
-  private pendingRequestsCount = 0;
-  private requestQueue: Promise<unknown> = Promise.resolve();
-  /**
-   * Posts a RPC request to the popup window and waits for a response
-   */
-  postMessageToPopup = async (request: RPCRequestMessage): Promise<RPCResponseMessage> => {
-    this.pendingRequestsCount++;
-
-    return (this.requestQueue = this.requestQueue
-      .then(async () => {
-        await this.communicator.postMessage(request);
-        return await this.communicator.onMessage<RPCResponseMessage>(
-          ({ requestId }) => requestId === request.id
-        );
-      })
-      .finally(() => {
-        this.pendingRequestsCount--;
-        if (this.pendingRequestsCount === 0) {
-          this.communicator.disconnect();
-        }
-      }));
-  };
 
   async handshake(): Promise<AddressString[]> {
     const handshakeMessage = await this.createRequestMessage({

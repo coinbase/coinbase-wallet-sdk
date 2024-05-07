@@ -1,5 +1,5 @@
 import { LIB_VERSION } from '../../version';
-import { ConfigMessage, Message } from '../message';
+import { ConfigMessage, Message, RPCRequestMessage, RPCResponseMessage } from '../message';
 import { closePopup, openPopup } from './util';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
@@ -26,6 +26,26 @@ export class Communicator {
   postMessage = async (message: Message) => {
     const popup = await this.waitForPopupLoaded();
     popup.postMessage(message, this.url.origin);
+  };
+
+  /**
+   * Posts a RPC request to the popup window and waits for a response
+   */
+  private pendingRequestsCount = 0;
+  postMessageToPopup = async (request: RPCRequestMessage): Promise<RPCResponseMessage> => {
+    this.pendingRequestsCount++;
+    return new Promise((resolve, reject) => {
+      this.postMessage(request)
+        .then(() => this.onMessage<RPCResponseMessage>(({ requestId }) => requestId === request.id))
+        .then(resolve)
+        .catch(reject)
+        .finally(() => {
+          this.pendingRequestsCount--;
+          if (this.pendingRequestsCount === 0) {
+            this.disconnect();
+          }
+        });
+    });
   };
 
   /**
