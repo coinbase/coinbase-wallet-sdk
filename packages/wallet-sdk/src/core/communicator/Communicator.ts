@@ -10,7 +10,14 @@ import { closePopup, openPopup } from './util';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
 
+/**
+ * Request status for pending requests
+ * - `created`: promise has been created but not yet awaited
+ * - `awaiting`: promise has been triggered and is awaiting a response
+ */
 type RequestStatus = 'created' | 'awaiting';
+
+const EVENT_LISTENER_REMOVED = 'Event listener removed';
 
 /**
  * Communicates with a popup window for Coinbase keys.coinbase.com (or another url)
@@ -59,14 +66,14 @@ export class Communicator {
       this.listeners.set(listener, {
         cleanup: () => {
           window.removeEventListener('message', listener);
-          reject(standardErrors.rpc.internal('Message listener cancelled'));
+          reject(EVENT_LISTENER_REMOVED);
         },
       });
     });
   };
 
   /**
-   * Rejects pending requests, closes the popup window and clears the listeners
+   * Rejects pending requests, clears the listeners and closes the popup window
    */
   disconnect = () => {
     this.pendingRequests.forEach((status, id) => {
@@ -76,11 +83,11 @@ export class Communicator {
       }
     });
 
-    closePopup(this.popup);
-    this.popup = null;
-
     this.listeners.forEach(({ cleanup }) => cleanup());
     this.listeners.clear();
+
+    closePopup(this.popup);
+    this.popup = null;
   };
 
   /**
@@ -115,9 +122,13 @@ export class Communicator {
     this.pendingRequests.set(request.id, 'created');
 
     return new Promise((resolve, reject) => {
+      const rejectWithUserRejected = (message: string) => {
+        reject(standardErrors.provider.userRejectedRequest(message));
+      };
+
       // reject if the request was cancelled between creation and awaiting due to disconnect
       if (!this.pendingRequests.has(request.id)) {
-        reject(standardErrors.provider.userRejectedRequest());
+        rejectWithUserRejected('Request cancelled before sending');
         return;
       }
 
@@ -125,10 +136,17 @@ export class Communicator {
       this.pendingRequests.set(request.id, 'awaiting');
       this.postMessage(request)
         .then(() => this.onMessage<RPCResponseMessage>(({ requestId }) => requestId === request.id))
-        .then(resolve) // resolve the outer promise first, to take follow-up requests if needed
-        .catch(reject)
+        // resolve the outer promise to take any follow-up requests before disconnect
+        .then(resolve)
+        .catch((error) => {
+          if (error === EVENT_LISTENER_REMOVED) {
+            rejectWithUserRejected('Request cancelled before response');
+          } else {
+            reject(error);
+          }
+        })
+        // then clean up the current request and disconnect if there are no more pending requests
         .finally(() => {
-          // then clean up the pending request and disconnect if no more requests are pending
           this.pendingRequests.delete(request.id);
           if (this.pendingRequests.size === 0) {
             this.disconnect();
