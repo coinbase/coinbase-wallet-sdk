@@ -38,9 +38,9 @@ export class Communicator {
 
         const message = event.data;
         if (predicate(message)) {
+          resolve(message);
           window.removeEventListener('message', listener);
           this.listeners.delete(listener);
-          resolve(message);
         }
       };
 
@@ -59,8 +59,8 @@ export class Communicator {
     this.popup = null;
 
     this.listeners.forEach(({ reject }, listener) => {
-      window.removeEventListener('message', listener);
       reject(standardErrors.provider.userRejectedRequest('Request rejected'));
+      window.removeEventListener('message', listener);
     });
     this.listeners.clear();
   };
