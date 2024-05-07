@@ -96,7 +96,7 @@ export class Communicator {
   /**
    * Posts a RPC request to the popup window and waits for a response
    */
-  postMessageToPopup = async (request: RPCRequestMessage): Promise<RPCResponseMessage> => {
+  postRPCRequest = async (request: RPCRequestMessage): Promise<RPCResponseMessage> => {
     this.pendingRPCRequestsCount++;
     return new Promise((resolve, reject) => {
       this.postMessage(request)

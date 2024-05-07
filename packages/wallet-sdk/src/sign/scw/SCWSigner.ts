@@ -23,13 +23,13 @@ type SwitchEthereumChainParam = [
 
 export class SCWSigner implements Signer {
   private readonly metadata: AppMetadata;
-  private readonly postMessageToPopup: Communicator['postMessageToPopup'];
+  private readonly postMessageToPopup: Communicator['postRPCRequest'];
   private readonly keyManager: SCWKeyManager;
   private readonly stateManager: SCWStateManager;
 
   constructor(params: {
     metadata: AppMetadata;
-    postMessageToPopup: Communicator['postMessageToPopup'];
+    postMessageToPopup: Communicator['postRPCRequest'];
     updateListener: StateUpdateListener;
   }) {
     this.metadata = params.metadata;
