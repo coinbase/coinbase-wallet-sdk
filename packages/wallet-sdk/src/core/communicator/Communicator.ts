@@ -58,23 +58,21 @@ export class Communicator {
     return new Promise((resolve, reject) => {
       const listener = (event: MessageEvent<M>) => {
         if (event.origin !== this.url.origin) return; // origin validation
+
         const message = event.data;
         if (predicate(message)) {
-          this.cleanupListener(listener);
+          window.removeEventListener('message', listener);
+          this.listeners.delete(listener);
           resolve(message);
         }
       };
+
       window.addEventListener('message', listener);
       this.listeners.set(listener, { reject });
     });
   };
 
   private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>();
-
-  private cleanupListener = (listener: (_: MessageEvent) => void) => {
-    window.removeEventListener('message', listener);
-    this.listeners.delete(listener);
-  };
 
   /**
    * Close the popup window, rejects all requests and clears the listeners
@@ -84,8 +82,8 @@ export class Communicator {
     this.popup = null;
 
     this.listeners.forEach(({ reject }, listener) => {
+      window.removeEventListener('message', listener);
       reject(standardErrors.provider.userRejectedRequest('Request rejected'));
-      this.cleanupListener(listener);
     });
     this.listeners.clear();
   };
