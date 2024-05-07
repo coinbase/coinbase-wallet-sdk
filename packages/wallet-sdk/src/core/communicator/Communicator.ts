@@ -74,10 +74,13 @@ export class Communicator {
    * Rejects pending requests, clears the listeners and closes the popup window
    */
   disconnect = () => {
+    console.log('disconnect', this.pendingRequests);
     // cancel pending request promises that haven't been posted
     this.pendingRequests.forEach((status, id, map) => {
       if (status !== 'awaiting') map.delete(id);
     });
+
+    console.log('after forEach', this.pendingRequests);
 
     // remove all event listeners
     this.listeners.forEach(({ cleanup }) => cleanup());
@@ -119,26 +122,31 @@ export class Communicator {
     this.pendingRequests.set(request.id, 'created');
 
     return new Promise((resolve, reject) => {
-      // reject if the request was cancelled between creation and awaiting due to disconnect
-      if (!this.pendingRequests.has(request.id)) {
-        reject(standardErrors.provider.userRejectedRequest('Request cancelled before sending'));
-        return;
-      }
+      // defer the execution the promise until the current call stack clears
+      Promise.resolve().then(() => {
+        // reject if the request was cancelled between creation and awaiting due to disconnect
+        if (!this.pendingRequests.has(request.id)) {
+          reject(standardErrors.provider.userRejectedRequest('Request cancelled before sending'));
+          return;
+        }
 
-      // otherwise, post the message and wait for a response
-      this.pendingRequests.set(request.id, 'awaiting');
-      this.postMessage(request)
-        .then(() => this.onMessage<RPCResponseMessage>(({ requestId }) => requestId === request.id))
-        // resolve or reject the outer promise to take any follow-up requests before disconnect
-        .then(resolve)
-        .catch(reject)
-        // then clean up the current request and disconnect if there are no more pending requests
-        .finally(() => {
-          this.pendingRequests.delete(request.id);
-          if (this.pendingRequests.size === 0) {
-            this.disconnect();
-          }
-        });
+        // otherwise, post the message and wait for a response
+        this.pendingRequests.set(request.id, 'awaiting');
+        this.postMessage(request)
+          .then(() =>
+            this.onMessage<RPCResponseMessage>(({ requestId }) => requestId === request.id)
+          )
+          // resolve or reject the outer promise to take any follow-up requests before disconnect
+          .then(resolve)
+          .catch(reject)
+          // then clean up the current request and disconnect if there are no more pending requests
+          .finally(() => {
+            this.pendingRequests.delete(request.id);
+            if (this.pendingRequests.size === 0) {
+              this.disconnect();
+            }
+          });
+      });
     });
   };
 }
