@@ -15,93 +15,94 @@ import { standardErrors } from ':core/error';
  */
 export class Communicator {
   private readonly url: URL;
-  private requestQueue: Promise<unknown> = Promise.resolve();
 
   constructor(url: string = CB_KEYS_URL) {
     this.url = new URL(url);
-    this.postMessage = this.postMessage.bind(this);
-    this.postRPCRequest = this.postRPCRequest.bind(this);
-    this.onMessage = this.onMessage.bind(this);
-    this.close = this.close.bind(this);
   }
 
   /**
    * Posts a message to the popup window
    */
-  async postMessage(message: Message) {
+  postMessage = async (message: Message) => {
     const popup = await this.waitForPopupLoaded();
     popup.postMessage(message, this.url.origin);
-  }
+  };
 
+  private pendingRequestsCount = 0;
+  private requestQueue: Promise<unknown> = Promise.resolve();
   /**
    * Posts a RPC request to the popup window and waits for a response
    */
-  async postRPCRequest(request: RPCRequestMessage): Promise<RPCResponseMessage> {
+  postRPCRequest = async (request: RPCRequestMessage): Promise<RPCResponseMessage> => {
+    this.pendingRequestsCount++;
+
     return (this.requestQueue = this.requestQueue
       .then(async () => {
         await this.postMessage(request);
-        const response: RPCResponseMessage = await this.onMessage(
+        return await this.onMessage<RPCResponseMessage>(
           ({ requestId }) => requestId === request.id
         );
-        return response;
       })
       .finally(() => {
-        // unless FE popup supports batch requests, close the popup after each request
-        // this.close();
+        this.pendingRequestsCount--;
+        if (this.pendingRequestsCount === 0) {
+          this.close();
+        }
       }));
-  }
+  };
 
   /**
    * Listens for messages from the popup window that match a given predicate.
    */
-  async onMessage<M extends Message>(predicate: (_: Partial<M>) => boolean): Promise<M> {
+  onMessage = async <M extends Message>(predicate: (_: Partial<M>) => boolean): Promise<M> => {
     return new Promise((resolve, reject) => {
       const listener = (event: MessageEvent<M>) => {
         if (event.origin !== this.url.origin) return; // origin validation
         const message = event.data;
         if (predicate(message)) {
+          this.cleanupListener(listener);
           resolve(message);
-          window.removeEventListener('message', listener);
         }
       };
       window.addEventListener('message', listener);
-
-      const removeListener = () => {
-        window.removeEventListener('message', listener);
-        reject(standardErrors.provider.userRejectedRequest('Request rejected'));
-      };
-      this.pendingRemoveListeners.push(removeListener);
+      this.listeners.set(listener, { reject });
     });
-  }
+  };
 
-  private pendingRemoveListeners = new Array<() => void>();
+  private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>();
+
+  private cleanupListener = (listener: (_: MessageEvent) => void) => {
+    window.removeEventListener('message', listener);
+    this.listeners.delete(listener);
+  };
 
   /**
    * Close the popup window, rejects all requests and clears the listeners
    */
-  close() {
+  close = () => {
     closePopup(this.popup);
     this.popup = null;
 
-    for (const removeListener of this.pendingRemoveListeners) {
-      removeListener();
-    }
-    this.pendingRemoveListeners = [];
-  }
+    this.listeners.forEach(({ reject }, listener) => {
+      reject(standardErrors.provider.userRejectedRequest('Request rejected'));
+      this.cleanupListener(listener);
+    });
+    this.listeners.clear();
+  };
 
   private popup: Window | null = null;
 
   /**
    * Waits for the popup window to fully load and then sends a version message.
    */
-  private async waitForPopupLoaded(): Promise<Window> {
+  private waitForPopupLoaded = async (): Promise<Window> => {
     if (this.popup) return this.popup;
 
     this.popup = openPopup(this.url);
 
-    this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload').then(() => {
-      this.close();
-    });
+    this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload')
+      .then(() => this.close())
+      .catch(() => {});
 
     return this.onMessage<ConfigMessage>(({ event }) => event === 'PopupLoaded')
       .then((message) => {
@@ -114,5 +115,5 @@ export class Communicator {
         if (!this.popup) throw standardErrors.rpc.internal();
         return this.popup;
       });
-  }
+  };
 }
