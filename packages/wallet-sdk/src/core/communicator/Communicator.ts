@@ -1,5 +1,5 @@
 import { LIB_VERSION } from '../../version';
-import { ConfigMessage, Message, RPCRequestMessage, RPCResponseMessage } from '../message';
+import { ConfigMessage, Message } from '../message';
 import { closePopup, openPopup } from './util';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
@@ -28,29 +28,6 @@ export class Communicator {
     popup.postMessage(message, this.url.origin);
   };
 
-  private pendingRequestsCount = 0;
-  private requestQueue: Promise<unknown> = Promise.resolve();
-  /**
-   * Posts a RPC request to the popup window and waits for a response
-   */
-  postRPCRequest = async (request: RPCRequestMessage): Promise<RPCResponseMessage> => {
-    this.pendingRequestsCount++;
-
-    return (this.requestQueue = this.requestQueue
-      .then(async () => {
-        await this.postMessage(request);
-        return await this.onMessage<RPCResponseMessage>(
-          ({ requestId }) => requestId === request.id
-        );
-      })
-      .finally(() => {
-        this.pendingRequestsCount--;
-        if (this.pendingRequestsCount === 0) {
-          this.close();
-        }
-      }));
-  };
-
   /**
    * Listens for messages from the popup window that match a given predicate.
    */
@@ -77,7 +54,7 @@ export class Communicator {
   /**
    * Close the popup window, rejects all requests and clears the listeners
    */
-  close = () => {
+  disconnect = () => {
     closePopup(this.popup);
     this.popup = null;
 
@@ -99,7 +76,7 @@ export class Communicator {
     this.popup = openPopup(this.url);
 
     this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload')
-      .then(() => this.close())
+      .then(() => this.disconnect())
       .catch(() => {});
 
     return this.onMessage<ConfigMessage>(({ event }) => event === 'PopupLoaded')

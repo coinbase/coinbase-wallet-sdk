@@ -23,17 +23,17 @@ type SwitchEthereumChainParam = [
 
 export class SCWSigner implements Signer {
   private readonly metadata: AppMetadata;
-  private readonly postRPCRequest: Communicator['postRPCRequest'];
+  private readonly communicator: Communicator;
   private readonly keyManager: SCWKeyManager;
   private readonly stateManager: SCWStateManager;
 
   constructor(params: {
     metadata: AppMetadata;
-    postRPCRequest: Communicator['postRPCRequest'];
+    communicator: Communicator;
     updateListener: StateUpdateListener;
   }) {
     this.metadata = params.metadata;
-    this.postRPCRequest = params.postRPCRequest;
+    this.communicator = params.communicator;
     this.keyManager = new SCWKeyManager();
     this.stateManager = new SCWStateManager({
       appChainIds: this.metadata.appChainIds,
@@ -46,6 +46,29 @@ export class SCWSigner implements Signer {
     this.decryptResponseMessage = this.decryptResponseMessage.bind(this);
   }
 
+  private pendingRequestsCount = 0;
+  private requestQueue: Promise<unknown> = Promise.resolve();
+  /**
+   * Posts a RPC request to the popup window and waits for a response
+   */
+  postMessageToPopup = async (request: RPCRequestMessage): Promise<RPCResponseMessage> => {
+    this.pendingRequestsCount++;
+
+    return (this.requestQueue = this.requestQueue
+      .then(async () => {
+        await this.communicator.postMessage(request);
+        return await this.communicator.onMessage<RPCResponseMessage>(
+          ({ requestId }) => requestId === request.id
+        );
+      })
+      .finally(() => {
+        this.pendingRequestsCount--;
+        if (this.pendingRequestsCount === 0) {
+          this.communicator.disconnect();
+        }
+      }));
+  };
+
   async handshake(): Promise<AddressString[]> {
     const handshakeMessage = await this.createRequestMessage({
       handshake: {
@@ -53,7 +76,7 @@ export class SCWSigner implements Signer {
         params: this.metadata,
       },
     });
-    const response: RPCResponseMessage = await this.postRPCRequest(handshakeMessage);
+    const response: RPCResponseMessage = await this.postMessageToPopup(handshakeMessage);
 
     // store peer's public key
     if ('failure' in response.content) throw response.content.failure;
@@ -136,7 +159,7 @@ export class SCWSigner implements Signer {
     );
     const message = await this.createRequestMessage({ encrypted });
 
-    return this.postRPCRequest(message);
+    return this.postMessageToPopup(message);
   }
 
   private async createRequestMessage(
