@@ -1,1 +1,1 @@
-View our new docs here: https://www.smartwallet.dev/guides/create-app/using-wagmi
+The Smart Wallet wagmi guide has moved to our new docs site: https://www.smartwallet.dev/guides/create-app/using-wagmi
