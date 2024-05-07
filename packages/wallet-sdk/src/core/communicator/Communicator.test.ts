@@ -98,7 +98,7 @@ describe('Communicator', () => {
     expect(mockPopup.postMessage).toHaveBeenNthCalledWith(2, mockRequest, urlOrigin);
   });
 
-  describe('postMessageToPopup', () => {
+  describe('postRPCRequest', () => {
     function wait(ms: number) {
       return new Promise((resolve) => setTimeout(resolve, ms));
     }
