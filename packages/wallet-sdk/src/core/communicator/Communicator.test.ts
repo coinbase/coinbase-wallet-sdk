@@ -152,7 +152,7 @@ describe('Communicator', () => {
         });
     });
 
-    it('should reject if popup closes before posting request', async () => {
+    it('should reject if popup disconnects before posting request', async () => {
       const promise = communicator.postRPCRequest(request);
       expect(postMessageSpy).not.toHaveBeenCalledWith(request);
       expect(communicator.disconnect).not.toHaveBeenCalled();
@@ -161,6 +161,21 @@ describe('Communicator', () => {
       communicator.disconnect();
 
       await expect(promise).rejects.toThrow('Request cancelled before sending');
+    });
+
+    it('should reject all pending requests if popup disconnects before posting them', async () => {
+      const promise1 = communicator.postRPCRequest(request);
+      const promise2 = communicator.postRPCRequest(request2);
+
+      expect(postMessageSpy).not.toHaveBeenCalledWith(request);
+      expect(postMessageSpy).not.toHaveBeenCalledWith(request2);
+      expect(communicator.disconnect).not.toHaveBeenCalled();
+
+      // close the popup
+      communicator.disconnect();
+
+      await expect(promise1).rejects.toThrow('Request cancelled before sending');
+      await expect(promise2).rejects.toThrow('Request cancelled before sending');
     });
   });
 });

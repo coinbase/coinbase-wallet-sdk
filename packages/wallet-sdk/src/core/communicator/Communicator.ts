@@ -124,7 +124,7 @@ export class Communicator {
     return new Promise((resolve, reject) => {
       // defer the execution the promise until the current call stack clears
       Promise.resolve().then(() => {
-        // reject if the request was cancelled between creation and awaiting due to disconnect
+        // reject if the request was cancelled between creation and awaiting due to PopupUnload
         if (!this.pendingRequests.has(request.id)) {
           reject(standardErrors.provider.userRejectedRequest('Request cancelled before sending'));
           return;
@@ -136,7 +136,7 @@ export class Communicator {
           .then(() =>
             this.onMessage<RPCResponseMessage>(({ requestId }) => requestId === request.id)
           )
-          // resolve or reject the outer promise to take any follow-up requests before disconnect
+          // resolve or reject the promise to take any follow-up requests if necessary before disconnecting
           .then(resolve)
           .catch(reject)
           // then clean up the current request and disconnect if there are no more pending requests
