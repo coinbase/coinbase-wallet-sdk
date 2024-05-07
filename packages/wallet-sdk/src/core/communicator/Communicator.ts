@@ -15,6 +15,9 @@ import { standardErrors } from ':core/error';
  */
 export class Communicator {
   private readonly url: URL;
+  private popup: Window | null = null;
+  private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>();
+  private pendingRPCRequestsCount = 0;
 
   constructor(url: string = CB_KEYS_URL) {
     this.url = new URL(url);
@@ -26,26 +29,6 @@ export class Communicator {
   postMessage = async (message: Message) => {
     const popup = await this.waitForPopupLoaded();
     popup.postMessage(message, this.url.origin);
-  };
-
-  /**
-   * Posts a RPC request to the popup window and waits for a response
-   */
-  private pendingRequestsCount = 0;
-  postMessageToPopup = async (request: RPCRequestMessage): Promise<RPCResponseMessage> => {
-    this.pendingRequestsCount++;
-    return new Promise((resolve, reject) => {
-      this.postMessage(request)
-        .then(() => this.onMessage<RPCResponseMessage>(({ requestId }) => requestId === request.id))
-        .then(resolve)
-        .catch(reject)
-        .finally(() => {
-          this.pendingRequestsCount--;
-          if (this.pendingRequestsCount === 0) {
-            this.disconnect();
-          }
-        });
-    });
   };
 
   /**
@@ -69,8 +52,6 @@ export class Communicator {
     });
   };
 
-  private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>();
-
   /**
    * Close the popup window, rejects all requests and clears the listeners
    */
@@ -85,7 +66,24 @@ export class Communicator {
     this.listeners.clear();
   };
 
-  private popup: Window | null = null;
+  /**
+   * Posts a RPC request to the popup window and waits for a response
+   */
+  postMessageToPopup = async (request: RPCRequestMessage): Promise<RPCResponseMessage> => {
+    this.pendingRPCRequestsCount++;
+    return new Promise((resolve, reject) => {
+      this.postMessage(request)
+        .then(() => this.onMessage<RPCResponseMessage>(({ requestId }) => requestId === request.id))
+        .then(resolve)
+        .catch(reject)
+        .finally(() => {
+          this.pendingRPCRequestsCount--;
+          if (this.pendingRPCRequestsCount === 0) {
+            this.disconnect();
+          }
+        });
+    });
+  };
 
   /**
    * Waits for the popup window to fully load and then sends a version message.
