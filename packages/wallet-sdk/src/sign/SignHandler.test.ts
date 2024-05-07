@@ -4,7 +4,7 @@ import { Preference } from ':core/provider/interface';
 
 const communicator = new Communicator();
 const mockPostMessage = jest.fn();
-communicator.post = mockPostMessage;
+communicator.postMessage = mockPostMessage;
 
 describe('SignerConfigurator', () => {
   describe('handshake', () => {
