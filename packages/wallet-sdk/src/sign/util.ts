@@ -1,4 +1,4 @@
-import { WLSigner } from './walletlink/WLSigner';
+import { WalletLinkSigner } from './walletlink/WalletLinkSigner';
 import { Communicator } from ':core/communicator/Communicator';
 import { ConfigMessage, SignerType } from ':core/message';
 import { AppMetadata, Preference } from ':core/provider/interface';
@@ -47,7 +47,7 @@ async function listenForWalletLinkSessionRequest(
 
   // temporary walletlink signer instance to handle WalletLinkSessionRequest
   // will revisit this when refactoring the walletlink signer
-  const walletlink = new WLSigner({
+  const walletlink = new WalletLinkSigner({
     metadata,
   });
 

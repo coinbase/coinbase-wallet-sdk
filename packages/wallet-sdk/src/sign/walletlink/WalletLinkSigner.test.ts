@@ -1,28 +1,26 @@
 import { fireEvent } from '@testing-library/preact';
 
-import { LOCAL_STORAGE_ADDRESSES_KEY } from './constants';
-import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from './mocks/fixtures';
-import { mockedWalletLinkRelay } from './mocks/relay';
-import { WalletLinkRelay } from './WalletLinkRelay';
-import { WLRelayAdapter } from './WLRelayAdapter';
+import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants';
+import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from './relay/mocks/fixtures';
+import { mockedWalletLinkRelay } from './relay/mocks/relay';
+import { WalletLinkRelay } from './relay/WalletLinkRelay';
+import { WalletLinkSigner } from './WalletLinkSigner';
+import { WALLETLINK_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
 import { AddressString } from ':core/type';
 import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
-jest.mock('./WalletLinkRelay', () => {
+jest.mock('./relay/WalletLinkRelay', () => {
   return {
     WalletLinkRelay: mockedWalletLinkRelay,
   };
 });
 
-const testWalletLinkUrl = 'http://test-url';
-const testStorage = new ScopedLocalStorage('walletlink', testWalletLinkUrl);
+const testStorage = new ScopedLocalStorage('walletlink', WALLETLINK_URL);
 
 const createAdapter = (options?: { relay?: WalletLinkRelay }) => {
-  const adapter = new WLRelayAdapter({
-    appName: 'test',
-    appLogoUrl: null,
-    walletlinkUrl: testWalletLinkUrl,
+  const adapter = new WalletLinkSigner({
+    metadata: { appName: 'test', appLogoUrl: null, appChainIds: [1] },
     updateListener: {
       onAccountsUpdate: () => {},
       onChainUpdate: () => {},
@@ -50,7 +48,7 @@ describe('LegacyProvider', () => {
     const spy = jest.spyOn(relay, 'resetAndReload');
 
     const provider = createAdapter({ relay });
-    await provider.close();
+    await provider.disconnect();
     expect(spy).toHaveBeenCalled();
   });
 
@@ -122,7 +120,7 @@ describe('LegacyProvider', () => {
   });
 
   describe('RPC Methods', () => {
-    let provider: WLRelayAdapter | null = null;
+    let provider: WalletLinkSigner | null = null;
     beforeEach(() => {
       testStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDERESS.toLowerCase());
       provider = createAdapter();
