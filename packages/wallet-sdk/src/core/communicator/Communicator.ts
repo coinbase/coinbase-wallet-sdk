@@ -98,12 +98,14 @@ export class Communicator {
    */
   postRPCRequest = async (request: RPCRequestMessage): Promise<RPCResponseMessage> => {
     this.pendingRPCRequestsCount++;
+
     return new Promise((resolve, reject) => {
       this.postMessage(request)
         .then(() => this.onMessage<RPCResponseMessage>(({ requestId }) => requestId === request.id))
-        .then(resolve)
+        .then(resolve) // resolve the outer promise with the response
         .catch(reject)
         .finally(() => {
+          // then decrement the pending count and disconnect if no more requests
           this.pendingRPCRequestsCount--;
           if (this.pendingRPCRequestsCount === 0) {
             this.disconnect();
