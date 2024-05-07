@@ -87,7 +87,9 @@ Upgrade Coinbase Wallet SDK using yarn or npm.
 3. Request accounts to initialize connection to wallet
 
    ```js
-   const addresses = provider.request('eth_requestAccounts');
+   const addresses = provider.request({
+     method: 'eth_requestAccounts',
+   });
    ```
 
 4. Make more requests
