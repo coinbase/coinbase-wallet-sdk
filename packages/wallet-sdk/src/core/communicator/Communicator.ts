@@ -1,8 +1,16 @@
 import { LIB_VERSION } from '../../version';
-import { ConfigMessage, Message, RPCRequestMessage, RPCResponseMessage } from '../message';
+import {
+  ConfigMessage,
+  Message,
+  MessageID,
+  RPCRequestMessage,
+  RPCResponseMessage,
+} from '../message';
 import { closePopup, openPopup } from './util';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
+
+type RequestStatus = 'created' | 'awaiting';
 
 /**
  * Communicates with a popup window for Coinbase keys.coinbase.com (or another url)
@@ -15,7 +23,9 @@ import { standardErrors } from ':core/error';
  */
 export class Communicator {
   private readonly url: URL;
-  private pendingRPCRequestsCount = 0;
+  private popup: Window | null = null;
+  private listeners = new Map<(_: MessageEvent) => void, { cleanup: () => void }>();
+  private pendingRequests = new Map<MessageID, RequestStatus>();
 
   constructor(url: string = CB_KEYS_URL) {
     this.url = new URL(url);
@@ -46,27 +56,32 @@ export class Communicator {
       };
 
       window.addEventListener('message', listener);
-      this.listeners.set(listener, { reject });
+      this.listeners.set(listener, {
+        cleanup: () => {
+          window.removeEventListener('message', listener);
+          reject(standardErrors.rpc.internal('Message listener cancelled'));
+        },
+      });
     });
   };
 
-  private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>();
-
   /**
-   * Close the popup window, rejects all requests and clears the listeners
+   * Rejects pending requests, closes the popup window and clears the listeners
    */
   disconnect = () => {
+    this.pendingRequests.forEach((status, id) => {
+      // cancel pending request promises that are not awaiting a response
+      if (status !== 'awaiting') {
+        this.pendingRequests.delete(id);
+      }
+    });
+
     closePopup(this.popup);
     this.popup = null;
 
-    this.listeners.forEach(({ reject }, listener) => {
-      reject(standardErrors.provider.userRejectedRequest('Request rejected'));
-      window.removeEventListener('message', listener);
-    });
+    this.listeners.forEach(({ cleanup }) => cleanup());
     this.listeners.clear();
   };
-
-  private popup: Window | null = null;
 
   /**
    * Waits for the popup window to fully load and then sends a version message.
@@ -96,18 +111,26 @@ export class Communicator {
   /**
    * Posts a RPC request to the popup window and waits for a response
    */
-  postRPCRequest = async (request: RPCRequestMessage): Promise<RPCResponseMessage> => {
-    this.pendingRPCRequestsCount++;
+  postRPCRequest = (request: RPCRequestMessage): Promise<RPCResponseMessage> => {
+    this.pendingRequests.set(request.id, 'created');
 
     return new Promise((resolve, reject) => {
+      // reject if the request was cancelled between creation and awaiting due to disconnect
+      if (!this.pendingRequests.has(request.id)) {
+        reject(standardErrors.provider.userRejectedRequest());
+        return;
+      }
+
+      // otherwise, post the message and wait for a response
+      this.pendingRequests.set(request.id, 'awaiting');
       this.postMessage(request)
         .then(() => this.onMessage<RPCResponseMessage>(({ requestId }) => requestId === request.id))
-        .then(resolve) // resolve the outer promise with the response
+        .then(resolve) // resolve the outer promise first, to take follow-up requests if needed
         .catch(reject)
         .finally(() => {
-          // then decrement the pending count and disconnect if no more requests
-          this.pendingRPCRequestsCount--;
-          if (this.pendingRPCRequestsCount === 0) {
+          // then clean up the pending request and disconnect if no more requests are pending
+          this.pendingRequests.delete(request.id);
+          if (this.pendingRequests.size === 0) {
             this.disconnect();
           }
         });
