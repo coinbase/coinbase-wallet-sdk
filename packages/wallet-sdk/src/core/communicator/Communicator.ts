@@ -119,7 +119,7 @@ export class Communicator {
     this.pendingRequests.set(request.id, 'created');
 
     return new Promise((resolve, reject) => {
-      // defer the execution the promise until the current call stack clears
+      // defer the execution until the current call stack clears
       Promise.resolve().then(() => {
         // reject if the request was cancelled between creation and awaiting due to PopupUnload
         if (!this.pendingRequests.has(request.id)) {
