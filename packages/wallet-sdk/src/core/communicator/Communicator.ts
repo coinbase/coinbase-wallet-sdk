@@ -14,31 +14,37 @@ import { standardErrors } from ':core/error';
  * It also handles cleanup of event listeners and the popup window itself when necessary.
  */
 export class Communicator {
-  private url: URL;
+  private readonly url: URL;
+  private popup: Window | null = null;
+  private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>();
 
   constructor(url: string = CB_KEYS_URL) {
     this.url = new URL(url);
-    this.postMessage = this.postMessage.bind(this);
-    this.onMessage = this.onMessage.bind(this);
-    this.disconnect = this.disconnect.bind(this);
   }
 
   /**
-   * Posts a message to the popup window and optionally waits for a response.
+   * Posts a message to the popup window
    */
-  async postMessage<M extends Message>(request: Message): Promise<M> {
+  postMessage = async (message: Message) => {
     const popup = await this.waitForPopupLoaded();
-    popup.postMessage(request, this.url.origin);
+    popup.postMessage(message, this.url.origin);
+  };
+
+  /**
+   * Posts a request to the popup window and waits for a response
+   */
+  postRequestAndWaitForResponse = async <M extends Message>(request: Message): Promise<M> => {
+    this.postMessage(request);
 
     const { id } = request;
     if (!id) return {} as M; // do not wait for response if no id
     return this.onMessage<M>(({ requestId }) => requestId === id);
-  }
+  };
 
   /**
    * Listens for messages from the popup window that match a given predicate.
    */
-  async onMessage<M extends Message>(predicate: (_: Partial<M>) => boolean): Promise<M> {
+  onMessage = async <M extends Message>(predicate: (_: Partial<M>) => boolean): Promise<M> => {
     return new Promise((resolve, reject) => {
       const listener = (event: MessageEvent<M>) => {
         if (event.origin !== this.url.origin) return; // origin validation
@@ -54,36 +60,33 @@ export class Communicator {
       window.addEventListener('message', listener);
       this.listeners.set(listener, { reject });
     });
-  }
-
-  private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>();
+  };
 
   /**
-   * Rejects all requests and clears the listeners
+   * Closes the popup, rejects all requests and clears the listeners
    */
-  disconnect() {
+  disconnect = () => {
+    closePopup(this.popup);
+    this.popup = null;
+
     this.listeners.forEach(({ reject }, listener) => {
       reject(standardErrors.provider.userRejectedRequest('Request rejected'));
       window.removeEventListener('message', listener);
     });
     this.listeners.clear();
-  }
-
-  private popup: Window | null = null;
+  };
 
   /**
    * Waits for the popup window to fully load and then sends a version message.
    */
-  private async waitForPopupLoaded(): Promise<Window> {
+  private waitForPopupLoaded = async (): Promise<Window> => {
     if (this.popup) return this.popup;
 
     this.popup = openPopup(this.url);
 
-    this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload').then(() => {
-      closePopup(this.popup);
-      this.popup = null;
-      this.disconnect();
-    });
+    this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload')
+      .then(this.disconnect)
+      .catch();
 
     return this.onMessage<ConfigMessage>(({ event }) => event === 'PopupLoaded')
       .then((message) => {
@@ -96,5 +99,5 @@ export class Communicator {
         if (!this.popup) throw standardErrors.rpc.internal();
         return this.popup;
       });
-  }
+  };
 }
