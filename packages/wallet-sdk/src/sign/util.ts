@@ -1,6 +1,6 @@
 import { WalletLinkSigner } from './walletlink/WalletLinkSigner';
 import { Communicator } from ':core/communicator/Communicator';
-import { ConfigMessage, SignerType } from ':core/message';
+import { ConfigMessage, MessageID, SignerType } from ':core/message';
 import { AppMetadata, Preference } from ':core/provider/interface';
 import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
@@ -23,7 +23,7 @@ export async function fetchSignerType(params: {
   const { communicator, metadata } = params;
   listenForWalletLinkSessionRequest(communicator, metadata);
 
-  const request: ConfigMessage = {
+  const request: ConfigMessage & { id: MessageID } = {
     id: crypto.randomUUID(),
     event: 'selectSignerType',
     data: params.preference,
