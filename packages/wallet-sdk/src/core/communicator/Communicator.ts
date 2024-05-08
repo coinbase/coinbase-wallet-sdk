@@ -1,5 +1,5 @@
 import { LIB_VERSION } from '../../version';
-import { ConfigMessage, Message } from '../message';
+import { ConfigMessage, Message, MessageID } from '../message';
 import { closePopup, openPopup } from './util';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
@@ -33,11 +33,10 @@ export class Communicator {
   /**
    * Posts a request to the popup window and waits for a response
    */
-  postRequestAndWaitForResponse = async <M extends Message>(request: Message): Promise<M> => {
-    const { id } = request;
-    if (!id) throw standardErrors.rpc.invalidRequest(); // do not wait for response if no id
-
-    const responsePromise = this.onMessage<M>(({ requestId }) => requestId === id);
+  postRequestAndWaitForResponse = async <M extends Message>(
+    request: Message & { id: MessageID }
+  ): Promise<M> => {
+    const responsePromise = this.onMessage<M>(({ requestId }) => requestId === request.id);
     this.postMessage(request);
     return await responsePromise;
   };
