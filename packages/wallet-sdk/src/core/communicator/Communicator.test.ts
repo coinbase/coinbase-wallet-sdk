@@ -100,82 +100,120 @@ describe('Communicator', () => {
   });
 
   describe('postRPCRequest', () => {
-    const request = { id: 'mock-request-id-1-1', data: {} } as unknown as RPCRequestMessage;
+    const request1 = { id: 'mock-request-id-1-1', data: {} } as unknown as RPCRequestMessage;
     const request2 = { id: 'mock-request-id-2-2', data: {} } as unknown as RPCRequestMessage;
+    const simulateAsyncCall = () => new Promise((resolve) => setTimeout(resolve, 10));
+
     let postMessageSpy: jest.SpyInstance;
     let disconnectSpy: jest.SpyInstance;
 
-    function wait(ms: number) {
-      return new Promise((resolve) => setTimeout(resolve, ms));
-    }
-
     beforeEach(() => {
-      communicator.onMessage = jest.fn().mockImplementation(() => wait(100));
-      postMessageSpy = jest
-        .spyOn(communicator, 'postMessage')
-        .mockImplementation(() => Promise.resolve());
+      queueMessageEvent(popupLoadedMessage);
+
       disconnectSpy = jest.spyOn(communicator, 'disconnect');
-    });
-
-    it('should call disconnect immediately when single request resolves', async () => {
-      await communicator.postRPCRequest(request);
-      expect(postMessageSpy).toHaveBeenCalledWith(request);
-      expect(disconnectSpy).not.toHaveBeenCalled();
-
-      await wait(10);
-      expect(disconnectSpy).toHaveBeenCalled();
-    });
-
-    it('should call disconnect immediately when single request rejects', async () => {
       postMessageSpy = jest
         .spyOn(communicator, 'postMessage')
-        .mockRejectedValue(new Error('mock error'));
-
-      await expect(communicator.postRPCRequest(request)).rejects.toThrow('mock error');
-      expect(postMessageSpy).toHaveBeenCalledWith(request);
-      expect(communicator.disconnect).toHaveBeenCalled();
-    });
-
-    it('should call disconnect only when no more requests are pending', async () => {
-      await communicator.postRPCRequest(request);
-      expect(postMessageSpy).toHaveBeenCalledWith(request);
-      expect(communicator.disconnect).not.toHaveBeenCalled();
-
-      const secondPromise = communicator.postRPCRequest(request2);
-      expect(communicator.disconnect).not.toHaveBeenCalled();
-
-      return secondPromise
-        .then(() => wait(10))
-        .then(() => {
-          expect(postMessageSpy).toHaveBeenCalledWith(request2);
-          expect(communicator.disconnect).toHaveBeenCalled();
+        .mockImplementation(async (message: Message) => {
+          await simulateAsyncCall();
+          queueMessageEvent({
+            data: {
+              requestId: message.id,
+            },
+          });
         });
     });
 
-    it('should reject if popup disconnects before posting request', async () => {
-      const promise = communicator.postRPCRequest(request);
-      expect(postMessageSpy).not.toHaveBeenCalledWith(request);
-      expect(communicator.disconnect).not.toHaveBeenCalled();
+    describe('single request', () => {
+      it('should call disconnect immediately when single request resolves', async () => {
+        const response = await communicator.postRPCRequest(request1);
+        expect(response.requestId).toBe(request1.id);
+        expect(postMessageSpy).toHaveBeenCalledWith(request1);
+        expect(disconnectSpy).not.toHaveBeenCalled();
 
-      // close the popup
-      communicator.disconnect();
+        return simulateAsyncCall().then(() => {
+          expect(disconnectSpy).toHaveBeenCalledTimes(1);
+        });
+      });
 
-      await expect(promise).rejects.toThrow('Request cancelled before sending');
+      it('should call disconnect immediately when single request rejects', async () => {
+        postMessageSpy = jest
+          .spyOn(communicator, 'postMessage')
+          .mockRejectedValue(new Error('mock error'));
+
+        await expect(communicator.postRPCRequest(request1)).rejects.toThrow('mock error');
+        expect(postMessageSpy).toHaveBeenCalledWith(request1);
+        expect(communicator.disconnect).toHaveBeenCalled();
+      });
+
+      it('should reject if popup disconnects before posting request', async () => {
+        const promise = communicator.postRPCRequest(request1);
+        expect(postMessageSpy).not.toHaveBeenCalledWith(request1);
+        expect(communicator.disconnect).not.toHaveBeenCalled();
+
+        // close the popup
+        communicator.disconnect();
+
+        await expect(promise).rejects.toThrow('Request cancelled before sending');
+      });
+
+      it('should reject if popup disconnects while waiting for response', async () => {
+        // no dispatchMessageEvent simulation so that the request is never resolved
+        postMessageSpy = jest.spyOn(communicator, 'postMessage').mockResolvedValue();
+
+        const promise = communicator.postRPCRequest(request1);
+        expect(postMessageSpy).not.toHaveBeenCalledWith(request1);
+        expect(communicator.disconnect).not.toHaveBeenCalled();
+
+        // close the popup after a delay
+        setTimeout(() => communicator.disconnect(), 100);
+
+        await expect(promise).rejects.toThrow('Request cancelled before response');
+      });
     });
 
-    it('should reject all pending requests if popup disconnects before posting them', async () => {
-      const promise1 = communicator.postRPCRequest(request);
-      const promise2 = communicator.postRPCRequest(request2);
+    describe('multiple requests', () => {
+      it('should call disconnect only once for back to back requests', async () => {
+        const response1 = await communicator.postRPCRequest(request1);
+        const response2 = await communicator.postRPCRequest(request2);
 
-      expect(postMessageSpy).not.toHaveBeenCalledWith(request);
-      expect(postMessageSpy).not.toHaveBeenCalledWith(request2);
-      expect(communicator.disconnect).not.toHaveBeenCalled();
+        return simulateAsyncCall().then(() => {
+          expect(response1.requestId).toBe(request1.id);
+          expect(response2.requestId).toBe(request2.id);
+          expect(disconnectSpy).toHaveBeenCalledTimes(1);
+        });
+      });
 
-      // close the popup
-      communicator.disconnect();
+      it('should call disconnect only when no more requests are pending', async () => {
+        const response = await communicator.postRPCRequest(request1);
+        expect(response.requestId).toBe(request1.id);
+        expect(postMessageSpy).toHaveBeenCalledWith(request1);
+        expect(communicator.disconnect).not.toHaveBeenCalled();
 
-      await expect(promise1).rejects.toThrow('Request cancelled before sending');
-      await expect(promise2).rejects.toThrow('Request cancelled before sending');
+        const secondPromise = communicator.postRPCRequest(request2);
+        expect(communicator.disconnect).not.toHaveBeenCalled();
+
+        return secondPromise.then(async (response2) => {
+          await simulateAsyncCall();
+          expect(response2.requestId).toBe(request2.id);
+          expect(postMessageSpy).toHaveBeenCalledWith(request2);
+          expect(communicator.disconnect).toHaveBeenCalledTimes(1);
+        });
+      });
+
+      it('should reject all pending requests if popup disconnects before posting them', async () => {
+        const promise1 = communicator.postRPCRequest(request1);
+        const promise2 = communicator.postRPCRequest(request2);
+
+        expect(postMessageSpy).not.toHaveBeenCalledWith(request1);
+        expect(postMessageSpy).not.toHaveBeenCalledWith(request2);
+        expect(communicator.disconnect).not.toHaveBeenCalled();
+
+        // close the popup
+        communicator.disconnect();
+
+        await expect(promise1).rejects.toThrow('Request cancelled before sending');
+        await expect(promise2).rejects.toThrow('Request cancelled before sending');
+      });
     });
   });
 });

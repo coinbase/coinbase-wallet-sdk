@@ -74,13 +74,10 @@ export class Communicator {
    * Rejects pending requests, clears the listeners and closes the popup window
    */
   disconnect = () => {
-    console.log('disconnect', this.pendingRequests);
     // cancel pending request promises that haven't been posted
     this.pendingRequests.forEach((status, id, map) => {
       if (status !== 'awaiting') map.delete(id);
     });
-
-    console.log('after forEach', this.pendingRequests);
 
     // remove all event listeners
     this.listeners.forEach(({ cleanup }) => cleanup());
