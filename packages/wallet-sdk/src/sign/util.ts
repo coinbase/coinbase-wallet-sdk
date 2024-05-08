@@ -28,7 +28,7 @@ export async function fetchSignerType(params: {
     event: 'selectSignerType',
     data: params.preference,
   };
-  const { data } = await communicator.postMessage(request);
+  const { data } = await communicator.postRequestAndWaitForResponse(request);
   return data as SignerType;
 }
 
@@ -36,13 +36,9 @@ async function listenForWalletLinkSessionRequest(
   communicator: Communicator,
   metadata: AppMetadata
 ) {
-  try {
-    await communicator.onMessage<ConfigMessage>(
-      ({ event }) => event === 'WalletLinkSessionRequest'
-    );
-  } catch (_) {
-    return;
-  }
+  await communicator
+    .onMessage<ConfigMessage>(({ event }) => event === 'WalletLinkSessionRequest')
+    .catch(() => {});
 
   // temporary walletlink signer instance to handle WalletLinkSessionRequest
   // will revisit this when refactoring the walletlink signer

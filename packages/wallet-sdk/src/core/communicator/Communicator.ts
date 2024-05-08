@@ -34,11 +34,12 @@ export class Communicator {
    * Posts a request to the popup window and waits for a response
    */
   postRequestAndWaitForResponse = async <M extends Message>(request: Message): Promise<M> => {
-    this.postMessage(request);
-
     const { id } = request;
-    if (!id) return {} as M; // do not wait for response if no id
-    return this.onMessage<M>(({ requestId }) => requestId === id);
+    if (!id) throw standardErrors.rpc.invalidRequest(); // do not wait for response if no id
+
+    const responsePromise = this.onMessage<M>(({ requestId }) => requestId === id);
+    this.postMessage(request);
+    return await responsePromise;
   };
 
   /**
@@ -86,7 +87,7 @@ export class Communicator {
 
     this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload')
       .then(this.disconnect)
-      .catch();
+      .catch(() => {});
 
     return this.onMessage<ConfigMessage>(({ event }) => event === 'PopupLoaded')
       .then((message) => {
