@@ -65,7 +65,7 @@ export class Communicator {
   /**
    * Closes the popup, rejects all requests and clears the listeners
    */
-  disconnect = () => {
+  private disconnect = () => {
     closePopup(this.popup);
     this.popup = null;
 
