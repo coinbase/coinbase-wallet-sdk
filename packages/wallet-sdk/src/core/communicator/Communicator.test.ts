@@ -4,7 +4,7 @@ import { Communicator } from './Communicator';
 import { CB_KEYS_URL } from ':core/constants';
 import { openPopup } from ':util/web';
 
-jest.mock('./util', () => ({
+jest.mock(':util/web', () => ({
   openPopup: jest.fn(),
 }));
 
