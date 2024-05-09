@@ -1,5 +1,4 @@
 import { errorValues, standardErrorCodes } from './constants';
-import { SerializedEthereumRpcError } from './type';
 
 const FALLBACK_MESSAGE = 'Unspecified error message.';
 
@@ -32,7 +31,7 @@ export function getMessageFromCode(
  * Returns whether the given code is valid.
  * A code is only valid if it has a message.
  */
-function isValidCode(code: number): boolean {
+export function isValidCode(code: number): boolean {
   if (!Number.isInteger(code)) {
     return false;
   }
@@ -48,7 +47,51 @@ function isValidCode(code: number): boolean {
   return false;
 }
 
-export function serializeError(error: unknown): SerializedEthereumRpcError {
+/**
+ * Returns the error code from an error object.
+ */
+export function getErrorCode(error: unknown): number | undefined {
+  if (typeof error === 'number') {
+    return error;
+  } else if (isErrorWithCode(error)) {
+    return error.code ?? error.errorCode;
+  }
+
+  return undefined;
+}
+
+interface ErrorWithCode {
+  code?: number;
+  errorCode?: number;
+}
+
+function isErrorWithCode(error: unknown): error is ErrorWithCode {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    (typeof (error as ErrorWithCode).code === 'number' ||
+      typeof (error as ErrorWithCode).errorCode === 'number')
+  );
+}
+
+/**
+ * Serializes the given error to an Ethereum JSON RPC-compatible error object.
+ * Merely copies the given error's values if it is already compatible.
+ * If the given error is not fully compatible, it will be preserved on the
+ * returned object's data.originalError property.
+ */
+
+export interface SerializedEthereumRpcError {
+  code: number; // must be an integer
+  message: string;
+  data?: unknown;
+  stack?: string;
+}
+
+export function serialize(
+  error: unknown,
+  { shouldIncludeStack = false } = {}
+): SerializedEthereumRpcError {
   const serialized: Partial<SerializedEthereumRpcError> = {};
 
   if (
@@ -79,8 +122,9 @@ export function serializeError(error: unknown): SerializedEthereumRpcError {
     serialized.data = { originalError: assignOriginalError(error) };
   }
 
-  serialized.stack = hasStringProperty(error, 'stack') ? error.stack : undefined;
-
+  if (shouldIncludeStack) {
+    serialized.stack = hasStringProperty(error, 'stack') ? error.stack : undefined;
+  }
   return serialized as SerializedEthereumRpcError;
 }
 

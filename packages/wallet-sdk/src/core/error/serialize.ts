@@ -1,5 +1,3 @@
-// TODO: error should not depend on walletlink. revisit this.
-import { isErrorResponse, Web3Response } from '../../relay/walletlink/type/Web3Response';
 import { LIB_VERSION } from '../../version';
 import { standardErrorCodes } from './constants';
 import { serialize, SerializedEthereumRpcError } from './utils';
@@ -35,18 +33,11 @@ export function serializeError(
 /**
  * Converts an error to a serializable object.
  */
-function getErrorObject(error: string | Web3Response | unknown) {
+function getErrorObject(error: string | unknown) {
   if (typeof error === 'string') {
     return {
       message: error,
       code: standardErrorCodes.rpc.internal,
-    };
-  } else if (isErrorResponse(error)) {
-    return {
-      ...error,
-      message: error.errorMessage,
-      code: error.errorCode,
-      data: { method: error.method },
     };
   }
   return error;

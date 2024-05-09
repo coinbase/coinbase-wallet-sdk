@@ -1,7 +1,7 @@
 import EventEmitter from 'eventemitter3';
 
 import { standardErrorCodes, standardErrors } from './core/error';
-import { serializeError } from './core/error/utils';
+import { serializeError } from './core/error/serialize';
 import {
   AppMetadata,
   ConstructorOptions,
