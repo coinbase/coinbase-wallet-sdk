@@ -1,6 +1,6 @@
 import { WalletLinkSigner } from './walletlink/WalletLinkSigner';
 import { Communicator } from ':core/communicator/Communicator';
-import { ConfigMessage, SignerType } from ':core/message';
+import { ConfigMessage, MessageID, SignerType } from ':core/message';
 import { AppMetadata, Preference } from ':core/provider/interface';
 import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
@@ -23,12 +23,12 @@ export async function fetchSignerType(params: {
   const { communicator, metadata } = params;
   listenForWalletLinkSessionRequest(communicator, metadata);
 
-  const request: ConfigMessage = {
+  const request: ConfigMessage & { id: MessageID } = {
     id: crypto.randomUUID(),
     event: 'selectSignerType',
     data: params.preference,
   };
-  const { data } = await communicator.postMessage(request);
+  const { data } = await communicator.postRequestAndWaitForResponse(request);
   return data as SignerType;
 }
 
@@ -36,13 +36,9 @@ async function listenForWalletLinkSessionRequest(
   communicator: Communicator,
   metadata: AppMetadata
 ) {
-  try {
-    await communicator.onMessage<ConfigMessage>(
-      ({ event }) => event === 'WalletLinkSessionRequest'
-    );
-  } catch (_) {
-    return;
-  }
+  await communicator
+    .onMessage<ConfigMessage>(({ event }) => event === 'WalletLinkSessionRequest')
+    .catch(() => {});
 
   // temporary walletlink signer instance to handle WalletLinkSessionRequest
   // will revisit this when refactoring the walletlink signer
