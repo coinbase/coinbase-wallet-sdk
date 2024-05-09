@@ -1,3 +1,4 @@
+import { isErrorResponse, Web3Response } from '../../sign/walletlink/relay/type/Web3Response';
 import { standardErrorCodes } from './constants';
 import { standardErrors } from './errors';
 import { getErrorCode, getMessageFromCode } from './utils';
@@ -21,6 +22,14 @@ describe('errors', () => {
 
     expect(getErrorCode(null)).toEqual(undefined);
     expect(getErrorCode(undefined)).toEqual(undefined);
+
+    const errorResponse: Web3Response = {
+      method: 'generic',
+      errorMessage: 'test error message',
+      errorCode: 4137,
+    };
+    expect(isErrorResponse(errorResponse)).toEqual(true);
+    expect(getErrorCode(errorResponse)).toEqual(4137);
   });
 
   test('standardErrorMessage', () => {
