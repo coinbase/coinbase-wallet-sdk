@@ -1,5 +1,4 @@
-import { JSONRPCRequest } from '../../provider/JSONRPC';
-import { Web3Response } from '../../relay/walletlink/type/Web3Response';
+import { Web3Response } from '../../sign/walletlink/relay/type/Web3Response';
 import { standardErrorCodes } from './constants';
 import { standardErrors } from './errors';
 import { serializeError } from './serialize';
@@ -74,7 +73,7 @@ describe('serializeError', () => {
 
 describe('serializeError to retrieve the request method', () => {
   test('with JSONRPCRequest object', () => {
-    const jsonRpcRequest: JSONRPCRequest = {
+    const jsonRpcRequest = {
       jsonrpc: '2.0',
       id: 1,
       method: 'requestEthereumAccounts',
@@ -99,7 +98,7 @@ describe('serializeError to retrieve the request method', () => {
   });
 
   test('with JSONRPCRequest array', () => {
-    const jsonRpcRequests: JSONRPCRequest[] = [
+    const jsonRpcRequests = [
       {
         jsonrpc: '2.0',
         id: 1,
