@@ -1,3 +1,5 @@
+import { Signer } from 'src/sign/interface';
+
 import { LIB_VERSION } from '../version';
 import { standardErrors } from ':core/error';
 import { ConstructorOptions, ProviderInterface, RequestArguments } from ':core/provider/interface';
@@ -23,8 +25,20 @@ export async function fetchRPCRequest(request: RequestArguments, chain: Chain) {
 
 interface Window {
   top: Window;
-  ethereum?: ProviderInterface;
-  coinbaseWalletExtension?: ProviderInterface;
+  ethereum?: InjectedProvider;
+  coinbaseWalletExtension?: InjectedProvider;
+  coinbaseWalletSigner?: Signer;
+}
+
+interface InjectedProvider extends ProviderInterface {
+  isCoinbaseBrowser?: boolean;
+  shouldUseSigner?: boolean;
+  setAppInfo?(...args: unknown[]): void;
+}
+
+export function getCoinbaseInjectedSigner(): Signer | undefined {
+  const window = globalThis as Window;
+  return window.coinbaseWalletSigner;
 }
 
 export function getCoinbaseInjectedProvider({
@@ -35,16 +49,16 @@ export function getCoinbaseInjectedProvider({
 
   if (preference.options !== 'smartWalletOnly') {
     const extension = window.coinbaseWalletExtension;
-    if (extension && !('shouldUseSigner' in extension && extension.shouldUseSigner)) {
+    if (extension?.shouldUseSigner === true) {
       const { appName, appLogoUrl, appChainIds } = metadata;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (extension as any).setAppInfo?.(appName, appLogoUrl, appChainIds);
+      extension.setAppInfo?.(appName, appLogoUrl, appChainIds);
       return extension;
     }
   }
 
   const ethereum = window.ethereum ?? window.top?.ethereum;
-  if (ethereum && 'isCoinbaseBrowser' in ethereum && ethereum.isCoinbaseBrowser) {
+  if (ethereum?.isCoinbaseBrowser) {
     return ethereum;
   }
 
