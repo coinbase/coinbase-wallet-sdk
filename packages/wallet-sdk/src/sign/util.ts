@@ -21,7 +21,7 @@ export async function fetchSignerType(params: {
   metadata: AppMetadata; // for WalletLink
 }): Promise<SignerType> {
   const { communicator, metadata } = params;
-  listenForWalletLinkSessionRequest(communicator, metadata);
+  listenForWalletLinkSessionRequest(communicator, metadata).catch(() => {});
 
   const request: ConfigMessage & { id: MessageID } = {
     id: crypto.randomUUID(),
@@ -36,9 +36,7 @@ async function listenForWalletLinkSessionRequest(
   communicator: Communicator,
   metadata: AppMetadata
 ) {
-  await communicator
-    .onMessage<ConfigMessage>(({ event }) => event === 'WalletLinkSessionRequest')
-    .catch(() => {});
+  await communicator.onMessage<ConfigMessage>(({ event }) => event === 'WalletLinkSessionRequest');
 
   // temporary walletlink signer instance to handle WalletLinkSessionRequest
   // will revisit this when refactoring the walletlink signer
