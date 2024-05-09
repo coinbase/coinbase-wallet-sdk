@@ -60,7 +60,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       const category = determineMethodCategory(args.method) ?? 'fetch';
       return this.handlers[category](args) as T;
     } catch (error) {
-      return Promise.reject(serializeError(error));
+      return Promise.reject(serializeError(error, args.method));
     }
   }
 
