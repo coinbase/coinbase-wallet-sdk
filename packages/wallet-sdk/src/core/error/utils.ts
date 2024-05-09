@@ -48,7 +48,7 @@ function isValidCode(code: number): boolean {
   return false;
 }
 
-export function serialize(
+export function serializeError(
   error: unknown,
   { shouldIncludeStack = false } = {}
 ): SerializedEthereumRpcError {
