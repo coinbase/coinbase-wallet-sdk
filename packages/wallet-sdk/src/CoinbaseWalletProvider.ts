@@ -7,10 +7,11 @@ import {
   Preference,
   ProviderInterface,
   RequestArguments,
+  Signer,
 } from './core/provider/interface';
 import { AddressString, Chain, IntNumber } from './core/type';
 import { areAddressArraysEqual, hexStringFromIntNumber } from './core/type/util';
-import { AccountsUpdate, ChainUpdate, Signer } from './sign/interface';
+import { AccountsUpdate, ChainUpdate } from './sign/interface';
 import { SCWSigner } from './sign/scw/SCWSigner';
 import { fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
 import { WalletLinkSigner } from './sign/walletlink/WalletLinkSigner';

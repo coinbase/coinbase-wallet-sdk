@@ -1,8 +1,11 @@
-import { Signer } from 'src/sign/interface';
-
 import { LIB_VERSION } from '../version';
 import { standardErrors } from ':core/error';
-import { ConstructorOptions, ProviderInterface, RequestArguments } from ':core/provider/interface';
+import {
+  ConstructorOptions,
+  ProviderInterface,
+  RequestArguments,
+  Signer,
+} from ':core/provider/interface';
 import { Chain } from ':core/type';
 
 export async function fetchRPCRequest(request: RequestArguments, chain: Chain) {
