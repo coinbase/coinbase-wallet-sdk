@@ -48,10 +48,7 @@ function isValidCode(code: number): boolean {
   return false;
 }
 
-export function serializeError(
-  error: unknown,
-  { shouldIncludeStack = false } = {}
-): SerializedEthereumRpcError {
+export function serializeError(error: unknown): SerializedEthereumRpcError {
   const serialized: Partial<SerializedEthereumRpcError> = {};
 
   if (
@@ -82,9 +79,8 @@ export function serializeError(
     serialized.data = { originalError: assignOriginalError(error) };
   }
 
-  if (shouldIncludeStack) {
-    serialized.stack = hasStringProperty(error, 'stack') ? error.stack : undefined;
-  }
+  serialized.stack = hasStringProperty(error, 'stack') ? error.stack : undefined;
+
   return serialized as SerializedEthereumRpcError;
 }
 
