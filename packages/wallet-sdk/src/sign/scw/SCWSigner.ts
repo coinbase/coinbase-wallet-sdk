@@ -1,9 +1,9 @@
-import { Signer, StateUpdateListener } from '../interface';
+import { StateUpdateListener } from '../interface';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWStateManager } from './SCWStateManager';
 import { standardErrors } from ':core/error';
 import { RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
-import { AppMetadata, RequestArguments } from ':core/provider/interface';
+import { AppMetadata, RequestArguments, Signer } from ':core/provider/interface';
 import { Method } from ':core/provider/method';
 import { AddressString } from ':core/type';
 import { ensureIntNumber } from ':core/type/util';

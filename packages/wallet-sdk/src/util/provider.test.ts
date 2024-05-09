@@ -1,12 +1,8 @@
-import { checkErrorForInvalidRequestArgs, getCoinbaseInjectedProvider } from './provider';
+import { CBWindow, checkErrorForInvalidRequestArgs, getCoinbaseInjectedProvider } from './provider';
 import { standardErrors } from ':core/error';
-import { ProviderInterface } from ':core/provider/interface';
+import { ProviderInterface, Signer } from ':core/provider/interface';
 
-const window = globalThis as {
-  top: Window;
-  ethereum?: ProviderInterface;
-  coinbaseWalletExtension?: ProviderInterface;
-};
+const window = globalThis as CBWindow;
 
 // @ts-expect-error-next-line
 const invalidArgsError = (args) =>
@@ -32,12 +28,12 @@ describe('Utils', () => {
     describe('Extension Provider', () => {
       afterEach(() => {
         window.coinbaseWalletExtension = undefined;
+        window.coinbaseWalletSigner = undefined;
       });
 
       it('should return extension provider', () => {
         const mockSetAppInfo = jest.fn();
         const extensionProvider = {
-          shouldUseSigner: false,
           setAppInfo: mockSetAppInfo,
         } as unknown as ProviderInterface;
 
@@ -59,12 +55,9 @@ describe('Utils', () => {
         expect(mockSetAppInfo).toHaveBeenCalledWith('Dapp', null, []);
       });
 
-      it('shouldUseSigner as true - should return undefined', () => {
-        const extensionProvider = {
-          shouldUseSigner: true,
-        } as unknown as ProviderInterface;
-
-        window.coinbaseWalletExtension = extensionProvider;
+      it('should return undefined when extension injects `coinbaseWalletSigner`', () => {
+        window.coinbaseWalletSigner = {} as unknown as Signer;
+        window.coinbaseWalletExtension = {} as unknown as ProviderInterface;
 
         expect(
           getCoinbaseInjectedProvider({
@@ -81,12 +74,7 @@ describe('Utils', () => {
       });
 
       it('smartWalletOnly - should return undefined', () => {
-        const extensionProvider = {
-          shouldUseSigner: false,
-          setAppInfo: jest.fn(),
-        } as unknown as ProviderInterface;
-
-        window.coinbaseWalletExtension = extensionProvider;
+        window.coinbaseWalletExtension = {} as unknown as ProviderInterface;
 
         expect(
           getCoinbaseInjectedProvider({

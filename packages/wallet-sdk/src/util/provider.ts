@@ -1,6 +1,11 @@
 import { LIB_VERSION } from '../version';
 import { standardErrors } from ':core/error';
-import { ConstructorOptions, ProviderInterface, RequestArguments } from ':core/provider/interface';
+import {
+  ConstructorOptions,
+  ProviderInterface,
+  RequestArguments,
+  Signer,
+} from ':core/provider/interface';
 import { Chain } from ':core/type';
 
 export async function fetchRPCRequest(request: RequestArguments, chain: Chain) {
@@ -21,30 +26,43 @@ export async function fetchRPCRequest(request: RequestArguments, chain: Chain) {
   return response.result;
 }
 
-interface Window {
-  top: Window;
-  ethereum?: ProviderInterface;
-  coinbaseWalletExtension?: ProviderInterface;
+export interface CBWindow {
+  coinbaseWalletSigner?: Signer;
+  top: CBWindow;
+  ethereum?: CBInjectedProvider;
+  coinbaseWalletExtension?: CBInjectedProvider;
+}
+
+export interface CBInjectedProvider extends ProviderInterface {
+  isCoinbaseBrowser?: boolean;
+  setAppInfo?: (...args: unknown[]) => unknown;
+}
+
+export function getCoinbaseInjectedSigner(): Signer | undefined {
+  const window = globalThis as CBWindow;
+  return window.coinbaseWalletSigner;
 }
 
 export function getCoinbaseInjectedProvider({
   metadata,
   preference,
 }: Readonly<ConstructorOptions>): ProviderInterface | undefined {
-  const window = globalThis as Window;
+  const window = globalThis as CBWindow;
 
   if (preference.options !== 'smartWalletOnly') {
+    const signer = getCoinbaseInjectedSigner();
+    if (signer) return undefined; // use signer instead
+
     const extension = window.coinbaseWalletExtension;
-    if (extension && !('shouldUseSigner' in extension && extension.shouldUseSigner)) {
+    if (extension) {
       const { appName, appLogoUrl, appChainIds } = metadata;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (extension as any).setAppInfo?.(appName, appLogoUrl, appChainIds);
+      extension.setAppInfo?.(appName, appLogoUrl, appChainIds);
       return extension;
     }
   }
 
   const ethereum = window.ethereum ?? window.top?.ethereum;
-  if (ethereum && 'isCoinbaseBrowser' in ethereum && ethereum.isCoinbaseBrowser) {
+  if (ethereum?.isCoinbaseBrowser) {
     return ethereum;
   }
 
