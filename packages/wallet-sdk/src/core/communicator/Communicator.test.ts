@@ -1,8 +1,8 @@
 import { LIB_VERSION } from '../../version';
 import { Message } from '../message';
 import { Communicator } from './Communicator';
-import { openPopup } from './util';
 import { CB_KEYS_URL } from ':core/constants';
+import { openPopup } from ':util/web';
 
 jest.mock('./util', () => ({
   openPopup: jest.fn(),

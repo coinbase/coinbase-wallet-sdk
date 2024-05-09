@@ -21,8 +21,7 @@ export function openPopup(url: URL): Window {
   return popup;
 }
 
-export function closePopup(popup: Window | null) {
-  if (popup && !popup.closed) {
-    popup.close();
-  }
-}
+/**
+ * consolidate all window. document. functions
+ * e.g. WLMobileRelayUI, WalletLinkRelay, ...
+ */
