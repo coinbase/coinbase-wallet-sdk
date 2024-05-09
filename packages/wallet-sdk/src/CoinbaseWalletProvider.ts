@@ -1,6 +1,7 @@
 import EventEmitter from 'eventemitter3';
 
 import { standardErrorCodes, standardErrors } from './core/error';
+import { serializeError } from './core/error/serialize';
 import {
   AppMetadata,
   ConstructorOptions,
@@ -52,11 +53,15 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   }
 
   public async request<T>(args: RequestArguments): Promise<T> {
-    const invalidArgsError = checkErrorForInvalidRequestArgs(args);
-    if (invalidArgsError) throw invalidArgsError;
-    // unrecognized methods are treated as fetch requests
-    const category = determineMethodCategory(args.method) ?? 'fetch';
-    return this.handlers[category](args) as T;
+    try {
+      const invalidArgsError = checkErrorForInvalidRequestArgs(args);
+      if (invalidArgsError) throw invalidArgsError;
+      // unrecognized methods are treated as fetch requests
+      const category = determineMethodCategory(args.method) ?? 'fetch';
+      return this.handlers[category](args) as T;
+    } catch (error) {
+      return Promise.reject(serializeError(error, args.method));
+    }
   }
 
   protected readonly handlers = {
