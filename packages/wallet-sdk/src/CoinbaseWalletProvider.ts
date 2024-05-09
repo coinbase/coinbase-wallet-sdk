@@ -170,7 +170,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     });
   }
 
-  private initSigner(signerType: SignerType): Signer {
+  protected initSigner(signerType: SignerType): Signer {
     switch (signerType) {
       case 'scw':
         return new SCWSigner({
