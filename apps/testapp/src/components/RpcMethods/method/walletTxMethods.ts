@@ -35,7 +35,7 @@ const walletGetCallsStatus: RpcRequestInput = {
 const walletShowCallsStatus: RpcRequestInput = {
   method: 'wallet_showCallsStatus',
   params: [{ key: 'params', required: true }],
-  format: (data: Record<string, string>) => [data.params],
+  format: (data: { params: string }) => [data.params],
 };
 
 export const walletTxMethods = [
