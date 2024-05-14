@@ -13,14 +13,8 @@ import {
 import { AddressString, Chain, IntNumber } from './core/type';
 import { areAddressArraysEqual, hexStringFromIntNumber } from './core/type/util';
 import { AccountsUpdate, ChainUpdate } from './sign/interface';
-import { SCWSigner } from './sign/scw/SCWSigner';
-import { fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
-import { WalletLinkSigner } from './sign/walletlink/WalletLinkSigner';
-import {
-  checkErrorForInvalidRequestArgs,
-  fetchRPCRequest,
-  getCoinbaseInjectedSigner,
-} from './util/provider';
+import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
+import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './util/provider';
 import { Communicator } from ':core/communicator/Communicator';
 import { SignerType } from ':core/message';
 import { determineMethodCategory } from ':core/provider/method';
@@ -181,25 +175,11 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   }
 
   private initSigner(signerType: SignerType): Signer {
-    switch (signerType) {
-      case 'scw':
-        return new SCWSigner({
-          metadata: this.metadata,
-          updateListener: this.updateListener,
-          postMessageToPopup: this.communicator.postRequestAndWaitForResponse,
-        });
-      case 'walletlink':
-        return new WalletLinkSigner({
-          metadata: this.metadata,
-          updateListener: this.updateListener,
-        });
-      case 'extension': {
-        const injectedSigner = getCoinbaseInjectedSigner();
-        if (!injectedSigner) {
-          throw standardErrors.rpc.internal('injected signer not found');
-        }
-        return injectedSigner;
-      }
-    }
+    return createSigner({
+      signerType,
+      metadata: this.metadata,
+      communicator: this.communicator,
+      updateListener: this.updateListener,
+    });
   }
 }
