@@ -4,4 +4,4 @@ export default CoinbaseWalletSDK;
 
 export type { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 export { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
-export type { ProviderInterface } from './core/provider/interface';
+export type { AppMetadata, Preference, ProviderInterface } from './core/provider/interface';
