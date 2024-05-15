@@ -2783,7 +2783,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@coinbase/wallet-sdk-3.7@npm:@coinbase/wallet-sdk@~3.7.2":
+"@coinbase/wallet-sdk-3.7.2@npm:@coinbase/wallet-sdk@3.7.2":
   version: 3.7.2
   resolution: "@coinbase/wallet-sdk@npm:3.7.2"
   dependencies:
@@ -2808,7 +2808,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@coinbase/wallet-sdk-3.9@npm:@coinbase/wallet-sdk@~3.9.3":
+"@coinbase/wallet-sdk-3.9.3@npm:@coinbase/wallet-sdk@3.9.3":
   version: 3.9.3
   resolution: "@coinbase/wallet-sdk@npm:3.9.3"
   dependencies:
@@ -2825,9 +2825,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@coinbase/wallet-sdk-4.0-beta12@npm:@coinbase/wallet-sdk@4.0.0-beta.12":
-  version: 4.0.0-beta.12
-  resolution: "@coinbase/wallet-sdk@npm:4.0.0-beta.12"
+"@coinbase/wallet-sdk-4.0.0@npm:@coinbase/wallet-sdk@4.0.0":
+  version: 4.0.0
+  resolution: "@coinbase/wallet-sdk@npm:4.0.0"
   dependencies:
     buffer: ^6.0.3
     clsx: ^1.2.1
@@ -2835,7 +2835,7 @@ __metadata:
     keccak: ^3.0.3
     preact: ^10.16.0
     sha.js: ^2.4.11
-  checksum: 5fb985a4debbf516dfdce784eceeab1680e3c4c1f3f6c32656a8fdf70c44626007abe5e204b86dcbe4f1984507f4cd9df3087e37ef19d87dbe3d8a1f42a17d83
+  checksum: f9101233cd4529daae235eb01fcd10fe3c9ab075b3171beacb755ff475be7a9e33957fb4ffedbdd34092c3045ddcbf6fda181a5adfd531307a4cc8937861ef38
   languageName: node
   linkType: hard
 
@@ -2845,10 +2845,9 @@ __metadata:
   dependencies:
     "@chakra-ui/icons": ^2.1.1
     "@chakra-ui/react": ^2.8.0
-    "@coinbase/wallet-sdk": "workspace:^"
-    "@coinbase/wallet-sdk-3.7": "npm:@coinbase/wallet-sdk@~3.7.2"
-    "@coinbase/wallet-sdk-3.9": "npm:@coinbase/wallet-sdk@~3.9.3"
-    "@coinbase/wallet-sdk-4.0-beta12": "npm:@coinbase/wallet-sdk@4.0.0-beta.12"
+    "@coinbase/wallet-sdk-3.7.2": "npm:@coinbase/wallet-sdk@3.7.2"
+    "@coinbase/wallet-sdk-3.9.3": "npm:@coinbase/wallet-sdk@3.9.3"
+    "@coinbase/wallet-sdk-4.0.0": "npm:@coinbase/wallet-sdk@4.0.0"
     "@emotion/react": ^11.11.1
     "@emotion/styled": ^11.11.0
     "@metamask/eth-sig-util": ^7.0.0
@@ -2861,7 +2860,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@coinbase/wallet-sdk@workspace:^, @coinbase/wallet-sdk@workspace:packages/wallet-sdk":
+"@coinbase/wallet-sdk@workspace:packages/wallet-sdk":
   version: 0.0.0-use.local
   resolution: "@coinbase/wallet-sdk@workspace:packages/wallet-sdk"
   dependencies:
