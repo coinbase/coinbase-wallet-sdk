@@ -1,19 +1,19 @@
 import EventEmitter from 'eventemitter3';
 
 import { standardErrorCodes, standardErrors } from './core/error';
+import { serializeError } from './core/error/serialize';
 import {
   AppMetadata,
   ConstructorOptions,
   Preference,
   ProviderInterface,
   RequestArguments,
+  Signer,
 } from './core/provider/interface';
 import { AddressString, Chain, IntNumber } from './core/type';
 import { areAddressArraysEqual, hexStringFromIntNumber } from './core/type/util';
-import { AccountsUpdate, ChainUpdate, Signer } from './sign/interface';
-import { SCWSigner } from './sign/scw/SCWSigner';
-import { fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
-import { WalletLinkSigner } from './sign/walletlink/WalletLinkSigner';
+import { AccountsUpdate, ChainUpdate } from './sign/interface';
+import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './util/provider';
 import { Communicator } from ':core/communicator/Communicator';
 import { SignerType } from ':core/message';
@@ -47,11 +47,15 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   }
 
   public async request<T>(args: RequestArguments): Promise<T> {
-    const invalidArgsError = checkErrorForInvalidRequestArgs(args);
-    if (invalidArgsError) throw invalidArgsError;
-    // unrecognized methods are treated as fetch requests
-    const category = determineMethodCategory(args.method) ?? 'fetch';
-    return this.handlers[category](args) as T;
+    try {
+      const invalidArgsError = checkErrorForInvalidRequestArgs(args);
+      if (invalidArgsError) throw invalidArgsError;
+      // unrecognized methods are treated as fetch requests
+      const category = determineMethodCategory(args.method) ?? 'fetch';
+      return this.handlers[category](args) as T;
+    } catch (error) {
+      return Promise.reject(serializeError(error, args.method));
+    }
   }
 
   protected readonly handlers = {
@@ -171,18 +175,11 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   }
 
   private initSigner(signerType: SignerType): Signer {
-    switch (signerType) {
-      case 'scw':
-        return new SCWSigner({
-          metadata: this.metadata,
-          updateListener: this.updateListener,
-          postMessageToPopup: this.communicator.postRequestAndWaitForResponse,
-        });
-      case 'walletlink':
-        return new WalletLinkSigner({
-          metadata: this.metadata,
-          updateListener: this.updateListener,
-        });
-    }
+    return createSigner({
+      signerType,
+      metadata: this.metadata,
+      communicator: this.communicator,
+      updateListener: this.updateListener,
+    });
   }
 }

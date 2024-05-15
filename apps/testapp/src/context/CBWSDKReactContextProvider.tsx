@@ -90,6 +90,7 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
         appName: 'Test App',
         enableMobileWalletLink: true,
       });
+      preference = 'jsonRpcUrlMock';
       setSdk(cbwsdk);
     }
     if (!cbwsdk) return;
