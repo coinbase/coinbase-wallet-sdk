@@ -1,6 +1,6 @@
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { standardErrors } from './core/error';
-import { fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
+import * as util from './sign/util';
 import { AddressString } from ':core/type';
 
 function createProvider() {
@@ -42,10 +42,9 @@ describe('CoinbaseWalletProvider', () => {
   });
 });
 
-jest.mock('./sign/util');
-const mockFetchSignerType = fetchSignerType as jest.Mock;
-const mockLoadSignerType = loadSignerType as jest.Mock;
-const mockStoreSignerType = storeSignerType as jest.Mock;
+const mockFetchSignerType = jest.spyOn(util, 'fetchSignerType');
+const mockLoadSignerType = jest.spyOn(util, 'loadSignerType');
+const mockStoreSignerType = jest.spyOn(util, 'storeSignerType');
 
 const mockHandshake = jest.fn();
 const mockRequest = jest.fn();
