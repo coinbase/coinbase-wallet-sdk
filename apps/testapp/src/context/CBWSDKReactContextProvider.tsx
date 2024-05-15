@@ -1,7 +1,6 @@
-import { CoinbaseWalletSDK as CoinbaseWalletSDKDev } from '@coinbase/wallet-sdk';
-import { CoinbaseWalletSDK as CoinbaseWalletSDK37 } from '@coinbase/wallet-sdk-3.7';
-import { CoinbaseWalletSDK as CoinbaseWalletSDK39 } from '@coinbase/wallet-sdk-3.9';
-import { CoinbaseWalletSDK as CoinbaseWalletSDK40beta12 } from '@coinbase/wallet-sdk-4.0-beta12';
+import { CoinbaseWalletSDK as CoinbaseWalletSDK372 } from '@coinbase/wallet-sdk-3.7.2';
+import { CoinbaseWalletSDK as CoinbaseWalletSDK393 } from '@coinbase/wallet-sdk-3.9.3';
+import { CoinbaseWalletSDK as CoinbaseWalletSDK400 } from '@coinbase/wallet-sdk-4.0.0';
 import React, { useEffect, useMemo } from 'react';
 
 type CBWSDKProviderProps = {
@@ -11,7 +10,7 @@ type CBWSDKProviderProps = {
 const CBWSDKReactContext = React.createContext(null);
 
 const SELECTED_SDK_KEY = 'selected_sdk_version';
-export const sdkVersions = ['4.0.0-rc.1', '4.0.0-beta.12', '3.9', '3.7'] as const;
+export const sdkVersions = ['4.0.0', '3.9.3', '3.7.2'] as const;
 export type SDKVersionType = (typeof sdkVersions)[number];
 
 const SELECTED_SCW_URL_KEY = 'scw_url';
@@ -40,8 +39,6 @@ if (typeof window !== 'undefined') {
     }
   };
 }
-
-export const versionsOn4Point0 = ['4.0.0-rc.1', '4.0.0-beta.12'];
 
 export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
   const [version, setVersion] = React.useState<SDKVersionType | undefined>(undefined);
@@ -76,16 +73,15 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
   useEffect(() => {
     let cbwsdk;
     let preference;
-    if (version === '4.0.0-rc.1' || version === '4.0.0-beta.12') {
-      const SDK = version === '4.0.0-rc.1' ? CoinbaseWalletSDKDev : CoinbaseWalletSDK40beta12;
-      cbwsdk = new SDK({
+    if (version === '4.0.0') {
+      cbwsdk = new CoinbaseWalletSDK400({
         appName: 'SDK Playground',
         appChainIds: [84532, 8452],
       });
       preference = { options: option };
       setSdk(cbwsdk);
-    } else if (version === '3.9' || version === '3.7') {
-      const SDK = version === '3.9' ? CoinbaseWalletSDK39 : CoinbaseWalletSDK37;
+    } else if (version === '3.9.3' || version === '3.7.2') {
+      const SDK = version === '3.9.3' ? CoinbaseWalletSDK393 : CoinbaseWalletSDK372;
       cbwsdk = new SDK({
         appName: 'Test App',
         enableMobileWalletLink: true,
@@ -103,7 +99,7 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
   }, [version, option]);
 
   useEffect(() => {
-    if (versionsOn4Point0.includes(version)) {
+    if (version === '4.0.0') {
       if (scwUrl) window.setPopupUrl?.(scwUrl);
     }
   }, [version, scwUrl, sdk]);

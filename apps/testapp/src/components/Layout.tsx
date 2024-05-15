@@ -19,13 +19,7 @@ import {
 } from '@chakra-ui/react';
 import { useMemo } from 'react';
 
-import {
-  options,
-  scwUrls,
-  sdkVersions,
-  useCBWSDK,
-  versionsOn4Point0,
-} from '../context/CBWSDKReactContextProvider';
+import { options, scwUrls, sdkVersions, useCBWSDK } from '../context/CBWSDKReactContextProvider';
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -71,7 +65,7 @@ export function Layout({ children }: LayoutProps) {
             ))}
           </MenuList>
         </Menu>
-        {versionsOn4Point0.includes(sdkVersion) && sdkVersion !== '4.0.0-beta.7' && (
+        {sdkVersion === '4.0.0' && (
           <>
             <Menu>
               <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
