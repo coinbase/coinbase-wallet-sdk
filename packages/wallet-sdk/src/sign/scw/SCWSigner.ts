@@ -22,16 +22,19 @@ type SwitchEthereumChainParam = [
 
 export class SCWSigner implements Signer {
   private readonly metadata: AppMetadata;
+  private readonly waitForPopupLoaded: () => Promise<Window>;
   private readonly postMessageToPopup: (_: RPCRequestMessage) => Promise<RPCResponseMessage>;
   private readonly keyManager: SCWKeyManager;
   private readonly stateManager: SCWStateManager;
 
   constructor(params: {
     metadata: AppMetadata;
+    waitForPopupLoaded: () => Promise<Window>;
     postMessageToPopup: (_: RPCRequestMessage) => Promise<RPCResponseMessage>;
     updateListener: StateUpdateListener;
   }) {
     this.metadata = params.metadata;
+    this.waitForPopupLoaded = params.waitForPopupLoaded;
     this.postMessageToPopup = params.postMessageToPopup;
     this.keyManager = new SCWKeyManager();
     this.stateManager = new SCWStateManager({
@@ -74,6 +77,10 @@ export class SCWSigner implements Signer {
       if (localResult instanceof Error) throw localResult;
       return localResult;
     }
+
+    // Open the popup before constructing the request message.
+    // This is to ensure that the popup is not blocked by some browsers (i.e. Safari)
+    await this.waitForPopupLoaded();
 
     const response = await this.sendEncryptedRequest(request);
     const decrypted = await this.decryptResponseMessage<T>(response);
