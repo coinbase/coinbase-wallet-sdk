@@ -63,6 +63,20 @@ export class Communicator {
   };
 
   /**
+   * Closes the popup, rejects all requests and clears the listeners
+   */
+  private disconnect = () => {
+    closePopup(this.popup);
+    this.popup = null;
+
+    this.listeners.forEach(({ reject }, listener) => {
+      reject(standardErrors.provider.userRejectedRequest('Request rejected'));
+      window.removeEventListener('message', listener);
+    });
+    this.listeners.clear();
+  };
+
+  /**
    * Waits for the popup window to fully load and then sends a version message.
    */
   waitForPopupLoaded = async (): Promise<Window> => {
@@ -85,19 +99,5 @@ export class Communicator {
         if (!this.popup) throw standardErrors.rpc.internal();
         return this.popup;
       });
-  };
-
-  /**
-   * Closes the popup, rejects all requests and clears the listeners
-   */
-  private disconnect = () => {
-    closePopup(this.popup);
-    this.popup = null;
-
-    this.listeners.forEach(({ reject }, listener) => {
-      reject(standardErrors.provider.userRejectedRequest('Request rejected'));
-      window.removeEventListener('message', listener);
-    });
-    this.listeners.clear();
   };
 }
