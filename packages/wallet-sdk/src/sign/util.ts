@@ -48,7 +48,7 @@ export function createSigner(params: {
       return new SCWSigner({
         metadata,
         updateListener,
-        postMessageToPopup: communicator.postRequestAndWaitForResponse,
+        communicator,
       });
     case 'walletlink':
       return new WalletLinkSigner({
