@@ -1,6 +1,7 @@
 import { StateUpdateListener } from '../interface';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWStateManager } from './SCWStateManager';
+import { Communicator } from ':core/communicator/Communicator';
 import { standardErrors } from ':core/error';
 import { RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
 import { AppMetadata, RequestArguments, Signer } from ':core/provider/interface';
@@ -22,20 +23,17 @@ type SwitchEthereumChainParam = [
 
 export class SCWSigner implements Signer {
   private readonly metadata: AppMetadata;
-  private readonly waitForPopupLoaded: () => Promise<Window>;
-  private readonly postMessageToPopup: (_: RPCRequestMessage) => Promise<RPCResponseMessage>;
+  private readonly communicator: Communicator;
   private readonly keyManager: SCWKeyManager;
   private readonly stateManager: SCWStateManager;
 
   constructor(params: {
     metadata: AppMetadata;
-    waitForPopupLoaded: () => Promise<Window>;
-    postMessageToPopup: (_: RPCRequestMessage) => Promise<RPCResponseMessage>;
+    communicator: Communicator;
     updateListener: StateUpdateListener;
   }) {
     this.metadata = params.metadata;
-    this.waitForPopupLoaded = params.waitForPopupLoaded;
-    this.postMessageToPopup = params.postMessageToPopup;
+    this.communicator = params.communicator;
     this.keyManager = new SCWKeyManager();
     this.stateManager = new SCWStateManager({
       appChainIds: this.metadata.appChainIds,
@@ -55,7 +53,9 @@ export class SCWSigner implements Signer {
         params: this.metadata,
       },
     });
-    const response: RPCResponseMessage = await this.postMessageToPopup(handshakeMessage);
+    const response: RPCResponseMessage = await this.communicator.postRequestAndWaitForResponse(
+      handshakeMessage
+    );
 
     // store peer's public key
     if ('failure' in response.content) throw response.content.failure;
@@ -80,7 +80,7 @@ export class SCWSigner implements Signer {
 
     // Open the popup before constructing the request message.
     // This is to ensure that the popup is not blocked by some browsers (i.e. Safari)
-    await this.waitForPopupLoaded();
+    await this.communicator.waitForPopupLoaded();
 
     const response = await this.sendEncryptedRequest(request);
     const decrypted = await this.decryptResponseMessage<T>(response);
@@ -142,7 +142,7 @@ export class SCWSigner implements Signer {
     );
     const message = await this.createRequestMessage({ encrypted });
 
-    return this.postMessageToPopup(message);
+    return this.communicator.postRequestAndWaitForResponse(message);
   }
 
   private async createRequestMessage(

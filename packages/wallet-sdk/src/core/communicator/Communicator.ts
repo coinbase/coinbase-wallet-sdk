@@ -87,17 +87,17 @@ export class Communicator {
       });
   };
 
-    /**
+  /**
    * Closes the popup, rejects all requests and clears the listeners
    */
-    private disconnect = () => {
-      closePopup(this.popup);
-      this.popup = null;
-  
-      this.listeners.forEach(({ reject }, listener) => {
-        reject(standardErrors.provider.userRejectedRequest('Request rejected'));
-        window.removeEventListener('message', listener);
-      });
-      this.listeners.clear();
-    };
+  private disconnect = () => {
+    closePopup(this.popup);
+    this.popup = null;
+
+    this.listeners.forEach(({ reject }, listener) => {
+      reject(standardErrors.provider.userRejectedRequest('Request rejected'));
+      window.removeEventListener('message', listener);
+    });
+    this.listeners.clear();
+  };
 }
