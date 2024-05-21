@@ -59,7 +59,9 @@ describe('Communicator util', () => {
 
       expect(() => openPopup(url)).toThrowError('Pop up window failed to open');
       expect(window.alert).toHaveBeenCalledTimes(1);
-      expect(window.alert).toHaveBeenCalledWith('Please disable your pop-up blocker and try again');
+      expect(window.alert).toHaveBeenCalledWith(
+        'Smart wallet pop up failed, please disable your pop up blocker and try again.'
+      );
     });
   });
 
