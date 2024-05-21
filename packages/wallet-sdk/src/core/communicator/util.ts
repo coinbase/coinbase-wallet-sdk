@@ -14,10 +14,15 @@ export function openPopup(url: URL): Window {
     'Smart Wallet',
     `width=${POPUP_WIDTH}, height=${POPUP_HEIGHT}, left=${left}, top=${top}`
   );
-  popup?.focus();
-  if (!popup) {
+
+  if (popup) {
+    popup.focus();
+  } else {
+    // The popup may fail to open if the user has a pop-up blocker enabled
+    alert('Please disable your pop-up blocker and try again');
     throw standardErrors.rpc.internal('Pop up window failed to open');
   }
+
   return popup;
 }
 
