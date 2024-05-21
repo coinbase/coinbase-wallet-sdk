@@ -60,7 +60,6 @@ describe('Communicator', () => {
   it('should open a popup window', async () => {
     queueMessageEvent(popupLoadedMessage);
 
-    // @ts-expect-error accessing private method
     await communicator.waitForPopupLoaded();
 
     expect(openPopup).toHaveBeenCalledWith(new URL(CB_KEYS_URL));
