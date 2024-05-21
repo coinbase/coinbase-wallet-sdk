@@ -6,7 +6,7 @@ const ethSendTransactionShortcuts: ShortcutType[] = [
     key: 'Example Tx',
     data: {
       from: ADDR_TO_FILL,
-      to: '0xd7876e5dbd2da268a35416ba75d0ce154ed949e3',
+      to: '0x0000000000000000000000000000000000000000',
       value: '0x0',
     },
   },
