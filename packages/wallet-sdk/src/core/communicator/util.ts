@@ -19,7 +19,7 @@ export function openPopup(url: URL): Window {
     popup.focus();
   } else {
     // The popup may fail to open if the user has a pop-up blocker enabled
-    alert('Please disable your pop-up blocker and try again');
+    alert('Smart wallet pop up failed, please disable your pop up blocker and try again.');
     throw standardErrors.rpc.internal('Pop up window failed to open');
   }
 
