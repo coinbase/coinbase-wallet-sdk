@@ -2,8 +2,8 @@
   "name": "@coinbase/wallet-sdk-testapp",
   "packageManager": "yarn@3.6.1",
   "scripts": {
-    "lint": "yarn lint",
-    "typecheck": "yarn typecheck",
+    "lint": "eslint . --ext .ts,.tsx --fix",
+    "typecheck": "tsc --noEmit",
     "dev": "next dev --port 3001",
     "build": "next build",
     "start": "next start",
@@ -34,6 +34,7 @@
     "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "eslint-plugin-unused-imports": "^3.0.0",
-    "prettier": "^3.0.0"
+    "prettier": "^3.0.0",
+    "typescript": "^5.1.6"
   }
 }
