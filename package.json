@@ -2,10 +2,12 @@
   "name": "@coinbase/wallet-sdk-testapp",
   "packageManager": "yarn@3.6.1",
   "scripts": {
+    "lint": "yarn lint",
+    "typecheck": "yarn typecheck",
     "dev": "next dev --port 3001",
     "build": "next build",
     "start": "next start",
-    "export": "yarn workspace @coinbase/wallet-sdk run build && next build && next export"
+    "export": "next build && next export"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
@@ -16,13 +18,23 @@
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@metamask/eth-sig-util": "^7.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.2.0",
+    "@typescript-eslint/parser": "^6.2.0",
+    "eslint": "^8.45.0",
+    "eslint-config-preact": "^1.3.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "eslint-plugin-simple-import-sort": "^10.0.0",
+    "eslint-plugin-unused-imports": "^3.0.0",
     "framer-motion": "^10.13.1",
     "next": "^13.5.0",
+    "prettier": "^3.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.45.2"
   },
   "devDependencies": {
-    "@types/react": "18.2.15"
+    "@types/react": "18.2.15",
+    "typescript": "5.4.5"
   }
 }
