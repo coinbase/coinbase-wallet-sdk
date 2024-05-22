@@ -80,7 +80,7 @@ export class Communicator {
    * Waits for the popup window to fully load and then sends a version message.
    */
   waitForPopupLoaded = async (): Promise<Window> => {
-    if (this.popup) return this.popup;
+    if (this.popup && !this.popup.closed) return this.popup;
 
     this.popup = openPopup(this.url);
 
