@@ -41,7 +41,7 @@ function queueMessageEvent({
 describe('Communicator', () => {
   let urlOrigin: string;
   let communicator: Communicator;
-  let mockPopup: Pick<Exclude<Communicator['popup'], null>, 'postMessage' | 'close'>;
+  let mockPopup: Pick<Exclude<Communicator['popup'], null>, 'postMessage' | 'close' | 'closed'>;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -95,5 +95,30 @@ describe('Communicator', () => {
       urlOrigin
     );
     expect(mockPopup.postMessage).toHaveBeenNthCalledWith(2, mockRequest, urlOrigin);
+  });
+
+  it('should not open a popup window if one is already open', async () => {
+    // First call to waitForPopupLoaded
+    queueMessageEvent(popupLoadedMessage);
+    // Second call to waitForPopupLoaded
+    await communicator.waitForPopupLoaded();
+
+    expect(openPopup).toHaveBeenCalledTimes(1);
+  });
+
+  it('should open a popup window if an existing one is defined but closed', async () => {
+    mockPopup = {
+      postMessage: jest.fn(),
+      close: jest.fn(),
+      closed: true,
+    } as unknown as Window;
+    (openPopup as jest.Mock).mockImplementation(() => mockPopup);
+
+    // First call to waitForPopupLoaded
+    queueMessageEvent(popupLoadedMessage);
+    // Second call to waitForPopupLoaded
+    await communicator.waitForPopupLoaded();
+
+    expect(openPopup).toHaveBeenCalledTimes(2);
   });
 });
