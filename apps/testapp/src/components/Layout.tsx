@@ -65,7 +65,7 @@ export function Layout({ children }: LayoutProps) {
             ))}
           </MenuList>
         </Menu>
-        {sdkVersion === '4.0.1' && (
+        {sdkVersion === '4.0.0' && (
           <>
             <Menu>
               <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
