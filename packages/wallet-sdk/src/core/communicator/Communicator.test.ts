@@ -53,6 +53,7 @@ describe('Communicator', () => {
     mockPopup = {
       postMessage: jest.fn(),
       close: jest.fn(),
+      closed: false,
     } as unknown as Window;
     (openPopup as jest.Mock).mockImplementation(() => mockPopup);
   });
@@ -98,9 +99,7 @@ describe('Communicator', () => {
   });
 
   it('should not open a popup window if one is already open', async () => {
-    // First call to waitForPopupLoaded
     queueMessageEvent(popupLoadedMessage);
-    // Second call to waitForPopupLoaded
     await communicator.waitForPopupLoaded();
 
     expect(openPopup).toHaveBeenCalledTimes(1);
@@ -110,13 +109,12 @@ describe('Communicator', () => {
     mockPopup = {
       postMessage: jest.fn(),
       close: jest.fn(),
+      // Simulate the popup being closed
       closed: true,
     } as unknown as Window;
     (openPopup as jest.Mock).mockImplementation(() => mockPopup);
 
-    // First call to waitForPopupLoaded
     queueMessageEvent(popupLoadedMessage);
-    // Second call to waitForPopupLoaded
     await communicator.waitForPopupLoaded();
 
     expect(openPopup).toHaveBeenCalledTimes(2);
