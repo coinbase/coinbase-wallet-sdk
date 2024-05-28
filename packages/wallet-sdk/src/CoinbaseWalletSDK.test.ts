@@ -35,7 +35,7 @@ describe('CoinbaseWalletSDK', () => {
       metadata: {
         appName: 'Test',
         appLogoUrl: 'http://coinbase.com/wallet-logo.png',
-        appChainIds: [],
+        appChainIds: [1],
       },
       preference: {
         options: 'all',
@@ -58,7 +58,7 @@ describe('CoinbaseWalletSDK', () => {
       metadata: {
         appName: 'Dapp',
         appLogoUrl: 'https://dapp.xyz/pic.png',
-        appChainIds: [],
+        appChainIds: [1],
       },
       preference: {
         options: 'all',
