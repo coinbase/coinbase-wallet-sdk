@@ -18,7 +18,7 @@ export class CoinbaseWalletSDK {
     this.metadata = {
       appName: metadata.appName || 'Dapp',
       appLogoUrl: metadata.appLogoUrl || getFavicon(),
-      appChainIds: metadata.appChainIds || [],
+      appChainIds: metadata.appChainIds || [1],
     };
     this.storeLatestVersion();
   }
