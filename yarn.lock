@@ -1539,9 +1539,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@coinbase/wallet-sdk-4.0.2@npm:@coinbase/wallet-sdk@4.0.2":
-  version: 4.0.2
-  resolution: "@coinbase/wallet-sdk@npm:4.0.2"
+"@coinbase/wallet-sdk-4.0.3@npm:@coinbase/wallet-sdk@4.0.3":
+  version: 4.0.3
+  resolution: "@coinbase/wallet-sdk@npm:4.0.3"
   dependencies:
     buffer: ^6.0.3
     clsx: ^1.2.1
@@ -1549,7 +1549,7 @@ __metadata:
     keccak: ^3.0.3
     preact: ^10.16.0
     sha.js: ^2.4.11
-  checksum: d0cb646ae8a57142f0abc9a46ae449c732aec6347fc217547854ebb872668716b9494c5232dc564eeab2e26c9b24df3cfd536b7ee3027a39d5e9e89a6d05ea9c
+  checksum: 47c2818b57f13b1fa403a5e79fc3e039a8cfc4daf9e92910aec4fe32caa4f2326d13c7ff26bbe1921cdcae29acfe41fbf5f0d3c9d58ab39035f05b1737bc06ab
   languageName: node
   linkType: hard
 
@@ -1561,7 +1561,7 @@ __metadata:
     "@chakra-ui/react": ^2.8.0
     "@coinbase/wallet-sdk-3.7.2": "npm:@coinbase/wallet-sdk@3.7.2"
     "@coinbase/wallet-sdk-3.9.3": "npm:@coinbase/wallet-sdk@3.9.3"
-    "@coinbase/wallet-sdk-4.0.2": "npm:@coinbase/wallet-sdk@4.0.2"
+    "@coinbase/wallet-sdk-4.0.3": "npm:@coinbase/wallet-sdk@4.0.3"
     "@emotion/react": ^11.11.1
     "@emotion/styled": ^11.11.0
     "@metamask/eth-sig-util": ^7.0.0
