@@ -159,9 +159,6 @@ describe('SCWSigner', () => {
         },
       });
 
-      // setup mock data and methods
-      // ...
-
       await expect(signer.request(mockRequest)).rejects.toThrowError(mockError);
     });
 
