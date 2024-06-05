@@ -18,8 +18,6 @@ describe('PopupManager', () => {
     jest.clearAllMocks();
   });
 
-  // Test cases go here
-
   it('should open a popup with correct settings and focus it', () => {
     const url = new URL('https://example.com');
     (window.open as jest.Mock).mockReturnValue({ focus: jest.fn() });
