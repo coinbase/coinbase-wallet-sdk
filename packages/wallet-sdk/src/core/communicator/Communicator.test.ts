@@ -1,5 +1,5 @@
 import { LIB_VERSION } from '../../version';
-import { Message } from '../message';
+import { Message, MessageID } from '../message';
 import { Communicator } from './Communicator';
 import { openPopup } from './util';
 import { CB_KEYS_URL } from ':core/constants';
@@ -38,6 +38,9 @@ function queueMessageEvent({
   setTimeout(() => dispatchMessageEvent({ data, origin }), 200);
 }
 
+const addEventListenerSpy = jest.spyOn(window, 'addEventListener');
+const removeEventListenerSpy = jest.spyOn(window, 'removeEventListener');
+
 describe('Communicator', () => {
   let urlOrigin: string;
   let communicator: Communicator;
@@ -58,65 +61,113 @@ describe('Communicator', () => {
     (openPopup as jest.Mock).mockImplementation(() => mockPopup);
   });
 
-  it('should open a popup window', async () => {
-    queueMessageEvent(popupLoadedMessage);
+  describe('onMessage', () => {
+    it('should add and remove event listener', async () => {
+      const mockRequest: Message = {
+        requestId: 'mock-request-id-1-2',
+        data: 'test',
+      };
 
-    await communicator.waitForPopupLoaded();
+      queueMessageEvent({ data: mockRequest });
 
-    expect(openPopup).toHaveBeenCalledWith(new URL(CB_KEYS_URL));
-    expect(mockPopup.postMessage).toHaveBeenCalledWith(
-      {
-        data: {
-          version: LIB_VERSION,
-        },
-      },
-      urlOrigin
-    );
+      const promise = communicator.onMessage(() => true);
+
+      expect(addEventListenerSpy).toHaveBeenCalledTimes(1);
+      expect(await promise).toEqual(mockRequest);
+      expect(removeEventListenerSpy).toHaveBeenCalledTimes(1);
+    });
   });
 
-  it('should post a message to the popup window', async () => {
-    const mockRequest: Message = { id: 'mock-request-id-1-2', data: {} };
+  describe('postRequestAndWaitForResponse', () => {
+    it('should post a message to the popup window and wait for response', async () => {
+      const mockRequest: Message & { id: MessageID } = { id: 'mock-request-id-1-2', data: {} };
 
-    queueMessageEvent(popupLoadedMessage);
-    queueMessageEvent({
-      data: {
+      queueMessageEvent(popupLoadedMessage);
+      queueMessageEvent({
+        data: {
+          requestId: mockRequest.id,
+        },
+      });
+
+      const response = await communicator.postRequestAndWaitForResponse(mockRequest);
+
+      expect(mockPopup.postMessage).toHaveBeenNthCalledWith(
+        1,
+        {
+          data: {
+            version: LIB_VERSION,
+          },
+        },
+        urlOrigin
+      );
+      expect(mockPopup.postMessage).toHaveBeenNthCalledWith(2, mockRequest, urlOrigin);
+
+      expect(response).toEqual({
         requestId: mockRequest.id,
-      },
+      });
+    });
+  });
+
+  describe('postMessage', () => {
+    it('should post a response to the popup window', async () => {
+      const mockResponse: Message = { requestId: 'mock-request-id-1-2', data: {} };
+
+      queueMessageEvent(popupLoadedMessage);
+
+      await communicator.postMessage(mockResponse);
+
+      expect(mockPopup.postMessage).toHaveBeenNthCalledWith(
+        1,
+        {
+          data: {
+            version: LIB_VERSION,
+          },
+        },
+        urlOrigin
+      );
+      expect(mockPopup.postMessage).toHaveBeenNthCalledWith(2, mockResponse, urlOrigin);
+    });
+  });
+
+  describe('waitForPopupLoaded', () => {
+    it('should open a popup window and finish handshake', async () => {
+      queueMessageEvent(popupLoadedMessage);
+
+      const popup = await communicator.waitForPopupLoaded();
+
+      expect(openPopup).toHaveBeenCalledWith(new URL(CB_KEYS_URL));
+      expect(mockPopup.postMessage).toHaveBeenNthCalledWith(
+        1,
+        {
+          data: {
+            version: LIB_VERSION,
+          },
+        },
+        urlOrigin
+      );
+      expect(popup).toBeTruthy();
     });
 
-    await communicator.postMessage(mockRequest);
+    it('should not open a popup window if one is already open', async () => {
+      queueMessageEvent(popupLoadedMessage);
+      await communicator.waitForPopupLoaded();
 
-    expect(mockPopup.postMessage).toHaveBeenNthCalledWith(
-      1,
-      {
-        data: {
-          version: LIB_VERSION,
-        },
-      },
-      urlOrigin
-    );
-    expect(mockPopup.postMessage).toHaveBeenNthCalledWith(2, mockRequest, urlOrigin);
-  });
+      expect(openPopup).toHaveBeenCalledTimes(1);
+    });
 
-  it('should not open a popup window if one is already open', async () => {
-    queueMessageEvent(popupLoadedMessage);
-    await communicator.waitForPopupLoaded();
+    it('should open a popup window if an existing one is defined but closed', async () => {
+      mockPopup = {
+        postMessage: jest.fn(),
+        close: jest.fn(),
+        // Simulate the popup being closed
+        closed: true,
+      } as unknown as Window;
+      (openPopup as jest.Mock).mockImplementationOnce(() => mockPopup);
 
-    expect(openPopup).toHaveBeenCalledTimes(1);
-  });
+      queueMessageEvent(popupLoadedMessage);
+      await communicator.waitForPopupLoaded();
 
-  it('should open a popup window if an existing one is defined but closed', async () => {
-    mockPopup = {
-      postMessage: jest.fn(),
-      close: jest.fn(),
-      // Simulate the popup being closed
-      closed: true,
-    } as unknown as Window;
-    (openPopup as jest.Mock).mockImplementation(() => mockPopup);
-
-    queueMessageEvent(popupLoadedMessage);
-    await communicator.waitForPopupLoaded();
-
-    expect(openPopup).toHaveBeenCalledTimes(2);
+      expect(openPopup).toHaveBeenCalledTimes(2);
+    });
   });
 });
