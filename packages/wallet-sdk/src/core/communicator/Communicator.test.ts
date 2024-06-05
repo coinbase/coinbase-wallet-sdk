@@ -72,9 +72,9 @@ describe('Communicator', () => {
 
       const promise = communicator.onMessage(() => true);
 
-      expect(addEventListenerSpy).toHaveBeenCalled();
+      expect(addEventListenerSpy).toHaveBeenCalledTimes(1);
       expect(await promise).toEqual(mockRequest);
-      expect(removeEventListenerSpy).toHaveBeenCalled();
+      expect(removeEventListenerSpy).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -136,7 +136,8 @@ describe('Communicator', () => {
       const popup = await communicator.waitForPopupLoaded();
 
       expect(openPopup).toHaveBeenCalledWith(new URL(CB_KEYS_URL));
-      expect(mockPopup.postMessage).toHaveBeenCalledWith(
+      expect(mockPopup.postMessage).toHaveBeenNthCalledWith(
+        1,
         {
           data: {
             version: LIB_VERSION,
