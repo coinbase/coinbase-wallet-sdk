@@ -61,104 +61,112 @@ describe('Communicator', () => {
     (openPopup as jest.Mock).mockImplementation(() => mockPopup);
   });
 
-  test('@waitForPopupLoaded - should open a popup window and finish handshake', async () => {
-    queueMessageEvent(popupLoadedMessage);
+  describe('onMessage', () => {
+    it('should add and remove event listener', async () => {
+      const mockRequest: Message = {
+        requestId: 'mock-request-id-1-2',
+        data: 'test',
+      };
 
-    const popup = await communicator.waitForPopupLoaded();
+      queueMessageEvent({ data: mockRequest });
 
-    expect(openPopup).toHaveBeenCalledWith(new URL(CB_KEYS_URL));
-    expect(mockPopup.postMessage).toHaveBeenCalledWith(
-      {
+      const promise = communicator.onMessage(() => true);
+
+      expect(addEventListenerSpy).toHaveBeenCalled();
+      expect(await promise).toEqual(mockRequest);
+      expect(removeEventListenerSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('postRequestAndWaitForResponse', () => {
+    it('should post a message to the popup window and wait for response', async () => {
+      const mockRequest: Message & { id: MessageID } = { id: 'mock-request-id-1-2', data: {} };
+
+      queueMessageEvent(popupLoadedMessage);
+      queueMessageEvent({
         data: {
-          version: LIB_VERSION,
+          requestId: mockRequest.id,
         },
-      },
-      urlOrigin
-    );
-    expect(popup).toBeTruthy();
-  });
+      });
 
-  test('@onMessage - should add and remove event listener', async () => {
-    const mockRequest: Message = {
-      requestId: 'mock-request-id-1-2',
-      data: 'test',
-    };
+      const response = await communicator.postRequestAndWaitForResponse(mockRequest);
 
-    queueMessageEvent({ data: mockRequest });
+      expect(mockPopup.postMessage).toHaveBeenNthCalledWith(
+        1,
+        {
+          data: {
+            version: LIB_VERSION,
+          },
+        },
+        urlOrigin
+      );
+      expect(mockPopup.postMessage).toHaveBeenNthCalledWith(2, mockRequest, urlOrigin);
 
-    const promise = communicator.onMessage(() => true);
-
-    expect(addEventListenerSpy).toHaveBeenCalled();
-    expect(await promise).toEqual(mockRequest);
-    expect(removeEventListenerSpy).toHaveBeenCalled();
-  });
-
-  test('@postRequestAndWaitForResponse - should post a message to the popup window and wait for response', async () => {
-    const mockRequest: Message & { id: MessageID } = { id: 'mock-request-id-1-2', data: {} };
-
-    queueMessageEvent(popupLoadedMessage);
-    queueMessageEvent({
-      data: {
+      expect(response).toEqual({
         requestId: mockRequest.id,
-      },
-    });
-
-    const response = await communicator.postRequestAndWaitForResponse(mockRequest);
-
-    expect(mockPopup.postMessage).toHaveBeenNthCalledWith(
-      1,
-      {
-        data: {
-          version: LIB_VERSION,
-        },
-      },
-      urlOrigin
-    );
-    expect(mockPopup.postMessage).toHaveBeenNthCalledWith(2, mockRequest, urlOrigin);
-
-    expect(response).toEqual({
-      requestId: mockRequest.id,
+      });
     });
   });
 
-  test('@postMessage - should post a response to the popup window', async () => {
-    const mockResponse: Message = { requestId: 'mock-request-id-1-2', data: {} };
+  describe('postMessage', () => {
+    it('should post a response to the popup window', async () => {
+      const mockResponse: Message = { requestId: 'mock-request-id-1-2', data: {} };
 
-    queueMessageEvent(popupLoadedMessage);
+      queueMessageEvent(popupLoadedMessage);
 
-    await communicator.postMessage(mockResponse);
+      await communicator.postMessage(mockResponse);
 
-    expect(mockPopup.postMessage).toHaveBeenNthCalledWith(
-      1,
-      {
-        data: {
-          version: LIB_VERSION,
+      expect(mockPopup.postMessage).toHaveBeenNthCalledWith(
+        1,
+        {
+          data: {
+            version: LIB_VERSION,
+          },
         },
-      },
-      urlOrigin
-    );
-    expect(mockPopup.postMessage).toHaveBeenNthCalledWith(2, mockResponse, urlOrigin);
+        urlOrigin
+      );
+      expect(mockPopup.postMessage).toHaveBeenNthCalledWith(2, mockResponse, urlOrigin);
+    });
   });
 
-  it('should not open a popup window if one is already open', async () => {
-    queueMessageEvent(popupLoadedMessage);
-    await communicator.waitForPopupLoaded();
+  describe('waitForPopupLoaded', () => {
+    it('should open a popup window and finish handshake', async () => {
+      queueMessageEvent(popupLoadedMessage);
 
-    expect(openPopup).toHaveBeenCalledTimes(1);
-  });
+      const popup = await communicator.waitForPopupLoaded();
 
-  it('should open a popup window if an existing one is defined but closed', async () => {
-    mockPopup = {
-      postMessage: jest.fn(),
-      close: jest.fn(),
-      // Simulate the popup being closed
-      closed: true,
-    } as unknown as Window;
-    (openPopup as jest.Mock).mockImplementation(() => mockPopup);
+      expect(openPopup).toHaveBeenCalledWith(new URL(CB_KEYS_URL));
+      expect(mockPopup.postMessage).toHaveBeenCalledWith(
+        {
+          data: {
+            version: LIB_VERSION,
+          },
+        },
+        urlOrigin
+      );
+      expect(popup).toBeTruthy();
+    });
 
-    queueMessageEvent(popupLoadedMessage);
-    await communicator.waitForPopupLoaded();
+    it('should not open a popup window if one is already open', async () => {
+      queueMessageEvent(popupLoadedMessage);
+      await communicator.waitForPopupLoaded();
 
-    expect(openPopup).toHaveBeenCalledTimes(2);
+      expect(openPopup).toHaveBeenCalledTimes(1);
+    });
+
+    it('should open a popup window if an existing one is defined but closed', async () => {
+      mockPopup = {
+        postMessage: jest.fn(),
+        close: jest.fn(),
+        // Simulate the popup being closed
+        closed: true,
+      } as unknown as Window;
+      (openPopup as jest.Mock).mockImplementationOnce(() => mockPopup);
+
+      queueMessageEvent(popupLoadedMessage);
+      await communicator.waitForPopupLoaded();
+
+      expect(openPopup).toHaveBeenCalledTimes(2);
+    });
   });
 });
