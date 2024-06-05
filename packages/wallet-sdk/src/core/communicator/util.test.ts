@@ -24,12 +24,13 @@ describe('PopupManager', () => {
 
     const popup = openPopup(url);
 
-    expect(window.open).toHaveBeenCalledWith(
+    expect(window.open).toHaveBeenNthCalledWith(
+      1,
       url,
       'Smart Wallet',
       'width=420, height=540, left=302, top=114'
     );
-    expect(popup.focus).toHaveBeenCalled();
+    expect(popup.focus).toHaveBeenCalledTimes(1);
   });
 
   it('should throw an error if popup fails to open', () => {
@@ -45,6 +46,6 @@ describe('PopupManager', () => {
 
     closePopup(mockPopup);
 
-    expect(mockPopup.close).toHaveBeenCalled();
+    expect(mockPopup.close).toHaveBeenCalledTimes(1);
   });
 });
