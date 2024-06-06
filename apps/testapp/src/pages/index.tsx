@@ -5,11 +5,13 @@ import { EventListenersCard } from '../components/EventListeners/EventListenersC
 import { WIDTH_2XL } from '../components/Layout';
 import { connectionMethods } from '../components/RpcMethods/method/connectionMethods';
 import { multiChainMethods } from '../components/RpcMethods/method/multiChainMethods';
+import { nfcMethods } from '../components/RpcMethods/method/NfcMethods';
 import { RpcRequestInput } from '../components/RpcMethods/method/RpcRequestInput';
 import { sendMethods } from '../components/RpcMethods/method/sendMethods';
 import { signMessageMethods } from '../components/RpcMethods/method/signMessageMethods';
 import { RpcMethodCard } from '../components/RpcMethods/RpcMethodCard';
 import { multiChainShortcutsMap } from '../components/RpcMethods/shortcut/multipleChainShortcuts';
+import { nfcShortcutsMap } from '../components/RpcMethods/shortcut/nfcShortcuts';
 import { sendShortcutsMap } from '../components/RpcMethods/shortcut/sendShortcuts';
 import { ShortcutType } from '../components/RpcMethods/shortcut/ShortcutType';
 import { signMessageShortcutsMap } from '../components/RpcMethods/shortcut/signMessageShortcuts';
@@ -35,6 +37,7 @@ export default function Home() {
         shortcutsMap={signMessageShortcutsMap}
       />
       <MethodsSection title="Send" methods={sendMethods} shortcutsMap={sendShortcutsMap} />
+      <MethodsSection title="NFC" methods={nfcMethods} shortcutsMap={nfcShortcutsMap} />
     </Container>
   );
 }
