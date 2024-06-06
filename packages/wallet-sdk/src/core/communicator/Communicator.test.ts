@@ -44,7 +44,10 @@ const removeEventListenerSpy = jest.spyOn(window, 'removeEventListener');
 describe('Communicator', () => {
   let urlOrigin: string;
   let communicator: Communicator;
-  let mockPopup: Pick<Exclude<Communicator['popup'], null>, 'postMessage' | 'close' | 'closed'>;
+  let mockPopup: Pick<
+    Exclude<Communicator['popup'], null>,
+    'postMessage' | 'close' | 'closed' | 'focus'
+  >;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -57,6 +60,7 @@ describe('Communicator', () => {
       postMessage: jest.fn(),
       close: jest.fn(),
       closed: false,
+      focus: jest.fn(),
     } as unknown as Window;
     (openPopup as jest.Mock).mockImplementation(() => mockPopup);
   });
@@ -148,10 +152,19 @@ describe('Communicator', () => {
       expect(popup).toBeTruthy();
     });
 
-    it('should not open a popup window if one is already open', async () => {
+    it('should re-focus and return the existing popup window if one is already open.', async () => {
+      mockPopup = {
+        postMessage: jest.fn(),
+        close: jest.fn(),
+        closed: false,
+        focus: jest.fn(),
+      } as unknown as Window;
+      (openPopup as jest.Mock).mockImplementationOnce(() => mockPopup);
+
       queueMessageEvent(popupLoadedMessage);
       await communicator.waitForPopupLoaded();
 
+      expect(mockPopup.focus).toHaveBeenCalledTimes(1);
       expect(openPopup).toHaveBeenCalledTimes(1);
     });
 
