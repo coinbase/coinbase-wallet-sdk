@@ -50,7 +50,10 @@ export class SCWSigner implements Signer {
     const handshakeMessage = await this.createRequestMessage({
       handshake: {
         method: 'eth_requestAccounts',
-        params: this.metadata,
+        params: {
+          ...this.metadata,
+          appFullUrl: window.location.href,
+        },
       },
     });
     const response: RPCResponseMessage = await this.communicator.postRequestAndWaitForResponse(
