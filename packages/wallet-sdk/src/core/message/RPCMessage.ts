@@ -37,7 +37,5 @@ export interface RPCResponseMessage extends RPCMessage {
 
 type RequestAccountsAction = {
   method: 'eth_requestAccounts';
-  params: AppMetadata & {
-    appFullUrl?: string;
-  };
+  params: AppMetadata;
 };

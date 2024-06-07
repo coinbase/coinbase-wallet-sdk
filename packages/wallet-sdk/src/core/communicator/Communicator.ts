@@ -96,7 +96,7 @@ export class Communicator {
       .then((message) => {
         this.postMessage({
           requestId: message.id,
-          data: { version: LIB_VERSION },
+          data: { version: LIB_VERSION, appFullUrl: window.location.href },
         });
       })
       .then(() => {
