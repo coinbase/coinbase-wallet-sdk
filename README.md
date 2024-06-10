@@ -132,5 +132,6 @@
 - To run it locally follow these steps:
 
   1. Fork this repo and clone it
+  1. Checkout the playground branch `git checkout playground`
   1. From the root dir run `yarn install`
   1. From the root dir run `yarn dev`
