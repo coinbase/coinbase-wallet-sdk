@@ -4,15 +4,12 @@ const NfcShortcuts: ShortcutType[] = [
   {
     key: 'Example NFC',
     data: {
-      receiverName: 'Testing Vendor',
-      receiverAddress: '0x69bAdF095B03d62e97445EB0142e6488d19fF38B',
-      amount: '1',
-      chainId: '8453',
-      chainAsset: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+      calldata:
+        '0x095ea7b3000000000000000000000000b9d5b99d5d0fa04dd7eb2b0cd7753317c2ea1a8400000000000000000000000000000000000000000000000000000000002dc6c0',
     },
   },
 ];
 
 export const nfcShortcutsMap = {
-  wallet_requestNFCPayment: NfcShortcuts,
+  requestNFCPayment: NfcShortcuts,
 };

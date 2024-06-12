@@ -1,23 +1,19 @@
 import { RpcRequestInput } from './RpcRequestInput';
 
-const nfc: RpcRequestInput = {
-  method: 'wallet_requestNFCPayment',
-  params: [
-    { key: 'receiverName', required: true },
-    { key: 'receiverAddress', required: true },
-    { key: 'amount', required: true },
-    { key: 'chainId', required: true },
-    { key: 'chainAsset', required: true },
-  ],
+const requestNfc: RpcRequestInput = {
+  method: 'requestNFCPayment',
+  params: [{ key: 'calldata', required: true }],
   format: (data: Record<string, string>) => [
     {
-      receiverName: data.receiverName,
-      receiverAddress: data.receiverAddress,
-      amount: data.amount,
-      chainId: data.chainId,
-      chainAsset: data.chainAsset,
+      calldata: data.calldata,
     },
   ],
 };
 
-export const nfcMethods = [nfc];
+const hasNfc: RpcRequestInput = {
+  method: 'hasNFCPayment',
+  params: [],
+  format: () => [],
+};
+
+export const nfcMethods = [requestNfc, hasNfc];
