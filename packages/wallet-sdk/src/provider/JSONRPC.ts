@@ -25,7 +25,6 @@ export type JSONRPCMethod =
   | 'eth_signTypedData'
   | 'walletlink_arbitrary' // compatibility
   | 'wallet_addEthereumChain'
-  | 'wallet_requestNFCPayment'
   | 'wallet_switchEthereumChain'
   | 'wallet_watchAsset'
 

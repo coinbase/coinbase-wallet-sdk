@@ -81,8 +81,4 @@ type _Web3Response =
   | {
       method: 'makeEthereumJSONRPCRequest';
       result: unknown;
-    }
-  | {
-      method: 'requestNFCPayment';
-      result: boolean;
     };

@@ -16,7 +16,6 @@ export const web3Methods = [
   'watchAsset',
   'selectProvider',
   'connectAndSignIn',
-  'requestNFCPayment',
 ] as const;
 
 export type Web3Method = (typeof web3Methods)[number];

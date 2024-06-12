@@ -138,14 +138,4 @@ type _Web3Request =
         };
         chainId?: string;
       };
-    }
-  | {
-      method: 'requestNFCPayment';
-      params: {
-        receiverName: string;
-        receiverAddress: string;
-        amount: number;
-        chainId: number;
-        chainAsset: string;
-      };
     };

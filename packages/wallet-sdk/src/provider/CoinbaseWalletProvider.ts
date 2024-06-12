@@ -802,9 +802,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
 
       case 'wallet_watchAsset':
         return this._wallet_watchAsset(params);
-
-      case 'wallet_requestNFCPayment':
-        return this._wallet_requestNFCPayment(params);
     }
 
     const relay = await this.initializeRelay();
@@ -1240,47 +1237,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
     const res = await this.watchAsset(request.type, address, symbol, decimals, image, chainId);
 
     return { jsonrpc: '2.0', id: 0, result: res };
-  }
-
-  private async _wallet_requestNFCPayment(params: {
-    receiverName: string;
-    receiverAddress: string;
-    amount: number;
-    chainId: number;
-    chainAsset: string;
-  }): Promise<JSONRPCResponse> {
-    this.diagnostic?.log(EVENTS.ETH_ACCOUNTS_STATE, {
-      method: 'provider::requestNFCPayment',
-      sessionIdHash: this._relay ? Session.hash(this._relay.session.id) : undefined,
-    });
-
-    // TODO validate params
-
-    let res: Web3Response<'requestNFCPayment'>;
-    try {
-      const relay = await this.initializeRelay();
-      res = await (relay as any).requestNFCPayment(params).promise;
-
-      if (isErrorResponse(res)) {
-        throw new Error(res.errorMessage);
-      }
-    } catch (err: any) {
-      if (typeof err.message === 'string' && err.message.match(/(undefined)/i)) {
-        throw standardErrors.provider.unsupportedMethod(
-          'requestNFCPayment is only supported on mobile'
-        );
-      }
-      if (typeof err.message === 'string' && err.message.match(/(denied|rejected)/i)) {
-        throw standardErrors.provider.userRejectedRequest('NFC Payment request rejected');
-      }
-      throw err;
-    }
-
-    if (!res.result) {
-      throw new Error('request NFC failed');
-    }
-
-    return { jsonrpc: '2.0', id: 0, result: res.result };
   }
 
   private _eth_uninstallFilter(params: unknown[]): boolean {
