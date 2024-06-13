@@ -21,6 +21,12 @@ export function openPopup(url: URL): Window {
   return popup;
 }
 
+export function closePopup(popup: Window | null) {
+  if (popup && !popup.closed) {
+    popup.close();
+  }
+}
+
 /**
  * TODO: consolidate all UI related helper functions,
  * ones making window.xxx() document.yyy() calls.

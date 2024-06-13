@@ -2,7 +2,7 @@ import { LIB_VERSION } from '../../version';
 import { ConfigMessage, Message, MessageID } from '../message';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
-import { openPopup } from ':util/web';
+import { closePopup, openPopup } from ':util/web';
 
 /**
  * Communicates with a popup window for Coinbase keys.coinbase.com (or another url)
@@ -66,6 +66,8 @@ export class Communicator {
    * Closes the popup, rejects all requests and clears the listeners
    */
   private disconnect = () => {
+    // Note: keys.coinbase.com handles closing the popup window. This is a fallback.
+    closePopup(this.popup);
     this.popup = null;
 
     this.listeners.forEach(({ reject }, listener) => {
