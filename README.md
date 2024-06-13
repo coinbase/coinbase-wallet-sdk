@@ -1,7 +1,6 @@
 # Coinbase Wallet SDK
 
 [![npm](https://img.shields.io/npm/v/@coinbase/wallet-sdk.svg)](https://www.npmjs.com/package/@coinbase/wallet-sdk)
-[![npm](https://img.shields.io/npm/v/@coinbase/wallet-sdk/rc.svg)](https://www.npmjs.com/package/@coinbase/wallet-sdk/v/rc)
 [![npm](https://img.shields.io/npm/v/@coinbase/wallet-sdk/beta.svg)](https://www.npmjs.com/package/@coinbase/wallet-sdk/v/beta)
 
 ## Coinbase Wallet SDK allows dapps to connect to Coinbase Wallet
@@ -103,8 +102,6 @@
    ]);
    ```
 
-   [See more example methods in apps/testapp/src/components/RpcMethods/method](apps/testapp/src/components/RpcMethods/method)
-
 5. Handle provider events
 
    ```js
@@ -135,12 +132,6 @@
 - To run it locally follow these steps:
 
   1. Fork this repo and clone it
+  1. Checkout the playground branch `git checkout playground`
   1. From the root dir run `yarn install`
-  1. `cd apps/testapp && yarn install` to install testapp dependencies
   1. From the root dir run `yarn dev`
-
-     - starts two dev servers in parallel:
-       - `@coinbase/wallet-sdk-testapp`
-       - `@coinbase/wallet-sdk`
-
-  1. Visit localhost:3001 in your browser to view the testapp
