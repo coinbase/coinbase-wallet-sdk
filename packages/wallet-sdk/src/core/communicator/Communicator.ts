@@ -66,7 +66,7 @@ export class Communicator {
    * Closes the popup, rejects all requests and clears the listeners
    */
   private disconnect = () => {
-    // Note: keys.coinbase.com handles closing the popup window. This is a fallback.
+    // Note: keys popup handles closing itself. this is a fallback.
     closePopup(this.popup);
     this.popup = null;
 
