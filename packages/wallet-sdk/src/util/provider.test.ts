@@ -90,6 +90,7 @@ describe('Utils', () => {
         ).toBe(undefined);
       });
     });
+
     describe('Browser Provider', () => {
       class MockCipherProviderClass {
         public isCoinbaseBrowser = true;
@@ -98,6 +99,7 @@ describe('Utils', () => {
       const mockCipherProvider = new MockCipherProviderClass() as unknown as ProviderInterface;
 
       beforeAll(() => {
+        window.coinbaseWalletExtension = undefined;
         window.ethereum = mockCipherProvider;
       });
 
@@ -133,6 +135,35 @@ describe('Utils', () => {
             },
           })
         ).toBe(mockCipherProvider);
+      });
+
+      it('should handle exception when accessing window.top', () => {
+        window.ethereum = undefined;
+        const originalWindowTop = window.top;
+        Object.defineProperty(window, 'top', {
+          get: () => {
+            throw new Error('Simulated access error');
+          },
+          configurable: true,
+        });
+
+        expect(
+          getCoinbaseInjectedProvider({
+            metadata: {
+              appName: 'Dapp',
+              appChainIds: [],
+              appLogoUrl: null,
+            },
+            preference: {
+              options: 'all',
+            },
+          })
+        ).toBe(undefined);
+
+        Object.defineProperty(window, 'top', {
+          get: () => originalWindowTop,
+          configurable: true,
+        });
       });
     });
   });
