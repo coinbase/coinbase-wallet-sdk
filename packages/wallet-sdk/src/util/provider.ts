@@ -47,24 +47,27 @@ export function getCoinbaseInjectedProvider({
   metadata,
   preference,
 }: Readonly<ConstructorOptions>): ProviderInterface | undefined {
-  const window = globalThis as CBWindow;
+  try {
+    const window = globalThis as CBWindow;
 
-  if (preference.options !== 'smartWalletOnly') {
-    const signer = getCoinbaseInjectedSigner();
-    if (signer) return undefined; // use signer instead
+    if (preference.options !== 'smartWalletOnly') {
+      const signer = getCoinbaseInjectedSigner();
+      if (signer) return undefined; // use signer instead
 
-    const extension = window.coinbaseWalletExtension;
-    if (extension) {
-      const { appName, appLogoUrl, appChainIds } = metadata;
-      extension.setAppInfo?.(appName, appLogoUrl, appChainIds);
-      return extension;
+      const extension = window.coinbaseWalletExtension;
+      if (extension) {
+        const { appName, appLogoUrl, appChainIds } = metadata;
+        extension.setAppInfo?.(appName, appLogoUrl, appChainIds);
+        return extension;
+      }
     }
-  }
 
-  const ethereum = window.ethereum ?? window.top?.ethereum;
-  if (ethereum?.isCoinbaseBrowser) {
-    return ethereum;
-  }
+    const ethereum = window.ethereum ?? window.top?.ethereum;
+    if (ethereum?.isCoinbaseBrowser) {
+      return ethereum;
+    }
+    // eslint-disable-next-line no-empty
+  } catch {}
 
   return undefined;
 }
