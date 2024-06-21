@@ -61,10 +61,13 @@ export function getCoinbaseInjectedProvider({
     }
   }
 
-  const ethereum = window.ethereum ?? window.top?.ethereum;
-  if (ethereum?.isCoinbaseBrowser) {
-    return ethereum;
-  }
+  try {
+    const ethereum = window.ethereum ?? window.top?.ethereum;
+    if (ethereum?.isCoinbaseBrowser) {
+      return ethereum;
+    }
+    // eslint-disable-next-line no-empty
+  } catch {}
 
   return undefined;
 }
