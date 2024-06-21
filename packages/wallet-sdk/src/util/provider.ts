@@ -43,7 +43,7 @@ export function getCoinbaseInjectedSigner(): Signer | undefined {
   return window.coinbaseWalletSigner;
 }
 
-function getCipherWebViewInjectedProvider(): CBInjectedProvider | undefined {
+function getInjectedEthereum(): CBInjectedProvider | undefined {
   const window = globalThis as CBWindow;
   try {
     return window.ethereum ?? window.top?.ethereum;
@@ -71,7 +71,7 @@ export function getCoinbaseInjectedProvider({
     }
   }
 
-  const ethereum = getCipherWebViewInjectedProvider();
+  const ethereum = getInjectedEthereum();
   if (ethereum?.isCoinbaseBrowser) {
     return ethereum;
   }
