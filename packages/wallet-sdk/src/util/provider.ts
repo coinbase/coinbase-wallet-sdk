@@ -52,10 +52,9 @@ function getInjectedEthereum(): CBInjectedProvider | undefined {
   try {
     const window = globalThis as CBWindow;
     return window.ethereum ?? window.top?.ethereum;
-    // eslint-disable-next-line no-empty
-  } catch {}
-
-  return undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 export function getCoinbaseInjectedProvider({
