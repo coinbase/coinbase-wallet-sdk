@@ -44,8 +44,8 @@ export function getCoinbaseInjectedSigner(): Signer | undefined {
 }
 
 function getInjectedEthereum(): CBInjectedProvider | undefined {
-  const window = globalThis as CBWindow;
   try {
+    const window = globalThis as CBWindow;
     return window.ethereum ?? window.top?.ethereum;
     // eslint-disable-next-line no-empty
   } catch {}
@@ -57,9 +57,8 @@ export function getCoinbaseInjectedProvider({
   metadata,
   preference,
 }: Readonly<ConstructorOptions>): ProviderInterface | undefined {
-  const window = globalThis as CBWindow;
-
   if (preference.options !== 'smartWalletOnly') {
+    const window = globalThis as CBWindow;
     const signer = getCoinbaseInjectedSigner();
     if (signer) return undefined; // use signer instead
 
