@@ -43,6 +43,11 @@ export function getCoinbaseInjectedSigner(): Signer | undefined {
   return window.coinbaseWalletSigner;
 }
 
+function getCoinbaseInjectedLegacyProvider(): CBInjectedProvider | undefined {
+  const window = globalThis as CBWindow;
+  return window.coinbaseWalletExtension;
+}
+
 function getInjectedEthereum(): CBInjectedProvider | undefined {
   try {
     const window = globalThis as CBWindow;
@@ -58,11 +63,10 @@ export function getCoinbaseInjectedProvider({
   preference,
 }: Readonly<ConstructorOptions>): ProviderInterface | undefined {
   if (preference.options !== 'smartWalletOnly') {
-    const window = globalThis as CBWindow;
     const signer = getCoinbaseInjectedSigner();
     if (signer) return undefined; // use signer instead
 
-    const extension = window.coinbaseWalletExtension;
+    const extension = getCoinbaseInjectedLegacyProvider();
     if (extension) {
       const { appName, appLogoUrl, appChainIds } = metadata;
       extension.setAppInfo?.(appName, appLogoUrl, appChainIds);
