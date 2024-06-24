@@ -281,7 +281,7 @@ describe('LegacyProvider', () => {
       expect(response).toBe(MOCK_TX);
     });
 
-    // eslint-disable-next-line jest/no-disabled-tests
+    // eslint-disable-next-line
     test.skip('eth_signTypedData_v1', async () => {
       const response = await provider?.request({
         method: 'eth_signTypedData_v1',
