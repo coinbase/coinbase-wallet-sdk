@@ -26,3 +26,9 @@ export function closePopup(popup: Window | null) {
     popup.close();
   }
 }
+
+/**
+ * TODO: consolidate all UI related helper functions,
+ * ones making window.xxx() document.yyy() calls.
+ * e.g. WLMobileRelayUI, WalletLinkRelay, ...
+ */

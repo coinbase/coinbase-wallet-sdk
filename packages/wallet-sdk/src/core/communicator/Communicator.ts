@@ -1,8 +1,8 @@
 import { LIB_VERSION } from '../../version';
 import { ConfigMessage, Message, MessageID } from '../message';
-import { closePopup, openPopup } from './util';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
+import { closePopup, openPopup } from ':util/web';
 
 /**
  * Communicates with a popup window for Coinbase keys.coinbase.com (or another url)
@@ -66,6 +66,7 @@ export class Communicator {
    * Closes the popup, rejects all requests and clears the listeners
    */
   private disconnect = () => {
+    // Note: keys popup handles closing itself. this is a fallback.
     closePopup(this.popup);
     this.popup = null;
 
