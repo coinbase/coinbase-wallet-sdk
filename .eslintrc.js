@@ -1,5 +1,6 @@
 module.exports = {
   root: true,
+  extends: ['preact'],
   env: {
     browser: true,
     es2021: true,
@@ -21,6 +22,11 @@ module.exports = {
   parserOptions: {
     ecmaVersion: "latest",
     sourceType: "module",
+  },
+  settings: {
+    react: {
+      pragma: "h",
+    },
   },
   rules: {
     "@typescript-eslint/no-unused-vars": "off",
@@ -67,4 +73,12 @@ module.exports = {
     // TODO: change this back to error
     "@typescript-eslint/no-explicit-any": "warn",
   },
+  overrides: [
+    {
+      files: ["**/*.test.*"],
+      rules: {
+        "@typescript-eslint/no-explicit-any": "off"
+      }
+    }
+  ]
 };
