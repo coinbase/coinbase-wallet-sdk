@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./
+        working-directory: ./packages/wallet-sdk
 
     steps:
       - name: Checkout
@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./
+        working-directory: ./packages/wallet-sdk
 
     steps:
       - name: Checkout
@@ -50,7 +50,6 @@ jobs:
         run: yarn install --immutable
 
       - name: Runs compile asset script
-        working-directory: ./packages/wallet-sdk
         run: node ./compile-assets.js
 
       - name: Check Types
@@ -61,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./
+        working-directory: ./packages/wallet-sdk
 
     strategy:
       matrix:
@@ -81,9 +80,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Runs compile asset script
-        working-directory: ./packages/wallet-sdk
         run: node ./compile-assets.js
 
       - name: Run Unit Tests
-        working-directory: ./packages/wallet-sdk
         run: yarn test
