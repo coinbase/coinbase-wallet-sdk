@@ -139,7 +139,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       `.enable() has been deprecated. Please use .request({ method: "eth_requestAccounts" }) instead.`
     );
     return await this.request({
-      method: 'eth_requestAccounts',
+      method: 'ahhhhh',
     });
   }
 

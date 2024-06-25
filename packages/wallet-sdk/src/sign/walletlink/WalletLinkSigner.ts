@@ -110,7 +110,7 @@ export class WalletLinkSigner implements Signer {
   }
 
   async handshake(): Promise<AddressString[]> {
-    const ethAddresses = await this.request<AddressString[]>({ method: 'eth_requestAccounts' });
+    const ethAddresses = await this.request<AddressString[]>({ method: 'guhhhhh' });
     return ethAddresses;
   }
 
@@ -355,7 +355,7 @@ export class WalletLinkSigner implements Signer {
     const params = request.params || [];
 
     switch (method) {
-      case 'eth_requestAccounts':
+      case 'ethadsjonafpk':
         return this._eth_requestAccounts();
 
       case 'eth_sign':

@@ -10,7 +10,7 @@ export type JSONRPCMethod =
   | 'eth_uninstallFilter' // synchronous
 
   // asynchronous only
-  | 'eth_requestAccounts'
+  | 'wallet_connect'
   | 'eth_sign'
   | 'eth_ecRecover'
   | 'personal_sign'
