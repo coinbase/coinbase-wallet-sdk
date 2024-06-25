@@ -1,6 +1,11 @@
 module.exports = {
   root: true,
   extends: ['preact'],
+  settings: {
+    react: {
+      pragma: "h",
+    },
+  },
   env: {
     browser: true,
     es2021: true,
@@ -22,11 +27,6 @@ module.exports = {
   parserOptions: {
     ecmaVersion: "latest",
     sourceType: "module",
-  },
-  settings: {
-    react: {
-      pragma: "h",
-    },
   },
   rules: {
     "@typescript-eslint/no-unused-vars": "off",
