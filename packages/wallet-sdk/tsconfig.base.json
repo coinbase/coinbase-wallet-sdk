@@ -1,16 +1,16 @@
 {
+  "include": [
+    "./src",
+    "**/*.test.*",
+  ],
+  "exclude": [
+    "dist",
+  ],  
   "compilerOptions": {
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "outDir": "./dist",
-    "include": [
-      "./src",
-      "**/*.test.*",
-    ],
-    "exclude": [
-      "dist",
-    ],  
     "paths": {
       ":util/*": ["src/util/*"],
       ":core/*": ["src/core/*"]
