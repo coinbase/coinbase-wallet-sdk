@@ -25,7 +25,7 @@ export class CoinbaseWalletSDK {
 
   public makeWeb3Provider(preference: Preference = { options: 'all' }): ProviderInterface {
     const params = { metadata: this.metadata, preference };
-    return getCoinbaseInjectedProvider(params) ?? new CoinbaseWalletProvider(params);
+    return new CoinbaseWalletProvider(params);
   }
 
   /**
