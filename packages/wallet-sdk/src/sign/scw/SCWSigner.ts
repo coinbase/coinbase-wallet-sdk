@@ -48,7 +48,7 @@ export class SCWSigner implements Signer {
 
   async handshake(args): Promise<AddressString[]> {
     const handshakeMessage = await this.createRequestMessage({
-      handshake: {
+      guhhh: {
         method: 'wallet_connect',
         params: {...this.metadata, ...args},
       },
