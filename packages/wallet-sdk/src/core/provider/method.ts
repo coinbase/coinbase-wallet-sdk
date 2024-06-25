@@ -16,6 +16,7 @@ const mapping = {
     'wallet_getCapabilities',
     'wallet_sendCalls',
     'wallet_showCallsStatus',
+    'wallet_connect',
   ],
   state: [
     // internal state
