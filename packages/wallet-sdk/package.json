@@ -1,5 +1,5 @@
 {
-  "name": "@coinbase/wallet-sdk",
+  "name": "@lukasrosario/wallet-sdk",
   "version": "5.0.0",
   "description": "Coinbase Wallet JavaScript SDK",
   "keywords": [
