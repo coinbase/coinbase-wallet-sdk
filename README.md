@@ -1,37 +1,16 @@
 # Coinbase Wallet SDK
 
 [![npm](https://img.shields.io/npm/v/@coinbase/wallet-sdk.svg)](https://www.npmjs.com/package/@coinbase/wallet-sdk)
-[![npm](https://img.shields.io/npm/v/@coinbase/wallet-sdk/rc.svg)](https://www.npmjs.com/package/@coinbase/wallet-sdk/v/rc)
-[![npm](https://img.shields.io/npm/v/@coinbase/wallet-sdk/beta.svg)](https://www.npmjs.com/package/@coinbase/wallet-sdk/v/beta)
 
-> If you'd like to build a dapp for Coinbase smart wallet using our v4 beta release, check out our [step by step instructions](docs/v4_with_wagmi.md) to get started with Coinbase Wallet SDK v4 and wagmi.
+## Coinbase Wallet SDK allows dapps to connect to Coinbase Wallet
 
-## Coinbase Wallet SDK lets developers connect their dapps to Coinbase Wallet in the following ways:
-
-1. [Coinbase smart wallet](https://keys.coinbase.com/onboarding) (v4 only)
-
-   - EIP-4337 account abstraction using passkeys
-     - No passwords or PIN
-     - No seed phrase management
-     - No extension or app downloads
-   - Near instant onboarding
-   - Spend with Coinbase balance
-   - Gas sponsorship via paymasters
-   - Batch transactions
-   - Desktop and mobile compatible
-
+1. [Coinbase Smart Wallet](https://keys.coinbase.com/onboarding)
+   - [Docs](https://www.smartwallet.dev/)
 1. Coinbase Wallet mobile for [Android](https://play.google.com/store/apps/details?id=org.toshi&referrer=utm_source%3DWallet_LP) and [iOS](https://apps.apple.com/app/apple-store/id1278383455?pt=118788940&ct=Wallet_LP&mt=8)
    - Desktop: Users can connect to your dapp by scanning a QR code
    - Mobile: Users can connect to your mobile dapp through a deeplink to the dapp browser
 1. Coinbase Wallet extension for [Chrome](https://chrome.google.com/webstore/detail/coinbase-wallet-extension/hnfanknocfeofbddgcijnmhnfnkdnaad?hl=en) and [Brave](https://chromewebstore.google.com/detail/coinbase-wallet-extension/hnfanknocfeofbddgcijnmhnfnkdnaad?hl=en)
    - Desktop: Users can connect by clicking the connect with extension option.
-
-## Installing and Upgrading
-
-> Migrating from v3 to v4? Please see our [v4 migration guide](docs/migration_guide.md) for a full list of breaking changes.
-
-- This readme contains brief instructions to get up and running.
-- Visit our [public developer docs](https://docs.cloud.coinbase.com/wallet-sdk/docs/welcome) for more detail, including samples for integrating Coinbase Wallet using libraries like [web3-react](https://github.com/Uniswap/web3-react), [web3modal](https://github.com/Web3Modal/web3modal), [Web3-Onboard](https://docs.blocknative.com/onboard), and [wagmi](https://wagmi.sh/).
 
 ### Installing Wallet SDK
 
@@ -67,9 +46,7 @@
 
 ### Upgrading Wallet SDK
 
-Upgrade Coinbase Wallet SDK using yarn or npm.
-
-#### yarn/npm
+> Migrating from v3 to v4? Please see our [v4 migration guide](https://www.smartwallet.dev/sdk/v3-to-v4-changes) for a full list of breaking changes.
 
 1. Compare installed version with latest:
 
@@ -110,7 +87,9 @@ Upgrade Coinbase Wallet SDK using yarn or npm.
 3. Request accounts to initialize connection to wallet
 
    ```js
-   const addresses = provider.request('eth_requestAccounts');
+   const addresses = provider.request({
+     method: 'eth_requestAccounts',
+   });
    ```
 
 4. Make more requests
@@ -121,8 +100,6 @@ Upgrade Coinbase Wallet SDK using yarn or npm.
      addresses[0],
    ]);
    ```
-
-   [See more example methods in apps/testapp/src/components/RpcMethods/method](apps/testapp/src/components/RpcMethods/method)
 
 5. Handle provider events
 
@@ -154,16 +131,6 @@ Upgrade Coinbase Wallet SDK using yarn or npm.
 - To run it locally follow these steps:
 
   1. Fork this repo and clone it
+  1. Checkout the playground branch `git checkout playground`
   1. From the root dir run `yarn install`
-  1. `cd apps/testapp && yarn install` to install testapp dependencies
   1. From the root dir run `yarn dev`
-
-  - starts two dev servers in parallel:
-    - `@coinbase/wallet-sdk-testapp`
-    - `@coinbase/wallet-sdk`
-
-  1. Visit localhost:3001 in your browser to view the testapp
-
-## Attributions
-
-- [eth-rpc-errors](https://github.com/MetaMask/eth-rpc-errors/blob/main/LICENSE) under the MIT license

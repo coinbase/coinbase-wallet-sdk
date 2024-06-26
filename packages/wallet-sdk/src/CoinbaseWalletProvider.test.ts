@@ -1,7 +1,7 @@
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { standardErrors } from './core/error';
-import { SCWSigner } from './sign/scw/SCWSigner';
-import { fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
+import * as util from './sign/util';
+import { AddressString } from ':core/type';
 
 function createProvider() {
   return new CoinbaseWalletProvider({
@@ -27,22 +27,24 @@ describe('CoinbaseWalletProvider', () => {
     test('handles request correctly', async () => {
       const provider = createProvider();
       const response1 = await provider.request({ method: 'eth_chainId' });
-      expect(response1).toBe(1);
+      expect(response1).toBe('0x1');
     });
 
     test('throws error when handling invalid request', async () => {
       const provider = createProvider();
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error // testing invalid request args
-      await expect(provider.request({})).rejects.toThrow();
+      await expect(provider.request({})).rejects.toMatchObject({
+        code: -32602,
+        message: "'args.method' must be a non-empty string.",
+      });
     });
   });
 });
 
-jest.mock('./sign/util');
-const mockFetchSignerType = fetchSignerType as jest.Mock;
-const mockLoadSignerType = loadSignerType as jest.Mock;
-const mockStoreSignerType = storeSignerType as jest.Mock;
+const mockFetchSignerType = jest.spyOn(util, 'fetchSignerType');
+const mockLoadSignerType = jest.spyOn(util, 'loadSignerType');
+const mockStoreSignerType = jest.spyOn(util, 'storeSignerType');
 
 const mockHandshake = jest.fn();
 const mockRequest = jest.fn();

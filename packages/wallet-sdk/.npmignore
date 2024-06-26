@@ -5,11 +5,13 @@ __tests__/**
 
 # Config
 tsconfig.json
+tsconfig.base.json
 tsconfig.build.json
+.eslintignore
 .eslintrc.js
+.prettierignore
 babel.config.js
-webpack.config.js
-karma.conf.js
+release.sh
 
 # Jest
 jest.setup.ts

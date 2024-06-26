@@ -1,6 +1,11 @@
 import { LIB_VERSION } from '../version';
 import { standardErrors } from ':core/error';
-import { ConstructorOptions, ProviderInterface, RequestArguments } from ':core/provider/interface';
+import {
+  ConstructorOptions,
+  ProviderInterface,
+  RequestArguments,
+  Signer,
+} from ':core/provider/interface';
 import { Chain } from ':core/type';
 
 export async function fetchRPCRequest(request: RequestArguments, chain: Chain) {
@@ -21,30 +26,55 @@ export async function fetchRPCRequest(request: RequestArguments, chain: Chain) {
   return response.result;
 }
 
-interface Window {
-  top: Window;
-  ethereum?: ProviderInterface;
-  coinbaseWalletExtension?: ProviderInterface;
+export interface CBWindow {
+  coinbaseWalletSigner?: Signer;
+  top: CBWindow;
+  ethereum?: CBInjectedProvider;
+  coinbaseWalletExtension?: CBInjectedProvider;
+}
+
+export interface CBInjectedProvider extends ProviderInterface {
+  isCoinbaseBrowser?: boolean;
+  setAppInfo?: (...args: unknown[]) => unknown;
+}
+
+export function getCoinbaseInjectedSigner(): Signer | undefined {
+  const window = globalThis as CBWindow;
+  return window.coinbaseWalletSigner;
+}
+
+function getCoinbaseInjectedLegacyProvider(): CBInjectedProvider | undefined {
+  const window = globalThis as CBWindow;
+  return window.coinbaseWalletExtension;
+}
+
+function getInjectedEthereum(): CBInjectedProvider | undefined {
+  try {
+    const window = globalThis as CBWindow;
+    return window.ethereum ?? window.top?.ethereum;
+  } catch {
+    return undefined;
+  }
 }
 
 export function getCoinbaseInjectedProvider({
   metadata,
   preference,
 }: Readonly<ConstructorOptions>): ProviderInterface | undefined {
-  const window = globalThis as Window;
-
   if (preference.options !== 'smartWalletOnly') {
-    const extension = window.coinbaseWalletExtension;
-    if (extension && !('shouldUseSigner' in extension && extension.shouldUseSigner)) {
+    const signer = getCoinbaseInjectedSigner();
+    if (signer) return undefined; // use signer instead
+
+    const extension = getCoinbaseInjectedLegacyProvider();
+    if (extension) {
       const { appName, appLogoUrl, appChainIds } = metadata;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (extension as any).setAppInfo?.(appName, appLogoUrl, appChainIds);
+      extension.setAppInfo?.(appName, appLogoUrl, appChainIds);
       return extension;
     }
   }
 
-  const ethereum = window.ethereum ?? window.top?.ethereum;
-  if (ethereum && 'isCoinbaseBrowser' in ethereum && ethereum.isCoinbaseBrowser) {
+  const ethereum = getInjectedEthereum();
+  if (ethereum?.isCoinbaseBrowser) {
     return ethereum;
   }
 
@@ -59,7 +89,7 @@ export function getCoinbaseInjectedProvider({
  */
 export function checkErrorForInvalidRequestArgs(args: RequestArguments) {
   if (!args || typeof args !== 'object' || Array.isArray(args)) {
-    return standardErrors.rpc.invalidRequest({
+    return standardErrors.rpc.invalidParams({
       message: 'Expected a single, non-array, object argument.',
       data: args,
     });
@@ -68,7 +98,7 @@ export function checkErrorForInvalidRequestArgs(args: RequestArguments) {
   const { method, params } = args;
 
   if (typeof method !== 'string' || method.length === 0) {
-    return standardErrors.rpc.invalidRequest({
+    return standardErrors.rpc.invalidParams({
       message: "'args.method' must be a non-empty string.",
       data: args,
     });
@@ -79,7 +109,7 @@ export function checkErrorForInvalidRequestArgs(args: RequestArguments) {
     !Array.isArray(params) &&
     (typeof params !== 'object' || params === null)
   ) {
-    return standardErrors.rpc.invalidRequest({
+    return standardErrors.rpc.invalidParams({
       message: "'args.params' must be an object or array if provided.",
       data: args,
     });

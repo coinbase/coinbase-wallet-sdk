@@ -1,17 +1,5 @@
 {
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "allowJs": true,
-    "outDir": "./dist",
-    "baseUrl": ".",
-    "paths": {
-      ":util/*": ["src/util/*"],
-      ":core/*": ["src/core/*"]
-    },
-    "target": "es2017",
-    "jsx": "react",
-    "jsxFactory": "h",
-  },
+  "extends": "./tsconfig.base.json",
   "watchOptions": {
     // Use native file system events for files and directories
     "watchFile": "useFsEvents",
@@ -24,12 +12,5 @@
       "**/*.test.*",
     ],
   },
-  "include": [
-    "./src",
-    "**/*.test.*",
-  ],
-  "exclude": [
-    "dist",
-  ]
 }
  

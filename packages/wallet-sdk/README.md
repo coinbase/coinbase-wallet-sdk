@@ -2,27 +2,13 @@
 
 ## Coinbase Wallet SDK lets developers connect their dapps to Coinbase Wallet in the following ways:
 
-1. [Coinbase smart wallet](https://keys.coinbase.com/onboarding)
-
-   - EIP-4337 account abstraction using passkeys
-     - No passwords or PIN
-     - No seed phrase management
-     - No extension or app downloads
-   - Near instant onboarding
-   - Spend with Coinbase balance
-   - Gas sponsorship via paymasters
-   - Batch transactions
-   - Desktop and mobile compatible
-
+1. [Coinbase Smart Wallet](https://keys.coinbase.com/onboarding)
+   - [Docs](https://www.smartwallet.dev/)
 1. Coinbase Wallet mobile for [Android](https://play.google.com/store/apps/details?id=org.toshi&referrer=utm_source%3DWallet_LP) and [iOS](https://apps.apple.com/app/apple-store/id1278383455?pt=118788940&ct=Wallet_LP&mt=8)
    - Desktop: Users can connect to your dapp by scanning a QR code
    - Mobile: Users can connect to your mobile dapp through a deeplink to the dapp browser
 1. Coinbase Wallet extension for [Chrome](https://chrome.google.com/webstore/detail/coinbase-wallet-extension/hnfanknocfeofbddgcijnmhnfnkdnaad?hl=en) and [Brave](https://chromewebstore.google.com/detail/coinbase-wallet-extension/hnfanknocfeofbddgcijnmhnfnkdnaad?hl=en)
    - Desktop: Users can connect by clicking the connect with extension option.
-
-## Installing and Upgrading
-
-> Migrating from v3 to v4? Please see our [v4 migration guide](https://github.com/coinbase/coinbase-wallet-sdk/blob/docs/migration_guide.md) for a full list of breaking changes.
 
 ### Installing Wallet SDK
 
@@ -101,7 +87,9 @@ Upgrade Coinbase Wallet SDK using yarn or npm.
 3. Request accounts to initialize connection to wallet
 
    ```js
-   const addresses = provider.request('eth_requestAccounts');
+   const addresses = provider.request({
+     method: 'eth_requestAccounts',
+   });
    ```
 
 4. Make more requests
@@ -112,8 +100,6 @@ Upgrade Coinbase Wallet SDK using yarn or npm.
      addresses[0],
    ]);
    ```
-
-   [See more example methods in apps/testapp/src/components/RpcMethods/method](apps/testapp/src/components/RpcMethods/method)
 
 5. Handle provider events
 
@@ -146,15 +132,5 @@ Upgrade Coinbase Wallet SDK using yarn or npm.
 
   1. Fork this repo and clone it
   1. From the root dir run `yarn install`
-  1. `cd apps/testapp && yarn install` to install testapp dependencies
   1. From the root dir run `yarn dev`
 
-  - starts two dev servers in parallel:
-    - `@coinbase/wallet-sdk-testapp`
-    - `@coinbase/wallet-sdk`
-
-  1. Visit localhost:3001 in your browser to view the testapp
-
-## Attributions
-
-- [eth-rpc-errors](https://github.com/MetaMask/eth-rpc-errors/blob/main/LICENSE) under the MIT license
