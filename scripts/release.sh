@@ -7,6 +7,7 @@ PURPLE='\033[0;35m'
 TEAL='\033[0;36m'
 GREEN='\033[1;32m'
 
+gitMessage=$(git log --oneline -n 1)
 mainBranch="master"
 branch=$(git rev-parse --abbrev-ref HEAD)
 
@@ -22,12 +23,15 @@ if [ $branch == $mainBranch ]; then
   echo "================================================="
   echo -e "rm -rf ./node_modules"
   rm -rf ./node_modules
+  rm -rf ./packages/wallet-sdk/node_modules
   echo -e "rm -rf ./dist"
-  rm -rf ./dist
+  rm -rf ./packages/wallet-sdk/dist
   echo -e "yarn install"
   yarn install
-  echo -e "yarn build"
-  yarn build
+  echo -e "yarn workspace @coinbase/wallet-sdk build"
+  yarn workspace @coinbase/wallet-sdk build
+  echo -e "cd ./packages/wallet-sdk"
+  cd ./packages/wallet-sdk
   echo "================================================="
   echo -e " ${GREEN} run 'npm publish'"
   echo "================================================="

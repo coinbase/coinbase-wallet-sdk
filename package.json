@@ -1,0 +1,31 @@
+{
+  "name": "coinbase-wallet-sdk",
+  "version": "1.0.0",
+  "repository": "https://github.com/coinbase/coinbase-wallet-sdk",
+  "author": "Coinbase, Inc.",
+  "license": "MIT",
+  "private": true,
+  "workspaces": [
+    "libs/*",
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "lint": "yarn workspaces foreach -pt run lint",
+    "typecheck": "yarn workspaces foreach -pt run typecheck",
+    "dev": "yarn workspaces foreach -ipv run dev",
+    "release": "./scripts/release.sh"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.2.0",
+    "@typescript-eslint/parser": "^6.2.0",
+    "eslint": "^8.45.0",
+    "eslint-config-preact": "^1.3.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "eslint-plugin-simple-import-sort": "^10.0.0",
+    "eslint-plugin-unused-imports": "^3.0.0",
+    "prettier": "^3.0.0"
+  },
+  "packageManager": "yarn@3.6.1"
+}
