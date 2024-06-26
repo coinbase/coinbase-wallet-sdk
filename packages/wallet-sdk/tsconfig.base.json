@@ -1,8 +1,23 @@
 {
+  "include": [
+    "./src",
+    "**/*.test.*",
+  ],
+  "exclude": [
+    "dist",
+  ],  
   "compilerOptions": {
-    "allowJs": false,
+    "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
+    "outDir": "./dist",
+    "paths": {
+      ":util/*": ["src/util/*"],
+      ":core/*": ["src/core/*"]
+    },
+    "target": "es2017",
+    "jsx": "react",
+    "jsxFactory": "h",
     "esModuleInterop": true,
     "emitDecoratorMetadata": true,    
     "experimentalDecorators": true,
@@ -25,7 +40,6 @@
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "target": "es2016",
     "types": ["node", "jest", "@testing-library/jest-dom"],
   }
 }

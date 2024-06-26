@@ -33,7 +33,7 @@ yarn-error.log*
 examples/**/yarn.lock
 
 .pnp.*
-.yarn/*
+.yarn
 !.yarn/releases
 !.yarn/plugins
 !.yarn/sdks
