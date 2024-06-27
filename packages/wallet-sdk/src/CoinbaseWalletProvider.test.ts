@@ -1,7 +1,6 @@
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { standardErrors } from './core/error';
 import * as util from './sign/util';
-import { AddressString } from ':core/type';
 
 function createProvider() {
   return new CoinbaseWalletProvider({

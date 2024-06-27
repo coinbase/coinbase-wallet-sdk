@@ -29,17 +29,18 @@ export class SCWSigner implements Signer {
 
   private availableChains?: Chain[];
   private _accounts: AddressString[];
-  private _activeChain: Chain;
+  private _chain: Chain;
   get accounts() {
     return this._accounts;
   }
-  get activeChain() {
-    return this._activeChain;
+  get chain() {
+    return this._chain;
   }
 
   constructor(params: {
     metadata: AppMetadata;
     communicator: Communicator;
+    updateListener: StateUpdateListener;
   }) {
     this.metadata = params.metadata;
     this.communicator = params.communicator;
@@ -48,7 +49,7 @@ export class SCWSigner implements Signer {
 
     this.storage = new ScopedLocalStorage('CBWSDK', 'SCWStateManager');
     this._accounts = this.storage.loadObject(ACCOUNTS_KEY) ?? [];
-    this._activeChain = this.storage.loadObject(ACTIVE_CHAIN_STORAGE_KEY) || {
+    this._chain = this.storage.loadObject(ACTIVE_CHAIN_STORAGE_KEY) || {
       id: params.metadata.appChainIds?.[0] ?? 1,
     };
 
@@ -56,14 +57,6 @@ export class SCWSigner implements Signer {
     this.request = this.request.bind(this);
     this.createRequestMessage = this.createRequestMessage.bind(this);
     this.decryptResponseMessage = this.decryptResponseMessage.bind(this);
-  }
-
-  get accounts() {
-    return this.stateManager.accounts;
-  }
-
-  get chain() {
-    return this.stateManager.activeChain;
   }
 
   async handshake(): Promise<AddressString[]> {
@@ -148,7 +141,7 @@ export class SCWSigner implements Signer {
     const encrypted = await encryptContent(
       {
         action: request,
-        chainId: this._activeChain.id,
+        chainId: this._chain.id,
       },
       sharedSecret
     );
@@ -203,7 +196,7 @@ export class SCWSigner implements Signer {
       }));
       this.availableChains = chains;
       this.storage.storeObject(AVAILABLE_CHAINS_STORAGE_KEY, chains);
-      this.switchChain(this._activeChain.id);
+      this.switchChain(this._chain.id);
     }
 
     if (capabilities) {
@@ -214,9 +207,9 @@ export class SCWSigner implements Signer {
   private switchChain(chainId: number): boolean {
     const chain = this.availableChains?.find((chain) => chain.id === chainId);
     if (!chain) return false;
-    if (chain === this._activeChain) return true;
+    if (chain === this._chain) return true;
 
-    this._activeChain = chain;
+    this._chain = chain;
     this.storage.storeObject(ACTIVE_CHAIN_STORAGE_KEY, chain);
     this.updateListener.onChainUpdate(chain);
     return true;

@@ -144,15 +144,16 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   }
 
   async disconnect(): Promise<void> {
-    if (!this.signer) return;
-    this.signer.disconnect();
+    if (this.signer) {
+      this.signer.disconnect();
+    }
     ScopedLocalStorage.clearAll();
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
 
   readonly isCoinbaseWallet = true;
 
-    protected readonly updateListener = {
+  protected readonly updateListener = {
     onAccountsUpdate: (accounts: AddressString[]) => {
       if (areAddressArraysEqual(this.accounts, accounts)) return;
       this.emit('accountsChanged', this.accounts);
@@ -162,7 +163,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       this.emit('chainChanged', hexStringFromIntNumber(IntNumber(chain.id)));
     },
   };
-    
+
   private requestSignerSelection(): Promise<SignerType> {
     return fetchSignerType({
       communicator: this.communicator,
