@@ -6,7 +6,7 @@
 // @ts-ignore
 import { binary_to_base58 } from 'base58-js';
 import EventEmitter from 'eventemitter3';
-import { Hex, hexToBytes, WalletGrantPermissionsParameters } from 'viem';
+import { Hex, WalletGrantPermissionsParameters } from 'viem';
 
 import { standardErrorCodes, standardErrors } from './core/error';
 import { serializeError } from './core/error/serialize';
@@ -88,13 +88,13 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     },
 
     // eth_requestAccounts
-    handshake: async (args: RequestArguments): Promise<AddressString[]> => {
+    handshake: async (args: RequestArguments): Promise<any> => {
       try {
         if (this.connected) {
           this.emit('connect', {
             chainId: hexStringFromIntNumber(IntNumber(this.chain.id)),
           });
-          return this.accounts;
+          return { addresses: this.accounts };
         }
 
         const requests = (args.params as { requests: any }).requests as (
@@ -117,7 +117,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
                     signer: {
                       type: 'key',
                       data: {
-                        id: `zDn${binary_to_base58(hexToBytes(credential.publicKeyCompressed))}`,
+                        id: credential.publicKeyCompressed,
                       },
                     },
                   },
@@ -131,6 +131,8 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
         const signerType = await this.requestSignerSelection();
         const signer = this.initSigner(signerType);
         const accounts = await signer.handshake({ requests: updatedRequests });
+
+        this.emit('accountsChanged', (accounts as { addresses: any }).addresses);
 
         this.signer = signer;
         storeSignerType(signerType);
@@ -217,10 +219,10 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   protected readonly updateListener = {
     onAccountsUpdate: ({ accounts, source }: AccountsUpdate) => {
+      this.emit('accountsChanged', this.accounts);
       if (areAddressArraysEqual(this.accounts, accounts)) return;
       this.accounts = accounts;
       if (source === 'storage') return;
-      this.emit('accountsChanged', this.accounts);
     },
     onChainUpdate: ({ chain, source }: ChainUpdate) => {
       if (chain.id === this.chain.id && chain.rpcUrl === this.chain.rpcUrl) return;

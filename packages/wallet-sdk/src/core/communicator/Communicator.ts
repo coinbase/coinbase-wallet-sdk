@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { LIB_VERSION } from '../../version';
 import { ConfigMessage, Message, MessageID } from '../message';
 import { CB_KEYS_URL } from ':core/constants';
@@ -36,7 +37,9 @@ export class Communicator {
   postRequestAndWaitForResponse = async <M extends Message>(
     request: Message & { id: MessageID }
   ): Promise<M> => {
-    const responsePromise = this.onMessage<M>(({ requestId }) => requestId === request.id);
+    const responsePromise = this.onMessage<M>(({ requestId }) => {
+      return requestId === request.id;
+    });
     this.postMessage(request);
     return await responsePromise;
   };

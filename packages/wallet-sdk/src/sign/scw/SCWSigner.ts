@@ -50,7 +50,7 @@ export class SCWSigner implements Signer {
     this.decryptResponseMessage = this.decryptResponseMessage.bind(this);
   }
 
-  async handshake(args: any): Promise<AddressString[]> {
+  async handshake(args: any): Promise<any> {
     const handshakeMessage = await this.createRequestMessage({
       handshake: {
         method: 'wallet_connect',
@@ -72,7 +72,7 @@ export class SCWSigner implements Signer {
     const result = decrypted.result;
     if ('error' in result) throw result.error;
 
-    return this.stateManager.accounts;
+    return (decrypted.result as {value: any}).value;
   }
 
   async request<T>(request: RequestArguments): Promise<T> {

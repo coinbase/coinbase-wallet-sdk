@@ -1,6 +1,6 @@
 {
   "name": "@lukasrosario/wallet-sdk",
-  "version": "29.0.0",
+  "version": "38.0.0",
   "description": "Coinbase Wallet JavaScript SDK",
   "keywords": [
     "coinbase",
