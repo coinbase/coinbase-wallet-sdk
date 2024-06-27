@@ -89,7 +89,7 @@ export function getCoinbaseInjectedProvider({
  */
 export function checkErrorForInvalidRequestArgs(args: RequestArguments) {
   if (!args || typeof args !== 'object' || Array.isArray(args)) {
-    return standardErrors.rpc.invalidParams({
+    throw standardErrors.rpc.invalidParams({
       message: 'Expected a single, non-array, object argument.',
       data: args,
     });
@@ -98,7 +98,7 @@ export function checkErrorForInvalidRequestArgs(args: RequestArguments) {
   const { method, params } = args;
 
   if (typeof method !== 'string' || method.length === 0) {
-    return standardErrors.rpc.invalidParams({
+    throw standardErrors.rpc.invalidParams({
       message: "'args.method' must be a non-empty string.",
       data: args,
     });
@@ -109,10 +109,9 @@ export function checkErrorForInvalidRequestArgs(args: RequestArguments) {
     !Array.isArray(params) &&
     (typeof params !== 'object' || params === null)
   ) {
-    return standardErrors.rpc.invalidParams({
+    throw standardErrors.rpc.invalidParams({
       message: "'args.params' must be an object or array if provided.",
       data: args,
     });
   }
-  return undefined;
 }

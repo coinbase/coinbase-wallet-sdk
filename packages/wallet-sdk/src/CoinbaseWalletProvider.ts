@@ -83,20 +83,21 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     fetch: (request: RequestArguments) => fetchRPCRequest(request, this.signer?.chain),
 
     state: (request: RequestArguments) => {
-      if (!this.signer) {
+      const getConnectedAccounts = (): AddressString[] => {
+        if (this.signer) return this.signer.accounts;
         throw standardErrors.provider.unauthorized(
           "Must call 'eth_requestAccounts' before other methods"
         );
-      }
+      };
       switch (request.method) {
         case 'eth_chainId':
-          return hexStringFromIntNumber(IntNumber(this.signer.chain.id));
+          return hexStringFromIntNumber(IntNumber(this.signer?.chain.id ?? 1));
         case 'net_version':
-          return this.signer.chain.id;
+          return this.signer?.chain.id ?? 1;
         case 'eth_accounts':
-          return this.signer.accounts;
+          return getConnectedAccounts();
         case 'eth_coinbase':
-          return this.signer.accounts[0];
+          return getConnectedAccounts()[0];
         default:
           return this.handlers.unsupported(request);
       }
