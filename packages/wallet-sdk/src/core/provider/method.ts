@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const mapping = {
   handshake: ['wallet_connect'],
   sign: [
@@ -14,10 +15,10 @@ const mapping = {
     'wallet_switchEthereumChain',
     'wallet_watchAsset',
     'wallet_getCapabilities',
-    'wallet_sendCalls',
+    // 'wallet_sendCalls',
     'wallet_showCallsStatus',
-    'wallet_connect',
   ],
+  session: ['wallet_sendCalls'],
   state: [
     // internal state
     'eth_chainId',

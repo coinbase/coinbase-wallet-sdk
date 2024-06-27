@@ -53,7 +53,7 @@ export interface ConstructorOptions {
 }
 
 export interface Signer {
-  handshake(): Promise<AddressString[]>;
+  handshake(args: any): Promise<AddressString[]>;
   request<T>(request: RequestArguments): Promise<T>;
   disconnect: () => Promise<void>;
 }

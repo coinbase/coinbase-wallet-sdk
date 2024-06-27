@@ -1,6 +1,5 @@
 import { Message, MessageID } from './Message';
 import { SerializedEthereumRpcError } from ':core/error';
-import { AppMetadata } from ':core/provider/interface';
 
 interface RPCMessage extends Message {
   id: MessageID;
@@ -36,6 +35,6 @@ export interface RPCResponseMessage extends RPCMessage {
 }
 
 type RequestAccountsAction = {
-  method: 'ahhhhh';
-  params: AppMetadata;
+  method: 'wallet_connect';
+  params: any;
 };

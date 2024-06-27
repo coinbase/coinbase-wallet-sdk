@@ -6,7 +6,6 @@ import { AppMetadata, Preference, ProviderInterface } from './core/provider/inte
 import { ScopedLocalStorage } from './util/ScopedLocalStorage';
 import { LIB_VERSION } from './version';
 import { getFavicon } from ':core/type/util';
-import { getCoinbaseInjectedProvider } from ':util/provider';
 
 // for backwards compatibility
 type CoinbaseWalletSDKOptions = Partial<AppMetadata>;

@@ -1,4 +1,12 @@
+/* eslint-disable unused-imports/no-unused-vars */
+/* eslint-disable unused-imports/no-unused-imports */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable no-console */
+// @ts-ignore
+import { binary_to_base58 } from 'base58-js';
 import EventEmitter from 'eventemitter3';
+import { Hex, hexToBytes, WalletGrantPermissionsParameters } from 'viem';
 
 import { standardErrorCodes, standardErrors } from './core/error';
 import { serializeError } from './core/error/serialize';
@@ -19,6 +27,8 @@ import { Communicator } from ':core/communicator/Communicator';
 import { SignerType } from ':core/message';
 import { determineMethodCategory } from ':core/provider/method';
 import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
+
+const { createCredential } = require('webauthn-p256');
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
   private readonly metadata: AppMetadata;
@@ -59,22 +69,75 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   }
 
   protected readonly handlers = {
+    session: async (request: RequestArguments) => {
+      const requestBody = {
+        ...request,
+        jsonrpc: '2.0',
+        id: crypto.randomUUID(),
+      };
+      const res = await window.fetch('http://', {
+        method: 'POST',
+        body: JSON.stringify(requestBody),
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const response = await res.json();
+      return response.result;
+    },
+
     // eth_requestAccounts
     handshake: async (args: RequestArguments): Promise<AddressString[]> => {
       try {
         if (this.connected) {
-          this.emit('connect', { chainId: hexStringFromIntNumber(IntNumber(this.chain.id)) });
+          this.emit('connect', {
+            chainId: hexStringFromIntNumber(IntNumber(this.chain.id)),
+          });
           return this.accounts;
         }
 
+        const requests = (args.params as { requests: any }).requests as (
+          | {
+              method: 'wallet_grantPermissions';
+              params: WalletGrantPermissionsParameters;
+            }
+          | { method: 'personal_sign'; params: [Hex] }
+        )[];
+        const credential = await createCredential({ name: 'App' });
+        // @ts-ignore
+        const updatedRequests = await Promise.all(
+          requests.map(async (request) => {
+            if (request.method === 'wallet_grantPermissions') {
+              if (request.params.signer?.type === 'wallet') {
+                return {
+                  ...request,
+                  params: {
+                    ...request.params,
+                    signer: {
+                      type: 'key',
+                      data: {
+                        id: `zDn${binary_to_base58(hexToBytes(credential.publicKeyCompressed))}`,
+                      },
+                    },
+                  },
+                };
+              }
+            }
+            return request;
+          })
+        );
+
         const signerType = await this.requestSignerSelection();
         const signer = this.initSigner(signerType);
-        const accounts = await signer.handshake(args);
+        const accounts = await signer.handshake({ requests: updatedRequests });
 
         this.signer = signer;
         storeSignerType(signerType);
 
-        this.emit('connect', { chainId: hexStringFromIntNumber(IntNumber(this.chain.id)) });
+        this.emit('connect', {
+          chainId: hexStringFromIntNumber(IntNumber(this.chain.id)),
+        });
         return accounts;
       } catch (error) {
         this.handleUnauthorizedError(error);

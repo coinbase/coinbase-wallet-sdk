@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable prettier/prettier */
+/* eslint-disable no-console */
 import { StateUpdateListener } from '../interface';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWStateManager } from './SCWStateManager';
@@ -46,11 +50,11 @@ export class SCWSigner implements Signer {
     this.decryptResponseMessage = this.decryptResponseMessage.bind(this);
   }
 
-  async handshake(args): Promise<AddressString[]> {
+  async handshake(args: any): Promise<AddressString[]> {
     const handshakeMessage = await this.createRequestMessage({
-      guhhh: {
+      handshake: {
         method: 'wallet_connect',
-        params: {...this.metadata, ...args},
+        params: { ...this.metadata, ...args },
       },
     });
     const response: RPCResponseMessage = await this.communicator.postRequestAndWaitForResponse(
@@ -189,7 +193,7 @@ export class SCWSigner implements Signer {
 
     switch (request.method as Method) {
       case 'wallet_connect': {
-        const accounts = result.value.addresses as AddressString[];
+        const accounts = (result.value as any).addresses as AddressString[];
         this.stateManager.updateAccounts(accounts);
         break;
       }
