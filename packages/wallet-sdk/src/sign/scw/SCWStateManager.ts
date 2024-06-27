@@ -32,20 +32,6 @@ export class SCWStateManager {
     this._walletCapabilities = this.loadItemFromStorage(WALLET_CAPABILITIES_STORAGE_KEY);
     const accounts = this.loadItemFromStorage<AddressString[]>(ACCOUNTS_KEY);
     const chain = this.loadItemFromStorage<Chain>(ACTIVE_CHAIN_STORAGE_KEY);
-
-    if (accounts) {
-      this.updateListener.onAccountsUpdate({
-        accounts,
-        source: 'storage',
-      });
-    }
-    if (chain) {
-      this.updateListener.onChainUpdate({
-        chain,
-        source: 'storage',
-      });
-    }
-
     this._accounts = accounts || [];
     this._activeChain = chain || { id: params.appChainIds?.[0] ?? 1 };
   }
@@ -53,10 +39,7 @@ export class SCWStateManager {
   updateAccounts(accounts: AddressString[]) {
     this._accounts = accounts;
     this.storeItemToStorage(ACCOUNTS_KEY, accounts);
-    this.updateListener.onAccountsUpdate({
-      accounts,
-      source: 'wallet',
-    });
+    this.updateListener.onAccountsUpdate(accounts);
   }
 
   switchChain(chainId: number): boolean {
@@ -66,10 +49,7 @@ export class SCWStateManager {
 
     this._activeChain = chain;
     this.storeItemToStorage(ACTIVE_CHAIN_STORAGE_KEY, chain);
-    this.updateListener.onChainUpdate({
-      chain,
-      source: 'wallet',
-    });
+    this.updateListener.onChainUpdate(chain);
     return true;
   }
 
