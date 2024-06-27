@@ -1,6 +1,10 @@
-import { CBWindow, checkErrorForInvalidRequestArgs, getCoinbaseInjectedProvider } from './provider';
+import {
+  CBWindow,
+  checkErrorForInvalidRequestArgs,
+  getInjectedCbWalletMobileBrowserProvider,
+} from './provider';
 import { standardErrors } from ':core/error';
-import { ProviderInterface, Signer } from ':core/provider/interface';
+import { ProviderInterface } from ':core/provider/interface';
 
 const window = globalThis as CBWindow;
 
@@ -24,73 +28,7 @@ const invalidParamsError = (args) =>
   });
 
 describe('Utils', () => {
-  describe('getCoinbaseInjectedProvider', () => {
-    describe('Extension Provider', () => {
-      afterEach(() => {
-        window.coinbaseWalletExtension = undefined;
-        window.coinbaseWalletSigner = undefined;
-      });
-
-      it('should return extension provider', () => {
-        const mockSetAppInfo = jest.fn();
-        const extensionProvider = {
-          setAppInfo: mockSetAppInfo,
-        } as unknown as ProviderInterface;
-
-        window.coinbaseWalletExtension = extensionProvider;
-
-        expect(
-          getCoinbaseInjectedProvider({
-            metadata: {
-              appName: 'Dapp',
-              appChainIds: [],
-              appLogoUrl: null,
-            },
-            preference: {
-              options: 'all',
-            },
-          })
-        ).toBe(extensionProvider);
-
-        expect(mockSetAppInfo).toHaveBeenCalledWith('Dapp', null, []);
-      });
-
-      it('should return undefined when extension injects `coinbaseWalletSigner`', () => {
-        window.coinbaseWalletSigner = {} as unknown as Signer;
-        window.coinbaseWalletExtension = {} as unknown as ProviderInterface;
-
-        expect(
-          getCoinbaseInjectedProvider({
-            metadata: {
-              appName: 'Dapp',
-              appChainIds: [],
-              appLogoUrl: null,
-            },
-            preference: {
-              options: 'all',
-            },
-          })
-        ).toBe(undefined);
-      });
-
-      it('smartWalletOnly - should return undefined', () => {
-        window.coinbaseWalletExtension = {} as unknown as ProviderInterface;
-
-        expect(
-          getCoinbaseInjectedProvider({
-            metadata: {
-              appName: 'Dapp',
-              appChainIds: [],
-              appLogoUrl: null,
-            },
-            preference: {
-              options: 'smartWalletOnly',
-            },
-          })
-        ).toBe(undefined);
-      });
-    });
-
+  describe('getInjectedCbWalletMobileBrowserProvider', () => {
     describe('Browser Provider', () => {
       class MockCipherProviderClass {
         public isCoinbaseBrowser = true;
@@ -108,33 +46,7 @@ describe('Utils', () => {
       });
 
       it('Should return injected browser provider', () => {
-        expect(
-          getCoinbaseInjectedProvider({
-            metadata: {
-              appName: 'Dapp',
-              appChainIds: [],
-              appLogoUrl: null,
-            },
-            preference: {
-              options: 'all',
-            },
-          })
-        ).toBe(mockCipherProvider);
-      });
-
-      it('smartWalletOnly - Should still return injected browser provider', () => {
-        expect(
-          getCoinbaseInjectedProvider({
-            metadata: {
-              appName: 'Dapp',
-              appChainIds: [],
-              appLogoUrl: null,
-            },
-            preference: {
-              options: 'smartWalletOnly',
-            },
-          })
-        ).toBe(mockCipherProvider);
+        expect(getInjectedCbWalletMobileBrowserProvider()).toBe(mockCipherProvider);
       });
 
       it('should handle exception when accessing window.top', () => {
@@ -147,18 +59,7 @@ describe('Utils', () => {
           configurable: true,
         });
 
-        expect(
-          getCoinbaseInjectedProvider({
-            metadata: {
-              appName: 'Dapp',
-              appChainIds: [],
-              appLogoUrl: null,
-            },
-            preference: {
-              options: 'all',
-            },
-          })
-        ).toBe(undefined);
+        expect(getInjectedCbWalletMobileBrowserProvider()).toBe(undefined);
 
         Object.defineProperty(window, 'top', {
           get: () => originalWindowTop,

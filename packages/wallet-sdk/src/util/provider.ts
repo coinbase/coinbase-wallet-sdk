@@ -1,11 +1,6 @@
 import { LIB_VERSION } from '../version';
 import { standardErrors } from ':core/error';
-import {
-  ConstructorOptions,
-  ProviderInterface,
-  RequestArguments,
-  Signer,
-} from ':core/provider/interface';
+import { ProviderInterface, RequestArguments, Signer } from ':core/provider/interface';
 import { Chain } from ':core/type';
 
 export async function fetchRPCRequest(request: RequestArguments, chain: Chain) {
@@ -38,16 +33,6 @@ export interface CBInjectedProvider extends ProviderInterface {
   setAppInfo?: (...args: unknown[]) => unknown;
 }
 
-export function getCoinbaseInjectedSigner(): Signer | undefined {
-  const window = globalThis as CBWindow;
-  return window.coinbaseWalletSigner;
-}
-
-function getCoinbaseInjectedLegacyProvider(): CBInjectedProvider | undefined {
-  const window = globalThis as CBWindow;
-  return window.coinbaseWalletExtension;
-}
-
 function getInjectedEthereum(): CBInjectedProvider | undefined {
   try {
     const window = globalThis as CBWindow;
@@ -57,27 +42,11 @@ function getInjectedEthereum(): CBInjectedProvider | undefined {
   }
 }
 
-export function getCoinbaseInjectedProvider({
-  metadata,
-  preference,
-}: Readonly<ConstructorOptions>): ProviderInterface | undefined {
-  if (preference.options !== 'smartWalletOnly') {
-    const signer = getCoinbaseInjectedSigner();
-    if (signer) return undefined; // use signer instead
-
-    const extension = getCoinbaseInjectedLegacyProvider();
-    if (extension) {
-      const { appName, appLogoUrl, appChainIds } = metadata;
-      extension.setAppInfo?.(appName, appLogoUrl, appChainIds);
-      return extension;
-    }
-  }
-
+export function getInjectedCbWalletMobileBrowserProvider(): ProviderInterface | undefined {
   const ethereum = getInjectedEthereum();
   if (ethereum?.isCoinbaseBrowser) {
     return ethereum;
   }
-
   return undefined;
 }
 

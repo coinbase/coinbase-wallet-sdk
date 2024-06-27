@@ -2,7 +2,7 @@ import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
 import { ProviderInterface } from ':core/provider/interface';
 import { getFavicon } from ':core/type/util';
-import { getCoinbaseInjectedProvider } from ':util/provider';
+import { getInjectedCbWalletMobileBrowserProvider } from ':util/provider';
 
 jest.mock(':core/type/util');
 jest.mock(':util/provider');
@@ -11,7 +11,7 @@ jest.mock('./CoinbaseWalletProvider');
 describe('CoinbaseWalletSDK', () => {
   test('@makeWeb3Provider - return Coinbase Injected Provider', () => {
     const injectedProvider = {} as unknown as ProviderInterface;
-    (getCoinbaseInjectedProvider as jest.Mock).mockReturnValue(injectedProvider);
+    (getInjectedCbWalletMobileBrowserProvider as jest.Mock).mockReturnValue(injectedProvider);
 
     const SDK = new CoinbaseWalletSDK({
       appName: 'Test',
@@ -22,7 +22,7 @@ describe('CoinbaseWalletSDK', () => {
   });
 
   test('@makeWeb3Provider - return new CoinbaseWalletProvider', () => {
-    (getCoinbaseInjectedProvider as jest.Mock).mockReturnValue(undefined);
+    (getInjectedCbWalletMobileBrowserProvider as jest.Mock).mockReturnValue(undefined);
 
     const SDK = new CoinbaseWalletSDK({
       appName: 'Test',
@@ -45,7 +45,7 @@ describe('CoinbaseWalletSDK', () => {
 
   test('@makeWeb3Provider - default values for metadata', () => {
     (getFavicon as jest.Mock).mockReturnValue('https://dapp.xyz/pic.png');
-    (getCoinbaseInjectedProvider as jest.Mock).mockReturnValue(undefined);
+    (getInjectedCbWalletMobileBrowserProvider as jest.Mock).mockReturnValue(undefined);
 
     const SDK = new CoinbaseWalletSDK({
       appName: '',
