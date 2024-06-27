@@ -1,6 +1,6 @@
 import { LIB_VERSION } from '../version';
 import { standardErrors } from ':core/error';
-import { ProviderInterface, RequestArguments, Signer } from ':core/provider/interface';
+import { ProviderInterface, RequestArguments } from ':core/provider/interface';
 import { Chain } from ':core/type';
 
 export async function fetchRPCRequest(request: RequestArguments, chain: Chain) {
@@ -22,7 +22,6 @@ export async function fetchRPCRequest(request: RequestArguments, chain: Chain) {
 }
 
 export interface CBWindow {
-  coinbaseWalletSigner?: Signer;
   top: CBWindow;
   ethereum?: CBInjectedProvider;
   coinbaseWalletExtension?: CBInjectedProvider;
