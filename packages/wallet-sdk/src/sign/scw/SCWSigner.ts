@@ -82,10 +82,9 @@ export class SCWSigner implements Signer {
 
     const decrypted = await this.decryptResponseMessage<AddressString[]>(response);
 
-    const result = decrypted.result;
-    if ('error' in result) throw result.error;
+    if ('error' in decrypted.result) throw decrypted.result.error;
 
-    const accounts = result.value as AddressString[];
+    const accounts = decrypted.result.value;
     this._accounts = accounts;
     this.storage.storeObject(ACCOUNTS_KEY, accounts);
     this.updateListener.onAccountsUpdate(accounts);
@@ -105,12 +104,12 @@ export class SCWSigner implements Signer {
 
     const response = await this.sendEncryptedRequest(request);
     const decrypted = await this.decryptResponseMessage<T>(response);
-    this.updateInternalState(request, decrypted);
 
-    const result = decrypted.result;
-    if ('error' in result) throw result.error;
+    if ('error' in decrypted.result) throw decrypted.result.error;
 
-    return result.value;
+    const result = decrypted.result.value;
+    this.updateInternalState(request, result);
+    return result;
   }
 
   async disconnect() {
@@ -192,16 +191,22 @@ export class SCWSigner implements Signer {
     }
 
     const response: RPCResponse<T> = await decryptContent(content.encrypted, sharedSecret);
-    this.cacheState(response);
+    if (response.data) {
+      const metadata = response.data;
+      this.cacheMetadata(metadata);
+    }
     return response;
   }
 
-  private cacheState<T>(response: RPCResponse<T>) {
-    if (!response.data) return;
-    const { chains: rawChains, capabilities } = response.data;
-
-    if (rawChains) {
-      const chains = Object.entries(rawChains).map(([id, rpcUrl]) => ({ id: Number(id), rpcUrl }));
+  private cacheMetadata({
+    chains: availableChains,
+    capabilities,
+  }: Exclude<RPCResponse<unknown>['data'], undefined>) {
+    if (availableChains) {
+      const chains = Object.entries(availableChains).map(([id, rpcUrl]) => ({
+        id: Number(id),
+        rpcUrl,
+      }));
       this.availableChains = chains;
       this.storage.storeObject(AVAILABLE_CHAINS_STORAGE_KEY, chains);
       this.switchChain(this._activeChain.id);
@@ -209,6 +214,23 @@ export class SCWSigner implements Signer {
 
     if (capabilities) {
       this.storage.storeObject(WALLET_CAPABILITIES_STORAGE_KEY, capabilities);
+    }
+  }
+
+  private updateInternalState(request: RequestArguments, result: unknown) {
+    switch (request.method as Method) {
+      case 'wallet_switchEthereumChain': {
+        // "return null if the request was successful"
+        // https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
+        if (result !== null) return;
+
+        const params = request.params as SwitchEthereumChainParam;
+        const chainId = ensureIntNumber(params[0].chainId);
+        this.switchChain(chainId);
+        break;
+      }
+      default:
+        break;
     }
   }
 
