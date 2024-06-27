@@ -29,9 +29,9 @@ type SwitchEthereumChainParam = [
 export class SCWSigner implements Signer {
   private readonly metadata: AppMetadata;
   private readonly communicator: Communicator;
-  private readonly keyManager: SCWKeyManager;
-  private readonly storage = new ScopedLocalStorage('CBWSDK', 'SCWStateManager');
   private readonly updateListener: StateUpdateListener;
+  private readonly keyManager: SCWKeyManager;
+  private readonly storage: ScopedLocalStorage;
 
   private availableChains?: Chain[];
   private _accounts: AddressString[];
@@ -50,9 +50,10 @@ export class SCWSigner implements Signer {
   }) {
     this.metadata = params.metadata;
     this.communicator = params.communicator;
-    this.keyManager = new SCWKeyManager();
     this.updateListener = params.updateListener;
+    this.keyManager = new SCWKeyManager();
 
+    this.storage = new ScopedLocalStorage('CBWSDK', 'SCWStateManager');
     this._accounts = this.storage.loadObject(ACCOUNTS_KEY) ?? [];
     this._activeChain = this.storage.loadObject(ACTIVE_CHAIN_STORAGE_KEY) || {
       id: params.metadata.appChainIds?.[0] ?? 1,
@@ -80,12 +81,15 @@ export class SCWSigner implements Signer {
     await this.keyManager.setPeerPublicKey(peerPublicKey);
 
     const decrypted = await this.decryptResponseMessage<AddressString[]>(response);
-    this.updateInternalState({ method: 'eth_requestAccounts' }, decrypted);
 
     const result = decrypted.result;
     if ('error' in result) throw result.error;
 
-    return this._accounts;
+    const accounts = result.value as AddressString[];
+    this._accounts = accounts;
+    this.storage.storeObject(ACCOUNTS_KEY, accounts);
+    this.updateListener.onAccountsUpdate(accounts);
+    return accounts;
   }
 
   async request<T>(request: RequestArguments): Promise<T> {
@@ -187,11 +191,15 @@ export class SCWSigner implements Signer {
       throw standardErrors.provider.unauthorized('Invalid session');
     }
 
-    return decryptContent(content.encrypted, sharedSecret);
+    const response: RPCResponse<T> = await decryptContent(content.encrypted, sharedSecret);
+    this.cacheState(response);
+    return response;
   }
 
-  private updateInternalState<T>(request: RequestArguments, response: RPCResponse<T>) {
-    const rawChains = response.data?.chains;
+  private cacheState<T>(response: RPCResponse<T>) {
+    if (!response.data) return;
+    const { chains: rawChains, capabilities } = response.data;
+
     if (rawChains) {
       const chains = Object.entries(rawChains).map(([id, rpcUrl]) => ({ id: Number(id), rpcUrl }));
       this.availableChains = chains;
@@ -199,34 +207,8 @@ export class SCWSigner implements Signer {
       this.switchChain(this._activeChain.id);
     }
 
-    const walletCapabilities = response.data?.capabilities;
-    if (walletCapabilities) {
-      this.storage.storeObject(WALLET_CAPABILITIES_STORAGE_KEY, walletCapabilities);
-    }
-
-    const result = response.result;
-    if ('error' in result) return;
-
-    switch (request.method as Method) {
-      case 'eth_requestAccounts': {
-        const accounts = result.value as AddressString[];
-        this._accounts = accounts;
-        this.storage.storeObject(ACCOUNTS_KEY, accounts);
-        this.updateListener.onAccountsUpdate(accounts);
-        break;
-      }
-      case 'wallet_switchEthereumChain': {
-        // "return null if the request was successful"
-        // https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
-        if (result.value !== null) return;
-
-        const params = request.params as SwitchEthereumChainParam;
-        const chainId = ensureIntNumber(params[0].chainId);
-        this.switchChain(chainId);
-        break;
-      }
-      default:
-        break;
+    if (capabilities) {
+      this.storage.storeObject(WALLET_CAPABILITIES_STORAGE_KEY, capabilities);
     }
   }
 

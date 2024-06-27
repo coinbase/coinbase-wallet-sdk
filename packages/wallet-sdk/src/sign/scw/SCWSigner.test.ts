@@ -13,7 +13,6 @@ import {
 } from ':util/cipher';
 import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
-const storageLoadSpy = jest.spyOn(ScopedLocalStorage.prototype, 'loadObject');
 const storageStoreSpy = jest.spyOn(ScopedLocalStorage.prototype, 'storeObject');
 
 jest.mock('./SCWKeyManager');
