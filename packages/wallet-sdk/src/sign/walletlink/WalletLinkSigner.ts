@@ -81,22 +81,11 @@ export class WalletLinkSigner implements Signer {
       const addresses = cachedAddresses.split(' ') as AddressString[];
       if (addresses[0] !== '') {
         this._addresses = addresses.map((address) => ensureAddressString(address));
-        this.updateListener?.onAccountsUpdate({
-          accounts: this._addresses,
-          source: 'storage',
-        });
       }
     }
 
     const cachedChainId = this._storage.getItem(DEFAULT_CHAIN_ID_KEY);
     if (cachedChainId) {
-      this.updateListener?.onChainUpdate({
-        chain: {
-          id: this.getChainId(),
-          rpcUrl: this.jsonRpcUrl,
-        },
-        source: 'storage',
-      });
       this.hasMadeFirstChainChangedEmission = true;
     }
 
@@ -135,8 +124,8 @@ export class WalletLinkSigner implements Signer {
     const chainChanged = ensureIntNumber(chainId) !== originalChainId;
     if (chainChanged || !this.hasMadeFirstChainChangedEmission) {
       this.updateListener?.onChainUpdate({
-        chain: { id: chainId, rpcUrl: jsonRpcUrl },
-        source: 'wallet',
+        id: chainId,
+        rpcUrl: jsonRpcUrl,
       });
       this.hasMadeFirstChainChangedEmission = true;
     }
@@ -301,10 +290,7 @@ export class WalletLinkSigner implements Signer {
     }
 
     this._addresses = newAddresses;
-    this.updateListener?.onAccountsUpdate({
-      accounts: newAddresses,
-      source: 'wallet',
-    });
+    this.updateListener?.onAccountsUpdate(newAddresses);
     this._storage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, newAddresses.join(' '));
   }
 
