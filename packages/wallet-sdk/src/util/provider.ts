@@ -8,8 +8,8 @@ import {
 } from ':core/provider/interface';
 import { Chain } from ':core/type';
 
-export async function fetchRPCRequest(request: RequestArguments, chain: Chain) {
-  if (!chain.rpcUrl) throw standardErrors.rpc.internal('No RPC URL set for chain');
+export async function fetchRPCRequest(request: RequestArguments, chain?: Chain) {
+  if (!chain?.rpcUrl) throw standardErrors.rpc.internal('No RPC URL set for chain');
 
   const requestBody = {
     ...request,
