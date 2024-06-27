@@ -92,12 +92,17 @@ export class SCWSigner implements Signer {
   }
 
   async request<T>(request: RequestArguments): Promise<T> {
-    const localResult = this.tryLocalHandling<T>(request);
-    if (localResult !== undefined) {
-      if (localResult instanceof Error) throw localResult;
-      return localResult;
+    switch (request.method as Method) {
+      case 'wallet_getCapabilities':
+        return this.storage.loadObject(WALLET_CAPABILITIES_STORAGE_KEY) as T;
+      case 'wallet_switchEthereumChain':
+        return this.handleSwitchChainRequest(request) as T;
+      default:
+        return this.sendRequestToPopup<T>(request);
     }
+  }
 
+  private async sendRequestToPopup<T>(request: RequestArguments): Promise<T> {
     // Open the popup before constructing the request message.
     // This is to ensure that the popup is not blocked by some browsers (i.e. Safari)
     await this.communicator.waitForPopupLoaded();
@@ -106,10 +111,7 @@ export class SCWSigner implements Signer {
     const decrypted = await this.decryptResponseMessage<T>(response);
 
     if ('error' in decrypted.result) throw decrypted.result.error;
-
-    const result = decrypted.result.value;
-    this.updateInternalState(request, result);
-    return result;
+    return decrypted.result.value;
   }
 
   async disconnect() {
@@ -117,32 +119,26 @@ export class SCWSigner implements Signer {
     await this.keyManager.clear();
   }
 
-  private tryLocalHandling<T>(request: RequestArguments): T | undefined {
-    switch (request.method as Method) {
-      case 'wallet_switchEthereumChain': {
-        const params = request.params as SwitchEthereumChainParam;
-        if (!params || !params[0]?.chainId) {
-          throw standardErrors.rpc.invalidParams();
-        }
-        const chainId = ensureIntNumber(params[0].chainId);
-        const switched = this.switchChain(chainId);
-        // "return null if the request was successful"
-        // https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
-        return switched ? (null as T) : undefined;
-      }
-      case 'wallet_getCapabilities': {
-        const walletCapabilities = this.storage.loadObject(WALLET_CAPABILITIES_STORAGE_KEY);
-        if (!walletCapabilities) {
-          // This should never be the case for scw connections as capabilities are set during handshake
-          throw standardErrors.provider.unauthorized(
-            'No wallet capabilities found, please disconnect and reconnect'
-          );
-        }
-        return walletCapabilities as T;
-      }
-      default:
-        return undefined;
+  /**
+   * @returns `null` if the request was successful.
+   * https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
+   */
+  private async handleSwitchChainRequest(request: RequestArguments) {
+    const params = request.params as SwitchEthereumChainParam;
+    if (!params || !params[0]?.chainId) {
+      throw standardErrors.rpc.invalidParams();
     }
+    const chainId = ensureIntNumber(params[0].chainId);
+
+    // local handling
+    const switched = this.switchChain(chainId);
+    if (switched) return null;
+
+    const result = await this.sendRequestToPopup(request);
+    if (result === null) {
+      this.switchChain(chainId);
+    }
+    return result;
   }
 
   private async sendEncryptedRequest(request: RequestArguments): Promise<RPCResponseMessage> {
@@ -191,10 +187,12 @@ export class SCWSigner implements Signer {
     }
 
     const response: RPCResponse<T> = await decryptContent(content.encrypted, sharedSecret);
-    if (response.data) {
-      const metadata = response.data;
+
+    const metadata = response.data;
+    if (metadata) {
       this.cacheMetadata(metadata);
     }
+
     return response;
   }
 
@@ -214,23 +212,6 @@ export class SCWSigner implements Signer {
 
     if (capabilities) {
       this.storage.storeObject(WALLET_CAPABILITIES_STORAGE_KEY, capabilities);
-    }
-  }
-
-  private updateInternalState(request: RequestArguments, result: unknown) {
-    switch (request.method as Method) {
-      case 'wallet_switchEthereumChain': {
-        // "return null if the request was successful"
-        // https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
-        if (result !== null) return;
-
-        const params = request.params as SwitchEthereumChainParam;
-        const chainId = ensureIntNumber(params[0].chainId);
-        this.switchChain(chainId);
-        break;
-      }
-      default:
-        break;
     }
   }
 
