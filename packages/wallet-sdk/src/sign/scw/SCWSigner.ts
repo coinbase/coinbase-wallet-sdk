@@ -78,11 +78,10 @@ export class SCWSigner implements Signer {
 
     if ('error' in decrypted.result) throw decrypted.result.error;
 
-    const accounts = decrypted.result.value;
-    this._accounts = accounts;
-    this.storage.storeObject(ACCOUNTS_KEY, accounts);
-    this.updateListener.onAccountsUpdate(accounts);
-    return accounts;
+    this._accounts = decrypted.result.value;
+    this.storage.storeObject(ACCOUNTS_KEY, this._accounts);
+    this.updateListener.onAccountsUpdate(this._accounts);
+    return this._accounts;
   }
 
   async request<T>(request: RequestArguments): Promise<T> {
