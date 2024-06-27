@@ -40,7 +40,6 @@ export class SCWSigner implements Signer {
   constructor(params: {
     metadata: AppMetadata;
     communicator: Communicator;
-    updateListener: StateUpdateListener;
   }) {
     this.metadata = params.metadata;
     this.communicator = params.communicator;
@@ -57,6 +56,14 @@ export class SCWSigner implements Signer {
     this.request = this.request.bind(this);
     this.createRequestMessage = this.createRequestMessage.bind(this);
     this.decryptResponseMessage = this.decryptResponseMessage.bind(this);
+  }
+
+  get accounts() {
+    return this.stateManager.accounts;
+  }
+
+  get chain() {
+    return this.stateManager.activeChain;
   }
 
   async handshake(): Promise<AddressString[]> {

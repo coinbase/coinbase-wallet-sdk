@@ -64,14 +64,12 @@ export class WalletLinkSigner implements Signer {
   private _jsonRpcUrlFromOpts: string;
   private _addresses: AddressString[] = [];
   private hasMadeFirstChainChangedEmission = false;
-  private updateListener?: StateUpdateListener;
 
-  constructor(options: { metadata: AppMetadata; updateListener?: StateUpdateListener }) {
+  constructor(options: { metadata: AppMetadata /*updateListener?: StateUpdateListener */ }) {
     const { appName, appLogoUrl } = options.metadata;
     this._appName = appName;
     this._appLogoUrl = appLogoUrl;
     this._storage = new ScopedLocalStorage('walletlink', WALLETLINK_URL);
-    this.updateListener = options.updateListener;
 
     this._relayEventManager = new RelayEventManager();
     this._jsonRpcUrlFromOpts = '';
@@ -91,6 +89,9 @@ export class WalletLinkSigner implements Signer {
 
     this.initializeRelay();
   }
+
+  accounts: AddressString[] = [];
+  chain: Chain = { id: 1 };
 
   getSession() {
     const relay = this.initializeRelay();

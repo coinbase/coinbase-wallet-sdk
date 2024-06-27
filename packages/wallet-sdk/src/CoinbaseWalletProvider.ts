@@ -25,17 +25,18 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   private readonly communicator: Communicator;
 
   private signer: Signer | null;
-  protected accounts: AddressString[] = [];
-  protected chain: Chain;
+  private get accounts(): AddressString[] {
+    return this.signer?.accounts ?? [];
+  }
+  private get chain(): Chain {
+    return this.signer?.chain ?? { id: 1 };
+  }
 
   constructor({ metadata, preference: { keysUrl, ...preference } }: Readonly<ConstructorOptions>) {
     super();
     this.metadata = metadata;
     this.preference = preference;
     this.communicator = new Communicator(keysUrl);
-    this.chain = {
-      id: metadata.appChainIds?.[0] ?? 1,
-    };
     // Load states from storage
     const signerType = loadSignerType();
     this.signer = signerType ? this.initSigner(signerType) : null;
@@ -143,27 +144,25 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   }
 
   async disconnect(): Promise<void> {
-    this.accounts = [];
-    this.chain = { id: 1 };
+    if (!this.signer) return;
+    this.signer.disconnect();
     ScopedLocalStorage.clearAll();
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
 
   readonly isCoinbaseWallet = true;
 
-  protected readonly updateListener = {
+    protected readonly updateListener = {
     onAccountsUpdate: (accounts: AddressString[]) => {
       if (areAddressArraysEqual(this.accounts, accounts)) return;
-      this.accounts = accounts;
       this.emit('accountsChanged', this.accounts);
     },
     onChainUpdate: (chain: Chain) => {
       if (chain.id === this.chain.id && chain.rpcUrl === this.chain.rpcUrl) return;
-      this.chain = chain;
       this.emit('chainChanged', hexStringFromIntNumber(IntNumber(chain.id)));
     },
   };
-
+    
   private requestSignerSelection(): Promise<SignerType> {
     return fetchSignerType({
       communicator: this.communicator,

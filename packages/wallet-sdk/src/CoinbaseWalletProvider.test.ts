@@ -95,7 +95,7 @@ describe('signer configuration', () => {
     mockLoadSignerType.mockReturnValueOnce('scw');
     const provider = createProvider();
     // @ts-expect-error // TODO: should be able to mock cached accounts
-    provider.accounts = [AddressString('0x123')];
+    (provider.signer as SCWSigner).accounts = ['0x123'];
     const request = { method: 'personal_sign', params: ['0x123', '0xdeadbeef'] };
     provider.request(request);
     expect(mockRequest).toHaveBeenCalledWith(request);
