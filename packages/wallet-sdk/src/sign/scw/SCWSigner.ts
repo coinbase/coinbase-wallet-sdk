@@ -1,12 +1,11 @@
 import { StateUpdateListener } from '../interface';
 import { SCWKeyManager } from './SCWKeyManager';
-import { SCWStateManager } from './SCWStateManager';
 import { Communicator } from ':core/communicator/Communicator';
 import { standardErrors } from ':core/error';
 import { RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
 import { AppMetadata, RequestArguments, Signer } from ':core/provider/interface';
 import { Method } from ':core/provider/method';
-import { AddressString } from ':core/type';
+import { AddressString, Chain } from ':core/type';
 import { ensureIntNumber } from ':core/type/util';
 import {
   decryptContent,
@@ -14,6 +13,12 @@ import {
   exportKeyToHexString,
   importKeyFromHexString,
 } from ':util/cipher';
+import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
+
+const ACCOUNTS_KEY = 'accounts';
+const ACTIVE_CHAIN_STORAGE_KEY = 'activeChain';
+const AVAILABLE_CHAINS_STORAGE_KEY = 'availableChains';
+const WALLET_CAPABILITIES_STORAGE_KEY = 'walletCapabilities';
 
 type SwitchEthereumChainParam = [
   {
@@ -25,7 +30,18 @@ export class SCWSigner implements Signer {
   private readonly metadata: AppMetadata;
   private readonly communicator: Communicator;
   private readonly keyManager: SCWKeyManager;
-  private readonly stateManager: SCWStateManager;
+  private readonly storage = new ScopedLocalStorage('CBWSDK', 'SCWStateManager');
+  private readonly updateListener: StateUpdateListener;
+
+  private availableChains?: Chain[];
+  private _accounts: AddressString[];
+  private _activeChain: Chain;
+  get accounts() {
+    return this._accounts;
+  }
+  get activeChain() {
+    return this._activeChain;
+  }
 
   constructor(params: {
     metadata: AppMetadata;
@@ -35,10 +51,12 @@ export class SCWSigner implements Signer {
     this.metadata = params.metadata;
     this.communicator = params.communicator;
     this.keyManager = new SCWKeyManager();
-    this.stateManager = new SCWStateManager({
-      appChainIds: this.metadata.appChainIds,
-      updateListener: params.updateListener,
-    });
+    this.updateListener = params.updateListener;
+
+    this._accounts = this.storage.loadObject(ACCOUNTS_KEY) ?? [];
+    this._activeChain = this.storage.loadObject(ACTIVE_CHAIN_STORAGE_KEY) || {
+      id: params.metadata.appChainIds?.[0] ?? 1,
+    };
 
     this.handshake = this.handshake.bind(this);
     this.request = this.request.bind(this);
@@ -53,9 +71,8 @@ export class SCWSigner implements Signer {
         params: this.metadata,
       },
     });
-    const response: RPCResponseMessage = await this.communicator.postRequestAndWaitForResponse(
-      handshakeMessage
-    );
+    const response: RPCResponseMessage =
+      await this.communicator.postRequestAndWaitForResponse(handshakeMessage);
 
     // store peer's public key
     if ('failure' in response.content) throw response.content.failure;
@@ -68,7 +85,7 @@ export class SCWSigner implements Signer {
     const result = decrypted.result;
     if ('error' in result) throw result.error;
 
-    return this.stateManager.accounts;
+    return this._accounts;
   }
 
   async request<T>(request: RequestArguments): Promise<T> {
@@ -93,7 +110,7 @@ export class SCWSigner implements Signer {
   }
 
   async disconnect() {
-    this.stateManager.clear();
+    this.storage.clear();
     await this.keyManager.clear();
   }
 
@@ -105,13 +122,13 @@ export class SCWSigner implements Signer {
           throw standardErrors.rpc.invalidParams();
         }
         const chainId = ensureIntNumber(params[0].chainId);
-        const switched = this.stateManager.switchChain(chainId);
+        const switched = this.switchChain(chainId);
         // "return null if the request was successful"
         // https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
         return switched ? (null as T) : undefined;
       }
       case 'wallet_getCapabilities': {
-        const walletCapabilities = this.stateManager.walletCapabilities;
+        const walletCapabilities = this.storage.loadObject(WALLET_CAPABILITIES_STORAGE_KEY);
         if (!walletCapabilities) {
           // This should never be the case for scw connections as capabilities are set during handshake
           throw standardErrors.provider.unauthorized(
@@ -136,7 +153,7 @@ export class SCWSigner implements Signer {
     const encrypted = await encryptContent(
       {
         action: request,
-        chainId: this.stateManager.activeChain.id,
+        chainId: this._activeChain.id,
       },
       sharedSecret
     );
@@ -174,14 +191,17 @@ export class SCWSigner implements Signer {
   }
 
   private updateInternalState<T>(request: RequestArguments, response: RPCResponse<T>) {
-    const availableChains = response.data?.chains;
-    if (availableChains) {
-      this.stateManager.updateAvailableChains(availableChains);
+    const rawChains = response.data?.chains;
+    if (rawChains) {
+      const chains = Object.entries(rawChains).map(([id, rpcUrl]) => ({ id: Number(id), rpcUrl }));
+      this.availableChains = chains;
+      this.storage.storeObject(AVAILABLE_CHAINS_STORAGE_KEY, chains);
+      this.switchChain(this._activeChain.id);
     }
 
     const walletCapabilities = response.data?.capabilities;
     if (walletCapabilities) {
-      this.stateManager.updateWalletCapabilities(walletCapabilities);
+      this.storage.storeObject(WALLET_CAPABILITIES_STORAGE_KEY, walletCapabilities);
     }
 
     const result = response.result;
@@ -190,7 +210,9 @@ export class SCWSigner implements Signer {
     switch (request.method as Method) {
       case 'eth_requestAccounts': {
         const accounts = result.value as AddressString[];
-        this.stateManager.updateAccounts(accounts);
+        this._accounts = accounts;
+        this.storage.storeObject(ACCOUNTS_KEY, accounts);
+        this.updateListener.onAccountsUpdate(accounts);
         break;
       }
       case 'wallet_switchEthereumChain': {
@@ -200,11 +222,22 @@ export class SCWSigner implements Signer {
 
         const params = request.params as SwitchEthereumChainParam;
         const chainId = ensureIntNumber(params[0].chainId);
-        this.stateManager.switchChain(chainId);
+        this.switchChain(chainId);
         break;
       }
       default:
         break;
     }
+  }
+
+  private switchChain(chainId: number): boolean {
+    const chain = this.availableChains?.find((chain) => chain.id === chainId);
+    if (!chain) return false;
+    if (chain === this._activeChain) return true;
+
+    this._activeChain = chain;
+    this.storage.storeObject(ACTIVE_CHAIN_STORAGE_KEY, chain);
+    this.updateListener.onChainUpdate(chain);
+    return true;
   }
 }

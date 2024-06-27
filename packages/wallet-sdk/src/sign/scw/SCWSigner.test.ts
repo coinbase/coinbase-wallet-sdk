@@ -1,7 +1,6 @@
 import { StateUpdateListener } from '../interface';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWSigner } from './SCWSigner';
-import { SCWStateManager } from './SCWStateManager';
 import { Communicator } from ':core/communicator/Communicator';
 import { standardErrors } from ':core/error';
 import { EncryptedData, RPCResponseMessage } from ':core/message';
@@ -12,9 +11,12 @@ import {
   exportKeyToHexString,
   importKeyFromHexString,
 } from ':util/cipher';
+import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
+
+const storageLoadSpy = jest.spyOn(ScopedLocalStorage.prototype, 'loadObject');
+const storageStoreSpy = jest.spyOn(ScopedLocalStorage.prototype, 'storeObject');
 
 jest.mock('./SCWKeyManager');
-jest.mock('./SCWStateManager');
 jest.mock(':core/communicator/Communicator', () => ({
   Communicator: jest.fn(() => ({
     postRequestAndWaitForResponse: jest.fn(),
@@ -48,7 +50,6 @@ describe('SCWSigner', () => {
   let mockCommunicator: jest.Mocked<Communicator>;
   let mockUpdateListener: StateUpdateListener;
   let mockKeyManager: jest.Mocked<SCWKeyManager>;
-  let mockStateManager: jest.Mocked<SCWStateManager>;
 
   beforeEach(() => {
     mockMetadata = {
@@ -64,13 +65,8 @@ describe('SCWSigner', () => {
       onChainUpdate: jest.fn(),
     };
     mockKeyManager = new SCWKeyManager() as jest.Mocked<SCWKeyManager>;
-    mockStateManager = new SCWStateManager({
-      appChainIds: [1],
-      updateListener: mockUpdateListener,
-    }) as jest.Mocked<SCWStateManager>;
-
     (SCWKeyManager as jest.Mock).mockImplementation(() => mockKeyManager);
-    (SCWStateManager as jest.Mock).mockImplementation(() => mockStateManager);
+    storageStoreSpy.mockClear();
 
     (importKeyFromHexString as jest.Mock).mockResolvedValue(mockCryptoKey);
     (exportKeyToHexString as jest.Mock).mockResolvedValueOnce('0xPublicKey');
@@ -101,9 +97,10 @@ describe('SCWSigner', () => {
       expect(importKeyFromHexString).toHaveBeenCalledWith('public', '0xPublicKey');
       expect(mockKeyManager.setPeerPublicKey).toHaveBeenCalledWith(mockCryptoKey);
       expect(decryptContent).toHaveBeenCalledWith(encryptedData, mockCryptoKey);
-      expect(mockStateManager.updateAvailableChains).toHaveBeenCalledWith(mockChains);
-      expect(mockStateManager.updateWalletCapabilities).toHaveBeenCalledWith(mockCapabilities);
-      expect(mockStateManager.updateAccounts).toHaveBeenCalledWith(['0xAddress']);
+
+      expect(storageStoreSpy).toHaveBeenCalledWith('availableChains', [{ id: 0, rpcUrl: 10 }]);
+      expect(storageStoreSpy).toHaveBeenCalledWith('walletCapabilities', mockCapabilities);
+      expect(storageStoreSpy).toHaveBeenCalledWith('accounts', ['0xAddress']);
     });
 
     it('should throw an error if failure in response.content', async () => {
@@ -126,7 +123,6 @@ describe('SCWSigner', () => {
         method: 'personal_sign',
         params: ['0xMessage', '0xAddress'],
       };
-      (mockStateManager as any).activeChain = { id: 1 };
 
       (decryptContent as jest.Mock).mockResolvedValueOnce({
         result: {
@@ -151,7 +147,6 @@ describe('SCWSigner', () => {
         method: 'personal_sign',
         params: ['0xMessage', '0xAddress'],
       };
-      (mockStateManager as any).activeChain = { id: 1 };
 
       (decryptContent as jest.Mock).mockResolvedValueOnce({
         result: {
@@ -165,9 +160,8 @@ describe('SCWSigner', () => {
     it('should update internal state for successful wallet_switchEthereumChain', async () => {
       const mockRequest: RequestArguments = {
         method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0x1' }],
+        params: [{ chainId: '0x0' }],
       };
-      (mockStateManager as any).activeChain = { id: 1 };
 
       (decryptContent as jest.Mock).mockResolvedValueOnce({
         result: {
@@ -181,9 +175,9 @@ describe('SCWSigner', () => {
 
       await signer.request(mockRequest);
 
-      expect(mockStateManager.updateAvailableChains).toHaveBeenCalledWith(mockChains);
-      expect(mockStateManager.updateWalletCapabilities).toHaveBeenCalledWith(mockCapabilities);
-      expect(mockStateManager.switchChain).toHaveBeenCalledWith(1);
+      expect(storageStoreSpy).toHaveBeenCalledWith('availableChains', [{ id: 0, rpcUrl: 10 }]);
+      expect(storageStoreSpy).toHaveBeenCalledWith('walletCapabilities', mockCapabilities);
+      expect(mockUpdateListener.onChainUpdate).toHaveBeenCalled();
     });
   });
 
@@ -192,7 +186,6 @@ describe('SCWSigner', () => {
       await signer.disconnect();
 
       expect(mockKeyManager.clear).toHaveBeenCalled();
-      expect(mockStateManager.clear).toHaveBeenCalled();
     });
   });
 });
