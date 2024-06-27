@@ -114,9 +114,7 @@ describe('SCWStateManager', () => {
 
       it('should not call chainUpdatedListener when switching to an unavailable chain', () => {
         stateManager.switchChain(3);
-        expect(chainUpdatedListener).not.toHaveBeenCalledWith(
-          expect.objectContaining({ source: 'wallet' })
-        );
+        expect(chainUpdatedListener).not.toHaveBeenCalled();
       });
     });
 
@@ -130,9 +128,7 @@ describe('SCWStateManager', () => {
       });
       it('should not call chainUpdatedListener when updated available chains does not include the active chain', () => {
         stateManager.updateAvailableChains({ 3: 'https://chain3.com' });
-        expect(chainUpdatedListener).not.toHaveBeenCalledWith(
-          expect.objectContaining({ source: 'wallet' })
-        );
+        expect(chainUpdatedListener).not.toHaveBeenCalled();
       });
     });
   });
