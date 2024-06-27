@@ -107,8 +107,8 @@ describe('SCWStateManager', () => {
       it('should call chainUpdatedListener when switching the active chain', () => {
         stateManager.switchChain(7);
         expect(chainUpdatedListener).toHaveBeenCalledWith({
-          chain: { id: 7, rpcUrl: 'https://chain7.com' },
-          source: 'wallet',
+          id: 7,
+          rpcUrl: 'https://chain7.com',
         });
       });
 
@@ -124,8 +124,8 @@ describe('SCWStateManager', () => {
       it('should call chainUpdatedListener when updated available chains include the active chain', () => {
         stateManager.updateAvailableChains({ 1: 'https://chain1.com' });
         expect(chainUpdatedListener).toHaveBeenCalledWith({
-          chain: { id: 1, rpcUrl: 'https://chain1.com' },
-          source: 'wallet',
+          id: 1,
+          rpcUrl: 'https://chain1.com',
         });
       });
       it('should not call chainUpdatedListener when updated available chains does not include the active chain', () => {
