@@ -4,9 +4,24 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable no-console */
 // @ts-ignore
-import { binary_to_base58 } from 'base58-js';
+import { p256 } from '@noble/curves/p256';
+const { startAuthentication } = require('@simplewebauthn/browser');
+import { generateAuthenticationOptions } from '@simplewebauthn/server';
+import { isoBase64URL } from '@simplewebauthn/server/helpers';
 import EventEmitter from 'eventemitter3';
-import { Hex, WalletGrantPermissionsParameters } from 'viem';
+import {
+  Address,
+  bytesToBigInt,
+  decodeAbiParameters,
+  encodeAbiParameters,
+  Hex,
+  hexToBigInt,
+  hexToBytes,
+  parseAbiParameter,
+  stringToHex,
+  toHex,
+  WalletGrantPermissionsParameters,
+} from 'viem';
 
 import { standardErrorCodes, standardErrors } from './core/error';
 import { serializeError } from './core/error/serialize';
@@ -29,6 +44,215 @@ import { determineMethodCategory } from ':core/provider/method';
 import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 const { createCredential } = require('webauthn-p256');
+
+type BuildUserOperationParams = {
+  ownerIndex: bigint;
+  authenticatorData: string;
+  clientDataJSON: string;
+  r: bigint;
+  s: bigint;
+};
+
+const WebAuthnAuthStruct = {
+  components: [
+    {
+      name: 'authenticatorData',
+      type: 'bytes',
+    },
+    { name: 'clientDataJSON', type: 'bytes' },
+    { name: 'challengeIndex', type: 'uint256' },
+    { name: 'typeIndex', type: 'uint256' },
+    {
+      name: 'r',
+      type: 'uint256',
+    },
+    {
+      name: 's',
+      type: 'uint256',
+    },
+  ],
+  name: 'WebAuthnAuth',
+  type: 'tuple',
+};
+
+const SignatureWrapperStruct = {
+  components: [
+    {
+      name: 'ownerIndex',
+      type: 'uint256',
+    },
+    {
+      name: 'signatureData',
+      type: 'bytes',
+    },
+  ],
+  name: 'SignatureWrapper',
+  type: 'tuple',
+};
+
+export function buildWebAuthnSignature({
+  ownerIndex,
+  authenticatorData,
+  clientDataJSON,
+  r,
+  s,
+}: BuildUserOperationParams): Hex {
+  const jsonClientDataUtf8 = isoBase64URL.toUTF8String(clientDataJSON);
+  const challengeIndex = jsonClientDataUtf8.indexOf('"challenge":');
+  const typeIndex = jsonClientDataUtf8.indexOf('"type":');
+
+  const webAuthnAuthBytes = encodeAbiParameters(
+    [WebAuthnAuthStruct],
+    [
+      {
+        authenticatorData,
+        clientDataJSON: stringToHex(jsonClientDataUtf8),
+        challengeIndex,
+        typeIndex,
+        r,
+        s,
+      },
+    ]
+  );
+
+  return encodeAbiParameters(
+    [SignatureWrapperStruct],
+    [
+      {
+        ownerIndex,
+        signatureData: webAuthnAuthBytes,
+      },
+    ]
+  );
+}
+
+// adapted from Daimo
+export function extractRSFromSig(base64Signature: string): {
+  r: bigint;
+  s: bigint;
+} {
+  // Create an ECDSA instance with the secp256r1 curve
+
+  // Decode the signature from Base64
+  const signatureDER = Buffer.from(base64Signature, 'base64');
+  const parsedSignature = p256.Signature.fromDER(signatureDER);
+  const bSig = hexToBytes(`0x${parsedSignature.toCompactHex()}`);
+  // assert(bSig.length === 64, "signature is not 64 bytes");
+  const bR = bSig.slice(0, 32);
+  const bS = bSig.slice(32);
+
+  // Avoid malleability. Ensure low S (<= N/2 where N is the curve order)
+  const r = bytesToBigInt(bR);
+  let s = bytesToBigInt(bS);
+  const n = BigInt('0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551');
+  if (s > n / BigInt(2)) {
+    s = n - s;
+  }
+  return { r, s };
+}
+
+const SessionCallPermission = '0xD28D11a3781Baf3A6867C266385619F2d6Cbba1E';
+
+type Session = {
+  account: Address;
+  approval: Hex;
+  signer: Hex;
+  permissionContract: Address;
+  permissionData: Hex;
+  expiresAt: number; // unix seconds
+  chainId: bigint;
+  verifyingContract: Address;
+};
+
+type UserOperation = {
+  sender: Address;
+  nonce: Hex;
+  initCode: Hex;
+  callData: Hex;
+  callGasLimit: Hex;
+  verificationGasLimit: Hex;
+  preVerificationGas: Hex;
+  maxFeePerGas: Hex;
+  maxPriorityFeePerGas: Hex;
+  paymasterAndData: Hex;
+  signature: Hex;
+};
+
+export const sessionStruct = parseAbiParameter([
+  'Session session',
+  'struct Session { address account; bytes approval; bytes signer; address permissionContract; bytes permissionData; uint40 expiresAt; uint256 chainId; address verifyingContract; }',
+]);
+
+export function decodePermissionsContext(permissionsContext: Hex): Session {
+  const [session] = decodeAbiParameters([sessionStruct], permissionsContext);
+  return session;
+}
+
+// note this is for v0.6, our current Entrypoint version for CoinbaseSmartWallet
+export const userOperationStruct = parseAbiParameter([
+  'UserOperation userOperation',
+  'struct UserOperation { address sender; uint256 nonce; bytes initCode; bytes callData; uint256 callGasLimit; uint256 verificationGasLimit; uint256 preVerificationGas; uint256 maxFeePerGas; uint256 maxPriorityFeePerGas; bytes paymasterAndData; bytes signature; }',
+]);
+
+const signatureWrapperStruct = parseAbiParameter([
+  'SignatureWrapper signatureWrapper',
+  'struct SignatureWrapper { uint256 ownerIndex; bytes signatureData; }',
+]);
+
+// wraps a signature with an ownerIndex for verification within CoinbaseSmartWallet
+function wrapSignature({
+  ownerIndex,
+  signatureData,
+}: {
+  ownerIndex: bigint;
+  signatureData: Hex;
+}): Hex {
+  return encodeAbiParameters([signatureWrapperStruct], [{ ownerIndex, signatureData }] as never);
+}
+
+function updateUserOpSignature({
+  userOp,
+  sessionManagerOwnerIndex,
+  session,
+  sessionKeySignature,
+}: {
+  userOp: UserOperation;
+  sessionManagerOwnerIndex: bigint;
+  session: Session;
+  sessionKeySignature: Hex;
+}): UserOperation {
+  console.log(session.permissionContract, SessionCallPermission);
+  console.log('sessionStruct', sessionStruct);
+  console.log('sessionKeySignature', sessionKeySignature);
+
+  const newOp = {
+    ...userOp,
+    nonce: hexToBigInt(userOp.nonce),
+    callGasLimit: hexToBigInt(userOp.callGasLimit),
+    verificationGasLimit: hexToBigInt(userOp.verificationGasLimit),
+    preVerificationGas: hexToBigInt(userOp.preVerificationGas),
+    maxFeePerGas: hexToBigInt(userOp.maxFeePerGas),
+    maxPriorityFeePerGas: hexToBigInt(userOp.maxPriorityFeePerGas),
+  };
+
+  console.log('newOp', newOp);
+
+  const authData = encodeAbiParameters(
+    [sessionStruct, { name: 'sessionKeySignature', type: 'bytes' }],
+    [session, sessionKeySignature] as never
+  );
+  console.log('got the auth data', authData);
+  const signature = wrapSignature({
+    ownerIndex: sessionManagerOwnerIndex,
+    signatureData: authData,
+  });
+
+  console.log('got the wrapped signature', signature);
+  return {
+    ...userOp,
+    signature,
+  };
+}
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
   private readonly metadata: AppMetadata;
@@ -75,7 +299,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
         jsonrpc: '2.0',
         id: crypto.randomUUID(),
       };
-      const res = await window.fetch('http://', {
+      const res = await window.fetch('http://localhost:3000/api/sendCalls', {
         method: 'POST',
         body: JSON.stringify(requestBody),
         mode: 'cors',
@@ -84,6 +308,85 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
         },
       });
       const response = await res.json();
+      const { hash, userOp } = response.result;
+
+      const options = await generateAuthenticationOptions({
+        rpID: window.location.hostname,
+        challenge: hash,
+        userVerification: 'preferred',
+      });
+      options.challenge = hash;
+
+      const { response: sigResponse } = await startAuthentication(options);
+
+      console.log(319, sigResponse);
+
+      const authenticatorData = toHex(Buffer.from(sigResponse.authenticatorData, 'base64'));
+
+      console.log(323, authenticatorData);
+
+      const { r, s } = extractRSFromSig(sigResponse.signature);
+
+      console.log(325, r, s);
+
+      const signature = buildWebAuthnSignature({
+        r,
+        s,
+        ownerIndex: BigInt(0),
+        authenticatorData,
+        clientDataJSON: sigResponse.clientDataJSON,
+      });
+
+      console.log(request.params);
+
+      console.log((request.params as { capabilities: any }[])[0].capabilities);
+      const session = decodePermissionsContext(
+        (request.params as { capabilities: any }[])[0].capabilities.permissions.context
+      );
+      console.log('got the session', session);
+      const updatedOp = updateUserOpSignature({
+        userOp,
+        sessionKeySignature: signature,
+        sessionManagerOwnerIndex: BigInt(1),
+        session,
+      });
+
+      console.log('luksa signature', updatedOp);
+
+      const b = {
+        method: 'wallet_submitOp',
+        params: { userOp: updatedOp },
+        jsonrpc: '2.0',
+        id: crypto.randomUUID(),
+      };
+      await window.fetch('http://localhost:3000/api/sendCalls', {
+        method: 'POST',
+        body: JSON.stringify(b),
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      // const options = await generateAuthenticationOptions({
+      //   rpID: window.location.hostname,
+      //   challenge: hash,
+      //   userVerification: 'preferred',
+      // });
+      // options.challenge = hash;
+
+      // const { response: authResponse } = await startAuthentication(options);
+      // const authenticatorData = toHex(Buffer.from(response.authenticatorData, 'base64'));
+
+      // const { r, s } = extractRSFromSig(response.signature);
+
+      // const signature = buildWebAuthnSignature({
+      //   r,
+      //   s,
+      //   ownerIndex: ownerIndex - 1n,
+      //   authenticatorData,
+      //   clientDataJSON: response.clientDataJSON,
+      // });
       return response.result;
     },
 
@@ -104,7 +407,8 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
             }
           | { method: 'personal_sign'; params: [Hex] }
         )[];
-        const credential = await createCredential({ name: 'App' });
+        const credential = await createCredential({ name: 'please' });
+        console.log('cred id', credential.id);
         // @ts-ignore
         const updatedRequests = await Promise.all(
           requests.map(async (request) => {
@@ -131,6 +435,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
         const signerType = await this.requestSignerSelection();
         const signer = this.initSigner(signerType);
         const accounts = await signer.handshake({ requests: updatedRequests });
+        console.log('got this', accounts);
 
         this.emit('accountsChanged', (accounts as { addresses: any }).addresses);
 

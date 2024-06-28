@@ -1,6 +1,6 @@
 {
   "name": "@lukasrosario/wallet-sdk",
-  "version": "38.0.0",
+  "version": "56.0.0",
   "description": "Coinbase Wallet JavaScript SDK",
   "keywords": [
     "coinbase",
@@ -28,6 +28,9 @@
     "lint": "eslint . --ext .ts,.tsx --fix"
   },
   "dependencies": {
+    "@noble/curves": "^1.4.0",
+    "@simplewebauthn/browser": "^10.0.0",
+    "@simplewebauthn/server": "^10.0.0",
     "base58-js": "^2.0.0",
     "buffer": "^6.0.3",
     "clsx": "^1.2.1",
