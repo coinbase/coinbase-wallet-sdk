@@ -2,15 +2,15 @@ import { StateUpdateListener } from '../interface'; // Adjust the import path as
 import { ExtensionSigner } from './ExtensionSigner'; // Adjust the import path as needed
 import { AppMetadata, RequestArguments } from ':core/provider/interface'; // Adjust the import path as needed
 import { AddressString } from ':core/type'; // Adjust the import path as needed
-import { CBInjectedProvider, CBWindow } from ':util/provider'; // Adjust the import path as needed
+import { CBExtensionInjectedProvider, CBWindow } from ':util/provider'; // Adjust the import path as needed
 
-// Mocking CBInjectedProvider and StateUpdateListener
+// Mocking CBExtensionInjectedProvider and StateUpdateListener
 const mockUpdateListener: StateUpdateListener = {
   onChainUpdate: jest.fn(),
   onAccountsUpdate: jest.fn(),
 };
 
-const mockExtensionProvider: Partial<CBInjectedProvider> = {
+const mockExtensionProvider: Partial<CBExtensionInjectedProvider> = {
   setAppInfo: jest.fn(),
   on: jest.fn(),
   request: jest.fn(),
@@ -25,7 +25,8 @@ mockExtensionProvider.on = jest.fn((event, listener) => {
   eventListeners[event] = listener;
 });
 
-(globalThis as CBWindow).coinbaseWalletExtension = mockExtensionProvider as CBInjectedProvider;
+(globalThis as CBWindow).coinbaseWalletExtension =
+  mockExtensionProvider as CBExtensionInjectedProvider;
 
 const metadata: AppMetadata = {
   appName: 'TestApp',
@@ -57,7 +58,8 @@ describe('ExtensionSigner', () => {
     expect(() => new ExtensionSigner({ metadata, updateListener: mockUpdateListener })).toThrow(
       'Coinbase Wallet extension not found'
     );
-    (globalThis as CBWindow).coinbaseWalletExtension = mockExtensionProvider as CBInjectedProvider;
+    (globalThis as CBWindow).coinbaseWalletExtension =
+      mockExtensionProvider as CBExtensionInjectedProvider;
     expect(
       () => new ExtensionSigner({ metadata, updateListener: mockUpdateListener })
     ).not.toThrow();
