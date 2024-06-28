@@ -1,7 +1,7 @@
 import { StateUpdateListener } from '../interface';
 import { AppMetadata, ProviderInterface, RequestArguments, Signer } from ':core/provider/interface';
 import { AddressString } from ':core/type';
-import { CBWindow } from ':util/provider';
+import { CBExtensionInjectedProvider } from ':util/provider';
 
 export class ExtensionSigner implements Signer {
   private readonly metadata: AppMetadata;
@@ -11,8 +11,9 @@ export class ExtensionSigner implements Signer {
   constructor(params: { metadata: AppMetadata; updateListener: StateUpdateListener }) {
     this.metadata = params.metadata;
     this.updateListener = params.updateListener;
-    const window = globalThis as CBWindow;
-    const extensionProvider = window.coinbaseWalletExtension;
+    const extensionProvider = (
+      globalThis as { coinbaseWalletExtension?: CBExtensionInjectedProvider }
+    ).coinbaseWalletExtension;
 
     if (extensionProvider) {
       const { appName, appLogoUrl, appChainIds } = this.metadata;
