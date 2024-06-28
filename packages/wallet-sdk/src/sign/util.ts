@@ -1,11 +1,10 @@
+import { ExtensionSigner } from './extension/ExtensionSigner';
 import { StateUpdateListener } from './interface';
 import { SCWSigner } from './scw/SCWSigner';
 import { WalletLinkSigner } from './walletlink/WalletLinkSigner';
 import { Communicator } from ':core/communicator/Communicator';
-import { standardErrors } from ':core/error';
 import { ConfigMessage, MessageID, SignerType } from ':core/message';
 import { AppMetadata, Preference, Signer } from ':core/provider/interface';
-import { getCoinbaseInjectedSigner } from ':util/provider';
 import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 const SIGNER_TYPE_KEY = 'SignerType';
@@ -56,11 +55,10 @@ export function createSigner(params: {
         updateListener,
       });
     case 'extension': {
-      const injectedSigner = getCoinbaseInjectedSigner();
-      if (!injectedSigner) {
-        throw standardErrors.rpc.internal('injected signer not found');
-      }
-      return injectedSigner;
+      return new ExtensionSigner({
+        metadata,
+        updateListener,
+      });
     }
   }
 }
