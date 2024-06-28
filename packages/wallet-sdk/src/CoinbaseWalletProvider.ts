@@ -58,7 +58,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
           storeSignerType(signerType);
           this.signer = signer;
         } catch (error) {
-          console.log('Error in handshake', error);
           this.handleUnauthorizedError(error);
           throw error;
         }

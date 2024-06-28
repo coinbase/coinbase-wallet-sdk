@@ -65,7 +65,7 @@ describe('SCWSigner', () => {
     };
     mockKeyManager = new SCWKeyManager() as jest.Mocked<SCWKeyManager>;
     (SCWKeyManager as jest.Mock).mockImplementation(() => mockKeyManager);
-    storageStoreSpy.mockClear();
+    storageStoreSpy.mockReset();
 
     (importKeyFromHexString as jest.Mock).mockResolvedValue(mockCryptoKey);
     (exportKeyToHexString as jest.Mock).mockResolvedValueOnce('0xPublicKey');
