@@ -13,7 +13,7 @@ import { WalletLinkRelay } from './relay/WalletLinkRelay';
 import { WALLETLINK_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
 import { AppMetadata, RequestArguments, Signer } from ':core/provider/interface';
-import { AddressString, IntNumber } from ':core/type';
+import { AddressString, Chain, IntNumber } from ':core/type';
 import {
   ensureAddressString,
   ensureBigInt,
@@ -64,12 +64,14 @@ export class WalletLinkSigner implements Signer {
   private _jsonRpcUrlFromOpts: string;
   private _addresses: AddressString[] = [];
   private hasMadeFirstChainChangedEmission = false;
+  private updateListener?: StateUpdateListener;
 
-  constructor(options: { metadata: AppMetadata /*updateListener?: StateUpdateListener */ }) {
+  constructor(options: { metadata: AppMetadata; updateListener?: StateUpdateListener }) {
     const { appName, appLogoUrl } = options.metadata;
     this._appName = appName;
     this._appLogoUrl = appLogoUrl;
     this._storage = new ScopedLocalStorage('walletlink', WALLETLINK_URL);
+    this.updateListener = options.updateListener;
 
     this._relayEventManager = new RelayEventManager();
     this._jsonRpcUrlFromOpts = '';
