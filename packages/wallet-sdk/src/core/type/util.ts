@@ -3,6 +3,7 @@
 
 import { standardErrors } from '../error';
 import { AddressString, BigIntString, HexString, IntNumber, RegExpString } from '.';
+import { RequestArguments } from ':core/provider/interface';
 
 const INT_STRING_REGEX = /^[0-9]*$/;
 const HEXADECIMAL_STRING_REGEX = /^[a-f0-9]*$/;
@@ -120,6 +121,18 @@ export function ensureIntNumber(num: unknown): IntNumber {
     }
   }
   throw standardErrors.rpc.invalidParams(`Not an integer: ${String(num)}`);
+}
+
+export function ensureChainId(params: RequestArguments['params']): number {
+  const [{ chainId }] = params as [
+    {
+      chainId: `0x${string}`; // Hex chain id
+    },
+  ];
+  if (!params || !chainId) {
+    throw standardErrors.rpc.invalidParams();
+  }
+  return ensureIntNumber(chainId);
 }
 
 export function ensureRegExpString(regExp: unknown): RegExpString {

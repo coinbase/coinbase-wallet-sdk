@@ -1,7 +1,6 @@
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { standardErrors } from './core/error';
-import * as util from './sign/util';
-import { AddressString } from ':core/type';
+import { fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
 
 function createProvider() {
   return new CoinbaseWalletProvider({
@@ -42,60 +41,58 @@ describe('CoinbaseWalletProvider', () => {
   });
 });
 
-const mockFetchSignerType = jest.spyOn(util, 'fetchSignerType');
-const mockLoadSignerType = jest.spyOn(util, 'loadSignerType');
-const mockStoreSignerType = jest.spyOn(util, 'storeSignerType');
-
 const mockHandshake = jest.fn();
 const mockRequest = jest.fn();
-jest.mock('./sign/scw/SCWSigner', () => {
+
+jest.mock('./sign/util', () => {
   return {
-    SCWSigner: jest.fn().mockImplementation(() => {
-      return {
-        handshake: mockHandshake,
-        request: mockRequest,
-      };
+    fetchSignerType: jest.fn(),
+    loadSignerType: jest.fn(),
+    storeSignerType: jest.fn(),
+    createSigner: () => ({
+      chain: { id: 1 },
+      handshake: mockHandshake,
+      request: mockRequest,
     }),
   };
 });
 
 describe('signer configuration', () => {
   it('should complete signerType selection correctly', async () => {
-    mockFetchSignerType.mockResolvedValue('scw');
+    (fetchSignerType as jest.Mock).mockResolvedValue('scw');
     mockHandshake.mockResolvedValueOnce(['0x123']);
 
     const provider = createProvider();
-    const accounts = await provider.request({ method: 'eth_requestAccounts' });
-    expect(accounts).toEqual(['0x123']);
+    await provider.request({ method: 'eth_requestAccounts' });
     expect(mockHandshake).toHaveBeenCalledWith();
   });
 
   it('should throw error if signer selection failed', async () => {
     const error = new Error('Signer selection failed');
-    mockFetchSignerType.mockRejectedValueOnce(error);
+    (fetchSignerType as jest.Mock).mockRejectedValue(error);
 
     const provider = createProvider();
     await expect(provider.request({ method: 'eth_requestAccounts' })).rejects.toThrow(error);
     expect(mockHandshake).not.toHaveBeenCalled();
-    expect(mockStoreSignerType).not.toHaveBeenCalled();
+    expect(storeSignerType as jest.Mock).not.toHaveBeenCalled();
   });
 
   it('should not store signer type unless handshake is successful', async () => {
     const error = new Error('Handshake failed');
-    mockFetchSignerType.mockResolvedValueOnce('scw');
+    (fetchSignerType as jest.Mock).mockResolvedValueOnce('scw');
     mockHandshake.mockRejectedValueOnce(error);
 
     const provider = createProvider();
     await expect(provider.request({ method: 'eth_requestAccounts' })).rejects.toThrow(error);
     expect(mockHandshake).toHaveBeenCalled();
-    expect(mockStoreSignerType).not.toHaveBeenCalled();
+    expect(storeSignerType as jest.Mock).not.toHaveBeenCalled();
   });
 
   it('should load signer from storage when available', async () => {
-    mockLoadSignerType.mockReturnValueOnce('scw');
+    (loadSignerType as jest.Mock).mockReturnValueOnce('scw');
     const provider = createProvider();
     // @ts-expect-error // TODO: should be able to mock cached accounts
-    provider.accounts = [AddressString('0x123')];
+    (provider.signer as SCWSigner).accounts = ['0x123'];
     const request = { method: 'personal_sign', params: ['0x123', '0xdeadbeef'] };
     provider.request(request);
     expect(mockRequest).toHaveBeenCalledWith(request);

@@ -8,8 +8,8 @@ import {
 } from ':core/provider/interface';
 import { Chain } from ':core/type';
 
-export async function fetchRPCRequest(request: RequestArguments, chain: Chain) {
-  if (!chain.rpcUrl) throw standardErrors.rpc.internal('No RPC URL set for chain');
+export async function fetchRPCRequest(request: RequestArguments, chain?: Chain) {
+  if (!chain?.rpcUrl) throw standardErrors.rpc.internal('No RPC URL set for chain');
 
   const requestBody = {
     ...request,
@@ -87,18 +87,18 @@ export function getCoinbaseInjectedProvider({
  * @param args The request arguments to validate.
  * @returns An error object if the arguments are invalid, otherwise undefined.
  */
-export function checkErrorForInvalidRequestArgs(args: RequestArguments) {
+export function checkErrorForInvalidRequestArgs(args: unknown) {
   if (!args || typeof args !== 'object' || Array.isArray(args)) {
-    return standardErrors.rpc.invalidParams({
+    throw standardErrors.rpc.invalidParams({
       message: 'Expected a single, non-array, object argument.',
       data: args,
     });
   }
 
-  const { method, params } = args;
+  const { method, params } = args as RequestArguments;
 
   if (typeof method !== 'string' || method.length === 0) {
-    return standardErrors.rpc.invalidParams({
+    throw standardErrors.rpc.invalidParams({
       message: "'args.method' must be a non-empty string.",
       data: args,
     });
@@ -109,10 +109,9 @@ export function checkErrorForInvalidRequestArgs(args: RequestArguments) {
     !Array.isArray(params) &&
     (typeof params !== 'object' || params === null)
   ) {
-    return standardErrors.rpc.invalidParams({
+    throw standardErrors.rpc.invalidParams({
       message: "'args.params' must be an object or array if provided.",
       data: args,
     });
   }
-  return undefined;
 }
