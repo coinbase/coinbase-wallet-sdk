@@ -19,6 +19,8 @@ const mockExtensionProvider: Partial<CBInjectedProvider> = {
 
 const eventListeners: { [event: string]: (...args: any[]) => void } = {};
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
 mockExtensionProvider.on = jest.fn((event, listener) => {
   eventListeners[event] = listener;
 });
@@ -78,11 +80,9 @@ describe('ExtensionSigner', () => {
   });
 
   it('should request accounts during handshake', async () => {
-    (mockExtensionProvider.request as jest.Mock).mockImplementation((args) => {
-      if (args.method === 'eth_requestAccounts') {
-        return ['0x123'];
-      }
-    });
+    (mockExtensionProvider.request as jest.Mock).mockImplementation((args) =>
+      args.method === 'eth_requestAccounts' ? ['0x123'] : null
+    );
 
     const accounts = await signer.handshake();
     expect(accounts).toEqual(['0x123']);
