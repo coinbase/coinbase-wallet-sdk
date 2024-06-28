@@ -21,14 +21,11 @@ export class ExtensionSigner implements Signer {
       this.extensionProvider = extensionProvider;
 
       this.extensionProvider.on('chainChanged', (chainId) => {
-        this.updateListener.onChainUpdate({ chain: { id: Number(chainId) }, source: 'wallet' });
+        this.updateListener.onChainUpdate({ id: Number(chainId) });
       });
 
       this.extensionProvider.on('accountsChanged', (accounts) =>
-        this.updateListener.onAccountsUpdate({
-          accounts: accounts as AddressString[],
-          source: 'wallet',
-        })
+        this.updateListener.onAccountsUpdate(accounts as AddressString[])
       );
     } else {
       // should never happen since SCW FE should not show extension connection type in this case
@@ -45,7 +42,7 @@ export class ExtensionSigner implements Signer {
     });
 
     if (accounts) {
-      this.updateListener.onAccountsUpdate({ accounts, source: 'wallet' });
+      this.updateListener.onAccountsUpdate(accounts);
       return accounts;
     }
     throw new Error('No account found');
