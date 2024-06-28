@@ -1,12 +1,5 @@
-import {
-  CBWindow,
-  checkErrorForInvalidRequestArgs,
-  getInjectedCbWalletMobileBrowserProvider,
-} from './provider';
+import { checkErrorForInvalidRequestArgs } from './provider';
 import { standardErrors } from ':core/error';
-import { ProviderInterface } from ':core/provider/interface';
-
-const window = globalThis as CBWindow;
 
 // @ts-expect-error-next-line
 const invalidArgsError = (args) =>
@@ -28,47 +21,6 @@ const invalidParamsError = (args) =>
   });
 
 describe('Utils', () => {
-  describe('getInjectedCbWalletMobileBrowserProvider', () => {
-    describe('Browser Provider', () => {
-      class MockCipherProviderClass {
-        public isCoinbaseBrowser = true;
-      }
-
-      const mockCipherProvider = new MockCipherProviderClass() as unknown as ProviderInterface;
-
-      beforeAll(() => {
-        window.coinbaseWalletExtension = undefined;
-        window.ethereum = mockCipherProvider;
-      });
-
-      afterAll(() => {
-        window.ethereum = undefined;
-      });
-
-      it('Should return injected browser provider', () => {
-        expect(getInjectedCbWalletMobileBrowserProvider()).toBe(mockCipherProvider);
-      });
-
-      it('should handle exception when accessing window.top', () => {
-        window.ethereum = undefined;
-        const originalWindowTop = window.top;
-        Object.defineProperty(window, 'top', {
-          get: () => {
-            throw new Error('Simulated access error');
-          },
-          configurable: true,
-        });
-
-        expect(getInjectedCbWalletMobileBrowserProvider()).toBe(undefined);
-
-        Object.defineProperty(window, 'top', {
-          get: () => originalWindowTop,
-          configurable: true,
-        });
-      });
-    });
-  });
-
   describe('getErrorForInvalidRequestArgs', () => {
     it('should throw if args is not an object', () => {
       const args = 'not an object';
