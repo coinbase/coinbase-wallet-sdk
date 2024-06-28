@@ -1,12 +1,12 @@
 import { StateUpdateListener } from '../interface';
-import { AppMetadata, RequestArguments, Signer } from ':core/provider/interface';
+import { AppMetadata, ProviderInterface, RequestArguments, Signer } from ':core/provider/interface';
 import { AddressString } from ':core/type';
-import { CBInjectedProvider, CBWindow } from ':util/provider';
+import { CBWindow } from ':util/provider';
 
 export class ExtensionSigner implements Signer {
   private readonly metadata: AppMetadata;
   private readonly updateListener: StateUpdateListener;
-  private extensionProvider: CBInjectedProvider | undefined;
+  private extensionProvider: ProviderInterface | undefined;
 
   constructor(params: { metadata: AppMetadata; updateListener: StateUpdateListener }) {
     this.metadata = params.metadata;

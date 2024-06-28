@@ -24,7 +24,7 @@ export async function fetchRPCRequest(request: RequestArguments, chain: Chain) {
 export interface CBWindow {
   top: CBWindow;
   ethereum?: CBInjectedProvider;
-  coinbaseWalletExtension?: CBInjectedProvider;
+  coinbaseWalletExtension?: ProviderInterface;
 }
 
 export interface CBInjectedProvider extends ProviderInterface {
