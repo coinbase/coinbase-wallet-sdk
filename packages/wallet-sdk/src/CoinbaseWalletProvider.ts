@@ -12,7 +12,6 @@ import {
 } from './core/provider/interface';
 import { AddressString, Chain, IntNumber } from './core/type';
 import { areAddressArraysEqual, hexStringFromIntNumber } from './core/type/util';
-import { AccountsUpdate, ChainUpdate } from './sign/interface';
 import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './util/provider';
 import { Communicator } from ':core/communicator/Communicator';
@@ -144,16 +143,14 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   readonly isCoinbaseWallet = true;
 
   protected readonly updateListener = {
-    onAccountsUpdate: ({ accounts, source }: AccountsUpdate) => {
+    onAccountsUpdate: (accounts: AddressString[]) => {
       if (areAddressArraysEqual(this.accounts, accounts)) return;
       this.accounts = accounts;
-      if (source === 'storage') return;
       this.emit('accountsChanged', this.accounts);
     },
-    onChainUpdate: ({ chain, source }: ChainUpdate) => {
+    onChainUpdate: (chain: Chain) => {
       if (chain.id === this.chain.id && chain.rpcUrl === this.chain.rpcUrl) return;
       this.chain = chain;
-      if (source === 'storage') return;
       this.emit('chainChanged', hexStringFromIntNumber(IntNumber(chain.id)));
     },
   };
