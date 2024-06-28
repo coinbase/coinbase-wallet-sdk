@@ -15,7 +15,6 @@ import {
   decodeAbiParameters,
   encodeAbiParameters,
   Hex,
-  hexToBigInt,
   hexToBytes,
   parseAbiParameter,
   stringToHex,
@@ -46,7 +45,6 @@ import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 const { createCredential } = require('webauthn-p256');
 
 type BuildUserOperationParams = {
-  ownerIndex: bigint;
   authenticatorData: string;
   clientDataJSON: string;
   r: bigint;
@@ -75,23 +73,7 @@ const WebAuthnAuthStruct = {
   type: 'tuple',
 };
 
-const SignatureWrapperStruct = {
-  components: [
-    {
-      name: 'ownerIndex',
-      type: 'uint256',
-    },
-    {
-      name: 'signatureData',
-      type: 'bytes',
-    },
-  ],
-  name: 'SignatureWrapper',
-  type: 'tuple',
-};
-
 export function buildWebAuthnSignature({
-  ownerIndex,
   authenticatorData,
   clientDataJSON,
   r,
@@ -115,15 +97,7 @@ export function buildWebAuthnSignature({
     ]
   );
 
-  return encodeAbiParameters(
-    [SignatureWrapperStruct],
-    [
-      {
-        ownerIndex,
-        signatureData: webAuthnAuthBytes,
-      },
-    ]
-  );
+  return webAuthnAuthBytes;
 }
 
 // adapted from Daimo
@@ -151,7 +125,7 @@ export function extractRSFromSig(base64Signature: string): {
   return { r, s };
 }
 
-const SessionCallPermission = '0xD28D11a3781Baf3A6867C266385619F2d6Cbba1E';
+const SessionCallPermission = '0xd314fdcb16adb955fa3bc339aa6c894706263258';
 
 type Session = {
   account: Address;
@@ -225,23 +199,12 @@ function updateUserOpSignature({
   console.log('sessionStruct', sessionStruct);
   console.log('sessionKeySignature', sessionKeySignature);
 
-  const newOp = {
-    ...userOp,
-    nonce: hexToBigInt(userOp.nonce),
-    callGasLimit: hexToBigInt(userOp.callGasLimit),
-    verificationGasLimit: hexToBigInt(userOp.verificationGasLimit),
-    preVerificationGas: hexToBigInt(userOp.preVerificationGas),
-    maxFeePerGas: hexToBigInt(userOp.maxFeePerGas),
-    maxPriorityFeePerGas: hexToBigInt(userOp.maxPriorityFeePerGas),
-  };
-
-  console.log('newOp', newOp);
-
+  const requestData = encodeAbiParameters([userOperationStruct], [userOp] as never);
   const authData = encodeAbiParameters(
-    [sessionStruct, { name: 'sessionKeySignature', type: 'bytes' }],
-    [session, sessionKeySignature] as never
+    [sessionStruct, { name: 'signature', type: 'bytes' }, { name: 'requestData', type: 'bytes' }],
+    [session, sessionKeySignature, requestData] as never
   );
-  console.log('got the auth data', authData);
+
   const signature = wrapSignature({
     ownerIndex: sessionManagerOwnerIndex,
     signatureData: authData,
@@ -332,7 +295,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       const signature = buildWebAuthnSignature({
         r,
         s,
-        ownerIndex: BigInt(0),
         authenticatorData,
         clientDataJSON: sigResponse.clientDataJSON,
       });
@@ -347,7 +309,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       const updatedOp = updateUserOpSignature({
         userOp,
         sessionKeySignature: signature,
-        sessionManagerOwnerIndex: BigInt(1),
+        sessionManagerOwnerIndex: BigInt(5),
         session,
       });
 
