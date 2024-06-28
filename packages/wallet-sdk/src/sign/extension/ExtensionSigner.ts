@@ -11,7 +11,8 @@ export class ExtensionSigner implements Signer {
   constructor(params: { metadata: AppMetadata; updateListener: StateUpdateListener }) {
     this.metadata = params.metadata;
     this.updateListener = params.updateListener;
-    const extensionProvider = this.getCbInjectedExtensionProvider();
+    const window = globalThis as CBWindow;
+    const extensionProvider = window.coinbaseWalletExtension;
 
     if (extensionProvider) {
       const { appName, appLogoUrl, appChainIds } = this.metadata;
@@ -32,11 +33,6 @@ export class ExtensionSigner implements Signer {
       // should never happen since SCW FE should not show extension connection type in this case
       throw new Error('Coinbase Wallet extension not found');
     }
-  }
-
-  private getCbInjectedExtensionProvider(): CBInjectedProvider | undefined {
-    const window = globalThis as CBWindow;
-    return window.coinbaseWalletExtension;
   }
 
   async handshake(): Promise<AddressString[]> {

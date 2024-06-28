@@ -6,7 +6,7 @@ import { AppMetadata, Preference, ProviderInterface } from './core/provider/inte
 import { ScopedLocalStorage } from './util/ScopedLocalStorage';
 import { LIB_VERSION } from './version';
 import { getFavicon } from ':core/type/util';
-import { getInjectedCbWalletMobileBrowserProvider } from ':util/provider';
+import { CBWindow } from ':util/provider';
 
 // for backwards compatibility
 type CoinbaseWalletSDKOptions = Partial<AppMetadata>;
@@ -25,7 +25,20 @@ export class CoinbaseWalletSDK {
 
   public makeWeb3Provider(preference: Preference = { options: 'all' }): ProviderInterface {
     const params = { metadata: this.metadata, preference };
-    return getInjectedCbWalletMobileBrowserProvider() ?? new CoinbaseWalletProvider(params);
+    let ethereum = undefined;
+    try {
+      const window = globalThis as CBWindow;
+      ethereum = window.ethereum ?? window.top?.ethereum;
+    } catch {
+      // do nothing, ethereum remains undefined
+    }
+
+    let injectedCbWalletMobileBrowserProvider = undefined;
+
+    if (ethereum?.isCoinbaseBrowser) {
+      injectedCbWalletMobileBrowserProvider = ethereum;
+    }
+    return injectedCbWalletMobileBrowserProvider ?? new CoinbaseWalletProvider(params);
   }
 
   /**

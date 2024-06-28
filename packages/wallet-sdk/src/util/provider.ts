@@ -32,23 +32,6 @@ export interface CBInjectedProvider extends ProviderInterface {
   setAppInfo?: (...args: unknown[]) => unknown;
 }
 
-function getInjectedEthereum(): CBInjectedProvider | undefined {
-  try {
-    const window = globalThis as CBWindow;
-    return window.ethereum ?? window.top?.ethereum;
-  } catch {
-    return undefined;
-  }
-}
-
-export function getInjectedCbWalletMobileBrowserProvider(): ProviderInterface | undefined {
-  const ethereum = getInjectedEthereum();
-  if (ethereum?.isCoinbaseBrowser) {
-    return ethereum;
-  }
-  return undefined;
-}
-
 /**
  * Validates the arguments for an invalid request and returns an error if any validation fails.
  * Valid request args are defined here: https://eips.ethereum.org/EIPS/eip-1193#request
