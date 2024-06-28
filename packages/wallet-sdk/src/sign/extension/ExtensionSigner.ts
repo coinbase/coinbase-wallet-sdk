@@ -18,31 +18,25 @@ export class ExtensionSigner implements Signer {
       extensionProvider.setAppInfo?.(appName, appLogoUrl, appChainIds);
       this.extensionProvider = extensionProvider;
 
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
-      this.extensionProvider.on('chainChanged', this.handleChainChanged.bind(this));
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
-      this.extensionProvider.on('accountsChanged', this.handleAccountsChanged.bind(this));
+      this.extensionProvider.on('chainChanged', (chainId) => {
+        this.updateListener.onChainUpdate({ chain: { id: Number(chainId) }, source: 'wallet' });
+      });
+
+      this.extensionProvider.on('accountsChanged', (accounts) =>
+        this.updateListener.onAccountsUpdate({
+          accounts: accounts as AddressString[],
+          source: 'wallet',
+        })
+      );
     } else {
       // should never happen since SCW FE should not show extension connection type in this case
       throw new Error('Coinbase Wallet extension not found');
     }
-    //   if no provider found, this connection type should have never been shown in the FE UI
-    // throw error if no provider found
   }
 
-  getCbInjectedExtensionProvider(): CBInjectedProvider | undefined {
+  private getCbInjectedExtensionProvider(): CBInjectedProvider | undefined {
     const window = globalThis as CBWindow;
     return window.coinbaseWalletExtension;
-  }
-
-  private handleChainChanged(chainId: number) {
-    this.updateListener.onChainUpdate({ chain: { id: chainId }, source: 'wallet' });
-  }
-
-  private handleAccountsChanged(accounts: AddressString[]) {
-    this.updateListener.onAccountsUpdate({ accounts, source: 'wallet' });
   }
 
   async handshake(): Promise<AddressString[]> {
@@ -54,7 +48,7 @@ export class ExtensionSigner implements Signer {
     });
 
     if (accounts) {
-      this.handleAccountsChanged(accounts);
+      this.updateListener.onAccountsUpdate({ accounts, source: 'wallet' });
       return accounts;
     }
     throw new Error('No account found');
