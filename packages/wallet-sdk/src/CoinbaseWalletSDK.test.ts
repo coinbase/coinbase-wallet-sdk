@@ -9,11 +9,8 @@ const window = globalThis as CBWindow;
 jest.mock(':core/type/util');
 jest.mock(':util/provider');
 jest.mock('./CoinbaseWalletProvider');
-class MockCipherProviderClass {
-  public isCoinbaseBrowser = true;
-}
 
-const mockCipherProvider = new MockCipherProviderClass() as unknown as ProviderInterface;
+const mockCipherProvider = { isCoinbaseBrowser: true } as unknown as ProviderInterface;
 
 describe('CoinbaseWalletSDK', () => {
   test('@makeWeb3Provider - return Coinbase Injected Provider', () => {
