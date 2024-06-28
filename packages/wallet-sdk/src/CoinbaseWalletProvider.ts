@@ -50,20 +50,20 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   protected readonly handlers = {
     // eth_requestAccounts
     handshake: async (_: RequestArguments): Promise<AddressString[]> => {
-      if (!this.signer) {
-        try {
+      try {
+        if (!this.signer) {
           const signerType = await this.requestSignerSelection();
           const signer = this.initSigner(signerType);
           await signer.handshake();
-          storeSignerType(signerType);
           this.signer = signer;
-        } catch (error) {
-          this.handleUnauthorizedError(error);
-          throw error;
+          storeSignerType(signerType);
         }
+        this.emit('connect', { chainId: hexStringFromIntNumber(IntNumber(this.signer.chain.id)) });
+        return this.signer.accounts;
+      } catch (error) {
+        this.handleUnauthorizedError(error);
+        throw error;
       }
-      this.emit('connect', { chainId: hexStringFromIntNumber(IntNumber(this.signer.chain.id)) });
-      return this.signer.accounts;
     },
 
     sign: async (request: RequestArguments) => {
@@ -128,9 +128,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   }
 
   async disconnect(): Promise<void> {
-    if (this.signer) {
-      this.signer.disconnect();
-    }
+    this.signer?.disconnect();
     ScopedLocalStorage.clearAll();
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
