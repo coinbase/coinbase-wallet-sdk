@@ -48,8 +48,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   public async request<T>(args: RequestArguments): Promise<T> {
     try {
-      const invalidArgsError = checkErrorForInvalidRequestArgs(args);
-      if (invalidArgsError) throw invalidArgsError;
+      checkErrorForInvalidRequestArgs(args);
       // unrecognized methods are treated as fetch requests
       const category = determineMethodCategory(args.method) ?? 'fetch';
       return this.handlers[category](args) as T;
