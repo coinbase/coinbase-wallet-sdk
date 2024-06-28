@@ -12,7 +12,6 @@ import {
 } from './core/provider/interface';
 import { AddressString, Chain, IntNumber } from './core/type';
 import { areAddressArraysEqual, hexStringFromIntNumber } from './core/type/util';
-import { AccountsUpdate, ChainUpdate } from './sign/interface';
 import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './util/provider';
 import { Communicator } from ':core/communicator/Communicator';
@@ -48,12 +47,12 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   public async request<T>(args: RequestArguments): Promise<T> {
     try {
-      const invalidArgsError = checkErrorForInvalidRequestArgs(args);
-      if (invalidArgsError) throw invalidArgsError;
+      checkErrorForInvalidRequestArgs(args);
       // unrecognized methods are treated as fetch requests
       const category = determineMethodCategory(args.method) ?? 'fetch';
       return this.handlers[category](args) as T;
     } catch (error) {
+      this.handleUnauthorizedError(error);
       return Promise.reject(serializeError(error, args.method));
     }
   }
@@ -61,25 +60,20 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   protected readonly handlers = {
     // eth_requestAccounts
     handshake: async (_: RequestArguments): Promise<AddressString[]> => {
-      try {
-        if (this.connected) {
-          this.emit('connect', { chainId: hexStringFromIntNumber(IntNumber(this.chain.id)) });
-          return this.accounts;
-        }
-
-        const signerType = await this.requestSignerSelection();
-        const signer = this.initSigner(signerType);
-        const accounts = await signer.handshake();
-
-        this.signer = signer;
-        storeSignerType(signerType);
-
+      if (this.connected) {
         this.emit('connect', { chainId: hexStringFromIntNumber(IntNumber(this.chain.id)) });
-        return accounts;
-      } catch (error) {
-        this.handleUnauthorizedError(error);
-        throw error;
+        return this.accounts;
       }
+
+      const signerType = await this.requestSignerSelection();
+      const signer = this.initSigner(signerType);
+      const accounts = await signer.handshake();
+
+      this.signer = signer;
+      storeSignerType(signerType);
+
+      this.emit('connect', { chainId: hexStringFromIntNumber(IntNumber(this.chain.id)) });
+      return accounts;
     },
 
     sign: async (request: RequestArguments) => {
@@ -88,12 +82,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
           "Must call 'eth_requestAccounts' before other methods"
         );
       }
-      try {
-        return await this.signer.request(request);
-      } catch (error) {
-        this.handleUnauthorizedError(error);
-        throw error;
-      }
+      return await this.signer.request(request);
     },
 
     fetch: (request: RequestArguments) => fetchRPCRequest(request, this.chain),
@@ -146,6 +135,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   async disconnect(): Promise<void> {
     this.accounts = [];
     this.chain = { id: 1 };
+    this.signer?.disconnect();
     ScopedLocalStorage.clearAll();
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
@@ -153,16 +143,14 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   readonly isCoinbaseWallet = true;
 
   protected readonly updateListener = {
-    onAccountsUpdate: ({ accounts, source }: AccountsUpdate) => {
+    onAccountsUpdate: (accounts: AddressString[]) => {
       if (areAddressArraysEqual(this.accounts, accounts)) return;
       this.accounts = accounts;
-      if (source === 'storage') return;
       this.emit('accountsChanged', this.accounts);
     },
-    onChainUpdate: ({ chain, source }: ChainUpdate) => {
+    onChainUpdate: (chain: Chain) => {
       if (chain.id === this.chain.id && chain.rpcUrl === this.chain.rpcUrl) return;
       this.chain = chain;
-      if (source === 'storage') return;
       this.emit('chainChanged', hexStringFromIntNumber(IntNumber(chain.id)));
     },
   };
