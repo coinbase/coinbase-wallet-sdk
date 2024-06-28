@@ -13,9 +13,8 @@ import {
 } from ':util/cipher';
 import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
-const storageStoreSpy = jest.spyOn(ScopedLocalStorage.prototype, 'storeObject');
-
 jest.mock('./SCWKeyManager');
+const storageStoreSpy = jest.spyOn(ScopedLocalStorage.prototype, 'storeObject');
 jest.mock(':core/communicator/Communicator', () => ({
   Communicator: jest.fn(() => ({
     postRequestAndWaitForResponse: jest.fn(),
@@ -31,7 +30,10 @@ jest.mock(':util/cipher', () => ({
 
 const mockCryptoKey = {} as CryptoKey;
 const encryptedData = {} as EncryptedData;
-const mockChains = [10];
+const mockChains = {
+  '1': 'https://eth-rpc.example.com/1',
+  '2': 'https://eth-rpc.example.com/2',
+};
 const mockCapabilities = {};
 
 const mockError = standardErrors.provider.unauthorized();
@@ -97,7 +99,10 @@ describe('SCWSigner', () => {
       expect(mockKeyManager.setPeerPublicKey).toHaveBeenCalledWith(mockCryptoKey);
       expect(decryptContent).toHaveBeenCalledWith(encryptedData, mockCryptoKey);
 
-      expect(storageStoreSpy).toHaveBeenCalledWith('availableChains', [{ id: 0, rpcUrl: 10 }]);
+      expect(storageStoreSpy).toHaveBeenCalledWith('availableChains', [
+        { id: 1, rpcUrl: 'https://eth-rpc.example.com/1' },
+        { id: 2, rpcUrl: 'https://eth-rpc.example.com/2' },
+      ]);
       expect(storageStoreSpy).toHaveBeenCalledWith('walletCapabilities', mockCapabilities);
       expect(storageStoreSpy).toHaveBeenCalledWith('accounts', ['0xAddress']);
     });
@@ -159,7 +164,7 @@ describe('SCWSigner', () => {
     it('should update internal state for successful wallet_switchEthereumChain', async () => {
       const mockRequest: RequestArguments = {
         method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0x0' }],
+        params: [{ chainId: '0x1' }],
       };
 
       (decryptContent as jest.Mock).mockResolvedValueOnce({
@@ -174,9 +179,15 @@ describe('SCWSigner', () => {
 
       await signer.request(mockRequest);
 
-      expect(storageStoreSpy).toHaveBeenCalledWith('availableChains', [{ id: 0, rpcUrl: 10 }]);
+      expect(storageStoreSpy).toHaveBeenCalledWith('availableChains', [
+        { id: 1, rpcUrl: 'https://eth-rpc.example.com/1' },
+        { id: 2, rpcUrl: 'https://eth-rpc.example.com/2' },
+      ]);
       expect(storageStoreSpy).toHaveBeenCalledWith('walletCapabilities', mockCapabilities);
-      expect(mockUpdateListener.onChainUpdate).toHaveBeenCalled();
+      expect(mockUpdateListener.onChainUpdate).toHaveBeenCalledWith({
+        id: 1,
+        rpcUrl: 'https://eth-rpc.example.com/1',
+      });
     });
   });
 
