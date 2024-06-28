@@ -67,18 +67,12 @@ describe('ExtensionSigner', () => {
 
   it('should handle chainChanged events', () => {
     eventListeners['chainChanged']('1');
-    expect(mockUpdateListener.onChainUpdate).toHaveBeenCalledWith({
-      chain: { id: 1 },
-      source: 'wallet',
-    });
+    expect(mockUpdateListener.onChainUpdate).toHaveBeenCalledWith({ id: 1 });
   });
 
   it('should handle accountsChanged events', () => {
     eventListeners['accountsChanged'](['0x123']);
-    expect(mockUpdateListener.onAccountsUpdate).toHaveBeenCalledWith({
-      accounts: ['0x123'] as AddressString[],
-      source: 'wallet',
-    });
+    expect(mockUpdateListener.onAccountsUpdate).toHaveBeenCalledWith(['0x123'] as AddressString[]);
   });
 
   it('should request accounts during handshake', async () => {
@@ -88,10 +82,7 @@ describe('ExtensionSigner', () => {
 
     const accounts = await signer.handshake();
     expect(accounts).toEqual(['0x123']);
-    expect(mockUpdateListener.onAccountsUpdate).toHaveBeenCalledWith({
-      accounts: ['0x123'],
-      source: 'wallet',
-    });
+    expect(mockUpdateListener.onAccountsUpdate).toHaveBeenCalledWith(['0x123']);
   });
 
   it('should throw error if no accounts found during handshake', async () => {
