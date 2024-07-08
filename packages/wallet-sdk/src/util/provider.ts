@@ -66,6 +66,9 @@ export function getCoinbaseInjectedProvider({
   preference,
 }: Readonly<ConstructorOptions>): ProviderInterface | undefined {
   if (preference.options !== 'smartWalletOnly') {
+    const signer = getCoinbaseInjectedSigner();
+    if (signer) return undefined; // use signer instead
+
     const extension = getCbExtensionInjectedLegacyProvider();
     if (extension) {
       const { appName, appLogoUrl, appChainIds } = metadata;
