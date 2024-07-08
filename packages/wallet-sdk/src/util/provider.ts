@@ -29,11 +29,15 @@ export async function fetchRPCRequest(request: RequestArguments, chain?: Chain) 
 export interface CBWindow {
   coinbaseWalletSigner?: Signer;
   top: CBWindow;
-  ethereum?: CBInjectedProvider;
-  coinbaseWalletExtension?: CBInjectedProvider;
+  ethereum?: CBMobileInjectedProvider;
+  coinbaseWalletExtension?: CBExtensionInjectedProvider;
 }
 
-export interface CBInjectedProvider extends ProviderInterface {
+export interface CBExtensionInjectedProvider extends ProviderInterface {
+  setAppInfo?: (...args: unknown[]) => unknown;
+}
+
+export interface CBMobileInjectedProvider extends ProviderInterface {
   isCoinbaseBrowser?: boolean;
   setAppInfo?: (...args: unknown[]) => unknown;
 }
@@ -43,12 +47,12 @@ export function getCoinbaseInjectedSigner(): Signer | undefined {
   return window.coinbaseWalletSigner;
 }
 
-function getCoinbaseInjectedLegacyProvider(): CBInjectedProvider | undefined {
+function getCbExtensionInjectedLegacyProvider(): CBExtensionInjectedProvider | undefined {
   const window = globalThis as CBWindow;
   return window.coinbaseWalletExtension;
 }
 
-function getInjectedEthereum(): CBInjectedProvider | undefined {
+function getInjectedEthereum(): CBMobileInjectedProvider | undefined {
   try {
     const window = globalThis as CBWindow;
     return window.ethereum ?? window.top?.ethereum;
@@ -62,10 +66,7 @@ export function getCoinbaseInjectedProvider({
   preference,
 }: Readonly<ConstructorOptions>): ProviderInterface | undefined {
   if (preference.options !== 'smartWalletOnly') {
-    const signer = getCoinbaseInjectedSigner();
-    if (signer) return undefined; // use signer instead
-
-    const extension = getCoinbaseInjectedLegacyProvider();
+    const extension = getCbExtensionInjectedLegacyProvider();
     if (extension) {
       const { appName, appLogoUrl, appChainIds } = metadata;
       extension.setAppInfo?.(appName, appLogoUrl, appChainIds);
