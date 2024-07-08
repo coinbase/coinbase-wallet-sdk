@@ -4,11 +4,11 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable no-console */
 // @ts-ignore
-import { p256 } from '@noble/curves/p256';
-const { startAuthentication } = require('@simplewebauthn/browser');
-import { generateAuthenticationOptions } from '@simplewebauthn/server';
-import { isoBase64URL } from '@simplewebauthn/server/helpers';
-import EventEmitter from 'eventemitter3';
+import { p256 } from "@noble/curves/p256";
+const { startAuthentication } = require("@simplewebauthn/browser");
+import { generateAuthenticationOptions } from "@simplewebauthn/server";
+import { isoBase64URL } from "@simplewebauthn/server/helpers";
+import EventEmitter from "eventemitter3";
 import {
   Address,
   bytesToBigInt,
@@ -20,10 +20,10 @@ import {
   stringToHex,
   toHex,
   WalletGrantPermissionsParameters,
-} from 'viem';
+} from "viem";
 
-import { standardErrorCodes, standardErrors } from './core/error';
-import { serializeError } from './core/error/serialize';
+import { standardErrorCodes, standardErrors } from "./core/error";
+import { serializeError } from "./core/error/serialize";
 import {
   AppMetadata,
   ConstructorOptions,
@@ -31,18 +31,29 @@ import {
   ProviderInterface,
   RequestArguments,
   Signer,
-} from './core/provider/interface';
-import { AddressString, Chain, IntNumber } from './core/type';
-import { areAddressArraysEqual, hexStringFromIntNumber } from './core/type/util';
-import { AccountsUpdate, ChainUpdate } from './sign/interface';
-import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
-import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './util/provider';
-import { Communicator } from ':core/communicator/Communicator';
-import { SignerType } from ':core/message';
-import { determineMethodCategory } from ':core/provider/method';
-import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
+} from "./core/provider/interface";
+import { AddressString, Chain, IntNumber } from "./core/type";
+import {
+  areAddressArraysEqual,
+  hexStringFromIntNumber,
+} from "./core/type/util";
+import { AccountsUpdate, ChainUpdate } from "./sign/interface";
+import {
+  createSigner,
+  fetchSignerType,
+  loadSignerType,
+  storeSignerType,
+} from "./sign/util";
+import {
+  checkErrorForInvalidRequestArgs,
+  fetchRPCRequest,
+} from "./util/provider";
+import { Communicator } from ":core/communicator/Communicator";
+import { SignerType } from ":core/message";
+import { determineMethodCategory } from ":core/provider/method";
+import { ScopedLocalStorage } from ":util/ScopedLocalStorage";
 
-const { createCredential } = require('webauthn-p256');
+const { createCredential } = require("webauthn-p256");
 
 type BuildUserOperationParams = {
   authenticatorData: string;
@@ -54,23 +65,23 @@ type BuildUserOperationParams = {
 const WebAuthnAuthStruct = {
   components: [
     {
-      name: 'authenticatorData',
-      type: 'bytes',
+      name: "authenticatorData",
+      type: "bytes",
     },
-    { name: 'clientDataJSON', type: 'bytes' },
-    { name: 'challengeIndex', type: 'uint256' },
-    { name: 'typeIndex', type: 'uint256' },
+    { name: "clientDataJSON", type: "bytes" },
+    { name: "challengeIndex", type: "uint256" },
+    { name: "typeIndex", type: "uint256" },
     {
-      name: 'r',
-      type: 'uint256',
+      name: "r",
+      type: "uint256",
     },
     {
-      name: 's',
-      type: 'uint256',
+      name: "s",
+      type: "uint256",
     },
   ],
-  name: 'WebAuthnAuth',
-  type: 'tuple',
+  name: "WebAuthnAuth",
+  type: "tuple",
 };
 
 export function buildWebAuthnSignature({
@@ -108,7 +119,7 @@ export function extractRSFromSig(base64Signature: string): {
   // Create an ECDSA instance with the secp256r1 curve
 
   // Decode the signature from Base64
-  const signatureDER = Buffer.from(base64Signature, 'base64');
+  const signatureDER = Buffer.from(base64Signature, "base64");
   const parsedSignature = p256.Signature.fromDER(signatureDER);
   const bSig = hexToBytes(`0x${parsedSignature.toCompactHex()}`);
   // assert(bSig.length === 64, "signature is not 64 bytes");
@@ -118,14 +129,41 @@ export function extractRSFromSig(base64Signature: string): {
   // Avoid malleability. Ensure low S (<= N/2 where N is the curve order)
   const r = bytesToBigInt(bR);
   let s = bytesToBigInt(bS);
-  const n = BigInt('0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551');
+  const n = BigInt(
+    "0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551"
+  );
   if (s > n / BigInt(2)) {
     s = n - s;
   }
   return { r, s };
 }
 
-const SessionCallPermission = '0xd314fdcb16adb955fa3bc339aa6c894706263258';
+export async function signWithPasskey(base64Hash: string): Promise<Hex> {
+  const options = await generateAuthenticationOptions({
+    rpID: window.location.hostname,
+    challenge: base64Hash,
+    userVerification: "preferred",
+  });
+  options.challenge = base64Hash;
+
+  const { response: sigResponse } = await startAuthentication(options);
+
+  console.log(319, sigResponse);
+
+  const authenticatorData = toHex(
+    Buffer.from(sigResponse.authenticatorData, "base64")
+  );
+
+  const { r, s } = extractRSFromSig(sigResponse.signature);
+
+  const signature = buildWebAuthnSignature({
+    r,
+    s,
+    authenticatorData,
+    clientDataJSON: sigResponse.clientDataJSON,
+  });
+  return signature;
+}
 
 type Session = {
   account: Address;
@@ -133,7 +171,7 @@ type Session = {
   signer: Hex;
   permissionContract: Address;
   permissionData: Hex;
-  expiresAt: number; // unix seconds
+  expiry: number; // unix seconds
   chainId: bigint;
   verifyingContract: Address;
 };
@@ -153,24 +191,30 @@ type UserOperation = {
 };
 
 export const sessionStruct = parseAbiParameter([
-  'Session session',
-  'struct Session { address account; bytes approval; bytes signer; address permissionContract; bytes permissionData; uint40 expiresAt; uint256 chainId; address verifyingContract; }',
+  "Session session",
+  "struct Session { address account; uint256 chainId; bytes signer; uint40 expiry; address permissionContract; bytes permissionData; address verifyingContract; bytes approval; }",
 ]);
 
-export function decodePermissionsContext(permissionsContext: Hex): Session {
-  const [session] = decodeAbiParameters([sessionStruct], permissionsContext);
-  return session;
+export function decodePermissionsContext(permissionsContext: Hex): {
+  sessionManagerOwnerIndex: bigint;
+  session: Session;
+} {
+  const [sessionManagerOwnerIndex, session] = decodeAbiParameters(
+    [{ name: "sessionManagerOwnerIndex", type: "uint256" }, sessionStruct],
+    permissionsContext
+  );
+  return { sessionManagerOwnerIndex, session };
 }
 
 // note this is for v0.6, our current Entrypoint version for CoinbaseSmartWallet
 export const userOperationStruct = parseAbiParameter([
-  'UserOperation userOperation',
-  'struct UserOperation { address sender; uint256 nonce; bytes initCode; bytes callData; uint256 callGasLimit; uint256 verificationGasLimit; uint256 preVerificationGas; uint256 maxFeePerGas; uint256 maxPriorityFeePerGas; bytes paymasterAndData; bytes signature; }',
+  "UserOperation userOperation",
+  "struct UserOperation { address sender; uint256 nonce; bytes initCode; bytes callData; uint256 callGasLimit; uint256 verificationGasLimit; uint256 preVerificationGas; uint256 maxFeePerGas; uint256 maxPriorityFeePerGas; bytes paymasterAndData; bytes signature; }",
 ]);
 
 const signatureWrapperStruct = parseAbiParameter([
-  'SignatureWrapper signatureWrapper',
-  'struct SignatureWrapper { uint256 ownerIndex; bytes signatureData; }',
+  "SignatureWrapper signatureWrapper",
+  "struct SignatureWrapper { uint256 ownerIndex; bytes signatureData; }",
 ]);
 
 // wraps a signature with an ownerIndex for verification within CoinbaseSmartWallet
@@ -181,7 +225,9 @@ function wrapSignature({
   ownerIndex: bigint;
   signatureData: Hex;
 }): Hex {
-  return encodeAbiParameters([signatureWrapperStruct], [{ ownerIndex, signatureData }] as never);
+  return encodeAbiParameters([signatureWrapperStruct], [
+    { ownerIndex, signatureData },
+  ] as never);
 }
 
 function updateUserOpSignature({
@@ -195,13 +241,15 @@ function updateUserOpSignature({
   session: Session;
   sessionKeySignature: Hex;
 }): UserOperation {
-  console.log(session.permissionContract, SessionCallPermission);
-  console.log('sessionStruct', sessionStruct);
-  console.log('sessionKeySignature', sessionKeySignature);
-
-  const requestData = encodeAbiParameters([userOperationStruct], [userOp] as never);
+  const requestData = encodeAbiParameters([userOperationStruct], [
+    userOp,
+  ] as never);
   const authData = encodeAbiParameters(
-    [sessionStruct, { name: 'signature', type: 'bytes' }, { name: 'requestData', type: 'bytes' }],
+    [
+      sessionStruct,
+      { name: "signature", type: "bytes" },
+      { name: "requestData", type: "bytes" },
+    ],
     [session, sessionKeySignature, requestData] as never
   );
 
@@ -210,14 +258,17 @@ function updateUserOpSignature({
     signatureData: authData,
   });
 
-  console.log('got the wrapped signature', signature);
+  console.log("userOp.signature", signature);
   return {
     ...userOp,
     signature,
   };
 }
 
-export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
+export class CoinbaseWalletProvider
+  extends EventEmitter
+  implements ProviderInterface
+{
   private readonly metadata: AppMetadata;
   private readonly preference: Preference;
   private readonly communicator: Communicator;
@@ -226,7 +277,10 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   protected accounts: AddressString[] = [];
   protected chain: Chain;
 
-  constructor({ metadata, preference: { keysUrl, ...preference } }: Readonly<ConstructorOptions>) {
+  constructor({
+    metadata,
+    preference: { keysUrl, ...preference },
+  }: Readonly<ConstructorOptions>) {
     super();
     this.metadata = metadata;
     this.preference = preference;
@@ -248,7 +302,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       const invalidArgsError = checkErrorForInvalidRequestArgs(args);
       if (invalidArgsError) throw invalidArgsError;
       // unrecognized methods are treated as fetch requests
-      const category = determineMethodCategory(args.method) ?? 'fetch';
+      const category = determineMethodCategory(args.method) ?? "fetch";
       return this.handlers[category](args) as T;
     } catch (error) {
       return Promise.reject(serializeError(error, args.method));
@@ -259,104 +313,67 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     session: async (request: RequestArguments) => {
       const requestBody = {
         ...request,
-        jsonrpc: '2.0',
+        jsonrpc: "2.0",
         id: crypto.randomUUID(),
       };
-      const res = await window.fetch('http://localhost:3000/api/sendCalls', {
-        method: 'POST',
+      const res = await window.fetch("http://localhost:3000/api/sendCalls", {
+        method: "POST",
         body: JSON.stringify(requestBody),
-        mode: 'cors',
+        mode: "cors",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
       const response = await res.json();
-      const { hash, userOp } = response.result;
+      const { userOp, hash, base64Hash } = response.result;
+      console.log("userOpHash", hash);
+      console.log("base64 userOpHash", base64Hash);
 
-      const options = await generateAuthenticationOptions({
-        rpID: window.location.hostname,
-        challenge: hash,
-        userVerification: 'preferred',
-      });
-      options.challenge = hash;
+      const signature = await signWithPasskey(base64Hash);
+      console.log("passkey signature", signature);
 
-      const { response: sigResponse } = await startAuthentication(options);
-
-      console.log(319, sigResponse);
-
-      const authenticatorData = toHex(Buffer.from(sigResponse.authenticatorData, 'base64'));
-
-      console.log(323, authenticatorData);
-
-      const { r, s } = extractRSFromSig(sigResponse.signature);
-
-      console.log(325, r, s);
-
-      const signature = buildWebAuthnSignature({
-        r,
-        s,
-        authenticatorData,
-        clientDataJSON: sigResponse.clientDataJSON,
-      });
-
-      console.log(request.params);
-
-      console.log((request.params as { capabilities: any }[])[0].capabilities);
-      const session = decodePermissionsContext(
-        (request.params as { capabilities: any }[])[0].capabilities.permissions.context
+      const { sessionManagerOwnerIndex, session } = decodePermissionsContext(
+        (request.params as { capabilities: any }[])[0].capabilities.permissions
+          .context
       );
-      console.log('got the session', session);
+      console.log(
+        "decoded sessionManager ownerIndex",
+        sessionManagerOwnerIndex
+      );
+      console.log("decoded session", session);
+
       const updatedOp = updateUserOpSignature({
         userOp,
         sessionKeySignature: signature,
-        sessionManagerOwnerIndex: BigInt(5),
+        sessionManagerOwnerIndex,
         session,
       });
 
-      console.log('luksa signature', updatedOp);
+      console.log("updated userOp", updatedOp);
 
       const b = {
-        method: 'wallet_submitOp',
+        method: "wallet_submitOp",
         params: { userOp: updatedOp },
-        jsonrpc: '2.0',
+        jsonrpc: "2.0",
         id: crypto.randomUUID(),
       };
-      await window.fetch('http://localhost:3000/api/sendCalls', {
-        method: 'POST',
+      await window.fetch("http://localhost:3000/api/sendCalls", {
+        method: "POST",
         body: JSON.stringify(b),
-        mode: 'cors',
+        mode: "cors",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
-      // const options = await generateAuthenticationOptions({
-      //   rpID: window.location.hostname,
-      //   challenge: hash,
-      //   userVerification: 'preferred',
-      // });
-      // options.challenge = hash;
-
-      // const { response: authResponse } = await startAuthentication(options);
-      // const authenticatorData = toHex(Buffer.from(response.authenticatorData, 'base64'));
-
-      // const { r, s } = extractRSFromSig(response.signature);
-
-      // const signature = buildWebAuthnSignature({
-      //   r,
-      //   s,
-      //   ownerIndex: ownerIndex - 1n,
-      //   authenticatorData,
-      //   clientDataJSON: response.clientDataJSON,
-      // });
-      return response.result;
+      return hash; // should formally be a batchId, but userOpHash is sufficient for now
     },
 
     // eth_requestAccounts
     handshake: async (args: RequestArguments): Promise<any> => {
       try {
         if (this.connected) {
-          this.emit('connect', {
+          this.emit("connect", {
             chainId: hexStringFromIntNumber(IntNumber(this.chain.id)),
           });
           return { addresses: this.accounts };
@@ -364,26 +381,37 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
         const requests = (args.params as { requests: any }).requests as (
           | {
-              method: 'wallet_grantPermissions';
+              method: "wallet_grantPermissions";
               params: WalletGrantPermissionsParameters;
             }
-          | { method: 'personal_sign'; params: [Hex] }
+          | { method: "personal_sign"; params: [Hex] }
         )[];
-        const credential = await createCredential({ name: 'please' });
-        console.log('cred id', credential.id);
+        const credential = await createCredential({ name: "[DEMO APP]" });
+        console.log("new passkey credential", credential);
+
+        const encodedPublicKey = encodeAbiParameters(
+          [
+            { name: "x", type: "uint256" },
+            { name: "y", type: "uint256" },
+          ],
+          [credential.publicKey.x, credential.publicKey.y]
+        );
+        console.log("encodedPublicKey", encodedPublicKey);
+
         // @ts-ignore
         const updatedRequests = await Promise.all(
           requests.map(async (request) => {
-            if (request.method === 'wallet_grantPermissions') {
-              if (request.params.signer?.type === 'wallet') {
+            if (request.method === "wallet_grantPermissions") {
+              if (request.params.signer?.type === "wallet") {
                 return {
                   ...request,
                   params: {
                     ...request.params,
                     signer: {
-                      type: 'key',
+                      type: "passkey",
                       data: {
-                        id: credential.publicKeyCompressed,
+                        publicKey: encodedPublicKey,
+                        credentialId: credential.id,
                       },
                     },
                   },
@@ -397,14 +425,23 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
         const signerType = await this.requestSignerSelection();
         const signer = this.initSigner(signerType);
         const accounts = await signer.handshake({ requests: updatedRequests });
-        console.log('got this', accounts);
+        console.log("wallet_connect response", accounts);
+        const grantPermissionsRes = accounts.requestResponses[1];
+        console.log("grantPermissions inner response", grantPermissionsRes);
+        const decodedContext = decodePermissionsContext(
+          grantPermissionsRes.permissionsContext
+        );
+        console.log("received decodedContext", decodedContext);
 
-        this.emit('accountsChanged', (accounts as { addresses: any }).addresses);
+        this.emit(
+          "accountsChanged",
+          (accounts as { addresses: any }).addresses
+        );
 
         this.signer = signer;
         storeSignerType(signerType);
 
-        this.emit('connect', {
+        this.emit("connect", {
           chainId: hexStringFromIntNumber(IntNumber(this.chain.id)),
         });
         return accounts;
@@ -438,13 +475,13 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
         );
       };
       switch (request.method) {
-        case 'eth_chainId':
+        case "eth_chainId":
           return hexStringFromIntNumber(IntNumber(this.chain.id));
-        case 'net_version':
+        case "net_version":
           return this.chain.id;
-        case 'eth_accounts':
+        case "eth_accounts":
           return getConnectedAccounts();
-        case 'eth_coinbase':
+        case "eth_coinbase":
           return getConnectedAccounts()[0];
         default:
           return this.handlers.unsupported(request);
@@ -452,11 +489,15 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     },
 
     deprecated: ({ method }: RequestArguments) => {
-      throw standardErrors.rpc.methodNotSupported(`Method ${method} is deprecated.`);
+      throw standardErrors.rpc.methodNotSupported(
+        `Method ${method} is deprecated.`
+      );
     },
 
     unsupported: ({ method }: RequestArguments) => {
-      throw standardErrors.rpc.methodNotSupported(`Method ${method} is not supported.`);
+      throw standardErrors.rpc.methodNotSupported(
+        `Method ${method} is not supported.`
+      );
     },
   };
 
@@ -471,7 +512,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       `.enable() has been deprecated. Please use .request({ method: "eth_requestAccounts" }) instead.`
     );
     return await this.request({
-      method: 'ahhhhh',
+      method: "ahhhhh",
     });
   }
 
@@ -479,23 +520,27 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     this.accounts = [];
     this.chain = { id: 1 };
     ScopedLocalStorage.clearAll();
-    this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
+    this.emit(
+      "disconnect",
+      standardErrors.provider.disconnected("User initiated disconnection")
+    );
   }
 
   readonly isCoinbaseWallet = true;
 
   protected readonly updateListener = {
     onAccountsUpdate: ({ accounts, source }: AccountsUpdate) => {
-      this.emit('accountsChanged', this.accounts);
+      this.emit("accountsChanged", this.accounts);
       if (areAddressArraysEqual(this.accounts, accounts)) return;
       this.accounts = accounts;
-      if (source === 'storage') return;
+      if (source === "storage") return;
     },
     onChainUpdate: ({ chain, source }: ChainUpdate) => {
-      if (chain.id === this.chain.id && chain.rpcUrl === this.chain.rpcUrl) return;
+      if (chain.id === this.chain.id && chain.rpcUrl === this.chain.rpcUrl)
+        return;
       this.chain = chain;
-      if (source === 'storage') return;
-      this.emit('chainChanged', hexStringFromIntNumber(IntNumber(chain.id)));
+      if (source === "storage") return;
+      this.emit("chainChanged", hexStringFromIntNumber(IntNumber(chain.id)));
     },
   };
 
