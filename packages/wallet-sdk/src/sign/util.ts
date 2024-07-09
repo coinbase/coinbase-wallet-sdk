@@ -1,3 +1,4 @@
+import { ExtensionSigner } from './extension/ExtensionSigner';
 import { StateUpdateListener } from './interface';
 import { SCWSigner } from './scw/SCWSigner';
 import { WalletLinkSigner } from './walletlink/WalletLinkSigner';
