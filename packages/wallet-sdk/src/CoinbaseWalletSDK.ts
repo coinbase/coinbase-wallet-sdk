@@ -28,10 +28,14 @@ export class CoinbaseWalletSDK {
   }
 
   public makeWeb3Provider(preference: Preference = { options: 'all' }): ProviderInterface {
-    const window = globalThis as CBWindow;
-    const ethereum = window.ethereum ?? window.top?.ethereum;
-    if (ethereum?.isCoinbaseBrowser) {
-      return ethereum as ProviderInterface;
+    try {
+      const window = globalThis as CBWindow;
+      const ethereum = window.ethereum ?? window.top?.ethereum;
+      if (ethereum?.isCoinbaseBrowser) {
+        return ethereum as ProviderInterface;
+      }
+    } catch {
+      // Ignore
     }
     return new CoinbaseWalletProvider({ metadata: this.metadata, preference });
   }
