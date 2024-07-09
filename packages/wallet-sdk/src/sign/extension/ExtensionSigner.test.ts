@@ -1,16 +1,18 @@
-import { StateUpdateListener } from '../interface'; // Adjust the import path as needed
-import { ExtensionSigner } from './ExtensionSigner'; // Adjust the import path as needed
-import { AppMetadata, RequestArguments } from ':core/provider/interface'; // Adjust the import path as needed
-import { AddressString } from ':core/type'; // Adjust the import path as needed
-import { CBExtensionInjectedProvider, CBWindow } from ':util/provider'; // Adjust the import path as needed
+import { StateUpdateListener } from '../interface';
+import { ExtensionSigner } from './ExtensionSigner';
+import { AppMetadata, RequestArguments } from ':core/provider/interface';
+import { AddressString } from ':core/type';
 
-// Mocking CBExtensionInjectedProvider and StateUpdateListener
+const window = globalThis as {
+  coinbaseWalletExtension?: unknown;
+};
+
 const mockUpdateListener: StateUpdateListener = {
   onChainUpdate: jest.fn(),
   onAccountsUpdate: jest.fn(),
 };
 
-const mockExtensionProvider: Partial<CBExtensionInjectedProvider> = {
+const mockExtensionProvider = {
   setAppInfo: jest.fn(),
   on: jest.fn(),
   request: jest.fn(),
@@ -19,14 +21,11 @@ const mockExtensionProvider: Partial<CBExtensionInjectedProvider> = {
 
 const eventListeners: { [event: string]: (...args: any[]) => void } = {};
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
 mockExtensionProvider.on = jest.fn((event, listener) => {
   eventListeners[event] = listener;
 });
 
-(globalThis as CBWindow).coinbaseWalletExtension =
-  mockExtensionProvider as CBExtensionInjectedProvider;
+window.coinbaseWalletExtension = mockExtensionProvider;
 
 const metadata: AppMetadata = {
   appName: 'TestApp',
@@ -54,12 +53,11 @@ describe('ExtensionSigner', () => {
   });
 
   it('should throw error only if Coinbase Wallet extension is not found', () => {
-    delete (globalThis as CBWindow).coinbaseWalletExtension;
+    delete window.coinbaseWalletExtension;
     expect(() => new ExtensionSigner({ metadata, updateListener: mockUpdateListener })).toThrow(
       'Coinbase Wallet extension not found'
     );
-    (globalThis as CBWindow).coinbaseWalletExtension =
-      mockExtensionProvider as CBExtensionInjectedProvider;
+    window.coinbaseWalletExtension = mockExtensionProvider;
     expect(
       () => new ExtensionSigner({ metadata, updateListener: mockUpdateListener })
     ).not.toThrow();
@@ -85,9 +83,12 @@ describe('ExtensionSigner', () => {
     expect(mockUpdateListener.onAccountsUpdate).toHaveBeenCalledWith(['0x123']);
   });
 
-  it('should throw error if no accounts found during handshake', async () => {
-    (mockExtensionProvider.request as jest.Mock).mockResolvedValue(null);
-    await expect(signer.handshake()).rejects.toThrow('No account found');
+  it('should not call updateListener if extension request throws', async () => {
+    (mockExtensionProvider.request as jest.Mock).mockImplementation(() => {
+      throw new Error('ext provider request error');
+    });
+    await expect(signer.handshake()).rejects.toThrow('ext provider request error');
+    expect(mockUpdateListener.onAccountsUpdate).not.toHaveBeenCalled();
   });
 
   it('should get results from extension provider', async () => {

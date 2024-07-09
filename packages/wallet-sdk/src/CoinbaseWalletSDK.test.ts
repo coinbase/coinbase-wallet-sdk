@@ -2,9 +2,8 @@ import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
 import { ProviderInterface } from ':core/provider/interface';
 import { getFavicon } from ':core/type/util';
-import { CBWindow } from ':util/provider';
 
-const window = globalThis as CBWindow;
+const window = globalThis as { ethereum?: unknown };
 
 jest.mock(':core/type/util');
 jest.mock(':util/provider');

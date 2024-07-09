@@ -1,6 +1,6 @@
 import { LIB_VERSION } from '../version';
 import { standardErrors } from ':core/error';
-import { ProviderInterface, RequestArguments } from ':core/provider/interface';
+import { RequestArguments } from ':core/provider/interface';
 import { Chain } from ':core/type';
 
 export async function fetchRPCRequest(request: RequestArguments, chain?: Chain) {
@@ -19,20 +19,6 @@ export async function fetchRPCRequest(request: RequestArguments, chain?: Chain) 
   });
   const response = await res.json();
   return response.result;
-}
-
-export interface CBWindow {
-  top: CBWindow;
-  ethereum?: CBMobileInjectedProvider;
-  coinbaseWalletExtension?: CBExtensionInjectedProvider;
-}
-
-export interface CBExtensionInjectedProvider extends ProviderInterface {
-  setAppInfo?: (...args: unknown[]) => unknown;
-}
-export interface CBMobileInjectedProvider extends ProviderInterface {
-  isCoinbaseBrowser?: boolean;
-  setAppInfo?: (...args: unknown[]) => unknown;
 }
 
 /**

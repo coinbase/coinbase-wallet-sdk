@@ -1,12 +1,15 @@
 import { StateUpdateListener } from '../interface';
 import { AppMetadata, ProviderInterface, RequestArguments, Signer } from ':core/provider/interface';
 import { AddressString } from ':core/type';
-import { CBExtensionInjectedProvider } from ':util/provider';
+
+interface CBExtensionInjectedProvider extends ProviderInterface {
+  setAppInfo?: (...args: unknown[]) => unknown;
+}
 
 export class ExtensionSigner implements Signer {
   private readonly metadata: AppMetadata;
   private readonly updateListener: StateUpdateListener;
-  private extensionProvider: ProviderInterface | undefined;
+  private extensionProvider: ProviderInterface;
 
   constructor(params: { metadata: AppMetadata; updateListener: StateUpdateListener }) {
     this.metadata = params.metadata;
@@ -15,44 +18,33 @@ export class ExtensionSigner implements Signer {
       globalThis as { coinbaseWalletExtension?: CBExtensionInjectedProvider }
     ).coinbaseWalletExtension;
 
-    if (extensionProvider) {
-      const { appName, appLogoUrl, appChainIds } = this.metadata;
-      extensionProvider.setAppInfo?.(appName, appLogoUrl, appChainIds);
-      this.extensionProvider = extensionProvider;
-
-      this.extensionProvider.on('chainChanged', (chainId) => {
-        this.updateListener.onChainUpdate({ id: Number(chainId) });
-      });
-
-      this.extensionProvider.on('accountsChanged', (accounts) =>
-        this.updateListener.onAccountsUpdate(accounts as AddressString[])
-      );
-    } else {
-      // should never happen since SCW FE should not show extension connection type in this case
+    if (!extensionProvider) {
       throw new Error('Coinbase Wallet extension not found');
     }
+
+    const { appName, appLogoUrl, appChainIds } = this.metadata;
+    extensionProvider.setAppInfo?.(appName, appLogoUrl, appChainIds);
+    this.extensionProvider = extensionProvider;
+
+    this.extensionProvider.on('chainChanged', (chainId) => {
+      this.updateListener.onChainUpdate({ id: Number(chainId) });
+    });
+
+    this.extensionProvider.on('accountsChanged', (accounts) =>
+      this.updateListener.onAccountsUpdate(accounts as AddressString[])
+    );
   }
 
   async handshake(): Promise<AddressString[]> {
-    if (!this.extensionProvider) {
-      throw new Error('Coinbase Wallet extension not found');
-    }
     const accounts = await this.request<AddressString[]>({
       method: 'eth_requestAccounts',
     });
-
-    if (accounts) {
-      this.updateListener.onAccountsUpdate(accounts);
-      return accounts;
-    }
-    throw new Error('No account found');
+    this.updateListener.onAccountsUpdate(accounts);
+    return accounts;
   }
 
   async request<T>(request: RequestArguments): Promise<T> {
-    if (!this.extensionProvider) {
-      throw new Error('Coinbase Wallet extension not found');
-    }
-    return this.extensionProvider.request(request);
+    return await this.extensionProvider.request(request);
   }
 
   async disconnect() {
