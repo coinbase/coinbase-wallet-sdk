@@ -1,7 +1,6 @@
 import { EventEmitter } from 'eventemitter3';
 
 import { Method } from './method';
-import { AddressString, Chain } from ':core/type';
 
 export interface RequestArguments {
   readonly method: Method | string;
@@ -50,12 +49,4 @@ export interface Preference {
 export interface ConstructorOptions {
   metadata: AppMetadata;
   preference: Preference;
-}
-
-export interface Signer {
-  readonly accounts: AddressString[];
-  readonly chain: Chain;
-  handshake(): Promise<AddressString[]>;
-  request<T>(request: RequestArguments): Promise<T>;
-  disconnect: () => Promise<void>;
 }

@@ -8,10 +8,10 @@ import {
   Preference,
   ProviderInterface,
   RequestArguments,
-  Signer,
 } from './core/provider/interface';
 import { AddressString, IntNumber } from './core/type';
 import { hexStringFromIntNumber } from './core/type/util';
+import { Signer } from './sign/interface';
 import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './util/provider';
 import { Communicator } from ':core/communicator/Communicator';

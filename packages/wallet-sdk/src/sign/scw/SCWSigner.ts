@@ -1,9 +1,9 @@
-import { StateUpdateListener } from '../interface';
+import { Signer, StateUpdateListener } from '../interface';
 import { SCWKeyManager } from './SCWKeyManager';
 import { Communicator } from ':core/communicator/Communicator';
 import { standardErrors } from ':core/error';
 import { RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
-import { AppMetadata, RequestArguments, Signer } from ':core/provider/interface';
+import { AppMetadata, RequestArguments } from ':core/provider/interface';
 import { Method } from ':core/provider/method';
 import { AddressString, Chain, IntNumber } from ':core/type';
 import { ensureIntNumber } from ':core/type/util';
@@ -36,12 +36,6 @@ export class SCWSigner implements Signer {
   private availableChains?: Chain[];
   private _accounts: AddressString[];
   private _chain: Chain;
-  get accounts() {
-    return this._accounts;
-  }
-  get chain() {
-    return this._chain;
-  }
 
   constructor(params: {
     metadata: AppMetadata;
@@ -63,6 +57,13 @@ export class SCWSigner implements Signer {
     this.request = this.request.bind(this);
     this.createRequestMessage = this.createRequestMessage.bind(this);
     this.decryptResponseMessage = this.decryptResponseMessage.bind(this);
+  }
+
+  get accounts() {
+    return this._accounts;
+  }
+  get chain() {
+    return this._chain;
   }
 
   async handshake(): Promise<AddressString[]> {

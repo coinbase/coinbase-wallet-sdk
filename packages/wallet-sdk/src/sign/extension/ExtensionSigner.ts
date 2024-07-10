@@ -1,5 +1,5 @@
-import { StateUpdateListener } from '../interface';
-import { AppMetadata, ProviderInterface, RequestArguments, Signer } from ':core/provider/interface';
+import { Signer, StateUpdateListener } from '../interface';
+import { AppMetadata, ProviderInterface, RequestArguments } from ':core/provider/interface';
 import { AddressString, Chain, IntNumber } from ':core/type';
 
 interface CBExtensionInjectedProvider extends ProviderInterface {
@@ -34,8 +34,11 @@ export class ExtensionSigner implements Signer {
       this.updateListener.onAccountsUpdate(accounts as AddressString[])
     );
   }
-  accounts: AddressString[];
-  chain: Chain;
+
+  // TODO
+  accounts: AddressString[] = [];
+  // TODO
+  chain: Chain = { id: 1 };
 
   async handshake(): Promise<AddressString[]> {
     const accounts = await this.request<AddressString[]>({
