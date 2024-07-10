@@ -1,15 +1,17 @@
 import { Signer, StateUpdateListener } from '../interface';
 import { AppMetadata, ProviderInterface, RequestArguments } from ':core/provider/interface';
-import { AddressString, Chain } from ':core/type';
+import { AddressString, HexString } from ':core/type';
+import { intNumberFromHexString } from ':core/type/util';
 
 interface CBExtensionInjectedProvider extends ProviderInterface {
+  send: (...args: unknown[]) => unknown; // _handleSynchronousMethods
   setAppInfo?: (...args: unknown[]) => unknown;
 }
 
 export class ExtensionSigner implements Signer {
   private readonly metadata: AppMetadata;
   private readonly updateListener: StateUpdateListener;
-  private extensionProvider: ProviderInterface;
+  private extensionProvider: CBExtensionInjectedProvider;
 
   constructor(params: { metadata: AppMetadata; updateListener: StateUpdateListener }) {
     this.metadata = params.metadata;
@@ -35,10 +37,14 @@ export class ExtensionSigner implements Signer {
     );
   }
 
-  // TODO
-  accounts: AddressString[] = [];
-  // TODO
-  chain: Chain = { id: 1 };
+  get accounts() {
+    return this.extensionProvider.send({ method: 'eth_accounts' }) as AddressString[];
+  }
+
+  get chain() {
+    const hexString = this.extensionProvider.send({ method: 'eth_chainId' }) as HexString;
+    return { id: intNumberFromHexString(hexString) };
+  }
 
   async handshake(): Promise<AddressString[]> {
     const accounts = await this.request<AddressString[]>({

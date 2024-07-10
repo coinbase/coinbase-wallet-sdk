@@ -23,7 +23,7 @@ const createAdapter = (options?: { relay?: WalletLinkRelay }) => {
     metadata: { appName: 'test', appLogoUrl: null, appChainIds: [1] },
     updateListener: {
       onAccountsUpdate: () => {},
-      onChainUpdate: () => {},
+      onChainIdUpdate: () => {},
     },
   });
   if (options?.relay) {
@@ -174,12 +174,11 @@ describe('LegacyProvider', () => {
     });
 
     test('eth_sign fail bad address', async () => {
-      await expect(
-        () =>
-          provider?.request({
-            method: 'eth_sign',
-            params: ['0x123456789abcdef', 'Super safe message'],
-          })
+      await expect(() =>
+        provider?.request({
+          method: 'eth_sign',
+          params: ['0x123456789abcdef', 'Super safe message'],
+        })
       ).rejects.toThrowEIPError(
         standardErrorCodes.rpc.invalidParams,
         'Invalid Ethereum address: 0x123456789abcdef'
@@ -187,12 +186,11 @@ describe('LegacyProvider', () => {
     });
 
     test('eth_sign fail bad message format', async () => {
-      await expect(
-        () =>
-          provider?.request({
-            method: 'eth_sign',
-            params: [MOCK_ADDERESS.toLowerCase(), 123456789],
-          })
+      await expect(() =>
+        provider?.request({
+          method: 'eth_sign',
+          params: [MOCK_ADDERESS.toLowerCase(), 123456789],
+        })
       ).rejects.toThrowEIPError(standardErrorCodes.rpc.invalidParams, 'Not binary data: 123456789');
     });
 
@@ -213,12 +211,11 @@ describe('LegacyProvider', () => {
     });
 
     test('personal_sign fail', async () => {
-      await expect(
-        () =>
-          provider?.request({
-            method: 'personal_sign',
-            params: ['0x123456789abcdef', 'Super safe message'],
-          })
+      await expect(() =>
+        provider?.request({
+          method: 'personal_sign',
+          params: ['0x123456789abcdef', 'Super safe message'],
+        })
       ).rejects.toThrowEIPError(
         standardErrorCodes.rpc.invalidParams,
         'Invalid Ethereum address: Super safe message'
@@ -291,12 +288,11 @@ describe('LegacyProvider', () => {
     });
 
     test('eth_signTypedData_v2', async () => {
-      await expect(
-        () =>
-          provider?.request({
-            method: 'eth_signTypedData_v2',
-            params: [],
-          })
+      await expect(() =>
+        provider?.request({
+          method: 'eth_signTypedData_v2',
+          params: [],
+        })
       ).rejects.toThrowEIPError(
         standardErrorCodes.provider.unsupportedMethod,
         'The requested method is not supported by this Ethereum provider.'
@@ -435,26 +431,24 @@ describe('LegacyProvider', () => {
     });
 
     test('wallet_watchAsset w/o valid params', async () => {
-      await expect(
-        () =>
-          provider?.request({
-            method: 'wallet_watchAsset',
-            params: [{}],
-          })
+      await expect(() =>
+        provider?.request({
+          method: 'wallet_watchAsset',
+          params: [{}],
+        })
       ).rejects.toThrowEIPError(standardErrorCodes.rpc.invalidParams, 'Type is required');
     });
 
     test('wallet_watchAsset w/o valid asset type', async () => {
-      await expect(
-        () =>
-          provider?.request({
-            method: 'wallet_watchAsset',
-            params: [
-              {
-                type: 'ERC721',
-              },
-            ],
-          })
+      await expect(() =>
+        provider?.request({
+          method: 'wallet_watchAsset',
+          params: [
+            {
+              type: 'ERC721',
+            },
+          ],
+        })
       ).rejects.toThrowEIPError(
         standardErrorCodes.rpc.invalidParams,
         "Asset of type 'ERC721' is not supported"
@@ -462,31 +456,29 @@ describe('LegacyProvider', () => {
     });
 
     test('wallet_watchAsset to throw option required error', async () => {
-      await expect(
-        () =>
-          provider?.request({
-            method: 'wallet_watchAsset',
-            params: [
-              {
-                type: 'ERC20',
-              },
-            ],
-          })
+      await expect(() =>
+        provider?.request({
+          method: 'wallet_watchAsset',
+          params: [
+            {
+              type: 'ERC20',
+            },
+          ],
+        })
       ).rejects.toThrowEIPError(standardErrorCodes.rpc.invalidParams, 'Options are required');
     });
 
     test('wallet_watchAsset to throw address required error', async () => {
-      await expect(
-        () =>
-          provider?.request({
-            method: 'wallet_watchAsset',
-            params: [
-              {
-                type: 'ERC20',
-                options: {},
-              },
-            ],
-          })
+      await expect(() =>
+        provider?.request({
+          method: 'wallet_watchAsset',
+          params: [
+            {
+              type: 'ERC20',
+              options: {},
+            },
+          ],
+        })
       ).rejects.toThrowEIPError(standardErrorCodes.rpc.invalidParams, 'Address is required');
     });
   });
