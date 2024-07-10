@@ -125,11 +125,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   readonly isCoinbaseWallet = true;
 
-  protected readonly updateListener = {
-    onAccountsUpdate: (accounts: AddressString[]) => this.emit('accountsChanged', accounts),
-    onChainIdUpdate: (id: number) => this.emit('chainChanged', hexStringFromNumber(id)),
-  };
-
   private requestSignerSelection(): Promise<SignerType> {
     return fetchSignerType({
       communicator: this.communicator,
@@ -143,7 +138,10 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       signerType,
       metadata: this.metadata,
       communicator: this.communicator,
-      updateListener: this.updateListener,
+      updateListener: {
+        onAccountsUpdate: (accounts: AddressString[]) => this.emit('accountsChanged', accounts),
+        onChainIdUpdate: (id: number) => this.emit('chainChanged', hexStringFromNumber(id)),
+      },
     });
   }
 }
