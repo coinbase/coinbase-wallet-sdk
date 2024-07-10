@@ -132,15 +132,14 @@ export class SCWSigner implements Signer {
     }
     const chainId = ensureIntNumber(params[0].chainId);
 
-    // local handling
-    const switched = this.switchChain(chainId);
-    if (switched) return null;
+    const localResult = this.updateChain(chainId);
+    if (localResult) return null;
 
-    const result = await this.sendRequestToPopup(request);
-    if (result === null) {
-      this.switchChain(chainId);
+    const popupResult = await this.sendRequestToPopup(request);
+    if (popupResult === null) {
+      this.updateChain(chainId);
     }
-    return result;
+    return popupResult;
   }
 
   private async sendEncryptedRequest(request: RequestArguments): Promise<RPCResponseMessage> {
@@ -189,11 +188,7 @@ export class SCWSigner implements Signer {
     }
 
     const response: RPCResponse<T> = await decryptContent(content.encrypted, sharedSecret);
-    this.updateInternalState(response);
-    return response;
-  }
 
-  private updateInternalState<T>(response: RPCResponse<T>) {
     const availableChains = response.data?.chains;
     if (availableChains) {
       const chains = Object.entries(availableChains).map(([id, rpcUrl]) => ({
@@ -202,16 +197,18 @@ export class SCWSigner implements Signer {
       }));
       this.availableChains = chains;
       this.storage.storeObject(AVAILABLE_CHAINS_STORAGE_KEY, chains);
-      this.switchChain(this._chain.id);
+      this.updateChain(this._chain.id);
     }
 
     const walletCapabilities = response.data?.capabilities;
     if (walletCapabilities) {
       this.storage.storeObject(WALLET_CAPABILITIES_STORAGE_KEY, walletCapabilities);
     }
+
+    return response;
   }
 
-  private switchChain(chainId: number): boolean {
+  private updateChain(chainId: number): boolean {
     const chain = this.availableChains?.find((chain) => chain.id === chainId);
     if (!chain) return false;
     if (chain === this._chain) return true;
