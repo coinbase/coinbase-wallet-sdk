@@ -8,10 +8,10 @@ import {
   Preference,
   ProviderInterface,
   RequestArguments,
-  Signer,
 } from './core/provider/interface';
-import { AddressString, Chain, IntNumber } from './core/type';
-import { areAddressArraysEqual, hexStringFromIntNumber } from './core/type/util';
+import { AddressString, Chain } from './core/type';
+import { areAddressArraysEqual, hexStringFromNumber } from './core/type/util';
+import { Signer } from './sign/interface';
 import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './util/provider';
 import { Communicator } from ':core/communicator/Communicator';
@@ -61,7 +61,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     // eth_requestAccounts
     handshake: async (_: RequestArguments): Promise<AddressString[]> => {
       if (this.connected) {
-        this.emit('connect', { chainId: hexStringFromIntNumber(IntNumber(this.chain.id)) });
+        this.emit('connect', { chainId: hexStringFromNumber(this.chain.id) });
         return this.accounts;
       }
 
@@ -72,7 +72,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       this.signer = signer;
       storeSignerType(signerType);
 
-      this.emit('connect', { chainId: hexStringFromIntNumber(IntNumber(this.chain.id)) });
+      this.emit('connect', { chainId: hexStringFromNumber(this.chain.id) });
       return accounts;
     },
 
@@ -96,7 +96,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       };
       switch (request.method) {
         case 'eth_chainId':
-          return hexStringFromIntNumber(IntNumber(this.chain.id));
+          return hexStringFromNumber(this.chain.id);
         case 'net_version':
           return this.chain.id;
         case 'eth_accounts':
@@ -151,7 +151,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     onChainUpdate: (chain: Chain) => {
       if (chain.id === this.chain.id && chain.rpcUrl === this.chain.rpcUrl) return;
       this.chain = chain;
-      this.emit('chainChanged', hexStringFromIntNumber(IntNumber(chain.id)));
+      this.emit('chainChanged', hexStringFromNumber(chain.id));
     },
   };
 

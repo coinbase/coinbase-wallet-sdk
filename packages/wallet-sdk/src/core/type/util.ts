@@ -35,7 +35,7 @@ export function intNumberFromHexString(hex: HexString): IntNumber {
   return IntNumber(Number(BigInt(ensureEvenLengthHexString(hex, true))));
 }
 
-export function hexStringFromIntNumber(num: IntNumber): HexString {
+export function hexStringFromNumber(num: number): HexString {
   return HexString(`0x${BigInt(num).toString(16)}`);
 }
 

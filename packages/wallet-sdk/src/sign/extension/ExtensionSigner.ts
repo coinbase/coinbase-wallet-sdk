@@ -1,5 +1,5 @@
-import { StateUpdateListener } from '../interface';
-import { AppMetadata, ProviderInterface, RequestArguments, Signer } from ':core/provider/interface';
+import { Signer, StateUpdateListener } from '../interface';
+import { AppMetadata, ProviderInterface, RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
 
 interface CBExtensionInjectedProvider extends ProviderInterface {
