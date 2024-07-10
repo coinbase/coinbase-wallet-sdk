@@ -63,7 +63,7 @@ describe('SCWSigner', () => {
     mockCommunicator.postRequestAndWaitForResponse.mockResolvedValue(mockSuccessResponse);
     mockUpdateListener = {
       onAccountsUpdate: jest.fn(),
-      onChainUpdate: jest.fn(),
+      onChainIdUpdate: jest.fn(),
     };
     mockKeyManager = new SCWKeyManager() as jest.Mocked<SCWKeyManager>;
     (SCWKeyManager as jest.Mock).mockImplementation(() => mockKeyManager);
@@ -184,10 +184,7 @@ describe('SCWSigner', () => {
         { id: 2, rpcUrl: 'https://eth-rpc.example.com/2' },
       ]);
       expect(storageStoreSpy).toHaveBeenCalledWith('walletCapabilities', mockCapabilities);
-      expect(mockUpdateListener.onChainUpdate).toHaveBeenCalledWith({
-        id: 1,
-        rpcUrl: 'https://eth-rpc.example.com/1',
-      });
+      expect(mockUpdateListener.onChainIdUpdate).toHaveBeenCalledWith(1);
     });
   });
 
