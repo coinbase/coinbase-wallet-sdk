@@ -33,7 +33,14 @@ export class SCWSigner implements Signer {
   private readonly storage: ScopedLocalStorage;
 
   private _accounts: AddressString[];
+  get accounts() {
+    return this._accounts;
+  }
+
   private _chain: Chain;
+  get chain() {
+    return this._chain;
+  }
 
   constructor(params: {
     metadata: AppMetadata;
@@ -55,14 +62,6 @@ export class SCWSigner implements Signer {
     this.request = this.request.bind(this);
     this.createRequestMessage = this.createRequestMessage.bind(this);
     this.decryptResponseMessage = this.decryptResponseMessage.bind(this);
-  }
-
-  get accounts() {
-    return this._accounts;
-  }
-
-  get chain() {
-    return this._chain;
   }
 
   async handshake(): Promise<AddressString[]> {
@@ -154,7 +153,7 @@ export class SCWSigner implements Signer {
     const encrypted = await encryptContent(
       {
         action: request,
-        chainId: this._chain.id,
+        chainId: this.chain.id,
       },
       sharedSecret
     );
@@ -197,7 +196,7 @@ export class SCWSigner implements Signer {
         rpcUrl,
       }));
       this.storage.storeObject(AVAILABLE_CHAINS_STORAGE_KEY, chains);
-      this.updateChain(this._chain.id, chains);
+      this.updateChain(this.chain.id, chains);
     }
 
     const walletCapabilities = response.data?.capabilities;
@@ -214,7 +213,7 @@ export class SCWSigner implements Signer {
     const chain = chains?.find((chain) => chain.id === chainId);
     if (!chain) return false;
 
-    if (chain !== this._chain) {
+    if (chain !== this.chain) {
       this._chain = chain;
       this.storage.storeObject(ACTIVE_CHAIN_STORAGE_KEY, chain);
       this.updateListener.onChainIdUpdate(chain.id);
