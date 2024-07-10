@@ -4,7 +4,6 @@ import { Communicator } from ':core/communicator/Communicator';
 import { standardErrors } from ':core/error';
 import { RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
-import { Method } from ':core/provider/method';
 import { AddressString, Chain, IntNumber } from ':core/type';
 import { ensureIntNumber } from ':core/type/util';
 import {
@@ -83,16 +82,17 @@ export class SCWSigner implements Signer {
 
     const decrypted = await this.decryptResponseMessage<AddressString[]>(response);
 
-    if ('error' in decrypted.result) throw decrypted.result.error;
+    const result = decrypted.result;
+    if ('error' in result) throw result.error;
 
-    this._accounts = decrypted.result.value;
+    this._accounts = result.value;
     this.storage.storeObject(ACCOUNTS_KEY, this._accounts);
     this.updateListener.onAccountsUpdate(this._accounts);
     return this._accounts;
   }
 
   async request<T>(request: RequestArguments): Promise<T> {
-    switch (request.method as Method) {
+    switch (request.method) {
       case 'wallet_getCapabilities':
         return this.storage.loadObject(WALLET_CAPABILITIES_STORAGE_KEY) as T;
       case 'wallet_switchEthereumChain':
@@ -110,8 +110,10 @@ export class SCWSigner implements Signer {
     const response = await this.sendEncryptedRequest(request);
     const decrypted = await this.decryptResponseMessage<T>(response);
 
-    if ('error' in decrypted.result) throw decrypted.result.error;
-    return decrypted.result.value;
+    const result = decrypted.result;
+    if ('error' in result) throw result.error;
+
+    return result.value;
   }
 
   async disconnect() {
@@ -187,19 +189,12 @@ export class SCWSigner implements Signer {
     }
 
     const response: RPCResponse<T> = await decryptContent(content.encrypted, sharedSecret);
-
-    const metadata = response.data;
-    if (metadata) {
-      this.cacheMetadata(metadata);
-    }
-
+    this.updateInternalState(response);
     return response;
   }
 
-  private cacheMetadata({
-    chains: availableChains,
-    capabilities,
-  }: Exclude<RPCResponse<unknown>['data'], undefined>) {
+  private updateInternalState<T>(response: RPCResponse<T>) {
+    const availableChains = response.data?.chains;
     if (availableChains) {
       const chains = Object.entries(availableChains).map(([id, rpcUrl]) => ({
         id: Number(id),
@@ -210,8 +205,9 @@ export class SCWSigner implements Signer {
       this.switchChain(this._chain.id);
     }
 
-    if (capabilities) {
-      this.storage.storeObject(WALLET_CAPABILITIES_STORAGE_KEY, capabilities);
+    const walletCapabilities = response.data?.capabilities;
+    if (walletCapabilities) {
+      this.storage.storeObject(WALLET_CAPABILITIES_STORAGE_KEY, walletCapabilities);
     }
   }
 
