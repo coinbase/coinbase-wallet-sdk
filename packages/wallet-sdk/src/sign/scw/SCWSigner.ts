@@ -1,10 +1,10 @@
-import { StateUpdateListener } from '../interface';
+import { Signer, StateUpdateListener } from '../interface';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWStateManager } from './SCWStateManager';
 import { Communicator } from ':core/communicator/Communicator';
 import { standardErrors } from ':core/error';
 import { RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
-import { AppMetadata, RequestArguments, Signer } from ':core/provider/interface';
+import { AppMetadata, RequestArguments } from ':core/provider/interface';
 import { Method } from ':core/provider/method';
 import { AddressString } from ':core/type';
 import { ensureIntNumber } from ':core/type/util';
@@ -53,9 +53,8 @@ export class SCWSigner implements Signer {
         params: this.metadata,
       },
     });
-    const response: RPCResponseMessage = await this.communicator.postRequestAndWaitForResponse(
-      handshakeMessage
-    );
+    const response: RPCResponseMessage =
+      await this.communicator.postRequestAndWaitForResponse(handshakeMessage);
 
     // store peer's public key
     if ('failure' in response.content) throw response.content.failure;

@@ -1,10 +1,10 @@
 import { ExtensionSigner } from './extension/ExtensionSigner';
-import { StateUpdateListener } from './interface';
+import { Signer, StateUpdateListener } from './interface';
 import { SCWSigner } from './scw/SCWSigner';
 import { WalletLinkSigner } from './walletlink/WalletLinkSigner';
 import { Communicator } from ':core/communicator/Communicator';
 import { ConfigMessage, MessageID, SignerType } from ':core/message';
-import { AppMetadata, Preference, Signer } from ':core/provider/interface';
+import { AppMetadata, Preference } from ':core/provider/interface';
 import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 const SIGNER_TYPE_KEY = 'SignerType';

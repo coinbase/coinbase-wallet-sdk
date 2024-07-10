@@ -1,4 +1,4 @@
-import { HexString, IntNumber } from '.';
+import { HexString } from '.';
 import {
   bigIntStringFromBigInt,
   ensureAddressString,
@@ -12,7 +12,7 @@ import {
   getFavicon,
   has0xPrefix,
   hexStringFromBuffer,
-  hexStringFromIntNumber,
+  hexStringFromNumber,
   hexStringToUint8Array,
   intNumberFromHexString,
   isHexString,
@@ -59,8 +59,8 @@ describe('util', () => {
   });
 
   test('hexStringFromIntNumber', () => {
-    expect(hexStringFromIntNumber(IntNumber(1234))).toEqual('0x4d2');
-    expect(hexStringFromIntNumber(IntNumber(112341234234))).toEqual('0x1a280f323a');
+    expect(hexStringFromNumber(1234)).toEqual('0x4d2');
+    expect(hexStringFromNumber(112341234234)).toEqual('0x1a280f323a');
   });
 
   test('has0xPrefix', () => {
