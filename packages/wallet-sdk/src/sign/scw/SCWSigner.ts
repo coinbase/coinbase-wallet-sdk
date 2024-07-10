@@ -32,7 +32,6 @@ export class SCWSigner implements Signer {
   private readonly keyManager: SCWKeyManager;
   private readonly storage: ScopedLocalStorage;
 
-  private availableChains?: Chain[];
   private _accounts: AddressString[];
   private _chain: Chain;
 
@@ -195,9 +194,8 @@ export class SCWSigner implements Signer {
         id: Number(id),
         rpcUrl,
       }));
-      this.availableChains = chains;
       this.storage.storeObject(AVAILABLE_CHAINS_STORAGE_KEY, chains);
-      this.updateChain(this._chain.id);
+      this.updateChain(this._chain.id, chains);
     }
 
     const walletCapabilities = response.data?.capabilities;
@@ -208,14 +206,17 @@ export class SCWSigner implements Signer {
     return response;
   }
 
-  private updateChain(chainId: number): boolean {
-    const chain = this.availableChains?.find((chain) => chain.id === chainId);
+  private updateChain(chainId: number, newAvailableChains?: Chain[]): boolean {
+    const chains =
+      newAvailableChains ?? this.storage.loadObject<Chain[]>(AVAILABLE_CHAINS_STORAGE_KEY);
+    const chain = chains?.find((chain) => chain.id === chainId);
     if (!chain) return false;
-    if (chain === this._chain) return true;
 
-    this._chain = chain;
-    this.storage.storeObject(ACTIVE_CHAIN_STORAGE_KEY, chain);
-    this.updateListener.onChainIdUpdate(IntNumber(chain.id));
+    if (chain !== this._chain) {
+      this._chain = chain;
+      this.storage.storeObject(ACTIVE_CHAIN_STORAGE_KEY, chain);
+      this.updateListener.onChainIdUpdate(IntNumber(chain.id));
+    }
     return true;
   }
 }
