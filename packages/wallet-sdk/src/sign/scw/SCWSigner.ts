@@ -5,7 +5,7 @@ import { standardErrors } from ':core/error';
 import { RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
 import { AppMetadata, RequestArguments, Signer } from ':core/provider/interface';
 import { Method } from ':core/provider/method';
-import { AddressString, Chain } from ':core/type';
+import { AddressString, Chain, IntNumber } from ':core/type';
 import { ensureChainId } from ':core/type/util';
 import {
   decryptContent,
@@ -211,7 +211,7 @@ export class SCWSigner implements Signer {
 
     this._chain = chain;
     this.storage.storeObject(ACTIVE_CHAIN_STORAGE_KEY, chain);
-    this.updateListener.onChainUpdate(chain);
+    this.updateListener.onChainIdUpdate(IntNumber(chain.id));
     return true;
   }
 }

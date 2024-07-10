@@ -1,6 +1,6 @@
 import { StateUpdateListener } from '../interface';
 import { AppMetadata, ProviderInterface, RequestArguments, Signer } from ':core/provider/interface';
-import { AddressString } from ':core/type';
+import { AddressString, Chain, IntNumber } from ':core/type';
 
 interface CBExtensionInjectedProvider extends ProviderInterface {
   setAppInfo?: (...args: unknown[]) => unknown;
@@ -27,13 +27,15 @@ export class ExtensionSigner implements Signer {
     this.extensionProvider = extensionProvider;
 
     this.extensionProvider.on('chainChanged', (chainId) => {
-      this.updateListener.onChainUpdate({ id: Number(chainId) });
+      this.updateListener.onChainIdUpdate(IntNumber(Number(chainId)));
     });
 
     this.extensionProvider.on('accountsChanged', (accounts) =>
       this.updateListener.onAccountsUpdate(accounts as AddressString[])
     );
   }
+  accounts: AddressString[];
+  chain: Chain;
 
   async handshake(): Promise<AddressString[]> {
     const accounts = await this.request<AddressString[]>({

@@ -10,7 +10,7 @@ import {
   RequestArguments,
   Signer,
 } from './core/provider/interface';
-import { AddressString, Chain, IntNumber } from './core/type';
+import { AddressString, IntNumber } from './core/type';
 import { hexStringFromIntNumber } from './core/type/util';
 import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './util/provider';
@@ -39,10 +39,10 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   public async request<T>(args: RequestArguments): Promise<T> {
     try {
       checkErrorForInvalidRequestArgs(args);
-      // unrecognized methods are treated as fetch requests
       const category = determineMethodCategory(args.method) ?? 'fetch';
       return this.handlers[category](args) as T;
     } catch (error) {
+      this.handleUnauthorizedError(error);
       return Promise.reject(serializeError(error, args.method));
     }
   }
@@ -50,20 +50,15 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   protected readonly handlers = {
     // eth_requestAccounts
     handshake: async (_: RequestArguments): Promise<AddressString[]> => {
-      try {
-        if (!this.signer) {
-          const signerType = await this.requestSignerSelection();
-          const signer = this.initSigner(signerType);
-          await signer.handshake();
-          this.signer = signer;
-          storeSignerType(signerType);
-        }
-        this.emit('connect', { chainId: hexStringFromIntNumber(IntNumber(this.signer.chain.id)) });
-        return this.signer.accounts;
-      } catch (error) {
-        this.handleUnauthorizedError(error);
-        throw error;
+      if (!this.signer) {
+        const signerType = await this.requestSignerSelection();
+        const signer = this.initSigner(signerType);
+        await signer.handshake();
+        this.signer = signer;
+        storeSignerType(signerType);
       }
+      this.emit('connect', { chainId: hexStringFromIntNumber(IntNumber(this.signer.chain.id)) });
+      return this.signer.accounts;
     },
 
     sign: async (request: RequestArguments) => {
@@ -72,12 +67,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
           "Must call 'eth_requestAccounts' before other methods"
         );
       }
-      try {
-        return await this.signer.request(request);
-      } catch (error) {
-        this.handleUnauthorizedError(error);
-        throw error;
-      }
+      return await this.signer.request(request);
     },
 
     fetch: (request: RequestArguments) => fetchRPCRequest(request, this.signer?.chain),
@@ -136,12 +126,8 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   readonly isCoinbaseWallet = true;
 
   protected readonly updateListener = {
-    onAccountsUpdate: (accounts: AddressString[]) => {
-      this.emit('accountsChanged', accounts);
-    },
-    onChainUpdate: (chain: Chain) => {
-      this.emit('chainChanged', hexStringFromIntNumber(IntNumber(chain.id)));
-    },
+    onAccountsUpdate: (accounts: AddressString[]) => this.emit('accountsChanged', accounts),
+    onChainIdUpdate: (id: IntNumber) => this.emit('chainChanged', hexStringFromIntNumber(id)),
   };
 
   private requestSignerSelection(): Promise<SignerType> {

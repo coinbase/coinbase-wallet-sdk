@@ -8,7 +8,7 @@ const window = globalThis as {
 };
 
 const mockUpdateListener: StateUpdateListener = {
-  onChainUpdate: jest.fn(),
+  onChainIdUpdate: jest.fn(),
   onAccountsUpdate: jest.fn(),
 };
 
@@ -65,7 +65,7 @@ describe('ExtensionSigner', () => {
 
   it('should handle chainChanged events', () => {
     eventListeners['chainChanged']('1');
-    expect(mockUpdateListener.onChainUpdate).toHaveBeenCalledWith({ id: 1 });
+    expect(mockUpdateListener.onChainIdUpdate).toHaveBeenCalledWith(1);
   });
 
   it('should handle accountsChanged events', () => {
