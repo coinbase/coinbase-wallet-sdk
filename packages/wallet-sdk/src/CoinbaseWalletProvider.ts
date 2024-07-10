@@ -83,7 +83,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
         case 'eth_chainId':
           return hexStringFromIntNumber(IntNumber(this.signer?.chain.id ?? 1));
         case 'net_version':
-          return this.signer?.chain.id ?? 1;
+          return this.signer?.chain.id ?? 1; // default to mainnet
         case 'eth_accounts':
           return getConnectedAccounts();
         case 'eth_coinbase':

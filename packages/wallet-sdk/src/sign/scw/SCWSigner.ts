@@ -6,7 +6,7 @@ import { RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/messag
 import { AppMetadata, RequestArguments, Signer } from ':core/provider/interface';
 import { Method } from ':core/provider/method';
 import { AddressString, Chain, IntNumber } from ':core/type';
-import { ensureChainId } from ':core/type/util';
+import { ensureIntNumber } from ':core/type/util';
 import {
   decryptContent,
   encryptContent,
@@ -19,6 +19,12 @@ const ACCOUNTS_KEY = 'accounts';
 const ACTIVE_CHAIN_STORAGE_KEY = 'activeChain';
 const AVAILABLE_CHAINS_STORAGE_KEY = 'availableChains';
 const WALLET_CAPABILITIES_STORAGE_KEY = 'walletCapabilities';
+
+type SwitchEthereumChainParam = [
+  {
+    chainId: `0x${string}`; // Hex chain id
+  },
+];
 
 export class SCWSigner implements Signer {
   private readonly metadata: AppMetadata;
@@ -117,7 +123,11 @@ export class SCWSigner implements Signer {
    * https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
    */
   private async handleSwitchChainRequest(request: RequestArguments) {
-    const chainId = ensureChainId(request.params);
+    const params = request.params as SwitchEthereumChainParam;
+    if (!params || !params[0]?.chainId) {
+      throw standardErrors.rpc.invalidParams();
+    }
+    const chainId = ensureIntNumber(params[0].chainId);
 
     // local handling
     const switched = this.switchChain(chainId);
