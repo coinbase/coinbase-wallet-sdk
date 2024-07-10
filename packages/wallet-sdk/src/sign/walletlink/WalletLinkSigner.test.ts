@@ -23,7 +23,7 @@ const createAdapter = (options?: { relay?: WalletLinkRelay }) => {
     metadata: { appName: 'test', appLogoUrl: null, appChainIds: [1] },
     updateListener: {
       onAccountsUpdate: () => {},
-      onChainUpdate: () => {},
+      onChainIdUpdate: () => {},
     },
   });
   if (options?.relay) {

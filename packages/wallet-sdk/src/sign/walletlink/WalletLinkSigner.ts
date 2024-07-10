@@ -63,7 +63,6 @@ export class WalletLinkSigner implements Signer {
   private readonly _relayEventManager: RelayEventManager;
   private _jsonRpcUrlFromOpts: string;
   private _addresses: AddressString[] = [];
-  private hasMadeFirstChainChangedEmission = false;
   private updateListener?: StateUpdateListener;
 
   constructor(options: { metadata: AppMetadata; updateListener?: StateUpdateListener }) {
@@ -84,12 +83,15 @@ export class WalletLinkSigner implements Signer {
       }
     }
 
-    const cachedChainId = this._storage.getItem(DEFAULT_CHAIN_ID_KEY);
-    if (cachedChainId) {
-      this.hasMadeFirstChainChangedEmission = true;
-    }
-
     this.initializeRelay();
+  }
+
+  get accounts() {
+    return this._addresses;
+  }
+
+  get chain() {
+    return { id: this.getChainId(), rpcUrl: this.jsonRpcUrl };
   }
 
   getSession() {
@@ -122,12 +124,8 @@ export class WalletLinkSigner implements Signer {
     const originalChainId = this.getChainId();
     this._storage.setItem(DEFAULT_CHAIN_ID_KEY, chainId.toString(10));
     const chainChanged = ensureIntNumber(chainId) !== originalChainId;
-    if (chainChanged || !this.hasMadeFirstChainChangedEmission) {
-      this.updateListener?.onChainUpdate({
-        id: chainId,
-        rpcUrl: jsonRpcUrl,
-      });
-      this.hasMadeFirstChainChangedEmission = true;
+    if (chainChanged) {
+      this.updateListener?.onChainIdUpdate(chainId);
     }
   }
 

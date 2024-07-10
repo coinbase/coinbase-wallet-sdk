@@ -58,7 +58,7 @@ describe('util', () => {
     expect(intNumberFromHexString(HexString('0x1fffffffffffff'))).toEqual(9007199254740991);
   });
 
-  test('hexStringFromIntNumber', () => {
+  test('hexStringFromNumber', () => {
     expect(hexStringFromNumber(1234)).toEqual('0x4d2');
     expect(hexStringFromNumber(112341234234)).toEqual('0x1a280f323a');
   });

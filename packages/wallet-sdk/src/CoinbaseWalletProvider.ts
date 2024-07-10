@@ -9,14 +9,14 @@ import {
   ProviderInterface,
   RequestArguments,
 } from './core/provider/interface';
-import { AddressString, Chain } from './core/type';
-import { areAddressArraysEqual, hexStringFromNumber } from './core/type/util';
+import { AddressString } from './core/type';
 import { Signer } from './sign/interface';
 import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './util/provider';
 import { Communicator } from ':core/communicator/Communicator';
 import { SignerType } from ':core/message';
 import { determineMethodCategory } from ':core/provider/method';
+import { hexStringFromNumber } from ':core/type/util';
 import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
@@ -25,30 +25,20 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   private readonly communicator: Communicator;
 
   private signer: Signer | null;
-  protected accounts: AddressString[] = [];
-  protected chain: Chain;
 
   constructor({ metadata, preference: { keysUrl, ...preference } }: Readonly<ConstructorOptions>) {
     super();
     this.metadata = metadata;
     this.preference = preference;
     this.communicator = new Communicator(keysUrl);
-    this.chain = {
-      id: metadata.appChainIds?.[0] ?? 1,
-    };
     // Load states from storage
     const signerType = loadSignerType();
     this.signer = signerType ? this.initSigner(signerType) : null;
   }
 
-  public get connected() {
-    return this.accounts.length > 0;
-  }
-
   public async request<T>(args: RequestArguments): Promise<T> {
     try {
       checkErrorForInvalidRequestArgs(args);
-      // unrecognized methods are treated as fetch requests
       const category = determineMethodCategory(args.method) ?? 'fetch';
       return this.handlers[category](args) as T;
     } catch (error) {
@@ -60,24 +50,19 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   protected readonly handlers = {
     // eth_requestAccounts
     handshake: async (_: RequestArguments): Promise<AddressString[]> => {
-      if (this.connected) {
-        this.emit('connect', { chainId: hexStringFromNumber(this.chain.id) });
-        return this.accounts;
+      if (!this.signer) {
+        const signerType = await this.requestSignerSelection();
+        const signer = this.initSigner(signerType);
+        await signer.handshake();
+        this.signer = signer;
+        storeSignerType(signerType);
       }
-
-      const signerType = await this.requestSignerSelection();
-      const signer = this.initSigner(signerType);
-      const accounts = await signer.handshake();
-
-      this.signer = signer;
-      storeSignerType(signerType);
-
-      this.emit('connect', { chainId: hexStringFromNumber(this.chain.id) });
-      return accounts;
+      this.emit('connect', { chainId: hexStringFromNumber(this.signer.chain.id) });
+      return this.signer.accounts;
     },
 
     sign: async (request: RequestArguments) => {
-      if (!this.connected || !this.signer) {
+      if (!this.signer) {
         throw standardErrors.provider.unauthorized(
           "Must call 'eth_requestAccounts' before other methods"
         );
@@ -85,20 +70,20 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       return await this.signer.request(request);
     },
 
-    fetch: (request: RequestArguments) => fetchRPCRequest(request, this.chain),
+    fetch: (request: RequestArguments) => fetchRPCRequest(request, this.signer?.chain),
 
     state: (request: RequestArguments) => {
       const getConnectedAccounts = (): AddressString[] => {
-        if (this.connected) return this.accounts;
+        if (this.signer) return this.signer.accounts;
         throw standardErrors.provider.unauthorized(
           "Must call 'eth_requestAccounts' before other methods"
         );
       };
       switch (request.method) {
         case 'eth_chainId':
-          return hexStringFromNumber(this.chain.id);
+          return hexStringFromNumber(this.signer?.chain.id ?? 1);
         case 'net_version':
-          return this.chain.id;
+          return this.signer?.chain.id ?? 1; // default to mainnet
         case 'eth_accounts':
           return getConnectedAccounts();
         case 'eth_coinbase':
@@ -133,27 +118,12 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   }
 
   async disconnect(): Promise<void> {
-    this.accounts = [];
-    this.chain = { id: 1 };
     this.signer?.disconnect();
     ScopedLocalStorage.clearAll();
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
 
   readonly isCoinbaseWallet = true;
-
-  protected readonly updateListener = {
-    onAccountsUpdate: (accounts: AddressString[]) => {
-      if (areAddressArraysEqual(this.accounts, accounts)) return;
-      this.accounts = accounts;
-      this.emit('accountsChanged', this.accounts);
-    },
-    onChainUpdate: (chain: Chain) => {
-      if (chain.id === this.chain.id && chain.rpcUrl === this.chain.rpcUrl) return;
-      this.chain = chain;
-      this.emit('chainChanged', hexStringFromNumber(chain.id));
-    },
-  };
 
   private requestSignerSelection(): Promise<SignerType> {
     return fetchSignerType({
@@ -168,7 +138,10 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       signerType,
       metadata: this.metadata,
       communicator: this.communicator,
-      updateListener: this.updateListener,
+      updateListener: {
+        onAccountsUpdate: (accounts: AddressString[]) => this.emit('accountsChanged', accounts),
+        onChainIdUpdate: (id: number) => this.emit('chainChanged', hexStringFromNumber(id)),
+      },
     });
   }
 }
