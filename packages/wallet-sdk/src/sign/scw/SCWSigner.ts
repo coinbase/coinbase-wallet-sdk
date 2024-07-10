@@ -4,7 +4,7 @@ import { Communicator } from ':core/communicator/Communicator';
 import { standardErrors } from ':core/error';
 import { RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
-import { AddressString, Chain, IntNumber } from ':core/type';
+import { AddressString, Chain } from ':core/type';
 import { ensureIntNumber } from ':core/type/util';
 import {
   decryptContent,
@@ -60,6 +60,7 @@ export class SCWSigner implements Signer {
   get accounts() {
     return this._accounts;
   }
+
   get chain() {
     return this._chain;
   }
@@ -215,7 +216,7 @@ export class SCWSigner implements Signer {
     if (chain !== this._chain) {
       this._chain = chain;
       this.storage.storeObject(ACTIVE_CHAIN_STORAGE_KEY, chain);
-      this.updateListener.onChainIdUpdate(IntNumber(chain.id));
+      this.updateListener.onChainIdUpdate(chain.id);
     }
     return true;
   }

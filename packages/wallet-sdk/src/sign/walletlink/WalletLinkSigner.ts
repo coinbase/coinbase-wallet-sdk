@@ -125,7 +125,7 @@ export class WalletLinkSigner implements Signer {
     this._storage.setItem(DEFAULT_CHAIN_ID_KEY, chainId.toString(10));
     const chainChanged = ensureIntNumber(chainId) !== originalChainId;
     if (chainChanged) {
-      this.updateListener?.onChainIdUpdate(IntNumber(chainId));
+      this.updateListener?.onChainIdUpdate(chainId);
     }
   }
 
