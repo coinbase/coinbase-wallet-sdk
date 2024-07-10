@@ -13,14 +13,14 @@ import { WalletLinkRelay } from './relay/WalletLinkRelay';
 import { WALLETLINK_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
-import { AddressString, Chain, IntNumber } from ':core/type';
+import { AddressString, IntNumber } from ':core/type';
 import {
   ensureAddressString,
   ensureBigInt,
   ensureBuffer,
   ensureIntNumber,
   ensureParsedJSONObject,
-  hexStringFromIntNumber,
+  hexStringFromNumber,
 } from ':core/type/util';
 import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
@@ -63,7 +63,6 @@ export class WalletLinkSigner implements Signer {
   private readonly _relayEventManager: RelayEventManager;
   private _jsonRpcUrlFromOpts: string;
   private _addresses: AddressString[] = [];
-  private hasMadeFirstChainChangedEmission = false;
   private updateListener?: StateUpdateListener;
 
   constructor(options: { metadata: AppMetadata; updateListener?: StateUpdateListener }) {
@@ -84,16 +83,16 @@ export class WalletLinkSigner implements Signer {
       }
     }
 
-    const cachedChainId = this._storage.getItem(DEFAULT_CHAIN_ID_KEY);
-    if (cachedChainId) {
-      this.hasMadeFirstChainChangedEmission = true;
-    }
-
     this.initializeRelay();
   }
 
-  accounts: AddressString[] = [];
-  chain: Chain = { id: 1 };
+  get accounts() {
+    return this._addresses;
+  }
+
+  get chain() {
+    return { id: this.getChainId(), rpcUrl: this.jsonRpcUrl };
+  }
 
   getSession() {
     const relay = this.initializeRelay();
@@ -125,12 +124,8 @@ export class WalletLinkSigner implements Signer {
     const originalChainId = this.getChainId();
     this._storage.setItem(DEFAULT_CHAIN_ID_KEY, chainId.toString(10));
     const chainChanged = ensureIntNumber(chainId) !== originalChainId;
-    if (chainChanged || !this.hasMadeFirstChainChangedEmission) {
-      this.updateListener?.onChainUpdate({
-        id: chainId,
-        rpcUrl: jsonRpcUrl,
-      });
-      this.hasMadeFirstChainChangedEmission = true;
+    if (chainChanged) {
+      this.updateListener?.onChainIdUpdate(IntNumber(chainId));
     }
   }
 
@@ -519,7 +514,7 @@ export class WalletLinkSigner implements Signer {
   }
 
   private _eth_chainId(): string {
-    return hexStringFromIntNumber(this.getChainId());
+    return hexStringFromNumber(this.getChainId());
   }
 
   private getChainId(): IntNumber {

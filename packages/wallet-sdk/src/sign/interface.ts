@@ -1,5 +1,5 @@
 import { RequestArguments } from ':core/provider/interface';
-import { AddressString, Chain, IntNumber } from ':core/type';
+import { AddressString, Chain } from ':core/type';
 
 export interface Signer {
   readonly accounts: AddressString[];
@@ -11,5 +11,5 @@ export interface Signer {
 
 export interface StateUpdateListener {
   onAccountsUpdate: (_: AddressString[]) => void;
-  onChainIdUpdate: (_: IntNumber) => void;
+  onChainIdUpdate: (_: number) => void;
 }

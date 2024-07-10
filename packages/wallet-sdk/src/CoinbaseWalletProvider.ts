@@ -9,14 +9,14 @@ import {
   ProviderInterface,
   RequestArguments,
 } from './core/provider/interface';
-import { AddressString, IntNumber } from './core/type';
-import { hexStringFromIntNumber } from './core/type/util';
+import { AddressString } from './core/type';
 import { Signer } from './sign/interface';
 import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './util/provider';
 import { Communicator } from ':core/communicator/Communicator';
 import { SignerType } from ':core/message';
 import { determineMethodCategory } from ':core/provider/method';
+import { hexStringFromNumber } from ':core/type/util';
 import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
@@ -57,7 +57,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
         this.signer = signer;
         storeSignerType(signerType);
       }
-      this.emit('connect', { chainId: hexStringFromIntNumber(IntNumber(this.signer.chain.id)) });
+      this.emit('connect', { chainId: hexStringFromNumber(this.signer.chain.id) });
       return this.signer.accounts;
     },
 
@@ -81,7 +81,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       };
       switch (request.method) {
         case 'eth_chainId':
-          return hexStringFromIntNumber(IntNumber(this.signer?.chain.id ?? 1));
+          return hexStringFromNumber(this.signer?.chain.id ?? 1);
         case 'net_version':
           return this.signer?.chain.id ?? 1; // default to mainnet
         case 'eth_accounts':
@@ -127,7 +127,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   protected readonly updateListener = {
     onAccountsUpdate: (accounts: AddressString[]) => this.emit('accountsChanged', accounts),
-    onChainIdUpdate: (id: IntNumber) => this.emit('chainChanged', hexStringFromIntNumber(id)),
+    onChainIdUpdate: (id: number) => this.emit('chainChanged', hexStringFromNumber(id)),
   };
 
   private requestSignerSelection(): Promise<SignerType> {
