@@ -29,7 +29,6 @@
   },
   "dependencies": {
     "@noble/hashes": "^1.4.0",
-    "buffer": "^6.0.3",
     "clsx": "^1.2.1",
     "eventemitter3": "^5.0.1",
     "preact": "^10.16.0"
