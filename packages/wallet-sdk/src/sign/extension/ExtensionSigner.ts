@@ -48,11 +48,9 @@ export class ExtensionSigner implements Signer {
   }
 
   async handshake() {
-    const accounts = (await this.request({
+    await this.request({
       method: 'eth_requestAccounts',
-    })) as AddressString[];
-    this.updateListener.onAccountsUpdate(accounts);
-    return accounts;
+    });
   }
 
   async request(request: RequestArguments) {

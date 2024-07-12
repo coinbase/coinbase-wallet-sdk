@@ -4,7 +4,7 @@ import { AddressString, Chain } from ':core/type';
 export interface Signer {
   readonly accounts: AddressString[];
   readonly chain: Chain;
-  handshake(): Promise<AddressString[]>;
+  handshake(): Promise<void>;
   request(request: RequestArguments): Promise<unknown>;
   disconnect: () => Promise<void>;
 }
