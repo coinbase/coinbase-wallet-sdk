@@ -7,7 +7,6 @@ import { WalletLinkRelay } from './relay/WalletLinkRelay';
 import { WalletLinkSigner } from './WalletLinkSigner';
 import { WALLETLINK_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
-import { AddressString } from ':core/type';
 import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 jest.mock('./relay/WalletLinkRelay', () => {
@@ -39,7 +38,7 @@ describe('LegacyProvider', () => {
 
   it('handles enabling the provider successfully', async () => {
     const provider = createAdapter();
-    const response = await provider.request<AddressString[]>({ method: 'eth_requestAccounts' });
+    const response = await provider.request({ method: 'eth_requestAccounts' });
     expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
   });
 
@@ -54,7 +53,7 @@ describe('LegacyProvider', () => {
 
   it('handles making a rpc request', async () => {
     const provider = createAdapter();
-    const response = await provider.request<string[]>({
+    const response = await provider.request({
       method: 'eth_requestAccounts',
     });
     expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
@@ -90,7 +89,7 @@ describe('LegacyProvider', () => {
   it('returns the users address on future eth_requestAccounts calls', async () => {
     const provider = createAdapter();
     // Set the account on the first request
-    const response1 = await provider.request<string[]>({
+    const response1 = await provider.request({
       method: 'eth_requestAccounts',
     });
     expect(response1[0]).toBe(MOCK_ADDERESS.toLowerCase());
@@ -99,7 +98,7 @@ describe('LegacyProvider', () => {
     expect(provider._addresses).toEqual([MOCK_ADDERESS.toLowerCase()]);
 
     // Set the account on the first request
-    const response2 = await provider.request<string[]>({
+    const response2 = await provider.request({
       method: 'eth_requestAccounts',
     });
     expect(response2[0]).toBe(MOCK_ADDERESS.toLowerCase());
@@ -113,7 +112,7 @@ describe('LegacyProvider', () => {
     expect(provider._addresses).toEqual([MOCK_ADDERESS.toLowerCase()]);
 
     // Set the account on the first request
-    const response = await provider.request<string[]>({
+    const response = await provider.request({
       method: 'eth_requestAccounts',
     });
     expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
@@ -152,7 +151,7 @@ describe('LegacyProvider', () => {
     });
 
     test('eth_chainId', async () => {
-      const response = await provider?.request<string>({
+      const response = await provider?.request({
         method: 'eth_chainId',
       });
       expect(response).toEqual('0x1');
