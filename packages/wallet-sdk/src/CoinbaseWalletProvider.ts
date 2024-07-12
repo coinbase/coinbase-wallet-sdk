@@ -48,8 +48,22 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   }
 
   protected async handleRequest(request: RequestArguments) {
-    const category = determineMethodCategory(request.method) ?? 'fetch';
-    return this.handlers[category](request);
+    switch (request.method) {
+      case 'eth_requestAccounts':
+        return await this.handlers.handshake(request);
+      case 'eth_chainId':
+        return hexStringFromNumber(this.signer?.chainId ?? 1);
+      case 'net_version':
+        return this.signer?.chainId ?? 1;
+      default: {
+        const category = determineMethodCategory(request.method);
+        if (category) {
+          return await this.handlers[category](request);
+        } else {
+          return await this.handlers.unsupported(request);
+        }
+      }
+    }
   }
 
   protected readonly handlers = {
@@ -62,7 +76,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
         this.signer = signer;
         storeSignerType(signerType);
       }
-      this.emit('connect', { chainId: hexStringFromNumber(this.signer.chain.id) });
+      this.emit('connect', { chainId: hexStringFromNumber(this.signer.chainId) });
       return this.signer.accounts;
     },
 
@@ -75,7 +89,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       return await this.signer.request(request);
     },
 
-    fetch: (request: RequestArguments) => fetchRPCRequest(request, this.signer?.chain),
+    fetch: (request: RequestArguments) => fetchRPCRequest(request, 'undefined'),
 
     state: (request: RequestArguments) => {
       const getConnectedAccounts = (): AddressString[] => {
@@ -85,10 +99,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
         );
       };
       switch (request.method) {
-        case 'eth_chainId':
-          return hexStringFromNumber(this.signer?.chain.id ?? 1);
-        case 'net_version':
-          return this.signer?.chain.id ?? 1; // default to mainnet
         case 'eth_accounts':
           return getConnectedAccounts();
         case 'eth_coinbase':

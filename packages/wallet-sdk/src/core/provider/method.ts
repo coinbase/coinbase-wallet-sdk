@@ -16,12 +16,12 @@ const mapping = {
     'wallet_getCapabilities',
     'wallet_sendCalls',
     'wallet_showCallsStatus',
+    'eth_accounts',
+    'eth_coinbase',
   ],
   state: [
     // internal state
     'eth_chainId',
-    'eth_accounts',
-    'eth_coinbase',
     'net_version',
   ],
   deprecated: ['eth_sign', 'eth_signTypedData_v2'],
