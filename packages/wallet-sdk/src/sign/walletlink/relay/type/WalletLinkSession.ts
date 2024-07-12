@@ -1,6 +1,6 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
-import { sha256 } from 'js-sha256';
+import { sha256 } from '@noble/hashes/sha256';
 
 import { randomBytesHex } from ':core/type/util';
 import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
@@ -21,10 +21,9 @@ export class WalletLinkSession {
     this._id = id || randomBytesHex(16);
     this._secret = secret || randomBytesHex(32);
 
-    this._key = sha256
-      .create()
-      .update(`${this._id}, ${this._secret} WalletLink`) // ensure old sessions stay connected
-      .hex();
+    const hash = sha256.create().update(`${this._id}, ${this._secret} WalletLink`).digest();
+
+    this._key = Array.from(hash, (byte) => byte.toString(16).padStart(2, '0')).join('');
 
     this._linked = !!linked;
   }

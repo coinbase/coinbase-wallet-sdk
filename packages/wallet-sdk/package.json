@@ -28,11 +28,10 @@
     "lint": "eslint . --ext .ts,.tsx --fix"
   },
   "dependencies": {
+    "@noble/hashes": "^1.4.0",
     "buffer": "^6.0.3",
     "clsx": "^1.2.1",
     "eventemitter3": "^5.0.1",
-    "js-sha256": "^0.11.0",
-    "keccak": "^3.0.3",
     "preact": "^10.16.0"
   },
   "devDependencies": {
