@@ -64,7 +64,7 @@ export class SCWSigner implements Signer {
     this.decryptResponseMessage = this.decryptResponseMessage.bind(this);
   }
 
-  async handshake(): Promise<AddressString[]> {
+  async handshake() {
     const handshakeMessage = await this.createRequestMessage({
       handshake: {
         method: 'eth_requestAccounts',
@@ -79,12 +79,12 @@ export class SCWSigner implements Signer {
     const peerPublicKey = await importKeyFromHexString('public', response.sender);
     await this.keyManager.setPeerPublicKey(peerPublicKey);
 
-    const decrypted = await this.decryptResponseMessage<AddressString[]>(response);
+    const decrypted = await this.decryptResponseMessage(response);
 
     const result = decrypted.result;
     if ('error' in result) throw result.error;
 
-    const accounts = result.value;
+    const accounts = result.value as AddressString[];
     this._accounts = accounts;
     this.storage.storeObject(ACCOUNTS_KEY, accounts);
     this.updateListener.onAccountsUpdate(accounts);
@@ -106,13 +106,13 @@ export class SCWSigner implements Signer {
     }
   }
 
-  private async sendRequestToPopup<T>(request: RequestArguments): Promise<T> {
+  private async sendRequestToPopup(request: RequestArguments) {
     // Open the popup before constructing the request message.
     // This is to ensure that the popup is not blocked by some browsers (i.e. Safari)
     await this.communicator.waitForPopupLoaded();
 
     const response = await this.sendEncryptedRequest(request);
-    const decrypted = await this.decryptResponseMessage<T>(response);
+    const decrypted = await this.decryptResponseMessage(response);
 
     const result = decrypted.result;
     if ('error' in result) throw result.error;
@@ -178,7 +178,7 @@ export class SCWSigner implements Signer {
     };
   }
 
-  private async decryptResponseMessage<T>(message: RPCResponseMessage): Promise<RPCResponse<T>> {
+  private async decryptResponseMessage(message: RPCResponseMessage): Promise<RPCResponse> {
     const content = message.content;
 
     // throw protocol level error
@@ -191,7 +191,7 @@ export class SCWSigner implements Signer {
       throw standardErrors.provider.unauthorized('Invalid session');
     }
 
-    const response: RPCResponse<T> = await decryptContent(content.encrypted, sharedSecret);
+    const response: RPCResponse = await decryptContent(content.encrypted, sharedSecret);
 
     const availableChains = response.data?.chains;
     if (availableChains) {

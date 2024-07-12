@@ -68,7 +68,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   protected readonly handlers = {
     // eth_requestAccounts
-    handshake: async (_: RequestArguments): Promise<AddressString[]> => {
+    handshake: async (_: RequestArguments) => {
       if (!this.signer) {
         const signerType = await this.requestSignerSelection();
         const signer = this.initSigner(signerType);

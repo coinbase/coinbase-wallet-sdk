@@ -100,9 +100,8 @@ export class WalletLinkSigner implements Signer {
     return { id, secret };
   }
 
-  async handshake(): Promise<AddressString[]> {
-    const ethAddresses = await this.request<AddressString[]>({ method: 'eth_requestAccounts' });
-    return ethAddresses;
+  async handshake() {
+    return this.request({ method: 'eth_requestAccounts' });
   }
 
   get selectedAddress(): AddressString | undefined {
@@ -225,43 +224,8 @@ export class WalletLinkSigner implements Signer {
     this._storage.clear();
   }
 
-  public async request<T>(args: RequestArguments): Promise<T> {
-    try {
-      return this._request<T>(args).catch((error) => {
-        throw error;
-      });
-    } catch (error) {
-      return Promise.reject(error);
-    }
-  }
-  private async _request<T>(args: RequestArguments): Promise<T> {
-    if (!args || typeof args !== 'object' || Array.isArray(args)) {
-      throw standardErrors.rpc.invalidRequest({
-        message: 'Expected a single, non-array, object argument.',
-        data: args,
-      });
-    }
-
+  public async request(args: RequestArguments) {
     const { method, params } = args;
-
-    if (typeof method !== 'string' || method.length === 0) {
-      throw standardErrors.rpc.invalidRequest({
-        message: "'args.method' must be a non-empty string.",
-        data: args,
-      });
-    }
-
-    if (
-      params !== undefined &&
-      !Array.isArray(params) &&
-      (typeof params !== 'object' || params === null)
-    ) {
-      throw standardErrors.rpc.invalidRequest({
-        message: "'args.params' must be an object or array if provided.",
-        data: args,
-      });
-    }
-
     const newParams = params === undefined ? [] : params;
 
     // Coinbase Wallet Requests
@@ -273,7 +237,7 @@ export class WalletLinkSigner implements Signer {
       id,
     });
 
-    return result.result as T;
+    return result.result;
   }
 
   protected _setAddresses(addresses: string[], _?: boolean): void {
