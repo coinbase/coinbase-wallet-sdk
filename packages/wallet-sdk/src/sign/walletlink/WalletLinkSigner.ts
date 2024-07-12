@@ -299,6 +299,11 @@ export class WalletLinkSigner implements Signer {
     const params = request.params || [];
 
     switch (method) {
+      case 'eth_requestAccounts': {
+        await this.handshake();
+        return { jsonrpc: '2.0', id: 0, result: this._addresses };
+      }
+
       case 'eth_sign':
         return this._eth_sign(params);
 
