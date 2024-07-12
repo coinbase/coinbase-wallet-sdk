@@ -88,7 +88,6 @@ export class SCWSigner implements Signer {
     this._accounts = accounts;
     this.storage.storeObject(ACCOUNTS_KEY, accounts);
     this.updateListener.onAccountsUpdate(accounts);
-    return accounts;
   }
 
   async request(request: RequestArguments) {

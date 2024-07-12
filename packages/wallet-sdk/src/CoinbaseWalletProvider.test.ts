@@ -50,7 +50,7 @@ jest.mock('./sign/util', () => {
     loadSignerType: jest.fn(),
     storeSignerType: jest.fn(),
     createSigner: () => ({
-      chain: { id: 1 },
+      chainId: 1,
       handshake: mockHandshake,
       request: mockRequest,
     }),

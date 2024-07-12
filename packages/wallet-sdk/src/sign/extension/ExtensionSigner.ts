@@ -41,18 +41,16 @@ export class ExtensionSigner implements Signer {
     return this.extensionProvider.send({ method: 'eth_accounts' }) as AddressString[];
   }
 
-  get chain() {
+  get chainId() {
     const hexString = this.extensionProvider.send({ method: 'eth_chainId' }) as HexString;
     // TODO: currently, provider expects `rpcUrl` for fetch requests
-    return { id: intNumberFromHexString(hexString) };
+    return intNumberFromHexString(hexString);
   }
 
   async handshake() {
-    const accounts = (await this.request({
+    await this.request({
       method: 'eth_requestAccounts',
-    })) as AddressString[];
-    this.updateListener.onAccountsUpdate(accounts);
-    return accounts;
+    });
   }
 
   async request(request: RequestArguments) {

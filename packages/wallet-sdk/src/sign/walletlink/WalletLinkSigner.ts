@@ -90,8 +90,8 @@ export class WalletLinkSigner implements Signer {
     return this._addresses;
   }
 
-  get chain() {
-    return { id: this.getChainId(), rpcUrl: this.jsonRpcUrl };
+  get chainId() {
+    return this.getChainId();
   }
 
   getSession() {
@@ -101,7 +101,7 @@ export class WalletLinkSigner implements Signer {
   }
 
   async handshake() {
-    return this.request({ method: 'eth_requestAccounts' });
+    await this.request({ method: 'eth_requestAccounts' });
   }
 
   get selectedAddress(): AddressString | undefined {

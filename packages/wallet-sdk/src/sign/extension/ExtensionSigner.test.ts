@@ -74,12 +74,13 @@ describe('ExtensionSigner', () => {
   });
 
   it('should request accounts during handshake', async () => {
+    // expecting extension provider to return accounts and emit an accountsChanged event
     (mockExtensionProvider.request as jest.Mock).mockImplementation((args) =>
       args.method === 'eth_requestAccounts' ? ['0x123'] : null
     );
+    eventListeners['accountsChanged'](['0x123']);
 
-    const accounts = await signer.handshake();
-    expect(accounts).toEqual(['0x123']);
+    await expect(signer.handshake()).resolves.not.toThrow();
     expect(mockUpdateListener.onAccountsUpdate).toHaveBeenCalledWith(['0x123']);
   });
 
