@@ -95,7 +95,7 @@ describe('ExtensionSigner', () => {
     const requestArgs: RequestArguments = { method: 'someReq' };
     (mockExtensionProvider.request as jest.Mock).mockResolvedValueOnce('resFromExt');
 
-    const response = await signer.request<string>(requestArgs);
+    const response = await signer.request(requestArgs);
     expect(response).toBe('resFromExt');
     expect(mockExtensionProvider.request).toHaveBeenCalledWith(requestArgs);
   });

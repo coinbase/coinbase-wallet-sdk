@@ -5,7 +5,7 @@ export interface Signer {
   readonly accounts: AddressString[];
   readonly chain: Chain;
   handshake(): Promise<AddressString[]>;
-  request<T>(request: RequestArguments): Promise<T>;
+  request(request: RequestArguments): Promise<unknown>;
   disconnect: () => Promise<void>;
 }
 

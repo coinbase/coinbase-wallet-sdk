@@ -97,8 +97,8 @@ export async function importKeyFromHexString(
   );
 }
 
-export async function encryptContent<T>(
-  content: RPCRequest | RPCResponse<T>,
+export async function encryptContent(
+  content: RPCRequest | RPCResponse,
   sharedSecret: CryptoKey
 ): Promise<EncryptedData> {
   const serialized = JSON.stringify(content, (_, value) => {
@@ -113,7 +113,7 @@ export async function encryptContent<T>(
   return encrypt(sharedSecret, serialized);
 }
 
-export async function decryptContent<R extends RPCRequest | RPCResponse<U>, U>(
+export async function decryptContent<R extends RPCRequest | RPCResponse>(
   encryptedData: EncryptedData,
   sharedSecret: CryptoKey
 ): Promise<R> {

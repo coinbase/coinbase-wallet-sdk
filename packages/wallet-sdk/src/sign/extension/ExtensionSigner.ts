@@ -47,15 +47,15 @@ export class ExtensionSigner implements Signer {
     return { id: intNumberFromHexString(hexString) };
   }
 
-  async handshake(): Promise<AddressString[]> {
-    const accounts = await this.request<AddressString[]>({
+  async handshake() {
+    const accounts = (await this.request({
       method: 'eth_requestAccounts',
-    });
+    })) as AddressString[];
     this.updateListener.onAccountsUpdate(accounts);
     return accounts;
   }
 
-  async request<T>(request: RequestArguments): Promise<T> {
+  async request(request: RequestArguments) {
     return await this.extensionProvider.request(request);
   }
 
