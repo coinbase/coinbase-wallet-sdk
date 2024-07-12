@@ -36,7 +36,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     this.signer = signerType ? this.initSigner(signerType) : null;
   }
 
-  public async request<T>(args: unknown): Promise<T> {
+  public async request<T>(args: RequestArguments): Promise<T> {
     try {
       checkErrorForInvalidRequestArgs(args);
       return (await this.handleRequest(args)) as T;
