@@ -90,6 +90,10 @@ export class WalletLinkSigner implements Signer {
     return this._addresses;
   }
 
+  get chain() {
+    return { id: this.getChainId(), rpcUrl: this.jsonRpcUrl };
+  }
+
   getSession() {
     const relay = this.initializeRelay();
     const { id, secret } = relay.getWalletLinkSession();
@@ -116,7 +120,7 @@ export class WalletLinkSigner implements Signer {
     this.jsonRpcUrl = jsonRpcUrl;
 
     // emit chainChanged event if necessary
-    const originalChainId = this.chainId;
+    const originalChainId = this.getChainId();
     this._storage.setItem(DEFAULT_CHAIN_ID_KEY, chainId.toString(10));
     const chainChanged = ensureIntNumber(chainId) !== originalChainId;
     if (chainChanged) {
@@ -159,7 +163,7 @@ export class WalletLinkSigner implements Signer {
       decimals: number;
     }
   ): Promise<boolean> {
-    if (ensureIntNumber(chainId) === this.chainId) {
+    if (ensureIntNumber(chainId) === this.getChainId()) {
       return false;
     }
 
@@ -395,7 +399,7 @@ export class WalletLinkSigner implements Signer {
     const maxPriorityFeePerGas =
       tx.maxPriorityFeePerGas != null ? ensureBigInt(tx.maxPriorityFeePerGas) : null;
     const gasLimit = tx.gas != null ? ensureBigInt(tx.gas) : null;
-    const chainId = tx.chainId ? ensureIntNumber(tx.chainId) : this.chainId;
+    const chainId = tx.chainId ? ensureIntNumber(tx.chainId) : this.getChainId();
 
     return {
       fromAddress,
@@ -470,14 +474,14 @@ export class WalletLinkSigner implements Signer {
   }
 
   private _net_version(): string {
-    return this.chainId.toString(10);
+    return this.getChainId().toString(10);
   }
 
   private _eth_chainId(): string {
-    return hexStringFromNumber(this.chainId);
+    return hexStringFromNumber(this.getChainId());
   }
 
-  get chainId(): IntNumber {
+  private getChainId(): IntNumber {
     const chainIdStr = this._storage.getItem(DEFAULT_CHAIN_ID_KEY);
 
     if (!chainIdStr) {
@@ -570,7 +574,7 @@ export class WalletLinkSigner implements Signer {
   private async _eth_sendRawTransaction(params: unknown[]): Promise<JSONRPCResponse> {
     const signedTransaction = ensureBuffer(params[0]);
     const relay = this.initializeRelay();
-    const res = await relay.submitEthereumTransaction(signedTransaction, this.chainId);
+    const res = await relay.submitEthereumTransaction(signedTransaction, this.getChainId());
     if (isErrorResponse(res)) {
       throw new Error(res.errorMessage);
     }
@@ -696,7 +700,7 @@ export class WalletLinkSigner implements Signer {
       throw standardErrors.rpc.invalidParams('Address is required');
     }
 
-    const chainId = this.chainId;
+    const chainId = this.getChainId();
     const { address, symbol, image, decimals } = request.options;
 
     const res = await this.watchAsset(request.type, address, symbol, decimals, image, chainId);
