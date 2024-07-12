@@ -100,10 +100,6 @@ export class WalletLinkSigner implements Signer {
     return { id, secret };
   }
 
-  async handshake() {
-    return this.request({ method: 'eth_requestAccounts' });
-  }
-
   get selectedAddress(): AddressString | undefined {
     return this._addresses[0] || undefined;
   }
@@ -303,9 +299,6 @@ export class WalletLinkSigner implements Signer {
     const params = request.params || [];
 
     switch (method) {
-      case 'eth_requestAccounts':
-        return this._eth_requestAccounts();
-
       case 'eth_sign':
         return this._eth_sign(params);
 
@@ -492,13 +485,9 @@ export class WalletLinkSigner implements Signer {
     return ensureIntNumber(chainId);
   }
 
-  private async _eth_requestAccounts(): Promise<JSONRPCResponse> {
+  async handshake() {
     if (this._isAuthorized()) {
-      return Promise.resolve({
-        jsonrpc: '2.0',
-        id: 0,
-        result: this._addresses,
-      });
+      return;
     }
 
     let res: Web3Response<'requestEthereumAccounts'>;
@@ -520,8 +509,6 @@ export class WalletLinkSigner implements Signer {
     }
 
     this._setAddresses(res.result);
-
-    return { jsonrpc: '2.0', id: 0, result: this._addresses };
   }
 
   private _eth_sign(params: unknown[]): Promise<JSONRPCResponse> {
