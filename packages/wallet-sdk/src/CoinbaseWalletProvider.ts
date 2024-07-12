@@ -9,10 +9,9 @@ import {
   ProviderInterface,
   RequestArguments,
 } from './core/provider/interface';
-import { AddressString } from './core/type';
 import { Signer } from './sign/interface';
 import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
-import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './util/provider';
+import { checkErrorForInvalidRequestArgs } from './util/provider';
 import { Communicator } from ':core/communicator/Communicator';
 import { SignerType } from ':core/message';
 import { determineMethodCategory } from ':core/provider/method';
@@ -39,7 +38,18 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   public async request<T>(args: RequestArguments): Promise<T> {
     try {
       checkErrorForInvalidRequestArgs(args);
-      return (await this.handleRequest(args)) as T;
+
+      switch (determineMethodCategory(args.method)) {
+        case 'handshake':
+          return (await this.handshake()) as T;
+
+        case 'unsupported':
+        case 'deprecated':
+          throw standardErrors.rpc.methodNotSupported(`Method ${args.method} is not supported.`);
+
+        default:
+          return (await this.handleRequest(args)) as T;
+      }
     } catch (error) {
       const { code } = error as { code?: number };
       if (code === standardErrorCodes.provider.unauthorized) this.disconnect();
@@ -47,75 +57,37 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     }
   }
 
-  protected async handleRequest(request: RequestArguments) {
-    switch (request.method) {
-      case 'eth_requestAccounts':
-        return await this.handlers.handshake(request);
-      case 'eth_chainId':
-        return hexStringFromNumber(this.signer?.chainId ?? 1);
-      case 'net_version':
-        return this.signer?.chainId ?? 1;
-      default: {
-        const category = determineMethodCategory(request.method);
-        if (category) {
-          return await this.handlers[category](request);
-        } else {
-          return await this.handlers.unsupported(request);
-        }
-      }
+  private async handshake() {
+    if (!this.signer) {
+      const signerType = await this.requestSignerSelection();
+      const signer = this.initSigner(signerType);
+      await signer.handshake();
+      this.signer = signer;
+      storeSignerType(signerType);
     }
+
+    this.emit('connect', { chainId: hexStringFromNumber(this.signer.chainId) });
+    return this.signer.accounts;
   }
 
-  protected readonly handlers = {
-    // eth_requestAccounts
-    handshake: async (_: RequestArguments) => {
-      if (!this.signer) {
-        const signerType = await this.requestSignerSelection();
-        const signer = this.initSigner(signerType);
-        await signer.handshake();
-        this.signer = signer;
-        storeSignerType(signerType);
-      }
-      this.emit('connect', { chainId: hexStringFromNumber(this.signer.chainId) });
-      return this.signer.accounts;
-    },
-
-    sign: async (request: RequestArguments) => {
-      if (!this.signer) {
-        throw standardErrors.provider.unauthorized(
-          "Must call 'eth_requestAccounts' before other methods"
-        );
-      }
-      return await this.signer.request(request);
-    },
-
-    fetch: (request: RequestArguments) => fetchRPCRequest(request, 'undefined'),
-
-    state: (request: RequestArguments) => {
-      const getConnectedAccounts = (): AddressString[] => {
-        if (this.signer) return this.signer.accounts;
-        throw standardErrors.provider.unauthorized(
-          "Must call 'eth_requestAccounts' before other methods"
-        );
-      };
+  protected async handleRequest(request: RequestArguments) {
+    if (!this.signer) {
       switch (request.method) {
-        case 'eth_accounts':
-          return getConnectedAccounts();
-        case 'eth_coinbase':
-          return getConnectedAccounts()[0];
+        // if signer is not initialized, return chainId as 1 (mainnet)
+        case 'eth_chainId':
+          return hexStringFromNumber(1);
+        case 'net_version':
+          return 1;
         default:
-          return this.handlers.unsupported(request);
+          // for other methods, throw unauthorized error
+          throw standardErrors.provider.unauthorized(
+            "Must call 'eth_requestAccounts' before other methods"
+          );
       }
-    },
+    }
 
-    deprecated: ({ method }: RequestArguments) => {
-      throw standardErrors.rpc.methodNotSupported(`Method ${method} is deprecated.`);
-    },
-
-    unsupported: ({ method }: RequestArguments) => {
-      throw standardErrors.rpc.methodNotSupported(`Method ${method} is not supported.`);
-    },
-  };
+    return this.signer.request(request);
+  }
 
   /** @deprecated Use `.request({ method: 'eth_requestAccounts' })` instead. */
   public async enable() {
