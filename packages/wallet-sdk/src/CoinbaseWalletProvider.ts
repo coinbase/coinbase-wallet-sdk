@@ -39,12 +39,17 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
   public async request<T>(args: RequestArguments): Promise<T> {
     try {
       checkErrorForInvalidRequestArgs(args);
-      const category = determineMethodCategory(args.method) ?? 'fetch';
-      return this.handlers[category](args) as T;
+      return (await this.handleRequest(args)) as T;
     } catch (error) {
-      this.handleUnauthorizedError(error);
-      return Promise.reject(serializeError(error, args.method));
+      const { code } = error as { code?: number };
+      if (code === standardErrorCodes.provider.unauthorized) this.disconnect();
+      return Promise.reject(serializeError(error));
     }
+  }
+
+  protected async handleRequest(request: RequestArguments) {
+    const category = determineMethodCategory(request.method) ?? 'fetch';
+    return this.handlers[category](request);
   }
 
   protected readonly handlers = {
@@ -102,13 +107,8 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     },
   };
 
-  private handleUnauthorizedError(error: unknown) {
-    const e = error as { code?: number };
-    if (e.code === standardErrorCodes.provider.unauthorized) this.disconnect();
-  }
-
   /** @deprecated Use `.request({ method: 'eth_requestAccounts' })` instead. */
-  public async enable(): Promise<unknown> {
+  public async enable() {
     console.warn(
       `.enable() has been deprecated. Please use .request({ method: "eth_requestAccounts" }) instead.`
     );
@@ -117,7 +117,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     });
   }
 
-  async disconnect(): Promise<void> {
+  async disconnect() {
     this.signer?.disconnect();
     ScopedLocalStorage.clearAll();
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
@@ -139,8 +139,8 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       metadata: this.metadata,
       communicator: this.communicator,
       updateListener: {
-        onAccountsUpdate: (accounts: AddressString[]) => this.emit('accountsChanged', accounts),
-        onChainIdUpdate: (id: number) => this.emit('chainChanged', hexStringFromNumber(id)),
+        onAccountsUpdate: (accounts) => this.emit('accountsChanged', accounts),
+        onChainIdUpdate: (id) => this.emit('chainChanged', hexStringFromNumber(id)),
       },
     });
   }

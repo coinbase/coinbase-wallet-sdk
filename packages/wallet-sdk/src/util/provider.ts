@@ -27,7 +27,7 @@ export async function fetchRPCRequest(request: RequestArguments, chain?: Chain) 
  * @param args The request arguments to validate.
  * @returns An error object if the arguments are invalid, otherwise undefined.
  */
-export function checkErrorForInvalidRequestArgs(args: unknown) {
+export function checkErrorForInvalidRequestArgs(args: unknown): asserts args is RequestArguments {
   if (!args || typeof args !== 'object' || Array.isArray(args)) {
     throw standardErrors.rpc.invalidParams({
       message: 'Expected a single, non-array, object argument.',
