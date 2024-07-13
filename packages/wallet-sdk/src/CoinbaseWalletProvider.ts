@@ -14,7 +14,6 @@ import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from '
 import { checkErrorForInvalidRequestArgs } from './util/provider';
 import { Communicator } from ':core/communicator/Communicator';
 import { SignerType } from ':core/message';
-import { determineMethodCategory } from ':core/provider/method';
 import { hexStringFromNumber } from ':core/type/util';
 import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
@@ -39,13 +38,15 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     try {
       checkErrorForInvalidRequestArgs(args);
 
-      switch (determineMethodCategory(args.method)) {
-        case 'handshake':
+      switch (args.method) {
+        case 'eth_requestAccounts':
           return (await this.handshake()) as T;
 
-        case 'unsupported':
-        case 'deprecated':
-          throw standardErrors.rpc.methodNotSupported(`Method ${args.method} is not supported.`);
+        case 'eth_sign':
+        case 'eth_signTypedData_v2':
+        case 'eth_subscribe':
+        case 'eth_unsubscribe':
+          throw standardErrors.rpc.methodNotSupported();
 
         default:
           return (await this.handleRequest(args)) as T;

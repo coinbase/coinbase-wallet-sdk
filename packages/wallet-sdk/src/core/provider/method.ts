@@ -1,5 +1,4 @@
 const mapping = {
-  handshake: ['eth_requestAccounts'],
   interactive: [
     'eth_ecRecover',
     'personal_sign',
@@ -16,7 +15,7 @@ const mapping = {
     'wallet_sendCalls',
     'wallet_showCallsStatus',
   ],
-  readonly: [
+  local: [
     // non-interactive queries for internal state and readonly RPC calls
     'wallet_getCapabilities',
     'eth_chainId',
@@ -24,8 +23,6 @@ const mapping = {
     'eth_coinbase',
     'net_version',
   ],
-  deprecated: ['eth_sign', 'eth_signTypedData_v2'],
-  unsupported: ['eth_subscribe', 'eth_unsubscribe'],
 } as const;
 
 export type MethodCategory = keyof typeof mapping;
