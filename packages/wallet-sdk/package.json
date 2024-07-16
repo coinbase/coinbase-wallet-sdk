@@ -28,12 +28,10 @@
     "lint": "eslint . --ext .ts,.tsx --fix"
   },
   "dependencies": {
-    "buffer": "^6.0.3",
+    "@noble/hashes": "^1.4.0",
     "clsx": "^1.2.1",
     "eventemitter3": "^5.0.1",
-    "keccak": "^3.0.3",
-    "preact": "^10.16.0",
-    "sha.js": "^2.4.11"
+    "preact": "^10.16.0"
   },
   "devDependencies": {
     "@babel/core": "^7.22.9",
@@ -46,7 +44,6 @@
     "@testing-library/preact": "^2.0.1",
     "@types/jest": "^27.5.2",
     "@types/node": "^14.18.54",
-    "@types/sha.js": "^2.4.1",
     "@typescript-eslint/eslint-plugin": "^6.2.0",
     "@typescript-eslint/parser": "^6.2.0",
     "babel-jest": "^27.5.1",
