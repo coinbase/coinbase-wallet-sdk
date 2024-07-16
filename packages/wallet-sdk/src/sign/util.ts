@@ -5,16 +5,18 @@ import { WalletLinkSigner } from './walletlink/WalletLinkSigner';
 import { Communicator } from ':core/communicator/Communicator';
 import { ConfigMessage, MessageID, SignerType } from ':core/message';
 import { AppMetadata, Preference } from ':core/provider/interface';
+import type { BaseStorage } from ':util/BaseStorage';
 import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 const SIGNER_TYPE_KEY = 'SignerType';
-const storage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
 
-export function loadSignerType(): SignerType | null {
+export function loadSignerType(baseStorage: BaseStorage | undefined): SignerType | null {
+  const storage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator', baseStorage);
   return storage.getItem(SIGNER_TYPE_KEY) as SignerType;
 }
 
-export function storeSignerType(signerType: SignerType) {
+export function storeSignerType(signerType: SignerType, baseStorage: BaseStorage | undefined) {
+  const storage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator', baseStorage);
   storage.setItem(SIGNER_TYPE_KEY, signerType);
 }
 
@@ -24,7 +26,7 @@ export async function fetchSignerType(params: {
   metadata: AppMetadata; // for WalletLink
 }): Promise<SignerType> {
   const { communicator, metadata } = params;
-  listenForWalletLinkSessionRequest(communicator, metadata).catch(() => {});
+  listenForWalletLinkSessionRequest(communicator, metadata).catch(() => { });
 
   const request: ConfigMessage & { id: MessageID } = {
     id: crypto.randomUUID(),

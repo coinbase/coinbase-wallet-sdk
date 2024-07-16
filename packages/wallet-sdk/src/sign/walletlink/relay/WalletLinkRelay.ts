@@ -166,12 +166,12 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
          */
         const storedSession = WalletLinkSession.load(this.storage);
         if (storedSession?.id === this._session.id) {
-          ScopedLocalStorage.clearAll();
+          ScopedLocalStorage.clearAll(undefined);
         }
 
         document.location.reload();
       })
-      .catch((_) => {});
+      .catch((_) => { });
   }
 
   public setAppInfo(appName: string, appLogoUrl: string | null): void {
@@ -347,7 +347,7 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
   protected publishWeb3RequestEvent(id: string, request: Web3Request): void {
     const message: WalletLinkEventData = { type: 'WEB3_REQUEST', id, request };
     this.publishEvent('Web3Request', message, true)
-      .then((_) => {})
+      .then((_) => { })
       .catch((err) => {
         this.handleWeb3ResponseMessage({
           type: 'WEB3_RESPONSE',
