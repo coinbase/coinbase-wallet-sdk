@@ -18,7 +18,7 @@ import { SignerType } from ':core/message';
 import { determineMethodCategory } from ':core/provider/method';
 import { hexStringFromNumber } from ':core/type/util';
 import type { BaseStorage } from ':util/BaseStorage';
-import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
+import { ScopedStorage } from ':util/ScopedStorage';
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
   private readonly metadata: AppMetadata;
@@ -126,7 +126,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   async disconnect() {
     this.signer?.disconnect();
-    ScopedLocalStorage.clearAll(this.baseStorage);
+    ScopedStorage.clearAll(this.baseStorage);
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
 

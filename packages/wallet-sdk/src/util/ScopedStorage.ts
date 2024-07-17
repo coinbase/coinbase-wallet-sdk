@@ -3,7 +3,7 @@
 import { BaseStorage, browserStorageAdapter } from './BaseStorage';
 
 // TODO: clean up, or possibly deprecate Storage class
-export class ScopedLocalStorage {
+export class ScopedStorage {
   private baseStorage: BaseStorage;
 
   constructor(
@@ -57,7 +57,7 @@ export class ScopedLocalStorage {
   }
 
   static clearAll(baseStorage: BaseStorage | undefined) {
-    new ScopedLocalStorage('CBWSDK', undefined, baseStorage).clear();
-    new ScopedLocalStorage('walletlink', undefined, baseStorage).clear();
+    new ScopedStorage('CBWSDK', undefined, baseStorage).clear();
+    new ScopedStorage('walletlink', undefined, baseStorage).clear();
   }
 }

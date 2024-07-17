@@ -6,17 +6,17 @@ import { Communicator } from ':core/communicator/Communicator';
 import { ConfigMessage, MessageID, SignerType } from ':core/message';
 import { AppMetadata, Preference } from ':core/provider/interface';
 import type { BaseStorage } from ':util/BaseStorage';
-import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
+import { ScopedStorage } from ':util/ScopedStorage';
 
 const SIGNER_TYPE_KEY = 'SignerType';
 
 export function loadSignerType(baseStorage: BaseStorage | undefined): SignerType | null {
-  const storage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator', baseStorage);
+  const storage = new ScopedStorage('CBWSDK', 'SignerConfigurator', baseStorage);
   return storage.getItem(SIGNER_TYPE_KEY) as SignerType;
 }
 
 export function storeSignerType(signerType: SignerType, baseStorage: BaseStorage | undefined) {
-  const storage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator', baseStorage);
+  const storage = new ScopedStorage('CBWSDK', 'SignerConfigurator', baseStorage);
   storage.setItem(SIGNER_TYPE_KEY, signerType);
 }
 

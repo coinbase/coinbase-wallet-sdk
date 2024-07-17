@@ -19,18 +19,18 @@ import { WLMobileRelayUI } from './ui/WLMobileRelayUI';
 import { standardErrors } from ':core/error';
 import { AddressString, IntNumber, RegExpString } from ':core/type';
 import { bigIntStringFromBigInt, hexStringFromBuffer, randomBytesHex } from ':core/type/util';
-import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
+import { ScopedStorage } from ':util/ScopedStorage';
 
 interface WalletLinkRelayOptions {
   linkAPIUrl: string;
-  storage: ScopedLocalStorage;
+  storage: ScopedStorage;
 }
 
 export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
   private static accountRequestCallbackIds = new Set<string>();
 
   private readonly linkAPIUrl: string;
-  protected readonly storage: ScopedLocalStorage;
+  protected readonly storage: ScopedStorage;
   private _session: WalletLinkSession;
   private readonly relayEventManager: RelayEventManager;
   protected connection: WalletLinkConnection;
@@ -166,7 +166,7 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
          */
         const storedSession = WalletLinkSession.load(this.storage);
         if (storedSession?.id === this._session.id) {
-          ScopedLocalStorage.clearAll(undefined);
+          ScopedStorage.clearAll(undefined);
         }
 
         document.location.reload();

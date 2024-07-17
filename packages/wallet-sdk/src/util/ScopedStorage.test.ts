@@ -1,11 +1,11 @@
 import { browserStorageAdapter } from './BaseStorage';
-import { ScopedLocalStorage } from './ScopedLocalStorage';
+import { ScopedStorage } from './ScopedStorage';
 
 describe('ScopedStorage', () => {
   describe('public methods', () => {
     afterEach(() => localStorage.clear());
 
-    const scopedLocalStorage = new ScopedLocalStorage('CBWSDK', 'testing');
+    const scopedLocalStorage = new ScopedStorage('CBWSDK', 'testing');
     test('@setItem', () => {
       scopedLocalStorage.setItem('foo', 'bar');
 
@@ -38,7 +38,7 @@ describe('ScopedStorage', () => {
   });
 
   describe('with base storage', () => {
-    const scopedLocalStorage = new ScopedLocalStorage(
+    const scopedLocalStorage = new ScopedStorage(
       'CBWSDK',
       'testing',
       browserStorageAdapter(localStorage)
