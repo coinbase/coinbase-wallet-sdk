@@ -37,8 +37,8 @@ export function browserStorageAdapter(storage: Storage): BaseStorage {
 }
 
 type MMKVStorage = {
-  getString: (key: string) => string | null;
-  set: <T>(key: string, value: T) => void;
+  getString: (key: string) => string | undefined;
+  set: (key: string, value: string) => void;
   delete: (key: string) => void;
   getAllKeys: () => string[];
 };
@@ -59,7 +59,7 @@ type MMKVStorage = {
  */
 export function mmkvStorageAdapter(storage: MMKVStorage): BaseStorage {
   return {
-    get: (key) => storage.getString(key),
+    get: (key) => storage.getString(key) ?? null,
     set: (key, value) => storage.set(key, value),
     delete: (key) => storage.delete(key),
     getAllKeys: () => storage.getAllKeys(),
