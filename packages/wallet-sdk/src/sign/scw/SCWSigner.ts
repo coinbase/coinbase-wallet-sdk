@@ -12,7 +12,7 @@ import {
   exportKeyToHexString,
   importKeyFromHexString,
 } from ':util/cipher';
-import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
+import { ScopedStorage } from ':util/ScopedStorage';
 
 const ACCOUNTS_KEY = 'accounts';
 const ACTIVE_CHAIN_STORAGE_KEY = 'activeChain';
@@ -30,7 +30,7 @@ export class SCWSigner implements Signer {
   private readonly communicator: Communicator;
   private readonly updateListener: StateUpdateListener;
   private readonly keyManager: SCWKeyManager;
-  private readonly storage: ScopedLocalStorage;
+  private readonly storage: ScopedStorage;
 
   private _accounts: AddressString[];
   get accounts() {
@@ -52,7 +52,7 @@ export class SCWSigner implements Signer {
     this.updateListener = params.updateListener;
     this.keyManager = new SCWKeyManager();
 
-    this.storage = new ScopedLocalStorage('CBWSDK', 'SCWStateManager');
+    this.storage = new ScopedStorage('CBWSDK', 'SCWStateManager');
     this._accounts = this.storage.loadObject(ACCOUNTS_KEY) ?? [];
     this._chain = this.storage.loadObject(ACTIVE_CHAIN_STORAGE_KEY) || {
       id: params.metadata.appChainIds?.[0] ?? 1,

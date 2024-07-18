@@ -4,7 +4,7 @@ import {
   generateKeyPair,
   importKeyFromHexString,
 } from ':util/cipher';
-import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
+import { ScopedStorage } from ':util/ScopedStorage';
 
 interface StorageItem {
   storageKey: string;
@@ -24,7 +24,7 @@ const PEER_PUBLIC_KEY = {
 } as const;
 
 export class SCWKeyManager {
-  private readonly storage = new ScopedLocalStorage('CBWSDK', 'SCWKeyManager');
+  private readonly storage = new ScopedStorage('CBWSDK', 'SCWKeyManager');
   private ownPrivateKey: CryptoKey | null = null;
   private ownPublicKey: CryptoKey | null = null;
   private peerPublicKey: CryptoKey | null = null;

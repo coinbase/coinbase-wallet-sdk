@@ -17,22 +17,29 @@ import { Communicator } from ':core/communicator/Communicator';
 import { SignerType } from ':core/message';
 import { determineMethodCategory } from ':core/provider/method';
 import { hexStringFromNumber } from ':core/type/util';
-import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
+import type { BaseStorage } from ':util/BaseStorage';
+import { ScopedStorage } from ':util/ScopedStorage';
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
   private readonly metadata: AppMetadata;
   private readonly preference: Preference;
   private readonly communicator: Communicator;
+  private readonly baseStorage?: BaseStorage;
 
   private signer: Signer | null;
 
-  constructor({ metadata, preference: { keysUrl, ...preference } }: Readonly<ConstructorOptions>) {
+  constructor({
+    baseStorage,
+    metadata,
+    preference: { keysUrl, ...preference },
+  }: Readonly<ConstructorOptions>) {
     super();
+    this.baseStorage = baseStorage;
     this.metadata = metadata;
     this.preference = preference;
     this.communicator = new Communicator(keysUrl);
     // Load states from storage
-    const signerType = loadSignerType();
+    const signerType = loadSignerType(baseStorage);
     this.signer = signerType ? this.initSigner(signerType) : null;
   }
 
@@ -60,7 +67,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
         const signer = this.initSigner(signerType);
         await signer.handshake();
         this.signer = signer;
-        storeSignerType(signerType);
+        storeSignerType(signerType, this.baseStorage);
       }
       this.emit('connect', { chainId: hexStringFromNumber(this.signer.chain.id) });
       return this.signer.accounts;
@@ -119,7 +126,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   async disconnect() {
     this.signer?.disconnect();
-    ScopedLocalStorage.clearAll();
+    ScopedStorage.clearAll(this.baseStorage);
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
 
