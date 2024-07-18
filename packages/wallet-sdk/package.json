@@ -33,6 +33,11 @@
     "eventemitter3": "^5.0.1",
     "preact": "^10.16.0"
   },
+  "peerDependencies": {
+    "expo": "*",
+    "react": "*",
+    "react-native": "*"
+  },
   "devDependencies": {
     "@babel/core": "^7.22.9",
     "@babel/plugin-proposal-decorators": "^7.22.7",
@@ -44,6 +49,8 @@
     "@testing-library/preact": "^2.0.1",
     "@types/jest": "^27.5.2",
     "@types/node": "^14.18.54",
+    "@types/react": "^18.0.25",
+    "@types/react-native": "^0.70.6",
     "@typescript-eslint/eslint-plugin": "^6.2.0",
     "@typescript-eslint/parser": "^6.2.0",
     "babel-jest": "^27.5.1",
@@ -53,6 +60,7 @@
     "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "eslint-plugin-unused-imports": "^3.0.0",
+    "expo-modules-core": "^1.12.19",
     "jest": "^27.5.1",
     "jest-chrome": "^0.7.2",
     "jest-websocket-mock": "^2.4.0",
