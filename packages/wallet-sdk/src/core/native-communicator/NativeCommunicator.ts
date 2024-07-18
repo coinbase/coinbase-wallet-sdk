@@ -41,7 +41,6 @@ export class NativeCommunicator {
   };
 
   handleResponse = (responseUrl: string) => {
-    console.log('handleResponse', responseUrl);
     const urlParams = new URLSearchParams(responseUrl);
 
     const parseParam = <T>(paramName: string) => {
@@ -55,8 +54,6 @@ export class NativeCommunicator {
       content: parseParam<RPCResponseMessage['content']>('content'),
       timestamp: new Date(parseParam<string>('timestamp')),
     };
-
-    console.log(response);
 
     const handler = this.responseHandlers.get(response.requestId);
     if (handler) {
