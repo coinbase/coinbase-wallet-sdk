@@ -60,7 +60,6 @@
     "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "eslint-plugin-unused-imports": "^3.0.0",
-    "expo-modules-core": "^1.12.19",
     "jest": "^27.5.1",
     "jest-chrome": "^0.7.2",
     "jest-websocket-mock": "^2.4.0",

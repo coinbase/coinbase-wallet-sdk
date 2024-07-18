@@ -1,9 +1,0 @@
-{
-  "platforms": ["ios", "android"],
-  "ios": {
-    "modules": ["NativeCommunicatorModule"]
-  },
-  "android": {
-    "modules": ["expo.modules.nativecommunicator.NativeCommunicatorModule"]
-  }
-}
