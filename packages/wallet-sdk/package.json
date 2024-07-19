@@ -35,6 +35,7 @@
   },
   "peerDependencies": {
     "expo": "*",
+    "expo-web-browser": "*",
     "react": "*",
     "react-native": "*"
   },
@@ -60,6 +61,7 @@
     "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "eslint-plugin-unused-imports": "^3.0.0",
+    "expo-web-browser": "^13.0.3",
     "jest": "^27.5.1",
     "jest-chrome": "^0.7.2",
     "jest-websocket-mock": "^2.4.0",

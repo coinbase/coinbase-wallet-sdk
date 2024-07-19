@@ -1,29 +1,26 @@
-import { EventEmitter } from 'expo-modules-core';
+import * as WebBrowser from 'expo-web-browser';
 
-import { CB_KEYS_URL } from '../constants';
-import { MessageID, RPCRequestMessage, RPCResponseMessage } from '../message';
-import NativeCommunicatorModule from './NativeCommunicatorModule';
+import { CB_KEYS_URL } from ':core/constants';
+import { standardErrors } from ':core/error';
+import { MessageID, RPCRequestMessage, RPCResponseMessage } from ':core/message';
 
 type MobileRPCRequestMessage = RPCRequestMessage & {
   sdkVersion: string;
   callbackUrl: string;
 };
 
-const emitter = new EventEmitter(NativeCommunicatorModule);
-
-export class NativeCommunicator {
+export class Communicator {
   private readonly url: string;
   private responseHandlers = new Map<MessageID, (_: RPCResponseMessage) => void>();
 
   constructor(url: string = CB_KEYS_URL) {
     this.url = url;
-    emitter.addListener('onWalletClosed', this.clear);
   }
 
   postRequestAndWaitForResponse = (
     request: MobileRPCRequestMessage
   ): Promise<RPCResponseMessage> => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       // 1. generate request URL
       const urlParams = new URLSearchParams();
       Object.entries(request).forEach(([key, value]) => {
@@ -36,7 +33,20 @@ export class NativeCommunicator {
       this.responseHandlers.set(request.id, resolve);
 
       // 3. send request via native module
-      NativeCommunicatorModule.openWalletWithUrl(requestUrl.toString());
+      WebBrowser.openBrowserAsync(requestUrl.toString(), {
+        presentationStyle: WebBrowser.WebBrowserPresentationStyle.FORM_SHEET,
+      })
+        .then((result) => {
+          if (result.type === 'cancel') {
+            // iOS only: user cancelled the request
+            reject(standardErrors.provider.userRejectedRequest());
+            this.clear();
+          }
+        })
+        .catch(() => {
+          reject(standardErrors.provider.userRejectedRequest());
+          this.clear();
+        });
     });
   };
 
@@ -59,7 +69,7 @@ export class NativeCommunicator {
     if (handler) {
       handler(response);
       this.responseHandlers.delete(response.requestId);
-      NativeCommunicatorModule.closeWallet();
+      WebBrowser.dismissBrowser();
     }
   };
 
