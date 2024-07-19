@@ -3,7 +3,7 @@ import { standardErrors } from ':core/error';
 import { EncryptedData, MessageID, RPCResponseMessage } from ':core/message';
 
 jest.mock('expo-web-browser', () => ({
-  openBrowserAsync: jest.fn().mockImplementation((args) => console.log(args)),
+  openBrowserAsync: jest.fn(),
   WebBrowserPresentationStyle: {
     FORM_SHEET: 'FORM_SHEET',
   },
