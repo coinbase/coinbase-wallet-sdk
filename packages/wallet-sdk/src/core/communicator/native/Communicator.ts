@@ -51,10 +51,9 @@ export class Communicator {
   };
 
   handleResponse = (responseUrl: string) => {
-    const urlParams = new URLSearchParams(responseUrl);
-
+    const { searchParams } = new URL(responseUrl);
     const parseParam = <T>(paramName: string) => {
-      return JSON.parse(urlParams.get(paramName) as string) as T;
+      return JSON.parse(searchParams.get(paramName) as string) as T;
     };
 
     const response: RPCResponseMessage = {
