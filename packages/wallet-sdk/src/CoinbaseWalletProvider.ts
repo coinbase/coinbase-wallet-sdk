@@ -41,60 +41,45 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     this.signer = signerType ? this.initSigner(signerType) : null;
   }
 
-  public async request<T>(args: RequestArguments): Promise<T> {
+  public async request(args: RequestArguments) {
     try {
       checkErrorForInvalidRequestArgs(args);
 
       switch (args.method) {
-        case 'eth_requestAccounts':
-          return (await this.handshake()) as T;
+        // setup the signer and return the accounts
+        case 'eth_requestAccounts': {
+          if (!this.signer) {
+            const signerType = await this.requestSignerSelection();
+            const signer = this.initSigner(signerType);
+            await signer.handshake();
+            this.signer = signer;
+            storeSignerType(signerType, this.baseStorage);
+          }
+          this.emit('connect', { chainId: hexStringFromNumber(this.signer.chainId) });
+          return this.signer.accounts;
+        }
 
-        case 'eth_sign':
-        case 'eth_signTypedData_v2':
-        case 'eth_subscribe':
-        case 'eth_unsubscribe':
-          throw standardErrors.rpc.methodNotSupported();
+        // handle chain id requests directly from the provider with fallback to mainnet
+        case 'net_version':
+          return this.signer?.chainId ?? 1;
+        case 'eth_chainId':
+          return hexStringFromNumber(this.signer?.chainId ?? 1);
 
-        default:
-          return (await this.handleRequest(args)) as T;
+        // handle all other requests through the signer
+        default: {
+          if (!this.signer) {
+            throw standardErrors.provider.unauthorized(
+              "Must call 'eth_requestAccounts' before other methods"
+            );
+          }
+          return this.signer.request(args);
+        }
       }
     } catch (error) {
       const { code } = error as { code?: number };
       if (code === standardErrorCodes.provider.unauthorized) this.disconnect();
       return Promise.reject(serializeError(error));
     }
-  }
-
-  private async handshake() {
-    if (!this.signer) {
-      const signerType = await this.requestSignerSelection();
-      const signer = this.initSigner(signerType);
-      await signer.handshake();
-      this.signer = signer;
-      storeSignerType(signerType, this.baseStorage);
-    }
-
-    this.emit('connect', { chainId: hexStringFromNumber(this.signer.chainId) });
-    return this.signer.accounts;
-  }
-
-  protected async handleRequest(request: RequestArguments) {
-    if (!this.signer) {
-      switch (request.method) {
-        // if signer is not initialized, return chainId as 1 (mainnet)
-        case 'eth_chainId':
-          return hexStringFromNumber(1);
-        case 'net_version':
-          return 1;
-        default:
-          // for other methods, throw unauthorized error
-          throw standardErrors.provider.unauthorized(
-            "Must call 'eth_requestAccounts' before other methods"
-          );
-      }
-    }
-
-    return this.signer.request(request);
   }
 
   /** @deprecated Use `.request({ method: 'eth_requestAccounts' })` instead. */

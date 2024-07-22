@@ -24,7 +24,7 @@ interface ProviderConnectInfo {
 }
 
 export interface ProviderInterface extends EventEmitter {
-  request<T>(args: RequestArguments): Promise<T>;
+  request(args: RequestArguments): Promise<unknown>;
   disconnect(): Promise<void>;
   on(event: 'connect', listener: (info: ProviderConnectInfo) => void): this;
   on(event: 'disconnect', listener: (error: ProviderRpcError) => void): this;

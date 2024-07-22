@@ -99,6 +99,12 @@ export class SCWSigner implements Signer {
         return this.storage.loadObject(WALLET_CAPABILITIES_STORAGE_KEY);
       case 'wallet_switchEthereumChain':
         return this.handleSwitchChainRequest(request);
+      case 'eth_sign':
+      case 'eth_signTypedData_v2':
+      case 'eth_subscribe':
+      case 'eth_unsubscribe':
+        throw standardErrors.rpc.methodNotSupported();
+
       default:
         return this.sendRequestToPopup(request);
     }
@@ -128,9 +134,9 @@ export class SCWSigner implements Signer {
    * https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
    */
   private async handleSwitchChainRequest(request: RequestArguments) {
-    const [{chainId: chainIdStr}] = request.params as [
+    const [{ chainId: chainIdStr }] = request.params as [
       {
-        chainId: `0x${string}`
+        chainId: `0x${string}`;
       },
     ];
     if (!chainIdStr) {
