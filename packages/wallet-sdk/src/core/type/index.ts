@@ -28,8 +28,3 @@ export type RegExpString = OpaqueType<'RegExpString', string>;
 export const RegExpString = OpaqueType<RegExpString>();
 
 export type Callback<T> = (err: Error | null, result: T | null) => void;
-
-export type Chain = {
-  id: number;
-  rpcUrl?: string;
-};
