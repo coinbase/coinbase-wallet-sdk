@@ -8,7 +8,7 @@ import {
   Preference,
   ProviderInterface,
   RequestArguments,
-} from './core/provider/interface';
+} from './core/type/provider';
 import { Signer } from './sign/interface';
 import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
 import { checkErrorForInvalidRequestArgs } from './util/provider';

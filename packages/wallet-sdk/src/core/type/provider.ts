@@ -1,10 +1,9 @@
 import { EventEmitter } from 'eventemitter3';
 
-import { Method } from './method';
 import type { BaseStorage } from ':util/BaseStorage';
 
 export interface RequestArguments {
-  readonly method: Method | string;
+  readonly method: string;
   readonly params?: readonly unknown[] | object;
 }
 
