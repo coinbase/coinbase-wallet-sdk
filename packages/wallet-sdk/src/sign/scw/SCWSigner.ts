@@ -134,15 +134,15 @@ export class SCWSigner implements Signer {
    * https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
    */
   private async handleSwitchChainRequest(request: RequestArguments) {
-    const [{ chainId: chainIdStr }] = request.params as [
+    const params = request.params as [
       {
         chainId: `0x${string}`;
       },
     ];
-    if (!chainIdStr) {
+    if (!params || !params[0]?.chainId) {
       throw standardErrors.rpc.invalidParams();
     }
-    const chainId = ensureIntNumber(chainIdStr);
+    const chainId = ensureIntNumber(params[0].chainId);
 
     const localResult = this.updateChain(chainId);
     if (localResult) return null;
