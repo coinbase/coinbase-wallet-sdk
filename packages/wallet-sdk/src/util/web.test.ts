@@ -1,5 +1,5 @@
-import { standardErrors } from ':core/error';
 import { closePopup, openPopup } from './web';
+import { standardErrors } from ':core/error';
 
 describe('PopupManager', () => {
   beforeAll(() => {

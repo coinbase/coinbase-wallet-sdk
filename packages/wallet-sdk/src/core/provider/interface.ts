@@ -1,6 +1,7 @@
 import { EventEmitter } from 'eventemitter3';
 
 import { Method } from './method';
+import type { BaseStorage } from ':util/BaseStorage';
 
 export interface RequestArguments {
   readonly method: Method | string;
@@ -49,4 +50,5 @@ export interface Preference {
 export interface ConstructorOptions {
   metadata: AppMetadata;
   preference: Preference;
+  baseStorage?: BaseStorage;
 }

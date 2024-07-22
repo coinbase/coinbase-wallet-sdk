@@ -1,9 +1,10 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
-import { sha256 } from 'sha.js';
+import { sha256 } from '@noble/hashes/sha256';
+import { bytesToHex } from '@noble/hashes/utils';
 
 import { randomBytesHex } from ':core/type/util';
-import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
+import { ScopedStorage } from ':util/ScopedStorage';
 
 const STORAGE_KEY_SESSION_ID = 'session:id';
 const STORAGE_KEY_SESSION_SECRET = 'session:secret';
@@ -13,22 +14,20 @@ export class WalletLinkSession {
   private readonly _id: string;
   private readonly _secret: string;
   private readonly _key: string;
-  private readonly _storage: ScopedLocalStorage;
+  private readonly _storage: ScopedStorage;
   private _linked: boolean;
 
-  constructor(storage: ScopedLocalStorage, id?: string, secret?: string, linked?: boolean) {
+  constructor(storage: ScopedStorage, id?: string, secret?: string, linked?: boolean) {
     this._storage = storage;
     this._id = id || randomBytesHex(16);
     this._secret = secret || randomBytesHex(32);
 
-    this._key = new sha256()
-      .update(`${this._id}, ${this._secret} WalletLink`) // ensure old sessions stay connected
-      .digest('hex');
+    this._key = bytesToHex(sha256(`${this._id}, ${this._secret} WalletLink`));
 
     this._linked = !!linked;
   }
 
-  public static load(storage: ScopedLocalStorage): WalletLinkSession | null {
+  public static load(storage: ScopedStorage): WalletLinkSession | null {
     const id = storage.getItem(STORAGE_KEY_SESSION_ID);
     const linked = storage.getItem(STORAGE_KEY_SESSION_LINKED);
     const secret = storage.getItem(STORAGE_KEY_SESSION_SECRET);

@@ -22,7 +22,7 @@ import {
   ensureParsedJSONObject,
   hexStringFromNumber,
 } from ':core/type/util';
-import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
+import { ScopedStorage } from ':util/ScopedStorage';
 
 const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
 const DEFAULT_JSON_RPC_URL = 'DefaultJsonRpcUrl';
@@ -59,7 +59,7 @@ export class WalletLinkSigner implements Signer {
   private _appName: string;
   private _appLogoUrl: string | null;
   private _relay: WalletLinkRelay | null = null;
-  private readonly _storage: ScopedLocalStorage;
+  private readonly _storage: ScopedStorage;
   private readonly _relayEventManager: RelayEventManager;
   private _jsonRpcUrlFromOpts: string;
   private _addresses: AddressString[] = [];
@@ -69,7 +69,7 @@ export class WalletLinkSigner implements Signer {
     const { appName, appLogoUrl } = options.metadata;
     this._appName = appName;
     this._appLogoUrl = appLogoUrl;
-    this._storage = new ScopedLocalStorage('walletlink', WALLETLINK_URL);
+    this._storage = new ScopedStorage('walletlink', WALLETLINK_URL);
     this.updateListener = options.updateListener;
 
     this._relayEventManager = new RelayEventManager();
