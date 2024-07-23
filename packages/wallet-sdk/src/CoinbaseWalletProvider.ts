@@ -8,7 +8,7 @@ import {
   Preference,
   ProviderInterface,
   RequestArguments,
-} from './core/provider/interface';
+} from './core/type/interface';
 import { Signer } from './sign/interface';
 import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
 import { checkErrorForInvalidRequestArgs } from './util/provider';
@@ -66,7 +66,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
         case 'eth_signTypedData_v2':
         case 'eth_subscribe':
         case 'eth_unsubscribe':
-          throw standardErrors.rpc.methodNotSupported();
+          throw standardErrors.provider.unsupportedMethod();
 
         default: {
           if (!this.signer) {
