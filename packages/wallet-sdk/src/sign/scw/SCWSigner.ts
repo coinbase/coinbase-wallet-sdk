@@ -101,7 +101,6 @@ export class SCWSigner implements Signer {
         return this.storage.loadObject(WALLET_CAPABILITIES_STORAGE_KEY);
       case 'wallet_switchEthereumChain':
         return this.handleSwitchChainRequest(request);
-
       // relay to popup
       case 'eth_ecRecover':
       case 'personal_sign':
@@ -117,14 +116,6 @@ export class SCWSigner implements Signer {
       case 'wallet_sendCalls':
       case 'wallet_showCallsStatus':
         return this.sendRequestToPopup(request);
-
-      // not supported
-      case 'eth_sign':
-      case 'eth_signTypedData_v2':
-      case 'eth_subscribe':
-      case 'eth_unsubscribe':
-        throw standardErrors.rpc.methodNotSupported();
-
       // fallback as readonly RPC fetch
       default:
         return fetchRPCRequest(request, this._chain.rpcUrl);

@@ -45,7 +45,6 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     try {
       checkErrorForInvalidRequestArgs(args);
       switch (args.method) {
-        // set up signer and return accounts
         case 'eth_requestAccounts': {
           if (!this.signer) {
             const signerType = await this.requestSignerSelection();
@@ -58,13 +57,17 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
           return this.signer.accounts;
         }
 
-        // handle chain id requests directly from the provider with fallback to mainnet
         case 'net_version':
           return this.signer?.chainId ?? 1;
         case 'eth_chainId':
           return hexStringFromNumber(this.signer?.chainId ?? 1);
 
-        // handle all other requests through the signer
+        case 'eth_sign':
+        case 'eth_signTypedData_v2':
+        case 'eth_subscribe':
+        case 'eth_unsubscribe':
+          throw standardErrors.rpc.methodNotSupported();
+
         default: {
           if (!this.signer) {
             throw standardErrors.provider.unauthorized(

@@ -303,9 +303,6 @@ export class WalletLinkSigner implements Signer {
         return { jsonrpc: '2.0', id: 0, result: this._addresses };
       }
 
-      case 'eth_sign':
-        return this._eth_sign(params);
-
       case 'eth_ecRecover':
         return this._eth_ecRecover(params);
 
@@ -326,9 +323,6 @@ export class WalletLinkSigner implements Signer {
 
       case 'eth_signTypedData_v1':
         return this._eth_signTypedData_v1(params);
-
-      case 'eth_signTypedData_v2':
-        return this._throwUnsupportedMethodError();
 
       case 'eth_signTypedData_v3':
         return this._eth_signTypedData_v3(params);
@@ -423,10 +417,6 @@ export class WalletLinkSigner implements Signer {
     }
   }
 
-  private _throwUnsupportedMethodError(): Promise<JSONRPCResponse> {
-    throw standardErrors.provider.unsupportedMethod({});
-  }
-
   private async _signEthereumMessage(
     message: Buffer,
     address: AddressString,
@@ -514,14 +504,6 @@ export class WalletLinkSigner implements Signer {
     }
 
     this._setAddresses(res.result);
-  }
-
-  private _eth_sign(params: unknown[]): Promise<JSONRPCResponse> {
-    this._requireAuthorization();
-    const address = ensureAddressString(params[0]);
-    const message = ensureBuffer(params[1]);
-
-    return this._signEthereumMessage(message, address, false);
   }
 
   private _eth_ecRecover(params: unknown[]): Promise<JSONRPCResponse> {
