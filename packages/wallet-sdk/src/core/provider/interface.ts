@@ -17,6 +17,13 @@ interface ProviderConnectInfo {
   readonly chainId: string;
 }
 
+export interface ProviderInterface extends EventEmitter {
+  request(args: RequestArguments): Promise<unknown>;
+  disconnect(): Promise<void>;
+  on<K extends ProviderEventKey>(event: K, listener: (_: ProviderEventMap[K]) => void): this;
+  on(event: string | symbol, listener: (_: unknown) => void): this; // fallback for other events
+}
+
 type ProviderEventMap = {
   connect: ProviderConnectInfo;
   disconnect: ProviderRpcError;
@@ -25,14 +32,11 @@ type ProviderEventMap = {
 };
 
 export type ProviderEventKey = keyof ProviderEventMap;
-export type ProviderEventValue<K extends ProviderEventKey> = ProviderEventMap[K];
 
-export interface ProviderInterface extends EventEmitter {
-  request(args: RequestArguments): Promise<unknown>;
-  disconnect(): Promise<void>;
-  on<K extends ProviderEventKey>(event: K, listener: (_: ProviderEventValue<K>) => void): this;
-  on(event: string | symbol, listener: (_: unknown) => void): this; // fallback for other events
-}
+export type ProviderEventCallback<
+  K extends ProviderEventKey = ProviderEventKey,
+  V = ProviderEventMap[K],
+> = (event: K, value: V) => void;
 
 export interface AppMetadata {
   /** Application name */

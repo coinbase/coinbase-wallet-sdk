@@ -6,10 +6,11 @@ import {
   AppMetadata,
   ConstructorOptions,
   Preference,
+  ProviderEventCallback,
   ProviderInterface,
   RequestArguments,
 } from './core/provider/interface';
-import { Signer, SignerUpdateCallback } from './sign/interface';
+import { Signer } from './sign/interface';
 import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
 import { checkErrorForInvalidRequestArgs } from './util/provider';
 import { Communicator } from ':core/communicator/Communicator';
@@ -120,7 +121,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
     });
   }
 
-  private onSignerUpdate: SignerUpdateCallback = (key, value) => {
+  private onSignerUpdate: ProviderEventCallback = (key, value) => {
     if (key === 'disconnect') {
       this.disconnect();
     } else {

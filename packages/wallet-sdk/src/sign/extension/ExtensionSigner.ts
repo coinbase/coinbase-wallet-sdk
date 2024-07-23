@@ -1,6 +1,7 @@
-import { Signer, SignerUpdateCallback } from '../interface';
+import { Signer } from '../interface';
 import {
   AppMetadata,
+  ProviderEventCallback,
   ProviderEventKey,
   ProviderInterface,
   RequestArguments,
@@ -15,10 +16,10 @@ interface CBExtensionInjectedProvider extends ProviderInterface {
 
 export class ExtensionSigner implements Signer {
   private readonly metadata: AppMetadata;
-  private readonly callback: SignerUpdateCallback;
+  private readonly callback: ProviderEventCallback;
   private extensionProvider: CBExtensionInjectedProvider;
 
-  constructor(params: { metadata: AppMetadata; callback: SignerUpdateCallback }) {
+  constructor(params: { metadata: AppMetadata; callback: ProviderEventCallback }) {
     this.metadata = params.metadata;
     this.callback = params.callback;
     const extensionProvider = (

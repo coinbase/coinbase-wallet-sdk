@@ -1,10 +1,10 @@
 import { ExtensionSigner } from './extension/ExtensionSigner';
-import { Signer, SignerUpdateCallback } from './interface';
+import { Signer } from './interface';
 import { SCWSigner } from './scw/SCWSigner';
 import { WalletLinkSigner } from './walletlink/WalletLinkSigner';
 import { Communicator } from ':core/communicator/Communicator';
 import { ConfigMessage, MessageID, SignerType } from ':core/message';
-import { AppMetadata, Preference } from ':core/provider/interface';
+import { AppMetadata, Preference, ProviderEventCallback } from ':core/provider/interface';
 import type { BaseStorage } from ':util/BaseStorage';
 import { ScopedStorage } from ':util/ScopedStorage';
 
@@ -41,7 +41,7 @@ export function createSigner(params: {
   signerType: SignerType;
   metadata: AppMetadata;
   communicator: Communicator;
-  callback: SignerUpdateCallback;
+  callback: ProviderEventCallback;
 }): Signer {
   const { signerType, metadata, communicator, callback } = params;
   switch (signerType) {

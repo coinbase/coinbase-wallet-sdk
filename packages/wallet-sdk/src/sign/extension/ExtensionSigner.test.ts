@@ -1,16 +1,12 @@
-import { SignerUpdateCallback } from '../interface';
 import { ExtensionSigner } from './ExtensionSigner';
-import { AppMetadata, RequestArguments } from ':core/provider/interface';
+import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
 
 const window = globalThis as {
   coinbaseWalletExtension?: unknown;
 };
 
-const mockCallback: SignerUpdateCallback = {
-  onChainIdUpdate: jest.fn(),
-  onAccountsUpdate: jest.fn(),
-};
+const mockCallback: ProviderEventCallback = jest.fn();
 
 const mockExtensionProvider = {
   setAppInfo: jest.fn(),

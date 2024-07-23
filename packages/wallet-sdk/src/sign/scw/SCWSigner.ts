@@ -1,9 +1,9 @@
-import { Signer, SignerUpdateCallback } from '../interface';
+import { Signer } from '../interface';
 import { SCWKeyManager } from './SCWKeyManager';
 import { Communicator } from ':core/communicator/Communicator';
 import { standardErrors } from ':core/error';
 import { RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
-import { AppMetadata, RequestArguments } from ':core/provider/interface';
+import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util';
 import {
@@ -30,7 +30,7 @@ export class SCWSigner implements Signer {
   private readonly communicator: Communicator;
   private readonly keyManager: SCWKeyManager;
   private readonly storage: ScopedStorage;
-  private callback: SignerUpdateCallback | null;
+  private callback: ProviderEventCallback | null;
 
   private _accounts: AddressString[];
   get accounts() {
@@ -45,7 +45,7 @@ export class SCWSigner implements Signer {
   constructor(params: {
     metadata: AppMetadata;
     communicator: Communicator;
-    callback: SignerUpdateCallback;
+    callback: ProviderEventCallback;
   }) {
     this.metadata = params.metadata;
     this.communicator = params.communicator;

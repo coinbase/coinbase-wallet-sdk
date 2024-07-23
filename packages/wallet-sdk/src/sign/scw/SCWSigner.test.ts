@@ -1,4 +1,4 @@
-import { SignerUpdateCallback } from '../interface';
+import { ProviderEventCallback } from '../interface';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWSigner } from './SCWSigner';
 import { Communicator } from ':core/communicator/Communicator';
@@ -49,7 +49,7 @@ describe('SCWSigner', () => {
   let signer: SCWSigner;
   let mockMetadata: AppMetadata;
   let mockCommunicator: jest.Mocked<Communicator>;
-  let mockCallback: SignerUpdateCallback;
+  let mockCallback: ProviderEventCallback;
   let mockKeyManager: jest.Mocked<SCWKeyManager>;
 
   beforeEach(() => {

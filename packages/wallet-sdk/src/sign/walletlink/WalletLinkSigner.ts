@@ -3,7 +3,7 @@
 // Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
 
 import eip712 from '../../vendor-js/eth-eip712-util';
-import { Signer, SignerUpdateCallback } from '../interface';
+import { Signer } from '../interface';
 import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants';
 import { RelayEventManager } from './relay/RelayEventManager';
 import { EthereumTransactionParams } from './relay/type/EthereumTransactionParams';
@@ -12,7 +12,7 @@ import { isErrorResponse, Web3Response } from './relay/type/Web3Response';
 import { WalletLinkRelay } from './relay/WalletLinkRelay';
 import { WALLETLINK_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
-import { AppMetadata, RequestArguments } from ':core/provider/interface';
+import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface';
 import { AddressString, IntNumber } from ':core/type';
 import {
   ensureAddressString,
@@ -63,9 +63,9 @@ export class WalletLinkSigner implements Signer {
   private readonly _storage: ScopedStorage;
   private readonly _relayEventManager: RelayEventManager;
   private _addresses: AddressString[] = [];
-  private callback?: SignerUpdateCallback;
+  private callback?: ProviderEventCallback;
 
-  constructor(options: { metadata: AppMetadata; callback?: SignerUpdateCallback }) {
+  constructor(options: { metadata: AppMetadata; callback?: ProviderEventCallback }) {
     const { appName, appLogoUrl } = options.metadata;
     this._appName = appName;
     this._appLogoUrl = appLogoUrl;
