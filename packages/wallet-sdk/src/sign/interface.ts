@@ -1,5 +1,5 @@
+import { RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
-import { RequestArguments } from ':core/type/provider';
 
 export interface Signer {
   readonly accounts: AddressString[];

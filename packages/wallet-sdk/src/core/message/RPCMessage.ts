@@ -1,6 +1,6 @@
 import { Message, MessageID } from './Message';
 import { SerializedEthereumRpcError } from ':core/error';
-import { AppMetadata } from ':core/type/provider';
+import { AppMetadata } from ':core/provider/interface';
 
 interface RPCMessage extends Message {
   id: MessageID;

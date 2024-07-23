@@ -4,7 +4,7 @@ import { SCWSigner } from './scw/SCWSigner';
 import { WalletLinkSigner } from './walletlink/WalletLinkSigner';
 import { Communicator } from ':core/communicator/Communicator';
 import { ConfigMessage, MessageID, SignerType } from ':core/message';
-import { AppMetadata, Preference } from ':core/type/provider';
+import { AppMetadata, Preference } from ':core/provider/interface';
 import type { BaseStorage } from ':util/BaseStorage';
 import { ScopedStorage } from ':util/ScopedStorage';
 
@@ -26,7 +26,7 @@ export async function fetchSignerType(params: {
   metadata: AppMetadata; // for WalletLink
 }): Promise<SignerType> {
   const { communicator, metadata } = params;
-  listenForWalletLinkSessionRequest(communicator, metadata).catch(() => { });
+  listenForWalletLinkSessionRequest(communicator, metadata).catch(() => {});
 
   const request: ConfigMessage & { id: MessageID } = {
     id: crypto.randomUUID(),

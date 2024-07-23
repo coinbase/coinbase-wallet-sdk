@@ -1,6 +1,6 @@
 import { Signer, StateUpdateListener } from '../interface';
+import { AppMetadata, ProviderInterface, RequestArguments } from ':core/provider/interface';
 import { AddressString, HexString } from ':core/type';
-import { AppMetadata, ProviderInterface, RequestArguments } from ':core/type/provider';
 import { intNumberFromHexString } from ':core/type/util';
 
 interface CBExtensionInjectedProvider extends ProviderInterface {

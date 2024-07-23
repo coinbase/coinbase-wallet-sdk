@@ -3,8 +3,8 @@ import { SCWKeyManager } from './SCWKeyManager';
 import { Communicator } from ':core/communicator/Communicator';
 import { standardErrors } from ':core/error';
 import { RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
+import { AppMetadata, RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
-import { AppMetadata, RequestArguments } from ':core/type/provider';
 import { ensureIntNumber } from ':core/type/util';
 import {
   decryptContent,
