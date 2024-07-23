@@ -1,6 +1,9 @@
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { standardErrorCodes, standardErrors } from './core/error';
-import { fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
+import { StateUpdateListener } from './sign/interface';
+import * as util from './sign/util';
+import { RequestArguments } from ':core/provider/interface';
+import { AddressString } from ':core/type';
 
 function createProvider() {
   return new CoinbaseWalletProvider({
@@ -9,10 +12,43 @@ function createProvider() {
   });
 }
 
-describe('CoinbaseWalletProvider', () => {
+const mockHandshake = jest.fn();
+const mockRequest = jest.fn();
+const mockDisconnect = jest.fn();
+const mockFetchSignerType = jest.spyOn(util, 'fetchSignerType');
+const mockStoreSignerType = jest.spyOn(util, 'storeSignerType');
+const mockLoadSignerType = jest.spyOn(util, 'loadSignerType');
+
+let provider: CoinbaseWalletProvider;
+let updateListener: StateUpdateListener;
+
+beforeEach(() => {
+  jest.resetAllMocks();
+  jest.spyOn(util, 'createSigner').mockImplementation((params) => {
+    updateListener = params.updateListener;
+    return {
+      accounts: [AddressString('0x123')],
+      chainId: 1,
+      handshake: mockHandshake,
+      request: mockRequest,
+      disconnect: mockDisconnect,
+    };
+  });
+
+  provider = createProvider();
+});
+
+describe('event handling', () => {
+  it('should call update listeners on account and chainId change', async () => {
+    const connectListener = jest.fn();
+    provider.on('connect', connectListener);
+
+    await provider.request({ method: 'eth_requestAccounts' });
+    expect(connectListener).toHaveBeenCalledWith({ chainId: '0x1' });
+  });
+
   it('emits disconnect event on user initiated disconnection', async () => {
     const disconnectListener = jest.fn();
-    const provider = createProvider();
     provider.on('disconnect', disconnectListener);
 
     await provider.disconnect();
@@ -22,103 +58,119 @@ describe('CoinbaseWalletProvider', () => {
     );
   });
 
-  describe('Request Handling', () => {
-    test('handles request correctly', async () => {
-      const provider = createProvider();
-      const response1 = await provider.request({ method: 'eth_chainId' });
-      expect(response1).toBe('0x1');
-    });
+  it('should emit chainChanged event on chainId change', async () => {
+    const chainChangedListener = jest.fn();
+    provider.on('chainChanged', chainChangedListener);
 
-    test('throws error when handling invalid request', async () => {
-      const provider = createProvider();
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error // testing invalid request args
-      await expect(provider.request({})).rejects.toThrowEIPError(
-        -32602,
-        "'args.method' must be a non-empty string."
-      );
-    });
+    await provider.request({ method: 'eth_requestAccounts' });
+    updateListener.onChainIdUpdate(1);
 
-    test('eth_signTypedData_v2', async () => {
-      const provider = createProvider();
-      await expect(() =>
-        provider.request({
-          method: 'eth_signTypedData_v2',
-          params: [],
-        })
-      ).rejects.toThrowEIPError(standardErrorCodes.provider.unsupportedMethod);
-    });
+    expect(chainChangedListener).toHaveBeenCalledWith('0x1');
+  });
+
+  it('should emit accountsChanged event on account change', async () => {
+    const accountsChangedListener = jest.fn();
+    provider.on('accountsChanged', accountsChangedListener);
+
+    await provider.request({ method: 'eth_requestAccounts' });
+    updateListener.onAccountsUpdate([AddressString('0x123')]);
+
+    expect(accountsChangedListener).toHaveBeenCalledWith(['0x123']);
   });
 });
 
-const mockHandshake = jest.fn();
-const mockRequest = jest.fn();
+describe('Request Handling', () => {
+  it('returns default chain id even without signer set up', async () => {
+    expect(provider.request({ method: 'eth_chainId' })).resolves.toBe('0x1');
+    expect(provider.request({ method: 'net_version' })).resolves.toBe(1);
+  });
 
-jest.mock('./sign/util', () => {
-  return {
-    fetchSignerType: jest.fn(),
-    loadSignerType: jest.fn(),
-    storeSignerType: jest.fn(),
-    createSigner: () => ({
-      chainId: 1,
-      handshake: mockHandshake,
-      request: mockRequest,
-    }),
-  };
+  it('throws error when handling invalid request', async () => {
+    await expect(provider.request({} as RequestArguments)).rejects.toThrowEIPError(
+      standardErrorCodes.rpc.invalidParams,
+      "'args.method' must be a non-empty string."
+    );
+  });
+
+  it('throws error for requests with unsupported or deprecated method', async () => {
+    const deprecated = ['eth_sign', 'eth_signTypedData_v2'];
+    const unsupported = ['eth_subscribe', 'eth_unsubscribe'];
+
+    for (const method of [...deprecated, ...unsupported]) {
+      await expect(provider.request({ method })).rejects.toThrowEIPError(
+        standardErrorCodes.provider.unsupportedMethod
+      );
+    }
+  });
 });
 
 describe('signer configuration', () => {
   it('should complete signerType selection correctly', async () => {
-    (fetchSignerType as jest.Mock).mockResolvedValue('scw');
-    mockHandshake.mockResolvedValueOnce(['0x123']);
+    mockFetchSignerType.mockResolvedValue('scw');
 
-    const provider = createProvider();
     await provider.request({ method: 'eth_requestAccounts' });
+    expect(mockHandshake).toHaveBeenCalledWith();
+  });
+
+  it('should support enable', async () => {
+    mockFetchSignerType.mockResolvedValue('scw');
+    jest.spyOn(console, 'warn').mockImplementation();
+
+    await provider.enable();
     expect(mockHandshake).toHaveBeenCalledWith();
   });
 
   it('should throw error if signer selection failed', async () => {
     const error = new Error('Signer selection failed');
-    (fetchSignerType as jest.Mock).mockRejectedValue(error);
+    mockFetchSignerType.mockRejectedValue(error);
 
-    const provider = createProvider();
     await expect(provider.request({ method: 'eth_requestAccounts' })).rejects.toThrowEIPError(
       standardErrorCodes.rpc.internal,
       error.message
     );
     expect(mockHandshake).not.toHaveBeenCalled();
-    expect(storeSignerType as jest.Mock).not.toHaveBeenCalled();
+    expect(mockStoreSignerType).not.toHaveBeenCalled();
   });
 
   it('should not store signer type unless handshake is successful', async () => {
     const error = new Error('Handshake failed');
-    (fetchSignerType as jest.Mock).mockResolvedValueOnce('scw');
-    mockHandshake.mockRejectedValueOnce(error);
+    mockFetchSignerType.mockResolvedValue('scw');
+    mockHandshake.mockRejectedValue(error);
 
-    const provider = createProvider();
     await expect(provider.request({ method: 'eth_requestAccounts' })).rejects.toThrowEIPError(
       standardErrorCodes.rpc.internal,
       error.message
     );
     expect(mockHandshake).toHaveBeenCalled();
-    expect(storeSignerType as jest.Mock).not.toHaveBeenCalled();
+    expect(mockStoreSignerType).not.toHaveBeenCalled();
   });
 
   it('should load signer from storage when available', async () => {
-    (loadSignerType as jest.Mock).mockReturnValueOnce('scw');
-    const provider = createProvider();
-    // @ts-expect-error // TODO: should be able to mock cached accounts
-    (provider.signer as SCWSigner).accounts = ['0x123'];
+    mockLoadSignerType.mockReturnValue('scw');
+    const providerLoadedFromStorage = createProvider();
+
+    await providerLoadedFromStorage.request({ method: 'eth_requestAccounts' });
+    expect(mockHandshake).not.toHaveBeenCalled();
+
     const request = { method: 'personal_sign', params: ['0x123', '0xdeadbeef'] };
-    provider.request(request);
+    await providerLoadedFromStorage.request(request);
     expect(mockRequest).toHaveBeenCalledWith(request);
+
+    providerLoadedFromStorage.disconnect();
+    expect(mockDisconnect).toHaveBeenCalled();
   });
 
   it('should throw error if signer is not initialized', async () => {
-    const provider = createProvider();
     await expect(provider.request({ method: 'personal_sign' })).rejects.toThrowEIPError(
       standardErrorCodes.provider.unauthorized,
       `Must call 'eth_requestAccounts' before other methods`
     );
+  });
+
+  it('should call signer.disconnect on provider disconnect', async () => {
+    await provider.request({ method: 'eth_requestAccounts' });
+
+    provider.disconnect();
+    expect(mockDisconnect).toHaveBeenCalled();
   });
 });
