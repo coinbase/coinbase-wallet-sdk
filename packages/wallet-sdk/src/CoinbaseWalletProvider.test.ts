@@ -38,8 +38,8 @@ beforeEach(() => {
   provider = createProvider();
 });
 
-describe('event handling', () => {
-  it('should call update listeners on account and chainId change', async () => {
+describe('Event handling', () => {
+  it('should emit connect on eth_requestAccounts request', async () => {
     const connectListener = jest.fn();
     provider.on('connect', connectListener);
 
@@ -104,7 +104,7 @@ describe('Request Handling', () => {
   });
 });
 
-describe('signer configuration', () => {
+describe('Signer configuration', () => {
   it('should complete signerType selection correctly', async () => {
     mockFetchSignerType.mockResolvedValue('scw');
 
