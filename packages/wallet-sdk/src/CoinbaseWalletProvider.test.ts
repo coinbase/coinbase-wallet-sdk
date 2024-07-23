@@ -33,10 +33,10 @@ describe('CoinbaseWalletProvider', () => {
       const provider = createProvider();
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error // testing invalid request args
-      await expect(provider.request({})).rejects.toMatchObject({
-        code: -32602,
-        message: "'args.method' must be a non-empty string.",
-      });
+      await expect(provider.request({})).rejects.toThrowEIPError(
+        -32602,
+        "'args.method' must be a non-empty string."
+      );
     });
 
     test('eth_signTypedData_v2', async () => {
@@ -46,9 +46,7 @@ describe('CoinbaseWalletProvider', () => {
           method: 'eth_signTypedData_v2',
           params: [],
         })
-      ).rejects.toMatchObject({
-        code: standardErrorCodes.provider.unsupportedMethod,
-      });
+      ).rejects.toThrowEIPError(standardErrorCodes.provider.unsupportedMethod);
     });
   });
 });
@@ -84,10 +82,9 @@ describe('signer configuration', () => {
     (fetchSignerType as jest.Mock).mockRejectedValue(error);
 
     const provider = createProvider();
-    await expect(provider.request({ method: 'eth_requestAccounts' })).rejects.toMatchObject(
-      expect.objectContaining({
-        message: error.message,
-      })
+    await expect(provider.request({ method: 'eth_requestAccounts' })).rejects.toThrowEIPError(
+      standardErrorCodes.rpc.internal,
+      error.message
     );
     expect(mockHandshake).not.toHaveBeenCalled();
     expect(storeSignerType as jest.Mock).not.toHaveBeenCalled();
@@ -99,10 +96,9 @@ describe('signer configuration', () => {
     mockHandshake.mockRejectedValueOnce(error);
 
     const provider = createProvider();
-    await expect(provider.request({ method: 'eth_requestAccounts' })).rejects.toMatchObject(
-      expect.objectContaining({
-        message: error.message,
-      })
+    await expect(provider.request({ method: 'eth_requestAccounts' })).rejects.toThrowEIPError(
+      standardErrorCodes.rpc.internal,
+      error.message
     );
     expect(mockHandshake).toHaveBeenCalled();
     expect(storeSignerType as jest.Mock).not.toHaveBeenCalled();
@@ -120,9 +116,9 @@ describe('signer configuration', () => {
 
   it('should throw error if signer is not initialized', async () => {
     const provider = createProvider();
-    await expect(provider.request({ method: 'personal_sign' })).rejects.toMatchObject({
-      code: standardErrorCodes.provider.unauthorized,
-      message: `Must call 'eth_requestAccounts' before other methods`,
-    });
+    await expect(provider.request({ method: 'personal_sign' })).rejects.toThrowEIPError(
+      standardErrorCodes.provider.unauthorized,
+      `Must call 'eth_requestAccounts' before other methods`
+    );
   });
 });

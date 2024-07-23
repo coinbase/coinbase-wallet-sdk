@@ -11,7 +11,7 @@ global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
 expect.extend({
-  toThrowEIPError(received, code, message) {
+  toThrowEIPError(received, code, message = expect.any(String)) {
     const expected = expect.objectContaining({
       code,
       message,
