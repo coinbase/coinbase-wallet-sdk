@@ -1,4 +1,4 @@
-import { Communicator } from './Communicator'; // Adjust the import path as needed
+import { Communicator } from './Communicator.native'; // Adjust the import path as needed
 import { standardErrors } from ':core/error';
 import { EncryptedData, MessageID, RPCResponseMessage } from ':core/message';
 
