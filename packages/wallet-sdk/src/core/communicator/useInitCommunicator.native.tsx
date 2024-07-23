@@ -1,7 +1,7 @@
 import * as Linking from 'expo-linking';
 import { useEffect } from 'react';
 
-import { Communicator } from './Communicator';
+import { Communicator } from './Communicator.native';
 
 export function useInitCommunicator(communicator: Communicator) {
   useEffect(() => {
