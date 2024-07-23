@@ -1,17 +1,16 @@
 import { LIB_VERSION } from '../version';
 import { standardErrors } from ':core/error';
 import { RequestArguments } from ':core/provider/interface';
-import { Chain } from ':core/type';
 
-export async function fetchRPCRequest(request: RequestArguments, chain?: Chain) {
-  if (!chain?.rpcUrl) throw standardErrors.rpc.internal('No RPC URL set for chain');
+export async function fetchRPCRequest(request: RequestArguments, rpcUrl?: string) {
+  if (!rpcUrl) throw standardErrors.rpc.internal('No RPC URL set for chain');
 
   const requestBody = {
     ...request,
     jsonrpc: '2.0',
     id: crypto.randomUUID(),
   };
-  const res = await window.fetch(chain.rpcUrl, {
+  const res = await window.fetch(rpcUrl, {
     method: 'POST',
     body: JSON.stringify(requestBody),
     mode: 'cors',

@@ -4,7 +4,7 @@ import { Communicator } from ':core/communicator/Communicator';
 import { standardErrors } from ':core/error';
 import { RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
-import { AddressString, Chain } from ':core/type';
+import { AddressString } from ':core/type';
 import { ensureIntNumber } from ':core/type/util';
 import {
   decryptContent,
@@ -12,6 +12,7 @@ import {
   exportKeyToHexString,
   importKeyFromHexString,
 } from ':util/cipher';
+import { fetchRPCRequest } from ':util/provider';
 import { ScopedStorage } from ':util/ScopedStorage';
 
 const ACCOUNTS_KEY = 'accounts';
@@ -19,11 +20,10 @@ const ACTIVE_CHAIN_STORAGE_KEY = 'activeChain';
 const AVAILABLE_CHAINS_STORAGE_KEY = 'availableChains';
 const WALLET_CAPABILITIES_STORAGE_KEY = 'walletCapabilities';
 
-type SwitchEthereumChainParam = [
-  {
-    chainId: `0x${string}`; // Hex chain id
-  },
-];
+type Chain = {
+  id: number;
+  rpcUrl?: string;
+};
 
 export class SCWSigner implements Signer {
   private readonly metadata: AppMetadata;
@@ -38,8 +38,8 @@ export class SCWSigner implements Signer {
   }
 
   private _chain: Chain;
-  get chain() {
-    return this._chain;
+  get chainId() {
+    return this._chain.id;
   }
 
   constructor(params: {
@@ -92,12 +92,30 @@ export class SCWSigner implements Signer {
 
   async request(request: RequestArguments) {
     switch (request.method) {
+      case 'eth_accounts':
+        return this.accounts;
+      case 'eth_coinbase':
+        return this.accounts[0];
       case 'wallet_getCapabilities':
         return this.storage.loadObject(WALLET_CAPABILITIES_STORAGE_KEY);
       case 'wallet_switchEthereumChain':
         return this.handleSwitchChainRequest(request);
-      default:
+      case 'eth_ecRecover':
+      case 'personal_sign':
+      case 'personal_ecRecover':
+      case 'eth_signTransaction':
+      case 'eth_sendTransaction':
+      case 'eth_signTypedData_v1':
+      case 'eth_signTypedData_v3':
+      case 'eth_signTypedData_v4':
+      case 'eth_signTypedData':
+      case 'wallet_addEthereumChain':
+      case 'wallet_watchAsset':
+      case 'wallet_sendCalls':
+      case 'wallet_showCallsStatus':
         return this.sendRequestToPopup(request);
+      default:
+        return fetchRPCRequest(request, this._chain.rpcUrl);
     }
   }
 
@@ -125,7 +143,11 @@ export class SCWSigner implements Signer {
    * https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
    */
   private async handleSwitchChainRequest(request: RequestArguments) {
-    const params = request.params as SwitchEthereumChainParam;
+    const params = request.params as [
+      {
+        chainId: `0x${string}`;
+      },
+    ];
     if (!params || !params[0]?.chainId) {
       throw standardErrors.rpc.invalidParams();
     }
@@ -152,7 +174,7 @@ export class SCWSigner implements Signer {
     const encrypted = await encryptContent(
       {
         action: request,
-        chainId: this.chain.id,
+        chainId: this.chainId,
       },
       sharedSecret
     );
@@ -195,7 +217,7 @@ export class SCWSigner implements Signer {
         rpcUrl,
       }));
       this.storage.storeObject(AVAILABLE_CHAINS_STORAGE_KEY, chains);
-      this.updateChain(this.chain.id, chains);
+      this.updateChain(this.chainId, chains);
     }
 
     const walletCapabilities = response.data?.capabilities;
@@ -212,7 +234,7 @@ export class SCWSigner implements Signer {
     const chain = chains?.find((chain) => chain.id === chainId);
     if (!chain) return false;
 
-    if (chain !== this.chain) {
+    if (chain !== this._chain) {
       this._chain = chain;
       this.storage.storeObject(ACTIVE_CHAIN_STORAGE_KEY, chain);
       this.updateListener.onChainIdUpdate(chain.id);

@@ -22,6 +22,7 @@ import {
   ensureParsedJSONObject,
   hexStringFromNumber,
 } from ':core/type/util';
+import { fetchRPCRequest } from ':util/provider';
 import { ScopedStorage } from ':util/ScopedStorage';
 
 const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
@@ -61,7 +62,6 @@ export class WalletLinkSigner implements Signer {
   private _relay: WalletLinkRelay | null = null;
   private readonly _storage: ScopedStorage;
   private readonly _relayEventManager: RelayEventManager;
-  private _jsonRpcUrlFromOpts: string;
   private _addresses: AddressString[] = [];
   private updateListener?: StateUpdateListener;
 
@@ -73,7 +73,6 @@ export class WalletLinkSigner implements Signer {
     this.updateListener = options.updateListener;
 
     this._relayEventManager = new RelayEventManager();
-    this._jsonRpcUrlFromOpts = '';
 
     const cachedAddresses = this._storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
     if (cachedAddresses) {
@@ -90,8 +89,8 @@ export class WalletLinkSigner implements Signer {
     return this._addresses;
   }
 
-  get chain() {
-    return { id: this.getChainId(), rpcUrl: this.jsonRpcUrl };
+  get chainId() {
+    return this.getChainId();
   }
 
   getSession() {
@@ -104,8 +103,8 @@ export class WalletLinkSigner implements Signer {
     return this._addresses[0] || undefined;
   }
 
-  private get jsonRpcUrl(): string {
-    return this._storage.getItem(DEFAULT_JSON_RPC_URL) ?? this._jsonRpcUrlFromOpts;
+  private get jsonRpcUrl(): string | undefined {
+    return this._storage.getItem(DEFAULT_JSON_RPC_URL) ?? undefined;
   }
 
   private set jsonRpcUrl(value: string) {
@@ -304,9 +303,6 @@ export class WalletLinkSigner implements Signer {
         return { jsonrpc: '2.0', id: 0, result: this._addresses };
       }
 
-      case 'eth_sign':
-        return this._eth_sign(params);
-
       case 'eth_ecRecover':
         return this._eth_ecRecover(params);
 
@@ -328,9 +324,6 @@ export class WalletLinkSigner implements Signer {
       case 'eth_signTypedData_v1':
         return this._eth_signTypedData_v1(params);
 
-      case 'eth_signTypedData_v2':
-        return this._throwUnsupportedMethodError();
-
       case 'eth_signTypedData_v3':
         return this._eth_signTypedData_v3(params);
 
@@ -348,7 +341,7 @@ export class WalletLinkSigner implements Signer {
         return this._wallet_watchAsset(params);
 
       default:
-        return this._throwUnsupportedMethodError();
+        return fetchRPCRequest(request, this.jsonRpcUrl);
     }
   }
 
@@ -421,10 +414,6 @@ export class WalletLinkSigner implements Signer {
     if (!this._isAuthorized()) {
       throw standardErrors.provider.unauthorized({});
     }
-  }
-
-  private _throwUnsupportedMethodError(): Promise<JSONRPCResponse> {
-    throw standardErrors.provider.unsupportedMethod({});
   }
 
   private async _signEthereumMessage(
@@ -514,14 +503,6 @@ export class WalletLinkSigner implements Signer {
     }
 
     this._setAddresses(res.result);
-  }
-
-  private _eth_sign(params: unknown[]): Promise<JSONRPCResponse> {
-    this._requireAuthorization();
-    const address = ensureAddressString(params[0]);
-    const message = ensureBuffer(params[1]);
-
-    return this._signEthereumMessage(message, address, false);
   }
 
   private _eth_ecRecover(params: unknown[]): Promise<JSONRPCResponse> {

@@ -1,10 +1,9 @@
 import { EventEmitter } from 'eventemitter3';
 
-import { Method } from './method';
 import type { BaseStorage } from ':util/BaseStorage';
 
 export interface RequestArguments {
-  readonly method: Method | string;
+  readonly method: string;
   readonly params?: readonly unknown[] | object;
 }
 
@@ -24,7 +23,7 @@ interface ProviderConnectInfo {
 }
 
 export interface ProviderInterface extends EventEmitter {
-  request<T>(args: RequestArguments): Promise<T>;
+  request(args: RequestArguments): Promise<unknown>;
   disconnect(): Promise<void>;
   on(event: 'connect', listener: (info: ProviderConnectInfo) => void): this;
   on(event: 'disconnect', listener: (error: ProviderRpcError) => void): this;

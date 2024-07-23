@@ -1,9 +1,9 @@
 import { RequestArguments } from ':core/provider/interface';
-import { AddressString, Chain } from ':core/type';
+import { AddressString } from ':core/type';
 
 export interface Signer {
   readonly accounts: AddressString[];
-  readonly chain: Chain;
+  readonly chainId: number;
   handshake(): Promise<void>;
   request(request: RequestArguments): Promise<unknown>;
   disconnect: () => Promise<void>;

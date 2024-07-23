@@ -21,8 +21,8 @@ const createAdapter = (options?: { relay?: WalletLinkRelay }) => {
   const adapter = new WalletLinkSigner({
     metadata: { appName: 'test', appLogoUrl: null, appChainIds: [1] },
     updateListener: {
-      onAccountsUpdate: () => { },
-      onChainIdUpdate: () => { },
+      onAccountsUpdate: () => {},
+      onChainIdUpdate: () => {},
     },
   });
   if (options?.relay) {
@@ -164,35 +164,6 @@ describe('LegacyProvider', () => {
       expect(response).toEqual([MOCK_ADDERESS.toLowerCase()]);
     });
 
-    test('eth_sign success', async () => {
-      const response = await provider?.request({
-        method: 'eth_sign',
-        params: [MOCK_ADDERESS.toLowerCase(), 'Super safe message'],
-      });
-      expect(response).toBe('0x');
-    });
-
-    test('eth_sign fail bad address', async () => {
-      await expect(() =>
-        provider?.request({
-          method: 'eth_sign',
-          params: ['0x123456789abcdef', 'Super safe message'],
-        })
-      ).rejects.toThrowEIPError(
-        standardErrorCodes.rpc.invalidParams,
-        'Invalid Ethereum address: 0x123456789abcdef'
-      );
-    });
-
-    test('eth_sign fail bad message format', async () => {
-      await expect(() =>
-        provider?.request({
-          method: 'eth_sign',
-          params: [MOCK_ADDERESS.toLowerCase(), 123456789],
-        })
-      ).rejects.toThrowEIPError(standardErrorCodes.rpc.invalidParams, 'Not binary data: 123456789');
-    });
-
     test('eth_ecRecover', async () => {
       const response = await provider?.request({
         method: 'eth_ecRecover',
@@ -284,18 +255,6 @@ describe('LegacyProvider', () => {
         params: [[MOCK_TYPED_DATA], MOCK_ADDERESS],
       });
       expect(response).toBe('0x');
-    });
-
-    test('eth_signTypedData_v2', async () => {
-      await expect(() =>
-        provider?.request({
-          method: 'eth_signTypedData_v2',
-          params: [],
-        })
-      ).rejects.toThrowEIPError(
-        standardErrorCodes.provider.unsupportedMethod,
-        'The requested method is not supported by this Ethereum provider.'
-      );
     });
 
     test('eth_signTypedData_v3', async () => {
