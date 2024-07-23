@@ -32,7 +32,6 @@ type ProviderEventMap = {
 };
 
 export type ProviderEventKey = keyof ProviderEventMap;
-
 export type ProviderEventCallback<
   K extends ProviderEventKey = ProviderEventKey,
   V = ProviderEventMap[K],

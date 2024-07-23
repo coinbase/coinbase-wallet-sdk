@@ -6,7 +6,6 @@ import {
   AppMetadata,
   ConstructorOptions,
   Preference,
-  ProviderEventCallback,
   ProviderInterface,
   RequestArguments,
 } from './core/provider/interface';
@@ -117,15 +116,13 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       signerType,
       metadata: this.metadata,
       communicator: this.communicator,
-      callback: this.onSignerUpdate,
+      callback: (key, value) => {
+        if (key === 'disconnect') {
+          this.disconnect();
+        } else {
+          this.emit(key, value);
+        }
+      },
     });
   }
-
-  private onSignerUpdate: ProviderEventCallback = (key, value) => {
-    if (key === 'disconnect') {
-      this.disconnect();
-    } else {
-      this.emit(key, value);
-    }
-  };
 }
