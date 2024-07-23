@@ -125,7 +125,7 @@ export class SCWSigner implements Signer {
       case 'eth_unsubscribe':
         throw standardErrors.rpc.methodNotSupported();
 
-      // fallback to readonly RPC
+      // fallback as readonly RPC fetch
       default:
         return fetchRPCRequest(request, this._chain.rpcUrl);
     }

@@ -22,6 +22,7 @@ import {
   ensureParsedJSONObject,
   hexStringFromNumber,
 } from ':core/type/util';
+import { fetchRPCRequest } from ':util/provider';
 import { ScopedStorage } from ':util/ScopedStorage';
 
 const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
@@ -61,7 +62,6 @@ export class WalletLinkSigner implements Signer {
   private _relay: WalletLinkRelay | null = null;
   private readonly _storage: ScopedStorage;
   private readonly _relayEventManager: RelayEventManager;
-  private _jsonRpcUrlFromOpts: string;
   private _addresses: AddressString[] = [];
   private updateListener?: StateUpdateListener;
 
@@ -73,7 +73,6 @@ export class WalletLinkSigner implements Signer {
     this.updateListener = options.updateListener;
 
     this._relayEventManager = new RelayEventManager();
-    this._jsonRpcUrlFromOpts = '';
 
     const cachedAddresses = this._storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
     if (cachedAddresses) {
@@ -104,8 +103,8 @@ export class WalletLinkSigner implements Signer {
     return this._addresses[0] || undefined;
   }
 
-  private get jsonRpcUrl(): string {
-    return this._storage.getItem(DEFAULT_JSON_RPC_URL) ?? this._jsonRpcUrlFromOpts;
+  private get jsonRpcUrl(): string | undefined {
+    return this._storage.getItem(DEFAULT_JSON_RPC_URL) ?? undefined;
   }
 
   private set jsonRpcUrl(value: string) {
@@ -347,8 +346,9 @@ export class WalletLinkSigner implements Signer {
       case 'wallet_watchAsset':
         return this._wallet_watchAsset(params);
 
+      // fallback as readonly RPC fetch
       default:
-        return this._throwUnsupportedMethodError();
+        return fetchRPCRequest(request, this.jsonRpcUrl);
     }
   }
 

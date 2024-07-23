@@ -43,7 +43,6 @@ export class ExtensionSigner implements Signer {
 
   get chainId() {
     const hexString = this.extensionProvider.send({ method: 'eth_chainId' }) as HexString;
-    // TODO: currently, provider expects `rpcUrl` for fetch requests
     return intNumberFromHexString(hexString);
   }
 
