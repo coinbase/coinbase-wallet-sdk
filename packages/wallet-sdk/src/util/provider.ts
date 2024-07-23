@@ -1,8 +1,10 @@
 import { LIB_VERSION } from '../version';
 import { standardErrors } from ':core/error';
-import { RequestArguments } from ':core/provider/interface';
+import { RequestArguments } from ':core/type/provider';
 
-export async function fetchRPCRequest(request: RequestArguments, rpcUrl: string) {
+export async function fetchRPCRequest(request: RequestArguments, rpcUrl?: string) {
+  if (!rpcUrl) throw standardErrors.rpc.internal('No RPC URL set for chain');
+
   const requestBody = {
     ...request,
     jsonrpc: '2.0',

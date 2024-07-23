@@ -3,8 +3,8 @@ import { SCWKeyManager } from './SCWKeyManager';
 import { Communicator } from ':core/communicator/Communicator';
 import { standardErrors } from ':core/error';
 import { RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
-import { AppMetadata, RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
+import { AppMetadata, RequestArguments } from ':core/type/provider';
 import { ensureIntNumber } from ':core/type/util';
 import {
   decryptContent,
@@ -12,6 +12,7 @@ import {
   exportKeyToHexString,
   importKeyFromHexString,
 } from ':util/cipher';
+import { fetchRPCRequest } from ':util/provider';
 import { ScopedStorage } from ':util/ScopedStorage';
 
 const ACCOUNTS_KEY = 'accounts';
@@ -91,18 +92,17 @@ export class SCWSigner implements Signer {
 
   async request(request: RequestArguments) {
     switch (request.method) {
-      case 'wallet_switchEthereumChain':
-        return this.handleSwitchChainRequest(request);
-
-      // local handling
+      // handle locally
       case 'eth_accounts':
         return this.accounts;
       case 'eth_coinbase':
         return this.accounts[0];
       case 'wallet_getCapabilities':
         return this.storage.loadObject(WALLET_CAPABILITIES_STORAGE_KEY);
+      case 'wallet_switchEthereumChain':
+        return this.handleSwitchChainRequest(request);
 
-      // local handling with popup fallback
+      // relay to popup
       case 'eth_ecRecover':
       case 'personal_sign':
       case 'personal_ecRecover':
@@ -118,14 +118,16 @@ export class SCWSigner implements Signer {
       case 'wallet_showCallsStatus':
         return this.sendRequestToPopup(request);
 
+      // not supported
       case 'eth_sign':
       case 'eth_signTypedData_v2':
       case 'eth_subscribe':
       case 'eth_unsubscribe':
         throw standardErrors.rpc.methodNotSupported();
 
+      // fallback to readonly RPC
       default:
-        return this.sendRequestToPopup(request);
+        return fetchRPCRequest(request, this._chain.rpcUrl);
     }
   }
 
