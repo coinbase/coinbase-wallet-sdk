@@ -38,6 +38,18 @@ describe('CoinbaseWalletProvider', () => {
         message: "'args.method' must be a non-empty string.",
       });
     });
+
+    test('eth_signTypedData_v2', async () => {
+      const provider = createProvider();
+      await expect(() =>
+        provider.request({
+          method: 'eth_signTypedData_v2',
+          params: [],
+        })
+      ).rejects.toMatchObject({
+        code: standardErrorCodes.provider.unsupportedMethod,
+      });
+    });
   });
 });
 
