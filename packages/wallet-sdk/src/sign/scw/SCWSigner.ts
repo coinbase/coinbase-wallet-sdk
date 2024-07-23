@@ -91,14 +91,33 @@ export class SCWSigner implements Signer {
 
   async request(request: RequestArguments) {
     switch (request.method) {
+      case 'wallet_switchEthereumChain':
+        return this.handleSwitchChainRequest(request);
+
+      // local handling
       case 'eth_accounts':
         return this.accounts;
       case 'eth_coinbase':
         return this.accounts[0];
       case 'wallet_getCapabilities':
         return this.storage.loadObject(WALLET_CAPABILITIES_STORAGE_KEY);
-      case 'wallet_switchEthereumChain':
-        return this.handleSwitchChainRequest(request);
+
+      // local handling with popup fallback
+      case 'eth_ecRecover':
+      case 'personal_sign':
+      case 'personal_ecRecover':
+      case 'eth_signTransaction':
+      case 'eth_sendTransaction':
+      case 'eth_signTypedData_v1':
+      case 'eth_signTypedData_v3':
+      case 'eth_signTypedData_v4':
+      case 'eth_signTypedData':
+      case 'wallet_addEthereumChain':
+      case 'wallet_watchAsset':
+      case 'wallet_sendCalls':
+      case 'wallet_showCallsStatus':
+        return this.sendRequestToPopup(request);
+
       case 'eth_sign':
       case 'eth_signTypedData_v2':
       case 'eth_subscribe':
