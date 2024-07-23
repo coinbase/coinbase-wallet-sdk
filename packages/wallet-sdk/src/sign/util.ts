@@ -4,7 +4,7 @@ import { SCWSigner } from './scw/SCWSigner';
 import { WalletLinkSigner } from './walletlink/WalletLinkSigner';
 import { Communicator } from ':core/communicator/Communicator';
 import { ConfigMessage, MessageID, SignerType } from ':core/message';
-import { AppMetadata, Preference } from ':core/provider/interface';
+import { AppMetadata, Preference } from ':core/type/provider';
 import type { BaseStorage } from ':util/BaseStorage';
 import { ScopedStorage } from ':util/ScopedStorage';
 

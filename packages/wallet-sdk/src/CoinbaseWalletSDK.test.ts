@@ -1,6 +1,6 @@
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
-import { ProviderInterface } from ':core/provider/interface';
+import { ProviderInterface } from ':core/type/provider';
 import { getFavicon } from ':core/type/util';
 
 const window = globalThis as { ethereum?: unknown };

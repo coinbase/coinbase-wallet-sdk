@@ -1,7 +1,7 @@
 import { StateUpdateListener } from '../interface';
 import { ExtensionSigner } from './ExtensionSigner';
-import { AppMetadata, RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
+import { AppMetadata, RequestArguments } from ':core/type/provider';
 
 const window = globalThis as {
   coinbaseWalletExtension?: unknown;

@@ -12,8 +12,8 @@ import { isErrorResponse, Web3Response } from './relay/type/Web3Response';
 import { WalletLinkRelay } from './relay/WalletLinkRelay';
 import { WALLETLINK_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
-import { AppMetadata, RequestArguments } from ':core/provider/interface';
 import { AddressString, IntNumber } from ':core/type';
+import { AppMetadata, RequestArguments } from ':core/type/provider';
 import {
   ensureAddressString,
   ensureBigInt,

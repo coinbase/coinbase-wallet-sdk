@@ -1,6 +1,6 @@
 import { fetchSignerType } from './util';
 import { Communicator } from ':core/communicator/Communicator';
-import { Preference } from ':core/provider/interface';
+import { Preference } from ':core/type/provider';
 
 describe('SignerConfigurator', () => {
   describe('handshake', () => {
