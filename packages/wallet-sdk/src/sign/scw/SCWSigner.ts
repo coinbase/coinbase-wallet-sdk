@@ -37,9 +37,9 @@ export class SCWSigner implements Signer {
     return this._accounts;
   }
 
-  private _chain: Chain;
+  private chain: Chain;
   get chainId() {
-    return this._chain.id;
+    return this.chain.id;
   }
 
   constructor(params: {
@@ -54,7 +54,7 @@ export class SCWSigner implements Signer {
 
     this.storage = new ScopedStorage('CBWSDK', 'SCWStateManager');
     this._accounts = this.storage.loadObject(ACCOUNTS_KEY) ?? [];
-    this._chain = this.storage.loadObject(ACTIVE_CHAIN_STORAGE_KEY) || {
+    this.chain = this.storage.loadObject(ACTIVE_CHAIN_STORAGE_KEY) || {
       id: params.metadata.appChainIds?.[0] ?? 1,
     };
 
@@ -118,7 +118,7 @@ export class SCWSigner implements Signer {
         return this.sendRequestToPopup(request);
       // fallback as readonly RPC fetch
       default:
-        return fetchRPCRequest(request, this._chain.rpcUrl);
+        return fetchRPCRequest(request, this.chain.rpcUrl);
     }
   }
 
@@ -237,8 +237,8 @@ export class SCWSigner implements Signer {
     const chain = chains?.find((chain) => chain.id === chainId);
     if (!chain) return false;
 
-    if (chain !== this._chain) {
-      this._chain = chain;
+    if (chain !== this.chain) {
+      this.chain = chain;
       this.storage.storeObject(ACTIVE_CHAIN_STORAGE_KEY, chain);
       this.updateListener.onChainIdUpdate(chain.id);
     }
