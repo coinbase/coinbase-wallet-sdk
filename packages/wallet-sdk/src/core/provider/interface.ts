@@ -24,14 +24,13 @@ type ProviderEventMap = {
   accountsChanged: string[]; // array of accounts
 };
 
-export type ProviderEventKey = keyof ProviderEventMap;
-export class ProviderEventEmitter extends EventEmitter<ProviderEventKey> {}
+export class ProviderEventEmitter extends EventEmitter<keyof ProviderEventMap> {}
 export type ProviderEventCallback = ProviderEventEmitter['emit'];
 
 export interface ProviderInterface extends ProviderEventEmitter {
   request(args: RequestArguments): Promise<unknown>;
   disconnect(): Promise<void>;
-  on<K extends ProviderEventKey>(event: K, listener: (_: ProviderEventMap[K]) => void): this;
+  on<K extends keyof ProviderEventMap>(event: K, listener: (_: ProviderEventMap[K]) => void): this;
 }
 
 export interface AppMetadata {

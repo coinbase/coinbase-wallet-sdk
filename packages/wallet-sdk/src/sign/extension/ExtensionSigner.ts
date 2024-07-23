@@ -2,7 +2,6 @@ import { Signer } from '../interface';
 import {
   AppMetadata,
   ProviderEventCallback,
-  ProviderEventKey,
   ProviderInterface,
   RequestArguments,
 } from ':core/provider/interface';
@@ -34,7 +33,12 @@ export class ExtensionSigner implements Signer {
     extensionProvider.setAppInfo?.(appName, appLogoUrl, appChainIds);
     this.extensionProvider = extensionProvider;
 
-    const events: ProviderEventKey[] = ['chainChanged', 'accountsChanged'];
+    const events: Parameters<ProviderEventCallback>[0][] = [
+      'connect',
+      'chainChanged',
+      'accountsChanged',
+      'disconnect',
+    ];
     events.forEach((event) =>
       this.extensionProvider.on(event, (data) => this.callback(event, data))
     );
