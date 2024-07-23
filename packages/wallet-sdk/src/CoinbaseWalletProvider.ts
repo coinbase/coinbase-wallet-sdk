@@ -1,11 +1,10 @@
-import EventEmitter from 'eventemitter3';
-
 import { standardErrorCodes, standardErrors } from './core/error';
 import { serializeError } from './core/error/serialize';
 import {
   AppMetadata,
   ConstructorOptions,
   Preference,
+  ProviderEventEmitter,
   ProviderInterface,
   RequestArguments,
 } from './core/provider/interface';
@@ -18,7 +17,7 @@ import { hexStringFromNumber } from ':core/type/util';
 import type { BaseStorage } from ':util/BaseStorage';
 import { ScopedStorage } from ':util/ScopedStorage';
 
-export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
+export class CoinbaseWalletProvider extends ProviderEventEmitter implements ProviderInterface {
   private readonly metadata: AppMetadata;
   private readonly preference: Preference;
   private readonly communicator: Communicator;
@@ -96,11 +95,9 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   async disconnect() {
     this.signer?.disconnect();
-    this.signer = null;
     ScopedStorage.clearAll(this.baseStorage);
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
-
   readonly isCoinbaseWallet = true;
 
   private requestSignerSelection(): Promise<SignerType> {
@@ -116,13 +113,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       signerType,
       metadata: this.metadata,
       communicator: this.communicator,
-      callback: (key, value) => {
-        if (key === 'disconnect') {
-          this.disconnect();
-        } else {
-          this.emit(key, value);
-        }
-      },
+      callback: this.emit.bind(this),
     });
   }
 }

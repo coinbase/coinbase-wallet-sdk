@@ -1,7 +1,9 @@
+import EventEmitter from 'eventemitter3';
+
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { standardErrorCodes, standardErrors } from './core/error';
 import * as util from './sign/util';
-import { ProviderEventCallback, RequestArguments } from ':core/provider/interface';
+import { RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
 
 function createProvider() {
@@ -19,7 +21,7 @@ const mockStoreSignerType = jest.spyOn(util, 'storeSignerType');
 const mockLoadSignerType = jest.spyOn(util, 'loadSignerType');
 
 let provider: CoinbaseWalletProvider;
-let callback: ProviderEventCallback;
+let callback: EventEmitter['emit'];
 
 beforeEach(() => {
   jest.resetAllMocks();
