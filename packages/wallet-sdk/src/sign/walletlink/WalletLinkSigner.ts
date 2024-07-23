@@ -340,7 +340,6 @@ export class WalletLinkSigner implements Signer {
       case 'wallet_watchAsset':
         return this._wallet_watchAsset(params);
 
-      // fallback as readonly RPC fetch
       default:
         return fetchRPCRequest(request, this.jsonRpcUrl);
     }

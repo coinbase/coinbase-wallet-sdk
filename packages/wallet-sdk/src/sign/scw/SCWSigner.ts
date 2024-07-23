@@ -37,9 +37,9 @@ export class SCWSigner implements Signer {
     return this._accounts;
   }
 
-  private chain: Chain;
+  private _chain: Chain;
   get chainId() {
-    return this.chain.id;
+    return this._chain.id;
   }
 
   constructor(params: {
@@ -54,7 +54,7 @@ export class SCWSigner implements Signer {
 
     this.storage = new ScopedStorage('CBWSDK', 'SCWStateManager');
     this._accounts = this.storage.loadObject(ACCOUNTS_KEY) ?? [];
-    this.chain = this.storage.loadObject(ACTIVE_CHAIN_STORAGE_KEY) || {
+    this._chain = this.storage.loadObject(ACTIVE_CHAIN_STORAGE_KEY) || {
       id: params.metadata.appChainIds?.[0] ?? 1,
     };
 
@@ -92,7 +92,6 @@ export class SCWSigner implements Signer {
 
   async request(request: RequestArguments) {
     switch (request.method) {
-      // handle locally
       case 'eth_accounts':
         return this.accounts;
       case 'eth_coinbase':
@@ -101,7 +100,6 @@ export class SCWSigner implements Signer {
         return this.storage.loadObject(WALLET_CAPABILITIES_STORAGE_KEY);
       case 'wallet_switchEthereumChain':
         return this.handleSwitchChainRequest(request);
-      // relay to popup
       case 'eth_ecRecover':
       case 'personal_sign':
       case 'personal_ecRecover':
@@ -116,9 +114,8 @@ export class SCWSigner implements Signer {
       case 'wallet_sendCalls':
       case 'wallet_showCallsStatus':
         return this.sendRequestToPopup(request);
-      // fallback as readonly RPC fetch
       default:
-        return fetchRPCRequest(request, this.chain.rpcUrl);
+        return fetchRPCRequest(request, this._chain.rpcUrl);
     }
   }
 
@@ -237,8 +234,8 @@ export class SCWSigner implements Signer {
     const chain = chains?.find((chain) => chain.id === chainId);
     if (!chain) return false;
 
-    if (chain !== this.chain) {
-      this.chain = chain;
+    if (chain !== this._chain) {
+      this._chain = chain;
       this.storage.storeObject(ACTIVE_CHAIN_STORAGE_KEY, chain);
       this.updateListener.onChainIdUpdate(chain.id);
     }
