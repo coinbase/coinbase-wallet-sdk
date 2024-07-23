@@ -1,5 +1,5 @@
 import { ExtensionSigner } from './extension/ExtensionSigner';
-import { Signer, StateUpdateListener } from './interface';
+import { Signer, SignerUpdateCallback } from './interface';
 import { SCWSigner } from './scw/SCWSigner';
 import { WalletLinkSigner } from './walletlink/WalletLinkSigner';
 import { Communicator } from ':core/communicator/Communicator';
@@ -26,7 +26,7 @@ export async function fetchSignerType(params: {
   metadata: AppMetadata; // for WalletLink
 }): Promise<SignerType> {
   const { communicator, metadata } = params;
-  listenForWalletLinkSessionRequest(communicator, metadata).catch(() => { });
+  listenForWalletLinkSessionRequest(communicator, metadata).catch(() => {});
 
   const request: ConfigMessage & { id: MessageID } = {
     id: crypto.randomUUID(),
@@ -41,25 +41,25 @@ export function createSigner(params: {
   signerType: SignerType;
   metadata: AppMetadata;
   communicator: Communicator;
-  updateListener: StateUpdateListener;
+  callback: SignerUpdateCallback;
 }): Signer {
-  const { signerType, metadata, communicator, updateListener } = params;
+  const { signerType, metadata, communicator, callback } = params;
   switch (signerType) {
     case 'scw':
       return new SCWSigner({
         metadata,
-        updateListener,
+        callback,
         communicator,
       });
     case 'walletlink':
       return new WalletLinkSigner({
         metadata,
-        updateListener,
+        callback,
       });
     case 'extension': {
       return new ExtensionSigner({
         metadata,
-        updateListener,
+        callback,
       });
     }
   }

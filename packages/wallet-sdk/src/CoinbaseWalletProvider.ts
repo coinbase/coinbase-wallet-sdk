@@ -9,7 +9,7 @@ import {
   ProviderInterface,
   RequestArguments,
 } from './core/provider/interface';
-import { Signer } from './sign/interface';
+import { Signer, SignerUpdateCallback } from './sign/interface';
 import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
 import { checkErrorForInvalidRequestArgs } from './util/provider';
 import { Communicator } from ':core/communicator/Communicator';
@@ -96,6 +96,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   async disconnect() {
     this.signer?.disconnect();
+    this.signer = null;
     ScopedStorage.clearAll(this.baseStorage);
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
@@ -115,10 +116,15 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       signerType,
       metadata: this.metadata,
       communicator: this.communicator,
-      updateListener: {
-        onAccountsUpdate: (accounts) => this.emit('accountsChanged', accounts),
-        onChainIdUpdate: (id) => this.emit('chainChanged', hexStringFromNumber(id)),
-      },
+      callback: this.onSignerUpdate,
     });
   }
+
+  private onSignerUpdate: SignerUpdateCallback = (key, value) => {
+    if (key === 'disconnect') {
+      this.disconnect();
+    } else {
+      this.emit(key, value);
+    }
+  };
 }

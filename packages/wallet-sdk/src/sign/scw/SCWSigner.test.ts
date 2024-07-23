@@ -1,4 +1,4 @@
-import { StateUpdateListener } from '../interface';
+import { SignerUpdateCallback } from '../interface';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWSigner } from './SCWSigner';
 import { Communicator } from ':core/communicator/Communicator';
@@ -49,7 +49,7 @@ describe('SCWSigner', () => {
   let signer: SCWSigner;
   let mockMetadata: AppMetadata;
   let mockCommunicator: jest.Mocked<Communicator>;
-  let mockUpdateListener: StateUpdateListener;
+  let mockCallback: SignerUpdateCallback;
   let mockKeyManager: jest.Mocked<SCWKeyManager>;
 
   beforeEach(() => {
@@ -61,7 +61,7 @@ describe('SCWSigner', () => {
     mockCommunicator = new Communicator() as jest.Mocked<Communicator>;
     mockCommunicator.waitForPopupLoaded.mockResolvedValue({} as Window);
     mockCommunicator.postRequestAndWaitForResponse.mockResolvedValue(mockSuccessResponse);
-    mockUpdateListener = {
+    mockCallback = {
       onAccountsUpdate: jest.fn(),
       onChainIdUpdate: jest.fn(),
     };
@@ -77,7 +77,7 @@ describe('SCWSigner', () => {
     signer = new SCWSigner({
       metadata: mockMetadata,
       communicator: mockCommunicator,
-      updateListener: mockUpdateListener,
+      callback: mockCallback,
     });
   });
 
@@ -184,7 +184,7 @@ describe('SCWSigner', () => {
         { id: 2, rpcUrl: 'https://eth-rpc.example.com/2' },
       ]);
       expect(storageStoreSpy).toHaveBeenCalledWith('walletCapabilities', mockCapabilities);
-      expect(mockUpdateListener.onChainIdUpdate).toHaveBeenCalledWith(1);
+      expect(mockCallback.onChainIdUpdate).toHaveBeenCalledWith(1);
     });
   });
 

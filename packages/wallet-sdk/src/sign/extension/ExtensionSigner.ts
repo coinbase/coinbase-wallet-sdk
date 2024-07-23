@@ -1,5 +1,10 @@
-import { Signer, StateUpdateListener } from '../interface';
-import { AppMetadata, ProviderInterface, RequestArguments } from ':core/provider/interface';
+import { Signer, SignerUpdateCallback } from '../interface';
+import {
+  AppMetadata,
+  ProviderEventKey,
+  ProviderInterface,
+  RequestArguments,
+} from ':core/provider/interface';
 import { AddressString, HexString } from ':core/type';
 import { intNumberFromHexString } from ':core/type/util';
 
@@ -10,12 +15,12 @@ interface CBExtensionInjectedProvider extends ProviderInterface {
 
 export class ExtensionSigner implements Signer {
   private readonly metadata: AppMetadata;
-  private readonly updateListener: StateUpdateListener;
+  private readonly callback: SignerUpdateCallback;
   private extensionProvider: CBExtensionInjectedProvider;
 
-  constructor(params: { metadata: AppMetadata; updateListener: StateUpdateListener }) {
+  constructor(params: { metadata: AppMetadata; callback: SignerUpdateCallback }) {
     this.metadata = params.metadata;
-    this.updateListener = params.updateListener;
+    this.callback = params.callback;
     const extensionProvider = (
       globalThis as { coinbaseWalletExtension?: CBExtensionInjectedProvider }
     ).coinbaseWalletExtension;
@@ -28,12 +33,9 @@ export class ExtensionSigner implements Signer {
     extensionProvider.setAppInfo?.(appName, appLogoUrl, appChainIds);
     this.extensionProvider = extensionProvider;
 
-    this.extensionProvider.on('chainChanged', (chainId) => {
-      this.updateListener.onChainIdUpdate(Number(chainId));
-    });
-
-    this.extensionProvider.on('accountsChanged', (accounts) =>
-      this.updateListener.onAccountsUpdate(accounts as AddressString[])
+    const events: ProviderEventKey[] = ['chainChanged', 'accountsChanged'];
+    events.forEach((event) =>
+      this.extensionProvider.on(event, (data) => this.callback(event, data))
     );
   }
 

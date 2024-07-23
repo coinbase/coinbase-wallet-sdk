@@ -14,7 +14,7 @@ import { IntNumber } from ':core/type';
 const HEARTBEAT_INTERVAL = 10000;
 const REQUEST_TIMEOUT = 60000;
 
-export interface WalletLinkConnectionUpdateListener {
+export interface WalletLinkConnectionCallback {
   linkedUpdated: (linked: boolean) => void;
   handleWeb3ResponseMessage: (message: WalletLinkResponseEventData) => void;
   chainUpdated: (chainId: string, jsonRpcUrl: string) => void;
@@ -26,7 +26,7 @@ export interface WalletLinkConnectionUpdateListener {
 interface WalletLinkConnectionParams {
   session: WalletLinkSession;
   linkAPIUrl: string;
-  listener: WalletLinkConnectionUpdateListener;
+  listener: WalletLinkConnectionCallback;
   WebSocketClass?: typeof WebSocket;
 }
 
@@ -40,7 +40,7 @@ export class WalletLinkConnection {
 
   private readonly session: WalletLinkSession;
 
-  private listener?: WalletLinkConnectionUpdateListener;
+  private listener?: WalletLinkConnectionCallback;
   private cipher: WalletLinkCipher;
   private ws: WalletLinkWebSocket;
   private http: WalletLinkHTTP;
@@ -49,7 +49,7 @@ export class WalletLinkConnection {
    * Constructor
    * @param session Session
    * @param linkAPIUrl Coinbase Wallet link server URL
-   * @param listener WalletLinkConnectionUpdateListener
+   * @param listener WalletLinkConnectionCallback
    * @param [WebSocketClass] Custom WebSocket implementation
    */
   constructor({

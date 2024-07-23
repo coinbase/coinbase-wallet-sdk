@@ -13,23 +13,25 @@ export interface ProviderRpcError extends Error {
   data?: unknown;
 }
 
-interface ProviderMessage {
-  type: string;
-  data: unknown;
-}
-
 interface ProviderConnectInfo {
   readonly chainId: string;
 }
 
+type ProviderEventMap = {
+  connect: ProviderConnectInfo;
+  disconnect: ProviderRpcError;
+  chainChanged: string; // hex string of chainId
+  accountsChanged: string[]; // array of accounts
+};
+
+export type ProviderEventKey = keyof ProviderEventMap;
+export type ProviderEventValue<K extends ProviderEventKey> = ProviderEventMap[K];
+
 export interface ProviderInterface extends EventEmitter {
   request(args: RequestArguments): Promise<unknown>;
   disconnect(): Promise<void>;
-  on(event: 'connect', listener: (info: ProviderConnectInfo) => void): this;
-  on(event: 'disconnect', listener: (error: ProviderRpcError) => void): this;
-  on(event: 'chainChanged', listener: (chainId: string) => void): this;
-  on(event: 'accountsChanged', listener: (accounts: string[]) => void): this;
-  on(event: 'message', listener: (message: ProviderMessage) => void): this;
+  on<K extends ProviderEventKey>(event: K, listener: (_: ProviderEventValue<K>) => void): this;
+  on(event: string | symbol, listener: (_: unknown) => void): this; // fallback for other events
 }
 
 export interface AppMetadata {

@@ -1,4 +1,4 @@
-import { RequestArguments } from ':core/provider/interface';
+import { ProviderEventKey, ProviderEventValue, RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
 
 export interface Signer {
@@ -9,7 +9,7 @@ export interface Signer {
   disconnect: () => Promise<void>;
 }
 
-export interface StateUpdateListener {
-  onAccountsUpdate: (_: AddressString[]) => void;
-  onChainIdUpdate: (_: number) => void;
-}
+export type SignerUpdateCallback<
+  K extends ProviderEventKey = ProviderEventKey,
+  V = ProviderEventValue<K>,
+> = (event: K, value: V) => void;

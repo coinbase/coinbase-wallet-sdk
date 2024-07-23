@@ -20,7 +20,7 @@ const testStorage = new ScopedStorage('walletlink', WALLETLINK_URL);
 const createAdapter = (options?: { relay?: WalletLinkRelay }) => {
   const adapter = new WalletLinkSigner({
     metadata: { appName: 'test', appLogoUrl: null, appChainIds: [1] },
-    updateListener: {
+    callback: {
       onAccountsUpdate: () => {},
       onChainIdUpdate: () => {},
     },

@@ -3,7 +3,7 @@
 // Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
 
 import eip712 from '../../vendor-js/eth-eip712-util';
-import { Signer, StateUpdateListener } from '../interface';
+import { Signer, SignerUpdateCallback } from '../interface';
 import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants';
 import { RelayEventManager } from './relay/RelayEventManager';
 import { EthereumTransactionParams } from './relay/type/EthereumTransactionParams';
@@ -63,14 +63,14 @@ export class WalletLinkSigner implements Signer {
   private readonly _storage: ScopedStorage;
   private readonly _relayEventManager: RelayEventManager;
   private _addresses: AddressString[] = [];
-  private updateListener?: StateUpdateListener;
+  private callback?: SignerUpdateCallback;
 
-  constructor(options: { metadata: AppMetadata; updateListener?: StateUpdateListener }) {
+  constructor(options: { metadata: AppMetadata; callback?: SignerUpdateCallback }) {
     const { appName, appLogoUrl } = options.metadata;
     this._appName = appName;
     this._appLogoUrl = appLogoUrl;
     this._storage = new ScopedStorage('walletlink', WALLETLINK_URL);
-    this.updateListener = options.updateListener;
+    this.callback = options.callback;
 
     this._relayEventManager = new RelayEventManager();
 
@@ -119,7 +119,7 @@ export class WalletLinkSigner implements Signer {
     this._storage.setItem(DEFAULT_CHAIN_ID_KEY, chainId.toString(10));
     const chainChanged = ensureIntNumber(chainId) !== originalChainId;
     if (chainChanged) {
-      this.updateListener?.onChainIdUpdate(chainId);
+      this.callback?.('chainChanged', hexStringFromNumber(chainId));
     }
   }
 
@@ -247,7 +247,7 @@ export class WalletLinkSigner implements Signer {
     }
 
     this._addresses = newAddresses;
-    this.updateListener?.onAccountsUpdate(newAddresses);
+    this.callback?.('accountsChanged', newAddresses);
     this._storage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, newAddresses.join(' '));
   }
 

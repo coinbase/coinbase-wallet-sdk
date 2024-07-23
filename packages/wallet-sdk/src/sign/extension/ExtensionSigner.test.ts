@@ -1,4 +1,4 @@
-import { StateUpdateListener } from '../interface';
+import { SignerUpdateCallback } from '../interface';
 import { ExtensionSigner } from './ExtensionSigner';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
@@ -7,7 +7,7 @@ const window = globalThis as {
   coinbaseWalletExtension?: unknown;
 };
 
-const mockUpdateListener: StateUpdateListener = {
+const mockCallback: SignerUpdateCallback = {
   onChainIdUpdate: jest.fn(),
   onAccountsUpdate: jest.fn(),
 };
@@ -37,7 +37,7 @@ describe('ExtensionSigner', () => {
   let signer: ExtensionSigner;
 
   beforeEach(() => {
-    signer = new ExtensionSigner({ metadata, updateListener: mockUpdateListener });
+    signer = new ExtensionSigner({ metadata, callback: mockCallback });
   });
 
   afterEach(() => {
@@ -54,23 +54,21 @@ describe('ExtensionSigner', () => {
 
   it('should throw error only if Coinbase Wallet extension is not found', () => {
     delete window.coinbaseWalletExtension;
-    expect(() => new ExtensionSigner({ metadata, updateListener: mockUpdateListener })).toThrow(
+    expect(() => new ExtensionSigner({ metadata, callback: mockCallback })).toThrow(
       'Coinbase Wallet extension not found'
     );
     window.coinbaseWalletExtension = mockExtensionProvider;
-    expect(
-      () => new ExtensionSigner({ metadata, updateListener: mockUpdateListener })
-    ).not.toThrow();
+    expect(() => new ExtensionSigner({ metadata, callback: mockCallback })).not.toThrow();
   });
 
   it('should handle chainChanged events', () => {
     eventListeners['chainChanged']('1');
-    expect(mockUpdateListener.onChainIdUpdate).toHaveBeenCalledWith(1);
+    expect(mockCallback.onChainIdUpdate).toHaveBeenCalledWith(1);
   });
 
   it('should handle accountsChanged events', () => {
     eventListeners['accountsChanged'](['0x123']);
-    expect(mockUpdateListener.onAccountsUpdate).toHaveBeenCalledWith(['0x123'] as AddressString[]);
+    expect(mockCallback.onAccountsUpdate).toHaveBeenCalledWith(['0x123'] as AddressString[]);
   });
 
   it('should request accounts during handshake', async () => {
@@ -81,15 +79,15 @@ describe('ExtensionSigner', () => {
     eventListeners['accountsChanged'](['0x123']);
 
     await expect(signer.handshake()).resolves.not.toThrow();
-    expect(mockUpdateListener.onAccountsUpdate).toHaveBeenCalledWith(['0x123']);
+    expect(mockCallback.onAccountsUpdate).toHaveBeenCalledWith(['0x123']);
   });
 
-  it('should not call updateListener if extension request throws', async () => {
+  it('should not call callback if extension request throws', async () => {
     (mockExtensionProvider.request as jest.Mock).mockImplementation(() => {
       throw new Error('ext provider request error');
     });
     await expect(signer.handshake()).rejects.toThrow('ext provider request error');
-    expect(mockUpdateListener.onAccountsUpdate).not.toHaveBeenCalled();
+    expect(mockCallback.onAccountsUpdate).not.toHaveBeenCalled();
   });
 
   it('should get results from extension provider', async () => {
