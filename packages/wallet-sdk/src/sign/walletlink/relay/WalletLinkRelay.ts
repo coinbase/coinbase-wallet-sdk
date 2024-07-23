@@ -2,7 +2,7 @@
 
 import {
   WalletLinkConnection,
-  WalletLinkConnectionCallback,
+  WalletLinkConnectionUpdateListener,
 } from './connection/WalletLinkConnection';
 import { LOCAL_STORAGE_ADDRESSES_KEY } from './constants';
 import { RelayEventManager } from './RelayEventManager';
@@ -26,7 +26,7 @@ interface WalletLinkRelayOptions {
   storage: ScopedStorage;
 }
 
-export class WalletLinkRelay implements WalletLinkConnectionCallback {
+export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
   private static accountRequestCallbackIds = new Set<string>();
 
   private readonly linkAPIUrl: string;
@@ -171,7 +171,7 @@ export class WalletLinkRelay implements WalletLinkConnectionCallback {
 
         document.location.reload();
       })
-      .catch((_) => {});
+      .catch((_) => { });
   }
 
   public setAppInfo(appName: string, appLogoUrl: string | null): void {
@@ -347,7 +347,7 @@ export class WalletLinkRelay implements WalletLinkConnectionCallback {
   protected publishWeb3RequestEvent(id: string, request: Web3Request): void {
     const message: WalletLinkEventData = { type: 'WEB3_REQUEST', id, request };
     this.publishEvent('Web3Request', message, true)
-      .then((_) => {})
+      .then((_) => { })
       .catch((err) => {
         this.handleWeb3ResponseMessage({
           type: 'WEB3_RESPONSE',

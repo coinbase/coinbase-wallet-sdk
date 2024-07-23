@@ -2,7 +2,7 @@ import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../constants';
 import { WalletLinkSession } from '../type/WalletLinkSession';
 import { WalletLinkSessionConfig } from '../type/WalletLinkSessionConfig';
 import { WalletLinkCipher } from './WalletLinkCipher';
-import { WalletLinkConnection, WalletLinkConnectionCallback } from './WalletLinkConnection';
+import { WalletLinkConnection, WalletLinkConnectionUpdateListener } from './WalletLinkConnection';
 import { ScopedStorage } from ':util/ScopedStorage';
 
 const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`decrypted ${text}`));
@@ -13,7 +13,7 @@ describe('WalletLinkConnection', () => {
   const session = new WalletLinkSession(new ScopedStorage('walletlink', 'test'));
 
   let connection: WalletLinkConnection;
-  let listener: WalletLinkConnectionCallback;
+  let listener: WalletLinkConnectionUpdateListener;
 
   beforeEach(() => {
     jest.clearAllMocks();
