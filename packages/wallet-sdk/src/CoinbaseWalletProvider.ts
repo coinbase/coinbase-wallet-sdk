@@ -11,11 +11,11 @@ import {
 } from './core/provider/interface';
 import { Signer } from './sign/interface';
 import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
+import { ScopedLocalStorage } from './sign/walletlink/storage/ScopedLocalStorage';
 import { checkErrorForInvalidRequestArgs } from './util/provider';
 import { Communicator } from ':core/communicator/Communicator';
 import { SignerType } from ':core/message';
 import { hexStringFromNumber } from ':core/type/util';
-import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
   private readonly metadata: AppMetadata;

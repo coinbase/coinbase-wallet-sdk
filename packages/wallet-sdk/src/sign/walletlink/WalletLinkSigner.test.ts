@@ -4,10 +4,10 @@ import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants';
 import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from './relay/mocks/fixtures';
 import { mockedWalletLinkRelay } from './relay/mocks/relay';
 import { WalletLinkRelay } from './relay/WalletLinkRelay';
+import { ScopedLocalStorage } from './storage/ScopedLocalStorage';
 import { WalletLinkSigner } from './WalletLinkSigner';
 import { WALLETLINK_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
-import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 jest.mock('./relay/WalletLinkRelay', () => {
   return {

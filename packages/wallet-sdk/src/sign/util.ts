@@ -1,11 +1,11 @@
 import { ExtensionSigner } from './extension/ExtensionSigner';
 import { Signer, StateUpdateListener } from './interface';
 import { SCWSigner } from './scw/SCWSigner';
+import { ScopedLocalStorage } from './walletlink/storage/ScopedLocalStorage';
 import { WalletLinkSigner } from './walletlink/WalletLinkSigner';
 import { Communicator } from ':core/communicator/Communicator';
 import { ConfigMessage, MessageID, SignerType } from ':core/message';
 import { AppMetadata, Preference } from ':core/provider/interface';
-import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 const SIGNER_TYPE_KEY = 'SignerType';
 const storage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');

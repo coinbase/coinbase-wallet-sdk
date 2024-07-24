@@ -1,5 +1,6 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
+import { ScopedLocalStorage } from '../storage/ScopedLocalStorage';
 import {
   WalletLinkConnection,
   WalletLinkConnectionUpdateListener,
@@ -19,7 +20,6 @@ import { WLMobileRelayUI } from './ui/WLMobileRelayUI';
 import { standardErrors } from ':core/error';
 import { AddressString, IntNumber, RegExpString } from ':core/type';
 import { bigIntStringFromBigInt, hexStringFromBuffer, randomBytesHex } from ':core/type/util';
-import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 interface WalletLinkRelayOptions {
   linkAPIUrl: string;

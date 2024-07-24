@@ -1,4 +1,5 @@
 import { Signer, StateUpdateListener } from '../interface';
+import { ScopedLocalStorage } from '../walletlink/storage/ScopedLocalStorage';
 import { SCWKeyManager } from './SCWKeyManager';
 import { Communicator } from ':core/communicator/Communicator';
 import { standardErrors } from ':core/error';
@@ -13,7 +14,6 @@ import {
   importKeyFromHexString,
 } from ':util/cipher';
 import { fetchRPCRequest } from ':util/provider';
-import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 const ACCOUNTS_KEY = 'accounts';
 const ACTIVE_CHAIN_STORAGE_KEY = 'activeChain';
 const AVAILABLE_CHAINS_STORAGE_KEY = 'availableChains';

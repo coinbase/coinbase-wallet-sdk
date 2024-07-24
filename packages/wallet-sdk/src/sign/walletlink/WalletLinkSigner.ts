@@ -10,6 +10,7 @@ import { EthereumTransactionParams } from './relay/type/EthereumTransactionParam
 import { JSONRPCRequest, JSONRPCResponse } from './relay/type/JSONRPC';
 import { isErrorResponse, Web3Response } from './relay/type/Web3Response';
 import { WalletLinkRelay } from './relay/WalletLinkRelay';
+import { ScopedLocalStorage } from './storage/ScopedLocalStorage';
 import { WALLETLINK_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
@@ -23,7 +24,6 @@ import {
   hexStringFromNumber,
 } from ':core/type/util';
 import { fetchRPCRequest } from ':util/provider';
-import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
 const DEFAULT_JSON_RPC_URL = 'DefaultJsonRpcUrl';
 

@@ -1,10 +1,10 @@
+import { ScopedLocalStorage } from '../walletlink/storage/ScopedLocalStorage';
 import {
   deriveSharedSecret,
   exportKeyToHexString,
   generateKeyPair,
   importKeyFromHexString,
 } from ':util/cipher';
-import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 interface StorageItem {
   storageKey: string;

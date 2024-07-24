@@ -1,4 +1,5 @@
 import { StateUpdateListener } from '../interface';
+import { ScopedLocalStorage } from '../walletlink/storage/ScopedLocalStorage';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWSigner } from './SCWSigner';
 import { Communicator } from ':core/communicator/Communicator';
@@ -11,7 +12,6 @@ import {
   exportKeyToHexString,
   importKeyFromHexString,
 } from ':util/cipher';
-import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 jest.mock('./SCWKeyManager');
 const storageStoreSpy = jest.spyOn(ScopedLocalStorage.prototype, 'storeObject');
