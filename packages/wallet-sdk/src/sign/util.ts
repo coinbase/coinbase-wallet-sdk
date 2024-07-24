@@ -24,7 +24,7 @@ export async function fetchSignerType(params: {
   metadata: AppMetadata; // for WalletLink
 }): Promise<SignerType> {
   const { communicator, metadata } = params;
-  listenForWalletLinkSessionRequest(communicator, metadata).catch(() => { });
+  listenForWalletLinkSessionRequest(communicator, metadata).catch(() => {});
 
   const request: ConfigMessage & { id: MessageID } = {
     id: crypto.randomUUID(),
