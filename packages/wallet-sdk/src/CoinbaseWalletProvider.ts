@@ -15,29 +15,22 @@ import { checkErrorForInvalidRequestArgs } from './util/provider';
 import { Communicator } from ':core/communicator/Communicator';
 import { SignerType } from ':core/message';
 import { hexStringFromNumber } from ':core/type/util';
-import type { BaseStorage } from ':util/BaseStorage';
-import { ScopedStorage } from ':util/ScopedStorage';
+import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
   private readonly metadata: AppMetadata;
   private readonly preference: Preference;
   private readonly communicator: Communicator;
-  private readonly baseStorage?: BaseStorage;
 
   private signer: Signer | null;
 
-  constructor({
-    baseStorage,
-    metadata,
-    preference: { keysUrl, ...preference },
-  }: Readonly<ConstructorOptions>) {
+  constructor({ metadata, preference: { keysUrl, ...preference } }: Readonly<ConstructorOptions>) {
     super();
-    this.baseStorage = baseStorage;
     this.metadata = metadata;
     this.preference = preference;
     this.communicator = new Communicator(keysUrl);
     // Load states from storage
-    const signerType = loadSignerType(baseStorage);
+    const signerType = loadSignerType();
     this.signer = signerType ? this.initSigner(signerType) : null;
   }
 
@@ -51,7 +44,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
             const signer = this.initSigner(signerType);
             await signer.handshake();
             this.signer = signer;
-            storeSignerType(signerType, this.baseStorage);
+            storeSignerType(signerType);
           }
           this.emit('connect', { chainId: hexStringFromNumber(this.signer.chainId) });
           return this.signer.accounts;
@@ -96,7 +89,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
 
   async disconnect() {
     this.signer?.disconnect();
-    ScopedStorage.clearAll(this.baseStorage);
+    ScopedLocalStorage.clearAll();
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
 

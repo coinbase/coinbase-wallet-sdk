@@ -3,14 +3,14 @@ import { WalletLinkSession } from '../type/WalletLinkSession';
 import { WalletLinkSessionConfig } from '../type/WalletLinkSessionConfig';
 import { WalletLinkCipher } from './WalletLinkCipher';
 import { WalletLinkConnection, WalletLinkConnectionUpdateListener } from './WalletLinkConnection';
-import { ScopedStorage } from ':util/ScopedStorage';
+import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`decrypted ${text}`));
 
 jest.spyOn(WalletLinkCipher.prototype, 'decrypt').mockImplementation(decryptMock);
 
 describe('WalletLinkConnection', () => {
-  const session = new WalletLinkSession(new ScopedStorage('walletlink', 'test'));
+  const session = new WalletLinkSession(new ScopedLocalStorage('walletlink', 'test'));
 
   let connection: WalletLinkConnection;
   let listener: WalletLinkConnectionUpdateListener;

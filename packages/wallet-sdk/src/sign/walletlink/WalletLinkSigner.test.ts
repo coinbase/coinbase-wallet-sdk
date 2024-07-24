@@ -7,7 +7,7 @@ import { WalletLinkRelay } from './relay/WalletLinkRelay';
 import { WalletLinkSigner } from './WalletLinkSigner';
 import { WALLETLINK_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
-import { ScopedStorage } from ':util/ScopedStorage';
+import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 jest.mock('./relay/WalletLinkRelay', () => {
   return {
@@ -15,7 +15,7 @@ jest.mock('./relay/WalletLinkRelay', () => {
   };
 });
 
-const testStorage = new ScopedStorage('walletlink', WALLETLINK_URL);
+const testStorage = new ScopedLocalStorage('walletlink', WALLETLINK_URL);
 
 const createAdapter = (options?: { relay?: WalletLinkRelay }) => {
   const adapter = new WalletLinkSigner({

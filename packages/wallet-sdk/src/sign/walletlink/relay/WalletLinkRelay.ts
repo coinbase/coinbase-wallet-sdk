@@ -19,18 +19,18 @@ import { WLMobileRelayUI } from './ui/WLMobileRelayUI';
 import { standardErrors } from ':core/error';
 import { AddressString, IntNumber, RegExpString } from ':core/type';
 import { bigIntStringFromBigInt, hexStringFromBuffer, randomBytesHex } from ':core/type/util';
-import { ScopedStorage } from ':util/ScopedStorage';
+import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 interface WalletLinkRelayOptions {
   linkAPIUrl: string;
-  storage: ScopedStorage;
+  storage: ScopedLocalStorage;
 }
 
 export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
   private static accountRequestCallbackIds = new Set<string>();
 
   private readonly linkAPIUrl: string;
-  protected readonly storage: ScopedStorage;
+  protected readonly storage: ScopedLocalStorage;
   private _session: WalletLinkSession;
   private readonly relayEventManager: RelayEventManager;
   protected connection: WalletLinkConnection;
@@ -166,12 +166,12 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
          */
         const storedSession = WalletLinkSession.load(this.storage);
         if (storedSession?.id === this._session.id) {
-          ScopedStorage.clearAll(undefined);
+          ScopedLocalStorage.clearAll();
         }
 
         document.location.reload();
       })
-      .catch((_) => { });
+      .catch((_) => {});
   }
 
   public setAppInfo(appName: string, appLogoUrl: string | null): void {
@@ -347,7 +347,7 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
   protected publishWeb3RequestEvent(id: string, request: Web3Request): void {
     const message: WalletLinkEventData = { type: 'WEB3_REQUEST', id, request };
     this.publishEvent('Web3Request', message, true)
-      .then((_) => { })
+      .then((_) => {})
       .catch((err) => {
         this.handleWeb3ResponseMessage({
           type: 'WEB3_RESPONSE',

@@ -11,10 +11,10 @@ import {
   exportKeyToHexString,
   importKeyFromHexString,
 } from ':util/cipher';
-import { ScopedStorage } from ':util/ScopedStorage';
+import { ScopedLocalStorage } from ':util/ScopedLocalStorage';
 
 jest.mock('./SCWKeyManager');
-const storageStoreSpy = jest.spyOn(ScopedStorage.prototype, 'storeObject');
+const storageStoreSpy = jest.spyOn(ScopedLocalStorage.prototype, 'storeObject');
 jest.mock(':core/communicator/Communicator', () => ({
   Communicator: jest.fn(() => ({
     postRequestAndWaitForResponse: jest.fn(),
