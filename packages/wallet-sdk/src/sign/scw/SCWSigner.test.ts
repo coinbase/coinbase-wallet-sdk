@@ -52,7 +52,7 @@ describe('SCWSigner', () => {
   let mockUpdateListener: StateUpdateListener;
   let mockKeyManager: jest.Mocked<SCWKeyManager>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     mockMetadata = {
       appName: 'test',
       appLogoUrl: null,
@@ -74,7 +74,7 @@ describe('SCWSigner', () => {
     mockKeyManager.getSharedSecret.mockResolvedValue(mockCryptoKey);
     (encryptContent as jest.Mock).mockResolvedValueOnce(encryptedData);
 
-    signer = new SCWSigner({
+    signer = await SCWSigner.createInstance({
       metadata: mockMetadata,
       communicator: mockCommunicator,
       updateListener: mockUpdateListener,

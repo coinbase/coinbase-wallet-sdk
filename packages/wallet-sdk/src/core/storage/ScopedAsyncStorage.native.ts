@@ -16,16 +16,16 @@ export class ScopedAsyncStorage extends ScopedStorage implements KeyValueStorage
     return item ? JSON.parse(item) : undefined;
   }
 
-  setItem(key: string, value: string): Promise<void> {
-    return AsyncStorage.setItem(this.scopedKey(key), value);
+  async setItem(key: string, value: string): Promise<void> {
+    await AsyncStorage.setItem(this.scopedKey(key), value);
   }
 
-  getItem(key: string): Promise<string | null> {
+  async getItem(key: string): Promise<string | null> {
     return AsyncStorage.getItem(this.scopedKey(key));
   }
 
-  removeItem(key: string): Promise<void> {
-    return AsyncStorage.removeItem(this.scopedKey(key));
+  async removeItem(key: string): Promise<void> {
+    await AsyncStorage.removeItem(this.scopedKey(key));
   }
 
   async clear(): Promise<void> {

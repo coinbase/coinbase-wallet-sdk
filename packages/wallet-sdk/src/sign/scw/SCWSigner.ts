@@ -24,6 +24,12 @@ type Chain = {
   rpcUrl?: string;
 };
 
+type ConstructorOptions = {
+  metadata: AppMetadata;
+  communicator: Communicator;
+  updateListener: StateUpdateListener;
+};
+
 export class SCWSigner implements Signer {
   private readonly metadata: AppMetadata;
   private readonly communicator: Communicator;
@@ -41,27 +47,18 @@ export class SCWSigner implements Signer {
     return this._chain.id;
   }
 
-  private initPromise: Promise<void>;
-
-  constructor(params: {
-    metadata: AppMetadata;
-    communicator: Communicator;
-    updateListener: StateUpdateListener;
-  }) {
+  private constructor(params: ConstructorOptions) {
     this.metadata = params.metadata;
     this.communicator = params.communicator;
     this.updateListener = params.updateListener;
     this.keyManager = new SCWKeyManager();
+    this.storage = new ScopedAsyncStorage('CBWSDK', 'SCWStateManager');
 
     // default values
     this._accounts = [];
     this._chain = {
       id: params.metadata.appChainIds?.[0] ?? 1,
     };
-
-    // Async initialize
-    this.storage = new ScopedAsyncStorage('CBWSDK', 'SCWStateManager');
-    this.initPromise = this.initialize();
 
     this.handshake = this.handshake.bind(this);
     this.request = this.request.bind(this);
@@ -81,13 +78,13 @@ export class SCWSigner implements Signer {
     }
   }
 
-  async ensureInitialized() {
-    await this.initPromise; // resolves immediately if already initialized
+  static async createInstance(params: ConstructorOptions) {
+    const instance = new SCWSigner(params);
+    await instance.initialize();
+    return instance;
   }
 
   async handshake() {
-    await this.ensureInitialized();
-
     const handshakeMessage = await this.createRequestMessage({
       handshake: {
         method: 'eth_requestAccounts',
@@ -114,8 +111,6 @@ export class SCWSigner implements Signer {
   }
 
   async request(request: RequestArguments) {
-    await this.ensureInitialized();
-
     switch (request.method) {
       case 'eth_accounts':
         return this.accounts;

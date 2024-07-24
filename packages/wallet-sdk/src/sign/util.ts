@@ -44,15 +44,11 @@ export async function createSigner(params: {
   const { signerType, metadata, communicator, updateListener } = params;
   switch (signerType) {
     case 'scw': {
-      const signer = new SCWSigner({
+      return SCWSigner.createInstance({
         metadata,
         updateListener,
         communicator,
       });
-      // make sure accounts & chain id have been loaded from storage
-      // before returning the signer to the provider
-      await signer.ensureInitialized();
-      return signer;
     }
     case 'walletlink': {
       return new WalletLinkSigner({

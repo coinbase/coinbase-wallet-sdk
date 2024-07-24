@@ -14,21 +14,19 @@ export class ScopedAsyncStorage extends ScopedStorage implements KeyValueStorage
     return item ? JSON.parse(item) : undefined;
   }
 
-  setItem(key: string, value: string): Promise<void> {
+  async setItem(key: string, value: string): Promise<void> {
     localStorage.setItem(this.scopedKey(key), value);
-    return Promise.resolve();
   }
 
-  getItem(key: string): Promise<string | null> {
-    return Promise.resolve(localStorage.getItem(this.scopedKey(key)));
+  async getItem(key: string): Promise<string | null> {
+    return localStorage.getItem(this.scopedKey(key));
   }
 
-  removeItem(key: string): Promise<void> {
+  async removeItem(key: string): Promise<void> {
     localStorage.removeItem(this.scopedKey(key));
-    return Promise.resolve();
   }
 
-  clear(): Promise<void> {
+  async clear(): Promise<void> {
     const prefix = this.scopedKey('');
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
@@ -38,6 +36,5 @@ export class ScopedAsyncStorage extends ScopedStorage implements KeyValueStorage
       }
     }
     keysToRemove.forEach((key) => localStorage.removeItem(key));
-    return Promise.resolve();
   }
 }
