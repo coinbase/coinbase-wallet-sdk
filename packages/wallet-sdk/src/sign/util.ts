@@ -5,19 +5,17 @@ import { WalletLinkSigner } from './walletlink/WalletLinkSigner';
 import { Communicator } from ':core/communicator/Communicator';
 import { ConfigMessage, MessageID, SignerType } from ':core/message';
 import { AppMetadata, Preference } from ':core/provider/interface';
-import type { BaseStorage } from ':util/BaseStorage';
-import { ScopedStorage } from ':util/ScopedStorage';
+import { ScopedAsyncStorage } from ':core/storage/ScopedAsyncStorage';
 
 const SIGNER_TYPE_KEY = 'SignerType';
+const storage = new ScopedAsyncStorage('CBWSDK', 'SignerConfigurator');
 
-export function loadSignerType(baseStorage: BaseStorage | undefined): SignerType | null {
-  const storage = new ScopedStorage('CBWSDK', 'SignerConfigurator', baseStorage);
-  return storage.getItem(SIGNER_TYPE_KEY) as SignerType;
+export async function loadSignerType(): Promise<SignerType | null> {
+  return (await storage.getItem(SIGNER_TYPE_KEY)) as SignerType;
 }
 
-export function storeSignerType(signerType: SignerType, baseStorage: BaseStorage | undefined) {
-  const storage = new ScopedStorage('CBWSDK', 'SignerConfigurator', baseStorage);
-  storage.setItem(SIGNER_TYPE_KEY, signerType);
+export async function storeSignerType(signerType: SignerType): Promise<void> {
+  return storage.setItem(SIGNER_TYPE_KEY, signerType);
 }
 
 export async function fetchSignerType(params: {
@@ -26,7 +24,7 @@ export async function fetchSignerType(params: {
   metadata: AppMetadata; // for WalletLink
 }): Promise<SignerType> {
   const { communicator, metadata } = params;
-  listenForWalletLinkSessionRequest(communicator, metadata).catch(() => { });
+  listenForWalletLinkSessionRequest(communicator, metadata).catch(() => {});
 
   const request: ConfigMessage & { id: MessageID } = {
     id: crypto.randomUUID(),
@@ -37,25 +35,27 @@ export async function fetchSignerType(params: {
   return data as SignerType;
 }
 
-export function createSigner(params: {
+export async function createSigner(params: {
   signerType: SignerType;
   metadata: AppMetadata;
   communicator: Communicator;
   updateListener: StateUpdateListener;
-}): Signer {
+}): Promise<Signer> {
   const { signerType, metadata, communicator, updateListener } = params;
   switch (signerType) {
-    case 'scw':
-      return new SCWSigner({
+    case 'scw': {
+      return SCWSigner.createInstance({
         metadata,
         updateListener,
         communicator,
       });
-    case 'walletlink':
+    }
+    case 'walletlink': {
       return new WalletLinkSigner({
         metadata,
         updateListener,
       });
+    }
     case 'extension': {
       return new ExtensionSigner({
         metadata,

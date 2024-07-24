@@ -4,6 +4,7 @@ import { Communicator } from ':core/communicator/Communicator';
 import { standardErrors } from ':core/error';
 import { RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
+import { ScopedAsyncStorage } from ':core/storage/ScopedAsyncStorage';
 import { AddressString } from ':core/type';
 import { ensureIntNumber } from ':core/type/util';
 import {
@@ -13,8 +14,6 @@ import {
   importKeyFromHexString,
 } from ':util/cipher';
 import { fetchRPCRequest } from ':util/provider';
-import { ScopedStorage } from ':util/ScopedStorage';
-
 const ACCOUNTS_KEY = 'accounts';
 const ACTIVE_CHAIN_STORAGE_KEY = 'activeChain';
 const AVAILABLE_CHAINS_STORAGE_KEY = 'availableChains';
@@ -25,12 +24,18 @@ type Chain = {
   rpcUrl?: string;
 };
 
+type ConstructorOptions = {
+  metadata: AppMetadata;
+  communicator: Communicator;
+  updateListener: StateUpdateListener;
+};
+
 export class SCWSigner implements Signer {
   private readonly metadata: AppMetadata;
   private readonly communicator: Communicator;
   private readonly updateListener: StateUpdateListener;
   private readonly keyManager: SCWKeyManager;
-  private readonly storage: ScopedStorage;
+  private readonly storage: ScopedAsyncStorage;
 
   private _accounts: AddressString[];
   get accounts() {
@@ -42,19 +47,16 @@ export class SCWSigner implements Signer {
     return this._chain.id;
   }
 
-  constructor(params: {
-    metadata: AppMetadata;
-    communicator: Communicator;
-    updateListener: StateUpdateListener;
-  }) {
+  private constructor(params: ConstructorOptions) {
     this.metadata = params.metadata;
     this.communicator = params.communicator;
     this.updateListener = params.updateListener;
     this.keyManager = new SCWKeyManager();
+    this.storage = new ScopedAsyncStorage('CBWSDK', 'SCWStateManager');
 
-    this.storage = new ScopedStorage('CBWSDK', 'SCWStateManager');
-    this._accounts = this.storage.loadObject(ACCOUNTS_KEY) ?? [];
-    this._chain = this.storage.loadObject(ACTIVE_CHAIN_STORAGE_KEY) || {
+    // default values
+    this._accounts = [];
+    this._chain = {
       id: params.metadata.appChainIds?.[0] ?? 1,
     };
 
@@ -62,6 +64,24 @@ export class SCWSigner implements Signer {
     this.request = this.request.bind(this);
     this.createRequestMessage = this.createRequestMessage.bind(this);
     this.decryptResponseMessage = this.decryptResponseMessage.bind(this);
+  }
+
+  private async initialize() {
+    const storedAccounts = await this.storage.loadObject<AddressString[]>(ACCOUNTS_KEY);
+    if (storedAccounts) {
+      this._accounts = storedAccounts;
+    }
+
+    const storedChain = await this.storage.loadObject<Chain>(ACTIVE_CHAIN_STORAGE_KEY);
+    if (storedChain) {
+      this._chain = storedChain;
+    }
+  }
+
+  static async createInstance(params: ConstructorOptions) {
+    const instance = new SCWSigner(params);
+    await instance.initialize();
+    return instance;
   }
 
   async handshake() {
@@ -86,7 +106,7 @@ export class SCWSigner implements Signer {
 
     const accounts = result.value as AddressString[];
     this._accounts = accounts;
-    this.storage.storeObject(ACCOUNTS_KEY, accounts);
+    await this.storage.storeObject(ACCOUNTS_KEY, accounts);
     this.updateListener.onAccountsUpdate(accounts);
   }
 
@@ -134,7 +154,7 @@ export class SCWSigner implements Signer {
   }
 
   async disconnect() {
-    this.storage.clear();
+    await this.storage.clear();
     await this.keyManager.clear();
   }
 
@@ -153,7 +173,7 @@ export class SCWSigner implements Signer {
     }
     const chainId = ensureIntNumber(params[0].chainId);
 
-    const localResult = this.updateChain(chainId);
+    const localResult = await this.updateChain(chainId);
     if (localResult) return null;
 
     const popupResult = await this.sendRequestToPopup(request);
@@ -216,27 +236,27 @@ export class SCWSigner implements Signer {
         id: Number(id),
         rpcUrl,
       }));
-      this.storage.storeObject(AVAILABLE_CHAINS_STORAGE_KEY, chains);
-      this.updateChain(this.chainId, chains);
+      await this.storage.storeObject(AVAILABLE_CHAINS_STORAGE_KEY, chains);
+      await this.updateChain(this.chainId, chains);
     }
 
     const walletCapabilities = response.data?.capabilities;
     if (walletCapabilities) {
-      this.storage.storeObject(WALLET_CAPABILITIES_STORAGE_KEY, walletCapabilities);
+      await this.storage.storeObject(WALLET_CAPABILITIES_STORAGE_KEY, walletCapabilities);
     }
 
     return response;
   }
 
-  private updateChain(chainId: number, newAvailableChains?: Chain[]): boolean {
+  private async updateChain(chainId: number, newAvailableChains?: Chain[]): Promise<boolean> {
     const chains =
-      newAvailableChains ?? this.storage.loadObject<Chain[]>(AVAILABLE_CHAINS_STORAGE_KEY);
+      newAvailableChains ?? (await this.storage.loadObject<Chain[]>(AVAILABLE_CHAINS_STORAGE_KEY));
     const chain = chains?.find((chain) => chain.id === chainId);
     if (!chain) return false;
 
     if (chain !== this._chain) {
       this._chain = chain;
-      this.storage.storeObject(ACTIVE_CHAIN_STORAGE_KEY, chain);
+      await this.storage.storeObject(ACTIVE_CHAIN_STORAGE_KEY, chain);
       this.updateListener.onChainIdUpdate(chain.id);
     }
     return true;

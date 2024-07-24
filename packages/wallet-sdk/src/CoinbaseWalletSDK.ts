@@ -3,17 +3,12 @@
 import { LogoType, walletLogo } from './assets/wallet-logo';
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { AppMetadata, Preference, ProviderInterface } from './core/provider/interface';
-import { ScopedStorage } from './util/ScopedStorage';
 import { LIB_VERSION } from './version';
+import { ScopedAsyncStorage } from ':core/storage/ScopedAsyncStorage';
 import { getFavicon } from ':core/type/util';
-import type { BaseStorage } from ':util/BaseStorage';
 
 // for backwards compatibility
-type CoinbaseWalletSDKOptions = Partial<
-  AppMetadata & {
-    storage: BaseStorage;
-  }
->;
+type CoinbaseWalletSDKOptions = Partial<AppMetadata>;
 
 interface CBWindow {
   top: CBWindow;
@@ -22,16 +17,14 @@ interface CBWindow {
 
 export class CoinbaseWalletSDK {
   private metadata: AppMetadata;
-  private baseStorage?: BaseStorage;
 
-  constructor(options: Readonly<CoinbaseWalletSDKOptions>) {
+  constructor(metadata: Readonly<CoinbaseWalletSDKOptions>) {
     this.metadata = {
-      appName: options.appName || 'Dapp',
-      appLogoUrl: options.appLogoUrl || getFavicon(),
-      appChainIds: options.appChainIds || [],
+      appName: metadata.appName || 'Dapp',
+      appLogoUrl: metadata.appLogoUrl || getFavicon(),
+      appChainIds: metadata.appChainIds || [],
     };
-    this.baseStorage = options.storage;
-    this.storeLatestVersion(options.storage);
+    this.storeLatestVersion();
   }
 
   public makeWeb3Provider(preference: Preference = { options: 'all' }): ProviderInterface {
@@ -44,11 +37,7 @@ export class CoinbaseWalletSDK {
     } catch {
       // Ignore
     }
-    return new CoinbaseWalletProvider({
-      baseStorage: this.baseStorage,
-      metadata: this.metadata,
-      preference,
-    });
+    return new CoinbaseWalletProvider({ metadata: this.metadata, preference });
   }
 
   /**
@@ -61,8 +50,8 @@ export class CoinbaseWalletSDK {
     return walletLogo(type, width);
   }
 
-  private storeLatestVersion(storage: BaseStorage | undefined) {
-    const versionStorage = new ScopedStorage('CBWSDK', undefined, storage);
+  private async storeLatestVersion() {
+    const versionStorage = new ScopedAsyncStorage('CBWSDK');
     versionStorage.setItem('VERSION', LIB_VERSION);
   }
 }

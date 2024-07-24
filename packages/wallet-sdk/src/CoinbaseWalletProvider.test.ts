@@ -24,7 +24,7 @@ let updateListener: StateUpdateListener;
 
 beforeEach(() => {
   jest.resetAllMocks();
-  jest.spyOn(util, 'createSigner').mockImplementation((params) => {
+  jest.spyOn(util, 'createSigner').mockImplementation(async (params) => {
     updateListener = params.updateListener;
     return {
       accounts: [AddressString('0x123')],
@@ -146,7 +146,7 @@ describe('Signer configuration', () => {
   });
 
   it('should load signer from storage when available', async () => {
-    mockLoadSignerType.mockReturnValue('scw');
+    mockLoadSignerType.mockReturnValue(Promise.resolve('scw'));
     const providerLoadedFromStorage = createProvider();
 
     await providerLoadedFromStorage.request({ method: 'eth_requestAccounts' });
@@ -156,7 +156,7 @@ describe('Signer configuration', () => {
     await providerLoadedFromStorage.request(request);
     expect(mockRequest).toHaveBeenCalledWith(request);
 
-    providerLoadedFromStorage.disconnect();
+    await providerLoadedFromStorage.disconnect();
     expect(mockDisconnect).toHaveBeenCalled();
   });
 
@@ -170,7 +170,7 @@ describe('Signer configuration', () => {
   it('should call signer.disconnect on provider disconnect', async () => {
     await provider.request({ method: 'eth_requestAccounts' });
 
-    provider.disconnect();
+    await provider.disconnect();
     expect(mockDisconnect).toHaveBeenCalled();
   });
 });
