@@ -34,5 +34,19 @@ describe('ScopedLocalStorage', () => {
       scopedLocalStorage.clear();
       expect(localStorage.length).toEqual(0);
     });
+
+    test('@clearAll', () => {
+      const cbwSdkStorage = new ScopedLocalStorage('CBWSDK', 'testing');
+      const wlStorage = new ScopedLocalStorage('walletlink', 'testing');
+
+      cbwSdkStorage.setItem('foo', 'bar');
+      wlStorage.setItem('bar', 'foo');
+
+      expect(localStorage.length).toBe(2);
+
+      ScopedLocalStorage.clearAll();
+
+      expect(localStorage.length).toBe(0);
+    });
   });
 });
