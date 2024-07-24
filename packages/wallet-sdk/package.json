@@ -34,12 +34,18 @@
     "preact": "^10.16.0"
   },
   "peerDependencies": {
+    "@react-native-async-storage/async-storage": "*",
     "expo": "*",
     "expo-linking": "*",
     "expo-web-browser": "*",
     "react": "*",
     "react-dom": "*",
     "react-native": "*"
+  },
+  "peerDependenciesMeta": {
+    "@react-native-async-storage/async-storage": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@babel/core": "^7.22.9",
@@ -48,6 +54,7 @@
     "@babel/preset-env": "^7.22.9",
     "@babel/preset-typescript": "^7.22.5",
     "@peculiar/webcrypto": "^1.4.3",
+    "@react-native-async-storage/async-storage": "^1.24.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/preact": "^2.0.1",
     "@testing-library/react": "14.3.1",
