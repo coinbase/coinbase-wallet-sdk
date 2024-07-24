@@ -1,10 +1,10 @@
 import { Signer, StateUpdateListener } from '../interface';
-import { ScopedLocalStorage } from '../walletlink/storage/ScopedLocalStorage';
 import { SCWKeyManager } from './SCWKeyManager';
 import { Communicator } from ':core/communicator/Communicator';
 import { standardErrors } from ':core/error';
 import { RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
+import { ScopedAsyncStorage } from ':core/storage/ScopedAsyncStorage';
 import { AddressString } from ':core/type';
 import { ensureIntNumber } from ':core/type/util';
 import {
@@ -29,7 +29,7 @@ export class SCWSigner implements Signer {
   private readonly communicator: Communicator;
   private readonly updateListener: StateUpdateListener;
   private readonly keyManager: SCWKeyManager;
-  private readonly storage: ScopedLocalStorage;
+  private readonly storage: ScopedAsyncStorage;
 
   private _accounts: AddressString[];
   get accounts() {
@@ -41,6 +41,8 @@ export class SCWSigner implements Signer {
     return this._chain.id;
   }
 
+  private initPromise: Promise<void>;
+
   constructor(params: {
     metadata: AppMetadata;
     communicator: Communicator;
@@ -51,11 +53,15 @@ export class SCWSigner implements Signer {
     this.updateListener = params.updateListener;
     this.keyManager = new SCWKeyManager();
 
-    this.storage = new ScopedLocalStorage('CBWSDK', 'SCWStateManager');
-    this._accounts = this.storage.loadObject(ACCOUNTS_KEY) ?? [];
-    this._chain = this.storage.loadObject(ACTIVE_CHAIN_STORAGE_KEY) || {
+    // default values
+    this._accounts = [];
+    this._chain = {
       id: params.metadata.appChainIds?.[0] ?? 1,
     };
+
+    // Async initialize
+    this.storage = new ScopedAsyncStorage('CBWSDK', 'SCWStateManager');
+    this.initPromise = this.initialize();
 
     this.handshake = this.handshake.bind(this);
     this.request = this.request.bind(this);
@@ -63,7 +69,25 @@ export class SCWSigner implements Signer {
     this.decryptResponseMessage = this.decryptResponseMessage.bind(this);
   }
 
+  private async initialize() {
+    const storedAccounts = await this.storage.loadObject<AddressString[]>(ACCOUNTS_KEY);
+    if (storedAccounts) {
+      this._accounts = storedAccounts;
+    }
+
+    const storedChain = await this.storage.loadObject<Chain>(ACTIVE_CHAIN_STORAGE_KEY);
+    if (storedChain) {
+      this._chain = storedChain;
+    }
+  }
+
+  async ensureInitialized() {
+    await this.initPromise; // resolves immediately if already initialized
+  }
+
   async handshake() {
+    await this.ensureInitialized();
+
     const handshakeMessage = await this.createRequestMessage({
       handshake: {
         method: 'eth_requestAccounts',
@@ -85,11 +109,13 @@ export class SCWSigner implements Signer {
 
     const accounts = result.value as AddressString[];
     this._accounts = accounts;
-    this.storage.storeObject(ACCOUNTS_KEY, accounts);
+    await this.storage.storeObject(ACCOUNTS_KEY, accounts);
     this.updateListener.onAccountsUpdate(accounts);
   }
 
   async request(request: RequestArguments) {
+    await this.ensureInitialized();
+
     switch (request.method) {
       case 'eth_accounts':
         return this.accounts;
@@ -133,7 +159,7 @@ export class SCWSigner implements Signer {
   }
 
   async disconnect() {
-    this.storage.clear();
+    await this.storage.clear();
     await this.keyManager.clear();
   }
 
@@ -152,7 +178,7 @@ export class SCWSigner implements Signer {
     }
     const chainId = ensureIntNumber(params[0].chainId);
 
-    const localResult = this.updateChain(chainId);
+    const localResult = await this.updateChain(chainId);
     if (localResult) return null;
 
     const popupResult = await this.sendRequestToPopup(request);
@@ -215,27 +241,27 @@ export class SCWSigner implements Signer {
         id: Number(id),
         rpcUrl,
       }));
-      this.storage.storeObject(AVAILABLE_CHAINS_STORAGE_KEY, chains);
-      this.updateChain(this.chainId, chains);
+      await this.storage.storeObject(AVAILABLE_CHAINS_STORAGE_KEY, chains);
+      await this.updateChain(this.chainId, chains);
     }
 
     const walletCapabilities = response.data?.capabilities;
     if (walletCapabilities) {
-      this.storage.storeObject(WALLET_CAPABILITIES_STORAGE_KEY, walletCapabilities);
+      await this.storage.storeObject(WALLET_CAPABILITIES_STORAGE_KEY, walletCapabilities);
     }
 
     return response;
   }
 
-  private updateChain(chainId: number, newAvailableChains?: Chain[]): boolean {
+  private async updateChain(chainId: number, newAvailableChains?: Chain[]): Promise<boolean> {
     const chains =
-      newAvailableChains ?? this.storage.loadObject<Chain[]>(AVAILABLE_CHAINS_STORAGE_KEY);
+      newAvailableChains ?? (await this.storage.loadObject<Chain[]>(AVAILABLE_CHAINS_STORAGE_KEY));
     const chain = chains?.find((chain) => chain.id === chainId);
     if (!chain) return false;
 
     if (chain !== this._chain) {
       this._chain = chain;
-      this.storage.storeObject(ACTIVE_CHAIN_STORAGE_KEY, chain);
+      await this.storage.storeObject(ACTIVE_CHAIN_STORAGE_KEY, chain);
       this.updateListener.onChainIdUpdate(chain.id);
     }
     return true;

@@ -1,11 +1,11 @@
 import { StateUpdateListener } from '../interface';
-import { ScopedLocalStorage } from '../walletlink/storage/ScopedLocalStorage';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWSigner } from './SCWSigner';
 import { Communicator } from ':core/communicator/Communicator';
 import { standardErrors } from ':core/error';
 import { EncryptedData, RPCResponseMessage } from ':core/message';
 import { AppMetadata, RequestArguments } from ':core/provider/interface';
+import { ScopedAsyncStorage } from ':core/storage/ScopedAsyncStorage';
 import {
   decryptContent,
   encryptContent,
@@ -14,7 +14,7 @@ import {
 } from ':util/cipher';
 
 jest.mock('./SCWKeyManager');
-const storageStoreSpy = jest.spyOn(ScopedLocalStorage.prototype, 'storeObject');
+const storageStoreSpy = jest.spyOn(ScopedAsyncStorage.prototype, 'storeObject');
 jest.mock(':core/communicator/Communicator', () => ({
   Communicator: jest.fn(() => ({
     postRequestAndWaitForResponse: jest.fn(),

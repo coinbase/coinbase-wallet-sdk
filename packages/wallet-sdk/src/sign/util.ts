@@ -1,21 +1,21 @@
 import { ExtensionSigner } from './extension/ExtensionSigner';
 import { Signer, StateUpdateListener } from './interface';
 import { SCWSigner } from './scw/SCWSigner';
-import { ScopedLocalStorage } from './walletlink/storage/ScopedLocalStorage';
 import { WalletLinkSigner } from './walletlink/WalletLinkSigner';
 import { Communicator } from ':core/communicator/Communicator';
 import { ConfigMessage, MessageID, SignerType } from ':core/message';
 import { AppMetadata, Preference } from ':core/provider/interface';
+import { ScopedAsyncStorage } from ':core/storage/ScopedAsyncStorage';
 
 const SIGNER_TYPE_KEY = 'SignerType';
-const storage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
+const storage = new ScopedAsyncStorage('CBWSDK', 'SignerConfigurator');
 
-export function loadSignerType(): SignerType | null {
-  return storage.getItem(SIGNER_TYPE_KEY) as SignerType;
+export async function loadSignerType(): Promise<SignerType | null> {
+  return (await storage.getItem(SIGNER_TYPE_KEY)) as SignerType;
 }
 
-export function storeSignerType(signerType: SignerType) {
-  storage.setItem(SIGNER_TYPE_KEY, signerType);
+export async function storeSignerType(signerType: SignerType): Promise<void> {
+  return storage.setItem(SIGNER_TYPE_KEY, signerType);
 }
 
 export async function fetchSignerType(params: {
@@ -24,7 +24,7 @@ export async function fetchSignerType(params: {
   metadata: AppMetadata; // for WalletLink
 }): Promise<SignerType> {
   const { communicator, metadata } = params;
-  listenForWalletLinkSessionRequest(communicator, metadata).catch(() => {});
+  listenForWalletLinkSessionRequest(communicator, metadata).catch(() => { });
 
   const request: ConfigMessage & { id: MessageID } = {
     id: crypto.randomUUID(),
@@ -35,25 +35,31 @@ export async function fetchSignerType(params: {
   return data as SignerType;
 }
 
-export function createSigner(params: {
+export async function createSigner(params: {
   signerType: SignerType;
   metadata: AppMetadata;
   communicator: Communicator;
   updateListener: StateUpdateListener;
-}): Signer {
+}): Promise<Signer> {
   const { signerType, metadata, communicator, updateListener } = params;
   switch (signerType) {
-    case 'scw':
-      return new SCWSigner({
+    case 'scw': {
+      const signer = new SCWSigner({
         metadata,
         updateListener,
         communicator,
       });
-    case 'walletlink':
+      // make sure accounts & chain id have been loaded from storage
+      // before returning the signer to the provider
+      await signer.ensureInitialized();
+      return signer;
+    }
+    case 'walletlink': {
       return new WalletLinkSigner({
         metadata,
         updateListener,
       });
+    }
     case 'extension': {
       return new ExtensionSigner({
         metadata,
