@@ -24,7 +24,7 @@ let updateListener: StateUpdateListener;
 
 beforeEach(() => {
   jest.resetAllMocks();
-  jest.spyOn(util, 'createSigner').mockImplementation((params) => {
+  jest.spyOn(util, 'createSigner').mockImplementation(async (params) => {
     updateListener = params.updateListener;
     return {
       accounts: [AddressString('0x123')],
