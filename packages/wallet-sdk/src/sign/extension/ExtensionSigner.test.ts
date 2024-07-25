@@ -98,4 +98,18 @@ describe('ExtensionSigner', () => {
     await signer.disconnect();
     expect(mockExtensionProvider.disconnect).toHaveBeenCalled();
   });
+
+  it('should request accounts from extension provider', async () => {
+    (mockExtensionProvider.request as jest.Mock).mockResolvedValueOnce(['0x123']);
+    const accounts = await signer.accounts;
+    expect(accounts).toEqual(['0x123']);
+    expect(mockExtensionProvider.request).toHaveBeenCalledWith({ method: 'eth_accounts' });
+  });
+
+  it('should request chainId from extension provider', async () => {
+    (mockExtensionProvider.request as jest.Mock).mockResolvedValueOnce('0x1');
+    const chainId = await signer.chainId;
+    expect(chainId).toBe(1);
+    expect(mockExtensionProvider.request).toHaveBeenCalledWith({ method: 'eth_chainId' });
+  });
 });
