@@ -25,13 +25,15 @@ type ProviderEventMap = {
 };
 
 export class ProviderEventEmitter extends EventEmitter<keyof ProviderEventMap> {}
-export type ProviderEventCallback = ProviderEventEmitter['emit'];
 
 export interface ProviderInterface extends ProviderEventEmitter {
   request(args: RequestArguments): Promise<unknown>;
   disconnect(): Promise<void>;
+  emit<K extends keyof ProviderEventMap>(event: K, ...args: ProviderEventMap[K][]): boolean;
   on<K extends keyof ProviderEventMap>(event: K, listener: (_: ProviderEventMap[K]) => void): this;
 }
+
+export type ProviderEventCallback = ProviderInterface['emit'];
 
 export interface AppMetadata {
   /** Application name */

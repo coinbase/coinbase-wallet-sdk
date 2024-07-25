@@ -1,6 +1,5 @@
 import { ExtensionSigner } from './ExtensionSigner';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface';
-import { AddressString } from ':core/type';
 
 const window = globalThis as {
   coinbaseWalletExtension?: unknown;
@@ -59,12 +58,12 @@ describe('ExtensionSigner', () => {
 
   it('should handle chainChanged events', () => {
     eventListeners['chainChanged']('1');
-    expect(mockCallback.onChainIdUpdate).toHaveBeenCalledWith(1);
+    expect(mockCallback).toHaveBeenCalledWith('chainChanged', '1');
   });
 
   it('should handle accountsChanged events', () => {
     eventListeners['accountsChanged'](['0x123']);
-    expect(mockCallback.onAccountsUpdate).toHaveBeenCalledWith(['0x123'] as AddressString[]);
+    expect(mockCallback).toHaveBeenCalledWith('accountsChanged', ['0x123']);
   });
 
   it('should request accounts during handshake', async () => {
@@ -75,7 +74,7 @@ describe('ExtensionSigner', () => {
     eventListeners['accountsChanged'](['0x123']);
 
     await expect(signer.handshake()).resolves.not.toThrow();
-    expect(mockCallback.onAccountsUpdate).toHaveBeenCalledWith(['0x123']);
+    expect(mockCallback).toHaveBeenCalledWith('accountsChanged', ['0x123']);
   });
 
   it('should not call callback if extension request throws', async () => {
@@ -83,7 +82,7 @@ describe('ExtensionSigner', () => {
       throw new Error('ext provider request error');
     });
     await expect(signer.handshake()).rejects.toThrow('ext provider request error');
-    expect(mockCallback.onAccountsUpdate).not.toHaveBeenCalled();
+    expect(mockCallback).not.toHaveBeenCalledWith('accountsChanged');
   });
 
   it('should get results from extension provider', async () => {

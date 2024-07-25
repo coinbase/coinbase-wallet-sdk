@@ -1,9 +1,7 @@
-import EventEmitter from 'eventemitter3';
-
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { standardErrorCodes, standardErrors } from './core/error';
 import * as util from './sign/util';
-import { RequestArguments } from ':core/provider/interface';
+import { ProviderEventCallback, RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
 
 function createProvider() {
@@ -21,7 +19,7 @@ const mockStoreSignerType = jest.spyOn(util, 'storeSignerType');
 const mockLoadSignerType = jest.spyOn(util, 'loadSignerType');
 
 let provider: CoinbaseWalletProvider;
-let callback: EventEmitter['emit'];
+let callback: ProviderEventCallback;
 
 beforeEach(() => {
   jest.resetAllMocks();
@@ -64,7 +62,7 @@ describe('Event handling', () => {
     provider.on('chainChanged', chainChangedListener);
 
     await provider.request({ method: 'eth_requestAccounts' });
-    callback.onChainIdUpdate(1);
+    callback('chainChanged', '0x1');
 
     expect(chainChangedListener).toHaveBeenCalledWith('0x1');
   });
@@ -74,7 +72,7 @@ describe('Event handling', () => {
     provider.on('accountsChanged', accountsChangedListener);
 
     await provider.request({ method: 'eth_requestAccounts' });
-    callback.onAccountsUpdate([AddressString('0x123')]);
+    callback('accountsChanged', [AddressString('0x123')]);
 
     expect(accountsChangedListener).toHaveBeenCalledWith(['0x123']);
   });
