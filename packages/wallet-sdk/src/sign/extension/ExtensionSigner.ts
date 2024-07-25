@@ -45,12 +45,20 @@ export class ExtensionSigner implements Signer {
   }
 
   get accounts() {
-    return this.extensionProvider.send({ method: 'eth_accounts' }) as AddressString[];
+    return (async () => {
+      return (await this.extensionProvider.request({
+        method: 'eth_accounts',
+      })) as AddressString[];
+    })();
   }
 
   get chainId() {
-    const hexString = this.extensionProvider.send({ method: 'eth_chainId' }) as HexString;
-    return intNumberFromHexString(hexString);
+    return (async () => {
+      const hexString = (await this.extensionProvider.request({
+        method: 'eth_chainId',
+      })) as HexString;
+      return intNumberFromHexString(hexString) as number;
+    })();
   }
 
   async handshake() {
