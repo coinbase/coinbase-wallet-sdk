@@ -119,16 +119,12 @@ describe('SCWSigner', () => {
 
   describe('request', () => {
     beforeAll(() => {
-      jest.spyOn(ScopedAsyncStorage.prototype, 'loadObject').mockImplementation((key) => {
+      jest.spyOn(ScopedAsyncStorage.prototype, 'loadObject').mockImplementation(async (key) => {
         switch (key) {
           case 'accounts':
             return ['0xAddress'];
           case 'activeChain':
             return { id: 1, rpcUrl: 'https://eth-rpc.example.com/1' };
-          case 'availableChains':
-            return mockChains;
-          case 'walletCapabilities':
-            return mockCapabilities;
           default:
             return null;
         }

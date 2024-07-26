@@ -291,6 +291,7 @@ export class WalletLinkSigner implements Signer {
 
     switch (method) {
       case 'eth_requestAccounts': {
+        await this.handshake();
         this.callback?.('connect', { chainId: hexStringFromNumber(this.getChainId()) });
         return { jsonrpc: '2.0', id: 0, result: this._addresses };
       }
