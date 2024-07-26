@@ -1,4 +1,3 @@
-import { ExtensionSigner } from './extension/ExtensionSigner';
 import { Signer } from './interface';
 import { SCWSigner } from './scw/SCWSigner';
 import { WalletLinkSigner } from './walletlink/WalletLinkSigner';
@@ -52,12 +51,6 @@ export async function createSigner(params: {
     }
     case 'walletlink': {
       return new WalletLinkSigner({
-        metadata,
-        callback,
-      });
-    }
-    case 'extension': {
-      return new ExtensionSigner({
         metadata,
         callback,
       });
