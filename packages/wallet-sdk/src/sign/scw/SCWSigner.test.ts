@@ -101,6 +101,10 @@ describe('SCWSigner', () => {
       ]);
       expect(storageStoreSpy).toHaveBeenCalledWith('walletCapabilities', mockCapabilities);
       expect(storageStoreSpy).toHaveBeenCalledWith('accounts', ['0xAddress']);
+
+      expect(signer.request({ method: 'eth_requestAccounts' })).resolves.toEqual(['0xAddress']);
+      expect(mockCallback).toHaveBeenCalledWith('accountsChanged', ['0xAddress']);
+      expect(mockCallback).toHaveBeenCalledWith('connect', { chainId: '0x1' });
     });
 
     it('should throw an error if failure in response.content', async () => {
@@ -118,6 +122,23 @@ describe('SCWSigner', () => {
   });
 
   describe('request', () => {
+    beforeAll(() => {
+      jest.spyOn(ScopedAsyncStorage.prototype, 'loadObject').mockImplementation(async (key) => {
+        switch (key) {
+          case 'accounts':
+            return ['0xAddress'];
+          case 'activeChain':
+            return { id: 1, rpcUrl: 'https://eth-rpc.example.com/1' };
+          default:
+            return null;
+        }
+      });
+    });
+
+    afterAll(() => {
+      jest.spyOn(ScopedAsyncStorage.prototype, 'loadObject').mockRestore();
+    });
+
     it('should perform a successful request', async () => {
       const mockRequest: RequestArguments = {
         method: 'personal_sign',

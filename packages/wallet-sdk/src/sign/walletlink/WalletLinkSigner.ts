@@ -84,18 +84,14 @@ export class WalletLinkSigner implements Signer {
     this.initializeRelay();
   }
 
-  get accounts() {
-    return this._addresses;
-  }
-
-  get chainId() {
-    return this.getChainId();
-  }
-
   getSession() {
     const relay = this.initializeRelay();
     const { id, secret } = relay.getWalletLinkSession();
     return { id, secret };
+  }
+
+  async handshake() {
+    await this._eth_requestAccounts();
   }
 
   get selectedAddress(): AddressString | undefined {
@@ -298,10 +294,8 @@ export class WalletLinkSigner implements Signer {
     const params = request.params || [];
 
     switch (method) {
-      case 'eth_requestAccounts': {
-        await this.handshake();
-        return { jsonrpc: '2.0', id: 0, result: this._addresses };
-      }
+      case 'eth_requestAccounts':
+        return this._eth_requestAccounts();
 
       case 'eth_ecRecover':
         return this._eth_ecRecover(params);
@@ -479,9 +473,14 @@ export class WalletLinkSigner implements Signer {
     return ensureIntNumber(chainId);
   }
 
-  async handshake() {
+  private async _eth_requestAccounts(): Promise<JSONRPCResponse> {
     if (this._isAuthorized()) {
-      return;
+      this.callback?.('connect', { chainId: hexStringFromNumber(this.getChainId()) });
+      return Promise.resolve({
+        jsonrpc: '2.0',
+        id: 0,
+        result: this._addresses,
+      });
     }
 
     let res: Web3Response<'requestEthereumAccounts'>;
@@ -503,6 +502,8 @@ export class WalletLinkSigner implements Signer {
     }
 
     this._setAddresses(res.result);
+    this.callback?.('connect', { chainId: hexStringFromNumber(this.getChainId()) });
+    return { jsonrpc: '2.0', id: 0, result: this._addresses };
   }
 
   private _eth_ecRecover(params: unknown[]): Promise<JSONRPCResponse> {

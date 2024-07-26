@@ -53,4 +53,12 @@ export function checkErrorForInvalidRequestArgs(args: unknown): asserts args is 
       data: args,
     });
   }
+
+  switch (method) {
+    case 'eth_sign':
+    case 'eth_signTypedData_v2':
+    case 'eth_subscribe':
+    case 'eth_unsubscribe':
+      throw standardErrors.provider.unsupportedMethod();
+  }
 }

@@ -37,15 +37,8 @@ export class SCWSigner implements Signer {
   private readonly storage: ScopedAsyncStorage;
   private callback: ProviderEventCallback | null;
 
-  private _accounts: AddressString[];
-  get accounts() {
-    return this._accounts;
-  }
-
-  private _chain: Chain;
-  get chainId() {
-    return this._chain.id;
-  }
+  private accounts: AddressString[];
+  private chain: Chain;
 
   private constructor(params: ConstructorOptions) {
     this.metadata = params.metadata;
@@ -55,8 +48,8 @@ export class SCWSigner implements Signer {
     this.storage = new ScopedAsyncStorage('CBWSDK', 'SCWStateManager');
 
     // default values
-    this._accounts = [];
-    this._chain = {
+    this.accounts = [];
+    this.chain = {
       id: params.metadata.appChainIds?.[0] ?? 1,
     };
 
@@ -69,12 +62,12 @@ export class SCWSigner implements Signer {
   private async initialize() {
     const storedAccounts = await this.storage.loadObject<AddressString[]>(ACCOUNTS_KEY);
     if (storedAccounts) {
-      this._accounts = storedAccounts;
+      this.accounts = storedAccounts;
     }
 
     const storedChain = await this.storage.loadObject<Chain>(ACTIVE_CHAIN_STORAGE_KEY);
     if (storedChain) {
-      this._chain = storedChain;
+      this.chain = storedChain;
     }
   }
 
@@ -105,17 +98,28 @@ export class SCWSigner implements Signer {
     if ('error' in result) throw result.error;
 
     const accounts = result.value as AddressString[];
-    this._accounts = accounts;
+    this.accounts = accounts;
     await this.storage.storeObject(ACCOUNTS_KEY, accounts);
     this.callback?.('accountsChanged', accounts);
   }
 
   async request(request: RequestArguments) {
+    if (this.accounts.length === 0) {
+      throw standardErrors.provider.unauthorized();
+    }
+
     switch (request.method) {
+      case 'eth_requestAccounts':
+        this.callback?.('connect', { chainId: hexStringFromNumber(this.chain.id) });
+        return this.accounts;
       case 'eth_accounts':
         return this.accounts;
       case 'eth_coinbase':
         return this.accounts[0];
+      case 'net_version':
+        return this.chain.id;
+      case 'eth_chainId':
+        return hexStringFromNumber(this.chain.id);
       case 'wallet_getCapabilities':
         return this.storage.loadObject(WALLET_CAPABILITIES_STORAGE_KEY);
       case 'wallet_switchEthereumChain':
@@ -135,7 +139,7 @@ export class SCWSigner implements Signer {
       case 'wallet_showCallsStatus':
         return this.sendRequestToPopup(request);
       default:
-        return fetchRPCRequest(request, this._chain.rpcUrl);
+        return fetchRPCRequest(request, this.chain.rpcUrl);
     }
   }
 
@@ -195,7 +199,7 @@ export class SCWSigner implements Signer {
     const encrypted = await encryptContent(
       {
         action: request,
-        chainId: this.chainId,
+        chainId: this.chain.id,
       },
       sharedSecret
     );
@@ -238,7 +242,7 @@ export class SCWSigner implements Signer {
         rpcUrl,
       }));
       await this.storage.storeObject(AVAILABLE_CHAINS_STORAGE_KEY, chains);
-      await this.updateChain(this.chainId, chains);
+      await this.updateChain(this.chain.id, chains);
     }
 
     const walletCapabilities = response.data?.capabilities;
@@ -255,8 +259,8 @@ export class SCWSigner implements Signer {
     const chain = chains?.find((chain) => chain.id === chainId);
     if (!chain) return false;
 
-    if (chain !== this._chain) {
-      this._chain = chain;
+    if (chain !== this.chain) {
+      this.chain = chain;
       await this.storage.storeObject(ACTIVE_CHAIN_STORAGE_KEY, chain);
       this.callback?.('chainChanged', hexStringFromNumber(chain.id));
     }

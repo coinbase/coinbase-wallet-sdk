@@ -38,14 +38,6 @@ beforeEach(() => {
 });
 
 describe('Event handling', () => {
-  it('should emit connect on eth_requestAccounts request', async () => {
-    const connectListener = jest.fn();
-    provider.on('connect', connectListener);
-
-    await provider.request({ method: 'eth_requestAccounts' });
-    expect(connectListener).toHaveBeenCalledWith({ chainId: '0x1' });
-  });
-
   it('emits disconnect event on user initiated disconnection', async () => {
     const disconnectListener = jest.fn();
     provider.on('disconnect', disconnectListener);

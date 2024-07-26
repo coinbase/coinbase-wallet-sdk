@@ -82,5 +82,16 @@ describe('Utils', () => {
     it('should not throw if args.params is an empty object', () => {
       expect(() => checkErrorForInvalidRequestArgs({ method: 'foo', params: {} })).not.toThrow();
     });
+
+    it('throws error for requests with unsupported or deprecated method', async () => {
+      const deprecated = ['eth_sign', 'eth_signTypedData_v2'];
+      const unsupported = ['eth_subscribe', 'eth_unsubscribe'];
+
+      for (const method of [...deprecated, ...unsupported]) {
+        expect(() => checkErrorForInvalidRequestArgs({ method })).toThrow(
+          standardErrors.provider.unsupportedMethod()
+        );
+      }
+    });
   });
 });

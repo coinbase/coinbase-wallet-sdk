@@ -8,6 +8,7 @@ import { ScopedLocalStorage } from './storage/ScopedLocalStorage';
 import { WalletLinkSigner } from './WalletLinkSigner';
 import { WALLETLINK_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
+import { ProviderEventCallback } from ':core/provider/interface';
 
 jest.mock('./relay/WalletLinkRelay', () => {
   return {
@@ -16,11 +17,12 @@ jest.mock('./relay/WalletLinkRelay', () => {
 });
 
 const testStorage = new ScopedLocalStorage('walletlink', WALLETLINK_URL);
+const mockCallback: ProviderEventCallback = jest.fn();
 
 const createAdapter = (options?: { relay?: WalletLinkRelay }) => {
   const adapter = new WalletLinkSigner({
     metadata: { appName: 'test', appLogoUrl: null, appChainIds: [1] },
-    callback: jest.fn(),
+    callback: mockCallback,
   });
   if (options?.relay) {
     (adapter as any)._relay = options.relay;
@@ -37,6 +39,7 @@ describe('LegacyProvider', () => {
     const provider = createAdapter();
     const response = await provider.request({ method: 'eth_requestAccounts' });
     expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
+    expect(mockCallback).toHaveBeenCalledWith('connect', { chainId: '0x1' });
   });
 
   it('handles close', async () => {
