@@ -10,7 +10,7 @@ import {
 } from './core/provider/interface';
 import { Signer } from './sign/interface';
 import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
-import { checkErrorForInvalidRequestArgs } from './util/provider';
+import { checkErrorForInvalidRequest } from './util/provider';
 import { Communicator } from ':core/communicator/Communicator';
 import { SignerType } from ':core/message';
 import { clearAllStorage } from ':core/storage/util';
@@ -45,40 +45,29 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
   public async request(args: RequestArguments): Promise<unknown> {
     await this.ensureInitialized();
     try {
-      checkErrorForInvalidRequestArgs(args);
-      switch (args.method) {
-        case 'eth_requestAccounts': {
-          if (!this.signer) {
+      checkErrorForInvalidRequest(args);
+      if (!this.signer) {
+        switch (args.method) {
+          case 'eth_requestAccounts': {
             const signerType = await this.requestSignerSelection();
             const signer = await this.initSigner(signerType);
             await signer.handshake();
             this.signer = signer;
             storeSignerType(signerType);
+            break;
           }
-          this.emit('connect', { chainId: hexStringFromNumber(this.signer.chainId) });
-          return this.signer.accounts;
-        }
-
-        case 'net_version':
-          return this.signer?.chainId ?? 1;
-        case 'eth_chainId':
-          return hexStringFromNumber(this.signer?.chainId ?? 1);
-
-        case 'eth_sign':
-        case 'eth_signTypedData_v2':
-        case 'eth_subscribe':
-        case 'eth_unsubscribe':
-          throw standardErrors.provider.unsupportedMethod();
-
-        default: {
-          if (!this.signer) {
+          case 'net_version':
+            return 1;
+          case 'eth_chainId':
+            return hexStringFromNumber(1);
+          default: {
             throw standardErrors.provider.unauthorized(
               "Must call 'eth_requestAccounts' before other methods"
             );
           }
-          return this.signer.request(args);
         }
       }
+      return this.signer.request(args);
     } catch (error) {
       const { code } = error as { code?: number };
       if (code === standardErrorCodes.provider.unauthorized) this.disconnect();

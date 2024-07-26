@@ -84,14 +84,6 @@ export class WalletLinkSigner implements Signer {
     this.initializeRelay();
   }
 
-  get accounts() {
-    return this._addresses;
-  }
-
-  get chainId() {
-    return this.getChainId();
-  }
-
   getSession() {
     const relay = this.initializeRelay();
     const { id, secret } = relay.getWalletLinkSession();
@@ -299,7 +291,7 @@ export class WalletLinkSigner implements Signer {
 
     switch (method) {
       case 'eth_requestAccounts': {
-        await this.handshake();
+        this.callback?.('connect', { chainId: hexStringFromNumber(this.getChainId()) });
         return { jsonrpc: '2.0', id: 0, result: this._addresses };
       }
 

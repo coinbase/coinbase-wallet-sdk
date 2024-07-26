@@ -118,6 +118,23 @@ describe('SCWSigner', () => {
   });
 
   describe('request', () => {
+    beforeAll(() => {
+      jest.spyOn(ScopedAsyncStorage.prototype, 'loadObject').mockImplementation((key) => {
+        switch (key) {
+          case 'accounts':
+            return ['0xAddress'];
+          case 'activeChain':
+            return { id: 1, rpcUrl: 'https://eth-rpc.example.com/1' };
+          case 'availableChains':
+            return mockChains;
+          case 'walletCapabilities':
+            return mockCapabilities;
+          default:
+            return null;
+        }
+      });
+    });
+
     it('should perform a successful request', async () => {
       const mockRequest: RequestArguments = {
         method: 'personal_sign',

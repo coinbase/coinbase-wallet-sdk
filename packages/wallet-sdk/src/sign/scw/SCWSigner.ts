@@ -38,14 +38,7 @@ export class SCWSigner implements Signer {
   private callback: ProviderEventCallback | null;
 
   private _accounts: AddressString[];
-  get accounts() {
-    return this._accounts;
-  }
-
   private _chain: Chain;
-  get chainId() {
-    return this._chain.id;
-  }
 
   private constructor(params: ConstructorOptions) {
     this.metadata = params.metadata;
@@ -111,11 +104,22 @@ export class SCWSigner implements Signer {
   }
 
   async request(request: RequestArguments) {
+    if (this._accounts.length === 0) {
+      throw standardErrors.provider.unauthorized();
+    }
+
     switch (request.method) {
+      case 'eth_requestAccounts':
+        this.callback?.('connect', { chainId: hexStringFromNumber(this._chain.id) });
+        return this._accounts;
       case 'eth_accounts':
-        return this.accounts;
+        return this._accounts;
       case 'eth_coinbase':
-        return this.accounts[0];
+        return this._accounts[0];
+      case 'net_version':
+        return this._chain.id;
+      case 'eth_chainId':
+        return hexStringFromNumber(this._chain.id);
       case 'wallet_getCapabilities':
         return this.storage.loadObject(WALLET_CAPABILITIES_STORAGE_KEY);
       case 'wallet_switchEthereumChain':
@@ -195,7 +199,7 @@ export class SCWSigner implements Signer {
     const encrypted = await encryptContent(
       {
         action: request,
-        chainId: this.chainId,
+        chainId: this._chain.id,
       },
       sharedSecret
     );
@@ -238,7 +242,7 @@ export class SCWSigner implements Signer {
         rpcUrl,
       }));
       await this.storage.storeObject(AVAILABLE_CHAINS_STORAGE_KEY, chains);
-      await this.updateChain(this.chainId, chains);
+      await this.updateChain(this._chain.id, chains);
     }
 
     const walletCapabilities = response.data?.capabilities;

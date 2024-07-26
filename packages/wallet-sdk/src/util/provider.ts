@@ -26,7 +26,7 @@ export async function fetchRPCRequest(request: RequestArguments, rpcUrl?: string
  * @param args The request arguments to validate.
  * @returns An error object if the arguments are invalid, otherwise undefined.
  */
-export function checkErrorForInvalidRequestArgs(args: unknown): asserts args is RequestArguments {
+export function checkErrorForInvalidRequest(args: unknown): asserts args is RequestArguments {
   if (!args || typeof args !== 'object' || Array.isArray(args)) {
     throw standardErrors.rpc.invalidParams({
       message: 'Expected a single, non-array, object argument.',
@@ -52,5 +52,13 @@ export function checkErrorForInvalidRequestArgs(args: unknown): asserts args is 
       message: "'args.params' must be an object or array if provided.",
       data: args,
     });
+  }
+
+  switch (method) {
+    case 'eth_sign':
+    case 'eth_signTypedData_v2':
+    case 'eth_subscribe':
+    case 'eth_unsubscribe':
+      throw standardErrors.provider.unsupportedMethod();
   }
 }
