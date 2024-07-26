@@ -18,8 +18,8 @@ interface ProviderConnectInfo {
 type ProviderEventMap = {
   connect: ProviderConnectInfo;
   disconnect: ProviderRpcError;
-  chainChanged: string; // hex string of chainId
-  accountsChanged: string[]; // array of accounts
+  chainChanged: string; // hex string
+  accountsChanged: string[];
 };
 
 export class ProviderEventEmitter extends EventEmitter<keyof ProviderEventMap> {}
