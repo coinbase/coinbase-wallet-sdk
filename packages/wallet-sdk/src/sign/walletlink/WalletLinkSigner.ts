@@ -62,14 +62,14 @@ export class WalletLinkSigner implements Signer {
   private readonly _storage: ScopedLocalStorage;
   private readonly _relayEventManager: RelayEventManager;
   private _addresses: AddressString[] = [];
-  private callback?: ProviderEventCallback;
+  private callback: ProviderEventCallback | null;
 
   constructor(options: { metadata: AppMetadata; callback?: ProviderEventCallback }) {
     const { appName, appLogoUrl } = options.metadata;
     this._appName = appName;
     this._appLogoUrl = appLogoUrl;
     this._storage = new ScopedLocalStorage('walletlink', WALLETLINK_URL);
-    this.callback = options.callback;
+    this.callback = options.callback || null;
 
     this._relayEventManager = new RelayEventManager();
 
@@ -212,6 +212,7 @@ export class WalletLinkSigner implements Signer {
   }
 
   public async disconnect() {
+    this.callback = null;
     if (this._relay) {
       this._relay.resetAndReload();
     }
