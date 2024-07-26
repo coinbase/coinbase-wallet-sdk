@@ -40,12 +40,12 @@ export class Communicator {
           if (result.type === 'cancel') {
             // iOS only: user cancelled the request
             reject(standardErrors.provider.userRejectedRequest());
-            this.clear();
+            this.disconnect();
           }
         })
         .catch(() => {
           reject(standardErrors.provider.userRejectedRequest());
-          this.clear();
+          this.disconnect();
         });
     });
   };
@@ -72,7 +72,8 @@ export class Communicator {
     }
   };
 
-  clear = () => {
+  private disconnect = () => {
+    WebBrowser.dismissBrowser();
     this.responseHandlers.clear();
   };
 }

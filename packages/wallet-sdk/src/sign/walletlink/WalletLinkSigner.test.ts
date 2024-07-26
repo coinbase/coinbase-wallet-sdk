@@ -4,10 +4,10 @@ import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants';
 import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from './relay/mocks/fixtures';
 import { mockedWalletLinkRelay } from './relay/mocks/relay';
 import { WalletLinkRelay } from './relay/WalletLinkRelay';
+import { ScopedLocalStorage } from './storage/ScopedLocalStorage';
 import { WalletLinkSigner } from './WalletLinkSigner';
 import { WALLETLINK_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
-import { ScopedStorage } from ':util/ScopedStorage';
 
 jest.mock('./relay/WalletLinkRelay', () => {
   return {
@@ -15,7 +15,7 @@ jest.mock('./relay/WalletLinkRelay', () => {
   };
 });
 
-const testStorage = new ScopedStorage('walletlink', WALLETLINK_URL);
+const testStorage = new ScopedLocalStorage('walletlink', WALLETLINK_URL);
 
 const createAdapter = (options?: { relay?: WalletLinkRelay }) => {
   const adapter = new WalletLinkSigner({

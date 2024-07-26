@@ -10,6 +10,7 @@ import { EthereumTransactionParams } from './relay/type/EthereumTransactionParam
 import { JSONRPCRequest, JSONRPCResponse } from './relay/type/JSONRPC';
 import { isErrorResponse, Web3Response } from './relay/type/Web3Response';
 import { WalletLinkRelay } from './relay/WalletLinkRelay';
+import { ScopedLocalStorage } from './storage/ScopedLocalStorage';
 import { WALLETLINK_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface';
@@ -23,8 +24,6 @@ import {
   hexStringFromNumber,
 } from ':core/type/util';
 import { fetchRPCRequest } from ':util/provider';
-import { ScopedStorage } from ':util/ScopedStorage';
-
 const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
 const DEFAULT_JSON_RPC_URL = 'DefaultJsonRpcUrl';
 
@@ -60,7 +59,7 @@ export class WalletLinkSigner implements Signer {
   private _appName: string;
   private _appLogoUrl: string | null;
   private _relay: WalletLinkRelay | null = null;
-  private readonly _storage: ScopedStorage;
+  private readonly _storage: ScopedLocalStorage;
   private readonly _relayEventManager: RelayEventManager;
   private _addresses: AddressString[] = [];
   private callback?: ProviderEventCallback;
@@ -69,7 +68,7 @@ export class WalletLinkSigner implements Signer {
     const { appName, appLogoUrl } = options.metadata;
     this._appName = appName;
     this._appLogoUrl = appLogoUrl;
-    this._storage = new ScopedStorage('walletlink', WALLETLINK_URL);
+    this._storage = new ScopedLocalStorage('walletlink', WALLETLINK_URL);
     this.callback = options.callback;
 
     this._relayEventManager = new RelayEventManager();

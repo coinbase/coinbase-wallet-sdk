@@ -1,4 +1,4 @@
-import { Communicator } from './Communicator'; // Adjust the import path as needed
+import { Communicator } from './Communicator.native';
 import { standardErrors } from ':core/error';
 import { EncryptedData, MessageID, RPCResponseMessage } from ':core/message';
 
@@ -123,12 +123,12 @@ describe('Communicator', () => {
     });
   });
 
-  describe('clear', () => {
+  describe('disconnect', () => {
     it('should clear all response handlers', () => {
       communicator['responseHandlers'].set('123' as MessageID, jest.fn());
       communicator['responseHandlers'].set('456' as MessageID, jest.fn());
 
-      communicator.clear();
+      communicator['disconnect']();
 
       expect(communicator['responseHandlers'].size).toBe(0);
     });

@@ -4,16 +4,16 @@ import { Communicator } from ':core/communicator/Communicator';
 import { standardErrors } from ':core/error';
 import { EncryptedData, RPCResponseMessage } from ':core/message';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface';
+import { ScopedAsyncStorage } from ':core/storage/ScopedAsyncStorage';
 import {
   decryptContent,
   encryptContent,
   exportKeyToHexString,
   importKeyFromHexString,
 } from ':util/cipher';
-import { ScopedStorage } from ':util/ScopedStorage';
 
 jest.mock('./SCWKeyManager');
-const storageStoreSpy = jest.spyOn(ScopedStorage.prototype, 'storeObject');
+const storageStoreSpy = jest.spyOn(ScopedAsyncStorage.prototype, 'storeObject');
 jest.mock(':core/communicator/Communicator', () => ({
   Communicator: jest.fn(() => ({
     postRequestAndWaitForResponse: jest.fn(),
@@ -51,7 +51,7 @@ describe('SCWSigner', () => {
   let mockCallback: ProviderEventCallback;
   let mockKeyManager: jest.Mocked<SCWKeyManager>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     mockMetadata = {
       appName: 'test',
       appLogoUrl: null,
@@ -70,7 +70,7 @@ describe('SCWSigner', () => {
     mockKeyManager.getSharedSecret.mockResolvedValue(mockCryptoKey);
     (encryptContent as jest.Mock).mockResolvedValueOnce(encryptedData);
 
-    signer = new SCWSigner({
+    signer = await SCWSigner.createInstance({
       metadata: mockMetadata,
       communicator: mockCommunicator,
       callback: mockCallback,
