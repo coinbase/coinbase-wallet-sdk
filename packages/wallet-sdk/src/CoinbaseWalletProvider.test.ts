@@ -72,7 +72,7 @@ describe('Event handling', () => {
     provider.on('accountsChanged', accountsChangedListener);
 
     await provider.request({ method: 'eth_requestAccounts' });
-    callback('accountsChanged', [AddressString('0x123')]);
+    callback('accountsChanged', ['0x123']);
 
     expect(accountsChangedListener).toHaveBeenCalledWith(['0x123']);
   });
