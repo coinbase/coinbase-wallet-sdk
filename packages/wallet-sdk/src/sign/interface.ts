@@ -8,8 +8,3 @@ export interface Signer {
   request(request: RequestArguments): Promise<unknown>;
   disconnect: () => Promise<void>;
 }
-
-export interface StateUpdateListener {
-  onAccountsUpdate: (_: AddressString[]) => void;
-  onChainIdUpdate: (_: number) => void;
-}

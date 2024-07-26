@@ -11,24 +11,27 @@ export interface ProviderRpcError extends Error {
   data?: unknown;
 }
 
-interface ProviderMessage {
-  type: string;
-  data: unknown;
-}
-
 interface ProviderConnectInfo {
   readonly chainId: string;
 }
 
-export interface ProviderInterface extends EventEmitter {
+type ProviderEventMap = {
+  connect: ProviderConnectInfo;
+  disconnect: ProviderRpcError;
+  chainChanged: string; // hex string
+  accountsChanged: string[];
+};
+
+export class ProviderEventEmitter extends EventEmitter<keyof ProviderEventMap> {}
+
+export interface ProviderInterface extends ProviderEventEmitter {
   request(args: RequestArguments): Promise<unknown>;
   disconnect(): Promise<void>;
-  on(event: 'connect', listener: (info: ProviderConnectInfo) => void): this;
-  on(event: 'disconnect', listener: (error: ProviderRpcError) => void): this;
-  on(event: 'chainChanged', listener: (chainId: string) => void): this;
-  on(event: 'accountsChanged', listener: (accounts: string[]) => void): this;
-  on(event: 'message', listener: (message: ProviderMessage) => void): this;
+  emit<K extends keyof ProviderEventMap>(event: K, ...args: [ProviderEventMap[K]]): boolean;
+  on<K extends keyof ProviderEventMap>(event: K, listener: (_: ProviderEventMap[K]) => void): this;
 }
+
+export type ProviderEventCallback = ProviderInterface['emit'];
 
 export interface AppMetadata {
   /** Application name */

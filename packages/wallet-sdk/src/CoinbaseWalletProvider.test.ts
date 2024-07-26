@@ -1,8 +1,7 @@
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { standardErrorCodes, standardErrors } from './core/error';
-import { StateUpdateListener } from './sign/interface';
 import * as util from './sign/util';
-import { RequestArguments } from ':core/provider/interface';
+import { ProviderEventCallback, RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
 
 function createProvider() {
@@ -20,12 +19,12 @@ const mockStoreSignerType = jest.spyOn(util, 'storeSignerType');
 const mockLoadSignerType = jest.spyOn(util, 'loadSignerType');
 
 let provider: CoinbaseWalletProvider;
-let updateListener: StateUpdateListener;
+let callback: ProviderEventCallback;
 
 beforeEach(() => {
   jest.resetAllMocks();
   jest.spyOn(util, 'createSigner').mockImplementation(async (params) => {
-    updateListener = params.updateListener;
+    callback = params.callback;
     return {
       accounts: [AddressString('0x123')],
       chainId: 1,
@@ -63,7 +62,7 @@ describe('Event handling', () => {
     provider.on('chainChanged', chainChangedListener);
 
     await provider.request({ method: 'eth_requestAccounts' });
-    updateListener.onChainIdUpdate(1);
+    callback('chainChanged', '0x1');
 
     expect(chainChangedListener).toHaveBeenCalledWith('0x1');
   });
@@ -73,7 +72,7 @@ describe('Event handling', () => {
     provider.on('accountsChanged', accountsChangedListener);
 
     await provider.request({ method: 'eth_requestAccounts' });
-    updateListener.onAccountsUpdate([AddressString('0x123')]);
+    callback('accountsChanged', ['0x123']);
 
     expect(accountsChangedListener).toHaveBeenCalledWith(['0x123']);
   });

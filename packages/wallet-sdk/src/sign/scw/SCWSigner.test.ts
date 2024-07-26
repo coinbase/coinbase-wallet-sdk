@@ -1,10 +1,9 @@
-import { StateUpdateListener } from '../interface';
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWSigner } from './SCWSigner';
 import { Communicator } from ':core/communicator/Communicator';
 import { standardErrors } from ':core/error';
 import { EncryptedData, RPCResponseMessage } from ':core/message';
-import { AppMetadata, RequestArguments } from ':core/provider/interface';
+import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface';
 import { ScopedAsyncStorage } from ':core/storage/ScopedAsyncStorage';
 import {
   decryptContent,
@@ -49,7 +48,7 @@ describe('SCWSigner', () => {
   let signer: SCWSigner;
   let mockMetadata: AppMetadata;
   let mockCommunicator: jest.Mocked<Communicator>;
-  let mockUpdateListener: StateUpdateListener;
+  let mockCallback: ProviderEventCallback;
   let mockKeyManager: jest.Mocked<SCWKeyManager>;
 
   beforeEach(async () => {
@@ -61,10 +60,7 @@ describe('SCWSigner', () => {
     mockCommunicator = new Communicator() as jest.Mocked<Communicator>;
     mockCommunicator.waitForPopupLoaded.mockResolvedValue({} as Window);
     mockCommunicator.postRequestAndWaitForResponse.mockResolvedValue(mockSuccessResponse);
-    mockUpdateListener = {
-      onAccountsUpdate: jest.fn(),
-      onChainIdUpdate: jest.fn(),
-    };
+    mockCallback = jest.fn();
     mockKeyManager = new SCWKeyManager() as jest.Mocked<SCWKeyManager>;
     (SCWKeyManager as jest.Mock).mockImplementation(() => mockKeyManager);
     storageStoreSpy.mockReset();
@@ -77,7 +73,7 @@ describe('SCWSigner', () => {
     signer = await SCWSigner.createInstance({
       metadata: mockMetadata,
       communicator: mockCommunicator,
-      updateListener: mockUpdateListener,
+      callback: mockCallback,
     });
   });
 
@@ -184,7 +180,7 @@ describe('SCWSigner', () => {
         { id: 2, rpcUrl: 'https://eth-rpc.example.com/2' },
       ]);
       expect(storageStoreSpy).toHaveBeenCalledWith('walletCapabilities', mockCapabilities);
-      expect(mockUpdateListener.onChainIdUpdate).toHaveBeenCalledWith(1);
+      expect(mockCallback).toHaveBeenCalledWith('chainChanged', '0x1');
     });
   });
 

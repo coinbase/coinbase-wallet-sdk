@@ -1,10 +1,10 @@
 import { ExtensionSigner } from './extension/ExtensionSigner';
-import { Signer, StateUpdateListener } from './interface';
+import { Signer } from './interface';
 import { SCWSigner } from './scw/SCWSigner';
 import { WalletLinkSigner } from './walletlink/WalletLinkSigner';
 import { Communicator } from ':core/communicator/Communicator';
 import { ConfigMessage, MessageID, SignerType } from ':core/message';
-import { AppMetadata, Preference } from ':core/provider/interface';
+import { AppMetadata, Preference, ProviderEventCallback } from ':core/provider/interface';
 import { ScopedAsyncStorage } from ':core/storage/ScopedAsyncStorage';
 
 const SIGNER_TYPE_KEY = 'SignerType';
@@ -39,27 +39,27 @@ export async function createSigner(params: {
   signerType: SignerType;
   metadata: AppMetadata;
   communicator: Communicator;
-  updateListener: StateUpdateListener;
+  callback: ProviderEventCallback;
 }): Promise<Signer> {
-  const { signerType, metadata, communicator, updateListener } = params;
+  const { signerType, metadata, communicator, callback } = params;
   switch (signerType) {
     case 'scw': {
       return SCWSigner.createInstance({
         metadata,
-        updateListener,
+        callback,
         communicator,
       });
     }
     case 'walletlink': {
       return new WalletLinkSigner({
         metadata,
-        updateListener,
+        callback,
       });
     }
     case 'extension': {
       return new ExtensionSigner({
         metadata,
-        updateListener,
+        callback,
       });
     }
   }

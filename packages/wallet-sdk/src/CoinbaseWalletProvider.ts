@@ -1,11 +1,10 @@
-import EventEmitter from 'eventemitter3';
-
 import { standardErrorCodes, standardErrors } from './core/error';
 import { serializeError } from './core/error/serialize';
 import {
   AppMetadata,
   ConstructorOptions,
   Preference,
+  ProviderEventEmitter,
   ProviderInterface,
   RequestArguments,
 } from './core/provider/interface';
@@ -17,7 +16,7 @@ import { SignerType } from ':core/message';
 import { clearAllStorage } from ':core/storage/util';
 import { hexStringFromNumber } from ':core/type/util';
 
-export class CoinbaseWalletProvider extends EventEmitter implements ProviderInterface {
+export class CoinbaseWalletProvider extends ProviderEventEmitter implements ProviderInterface {
   private readonly metadata: AppMetadata;
   private readonly preference: Preference;
   private readonly communicator: Communicator;
@@ -124,10 +123,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements ProviderInte
       signerType,
       metadata: this.metadata,
       communicator: this.communicator,
-      updateListener: {
-        onAccountsUpdate: (accounts) => this.emit('accountsChanged', accounts),
-        onChainIdUpdate: (id) => this.emit('chainChanged', hexStringFromNumber(id)),
-      },
+      callback: this.emit.bind(this),
     });
   }
 }

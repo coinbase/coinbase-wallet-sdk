@@ -20,10 +20,7 @@ const testStorage = new ScopedLocalStorage('walletlink', WALLETLINK_URL);
 const createAdapter = (options?: { relay?: WalletLinkRelay }) => {
   const adapter = new WalletLinkSigner({
     metadata: { appName: 'test', appLogoUrl: null, appChainIds: [1] },
-    updateListener: {
-      onAccountsUpdate: () => {},
-      onChainIdUpdate: () => {},
-    },
+    callback: jest.fn(),
   });
   if (options?.relay) {
     (adapter as any)._relay = options.relay;

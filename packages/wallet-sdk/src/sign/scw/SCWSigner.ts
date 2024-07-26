@@ -1,12 +1,12 @@
-import { Signer, StateUpdateListener } from '../interface';
+import { Signer } from '../interface';
 import { SCWKeyManager } from './SCWKeyManager';
 import { Communicator } from ':core/communicator/Communicator';
 import { standardErrors } from ':core/error';
 import { RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
-import { AppMetadata, RequestArguments } from ':core/provider/interface';
+import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface';
 import { ScopedAsyncStorage } from ':core/storage/ScopedAsyncStorage';
 import { AddressString } from ':core/type';
-import { ensureIntNumber } from ':core/type/util';
+import { ensureIntNumber, hexStringFromNumber } from ':core/type/util';
 import {
   decryptContent,
   encryptContent,
@@ -27,15 +27,15 @@ type Chain = {
 type ConstructorOptions = {
   metadata: AppMetadata;
   communicator: Communicator;
-  updateListener: StateUpdateListener;
+  callback: ProviderEventCallback | null;
 };
 
 export class SCWSigner implements Signer {
   private readonly metadata: AppMetadata;
   private readonly communicator: Communicator;
-  private readonly updateListener: StateUpdateListener;
   private readonly keyManager: SCWKeyManager;
   private readonly storage: ScopedAsyncStorage;
+  private callback: ProviderEventCallback | null;
 
   private _accounts: AddressString[];
   get accounts() {
@@ -50,7 +50,7 @@ export class SCWSigner implements Signer {
   private constructor(params: ConstructorOptions) {
     this.metadata = params.metadata;
     this.communicator = params.communicator;
-    this.updateListener = params.updateListener;
+    this.callback = params.callback;
     this.keyManager = new SCWKeyManager();
     this.storage = new ScopedAsyncStorage('CBWSDK', 'SCWStateManager');
 
@@ -107,7 +107,7 @@ export class SCWSigner implements Signer {
     const accounts = result.value as AddressString[];
     this._accounts = accounts;
     await this.storage.storeObject(ACCOUNTS_KEY, accounts);
-    this.updateListener.onAccountsUpdate(accounts);
+    this.callback?.('accountsChanged', accounts);
   }
 
   async request(request: RequestArguments) {
@@ -154,6 +154,7 @@ export class SCWSigner implements Signer {
   }
 
   async disconnect() {
+    this.callback = null;
     await this.storage.clear();
     await this.keyManager.clear();
   }
@@ -257,7 +258,7 @@ export class SCWSigner implements Signer {
     if (chain !== this._chain) {
       this._chain = chain;
       await this.storage.storeObject(ACTIVE_CHAIN_STORAGE_KEY, chain);
-      this.updateListener.onChainIdUpdate(chain.id);
+      this.callback?.('chainChanged', hexStringFromNumber(chain.id));
     }
     return true;
   }
