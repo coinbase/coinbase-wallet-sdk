@@ -101,6 +101,10 @@ describe('SCWSigner', () => {
       ]);
       expect(storageStoreSpy).toHaveBeenCalledWith('walletCapabilities', mockCapabilities);
       expect(storageStoreSpy).toHaveBeenCalledWith('accounts', ['0xAddress']);
+
+      expect(signer.request({ method: 'eth_requestAccounts' })).resolves.toEqual(['0xAddress']);
+      expect(mockCallback).toHaveBeenCalledWith('accountsChanged', ['0xAddress']);
+      expect(mockCallback).toHaveBeenCalledWith('connect', { chainId: '0x1' });
     });
 
     it('should throw an error if failure in response.content', async () => {
@@ -129,6 +133,10 @@ describe('SCWSigner', () => {
             return null;
         }
       });
+    });
+
+    afterAll(() => {
+      jest.spyOn(ScopedAsyncStorage.prototype, 'loadObject').mockRestore();
     });
 
     it('should perform a successful request', async () => {
