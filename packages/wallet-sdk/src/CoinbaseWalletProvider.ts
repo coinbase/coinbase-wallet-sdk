@@ -10,7 +10,7 @@ import {
 } from './core/provider/interface';
 import { Signer } from './sign/interface';
 import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
-import { checkErrorForInvalidRequest } from './util/provider';
+import { checkErrorForInvalidRequestArgs } from './util/provider';
 import { Communicator } from ':core/communicator/Communicator';
 import { SignerType } from ':core/message';
 import { clearAllStorage } from ':core/storage/util';
@@ -45,7 +45,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
   public async request(args: RequestArguments): Promise<unknown> {
     await this.ensureInitialized();
     try {
-      checkErrorForInvalidRequest(args);
+      checkErrorForInvalidRequestArgs(args);
       if (!this.signer) {
         switch (args.method) {
           case 'eth_requestAccounts': {
