@@ -10,11 +10,21 @@ type MobileRPCRequestMessage = RPCRequestMessage & {
 };
 
 export class Communicator {
+  static communicators = new Map<string, Communicator>();
+
   private readonly url: string;
   private responseHandlers = new Map<MessageID, (_: RPCResponseMessage) => void>();
 
-  constructor(url: string = CB_KEYS_URL) {
+  private constructor(url: string = CB_KEYS_URL) {
     this.url = url;
+  }
+
+  static getInstance(url: string = CB_KEYS_URL): Communicator {
+    if (!this.communicators.has(url)) {
+      this.communicators.set(url, new Communicator(url));
+    }
+
+    return this.communicators.get(url)!;
   }
 
   postRequestAndWaitForResponse = (

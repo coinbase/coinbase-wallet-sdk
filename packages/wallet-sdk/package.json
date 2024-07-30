@@ -36,7 +36,6 @@
   "peerDependencies": {
     "@react-native-async-storage/async-storage": "*",
     "expo": "*",
-    "expo-linking": "*",
     "expo-web-browser": "*",
     "react": "*",
     "react-dom": "*",
@@ -71,7 +70,6 @@
     "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "eslint-plugin-unused-imports": "^3.0.0",
-    "expo-linking": "^6.3.1",
     "expo-web-browser": "^13.0.3",
     "jest": "^27.5.1",
     "jest-chrome": "^0.7.2",

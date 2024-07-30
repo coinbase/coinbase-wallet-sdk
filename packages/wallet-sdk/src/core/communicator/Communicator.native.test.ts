@@ -17,7 +17,8 @@ describe('Communicator', () => {
   const mockID = '123' as MessageID;
 
   beforeEach(() => {
-    communicator = new Communicator();
+    Communicator.communicators.clear();
+    communicator = Communicator.getInstance();
     jest.clearAllMocks();
   });
 
@@ -28,7 +29,7 @@ describe('Communicator', () => {
 
     it('should use the provided URL', () => {
       const customUrl = 'https://custom.com/api';
-      const customCommunicator = new Communicator(customUrl);
+      const customCommunicator = Communicator.getInstance(customUrl);
       expect(customCommunicator['url']).toBe(customUrl);
     });
   });
