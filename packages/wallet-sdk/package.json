@@ -28,6 +28,8 @@
     "lint": "eslint . --ext .ts,.tsx --fix"
   },
   "dependencies": {
+    "@noble/ciphers": "^0.5.3",
+    "@noble/curves": "^1.4.2",
     "@noble/hashes": "^1.4.0",
     "clsx": "^1.2.1",
     "eventemitter3": "^5.0.1",
