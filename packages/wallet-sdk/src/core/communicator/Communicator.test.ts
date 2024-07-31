@@ -51,9 +51,10 @@ describe('Communicator', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    Communicator.communicators.clear();
 
     // url defaults to CB_KEYS_URL
-    communicator = new Communicator();
+    communicator = Communicator.getInstance();
     urlOrigin = new URL(CB_KEYS_URL).origin;
 
     mockPopup = {

@@ -8,7 +8,7 @@ describe('SignerConfigurator', () => {
     const preference: Preference = { options: 'all' };
 
     it('should complete signerType selection correctly', async () => {
-      const communicator = new Communicator();
+      const communicator = Communicator.getInstance();
       communicator.postMessage = jest.fn();
       communicator.onMessage = jest.fn().mockResolvedValue({
         data: 'scw',

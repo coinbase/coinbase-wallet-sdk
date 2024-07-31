@@ -14,12 +14,6 @@ import {
 
 jest.mock('./SCWKeyManager');
 const storageStoreSpy = jest.spyOn(ScopedAsyncStorage.prototype, 'storeObject');
-jest.mock(':core/communicator/Communicator', () => ({
-  Communicator: jest.fn(() => ({
-    postRequestAndWaitForResponse: jest.fn(),
-    waitForPopupLoaded: jest.fn(),
-  })),
-}));
 jest.mock(':util/cipher', () => ({
   decryptContent: jest.fn(),
   encryptContent: jest.fn(),
@@ -47,7 +41,7 @@ const mockSuccessResponse: RPCResponseMessage = {
 describe('SCWSigner', () => {
   let signer: SCWSigner;
   let mockMetadata: AppMetadata;
-  let mockCommunicator: jest.Mocked<Communicator>;
+  let mockCommunicator: Communicator;
   let mockCallback: ProviderEventCallback;
   let mockKeyManager: jest.Mocked<SCWKeyManager>;
 
@@ -57,9 +51,14 @@ describe('SCWSigner', () => {
       appLogoUrl: null,
       appChainIds: [1],
     };
-    mockCommunicator = new Communicator() as jest.Mocked<Communicator>;
-    mockCommunicator.waitForPopupLoaded.mockResolvedValue({} as Window);
-    mockCommunicator.postRequestAndWaitForResponse.mockResolvedValue(mockSuccessResponse);
+
+    Communicator.communicators.clear();
+    mockCommunicator = Communicator.getInstance();
+    jest.spyOn(mockCommunicator, 'waitForPopupLoaded').mockResolvedValue({} as Window);
+    jest
+      .spyOn(mockCommunicator, 'postRequestAndWaitForResponse')
+      .mockResolvedValue(mockSuccessResponse);
+
     mockCallback = jest.fn();
     mockKeyManager = new SCWKeyManager() as jest.Mocked<SCWKeyManager>;
     (SCWKeyManager as jest.Mock).mockImplementation(() => mockKeyManager);
@@ -115,7 +114,7 @@ describe('SCWSigner', () => {
         content: { failure: mockError },
         timestamp: new Date(),
       };
-      mockCommunicator.postRequestAndWaitForResponse.mockResolvedValue(mockResponse);
+      (mockCommunicator.postRequestAndWaitForResponse as jest.Mock).mockResolvedValue(mockResponse);
 
       await expect(signer.handshake()).rejects.toThrowError(mockError);
     });
