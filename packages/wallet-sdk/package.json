@@ -46,6 +46,21 @@
   "peerDependenciesMeta": {
     "@react-native-async-storage/async-storage": {
       "optional": true
+    },
+    "expo": {
+      "optional": true
+    },
+    "expo-web-browser": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    },
+    "react-native": {
+      "optional": true
     }
   },
   "devDependencies": {

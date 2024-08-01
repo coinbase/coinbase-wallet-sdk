@@ -21,7 +21,7 @@ const mockCallback: ProviderEventCallback = jest.fn();
 
 const createAdapter = (options?: { relay?: WalletLinkRelay }) => {
   const adapter = new WalletLinkSigner({
-    metadata: { appName: 'test', appLogoUrl: null, appChainIds: [1] },
+    metadata: { appName: 'test', appLogoUrl: null, appChainIds: [1], appDeeplinkUrl: null },
     callback: mockCallback,
   });
   if (options?.relay) {

@@ -20,6 +20,8 @@ export type MobileEncryptedData = {
 };
 
 export interface RPCRequestMessage extends RPCMessage {
+  sdkVersion: string;
+  callbackUrl?: string;
   content:
     | {
         handshake: RequestAccountsAction;

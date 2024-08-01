@@ -50,6 +50,7 @@ describe('SCWSigner', () => {
       appName: 'test',
       appLogoUrl: null,
       appChainIds: [1],
+      appDeeplinkUrl: null,
     };
 
     Communicator.communicators.clear();
