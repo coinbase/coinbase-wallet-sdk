@@ -12,6 +12,7 @@
     "web3"
   ],
   "main": "dist/index.js",
+  "react-native": "dist/index.native.js",
   "types": "dist/index.d.ts",
   "sideEffects": false,
   "repository": "https://github.com/coinbase/coinbase-wallet-sdk.git",
