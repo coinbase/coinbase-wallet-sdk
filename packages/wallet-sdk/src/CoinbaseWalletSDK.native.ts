@@ -18,7 +18,9 @@ export class CoinbaseWalletSDK {
     }
 
     const url = new URL(metadata.appDeeplinkUrl);
-    url.pathname = `/${MOBILE_SDK_RESPONSE_PATH}`;
+    url.pathname += url.pathname.endsWith('/')
+      ? MOBILE_SDK_RESPONSE_PATH
+      : `/${MOBILE_SDK_RESPONSE_PATH}`;
 
     this.metadata = {
       appName: metadata.appName || 'Dapp',
