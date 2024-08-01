@@ -122,6 +122,23 @@ describe('Communicator', () => {
 
       expect(() => communicator.handleResponse(responseUrl)).not.toThrow();
     });
+
+    it('should return true if the communicator handled the message', () => {
+      const mockHandler = jest.fn();
+      communicator['responseHandlers'].set(mockResponse.requestId, mockHandler);
+
+      const responseUrl = `https://callback.com/?id="${mockResponse.id}"&sender="${mockResponse.sender}"&requestId="${mockResponse.requestId}"&content=${JSON.stringify(mockResponse.content)}&timestamp="${mockResponse.timestamp.toISOString()}"`;
+      const handled = communicator.handleResponse(responseUrl);
+
+      expect(handled).toBe(true);
+    });
+
+    it('should return false if the communicator did not handle the message', () => {
+      const responseUrl = `https://callback.com/?id="${mockResponse.id}"&sender="${mockResponse.sender}"&requestId="${mockResponse.requestId}"&content=${JSON.stringify(mockResponse.content)}&timestamp="${mockResponse.timestamp.toISOString()}"`;
+      const handled = communicator.handleResponse(responseUrl);
+
+      expect(handled).toBe(false);
+    });
   });
 
   describe('disconnect', () => {

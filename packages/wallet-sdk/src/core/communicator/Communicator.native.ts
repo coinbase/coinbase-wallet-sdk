@@ -55,7 +55,7 @@ export class Communicator {
     });
   };
 
-  handleResponse = (responseUrl: string) => {
+  handleResponse = (responseUrl: string): boolean => {
     const { searchParams } = new URL(responseUrl);
     const parseParam = <T>(paramName: string) => {
       return JSON.parse(searchParams.get(paramName) as string) as T;
@@ -74,7 +74,9 @@ export class Communicator {
       handler(response);
       this.responseHandlers.delete(response.requestId);
       WebBrowser.dismissBrowser();
+      return true;
     }
+    return false;
   };
 
   private disconnect = () => {
