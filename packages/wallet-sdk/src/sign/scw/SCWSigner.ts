@@ -18,6 +18,7 @@ const ACCOUNTS_KEY = 'accounts';
 const ACTIVE_CHAIN_STORAGE_KEY = 'activeChain';
 const AVAILABLE_CHAINS_STORAGE_KEY = 'availableChains';
 const WALLET_CAPABILITIES_STORAGE_KEY = 'walletCapabilities';
+import { LIB_VERSION } from '../../version';
 
 type Chain = {
   id: number;
@@ -144,9 +145,9 @@ export class SCWSigner implements Signer {
   }
 
   private async sendRequestToPopup(request: RequestArguments) {
-    // Open the popup before constructing the request message.
+    // [Web Only] Open the popup before constructing the request message.
     // This is to ensure that the popup is not blocked by some browsers (i.e. Safari)
-    await this.communicator.waitForPopupLoaded();
+    await this.communicator.waitForPopupLoaded?.();
 
     const response = await this.sendEncryptedRequest(request);
     const decrypted = await this.decryptResponseMessage(response);
@@ -161,6 +162,10 @@ export class SCWSigner implements Signer {
     this.callback = null;
     await this.storage.clear();
     await this.keyManager.clear();
+    this.accounts = [];
+    this.chain = {
+      id: this.metadata.appChainIds?.[0] ?? 1,
+    };
   }
 
   /**
@@ -216,7 +221,9 @@ export class SCWSigner implements Signer {
       id: crypto.randomUUID(),
       sender: publicKey,
       content,
+      sdkVersion: LIB_VERSION,
       timestamp: new Date(),
+      ...(this.metadata.appDeeplinkUrl && { callbackUrl: this.metadata.appDeeplinkUrl }),
     };
   }
 

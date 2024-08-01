@@ -6,7 +6,7 @@ import { AddressString } from ':core/type';
 
 function createProvider() {
   return new CoinbaseWalletProvider({
-    metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1] },
+    metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1], appDeeplinkUrl: null },
     preference: { options: 'all' },
   });
 }

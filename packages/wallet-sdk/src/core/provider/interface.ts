@@ -40,6 +40,8 @@ export interface AppMetadata {
   appLogoUrl: string | null;
   /** Array of chainIds your dapp supports */
   appChainIds: number[];
+  /** Mobile Only: Universal Link url or App Link url */
+  appDeeplinkUrl: string | null;
 }
 
 export interface Preference {

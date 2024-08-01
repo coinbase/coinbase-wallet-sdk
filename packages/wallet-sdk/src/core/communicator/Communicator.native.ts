@@ -2,18 +2,13 @@ import * as WebBrowser from 'expo-web-browser';
 
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
-import { MessageID, RPCRequestMessage, RPCResponseMessage } from ':core/message';
-
-type MobileRPCRequestMessage = RPCRequestMessage & {
-  sdkVersion: string;
-  callbackUrl: string;
-};
+import { MessageID, MobileRPCResponseMessage, RPCRequestMessage } from ':core/message';
 
 export class Communicator {
   static communicators = new Map<string, Communicator>();
 
   private readonly url: string;
-  private responseHandlers = new Map<MessageID, (_: RPCResponseMessage) => void>();
+  private responseHandlers = new Map<MessageID, (_: MobileRPCResponseMessage) => void>();
 
   private constructor(url: string = CB_KEYS_URL) {
     this.url = url;
@@ -28,8 +23,8 @@ export class Communicator {
   }
 
   postRequestAndWaitForResponse = (
-    request: MobileRPCRequestMessage
-  ): Promise<RPCResponseMessage> => {
+    request: RPCRequestMessage
+  ): Promise<MobileRPCResponseMessage> => {
     return new Promise((resolve, reject) => {
       // 1. generate request URL
       const urlParams = new URLSearchParams();
@@ -66,11 +61,11 @@ export class Communicator {
       return JSON.parse(searchParams.get(paramName) as string) as T;
     };
 
-    const response: RPCResponseMessage = {
+    const response: MobileRPCResponseMessage = {
       id: parseParam<MessageID>('id'),
       sender: parseParam<string>('sender'),
       requestId: parseParam<MessageID>('requestId'),
-      content: parseParam<RPCResponseMessage['content']>('content'),
+      content: parseParam<MobileRPCResponseMessage['content']>('content'),
       timestamp: new Date(parseParam<string>('timestamp')),
     };
 
