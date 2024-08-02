@@ -3,17 +3,18 @@ import { standardErrors } from ':core/error';
 import { ConstructorOptions, ProviderInterface, RequestArguments } from ':core/provider/interface';
 
 export async function fetchRPCRequest(request: RequestArguments, rpcUrl: string) {
-  const response = await window.fetch(rpcUrl, {
+  const requestBody = {
+    ...request,
+    jsonrpc: '2.0',
+    id: crypto.randomUUID(),
+  };
+  const res = await window.fetch(rpcUrl, {
     method: 'POST',
-    body: JSON.stringify({
-      ...request,
-      jsonrpc: '2.0',
-      id: crypto.randomUUID(),
-    }),
+    body: JSON.stringify(requestBody),
     mode: 'cors',
     headers: { 'Content-Type': 'application/json', 'X-Cbw-Sdk-Version': LIB_VERSION },
   });
-  const { result, error } = await response.json();
+  const { result, error } = await res.json();
   if (error) throw error;
   return result;
 }
