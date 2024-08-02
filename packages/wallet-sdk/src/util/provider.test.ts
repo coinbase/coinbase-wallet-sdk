@@ -30,42 +30,32 @@ const invalidParamsError = (args) =>
 
 describe('Utils', () => {
   describe('fetchRPCRequest', () => {
-    let response: {
-      id: number;
-      result?: unknown;
-      error?: unknown;
-    };
-
-    beforeAll(() => {
-      global.fetch = jest.fn().mockImplementation(() =>
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(response),
-        })
-      );
-    });
-
-    afterAll(() => {
-      (global.fetch as jest.Mock).mockReset();
-    });
+    function mockFetchResponse(response: unknown) {
+      global.fetch = jest.fn().mockResolvedValue({
+        json: jest.fn().mockResolvedValue(response),
+      });
+    }
 
     it('should throw if the response has an error', async () => {
-      const error = new Error('RPC error');
-      response = {
+      mockFetchResponse({
         id: 1,
         result: null,
-        error,
-      };
+        error: new Error('rpc fetch error'),
+      });
       await expect(
         fetchRPCRequest({ method: 'foo', params: [] }, 'https://example.com')
-      ).rejects.toThrow(error);
+      ).rejects.toThrow('rpc fetch error');
     });
 
     it('should return the result if the response is successful', async () => {
-      response = { id: 1, result: 'result', error: null };
+      mockFetchResponse({
+        id: 1,
+        result: 'some result value',
+        error: null,
+      });
       await expect(
         fetchRPCRequest({ method: 'foo', params: [] }, 'https://example.com')
-      ).resolves.toBe(response.result);
+      ).resolves.toBe('some result value');
     });
   });
 

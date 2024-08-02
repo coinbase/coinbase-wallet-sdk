@@ -3,22 +3,19 @@ import { standardErrors } from ':core/error';
 import { ConstructorOptions, ProviderInterface, RequestArguments } from ':core/provider/interface';
 
 export async function fetchRPCRequest(request: RequestArguments, rpcUrl: string) {
-  return window
-    .fetch(rpcUrl, {
-      method: 'POST',
-      body: JSON.stringify({
-        ...request,
-        jsonrpc: '2.0',
-        id: crypto.randomUUID(),
-      }),
-      mode: 'cors',
-      headers: { 'Content-Type': 'application/json', 'X-Cbw-Sdk-Version': LIB_VERSION },
-    })
-    .then((response) => response.json())
-    .then(({ result, error }) => {
-      if (error) throw error;
-      return result;
-    });
+  const response = await window.fetch(rpcUrl, {
+    method: 'POST',
+    body: JSON.stringify({
+      ...request,
+      jsonrpc: '2.0',
+      id: crypto.randomUUID(),
+    }),
+    mode: 'cors',
+    headers: { 'Content-Type': 'application/json', 'X-Cbw-Sdk-Version': LIB_VERSION },
+  });
+  const { result, error } = await response.json();
+  if (error) throw error;
+  return result;
 }
 
 export interface CBWindow {
