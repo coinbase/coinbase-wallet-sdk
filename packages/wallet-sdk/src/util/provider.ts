@@ -1,6 +1,6 @@
 import { LIB_VERSION } from '../version';
 import { standardErrors } from ':core/error';
-import { RequestArguments } from ':core/provider/interface';
+import { ConstructorOptions, ProviderInterface, RequestArguments } from ':core/provider/interface';
 
 export async function fetchRPCRequest(request: RequestArguments, rpcUrl: string) {
   return window
@@ -19,6 +19,52 @@ export async function fetchRPCRequest(request: RequestArguments, rpcUrl: string)
       if (error) throw error;
       return result;
     });
+}
+
+export interface CBWindow {
+  top: CBWindow;
+  ethereum?: CBInjectedProvider;
+  coinbaseWalletExtension?: CBInjectedProvider;
+}
+
+export interface CBInjectedProvider extends ProviderInterface {
+  isCoinbaseBrowser?: boolean;
+  setAppInfo?: (...args: unknown[]) => unknown;
+}
+
+function getCoinbaseInjectedLegacyProvider(): CBInjectedProvider | undefined {
+  const window = globalThis as CBWindow;
+  return window.coinbaseWalletExtension;
+}
+
+function getInjectedEthereum(): CBInjectedProvider | undefined {
+  try {
+    const window = globalThis as CBWindow;
+    return window.ethereum ?? window.top?.ethereum;
+  } catch {
+    return undefined;
+  }
+}
+
+export function getCoinbaseInjectedProvider({
+  metadata,
+  preference,
+}: Readonly<ConstructorOptions>): ProviderInterface | undefined {
+  if (preference.options !== 'smartWalletOnly') {
+    const extension = getCoinbaseInjectedLegacyProvider();
+    if (extension) {
+      const { appName, appLogoUrl, appChainIds } = metadata;
+      extension.setAppInfo?.(appName, appLogoUrl, appChainIds);
+      return extension;
+    }
+  }
+
+  const ethereum = getInjectedEthereum();
+  if (ethereum?.isCoinbaseBrowser) {
+    return ethereum;
+  }
+
+  return undefined;
 }
 
 /**

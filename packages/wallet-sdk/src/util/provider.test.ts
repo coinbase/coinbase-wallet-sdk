@@ -1,5 +1,13 @@
-import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './provider';
+import {
+  CBWindow,
+  checkErrorForInvalidRequestArgs,
+  fetchRPCRequest,
+  getCoinbaseInjectedProvider,
+} from './provider';
 import { standardErrors } from ':core/error';
+import { ProviderInterface } from ':core/provider/interface';
+
+const window = globalThis as CBWindow;
 
 // @ts-expect-error-next-line
 const invalidArgsError = (args) =>
@@ -20,31 +28,161 @@ const invalidParamsError = (args) =>
     data: args,
   });
 
-describe('fetchRPCRequest', () => {
-  it('should throw if the response has an error', async () => {
-    const response = { id: 1, result: null, error: standardErrors.rpc.invalidRequest() };
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(response),
-    });
-    await expect(
-      fetchRPCRequest({ method: 'foo', params: [] }, 'https://example.com')
-    ).rejects.toThrow(response.error);
-  });
-
-  it('should return the result if the response is successful', async () => {
-    const response = { id: 1, result: 'result', error: null };
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(response),
-    });
-    await expect(
-      fetchRPCRequest({ method: 'foo', params: [] }, 'https://example.com')
-    ).resolves.toBe(response.result);
-  });
-});
-
 describe('Utils', () => {
+  describe('fetchRPCRequest', () => {
+    it('should throw if the response has an error', async () => {
+      const response = { id: 1, result: null, error: standardErrors.rpc.invalidRequest() };
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(response),
+      });
+      await expect(
+        fetchRPCRequest({ method: 'foo', params: [] }, 'https://example.com')
+      ).rejects.toThrow(response.error);
+    });
+
+    it('should return the result if the response is successful', async () => {
+      const response = { id: 1, result: 'result', error: null };
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(response),
+      });
+      await expect(
+        fetchRPCRequest({ method: 'foo', params: [] }, 'https://example.com')
+      ).resolves.toBe(response.result);
+    });
+  });
+
+  describe('getCoinbaseInjectedProvider', () => {
+    describe('Extension Provider', () => {
+      afterEach(() => {
+        window.coinbaseWalletExtension = undefined;
+      });
+
+      it('should return extension provider', () => {
+        const mockSetAppInfo = jest.fn();
+        const extensionProvider = {
+          setAppInfo: mockSetAppInfo,
+        } as unknown as ProviderInterface;
+
+        window.coinbaseWalletExtension = extensionProvider;
+
+        expect(
+          getCoinbaseInjectedProvider({
+            metadata: {
+              appName: 'Dapp',
+              appChainIds: [],
+              appLogoUrl: null,
+              appDeeplinkUrl: null,
+            },
+            preference: {
+              options: 'all',
+            },
+          })
+        ).toBe(extensionProvider);
+
+        expect(mockSetAppInfo).toHaveBeenCalledWith('Dapp', null, []);
+      });
+
+      it('smartWalletOnly - should return undefined', () => {
+        window.coinbaseWalletExtension = {} as unknown as ProviderInterface;
+
+        expect(
+          getCoinbaseInjectedProvider({
+            metadata: {
+              appName: 'Dapp',
+              appChainIds: [],
+              appLogoUrl: null,
+              appDeeplinkUrl: null,
+            },
+            preference: {
+              options: 'smartWalletOnly',
+            },
+          })
+        ).toBe(undefined);
+      });
+    });
+
+    describe('Browser Provider', () => {
+      class MockCipherProviderClass {
+        public isCoinbaseBrowser = true;
+      }
+
+      const mockCipherProvider = new MockCipherProviderClass() as unknown as ProviderInterface;
+
+      beforeAll(() => {
+        window.coinbaseWalletExtension = undefined;
+        window.ethereum = mockCipherProvider;
+      });
+
+      afterAll(() => {
+        window.ethereum = undefined;
+      });
+
+      it('Should return injected browser provider', () => {
+        expect(
+          getCoinbaseInjectedProvider({
+            metadata: {
+              appName: 'Dapp',
+              appChainIds: [],
+              appLogoUrl: null,
+              appDeeplinkUrl: null,
+            },
+            preference: {
+              options: 'all',
+            },
+          })
+        ).toBe(mockCipherProvider);
+      });
+
+      it('smartWalletOnly - Should still return injected browser provider', () => {
+        expect(
+          getCoinbaseInjectedProvider({
+            metadata: {
+              appName: 'Dapp',
+              appChainIds: [],
+              appLogoUrl: null,
+              appDeeplinkUrl: null,
+            },
+            preference: {
+              options: 'smartWalletOnly',
+            },
+          })
+        ).toBe(mockCipherProvider);
+      });
+
+      it('should handle exception when accessing window.top', () => {
+        window.ethereum = undefined;
+        const originalWindowTop = window.top;
+        Object.defineProperty(window, 'top', {
+          get: () => {
+            throw new Error('Simulated access error');
+          },
+          configurable: true,
+        });
+
+        expect(
+          getCoinbaseInjectedProvider({
+            metadata: {
+              appName: 'Dapp',
+              appChainIds: [],
+              appLogoUrl: null,
+              appDeeplinkUrl: null,
+            },
+            preference: {
+              options: 'all',
+            },
+          })
+        ).toBe(undefined);
+
+        Object.defineProperty(window, 'top', {
+          get: () => originalWindowTop,
+          configurable: true,
+        });
+      });
+    });
+  });
+
   describe('getErrorForInvalidRequestArgs', () => {
     it('should throw if args is not an object', () => {
       const args = 'not an object';
