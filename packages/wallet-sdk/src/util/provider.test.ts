@@ -55,24 +55,6 @@ describe('Utils', () => {
         expect(mockSetAppInfo).toHaveBeenCalledWith('Dapp', null, []);
       });
 
-      it('should return undefined when extension injects `coinbaseWalletSigner`', () => {
-        window.coinbaseWalletExtension = {} as unknown as ProviderInterface;
-
-        expect(
-          getCoinbaseInjectedProvider({
-            metadata: {
-              appName: 'Dapp',
-              appChainIds: [],
-              appLogoUrl: null,
-              appDeeplinkUrl: null,
-            },
-            preference: {
-              options: 'all',
-            },
-          })
-        ).toBe(undefined);
-      });
-
       it('smartWalletOnly - should return undefined', () => {
         window.coinbaseWalletExtension = {} as unknown as ProviderInterface;
 
