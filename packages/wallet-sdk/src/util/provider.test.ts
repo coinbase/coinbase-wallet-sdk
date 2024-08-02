@@ -1,4 +1,9 @@
-import { CBWindow, checkErrorForInvalidRequestArgs, getCoinbaseInjectedProvider } from './provider';
+import {
+  CBWindow,
+  checkErrorForInvalidRequestArgs,
+  fetchRPCRequest,
+  getCoinbaseInjectedProvider,
+} from './provider';
 import { standardErrors } from ':core/error';
 import { ProviderInterface } from ':core/provider/interface';
 
@@ -24,6 +29,36 @@ const invalidParamsError = (args) =>
   });
 
 describe('Utils', () => {
+  describe('fetchRPCRequest', () => {
+    function mockFetchResponse(response: unknown) {
+      global.fetch = jest.fn().mockResolvedValue({
+        json: jest.fn().mockResolvedValue(response),
+      });
+    }
+
+    it('should throw if the response has an error', async () => {
+      mockFetchResponse({
+        id: 1,
+        result: null,
+        error: new Error('rpc fetch error'),
+      });
+      await expect(
+        fetchRPCRequest({ method: 'foo', params: [] }, 'https://example.com')
+      ).rejects.toThrow('rpc fetch error');
+    });
+
+    it('should return the result if the response is successful', async () => {
+      mockFetchResponse({
+        id: 1,
+        result: 'some result value',
+        error: null,
+      });
+      await expect(
+        fetchRPCRequest({ method: 'foo', params: [] }, 'https://example.com')
+      ).resolves.toBe('some result value');
+    });
+  });
+
   describe('getCoinbaseInjectedProvider', () => {
     describe('Extension Provider', () => {
       afterEach(() => {

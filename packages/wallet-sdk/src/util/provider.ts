@@ -2,9 +2,7 @@ import { LIB_VERSION } from '../version';
 import { standardErrors } from ':core/error';
 import { ConstructorOptions, ProviderInterface, RequestArguments } from ':core/provider/interface';
 
-export async function fetchRPCRequest(request: RequestArguments, rpcUrl?: string) {
-  if (!rpcUrl) throw standardErrors.rpc.internal('No RPC URL set for chain');
-
+export async function fetchRPCRequest(request: RequestArguments, rpcUrl: string) {
   const requestBody = {
     ...request,
     jsonrpc: '2.0',
@@ -16,8 +14,9 @@ export async function fetchRPCRequest(request: RequestArguments, rpcUrl?: string
     mode: 'cors',
     headers: { 'Content-Type': 'application/json', 'X-Cbw-Sdk-Version': LIB_VERSION },
   });
-  const response = await res.json();
-  return response.result;
+  const { result, error } = await res.json();
+  if (error) throw error;
+  return result;
 }
 
 export interface CBWindow {

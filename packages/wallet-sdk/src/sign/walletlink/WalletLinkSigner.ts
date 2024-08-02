@@ -335,6 +335,7 @@ export class WalletLinkSigner implements Signer {
         return this._wallet_watchAsset(params);
 
       default:
+        if (!this.jsonRpcUrl) throw standardErrors.rpc.internal('No RPC URL set for chain');
         return fetchRPCRequest(request, this.jsonRpcUrl);
     }
   }
