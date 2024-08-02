@@ -1,4 +1,4 @@
-import { checkErrorForInvalidRequestArgs } from './provider';
+import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './provider';
 import { standardErrors } from ':core/error';
 
 // @ts-expect-error-next-line
@@ -19,6 +19,30 @@ const invalidParamsError = (args) =>
     message: "'args.params' must be an object or array if provided.",
     data: args,
   });
+
+describe('fetchRPCRequest', () => {
+  it('should throw if the response has an error', async () => {
+    const response = { id: 1, result: null, error: standardErrors.rpc.invalidRequest() };
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(response),
+    });
+    await expect(
+      fetchRPCRequest({ method: 'foo', params: [] }, 'https://example.com')
+    ).rejects.toThrow(response.error);
+  });
+
+  it('should return the result if the response is successful', async () => {
+    const response = { id: 1, result: 'result', error: null };
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(response),
+    });
+    await expect(
+      fetchRPCRequest({ method: 'foo', params: [] }, 'https://example.com')
+    ).resolves.toBe(response.result);
+  });
+});
 
 describe('Utils', () => {
   describe('getErrorForInvalidRequestArgs', () => {
