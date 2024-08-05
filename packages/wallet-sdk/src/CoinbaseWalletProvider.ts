@@ -57,9 +57,9 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
             break;
           }
           case 'net_version':
-            return 1;
+            return 1; // default value
           case 'eth_chainId':
-            return hexStringFromNumber(1);
+            return hexStringFromNumber(1); // default value
           default: {
             throw standardErrors.provider.unauthorized(
               "Must call 'eth_requestAccounts' before other methods"
@@ -87,8 +87,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
 
   async disconnect() {
     await this.ensureInitialized();
-
-    await this.signer?.disconnect();
+    this.signer = null;
     await clearAllStorage();
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }

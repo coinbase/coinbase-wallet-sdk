@@ -148,7 +148,7 @@ describe('Signer configuration', () => {
     expect(mockRequest).toHaveBeenCalledWith(request);
 
     await providerLoadedFromStorage.disconnect();
-    expect(mockDisconnect).toHaveBeenCalled();
+    expect(provider['signer']).toBeNull();
   });
 
   it('should throw error if signer is not initialized', async () => {
@@ -158,10 +158,10 @@ describe('Signer configuration', () => {
     );
   });
 
-  it('should call signer.disconnect on provider disconnect', async () => {
+  it('should set signer to null', async () => {
     await provider.request({ method: 'eth_requestAccounts' });
 
     await provider.disconnect();
-    expect(mockDisconnect).toHaveBeenCalled();
+    expect(provider['signer']).toBeNull();
   });
 });

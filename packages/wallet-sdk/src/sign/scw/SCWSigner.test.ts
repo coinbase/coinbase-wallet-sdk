@@ -14,6 +14,8 @@ import {
 
 jest.mock('./SCWKeyManager');
 const storageStoreSpy = jest.spyOn(ScopedAsyncStorage.prototype, 'storeObject');
+const storageClearSpy = jest.spyOn(ScopedAsyncStorage.prototype, 'clear');
+
 jest.mock(':util/cipher', () => ({
   decryptContent: jest.fn(),
   encryptContent: jest.fn(),
@@ -209,7 +211,10 @@ describe('SCWSigner', () => {
     it('should disconnect successfully', async () => {
       await signer.disconnect();
 
+      expect(storageClearSpy).toHaveBeenCalled();
       expect(mockKeyManager.clear).toHaveBeenCalled();
+      expect(signer['accounts']).toEqual([]);
+      expect(signer['chain']).toEqual({ id: 1 });
     });
   });
 });
