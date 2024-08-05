@@ -158,7 +158,7 @@ describe('Signer configuration', () => {
     );
   });
 
-  it('should call signer.disconnect on provider disconnect', async () => {
+  it('should set signer to null', async () => {
     await provider.request({ method: 'eth_requestAccounts' });
 
     await provider.disconnect();
