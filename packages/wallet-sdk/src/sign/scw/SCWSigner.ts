@@ -160,7 +160,6 @@ export class SCWSigner implements Signer {
   }
 
   async disconnect() {
-    this.callback = null;
     await this.storage.clear();
     await this.keyManager.clear();
     this.accounts = [];
