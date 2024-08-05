@@ -207,7 +207,7 @@ export class WalletLinkSigner implements Signer {
     }
   }
 
-  public async disconnect() {
+  public async cleanup() {
     this.callback = null;
     if (this._relay) {
       this._relay.resetAndReload();
