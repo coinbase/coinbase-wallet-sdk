@@ -209,7 +209,7 @@ describe('SCWSigner', () => {
 
   describe('disconnect', () => {
     it('should disconnect successfully', async () => {
-      await signer.disconnect();
+      await signer.cleanup();
 
       expect(storageClearSpy).toHaveBeenCalled();
       expect(mockKeyManager.clear).toHaveBeenCalled();

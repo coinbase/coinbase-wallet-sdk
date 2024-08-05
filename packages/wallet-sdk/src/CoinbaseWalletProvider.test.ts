@@ -13,7 +13,7 @@ function createProvider() {
 
 const mockHandshake = jest.fn();
 const mockRequest = jest.fn();
-const mockDisconnect = jest.fn();
+const mockCleanup = jest.fn();
 const mockFetchSignerType = jest.spyOn(util, 'fetchSignerType');
 const mockStoreSignerType = jest.spyOn(util, 'storeSignerType');
 const mockLoadSignerType = jest.spyOn(util, 'loadSignerType');
@@ -30,7 +30,7 @@ beforeEach(() => {
       chainId: 1,
       handshake: mockHandshake,
       request: mockRequest,
-      disconnect: mockDisconnect,
+      cleanup: mockCleanup,
     };
   });
 
@@ -148,6 +148,7 @@ describe('Signer configuration', () => {
     expect(mockRequest).toHaveBeenCalledWith(request);
 
     await providerLoadedFromStorage.disconnect();
+    expect(mockCleanup).toHaveBeenCalled();
     expect(provider['signer']).toBeNull();
   });
 
@@ -162,6 +163,7 @@ describe('Signer configuration', () => {
     await provider.request({ method: 'eth_requestAccounts' });
 
     await provider.disconnect();
+    expect(mockCleanup).toHaveBeenCalled();
     expect(provider['signer']).toBeNull();
   });
 });

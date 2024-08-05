@@ -47,7 +47,7 @@ describe('LegacyProvider', () => {
     const spy = jest.spyOn(relay, 'resetAndReload');
 
     const provider = createAdapter({ relay });
-    await provider.disconnect();
+    await provider.cleanup();
     expect(spy).toHaveBeenCalled();
   });
 

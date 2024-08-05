@@ -87,6 +87,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
 
   async disconnect() {
     await this.ensureInitialized();
+    await this.signer?.cleanup();
     this.signer = null;
     await clearAllStorage();
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
