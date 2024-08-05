@@ -148,6 +148,7 @@ describe('Signer configuration', () => {
     expect(mockRequest).toHaveBeenCalledWith(request);
 
     await providerLoadedFromStorage.disconnect();
+    expect(mockCleanup).toHaveBeenCalled();
     expect(provider['signer']).toBeNull();
   });
 
@@ -162,6 +163,7 @@ describe('Signer configuration', () => {
     await provider.request({ method: 'eth_requestAccounts' });
 
     await provider.disconnect();
+    expect(mockCleanup).toHaveBeenCalled();
     expect(provider['signer']).toBeNull();
   });
 });
