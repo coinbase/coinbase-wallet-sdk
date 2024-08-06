@@ -85,17 +85,38 @@ export class WalletLinkSigner implements Signer {
     }
   }
 
-  private async watchAsset(
-    type: string,
-    address: string,
-    symbol?: string,
-    decimals?: number,
-    image?: string,
-    chainId?: number
-  ): Promise<boolean> {
+  private async watchAsset(params: RequestParam) {
+    const request = (Array.isArray(params) ? params[0] : params) as {
+      type: string;
+      options: {
+        address: string;
+        symbol?: string;
+        decimals?: number;
+        image?: string;
+      };
+    };
+    if (!request.type) {
+      throw standardErrors.rpc.invalidParams('Type is required');
+    }
+
+    if (request?.type !== 'ERC20') {
+      throw standardErrors.rpc.invalidParams(`Asset of type '${request.type}' is not supported`);
+    }
+
+    if (!request?.options) {
+      throw standardErrors.rpc.invalidParams('Options are required');
+    }
+
+    if (!request?.options.address) {
+      throw standardErrors.rpc.invalidParams('Address is required');
+    }
+
+    const chainId = this.getChainId();
+    const { address, symbol, image, decimals } = request.options;
+
     const relay = this.initializeRelay();
     const result = await relay.watchAsset(
-      type,
+      request.type,
       address,
       symbol,
       decimals,
@@ -108,30 +129,50 @@ export class WalletLinkSigner implements Signer {
     return !!result.result;
   }
 
-  private async addEthereumChain(
-    chainId: number,
-    rpcUrls: string[],
-    blockExplorerUrls: string[],
-    chainName: string,
-    iconUrls: string[],
-    nativeCurrency: {
-      name: string;
-      symbol: string;
-      decimals: number;
+  private async addEthereumChain(params: RequestParam) {
+    const request = params[0] as {
+      chainId: string;
+      blockExplorerUrls?: string[];
+      chainName?: string;
+      iconUrls?: string[];
+      rpcUrls?: string[];
+      nativeCurrency?: {
+        name: string;
+        symbol: string;
+        decimals: number;
+      };
+    };
+
+    if (request.rpcUrls?.length === 0) {
+      throw standardErrors.rpc.invalidParams('please pass in at least 1 rpcUrl');
     }
-  ): Promise<boolean> {
-    if (ensureIntNumber(chainId) === this.getChainId()) {
+
+    if (!request.chainName || request.chainName.trim() === '') {
+      throw standardErrors.rpc.invalidParams('chainName is a required field');
+    }
+
+    if (!request.nativeCurrency) {
+      throw standardErrors.rpc.invalidParams('nativeCurrency is a required field');
+    }
+
+    const chainIdNumber = parseInt(request.chainId, 16);
+
+    if (chainIdNumber === this.getChainId()) {
       return false;
     }
 
     const relay = this.initializeRelay();
 
-    if (!this._isAuthorized()) {
-      await relay.requestEthereumAccounts();
-    }
+    const {
+      rpcUrls = [],
+      blockExplorerUrls = [],
+      chainName,
+      iconUrls = [],
+      nativeCurrency,
+    } = request;
 
     const res = await relay.addEthereumChain(
-      chainId.toString(),
+      chainIdNumber.toString(),
       rpcUrls,
       iconUrls,
       blockExplorerUrls,
@@ -142,13 +183,18 @@ export class WalletLinkSigner implements Signer {
     if (isErrorResponse(res)) return false;
 
     if (res.result?.isApproved === true) {
-      this.updateProviderInfo(rpcUrls[0], chainId);
+      this.updateProviderInfo(rpcUrls[0], chainIdNumber);
+      return null;
     }
-
-    return res.result?.isApproved === true;
+    throw standardErrors.rpc.internal('unable to add ethereum chain');
   }
 
-  private async switchEthereumChain(chainId: number) {
+  private async switchEthereumChain(params: RequestParam) {
+    const request = params[0] as {
+      chainId: string;
+    };
+    const chainId = parseInt(request.chainId, 16);
+
     const relay = this.initializeRelay();
     const res = await relay.switchEthereumChain(
       chainId.toString(10),
@@ -172,6 +218,8 @@ export class WalletLinkSigner implements Signer {
     if (switchResponse.isApproved && switchResponse.rpcUrl.length > 0) {
       this.updateProviderInfo(switchResponse.rpcUrl, chainId);
     }
+
+    return null;
   }
 
   public async cleanup() {
@@ -199,40 +247,19 @@ export class WalletLinkSigner implements Signer {
   }
 
   async request(request: RequestArguments) {
-    const syncResult = this._handleSynchronousMethods(request);
-    if (syncResult !== undefined) {
-      return syncResult;
-    }
-
-    return await this._handleAsynchronousMethods(request);
-  }
-
-  private _handleSynchronousMethods(request: RequestArguments) {
-    const { method } = request;
-
-    switch (method) {
-      case 'eth_accounts':
-        return this._eth_accounts();
-
-      case 'eth_coinbase':
-        return this._eth_coinbase();
-
-      case 'net_version':
-        return this._net_version();
-
-      case 'eth_chainId':
-        return this._eth_chainId();
-
-      default:
-        return undefined;
-    }
-  }
-
-  private async _handleAsynchronousMethods(request: RequestArguments) {
     const { method } = request;
     const params = (request.params as RequestParam) || [];
 
     switch (method) {
+      case 'eth_accounts':
+        return [...this._addresses];
+      case 'eth_coinbase':
+        return this.selectedAddress || null;
+      case 'net_version':
+        return this.getChainId().toString(10);
+      case 'eth_chainId':
+        return hexStringFromNumber(this.getChainId());
+
       case 'eth_requestAccounts':
         return this._eth_requestAccounts();
 
@@ -265,13 +292,13 @@ export class WalletLinkSigner implements Signer {
         return this._eth_signTypedData_v4(params);
 
       case 'wallet_addEthereumChain':
-        return this._wallet_addEthereumChain(params);
+        return this.addEthereumChain(params);
 
       case 'wallet_switchEthereumChain':
-        return this._wallet_switchEthereumChain(params);
+        return this.switchEthereumChain(params);
 
       case 'wallet_watchAsset':
-        return this._wallet_watchAsset(params);
+        return this.watchAsset(params);
 
       default:
         if (!this.jsonRpcUrl) throw standardErrors.rpc.internal('No RPC URL set for chain');
@@ -279,19 +306,10 @@ export class WalletLinkSigner implements Signer {
     }
   }
 
-  private _isKnownAddress(addressString: string): boolean {
-    try {
-      const addressStr = ensureAddressString(addressString);
-      const lowercaseAddresses = this._addresses.map((address) => ensureAddressString(address));
-      return lowercaseAddresses.includes(addressStr);
-    } catch {
-      // noop
-    }
-    return false;
-  }
-
   private _ensureKnownAddress(addressString: string): void {
-    if (!this._isKnownAddress(addressString)) {
+    const addressStr = ensureAddressString(addressString);
+    const lowercaseAddresses = this._addresses.map((address) => ensureAddressString(address));
+    if (!lowercaseAddresses.includes(addressStr)) {
       throw new Error('Unknown Ethereum address');
     }
   }
@@ -384,22 +402,6 @@ export class WalletLinkSigner implements Signer {
       throw new Error(res.errorMessage);
     }
     return res.result;
-  }
-
-  private _eth_accounts(): string[] {
-    return [...this._addresses];
-  }
-
-  private _eth_coinbase(): string | null {
-    return this.selectedAddress || null;
-  }
-
-  private _net_version(): string {
-    return this.getChainId().toString(10);
-  }
-
-  private _eth_chainId(): string {
-    return hexStringFromNumber(this.getChainId());
   }
 
   private getChainId(): IntNumber {
@@ -546,89 +548,6 @@ export class WalletLinkSigner implements Signer {
     const typedDataJSON = JSON.stringify(typedData, null, 2);
 
     return this._signEthereumMessage(message, address, false, typedDataJSON);
-  }
-
-  private async _wallet_addEthereumChain(params: RequestParam) {
-    const request = params[0] as {
-      chainId: string;
-      blockExplorerUrls?: string[];
-      chainName?: string;
-      iconUrls?: string[];
-      rpcUrls?: string[];
-      nativeCurrency?: {
-        name: string;
-        symbol: string;
-        decimals: number;
-      };
-    };
-
-    if (request.rpcUrls?.length === 0) {
-      throw standardErrors.rpc.invalidParams('please pass in at least 1 rpcUrl');
-    }
-
-    if (!request.chainName || request.chainName.trim() === '') {
-      throw standardErrors.rpc.invalidParams('chainName is a required field');
-    }
-
-    if (!request.nativeCurrency) {
-      throw standardErrors.rpc.invalidParams('nativeCurrency is a required field');
-    }
-
-    const chainIdNumber = parseInt(request.chainId, 16);
-    const success = await this.addEthereumChain(
-      chainIdNumber,
-      request.rpcUrls ?? [],
-      request.blockExplorerUrls ?? [],
-      request.chainName,
-      request.iconUrls ?? [],
-      request.nativeCurrency
-    );
-    if (success) {
-      return null;
-    }
-    throw standardErrors.rpc.internal('unable to add ethereum chain');
-  }
-
-  private async _wallet_switchEthereumChain(params: RequestParam) {
-    const request = params[0] as {
-      chainId: string;
-    };
-    await this.switchEthereumChain(parseInt(request.chainId, 16));
-    return null;
-  }
-
-  private async _wallet_watchAsset(params: unknown) {
-    const request = (Array.isArray(params) ? params[0] : params) as {
-      type: string;
-      options: {
-        address: string;
-        symbol?: string;
-        decimals?: number;
-        image?: string;
-      };
-    };
-    if (!request.type) {
-      throw standardErrors.rpc.invalidParams('Type is required');
-    }
-
-    if (request?.type !== 'ERC20') {
-      throw standardErrors.rpc.invalidParams(`Asset of type '${request.type}' is not supported`);
-    }
-
-    if (!request?.options) {
-      throw standardErrors.rpc.invalidParams('Options are required');
-    }
-
-    if (!request?.options.address) {
-      throw standardErrors.rpc.invalidParams('Address is required');
-    }
-
-    const chainId = this.getChainId();
-    const { address, symbol, image, decimals } = request.options;
-
-    const res = await this.watchAsset(request.type, address, symbol, decimals, image, chainId);
-
-    return res;
   }
 
   private initializeRelay(): WalletLinkRelay {
