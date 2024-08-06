@@ -27,37 +27,9 @@ import { fetchRPCRequest } from ':util/provider';
 const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
 const DEFAULT_JSON_RPC_URL = 'DefaultJsonRpcUrl';
 
-interface AddEthereumChainParams {
-  chainId: string;
-  blockExplorerUrls?: string[];
-  chainName?: string;
-  iconUrls?: string[];
-  rpcUrls?: string[];
-  nativeCurrency?: {
-    name: string;
-    symbol: string;
-    decimals: number;
-  };
-}
-
-interface SwitchEthereumChainParams {
-  chainId: string;
-}
-
-interface WatchAssetParams {
-  type: string;
-  options: {
-    address: string;
-    symbol?: string;
-    decimals?: number;
-    image?: string;
-  };
-}
-
 // original source: https://github.com/coinbase/coinbase-wallet-sdk/blob/v3.7.1/packages/wallet-sdk/src/provider/CoinbaseWalletProvider.ts
 export class WalletLinkSigner implements Signer {
-  private _appName: string;
-  private _appLogoUrl: string | null;
+  private metadata: AppMetadata;
   private _relay: WalletLinkRelay | null = null;
   private readonly _storage: ScopedLocalStorage;
   private readonly _relayEventManager: RelayEventManager;
@@ -65,9 +37,7 @@ export class WalletLinkSigner implements Signer {
   private callback: ProviderEventCallback | null;
 
   constructor(options: { metadata: AppMetadata; callback?: ProviderEventCallback }) {
-    const { appName, appLogoUrl } = options.metadata;
-    this._appName = appName;
-    this._appLogoUrl = appLogoUrl;
+    this.metadata = options.metadata;
     this._storage = new ScopedLocalStorage('walletlink', WALLETLINK_URL);
     this.callback = options.callback || null;
 
@@ -94,7 +64,7 @@ export class WalletLinkSigner implements Signer {
     await this._eth_requestAccounts();
   }
 
-  get selectedAddress(): AddressString | undefined {
+  private get selectedAddress(): AddressString | undefined {
     return this._addresses[0] || undefined;
   }
 
@@ -231,7 +201,7 @@ export class WalletLinkSigner implements Signer {
     return result.result;
   }
 
-  protected _setAddresses(addresses: string[], _?: boolean): void {
+  private _setAddresses(addresses: string[], _?: boolean): void {
     if (!Array.isArray(addresses)) {
       throw new Error('addresses is not an array');
     }
@@ -401,7 +371,7 @@ export class WalletLinkSigner implements Signer {
     };
   }
 
-  protected _isAuthorized(): boolean {
+  private _isAuthorized(): boolean {
     return this._addresses.length > 0;
   }
 
@@ -614,7 +584,18 @@ export class WalletLinkSigner implements Signer {
   }
 
   private async _wallet_addEthereumChain(params: unknown[]): Promise<JSONRPCResponse> {
-    const request = params[0] as AddEthereumChainParams;
+    const request = params[0] as {
+      chainId: string;
+      blockExplorerUrls?: string[];
+      chainName?: string;
+      iconUrls?: string[];
+      rpcUrls?: string[];
+      nativeCurrency?: {
+        name: string;
+        symbol: string;
+        decimals: number;
+      };
+    };
 
     if (request.rpcUrls?.length === 0) {
       return {
@@ -652,13 +633,23 @@ export class WalletLinkSigner implements Signer {
   }
 
   private async _wallet_switchEthereumChain(params: unknown[]): Promise<JSONRPCResponse> {
-    const request = params[0] as SwitchEthereumChainParams;
+    const request = params[0] as {
+      chainId: string;
+    };
     await this.switchEthereumChain(parseInt(request.chainId, 16));
     return { jsonrpc: '2.0', id: 0, result: null };
   }
 
   private async _wallet_watchAsset(params: unknown): Promise<JSONRPCResponse> {
-    const request = (Array.isArray(params) ? params[0] : params) as WatchAssetParams;
+    const request = (Array.isArray(params) ? params[0] : params) as {
+      type: string;
+      options: {
+        address: string;
+        symbol?: string;
+        decimals?: number;
+        image?: string;
+      };
+    };
     if (!request.type) {
       throw standardErrors.rpc.invalidParams('Type is required');
     }
@@ -689,7 +680,8 @@ export class WalletLinkSigner implements Signer {
         linkAPIUrl: WALLETLINK_URL,
         storage: this._storage,
       });
-      relay.setAppInfo(this._appName, this._appLogoUrl);
+      const { appName, appLogoUrl } = this.metadata;
+      relay.setAppInfo(appName, appLogoUrl);
       relay.attachUI();
 
       relay.setAccountsCallback((accounts, isDisconnect) =>
