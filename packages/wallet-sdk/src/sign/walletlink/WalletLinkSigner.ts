@@ -5,9 +5,7 @@
 import eip712 from '../../vendor-js/eth-eip712-util';
 import { Signer } from '../interface';
 import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants';
-import { RelayEventManager } from './relay/RelayEventManager';
 import { EthereumTransactionParams } from './relay/type/EthereumTransactionParams';
-import { JSONRPCRequest, JSONRPCResponse } from './relay/type/JSONRPC';
 import { isErrorResponse, Web3Response } from './relay/type/Web3Response';
 import { WalletLinkRelay } from './relay/WalletLinkRelay';
 import { ScopedLocalStorage } from './storage/ScopedLocalStorage';
@@ -27,12 +25,13 @@ import { fetchRPCRequest } from ':util/provider';
 const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
 const DEFAULT_JSON_RPC_URL = 'DefaultJsonRpcUrl';
 
+type RequestParam = unknown[];
+
 // original source: https://github.com/coinbase/coinbase-wallet-sdk/blob/v3.7.1/packages/wallet-sdk/src/provider/CoinbaseWalletProvider.ts
 export class WalletLinkSigner implements Signer {
   private metadata: AppMetadata;
   private _relay: WalletLinkRelay | null = null;
   private readonly _storage: ScopedLocalStorage;
-  private readonly _relayEventManager: RelayEventManager;
   private _addresses: AddressString[] = [];
   private callback: ProviderEventCallback | null;
 
@@ -40,8 +39,6 @@ export class WalletLinkSigner implements Signer {
     this.metadata = options.metadata;
     this._storage = new ScopedLocalStorage('walletlink', WALLETLINK_URL);
     this.callback = options.callback || null;
-
-    this._relayEventManager = new RelayEventManager();
 
     const cachedAddresses = this._storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
     if (cachedAddresses) {
@@ -185,22 +182,6 @@ export class WalletLinkSigner implements Signer {
     this._storage.clear();
   }
 
-  public async request(args: RequestArguments) {
-    const { method, params } = args;
-    const newParams = params === undefined ? [] : params;
-
-    // Coinbase Wallet Requests
-    const id = this._relayEventManager.makeRequestId();
-    const result = await this._sendRequestAsync({
-      method,
-      params: newParams,
-      jsonrpc: '2.0',
-      id,
-    });
-
-    return result.result;
-  }
-
   private _setAddresses(addresses: string[], _?: boolean): void {
     if (!Array.isArray(addresses)) {
       throw new Error('addresses is not an array');
@@ -217,28 +198,16 @@ export class WalletLinkSigner implements Signer {
     this._storage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, newAddresses.join(' '));
   }
 
-  private _sendRequestAsync(request: JSONRPCRequest): Promise<JSONRPCResponse> {
-    return new Promise<JSONRPCResponse>((resolve, reject) => {
-      try {
-        const syncResult = this._handleSynchronousMethods(request);
-        if (syncResult !== undefined) {
-          return resolve({
-            jsonrpc: '2.0',
-            id: request.id,
-            result: syncResult,
-          });
-        }
-      } catch (err: any) {
-        return reject(err);
-      }
+  async request(request: RequestArguments) {
+    const syncResult = this._handleSynchronousMethods(request);
+    if (syncResult !== undefined) {
+      return syncResult;
+    }
 
-      this._handleAsynchronousMethods(request)
-        .then((res) => res && resolve({ ...res, id: request.id }))
-        .catch((err) => reject(err));
-    });
+    return await this._handleAsynchronousMethods(request);
   }
 
-  private _handleSynchronousMethods(request: JSONRPCRequest) {
+  private _handleSynchronousMethods(request: RequestArguments) {
     const { method } = request;
 
     switch (method) {
@@ -259,9 +228,9 @@ export class WalletLinkSigner implements Signer {
     }
   }
 
-  private async _handleAsynchronousMethods(request: JSONRPCRequest): Promise<JSONRPCResponse> {
+  private async _handleAsynchronousMethods(request: RequestArguments) {
     const { method } = request;
-    const params = request.params || [];
+    const params = (request.params as RequestParam) || [];
 
     switch (method) {
       case 'eth_requestAccounts':
@@ -386,7 +355,7 @@ export class WalletLinkSigner implements Signer {
     address: AddressString,
     addPrefix: boolean,
     typedDataJson?: string | null
-  ): Promise<JSONRPCResponse> {
+  ) {
     this._ensureKnownAddress(address);
 
     try {
@@ -395,7 +364,7 @@ export class WalletLinkSigner implements Signer {
       if (isErrorResponse(res)) {
         throw new Error(res.errorMessage);
       }
-      return { jsonrpc: '2.0', id: 0, result: res.result };
+      return res.result;
     } catch (err: any) {
       if (typeof err.message === 'string' && err.message.match(/(denied|rejected)/i)) {
         throw standardErrors.provider.userRejectedRequest('User denied message signature');
@@ -408,13 +377,13 @@ export class WalletLinkSigner implements Signer {
     message: Buffer,
     signature: Buffer,
     addPrefix: boolean
-  ): Promise<JSONRPCResponse> {
+  ) {
     const relay = this.initializeRelay();
     const res = await relay.ethereumAddressFromSignedMessage(message, signature, addPrefix);
     if (isErrorResponse(res)) {
       throw new Error(res.errorMessage);
     }
-    return { jsonrpc: '2.0', id: 0, result: res.result };
+    return res.result;
   }
 
   private _eth_accounts(): string[] {
@@ -444,14 +413,10 @@ export class WalletLinkSigner implements Signer {
     return ensureIntNumber(chainId);
   }
 
-  private async _eth_requestAccounts(): Promise<JSONRPCResponse> {
+  private async _eth_requestAccounts() {
     if (this._isAuthorized()) {
       this.callback?.('connect', { chainId: hexStringFromNumber(this.getChainId()) });
-      return Promise.resolve({
-        jsonrpc: '2.0',
-        id: 0,
-        result: this._addresses,
-      });
+      return this._addresses;
     }
 
     let res: Web3Response<'requestEthereumAccounts'>;
@@ -474,16 +439,16 @@ export class WalletLinkSigner implements Signer {
 
     this._setAddresses(res.result);
     this.callback?.('connect', { chainId: hexStringFromNumber(this.getChainId()) });
-    return { jsonrpc: '2.0', id: 0, result: this._addresses };
+    return this._addresses;
   }
 
-  private _eth_ecRecover(params: unknown[]): Promise<JSONRPCResponse> {
+  private _eth_ecRecover(params: RequestParam) {
     const message = ensureBuffer(params[0]);
     const signature = ensureBuffer(params[1]);
     return this._ethereumAddressFromSignedMessage(message, signature, false);
   }
 
-  private _personal_sign(params: unknown[]): Promise<JSONRPCResponse> {
+  private _personal_sign(params: RequestParam) {
     this._requireAuthorization();
     const message = ensureBuffer(params[0]);
     const address = ensureAddressString(params[1]);
@@ -491,14 +456,14 @@ export class WalletLinkSigner implements Signer {
     return this._signEthereumMessage(message, address, true);
   }
 
-  private _personal_ecRecover(params: unknown[]): Promise<JSONRPCResponse> {
+  private _personal_ecRecover(params: RequestParam) {
     const message = ensureBuffer(params[0]);
     const signature = ensureBuffer(params[1]);
 
     return this._ethereumAddressFromSignedMessage(message, signature, true);
   }
 
-  private async _eth_signTransaction(params: unknown[]): Promise<JSONRPCResponse> {
+  private async _eth_signTransaction(params: RequestParam) {
     this._requireAuthorization();
     const tx = this._prepareTransactionParams((params[0] as any) || {});
     try {
@@ -507,7 +472,7 @@ export class WalletLinkSigner implements Signer {
       if (isErrorResponse(res)) {
         throw new Error(res.errorMessage);
       }
-      return { jsonrpc: '2.0', id: 0, result: res.result };
+      return res.result;
     } catch (err: any) {
       if (typeof err.message === 'string' && err.message.match(/(denied|rejected)/i)) {
         throw standardErrors.provider.userRejectedRequest('User denied transaction signature');
@@ -516,17 +481,17 @@ export class WalletLinkSigner implements Signer {
     }
   }
 
-  private async _eth_sendRawTransaction(params: unknown[]): Promise<JSONRPCResponse> {
+  private async _eth_sendRawTransaction(params: RequestParam) {
     const signedTransaction = ensureBuffer(params[0]);
     const relay = this.initializeRelay();
     const res = await relay.submitEthereumTransaction(signedTransaction, this.getChainId());
     if (isErrorResponse(res)) {
       throw new Error(res.errorMessage);
     }
-    return { jsonrpc: '2.0', id: 0, result: res.result };
+    return res.result;
   }
 
-  private async _eth_sendTransaction(params: unknown[]): Promise<JSONRPCResponse> {
+  private async _eth_sendTransaction(params: RequestParam) {
     this._requireAuthorization();
     const tx = this._prepareTransactionParams((params[0] as any) || {});
     try {
@@ -535,7 +500,7 @@ export class WalletLinkSigner implements Signer {
       if (isErrorResponse(res)) {
         throw new Error(res.errorMessage);
       }
-      return { jsonrpc: '2.0', id: 0, result: res.result };
+      return res.result;
     } catch (err: any) {
       if (typeof err.message === 'string' && err.message.match(/(denied|rejected)/i)) {
         throw standardErrors.provider.userRejectedRequest('User denied transaction signature');
@@ -544,7 +509,7 @@ export class WalletLinkSigner implements Signer {
     }
   }
 
-  private async _eth_signTypedData_v1(params: unknown[]): Promise<JSONRPCResponse> {
+  private async _eth_signTypedData_v1(params: RequestParam) {
     this._requireAuthorization();
     const typedData = ensureParsedJSONObject(params[0]);
     const address = ensureAddressString(params[1]);
@@ -557,7 +522,7 @@ export class WalletLinkSigner implements Signer {
     return this._signEthereumMessage(message, address, false, typedDataJSON);
   }
 
-  private async _eth_signTypedData_v3(params: unknown[]): Promise<JSONRPCResponse> {
+  private async _eth_signTypedData_v3(params: RequestParam) {
     this._requireAuthorization();
     const address = ensureAddressString(params[0]);
     const typedData = ensureParsedJSONObject(params[1]);
@@ -570,7 +535,7 @@ export class WalletLinkSigner implements Signer {
     return this._signEthereumMessage(message, address, false, typedDataJSON);
   }
 
-  private async _eth_signTypedData_v4(params: unknown[]): Promise<JSONRPCResponse> {
+  private async _eth_signTypedData_v4(params: RequestParam) {
     this._requireAuthorization();
     const address = ensureAddressString(params[0]);
     const typedData = ensureParsedJSONObject(params[1]);
@@ -583,7 +548,7 @@ export class WalletLinkSigner implements Signer {
     return this._signEthereumMessage(message, address, false, typedDataJSON);
   }
 
-  private async _wallet_addEthereumChain(params: unknown[]): Promise<JSONRPCResponse> {
+  private async _wallet_addEthereumChain(params: RequestParam) {
     const request = params[0] as {
       chainId: string;
       blockExplorerUrls?: string[];
@@ -598,11 +563,7 @@ export class WalletLinkSigner implements Signer {
     };
 
     if (request.rpcUrls?.length === 0) {
-      return {
-        jsonrpc: '2.0',
-        id: 0,
-        error: { code: 2, message: `please pass in at least 1 rpcUrl` },
-      };
+      throw standardErrors.rpc.invalidParams('please pass in at least 1 rpcUrl');
     }
 
     if (!request.chainName || request.chainName.trim() === '') {
@@ -623,24 +584,20 @@ export class WalletLinkSigner implements Signer {
       request.nativeCurrency
     );
     if (success) {
-      return { jsonrpc: '2.0', id: 0, result: null };
+      return null;
     }
-    return {
-      jsonrpc: '2.0',
-      id: 0,
-      error: { code: 2, message: `unable to add ethereum chain` },
-    };
+    throw standardErrors.rpc.internal('unable to add ethereum chain');
   }
 
-  private async _wallet_switchEthereumChain(params: unknown[]): Promise<JSONRPCResponse> {
+  private async _wallet_switchEthereumChain(params: RequestParam) {
     const request = params[0] as {
       chainId: string;
     };
     await this.switchEthereumChain(parseInt(request.chainId, 16));
-    return { jsonrpc: '2.0', id: 0, result: null };
+    return null;
   }
 
-  private async _wallet_watchAsset(params: unknown): Promise<JSONRPCResponse> {
+  private async _wallet_watchAsset(params: unknown) {
     const request = (Array.isArray(params) ? params[0] : params) as {
       type: string;
       options: {
@@ -671,7 +628,7 @@ export class WalletLinkSigner implements Signer {
 
     const res = await this.watchAsset(request.type, address, symbol, decimals, image, chainId);
 
-    return { jsonrpc: '2.0', id: 0, result: res };
+    return res;
   }
 
   private initializeRelay(): WalletLinkRelay {
