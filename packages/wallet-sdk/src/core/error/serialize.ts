@@ -35,10 +35,17 @@ function getErrorObject(error: string | Web3Response | unknown) {
       code: standardErrorCodes.rpc.internal,
     };
   } else if (isErrorResponse(error)) {
+    const message = error.errorMessage;
+    const code =
+      error.errorCode ??
+      (message.match(/(denied|rejected)/i)
+        ? standardErrorCodes.provider.userRejectedRequest
+        : undefined);
+
     return {
       ...error,
-      message: error.errorMessage,
-      code: error.errorCode,
+      message,
+      code,
       data: { method: error.method },
     };
   }
