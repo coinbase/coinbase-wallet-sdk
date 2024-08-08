@@ -9,6 +9,7 @@ import { WalletLinkSigner } from './WalletLinkSigner';
 import { WALLETLINK_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
 import { ProviderEventCallback } from ':core/provider/interface';
+import { AddressString } from ':core/type';
 
 jest.mock('./relay/WalletLinkRelay', () => {
   return {
@@ -37,7 +38,7 @@ describe('LegacyProvider', () => {
 
   it('handles enabling the provider successfully', async () => {
     const provider = createAdapter();
-    const response = await provider.request({ method: 'eth_requestAccounts' });
+    const response = (await provider.request({ method: 'eth_requestAccounts' })) as AddressString[];
     expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
     expect(mockCallback).toHaveBeenCalledWith('connect', { chainId: '0x1' });
   });
@@ -53,9 +54,9 @@ describe('LegacyProvider', () => {
 
   it('handles making a rpc request', async () => {
     const provider = createAdapter();
-    const response = await provider.request({
+    const response = (await provider.request({
       method: 'eth_requestAccounts',
-    });
+    })) as AddressString[];
     expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
   });
 
@@ -89,18 +90,18 @@ describe('LegacyProvider', () => {
   it('returns the users address on future eth_requestAccounts calls', async () => {
     const provider = createAdapter();
     // Set the account on the first request
-    const response1 = await provider.request({
+    const response1 = (await provider.request({
       method: 'eth_requestAccounts',
-    });
+    })) as AddressString[];
     expect(response1[0]).toBe(MOCK_ADDERESS.toLowerCase());
 
     // @ts-expect-error accessing private value for test
     expect(provider._addresses).toEqual([MOCK_ADDERESS.toLowerCase()]);
 
     // Set the account on the first request
-    const response2 = await provider.request({
+    const response2 = (await provider.request({
       method: 'eth_requestAccounts',
-    });
+    })) as AddressString[];
     expect(response2[0]).toBe(MOCK_ADDERESS.toLowerCase());
   });
 
@@ -112,9 +113,9 @@ describe('LegacyProvider', () => {
     expect(provider._addresses).toEqual([MOCK_ADDERESS.toLowerCase()]);
 
     // Set the account on the first request
-    const response = await provider.request({
+    const response = (await provider.request({
       method: 'eth_requestAccounts',
-    });
+    })) as AddressString[];
     expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
   });
 
@@ -299,7 +300,7 @@ describe('LegacyProvider', () => {
     });
 
     test('wallet_addEthereumChain missing RPC urls', async () => {
-      const response = await provider?.request({
+      const response = provider?.request({
         method: 'wallet_addEthereumChain',
         params: [
           {
@@ -307,7 +308,9 @@ describe('LegacyProvider', () => {
           },
         ],
       });
-      expect(response).toBeUndefined();
+      expect(response).rejects.toThrow(
+        standardErrors.rpc.invalidParams('please pass in at least 1 rpcUrl')
+      );
     });
 
     test('wallet_addEthereumChain missing chainName', async () => {
