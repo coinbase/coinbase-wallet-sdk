@@ -1,16 +1,14 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 // Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
 
 import eip712 from '../../vendor-js/eth-eip712-util';
 import { Signer } from '../interface';
 import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants';
 import { EthereumTransactionParams } from './relay/type/EthereumTransactionParams';
-import { isErrorResponse, Web3Response } from './relay/type/Web3Response';
+import { isErrorResponse } from './relay/type/Web3Response';
 import { WalletLinkRelay } from './relay/WalletLinkRelay';
 import { ScopedLocalStorage } from './storage/ScopedLocalStorage';
 import { WALLETLINK_URL } from ':core/constants';
-import { standardErrorCodes, standardErrors } from ':core/error';
+import { standardErrors } from ':core/error';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface';
 import { AddressString, IntNumber } from ':core/type';
 import {
@@ -201,18 +199,7 @@ export class WalletLinkSigner implements Signer {
       this.selectedAddress || undefined
     );
 
-    // backward compatibility
-    if (isErrorResponse(res)) {
-      if (!res.errorCode) return;
-      if (res.errorCode === standardErrorCodes.provider.unsupportedChain) {
-        throw standardErrors.provider.unsupportedChain();
-      } else {
-        throw standardErrors.provider.custom({
-          message: res.errorMessage,
-          code: res.errorCode,
-        });
-      }
-    }
+    if (isErrorResponse(res)) throw res;
 
     const switchResponse = res.result;
     if (switchResponse.isApproved && switchResponse.rpcUrl.length > 0) {
@@ -358,16 +345,6 @@ export class WalletLinkSigner implements Signer {
     };
   }
 
-  private _isAuthorized(): boolean {
-    return this._addresses.length > 0;
-  }
-
-  private _requireAuthorization(): void {
-    if (!this._isAuthorized()) {
-      throw standardErrors.provider.unauthorized({});
-    }
-  }
-
   private async _signEthereumMessage(
     message: Buffer,
     address: AddressString,
@@ -376,19 +353,10 @@ export class WalletLinkSigner implements Signer {
   ) {
     this._ensureKnownAddress(address);
 
-    try {
-      const relay = this.initializeRelay();
-      const res = await relay.signEthereumMessage(message, address, addPrefix, typedDataJson);
-      if (isErrorResponse(res)) {
-        throw new Error(res.errorMessage);
-      }
-      return res.result;
-    } catch (err: any) {
-      if (typeof err.message === 'string' && err.message.match(/(denied|rejected)/i)) {
-        throw standardErrors.provider.userRejectedRequest('User denied message signature');
-      }
-      throw err;
-    }
+    const relay = this.initializeRelay();
+    const res = await relay.signEthereumMessage(message, address, addPrefix, typedDataJson);
+    if (isErrorResponse(res)) throw res;
+    return res.result;
   }
 
   private async _ethereumAddressFromSignedMessage(
@@ -398,9 +366,7 @@ export class WalletLinkSigner implements Signer {
   ) {
     const relay = this.initializeRelay();
     const res = await relay.ethereumAddressFromSignedMessage(message, signature, addPrefix);
-    if (isErrorResponse(res)) {
-      throw new Error(res.errorMessage);
-    }
+    if (isErrorResponse(res)) throw res;
     return res.result;
   }
 
@@ -416,24 +382,14 @@ export class WalletLinkSigner implements Signer {
   }
 
   private async _eth_requestAccounts() {
-    if (this._isAuthorized()) {
+    if (this._addresses.length > 0) {
       this.callback?.('connect', { chainId: hexStringFromNumber(this.getChainId()) });
       return this._addresses;
     }
 
-    let res: Web3Response<'requestEthereumAccounts'>;
-    try {
-      const relay = this.initializeRelay();
-      res = await relay.requestEthereumAccounts();
-      if (isErrorResponse(res)) {
-        throw new Error(res.errorMessage);
-      }
-    } catch (err: any) {
-      if (typeof err.message === 'string' && err.message.match(/(denied|rejected)/i)) {
-        throw standardErrors.provider.userRejectedRequest('User denied account authorization');
-      }
-      throw err;
-    }
+    const relay = this.initializeRelay();
+    const res = await relay.requestEthereumAccounts();
+    if (isErrorResponse(res)) throw res;
 
     if (!res.result) {
       throw new Error('accounts received is empty');
@@ -451,7 +407,6 @@ export class WalletLinkSigner implements Signer {
   }
 
   private _personal_sign(params: RequestParam) {
-    this._requireAuthorization();
     const message = ensureBuffer(params[0]);
     const address = ensureAddressString(params[1]);
 
@@ -466,53 +421,32 @@ export class WalletLinkSigner implements Signer {
   }
 
   private async _eth_signTransaction(params: RequestParam) {
-    this._requireAuthorization();
-    const tx = this._prepareTransactionParams((params[0] as any) || {});
-    try {
-      const relay = this.initializeRelay();
-      const res = await relay.signEthereumTransaction(tx);
-      if (isErrorResponse(res)) {
-        throw new Error(res.errorMessage);
-      }
-      return res.result;
-    } catch (err: any) {
-      if (typeof err.message === 'string' && err.message.match(/(denied|rejected)/i)) {
-        throw standardErrors.provider.userRejectedRequest('User denied transaction signature');
-      }
-      throw err;
-    }
+    const tx = this._prepareTransactionParams(params[0] || {});
+
+    const relay = this.initializeRelay();
+    const res = await relay.signEthereumTransaction(tx);
+    if (isErrorResponse(res)) throw res;
+    return res.result;
   }
 
   private async _eth_sendRawTransaction(params: RequestParam) {
     const signedTransaction = ensureBuffer(params[0]);
     const relay = this.initializeRelay();
     const res = await relay.submitEthereumTransaction(signedTransaction, this.getChainId());
-    if (isErrorResponse(res)) {
-      throw new Error(res.errorMessage);
-    }
+    if (isErrorResponse(res)) throw res;
     return res.result;
   }
 
   private async _eth_sendTransaction(params: RequestParam) {
-    this._requireAuthorization();
-    const tx = this._prepareTransactionParams((params[0] as any) || {});
-    try {
-      const relay = this.initializeRelay();
-      const res = await relay.signAndSubmitEthereumTransaction(tx);
-      if (isErrorResponse(res)) {
-        throw new Error(res.errorMessage);
-      }
-      return res.result;
-    } catch (err: any) {
-      if (typeof err.message === 'string' && err.message.match(/(denied|rejected)/i)) {
-        throw standardErrors.provider.userRejectedRequest('User denied transaction signature');
-      }
-      throw err;
-    }
+    const tx = this._prepareTransactionParams(params[0] || {});
+
+    const relay = this.initializeRelay();
+    const res = await relay.signAndSubmitEthereumTransaction(tx);
+    if (isErrorResponse(res)) throw res;
+    return res.result;
   }
 
   private async _eth_signTypedData_v1(params: RequestParam) {
-    this._requireAuthorization();
     const typedData = ensureParsedJSONObject(params[0]);
     const address = ensureAddressString(params[1]);
 
@@ -525,7 +459,6 @@ export class WalletLinkSigner implements Signer {
   }
 
   private async _eth_signTypedData_v3(params: RequestParam) {
-    this._requireAuthorization();
     const address = ensureAddressString(params[0]);
     const typedData = ensureParsedJSONObject(params[1]);
 
@@ -538,7 +471,6 @@ export class WalletLinkSigner implements Signer {
   }
 
   private async _eth_signTypedData_v4(params: RequestParam) {
-    this._requireAuthorization();
     const address = ensureAddressString(params[0]);
     const typedData = ensureParsedJSONObject(params[1]);
 
