@@ -44,12 +44,6 @@ const mock = {
       },
     });
   },
-  signEthereumMessage() {
-    return makeMockReturn({
-      method: 'signEthereumMessage',
-      result: HexString('0x'),
-    });
-  },
   signEthereumTransaction() {
     return makeMockReturn({
       method: 'signEthereumTransaction',

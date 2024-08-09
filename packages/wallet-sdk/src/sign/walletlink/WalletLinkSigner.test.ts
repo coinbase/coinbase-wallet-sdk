@@ -1,5 +1,6 @@
 import { fireEvent } from '@testing-library/preact';
 
+import eip712 from '../../vendor-js/eth-eip712-util';
 import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants';
 import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from './relay/mocks/fixtures';
 import { mockedWalletLinkRelay } from './relay/mocks/relay';
@@ -121,10 +122,14 @@ describe('LegacyProvider', () => {
 
   describe('ecRecover', () => {
     const relay = mockedWalletLinkRelay();
-    const sendRequestSpy = jest.spyOn(relay, 'sendRequest').mockResolvedValue({
-      result: AddressString(MOCK_ADDERESS),
-    });
+    const sendRequestSpy = jest.spyOn(relay, 'sendRequest');
     const provider = createAdapter({ relay });
+
+    beforeEach(() => {
+      sendRequestSpy.mockResolvedValue({
+        result: AddressString(MOCK_ADDERESS),
+      });
+    });
 
     test('eth_ecRecover', async () => {
       const response = await provider?.request({
@@ -156,6 +161,136 @@ describe('LegacyProvider', () => {
         },
       });
       expect(response).toBe(MOCK_ADDERESS);
+    });
+  });
+
+  describe('personal_sign', () => {
+    testStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDERESS);
+    const relay = mockedWalletLinkRelay();
+    const provider = createAdapter({ relay });
+
+    test('personal_sign success', async () => {
+      const sendRequestSpy = jest.spyOn(relay, 'sendRequest').mockResolvedValueOnce({
+        result: 'mocked result',
+      });
+      const response = await provider?.request({
+        method: 'personal_sign',
+        params: ['My secret message', MOCK_ADDERESS],
+      });
+      expect(sendRequestSpy).toBeCalledWith({
+        method: 'signEthereumMessage',
+        params: {
+          address: MOCK_ADDERESS.toLowerCase(),
+          message: '0x4d7920736563726574206d657373616765',
+          addPrefix: true,
+          typedDataJson: null,
+        },
+      });
+      expect(response).toBe('mocked result');
+    });
+
+    test('personal_sign fail', async () => {
+      await expect(() =>
+        provider?.request({
+          method: 'personal_sign',
+          params: ['0x123456789abcdef', 'Super safe message'],
+        })
+      ).rejects.toThrowEIPError(
+        standardErrorCodes.rpc.invalidParams,
+        'Invalid Ethereum address: Super safe message'
+      );
+    });
+  });
+
+  describe('signTypedData', () => {
+    testStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDERESS);
+    const relay = mockedWalletLinkRelay();
+    const sendRequestSpy = jest.spyOn(relay, 'sendRequest');
+    const provider = createAdapter({ relay });
+
+    const ENCODED_MESSAGE = '0xb7845733ba102a68c6eb21c3cd2feafafd1130de581d7e73be60b76d775b6704';
+    const ENCODED_TYPED_DATA_JSON = JSON.stringify(MOCK_TYPED_DATA);
+
+    beforeEach(() => {
+      sendRequestSpy.mockResolvedValue({
+        result: 'signTypedData mocked result',
+      });
+    });
+
+    test.skip('eth_signTypedData_v1', async () => {
+      const hashSpy = jest.spyOn(eip712, 'hashForSignTypedDataLegacy');
+      const response = await provider?.request({
+        method: 'eth_signTypedData_v1',
+        params: [[MOCK_TYPED_DATA], MOCK_ADDERESS],
+      });
+      expect(hashSpy).toHaveBeenCalled();
+      expect(sendRequestSpy).toBeCalledWith({
+        method: 'signEthereumMessage',
+        params: {
+          address: MOCK_ADDERESS.toLowerCase(),
+          message: ENCODED_MESSAGE,
+          addPrefix: false,
+          typedDataJson: ENCODED_TYPED_DATA_JSON,
+        },
+      });
+      expect(response).toBe('signTypedData mocked result');
+    });
+
+    test('eth_signTypedData_v3', async () => {
+      const hashSpy = jest.spyOn(eip712, 'hashForSignTypedData_v3');
+      const response = await provider?.request({
+        method: 'eth_signTypedData_v3',
+        params: [MOCK_ADDERESS, MOCK_TYPED_DATA],
+      });
+      expect(hashSpy).toHaveBeenCalled();
+      expect(sendRequestSpy).toBeCalledWith({
+        method: 'signEthereumMessage',
+        params: {
+          address: MOCK_ADDERESS.toLowerCase(),
+          message: ENCODED_MESSAGE,
+          addPrefix: false,
+          typedDataJson: ENCODED_TYPED_DATA_JSON,
+        },
+      });
+      expect(response).toBe('signTypedData mocked result');
+    });
+
+    test('eth_signTypedData_v4', async () => {
+      const hashSpy = jest.spyOn(eip712, 'hashForSignTypedData_v4');
+      const response = await provider?.request({
+        method: 'eth_signTypedData_v4',
+        params: [MOCK_ADDERESS, MOCK_TYPED_DATA],
+      });
+      expect(hashSpy).toHaveBeenCalled();
+      expect(sendRequestSpy).toBeCalledWith({
+        method: 'signEthereumMessage',
+        params: {
+          address: MOCK_ADDERESS.toLowerCase(),
+          message: ENCODED_MESSAGE,
+          addPrefix: false,
+          typedDataJson: ENCODED_TYPED_DATA_JSON,
+        },
+      });
+      expect(response).toBe('signTypedData mocked result');
+    });
+
+    test('eth_signTypedData', async () => {
+      const hashSpy = jest.spyOn(eip712, 'hashForSignTypedData_v4');
+      const response = await provider?.request({
+        method: 'eth_signTypedData',
+        params: [MOCK_ADDERESS, MOCK_TYPED_DATA],
+      });
+      expect(hashSpy).toHaveBeenCalled();
+      expect(sendRequestSpy).toBeCalledWith({
+        method: 'signEthereumMessage',
+        params: {
+          address: MOCK_ADDERESS.toLowerCase(),
+          message: ENCODED_MESSAGE,
+          addPrefix: false,
+          typedDataJson: ENCODED_TYPED_DATA_JSON,
+        },
+      });
+      expect(response).toBe('signTypedData mocked result');
     });
   });
 
@@ -205,26 +340,6 @@ describe('LegacyProvider', () => {
       expect(response).toEqual([MOCK_ADDERESS.toLowerCase()]);
     });
 
-    test('personal_sign success', async () => {
-      const response = await provider?.request({
-        method: 'personal_sign',
-        params: ['My secret message', MOCK_ADDERESS.toLowerCase()],
-      });
-      expect(response).toBe('0x');
-    });
-
-    test('personal_sign fail', async () => {
-      await expect(() =>
-        provider?.request({
-          method: 'personal_sign',
-          params: ['0x123456789abcdef', 'Super safe message'],
-        })
-      ).rejects.toThrowEIPError(
-        standardErrorCodes.rpc.invalidParams,
-        'Invalid Ethereum address: Super safe message'
-      );
-    });
-
     test('eth_signTransaction', async () => {
       const response = await provider?.request({
         method: 'eth_signTransaction',
@@ -271,39 +386,6 @@ describe('LegacyProvider', () => {
         ],
       });
       expect(response).toBe(MOCK_TX);
-    });
-
-    // eslint-disable-next-line
-    test.skip('eth_signTypedData_v1', async () => {
-      const response = await provider?.request({
-        method: 'eth_signTypedData_v1',
-        params: [[MOCK_TYPED_DATA], MOCK_ADDERESS],
-      });
-      expect(response).toBe('0x');
-    });
-
-    test('eth_signTypedData_v3', async () => {
-      const response = await provider?.request({
-        method: 'eth_signTypedData_v3',
-        params: [MOCK_ADDERESS, MOCK_TYPED_DATA],
-      });
-      expect(response).toBe('0x');
-    });
-
-    test('eth_signTypedData_v4', async () => {
-      const response = await provider?.request({
-        method: 'eth_signTypedData_v4',
-        params: [MOCK_ADDERESS, MOCK_TYPED_DATA],
-      });
-      expect(response).toBe('0x');
-    });
-
-    test('eth_signTypedData', async () => {
-      const response = await provider?.request({
-        method: 'eth_signTypedData',
-        params: [MOCK_ADDERESS, MOCK_TYPED_DATA],
-      });
-      expect(response).toBe('0x');
     });
 
     test('wallet_addEthereumChain success', async () => {

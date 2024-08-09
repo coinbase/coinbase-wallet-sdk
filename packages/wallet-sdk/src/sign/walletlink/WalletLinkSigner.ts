@@ -18,6 +18,7 @@ import {
   ensureBuffer,
   ensureIntNumber,
   ensureParsedJSONObject,
+  hexStringFromBuffer,
   hexStringFromNumber,
 } from ':core/type/util';
 import { fetchRPCRequest } from ':util/provider';
@@ -255,7 +256,7 @@ export class WalletLinkSigner implements Signer {
         return this.ecRecover(request);
 
       case 'personal_sign':
-        return this._personal_sign(params);
+        return this.personalSign(request);
 
       case 'eth_signTransaction':
         return this._eth_signTransaction(params);
@@ -267,14 +268,10 @@ export class WalletLinkSigner implements Signer {
         return this._eth_sendTransaction(params);
 
       case 'eth_signTypedData_v1':
-        return this._eth_signTypedData_v1(params);
-
       case 'eth_signTypedData_v3':
-        return this._eth_signTypedData_v3(params);
-
       case 'eth_signTypedData_v4':
       case 'eth_signTypedData':
-        return this._eth_signTypedData_v4(params);
+        return this.signTypedData(request);
 
       case 'wallet_addEthereumChain':
         return this.addEthereumChain(params);
@@ -343,20 +340,6 @@ export class WalletLinkSigner implements Signer {
     };
   }
 
-  private async _signEthereumMessage(
-    message: Buffer,
-    address: AddressString,
-    addPrefix: boolean,
-    typedDataJson?: string | null
-  ) {
-    this._ensureKnownAddress(address);
-
-    const relay = this.initializeRelay();
-    const res = await relay.signEthereumMessage(message, address, addPrefix, typedDataJson);
-    if (isErrorResponse(res)) throw res;
-    return res.result;
-  }
-
   private async ecRecover(request: RequestArguments) {
     const { method, params } = request;
     if (!Array.isArray(params)) throw standardErrors.rpc.invalidParams();
@@ -404,11 +387,26 @@ export class WalletLinkSigner implements Signer {
     return this._addresses;
   }
 
-  private _personal_sign(params: RequestParam) {
-    const message = ensureBuffer(params[0]);
-    const address = ensureAddressString(params[1]);
+  private async personalSign({ params }: RequestArguments) {
+    if (!Array.isArray(params)) throw standardErrors.rpc.invalidParams();
 
-    return this._signEthereumMessage(message, address, true);
+    const address = params[1];
+    const rawData = params[0];
+    this._ensureKnownAddress(address);
+
+    const relay = this.initializeRelay();
+    const res = await relay.sendRequest({
+      method: 'signEthereumMessage',
+      params: {
+        address: ensureAddressString(address),
+        message: encodeToHexString(rawData),
+        addPrefix: true,
+        typedDataJson: null,
+      },
+    });
+
+    if (isErrorResponse(res)) throw res;
+    return res.result;
   }
 
   private async _eth_signTransaction(params: RequestParam) {
@@ -437,40 +435,42 @@ export class WalletLinkSigner implements Signer {
     return res.result;
   }
 
-  private async _eth_signTypedData_v1(params: RequestParam) {
-    const typedData = ensureParsedJSONObject(params[0]);
-    const address = ensureAddressString(params[1]);
+  private async signTypedData(request: RequestArguments) {
+    const { method, params } = request;
+    if (!Array.isArray(params)) throw standardErrors.rpc.invalidParams();
 
+    const encode = (input: object) => {
+      const hashFuncMap = {
+        eth_signTypedData_v1: eip712.hashForSignTypedDataLegacy,
+        eth_signTypedData_v3: eip712.hashForSignTypedData_v3,
+        eth_signTypedData_v4: eip712.hashForSignTypedData_v4,
+        eth_signTypedData: eip712.hashForSignTypedData_v4,
+      };
+      return hexStringFromBuffer(
+        hashFuncMap[method as keyof typeof hashFuncMap]({
+          data: ensureParsedJSONObject(input),
+        }),
+        true
+      );
+    };
+
+    const address = params[method === 'eth_signTypedData_v1' ? 1 : 0];
+    const rawData = params[method === 'eth_signTypedData_v1' ? 0 : 1];
     this._ensureKnownAddress(address);
 
-    const message = eip712.hashForSignTypedDataLegacy({ data: typedData });
-    const typedDataJSON = JSON.stringify(typedData, null, 2);
+    const relay = this.initializeRelay();
+    const res = await relay.sendRequest({
+      method: 'signEthereumMessage',
+      params: {
+        address: ensureAddressString(address),
+        message: encode(rawData),
+        typedDataJson: JSON.stringify(rawData, null, 2),
+        addPrefix: false,
+      },
+    });
 
-    return this._signEthereumMessage(message, address, false, typedDataJSON);
-  }
-
-  private async _eth_signTypedData_v3(params: RequestParam) {
-    const address = ensureAddressString(params[0]);
-    const typedData = ensureParsedJSONObject(params[1]);
-
-    this._ensureKnownAddress(address);
-
-    const message = eip712.hashForSignTypedData_v3({ data: typedData });
-    const typedDataJSON = JSON.stringify(typedData, null, 2);
-
-    return this._signEthereumMessage(message, address, false, typedDataJSON);
-  }
-
-  private async _eth_signTypedData_v4(params: RequestParam) {
-    const address = ensureAddressString(params[0]);
-    const typedData = ensureParsedJSONObject(params[1]);
-
-    this._ensureKnownAddress(address);
-
-    const message = eip712.hashForSignTypedData_v4({ data: typedData });
-    const typedDataJSON = JSON.stringify(typedData, null, 2);
-
-    return this._signEthereumMessage(message, address, false, typedDataJSON);
+    if (isErrorResponse(res)) throw res;
+    return res.result;
   }
 
   private initializeRelay(): WalletLinkRelay {
