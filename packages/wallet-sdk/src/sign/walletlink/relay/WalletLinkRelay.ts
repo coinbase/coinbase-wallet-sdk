@@ -204,17 +204,6 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
     });
   }
 
-  public ethereumAddressFromSignedMessage(message: Buffer, signature: Buffer, addPrefix: boolean) {
-    return this.sendRequest({
-      method: 'ethereumAddressFromSignedMessage',
-      params: {
-        message: hexStringFromBuffer(message, true),
-        signature: hexStringFromBuffer(signature, true),
-        addPrefix,
-      },
-    });
-  }
-
   public signEthereumTransaction(params: EthereumTransactionParams) {
     return this.sendRequest({
       method: 'signEthereumTransaction',

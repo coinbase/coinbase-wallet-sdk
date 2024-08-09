@@ -12,6 +12,7 @@ import { standardErrors } from ':core/error';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface';
 import { AddressString, IntNumber } from ':core/type';
 import {
+  encodeToHexString,
   ensureAddressString,
   ensureBigInt,
   ensureBuffer,
@@ -234,10 +235,9 @@ export class WalletLinkSigner implements Signer {
   }
 
   async request(request: RequestArguments) {
-    const { method } = request;
     const params = (request.params as RequestParam) || [];
 
-    switch (method) {
+    switch (request.method) {
       case 'eth_accounts':
         return [...this._addresses];
       case 'eth_coinbase':
@@ -251,13 +251,11 @@ export class WalletLinkSigner implements Signer {
         return this._eth_requestAccounts();
 
       case 'eth_ecRecover':
-        return this._eth_ecRecover(params);
+      case 'personal_ecRecover':
+        return this.ecRecover(request);
 
       case 'personal_sign':
         return this._personal_sign(params);
-
-      case 'personal_ecRecover':
-        return this._personal_ecRecover(params);
 
       case 'eth_signTransaction':
         return this._eth_signTransaction(params);
@@ -359,13 +357,19 @@ export class WalletLinkSigner implements Signer {
     return res.result;
   }
 
-  private async _ethereumAddressFromSignedMessage(
-    message: Buffer,
-    signature: Buffer,
-    addPrefix: boolean
-  ) {
+  private async ecRecover(request: RequestArguments) {
+    const { method, params } = request;
+    if (!Array.isArray(params)) throw standardErrors.rpc.invalidParams();
+
     const relay = this.initializeRelay();
-    const res = await relay.ethereumAddressFromSignedMessage(message, signature, addPrefix);
+    const res = await relay.sendRequest({
+      method: 'ethereumAddressFromSignedMessage',
+      params: {
+        message: encodeToHexString(params[0]),
+        signature: encodeToHexString(params[1]),
+        addPrefix: method === 'personal_ecRecover',
+      },
+    });
     if (isErrorResponse(res)) throw res;
     return res.result;
   }
@@ -400,24 +404,11 @@ export class WalletLinkSigner implements Signer {
     return this._addresses;
   }
 
-  private _eth_ecRecover(params: RequestParam) {
-    const message = ensureBuffer(params[0]);
-    const signature = ensureBuffer(params[1]);
-    return this._ethereumAddressFromSignedMessage(message, signature, false);
-  }
-
   private _personal_sign(params: RequestParam) {
     const message = ensureBuffer(params[0]);
     const address = ensureAddressString(params[1]);
 
     return this._signEthereumMessage(message, address, true);
-  }
-
-  private _personal_ecRecover(params: RequestParam) {
-    const message = ensureBuffer(params[0]);
-    const signature = ensureBuffer(params[1]);
-
-    return this._ethereumAddressFromSignedMessage(message, signature, true);
   }
 
   private async _eth_signTransaction(params: RequestParam) {

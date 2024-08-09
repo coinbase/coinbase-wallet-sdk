@@ -27,6 +27,10 @@ export function hexStringFromBuffer(buf: Buffer, includePrefix = false): HexStri
   return HexString(includePrefix ? `0x${hex}` : hex);
 }
 
+export function encodeToHexString(str: unknown): HexString {
+  return hexStringFromBuffer(ensureBuffer(str), true);
+}
+
 export function bigIntStringFromBigInt(bi: bigint): BigIntString {
   return BigIntString(bi.toString(10));
 }
