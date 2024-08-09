@@ -119,6 +119,46 @@ describe('LegacyProvider', () => {
     expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
   });
 
+  describe('ecRecover', () => {
+    const relay = mockedWalletLinkRelay();
+    const sendRequestSpy = jest.spyOn(relay, 'sendRequest').mockResolvedValue({
+      result: AddressString(MOCK_ADDERESS),
+    });
+    const provider = createAdapter({ relay });
+
+    test('eth_ecRecover', async () => {
+      const response = await provider?.request({
+        method: 'eth_ecRecover',
+        params: ['Super safe message', '0x'],
+      });
+      expect(sendRequestSpy).toBeCalledWith({
+        method: 'ethereumAddressFromSignedMessage',
+        params: {
+          addPrefix: false,
+          message: '0x53757065722073616665206d657373616765',
+          signature: '0x',
+        },
+      });
+      expect(response).toBe(MOCK_ADDERESS);
+    });
+
+    test('personal_ecRecover', async () => {
+      const response = await provider?.request({
+        method: 'personal_ecRecover',
+        params: ['Super safe message', '0x'],
+      });
+      expect(sendRequestSpy).toBeCalledWith({
+        method: 'ethereumAddressFromSignedMessage',
+        params: {
+          addPrefix: true,
+          message: '0x53757065722073616665206d657373616765',
+          signature: '0x',
+        },
+      });
+      expect(response).toBe(MOCK_ADDERESS);
+    });
+  });
+
   describe('RPC Methods', () => {
     let provider: WalletLinkSigner | null = null;
     beforeEach(() => {
@@ -165,14 +205,6 @@ describe('LegacyProvider', () => {
       expect(response).toEqual([MOCK_ADDERESS.toLowerCase()]);
     });
 
-    test('eth_ecRecover', async () => {
-      const response = await provider?.request({
-        method: 'eth_ecRecover',
-        params: ['Super safe message', '0x'],
-      });
-      expect(response).toBe(MOCK_ADDERESS);
-    });
-
     test('personal_sign success', async () => {
       const response = await provider?.request({
         method: 'personal_sign',
@@ -191,14 +223,6 @@ describe('LegacyProvider', () => {
         standardErrorCodes.rpc.invalidParams,
         'Invalid Ethereum address: Super safe message'
       );
-    });
-
-    test('personal_ecRecover', async () => {
-      const response = await provider?.request({
-        method: 'personal_ecRecover',
-        params: ['Super safe message', '0x'],
-      });
-      expect(response).toBe(MOCK_ADDERESS);
     });
 
     test('eth_signTransaction', async () => {

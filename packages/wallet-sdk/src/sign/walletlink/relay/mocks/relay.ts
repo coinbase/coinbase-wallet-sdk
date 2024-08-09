@@ -50,12 +50,6 @@ const mock = {
       result: HexString('0x'),
     });
   },
-  ethereumAddressFromSignedMessage() {
-    return makeMockReturn({
-      method: 'ethereumAddressFromSignedMessage',
-      result: AddressString(MOCK_ADDERESS),
-    });
-  },
   signEthereumTransaction() {
     return makeMockReturn({
       method: 'signEthereumTransaction',
