@@ -1,6 +1,7 @@
 import { HexString } from '.';
 import {
   bigIntStringFromBigInt,
+  encodeToHexString,
   ensureAddressString,
   ensureBigInt,
   ensureBuffer,
@@ -46,6 +47,14 @@ describe('util', () => {
   test('hexStringFromBuffer', () => {
     expect(hexStringFromBuffer(Buffer.alloc(3))).toEqual('000000');
     expect(hexStringFromBuffer(Buffer.alloc(3), true)).toEqual('0x000000');
+  });
+
+  test('endcodeToHexString', () => {
+    expect(encodeToHexString('')).toEqual('0x');
+    expect(encodeToHexString('713')).toEqual('0x0713');
+    expect(
+      encodeToHexString('My name is Giovanni Giorgio, but everybody calls me... Jungho')
+    ).toEqual(expect.stringContaining('0x4d79206e'));
   });
 
   test('bigIntStringFromBigInt', () => {
