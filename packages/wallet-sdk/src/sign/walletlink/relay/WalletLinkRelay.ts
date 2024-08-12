@@ -19,7 +19,7 @@ import { WalletLinkRelayUI } from './ui/WalletLinkRelayUI';
 import { WLMobileRelayUI } from './ui/WLMobileRelayUI';
 import { standardErrors } from ':core/error';
 import { AppMetadata } from ':core/provider/interface';
-import { AddressString, IntNumber } from ':core/type';
+import { AddressString } from ':core/type';
 import { bigIntStringFromBigInt, hexStringFromBuffer, randomBytesHex } from ':core/type/util';
 
 export interface WalletLinkRelayOptions {
@@ -218,7 +218,7 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
     });
   }
 
-  public submitEthereumTransaction(signedTransaction: Buffer, chainId: IntNumber) {
+  public submitEthereumTransaction(signedTransaction: Buffer, chainId: number) {
     return this.sendRequest({
       method: 'submitEthereumTransaction',
       params: {
