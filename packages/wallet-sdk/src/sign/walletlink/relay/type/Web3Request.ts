@@ -103,13 +103,6 @@ type _Web3Request =
       };
     }
   | {
-      method: 'generic';
-      params: {
-        action: string;
-        data: object;
-      };
-    }
-  | {
       method: 'watchAsset';
       params: {
         type: string;

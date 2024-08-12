@@ -18,32 +18,34 @@ import { RelayUI } from './ui/RelayUI';
 import { WalletLinkRelayUI } from './ui/WalletLinkRelayUI';
 import { WLMobileRelayUI } from './ui/WLMobileRelayUI';
 import { standardErrors } from ':core/error';
-import { AddressString, IntNumber, RegExpString } from ':core/type';
+import { AppMetadata } from ':core/provider/interface';
+import { AddressString, IntNumber } from ':core/type';
 import { bigIntStringFromBigInt, hexStringFromBuffer, randomBytesHex } from ':core/type/util';
 
-interface WalletLinkRelayOptions {
+export interface WalletLinkRelayOptions {
   linkAPIUrl: string;
   storage: ScopedLocalStorage;
+  metadata: AppMetadata;
+  accountsCallback: (account: string[]) => void;
+  chainCallback: (jsonRpcUrl: string, chainId: number) => void;
 }
 
 export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
   private static accountRequestCallbackIds = new Set<string>();
 
   private readonly linkAPIUrl: string;
-  protected readonly storage: ScopedLocalStorage;
+  private readonly storage: ScopedLocalStorage;
   private _session: WalletLinkSession;
   private readonly relayEventManager: RelayEventManager;
-  protected connection: WalletLinkConnection;
-  private accountsCallback: ((account: string[], isDisconnect?: boolean) => void) | null = null;
+  private connection: WalletLinkConnection;
+  private accountsCallback: (account: string[]) => void;
   private chainCallbackParams = { chainId: '', jsonRpcUrl: '' }; // to implement distinctUntilChanged
-  private chainCallback: ((chainId: string, jsonRpcUrl: string) => void) | null = null;
-  protected dappDefaultChain = 1;
+  private chainCallback: (jsonRpcUrl: string, chainId: number) => void;
 
-  protected ui: RelayUI;
+  private ui: RelayUI;
   private isMobileWeb = isMobileWeb();
 
-  protected appName = '';
-  protected appLogoUrl: string | null = null;
+  private metadata: AppMetadata;
   isLinked: boolean | undefined;
   isUnlinkedErrorState: boolean | undefined;
 
@@ -52,6 +54,9 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
 
     this.linkAPIUrl = options.linkAPIUrl;
     this.storage = options.storage;
+    this.metadata = options.metadata;
+    this.accountsCallback = options.accountsCallback;
+    this.chainCallback = options.chainCallback;
 
     const { session, ui, connection } = this.subscribe();
 
@@ -61,9 +66,10 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
     this.relayEventManager = new RelayEventManager();
 
     this.ui = ui;
+    this.ui.attach();
   }
 
-  public subscribe() {
+  private subscribe() {
     const session =
       WalletLinkSession.load(this.storage) || new WalletLinkSession(this.storage).save();
 
@@ -118,7 +124,7 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
     };
 
     if (this.chainCallback) {
-      this.chainCallback(chainId, jsonRpcUrl);
+      this.chainCallback(jsonRpcUrl, parseInt(chainId, 10));
     }
   };
 
@@ -145,10 +151,6 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
     }
   };
 
-  public attachUI() {
-    this.ui.attach();
-  }
-
   public resetAndReload(): void {
     Promise.race([
       this.connection.setSessionMetadata('__destroyed', '1'),
@@ -172,19 +174,6 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
         document.location.reload();
       })
       .catch((_) => {});
-  }
-
-  public setAppInfo(appName: string, appLogoUrl: string | null): void {
-    this.appName = appName;
-    this.appLogoUrl = appLogoUrl;
-  }
-
-  public getStorageItem(key: string): string | null {
-    return this.storage.getItem(key);
-  }
-
-  public setStorageItem(key: string, value: string): void {
-    this.storage.setItem(key, value);
   }
 
   public signEthereumTransaction(params: EthereumTransactionParams) {
@@ -239,31 +228,8 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
     });
   }
 
-  public scanQRCode(regExp: RegExpString) {
-    return this.sendRequest({
-      method: 'scanQRCode',
-      params: {
-        regExp,
-      },
-    });
-  }
-
   public getWalletLinkSession() {
     return this._session;
-  }
-
-  public genericRequest(data: object, action: string) {
-    return this.sendRequest({
-      method: 'generic',
-      params: {
-        action,
-        data,
-      },
-    });
-  }
-
-  public sendGenericMessage(request: Web3Request<'generic'>): Promise<Web3Response<'generic'>> {
-    return this.sendRequest(request);
   }
 
   public sendRequest<
@@ -302,21 +268,7 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
     });
   }
 
-  public setAccountsCallback(
-    accountsCallback: (accounts: string[], isDisconnect?: boolean) => void
-  ) {
-    this.accountsCallback = accountsCallback;
-  }
-
-  public setChainCallback(chainCallback: (chainId: string, jsonRpcUrl: string) => void) {
-    this.chainCallback = chainCallback;
-  }
-
-  public setDappDefaultChainCallback(chainId: number) {
-    this.dappDefaultChain = chainId;
-  }
-
-  protected publishWeb3RequestEvent(id: string, request: Web3Request): void {
+  private publishWeb3RequestEvent(id: string, request: Web3Request): void {
     const message: WalletLinkEventData = { type: 'WEB3_REQUEST', id, request };
     this.publishEvent('Web3Request', message, true)
       .then((_) => {})
@@ -372,7 +324,7 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
     this.publishEvent('Web3RequestCanceled', message, false).then();
   }
 
-  protected publishEvent(
+  private publishEvent(
     event: string,
     message: WalletLinkEventData,
     callWebhook: boolean
@@ -415,11 +367,12 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
   }
 
   public requestEthereumAccounts() {
+    const { appName, appLogoUrl } = this.metadata;
     const request: Web3Request = {
       method: 'requestEthereumAccounts',
       params: {
-        appName: this.appName,
-        appLogoUrl: this.appLogoUrl || null,
+        appName,
+        appLogoUrl,
       },
     };
 

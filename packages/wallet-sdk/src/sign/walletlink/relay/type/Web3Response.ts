@@ -67,8 +67,4 @@ type _Web3Response =
   | {
       method: 'scanQRCode';
       result: string;
-    }
-  | {
-      method: 'generic';
-      result: string;
     };

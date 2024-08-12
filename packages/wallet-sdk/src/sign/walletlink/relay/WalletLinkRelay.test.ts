@@ -7,16 +7,24 @@ import { WalletLinkWebSocket } from './connection/WalletLinkWebSocket';
 import { WALLET_USER_NAME_KEY } from './constants';
 import { ServerMessage } from './type/ServerMessage';
 import { WalletLinkSessionConfig } from './type/WalletLinkSessionConfig';
-import { WalletLinkRelay } from './WalletLinkRelay';
+import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay';
 
-const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`"decrypted ${text}"`));
+const decryptMock = jest.fn().mockImplementation((text) => text);
 
 jest.spyOn(WalletLinkCipher.prototype, 'decrypt').mockImplementation(decryptMock);
 
 describe('WalletLinkRelay', () => {
-  const options = {
+  const options: WalletLinkRelayOptions = {
     linkAPIUrl: 'http://link-api-url',
     storage: new ScopedLocalStorage('walletlink', 'test'),
+    metadata: {
+      appName: 'test app',
+      appLogoUrl: '',
+      appChainIds: [],
+      appDeeplinkUrl: null,
+    },
+    accountsCallback: jest.fn(),
+    chainCallback: jest.fn(),
   };
 
   beforeEach(() => {
@@ -107,15 +115,14 @@ describe('WalletLinkRelay', () => {
     });
 
     it('should update chainId and jsonRpcUrl only when distinct', async () => {
-      const callback = jest.fn();
       const relay = new WalletLinkRelay(options);
-      relay.setChainCallback(callback);
+      const callback = options.chainCallback;
 
       const sessionConfig: WalletLinkSessionConfig = {
         webhookId: 'webhookId',
         webhookUrl: 'webhookUrl',
         metadata: {
-          ChainId: 'ChainId',
+          ChainId: '12345',
           JsonRpcUrl: 'JsonRpcUrl',
         },
       };
@@ -126,8 +133,8 @@ describe('WalletLinkRelay', () => {
         type: 'GetSessionConfigOK',
       });
       expect(callback).toHaveBeenCalledWith(
-        await decryptMock(sessionConfig.metadata.ChainId),
-        await decryptMock(sessionConfig.metadata.JsonRpcUrl)
+        await decryptMock(sessionConfig.metadata.JsonRpcUrl),
+        Number(await decryptMock(sessionConfig.metadata.ChainId))
       );
 
       // same chain id and json rpc url
@@ -152,8 +159,8 @@ describe('WalletLinkRelay', () => {
       });
 
       expect(callback).toHaveBeenCalledWith(
-        await decryptMock(newSessionConfig.metadata.ChainId),
-        await decryptMock(newSessionConfig.metadata.JsonRpcUrl)
+        await decryptMock(newSessionConfig.metadata.JsonRpcUrl),
+        Number(await decryptMock(newSessionConfig.metadata.ChainId))
       );
       expect(callback).toHaveBeenCalledTimes(2);
     });

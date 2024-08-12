@@ -62,34 +62,7 @@ const mock = {
       result: HexString(MOCK_TX),
     });
   },
-  scanQRCode() {
-    return makeMockReturn({
-      method: 'scanQRCode',
-      result: 'Success',
-    });
-  },
-  genericRequest() {
-    return makeMockReturn({
-      method: 'generic',
-      result: 'Success',
-    });
-  },
   sendRequest<_, T extends Web3Method>() {
     return Promise.reject<Web3Response<T>>();
-  },
-  setAppInfo() {
-    return;
-  },
-  setAccountsCallback(): void {
-    return;
-  },
-  setChainCallback(): void {
-    return;
-  },
-  setDappDefaultChainCallback(): void {
-    return;
-  },
-  attachUI() {
-    return;
   },
 };
