@@ -10,7 +10,7 @@ import { ScopedLocalStorage } from './storage/ScopedLocalStorage';
 import { WALLETLINK_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface';
-import { AddressString, IntNumber } from ':core/type';
+import { AddressString } from ':core/type';
 import {
   encodeToHexString,
   ensureAddressString,
@@ -357,15 +357,8 @@ export class WalletLinkSigner implements Signer {
     return res.result;
   }
 
-  private getChainId(): IntNumber {
-    const chainIdStr = this._storage.getItem(DEFAULT_CHAIN_ID_KEY);
-
-    if (!chainIdStr) {
-      return ensureIntNumber(1); // default to mainnet
-    }
-
-    const chainId = parseInt(chainIdStr, 10);
-    return ensureIntNumber(chainId);
+  private getChainId(): number {
+    return parseInt(this._storage.getItem(DEFAULT_CHAIN_ID_KEY) ?? '1', 10);
   }
 
   private async _eth_requestAccounts() {
@@ -475,21 +468,13 @@ export class WalletLinkSigner implements Signer {
 
   private initializeRelay(): WalletLinkRelay {
     if (!this._relay) {
-      const relay = new WalletLinkRelay({
+      this._relay = new WalletLinkRelay({
         linkAPIUrl: WALLETLINK_URL,
         storage: this._storage,
+        metadata: this.metadata,
+        accountsCallback: this._setAddresses.bind(this),
+        chainCallback: this.updateProviderInfo.bind(this),
       });
-      const { appName, appLogoUrl } = this.metadata;
-      relay.setAppInfo(appName, appLogoUrl);
-      relay.attachUI();
-
-      relay.setAccountsCallback((accounts, isDisconnect) =>
-        this._setAddresses(accounts, isDisconnect)
-      );
-      relay.setChainCallback((chainId, jsonRpcUrl) => {
-        this.updateProviderInfo(jsonRpcUrl, parseInt(chainId, 10));
-      });
-      this._relay = relay;
     }
     return this._relay;
   }

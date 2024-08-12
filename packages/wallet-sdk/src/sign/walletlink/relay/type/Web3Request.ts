@@ -77,7 +77,7 @@ type _Web3Request =
         maxFeePerGas: BigIntString | null; // in wei
         maxPriorityFeePerGas: BigIntString | null; // in wei
         gasLimit: BigIntString | null;
-        chainId: IntNumber;
+        chainId: number;
         shouldSubmit: boolean;
       };
     }
@@ -85,7 +85,7 @@ type _Web3Request =
       method: 'submitEthereumTransaction';
       params: {
         signedTransaction: HexString;
-        chainId: IntNumber;
+        chainId: number;
       };
     }
   | {
@@ -100,13 +100,6 @@ type _Web3Request =
       method: 'scanQRCode';
       params: {
         regExp: RegExpString;
-      };
-    }
-  | {
-      method: 'generic';
-      params: {
-        action: string;
-        data: object;
       };
     }
   | {

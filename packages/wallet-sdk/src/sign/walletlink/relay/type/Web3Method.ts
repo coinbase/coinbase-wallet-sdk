@@ -7,7 +7,6 @@ export const web3Methods = [
   'submitEthereumTransaction',
   'ethereumAddressFromSignedMessage',
   'scanQRCode',
-  'generic',
   'childRequestEthereumAccounts',
   'addEthereumChain',
   'switchEthereumChain',
