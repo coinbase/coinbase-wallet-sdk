@@ -1,5 +1,3 @@
-// Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
-
 import { LogoType, walletLogo } from './assets/wallet-logo';
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { AppMetadata, Preference, ProviderInterface } from './core/provider/interface';
@@ -9,10 +7,11 @@ import { getFavicon } from ':core/type/util';
 import { getCoinbaseInjectedProvider } from ':util/provider';
 
 // for backwards compatibility
-type CoinbaseWalletSDKOptions = Partial<AppMetadata>;
+type CoinbaseWalletSDKOptions = Partial<AppMetadata> & { owners?: string[] };
 
 export class CoinbaseWalletSDK {
   private metadata: AppMetadata;
+  private owners: string[];
 
   constructor(metadata: Readonly<CoinbaseWalletSDKOptions>) {
     this.metadata = {
@@ -21,11 +20,12 @@ export class CoinbaseWalletSDK {
       appChainIds: metadata.appChainIds || [],
       appDeeplinkUrl: null,
     };
+    this.owners = metadata.owners || [];
     this.storeLatestVersion();
   }
 
   public makeWeb3Provider(preference: Preference = { options: 'all' }): ProviderInterface {
-    const params = { metadata: this.metadata, preference };
+    const params = { metadata: this.metadata, preference, owners: this.owners };
     return getCoinbaseInjectedProvider(params) ?? new CoinbaseWalletProvider(params);
   }
 

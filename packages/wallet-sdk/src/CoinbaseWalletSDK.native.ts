@@ -1,5 +1,3 @@
-// Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
-
 import { LogoType, walletLogo } from './assets/wallet-logo';
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { AppMetadata, ProviderInterface } from './core/provider/interface';
@@ -7,10 +5,11 @@ import { LIB_VERSION } from './version';
 import { MOBILE_SDK_RESPONSE_PATH } from ':core/constants';
 import { ScopedAsyncStorage } from ':core/storage/ScopedAsyncStorage';
 
-type CoinbaseWalletSDKOptions = Partial<AppMetadata>;
+type CoinbaseWalletSDKOptions = Partial<AppMetadata> & { owners?: string[] };
 
 export class CoinbaseWalletSDK {
   private metadata: AppMetadata;
+  private owners: string[];
 
   constructor(metadata: Readonly<CoinbaseWalletSDKOptions>) {
     if (!metadata.appDeeplinkUrl) {
@@ -28,6 +27,7 @@ export class CoinbaseWalletSDK {
       appChainIds: metadata.appChainIds || [],
       appDeeplinkUrl: url.toString(),
     };
+    this.owners = metadata.owners || [];
     this.storeLatestVersion();
   }
 
@@ -35,6 +35,7 @@ export class CoinbaseWalletSDK {
     return new CoinbaseWalletProvider({
       metadata: this.metadata,
       preference: { options: 'smartWalletOnly' },
+      owners: this.owners,
     });
   }
 

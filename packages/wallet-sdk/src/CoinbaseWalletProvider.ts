@@ -20,15 +20,17 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
   private readonly metadata: AppMetadata;
   private readonly preference: Preference;
   private readonly communicator: Communicator;
+  private readonly owners: string[];
 
   private initPromise: Promise<void>;
   private signer: Signer | null = null;
 
-  constructor({ metadata, preference: { keysUrl, ...preference } }: Readonly<ConstructorOptions>) {
+  constructor({ metadata, preference: { keysUrl, ...preference }, owners = [] }: Readonly<ConstructorOptions & { owners?: string[] }>) {
     super();
     this.metadata = metadata;
     this.preference = preference;
     this.communicator = Communicator.getInstance(keysUrl);
+    this.owners = owners;
 
     // Async initialize
     this.initPromise = this.initialize();
@@ -39,6 +41,9 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
     const signerType = await loadSignerType();
     if (signerType) {
       this.signer = await this.initSigner(signerType);
+      if (this.owners.length > 0) {
+        await this.initializeOwners();
+      }
     }
   }
 
@@ -54,6 +59,9 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
             await signer.handshake();
             this.signer = signer;
             storeSignerType(signerType);
+            if (this.owners.length > 0) {
+              await this.initializeOwners();
+            }
             break;
           }
           case 'net_version':
@@ -114,5 +122,10 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
       communicator: this.communicator,
       callback: this.emit.bind(this),
     });
+  }
+
+  private async initializeOwners() {
+    // Implement the logic to initialize owners
+    // This is a placeholder function and should be replaced with actual implementation
   }
 }

@@ -4,10 +4,11 @@ import * as util from './sign/util';
 import { ProviderEventCallback, RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
 
-function createProvider() {
+function createProvider(owners: string[] = []) {
   return new CoinbaseWalletProvider({
     metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1], appDeeplinkUrl: null },
     preference: { options: 'all' },
+    owners,
   });
 }
 
@@ -165,5 +166,27 @@ describe('Signer configuration', () => {
     await provider.disconnect();
     expect(mockCleanup).toHaveBeenCalled();
     expect(provider['signer']).toBeNull();
+  });
+});
+
+describe('Owner initialization', () => {
+  it('should initialize owners during setup', async () => {
+    const owners = ['0xOwner1', '0xOwner2'];
+    const providerWithOwners = createProvider(owners);
+
+    await providerWithOwners.request({ method: 'eth_requestAccounts' });
+    expect(mockHandshake).toHaveBeenCalledWith();
+    expect(providerWithOwners['owners']).toEqual(owners);
+  });
+
+  it('should handle owner initialization correctly', async () => {
+    const owners = ['0xOwner1', '0xOwner2'];
+    const providerWithOwners = createProvider(owners);
+
+    await providerWithOwners.request({ method: 'eth_requestAccounts' });
+    expect(mockHandshake).toHaveBeenCalledWith();
+    expect(providerWithOwners['owners']).toEqual(owners);
+
+    // Add additional assertions or logic to verify owner initialization
   });
 });

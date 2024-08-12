@@ -40,6 +40,12 @@ describe('CoinbaseWalletSDK', () => {
         appDeeplinkUrl: `${mockAppDeeplinkUrl}/${MOBILE_SDK_RESPONSE_PATH}`,
       });
     });
+
+    it('should initialize owners with provided values', () => {
+      const owners = ['0xOwner1', '0xOwner2'];
+      const sdk = new CoinbaseWalletSDK({ ...mockMetadata, owners });
+      expect(sdk['owners']).toEqual(owners);
+    });
   });
 
   describe('makeWeb3Provider', () => {
@@ -50,6 +56,19 @@ describe('CoinbaseWalletSDK', () => {
       expect(CoinbaseWalletProvider).toHaveBeenCalledWith({
         metadata: sdk['metadata'],
         preference: { options: 'smartWalletOnly' },
+        owners: [],
+      });
+    });
+
+    it('should pass owners to CoinbaseWalletProvider', () => {
+      const owners = ['0xOwner1', '0xOwner2'];
+      const sdk = new CoinbaseWalletSDK({ ...mockMetadata, owners });
+      const provider = sdk.makeWeb3Provider();
+      expect(provider).toBeInstanceOf(CoinbaseWalletProvider);
+      expect(CoinbaseWalletProvider).toHaveBeenCalledWith({
+        metadata: sdk['metadata'],
+        preference: { options: 'smartWalletOnly' },
+        owners,
       });
     });
   });

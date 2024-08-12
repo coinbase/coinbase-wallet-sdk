@@ -41,6 +41,7 @@ describe('CoinbaseWalletSDK', () => {
       preference: {
         options: 'all',
       },
+      owners: [],
     });
   });
 
@@ -65,6 +66,33 @@ describe('CoinbaseWalletSDK', () => {
       preference: {
         options: 'all',
       },
+      owners: [],
+    });
+  });
+
+  test('@makeWeb3Provider - initialize owners during setup', () => {
+    (getCoinbaseInjectedProvider as jest.Mock).mockReturnValue(undefined);
+
+    const owners = ['0xOwner1', '0xOwner2'];
+    const SDK = new CoinbaseWalletSDK({
+      appName: 'Test',
+      appLogoUrl: 'http://coinbase.com/wallet-logo.png',
+      owners,
+    });
+
+    SDK.makeWeb3Provider();
+
+    expect(CoinbaseWalletProvider).toHaveBeenCalledWith({
+      metadata: {
+        appName: 'Test',
+        appLogoUrl: 'http://coinbase.com/wallet-logo.png',
+        appChainIds: [],
+        appDeeplinkUrl: null,
+      },
+      preference: {
+        options: 'all',
+      },
+      owners,
     });
   });
 });

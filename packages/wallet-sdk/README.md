@@ -75,6 +75,7 @@ Upgrade Coinbase Wallet SDK using yarn or npm.
    ```js
    const sdk = new CoinbaseWalletSDK({
      appName: 'SDK Playground',
+     owners: [address1, address2], // Optional: Initialize owners during setup
    });
    ```
 
