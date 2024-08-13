@@ -6,7 +6,6 @@ import { WalletLinkConnection } from './connection/WalletLinkConnection';
 import { WalletLinkWebSocket } from './connection/WalletLinkWebSocket';
 import { WALLET_USER_NAME_KEY } from './constants';
 import { ServerMessage } from './type/ServerMessage';
-import { WalletLinkSessionConfig } from './type/WalletLinkSessionConfig';
 import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay';
 
 const decryptMock = jest.fn().mockImplementation((text) => text);
@@ -84,7 +83,7 @@ describe('WalletLinkRelay', () => {
 
   describe('setSessionConfigListener', () => {
     it('should update metadata with setSessionConfigListener', async () => {
-      const sessionConfig: WalletLinkSessionConfig = {
+      const sessionConfig = {
         webhookId: 'webhookId',
         webhookUrl: 'webhookUrl',
         metadata: {
@@ -111,7 +110,7 @@ describe('WalletLinkRelay', () => {
       const relay = new WalletLinkRelay(options);
       const callback = options.chainCallback;
 
-      const sessionConfig: WalletLinkSessionConfig = {
+      const sessionConfig = {
         webhookId: 'webhookId',
         webhookUrl: 'webhookUrl',
         metadata: {
