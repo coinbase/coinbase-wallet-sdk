@@ -146,12 +146,9 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
   };
 
   public resetAndReload(): void {
-    Promise.race([
-      this.connection.setSessionMetadata('__destroyed', '1'),
-      new Promise((resolve) => setTimeout(() => resolve(null), 1000)),
-    ])
+    this.connection
+      .destroy()
       .then(() => {
-        this.connection.destroy();
         /**
          * Only clear storage if the session id we have in memory matches the one on disk
          * Otherwise, in the case where we have 2 tabs, another tab might have cleared

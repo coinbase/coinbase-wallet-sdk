@@ -32,6 +32,6 @@ export type ClientMessage =
       id: IntNumber;
       sessionId: string;
       event: string;
-      data: string; // encrypted WLRequest
+      data: string; // encrypted WalletLinkEventData
       callWebhook: boolean;
     };

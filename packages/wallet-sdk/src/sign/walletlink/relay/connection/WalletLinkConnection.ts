@@ -174,14 +174,22 @@ export class WalletLinkConnection {
    * Terminate connection, and mark as destroyed. To reconnect, create a new
    * instance of WalletSDKConnection
    */
-  public destroy(): void {
+  public async destroy() {
+    if (this.destroyed) return;
+
+    await this.makeRequest(
+      {
+        type: 'SetSessionConfig',
+        id: IntNumber(this.nextReqId++),
+        sessionId: this.session.id,
+        metadata: { __destroyed: '1' },
+      },
+      { timeout: 1000 }
+    );
+
     this.destroyed = true;
     this.ws.disconnect();
     this.listener = undefined;
-  }
-
-  public get isDestroyed(): boolean {
-    return this.destroyed;
   }
 
   /**
@@ -194,26 +202,7 @@ export class WalletLinkConnection {
   }
   private set connected(connected: boolean) {
     this._connected = connected;
-    if (connected) this.onceConnected?.();
   }
-
-  /**
-   * Execute once when connected
-   */
-  private onceConnected?: () => void;
-  private setOnceConnected<T>(callback: () => Promise<T>): Promise<T> {
-    return new Promise<T>((resolve) => {
-      if (this.connected) {
-        callback().then(resolve);
-      } else {
-        this.onceConnected = () => {
-          callback().then(resolve);
-          this.onceConnected = undefined;
-        };
-      }
-    });
-  }
-
   /**
    * true if linked (a guest has joined before)
    * runs listener when linked status changes
@@ -284,28 +273,6 @@ export class WalletLinkConnection {
   }
 
   /**
-   * Set session metadata in SessionConfig object
-   * @param key
-   * @param value
-   * @returns a Promise that completes when successful
-   */
-  public async setSessionMetadata(key: string, value: string | null) {
-    const message: ClientMessage = {
-      type: 'SetSessionConfig',
-      id: IntNumber(this.nextReqId++),
-      sessionId: this.session.id,
-      metadata: { [key]: value },
-    };
-
-    return this.setOnceConnected(async () => {
-      const res = await this.makeRequest<'OK' | 'Fail'>(message);
-      if (res.type === 'Fail') {
-        throw new Error(res.error || 'failed to set session metadata');
-      }
-    });
-  }
-
-  /**
    * Publish an event and emit event ID when successful
    * @param event event name
    * @param unencryptedData unencrypted event data
@@ -370,7 +337,7 @@ export class WalletLinkConnection {
 
   private async makeRequest<T extends ServerMessageType, M = ServerMessage<T>>(
     message: ClientMessage,
-    timeout: number = REQUEST_TIMEOUT
+    options: { timeout: number } = { timeout: REQUEST_TIMEOUT }
   ): Promise<M> {
     const reqId = message.id;
     this.sendData(message);
@@ -381,7 +348,7 @@ export class WalletLinkConnection {
       new Promise<M>((_, reject) => {
         timeoutId = window.setTimeout(() => {
           reject(new Error(`request ${reqId} timed out`));
-        }, timeout);
+        }, options.timeout);
       }),
       new Promise<M>((resolve) => {
         this.requestResolutions.set(reqId, (m) => {
