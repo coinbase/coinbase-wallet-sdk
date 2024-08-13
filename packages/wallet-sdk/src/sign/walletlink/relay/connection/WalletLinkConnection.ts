@@ -81,15 +81,8 @@ export class WalletLinkConnection {
 
         case ConnectionState.CONNECTED:
           // perform authentication upon connection
-          try {
-            // if CONNECTED, authenticate, and then check link status
-            await this.authenticate();
-            this.sendIsLinked();
-            this.sendGetSessionConfig();
-            connected = true;
-          } catch {
-            /* empty */
-          }
+          // if CONNECTED, authenticate, and then check link status
+          connected = await this.handleConnected();
 
           // send heartbeat every n seconds while connected
           // if CONNECTED, start the heartbeat timer
@@ -232,14 +225,13 @@ export class WalletLinkConnection {
       return;
     }
 
-    {
-      const decryptedData = await this.cipher.decrypt(m.data);
-      const message: WalletLinkEventData = JSON.parse(decryptedData);
+    const decryptedData = await this.cipher.decrypt(m.data);
+    const message: WalletLinkEventData = JSON.parse(decryptedData);
 
-      if (message.type !== 'WEB3_RESPONSE') return;
+    if (message.type !== 'WEB3_RESPONSE') return;
 
-      this.listener?.handleWeb3ResponseMessage(message.id, message.response);
-    }
+    const { id, response } = message;
+    this.listener?.handleWeb3ResponseMessage(id, response);
   }
 
   private shouldFetchUnseenEventsOnConnect = false;
@@ -353,35 +345,28 @@ export class WalletLinkConnection {
     ]);
   }
 
-  private async authenticate() {
-    const m: ClientMessage = {
+  private async handleConnected() {
+    const res = await this.makeRequest<'OK' | 'Fail'>({
       type: 'HostSession',
       id: IntNumber(this.nextReqId++),
       sessionId: this.session.id,
       sessionKey: this.session.key,
-    };
-    const res = await this.makeRequest<'OK' | 'Fail'>(m);
-    if (res.type === 'Fail') {
-      throw new Error(res.error || 'failed to authenticate');
-    }
-  }
+    });
+    if (res.type === 'Fail') return false;
 
-  private sendIsLinked(): void {
-    const m: ClientMessage = {
+    this.sendData({
       type: 'IsLinked',
       id: IntNumber(this.nextReqId++),
       sessionId: this.session.id,
-    };
-    this.sendData(m);
-  }
+    });
 
-  private sendGetSessionConfig(): void {
-    const m: ClientMessage = {
+    this.sendData({
       type: 'GetSessionConfig',
       id: IntNumber(this.nextReqId++),
       sessionId: this.session.id,
-    };
-    this.sendData(m);
+    });
+
+    return true;
   }
 
   private handleSessionMetadataUpdated = (metadata: { [_: string]: string }) => {
@@ -414,17 +399,13 @@ export class WalletLinkConnection {
   };
 
   private handleAccountUpdated = async (encryptedEthereumAddress: string) => {
-    {
-      const address = await this.cipher.decrypt(encryptedEthereumAddress);
-      this.listener?.accountUpdated(address);
-    }
+    const address = await this.cipher.decrypt(encryptedEthereumAddress);
+    this.listener?.accountUpdated(address);
   };
 
   private handleMetadataUpdated = async (key: string, encryptedMetadataValue: string) => {
-    {
-      const decryptedValue = await this.cipher.decrypt(encryptedMetadataValue);
-      this.listener?.metadataUpdated(key, decryptedValue);
-    }
+    const decryptedValue = await this.cipher.decrypt(encryptedMetadataValue);
+    this.listener?.metadataUpdated(key, decryptedValue);
   };
 
   private handleWalletUsernameUpdated = async (walletUsername: string) => {
@@ -436,10 +417,8 @@ export class WalletLinkConnection {
   };
 
   private handleChainUpdated = async (encryptedChainId: string, encryptedJsonRpcUrl: string) => {
-    {
-      const chainId = await this.cipher.decrypt(encryptedChainId);
-      const jsonRpcUrl = await this.cipher.decrypt(encryptedJsonRpcUrl);
-      this.listener?.chainUpdated(chainId, jsonRpcUrl);
-    }
+    const chainId = await this.cipher.decrypt(encryptedChainId);
+    const jsonRpcUrl = await this.cipher.decrypt(encryptedJsonRpcUrl);
+    this.listener?.chainUpdated(chainId, jsonRpcUrl);
   };
 }
