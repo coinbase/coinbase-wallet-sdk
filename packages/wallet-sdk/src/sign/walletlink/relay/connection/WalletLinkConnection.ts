@@ -3,9 +3,10 @@
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../constants';
 import { ClientMessage } from '../type/ClientMessage';
 import { ServerMessage, ServerMessageType } from '../type/ServerMessage';
-import { WalletLinkEventData, WalletLinkResponseEventData } from '../type/WalletLinkEventData';
+import { WalletLinkEventData } from '../type/WalletLinkEventData';
 import { WalletLinkSession } from '../type/WalletLinkSession';
 import { WalletLinkSessionConfig } from '../type/WalletLinkSessionConfig';
+import { Web3Response } from '../type/Web3Response';
 import { WalletLinkCipher } from './WalletLinkCipher';
 import { WalletLinkHTTP } from './WalletLinkHTTP';
 import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket';
@@ -16,7 +17,7 @@ const REQUEST_TIMEOUT = 60000;
 
 export interface WalletLinkConnectionUpdateListener {
   linkedUpdated: (linked: boolean) => void;
-  handleWeb3ResponseMessage: (message: WalletLinkResponseEventData) => void;
+  handleWeb3ResponseMessage: (id: string, response: Web3Response) => void;
   chainUpdated: (chainId: string, jsonRpcUrl: string) => void;
   accountUpdated: (selectedAddress: string) => void;
   metadataUpdated: (key: string, metadataValue: string) => void;
@@ -251,11 +252,11 @@ export class WalletLinkConnection {
 
     {
       const decryptedData = await this.cipher.decrypt(m.data);
-      const message = JSON.parse(decryptedData);
+      const message: WalletLinkEventData = JSON.parse(decryptedData);
 
       if (message.type !== 'WEB3_RESPONSE') return;
 
-      this.listener?.handleWeb3ResponseMessage(message);
+      this.listener?.handleWeb3ResponseMessage(message.id, message.response);
     }
   }
 

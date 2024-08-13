@@ -8,10 +8,9 @@ import {
 import { LOCAL_STORAGE_ADDRESSES_KEY } from './constants';
 import { RelayEventManager } from './RelayEventManager';
 import { EthereumTransactionParams } from './type/EthereumTransactionParams';
-import { WalletLinkEventData, WalletLinkResponseEventData } from './type/WalletLinkEventData';
+import { WalletLinkEventData } from './type/WalletLinkEventData';
 import { WalletLinkSession } from './type/WalletLinkSession';
-import { Web3Method } from './type/Web3Method';
-import { SupportedWeb3Method, Web3Request } from './type/Web3Request';
+import { Web3Method, Web3Request } from './type/Web3Request';
 import { isErrorResponse, Web3Response } from './type/Web3Response';
 import { isMobileWeb } from './ui/components/util';
 import { RelayUI } from './ui/RelayUI';
@@ -137,15 +136,10 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
       // reason we don't get a response via an explicit web3 message
       // we can still fulfill the eip1102 request.
       Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach((id) => {
-        const message: WalletLinkEventData = {
-          type: 'WEB3_RESPONSE',
-          id,
-          response: {
-            method: 'requestEthereumAccounts',
-            result: [selectedAddress as AddressString],
-          },
-        };
-        this.invokeCallback({ ...message, id });
+        this.invokeCallback(id, {
+          method: 'requestEthereumAccounts',
+          result: [selectedAddress as AddressString],
+        });
       });
       WalletLinkRelay.accountRequestCallbackIds.clear();
     }
@@ -233,8 +227,8 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
   }
 
   public sendRequest<
-    RequestMethod extends SupportedWeb3Method,
-    ResponseMethod extends SupportedWeb3Method = RequestMethod,
+    RequestMethod extends Web3Method,
+    ResponseMethod extends Web3Method = RequestMethod,
     Response = Web3Response<ResponseMethod>,
   >(request: Web3Request<RequestMethod>): Promise<Response> {
     let hideSnackbarItem: (() => void) | null = null;
@@ -273,13 +267,9 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
     this.publishEvent('Web3Request', message, true)
       .then((_) => {})
       .catch((err) => {
-        this.handleWeb3ResponseMessage({
-          type: 'WEB3_RESPONSE',
-          id: message.id,
-          response: {
-            method: request.method,
-            errorMessage: err.message,
-          },
+        this.handleWeb3ResponseMessage(message.id, {
+          method: request.method,
+          errorMessage: err.message,
         });
       });
 
@@ -289,7 +279,7 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
   }
 
   // copied from MobileRelay
-  private openCoinbaseWalletDeeplink(method: SupportedWeb3Method) {
+  private openCoinbaseWalletDeeplink(method: Web3Method) {
     if (!(this.ui instanceof WLMobileRelayUI)) return;
 
     // For mobile relay requests, open the Coinbase Wallet app
@@ -332,37 +322,29 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
     return this.connection.publishEvent(event, message, callWebhook);
   }
 
-  handleWeb3ResponseMessage(message: WalletLinkResponseEventData) {
-    const { response } = message;
-
+  handleWeb3ResponseMessage(id: string, response: Web3Response) {
     if (response.method === 'requestEthereumAccounts') {
-      WalletLinkRelay.accountRequestCallbackIds.forEach((id) =>
-        this.invokeCallback({ ...message, id })
-      );
+      WalletLinkRelay.accountRequestCallbackIds.forEach((id) => this.invokeCallback(id, response));
       WalletLinkRelay.accountRequestCallbackIds.clear();
       return;
     }
 
-    this.invokeCallback(message);
+    this.invokeCallback(id, response);
   }
 
   private handleErrorResponse(id: string, method: Web3Method, error?: Error) {
     const errorMessage = error?.message ?? 'Unspecified error message.';
-    this.handleWeb3ResponseMessage({
-      type: 'WEB3_RESPONSE',
-      id,
-      response: {
-        method,
-        errorMessage,
-      },
+    this.handleWeb3ResponseMessage(id, {
+      method,
+      errorMessage,
     });
   }
 
-  private invokeCallback(message: WalletLinkResponseEventData) {
-    const callback = this.relayEventManager.callbacks.get(message.id);
+  private invokeCallback(id: string, response: Web3Response) {
+    const callback = this.relayEventManager.callbacks.get(id);
     if (callback) {
-      callback(message.response);
-      this.relayEventManager.callbacks.delete(message.id);
+      callback(response);
+      this.relayEventManager.callbacks.delete(id);
     }
   }
 

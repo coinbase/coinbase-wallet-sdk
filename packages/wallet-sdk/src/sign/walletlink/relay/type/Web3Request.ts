@@ -1,11 +1,9 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
-import { Web3Method } from './Web3Method';
-import { AddressString, BigIntString, HexString, IntNumber, RegExpString } from ':core/type';
+import { AddressString, BigIntString, HexString, IntNumber } from ':core/type';
 
+export type Web3Method = _Web3Request['method'];
 export type Web3Request<M extends Web3Method = Web3Method> = Extract<_Web3Request, { method: M }>;
-
-export type SupportedWeb3Method = Extract<Web3Method, _Web3Request['method']>;
 
 type _Web3Request =
   | {
@@ -94,12 +92,6 @@ type _Web3Request =
         message: HexString;
         signature: HexString;
         addPrefix: boolean;
-      };
-    }
-  | {
-      method: 'scanQRCode';
-      params: {
-        regExp: RegExpString;
       };
     }
   | {

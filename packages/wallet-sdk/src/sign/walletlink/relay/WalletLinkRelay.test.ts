@@ -53,15 +53,12 @@ describe('WalletLinkRelay', () => {
         sessionId: 'sessionId',
         eventId: 'eventId',
         event: 'Web3Response',
-        data: 'data',
-      };
-
-      jest.spyOn(JSON, 'parse').mockImplementation(() => {
-        return {
+        data: JSON.stringify({
+          id: 137,
           type: 'WEB3_RESPONSE',
-          data: 'decrypted data',
-        };
-      });
+          response: 'response mock',
+        }),
+      };
 
       const relay = new WalletLinkRelay(options);
 
@@ -71,9 +68,8 @@ describe('WalletLinkRelay', () => {
 
       (relay as any).connection.ws.incomingDataListener?.(serverMessageEvent);
 
-      expect(handleWeb3ResponseMessageSpy).toHaveBeenCalledWith(
-        JSON.parse(await decryptMock(serverMessageEvent.data))
-      );
+      const message = JSON.parse(await decryptMock(serverMessageEvent.data));
+      expect(handleWeb3ResponseMessageSpy).toHaveBeenCalledWith(message.id, message.response);
     });
 
     it('should set isLinked with LinkedListener', async () => {
