@@ -3,18 +3,18 @@
 import { Web3Request } from './Web3Request';
 import { Web3Response } from './Web3Response';
 
-export type WalletLinkEventData = {
-  id: string;
-} & (
+export type WalletLinkEventData =
   | {
       type: 'WEB3_RESPONSE';
+      id: string;
       response: Web3Response;
     }
   | {
       type: 'WEB3_REQUEST';
+      id: string;
       request: Web3Request;
     }
   | {
       type: 'WEB3_REQUEST_CANCELED';
-    }
-);
+      id: string;
+    };
