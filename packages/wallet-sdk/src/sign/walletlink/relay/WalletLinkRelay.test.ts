@@ -34,15 +34,12 @@ describe('WalletLinkRelay', () => {
 
   describe('resetAndReload', () => {
     it('should destroy the connection and connect again', async () => {
-      const setSessionMetadataSpy = jest.spyOn(
-        WalletLinkConnection.prototype,
-        'setSessionMetadata'
-      );
+      const destroySpy = jest.spyOn(WalletLinkConnection.prototype, 'destroy');
 
       const relay = new WalletLinkRelay(options);
       relay.resetAndReload();
 
-      expect(setSessionMetadataSpy).toHaveBeenCalled();
+      expect(destroySpy).toHaveBeenCalled();
     });
   });
 
