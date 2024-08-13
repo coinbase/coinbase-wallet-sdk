@@ -11,20 +11,23 @@ const STORAGE_KEY_SESSION_SECRET = 'session:secret';
 const STORAGE_KEY_SESSION_LINKED = 'session:linked';
 
 export class WalletLinkSession {
-  private readonly _id: string;
-  private readonly _secret: string;
-  private readonly _key: string;
-  private readonly _storage: ScopedLocalStorage;
+  readonly key: string;
   private _linked: boolean;
 
-  constructor(storage: ScopedLocalStorage, id?: string, secret?: string, linked?: boolean) {
-    this._storage = storage;
-    this._id = id || randomBytesHex(16);
-    this._secret = secret || randomBytesHex(32);
-
-    this._key = bytesToHex(sha256(`${this._id}, ${this._secret} WalletLink`));
-
+  private constructor(
+    readonly storage: ScopedLocalStorage,
+    readonly id: string,
+    readonly secret: string,
+    linked = false
+  ) {
+    this.key = bytesToHex(sha256(`${id}, ${secret} WalletLink`));
     this._linked = !!linked;
+  }
+
+  public static create(storage: ScopedLocalStorage): WalletLinkSession {
+    const id = randomBytesHex(32);
+    const secret = randomBytesHex(32);
+    return new WalletLinkSession(storage, id, secret).save();
   }
 
   public static load(storage: ScopedLocalStorage): WalletLinkSession | null {
@@ -39,18 +42,6 @@ export class WalletLinkSession {
     return null;
   }
 
-  public get id(): string {
-    return this._id;
-  }
-
-  public get secret(): string {
-    return this._secret;
-  }
-
-  public get key(): string {
-    return this._key;
-  }
-
   public get linked(): boolean {
     return this._linked;
   }
@@ -61,13 +52,13 @@ export class WalletLinkSession {
   }
 
   public save(): WalletLinkSession {
-    this._storage.setItem(STORAGE_KEY_SESSION_ID, this._id);
-    this._storage.setItem(STORAGE_KEY_SESSION_SECRET, this._secret);
+    this.storage.setItem(STORAGE_KEY_SESSION_ID, this.id);
+    this.storage.setItem(STORAGE_KEY_SESSION_SECRET, this.secret);
     this.persistLinked();
     return this;
   }
 
   private persistLinked(): void {
-    this._storage.setItem(STORAGE_KEY_SESSION_LINKED, this._linked ? '1' : '0');
+    this.storage.setItem(STORAGE_KEY_SESSION_LINKED, this._linked ? '1' : '0');
   }
 }

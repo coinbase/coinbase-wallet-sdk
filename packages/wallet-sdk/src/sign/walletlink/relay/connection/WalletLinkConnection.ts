@@ -27,7 +27,6 @@ interface WalletLinkConnectionParams {
   session: WalletLinkSession;
   linkAPIUrl: string;
   listener: WalletLinkConnectionUpdateListener;
-  WebSocketClass?: typeof WebSocket;
 }
 
 /**
@@ -52,17 +51,12 @@ export class WalletLinkConnection {
    * @param listener WalletLinkConnectionUpdateListener
    * @param [WebSocketClass] Custom WebSocket implementation
    */
-  constructor({
-    session,
-    linkAPIUrl,
-    listener,
-    WebSocketClass = WebSocket,
-  }: WalletLinkConnectionParams) {
+  constructor({ session, linkAPIUrl, listener }: WalletLinkConnectionParams) {
     this.session = session;
     this.cipher = new WalletLinkCipher(session.secret);
     this.listener = listener;
 
-    const ws = new WalletLinkWebSocket(`${linkAPIUrl}/rpc`, WebSocketClass);
+    const ws = new WalletLinkWebSocket(`${linkAPIUrl}/rpc`, WebSocket);
     ws.setConnectionStateListener(async (state) => {
       // attempt to reconnect every 5 seconds when disconnected
       let connected = false;

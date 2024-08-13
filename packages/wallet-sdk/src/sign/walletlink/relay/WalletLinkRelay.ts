@@ -69,8 +69,7 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
   }
 
   private subscribe() {
-    const session =
-      WalletLinkSession.load(this.storage) || new WalletLinkSession(this.storage).save();
+    const session = WalletLinkSession.load(this.storage) || WalletLinkSession.create(this.storage);
 
     const { linkAPIUrl } = this;
     const connection = new WalletLinkConnection({
