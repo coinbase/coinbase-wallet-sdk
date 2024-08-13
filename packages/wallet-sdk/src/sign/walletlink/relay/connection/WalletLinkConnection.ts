@@ -5,7 +5,6 @@ import { ClientMessage } from '../type/ClientMessage';
 import { ServerMessage, ServerMessageType } from '../type/ServerMessage';
 import { WalletLinkEventData } from '../type/WalletLinkEventData';
 import { WalletLinkSession } from '../type/WalletLinkSession';
-import { WalletLinkSessionConfig } from '../type/WalletLinkSessionConfig';
 import { Web3Response } from '../type/Web3Response';
 import { WalletLinkCipher } from './WalletLinkCipher';
 import { WalletLinkHTTP } from './WalletLinkHTTP';
@@ -391,7 +390,7 @@ export class WalletLinkConnection {
     this.sendData(m);
   }
 
-  private handleSessionMetadataUpdated = (metadata: WalletLinkSessionConfig['metadata']) => {
+  private handleSessionMetadataUpdated = (metadata: { [_: string]: string }) => {
     if (!metadata) return;
 
     // Map of metadata key to handler function

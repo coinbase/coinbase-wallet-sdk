@@ -23,9 +23,7 @@ export type ClientMessage =
       type: 'SetSessionConfig';
       id: IntNumber;
       sessionId: string;
-      webhookId?: string | null;
-      webhookUrl?: string | null;
-      metadata?: { [key: string]: string | null };
+      metadata: { [key: string]: string | null };
     }
   | {
       type: 'PublishEvent';
