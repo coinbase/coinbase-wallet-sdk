@@ -6,7 +6,6 @@ import { WalletLinkConnection } from './connection/WalletLinkConnection';
 import { WalletLinkWebSocket } from './connection/WalletLinkWebSocket';
 import { WALLET_USER_NAME_KEY } from './constants';
 import { ServerMessage } from './type/ServerMessage';
-import { WalletLinkSessionConfig } from './type/WalletLinkSessionConfig';
 import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay';
 
 const decryptMock = jest.fn().mockImplementation((text) => text);
@@ -34,15 +33,12 @@ describe('WalletLinkRelay', () => {
 
   describe('resetAndReload', () => {
     it('should destroy the connection and connect again', async () => {
-      const setSessionMetadataSpy = jest.spyOn(
-        WalletLinkConnection.prototype,
-        'setSessionMetadata'
-      );
+      const destroySpy = jest.spyOn(WalletLinkConnection.prototype, 'destroy');
 
       const relay = new WalletLinkRelay(options);
       relay.resetAndReload();
 
-      expect(setSessionMetadataSpy).toHaveBeenCalled();
+      expect(destroySpy).toHaveBeenCalled();
     });
   });
 
@@ -53,15 +49,12 @@ describe('WalletLinkRelay', () => {
         sessionId: 'sessionId',
         eventId: 'eventId',
         event: 'Web3Response',
-        data: 'data',
-      };
-
-      jest.spyOn(JSON, 'parse').mockImplementation(() => {
-        return {
+        data: JSON.stringify({
+          id: 137,
           type: 'WEB3_RESPONSE',
-          data: 'decrypted data',
-        };
-      });
+          response: 'response mock',
+        }),
+      };
 
       const relay = new WalletLinkRelay(options);
 
@@ -71,9 +64,8 @@ describe('WalletLinkRelay', () => {
 
       (relay as any).connection.ws.incomingDataListener?.(serverMessageEvent);
 
-      expect(handleWeb3ResponseMessageSpy).toHaveBeenCalledWith(
-        JSON.parse(await decryptMock(serverMessageEvent.data))
-      );
+      const message = JSON.parse(await decryptMock(serverMessageEvent.data));
+      expect(handleWeb3ResponseMessageSpy).toHaveBeenCalledWith(message.id, message.response);
     });
 
     it('should set isLinked with LinkedListener', async () => {
@@ -91,7 +83,7 @@ describe('WalletLinkRelay', () => {
 
   describe('setSessionConfigListener', () => {
     it('should update metadata with setSessionConfigListener', async () => {
-      const sessionConfig: WalletLinkSessionConfig = {
+      const sessionConfig = {
         webhookId: 'webhookId',
         webhookUrl: 'webhookUrl',
         metadata: {
@@ -118,7 +110,7 @@ describe('WalletLinkRelay', () => {
       const relay = new WalletLinkRelay(options);
       const callback = options.chainCallback;
 
-      const sessionConfig: WalletLinkSessionConfig = {
+      const sessionConfig = {
         webhookId: 'webhookId',
         webhookUrl: 'webhookUrl',
         metadata: {

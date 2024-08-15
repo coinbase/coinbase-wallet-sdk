@@ -1,4 +1,3 @@
-import { Web3Method as SupportedWeb3Method, Web3Method } from '../type/Web3Method';
 import { Web3Response } from '../type/Web3Response';
 import { WalletLinkRelay } from '../WalletLinkRelay';
 import { MOCK_ADDERESS, MOCK_TX } from './fixtures';
@@ -8,8 +7,8 @@ export function mockedWalletLinkRelay(): WalletLinkRelay {
   return mock as unknown as WalletLinkRelay;
 }
 
-function makeMockReturn<T extends SupportedWeb3Method>(response: Web3Response<T>) {
-  return Promise.resolve<Web3Response<T>>(response);
+function makeMockReturn(response: Web3Response) {
+  return Promise.resolve<Web3Response>(response);
 }
 
 const mock = {
@@ -62,7 +61,7 @@ const mock = {
       result: HexString(MOCK_TX),
     });
   },
-  sendRequest<_, T extends Web3Method>() {
-    return Promise.reject<Web3Response<T>>();
+  sendRequest() {
+    return Promise.reject<Web3Response>();
   },
 };

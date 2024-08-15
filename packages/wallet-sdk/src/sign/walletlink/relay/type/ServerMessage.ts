@@ -63,5 +63,5 @@ type _ServerMessage =
       sessionId: string;
       eventId: string;
       event: string;
-      data: string;
+      data: string; // encrypted WalletLinkEventData
     };
