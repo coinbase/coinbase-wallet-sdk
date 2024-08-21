@@ -25,7 +25,7 @@ export class WalletLinkSession {
   }
 
   public static create(storage: ScopedLocalStorage): WalletLinkSession {
-    const id = randomBytesHex(32);
+    const id = randomBytesHex(16);
     const secret = randomBytesHex(32);
     return new WalletLinkSession(storage, id, secret).save();
   }
