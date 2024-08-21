@@ -19,6 +19,7 @@ const ACTIVE_CHAIN_STORAGE_KEY = 'activeChain';
 const AVAILABLE_CHAINS_STORAGE_KEY = 'availableChains';
 const WALLET_CAPABILITIES_STORAGE_KEY = 'walletCapabilities';
 import { LIB_VERSION } from '../../version';
+import { isPresigned } from './util';
 
 type Chain = {
   id: number;
@@ -30,6 +31,8 @@ type ConstructorOptions = {
   communicator: Communicator;
   callback: ProviderEventCallback | null;
 };
+
+const PERMISSIONS_BACKEND_URL = 'https://permissioned-keys.com'
 
 export class SCWSigner implements Signer {
   private readonly metadata: AppMetadata;
@@ -125,6 +128,11 @@ export class SCWSigner implements Signer {
         return this.storage.loadObject(WALLET_CAPABILITIES_STORAGE_KEY);
       case 'wallet_switchEthereumChain':
         return this.handleSwitchChainRequest(request);
+      case 'wallet_sendCalls':
+        // Temporary solution for demo purposes
+        if (isPresigned(request)) return fetchRPCRequest(request, PERMISSIONS_BACKEND_URL)
+        return this.sendRequestToPopup(request);
+      case 'eth_call':
       case 'eth_ecRecover':
       case 'personal_sign':
       case 'personal_ecRecover':
@@ -136,8 +144,8 @@ export class SCWSigner implements Signer {
       case 'eth_signTypedData':
       case 'wallet_addEthereumChain':
       case 'wallet_watchAsset':
-      case 'wallet_sendCalls':
       case 'wallet_showCallsStatus':
+      case 'wallet_grantPermissions':
         return this.sendRequestToPopup(request);
       default:
         if (!this.chain.rpcUrl) throw standardErrors.rpc.internal('No RPC URL set for chain');

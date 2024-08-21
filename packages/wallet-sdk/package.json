@@ -1,7 +1,7 @@
 {
-  "name": "@coinbase/wallet-sdk",
-  "version": "4.0.4",
-  "description": "Coinbase Wallet JavaScript SDK",
+  "name": "@cb-felix-z/wallet-sdk",
+  "version": "4.1.0-demo.1",
+  "description": "Special build of Coinbase Wallet SDK that supports session key for demo purposes",
   "keywords": [
     "coinbase",
     "coinbasewallet",
