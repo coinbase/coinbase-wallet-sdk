@@ -29,7 +29,7 @@ const personalSign: RpcRequestInput = {
     { key: 'address', required: true },
   ],
   format: (data: Record<string, string>) => [
-    `0x${Buffer.from(data.message, 'utf8').toString('hex')}`,
+    data.message,
     data.address,
   ],
 };
