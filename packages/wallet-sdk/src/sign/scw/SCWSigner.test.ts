@@ -11,6 +11,9 @@ import {
   exportKeyToHexString,
   importKeyFromHexString,
 } from ':util/cipher';
+import { fetchRPCRequest } from ':util/provider';
+
+jest.mock(':util/provider');
 
 jest.mock('./SCWKeyManager');
 const storageStoreSpy = jest.spyOn(ScopedAsyncStorage.prototype, 'storeObject');
@@ -163,6 +166,59 @@ describe('SCWSigner', () => {
         })
       );
       expect(result).toEqual('0xSignature');
+    });
+
+    it.each([
+      'eth_ecRecover',
+      'personal_sign',
+      'personal_ecRecover',
+      'eth_signTransaction',
+      'eth_sendTransaction',
+      'eth_signTypedData_v1',
+      'eth_signTypedData_v3',
+      'eth_signTypedData_v4',
+      'eth_signTypedData',
+      'wallet_addEthereumChain',
+      'wallet_watchAsset',
+      'wallet_sendCalls',
+      'wallet_showCallsStatus',
+      'wallet_grantPermissions',
+    ])('should send request to popup for %s', async (method) => {
+      const mockRequest: RequestArguments = {
+        method,
+        params: [],
+      };
+
+      (decryptContent as jest.Mock).mockResolvedValueOnce({
+        result: {
+          value: '0xSignature',
+        },
+      });
+
+      await signer.request(mockRequest);
+
+      expect(mockCommunicator.postRequestAndWaitForResponse).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sender: '0xPublicKey',
+          content: { encrypted: encryptedData },
+        })
+      );
+    });
+
+    it.each([
+      'wallet_prepareCalls',
+      'wallet_sendPreparedCalls',
+      'eth_getBalance',
+      'eth_getTransactionCount',
+    ])('should fetch rpc request for %s', async (method) => {
+      const mockRequest: RequestArguments = {
+        method,
+        params: [],
+      };
+
+      await signer.request(mockRequest);
+
+      expect(fetchRPCRequest).toHaveBeenCalledWith(mockRequest, 'https://eth-rpc.example.com/1');
     });
 
     it('should throw an error if error in decrypted response', async () => {

@@ -138,6 +138,7 @@ export class SCWSigner implements Signer {
       case 'wallet_watchAsset':
       case 'wallet_sendCalls':
       case 'wallet_showCallsStatus':
+      case 'wallet_grantPermissions':
         return this.sendRequestToPopup(request);
       default:
         if (!this.chain.rpcUrl) throw standardErrors.rpc.internal('No RPC URL set for chain');
