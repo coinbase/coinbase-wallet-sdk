@@ -51,7 +51,7 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
       from: data.address?.toLowerCase(),
       sign: response,
       message: data.message,
-      chain: chain as Chain 
+      chain: chain as Chain
     });
     if (verifyResult) {
       setVerifyResult(verifyResult);
