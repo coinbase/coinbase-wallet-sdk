@@ -7,6 +7,9 @@ import {
   TypedMessage,
 } from '@metamask/eth-sig-util';
 
+import { createPublicClient, http } from 'viem';
+import { base, mainnet } from 'viem/chains';
+
 import { parseMessage } from '../shortcut/ShortcutType';
 import { RpcRequestInput } from './RpcRequestInput';
 
@@ -69,7 +72,7 @@ export const signMessageMethods = [
   ethSignTypedDataV4,
 ];
 
-export const verifySignMsg = ({
+export const verifySignMsg = async ({
   method,
   from,
   sign,
@@ -83,14 +86,38 @@ export const verifySignMsg = ({
   switch (method) {
     case 'personal_sign': {
       const msg = `0x${Buffer.from(message as string, 'utf8').toString('hex')}`;
-      const recoveredAddr = recoverPersonalSignature({
-        data: msg,
-        signature: sign,
-      });
-      if (recoveredAddr === from) {
-        return `SigUtil Successfully verified signer as ${recoveredAddr}`;
-      } else {
-        return `SigUtil Failed to verify signer when comparing ${recoveredAddr} to ${from}`;
+
+      try {
+        const recoveredAddr = recoverPersonalSignature({
+          data: msg,
+          signature: sign,
+        });
+        if (recoveredAddr === from) {
+          return `SigUtil Successfully verified signer as ${recoveredAddr}`;
+        } else {
+          return `SigUtil Failed to verify signer when comparing ${recoveredAddr} to ${from}`;
+        }
+      } catch (e: any) {
+        const client = createPublicClient({
+          chain: base,
+          transport: http(),
+        });
+
+        console.log("ASDFASDf passing in", {
+          address: from as `0x${string}`,
+          message: msg,
+          signature: sign as `0x${string}`,
+        })
+        const valid = await client.verifyMessage({
+          address: from as `0x${string}`,
+          message: message as string,
+          signature: sign as `0x${string}`,
+        })
+        if (valid) {
+          return `SigUtil Successfully verified signer as ${from}`;
+        } else {
+          return `SigUtil Failed to verify signer`;
+        }
       }
     }
     case 'eth_signTypedData_v1': {

@@ -40,7 +40,7 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
   } = useForm();
 
   const verify = useCallback(async (response: ResponseType, data: Record<string, string>) => {
-    const verifyResult = verifySignMsg({
+    const verifyResult = await verifySignMsg({
       method,
       from: data.address?.toLowerCase(),
       sign: response,
