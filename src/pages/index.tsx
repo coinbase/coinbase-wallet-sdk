@@ -40,6 +40,14 @@ export default function Home() {
     });
   }, [provider]);
 
+  useEffect(() => {
+    if (connected) {
+      provider.request({ method: "eth_chainId"}).then((chainId) => {
+        setChainId(parseInt(chainId, 16));
+      });
+    }
+  }, [connected, provider]);
+
   return (
     <Container maxW={WIDTH_2XL} mb={8}>
       <Box>
