@@ -9,13 +9,7 @@ import {
   RequestArguments,
 } from './core/provider/interface';
 import { Signer } from './sign/interface';
-import {
-  createSigner,
-  fetchSignerType,
-  loadSignerType,
-  ScwOnboardMode,
-  storeSignerType,
-} from './sign/util';
+import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
 import { checkErrorForInvalidRequestArgs } from './util/provider';
 import { Communicator } from ':core/communicator/Communicator';
 import { SignerType } from ':core/message';
@@ -55,11 +49,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
       if (!this.signer) {
         switch (args.method) {
           case 'eth_requestAccounts': {
-            const scwOnboardMode = Array.isArray(args?.params)
-              ? (args.params[0]?.scwOnboardMode as ScwOnboardMode)
-              : undefined;
-            const options = { scwOnboardMode: scwOnboardMode ?? 'default' };
-            const signerType = await this.requestSignerSelection(options);
+            const signerType = await this.requestSignerSelection();
             const signer = await this.initSigner(signerType);
             await signer.handshake();
             this.signer = signer;
@@ -109,12 +99,11 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
     await this.initPromise; // resolves immediately if already initialized
   }
 
-  private requestSignerSelection(options: Record<string, unknown>): Promise<SignerType> {
+  private requestSignerSelection(): Promise<SignerType> {
     return fetchSignerType({
       communicator: this.communicator,
       preference: this.preference,
       metadata: this.metadata,
-      options,
     });
   }
 

@@ -17,13 +17,10 @@ export async function storeSignerType(signerType: SignerType): Promise<void> {
   return storage.setItem(SIGNER_TYPE_KEY, signerType);
 }
 
-export type ScwOnboardMode = 'default' | 'create';
-
 export async function fetchSignerType(params: {
   communicator: Communicator;
   preference: Preference;
   metadata: AppMetadata; // for WalletLink
-  options?: Record<string, unknown>;
 }): Promise<SignerType> {
   const { communicator, metadata } = params;
   listenForWalletLinkSessionRequest(communicator, metadata).catch(() => {});
@@ -33,11 +30,6 @@ export async function fetchSignerType(params: {
     event: 'selectSignerType',
     data: params.preference,
   };
-
-  if (params.options?.scwOnboardMode) {
-    (request.data as { scwOnboardMode: ScwOnboardMode }).scwOnboardMode = params.options
-      .scwOnboardMode as ScwOnboardMode;
-  }
   const { data } = await communicator.postRequestAndWaitForResponse(request);
   return data as SignerType;
 }
