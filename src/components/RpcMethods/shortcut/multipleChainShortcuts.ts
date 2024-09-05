@@ -1,4 +1,5 @@
 import { base, baseSepolia, harmonyOne, mainnet } from 'viem/chains';
+
 import { ShortcutType } from './ShortcutType';
 
 const walletSwitchEthereumChainShortcuts: ShortcutType[] = [
