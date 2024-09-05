@@ -42,7 +42,7 @@ export default function Home() {
 
   useEffect(() => {
     if (connected) {
-      provider?.request({ method: "eth_chainId"}).then((chainId) => {
+      provider?.request({ method: 'eth_chainId' }).then((chainId) => {
         setChainId(parseInt(chainId, 16));
       });
     }
