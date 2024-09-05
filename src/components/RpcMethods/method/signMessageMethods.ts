@@ -1,11 +1,4 @@
-import {
-  MessageTypes,
-  recoverPersonalSignature,
-  recoverTypedSignature,
-  SignTypedDataVersion,
-  TypedDataV1,
-  TypedMessage,
-} from '@metamask/eth-sig-util';
+import { Chain, createPublicClient, http, TypedDataDomain } from 'viem';
 
 import { parseMessage } from '../shortcut/ShortcutType';
 import { RpcRequestInput } from './RpcRequestInput';
@@ -69,64 +62,57 @@ export const signMessageMethods = [
   ethSignTypedDataV4,
 ];
 
-export const verifySignMsg = ({
+export const verifySignMsg = async ({
   method,
   from,
   sign,
   message,
+  chain,
 }: {
   method: string;
   from: string;
   sign: string;
   message: unknown;
+  chain: Chain;
 }) => {
   switch (method) {
     case 'personal_sign': {
-      const msg = `0x${Buffer.from(message as string, 'utf8').toString('hex')}`;
-      const recoveredAddr = recoverPersonalSignature({
-        data: msg,
-        signature: sign,
+      const client = createPublicClient({
+        chain,
+        transport: http(),
       });
-      if (recoveredAddr === from) {
-        return `SigUtil Successfully verified signer as ${recoveredAddr}`;
+
+      const valid = await client.verifyMessage({
+        address: from as `0x${string}`,
+        message: message as string,
+        signature: sign as `0x${string}`,
+      })
+      if (valid) {
+        return `SigUtil Successfully verified signer as ${from}`;
       } else {
-        return `SigUtil Failed to verify signer when comparing ${recoveredAddr} to ${from}`;
+        return `SigUtil Failed to verify signer`;
       }
     }
-    case 'eth_signTypedData_v1': {
-      const recoveredAddr = recoverTypedSignature({
-        data: message as TypedDataV1,
-        signature: sign,
-        version: SignTypedDataVersion.V1,
-      });
-      if (recoveredAddr === from) {
-        return `SigUtil Successfully verified signer as ${recoveredAddr}`;
-      } else {
-        return `SigUtil Failed to verify signer when comparing ${recoveredAddr} to ${from}`;
-      }
-    }
-    case 'eth_signTypedData_v3': {
-      const recoveredAddr = recoverTypedSignature({
-        data: message as TypedMessage<MessageTypes>,
-        signature: sign,
-        version: SignTypedDataVersion.V3,
-      });
-      if (recoveredAddr === from) {
-        return `SigUtil Successfully verified signer as ${recoveredAddr}`;
-      } else {
-        return `SigUtil Failed to verify signer when comparing ${recoveredAddr} to ${from}`;
-      }
-    }
+    case 'eth_signTypedData_v1':
+    case 'eth_signTypedData_v3':
     case 'eth_signTypedData_v4': {
-      const recoveredAddr = recoverTypedSignature({
-        data: message as TypedMessage<MessageTypes>,
-        signature: sign,
-        version: SignTypedDataVersion.V4,
+      const client = createPublicClient({
+        chain,
+        transport: http(),
       });
-      if (recoveredAddr === from) {
-        return `SigUtil Successfully verified signer as ${recoveredAddr}`;
+
+      const valid = await client.verifyTypedData({
+        address: from as `0x${string}`,
+        domain: message['domain'] as TypedDataDomain,
+        types: message['types'] as any,
+        primaryType: message['primaryType'] as string,
+        message: message['message'] as any,
+        signature: sign as `0x${string}`,
+      })
+      if (valid) {
+        return `SigUtil Successfully verified signer as ${from}`;
       } else {
-        return `SigUtil Failed to verify signer when comparing ${recoveredAddr} to ${from}`;
+        return `SigUtil Failed to verify signer`;
       }
     }
     default:
