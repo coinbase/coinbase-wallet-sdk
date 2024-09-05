@@ -2,6 +2,7 @@ import { LIB_VERSION } from '../../version';
 import { ConfigMessage, Message, MessageID } from '../message';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
+import { AppMetadata } from ':core/provider/interface';
 import { closePopup, openPopup } from ':util/web';
 
 /**
@@ -16,17 +17,19 @@ import { closePopup, openPopup } from ':util/web';
 export class Communicator {
   static communicators = new Map<string, Communicator>();
 
+  private readonly metadata: AppMetadata;
   private readonly url: URL;
   private popup: Window | null = null;
   private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>();
 
-  private constructor(url: string = CB_KEYS_URL) {
+  private constructor(url: string = CB_KEYS_URL, metadata: AppMetadata) {
     this.url = new URL(url);
+    this.metadata = metadata;
   }
 
-  static getInstance(url: string = CB_KEYS_URL): Communicator {
+  static getInstance(url: string = CB_KEYS_URL, metadata: AppMetadata): Communicator {
     if (!this.communicators.has(url)) {
-      this.communicators.set(url, new Communicator(url));
+      this.communicators.set(url, new Communicator(url, metadata));
     }
 
     return this.communicators.get(url)!;
@@ -107,7 +110,7 @@ export class Communicator {
       .then((message) => {
         this.postMessage({
           requestId: message.id,
-          data: { version: LIB_VERSION },
+          data: { version: LIB_VERSION, metadata: this.metadata },
         });
       })
       .then(() => {
