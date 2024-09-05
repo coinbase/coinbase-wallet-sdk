@@ -1,5 +1,6 @@
 import { fetchSignerType, loadSignerType, storeSignerType } from './util';
 import { Communicator } from ':core/communicator/Communicator';
+import { CB_KEYS_URL } from ':core/constants';
 import { Preference } from ':core/provider/interface';
 import { ScopedAsyncStorage } from ':core/storage/ScopedAsyncStorage';
 
@@ -48,7 +49,7 @@ describe('util', () => {
     const preference: Preference = { options: 'all' };
 
     it('should complete signerType selection correctly', async () => {
-      const communicator = Communicator.getInstance();
+      const communicator = Communicator.getInstance(CB_KEYS_URL, metadata);
       communicator.postMessage = jest.fn();
       communicator.onMessage = jest.fn().mockResolvedValue({
         data: 'scw',

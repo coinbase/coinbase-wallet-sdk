@@ -28,7 +28,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
     super();
     this.metadata = metadata;
     this.preference = preference;
-    this.communicator = Communicator.getInstance(keysUrl);
+    this.communicator = Communicator.getInstance(keysUrl, metadata);
 
     // Async initialize
     this.initPromise = this.initialize();

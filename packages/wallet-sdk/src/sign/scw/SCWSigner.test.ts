@@ -1,6 +1,7 @@
 import { SCWKeyManager } from './SCWKeyManager';
 import { SCWSigner } from './SCWSigner';
 import { Communicator } from ':core/communicator/Communicator';
+import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
 import { EncryptedData, RPCResponseMessage } from ':core/message';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface';
@@ -59,7 +60,7 @@ describe('SCWSigner', () => {
     };
 
     Communicator.communicators.clear();
-    mockCommunicator = Communicator.getInstance();
+    mockCommunicator = Communicator.getInstance(CB_KEYS_URL, mockMetadata);
     jest.spyOn(mockCommunicator, 'waitForPopupLoaded').mockResolvedValue({} as Window);
     jest
       .spyOn(mockCommunicator, 'postRequestAndWaitForResponse')

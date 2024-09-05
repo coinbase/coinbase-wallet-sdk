@@ -1,3 +1,5 @@
+import { AppMetadata } from 'src/index';
+
 import { LIB_VERSION } from '../../version';
 import { Message, MessageID } from '../message';
 import { Communicator } from './Communicator';
@@ -41,6 +43,13 @@ function queueMessageEvent({
 const addEventListenerSpy = jest.spyOn(window, 'addEventListener');
 const removeEventListenerSpy = jest.spyOn(window, 'removeEventListener');
 
+const appMetadata: AppMetadata = {
+  appName: 'Test App',
+  appLogoUrl: null,
+  appChainIds: [1],
+  appDeeplinkUrl: null,
+};
+
 describe('Communicator', () => {
   let urlOrigin: string;
   let communicator: Communicator;
@@ -54,7 +63,7 @@ describe('Communicator', () => {
     Communicator.communicators.clear();
 
     // url defaults to CB_KEYS_URL
-    communicator = Communicator.getInstance();
+    communicator = Communicator.getInstance(CB_KEYS_URL, appMetadata);
     urlOrigin = new URL(CB_KEYS_URL).origin;
 
     mockPopup = {
@@ -101,6 +110,7 @@ describe('Communicator', () => {
         {
           data: {
             version: LIB_VERSION,
+            metadata: appMetadata,
           },
         },
         urlOrigin
@@ -126,6 +136,7 @@ describe('Communicator', () => {
         {
           data: {
             version: LIB_VERSION,
+            metadata: appMetadata,
           },
         },
         urlOrigin
@@ -146,6 +157,7 @@ describe('Communicator', () => {
         {
           data: {
             version: LIB_VERSION,
+            metadata: appMetadata,
           },
         },
         urlOrigin
