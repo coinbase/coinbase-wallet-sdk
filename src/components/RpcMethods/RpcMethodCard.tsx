@@ -20,12 +20,12 @@ import {
 } from '@chakra-ui/react';
 import React, { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
+import { Chain, hexToNumber } from 'viem';
+import { mainnet } from 'viem/chains';
 
 import { useCBWSDK } from '../../context/CBWSDKReactContextProvider';
 import { verifySignMsg } from './method/signMessageMethods';
 import { ADDR_TO_FILL } from './shortcut/const';
-import { Chain, hexToNumber } from 'viem';
-import { mainnet } from 'viem/chains';
 import { multiChainShortcutsMap } from './shortcut/multipleChainShortcuts';
 
 type ResponseType = string;
@@ -42,22 +42,28 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
     formState: { errors },
   } = useForm();
 
-  const verify = useCallback(async (response: ResponseType, data: Record<string, string>) => {
-    const chainId = await provider.request({ method: "eth_chainId"});
-    let chain = multiChainShortcutsMap['wallet_switchEthereumChain'].find((shortcut) => Number(shortcut.data.chainId) ===  hexToNumber(chainId))?.data.chain ?? mainnet;
+  const verify = useCallback(
+    async (response: ResponseType, data: Record<string, string>) => {
+      const chainId = await provider.request({ method: 'eth_chainId' });
+      const chain =
+        multiChainShortcutsMap['wallet_switchEthereumChain'].find(
+          (shortcut) => Number(shortcut.data.chainId) === hexToNumber(chainId)
+        )?.data.chain ?? mainnet;
 
-    const verifyResult = await verifySignMsg({
-      method,
-      from: data.address?.toLowerCase(),
-      sign: response,
-      message: data.message,
-      chain: chain as Chain
-    });
-    if (verifyResult) {
-      setVerifyResult(verifyResult);
-      return;
-    }
-  }, [provider]);
+      const verifyResult = await verifySignMsg({
+        method,
+        from: data.address?.toLowerCase(),
+        sign: response,
+        message: data.message,
+        chain: chain as Chain,
+      });
+      if (verifyResult) {
+        setVerifyResult(verifyResult);
+        return;
+      }
+    },
+    [provider]
+  );
 
   const submit = useCallback(
     async (data: Record<string, string>) => {

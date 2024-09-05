@@ -86,7 +86,7 @@ export const verifySignMsg = async ({
         address: from as `0x${string}`,
         message: message as string,
         signature: sign as `0x${string}`,
-      })
+      });
       if (valid) {
         return `SigUtil Successfully verified signer as ${from}`;
       } else {
@@ -108,7 +108,7 @@ export const verifySignMsg = async ({
         primaryType: message['primaryType'] as string,
         message: message['message'] as any,
         signature: sign as `0x${string}`,
-      })
+      });
       if (valid) {
         return `SigUtil Successfully verified signer as ${from}`;
       } else {
