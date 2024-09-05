@@ -58,9 +58,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
             const scwOnboardMode = Array.isArray(args?.params)
               ? (args.params[0]?.scwOnboardMode as ScwOnboardMode)
               : undefined;
-            const options: { scwOnboardMode: ScwOnboardMode } = scwOnboardMode
-              ? { scwOnboardMode }
-              : { scwOnboardMode: 'default' };
+            const options = { scwOnboardMode: scwOnboardMode ?? 'default' };
             const signerType = await this.requestSignerSelection(options);
             const signer = await this.initSigner(signerType);
             await signer.handshake();
