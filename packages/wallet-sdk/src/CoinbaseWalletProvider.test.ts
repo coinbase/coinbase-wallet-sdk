@@ -111,6 +111,22 @@ describe('Signer configuration', () => {
     expect(mockHandshake).toHaveBeenCalledWith();
   });
 
+  it('should support scwOnboardMode', async () => {
+    mockFetchSignerType.mockResolvedValue('scw');
+
+    await provider.request({
+      method: 'eth_requestAccounts',
+      params: [{ scwOnboardMode: 'create' }],
+    });
+    expect(mockFetchSignerType).toHaveBeenCalledWith(
+      expect.objectContaining({
+        options: {
+          scwOnboardMode: 'create',
+        },
+      })
+    );
+  });
+
   it('should throw error if signer selection failed', async () => {
     const error = new Error('Signer selection failed');
     mockFetchSignerType.mockRejectedValue(error);
