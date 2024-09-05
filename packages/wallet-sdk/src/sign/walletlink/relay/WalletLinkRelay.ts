@@ -492,10 +492,26 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
       },
     };
 
+    let hideSnackbarItem: (() => void) | null = null;
     const id = randomBytesHex(8);
+
+    const cancel = (error?: Error) => {
+      this.publishWeb3RequestCanceledEvent(id);
+      this.handleErrorResponse(id, request.method, error);
+      hideSnackbarItem?.();
+    };
+
+    {
+      hideSnackbarItem = this.ui.showConnecting({
+        isUnlinkedErrorState: this.isUnlinkedErrorState,
+        onCancel: cancel,
+        onResetConnection: this.resetAndReload, // eslint-disable-line @typescript-eslint/unbound-method
+      });
+    }
 
     return new Promise<Web3Response<'switchEthereumChain'>>((resolve, reject) => {
       this.relayEventManager.callbacks.set(id, (response) => {
+        hideSnackbarItem?.();
         if (isErrorResponse(response) && response.errorCode) {
           return reject(
             standardErrors.provider.custom({
