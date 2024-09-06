@@ -3,7 +3,12 @@ import { SCWSigner } from './scw/SCWSigner';
 import { WalletLinkSigner } from './walletlink/WalletLinkSigner';
 import { Communicator } from ':core/communicator/Communicator';
 import { ConfigMessage, MessageID, SignerType } from ':core/message';
-import { AppMetadata, Preference, ProviderEventCallback } from ':core/provider/interface';
+import {
+  AppMetadata,
+  Preference,
+  ProviderEventCallback,
+  RequestArguments,
+} from ':core/provider/interface';
 import { ScopedAsyncStorage } from ':core/storage/ScopedAsyncStorage';
 
 const SIGNER_TYPE_KEY = 'SignerType';
@@ -23,7 +28,7 @@ export async function fetchSignerType(params: {
   communicator: Communicator;
   preference: Preference;
   metadata: AppMetadata; // for WalletLink
-  options?: Record<string, unknown>;
+  handshakeRequest: RequestArguments;
 }): Promise<SignerType> {
   const { communicator, metadata } = params;
   listenForWalletLinkSessionRequest(communicator, metadata).catch(() => {});
@@ -31,13 +36,12 @@ export async function fetchSignerType(params: {
   const request: ConfigMessage & { id: MessageID } = {
     id: crypto.randomUUID(),
     event: 'selectSignerType',
-    data: params.preference,
+    data: {
+      ...params.preference,
+      handshakeRequest: params.handshakeRequest,
+    },
   };
 
-  if (params.options?.scwOnboardMode) {
-    (request.data as { scwOnboardMode: ScwOnboardMode }).scwOnboardMode = params.options
-      .scwOnboardMode as ScwOnboardMode;
-  }
   const { data } = await communicator.postRequestAndWaitForResponse(request);
   return data as SignerType;
 }
