@@ -99,8 +99,9 @@ describe('Signer configuration', () => {
   it('should complete signerType selection correctly', async () => {
     mockFetchSignerType.mockResolvedValue('scw');
 
-    await provider.request({ method: 'eth_requestAccounts' });
-    expect(mockHandshake).toHaveBeenCalledWith();
+    const args = { method: 'eth_requestAccounts' };
+    await provider.request(args);
+    expect(mockHandshake).toHaveBeenCalledWith(args);
   });
 
   it('should support enable', async () => {
@@ -108,52 +109,20 @@ describe('Signer configuration', () => {
     jest.spyOn(console, 'warn').mockImplementation();
 
     await provider.enable();
-    expect(mockHandshake).toHaveBeenCalledWith();
+    expect(mockHandshake).toHaveBeenCalledWith({ method: 'eth_requestAccounts' });
   });
 
-  it('should support scwOnboardMode create', async () => {
+  it('should pass handshake request args', async () => {
     mockFetchSignerType.mockResolvedValue('scw');
 
-    await provider.request({
+    const argsWithCustomParams = {
       method: 'eth_requestAccounts',
       params: [{ scwOnboardMode: 'create' }],
-    });
+    };
+    await provider.request(argsWithCustomParams);
     expect(mockFetchSignerType).toHaveBeenCalledWith(
       expect.objectContaining({
-        options: {
-          scwOnboardMode: 'create',
-        },
-      })
-    );
-  });
-
-  it('should support scwOnboardMode default', async () => {
-    mockFetchSignerType.mockResolvedValue('scw');
-
-    await provider.request({
-      method: 'eth_requestAccounts',
-      params: [{ scwOnboardMode: 'default' }],
-    });
-    expect(mockFetchSignerType).toHaveBeenCalledWith(
-      expect.objectContaining({
-        options: {
-          scwOnboardMode: 'default',
-        },
-      })
-    );
-  });
-
-  it('should support no scwOnboardMode passed', async () => {
-    mockFetchSignerType.mockResolvedValue('scw');
-
-    await provider.request({
-      method: 'eth_requestAccounts',
-    });
-    expect(mockFetchSignerType).toHaveBeenCalledWith(
-      expect.objectContaining({
-        options: {
-          scwOnboardMode: 'default',
-        },
+        handshakeRequest: argsWithCustomParams,
       })
     );
   });

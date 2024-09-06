@@ -30,7 +30,7 @@ export async function fetchSignerType(params: {
   metadata: AppMetadata; // for WalletLink
   handshakeRequest: RequestArguments;
 }): Promise<SignerType> {
-  const { communicator, metadata } = params;
+  const { communicator, metadata, handshakeRequest } = params;
   listenForWalletLinkSessionRequest(communicator, metadata).catch(() => {});
 
   const request: ConfigMessage & { id: MessageID } = {
@@ -38,7 +38,7 @@ export async function fetchSignerType(params: {
     event: 'selectSignerType',
     data: {
       ...params.preference,
-      handshakeRequest: params.handshakeRequest,
+      handshakeRequest,
     },
   };
 

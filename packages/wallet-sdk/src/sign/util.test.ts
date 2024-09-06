@@ -58,6 +58,7 @@ describe('util', () => {
         communicator,
         preference,
         metadata,
+        handshakeRequest: { method: 'eth_requestAccounts' },
       });
       expect(signerType).toEqual('scw');
     });
