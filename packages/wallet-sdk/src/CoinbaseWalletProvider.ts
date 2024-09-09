@@ -48,8 +48,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
       checkErrorForInvalidRequestArgs(args);
       if (!this.signer) {
         switch (args.method) {
-          case 'eth_requestAccounts':
-          case 'wallet_connect': /* forward compatibility */ {
+          case 'eth_requestAccounts': {
             const signerType = await this.requestSignerSelection(args);
             const signer = await this.initSigner(signerType);
             await signer.handshake(args);
