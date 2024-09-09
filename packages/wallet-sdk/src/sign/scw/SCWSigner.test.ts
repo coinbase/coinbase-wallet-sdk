@@ -19,6 +19,12 @@ jest.mock(':util/provider');
 jest.mock('./SCWKeyManager');
 const storageStoreSpy = jest.spyOn(ScopedAsyncStorage.prototype, 'storeObject');
 const storageClearSpy = jest.spyOn(ScopedAsyncStorage.prototype, 'clear');
+jest.mock(':core/communicator/Communicator', () => ({
+  Communicator: jest.fn(() => ({
+    postRequestAndWaitForResponse: jest.fn(),
+    waitForPopupLoaded: jest.fn(),
+  })),
+}));
 
 jest.mock(':util/cipher', () => ({
   decryptContent: jest.fn(),
@@ -47,7 +53,7 @@ const mockSuccessResponse: RPCResponseMessage = {
 describe('SCWSigner', () => {
   let signer: SCWSigner;
   let mockMetadata: AppMetadata;
-  let mockCommunicator: Communicator;
+  let mockCommunicator: jest.Mocked<Communicator>;
   let mockCallback: ProviderEventCallback;
   let mockKeyManager: jest.Mocked<SCWKeyManager>;
 
@@ -56,15 +62,11 @@ describe('SCWSigner', () => {
       appName: 'test',
       appLogoUrl: null,
       appChainIds: [1],
-      appDeeplinkUrl: null,
     };
 
-    Communicator.communicators.clear();
-    mockCommunicator = Communicator.getInstance(CB_KEYS_URL, mockMetadata);
-    jest.spyOn(mockCommunicator, 'waitForPopupLoaded').mockResolvedValue({} as Window);
-    jest
-      .spyOn(mockCommunicator, 'postRequestAndWaitForResponse')
-      .mockResolvedValue(mockSuccessResponse);
+    mockCommunicator = new Communicator(CB_KEYS_URL, mockMetadata) as jest.Mocked<Communicator>;
+    mockCommunicator.waitForPopupLoaded.mockResolvedValue({} as Window);
+    mockCommunicator.postRequestAndWaitForResponse.mockResolvedValue(mockSuccessResponse);
 
     mockCallback = jest.fn();
     mockKeyManager = new SCWKeyManager() as jest.Mocked<SCWKeyManager>;
@@ -121,7 +123,7 @@ describe('SCWSigner', () => {
         content: { failure: mockError },
         timestamp: new Date(),
       };
-      (mockCommunicator.postRequestAndWaitForResponse as jest.Mock).mockResolvedValue(mockResponse);
+      mockCommunicator.postRequestAndWaitForResponse.mockResolvedValue(mockResponse);
 
       await expect(signer.handshake()).rejects.toThrowError(mockError);
     });
