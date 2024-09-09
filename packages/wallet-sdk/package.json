@@ -36,34 +36,6 @@
     "eventemitter3": "^5.0.1",
     "preact": "^10.16.0"
   },
-  "peerDependencies": {
-    "@react-native-async-storage/async-storage": "*",
-    "expo": "*",
-    "expo-web-browser": "*",
-    "react": "*",
-    "react-dom": "*",
-    "react-native": "*"
-  },
-  "peerDependenciesMeta": {
-    "@react-native-async-storage/async-storage": {
-      "optional": true
-    },
-    "expo": {
-      "optional": true
-    },
-    "expo-web-browser": {
-      "optional": true
-    },
-    "react": {
-      "optional": true
-    },
-    "react-dom": {
-      "optional": true
-    },
-    "react-native": {
-      "optional": true
-    }
-  },
   "devDependencies": {
     "@babel/core": "^7.22.9",
     "@babel/plugin-proposal-decorators": "^7.22.7",
@@ -71,14 +43,12 @@
     "@babel/preset-env": "^7.22.9",
     "@babel/preset-typescript": "^7.22.5",
     "@peculiar/webcrypto": "^1.4.3",
-    "@react-native-async-storage/async-storage": "^1.24.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/preact": "^2.0.1",
     "@testing-library/react": "14.3.1",
     "@types/jest": "^27.5.2",
     "@types/node": "^14.18.54",
     "@types/react": "^18.0.25",
-    "@types/react-native": "^0.70.6",
     "@typescript-eslint/eslint-plugin": "^6.2.0",
     "@typescript-eslint/parser": "^6.2.0",
     "babel-jest": "^27.5.1",
@@ -88,7 +58,6 @@
     "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "eslint-plugin-unused-imports": "^3.0.0",
-    "expo-web-browser": "^13.0.3",
     "jest": "^27.5.1",
     "jest-chrome": "^0.7.2",
     "jest-websocket-mock": "^2.4.0",
