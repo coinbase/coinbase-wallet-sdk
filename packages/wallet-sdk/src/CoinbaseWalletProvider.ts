@@ -13,7 +13,7 @@ import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from '
 import { checkErrorForInvalidRequestArgs } from './util/provider';
 import { Communicator } from ':core/communicator/Communicator';
 import { SignerType } from ':core/message';
-import { clearAllStorage } from ':core/storage/util';
+import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { hexStringFromNumber } from ':core/type/util';
 
 export class CoinbaseWalletProvider extends ProviderEventEmitter implements ProviderInterface {
@@ -89,7 +89,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
     await this.ensureInitialized();
     await this.signer?.cleanup();
     this.signer = null;
-    await clearAllStorage();
+    ScopedLocalStorage.clearAll();
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
 

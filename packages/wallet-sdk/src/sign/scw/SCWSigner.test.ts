@@ -5,7 +5,7 @@ import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
 import { EncryptedData, RPCResponseMessage } from ':core/message';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface';
-import { ScopedAsyncStorage } from ':core/storage/ScopedAsyncStorage';
+import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import {
   decryptContent,
   encryptContent,
@@ -17,8 +17,8 @@ import { fetchRPCRequest } from ':util/provider';
 jest.mock(':util/provider');
 
 jest.mock('./SCWKeyManager');
-const storageStoreSpy = jest.spyOn(ScopedAsyncStorage.prototype, 'storeObject');
-const storageClearSpy = jest.spyOn(ScopedAsyncStorage.prototype, 'clear');
+const storageStoreSpy = jest.spyOn(ScopedLocalStorage.prototype, 'storeObject');
+const storageClearSpy = jest.spyOn(ScopedLocalStorage.prototype, 'clear');
 jest.mock(':core/communicator/Communicator', () => ({
   Communicator: jest.fn(() => ({
     postRequestAndWaitForResponse: jest.fn(),
@@ -57,7 +57,7 @@ describe('SCWSigner', () => {
   let mockCallback: ProviderEventCallback;
   let mockKeyManager: jest.Mocked<SCWKeyManager>;
 
-  beforeEach(async () => {
+  beforeEach(() => {
     mockMetadata = {
       appName: 'test',
       appLogoUrl: null,
@@ -78,7 +78,7 @@ describe('SCWSigner', () => {
     mockKeyManager.getSharedSecret.mockResolvedValue(mockCryptoKey);
     (encryptContent as jest.Mock).mockResolvedValueOnce(encryptedData);
 
-    signer = await SCWSigner.createInstance({
+    signer = new SCWSigner({
       metadata: mockMetadata,
       communicator: mockCommunicator,
       callback: mockCallback,
@@ -131,7 +131,7 @@ describe('SCWSigner', () => {
 
   describe('request', () => {
     beforeAll(() => {
-      jest.spyOn(ScopedAsyncStorage.prototype, 'loadObject').mockImplementation(async (key) => {
+      jest.spyOn(ScopedLocalStorage.prototype, 'loadObject').mockImplementation((key) => {
         switch (key) {
           case 'accounts':
             return ['0xAddress'];
@@ -144,7 +144,7 @@ describe('SCWSigner', () => {
     });
 
     afterAll(() => {
-      jest.spyOn(ScopedAsyncStorage.prototype, 'loadObject').mockRestore();
+      jest.spyOn(ScopedLocalStorage.prototype, 'loadObject').mockRestore();
     });
 
     it('should perform a successful request', async () => {

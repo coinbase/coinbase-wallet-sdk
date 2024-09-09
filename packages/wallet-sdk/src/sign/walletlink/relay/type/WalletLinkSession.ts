@@ -3,7 +3,7 @@
 import { sha256 } from '@noble/hashes/sha256';
 import { bytesToHex } from '@noble/hashes/utils';
 
-import { ScopedLocalStorage } from '../../storage/ScopedLocalStorage';
+import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { randomBytesHex } from ':core/type/util';
 
 const STORAGE_KEY_SESSION_ID = 'session:id';

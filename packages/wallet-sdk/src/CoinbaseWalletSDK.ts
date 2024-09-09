@@ -4,7 +4,7 @@ import { LogoType, walletLogo } from './assets/wallet-logo';
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { AppMetadata, Preference, ProviderInterface } from './core/provider/interface';
 import { LIB_VERSION } from './version';
-import { ScopedAsyncStorage } from ':core/storage/ScopedAsyncStorage';
+import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { getFavicon } from ':core/type/util';
 import { getCoinbaseInjectedProvider } from ':util/provider';
 
@@ -39,7 +39,7 @@ export class CoinbaseWalletSDK {
   }
 
   private async storeLatestVersion() {
-    const versionStorage = new ScopedAsyncStorage('CBWSDK');
+    const versionStorage = new ScopedLocalStorage('CBWSDK');
     versionStorage.setItem('VERSION', LIB_VERSION);
   }
 }

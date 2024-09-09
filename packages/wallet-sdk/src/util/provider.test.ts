@@ -79,7 +79,6 @@ describe('Utils', () => {
               appName: 'Dapp',
               appChainIds: [],
               appLogoUrl: null,
-              appDeeplinkUrl: null,
             },
             preference: {
               options: 'all',
@@ -99,7 +98,6 @@ describe('Utils', () => {
               appName: 'Dapp',
               appChainIds: [],
               appLogoUrl: null,
-              appDeeplinkUrl: null,
             },
             preference: {
               options: 'smartWalletOnly',
@@ -132,7 +130,6 @@ describe('Utils', () => {
               appName: 'Dapp',
               appChainIds: [],
               appLogoUrl: null,
-              appDeeplinkUrl: null,
             },
             preference: {
               options: 'all',
@@ -148,7 +145,6 @@ describe('Utils', () => {
               appName: 'Dapp',
               appChainIds: [],
               appLogoUrl: null,
-              appDeeplinkUrl: null,
             },
             preference: {
               options: 'smartWalletOnly',
@@ -173,7 +169,6 @@ describe('Utils', () => {
               appName: 'Dapp',
               appChainIds: [],
               appLogoUrl: null,
-              appDeeplinkUrl: null,
             },
             preference: {
               options: 'all',
