@@ -82,10 +82,7 @@ export class SCWSigner implements Signer {
     const handshakeMessage = await this.createRequestMessage({
       handshake: {
         method: args.method,
-        params: {
-          ...this.metadata,
-          ...(args.params ?? {}),
-        },
+        params: Object.assign({}, this.metadata, args.params ?? {}),
       },
     });
     const response: RPCResponseMessage =
