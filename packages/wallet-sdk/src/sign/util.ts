@@ -14,7 +14,7 @@ export function loadSignerType(): SignerType | null {
 }
 
 export function storeSignerType(signerType: SignerType) {
-  return storage.setItem(SIGNER_TYPE_KEY, signerType);
+  storage.setItem(SIGNER_TYPE_KEY, signerType);
 }
 
 export async function fetchSignerType(params: {
@@ -34,12 +34,12 @@ export async function fetchSignerType(params: {
   return data as SignerType;
 }
 
-export async function createSigner(params: {
+export function createSigner(params: {
   signerType: SignerType;
   metadata: AppMetadata;
   communicator: Communicator;
   callback: ProviderEventCallback;
-}): Promise<Signer> {
+}): Signer {
   const { signerType, metadata, communicator, callback } = params;
   switch (signerType) {
     case 'scw': {

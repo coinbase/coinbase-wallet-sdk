@@ -12,7 +12,6 @@
     "web3"
   ],
   "main": "dist/index.js",
-  "react-native": "dist/index.native.js",
   "types": "dist/index.d.ts",
   "sideEffects": false,
   "repository": "https://github.com/coinbase/coinbase-wallet-sdk.git",
@@ -45,10 +44,8 @@
     "@peculiar/webcrypto": "^1.4.3",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/preact": "^2.0.1",
-    "@testing-library/react": "14.3.1",
     "@types/jest": "^27.5.2",
     "@types/node": "^14.18.54",
-    "@types/react": "^18.0.25",
     "@typescript-eslint/eslint-plugin": "^6.2.0",
     "@typescript-eslint/parser": "^6.2.0",
     "babel-jest": "^27.5.1",

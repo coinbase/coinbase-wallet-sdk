@@ -38,7 +38,7 @@ export class CoinbaseWalletSDK {
     return walletLogo(type, width);
   }
 
-  private async storeLatestVersion() {
+  private storeLatestVersion() {
     const versionStorage = new ScopedLocalStorage('CBWSDK');
     versionStorage.setItem('VERSION', LIB_VERSION);
   }

@@ -47,7 +47,6 @@ export class SCWSigner implements Signer {
     this.keyManager = new SCWKeyManager();
     this.storage = new ScopedLocalStorage('CBWSDK', 'SCWStateManager');
 
-    this.storage = new ScopedLocalStorage('CBWSDK', 'SCWStateManager');
     this.accounts = this.storage.loadObject(ACCOUNTS_KEY) ?? [];
     this.chain = this.storage.loadObject(ACTIVE_CHAIN_STORAGE_KEY) || {
       id: params.metadata.appChainIds?.[0] ?? 1,
@@ -128,7 +127,7 @@ export class SCWSigner implements Signer {
   }
 
   private async sendRequestToPopup(request: RequestArguments) {
-    // [Web Only] Open the popup before constructing the request message.
+    // Open the popup before constructing the request message.
     // This is to ensure that the popup is not blocked by some browsers (i.e. Safari)
     await this.communicator.waitForPopupLoaded?.();
 
