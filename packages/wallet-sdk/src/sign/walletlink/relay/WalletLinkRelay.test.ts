@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { ScopedLocalStorage } from '../storage/ScopedLocalStorage';
 import { WalletLinkCipher } from './connection/WalletLinkCipher';
 import { WalletLinkConnection } from './connection/WalletLinkConnection';
 import { WalletLinkWebSocket } from './connection/WalletLinkWebSocket';
 import { WALLET_USER_NAME_KEY } from './constants';
 import { ServerMessage } from './type/ServerMessage';
 import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay';
+import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 
 const decryptMock = jest.fn().mockImplementation((text) => text);
 
@@ -20,7 +20,6 @@ describe('WalletLinkRelay', () => {
       appName: 'test app',
       appLogoUrl: '',
       appChainIds: [],
-      appDeeplinkUrl: null,
     },
     accountsCallback: jest.fn(),
     chainCallback: jest.fn(),

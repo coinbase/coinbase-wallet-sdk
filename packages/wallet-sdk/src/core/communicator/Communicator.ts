@@ -15,24 +15,14 @@ import { closePopup, openPopup } from ':util/web';
  * It also handles cleanup of event listeners and the popup window itself when necessary.
  */
 export class Communicator {
-  static communicators = new Map<string, Communicator>();
-
   private readonly metadata: AppMetadata;
   private readonly url: URL;
   private popup: Window | null = null;
   private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>();
 
-  private constructor(url: string = CB_KEYS_URL, metadata: AppMetadata) {
+  constructor(url: string = CB_KEYS_URL, metadata: AppMetadata) {
     this.url = new URL(url);
     this.metadata = metadata;
-  }
-
-  static getInstance(url: string = CB_KEYS_URL, metadata: AppMetadata): Communicator {
-    if (!this.communicators.has(url)) {
-      this.communicators.set(url, new Communicator(url, metadata));
-    }
-
-    return this.communicators.get(url)!;
   }
 
   /**

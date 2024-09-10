@@ -14,14 +14,7 @@ export type EncryptedData = {
   cipherText: ArrayBuffer;
 };
 
-export type MobileEncryptedData = {
-  iv: Uint8Array;
-  cipherText: Uint8Array;
-};
-
 export interface RPCRequestMessage extends RPCMessage {
-  sdkVersion: string;
-  callbackUrl?: string;
   content:
     | {
         handshake: RequestAccountsAction;
@@ -36,17 +29,6 @@ export interface RPCResponseMessage extends RPCMessage {
   content:
     | {
         encrypted: EncryptedData;
-      }
-    | {
-        failure: SerializedEthereumRpcError;
-      };
-}
-
-export interface MobileRPCResponseMessage extends RPCMessage {
-  requestId: MessageID;
-  content:
-    | {
-        encrypted: MobileEncryptedData;
       }
     | {
         failure: SerializedEthereumRpcError;

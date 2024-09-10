@@ -6,10 +6,10 @@ import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants';
 import { EthereumTransactionParams } from './relay/type/EthereumTransactionParams';
 import { isErrorResponse } from './relay/type/Web3Response';
 import { WalletLinkRelay } from './relay/WalletLinkRelay';
-import { ScopedLocalStorage } from './storage/ScopedLocalStorage';
 import { WALLETLINK_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface';
+import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { AddressString } from ':core/type';
 import {
   encodeToHexString,

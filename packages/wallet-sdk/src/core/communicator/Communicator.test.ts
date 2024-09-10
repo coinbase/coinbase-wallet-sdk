@@ -47,7 +47,6 @@ const appMetadata: AppMetadata = {
   appName: 'Test App',
   appLogoUrl: null,
   appChainIds: [1],
-  appDeeplinkUrl: null,
 };
 
 describe('Communicator', () => {
@@ -60,10 +59,9 @@ describe('Communicator', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    Communicator.communicators.clear();
 
     // url defaults to CB_KEYS_URL
-    communicator = Communicator.getInstance(CB_KEYS_URL, appMetadata);
+    communicator = new Communicator(CB_KEYS_URL, appMetadata);
     urlOrigin = new URL(CB_KEYS_URL).origin;
 
     mockPopup = {

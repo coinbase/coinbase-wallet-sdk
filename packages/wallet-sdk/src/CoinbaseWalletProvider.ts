@@ -13,7 +13,7 @@ import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from '
 import { checkErrorForInvalidRequestArgs } from './util/provider';
 import { Communicator } from ':core/communicator/Communicator';
 import { SignerType } from ':core/message';
-import { clearAllStorage } from ':core/storage/util';
+import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { hexStringFromNumber } from ':core/type/util';
 
 export class CoinbaseWalletProvider extends ProviderEventEmitter implements ProviderInterface {
@@ -21,36 +21,26 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
   private readonly preference: Preference;
   private readonly communicator: Communicator;
 
-  private initPromise: Promise<void>;
   private signer: Signer | null = null;
 
   constructor({ metadata, preference: { keysUrl, ...preference } }: Readonly<ConstructorOptions>) {
     super();
     this.metadata = metadata;
     this.preference = preference;
-    this.communicator = Communicator.getInstance(keysUrl, metadata);
+    this.communicator = new Communicator(keysUrl, metadata);
 
-    // Async initialize
-    this.initPromise = this.initialize();
-  }
-
-  private async initialize() {
-    // Load states from storage
-    const signerType = await loadSignerType();
-    if (signerType) {
-      this.signer = await this.initSigner(signerType);
-    }
+    const signerType = loadSignerType();
+    if (signerType) this.signer = this.initSigner(signerType);
   }
 
   public async request(args: RequestArguments): Promise<unknown> {
-    await this.ensureInitialized();
     try {
       checkErrorForInvalidRequestArgs(args);
       if (!this.signer) {
         switch (args.method) {
           case 'eth_requestAccounts': {
             const signerType = await this.requestSignerSelection();
-            const signer = await this.initSigner(signerType);
+            const signer = this.initSigner(signerType);
             await signer.handshake();
             this.signer = signer;
             storeSignerType(signerType);
@@ -86,18 +76,13 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
   }
 
   async disconnect() {
-    await this.ensureInitialized();
     await this.signer?.cleanup();
     this.signer = null;
-    await clearAllStorage();
+    ScopedLocalStorage.clearAll();
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
 
   readonly isCoinbaseWallet = true;
-
-  private async ensureInitialized() {
-    await this.initPromise; // resolves immediately if already initialized
-  }
 
   private requestSignerSelection(): Promise<SignerType> {
     return fetchSignerType({
@@ -107,7 +92,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
     });
   }
 
-  private async initSigner(signerType: SignerType): Promise<Signer> {
+  private initSigner(signerType: SignerType): Signer {
     return createSigner({
       signerType,
       metadata: this.metadata,

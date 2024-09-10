@@ -4,17 +4,17 @@ import { WalletLinkSigner } from './walletlink/WalletLinkSigner';
 import { Communicator } from ':core/communicator/Communicator';
 import { ConfigMessage, MessageID, SignerType } from ':core/message';
 import { AppMetadata, Preference, ProviderEventCallback } from ':core/provider/interface';
-import { ScopedAsyncStorage } from ':core/storage/ScopedAsyncStorage';
+import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 
 const SIGNER_TYPE_KEY = 'SignerType';
-const storage = new ScopedAsyncStorage('CBWSDK', 'SignerConfigurator');
+const storage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
 
-export async function loadSignerType(): Promise<SignerType | null> {
-  return (await storage.getItem(SIGNER_TYPE_KEY)) as SignerType;
+export function loadSignerType(): SignerType | null {
+  return storage.getItem(SIGNER_TYPE_KEY) as SignerType;
 }
 
-export async function storeSignerType(signerType: SignerType): Promise<void> {
-  return storage.setItem(SIGNER_TYPE_KEY, signerType);
+export function storeSignerType(signerType: SignerType) {
+  storage.setItem(SIGNER_TYPE_KEY, signerType);
 }
 
 export async function fetchSignerType(params: {
@@ -34,16 +34,16 @@ export async function fetchSignerType(params: {
   return data as SignerType;
 }
 
-export async function createSigner(params: {
+export function createSigner(params: {
   signerType: SignerType;
   metadata: AppMetadata;
   communicator: Communicator;
   callback: ProviderEventCallback;
-}): Promise<Signer> {
+}): Signer {
   const { signerType, metadata, communicator, callback } = params;
   switch (signerType) {
     case 'scw': {
-      return SCWSigner.createInstance({
+      return new SCWSigner({
         metadata,
         callback,
         communicator,

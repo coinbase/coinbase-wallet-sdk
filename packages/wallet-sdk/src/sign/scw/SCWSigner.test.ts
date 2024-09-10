@@ -5,7 +5,7 @@ import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
 import { EncryptedData, RPCResponseMessage } from ':core/message';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface';
-import { ScopedAsyncStorage } from ':core/storage/ScopedAsyncStorage';
+import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import {
   decryptContent,
   encryptContent,
@@ -17,8 +17,14 @@ import { fetchRPCRequest } from ':util/provider';
 jest.mock(':util/provider');
 
 jest.mock('./SCWKeyManager');
-const storageStoreSpy = jest.spyOn(ScopedAsyncStorage.prototype, 'storeObject');
-const storageClearSpy = jest.spyOn(ScopedAsyncStorage.prototype, 'clear');
+const storageStoreSpy = jest.spyOn(ScopedLocalStorage.prototype, 'storeObject');
+const storageClearSpy = jest.spyOn(ScopedLocalStorage.prototype, 'clear');
+jest.mock(':core/communicator/Communicator', () => ({
+  Communicator: jest.fn(() => ({
+    postRequestAndWaitForResponse: jest.fn(),
+    waitForPopupLoaded: jest.fn(),
+  })),
+}));
 
 jest.mock(':util/cipher', () => ({
   decryptContent: jest.fn(),
@@ -47,24 +53,20 @@ const mockSuccessResponse: RPCResponseMessage = {
 describe('SCWSigner', () => {
   let signer: SCWSigner;
   let mockMetadata: AppMetadata;
-  let mockCommunicator: Communicator;
+  let mockCommunicator: jest.Mocked<Communicator>;
   let mockCallback: ProviderEventCallback;
   let mockKeyManager: jest.Mocked<SCWKeyManager>;
 
-  beforeEach(async () => {
+  beforeEach(() => {
     mockMetadata = {
       appName: 'test',
       appLogoUrl: null,
       appChainIds: [1],
-      appDeeplinkUrl: null,
     };
 
-    Communicator.communicators.clear();
-    mockCommunicator = Communicator.getInstance(CB_KEYS_URL, mockMetadata);
-    jest.spyOn(mockCommunicator, 'waitForPopupLoaded').mockResolvedValue({} as Window);
-    jest
-      .spyOn(mockCommunicator, 'postRequestAndWaitForResponse')
-      .mockResolvedValue(mockSuccessResponse);
+    mockCommunicator = new Communicator(CB_KEYS_URL, mockMetadata) as jest.Mocked<Communicator>;
+    mockCommunicator.waitForPopupLoaded.mockResolvedValue({} as Window);
+    mockCommunicator.postRequestAndWaitForResponse.mockResolvedValue(mockSuccessResponse);
 
     mockCallback = jest.fn();
     mockKeyManager = new SCWKeyManager() as jest.Mocked<SCWKeyManager>;
@@ -76,7 +78,7 @@ describe('SCWSigner', () => {
     mockKeyManager.getSharedSecret.mockResolvedValue(mockCryptoKey);
     (encryptContent as jest.Mock).mockResolvedValueOnce(encryptedData);
 
-    signer = await SCWSigner.createInstance({
+    signer = new SCWSigner({
       metadata: mockMetadata,
       communicator: mockCommunicator,
       callback: mockCallback,
@@ -121,7 +123,7 @@ describe('SCWSigner', () => {
         content: { failure: mockError },
         timestamp: new Date(),
       };
-      (mockCommunicator.postRequestAndWaitForResponse as jest.Mock).mockResolvedValue(mockResponse);
+      mockCommunicator.postRequestAndWaitForResponse.mockResolvedValue(mockResponse);
 
       await expect(signer.handshake()).rejects.toThrowError(mockError);
     });
@@ -129,7 +131,7 @@ describe('SCWSigner', () => {
 
   describe('request', () => {
     beforeAll(() => {
-      jest.spyOn(ScopedAsyncStorage.prototype, 'loadObject').mockImplementation(async (key) => {
+      jest.spyOn(ScopedLocalStorage.prototype, 'loadObject').mockImplementation((key) => {
         switch (key) {
           case 'accounts':
             return ['0xAddress'];
@@ -142,7 +144,7 @@ describe('SCWSigner', () => {
     });
 
     afterAll(() => {
-      jest.spyOn(ScopedAsyncStorage.prototype, 'loadObject').mockRestore();
+      jest.spyOn(ScopedLocalStorage.prototype, 'loadObject').mockRestore();
     });
 
     it('should perform a successful request', async () => {

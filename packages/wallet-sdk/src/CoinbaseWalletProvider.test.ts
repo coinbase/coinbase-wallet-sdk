@@ -6,7 +6,7 @@ import { AddressString } from ':core/type';
 
 function createProvider() {
   return new CoinbaseWalletProvider({
-    metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1], appDeeplinkUrl: null },
+    metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1] },
     preference: { options: 'all' },
   });
 }
@@ -23,7 +23,7 @@ let callback: ProviderEventCallback;
 
 beforeEach(() => {
   jest.resetAllMocks();
-  jest.spyOn(util, 'createSigner').mockImplementation(async (params) => {
+  jest.spyOn(util, 'createSigner').mockImplementation((params) => {
     callback = params.callback;
     return {
       accounts: [AddressString('0x123')],
@@ -137,7 +137,7 @@ describe('Signer configuration', () => {
   });
 
   it('should load signer from storage when available', async () => {
-    mockLoadSignerType.mockReturnValue(Promise.resolve('scw'));
+    mockLoadSignerType.mockReturnValue('scw');
     const providerLoadedFromStorage = createProvider();
 
     await providerLoadedFromStorage.request({ method: 'eth_requestAccounts' });

@@ -4,7 +4,7 @@ import { LogoType, walletLogo } from './assets/wallet-logo';
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { AppMetadata, Preference, ProviderInterface } from './core/provider/interface';
 import { LIB_VERSION } from './version';
-import { ScopedAsyncStorage } from ':core/storage/ScopedAsyncStorage';
+import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { getFavicon } from ':core/type/util';
 import { getCoinbaseInjectedProvider } from ':util/provider';
 
@@ -19,7 +19,6 @@ export class CoinbaseWalletSDK {
       appName: metadata.appName || 'Dapp',
       appLogoUrl: metadata.appLogoUrl || getFavicon(),
       appChainIds: metadata.appChainIds || [],
-      appDeeplinkUrl: null,
     };
     this.storeLatestVersion();
   }
@@ -39,8 +38,8 @@ export class CoinbaseWalletSDK {
     return walletLogo(type, width);
   }
 
-  private async storeLatestVersion() {
-    const versionStorage = new ScopedAsyncStorage('CBWSDK');
+  private storeLatestVersion() {
+    const versionStorage = new ScopedLocalStorage('CBWSDK');
     versionStorage.setItem('VERSION', LIB_VERSION);
   }
 }
