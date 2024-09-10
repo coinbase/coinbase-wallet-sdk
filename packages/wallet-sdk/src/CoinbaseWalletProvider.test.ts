@@ -23,7 +23,7 @@ let callback: ProviderEventCallback;
 
 beforeEach(() => {
   jest.resetAllMocks();
-  jest.spyOn(util, 'createSigner').mockImplementation(async (params) => {
+  jest.spyOn(util, 'createSigner').mockImplementation((params) => {
     callback = params.callback;
     return {
       accounts: [AddressString('0x123')],
