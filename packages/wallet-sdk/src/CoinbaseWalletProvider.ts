@@ -39,9 +39,9 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
       if (!this.signer) {
         switch (args.method) {
           case 'eth_requestAccounts': {
-            const signerType = await this.requestSignerSelection();
+            const signerType = await this.requestSignerSelection(args);
             const signer = this.initSigner(signerType);
-            await signer.handshake();
+            await signer.handshake(args);
             this.signer = signer;
             storeSignerType(signerType);
             break;
@@ -84,11 +84,12 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
 
   readonly isCoinbaseWallet = true;
 
-  private requestSignerSelection(): Promise<SignerType> {
+  private requestSignerSelection(handshakeRequest: RequestArguments): Promise<SignerType> {
     return fetchSignerType({
       communicator: this.communicator,
       preference: this.preference,
       metadata: this.metadata,
+      handshakeRequest,
     });
   }
 

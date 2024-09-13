@@ -1,6 +1,6 @@
 import { Message, MessageID } from './Message';
 import { SerializedEthereumRpcError } from ':core/error';
-import { AppMetadata } from ':core/provider/interface';
+import { RequestArguments } from ':core/provider/interface';
 
 interface RPCMessage extends Message {
   id: MessageID;
@@ -17,7 +17,7 @@ export type EncryptedData = {
 export interface RPCRequestMessage extends RPCMessage {
   content:
     | {
-        handshake: RequestAccountsAction;
+        handshake: RequestArguments;
       }
     | {
         encrypted: EncryptedData;
@@ -34,8 +34,3 @@ export interface RPCResponseMessage extends RPCMessage {
         failure: SerializedEthereumRpcError;
       };
 }
-
-type RequestAccountsAction = {
-  method: 'eth_requestAccounts';
-  params: AppMetadata;
-};

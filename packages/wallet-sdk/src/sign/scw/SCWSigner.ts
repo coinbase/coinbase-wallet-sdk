@@ -58,11 +58,11 @@ export class SCWSigner implements Signer {
     this.decryptResponseMessage = this.decryptResponseMessage.bind(this);
   }
 
-  async handshake() {
+  async handshake(args: RequestArguments) {
     const handshakeMessage = await this.createRequestMessage({
       handshake: {
-        method: 'eth_requestAccounts',
-        params: this.metadata,
+        method: args.method,
+        params: Object.assign({}, this.metadata, args.params ?? {}),
       },
     });
     const response: RPCResponseMessage =
