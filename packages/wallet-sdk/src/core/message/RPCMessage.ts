@@ -15,7 +15,6 @@ export type EncryptedData = {
 };
 
 export interface RPCRequestMessage extends RPCMessage {
-  callbackUrl?: string;
   content:
     | {
         handshake: RequestArguments;
