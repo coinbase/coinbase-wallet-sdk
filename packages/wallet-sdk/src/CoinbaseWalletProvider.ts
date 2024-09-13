@@ -40,7 +40,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
         switch (args.method) {
           case 'eth_requestAccounts': {
             const signerType = await this.requestSignerSelection(args);
-            const signer = await this.initSigner(signerType);
+            const signer = this.initSigner(signerType);
             await signer.handshake(args);
             this.signer = signer;
             storeSignerType(signerType);
