@@ -99,8 +99,9 @@ describe('Signer configuration', () => {
   it('should complete signerType selection correctly', async () => {
     mockFetchSignerType.mockResolvedValue('scw');
 
-    await provider.request({ method: 'eth_requestAccounts' });
-    expect(mockHandshake).toHaveBeenCalledWith();
+    const args = { method: 'eth_requestAccounts' };
+    await provider.request(args);
+    expect(mockHandshake).toHaveBeenCalledWith(args);
   });
 
   it('should support enable', async () => {
@@ -108,7 +109,22 @@ describe('Signer configuration', () => {
     jest.spyOn(console, 'warn').mockImplementation();
 
     await provider.enable();
-    expect(mockHandshake).toHaveBeenCalledWith();
+    expect(mockHandshake).toHaveBeenCalledWith({ method: 'eth_requestAccounts' });
+  });
+
+  it('should pass handshake request args', async () => {
+    mockFetchSignerType.mockResolvedValue('scw');
+
+    const argsWithCustomParams = {
+      method: 'eth_requestAccounts',
+      params: [{ scwOnboardMode: 'create' }],
+    };
+    await provider.request(argsWithCustomParams);
+    expect(mockFetchSignerType).toHaveBeenCalledWith(
+      expect.objectContaining({
+        handshakeRequest: argsWithCustomParams,
+      })
+    );
   });
 
   it('should throw error if signer selection failed', async () => {

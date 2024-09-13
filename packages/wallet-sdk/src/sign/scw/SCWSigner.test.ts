@@ -97,7 +97,7 @@ describe('SCWSigner', () => {
         },
       });
 
-      await signer.handshake();
+      await signer.handshake({ method: 'eth_requestAccounts' });
 
       expect(importKeyFromHexString).toHaveBeenCalledWith('public', '0xPublicKey');
       expect(mockKeyManager.setPeerPublicKey).toHaveBeenCalledWith(mockCryptoKey);
@@ -125,7 +125,9 @@ describe('SCWSigner', () => {
       };
       mockCommunicator.postRequestAndWaitForResponse.mockResolvedValue(mockResponse);
 
-      await expect(signer.handshake()).rejects.toThrowError(mockError);
+      await expect(signer.handshake({ method: 'eth_requestAccounts' })).rejects.toThrowError(
+        mockError
+      );
     });
   });
 
