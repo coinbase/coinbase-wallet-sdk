@@ -1,6 +1,5 @@
 {
   "name": "@coinbase/wallet-sdk-testapp",
-  "packageManager": "yarn@3.6.1",
   "scripts": {
     "lint": "eslint . --ext .ts,.tsx --fix",
     "typecheck": "tsc --noEmit",
