@@ -2,8 +2,6 @@ name: Deploy Coinbase Wallet SDK Playground to Pages
 
 on:
   workflow_dispatch:
-  push:
-    branches: [playground]
 
 permissions:
   contents: read
