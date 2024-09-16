@@ -32,11 +32,11 @@ jobs:
       - name: Install dependencies
         run: yarn install
       - name: Build and export with Next.js
-        run: yarn workspace @coinbase/wallet-sdk-testapp run export
+        run: yarn export
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
-          path: ./apps/testapp/out
+          path: ./out
 
   deploy:
     environment:
