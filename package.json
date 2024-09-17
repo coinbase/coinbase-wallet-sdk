@@ -10,9 +10,9 @@
     "apps/*"
   ],
   "scripts": {
-    "lint": "yarn workspaces run lint",
-    "typecheck": "yarn workspaces run typecheck",
-    "dev": "yarn workspaces run dev",
+    "lint": "yarn workspaces foreach -A -pt run lint",
+    "typecheck": "yarn workspaces foreach -A -pt run typecheck",
+    "dev": "yarn workspaces foreach -A -ipv run dev",
     "deploy": "yarn workspace @coinbase/wallet-sdk build && yarn workspace sdk-playground export"
   },
   "devDependencies": {
