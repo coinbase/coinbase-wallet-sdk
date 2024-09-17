@@ -1,5 +1,6 @@
 {
-  "name": "@coinbase/wallet-sdk-testapp",
+  "name": "sdk-playground",
+  "version": "0.0.1",
   "scripts": {
     "lint": "eslint . --ext .ts,.tsx --fix",
     "typecheck": "tsc --noEmit",
@@ -11,6 +12,7 @@
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
     "@chakra-ui/react": "^2.8.0",
+    "@coinbase/wallet-sdk": "workspace:*",
     "@coinbase/wallet-sdk-3.7.2": "npm:@coinbase/wallet-sdk@3.7.2",
     "@coinbase/wallet-sdk-3.9.3": "npm:@coinbase/wallet-sdk@3.9.3",
     "@coinbase/wallet-sdk-4.0.4": "npm:@coinbase/wallet-sdk@4.0.4",
@@ -21,7 +23,7 @@
     "next": "^13.5.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-hook-form": "^7.45.2",
+    "react-hook-form": "7.45.2",
     "viem": "2.21.1"
   },
   "devDependencies": {
