@@ -195,10 +195,10 @@ describe('LegacyProvider', () => {
           method: 'personal_sign',
           params: ['0x123456789abcdef', 'Super safe message'],
         })
-      ).rejects.toThrowEIPError(
-        standardErrorCodes.rpc.invalidParams,
-        'Invalid Ethereum address: Super safe message'
-      );
+      ).rejects.toMatchObject({
+        code: standardErrorCodes.rpc.invalidParams,
+        message: 'Invalid Ethereum address: Super safe message',
+      });
     });
   });
 
@@ -425,10 +425,10 @@ describe('LegacyProvider', () => {
           method: 'wallet_addEthereumChain',
           params: [{}],
         });
-      }).rejects.toThrowEIPError(
-        standardErrorCodes.rpc.invalidParams,
-        'chainName is a required field'
-      );
+      }).rejects.toMatchObject({
+        code: standardErrorCodes.rpc.invalidParams,
+        message: 'chainName is a required field',
+      });
     });
 
     test('wallet_addEthereumChain native currency', async () => {
@@ -442,10 +442,10 @@ describe('LegacyProvider', () => {
             },
           ],
         });
-      }).rejects.toThrowEIPError(
-        standardErrorCodes.rpc.invalidParams,
-        'nativeCurrency is a required field'
-      );
+      }).rejects.toMatchObject({
+        code: standardErrorCodes.rpc.invalidParams,
+        message: 'nativeCurrency is a required field',
+      });
     });
 
     test('wallet_switchEthereumChain', async () => {
@@ -476,10 +476,10 @@ describe('LegacyProvider', () => {
             },
           ],
         });
-      }).rejects.toThrowEIPError(
-        standardErrorCodes.provider.unsupportedChain,
-        expect.stringContaining('Unrecognized chain ID')
-      );
+      }).rejects.toMatchObject({
+        code: standardErrorCodes.provider.unsupportedChain,
+        message: expect.stringContaining('Unrecognized chain ID'),
+      });
     });
 
     test('wallet_watchAsset', async () => {
@@ -503,7 +503,10 @@ describe('LegacyProvider', () => {
           method: 'wallet_watchAsset',
           params: [{}],
         })
-      ).rejects.toThrowEIPError(standardErrorCodes.rpc.invalidParams, 'Type is required');
+      ).rejects.toMatchObject({
+        code: standardErrorCodes.rpc.invalidParams,
+        message: 'Type is required',
+      });
     });
 
     test('wallet_watchAsset w/o valid asset type', async () => {
@@ -516,10 +519,10 @@ describe('LegacyProvider', () => {
             },
           ],
         })
-      ).rejects.toThrowEIPError(
-        standardErrorCodes.rpc.invalidParams,
-        "Asset of type 'ERC721' is not supported"
-      );
+      ).rejects.toMatchObject({
+        code: standardErrorCodes.rpc.invalidParams,
+        message: "Asset of type 'ERC721' is not supported",
+      });
     });
 
     test('wallet_watchAsset to throw option required error', async () => {
@@ -532,7 +535,10 @@ describe('LegacyProvider', () => {
             },
           ],
         })
-      ).rejects.toThrowEIPError(standardErrorCodes.rpc.invalidParams, 'Options are required');
+      ).rejects.toMatchObject({
+        code: standardErrorCodes.rpc.invalidParams,
+        message: 'Options are required',
+      });
     });
 
     test('wallet_watchAsset to throw address required error', async () => {
@@ -546,7 +552,10 @@ describe('LegacyProvider', () => {
             },
           ],
         })
-      ).rejects.toThrowEIPError(standardErrorCodes.rpc.invalidParams, 'Address is required');
+      ).rejects.toMatchObject({
+        code: standardErrorCodes.rpc.invalidParams,
+        message: 'Address is required',
+      });
     });
   });
 });

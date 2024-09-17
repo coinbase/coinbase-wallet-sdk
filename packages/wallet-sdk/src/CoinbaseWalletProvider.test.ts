@@ -77,10 +77,10 @@ describe('Request Handling', () => {
   });
 
   it('throws error when handling invalid request', async () => {
-    await expect(provider.request({} as RequestArguments)).rejects.toThrowEIPError(
-      standardErrorCodes.rpc.invalidParams,
-      "'args.method' must be a non-empty string."
-    );
+    await expect(provider.request({} as RequestArguments)).rejects.toMatchObject({
+      code: standardErrorCodes.rpc.invalidParams,
+      message: "'args.method' must be a non-empty string.",
+    });
   });
 
   it('throws error for requests with unsupported or deprecated method', async () => {
@@ -88,9 +88,9 @@ describe('Request Handling', () => {
     const unsupported = ['eth_subscribe', 'eth_unsubscribe'];
 
     for (const method of [...deprecated, ...unsupported]) {
-      await expect(provider.request({ method })).rejects.toThrowEIPError(
-        standardErrorCodes.provider.unsupportedMethod
-      );
+      await expect(provider.request({ method })).rejects.toMatchObject({
+        code: standardErrorCodes.provider.unsupportedMethod,
+      });
     }
   });
 });
@@ -131,10 +131,10 @@ describe('Signer configuration', () => {
     const error = new Error('Signer selection failed');
     mockFetchSignerType.mockRejectedValue(error);
 
-    await expect(provider.request({ method: 'eth_requestAccounts' })).rejects.toThrowEIPError(
-      standardErrorCodes.rpc.internal,
-      error.message
-    );
+    await expect(provider.request({ method: 'eth_requestAccounts' })).rejects.toMatchObject({
+      code: standardErrorCodes.rpc.internal,
+      message: error.message,
+    });
     expect(mockHandshake).not.toHaveBeenCalled();
     expect(mockStoreSignerType).not.toHaveBeenCalled();
   });
@@ -144,10 +144,10 @@ describe('Signer configuration', () => {
     mockFetchSignerType.mockResolvedValue('scw');
     mockHandshake.mockRejectedValue(error);
 
-    await expect(provider.request({ method: 'eth_requestAccounts' })).rejects.toThrowEIPError(
-      standardErrorCodes.rpc.internal,
-      error.message
-    );
+    await expect(provider.request({ method: 'eth_requestAccounts' })).rejects.toMatchObject({
+      code: standardErrorCodes.rpc.internal,
+      message: error.message,
+    });
     expect(mockHandshake).toHaveBeenCalled();
     expect(mockStoreSignerType).not.toHaveBeenCalled();
   });
@@ -169,10 +169,10 @@ describe('Signer configuration', () => {
   });
 
   it('should throw error if signer is not initialized', async () => {
-    await expect(provider.request({ method: 'personal_sign' })).rejects.toThrowEIPError(
-      standardErrorCodes.provider.unauthorized,
-      `Must call 'eth_requestAccounts' before other methods`
-    );
+    await expect(provider.request({ method: 'personal_sign' })).rejects.toMatchObject({
+      code: standardErrorCodes.provider.unauthorized,
+      message: `Must call 'eth_requestAccounts' before other methods`,
+    });
   });
 
   it('should set signer to null', async () => {
