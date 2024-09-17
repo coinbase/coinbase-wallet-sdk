@@ -9931,9 +9931,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sdk-playground@workspace:apps/playground":
+"sdk-playground@workspace:apps/testapp":
   version: 0.0.0-use.local
-  resolution: "sdk-playground@workspace:apps/playground"
+  resolution: "sdk-playground@workspace:apps/testapp"
   dependencies:
     "@chakra-ui/icons": ^2.1.1
     "@chakra-ui/react": ^2.8.0

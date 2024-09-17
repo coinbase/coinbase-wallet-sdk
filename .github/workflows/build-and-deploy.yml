@@ -30,13 +30,13 @@ jobs:
         with:
           static_site_generator: next
       - name: Install dependencies
-        run: yarn install --immutable
+        run: yarn install
       - name: Build and export with Next.js
         run: yarn deploy
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
-          path: ./apps/playground/out
+          path: ./apps/testapp/out
 
   deploy:
     environment:
