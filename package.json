@@ -13,7 +13,7 @@
     "lint": "yarn workspaces foreach -pt run lint",
     "typecheck": "yarn workspaces foreach -pt run typecheck",
     "dev": "yarn workspaces foreach -ipv run dev",
-    "release": "./scripts/release.sh"
+    "deploy": "yarn workspace @coinbase/wallet-sdk build && yarn workspace sdk-playground export"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.2.0",
