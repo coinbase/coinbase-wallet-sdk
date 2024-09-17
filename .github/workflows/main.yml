@@ -17,11 +17,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Install correct Yarn version
-        run: |
-          corepack enable
-          corepack prepare yarn@4.5.0 --activate
-
+      - name: Checkout node action
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+          cache-dependency-path: 'yarn.lock'
 
       - name: Install NPM dependencies
         run: yarn install --immutable
@@ -40,10 +40,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Install correct Yarn version
-        run: |
-          corepack enable
-          corepack prepare yarn@4.5.0 --activate
+      - name: Checkout node action
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+          cache-dependency-path: '**/yarn.lock'
 
       - name: Install NPM dependencies
         run: yarn install --immutable
@@ -61,14 +62,19 @@ jobs:
       run:
         working-directory: ./packages/wallet-sdk
 
+    strategy:
+      matrix:
+        node-version: [16.x, 18.x, 20.x]
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Install correct Yarn version
-        run: |
-          corepack enable
-          corepack prepare yarn@4.5.0 --activate
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache-dependency-path: '**/yarn.lock'
 
       - name: Install NPM dependencies
         run: yarn install --immutable

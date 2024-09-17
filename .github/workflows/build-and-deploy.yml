@@ -20,18 +20,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Install correct Yarn version
-        run: |
-          corepack enable
-          corepack prepare yarn@4.5.0 --activate
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: yarn
       - name: Setup Pages
         uses: actions/configure-pages@v3
         with:
           static_site_generator: next
       - name: Install dependencies
-        run: yarn install
+        run: yarn install --immutable
       - name: Build and export with Next.js
-        run: yarn deploy
+        run: yarn export
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
