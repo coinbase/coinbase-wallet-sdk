@@ -7,7 +7,7 @@
   "private": true,
   "workspaces": [
     "packages/*",
-    "apps/*"
+    "examples/*"
   ],
   "scripts": {
     "lint": "yarn workspaces foreach -pt run lint",
