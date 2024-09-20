@@ -36,7 +36,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
-          path: ./apps/testapp/out
+          path: ./examples/testapp/out
 
   deploy:
     environment:
