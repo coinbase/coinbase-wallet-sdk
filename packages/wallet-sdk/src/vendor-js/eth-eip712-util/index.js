@@ -59,7 +59,7 @@ const TypedDataUtils = {
         if (type === 'string') {
           // convert string to buffer - prevents ethUtil from interpreting strings like '0xabcd' as hex
           if (typeof value === 'string') {
-            value = Buffer.from(value, 'utf8')
+            value = new TextEncoder().encode(value);
           }
           return ['bytes32', util.keccak(value)]
         }
@@ -94,7 +94,7 @@ const TypedDataUtils = {
             encodedTypes.push('bytes32')
             // convert string to buffer - prevents ethUtil from interpreting strings like '0xabcd' as hex
             if (typeof value === 'string') {
-              value = Buffer.from(value, 'utf8')
+              value = new TextEncoder().encode(value);
             }
             value = util.keccak(value)
             encodedValues.push(value)
@@ -204,12 +204,12 @@ const TypedDataUtils = {
    */
   hash (typedData, useV4 = true) {
     const sanitizedData = this.sanitizeData(typedData)
-    const parts = [Buffer.from('1901', 'hex')]
+    const parts = [new Uint8Array([0x19, 0x01])]
     parts.push(this.hashStruct('EIP712Domain', sanitizedData.domain, sanitizedData.types, useV4))
     if (sanitizedData.primaryType !== 'EIP712Domain') {
       parts.push(this.hashStruct(sanitizedData.primaryType, sanitizedData.message, sanitizedData.types, useV4))
     }
-    return util.keccak(Buffer.concat(parts))
+    return util.keccak(util.concatUint8Arrays(parts));
   },
 }
 
