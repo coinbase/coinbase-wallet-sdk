@@ -30,7 +30,9 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
     this.communicator = new Communicator(keysUrl, metadata);
 
     const signerType = loadSignerType();
-    if (signerType) this.signer = this.initSigner(signerType);
+    if (signerType) {
+      this.signer = this.initSigner(signerType);
+    }
   }
 
   public async request(args: RequestArguments): Promise<unknown> {

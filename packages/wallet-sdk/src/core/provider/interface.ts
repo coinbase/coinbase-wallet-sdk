@@ -42,10 +42,10 @@ export interface AppMetadata {
   appChainIds: number[];
 }
 
-export interface Preference {
+export type Preference = {
   options: 'all' | 'smartWalletOnly' | 'eoaOnly';
   keysUrl?: string;
-}
+} & Record<string, unknown>;
 
 export interface ConstructorOptions {
   metadata: AppMetadata;
