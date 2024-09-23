@@ -60,7 +60,7 @@ function parseNumber (arg) {
 }
 
 // Encodes a single item (can be dynamic array)
-// @returns: Buffer
+// @returns: Uint8Array
 function encodeSingle (type, arg) {
   var size, num, ret, i
 
@@ -69,7 +69,7 @@ function encodeSingle (type, arg) {
   } else if (type === 'bool') {
     return encodeSingle('uint8', arg ? 1 : 0)
   } else if (type === 'string') {
-    return encodeSingle('bytes', new Buffer(arg, 'utf8'))
+    return encodeSingle('bytes', new TextEncoder().encode(arg))
   } else if (isArray(type)) {
     // this part handles fixed-length ([2]) and variable length ([]) arrays
     // NOTE: we catch here all calls to arrays, that simplifies the rest
@@ -92,14 +92,14 @@ function encodeSingle (type, arg) {
       var length = encodeSingle('uint256', arg.length)
       ret.unshift(length)
     }
-    return Buffer.concat(ret)
+    return util.concatUint8Arrays(ret)
   } else if (type === 'bytes') {
-    arg = new Buffer(arg)
+    arg = new Uint8Array(arg)
 
-    ret = Buffer.concat([ encodeSingle('uint256', arg.length), arg ])
+    ret = util.concatUint8Arrays([encodeSingle('uint256', arg.length), arg])
 
     if ((arg.length % 32) !== 0) {
-      ret = Buffer.concat([ ret, util.zeros(32 - (arg.length % 32)) ])
+      ret = util.concatUint8Arrays([ret, util.zeros(32 - (arg.length % 32))])
     }
 
     return ret
@@ -196,7 +196,7 @@ function rawEncode (types, values) {
     }
   }
 
-  return Buffer.concat(output.concat(data))
+  return util.concatUint8Arrays(output.concat(data))
 }
 
 function solidityPack (types, values) {
@@ -214,9 +214,9 @@ function solidityPack (types, values) {
     if (type === 'bytes') {
       ret.push(value)
     } else if (type === 'string') {
-      ret.push(new Buffer(value, 'utf8'))
+      ret.push(new TextEncoder().encode(value))
     } else if (type === 'bool') {
-      ret.push(new Buffer(value ? '01' : '00', 'hex'))
+      ret.push(new Uint8Array([value ? 1 : 0]))
     } else if (type === 'address') {
       ret.push(util.setLength(value, 20))
     } else if (type.startsWith('bytes')) {
@@ -259,7 +259,7 @@ function solidityPack (types, values) {
     }
   }
 
-  return Buffer.concat(ret)
+  return util.concatUint8Arrays(ret)
 }
 
 function soliditySHA3 (types, values) {

@@ -6,13 +6,13 @@
 const { keccak_256 } = require('@noble/hashes/sha3')
 
 /**
- * Returns a buffer filled with 0s
+ * Returns a Uint8Array filled with 0s
  * @method zeros
  * @param {Number} bytes  the number of bytes the buffer should be
- * @return {Buffer}
+ * @return {Uint8Array}
  */
 function zeros (bytes) {
-  return Buffer.allocUnsafe(bytes).fill(0)
+  return new Uint8Array(bytes).fill(0)
 }
 
 function bitLengthFromBigInt (num) {
@@ -30,7 +30,7 @@ function bufferBEFromBigInt(num, length) {
     byteArray.unshift(0); // Prepend with zeroes if shorter than required length
   }
 
-  return Buffer.from(byteArray);
+  return new Uint8Array(byteArray);
 }
 
 function twosFromBigInt(value, width) {
@@ -51,26 +51,26 @@ function twosFromBigInt(value, width) {
 }
 
 /**
- * Left Pads an `Array` or `Buffer` with leading zeros till it has `length` bytes.
+ * Left Pads an `Array` or `Uint8Array` with leading zeros till it has `length` bytes.
  * Or it truncates the beginning if it exceeds.
  * @method setLength
- * @param {Buffer|Array} msg the value to pad
+ * @param {Uint8Array|Array} msg the value to pad
  * @param {Number} length the number of bytes the output should be
  * @param {Boolean} [right=false] whether to start padding form the left or right
- * @return {Buffer|Array}
+ * @return {Uint8Array|Array}
  */
 function setLength (msg, length, right) {
   const buf = zeros(length)
   msg = toBuffer(msg)
   if (right) {
     if (msg.length < length) {
-      msg.copy(buf)
+      buf.set(msg)
       return buf
     }
     return msg.slice(0, length)
   } else {
     if (msg.length < length) {
-      msg.copy(buf, length - msg.length)
+      buf.set(msg, length - msg.length)
       return buf
     }
     return msg.slice(-length)
@@ -78,40 +78,38 @@ function setLength (msg, length, right) {
 }
 
 /**
- * Right Pads an `Array` or `Buffer` with leading zeros till it has `length` bytes.
+ * Right Pads an `Array` or `Uint8Array` with leading zeros till it has `length` bytes.
  * Or it truncates the beginning if it exceeds.
- * @param {Buffer|Array} msg the value to pad
+ * @param {Uint8Array|Array} msg the value to pad
  * @param {Number} length the number of bytes the output should be
- * @return {Buffer|Array}
+ * @return {Uint8Array|Array}
  */
 function setLengthRight (msg, length) {
   return setLength(msg, length, true)
 }
 
 /**
- * Attempts to turn a value into a `Buffer`. As input it supports `Buffer`, `String`, `Number`, null/undefined, `BIgInt` and other objects with a `toArray()` method.
+ * Attempts to turn a value into a `Uint8Array`. As input it supports `Uint8Array`, `String`, `Number`, null/undefined, `BigInt` and other objects with a `toArray()` method.
  * @param {*} v the value
  */
 function toBuffer (v) {
-  if (!Buffer.isBuffer(v)) {
+  if (!(v instanceof Uint8Array)) {
     if (Array.isArray(v)) {
-      v = Buffer.from(v)
+      v = new Uint8Array(v)
     } else if (typeof v === 'string') {
       if (isHexString(v)) {
-        v = Buffer.from(padToEven(stripHexPrefix(v)), 'hex')
+        v = new Uint8Array(padToEven(stripHexPrefix(v)).match(/.{1,2}/g).map(byte => parseInt(byte, 16)))
       } else {
-        v = Buffer.from(v)
+        v = new TextEncoder().encode(v)
       }
     } else if (typeof v === 'number') {
-      v = intToBuffer(v)
+      v = new Uint8Array([v])
     } else if (v === null || v === undefined) {
-      v = Buffer.allocUnsafe(0)
+      v = new Uint8Array(0)
     } else if (typeof v === 'bigint') {
       v = bufferBEFromBigInt(v)
     } else if (v.toArray) {
-      // TODO: bigint should be handled above, may remove this duplicate
-      // converts a BigInt to a Buffer
-      v = Buffer.from(v.toArray())
+      v = new Uint8Array(v.toArray())
     } else {
       throw new Error('invalid type')
     }
@@ -120,26 +118,26 @@ function toBuffer (v) {
 }
 
 /**
- * Converts a `Buffer` into a hex `String`
- * @param {Buffer} buf
+ * Converts a `Uint8Array` into a hex `String`
+ * @param {Uint8Array} buf
  * @return {String}
  */
 function bufferToHex (buf) {
   buf = toBuffer(buf)
-  return '0x' + buf.toString('hex')
+  return '0x' + Array.from(buf).map(byte => byte.toString(16).padStart(2, '0')).join('')
 }
 
 /**
  * Creates Keccak hash of the input
- * @param {Buffer|Array|String|Number} a the input data
+ * @param {Uint8Array|Array|String|Number} a the input data
  * @param {Number} [bits=256] the Keccak width
- * @return {Buffer}
+ * @return {Uint8Array}
  */
 function keccak (a, bits) {
   a = toBuffer(a)
   if (!bits) bits = 256
 
-  return Buffer.from(keccak_256('keccak' + bits))
+  return new Uint8Array(keccak_256(a))
 }
 
 function padToEven (str) {
@@ -157,6 +155,17 @@ function stripHexPrefix (str) {
   return str
 }
 
+function concatUint8Arrays(arrays) {
+  let totalLength = arrays.reduce((acc, value) => acc + value.length, 0);
+  let result = new Uint8Array(totalLength);
+  let offset = 0;
+  for (let array of arrays) {
+    result.set(array, offset);
+    offset += array.length;
+  }
+  return result;
+}
+
 module.exports = {
   zeros,
   setLength,
@@ -168,5 +177,6 @@ module.exports = {
   keccak,
   bitLengthFromBigInt,
   bufferBEFromBigInt,
-  twosFromBigInt
+  twosFromBigInt,
+  concatUint8Arrays
 }
