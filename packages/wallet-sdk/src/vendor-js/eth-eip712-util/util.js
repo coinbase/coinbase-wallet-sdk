@@ -141,7 +141,7 @@ function keccak (a, bits) {
   if (bits !== 256) {
     throw new Error('unsupported')
   }
-  return Buffer.from(keccak_256(a))
+  return Buffer.from(keccak_256(new Uint8Array(a)))
 }
 
 function padToEven (str) {
