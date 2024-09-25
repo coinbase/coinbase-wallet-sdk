@@ -29,8 +29,6 @@ type LayoutProps = {
 
 export const WIDTH_2XL = '1536px';
 
-console.log('customlogs: latestPkgJson', latestPkgJson.version);
-
 export function Layout({ children }: LayoutProps) {
   const { provider, option, setPreference, sdkVersion, setSDKVersion, scwUrl, setScwUrlAndSave } =
     useCBWSDK();
