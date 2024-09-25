@@ -17,15 +17,19 @@ import {
   useBreakpointValue,
   useDisclosure,
 } from '@chakra-ui/react';
+import latestPkgJson from '@coinbase/wallet-sdk/package.json';
 import { useMemo } from 'react';
 
 import { options, scwUrls, sdkVersions, useCBWSDK } from '../context/CBWSDKReactContextProvider';
+
 
 type LayoutProps = {
   children: React.ReactNode;
 };
 
 export const WIDTH_2XL = '1536px';
+
+console.log('customlogs: latestPkgJson', latestPkgJson.version);
 
 export function Layout({ children }: LayoutProps) {
   const { provider, option, setPreference, sdkVersion, setSDKVersion, scwUrl, setScwUrlAndSave } =
@@ -65,7 +69,7 @@ export function Layout({ children }: LayoutProps) {
             ))}
           </MenuList>
         </Menu>
-        {(sdkVersion === 'HEAD' || sdkVersion === 'Latest') && (
+        {(sdkVersion === 'HEAD' || sdkVersion === latestPkgJson.version) && (
           <>
             <Menu>
               <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
