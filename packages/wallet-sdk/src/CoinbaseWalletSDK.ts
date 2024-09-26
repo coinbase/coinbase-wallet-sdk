@@ -11,6 +11,12 @@ import { getCoinbaseInjectedProvider } from ':util/provider';
 // for backwards compatibility
 type CoinbaseWalletSDKOptions = Partial<AppMetadata>;
 
+/**
+ * CoinbaseWalletSDK
+ *
+ * @deprecated CoinbaseWalletSDK is deprecated and will likely be removed in a future major version release.
+ * It's recommended to use `createCoinbaseWalletSDK` instead.
+ */
 export class CoinbaseWalletSDK {
   private metadata: AppMetadata;
 
