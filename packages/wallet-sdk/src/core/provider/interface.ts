@@ -51,11 +51,10 @@ type OnrampPrefillOptions = {
 };
 
 export type Preference = {
-  options: 'all' | 'smartWalletOnly' | 'eoaOnly';
   /**
-   * @deprecated this is only for internal use
+   * @param options
    */
-  keysUrl?: string;
+  options: 'all' | 'smartWalletOnly' | 'eoaOnly';
   /**
    * @param postOnboardingAction
    * @type {PostOnboardingAction}
