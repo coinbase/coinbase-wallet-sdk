@@ -12,7 +12,6 @@ import { Signer } from './sign/interface';
 import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
 import { checkErrorForInvalidRequestArgs } from './util/provider';
 import { Communicator } from ':core/communicator/Communicator';
-import { CB_KEYS_URL } from ':core/constants';
 import { SignerType } from ':core/message';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { hexStringFromNumber } from ':core/type/util';
@@ -28,9 +27,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
     super();
     this.metadata = metadata;
     this.preference = preference;
-
-    const url = typeof keysUrl === 'string' ? keysUrl : CB_KEYS_URL;
-    this.communicator = new Communicator(url, metadata);
+    this.communicator = new Communicator(keysUrl, metadata);
 
     const signerType = loadSignerType();
     if (signerType) {

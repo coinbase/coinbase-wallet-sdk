@@ -52,6 +52,10 @@ type OnrampPrefillOptions = {
 
 export type Preference = {
   /**
+   * @deprecated internal use only.
+   */
+  keysUrl?: string;
+  /**
    * @param options
    */
   options: 'all' | 'smartWalletOnly' | 'eoaOnly';
