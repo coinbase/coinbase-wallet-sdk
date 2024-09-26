@@ -42,9 +42,46 @@ export interface AppMetadata {
   appChainIds: number[];
 }
 
+type PostOnboardingAction = 'none' | 'onramp' | 'magicspend';
+
+type OnrampPrefillOptions = {
+  contractAddress?: string;
+  amount: string;
+  chainId: number;
+};
+
 export type Preference = {
   options: 'all' | 'smartWalletOnly' | 'eoaOnly';
+  /**
+   * @deprecated this is only for internal use
+   */
   keysUrl?: string;
+  /**
+   * @param postOnboardingAction
+   * @type {PostOnboardingAction}
+   * @description Recommends the action to be taken after the onboarding process to engage users with various flows. Possible values:
+   * - `none`: No action is recommended post-onboarding. (Default experience)
+   * - `onramp`: Recommends initiating the onramp flow, allowing users to prefill their account with a specified asset, chain, and amount.
+   * - `magicspend`: Suggests linking the users retail Coinbase account for seamless transactions.
+   */
+  postOnboardingAction?: PostOnboardingAction;
+  /**
+   * @param onrampPrefillOptions
+   * @type {OnrampPrefillOptions}
+   * @description This option only functions when `postOnboardingAction` is set to `onramp`.
+   * - Prefills the onramp flow with the specified asset, chain, and suggested amount,
+   * allowing users to prefill their account.
+   * - Ensure the asset and chain are supported by the onramp provider
+   * (e.g., Coinbase Pay - CBPay).
+   */
+  onrampPrefillOptions?: OnrampPrefillOptions;
+  /**
+   * @param attributionDataSuffix
+   * @type {Hex}
+   * @description Data suffix to be appended to the initCode or executeBatch calldata
+   * Expects a 4 byte hex string
+   */
+  attributionDataSuffix?: string;
 } & Record<string, unknown>;
 
 export interface ConstructorOptions {
