@@ -58,7 +58,7 @@ export type Preference = {
   /**
    * @param postOnboardingAction
    * @type {PostOnboardingAction}
-   * @description Displays CTAs to the user based on the preference of the dapp.
+   * @description This option only applies to Coinbase Smart Wallet. Displays CTAs to the user based on the preference of the app.
    * These CTAs are part of prebuilt UI components that are available to the Coinbase
    * Smart Wallet.
    *
@@ -71,8 +71,8 @@ export type Preference = {
   /**
    * @param onrampPrefillOptions
    * @type {OnrampPrefillOptions}
-   * @description This option only functions when `postOnboardingAction` is set to `onramp`. Defaults to an asset selector
-   * with 0 as the initial amount
+   * @description This option only applies to Coinbase Smart Wallet. Requires `postOnboardingAction` to be set to `onramp`. When not configured,
+   * The onramp screen defaults to an asset selector with 0 as the initial amount.
    *
    * - Prefills the onramp flow with the specified asset, chain, and suggested amount, allowing users to prefill their account.
    * - Ensure the asset and chain are supported by the onramp provider (e.g., Coinbase Pay - CBPay).
@@ -83,8 +83,9 @@ export type Preference = {
   /**
    * @param attributionDataSuffix
    * @type {Hex}
-   * @description Data suffix to be appended to the initCode or executeBatch calldata
-   * Expects a 4 byte hex string
+   * @note Smart Wallet only
+   * @description This option only applies to Coinbase Smart Wallet. Data suffix to be appended to the initCode or executeBatch calldata
+   * Coinbase Smart Wallet expects a 4 byte hex string. If the suffix is not a 4 byte hex string, the Smart Wallet will not apply the data suffix.
    */
   attributionDataSuffix?: string;
 } & Record<string, unknown>;
