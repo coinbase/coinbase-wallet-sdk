@@ -1,6 +1,5 @@
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
-import { AppMetadata, Preference } from ':core/provider/interface';
-import { ConstructorOptions } from ':core/provider/interface';
+import { AppMetadata, ConstructorOptions, Preference } from ':core/provider/interface';
 import { getCoinbaseInjectedProvider } from ':util/provider';
 
 export type CreateProviderOptions = {

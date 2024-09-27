@@ -217,6 +217,7 @@ describe('LegacyProvider', () => {
       });
     });
 
+    // eslint-disable-next-line jest/no-disabled-tests
     test.skip('eth_signTypedData_v1', async () => {
       const hashSpy = jest.spyOn(eip712, 'hashForSignTypedDataLegacy');
       const response = await provider?.request({
@@ -414,7 +415,7 @@ describe('LegacyProvider', () => {
           },
         ],
       });
-      expect(response).rejects.toThrow(
+      await expect(response).rejects.toThrow(
         standardErrors.rpc.invalidParams('please pass in at least 1 rpcUrl')
       );
     });
