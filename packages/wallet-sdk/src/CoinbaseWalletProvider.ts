@@ -96,6 +96,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
       preference: this.preference,
       metadata: this.metadata,
       handshakeRequest,
+      callback: this.emit.bind(this),
     });
   }
 
