@@ -64,7 +64,12 @@ describe('SCWSigner', () => {
       appChainIds: [1],
     };
 
-    mockCommunicator = new Communicator(CB_KEYS_URL, mockMetadata) as jest.Mocked<Communicator>;
+    mockCommunicator = new Communicator({
+      url: CB_KEYS_URL,
+      metadata: mockMetadata,
+      preference: { keysUrl: CB_KEYS_URL, options: 'all' },
+    }) as jest.Mocked<Communicator>;
+
     mockCommunicator.waitForPopupLoaded.mockResolvedValue({} as Window);
     mockCommunicator.postRequestAndWaitForResponse.mockResolvedValue(mockSuccessResponse);
 

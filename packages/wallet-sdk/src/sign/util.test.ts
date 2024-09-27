@@ -42,7 +42,11 @@ describe('util', () => {
     const preference: Preference = { options: 'all' };
 
     it('should complete signerType selection correctly', async () => {
-      const communicator = new Communicator(CB_KEYS_URL, metadata);
+      const communicator = new Communicator({
+        url: CB_KEYS_URL,
+        metadata,
+        preference: { keysUrl: CB_KEYS_URL, options: 'all' },
+      });
       communicator.postMessage = jest.fn();
       communicator.onMessage = jest.fn().mockResolvedValue({
         data: 'scw',
