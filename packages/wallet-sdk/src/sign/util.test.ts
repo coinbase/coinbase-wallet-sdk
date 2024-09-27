@@ -52,6 +52,7 @@ describe('util', () => {
         preference,
         metadata,
         handshakeRequest: { method: 'eth_requestAccounts' },
+        callback: jest.fn(),
       });
       expect(signerType).toEqual('scw');
     });
