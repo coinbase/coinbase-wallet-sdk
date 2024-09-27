@@ -27,7 +27,11 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
     super();
     this.metadata = metadata;
     this.preference = preference;
-    this.communicator = new Communicator(keysUrl, metadata);
+    this.communicator = new Communicator({
+      url: keysUrl,
+      metadata,
+      preference,
+    });
 
     const signerType = loadSignerType();
     if (signerType) {
