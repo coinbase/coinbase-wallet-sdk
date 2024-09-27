@@ -72,8 +72,8 @@ describe('Event handling', () => {
 
 describe('Request Handling', () => {
   it('returns default chain id even without signer set up', async () => {
-    expect(provider.request({ method: 'eth_chainId' })).resolves.toBe('0x1');
-    expect(provider.request({ method: 'net_version' })).resolves.toBe(1);
+    await expect(provider.request({ method: 'eth_chainId' })).resolves.toBe('0x1');
+    await expect(provider.request({ method: 'net_version' })).resolves.toBe(1);
   });
 
   it('throws error when handling invalid request', async () => {
