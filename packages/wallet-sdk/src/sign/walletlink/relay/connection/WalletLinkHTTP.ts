@@ -1,4 +1,4 @@
-import { ServerMessage } from '../type/ServerMessage';
+import type { ServerMessage } from '../type/ServerMessage';
 
 export class WalletLinkHTTP {
   private readonly auth: string;

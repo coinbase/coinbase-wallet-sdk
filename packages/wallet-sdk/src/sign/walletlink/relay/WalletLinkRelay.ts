@@ -2,23 +2,23 @@
 
 import {
   WalletLinkConnection,
-  WalletLinkConnectionUpdateListener,
+  type WalletLinkConnectionUpdateListener,
 } from './connection/WalletLinkConnection';
 import { LOCAL_STORAGE_ADDRESSES_KEY } from './constants';
 import { RelayEventManager } from './RelayEventManager';
-import { EthereumTransactionParams } from './type/EthereumTransactionParams';
-import { WalletLinkEventData } from './type/WalletLinkEventData';
+import type { EthereumTransactionParams } from './type/EthereumTransactionParams';
+import type { WalletLinkEventData } from './type/WalletLinkEventData';
 import { WalletLinkSession } from './type/WalletLinkSession';
-import { Web3Method, Web3Request } from './type/Web3Request';
-import { isErrorResponse, Web3Response } from './type/Web3Response';
+import type { Web3Method, Web3Request } from './type/Web3Request';
+import { isErrorResponse, type Web3Response } from './type/Web3Response';
 import { isMobileWeb } from './ui/components/util';
-import { RelayUI } from './ui/RelayUI';
+import type { RelayUI } from './ui/RelayUI';
 import { WalletLinkRelayUI } from './ui/WalletLinkRelayUI';
 import { WLMobileRelayUI } from './ui/WLMobileRelayUI';
 import { standardErrors } from ':core/error';
-import { AppMetadata } from ':core/provider/interface';
+import type { AppMetadata } from ':core/provider/interface';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
-import { AddressString } from ':core/type';
+import type { AddressString } from ':core/type';
 import { bigIntStringFromBigInt, hexStringFromBuffer, randomBytesHex } from ':core/type/util';
 
 export interface WalletLinkRelayOptions {

@@ -4,11 +4,11 @@ import eip712 from '../../vendor-js/eth-eip712-util';
 import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants';
 import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from './relay/mocks/fixtures';
 import { mockedWalletLinkRelay } from './relay/mocks/relay';
-import { WalletLinkRelay } from './relay/WalletLinkRelay';
+import type { WalletLinkRelay } from './relay/WalletLinkRelay';
 import { WalletLinkSigner } from './WalletLinkSigner';
 import { WALLETLINK_URL } from ':core/constants';
 import { standardErrorCodes, standardErrors } from ':core/error';
-import { ProviderEventCallback } from ':core/provider/interface';
+import type { ProviderEventCallback } from ':core/provider/interface';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { AddressString } from ':core/type';
 

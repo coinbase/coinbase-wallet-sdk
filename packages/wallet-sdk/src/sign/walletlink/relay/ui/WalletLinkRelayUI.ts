@@ -1,6 +1,6 @@
 import { injectCssReset } from './components/cssReset/cssReset';
-import { Snackbar, SnackbarInstanceProps } from './components/Snackbar/Snackbar';
-import { RelayUI } from './RelayUI';
+import { Snackbar, type SnackbarInstanceProps } from './components/Snackbar/Snackbar';
+import type { RelayUI } from './RelayUI';
 
 export class WalletLinkRelayUI implements RelayUI {
   private readonly snackbar: Snackbar;

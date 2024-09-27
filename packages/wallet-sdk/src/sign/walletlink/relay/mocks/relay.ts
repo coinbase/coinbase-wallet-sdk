@@ -1,5 +1,5 @@
-import { Web3Response } from '../type/Web3Response';
-import { WalletLinkRelay } from '../WalletLinkRelay';
+import type { Web3Response } from '../type/Web3Response';
+import type { WalletLinkRelay } from '../WalletLinkRelay';
 import { MOCK_ADDERESS, MOCK_TX } from './fixtures';
 import { AddressString, HexString } from ':core/type';
 

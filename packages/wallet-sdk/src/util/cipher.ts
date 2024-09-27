@@ -1,4 +1,4 @@
-import { EncryptedData, RPCRequest, RPCResponse } from ':core/message';
+import type { EncryptedData, RPCRequest, RPCResponse } from ':core/message';
 import { hexStringToUint8Array, uint8ArrayToHex } from ':core/type/util';
 
 export async function generateKeyPair(): Promise<CryptoKeyPair> {

@@ -1,11 +1,11 @@
 import {
-  CBWindow,
+  type CBWindow,
   checkErrorForInvalidRequestArgs,
   fetchRPCRequest,
   getCoinbaseInjectedProvider,
 } from './provider';
 import { standardErrors } from ':core/error';
-import { ProviderInterface } from ':core/provider/interface';
+import type { ProviderInterface } from ':core/provider/interface';
 
 const window = globalThis as CBWindow;
 

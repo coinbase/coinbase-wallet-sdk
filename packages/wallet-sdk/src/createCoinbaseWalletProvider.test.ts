@@ -1,6 +1,6 @@
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { createCoinbaseWalletProvider } from './createCoinbaseWalletProvider';
-import { ConstructorOptions } from ':core/provider/interface';
+import type { ConstructorOptions } from ':core/provider/interface';
 
 describe('createCoinbaseWalletProvider', () => {
   it('should return a provider', () => {

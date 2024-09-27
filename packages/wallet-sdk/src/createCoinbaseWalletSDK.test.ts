@@ -1,4 +1,7 @@
-import { createCoinbaseWalletSDK, CreateCoinbaseWalletSDKOptions } from './createCoinbaseWalletSDK';
+import {
+  createCoinbaseWalletSDK,
+  type CreateCoinbaseWalletSDKOptions,
+} from './createCoinbaseWalletSDK';
 
 const options: CreateCoinbaseWalletSDKOptions = {
   appName: 'Dapp',

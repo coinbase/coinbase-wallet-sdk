@@ -4,8 +4,8 @@ import { WalletLinkCipher } from './connection/WalletLinkCipher';
 import { WalletLinkConnection } from './connection/WalletLinkConnection';
 import { WalletLinkWebSocket } from './connection/WalletLinkWebSocket';
 import { WALLET_USER_NAME_KEY } from './constants';
-import { ServerMessage } from './type/ServerMessage';
-import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay';
+import type { ServerMessage } from './type/ServerMessage';
+import { WalletLinkRelay, type WalletLinkRelayOptions } from './WalletLinkRelay';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 
 const decryptMock = jest.fn().mockImplementation((text) => text);

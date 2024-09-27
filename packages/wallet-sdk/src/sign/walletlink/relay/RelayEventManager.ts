@@ -1,4 +1,4 @@
-import { Web3Response } from './type/Web3Response';
+import type { Web3Response } from './type/Web3Response';
 import { prepend0x } from ':core/type/util';
 
 type ResponseCallback = (response: Web3Response) => void;

@@ -1,6 +1,10 @@
 import { LIB_VERSION } from '../version';
 import { standardErrors } from ':core/error';
-import { ConstructorOptions, ProviderInterface, RequestArguments } from ':core/provider/interface';
+import type {
+  ConstructorOptions,
+  ProviderInterface,
+  RequestArguments,
+} from ':core/provider/interface';
 
 export async function fetchRPCRequest(request: RequestArguments, rpcUrl: string) {
   const requestBody = {

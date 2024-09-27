@@ -1,11 +1,11 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../constants';
-import { ClientMessage } from '../type/ClientMessage';
-import { ServerMessage, ServerMessageType } from '../type/ServerMessage';
-import { WalletLinkEventData } from '../type/WalletLinkEventData';
-import { WalletLinkSession } from '../type/WalletLinkSession';
-import { Web3Response } from '../type/Web3Response';
+import type { ClientMessage } from '../type/ClientMessage';
+import type { ServerMessage, ServerMessageType } from '../type/ServerMessage';
+import type { WalletLinkEventData } from '../type/WalletLinkEventData';
+import type { WalletLinkSession } from '../type/WalletLinkSession';
+import type { Web3Response } from '../type/Web3Response';
 import { WalletLinkCipher } from './WalletLinkCipher';
 import { WalletLinkHTTP } from './WalletLinkHTTP';
 import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket';

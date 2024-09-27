@@ -1,4 +1,4 @@
-import { AddressString, IntNumber } from ':core/type';
+import type { AddressString, IntNumber } from ':core/type';
 
 export interface EthereumTransactionParams {
   fromAddress: AddressString;

@@ -1,6 +1,6 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
-import { IntNumber } from ':core/type';
+import type { IntNumber } from ':core/type';
 
 export type ClientMessage =
   | {

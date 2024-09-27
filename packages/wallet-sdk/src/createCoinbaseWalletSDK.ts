@@ -1,6 +1,6 @@
 import { createCoinbaseWalletProvider } from './createCoinbaseWalletProvider';
 import { LIB_VERSION } from './version';
-import {
+import type {
   AppMetadata,
   ConstructorOptions,
   Preference,

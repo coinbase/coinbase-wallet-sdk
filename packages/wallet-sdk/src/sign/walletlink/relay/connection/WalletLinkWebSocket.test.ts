@@ -1,6 +1,6 @@
 import WS from 'jest-websocket-mock';
 
-import { ServerMessage } from '../type/ServerMessage';
+import type { ServerMessage } from '../type/ServerMessage';
 import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket';
 import { IntNumber } from ':core/type';
 

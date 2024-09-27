@@ -1,6 +1,6 @@
 import { RedirectDialog } from './components/RedirectDialog/RedirectDialog';
 import { getLocation } from './components/util';
-import { RelayUI } from './RelayUI';
+import type { RelayUI } from './RelayUI';
 import { CBW_MOBILE_DEEPLINK_URL } from ':core/constants';
 
 export class WLMobileRelayUI implements RelayUI {

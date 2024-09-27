@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
-import { Web3Method } from './Web3Request';
-import { AddressString, HexString } from ':core/type';
+import type { Web3Method } from './Web3Request';
+import type { AddressString, HexString } from ':core/type';
 
 export type Web3Response<M extends Web3Method = Web3Method> =
   | Extract<_Web3Response, { method: M }>

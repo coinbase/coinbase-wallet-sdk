@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
-import { Web3Request } from './Web3Request';
-import { Web3Response } from './Web3Response';
+import type { Web3Request } from './Web3Request';
+import type { Web3Response } from './Web3Response';
 
 export type WalletLinkEventData =
   | {
