@@ -7,5 +7,4 @@ global.crypto = new Crypto();
 
 global.TextEncoder = TextEncoder;
 
-// @ts-expect-error Use util TextDecoder
-global.TextDecoder = TextDecoder;
+global.TextDecoder = TextDecoder as typeof global.TextDecoder;
