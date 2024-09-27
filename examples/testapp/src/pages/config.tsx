@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 
 const SDKConfig = dynamic(
   () =>
-    import("../components/SDKConfig/SdkConfig").then((mod) => mod.SDKConfig),
+    import("../components/SDKConfig/SDKConfig").then((mod) => mod.SDKConfig),
   { ssr: false }
 );
 
