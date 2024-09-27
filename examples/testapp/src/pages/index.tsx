@@ -1,5 +1,5 @@
 import { Box, Container, Grid, Heading } from "@chakra-ui/react";
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 
 import { EventListenersCard } from "../components/EventListeners/EventListenersCard";
 import { WIDTH_2XL } from "../components/Layout";
@@ -18,7 +18,7 @@ import { useCBWSDK } from "../context/CBWSDKReactContextProvider";
 import { MethodsSection } from "../components/MethodsSection/MethodsSection";
 
 export default function Home() {
-  const { provider } = useCBWSDK();
+  const { provider, sdkVersion } = useCBWSDK();
   const [connected, setConnected] = React.useState(
     Boolean(provider?.connected)
   );
@@ -43,10 +43,13 @@ export default function Home() {
   useEffect(() => {
     if (connected) {
       provider?.request({ method: "eth_chainId" }).then((chainId) => {
-        setChainId(parseInt(chainId, 16));
+        setChainId(Number.parseInt(chainId, 16));
       });
     }
   }, [connected, provider]);
+
+  // There's a bug in 3.9.3 where it does not emit a 'connect' event for walletlink connections
+  const shouldShowMethodsRequiringConnection = connected || (sdkVersion === '3.9.3')
 
   return (
     <Container maxW={WIDTH_2XL} mb={8}>
@@ -57,7 +60,7 @@ export default function Home() {
         </Grid>
       </Box>
       <MethodsSection title="Wallet Connection" methods={connectionMethods} />
-      {connected && (
+      {shouldShowMethodsRequiringConnection && (
         <>
           <MethodsSection
             title="Switch/Add Chain"
