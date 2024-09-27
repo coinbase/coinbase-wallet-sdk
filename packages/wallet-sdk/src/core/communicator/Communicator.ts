@@ -1,8 +1,8 @@
 import { LIB_VERSION } from '../../version';
-import { ConfigMessage, Message, MessageID } from '../message';
+import type { ConfigMessage, Message, MessageID } from '../message';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
-import { AppMetadata, Preference } from ':core/provider/interface';
+import type { AppMetadata, Preference } from ':core/provider/interface';
 import { closePopup, openPopup } from ':util/web';
 
 export type CommunicatorOptions = {

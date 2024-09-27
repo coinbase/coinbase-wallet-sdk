@@ -1,18 +1,18 @@
 import { standardErrorCodes, standardErrors } from './core/error';
 import { serializeError } from './core/error/serialize';
 import {
-  AppMetadata,
-  ConstructorOptions,
-  Preference,
+  type AppMetadata,
+  type ConstructorOptions,
+  type Preference,
   ProviderEventEmitter,
-  ProviderInterface,
-  RequestArguments,
+  type ProviderInterface,
+  type RequestArguments,
 } from './core/provider/interface';
-import { Signer } from './sign/interface';
+import type { Signer } from './sign/interface';
 import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
 import { checkErrorForInvalidRequestArgs } from './util/provider';
 import { Communicator } from ':core/communicator/Communicator';
-import { SignerType } from ':core/message';
+import type { SignerType } from ':core/message';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { hexStringFromNumber } from ':core/type/util';
 

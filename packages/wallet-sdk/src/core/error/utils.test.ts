@@ -1,4 +1,4 @@
-import { isErrorResponse, Web3Response } from '../../sign/walletlink/relay/type/Web3Response';
+import { isErrorResponse, type Web3Response } from '../../sign/walletlink/relay/type/Web3Response';
 import { standardErrorCodes } from './constants';
 import { standardErrors } from './errors';
 import { getErrorCode, getMessageFromCode } from './utils';

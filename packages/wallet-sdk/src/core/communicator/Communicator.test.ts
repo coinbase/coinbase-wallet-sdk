@@ -1,7 +1,7 @@
-import { AppMetadata, Preference } from 'src/index';
+import type { AppMetadata, Preference } from 'src/index';
 
 import { LIB_VERSION } from '../../version';
-import { Message, MessageID } from '../message';
+import type { Message, MessageID } from '../message';
 import { Communicator } from './Communicator';
 import { CB_KEYS_URL } from ':core/constants';
 import { openPopup } from ':util/web';

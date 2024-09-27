@@ -3,8 +3,12 @@ import { SCWSigner } from './SCWSigner';
 import { Communicator } from ':core/communicator/Communicator';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
-import { EncryptedData, RPCResponseMessage } from ':core/message';
-import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface';
+import type { EncryptedData, RPCResponseMessage } from ':core/message';
+import type {
+  AppMetadata,
+  ProviderEventCallback,
+  RequestArguments,
+} from ':core/provider/interface';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import {
   decryptContent,

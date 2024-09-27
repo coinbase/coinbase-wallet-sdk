@@ -1,7 +1,7 @@
-import { Signer } from './interface';
+import type { Signer } from './interface';
 import { SCWSigner } from './scw/SCWSigner';
 import { WalletLinkSigner } from './walletlink/WalletLinkSigner';
-import { Communicator } from ':core/communicator/Communicator';
+import type { Communicator } from ':core/communicator/Communicator';
 import { ConfigMessage, MessageID, SignerType } from ':core/message';
 import {
   AppMetadata,

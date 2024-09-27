@@ -1,5 +1,5 @@
 // TODO: error should not depend on walletlink. revisit this.
-import { isErrorResponse, Web3Response } from '../../sign/walletlink/relay/type/Web3Response';
+import { isErrorResponse, type Web3Response } from '../../sign/walletlink/relay/type/Web3Response';
 import { LIB_VERSION } from '../../version';
 import { standardErrorCodes } from './constants';
 import { serialize } from './utils';

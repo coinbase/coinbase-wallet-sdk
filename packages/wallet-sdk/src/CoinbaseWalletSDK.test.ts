@@ -1,6 +1,6 @@
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
-import { ProviderInterface } from ':core/provider/interface';
+import type { ProviderInterface } from ':core/provider/interface';
 import { getFavicon } from ':core/type/util';
 import { getCoinbaseInjectedProvider } from ':util/provider';
 

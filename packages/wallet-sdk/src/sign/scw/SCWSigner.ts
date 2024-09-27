@@ -1,11 +1,15 @@
-import { Signer } from '../interface';
+import type { Signer } from '../interface';
 import { SCWKeyManager } from './SCWKeyManager';
-import { Communicator } from ':core/communicator/Communicator';
+import type { Communicator } from ':core/communicator/Communicator';
 import { standardErrors } from ':core/error';
-import { RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
-import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface';
+import type { RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
+import type {
+  AppMetadata,
+  ProviderEventCallback,
+  RequestArguments,
+} from ':core/provider/interface';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
-import { AddressString } from ':core/type';
+import type { AddressString } from ':core/type';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util';
 import {
   decryptContent,

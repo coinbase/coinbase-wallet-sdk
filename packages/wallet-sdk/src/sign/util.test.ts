@@ -1,7 +1,7 @@
 import { fetchSignerType, loadSignerType, storeSignerType } from './util';
 import { Communicator } from ':core/communicator/Communicator';
 import { CB_KEYS_URL } from ':core/constants';
-import { Preference } from ':core/provider/interface';
+import type { Preference } from ':core/provider/interface';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 
 jest.mock(':core/storage/ScopedLocalStorage');

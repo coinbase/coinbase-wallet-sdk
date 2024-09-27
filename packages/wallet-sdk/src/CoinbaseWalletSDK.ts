@@ -1,8 +1,8 @@
 // Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
 
-import { LogoType, walletLogo } from './assets/wallet-logo';
+import { type LogoType, walletLogo } from './assets/wallet-logo';
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
-import { AppMetadata, Preference, ProviderInterface } from './core/provider/interface';
+import type { AppMetadata, Preference, ProviderInterface } from './core/provider/interface';
 import { LIB_VERSION } from './version';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { getFavicon } from ':core/type/util';

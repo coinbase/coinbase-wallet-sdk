@@ -1,7 +1,7 @@
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
 import { standardErrorCodes, standardErrors } from './core/error';
 import * as util from './sign/util';
-import { ProviderEventCallback, RequestArguments } from ':core/provider/interface';
+import type { ProviderEventCallback, RequestArguments } from ':core/provider/interface';
 import { AddressString } from ':core/type';
 
 function createProvider() {

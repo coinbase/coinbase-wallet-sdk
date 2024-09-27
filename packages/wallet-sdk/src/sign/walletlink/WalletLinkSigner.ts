@@ -1,16 +1,20 @@
 // Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
 
 import eip712 from '../../vendor-js/eth-eip712-util';
-import { Signer } from '../interface';
+import type { Signer } from '../interface';
 import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants';
-import { EthereumTransactionParams } from './relay/type/EthereumTransactionParams';
+import type { EthereumTransactionParams } from './relay/type/EthereumTransactionParams';
 import { isErrorResponse } from './relay/type/Web3Response';
 import { WalletLinkRelay } from './relay/WalletLinkRelay';
 import { WALLETLINK_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
-import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface';
+import type {
+  AppMetadata,
+  ProviderEventCallback,
+  RequestArguments,
+} from ':core/provider/interface';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
-import { AddressString } from ':core/type';
+import type { AddressString } from ':core/type';
 import {
   encodeToHexString,
   ensureAddressString,
@@ -35,7 +39,7 @@ export class WalletLinkSigner implements Signer {
   private _addresses: AddressString[] = [];
   private callback: ProviderEventCallback | null;
 
-  constructor(options: { metadata: AppMetadata; callback?: ProviderEventCallback }) {
+  constructor(options: { metadata: AppMetadata; callback: ProviderEventCallback }) {
     this.metadata = options.metadata;
     this._storage = new ScopedLocalStorage('walletlink', WALLETLINK_URL);
     this.callback = options.callback || null;
