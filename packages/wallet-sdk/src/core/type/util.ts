@@ -19,7 +19,7 @@ export function uint8ArrayToHex(value: Uint8Array) {
 }
 
 export function hexStringToUint8Array(hexString: string): Uint8Array {
-  return new Uint8Array(hexString.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)));
+  return new Uint8Array(hexString.match(/.{1,2}/g)!.map((byte) => Number.parseInt(byte, 16)));
 }
 
 export function hexStringFromBuffer(buf: Buffer, includePrefix = false): HexString {

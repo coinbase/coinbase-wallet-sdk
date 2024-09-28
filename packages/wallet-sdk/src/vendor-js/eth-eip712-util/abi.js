@@ -30,20 +30,20 @@ function elementaryName (name) {
 
 // Parse N from type<N>
 function parseTypeN (type) {
-  return parseInt(/^\D+(\d+)$/.exec(type)[1], 10)
+  return Number.parseInt(/^\D+(\d+)$/.exec(type)[1], 10)
 }
 
 // Parse N,M from type<N>x<M>
 function parseTypeNxM (type) {
   var tmp = /^\D+(\d+)x(\d+)$/.exec(type)
-  return [ parseInt(tmp[1], 10), parseInt(tmp[2], 10) ]
+  return [ Number.parseInt(tmp[1], 10), Number.parseInt(tmp[2], 10) ]
 }
 
 // Parse N in type[<N>] where "type" can itself be an array type.
 function parseTypeArray (type) {
   var tmp = type.match(/(.*)\[(.*?)\]$/)
   if (tmp) {
-    return tmp[2] === '' ? 'dynamic' : parseInt(tmp[2], 10)
+    return tmp[2] === '' ? 'dynamic' : Number.parseInt(tmp[2], 10)
   }
   return null
 }
