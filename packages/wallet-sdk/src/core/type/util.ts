@@ -185,7 +185,7 @@ export function getFavicon(): string | null {
   const { protocol, host } = document.location;
   const href = el ? el.getAttribute('href') : null;
   if (!href || href.startsWith('javascript:') || href.startsWith('vbscript:')) {
-    return null;
+    return `${protocol}//${host}/favicon.ico`; // fallback
   }
   if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('data:')) {
     return href;
