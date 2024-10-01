@@ -7,6 +7,7 @@ import {
   ProviderInterface,
 } from ':core/provider/interface';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
+import { checkCrossOriginOpenerPolicy } from ':util/crossOriginOpenerPolicy';
 
 export type CreateCoinbaseWalletSDKOptions = Partial<AppMetadata> & {
   preference?: Preference;
@@ -19,6 +20,8 @@ const DEFAULT_PREFERENCE: Preference = {
 export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) {
   const versionStorage = new ScopedLocalStorage('CBWSDK');
   versionStorage.setItem('VERSION', LIB_VERSION);
+
+  void checkCrossOriginOpenerPolicy();
 
   const options: ConstructorOptions = {
     metadata: {
