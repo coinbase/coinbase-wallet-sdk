@@ -9,7 +9,7 @@ module.exports = {
         headers: [
           {
             key: "Cross-Origin-Opener-Policy",
-            value: "unsafe-none", // Or 'unsafe-none' if you want to disable COOP
+            value: "unsafe-none", // Or 'same-origin' to test COOP errors
           },
         ],
       },
