@@ -7,6 +7,8 @@ const options: CreateCoinbaseWalletSDKOptions = {
   preference: { options: 'all' },
 };
 
+jest.mock('./util/crossOriginOpenerPolicy');
+
 describe('createCoinbaseWalletSDK', () => {
   it('should return an object with a getProvider method', () => {
     const sdk = createCoinbaseWalletSDK(options);
