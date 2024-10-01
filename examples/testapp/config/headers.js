@@ -11,7 +11,7 @@ function getCrossOriginOpenerPolicyHeaders() {
 }
 
 // To test these headers in your local environment, 
-// add the following rules to the next.config.js headers property.
+// create a next.config and add the following rules to the next.config.js headers property.
 module.exports = {
     getCrossOriginOpenerPolicyHeaders
 }
