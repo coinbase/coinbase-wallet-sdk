@@ -14,43 +14,25 @@ import {
   FormHelperText,
   Heading,
   Input,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
   Text,
   VStack,
-  Divider,
+  Switch,
 } from "@chakra-ui/react";
 import React, { useCallback, useMemo, useState } from "react";
 import { createCoinbaseWalletSDK } from "@coinbase/wallet-sdk";
 import { useCBWSDK } from "../../context/CBWSDKReactContextProvider";
-import {
-  Preference,
-} from "@coinbase/wallet-sdk/dist/core/provider/interface";
-import { CheckIcon, ChevronDownIcon } from "@chakra-ui/icons";
+import { Preference } from "@coinbase/wallet-sdk/dist/core/provider/interface";
 import { keccak256, slice, toHex } from "viem";
 import { CreateCoinbaseWalletSDKOptions } from "@coinbase/wallet-sdk/dist/createCoinbaseWalletSDK";
 
-type PostOnboardingAction = "none" | "onramp" | "magicspend";
-
-const postOnboardingActions = ["none", "onramp", "magicspend"] as const;
-
-type OnrampPrefillOptions = {
-  contractAddress?: string;
-  amount: string;
-  chainId: number;
-};
-
-type Config = {
-  postOnboardingAction?: PostOnboardingAction;
-  onrampPrefillOptions?: OnrampPrefillOptions;
-  attributionDataSuffix?: string;
-};
-
 export function SDKConfig() {
   const { option, scwUrl } = useCBWSDK();
-  const [config, setConfig] = React.useState<Config>({});
+  const [config, setConfig] = React.useState<Preference>({
+    options: option,
+    attribution: {
+      auto: true,
+    },
+  });
 
   const options: CreateCoinbaseWalletSDKOptions = useMemo(() => {
     const preference: Preference = {
@@ -72,44 +54,41 @@ export function SDKConfig() {
     await provider.request({ method: "eth_requestAccounts" });
   }, [options]);
 
-  const handlePostOnboardingAction = useCallback(
-    (action: PostOnboardingAction) => {
-      const config_ = { ...config, postOnboardingAction: action };
-      if (action !== "onramp") {
-        delete config_.onrampPrefillOptions;
-      }
+  const handleSetAttributionAuto = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const config_: Preference = {
+        ...config,
+        attribution: {
+          auto: event.target.checked,
+        },
+      };
       setConfig(config_);
     },
     [config]
   );
 
-  const handleOnrampPrefill = useCallback(
-    (key: "contractAddress" | "amount" | "chainId") => (e) => {
-      const value = e.target.value;
+  const handleSetDataSuffix = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value;
       setConfig((prev) => ({
         ...prev,
-        onrampPrefillOptions: {
-          ...prev.onrampPrefillOptions,
-          [key]: value,
+        attribution: {
+          dataSuffix: value,
         },
       }));
     },
     []
   );
 
-  const handleSetDataSuffix = useCallback((e) => {
-    const value = e.target.value;
-    setConfig((prev) => ({
-      ...prev,
-      attributionDataSuffix: value,
-    }));
-  }, []);
-
   const [dataSuffix, setDataSuffix] = useState("Coinbase Wallet");
   const fourByteHex = useMemo(
     () => slice(keccak256(toHex(dataSuffix)), 0, 4),
     [dataSuffix]
   );
+
+  const attributionAuto = useMemo(() => {
+    return "auto" in config.attribution && config.attribution?.auto;
+  }, [config.attribution]);
 
   return (
     <Card>
@@ -131,104 +110,65 @@ export function SDKConfig() {
       <CardBody>
         <Flex justify="space-between" align="center">
           <Box>
-            <Heading size="md">Post Onboarding Action</Heading>
-            <Code mt={2}>postOnboardingAction</Code>
+            <Heading size="md">Attribution</Heading>
+            <Code mt={2}>attribution.auto</Code>
           </Box>
-          <Menu>
-            <MenuButton
-              colorScheme="telegram"
-              as={Button}
-              rightIcon={<ChevronDownIcon />}
-            >
-              {config?.postOnboardingAction}
-            </MenuButton>
-            <MenuList>
-              {postOnboardingActions.map((action) => (
-                <MenuItem
-                  color={"MenuText"}
-                  key={action}
-                  icon={
-                    action === config.postOnboardingAction ? (
-                      <CheckIcon />
-                    ) : null
-                  }
-                  onClick={() => handlePostOnboardingAction(action)}
-                >
-                  {action}
-                </MenuItem>
-              ))}
-            </MenuList>
-          </Menu>
-        </Flex>
-        {config.postOnboardingAction === "onramp" && (
-          <>
-            <Divider my={6} />
-            <Flex justify="space-between" align="center" mt={6}>
-              <Box>
-                <Heading size="md">Onramp Prefill Options</Heading>
-                <Text fontSize="sm" maxW="400px">
-                  Optional: Only works when postOnboardingAction is set to
-                  onramp. Amount and chainId are required. If contract address
-                  is omitted, onramp assumes native asset for that chain
-                </Text>
-                <Code mt={2}>onrampPrefillOptions</Code>
-              </Box>
-              <VStack>
-                <Input
-                  placeholder="Contract Address"
-                  onChange={handleOnrampPrefill("contractAddress")}
-                />
-                <Input
-                  placeholder="Amount (wei)"
-                  required
-                  onChange={handleOnrampPrefill("amount")}
-                />
-                <Input
-                  placeholder="Chain ID"
-                  required
-                  onChange={(e) =>
-                    handleOnrampPrefill("chainId")({
-                      target: { value: parseInt(e.target.value, 10) },
-                    })
-                  }
-                />
-              </VStack>
-            </Flex>
-          </>
-        )}
-        <Divider my={6} />
-        <Flex justify="space-between" align="center">
           <Box>
-            <Heading size="md">Attribution Data Suffix</Heading>
-            <Text fontSize="sm">
-              First 4 bytes of a unique string to identify your onchain activity
-            </Text>
             <FormControl mt={2}>
-              <FormLabel>
-                <Code>attributionDataSuffix</Code>
-              </FormLabel>
+              <Switch
+                defaultChecked={attributionAuto}
+                onChange={handleSetAttributionAuto}
+              />
+            </FormControl>
+          </Box>
+        </Flex>
+        {!attributionAuto && (
+          <Flex
+            justify="space-between"
+            align={{
+              base: "flex-start",
+              md: "center",
+            }}
+            my={2}
+            flexDirection={{
+              base: "column",
+              md: "row",
+            }}
+          >
+            <Box>
+              <Heading size="sm">Data Suffix</Heading>
+              <Text fontSize="sm">
+                First 4 bytes of a unique string to identify your onchain
+                activity
+              </Text>
+              <FormControl mt={2}>
+                <FormLabel>
+                  <Code>attribution.dataSuffix</Code>
+                </FormLabel>
+                <Input
+                  mt={2}
+                  type="text"
+                  placeholder="Enter String"
+                  onChange={(e) => setDataSuffix(e.target.value)}
+                  value={dataSuffix}
+                />
+                <FormHelperText>
+                  Convert any string into a 4 byte data suffix
+                </FormHelperText>
+              </FormControl>
+              <Code mt={2} colorScheme="telegram">
+                {fourByteHex}
+              </Code>
+            </Box>
+            <VStack>
               <Input
                 mt={2}
-                type="text"
-                placeholder="Enter String"
-                onChange={(e) => setDataSuffix(e.target.value)}
-                value={dataSuffix}
+                placeholder="Data Suffix (4 bytes)"
+                onChange={handleSetDataSuffix}
               />
-              <FormHelperText>
-                Convert any string into a 4 byte data suffix
-              </FormHelperText>
-            </FormControl>
-            <Code mt={2} colorScheme="telegram">
-              {fourByteHex}
-            </Code>
-          </Box>
-          <VStack>
-            <Input
-              placeholder="Data Suffix (4 bytes)"
-              onChange={handleSetDataSuffix}
-            />
-          </VStack>
-        </Flex>
+            </VStack>
+          </Flex>
+        )}
       </CardBody>
       <Button size="lg" colorScheme="telegram" onClick={startOnboarding}>
         Start Onboarding

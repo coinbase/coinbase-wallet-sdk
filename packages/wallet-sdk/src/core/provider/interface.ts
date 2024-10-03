@@ -42,13 +42,11 @@ export interface AppMetadata {
   appChainIds: number[];
 }
 
-type Attribution =
+export type Attribution =
   | {
       dataSuffix: string;
-      auto: never;
     }
   | {
-      dataSuffix: never;
       auto: boolean;
     };
 
