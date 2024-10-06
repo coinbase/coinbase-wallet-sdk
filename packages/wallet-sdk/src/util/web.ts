@@ -1,4 +1,4 @@
-import { standardErrors } from ':core/error';
+import { standardErrors } from ':core/error/errors.js';
 
 const POPUP_WIDTH = 420;
 const POPUP_HEIGHT = 540;

@@ -1,7 +1,9 @@
-import { fireEvent, render, screen } from '@testing-library/preact';
-import { h } from 'preact';
+import '@testing-library/jest-dom';
 
-import { SnackbarContainer, SnackbarInstance, SnackbarInstanceProps } from './Snackbar';
+import { fireEvent, render, screen } from '@testing-library/preact';
+import { vi } from 'vitest';
+
+import { SnackbarContainer, SnackbarInstance, SnackbarInstanceProps } from './Snackbar.js';
 
 const renderSnackbarContainer = (props?: SnackbarInstanceProps) =>
   render(
@@ -12,8 +14,8 @@ const renderSnackbarContainer = (props?: SnackbarInstanceProps) =>
 
 describe('SnackbarContainer', () => {
   beforeEach(() => {
-    jest.useFakeTimers();
-    jest.spyOn(window, 'setTimeout');
+    vi.useFakeTimers();
+    vi.spyOn(window, 'setTimeout');
     renderSnackbarContainer({
       menuItems: [
         {
@@ -24,20 +26,20 @@ describe('SnackbarContainer', () => {
           path: '',
           defaultFillRule: 'inherit',
           defaultClipRule: 'inherit',
-          onClick: jest.fn,
+          onClick: vi.fn,
         },
       ],
     });
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test('render hidden', () => {
     const hiddenClass = document.getElementsByClassName('-cbwsdk-snackbar-instance-hidden');
     expect(hiddenClass.length).toEqual(1);
-    jest.runAllTimers();
+    vi.runAllTimers();
     expect(setTimeout).toHaveBeenCalledTimes(2);
   });
 

@@ -1,19 +1,21 @@
-import { Signer } from '../interface';
-import { SCWKeyManager } from './SCWKeyManager';
-import { Communicator } from ':core/communicator/Communicator';
-import { standardErrors } from ':core/error';
-import { RPCRequestMessage, RPCResponse, RPCResponseMessage } from ':core/message';
-import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface';
-import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
-import { AddressString } from ':core/type';
-import { ensureIntNumber, hexStringFromNumber } from ':core/type/util';
+import { Signer } from '../interface.js';
+import { SCWKeyManager } from './SCWKeyManager.js';
+import { Communicator } from ':core/communicator/Communicator.js';
+import { standardErrors } from ':core/error/errors.js';
+import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage.js';
+import { RPCResponse } from ':core/message/RPCResponse.js';
+import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
+import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
+import { AddressString } from ':core/type/index.js';
+import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
 import {
   decryptContent,
   encryptContent,
   exportKeyToHexString,
   importKeyFromHexString,
-} from ':util/cipher';
-import { fetchRPCRequest } from ':util/provider';
+} from ':util/cipher.js';
+import { fetchRPCRequest } from ':util/provider.js';
+
 const ACCOUNTS_KEY = 'accounts';
 const ACTIVE_CHAIN_STORAGE_KEY = 'activeChain';
 const AVAILABLE_CHAINS_STORAGE_KEY = 'availableChains';

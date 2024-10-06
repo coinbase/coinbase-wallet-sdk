@@ -1,25 +1,27 @@
 import { fireEvent } from '@testing-library/preact';
+import { vi } from 'vitest';
 
-import eip712 from '../../vendor-js/eth-eip712-util';
-import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants';
-import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from './relay/mocks/fixtures';
-import { mockedWalletLinkRelay } from './relay/mocks/relay';
-import { WalletLinkRelay } from './relay/WalletLinkRelay';
-import { WalletLinkSigner } from './WalletLinkSigner';
-import { WALLETLINK_URL } from ':core/constants';
-import { standardErrorCodes, standardErrors } from ':core/error';
-import { ProviderEventCallback } from ':core/provider/interface';
-import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
-import { AddressString } from ':core/type';
+import * as eip712 from '../../vendor-js/eth-eip712-util/index.cjs';
+import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants.js';
+import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from './relay/mocks/fixtures.js';
+import { mockedWalletLinkRelay } from './relay/mocks/relay.js';
+import { WalletLinkRelay } from './relay/WalletLinkRelay.js';
+import { WalletLinkSigner } from './WalletLinkSigner.js';
+import { WALLETLINK_URL } from ':core/constants.js';
+import { standardErrorCodes } from ':core/error/constants.js';
+import { standardErrors } from ':core/error/errors.js';
+import { ProviderEventCallback } from ':core/provider/interface.js';
+import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
+import { AddressString } from ':core/type/index.js';
 
-jest.mock('./relay/WalletLinkRelay', () => {
+vi.mock('./relay/WalletLinkRelay', () => {
   return {
     WalletLinkRelay: mockedWalletLinkRelay,
   };
 });
 
 const testStorage = new ScopedLocalStorage('walletlink', WALLETLINK_URL);
-const mockCallback: ProviderEventCallback = jest.fn();
+const mockCallback: ProviderEventCallback = vi.fn();
 
 const createAdapter = (options?: { relay?: WalletLinkRelay }) => {
   const adapter = new WalletLinkSigner({
@@ -46,7 +48,7 @@ describe('LegacyProvider', () => {
 
   it('handles close', async () => {
     const relay = mockedWalletLinkRelay();
-    const spy = jest.spyOn(relay, 'resetAndReload');
+    const spy = vi.spyOn(relay, 'resetAndReload');
 
     const provider = createAdapter({ relay });
     await provider.cleanup();
@@ -122,7 +124,7 @@ describe('LegacyProvider', () => {
 
   describe('ecRecover', () => {
     const relay = mockedWalletLinkRelay();
-    const sendRequestSpy = jest.spyOn(relay, 'sendRequest');
+    const sendRequestSpy = vi.spyOn(relay, 'sendRequest');
     const provider = createAdapter({ relay });
 
     beforeEach(() => {
@@ -170,7 +172,7 @@ describe('LegacyProvider', () => {
     const provider = createAdapter({ relay });
 
     test('personal_sign success', async () => {
-      const sendRequestSpy = jest.spyOn(relay, 'sendRequest').mockResolvedValueOnce({
+      const sendRequestSpy = vi.spyOn(relay, 'sendRequest').mockResolvedValueOnce({
         result: 'mocked result',
       });
       const response = await provider?.request({
@@ -205,7 +207,7 @@ describe('LegacyProvider', () => {
   describe('signTypedData', () => {
     testStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDERESS);
     const relay = mockedWalletLinkRelay();
-    const sendRequestSpy = jest.spyOn(relay, 'sendRequest');
+    const sendRequestSpy = vi.spyOn(relay, 'sendRequest');
     const provider = createAdapter({ relay });
 
     const ENCODED_MESSAGE = '0x421b6e328c574f0ee83a68d51d01be3597d8b5391c7725dfa80247a60b5cd390';
@@ -217,9 +219,8 @@ describe('LegacyProvider', () => {
       });
     });
 
-    // eslint-disable-next-line jest/no-disabled-tests
     test.skip('eth_signTypedData_v1', async () => {
-      const hashSpy = jest.spyOn(eip712, 'hashForSignTypedDataLegacy');
+      const hashSpy = vi.spyOn(eip712, 'hashForSignTypedDataLegacy');
       const response = await provider?.request({
         method: 'eth_signTypedData_v1',
         params: [[MOCK_TYPED_DATA], MOCK_ADDERESS],
@@ -238,7 +239,7 @@ describe('LegacyProvider', () => {
     });
 
     test('eth_signTypedData_v3', async () => {
-      const hashSpy = jest.spyOn(eip712, 'hashForSignTypedData_v3');
+      const hashSpy = vi.spyOn(eip712, 'hashForSignTypedData_v3');
       const response = await provider?.request({
         method: 'eth_signTypedData_v3',
         params: [MOCK_ADDERESS, MOCK_TYPED_DATA],
@@ -257,7 +258,7 @@ describe('LegacyProvider', () => {
     });
 
     test('eth_signTypedData_v4', async () => {
-      const hashSpy = jest.spyOn(eip712, 'hashForSignTypedData_v4');
+      const hashSpy = vi.spyOn(eip712, 'hashForSignTypedData_v4');
       const response = await provider?.request({
         method: 'eth_signTypedData_v4',
         params: [MOCK_ADDERESS, MOCK_TYPED_DATA],
@@ -276,7 +277,7 @@ describe('LegacyProvider', () => {
     });
 
     test('eth_signTypedData', async () => {
-      const hashSpy = jest.spyOn(eip712, 'hashForSignTypedData_v4');
+      const hashSpy = vi.spyOn(eip712, 'hashForSignTypedData_v4');
       const response = await provider?.request({
         method: 'eth_signTypedData',
         params: [MOCK_ADDERESS, MOCK_TYPED_DATA],
@@ -463,9 +464,9 @@ describe('LegacyProvider', () => {
 
     test('wallet_switchEthereumChain w/ error code', async () => {
       const relay = mockedWalletLinkRelay();
-      jest
-        .spyOn(relay, 'switchEthereumChain')
-        .mockReturnValue(Promise.reject(standardErrors.provider.unsupportedChain()));
+      vi.spyOn(relay, 'switchEthereumChain').mockReturnValue(
+        Promise.reject(standardErrors.provider.unsupportedChain())
+      );
       const localProvider = createAdapter({ relay });
 
       await expect(() => {

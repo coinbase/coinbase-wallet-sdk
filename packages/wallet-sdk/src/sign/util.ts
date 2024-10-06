@@ -1,15 +1,16 @@
-import { Signer } from './interface';
-import { SCWSigner } from './scw/SCWSigner';
-import { WalletLinkSigner } from './walletlink/WalletLinkSigner';
-import { Communicator } from ':core/communicator/Communicator';
-import { ConfigMessage, MessageID, SignerType } from ':core/message';
+import { Signer } from './interface.js';
+import { SCWSigner } from './scw/SCWSigner.js';
+import { WalletLinkSigner } from './walletlink/WalletLinkSigner.js';
+import { Communicator } from ':core/communicator/Communicator.js';
+import { ConfigMessage, SignerType } from ':core/message/ConfigMessage.js';
+import { MessageID } from ':core/message/Message.js';
 import {
   AppMetadata,
   Preference,
   ProviderEventCallback,
   RequestArguments,
-} from ':core/provider/interface';
-import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
+} from ':core/provider/interface.js';
+import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 
 const SIGNER_TYPE_KEY = 'SignerType';
 const storage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');

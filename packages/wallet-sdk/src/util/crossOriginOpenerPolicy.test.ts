@@ -1,9 +1,11 @@
-import { checkCrossOriginOpenerPolicy } from './crossOriginOpenerPolicy';
+import { vi } from 'vitest';
+
+import { checkCrossOriginOpenerPolicy } from './crossOriginOpenerPolicy.js';
 
 describe('checkCrossOriginOpenerPolicy', () => {
   beforeEach(() => {
     // Clear all mocks before each test
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should not run if window is undefined', () => {
@@ -18,9 +20,9 @@ describe('checkCrossOriginOpenerPolicy', () => {
   });
 
   it('should fetch the current origin', async () => {
-    global.fetch = jest.fn().mockResolvedValue({
+    global.fetch = vi.fn().mockResolvedValue({
       headers: {
-        get: jest.fn().mockReturnValue(null),
+        get: vi.fn().mockReturnValue(null),
       },
     });
 
@@ -30,10 +32,10 @@ describe('checkCrossOriginOpenerPolicy', () => {
   });
 
   it('should log an error if Cross-Origin-Opener-Policy is same-origin', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    global.fetch = jest.fn().mockResolvedValue({
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    global.fetch = vi.fn().mockResolvedValue({
       headers: {
-        get: jest.fn().mockReturnValue('same-origin'),
+        get: vi.fn().mockReturnValue('same-origin'),
       },
     });
 
@@ -48,10 +50,10 @@ describe('checkCrossOriginOpenerPolicy', () => {
   });
 
   it('should not log an error if Cross-Origin-Opener-Policy is not same-origin', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    global.fetch = jest.fn().mockResolvedValue({
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    global.fetch = vi.fn().mockResolvedValue({
       headers: {
-        get: jest.fn().mockReturnValue('unsafe-none'),
+        get: vi.fn().mockReturnValue('unsafe-none'),
       },
     });
 

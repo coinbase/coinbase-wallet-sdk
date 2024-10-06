@@ -1,12 +1,17 @@
-import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../constants';
-import { WalletLinkSession } from '../type/WalletLinkSession';
-import { WalletLinkCipher } from './WalletLinkCipher';
-import { WalletLinkConnection, WalletLinkConnectionUpdateListener } from './WalletLinkConnection';
-import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
+import { vi } from 'vitest';
 
-const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`decrypted ${text}`));
+import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../constants.js';
+import { WalletLinkSession } from '../type/WalletLinkSession.js';
+import { WalletLinkCipher } from './WalletLinkCipher.js';
+import {
+  WalletLinkConnection,
+  WalletLinkConnectionUpdateListener,
+} from './WalletLinkConnection.js';
+import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 
-jest.spyOn(WalletLinkCipher.prototype, 'decrypt').mockImplementation(decryptMock);
+const decryptMock = vi.fn().mockImplementation((text) => Promise.resolve(`decrypted ${text}`));
+
+vi.spyOn(WalletLinkCipher.prototype, 'decrypt').mockImplementation(decryptMock);
 
 describe('WalletLinkConnection', () => {
   const session = WalletLinkSession.create(new ScopedLocalStorage('walletlink', 'test'));
@@ -15,18 +20,18 @@ describe('WalletLinkConnection', () => {
   let listener: WalletLinkConnectionUpdateListener;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     connection = new WalletLinkConnection({
       session,
       linkAPIUrl: 'http://link-api-url',
       listener: {
-        linkedUpdated: jest.fn(),
-        handleWeb3ResponseMessage: jest.fn(),
-        chainUpdated: jest.fn(),
-        accountUpdated: jest.fn(),
-        metadataUpdated: jest.fn(),
-        resetAndReload: jest.fn(),
+        linkedUpdated: vi.fn(),
+        handleWeb3ResponseMessage: vi.fn(),
+        chainUpdated: vi.fn(),
+        accountUpdated: vi.fn(),
+        metadataUpdated: vi.fn(),
+        resetAndReload: vi.fn(),
       },
     });
     listener = (connection as any).listener;
@@ -34,7 +39,7 @@ describe('WalletLinkConnection', () => {
 
   describe('incomingDataListener', () => {
     it('should call handleSessionMetadataUpdated when session config is updated', async () => {
-      const handleSessionMetadataUpdatedSpy = jest.spyOn(
+      const handleSessionMetadataUpdatedSpy = vi.spyOn(
         connection as any,
         'handleSessionMetadataUpdated'
       );
@@ -62,7 +67,7 @@ describe('WalletLinkConnection', () => {
     }
 
     it('should call listner.metadataUpdated when WalletUsername updated', async () => {
-      const listener_metadataUpdatedSpy = jest.spyOn(listener, 'metadataUpdated');
+      const listener_metadataUpdatedSpy = vi.spyOn(listener, 'metadataUpdated');
 
       const newUsername = 'new username';
 
@@ -75,7 +80,7 @@ describe('WalletLinkConnection', () => {
     });
 
     it('should call listner.metadataUpdated when AppVersion updated', async () => {
-      const listener_metadataUpdatedSpy = jest.spyOn(listener, 'metadataUpdated');
+      const listener_metadataUpdatedSpy = vi.spyOn(listener, 'metadataUpdated');
 
       const newAppVersion = 'new app version';
 
@@ -88,7 +93,7 @@ describe('WalletLinkConnection', () => {
     });
 
     it('should call listner.resetAndReload when __destroyed: 1 is received', async () => {
-      const listener_resetAndReloadSpy = jest.spyOn(listener, 'resetAndReload');
+      const listener_resetAndReloadSpy = vi.spyOn(listener, 'resetAndReload');
 
       invoke_handleSessionMetadataUpdated({ __destroyed: '1' });
 
@@ -96,7 +101,7 @@ describe('WalletLinkConnection', () => {
     });
 
     it('should call listner.accountUpdated when Account updated', async () => {
-      const listener_accountUpdatedSpy = jest.spyOn(listener, 'accountUpdated');
+      const listener_accountUpdatedSpy = vi.spyOn(listener, 'accountUpdated');
 
       const newAccount = 'new account';
 
@@ -107,7 +112,7 @@ describe('WalletLinkConnection', () => {
 
     describe('chain updates', () => {
       it('should NOT call listner.chainUpdated when only one changed', async () => {
-        const listener_chainUpdatedSpy = jest.spyOn(listener, 'chainUpdated');
+        const listener_chainUpdatedSpy = vi.spyOn(listener, 'chainUpdated');
 
         const chainIdUpdate = { ChainId: 'new chain id' };
         const jsonRpcUrlUpdate = { JsonRpcUrl: 'new json rpc url' };
@@ -121,7 +126,7 @@ describe('WalletLinkConnection', () => {
       });
 
       it('should call listner.chainUpdated when both ChainId and JsonRpcUrl changed', async () => {
-        const listener_chainUpdatedSpy = jest.spyOn(listener, 'chainUpdated');
+        const listener_chainUpdatedSpy = vi.spyOn(listener, 'chainUpdated');
 
         const update = {
           ChainId: 'new chain id',

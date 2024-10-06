@@ -1,8 +1,8 @@
 // TODO: error should not depend on walletlink. revisit this.
-import { isErrorResponse, Web3Response } from '../../sign/walletlink/relay/type/Web3Response';
-import { LIB_VERSION } from '../../version';
-import { standardErrorCodes } from './constants';
-import { serialize } from './utils';
+import { isErrorResponse, Web3Response } from '../../sign/walletlink/relay/type/Web3Response.js';
+import { LIB_VERSION } from '../../version.js';
+import { standardErrorCodes } from './constants.js';
+import { serialize } from './utils.js';
 
 /**
  * Serializes an error to a format that is compatible with the Ethereum JSON RPC error format.
