@@ -11,20 +11,12 @@ export default {
   collectCoverage: true,
 
   // An array of glob patterns indicating a set of files for which coverage information should be collected
-  collectCoverageFrom: [
-    './src/CoinbaseWalletSDK.ts',
-    './src/core/**/*.ts',
-    './src/provider/**/*.ts',
-    './src/relay/**/*.ts',
-    './src/components/**/*.tsx',
-    './src/signer/**/*.ts',
-    './src/transport/**/*.ts',
-  ],
+  collectCoverageFrom: ['./src/**/*.ts'],
   // The directory where Jest should output its coverage files
   coverageDirectory: 'coverage',
 
   // An array of regexp pattern strings used to skip coverage collection
-  coveragePathIgnorePatterns: ['/node_modules/'],
+  coveragePathIgnorePatterns: ['/node_modules/', 'vendor-js/', 'assets/', 'walletlink/relay/'],
 
   // A list of reporter names that Jest uses when writing coverage reports
   coverageReporters: ['json', 'text', 'text-summary', 'lcov'],
@@ -32,9 +24,9 @@ export default {
   // TODO: Increase threshold as additional tests are added
   coverageThreshold: {
     global: {
-      branches: 40,
-      functions: 45,
-      statements: 40,
+      branches: 71,
+      functions: 81,
+      statements: 82,
     },
   },
 
@@ -45,6 +37,7 @@ export default {
   moduleNameMapper: {
     '^src/(.*)$': '<rootDir>/src/$1',
     '^:core/(.*)$': '<rootDir>/src/core/$1',
+    '^:util/(.*)$': '<rootDir>/src/util/$1',
   },
 
   // A list of paths to directories that Jest should use to search for files in

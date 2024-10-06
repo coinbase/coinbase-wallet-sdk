@@ -1,31 +1,33 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
-import { sha256 } from 'sha.js';
+import { sha256 } from '@noble/hashes/sha256';
+import { bytesToHex } from '@noble/hashes/utils';
 
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
-import { randomBytesHex } from ':core/util';
+import { randomBytesHex } from ':core/type/util';
 
 const STORAGE_KEY_SESSION_ID = 'session:id';
 const STORAGE_KEY_SESSION_SECRET = 'session:secret';
 const STORAGE_KEY_SESSION_LINKED = 'session:linked';
 
 export class WalletLinkSession {
-  private readonly _id: string;
-  private readonly _secret: string;
-  private readonly _key: string;
-  private readonly _storage: ScopedLocalStorage;
+  readonly key: string;
   private _linked: boolean;
 
-  constructor(storage: ScopedLocalStorage, id?: string, secret?: string, linked?: boolean) {
-    this._storage = storage;
-    this._id = id || randomBytesHex(16);
-    this._secret = secret || randomBytesHex(32);
-
-    this._key = new sha256()
-      .update(`${this._id}, ${this._secret} WalletLink`) // ensure old sessions stay connected
-      .digest('hex');
-
+  private constructor(
+    readonly storage: ScopedLocalStorage,
+    readonly id: string,
+    readonly secret: string,
+    linked = false
+  ) {
+    this.key = bytesToHex(sha256(`${id}, ${secret} WalletLink`));
     this._linked = !!linked;
+  }
+
+  public static create(storage: ScopedLocalStorage): WalletLinkSession {
+    const id = randomBytesHex(16);
+    const secret = randomBytesHex(32);
+    return new WalletLinkSession(storage, id, secret).save();
   }
 
   public static load(storage: ScopedLocalStorage): WalletLinkSession | null {
@@ -40,26 +42,6 @@ export class WalletLinkSession {
     return null;
   }
 
-  /**
-   * Takes in a session ID and returns the sha256 hash of it.
-   * @param sessionId session ID
-   */
-  public static hash(sessionId: string): string {
-    return new sha256().update(sessionId).digest('hex');
-  }
-
-  public get id(): string {
-    return this._id;
-  }
-
-  public get secret(): string {
-    return this._secret;
-  }
-
-  public get key(): string {
-    return this._key;
-  }
-
   public get linked(): boolean {
     return this._linked;
   }
@@ -70,13 +52,13 @@ export class WalletLinkSession {
   }
 
   public save(): WalletLinkSession {
-    this._storage.setItem(STORAGE_KEY_SESSION_ID, this._id);
-    this._storage.setItem(STORAGE_KEY_SESSION_SECRET, this._secret);
+    this.storage.setItem(STORAGE_KEY_SESSION_ID, this.id);
+    this.storage.setItem(STORAGE_KEY_SESSION_SECRET, this.secret);
     this.persistLinked();
     return this;
   }
 
   private persistLinked(): void {
-    this._storage.setItem(STORAGE_KEY_SESSION_LINKED, this._linked ? '1' : '0');
+    this.storage.setItem(STORAGE_KEY_SESSION_LINKED, this._linked ? '1' : '0');
   }
 }

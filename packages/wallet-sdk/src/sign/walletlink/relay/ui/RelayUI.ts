@@ -1,8 +1,3 @@
-export interface RelayUIOptions {
-  version: string;
-  darkMode: boolean;
-}
-
 export interface RelayUI {
   attach(): void;
 
@@ -18,9 +13,4 @@ export interface RelayUI {
     onCancel: (error?: Error) => void;
     onResetConnection: () => void;
   }): () => void;
-
-  /**
-   * Reload document ui
-   */
-  reloadUI(): void;
 }

@@ -2,6 +2,8 @@ name: Deploy Coinbase Wallet SDK Playground to Pages
 
 on:
   workflow_dispatch:
+  push:
+    branches: [master]
 
 permissions:
   contents: read
@@ -30,11 +32,11 @@ jobs:
       - name: Install dependencies
         run: yarn install
       - name: Build and export with Next.js
-        run: yarn workspace @coinbase/wallet-sdk-testapp run export
+        run: yarn deploy
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
-          path: ./apps/testapp/out
+          path: ./examples/testapp/out
 
   deploy:
     environment:

@@ -1,3 +1,6 @@
+/* eslint-disable */
+//prettier-ignore
+
 const util = require('./util')
 const abi = require('./abi')
 
@@ -137,7 +140,7 @@ const TypedDataUtils = {
   },
 
   /**
-   * Finds all types within a type defintion object
+   * Finds all types within a type definition object
    *
    * @param {string} primaryType - Root type
    * @param {Object} types - Type definitions

@@ -1,6 +1,5 @@
-import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../RelayAbstract';
+import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../constants';
 import { WalletLinkSession } from '../type/WalletLinkSession';
-import { WalletLinkSessionConfig } from '../type/WalletLinkSessionConfig';
 import { WalletLinkCipher } from './WalletLinkCipher';
 import { WalletLinkConnection, WalletLinkConnectionUpdateListener } from './WalletLinkConnection';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
@@ -10,7 +9,7 @@ const decryptMock = jest.fn().mockImplementation((text) => Promise.resolve(`decr
 jest.spyOn(WalletLinkCipher.prototype, 'decrypt').mockImplementation(decryptMock);
 
 describe('WalletLinkConnection', () => {
-  const session = new WalletLinkSession(new ScopedLocalStorage('walletlink', 'test'));
+  const session = WalletLinkSession.create(new ScopedLocalStorage('walletlink', 'test'));
 
   let connection: WalletLinkConnection;
   let listener: WalletLinkConnectionUpdateListener;
@@ -40,7 +39,7 @@ describe('WalletLinkConnection', () => {
         'handleSessionMetadataUpdated'
       );
 
-      const sessionConfig: WalletLinkSessionConfig = {
+      const sessionConfig = {
         webhookId: 'webhookId',
         webhookUrl: 'webhookUrl',
         metadata: {
@@ -58,7 +57,7 @@ describe('WalletLinkConnection', () => {
   });
 
   describe('handleSessionMetadataUpdated', () => {
-    function invoke_handleSessionMetadataUpdated(metadata: WalletLinkSessionConfig['metadata']) {
+    function invoke_handleSessionMetadataUpdated(metadata: { [_: string]: string }) {
       (connection as any).handleSessionMetadataUpdated(metadata);
     }
 

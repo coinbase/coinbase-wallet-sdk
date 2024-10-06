@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
-import { Web3Method } from './Web3Method';
-import { AddressString, HexString, ProviderType } from ':core/type';
+import { Web3Method } from './Web3Request';
+import { AddressString, HexString } from ':core/type';
 
 export type Web3Response<M extends Web3Method = Web3Method> =
   | Extract<_Web3Response, { method: M }>
@@ -49,10 +49,6 @@ type _Web3Response =
       result: boolean;
     }
   | {
-      method: 'selectProvider';
-      result: ProviderType;
-    }
-  | {
       method: 'signEthereumMessage';
       result: HexString;
     }
@@ -67,12 +63,4 @@ type _Web3Response =
   | {
       method: 'ethereumAddressFromSignedMessage';
       result: AddressString;
-    }
-  | {
-      method: 'scanQRCode';
-      result: string;
-    }
-  | {
-      method: 'generic';
-      result: string;
     };

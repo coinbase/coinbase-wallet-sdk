@@ -23,15 +23,13 @@ export type ClientMessage =
       type: 'SetSessionConfig';
       id: IntNumber;
       sessionId: string;
-      webhookId?: string | null;
-      webhookUrl?: string | null;
-      metadata?: { [key: string]: string | null };
+      metadata: { [key: string]: string | null };
     }
   | {
       type: 'PublishEvent';
       id: IntNumber;
       sessionId: string;
       event: string;
-      data: string;
+      data: string; // encrypted WalletLinkEventData
       callWebhook: boolean;
     };

@@ -1,12 +1,11 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
-import { DiagnosticLogger, EVENTS } from '../DiagnosticLogger';
-import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../RelayAbstract';
+import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../constants';
 import { ClientMessage } from '../type/ClientMessage';
 import { ServerMessage, ServerMessageType } from '../type/ServerMessage';
-import { WalletLinkEventData, WalletLinkResponseEventData } from '../type/WalletLinkEventData';
+import { WalletLinkEventData } from '../type/WalletLinkEventData';
 import { WalletLinkSession } from '../type/WalletLinkSession';
-import { WalletLinkSessionConfig } from '../type/WalletLinkSessionConfig';
+import { Web3Response } from '../type/Web3Response';
 import { WalletLinkCipher } from './WalletLinkCipher';
 import { WalletLinkHTTP } from './WalletLinkHTTP';
 import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket';
@@ -17,7 +16,7 @@ const REQUEST_TIMEOUT = 60000;
 
 export interface WalletLinkConnectionUpdateListener {
   linkedUpdated: (linked: boolean) => void;
-  handleWeb3ResponseMessage: (message: WalletLinkResponseEventData) => void;
+  handleWeb3ResponseMessage: (id: string, response: Web3Response) => void;
   chainUpdated: (chainId: string, jsonRpcUrl: string) => void;
   accountUpdated: (selectedAddress: string) => void;
   metadataUpdated: (key: string, metadataValue: string) => void;
@@ -28,8 +27,6 @@ interface WalletLinkConnectionParams {
   session: WalletLinkSession;
   linkAPIUrl: string;
   listener: WalletLinkConnectionUpdateListener;
-  diagnostic?: DiagnosticLogger;
-  WebSocketClass?: typeof WebSocket;
 }
 
 /**
@@ -43,7 +40,6 @@ export class WalletLinkConnection {
   private readonly session: WalletLinkSession;
 
   private listener?: WalletLinkConnectionUpdateListener;
-  private diagnostic?: DiagnosticLogger;
   private cipher: WalletLinkCipher;
   private ws: WalletLinkWebSocket;
   private http: WalletLinkHTTP;
@@ -55,26 +51,14 @@ export class WalletLinkConnection {
    * @param listener WalletLinkConnectionUpdateListener
    * @param [WebSocketClass] Custom WebSocket implementation
    */
-  constructor({
-    session,
-    linkAPIUrl,
-    listener,
-    diagnostic,
-    WebSocketClass = WebSocket,
-  }: WalletLinkConnectionParams) {
+  constructor({ session, linkAPIUrl, listener }: WalletLinkConnectionParams) {
     this.session = session;
     this.cipher = new WalletLinkCipher(session.secret);
-    this.diagnostic = diagnostic;
     this.listener = listener;
 
-    const ws = new WalletLinkWebSocket(`${linkAPIUrl}/rpc`, WebSocketClass);
+    const ws = new WalletLinkWebSocket(`${linkAPIUrl}/rpc`, WebSocket);
     ws.setConnectionStateListener(async (state) => {
       // attempt to reconnect every 5 seconds when disconnected
-      this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
-        state,
-        sessionIdHash: WalletLinkSession.hash(session.id),
-      });
-
       let connected = false;
       switch (state) {
         case ConnectionState.DISCONNECTED:
@@ -97,15 +81,8 @@ export class WalletLinkConnection {
 
         case ConnectionState.CONNECTED:
           // perform authentication upon connection
-          try {
-            // if CONNECTED, authenticate, and then check link status
-            await this.authenticate();
-            this.sendIsLinked();
-            this.sendGetSessionConfig();
-            connected = true;
-          } catch {
-            /* empty */
-          }
+          // if CONNECTED, authenticate, and then check link status
+          connected = await this.handleConnected();
 
           // send heartbeat every n seconds while connected
           // if CONNECTED, start the heartbeat timer
@@ -142,13 +119,6 @@ export class WalletLinkConnection {
         case 'IsLinkedOK':
         case 'Linked': {
           const linked = m.type === 'IsLinkedOK' ? m.linked : undefined;
-          this.diagnostic?.log(EVENTS.LINKED, {
-            sessionIdHash: WalletLinkSession.hash(session.id),
-            linked,
-            type: m.type,
-            onlineGuests: m.onlineGuests,
-          });
-
           this.linked = linked || m.onlineGuests > 0;
           break;
         }
@@ -156,10 +126,6 @@ export class WalletLinkConnection {
         // handle session config updates
         case 'GetSessionConfigOK':
         case 'SessionConfigUpdated': {
-          this.diagnostic?.log(EVENTS.SESSION_CONFIG_RECEIVED, {
-            sessionIdHash: WalletLinkSession.hash(session.id),
-            metadata_keys: m && m.metadata ? Object.keys(m.metadata) : undefined,
-          });
           this.handleSessionMetadataUpdated(m.metadata);
           break;
         }
@@ -187,9 +153,6 @@ export class WalletLinkConnection {
     if (this.destroyed) {
       throw new Error('instance is destroyed');
     }
-    this.diagnostic?.log(EVENTS.STARTED_CONNECTING, {
-      sessionIdHash: WalletLinkSession.hash(this.session.id),
-    });
     this.ws.connect();
   }
 
@@ -197,19 +160,22 @@ export class WalletLinkConnection {
    * Terminate connection, and mark as destroyed. To reconnect, create a new
    * instance of WalletSDKConnection
    */
-  public destroy(): void {
+  public async destroy() {
+    if (this.destroyed) return;
+
+    await this.makeRequest(
+      {
+        type: 'SetSessionConfig',
+        id: IntNumber(this.nextReqId++),
+        sessionId: this.session.id,
+        metadata: { __destroyed: '1' },
+      },
+      { timeout: 1000 }
+    );
+
     this.destroyed = true;
-
     this.ws.disconnect();
-    this.diagnostic?.log(EVENTS.DISCONNECTED, {
-      sessionIdHash: WalletLinkSession.hash(this.session.id),
-    });
-
     this.listener = undefined;
-  }
-
-  public get isDestroyed(): boolean {
-    return this.destroyed;
   }
 
   /**
@@ -222,26 +188,7 @@ export class WalletLinkConnection {
   }
   private set connected(connected: boolean) {
     this._connected = connected;
-    if (connected) this.onceConnected?.();
   }
-
-  /**
-   * Execute once when connected
-   */
-  private onceConnected?: () => void;
-  private setOnceConnected<T>(callback: () => Promise<T>): Promise<T> {
-    return new Promise<T>((resolve) => {
-      if (this.connected) {
-        callback().then(resolve);
-      } else {
-        this.onceConnected = () => {
-          callback().then(resolve);
-          this.onceConnected = undefined;
-        };
-      }
-    });
-  }
-
   /**
    * true if linked (a guest has joined before)
    * runs listener when linked status changes
@@ -278,19 +225,13 @@ export class WalletLinkConnection {
       return;
     }
 
-    try {
-      const decryptedData = await this.cipher.decrypt(m.data);
-      const message = JSON.parse(decryptedData);
+    const decryptedData = await this.cipher.decrypt(m.data);
+    const message: WalletLinkEventData = JSON.parse(decryptedData);
 
-      if (message.type !== 'WEB3_RESPONSE') return;
+    if (message.type !== 'WEB3_RESPONSE') return;
 
-      this.listener?.handleWeb3ResponseMessage(message);
-    } catch {
-      this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-        message: 'Had error decrypting',
-        value: 'incomingEvent',
-      });
-    }
+    const { id, response } = message;
+    this.listener?.handleWeb3ResponseMessage(id, response);
   }
 
   private shouldFetchUnseenEventsOnConnect = false;
@@ -317,28 +258,6 @@ export class WalletLinkConnection {
   }
 
   /**
-   * Set session metadata in SessionConfig object
-   * @param key
-   * @param value
-   * @returns a Promise that completes when successful
-   */
-  public async setSessionMetadata(key: string, value: string | null) {
-    const message: ClientMessage = {
-      type: 'SetSessionConfig',
-      id: IntNumber(this.nextReqId++),
-      sessionId: this.session.id,
-      metadata: { [key]: value },
-    };
-
-    return this.setOnceConnected(async () => {
-      const res = await this.makeRequest<'OK' | 'Fail'>(message);
-      if (res.type === 'Fail') {
-        throw new Error(res.error || 'failed to set session metadata');
-      }
-    });
-  }
-
-  /**
    * Publish an event and emit event ID when successful
    * @param event event name
    * @param unencryptedData unencrypted event data
@@ -354,7 +273,10 @@ export class WalletLinkConnection {
       JSON.stringify({
         ...unencryptedData,
         origin: location.origin,
-        relaySource: window.coinbaseWalletExtension ? 'injected_sdk' : 'sdk',
+        relaySource:
+          'coinbaseWalletExtension' in window && window.coinbaseWalletExtension
+            ? 'injected_sdk'
+            : 'sdk',
       })
     );
 
@@ -400,7 +322,7 @@ export class WalletLinkConnection {
 
   private async makeRequest<T extends ServerMessageType, M = ServerMessage<T>>(
     message: ClientMessage,
-    timeout: number = REQUEST_TIMEOUT
+    options: { timeout: number } = { timeout: REQUEST_TIMEOUT }
   ): Promise<M> {
     const reqId = message.id;
     this.sendData(message);
@@ -411,7 +333,7 @@ export class WalletLinkConnection {
       new Promise<M>((_, reject) => {
         timeoutId = window.setTimeout(() => {
           reject(new Error(`request ${reqId} timed out`));
-        }, timeout);
+        }, options.timeout);
       }),
       new Promise<M>((resolve) => {
         this.requestResolutions.set(reqId, (m) => {
@@ -423,38 +345,31 @@ export class WalletLinkConnection {
     ]);
   }
 
-  private async authenticate() {
-    const m: ClientMessage = {
+  private async handleConnected() {
+    const res = await this.makeRequest<'OK' | 'Fail'>({
       type: 'HostSession',
       id: IntNumber(this.nextReqId++),
       sessionId: this.session.id,
       sessionKey: this.session.key,
-    };
-    const res = await this.makeRequest<'OK' | 'Fail'>(m);
-    if (res.type === 'Fail') {
-      throw new Error(res.error || 'failed to authentcate');
-    }
-  }
+    });
+    if (res.type === 'Fail') return false;
 
-  private sendIsLinked(): void {
-    const m: ClientMessage = {
+    this.sendData({
       type: 'IsLinked',
       id: IntNumber(this.nextReqId++),
       sessionId: this.session.id,
-    };
-    this.sendData(m);
-  }
+    });
 
-  private sendGetSessionConfig(): void {
-    const m: ClientMessage = {
+    this.sendData({
       type: 'GetSessionConfig',
       id: IntNumber(this.nextReqId++),
       sessionId: this.session.id,
-    };
-    this.sendData(m);
+    });
+
+    return true;
   }
 
-  private handleSessionMetadataUpdated = (metadata: WalletLinkSessionConfig['metadata']) => {
+  private handleSessionMetadataUpdated = (metadata: { [_: string]: string }) => {
     if (!metadata) return;
 
     // Map of metadata key to handler function
@@ -481,34 +396,16 @@ export class WalletLinkConnection {
     if (__destroyed !== '1') return;
 
     this.listener?.resetAndReload();
-    this.diagnostic?.log(EVENTS.METADATA_DESTROYED, {
-      alreadyDestroyed: this.isDestroyed,
-      sessionIdHash: WalletLinkSession.hash(this.session.id),
-    });
   };
 
   private handleAccountUpdated = async (encryptedEthereumAddress: string) => {
-    try {
-      const address = await this.cipher.decrypt(encryptedEthereumAddress);
-      this.listener?.accountUpdated(address);
-    } catch {
-      this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-        message: 'Had error decrypting',
-        value: 'selectedAddress',
-      });
-    }
+    const address = await this.cipher.decrypt(encryptedEthereumAddress);
+    this.listener?.accountUpdated(address);
   };
 
   private handleMetadataUpdated = async (key: string, encryptedMetadataValue: string) => {
-    try {
-      const decryptedValue = await this.cipher.decrypt(encryptedMetadataValue);
-      this.listener?.metadataUpdated(key, decryptedValue);
-    } catch {
-      this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-        message: 'Had error decrypting',
-        value: key,
-      });
-    }
+    const decryptedValue = await this.cipher.decrypt(encryptedMetadataValue);
+    this.listener?.metadataUpdated(key, decryptedValue);
   };
 
   private handleWalletUsernameUpdated = async (walletUsername: string) => {
@@ -520,15 +417,8 @@ export class WalletLinkConnection {
   };
 
   private handleChainUpdated = async (encryptedChainId: string, encryptedJsonRpcUrl: string) => {
-    try {
-      const chainId = await this.cipher.decrypt(encryptedChainId);
-      const jsonRpcUrl = await this.cipher.decrypt(encryptedJsonRpcUrl);
-      this.listener?.chainUpdated(chainId, jsonRpcUrl);
-    } catch {
-      this.diagnostic?.log(EVENTS.GENERAL_ERROR, {
-        message: 'Had error decrypting',
-        value: 'chainId|jsonRpcUrl',
-      });
-    }
+    const chainId = await this.cipher.decrypt(encryptedChainId);
+    const jsonRpcUrl = await this.cipher.decrypt(encryptedJsonRpcUrl);
+    this.listener?.chainUpdated(chainId, jsonRpcUrl);
   };
 }

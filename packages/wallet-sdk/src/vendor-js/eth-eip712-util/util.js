@@ -3,7 +3,7 @@
 
 /* eslint-disable */
 //prettier-ignore
-const createKeccakHash = require('keccak/js')
+const { keccak_256 } = require('@noble/hashes/sha3')
 
 /**
  * Returns a buffer filled with 0s
@@ -138,8 +138,10 @@ function bufferToHex (buf) {
 function keccak (a, bits) {
   a = toBuffer(a)
   if (!bits) bits = 256
-
-  return createKeccakHash('keccak' + bits).update(a).digest()
+  if (bits !== 256) {
+    throw new Error('unsupported')
+  }
+  return Buffer.from(keccak_256(new Uint8Array(a)))
 }
 
 function padToEven (str) {

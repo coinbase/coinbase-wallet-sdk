@@ -1,0 +1,8 @@
+# specific files to ignore
+*.md
+
+# folders to ignore
+build
+dist
+node_modules
+verdor-js

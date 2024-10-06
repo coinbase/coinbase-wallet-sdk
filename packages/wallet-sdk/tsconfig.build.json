@@ -1,15 +1,8 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
+    "allowJs": false,
     "declaration": true,
-    "outDir": "./dist",
-    "baseUrl": ".",
-    "paths": {
-      ":core/*": ["src/core/*"]
-    },
-    "target": "es2017",
-    "jsx": "react",
-    "jsxFactory": "h",
     "sourceMap": false,
   },
   "include": ["src"],

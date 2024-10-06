@@ -1,4 +1,5 @@
-import { errorValues, standardErrorCodes } from './constants';
+import { standardErrorCodes } from './constants';
+import { getMessageFromCode } from './utils';
 
 export const standardErrors = {
   rpc: {
@@ -88,28 +89,6 @@ export const standardErrors = {
 
 // Internal
 
-function isJsonRpcServerError(code: number): boolean {
-  return code >= -32099 && code <= -32000;
-}
-
-function hasKey(obj: Record<string, unknown>, key: string) {
-  return Object.prototype.hasOwnProperty.call(obj, key);
-}
-
-function getMessageFromCode(code: number | undefined): string {
-  if (code && Number.isInteger(code)) {
-    const codeString = code.toString();
-
-    if (hasKey(errorValues, codeString)) {
-      return errorValues[codeString as keyof typeof errorValues].message;
-    }
-    if (isJsonRpcServerError(code)) {
-      return 'Unspecified server error.';
-    }
-  }
-  return 'Unspecified error message.';
-}
-
 function getEthJsonRpcError<T>(code: number, arg?: EthErrorsArg<T>): EthereumRpcError<T> {
   const [message, data] = parseOpts(arg);
   return new EthereumRpcError(code, message || getMessageFromCode(code), data);
@@ -150,9 +129,9 @@ type CustomErrorArg<T> = ServerErrorOptions<T>;
 type EthErrorsArg<T> = EthereumErrorOptions<T> | string;
 
 class EthereumRpcError<T> extends Error {
-  public code: number;
+  code: number;
 
-  public data?: T;
+  data?: T;
 
   constructor(code: number, message: string, data?: T) {
     if (!Number.isInteger(code)) {
