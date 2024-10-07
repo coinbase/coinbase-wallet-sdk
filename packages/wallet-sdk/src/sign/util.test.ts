@@ -42,11 +42,7 @@ describe('util', () => {
     const preference: Preference = { options: 'all' };
 
     it('should complete signerType selection correctly', async () => {
-      const communicator = new Communicator({
-        url: CB_KEYS_URL,
-        metadata,
-        preference: { keysUrl: CB_KEYS_URL, options: 'all' },
-      });
+      const communicator = new Communicator(CB_KEYS_URL, metadata);
       communicator.postMessage = jest.fn();
       communicator.onMessage = jest.fn().mockResolvedValue({
         data: 'scw',
@@ -56,7 +52,6 @@ describe('util', () => {
         preference,
         metadata,
         handshakeRequest: { method: 'eth_requestAccounts' },
-        callback: jest.fn(),
       });
       expect(signerType).toEqual('scw');
     });

@@ -64,12 +64,7 @@ describe('SCWSigner', () => {
       appChainIds: [1],
     };
 
-    mockCommunicator = new Communicator({
-      url: CB_KEYS_URL,
-      metadata: mockMetadata,
-      preference: { keysUrl: CB_KEYS_URL, options: 'all' },
-    }) as jest.Mocked<Communicator>;
-
+    mockCommunicator = new Communicator(CB_KEYS_URL, mockMetadata) as jest.Mocked<Communicator>;
     mockCommunicator.waitForPopupLoaded.mockResolvedValue({} as Window);
     mockCommunicator.postRequestAndWaitForResponse.mockResolvedValue(mockSuccessResponse);
 
@@ -115,9 +110,7 @@ describe('SCWSigner', () => {
       expect(storageStoreSpy).toHaveBeenCalledWith('walletCapabilities', mockCapabilities);
       expect(storageStoreSpy).toHaveBeenCalledWith('accounts', ['0xAddress']);
 
-      await expect(signer.request({ method: 'eth_requestAccounts' })).resolves.toEqual([
-        '0xAddress',
-      ]);
+      expect(signer.request({ method: 'eth_requestAccounts' })).resolves.toEqual(['0xAddress']);
       expect(mockCallback).toHaveBeenCalledWith('accountsChanged', ['0xAddress']);
       expect(mockCallback).toHaveBeenCalledWith('connect', { chainId: '0x1' });
     });

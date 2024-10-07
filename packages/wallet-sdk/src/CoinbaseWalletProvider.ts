@@ -27,16 +27,10 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
     super();
     this.metadata = metadata;
     this.preference = preference;
-    this.communicator = new Communicator({
-      url: keysUrl,
-      metadata,
-      preference,
-    });
+    this.communicator = new Communicator(keysUrl, metadata);
 
     const signerType = loadSignerType();
-    if (signerType) {
-      this.signer = this.initSigner(signerType);
-    }
+    if (signerType) this.signer = this.initSigner(signerType);
   }
 
   public async request(args: RequestArguments): Promise<unknown> {
@@ -96,7 +90,6 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
       preference: this.preference,
       metadata: this.metadata,
       handshakeRequest,
-      callback: this.emit.bind(this),
     });
   }
 

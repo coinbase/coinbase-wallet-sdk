@@ -1,4 +1,4 @@
-import { AppMetadata, Preference } from 'src/index';
+import { AppMetadata } from 'src/index';
 
 import { LIB_VERSION } from '../../version';
 import { Message, MessageID } from '../message';
@@ -49,8 +49,6 @@ const appMetadata: AppMetadata = {
   appChainIds: [1],
 };
 
-const preference: Preference = { keysUrl: CB_KEYS_URL, options: 'all' };
-
 describe('Communicator', () => {
   let urlOrigin: string;
   let communicator: Communicator;
@@ -63,11 +61,7 @@ describe('Communicator', () => {
     jest.clearAllMocks();
 
     // url defaults to CB_KEYS_URL
-    communicator = new Communicator({
-      url: CB_KEYS_URL,
-      metadata: appMetadata,
-      preference,
-    });
+    communicator = new Communicator(CB_KEYS_URL, appMetadata);
     urlOrigin = new URL(CB_KEYS_URL).origin;
 
     mockPopup = {
@@ -115,7 +109,6 @@ describe('Communicator', () => {
           data: {
             version: LIB_VERSION,
             metadata: appMetadata,
-            preference,
           },
         },
         urlOrigin
@@ -142,7 +135,6 @@ describe('Communicator', () => {
           data: {
             version: LIB_VERSION,
             metadata: appMetadata,
-            preference,
           },
         },
         urlOrigin
@@ -164,7 +156,6 @@ describe('Communicator', () => {
           data: {
             version: LIB_VERSION,
             metadata: appMetadata,
-            preference,
           },
         },
         urlOrigin

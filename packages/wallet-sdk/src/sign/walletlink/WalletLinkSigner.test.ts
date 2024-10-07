@@ -208,7 +208,7 @@ describe('LegacyProvider', () => {
     const sendRequestSpy = jest.spyOn(relay, 'sendRequest');
     const provider = createAdapter({ relay });
 
-    const ENCODED_MESSAGE = '0x421b6e328c574f0ee83a68d51d01be3597d8b5391c7725dfa80247a60b5cd390';
+    const ENCODED_MESSAGE = '0xb7845733ba102a68c6eb21c3cd2feafafd1130de581d7e73be60b76d775b6704';
     const ENCODED_TYPED_DATA_JSON = JSON.stringify(MOCK_TYPED_DATA);
 
     beforeEach(() => {
@@ -217,7 +217,6 @@ describe('LegacyProvider', () => {
       });
     });
 
-    // eslint-disable-next-line jest/no-disabled-tests
     test.skip('eth_signTypedData_v1', async () => {
       const hashSpy = jest.spyOn(eip712, 'hashForSignTypedDataLegacy');
       const response = await provider?.request({
@@ -415,7 +414,7 @@ describe('LegacyProvider', () => {
           },
         ],
       });
-      await expect(response).rejects.toThrow(
+      expect(response).rejects.toThrow(
         standardErrors.rpc.invalidParams('please pass in at least 1 rpcUrl')
       );
     });

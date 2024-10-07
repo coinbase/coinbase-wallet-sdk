@@ -1,6 +1,3 @@
-/* eslint-disable */
-//prettier-ignore
-
 const util = require('./util')
 const abi = require('./abi')
 

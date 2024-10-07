@@ -138,10 +138,8 @@ function bufferToHex (buf) {
 function keccak (a, bits) {
   a = toBuffer(a)
   if (!bits) bits = 256
-  if (bits !== 256) {
-    throw new Error('unsupported')
-  }
-  return Buffer.from(keccak_256(new Uint8Array(a)))
+
+  return Buffer.from(keccak_256('keccak' + bits))
 }
 
 function padToEven (str) {

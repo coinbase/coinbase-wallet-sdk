@@ -95,7 +95,7 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
           params: values,
         });
         setResponse(response);
-        await verify(response, data);
+        verify(response, data);
       } catch (err) {
         const { code, message, data } = err;
         setError({ code, message, data });

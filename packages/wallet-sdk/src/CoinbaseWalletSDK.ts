@@ -6,18 +6,11 @@ import { AppMetadata, Preference, ProviderInterface } from './core/provider/inte
 import { LIB_VERSION } from './version';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { getFavicon } from ':core/type/util';
-import { checkCrossOriginOpenerPolicy } from ':util/crossOriginOpenerPolicy';
 import { getCoinbaseInjectedProvider } from ':util/provider';
 
 // for backwards compatibility
 type CoinbaseWalletSDKOptions = Partial<AppMetadata>;
 
-/**
- * CoinbaseWalletSDK
- *
- * @deprecated CoinbaseWalletSDK is deprecated and will likely be removed in a future major version release.
- * It's recommended to use `createCoinbaseWalletSDK` instead.
- */
 export class CoinbaseWalletSDK {
   private metadata: AppMetadata;
 
@@ -28,7 +21,6 @@ export class CoinbaseWalletSDK {
       appChainIds: metadata.appChainIds || [],
     };
     this.storeLatestVersion();
-    this.checkCrossOriginOpenerPolicy();
   }
 
   public makeWeb3Provider(preference: Preference = { options: 'all' }): ProviderInterface {
@@ -49,9 +41,5 @@ export class CoinbaseWalletSDK {
   private storeLatestVersion() {
     const versionStorage = new ScopedLocalStorage('CBWSDK');
     versionStorage.setItem('VERSION', LIB_VERSION);
-  }
-
-  private checkCrossOriginOpenerPolicy() {
-    void checkCrossOriginOpenerPolicy();
   }
 }
