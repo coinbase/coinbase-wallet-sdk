@@ -17,4 +17,4 @@ vitest.setup.ts
 vitest.config.ts
 coverage/**
 
-compile-assets.js
+compile-assets.cjs
