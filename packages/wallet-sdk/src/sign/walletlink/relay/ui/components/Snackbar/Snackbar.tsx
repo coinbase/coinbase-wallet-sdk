@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
 import { clsx } from 'clsx';
-import { FunctionComponent, render } from 'preact';
+import { FunctionComponent, h, render } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 
 import { isDarkMode } from '../util.js';

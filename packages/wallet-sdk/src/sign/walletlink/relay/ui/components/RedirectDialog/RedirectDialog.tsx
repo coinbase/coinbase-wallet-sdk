@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { FunctionComponent, render } from 'preact';
+import { FunctionComponent, h, render } from 'preact';
 
 import { injectCssReset } from '../cssReset/cssReset.js';
 import { SnackbarContainer } from '../Snackbar/Snackbar.js';

@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom';
 
+import { h } from 'preact';
 import { render, screen, waitFor } from '@testing-library/preact';
 import { vi } from 'vitest';
 
