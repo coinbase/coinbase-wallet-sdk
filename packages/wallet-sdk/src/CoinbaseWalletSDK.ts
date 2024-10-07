@@ -8,6 +8,7 @@ import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { getFavicon } from ':core/type/util';
 import { checkCrossOriginOpenerPolicy } from ':util/crossOriginOpenerPolicy';
 import { getCoinbaseInjectedProvider } from ':util/provider';
+import { validatePreferences } from ':util/validatePreferences';
 
 // for backwards compatibility
 type CoinbaseWalletSDKOptions = Partial<AppMetadata>;
@@ -32,6 +33,7 @@ export class CoinbaseWalletSDK {
   }
 
   public makeWeb3Provider(preference: Preference = { options: 'all' }): ProviderInterface {
+    validatePreferences(preference);
     const params = { metadata: this.metadata, preference };
     return getCoinbaseInjectedProvider(params) ?? new CoinbaseWalletProvider(params);
   }

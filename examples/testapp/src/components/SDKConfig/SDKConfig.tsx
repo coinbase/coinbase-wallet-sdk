@@ -25,6 +25,10 @@ import { Preference } from "@coinbase/wallet-sdk/dist/core/provider/interface";
 import { keccak256, slice, toHex } from "viem";
 import { CreateCoinbaseWalletSDKOptions } from "@coinbase/wallet-sdk/dist/createCoinbaseWalletSDK";
 
+function is0xString(value: string): value is `0x${string}` {
+  return value.startsWith("0x");
+}
+
 export function SDKConfig() {
   const { option, scwUrl } = useCBWSDK();
   const [config, setConfig] = React.useState<Preference>({
@@ -70,12 +74,14 @@ export function SDKConfig() {
   const handleSetDataSuffix = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const value = event.target.value;
-      setConfig((prev) => ({
-        ...prev,
-        attribution: {
-          dataSuffix: value,
-        },
-      }));
+      if (is0xString(value)) {
+        setConfig((prev) => ({
+          ...prev,
+          attribution: {
+            dataSuffix: value,
+          },
+        }));
+      }
     },
     []
   );
