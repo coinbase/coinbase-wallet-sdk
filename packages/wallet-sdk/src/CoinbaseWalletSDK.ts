@@ -2,12 +2,13 @@
 
 import { LogoType, walletLogo } from './assets/wallet-logo.js';
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js';
+import { AppMetadata, Preference, ProviderInterface } from './core/provider/interface.js';
 import { LIB_VERSION } from './version.js';
-import { AppMetadata, Preference, ProviderInterface } from ':core/provider/interface.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { getFavicon } from ':core/type/util.js';
 import { checkCrossOriginOpenerPolicy } from ':util/crossOriginOpenerPolicy.js';
 import { getCoinbaseInjectedProvider } from ':util/provider.js';
+import { validatePreferences } from ':util/validatePreferences.js';
 
 // for backwards compatibility
 type CoinbaseWalletSDKOptions = Partial<AppMetadata>;
@@ -32,6 +33,7 @@ export class CoinbaseWalletSDK {
   }
 
   public makeWeb3Provider(preference: Preference = { options: 'all' }): ProviderInterface {
+    validatePreferences(preference);
     const params = { metadata: this.metadata, preference };
     return getCoinbaseInjectedProvider(params) ?? new CoinbaseWalletProvider(params);
   }
