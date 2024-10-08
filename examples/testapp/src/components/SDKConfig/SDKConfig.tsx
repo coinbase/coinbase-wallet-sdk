@@ -87,8 +87,8 @@ export function SDKConfig() {
   );
 
   const [dataSuffix, setDataSuffix] = useState("Coinbase Wallet");
-  const fourByteHex = useMemo(
-    () => slice(keccak256(toHex(dataSuffix)), 0, 4),
+  const sixteenByteHex = useMemo(
+    () => slice(keccak256(toHex(dataSuffix)), 0, 16),
     [dataSuffix]
   );
 
@@ -144,7 +144,7 @@ export function SDKConfig() {
             <Box>
               <Heading size="sm">Data Suffix</Heading>
               <Text fontSize="sm">
-                First 4 bytes of a unique string to identify your onchain
+                First 16 bytes of a unique string to identify your onchain
                 activity
               </Text>
               <FormControl mt={2}>
@@ -159,17 +159,17 @@ export function SDKConfig() {
                   value={dataSuffix}
                 />
                 <FormHelperText>
-                  Convert any string into a 4 byte data suffix
+                  Convert any string into a 16 byte data suffix
                 </FormHelperText>
               </FormControl>
               <Code mt={2} colorScheme="telegram">
-                {fourByteHex}
+                {sixteenByteHex}
               </Code>
             </Box>
             <VStack>
               <Input
                 mt={2}
-                placeholder="Data Suffix (4 bytes)"
+                placeholder="Data Suffix (16 bytes)"
                 onChange={handleSetDataSuffix}
               />
             </VStack>
