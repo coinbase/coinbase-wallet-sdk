@@ -16,13 +16,7 @@ import { signMessageShortcutsMap } from "../components/RpcMethods/shortcut/signM
 import { walletTxShortcutsMap } from "../components/RpcMethods/shortcut/walletTxShortcuts";
 import { useCBWSDK } from "../context/CBWSDKReactContextProvider";
 import { MethodsSection } from "../components/MethodsSection/MethodsSection";
-import dynamic from "next/dynamic";
-
-const SDKConfig = dynamic(
-  () =>
-    import("../components/SDKConfig/SDKConfig").then((mod) => mod.SDKConfig),
-  { ssr: false }
-);
+import { SDKConfig } from "../components/SDKConfig/SDKConfig";
 
 export default function Home() {
   const { provider, sdkVersion } = useCBWSDK();

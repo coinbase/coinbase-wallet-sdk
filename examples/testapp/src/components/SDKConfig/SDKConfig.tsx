@@ -30,7 +30,7 @@ function computeDataSuffix(value: string): string {
 
 export function SDKConfig() {
   const { config, setConfig } = useCBWSDK();
-  const [dataSuffix, setDataSuffix] = useState("Coinbase Wallet");
+  const [dataSuffix, setDataSuffix] = useState<string>();
 
   const handleSetAttributionAuto = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,7 +60,7 @@ export function SDKConfig() {
   );
 
   const sixteenByteHex = useMemo(
-    () => computeDataSuffix(dataSuffix),
+    () => (dataSuffix ? computeDataSuffix(dataSuffix) : undefined),
     [dataSuffix]
   );
 
@@ -108,20 +108,19 @@ export function SDKConfig() {
               </Flex>
               <Text mt={2} fontSize="sm">
                 First 16 bytes of a unique string to identify your onchain
-                activity. Update the text box below to have your data suffix applied
+                activity. Update the text box below to have your data suffix
+                applied
               </Text>
               <FormControl mt={2}>
                 <Input
                   mt={2}
                   type="text"
-                  placeholder="Enter String"
+                  placeholder="Enter string to hash"
                   onChange={handleSetDataSuffix}
-                  value={dataSuffix}
                 />
-                <FormHelperText>
-                  custom data suffix to be added to the preferences
-                </FormHelperText>
               </FormControl>
+            </Box>
+            <Box flexBasis="50%" textAlign="right">
               <Code mt={2} colorScheme="telegram">
                 {sixteenByteHex}
               </Code>
