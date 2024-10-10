@@ -89,9 +89,8 @@ export const verifySignMsg = async ({
       });
       if (valid) {
         return `SigUtil Successfully verified signer as ${from}`;
-      } else {
-        return `SigUtil Failed to verify signer`;
       }
+      return 'SigUtil Failed to verify signer';
     }
     case 'eth_signTypedData_v1':
     case 'eth_signTypedData_v3':
@@ -104,16 +103,17 @@ export const verifySignMsg = async ({
       const valid = await client.verifyTypedData({
         address: from as `0x${string}`,
         domain: message['domain'] as TypedDataDomain,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         types: message['types'] as any,
         primaryType: message['primaryType'] as string,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         message: message['message'] as any,
         signature: sign as `0x${string}`,
       });
       if (valid) {
         return `SigUtil Successfully verified signer as ${from}`;
-      } else {
-        return `SigUtil Failed to verify signer`;
       }
+      return 'SigUtil Failed to verify signer';
     }
     default:
       return null;
