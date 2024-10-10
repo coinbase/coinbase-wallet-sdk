@@ -3,7 +3,7 @@
 
 /* eslint-disable */
 //prettier-ignore
-const util = require('./util')
+const util = require('./util.cjs')
 
 // Convert from short to canonical names
 // FIXME: optimise or make this nicer?

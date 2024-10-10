@@ -1,5 +1,7 @@
-import { closePopup, openPopup } from './web';
-import { standardErrors } from ':core/error';
+import { Mock, vi } from 'vitest';
+
+import { closePopup, openPopup } from './web.js';
+import { standardErrors } from ':core/error/errors.js';
 
 describe('PopupManager', () => {
   beforeAll(() => {
@@ -9,18 +11,18 @@ describe('PopupManager', () => {
       innerHeight: { value: 768 },
       screenX: { value: 0 },
       screenY: { value: 0 },
-      open: { value: jest.fn() },
-      close: { value: jest.fn() },
+      open: { value: vi.fn() },
+      close: { value: vi.fn() },
     });
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should open a popup with correct settings and focus it', () => {
     const url = new URL('https://example.com');
-    (window.open as jest.Mock).mockReturnValue({ focus: jest.fn() });
+    (window.open as Mock).mockReturnValue({ focus: vi.fn() });
 
     const popup = openPopup(url);
 
@@ -34,7 +36,7 @@ describe('PopupManager', () => {
   });
 
   it('should throw an error if popup fails to open', () => {
-    (window.open as jest.Mock).mockReturnValue(null);
+    (window.open as Mock).mockReturnValue(null);
 
     expect(() => openPopup(new URL('https://example.com'))).toThrow(
       standardErrors.rpc.internal('Pop up window failed to open')
@@ -42,7 +44,7 @@ describe('PopupManager', () => {
   });
 
   it('should close an open popup window', () => {
-    const mockPopup = { close: jest.fn(), closed: false } as any as Window;
+    const mockPopup = { close: vi.fn(), closed: false } as any as Window;
 
     closePopup(mockPopup);
 

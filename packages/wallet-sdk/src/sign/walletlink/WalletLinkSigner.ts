@@ -1,16 +1,18 @@
 // Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
 
-import eip712 from '../../vendor-js/eth-eip712-util';
-import { Signer } from '../interface';
-import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants';
-import { EthereumTransactionParams } from './relay/type/EthereumTransactionParams';
-import { isErrorResponse } from './relay/type/Web3Response';
-import { WalletLinkRelay } from './relay/WalletLinkRelay';
-import { WALLETLINK_URL } from ':core/constants';
-import { standardErrors } from ':core/error';
-import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface';
-import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
-import { AddressString } from ':core/type';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import * as eip712 from '../../vendor-js/eth-eip712-util/index.cjs';
+import { Signer } from '../interface.js';
+import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants.js';
+import { EthereumTransactionParams } from './relay/type/EthereumTransactionParams.js';
+import { isErrorResponse } from './relay/type/Web3Response.js';
+import { WalletLinkRelay } from './relay/WalletLinkRelay.js';
+import { WALLETLINK_URL } from ':core/constants.js';
+import { standardErrors } from ':core/error/errors.js';
+import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
+import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
+import { AddressString } from ':core/type/index.js';
 import {
   encodeToHexString,
   ensureAddressString,
@@ -20,8 +22,8 @@ import {
   ensureParsedJSONObject,
   hexStringFromBuffer,
   hexStringFromNumber,
-} from ':core/type/util';
-import { fetchRPCRequest } from ':util/provider';
+} from ':core/type/util.js';
+import { fetchRPCRequest } from ':util/provider.js';
 const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
 const DEFAULT_JSON_RPC_URL = 'DefaultJsonRpcUrl';
 
@@ -442,7 +444,7 @@ export class WalletLinkSigner implements Signer {
       return hexStringFromBuffer(
         hashFuncMap[method as keyof typeof hashFuncMap]({
           data: ensureParsedJSONObject(input),
-        }),
+        }) as Buffer,
         true
       );
     };

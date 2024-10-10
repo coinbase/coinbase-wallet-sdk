@@ -1,5 +1,5 @@
-import { WalletLinkCipher } from './WalletLinkCipher';
-import { randomBytesHex } from ':core/type/util';
+import { WalletLinkCipher } from './WalletLinkCipher.js';
+import { randomBytesHex } from ':core/type/util.js';
 
 const secret = 'c356fe708ea7bbf7b1cc9ff9813c32772b6e0d16332da4c031ba9ea88be9b5ed';
 

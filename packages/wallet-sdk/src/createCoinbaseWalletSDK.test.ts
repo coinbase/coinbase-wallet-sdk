@@ -1,4 +1,7 @@
-import { createCoinbaseWalletSDK, CreateCoinbaseWalletSDKOptions } from './createCoinbaseWalletSDK';
+import {
+  createCoinbaseWalletSDK,
+  CreateCoinbaseWalletSDKOptions,
+} from './createCoinbaseWalletSDK.js';
 
 const options: CreateCoinbaseWalletSDKOptions = {
   appName: 'Dapp',
@@ -7,7 +10,7 @@ const options: CreateCoinbaseWalletSDKOptions = {
   preference: { options: 'all' },
 };
 
-jest.mock('./util/crossOriginOpenerPolicy');
+vi.mock('./util/crossOriginOpenerPolicy');
 
 describe('createCoinbaseWalletSDK', () => {
   it('should return an object with a getProvider method', () => {

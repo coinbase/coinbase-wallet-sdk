@@ -1,10 +1,10 @@
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import { FunctionComponent, h, render } from 'preact';
 
-import { injectCssReset } from '../cssReset/cssReset';
-import { SnackbarContainer } from '../Snackbar/Snackbar';
-import { isDarkMode } from '../util';
-import css from './RedirectDialog-css';
+import { injectCssReset } from '../cssReset/cssReset.js';
+import { SnackbarContainer } from '../Snackbar/Snackbar.js';
+import { isDarkMode } from '../util.js';
+import css from './RedirectDialog-css.js';
 
 type RedirectDialogProps = {
   title: string;

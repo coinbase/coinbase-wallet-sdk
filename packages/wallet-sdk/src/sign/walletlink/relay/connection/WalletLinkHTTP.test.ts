@@ -1,5 +1,7 @@
-import { ServerMessage } from '../type/ServerMessage';
-import { WalletLinkHTTP } from './WalletLinkHTTP';
+import { vi } from 'vitest';
+
+import { ServerMessage } from '../type/ServerMessage.js';
+import { WalletLinkHTTP } from './WalletLinkHTTP.js';
 
 describe('WalletLinkHTTP', () => {
   const linkAPIUrl = 'https://example.com';
@@ -19,7 +21,7 @@ describe('WalletLinkHTTP', () => {
       data: string;
     }[];
 
-    global.fetch = jest.fn().mockResolvedValue({
+    global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: () => ({
         events,
@@ -34,7 +36,7 @@ describe('WalletLinkHTTP', () => {
     describe('fetchUnseenEvents', () => {
       it('should return an empty array if there are no unseen events', async () => {
         const walletLinkHTTP = new WalletLinkHTTP(linkAPIUrl, sessionId, sessionKey);
-        jest.spyOn(walletLinkHTTP as any, 'markUnseenEventsAsSeen').mockImplementation(() => {});
+        vi.spyOn(walletLinkHTTP as any, 'markUnseenEventsAsSeen').mockImplementation(() => {});
 
         const result = await walletLinkHTTP.fetchUnseenEvents();
 
@@ -56,7 +58,7 @@ describe('WalletLinkHTTP', () => {
         ];
 
         const walletLinkHTTP = new WalletLinkHTTP(linkAPIUrl, sessionId, sessionKey);
-        jest.spyOn(walletLinkHTTP as any, 'markUnseenEventsAsSeen').mockImplementation(() => {});
+        vi.spyOn(walletLinkHTTP as any, 'markUnseenEventsAsSeen').mockImplementation(() => {});
 
         const result = await walletLinkHTTP.fetchUnseenEvents();
 
@@ -100,7 +102,7 @@ describe('WalletLinkHTTP', () => {
         ];
 
         // spy on fetch and verify that it was called with the correct arguments
-        const fetchSpy = jest.spyOn(global, 'fetch');
+        const fetchSpy = vi.spyOn(global, 'fetch');
 
         (walletLinkHTTP as any).markUnseenEventsAsSeen(unseenEvents);
 

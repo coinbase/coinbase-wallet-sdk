@@ -1,6 +1,6 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
-import { ServerMessage } from '../type/ServerMessage';
+import { ServerMessage } from '../type/ServerMessage.js';
 
 export enum ConnectionState {
   DISCONNECTED,

@@ -1,5 +1,7 @@
-import { EncryptedData, RPCRequest, RPCResponse } from ':core/message';
-import { hexStringToUint8Array, uint8ArrayToHex } from ':core/type/util';
+import { EncryptedData } from ':core/message/RPCMessage.js';
+import { RPCRequest } from ':core/message/RPCRequest.js';
+import { RPCResponse } from ':core/message/RPCResponse.js';
+import { hexStringToUint8Array, uint8ArrayToHex } from ':core/type/util.js';
 
 export async function generateKeyPair(): Promise<CryptoKeyPair> {
   return crypto.subtle.generateKey(
@@ -87,7 +89,7 @@ export async function importKeyFromHexString(
   const arrayBuffer = hexStringToUint8Array(hexString).buffer;
   return await crypto.subtle.importKey(
     format,
-    arrayBuffer,
+    new Uint8Array(arrayBuffer),
     {
       name: 'ECDH',
       namedCurve: 'P-256',

@@ -1,5 +1,10 @@
-import { standardErrorCodes, standardErrors } from './core/error';
-import { serializeError } from './core/error/serialize';
+import { Signer } from './sign/interface.js';
+import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util.js';
+import { Communicator } from ':core/communicator/Communicator.js';
+import { standardErrorCodes } from ':core/error/constants.js';
+import { standardErrors } from ':core/error/errors.js';
+import { serializeError } from ':core/error/serialize.js';
+import { SignerType } from ':core/message/ConfigMessage.js';
 import {
   AppMetadata,
   ConstructorOptions,
@@ -7,14 +12,10 @@ import {
   ProviderEventEmitter,
   ProviderInterface,
   RequestArguments,
-} from './core/provider/interface';
-import { Signer } from './sign/interface';
-import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util';
-import { checkErrorForInvalidRequestArgs } from './util/provider';
-import { Communicator } from ':core/communicator/Communicator';
-import { SignerType } from ':core/message';
-import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
-import { hexStringFromNumber } from ':core/type/util';
+} from ':core/provider/interface.js';
+import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
+import { hexStringFromNumber } from ':core/type/util.js';
+import { checkErrorForInvalidRequestArgs } from ':util/provider.js';
 
 export class CoinbaseWalletProvider extends ProviderEventEmitter implements ProviderInterface {
   private readonly metadata: AppMetadata;

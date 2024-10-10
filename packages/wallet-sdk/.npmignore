@@ -10,12 +10,11 @@ tsconfig.build.json
 .eslintignore
 .eslintrc.js
 .prettierignore
-babel.config.js
 release.sh
 
-# Jest
-jest.setup.ts
-jest.config.ts
+# Vitest
+vitest.setup.ts
+vitest.config.ts
 coverage/**
 
-compile-assets.js
+compile-assets.cjs

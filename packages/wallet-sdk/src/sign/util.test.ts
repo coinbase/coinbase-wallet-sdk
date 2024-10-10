@@ -1,26 +1,28 @@
-import { fetchSignerType, loadSignerType, storeSignerType } from './util';
-import { Communicator } from ':core/communicator/Communicator';
-import { CB_KEYS_URL } from ':core/constants';
-import { Preference } from ':core/provider/interface';
-import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
+import { Mock, vi } from 'vitest';
 
-jest.mock(':core/storage/ScopedLocalStorage');
+import { fetchSignerType, loadSignerType, storeSignerType } from './util.js';
+import { Communicator } from ':core/communicator/Communicator.js';
+import { CB_KEYS_URL } from ':core/constants.js';
+import { Preference } from ':core/provider/interface.js';
+import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
+
+vi.mock(':core/storage/ScopedLocalStorage');
 
 describe('util', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('loadSignerType', () => {
     it('should load signer type from storage', () => {
-      (ScopedLocalStorage.prototype.getItem as jest.Mock).mockReturnValue('scw');
+      (ScopedLocalStorage.prototype.getItem as Mock).mockReturnValue('scw');
       const result = loadSignerType();
       expect(result).toBe('scw');
       expect(ScopedLocalStorage.prototype.getItem).toHaveBeenCalledWith('SignerType');
     });
 
     it('should return null if no signer type is stored', () => {
-      (ScopedLocalStorage.prototype.getItem as jest.Mock).mockReturnValue(null);
+      (ScopedLocalStorage.prototype.getItem as Mock).mockReturnValue(null);
       const result = loadSignerType();
       expect(result).toBeNull();
     });
@@ -47,8 +49,8 @@ describe('util', () => {
         metadata,
         preference: { keysUrl: CB_KEYS_URL, options: 'all' },
       });
-      communicator.postMessage = jest.fn();
-      communicator.onMessage = jest.fn().mockResolvedValue({
+      communicator.postMessage = vi.fn();
+      communicator.onMessage = vi.fn().mockResolvedValue({
         data: 'scw',
       });
       const signerType = await fetchSignerType({
@@ -56,7 +58,7 @@ describe('util', () => {
         preference,
         metadata,
         handshakeRequest: { method: 'eth_requestAccounts' },
-        callback: jest.fn(),
+        callback: vi.fn(),
       });
       expect(signerType).toEqual('scw');
     });

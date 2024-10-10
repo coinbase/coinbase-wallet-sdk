@@ -68,6 +68,7 @@ module.exports = {
     // TODO: change this back to error
     '@typescript-eslint/no-explicit-any': 'warn',
     'no-useless-constructor': 'off',
+    'jest/no-deprecated-functions': 'off',
   },
   overrides: [
     {

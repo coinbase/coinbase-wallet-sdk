@@ -1,7 +1,8 @@
 import { render } from '@testing-library/preact';
+import { vi } from 'vitest';
 
-import { Snackbar } from './components/Snackbar/Snackbar';
-import { WalletLinkRelayUI } from './WalletLinkRelayUI';
+import { Snackbar } from './components/Snackbar/Snackbar.js';
+import { WalletLinkRelayUI } from './WalletLinkRelayUI.js';
 
 describe('WalletLinkRelayUI', () => {
   const walletSDKUI = new WalletLinkRelayUI();
@@ -20,7 +21,7 @@ describe('WalletLinkRelayUI', () => {
   });
 
   test('@showConnecting: isUnlinkedErrorState - false', () => {
-    const snackbarMock = jest
+    const snackbarMock = vi
       .spyOn(Snackbar.prototype, 'presentItem')
       .mockImplementation(() => () => {});
 
@@ -59,7 +60,7 @@ describe('WalletLinkRelayUI', () => {
   });
 
   test('@showConnecting: isUnlinkedErrorState - true', () => {
-    const snackbarMock = jest.spyOn(Snackbar.prototype, 'presentItem');
+    const snackbarMock = vi.spyOn(Snackbar.prototype, 'presentItem');
 
     const onResetConnection = () => {};
     const onCancel = () => {};

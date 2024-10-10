@@ -1,4 +1,4 @@
-import { createQrUrl, isMobileWeb } from './util';
+import { createQrUrl, isMobileWeb } from './util.js';
 
 describe('util', () => {
   test('isMobileWeb', () => {

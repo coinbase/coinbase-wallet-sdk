@@ -1,11 +1,13 @@
+import { vi } from 'vitest';
+
 import {
   CBWindow,
   checkErrorForInvalidRequestArgs,
   fetchRPCRequest,
   getCoinbaseInjectedProvider,
-} from './provider';
-import { standardErrors } from ':core/error';
-import { ProviderInterface } from ':core/provider/interface';
+} from './provider.js';
+import { standardErrors } from ':core/error/errors.js';
+import { ProviderInterface } from ':core/provider/interface.js';
 
 const window = globalThis as CBWindow;
 
@@ -31,8 +33,8 @@ const invalidParamsError = (args) =>
 describe('Utils', () => {
   describe('fetchRPCRequest', () => {
     function mockFetchResponse(response: unknown) {
-      global.fetch = jest.fn().mockResolvedValue({
-        json: jest.fn().mockResolvedValue(response),
+      global.fetch = vi.fn().mockResolvedValue({
+        json: vi.fn().mockResolvedValue(response),
       });
     }
 
@@ -66,7 +68,7 @@ describe('Utils', () => {
       });
 
       it('should return extension provider', () => {
-        const mockSetAppInfo = jest.fn();
+        const mockSetAppInfo = vi.fn();
         const extensionProvider = {
           setAppInfo: mockSetAppInfo,
         } as unknown as ProviderInterface;

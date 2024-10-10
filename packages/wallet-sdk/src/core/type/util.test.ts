@@ -1,4 +1,4 @@
-import { HexString } from '.';
+import { HexString } from './index.js';
 import {
   bigIntStringFromBigInt,
   encodeToHexString,
@@ -22,7 +22,7 @@ import {
   range,
   strip0x,
   uint8ArrayToHex,
-} from './util';
+} from './util.js';
 
 const uint8ArrVal = new Uint8Array(6);
 const hexString = 'E556B9bfEFDd5B190c67b521ED0A7d19Ab89a311';
@@ -199,7 +199,7 @@ describe('util', () => {
       document.head.innerHTML = `
       <link rel="shortcut icon" sizes="16x16 24x24" href="/favicon.ico">
     `;
-      expect(getFavicon()).toEqual('http://localhost/favicon.ico');
+      expect(getFavicon()).toEqual('http://localhost:3000/favicon.ico');
     });
   });
 });

@@ -3,7 +3,8 @@
   "compilerOptions": {
     "allowJs": false,
     "declaration": true,
-    "sourceMap": false,
+    "declarationMap": true,
+    "sourceMap": true,
   },
   "include": ["src"],
   "exclude": ["dist", "build", "**/*.test.*", "mocks"]

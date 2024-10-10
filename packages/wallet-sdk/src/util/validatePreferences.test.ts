@@ -1,5 +1,5 @@
-import { Preference } from '../core/provider/interface';
-import { validatePreferences } from './validatePreferences';
+import { Preference } from '../core/provider/interface.js';
+import { validatePreferences } from './validatePreferences.js';
 
 describe('validatePreferences', () => {
   it('should not throw an error if preference is undefined', () => {

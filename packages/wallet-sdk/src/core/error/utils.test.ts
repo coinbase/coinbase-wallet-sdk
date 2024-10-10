@@ -1,7 +1,7 @@
-import { isErrorResponse, Web3Response } from '../../sign/walletlink/relay/type/Web3Response';
-import { standardErrorCodes } from './constants';
-import { standardErrors } from './errors';
-import { getErrorCode, getMessageFromCode } from './utils';
+import { isErrorResponse, Web3Response } from '../../sign/walletlink/relay/type/Web3Response.js';
+import { standardErrorCodes } from './constants.js';
+import { standardErrors } from './errors.js';
+import { getErrorCode, getMessageFromCode } from './utils.js';
 
 describe('errors', () => {
   test('getErrorCode', () => {

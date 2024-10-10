@@ -1,7 +1,7 @@
-import { Web3Response } from '../type/Web3Response';
-import { WalletLinkRelay } from '../WalletLinkRelay';
-import { MOCK_ADDERESS, MOCK_TX } from './fixtures';
-import { AddressString, HexString } from ':core/type';
+import { Web3Response } from '../type/Web3Response.js';
+import { WalletLinkRelay } from '../WalletLinkRelay.js';
+import { MOCK_ADDERESS, MOCK_TX } from './fixtures.js';
+import { AddressString, HexString } from ':core/type/index.js';
 
 export function mockedWalletLinkRelay(): WalletLinkRelay {
   return mock as unknown as WalletLinkRelay;

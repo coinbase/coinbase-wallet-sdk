@@ -1,4 +1,4 @@
-import { Message } from './Message';
+import { Message } from './Message.js';
 
 export interface ConfigMessage extends Message {
   event: ConfigEvent;

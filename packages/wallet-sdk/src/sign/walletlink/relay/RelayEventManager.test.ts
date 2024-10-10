@@ -1,4 +1,4 @@
-import { RelayEventManager } from './RelayEventManager';
+import { RelayEventManager } from './RelayEventManager.js';
 
 describe('WalletSDKRelayEventManager', () => {
   test('@makeRequestId', () => {
