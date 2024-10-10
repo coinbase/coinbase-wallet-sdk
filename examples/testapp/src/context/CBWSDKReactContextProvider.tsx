@@ -179,6 +179,8 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
       setSDKVersion,
       scwUrl,
       setScwUrlAndSave,
+      config,
+      setConfig,
     ]
   );
 
