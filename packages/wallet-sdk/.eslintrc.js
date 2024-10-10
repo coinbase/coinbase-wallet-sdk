@@ -68,6 +68,13 @@ module.exports = {
     // TODO: change this back to error
     '@typescript-eslint/no-explicit-any': 'warn',
     'no-useless-constructor': 'off',
+    'no-restricted-globals': [
+      'error',
+      {
+        name: 'parseInt',
+        message: 'Use Number.parseInt instead of parseInt.',
+      },
+    ],
   },
   overrides: [
     {
