@@ -26,7 +26,7 @@ export const MOCK_TYPED_DATA = JSON.stringify({
   domain: {
     name: 'Provider Test',
     version: '1',
-    chainId: parseInt('1', 10),
+    chainId: Number.parseInt('1', 10),
     verifyingContract: MOCK_ADDERESS,
     salt: '0xf2d857f4a3edcb9b78b4d503bfe733db1e3f6cdc2b7971ee739626c97e86a558',
   },

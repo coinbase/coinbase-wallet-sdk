@@ -1,5 +1,5 @@
 import { Box, Container, Grid, Heading } from "@chakra-ui/react";
-import React, { useCallback, useEffect } from "react";
+import React, { useEffect } from "react";
 
 import { EventListenersCard } from "../components/EventListeners/EventListenersCard";
 import { WIDTH_2XL } from "../components/Layout";
@@ -16,6 +16,7 @@ import { signMessageShortcutsMap } from "../components/RpcMethods/shortcut/signM
 import { walletTxShortcutsMap } from "../components/RpcMethods/shortcut/walletTxShortcuts";
 import { useCBWSDK } from "../context/CBWSDKReactContextProvider";
 import { MethodsSection } from "../components/MethodsSection/MethodsSection";
+import { SDKConfig } from "../components/SDKConfig/SDKConfig";
 
 export default function Home() {
   const { provider, sdkVersion } = useCBWSDK();
@@ -49,7 +50,8 @@ export default function Home() {
   }, [connected, provider]);
 
   // There's a bug in 3.9.3 where it does not emit a 'connect' event for walletlink connections
-  const shouldShowMethodsRequiringConnection = connected || (sdkVersion === '3.9.3')
+  const shouldShowMethodsRequiringConnection =
+    connected || sdkVersion === "3.9.3";
 
   return (
     <Container maxW={WIDTH_2XL} mb={8}>
@@ -59,6 +61,17 @@ export default function Home() {
           <EventListenersCard />
         </Grid>
       </Box>
+      {/* TODO: once published have this include latest */}
+      {sdkVersion === "HEAD" && (
+        <>
+          <Heading size="md" mt={4}>
+            SDK Configuration (Optional)
+          </Heading>
+          <Box mt={4}>
+            <SDKConfig />
+          </Box>
+        </>
+      )}
       <MethodsSection title="Wallet Connection" methods={connectionMethods} />
       {shouldShowMethodsRequiringConnection && (
         <>
