@@ -1,9 +1,9 @@
-import { Box, Grid, GridItem, Heading } from "@chakra-ui/react";
-import React from "react";
+import { Box, Grid, GridItem, Heading } from '@chakra-ui/react';
+import React from 'react';
 
-import { RpcRequestInput } from "../RpcMethods/method/RpcRequestInput";
-import { RpcMethodCard } from "../RpcMethods/RpcMethodCard";
-import { ShortcutType } from "../RpcMethods/shortcut/ShortcutType";
+import { RpcRequestInput } from '../RpcMethods/method/RpcRequestInput';
+import { RpcMethodCard } from '../RpcMethods/RpcMethodCard';
+import { ShortcutType } from '../RpcMethods/shortcut/ShortcutType';
 
 export function MethodsSection({
   title,
@@ -20,9 +20,9 @@ export function MethodsSection({
       <Grid
         mt={2}
         templateColumns={{
-          base: "100%",
-          md: "repeat(2, 50%)",
-          xl: "repeat(3, 33%)",
+          base: '100%',
+          md: 'repeat(2, 50%)',
+          xl: 'repeat(3, 33%)',
         }}
         gap={2}
       >

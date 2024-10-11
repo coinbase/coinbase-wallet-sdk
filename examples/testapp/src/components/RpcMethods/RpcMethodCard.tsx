@@ -62,7 +62,7 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
         return;
       }
     },
-    [provider]
+    [method, provider]
   );
 
   const submit = useCallback(
@@ -101,7 +101,7 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
         setError({ code, message, data });
       }
     },
-    [provider]
+    [format, method, provider, verify]
   );
 
   return (
@@ -116,57 +116,55 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
           </Button>
         </Flex>
         {params?.length > 0 && (
-          <>
-            <Accordion allowMultiple mt={4} defaultIndex={shortcuts ? [1] : [0]}>
+          <Accordion allowMultiple mt={4} defaultIndex={shortcuts ? [1] : [0]}>
+            <AccordionItem>
+              <AccordionButton>
+                <Heading as="h3" size="sm" marginY={2} flex="1" textAlign="left">
+                  Params
+                </Heading>
+                <AccordionIcon />
+              </AccordionButton>
+              <AccordionPanel pb={4}>
+                <VStack spacing={2} mt={2}>
+                  {params.map((param) => {
+                    const err = errors[param.key];
+                    return (
+                      <FormControl key={param.key} isInvalid={!!err} isRequired={param.required}>
+                        <InputGroup size="sm">
+                          <InputLeftAddon>{param.key}</InputLeftAddon>
+                          <Input
+                            {...register(param.key, {
+                              required: param.required ? `${param.key} required` : false,
+                            })}
+                          />
+                        </InputGroup>
+                        <FormErrorMessage>{err?.message as string}</FormErrorMessage>
+                      </FormControl>
+                    );
+                  })}
+                </VStack>
+              </AccordionPanel>
+            </AccordionItem>
+            {shortcuts?.length > 0 && (
               <AccordionItem>
                 <AccordionButton>
                   <Heading as="h3" size="sm" marginY={2} flex="1" textAlign="left">
-                    Params
+                    Shortcuts
                   </Heading>
                   <AccordionIcon />
                 </AccordionButton>
                 <AccordionPanel pb={4}>
-                  <VStack spacing={2} mt={2}>
-                    {params.map((param) => {
-                      const err = errors[param.key];
-                      return (
-                        <FormControl key={param.key} isInvalid={!!err} isRequired={param.required}>
-                          <InputGroup size="sm">
-                            <InputLeftAddon>{param.key}</InputLeftAddon>
-                            <Input
-                              {...register(param.key, {
-                                required: param.required ? `${param.key} required` : false,
-                              })}
-                            />
-                          </InputGroup>
-                          <FormErrorMessage>{err?.message as string}</FormErrorMessage>
-                        </FormControl>
-                      );
-                    })}
-                  </VStack>
+                  <HStack spacing={2}>
+                    {shortcuts.map((shortcut) => (
+                      <Button key={shortcut.key} onClick={() => submit(shortcut.data)}>
+                        {shortcut.key}
+                      </Button>
+                    ))}
+                  </HStack>
                 </AccordionPanel>
               </AccordionItem>
-              {shortcuts?.length > 0 && (
-                <AccordionItem>
-                  <AccordionButton>
-                    <Heading as="h3" size="sm" marginY={2} flex="1" textAlign="left">
-                      Shortcuts
-                    </Heading>
-                    <AccordionIcon />
-                  </AccordionButton>
-                  <AccordionPanel pb={4}>
-                    <HStack spacing={2}>
-                      {shortcuts.map((shortcut) => (
-                        <Button key={shortcut.key} onClick={() => submit(shortcut.data)}>
-                          {shortcut.key}
-                        </Button>
-                      ))}
-                    </HStack>
-                  </AccordionPanel>
-                </AccordionItem>
-              )}
-            </Accordion>
-          </>
+            )}
+          </Accordion>
         )}
         {response && (
           <VStack mt={4}>

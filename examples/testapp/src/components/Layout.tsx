@@ -22,7 +22,6 @@ import { useMemo } from 'react';
 
 import { options, scwUrls, sdkVersions, useCBWSDK } from '../context/CBWSDKReactContextProvider';
 
-
 type LayoutProps = {
   children: React.ReactNode;
 };
