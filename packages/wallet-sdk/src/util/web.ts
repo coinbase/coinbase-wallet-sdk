@@ -1,4 +1,4 @@
-import { LIB_NAME, LIB_VERSION } from '../sdk-info';
+import { NAME, VERSION } from '../sdk-info';
 import { checkCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy';
 import { standardErrors } from ':core/error';
 
@@ -36,8 +36,8 @@ export function closePopup(popup: Window | null) {
 
 async function appendAppInfoQueryParams(url: URL) {
   const params = {
-    sdkName: LIB_NAME,
-    sdkVersion: LIB_VERSION,
+    sdkName: NAME,
+    sdkVersion: VERSION,
     origin: window.location.origin,
     coop: await checkCrossOriginOpenerPolicy(),
   };

@@ -1,4 +1,4 @@
-import { LIB_VERSION } from '../../sdk-info';
+import { VERSION } from '../../sdk-info';
 import { ConfigMessage, Message, MessageID } from '../message';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
@@ -109,7 +109,7 @@ export class Communicator {
         this.postMessage({
           requestId: message.id,
           data: {
-            version: LIB_VERSION,
+            version: VERSION,
             metadata: this.metadata,
             preference: this.preference,
           },

@@ -1,4 +1,4 @@
-import { LIB_NAME, LIB_VERSION } from 'src/sdk-info';
+import { NAME, VERSION } from 'src/sdk-info';
 
 import { checkCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy';
 import { closePopup, openPopup } from './web';
@@ -41,8 +41,8 @@ describe('PopupManager', () => {
     );
     expect(popup.focus).toHaveBeenCalledTimes(1);
 
-    expect(url.searchParams.get('sdkName')).toBe(LIB_NAME);
-    expect(url.searchParams.get('sdkVersion')).toBe(LIB_VERSION);
+    expect(url.searchParams.get('sdkName')).toBe(NAME);
+    expect(url.searchParams.get('sdkVersion')).toBe(VERSION);
     expect(url.searchParams.get('origin')).toBe(mockOrigin);
     expect(url.searchParams.get('coop')).toBe('null');
   });
