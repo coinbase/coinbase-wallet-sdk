@@ -1,5 +1,5 @@
 import { createCoinbaseWalletProvider } from './createCoinbaseWalletProvider';
-import { LIB_VERSION } from './libInfo';
+import { LIB_VERSION } from './sdk-info';
 import {
   AppMetadata,
   ConstructorOptions,

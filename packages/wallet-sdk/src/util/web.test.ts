@@ -1,4 +1,4 @@
-import { LIB_NAME, LIB_VERSION } from 'src/libInfo';
+import { LIB_NAME, LIB_VERSION } from 'src/sdk-info';
 
 import { checkCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy';
 import { closePopup, openPopup } from './web';

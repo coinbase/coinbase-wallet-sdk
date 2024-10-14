@@ -1,4 +1,4 @@
-import { LIB_NAME, LIB_VERSION } from '../libInfo';
+import { LIB_NAME, LIB_VERSION } from '../sdk-info';
 import { checkCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy';
 import { standardErrors } from ':core/error';
 

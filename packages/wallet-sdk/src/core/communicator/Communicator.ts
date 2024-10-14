@@ -1,4 +1,4 @@
-import { LIB_VERSION } from '../../libInfo';
+import { LIB_VERSION } from '../../sdk-info';
 import { ConfigMessage, Message, MessageID } from '../message';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';

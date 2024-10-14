@@ -1,4 +1,4 @@
-import { LIB_NAME, LIB_VERSION } from '../libInfo';
+import { LIB_NAME, LIB_VERSION } from '../sdk-info';
 import { standardErrors } from ':core/error';
 import { ConstructorOptions, ProviderInterface, RequestArguments } from ':core/provider/interface';
 
