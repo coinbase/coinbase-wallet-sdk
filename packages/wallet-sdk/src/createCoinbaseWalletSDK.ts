@@ -1,5 +1,5 @@
 import { createCoinbaseWalletProvider } from './createCoinbaseWalletProvider';
-import { LIB_VERSION } from './version';
+import { LIB_VERSION } from './libInfo';
 import {
   AppMetadata,
   ConstructorOptions,
@@ -7,7 +7,7 @@ import {
   ProviderInterface,
 } from ':core/provider/interface';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
-import { checkCrossOriginOpenerPolicy } from ':util/crossOriginOpenerPolicy';
+import { checkCrossOriginOpenerPolicyCompatibility } from ':util/checkCrossOriginOpenerPolicyCompatibility';
 import { validatePreferences } from ':util/validatePreferences';
 
 export type CreateCoinbaseWalletSDKOptions = Partial<AppMetadata> & {
@@ -27,7 +27,7 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
   const versionStorage = new ScopedLocalStorage('CBWSDK');
   versionStorage.setItem('VERSION', LIB_VERSION);
 
-  void checkCrossOriginOpenerPolicy();
+  void checkCrossOriginOpenerPolicyCompatibility();
 
   const options: ConstructorOptions = {
     metadata: {

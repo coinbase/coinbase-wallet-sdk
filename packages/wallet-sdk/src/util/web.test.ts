@@ -1,5 +1,13 @@
+import { LIB_NAME, LIB_VERSION } from 'src/libInfo';
+
+import { checkCrossOriginOpenerPolicyCompatibility } from './checkCrossOriginOpenerPolicyCompatibility';
 import { closePopup, openPopup } from './web';
 import { standardErrors } from ':core/error';
+
+jest.mock('./checkCrossOriginOpenerPolicyCompatibility');
+(checkCrossOriginOpenerPolicyCompatibility as jest.Mock).mockResolvedValue(true);
+
+const mockOrigin = 'http://localhost';
 
 describe('PopupManager', () => {
   beforeAll(() => {
@@ -11,6 +19,7 @@ describe('PopupManager', () => {
       screenY: { value: 0 },
       open: { value: jest.fn() },
       close: { value: jest.fn() },
+      location: { value: { origin: mockOrigin } },
     });
   });
 
@@ -18,11 +27,11 @@ describe('PopupManager', () => {
     jest.clearAllMocks();
   });
 
-  it('should open a popup with correct settings and focus it', () => {
+  it('should open a popup with correct settings and focus it', async () => {
     const url = new URL('https://example.com');
     (window.open as jest.Mock).mockReturnValue({ focus: jest.fn() });
 
-    const popup = openPopup(url);
+    const popup = await openPopup(url);
 
     expect(window.open).toHaveBeenNthCalledWith(
       1,
@@ -31,12 +40,17 @@ describe('PopupManager', () => {
       'width=420, height=540, left=302, top=114'
     );
     expect(popup.focus).toHaveBeenCalledTimes(1);
+
+    expect(url.searchParams.get('sdkName')).toBe(LIB_NAME);
+    expect(url.searchParams.get('sdkVersion')).toBe(LIB_VERSION);
+    expect(url.searchParams.get('origin')).toBe(mockOrigin);
+    expect(url.searchParams.get('coopIncompatibility')).toBe('true');
   });
 
-  it('should throw an error if popup fails to open', () => {
+  it('should throw an error if popup fails to open', async () => {
     (window.open as jest.Mock).mockReturnValue(null);
 
-    expect(() => openPopup(new URL('https://example.com'))).toThrow(
+    await expect(openPopup(new URL('https://example.com'))).rejects.toThrow(
       standardErrors.rpc.internal('Pop up window failed to open')
     );
   });

@@ -1,6 +1,6 @@
 import { AppMetadata, Preference } from 'src/index';
 
-import { LIB_VERSION } from '../../version';
+import { LIB_VERSION } from '../../libInfo';
 import { Message, MessageID } from '../message';
 import { Communicator } from './Communicator';
 import { CB_KEYS_URL } from ':core/constants';

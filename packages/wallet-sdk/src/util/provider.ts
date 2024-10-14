@@ -1,4 +1,4 @@
-import { LIB_VERSION } from '../version';
+import { LIB_NAME, LIB_VERSION } from '../libInfo';
 import { standardErrors } from ':core/error';
 import { ConstructorOptions, ProviderInterface, RequestArguments } from ':core/provider/interface';
 
@@ -12,7 +12,11 @@ export async function fetchRPCRequest(request: RequestArguments, rpcUrl: string)
     method: 'POST',
     body: JSON.stringify(requestBody),
     mode: 'cors',
-    headers: { 'Content-Type': 'application/json', 'X-Cbw-Sdk-Version': LIB_VERSION },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Cbw-Sdk-Version': LIB_VERSION,
+      'X-Cbw-Sdk-Platform': LIB_NAME,
+    },
   });
   const { result, error } = await res.json();
   if (error) throw error;

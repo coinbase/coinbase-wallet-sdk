@@ -1,4 +1,4 @@
-import { LIB_VERSION } from '../../version';
+import { LIB_VERSION } from '../../libInfo';
 import { ConfigMessage, Message, MessageID } from '../message';
 import { CB_KEYS_URL } from ':core/constants';
 import { standardErrors } from ':core/error';
@@ -98,7 +98,7 @@ export class Communicator {
       return this.popup;
     }
 
-    this.popup = openPopup(this.url);
+    this.popup = await openPopup(this.url);
 
     this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload')
       .then(this.disconnect)
