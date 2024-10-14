@@ -1,11 +1,11 @@
 import { LIB_NAME, LIB_VERSION } from 'src/libInfo';
 
-import { checkCrossOriginOpenerPolicyCompatibility } from './checkCrossOriginOpenerPolicyCompatibility';
+import { checkCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy';
 import { closePopup, openPopup } from './web';
 import { standardErrors } from ':core/error';
 
-jest.mock('./checkCrossOriginOpenerPolicyCompatibility');
-(checkCrossOriginOpenerPolicyCompatibility as jest.Mock).mockResolvedValue(true);
+jest.mock('./checkCrossOriginOpenerPolicy');
+(checkCrossOriginOpenerPolicy as jest.Mock).mockResolvedValue('null');
 
 const mockOrigin = 'http://localhost';
 
@@ -44,7 +44,7 @@ describe('PopupManager', () => {
     expect(url.searchParams.get('sdkName')).toBe(LIB_NAME);
     expect(url.searchParams.get('sdkVersion')).toBe(LIB_VERSION);
     expect(url.searchParams.get('origin')).toBe(mockOrigin);
-    expect(url.searchParams.get('coopIncompatibility')).toBe('true');
+    expect(url.searchParams.get('coop')).toBe('null');
   });
 
   it('should throw an error if popup fails to open', async () => {

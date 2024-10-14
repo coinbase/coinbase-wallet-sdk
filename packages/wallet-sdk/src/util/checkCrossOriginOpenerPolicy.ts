@@ -10,10 +10,10 @@ Please see https://www.smartwallet.dev/guides/tips/popup-tips#cross-origin-opene
  *
  * @returns {Promise<boolean>} A promise that resolves to `true` if the COOP is compatible or if the code is running in a non-browser environment, and `false` otherwise.
  */
-export async function checkCrossOriginOpenerPolicyCompatibility(): Promise<boolean> {
+export async function checkCrossOriginOpenerPolicy(): Promise<string> {
   if (typeof window === 'undefined') {
     // Non-browser environment
-    return true;
+    return 'non-browser-env';
   }
 
   const response = await fetch(window.location.origin, {});
@@ -21,8 +21,7 @@ export async function checkCrossOriginOpenerPolicyCompatibility(): Promise<boole
 
   if (crossOriginOpenerPolicy === 'same-origin') {
     console.error(COOP_ERROR_MESSAGE);
-    return false;
   }
 
-  return true;
+  return crossOriginOpenerPolicy ?? 'null';
 }

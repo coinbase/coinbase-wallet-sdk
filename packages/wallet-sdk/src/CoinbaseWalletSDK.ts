@@ -6,7 +6,7 @@ import { AppMetadata, Preference, ProviderInterface } from './core/provider/inte
 import { LIB_VERSION } from './libInfo';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
 import { getFavicon } from ':core/type/util';
-import { checkCrossOriginOpenerPolicyCompatibility } from ':util/checkCrossOriginOpenerPolicyCompatibility';
+import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy';
 import { getCoinbaseInjectedProvider } from ':util/provider';
 import { validatePreferences } from ':util/validatePreferences';
 
@@ -29,7 +29,7 @@ export class CoinbaseWalletSDK {
       appChainIds: metadata.appChainIds || [],
     };
     this.storeLatestVersion();
-    void checkCrossOriginOpenerPolicyCompatibility();
+    void checkCrossOriginOpenerPolicy();
   }
 
   public makeWeb3Provider(preference: Preference = { options: 'all' }): ProviderInterface {

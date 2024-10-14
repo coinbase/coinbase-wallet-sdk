@@ -1,5 +1,5 @@
 import { LIB_NAME, LIB_VERSION } from '../libInfo';
-import { checkCrossOriginOpenerPolicyCompatibility } from './checkCrossOriginOpenerPolicyCompatibility';
+import { checkCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy';
 import { standardErrors } from ':core/error';
 
 const POPUP_WIDTH = 420;
@@ -39,7 +39,7 @@ async function appendAppInfoQueryParams(url: URL) {
     sdkName: LIB_NAME,
     sdkVersion: LIB_VERSION,
     origin: window.location.origin,
-    coopIncompatibility: await checkCrossOriginOpenerPolicyCompatibility(),
+    coop: await checkCrossOriginOpenerPolicy(),
   };
 
   for (const [key, value] of Object.entries(params)) {

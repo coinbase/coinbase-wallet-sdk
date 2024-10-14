@@ -1,6 +1,6 @@
-import { checkCrossOriginOpenerPolicyCompatibility } from './checkCrossOriginOpenerPolicyCompatibility';
+import { checkCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy';
 
-describe('checkCrossOriginOpenerPolicyCompatibility', () => {
+describe('checkCrossOriginOpenerPolicy', () => {
   beforeEach(() => {
     // Clear all mocks before each test
     jest.clearAllMocks();
@@ -11,7 +11,7 @@ describe('checkCrossOriginOpenerPolicyCompatibility', () => {
     // @ts-expect-error delete window property
     delete global.window;
 
-    expect(await checkCrossOriginOpenerPolicyCompatibility()).toBe(true);
+    expect(await checkCrossOriginOpenerPolicy()).toBe('non-browser-env');
 
     // Restore the original window object
     global.window = originalWindow;
@@ -24,7 +24,7 @@ describe('checkCrossOriginOpenerPolicyCompatibility', () => {
       },
     });
 
-    checkCrossOriginOpenerPolicyCompatibility();
+    checkCrossOriginOpenerPolicy();
 
     expect(global.fetch).toHaveBeenCalledWith(window.location.origin, {});
   });
@@ -37,14 +37,14 @@ describe('checkCrossOriginOpenerPolicyCompatibility', () => {
       },
     });
 
-    const result = await checkCrossOriginOpenerPolicyCompatibility();
+    const result = await checkCrossOriginOpenerPolicy();
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       expect.stringContaining(
         "Coinbase Wallet SDK requires the Cross-Origin-Opener-Policy header to not be set to 'same-origin'."
       )
     );
-    expect(result).toBe(false);
+    expect(result).toBe('same-origin');
     consoleErrorSpy.mockRestore();
   });
 
@@ -56,10 +56,10 @@ describe('checkCrossOriginOpenerPolicyCompatibility', () => {
       },
     });
 
-    const result = await checkCrossOriginOpenerPolicyCompatibility();
+    const result = await checkCrossOriginOpenerPolicy();
 
     expect(consoleErrorSpy).not.toHaveBeenCalled();
-    expect(result).toBe(true);
+    expect(result).toBe('unsafe-none');
     consoleErrorSpy.mockRestore();
   });
 });
