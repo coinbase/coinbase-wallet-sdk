@@ -1,5 +1,5 @@
 import { NAME, VERSION } from '../sdk-info';
-import { checkCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy';
+import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy';
 import { standardErrors } from ':core/error';
 
 const POPUP_WIDTH = 420;
@@ -7,11 +7,11 @@ const POPUP_HEIGHT = 540;
 
 // Window Management
 
-export async function openPopup(url: URL): Promise<Window> {
+export function openPopup(url: URL): Window {
   const left = (window.innerWidth - POPUP_WIDTH) / 2 + window.screenX;
   const top = (window.innerHeight - POPUP_HEIGHT) / 2 + window.screenY;
 
-  await appendAppInfoQueryParams(url);
+  appendAppInfoQueryParams(url);
 
   const popup = window.open(
     url,
@@ -34,12 +34,12 @@ export function closePopup(popup: Window | null) {
   }
 }
 
-async function appendAppInfoQueryParams(url: URL) {
+function appendAppInfoQueryParams(url: URL) {
   const params = {
     sdkName: NAME,
     sdkVersion: VERSION,
     origin: window.location.origin,
-    coop: await checkCrossOriginOpenerPolicy(),
+    coop: getCrossOriginOpenerPolicy(),
   };
 
   for (const [key, value] of Object.entries(params)) {

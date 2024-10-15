@@ -3,25 +3,47 @@ const COOP_ERROR_MESSAGE = `Coinbase Wallet SDK requires the Cross-Origin-Opener
 Please see https://www.smartwallet.dev/guides/tips/popup-tips#cross-origin-opener-policy for more information.`;
 
 /**
- * Checks the compatibility of the Cross-Origin-Opener-Policy (COOP) for the current window.
+ * Creates a checker for the Cross-Origin-Opener-Policy (COOP).
  *
- * This function fetches the current origin and examines the 'Cross-Origin-Opener-Policy' header.
- * If the policy is set to 'same-origin', it logs an error message and returns `false`.
+ * @returns An object with methods to get and check the Cross-Origin-Opener-Policy.
  *
- * @returns {Promise<boolean>} A promise that resolves to `true` if the COOP is compatible or if the code is running in a non-browser environment, and `false` otherwise.
+ * @method getCrossOriginOpenerPolicy
+ * Retrieves current Cross-Origin-Opener-Policy.
+ * @throws Will throw an error if the policy has not been checked yet.
+ *
+ * @method checkCrossOriginOpenerPolicy
+ * Checks the Cross-Origin-Opener-Policy of the current environment.
+ * If in a non-browser environment, sets the policy to 'non-browser-env'.
+ * If in a browser environment, fetches the policy from the current origin.
+ * Logs an error if the policy is 'same-origin'.
  */
-export async function checkCrossOriginOpenerPolicy(): Promise<string> {
-  if (typeof window === 'undefined') {
-    // Non-browser environment
-    return 'non-browser-env';
-  }
+const createCoopChecker = () => {
+  let crossOriginOpenerPolicy: string | undefined;
 
-  const response = await fetch(window.location.origin, {});
-  const crossOriginOpenerPolicy = response.headers.get('Cross-Origin-Opener-Policy');
+  return {
+    getCrossOriginOpenerPolicy: () => {
+      if (crossOriginOpenerPolicy === undefined) {
+        throw new Error('Cross-Origin-Opener-Policy has not been checked yet');
+      }
 
-  if (crossOriginOpenerPolicy === 'same-origin') {
-    console.error(COOP_ERROR_MESSAGE);
-  }
+      return crossOriginOpenerPolicy;
+    },
+    checkCrossOriginOpenerPolicy: async () => {
+      if (typeof window === 'undefined') {
+        // Non-browser environment
+        crossOriginOpenerPolicy = 'non-browser-env';
+        return;
+      }
 
-  return crossOriginOpenerPolicy ?? 'null';
-}
+      const response = await fetch(window.location.origin, {});
+      const result = response.headers.get('Cross-Origin-Opener-Policy');
+      crossOriginOpenerPolicy = result ?? 'null';
+
+      if (crossOriginOpenerPolicy === 'same-origin') {
+        console.error(COOP_ERROR_MESSAGE);
+      }
+    },
+  };
+};
+
+export const { checkCrossOriginOpenerPolicy, getCrossOriginOpenerPolicy } = createCoopChecker();

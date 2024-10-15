@@ -1,11 +1,11 @@
 import { NAME, VERSION } from 'src/sdk-info';
 
-import { checkCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy';
+import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy';
 import { closePopup, openPopup } from './web';
 import { standardErrors } from ':core/error';
 
 jest.mock('./checkCrossOriginOpenerPolicy');
-(checkCrossOriginOpenerPolicy as jest.Mock).mockResolvedValue('null');
+(getCrossOriginOpenerPolicy as jest.Mock).mockReturnValue('null');
 
 const mockOrigin = 'http://localhost';
 
@@ -27,11 +27,11 @@ describe('PopupManager', () => {
     jest.clearAllMocks();
   });
 
-  it('should open a popup with correct settings and focus it', async () => {
+  it('should open a popup with correct settings and focus it', () => {
     const url = new URL('https://example.com');
     (window.open as jest.Mock).mockReturnValue({ focus: jest.fn() });
 
-    const popup = await openPopup(url);
+    const popup = openPopup(url);
 
     expect(window.open).toHaveBeenNthCalledWith(
       1,
@@ -47,10 +47,10 @@ describe('PopupManager', () => {
     expect(url.searchParams.get('coop')).toBe('null');
   });
 
-  it('should throw an error if popup fails to open', async () => {
+  it('should throw an error if popup fails to open', () => {
     (window.open as jest.Mock).mockReturnValue(null);
 
-    await expect(openPopup(new URL('https://example.com'))).rejects.toThrow(
+    expect(() => openPopup(new URL('https://example.com'))).toThrow(
       standardErrors.rpc.internal('Pop up window failed to open')
     );
   });
