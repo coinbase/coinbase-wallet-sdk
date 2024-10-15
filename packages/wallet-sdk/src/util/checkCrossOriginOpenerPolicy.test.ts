@@ -22,16 +22,20 @@ describe('checkCrossOriginOpenerPolicy', () => {
     global.window = originalWindow;
   });
 
-  it('should fetch the current origin', async () => {
+  it('should fetch the current origin and pathname', async () => {
     global.fetch = jest.fn().mockResolvedValue({
       headers: {
         get: jest.fn().mockReturnValue(null),
       },
+      ok: true,
     });
 
     checkCrossOriginOpenerPolicy();
 
-    expect(global.fetch).toHaveBeenCalledWith(window.location.origin, {});
+    expect(global.fetch).toHaveBeenCalledWith(
+      `${window.location.origin}${window.location.pathname}`,
+      { method: 'HEAD' }
+    );
   });
 
   it('should log an error if Cross-Origin-Opener-Policy is same-origin', async () => {
@@ -40,6 +44,7 @@ describe('checkCrossOriginOpenerPolicy', () => {
       headers: {
         get: jest.fn().mockReturnValue('same-origin'),
       },
+      ok: true,
     });
 
     await checkCrossOriginOpenerPolicy();
@@ -60,6 +65,7 @@ describe('checkCrossOriginOpenerPolicy', () => {
       headers: {
         get: jest.fn().mockReturnValue('unsafe-none'),
       },
+      ok: true,
     });
 
     await checkCrossOriginOpenerPolicy();
