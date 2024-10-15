@@ -35,12 +35,25 @@ const createCoopChecker = () => {
         return;
       }
 
-      const response = await fetch(window.location.origin, {});
-      const result = response.headers.get('Cross-Origin-Opener-Policy');
-      crossOriginOpenerPolicy = result ?? 'null';
+      try {
+        const url = `${window.location.origin}${window.location.pathname}`;
+        const response = await fetch(url, {
+          method: 'HEAD',
+        });
 
-      if (crossOriginOpenerPolicy === 'same-origin') {
-        console.error(COOP_ERROR_MESSAGE);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = response.headers.get('Cross-Origin-Opener-Policy');
+        crossOriginOpenerPolicy = result ?? 'null';
+
+        if (crossOriginOpenerPolicy === 'same-origin') {
+          console.error(COOP_ERROR_MESSAGE);
+        }
+      } catch (error) {
+        console.error('Error checking Cross-Origin-Opener-Policy:', (error as Error).message);
+        crossOriginOpenerPolicy = 'error';
       }
     },
   };
