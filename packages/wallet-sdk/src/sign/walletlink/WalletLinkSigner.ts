@@ -157,7 +157,7 @@ export class WalletLinkSigner implements Signer {
       throw standardErrors.rpc.invalidParams('nativeCurrency is a required field');
     }
 
-    const chainIdNumber = parseInt(request.chainId, 16);
+    const chainIdNumber = Number.parseInt(request.chainId, 16);
 
     if (chainIdNumber === this.getChainId()) {
       return false;
@@ -195,7 +195,7 @@ export class WalletLinkSigner implements Signer {
     const request = params[0] as {
       chainId: string;
     };
-    const chainId = parseInt(request.chainId, 16);
+    const chainId = Number.parseInt(request.chainId, 16);
 
     const relay = this.initializeRelay();
     const res = await relay.switchEthereumChain(
@@ -360,7 +360,7 @@ export class WalletLinkSigner implements Signer {
   }
 
   private getChainId(): number {
-    return parseInt(this._storage.getItem(DEFAULT_CHAIN_ID_KEY) ?? '1', 10);
+    return Number.parseInt(this._storage.getItem(DEFAULT_CHAIN_ID_KEY) ?? '1', 10);
   }
 
   private async _eth_requestAccounts() {

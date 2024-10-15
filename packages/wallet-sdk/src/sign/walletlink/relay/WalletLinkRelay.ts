@@ -122,7 +122,7 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
     };
 
     if (this.chainCallback) {
-      this.chainCallback(jsonRpcUrl, parseInt(chainId, 10));
+      this.chainCallback(jsonRpcUrl, Number.parseInt(chainId, 10));
     }
   };
 
