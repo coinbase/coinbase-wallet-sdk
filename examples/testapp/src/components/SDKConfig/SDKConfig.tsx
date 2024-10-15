@@ -7,17 +7,14 @@ import {
   FormControl,
   Heading,
   Input,
-  Text,
   Switch,
-} from "@chakra-ui/react";
-import React, { useCallback, useMemo, useState } from "react";
-import { useCBWSDK } from "../../context/CBWSDKReactContextProvider";
-import { Preference } from "@coinbase/wallet-sdk/dist/core/provider/interface";
-import { keccak256, slice, toHex } from "viem";
+  Text,
+} from '@chakra-ui/react';
+import { Preference } from '@coinbase/wallet-sdk/dist/core/provider/interface';
+import React, { useCallback, useMemo, useState } from 'react';
+import { keccak256, slice, toHex } from 'viem';
 
-function is0xString(value: string): value is `0x${string}` {
-  return value.startsWith("0x");
-}
+import { useCBWSDK } from '../../context/CBWSDKReactContextProvider';
 
 function computeDataSuffix(value: string): string {
   return slice(keccak256(toHex(value)), 0, 16);
@@ -37,7 +34,7 @@ export function SDKConfig() {
       };
       setConfig(config_);
     },
-    [config]
+    [config, setConfig]
   );
 
   const handleSetDataSuffix = useCallback(
@@ -51,7 +48,7 @@ export function SDKConfig() {
         },
       }));
     },
-    []
+    [setConfig]
   );
 
   const sixteenByteHex = useMemo(
@@ -60,7 +57,7 @@ export function SDKConfig() {
   );
 
   const attributionAuto = useMemo(() => {
-    return "auto" in config.attribution && config.attribution?.auto;
+    return 'auto' in config.attribution && config.attribution?.auto;
   }, [config.attribution]);
 
   return (
@@ -76,10 +73,7 @@ export function SDKConfig() {
           </Flex>
           <Box>
             <FormControl mt={2}>
-              <Switch
-                defaultChecked={attributionAuto}
-                onChange={handleSetAttributionAuto}
-              />
+              <Switch defaultChecked={attributionAuto} onChange={handleSetAttributionAuto} />
             </FormControl>
           </Box>
         </Flex>
@@ -87,13 +81,13 @@ export function SDKConfig() {
           <Flex
             justify="space-between"
             align={{
-              base: "flex-start",
-              md: "center",
+              base: 'flex-start',
+              md: 'center',
             }}
             my={2}
             flexDirection={{
-              base: "column",
-              md: "row",
+              base: 'column',
+              md: 'row',
             }}
           >
             <Box flexBasis="50%">
@@ -102,9 +96,8 @@ export function SDKConfig() {
                 <Code ml={2}>attribution.dataSuffix</Code>
               </Flex>
               <Text mt={2} fontSize="sm">
-                First 16 bytes of a unique string to identify your onchain
-                activity. Update the text box below to have your data suffix
-                applied
+                First 16 bytes of a unique string to identify your onchain activity. Update the text
+                box below to have your data suffix applied
               </Text>
               <FormControl mt={2}>
                 <Input

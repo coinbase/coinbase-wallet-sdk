@@ -84,3 +84,26 @@ jobs:
 
       - name: Run Unit Tests
         run: yarn test
+        
+  lint-testapp:
+    name: Lint Testapp
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./examples/testapp
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout node action
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache-dependency-path: 'yarn.lock'
+
+      - name: Install NPM dependencies
+        run: yarn install --immutable
+
+      - name: eslint
+        run: yarn lint
