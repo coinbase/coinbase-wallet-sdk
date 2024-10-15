@@ -23,7 +23,7 @@ const createCoopChecker = () => {
   return {
     getCrossOriginOpenerPolicy: () => {
       if (crossOriginOpenerPolicy === undefined) {
-        throw new Error('Cross-Origin-Opener-Policy has not been checked yet');
+        return 'undefined';
       }
 
       return crossOriginOpenerPolicy;
