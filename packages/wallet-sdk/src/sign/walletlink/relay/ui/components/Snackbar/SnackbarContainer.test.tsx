@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom';
 
-import { h } from 'preact';
 import { fireEvent, render, screen } from '@testing-library/preact';
+import { h } from 'preact';
 import { vi } from 'vitest';
 
 import { SnackbarContainer, SnackbarInstance, SnackbarInstanceProps } from './Snackbar.js';
