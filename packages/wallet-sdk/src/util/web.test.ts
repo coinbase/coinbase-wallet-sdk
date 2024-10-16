@@ -1,5 +1,13 @@
+import { NAME, VERSION } from 'src/sdk-info';
+
+import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy';
 import { closePopup, openPopup } from './web';
 import { standardErrors } from ':core/error';
+
+jest.mock('./checkCrossOriginOpenerPolicy');
+(getCrossOriginOpenerPolicy as jest.Mock).mockReturnValue('null');
+
+const mockOrigin = 'http://localhost';
 
 describe('PopupManager', () => {
   beforeAll(() => {
@@ -11,6 +19,7 @@ describe('PopupManager', () => {
       screenY: { value: 0 },
       open: { value: jest.fn() },
       close: { value: jest.fn() },
+      location: { value: { origin: mockOrigin } },
     });
   });
 
@@ -31,6 +40,11 @@ describe('PopupManager', () => {
       'width=420, height=540, left=302, top=114'
     );
     expect(popup.focus).toHaveBeenCalledTimes(1);
+
+    expect(url.searchParams.get('sdkName')).toBe(NAME);
+    expect(url.searchParams.get('sdkVersion')).toBe(VERSION);
+    expect(url.searchParams.get('origin')).toBe(mockOrigin);
+    expect(url.searchParams.get('coop')).toBe('null');
   });
 
   it('should throw an error if popup fails to open', () => {

@@ -7,7 +7,7 @@ import { getCoinbaseInjectedProvider } from ':util/provider';
 jest.mock(':core/type/util');
 jest.mock(':util/provider');
 jest.mock('./CoinbaseWalletProvider');
-jest.mock('./util/crossOriginOpenerPolicy');
+jest.mock('./util/checkCrossOriginOpenerPolicy');
 
 describe('CoinbaseWalletSDK', () => {
   test('@makeWeb3Provider - return Coinbase Injected Provider', () => {

@@ -1,6 +1,6 @@
 // TODO: error should not depend on walletlink. revisit this.
+import { VERSION } from '../../sdk-info';
 import { isErrorResponse, Web3Response } from '../../sign/walletlink/relay/type/Web3Response';
-import { LIB_VERSION } from '../../version';
 import { standardErrorCodes } from './constants';
 import { serialize } from './utils';
 
@@ -15,7 +15,7 @@ export function serializeError(error: unknown) {
   });
 
   const docUrl = new URL('https://docs.cloud.coinbase.com/wallet-sdk/docs/errors');
-  docUrl.searchParams.set('version', LIB_VERSION);
+  docUrl.searchParams.set('version', VERSION);
   docUrl.searchParams.set('code', serialized.code.toString());
   docUrl.searchParams.set('message', serialized.message);
 
