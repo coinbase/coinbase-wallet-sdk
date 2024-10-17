@@ -1,12 +1,14 @@
+import { vi } from 'vitest';
+
 import {
   checkCrossOriginOpenerPolicy,
   getCrossOriginOpenerPolicy,
-} from './checkCrossOriginOpenerPolicy';
+} from './checkCrossOriginOpenerPolicy.js';
 
 describe('checkCrossOriginOpenerPolicy', () => {
   beforeEach(() => {
     // Clear all mocks before each test
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should return non-browser-env if window is undefined', async () => {
@@ -22,10 +24,10 @@ describe('checkCrossOriginOpenerPolicy', () => {
     global.window = originalWindow;
   });
 
-  it('should fetch the current origin and pathname', async () => {
-    global.fetch = jest.fn().mockResolvedValue({
+  it('should fetch the current origin', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
       headers: {
-        get: jest.fn().mockReturnValue(null),
+        get: vi.fn().mockReturnValue(null),
       },
       ok: true,
     });
@@ -39,10 +41,10 @@ describe('checkCrossOriginOpenerPolicy', () => {
   });
 
   it('should log an error if Cross-Origin-Opener-Policy is same-origin', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    global.fetch = jest.fn().mockResolvedValue({
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    global.fetch = vi.fn().mockResolvedValue({
       headers: {
-        get: jest.fn().mockReturnValue('same-origin'),
+        get: vi.fn().mockReturnValue('same-origin'),
       },
       ok: true,
     });
@@ -59,11 +61,11 @@ describe('checkCrossOriginOpenerPolicy', () => {
     consoleErrorSpy.mockRestore();
   });
 
-  it('should return true and not log an error if Cross-Origin-Opener-Policy is not same-origin', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    global.fetch = jest.fn().mockResolvedValue({
+  it('should not log an error if Cross-Origin-Opener-Policy is not same-origin', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    global.fetch = vi.fn().mockResolvedValue({
       headers: {
-        get: jest.fn().mockReturnValue('unsafe-none'),
+        get: vi.fn().mockReturnValue('unsafe-none'),
       },
       ok: true,
     });

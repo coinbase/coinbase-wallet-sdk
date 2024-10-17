@@ -1,14 +1,14 @@
-import { createCoinbaseWalletProvider } from './createCoinbaseWalletProvider';
-import { VERSION } from './sdk-info';
+import { createCoinbaseWalletProvider } from './createCoinbaseWalletProvider.js';
+import { VERSION } from './sdk-info.js';
 import {
   AppMetadata,
   ConstructorOptions,
   Preference,
   ProviderInterface,
-} from ':core/provider/interface';
-import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
-import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy';
-import { validatePreferences } from ':util/validatePreferences';
+} from ':core/provider/interface.js';
+import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
+import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
+import { validatePreferences } from ':util/validatePreferences.js';
 
 export type CreateCoinbaseWalletSDKOptions = Partial<AppMetadata> & {
   preference?: Preference;

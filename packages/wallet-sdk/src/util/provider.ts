@@ -1,6 +1,10 @@
-import { NAME, VERSION } from '../sdk-info';
-import { standardErrors } from ':core/error';
-import { ConstructorOptions, ProviderInterface, RequestArguments } from ':core/provider/interface';
+import { NAME, VERSION } from '../sdk-info.js';
+import { standardErrors } from ':core/error/errors.js';
+import {
+  ConstructorOptions,
+  ProviderInterface,
+  RequestArguments,
+} from ':core/provider/interface.js';
 
 export async function fetchRPCRequest(request: RequestArguments, rpcUrl: string) {
   const requestBody = {

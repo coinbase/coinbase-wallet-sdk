@@ -1,8 +1,8 @@
 /* eslint-disable */
 //prettier-ignore
 
-const util = require('./util')
-const abi = require('./abi')
+const util = require('./util.cjs')
+const abi = require('./abi.cjs')
 
 const TYPED_MESSAGE_SCHEMA = {
   type: 'object',

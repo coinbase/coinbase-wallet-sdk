@@ -1,4 +1,4 @@
-import { ScopedLocalStorage } from './ScopedLocalStorage';
+import { ScopedLocalStorage } from './ScopedLocalStorage.js';
 
 describe('ScopedLocalStorage', () => {
   describe('public methods', () => {

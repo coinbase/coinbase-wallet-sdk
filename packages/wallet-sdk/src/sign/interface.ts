@@ -1,4 +1,4 @@
-import { RequestArguments } from ':core/provider/interface';
+import { RequestArguments } from ':core/provider/interface.js';
 
 export interface Signer {
   handshake(_: RequestArguments): Promise<void>;

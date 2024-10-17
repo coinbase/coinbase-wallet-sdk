@@ -1,16 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { WalletLinkCipher } from './connection/WalletLinkCipher';
-import { WalletLinkConnection } from './connection/WalletLinkConnection';
-import { WalletLinkWebSocket } from './connection/WalletLinkWebSocket';
-import { WALLET_USER_NAME_KEY } from './constants';
-import { ServerMessage } from './type/ServerMessage';
-import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay';
-import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
+import { vi } from 'vitest';
 
-const decryptMock = jest.fn().mockImplementation((text) => text);
+import { WalletLinkCipher } from './connection/WalletLinkCipher.js';
+import { WalletLinkConnection } from './connection/WalletLinkConnection.js';
+import { WalletLinkWebSocket } from './connection/WalletLinkWebSocket.js';
+import { WALLET_USER_NAME_KEY } from './constants.js';
+import { ServerMessage } from './type/ServerMessage.js';
+import { WalletLinkRelay, WalletLinkRelayOptions } from './WalletLinkRelay.js';
+import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 
-jest.spyOn(WalletLinkCipher.prototype, 'decrypt').mockImplementation(decryptMock);
+const decryptMock = vi.fn().mockImplementation((text) => text);
+
+vi.spyOn(WalletLinkCipher.prototype, 'decrypt').mockImplementation(decryptMock);
 
 describe('WalletLinkRelay', () => {
   const options: WalletLinkRelayOptions = {
@@ -21,18 +23,18 @@ describe('WalletLinkRelay', () => {
       appLogoUrl: '',
       appChainIds: [],
     },
-    accountsCallback: jest.fn(),
-    chainCallback: jest.fn(),
+    accountsCallback: vi.fn(),
+    chainCallback: vi.fn(),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.spyOn(WalletLinkWebSocket.prototype, 'connect').mockReturnValue(Promise.resolve());
+    vi.clearAllMocks();
+    vi.spyOn(WalletLinkWebSocket.prototype, 'connect').mockReturnValue(Promise.resolve());
   });
 
   describe('resetAndReload', () => {
     it('should destroy the connection and connect again', async () => {
-      const destroySpy = jest.spyOn(WalletLinkConnection.prototype, 'destroy');
+      const destroySpy = vi.spyOn(WalletLinkConnection.prototype, 'destroy');
 
       const relay = new WalletLinkRelay(options);
       relay.resetAndReload();
@@ -57,7 +59,7 @@ describe('WalletLinkRelay', () => {
 
       const relay = new WalletLinkRelay(options);
 
-      const handleWeb3ResponseMessageSpy = jest
+      const handleWeb3ResponseMessageSpy = vi
         .spyOn(relay, 'handleWeb3ResponseMessage')
         .mockReturnValue();
 
@@ -92,7 +94,7 @@ describe('WalletLinkRelay', () => {
 
       const relay = new WalletLinkRelay(options);
 
-      const metadataUpdatedSpy = jest.spyOn(relay, 'metadataUpdated');
+      const metadataUpdatedSpy = vi.spyOn(relay, 'metadataUpdated');
 
       (relay as any).connection.ws.incomingDataListener?.({
         ...sessionConfig,

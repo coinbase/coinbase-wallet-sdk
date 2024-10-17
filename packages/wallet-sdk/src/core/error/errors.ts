@@ -1,5 +1,5 @@
-import { standardErrorCodes } from './constants';
-import { getMessageFromCode } from './utils';
+import { standardErrorCodes } from './constants.js';
+import { getMessageFromCode } from './utils.js';
 
 export const standardErrors = {
   rpc: {

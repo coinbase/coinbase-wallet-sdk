@@ -1,15 +1,15 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
-import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../constants';
-import { ClientMessage } from '../type/ClientMessage';
-import { ServerMessage, ServerMessageType } from '../type/ServerMessage';
-import { WalletLinkEventData } from '../type/WalletLinkEventData';
-import { WalletLinkSession } from '../type/WalletLinkSession';
-import { Web3Response } from '../type/Web3Response';
-import { WalletLinkCipher } from './WalletLinkCipher';
-import { WalletLinkHTTP } from './WalletLinkHTTP';
-import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket';
-import { IntNumber } from ':core/type';
+import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../constants.js';
+import { ClientMessage } from '../type/ClientMessage.js';
+import { ServerMessage, ServerMessageType } from '../type/ServerMessage.js';
+import { WalletLinkEventData } from '../type/WalletLinkEventData.js';
+import { WalletLinkSession } from '../type/WalletLinkSession.js';
+import { Web3Response } from '../type/Web3Response.js';
+import { WalletLinkCipher } from './WalletLinkCipher.js';
+import { WalletLinkHTTP } from './WalletLinkHTTP.js';
+import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket.js';
+import { IntNumber } from ':core/type/index.js';
 
 const HEARTBEAT_INTERVAL = 10000;
 const REQUEST_TIMEOUT = 60000;

@@ -1,8 +1,9 @@
-import WS from 'jest-websocket-mock';
+import { WS } from 'jest-websocket-mock';
+import { vi } from 'vitest';
 
-import { ServerMessage } from '../type/ServerMessage';
-import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket';
-import { IntNumber } from ':core/type';
+import { ServerMessage } from '../type/ServerMessage.js';
+import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket.js';
+import { IntNumber } from ':core/type/index.js';
 
 describe('WalletLinkWebSocket', () => {
   let server: WS;
@@ -18,7 +19,7 @@ describe('WalletLinkWebSocket', () => {
 
   describe('is connected', () => {
     test('@connect & @disconnect', async () => {
-      const connectionStateListener = jest.fn();
+      const connectionStateListener = vi.fn();
       rxWS.setConnectionStateListener(connectionStateListener);
 
       await rxWS.connect();
@@ -27,9 +28,7 @@ describe('WalletLinkWebSocket', () => {
       expect(connectionStateListener).toHaveBeenCalledWith(ConnectionState.CONNECTED);
 
       // Sends data
-      const webSocketSendMock = jest
-        .spyOn(WebSocket.prototype, 'send')
-        .mockImplementation(() => {});
+      const webSocketSendMock = vi.spyOn(WebSocket.prototype, 'send').mockImplementation(() => {});
 
       rxWS.sendData('data');
       expect(webSocketSendMock).toHaveBeenCalledWith('data');
@@ -67,7 +66,7 @@ describe('WalletLinkWebSocket', () => {
       });
 
       test('onmessage event emits message', async () => {
-        const incomingDataListener = jest.fn();
+        const incomingDataListener = vi.fn();
         rxWS.setIncomingDataListener(incomingDataListener);
 
         await rxWS.connect();
@@ -84,7 +83,7 @@ describe('WalletLinkWebSocket', () => {
       });
 
       test('onmessage event emits heartbeat message', async () => {
-        const incomingDataListener = jest.fn();
+        const incomingDataListener = vi.fn();
         rxWS.setIncomingDataListener(incomingDataListener);
 
         await rxWS.connect();
@@ -100,7 +99,7 @@ describe('WalletLinkWebSocket', () => {
 
   describe('is not connected', () => {
     test('disconnect returns', () => {
-      const webSocketCloseMock = jest
+      const webSocketCloseMock = vi
         .spyOn(WebSocket.prototype, 'close')
         .mockImplementation(() => {});
 

@@ -1,7 +1,10 @@
+import '@testing-library/jest-dom';
+
 import { render, screen, waitFor } from '@testing-library/preact';
 import { h } from 'preact';
+import { vi } from 'vitest';
 
-import { Snackbar } from './Snackbar';
+import { Snackbar } from './Snackbar.js';
 
 const attachedEl = document.getElementsByClassName('-cbwsdk-snackbar-root');
 
@@ -33,7 +36,7 @@ describe('Snackbar', () => {
             path: '',
             defaultFillRule: 'inherit',
             defaultClipRule: 'inherit',
-            onClick: jest.fn,
+            onClick: vi.fn,
           },
           {
             isRed: true,
@@ -43,7 +46,7 @@ describe('Snackbar', () => {
             path: '',
             defaultFillRule: 'evenodd',
             defaultClipRule: 'evenodd',
-            onClick: jest.fn,
+            onClick: vi.fn,
           },
         ],
       });

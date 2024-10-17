@@ -1,6 +1,6 @@
-import { NAME, VERSION } from '../sdk-info';
-import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy';
-import { standardErrors } from ':core/error';
+import { NAME, VERSION } from '../sdk-info.js';
+import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
+import { standardErrors } from ':core/error/errors.js';
 
 const POPUP_WIDTH = 420;
 const POPUP_HEIGHT = 540;

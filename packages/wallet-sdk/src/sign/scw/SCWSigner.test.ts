@@ -1,36 +1,38 @@
-import { SCWKeyManager } from './SCWKeyManager';
-import { SCWSigner } from './SCWSigner';
-import { Communicator } from ':core/communicator/Communicator';
-import { CB_KEYS_URL } from ':core/constants';
-import { standardErrors } from ':core/error';
-import { EncryptedData, RPCResponseMessage } from ':core/message';
-import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface';
-import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
+import { Mock, Mocked, vi } from 'vitest';
+
+import { SCWKeyManager } from './SCWKeyManager.js';
+import { SCWSigner } from './SCWSigner.js';
+import { Communicator } from ':core/communicator/Communicator.js';
+import { CB_KEYS_URL } from ':core/constants.js';
+import { standardErrors } from ':core/error/errors.js';
+import { EncryptedData, RPCResponseMessage } from ':core/message/RPCMessage.js';
+import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
+import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import {
   decryptContent,
   encryptContent,
   exportKeyToHexString,
   importKeyFromHexString,
-} from ':util/cipher';
-import { fetchRPCRequest } from ':util/provider';
+} from ':util/cipher.js';
+import { fetchRPCRequest } from ':util/provider.js';
 
-jest.mock(':util/provider');
+vi.mock(':util/provider');
 
-jest.mock('./SCWKeyManager');
-const storageStoreSpy = jest.spyOn(ScopedLocalStorage.prototype, 'storeObject');
-const storageClearSpy = jest.spyOn(ScopedLocalStorage.prototype, 'clear');
-jest.mock(':core/communicator/Communicator', () => ({
-  Communicator: jest.fn(() => ({
-    postRequestAndWaitForResponse: jest.fn(),
-    waitForPopupLoaded: jest.fn(),
+vi.mock('./SCWKeyManager');
+const storageStoreSpy = vi.spyOn(ScopedLocalStorage.prototype, 'storeObject');
+const storageClearSpy = vi.spyOn(ScopedLocalStorage.prototype, 'clear');
+vi.mock(':core/communicator/Communicator', () => ({
+  Communicator: vi.fn(() => ({
+    postRequestAndWaitForResponse: vi.fn(),
+    waitForPopupLoaded: vi.fn(),
   })),
 }));
 
-jest.mock(':util/cipher', () => ({
-  decryptContent: jest.fn(),
-  encryptContent: jest.fn(),
-  exportKeyToHexString: jest.fn(),
-  importKeyFromHexString: jest.fn(),
+vi.mock(':util/cipher', () => ({
+  decryptContent: vi.fn(),
+  encryptContent: vi.fn(),
+  exportKeyToHexString: vi.fn(),
+  importKeyFromHexString: vi.fn(),
 }));
 
 const mockCryptoKey = {} as CryptoKey;
@@ -53,9 +55,9 @@ const mockSuccessResponse: RPCResponseMessage = {
 describe('SCWSigner', () => {
   let signer: SCWSigner;
   let mockMetadata: AppMetadata;
-  let mockCommunicator: jest.Mocked<Communicator>;
+  let mockCommunicator: Mocked<Communicator>;
   let mockCallback: ProviderEventCallback;
-  let mockKeyManager: jest.Mocked<SCWKeyManager>;
+  let mockKeyManager: Mocked<SCWKeyManager>;
 
   beforeEach(() => {
     mockMetadata = {
@@ -68,20 +70,20 @@ describe('SCWSigner', () => {
       url: CB_KEYS_URL,
       metadata: mockMetadata,
       preference: { keysUrl: CB_KEYS_URL, options: 'all' },
-    }) as jest.Mocked<Communicator>;
+    }) as Mocked<Communicator>;
 
     mockCommunicator.waitForPopupLoaded.mockResolvedValue({} as Window);
     mockCommunicator.postRequestAndWaitForResponse.mockResolvedValue(mockSuccessResponse);
 
-    mockCallback = jest.fn();
-    mockKeyManager = new SCWKeyManager() as jest.Mocked<SCWKeyManager>;
-    (SCWKeyManager as jest.Mock).mockImplementation(() => mockKeyManager);
+    mockCallback = vi.fn();
+    mockKeyManager = new SCWKeyManager() as Mocked<SCWKeyManager>;
+    (SCWKeyManager as Mock).mockImplementation(() => mockKeyManager);
     storageStoreSpy.mockReset();
 
-    (importKeyFromHexString as jest.Mock).mockResolvedValue(mockCryptoKey);
-    (exportKeyToHexString as jest.Mock).mockResolvedValueOnce('0xPublicKey');
+    (importKeyFromHexString as Mock).mockResolvedValue(mockCryptoKey);
+    (exportKeyToHexString as Mock).mockResolvedValueOnce('0xPublicKey');
     mockKeyManager.getSharedSecret.mockResolvedValue(mockCryptoKey);
-    (encryptContent as jest.Mock).mockResolvedValueOnce(encryptedData);
+    (encryptContent as Mock).mockResolvedValueOnce(encryptedData);
 
     signer = new SCWSigner({
       metadata: mockMetadata,
@@ -92,7 +94,7 @@ describe('SCWSigner', () => {
 
   describe('handshake', () => {
     it('should perform a successful handshake', async () => {
-      (decryptContent as jest.Mock).mockResolvedValueOnce({
+      (decryptContent as Mock).mockResolvedValueOnce({
         result: {
           value: ['0xAddress'],
         },
@@ -140,7 +142,7 @@ describe('SCWSigner', () => {
 
   describe('request', () => {
     beforeAll(() => {
-      jest.spyOn(ScopedLocalStorage.prototype, 'loadObject').mockImplementation((key) => {
+      vi.spyOn(ScopedLocalStorage.prototype, 'loadObject').mockImplementation((key) => {
         switch (key) {
           case 'accounts':
             return ['0xAddress'];
@@ -153,7 +155,7 @@ describe('SCWSigner', () => {
     });
 
     afterAll(() => {
-      jest.spyOn(ScopedLocalStorage.prototype, 'loadObject').mockRestore();
+      vi.spyOn(ScopedLocalStorage.prototype, 'loadObject').mockRestore();
     });
 
     it('should perform a successful request', async () => {
@@ -162,7 +164,7 @@ describe('SCWSigner', () => {
         params: ['0xMessage', '0xAddress'],
       };
 
-      (decryptContent as jest.Mock).mockResolvedValueOnce({
+      (decryptContent as Mock).mockResolvedValueOnce({
         result: {
           value: '0xSignature',
         },
@@ -201,7 +203,7 @@ describe('SCWSigner', () => {
         params: [],
       };
 
-      (decryptContent as jest.Mock).mockResolvedValueOnce({
+      (decryptContent as Mock).mockResolvedValueOnce({
         result: {
           value: '0xSignature',
         },
@@ -239,7 +241,7 @@ describe('SCWSigner', () => {
         params: ['0xMessage', '0xAddress'],
       };
 
-      (decryptContent as jest.Mock).mockResolvedValueOnce({
+      (decryptContent as Mock).mockResolvedValueOnce({
         result: {
           error: mockError,
         },
@@ -254,7 +256,7 @@ describe('SCWSigner', () => {
         params: [{ chainId: '0x1' }],
       };
 
-      (decryptContent as jest.Mock).mockResolvedValueOnce({
+      (decryptContent as Mock).mockResolvedValueOnce({
         result: {
           value: null,
         },

@@ -1,9 +1,10 @@
-import { VERSION } from '../../sdk-info';
-import { ConfigMessage, Message, MessageID } from '../message';
-import { CB_KEYS_URL } from ':core/constants';
-import { standardErrors } from ':core/error';
-import { AppMetadata, Preference } from ':core/provider/interface';
-import { closePopup, openPopup } from ':util/web';
+import { VERSION } from '../../sdk-info.js';
+import { ConfigMessage } from '../message/ConfigMessage.js';
+import { Message, MessageID } from '../message/Message.js';
+import { CB_KEYS_URL } from ':core/constants.js';
+import { standardErrors } from ':core/error/errors.js';
+import { AppMetadata, Preference } from ':core/provider/interface.js';
+import { closePopup, openPopup } from ':util/web.js';
 
 export type CommunicatorOptions = {
   url?: string;

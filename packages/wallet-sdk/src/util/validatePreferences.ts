@@ -1,4 +1,4 @@
-import { Preference } from ':core/provider/interface';
+import { Preference } from ':core/provider/interface.js';
 
 /**
  * Validates user supplied preferences. Throws if keys are not valid.

@@ -1,14 +1,14 @@
 // Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
 
-import { LogoType, walletLogo } from './assets/wallet-logo';
-import { CoinbaseWalletProvider } from './CoinbaseWalletProvider';
-import { AppMetadata, Preference, ProviderInterface } from './core/provider/interface';
-import { VERSION } from './sdk-info';
-import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage';
-import { getFavicon } from ':core/type/util';
-import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy';
-import { getCoinbaseInjectedProvider } from ':util/provider';
-import { validatePreferences } from ':util/validatePreferences';
+import { LogoType, walletLogo } from './assets/wallet-logo.js';
+import { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js';
+import { AppMetadata, Preference, ProviderInterface } from './core/provider/interface.js';
+import { VERSION } from './sdk-info.js';
+import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
+import { getFavicon } from ':core/type/util.js';
+import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
+import { getCoinbaseInjectedProvider } from ':util/provider.js';
+import { validatePreferences } from ':util/validatePreferences.js';
 
 // for backwards compatibility
 type CoinbaseWalletSDKOptions = Partial<AppMetadata>;

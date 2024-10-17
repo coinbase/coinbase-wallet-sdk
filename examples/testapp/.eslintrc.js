@@ -1,5 +1,4 @@
 module.exports = {
-  root: true,
   extends: [
     'preact',
     'eslint:recommended',
@@ -68,6 +67,7 @@ module.exports = {
     // TODO: change this back to error
     '@typescript-eslint/no-explicit-any': 'warn',
     'no-useless-constructor': 'off',
+    'jest/no-deprecated-functions': 'off',
     'no-restricted-globals': [
       'error',
       {

@@ -1,7 +1,7 @@
-import { Web3Response } from '../../sign/walletlink/relay/type/Web3Response';
-import { standardErrorCodes } from './constants';
-import { standardErrors } from './errors';
-import { serializeError } from './serialize';
+import { Web3Response } from '../../sign/walletlink/relay/type/Web3Response.js';
+import { standardErrorCodes } from './constants.js';
+import { standardErrors } from './errors.js';
+import { serializeError } from './serialize.js';
 
 describe('serializeError', () => {
   test('with ErrorResponse object', () => {
