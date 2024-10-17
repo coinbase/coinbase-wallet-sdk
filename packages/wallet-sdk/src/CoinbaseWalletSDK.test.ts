@@ -9,7 +9,7 @@ import { getCoinbaseInjectedProvider } from ':util/provider.js';
 vi.mock(':core/type/util');
 vi.mock(':util/provider');
 vi.mock('./CoinbaseWalletProvider');
-vi.mock('./util/crossOriginOpenerPolicy');
+vi.mock('./util/checkCrossOriginOpenerPolicy');
 
 describe('CoinbaseWalletSDK', () => {
   test('@makeWeb3Provider - return Coinbase Injected Provider', () => {

@@ -2,7 +2,7 @@ import { Mock, vi } from 'vitest';
 
 import { AppMetadata, Preference } from 'src/index.js';
 
-import { LIB_VERSION } from '../../version.js';
+import { VERSION } from '../../sdk-info.js';
 import { Message, MessageID } from '../message/Message.js';
 import { Communicator } from './Communicator.js';
 import { CB_KEYS_URL } from ':core/constants.js';
@@ -115,7 +115,7 @@ describe('Communicator', () => {
         1,
         {
           data: {
-            version: LIB_VERSION,
+            version: VERSION,
             metadata: appMetadata,
             preference,
           },
@@ -142,7 +142,7 @@ describe('Communicator', () => {
         1,
         {
           data: {
-            version: LIB_VERSION,
+            version: VERSION,
             metadata: appMetadata,
             preference,
           },
@@ -164,7 +164,7 @@ describe('Communicator', () => {
         1,
         {
           data: {
-            version: LIB_VERSION,
+            version: VERSION,
             metadata: appMetadata,
             preference,
           },

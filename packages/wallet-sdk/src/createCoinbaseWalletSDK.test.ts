@@ -10,7 +10,7 @@ const options: CreateCoinbaseWalletSDKOptions = {
   preference: { options: 'all' },
 };
 
-vi.mock('./util/crossOriginOpenerPolicy');
+vi.mock('./util/checkCrossOriginOpenerPolicy');
 
 describe('createCoinbaseWalletSDK', () => {
   it('should return an object with a getProvider method', () => {

@@ -45,8 +45,8 @@ jobs:
 
       - name: Install NPM dependencies
         run: yarn install --immutable
-  
-      - name: Update version.ts file
+
+      - name: Update sdk-info.ts file
         run: yarn prebuild
 
       - name: Commit and branch updated version

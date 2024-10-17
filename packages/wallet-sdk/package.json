@@ -22,7 +22,7 @@
     "pretest": "node compile-assets.cjs",
     "test": "vitest",
     "test:coverage": "yarn test:unit && open coverage/lcov-report/index.html",
-    "prebuild": "rm -rf ./dist && node -p \"'export const LIB_VERSION = \\'' + require('./package.json').version + '\\';'\" > src/version.ts",
+    "prebuild": "rm -rf ./dist && node -p \"'export const VERSION = \\'' + require('./package.json').version + '\\';\\nexport const NAME = \\'' + require('./package.json').name + '\\';'\" > src/sdk-info.ts",
     "build": "node compile-assets.cjs && tsc -p ./tsconfig.build.json && tsc-alias && cp -a src/vendor-js dist",
     "dev": "yarn build && tsc --watch & nodemon --watch dist --delay 1 --exec tsc-alias",
     "typecheck": "tsc --noEmit",

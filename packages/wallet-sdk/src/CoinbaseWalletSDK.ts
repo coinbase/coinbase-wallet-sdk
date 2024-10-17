@@ -3,10 +3,10 @@
 import { LogoType, walletLogo } from './assets/wallet-logo.js';
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js';
 import { AppMetadata, Preference, ProviderInterface } from './core/provider/interface.js';
-import { LIB_VERSION } from './version.js';
+import { VERSION } from './sdk-info.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { getFavicon } from ':core/type/util.js';
-import { checkCrossOriginOpenerPolicy } from ':util/crossOriginOpenerPolicy.js';
+import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { getCoinbaseInjectedProvider } from ':util/provider.js';
 import { validatePreferences } from ':util/validatePreferences.js';
 
@@ -29,7 +29,7 @@ export class CoinbaseWalletSDK {
       appChainIds: metadata.appChainIds || [],
     };
     this.storeLatestVersion();
-    this.checkCrossOriginOpenerPolicy();
+    void checkCrossOriginOpenerPolicy();
   }
 
   public makeWeb3Provider(preference: Preference = { options: 'all' }): ProviderInterface {
@@ -50,10 +50,6 @@ export class CoinbaseWalletSDK {
 
   private storeLatestVersion() {
     const versionStorage = new ScopedLocalStorage('CBWSDK');
-    versionStorage.setItem('VERSION', LIB_VERSION);
-  }
-
-  private checkCrossOriginOpenerPolicy() {
-    void checkCrossOriginOpenerPolicy();
+    versionStorage.setItem('VERSION', VERSION);
   }
 }
