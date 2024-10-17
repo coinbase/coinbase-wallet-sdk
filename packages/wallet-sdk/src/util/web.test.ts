@@ -1,7 +1,6 @@
 import { Mock, vi } from 'vitest';
 
-import { NAME, VERSION } from 'src/sdk-info.js';
-
+import { NAME, VERSION } from '../sdk-info.js';
 import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
 import { closePopup, openPopup } from './web.js';
 import { standardErrors } from ':core/error/errors.js';
