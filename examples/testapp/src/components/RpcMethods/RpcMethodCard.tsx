@@ -13,10 +13,11 @@ import {
   FormErrorMessage,
   Heading,
   HStack,
-  Input,
+  Textarea,
   InputGroup,
   InputLeftAddon,
   VStack,
+  Text,
 } from '@chakra-ui/react';
 import React, { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
@@ -125,23 +126,40 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
                 <AccordionIcon />
               </AccordionButton>
               <AccordionPanel pb={4}>
-                <VStack spacing={2} mt={2}>
+                <VStack spacing={2} mt={2} align="stretch" width="100%">
                   {params.map((param) => {
                     const err = errors[param.key];
                     return (
                       <FormControl key={param.key} isInvalid={!!err} isRequired={param.required}>
-                        <InputGroup size="sm">
-                          <InputLeftAddon>{param.key}</InputLeftAddon>
-                          <Input
+                        <InputGroup size="sm" flexDirection="column">
+                          <InputLeftAddon width="100%" mb={1}>
+                            {param.key}
+                          </InputLeftAddon>
+                          <Textarea
                             {...register(param.key, {
                               required: param.required ? `${param.key} required` : false,
                             })}
+                            minH="40px"
+                            maxH="none"          // No max height limit for vertical resizing
+                            resize="none"         // Disable manual resizing
+                            width="100%"
+                            overflow="auto"
+                            maxW="100%"
+                            minW="100%"
+                            whiteSpace="nowrap"   // Keep horizontal scrolling
+                            overflowX="auto"      // Enable horizontal scrolling
+                            onInput={(e) => {
+                              const target = e.target as HTMLTextAreaElement;
+                              target.style.height = "auto"; // Reset height to auto to adjust for content
+                              target.style.height = `${target.scrollHeight}px`; // Set height based on scroll height
+                            }}
                           />
                         </InputGroup>
                         <FormErrorMessage>{err?.message as string}</FormErrorMessage>
                       </FormControl>
                     );
                   })}
+
                 </VStack>
               </AccordionPanel>
             </AccordionItem>
