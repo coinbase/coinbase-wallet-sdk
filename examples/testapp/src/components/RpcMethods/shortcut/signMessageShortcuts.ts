@@ -131,36 +131,36 @@ const ethSignTypedDataV4Shortcuts: (chainId: number) => ShortcutType[] = (chainI
     },
   },
   {
-    key: "Grant Permission",
+    key: 'Grant Permission',
     data: {
       message: {
         domain: {
-          name: "Spend Permission Manager",
-          version: "1",
-          chainId: chainId,
-          verifyingContract: "0x4ba47ee994d7fd63e8e8029431c35afa8487b8a5"
+          name: 'Spend Permission Manager',
+          version: '1',
+          chainId,
+          verifyingContract: '0x4ba47ee994d7fd63e8e8029431c35afa8487b8a5',
         },
         types: {
           SpendPermission: [
-            {name: "account", type: "address"},
-            {name: "spender", type: "address"},
-            {name: "token", type: "address"},
-            {name: "start", type: "uint48"},
-            {name: "end", type: "uint48"},
-            {name: "period", type: "uint48"},
-            {name: "allowance", type: "uint160"}
-          ]
+            { name: 'account', type: 'address' },
+            { name: 'spender', type: 'address' },
+            { name: 'token', type: 'address' },
+            { name: 'start', type: 'uint48' },
+            { name: 'end', type: 'uint48' },
+            { name: 'period', type: 'uint48' },
+            { name: 'allowance', type: 'uint160' },
+          ],
         },
-        primaryType: "SpendPermission",
+        primaryType: 'SpendPermission',
         message: {
           account: '0xd4e17478581878A967aA22d45a5158A9fE96AA08',
-          spender: "0x0000000000000000000000000000000000000000",
-          token: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+          spender: '0x0000000000000000000000000000000000000000',
+          token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
           end: 17242884802,
           start: 1724264802,
           period: 86400,
-          allowance: "10000000000000000"
-        }
+          allowance: '10000000000000000',
+        },
       },
       address: ADDR_TO_FILL,
     },
