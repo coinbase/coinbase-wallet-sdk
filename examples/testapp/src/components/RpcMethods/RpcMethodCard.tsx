@@ -172,7 +172,7 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
                 <AccordionPanel pb={4}>
                   <HStack spacing={2}>
                     {shortcuts.map((shortcut) => (
-                      <HStack key={shortcut.key} spacing={1}>
+                      <VStack key={shortcut.key} spacing={1}>
                         <Button onClick={() => submit(shortcut.data)}>{shortcut.key}</Button>
                         {shortcut.data.message && (
                           <Button
@@ -187,7 +187,7 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
                             Copy
                           </Button>
                         )}
-                      </HStack>
+                      </VStack>
                     ))}
                   </HStack>
                 </AccordionPanel>
