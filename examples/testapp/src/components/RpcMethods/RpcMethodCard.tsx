@@ -13,11 +13,10 @@ import {
   FormErrorMessage,
   Heading,
   HStack,
-  Textarea,
   InputGroup,
   InputLeftAddon,
+  Textarea,
   VStack,
-  Text,
 } from '@chakra-ui/react';
 import React, { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
@@ -140,17 +139,17 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
                               required: param.required ? `${param.key} required` : false,
                             })}
                             minH="40px"
-                            maxH="none"          // No max height limit for vertical resizing
-                            resize="none"         // Disable manual resizing
+                            maxH="none" // No max height limit for vertical resizing
+                            resize="none" // Disable manual resizing
                             width="100%"
                             overflow="auto"
                             maxW="100%"
                             minW="100%"
-                            whiteSpace="nowrap"   // Keep horizontal scrolling
-                            overflowX="auto"      // Enable horizontal scrolling
+                            whiteSpace="nowrap" // Keep horizontal scrolling
+                            overflowX="auto" // Enable horizontal scrolling
                             onInput={(e) => {
                               const target = e.target as HTMLTextAreaElement;
-                              target.style.height = "auto"; // Reset height to auto to adjust for content
+                              target.style.height = 'auto'; // Reset height to auto to adjust for content
                               target.style.height = `${target.scrollHeight}px`; // Set height based on scroll height
                             }}
                           />
@@ -159,7 +158,6 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
                       </FormControl>
                     );
                   })}
-
                 </VStack>
               </AccordionPanel>
             </AccordionItem>
@@ -175,12 +173,14 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
                   <HStack spacing={2}>
                     {shortcuts.map((shortcut) => (
                       <VStack key={shortcut.key} spacing={1}>
-                        <Button onClick={() => submit(shortcut.data)}>
-                          {shortcut.key}
-                        </Button>
+                        <Button onClick={() => submit(shortcut.data)}>{shortcut.key}</Button>
                         {shortcut.data.message && (
                           <Button
-                            onClick={() => navigator.clipboard.writeText(JSON.stringify(shortcut.data.message, null, 2))}
+                            onClick={() =>
+                              navigator.clipboard.writeText(
+                                JSON.stringify(shortcut.data.message, null, 2)
+                              )
+                            }
                             variant="outline"
                             size="sm"
                           >
