@@ -85,11 +85,6 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
         values = format(data);
       }
       try {
-        // connection required
-        if (!provider?.connected) {
-          await provider.enable();
-        }
-
         const response = await provider.request({
           method,
           params: values,
