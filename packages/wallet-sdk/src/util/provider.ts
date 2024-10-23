@@ -36,6 +36,7 @@ export interface CBWindow {
 export interface CBInjectedProvider extends ProviderInterface {
   isCoinbaseBrowser?: boolean;
   setAppInfo?: (...args: unknown[]) => unknown;
+  setAppParams?: (params: Record<string, unknown>) => void;
 }
 
 function getCoinbaseInjectedLegacyProvider(): CBInjectedProvider | undefined {
@@ -50,6 +51,16 @@ function getInjectedEthereum(): CBInjectedProvider | undefined {
   } catch {
     return undefined;
   }
+}
+
+function flattenParams({
+  metadata,
+  preference,
+}: Readonly<ConstructorOptions>): Record<string, unknown> {
+  return {
+    ...metadata,
+    ...preference,
+  };
 }
 
 export function getCoinbaseInjectedProvider({
@@ -67,6 +78,7 @@ export function getCoinbaseInjectedProvider({
 
   const ethereum = getInjectedEthereum();
   if (ethereum?.isCoinbaseBrowser) {
+    ethereum.setAppParams?.(flattenParams({ metadata, preference }));
     return ethereum;
   }
 

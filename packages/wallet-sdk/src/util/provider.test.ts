@@ -1,6 +1,7 @@
 import { vi } from 'vitest';
 
 import {
+  CBInjectedProvider,
   CBWindow,
   checkErrorForInvalidRequestArgs,
   fetchRPCRequest,
@@ -110,11 +111,10 @@ describe('Utils', () => {
     });
 
     describe('Browser Provider', () => {
-      class MockCipherProviderClass {
-        public isCoinbaseBrowser = true;
-      }
-
-      const mockCipherProvider = new MockCipherProviderClass() as unknown as ProviderInterface;
+      const mockCipherProvider = {
+        isCoinbaseBrowser: true,
+        setAppParams: vi.fn(),
+      } as unknown as CBInjectedProvider;
 
       beforeAll(() => {
         window.coinbaseWalletExtension = undefined;
@@ -138,6 +138,12 @@ describe('Utils', () => {
             },
           })
         ).toBe(mockCipherProvider);
+        expect(mockCipherProvider.setAppParams).toHaveBeenCalledWith({
+          appName: 'Dapp',
+          appChainIds: [],
+          appLogoUrl: null,
+          options: 'all',
+        });
       });
 
       it('smartWalletOnly - Should still return injected browser provider', () => {
@@ -153,6 +159,12 @@ describe('Utils', () => {
             },
           })
         ).toBe(mockCipherProvider);
+        expect(mockCipherProvider.setAppParams).toHaveBeenCalledWith({
+          appName: 'Dapp',
+          appChainIds: [],
+          appLogoUrl: null,
+          options: 'smartWalletOnly',
+        });
       });
 
       it('should handle exception when accessing window.top', () => {
