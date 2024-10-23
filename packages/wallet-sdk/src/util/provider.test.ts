@@ -89,7 +89,12 @@ describe('Utils', () => {
           })
         ).toBe(extensionProvider);
 
-        expect(mockSetAppInfo).toHaveBeenCalledWith('Dapp', null, []);
+        expect(mockSetAppInfo).toHaveBeenCalledWith(
+          'Dapp',
+          null,
+          [],
+          expect.objectContaining({ options: 'all' })
+        );
       });
 
       it('smartWalletOnly - should return undefined', () => {
@@ -113,7 +118,7 @@ describe('Utils', () => {
     describe('Browser Provider', () => {
       const mockCipherProvider = {
         isCoinbaseBrowser: true,
-        setAppParams: vi.fn(),
+        setAppInfo: vi.fn(),
       } as unknown as CBInjectedProvider;
 
       beforeAll(() => {
@@ -138,12 +143,14 @@ describe('Utils', () => {
             },
           })
         ).toBe(mockCipherProvider);
-        expect(mockCipherProvider.setAppParams).toHaveBeenCalledWith({
-          appName: 'Dapp',
-          appChainIds: [],
-          appLogoUrl: null,
-          options: 'all',
-        });
+        expect(mockCipherProvider.setAppInfo).toHaveBeenCalledWith(
+          'Dapp',
+          null,
+          [],
+          expect.objectContaining({
+            options: 'all',
+          })
+        );
       });
 
       it('smartWalletOnly - Should still return injected browser provider', () => {
@@ -159,12 +166,14 @@ describe('Utils', () => {
             },
           })
         ).toBe(mockCipherProvider);
-        expect(mockCipherProvider.setAppParams).toHaveBeenCalledWith({
-          appName: 'Dapp',
-          appChainIds: [],
-          appLogoUrl: null,
-          options: 'smartWalletOnly',
-        });
+        expect(mockCipherProvider.setAppInfo).toHaveBeenCalledWith(
+          'Dapp',
+          null,
+          [],
+          expect.objectContaining({
+            options: 'all',
+          })
+        );
       });
 
       it('should handle exception when accessing window.top', () => {
