@@ -36,7 +36,6 @@ export interface CBWindow {
 export interface CBInjectedProvider extends ProviderInterface {
   isCoinbaseBrowser?: boolean;
   setAppInfo?: (...args: unknown[]) => unknown;
-  setAppParams?: (params: Record<string, unknown>) => void;
 }
 
 function getCoinbaseInjectedLegacyProvider(): CBInjectedProvider | undefined {
@@ -53,32 +52,23 @@ function getInjectedEthereum(): CBInjectedProvider | undefined {
   }
 }
 
-function flattenParams({
-  metadata,
-  preference,
-}: Readonly<ConstructorOptions>): Record<string, unknown> {
-  return {
-    ...metadata,
-    ...preference,
-  };
-}
-
 export function getCoinbaseInjectedProvider({
   metadata,
   preference,
 }: Readonly<ConstructorOptions>): ProviderInterface | undefined {
+  const { appName, appLogoUrl, appChainIds } = metadata;
+
   if (preference.options !== 'smartWalletOnly') {
     const extension = getCoinbaseInjectedLegacyProvider();
     if (extension) {
-      const { appName, appLogoUrl, appChainIds } = metadata;
-      extension.setAppInfo?.(appName, appLogoUrl, appChainIds);
+      extension.setAppInfo?.(appName, appLogoUrl, appChainIds, preference);
       return extension;
     }
   }
 
   const ethereum = getInjectedEthereum();
   if (ethereum?.isCoinbaseBrowser) {
-    ethereum.setAppParams?.(flattenParams({ metadata, preference }));
+    ethereum.setAppInfo?.(appName, appLogoUrl, appChainIds, preference);
     return ethereum;
   }
 
