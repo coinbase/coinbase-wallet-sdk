@@ -56,17 +56,19 @@ export function getCoinbaseInjectedProvider({
   metadata,
   preference,
 }: Readonly<ConstructorOptions>): ProviderInterface | undefined {
+  const { appName, appLogoUrl, appChainIds } = metadata;
+
   if (preference.options !== 'smartWalletOnly') {
     const extension = getCoinbaseInjectedLegacyProvider();
     if (extension) {
-      const { appName, appLogoUrl, appChainIds } = metadata;
-      extension.setAppInfo?.(appName, appLogoUrl, appChainIds);
+      extension.setAppInfo?.(appName, appLogoUrl, appChainIds, preference);
       return extension;
     }
   }
 
   const ethereum = getInjectedEthereum();
   if (ethereum?.isCoinbaseBrowser) {
+    ethereum.setAppInfo?.(appName, appLogoUrl, appChainIds, preference);
     return ethereum;
   }
 

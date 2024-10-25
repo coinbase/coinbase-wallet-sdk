@@ -1,6 +1,7 @@
 import { vi } from 'vitest';
 
 import {
+  CBInjectedProvider,
   CBWindow,
   checkErrorForInvalidRequestArgs,
   fetchRPCRequest,
@@ -88,7 +89,12 @@ describe('Utils', () => {
           })
         ).toBe(extensionProvider);
 
-        expect(mockSetAppInfo).toHaveBeenCalledWith('Dapp', null, []);
+        expect(mockSetAppInfo).toHaveBeenCalledWith(
+          'Dapp',
+          null,
+          [],
+          expect.objectContaining({ options: 'all' })
+        );
       });
 
       it('smartWalletOnly - should return undefined', () => {
@@ -110,11 +116,10 @@ describe('Utils', () => {
     });
 
     describe('Browser Provider', () => {
-      class MockCipherProviderClass {
-        public isCoinbaseBrowser = true;
-      }
-
-      const mockCipherProvider = new MockCipherProviderClass() as unknown as ProviderInterface;
+      const mockCipherProvider = {
+        isCoinbaseBrowser: true,
+        setAppInfo: vi.fn(),
+      } as unknown as CBInjectedProvider;
 
       beforeAll(() => {
         window.coinbaseWalletExtension = undefined;
@@ -138,6 +143,14 @@ describe('Utils', () => {
             },
           })
         ).toBe(mockCipherProvider);
+        expect(mockCipherProvider.setAppInfo).toHaveBeenCalledWith(
+          'Dapp',
+          null,
+          [],
+          expect.objectContaining({
+            options: 'all',
+          })
+        );
       });
 
       it('smartWalletOnly - Should still return injected browser provider', () => {
@@ -153,6 +166,14 @@ describe('Utils', () => {
             },
           })
         ).toBe(mockCipherProvider);
+        expect(mockCipherProvider.setAppInfo).toHaveBeenCalledWith(
+          'Dapp',
+          null,
+          [],
+          expect.objectContaining({
+            options: 'all',
+          })
+        );
       });
 
       it('should handle exception when accessing window.top', () => {
