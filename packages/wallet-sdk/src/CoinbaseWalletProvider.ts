@@ -40,7 +40,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
     }
   }
 
-  public async request(args: RequestArguments): Promise<unknown> {
+  public async request<T>(args: RequestArguments): Promise<T> {
     try {
       checkErrorForInvalidRequestArgs(args);
       if (!this.signer) {
@@ -54,9 +54,9 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
             break;
           }
           case 'net_version':
-            return 1; // default value
+            return 1 as T; // default value
           case 'eth_chainId':
-            return hexStringFromNumber(1); // default value
+            return hexStringFromNumber(1) as T; // default value
           default: {
             throw standardErrors.provider.unauthorized(
               "Must call 'eth_requestAccounts' before other methods"
