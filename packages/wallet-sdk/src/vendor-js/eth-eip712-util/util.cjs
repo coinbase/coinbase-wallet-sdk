@@ -24,7 +24,7 @@ function bufferBEFromBigInt(num, length) {
   // Ensure the hex string length is even
   if (hex.length % 2 !== 0) hex = '0' + hex;
   // Convert hex string to a byte array
-  const byteArray = hex.match(/.{1,2}/g).map(byte => Number.parseInt(byte, 16));
+  const byteArray = hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16));
   // Ensure the byte array is of the specified length
   while (byteArray.length < length) {
     byteArray.unshift(0); // Prepend with zeroes if shorter than required length
