@@ -9,15 +9,6 @@ export function validatePreferences(preference?: Preference) {
     return;
   }
 
-  if (
-    preference.keysUrl &&
-    !['https://keys.coinbase.com/connect', 'https://keys-dev.coinbase.com/connect'].includes(
-      preference.keysUrl
-    )
-  ) {
-    throw new Error(`Invalid keysUrl: ${preference.keysUrl}`);
-  }
-
   if (!['all', 'smartWalletOnly', 'eoaOnly'].includes(preference.options)) {
     throw new Error(`Invalid options: ${preference.options}`);
   }
