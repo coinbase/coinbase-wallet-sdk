@@ -118,6 +118,7 @@ describe('Communicator', () => {
             version: VERSION,
             metadata: appMetadata,
             preference,
+            location: 'http://localhost:3000/',
           },
         },
         urlOrigin
@@ -145,6 +146,7 @@ describe('Communicator', () => {
             version: VERSION,
             metadata: appMetadata,
             preference,
+            location: 'http://localhost:3000/',
           },
         },
         urlOrigin
@@ -167,6 +169,7 @@ describe('Communicator', () => {
             version: VERSION,
             metadata: appMetadata,
             preference,
+            location: 'http://localhost:3000/',
           },
         },
         urlOrigin

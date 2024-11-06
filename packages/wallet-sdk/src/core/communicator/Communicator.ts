@@ -113,6 +113,7 @@ export class Communicator {
             version: VERSION,
             metadata: this.metadata,
             preference: this.preference,
+            location: window.location.toString(),
           },
         });
       })
