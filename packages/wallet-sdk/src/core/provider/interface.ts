@@ -54,7 +54,9 @@ export type Attribution =
 
 export type Preference = {
   /**
-   * @deprecated internal use only.
+   * The URL for the keys popup.
+   * By default, `https://keys.coinbase.com/connect` is used for production. Use `https://keys-dev.coinbase.com/connect` for development environments.
+   * @type {string}
    */
   keysUrl?: string;
   /**
