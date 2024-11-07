@@ -1,7 +1,9 @@
 import { fireEvent } from '@testing-library/preact';
 import { vi } from 'vitest';
 
-import * as eip712 from '../../vendor-js/eth-eip712-util/index.cjs';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+import eip712 from '../../vendor-js/eth-eip712-util/index.cjs';
 import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants.js';
 import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from './relay/mocks/fixtures.js';
 import { mockedWalletLinkRelay } from './relay/mocks/relay.js';
