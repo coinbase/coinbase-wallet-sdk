@@ -1,8 +1,6 @@
 // Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import * as eip712 from '../../vendor-js/eth-eip712-util/index.cjs';
+import eip712 from '../../vendor-js/eth-eip712-util/index.cjs';
 import { Signer } from '../interface.js';
 import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants.js';
 import { EthereumTransactionParams } from './relay/type/EthereumTransactionParams.js';
