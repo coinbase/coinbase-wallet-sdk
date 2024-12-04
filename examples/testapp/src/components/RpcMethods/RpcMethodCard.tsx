@@ -25,7 +25,7 @@ import { mainnet } from 'viem/chains';
 
 import { useCBWSDK } from '../../context/CBWSDKReactContextProvider';
 import { verifySignMsg } from './method/signMessageMethods';
-import { ADDR_TO_FILL } from './shortcut/const';
+import { ADDR_TO_FILL, CHAIN_ID_TO_FILL } from './shortcut/const';
 import { multiChainShortcutsMap } from './shortcut/multipleChainShortcuts';
 
 type ResponseType = string;
@@ -71,18 +71,26 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
       setVerifyResult(null);
       setResponse(null);
       if (!provider) return;
-      let values = data;
+
+      const dataToSubmit = { ...data };
+      let values = dataToSubmit;
       if (format) {
         // fill active address to the request
         const addresses = await provider.request({ method: 'eth_accounts' });
-        for (const key in data) {
+        const chainId = await provider.request({ method: 'eth_chainId' });
+
+        for (const key in dataToSubmit) {
           if (Object.prototype.hasOwnProperty.call(data, key)) {
-            if (data[key] === ADDR_TO_FILL) {
-              data[key] = addresses[0];
+            if (dataToSubmit[key] === ADDR_TO_FILL) {
+              dataToSubmit[key] = addresses[0];
+            }
+
+            if (dataToSubmit[key] === CHAIN_ID_TO_FILL) {
+              dataToSubmit[key] = chainId;
             }
           }
         }
-        values = format(data);
+        values = format(dataToSubmit);
       }
       try {
         const response = await provider.request({
