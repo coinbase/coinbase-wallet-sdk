@@ -7,7 +7,7 @@
     "dev": "next dev --port 3001",
     "build": "next build",
     "start": "next start",
-    "export": "next build && next export"
+    "export": "next build"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
