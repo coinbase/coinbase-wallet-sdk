@@ -3,7 +3,7 @@ import latestPkgJson from '@coinbase/wallet-sdk/package.json';
 import { CoinbaseWalletSDK as CoinbaseWalletSDK372 } from '@coinbase/wallet-sdk-3.7.2';
 import { CoinbaseWalletSDK as CoinbaseWalletSDK393 } from '@coinbase/wallet-sdk-3.9.3';
 import { CoinbaseWalletSDK as CoinbaseWalletSDKLatest } from '@coinbase/wallet-sdk-latest';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 type CBWSDKProviderProps = {
   children: React.ReactNode;
@@ -36,7 +36,7 @@ declare global {
 
 if (typeof window !== 'undefined') {
   window.setPopupUrl = (url: string) => {
-    const communicator = window.ethereum.communicator;
+    const communicator = window.ethereum?.communicator;
     if (communicator) {
       communicator.url = new URL(url);
     }
@@ -44,6 +44,7 @@ if (typeof window !== 'undefined') {
 }
 
 export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
+  const previousScwUrlRef = useRef<ScwUrlType | undefined>();
   const [version, setVersion] = React.useState<SDKVersionType | undefined>(undefined);
   const [option, setOption] = React.useState<OptionsType | undefined>(undefined);
   const [config, setConfig] = React.useState<Preference>({
@@ -108,18 +109,79 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
       return;
     }
     const cbwprovider = cbwsdk.makeWeb3Provider(preference);
-    cbwprovider.on('disconnect', () => {
+
+    const handleConnect = (info: { chainId: string }) => {
+      // eslint-disable-next-line no-console
+      console.log('🟢 Connected:', info);
+    };
+
+    const handleDisconnect = () => {
+      // eslint-disable-next-line no-console
+      console.log('🔴 Disconnect detected');
+      window.ethereum.disconnect();
       location.reload();
-    });
+    };
+
+    const handleAccountsChanged = (accounts: string[]) => {
+      // eslint-disable-next-line no-console
+      console.log('👤 Accounts changed:', accounts);
+    };
+
+    const handleChainChanged = (chainId: string) => {
+      // eslint-disable-next-line no-console
+      console.log('⛓️ Chain changed:', chainId);
+    };
+
+    const handleMessage = (message: { type: string; data: unknown }) => {
+      // eslint-disable-next-line no-console
+      console.log('📨 Message received:', message);
+    };
+
+    cbwprovider.on('connect', handleConnect);
+    cbwprovider.on('accountsChanged', handleAccountsChanged);
+    cbwprovider.on('chainChanged', handleChainChanged);
+    cbwprovider.on('message', handleMessage);
+
+    // Add request handler to check for 4100 errors
+    const originalRequest = cbwprovider.request.bind(cbwprovider);
+    cbwprovider.request = async (...args) => {
+      try {
+        return await originalRequest(...args);
+      } catch (error) {
+        if (error?.code === 4100) {
+          // eslint-disable-next-line no-console
+          console.log('🔴 4100 error detected, disconnecting');
+          handleDisconnect();
+        }
+        throw error;
+      }
+    };
+
     window.ethereum = cbwprovider;
     setProvider(cbwprovider);
+
+    return () => {
+      cbwprovider.removeListener('connect', handleConnect);
+      cbwprovider.removeListener('disconnect', handleDisconnect);
+      cbwprovider.removeListener('accountsChanged', handleAccountsChanged);
+      cbwprovider.removeListener('chainChanged', handleChainChanged);
+      cbwprovider.removeListener('message', handleMessage);
+    };
   }, [version, option, config]);
 
   useEffect(() => {
     if (version === 'HEAD' || version === latestPkgJson.version) {
-      if (scwUrl) window.setPopupUrl?.(scwUrl);
+      if (scwUrl && previousScwUrlRef.current && scwUrl !== previousScwUrlRef.current) {
+        if (provider?.disconnect) {
+          provider.disconnect();
+        }
+      }
+      if (scwUrl) {
+        previousScwUrlRef.current = scwUrl;
+        window.setPopupUrl?.(scwUrl);
+      }
     }
-  }, [version, scwUrl]);
+  }, [version, scwUrl, provider]);
 
   const setPreference = useCallback((option: OptionsType) => {
     localStorage.setItem(OPTIONS_KEY, option);
