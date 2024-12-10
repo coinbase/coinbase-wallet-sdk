@@ -110,26 +110,30 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
     }
     const cbwprovider = cbwsdk.makeWeb3Provider(preference);
 
-    // Add all recommended event handlers
-    const handleConnect = (info: any) => {
+    const handleConnect = (info: { chainId: string }) => {
+      // eslint-disable-next-line no-console
       console.log('🟢 Connected:', info);
     };
 
     const handleDisconnect = () => {
+      // eslint-disable-next-line no-console
       console.log('🔴 Disconnect detected');
       window.ethereum.disconnect();
       location.reload();
     };
 
     const handleAccountsChanged = (accounts: string[]) => {
+      // eslint-disable-next-line no-console
       console.log('👤 Accounts changed:', accounts);
     };
 
     const handleChainChanged = (chainId: string) => {
+      // eslint-disable-next-line no-console
       console.log('⛓️ Chain changed:', chainId);
     };
 
-    const handleMessage = (message: any) => {
+    const handleMessage = (message: { type: string; data: unknown }) => {
+      // eslint-disable-next-line no-console
       console.log('📨 Message received:', message);
     };
 
@@ -145,6 +149,7 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
         return await originalRequest(...args);
       } catch (error) {
         if (error?.code === 4100) {
+          // eslint-disable-next-line no-console
           console.log('🔴 4100 error detected, disconnecting');
           handleDisconnect();
         }
