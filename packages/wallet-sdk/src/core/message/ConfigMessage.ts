@@ -4,11 +4,6 @@ export interface ConfigMessage extends Message {
   event: ConfigEvent;
 }
 
-export type ConfigEvent =
-  | 'PopupLoaded'
-  | 'PopupUnload'
-  | 'selectSignerType'
-  | 'WalletLinkSessionRequest'
-  | 'WalletLinkUpdate';
+export type ConfigEvent = 'PopupLoaded' | 'PopupUnload' | 'selectSignerType';
 
-export type SignerType = 'scw' | 'walletlink';
+export type SignerType = 'scw';

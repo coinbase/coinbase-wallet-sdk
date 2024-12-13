@@ -8,7 +8,6 @@
     "eth",
     "ethereum",
     "wallet",
-    "walletlink",
     "web3"
   ],
   "type": "module",

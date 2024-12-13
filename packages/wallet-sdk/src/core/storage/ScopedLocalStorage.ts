@@ -3,7 +3,7 @@
 // TODO: clean up, or possibly deprecate Storage class
 export class ScopedLocalStorage {
   constructor(
-    private scope: 'CBWSDK' | 'walletlink',
+    private scope: 'CBWSDK',
     private module?: string
   ) {}
 
@@ -46,6 +46,5 @@ export class ScopedLocalStorage {
 
   static clearAll() {
     new ScopedLocalStorage('CBWSDK').clear();
-    new ScopedLocalStorage('walletlink').clear();
   }
 }
