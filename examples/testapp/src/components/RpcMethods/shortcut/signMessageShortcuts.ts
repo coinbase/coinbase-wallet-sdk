@@ -138,7 +138,7 @@ const ethSignTypedDataV4Shortcuts: (chainId: number) => ShortcutType[] = (chainI
           name: 'Spend Permission Manager',
           version: '1',
           chainId,
-          verifyingContract: '0xf85210B21cC50302F477BA56686d2019dC9b67Ad'
+          verifyingContract: '0xf85210B21cC50302F477BA56686d2019dC9b67Ad',
         },
         types: {
           SpendPermission: [
@@ -150,7 +150,7 @@ const ethSignTypedDataV4Shortcuts: (chainId: number) => ShortcutType[] = (chainI
             { name: 'start', type: 'uint48' },
             { name: 'end', type: 'uint48' },
             { name: 'salt', type: 'uint256' },
-            { name: 'extraData', type: 'bytes' }
+            { name: 'extraData', type: 'bytes' },
           ],
         },
         primaryType: 'SpendPermission',
@@ -163,7 +163,7 @@ const ethSignTypedDataV4Shortcuts: (chainId: number) => ShortcutType[] = (chainI
           start: 1724264802,
           end: 17242884802,
           salt: '0x1',
-          extraData: '0x'
+          extraData: '0x',
         },
       },
       address: ADDR_TO_FILL,
