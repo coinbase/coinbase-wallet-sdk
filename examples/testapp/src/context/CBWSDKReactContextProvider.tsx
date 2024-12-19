@@ -118,7 +118,6 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
     const handleDisconnect = () => {
       // eslint-disable-next-line no-console
       console.log('🔴 Disconnect detected');
-      window.ethereum.disconnect();
       location.reload();
     };
 
@@ -141,6 +140,7 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
     cbwprovider.on('accountsChanged', handleAccountsChanged);
     cbwprovider.on('chainChanged', handleChainChanged);
     cbwprovider.on('message', handleMessage);
+    cbwprovider.on('disconnect', handleDisconnect);
 
     // Add request handler to check for 4100 errors
     const originalRequest = cbwprovider.request.bind(cbwprovider);
