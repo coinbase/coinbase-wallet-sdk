@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { Signer } from '../interface.js';
 import { SCWKeyManager } from './SCWKeyManager.js';
 import { Communicator } from ':core/communicator/Communicator.js';
@@ -86,9 +87,46 @@ export class SCWSigner implements Signer {
     this.callback?.('accountsChanged', accounts);
   }
 
+  async lightHandshake(args: RequestArguments) {
+    const handshakeMessage = await this.createRequestMessage({
+      lightHandshake: {
+        method: 'coinbase_lightHandshake',
+        params: Object.assign({}, this.metadata, args.params ?? {}),
+      },
+    });
+    const response: RPCResponseMessage =
+      await this.communicator.postRequestAndWaitForResponse(handshakeMessage);
+
+    // store peer's public key
+    if ('failure' in response.content) throw response.content.failure;
+    const peerPublicKey = await importKeyFromHexString('public', response.sender);
+    await this.keyManager.setPeerPublicKey(peerPublicKey);
+
+    const decrypted = await this.decryptResponseMessage(response);
+
+    const result = decrypted.result;
+    if ('error' in result) throw result.error;
+
+    const { ok } = result.value as { ok?: boolean };
+    if (!ok) throw standardErrors.provider.unauthorized();
+  }
+
   async request(request: RequestArguments) {
     if (this.accounts.length === 0) {
-      throw standardErrors.provider.unauthorized();
+      switch (request.method) {
+        case 'eth_requestAccounts':
+          await this.handshake(request);
+          this.callback?.('connect', { chainId: hexStringFromNumber(this.chain.id) });
+          return this.accounts;
+        case 'wallet_getCallsStatus':
+          if (!this.chain.rpcUrl) throw standardErrors.rpc.internal('No RPC URL set for chain');
+          return fetchRPCRequest(request, this.chain.rpcUrl);
+        case 'wallet_sendCalls':
+        case 'wallet_sign':
+          return this.sendRequestToPopup(request);
+        default:
+          throw standardErrors.provider.unauthorized();
+      }
     }
 
     switch (request.method) {

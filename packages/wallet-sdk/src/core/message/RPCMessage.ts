@@ -21,6 +21,9 @@ export interface RPCRequestMessage extends RPCMessage {
       }
     | {
         encrypted: EncryptedData;
+      }
+    | {
+        lightHandshake: RequestArguments;
       };
 }
 
