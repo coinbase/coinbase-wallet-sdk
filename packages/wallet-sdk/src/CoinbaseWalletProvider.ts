@@ -58,9 +58,13 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
           case 'eth_chainId':
             return hexStringFromNumber(1) as T; // default value
           default: {
-            throw standardErrors.provider.unauthorized(
-              "Must call 'eth_requestAccounts' before other methods"
-            );
+            const signerType = await this.requestSignerSelection(args);
+            const signer = this.initSigner(signerType);
+            await signer.lightHandshake?.(args);
+            this.signer = signer;
+            storeSignerType(signerType);
+
+            return signer.request(args);
           }
         }
       }
