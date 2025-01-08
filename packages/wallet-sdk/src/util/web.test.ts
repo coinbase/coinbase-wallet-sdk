@@ -10,6 +10,8 @@ vi.mock('./checkCrossOriginOpenerPolicy');
 
 const mockOrigin = 'http://localhost';
 
+const mockId = 'wallet_123';
+
 describe('PopupManager', () => {
   beforeAll(() => {
     global.window = Object.create(window);
@@ -32,12 +34,12 @@ describe('PopupManager', () => {
     const url = new URL('https://example.com');
     (window.open as Mock).mockReturnValue({ focus: vi.fn() });
 
-    const popup = openPopup(url);
+    const popup = openPopup(url, mockId);
 
     expect(window.open).toHaveBeenNthCalledWith(
       1,
       url,
-      'Smart Wallet',
+      mockId,
       'width=420, height=540, left=302, top=114'
     );
     expect(popup.focus).toHaveBeenCalledTimes(1);
@@ -51,7 +53,7 @@ describe('PopupManager', () => {
   it('should throw an error if popup fails to open', () => {
     (window.open as Mock).mockReturnValue(null);
 
-    expect(() => openPopup(new URL('https://example.com'))).toThrow(
+    expect(() => openPopup(new URL('https://example.com'), mockId)).toThrow(
       standardErrors.rpc.internal('Pop up window failed to open')
     );
   });
