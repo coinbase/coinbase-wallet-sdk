@@ -7,15 +7,14 @@ const POPUP_HEIGHT = 540;
 
 // Window Management
 
-export function openPopup(url: URL): Window {
+export function openPopup(url: URL, id: string): Window {
   const left = (window.innerWidth - POPUP_WIDTH) / 2 + window.screenX;
   const top = (window.innerHeight - POPUP_HEIGHT) / 2 + window.screenY;
-
   appendAppInfoQueryParams(url);
 
   const popup = window.open(
     url,
-    'Smart Wallet',
+    id,
     `width=${POPUP_WIDTH}, height=${POPUP_HEIGHT}, left=${left}, top=${top}`
   );
 
