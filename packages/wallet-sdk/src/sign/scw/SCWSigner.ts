@@ -96,14 +96,14 @@ export class SCWSigner implements Signer {
   }
 
   async request(request: RequestArguments) {
-    switch (request.method) {
-      case 'wallet_sendCalls':
-      case 'wallet_sign':
-        return this.sendRequestToPopup(request);
-    }
-
     if (this.accounts.length === 0) {
-      throw standardErrors.provider.unauthorized();
+      switch (request.method) {
+        case 'wallet_sendCalls':
+        case 'wallet_sign':
+          return this.sendRequestToPopup(request);
+        default:
+          throw standardErrors.provider.unauthorized();
+      }
     }
 
     switch (request.method) {
