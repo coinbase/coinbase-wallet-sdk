@@ -1,5 +1,7 @@
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js';
 import * as util from './sign/util.js';
+import * as providerUtil from './util/provider.js';
+import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
@@ -15,6 +17,7 @@ function createProvider() {
 const mockHandshake = vi.fn();
 const mockRequest = vi.fn();
 const mockCleanup = vi.fn();
+const mockFetchRPCRequest = vi.fn();
 const mockFetchSignerType = vi.spyOn(util, 'fetchSignerType');
 const mockStoreSignerType = vi.spyOn(util, 'storeSignerType');
 const mockLoadSignerType = vi.spyOn(util, 'loadSignerType');
@@ -34,6 +37,7 @@ beforeEach(() => {
       cleanup: mockCleanup,
     };
   });
+  vi.spyOn(providerUtil, 'fetchRPCRequest').mockImplementation(mockFetchRPCRequest);
 
   provider = createProvider();
 });
@@ -93,6 +97,26 @@ describe('Request Handling', () => {
         code: standardErrorCodes.provider.unsupportedMethod,
       });
     }
+  });
+});
+
+describe('Ephemeral methods', () => {
+  it('should post requests to wallet rpc url for wallet_getCallsStatus', async () => {
+    const args = { method: 'wallet_getCallsStatus' };
+    expect(provider['signer']).toBeNull();
+    await provider.request(args);
+    expect(mockFetchRPCRequest).toHaveBeenCalledWith(args, CB_WALLET_RPC_URL);
+    expect(provider['signer']).toBeNull();
+  });
+
+  it('should pass args to SCWSigner', async () => {
+    const args = { method: 'wallet_sign', params: ['0xdeadbeef'] };
+    expect(provider['signer']).toBeNull();
+    await provider.request(args);
+    expect(mockHandshake).toHaveBeenCalledWith({ method: 'coinbase_handshake' });
+    expect(mockRequest).toHaveBeenCalledWith(args);
+    expect(mockCleanup).toHaveBeenCalled();
+    expect(provider['signer']).toBeNull();
   });
 });
 

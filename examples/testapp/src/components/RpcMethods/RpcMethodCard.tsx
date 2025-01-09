@@ -75,17 +75,15 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
       const dataToSubmit = { ...data };
       let values = dataToSubmit;
       if (format) {
-        // fill active address to the request
-        const addresses = await provider.request({ method: 'eth_accounts' });
-        const chainId = await provider.request({ method: 'eth_chainId' });
-
         for (const key in dataToSubmit) {
           if (Object.prototype.hasOwnProperty.call(data, key)) {
             if (dataToSubmit[key] === ADDR_TO_FILL) {
+              const addresses = await provider.request({ method: 'eth_accounts' });
               dataToSubmit[key] = addresses[0];
             }
 
             if (dataToSubmit[key] === CHAIN_ID_TO_FILL) {
+              const chainId = await provider.request({ method: 'eth_chainId' });
               dataToSubmit[key] = chainId;
             }
           }

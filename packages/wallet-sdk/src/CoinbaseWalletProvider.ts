@@ -1,6 +1,7 @@
 import { Signer } from './sign/interface.js';
 import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util.js';
 import { Communicator } from ':core/communicator/Communicator.js';
+import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { serializeError } from ':core/error/serialize.js';
@@ -15,7 +16,7 @@ import {
 } from ':core/provider/interface.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { hexStringFromNumber } from ':core/type/util.js';
-import { checkErrorForInvalidRequestArgs } from ':util/provider.js';
+import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from ':util/provider.js';
 
 export class CoinbaseWalletProvider extends ProviderEventEmitter implements ProviderInterface {
   private readonly metadata: AppMetadata;
@@ -53,6 +54,16 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
             storeSignerType(signerType);
             break;
           }
+          case 'wallet_sendCalls':
+          case 'wallet_sign': {
+            const ephemeralSigner = this.initSigner('scw');
+            await ephemeralSigner.handshake({ method: 'coinbase_handshake' }); // exchange session keys
+            const result = await ephemeralSigner.request(args); // send diffie-hellman encrypted request
+            await ephemeralSigner.cleanup(); // clean up (rotate) the ephemeral session keys
+            return result as T;
+          }
+          case 'wallet_getCallsStatus':
+            return fetchRPCRequest(args, CB_WALLET_RPC_URL);
           case 'net_version':
             return 1 as T; // default value
           case 'eth_chainId':
@@ -64,7 +75,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
           }
         }
       }
-      return this.signer.request(args);
+      return await this.signer.request(args);
     } catch (error) {
       const { code } = error as { code?: number };
       if (code === standardErrorCodes.provider.unauthorized) this.disconnect();
