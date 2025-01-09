@@ -1,8 +1,8 @@
 import { ShortcutType } from './ShortcutType';
 
-const walletSignEphemeralShortcuts: ShortcutType[] = [
+const walletSendCallsEphemeralShortcuts: ShortcutType[] = [
   {
-    key: 'wallet_sign',
+    key: 'wallet_sendCalls',
     data: {
       chainId: '84532',
       calls: [],
@@ -11,6 +11,16 @@ const walletSignEphemeralShortcuts: ShortcutType[] = [
   },
 ];
 
+const walletSignEphemeralShortcuts: ShortcutType[] = [
+  {
+    key: 'wallet_sign',
+    data: {
+      message: 'Hello, world!',
+    },
+  },
+];
+
 export const ephemeralMethodShortcutsMap = {
+  wallet_sendCalls: walletSendCallsEphemeralShortcuts,
   wallet_sign: walletSignEphemeralShortcuts,
 };

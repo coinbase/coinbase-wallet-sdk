@@ -1,7 +1,7 @@
 import { RpcRequestInput } from './RpcRequestInput';
 
-const walletSignEphemeral: RpcRequestInput = {
-  method: 'wallet_sign',
+const walletSendCallsEphemeral: RpcRequestInput = {
+  method: 'wallet_sendCalls',
   params: [
     { key: 'version', required: true },
     { key: 'chainId', required: true },
@@ -16,4 +16,12 @@ const walletSignEphemeral: RpcRequestInput = {
   ],
 };
 
-export const ephemeralMethods = [walletSignEphemeral];
+const walletSignEphemeral: RpcRequestInput = {
+  method: 'wallet_sign',
+  params: [{ key: 'message', required: true }],
+  format: (data: Record<string, string>) => [
+    `0x${Buffer.from(data.message, 'utf8').toString('hex')}`,
+  ],
+};
+
+export const ephemeralMethods = [walletSendCallsEphemeral, walletSignEphemeral];

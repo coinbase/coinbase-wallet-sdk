@@ -124,6 +124,7 @@ export class SCWSigner implements Signer {
         return this.handleSwitchChainRequest(request);
       case 'eth_ecRecover':
       case 'personal_sign':
+      case 'wallet_sign':
       case 'personal_ecRecover':
       case 'eth_signTransaction':
       case 'eth_sendTransaction':
