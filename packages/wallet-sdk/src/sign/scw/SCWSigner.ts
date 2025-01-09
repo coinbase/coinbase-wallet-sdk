@@ -61,6 +61,10 @@ export class SCWSigner implements Signer {
   }
 
   async handshake(args: RequestArguments) {
+    // Open the popup before constructing the request message.
+    // This is to ensure that the popup is not blocked by some browsers (i.e. Safari)
+    await this.communicator.waitForPopupLoaded?.();
+
     const handshakeMessage = await this.createRequestMessage({
       handshake: {
         method: args.method,
@@ -80,13 +84,24 @@ export class SCWSigner implements Signer {
     const result = decrypted.result;
     if ('error' in result) throw result.error;
 
-    const accounts = result.value as AddressString[];
-    this.accounts = accounts;
-    this.storage.storeObject(ACCOUNTS_KEY, accounts);
-    this.callback?.('accountsChanged', accounts);
+    switch (args.method) {
+      case 'eth_requestAccounts': {
+        const accounts = result.value as AddressString[];
+        this.accounts = accounts;
+        this.storage.storeObject(ACCOUNTS_KEY, accounts);
+        this.callback?.('accountsChanged', accounts);
+        break;
+      }
+    }
   }
 
   async request(request: RequestArguments) {
+    switch (request.method) {
+      case 'wallet_sendCalls':
+      case 'wallet_sign':
+        return this.sendRequestToPopup(request);
+    }
+
     if (this.accounts.length === 0) {
       throw standardErrors.provider.unauthorized();
     }

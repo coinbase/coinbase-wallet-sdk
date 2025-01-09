@@ -53,6 +53,13 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
             storeSignerType(signerType);
             break;
           }
+          case 'wallet_sign': {
+            const ephemeralSigner = this.initSigner('scw');
+            await ephemeralSigner.handshake({ method: 'coinbase_handshake' }); // exchange session keys
+            const result = await ephemeralSigner.request(args); // send diffie-hellman encrypted request
+            await ephemeralSigner.cleanup(); // clean up (rotate) the ephemeral session keys
+            return result as T;
+          }
           case 'net_version':
             return 1 as T; // default value
           case 'eth_chainId':
@@ -64,7 +71,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
           }
         }
       }
-      return this.signer.request(args);
+      return await this.signer.request(args);
     } catch (error) {
       const { code } = error as { code?: number };
       if (code === standardErrorCodes.provider.unauthorized) this.disconnect();
