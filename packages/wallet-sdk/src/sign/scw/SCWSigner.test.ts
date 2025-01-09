@@ -93,7 +93,7 @@ describe('SCWSigner', () => {
   });
 
   describe('handshake', () => {
-    it('should perform a successful handshake', async () => {
+    it('should perform a successful handshake for eth_requestAccounts', async () => {
       (decryptContent as Mock).mockResolvedValueOnce({
         result: {
           value: ['0xAddress'],
@@ -124,6 +124,32 @@ describe('SCWSigner', () => {
       expect(mockCallback).toHaveBeenCalledWith('connect', { chainId: '0x1' });
     });
 
+    it('should perform a successful handshake for coinbase_handshake', async () => {
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: null,
+        },
+      });
+
+      await signer.handshake({ method: 'coinbase_handshake' });
+
+      expect(importKeyFromHexString).toHaveBeenCalledWith('public', '0xPublicKey');
+      expect(mockCommunicator.postRequestAndWaitForResponse).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sender: '0xPublicKey',
+          content: {
+            handshake: expect.objectContaining({
+              method: 'coinbase_handshake',
+            }),
+          },
+        })
+      );
+      expect(mockKeyManager.setPeerPublicKey).toHaveBeenCalledWith(mockCryptoKey);
+      expect(decryptContent).toHaveBeenCalledWith(encryptedData, mockCryptoKey);
+
+      expect(storageStoreSpy).not.toHaveBeenCalled();
+    });
+
     it('should throw an error if failure in response.content', async () => {
       const mockResponse: RPCResponseMessage = {
         id: '1-2-3-4-5',
@@ -138,6 +164,42 @@ describe('SCWSigner', () => {
         mockError
       );
     });
+  });
+
+  describe('request - using ephemeral SCWSigner', () => {
+    it.each(['wallet_sign', 'wallet_sendCalls'])(
+      'should perform a successful request after coinbase_handshake',
+      async (method) => {
+        const mockRequest: RequestArguments = { method };
+
+        (decryptContent as Mock).mockResolvedValueOnce({
+          result: {
+            value: null,
+          },
+        });
+        await signer.handshake({ method: 'coinbase_handshake' });
+        expect(signer['accounts']).toEqual([]);
+
+        (decryptContent as Mock).mockResolvedValueOnce({
+          result: {
+            value: '0xSignature',
+          },
+        });
+        (exportKeyToHexString as Mock).mockResolvedValueOnce('0xPublicKey');
+
+        const result = await signer.request(mockRequest);
+
+        expect(encryptContent).toHaveBeenCalled();
+        expect(mockCommunicator.postRequestAndWaitForResponse).toHaveBeenNthCalledWith(
+          2,
+          expect.objectContaining({
+            sender: '0xPublicKey',
+            content: { encrypted: encryptedData },
+          })
+        );
+        expect(result).toEqual('0xSignature');
+      }
+    );
   });
 
   describe('request', () => {
@@ -185,6 +247,7 @@ describe('SCWSigner', () => {
     it.each([
       'eth_ecRecover',
       'personal_sign',
+      'wallet_sign',
       'personal_ecRecover',
       'eth_signTransaction',
       'eth_sendTransaction',
