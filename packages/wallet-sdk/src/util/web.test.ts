@@ -10,8 +10,6 @@ vi.mock('./checkCrossOriginOpenerPolicy');
 
 const mockOrigin = 'http://localhost';
 
-const mockId = 'wallet_123';
-
 describe('PopupManager', () => {
   beforeAll(() => {
     global.window = Object.create(window);
