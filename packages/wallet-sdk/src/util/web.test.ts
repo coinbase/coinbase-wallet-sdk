@@ -37,7 +37,7 @@ describe('PopupManager', () => {
     expect(window.open).toHaveBeenNthCalledWith(
       1,
       url,
-      'Smart Wallet',
+      expect.stringContaining('wallet_'),
       'width=420, height=540, left=302, top=114'
     );
     expect(popup.focus).toHaveBeenCalledTimes(1);
