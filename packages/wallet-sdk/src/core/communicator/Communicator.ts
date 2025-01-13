@@ -25,7 +25,6 @@ export class Communicator {
   private readonly metadata: AppMetadata;
   private readonly preference: Preference;
   private readonly url: URL;
-  private id: string | null = null;
   private popup: Window | null = null;
   private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>();
 
@@ -100,8 +99,7 @@ export class Communicator {
       return this.popup;
     }
 
-    this.id = `wallet_${crypto.randomUUID()}`;
-    this.popup = openPopup(this.url, this.id);
+    this.popup = openPopup(this.url);
 
     this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload')
       .then(this.disconnect)

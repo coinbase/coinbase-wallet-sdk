@@ -161,10 +161,7 @@ describe('Communicator', () => {
 
       const popup = await communicator.waitForPopupLoaded();
 
-      expect(openPopup).toHaveBeenCalledWith(
-        new URL(CB_KEYS_URL),
-        expect.stringContaining('wallet_')
-      );
+      expect(openPopup).toHaveBeenCalledWith(new URL(CB_KEYS_URL));
       expect(mockPopup.postMessage).toHaveBeenNthCalledWith(
         1,
         {

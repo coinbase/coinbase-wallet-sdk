@@ -7,14 +7,15 @@ const POPUP_HEIGHT = 540;
 
 // Window Management
 
-export function openPopup(url: URL, id: string): Window {
+export function openPopup(url: URL): Window {
   const left = (window.innerWidth - POPUP_WIDTH) / 2 + window.screenX;
   const top = (window.innerHeight - POPUP_HEIGHT) / 2 + window.screenY;
   appendAppInfoQueryParams(url);
 
+  const popupId = `wallet_${crypto.randomUUID()}`;
   const popup = window.open(
     url,
-    id,
+    popupId,
     `width=${POPUP_WIDTH}, height=${POPUP_HEIGHT}, left=${left}, top=${top}`
   );
 
