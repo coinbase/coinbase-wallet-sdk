@@ -124,14 +124,14 @@ describe('SCWSigner', () => {
       expect(mockCallback).toHaveBeenCalledWith('connect', { chainId: '0x1' });
     });
 
-    it('should perform a successful handshake for coinbase_handshake', async () => {
+    it('should perform a successful handshake for handshake', async () => {
       (decryptContent as Mock).mockResolvedValueOnce({
         result: {
           value: null,
         },
       });
 
-      await signer.handshake({ method: 'coinbase_handshake' });
+      await signer.handshake({ method: 'handshake' });
 
       expect(importKeyFromHexString).toHaveBeenCalledWith('public', '0xPublicKey');
       expect(mockCommunicator.postRequestAndWaitForResponse).toHaveBeenCalledWith(
@@ -139,7 +139,7 @@ describe('SCWSigner', () => {
           sender: '0xPublicKey',
           content: {
             handshake: expect.objectContaining({
-              method: 'coinbase_handshake',
+              method: 'handshake',
             }),
           },
         })
@@ -168,7 +168,7 @@ describe('SCWSigner', () => {
 
   describe('request - using ephemeral SCWSigner', () => {
     it.each(['wallet_sign', 'wallet_sendCalls'])(
-      'should perform a successful request after coinbase_handshake',
+      'should perform a successful request after handshake',
       async (method) => {
         const mockRequest: RequestArguments = { method };
 
@@ -177,7 +177,7 @@ describe('SCWSigner', () => {
             value: null,
           },
         });
-        await signer.handshake({ method: 'coinbase_handshake' });
+        await signer.handshake({ method: 'handshake' });
         expect(signer['accounts']).toEqual([]);
 
         (decryptContent as Mock).mockResolvedValueOnce({

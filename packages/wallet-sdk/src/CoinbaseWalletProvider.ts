@@ -57,7 +57,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
           case 'wallet_sendCalls':
           case 'wallet_sign': {
             const ephemeralSigner = this.initSigner('scw');
-            await ephemeralSigner.handshake({ method: 'coinbase_handshake' }); // exchange session keys
+            await ephemeralSigner.handshake({ method: 'handshake' }); // exchange session keys
             const result = await ephemeralSigner.request(args); // send diffie-hellman encrypted request
             await ephemeralSigner.cleanup(); // clean up (rotate) the ephemeral session keys
             return result as T;
