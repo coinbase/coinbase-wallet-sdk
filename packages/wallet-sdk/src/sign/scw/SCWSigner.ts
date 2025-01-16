@@ -99,7 +99,6 @@ export class SCWSigner implements Signer {
     if (this.accounts.length === 0) {
       switch (request.method) {
         case 'wallet_sendCalls':
-        case 'wallet_sign':
           return this.sendRequestToPopup(request);
         default:
           throw standardErrors.provider.unauthorized();

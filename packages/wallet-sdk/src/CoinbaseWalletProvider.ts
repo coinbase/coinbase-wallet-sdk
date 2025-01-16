@@ -54,8 +54,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
             storeSignerType(signerType);
             break;
           }
-          case 'wallet_sendCalls':
-          case 'wallet_sign': {
+          case 'wallet_sendCalls': {
             const ephemeralSigner = this.initSigner('scw');
             await ephemeralSigner.handshake({ method: 'handshake' }); // exchange session keys
             const result = await ephemeralSigner.request(args); // send diffie-hellman encrypted request

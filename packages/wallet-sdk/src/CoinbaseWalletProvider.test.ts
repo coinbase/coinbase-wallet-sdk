@@ -110,7 +110,7 @@ describe('Ephemeral methods', () => {
   });
 
   it('should pass args to SCWSigner', async () => {
-    const args = { method: 'wallet_sign', params: ['0xdeadbeef'] };
+    const args = { method: 'wallet_sendCalls', params: ['0xdeadbeef'] };
     expect(provider['signer']).toBeNull();
     await provider.request(args);
     expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });

@@ -167,7 +167,7 @@ describe('SCWSigner', () => {
   });
 
   describe('request - using ephemeral SCWSigner', () => {
-    it.each(['wallet_sign', 'wallet_sendCalls'])(
+    it.each(['wallet_sendCalls'])(
       'should perform a successful request after handshake',
       async (method) => {
         const mockRequest: RequestArguments = { method };
