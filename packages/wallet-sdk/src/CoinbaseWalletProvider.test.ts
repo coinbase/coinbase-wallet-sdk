@@ -113,7 +113,7 @@ describe('Ephemeral methods', () => {
     const args = { method: 'wallet_sign', params: ['0xdeadbeef'] };
     expect(provider['signer']).toBeNull();
     await provider.request(args);
-    expect(mockHandshake).toHaveBeenCalledWith({ method: 'coinbase_handshake' });
+    expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
     expect(mockRequest).toHaveBeenCalledWith(args);
     expect(mockCleanup).toHaveBeenCalled();
     expect(provider['signer']).toBeNull();
