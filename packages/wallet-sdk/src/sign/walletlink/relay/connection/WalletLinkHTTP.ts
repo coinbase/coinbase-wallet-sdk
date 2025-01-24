@@ -23,7 +23,7 @@ export class WalletLinkHTTP {
           },
         })
       )
-    ).catch((error) => console.error('Unabled to mark event as failed:', error));
+    ).catch((error) => console.error('Enabled to mark event as failed:', error));
   }
 
   async fetchUnseenEvents(): Promise<ServerMessage<'Event'>[]> {
