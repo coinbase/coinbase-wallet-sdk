@@ -66,7 +66,7 @@ describe('WalletLinkConnection', () => {
       (connection as any).handleSessionMetadataUpdated(metadata);
     }
 
-    it('should call listner.metadataUpdated when WalletUsername updated', async () => {
+    it('should call listener.metadataUpdated when WalletUsername updated', async () => {
       const listener_metadataUpdatedSpy = vi.spyOn(listener, 'metadataUpdated');
 
       const newUsername = 'new username';
@@ -79,7 +79,7 @@ describe('WalletLinkConnection', () => {
       );
     });
 
-    it('should call listner.metadataUpdated when AppVersion updated', async () => {
+    it('should call listener.metadataUpdated when AppVersion updated', async () => {
       const listener_metadataUpdatedSpy = vi.spyOn(listener, 'metadataUpdated');
 
       const newAppVersion = 'new app version';
@@ -92,7 +92,7 @@ describe('WalletLinkConnection', () => {
       );
     });
 
-    it('should call listner.resetAndReload when __destroyed: 1 is received', async () => {
+    it('should call listener.resetAndReload when __destroyed: 1 is received', async () => {
       const listener_resetAndReloadSpy = vi.spyOn(listener, 'resetAndReload');
 
       invoke_handleSessionMetadataUpdated({ __destroyed: '1' });
@@ -100,7 +100,7 @@ describe('WalletLinkConnection', () => {
       expect(listener_resetAndReloadSpy).toHaveBeenCalled();
     });
 
-    it('should call listner.accountUpdated when Account updated', async () => {
+    it('should call listener.accountUpdated when Account updated', async () => {
       const listener_accountUpdatedSpy = vi.spyOn(listener, 'accountUpdated');
 
       const newAccount = 'new account';
@@ -111,7 +111,7 @@ describe('WalletLinkConnection', () => {
     });
 
     describe('chain updates', () => {
-      it('should NOT call listner.chainUpdated when only one changed', async () => {
+      it('should NOT call listener.chainUpdated when only one changed', async () => {
         const listener_chainUpdatedSpy = vi.spyOn(listener, 'chainUpdated');
 
         const chainIdUpdate = { ChainId: 'new chain id' };
@@ -125,7 +125,7 @@ describe('WalletLinkConnection', () => {
         expect(listener_chainUpdatedSpy).not.toHaveBeenCalled();
       });
 
-      it('should call listner.chainUpdated when both ChainId and JsonRpcUrl changed', async () => {
+      it('should call listener.chainUpdated when both ChainId and JsonRpcUrl changed', async () => {
         const listener_chainUpdatedSpy = vi.spyOn(listener, 'chainUpdated');
 
         const update = {
