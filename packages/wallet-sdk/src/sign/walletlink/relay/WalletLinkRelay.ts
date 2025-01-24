@@ -97,7 +97,7 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
     this.isUnlinkedErrorState = false;
 
     if (cachedAddresses) {
-      const addresses = cachedAddresses.split(' ') as Address[];
+      const addresses = cachedAddresses.split(' ') as string[];
       const wasConnectedViaStandalone = this.storage.getItem('IsStandaloneSigning') === 'true';
       if (addresses[0] !== '' && !linked && this._session.linked && !wasConnectedViaStandalone) {
         this.isUnlinkedErrorState = true;
