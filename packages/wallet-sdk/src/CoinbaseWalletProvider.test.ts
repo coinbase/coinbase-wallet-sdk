@@ -5,7 +5,6 @@ import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
-import { AddressString } from ':core/type/index.js';
 
 function createProvider() {
   return new CoinbaseWalletProvider({
@@ -30,7 +29,7 @@ beforeEach(() => {
   vi.spyOn(util, 'createSigner').mockImplementation((params) => {
     callback = params.callback;
     return {
-      accounts: [AddressString('0x123')],
+      accounts: ['0x123'],
       chainId: 1,
       handshake: mockHandshake,
       request: mockRequest,
