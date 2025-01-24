@@ -1,6 +1,6 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
-import { AddressString, BigIntString, HexString, IntNumber } from ':core/type/index.js';
+import { Address, BigIntString, HexString, IntNumber } from ':core/type/index.js';
 
 export type Web3Method = _Web3Request['method'];
 export type Web3Request<M extends Web3Method = Web3Method> = Extract<_Web3Request, { method: M }>;
@@ -58,7 +58,7 @@ type _Web3Request =
       method: 'signEthereumMessage';
       params: {
         message: HexString;
-        address: AddressString;
+        address: Address;
         addPrefix: boolean;
         typedDataJson: string | null;
       };
@@ -66,8 +66,8 @@ type _Web3Request =
   | {
       method: 'signEthereumTransaction';
       params: {
-        fromAddress: AddressString;
-        toAddress: AddressString | null;
+        fromAddress: Address;
+        toAddress: Address | null;
         weiValue: BigIntString;
         data: HexString;
         nonce: IntNumber | null;

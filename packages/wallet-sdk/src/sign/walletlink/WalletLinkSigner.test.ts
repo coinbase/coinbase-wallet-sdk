@@ -14,7 +14,7 @@ import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { ProviderEventCallback } from ':core/provider/interface.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
-import { AddressString } from ':core/type/index.js';
+import { Address } from ':core/type/index.js';
 
 vi.mock('./relay/WalletLinkRelay', () => {
   return {
@@ -43,7 +43,7 @@ describe('LegacyProvider', () => {
 
   it('handles enabling the provider successfully', async () => {
     const provider = createAdapter();
-    const response = (await provider.request({ method: 'eth_requestAccounts' })) as AddressString[];
+    const response = (await provider.request({ method: 'eth_requestAccounts' })) as Address[];
     expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
     expect(mockCallback).toHaveBeenCalledWith('connect', { chainId: '0x1' });
   });
@@ -61,7 +61,7 @@ describe('LegacyProvider', () => {
     const provider = createAdapter();
     const response = (await provider.request({
       method: 'eth_requestAccounts',
-    })) as AddressString[];
+    })) as Address[];
     expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
   });
 
@@ -97,7 +97,7 @@ describe('LegacyProvider', () => {
     // Set the account on the first request
     const response1 = (await provider.request({
       method: 'eth_requestAccounts',
-    })) as AddressString[];
+    })) as Address[];
     expect(response1[0]).toBe(MOCK_ADDERESS.toLowerCase());
 
     // @ts-expect-error accessing private value for test
@@ -106,7 +106,7 @@ describe('LegacyProvider', () => {
     // Set the account on the first request
     const response2 = (await provider.request({
       method: 'eth_requestAccounts',
-    })) as AddressString[];
+    })) as Address[];
     expect(response2[0]).toBe(MOCK_ADDERESS.toLowerCase());
   });
 
@@ -120,7 +120,7 @@ describe('LegacyProvider', () => {
     // Set the account on the first request
     const response = (await provider.request({
       method: 'eth_requestAccounts',
-    })) as AddressString[];
+    })) as Address[];
     expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
   });
 
@@ -131,7 +131,7 @@ describe('LegacyProvider', () => {
 
     beforeEach(() => {
       sendRequestSpy.mockResolvedValue({
-        result: AddressString(MOCK_ADDERESS),
+        result: MOCK_ADDERESS,
       });
     });
 

@@ -18,7 +18,7 @@ import { WLMobileRelayUI } from './ui/WLMobileRelayUI.js';
 import { standardErrors } from ':core/error/errors.js';
 import { AppMetadata } from ':core/provider/interface.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
-import { AddressString } from ':core/type/index.js';
+import { Address } from ':core/type/index.js';
 import { bigIntStringFromBigInt, hexStringFromBuffer, randomBytesHex } from ':core/type/util.js';
 
 export interface WalletLinkRelayOptions {
@@ -97,7 +97,7 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
     this.isUnlinkedErrorState = false;
 
     if (cachedAddresses) {
-      const addresses = cachedAddresses.split(' ') as AddressString[];
+      const addresses = cachedAddresses.split(' ') as string[];
       const wasConnectedViaStandalone = this.storage.getItem('IsStandaloneSigning') === 'true';
       if (addresses[0] !== '' && !linked && this._session.linked && !wasConnectedViaStandalone) {
         this.isUnlinkedErrorState = true;
@@ -137,7 +137,7 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
       Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach((id) => {
         this.invokeCallback(id, {
           method: 'requestEthereumAccounts',
-          result: [selectedAddress as AddressString],
+          result: [selectedAddress as Address],
         });
       });
       WalletLinkRelay.accountRequestCallbackIds.clear();

@@ -6,7 +6,7 @@ import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage.
 import { RPCResponse } from ':core/message/RPCResponse.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
-import { AddressString } from ':core/type/index.js';
+import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
 import {
   decryptContent,
@@ -39,7 +39,7 @@ export class SCWSigner implements Signer {
   private readonly storage: ScopedLocalStorage;
   private callback: ProviderEventCallback | null;
 
-  private accounts: AddressString[];
+  private accounts: Address[];
   private chain: Chain;
 
   constructor(params: ConstructorOptions) {
@@ -86,7 +86,7 @@ export class SCWSigner implements Signer {
 
     switch (args.method) {
       case 'eth_requestAccounts': {
-        const accounts = result.value as AddressString[];
+        const accounts = result.value as Address[];
         this.accounts = accounts;
         this.storage.storeObject(ACCOUNTS_KEY, accounts);
         this.callback?.('accountsChanged', accounts);
