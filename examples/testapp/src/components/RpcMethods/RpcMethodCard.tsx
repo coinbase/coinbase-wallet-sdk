@@ -89,7 +89,6 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
 
   const submit = useCallback(
     async (data: Record<string, string>) => {
-      console.log('submit called with data:', data);
       setError(null);
       setVerifyResult(null);
       setResponse(null);
@@ -111,9 +110,7 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
             }
           }
         }
-        console.log('dataToSubmit:', dataToSubmit);
         values = format(dataToSubmit);
-        console.log('values:', values);
       }
       try {
         const response = await provider.request({
