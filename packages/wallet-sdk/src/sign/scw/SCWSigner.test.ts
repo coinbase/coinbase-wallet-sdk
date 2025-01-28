@@ -260,6 +260,7 @@ describe('SCWSigner', () => {
       'wallet_sendCalls',
       'wallet_showCallsStatus',
       'wallet_grantPermissions',
+      'wallet_addAddress',
     ])('should send request to popup for %s', async (method) => {
       const mockRequest: RequestArguments = {
         method,
@@ -348,6 +349,25 @@ describe('SCWSigner', () => {
       expect(mockKeyManager.clear).toHaveBeenCalled();
       expect(signer['accounts']).toEqual([]);
       expect(signer['chain']).toEqual({ id: 1 });
+    });
+  });
+
+  describe('sub accounts', () => {
+    it('should set the active sub account id', async () => {
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            address: '0x123',
+          },
+        },
+        data: {
+          chains: mockChains,
+          capabilities: mockCapabilities,
+        },
+      });
+
+      const response = await signer.request({ method: 'wallet_addAddress' });
+      expect(response).toEqual({ address: '0x123' });
     });
   });
 });

@@ -161,11 +161,11 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
     setProvider(cbwprovider);
 
     return () => {
-      cbwprovider.removeListener('connect', handleConnect);
-      cbwprovider.removeListener('disconnect', handleDisconnect);
-      cbwprovider.removeListener('accountsChanged', handleAccountsChanged);
-      cbwprovider.removeListener('chainChanged', handleChainChanged);
-      cbwprovider.removeListener('message', handleMessage);
+      cbwprovider.off('connect', handleConnect);
+      cbwprovider.off('disconnect', handleDisconnect);
+      cbwprovider.off('accountsChanged', handleAccountsChanged);
+      cbwprovider.off('chainChanged', handleChainChanged);
+      cbwprovider.off('message', handleMessage);
     };
   }, [version, option, config]);
 

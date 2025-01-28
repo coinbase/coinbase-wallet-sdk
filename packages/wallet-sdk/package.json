@@ -33,7 +33,12 @@
     "@noble/hashes": "^1.4.0",
     "clsx": "^1.2.1",
     "eventemitter3": "^5.0.1",
-    "preact": "^10.24.2"
+    "idb-keyval": "^6.2.1",
+    "ox": "^0.6.5",
+    "preact": "^10.24.2",
+    "viem": "^2.22.16",
+    "webauthn-p256": "^0.0.10",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@size-limit/preset-big-lib": "^11.1.6",
@@ -48,6 +53,7 @@
     "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "eslint-plugin-unused-imports": "^3.0.0",
+    "fake-indexeddb": "^6.0.0",
     "glob": "^11.0.0",
     "jest-websocket-mock": "^2.4.0",
     "jsdom": "^25.0.1",

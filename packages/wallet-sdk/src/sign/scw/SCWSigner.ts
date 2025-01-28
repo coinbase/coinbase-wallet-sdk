@@ -1,13 +1,30 @@
 import { Signer } from '../interface.js';
 import { SCWKeyManager } from './SCWKeyManager.js';
+import {
+  ACCOUNTS_KEY,
+  ACTIVE_CHAIN_STORAGE_KEY,
+  ACTIVE_SUB_ACCOUNT_ID_KEY,
+  AVAILABLE_CHAINS_STORAGE_KEY,
+  getSubAccountFromStorage,
+  SCWStateManager,
+  SUB_ACCOUNTS_KEY,
+  WALLET_CAPABILITIES_STORAGE_KEY,
+} from './SCWStateManager.js';
+import { Chain } from './types.js';
+import { enhanceRequestParams, get, getSenderFromRequest } from './utils.js';
 import { Communicator } from ':core/communicator/Communicator.js';
 import { standardErrors } from ':core/error/errors.js';
 import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage.js';
 import { RPCResponse } from ':core/message/RPCResponse.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
-import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
+import { createClients } from ':features/clients/utils.js';
+import { createSubAccountSigner } from ':features/sub-accounts/createSubAccountSigner.js';
+import { generateSubAccountKeypair } from ':features/sub-accounts/cryptokeys/keypair.js';
+import { idb } from ':features/sub-accounts/cryptokeys/storage.js';
+
+import { AddAddressResponse } from ':features/sub-accounts/types.js';
 import {
   decryptContent,
   encryptContent,
@@ -15,16 +32,6 @@ import {
   importKeyFromHexString,
 } from ':util/cipher.js';
 import { fetchRPCRequest } from ':util/provider.js';
-
-const ACCOUNTS_KEY = 'accounts';
-const ACTIVE_CHAIN_STORAGE_KEY = 'activeChain';
-const AVAILABLE_CHAINS_STORAGE_KEY = 'availableChains';
-const WALLET_CAPABILITIES_STORAGE_KEY = 'walletCapabilities';
-
-type Chain = {
-  id: number;
-  rpcUrl?: string;
-};
 
 type ConstructorOptions = {
   metadata: AppMetadata;
@@ -36,10 +43,11 @@ export class SCWSigner implements Signer {
   private readonly metadata: AppMetadata;
   private readonly communicator: Communicator;
   private readonly keyManager: SCWKeyManager;
-  private readonly storage: ScopedLocalStorage;
+
   private callback: ProviderEventCallback | null;
 
   private accounts: Address[];
+  private subAccount: AddAddressResponse | null;
   private chain: Chain;
 
   constructor(params: ConstructorOptions) {
@@ -47,10 +55,9 @@ export class SCWSigner implements Signer {
     this.communicator = params.communicator;
     this.callback = params.callback;
     this.keyManager = new SCWKeyManager();
-    this.storage = new ScopedLocalStorage('CBWSDK', 'SCWStateManager');
 
-    this.accounts = this.storage.loadObject(ACCOUNTS_KEY) ?? [];
-    this.chain = this.storage.loadObject(ACTIVE_CHAIN_STORAGE_KEY) || {
+    this.accounts = SCWStateManager.loadObject(ACCOUNTS_KEY) ?? [];
+    this.chain = SCWStateManager.loadObject(ACTIVE_CHAIN_STORAGE_KEY) || {
       id: params.metadata.appChainIds?.[0] ?? 1,
     };
 
@@ -58,6 +65,15 @@ export class SCWSigner implements Signer {
     this.request = this.request.bind(this);
     this.createRequestMessage = this.createRequestMessage.bind(this);
     this.decryptResponseMessage = this.decryptResponseMessage.bind(this);
+
+    // Load sub accounts
+    this.subAccount = getSubAccountFromStorage();
+
+    // load chains
+    const chains = SCWStateManager.loadObject<Chain[]>(AVAILABLE_CHAINS_STORAGE_KEY);
+    if (chains) {
+      createClients(chains);
+    }
   }
 
   async handshake(args: RequestArguments) {
@@ -68,7 +84,7 @@ export class SCWSigner implements Signer {
     const handshakeMessage = await this.createRequestMessage({
       handshake: {
         method: args.method,
-        params: Object.assign({}, this.metadata, args.params ?? {}),
+        params: args.params ?? [],
       },
     });
     const response: RPCResponseMessage =
@@ -88,7 +104,7 @@ export class SCWSigner implements Signer {
       case 'eth_requestAccounts': {
         const accounts = result.value as Address[];
         this.accounts = accounts;
-        this.storage.storeObject(ACCOUNTS_KEY, accounts);
+        SCWStateManager.storeObject(ACCOUNTS_KEY, accounts);
         this.callback?.('accountsChanged', accounts);
         break;
       }
@@ -105,6 +121,10 @@ export class SCWSigner implements Signer {
       }
     }
 
+    if (this.shouldRequestUseSubAccountSigner(request)) {
+      return this.sendRequestSubAccountSigner(request);
+    }
+
     switch (request.method) {
       case 'eth_requestAccounts':
         this.callback?.('connect', { chainId: hexStringFromNumber(this.chain.id) });
@@ -118,7 +138,7 @@ export class SCWSigner implements Signer {
       case 'eth_chainId':
         return hexStringFromNumber(this.chain.id);
       case 'wallet_getCapabilities':
-        return this.storage.loadObject(WALLET_CAPABILITIES_STORAGE_KEY);
+        return SCWStateManager.loadObject(WALLET_CAPABILITIES_STORAGE_KEY);
       case 'wallet_switchEthereumChain':
         return this.handleSwitchChainRequest(request);
       case 'eth_ecRecover':
@@ -137,8 +157,13 @@ export class SCWSigner implements Signer {
       case 'wallet_showCallsStatus':
       case 'wallet_grantPermissions':
         return this.sendRequestToPopup(request);
+      // Sub Account Support
+      case 'wallet_addAddress':
+        return this.addAddress(request);
       default:
-        if (!this.chain.rpcUrl) throw standardErrors.rpc.internal('No RPC URL set for chain');
+        if (!this.chain.rpcUrl) {
+          throw standardErrors.rpc.internal('No RPC URL set for chain');
+        }
         return fetchRPCRequest(request, this.chain.rpcUrl);
     }
   }
@@ -158,7 +183,7 @@ export class SCWSigner implements Signer {
   }
 
   async cleanup() {
-    this.storage.clear();
+    SCWStateManager.clear();
     await this.keyManager.clear();
     this.accounts = [];
     this.chain = {
@@ -173,7 +198,7 @@ export class SCWSigner implements Signer {
   private async handleSwitchChainRequest(request: RequestArguments) {
     const params = request.params as [
       {
-        chainId: `0x${string}`;
+        chainId: Address;
       },
     ];
     if (!params || !params[0]?.chainId) {
@@ -244,13 +269,15 @@ export class SCWSigner implements Signer {
         id: Number(id),
         rpcUrl,
       }));
-      this.storage.storeObject(AVAILABLE_CHAINS_STORAGE_KEY, chains);
+      SCWStateManager.storeObject(AVAILABLE_CHAINS_STORAGE_KEY, chains);
       this.updateChain(this.chain.id, chains);
+      // create clients for sub accounts
+      createClients(chains);
     }
 
     const walletCapabilities = response.data?.capabilities;
     if (walletCapabilities) {
-      this.storage.storeObject(WALLET_CAPABILITIES_STORAGE_KEY, walletCapabilities);
+      SCWStateManager.storeObject(WALLET_CAPABILITIES_STORAGE_KEY, walletCapabilities);
     }
 
     return response;
@@ -258,15 +285,90 @@ export class SCWSigner implements Signer {
 
   private updateChain(chainId: number, newAvailableChains?: Chain[]): boolean {
     const chains =
-      newAvailableChains ?? this.storage.loadObject<Chain[]>(AVAILABLE_CHAINS_STORAGE_KEY);
+      newAvailableChains ?? SCWStateManager.loadObject<Chain[]>(AVAILABLE_CHAINS_STORAGE_KEY);
     const chain = chains?.find((chain) => chain.id === chainId);
     if (!chain) return false;
 
     if (chain !== this.chain) {
       this.chain = chain;
-      this.storage.storeObject(ACTIVE_CHAIN_STORAGE_KEY, chain);
+      SCWStateManager.storeObject(ACTIVE_CHAIN_STORAGE_KEY, chain);
       this.callback?.('chainChanged', hexStringFromNumber(chain.id));
     }
     return true;
+  }
+
+  private async addAddress(request: RequestArguments) {
+    const active = SCWStateManager.getItem(ACTIVE_SUB_ACCOUNT_ID_KEY);
+    if (active) {
+      const subAccountMap = SCWStateManager.loadObject<Record<string, unknown>>(SUB_ACCOUNTS_KEY);
+      const subAccount = subAccountMap?.[active];
+      if (subAccount) {
+        return subAccount;
+      }
+    }
+
+    const signer = get(request, 'params[0].signer') as string;
+    // could also check if the app supplied a getAddress sub account signer method?
+    if (!signer) {
+      // Open the popup before constructing the request message.
+      // This is to ensure that the popup is not blocked by some browsers (i.e. Safari)
+      await this.communicator.waitForPopupLoaded?.();
+      // Create the subaccount key pair
+      const { id, keypair, publicKey } = await generateSubAccountKeypair();
+      // send request to popup
+      const response = await this.sendRequestToPopup({
+        ...request,
+        params: [
+          {
+            signer: publicKey,
+          },
+        ],
+      });
+      // Only store the sub account information after the popup has been closed and the
+      // user has confirmed the creation
+      SCWStateManager.setItem(ACTIVE_SUB_ACCOUNT_ID_KEY, publicKey);
+      SCWStateManager.storeObject(SUB_ACCOUNTS_KEY, { [publicKey]: response });
+      idb.setItem(id, { keypair });
+
+      this.subAccount = getSubAccountFromStorage();
+      return response;
+    }
+    // when apps bring their own keys
+    const response = await this.sendRequestToPopup(request);
+
+    // Only store the sub account information after the popup has been closed and the
+    // user has confirmed the creation
+    SCWStateManager.setItem(ACTIVE_SUB_ACCOUNT_ID_KEY, signer.toString());
+    SCWStateManager.storeObject(SUB_ACCOUNTS_KEY, { [signer]: response });
+
+    this.subAccount = getSubAccountFromStorage();
+    return response;
+  }
+
+  private shouldRequestUseSubAccountSigner(request: RequestArguments) {
+    const sender = getSenderFromRequest(request);
+    // if the sender is undefined, it means the application did not provide a sender
+    // in this case, we assume the request is for the active sub account (if present)
+    // if the sender is defined, we check if it is the same as the active sub account
+    // if not, we use the root account signer
+    return (
+      (this.subAccount && sender === undefined) ||
+      (this.subAccount && this.subAccount.address === sender)
+    );
+  }
+
+  private async sendRequestSubAccountSigner(request: RequestArguments) {
+    if (!this.subAccount) {
+      throw standardErrors.provider.unauthorized('No active sub account');
+    }
+    const sender = getSenderFromRequest(request);
+    // if sender is undefined, we inject the active sub account
+    // address into the params for the supported request methods
+    if (sender === undefined) {
+      request = enhanceRequestParams(request, this.subAccount.address as Address);
+    }
+
+    const signer = await createSubAccountSigner(this.subAccount);
+    return signer.request(request);
   }
 }

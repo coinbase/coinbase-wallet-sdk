@@ -24,7 +24,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "7.45.2",
-    "viem": "2.21.1"
+    "viem": "^2.22.16"
   },
   "devDependencies": {
     "@types/react": "18.2.15",

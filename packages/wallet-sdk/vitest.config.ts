@@ -6,8 +6,11 @@ export default defineConfig({
     alias: {
       ':core': path.resolve(__dirname, 'src/core'),
       ':util': path.resolve(__dirname, 'src/util'),
+      ':features': path.resolve(__dirname, 'src/features'),
+      ':sign': path.resolve(__dirname, 'src/sign'),
     },
     environment: 'jsdom',
     globals: true,
+    setupFiles: ['./vitest.setup.mjs'],
   },
 });
