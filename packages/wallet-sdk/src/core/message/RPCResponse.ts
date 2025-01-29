@@ -1,5 +1,12 @@
 import { SerializedEthereumRpcError } from '../error/utils.js';
 
+type NativeCurrency = {
+  chainName: string;
+  symbol: string;
+  name: string;
+  decimal: number;
+};
+
 export type RPCResponse = {
   result:
     | {
@@ -11,6 +18,7 @@ export type RPCResponse = {
   data?: {
     // optional data
     chains?: { [key: number]: string };
+    nativeCurrencies?: { [key: number]: NativeCurrency };
     capabilities?: Record<`0x${string}`, Record<string, unknown>>;
   };
 };

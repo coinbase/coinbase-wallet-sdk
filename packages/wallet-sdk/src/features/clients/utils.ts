@@ -1,18 +1,31 @@
-import { createPublicClient, http, PublicClient } from 'viem';
+import { createPublicClient, defineChain, http, PublicClient } from 'viem';
 import { BundlerClient, createBundlerClient } from 'viem/account-abstraction';
 
-import { SUPPORTED_CHAIN_MAP } from './constants.js';
 import { ChainClients } from './state.js';
 import { Chain as SCWChain } from ':sign/scw/types.js';
 
 export function createClients(chains: SCWChain[]) {
   chains.forEach((chain) => {
-    const supportedChain = SUPPORTED_CHAIN_MAP[chain.id];
-    if (!supportedChain) {
+    if (!chain.rpcUrl) {
       return;
     }
+    const viemchain = defineChain({
+      id: chain.id,
+      rpcUrls: {
+        default: {
+          http: [chain.rpcUrl],
+        },
+      },
+      name: chain.chainName ?? '',
+      nativeCurrency: {
+        name: chain.name ?? '',
+        symbol: chain.symbol ?? '',
+        decimals: chain.decimal ?? 18,
+      },
+    });
+
     const client = createPublicClient({
-      chain: supportedChain,
+      chain: viemchain,
       transport: http(chain.rpcUrl),
     });
     const bundlerClient = createBundlerClient({

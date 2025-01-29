@@ -263,11 +263,17 @@ export class SCWSigner implements Signer {
     const response: RPCResponse = await decryptContent(content.encrypted, sharedSecret);
 
     const availableChains = response.data?.chains;
+
     if (availableChains) {
-      const chains = Object.entries(availableChains).map(([id, rpcUrl]) => ({
-        id: Number(id),
-        rpcUrl,
-      }));
+      const nativeCurrencies = response.data?.nativeCurrencies;
+      const chains = Object.entries(availableChains).map(([id, rpcUrl]) => {
+        const nativeCurrency = nativeCurrencies?.[Number(id)];
+        return {
+          id: Number(id),
+          rpcUrl,
+          ...(nativeCurrency ? { nativeCurrency } : {}),
+        };
+      });
       SCWStateManager.storeObject(AVAILABLE_CHAINS_STORAGE_KEY, chains);
       this.updateChain(this.chain.id, chains);
       // create clients for sub accounts
