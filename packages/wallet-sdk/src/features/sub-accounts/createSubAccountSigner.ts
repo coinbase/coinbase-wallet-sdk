@@ -33,14 +33,14 @@ async function toSmartAccount({
     sign,
     address: signerAddress,
   });
-
+  // TODO[jake] how do we handle unsupported chains?
   const client = getClient(subAccount.chainId ?? baseSepolia.id);
   if (!client) {
     throw new Error('client not found');
   }
 
   // TODO[jake] update to support ownership changes
-  return await toCoinbaseSmartAccount({
+  return toCoinbaseSmartAccount({
     address: subAccount.address,
     client,
     owners: [subAccount.root, account],

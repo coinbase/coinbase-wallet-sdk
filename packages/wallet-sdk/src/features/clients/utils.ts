@@ -1,5 +1,5 @@
-import { createPublicClient, http } from 'viem';
-import { createBundlerClient } from 'viem/account-abstraction';
+import { createPublicClient, http, PublicClient } from 'viem';
+import { BundlerClient, createBundlerClient } from 'viem/account-abstraction';
 
 import { SUPPORTED_CHAIN_MAP } from './constants.js';
 import { ChainClients } from './state.js';
@@ -29,10 +29,10 @@ export function createClients(chains: SCWChain[]) {
   });
 }
 
-export function getClient(chainId: number) {
-  return ChainClients.getState()[chainId].client;
+export function getClient(chainId: number): PublicClient {
+  return ChainClients.getState()[chainId]?.client;
 }
 
-export function getBundlerClient(chainId: number) {
-  return ChainClients.getState()[chainId].bundlerClient;
+export function getBundlerClient(chainId: number): BundlerClient {
+  return ChainClients.getState()[chainId]?.bundlerClient;
 }

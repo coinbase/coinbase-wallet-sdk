@@ -122,7 +122,7 @@ export class SCWSigner implements Signer {
     }
 
     if (this.shouldRequestUseSubAccountSigner(request)) {
-      return this.sendRequestSubAccountSigner(request);
+      return this.sendRequestToSubAccountSigner(request);
     }
 
     switch (request.method) {
@@ -316,13 +316,13 @@ export class SCWSigner implements Signer {
       // Create the subaccount key pair
       const { id, keypair, publicKey } = await generateSubAccountKeypair();
       // send request to popup
+
+      const chainId = get(request, 'params[0].chainId') as string;
+      const params = Object.assign({}, { chainId, signer: publicKey });
+      console.log('customlogs: params', params);
       const response = await this.sendRequestToPopup({
         ...request,
-        params: [
-          {
-            signer: publicKey,
-          },
-        ],
+        params: [params],
       });
       // Only store the sub account information after the popup has been closed and the
       // user has confirmed the creation
@@ -357,16 +357,19 @@ export class SCWSigner implements Signer {
     );
   }
 
-  private async sendRequestSubAccountSigner(request: RequestArguments) {
+  private async sendRequestToSubAccountSigner(request: RequestArguments) {
     if (!this.subAccount) {
       throw standardErrors.provider.unauthorized('No active sub account');
     }
     const sender = getSenderFromRequest(request);
+    console.log('customlogs: sender', sender);
     // if sender is undefined, we inject the active sub account
     // address into the params for the supported request methods
     if (sender === undefined) {
       request = enhanceRequestParams(request, this.subAccount.address as Address);
     }
+
+    console.log('customlogs: request', request);
 
     const signer = await createSubAccountSigner(this.subAccount);
     return signer.request(request);

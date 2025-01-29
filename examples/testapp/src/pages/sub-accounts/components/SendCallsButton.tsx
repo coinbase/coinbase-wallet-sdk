@@ -3,11 +3,7 @@ import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import React, { useCallback, useState } from 'react';
 import { baseSepolia } from 'viem/chains';
 
-export default function SendCallsButton({
-  sdk,
-}: {
-  sdk: ReturnType<typeof createCoinbaseWalletSDK>;
-}) {
+export function SendCallsButton({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletSDK> }) {
   const [state, setState] = useState<string>();
   const handleSendCalls = useCallback(async () => {
     if (!sdk) {
@@ -23,7 +19,11 @@ export default function SendCallsButton({
             chainId: baseSepolia.id,
             calls: [],
             version: '1',
-            capabilities: {},
+            // capabilities: {
+            //   paymasterService: {
+            //     url: '',
+            //   },
+            // },
           },
         ],
       });

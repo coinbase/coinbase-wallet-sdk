@@ -2,20 +2,16 @@ import { Box, Button } from '@chakra-ui/react';
 import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import React, { useCallback, useState } from 'react';
 
-export default function CreateSubAccountButton({
-  sdk,
-}: {
-  sdk: ReturnType<typeof createCoinbaseWalletSDK>;
-}) {
+export function AddAddressButton({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletSDK> }) {
   const [subAccount, setSubAccount] = useState<string>();
 
-  const handleCreateSubAccount = useCallback(async () => {
+  const handleAddAddress = useCallback(async () => {
     if (!sdk) {
       return;
     }
     const provider = sdk.getProvider();
     const response = (await provider.request({
-      method: 'experimental_createSubAccount',
+      method: 'wallet_addAddress',
       params: [
         {
           chainId: 84532,
@@ -30,8 +26,8 @@ export default function CreateSubAccountButton({
 
   return (
     <>
-      <Button w="full" onClick={handleCreateSubAccount}>
-        Create Sub Account
+      <Button w="full" onClick={handleAddAddress}>
+        Add Address
       </Button>
       {subAccount && (
         <Box

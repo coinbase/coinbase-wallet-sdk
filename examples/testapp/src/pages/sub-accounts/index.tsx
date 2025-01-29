@@ -2,10 +2,10 @@ import { Container, VStack } from '@chakra-ui/react';
 import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import React, { useEffect, useState } from 'react';
 
-import ConnectButton from './components/ConnectButton';
-import CreateSubAccountButton from './components/CreateSubAccountButton';
-import PersonalSignButton from './components/PersonalSignButton';
-import SendCallsButton from './components/SendCallsButton';
+import { AddAddressButton } from './components/AddAddressButton';
+import { ConnectButton } from './components/ConnectButton';
+import { PersonalSignButton } from './components/PersonalSignButton';
+import { SendCallsButton } from './components/SendCallsButton';
 
 export default function SubAccounts() {
   const [sdk, setSDK] = useState<ReturnType<typeof createCoinbaseWalletSDK>>();
@@ -35,7 +35,7 @@ export default function SubAccounts() {
     <Container mb={16}>
       <VStack w="full" spacing={4}>
         <ConnectButton sdk={sdk} />
-        <CreateSubAccountButton sdk={sdk} />
+        <AddAddressButton sdk={sdk} />
         <PersonalSignButton sdk={sdk} />
         <SendCallsButton sdk={sdk} />
       </VStack>

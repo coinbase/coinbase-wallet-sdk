@@ -3,11 +3,7 @@ import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import React, { useCallback, useState } from 'react';
 import { toHex } from 'viem';
 
-export default function PersonalSignButton({
-  sdk,
-}: {
-  sdk: ReturnType<typeof createCoinbaseWalletSDK>;
-}) {
+export function PersonalSignButton({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletSDK> }) {
   const [state, setState] = useState<string>();
   const handlePersonalSign = useCallback(async () => {
     if (!sdk) {
