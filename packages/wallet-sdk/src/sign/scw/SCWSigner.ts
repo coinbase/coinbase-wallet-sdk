@@ -23,7 +23,6 @@ import { createClients } from ':features/clients/utils.js';
 import { createSubAccountSigner } from ':features/sub-accounts/createSubAccountSigner.js';
 import { generateSubAccountKeypair } from ':features/sub-accounts/cryptokeys/keypair.js';
 import { idb } from ':features/sub-accounts/cryptokeys/storage.js';
-
 import { AddAddressResponse } from ':features/sub-accounts/types.js';
 import {
   decryptContent,
@@ -319,7 +318,6 @@ export class SCWSigner implements Signer {
 
       const chainId = get(request, 'params[0].chainId') as string;
       const params = Object.assign({}, { chainId, signer: publicKey });
-      console.log('customlogs: params', params);
       const response = await this.sendRequestToPopup({
         ...request,
         params: [params],
@@ -362,14 +360,11 @@ export class SCWSigner implements Signer {
       throw standardErrors.provider.unauthorized('No active sub account');
     }
     const sender = getSenderFromRequest(request);
-    console.log('customlogs: sender', sender);
     // if sender is undefined, we inject the active sub account
     // address into the params for the supported request methods
     if (sender === undefined) {
       request = enhanceRequestParams(request, this.subAccount.address as Address);
     }
-
-    console.log('customlogs: request', request);
 
     const signer = await createSubAccountSigner(this.subAccount);
     return signer.request(request);
