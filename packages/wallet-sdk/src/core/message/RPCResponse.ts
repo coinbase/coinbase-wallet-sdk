@@ -1,7 +1,6 @@
 import { SerializedEthereumRpcError } from '../error/utils.js';
 
 type NativeCurrency = {
-  chainName: string;
   symbol: string;
   name: string;
   decimal: number;

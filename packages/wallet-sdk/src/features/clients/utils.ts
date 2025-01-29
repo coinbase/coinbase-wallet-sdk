@@ -16,11 +16,11 @@ export function createClients(chains: SCWChain[]) {
           http: [chain.rpcUrl],
         },
       },
-      name: chain.chainName ?? '',
+      name: chain.nativeCurrency?.name ?? '',
       nativeCurrency: {
-        name: chain.name ?? '',
-        symbol: chain.symbol ?? '',
-        decimals: chain.decimal ?? 18,
+        name: chain.nativeCurrency?.name ?? '',
+        symbol: chain.nativeCurrency?.symbol ?? '',
+        decimals: chain.nativeCurrency?.decimal ?? 18,
       },
     });
 
