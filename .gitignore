@@ -41,3 +41,5 @@ examples/**/yarn.lock
 
 # next.js
 .next
+
+/**/tsconfig.tsbuildinfo
