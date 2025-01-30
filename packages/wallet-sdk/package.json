@@ -21,7 +21,7 @@
   "scripts": {
     "pretest": "node compile-assets.cjs",
     "test": "vitest",
-    "test:coverage": "yarn test:unit && open coverage/lcov-report/index.html",
+    "test:coverage": "yarn test && open coverage/lcov-report/index.html",
     "prebuild": "rm -rf ./dist && node -p \"'export const VERSION = \\'' + require('./package.json').version + '\\';\\nexport const NAME = \\'' + require('./package.json').name + '\\';'\" > src/sdk-info.ts",
     "build": "node compile-assets.cjs && tsc -p ./tsconfig.build.json && tsc-alias && cp -a src/vendor-js dist",
     "dev": "yarn build && tsc --watch & nodemon --watch dist --delay 1 --exec tsc-alias",
@@ -42,6 +42,7 @@
     "@types/node": "^14.18.54",
     "@typescript-eslint/eslint-plugin": "^6.2.0",
     "@typescript-eslint/parser": "^6.2.0",
+    "@vitest/coverage-v8": "2.1.2",
     "eslint": "^8.45.0",
     "eslint-config-preact": "^1.3.0",
     "eslint-config-prettier": "^8.8.0",
