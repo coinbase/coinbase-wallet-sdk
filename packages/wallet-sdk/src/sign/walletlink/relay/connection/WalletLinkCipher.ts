@@ -43,7 +43,7 @@ export class WalletLinkCipher {
 
     const authTagBytes = new Uint8Array(authTag);
     const encryptedPlaintextBytes = new Uint8Array(encryptedPlaintext);
-    const concatted = new Uint8Array([...ivBytes, ...authTagBytes, ...encryptedPlaintextBytes]);
+    const concatenated = new Uint8Array([...ivBytes, ...authTagBytes, ...encryptedPlaintextBytes]);
     return uint8ArrayToHex(concatted);
   }
 
@@ -70,7 +70,7 @@ export class WalletLinkCipher {
         const ivBytes = encrypted.slice(0, 12);
         const authTagBytes = encrypted.slice(12, 28);
         const encryptedPlaintextBytes = encrypted.slice(28);
-        const concattedBytes = new Uint8Array([...encryptedPlaintextBytes, ...authTagBytes]);
+        const concatenatedBytes = new Uint8Array([...encryptedPlaintextBytes, ...authTagBytes]);
         const algo = {
           name: 'AES-GCM',
           iv: new Uint8Array(ivBytes),
