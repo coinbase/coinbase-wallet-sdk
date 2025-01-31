@@ -7,13 +7,15 @@
   "private": true,
   "workspaces": [
     "packages/*",
+    "libs/*",
     "examples/*"
   ],
   "scripts": {
-    "lint": "yarn workspaces foreach -pt run lint",
-    "typecheck": "yarn workspaces foreach -pt run typecheck",
+    "deploy": "yarn workspace @coinbase/wallet-sdk build && yarn workspace sdk-playground export",
     "dev": "yarn workspaces foreach -ipv run dev",
-    "deploy": "yarn workspace @coinbase/wallet-sdk build && yarn workspace sdk-playground export"
+    "lint": "yarn workspaces foreach -pt run lint",
+    "test": "yarn workspaces foreach -ipv run test",
+    "typecheck": "yarn workspaces foreach -pt run typecheck"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.2.0",
