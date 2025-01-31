@@ -33,7 +33,9 @@
     "@noble/hashes": "^1.4.0",
     "clsx": "^1.2.1",
     "eventemitter3": "^5.0.1",
-    "preact": "^10.24.2"
+    "preact": "^10.24.2",
+    "viem": "^2.22.17",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@size-limit/preset-big-lib": "^11.1.6",
