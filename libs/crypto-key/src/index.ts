@@ -1,6 +1,6 @@
 import { Hex, PublicKey, Signature, WebAuthnP256, WebCryptoP256 } from 'ox';
 import { hashMessage, hashTypedData } from 'viem';
-import type { WebAuthnAccount } from 'viem/account-abstraction';
+import { type WebAuthnAccount } from 'viem/account-abstraction';
 
 import { createStorage } from './storage.js';
 
@@ -16,11 +16,6 @@ export const STORAGE_SCOPE = 'CBWSDK';
 export const STORAGE_NAME = 'CryptoKeys';
 
 export const ACTIVE_ID_KEY = 'activeId';
-
-export const ACCOUNT_TYPE = 'webAuthn';
-
-export const authenticatorData =
-  '0x49960de5880e8c687434170f6476605b8fe4aeb9a28632c7995cf3ba831d97630500000000' as const;
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // Storage
@@ -81,7 +76,7 @@ export async function getCryptoKeyAccount(): Promise<WebAuthnAccount> {
     });
     return {
       signature: Signature.toHex(signature),
-      raw: signature as unknown as PublicKeyCredential, // type changed in viem
+      raw: {} as unknown as PublicKeyCredential, // type changed in viem
       webauthn: metadata,
     };
   };
