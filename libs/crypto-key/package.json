@@ -9,7 +9,8 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "lint": "eslint . --ext .ts --fix",
-    "test": "vitest"
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "idb-keyval": "^6.2.1",
