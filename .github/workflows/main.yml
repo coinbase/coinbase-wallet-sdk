@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./
+        working-directory: ./packages/wallet-sdk
 
     steps:
       - name: Checkout
@@ -50,13 +50,16 @@ jobs:
         run: yarn install --immutable
 
       - name: Runs compile asset script
-        run: node ./compile-assets.cjs
+        run: |
+          cd ./packages/wallet-sdk
+          node ./compile-assets.cjs
+          cd ../../
 
       - name: Check Types
         run: yarn typecheck
 
   tests:
-    name: Test Wallet SDK
+    name: Tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -80,7 +83,10 @@ jobs:
         run: yarn install --immutable
 
       - name: Runs compile asset script
-        run: node ./compile-assets.cjs
+        run: |
+          cd ./packages/wallet-sdk
+          node ./compile-assets.cjs
+          cd ../../
 
       - name: Run Unit Tests
         run: yarn test
