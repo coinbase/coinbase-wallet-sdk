@@ -19,6 +19,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@adraffy/ens-normalize@npm:^1.10.1":
+  version: 1.11.0
+  resolution: "@adraffy/ens-normalize@npm:1.11.0"
+  checksum: b2911269e3e0ec6396a2e5433a99e0e1f9726befc6c167994448cd0e53dbdd0be22b4835b4f619558b568ed9aa7312426b8fa6557a13999463489daa88169ee5
+  languageName: node
+  linkType: hard
+
 "@ampproject/remapping@npm:^2.2.0, @ampproject/remapping@npm:^2.3.0":
   version: 2.3.0
   resolution: "@ampproject/remapping@npm:2.3.0"
@@ -310,6 +317,13 @@ __metadata:
   version: 0.2.3
   resolution: "@bcoe/v8-coverage@npm:0.2.3"
   checksum: 850f9305536d0f2bd13e9e0881cb5f02e4f93fad1189f7b2d4bebf694e3206924eadee1068130d43c11b750efcc9405f88a8e42ef098b6d75239c0f047de1a27
+  languageName: node
+  linkType: hard
+
+"@bcoe/v8-coverage@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "@bcoe/v8-coverage@npm:1.0.2"
+  checksum: f4e6f55817645fc1b543aa0bbd6ffceb7b9ff3052e8c92c493a0a71831e6b8ae97d73e123b048cb98ef9d9e31afae018a60795f2e27a6f3e94a1ec7abedac85d
   languageName: node
   linkType: hard
 
@@ -3544,6 +3558,32 @@ __metadata:
     "@vitest/browser":
       optional: true
   checksum: 510efabda04f765f427ff6d2df528cc3cd1534ec8c6f5cfc2c403e23e9969f148979d8363109aef1ba0dd0724d19e0e2140b893caa86218345872852cc51d591
+  languageName: node
+  linkType: hard
+
+"@vitest/coverage-v8@npm:3.0.4":
+  version: 3.0.4
+  resolution: "@vitest/coverage-v8@npm:3.0.4"
+  dependencies:
+    "@ampproject/remapping": ^2.3.0
+    "@bcoe/v8-coverage": ^1.0.2
+    debug: ^4.4.0
+    istanbul-lib-coverage: ^3.2.2
+    istanbul-lib-report: ^3.0.1
+    istanbul-lib-source-maps: ^5.0.6
+    istanbul-reports: ^3.1.7
+    magic-string: ^0.30.17
+    magicast: ^0.3.5
+    std-env: ^3.8.0
+    test-exclude: ^7.0.1
+    tinyrainbow: ^2.0.0
+  peerDependencies:
+    "@vitest/browser": 3.0.4
+    vitest: 3.0.4
+  peerDependenciesMeta:
+    "@vitest/browser":
+      optional: true
+  checksum: e38e5fb6bba8afe230885a12cc12b08135616b2868b8adfd9667b15d11b557811c91908948f267e1f811f95c6b371164e840aff8fb740adbabf354c50b2d108b
   languageName: node
   linkType: hard
 
@@ -7179,6 +7219,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"isows@npm:1.0.6":
+  version: 1.0.6
+  resolution: "isows@npm:1.0.6"
+  peerDependencies:
+    ws: "*"
+  checksum: ab9e85b50bcc3d70aa5ec875aa2746c5daf9321cb376ed4e5434d3c2643c5d62b1f466d93a05cd2ad0ead5297224922748c31707cb4fbd68f5d05d0479dce99c
+  languageName: node
+  linkType: hard
+
 "istanbul-lib-coverage@npm:^3.0.0, istanbul-lib-coverage@npm:^3.2.2":
   version: 3.2.2
   resolution: "istanbul-lib-coverage@npm:3.2.2"
@@ -7662,7 +7711,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"magicast@npm:^0.3.4":
+"magic-string@npm:^0.30.17":
+  version: 0.30.17
+  resolution: "magic-string@npm:0.30.17"
+  dependencies:
+    "@jridgewell/sourcemap-codec": ^1.5.0
+  checksum: f4b4ed17c5ada64f77fc98491847302ebad64894a905c417c943840c0384662118c9b37f9f68bb86add159fa4749ff6f118c4627d69a470121b46731f8debc6d
+  languageName: node
+  linkType: hard
+
+"magicast@npm:^0.3.4, magicast@npm:^0.3.5":
   version: 0.3.5
   resolution: "magicast@npm:0.3.5"
   dependencies:
