@@ -1,4 +1,4 @@
-import { AbiParameters, Base64, Hash, Hex, PublicKey, Signature, WebCryptoP256 } from 'ox';
+import { Hex, PublicKey, Signature, WebAuthnP256, WebCryptoP256 } from 'ox';
 import { hashMessage, hashTypedData } from 'viem';
 import type { WebAuthnAccount } from 'viem/account-abstraction';
 
@@ -70,15 +70,11 @@ export async function getCryptoKeyAccount(): Promise<WebAuthnAccount> {
    * signer
    */
   const sign = async (payload: Hex.Hex) => {
-    const challengeBase64 = Base64.fromHex(payload, { url: true, pad: false });
-    const clientDataJSON = `{"type":"webauthn.get","challenge":"${challengeBase64}","origin":"https://keys.coinbase.com"}`;
-    const challengeIndex = clientDataJSON.indexOf('"challenge":');
-    const typeIndex = clientDataJSON.indexOf('"type":');
-    const clientDataJSONHash = Hash.sha256(Hex.fromString(clientDataJSON));
-    const message = AbiParameters.encodePacked(
-      ['bytes', 'bytes32'],
-      [authenticatorData, clientDataJSONHash]
-    );
+    const { payload: message, metadata } = WebAuthnP256.getSignPayload({
+      challenge: payload,
+      origin: 'https://keys.coinbase.com',
+      userVerification: 'preferred',
+    });
     const signature = await WebCryptoP256.sign({
       payload: message,
       privateKey: keypair.privateKey,
@@ -86,13 +82,7 @@ export async function getCryptoKeyAccount(): Promise<WebAuthnAccount> {
     return {
       signature: Signature.toHex(signature),
       raw: signature as unknown as PublicKeyCredential, // type changed in viem
-      webauthn: {
-        authenticatorData,
-        challengeIndex,
-        clientDataJSON,
-        typeIndex,
-        userVerificationRequired: false,
-      },
+      webauthn: metadata,
     };
   };
 
