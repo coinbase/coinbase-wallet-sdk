@@ -55,18 +55,16 @@ export async function getKeypair(): Promise<P256KeyPair | null> {
 export async function getCryptoKeyAccount(): Promise<WebAuthnAccount> {
   let keypair = await getKeypair();
   if (!keypair) {
-    console.error('keypair not found');
-    const newKeypair = await generateKeyPair();
-    await storage.setItem(Hex.slice(PublicKey.toHex(newKeypair.publicKey), 1), newKeypair);
-    keypair = newKeypair;
+    keypair = await generateKeyPair();
+    const pubKey = Hex.slice(PublicKey.toHex(keypair.publicKey), 1);
+    await storage.setItem(pubKey, keypair);
+    await storage.setItem(ACTIVE_ID_KEY, pubKey);
   }
 
   /**
    * public key / address
    */
   const publicKey = Hex.slice(PublicKey.toHex(keypair.publicKey), 1);
-
-  await storage.setItem(ACTIVE_ID_KEY, keypair);
 
   /**
    * signer
