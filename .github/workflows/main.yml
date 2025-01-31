@@ -51,9 +51,7 @@ jobs:
 
       - name: Runs compile asset script
         run: |
-          cd ./packages/wallet-sdk
           node ./compile-assets.cjs
-          cd ../../
 
       - name: Check Types
         run: yarn typecheck
