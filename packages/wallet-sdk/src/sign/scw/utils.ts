@@ -24,7 +24,7 @@ export function getSenderFromRequest(request: RequestArguments) {
   }
 }
 
-export function enhanceRequestParams(request: RequestArguments, sender: Address) {
+export function addSenderToRequest(request: RequestArguments, sender: Address) {
   if (!Array.isArray(request.params)) {
     throw standardErrors.rpc.invalidParams();
   }

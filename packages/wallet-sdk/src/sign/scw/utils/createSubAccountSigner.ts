@@ -36,13 +36,13 @@ export async function createSubAccountSigner(subaccount: SubAccountInfo) {
       switch (args.method) {
         case 'eth_sendTransaction': {
           if (!Array.isArray(args.params)) {
-            throw standardErrors.rpc.invalidParams('invalid params');
+            throw standardErrors.rpc.invalidParams();
           }
           return account.sign(args.params[0] as { hash: Hex });
         }
         case 'wallet_sendCalls': {
           if (!Array.isArray(args.params)) {
-            throw standardErrors.rpc.invalidParams('invalid params');
+            throw standardErrors.rpc.invalidParams();
           }
           // Get the paymaster URL from the requests capabilities
           const paymasterURL = args.params[0]?.capabilities?.paymasterService?.url;
@@ -74,7 +74,7 @@ export async function createSubAccountSigner(subaccount: SubAccountInfo) {
         }
         case 'personal_sign': {
           if (!Array.isArray(args.params)) {
-            throw standardErrors.rpc.invalidParams('invalid params');
+            throw standardErrors.rpc.invalidParams();
           }
           return account.signMessage({ message: args.params[0] } as {
             message: SignableMessage;
@@ -82,7 +82,7 @@ export async function createSubAccountSigner(subaccount: SubAccountInfo) {
         }
         case 'eth_signTypedData_v4': {
           if (!Array.isArray(args.params)) {
-            throw standardErrors.rpc.invalidParams('invalid params');
+            throw standardErrors.rpc.invalidParams();
           }
           return account.signTypedData(args.params[1] as TypedDataDefinition);
         }

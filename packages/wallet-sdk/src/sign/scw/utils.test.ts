@@ -1,4 +1,4 @@
-import { enhanceRequestParams, getSenderFromRequest } from './utils.js';
+import { addSenderToRequest, getSenderFromRequest } from './utils.js';
 
 describe('utils', () => {
   describe('getSenderFromRequest', () => {
@@ -15,7 +15,7 @@ describe('utils', () => {
     });
   });
 
-  describe('enhanceRequestParams', () => {
+  describe('addSenderToRequest', () => {
     it.each([
       ['eth_signTransaction', [{}], [{ from: '0x123' }]],
       ['eth_sendTransaction', [{}], [{ from: '0x123' }]],
@@ -25,7 +25,7 @@ describe('utils', () => {
     ])('should enhance the request params for %s', (method, params, expectedParams) => {
       const request = { method, params };
       const sender = '0x123';
-      expect(enhanceRequestParams(request, sender)).toEqual({
+      expect(addSenderToRequest(request, sender)).toEqual({
         method,
         params: expectedParams,
       });

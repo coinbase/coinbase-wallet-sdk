@@ -80,7 +80,7 @@ describe('createSubAccountSigner', () => {
       params: [{ hash: '0x' }],
     });
 
-    expect(mock).toHaveBeenCalledWith([{ hash: '0x' }]);
+    expect(mock).toHaveBeenCalledWith({ hash: '0x' });
   });
 
   it('handle sign message', async () => {
