@@ -2,6 +2,7 @@ import { Hex, http, SignableMessage, TypedDataDefinition } from 'viem';
 import { createPaymasterClient, toCoinbaseSmartAccount } from 'viem/account-abstraction';
 import { baseSepolia } from 'viem/chains';
 
+import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
 import { getBundlerClient, getClient } from ':stores/chain-clients/utils.js';
 import { SubAccount, SubAccountInfo } from ':stores/sub-accounts/store.js';
@@ -34,11 +35,14 @@ export async function createSubAccountSigner(subaccount: SubAccountInfo) {
     request: async (args: RequestArguments): Promise<Hex> => {
       switch (args.method) {
         case 'eth_sendTransaction': {
-          return account.sign(args.params as { hash: Hex });
+          if (!Array.isArray(args.params)) {
+            throw standardErrors.rpc.invalidParams('invalid params');
+          }
+          return account.sign(args.params[0] as { hash: Hex });
         }
         case 'wallet_sendCalls': {
           if (!Array.isArray(args.params)) {
-            throw new Error('invalid params');
+            throw standardErrors.rpc.invalidParams('invalid params');
           }
           // Get the paymaster URL from the requests capabilities
           const paymasterURL = args.params[0]?.capabilities?.paymasterService?.url;
@@ -70,7 +74,7 @@ export async function createSubAccountSigner(subaccount: SubAccountInfo) {
         }
         case 'personal_sign': {
           if (!Array.isArray(args.params)) {
-            throw new Error('invalid params');
+            throw standardErrors.rpc.invalidParams('invalid params');
           }
           return account.signMessage({ message: args.params[0] } as {
             message: SignableMessage;
@@ -78,7 +82,7 @@ export async function createSubAccountSigner(subaccount: SubAccountInfo) {
         }
         case 'eth_signTypedData_v4': {
           if (!Array.isArray(args.params)) {
-            throw new Error('invalid params');
+            throw standardErrors.rpc.invalidParams('invalid params');
           }
           return account.signTypedData(args.params[1] as TypedDataDefinition);
         }
