@@ -5,8 +5,8 @@ import { ChainClients } from './store.js';
 
 export type SDKChain = {
   id: number;
-  rpcUrl: string;
-  nativeCurrency: {
+  rpcUrl?: string;
+  nativeCurrency?: {
     name: string;
     symbol: string;
     decimal: number;
@@ -51,10 +51,10 @@ export function createClients(chains: SDKChain[]) {
   });
 }
 
-export function getClient(chainId: number): PublicClient {
+export function getClient(chainId: number): PublicClient | undefined {
   return ChainClients.getState()[chainId]?.client;
 }
 
-export function getBundlerClient(chainId: number): BundlerClient {
+export function getBundlerClient(chainId: number): BundlerClient | undefined {
   return ChainClients.getState()[chainId]?.bundlerClient;
 }
