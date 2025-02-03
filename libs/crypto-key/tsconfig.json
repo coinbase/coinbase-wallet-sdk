@@ -2,6 +2,8 @@
   "compilerOptions": {
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "declarationMap": true,
     "baseUrl": ".",
     "outDir": "./dist",
     "esModuleInterop": true,
@@ -28,7 +30,7 @@
     ],
   },
   "include": [
-    "**/*.ts",
+    "src",
   ],
   "exclude": [
     "dist",

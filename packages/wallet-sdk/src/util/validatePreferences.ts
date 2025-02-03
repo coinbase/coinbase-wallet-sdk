@@ -1,5 +1,5 @@
 import { Preference } from ':core/provider/interface.js';
-import { SubAccountState } from ':stores/sub-accounts/store.js';
+import type { SubAccountState } from ':stores/sub-accounts/store.js';
 
 /**
  * Validates user supplied preferences. Throws if keys are not valid.
