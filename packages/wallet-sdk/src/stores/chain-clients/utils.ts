@@ -5,8 +5,8 @@ import { ChainClients } from './store.js';
 
 export type SDKChain = {
   id: number;
-  rpcUrl: string;
-  nativeCurrency: {
+  rpcUrl?: string;
+  nativeCurrency?: {
     name: string;
     symbol: string;
     decimal: number;
