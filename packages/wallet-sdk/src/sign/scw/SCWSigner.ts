@@ -7,7 +7,8 @@ import {
   scwSignerStorage,
   WALLET_CAPABILITIES_STORAGE_KEY,
 } from './storage.js';
-import { enhanceRequestParams, get, getSenderFromRequest } from './utils.js';
+import { addSenderToRequest, get, getSenderFromRequest } from './utils.js';
+import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
 import { Communicator } from ':core/communicator/Communicator.js';
 import { standardErrors } from ':core/error/errors.js';
 import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage.js';
@@ -16,15 +17,7 @@ import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/prov
 import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
 import { createClients, SDKChain } from ':stores/chain-clients/utils.js';
-import { createSubAccountSigner } from '../../features/sub-accounts/createSubAccountSigner.js';
-import { SubAccount } from ':stores/sub-accounts/store.js';
-import {
-  ACTIVE_ID_KEY,
-  getSubAccountFromStorage,
-  SUB_ACCOUNTS_KEY,
-  subAccountStorage,
-} from '../../features/sub-accounts/storage.js';
-import { AddAddressResponse } from '../../features/sub-accounts/types.js';
+import { SubAccount, SubAccountInfo } from ':stores/sub-accounts/store.js';
 import {
   decryptContent,
   encryptContent,
@@ -47,7 +40,7 @@ export class SCWSigner implements Signer {
   private callback: ProviderEventCallback | null;
 
   private accounts: Address[];
-  private subAccount: AddAddressResponse | null;
+  private subAccount?: SubAccountInfo;
   private chain: SDKChain;
 
   constructor(params: ConstructorOptions) {
@@ -67,7 +60,7 @@ export class SCWSigner implements Signer {
     this.decryptResponseMessage = this.decryptResponseMessage.bind(this);
 
     // Load sub accounts
-    this.subAccount = getSubAccountFromStorage();
+    this.subAccount = SubAccount.getState().account;
 
     // load chains
     const chains = scwSignerStorage.loadObject<SDKChain[]>(AVAILABLE_CHAINS_STORAGE_KEY);
@@ -304,15 +297,14 @@ export class SCWSigner implements Signer {
   }
 
   private async addAddress(request: RequestArguments) {
-    const subaccount = getSubAccountFromStorage();
-    if (subaccount) {
-      return subaccount;
+    const state = SubAccount.getState();
+    if (state.account) {
+      return state.account;
     }
 
     await this.communicator.waitForPopupLoaded?.();
-
     let signer = get(request, 'params[0].signer') as string;
-    const state = SubAccount.getState();
+
     if (!state.getSigner) {
       throw standardErrors.rpc.invalidParams('no signer provided');
     }
@@ -329,10 +321,12 @@ export class SCWSigner implements Signer {
 
     // Only store the sub account information after the popup has been closed and the
     // user has confirmed the creation
-    subAccountStorage.setItem(ACTIVE_ID_KEY, signer.toString());
-    subAccountStorage.storeObject(SUB_ACCOUNTS_KEY, { [signer]: response });
+    SubAccount.setState({
+      activeSigner: signer as Address,
+      account: response as SubAccountInfo,
+    });
 
-    this.subAccount = getSubAccountFromStorage();
+    this.subAccount = SubAccount.getState().account;
     return response;
   }
 
@@ -356,7 +350,7 @@ export class SCWSigner implements Signer {
     // if sender is undefined, we inject the active sub account
     // address into the params for the supported request methods
     if (sender === undefined) {
-      request = enhanceRequestParams(request, this.subAccount.address as Address);
+      request = addSenderToRequest(request, this.subAccount.address as Address);
     }
 
     const signer = await createSubAccountSigner(this.subAccount);

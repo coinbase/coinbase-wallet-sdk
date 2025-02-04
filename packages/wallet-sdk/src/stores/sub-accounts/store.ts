@@ -18,6 +18,7 @@ export type SubAccountInfo = {
 export type SubAccountState = {
   getSigner: null | (() => Promise<WebAuthnAccount>) | (() => Promise<LocalAccount>);
   account?: SubAccountInfo;
+  activeSigner?: Address;
 };
 
 export const SubAccount = createStore(
@@ -30,6 +31,7 @@ export const SubAccount = createStore(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         account: state.account,
+        activeSigner: state.activeSigner,
       }),
     }
   )
