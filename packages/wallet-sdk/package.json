@@ -32,6 +32,7 @@
   "dependencies": {
     "@noble/hashes": "^1.4.0",
     "clsx": "^1.2.1",
+    "crypto-key": "workspace:^",
     "eventemitter3": "^5.0.1",
     "preact": "^10.24.2",
     "viem": "^2.22.17",
