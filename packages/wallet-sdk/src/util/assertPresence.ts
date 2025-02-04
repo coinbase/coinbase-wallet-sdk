@@ -1,11 +1,18 @@
 import { standardErrors } from ':core/error/errors.js';
 
-export function assetPresence<T>(value: T, message?: string): asserts value is NonNullable<T> {
+export function assetPresence<T>(
+  value: T,
+  error?: Error,
+  message?: string
+): asserts value is NonNullable<T> {
   if (value === null || value === undefined) {
-    throw standardErrors.rpc.invalidParams({
-      message: message ?? 'value must be present',
-      data: value,
-    });
+    throw (
+      error ??
+      standardErrors.rpc.invalidParams({
+        message: message ?? 'value must be present',
+        data: value,
+      })
+    );
   }
 }
 

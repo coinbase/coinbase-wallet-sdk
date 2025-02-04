@@ -7,7 +7,7 @@ import {
   ProviderInterface,
 } from ':core/provider/interface.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
-import { SubAccount, SubAccountState } from ':stores/sub-accounts/store.js';
+import { subaccounts, SubAccountState } from ':stores/sub-accounts/store.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { validatePreferences, validateSubAccount } from ':util/validatePreferences.js';
 
@@ -53,7 +53,7 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
   if (params.subaccount) {
     validateSubAccount(params.subaccount);
     // store the signer in the sub account store
-    SubAccount.setState({
+    subaccounts.setState({
       getSigner: params.subaccount.getSigner,
     });
   }

@@ -11,7 +11,7 @@ import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
 import { createClients, SDKChain } from ':stores/chain-clients/utils.js';
-import { SubAccount } from ':stores/sub-accounts/store.js';
+import { subaccounts } from ':stores/sub-accounts/store.js';
 import { assertSubAccountInfo } from ':stores/sub-accounts/utils.js';
 import { assetArrayPresence, assetPresence } from ':util/assertPresence.js';
 import {
@@ -67,7 +67,7 @@ export class SCWSigner implements Signer {
     this.decryptResponseMessage = this.decryptResponseMessage.bind(this);
 
     // rehydrate the sub account store
-    SubAccount.persist.rehydrate(); // should this be called inside the createCoinbaseWalletSDK?
+    subaccounts.persist.rehydrate(); // should this be called inside the createCoinbaseWalletSDK?
 
     const chains = this.storage.loadObject<SDKChain[]>(AVAILABLE_CHAINS_STORAGE_KEY);
     if (chains) {
@@ -302,14 +302,14 @@ export class SCWSigner implements Signer {
   }
 
   private async addAddress(request: RequestArguments) {
-    const state = SubAccount.getState();
+    const state = subaccounts.getState();
     if (state.account) {
       return state.account;
     }
 
     await this.communicator.waitForPopupLoaded?.();
     let signer = get(request, 'params[0].signer') as string;
-    assetPresence(state.getSigner, 'signer is required');
+    assetPresence(state.getSigner, standardErrors.rpc.invalidParams('signer is required'));
 
     const account = await state.getSigner();
     if (!signer && account) {
@@ -323,7 +323,7 @@ export class SCWSigner implements Signer {
     assertSubAccountInfo(response);
     // Only store the sub account information after the popup has been closed and the
     // user has confirmed the creation
-    SubAccount.setState({
+    subaccounts.setState({
       account: response,
     });
     return response;
@@ -335,17 +335,16 @@ export class SCWSigner implements Signer {
     // in this case, we assume the request is for the active sub account (if present)
     // if the sender is defined, we check if it is the same as the active sub account
     // if not, we use the root account signer
-    const state = SubAccount.getState();
+    const state = subaccounts.getState();
     return (
       (state.account && sender === undefined) || (state.account && state.account.address === sender)
     );
   }
 
   private async sendRequestToSubAccountSigner(request: RequestArguments) {
-    const state = SubAccount.getState();
-    if (!state.account) {
-      throw standardErrors.provider.unauthorized('No active sub account');
-    }
+    const state = subaccounts.getState();
+    assetPresence(state.account, standardErrors.provider.unauthorized('no active sub account'));
+
     const sender = getSenderFromRequest(request);
     // if sender is undefined, we inject the active sub account
     // address into the params for the supported request methods

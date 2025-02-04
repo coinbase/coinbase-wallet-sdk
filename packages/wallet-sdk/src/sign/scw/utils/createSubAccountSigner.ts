@@ -2,22 +2,23 @@ import { Address, Hex, http, SignableMessage, TypedDataDefinition } from 'viem';
 import { createPaymasterClient, toCoinbaseSmartAccount } from 'viem/account-abstraction';
 import { baseSepolia } from 'viem/chains';
 
+import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
 import { getBundlerClient, getClient } from ':stores/chain-clients/utils.js';
-import { SubAccount, SubAccountInfo } from ':stores/sub-accounts/store.js';
+import { SubAccountInfo, subaccounts } from ':stores/sub-accounts/store.js';
 import { assetArrayPresence, assetPresence } from ':util/assertPresence.js';
 import { get } from ':util/get.js';
 
 export async function createSubAccountSigner(subaccount: SubAccountInfo) {
-  const { getSigner } = SubAccount.getState();
-  assetPresence(getSigner, 'getSigner not found');
+  const { getSigner } = subaccounts.getState();
+  assetPresence(getSigner, standardErrors.rpc.invalidParams('getSigner not found'));
 
   const signer = await getSigner();
-  assetPresence(signer, 'signer not found');
+  assetPresence(signer, standardErrors.rpc.invalidParams('signer not found'));
 
   // TODO[jake] how do we handle unsupported chains
   const client = getClient(subaccount.chainId ?? baseSepolia.id);
-  assetPresence(client, 'client not found');
+  assetPresence(client, standardErrors.rpc.invalidParams('client not found'));
 
   const account = await toCoinbaseSmartAccount({
     address: subaccount.address,
@@ -46,10 +47,13 @@ export async function createSubAccountSigner(subaccount: SubAccountInfo) {
           }
           // Get the bundler client for the chain
           const chainId = get(args.params[0], 'chainId') as number;
-          assetPresence(chainId, 'chainId is required');
+          assetPresence(chainId, standardErrors.rpc.invalidParams('chainId is required'));
 
           const bundlerClient = getBundlerClient(chainId);
-          assetPresence(bundlerClient, 'bundler client not found');
+          assetPresence(
+            bundlerClient,
+            standardErrors.rpc.invalidParams('bundler client not found')
+          );
 
           // Send the user operation
           return await bundlerClient.sendUserOperation({
