@@ -17,10 +17,6 @@ export function assertSubAccountInfo(info: unknown): asserts info is SubAccountI
     throw new Error('owners is required');
   }
 
-  if (!('ownerIndex' in info)) {
-    throw new Error('ownerIndex is required');
-  }
-
   if (!('root' in info)) {
     throw new Error('root is required');
   }
