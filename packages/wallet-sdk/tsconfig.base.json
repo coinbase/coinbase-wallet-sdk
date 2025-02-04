@@ -17,7 +17,7 @@
       ":stores/*": ["src/stores/*"],
       ":sign/*": ["src/sign/*"],
     },
-    "target": "es2017",
+    "target": "es2020",
     "jsx": "react",
     "jsxFactory": "h",
     "esModuleInterop": true,

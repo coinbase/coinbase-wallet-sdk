@@ -1,5 +1,5 @@
 import { Box, Button } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
+import { createCoinbaseWalletSDK, getCryptoKeyAccount } from '@coinbase/wallet-sdk';
 import React, { useCallback, useState } from 'react';
 
 export function AddAddress({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletSDK> }) {
@@ -10,10 +10,16 @@ export function AddAddress({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalle
       return;
     }
     const provider = sdk.getProvider();
+    const signer = await getCryptoKeyAccount();
+    const { address, factory, factoryData } = await sdk.createAccount(signer.publicKey);
+
     const response = (await provider.request({
       method: 'wallet_addAddress',
       params: [
         {
+          address,
+          factory,
+          factoryData,
           chainId: 84532,
         },
       ],

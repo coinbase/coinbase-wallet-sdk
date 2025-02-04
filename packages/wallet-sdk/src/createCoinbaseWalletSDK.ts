@@ -1,3 +1,6 @@
+import { Hex } from 'viem';
+
+import { createAccount } from './createAccount.js';
 import { createCoinbaseWalletProvider } from './createCoinbaseWalletProvider.js';
 import { VERSION } from './sdk-info.js';
 import {
@@ -61,11 +64,20 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
   let provider: ProviderInterface | null = null;
 
   return {
-    getProvider: () => {
+    getProvider() {
       if (!provider) {
         provider = createCoinbaseWalletProvider(options);
       }
       return provider;
+    },
+    async createAccount(signer: Hex) {
+      if (!provider) {
+        this.getProvider();
+      }
+      const accounts = await provider?.request({
+        method: 'eth_requestAccounts',
+      });
+      return createAccount([...(accounts as Hex[]), signer]);
     },
   };
 }

@@ -76,7 +76,7 @@ export async function getCryptoKeyAccount(): Promise<WebAuthnAccount> {
     });
     return {
       signature: Signature.toHex(signature),
-      raw: {} as unknown as PublicKeyCredential, // type changed in viem
+      raw: {} as unknown as PublicKeyCredential,
       webauthn: metadata,
     };
   };

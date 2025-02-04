@@ -20,7 +20,6 @@ import {
   exportKeyToHexString,
   importKeyFromHexString,
 } from ':util/cipher.js';
-import { get } from ':util/get.js';
 import { fetchRPCRequest } from ':util/provider.js';
 
 const ACCOUNTS_KEY = 'accounts';
@@ -308,16 +307,9 @@ export class SCWSigner implements Signer {
     }
 
     await this.communicator.waitForPopupLoaded?.();
-    let signer = get(request, 'params[0].signer') as string;
+    // assert params
     assetPresence(state.getSigner, standardErrors.rpc.invalidParams('signer is required'));
-
-    const account = await state.getSigner();
-    if (!signer && account) {
-      signer = account.publicKey;
-    }
-
     assetArrayPresence(request.params);
-    request.params[0] = { ...request.params[0], signer };
 
     const response = await this.sendRequestToPopup(request);
     assertSubAccountInfo(response);
