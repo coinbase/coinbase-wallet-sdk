@@ -1,6 +1,6 @@
 import { Signer } from '../interface.js';
 import { SCWKeyManager } from './SCWKeyManager.js';
-import { addSenderToRequest, get, getSenderFromRequest } from './utils.js';
+import { addSenderToRequest, getSenderFromRequest } from './utils.js';
 import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
 import { Communicator } from ':core/communicator/Communicator.js';
 import { standardErrors } from ':core/error/errors.js';
@@ -11,13 +11,16 @@ import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
 import { createClients, SDKChain } from ':stores/chain-clients/utils.js';
-import { SubAccount, SubAccountInfo } from ':stores/sub-accounts/store.js';
+import { SubAccount } from ':stores/sub-accounts/store.js';
+import { assertSubAccountInfo } from ':stores/sub-accounts/utils.js';
+import { assetArrayPresence, assetPresence } from ':util/assertPresence.js';
 import {
   decryptContent,
   encryptContent,
   exportKeyToHexString,
   importKeyFromHexString,
 } from ':util/cipher.js';
+import { get } from ':util/get.js';
 import { fetchRPCRequest } from ':util/provider.js';
 
 const ACCOUNTS_KEY = 'accounts';
@@ -306,24 +309,22 @@ export class SCWSigner implements Signer {
 
     await this.communicator.waitForPopupLoaded?.();
     let signer = get(request, 'params[0].signer') as string;
-    if (!state.getSigner) {
-      throw standardErrors.rpc.invalidParams('no signer provided');
-    }
+    assetPresence(state.getSigner, 'signer is required');
+
     const account = await state.getSigner();
     if (!signer && account) {
       signer = account.publicKey;
     }
-    if (!Array.isArray(request.params)) {
-      throw standardErrors.rpc.invalidParams();
-    }
-    request.params[0].signer = signer;
+
+    assetArrayPresence(request.params);
+    request.params[0] = { ...request.params[0], signer };
 
     const response = await this.sendRequestToPopup(request);
-
+    assertSubAccountInfo(response);
     // Only store the sub account information after the popup has been closed and the
     // user has confirmed the creation
     SubAccount.setState({
-      account: response as SubAccountInfo,
+      account: response,
     });
     return response;
   }
