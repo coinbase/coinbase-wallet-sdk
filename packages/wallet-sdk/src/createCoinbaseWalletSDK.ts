@@ -7,11 +7,15 @@ import {
   ProviderInterface,
 } from ':core/provider/interface.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
+import { SubAccount, SubAccountState } from ':stores/sub-accounts/store.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
-import { validatePreferences } from ':util/validatePreferences.js';
+import { validatePreferences, validateSubAccount } from ':util/validatePreferences.js';
 
 export type CreateCoinbaseWalletSDKOptions = Partial<AppMetadata> & {
   preference?: Preference;
+  subaccount?: {
+    getSigner: SubAccountState['getSigner'];
+  };
 };
 
 const DEFAULT_PREFERENCE: Preference = {
@@ -42,6 +46,17 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
    * Validate user supplied preferences. Throws if key/values are not valid.
    */
   validatePreferences(options.preference);
+
+  /**
+   * Set the sub account signer inside the store.
+   */
+  if (params.subaccount) {
+    validateSubAccount(params.subaccount);
+    // store the signer in the sub account store
+    SubAccount.setState({
+      getSigner: params.subaccount.getSigner,
+    });
+  }
 
   let provider: ProviderInterface | null = null;
 
