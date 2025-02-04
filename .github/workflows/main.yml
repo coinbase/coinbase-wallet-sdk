@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./packages/wallet-sdk
+        working-directory: ./
 
     steps:
       - name: Checkout
@@ -49,12 +49,20 @@ jobs:
       - name: Install NPM dependencies
         run: yarn install --immutable
 
+      - name: Build crypto-key lib
+        run: |
+          cd ./libs/crypto-key
+          yarn build
+      
       - name: Runs compile asset script
         run: |
+          cd ./packages/wallet-sdk
           node ./compile-assets.cjs
 
       - name: Check Types
-        run: yarn typecheck
+        run: |
+          cd ./packages/wallet-sdk
+          yarn typecheck
 
   tests:
     name: Tests
