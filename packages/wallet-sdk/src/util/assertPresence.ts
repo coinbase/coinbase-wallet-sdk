@@ -1,6 +1,6 @@
 import { standardErrors } from ':core/error/errors.js';
 
-export function assetPresence<T>(
+export function assertPresence<T>(
   value: T,
   error?: Error,
   message?: string
@@ -16,7 +16,7 @@ export function assetPresence<T>(
   }
 }
 
-export function assetArrayPresence<T>(
+export function assertArrayPresence<T>(
   value: unknown,
   message?: string
 ): asserts value is NonNullable<T>[] {

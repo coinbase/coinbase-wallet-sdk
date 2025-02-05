@@ -13,7 +13,7 @@ import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
 import { createClients, SDKChain } from ':stores/chain-clients/utils.js';
 import { subaccounts } from ':stores/sub-accounts/store.js';
 import { assertSubAccountInfo } from ':stores/sub-accounts/utils.js';
-import { assetArrayPresence, assetPresence } from ':util/assertPresence.js';
+import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
 import {
   decryptContent,
   encryptContent,
@@ -309,14 +309,14 @@ export class SCWSigner implements Signer {
 
     await this.communicator.waitForPopupLoaded?.();
     let signer = get(request, 'params[0].signer') as string;
-    assetPresence(state.getSigner, standardErrors.rpc.invalidParams('signer is required'));
+    assertPresence(state.getSigner, standardErrors.rpc.invalidParams('signer is required'));
 
     const account = await state.getSigner();
     if (!signer && account) {
       signer = account.publicKey;
     }
 
-    assetArrayPresence(request.params);
+    assertArrayPresence(request.params);
     request.params[0] = { ...request.params[0], signer };
 
     const response = await this.sendRequestToPopup(request);
@@ -343,7 +343,7 @@ export class SCWSigner implements Signer {
 
   private async sendRequestToSubAccountSigner(request: RequestArguments) {
     const state = subaccounts.getState();
-    assetPresence(state.account, standardErrors.provider.unauthorized('no active sub account'));
+    assertPresence(state.account, standardErrors.provider.unauthorized('no active sub account'));
 
     const sender = getSenderFromRequest(request);
     // if sender is undefined, we inject the active sub account
