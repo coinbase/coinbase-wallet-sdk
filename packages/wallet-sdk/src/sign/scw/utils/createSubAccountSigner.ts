@@ -6,19 +6,19 @@ import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
 import { getBundlerClient, getClient } from ':stores/chain-clients/utils.js';
 import { SubAccountInfo, subaccounts } from ':stores/sub-accounts/store.js';
-import { assetArrayPresence, assetPresence } from ':util/assertPresence.js';
+import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
 import { get } from ':util/get.js';
 
 export async function createSubAccountSigner(subaccount: SubAccountInfo) {
   const { getSigner } = subaccounts.getState();
-  assetPresence(getSigner, standardErrors.rpc.invalidParams('getSigner not found'));
+  assertPresence(getSigner, standardErrors.rpc.invalidParams('getSigner not found'));
 
   const signer = await getSigner();
-  assetPresence(signer, standardErrors.rpc.invalidParams('signer not found'));
+  assertPresence(signer, standardErrors.rpc.invalidParams('signer not found'));
 
   // TODO[jake] how do we handle unsupported chains
   const client = getClient(subaccount.chainId ?? baseSepolia.id);
-  assetPresence(client, standardErrors.rpc.invalidParams('client not found'));
+  assertPresence(client, standardErrors.rpc.invalidParams('client not found'));
 
   const account = await toCoinbaseSmartAccount({
     address: subaccount.address,
@@ -31,11 +31,11 @@ export async function createSubAccountSigner(subaccount: SubAccountInfo) {
     request: async (args: RequestArguments): Promise<Hex> => {
       switch (args.method) {
         case 'eth_sendTransaction': {
-          assetArrayPresence(args.params);
+          assertArrayPresence(args.params);
           return account.sign(args.params[0] as { hash: Hex });
         }
         case 'wallet_sendCalls': {
-          assetArrayPresence(args.params);
+          assertArrayPresence(args.params);
 
           // Get the paymaster URL from the requests capabilities
           const paymasterURL = get(args.params[0], 'capabilities.paymasterService.url') as string;
@@ -47,10 +47,10 @@ export async function createSubAccountSigner(subaccount: SubAccountInfo) {
           }
           // Get the bundler client for the chain
           const chainId = get(args.params[0], 'chainId') as number;
-          assetPresence(chainId, standardErrors.rpc.invalidParams('chainId is required'));
+          assertPresence(chainId, standardErrors.rpc.invalidParams('chainId is required'));
 
           const bundlerClient = getBundlerClient(chainId);
-          assetPresence(
+          assertPresence(
             bundlerClient,
             standardErrors.rpc.invalidParams('bundler client not found')
           );
@@ -66,13 +66,13 @@ export async function createSubAccountSigner(subaccount: SubAccountInfo) {
           throw new Error('Not implemented');
         }
         case 'personal_sign': {
-          assetArrayPresence(args.params);
+          assertArrayPresence(args.params);
           return account.signMessage({ message: args.params[0] } as {
             message: SignableMessage;
           });
         }
         case 'eth_signTypedData_v4': {
-          assetArrayPresence(args.params);
+          assertArrayPresence(args.params);
           return account.signTypedData(args.params[1] as TypedDataDefinition);
         }
         default:

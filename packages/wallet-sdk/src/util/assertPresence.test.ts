@@ -1,29 +1,29 @@
-import { assetArrayPresence, assetPresence } from './assertPresence.js';
+import { assertArrayPresence, assertPresence } from './assertPresence.js';
 
 describe('assertPresence', () => {
   it('should throw an error if the value is null', () => {
-    expect(() => assetPresence(null)).toThrow();
+    expect(() => assertPresence(null)).toThrow();
   });
 
   it('should throw an error if the value is undefined', () => {
-    expect(() => assetPresence(undefined)).toThrow();
+    expect(() => assertPresence(undefined)).toThrow();
   });
 
   it('should throw an error if the value is null and an error is provided', () => {
-    expect(() => assetPresence(null, new Error('test'))).toThrow();
+    expect(() => assertPresence(null, new Error('test'))).toThrow();
   });
 
   it('should throw an error if the value is undefined and an error is provided', () => {
-    expect(() => assetPresence(undefined, new Error('test'))).toThrow();
+    expect(() => assertPresence(undefined, new Error('test'))).toThrow();
   });
 });
 
-describe('assetArrayPresence', () => {
+describe('assertArrayPresence', () => {
   it('should throw an error if the value is not an array', () => {
-    expect(() => assetArrayPresence(null)).toThrow();
+    expect(() => assertArrayPresence(null)).toThrow();
   });
 
   it('should throw an error if the value is not an array and an error is provided', () => {
-    expect(() => assetArrayPresence(null, 'test')).toThrow();
+    expect(() => assertArrayPresence(null, 'test')).toThrow();
   });
 });
