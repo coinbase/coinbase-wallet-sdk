@@ -17,7 +17,7 @@ const params: SubAccountInfo = {
 };
 
 vi.mock(':stores/sub-accounts/store.js', () => ({
-  SubAccount: {
+  subaccounts: {
     getState: vi.fn().mockReturnValue({
       getSigner: vi.fn().mockResolvedValue('0x1'),
       account: {

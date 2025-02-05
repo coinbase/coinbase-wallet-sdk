@@ -20,7 +20,7 @@ export type SubAccountState = {
   account?: SubAccountInfo;
 };
 
-export const SubAccount = createStore(
+export const subaccounts = createStore(
   persist<Partial<SubAccountState>>(
     () => ({
       getSigner: null,

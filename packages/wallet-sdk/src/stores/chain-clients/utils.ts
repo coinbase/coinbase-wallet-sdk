@@ -2,15 +2,12 @@ import { createPublicClient, defineChain, http, PublicClient } from 'viem';
 import { BundlerClient, createBundlerClient } from 'viem/account-abstraction';
 
 import { ChainClients } from './store.js';
+import { RPCResponseNativeCurrency } from ':core/message/RPCResponse.js';
 
 export type SDKChain = {
   id: number;
   rpcUrl?: string;
-  nativeCurrency?: {
-    name: string;
-    symbol: string;
-    decimal: number;
-  };
+  nativeCurrency?: RPCResponseNativeCurrency;
 };
 
 export function createClients(chains: SDKChain[]) {

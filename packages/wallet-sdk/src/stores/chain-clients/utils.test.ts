@@ -1,10 +1,10 @@
-import { optimismSepolia, sepolia } from "viem/chains";
+import { optimismSepolia, sepolia } from 'viem/chains';
 
-import { ChainClients } from "./store.js";
-import { createClients } from "./utils.js";
+import { ChainClients } from './store.js';
+import { createClients } from './utils.js';
 
-describe("chain-clients/utils", () => {
-  it("should create clients", () => {
+describe('chain-clients/utils', () => {
+  it('should create clients', () => {
     createClients([
       {
         id: sepolia.id,
@@ -19,7 +19,7 @@ describe("chain-clients/utils", () => {
     expect(Object.keys(ChainClients.getState()).length).toBe(1);
   });
 
-  it("should create clients for multiple chains", () => {
+  it('should create clients for multiple chains', () => {
     createClients([
       {
         id: sepolia.id,
@@ -45,8 +45,6 @@ describe("chain-clients/utils", () => {
     expect(ChainClients.getState()[optimismSepolia.id].client).toBeDefined();
 
     expect(ChainClients.getState()[sepolia.id].bundlerClient).toBeDefined();
-    expect(
-      ChainClients.getState()[optimismSepolia.id].bundlerClient
-    ).toBeDefined();
+    expect(ChainClients.getState()[optimismSepolia.id].bundlerClient).toBeDefined();
   });
 });
