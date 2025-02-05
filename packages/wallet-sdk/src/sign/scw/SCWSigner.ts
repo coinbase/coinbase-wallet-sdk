@@ -304,6 +304,7 @@ export class SCWSigner implements Signer {
   private async addAddress(request: RequestArguments) {
     const state = subaccounts.getState();
     if (state.account) {
+      this.callback?.('accountsChanged', [state.account.address]);
       return state.account;
     }
 
@@ -326,6 +327,7 @@ export class SCWSigner implements Signer {
     subaccounts.setState({
       account: response,
     });
+    this.callback?.('accountsChanged', [response.address]);
     return response;
   }
 

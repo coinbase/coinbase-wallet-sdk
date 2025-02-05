@@ -1,6 +1,6 @@
 import { Box, Button } from '@chakra-ui/react';
 import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 export function Connect({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletSDK> }) {
   const [state, setState] = useState<string[]>();
@@ -16,6 +16,17 @@ export function Connect({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletSD
 
     console.info('customlogs: response', response);
     setState(response as string[]);
+  }, [sdk]);
+
+  useEffect(() => {
+    if (!sdk) {
+      return;
+    }
+
+    const provider = sdk.getProvider();
+    provider.on('accountsChanged', (accounts) => {
+      setState(accounts as string[]);
+    });
   }, [sdk]);
 
   return (
