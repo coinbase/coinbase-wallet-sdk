@@ -49,20 +49,11 @@ jobs:
       - name: Install NPM dependencies
         run: yarn install --immutable
 
-      - name: Build crypto-key lib
-        run: |
-          cd ./libs/crypto-key
-          yarn build
-      
-      - name: Runs compile asset script
-        run: |
-          cd ./packages/wallet-sdk
-          node ./compile-assets.cjs
+      - name: Build packages
+        run: yarn build:packages
 
       - name: Check Types
-        run: |
-          cd ./packages/wallet-sdk
-          yarn typecheck
+        run: yarn typecheck
 
   tests:
     name: Tests
