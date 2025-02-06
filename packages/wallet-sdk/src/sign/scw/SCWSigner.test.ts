@@ -17,17 +17,13 @@ import {
 import { fetchRPCRequest } from ':util/provider.js';
 
 vi.mock(':util/provider');
-
 vi.mock('./SCWKeyManager');
-const storageStoreSpy = vi.spyOn(ScopedLocalStorage.prototype, 'storeObject');
-const storageClearSpy = vi.spyOn(ScopedLocalStorage.prototype, 'clear');
 vi.mock(':core/communicator/Communicator', () => ({
   Communicator: vi.fn(() => ({
     postRequestAndWaitForResponse: vi.fn(),
     waitForPopupLoaded: vi.fn(),
   })),
 }));
-
 vi.mock(':util/cipher', () => ({
   decryptContent: vi.fn(),
   encryptContent: vi.fn(),
@@ -35,6 +31,8 @@ vi.mock(':util/cipher', () => ({
   importKeyFromHexString: vi.fn(),
 }));
 
+const storageStoreSpy = vi.spyOn(ScopedLocalStorage.prototype, 'storeObject');
+const storageClearSpy = vi.spyOn(ScopedLocalStorage.prototype, 'clear');
 const mockCryptoKey = {} as CryptoKey;
 const encryptedData = {} as EncryptedData;
 const mockChains = {
@@ -59,7 +57,7 @@ describe('SCWSigner', () => {
   let mockCallback: ProviderEventCallback;
   let mockKeyManager: Mocked<SCWKeyManager>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     mockMetadata = {
       appName: 'test',
       appLogoUrl: null,
@@ -166,7 +164,7 @@ describe('SCWSigner', () => {
     });
   });
 
-  describe('request - using ephemeral SCWSigner', () => {
+  describe('request - ephemeral signer', () => {
     it.each(['wallet_sendCalls'])(
       'should perform a successful request after handshake',
       async (method) => {
@@ -348,6 +346,51 @@ describe('SCWSigner', () => {
       expect(mockKeyManager.clear).toHaveBeenCalled();
       expect(signer['accounts']).toEqual([]);
       expect(signer['chain']).toEqual({ id: 1 });
+    });
+  });
+
+  describe('SCWSigner - wallet_connect', () => {
+    beforeEach(async () => {
+      await signer.cleanup();
+    });
+
+    it('should update internal state for successful wallet_connect', async () => {
+      const mockRequest: RequestArguments = {
+        method: 'wallet_connect',
+        params: [],
+      };
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: null,
+        },
+      });
+      await signer.handshake({ method: 'handshake' });
+      expect(signer['accounts']).toEqual([]);
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: '0xAddress',
+                capabilities: {
+                  addAddress: {
+                    address: '0xAddress',
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      await signer.request(mockRequest);
+
+      expect(storageStoreSpy).toHaveBeenCalledWith('accounts', ['0xAddress']);
+      expect(mockCallback).toHaveBeenCalledWith('accountsChanged', ['0xAddress']);
+
+      await signer.cleanup();
     });
   });
 });
