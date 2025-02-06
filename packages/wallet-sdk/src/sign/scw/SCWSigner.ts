@@ -186,17 +186,18 @@ export class SCWSigner implements Signer {
         const accounts = response.accounts.map((account) => account.address);
         this.accounts = accounts;
         this.storage.storeObject(ACCOUNTS_KEY, accounts);
-        this.callback?.('accountsChanged', accounts);
 
         // TODO: in future PR update state to support multiple accounts
         const account = response.accounts[0];
         const capabilities = account.capabilities;
         if (capabilities && capabilities.addAddress) {
-          const subAccount = capabilities.addAddress;
           subaccounts.setState({
-            account: subAccount,
+            account: capabilities.addAddress,
           });
         }
+        this.callback?.('accountsChanged', [
+          subaccounts.getState().account?.address ?? this.accounts[0],
+        ]);
         break;
       }
       default:
