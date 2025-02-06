@@ -4,7 +4,6 @@ const walletConnectShortcuts: ShortcutType[] = [
   {
     key: 'SIWE',
     data: {
-      chainId: '84532',
       version: '1',
       capabilities: {
         signInWithEthereum: {

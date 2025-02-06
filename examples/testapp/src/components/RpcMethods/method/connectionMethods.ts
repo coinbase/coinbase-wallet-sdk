@@ -21,6 +21,12 @@ const walletConnect: RpcRequestInput = {
       key: 'capabilities',
     },
   ],
+  format: (data: Record<string, string>) => [
+    {
+      version: data.version,
+      capabilities: data.capabilities,
+    },
+  ],
 };
 
 export const connectionMethods = [ethRequestAccounts, ethAccounts, walletConnect];
