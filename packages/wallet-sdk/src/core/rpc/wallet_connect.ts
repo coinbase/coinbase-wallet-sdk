@@ -51,9 +51,9 @@ export type WalletConnectRequest = {
       version: string;
       // Optional capabilities to request (e.g. Sign In With Ethereum).
       capabilities?: {
-        addAddress: AddAddressCapabilityRequest;
-        spendPermissions: SpendPermissionsCapabilityRequest;
-        signInWithEthereum: SignInWithEthereumCapabilityRequest;
+        addAddress?: AddAddressCapabilityRequest;
+        spendPermissions?: SpendPermissionsCapabilityRequest;
+        signInWithEthereum?: SignInWithEthereumCapabilityRequest;
       };
     },
   ];
@@ -64,10 +64,10 @@ export type WalletConnectResponse = {
     // Address of the connected account.
     address: `0x${string}`;
     // Capabilities granted that is associated with this account.
-    capabilities: {
-      addAddress: AddAddressCapabilityResponse;
-      spendPermissions: SpendPermissionsCapabilityResponse;
-      signInWithEthereum: SignInWithEthereumCapabilityResponse;
+    capabilities?: {
+      addAddress?: AddAddressCapabilityResponse;
+      spendPermissions?: SpendPermissionsCapabilityResponse;
+      signInWithEthereum?: SignInWithEthereumCapabilityResponse;
     };
   }[];
 };
