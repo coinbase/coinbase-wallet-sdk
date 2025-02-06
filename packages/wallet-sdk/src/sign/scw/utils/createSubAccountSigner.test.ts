@@ -8,7 +8,6 @@ const params: SubAccountInfo = {
   address: '0x',
   chainId: 84532,
   owners: [],
-  ownerIndex: 0,
   root: '0x',
   initCode: {
     factory: '0x',
