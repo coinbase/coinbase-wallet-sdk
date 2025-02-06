@@ -7,6 +7,7 @@ import { standardErrors } from ':core/error/errors.js';
 import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage.js';
 import { RPCResponse } from ':core/message/RPCResponse.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
+import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
@@ -96,24 +97,14 @@ export class SCWSigner implements Signer {
 
     const decrypted = await this.decryptResponseMessage(response);
 
-    const result = decrypted.result;
-    if ('error' in result) throw result.error;
-
-    switch (args.method) {
-      case 'eth_requestAccounts': {
-        const accounts = result.value as Address[];
-        this.accounts = accounts;
-        this.storage.storeObject(ACCOUNTS_KEY, accounts);
-        this.callback?.('accountsChanged', accounts);
-        break;
-      }
-    }
+    this.handleResponse(args, decrypted);
   }
 
   async request(request: RequestArguments) {
     if (this.accounts.length === 0) {
       switch (request.method) {
         case 'wallet_sendCalls':
+        case 'wallet_connect':
           return this.sendRequestToPopup(request);
         default:
           throw standardErrors.provider.unauthorized();
@@ -175,9 +166,42 @@ export class SCWSigner implements Signer {
     const response = await this.sendEncryptedRequest(request);
     const decrypted = await this.decryptResponseMessage(response);
 
+    return this.handleResponse(request, decrypted);
+  }
+
+  private async handleResponse(request: RequestArguments, decrypted: RPCResponse) {
     const result = decrypted.result;
     if ('error' in result) throw result.error;
 
+    switch (request.method) {
+      case 'eth_requestAccounts': {
+        const accounts = result.value as Address[];
+        this.accounts = accounts;
+        this.storage.storeObject(ACCOUNTS_KEY, accounts);
+        this.callback?.('accountsChanged', accounts);
+        break;
+      }
+      case 'wallet_connect': {
+        const response = result.value as WalletConnectResponse;
+        const accounts = response.accounts.map((account) => account.address);
+        this.accounts = accounts;
+        this.storage.storeObject(ACCOUNTS_KEY, accounts);
+        this.callback?.('accountsChanged', accounts);
+
+        // TODO: in future PR update state to support multiple accounts
+        const account = response.accounts[0];
+        const capabilities = account.capabilities;
+        if (capabilities.addAddress) {
+          const subAccount = capabilities.addAddress;
+          subaccounts.setState({
+            account: subAccount,
+          });
+        }
+        break;
+      }
+      default:
+        break;
+    }
     return result.value;
   }
 
