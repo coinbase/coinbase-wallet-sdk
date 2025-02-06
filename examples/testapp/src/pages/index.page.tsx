@@ -11,6 +11,7 @@ import { readonlyJsonRpcMethods } from '../components/RpcMethods/method/readonly
 import { sendMethods } from '../components/RpcMethods/method/sendMethods';
 import { signMessageMethods } from '../components/RpcMethods/method/signMessageMethods';
 import { walletTxMethods } from '../components/RpcMethods/method/walletTxMethods';
+import { connectionMethodShortcutsMap } from '../components/RpcMethods/shortcut/connectionMethodShortcuts';
 import { ephemeralMethodShortcutsMap } from '../components/RpcMethods/shortcut/ephemeralMethodShortcuts';
 import { multiChainShortcutsMap } from '../components/RpcMethods/shortcut/multipleChainShortcuts';
 import { readonlyJsonRpcShortcutsMap } from '../components/RpcMethods/shortcut/readonlyJsonRpcShortcuts';
@@ -71,7 +72,11 @@ export default function Home() {
           </Box>
         </>
       )}
-      <MethodsSection title="Wallet Connection" methods={connectionMethods} />
+      <MethodsSection
+        title="Wallet Connection"
+        methods={connectionMethods}
+        shortcutsMap={connectionMethodShortcutsMap}
+      />
       <MethodsSection
         title="Ephemeral Methods"
         methods={ephemeralMethods}

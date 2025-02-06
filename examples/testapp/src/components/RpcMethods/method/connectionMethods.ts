@@ -10,4 +10,17 @@ const ethAccounts: RpcRequestInput = {
   params: [],
 };
 
-export const connectionMethods = [ethRequestAccounts, ethAccounts];
+const walletConnect: RpcRequestInput = {
+  method: 'wallet_connect',
+  params: [
+    {
+      key: 'version',
+      required: true,
+    },
+    {
+      key: 'capabilities',
+    },
+  ],
+};
+
+export const connectionMethods = [ethRequestAccounts, ethAccounts, walletConnect];
