@@ -7,7 +7,6 @@ export type SubAccountInfo = {
   address: Address;
   chainId: number;
   owners: Address[];
-  ownerIndex: number;
   root: Address;
   initCode: {
     factory: Address;
