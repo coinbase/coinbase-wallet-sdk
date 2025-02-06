@@ -14,7 +14,7 @@ import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
 import { createClients, SDKChain } from ':stores/chain-clients/utils.js';
 import { subaccounts } from ':stores/sub-accounts/store.js';
 import { assertSubAccountInfo } from ':stores/sub-accounts/utils.js';
-import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
+import { assertPresence } from ':util/assertPresence.js';
 import {
   decryptContent,
   encryptContent,
@@ -334,16 +334,10 @@ export class SCWSigner implements Signer {
     }
 
     await this.communicator.waitForPopupLoaded?.();
-    let signer = get(request, 'params[0].signer') as string;
-    assertPresence(state.getSigner, standardErrors.rpc.invalidParams('signer is required'));
-
-    const account = await state.getSigner();
-    if (!signer && account) {
-      signer = account.publicKey;
+    const address = get(request, 'params[0].address') as string;
+    if (address) {
+      throw standardErrors.rpc.invalidParams('importing an address is not yet supported');
     }
-
-    assertArrayPresence(request.params);
-    request.params[0] = { ...request.params[0], signer };
 
     const response = await this.sendRequestToPopup(request);
     assertSubAccountInfo(response);
