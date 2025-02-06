@@ -1,6 +1,6 @@
 import { Address, Hex } from 'viem';
 
-type WalletAddAddressCapabilities = {
+export type WalletAddAddressCapabilities = {
   createAccount?: {
     signer: Hex;
   };
