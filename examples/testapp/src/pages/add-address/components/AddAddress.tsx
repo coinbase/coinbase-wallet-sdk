@@ -15,6 +15,7 @@ export function AddAddress({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalle
       method: 'wallet_addAddress',
       params: [
         {
+          version: '1',
           chainId: 84532,
           capabilities: {
             createAccount: {
