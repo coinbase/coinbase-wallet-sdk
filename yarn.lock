@@ -9367,6 +9367,7 @@ __metadata:
     react-hook-form: 7.45.2
     typescript: ^5.1.6
     viem: ^2.22.17
+    vitest: ^2.1.2
   languageName: unknown
   linkType: soft
 
@@ -10647,7 +10648,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vitest@npm:^2.1.9":
+"vitest@npm:^2.1.2, vitest@npm:^2.1.9":
   version: 2.1.9
   resolution: "vitest@npm:2.1.9"
   dependencies:
