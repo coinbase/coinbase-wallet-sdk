@@ -354,12 +354,11 @@ export class SCWSigner implements Signer {
 
   private shouldRequestUseSubAccountSigner(request: RequestArguments) {
     const sender = getSenderFromRequest(request);
-    // if the sender is undefined, it means the application did not provide a sender
-    // in this case, we assume the request is for the active sub account (if present)
-    // if the sender is defined, we check if it is the same as the active sub account
-    // if not, we use the root account signer
     const state = subaccounts.getState();
-    return (state.account && sender && sender === state.account.address) || state.account;
+    if (sender && sender !== state.account?.address) {
+      return false;
+    }
+    return !!state.account;
   }
 
   private async sendRequestToSubAccountSigner(request: RequestArguments) {
