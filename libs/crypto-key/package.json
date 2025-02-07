@@ -8,7 +8,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "lint": "eslint . --ext .ts --fix",
+    "lint": "eslint . --ext .ts",
     "test": "vitest",
     "typecheck": "tsc --noEmit"
   },
