@@ -1,27 +1,17 @@
 import { SubAccountInfo } from './store.js';
+import { standardErrors } from ':core/error/errors.js';
 
 export function assertSubAccountInfo(info: unknown): asserts info is SubAccountInfo {
   if (typeof info !== 'object' || info === null) {
-    throw new Error('info is not an object');
+    throw standardErrors.rpc.internal('sub account info is not an object');
   }
-
-  if (!('address' in info)) {
-    throw new Error('address is required');
-  }
-
-  if (!('chainId' in info)) {
-    throw new Error('chainId is required');
-  }
-
-  if (!('owners' in info)) {
-    throw new Error('owners is required');
-  }
-
-  if (!('root' in info)) {
-    throw new Error('root is required');
-  }
-
-  if (!('initCode' in info)) {
-    throw new Error('initCode is required');
+  if (
+    !('address' in info) ||
+    !('chainId' in info) ||
+    !('owners' in info) ||
+    !('root' in info) ||
+    !('initCode' in info)
+  ) {
+    throw standardErrors.rpc.internal('sub account is invalid');
   }
 }
