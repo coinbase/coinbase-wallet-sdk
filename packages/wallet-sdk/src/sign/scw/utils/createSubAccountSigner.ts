@@ -1,4 +1,4 @@
-import { Address, Hex, http, SignableMessage, TypedDataDefinition } from 'viem';
+import { Address, Hex, http, numberToHex, SignableMessage, TypedDataDefinition } from 'viem';
 import { createPaymasterClient, toCoinbaseSmartAccount } from 'viem/account-abstraction';
 import { baseSepolia } from 'viem/chains';
 
@@ -28,8 +28,20 @@ export async function createSubAccountSigner(subaccount: SubAccountInfo) {
   });
 
   return {
-    request: async (args: RequestArguments): Promise<Hex> => {
+    request: async (args: RequestArguments): Promise<Hex | Address[] | number | SubAccountInfo> => {
       switch (args.method) {
+        case 'wallet_addAddress':
+          return subaccount;
+        case 'eth_requestAccounts':
+          return [subaccount.address] as Address[];
+        case 'eth_accounts':
+          return [subaccount.address] as Address[];
+        case 'eth_coinbase':
+          return subaccount.address;
+        case 'net_version':
+          return subaccount.chainId;
+        case 'eth_chainId':
+          return numberToHex(subaccount.chainId);
         case 'eth_sendTransaction': {
           assertArrayPresence(args.params);
           return account.sign(args.params[0] as { hash: Hex });
@@ -75,8 +87,12 @@ export async function createSubAccountSigner(subaccount: SubAccountInfo) {
           assertArrayPresence(args.params);
           return account.signTypedData(args.params[1] as TypedDataDefinition);
         }
+        case 'eth_signTypedData_v1':
+        case 'eth_signTypedData_v3':
+        case 'wallet_addEthereumChain':
+        case 'wallet_switchEthereumChain':
         default:
-          throw new Error('Not supported');
+          throw standardErrors.rpc.methodNotSupported();
       }
     },
   };

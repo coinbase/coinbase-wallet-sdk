@@ -1,3 +1,5 @@
+import { numberToHex } from 'viem';
+
 import { Signer } from '../interface.js';
 import { SCWKeyManager } from './SCWKeyManager.js';
 import { addSenderToRequest, getSenderFromRequest } from './utils.js';
@@ -103,8 +105,8 @@ export class SCWSigner implements Signer {
   async request(request: RequestArguments) {
     if (this.accounts.length === 0) {
       switch (request.method) {
-        case 'wallet_sendCalls':
         case 'wallet_connect':
+        case 'wallet_sendCalls':
           return this.sendRequestToPopup(request);
         default:
           throw standardErrors.provider.unauthorized();
@@ -117,7 +119,7 @@ export class SCWSigner implements Signer {
 
     switch (request.method) {
       case 'eth_requestAccounts':
-        this.callback?.('connect', { chainId: hexStringFromNumber(this.chain.id) });
+        this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
         return this.accounts;
       case 'eth_accounts':
         return this.accounts;
@@ -126,7 +128,7 @@ export class SCWSigner implements Signer {
       case 'net_version':
         return this.chain.id;
       case 'eth_chainId':
-        return hexStringFromNumber(this.chain.id);
+        return numberToHex(this.chain.id);
       case 'wallet_getCapabilities':
         return this.storage.loadObject(WALLET_CAPABILITIES_STORAGE_KEY);
       case 'wallet_switchEthereumChain':
@@ -357,9 +359,7 @@ export class SCWSigner implements Signer {
     // if the sender is defined, we check if it is the same as the active sub account
     // if not, we use the root account signer
     const state = subaccounts.getState();
-    return (
-      (state.account && sender === undefined) || (state.account && state.account.address === sender)
-    );
+    return (state.account && sender && sender === state.account.address) || state.account;
   }
 
   private async sendRequestToSubAccountSigner(request: RequestArguments) {
