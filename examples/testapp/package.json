@@ -7,7 +7,8 @@
     "dev": "next dev --port 3001",
     "build": "next build",
     "start": "next start",
-    "export": "yarn build && touch ./out/.nojekyll"
+    "export": "yarn build && touch ./out/.nojekyll",
+    "test": "vitest"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
@@ -37,6 +38,7 @@
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "eslint-plugin-unused-imports": "^3.0.0",
     "prettier": "^3.0.0",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "vitest": "^3.0.4"
   }
 }
