@@ -35,14 +35,15 @@ const replaceAddressInValue = (value: any, currentAddress: string) => {
   if (typeof value === 'string' && (value === ADDR_TO_FILL || value === 'YOUR_ADDRESS_HERE')) {
     return currentAddress;
   }
-  
+
   if (typeof value === 'object') {
     try {
       const parsed = typeof value === 'string' ? JSON.parse(value) : value;
       const stringified = JSON.stringify(parsed);
       if (stringified.includes(ADDR_TO_FILL) || stringified.includes('YOUR_ADDRESS_HERE')) {
-        const replaced = stringified.replace(new RegExp(ADDR_TO_FILL, 'g'), currentAddress)
-                                  .replace(new RegExp('YOUR_ADDRESS_HERE', 'g'), currentAddress);
+        const replaced = stringified
+          .replace(new RegExp(ADDR_TO_FILL, 'g'), currentAddress)
+          .replace(new RegExp('YOUR_ADDRESS_HERE', 'g'), currentAddress);
         return typeof value === 'object' ? JSON.parse(replaced) : replaced;
       }
     } catch (e) {
