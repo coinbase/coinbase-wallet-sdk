@@ -31,8 +31,9 @@ import { multiChainShortcutsMap } from './shortcut/multipleChainShortcuts';
 type ResponseType = string;
 
 // Replace address placeholders in string or object values
-const replaceAddressInValue = (value: any, currentAddress: string) => {
+const replaceAddressInValue = async (value: any, getCurrentAddress: () => Promise<[string]>) => {
   if (typeof value === 'string' && (value === ADDR_TO_FILL || value === 'YOUR_ADDRESS_HERE')) {
+    const currentAddress = (await getCurrentAddress())[0];
     return currentAddress;
   }
 
@@ -41,6 +42,7 @@ const replaceAddressInValue = (value: any, currentAddress: string) => {
       const parsed = typeof value === 'string' ? JSON.parse(value) : value;
       const stringified = JSON.stringify(parsed);
       if (stringified.includes(ADDR_TO_FILL) || stringified.includes('YOUR_ADDRESS_HERE')) {
+        const currentAddress = (await getCurrentAddress())[0];
         const replaced = stringified
           .replace(new RegExp(ADDR_TO_FILL, 'g'), currentAddress)
           .replace(new RegExp('YOUR_ADDRESS_HERE', 'g'), currentAddress);
@@ -98,12 +100,11 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
       const dataToSubmit = { ...data };
       let values = dataToSubmit;
       if (format) {
-        const addresses = await provider.request({ method: 'eth_accounts' });
-        const currentAddress = addresses[0];
+        const getCurrentAddress = async () => await provider.request({ method: 'eth_accounts' });
 
         for (const key in dataToSubmit) {
           if (Object.prototype.hasOwnProperty.call(data, key)) {
-            dataToSubmit[key] = replaceAddressInValue(dataToSubmit[key], currentAddress);
+            dataToSubmit[key] = await replaceAddressInValue(dataToSubmit[key], getCurrentAddress);
 
             if (dataToSubmit[key] === CHAIN_ID_TO_FILL) {
               const chainId = await provider.request({ method: 'eth_chainId' });
