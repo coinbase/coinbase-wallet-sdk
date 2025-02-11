@@ -12,6 +12,7 @@
   ],
   "scripts": {
     "build:packages": "yarn workspace @coinbase/wallet-sdk-crypto-key build && yarn workspace @coinbase/wallet-sdk build",
+    "clean": "rm -rf node_modules && yarn workspaces foreach -ipv run clean",
     "deploy": "yarn build:packages && yarn workspace sdk-playground export",
     "dev": "yarn workspaces foreach -ipv run dev",
     "lint": "yarn workspaces foreach -pt run lint",

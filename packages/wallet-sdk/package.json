@@ -20,6 +20,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "pretest": "node compile-assets.cjs",
+    "clean": "rm -rf node_modules && rm -rf dist",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
     "prebuild": "rm -rf ./dist && node -p \"'export const VERSION = \\'' + require('./package.json').version + '\\';\\nexport const NAME = \\'' + require('./package.json').name + '\\';'\" > src/sdk-info.ts",
