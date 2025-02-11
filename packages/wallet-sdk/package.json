@@ -30,7 +30,6 @@
     "size": "size-limit"
   },
   "dependencies": {
-    "@coinbase/wallet-sdk-crypto-key": "workspace:^",
     "@noble/hashes": "^1.4.0",
     "clsx": "^1.2.1",
     "eventemitter3": "^5.0.1",

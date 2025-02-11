@@ -1566,7 +1566,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@coinbase/wallet-sdk-crypto-key@workspace:^, @coinbase/wallet-sdk-crypto-key@workspace:libs/crypto-key":
+"@coinbase/wallet-sdk-crypto-key@workspace:libs/crypto-key":
   version: 0.0.0-use.local
   resolution: "@coinbase/wallet-sdk-crypto-key@workspace:libs/crypto-key"
   dependencies:
@@ -1606,7 +1606,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@coinbase/wallet-sdk@workspace:packages/wallet-sdk"
   dependencies:
-    "@coinbase/wallet-sdk-crypto-key": "workspace:^"
     "@noble/hashes": ^1.4.0
     "@size-limit/preset-big-lib": ^11.1.6
     "@testing-library/jest-dom": ^6.5.0

@@ -2,8 +2,8 @@
 import { CoinbaseWalletSDK } from './CoinbaseWalletSDK.js';
 export default CoinbaseWalletSDK;
 
+export { getCryptoKeyAccount } from '../../../libs/crypto-key/src/index.js';
 export type { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js';
 export { CoinbaseWalletSDK } from './CoinbaseWalletSDK.js';
 export { createCoinbaseWalletSDK } from './createCoinbaseWalletSDK.js';
 export type { AppMetadata, Preference, ProviderInterface } from ':core/provider/interface.js';
-export { getCryptoKeyAccount } from '@coinbase/wallet-sdk-crypto-key';
