@@ -1,9 +1,14 @@
 import { Container, VStack } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK, getCryptoKeyAccount } from '@coinbase/wallet-sdk';
+import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
+import { getCryptoKeyAccount } from '@coinbase/wallet-sdk-crypto-key';
 import React, { useEffect, useState } from 'react';
+import { LocalAccount, OneOf } from 'viem';
+import { WebAuthnAccount } from 'viem/account-abstraction';
 
 import { AddAddress } from './components/AddAddress';
+import { AddOwner } from './components/AddOwner';
 import { Connect } from './components/Connect';
+import { GenerateNewSigner } from './components/GenerateNewSigner';
 import { PersonalSign } from './components/PersonalSign';
 import { SendCalls } from './components/SendCalls';
 
@@ -18,7 +23,9 @@ export default function SubAccounts() {
         options: 'smartWalletOnly',
       },
       subaccount: {
-        getSigner: getCryptoKeyAccount as any,
+        getSigner: getCryptoKeyAccount as () => Promise<{
+          account: OneOf<WebAuthnAccount | LocalAccount> | null;
+        }>,
       },
     });
 
@@ -41,6 +48,8 @@ export default function SubAccounts() {
         <AddAddress sdk={sdk} />
         <PersonalSign sdk={sdk} />
         <SendCalls sdk={sdk} />
+        <GenerateNewSigner />
+        <AddOwner sdk={sdk} />
       </VStack>
     </Container>
   );

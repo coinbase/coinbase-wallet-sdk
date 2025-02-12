@@ -1,7 +1,10 @@
 import { Address, Hex, http, numberToHex, SignableMessage, TypedDataDefinition } from 'viem';
-import { createPaymasterClient, toCoinbaseSmartAccount } from 'viem/account-abstraction';
+import { createPaymasterClient } from 'viem/account-abstraction';
+import { getCode } from 'viem/actions';
 import { baseSepolia } from 'viem/chains';
 
+import { createSmartAccount } from './createSmartAccount.js';
+import { getAccountIndex } from './getAccountIndex.js';
 import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
 import { getBundlerClient, getClient } from ':stores/chain-clients/utils.js';
@@ -10,21 +13,36 @@ import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
 import { get } from ':util/get.js';
 
 export async function createSubAccountSigner(subaccount: SubAccountInfo) {
-  const { getSigner } = subaccounts.getState();
-  assertPresence(getSigner, standardErrors.rpc.invalidParams('getSigner not found'));
-
-  const signer = await getSigner();
-  assertPresence(signer, standardErrors.rpc.invalidParams('signer not found'));
-
-  // TODO[jake] how do we handle unsupported chains
   const client = getClient(subaccount.chainId ?? baseSepolia.id);
-  assertPresence(client, standardErrors.rpc.invalidParams('client not found'));
+  assertPresence(client, standardErrors.rpc.internal('client not found'));
 
-  const account = await toCoinbaseSmartAccount({
+  const { getSigner } = subaccounts.getState();
+  assertPresence(getSigner, standardErrors.rpc.internal('signer not found'));
+
+  const { account: signer } = await getSigner();
+  assertPresence(signer, standardErrors.rpc.internal('signer not found'));
+
+  const code = await getCode(client, {
+    address: subaccount.address,
+  });
+
+  console.log('customlogs: code', code);
+
+  let index = 1;
+  if (code) {
+    index = await getAccountIndex({
+      address: subaccount.address,
+      publicKey: signer.publicKey || signer.address,
+      client,
+    });
+  }
+
+  const account = await createSmartAccount({
+    account: signer,
+    accountIndex: index,
     address: subaccount.address,
     client,
-    owners: [subaccount.root, signer],
-    ownerIndex: 1,
+    factoryData: subaccount.initCode.factoryCalldata,
   });
 
   return {
@@ -32,8 +50,6 @@ export async function createSubAccountSigner(subaccount: SubAccountInfo) {
       switch (args.method) {
         case 'wallet_addAddress':
           return subaccount;
-        case 'eth_requestAccounts':
-          return [subaccount.address] as Address[];
         case 'eth_accounts':
           return [subaccount.address] as Address[];
         case 'eth_coinbase':
