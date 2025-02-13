@@ -1,3 +1,4 @@
+import { SerializedEthereumRpcError } from ':core/error/utils.js';
 import { SubAccountInfo } from ':stores/sub-accounts/store.js';
 
 export type SignInWithEthereumCapabilityRequest = {
@@ -65,9 +66,10 @@ export type WalletConnectResponse = {
     address: `0x${string}`;
     // Capabilities granted that is associated with this account.
     capabilities?: {
-      addAddress?: AddAddressCapabilityResponse;
-      spendPermissions?: SpendPermissionsCapabilityResponse;
-      signInWithEthereum?: SignInWithEthereumCapabilityResponse;
+      addAddress?: AddAddressCapabilityResponse | SerializedEthereumRpcError;
+      getAppAccounts?: AddAddressCapabilityResponse | SerializedEthereumRpcError;
+      spendPermissions?: SpendPermissionsCapabilityResponse | SerializedEthereumRpcError;
+      signInWithEthereum?: SignInWithEthereumCapabilityResponse | SerializedEthereumRpcError;
     };
   }[];
 };

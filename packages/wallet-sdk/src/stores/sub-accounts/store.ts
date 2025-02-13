@@ -1,7 +1,11 @@
-import { Address, Hex, LocalAccount } from 'viem';
+import { Address, Hex, LocalAccount, type OneOf } from 'viem';
 import { WebAuthnAccount } from 'viem/account-abstraction';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { createStore } from 'zustand/vanilla';
+
+export type GetSubAccountSigner = () => Promise<{
+  account: OneOf<LocalAccount | WebAuthnAccount> | null;
+}>;
 
 export type SubAccountInfo = {
   address: Address;
@@ -15,7 +19,7 @@ export type SubAccountInfo = {
 };
 
 export type SubAccountState = {
-  getSigner: null | (() => Promise<WebAuthnAccount>) | (() => Promise<LocalAccount>);
+  getSigner: null | GetSubAccountSigner;
   account?: SubAccountInfo;
 };
 

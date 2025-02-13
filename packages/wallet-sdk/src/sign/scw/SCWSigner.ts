@@ -148,6 +148,7 @@ export class SCWSigner implements Signer {
       case 'wallet_sendCalls':
       case 'wallet_showCallsStatus':
       case 'wallet_grantPermissions':
+      case 'wallet_connect':
         return this.sendRequestToPopup(request);
       // Sub Account Support
       case 'wallet_addAddress':
@@ -193,6 +194,7 @@ export class SCWSigner implements Signer {
         const account = response.accounts[0];
         const capabilities = account.capabilities;
         if (capabilities && capabilities.addAddress) {
+          assertSubAccountInfo(capabilities.addAddress);
           subaccounts.setState({
             account: capabilities.addAddress,
           });
@@ -355,7 +357,10 @@ export class SCWSigner implements Signer {
   private shouldRequestUseSubAccountSigner(request: RequestArguments) {
     const sender = getSenderFromRequest(request);
     const state = subaccounts.getState();
-    if (sender && sender !== state.account?.address) {
+    if (
+      ROOT_ACCOUNT_METHODS.includes(request.method) ||
+      (sender && sender !== state.account?.address)
+    ) {
       return false;
     }
     return !!state.account;
@@ -376,3 +381,10 @@ export class SCWSigner implements Signer {
     return signer.request(request);
   }
 }
+
+const ROOT_ACCOUNT_METHODS = [
+  'eth_requestAccounts',
+  'wallet_connect',
+  'wallet_addAddress',
+  'wallet_switchEthereumChain',
+];

@@ -1,7 +1,21 @@
-import { PublicKey } from 'ox';
-import { Hex } from 'ox';
+import { Hex, PublicKey } from 'ox';
+import { LocalAccount } from 'viem';
+import { OneOf } from 'viem';
+import { WebAuthnAccount } from 'viem/account-abstraction';
 
 import { generateKeyPair, getCryptoKeyAccount, getKeypair, storage } from './index.js';
+
+function assertWebAuthnAccount(
+  account: OneOf<WebAuthnAccount | LocalAccount> | null
+): asserts account is WebAuthnAccount {
+  if (!account) {
+    throw new Error('account is null');
+  }
+
+  if (account.type !== 'webAuthn') {
+    throw new Error('account is not a webAuthn account');
+  }
+}
 
 describe('crypto-key', () => {
   it('should generate a key pair', async () => {
@@ -41,7 +55,7 @@ describe('crypto-key', () => {
     const publicKey = Hex.slice(PublicKey.toHex(mockKeypair.publicKey), 1);
     vi.spyOn(storage, 'getItem').mockResolvedValue(mockKeypair);
 
-    const account = await getCryptoKeyAccount();
+    const { account } = await getCryptoKeyAccount();
 
     expect(account).toEqual(
       expect.objectContaining({
@@ -56,7 +70,8 @@ describe('crypto-key', () => {
     const mockKeypair = await generateKeyPair();
     vi.spyOn(storage, 'getItem').mockResolvedValue(mockKeypair);
 
-    const account = await getCryptoKeyAccount();
+    const { account } = await getCryptoKeyAccount();
+    assertWebAuthnAccount(account);
 
     const signature = await account.signMessage({ message: 'Hello, world!' });
 
@@ -71,7 +86,8 @@ describe('crypto-key', () => {
     const mockKeypair = await generateKeyPair();
     vi.spyOn(storage, 'getItem').mockResolvedValue(mockKeypair);
 
-    const account = await getCryptoKeyAccount();
+    const { account } = await getCryptoKeyAccount();
+    assertWebAuthnAccount(account);
 
     const signature = await account.signTypedData({
       primaryType: 'Test',
@@ -97,7 +113,8 @@ describe('crypto-key', () => {
     const mockKeypair = await generateKeyPair();
     vi.spyOn(storage, 'getItem').mockResolvedValue(mockKeypair);
 
-    const account = await getCryptoKeyAccount();
+    const { account } = await getCryptoKeyAccount();
+    assertWebAuthnAccount(account);
 
     const signature = await account.sign({
       hash: '0x123',

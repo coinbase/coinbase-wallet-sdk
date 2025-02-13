@@ -10,7 +10,7 @@ export function AddAddress({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalle
       return;
     }
     const provider = sdk.getProvider();
-    const account = await getCryptoKeyAccount();
+    const { account } = await getCryptoKeyAccount();
     const response = (await provider.request({
       method: 'wallet_addAddress',
       params: [
