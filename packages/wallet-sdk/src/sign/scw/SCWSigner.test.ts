@@ -377,6 +377,10 @@ describe('SCWSigner', () => {
                 capabilities: {
                   addAddress: {
                     address: '0xAddress',
+                    chainId: 1,
+                    owners: ['0xOwner1', '0xOwner2'],
+                    root: '0xRoot',
+                    initCode: '0xInitCode',
                   },
                 },
               },

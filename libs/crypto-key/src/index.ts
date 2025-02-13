@@ -1,5 +1,5 @@
 import { Hex, PublicKey, Signature, WebAuthnP256, WebCryptoP256 } from 'ox';
-import { hashMessage, hashTypedData } from 'viem';
+import { hashMessage, hashTypedData, LocalAccount, OneOf } from 'viem';
 import { type WebAuthnAccount } from 'viem/account-abstraction';
 
 import { createStorage } from './storage.js';
@@ -47,14 +47,20 @@ export async function getKeypair(): Promise<P256KeyPair | null> {
   return keypair;
 }
 
-export async function getCryptoKeyAccount(): Promise<WebAuthnAccount> {
-  let keypair = await getKeypair();
+export async function getOrCreateKeypair(): Promise<P256KeyPair> {
+  const keypair = await getKeypair();
   if (!keypair) {
-    keypair = await generateKeyPair();
-    const pubKey = Hex.slice(PublicKey.toHex(keypair.publicKey), 1);
-    await storage.setItem(pubKey, keypair);
+    const kp = await generateKeyPair();
+    const pubKey = Hex.slice(PublicKey.toHex(kp.publicKey), 1);
+    await storage.setItem(pubKey, kp);
     await storage.setItem(ACTIVE_ID_KEY, pubKey);
+    return kp;
   }
+  return keypair;
+}
+
+async function getAccount(): Promise<WebAuthnAccount> {
+  const keypair = await getOrCreateKeypair();
 
   /**
    * public key / address
@@ -95,4 +101,22 @@ export async function getCryptoKeyAccount(): Promise<WebAuthnAccount> {
     },
     type: 'webAuthn',
   };
+}
+
+export async function getCryptoKeyAccount(): Promise<{
+  account: OneOf<WebAuthnAccount | LocalAccount> | null;
+}> {
+  const account = await getAccount();
+  return {
+    account,
+  };
+}
+
+export async function removeCryptoKey(): Promise<void> {
+  const keypair = await getKeypair();
+  if (!keypair) {
+    return;
+  }
+  await storage.removeItem(Hex.slice(PublicKey.toHex(keypair.publicKey), 1));
+  await storage.removeItem(ACTIVE_ID_KEY);
 }

@@ -9346,6 +9346,7 @@ __metadata:
     "@coinbase/wallet-sdk": "workspace:*"
     "@coinbase/wallet-sdk-3.7.2": "npm:@coinbase/wallet-sdk@3.7.2"
     "@coinbase/wallet-sdk-3.9.3": "npm:@coinbase/wallet-sdk@3.9.3"
+    "@coinbase/wallet-sdk-crypto-key": "workspace:^"
     "@coinbase/wallet-sdk-latest": "npm:@coinbase/wallet-sdk@latest"
     "@emotion/react": ^11.11.1
     "@emotion/styled": ^11.11.0

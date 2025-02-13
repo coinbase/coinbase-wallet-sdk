@@ -1,5 +1,4 @@
-import { PublicKey } from 'ox';
-import { Hex } from 'ox';
+import { Hex, PublicKey } from 'ox';
 
 import { generateKeyPair, getCryptoKeyAccount, getKeypair, storage } from './index.js';
 
@@ -41,7 +40,7 @@ describe('crypto-key', () => {
     const publicKey = Hex.slice(PublicKey.toHex(mockKeypair.publicKey), 1);
     vi.spyOn(storage, 'getItem').mockResolvedValue(mockKeypair);
 
-    const account = await getCryptoKeyAccount();
+    const { account } = await getCryptoKeyAccount();
 
     expect(account).toEqual(
       expect.objectContaining({
@@ -56,7 +55,7 @@ describe('crypto-key', () => {
     const mockKeypair = await generateKeyPair();
     vi.spyOn(storage, 'getItem').mockResolvedValue(mockKeypair);
 
-    const account = await getCryptoKeyAccount();
+    const { account } = await getCryptoKeyAccount();
 
     const signature = await account.signMessage({ message: 'Hello, world!' });
 
@@ -71,7 +70,7 @@ describe('crypto-key', () => {
     const mockKeypair = await generateKeyPair();
     vi.spyOn(storage, 'getItem').mockResolvedValue(mockKeypair);
 
-    const account = await getCryptoKeyAccount();
+    const { account } = await getCryptoKeyAccount();
 
     const signature = await account.signTypedData({
       primaryType: 'Test',
@@ -97,7 +96,7 @@ describe('crypto-key', () => {
     const mockKeypair = await generateKeyPair();
     vi.spyOn(storage, 'getItem').mockResolvedValue(mockKeypair);
 
-    const account = await getCryptoKeyAccount();
+    const { account } = await getCryptoKeyAccount();
 
     const signature = await account.sign({
       hash: '0x123',
