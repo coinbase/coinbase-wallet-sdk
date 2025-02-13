@@ -30,12 +30,6 @@ export async function createSubAccountSigner(subaccount: SubAccountInfo) {
   // The implemention will likely require the signer to tell us the index
   let index = 1;
   if (code) {
-    console.log('customlogs: code', code);
-    console.log('customlogs: ', {
-      address: subaccount.address,
-      publicKey: owner.publicKey || owner.address,
-      client,
-    });
     index = await getOwnerIndex({
       address: subaccount.address,
       publicKey: owner.publicKey || owner.address,
