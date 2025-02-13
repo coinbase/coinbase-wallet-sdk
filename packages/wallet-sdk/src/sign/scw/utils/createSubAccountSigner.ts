@@ -4,7 +4,7 @@ import { getCode } from 'viem/actions';
 import { baseSepolia } from 'viem/chains';
 
 import { createSmartAccount } from './createSmartAccount.js';
-import { getAccountIndex } from './getAccountIndex.js';
+import { getOwnerIndex } from './getOwnerIndex.js';
 import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
 import { getBundlerClient, getClient } from ':stores/chain-clients/utils.js';
@@ -19,8 +19,8 @@ export async function createSubAccountSigner(subaccount: SubAccountInfo) {
   const { getSigner } = subaccounts.getState();
   assertPresence(getSigner, standardErrors.rpc.internal('signer not found'));
 
-  const { account: signer } = await getSigner();
-  assertPresence(signer, standardErrors.rpc.internal('signer not found'));
+  const { account: owner } = await getSigner();
+  assertPresence(owner, standardErrors.rpc.internal('signer not found'));
 
   const code = await getCode(client, {
     address: subaccount.address,
@@ -30,16 +30,22 @@ export async function createSubAccountSigner(subaccount: SubAccountInfo) {
   // The implemention will likely require the signer to tell us the index
   let index = 1;
   if (code) {
-    index = await getAccountIndex({
+    console.log('customlogs: code', code);
+    console.log('customlogs: ', {
       address: subaccount.address,
-      publicKey: signer.publicKey || signer.address,
+      publicKey: owner.publicKey || owner.address,
+      client,
+    });
+    index = await getOwnerIndex({
+      address: subaccount.address,
+      publicKey: owner.publicKey || owner.address,
       client,
     });
   }
 
   const account = await createSmartAccount({
-    account: signer,
-    accountIndex: index,
+    owner,
+    ownerIndex: index,
     address: subaccount.address,
     client,
     factoryData: subaccount.initCode.factoryCalldata,

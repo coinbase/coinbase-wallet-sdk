@@ -32,12 +32,14 @@ import {
   type WebAuthnAccount,
 } from 'viem/account-abstraction';
 
+import { abi, factoryAbi, factoryAddress } from './constants.js';
+
 export type CreateSmartAccountParameters = {
   address: Address;
   client: Client;
   factoryData: Hex | undefined;
-  accountIndex: number;
-  account: OneOf<LocalAccount | WebAuthnAccount>;
+  ownerIndex: number;
+  owner: OneOf<LocalAccount | WebAuthnAccount>;
 };
 
 export type CreateSmartAccountReturnType = Prettify<
@@ -63,14 +65,11 @@ export type CoinbaseSmartAccountImplementation = Assign<
  * @returns Coinbase Smart Account. {@link CreateSmartAccountReturnType}
  *
  * @example
- * import { createSmartAccount } from 'viem/account-abstraction'
- * import { privateKeyToAccount } from 'viem/accounts'
- * import { client } from './client.js'
  *
  * const account = createSmartAccount({
  *   client,
- *   account: privateKeyToAccount('0x...'),
- *   accountIndex: 0,
+ *   owner: privateKeyToAccount('0x...'),
+ *   ownerIndex: 0,
  *   address: '0x...',
  *   factoryData: '0x...',
  * })
@@ -78,7 +77,7 @@ export type CoinbaseSmartAccountImplementation = Assign<
 export async function createSmartAccount(
   parameters: CreateSmartAccountParameters
 ): Promise<CreateSmartAccountReturnType> {
-  const { account, accountIndex, address, client, factoryData } = parameters;
+  const { owner, ownerIndex, address, client, factoryData } = parameters;
   const entryPoint = {
     abi: entryPoint06Abi,
     address: entryPoint06Address,
@@ -86,14 +85,8 @@ export async function createSmartAccount(
   } as const;
   const factory = {
     abi: factoryAbi,
-    address: '0x0ba5ed0c6aa8c49038f819e587e2633c4a9f428a',
+    address: factoryAddress,
   } as const;
-
-  const owner = (() => {
-    const owner = account;
-    if (typeof owner === 'string') return { address: owner, type: 'address' } as const;
-    return owner;
-  })();
 
   return toSmartAccount({
     client,
@@ -116,12 +109,13 @@ export async function createSmartAccount(
     },
 
     async encodeCalls(calls) {
-      if (calls.length === 1)
+      if (calls.length === 1) {
         return encodeFunctionData({
           abi,
           functionName: 'execute',
           args: [calls[0].to, calls[0].value ?? BigInt(0), calls[0].data ?? '0x'],
         });
+      }
       return encodeFunctionData({
         abi,
         functionName: 'executeBatch',
@@ -147,7 +141,7 @@ export async function createSmartAccount(
       if (owner.type === 'webAuthn')
         return '0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000012000000000000000000000000000000000000000000000000000000000000000170000000000000000000000000000000000000000000000000000000000000001949fc7c88032b9fcb5f6efc7a7b8c63668eae9871b765e23123bb473ff57aa831a7c0d9276168ebcc29f2875a0239cffdf2a9cd1c2007c5c77c071db9264df1d000000000000000000000000000000000000000000000000000000000000002549960de5880e8c687434170f6476605b8fe4aeb9a28632c7995cf3ba831d97630500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008a7b2274797065223a22776562617574686e2e676574222c226368616c6c656e6765223a2273496a396e6164474850596759334b7156384f7a4a666c726275504b474f716d59576f4d57516869467773222c226f726967696e223a2268747470733a2f2f7369676e2e636f696e626173652e636f6d222c2263726f73734f726967696e223a66616c73657d00000000000000000000000000000000000000000000';
       return wrapSignature({
-        accountIndex,
+        ownerIndex,
         signature:
           '0xfffffffffffffffffffffffffffffff0000000000000000000000000000000007aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1c',
       });
@@ -162,11 +156,10 @@ export async function createSmartAccount(
         hash: parameters.hash,
       });
 
-      if (owner.type === 'address') throw new Error('owner cannot sign');
       const signature = await sign({ hash, owner });
 
       return wrapSignature({
-        accountIndex,
+        ownerIndex,
         signature,
       });
     },
@@ -181,11 +174,10 @@ export async function createSmartAccount(
         hash: hashMessage(message),
       });
 
-      if (owner.type === 'address') throw new Error('owner cannot sign');
       const signature = await sign({ hash, owner });
 
       return wrapSignature({
-        accountIndex,
+        ownerIndex,
         signature,
       });
     },
@@ -208,11 +200,10 @@ export async function createSmartAccount(
         }),
       });
 
-      if (owner.type === 'address') throw new Error('owner cannot sign');
       const signature = await sign({ hash, owner });
 
       return wrapSignature({
-        accountIndex,
+        ownerIndex,
         signature,
       });
     },
@@ -231,11 +222,10 @@ export async function createSmartAccount(
         },
       });
 
-      if (owner.type === 'address') throw new Error('owner cannot sign');
       const signature = await sign({ hash, owner });
 
       return wrapSignature({
-        accountIndex,
+        ownerIndex,
         signature,
       });
     },
@@ -358,8 +348,8 @@ export function toWebAuthnSignature({
 }
 
 /** @internal */
-export function wrapSignature(parameters: { accountIndex?: number | undefined; signature: Hex }) {
-  const { accountIndex = 0 } = parameters;
+export function wrapSignature(parameters: { ownerIndex?: number | undefined; signature: Hex }) {
+  const { ownerIndex = 0 } = parameters;
   const signatureData = (() => {
     if (size(parameters.signature) !== 65) return parameters.signature;
     const signature = parseSignature(parameters.signature);
@@ -373,7 +363,7 @@ export function wrapSignature(parameters: { accountIndex?: number | undefined; s
       {
         components: [
           {
-            name: 'accountIndex',
+            name: 'ownerIndex',
             type: 'uint8',
           },
           {
@@ -386,445 +376,9 @@ export function wrapSignature(parameters: { accountIndex?: number | undefined; s
     ],
     [
       {
-        accountIndex,
+        ownerIndex,
         signatureData,
       },
     ]
   );
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-// Constants
-/////////////////////////////////////////////////////////////////////////////////////////////
-
-const abi = [
-  { inputs: [], stateMutability: 'nonpayable', type: 'constructor' },
-  {
-    inputs: [{ name: 'owner', type: 'bytes' }],
-    name: 'AlreadyOwner',
-    type: 'error',
-  },
-  { inputs: [], name: 'Initialized', type: 'error' },
-  {
-    inputs: [{ name: 'owner', type: 'bytes' }],
-    name: 'InvalidEthereumAddressOwner',
-    type: 'error',
-  },
-  {
-    inputs: [{ name: 'key', type: 'uint256' }],
-    name: 'InvalidNonceKey',
-    type: 'error',
-  },
-  {
-    inputs: [{ name: 'owner', type: 'bytes' }],
-    name: 'InvalidOwnerBytesLength',
-    type: 'error',
-  },
-  { inputs: [], name: 'LastOwner', type: 'error' },
-  {
-    inputs: [{ name: 'index', type: 'uint256' }],
-    name: 'NoOwnerAtIndex',
-    type: 'error',
-  },
-  {
-    inputs: [{ name: 'ownersRemaining', type: 'uint256' }],
-    name: 'NotLastOwner',
-    type: 'error',
-  },
-  {
-    inputs: [{ name: 'selector', type: 'bytes4' }],
-    name: 'SelectorNotAllowed',
-    type: 'error',
-  },
-  { inputs: [], name: 'Unauthorized', type: 'error' },
-  { inputs: [], name: 'UnauthorizedCallContext', type: 'error' },
-  { inputs: [], name: 'UpgradeFailed', type: 'error' },
-  {
-    inputs: [
-      { name: 'index', type: 'uint256' },
-      { name: 'expectedOwner', type: 'bytes' },
-      { name: 'actualOwner', type: 'bytes' },
-    ],
-    name: 'WrongOwnerAtIndex',
-    type: 'error',
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-
-        name: 'index',
-        type: 'uint256',
-      },
-      { indexed: false, name: 'owner', type: 'bytes' },
-    ],
-    name: 'AddOwner',
-    type: 'event',
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-
-        name: 'index',
-        type: 'uint256',
-      },
-      { indexed: false, name: 'owner', type: 'bytes' },
-    ],
-    name: 'RemoveOwner',
-    type: 'event',
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-
-        name: 'implementation',
-        type: 'address',
-      },
-    ],
-    name: 'Upgraded',
-    type: 'event',
-  },
-  { stateMutability: 'payable', type: 'fallback' },
-  {
-    inputs: [],
-    name: 'REPLAYABLE_NONCE_KEY',
-    outputs: [{ name: '', type: 'uint256' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: 'owner', type: 'address' }],
-    name: 'addOwnerAddress',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: 'x', type: 'bytes32' },
-      { name: 'y', type: 'bytes32' },
-    ],
-    name: 'addOwnerPublicKey',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: 'functionSelector', type: 'bytes4' }],
-    name: 'canSkipChainIdValidation',
-    outputs: [{ name: '', type: 'bool' }],
-    stateMutability: 'pure',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'domainSeparator',
-    outputs: [{ name: '', type: 'bytes32' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'eip712Domain',
-    outputs: [
-      { name: 'fields', type: 'bytes1' },
-      { name: 'name', type: 'string' },
-      { name: 'version', type: 'string' },
-      { name: 'chainId', type: 'uint256' },
-      { name: 'verifyingContract', type: 'address' },
-      { name: 'salt', type: 'bytes32' },
-      { name: 'extensions', type: 'uint256[]' },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'entryPoint',
-    outputs: [{ name: '', type: 'address' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: 'target', type: 'address' },
-      { name: 'value', type: 'uint256' },
-      { name: 'data', type: 'bytes' },
-    ],
-    name: 'execute',
-    outputs: [],
-    stateMutability: 'payable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        components: [
-          { name: 'target', type: 'address' },
-          { name: 'value', type: 'uint256' },
-          { name: 'data', type: 'bytes' },
-        ],
-
-        name: 'calls',
-        type: 'tuple[]',
-      },
-    ],
-    name: 'executeBatch',
-    outputs: [],
-    stateMutability: 'payable',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: 'calls', type: 'bytes[]' }],
-    name: 'executeWithoutChainIdValidation',
-    outputs: [],
-    stateMutability: 'payable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        components: [
-          { name: 'sender', type: 'address' },
-          { name: 'nonce', type: 'uint256' },
-          { name: 'initCode', type: 'bytes' },
-          { name: 'callData', type: 'bytes' },
-          { name: 'callGasLimit', type: 'uint256' },
-          {
-            name: 'verificationGasLimit',
-            type: 'uint256',
-          },
-          {
-            name: 'preVerificationGas',
-            type: 'uint256',
-          },
-          { name: 'maxFeePerGas', type: 'uint256' },
-          {
-            name: 'maxPriorityFeePerGas',
-            type: 'uint256',
-          },
-          { name: 'paymasterAndData', type: 'bytes' },
-          { name: 'signature', type: 'bytes' },
-        ],
-
-        name: 'userOp',
-        type: 'tuple',
-      },
-    ],
-    name: 'getUserOpHashWithoutChainId',
-    outputs: [{ name: '', type: 'bytes32' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'implementation',
-    outputs: [{ name: '$', type: 'address' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: 'owners', type: 'bytes[]' }],
-    name: 'initialize',
-    outputs: [],
-    stateMutability: 'payable',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: 'account', type: 'address' }],
-    name: 'isOwnerAddress',
-    outputs: [{ name: '', type: 'bool' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: 'account', type: 'bytes' }],
-    name: 'isOwnerBytes',
-    outputs: [{ name: '', type: 'bool' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: 'x', type: 'bytes32' },
-      { name: 'y', type: 'bytes32' },
-    ],
-    name: 'isOwnerPublicKey',
-    outputs: [{ name: '', type: 'bool' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: 'hash', type: 'bytes32' },
-      { name: 'signature', type: 'bytes' },
-    ],
-    name: 'isValidSignature',
-    outputs: [{ name: 'result', type: 'bytes4' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'nextOwnerIndex',
-    outputs: [{ name: '', type: 'uint256' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: 'index', type: 'uint256' }],
-    name: 'ownerAtIndex',
-    outputs: [{ name: '', type: 'bytes' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'ownerCount',
-    outputs: [{ name: '', type: 'uint256' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'proxiableUUID',
-    outputs: [{ name: '', type: 'bytes32' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: 'index', type: 'uint256' },
-      { name: 'owner', type: 'bytes' },
-    ],
-    name: 'removeLastOwner',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: 'index', type: 'uint256' },
-      { name: 'owner', type: 'bytes' },
-    ],
-    name: 'removeOwnerAtIndex',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'removedOwnersCount',
-    outputs: [{ name: '', type: 'uint256' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: 'hash', type: 'bytes32' }],
-    name: 'replaySafeHash',
-    outputs: [{ name: '', type: 'bytes32' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: 'newImplementation', type: 'address' },
-      { name: 'data', type: 'bytes' },
-    ],
-    name: 'upgradeToAndCall',
-    outputs: [],
-    stateMutability: 'payable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        components: [
-          { name: 'sender', type: 'address' },
-          { name: 'nonce', type: 'uint256' },
-          { name: 'initCode', type: 'bytes' },
-          { name: 'callData', type: 'bytes' },
-          { name: 'callGasLimit', type: 'uint256' },
-          {
-            name: 'verificationGasLimit',
-            type: 'uint256',
-          },
-          {
-            name: 'preVerificationGas',
-            type: 'uint256',
-          },
-          { name: 'maxFeePerGas', type: 'uint256' },
-          {
-            name: 'maxPriorityFeePerGas',
-            type: 'uint256',
-          },
-          { name: 'paymasterAndData', type: 'bytes' },
-          { name: 'signature', type: 'bytes' },
-        ],
-
-        name: 'userOp',
-        type: 'tuple',
-      },
-      { name: 'userOpHash', type: 'bytes32' },
-      { name: 'missingAccountFunds', type: 'uint256' },
-    ],
-    name: 'validateUserOp',
-    outputs: [{ name: 'validationData', type: 'uint256' }],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  { stateMutability: 'payable', type: 'receive' },
-] as const;
-
-const factoryAbi = [
-  {
-    inputs: [{ name: 'implementation_', type: 'address' }],
-    stateMutability: 'payable',
-    type: 'constructor',
-  },
-  { inputs: [], name: 'OwnerRequired', type: 'error' },
-  {
-    inputs: [
-      { name: 'owners', type: 'bytes[]' },
-      { name: 'nonce', type: 'uint256' },
-    ],
-    name: 'createAccount',
-    outputs: [
-      {
-        name: 'account',
-        type: 'address',
-      },
-    ],
-    stateMutability: 'payable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: 'owners', type: 'bytes[]' },
-      { name: 'nonce', type: 'uint256' },
-    ],
-    name: 'getAddress',
-    outputs: [{ name: '', type: 'address' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'implementation',
-    outputs: [{ name: '', type: 'address' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'initCodeHash',
-    outputs: [{ name: '', type: 'bytes32' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-] as const;

@@ -2,7 +2,7 @@ import { createPublicClient, http } from 'viem';
 import { readContract } from 'viem/actions';
 import { describe, expect, it, Mock, vi } from 'vitest';
 
-import { getAccountIndex } from './getAccountIndex.js';
+import { getOwnerIndex } from './getOwnerIndex.js';
 import { standardErrors } from ':core/error/errors.js';
 
 const client = createPublicClient({
@@ -13,7 +13,7 @@ vi.mock('viem/actions', () => ({
   readContract: vi.fn(),
 }));
 
-describe('getAccountIndex', () => {
+describe('getOwnerIndex', () => {
   it('returns correct index when owner found', async () => {
     const mockReadContract = vi
       .fn()
@@ -24,7 +24,7 @@ describe('getAccountIndex', () => {
 
     (readContract as Mock).mockImplementation(mockReadContract);
 
-    const result = await getAccountIndex({
+    const result = await getOwnerIndex({
       address: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
       client,
       publicKey: '0x7838d2724FC686813CAf81d4429beff1110c739a',
@@ -44,7 +44,7 @@ describe('getAccountIndex', () => {
 
     (readContract as Mock).mockImplementation(mockReadContract);
 
-    const result = await getAccountIndex({
+    const result = await getOwnerIndex({
       address: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
       client,
       publicKey: '0x46440ECd6746f7612809eFED388347d476369f6D',
@@ -63,7 +63,7 @@ describe('getAccountIndex', () => {
 
     (readContract as Mock).mockImplementation(mockReadContract);
 
-    const result = await getAccountIndex({
+    const result = await getOwnerIndex({
       address: '0xabc',
       client,
       publicKey: '0xaaa',
@@ -82,7 +82,7 @@ describe('getAccountIndex', () => {
     (readContract as Mock).mockImplementation(mockReadContract);
 
     await expect(
-      getAccountIndex({
+      getOwnerIndex({
         address: '0xabc',
         client,
         publicKey: '0xccc',
@@ -96,7 +96,7 @@ describe('getAccountIndex', () => {
     (readContract as Mock).mockImplementation(mockReadContract);
 
     await expect(
-      getAccountIndex({
+      getOwnerIndex({
         address: '0xabc',
         client,
         publicKey: '0xccc',

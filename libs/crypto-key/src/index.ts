@@ -47,7 +47,7 @@ export async function getKeypair(): Promise<P256KeyPair | null> {
   return keypair;
 }
 
-export async function getOrCreateKeypair(): Promise<P256KeyPair> {
+async function getOrCreateKeypair(): Promise<P256KeyPair> {
   const keypair = await getKeypair();
   if (!keypair) {
     const kp = await generateKeyPair();

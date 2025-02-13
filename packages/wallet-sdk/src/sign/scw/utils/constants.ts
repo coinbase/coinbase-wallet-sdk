@@ -1,6 +1,8 @@
 /**********************************************************************
  * Constants
  **********************************************************************/
+export const factoryAddress = '0x0ba5ed0c6aa8c49038f819e587e2633c4a9f428a';
+
 export const abi = [
   { inputs: [], stateMutability: 'nonpayable', type: 'constructor' },
   {

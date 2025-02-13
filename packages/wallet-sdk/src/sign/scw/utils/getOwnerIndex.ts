@@ -4,7 +4,7 @@ import { readContract } from 'viem/actions';
 import { abi } from './constants.js';
 import { standardErrors } from ':core/error/errors.js';
 
-export async function getAccountIndex({
+export async function getOwnerIndex({
   address,
   client,
   publicKey,

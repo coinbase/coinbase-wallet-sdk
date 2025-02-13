@@ -2,6 +2,7 @@ import { getCode } from 'viem/actions';
 
 import { createSmartAccount } from './createSmartAccount.js';
 import { createSubAccountSigner } from './createSubAccountSigner.js';
+import { getOwnerIndex } from './getOwnerIndex.js';
 import { getBundlerClient } from ':stores/chain-clients/utils.js';
 import { SubAccountInfo } from ':stores/sub-accounts/store.js';
 
@@ -20,11 +21,17 @@ vi.mock('viem/actions', () => ({
   getCode: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock('./getOwnerIndex.js', () => ({
+  getOwnerIndex: vi.fn(),
+}));
+
 vi.mock(':stores/sub-accounts/store.js', () => ({
   subaccounts: {
     getState: vi.fn().mockReturnValue({
       getSigner: vi.fn().mockResolvedValue({
-        account: {},
+        account: {
+          address: '0x',
+        },
       }),
       account: {
         address: '0x',
@@ -131,7 +138,10 @@ describe('createSubAccountSigner', () => {
     (getBundlerClient as any).mockReturnValue({
       sendUserOperation,
     });
+    const mockGetOwnerIndex = vi.fn();
     (getCode as any).mockResolvedValue('0x123');
+
+    (getOwnerIndex as any).mockImplementation(mockGetOwnerIndex);
 
     const signer = await createSubAccountSigner(params);
     await signer.request({
@@ -139,10 +149,10 @@ describe('createSubAccountSigner', () => {
       params: [{ chainId: 84532, calls: [{ to: '0x', data: '0x' }] }],
     });
 
-    expect(sendUserOperation).toHaveBeenCalledWith(
+    expect(mockGetOwnerIndex).toHaveBeenCalledWith(
       expect.objectContaining({
-        calls: [{ to: '0x', data: '0x' }],
-        paymaster: undefined,
+        address: '0x',
+        publicKey: '0x',
       })
     );
   });
