@@ -13,6 +13,17 @@ const walletConnectShortcuts: ShortcutType[] = [
       },
     },
   },
+  {
+    key: 'Get App Accounts',
+    data: {
+      version: '1',
+      capabilities: {
+        getAppAccounts: {
+          chainId: 84532,
+        },
+      },
+    },
+  },
 ];
 
 export const connectionMethodShortcutsMap = {

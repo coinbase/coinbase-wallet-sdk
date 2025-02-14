@@ -191,13 +191,21 @@ export class SCWSigner implements Signer {
         this.storage.storeObject(ACCOUNTS_KEY, accounts);
 
         // TODO: in future PR update state to support multiple accounts
-        const account = response.accounts[0];
-        const capabilities = account.capabilities;
-        if (capabilities && capabilities.addAddress) {
-          assertSubAccountInfo(capabilities.addAddress);
-          subaccounts.setState({
-            account: capabilities.addAddress,
-          });
+        const account = response.accounts.at(0);
+        const capabilities = account?.capabilities;
+        if (capabilities) {
+          if (capabilities.addAddress) {
+            assertSubAccountInfo(capabilities.addAddress);
+            subaccounts.setState({
+              account: capabilities.addAddress,
+            });
+          }
+          if (capabilities.getAppAccounts) {
+            assertSubAccountInfo(capabilities.getAppAccounts[0]);
+            subaccounts.setState({
+              account: capabilities.getAppAccounts[0],
+            });
+          }
         }
         this.callback?.('accountsChanged', [
           subaccounts.getState().account?.address ?? this.accounts[0],
@@ -357,13 +365,8 @@ export class SCWSigner implements Signer {
   private shouldRequestUseSubAccountSigner(request: RequestArguments) {
     const sender = getSenderFromRequest(request);
     const state = subaccounts.getState();
-    if (
-      ROOT_ACCOUNT_METHODS.includes(request.method) ||
-      (sender && sender !== state.account?.address)
-    ) {
-      return false;
-    }
-    return !!state.account;
+    if (!sender) return false;
+    return sender && sender !== state.account?.address;
   }
 
   private async sendRequestToSubAccountSigner(request: RequestArguments) {
@@ -381,10 +384,3 @@ export class SCWSigner implements Signer {
     return signer.request(request);
   }
 }
-
-const ROOT_ACCOUNT_METHODS = [
-  'eth_requestAccounts',
-  'wallet_connect',
-  'wallet_addAddress',
-  'wallet_switchEthereumChain',
-];
