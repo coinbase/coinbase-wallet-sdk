@@ -365,8 +365,10 @@ export class SCWSigner implements Signer {
   private shouldRequestUseSubAccountSigner(request: RequestArguments) {
     const sender = getSenderFromRequest(request);
     const state = subaccounts.getState();
-    if (!sender) return false;
-    return sender && sender !== state.account?.address;
+    if (sender) {
+      return sender === state.account?.address;
+    }
+    return false;
   }
 
   private async sendRequestToSubAccountSigner(request: RequestArguments) {
