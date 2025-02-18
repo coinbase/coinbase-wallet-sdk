@@ -9,8 +9,10 @@ import { AddAddress } from './components/AddAddress';
 import { AddOwner } from './components/AddOwner';
 import { Connect } from './components/Connect';
 import { GenerateNewSigner } from './components/GenerateNewSigner';
+import { GrantSpendPermission } from './components/GrantSpendPermission';
 import { PersonalSign } from './components/PersonalSign';
 import { SendCalls } from './components/SendCalls';
+import { SpendPermissions } from './components/SpendPermissions';
 
 export default function SubAccounts() {
   const [sdk, setSDK] = useState<ReturnType<typeof createCoinbaseWalletSDK>>();
@@ -48,6 +50,8 @@ export default function SubAccounts() {
         <AddAddress sdk={sdk} />
         <PersonalSign sdk={sdk} />
         <SendCalls sdk={sdk} />
+        <GrantSpendPermission sdk={sdk} />
+        <SpendPermissions sdk={sdk} />
         <GenerateNewSigner />
         <AddOwner sdk={sdk} />
       </VStack>
