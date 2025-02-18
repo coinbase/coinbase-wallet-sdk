@@ -1,6 +1,5 @@
 import { Hex, PublicKey } from 'ox';
-import { LocalAccount } from 'viem';
-import { OneOf } from 'viem';
+import { type LocalAccount, type OneOf } from 'viem';
 import { WebAuthnAccount } from 'viem/account-abstraction';
 
 import { generateKeyPair, getCryptoKeyAccount, getKeypair, storage } from './index.js';
