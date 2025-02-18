@@ -75,7 +75,7 @@ export function GrantSpendPermission({ sdk }: { sdk: ReturnType<typeof createCoi
 
     try {
       const provider = sdk.getProvider();
-      const account = await getCryptoKeyAccount();
+      const { account } = await getCryptoKeyAccount();
       const subaccount = (await provider?.request({
         method: 'wallet_addAddress',
         params: [

@@ -23,7 +23,7 @@ export function SpendPermissions({ sdk }: { sdk: ReturnType<typeof createCoinbas
       return;
     }
     const provider = sdk.getProvider();
-    const signer = await getCryptoKeyAccount();
+    const { account: signer } = await getCryptoKeyAccount();
     if (!signer) {
       return;
     }
