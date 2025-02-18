@@ -3,7 +3,13 @@ import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import React, { useCallback, useState } from 'react';
 import { baseSepolia } from 'viem/chains';
 
-export function SendCalls({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletSDK> }) {
+export function SendCalls({
+  sdk,
+  appAccount,
+}: {
+  sdk: ReturnType<typeof createCoinbaseWalletSDK>;
+  appAccount: string;
+}) {
   const [state, setState] = useState<string>();
   const handleSendCalls = useCallback(async () => {
     if (!sdk) {
@@ -17,6 +23,7 @@ export function SendCalls({ sdk }: { sdk: ReturnType<typeof createCoinbaseWallet
         params: [
           {
             chainId: baseSepolia.id,
+            from: appAccount,
             calls: [],
             version: '1',
             capabilities: {
@@ -32,7 +39,7 @@ export function SendCalls({ sdk }: { sdk: ReturnType<typeof createCoinbaseWallet
     } catch (e) {
       console.error('customlogs: error', e);
     }
-  }, [sdk]);
+  }, [sdk, appAccount]);
 
   return (
     <>
