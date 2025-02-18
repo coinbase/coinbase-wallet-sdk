@@ -11,7 +11,7 @@ export type WalletAddAddressRequest = {
   params: [
     {
       version: '1';
-      chainId: string;
+      chainId: number;
       address?: string;
       capabilities?: WalletAddAddressCapabilities;
     },
