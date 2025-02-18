@@ -67,7 +67,7 @@ export type WalletConnectResponse = {
     // Capabilities granted that is associated with this account.
     capabilities?: {
       addAddress?: AddAddressCapabilityResponse | SerializedEthereumRpcError;
-      getAppAccounts?: AddAddressCapabilityResponse | SerializedEthereumRpcError;
+      getAppAccounts?: AddAddressCapabilityResponse[];
       spendPermissions?: SpendPermissionsCapabilityResponse | SerializedEthereumRpcError;
       signInWithEthereum?: SignInWithEthereumCapabilityResponse | SerializedEthereumRpcError;
     };

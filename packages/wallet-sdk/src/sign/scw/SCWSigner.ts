@@ -191,12 +191,13 @@ export class SCWSigner implements Signer {
         this.storage.storeObject(ACCOUNTS_KEY, accounts);
 
         // TODO: in future PR update state to support multiple accounts
-        const account = response.accounts[0];
-        const capabilities = account.capabilities;
-        if (capabilities && capabilities.addAddress) {
-          assertSubAccountInfo(capabilities.addAddress);
+        const account = response.accounts.at(0);
+        const capabilities = account?.capabilities;
+        if (capabilities?.addAddress || capabilities?.getAppAccounts) {
+          const capabilityResponse = capabilities?.addAddress ?? capabilities?.getAppAccounts?.[0];
+          assertSubAccountInfo(capabilityResponse);
           subaccounts.setState({
-            account: capabilities.addAddress,
+            account: capabilityResponse,
           });
         }
         this.callback?.('accountsChanged', [
@@ -357,13 +358,10 @@ export class SCWSigner implements Signer {
   private shouldRequestUseSubAccountSigner(request: RequestArguments) {
     const sender = getSenderFromRequest(request);
     const state = subaccounts.getState();
-    if (
-      ROOT_ACCOUNT_METHODS.includes(request.method) ||
-      (sender && sender !== state.account?.address)
-    ) {
-      return false;
+    if (sender) {
+      return sender === state.account?.address;
     }
-    return !!state.account;
+    return false;
   }
 
   private async sendRequestToSubAccountSigner(request: RequestArguments) {
@@ -381,10 +379,3 @@ export class SCWSigner implements Signer {
     return signer.request(request);
   }
 }
-
-const ROOT_ACCOUNT_METHODS = [
-  'eth_requestAccounts',
-  'wallet_connect',
-  'wallet_addAddress',
-  'wallet_switchEthereumChain',
-];
