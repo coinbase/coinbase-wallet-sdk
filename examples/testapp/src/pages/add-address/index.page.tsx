@@ -16,6 +16,7 @@ import { SpendPermissions } from './components/SpendPermissions';
 
 export default function SubAccounts() {
   const [sdk, setSDK] = useState<ReturnType<typeof createCoinbaseWalletSDK>>();
+  const [appAccount, setAppAccount] = useState<string>();
 
   useEffect(() => {
     const sdk = createCoinbaseWalletSDK({
@@ -47,10 +48,10 @@ export default function SubAccounts() {
     <Container mb={16}>
       <VStack w="full" spacing={4}>
         <Connect sdk={sdk} />
-        <AddAddress sdk={sdk} />
-        <PersonalSign sdk={sdk} />
-        <SendCalls sdk={sdk} />
-        <GrantSpendPermission sdk={sdk} />
+        <AddAddress sdk={sdk} onAddAddress={setAppAccount} />
+        <PersonalSign sdk={sdk} appAccount={appAccount} />
+        <SendCalls sdk={sdk} appAccount={appAccount} />
+        <GrantSpendPermission sdk={sdk} appAccount={appAccount} />
         <SpendPermissions sdk={sdk} />
         <GenerateNewSigner />
         <AddOwner sdk={sdk} />

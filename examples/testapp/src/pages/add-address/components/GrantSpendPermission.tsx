@@ -65,7 +65,13 @@ const makeSpendPermissionTypedData = ({
   };
 };
 
-export function GrantSpendPermission({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletSDK> }) {
+export function GrantSpendPermission({
+  sdk,
+  appAccount,
+}: {
+  sdk: ReturnType<typeof createCoinbaseWalletSDK>;
+  appAccount: string;
+}) {
   const [state, setState] = useState<Hex>();
 
   const handleGrantSpendPermission = useCallback(async () => {
@@ -94,7 +100,7 @@ export function GrantSpendPermission({ sdk }: { sdk: ReturnType<typeof createCoi
       const data = {
         chainId: baseSepolia.id,
         account: subaccount.root,
-        spender: subaccount.address,
+        spender: appAccount,
         token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
         allowance: '0x2386F26FC10000',
         period: 86400,
@@ -128,7 +134,7 @@ export function GrantSpendPermission({ sdk }: { sdk: ReturnType<typeof createCoi
     } catch (error) {
       console.error('customlogs: error', error);
     }
-  }, [sdk]);
+  }, [sdk, appAccount]);
 
   return (
     <>

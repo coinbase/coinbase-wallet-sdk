@@ -2,7 +2,12 @@ import { Box, Button } from '@chakra-ui/react';
 import { createCoinbaseWalletSDK, getCryptoKeyAccount } from '@coinbase/wallet-sdk';
 import React, { useCallback, useState } from 'react';
 
-export function AddAddress({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletSDK> }) {
+type AddAddressProps = {
+  sdk: ReturnType<typeof createCoinbaseWalletSDK>;
+  onAddAddress: (address: string) => void;
+};
+
+export function AddAddress({ sdk, onAddAddress }: AddAddressProps) {
   const [subAccount, setSubAccount] = useState<string>();
 
   const handleAddAddress = useCallback(async () => {
@@ -28,7 +33,8 @@ export function AddAddress({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalle
 
     console.info('customlogs: response', response);
     setSubAccount(response.address);
-  }, [sdk]);
+    onAddAddress(response.address);
+  }, [sdk, onAddAddress]);
 
   return (
     <>
