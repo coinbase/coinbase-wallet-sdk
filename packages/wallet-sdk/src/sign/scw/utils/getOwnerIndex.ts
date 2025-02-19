@@ -1,4 +1,4 @@
-import { Client, Hex } from 'viem';
+import { Client, Hex, isAddress, pad } from 'viem';
 import { readContract } from 'viem/actions';
 
 import { abi } from './constants.js';
@@ -28,10 +28,23 @@ export async function getOwnerIndex({
       args: [BigInt(i)],
     });
 
-    if (owner.toLowerCase() === publicKey.toLowerCase()) {
+    const formatted = formatPublicKey(publicKey);
+    if (owner.toLowerCase() === formatted.toLowerCase()) {
       return i;
     }
   }
 
   throw standardErrors.rpc.internal('account owner not found');
+}
+
+/**
+ * Formats 20 byte addresses to 32 byte public keys. Contract uses 32 byte keys for owners.
+ * @param publicKey - The public key to format
+ * @returns The formatted public key
+ */
+export function formatPublicKey(publicKey: Hex): Hex {
+  if (isAddress(publicKey)) {
+    return pad(publicKey);
+  }
+  return publicKey;
 }
