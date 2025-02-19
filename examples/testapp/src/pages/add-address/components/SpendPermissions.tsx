@@ -53,7 +53,6 @@ export function SpendPermissions({
             version: '1',
             chainId: baseSepolia.id,
             from: appAccount,
-            // 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O'
             calls: [
               {
                 to: SPEND_PERMISSION_MANAGER_ADDRESS,
