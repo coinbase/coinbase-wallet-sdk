@@ -28,8 +28,8 @@ export function validatePreferences(preference?: Preference) {
  * Validates user supplied subaccount. Throws if keys are not valid.
  * @param subaccount
  */
-export function validateSubAccount(subaccount: SubAccountState) {
-  if (typeof subaccount.getSigner !== 'function') {
+export function validateSubAccount(subaccount: SubAccountState['getSigner']) {
+  if (typeof subaccount !== 'function') {
     throw new Error(`getSigner is not a function`);
   }
 }
