@@ -1,6 +1,6 @@
 import { Container, VStack } from '@chakra-ui/react';
 import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
-import { getCryptoKeyAccount } from '@coinbase/wallet-sdk-crypto-key';
+import { getCryptoKeyAccount } from '@coinbase/wallet-sdk';
 import React, { useEffect, useState } from 'react';
 import { LocalAccount, OneOf } from 'viem';
 import { WebAuthnAccount } from 'viem/account-abstraction';

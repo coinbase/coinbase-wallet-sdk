@@ -1,6 +1,5 @@
 import { Hex, PublicKey } from 'ox';
-import { LocalAccount } from 'viem';
-import { OneOf } from 'viem';
+import { type LocalAccount, type OneOf } from 'viem';
 import { WebAuthnAccount } from 'viem/account-abstraction';
 
 import { generateKeyPair, getCryptoKeyAccount, getKeypair, storage } from './index.js';
@@ -50,7 +49,7 @@ describe('crypto-key', () => {
     expect(keypair).toBeDefined();
   });
 
-  it('should return the keypair if found', async () => {
+  it('should return the account', async () => {
     const mockKeypair = await generateKeyPair();
     const publicKey = Hex.slice(PublicKey.toHex(mockKeypair.publicKey), 1);
     vi.spyOn(storage, 'getItem').mockResolvedValue(mockKeypair);

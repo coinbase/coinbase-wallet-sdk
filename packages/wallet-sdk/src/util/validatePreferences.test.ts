@@ -72,16 +72,11 @@ describe('validatePreferences', () => {
 
 describe('validateSubAccount', () => {
   it('should throw an error if getSigner is not a function', () => {
-    const invalidSubAccount: SubAccountState = {
-      getSigner: null,
-    };
-    expect(() => validateSubAccount(invalidSubAccount)).toThrow('getSigner is not a function');
+    expect(() => validateSubAccount(null)).toThrow('getSigner is not a function');
   });
 
   it('should not throw an error if getSigner is a function', () => {
-    const validSubAccount: SubAccountState = {
-      getSigner: () => Promise.resolve() as any,
-    };
-    expect(() => validateSubAccount(validSubAccount)).not.toThrow();
+    const getSigner: SubAccountState['getSigner'] = () => Promise.resolve({} as any);
+    expect(() => validateSubAccount(getSigner)).not.toThrow();
   });
 });

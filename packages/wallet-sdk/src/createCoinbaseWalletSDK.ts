@@ -51,7 +51,7 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
    * Set the sub account signer inside the store.
    */
   if (params.subaccount) {
-    validateSubAccount(params.subaccount);
+    validateSubAccount(params.subaccount.getSigner);
     // store the signer in the sub account store
     subaccounts.setState({
       getSigner: params.subaccount.getSigner,
@@ -66,6 +66,14 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
         provider = createCoinbaseWalletProvider(options);
       }
       return provider;
+    },
+    accounts: {
+      setSigner(params: SubAccountState['getSigner']) {
+        validateSubAccount(params);
+        subaccounts.setState({
+          getSigner: params,
+        });
+      },
     },
   };
 }
