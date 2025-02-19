@@ -49,7 +49,7 @@ describe('crypto-key', () => {
     expect(keypair).toBeDefined();
   });
 
-  it('should return the keypair if found', async () => {
+  it('should return the account', async () => {
     const mockKeypair = await generateKeyPair();
     const publicKey = Hex.slice(PublicKey.toHex(mockKeypair.publicKey), 1);
     vi.spyOn(storage, 'getItem').mockResolvedValue(mockKeypair);
