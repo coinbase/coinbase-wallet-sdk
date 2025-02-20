@@ -51,7 +51,7 @@ export default function SubAccounts() {
         <PersonalSign sdk={sdk} appAccount={appAccount} />
         <SendCalls sdk={sdk} appAccount={appAccount} />
         <GrantSpendPermission sdk={sdk} appAccount={appAccount} />
-        <SpendPermissions sdk={sdk} />
+        <SpendPermissions sdk={sdk} appAccount={appAccount} />
         <GenerateNewSigner />
         <AddOwner sdk={sdk} />
       </VStack>
