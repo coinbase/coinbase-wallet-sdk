@@ -19,6 +19,7 @@
   "author": "Coinbase, Inc.",
   "license": "Apache-2.0",
   "scripts": {
+    "clean": "rm -rf dist && rm -rf node_modules",
     "pretest": "node compile-assets.cjs",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
