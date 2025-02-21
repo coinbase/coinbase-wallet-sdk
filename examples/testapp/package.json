@@ -2,13 +2,14 @@
   "name": "sdk-playground",
   "version": "0.0.1",
   "scripts": {
-    "lint": "eslint . --ext .ts,.tsx",
-    "typecheck": "tsc --noEmit",
-    "dev": "next dev --port 3001",
     "build": "next build",
-    "start": "next start",
+    "clean": "rm -rf .next && rm -rf node_modules",
+    "dev": "next dev --port 3001",
     "export": "yarn build && touch ./out/.nojekyll",
-    "test": "vitest"
+    "lint": "eslint . --ext .ts,.tsx",
+    "start": "next start",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
