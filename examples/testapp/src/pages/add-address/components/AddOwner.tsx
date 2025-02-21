@@ -1,7 +1,7 @@
 import { Box, Button } from '@chakra-ui/react';
 import { createCoinbaseWalletSDK, getCryptoKeyAccount } from '@coinbase/wallet-sdk';
 import React, { useCallback, useState } from 'react';
-import { decodeAbiParameters, encodeFunctionData } from 'viem';
+import { decodeAbiParameters, encodeFunctionData, toHex } from 'viem';
 
 import { abi } from './constants';
 
@@ -35,7 +35,7 @@ export function AddOwner({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletS
             functionName: 'addOwnerPublicKey',
             args: [x, y] as const,
           }),
-          value: 0,
+          value: toHex(0),
         },
       ];
 
@@ -45,7 +45,7 @@ export function AddOwner({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletS
           {
             version: 1,
             from: subaccount.root,
-            chainId: 84532,
+            chainId: toHex(84532),
             calls,
           },
         ],
