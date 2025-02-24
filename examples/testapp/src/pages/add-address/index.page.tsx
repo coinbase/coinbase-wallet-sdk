@@ -1,8 +1,6 @@
 import { Container, VStack } from '@chakra-ui/react';
 import { createCoinbaseWalletSDK, getCryptoKeyAccount } from '@coinbase/wallet-sdk';
 import React, { useEffect, useState } from 'react';
-import { LocalAccount, OneOf } from 'viem';
-import { WebAuthnAccount } from 'viem/account-abstraction';
 
 import { AddAddress } from './components/AddAddress';
 import { AddOwner } from './components/AddOwner';
@@ -21,13 +19,10 @@ export default function SubAccounts() {
     const sdk = createCoinbaseWalletSDK({
       appName: 'CryptoPlayground',
       preference: {
-        keysUrl: 'http://localhost:3005/connect',
         options: 'smartWalletOnly',
       },
       subaccount: {
-        getSigner: getCryptoKeyAccount as () => Promise<{
-          account: OneOf<WebAuthnAccount | LocalAccount> | null;
-        }>,
+        getSigner: getCryptoKeyAccount,
       },
     });
 
