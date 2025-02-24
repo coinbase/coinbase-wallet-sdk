@@ -27,7 +27,7 @@ export async function createSubAccountSigner(subaccount: SubAccountInfo) {
   });
   // Default index to 1 if the contract is not deployed
   // Note: importing an undeployed contract might need to be handled differently
-  // The implemention will likely require the signer to tell us the index
+  // The implementation will likely require the signer to tell us the index
   let index = 1;
   if (code) {
     index = await getOwnerIndex({
