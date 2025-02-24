@@ -8,12 +8,12 @@ import {
   Preference,
   ProviderInterface,
 } from ':core/provider/interface.js';
+import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { abi } from ':sign/scw/utils/constants.js';
 import { subaccounts, SubAccountState } from ':stores/sub-accounts/store.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { validatePreferences, validateSubAccount } from ':util/validatePreferences.js';
-
 export type CreateCoinbaseWalletSDKOptions = Partial<AppMetadata> & {
   preference?: Preference;
   subaccount?: {
@@ -94,10 +94,10 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
           ],
         });
       },
-      get(chainId: number) {
+      async get(chainId: number) {
         const state = subaccounts.getState();
         if (!state.account) {
-          return sdk.getProvider()?.request({
+          const response = (await sdk.getProvider()?.request({
             method: 'wallet_connect',
             params: [
               {
@@ -109,7 +109,8 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
                 },
               },
             ],
-          });
+          })) as WalletConnectResponse;
+          return response.accounts[0].capabilities?.getAppAccounts?.[0];
         }
         return state.account;
       },
