@@ -97,6 +97,7 @@ describe('createCoinbaseWalletSDK', () => {
         method: 'wallet_addAddress',
         params: [
           {
+            chainId: 1,
             capabilities: {
               createAccount: {
                 signer: '0x123',
@@ -113,20 +114,26 @@ describe('createCoinbaseWalletSDK', () => {
       subaccounts.setState({ account: undefined, getSigner: null });
     });
 
-    it('should return existing account if it exists', () => {
+    it('should return existing account if it exists', async () => {
       const sdk = createCoinbaseWalletSDK(options);
       const mockAccount = { address: '0x123' };
       subaccounts.setState({ account: mockAccount as any });
-      expect(sdk.subaccount.get(1)).toBe(mockAccount);
+      expect(await sdk.subaccount.get(1)).toBe(mockAccount);
       subaccounts.setState({ account: undefined });
     });
 
-    it('should call wallet_connect if no account exists', () => {
-      const mockRequest = vi.fn();
+    it('should call wallet_connect if no account exists', async () => {
+      const mockRequest = vi.fn().mockResolvedValue({
+        accounts: [
+          {
+            address: '0x123',
+          },
+        ],
+      });
       const sdk = createCoinbaseWalletSDK(options);
       vi.spyOn(sdk, 'getProvider').mockImplementation(() => ({ request: mockRequest }) as any);
 
-      sdk.subaccount.get(1);
+      await sdk.subaccount.get(1);
       expect(mockRequest).toHaveBeenCalledWith({
         method: 'wallet_connect',
         params: [
