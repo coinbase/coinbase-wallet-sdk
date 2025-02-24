@@ -71,7 +71,7 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
       return provider;
     },
     subaccount: {
-      async create(key: `0x${string}`) {
+      async create({ key, chainId }: { key: `0x${string}`; chainId: number }) {
         const state = subaccounts.getState();
         if (!state.getSigner) {
           throw new Error('no signer found');
@@ -84,6 +84,7 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
           method: 'wallet_addAddress',
           params: [
             {
+              chainId,
               capabilities: {
                 createAccount: {
                   signer: key,

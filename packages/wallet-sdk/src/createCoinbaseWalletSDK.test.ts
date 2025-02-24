@@ -67,7 +67,9 @@ describe('createCoinbaseWalletSDK', () => {
 
     it('should throw if no signer is set', async () => {
       const sdk = createCoinbaseWalletSDK(options);
-      await expect(sdk.subaccount.create('0x123')).rejects.toThrow('no signer found');
+      await expect(sdk.subaccount.create({ key: '0x123', chainId: 1 })).rejects.toThrow(
+        'no signer found'
+      );
     });
 
     it('should throw if subaccount already exists', async () => {
@@ -76,7 +78,9 @@ describe('createCoinbaseWalletSDK', () => {
         subaccount: { getSigner: () => Promise.resolve({} as any) },
       });
       subaccounts.setState({ account: { address: '0x123' } as any });
-      await expect(sdk.subaccount.create('0x123')).rejects.toThrow('subaccount already exists');
+      await expect(sdk.subaccount.create({ key: '0x123', chainId: 1 })).rejects.toThrow(
+        'subaccount already exists'
+      );
       subaccounts.setState({ account: undefined });
     });
 
@@ -88,7 +92,7 @@ describe('createCoinbaseWalletSDK', () => {
       });
       vi.spyOn(sdk, 'getProvider').mockImplementation(() => ({ request: mockRequest }) as any);
 
-      await sdk.subaccount.create('0x123');
+      await sdk.subaccount.create({ key: '0x123', chainId: 1 });
       expect(mockRequest).toHaveBeenCalledWith({
         method: 'wallet_addAddress',
         params: [
