@@ -7,7 +7,7 @@ export type WalletAddAddressCapabilities = {
 };
 
 export type WalletAddAddressRequest = {
-  method: 'wallet_addAddress';
+  method: 'wallet_addSubAccount';
   params: [
     {
       version: '1';

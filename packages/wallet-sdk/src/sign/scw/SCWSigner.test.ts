@@ -375,7 +375,7 @@ describe('SCWSigner', () => {
               {
                 address: '0xAddress',
                 capabilities: {
-                  addAddress: {
+                  addSubAccount: {
                     address: '0xAddress',
                     chainId: 1,
                     owners: ['0xOwner1', '0xOwner2'],

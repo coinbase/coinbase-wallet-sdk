@@ -14,7 +14,7 @@ export function AddOwner({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletS
     }
     const provider = sdk.getProvider();
     const subaccount = (await provider?.request({
-      method: 'wallet_addAddress',
+      method: 'wallet_addSubAccount',
       params: [{}],
     })) as {
       address: string;

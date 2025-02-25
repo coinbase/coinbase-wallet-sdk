@@ -84,7 +84,7 @@ describe('createCoinbaseWalletSDK', () => {
       subaccounts.setState({ account: undefined });
     });
 
-    it('should call wallet_addAddress with correct params', async () => {
+    it('should call wallet_addSubAccount with correct params', async () => {
       const mockRequest = vi.fn();
       const sdk = createCoinbaseWalletSDK({
         ...options,
@@ -94,7 +94,7 @@ describe('createCoinbaseWalletSDK', () => {
 
       await sdk.subaccount.create({ key: '0x123', chainId: 1 });
       expect(mockRequest).toHaveBeenCalledWith({
-        method: 'wallet_addAddress',
+        method: 'wallet_addSubAccount',
         params: [
           {
             chainId: 1,

@@ -151,8 +151,8 @@ export class SCWSigner implements Signer {
       case 'wallet_connect':
         return this.sendRequestToPopup(request);
       // Sub Account Support
-      case 'wallet_addAddress':
-        return this.addAddress(request);
+      case 'wallet_addSubAccount':
+        return this.addSubAccount(request);
       default:
         if (!this.chain.rpcUrl) {
           throw standardErrors.rpc.internal('No RPC URL set for chain');
@@ -193,16 +193,20 @@ export class SCWSigner implements Signer {
         // TODO: in future PR update state to support multiple accounts
         const account = response.accounts.at(0);
         const capabilities = account?.capabilities;
-        if (capabilities?.addAddress || capabilities?.getAppAccounts) {
-          const capabilityResponse = capabilities?.addAddress ?? capabilities?.getAppAccounts?.[0];
+        if (capabilities?.addSubAccount || capabilities?.getSubAccounts) {
+          const capabilityResponse =
+            capabilities?.addSubAccount ?? capabilities?.getSubAccounts?.[0];
           assertSubAccountInfo(capabilityResponse);
           subaccounts.setState({
             account: capabilityResponse,
           });
         }
-        this.callback?.('accountsChanged', [
-          subaccounts.getState().account?.address ?? this.accounts[0],
-        ]);
+        const accounts_ = [this.accounts[0]];
+        const subaccount = subaccounts.getState().account;
+        if (subaccount) {
+          accounts_.push(subaccount.address);
+        }
+        this.callback?.('accountsChanged', accounts_);
         break;
       }
       default:
@@ -331,10 +335,10 @@ export class SCWSigner implements Signer {
     return true;
   }
 
-  private async addAddress(request: RequestArguments) {
+  private async addSubAccount(request: RequestArguments) {
     const state = subaccounts.getState();
     if (state.account) {
-      this.callback?.('accountsChanged', [state.account.address]);
+      this.callback?.('accountsChanged', [state.account.root, state.account.address]);
       return state.account;
     }
 
@@ -351,7 +355,7 @@ export class SCWSigner implements Signer {
     subaccounts.setState({
       account: response,
     });
-    this.callback?.('accountsChanged', [response.address]);
+    this.callback?.('accountsChanged', [response.root, response.address]);
     return response;
   }
 

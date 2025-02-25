@@ -81,7 +81,7 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
           throw new Error('subaccount already exists');
         }
         return sdk.getProvider()?.request({
-          method: 'wallet_addAddress',
+          method: 'wallet_addSubAccount',
           params: [
             {
               chainId,

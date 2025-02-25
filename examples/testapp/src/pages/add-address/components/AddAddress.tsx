@@ -17,7 +17,7 @@ export function AddAddress({ sdk, onAddAddress }: AddAddressProps) {
     const provider = sdk.getProvider();
     const { account } = await getCryptoKeyAccount();
     const response = (await provider.request({
-      method: 'wallet_addAddress',
+      method: 'wallet_addSubAccount',
       params: [
         {
           version: '1',

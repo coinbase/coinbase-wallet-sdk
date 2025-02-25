@@ -48,7 +48,7 @@ export async function createSubAccountSigner(subaccount: SubAccountInfo) {
   return {
     request: async (args: RequestArguments): Promise<Hex | Address[] | number | SubAccountInfo> => {
       switch (args.method) {
-        case 'wallet_addAddress':
+        case 'wallet_addSubAccount':
           return subaccount;
         case 'eth_accounts':
           return [subaccount.address] as Address[];

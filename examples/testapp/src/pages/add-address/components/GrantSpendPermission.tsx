@@ -83,7 +83,7 @@ export function GrantSpendPermission({
       const provider = sdk.getProvider();
       const { account } = await getCryptoKeyAccount();
       const subaccount = (await provider?.request({
-        method: 'wallet_addAddress',
+        method: 'wallet_addSubAccount',
         params: [
           {
             version: '1',
