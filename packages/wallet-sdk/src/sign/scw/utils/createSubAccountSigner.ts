@@ -42,7 +42,7 @@ export async function createSubAccountSigner(subaccount: SubAccountInfo) {
     ownerIndex: index,
     address: subaccount.address,
     client,
-    factoryData: subaccount.initCode.factoryCalldata,
+    factoryData: subaccount.factoryData,
   });
 
   return {
@@ -55,9 +55,9 @@ export async function createSubAccountSigner(subaccount: SubAccountInfo) {
         case 'eth_coinbase':
           return subaccount.address;
         case 'net_version':
-          return subaccount.chainId;
+          return numberToHex(subaccount.chainId ?? baseSepolia.id);
         case 'eth_chainId':
-          return numberToHex(subaccount.chainId);
+          return numberToHex(subaccount.chainId ?? baseSepolia.id);
         case 'eth_sendTransaction': {
           assertArrayPresence(args.params);
           return account.sign(args.params[0] as { hash: Hex });
