@@ -8,13 +8,9 @@ import { SubAccountInfo } from ':stores/sub-accounts/store.js';
 
 const params: SubAccountInfo = {
   address: '0x',
-  chainId: 84532,
-  owners: [],
-  root: '0x',
-  initCode: {
-    factory: '0x',
-    factoryCalldata: '0x',
-  },
+  factory: '0x',
+  factoryData: '0x',
+  universalAccount: '0x',
 };
 
 vi.mock('viem/actions', () => ({
@@ -36,13 +32,10 @@ vi.mock(':stores/sub-accounts/store.js', () => ({
       account: {
         address: '0x',
         chainId: 84532,
-        owners: [],
         ownerIndex: 0,
-        root: '0x',
-        initCode: {
-          factory: '0x',
-          factoryCalldata: '0x',
-        },
+        factory: '0x',
+        factoryData: '0x',
+        universalAccount: '0x',
       },
     }),
   },

@@ -8,7 +8,6 @@ export type GetSubAccountSigner = () => Promise<{
 }>;
 
 export type SubAccountInfo = {
-  universalAccount: Address;
   address: Address;
   chainId?: number;
   factory?: Address;
@@ -18,11 +17,13 @@ export type SubAccountInfo = {
 export type SubAccountState = {
   getSigner: null | GetSubAccountSigner;
   account?: SubAccountInfo;
+  universalAccount: Address | null;
 };
 
 export const subaccounts = createStore(
   persist<Partial<SubAccountState>>(
     () => ({
+      universalAccount: null,
       getSigner: null,
     }),
     {

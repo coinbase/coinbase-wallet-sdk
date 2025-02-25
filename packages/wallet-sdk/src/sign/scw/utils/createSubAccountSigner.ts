@@ -25,6 +25,7 @@ export async function createSubAccountSigner(subaccount: SubAccountInfo) {
   const code = await getCode(client, {
     address: subaccount.address,
   });
+
   // Default index to 1 if the contract is not deployed
   // Note: importing an undeployed contract might need to be handled differently
   // The implemention will likely require the signer to tell us the index

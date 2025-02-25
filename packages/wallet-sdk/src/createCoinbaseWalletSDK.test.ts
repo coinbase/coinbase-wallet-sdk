@@ -67,9 +67,17 @@ describe('createCoinbaseWalletSDK', () => {
 
     it('should throw if no signer is set', async () => {
       const sdk = createCoinbaseWalletSDK(options);
-      await expect(sdk.subaccount.create({ key: '0x123', chainId: 1 })).rejects.toThrow(
-        'no signer found'
-      );
+      await expect(
+        sdk.subaccount.create({
+          type: 'create',
+          keys: [
+            {
+              key: '0x123',
+              type: 'p256',
+            },
+          ],
+        })
+      ).rejects.toThrow('no signer found');
     });
 
     it('should throw if subaccount already exists', async () => {
@@ -78,9 +86,17 @@ describe('createCoinbaseWalletSDK', () => {
         subaccount: { getSigner: () => Promise.resolve({} as any) },
       });
       subaccounts.setState({ account: { address: '0x123' } as any });
-      await expect(sdk.subaccount.create({ key: '0x123', chainId: 1 })).rejects.toThrow(
-        'subaccount already exists'
-      );
+      await expect(
+        sdk.subaccount.create({
+          type: 'create',
+          keys: [
+            {
+              key: '0x123',
+              type: 'p256',
+            },
+          ],
+        })
+      ).rejects.toThrow('subaccount already exists');
       subaccounts.setState({ account: undefined });
     });
 
@@ -92,16 +108,28 @@ describe('createCoinbaseWalletSDK', () => {
       });
       vi.spyOn(sdk, 'getProvider').mockImplementation(() => ({ request: mockRequest }) as any);
 
-      await sdk.subaccount.create({ key: '0x123', chainId: 1 });
+      await sdk.subaccount.create({
+        type: 'create',
+        keys: [
+          {
+            key: '0x123',
+            type: 'p256',
+          },
+        ],
+      });
       expect(mockRequest).toHaveBeenCalledWith({
         method: 'wallet_addSubAccount',
         params: [
           {
-            chainId: 1,
-            capabilities: {
-              createAccount: {
-                signer: '0x123',
-              },
+            version: '1',
+            account: {
+              type: 'create',
+              keys: [
+                {
+                  key: '0x123',
+                  type: 'p256',
+                },
+              ],
             },
           },
         ],
@@ -118,7 +146,7 @@ describe('createCoinbaseWalletSDK', () => {
       const sdk = createCoinbaseWalletSDK(options);
       const mockAccount = { address: '0x123' };
       subaccounts.setState({ account: mockAccount as any });
-      expect(await sdk.subaccount.get(1)).toBe(mockAccount);
+      expect(await sdk.subaccount.get()).toBe(mockAccount);
       subaccounts.setState({ account: undefined });
     });
 
@@ -133,16 +161,14 @@ describe('createCoinbaseWalletSDK', () => {
       const sdk = createCoinbaseWalletSDK(options);
       vi.spyOn(sdk, 'getProvider').mockImplementation(() => ({ request: mockRequest }) as any);
 
-      await sdk.subaccount.get(1);
+      await sdk.subaccount.get();
       expect(mockRequest).toHaveBeenCalledWith({
         method: 'wallet_connect',
         params: [
           {
             version: 1,
             capabilities: {
-              getAppAccounts: {
-                chainId: 1,
-              },
+              getAppAccounts: true,
             },
           },
         ],
@@ -177,7 +203,10 @@ describe('createCoinbaseWalletSDK', () => {
         ...options,
         subaccount: { getSigner: () => Promise.resolve({} as any) },
       });
-      subaccounts.setState({ account: { address: '0x456', root: '0x789' } as any });
+      subaccounts.setState({
+        universalAccount: '0x789',
+        account: { address: '0x456', root: '0x789' } as any,
+      });
       vi.spyOn(sdk, 'getProvider').mockImplementation(() => ({ request: mockRequest }) as any);
 
       await sdk.subaccount.addOwner({ address: '0xE3cA9Cc9378143a26b9d4692Ca3722dc45910a15' });
@@ -206,7 +235,10 @@ describe('createCoinbaseWalletSDK', () => {
         ...options,
         subaccount: { getSigner: () => Promise.resolve({} as any) },
       });
-      subaccounts.setState({ account: { address: '0x456', root: '0x789' } as any });
+      subaccounts.setState({
+        universalAccount: '0x789',
+        account: { address: '0x456' } as any,
+      });
       vi.spyOn(sdk, 'getProvider').mockImplementation(() => ({ request: mockRequest }) as any);
 
       await sdk.subaccount.addOwner({

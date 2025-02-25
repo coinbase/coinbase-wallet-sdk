@@ -8,6 +8,7 @@ import {
   Preference,
   ProviderInterface,
 } from ':core/provider/interface.js';
+import { AddSubAccountAccount } from ':core/rpc/wallet_addSubAccount.js';
 import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { abi } from ':sign/scw/utils/constants.js';
@@ -73,30 +74,26 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
       return provider;
     },
     subaccount: {
-      async create({ key, chainId }: { key: `0x${string}`; chainId: number }) {
+      async create(account: AddSubAccountAccount) {
         const state = subaccounts.getState();
         if (!state.getSigner) {
           throw new Error('no signer found');
         }
-
         if (state.account) {
           throw new Error('subaccount already exists');
         }
+
         return sdk.getProvider()?.request({
           method: 'wallet_addSubAccount',
           params: [
             {
-              chainId,
-              capabilities: {
-                createAccount: {
-                  signer: key,
-                },
-              },
+              version: '1',
+              account,
             },
           ],
         });
       },
-      async get(chainId: number) {
+      async get() {
         const state = subaccounts.getState();
         if (!state.account) {
           const response = (await sdk.getProvider()?.request({
@@ -105,9 +102,7 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
               {
                 version: 1,
                 capabilities: {
-                  getAppAccounts: {
-                    chainId,
-                  },
+                  getAppAccounts: true,
                 },
               },
             ],
@@ -169,7 +164,7 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
             {
               version: 1,
               calls,
-              from: state.account.universalAccount,
+              from: state.universalAccount,
             },
           ],
         });

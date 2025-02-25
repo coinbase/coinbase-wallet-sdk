@@ -4,7 +4,7 @@ type AccountCreate = {
   type: 'create';
   keys: {
     type: 'address' | 'p256' | 'webcrypto-p256' | 'webauthn-p256';
-    key: '0x...';
+    key: `0x${string}`;
   }[];
 };
 
@@ -21,14 +21,14 @@ type AccountUndeployed = {
   chainId?: Hex;
 };
 
-type Account = AccountDeployed | AccountCreate | AccountUndeployed;
+export type AddSubAccountAccount = AccountDeployed | AccountCreate | AccountUndeployed;
 
 export type WalletAddSubAccountRequest = {
   method: 'wallet_addSubAccount';
   params: [
     {
       version: '1';
-      account: Account;
+      account: AddSubAccountAccount;
     },
   ];
 };

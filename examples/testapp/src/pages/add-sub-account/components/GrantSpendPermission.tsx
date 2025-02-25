@@ -1,5 +1,5 @@
 import { Box, Button } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK, getCryptoKeyAccount } from '@coinbase/wallet-sdk';
+import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import React, { useCallback, useState } from 'react';
 import { Address, Hex } from 'viem';
 import { baseSepolia } from 'viem/chains';
@@ -81,25 +81,21 @@ export function GrantSpendPermission({
 
     try {
       const provider = sdk.getProvider();
-      const { account } = await getCryptoKeyAccount();
       const subaccount = (await provider?.request({
-        method: 'wallet_addSubAccount',
+        method: 'eth_accounts',
         params: [
           {
             version: '1',
-            chainId: 84532,
             capabilities: {
-              createAccount: {
-                signer: account.publicKey,
-              },
+              getSubAccounts: true,
             },
           },
         ],
-      })) as { address: Address; root: Address };
+      })) as string[];
 
       const data = {
         chainId: baseSepolia.id,
-        account: subaccount.root,
+        account: subaccount[0],
         spender: subAccountAddress,
         token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
         allowance: '0x2386F26FC10000',
@@ -112,8 +108,8 @@ export function GrantSpendPermission({
 
       const spendPermission = makeSpendPermissionTypedData({
         chainId: baseSepolia.id,
-        account: subaccount.root,
-        spender: subaccount.address,
+        account: subaccount[0] as Address,
+        spender: subAccountAddress as Address,
         token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
         allowance: '0x2386F26FC10000',
         period: 86400,
@@ -125,7 +121,7 @@ export function GrantSpendPermission({
 
       const response = await provider?.request({
         method: 'eth_signTypedData_v4',
-        params: [subaccount.root, spendPermission],
+        params: [subaccount[0] as Address, spendPermission],
       });
       console.info('customlogs: response', response);
       localStorage.setItem('cbwsdk.demo.spend-permission.signature', response as Hex);
