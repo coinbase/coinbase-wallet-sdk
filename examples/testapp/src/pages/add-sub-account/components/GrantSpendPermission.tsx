@@ -67,10 +67,10 @@ const makeSpendPermissionTypedData = ({
 
 export function GrantSpendPermission({
   sdk,
-  appAccount,
+  subAccountAddress,
 }: {
   sdk: ReturnType<typeof createCoinbaseWalletSDK>;
-  appAccount: string;
+  subAccountAddress: string;
 }) {
   const [state, setState] = useState<Hex>();
 
@@ -100,7 +100,7 @@ export function GrantSpendPermission({
       const data = {
         chainId: baseSepolia.id,
         account: subaccount.root,
-        spender: appAccount,
+        spender: subAccountAddress,
         token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
         allowance: '0x2386F26FC10000',
         period: 86400,
@@ -134,7 +134,7 @@ export function GrantSpendPermission({
     } catch (error) {
       console.error('customlogs: error', error);
     }
-  }, [sdk, appAccount]);
+  }, [sdk, subAccountAddress]);
 
   return (
     <>

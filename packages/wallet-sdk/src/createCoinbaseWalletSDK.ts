@@ -68,6 +68,8 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
       if (!provider) {
         provider = createCoinbaseWalletProvider(options);
       }
+      // @ts-expect-error - provider
+      provider.sdk = sdk;
       return provider;
     },
     subaccount: {
@@ -110,7 +112,7 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
               },
             ],
           })) as WalletConnectResponse;
-          return response.accounts[0].capabilities?.getAppAccounts?.[0];
+          return response.accounts[0].capabilities?.getSubAccounts?.[0];
         }
         return state.account;
       },
@@ -167,7 +169,7 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
             {
               version: 1,
               calls,
-              from: state.account.root,
+              from: state.account.universalAccount,
             },
           ],
         });

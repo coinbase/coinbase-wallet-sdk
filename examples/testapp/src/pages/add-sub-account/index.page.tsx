@@ -2,8 +2,8 @@ import { Container, VStack } from '@chakra-ui/react';
 import { createCoinbaseWalletSDK, getCryptoKeyAccount } from '@coinbase/wallet-sdk';
 import React, { useEffect, useState } from 'react';
 
-import { AddAddress } from './components/AddAddress';
 import { AddOwner } from './components/AddOwner';
+import { AddSubAccount } from './components/AddSubAccount';
 import { Connect } from './components/Connect';
 import { GenerateNewSigner } from './components/GenerateNewSigner';
 import { GrantSpendPermission } from './components/GrantSpendPermission';
@@ -13,7 +13,7 @@ import { SpendPermissions } from './components/SpendPermissions';
 
 export default function SubAccounts() {
   const [sdk, setSDK] = useState<ReturnType<typeof createCoinbaseWalletSDK>>();
-  const [appAccount, setAppAccount] = useState<string>();
+  const [subAccountAddress, setSubAccountAddress] = useState<string>();
 
   useEffect(() => {
     const sdk = createCoinbaseWalletSDK({
@@ -42,11 +42,11 @@ export default function SubAccounts() {
     <Container mb={16}>
       <VStack w="full" spacing={4}>
         <Connect sdk={sdk} />
-        <AddAddress sdk={sdk} onAddAddress={setAppAccount} />
-        <PersonalSign sdk={sdk} appAccount={appAccount} />
-        <SendCalls sdk={sdk} appAccount={appAccount} />
-        <GrantSpendPermission sdk={sdk} appAccount={appAccount} />
-        <SpendPermissions sdk={sdk} appAccount={appAccount} />
+        <AddSubAccount sdk={sdk} onAddSubAccount={setSubAccountAddress} />
+        <PersonalSign sdk={sdk} subAccountAddress={subAccountAddress} />
+        <SendCalls sdk={sdk} subAccountAddress={subAccountAddress} />
+        <GrantSpendPermission sdk={sdk} subAccountAddress={subAccountAddress} />
+        <SpendPermissions sdk={sdk} subAccountAddress={subAccountAddress} />
         <GenerateNewSigner />
         <AddOwner sdk={sdk} />
       </VStack>

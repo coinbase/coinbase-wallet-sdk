@@ -8,14 +8,11 @@ export type GetSubAccountSigner = () => Promise<{
 }>;
 
 export type SubAccountInfo = {
+  universalAccount: Address;
   address: Address;
-  chainId: number;
-  owners: Address[];
-  root: Address;
-  initCode: {
-    factory: Address;
-    factoryCalldata: Hex;
-  };
+  chainId?: Hex;
+  factory?: Address;
+  factoryData?: Hex;
 };
 
 export type SubAccountState = {

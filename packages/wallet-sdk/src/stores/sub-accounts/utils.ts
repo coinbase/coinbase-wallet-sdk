@@ -5,13 +5,7 @@ export function assertSubAccountInfo(info: unknown): asserts info is SubAccountI
   if (typeof info !== 'object' || info === null) {
     throw standardErrors.rpc.internal('sub account info is not an object');
   }
-  if (
-    !('address' in info) ||
-    !('chainId' in info) ||
-    !('owners' in info) ||
-    !('root' in info) ||
-    !('initCode' in info)
-  ) {
+  if (!('address' in info)) {
     throw standardErrors.rpc.internal('sub account is invalid');
   }
 }
