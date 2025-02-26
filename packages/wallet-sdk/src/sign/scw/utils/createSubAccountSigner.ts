@@ -47,7 +47,9 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
   });
 
   return {
-    request: async (args: RequestArguments): Promise<Hex | Address[] | number | SubAccountInfo> => {
+    request: async (
+      args: RequestArguments
+    ): Promise<string | Hex | Address[] | number | SubAccountInfo> => {
       switch (args.method) {
         case 'wallet_addSubAccount':
           return subaccount;
@@ -58,7 +60,7 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
         case 'net_version':
           return numberToHex(chainId);
         case 'eth_chainId':
-          return numberToHex(chainId);
+          return chainId.toString();
         case 'eth_sendTransaction': {
           assertArrayPresence(args.params);
           return account.sign(args.params[0] as { hash: Hex });

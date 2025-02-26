@@ -2,7 +2,7 @@ import { numberToHex } from 'viem';
 
 import { Signer } from '../interface.js';
 import { SCWKeyManager } from './SCWKeyManager.js';
-import { addSenderToRequest, getSenderFromRequest } from './utils.js';
+import { addSenderToRequest, assertParamsChainId, getSenderFromRequest } from './utils.js';
 import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
 import { Communicator } from ':core/communicator/Communicator.js';
 import { standardErrors } from ':core/error/errors.js';
@@ -106,15 +106,8 @@ export class SCWSigner implements Signer {
     if (this.accounts.length === 0) {
       switch (request.method) {
         case 'wallet_switchEthereumChain': {
-          const params = request.params as [
-            {
-              chainId: `0x${string}`;
-            },
-          ];
-          if (!params || !params[0]?.chainId) {
-            throw standardErrors.rpc.invalidParams();
-          }
-          return (this.chain.id = Number(params[0].chainId));
+          assertParamsChainId(request.params);
+          return (this.chain.id = Number(request.params[0].chainId));
         }
         case 'wallet_connect':
         case 'wallet_sendCalls':
@@ -242,16 +235,9 @@ export class SCWSigner implements Signer {
    * https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
    */
   private async handleSwitchChainRequest(request: RequestArguments) {
-    const params = request.params as [
-      {
-        chainId: `0x${string}`;
-      },
-    ];
-    if (!params || !params[0]?.chainId) {
-      throw standardErrors.rpc.invalidParams();
-    }
-    const chainId = ensureIntNumber(params[0].chainId);
+    assertParamsChainId(request.params);
 
+    const chainId = ensureIntNumber(request.params[0].chainId);
     const localResult = this.updateChain(chainId);
     if (localResult) return null;
 

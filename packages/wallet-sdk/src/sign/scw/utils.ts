@@ -3,9 +3,9 @@ import { Address } from 'viem';
 import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
 
-/////////////////////////////////////////////////////////////////////////////////////////////
+// ***************************************************************
 // Utility
-/////////////////////////////////////////////////////////////////////////////////////////////
+// ***************************************************************
 export function getSenderFromRequest(request: RequestArguments) {
   if (!Array.isArray(request.params)) {
     return null;
@@ -46,4 +46,17 @@ export function addSenderToRequest(request: RequestArguments, sender: Address) {
   }
 
   return { ...request, params };
+}
+
+export function assertParamsChainId(params: unknown): asserts params is [
+  {
+    chainId: `0x${string}`;
+  },
+] {
+  if (!params || !Array.isArray(params) || !params[0]?.chainId) {
+    throw standardErrors.rpc.invalidParams();
+  }
+  if (typeof params[0].chainId !== 'string' && typeof params[0].chainId !== 'number') {
+    throw standardErrors.rpc.invalidParams();
+  }
 }

@@ -1,4 +1,4 @@
-import { addSenderToRequest, getSenderFromRequest } from './utils.js';
+import { addSenderToRequest, assertParamsChainId, getSenderFromRequest } from './utils.js';
 
 describe('utils', () => {
   describe('getSenderFromRequest', () => {
@@ -30,5 +30,39 @@ describe('utils', () => {
         params: expectedParams,
       });
     });
+  });
+});
+
+describe('assertParamsChainId', () => {
+  it('should throw if the params are not an array', () => {
+    expect(() => assertParamsChainId({})).toThrow();
+  });
+
+  it('should throw if the params array is empty', () => {
+    expect(() => assertParamsChainId([])).toThrow();
+  });
+
+  it('should throw if the first param does not have a chainId property', () => {
+    expect(() => assertParamsChainId([{}])).toThrow();
+  });
+
+  it('should throw if the chainId is not a string or number', () => {
+    expect(() => assertParamsChainId([{ chainId: true }])).toThrow();
+    expect(() => assertParamsChainId([{ chainId: null }])).toThrow();
+    expect(() => assertParamsChainId([{ chainId: undefined }])).toThrow();
+    expect(() => assertParamsChainId([{ chainId: {} }])).toThrow();
+  });
+
+  it('should not throw if the chainId is a string', () => {
+    expect(() => assertParamsChainId([{ chainId: '0x1' }])).not.toThrow();
+  });
+
+  it('should not throw if the chainId is a number', () => {
+    expect(() => assertParamsChainId([{ chainId: 1 }])).not.toThrow();
+  });
+
+  it('should throw if params is null or undefined', () => {
+    expect(() => assertParamsChainId(null)).toThrow();
+    expect(() => assertParamsChainId(undefined)).toThrow();
   });
 });
