@@ -10,7 +10,6 @@ const params: SubAccountInfo = {
   address: '0x',
   factory: '0x',
   factoryData: '0x',
-  universalAccount: '0x',
 };
 
 vi.mock('viem/actions', () => ({
@@ -29,13 +28,13 @@ vi.mock(':stores/sub-accounts/store.js', () => ({
           address: '0x',
         },
       }),
+      universalAccount: '0x',
       account: {
         address: '0x',
         chainId: 84532,
         ownerIndex: 0,
         factory: '0x',
         factoryData: '0x',
-        universalAccount: '0x',
       },
     }),
   },
