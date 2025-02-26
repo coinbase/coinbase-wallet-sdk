@@ -97,9 +97,6 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
       setResponse(null);
       if (!provider) return;
 
-      // sleep for 1 second
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
       const dataToSubmit = { ...data };
       let values = dataToSubmit;
       if (format) {
