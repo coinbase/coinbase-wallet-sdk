@@ -393,7 +393,9 @@ export class SCWSigner implements Signer {
       request = addSenderToRequest(request, state.account.address as Address);
     }
 
-    const signer = await createSubAccountSigner(state.account);
+    const signer = await createSubAccountSigner({
+      chainId: this.chain.id,
+    });
     return signer.request(request);
   }
 }

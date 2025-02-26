@@ -9,7 +9,6 @@ export type GetSubAccountSigner = () => Promise<{
 
 export type SubAccountInfo = {
   address: Address;
-  chainId?: number;
   factory?: Address;
   factoryData?: Hex;
 };

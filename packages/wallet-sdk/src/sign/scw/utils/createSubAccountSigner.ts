@@ -1,7 +1,6 @@
 import { Address, Hex, http, numberToHex, SignableMessage, TypedDataDefinition } from 'viem';
 import { createPaymasterClient } from 'viem/account-abstraction';
 import { getCode } from 'viem/actions';
-import { baseSepolia } from 'viem/chains';
 
 import { createSmartAccount } from './createSmartAccount.js';
 import { getOwnerIndex } from './getOwnerIndex.js';
@@ -12,11 +11,12 @@ import { SubAccountInfo, subaccounts } from ':stores/sub-accounts/store.js';
 import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
 import { get } from ':util/get.js';
 
-export async function createSubAccountSigner(subaccount: SubAccountInfo) {
-  const client = getClient(subaccount.chainId ?? baseSepolia.id);
+export async function createSubAccountSigner({ chainId }: { chainId: number }) {
+  const client = getClient(chainId);
   assertPresence(client, standardErrors.rpc.internal('client not found'));
 
-  const { getSigner } = subaccounts.getState();
+  const { account: subaccount, getSigner } = subaccounts.getState();
+  assertPresence(subaccount, standardErrors.rpc.internal('subaccount not found'));
   assertPresence(getSigner, standardErrors.rpc.internal('signer not found'));
 
   const { account: owner } = await getSigner();
@@ -56,9 +56,9 @@ export async function createSubAccountSigner(subaccount: SubAccountInfo) {
         case 'eth_coinbase':
           return subaccount.address;
         case 'net_version':
-          return numberToHex(subaccount.chainId ?? baseSepolia.id);
+          return numberToHex(chainId);
         case 'eth_chainId':
-          return numberToHex(subaccount.chainId ?? baseSepolia.id);
+          return numberToHex(chainId);
         case 'eth_sendTransaction': {
           assertArrayPresence(args.params);
           return account.sign(args.params[0] as { hash: Hex });
