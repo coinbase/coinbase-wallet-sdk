@@ -81,7 +81,7 @@ export function GrantSpendPermission({
 
     try {
       const provider = sdk.getProvider();
-      const subaccount = (await provider?.request({
+      const accounts = (await provider?.request({
         method: 'eth_accounts',
         params: [
           {
@@ -95,7 +95,7 @@ export function GrantSpendPermission({
 
       const data = {
         chainId: baseSepolia.id,
-        account: subaccount[0],
+        account: accounts[0],
         spender: subAccountAddress,
         token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
         allowance: '0x2386F26FC10000',
@@ -108,7 +108,7 @@ export function GrantSpendPermission({
 
       const spendPermission = makeSpendPermissionTypedData({
         chainId: baseSepolia.id,
-        account: subaccount[0] as Address,
+        account: accounts[0] as Address,
         spender: subAccountAddress as Address,
         token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
         allowance: '0x2386F26FC10000',
@@ -121,7 +121,7 @@ export function GrantSpendPermission({
 
       const response = await provider?.request({
         method: 'eth_signTypedData_v4',
-        params: [subaccount[0] as Address, spendPermission],
+        params: [accounts[0] as Address, spendPermission],
       });
       console.info('customlogs: response', response);
       localStorage.setItem('cbwsdk.demo.spend-permission.signature', response as Hex);
