@@ -1,12 +1,26 @@
+import { waitFor } from '@testing-library/preact';
 import { Mock, vi } from 'vitest';
 
 import { NAME, VERSION } from '../sdk-info.js';
 import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
 import { closePopup, openPopup } from './web.js';
-import { standardErrors } from ':core/error/errors.js';
 
 vi.mock('./checkCrossOriginOpenerPolicy');
 (getCrossOriginOpenerPolicy as Mock).mockReturnValue('null');
+
+// Mock Snackbar class
+const mockPresentItem = vi.fn().mockReturnValue(() => {});
+const mockClear = vi.fn();
+const mockAttach = vi.fn();
+const mockInstance = {
+  presentItem: mockPresentItem,
+  clear: mockClear,
+  attach: mockAttach,
+};
+
+vi.mock(':sign/walletlink/relay/ui/components/Snackbar/Snackbar.js', () => ({
+  Snackbar: vi.fn().mockImplementation(() => mockInstance),
+}));
 
 const mockOrigin = 'http://localhost';
 
@@ -28,11 +42,11 @@ describe('PopupManager', () => {
     vi.clearAllMocks();
   });
 
-  it('should open a popup with correct settings and focus it', () => {
+  it('should open a popup with correct settings and focus it', async () => {
     const url = new URL('https://example.com');
     (window.open as Mock).mockReturnValue({ focus: vi.fn() });
 
-    const popup = openPopup(url);
+    const popup = await openPopup(url);
 
     expect(window.open).toHaveBeenNthCalledWith(
       1,
@@ -48,12 +62,51 @@ describe('PopupManager', () => {
     expect(url.searchParams.get('coop')).toBe('null');
   });
 
-  it('should throw an error if popup fails to open', () => {
+  it('should show snackbar with retry button when popup is blocked and retry successfully', async () => {
+    const url = new URL('https://example.com');
+    const mockPopup = { focus: vi.fn() };
+    (window.open as Mock).mockReturnValueOnce(null).mockReturnValueOnce(mockPopup);
+
+    const promise = openPopup(url);
+
+    await waitFor(() => {
+      expect(mockPresentItem).toHaveBeenCalledWith(
+        expect.objectContaining({
+          autoExpand: true,
+          message: 'Popup was blocked. Try again.',
+        })
+      );
+    });
+
+    const retryButton = mockPresentItem.mock.calls[0][0].menuItems[0];
+    retryButton.onClick();
+
+    const popup = await promise;
+    expect(popup).toBe(mockPopup);
+    expect(mockClear).toHaveBeenCalled();
+    expect(window.open).toHaveBeenCalledTimes(2);
+  });
+
+  it('should show snackbar with retry button when popup is blocked and reject if retry fails', async () => {
+    const url = new URL('https://example.com');
     (window.open as Mock).mockReturnValue(null);
 
-    expect(() => openPopup(new URL('https://example.com'))).toThrow(
-      standardErrors.rpc.internal('Pop up window failed to open')
-    );
+    const promise = openPopup(url);
+
+    await waitFor(() => {
+      expect(mockPresentItem).toHaveBeenCalledWith(
+        expect.objectContaining({
+          autoExpand: true,
+          message: 'Popup was blocked. Try again.',
+        })
+      );
+    });
+
+    const retryButton = mockPresentItem.mock.calls[0][0].menuItems[0];
+    retryButton.onClick();
+
+    await expect(promise).rejects.toThrow('Popup window was blocked');
+    expect(mockClear).toHaveBeenCalled();
   });
 
   it('should close an open popup window', () => {
