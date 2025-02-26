@@ -58,9 +58,9 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
         case 'eth_coinbase':
           return subaccount.address;
         case 'net_version':
-          return numberToHex(chainId);
-        case 'eth_chainId':
           return chainId.toString();
+        case 'eth_chainId':
+          return numberToHex(chainId);
         case 'eth_sendTransaction': {
           assertArrayPresence(args.params);
           return account.sign(args.params[0] as { hash: Hex });
