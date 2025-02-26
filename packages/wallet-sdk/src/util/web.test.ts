@@ -1,10 +1,9 @@
-import { render, waitFor } from '@testing-library/preact';
+import { waitFor } from '@testing-library/preact';
 import { Mock, vi } from 'vitest';
 
 import { NAME, VERSION } from '../sdk-info.js';
 import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
 import { closePopup, openPopup } from './web.js';
-import { standardErrors } from ':core/error/errors.js';
 
 vi.mock('./checkCrossOriginOpenerPolicy');
 (getCrossOriginOpenerPolicy as Mock).mockReturnValue('null');
