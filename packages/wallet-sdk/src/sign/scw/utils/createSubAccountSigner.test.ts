@@ -4,18 +4,6 @@ import { createSmartAccount } from './createSmartAccount.js';
 import { createSubAccountSigner } from './createSubAccountSigner.js';
 import { getOwnerIndex } from './getOwnerIndex.js';
 import { getBundlerClient } from ':stores/chain-clients/utils.js';
-import { SubAccountInfo } from ':stores/sub-accounts/store.js';
-
-const params: SubAccountInfo = {
-  address: '0x',
-  chainId: 84532,
-  owners: [],
-  root: '0x',
-  initCode: {
-    factory: '0x',
-    factoryCalldata: '0x',
-  },
-};
 
 vi.mock('viem/actions', () => ({
   getCode: vi.fn().mockResolvedValue(undefined),
@@ -33,16 +21,13 @@ vi.mock(':stores/sub-accounts/store.js', () => ({
           address: '0x',
         },
       }),
+      universalAccount: '0x',
       account: {
         address: '0x',
         chainId: 84532,
-        owners: [],
         ownerIndex: 0,
-        root: '0x',
-        initCode: {
-          factory: '0x',
-          factoryCalldata: '0x',
-        },
+        factory: '0x',
+        factoryData: '0x',
       },
     }),
   },
@@ -67,7 +52,9 @@ vi.mock('./getAccountIndex.js', () => ({
 
 describe('createSubAccountSigner', () => {
   it('should create a signer', async () => {
-    const signer = await createSubAccountSigner(params);
+    const signer = await createSubAccountSigner({
+      chainId: 84532,
+    });
     expect(signer.request).toBeDefined();
   });
 
@@ -77,7 +64,9 @@ describe('createSubAccountSigner', () => {
       sendUserOperation,
     });
 
-    const signer = await createSubAccountSigner(params);
+    const signer = await createSubAccountSigner({
+      chainId: 84532,
+    });
     await signer.request({
       method: 'wallet_sendCalls',
       params: [{ chainId: 84532, calls: [{ to: '0x', data: '0x' }] }],
@@ -96,7 +85,9 @@ describe('createSubAccountSigner', () => {
     (createSmartAccount as any).mockResolvedValue({
       sign: mock,
     });
-    const signer = await createSubAccountSigner(params);
+    const signer = await createSubAccountSigner({
+      chainId: 84532,
+    });
     await signer.request({
       method: 'eth_sendTransaction',
       params: [{ hash: '0x' }],
@@ -110,7 +101,9 @@ describe('createSubAccountSigner', () => {
     (createSmartAccount as any).mockResolvedValue({
       signMessage: mock,
     });
-    const signer = await createSubAccountSigner(params);
+    const signer = await createSubAccountSigner({
+      chainId: 84532,
+    });
     await signer.request({
       method: 'personal_sign',
       params: ['hello world', '0x123'],
@@ -124,7 +117,9 @@ describe('createSubAccountSigner', () => {
     (createSmartAccount as any).mockResolvedValue({
       signTypedData: mock,
     });
-    const signer = await createSubAccountSigner(params);
+    const signer = await createSubAccountSigner({
+      chainId: 84532,
+    });
     await signer.request({
       method: 'eth_signTypedData_v4',
       params: ['0x123', { hash: '0x' }],
@@ -143,7 +138,9 @@ describe('createSubAccountSigner', () => {
 
     (getOwnerIndex as any).mockImplementation(mockGetOwnerIndex);
 
-    const signer = await createSubAccountSigner(params);
+    const signer = await createSubAccountSigner({
+      chainId: 84532,
+    });
     await signer.request({
       method: 'wallet_sendCalls',
       params: [{ chainId: 84532, calls: [{ to: '0x', data: '0x' }] }],

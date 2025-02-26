@@ -5,10 +5,10 @@ import { toHex } from 'viem';
 
 export function PersonalSign({
   sdk,
-  appAccount,
+  subAccountAddress,
 }: {
   sdk: ReturnType<typeof createCoinbaseWalletSDK>;
-  appAccount: string;
+  subAccountAddress: string;
 }) {
   const [state, setState] = useState<string>();
   const handlePersonalSign = useCallback(async () => {
@@ -20,14 +20,14 @@ export function PersonalSign({
     try {
       const response = await provider.request({
         method: 'personal_sign',
-        params: [toHex('Hello, world!'), appAccount],
+        params: [toHex('Hello, world!'), subAccountAddress],
       });
       console.info('customlogs: response', response);
       setState(response as string);
     } catch (e) {
       console.error('customlogs: error', e);
     }
-  }, [sdk, appAccount]);
+  }, [sdk, subAccountAddress]);
 
   return (
     <>

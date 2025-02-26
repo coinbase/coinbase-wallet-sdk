@@ -8,10 +8,11 @@ import {
   Preference,
   ProviderInterface,
 } from ':core/provider/interface.js';
+import { AddSubAccountAccount } from ':core/rpc/wallet_addSubAccount.js';
 import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { abi } from ':sign/scw/utils/constants.js';
-import { subaccounts, SubAccountState } from ':stores/sub-accounts/store.js';
+import { SubAccountInfo, subaccounts, SubAccountState } from ':stores/sub-accounts/store.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { validatePreferences, validateSubAccount } from ':util/validatePreferences.js';
 export type CreateCoinbaseWalletSDKOptions = Partial<AppMetadata> & {
@@ -68,33 +69,31 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
       if (!provider) {
         provider = createCoinbaseWalletProvider(options);
       }
+      // @ts-expect-error - provider
+      provider.sdk = sdk;
       return provider;
     },
     subaccount: {
-      async create({ key, chainId }: { key: `0x${string}`; chainId: number }) {
+      async create(account: AddSubAccountAccount): Promise<SubAccountInfo> {
         const state = subaccounts.getState();
         if (!state.getSigner) {
           throw new Error('no signer found');
         }
-
         if (state.account) {
           throw new Error('subaccount already exists');
         }
-        return sdk.getProvider()?.request({
-          method: 'wallet_addAddress',
+
+        return (await sdk.getProvider()?.request({
+          method: 'wallet_addSubAccount',
           params: [
             {
-              chainId,
-              capabilities: {
-                createAccount: {
-                  signer: key,
-                },
-              },
+              version: '1',
+              account,
             },
           ],
-        });
+        })) as SubAccountInfo;
       },
-      async get(chainId: number) {
+      async get(): Promise<SubAccountInfo> {
         const state = subaccounts.getState();
         if (!state.account) {
           const response = (await sdk.getProvider()?.request({
@@ -103,29 +102,30 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
               {
                 version: 1,
                 capabilities: {
-                  getAppAccounts: {
-                    chainId,
-                  },
+                  getAppAccounts: true,
                 },
               },
             ],
           })) as WalletConnectResponse;
-          return response.accounts[0].capabilities?.getAppAccounts?.[0];
+          return response.accounts[0].capabilities?.getSubAccounts?.[0] as SubAccountInfo;
         }
         return state.account;
       },
       async addOwner({
         address,
         publicKey,
+        chainId,
       }:
         | {
             address: `0x${string}`;
             publicKey?: never;
+            chainId: number;
           }
         | {
             address?: never;
             publicKey: `0x${string}`;
-          }) {
+            chainId: number;
+          }): Promise<string> {
         const state = subaccounts.getState();
         if (!state.getSigner) {
           throw new Error('no signer found');
@@ -161,18 +161,19 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
           });
         }
 
-        return sdk.getProvider()?.request({
+        return (await sdk.getProvider()?.request({
           method: 'wallet_sendCalls',
           params: [
             {
-              version: 1,
               calls,
-              from: state.account.root,
+              chainId: toHex(chainId),
+              from: state.universalAccount,
+              version: 1,
             },
           ],
-        });
+        })) as string;
       },
-      setSigner(params: SubAccountState['getSigner']) {
+      setSigner(params: SubAccountState['getSigner']): void {
         validateSubAccount(params);
         subaccounts.setState({
           getSigner: params,

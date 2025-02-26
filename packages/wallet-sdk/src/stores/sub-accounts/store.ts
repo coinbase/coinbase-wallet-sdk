@@ -9,23 +9,20 @@ export type GetSubAccountSigner = () => Promise<{
 
 export type SubAccountInfo = {
   address: Address;
-  chainId: number;
-  owners: Address[];
-  root: Address;
-  initCode: {
-    factory: Address;
-    factoryCalldata: Hex;
-  };
+  factory?: Address;
+  factoryData?: Hex;
 };
 
 export type SubAccountState = {
   getSigner: null | GetSubAccountSigner;
   account?: SubAccountInfo;
+  universalAccount: Address | null;
 };
 
 export const subaccounts = createStore(
   persist<Partial<SubAccountState>>(
     () => ({
+      universalAccount: null,
       getSigner: null,
     }),
     {

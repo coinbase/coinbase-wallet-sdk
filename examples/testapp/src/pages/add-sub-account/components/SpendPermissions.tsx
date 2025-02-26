@@ -11,10 +11,10 @@ import {
 
 export function SpendPermissions({
   sdk,
-  appAccount,
+  subAccountAddress,
 }: {
   sdk: ReturnType<typeof createCoinbaseWalletSDK>;
-  appAccount: string;
+  subAccountAddress: string;
 }) {
   const [state, setState] = useState<string>();
 
@@ -52,7 +52,7 @@ export function SpendPermissions({
           {
             version: '1',
             chainId: baseSepolia.id,
-            from: appAccount,
+            from: subAccountAddress,
             calls: [
               {
                 to: SPEND_PERMISSION_MANAGER_ADDRESS,
@@ -82,7 +82,7 @@ export function SpendPermissions({
     } catch (error) {
       console.error('customlogs: error', error);
     }
-  }, [appAccount, sdk]);
+  }, [subAccountAddress, sdk]);
 
   return (
     <>

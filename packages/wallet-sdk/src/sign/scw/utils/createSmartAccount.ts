@@ -134,6 +134,8 @@ export async function createSmartAccount(
     },
 
     async getFactoryArgs() {
+      if (factoryData) return { factory: factory.address, factoryData };
+      // TODO: support creating factory data
       return { factory: factory.address, factoryData };
     },
 

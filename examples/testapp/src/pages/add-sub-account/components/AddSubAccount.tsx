@@ -1,31 +1,40 @@
 import { Box, Button } from '@chakra-ui/react';
 import { createCoinbaseWalletSDK, getCryptoKeyAccount } from '@coinbase/wallet-sdk';
 import React, { useCallback, useState } from 'react';
+import { numberToHex } from 'viem';
 
-type AddAddressProps = {
+type AddSubAccountProps = {
   sdk: ReturnType<typeof createCoinbaseWalletSDK>;
-  onAddAddress: (address: string) => void;
+  onAddSubAccount: (address: string) => void;
 };
 
-export function AddAddress({ sdk, onAddAddress }: AddAddressProps) {
+export function AddSubAccount({ sdk, onAddSubAccount }: AddSubAccountProps) {
   const [subAccount, setSubAccount] = useState<string>();
 
-  const handleAddAddress = useCallback(async () => {
+  const handleAddSubAccount = useCallback(async () => {
     if (!sdk) {
       return;
     }
     const provider = sdk.getProvider();
     const { account } = await getCryptoKeyAccount();
+    await provider.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: numberToHex(84532) }],
+    });
+
     const response = (await provider.request({
-      method: 'wallet_addAddress',
+      method: 'wallet_addSubAccount',
       params: [
         {
           version: '1',
-          chainId: 84532,
-          capabilities: {
-            createAccount: {
-              signer: account.publicKey,
-            },
+          account: {
+            type: 'create',
+            keys: [
+              {
+                type: 'webauthn-p256',
+                key: account.publicKey,
+              },
+            ],
           },
         },
       ],
@@ -33,12 +42,12 @@ export function AddAddress({ sdk, onAddAddress }: AddAddressProps) {
 
     console.info('customlogs: response', response);
     setSubAccount(response.address);
-    onAddAddress(response.address);
-  }, [sdk, onAddAddress]);
+    onAddSubAccount(response.address);
+  }, [sdk, onAddSubAccount]);
 
   return (
     <>
-      <Button w="full" onClick={handleAddAddress}>
+      <Button w="full" onClick={handleAddSubAccount}>
         Add Address
       </Button>
       {subAccount && (

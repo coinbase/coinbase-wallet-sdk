@@ -5,10 +5,10 @@ import { baseSepolia } from 'viem/chains';
 
 export function SendCalls({
   sdk,
-  appAccount,
+  subAccountAddress,
 }: {
   sdk: ReturnType<typeof createCoinbaseWalletSDK>;
-  appAccount: string;
+  subAccountAddress: string;
 }) {
   const [state, setState] = useState<string>();
   const handleSendCalls = useCallback(async () => {
@@ -23,7 +23,7 @@ export function SendCalls({
         params: [
           {
             chainId: baseSepolia.id,
-            from: appAccount,
+            from: subAccountAddress,
             calls: [],
             version: '1',
             capabilities: {
@@ -39,7 +39,7 @@ export function SendCalls({
     } catch (e) {
       console.error('customlogs: error', e);
     }
-  }, [sdk, appAccount]);
+  }, [sdk, subAccountAddress]);
 
   return (
     <>

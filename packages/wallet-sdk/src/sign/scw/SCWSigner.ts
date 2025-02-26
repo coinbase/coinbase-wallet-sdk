@@ -2,7 +2,7 @@ import { numberToHex } from 'viem';
 
 import { Signer } from '../interface.js';
 import { SCWKeyManager } from './SCWKeyManager.js';
-import { addSenderToRequest, getSenderFromRequest } from './utils.js';
+import { addSenderToRequest, assertParamsChainId, getSenderFromRequest } from './utils.js';
 import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
 import { Communicator } from ':core/communicator/Communicator.js';
 import { standardErrors } from ':core/error/errors.js';
@@ -105,6 +105,10 @@ export class SCWSigner implements Signer {
   async request(request: RequestArguments) {
     if (this.accounts.length === 0) {
       switch (request.method) {
+        case 'wallet_switchEthereumChain': {
+          assertParamsChainId(request.params);
+          return (this.chain.id = Number(request.params[0].chainId));
+        }
         case 'wallet_connect':
         case 'wallet_sendCalls':
           return this.sendRequestToPopup(request);
@@ -151,8 +155,8 @@ export class SCWSigner implements Signer {
       case 'wallet_connect':
         return this.sendRequestToPopup(request);
       // Sub Account Support
-      case 'wallet_addAddress':
-        return this.addAddress(request);
+      case 'wallet_addSubAccount':
+        return this.addSubAccount(request);
       default:
         if (!this.chain.rpcUrl) {
           throw standardErrors.rpc.internal('No RPC URL set for chain');
@@ -174,6 +178,7 @@ export class SCWSigner implements Signer {
 
   private async handleResponse(request: RequestArguments, decrypted: RPCResponse) {
     const result = decrypted.result;
+
     if ('error' in result) throw result.error;
 
     switch (request.method) {
@@ -193,16 +198,21 @@ export class SCWSigner implements Signer {
         // TODO: in future PR update state to support multiple accounts
         const account = response.accounts.at(0);
         const capabilities = account?.capabilities;
-        if (capabilities?.addAddress || capabilities?.getAppAccounts) {
-          const capabilityResponse = capabilities?.addAddress ?? capabilities?.getAppAccounts?.[0];
+        if (capabilities?.addSubAccount || capabilities?.getSubAccounts) {
+          const capabilityResponse =
+            capabilities?.addSubAccount ?? capabilities?.getSubAccounts?.[0];
           assertSubAccountInfo(capabilityResponse);
           subaccounts.setState({
             account: capabilityResponse,
+            universalAccount: this.accounts[0],
           });
         }
-        this.callback?.('accountsChanged', [
-          subaccounts.getState().account?.address ?? this.accounts[0],
-        ]);
+        const accounts_ = [this.accounts[0]];
+        const subaccount = subaccounts.getState().account;
+        if (subaccount) {
+          accounts_.push(subaccount.address);
+        }
+        this.callback?.('accountsChanged', accounts_);
         break;
       }
       default:
@@ -225,16 +235,9 @@ export class SCWSigner implements Signer {
    * https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
    */
   private async handleSwitchChainRequest(request: RequestArguments) {
-    const params = request.params as [
-      {
-        chainId: `0x${string}`;
-      },
-    ];
-    if (!params || !params[0]?.chainId) {
-      throw standardErrors.rpc.invalidParams();
-    }
-    const chainId = ensureIntNumber(params[0].chainId);
+    assertParamsChainId(request.params);
 
+    const chainId = ensureIntNumber(request.params[0].chainId);
     const localResult = this.updateChain(chainId);
     if (localResult) return null;
 
@@ -331,10 +334,10 @@ export class SCWSigner implements Signer {
     return true;
   }
 
-  private async addAddress(request: RequestArguments) {
+  private async addSubAccount(request: RequestArguments) {
     const state = subaccounts.getState();
     if (state.account) {
-      this.callback?.('accountsChanged', [state.account.address]);
+      this.callback?.('accountsChanged', [this.accounts[0], state.account.address]);
       return state.account;
     }
 
@@ -350,8 +353,9 @@ export class SCWSigner implements Signer {
     // user has confirmed the creation
     subaccounts.setState({
       account: response,
+      universalAccount: this.accounts[0],
     });
-    this.callback?.('accountsChanged', [response.address]);
+    this.callback?.('accountsChanged', [this.accounts[0], response.address]);
     return response;
   }
 
@@ -375,7 +379,9 @@ export class SCWSigner implements Signer {
       request = addSenderToRequest(request, state.account.address as Address);
     }
 
-    const signer = await createSubAccountSigner(state.account);
+    const signer = await createSubAccountSigner({
+      chainId: this.chain.id,
+    });
     return signer.request(request);
   }
 }

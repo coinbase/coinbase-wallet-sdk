@@ -365,6 +365,7 @@ describe('SCWSigner', () => {
           value: null,
         },
       });
+
       await signer.handshake({ method: 'handshake' });
       expect(signer['accounts']).toEqual([]);
 
@@ -373,14 +374,12 @@ describe('SCWSigner', () => {
           value: {
             accounts: [
               {
-                address: '0xAddress',
+                address: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
                 capabilities: {
-                  addAddress: {
-                    address: '0xAddress',
-                    chainId: 1,
-                    owners: ['0xOwner1', '0xOwner2'],
-                    root: '0xRoot',
-                    initCode: '0xInitCode',
+                  addSubAccount: {
+                    address: '0x7838d2724FC686813CAf81d4429beff1110c739a',
+                    factory: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+                    factoryData: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
                   },
                 },
               },
@@ -391,8 +390,13 @@ describe('SCWSigner', () => {
 
       await signer.request(mockRequest);
 
-      expect(storageStoreSpy).toHaveBeenCalledWith('accounts', ['0xAddress']);
-      expect(mockCallback).toHaveBeenCalledWith('accountsChanged', ['0xAddress']);
+      expect(storageStoreSpy).toHaveBeenCalledWith('accounts', [
+        '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+      ]);
+      expect(mockCallback).toHaveBeenCalledWith('accountsChanged', [
+        '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+        '0x7838d2724FC686813CAf81d4429beff1110c739a',
+      ]);
 
       await signer.cleanup();
     });

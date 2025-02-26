@@ -1,5 +1,5 @@
+import { AddSubAccountAccount } from './wallet_addSubAccount.js';
 import { SerializedEthereumRpcError } from ':core/error/utils.js';
-import { SubAccountInfo } from ':stores/sub-accounts/store.js';
 
 export type SignInWithEthereumCapabilityRequest = {
   nonce: string;
@@ -33,16 +33,15 @@ export type SpendPermissionsCapabilityResponse = {
   signature: `0x${string}`;
 };
 
-export type AddAddressCapabilityRequest = {
-  address?: `0x${string}`;
-  chainId: number;
-  createAccount?: {
-    signer: `0x${string}`;
-  };
-  // TODO: initcode will be added for import
+export type AddSubAccountCapabilityRequest = {
+  account: AddSubAccountAccount;
 };
 
-export type AddAddressCapabilityResponse = SubAccountInfo;
+export type AddSubAccountCapabilityResponse = {
+  address?: `0x${string}`;
+  factory?: `0x${string}`;
+  factoryData?: `0x${string}`;
+};
 
 export type WalletConnectRequest = {
   method: 'wallet_connect';
@@ -52,7 +51,8 @@ export type WalletConnectRequest = {
       version: string;
       // Optional capabilities to request (e.g. Sign In With Ethereum).
       capabilities?: {
-        addAddress?: AddAddressCapabilityRequest;
+        addSubAccount?: AddSubAccountCapabilityRequest;
+        getSubAccounts?: boolean;
         spendPermissions?: SpendPermissionsCapabilityRequest;
         signInWithEthereum?: SignInWithEthereumCapabilityRequest;
       };
@@ -66,8 +66,8 @@ export type WalletConnectResponse = {
     address: `0x${string}`;
     // Capabilities granted that is associated with this account.
     capabilities?: {
-      addAddress?: AddAddressCapabilityResponse | SerializedEthereumRpcError;
-      getAppAccounts?: AddAddressCapabilityResponse[];
+      addSubAccount?: AddSubAccountCapabilityResponse | SerializedEthereumRpcError;
+      getSubAccounts?: AddSubAccountCapabilityResponse[];
       spendPermissions?: SpendPermissionsCapabilityResponse | SerializedEthereumRpcError;
       signInWithEthereum?: SignInWithEthereumCapabilityResponse | SerializedEthereumRpcError;
     };
