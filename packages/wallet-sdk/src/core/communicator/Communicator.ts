@@ -99,7 +99,7 @@ export class Communicator {
       return this.popup;
     }
 
-    this.popup = openPopup(this.url);
+    this.popup = await openPopup(this.url);
 
     this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload')
       .then(this.disconnect)
