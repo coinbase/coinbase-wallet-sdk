@@ -183,7 +183,10 @@ describe('createCoinbaseWalletSDK', () => {
     it('should throw if no signer is set', async () => {
       const sdk = createCoinbaseWalletSDK(options);
       await expect(
-        sdk.subaccount.addOwner({ address: '0xE3cA9Cc9378143a26b9d4692Ca3722dc45910a15' })
+        sdk.subaccount.addOwner({
+          chainId: 1,
+          address: '0xE3cA9Cc9378143a26b9d4692Ca3722dc45910a15',
+        })
       ).rejects.toThrow('no signer found');
     });
 
@@ -193,7 +196,10 @@ describe('createCoinbaseWalletSDK', () => {
         subaccount: { getSigner: () => Promise.resolve({} as any) },
       });
       await expect(
-        sdk.subaccount.addOwner({ address: '0xE3cA9Cc9378143a26b9d4692Ca3722dc45910a15' })
+        sdk.subaccount.addOwner({
+          chainId: 1,
+          address: '0xE3cA9Cc9378143a26b9d4692Ca3722dc45910a15',
+        })
       ).rejects.toThrow('subaccount does not exist');
     });
 
@@ -209,12 +215,17 @@ describe('createCoinbaseWalletSDK', () => {
       });
       vi.spyOn(sdk, 'getProvider').mockImplementation(() => ({ request: mockRequest }) as any);
 
-      await sdk.subaccount.addOwner({ address: '0xE3cA9Cc9378143a26b9d4692Ca3722dc45910a15' });
+      await sdk.subaccount.addOwner({
+        chainId: 1,
+        address: '0xE3cA9Cc9378143a26b9d4692Ca3722dc45910a15',
+      });
+
       expect(mockRequest).toHaveBeenCalledWith({
         method: 'wallet_sendCalls',
         params: [
           {
             version: 1,
+            chainId: '0x1',
             calls: [
               {
                 to: '0x456',
@@ -242,6 +253,7 @@ describe('createCoinbaseWalletSDK', () => {
       vi.spyOn(sdk, 'getProvider').mockImplementation(() => ({ request: mockRequest }) as any);
 
       await sdk.subaccount.addOwner({
+        chainId: 1,
         publicKey:
           '0x7da44d4bc972affd138c619a211ef0afe0926b813fec67d15587cf8625b2bf185f5044ae96640a63b32aa1eb6f8f993006bbd26292b81cb07a0672302c69a866',
       });
@@ -250,6 +262,7 @@ describe('createCoinbaseWalletSDK', () => {
         params: [
           {
             version: 1,
+            chainId: '0x1',
             calls: [
               {
                 to: '0x456',

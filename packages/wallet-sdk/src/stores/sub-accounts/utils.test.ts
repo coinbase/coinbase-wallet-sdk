@@ -8,14 +8,14 @@ describe('assertSubAccountInfo', () => {
 
   it('should throw an error if the info is an empty object', () => {
     expect(() => assertSubAccountInfo({})).toThrow(
-      standardErrors.rpc.internal('sub account address is invalid')
+      standardErrors.rpc.internal('sub account is invalid')
     );
   });
 
   it('should throw an error if the address is missing', () => {
     expect(() =>
       assertSubAccountInfo({ factory: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' })
-    ).toThrow(standardErrors.rpc.internal('sub account address is invalid'));
+    ).toThrow(standardErrors.rpc.internal('sub account is invalid'));
   });
 
   it('should throw an error if the address is invalid', () => {

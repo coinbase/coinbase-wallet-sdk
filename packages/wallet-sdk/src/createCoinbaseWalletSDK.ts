@@ -114,14 +114,17 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
       async addOwner({
         address,
         publicKey,
+        chainId,
       }:
         | {
             address: `0x${string}`;
             publicKey?: never;
+            chainId: number;
           }
         | {
             address?: never;
             publicKey: `0x${string}`;
+            chainId: number;
           }): Promise<string> {
         const state = subaccounts.getState();
         if (!state.getSigner) {
@@ -162,10 +165,10 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
           method: 'wallet_sendCalls',
           params: [
             {
-              version: 1,
               calls,
-              chainId: toHex(84532),
+              chainId: toHex(chainId),
               from: state.universalAccount,
+              version: 1,
             },
           ],
         })) as string;
