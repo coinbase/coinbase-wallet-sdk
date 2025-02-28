@@ -1,8 +1,22 @@
-// TODO: error should not depend on walletlink. revisit this.
 import { VERSION } from '../../sdk-info.js';
-import { isErrorResponse, Web3Response } from '../../sign/walletlink/relay/type/Web3Response.js';
 import { standardErrorCodes } from './constants.js';
 import { serialize } from './utils.js';
+
+/**
+ * Interface for error responses
+ */
+export interface ErrorResponse {
+  method: unknown;
+  errorCode?: number;
+  errorMessage: string;
+}
+
+/**
+ * Checks if a response is an error response
+ */
+export function isErrorResponse(response: unknown): response is ErrorResponse {
+  return (response as ErrorResponse).errorMessage !== undefined;
+}
 
 /**
  * Serializes an error to a format that is compatible with the Ethereum JSON RPC error format.
@@ -28,7 +42,7 @@ export function serializeError(error: unknown) {
 /**
  * Converts an error to a serializable object.
  */
-function getErrorObject(error: string | Web3Response | unknown) {
+function getErrorObject(error: string | ErrorResponse | unknown) {
   if (typeof error === 'string') {
     return {
       message: error,
