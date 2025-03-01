@@ -19,7 +19,15 @@ export function uint8ArrayToHex(value: Uint8Array) {
 }
 
 export function hexStringToUint8Array(hexString: string): Uint8Array {
-  return new Uint8Array(hexString.match(/.{1,2}/g)!.map((byte) => Number.parseInt(byte, 16)));
+  const cleanHex = has0xPrefix(hexString) ? hexString.slice(2) : hexString;
+  
+  if (!HEXADECIMAL_STRING_REGEX.test(cleanHex.toLowerCase())) {
+    throw new Error('Invalid hex string');
+  }
+  
+  const paddedHex = cleanHex.length % 2 === 0 ? cleanHex : `0${cleanHex}`;
+  
+  return new Uint8Array(paddedHex.match(/.{1,2}/g)!.map((byte) => Number.parseInt(byte, 16)));
 }
 
 export function hexStringFromBuffer(buf: Buffer, includePrefix = false): HexString {
