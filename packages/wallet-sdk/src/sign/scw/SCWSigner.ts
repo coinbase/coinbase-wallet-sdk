@@ -1,9 +1,5 @@
 import { Hex, numberToHex } from 'viem';
 
-import { Signer } from '../interface.js';
-import { SCWKeyManager } from './SCWKeyManager.js';
-import { addSenderToRequest, assertParamsChainId, getSenderFromRequest } from './utils.js';
-import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
 import { Communicator } from ':core/communicator/Communicator.js';
 import { standardErrors } from ':core/error/errors.js';
 import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage.js';
@@ -12,7 +8,7 @@ import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/prov
 import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
 import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
-import { createClients, SDKChain } from ':store/chain-clients/utils.js';
+import { SDKChain, createClients } from ':store/chain-clients/utils.js';
 import { config } from ':store/config.js';
 import { store } from ':store/store.js';
 import { assertPresence } from ':util/assertPresence.js';
@@ -25,6 +21,10 @@ import {
 } from ':util/cipher.js';
 import { get } from ':util/get.js';
 import { fetchRPCRequest } from ':util/provider.js';
+import { Signer } from '../interface.js';
+import { SCWKeyManager } from './SCWKeyManager.js';
+import { addSenderToRequest, assertParamsChainId, getSenderFromRequest } from './utils.js';
+import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
 
 type ConstructorOptions = {
   metadata: AppMetadata;
@@ -335,17 +335,37 @@ export class SCWSigner implements Signer {
     factoryData?: Hex;
   }> {
     const state = store.getState();
+    const c = config.getState();
     const subAccount = state.subAccount;
     if (subAccount?.address) {
       this.callback?.('accountsChanged', [this.accounts[0], subAccount.address]);
       return subAccount;
     }
-
-    await this.communicator.waitForPopupLoaded?.();
+    // TODO: add support for importing an address
     const address = get(request, 'params[0].address') as string;
     if (address) {
       throw standardErrors.rpc.invalidParams('importing an address is not yet supported');
     }
+
+    await this.communicator.waitForPopupLoaded?.();
+    const request_ = { ...request };
+
+    // Auto Support for Sub Accounts
+    if (c.headlessSubAccounts && state.toSubAccountSigner) {
+      const { account } = await state.toSubAccountSigner();
+      assertPresence(account, standardErrors.provider.unauthorized('no sub account signer found'));
+      if (Array.isArray(request_?.params)) {
+        request_.params[0] = {};
+        request_.params[0].account = {
+          type: 'create',
+          keys: [{ type: 'webauthn-p256', key: account.publicKey }],
+        };
+      } else {
+        throw new Error('sub account params not found');
+      }
+    }
+
+    console.info('customlogs: request_', request_);
 
     const response = await this.sendRequestToPopup(request);
     assertSubAccount(response);

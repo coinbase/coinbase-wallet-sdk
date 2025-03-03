@@ -33,7 +33,8 @@ export default function SubAccounts() {
     const provider = sdk.getProvider();
 
     provider.on('accountsChanged', (accounts) => {
-      console.info('accountsChanged', accounts);
+      console.info('customlogs: accountsChanged', accounts);
+      setSubAccountAddress(accounts[1]);
     });
   }, []);
 

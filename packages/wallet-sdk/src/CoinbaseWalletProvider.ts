@@ -1,5 +1,5 @@
-import { Signer } from './sign/interface.js';
-import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util.js';
+import { numberToHex } from 'viem';
+
 import { Communicator } from ':core/communicator/Communicator.js';
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
@@ -16,7 +16,11 @@ import {
 } from ':core/provider/interface.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { hexStringFromNumber } from ':core/type/util.js';
+import { config } from ':store/config.js';
+import { store } from ':store/store.js';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from ':util/provider.js';
+import { Signer } from './sign/interface.js';
+import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util.js';
 
 export class CoinbaseWalletProvider extends ProviderEventEmitter implements ProviderInterface {
   private readonly metadata: AppMetadata;
@@ -49,6 +53,47 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
           case 'eth_requestAccounts': {
             const signerType = await this.requestSignerSelection(args);
             const signer = this.initSigner(signerType);
+            const state = store.getState();
+            const c = config.getState();
+
+            if (signerType === 'scw' && c.headlessSubAccounts && state.toSubAccountSigner) {
+              await signer.handshake({ method: 'handshake' });
+              const { account } = await state.toSubAccountSigner();
+              await signer.request({
+                method: 'wallet_switchEthereumChain',
+                params: [
+                  {
+                    chainId: numberToHex(84532),
+                  },
+                ],
+              });
+
+              const result = await signer.request({
+                method: 'wallet_connect',
+                params: [
+                  {
+                    version: 1,
+                    capabilities: {
+                      addSubAccount: {
+                        account: {
+                          type: 'create',
+                          keys: [
+                            {
+                              type: 'webauthn-p256',
+                              key: account?.publicKey,
+                            },
+                          ],
+                        },
+                      },
+                    },
+                  },
+                ],
+              });
+              this.signer = signer;
+              // @ts-expect-error meh
+              return result.accounts.map((account) => account.address) as T;
+            }
+
             await signer.handshake(args);
             this.signer = signer;
             storeSignerType(signerType);
