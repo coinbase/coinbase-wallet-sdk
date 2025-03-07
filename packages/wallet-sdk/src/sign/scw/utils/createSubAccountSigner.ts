@@ -6,8 +6,8 @@ import { createSmartAccount } from './createSmartAccount.js';
 import { getOwnerIndex } from './getOwnerIndex.js';
 import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
-import { getBundlerClient, getClient } from ':stores/chain-clients/utils.js';
-import { SubAccountInfo, subaccounts } from ':stores/sub-accounts/store.js';
+import { getBundlerClient, getClient } from ':store/chain-clients/utils.js';
+import { store, SubAccount } from ':store/store.js';
 import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
 import { get } from ':util/get.js';
 
@@ -15,15 +15,16 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
   const client = getClient(chainId);
   assertPresence(client, standardErrors.rpc.internal('client not found'));
 
-  const { account: subaccount, getSigner } = subaccounts.getState();
-  assertPresence(subaccount, standardErrors.rpc.internal('subaccount not found'));
-  assertPresence(getSigner, standardErrors.rpc.internal('signer not found'));
+  const subAccount = store.subAccounts.get();
+  const toSubAccountSigner = store.getState().toSubAccountSigner;
+  assertPresence(subAccount, standardErrors.rpc.internal('subaccount not found'));
+  assertPresence(toSubAccountSigner, standardErrors.rpc.internal('toSubAccountSigner not defined'));
 
-  const { account: owner } = await getSigner();
+  const { account: owner } = await toSubAccountSigner();
   assertPresence(owner, standardErrors.rpc.internal('signer not found'));
 
   const code = await getCode(client, {
-    address: subaccount.address,
+    address: subAccount.address,
   });
 
   // Default index to 1 if the contract is not deployed
@@ -32,31 +33,36 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
   let index = 1;
   if (code) {
     index = await getOwnerIndex({
-      address: subaccount.address,
+      address: subAccount.address,
       publicKey: owner.publicKey || owner.address,
       client,
     });
   }
 
+  // If contract is not deployed we need to have the factory data
+  if (!code) {
+    assertPresence(subAccount.factoryData, standardErrors.rpc.internal('factory data not found'));
+  }
+
   const account = await createSmartAccount({
     owner,
     ownerIndex: index,
-    address: subaccount.address,
+    address: subAccount.address,
     client,
-    factoryData: subaccount.factoryData,
+    factoryData: subAccount.factoryData,
   });
 
   return {
     request: async (
       args: RequestArguments
-    ): Promise<string | Hex | Address[] | number | SubAccountInfo> => {
+    ): Promise<string | Hex | Address[] | number | SubAccount> => {
       switch (args.method) {
         case 'wallet_addSubAccount':
-          return subaccount;
+          return subAccount;
         case 'eth_accounts':
-          return [subaccount.address] as Address[];
+          return [subAccount.address] as Address[];
         case 'eth_coinbase':
-          return subaccount.address;
+          return subAccount.address;
         case 'net_version':
           return chainId.toString();
         case 'eth_chainId':
