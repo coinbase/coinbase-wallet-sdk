@@ -3,8 +3,6 @@ import { WebAuthnAccount } from 'viem/account-abstraction';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { createStore, StateCreator } from 'zustand/vanilla';
 
-import { deepMerge } from '../utils/deepMerge.js';
-
 export type ToSubAccountSigner = () => Promise<{
   account: OneOf<LocalAccount | WebAuthnAccount> | null;
 }>;
@@ -109,7 +107,10 @@ export const sdkstore = createStore(
       },
       merge: (persistedState, currentState) => {
         const persisted = persistedState as Partial<StoreState>;
-        return deepMerge(currentState, persisted);
+        return {
+          ...currentState,
+          ...persisted,
+        };
       },
     }
   )
