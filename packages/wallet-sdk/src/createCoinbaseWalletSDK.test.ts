@@ -1,8 +1,10 @@
+import { Address } from 'viem';
+
 import {
   createCoinbaseWalletSDK,
   CreateCoinbaseWalletSDKOptions,
 } from './createCoinbaseWalletSDK.js';
-import { subaccounts } from ':stores/sub-accounts/store.js';
+import { store } from ':store/store.js';
 
 const options: CreateCoinbaseWalletSDKOptions = {
   appName: 'Dapp',
@@ -14,6 +16,11 @@ const options: CreateCoinbaseWalletSDKOptions = {
 vi.mock('./util/checkCrossOriginOpenerPolicy');
 
 describe('createCoinbaseWalletSDK', () => {
+  afterEach(() => {
+    store.setState({});
+    store.setState({ toSubAccountSigner: undefined });
+  });
+
   it('should return an object with a getProvider method', () => {
     const sdk = createCoinbaseWalletSDK(options);
     expect(sdk).toHaveProperty('getProvider');
@@ -28,41 +35,39 @@ describe('createCoinbaseWalletSDK', () => {
   });
 
   it('should set the signer in the sub account store', () => {
-    expect(subaccounts.getState().getSigner).toBe(null);
+    expect(store.getState().toSubAccountSigner).toBeUndefined();
 
     createCoinbaseWalletSDK({
       ...options,
-      subaccount: { getSigner: () => Promise.resolve({} as any) },
+      toSubAccountSigner: () => Promise.resolve({} as any),
     });
 
-    expect(subaccounts.getState().getSigner).toBeDefined();
-
-    // reset the state
-    subaccounts.setState({ getSigner: null });
+    expect(store.getState().toSubAccountSigner).toBeDefined();
   });
 
   it('should throw an error if the signer is not a function', () => {
     expect(() =>
       createCoinbaseWalletSDK({
         ...options,
-        subaccount: { getSigner: {} as any },
+        toSubAccountSigner: {} as any,
       })
-    ).toThrow('getSigner is not a function');
+    ).toThrow('toSubAccountSigner is not a function');
   });
 
   it('when set signer is called, it should set the signer in the sub account store', () => {
-    expect(subaccounts.getState().getSigner).toBe(null);
+    expect(store.getState().toSubAccountSigner).toBeUndefined();
+
     const sdk = createCoinbaseWalletSDK(options);
-    const getSigner = () => Promise.resolve({} as any);
-    sdk.subaccount.setSigner(getSigner);
-    expect(subaccounts.getState().getSigner).toBe(getSigner);
-    // reset the state
-    subaccounts.setState({ getSigner: null });
+    const toSubAccountSigner = () => Promise.resolve({} as any);
+
+    sdk.subaccount.setSigner(toSubAccountSigner);
+
+    expect(store.getState().toSubAccountSigner).toBe(toSubAccountSigner);
   });
 
   describe('subaccount.create', () => {
     afterEach(() => {
-      subaccounts.setState({ account: undefined, getSigner: null });
+      store.subAccounts.clear();
     });
 
     it('should throw if no signer is set', async () => {
@@ -77,15 +82,14 @@ describe('createCoinbaseWalletSDK', () => {
             },
           ],
         })
-      ).rejects.toThrow('no signer found');
+      ).rejects.toThrow('toSubAccountSigner is not set');
     });
 
     it('should throw if subaccount already exists', async () => {
       const sdk = createCoinbaseWalletSDK({
         ...options,
-        subaccount: { getSigner: () => Promise.resolve({} as any) },
+        toSubAccountSigner: () => Promise.resolve({} as any),
       });
-      subaccounts.setState({ account: { address: '0x123' } as any });
       await expect(
         sdk.subaccount.create({
           type: 'create',
@@ -97,14 +101,17 @@ describe('createCoinbaseWalletSDK', () => {
           ],
         })
       ).rejects.toThrow('subaccount already exists');
-      subaccounts.setState({ account: undefined });
+      store.subAccounts.clear();
     });
 
     it('should call wallet_addSubAccount with correct params', async () => {
+      store.subAccounts.set({
+        address: '0x123',
+      });
       const mockRequest = vi.fn();
       const sdk = createCoinbaseWalletSDK({
         ...options,
-        subaccount: { getSigner: () => Promise.resolve({} as any) },
+        toSubAccountSigner: () => Promise.resolve({} as any),
       });
       vi.spyOn(sdk, 'getProvider').mockImplementation(() => ({ request: mockRequest }) as any);
 
@@ -139,15 +146,14 @@ describe('createCoinbaseWalletSDK', () => {
 
   describe('subaccount.get', () => {
     afterEach(() => {
-      subaccounts.setState({ account: undefined, getSigner: null });
+      store.subAccounts.clear();
     });
 
     it('should return existing account if it exists', async () => {
       const sdk = createCoinbaseWalletSDK(options);
-      const mockAccount = { address: '0x123' };
-      subaccounts.setState({ account: mockAccount as any });
-      expect(await sdk.subaccount.get()).toBe(mockAccount);
-      subaccounts.setState({ account: undefined });
+      const mockAccount = { address: '0x123' as Address };
+      store.subAccounts.set(mockAccount);
+      expect(await sdk.subaccount.get()).toEqual(mockAccount);
     });
 
     it('should call wallet_connect if no account exists', async () => {
@@ -178,22 +184,26 @@ describe('createCoinbaseWalletSDK', () => {
 
   describe('subaccount.addOwner', () => {
     afterEach(() => {
-      subaccounts.setState({ account: undefined, getSigner: null });
+      store.subAccounts.clear();
     });
-    it('should throw if no signer is set', async () => {
+
+    it('should throw if not global account is set', async () => {
       const sdk = createCoinbaseWalletSDK(options);
       await expect(
         sdk.subaccount.addOwner({
           chainId: 1,
           address: '0xE3cA9Cc9378143a26b9d4692Ca3722dc45910a15',
         })
-      ).rejects.toThrow('no signer found');
+      ).rejects.toThrow('account does not exist');
     });
 
     it('should throw if no subaccount exists', async () => {
+      store.account.set({
+        accounts: ['0x123'],
+      });
       const sdk = createCoinbaseWalletSDK({
         ...options,
-        subaccount: { getSigner: () => Promise.resolve({} as any) },
+        toSubAccountSigner: () => Promise.resolve({} as any),
       });
       await expect(
         sdk.subaccount.addOwner({
@@ -207,11 +217,18 @@ describe('createCoinbaseWalletSDK', () => {
       const mockRequest = vi.fn();
       const sdk = createCoinbaseWalletSDK({
         ...options,
-        subaccount: { getSigner: () => Promise.resolve({} as any) },
+        toSubAccountSigner: () => Promise.resolve({} as any),
       });
-      subaccounts.setState({
-        universalAccount: '0x789',
-        account: { address: '0x456', root: '0x789' } as any,
+      store.setState({
+        toSubAccountSigner: () => Promise.resolve({} as any),
+      });
+      store.setState({
+        account: {
+          accounts: ['0x123'],
+        },
+        subAccount: {
+          address: '0x789',
+        },
       });
       vi.spyOn(sdk, 'getProvider').mockImplementation(() => ({ request: mockRequest }) as any);
 
@@ -228,27 +245,34 @@ describe('createCoinbaseWalletSDK', () => {
             chainId: '0x1',
             calls: [
               {
-                to: '0x456',
+                to: '0x789',
                 data: expect.any(String),
                 value: '0x0',
               },
             ],
-            from: '0x789',
+            from: '0x123',
           },
         ],
       });
-      subaccounts.setState({ account: undefined });
+      store.subAccounts.clear();
     });
 
     it('should call wallet_sendCalls with publicKey param', async () => {
       const mockRequest = vi.fn();
       const sdk = createCoinbaseWalletSDK({
         ...options,
-        subaccount: { getSigner: () => Promise.resolve({} as any) },
+        toSubAccountSigner: () => Promise.resolve({} as any),
       });
-      subaccounts.setState({
-        universalAccount: '0x789',
-        account: { address: '0x456' } as any,
+      store.setState({
+        toSubAccountSigner: () => Promise.resolve({} as any),
+      });
+      store.setState({
+        account: {
+          accounts: ['0x123'],
+        },
+        subAccount: {
+          address: '0x789',
+        },
       });
       vi.spyOn(sdk, 'getProvider').mockImplementation(() => ({ request: mockRequest }) as any);
 
@@ -265,16 +289,16 @@ describe('createCoinbaseWalletSDK', () => {
             chainId: '0x1',
             calls: [
               {
-                to: '0x456',
+                to: '0x789',
                 data: expect.any(String),
                 value: '0x0',
               },
             ],
-            from: '0x789',
+            from: '0x123',
           },
         ],
       });
-      subaccounts.setState({ account: undefined });
+      store.subAccounts.clear();
     });
   });
 });

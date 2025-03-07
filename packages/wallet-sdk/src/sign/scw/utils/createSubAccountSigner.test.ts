@@ -3,7 +3,7 @@ import { getCode } from 'viem/actions';
 import { createSmartAccount } from './createSmartAccount.js';
 import { createSubAccountSigner } from './createSubAccountSigner.js';
 import { getOwnerIndex } from './getOwnerIndex.js';
-import { getBundlerClient } from ':stores/chain-clients/utils.js';
+import { getBundlerClient } from ':store/chain-clients/utils.js';
 
 vi.mock('viem/actions', () => ({
   getCode: vi.fn().mockResolvedValue(undefined),
@@ -13,27 +13,31 @@ vi.mock('./getOwnerIndex.js', () => ({
   getOwnerIndex: vi.fn(),
 }));
 
-vi.mock(':stores/sub-accounts/store.js', () => ({
-  subaccounts: {
+vi.mock(':store/store.js', () => ({
+  store: {
     getState: vi.fn().mockReturnValue({
-      getSigner: vi.fn().mockResolvedValue({
+      toSubAccountSigner: vi.fn().mockResolvedValue({
         account: {
           address: '0x',
         },
       }),
-      universalAccount: '0x',
-      account: {
+      subAccount: {
         address: '0x',
-        chainId: 84532,
-        ownerIndex: 0,
         factory: '0x',
         factoryData: '0x',
       },
     }),
+    subAccounts: {
+      get: vi.fn().mockReturnValue({
+        address: '0x',
+        factory: '0x',
+        factoryData: '0x',
+      }),
+    },
   },
 }));
 
-vi.mock(':stores/chain-clients/utils.js', () => ({
+vi.mock(':store/chain-clients/utils.js', () => ({
   getBundlerClient: vi.fn().mockReturnValue({}),
   getClient: vi.fn().mockReturnValue({}),
 }));

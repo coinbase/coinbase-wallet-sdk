@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     alias: {
       ':core': path.resolve(__dirname, 'src/core'),
-      ':stores': path.resolve(__dirname, 'src/stores'),
+      ':store': path.resolve(__dirname, 'src/store'),
       ':sign': path.resolve(__dirname, 'src/sign'),
       ':util': path.resolve(__dirname, 'src/util'),
     },
