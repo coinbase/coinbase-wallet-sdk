@@ -11,7 +11,7 @@ export function GenerateNewSigner() {
       const { account } = await getCryptoKeyAccount();
       setState(account.publicKey);
     } catch (e) {
-      console.error('customlogs: error', e);
+      console.error('error', e);
     }
   }, []);
 

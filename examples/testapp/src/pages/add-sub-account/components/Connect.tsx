@@ -14,7 +14,7 @@ export function Connect({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletSD
       method: 'eth_requestAccounts',
     });
 
-    console.info('customlogs: response', response);
+    console.info('response', response);
     setState(response as string[]);
   }, [sdk]);
 
@@ -25,7 +25,11 @@ export function Connect({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletSD
 
     const provider = sdk.getProvider();
     provider.on('accountsChanged', (accounts) => {
-      setState(accounts as string[]);
+      if (accounts.length === 0) {
+        setState(undefined);
+      } else {
+        setState(accounts as string[]);
+      }
     });
   }, [sdk]);
 
