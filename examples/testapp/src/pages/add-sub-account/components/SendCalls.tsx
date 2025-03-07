@@ -34,10 +34,10 @@ export function SendCalls({
           },
         ],
       });
-      console.info('customlogs: response', response);
+      console.info('response', response);
       setState(response as string);
     } catch (e) {
-      console.error('customlogs: error', e);
+      console.error('error', e);
     }
   }, [sdk, subAccountAddress]);
 

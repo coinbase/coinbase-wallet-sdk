@@ -17,10 +17,10 @@ export function AddOwner({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletS
         chainId: baseSepolia.id,
         publicKey: ckaccount.account.publicKey,
       });
-      console.info('customlogs: response', subaccount);
+      console.info('response', subaccount);
       setSubAccount(subaccount);
     } catch (error) {
-      console.error('customlogs: error', error);
+      console.error('error', error);
     }
   }, [sdk]);
 

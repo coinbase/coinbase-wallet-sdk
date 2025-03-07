@@ -40,7 +40,7 @@ export function AddSubAccount({ sdk, onAddSubAccount }: AddSubAccountProps) {
       ],
     })) as { address: string };
 
-    console.info('customlogs: response', response);
+    console.info('response', response);
     setSubAccount(response.address);
     onAddSubAccount(response.address);
   }, [sdk, onAddSubAccount]);
