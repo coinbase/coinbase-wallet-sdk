@@ -123,12 +123,12 @@ export function GrantSpendPermission({
         method: 'eth_signTypedData_v4',
         params: [accounts[0] as Address, spendPermission],
       });
-      console.info('customlogs: response', response);
+      console.info('response', response);
       localStorage.setItem('cbwsdk.demo.spend-permission.signature', response as Hex);
       localStorage.setItem('cbwsdk.demo.spend-permission.data', JSON.stringify(data));
       setState(response as Hex);
     } catch (error) {
-      console.error('customlogs: error', error);
+      console.error('error', error);
     }
   }, [sdk, subAccountAddress]);
 
