@@ -39,7 +39,7 @@ type SubAccountAddOwnerParams = {
 export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) {
   const options: ConstructorOptions = {
     metadata: {
-      appName: params.appName || '',
+      appName: params.appName || 'Dapp',
       appLogoUrl: params.appLogoUrl || '',
       appChainIds: params.appChainIds || [],
     },
