@@ -105,13 +105,6 @@ export const sdkstore = createStore(
           subAccount: state.subAccount,
         } as StoreState;
       },
-      merge: (persistedState, currentState) => {
-        const persisted = persistedState as Partial<StoreState>;
-        return {
-          ...currentState,
-          ...persisted,
-        };
-      },
     }
   )
 );
