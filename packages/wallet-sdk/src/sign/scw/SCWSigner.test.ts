@@ -7,7 +7,7 @@ import { CB_KEYS_URL } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { EncryptedData, RPCResponseMessage } from ':core/message/RPCMessage.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
-import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
+import { store } from ':store/store.js';
 import {
   decryptContent,
   encryptContent,
@@ -31,8 +31,6 @@ vi.mock(':util/cipher', () => ({
   importKeyFromHexString: vi.fn(),
 }));
 
-const storageStoreSpy = vi.spyOn(ScopedLocalStorage.prototype, 'storeObject');
-const storageClearSpy = vi.spyOn(ScopedLocalStorage.prototype, 'clear');
 const mockCryptoKey = {} as CryptoKey;
 const encryptedData = {} as EncryptedData;
 const mockChains = {
@@ -76,7 +74,6 @@ describe('SCWSigner', () => {
     mockCallback = vi.fn();
     mockKeyManager = new SCWKeyManager() as Mocked<SCWKeyManager>;
     (SCWKeyManager as Mock).mockImplementation(() => mockKeyManager);
-    storageStoreSpy.mockReset();
 
     (importKeyFromHexString as Mock).mockResolvedValue(mockCryptoKey);
     (exportKeyToHexString as Mock).mockResolvedValueOnce('0xPublicKey');
@@ -88,6 +85,14 @@ describe('SCWSigner', () => {
       communicator: mockCommunicator,
       callback: mockCallback,
     });
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+
+    store.account.clear();
+    store.chains.clear();
+    store.setState({});
   });
 
   describe('handshake', () => {
@@ -102,18 +107,28 @@ describe('SCWSigner', () => {
         },
       });
 
+      const mockSetChains = vi.spyOn(store.chains, 'set');
+      const mockSetAccount = vi.spyOn(store.account, 'set');
+
       await signer.handshake({ method: 'eth_requestAccounts' });
 
       expect(importKeyFromHexString).toHaveBeenCalledWith('public', '0xPublicKey');
       expect(mockKeyManager.setPeerPublicKey).toHaveBeenCalledWith(mockCryptoKey);
       expect(decryptContent).toHaveBeenCalledWith(encryptedData, mockCryptoKey);
 
-      expect(storageStoreSpy).toHaveBeenCalledWith('availableChains', [
+      expect(mockSetChains).toHaveBeenCalledWith([
         { id: 1, rpcUrl: 'https://eth-rpc.example.com/1' },
         { id: 2, rpcUrl: 'https://eth-rpc.example.com/2' },
       ]);
-      expect(storageStoreSpy).toHaveBeenCalledWith('walletCapabilities', mockCapabilities);
-      expect(storageStoreSpy).toHaveBeenCalledWith('accounts', ['0xAddress']);
+      expect(mockSetAccount).toHaveBeenNthCalledWith(1, {
+        chain: {
+          id: 1,
+          rpcUrl: 'https://eth-rpc.example.com/1',
+        },
+      });
+      expect(mockSetAccount).toHaveBeenNthCalledWith(2, {
+        capabilities: mockCapabilities,
+      });
 
       await expect(signer.request({ method: 'eth_requestAccounts' })).resolves.toEqual([
         '0xAddress',
@@ -128,6 +143,8 @@ describe('SCWSigner', () => {
           value: null,
         },
       });
+
+      const mockSetAccount = vi.spyOn(store.account, 'set');
 
       await signer.handshake({ method: 'handshake' });
 
@@ -145,7 +162,7 @@ describe('SCWSigner', () => {
       expect(mockKeyManager.setPeerPublicKey).toHaveBeenCalledWith(mockCryptoKey);
       expect(decryptContent).toHaveBeenCalledWith(encryptedData, mockCryptoKey);
 
-      expect(storageStoreSpy).not.toHaveBeenCalled();
+      expect(mockSetAccount).not.toHaveBeenCalled();
     });
 
     it('should throw an error if failure in response.content', async () => {
@@ -169,12 +186,12 @@ describe('SCWSigner', () => {
       'should perform a successful request after handshake',
       async (method) => {
         const mockRequest: RequestArguments = { method };
-
         (decryptContent as Mock).mockResolvedValueOnce({
           result: {
             value: null,
           },
         });
+
         await signer.handshake({ method: 'handshake' });
         expect(signer['accounts']).toEqual([]);
 
@@ -202,20 +219,14 @@ describe('SCWSigner', () => {
 
   describe('request', () => {
     beforeAll(() => {
-      vi.spyOn(ScopedLocalStorage.prototype, 'loadObject').mockImplementation((key) => {
-        switch (key) {
-          case 'accounts':
-            return ['0xAddress'];
-          case 'activeChain':
-            return { id: 1, rpcUrl: 'https://eth-rpc.example.com/1' };
-          default:
-            return null;
-        }
-      });
-    });
-
-    afterAll(() => {
-      vi.spyOn(ScopedLocalStorage.prototype, 'loadObject').mockRestore();
+      vi.spyOn(store, 'getState').mockImplementation(() => ({
+        account: {
+          accounts: ['0xAddress'],
+          chain: { id: 1, rpcUrl: 'https://eth-rpc.example.com/1' },
+        },
+        chains: [],
+        keys: {},
+      }));
     });
 
     it('should perform a successful request', async () => {
@@ -327,22 +338,32 @@ describe('SCWSigner', () => {
         },
       });
 
+      const mockSetChains = vi.spyOn(store.chains, 'set');
+      const mockSetAccount = vi.spyOn(store.account, 'set');
+
       await signer.request(mockRequest);
 
-      expect(storageStoreSpy).toHaveBeenCalledWith('availableChains', [
+      expect(mockSetChains).toHaveBeenCalledWith([
         { id: 1, rpcUrl: 'https://eth-rpc.example.com/1' },
         { id: 2, rpcUrl: 'https://eth-rpc.example.com/2' },
       ]);
-      expect(storageStoreSpy).toHaveBeenCalledWith('walletCapabilities', mockCapabilities);
+      expect(mockSetAccount).toHaveBeenNthCalledWith(1, {
+        chain: { id: 1, rpcUrl: 'https://eth-rpc.example.com/1' },
+      });
+      expect(mockSetAccount).toHaveBeenNthCalledWith(2, {
+        capabilities: mockCapabilities,
+      });
       expect(mockCallback).toHaveBeenCalledWith('chainChanged', '0x1');
     });
   });
 
   describe('disconnect', () => {
     it('should disconnect successfully', async () => {
+      const mockClear = vi.spyOn(store.account, 'clear');
+
       await signer.cleanup();
 
-      expect(storageClearSpy).toHaveBeenCalled();
+      expect(mockClear).toHaveBeenCalled();
       expect(mockKeyManager.clear).toHaveBeenCalled();
       expect(signer['accounts']).toEqual([]);
       expect(signer['chain']).toEqual({ id: 1 });
@@ -350,11 +371,9 @@ describe('SCWSigner', () => {
   });
 
   describe('SCWSigner - wallet_connect', () => {
-    beforeEach(async () => {
-      await signer.cleanup();
-    });
-
     it('should update internal state for successful wallet_connect', async () => {
+      await signer.cleanup();
+
       const mockRequest: RequestArguments = {
         method: 'wallet_connect',
         params: [],
@@ -365,6 +384,7 @@ describe('SCWSigner', () => {
           value: null,
         },
       });
+      const mockSetAccount = vi.spyOn(store.account, 'set');
 
       await signer.handshake({ method: 'handshake' });
       expect(signer['accounts']).toEqual([]);
@@ -390,9 +410,9 @@ describe('SCWSigner', () => {
 
       await signer.request(mockRequest);
 
-      expect(storageStoreSpy).toHaveBeenCalledWith('accounts', [
-        '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
-      ]);
+      expect(mockSetAccount).toHaveBeenCalledWith({
+        accounts: ['0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54'],
+      });
       expect(mockCallback).toHaveBeenCalledWith('accountsChanged', [
         '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
         '0x7838d2724FC686813CAf81d4429beff1110c739a',

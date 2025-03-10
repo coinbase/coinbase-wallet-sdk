@@ -1,7 +1,7 @@
 import { decodeAbiParameters, encodeFunctionData, toHex } from 'viem';
 
 import { createCoinbaseWalletProvider } from './createCoinbaseWalletProvider.js';
-import { VERSION } from './sdk-info.js';
+import { store, SubAccount, ToSubAccountSigner } from './store/store.js';
 import {
   AppMetadata,
   ConstructorOptions,
@@ -10,20 +10,25 @@ import {
 } from ':core/provider/interface.js';
 import { AddSubAccountAccount } from ':core/rpc/wallet_addSubAccount.js';
 import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
-import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { abi } from ':sign/scw/utils/constants.js';
-import { SubAccountInfo, subaccounts, SubAccountState } from ':stores/sub-accounts/store.js';
+import { config } from ':store/config.js';
+import { assertPresence } from ':util/assertPresence.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { validatePreferences, validateSubAccount } from ':util/validatePreferences.js';
+
 export type CreateCoinbaseWalletSDKOptions = Partial<AppMetadata> & {
   preference?: Preference;
-  subaccount?: {
-    getSigner: SubAccountState['getSigner'];
-  };
+  toSubAccountSigner?: ToSubAccountSigner;
 };
 
 const DEFAULT_PREFERENCE: Preference = {
   options: 'all',
+};
+
+type SubAccountAddOwnerParams = {
+  address?: `0x${string}`;
+  publicKey?: `0x${string}`;
+  chainId: number;
 };
 
 /**
@@ -32,11 +37,6 @@ const DEFAULT_PREFERENCE: Preference = {
  * @returns A Coinbase Wallet SDK object.
  */
 export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) {
-  const versionStorage = new ScopedLocalStorage('CBWSDK');
-  versionStorage.setItem('VERSION', VERSION);
-
-  void checkCrossOriginOpenerPolicy();
-
   const options: ConstructorOptions = {
     metadata: {
       appName: params.appName || 'Dapp',
@@ -46,19 +46,24 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
     preference: Object.assign(DEFAULT_PREFERENCE, params.preference ?? {}),
   };
 
-  /**
-   * Validate user supplied preferences. Throws if key/values are not valid.
-   */
+  // set the options in the store
+  config.setState(options);
+
+  // rehydrate the store from storage
+  void store.persist.rehydrate();
+
+  // check the cross origin opener policy
+  void checkCrossOriginOpenerPolicy();
+
+  // Validate user supplied preferences. Throws if key/values are not valid.
   validatePreferences(options.preference);
 
-  /**
-   * Set the sub account signer inside the store.
-   */
-  if (params.subaccount) {
-    validateSubAccount(params.subaccount.getSigner);
+  // Set the sub account signer inside the store.
+  if (params.toSubAccountSigner) {
+    validateSubAccount(params.toSubAccountSigner);
     // store the signer in the sub account store
-    subaccounts.setState({
-      getSigner: params.subaccount.getSigner,
+    store.setState({
+      toSubAccountSigner: params.toSubAccountSigner,
     });
   }
 
@@ -69,19 +74,15 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
       if (!provider) {
         provider = createCoinbaseWalletProvider(options);
       }
-      // @ts-expect-error - provider
+      // @ts-expect-error - store reference to the sdk on the provider
       provider.sdk = sdk;
       return provider;
     },
     subaccount: {
-      async create(account: AddSubAccountAccount): Promise<SubAccountInfo> {
-        const state = subaccounts.getState();
-        if (!state.getSigner) {
-          throw new Error('no signer found');
-        }
-        if (state.account) {
-          throw new Error('subaccount already exists');
-        }
+      async create(account: AddSubAccountAccount): Promise<SubAccount> {
+        const state = store.getState();
+        assertPresence(state.toSubAccountSigner, new Error('toSubAccountSigner is not set'));
+        assertPresence(state.subAccount?.address, new Error('subaccount already exists'));
 
         return (await sdk.getProvider()?.request({
           method: 'wallet_addSubAccount',
@@ -91,55 +92,38 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
               account,
             },
           ],
-        })) as SubAccountInfo;
+        })) as SubAccount;
       },
-      async get(): Promise<SubAccountInfo> {
-        const state = subaccounts.getState();
-        if (!state.account) {
-          const response = (await sdk.getProvider()?.request({
-            method: 'wallet_connect',
-            params: [
-              {
-                version: 1,
-                capabilities: {
-                  getAppAccounts: true,
-                },
-              },
-            ],
-          })) as WalletConnectResponse;
-          return response.accounts[0].capabilities?.getSubAccounts?.[0] as SubAccountInfo;
-        }
-        return state.account;
-      },
-      async addOwner({
-        address,
-        publicKey,
-        chainId,
-      }:
-        | {
-            address: `0x${string}`;
-            publicKey?: never;
-            chainId: number;
-          }
-        | {
-            address?: never;
-            publicKey: `0x${string}`;
-            chainId: number;
-          }): Promise<string> {
-        const state = subaccounts.getState();
-        if (!state.getSigner) {
-          throw new Error('no signer found');
+      async get(): Promise<SubAccount> {
+        const subAccount = store.subAccounts.get();
+        if (subAccount?.address) {
+          return subAccount;
         }
 
-        if (!state.account) {
-          throw new Error('subaccount does not exist');
-        }
+        const response = (await sdk.getProvider()?.request({
+          method: 'wallet_connect',
+          params: [
+            {
+              version: 1,
+              capabilities: {
+                getAppAccounts: true,
+              },
+            },
+          ],
+        })) as WalletConnectResponse;
+        return response.accounts[0].capabilities?.getSubAccounts?.[0] as SubAccount;
+      },
+      async addOwner({ address, publicKey, chainId }: SubAccountAddOwnerParams): Promise<string> {
+        const subAccount = store.subAccounts.get();
+        const account = store.account.get();
+        assertPresence(account, new Error('account does not exist'));
+        assertPresence(subAccount?.address, new Error('subaccount does not exist'));
 
         const calls = [];
         if (publicKey) {
           const [x, y] = decodeAbiParameters([{ type: 'bytes32' }, { type: 'bytes32' }], publicKey);
           calls.push({
-            to: state.account.address,
+            to: subAccount.address,
             data: encodeFunctionData({
               abi,
               functionName: 'addOwnerPublicKey',
@@ -151,7 +135,7 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
 
         if (address) {
           calls.push({
-            to: state.account.address,
+            to: subAccount.address,
             data: encodeFunctionData({
               abi,
               functionName: 'addOwnerAddress',
@@ -167,16 +151,16 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
             {
               calls,
               chainId: toHex(chainId),
-              from: state.universalAccount,
+              from: account.accounts?.[0],
               version: 1,
             },
           ],
         })) as string;
       },
-      setSigner(params: SubAccountState['getSigner']): void {
-        validateSubAccount(params);
-        subaccounts.setState({
-          getSigner: params,
+      setSigner(toSubAccountSigner: ToSubAccountSigner): void {
+        validateSubAccount(toSubAccountSigner);
+        store.setState({
+          toSubAccountSigner,
         });
       },
     },
