@@ -26,7 +26,7 @@ jobs:
       - name: Install NPM dependencies
         run: yarn install --immutable
 
-      - name: Check ESLint
+      - name: Lint
         run: yarn lint
 
   typecheck:

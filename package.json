@@ -20,6 +20,7 @@
     "typecheck": "yarn workspaces foreach -pt run typecheck"
   },
   "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
     "@typescript-eslint/eslint-plugin": "^6.2.0",
     "@typescript-eslint/parser": "^6.2.0",
     "eslint": "^8.45.0",

@@ -27,7 +27,7 @@
     "build": "node compile-assets.cjs && tsc -p ./tsconfig.build.json && tsc-alias && cp -a src/vendor-js dist",
     "dev": "yarn build && tsc --watch & nodemon --watch dist --delay 1 --exec tsc-alias",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint . --ext .ts,.tsx",
+    "lint": "biome lint .",
     "size": "size-limit"
   },
   "dependencies": {

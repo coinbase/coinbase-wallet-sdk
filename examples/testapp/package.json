@@ -6,7 +6,7 @@
     "clean": "rm -rf .next && rm -rf node_modules",
     "dev": "next dev --port 3001",
     "export": "yarn build && touch ./out/.nojekyll",
-    "lint": "eslint . --ext .ts,.tsx",
+    "lint": "biome lint .",
     "start": "next start",
     "test": "vitest",
     "typecheck": "tsc --noEmit"
