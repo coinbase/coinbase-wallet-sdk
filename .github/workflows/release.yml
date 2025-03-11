@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      packageVersion:
+        description: "The version to publish in MAJOR.MINOR.PATCH format"
+        required: true
+        default: ""
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: 'Setup'
+        uses: ./.github/actions/setup
+
+      - name: Set version
+        run: npm version ${{ env.PACKAGE_VERSION }} -w packages/wallet-sdk
+
+      # Build the package
+      - name: Prebuild
+        run: yarn workspace @coinbase/wallet-sdk prebuild
+
+      - name: Build Packages
+        shell: bash
+        run: yarn build:packages
+
+      # Create a pull request to update the version
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          title: "[Version update] v${{ env.PACKAGE_VERSION }}"
+          body: "Automated workflow: version update"
+          branch: release-v${{ env.PACKAGE_VERSION }}
+          delete-branch: true
+          commit-message: "v${{ env.PACKAGE_VERSION }}"
+          labels: version-update
+
+      # Publish to npm
+      - name: Set deployment token
+        run: npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
+
+      - name: Publish to npm
+        run: cd packages/wallet-sdk && npm publish --tag latest
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
