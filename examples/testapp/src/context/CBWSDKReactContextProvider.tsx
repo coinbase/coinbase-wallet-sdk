@@ -111,28 +111,28 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
     const cbwprovider = cbwsdk.makeWeb3Provider(preference);
 
     const handleConnect = (info: { chainId: string }) => {
-      // eslint-disable-next-line no-console
+      // biome-ignore lint/suspicious/noConsole: developer feedback
       console.log('🟢 Connected:', info);
     };
 
     const handleDisconnect = () => {
-      // eslint-disable-next-line no-console
+      // biome-ignore lint/suspicious/noConsole: developer feedback
       console.log('🔴 Disconnect detected');
       location.reload();
     };
 
     const handleAccountsChanged = (accounts: string[]) => {
-      // eslint-disable-next-line no-console
+      // biome-ignore lint/suspicious/noConsole: developer feedback
       console.log('👤 Accounts changed:', accounts);
     };
 
     const handleChainChanged = (chainId: string) => {
-      // eslint-disable-next-line no-console
+      // biome-ignore lint/suspicious/noConsole: developer feedback
       console.log('⛓️ Chain changed:', chainId);
     };
 
     const handleMessage = (message: { type: string; data: unknown }) => {
-      // eslint-disable-next-line no-console
+      // biome-ignore lint/suspicious/noConsole: developer feedback
       console.log('📨 Message received:', message);
     };
 
@@ -149,7 +149,7 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
         return await originalRequest(...args);
       } catch (error) {
         if (error?.code === 4100) {
-          // eslint-disable-next-line no-console
+          // biome-ignore lint/suspicious/noConsole: developer feedback
           console.log('🔴 4100 error detected, disconnecting');
           handleDisconnect();
         }

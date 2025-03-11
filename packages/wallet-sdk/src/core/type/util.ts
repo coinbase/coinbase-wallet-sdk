@@ -167,8 +167,8 @@ export function isBigNumber(val: unknown): boolean {
   if (val == null || typeof (val as any).constructor !== 'function') {
     return false;
   }
-  const { constructor } = val as any;
-  return typeof constructor.config === 'function' && typeof constructor.EUCLID === 'number';
+  const { constructor: constructor_ } = val as any;
+  return typeof constructor_.config === 'function' && typeof constructor_.EUCLID === 'number';
 }
 
 export function range(start: number, stop: number): number[] {

@@ -48,7 +48,7 @@ const replaceAddressInValue = async (value: any, getCurrentAddress: () => Promis
           .replace(new RegExp('YOUR_ADDRESS_HERE', 'g'), currentAddress);
         return typeof value === 'object' ? JSON.parse(replaced) : replaced;
       }
-    } catch (e) {
+    } catch (_) {
       // If parsing fails, return original value
     }
   }
