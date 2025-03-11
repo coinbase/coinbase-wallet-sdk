@@ -241,7 +241,7 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
         hideSnackbarItem = this.ui.showConnecting({
           isUnlinkedErrorState: this.isUnlinkedErrorState,
           onCancel: cancel,
-          onResetConnection: this.resetAndReload, // eslint-disable-line @typescript-eslint/unbound-method
+          onResetConnection: this.resetAndReload,
         });
       }
 
@@ -359,7 +359,6 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
 
     return new Promise<Web3Response<'requestEthereumAccounts'>>((resolve, reject) => {
       this.relayEventManager.callbacks.set(id, (response) => {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         hideSnackbarItem?.();
         if (isErrorResponse(response)) {
@@ -407,7 +406,7 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
       hideSnackbarItem = this.ui.showConnecting({
         isUnlinkedErrorState: this.isUnlinkedErrorState,
         onCancel: cancel,
-        onResetConnection: this.resetAndReload, // eslint-disable-line @typescript-eslint/unbound-method
+        onResetConnection: this.resetAndReload,
       });
     }
 
@@ -462,7 +461,7 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
       hideSnackbarItem = this.ui.showConnecting({
         isUnlinkedErrorState: this.isUnlinkedErrorState,
         onCancel: cancel,
-        onResetConnection: this.resetAndReload, // eslint-disable-line @typescript-eslint/unbound-method
+        onResetConnection: this.resetAndReload,
       });
     }
 
@@ -505,7 +504,7 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
       hideSnackbarItem = this.ui.showConnecting({
         isUnlinkedErrorState: this.isUnlinkedErrorState,
         onCancel: cancel,
-        onResetConnection: this.resetAndReload, // eslint-disable-line @typescript-eslint/unbound-method
+        onResetConnection: this.resetAndReload,
       });
     }
 
