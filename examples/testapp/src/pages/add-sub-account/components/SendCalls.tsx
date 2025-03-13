@@ -1,6 +1,7 @@
 import { Box, Button } from '@chakra-ui/react';
 import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import React, { useCallback, useState } from 'react';
+import { zeroAddress } from 'viem';
 import { baseSepolia } from 'viem/chains';
 
 export function SendCalls({
@@ -24,7 +25,12 @@ export function SendCalls({
           {
             chainId: baseSepolia.id,
             from: subAccountAddress,
-            calls: [],
+            calls: [
+              {
+                to: zeroAddress,
+                data: '0x',
+              },
+            ],
             version: '1',
             capabilities: {
               paymasterService: {
