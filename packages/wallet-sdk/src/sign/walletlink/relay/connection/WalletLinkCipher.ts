@@ -56,7 +56,7 @@ export class WalletLinkCipher {
     const secret = this.secret;
     if (secret.length !== 64) throw new Error(`secret must be 256 bits`);
     return new Promise<string>((resolve, reject) => {
-      void (async function () {
+      void (async () => {
         const secretKey: CryptoKey = await crypto.subtle.importKey(
           'raw',
           hexStringToUint8Array(secret),

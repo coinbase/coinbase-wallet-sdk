@@ -1,6 +1,6 @@
 import { Box, Button } from '@chakra-ui/react';
 import { createCoinbaseWalletSDK, getCryptoKeyAccount } from '@coinbase/wallet-sdk';
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { numberToHex } from 'viem';
 
 type AddSubAccountProps = {

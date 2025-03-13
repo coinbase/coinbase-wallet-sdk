@@ -1,6 +1,6 @@
 import { Container, VStack } from '@chakra-ui/react';
 import { createCoinbaseWalletSDK, getCryptoKeyAccount } from '@coinbase/wallet-sdk';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { AddOwner } from './components/AddOwner';
 import { AddSubAccount } from './components/AddSubAccount';

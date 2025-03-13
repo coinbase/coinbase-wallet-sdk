@@ -34,7 +34,8 @@ function getErrorObject(error: string | Web3Response | unknown) {
       message: error,
       code: standardErrorCodes.rpc.internal,
     };
-  } else if (isErrorResponse(error)) {
+  } 
+  if (isErrorResponse(error)) {
     const message = error.errorMessage;
     const code =
       error.errorCode ??
