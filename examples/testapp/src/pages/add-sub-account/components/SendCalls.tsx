@@ -24,7 +24,12 @@ export function SendCalls({
           {
             chainId: baseSepolia.id,
             from: subAccountAddress,
-            calls: [],
+            calls: [
+              {
+                to: "0x000000000000000000000000000000000000dead",
+                data: '0x',
+              },
+            ],
             version: '1',
             capabilities: {
               paymasterService: {

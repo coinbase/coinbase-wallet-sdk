@@ -1,12 +1,24 @@
-import { Address, Hex, SignableMessage, TypedDataDefinition, http, numberToHex } from 'viem';
-import { createPaymasterClient } from 'viem/account-abstraction';
+import { Signature } from 'ox';
+import {
+  Address,
+  Hex,
+  SignableMessage,
+  TypedDataDefinition,
+  hexToBytes,
+  hexToString,
+  isAddress,
+  numberToHex
+} from 'viem';
 import { getCode } from 'viem/actions';
 
 import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
-import { getBundlerClient, getClient } from ':store/chain-clients/utils.js';
+import { type PrepareCallsSchema } from ':core/rpc/wallet_prepareCalls.js';
+import { type SendPreparedCallsSchema } from ':core/rpc/wallet_sendPreparedCalls.js';
+import { getClient } from ':store/chain-clients/utils.js';
 import { SubAccount, store } from ':store/store.js';
 import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
+import { asn1EncodeSignature, convertCredentialToJSON } from ':util/encoding.js';
 import { get } from ':util/get.js';
 import { createSmartAccount } from './createSmartAccount.js';
 import { getOwnerIndex } from './getOwnerIndex.js';
@@ -55,7 +67,7 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
   return {
     request: async (
       args: RequestArguments
-    ): Promise<string | Hex | Address[] | number | SubAccount> => {
+    ): Promise<string | Hex | Address[] | number | SubAccount | string[]> => {
       switch (args.method) {
         case 'wallet_addSubAccount':
           return subAccount;
@@ -73,32 +85,100 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
         }
         case 'wallet_sendCalls': {
           assertArrayPresence(args.params);
-
-          // Get the paymaster URL from the requests capabilities
-          const paymasterURL = get(args.params[0], 'capabilities.paymasterService.url') as string;
-          let paymaster;
-          if (paymasterURL) {
-            paymaster = createPaymasterClient({
-              transport: http(paymasterURL),
-            });
-          }
-          // Get the bundler client for the chain
+          // Get the client for the chain
           const chainId = get(args.params[0], 'chainId') as number;
           assertPresence(chainId, standardErrors.rpc.invalidParams('chainId is required'));
 
-          const bundlerClient = getBundlerClient(chainId);
-          assertPresence(
-            bundlerClient,
-            standardErrors.rpc.invalidParams('bundler client not found')
-          );
+          const walletClient = getClient(chainId);
+          assertPresence(walletClient, standardErrors.rpc.internal('wallet client not found'));
 
-          const calls = get(args.params[0], 'calls') as { to: Address; data: Hex }[];
-          // Send the user operation
-          return await bundlerClient.sendUserOperation({
-            account,
-            calls,
-            paymaster,
+          if (!args.params[0]) {
+            throw standardErrors.rpc.invalidParams('params are required');
+          }
+
+          if (!('calls' in args.params[0])) {
+            throw standardErrors.rpc.invalidParams('calls are required');
+          }
+
+          const prepareCallsResponse = await walletClient.request<PrepareCallsSchema>({
+            method: 'wallet_prepareCalls',
+            params: [
+              {
+                calls: args.params[0].calls as {
+                  to: Address;
+                  data: Hex;
+                  value: Hex;
+                }[],
+                chainId: numberToHex(chainId),
+                from: subAccount.address,
+                capabilities:
+                  'capabilities' in args.params[0]
+                    ? (args.params[0].capabilities as Record<string, any>)
+                    : {},
+              },
+            ],
           });
+
+          const signature = await owner.sign?.({
+            // Hash returned from wallet_prepareCalls is double hex encoded
+            hash: hexToString(prepareCallsResponse.signatureRequest.hash) as `0x${string}`,
+          });
+
+          let signatureData: SendPreparedCallsSchema['Parameters'][0]['signature'];
+
+          if (!signature) {
+            throw standardErrors.rpc.internal('signature not found');
+          }
+
+          if (owner.address && isAddress(owner.address)) {
+            signatureData = {
+              type: 'secp256k1',
+              data: {
+                address: owner.address,
+                signature: signature as Hex,
+              },
+            };
+          } else if (typeof signature === 'object' && 'webauthn' in signature) {
+            const { webauthn, signature: signatureHex } = signature;
+
+            const signatureRaw = Signature.fromHex(signatureHex);
+
+            signatureData = {
+              type: 'webauthn',
+              data: {
+                signature: JSON.stringify(
+                  convertCredentialToJSON({
+                    id: '1',
+                    rawId: '',
+                    response: {
+                      authenticatorData: hexToBytes(webauthn.authenticatorData),
+                      clientDataJSON: webauthn.clientDataJSON,
+                      signature: asn1EncodeSignature(signatureRaw.r, signatureRaw.s),
+                    },
+                    type: JSON.parse(webauthn.clientDataJSON).type,
+                  })
+                ),
+                publicKey: owner.publicKey,
+              },
+            };
+          } else {
+            throw standardErrors.rpc.internal('invalid signature type');
+          }
+
+          const sendPreparedCallsResponse = await walletClient.request<SendPreparedCallsSchema>({
+            method: 'wallet_sendPreparedCalls',
+            params: [
+              {
+                version: '1.0',
+                type: prepareCallsResponse.type,
+                data: prepareCallsResponse.userOp,
+                chainId: prepareCallsResponse.chainId,
+                signature: signatureData,
+              },
+            ],
+          });
+
+          return sendPreparedCallsResponse;
         }
         case 'wallet_sendPreparedCalls': {
           throw new Error('Not implemented');
