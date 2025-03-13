@@ -1,7 +1,6 @@
 import { fireEvent } from '@testing-library/preact';
 import { vi } from 'vitest';
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import eip712 from '../../vendor-js/eth-eip712-util/index.cjs';
 import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants.js';

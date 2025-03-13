@@ -18,7 +18,7 @@ import {
   useDisclosure,
 } from '@chakra-ui/react';
 import latestPkgJson from '@coinbase/wallet-sdk/package.json';
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { options, scwUrls, sdkVersions, useCBWSDK } from '../context/CBWSDKReactContextProvider';
 

@@ -106,11 +106,9 @@ export const verifySignMsg = async ({
       const valid = await client.verifyTypedData({
         address: from as `0x${string}`,
         domain: typedData['domain'] as TypedDataDomain,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        types: typedData['types'] as any,
+        types: typedData['types'],
         primaryType: typedData['primaryType'] as string,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        message: typedData['message'] as any,
+        message: typedData['message'],
         signature: sign as `0x${string}`,
       });
       if (valid) {

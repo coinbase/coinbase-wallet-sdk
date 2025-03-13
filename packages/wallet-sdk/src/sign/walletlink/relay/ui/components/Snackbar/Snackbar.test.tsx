@@ -1,8 +1,9 @@
 import '@testing-library/jest-dom';
 
 import { render, screen, waitFor } from '@testing-library/preact';
-import { h } from 'preact';
 import { vi } from 'vitest';
+// biome-ignore lint/correctness/noUnusedImports: preact
+import { h } from 'preact';
 
 import { Snackbar } from './Snackbar.js';
 

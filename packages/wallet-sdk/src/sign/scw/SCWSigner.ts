@@ -85,7 +85,8 @@ export class SCWSigner implements Signer {
       switch (request.method) {
         case 'wallet_switchEthereumChain': {
           assertParamsChainId(request.params);
-          return (this.chain.id = Number(request.params[0].chainId));
+          this.chain.id = Number(request.params[0].chainId);
+          return;
         }
         case 'wallet_connect':
         case 'wallet_sendCalls':

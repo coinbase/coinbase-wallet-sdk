@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
 const fs = require('fs');
