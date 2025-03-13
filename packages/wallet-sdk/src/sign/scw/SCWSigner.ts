@@ -1,4 +1,4 @@
-import { numberToHex } from 'viem';
+import { Hex, numberToHex } from 'viem';
 
 import { Signer } from '../interface.js';
 import { SCWKeyManager } from './SCWKeyManager.js';
@@ -328,12 +328,16 @@ export class SCWSigner implements Signer {
     return true;
   }
 
-  private async addSubAccount(request: RequestArguments) {
+  private async addSubAccount(request: RequestArguments): Promise<{
+    address: Address;
+    factory?: Address;
+    factoryData?: Hex;
+  }> {
     const state = store.getState();
     const subAccount = state.subAccount;
     if (subAccount?.address) {
       this.callback?.('accountsChanged', [this.accounts[0], subAccount.address]);
-      return subAccount.address;
+      return subAccount;
     }
 
     await this.communicator.waitForPopupLoaded?.();
