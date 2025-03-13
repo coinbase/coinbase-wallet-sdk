@@ -103,7 +103,8 @@ function parseOpts<T>(arg?: EthErrorsArg<T>): [string?, T?] {
   if (arg) {
     if (typeof arg === 'string') {
       return [arg];
-    } else if (typeof arg === 'object' && !Array.isArray(arg)) {
+    }
+    if (typeof arg === 'object' && !Array.isArray(arg)) {
       const { message, data } = arg;
 
       if (message && typeof message !== 'string') {

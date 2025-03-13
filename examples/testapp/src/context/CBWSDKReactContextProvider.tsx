@@ -1,8 +1,8 @@
 import { CoinbaseWalletSDK as CoinbaseWalletSDKHEAD, Preference } from '@coinbase/wallet-sdk';
-import latestPkgJson from '@coinbase/wallet-sdk/package.json';
 import { CoinbaseWalletSDK as CoinbaseWalletSDK372 } from '@coinbase/wallet-sdk-3.7.2';
 import { CoinbaseWalletSDK as CoinbaseWalletSDK393 } from '@coinbase/wallet-sdk-3.9.3';
 import { CoinbaseWalletSDK as CoinbaseWalletSDKLatest } from '@coinbase/wallet-sdk-latest';
+import latestPkgJson from '@coinbase/wallet-sdk/package.json';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 type CBWSDKProviderProps = {

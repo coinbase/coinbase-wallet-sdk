@@ -1,6 +1,6 @@
 import { Box, Button } from '@chakra-ui/react';
 import { createCoinbaseWalletSDK, getCryptoKeyAccount } from '@coinbase/wallet-sdk';
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Hex } from 'viem';
 import { baseSepolia } from 'viem/chains';
 
