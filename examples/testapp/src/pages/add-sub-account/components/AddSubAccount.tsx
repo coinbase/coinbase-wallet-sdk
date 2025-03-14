@@ -1,5 +1,5 @@
 import { Box, Button } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK, getCryptoKeyAccount } from '@coinbase/wallet-sdk';
+import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import { useCallback, useState } from 'react';
 import { numberToHex } from 'viem';
 
@@ -16,7 +16,6 @@ export function AddSubAccount({ sdk, onAddSubAccount }: AddSubAccountProps) {
       return;
     }
     const provider = sdk.getProvider();
-    const { account } = await getCryptoKeyAccount();
     await provider.request({
       method: 'wallet_switchEthereumChain',
       params: [{ chainId: numberToHex(84532) }],
@@ -24,20 +23,7 @@ export function AddSubAccount({ sdk, onAddSubAccount }: AddSubAccountProps) {
 
     const response = (await provider.request({
       method: 'wallet_addSubAccount',
-      params: [
-        {
-          version: '1',
-          account: {
-            type: 'create',
-            keys: [
-              {
-                type: 'webauthn-p256',
-                key: account.publicKey,
-              },
-            ],
-          },
-        },
-      ],
+      params: [],
     })) as { address: string };
 
     console.info('response', response);

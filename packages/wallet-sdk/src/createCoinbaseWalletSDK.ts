@@ -1,7 +1,5 @@
 import { decodeAbiParameters, encodeFunctionData, toHex } from 'viem';
 
-import { createCoinbaseWalletProvider } from './createCoinbaseWalletProvider.js';
-import { store, SubAccount, ToSubAccountSigner } from './store/store.js';
 import {
   AppMetadata,
   ConstructorOptions,
@@ -15,10 +13,14 @@ import { config } from ':store/config.js';
 import { assertPresence } from ':util/assertPresence.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { validatePreferences, validateSubAccount } from ':util/validatePreferences.js';
+import { createCoinbaseWalletProvider } from './createCoinbaseWalletProvider.js';
+import { getCryptoKeyAccount } from './kms/crypto-key/index.js';
+import { SubAccount, ToSubAccountSigner, store } from './store/store.js';
 
 export type CreateCoinbaseWalletSDKOptions = Partial<AppMetadata> & {
   preference?: Preference;
   toSubAccountSigner?: ToSubAccountSigner;
+  headlessSubAccounts?: boolean;
 };
 
 const DEFAULT_PREFERENCE: Preference = {
@@ -63,7 +65,10 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
     validateSubAccount(params.toSubAccountSigner);
     // store the signer in the sub account store
     store.setState({
-      toSubAccountSigner: params.toSubAccountSigner,
+      toSubAccountSigner:
+        params.headlessSubAccounts && !params.toSubAccountSigner
+          ? getCryptoKeyAccount
+          : params.toSubAccountSigner,
     });
   }
 
