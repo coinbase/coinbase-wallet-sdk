@@ -48,6 +48,11 @@ export default function Home() {
         setChainId(Number.parseInt(chainId, 16));
       });
     }
+
+    // Injected provider does not emit a 'connect' event
+    if (provider?.isCoinbaseBrowser) {
+      setConnected(true);
+    }
   }, [connected, provider]);
 
   // There's a bug in 3.9.3 where it does not emit a 'connect' event for walletlink connections
