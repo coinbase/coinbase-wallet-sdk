@@ -23,7 +23,6 @@ import {
   exportKeyToHexString,
   importKeyFromHexString,
 } from ':util/cipher.js';
-import { get } from ':util/get.js';
 import { fetchRPCRequest } from ':util/provider.js';
 
 type ConstructorOptions = {
@@ -341,11 +340,8 @@ export class SCWSigner implements Signer {
       return subAccount;
     }
 
+    // Wait for the popup to be loaded before sending the request
     await this.communicator.waitForPopupLoaded?.();
-    const address = get(request, 'params[0].address') as string;
-    if (address) {
-      throw standardErrors.rpc.invalidParams('importing an address is not yet supported');
-    }
 
     const response = await this.sendRequestToPopup(request);
     assertSubAccount(response);

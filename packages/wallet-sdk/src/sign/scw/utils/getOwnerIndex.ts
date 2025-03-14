@@ -1,8 +1,8 @@
 import { Client, Hex, isAddress, pad } from 'viem';
 import { readContract } from 'viem/actions';
 
-import { abi } from './constants.js';
 import { standardErrors } from ':core/error/errors.js';
+import { abi } from './constants.js';
 
 export async function getOwnerIndex({
   address,
