@@ -1,11 +1,11 @@
-import { Address, Hex, http, numberToHex, SignableMessage, TypedDataDefinition } from 'viem';
+import { Address, Hex, SignableMessage, TypedDataDefinition, http, numberToHex } from 'viem';
 import { createPaymasterClient } from 'viem/account-abstraction';
 import { getCode } from 'viem/actions';
 
 import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
 import { getBundlerClient, getClient } from ':store/chain-clients/utils.js';
-import { store, SubAccount } from ':store/store.js';
+import { SubAccount, store } from ':store/store.js';
 import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
 import { get } from ':util/get.js';
 import { createSmartAccount } from './createSmartAccount.js';
@@ -22,9 +22,6 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
 
   const { account: owner } = await toSubAccountSigner();
   assertPresence(owner, standardErrors.rpc.internal('signer not found'));
-
-  console.log('customlogs: subAccount', subAccount);
-  console.log('customlogs: owner', owner);
 
   const code = await getCode(client, {
     address: subAccount.address,
