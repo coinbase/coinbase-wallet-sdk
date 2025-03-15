@@ -1,6 +1,6 @@
 import { Box, Button } from '@chakra-ui/react';
 import { getCryptoKeyAccount, removeCryptoKey } from '@coinbase/wallet-sdk';
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 export function GenerateNewSigner() {
   const [state, setState] = useState<string>();

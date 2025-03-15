@@ -15,7 +15,7 @@ export class WalletLinkCipher {
    */
   async encrypt(plainText: string): Promise<string> {
     const secret = this.secret;
-    if (secret.length !== 64) throw Error(`secret must be 256 bits`);
+    if (secret.length !== 64) throw new Error(`secret must be 256 bits`);
     const ivBytes = crypto.getRandomValues(new Uint8Array(12));
     const secretKey: CryptoKey = await crypto.subtle.importKey(
       'raw',
@@ -54,9 +54,9 @@ export class WalletLinkCipher {
    */
   async decrypt(cipherText: string): Promise<string> {
     const secret = this.secret;
-    if (secret.length !== 64) throw Error(`secret must be 256 bits`);
+    if (secret.length !== 64) throw new Error(`secret must be 256 bits`);
     return new Promise<string>((resolve, reject) => {
-      void (async function () {
+      void (async () => {
         const secretKey: CryptoKey = await crypto.subtle.importKey(
           'raw',
           hexStringToUint8Array(secret),

@@ -1,6 +1,6 @@
 import { Box, Button } from '@chakra-ui/react';
 import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 export function Connect({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletSDK> }) {
   const [state, setState] = useState<string[]>();

@@ -1,6 +1,6 @@
 import { Container, VStack } from '@chakra-ui/react';
 import { createCoinbaseWalletSDK, getCryptoKeyAccount } from '@coinbase/wallet-sdk';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { AddOwner } from './components/AddOwner';
 import { AddSubAccount } from './components/AddSubAccount';
@@ -19,12 +19,10 @@ export default function SubAccounts() {
     const sdk = createCoinbaseWalletSDK({
       appName: 'CryptoPlayground',
       preference: {
-        keysUrl: 'http://localhost:3005/connect',
+        keysUrl: 'https://keys-dev.coinbase.com/connect',
         options: 'smartWalletOnly',
       },
-      subaccount: {
-        getSigner: getCryptoKeyAccount,
-      },
+      toSubAccountSigner: getCryptoKeyAccount,
     });
 
     if (!sdk) {
