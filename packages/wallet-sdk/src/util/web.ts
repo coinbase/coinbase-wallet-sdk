@@ -1,8 +1,8 @@
+import { standardErrors } from '../core/error/errors.js';
 import { NAME, VERSION } from '../sdk-info.js';
+import { Snackbar } from '../sign/walletlink/relay/ui/components/Snackbar/Snackbar.js';
+import { RETRY_SVG_PATH } from '../sign/walletlink/relay/ui/WalletLinkRelayUI.js';
 import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
-import { standardErrors } from ':core/error/errors.js';
-import { Snackbar } from ':sign/walletlink/relay/ui/components/Snackbar/Snackbar.js';
-import { RETRY_SVG_PATH } from ':sign/walletlink/relay/ui/WalletLinkRelayUI.js';
 
 const POPUP_WIDTH = 420;
 const POPUP_HEIGHT = 540;

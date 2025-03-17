@@ -18,7 +18,7 @@ const mockInstance = {
   attach: mockAttach,
 };
 
-vi.mock(':sign/walletlink/relay/ui/components/Snackbar/Snackbar.js', () => ({
+vi.mock('../sign/walletlink/relay/ui/components/Snackbar/Snackbar.js', () => ({
   Snackbar: vi.fn().mockImplementation(() => mockInstance),
 }));
 
