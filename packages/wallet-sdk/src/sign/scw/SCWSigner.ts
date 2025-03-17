@@ -351,7 +351,7 @@ export class SCWSigner implements Signer {
     const request_ = { ...request };
 
     // Auto Support for Sub Accounts
-    if (c.headlessSubAccounts && state.toSubAccountSigner) {
+    if (c.preference?.headlessSubAccounts && state.toSubAccountSigner) {
       const { account } = await state.toSubAccountSigner();
       assertPresence(account, standardErrors.provider.unauthorized('no sub account signer found'));
       if (Array.isArray(request_?.params)) {

@@ -20,7 +20,6 @@ import { SubAccount, ToSubAccountSigner, store } from './store/store.js';
 export type CreateCoinbaseWalletSDKOptions = Partial<AppMetadata> & {
   preference?: Preference;
   toSubAccountSigner?: ToSubAccountSigner;
-  headlessSubAccounts?: boolean;
 };
 
 const DEFAULT_PREFERENCE: Preference = {
@@ -47,7 +46,6 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
     },
     preference: Object.assign(DEFAULT_PREFERENCE, params.preference ?? {}),
   };
-
   // set the options in the store
   config.setState(options);
 
@@ -66,11 +64,11 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
     // store the signer in the sub account store
     store.setState({
       toSubAccountSigner:
-        params.headlessSubAccounts && !params.toSubAccountSigner
+        options.preference.headlessSubAccounts && !params.toSubAccountSigner
           ? getCryptoKeyAccount
           : params.toSubAccountSigner,
     });
-  }
+  } 
 
   let provider: ProviderInterface | null = null;
 

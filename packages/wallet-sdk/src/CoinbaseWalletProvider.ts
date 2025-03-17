@@ -16,7 +16,6 @@ import {
 } from ':core/provider/interface.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { hexStringFromNumber } from ':core/type/util.js';
-import { config } from ':store/config.js';
 import { store } from ':store/store.js';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from ':util/provider.js';
 import { Signer } from './sign/interface.js';
@@ -51,12 +50,15 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
       if (!this.signer) {
         switch (args.method) {
           case 'eth_requestAccounts': {
-            const signerType = await this.requestSignerSelection(args);
+            // this causes a popup which we dont want.
+            //const signerType = await this.requestSignerSelection(args);
+            const signerType = 'scw';
             const signer = this.initSigner(signerType);
             const state = store.getState();
-            const c = config.getState();
+            // config is not initialized properly for some reason.
+            // const c = config.getState();
 
-            if (signerType === 'scw' && c.headlessSubAccounts && state.toSubAccountSigner) {
+            if (signerType === 'scw' && this.preference.headlessSubAccounts && state.toSubAccountSigner) {
               await signer.handshake({ method: 'handshake' });
               const { account } = await state.toSubAccountSigner();
               await signer.request({

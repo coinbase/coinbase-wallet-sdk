@@ -21,6 +21,7 @@ export default function SubAccounts() {
       preference: {
         keysUrl: 'https://keys-dev.coinbase.com/connect',
         options: 'smartWalletOnly',
+        headlessSubAccounts: true,
       },
       toSubAccountSigner: getCryptoKeyAccount,
     });

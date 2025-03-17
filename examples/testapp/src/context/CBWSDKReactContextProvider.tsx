@@ -48,6 +48,7 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
   const [version, setVersion] = React.useState<SDKVersionType | undefined>(undefined);
   const [option, setOption] = React.useState<OptionsType | undefined>(undefined);
   const [config, setConfig] = React.useState<Preference>({
+    headlessSubAccounts: true,
     options: option,
     attribution: {
       auto: false,

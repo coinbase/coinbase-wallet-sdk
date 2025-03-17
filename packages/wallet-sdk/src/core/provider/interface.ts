@@ -72,6 +72,11 @@ export type Preference = {
    * the Smart Wallet will generate a 16 byte hex string from the apps origin.
    */
   attribution?: Attribution;
+  /**
+   * @param headlessSubAccounts
+   * @description If true, the provider will automatically create a subaccount for the user and use it for all transactions.
+   */
+  headlessSubAccounts?: boolean;
 } & Record<string, unknown>;
 
 export interface ConstructorOptions {

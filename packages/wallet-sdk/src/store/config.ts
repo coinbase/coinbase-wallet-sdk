@@ -7,7 +7,6 @@ import { VERSION } from '../sdk-info.js';
 export type ConfigState = {
   metadata?: AppMetadata;
   preference?: Preference;
-  headlessSubAccounts?: boolean;
   version: string;
 };
 
@@ -16,7 +15,6 @@ export const sdkconfig = createStore(
     () => ({
       metadata: undefined,
       preference: undefined,
-      headlessSubAccounts: false,
       version: VERSION,
     }),
     {
@@ -26,7 +24,6 @@ export const sdkconfig = createStore(
         metadata: state.metadata,
         preference: state.preference,
         version: state.version,
-        headlessSubAccounts: state.headlessSubAccounts,
       }),
     }
   )

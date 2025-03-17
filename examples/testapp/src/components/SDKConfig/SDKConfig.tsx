@@ -31,6 +31,7 @@ export function SDKConfig() {
         attribution: {
           auto: event.target.checked,
         },
+        headlessSubAccounts: true,
       };
       setConfig(config_);
     },
@@ -46,6 +47,7 @@ export function SDKConfig() {
         attribution: {
           dataSuffix: computeDataSuffix(value),
         },
+        headlessSubAccounts: true,
       }));
     },
     [setConfig]
