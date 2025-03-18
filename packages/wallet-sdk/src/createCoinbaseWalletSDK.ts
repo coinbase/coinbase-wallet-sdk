@@ -68,7 +68,11 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
           ? getCryptoKeyAccount
           : params.toSubAccountSigner,
     });
-  } 
+  } else if (options.preference.headlessSubAccounts) {
+    store.setState({
+      toSubAccountSigner: getCryptoKeyAccount,
+    });
+  }
 
   let provider: ProviderInterface | null = null;
 

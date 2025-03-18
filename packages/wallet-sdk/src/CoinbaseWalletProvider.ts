@@ -19,7 +19,7 @@ import { hexStringFromNumber } from ':core/type/util.js';
 import { store } from ':store/store.js';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from ':util/provider.js';
 import { Signer } from './sign/interface.js';
-import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util.js';
+import { createSigner, loadSignerType, storeSignerType } from './sign/util.js';
 
 export class CoinbaseWalletProvider extends ProviderEventEmitter implements ProviderInterface {
   private readonly metadata: AppMetadata;
@@ -154,16 +154,6 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
   }
 
   readonly isCoinbaseWallet = true;
-
-  private requestSignerSelection(handshakeRequest: RequestArguments): Promise<SignerType> {
-    return fetchSignerType({
-      communicator: this.communicator,
-      preference: this.preference,
-      metadata: this.metadata,
-      handshakeRequest,
-      callback: this.emit.bind(this),
-    });
-  }
 
   private initSigner(signerType: SignerType): Signer {
     return createSigner({
