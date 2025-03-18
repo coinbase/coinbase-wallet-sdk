@@ -88,7 +88,9 @@ function appendAppInfoQueryParams(url: URL) {
   };
 
   for (const [key, value] of Object.entries(params)) {
-    url.searchParams.append(key, value.toString());
+    if (!url.searchParams.has(key)) {
+      url.searchParams.append(key, value.toString());
+    }
   }
 }
 
