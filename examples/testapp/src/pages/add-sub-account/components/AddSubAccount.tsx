@@ -6,17 +6,24 @@ import { numberToHex } from 'viem';
 type AddSubAccountProps = {
   sdk: ReturnType<typeof createCoinbaseWalletSDK>;
   onAddSubAccount: (address: string) => void;
+  signerFn: typeof getCryptoKeyAccount;
 };
 
-export function AddSubAccount({ sdk, onAddSubAccount }: AddSubAccountProps) {
+export function AddSubAccount({ sdk, onAddSubAccount, signerFn }: AddSubAccountProps) {
   const [subAccount, setSubAccount] = useState<string>();
 
   const handleAddSubAccount = useCallback(async () => {
     if (!sdk) {
       return;
     }
+
+    const { account } = await signerFn();
+
+    if (!account) {
+      throw new Error('Could not get owner account');
+    }
+
     const provider = sdk.getProvider();
-    const { account } = await getCryptoKeyAccount();
     await provider.request({
       method: 'wallet_switchEthereumChain',
       params: [{ chainId: numberToHex(84532) }],
@@ -29,12 +36,20 @@ export function AddSubAccount({ sdk, onAddSubAccount }: AddSubAccountProps) {
           version: '1',
           account: {
             type: 'create',
-            keys: [
-              {
-                type: 'webauthn-p256',
-                key: account.publicKey,
-              },
-            ],
+            keys:
+              (account.type as string) === 'webAuthn'
+                ? [
+                    {
+                      type: 'webauthn-p256',
+                      key: account.publicKey,
+                    },
+                  ]
+                : [
+                    {
+                      type: 'address',
+                      key: account.address,
+                    },
+                  ],
           },
         },
       ],
@@ -43,7 +58,7 @@ export function AddSubAccount({ sdk, onAddSubAccount }: AddSubAccountProps) {
     console.info('response', response);
     setSubAccount(response.address);
     onAddSubAccount(response.address);
-  }, [sdk, onAddSubAccount]);
+  }, [sdk, onAddSubAccount, signerFn]);
 
   return (
     <>

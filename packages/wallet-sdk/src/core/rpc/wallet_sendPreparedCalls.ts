@@ -43,6 +43,7 @@ export type SendPreparedCallsParams = [
 export type SendPreparedCallsReturnValue = string[];
 
 export type SendPreparedCallsSchema = {
+  Method: 'wallet_sendPreparedCalls';
   Parameters: SendPreparedCallsParams;
   ReturnType: SendPreparedCallsReturnValue;
 };

@@ -24,6 +24,7 @@ export type PrepareCallsReturnValue = {
 };
 
 export type PrepareCallsSchema = {
+  Method: 'wallet_prepareCalls';
   Parameters: PrepareCallsParams;
   ReturnType: PrepareCallsReturnValue;
 };
