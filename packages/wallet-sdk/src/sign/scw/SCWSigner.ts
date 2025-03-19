@@ -406,6 +406,7 @@ export class SCWSigner implements Signer {
     const signer = await createSubAccountSigner({
       chainId: this.chain.id,
     });
+    console.log('SCWSigner: customlogs: sendRequestToSubAccountSignerSigner', signer, request);
     return signer.request(request);
   }
 }

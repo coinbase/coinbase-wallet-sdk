@@ -58,6 +58,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
             // config is not initialized properly for some reason.
             // const c = config.getState();
 
+
             if (signerType === 'scw' && this.preference.headlessSubAccounts && state.toSubAccountSigner) {
               await signer.handshake({ method: 'handshake' });
               const { account } = await state.toSubAccountSigner();
@@ -93,7 +94,8 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
               });
               this.signer = signer;
               // @ts-expect-error meh
-              return result.accounts.map((account) => account.address) as T;
+              //return result.accounts.map((account) => account.address) as T;
+              return result.accounts[0].capabilities.addSubAccount.address as T;
             }
 
             await signer.handshake(args);
@@ -102,6 +104,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
             break;
           }
           case 'wallet_connect': {
+            console.log('customlogs: wallet_connect', args);
             const signer = this.initSigner('scw');
             await signer.handshake({ method: 'handshake' }); // exchange session keys
             const result = await signer.request(args); // send diffie-hellman encrypted request
@@ -109,6 +112,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
             return result as T;
           }
           case 'wallet_sendCalls': {
+            console.log('customlogs: wallet_sendCalls', args);
             const ephemeralSigner = this.initSigner('scw');
             await ephemeralSigner.handshake({ method: 'handshake' }); // exchange session keys
             const result = await ephemeralSigner.request(args); // send diffie-hellman encrypted request
@@ -128,6 +132,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
           }
         }
       }
+      console.log('customlogs: signer', this.signer);
       return await this.signer.request(args);
     } catch (error) {
       const { code } = error as { code?: number };
