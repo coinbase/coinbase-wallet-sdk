@@ -1,20 +1,10 @@
-import { Box, Button } from "@chakra-ui/react";
-import { createCoinbaseWalletSDK } from "@coinbase/wallet-sdk";
-import { useCallback, useState } from "react";
-import {
-  Client,
-  createPublicClient,
-  encodeFunctionData,
-  http,
-  toHex,
-} from "viem";
-import {
-  createBundlerClient,
-  createPaymasterClient,
-  SmartAccount,
-} from "viem/account-abstraction";
-import { baseSepolia } from "viem/chains";
-import { abi } from "../../../constants";
+import { Box, Button } from '@chakra-ui/react';
+import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
+import { useCallback, useState } from 'react';
+import { Client, createPublicClient, encodeFunctionData, http, toHex } from 'viem';
+import { SmartAccount, createBundlerClient, createPaymasterClient } from 'viem/account-abstraction';
+import { baseSepolia } from 'viem/chains';
+import { abi } from '../../../constants';
 
 export function AddGlobalOwner({
   sdk,
@@ -32,10 +22,11 @@ export function AddGlobalOwner({
 
     const provider = sdk.getProvider();
     const accounts = await provider.request({
-      method: "eth_accounts",
+      method: 'eth_accounts',
     });
 
-    console.log("customlogs: accounts", accounts);
+    // biome-ignore lint/suspicious/noConsole: internal logging
+    console.log('customlogs: accounts', accounts);
 
     try {
       const client = createPublicClient({
@@ -44,14 +35,14 @@ export function AddGlobalOwner({
       });
       const paymasterClient = createPaymasterClient({
         transport: http(
-          "https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O"
+          'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O'
         ),
       });
       const bundlerClient = createBundlerClient({
         account: subAccount,
         client: client as Client,
         transport: http(
-          "https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O"
+          'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O'
         ),
         paymaster: paymasterClient,
       });
@@ -62,7 +53,7 @@ export function AddGlobalOwner({
             to: subAccount.address,
             data: encodeFunctionData({
               abi,
-              functionName: "addOwnerAddress",
+              functionName: 'addOwnerAddress',
               args: [accounts[0]] as const,
             }),
             value: toHex(0),
@@ -70,10 +61,10 @@ export function AddGlobalOwner({
         ],
       });
 
-      console.info("response", hash);
+      console.info('response', hash);
       setState(hash as string);
     } catch (e) {
-      console.error("error", e);
+      console.error('error', e);
     }
   }, [sdk, subAccount]);
 

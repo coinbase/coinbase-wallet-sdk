@@ -1,19 +1,19 @@
 import { fireEvent } from '@testing-library/preact';
 import { vi } from 'vitest';
 
-// @ts-nocheck
-import eip712 from '../../vendor-js/eth-eip712-util/index.cjs';
-import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants.js';
-import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from './relay/mocks/fixtures.js';
-import { mockedWalletLinkRelay } from './relay/mocks/relay.js';
-import { WalletLinkRelay } from './relay/WalletLinkRelay.js';
-import { WalletLinkSigner } from './WalletLinkSigner.js';
 import { WALLETLINK_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { ProviderEventCallback } from ':core/provider/interface.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { Address } from ':core/type/index.js';
+// @ts-nocheck
+import eip712 from '../../vendor-js/eth-eip712-util/index.cjs';
+import { WalletLinkSigner } from './WalletLinkSigner.js';
+import { WalletLinkRelay } from './relay/WalletLinkRelay.js';
+import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants.js';
+import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from './relay/mocks/fixtures.js';
+import { mockedWalletLinkRelay } from './relay/mocks/relay.js';
 
 vi.mock('./relay/WalletLinkRelay', () => {
   return {
@@ -220,6 +220,7 @@ describe('LegacyProvider', () => {
       });
     });
 
+    // biome-ignore lint/suspicious/noSkippedTests: eth_signTypedData_v1 is deprecated
     test.skip('eth_signTypedData_v1', async () => {
       const hashSpy = vi.spyOn(eip712, 'hashForSignTypedDataLegacy');
       const response = await provider?.request({

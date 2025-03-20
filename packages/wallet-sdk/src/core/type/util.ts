@@ -134,6 +134,7 @@ export function ensureRegExpString(regExp: unknown): RegExpString {
 
 export function ensureBigInt(val: unknown): bigint {
   if (val !== null && (typeof val === 'bigint' || isBigNumber(val))) {
+    // biome-ignore lint/suspicious/noExplicitAny: force cast to any to avoid type error
     return BigInt((val as any).toString(10));
   }
   if (typeof val === 'number') {
@@ -163,9 +164,11 @@ export function ensureParsedJSONObject<T extends object>(val: unknown): T {
 }
 
 export function isBigNumber(val: unknown): boolean {
+  // biome-ignore lint/suspicious/noExplicitAny: force cast to any to avoid type error
   if (val == null || typeof (val as any).constructor !== 'function') {
     return false;
   }
+  // biome-ignore lint/suspicious/noExplicitAny: force cast to any to avoid type error
   const { constructor: constructor_ } = val as any;
   return typeof constructor_.config === 'function' && typeof constructor_.EUCLID === 'number';
 }

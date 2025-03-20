@@ -1,7 +1,7 @@
 import { Container, VStack } from '@chakra-ui/react';
 import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import { useEffect, useState } from 'react';
-import { Client, createPublicClient, Hex, http } from 'viem';
+import { Client, Hex, createPublicClient, http } from 'viem';
 import { SmartAccount, toCoinbaseSmartAccount } from 'viem/account-abstraction';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
@@ -33,6 +33,7 @@ export default function SubAccounts() {
     return smartAccount;
   }
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: no dep
   useEffect(() => {
     let pk = localStorage.getItem('cbwsdk.demo.add-sub-account.pk') as Hex | null;
     if (!pk) {

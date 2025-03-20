@@ -11,8 +11,8 @@ import {
   Flex,
   FormControl,
   FormErrorMessage,
-  Heading,
   HStack,
+  Heading,
   InputGroup,
   InputLeftAddon,
   Textarea,
@@ -31,6 +31,7 @@ import { multiChainShortcutsMap } from './shortcut/multipleChainShortcuts';
 type ResponseType = string;
 
 // Replace address placeholders in string or object values
+// biome-ignore lint/suspicious/noExplicitAny: old code
 const replaceAddressInValue = async (value: any, getCurrentAddress: () => Promise<[string]>) => {
   if (typeof value === 'string' && (value === ADDR_TO_FILL || value === 'YOUR_ADDRESS_HERE')) {
     const currentAddress = (await getCurrentAddress())[0];
