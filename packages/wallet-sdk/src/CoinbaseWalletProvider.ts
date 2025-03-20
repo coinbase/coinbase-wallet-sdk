@@ -95,7 +95,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
               this.signer = signer;
               // @ts-expect-error meh
               //return result.accounts.map((account) => account.address) as T;
-              return result.accounts[0].capabilities.addSubAccount.address as T;
+              return [result.accounts[0].capabilities.addSubAccount.address] as T;
             }
 
             await signer.handshake(args);

@@ -1,8 +1,8 @@
-import { createPublicClient, defineChain, http, PublicClient } from 'viem';
+import { createPublicClient, defineChain, http, numberToHex, PublicClient } from 'viem';
 import { BundlerClient, createBundlerClient } from 'viem/account-abstraction';
 
-import { ChainClients } from './store.js';
 import { RPCResponseNativeCurrency } from ':core/message/RPCResponse.js';
+import { ChainClients } from './store.js';
 
 export type SDKChain = {
   id: number;
@@ -41,6 +41,13 @@ export function createClients(chains: SDKChain[]) {
 
     ChainClients.setState({
       [c.id]: {
+        client,
+        bundlerClient,
+      },
+    });
+    // also store under hexstring namespaced key because that's what wagmi sends.
+    ChainClients.setState({
+      [numberToHex(c.id)]: {
         client,
         bundlerClient,
       },
