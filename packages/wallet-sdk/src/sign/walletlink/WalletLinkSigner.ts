@@ -43,6 +43,7 @@ export class WalletLinkSigner implements Signer {
     const cachedAddresses = this._storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
     if (cachedAddresses) {
       const addresses = cachedAddresses.split(' ') as Address[];
+      // @ts-expect-error
       if (addresses[0] !== '') {
         this._addresses = addresses.map((address) => ensureAddressString(address));
       }
