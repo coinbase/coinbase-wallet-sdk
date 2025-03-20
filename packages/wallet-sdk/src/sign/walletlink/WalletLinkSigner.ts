@@ -1,5 +1,12 @@
 // Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
 
+// @ts-nocheck
+import eip712 from '../../vendor-js/eth-eip712-util/index.cjs';
+import { Signer } from '../interface.js';
+import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants.js';
+import { EthereumTransactionParams } from './relay/type/EthereumTransactionParams.js';
+import { isErrorResponse } from './relay/type/Web3Response.js';
+import { WalletLinkRelay } from './relay/WalletLinkRelay.js';
 import { WALLETLINK_URL } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
@@ -16,13 +23,7 @@ import {
   hexStringFromNumber,
 } from ':core/type/util.js';
 import { fetchRPCRequest } from ':util/provider.js';
-// @ts-nocheck
-import eip712 from '../../vendor-js/eth-eip712-util/index.cjs';
-import { Signer } from '../interface.js';
-import { WalletLinkRelay } from './relay/WalletLinkRelay.js';
-import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants.js';
-import { EthereumTransactionParams } from './relay/type/EthereumTransactionParams.js';
-import { isErrorResponse } from './relay/type/Web3Response.js';
+
 const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
 const DEFAULT_JSON_RPC_URL = 'DefaultJsonRpcUrl';
 
@@ -44,7 +45,6 @@ export class WalletLinkSigner implements Signer {
     const cachedAddresses = this._storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
     if (cachedAddresses) {
       const addresses = cachedAddresses.split(' ') as Address[];
-      // @ts-expect-error
       if (addresses[0] !== '') {
         this._addresses = addresses.map((address) => ensureAddressString(address));
       }
