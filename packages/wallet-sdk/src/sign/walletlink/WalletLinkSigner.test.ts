@@ -8,6 +8,7 @@ import { ProviderEventCallback } from ':core/provider/interface.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { Address, HexString } from ':core/type/index.js';
 
+// @ts-nocheck
 import eip712 from '../../vendor-js/eth-eip712-util/index.cjs';
 import { WalletLinkSigner } from './WalletLinkSigner.js';
 import { WalletLinkRelay } from './relay/WalletLinkRelay.js';

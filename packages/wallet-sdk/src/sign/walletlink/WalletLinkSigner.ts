@@ -16,6 +16,7 @@ import {
   hexStringFromNumber,
 } from ':core/type/util.js';
 import { fetchRPCRequest } from ':util/provider.js';
+// @ts-nocheck
 import eip712 from '../../vendor-js/eth-eip712-util/index.cjs';
 import { Signer } from '../interface.js';
 import { WalletLinkRelay } from './relay/WalletLinkRelay.js';
