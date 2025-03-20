@@ -9,8 +9,7 @@ import {
 } from '@chakra-ui/react';
 import { createCoinbaseWalletSDK, getCryptoKeyAccount } from '@coinbase/wallet-sdk';
 import { useEffect, useState } from 'react';
-
-import { mnemonicToAccount } from 'viem/accounts';
+import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import { AddOwner } from './components/AddOwner';
 import { AddSubAccount } from './components/AddSubAccount';
 import { Connect } from './components/Connect';
@@ -45,11 +44,16 @@ export default function SubAccounts() {
     const getSigner =
       signerType === 'cryptokey'
         ? getCryptoKeyAccount
-        : async () => ({
-            account: mnemonicToAccount(
-              'test test test test test test test test test test test junk'
-            ),
-          });
+        : async () => {
+            let privateKey = localStorage.getItem('secp256k1-private-key') as `0x${string}` | null;
+            if (!privateKey) {
+              privateKey = generatePrivateKey();
+              localStorage.setItem('secp256k1-private-key', privateKey);
+            }
+            return {
+              account: privateKeyToAccount(privateKey),
+            };
+          };
 
     setGetSubAccountSigner(() => getSigner);
   }, [signerType]);
