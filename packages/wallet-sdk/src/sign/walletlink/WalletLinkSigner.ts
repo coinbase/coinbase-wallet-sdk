@@ -23,6 +23,7 @@ import {
   hexStringFromNumber,
 } from ':core/type/util.js';
 import { fetchRPCRequest } from ':util/provider.js';
+
 const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
 const DEFAULT_JSON_RPC_URL = 'DefaultJsonRpcUrl';
 
