@@ -1,6 +1,6 @@
 {
   "name": "@coinbase/wallet-sdk",
-  "version": "4.4.0-canary.6",
+  "version": "4.4.0-experimental.1",
   "description": "Coinbase Wallet JavaScript SDK",
   "keywords": [
     "coinbase",

@@ -18,6 +18,7 @@ import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { hexStringFromNumber } from ':core/type/util.js';
 import { store } from ':store/store.js';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from ':util/provider.js';
+import { getCryptoKeyAccount } from './kms/crypto-key/index.js';
 import { Signer } from './sign/interface.js';
 import { createSigner, loadSignerType, storeSignerType } from './sign/util.js';
 
@@ -37,6 +38,12 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
       metadata,
       preference,
     });
+
+    if (this.preference.headlessSubAccounts) {
+      store.setState({
+        toSubAccountSigner: getCryptoKeyAccount,
+      });
+    }
 
     const signerType = loadSignerType();
     if (signerType) {
