@@ -1,9 +1,9 @@
 import { getCode } from 'viem/actions';
 
+import { getBundlerClient } from ':store/chain-clients/utils.js';
 import { createSmartAccount } from './createSmartAccount.js';
 import { createSubAccountSigner } from './createSubAccountSigner.js';
 import { getOwnerIndex } from './getOwnerIndex.js';
-import { getBundlerClient } from ':store/chain-clients/utils.js';
 
 vi.mock('viem/actions', () => ({
   getCode: vi.fn().mockResolvedValue(undefined),
@@ -19,6 +19,7 @@ vi.mock(':store/store.js', () => ({
       toSubAccountSigner: vi.fn().mockResolvedValue({
         account: {
           address: '0x',
+          type: 'local',
         },
       }),
       subAccount: {
