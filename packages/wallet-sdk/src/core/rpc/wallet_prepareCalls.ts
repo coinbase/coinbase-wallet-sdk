@@ -15,9 +15,9 @@ export type PrepareCallsParams = [
 
 export type PrepareCallsReturnValue = {
   type: string;
-  chainId: `0x${string}`;
+  chainId: Hex;
   signatureRequest: {
-    hash: `0x${string}`;
+    hash: Hex;
   };
   capabilities: Record<string, any>;
   userOp: any;

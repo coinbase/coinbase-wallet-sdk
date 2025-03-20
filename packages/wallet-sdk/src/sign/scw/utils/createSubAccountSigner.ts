@@ -1,21 +1,19 @@
 import { Signature } from 'ox';
 import {
   Address,
-  EIP1193RequestFn,
   Hex,
   SignableMessage,
   TypedDataDefinition,
-  WalletRpcSchema,
   hexToBytes,
   hexToNumber,
   hexToString,
-  isAddress,
   isHex,
   numberToHex,
 } from 'viem';
 import { getCode } from 'viem/actions';
 
 import { standardErrors } from ':core/error/errors.js';
+import { RequestArguments } from ':core/provider/interface.js';
 import { PrepareCallsParams, type PrepareCallsSchema } from ':core/rpc/wallet_prepareCalls.js';
 import {
   SendPreparedCallsParams,
@@ -31,7 +29,7 @@ import { getOwnerIndex } from './getOwnerIndex.js';
 
 export async function createSubAccountSigner({ chainId }: { chainId: number }) {
   const client = getClient(chainId);
-  assertPresence(client, standardErrors.rpc.internal('client not found'));
+  assertPresence(client, standardErrors.rpc.internal(`client not found for chainId ${chainId}`));
 
   const subAccount = store.subAccounts.get();
   const toSubAccountSigner = store.getState().toSubAccountSigner;
@@ -70,9 +68,7 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
     factoryData: subAccount.factoryData,
   });
 
-  const request: EIP1193RequestFn<
-    [...WalletRpcSchema, SendPreparedCallsSchema, PrepareCallsSchema]
-  > = (async (args) => {
+  const request = async (args: RequestArguments) => {
     switch (args.method) {
       case 'wallet_addSubAccount':
         return subAccount!;
@@ -91,11 +87,22 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
       case 'wallet_sendCalls': {
         assertArrayPresence(args.params);
         // Get the client for the chain
-        const chainId = get(args.params[0], 'chainId') as number;
-        assertPresence(chainId, standardErrors.rpc.invalidParams('chainId is required'));
+        const chainIdRaw = get(args.params[0], 'chainId');
+        const chainIdHex =
+          typeof chainIdRaw === 'number'
+            ? numberToHex(chainIdRaw)
+            : isHex(chainIdRaw)
+              ? chainIdRaw
+              : null;
+        if (!chainIdHex) {
+          throw standardErrors.rpc.invalidParams('chainId is required');
+        }
 
-        const walletClient = getClient(chainId);
-        assertPresence(walletClient, standardErrors.rpc.internal('wallet client not found'));
+        const walletClient = getClient(hexToNumber(chainIdHex));
+        assertPresence(
+          walletClient,
+          standardErrors.rpc.internal(`client not found for chainId ${hexToNumber(chainIdHex)}`)
+        );
 
         if (!args.params[0]) {
           throw standardErrors.rpc.invalidParams('params are required');
@@ -105,7 +112,7 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
           throw standardErrors.rpc.invalidParams('calls are required');
         }
 
-        const prepareCallsResponse = await request({
+        const prepareCallsResponse = (await request({
           method: 'wallet_prepareCalls',
           params: [
             {
@@ -114,7 +121,7 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
                 data: Hex;
                 value: Hex;
               }[],
-              chainId: numberToHex(chainId),
+              chainId: chainIdHex,
               from: subAccount.address,
               capabilities:
                 'capabilities' in args.params[0]
@@ -122,7 +129,7 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
                   : {},
             },
           ],
-        });
+        })) as PrepareCallsSchema['ReturnType'];
 
         const signature = await owner!.sign?.({
           // Hash returned from wallet_prepareCalls is double hex encoded
@@ -135,15 +142,15 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
           throw standardErrors.rpc.internal('signature not found');
         }
 
-        if (owner!.address && isAddress(owner!.address)) {
+        if (isHex(signature)) {
           signatureData = {
             type: 'secp256k1',
             data: {
-              address: owner!.address,
+              address: owner!.address!,
               signature: signature as Hex,
             },
           };
-        } else if (typeof signature === 'object' && 'webauthn' in signature) {
+        } else {
           const { webauthn, signature: signatureHex } = signature;
 
           const signatureRaw = Signature.fromHex(signatureHex);
@@ -166,11 +173,9 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
               publicKey: owner!.publicKey,
             },
           };
-        } else {
-          throw standardErrors.rpc.internal('invalid signature type');
         }
 
-        const sendPreparedCallsResponse = await request({
+        const sendPreparedCallsResponse = (await request({
           method: 'wallet_sendPreparedCalls',
           params: [
             {
@@ -181,9 +186,9 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
               signature: signatureData,
             },
           ],
-        });
+        })) as SendPreparedCallsSchema['ReturnType'];
 
-        return sendPreparedCallsResponse;
+        return sendPreparedCallsResponse[0];
       }
       case 'wallet_sendPreparedCalls': {
         assertArrayPresence(args.params);
@@ -200,7 +205,10 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
         }
 
         const walletClient = getClient(hexToNumber(chainIdHex));
-        assertPresence(walletClient, standardErrors.rpc.internal('wallet client not found'));
+        assertPresence(
+          walletClient,
+          standardErrors.rpc.internal(`client not found for chainId ${hexToNumber(chainIdHex)}`)
+        );
 
         const sendPreparedCallsResponse = await walletClient.request<SendPreparedCallsSchema>({
           method: 'wallet_sendPreparedCalls',
@@ -224,13 +232,16 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
         }
 
         const walletClient = getClient(hexToNumber(chainIdHex));
-        assertPresence(walletClient, standardErrors.rpc.internal('wallet client not found'));
+        assertPresence(
+          walletClient,
+          standardErrors.rpc.internal(`client not found for chainId ${hexToNumber(chainIdHex)}`)
+        );
 
         if (!args.params[0]) {
           throw standardErrors.rpc.invalidParams('params are required');
         }
 
-        if (!('calls' in args.params[0])) {
+        if (!get(args.params[0], 'calls')) {
           throw standardErrors.rpc.invalidParams('calls are required');
         }
 
@@ -258,7 +269,7 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
       default:
         throw standardErrors.rpc.methodNotSupported();
     }
-  }) as EIP1193RequestFn;
+  };
 
   return {
     request,

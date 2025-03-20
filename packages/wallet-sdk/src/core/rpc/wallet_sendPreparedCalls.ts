@@ -1,3 +1,5 @@
+import { Hex } from 'viem';
+
 export type WebauthnSignatureType = {
   type: 'webauthn';
   data: {
@@ -18,15 +20,15 @@ export type WebauthnSignatureType = {
      * ```
      */
     signature: string;
-    publicKey: `0x${string}`;
+    publicKey: Hex;
   };
 };
 
 export type Secp256k1SignatureType = {
   type: 'secp256k1';
   data: {
-    address: `0x${string}`;
-    signature: `0x${string}`;
+    address: Hex;
+    signature: Hex;
   };
 };
 
@@ -35,7 +37,7 @@ export type SendPreparedCallsParams = [
     version: string;
     type: string;
     data: any;
-    chainId: `0x${string}`;
+    chainId: Hex;
     signature: WebauthnSignatureType | Secp256k1SignatureType;
   },
 ];

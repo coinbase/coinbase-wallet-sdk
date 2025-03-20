@@ -383,7 +383,6 @@ export class SCWSigner implements Signer {
       chainId: this.chain.id,
     });
 
-    // `RequestArguments` is not correctly typed for viem EIP1193RequestFn
-    return signer.request(request as any);
+    return signer.request(request);
   }
 }
