@@ -58,7 +58,7 @@ export function SendCalls({
           {
             to: subAccountAddress,
             data: '0x',
-            value: '0',
+            value: '0x1',
           },
         ],
       });
