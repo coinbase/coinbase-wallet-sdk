@@ -335,7 +335,7 @@ export class SCWSigner implements Signer {
     factoryData?: Hex;
   }> {
     const state = store.getState();
-    const c = config.getState();
+    //const c = config.getState();
     const subAccount = state.subAccount;
     if (subAccount?.address) {
       this.callback?.('accountsChanged', [this.accounts[0], subAccount.address]);
@@ -351,7 +351,7 @@ export class SCWSigner implements Signer {
     const request_ = { ...request };
 
     // Auto Support for Sub Accounts
-    if (c.preference?.headlessSubAccounts && state.toSubAccountSigner) {
+    if (state.toSubAccountSigner) {
       const { account } = await state.toSubAccountSigner();
       assertPresence(account, standardErrors.provider.unauthorized('no sub account signer found'));
       if (Array.isArray(request_?.params)) {
@@ -381,10 +381,14 @@ export class SCWSigner implements Signer {
   }
 
   private shouldRequestUseSubAccountSigner(request: RequestArguments) {
+    console.log('SCWSigner: customlogs: shouldRequestUseSubAccountSigner', request);
     const sender = getSenderFromRequest(request);
     const subAccount = store.subAccounts.get();
     if (sender) {
       return sender === subAccount?.address;
+    }
+    if (request.method === 'eth_sendTransaction') {
+      return true;
     }
     return false;
   }

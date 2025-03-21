@@ -66,7 +66,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
             // const c = config.getState();
 
 
-            if (signerType === 'scw' && this.preference.headlessSubAccounts && state.toSubAccountSigner) {
+            if (signerType === 'scw' && state.toSubAccountSigner) {
               await signer.handshake({ method: 'handshake' });
               const { account } = await state.toSubAccountSigner();
               await signer.request({
@@ -139,7 +139,6 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
           }
         }
       }
-      console.log('customlogs: signer', this.signer);
       return await this.signer.request(args);
     } catch (error) {
       const { code } = error as { code?: number };

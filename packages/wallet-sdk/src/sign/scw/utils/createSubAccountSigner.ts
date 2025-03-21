@@ -68,24 +68,61 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
         case 'eth_chainId':
           return numberToHex(chainId);
         case 'eth_sendTransaction': {
-          assertArrayPresence(args.params);
-          return account.sign(args.params[0] as { hash: Hex });
+          //assertArrayPresence(args.params);
+          //return account.sign(args.params[0] as { hash: Hex });
+          console.log('eth_sendTransaction', args.params);
+          // this is a hack to make sure we dont run into paymaster issues
+          // @ts-ignore
+          const paymasterUrl = get(args.params[0], 'capabilities.paymasterService.url') as string;  
+  
+          const paymaster = createPaymasterClient({
+            transport: http(paymasterUrl),
+          });
+          const bundlerClient = getBundlerClient(chainId);
+          assertPresence(
+            bundlerClient,
+            standardErrors.rpc.invalidParams('bundler client not found')
+          );
+
+          // @ts-ignore
+          const params = args.params[0] as {
+            to: Address;
+            data: Hex;
+            value: any;
+          };
+
+          // Send the user operation
+          const result = await bundlerClient.sendUserOperation({
+            account,
+            calls: [
+              {
+                to: params.to,
+                data: params.data,
+                value: params.value,
+              },
+            ],
+            paymaster,
+          });
+          console.log(`user op hash: ${result}. Waiting for transaction to confirm...`);
+          const userOpReceipt = await bundlerClient.waitForUserOperationReceipt({
+            hash: result
+          });
+          return userOpReceipt.receipt.transactionHash;
         }
         case 'wallet_sendCalls': {
           assertArrayPresence(args.params);
 
-          // Get the paymaster URL from the requests capabilities
-          const paymasterURL = get(args.params[0], 'capabilities.paymasterService.url') as string;
-          let paymaster;
-          if (paymasterURL) {
-            paymaster = createPaymasterClient({
-              transport: http(paymasterURL),
-            });
-          }
+
           // Get the bundler client for the chain
           const chainId = get(args.params[0], 'chainId') as number;
           assertPresence(chainId, standardErrors.rpc.invalidParams('chainId is required'));
 
+          // this is a hack to make sure we dont run into paymaster issues
+          // @ts-ignore
+          const paymasterUrl = get(args.params[0], 'capabilities.paymasterService.url') as string;  
+          const paymaster = createPaymasterClient({
+            transport: http(paymasterUrl),
+          });
           const bundlerClient = getBundlerClient(chainId);
           assertPresence(
             bundlerClient,
