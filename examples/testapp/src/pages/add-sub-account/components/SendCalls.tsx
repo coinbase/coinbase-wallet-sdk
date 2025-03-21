@@ -1,6 +1,7 @@
 import { Box, Button } from '@chakra-ui/react';
 import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import { useCallback, useState } from 'react';
+import { numberToHex } from 'viem';
 import { baseSepolia } from 'viem/chains';
 
 export function SendCalls({
@@ -22,12 +23,13 @@ export function SendCalls({
         method: 'wallet_sendCalls',
         params: [
           {
-            chainId: baseSepolia.id,
+            chainId: numberToHex(baseSepolia.id),
             from: subAccountAddress,
             calls: [
               {
-                to: "0x000000000000000000000000000000000000dead",
+                to: '0x000000000000000000000000000000000000dead',
                 data: '0x',
+                value: '0x0',
               },
             ],
             version: '1',

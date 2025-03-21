@@ -87,21 +87,19 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
       case 'wallet_sendCalls': {
         assertArrayPresence(args.params);
         // Get the client for the chain
-        const chainIdRaw = get(args.params[0], 'chainId');
-        const chainIdHex =
-          typeof chainIdRaw === 'number'
-            ? numberToHex(chainIdRaw)
-            : isHex(chainIdRaw)
-              ? chainIdRaw
-              : null;
-        if (!chainIdHex) {
+        const chainId = get(args.params[0], 'chainId');
+        if (!chainId) {
           throw standardErrors.rpc.invalidParams('chainId is required');
         }
 
-        const walletClient = getClient(hexToNumber(chainIdHex));
+        if (!isHex(chainId)) {
+          throw standardErrors.rpc.invalidParams('chainId must be a hex encoded integer');
+        }
+
+        const walletClient = getClient(hexToNumber(chainId));
         assertPresence(
           walletClient,
-          standardErrors.rpc.internal(`client not found for chainId ${hexToNumber(chainIdHex)}`)
+          standardErrors.rpc.internal(`client not found for chainId ${hexToNumber(chainId)}`)
         );
 
         if (!args.params[0]) {
@@ -121,7 +119,7 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
                 data: Hex;
                 value: Hex;
               }[],
-              chainId: chainIdHex,
+              chainId: chainId,
               from: subAccount.address,
               capabilities:
                 'capabilities' in args.params[0]
@@ -193,21 +191,19 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
       case 'wallet_sendPreparedCalls': {
         assertArrayPresence(args.params);
         // Get the client for the chain
-        const chainIdRaw = get(args.params[0], 'chainId');
-        const chainIdHex =
-          typeof chainIdRaw === 'number'
-            ? numberToHex(chainIdRaw)
-            : isHex(chainIdRaw)
-              ? chainIdRaw
-              : null;
-        if (!chainIdHex) {
+        const chainId = get(args.params[0], 'chainId');
+        if (!chainId) {
           throw standardErrors.rpc.invalidParams('chainId is required');
         }
 
-        const walletClient = getClient(hexToNumber(chainIdHex));
+        if (!isHex(chainId)) {
+          throw standardErrors.rpc.invalidParams('chainId must be a hex encoded integer');
+        }
+
+        const walletClient = getClient(hexToNumber(chainId));
         assertPresence(
           walletClient,
-          standardErrors.rpc.internal(`client not found for chainId ${hexToNumber(chainIdHex)}`)
+          standardErrors.rpc.internal(`client not found for chainId ${hexToNumber(chainId)}`)
         );
 
         const sendPreparedCallsResponse = await walletClient.request<SendPreparedCallsSchema>({
@@ -220,21 +216,19 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
       case 'wallet_prepareCalls': {
         assertArrayPresence(args.params);
         // Get the client for the chain
-        const chainIdRaw = get(args.params[0], 'chainId');
-        const chainIdHex =
-          typeof chainIdRaw === 'number'
-            ? numberToHex(chainIdRaw)
-            : isHex(chainIdRaw)
-              ? chainIdRaw
-              : null;
-        if (!chainIdHex) {
+        const chainId = get(args.params[0], 'chainId');
+        if (!chainId) {
           throw standardErrors.rpc.invalidParams('chainId is required');
         }
 
-        const walletClient = getClient(hexToNumber(chainIdHex));
+        if (!isHex(chainId)) {
+          throw standardErrors.rpc.invalidParams('chainId must be a hex encoded integer');
+        }
+
+        const walletClient = getClient(hexToNumber(chainId));
         assertPresence(
           walletClient,
-          standardErrors.rpc.internal(`client not found for chainId ${hexToNumber(chainIdHex)}`)
+          standardErrors.rpc.internal(`client not found for chainId ${hexToNumber(chainId)}`)
         );
 
         if (!args.params[0]) {
@@ -247,7 +241,7 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
 
         const prepareCallsResponse = await walletClient.request<PrepareCallsSchema>({
           method: 'wallet_prepareCalls',
-          params: [{ ...args.params[0], chainId: chainIdHex }] as PrepareCallsParams,
+          params: [{ ...args.params[0], chainId: chainId }] as PrepareCallsParams,
         });
 
         return prepareCallsResponse;
