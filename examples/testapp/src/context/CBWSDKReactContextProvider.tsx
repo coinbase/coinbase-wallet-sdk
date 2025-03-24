@@ -81,8 +81,8 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
   }, [scwUrl]);
 
   useEffect(() => {
-    // biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
-    let cbwsdk;
+    // biome-ignore lint/suspicious/noExplicitAny: old code
+    let cbwsdk: any;
     let preference: Preference | string;
     if (version === 'HEAD' || version === latestPkgJson.version) {
       const SDK = version === 'HEAD' ? CoinbaseWalletSDKHEAD : CoinbaseWalletSDKLatest;
@@ -211,18 +211,7 @@ export function CBWSDKReactContextProvider({ children }: CBWSDKProviderProps) {
       config,
       setConfig,
     }),
-    [
-      sdk,
-      provider,
-      option,
-      setPreference,
-      version,
-      setSDKVersion,
-      scwUrl,
-      setScwUrlAndSave,
-      config,
-      setConfig,
-    ]
+    [sdk, provider, option, setPreference, version, setSDKVersion, scwUrl, setScwUrlAndSave, config]
   );
 
   return <CBWSDKReactContext.Provider value={ctx}>{children}</CBWSDKReactContext.Provider>;

@@ -1,15 +1,15 @@
-import { Address, Hex, http, numberToHex, SignableMessage, TypedDataDefinition } from 'viem';
+import { Address, Hex, SignableMessage, TypedDataDefinition, http, numberToHex } from 'viem';
 import { createPaymasterClient } from 'viem/account-abstraction';
 import { getCode } from 'viem/actions';
 
-import { createSmartAccount } from './createSmartAccount.js';
-import { getOwnerIndex } from './getOwnerIndex.js';
 import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
 import { getBundlerClient, getClient } from ':store/chain-clients/utils.js';
-import { store, SubAccount } from ':store/store.js';
+import { SubAccount, store } from ':store/store.js';
 import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
 import { get } from ':util/get.js';
+import { createSmartAccount } from './createSmartAccount.js';
+import { getOwnerIndex } from './getOwnerIndex.js';
 
 export async function createSubAccountSigner({ chainId }: { chainId: number }) {
   const client = getClient(chainId);
@@ -34,7 +34,7 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
   if (code) {
     index = await getOwnerIndex({
       address: subAccount.address,
-      publicKey: owner.publicKey || owner.address,
+      publicKey: owner.type === 'local' ? owner.address : owner.publicKey,
       client,
     });
   }

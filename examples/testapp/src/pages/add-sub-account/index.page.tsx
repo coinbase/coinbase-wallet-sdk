@@ -19,7 +19,7 @@ export default function SubAccounts() {
     const sdk = createCoinbaseWalletSDK({
       appName: 'CryptoPlayground',
       preference: {
-        keysUrl: 'https://keys-dev.coinbase.com/connect',
+        keysUrl: 'http://localhost:3005/connect',
         options: 'smartWalletOnly',
       },
       toSubAccountSigner: getCryptoKeyAccount,
