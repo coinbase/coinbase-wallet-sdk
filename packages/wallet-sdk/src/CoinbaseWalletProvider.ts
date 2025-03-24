@@ -1,4 +1,4 @@
-import { numberToHex } from 'viem';
+import { Hex, numberToHex, parseEther, toHex } from 'viem';
 
 import { Communicator } from ':core/communicator/Communicator.js';
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
@@ -39,11 +39,11 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
       preference,
     });
 
-    if (this.preference.headlessSubAccounts) {
+    //if (this.preference.headlessSubAccounts) {
       store.setState({
         toSubAccountSigner: getCryptoKeyAccount,
       });
-    }
+   // }
 
     const signerType = loadSignerType();
     if (signerType) {
@@ -66,7 +66,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
             // const c = config.getState();
 
 
-            if (signerType === 'scw' && this.preference.headlessSubAccounts && state.toSubAccountSigner) {
+            if (signerType === 'scw' && state.toSubAccountSigner) {
               await signer.handshake({ method: 'handshake' });
               const { account } = await state.toSubAccountSigner();
               await signer.request({
@@ -95,13 +95,26 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
                           ],
                         },
                       },
+                      spendPermissions: {
+                        token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+                        allowance: toHex(parseEther('0.001')),
+                        period: 86400,
+                        salt: '0x1',
+                        extraData: '0x' as Hex
+                      },
                     },
                   },
                 ],
               });
               this.signer = signer;
-              // @ts-expect-error meh
-              //return result.accounts.map((account) => account.address) as T;
+
+              store.spendPermissions.set({
+                // @ts-ignore
+                signature: result?.accounts?.[0]?.capabilities?.spendPermissions.signature,
+                // @ts-ignore
+                permission: result?.accounts?.[0]?.capabilities?.spendPermissions.permission,
+              });
+              // @ts-ignore
               return [result.accounts[0].capabilities.addSubAccount.address] as T;
             }
 
@@ -139,7 +152,6 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
           }
         }
       }
-      console.log('customlogs: signer', this.signer);
       return await this.signer.request(args);
     } catch (error) {
       const { code } = error as { code?: number };

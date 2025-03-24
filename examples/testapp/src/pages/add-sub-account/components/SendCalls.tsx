@@ -45,10 +45,52 @@ export function SendCalls({
     }
   }, [sdk, subAccountAddress]);
 
+  const handleSendTransaction = useCallback(async () => {
+    if (!sdk) {
+      return;
+    }
+
+    const provider = sdk.getProvider();
+    try {
+      const response = await provider.request({
+        method: 'eth_sendTransaction',
+        params: [
+          {
+            to: subAccountAddress,
+            data: '0x',
+            value: '0x1',
+          },
+        ],
+      });
+      console.info('response', response);
+      setState(response as string);
+    } catch (e) {
+      console.error('error', e);
+    }
+  }, [sdk, subAccountAddress]);
+
   return (
     <>
       <Button w="full" onClick={handleSendCalls}>
         Send Calls
+      </Button>
+      {state && (
+        <Box
+          as="pre"
+          w="full"
+          p={2}
+          bg="gray.900"
+          borderRadius="md"
+          border="1px solid"
+          borderColor="gray.700"
+          overflow="auto"
+          whiteSpace="pre-wrap"
+        >
+          {JSON.stringify(state, null, 2)}
+        </Box>
+      )}
+      <Button w="full" onClick={handleSendTransaction}>
+        Send Transaction
       </Button>
       {state && (
         <Box

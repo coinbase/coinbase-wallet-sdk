@@ -69,6 +69,16 @@ const createSubAccountSlice: StateCreator<StoreState, [], [], SubAccountSlice> =
   };
 };
 
+type SpendPermissionSlice = {
+  spendPermission?: SpendPermission;
+};
+
+const createSpendPermissionSlice: StateCreator<StoreState, [], [], SpendPermissionSlice> = () => {
+  return {
+    spendPermission: undefined,
+  };
+};
+
 type MergeTypes<T extends unknown[]> = T extends [infer First, ...infer Rest]
   ? First & (Rest extends unknown[] ? MergeTypes<Rest> : Record<string, unknown>)
   : Record<string, unknown>;
@@ -79,6 +89,7 @@ export type StoreState = MergeTypes<
     KeysSlice,
     AccountSlice,
     SubAccountSlice,
+    SpendPermissionSlice,
     { toSubAccountSigner?: ToSubAccountSigner },
   ]
 >;
@@ -90,6 +101,7 @@ export const sdkstore = createStore(
       ...createKeysSlice(...args),
       ...createAccountSlice(...args),
       ...createSubAccountSlice(...args),
+      ...createSpendPermissionSlice(...args),
       toSubAccountSigner: undefined,
     }),
     {
@@ -103,6 +115,7 @@ export const sdkstore = createStore(
           keys: state.keys,
           account: state.account,
           subAccount: state.subAccount,
+          spendPermission: state.spendPermission,
         } as StoreState;
       },
     }
@@ -160,12 +173,29 @@ export const keys = {
     });
   },
 };
+export type SpendPermission = {
+  signature: string;
+  permission: any;
+};
+
+export const spendPermissions = {
+  get: () => sdkstore.getState().spendPermission,
+  set: (spendPermission: SpendPermission) => {
+    sdkstore.setState({ spendPermission });
+  },
+  clear: () => {
+    sdkstore.setState({
+      spendPermission: undefined,
+    });
+  },
+};
 
 const actions = {
   subAccounts,
   account,
   chains,
   keys,
+  spendPermissions,
   setSubAccountSigner: (toSubAccountSigner: ToSubAccountSigner) => {
     sdkstore.setState({ toSubAccountSigner });
   },
