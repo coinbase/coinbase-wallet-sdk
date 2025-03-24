@@ -33,7 +33,8 @@ export function DeploySubAccount({
         transport: http("https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O"),
         paymaster: paymasterClient,
       });
-      // @ts-expect-error testing
+
+      // @ts-ignore
       const hash = await bundlerClient.sendUserOperation({
         calls: [],
       });
