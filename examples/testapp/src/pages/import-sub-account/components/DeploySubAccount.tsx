@@ -2,7 +2,7 @@ import { Box, Button } from "@chakra-ui/react";
 import { createCoinbaseWalletSDK } from "@coinbase/wallet-sdk";
 import { useCallback, useState } from "react";
 import { Client, createPublicClient, http } from "viem";
-import { createBundlerClient, createPaymasterClient, SmartAccount } from "viem/account-abstraction";
+import { SmartAccount, createBundlerClient, createPaymasterClient } from "viem/account-abstraction";
 import { baseSepolia } from "viem/chains";
 
 export function DeploySubAccount({
@@ -33,7 +33,7 @@ export function DeploySubAccount({
         transport: http("https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O"),
         paymaster: paymasterClient,
       });
-      // @ts-expect-error
+      // @ts-expect-error testing
       const hash = await bundlerClient.sendUserOperation({
         calls: [],
       });
