@@ -1,7 +1,11 @@
-# Coinbase Wallet SDK v3.x.x
+# [DEPRECATED] Coinbase Wallet SDK v3.x.x
 
-- [Playground](https://coinbase.github.io/coinbase-wallet-sdk/)
-- [Developer docs](https://docs.cloud.coinbase.com/wallet-sdk/docs)
+> **IMPORTANT**: This documentation is for v3.x.x which is now deprecated. Please migrate to v4.x.x and refer to the current documentation at [https://www.smartwallet.dev/](https://www.smartwallet.dev/).
+>
+> For migration assistance, please visit the [v3 to v4 migration guide](https://www.smartwallet.dev/sdk/v3-to-v4-changes).
+
+- [Playground (v3)](https://coinbase.github.io/coinbase-wallet-sdk/)
+- [Legacy Developer docs (v3)](https://docs.cloud.coinbase.com/wallet-sdk/docs)
 
 Coinbase Wallet SDK (formerly WalletLink) lets developers connect their dapps to Coinbase Wallet
 on both mobile web (for iOS and Android) and desktop:
@@ -45,3 +49,9 @@ yarn typecheck
 - [wagmi](https://github.com/tmm/wagmi)
 - [web3-react](https://github.com/NoahZinsmeister/web3-react)
 - [web3modal](https://github.com/Web3Modal/web3modal)
+
+## Next Steps
+
+1. Upgrade to v4: `yarn add @coinbase/wallet-sdk@latest` or `npm install @coinbase/wallet-sdk@latest`
+2. Follow the [migration guide](https://www.smartwallet.dev/sdk/v3-to-v4-changes) to update your code
+3. Explore the [new documentation](https://www.smartwallet.dev/) for additional features and improvements
