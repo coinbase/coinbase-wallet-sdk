@@ -133,7 +133,7 @@ describe('createSubAccountSigner', () => {
               data: '0x',
             },
           ],
-          from: signer.address,
+          from: '0x',
           version: '1.0',
         },
       ],
@@ -191,7 +191,7 @@ describe('createSubAccountSigner', () => {
     });
     await signer.request({
       method: 'personal_sign',
-      params: ['hello world', signer.address],
+      params: ['hello world',  '0x'],
     });
 
     expect(mock).toHaveBeenCalledWith({ message: 'hello world' });
@@ -234,7 +234,7 @@ describe('createSubAccountSigner', () => {
           chainId: numberToHex(84532),
           calls: [{ to: '0x', data: '0x' }],
           version: '1.0',
-          from: signer.address,
+          from: '0x',
         },
       ],
     });

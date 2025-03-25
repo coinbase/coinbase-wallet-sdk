@@ -45,10 +45,10 @@ export default function SubAccounts() {
       signerType === 'cryptokey'
         ? getCryptoKeyAccount
         : async () => {
-            let privateKey = localStorage.getItem('secp256k1-private-key') as `0x${string}` | null;
+            let privateKey = localStorage.getItem('cbwsdk.demo.add-sub-account.pk') as `0x${string}` | null;
             if (!privateKey) {
               privateKey = generatePrivateKey();
-              localStorage.setItem('secp256k1-private-key', privateKey);
+              localStorage.setItem('cbwsdk.demo.add-sub-account.pk', privateKey);
             }
             return {
               account: privateKeyToAccount(privateKey),

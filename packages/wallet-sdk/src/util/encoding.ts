@@ -1,4 +1,4 @@
-import { hexToBytes, numberToHex, trim } from "viem";
+import { hexToBytes, numberToHex, trim } from 'viem';
 
 export function base64ToBase64Url(base64: string): string {
   return base64.replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
@@ -6,9 +6,10 @@ export function base64ToBase64Url(base64: string): string {
 
 export function arrayBufferToBase64Url(buffer: ArrayBuffer): string {
   // First convert to regular base64
-  const base64 = Buffer.from(buffer).toString('base64');
+  const base64String = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+
   // Then convert to base64url
-  return base64ToBase64Url(base64);
+  return base64ToBase64Url(base64String);
 }
 
 export function convertCredentialToJSON(credential: any) {

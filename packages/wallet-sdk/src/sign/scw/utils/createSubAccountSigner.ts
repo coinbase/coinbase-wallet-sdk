@@ -267,6 +267,5 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
 
   return {
     request,
-    address: subAccount.address,
   };
 }
