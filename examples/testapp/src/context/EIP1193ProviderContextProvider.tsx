@@ -13,7 +13,14 @@ type EIP1193ProviderContextProviderProps = {
   children: React.ReactNode;
 };
 
-const EIP1193ProviderContext = React.createContext(null);
+type EIP1193ProviderContextType = {
+  sdk:
+    | ReturnType<typeof createCoinbaseWalletSDKHEAD>
+    | ReturnType<typeof createCoinbaseWalletSDKLatest>;
+  provider: ReturnType<EIP1193ProviderContextType['sdk']['getProvider']>;
+};
+
+const EIP1193ProviderContext = React.createContext<EIP1193ProviderContextType | null>(null);
 
 export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderContextProviderProps) {
   const { option, version, scwUrl, config } = useConfigParams();

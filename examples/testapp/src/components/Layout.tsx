@@ -30,11 +30,13 @@ export const WIDTH_2XL = '1536px';
 const PAGES = ['/', '/add-sub-account', '/import-sub-account'];
 
 export function Layout({ children }: LayoutProps) {
-  const { option, setPreference, sdkVersion, setSDKVersion, scwUrl, setScwUrlAndSave } =
+  const { option, setPreference, version, setSDKVersion, scwUrl, setScwUrlAndSave } =
     useConfigParams();
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const isSmallScreen = useBreakpointValue({ base: true, xl: false });
+
+  console.log('version', version);
 
   const handleReset = async () => {
     localStorage.clear();
@@ -46,17 +48,17 @@ export function Layout({ children }: LayoutProps) {
       <>
         <Menu>
           <MenuButton colorScheme="telegram" as={Button} rightIcon={<ChevronDownIcon />}>
-            {`SDK: ${sdkVersion}`}
+            {`SDK: ${version}`}
           </MenuButton>
           <MenuList>
-            {sdkVersions.map((version) => (
+            {sdkVersions.map((v) => (
               <MenuItem
                 color={'MenuText'}
-                key={version}
-                icon={version === sdkVersion ? <CheckIcon /> : null}
-                onClick={() => setSDKVersion(version)}
+                key={v}
+                icon={v === version ? <CheckIcon /> : null}
+                onClick={() => setSDKVersion(v)}
               >
-                {version}
+                {v}
               </MenuItem>
             ))}
           </MenuList>
@@ -99,7 +101,7 @@ export function Layout({ children }: LayoutProps) {
         </Menu>
       </>
     );
-  }, [sdkVersion, option, setPreference, setSDKVersion, scwUrl, setScwUrlAndSave]);
+  }, [version, option, setPreference, setSDKVersion, scwUrl, setScwUrlAndSave]);
 
   const pages = useMemo(() => {
     return (

@@ -16,7 +16,18 @@ type ConfigParamsContextProviderProps = {
   children: React.ReactNode;
 };
 
-const ConfigParamsContext = React.createContext(null);
+type ConfigParamsContextType = {
+  version: SDKVersionType | undefined;
+  option: OptionsType | undefined;
+  scwUrl: ScwUrlType | undefined;
+  config: Preference;
+  setPreference: (option: OptionsType) => void;
+  setSDKVersion: (version: SDKVersionType) => void;
+  setScwUrlAndSave: (url: ScwUrlType) => void;
+  setConfig: (config: Preference) => void;
+};
+
+const ConfigParamsContext = React.createContext<ConfigParamsContextType | null>(null);
 
 export const ConfigParamsContextProvider = ({ children }: ConfigParamsContextProviderProps) => {
   const [version, setVersion] = React.useState<SDKVersionType | undefined>(undefined);
