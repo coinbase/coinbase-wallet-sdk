@@ -106,7 +106,6 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
 
         for (const key in dataToSubmit) {
           if (Object.prototype.hasOwnProperty.call(data, key)) {
-            //
             dataToSubmit[key] = await replaceAddressInValue(dataToSubmit[key], getCurrentAddress);
 
             if (dataToSubmit[key] === CHAIN_ID_TO_FILL) {
