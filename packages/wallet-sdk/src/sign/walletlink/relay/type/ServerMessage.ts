@@ -9,9 +9,6 @@ type Type = _ServerMessage['type'];
 
 type _ServerMessage =
   | {
-      type: 'Heartbeat'; // TODO: remove. it's client side only virtual message.
-    }
-  | {
       type: 'OK';
       id: IntNumber;
       sessionId: string;
