@@ -1,4 +1,3 @@
-// 1. import `ChakraProvider` component
 import { ChakraProvider } from '@chakra-ui/react';
 
 import { Layout } from '../components/Layout';
