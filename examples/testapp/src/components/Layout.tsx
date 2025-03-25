@@ -36,8 +36,6 @@ export function Layout({ children }: LayoutProps) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const isSmallScreen = useBreakpointValue({ base: true, xl: false });
 
-  console.log('version', version);
-
   const handleReset = async () => {
     localStorage.clear();
     window.location.reload();
