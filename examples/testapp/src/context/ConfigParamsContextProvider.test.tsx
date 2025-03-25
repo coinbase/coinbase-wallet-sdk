@@ -108,7 +108,7 @@ describe('ConfigParamsContextProvider', () => {
       wrapper: TestWrapper,
     });
     const newConfig = {
-      options: 'minimal',
+      options: 'smartWalletOnly' as const,
       attribution: {
         auto: true,
       },

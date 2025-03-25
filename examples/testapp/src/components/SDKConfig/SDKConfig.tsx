@@ -16,7 +16,7 @@ import { keccak256, slice, toHex } from 'viem';
 
 import { useConfigParams } from '../../context/ConfigParamsContextProvider';
 
-function computeDataSuffix(value: string): string {
+function computeDataSuffix(value: string): `0x${string}` {
   return slice(keccak256(toHex(value)), 0, 16);
 }
 

@@ -1,4 +1,5 @@
 import { createCoinbaseWalletSDK as createCoinbaseWalletSDKHEAD } from '@coinbase/wallet-sdk';
+import { createCoinbaseWalletSDK as createCoinbaseWalletSDKLatest } from '@coinbase/wallet-sdk-latest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -50,8 +51,12 @@ describe('EIP1193ProviderContextProvider', () => {
     vi.spyOn(ConfigParamsContext, 'useConfigParams').mockReturnValue({
       option: 'all',
       version: 'HEAD',
-      scwUrl: 'https://test.url',
-      config: { attribution: 'test-attribution' },
+      scwUrl: 'https://keys-dev.coinbase.com/connect',
+      config: { options: 'all', attribution: { dataSuffix: '0xtestattribution' } },
+      setPreference: vi.fn(),
+      setSDKVersion: vi.fn(),
+      setScwUrlAndSave: vi.fn(),
+      setConfig: vi.fn(),
     });
 
     vi.spyOn(EventListeners, 'useEventListeners').mockReturnValue({
@@ -85,8 +90,8 @@ describe('EIP1193ProviderContextProvider', () => {
       appChainIds: [84532, 8452],
       preference: {
         options: 'all',
-        attribution: 'test-attribution',
-        keysUrl: 'https://test.url',
+        attribution: { dataSuffix: '0xtestattribution' },
+        keysUrl: 'https://keys-dev.coinbase.com/connect',
       },
     });
     expect(screen.getByTestId('sdk-exists')).toBeTruthy();
@@ -95,50 +100,43 @@ describe('EIP1193ProviderContextProvider', () => {
     expect(mockSpyOnDisconnectedError).toHaveBeenCalledWith(mockProvider);
   });
 
-  // it('initializes SDK with latest version when version is not HEAD', () => {
-  //   vi.spyOn(ConfigParamsContext, 'useConfigParams').mockReturnValue({
-  //     option: 'all',
-  //     version: 'latest',
-  //     scwUrl: 'https://test.url',
-  //     config: { attribution: 'test-attribution' },
-  //   });
+  it('initializes SDK with latest version when version is not HEAD', () => {
+    vi.spyOn(ConfigParamsContext, 'useConfigParams').mockReturnValue({
+      option: 'all',
+      version: 'latest',
+      scwUrl: 'https://keys-dev.coinbase.com/connect',
+      config: { options: 'all', attribution: { dataSuffix: '0xtestattribution' } },
+      setPreference: vi.fn(),
+      setSDKVersion: vi.fn(),
+      setScwUrlAndSave: vi.fn(),
+      setConfig: vi.fn(),
+    });
 
-  //   render(
-  //     <EIP1193ProviderContextProvider>
-  //       <TestConsumer />
-  //     </EIP1193ProviderContextProvider>
-  //   );
+    render(
+      <EIP1193ProviderContextProvider>
+        <TestConsumer />
+      </EIP1193ProviderContextProvider>
+    );
 
-  //   expect(createCoinbaseWalletSDKLatest).toHaveBeenCalledWith({
-  //     appName: 'SDK Playground',
-  //     appChainIds: [84532, 8452],
-  //     preference: {
-  //       options: 'all',
-  //       attribution: 'test-attribution',
-  //       keysUrl: 'https://test.url',
-  //     },
-  //   });
-  // });
+    expect(createCoinbaseWalletSDKLatest).toHaveBeenCalledWith({
+      appName: 'SDK Playground',
+      appChainIds: [84532, 8452],
+      preference: {
+        options: 'all',
+        attribution: { dataSuffix: '0xtestattribution' },
+        keysUrl: 'https://keys-dev.coinbase.com/connect',
+      },
+    });
+  });
 
-  // it('cleans up event listeners on unmount', () => {
-  //   const { unmount } = render(
-  //     <EIP1193ProviderContextProvider>
-  //       <TestConsumer />
-  //     </EIP1193ProviderContextProvider>
-  //   );
+  it('cleans up event listeners on unmount', () => {
+    const { unmount } = render(
+      <EIP1193ProviderContextProvider>
+        <TestConsumer />
+      </EIP1193ProviderContextProvider>
+    );
 
-  //   unmount();
-  //   expect(mockRemoveEventListeners).toHaveBeenCalledWith(mockProvider);
-  // });
-
-  // it('throws error when useEIP1193Provider is used outside provider', () => {
-  //   // Suppress console.error for this test
-  //   const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-  //   expect(() => render(<TestConsumer />)).toThrow(
-  //     'useEIP1193Provider must be used within a EIP1193ProviderContextProvider'
-  //   );
-
-  //   consoleErrorSpy.mockRestore();
-  // });
+    unmount();
+    expect(mockRemoveEventListeners).toHaveBeenCalledWith(mockProvider);
+  });
 });

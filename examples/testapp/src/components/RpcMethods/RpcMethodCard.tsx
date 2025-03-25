@@ -70,7 +70,7 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
 
   const verify = useCallback(
     async (response: ResponseType, data: Record<string, string>) => {
-      const chainId = await provider.request({ method: 'eth_chainId' });
+      const chainId = (await provider.request({ method: 'eth_chainId' })) as `0x${string}`;
       const chain =
         multiChainShortcutsMap['wallet_switchEthereumChain'].find(
           (shortcut) => Number(shortcut.data.chainId) === hexToNumber(chainId)
@@ -101,14 +101,16 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
       const dataToSubmit = { ...data };
       let values = dataToSubmit;
       if (format) {
-        const getCurrentAddress = async () => await provider.request({ method: 'eth_accounts' });
+        const getCurrentAddress = async () =>
+          (await provider.request({ method: 'eth_accounts' })) as [string];
 
         for (const key in dataToSubmit) {
           if (Object.prototype.hasOwnProperty.call(data, key)) {
+            //
             dataToSubmit[key] = await replaceAddressInValue(dataToSubmit[key], getCurrentAddress);
 
             if (dataToSubmit[key] === CHAIN_ID_TO_FILL) {
-              const chainId = await provider.request({ method: 'eth_chainId' });
+              const chainId = (await provider.request({ method: 'eth_chainId' })) as string;
               dataToSubmit[key] = chainId;
             }
           }
@@ -116,12 +118,13 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
         values = format(dataToSubmit);
       }
       try {
-        const response = await provider.request({
+        const response = (await provider.request({
           method,
           params: values,
-        });
+          // biome-ignore lint/suspicious/noExplicitAny: old code, refactor soon
+        })) as any;
         setResponse(response);
-        await verify(response, dataToSubmit);
+        await verify(response as string, dataToSubmit);
       } catch (err) {
         const { code, message, data } = err;
         setError({ code, message, data });

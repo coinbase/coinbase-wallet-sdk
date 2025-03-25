@@ -22,12 +22,14 @@ import { SDKConfig } from '../components/SDKConfig/SDKConfig';
 import { useEIP1193Provider } from '../context/EIP1193ProviderContextProvider';
 
 export default function Home() {
-  const { provider, sdkVersion } = useEIP1193Provider();
+  const { provider } = useEIP1193Provider();
+  // @ts-expect-error refactor soon
   const [connected, setConnected] = React.useState(Boolean(provider?.connected));
   const [chainId, setChainId] = React.useState<number | undefined>(undefined);
   // This is for Extension compatibility, Extension with SDK3.9 does not emit connect event
   // correctly, so we manually check if the extension is connected, and set the connected state
   useEffect(() => {
+    // @ts-expect-error refactor soon
     if (window.coinbaseWalletExtension) {
       setConnected(true);
     }
@@ -38,6 +40,7 @@ export default function Home() {
       setConnected(true);
     });
     provider?.on('chainChanged', (newChainId) => {
+      // @ts-expect-error refactor soon
       setChainId(newChainId);
     });
   }, [provider]);
@@ -45,18 +48,19 @@ export default function Home() {
   useEffect(() => {
     if (connected) {
       provider?.request({ method: 'eth_chainId' }).then((chainId) => {
+        // @ts-expect-error refactor soon
         setChainId(Number.parseInt(chainId, 16));
       });
     }
 
     // Injected provider does not emit a 'connect' event
+    // @ts-expect-error refactor soon
     if (provider?.isCoinbaseBrowser) {
       setConnected(true);
     }
   }, [connected, provider]);
 
-  // There's a bug in 3.9.3 where it does not emit a 'connect' event for walletlink connections
-  const shouldShowMethodsRequiringConnection = connected || sdkVersion === '3.9.3';
+  const shouldShowMethodsRequiringConnection = connected;
 
   return (
     <Container maxW={WIDTH_2XL} mb={8}>
@@ -66,17 +70,14 @@ export default function Home() {
           <EventListenersCard />
         </Grid>
       </Box>
-      {/* TODO: once published have this include latest */}
-      {sdkVersion === 'HEAD' && (
-        <>
-          <Heading size="md" mt={4}>
-            SDK Configuration (Optional)
-          </Heading>
-          <Box mt={4}>
-            <SDKConfig />
-          </Box>
-        </>
-      )}
+      <>
+        <Heading size="md" mt={4}>
+          SDK Configuration (Optional)
+        </Heading>
+        <Box mt={4}>
+          <SDKConfig />
+        </Box>
+      </>
       <MethodsSection
         title="Wallet Connection"
         methods={connectionMethods}

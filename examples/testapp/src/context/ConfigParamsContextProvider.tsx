@@ -21,10 +21,10 @@ type ConfigParamsContextType = {
   option: OptionsType | undefined;
   scwUrl: ScwUrlType | undefined;
   config: Preference;
-  setPreference: (option: OptionsType) => void;
-  setSDKVersion: (version: SDKVersionType) => void;
-  setScwUrlAndSave: (url: ScwUrlType) => void;
-  setConfig: (config: Preference) => void;
+  setPreference: React.Dispatch<React.SetStateAction<OptionsType>>;
+  setSDKVersion: React.Dispatch<React.SetStateAction<SDKVersionType>>;
+  setScwUrlAndSave: React.Dispatch<React.SetStateAction<ScwUrlType>>;
+  setConfig: React.Dispatch<React.SetStateAction<Preference>>;
 };
 
 const ConfigParamsContext = React.createContext<ConfigParamsContextType | null>(null);
