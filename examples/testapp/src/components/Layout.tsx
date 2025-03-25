@@ -19,8 +19,9 @@ import {
 } from '@chakra-ui/react';
 import NextLink from 'next/link';
 import React, { useMemo } from 'react';
-import { useConfigParams } from '../context/ConfigParamsContextProvider';
+import { useConfig } from '../context/ConfigContextProvider';
 import { options, scwUrls, sdkVersions } from '../store/config';
+import { cleanupSDKLocalStorage } from '../utils/cleanupSDKLocalStorage';
 type LayoutProps = {
   children: React.ReactNode;
 };
@@ -30,8 +31,7 @@ export const WIDTH_2XL = '1536px';
 const PAGES = ['/', '/add-sub-account', '/import-sub-account'];
 
 export function Layout({ children }: LayoutProps) {
-  const { option, setPreference, version, setSDKVersion, scwUrl, setScwUrlAndSave } =
-    useConfigParams();
+  const { option, setPreference, version, setSDKVersion, scwUrl, setScwUrlAndSave } = useConfig();
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const isSmallScreen = useBreakpointValue({ base: true, xl: false });
@@ -109,7 +109,13 @@ export function Layout({ children }: LayoutProps) {
         </MenuButton>
         <MenuList>
           {PAGES.map((page) => (
-            <MenuItem key={page} as={NextLink} href={page} color={'MenuText'}>
+            <MenuItem
+              key={page}
+              as={NextLink}
+              href={page}
+              color={'MenuText'}
+              onClick={cleanupSDKLocalStorage}
+            >
               {page}
             </MenuItem>
           ))}

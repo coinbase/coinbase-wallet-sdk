@@ -1,5 +1,15 @@
 import { Preference } from '@coinbase/wallet-sdk';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import {
+  Dispatch,
+  ReactNode,
+  SetStateAction,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import {
   OPTIONS_KEY,
   OptionsType,
@@ -11,29 +21,30 @@ import {
   scwUrls,
   sdkVersions,
 } from '../store/config';
+import { cleanupSDKLocalStorage } from '../utils/cleanupSDKLocalStorage';
 
-type ConfigParamsContextProviderProps = {
-  children: React.ReactNode;
+type ConfigContextProviderProps = {
+  children: ReactNode;
 };
 
-type ConfigParamsContextType = {
+type ConfigContextType = {
   version: SDKVersionType | undefined;
   option: OptionsType | undefined;
   scwUrl: ScwUrlType | undefined;
   config: Preference;
-  setPreference: React.Dispatch<React.SetStateAction<OptionsType>>;
-  setSDKVersion: React.Dispatch<React.SetStateAction<SDKVersionType>>;
-  setScwUrlAndSave: React.Dispatch<React.SetStateAction<ScwUrlType>>;
-  setConfig: React.Dispatch<React.SetStateAction<Preference>>;
+  setPreference: Dispatch<SetStateAction<OptionsType>>;
+  setSDKVersion: Dispatch<SetStateAction<SDKVersionType>>;
+  setScwUrlAndSave: Dispatch<SetStateAction<ScwUrlType>>;
+  setConfig: Dispatch<SetStateAction<Preference>>;
 };
 
-const ConfigParamsContext = React.createContext<ConfigParamsContextType | null>(null);
+const ConfigContext = createContext<ConfigContextType | null>(null);
 
-export const ConfigParamsContextProvider = ({ children }: ConfigParamsContextProviderProps) => {
-  const [version, setVersion] = React.useState<SDKVersionType | undefined>(undefined);
-  const [option, setOption] = React.useState<OptionsType | undefined>(undefined);
-  const [scwUrl, setScwUrl] = React.useState<ScwUrlType | undefined>(undefined);
-  const [config, setConfig] = React.useState<Preference>({
+export const ConfigContextProvider = ({ children }: ConfigContextProviderProps) => {
+  const [version, setVersion] = useState<SDKVersionType | undefined>(undefined);
+  const [option, setOption] = useState<OptionsType | undefined>(undefined);
+  const [scwUrl, setScwUrl] = useState<ScwUrlType | undefined>(undefined);
+  const [config, setConfig] = useState<Preference>({
     options: option,
     attribution: {
       auto: false,
@@ -73,16 +84,19 @@ export const ConfigParamsContextProvider = ({ children }: ConfigParamsContextPro
   );
 
   const setPreference = useCallback((option: OptionsType) => {
+    cleanupSDKLocalStorage();
     localStorage.setItem(OPTIONS_KEY, option);
     setOption(option);
   }, []);
 
   const setSDKVersion = useCallback((version: SDKVersionType) => {
+    cleanupSDKLocalStorage();
     localStorage.setItem(SELECTED_SDK_KEY, version);
     setVersion(version);
   }, []);
 
   const setScwUrlAndSave = useCallback((url: ScwUrlType) => {
+    cleanupSDKLocalStorage();
     localStorage.setItem(SELECTED_SCW_URL_KEY, url);
     setScwUrl(url);
   }, []);
@@ -100,13 +114,13 @@ export const ConfigParamsContextProvider = ({ children }: ConfigParamsContextPro
     };
   }, [version, option, scwUrl, config, setPreference, setSDKVersion, setScwUrlAndSave]);
 
-  return <ConfigParamsContext.Provider value={value}>{children}</ConfigParamsContext.Provider>;
+  return <ConfigContext.Provider value={value}>{children}</ConfigContext.Provider>;
 };
 
-export function useConfigParams() {
-  const context = React.useContext(ConfigParamsContext);
+export function useConfig() {
+  const context = useContext(ConfigContext);
   if (context === undefined) {
-    throw new Error('useConfigParams must be used within a ConfigParamsContextProvider');
+    throw new Error('useConfig must be used within a ConfigContextProvider');
   }
   return context;
 }

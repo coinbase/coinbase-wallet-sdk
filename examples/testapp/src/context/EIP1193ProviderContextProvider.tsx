@@ -1,16 +1,15 @@
 import { createCoinbaseWalletSDK as createCoinbaseWalletSDKHEAD } from '@coinbase/wallet-sdk';
 import { createCoinbaseWalletSDK as createCoinbaseWalletSDKLatest } from '@coinbase/wallet-sdk-latest';
 
-import React, { useEffect, useMemo } from 'react';
+import { ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { DisconnectedAlert } from '../components/alerts/DisconnectedAlert';
 import { useEventListeners } from '../hooks/useEventListeners';
 import { useSpyOnDisconnectedError } from '../hooks/useSpyOnDisconnectedError';
 import { scwUrls } from '../store/config';
-import { cleanupSDKLocalStorage } from '../utils/cleanupSDKLocalStorage';
-import { useConfigParams } from './ConfigParamsContextProvider';
+import { useConfig } from './ConfigContextProvider';
 
 type EIP1193ProviderContextProviderProps = {
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 type EIP1193ProviderContextType = {
@@ -20,10 +19,10 @@ type EIP1193ProviderContextType = {
   provider: ReturnType<EIP1193ProviderContextType['sdk']['getProvider']>;
 };
 
-const EIP1193ProviderContext = React.createContext<EIP1193ProviderContextType | null>(null);
+const EIP1193ProviderContext = createContext<EIP1193ProviderContextType | null>(null);
 
 export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderContextProviderProps) {
-  const { option, version, scwUrl, config } = useConfigParams();
+  const { option, version, scwUrl, config } = useConfig();
   const { addEventListeners, removeEventListeners } = useEventListeners();
   const {
     spyOnDisconnectedError,
@@ -31,12 +30,10 @@ export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderCont
     onClose: onDisconnectedAlertClose,
   } = useSpyOnDisconnectedError();
 
-  const [sdk, setSdk] = React.useState(null);
-  const [provider, setProvider] = React.useState(null);
+  const [sdk, setSdk] = useState(null);
+  const [provider, setProvider] = useState(null);
 
   useEffect(() => {
-    cleanupSDKLocalStorage();
-
     const sdkParams = {
       appName: 'SDK Playground',
       appChainIds: [84532, 8452],
@@ -94,7 +91,7 @@ export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderCont
 }
 
 export function useEIP1193Provider() {
-  const context = React.useContext(EIP1193ProviderContext);
+  const context = useContext(EIP1193ProviderContext);
   if (context === undefined) {
     throw new Error('useEIP1193Provider must be used within a EIP1193ProviderContextProvider');
   }

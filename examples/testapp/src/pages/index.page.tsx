@@ -70,14 +70,12 @@ export default function Home() {
           <EventListenersCard />
         </Grid>
       </Box>
-      <>
-        <Heading size="md" mt={4}>
-          SDK Configuration (Optional)
-        </Heading>
-        <Box mt={4}>
-          <SDKConfig />
-        </Box>
-      </>
+      <Heading size="md" mt={4}>
+        SDK Configuration (Optional)
+      </Heading>
+      <Box mt={4}>
+        <SDKConfig />
+      </Box>
       <MethodsSection
         title="Wallet Connection"
         methods={connectionMethods}

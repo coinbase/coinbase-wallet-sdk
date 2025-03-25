@@ -31,7 +31,6 @@ export const DisconnectedAlert = ({
       isCentered
     >
       <AlertDialogOverlay />
-
       <AlertDialogContent>
         <AlertDialogHeader>Wallet Disconnected</AlertDialogHeader>
         <AlertDialogCloseButton />

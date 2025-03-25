@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as EventListeners from '../hooks/useEventListeners';
 import * as DisconnectedError from '../hooks/useSpyOnDisconnectedError';
 import * as CleanupUtils from '../utils/cleanupSDKLocalStorage';
-import * as ConfigParamsContext from './ConfigParamsContextProvider';
+import * as ConfigContext from './ConfigContextProvider';
 import {
   EIP1193ProviderContextProvider,
   useEIP1193Provider,
@@ -48,7 +48,7 @@ function TestConsumer() {
 
 describe('EIP1193ProviderContextProvider', () => {
   beforeEach(() => {
-    vi.spyOn(ConfigParamsContext, 'useConfigParams').mockReturnValue({
+    vi.spyOn(ConfigContext, 'useConfig').mockReturnValue({
       option: 'all',
       version: 'HEAD',
       scwUrl: 'https://keys-dev.coinbase.com/connect',
@@ -101,7 +101,7 @@ describe('EIP1193ProviderContextProvider', () => {
   });
 
   it('initializes SDK with latest version when version is not HEAD', () => {
-    vi.spyOn(ConfigParamsContext, 'useConfigParams').mockReturnValue({
+    vi.spyOn(ConfigContext, 'useConfig').mockReturnValue({
       option: 'all',
       version: 'latest',
       scwUrl: 'https://keys-dev.coinbase.com/connect',

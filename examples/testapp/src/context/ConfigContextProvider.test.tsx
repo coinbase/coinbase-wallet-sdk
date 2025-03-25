@@ -9,13 +9,13 @@ import {
   scwUrls,
   sdkVersions,
 } from '../store/config';
-import { ConfigParamsContextProvider, useConfigParams } from './ConfigParamsContextProvider';
+import { ConfigContextProvider, useConfig } from './ConfigContextProvider';
 
 const TestWrapper = ({ children }: { children: React.ReactNode }) => {
-  return <ConfigParamsContextProvider>{children}</ConfigParamsContextProvider>;
+  return <ConfigContextProvider>{children}</ConfigContextProvider>;
 };
 
-describe('ConfigParamsContextProvider', () => {
+describe('ConfigContextProvider', () => {
   const localStorageMock = (() => {
     let store: Record<string, string> = {};
     return {
@@ -41,7 +41,7 @@ describe('ConfigParamsContextProvider', () => {
   });
 
   it('should initialize with default values when localStorage is empty', () => {
-    const { result } = renderHook(() => useConfigParams(), {
+    const { result } = renderHook(() => useConfig(), {
       wrapper: TestWrapper,
     });
 
@@ -55,7 +55,7 @@ describe('ConfigParamsContextProvider', () => {
     localStorageMock.setItem(OPTIONS_KEY, options[1]);
     localStorageMock.setItem(SELECTED_SCW_URL_KEY, scwUrls[1]);
 
-    const { result } = renderHook(() => useConfigParams(), {
+    const { result } = renderHook(() => useConfig(), {
       wrapper: TestWrapper,
     });
 
@@ -65,7 +65,7 @@ describe('ConfigParamsContextProvider', () => {
   });
 
   it('should update values when setPreference is called', () => {
-    const { result } = renderHook(() => useConfigParams(), {
+    const { result } = renderHook(() => useConfig(), {
       wrapper: TestWrapper,
     });
 
@@ -78,7 +78,7 @@ describe('ConfigParamsContextProvider', () => {
   });
 
   it('should update values when setSDKVersion is called', () => {
-    const { result } = renderHook(() => useConfigParams(), {
+    const { result } = renderHook(() => useConfig(), {
       wrapper: TestWrapper,
     });
 
@@ -91,7 +91,7 @@ describe('ConfigParamsContextProvider', () => {
   });
 
   it('should update values when setScwUrlAndSave is called', () => {
-    const { result } = renderHook(() => useConfigParams(), {
+    const { result } = renderHook(() => useConfig(), {
       wrapper: TestWrapper,
     });
 
@@ -104,7 +104,7 @@ describe('ConfigParamsContextProvider', () => {
   });
 
   it('should update config when setConfig is called', () => {
-    const { result } = renderHook(() => useConfigParams(), {
+    const { result } = renderHook(() => useConfig(), {
       wrapper: TestWrapper,
     });
     const newConfig = {

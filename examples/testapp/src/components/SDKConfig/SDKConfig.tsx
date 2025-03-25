@@ -14,14 +14,14 @@ import { Preference } from '@coinbase/wallet-sdk/dist/core/provider/interface';
 import React, { useCallback, useMemo, useState } from 'react';
 import { keccak256, slice, toHex } from 'viem';
 
-import { useConfigParams } from '../../context/ConfigParamsContextProvider';
+import { useConfig } from '../../context/ConfigContextProvider';
 
 function computeDataSuffix(value: string): `0x${string}` {
   return slice(keccak256(toHex(value)), 0, 16);
 }
 
 export function SDKConfig() {
-  const { config, setConfig } = useConfigParams();
+  const { config, setConfig } = useConfig();
   const [dataSuffix, setDataSuffix] = useState<string>();
 
   const handleSetAttributionAuto = useCallback(
