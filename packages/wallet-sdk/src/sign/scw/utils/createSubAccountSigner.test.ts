@@ -75,6 +75,8 @@ describe('createSubAccountSigner', () => {
       toSubAccountSigner: vi.fn().mockResolvedValue({
         account: {
           address: '0x',
+          publicKey: '0x',
+          type: 'webAuthn',
           sign: vi.fn().mockResolvedValue({
             webauthn: {
               authenticatorData: '0x',
@@ -158,7 +160,7 @@ describe('createSubAccountSigner', () => {
           version: '1.0',
           type: '0x',
           data: '0x',
-          chainId: '0x14a34',
+          chainId: numberToHex(84532),
           signature: { type: 'webauthn', data: expect.any(Object) },
         },
       ],
