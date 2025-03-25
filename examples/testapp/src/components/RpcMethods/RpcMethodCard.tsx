@@ -23,7 +23,7 @@ import { useForm } from 'react-hook-form';
 import { Chain, hexToNumber } from 'viem';
 import { mainnet } from 'viem/chains';
 
-import { useCBWSDK } from '../../context/CBWSDKReactContextProvider';
+import { useEIP1193Provider } from '../../context/EIP1193ProviderContextProvider';
 import { verifySignMsg } from './method/signMessageMethods';
 import { ADDR_TO_FILL, CHAIN_ID_TO_FILL } from './shortcut/const';
 import { multiChainShortcutsMap } from './shortcut/multipleChainShortcuts';
@@ -60,7 +60,7 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
   const [response, setResponse] = React.useState<Response | null>(null);
   const [verifyResult, setVerifyResult] = React.useState<string | null>(null);
   const [error, setError] = React.useState<Record<string, unknown> | string | number | null>(null);
-  const { provider } = useCBWSDK();
+  const { provider } = useEIP1193Provider();
 
   const {
     handleSubmit,

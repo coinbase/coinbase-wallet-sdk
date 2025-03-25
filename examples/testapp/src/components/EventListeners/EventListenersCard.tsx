@@ -1,7 +1,7 @@
 import { Box, Card, CardBody, Code, Flex, Heading } from '@chakra-ui/react';
 import React, { useEffect } from 'react';
 
-import { useCBWSDK } from '../../context/CBWSDKReactContextProvider';
+import { useEIP1193Provider } from '../../context/EIP1193ProviderContextProvider';
 
 export function EventListenersCard() {
   const [connect, setConnect] = React.useState<Record<string, unknown> | string | number | null>(
@@ -20,7 +20,7 @@ export function EventListenersCard() {
     null
   );
 
-  const { provider } = useCBWSDK();
+  const { provider } = useEIP1193Provider();
 
   useEffect(() => {
     if (!provider) return;

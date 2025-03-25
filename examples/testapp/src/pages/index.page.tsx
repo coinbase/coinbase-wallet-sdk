@@ -19,10 +19,10 @@ import { sendShortcutsMap } from '../components/RpcMethods/shortcut/sendShortcut
 import { signMessageShortcutsMap } from '../components/RpcMethods/shortcut/signMessageShortcuts';
 import { walletTxShortcutsMap } from '../components/RpcMethods/shortcut/walletTxShortcuts';
 import { SDKConfig } from '../components/SDKConfig/SDKConfig';
-import { useCBWSDK } from '../context/CBWSDKReactContextProvider';
+import { useEIP1193Provider } from '../context/EIP1193ProviderContextProvider';
 
 export default function Home() {
-  const { provider, sdkVersion } = useCBWSDK();
+  const { provider, sdkVersion } = useEIP1193Provider();
   const [connected, setConnected] = React.useState(Boolean(provider?.connected));
   const [chainId, setChainId] = React.useState<number | undefined>(undefined);
   // This is for Extension compatibility, Extension with SDK3.9 does not emit connect event

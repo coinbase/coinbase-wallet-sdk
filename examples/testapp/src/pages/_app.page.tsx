@@ -2,17 +2,20 @@
 import { ChakraProvider } from '@chakra-ui/react';
 
 import { Layout } from '../components/Layout';
-import { CBWSDKReactContextProvider } from '../context/CBWSDKReactContextProvider';
+import { ConfigParamsContextProvider } from '../context/ConfigParamsContextProvider';
+import { EIP1193ProviderContextProvider } from '../context/EIP1193ProviderContextProvider';
 import { theme } from '../theme';
 
 export default function App({ Component, pageProps }) {
   return (
     <ChakraProvider theme={theme}>
-      <CBWSDKReactContextProvider>
-        <Layout>
-          <Component {...pageProps} />
-        </Layout>
-      </CBWSDKReactContextProvider>
+      <ConfigParamsContextProvider>
+        <EIP1193ProviderContextProvider>
+          <Layout>
+            <Component {...pageProps} />
+          </Layout>
+        </EIP1193ProviderContextProvider>
+      </ConfigParamsContextProvider>
     </ChakraProvider>
   );
 }
