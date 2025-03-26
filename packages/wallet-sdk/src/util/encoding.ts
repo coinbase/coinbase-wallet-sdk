@@ -1,4 +1,5 @@
-import { hexToBytes, numberToHex, trim } from 'viem';
+import { Signature, WebAuthnP256 } from 'ox';
+import { Hex, hexToBytes, numberToHex, stringToBytes, trim } from 'viem';
 
 export function base64ToBase64Url(base64: string): string {
   return base64.replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
@@ -12,16 +13,25 @@ export function arrayBufferToBase64Url(buffer: ArrayBuffer): string {
   return base64ToBase64Url(base64String);
 }
 
-export function convertCredentialToJSON(credential: any) {
+export function convertCredentialToJSON({
+  webauthn,
+  signature,
+  id,
+}: {
+  signature: Hex;
+  webauthn: WebAuthnP256.SignMetadata;
+  id: string;
+}) {
+  const signatureRaw = Signature.fromHex(signature);
   return {
-    id: credential.id,
-    rawId: arrayBufferToBase64Url(credential.rawId),
+    id,
+    rawId: arrayBufferToBase64Url(stringToBytes(id)),
     response: {
-      authenticatorData: arrayBufferToBase64Url(credential.response.authenticatorData),
-      clientDataJSON: arrayBufferToBase64Url(credential.response.clientDataJSON),
-      signature: arrayBufferToBase64Url(credential.response.signature),
+      authenticatorData: arrayBufferToBase64Url(hexToBytes(webauthn.authenticatorData)),
+      clientDataJSON: arrayBufferToBase64Url(stringToBytes(webauthn.clientDataJSON)),
+      signature: arrayBufferToBase64Url(asn1EncodeSignature(signatureRaw.r, signatureRaw.s)),
     },
-    type: credential.type,
+    type: JSON.parse(webauthn.clientDataJSON).type,
   };
 }
 

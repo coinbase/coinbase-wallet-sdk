@@ -1,10 +1,8 @@
-import { Signature } from 'ox';
 import {
   Address,
   Hex,
   SignableMessage,
   TypedDataDefinition,
-  hexToBytes,
   hexToNumber,
   hexToString,
   isHex,
@@ -22,7 +20,7 @@ import {
 import { getClient } from ':store/chain-clients/utils.js';
 import { store } from ':store/store.js';
 import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
-import { asn1EncodeSignature, convertCredentialToJSON } from ':util/encoding.js';
+import { convertCredentialToJSON } from ':util/encoding.js';
 import { get } from ':util/get.js';
 import { createSmartAccount } from './createSmartAccount.js';
 import { getOwnerIndex } from './getOwnerIndex.js';
@@ -129,43 +127,33 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
           ],
         })) as PrepareCallsSchema['ReturnType'];
 
-        const signature = await owner!.sign?.({
+        const signResponse = await owner!.sign?.({
           // Hash returned from wallet_prepareCalls is double hex encoded
           hash: hexToString(prepareCallsResponse.signatureRequest.hash) as `0x${string}`,
         });
 
         let signatureData: SendPreparedCallsSchema['Parameters'][0]['signature'];
 
-        if (!signature) {
+        if (!signResponse) {
           throw standardErrors.rpc.internal('signature not found');
         }
 
-        if (isHex(signature)) {
+        if (isHex(signResponse)) {
           signatureData = {
             type: 'secp256k1',
             data: {
               address: owner!.address!,
-              signature: signature as Hex,
+              signature: signResponse as Hex,
             },
           };
         } else {
-          const { webauthn, signature: signatureHex } = signature;
-
-          const signatureRaw = Signature.fromHex(signatureHex);
-
           signatureData = {
             type: 'webauthn',
             data: {
               signature: JSON.stringify(
                 convertCredentialToJSON({
                   id: owner!.id ?? '1',
-                  rawId: owner!.id ?? '',
-                  response: {
-                    authenticatorData: hexToBytes(webauthn.authenticatorData),
-                    clientDataJSON: webauthn.clientDataJSON,
-                    signature: asn1EncodeSignature(signatureRaw.r, signatureRaw.s),
-                  },
-                  type: JSON.parse(webauthn.clientDataJSON).type,
+                  ...signResponse,
                 })
               ),
               publicKey: owner!.publicKey,
