@@ -15,9 +15,7 @@
     "@chakra-ui/icons": "^2.1.1",
     "@chakra-ui/react": "^2.8.0",
     "@coinbase/wallet-sdk": "workspace:*",
-    "@coinbase/wallet-sdk-3.7.2": "npm:@coinbase/wallet-sdk@3.7.2",
-    "@coinbase/wallet-sdk-3.9.3": "npm:@coinbase/wallet-sdk@3.9.3",
-    "@coinbase/wallet-sdk-latest": "npm:@coinbase/wallet-sdk@latest",
+    "@coinbase/wallet-sdk-latest": "npm:@coinbase/wallet-sdk@4.3.1",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@metamask/eth-sig-util": "^7.0.0",
@@ -29,6 +27,7 @@
     "viem": "^2.22.17"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.2.0",
     "@types/react": "18.2.15",
     "typescript": "^5.1.6",
     "vitest": "^3.0.4"
