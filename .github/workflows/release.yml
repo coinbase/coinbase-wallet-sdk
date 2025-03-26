@@ -9,6 +9,17 @@ on:
         default: ""
 
 jobs:
+  authorize:
+    name: Authorize
+    runs-on: ubuntu-latest
+    steps:
+      - name: ${{ github.actor }} permission check to update release version
+        uses: "lannonbr/repo-permission-check-action@2.0.2"
+        with:
+          permission: "write"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   release:
     name: Release
     runs-on: ubuntu-latest
@@ -35,7 +46,7 @@ jobs:
 
       - name: Build Packages
         shell: bash
-        run: yarn build:packages
+        run: yarn workspace @coinbase/wallet-sdk build
 
       # Create a pull request to update the version
       - name: Create pull request
