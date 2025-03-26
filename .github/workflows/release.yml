@@ -33,9 +33,9 @@ jobs:
       - name: Prebuild
         run: yarn workspace @coinbase/wallet-sdk prebuild
 
-      - name: Build Packages
+      - name: Build SDK
         shell: bash
-        run: yarn build:packages
+        run: yarn workspace @coinbase/wallet-sdk build
 
       # Create a pull request to update the version
       - name: Create pull request
