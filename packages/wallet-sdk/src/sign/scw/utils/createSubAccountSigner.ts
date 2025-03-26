@@ -94,9 +94,9 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
           throw standardErrors.rpc.invalidParams('chainId must be a hex encoded integer');
         }
 
-        const walletClient = getClient(hexToNumber(chainId));
+        const publicClient = getClient(hexToNumber(chainId));
         assertPresence(
-          walletClient,
+          publicClient,
           standardErrors.rpc.internal(`client not found for chainId ${hexToNumber(chainId)}`)
         );
 
@@ -188,13 +188,13 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
           throw standardErrors.rpc.invalidParams('chainId must be a hex encoded integer');
         }
 
-        const walletClient = getClient(hexToNumber(chainId));
+        const publicClient = getClient(hexToNumber(chainId));
         assertPresence(
-          walletClient,
+          publicClient,
           standardErrors.rpc.internal(`client not found for chainId ${hexToNumber(chainId)}`)
         );
 
-        const sendPreparedCallsResponse = await walletClient.request<SendPreparedCallsSchema>({
+        const sendPreparedCallsResponse = await publicClient.request<SendPreparedCallsSchema>({
           method: 'wallet_sendPreparedCalls',
           params: args.params as SendPreparedCallsParams,
         });
@@ -213,9 +213,9 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
           throw standardErrors.rpc.invalidParams('chainId must be a hex encoded integer');
         }
 
-        const walletClient = getClient(hexToNumber(chainId));
+        const publicClient = getClient(hexToNumber(chainId));
         assertPresence(
-          walletClient,
+          publicClient,
           standardErrors.rpc.internal(`client not found for chainId ${hexToNumber(chainId)}`)
         );
 
@@ -227,7 +227,7 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
           throw standardErrors.rpc.invalidParams('calls are required');
         }
 
-        const prepareCallsResponse = await walletClient.request<PrepareCallsSchema>({
+        const prepareCallsResponse = await publicClient.request<PrepareCallsSchema>({
           method: 'wallet_prepareCalls',
           params: [{ ...args.params[0], chainId: chainId }] as PrepareCallsParams,
         });
