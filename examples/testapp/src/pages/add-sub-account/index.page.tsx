@@ -9,7 +9,9 @@ import {
 } from '@chakra-ui/react';
 import { createCoinbaseWalletSDK, getCryptoKeyAccount } from '@coinbase/wallet-sdk';
 import { useEffect, useState } from 'react';
-import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
+import { privateKeyToAccount } from 'viem/accounts';
+
+import { unsafe_generateOrLoadPrivateKey } from '../../utils/unsafe_generateOrLoadPrivateKey';
 import { AddOwner } from './components/AddOwner';
 import { AddSubAccount } from './components/AddSubAccount';
 import { Connect } from './components/Connect';
@@ -45,11 +47,9 @@ export default function SubAccounts() {
       signerType === 'cryptokey'
         ? getCryptoKeyAccount
         : async () => {
-            let privateKey = localStorage.getItem('cbwsdk.demo.add-sub-account.pk') as `0x${string}` | null;
-            if (!privateKey) {
-              privateKey = generatePrivateKey();
-              localStorage.setItem('cbwsdk.demo.add-sub-account.pk', privateKey);
-            }
+            // THIS IS NOT SAFE, THIS IS ONLY FOR TESTING
+            // IN A REAL APP YOU SHOULD NOT STORE/EXPOSE A PRIVATE KEY
+            const privateKey = unsafe_generateOrLoadPrivateKey();
             return {
               account: privateKeyToAccount(privateKey),
             };

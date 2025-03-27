@@ -3,9 +3,10 @@ import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import { useEffect, useState } from 'react';
 import { Client, Hex, createPublicClient, http } from 'viem';
 import { SmartAccount, toCoinbaseSmartAccount } from 'viem/account-abstraction';
-import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
+import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
 
+import { unsafe_generateOrLoadPrivateKey } from '../../utils/unsafe_generateOrLoadPrivateKey';
 import { AddGlobalOwner } from './components/AddGlobalOwner';
 import { AddSubAccountDeployed } from './components/AddSubAccountDeployed';
 import { AddSubAccountUndeployed } from './components/AddSubAccountUndeployed';
@@ -35,13 +36,9 @@ export default function SubAccounts() {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: no dep
   useEffect(() => {
-    let pk = localStorage.getItem('cbwsdk.demo.add-sub-account.pk') as Hex | null;
-    if (!pk) {
-      pk = generatePrivateKey();
-      // THIS IS NOT SAFE, THIS IS ONLY FOR TESTING
-      // IN A REAL APP YOU SHOULD NOT STORE/EXPOSE A PRIVATE KEY
-      localStorage.setItem('cbwsdk.demo.add-sub-account.pk', pk);
-    }
+    // THIS IS NOT SAFE, THIS IS ONLY FOR TESTING
+    // IN A REAL APP YOU SHOULD NOT STORE/EXPOSE A PRIVATE KEY
+    const pk = unsafe_generateOrLoadPrivateKey();
     const account = privateKeyToAccount(pk);
 
     const sdk = createCoinbaseWalletSDK({
