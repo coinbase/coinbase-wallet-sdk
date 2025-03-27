@@ -15,9 +15,9 @@
 
 ## How to Contribute
 
-Thank you for your interest in contributing to the Coinbase Wallet SDK!
+🎉 First off, thank you for considering contributing to Base Web! 🎉
 
-All contributions, no matter how big or small, are appreciated regardless of your experience level. There are various ways to contribute:
+The following is a set of guidelines for contributing to Base Web. These are just guidelines, not rules. Use your best judgment, and feel free to propose changes to this document in a pull request.
 
 ### Reporting Bugs
 
@@ -77,24 +77,7 @@ This project uses [Biome](https://github.com/biomejs/biome) for linting and form
 ### Signing Commits
 
 All commits need to be signed with a GPG key. This adds a second factor of authentication that proves that it came from
-you, and not someone who managed to compromise your GitHub account. You can enable signing by following these steps:
-
-1. [Generate GPG Keys](https://help.github.com/en/github/authenticating-to-github/generating-a-new-gpg-key) and upload them to your Github account, [GPG Suite](https://gpgtools.org/) is recommended for OSX
-
-2. Use `gpg-agent` to remember your password locally
-
-```bash
-vi ~/.gnupg/gpg-agent.conf
-
-default-cache-ttl 100000000
-max-cache-ttl 100000000
-```
-
-3. Configure Git to [use your keys when signing](https://help.github.com/en/github/authenticating-to-github/telling-git-about-your-signing-key).
-
-4. Configure Git to always sign commits by running `git config --global commit.gpgsign true`
-
-5. Commit all changes with your usual git commands and you should see a `Verified` badge near your commits
+you, and not someone who managed to compromise your GitHub account. You can enable signing by following the guide [here](https://docs.github.com/en/authentication/managing-commit-signature-verification/about-commit-signature-verification#gpg-commit-signature-verification).
 
 ## Coding Conventions
 
