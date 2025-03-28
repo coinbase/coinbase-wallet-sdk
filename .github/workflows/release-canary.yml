@@ -30,7 +30,7 @@ jobs:
       
       - name: Build Packages
         shell: bash
-        run: yarn build:packages
+        run: yarn workspace @coinbase/wallet-sdk build
 
       - name: Set deployment token
         run: npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
