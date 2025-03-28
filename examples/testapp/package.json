@@ -14,8 +14,8 @@
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
     "@chakra-ui/react": "^2.8.0",
-    "@coinbase/wallet-sdk": "workspace:*",
-    "@coinbase/wallet-sdk-latest": "npm:@coinbase/wallet-sdk@4.3.1",
+    "@coinbase/wallet-sdk": "*",
+    "@coinbase/wallet-sdk-latest": "npm:@coinbase/wallet-sdk@latest",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@metamask/eth-sig-util": "^7.0.0",

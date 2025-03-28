@@ -1481,19 +1481,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@coinbase/wallet-sdk-latest@npm:@coinbase/wallet-sdk@4.3.1":
-  version: 4.3.1
-  resolution: "@coinbase/wallet-sdk@npm:4.3.1"
+"@coinbase/wallet-sdk-latest@npm:@coinbase/wallet-sdk@latest":
+  version: 4.3.2
+  resolution: "@coinbase/wallet-sdk@npm:4.3.2"
   dependencies:
     "@noble/hashes": ^1.4.0
     clsx: ^1.2.1
     eventemitter3: ^5.0.1
     preact: ^10.24.2
-  checksum: 9d25c131ac873c27622db9a9e34e7ccb762b64e742db1ac819e55afac93e7a705523353b2eb8520ce07801c4c4108c8132f87aa858c706e142ba3be3888ff091
+  checksum: 85c4c0db5c4b5daf1d5b049df5b053d76590aa6c490601d734637209384905e0f1cbd8a800d62fd21bda61da015bb4e8247b4007c6ce34d4911ac2e2ce25ab03
   languageName: node
   linkType: hard
 
-"@coinbase/wallet-sdk@workspace:*, @coinbase/wallet-sdk@workspace:packages/wallet-sdk":
+"@coinbase/wallet-sdk@*, @coinbase/wallet-sdk@workspace:packages/wallet-sdk":
   version: 0.0.0-use.local
   resolution: "@coinbase/wallet-sdk@workspace:packages/wallet-sdk"
   dependencies:
@@ -7230,8 +7230,8 @@ __metadata:
   dependencies:
     "@chakra-ui/icons": ^2.1.1
     "@chakra-ui/react": ^2.8.0
-    "@coinbase/wallet-sdk": "workspace:*"
-    "@coinbase/wallet-sdk-latest": "npm:@coinbase/wallet-sdk@4.3.1"
+    "@coinbase/wallet-sdk": "*"
+    "@coinbase/wallet-sdk-latest": "npm:@coinbase/wallet-sdk@latest"
     "@emotion/react": ^11.11.1
     "@emotion/styled": ^11.11.0
     "@metamask/eth-sig-util": ^7.0.0

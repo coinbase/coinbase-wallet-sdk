@@ -1,4 +1,6 @@
 name: Setup
+permissions:
+  contents: read
 runs:
   using: composite
   steps:
@@ -14,5 +16,5 @@ runs:
       shell: bash
 
     - name: Install node modules
-      run: yarn install --frozen-lockfile
+      run: yarn install --immutable
       shell: bash
