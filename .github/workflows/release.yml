@@ -10,6 +10,8 @@ on:
 
 jobs:
   release:
+    env:
+      PACKAGE_VERSION: ${{ github.event.inputs.packageVersion }}
     name: Release
     runs-on: ubuntu-latest
     environment: release
@@ -34,7 +36,6 @@ jobs:
         run: yarn workspace @coinbase/wallet-sdk prebuild
 
       - name: Build Packages
-        shell: bash
         run: yarn workspace @coinbase/wallet-sdk build
 
       # Publish to npm
@@ -42,6 +43,8 @@ jobs:
         run: npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
 
       - name: Publish to npm
-        run: cd packages/wallet-sdk && npm publish --tag latest
+        run: |
+          cd packages/wallet-sdk
+          npm publish --tag latest
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
