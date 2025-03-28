@@ -1,11 +1,11 @@
 import { Signature, WebAuthnP256 } from 'ox';
-import { Hex, hexToBytes, numberToHex, stringToBytes, trim } from 'viem';
+import { ByteArray, Hex, hexToBytes, numberToHex, stringToBytes, trim } from 'viem';
 
 export function base64ToBase64Url(base64: string): string {
   return base64.replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
 }
 
-export function arrayBufferToBase64Url(buffer: ArrayBuffer): string {
+export function arrayBufferToBase64Url(buffer: ArrayBuffer | ByteArray): string {
   // First convert to regular base64
   const base64String = btoa(String.fromCharCode(...new Uint8Array(buffer)));
 
