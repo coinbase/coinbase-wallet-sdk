@@ -1,6 +1,6 @@
+import { RequestArguments } from ':core/provider/interface.js';
 import { SerializedEthereumRpcError } from '../error/utils.js';
 import { Message, MessageID } from './Message.js';
-import { RequestArguments } from ':core/provider/interface.js';
 
 interface RPCMessage extends Message {
   id: MessageID;
@@ -10,7 +10,7 @@ interface RPCMessage extends Message {
 }
 
 export type EncryptedData = {
-  iv: ArrayBuffer;
+  iv: Uint8Array;
   cipherText: ArrayBuffer;
 };
 
