@@ -21,7 +21,14 @@ export default function SubAccounts() {
       preference: {
         keysUrl: 'https://keys-dev.coinbase.com/connect',
         options: 'smartWalletOnly',
-        headlessSubAccounts: true,
+        enableAutomaticSubAccountCreation: true,
+        spendPermissionConfig: {
+          '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE': {
+            token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+            allowance: '0x2386f26fc10000',
+            period: 86400,
+          },
+        },
       },
       toSubAccountSigner: getCryptoKeyAccount,
     });

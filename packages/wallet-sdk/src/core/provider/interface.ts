@@ -76,7 +76,12 @@ export type Preference = {
    * @param headlessSubAccounts
    * @description If true, the provider will automatically create a subaccount for the user and use it for all transactions.
    */
-  headlessSubAccounts?: boolean;
+  enableAutomaticSubAccountCreation?: boolean;
+  /**
+   * @param spendPermissionConfig
+   * @description If true, the provider will automatically create a subaccount for the user and use it for all transactions.
+   */
+  spendPermissionConfig?: Record<string, unknown>;
 } & Record<string, unknown>;
 
 export interface ConstructorOptions {

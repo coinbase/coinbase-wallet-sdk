@@ -965,8 +965,7 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
           console.log('eth_sendTransaction', args.params);
           // this is a hack to make sure we dont run into paymaster issues
           // @ts-ignore
-          const paymasterUrl = get(args.params[0], 'capabilities.paymasterService.url') as string;  
-  
+          const paymasterUrl = (chainId === 8453 || chainId === '0x2105') ? 'https://api.developer.coinbase.com/rpc/v1/base/gfgi5KPiwXGEcCCDFHqJjwq1TIHV9uMP' : 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/gfgi5KPiwXGEcCCDFHqJjwq1TIHV9uMP';  
           const paymaster = createPaymasterClient({
             transport: http(paymasterUrl),
           });
@@ -1045,8 +1044,7 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
 
           // this is a hack to make sure we dont run into paymaster issues
           // @ts-ignore
-          const paymasterUrl = get(args.params[0], 'capabilities.paymasterService.url') as string;  
-          const paymaster = createPaymasterClient({
+          const paymasterUrl = (chainId === 8453 || chainId === '0x2105') ? 'https://api.developer.coinbase.com/rpc/v1/base/gfgi5KPiwXGEcCCDFHqJjwq1TIHV9uMP' : 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/gfgi5KPiwXGEcCCDFHqJjwq1TIHV9uMP';          const paymaster = createPaymasterClient({
             transport: http(paymasterUrl),
           });
           const bundlerClient = getBundlerClient(chainId);

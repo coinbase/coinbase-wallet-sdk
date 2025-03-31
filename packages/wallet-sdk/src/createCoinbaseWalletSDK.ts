@@ -64,11 +64,11 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
     // store the signer in the sub account store
     store.setState({
       toSubAccountSigner:
-        options.preference.headlessSubAccounts && !params.toSubAccountSigner
+        options.preference.enableAutomaticSubAccountCreation && !params.toSubAccountSigner
           ? getCryptoKeyAccount
           : params.toSubAccountSigner,
     });
-  } else if (options.preference.headlessSubAccounts) {
+  } else if (options.preference.enableAutomaticSubAccountCreation) {
     store.setState({
       toSubAccountSigner: getCryptoKeyAccount,
     });

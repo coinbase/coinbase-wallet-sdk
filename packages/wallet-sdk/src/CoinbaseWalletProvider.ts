@@ -1,4 +1,4 @@
-import { Hex, numberToHex, parseEther, toHex } from 'viem';
+import { Hex, numberToHex } from 'viem';
 
 import { Communicator } from ':core/communicator/Communicator.js';
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
@@ -22,10 +22,23 @@ import { getCryptoKeyAccount } from './kms/crypto-key/index.js';
 import { Signer } from './sign/interface.js';
 import { createSigner, loadSignerType, storeSignerType } from './sign/util.js';
 
+
+type SpendPermissionDefault = {
+  token: string;
+  allowance: Hex;
+  period?: number;
+  salt?: Hex;
+  extraData?: Hex;
+}
+
+// only 
+type SpendPermissionConfig = Record<string, SpendPermissionDefault>;
+
 export class CoinbaseWalletProvider extends ProviderEventEmitter implements ProviderInterface {
   private readonly metadata: AppMetadata;
   private readonly preference: Preference;
   private readonly communicator: Communicator;
+  private spendPermissionConfig: SpendPermissionConfig | undefined;
 
   private signer: Signer | null = null;
 
@@ -39,16 +52,17 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
       preference,
     });
 
-    //if (this.preference.headlessSubAccounts) {
+    if (this.preference.enableAutomaticSubAccountCreation) {
       store.setState({
         toSubAccountSigner: getCryptoKeyAccount,
       });
-   // }
+   }
 
     const signerType = loadSignerType();
     if (signerType) {
       this.signer = this.initSigner(signerType);
     }
+    this.spendPermissionConfig = this.preference?.spendPermissionConfig as SpendPermissionConfig;
   }
 
   public async request<T>(args: RequestArguments): Promise<T> {
@@ -78,31 +92,38 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
                 ],
               });
 
+              const capabilities = {
+                addSubAccount: {
+                  account: {
+                    type: 'create',
+                    keys: [
+                      {
+                        type: 'webauthn-p256',
+                        key: account?.publicKey,
+                      },
+                    ],
+                  },
+                },
+              };
+
+              if (this.spendPermissionConfig) {
+                // @ts-ignore
+                capabilities.spendPermissions = {
+                  ...this.spendPermissionConfig['0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'],
+                };
+                // @ts-ignore
+                capabilities.spendPermissions.salt = capabilities.spendPermissions.salt || '0x1';
+                // @ts-ignore
+                capabilities.spendPermissions.extraData = capabilities.spendPermissions.extraData || '0x' as Hex;
+              }
+
+              console.log('customlogs: capabilities', capabilities);
               const result = await signer.request({
                 method: 'wallet_connect',
                 params: [
                   {
                     version: 1,
-                    capabilities: {
-                      addSubAccount: {
-                        account: {
-                          type: 'create',
-                          keys: [
-                            {
-                              type: 'webauthn-p256',
-                              key: account?.publicKey,
-                            },
-                          ],
-                        },
-                      },
-                      spendPermissions: {
-                        token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-                        allowance: toHex(parseEther('0.001')),
-                        period: 86400,
-                        salt: '0x1',
-                        extraData: '0x' as Hex
-                      },
-                    },
+                    capabilities,
                   },
                 ],
               });
