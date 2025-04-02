@@ -39,14 +39,13 @@ jobs:
         run: yarn workspace @coinbase/wallet-sdk build
 
       # Publish to npm
-      - name: Setup NPM authentication
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Set deployment token
+        run: npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
 
       - name: Publish to npm
-        run: yarn workspace @coinbase/wallet-sdk npm publish --tag canary
+        run: |
+          cd packages/wallet-sdk
+          npm publish --tag canary
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
  
