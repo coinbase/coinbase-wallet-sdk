@@ -29,24 +29,22 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Set version
-        run: npm version ${{ env.PACKAGE_VERSION }} -w packages/wallet-sdk
-
-      # Change to the wallet-sdk directory
-      - name: Change to wallet-sdk directory
-        run: cd packages/wallet-sdk
+        run: yarn workspace @coinbase/wallet-sdk version ${{ env.PACKAGE_VERSION }}
 
       # Build the package
       - name: Prebuild Packages
-        run: yarn prebuild
+        run: yarn workspace @coinbase/wallet-sdk prebuild
 
       - name: Build Packages
-        run: yarn build
+        run: yarn workspace @coinbase/wallet-sdk build
 
       # Publish to npm
       - name: Set deployment token
         run: npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
 
       - name: Publish to npm
-        run: npm publish --tag latest
+        run: |
+          cd packages/wallet-sdk
+          npm publish --tag latest
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
