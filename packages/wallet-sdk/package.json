@@ -1,6 +1,6 @@
 {
   "name": "@coinbase/wallet-sdk",
-  "version": "4.4.0-canary.20250402",
+  "version": "4.3.2",
   "description": "Coinbase Wallet JavaScript SDK",
   "keywords": [
     "coinbase",
@@ -64,6 +64,5 @@
       "limit": "31 KB",
       "import": "*"
     }
-  ],
-  "stableVersion": "4.3.2"
+  ]
 }
