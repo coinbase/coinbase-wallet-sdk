@@ -23,8 +23,8 @@ jobs:
           node-version-file: '.nvmrc'
           cache-dependency-path: 'yarn.lock'
 
-      - name: Install NPM dependencies
-        run: yarn install --immutable
+      - name: 'Setup'
+        uses: ./.github/actions/setup
 
       - name: Lint
         run: yarn lint
@@ -46,8 +46,8 @@ jobs:
           node-version-file: '.nvmrc'
           cache-dependency-path: '**/yarn.lock'
 
-      - name: Install NPM dependencies
-        run: yarn install --immutable
+      - name: 'Setup'
+        uses: ./.github/actions/setup
 
       - name: Build packages
         run: yarn build:packages
@@ -76,8 +76,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache-dependency-path: '**/yarn.lock'
 
-      - name: Install NPM dependencies
-        run: yarn install --immutable
+      - name: 'Setup'
+        uses: ./.github/actions/setup
 
       - name: Runs compile asset script
         run: |

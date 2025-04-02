@@ -29,7 +29,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Set version
-        run: npm --no-git-tag-version version ${{ env.PACKAGE_VERSION }}-canary.$(date +'%Y%m%d') -w packages/wallet-sdk
+        run: yarn workspace @coinbase/wallet-sdk version ${{ env.PACKAGE_VERSION }}-canary.$(date +'%Y%m%d')
 
       # Change to the wallet-sdk directory
       - name: Change to wallet-sdk directory
@@ -47,7 +47,7 @@ jobs:
         run: npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
 
       - name: Publish to npm
-        run: npm publish --tag canary
+        run: yarn npm publish --tag canary
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
  

@@ -12,15 +12,15 @@
   ],
   "scripts": {
     "build:packages": "yarn workspace @coinbase/wallet-sdk build",
-    "clean": "yarn workspaces foreach -ipv run clean && rm -rf node_modules && yarn",
+    "clean": "yarn workspaces foreach -A -ipv run clean && rm -rf node_modules && yarn",
     "deploy": "yarn build:packages && yarn workspace sdk-playground export",
-    "dev": "yarn workspaces foreach -ipv run dev",
-    "lint": "yarn workspaces foreach -pt run lint",
-    "test": "yarn workspaces foreach -ipv run test",
-    "typecheck": "yarn workspaces foreach -pt run typecheck"
+    "dev": "yarn workspaces foreach -A -ipv run dev",
+    "lint": "yarn workspaces foreach -A -pt run lint",
+    "test": "yarn workspaces foreach -A -ipv run test",
+    "typecheck": "yarn workspaces foreach -A -pt run typecheck"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4"
   },
-  "packageManager": "yarn@3.6.1"
+  "packageManager": "yarn@4.8.1"
 }
