@@ -1,0 +1,17 @@
+wallet:
+  name: "Coinbase Wallet"
+  network: "Ethereum Mainnet"
+  created_at: "2023-08-28"
+
+  accounts:
+    - id: "main"
+      purpose: "Primary ETH Account"
+      address: "SOL: 5aemAxWMekKr3Nw8rNXBnR4sNcQrS9kJL9REr5nG3e2P, ETH: 0x0413D9A434643ADc9ce77A3022A26f7503042794, BTC: xpub6CZ6biePTZtU1ytD6nNfKC4V391RhCruuZLn6tj9c8Y5ASyv8mz9omAXb8xBMAo7oJhomZK7UcmnzZKS86HFxNh3et43JTU6n83ixGDn6Cy, LTC: xpub6BoEtX8abcGY1z8UY7ia9mT1KaBuNV3ZHgyw9fxBKxV4hvAFVgqFaxHc3RMYUsuXWMwmDVBLd7sb8ukod6UVXZWobGHous9y9Ste88xaGzz, DOGE: xpub6DWAU4oNHSv81uf9rKTTocTVDLB6BCj4cUS4J7PHnL3xzkjTanz1JRosaxzyx6qz8zLJajAhmBvVfwc3nR1AfC9SPE9LbFuopmU6Jawjr5P"
+
+    - id: "secondary"
+      purpose: "NFTs & Collectibles"
+      address: "SOL: 3Grcmv4wpwpJEBvT4QsPE5SKyCgLzKkDsFk991TwbhRw, ETH: 0xc9fd72109ac508e195BD550ed3943b77C8Da1180, LTC: xpub6BmyfXSgiSLn1SMxRmR7TRkibxw4ADfPW5YB4puu7UL4yJzb6an6nmKCYduXkLnvUPrM436rkuhCxA9AUEvpYcknSGEEzY3DvsDZCNTwXUa, DOGE: xpub6Ciuvi2xHCBibZBBScuppqH7yPRGDzC11roPKsd8MK9Zv4fKMNKMdvJk3pCeu5A3DuB3u7FUskprdwH27YmxaFLLsd44tPbaSovPWQU2zQb, BTC: xpub6DT6hSSa5d1J58G3Sfkej33YCaJGkf1iXoTnswGjRxRCVepWxxwtoG2AeN8yE5PrYUZdaye8o1L9TLG31RNMeUNsqd9AL5RDetx4x5MTRNP"
+
+    - id: "dapp"
+      purpose: "DApp Connections"
+      address: "SOL: GJ5DTv7mGyXoaEF2kCZJN39V6YSZkfUavXyFocf6XiB8, ETH: 0x7e224d68766155E31BFba98e819bc240c9C7bc0A, DOGE: xpub6CCc61UdeCgVzrdvU8B5SrDibVdPsoaBs6RGoSCncDqxFamUh93gSnYuz3q3SQ2JMMbk65QdWaLiE9XuTp1JPv52evEYz1z3PTz9HQuQ2M3, BTC: xpub6DJ8PwZBJwx3LiWShiKYqMkNFh4Ynsv5P3kWPAMpCZZ5L4D82paHpsPffSdpVjrsssF55C7pKLFJYHMNuUgLJFXbEGCNnPgWEFdUAvKQ7UB, LTC: xpub6D527HN5akzipunuY7b2RHbbv6VyzrH5tUy75qnecVhacA4H3UzBVdFqbQtca5naSF2XSaAUmY5r3DB2aKzEpYgdbEY7SWdLNATKtrPd7ZS"
