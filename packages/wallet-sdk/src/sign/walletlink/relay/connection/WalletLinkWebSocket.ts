@@ -48,7 +48,7 @@ export class WalletLinkWebSocket {
       try {
         this.webSocket = webSocket = new this.WebSocketClass(this.url);
       } catch (err) {
-        reject(err);
+        reject(err instanceof Error ? err : new Error(String(err)));
         return;
       }
       this.connectionStateListener?.(ConnectionState.CONNECTING);

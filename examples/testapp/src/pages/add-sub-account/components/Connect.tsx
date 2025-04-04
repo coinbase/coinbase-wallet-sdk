@@ -1,15 +1,15 @@
 import { Box, Button } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
+import { CoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import { useCallback, useEffect, useState } from 'react';
 
-export function Connect({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletSDK> }) {
+export function Connect({ sdk }: { sdk: CoinbaseWalletSDK }) {
   const [state, setState] = useState<string[]>();
   const handleConnect = useCallback(async () => {
     if (!sdk) {
       return;
     }
 
-    const provider = sdk.getProvider();
+    const provider = sdk.makeWeb3Provider('', 1); // Replace '' with the desired JSON-RPC URL and 1 with the chain ID
     const response = await provider.request({
       method: 'eth_requestAccounts',
     });
@@ -23,7 +23,7 @@ export function Connect({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletSD
       return;
     }
 
-    const provider = sdk.getProvider();
+    const provider = sdk.makeWeb3Provider('', 1); // Replace '' with the desired JSON-RPC URL and 1 with the chain ID
     provider.on('accountsChanged', (accounts) => {
       if (accounts.length === 0) {
         setState(undefined);

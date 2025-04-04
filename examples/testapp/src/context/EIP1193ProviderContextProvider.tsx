@@ -1,4 +1,4 @@
-import { createCoinbaseWalletSDK as createCoinbaseWalletSDKHEAD } from '@coinbase/wallet-sdk';
+import { CoinbaseWalletSDK as CoinbaseWalletSDKHEAD } from '@coinbase/wallet-sdk';
 import { createCoinbaseWalletSDK as createCoinbaseWalletSDKLatest } from '@coinbase/wallet-sdk-latest';
 
 import { ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
@@ -14,9 +14,9 @@ type EIP1193ProviderContextProviderProps = {
 
 type EIP1193ProviderContextType = {
   sdk:
-    | ReturnType<typeof createCoinbaseWalletSDKHEAD>
+    | InstanceType<typeof CoinbaseWalletSDKHEAD>
     | ReturnType<typeof createCoinbaseWalletSDKLatest>;
-  provider: ReturnType<EIP1193ProviderContextType['sdk']['getProvider']>;
+  provider: any; // Replace with the correct type if available, or use 'any' as a temporary fix.
 };
 
 const EIP1193ProviderContext = createContext<EIP1193ProviderContextType | null>(null);
@@ -30,8 +30,8 @@ export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderCont
     onClose: onDisconnectedAlertClose,
   } = useSpyOnDisconnectedError();
 
-  const [sdk, setSdk] = useState(null);
-  const [provider, setProvider] = useState(null);
+  const [sdk, setSdk] = useState<EIP1193ProviderContextType['sdk'] | null>(null);
+  const [provider, setProvider] = useState<EIP1193ProviderContextType['provider'] | null>(null);
 
   useEffect(() => {
     const sdkParams = {
@@ -46,18 +46,22 @@ export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderCont
 
     const sdk =
       version === 'HEAD'
-        ? createCoinbaseWalletSDKHEAD(sdkParams)
+        ? new CoinbaseWalletSDKHEAD(sdkParams)
         : createCoinbaseWalletSDKLatest(sdkParams);
 
     setSdk(sdk);
 
-    const newProvider = sdk.getProvider();
+    const newProvider = 
+      'getProvider' in sdk ? sdk.getProvider() : null;
+    setProvider(newProvider);
+
     addEventListeners(newProvider);
     spyOnDisconnectedError(newProvider);
 
     // @ts-ignore convenience for testing
-    window.ethereum = newProvider;
-    setProvider(newProvider);
+    setTimeout("alert('Hi!')", 50); // equivalent to using window.setTimeout().
+alert(window === window.window); // displays "true"
+
 
     return () => {
       removeEventListeners(newProvider);
