@@ -5,27 +5,41 @@ on:
     types: [opened, reopened]
 
 env:
-  CHANNEL_WALLET_FEEDBACK: ${{ vars.CHANNEL_WALLET_FEEDBACK }}
-  CHANNEL_WALLET_SQUAD_BUILD: ${{ vars.CHANNEL_WALLET_SQUAD_BUILD }}
-  ON_CALL_WALLET: ${{ vars.ON_CALL_WALLET }}
-  ON_CALL_BUILD_SQUAD: ${{ vars.ON_CALL_BUILD_SQUAD }}
+  CHANNEL_WALLET_FEEDBACK: ${{ secrets.CHANNEL_WALLET_FEEDBACK }}
+  CHANNEL_WALLET_SQUAD_BUILD: ${{ secrets.CHANNEL_WALLET_SQUAD_BUILD }}
+  ON_CALL_WALLET: ${{ secrets.ON_CALL_WALLET }}
+  ON_CALL_BUILD_SQUAD: ${{ secrets.ON_CALL_BUILD_SQUAD }}
 
 jobs:
   checks:
     runs-on: ubuntu-latest
     outputs:
-      skip: ${{ env.skip }}
+      skip: ${{ steps.set-skip.outputs.skip }}
     steps:
+    - name: Check Slack enabled
+      id: check-slack-enabled
+      run: |
+        if [ "${{ secrets.SLACK_ENABLED }}" == "true" ]; then
+          echo "::set-output name=slack_enabled::true"
+        else
+          echo "::set-output name=slack_enabled::false"
+        fi
+
+    - name: Initialize skip variable
+      id: set-skip
+      run: |
+        echo "::set-output name=skip::false"
+
     - name: Check spam labels
-      if: ${{ contains(github.event.*.labels.*.name, 'spam') }}
+      if: ${{ contains(join(github.event.issue.labels.*.name, ','), 'spam') }}
       run: |
         echo "skip=true" >> $GITHUB_ENV
         echo "::error:: Spam label found."
-        
+
   notify:
-    runs-on: ubuntu-latest
+    if: ${{ needs.checks.outputs.slack_enabled == 'true' && secrets.SLACK_ENABLED == 'true' && needs.checks.outputs.skip != 'true' }}
     needs: checks
-    if: ${{ vars.SLACK_ENABLED == 'true' && needs.checks.outputs.skip != 'true' }}
+    runs-on: ubuntu-latest
     steps:
     - name: Set channel and mention
       run: |

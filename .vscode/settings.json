@@ -3,5 +3,8 @@
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit",
     "source.fixAll": "explicit"
+  },
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-issue-forms.json": "file:///home/dargon789/github/coinbase-wallet-sdk/.github/ISSUE_TEMPLATE/config.yml"
   }
 }

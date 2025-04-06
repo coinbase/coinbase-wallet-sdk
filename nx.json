@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json.schemastore.org/nx",
+  "targetDefaults": {
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "cache": true
+    },
+    "clean": {
+      "dependsOn": [
+        "^clean"
+      ],
+      "cache": true
+    },
+    "dev": {
+      "dependsOn": [
+        "^dev"
+      ],
+      "cache": true
+    },
+    "export": {
+      "dependsOn": [
+        "^export"
+      ],
+      "cache": true
+    },
+    "lint": {
+      "dependsOn": [
+        "^lint"
+      ],
+      "cache": true
+    },
+    "start": {
+      "dependsOn": [
+        "^start"
+      ],
+      "cache": true
+    },
+    "test": {
+      "dependsOn": [
+        "^test"
+      ],
+      "cache": true
+    },
+    "typecheck": {
+      "dependsOn": [
+        "^typecheck"
+      ],
+      "cache": true
+    },
+    "pretest": {
+      "dependsOn": [
+        "^pretest"
+      ],
+      "cache": true
+    },
+    "test:coverage": {
+      "dependsOn": [
+        "^test:coverage"
+      ],
+      "cache": true
+    },
+    "prebuild": {
+      "dependsOn": [
+        "^prebuild"
+      ],
+      "cache": true
+    },
+    "size": {
+      "dependsOn": [
+        "^size"
+      ],
+      "cache": true
+    }
+  }
+}

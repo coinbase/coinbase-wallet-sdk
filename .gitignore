@@ -43,3 +43,9 @@ examples/**/yarn.lock
 .next
 
 /**/tsconfig.tsbuildinfo
+.env*.local
+
+
+
+.nx/cache
+.nx/workspace-data
