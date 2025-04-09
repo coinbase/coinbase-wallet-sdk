@@ -1,5 +1,5 @@
 import { Box, Button } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
+import { CoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import { useCallback, useState } from 'react';
 import { Address, Hex } from 'viem';
 import { baseSepolia } from 'viem/chains';
@@ -69,7 +69,7 @@ export function GrantSpendPermission({
   sdk,
   subAccountAddress,
 }: {
-  sdk: ReturnType<typeof createCoinbaseWalletSDK>;
+  sdk: CoinbaseWalletSDK;
   subAccountAddress: string;
 }) {
   const [state, setState] = useState<Hex>();
@@ -80,7 +80,7 @@ export function GrantSpendPermission({
     }
 
     try {
-      const provider = sdk.getProvider();
+      const provider = sdk.makeWeb3Provider(baseSepolia.rpcUrls[0], baseSepolia.id);
       const accounts = (await provider?.request({
         method: 'eth_accounts',
         params: [

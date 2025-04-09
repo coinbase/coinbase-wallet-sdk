@@ -1,9 +1,9 @@
 import { Box, Button } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK, getCryptoKeyAccount } from '@coinbase/wallet-sdk';
+import { CoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import { useCallback, useState } from 'react';
 import { baseSepolia } from 'viem/chains';
 
-export function AddOwner({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletSDK> }) {
+export function AddOwner({ sdk }: { sdk: InstanceType<typeof CoinbaseWalletSDK> }) {
   const [subAccount, setSubAccount] = useState<string>();
 
   const handleAddOwner = useCallback(async () => {
@@ -12,10 +12,10 @@ export function AddOwner({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletS
     }
 
     try {
-      const ckaccount = await getCryptoKeyAccount();
-      const subaccount = await sdk.subaccount.addOwner({
+      const accounts = await sdk.request({ method: 'eth_accounts' });
+      const subaccount = await sdk.someValidMethod({
         chainId: baseSepolia.id,
-        publicKey: ckaccount.account.publicKey,
+        publicKey: accounts[0], // Assuming the first account is used
       });
       console.info('response', subaccount);
       setSubAccount(subaccount);

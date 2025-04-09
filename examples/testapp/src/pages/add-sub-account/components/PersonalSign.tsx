@@ -1,5 +1,5 @@
 import { Box, Button } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
+import { CoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import { useCallback, useState } from 'react';
 import { toHex } from 'viem';
 
@@ -7,7 +7,7 @@ export function PersonalSign({
   sdk,
   subAccountAddress,
 }: {
-  sdk: ReturnType<typeof createCoinbaseWalletSDK>;
+  sdk: CoinbaseWalletSDK;
   subAccountAddress: string;
 }) {
   const [state, setState] = useState<string>();
@@ -16,7 +16,7 @@ export function PersonalSign({
       return;
     }
 
-    const provider = sdk.getProvider();
+    const provider = sdk.makeWeb3Provider();
     try {
       const response = await provider.request({
         method: 'personal_sign',

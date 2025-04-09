@@ -43,3 +43,5 @@ examples/**/yarn.lock
 .next
 
 /**/tsconfig.tsbuildinfo
+.vercel
+.env*.local

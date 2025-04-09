@@ -1,5 +1,5 @@
 import { Box, Button } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
+import { CoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import { useCallback, useState } from 'react';
 import { numberToHex } from 'viem';
 import { baseSepolia } from 'viem/chains';
@@ -8,7 +8,7 @@ export function SendCalls({
   sdk,
   subAccountAddress,
 }: {
-  sdk: ReturnType<typeof createCoinbaseWalletSDK>;
+  sdk: InstanceType<typeof CoinbaseWalletSDK>;
   subAccountAddress: string;
 }) {
   const [state, setState] = useState<string>();
@@ -17,7 +17,7 @@ export function SendCalls({
       return;
     }
 
-    const provider = sdk.getProvider();
+    const provider = sdk.makeWeb3Provider();
     try {
       const response = await provider.request({
         method: 'wallet_sendCalls',
