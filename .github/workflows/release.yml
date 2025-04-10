@@ -10,6 +10,8 @@ on:
 
 jobs:
   release:
+    env:
+      PACKAGE_VERSION: ${{ github.event.inputs.packageVersion }}
     name: Release
     runs-on: ubuntu-latest
     environment: release
@@ -27,32 +29,22 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Set version
-        run: npm version ${{ env.PACKAGE_VERSION }} -w packages/wallet-sdk
+        run: yarn workspace @coinbase/wallet-sdk version ${{ env.PACKAGE_VERSION }}
 
       # Build the package
-      - name: Prebuild
+      - name: Prebuild Packages
         run: yarn workspace @coinbase/wallet-sdk prebuild
 
       - name: Build Packages
-        shell: bash
-        run: yarn build:packages
-
-      # Create a pull request to update the version
-      - name: Create pull request
-        uses: peter-evans/create-pull-request@v4
-        with:
-          title: "[Version update] v${{ env.PACKAGE_VERSION }}"
-          body: "Automated workflow: version update"
-          branch: release-v${{ env.PACKAGE_VERSION }}
-          delete-branch: true
-          commit-message: "v${{ env.PACKAGE_VERSION }}"
-          labels: version-update
+        run: yarn workspace @coinbase/wallet-sdk build
 
       # Publish to npm
       - name: Set deployment token
         run: npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
 
       - name: Publish to npm
-        run: cd packages/wallet-sdk && npm publish --tag latest
+        run: |
+          cd packages/wallet-sdk
+          npm publish --tag latest
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -1,26 +1,18 @@
 import { Box, Card, CardBody, Code, Flex, Heading } from '@chakra-ui/react';
 import React, { useEffect } from 'react';
 
-import { useCBWSDK } from '../../context/CBWSDKReactContextProvider';
+import { ProviderConnectInfo } from 'viem';
+import { useEIP1193Provider } from '../../context/EIP1193ProviderContextProvider';
 
 export function EventListenersCard() {
-  const [connect, setConnect] = React.useState<Record<string, unknown> | string | number | null>(
+  const [connect, setConnect] = React.useState<ProviderConnectInfo | null>(null);
+  const [disconnect, setDisconnect] = React.useState<{ code: number; message: string } | null>(
     null
   );
-  const [disconnect, setDisconnect] = React.useState<
-    Record<string, unknown> | string | number | null
-  >(null);
-  const [accountsChanged, setAccountsChanged] = React.useState<
-    Record<string, unknown> | string | number | null
-  >(null);
-  const [chainChanged, setChainChanged] = React.useState<
-    Record<string, unknown> | string | number | null
-  >(null);
-  const [message, setMessage] = React.useState<Record<string, unknown> | string | number | null>(
-    null
-  );
+  const [accountsChanged, setAccountsChanged] = React.useState<string[] | null>(null);
+  const [chainChanged, setChainChanged] = React.useState<string | null>(null);
 
-  const { provider } = useCBWSDK();
+  const { provider } = useEIP1193Provider();
 
   useEffect(() => {
     if (!provider) return;
@@ -35,9 +27,6 @@ export function EventListenersCard() {
     });
     provider.on('chainChanged', (chainId) => {
       setChainChanged(chainId);
-    });
-    provider.on('message', (message) => {
-      setMessage(message);
     });
 
     return () => {
@@ -71,18 +60,6 @@ export function EventListenersCard() {
           {chainChanged && (
             <Code mt={2} as="pre" p={4} wordBreak="break-word" whiteSpace="pre-wrap" w="100%">
               {JSON.stringify(chainChanged, null, 2)}
-            </Code>
-          )}
-        </Box>
-        <Box>
-          <Flex align="center" justify="space-between">
-            <Heading as="h2" size="lg">
-              <Code>message</Code>
-            </Heading>
-          </Flex>
-          {message && (
-            <Code mt={2} as="pre" p={4} wordBreak="break-word" whiteSpace="pre-wrap" w="100%">
-              {JSON.stringify(message, null, 2)}
             </Code>
           )}
         </Box>

@@ -1,12 +1,27 @@
-import { Address, encodeFunctionData, Hex, http, numberToHex, SignableMessage, TypedDataDefinition } from 'viem';
+import {
+  Address,
+  Hex,
+  SignableMessage,
+  TypedDataDefinition, encodeFunctionData, hexToNumber,
+  hexToString,
+  http,
+  isHex,
+  numberToHex
+} from 'viem';
 import { createPaymasterClient } from 'viem/account-abstraction';
 import { getCode } from 'viem/actions';
 
 import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
+import { PrepareCallsParams, type PrepareCallsSchema } from ':core/rpc/wallet_prepareCalls.js';
+import {
+  SendPreparedCallsParams,
+  type SendPreparedCallsSchema,
+} from ':core/rpc/wallet_sendPreparedCalls.js';
 import { getBundlerClient, getClient } from ':store/chain-clients/utils.js';
-import { store, SubAccount } from ':store/store.js';
+import { store } from ':store/store.js';
 import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
+import { convertCredentialToJSON } from ':util/encoding.js';
 import { get } from ':util/get.js';
 import { createSmartAccount } from './createSmartAccount.js';
 import { getOwnerIndex } from './getOwnerIndex.js';
@@ -905,7 +920,7 @@ const spendPermissionManagerAbi = [
 
 export async function createSubAccountSigner({ chainId }: { chainId: number }) {
   const client = getClient(chainId);
-  assertPresence(client, standardErrors.rpc.internal('client not found'));
+  assertPresence(client, standardErrors.rpc.internal(`client not found for chainId ${chainId}`));
 
   const subAccount = store.subAccounts.get();
   const toSubAccountSigner = store.getState().toSubAccountSigner;
@@ -926,7 +941,7 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
   if (code) {
     index = await getOwnerIndex({
       address: subAccount.address,
-      publicKey: owner.publicKey || owner.address,
+      publicKey: owner.type === 'local' ? owner.address : owner.publicKey,
       client,
     });
   }
@@ -944,143 +959,264 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
     factoryData: subAccount.factoryData,
   });
 
-  return {
-    request: async (
-      args: RequestArguments
-    ): Promise<string | Hex | Address[] | number | SubAccount> => {
-      switch (args.method) {
-        case 'wallet_addSubAccount':
-          return subAccount;
-        case 'eth_accounts':
-          return [subAccount.address] as Address[];
-        case 'eth_coinbase':
-          return subAccount.address;
-        case 'net_version':
-          return chainId.toString();
-        case 'eth_chainId':
-          return numberToHex(chainId);
-        case 'eth_sendTransaction': {
-          //assertArrayPresence(args.params);
-          //return account.sign(args.params[0] as { hash: Hex });
-          console.log('eth_sendTransaction', args.params);
-          // this is a hack to make sure we dont run into paymaster issues
+  const request = async (args: RequestArguments) => {
+    switch (args.method) {
+      case 'wallet_addSubAccount':
+        return subAccount!;
+      case 'eth_accounts':
+        return [subAccount!.address] as Address[];
+      case 'eth_coinbase':
+        return subAccount!.address;
+      case 'net_version':
+        return chainId.toString();
+      case 'eth_chainId':
+        return numberToHex(chainId);
+      case 'eth_sendTransaction': {
+        //assertArrayPresence(args.params);
+        //return account.sign(args.params[0] as { hash: Hex });
+        // this is a hack to make sure we dont run into paymaster issues
+        // @ts-ignore
+        const paymasterUrl =
           // @ts-ignore
-          const paymasterUrl = (chainId === 8453 || chainId === '0x2105') ? 'https://api.developer.coinbase.com/rpc/v1/base/gfgi5KPiwXGEcCCDFHqJjwq1TIHV9uMP' : 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/gfgi5KPiwXGEcCCDFHqJjwq1TIHV9uMP';  
-          const paymaster = createPaymasterClient({
-            transport: http(paymasterUrl),
-          });
-          const bundlerClient = getBundlerClient(chainId);
-          assertPresence(
-            bundlerClient,
-            standardErrors.rpc.invalidParams('bundler client not found')
-          );
+          chainId === 8453 || chainId === '0x2105'
+            ? 'https://api.developer.coinbase.com/rpc/v1/base/gfgi5KPiwXGEcCCDFHqJjwq1TIHV9uMP'
+            : 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/gfgi5KPiwXGEcCCDFHqJjwq1TIHV9uMP';
+        const paymaster = createPaymasterClient({
+          transport: http(paymasterUrl),
+        });
+        const bundlerClient = getBundlerClient(chainId);
+        assertPresence(bundlerClient, standardErrors.rpc.invalidParams('bundler client not found'));
 
-          // @ts-ignore
-          const params = args.params[0] as {
-            to: Address;
-            data: Hex;
-            value: any;
-          };
+        // @ts-ignore
+        const params = args.params[0] as {
+          to: Address;
+          data: Hex;
+          value: any;
+        };
 
-          let calls;
-          const spendPermission = store.getState().spendPermission;
-          if (!spendPermission) {
-            console.error('no spend permission found');
-            calls = [
-              {
-                to: params.to,
-                data: params.data,
-                value: params.value,
-              },
-            ];
-          } else {
-            calls = [
-              {
-                to: '0xf85210B21cC50302F477BA56686d2019dC9b67Ad' as Address,
-                data: encodeFunctionData({
-                  abi: spendPermissionManagerAbi,
-                  functionName: 'approveWithSignature',
-                  // @ts-ignore
-                  args: [spendPermission.permission, spendPermission.signature],
-                }),
-                value: '0x0',
-              },
-              {
-                  to: '0xf85210B21cC50302F477BA56686d2019dC9b67Ad' as Address,
-                  data: encodeFunctionData({
-                    abi: spendPermissionManagerAbi,
-                    functionName: 'spend',
-                    // @ts-ignore
-                    args: [spendPermission.permission, params.value.toString()],
-                  }),
-                  value: '0x0',
-              },
-              {
-                to: params.to,
-                data: params.data,
-                value: params.value,
-              },
-            ];
-          }
-          // Send the user operation
-          const result = await bundlerClient.sendUserOperation({
-            account,
-            calls,
-            paymaster,
-          });
-          console.log(`user op hash: ${result}. Waiting for transaction to confirm...`);
-          const userOpReceipt = await bundlerClient.waitForUserOperationReceipt({
-            hash: result
-          });
-          return userOpReceipt.receipt.transactionHash;
+        let calls;
+        const spendPermission = store.getState().spendPermission;
+        if (!spendPermission) {
+          console.error('no spend permission found');
+          calls = [
+            {
+              to: params.to,
+              data: params.data,
+              value: params.value,
+            },
+          ];
+        } else {
+          calls = [
+            {
+              to: '0xf85210B21cC50302F477BA56686d2019dC9b67Ad' as Address,
+              data: encodeFunctionData({
+                abi: spendPermissionManagerAbi,
+                functionName: 'approveWithSignature',
+                // @ts-ignore
+                args: [spendPermission.permission, spendPermission.signature],
+              }),
+              value: '0x0',
+            },
+            {
+              to: '0xf85210B21cC50302F477BA56686d2019dC9b67Ad' as Address,
+              data: encodeFunctionData({
+                abi: spendPermissionManagerAbi,
+                functionName: 'spend',
+                // @ts-ignore
+                args: [spendPermission.permission, params.value.toString()],
+              }),
+              value: '0x0',
+            },
+            {
+              to: params.to,
+              data: params.data,
+              value: params.value,
+            },
+          ];
         }
-        case 'wallet_sendCalls': {
-          assertArrayPresence(args.params);
-
-
-          // Get the bundler client for the chain
-          const chainId = get(args.params[0], 'chainId') as number;
-          assertPresence(chainId, standardErrors.rpc.invalidParams('chainId is required'));
-
-          // this is a hack to make sure we dont run into paymaster issues
-          // @ts-ignore
-          const paymasterUrl = (chainId === 8453 || chainId === '0x2105') ? 'https://api.developer.coinbase.com/rpc/v1/base/gfgi5KPiwXGEcCCDFHqJjwq1TIHV9uMP' : 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/gfgi5KPiwXGEcCCDFHqJjwq1TIHV9uMP';          const paymaster = createPaymasterClient({
-            transport: http(paymasterUrl),
-          });
-          const bundlerClient = getBundlerClient(chainId);
-          assertPresence(
-            bundlerClient,
-            standardErrors.rpc.invalidParams('bundler client not found')
-          );
-
-          const calls = get(args.params[0], 'calls') as { to: Address; data: Hex }[];
-          // Send the user operation
-          return await bundlerClient.sendUserOperation({
-            account,
-            calls,
-            paymaster,
-          });
-        }
-        case 'wallet_sendPreparedCalls': {
-          throw new Error('Not implemented');
-        }
-        case 'personal_sign': {
-          assertArrayPresence(args.params);
-          return account.signMessage({ message: args.params[0] } as {
-            message: SignableMessage;
-          });
-        }
-        case 'eth_signTypedData_v4': {
-          assertArrayPresence(args.params);
-          return account.signTypedData(args.params[1] as TypedDataDefinition);
-        }
-        case 'eth_signTypedData_v1':
-        case 'eth_signTypedData_v3':
-        case 'wallet_addEthereumChain':
-        case 'wallet_switchEthereumChain':
-        default:
-          throw standardErrors.rpc.methodNotSupported();
+        // Send the user operation
+        const result = await bundlerClient.sendUserOperation({
+          account,
+          calls,
+          paymaster,
+        });
+        const userOpReceipt = await bundlerClient.waitForUserOperationReceipt({
+          hash: result,
+        });
+        return userOpReceipt.receipt.transactionHash;
       }
-    },
+      case 'wallet_sendCalls': {
+        assertArrayPresence(args.params);
+        // Get the client for the chain
+        const chainId = get(args.params[0], 'chainId');
+        if (!chainId) {
+          throw standardErrors.rpc.invalidParams('chainId is required');
+        }
+
+        if (!isHex(chainId)) {
+          throw standardErrors.rpc.invalidParams('chainId must be a hex encoded integer');
+        }
+
+        const publicClient = getClient(hexToNumber(chainId));
+        assertPresence(
+          publicClient,
+          standardErrors.rpc.internal(`client not found for chainId ${hexToNumber(chainId)}`)
+        );
+
+        if (!args.params[0]) {
+          throw standardErrors.rpc.invalidParams('params are required');
+        }
+
+        if (!('calls' in args.params[0])) {
+          throw standardErrors.rpc.invalidParams('calls are required');
+        }
+
+        const prepareCallsResponse = (await request({
+          method: 'wallet_prepareCalls',
+          params: [
+            {
+              calls: args.params[0].calls as {
+                to: Address;
+                data: Hex;
+                value: Hex;
+              }[],
+              chainId: chainId,
+              from: subAccount.address,
+              capabilities:
+                'capabilities' in args.params[0]
+                  ? (args.params[0].capabilities as Record<string, any>)
+                  : {},
+            },
+          ],
+        })) as PrepareCallsSchema['ReturnType'];
+
+        const signResponse = await owner!.sign?.({
+          // Hash returned from wallet_prepareCalls is double hex encoded
+          hash: hexToString(prepareCallsResponse.signatureRequest.hash) as `0x${string}`,
+        });
+
+        let signatureData: SendPreparedCallsSchema['Parameters'][0]['signature'];
+
+        if (!signResponse) {
+          throw standardErrors.rpc.internal('signature not found');
+        }
+
+        if (isHex(signResponse)) {
+          signatureData = {
+            type: 'secp256k1',
+            data: {
+              address: owner!.address!,
+              signature: signResponse as Hex,
+            },
+          };
+        } else {
+          signatureData = {
+            type: 'webauthn',
+            data: {
+              signature: JSON.stringify(
+                convertCredentialToJSON({
+                  id: owner!.id ?? '1',
+                  ...signResponse,
+                })
+              ),
+              publicKey: owner!.publicKey,
+            },
+          };
+        }
+
+        const sendPreparedCallsResponse = (await request({
+          method: 'wallet_sendPreparedCalls',
+          params: [
+            {
+              version: '1.0',
+              type: prepareCallsResponse.type,
+              data: prepareCallsResponse.userOp,
+              chainId: prepareCallsResponse.chainId,
+              signature: signatureData,
+            },
+          ],
+        })) as SendPreparedCallsSchema['ReturnType'];
+
+        return sendPreparedCallsResponse[0];
+      }
+      case 'wallet_sendPreparedCalls': {
+        assertArrayPresence(args.params);
+        // Get the client for the chain
+        const chainId = get(args.params[0], 'chainId');
+        if (!chainId) {
+          throw standardErrors.rpc.invalidParams('chainId is required');
+        }
+
+        if (!isHex(chainId)) {
+          throw standardErrors.rpc.invalidParams('chainId must be a hex encoded integer');
+        }
+
+        const publicClient = getClient(hexToNumber(chainId));
+        assertPresence(
+          publicClient,
+          standardErrors.rpc.internal(`client not found for chainId ${hexToNumber(chainId)}`)
+        );
+
+        const sendPreparedCallsResponse = await publicClient.request<SendPreparedCallsSchema>({
+          method: 'wallet_sendPreparedCalls',
+          params: args.params as SendPreparedCallsParams,
+        });
+
+        return sendPreparedCallsResponse;
+      }
+      case 'wallet_prepareCalls': {
+        assertArrayPresence(args.params);
+        // Get the client for the chain
+        const chainId = get(args.params[0], 'chainId');
+        if (!chainId) {
+          throw standardErrors.rpc.invalidParams('chainId is required');
+        }
+
+        if (!isHex(chainId)) {
+          throw standardErrors.rpc.invalidParams('chainId must be a hex encoded integer');
+        }
+
+        const publicClient = getClient(hexToNumber(chainId));
+        assertPresence(
+          publicClient,
+          standardErrors.rpc.internal(`client not found for chainId ${hexToNumber(chainId)}`)
+        );
+
+        if (!args.params[0]) {
+          throw standardErrors.rpc.invalidParams('params are required');
+        }
+
+        if (!get(args.params[0], 'calls')) {
+          throw standardErrors.rpc.invalidParams('calls are required');
+        }
+
+        const prepareCallsResponse = await publicClient.request<PrepareCallsSchema>({
+          method: 'wallet_prepareCalls',
+          params: [{ ...args.params[0], chainId: chainId }] as PrepareCallsParams,
+        });
+
+        return prepareCallsResponse;
+      }
+      case 'personal_sign': {
+        assertArrayPresence(args.params);
+        return account.signMessage({ message: args.params[0] } as {
+          message: SignableMessage;
+        });
+      }
+      case 'eth_signTypedData_v4': {
+        assertArrayPresence(args.params);
+        return account.signTypedData(args.params[1] as TypedDataDefinition);
+      }
+      case 'eth_signTypedData_v1':
+      case 'eth_signTypedData_v3':
+      case 'wallet_addEthereumChain':
+      case 'wallet_switchEthereumChain':
+      default:
+        throw standardErrors.rpc.methodNotSupported();
+    }
+  };
+
+  return {
+    request,
   };
 }

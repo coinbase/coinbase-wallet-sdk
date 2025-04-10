@@ -19,7 +19,6 @@ import {
   exportKeyToHexString,
   importKeyFromHexString,
 } from ':util/cipher.js';
-import { get } from ':util/get.js';
 import { fetchRPCRequest } from ':util/provider.js';
 import { Signer } from '../interface.js';
 import { SCWKeyManager } from './SCWKeyManager.js';
@@ -341,13 +340,10 @@ export class SCWSigner implements Signer {
       this.callback?.('accountsChanged', [this.accounts[0], subAccount.address]);
       return subAccount;
     }
-    // TODO: add support for importing an address
-    const address = get(request, 'params[0].address') as string;
-    if (address) {
-      throw standardErrors.rpc.invalidParams('importing an address is not yet supported');
-    }
 
+    // Wait for the popup to be loaded before sending the request
     await this.communicator.waitForPopupLoaded?.();
+
     const request_ = { ...request };
 
     // Auto Support for Sub Accounts
@@ -381,7 +377,6 @@ export class SCWSigner implements Signer {
   }
 
   private shouldRequestUseSubAccountSigner(request: RequestArguments) {
-    console.log('SCWSigner: customlogs: shouldRequestUseSubAccountSigner', request);
     const sender = getSenderFromRequest(request);
     const subAccount = store.subAccounts.get();
     if (sender) {
@@ -410,7 +405,6 @@ export class SCWSigner implements Signer {
     const signer = await createSubAccountSigner({
       chainId: this.chain.id,
     });
-    console.log('SCWSigner: customlogs: sendRequestToSubAccountSignerSigner', signer, request);
     return signer.request(request);
   }
 }

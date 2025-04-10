@@ -1,20 +1,28 @@
 import { Box, Button } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
+import { createCoinbaseWalletSDK, getCryptoKeyAccount } from '@coinbase/wallet-sdk';
 import { useCallback, useState } from 'react';
 import { numberToHex } from 'viem';
 
 type AddSubAccountProps = {
   sdk: ReturnType<typeof createCoinbaseWalletSDK>;
   onAddSubAccount: (address: string) => void;
+  signerFn: typeof getCryptoKeyAccount;
 };
 
-export function AddSubAccount({ sdk, onAddSubAccount }: AddSubAccountProps) {
+export function AddSubAccount({ sdk, onAddSubAccount, signerFn }: AddSubAccountProps) {
   const [subAccount, setSubAccount] = useState<string>();
 
   const handleAddSubAccount = useCallback(async () => {
     if (!sdk) {
       return;
     }
+
+    const { account } = await signerFn();
+
+    if (!account) {
+      throw new Error('Could not get owner account');
+    }
+
     const provider = sdk.getProvider();
     await provider.request({
       method: 'wallet_switchEthereumChain',
@@ -29,7 +37,7 @@ export function AddSubAccount({ sdk, onAddSubAccount }: AddSubAccountProps) {
     console.info('response', response);
     setSubAccount(response.address);
     onAddSubAccount(response.address);
-  }, [sdk, onAddSubAccount]);
+  }, [sdk, onAddSubAccount, signerFn]);
 
   return (
     <>

@@ -62,6 +62,21 @@ describe('PopupManager', () => {
     expect(url.searchParams.get('coop')).toBe('null');
   });
 
+  it('should not duplicate parameters when opening a popup with existing params', async () => {
+    const url = new URL('https://example.com');
+    url.searchParams.append('sdkName', NAME);
+    url.searchParams.append('sdkVersion', VERSION);
+    url.searchParams.append('origin', mockOrigin);
+    url.searchParams.append('coop', 'null');
+    
+    (window.open as Mock).mockReturnValue({ focus: vi.fn() });
+
+    await openPopup(url);
+
+    const paramCount = url.searchParams.toString().split('&').length;
+    expect(paramCount).toBe(4);
+  });
+
   it('should show snackbar with retry button when popup is blocked and retry successfully', async () => {
     const url = new URL('https://example.com');
     const mockPopup = { focus: vi.fn() };
