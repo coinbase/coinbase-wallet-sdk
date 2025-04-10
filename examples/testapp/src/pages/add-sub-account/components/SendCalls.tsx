@@ -28,7 +28,7 @@ export function SendCalls({
             calls: [{
               to: subAccountAddress,
               data: '0x',
-              value: '1',
+              value: '0x64',
             }],
             version: '1',
             capabilities: {
