@@ -1,7 +1,5 @@
 import { Mock, Mocked, vi } from 'vitest';
 
-import { SCWKeyManager } from './SCWKeyManager.js';
-import { SCWSigner } from './SCWSigner.js';
 import { Communicator } from ':core/communicator/Communicator.js';
 import { CB_KEYS_URL } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
@@ -15,6 +13,8 @@ import {
   importKeyFromHexString,
 } from ':util/cipher.js';
 import { fetchRPCRequest } from ':util/provider.js';
+import { SCWKeyManager } from './SCWKeyManager.js';
+import { SCWSigner } from './SCWSigner.js';
 
 vi.mock(':util/provider');
 vi.mock('./SCWKeyManager');
@@ -226,6 +226,11 @@ describe('SCWSigner', () => {
         },
         chains: [],
         keys: {},
+        config: {
+          metadata: mockMetadata,
+          preference: { keysUrl: CB_KEYS_URL, options: 'all' },
+          version: '1.0.0',
+        },
       }));
     });
 

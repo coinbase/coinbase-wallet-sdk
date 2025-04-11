@@ -9,7 +9,6 @@ import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
 import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
 import { SDKChain, createClients } from ':store/chain-clients/utils.js';
-import { config } from ':store/config.js';
 import { store } from ':store/store.js';
 import { assertPresence } from ':util/assertPresence.js';
 import { assertSubAccount } from ':util/assertSubAccount.js';
@@ -206,7 +205,7 @@ export class SCWSigner implements Signer {
   }
 
   async cleanup() {
-    const metadata = config.getState().metadata;
+    const metadata = store.config.get().metadata;
     await this.keyManager.clear();
 
     // clear the store

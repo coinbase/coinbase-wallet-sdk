@@ -1,9 +1,9 @@
 import { AppMetadata, Preference } from ":core/provider/interface.js";
-import { VERSION } from "src/sdk-info.js";
 import { Address, Hex, LocalAccount, OneOf } from "viem";
 import { WebAuthnAccount } from "viem/account-abstraction";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { StateCreator, createStore } from "zustand/vanilla";
+import { VERSION } from "../sdk-info.js";
 
 export type ToSubAccountSigner = () => Promise<{
   account: OneOf<LocalAccount | WebAuthnAccount> | null;
