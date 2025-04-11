@@ -52,7 +52,7 @@ describe('PopupManager', () => {
       1,
       url,
       expect.stringContaining('wallet_'),
-      'width=420, height=540, left=302, top=114'
+      'width=420, height=700, left=302, top=34'
     );
     expect(popup.focus).toHaveBeenCalledTimes(1);
 

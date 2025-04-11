@@ -5,7 +5,7 @@ import { NAME, VERSION } from '../sdk-info.js';
 import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
 
 const POPUP_WIDTH = 420;
-const POPUP_HEIGHT = 540;
+const POPUP_HEIGHT = 700;
 
 const RETRY_BUTTON = {
   isRed: false,
