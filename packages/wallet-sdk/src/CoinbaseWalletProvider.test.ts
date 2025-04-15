@@ -1,10 +1,10 @@
-import { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js';
-import * as util from './sign/util.js';
-import * as providerUtil from './util/provider.js';
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
+import { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js';
+import * as util from './sign/util.js';
+import * as providerUtil from './util/provider.js';
 
 function createProvider() {
   return new CoinbaseWalletProvider({

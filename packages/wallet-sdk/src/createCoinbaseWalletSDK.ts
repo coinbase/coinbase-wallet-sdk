@@ -1,7 +1,5 @@
 import { decodeAbiParameters, encodeFunctionData, toHex } from 'viem';
 
-import { createCoinbaseWalletProvider } from './createCoinbaseWalletProvider.js';
-import { store, SubAccount, ToSubAccountSigner } from './store/store.js';
 import {
   AppMetadata,
   ConstructorOptions,
@@ -11,10 +9,11 @@ import {
 import { AddSubAccountAccount } from ':core/rpc/wallet_addSubAccount.js';
 import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
 import { abi } from ':sign/scw/utils/constants.js';
-import { config } from ':store/config.js';
 import { assertPresence } from ':util/assertPresence.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { validatePreferences, validateSubAccount } from ':util/validatePreferences.js';
+import { createCoinbaseWalletProvider } from './createCoinbaseWalletProvider.js';
+import { SubAccount, ToSubAccountSigner, store } from './store/store.js';
 
 export type CreateCoinbaseWalletSDKOptions = Partial<AppMetadata> & {
   preference?: Preference;
@@ -47,7 +46,7 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
   };
 
   // set the options in the store
-  config.setState(options);
+  store.config.set(options);
 
   // rehydrate the store from storage
   void store.persist.rehydrate();

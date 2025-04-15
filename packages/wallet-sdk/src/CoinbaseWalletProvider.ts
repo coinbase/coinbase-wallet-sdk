@@ -1,5 +1,3 @@
-import { Signer } from './sign/interface.js';
-import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util.js';
 import { Communicator } from ':core/communicator/Communicator.js';
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
@@ -17,6 +15,8 @@ import {
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { hexStringFromNumber } from ':core/type/util.js';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from ':util/provider.js';
+import { Signer } from './sign/interface.js';
+import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util.js';
 
 export class CoinbaseWalletProvider extends ProviderEventEmitter implements ProviderInterface {
   private readonly metadata: AppMetadata;

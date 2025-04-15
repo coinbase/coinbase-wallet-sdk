@@ -1,14 +1,13 @@
 // Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
 
-import { LogoType, walletLogo } from './assets/wallet-logo.js';
-import { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js';
-import { AppMetadata, Preference, ProviderInterface } from './core/provider/interface.js';
 import { getFavicon } from ':core/type/util.js';
-import { config } from ':store/config.js';
 import { store } from ':store/store.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { getCoinbaseInjectedProvider } from ':util/provider.js';
 import { validatePreferences } from ':util/validatePreferences.js';
+import { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js';
+import { LogoType, walletLogo } from './assets/wallet-logo.js';
+import { AppMetadata, Preference, ProviderInterface } from './core/provider/interface.js';
 
 // for backwards compatibility
 type CoinbaseWalletSDKOptions = Partial<AppMetadata>;
@@ -31,7 +30,7 @@ export class CoinbaseWalletSDK {
       appChainIds: metadata.appChainIds || [],
     };
 
-    config.setState({
+    store.config.set({
       metadata: this.metadata,
     });
 
@@ -40,7 +39,7 @@ export class CoinbaseWalletSDK {
 
   public makeWeb3Provider(preference: Preference = { options: 'all' }): ProviderInterface {
     validatePreferences(preference);
-    config.setState({
+    store.config.set({
       preference,
     });
     const params = { metadata: this.metadata, preference };
