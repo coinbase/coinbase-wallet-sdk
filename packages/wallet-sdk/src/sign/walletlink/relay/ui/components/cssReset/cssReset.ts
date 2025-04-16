@@ -4,7 +4,7 @@ import css from './cssReset-css.js';
 
 export function injectCssReset(): void {
   const styleEl = document.createElement('style');
-  styleEl.type = 'text/css';
+  // Removed deprecated 'type' property assignment
   styleEl.appendChild(document.createTextNode(css));
   document.documentElement.appendChild(styleEl);
 }

@@ -11,6 +11,7 @@
     "examples/*"
   ],
   "scripts": {
+    "vercel-build": "next build",
     "build:packages": "yarn workspace @coinbase/wallet-sdk build",
     "clean": "yarn workspaces foreach -A -ipv run clean && rm -rf node_modules && yarn",
     "deploy": "yarn build:packages && yarn workspace sdk-playground export",
@@ -22,5 +23,21 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4"
   },
-  "packageManager": "yarn@4.8.1"
+  "packageManager": "yarn@4.8.1",
+  "dependencies": {
+    "@coinbase/onchainkit": "^0.38.5",
+    "@coinbase/wallet-sdk": "^4.3.2",
+    "@reown/appkit": "^1.7.2",
+    "@reown/appkit-adapter-wagmi": "^1.7.2",
+    "@tanstack/react-query": "^5.71.5",
+    "@vercel/analytics": "^1.5.0",
+    "@vercel/edge-config": "^1.4.0",
+    "next.js": "^1.0.3",
+    "pnpm": "^10.7.1",
+    "pnpm-workspace": "^1.0.6",
+    "sdk-playground": "workspace:examples/testapp",
+    "vercel": "^41.4.1",
+    "viem": "^2.25.0",
+    "wagmi": "^2.14.16"
+  }
 }

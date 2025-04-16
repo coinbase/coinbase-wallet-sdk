@@ -1,7 +1,5 @@
 import { clsx } from 'clsx';
-import { FunctionComponent, render } from 'preact';
-// biome-ignore lint/correctness/noUnusedImports: preact
-import { h } from 'preact';
+import { FunctionComponent, h, render } from 'preact';
 
 import { injectCssReset } from '../cssReset/cssReset.js';
 import { SnackbarContainer } from '../Snackbar/Snackbar.js';
@@ -68,7 +66,16 @@ const RedirectDialogContent: FunctionComponent<
     <SnackbarContainer darkMode={darkMode}>
       <div class="-cbwsdk-redirect-dialog">
         <style>{css}</style>
-        <div class="-cbwsdk-redirect-dialog-backdrop" onClick={onDismiss} />
+        <button
+          class="-cbwsdk-redirect-dialog-backdrop"
+          onClick={onDismiss}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onDismiss();
+            }
+          }}
+        />
         <div class={clsx('-cbwsdk-redirect-dialog-box', theme)}>
           <p>{title}</p>
           <button onClick={onButtonClick}>{buttonText}</button>

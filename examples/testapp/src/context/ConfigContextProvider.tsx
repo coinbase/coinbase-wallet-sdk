@@ -1,4 +1,4 @@
-import { Preference } from '@coinbase/wallet-sdk';
+import Preference from '@coinbase/wallet-sdk';
 import {
   Dispatch,
   ReactNode,
@@ -44,19 +44,14 @@ export const ConfigContextProvider = ({ children }: ConfigContextProviderProps) 
   const [version, setVersion] = useState<SDKVersionType | undefined>(undefined);
   const [option, setOption] = useState<OptionsType | undefined>(undefined);
   const [scwUrl, setScwUrl] = useState<ScwUrlType | undefined>(undefined);
-  const [config, setConfig] = useState<Preference>({
-    options: option,
-    attribution: {
-      auto: false,
-    },
-  });
+  const [config, setConfig] = useState<Preference | undefined>(undefined);
 
   useEffect(
     function initializeSDKVersion() {
       if (version === undefined) {
-        const savedVersion = localStorage.getItem(SELECTED_SDK_KEY) as SDKVersionType;
+        const savedVersion = localStorage.getItem(SELECTED_SDK_KEY);
         setVersion(
-          sdkVersions.includes(savedVersion) ? (savedVersion as SDKVersionType) : sdkVersions[0]
+          sdkVersions.includes(savedVersion) ? savedVersion : sdkVersions[0]
         );
       }
     },
@@ -67,7 +62,7 @@ export const ConfigContextProvider = ({ children }: ConfigContextProviderProps) 
     function initializeOption() {
       if (option === undefined) {
         const option = localStorage.getItem(OPTIONS_KEY) as OptionsType;
-        setOption(options.includes(option) ? (option as OptionsType) : 'all');
+        setOption(options.includes(option) ? option : 'all');
       }
     },
     [option]
@@ -77,7 +72,7 @@ export const ConfigContextProvider = ({ children }: ConfigContextProviderProps) 
     function initializeScwUrl() {
       if (scwUrl === undefined) {
         const savedScwUrl = localStorage.getItem(SELECTED_SCW_URL_KEY) as ScwUrlType;
-        setScwUrl(scwUrls.includes(savedScwUrl) ? (savedScwUrl as ScwUrlType) : scwUrls[0]);
+        setScwUrl(scwUrls.includes(savedScwUrl) ? savedScwUrl : scwUrls[0]);
       }
     },
     [scwUrl]

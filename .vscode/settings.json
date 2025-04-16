@@ -3,5 +3,19 @@
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit",
     "source.fixAll": "explicit"
+  },
+  "spellright.language": [
+    "en-US-10-1."
+  ],
+  "spellright.documentTypes": [
+    "markdown",
+    "latex",
+    "plaintext",
+    "splunk"
+  ],
+  "spellright.parserByClass": {
+    "splunk": {
+      "parser": "plain"
+    }
   }
 }
