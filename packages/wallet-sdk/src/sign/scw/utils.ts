@@ -2,6 +2,8 @@ import { Address } from 'viem';
 
 import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
+import { assertPresence } from ':util/assertPresence.js';
+import { get } from ':util/get.js';
 
 // ***************************************************************
 // Utility
@@ -59,4 +61,39 @@ export function assertParamsChainId(params: unknown): asserts params is [
   if (typeof params[0].chainId !== 'string' && typeof params[0].chainId !== 'number') {
     throw standardErrors.rpc.invalidParams();
   }
+}
+
+export function injectRequestCapabilities(
+  request: RequestArguments,
+  capabilities: Record<string, unknown>
+) {
+  // Modify request to include auto sub account capabilities
+  const modifiedRequest = { ...request };
+
+  if (capabilities && ['wallet_sendCalls', 'wallet_connect'].includes(request.method)) {
+    let requestCapabilities = get(modifiedRequest, 'params.0.capabilities');
+    assertPresence(requestCapabilities, standardErrors.rpc.invalidParams());
+
+    if (typeof requestCapabilities === 'undefined') {
+      requestCapabilities = {};
+    }
+
+    if (typeof requestCapabilities !== 'object') {
+      throw standardErrors.rpc.invalidParams();
+    }
+
+    requestCapabilities = {
+      ...capabilities,
+      ...requestCapabilities,
+    };
+
+    if (modifiedRequest.params && Array.isArray(modifiedRequest.params)) {
+      modifiedRequest.params[0] = {
+        ...modifiedRequest.params[0],
+        capabilities: requestCapabilities,
+      };
+    }
+  }
+
+  return modifiedRequest;
 }

@@ -1,12 +1,12 @@
-import { AppMetadata, Preference } from ":core/provider/interface.js";
-import { Address, Hex, LocalAccount, OneOf } from "viem";
-import { WebAuthnAccount } from "viem/account-abstraction";
-import { createJSONStorage, persist } from "zustand/middleware";
-import { StateCreator, createStore } from "zustand/vanilla";
-import { VERSION } from "../sdk-info.js";
+import { AppMetadata, Preference } from ':core/provider/interface.js';
+import { OwnerAccount } from ':core/type/index.js';
+import { VERSION } from 'src/sdk-info.js';
+import { Address, Hex } from 'viem';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import { StateCreator, createStore } from 'zustand/vanilla';
 
 export type ToSubAccountSigner = () => Promise<{
-  account: OneOf<LocalAccount | WebAuthnAccount> | null;
+  account: OwnerAccount | null;
 }>;
 
 type Chain = {
@@ -61,12 +61,7 @@ type AccountSlice = {
   account: Account;
 };
 
-const createAccountSlice: StateCreator<
-  StoreState,
-  [],
-  [],
-  AccountSlice
-> = () => {
+const createAccountSlice: StateCreator<StoreState, [], [], AccountSlice> = () => {
   return {
     account: {},
   };
@@ -76,12 +71,7 @@ type SubAccountSlice = {
   subAccount?: SubAccount;
 };
 
-const createSubAccountSlice: StateCreator<
-  StoreState,
-  [],
-  [],
-  SubAccountSlice
-> = () => {
+const createSubAccountSlice: StateCreator<StoreState, [], [], SubAccountSlice> = () => {
   return {
     subAccount: undefined,
   };
@@ -100,8 +90,7 @@ const createConfigSlice: StateCreator<StoreState, [], [], ConfigSlice> = () => {
 };
 
 type MergeTypes<T extends unknown[]> = T extends [infer First, ...infer Rest]
-  ? First &
-      (Rest extends unknown[] ? MergeTypes<Rest> : Record<string, unknown>)
+  ? First & (Rest extends unknown[] ? MergeTypes<Rest> : Record<string, unknown>)
   : Record<string, unknown>;
 
 export type StoreState = MergeTypes<
@@ -111,7 +100,7 @@ export type StoreState = MergeTypes<
     AccountSlice,
     SubAccountSlice,
     ConfigSlice,
-    { toSubAccountSigner?: ToSubAccountSigner }
+    { toSubAccountSigner?: ToSubAccountSigner },
   ]
 >;
 
@@ -126,7 +115,7 @@ export const sdkstore = createStore(
       toSubAccountSigner: undefined,
     }),
     {
-      name: "cbwsdk.store",
+      name: 'cbwsdk.store',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => {
         // Explicitly select only the data properties we want to persist

@@ -84,6 +84,9 @@ describe('SCWSigner', () => {
       metadata: mockMetadata,
       communicator: mockCommunicator,
       callback: mockCallback,
+      preferences: {
+        options: 'smartWalletOnly',
+      },
     });
   });
 

@@ -5,33 +5,31 @@ import {
   Assign,
   BaseError,
   type Client,
+  type Hash,
+  type Hex,
+  type Prettify,
+  type TypedDataDefinition,
   decodeFunctionData,
   encodeAbiParameters,
   encodeFunctionData,
   encodePacked,
-  type Hash,
   hashMessage,
   hashTypedData,
-  type Hex,
-  type LocalAccount,
-  type OneOf,
   parseSignature,
-  type Prettify,
   size,
   stringToHex,
-  type TypedDataDefinition,
 } from 'viem';
 import {
+  type SmartAccount,
+  type SmartAccountImplementation,
+  type UserOperation,
   entryPoint06Abi,
   entryPoint06Address,
   getUserOperationHash,
-  type SmartAccount,
-  type SmartAccountImplementation,
   toSmartAccount,
-  type UserOperation,
-  type WebAuthnAccount,
 } from 'viem/account-abstraction';
 
+import { OwnerAccount } from ':core/type/index.js';
 import { abi, factoryAbi, factoryAddress } from './constants.js';
 
 export type CreateSmartAccountParameters = {
@@ -39,7 +37,7 @@ export type CreateSmartAccountParameters = {
   client: Client;
   factoryData: Hex | undefined;
   ownerIndex: number;
-  owner: OneOf<LocalAccount | WebAuthnAccount>;
+  owner: OwnerAccount;
 };
 
 export type CreateSmartAccountReturnType = Prettify<
@@ -257,7 +255,7 @@ export async function sign({
   owner,
 }: {
   hash: Hash;
-  owner: OneOf<LocalAccount | WebAuthnAccount>;
+  owner: OwnerAccount;
 }) {
   // WebAuthn Account (Passkey)
   if (owner.type === 'webAuthn') {

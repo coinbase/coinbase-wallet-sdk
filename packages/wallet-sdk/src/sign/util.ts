@@ -1,6 +1,3 @@
-import { Signer } from './interface.js';
-import { SCWSigner } from './scw/SCWSigner.js';
-import { WalletLinkSigner } from './walletlink/WalletLinkSigner.js';
 import { Communicator } from ':core/communicator/Communicator.js';
 import { ConfigMessage, SignerType } from ':core/message/ConfigMessage.js';
 import { MessageID } from ':core/message/Message.js';
@@ -11,6 +8,9 @@ import {
   RequestArguments,
 } from ':core/provider/interface.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
+import { Signer } from './interface.js';
+import { SCWSigner } from './scw/SCWSigner.js';
+import { WalletLinkSigner } from './walletlink/WalletLinkSigner.js';
 
 const SIGNER_TYPE_KEY = 'SignerType';
 const storage = new ScopedLocalStorage('CBWSDK', 'SignerConfigurator');
@@ -48,14 +48,16 @@ export async function fetchSignerType(params: {
 export function createSigner(params: {
   signerType: SignerType;
   metadata: AppMetadata;
+  preferences: Preference;
   communicator: Communicator;
   callback: ProviderEventCallback;
 }): Signer {
-  const { signerType, metadata, communicator, callback } = params;
+  const { signerType, metadata, communicator, callback, preferences } = params;
   switch (signerType) {
     case 'scw': {
       return new SCWSigner({
         metadata,
+        preferences,
         callback,
         communicator,
       });

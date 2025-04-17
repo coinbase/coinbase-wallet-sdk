@@ -4,11 +4,16 @@ import { Communicator } from ':core/communicator/Communicator.js';
 import { standardErrors } from ':core/error/errors.js';
 import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage.js';
 import { RPCResponse } from ':core/message/RPCResponse.js';
-import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
+import {
+  AppMetadata,
+  Preference,
+  ProviderEventCallback,
+  RequestArguments,
+} from ':core/provider/interface.js';
 import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
-import { Address } from ':core/type/index.js';
+import { Address, OwnerAccount } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
-import { SDKChain, createClients } from ':store/chain-clients/utils.js';
+import { SDKChain, createClients, getClient } from ':store/chain-clients/utils.js';
 import { store } from ':store/store.js';
 import { assertPresence } from ':util/assertPresence.js';
 import { assertSubAccount } from ':util/assertSubAccount.js';
@@ -19,27 +24,39 @@ import {
   importKeyFromHexString,
 } from ':util/cipher.js';
 import { fetchRPCRequest } from ':util/provider.js';
+import { getCryptoKeyAccount } from '../../kms/crypto-key/index.js';
 import { Signer } from '../interface.js';
 import { SCWKeyManager } from './SCWKeyManager.js';
-import { addSenderToRequest, assertParamsChainId, getSenderFromRequest } from './utils.js';
-import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
+import {
+  addSenderToRequest,
+  assertParamsChainId,
+  getSenderFromRequest,
+  injectRequestCapabilities,
+} from './utils.js';
+import { toSubAccount } from './utils/toSubAccount.js';
 
 type ConstructorOptions = {
   metadata: AppMetadata;
+  preferences: Preference;
   communicator: Communicator;
   callback: ProviderEventCallback | null;
 };
 
 export class SCWSigner implements Signer {
   private readonly communicator: Communicator;
+  private readonly preferences: Preference;
   private readonly keyManager: SCWKeyManager;
   private callback: ProviderEventCallback | null;
+
+  private configCapabilities: Record<string, unknown> = {};
+  private subAccountOwner: OwnerAccount | undefined;
 
   private accounts: Address[];
   private chain: SDKChain;
 
   constructor(params: ConstructorOptions) {
     this.communicator = params.communicator;
+    this.preferences = params.preferences;
     this.callback = params.callback;
     this.keyManager = new SCWKeyManager();
 
@@ -78,7 +95,41 @@ export class SCWSigner implements Signer {
     this.handleResponse(args, decrypted);
   }
 
+  async initSubAccountConfig() {
+    if (this.preferences.autoSubAccounts?.enabled) {
+      // Get the owner account
+      const { account: owner } = this.preferences.autoSubAccounts.getOwnerAccount
+        ? await this.preferences.autoSubAccounts.getOwnerAccount()
+        : await getCryptoKeyAccount();
+
+      if (!owner) {
+        throw standardErrors.provider.unauthorized('No owner account found');
+      }
+
+      this.subAccountOwner = owner;
+
+      // Set the capabilities for the sub account
+      this.configCapabilities = {
+        addSubAccount: {
+          account: {
+            type: 'create',
+            keys: [
+              {
+                type: owner.address ? 'address' : 'webauthn-p256',
+                key: owner.address || owner.publicKey,
+              },
+            ],
+          },
+        },
+      };
+    }
+  }
+
   async request(request: RequestArguments) {
+    if (this.preferences.autoSubAccounts?.enabled) {
+      await this.initSubAccountConfig();
+    }
+
     if (this.accounts.length === 0) {
       switch (request.method) {
         case 'wallet_switchEthereumChain': {
@@ -87,10 +138,10 @@ export class SCWSigner implements Signer {
           return;
         }
         case 'wallet_connect':
-        case 'wallet_sendCalls':
-          return this.sendRequestToPopup(request);
-        default:
-          throw standardErrors.provider.unauthorized();
+        case 'wallet_sendCalls': {
+          const modifiedRequest = injectRequestCapabilities(request, this.configCapabilities);
+          return this.sendRequestToPopup(modifiedRequest);
+        }
       }
     }
 
@@ -99,9 +150,23 @@ export class SCWSigner implements Signer {
     }
 
     switch (request.method) {
-      case 'eth_requestAccounts':
+      case 'eth_requestAccounts': {
+        if (this.preferences.autoSubAccounts?.enabled) {
+          const response = (await this.request({
+            method: 'wallet_connect',
+            params: [
+              {
+                version: 1,
+                capabilities: this.configCapabilities,
+              },
+            ],
+          })) as Address[];
+          return response;
+        }
+
         this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
         return this.accounts;
+      }
       case 'eth_accounts':
         return this.accounts;
       case 'eth_coinbase':
@@ -129,8 +194,11 @@ export class SCWSigner implements Signer {
       case 'wallet_sendCalls':
       case 'wallet_showCallsStatus':
       case 'wallet_grantPermissions':
-      case 'wallet_connect':
         return this.sendRequestToPopup(request);
+      case 'wallet_connect': {
+        const modifiedRequest = injectRequestCapabilities(request, this.configCapabilities);
+        return this.sendRequestToPopup(modifiedRequest);
+      }
       // Sub Account Support
       case 'wallet_addSubAccount':
         return this.addSubAccount(request);
@@ -378,10 +446,22 @@ export class SCWSigner implements Signer {
       request = addSenderToRequest(request, subAccount.address);
     }
 
-    const signer = await createSubAccountSigner({
-      chainId: this.chain.id,
+    const client = getClient(this.chain.id);
+    assertPresence(
+      client,
+      standardErrors.rpc.internal(`client not found for chainId ${this.chain.id}`)
+    );
+
+    const { client: subAccountClient } = await toSubAccount({
+      address: subAccount.address,
+      // @ts-ignore
+      owner: this.subAccountOwner,
+      client: client,
+      factory: subAccount.factory,
+      factoryData: subAccount.factoryData,
     });
 
-    return signer.request(request);
+    // @ts-ignore
+    return subAccountClient.request(request);
   }
 }

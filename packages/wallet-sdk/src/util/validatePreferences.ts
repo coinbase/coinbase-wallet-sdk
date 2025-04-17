@@ -22,6 +22,12 @@ export function validatePreferences(preference?: Preference) {
       throw new Error(`Attribution cannot contain both auto and dataSuffix properties`);
     }
   }
+
+  if (preference.autoSubAccounts) {
+    if (typeof preference.autoSubAccounts.getOwnerAccount !== 'function') {
+      throw new Error(`autoSubAccounts.getOwnerAccount is not a function`);
+    }
+  }
 }
 
 /**

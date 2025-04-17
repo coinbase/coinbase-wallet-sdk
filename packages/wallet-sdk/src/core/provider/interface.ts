@@ -1,3 +1,4 @@
+import { OwnerAccount } from ':core/type/index.js';
 import { EventEmitter } from 'eventemitter3';
 
 export interface RequestArguments {
@@ -72,6 +73,18 @@ export type Preference = {
    * the Smart Wallet will generate a 16 byte hex string from the apps origin.
    */
   attribution?: Attribution;
+  /**
+   * @param autoSubAccounts
+   * @description If specified, the provider will automatically create a subaccount for the user and use it for all transactions.
+   */
+  autoSubAccounts?: {
+    enabled: true;
+    /**
+     * @param address The address of the subaccount to return the owner account for. Will be undefined if the subaccount is not created yet.
+     * @returns Return the owner account that will be used to sign the subaccount transactions.
+     */
+    getOwnerAccount?: () => Promise<{ account: OwnerAccount }>;
+  };
 } & Record<string, unknown>;
 
 export interface ConstructorOptions {

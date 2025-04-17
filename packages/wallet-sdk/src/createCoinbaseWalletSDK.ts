@@ -17,7 +17,6 @@ import { SubAccount, ToSubAccountSigner, store } from './store/store.js';
 
 export type CreateCoinbaseWalletSDKOptions = Partial<AppMetadata> & {
   preference?: Preference;
-  toSubAccountSigner?: ToSubAccountSigner;
 };
 
 const DEFAULT_PREFERENCE: Preference = {
@@ -56,15 +55,6 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
 
   // Validate user supplied preferences. Throws if key/values are not valid.
   validatePreferences(options.preference);
-
-  // Set the sub account signer inside the store.
-  if (params.toSubAccountSigner) {
-    validateSubAccount(params.toSubAccountSigner);
-    // store the signer in the sub account store
-    store.setState({
-      toSubAccountSigner: params.toSubAccountSigner,
-    });
-  }
 
   let provider: ProviderInterface | null = null;
 

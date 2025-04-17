@@ -1,10 +1,10 @@
-import { VERSION } from '../../sdk-info.js';
-import { ConfigMessage } from '../message/ConfigMessage.js';
-import { Message, MessageID } from '../message/Message.js';
 import { CB_KEYS_URL } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { AppMetadata, Preference } from ':core/provider/interface.js';
 import { closePopup, openPopup } from ':util/web.js';
+import { VERSION } from '../../sdk-info.js';
+import { ConfigMessage } from '../message/ConfigMessage.js';
+import { Message, MessageID } from '../message/Message.js';
 
 export type CommunicatorOptions = {
   url?: string;
@@ -112,7 +112,12 @@ export class Communicator {
           data: {
             version: VERSION,
             metadata: this.metadata,
-            preference: this.preference,
+            // TODO: Confirm if this is okay - do we expect to pass arbitrary prefernces to popup?
+            preference: {
+              keysUrl: this.preference.keysUrl,
+              options: this.preference.options,
+              attribution: this.preference.attribution,
+            },
             location: window.location.toString(),
           },
         });
