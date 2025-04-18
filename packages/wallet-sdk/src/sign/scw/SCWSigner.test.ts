@@ -231,6 +231,7 @@ describe('SCWSigner', () => {
           preference: { keysUrl: CB_KEYS_URL, options: 'all' },
           version: '1.0.0',
         },
+        subAccountConfig: undefined,
       }));
     });
 

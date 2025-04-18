@@ -14,6 +14,7 @@ import {
 } from ':core/provider/interface.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { hexStringFromNumber } from ':core/type/util.js';
+import { store } from ':store/store.js';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from ':util/provider.js';
 import { Signer } from './sign/interface.js';
 import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util.js';
@@ -47,8 +48,26 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
       if (!this.signer) {
         switch (args.method) {
           case 'eth_requestAccounts': {
-            const signerType = await this.requestSignerSelection(args);
+            // this causes a popup which we dont want.
+            let signerType: SignerType;
+            const subAccountsConfig = store.subAccountsConfig.get();
+            if (subAccountsConfig?.enableAutoSubAccounts) {
+              signerType = 'scw';
+            } else {
+              signerType = await this.requestSignerSelection(args);
+            }
             const signer = this.initSigner(signerType);
+
+            if (signerType === 'scw' && subAccountsConfig?.enableAutoSubAccounts) {
+              await signer.handshake({ method: 'handshake' });
+
+              const result = await signer.request(args);
+              this.signer = signer;
+
+              // @ts-ignore -- TODO: Validate result
+              return [result.accounts[0].capabilities.addSubAccount.address] as T;
+            }
+
             await signer.handshake(args);
             this.signer = signer;
             storeSignerType(signerType);

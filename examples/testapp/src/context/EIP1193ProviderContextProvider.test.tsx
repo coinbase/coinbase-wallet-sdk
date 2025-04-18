@@ -57,6 +57,10 @@ describe('EIP1193ProviderContextProvider', () => {
       setSDKVersion: vi.fn(),
       setScwUrlAndSave: vi.fn(),
       setConfig: vi.fn(),
+      subAccountsConfig: {
+        enableAutoSubAccounts: true,
+      },
+      setSubAccountsConfig: vi.fn(),
     });
 
     vi.spyOn(EventListeners, 'useEventListeners').mockReturnValue({
@@ -93,6 +97,9 @@ describe('EIP1193ProviderContextProvider', () => {
         attribution: { dataSuffix: '0xtestattribution' },
         keysUrl: 'https://keys-dev.coinbase.com/connect',
       },
+      subAccounts: {
+        enableAutoSubAccounts: true,
+      },
     });
     expect(screen.getByTestId('sdk-exists')).toBeTruthy();
     expect(screen.getByTestId('provider-exists')).toBeTruthy();
@@ -106,10 +113,14 @@ describe('EIP1193ProviderContextProvider', () => {
       version: 'latest',
       scwUrl: 'https://keys-dev.coinbase.com/connect',
       config: { options: 'all', attribution: { dataSuffix: '0xtestattribution' } },
+      subAccountsConfig: {
+        enableAutoSubAccounts: true,
+      },
       setPreference: vi.fn(),
       setSDKVersion: vi.fn(),
       setScwUrlAndSave: vi.fn(),
       setConfig: vi.fn(),
+      setSubAccountsConfig: vi.fn(),
     });
 
     render(
@@ -125,6 +136,9 @@ describe('EIP1193ProviderContextProvider', () => {
         options: 'all',
         attribution: { dataSuffix: '0xtestattribution' },
         keysUrl: 'https://keys-dev.coinbase.com/connect',
+      },
+      subAccounts: {
+        enableAutoSubAccounts: true,
       },
     });
   });

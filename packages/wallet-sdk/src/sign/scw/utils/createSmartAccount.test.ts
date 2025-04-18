@@ -152,10 +152,11 @@ describe('decodeCalls', () => {
       abi: account.abi,
       functionName: 'entryPoint',
     });
+
     await expect(() => account.decodeCalls?.(data)).rejects.toThrowErrorMatchingInlineSnapshot(`
       [BaseError: unable to decode calls for "entryPoint"
 
-      Version: viem@2.22.17]
+Version: viem@2.27.2]
     `);
   });
 });
@@ -476,7 +477,7 @@ describe('function: sign', () => {
     ).rejects.toMatchInlineSnapshot(`
       [BaseError: \`owner\` does not support raw sign.
 
-      Version: viem@2.22.17]
+Version: viem@2.27.2]
     `);
   });
 });

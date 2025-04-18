@@ -13,7 +13,7 @@ export function AddOwner({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletS
 
     try {
       const ckaccount = await getCryptoKeyAccount();
-      const subaccount = await sdk.subaccount.addOwner({
+      const subaccount = await sdk.subAccount.addOwner({
         chainId: baseSepolia.id,
         publicKey: ckaccount.account.publicKey,
       });
