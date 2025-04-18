@@ -138,16 +138,18 @@ export class SCWSigner implements Signer {
           this.chain.id = Number(request.params[0].chainId);
           return;
         }
-        case 'wallet_connect':
-        case 'wallet_sendCalls': {
+        case 'wallet_connect': {
           const modifiedRequest = injectRequestCapabilities(request, this.configCapabilities);
           return this.sendRequestToPopup(modifiedRequest);
+        }
+        case 'wallet_sendCalls': {
+          return this.sendRequestToPopup(request);
         }
       }
     }
 
     if (this.shouldRequestUseSubAccountSigner(request)) {
-      return this.sendRequestToSubAccountSignerSigner(request);
+      return this.sendRequestToSubAccountSigner(request);
     }
 
     switch (request.method) {
@@ -435,7 +437,7 @@ export class SCWSigner implements Signer {
     return false;
   }
 
-  private async sendRequestToSubAccountSignerSigner(request: RequestArguments) {
+  private async sendRequestToSubAccountSigner(request: RequestArguments) {
     const subAccount = store.subAccounts.get();
     assertPresence(
       subAccount?.address,

@@ -74,7 +74,7 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
       provider.sdk = sdk;
       return provider;
     },
-    subaccount: {
+    subAccount: {
       async create(account: AddSubAccountAccount): Promise<SubAccount> {
         const state = store.getState();
         assertPresence(state.subAccount?.address, new Error('subaccount already exists'));

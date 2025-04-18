@@ -19,6 +19,7 @@ import {
   numberToHex,
 } from 'viem';
 import { getCode } from 'viem/actions';
+import { waitForCallsStatus } from "viem/experimental";
 import { createSmartAccount } from './createSmartAccount.js';
 import { getOwnerIndex } from './getOwnerIndex.js';
 
@@ -94,13 +95,23 @@ export async function createSubAccountSigner({
               calls: [args.params[0]],
               chainId: numberToHex(chainId),
               from: subAccount.address,
+              atomicRequired: true,
               // TODO: Add capabilities?
             },
           ] satisfies WalletSendCallsParameters,
         })) as string;
 
-        // TODO: Transform into eth_sendTransaction response
-        return response;
+        console.log
+
+        const result = await waitForCallsStatus(client, {
+          id: response,
+        })
+
+        if (result.status === 'success') {
+          return result.receipts?.[0].transactionHash
+        }
+
+        throw standardErrors.rpc.internal('failed to send transaction')
       }
       case 'wallet_sendCalls': {
         assertArrayPresence(args.params);

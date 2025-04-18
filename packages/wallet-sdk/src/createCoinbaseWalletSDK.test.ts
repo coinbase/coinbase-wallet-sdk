@@ -2,8 +2,8 @@ import { Address } from 'viem';
 
 import { store } from ':store/store.js';
 import {
-  CreateCoinbaseWalletSDKOptions,
-  createCoinbaseWalletSDK,
+    CreateCoinbaseWalletSDKOptions,
+    createCoinbaseWalletSDK,
 } from './createCoinbaseWalletSDK.js';
 
 const options: CreateCoinbaseWalletSDKOptions = {
@@ -46,7 +46,7 @@ describe('createCoinbaseWalletSDK', () => {
         },
       });
       await expect(
-        sdk.subaccount.create({
+        sdk.subAccount.create({
           type: 'create',
           keys: [
             {
@@ -72,7 +72,7 @@ describe('createCoinbaseWalletSDK', () => {
       });
       vi.spyOn(sdk, 'getProvider').mockImplementation(() => ({ request: mockRequest }) as any);
 
-      await sdk.subaccount.create({
+      await sdk.subAccount.create({
         type: 'create',
         keys: [
           {
@@ -110,7 +110,7 @@ describe('createCoinbaseWalletSDK', () => {
       const sdk = createCoinbaseWalletSDK(options);
       const mockAccount = { address: '0x123' as Address };
       store.subAccounts.set(mockAccount);
-      expect(await sdk.subaccount.get()).toEqual(mockAccount);
+      expect(await sdk.subAccount.get()).toEqual(mockAccount);
     });
 
     it('should call wallet_connect if no account exists', async () => {
@@ -124,7 +124,7 @@ describe('createCoinbaseWalletSDK', () => {
       const sdk = createCoinbaseWalletSDK(options);
       vi.spyOn(sdk, 'getProvider').mockImplementation(() => ({ request: mockRequest }) as any);
 
-      await sdk.subaccount.get();
+      await sdk.subAccount.get();
       expect(mockRequest).toHaveBeenCalledWith({
         method: 'wallet_connect',
         params: [
@@ -147,7 +147,7 @@ describe('createCoinbaseWalletSDK', () => {
     it('should throw if not global account is set', async () => {
       const sdk = createCoinbaseWalletSDK(options);
       await expect(
-        sdk.subaccount.addOwner({
+        sdk.subAccount.addOwner({
           chainId: 1,
           address: '0xE3cA9Cc9378143a26b9d4692Ca3722dc45910a15',
         })
@@ -165,7 +165,7 @@ describe('createCoinbaseWalletSDK', () => {
         },
       });
       await expect(
-        sdk.subaccount.addOwner({
+        sdk.subAccount.addOwner({
           chainId: 1,
           address: '0xE3cA9Cc9378143a26b9d4692Ca3722dc45910a15',
         })
@@ -193,7 +193,7 @@ describe('createCoinbaseWalletSDK', () => {
       });
       vi.spyOn(sdk, 'getProvider').mockImplementation(() => ({ request: mockRequest }) as any);
 
-      await sdk.subaccount.addOwner({
+      await sdk.subAccount.addOwner({
         chainId: 1,
         address: '0xE3cA9Cc9378143a26b9d4692Ca3722dc45910a15',
       });
@@ -239,7 +239,7 @@ describe('createCoinbaseWalletSDK', () => {
       });
       vi.spyOn(sdk, 'getProvider').mockImplementation(() => ({ request: mockRequest }) as any);
 
-      await sdk.subaccount.addOwner({
+      await sdk.subAccount.addOwner({
         chainId: 1,
         publicKey:
           '0x7da44d4bc972affd138c619a211ef0afe0926b813fec67d15587cf8625b2bf185f5044ae96640a63b32aa1eb6f8f993006bbd26292b81cb07a0672302c69a866',
