@@ -87,7 +87,7 @@ const createSubAccountSlice: StateCreator<StoreState, [], [], SubAccountSlice> =
 };
 
 type SubAccountConfigSlice = {
-  subAccountConfig: SubAccountConfig;
+  subAccountConfig?: SubAccountConfig;
 };
 
 const createSubAccountConfigSlice: StateCreator<StoreState, [], [], SubAccountConfigSlice> = () => {

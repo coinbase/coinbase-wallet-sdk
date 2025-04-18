@@ -51,14 +51,14 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
             // this causes a popup which we dont want.
             let signerType: SignerType;
             const subAccountsConfig = store.subAccountsConfig.get();
-            if (subAccountsConfig.enableAutoSubAccounts) {
+            if (subAccountsConfig?.enableAutoSubAccounts) {
               signerType = 'scw';
             } else {
               signerType = await this.requestSignerSelection(args);
             }
             const signer = this.initSigner(signerType);
 
-            if (signerType === 'scw' && subAccountsConfig.enableAutoSubAccounts) {
+            if (signerType === 'scw' && subAccountsConfig?.enableAutoSubAccounts) {
               await signer.handshake({ method: 'handshake' });
 
               const result = await signer.request(args);

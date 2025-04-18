@@ -87,7 +87,7 @@ export class SCWSigner implements Signer {
   async initSubAccountConfig() {
     const config = store.subAccountsConfig.get();
 
-    if (!config.enableAutoSubAccounts) {
+    if (!config?.enableAutoSubAccounts) {
       throw new Error('called initSubAccountConfig but enableAutoSubAccounts is false');
     }
 
@@ -123,7 +123,7 @@ export class SCWSigner implements Signer {
 
   // TODO: Properly type the return value
   async request(request: RequestArguments): Promise<any> {
-    if (store.subAccountsConfig.get().enableAutoSubAccounts) {
+    if (store.subAccountsConfig.get()?.enableAutoSubAccounts) {
       await this.initSubAccountConfig();
     }
 
@@ -137,7 +137,7 @@ export class SCWSigner implements Signer {
         case 'wallet_connect': {
           const modifiedRequest = injectRequestCapabilities(
             request,
-            store.subAccountsConfig.get().capabilities ?? {}
+            store.subAccountsConfig.get()?.capabilities ?? {}
           );
           return this.sendRequestToPopup(modifiedRequest);
         }
@@ -153,13 +153,13 @@ export class SCWSigner implements Signer {
 
     switch (request.method) {
       case 'eth_requestAccounts': {
-        if (store.subAccountsConfig.get().enableAutoSubAccounts) {
+        if (store.subAccountsConfig.get()?.enableAutoSubAccounts) {
           const result = await this.request({
             method: 'wallet_connect',
             params: [
               {
                 version: 1,
-                capabilities: store.subAccountsConfig.get().capabilities ?? {},
+                capabilities: store.subAccountsConfig.get()?.capabilities ?? {},
               },
             ],
           });
@@ -202,7 +202,7 @@ export class SCWSigner implements Signer {
       case 'wallet_connect': {
         const modifiedRequest = injectRequestCapabilities(
           request,
-          store.subAccountsConfig.get().capabilities ?? {}
+          store.subAccountsConfig.get()?.capabilities ?? {}
         );
         return this.sendRequestToPopup(modifiedRequest);
       }
@@ -449,7 +449,7 @@ export class SCWSigner implements Signer {
     );
 
     // Get the owner account from the config
-    const ownerAccount = config.toOwnerAccount
+    const ownerAccount = config?.toOwnerAccount
       ? await config.toOwnerAccount()
       : await getCryptoKeyAccount();
 

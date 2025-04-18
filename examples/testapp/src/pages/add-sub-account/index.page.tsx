@@ -66,7 +66,7 @@ export default function SubAccounts() {
         options: 'smartWalletOnly',
       },
       subAccounts: {
-        toAccount: getSubAccountSigner,
+        toOwnerAccount: getSubAccountSigner,
       },
     });
 

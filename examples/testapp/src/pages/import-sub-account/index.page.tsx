@@ -48,7 +48,7 @@ export default function SubAccounts() {
         options: 'smartWalletOnly',
       },
       subAccounts: {
-        toAccount: () => Promise.resolve({ account }),
+        toOwnerAccount: () => Promise.resolve({ account }),
       },
     });
 
