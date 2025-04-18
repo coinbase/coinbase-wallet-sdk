@@ -23,6 +23,15 @@ export type SubAccount = {
   address: Address;
   factory?: Address;
   factoryData?: Hex;
+  config?: {
+    capabilities: Record<string, unknown>;
+  };
+};
+
+type SubAccountConfig = {
+  toOwnerAccount?: ToOwnerAccountFn;
+  capabilities?: Record<string, unknown>;
+  enableAutoSubAccounts?: boolean;
 };
 
 type Account = {
@@ -77,6 +86,16 @@ const createSubAccountSlice: StateCreator<StoreState, [], [], SubAccountSlice> =
   };
 };
 
+type SubAccountConfigSlice = {
+  subAccountConfig: SubAccountConfig;
+};
+
+const createSubAccountConfigSlice: StateCreator<StoreState, [], [], SubAccountConfigSlice> = () => {
+  return {
+    subAccountConfig: {},
+  };
+};
+
 type ConfigSlice = {
   config: Config;
 };
@@ -94,7 +113,7 @@ type MergeTypes<T extends unknown[]> = T extends [infer First, ...infer Rest]
   : Record<string, unknown>;
 
 export type StoreState = MergeTypes<
-  [ChainSlice, KeysSlice, AccountSlice, SubAccountSlice, ConfigSlice]
+  [ChainSlice, KeysSlice, AccountSlice, SubAccountSlice, SubAccountConfigSlice, ConfigSlice]
 >;
 
 export const sdkstore = createStore(
@@ -105,7 +124,7 @@ export const sdkstore = createStore(
       ...createAccountSlice(...args),
       ...createSubAccountSlice(...args),
       ...createConfigSlice(...args),
-      toSubAccountSigner: undefined,
+      ...createSubAccountConfigSlice(...args),
     }),
     {
       name: 'cbwsdk.store',
@@ -124,6 +143,22 @@ export const sdkstore = createStore(
     }
   )
 );
+
+// Non-persisted subaccount configuration
+
+export const subAccountsConfig = {
+  get: () => sdkstore.getState().subAccountConfig,
+  set: (subAccountConfig: Partial<SubAccountConfig>) => {
+    sdkstore.setState((state) => ({
+      subAccountConfig: { ...state.subAccountConfig, ...subAccountConfig },
+    }));
+  },
+  clear: () => {
+    sdkstore.setState({
+      subAccountConfig: {},
+    });
+  },
+};
 
 export const subAccounts = {
   get: () => sdkstore.getState().subAccount,
@@ -188,6 +223,7 @@ export const config = {
 
 const actions = {
   subAccounts,
+  subAccountsConfig,
   account,
   chains,
   keys,

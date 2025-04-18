@@ -88,7 +88,7 @@ export type SubAccountOptions = {
   /**
    * @returns The owner account that will be used to sign the subaccount transactions.
    */
-  toAccount?: ToOwnerAccountFn;
+  toOwnerAccount?: ToOwnerAccountFn;
   /**
    * Spend limits requested on app connect if a matching existing one does not exist.
    * Only supports native chain tokens currently.
@@ -103,5 +103,4 @@ export type SubAccountOptions = {
 export interface ConstructorOptions {
   metadata: AppMetadata;
   preference: Preference;
-  subAccounts?: SubAccountOptions;
 }

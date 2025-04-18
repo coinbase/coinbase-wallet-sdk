@@ -7,12 +7,7 @@ import { getCoinbaseInjectedProvider } from ':util/provider.js';
 import { validatePreferences } from ':util/validatePreferences.js';
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js';
 import { LogoType, walletLogo } from './assets/wallet-logo.js';
-import {
-  AppMetadata,
-  Preference,
-  ProviderInterface,
-  SubAccountOptions,
-} from './core/provider/interface.js';
+import { AppMetadata, Preference, ProviderInterface } from './core/provider/interface.js';
 
 // for backwards compatibility
 type CoinbaseWalletSDKOptions = Partial<AppMetadata>;
@@ -43,7 +38,7 @@ export class CoinbaseWalletSDK {
   }
 
   public makeWeb3Provider(
-    { subAccounts, ...preference }: Preference & { subAccounts?: SubAccountOptions } = {
+    preference: Preference = {
       options: 'all',
     }
   ): ProviderInterface {
@@ -51,7 +46,7 @@ export class CoinbaseWalletSDK {
     store.config.set({
       preference,
     });
-    const params = { metadata: this.metadata, preference, subAccounts };
+    const params = { metadata: this.metadata, preference };
     return getCoinbaseInjectedProvider(params) ?? new CoinbaseWalletProvider(params);
   }
 

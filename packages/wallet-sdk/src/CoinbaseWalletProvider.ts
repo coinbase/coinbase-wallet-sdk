@@ -11,10 +11,10 @@ import {
   ProviderEventEmitter,
   ProviderInterface,
   RequestArguments,
-  SubAccountOptions,
 } from ':core/provider/interface.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { hexStringFromNumber } from ':core/type/util.js';
+import { store } from ':store/store.js';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from ':util/provider.js';
 import { numberToHex } from 'viem';
 import { Signer } from './sign/interface.js';
@@ -24,19 +24,13 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
   private readonly metadata: AppMetadata;
   private readonly preference: Preference;
   private readonly communicator: Communicator;
-  private readonly subAccountsOptions?: SubAccountOptions;
 
   private signer: Signer | null = null;
 
-  constructor({
-    metadata,
-    preference: { keysUrl, ...preference },
-    subAccounts,
-  }: Readonly<ConstructorOptions>) {
+  constructor({ metadata, preference: { keysUrl, ...preference } }: Readonly<ConstructorOptions>) {
     super();
     this.metadata = metadata;
     this.preference = preference;
-    this.subAccountsOptions = subAccounts;
     this.communicator = new Communicator({
       url: keysUrl,
       metadata,
@@ -57,7 +51,8 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
           case 'eth_requestAccounts': {
             // this causes a popup which we dont want.
             let signerType: SignerType;
-            if (this.subAccountsOptions?.enableAutoSubAccounts) {
+            const subAccountsConfig = store.subAccountsConfig.get();
+            if (subAccountsConfig.enableAutoSubAccounts) {
               signerType = 'scw';
             } else {
               signerType = await this.requestSignerSelection(args);
@@ -67,7 +62,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
             // config is not initialized properly for some reason.
             // const c = config.getState();
 
-            if (signerType === 'scw' && this.subAccountsOptions?.enableAutoSubAccounts) {
+            if (signerType === 'scw' && subAccountsConfig.enableAutoSubAccounts) {
               await signer.handshake({ method: 'handshake' });
 
               // TODO: check if current chain is supported
@@ -162,7 +157,6 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
       metadata: this.metadata,
       communicator: this.communicator,
       callback: this.emit.bind(this),
-      subAccounts: this.subAccountsOptions,
     });
   }
 }

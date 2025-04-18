@@ -18,13 +18,6 @@ vi.mock('./getOwnerIndex.js', () => ({
 vi.mock(':store/store.js', () => ({
   store: {
     getState: vi.fn().mockReturnValue({
-      toSubAccountSigner: vi.fn().mockResolvedValue({
-        account: {
-          address: '0x',
-          type: 'local',
-          sign: vi.fn().mockResolvedValue,
-        },
-      }),
       subAccount: {
         address: '0x',
         factory: '0x',
@@ -36,6 +29,17 @@ vi.mock(':store/store.js', () => ({
         address: '0x',
         factory: '0x',
         factoryData: '0x',
+      }),
+    },
+    subAccountsConfig: {
+      get: vi.fn().mockReturnValue({
+        toOwnerAccount: vi.fn().mockResolvedValue({
+          account: {
+            address: '0x',
+            type: 'local',
+            sign: vi.fn().mockResolvedValue,
+          },
+        }),
       }),
     },
   },

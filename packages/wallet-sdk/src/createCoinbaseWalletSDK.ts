@@ -14,7 +14,7 @@ import { assertPresence } from ':util/assertPresence.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { validatePreferences, validateSubAccount } from ':util/validatePreferences.js';
 import { createCoinbaseWalletProvider } from './createCoinbaseWalletProvider.js';
-import { SubAccount, store } from './store/store.js';
+import { SubAccount, ToOwnerAccountFn, store } from './store/store.js';
 
 export type CreateCoinbaseWalletSDKOptions = Partial<AppMetadata> & {
   preference?: Preference;
@@ -44,8 +44,18 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
       appChainIds: params.appChainIds || [],
     },
     preference: Object.assign(DEFAULT_PREFERENCE, params.preference ?? {}),
-    subAccounts: params.subAccounts,
   };
+
+  // If we have a toOwnerAccount function, set it in the non-persisted config
+
+  if (params.subAccounts?.toOwnerAccount) {
+    validateSubAccount(params.subAccounts.toOwnerAccount);
+  }
+
+  store.subAccountsConfig.set({
+    toOwnerAccount: params.subAccounts?.toOwnerAccount,
+    enableAutoSubAccounts: params.subAccounts?.enableAutoSubAccounts,
+  });
 
   // set the options in the store
   store.config.set(options);
@@ -58,10 +68,6 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
 
   // Validate user supplied preferences. Throws if key/values are not valid.
   validatePreferences(options.preference);
-
-  if (options.subAccounts?.toAccount) {
-    validateSubAccount(options.subAccounts.toAccount);
-  }
 
   let provider: ProviderInterface | null = null;
 
@@ -151,6 +157,12 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
             },
           ],
         })) as string;
+      },
+      setToOwnerAccount(toSubAccountOwner: ToOwnerAccountFn): void {
+        validateSubAccount(toSubAccountOwner);
+        store.subAccountsConfig.set({
+          toOwnerAccount: toSubAccountOwner,
+        });
       },
     },
   };

@@ -6,7 +6,6 @@ import {
   Preference,
   ProviderEventCallback,
   RequestArguments,
-  SubAccountOptions,
 } from ':core/provider/interface.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { Signer } from './interface.js';
@@ -50,17 +49,15 @@ export function createSigner(params: {
   signerType: SignerType;
   metadata: AppMetadata;
   communicator: Communicator;
-  subAccounts?: SubAccountOptions;
   callback: ProviderEventCallback;
 }): Signer {
-  const { signerType, metadata, communicator, callback, subAccounts } = params;
+  const { signerType, metadata, communicator, callback } = params;
   switch (signerType) {
     case 'scw': {
       return new SCWSigner({
         metadata,
         callback,
         communicator,
-        subAccounts,
       });
     }
     case 'walletlink': {

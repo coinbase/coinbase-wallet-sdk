@@ -2,8 +2,8 @@ import { Address } from 'viem';
 
 import { store } from ':store/store.js';
 import {
-    CreateCoinbaseWalletSDKOptions,
-    createCoinbaseWalletSDK,
+  CreateCoinbaseWalletSDKOptions,
+  createCoinbaseWalletSDK,
 } from './createCoinbaseWalletSDK.js';
 
 const options: CreateCoinbaseWalletSDKOptions = {
@@ -33,6 +33,44 @@ describe('createCoinbaseWalletSDK', () => {
     expect(provider1).toBe(provider2);
   });
 
+  it('should set the signer in the sub account store', () => {
+    expect(store.getState().toSubAccountSigner).toBeUndefined();
+
+    createCoinbaseWalletSDK({
+      ...options,
+      subAccounts: {
+        toOwnerAccount: () => Promise.resolve({} as any),
+      },
+    });
+
+    console.log('store.subAccountsConfig.get()', store.subAccountsConfig.get());
+
+    expect(store.subAccountsConfig.get().toOwnerAccount).toBeDefined();
+  });
+
+  it('should throw an error if the signer is not a function', () => {
+    expect(() =>
+      createCoinbaseWalletSDK({
+        ...options,
+        subAccounts: {
+          enableAutoSubAccounts: true,
+          toOwnerAccount: {} as any,
+        },
+      })
+    ).toThrow('toAccount is not a function');
+  });
+
+  it('when set signer is called, it should set the signer in the sub account store', () => {
+    expect(store.getState().toSubAccountSigner).toBeUndefined();
+
+    const sdk = createCoinbaseWalletSDK(options);
+    const toAccount = () => Promise.resolve({} as any);
+
+    sdk.subAccount.setToOwnerAccount(toAccount);
+
+    expect(store.subAccountsConfig.get().toOwnerAccount).toBeDefined();
+  });
+
   describe('subaccount.create', () => {
     afterEach(() => {
       store.subAccounts.clear();
@@ -42,7 +80,7 @@ describe('createCoinbaseWalletSDK', () => {
       const sdk = createCoinbaseWalletSDK({
         ...options,
         subAccounts: {
-          toAccount: () => Promise.resolve({} as any),
+          toOwnerAccount: () => Promise.resolve({} as any),
         },
       });
       await expect(
@@ -67,7 +105,7 @@ describe('createCoinbaseWalletSDK', () => {
       const sdk = createCoinbaseWalletSDK({
         ...options,
         subAccounts: {
-          toAccount: () => Promise.resolve({} as any),
+          toOwnerAccount: () => Promise.resolve({} as any),
         },
       });
       vi.spyOn(sdk, 'getProvider').mockImplementation(() => ({ request: mockRequest }) as any);
@@ -161,7 +199,7 @@ describe('createCoinbaseWalletSDK', () => {
       const sdk = createCoinbaseWalletSDK({
         ...options,
         subAccounts: {
-          toAccount: () => Promise.resolve({} as any),
+          toOwnerAccount: () => Promise.resolve({} as any),
         },
       });
       await expect(
@@ -177,7 +215,7 @@ describe('createCoinbaseWalletSDK', () => {
       const sdk = createCoinbaseWalletSDK({
         ...options,
         subAccounts: {
-          toAccount: () => Promise.resolve({} as any),
+          toOwnerAccount: () => Promise.resolve({} as any),
         },
       });
       store.setState({
@@ -223,7 +261,7 @@ describe('createCoinbaseWalletSDK', () => {
       const sdk = createCoinbaseWalletSDK({
         ...options,
         subAccounts: {
-          toAccount: () => Promise.resolve({} as any),
+          toOwnerAccount: () => Promise.resolve({} as any),
         },
       });
       store.setState({
