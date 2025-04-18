@@ -2,7 +2,6 @@ import { Address } from 'viem';
 
 import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
-import { assertPresence } from ':util/assertPresence.js';
 import { get } from ':util/get.js';
 
 // ***************************************************************
@@ -72,7 +71,6 @@ export function injectRequestCapabilities(
 
   if (capabilities && ['wallet_sendCalls', 'wallet_connect'].includes(request.method)) {
     let requestCapabilities = get(modifiedRequest, 'params.0.capabilities');
-    assertPresence(requestCapabilities, standardErrors.rpc.invalidParams());
 
     if (typeof requestCapabilities === 'undefined') {
       requestCapabilities = {};

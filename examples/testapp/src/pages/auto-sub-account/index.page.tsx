@@ -9,7 +9,7 @@ import {
   Stack,
   VStack,
 } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK, getCryptoKeyAccount } from '@coinbase/wallet-sdk';
+import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import { useEffect, useState } from 'react';
 import { baseSepolia } from 'viem/chains';
 
@@ -25,12 +25,9 @@ export default function AutoSubAccount() {
       preference: {
         keysUrl: 'https://keys-dev.coinbase.com/connect',
         options: 'smartWalletOnly',
-        autoSubAccounts: autoSubAccountsEnabled
-          ? {
-              enabled: true,
-              getOwnerAccount: getCryptoKeyAccount,
-            }
-          : undefined,
+      },
+      subAccounts: {
+        enableAutoSubAccounts: autoSubAccountsEnabled,
       },
     });
 

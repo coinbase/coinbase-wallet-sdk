@@ -11,25 +11,32 @@ import {
   ProviderEventEmitter,
   ProviderInterface,
   RequestArguments,
+  SubAccountOptions,
 } from ':core/provider/interface.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { hexStringFromNumber } from ':core/type/util.js';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from ':util/provider.js';
 import { numberToHex } from 'viem';
 import { Signer } from './sign/interface.js';
-import { createSigner, loadSignerType, storeSignerType } from './sign/util.js';
+import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util.js';
 
 export class CoinbaseWalletProvider extends ProviderEventEmitter implements ProviderInterface {
   private readonly metadata: AppMetadata;
   private readonly preference: Preference;
   private readonly communicator: Communicator;
+  private readonly subAccountsOptions?: SubAccountOptions;
 
   private signer: Signer | null = null;
 
-  constructor({ metadata, preference: { keysUrl, ...preference } }: Readonly<ConstructorOptions>) {
+  constructor({
+    metadata,
+    preference: { keysUrl, ...preference },
+    subAccounts,
+  }: Readonly<ConstructorOptions>) {
     super();
     this.metadata = metadata;
     this.preference = preference;
+    this.subAccountsOptions = subAccounts;
     this.communicator = new Communicator({
       url: keysUrl,
       metadata,
@@ -49,16 +56,21 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
         switch (args.method) {
           case 'eth_requestAccounts': {
             // this causes a popup which we dont want.
-            //const signerType = await this.requestSignerSelection(args);
-            const signerType = 'scw';
+            let signerType: SignerType;
+            if (this.subAccountsOptions?.enableAutoSubAccounts) {
+              signerType = 'scw';
+            } else {
+              signerType = await this.requestSignerSelection(args);
+            }
             const signer = this.initSigner(signerType);
+
             // config is not initialized properly for some reason.
             // const c = config.getState();
 
-            if (signerType === 'scw' && this.preference.autoSubAccounts?.enabled) {
+            if (signerType === 'scw' && this.subAccountsOptions?.enableAutoSubAccounts) {
               await signer.handshake({ method: 'handshake' });
 
-              // TODO: check if chain is supported
+              // TODO: check if current chain is supported
               await signer.request({
                 method: 'wallet_switchEthereumChain',
                 params: [
@@ -71,7 +83,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
               const result = await signer.request(args);
               this.signer = signer;
 
-              // @ts-ignore
+              // @ts-ignore -- TODO: Validate result
               return [result.accounts[0].capabilities.addSubAccount.address] as T;
             }
 
@@ -134,15 +146,15 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
 
   readonly isCoinbaseWallet = true;
 
-  // private requestSignerSelection(handshakeRequest: RequestArguments): Promise<SignerType> {
-  //   return fetchSignerType({
-  //     communicator: this.communicator,
-  //     preference: this.preference,
-  //     metadata: this.metadata,
-  //     handshakeRequest,
-  //     callback: this.emit.bind(this),
-  //   });
-  // }
+  private requestSignerSelection(handshakeRequest: RequestArguments): Promise<SignerType> {
+    return fetchSignerType({
+      communicator: this.communicator,
+      preference: this.preference,
+      metadata: this.metadata,
+      handshakeRequest,
+      callback: this.emit.bind(this),
+    });
+  }
 
   private initSigner(signerType: SignerType): Signer {
     return createSigner({
@@ -150,7 +162,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
       metadata: this.metadata,
       communicator: this.communicator,
       callback: this.emit.bind(this),
-      preferences: this.preference,
+      subAccounts: this.subAccountsOptions,
     });
   }
 }

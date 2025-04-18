@@ -1,5 +1,6 @@
-import { OwnerAccount } from ':core/type/index.js';
+import { ToOwnerAccountFn } from ':store/store.js';
 import { EventEmitter } from 'eventemitter3';
+import { Address, Hex } from 'viem';
 
 export interface RequestArguments {
   readonly method: string;
@@ -33,6 +34,12 @@ export interface ProviderInterface extends ProviderEventEmitter {
 }
 
 export type ProviderEventCallback = ProviderInterface['emit'];
+
+export type SpendLimitConfig = {
+  token: Address;
+  allowance: Hex;
+  period: number;
+};
 
 export interface AppMetadata {
   /** Application name */
@@ -73,21 +80,28 @@ export type Preference = {
    * the Smart Wallet will generate a 16 byte hex string from the apps origin.
    */
   attribution?: Attribution;
-  /**
-   * @param autoSubAccounts
-   * @description If specified, the provider will automatically create a subaccount for the user and use it for all transactions.
-   */
-  autoSubAccounts?: {
-    enabled: true;
-    /**
-     * @param address The address of the subaccount to return the owner account for. Will be undefined if the subaccount is not created yet.
-     * @returns Return the owner account that will be used to sign the subaccount transactions.
-     */
-    getOwnerAccount?: () => Promise<{ account: OwnerAccount }>;
-  };
 } & Record<string, unknown>;
+
+export type SubAccountOptions = {
+  /* Automatically create a subaccount for the user and use it for all transactions. */
+  enableAutoSubAccounts?: boolean;
+  /**
+   * @returns The owner account that will be used to sign the subaccount transactions.
+   */
+  toAccount?: ToOwnerAccountFn;
+  /**
+   * Spend limits requested on app connect if a matching existing one does not exist.
+   * Only supports native chain tokens currently.
+   */
+  defaultSpendLimits?: Record<Hex, SpendLimitConfig[]>;
+  /**
+   * Used when users have insufficient funds, the SDK will request a new spend limit (only used when auto sub accounts is enabled)
+   */
+  dynamicSpendLimit?: boolean;
+};
 
 export interface ConstructorOptions {
   metadata: AppMetadata;
   preference: Preference;
+  subAccounts?: SubAccountOptions;
 }

@@ -64,12 +64,10 @@ export default function SubAccounts() {
       preference: {
         keysUrl: 'https://keys-dev.coinbase.com/connect',
         options: 'smartWalletOnly',
-        autoSubAccounts: {
-          enabled: true,
-          getOwnerAccount: getCryptoKeyAccount,
-        },
       },
-      toSubAccountSigner: getSubAccountSigner,
+      subAccounts: {
+        toAccount: getSubAccountSigner,
+      },
     });
 
     setSDK(sdk);

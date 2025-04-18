@@ -1,9 +1,8 @@
-import { getCode } from 'viem/actions';
-
+import { OwnerAccount } from ':core/type/index.js';
 import { getBundlerClient, getClient } from ':store/chain-clients/utils.js';
-import { store } from ':store/store.js';
 import { Signature } from 'ox';
 import { numberToHex } from 'viem';
+import { getCode } from 'viem/actions';
 import { createSmartAccount } from './createSmartAccount.js';
 import { createSubAccountSigner } from './createSubAccountSigner.js';
 import { getOwnerIndex } from './getOwnerIndex.js';
@@ -46,6 +45,7 @@ vi.mock(':store/chain-clients/utils.js', () => ({
   getBundlerClient: vi.fn().mockReturnValue({}),
   getClient: vi.fn().mockReturnValue({
     request: vi.fn(),
+    getChainId: vi.fn().mockResolvedValue(84532),
   }),
 }));
 
@@ -62,42 +62,36 @@ vi.mock('./getAccountIndex.js', () => ({
 }));
 
 describe('createSubAccountSigner', () => {
+  let owner = {
+    address: '0x',
+    publicKey: '0x',
+    type: 'webAuthn',
+    sign: vi.fn().mockResolvedValue({
+      webauthn: {
+        authenticatorData: '0x',
+        clientDataJSON: JSON.stringify({
+          type: 'webauthn',
+        }),
+      },
+      signature: Signature.toHex({
+        r: BigInt('49782753348462494199823712700004552394425719014458918871452329774910450607807'),
+        s: BigInt('33726695977844476214676913201140481102225469284307016937915595756355928419768'),
+        yParity: 1,
+      }),
+    }),
+  } as unknown as OwnerAccount;
+
   it('should create a signer', async () => {
     const signer = await createSubAccountSigner({
-      chainId: 84532,
+      address: '0x',
+      client: getClient(84532)!,
+      owner,
     });
     expect(signer.request).toBeDefined();
   });
 
   it('handle send calls', async () => {
-    // Mock store subaccount sign method
-    (store.getState as any).mockReturnValue({
-      toSubAccountSigner: vi.fn().mockResolvedValue({
-        account: {
-          address: '0x',
-          publicKey: '0x',
-          type: 'webAuthn',
-          sign: vi.fn().mockResolvedValue({
-            webauthn: {
-              authenticatorData: '0x',
-              clientDataJSON: JSON.stringify({
-                type: 'webauthn',
-              }),
-            },
-            signature: Signature.toHex({
-              r: BigInt(
-                '49782753348462494199823712700004552394425719014458918871452329774910450607807'
-              ),
-              s: BigInt(
-                '33726695977844476214676913201140481102225469284307016937915595756355928419768'
-              ),
-              yParity: 1,
-            }),
-          }),
-        },
-      }),
-    });
-
+    // // Mock store subaccount sign method
     const request = vi.fn((args) => {
       if (args.method === 'wallet_prepareCalls') {
         return {
@@ -118,10 +112,13 @@ describe('createSubAccountSigner', () => {
 
     (getClient as any).mockReturnValue({
       request,
+      getChainId: vi.fn().mockResolvedValue(84532),
     });
 
     const signer = await createSubAccountSigner({
-      chainId: 84532,
+      address: '0x',
+      client: getClient(84532)!,
+      owner,
     });
 
     await signer.request({
@@ -172,15 +169,41 @@ describe('createSubAccountSigner', () => {
     (createSmartAccount as any).mockResolvedValue({
       sign: mock,
     });
-    const signer = await createSubAccountSigner({
-      chainId: 84532,
+
+    const request = vi.fn((args) => {
+      if (args.method === 'wallet_prepareCalls') {
+        return {
+          signatureRequest: {
+            hash: '0x',
+          },
+          type: '0x',
+          userOp: '0x',
+          chainId: numberToHex(84532),
+        };
+      }
+
+      if (args.method === 'wallet_sendPreparedCalls') {
+        return ['0x'];
+      }
+      return undefined;
     });
-    await signer.request({
+
+    (getClient as any).mockReturnValue({
+      request,
+      getChainId: vi.fn().mockResolvedValue(84532),
+    });
+
+    const signer = await createSubAccountSigner({
+      address: '0x',
+      client: getClient(84532)!,
+      owner,
+    });
+    const result = await signer.request({
       method: 'eth_sendTransaction',
       params: [{ to: '0x', data: '0x' }],
     });
 
-    expect(mock).toHaveBeenCalledWith({ to: '0x', data: '0x' });
+    expect(result).toBe('0x');
   });
 
   it('handle sign message', async () => {
@@ -189,11 +212,13 @@ describe('createSubAccountSigner', () => {
       signMessage: mock,
     });
     const signer = await createSubAccountSigner({
-      chainId: 84532,
+      address: '0x',
+      client: getClient(84532)!,
+      owner,
     });
     await signer.request({
       method: 'personal_sign',
-      params: ['hello world',  '0x'],
+      params: ['hello world', '0x'],
     });
 
     expect(mock).toHaveBeenCalledWith({ message: 'hello world' });
@@ -205,7 +230,9 @@ describe('createSubAccountSigner', () => {
       signTypedData: mock,
     });
     const signer = await createSubAccountSigner({
-      chainId: 84532,
+      address: '0x',
+      client: getClient(84532)!,
+      owner,
     });
     await signer.request({
       method: 'eth_signTypedData_v4',
@@ -226,7 +253,9 @@ describe('createSubAccountSigner', () => {
     (getOwnerIndex as any).mockImplementation(mockGetOwnerIndex);
 
     const signer = await createSubAccountSigner({
-      chainId: 84532,
+      address: '0x',
+      client: getClient(84532)!,
+      owner,
     });
 
     await signer.request({

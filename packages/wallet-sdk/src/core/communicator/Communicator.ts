@@ -112,12 +112,7 @@ export class Communicator {
           data: {
             version: VERSION,
             metadata: this.metadata,
-            // TODO: Confirm if this is okay - do we expect to pass arbitrary prefernces to popup?
-            preference: {
-              keysUrl: this.preference.keysUrl,
-              options: this.preference.options,
-              attribution: this.preference.attribution,
-            },
+            preference: this.preference,
             location: window.location.toString(),
           },
         });

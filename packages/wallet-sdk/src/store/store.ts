@@ -1,11 +1,11 @@
 import { AppMetadata, Preference } from ':core/provider/interface.js';
 import { OwnerAccount } from ':core/type/index.js';
-import { VERSION } from 'src/sdk-info.js';
 import { Address, Hex } from 'viem';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { StateCreator, createStore } from 'zustand/vanilla';
+import { VERSION } from '../sdk-info.js';
 
-export type ToSubAccountSigner = () => Promise<{
+export type ToOwnerAccountFn = () => Promise<{
   account: OwnerAccount | null;
 }>;
 
@@ -94,14 +94,7 @@ type MergeTypes<T extends unknown[]> = T extends [infer First, ...infer Rest]
   : Record<string, unknown>;
 
 export type StoreState = MergeTypes<
-  [
-    ChainSlice,
-    KeysSlice,
-    AccountSlice,
-    SubAccountSlice,
-    ConfigSlice,
-    { toSubAccountSigner?: ToSubAccountSigner },
-  ]
+  [ChainSlice, KeysSlice, AccountSlice, SubAccountSlice, ConfigSlice]
 >;
 
 export const sdkstore = createStore(
@@ -199,9 +192,6 @@ const actions = {
   chains,
   keys,
   config,
-  setSubAccountSigner: (toSubAccountSigner: ToSubAccountSigner) => {
-    sdkstore.setState({ toSubAccountSigner });
-  },
 };
 
 export const store = {

@@ -6,9 +6,9 @@ import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage.
 import { RPCResponse } from ':core/message/RPCResponse.js';
 import {
   AppMetadata,
-  Preference,
   ProviderEventCallback,
   RequestArguments,
+  SubAccountOptions,
 } from ':core/provider/interface.js';
 import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
 import { Address, OwnerAccount } from ':core/type/index.js';
@@ -33,18 +33,18 @@ import {
   getSenderFromRequest,
   injectRequestCapabilities,
 } from './utils.js';
-import { toSubAccount } from './utils/toSubAccount.js';
+import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
 
 type ConstructorOptions = {
   metadata: AppMetadata;
-  preferences: Preference;
+  subAccounts?: SubAccountOptions;
   communicator: Communicator;
   callback: ProviderEventCallback | null;
 };
 
 export class SCWSigner implements Signer {
   private readonly communicator: Communicator;
-  private readonly preferences: Preference;
+  private readonly subAccountOptions?: SubAccountOptions;
   private readonly keyManager: SCWKeyManager;
   private callback: ProviderEventCallback | null;
 
@@ -56,7 +56,7 @@ export class SCWSigner implements Signer {
 
   constructor(params: ConstructorOptions) {
     this.communicator = params.communicator;
-    this.preferences = params.preferences;
+    this.subAccountOptions = params.subAccounts;
     this.callback = params.callback;
     this.keyManager = new SCWKeyManager();
 
@@ -96,10 +96,10 @@ export class SCWSigner implements Signer {
   }
 
   async initSubAccountConfig() {
-    if (this.preferences.autoSubAccounts?.enabled) {
+    if (this.subAccountOptions?.enableAutoSubAccounts) {
       // Get the owner account
-      const { account: owner } = this.preferences.autoSubAccounts.getOwnerAccount
-        ? await this.preferences.autoSubAccounts.getOwnerAccount()
+      const { account: owner } = this.subAccountOptions.toAccount
+        ? await this.subAccountOptions.toAccount()
         : await getCryptoKeyAccount();
 
       if (!owner) {
@@ -125,8 +125,9 @@ export class SCWSigner implements Signer {
     }
   }
 
-  async request(request: RequestArguments) {
-    if (this.preferences.autoSubAccounts?.enabled) {
+  // TODO: Properly type the return value
+  async request(request: RequestArguments): Promise<any> {
+    if (this.subAccountOptions?.enableAutoSubAccounts) {
       await this.initSubAccountConfig();
     }
 
@@ -151,8 +152,8 @@ export class SCWSigner implements Signer {
 
     switch (request.method) {
       case 'eth_requestAccounts': {
-        if (this.preferences.autoSubAccounts?.enabled) {
-          const response = (await this.request({
+        if (this.subAccountOptions?.enableAutoSubAccounts) {
+          const result = await this.request({
             method: 'wallet_connect',
             params: [
               {
@@ -160,8 +161,10 @@ export class SCWSigner implements Signer {
                 capabilities: this.configCapabilities,
               },
             ],
-          })) as Address[];
-          return response;
+          });
+
+          // @ts-ignore -- TODO: Validate result
+          return [result.accounts[0].capabilities.addSubAccount.address] as Address[];
         }
 
         this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
@@ -439,6 +442,11 @@ export class SCWSigner implements Signer {
       standardErrors.provider.unauthorized('no active sub account')
     );
 
+    assertPresence(
+      this.subAccountOwner,
+      standardErrors.provider.unauthorized('no active sub account owner')
+    );
+
     const sender = getSenderFromRequest(request);
     // if sender is undefined, we inject the active sub account
     // address into the params for the supported request methods
@@ -452,16 +460,14 @@ export class SCWSigner implements Signer {
       standardErrors.rpc.internal(`client not found for chainId ${this.chain.id}`)
     );
 
-    const { client: subAccountClient } = await toSubAccount({
+    const { request: subAccountRequest } = await createSubAccountSigner({
       address: subAccount.address,
-      // @ts-ignore
       owner: this.subAccountOwner,
       client: client,
       factory: subAccount.factory,
       factoryData: subAccount.factoryData,
     });
 
-    // @ts-ignore
-    return subAccountClient.request(request);
+    return subAccountRequest(request);
   }
 }

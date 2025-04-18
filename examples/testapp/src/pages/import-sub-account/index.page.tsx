@@ -47,7 +47,9 @@ export default function SubAccounts() {
         keysUrl: 'http://localhost:3005/connect',
         options: 'smartWalletOnly',
       },
-      toSubAccountSigner: () => Promise.resolve({ account }),
+      subAccounts: {
+        toAccount: () => Promise.resolve({ account }),
+      },
     });
 
     if (!sdk) {

@@ -1,10 +1,10 @@
 import { Address } from 'viem';
 
-import {
-  createCoinbaseWalletSDK,
-  CreateCoinbaseWalletSDKOptions,
-} from './createCoinbaseWalletSDK.js';
 import { store } from ':store/store.js';
+import {
+  CreateCoinbaseWalletSDKOptions,
+  createCoinbaseWalletSDK,
+} from './createCoinbaseWalletSDK.js';
 
 const options: CreateCoinbaseWalletSDKOptions = {
   appName: 'Dapp',
@@ -18,7 +18,6 @@ vi.mock('./util/checkCrossOriginOpenerPolicy');
 describe('createCoinbaseWalletSDK', () => {
   afterEach(() => {
     store.setState({});
-    store.setState({ toSubAccountSigner: undefined });
   });
 
   it('should return an object with a getProvider method', () => {
@@ -34,61 +33,17 @@ describe('createCoinbaseWalletSDK', () => {
     expect(provider1).toBe(provider2);
   });
 
-  it('should set the signer in the sub account store', () => {
-    expect(store.getState().toSubAccountSigner).toBeUndefined();
-
-    createCoinbaseWalletSDK({
-      ...options,
-      toSubAccountSigner: () => Promise.resolve({} as any),
-    });
-
-    expect(store.getState().toSubAccountSigner).toBeDefined();
-  });
-
-  it('should throw an error if the signer is not a function', () => {
-    expect(() =>
-      createCoinbaseWalletSDK({
-        ...options,
-        toSubAccountSigner: {} as any,
-      })
-    ).toThrow('toSubAccountSigner is not a function');
-  });
-
-  it('when set signer is called, it should set the signer in the sub account store', () => {
-    expect(store.getState().toSubAccountSigner).toBeUndefined();
-
-    const sdk = createCoinbaseWalletSDK(options);
-    const toSubAccountSigner = () => Promise.resolve({} as any);
-
-    sdk.subaccount.setSigner(toSubAccountSigner);
-
-    expect(store.getState().toSubAccountSigner).toBe(toSubAccountSigner);
-  });
-
   describe('subaccount.create', () => {
     afterEach(() => {
       store.subAccounts.clear();
     });
 
-    it('should throw if no signer is set', async () => {
-      const sdk = createCoinbaseWalletSDK(options);
-      await expect(
-        sdk.subaccount.create({
-          type: 'create',
-          keys: [
-            {
-              key: '0x123',
-              type: 'p256',
-            },
-          ],
-        })
-      ).rejects.toThrow('toSubAccountSigner is not set');
-    });
-
     it('should throw if subaccount already exists', async () => {
       const sdk = createCoinbaseWalletSDK({
         ...options,
-        toSubAccountSigner: () => Promise.resolve({} as any),
+        subAccounts: {
+          toAccount: () => Promise.resolve({} as any),
+        },
       });
       await expect(
         sdk.subaccount.create({
@@ -111,7 +66,9 @@ describe('createCoinbaseWalletSDK', () => {
       const mockRequest = vi.fn();
       const sdk = createCoinbaseWalletSDK({
         ...options,
-        toSubAccountSigner: () => Promise.resolve({} as any),
+        subAccounts: {
+          toAccount: () => Promise.resolve({} as any),
+        },
       });
       vi.spyOn(sdk, 'getProvider').mockImplementation(() => ({ request: mockRequest }) as any);
 
@@ -203,7 +160,9 @@ describe('createCoinbaseWalletSDK', () => {
       });
       const sdk = createCoinbaseWalletSDK({
         ...options,
-        toSubAccountSigner: () => Promise.resolve({} as any),
+        subAccounts: {
+          toAccount: () => Promise.resolve({} as any),
+        },
       });
       await expect(
         sdk.subaccount.addOwner({
@@ -217,7 +176,9 @@ describe('createCoinbaseWalletSDK', () => {
       const mockRequest = vi.fn();
       const sdk = createCoinbaseWalletSDK({
         ...options,
-        toSubAccountSigner: () => Promise.resolve({} as any),
+        subAccounts: {
+          toAccount: () => Promise.resolve({} as any),
+        },
       });
       store.setState({
         toSubAccountSigner: () => Promise.resolve({} as any),
@@ -261,7 +222,9 @@ describe('createCoinbaseWalletSDK', () => {
       const mockRequest = vi.fn();
       const sdk = createCoinbaseWalletSDK({
         ...options,
-        toSubAccountSigner: () => Promise.resolve({} as any),
+        subAccounts: {
+          toAccount: () => Promise.resolve({} as any),
+        },
       });
       store.setState({
         toSubAccountSigner: () => Promise.resolve({} as any),
