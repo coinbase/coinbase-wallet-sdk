@@ -88,7 +88,7 @@ export class SCWSigner implements Signer {
     const config = store.subAccountsConfig.get();
 
     if (!config.enableAutoSubAccounts) {
-      return;
+      throw new Error('called initSubAccountConfig but enableAutoSubAccounts is false');
     }
 
     // Get the owner account

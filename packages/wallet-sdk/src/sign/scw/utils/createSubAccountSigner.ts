@@ -19,7 +19,7 @@ import {
   numberToHex,
 } from 'viem';
 import { getCode } from 'viem/actions';
-import { waitForCallsStatus } from "viem/experimental";
+import { waitForCallsStatus } from 'viem/experimental';
 import { createSmartAccount } from './createSmartAccount.js';
 import { getOwnerIndex } from './getOwnerIndex.js';
 
@@ -96,26 +96,23 @@ export async function createSubAccountSigner({
               chainId: numberToHex(chainId),
               from: subAccount.address,
               atomicRequired: true,
-              // TODO: Add capabilities?
+              // TODO: Add paymaster capabilities from config
             },
           ] satisfies WalletSendCallsParameters,
         })) as string;
 
-        console.log
-
         const result = await waitForCallsStatus(client, {
           id: response,
-        })
+        });
 
         if (result.status === 'success') {
-          return result.receipts?.[0].transactionHash
+          return result.receipts?.[0].transactionHash;
         }
 
-        throw standardErrors.rpc.internal('failed to send transaction')
+        throw standardErrors.rpc.internal('failed to send transaction');
       }
       case 'wallet_sendCalls': {
         assertArrayPresence(args.params);
-        // TODO: Move this to SCWSigner
         // Get the client for the chain
         const chainId = get(args.params[0], 'chainId');
         if (!chainId) {

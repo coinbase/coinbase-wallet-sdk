@@ -57,6 +57,10 @@ describe('EIP1193ProviderContextProvider', () => {
       setSDKVersion: vi.fn(),
       setScwUrlAndSave: vi.fn(),
       setConfig: vi.fn(),
+      subAccountsConfig: {
+        enableAutoSubAccounts: true,
+      },
+      setSubAccountsConfig: vi.fn(),
     });
 
     vi.spyOn(EventListeners, 'useEventListeners').mockReturnValue({
@@ -106,10 +110,14 @@ describe('EIP1193ProviderContextProvider', () => {
       version: 'latest',
       scwUrl: 'https://keys-dev.coinbase.com/connect',
       config: { options: 'all', attribution: { dataSuffix: '0xtestattribution' } },
+      subAccountsConfig: {
+        enableAutoSubAccounts: true,
+      },
       setPreference: vi.fn(),
       setSDKVersion: vi.fn(),
       setScwUrlAndSave: vi.fn(),
       setConfig: vi.fn(),
+      setSubAccountsConfig: vi.fn(),
     });
 
     render(

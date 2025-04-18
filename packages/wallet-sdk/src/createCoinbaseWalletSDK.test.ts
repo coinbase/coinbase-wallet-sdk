@@ -43,8 +43,6 @@ describe('createCoinbaseWalletSDK', () => {
       },
     });
 
-    console.log('store.subAccountsConfig.get()', store.subAccountsConfig.get());
-
     expect(store.subAccountsConfig.get().toOwnerAccount).toBeDefined();
   });
 

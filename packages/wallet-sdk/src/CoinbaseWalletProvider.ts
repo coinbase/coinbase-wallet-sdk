@@ -16,7 +16,6 @@ import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { hexStringFromNumber } from ':core/type/util.js';
 import { store } from ':store/store.js';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from ':util/provider.js';
-import { numberToHex } from 'viem';
 import { Signer } from './sign/interface.js';
 import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util.js';
 
@@ -59,21 +58,8 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
             }
             const signer = this.initSigner(signerType);
 
-            // config is not initialized properly for some reason.
-            // const c = config.getState();
-
             if (signerType === 'scw' && subAccountsConfig.enableAutoSubAccounts) {
               await signer.handshake({ method: 'handshake' });
-
-              // TODO: check if current chain is supported
-              await signer.request({
-                method: 'wallet_switchEthereumChain',
-                params: [
-                  {
-                    chainId: numberToHex(84532),
-                  },
-                ],
-              });
 
               const result = await signer.request(args);
               this.signer = signer;

@@ -189,6 +189,23 @@ describe('createSubAccountSigner', () => {
       if (args.method === 'wallet_sendPreparedCalls') {
         return ['0x'];
       }
+
+      if (args.method === 'wallet_getCallsStatus') {
+        return {
+          status: 'CONFIRMED',
+          receipts: [
+            {
+              logs: [],
+              status: 1,
+              blockHash: '0x',
+              blockNumber: 1,
+              gasUsed: 130161,
+              transactionHash: '0x',
+            },
+          ],
+        };
+      }
+
       return undefined;
     });
 

@@ -9,36 +9,21 @@ import {
   Stack,
   VStack,
 } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK } from '@coinbase/wallet-sdk';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { baseSepolia } from 'viem/chains';
+import { useConfig } from '../../context/ConfigContextProvider';
+import { useEIP1193Provider } from '../../context/EIP1193ProviderContextProvider';
 
 export default function AutoSubAccount() {
-  const [sdk, setSDK] = useState<ReturnType<typeof createCoinbaseWalletSDK>>();
   const [accounts, setAccounts] = useState<string[]>([]);
   const [lastResult, setLastResult] = useState<string>();
-  const [autoSubAccountsEnabled, setAutoSubAccountsEnabled] = useState(true);
-
-  useEffect(() => {
-    const sdk = createCoinbaseWalletSDK({
-      appName: 'CryptoPlayground',
-      preference: {
-        keysUrl: 'https://keys-dev.coinbase.com/connect',
-        options: 'smartWalletOnly',
-      },
-      subAccounts: {
-        enableAutoSubAccounts: autoSubAccountsEnabled,
-      },
-    });
-
-    setSDK(sdk);
-  }, [autoSubAccountsEnabled]);
+  const { subAccountsConfig, setSubAccountsConfig } = useConfig();
+  const { provider } = useEIP1193Provider();
 
   const handleRequestAccounts = async () => {
-    if (!sdk) return;
+    if (!provider) return;
 
     try {
-      const provider = sdk.getProvider();
       const response = await provider.request({
         method: 'eth_requestAccounts',
         params: [],
@@ -52,10 +37,9 @@ export default function AutoSubAccount() {
   };
 
   const handleSendTransaction = async () => {
-    if (!sdk || !accounts.length) return;
+    if (!provider || !accounts.length) return;
 
     try {
-      const provider = sdk.getProvider();
       const response = await provider.request({
         method: 'eth_sendTransaction',
         params: [
@@ -75,10 +59,9 @@ export default function AutoSubAccount() {
   };
 
   const handleSignTypedData = async () => {
-    if (!sdk || !accounts.length) return;
+    if (!provider || !accounts.length) return;
 
     try {
-      const provider = sdk.getProvider();
       const typedData = {
         types: {
           EIP712Domain: [
@@ -122,8 +105,8 @@ export default function AutoSubAccount() {
         <FormControl>
           <FormLabel>Auto Sub-Accounts</FormLabel>
           <RadioGroup
-            value={autoSubAccountsEnabled.toString()}
-            onChange={(value) => setAutoSubAccountsEnabled(value === 'true')}
+            value={(subAccountsConfig?.enableAutoSubAccounts || false).toString()}
+            onChange={(value) => setSubAccountsConfig({ enableAutoSubAccounts: value === 'true' })}
           >
             <Stack direction="row">
               <Radio value="true">Enabled</Radio>
