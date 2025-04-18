@@ -97,6 +97,9 @@ describe('EIP1193ProviderContextProvider', () => {
         attribution: { dataSuffix: '0xtestattribution' },
         keysUrl: 'https://keys-dev.coinbase.com/connect',
       },
+      subAccounts: {
+        enableAutoSubAccounts: true,
+      },
     });
     expect(screen.getByTestId('sdk-exists')).toBeTruthy();
     expect(screen.getByTestId('provider-exists')).toBeTruthy();
@@ -133,6 +136,9 @@ describe('EIP1193ProviderContextProvider', () => {
         options: 'all',
         attribution: { dataSuffix: '0xtestattribution' },
         keysUrl: 'https://keys-dev.coinbase.com/connect',
+      },
+      subAccounts: {
+        enableAutoSubAccounts: true,
       },
     });
   });
