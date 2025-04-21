@@ -65,7 +65,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
               this.signer = signer;
 
               // @ts-ignore -- TODO: Validate result
-              return [result.accounts[0].capabilities.addSubAccount.address] as T;
+              return result;
             }
 
             await signer.handshake(args);
