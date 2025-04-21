@@ -444,7 +444,7 @@ export class SCWSigner implements Signer {
     const sender = getSenderFromRequest(request);
     const subAccount = store.subAccounts.get();
     if (sender) {
-      return sender === subAccount?.address;
+      return sender.toLowerCase() === subAccount?.address.toLowerCase();
     }
     return false;
   }

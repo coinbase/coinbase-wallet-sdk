@@ -427,4 +427,53 @@ describe('SCWSigner', () => {
       await signer.cleanup();
     });
   });
+
+  describe('Auto sub account', () => {
+    it('should create a sub account when eth_requestAccounts is called and enableAutoSubAccounts is true', async () => {
+      await signer.cleanup();
+
+      vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
+        enableAutoSubAccounts: true,
+      });
+
+      const mockRequest: RequestArguments = {
+        method: 'eth_requestAccounts',
+        params: [],
+      };
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: null,
+        },
+      });
+
+      await signer.handshake({ method: 'handshake' });
+      expect(signer['accounts']).toEqual([]);
+
+      const subAccountAddress = '0x7838d2724FC686813CAf81d4429beff1110c739a';
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+                capabilities: {
+                  addSubAccount: {
+                    address: subAccountAddress,
+                    factory: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+                    factoryData: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      const accounts = await signer.request(mockRequest);
+
+      expect(accounts).toContain(subAccountAddress);
+    });
+  });
 });
