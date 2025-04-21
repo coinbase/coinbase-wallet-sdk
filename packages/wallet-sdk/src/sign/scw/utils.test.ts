@@ -1,7 +1,9 @@
+import { store } from ':store/store.js';
 import {
   addSenderToRequest,
   assertParamsChainId,
   getSenderFromRequest,
+  initSubAccountConfig,
   injectRequestCapabilities,
 } from './utils.js';
 
@@ -173,5 +175,24 @@ describe('injectRequestCapabilities', () => {
     };
 
     expect(() => injectRequestCapabilities(request, capabilities)).toThrow();
+  });
+});
+
+describe('initSubAccountConfig', () => {
+  it('should initialize the sub account config', async () => {
+    store.subAccountsConfig.set({
+      enableAutoSubAccounts: true,
+      toOwnerAccount: vi.fn().mockResolvedValue({
+        account: {
+          address: '0x123',
+          type: 'local',
+        },
+      }),
+    });
+
+    await initSubAccountConfig();
+
+    const config = store.subAccountsConfig.get();
+    expect(config?.capabilities?.addSubAccount).toBeDefined();
   });
 });

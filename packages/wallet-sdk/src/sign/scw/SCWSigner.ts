@@ -26,6 +26,7 @@ import {
   addSenderToRequest,
   assertParamsChainId,
   getSenderFromRequest,
+  initSubAccountConfig,
   injectRequestCapabilities,
 } from './utils.js';
 import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
@@ -84,43 +85,6 @@ export class SCWSigner implements Signer {
     this.handleResponse(args, decrypted);
   }
 
-  async initSubAccountConfig() {
-    const config = store.subAccountsConfig.get();
-
-    if (!config?.enableAutoSubAccounts) {
-      return;
-    }
-
-    // Get the owner account
-    const { account: owner } = config.toOwnerAccount
-      ? await config.toOwnerAccount()
-      : await getCryptoKeyAccount();
-
-    if (!owner) {
-      throw standardErrors.provider.unauthorized('No owner account found');
-    }
-
-    // Set the capabilities for the sub account
-    const capabilities = {
-      addSubAccount: {
-        account: {
-          type: 'create',
-          keys: [
-            {
-              type: owner.address ? 'address' : 'webauthn-p256',
-              key: owner.address || owner.publicKey,
-            },
-          ],
-        },
-      },
-    };
-
-    // Store the owner account and capabilities in the non-persisted config
-    store.subAccountsConfig.set({
-      capabilities,
-    });
-  }
-
   // TODO: Properly type the return value
   async request(request: RequestArguments): Promise<any> {
     if (this.accounts.length === 0) {
@@ -133,7 +97,7 @@ export class SCWSigner implements Signer {
         case 'wallet_connect': {
           // Wait for the popup to be loaded before making async calls
           await this.communicator.waitForPopupLoaded?.();
-          await this.initSubAccountConfig();
+          await initSubAccountConfig();
           const modifiedRequest = injectRequestCapabilities(
             request,
             store.subAccountsConfig.get()?.capabilities ?? {}
@@ -156,7 +120,7 @@ export class SCWSigner implements Signer {
         if (subAccountsConfig?.enableAutoSubAccounts) {
           // Wait for the popup to be loaded before making async calls
           await this.communicator.waitForPopupLoaded?.();
-          await this.initSubAccountConfig();
+          await initSubAccountConfig();
 
           // This will populate the store with the sub account
           await this.request({
@@ -208,7 +172,7 @@ export class SCWSigner implements Signer {
       case 'wallet_connect': {
         // Wait for the popup to be loaded before making async calls
         await this.communicator.waitForPopupLoaded?.();
-        await this.initSubAccountConfig();
+        await initSubAccountConfig();
         const subAccountsConfig = store.subAccountsConfig.get();
         const modifiedRequest = injectRequestCapabilities(
           request,

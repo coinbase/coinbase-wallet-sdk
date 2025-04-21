@@ -2,7 +2,9 @@ import { Address } from 'viem';
 
 import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
+import { store } from ':store/store.js';
 import { get } from ':util/get.js';
+import { getCryptoKeyAccount } from '../../kms/crypto-key/index.js';
 
 // ***************************************************************
 // Utility
@@ -94,4 +96,45 @@ export function injectRequestCapabilities(
   }
 
   return modifiedRequest;
+}
+
+/**
+ * Initializes the `subAccountConfig` store with the owner account function and capabilities
+ * @returns void
+ */
+export async function initSubAccountConfig() {
+  const config = store.subAccountsConfig.get();
+
+  if (!config?.enableAutoSubAccounts) {
+    return;
+  }
+
+  // Get the owner account
+  const { account: owner } = config.toOwnerAccount
+    ? await config.toOwnerAccount()
+    : await getCryptoKeyAccount();
+
+  if (!owner) {
+    throw standardErrors.provider.unauthorized('No owner account found');
+  }
+
+  // Set the capabilities for the sub account
+  const capabilities = {
+    addSubAccount: {
+      account: {
+        type: 'create',
+        keys: [
+          {
+            type: owner.address ? 'address' : 'webauthn-p256',
+            key: owner.address || owner.publicKey,
+          },
+        ],
+      },
+    },
+  };
+
+  // Store the owner account and capabilities in the non-persisted config
+  store.subAccountsConfig.set({
+    capabilities,
+  });
 }
