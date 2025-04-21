@@ -1,4 +1,4 @@
-import { Hex, numberToHex } from 'viem';
+import { Hex, decodeAbiParameters, encodeFunctionData, numberToHex, toHex } from 'viem';
 
 import { Communicator } from ':core/communicator/Communicator.js';
 import { standardErrors } from ':core/error/errors.js';
@@ -19,6 +19,7 @@ import {
   importKeyFromHexString,
 } from ':util/cipher.js';
 import { fetchRPCRequest } from ':util/provider.js';
+import { waitForCallsStatus } from 'viem/experimental';
 import { getCryptoKeyAccount } from '../../kms/crypto-key/index.js';
 import { Signer } from '../interface.js';
 import { SCWKeyManager } from './SCWKeyManager.js';
@@ -29,7 +30,9 @@ import {
   initSubAccountConfig,
   injectRequestCapabilities,
 } from './utils.js';
+import { abi } from './utils/constants.js';
 import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
+import { getOwnerIndex } from './utils/getOwnerIndex.js';
 
 type ConstructorOptions = {
   metadata: AppMetadata;
@@ -123,7 +126,7 @@ export class SCWSigner implements Signer {
           await initSubAccountConfig();
 
           // This will populate the store with the sub account
-          await this.request({
+          const result = await this.request({
             method: 'wallet_connect',
             params: [
               {
@@ -135,9 +138,14 @@ export class SCWSigner implements Signer {
 
           const subAccount = store.subAccounts.get();
           assertPresence(subAccount, standardErrors.provider.unauthorized('No sub account found'));
-
-          return [subAccount.address] as Address[];
+          return [
+            // First account is the sub account, to be used by default
+            subAccount.address,
+            // Second account is the global account
+            result.accounts[0].address,
+          ] as Address[];
         }
+
         this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
         return this.accounts;
       }
@@ -233,12 +241,35 @@ export class SCWSigner implements Signer {
           const capabilityResponse =
             capabilities?.addSubAccount ?? capabilities?.getSubAccounts?.[0];
           assertSubAccount(capabilityResponse);
+
+          const config = store.subAccountsConfig.get();
+          const { account: owner } = config?.toOwnerAccount
+            ? await config.toOwnerAccount()
+            : await getCryptoKeyAccount();
+
+          assertPresence(owner, standardErrors.provider.unauthorized('No owner account found'));
+
+          const client = getClient(this.chain.id);
+          assertPresence(client, standardErrors.rpc.internal('No client found for chain'));
+
+          const ownerIndex = await getOwnerIndex({
+            address: capabilityResponse?.address,
+            publicKey: owner?.type === 'local' ? owner.address : owner.publicKey,
+            client,
+            factory: capabilityResponse?.factory,
+            factoryData: capabilityResponse?.factoryData,
+          });
+
           store.subAccounts.set({
             address: capabilityResponse?.address,
             factory: capabilityResponse?.factory,
             factoryData: capabilityResponse?.factoryData,
+            // TODO: Should this be by chain id?
+            ownerIndex,
+            owner,
           });
         }
+
         const accounts_ = [this.accounts[0]];
         const subAccount = store.subAccounts.get();
         if (subAccount?.address) {
@@ -415,7 +446,6 @@ export class SCWSigner implements Signer {
 
   private async sendRequestToSubAccountSigner(request: RequestArguments) {
     const subAccount = store.subAccounts.get();
-    const config = store.subAccountsConfig.get();
 
     assertPresence(
       subAccount?.address,
@@ -423,14 +453,9 @@ export class SCWSigner implements Signer {
     );
 
     // Get the owner account from the config
-    const ownerAccount = config?.toOwnerAccount
-      ? await config.toOwnerAccount()
-      : await getCryptoKeyAccount();
+    const owner = subAccount.owner;
 
-    assertPresence(
-      ownerAccount.account,
-      standardErrors.provider.unauthorized('no active sub account owner')
-    );
+    assertPresence(owner, standardErrors.provider.unauthorized('no active sub account owner'));
 
     const sender = getSenderFromRequest(request);
     // if sender is undefined, we inject the active sub account
@@ -445,12 +470,101 @@ export class SCWSigner implements Signer {
       standardErrors.rpc.internal(`client not found for chainId ${this.chain.id}`)
     );
 
+    const ownerPublicKey = owner.type === 'local' ? owner.address : owner.publicKey;
+    let ownerIndex = subAccount.ownerIndex;
+    const globalAccount = this.accounts[1];
+
+    // If the owner index is not found, we need to add the owner from the global account
+    if (!ownerIndex) {
+      const calls: {
+        to: Address;
+        data: Hex;
+        value: Hex;
+      }[] = [];
+
+      const code = await client.getCode({ address: subAccount.address });
+      if (!code) {
+        // If sub account is not deployed and the owner is not in the initCode,
+        // we need to deploy the sub account before adding the owner
+
+        if (!subAccount.factory || !subAccount.factoryData) {
+          throw standardErrors.rpc.internal('no factory or factory data for sub account');
+        }
+
+        calls.push({
+          to: subAccount.factory,
+          data: subAccount.factoryData,
+          value: toHex(0),
+        });
+      }
+
+      if (owner.type === 'local') {
+        calls.push({
+          to: subAccount.address,
+          data: encodeFunctionData({
+            abi: abi,
+            functionName: 'addOwnerAddress',
+            args: [owner.address] as const,
+          }),
+          value: toHex(0),
+        });
+      } else {
+        const [x, y] = decodeAbiParameters(
+          [{ type: 'bytes32' }, { type: 'bytes32' }],
+          owner.publicKey
+        );
+
+        calls.push({
+          to: subAccount.address,
+          data: encodeFunctionData({
+            abi,
+            functionName: 'addOwnerPublicKey',
+            args: [x, y] as const,
+          }),
+          value: toHex(0),
+        });
+      }
+
+      const request: RequestArguments = {
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            version: 1,
+            calls,
+            chainId: toHex(this.chain.id),
+            from: globalAccount,
+          },
+        ],
+      };
+
+      const callId = (await this.sendRequestToPopup(request)) as string;
+
+      const callsResult = await waitForCallsStatus(client, {
+        id: callId,
+      });
+
+      if (callsResult.status === 'success') {
+        ownerIndex = await getOwnerIndex({
+          address: subAccount.address,
+          publicKey: ownerPublicKey,
+          client,
+        });
+
+        store.subAccounts.set({
+          ownerIndex,
+        });
+      } else {
+        throw standardErrors.rpc.internal('failed to add owner to sub account');
+      }
+    }
+
     const { request: subAccountRequest } = await createSubAccountSigner({
       address: subAccount.address,
-      owner: ownerAccount.account,
+      owner: owner,
       client: client,
       factory: subAccount.factory,
       factoryData: subAccount.factoryData,
+      ownerIndex,
     });
 
     return subAccountRequest(request);

@@ -23,6 +23,8 @@ export type SubAccount = {
   address: Address;
   factory?: Address;
   factoryData?: Hex;
+  owner?: OwnerAccount;
+  ownerIndex?: number;
 };
 
 type SubAccountConfig = {
@@ -133,7 +135,11 @@ export const sdkstore = createStore(
           chains: state.chains,
           keys: state.keys,
           account: state.account,
-          subAccount: state.subAccount,
+          subAccount: {
+            address: state.subAccount?.address,
+            factory: state.subAccount?.factory,
+            factoryData: state.subAccount?.factoryData,
+          },
           config: state.config,
         } as StoreState;
       },

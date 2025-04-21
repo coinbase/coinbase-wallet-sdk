@@ -18,7 +18,6 @@ import {
   isHex,
   numberToHex,
 } from 'viem';
-import { getCode } from 'viem/actions';
 import { waitForCallsStatus } from 'viem/experimental';
 import { createSmartAccount } from './createSmartAccount.js';
 import { getOwnerIndex } from './getOwnerIndex.js';
@@ -29,26 +28,20 @@ export async function createSubAccountSigner({
   client,
   factory,
   factoryData,
+  ownerIndex,
 }: {
   address: Address;
   owner: OwnerAccount;
   client: PublicClient;
   factoryData?: Hex;
   factory?: Address;
+  ownerIndex?: number;
 }) {
-  const code = await getCode(client, {
-    address,
-  });
-
-  // Default index to 1 if the contract is not deployed
-  // Note: importing an undeployed contract might need to be handled differently
-  // The implemention will likely require the signer to tell us the index
-  let index = 1;
-  if (code) {
+  if (!ownerIndex) {
     const ownerPublicKey = owner.type === 'local' ? owner.address : owner.publicKey;
     assertPresence(ownerPublicKey, standardErrors.rpc.internal('owner public key not found'));
 
-    index = await getOwnerIndex({
+    ownerIndex = await getOwnerIndex({
       address,
       publicKey: ownerPublicKey,
       client,
@@ -61,11 +54,15 @@ export async function createSubAccountSigner({
     factoryData,
   };
 
+  if (!ownerIndex) {
+    throw standardErrors.rpc.internal('owner index not found');
+  }
+
   const chainId = await client.getChainId();
 
   const account = await createSmartAccount({
     owner,
-    ownerIndex: index,
+    ownerIndex,
     address,
     client,
     factoryData,

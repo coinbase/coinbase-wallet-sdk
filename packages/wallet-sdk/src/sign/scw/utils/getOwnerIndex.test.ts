@@ -1,9 +1,8 @@
-import { createPublicClient, http } from 'viem';
-import { readContract } from 'viem/actions';
-import { describe, expect, it, Mock, vi } from 'vitest';
-
+import { createPublicClient, encodeFunctionData, http } from 'viem';
+import { getCode, readContract } from 'viem/actions';
+import { Mock, describe, expect, it, vi } from 'vitest';
+import { factoryAbi, factoryAddress } from './constants.js';
 import { getOwnerIndex } from './getOwnerIndex.js';
-import { standardErrors } from ':core/error/errors.js';
 
 const client = createPublicClient({
   transport: http('http://localhost:8545'),
@@ -11,6 +10,7 @@ const client = createPublicClient({
 
 vi.mock('viem/actions', () => ({
   readContract: vi.fn(),
+  getCode: vi.fn(() => Promise.resolve('0x123')),
 }));
 
 describe('getOwnerIndex', () => {
@@ -52,6 +52,33 @@ describe('getOwnerIndex', () => {
 
     expect(result).toBe(2);
     expect(mockReadContract).toHaveBeenCalledTimes(2);
+  });
+
+  it('looks for the owner in the factory data if the contract is not deployed', async () => {
+    // Mock getCode to return undefined
+    (getCode as Mock).mockResolvedValueOnce(undefined);
+
+    const factoryData = encodeFunctionData({
+      abi: factoryAbi,
+      functionName: 'createAccount',
+      args: [
+        [
+          '0x0000000000000000000000007838d2724FC686813CAf81d4429beff1110c739a',
+          '0x000000000000000000000000d9Ec1a8603125732c1ee35147619BbFA769A062b',
+        ],
+        BigInt(0),
+      ],
+    });
+
+    const result = await getOwnerIndex({
+      address: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+      client,
+      factoryData,
+      factory: factoryAddress,
+      publicKey: '0xd9Ec1a8603125732c1ee35147619BbFA769A062b',
+    });
+
+    expect(result).toBe(1);
   });
 
   it('handles 64 byte public keys', async () => {
@@ -109,7 +136,7 @@ describe('getOwnerIndex', () => {
         client,
         publicKey: '0xccc',
       })
-    ).rejects.toThrow(standardErrors.rpc.internal('account owner not found'));
+    ).resolves.toBeUndefined();
   });
 
   it('handles empty owner list', async () => {
@@ -123,6 +150,6 @@ describe('getOwnerIndex', () => {
         client,
         publicKey: '0xccc',
       })
-    ).rejects.toThrow(standardErrors.rpc.internal('account owner not found'));
+    ).resolves.toBeUndefined();
   });
 });
