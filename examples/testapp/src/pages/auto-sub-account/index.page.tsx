@@ -9,6 +9,7 @@ import {
   Stack,
   VStack,
 } from '@chakra-ui/react';
+import { removeCryptoKey } from '@coinbase/wallet-sdk';
 import { useState } from 'react';
 import { baseSepolia } from 'viem/chains';
 import { useConfig } from '../../context/ConfigContextProvider';
@@ -99,6 +100,16 @@ export default function AutoSubAccount() {
     }
   };
 
+  const handleClearCryptoKey = async () => {
+    try {
+      await removeCryptoKey();
+      setLastResult('Crypto key cleared successfully');
+    } catch (e) {
+      console.error('error', e);
+      setLastResult(JSON.stringify(e, null, 2));
+    }
+  };
+
   return (
     <Container mb={16}>
       <VStack w="full" spacing={4}>
@@ -122,6 +133,9 @@ export default function AutoSubAccount() {
         </Button>
         <Button w="full" onClick={handleSignTypedData} isDisabled={!accounts.length}>
           eth_signTypedData_v4
+        </Button>
+        <Button w="full" onClick={handleClearCryptoKey}>
+          Clear Crypto Key
         </Button>
         {lastResult && (
           <Box
