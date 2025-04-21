@@ -5,6 +5,7 @@ import { CB_KEYS_URL } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { EncryptedData, RPCResponseMessage } from ':core/message/RPCMessage.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
+import { getClient } from ':store/chain-clients/utils.js';
 import { store } from ':store/store.js';
 import {
   decryptContent,
@@ -13,8 +14,12 @@ import {
   importKeyFromHexString,
 } from ':util/cipher.js';
 import { fetchRPCRequest } from ':util/provider.js';
+import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
+import { getCode } from 'viem/actions';
+import { waitForCallsStatus } from 'viem/experimental';
 import { SCWKeyManager } from './SCWKeyManager.js';
 import { SCWSigner } from './SCWSigner.js';
+import { getOwnerIndex } from './utils/getOwnerIndex.js';
 
 vi.mock(':util/provider');
 vi.mock('./SCWKeyManager');
@@ -29,6 +34,28 @@ vi.mock(':util/cipher', () => ({
   encryptContent: vi.fn(),
   exportKeyToHexString: vi.fn(),
   importKeyFromHexString: vi.fn(),
+}));
+vi.mock('viem/actions', () => ({
+  getCode: vi.fn().mockResolvedValue('0x123'),
+  readContract: vi.fn().mockResolvedValue('0x123'),
+}));
+vi.mock('viem/experimental', () => ({
+  waitForCallsStatus: vi.fn(),
+}));
+vi.mock('./utils/createSubAccountSigner.js', () => ({
+  createSubAccountSigner: vi.fn().mockResolvedValue({
+    request: vi.fn().mockResolvedValue('0x123'),
+  }),
+}));
+vi.mock('./utils/getOwnerIndex.js', () => ({
+  getOwnerIndex: vi.fn(),
+}));
+vi.mock(':store/chain-clients/utils.js', () => ({
+  getClient: vi.fn().mockReturnValue({
+    getCode: vi.fn().mockResolvedValue('0x123'),
+    test: 'test',
+  }),
+  createClients: vi.fn(),
 }));
 
 const mockCryptoKey = {} as CryptoKey;
@@ -474,6 +501,63 @@ describe('SCWSigner', () => {
       const accounts = await signer.request(mockRequest);
 
       expect(accounts).toContain(subAccountAddress);
+    });
+
+    it("should add the owner account as an owner if it's not already an owner on request", async () => {
+      await signer.cleanup();
+
+      vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
+        enableAutoSubAccounts: true,
+      });
+
+      const randomAccount = privateKeyToAccount(generatePrivateKey());
+
+      // Mock subaccount store
+      vi.spyOn(store.subAccounts, 'get').mockReturnValue({
+        address: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+        factory: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+        factoryData: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+        ownerIndex: undefined,
+        owner: {
+          address: randomAccount.address,
+          type: 'local',
+          publicKey: randomAccount.address,
+          signMessage: vi.fn(),
+          signTransaction: vi.fn(),
+          signTypedData: vi.fn(),
+          source: 'test',
+        },
+      });
+
+      const spy = vi
+        .spyOn(signer as any, 'sendRequestToPopup')
+        .mockImplementationOnce(vi.fn().mockResolvedValue('some-id'));
+
+      (getCode as Mock).mockResolvedValue('0x123');
+
+      (waitForCallsStatus as Mock).mockResolvedValueOnce({
+        status: 'success',
+      });
+
+      (getOwnerIndex as Mock).mockResolvedValueOnce(3);
+
+      (getClient as Mock).mockReturnValue({
+        getCode: vi.fn().mockResolvedValue('0x123'),
+      } as any);
+
+      await signer.request({
+        method: 'eth_sendTransaction',
+        params: [
+          {
+            to: '0x7838d2724FC686813CAf81d4429beff1110c739a',
+            from: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+            data: '0x123',
+            value: '0x0',
+          },
+        ],
+      });
+
+      expect(spy).toHaveBeenCalled();
     });
   });
 });

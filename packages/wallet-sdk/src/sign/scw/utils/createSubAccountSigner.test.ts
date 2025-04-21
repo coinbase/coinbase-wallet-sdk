@@ -12,7 +12,7 @@ vi.mock('viem/actions', () => ({
 }));
 
 vi.mock('./getOwnerIndex.js', () => ({
-  getOwnerIndex: vi.fn(),
+  getOwnerIndex: vi.fn().mockResolvedValue(1),
 }));
 
 vi.mock(':store/store.js', () => ({
@@ -263,12 +263,12 @@ describe('createSubAccountSigner', () => {
     expect(mock).toHaveBeenCalledWith({ hash: '0x' });
   });
 
-  it('checks the owner index if the contract is deployed', async () => {
+  it('checks the owner index if the contract is deployed if the owner index is not provided', async () => {
     const sendUserOperation = vi.fn();
     (getBundlerClient as any).mockReturnValue({
       sendUserOperation,
     });
-    const mockGetOwnerIndex = vi.fn();
+    const mockGetOwnerIndex = vi.fn().mockResolvedValue(1);
     (getCode as any).mockResolvedValue('0x123');
 
     (getOwnerIndex as any).mockImplementation(mockGetOwnerIndex);
