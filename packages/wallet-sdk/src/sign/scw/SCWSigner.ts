@@ -88,7 +88,7 @@ export class SCWSigner implements Signer {
     const config = store.subAccountsConfig.get();
 
     if (!config?.enableAutoSubAccounts) {
-      throw new Error('called initSubAccountConfig but enableAutoSubAccounts is false');
+      return;
     }
 
     // Get the owner account
@@ -123,10 +123,6 @@ export class SCWSigner implements Signer {
 
   // TODO: Properly type the return value
   async request(request: RequestArguments): Promise<any> {
-    if (store.subAccountsConfig.get()?.enableAutoSubAccounts) {
-      await this.initSubAccountConfig();
-    }
-
     if (this.accounts.length === 0) {
       switch (request.method) {
         case 'wallet_switchEthereumChain': {
@@ -135,6 +131,9 @@ export class SCWSigner implements Signer {
           return;
         }
         case 'wallet_connect': {
+          // Wait for the popup to be loaded before making async calls
+          await this.communicator.waitForPopupLoaded?.();
+          await this.initSubAccountConfig();
           const modifiedRequest = injectRequestCapabilities(
             request,
             store.subAccountsConfig.get()?.capabilities ?? {}
@@ -153,21 +152,28 @@ export class SCWSigner implements Signer {
 
     switch (request.method) {
       case 'eth_requestAccounts': {
-        if (store.subAccountsConfig.get()?.enableAutoSubAccounts) {
-          const result = await this.request({
+        const subAccountsConfig = store.subAccountsConfig.get();
+        if (subAccountsConfig?.enableAutoSubAccounts) {
+          // Wait for the popup to be loaded before making async calls
+          await this.communicator.waitForPopupLoaded?.();
+          await this.initSubAccountConfig();
+
+          // This will populate the store with the sub account
+          await this.request({
             method: 'wallet_connect',
             params: [
               {
                 version: 1,
-                capabilities: store.subAccountsConfig.get()?.capabilities ?? {},
+                capabilities: subAccountsConfig?.capabilities ?? {},
               },
             ],
           });
 
-          // @ts-ignore -- TODO: Validate result
-          return [result.accounts[0].capabilities.addSubAccount.address] as Address[];
-        }
+          const subAccount = store.subAccounts.get();
+          assertPresence(subAccount, standardErrors.provider.unauthorized('No sub account found'));
 
+          return [subAccount.address] as Address[];
+        }
         this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
         return this.accounts;
       }
@@ -200,9 +206,13 @@ export class SCWSigner implements Signer {
       case 'wallet_grantPermissions':
         return this.sendRequestToPopup(request);
       case 'wallet_connect': {
+        // Wait for the popup to be loaded before making async calls
+        await this.communicator.waitForPopupLoaded?.();
+        await this.initSubAccountConfig();
+        const subAccountsConfig = store.subAccountsConfig.get();
         const modifiedRequest = injectRequestCapabilities(
           request,
-          store.subAccountsConfig.get()?.capabilities ?? {}
+          subAccountsConfig?.capabilities ?? {}
         );
         return this.sendRequestToPopup(modifiedRequest);
       }

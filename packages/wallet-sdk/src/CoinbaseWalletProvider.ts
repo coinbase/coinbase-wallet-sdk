@@ -48,7 +48,6 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
       if (!this.signer) {
         switch (args.method) {
           case 'eth_requestAccounts': {
-            // this causes a popup which we dont want.
             let signerType: SignerType;
             const subAccountsConfig = store.subAccountsConfig.get();
             if (subAccountsConfig?.enableAutoSubAccounts) {
@@ -64,8 +63,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
               const result = await signer.request(args);
               this.signer = signer;
 
-              // @ts-ignore -- TODO: Validate result
-              return result;
+              return result as T;
             }
 
             await signer.handshake(args);

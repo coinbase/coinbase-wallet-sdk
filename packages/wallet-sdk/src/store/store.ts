@@ -23,9 +23,6 @@ export type SubAccount = {
   address: Address;
   factory?: Address;
   factoryData?: Hex;
-  config?: {
-    capabilities: Record<string, unknown>;
-  };
 };
 
 type SubAccountConfig = {
