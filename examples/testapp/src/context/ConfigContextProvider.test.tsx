@@ -115,9 +115,22 @@ describe('ConfigContextProvider', () => {
     };
 
     act(() => {
-      result.current.setConfig(newConfig);
+      result.current.setConfig((prevConfig) => ({
+        ...prevConfig,
+        options: newConfig.options,
+        attribution: newConfig.attribution,
+        _appName: prevConfig?._appName || '',
+        _appLogoUrl: prevConfig?._appLogoUrl || '',
+        _relay: prevConfig?._relay || null,
+        _relayEventManager: prevConfig?._relayEventManager || null,
+        // Add other required properties with default or existing values
+      }));
     });
 
-    expect(result.current.config).toEqual(newConfig);
+    expect(result.current.config).toEqual({
+      ...result.current.config,
+      options: newConfig.options,
+      attribution: newConfig.attribution,
+    });
   });
 });

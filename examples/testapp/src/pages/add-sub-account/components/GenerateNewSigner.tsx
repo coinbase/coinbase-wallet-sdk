@@ -1,5 +1,5 @@
 import { Box, Button } from '@chakra-ui/react';
-import { getCryptoKeyAccount, removeCryptoKey } from '@coinbase/wallet-sdk';
+import getCryptoKeyAccount, { removeCryptoKey } from '@coinbase/wallet-sdk';
 import { useCallback, useState } from 'react';
 
 export function GenerateNewSigner() {
@@ -8,7 +8,8 @@ export function GenerateNewSigner() {
   const handleGenerateNewSigner = useCallback(async () => {
     try {
       await removeCryptoKey();
-      const { account } = await getCryptoKeyAccount();
+      const cryptoKeyAccount = new getCryptoKeyAccount();
+      const { account } = await cryptoKeyAccount.getAccount();
       setState(account.publicKey);
     } catch (e) {
       console.error('error', e);
