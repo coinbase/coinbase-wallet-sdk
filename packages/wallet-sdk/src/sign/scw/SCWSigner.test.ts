@@ -5,6 +5,7 @@ import { CB_KEYS_URL } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { EncryptedData, RPCResponseMessage } from ':core/message/RPCMessage.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
+import { SpendLimit } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { store } from ':store/store.js';
 import {
   decryptContent,
@@ -226,6 +227,7 @@ describe('SCWSigner', () => {
         },
         chains: [],
         keys: {},
+        spendLimits: [],
         config: {
           metadata: mockMetadata,
           preference: { keysUrl: CB_KEYS_URL, options: 'all' },
@@ -474,6 +476,59 @@ describe('SCWSigner', () => {
       const accounts = await signer.request(mockRequest);
 
       expect(accounts).toContain(subAccountAddress);
+    });
+  });
+
+  describe('SCWSigner - coinbase_fetchPermissions', () => {
+    const mockSpendLimits = [
+      {
+        permissionHash: '0xPermissionHash',
+        signature: '0xSignature',
+        permission: {
+          account: '0xAddress',
+          spender: '0xSubAccount',
+        },
+      },
+    ] as [SpendLimit];
+
+    beforeEach(() => {
+      vi.spyOn(store, 'getState').mockImplementation(() => ({
+        account: {
+          accounts: ['0xAddress'],
+          chain: { id: 10, rpcUrl: 'https://eth-rpc.example.com/10' },
+        },
+        subAccount: {
+          address: '0xSubAccount',
+        },
+        chains: [],
+        keys: {},
+        spendLimits: [],
+        config: {
+          metadata: mockMetadata,
+          preference: { keysUrl: CB_KEYS_URL, options: 'all' },
+          version: '1.0.0',
+        },
+      }));
+
+      (fetchRPCRequest as Mock).mockResolvedValue({
+        permissions: mockSpendLimits,
+      });
+    });
+
+    it('should update internal state for successful coinbase_fetchPermissions', async () => {
+      await signer.cleanup();
+
+      const mockRequest: RequestArguments = {
+        method: 'coinbase_fetchPermissions',
+      };
+
+      signer['accounts'] = ['0xAddress']; // mock the logged in state
+
+      const mockSetSpendLimits = vi.spyOn(store.spendLimits, 'set');
+
+      await signer.request(mockRequest);
+
+      expect(mockSetSpendLimits).toHaveBeenCalledWith(mockSpendLimits);
     });
   });
 });

@@ -1,4 +1,5 @@
 import { AppMetadata, Preference } from ':core/provider/interface.js';
+import { SpendLimit } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { OwnerAccount } from ':core/type/index.js';
 import { Address, Hex } from 'viem';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -93,6 +94,16 @@ const createSubAccountConfigSlice: StateCreator<StoreState, [], [], SubAccountCo
   };
 };
 
+type SpendLimitsSlice = {
+  spendLimits: SpendLimit[];
+};
+
+const createSpendLimitsSlice: StateCreator<StoreState, [], [], SpendLimitsSlice> = () => {
+  return {
+    spendLimits: [],
+  };
+};
+
 type ConfigSlice = {
   config: Config;
 };
@@ -110,7 +121,15 @@ type MergeTypes<T extends unknown[]> = T extends [infer First, ...infer Rest]
   : Record<string, unknown>;
 
 export type StoreState = MergeTypes<
-  [ChainSlice, KeysSlice, AccountSlice, SubAccountSlice, SubAccountConfigSlice, ConfigSlice]
+  [
+    ChainSlice,
+    KeysSlice,
+    AccountSlice,
+    SubAccountSlice,
+    SubAccountConfigSlice,
+    SpendLimitsSlice,
+    ConfigSlice,
+  ]
 >;
 
 export const sdkstore = createStore(
@@ -120,6 +139,7 @@ export const sdkstore = createStore(
       ...createKeysSlice(...args),
       ...createAccountSlice(...args),
       ...createSubAccountSlice(...args),
+      ...createSpendLimitsSlice(...args),
       ...createConfigSlice(...args),
       ...createSubAccountConfigSlice(...args),
     }),
@@ -134,6 +154,7 @@ export const sdkstore = createStore(
           keys: state.keys,
           account: state.account,
           subAccount: state.subAccount,
+          spendLimits: state.spendLimits,
           config: state.config,
         } as StoreState;
       },
@@ -169,6 +190,18 @@ export const subAccounts = {
   clear: () => {
     sdkstore.setState({
       subAccount: undefined,
+    });
+  },
+};
+
+export const spendLimits = {
+  get: () => sdkstore.getState().spendLimits,
+  set: (spendLimits: SpendLimit[]) => {
+    sdkstore.setState({ spendLimits });
+  },
+  clear: () => {
+    sdkstore.setState({
+      spendLimits: [],
     });
   },
 };
@@ -221,6 +254,7 @@ export const config = {
 const actions = {
   subAccounts,
   subAccountsConfig,
+  spendLimits,
   account,
   chains,
   keys,
