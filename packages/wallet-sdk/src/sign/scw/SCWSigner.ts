@@ -245,7 +245,7 @@ export class SCWSigner implements Signer {
         const subAccount = store.subAccounts.get();
         const subAccountsConfig = store.subAccountsConfig.get();
         if (subAccount?.address) {
-          // Sub account is always at index 0 - does this break any assumptions?
+          // Sub account is always at index 0
           accounts_ = [subAccount.address, ...this.accounts];
 
           // Also update the accounts store if automatic sub accounts are enabled
