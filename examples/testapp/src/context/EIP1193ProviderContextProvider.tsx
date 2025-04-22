@@ -22,7 +22,7 @@ type EIP1193ProviderContextType = {
 const EIP1193ProviderContext = createContext<EIP1193ProviderContextType | null>(null);
 
 export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderContextProviderProps) {
-  const { option, version, scwUrl, config } = useConfig();
+  const { option, version, scwUrl, config, subAccountsConfig } = useConfig();
   const { addEventListeners, removeEventListeners } = useEventListeners();
   const {
     spyOnDisconnectedError,
@@ -42,6 +42,7 @@ export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderCont
         attribution: config.attribution,
         keysUrl: scwUrl ?? scwUrls[0],
       },
+      subAccounts: subAccountsConfig,
     };
 
     const sdk =
@@ -67,6 +68,7 @@ export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderCont
     version,
     option,
     config,
+    subAccountsConfig,
     spyOnDisconnectedError,
     addEventListeners,
     removeEventListeners,

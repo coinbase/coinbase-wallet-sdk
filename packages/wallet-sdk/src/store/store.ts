@@ -1,12 +1,12 @@
-import { AppMetadata, Preference } from ":core/provider/interface.js";
-import { Address, Hex, LocalAccount, OneOf } from "viem";
-import { WebAuthnAccount } from "viem/account-abstraction";
-import { createJSONStorage, persist } from "zustand/middleware";
-import { StateCreator, createStore } from "zustand/vanilla";
-import { VERSION } from "../sdk-info.js";
+import { AppMetadata, Preference } from ':core/provider/interface.js';
+import { OwnerAccount } from ':core/type/index.js';
+import { Address, Hex } from 'viem';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import { StateCreator, createStore } from 'zustand/vanilla';
+import { VERSION } from '../sdk-info.js';
 
-export type ToSubAccountSigner = () => Promise<{
-  account: OneOf<LocalAccount | WebAuthnAccount> | null;
+export type ToOwnerAccountFn = () => Promise<{
+  account: OwnerAccount | null;
 }>;
 
 type Chain = {
@@ -23,6 +23,12 @@ export type SubAccount = {
   address: Address;
   factory?: Address;
   factoryData?: Hex;
+};
+
+type SubAccountConfig = {
+  toOwnerAccount?: ToOwnerAccountFn;
+  capabilities?: Record<string, unknown>;
+  enableAutoSubAccounts?: boolean;
 };
 
 type Account = {
@@ -61,12 +67,7 @@ type AccountSlice = {
   account: Account;
 };
 
-const createAccountSlice: StateCreator<
-  StoreState,
-  [],
-  [],
-  AccountSlice
-> = () => {
+const createAccountSlice: StateCreator<StoreState, [], [], AccountSlice> = () => {
   return {
     account: {},
   };
@@ -76,14 +77,19 @@ type SubAccountSlice = {
   subAccount?: SubAccount;
 };
 
-const createSubAccountSlice: StateCreator<
-  StoreState,
-  [],
-  [],
-  SubAccountSlice
-> = () => {
+const createSubAccountSlice: StateCreator<StoreState, [], [], SubAccountSlice> = () => {
   return {
     subAccount: undefined,
+  };
+};
+
+type SubAccountConfigSlice = {
+  subAccountConfig?: SubAccountConfig;
+};
+
+const createSubAccountConfigSlice: StateCreator<StoreState, [], [], SubAccountConfigSlice> = () => {
+  return {
+    subAccountConfig: {},
   };
 };
 
@@ -100,19 +106,11 @@ const createConfigSlice: StateCreator<StoreState, [], [], ConfigSlice> = () => {
 };
 
 type MergeTypes<T extends unknown[]> = T extends [infer First, ...infer Rest]
-  ? First &
-      (Rest extends unknown[] ? MergeTypes<Rest> : Record<string, unknown>)
+  ? First & (Rest extends unknown[] ? MergeTypes<Rest> : Record<string, unknown>)
   : Record<string, unknown>;
 
 export type StoreState = MergeTypes<
-  [
-    ChainSlice,
-    KeysSlice,
-    AccountSlice,
-    SubAccountSlice,
-    ConfigSlice,
-    { toSubAccountSigner?: ToSubAccountSigner }
-  ]
+  [ChainSlice, KeysSlice, AccountSlice, SubAccountSlice, SubAccountConfigSlice, ConfigSlice]
 >;
 
 export const sdkstore = createStore(
@@ -123,10 +121,10 @@ export const sdkstore = createStore(
       ...createAccountSlice(...args),
       ...createSubAccountSlice(...args),
       ...createConfigSlice(...args),
-      toSubAccountSigner: undefined,
+      ...createSubAccountConfigSlice(...args),
     }),
     {
-      name: "cbwsdk.store",
+      name: 'cbwsdk.store',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => {
         // Explicitly select only the data properties we want to persist
@@ -142,6 +140,22 @@ export const sdkstore = createStore(
     }
   )
 );
+
+// Non-persisted subaccount configuration
+
+export const subAccountsConfig = {
+  get: () => sdkstore.getState().subAccountConfig,
+  set: (subAccountConfig: Partial<SubAccountConfig>) => {
+    sdkstore.setState((state) => ({
+      subAccountConfig: { ...state.subAccountConfig, ...subAccountConfig },
+    }));
+  },
+  clear: () => {
+    sdkstore.setState({
+      subAccountConfig: {},
+    });
+  },
+};
 
 export const subAccounts = {
   get: () => sdkstore.getState().subAccount,
@@ -206,13 +220,11 @@ export const config = {
 
 const actions = {
   subAccounts,
+  subAccountsConfig,
   account,
   chains,
   keys,
   config,
-  setSubAccountSigner: (toSubAccountSigner: ToSubAccountSigner) => {
-    sdkstore.setState({ toSubAccountSigner });
-  },
 };
 
 export const store = {

@@ -1,4 +1,5 @@
 import { Preference } from '@coinbase/wallet-sdk';
+import { SubAccountOptions } from '@coinbase/wallet-sdk/dist/core/provider/interface';
 import {
   Dispatch,
   ReactNode,
@@ -36,6 +37,8 @@ type ConfigContextType = {
   setSDKVersion: Dispatch<SetStateAction<SDKVersionType>>;
   setScwUrlAndSave: Dispatch<SetStateAction<ScwUrlType>>;
   setConfig: Dispatch<SetStateAction<Preference>>;
+  subAccountsConfig: SubAccountOptions;
+  setSubAccountsConfig: Dispatch<SetStateAction<SubAccountOptions>>;
 };
 
 const ConfigContext = createContext<ConfigContextType | null>(null);
@@ -50,6 +53,9 @@ export const ConfigContextProvider = ({ children }: ConfigContextProviderProps) 
       auto: false,
     },
   });
+  const [subAccountsConfig, setSubAccountsConfig] = useState<SubAccountOptions | undefined>(
+    undefined
+  );
 
   useEffect(
     function initializeSDKVersion() {
@@ -111,8 +117,20 @@ export const ConfigContextProvider = ({ children }: ConfigContextProviderProps) 
       setSDKVersion,
       setScwUrlAndSave,
       setConfig,
+      subAccountsConfig,
+      setSubAccountsConfig,
     };
-  }, [version, option, scwUrl, config, setPreference, setSDKVersion, setScwUrlAndSave]);
+  }, [
+    version,
+    option,
+    scwUrl,
+    config,
+    setPreference,
+    setSDKVersion,
+    setScwUrlAndSave,
+    subAccountsConfig,
+    setSubAccountsConfig,
+  ]);
 
   return <ConfigContext.Provider value={value}>{children}</ConfigContext.Provider>;
 };

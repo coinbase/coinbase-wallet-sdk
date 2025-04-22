@@ -5,6 +5,7 @@ import {
   ConstructorOptions,
   Preference,
   ProviderInterface,
+  SubAccountOptions,
 } from ':core/provider/interface.js';
 import { AddSubAccountAccount } from ':core/rpc/wallet_addSubAccount.js';
 import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
@@ -13,11 +14,11 @@ import { assertPresence } from ':util/assertPresence.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { validatePreferences, validateSubAccount } from ':util/validatePreferences.js';
 import { createCoinbaseWalletProvider } from './createCoinbaseWalletProvider.js';
-import { SubAccount, ToSubAccountSigner, store } from './store/store.js';
+import { SubAccount, ToOwnerAccountFn, store } from './store/store.js';
 
 export type CreateCoinbaseWalletSDKOptions = Partial<AppMetadata> & {
   preference?: Preference;
-  toSubAccountSigner?: ToSubAccountSigner;
+  subAccounts?: SubAccountOptions;
 };
 
 const DEFAULT_PREFERENCE: Preference = {
@@ -45,6 +46,17 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
     preference: Object.assign(DEFAULT_PREFERENCE, params.preference ?? {}),
   };
 
+  // If we have a toOwnerAccount function, set it in the non-persisted config
+
+  if (params.subAccounts?.toOwnerAccount) {
+    validateSubAccount(params.subAccounts.toOwnerAccount);
+  }
+
+  store.subAccountsConfig.set({
+    toOwnerAccount: params.subAccounts?.toOwnerAccount,
+    enableAutoSubAccounts: params.subAccounts?.enableAutoSubAccounts,
+  });
+
   // set the options in the store
   store.config.set(options);
 
@@ -57,15 +69,6 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
   // Validate user supplied preferences. Throws if key/values are not valid.
   validatePreferences(options.preference);
 
-  // Set the sub account signer inside the store.
-  if (params.toSubAccountSigner) {
-    validateSubAccount(params.toSubAccountSigner);
-    // store the signer in the sub account store
-    store.setState({
-      toSubAccountSigner: params.toSubAccountSigner,
-    });
-  }
-
   let provider: ProviderInterface | null = null;
 
   const sdk = {
@@ -77,10 +80,9 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
       provider.sdk = sdk;
       return provider;
     },
-    subaccount: {
+    subAccount: {
       async create(account: AddSubAccountAccount): Promise<SubAccount> {
         const state = store.getState();
-        assertPresence(state.toSubAccountSigner, new Error('toSubAccountSigner is not set'));
         assertPresence(state.subAccount?.address, new Error('subaccount already exists'));
 
         return (await sdk.getProvider()?.request({
@@ -156,10 +158,10 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
           ],
         })) as string;
       },
-      setSigner(toSubAccountSigner: ToSubAccountSigner): void {
-        validateSubAccount(toSubAccountSigner);
-        store.setState({
-          toSubAccountSigner,
+      setToOwnerAccount(toSubAccountOwner: ToOwnerAccountFn): void {
+        validateSubAccount(toSubAccountOwner);
+        store.subAccountsConfig.set({
+          toOwnerAccount: toSubAccountOwner,
         });
       },
     },

@@ -1,5 +1,5 @@
 import { Preference } from ':core/provider/interface.js';
-import { ToSubAccountSigner } from ':store/store.js';
+import { ToOwnerAccountFn } from ':store/store.js';
 
 /**
  * Validates user supplied preferences. Throws if keys are not valid.
@@ -26,10 +26,10 @@ export function validatePreferences(preference?: Preference) {
 
 /**
  * Validates user supplied toSubAccountSigner function. Throws if keys are not valid.
- * @param toSubAccountSigner
+ * @param toAccount
  */
-export function validateSubAccount(toSubAccountSigner: ToSubAccountSigner) {
-  if (typeof toSubAccountSigner !== 'function') {
-    throw new Error(`toSubAccountSigner is not a function`);
+export function validateSubAccount(toAccount: ToOwnerAccountFn) {
+  if (typeof toAccount !== 'function') {
+    throw new Error(`toAccount is not a function`);
   }
 }

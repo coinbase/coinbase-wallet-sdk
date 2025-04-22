@@ -1,4 +1,11 @@
-import { addSenderToRequest, assertParamsChainId, getSenderFromRequest } from './utils.js';
+import { store } from ':store/store.js';
+import {
+  addSenderToRequest,
+  assertParamsChainId,
+  getSenderFromRequest,
+  initSubAccountConfig,
+  injectRequestCapabilities,
+} from './utils.js';
 
 describe('utils', () => {
   describe('getSenderFromRequest', () => {
@@ -64,5 +71,128 @@ describe('assertParamsChainId', () => {
   it('should throw if params is null or undefined', () => {
     expect(() => assertParamsChainId(null)).toThrow();
     expect(() => assertParamsChainId(undefined)).toThrow();
+  });
+});
+
+describe('injectRequestCapabilities', () => {
+  const capabilities = {
+    addSubAccount: {
+      account: {
+        type: 'create',
+        keys: [
+          {
+            type: 'address',
+            key: '0x123',
+          },
+        ],
+      },
+    },
+  };
+
+  it('should merge capabilities for wallet_connect method', () => {
+    const siweCapability = {
+      chainId: 84532,
+      nonce: Math.random().toString(36).substring(2, 15),
+    };
+    const request = {
+      method: 'wallet_connect',
+      params: [
+        {
+          someParam: 'value',
+          capabilities: {
+            signInWithEthereum: siweCapability,
+          },
+        },
+      ],
+    };
+
+    const result = injectRequestCapabilities(request, capabilities);
+    expect(result).toEqual({
+      method: 'wallet_connect',
+      params: [
+        {
+          someParam: 'value',
+          capabilities: {
+            ...capabilities,
+            signInWithEthereum: siweCapability,
+          },
+        },
+      ],
+    });
+  });
+
+  it('should merge capabilities for wallet_sendCalls method', () => {
+    const paymasterCapability = {
+      url: 'https://paymaster.example.com',
+    };
+    const request = {
+      method: 'wallet_sendCalls',
+      params: [
+        {
+          version: '1.0',
+          existingParam: 'test',
+          capabilities: {
+            paymasterService: paymasterCapability,
+          },
+        },
+      ],
+    };
+
+    const result = injectRequestCapabilities(request, capabilities);
+    expect(result).toEqual({
+      method: 'wallet_sendCalls',
+      params: [
+        {
+          version: '1.0',
+          existingParam: 'test',
+          capabilities: {
+            ...capabilities,
+            paymasterService: paymasterCapability,
+          },
+        },
+      ],
+    });
+  });
+
+  it('should not modify request for other methods', () => {
+    const request = {
+      method: 'eth_sendTransaction',
+      params: [{ someParam: 'value' }],
+    };
+
+    const result = injectRequestCapabilities(request, capabilities);
+    expect(result).toEqual(request);
+  });
+
+  it('should throw if capabilities is not an object', () => {
+    const request = {
+      method: 'wallet_sendCalls',
+      params: [
+        {
+          capabilities: 'invalid',
+        },
+      ],
+    };
+
+    expect(() => injectRequestCapabilities(request, capabilities)).toThrow();
+  });
+});
+
+describe('initSubAccountConfig', () => {
+  it('should initialize the sub account config', async () => {
+    store.subAccountsConfig.set({
+      enableAutoSubAccounts: true,
+      toOwnerAccount: vi.fn().mockResolvedValue({
+        account: {
+          address: '0x123',
+          type: 'local',
+        },
+      }),
+    });
+
+    await initSubAccountConfig();
+
+    const config = store.subAccountsConfig.get();
+    expect(config?.capabilities?.addSubAccount).toBeDefined();
   });
 });

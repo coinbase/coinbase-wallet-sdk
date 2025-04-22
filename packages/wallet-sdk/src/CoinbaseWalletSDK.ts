@@ -37,7 +37,11 @@ export class CoinbaseWalletSDK {
     void checkCrossOriginOpenerPolicy();
   }
 
-  public makeWeb3Provider(preference: Preference = { options: 'all' }): ProviderInterface {
+  public makeWeb3Provider(
+    preference: Preference = {
+      options: 'all',
+    }
+  ): ProviderInterface {
     validatePreferences(preference);
     store.config.set({
       preference,

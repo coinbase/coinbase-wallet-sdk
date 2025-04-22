@@ -1,44 +1,43 @@
+import { standardErrors } from ':core/error/errors.js';
+import { RequestArguments } from ':core/provider/interface.js';
+import { PrepareCallsSchema } from ':core/rpc/wallet_prepareCalls.js';
+import { SendPreparedCallsSchema } from ':core/rpc/wallet_sendPreparedCalls.js';
+import { OwnerAccount } from ':core/type/index.js';
+import { SubAccount } from ':store/store.js';
+import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
+import { convertCredentialToJSON } from ':util/encoding.js';
+import { get } from ':util/get.js';
 import {
   Address,
   Hex,
+  PublicClient,
   SignableMessage,
   TypedDataDefinition,
-  hexToNumber,
+  WalletSendCallsParameters,
   hexToString,
   isHex,
   numberToHex,
 } from 'viem';
 import { getCode } from 'viem/actions';
-
-import { standardErrors } from ':core/error/errors.js';
-import { RequestArguments } from ':core/provider/interface.js';
-import { PrepareCallsParams, type PrepareCallsSchema } from ':core/rpc/wallet_prepareCalls.js';
-import {
-  SendPreparedCallsParams,
-  type SendPreparedCallsSchema,
-} from ':core/rpc/wallet_sendPreparedCalls.js';
-import { getClient } from ':store/chain-clients/utils.js';
-import { store } from ':store/store.js';
-import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
-import { convertCredentialToJSON } from ':util/encoding.js';
-import { get } from ':util/get.js';
+import { waitForCallsStatus } from 'viem/experimental';
 import { createSmartAccount } from './createSmartAccount.js';
 import { getOwnerIndex } from './getOwnerIndex.js';
 
-export async function createSubAccountSigner({ chainId }: { chainId: number }) {
-  const client = getClient(chainId);
-  assertPresence(client, standardErrors.rpc.internal(`client not found for chainId ${chainId}`));
-
-  const subAccount = store.subAccounts.get();
-  const toSubAccountSigner = store.getState().toSubAccountSigner;
-  assertPresence(subAccount, standardErrors.rpc.internal('subaccount not found'));
-  assertPresence(toSubAccountSigner, standardErrors.rpc.internal('toSubAccountSigner not defined'));
-
-  const { account: owner } = await toSubAccountSigner();
-  assertPresence(owner, standardErrors.rpc.internal('signer not found'));
-
+export async function createSubAccountSigner({
+  address,
+  owner,
+  client,
+  factory,
+  factoryData,
+}: {
+  address: Address;
+  owner: OwnerAccount;
+  client: PublicClient;
+  factoryData?: Hex;
+  factory?: Address;
+}) {
   const code = await getCode(client, {
-    address: subAccount.address,
+    address,
   });
 
   // Default index to 1 if the contract is not deployed
@@ -46,41 +45,71 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
   // The implemention will likely require the signer to tell us the index
   let index = 1;
   if (code) {
+    const ownerPublicKey = owner.type === 'local' ? owner.address : owner.publicKey;
+    assertPresence(ownerPublicKey, standardErrors.rpc.internal('owner public key not found'));
+
     index = await getOwnerIndex({
-      address: subAccount.address,
-      publicKey: owner.type === 'local' ? owner.address : owner.publicKey,
+      address,
+      publicKey: ownerPublicKey,
       client,
     });
   }
 
-  // If contract is not deployed we need to have the factory data
-  if (!code) {
-    assertPresence(subAccount.factoryData, standardErrors.rpc.internal('factory data not found'));
-  }
+  const subAccount: SubAccount = {
+    address,
+    factory,
+    factoryData,
+  };
+
+  const chainId = await client.getChainId();
 
   const account = await createSmartAccount({
     owner,
     ownerIndex: index,
-    address: subAccount.address,
+    address,
     client,
-    factoryData: subAccount.factoryData,
+    factoryData,
   });
 
   const request = async (args: RequestArguments) => {
     switch (args.method) {
       case 'wallet_addSubAccount':
-        return subAccount!;
+        return subAccount;
       case 'eth_accounts':
-        return [subAccount!.address] as Address[];
+        return [subAccount.address] as Address[];
       case 'eth_coinbase':
-        return subAccount!.address;
+        return subAccount.address;
       case 'net_version':
         return chainId.toString();
       case 'eth_chainId':
         return numberToHex(chainId);
       case 'eth_sendTransaction': {
         assertArrayPresence(args.params);
-        return account.sign(args.params[0] as { hash: Hex });
+
+        // Transform into wallet_sendCalls request
+        const response = (await request({
+          method: 'wallet_sendCalls',
+          params: [
+            {
+              version: '1.0',
+              calls: [args.params[0]],
+              chainId: numberToHex(chainId),
+              from: subAccount.address,
+              atomicRequired: true,
+              // TODO: Add paymaster capabilities from config
+            },
+          ] satisfies WalletSendCallsParameters,
+        })) as string;
+
+        const result = await waitForCallsStatus(client, {
+          id: response,
+        });
+
+        if (result.status === 'success') {
+          return result.receipts?.[0].transactionHash;
+        }
+
+        throw standardErrors.rpc.internal('failed to send transaction');
       }
       case 'wallet_sendCalls': {
         assertArrayPresence(args.params);
@@ -93,12 +122,6 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
         if (!isHex(chainId)) {
           throw standardErrors.rpc.invalidParams('chainId must be a hex encoded integer');
         }
-
-        const publicClient = getClient(hexToNumber(chainId));
-        assertPresence(
-          publicClient,
-          standardErrors.rpc.internal(`client not found for chainId ${hexToNumber(chainId)}`)
-        );
 
         if (!args.params[0]) {
           throw standardErrors.rpc.invalidParams('params are required');
@@ -188,15 +211,9 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
           throw standardErrors.rpc.invalidParams('chainId must be a hex encoded integer');
         }
 
-        const publicClient = getClient(hexToNumber(chainId));
-        assertPresence(
-          publicClient,
-          standardErrors.rpc.internal(`client not found for chainId ${hexToNumber(chainId)}`)
-        );
-
-        const sendPreparedCallsResponse = await publicClient.request<SendPreparedCallsSchema>({
+        const sendPreparedCallsResponse = await client.request<SendPreparedCallsSchema>({
           method: 'wallet_sendPreparedCalls',
-          params: args.params as SendPreparedCallsParams,
+          params: args.params as SendPreparedCallsSchema['Parameters'],
         });
 
         return sendPreparedCallsResponse;
@@ -213,12 +230,6 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
           throw standardErrors.rpc.invalidParams('chainId must be a hex encoded integer');
         }
 
-        const publicClient = getClient(hexToNumber(chainId));
-        assertPresence(
-          publicClient,
-          standardErrors.rpc.internal(`client not found for chainId ${hexToNumber(chainId)}`)
-        );
-
         if (!args.params[0]) {
           throw standardErrors.rpc.invalidParams('params are required');
         }
@@ -227,9 +238,9 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
           throw standardErrors.rpc.invalidParams('calls are required');
         }
 
-        const prepareCallsResponse = await publicClient.request<PrepareCallsSchema>({
+        const prepareCallsResponse = await client.request<PrepareCallsSchema>({
           method: 'wallet_prepareCalls',
-          params: [{ ...args.params[0], chainId: chainId }] as PrepareCallsParams,
+          params: [{ ...args.params[0], chainId: chainId }] as PrepareCallsSchema['Parameters'],
         });
 
         return prepareCallsResponse;
@@ -242,7 +253,9 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
       }
       case 'eth_signTypedData_v4': {
         assertArrayPresence(args.params);
-        return account.signTypedData(args.params[1] as TypedDataDefinition);
+        const typedData =
+          typeof args.params[1] === 'string' ? JSON.parse(args.params[1]) : args.params[1];
+        return account.signTypedData(typedData as TypedDataDefinition);
       }
       case 'eth_signTypedData_v1':
       case 'eth_signTypedData_v3':
@@ -253,7 +266,5 @@ export async function createSubAccountSigner({ chainId }: { chainId: number }) {
     }
   };
 
-  return {
-    request,
-  };
+  return { request };
 }

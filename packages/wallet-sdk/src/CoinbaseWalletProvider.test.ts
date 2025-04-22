@@ -2,6 +2,7 @@ import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
+import { store } from ':store/store.js';
 import { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js';
 import * as util from './sign/util.js';
 import * as providerUtil from './util/provider.js';
@@ -205,5 +206,17 @@ describe('Signer configuration', () => {
     await provider.disconnect();
     expect(mockCleanup).toHaveBeenCalled();
     expect(provider['signer']).toBeNull();
+  });
+
+  describe('Auto sub account', () => {
+    it('call handshake without method when enableAutoSubAccounts is true', async () => {
+      mockLoadSignerType.mockReturnValue('scw');
+      vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
+        enableAutoSubAccounts: true,
+      });
+
+      await provider.request({ method: 'eth_requestAccounts' });
+      expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
+    });
   });
 });

@@ -1,4 +1,6 @@
+import { ToOwnerAccountFn } from ':store/store.js';
 import { EventEmitter } from 'eventemitter3';
+import { Address, Hex } from 'viem';
 
 export interface RequestArguments {
   readonly method: string;
@@ -32,6 +34,12 @@ export interface ProviderInterface extends ProviderEventEmitter {
 }
 
 export type ProviderEventCallback = ProviderInterface['emit'];
+
+export type SpendLimitConfig = {
+  token: Address;
+  allowance: Hex;
+  period: number;
+};
 
 export interface AppMetadata {
   /** Application name */
@@ -73,6 +81,24 @@ export type Preference = {
    */
   attribution?: Attribution;
 } & Record<string, unknown>;
+
+export type SubAccountOptions = {
+  /* Automatically create a subaccount for the user and use it for all transactions. */
+  enableAutoSubAccounts?: boolean;
+  /**
+   * @returns The owner account that will be used to sign the subaccount transactions.
+   */
+  toOwnerAccount?: ToOwnerAccountFn;
+  /**
+   * Spend limits requested on app connect if a matching existing one does not exist.
+   * Only supports native chain tokens currently.
+   */
+  defaultSpendLimits?: Record<Hex, SpendLimitConfig[]>;
+  /**
+   * Used when users have insufficient funds, the SDK will request a new spend limit (only used when auto sub accounts is enabled)
+   */
+  dynamicSpendLimit?: boolean;
+};
 
 export interface ConstructorOptions {
   metadata: AppMetadata;
