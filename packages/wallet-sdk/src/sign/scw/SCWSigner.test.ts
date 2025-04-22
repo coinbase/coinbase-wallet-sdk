@@ -420,8 +420,8 @@ describe('SCWSigner', () => {
         accounts: ['0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54'],
       });
       expect(mockCallback).toHaveBeenCalledWith('accountsChanged', [
-        '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
         '0x7838d2724FC686813CAf81d4429beff1110c739a',
+        '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
       ]);
 
       await signer.cleanup();
