@@ -89,6 +89,27 @@ export class SCWSigner implements Signer {
   async request(request: RequestArguments): Promise<any> {
     if (this.accounts.length === 0) {
       switch (request.method) {
+        case 'eth_requestAccounts': {
+          const subAccountsConfig = store.subAccountsConfig.get();
+          if (subAccountsConfig?.enableAutoSubAccounts) {
+            // Wait for the popup to be loaded before making async calls
+            await this.communicator.waitForPopupLoaded?.();
+            await initSubAccountConfig();
+
+            // This will populate the store with the sub account
+            await this.request({
+              method: 'wallet_connect',
+              params: [
+                {
+                  version: 1,
+                  capabilities: subAccountsConfig?.capabilities ?? {},
+                },
+              ],
+            });
+          }
+          this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
+          return this.accounts;
+        }
         case 'wallet_switchEthereumChain': {
           assertParamsChainId(request.params);
           this.chain.id = Number(request.params[0].chainId);
@@ -107,6 +128,8 @@ export class SCWSigner implements Signer {
         case 'wallet_sendCalls': {
           return this.sendRequestToPopup(request);
         }
+        default:
+          throw standardErrors.provider.unauthorized();
       }
     }
 
@@ -116,28 +139,6 @@ export class SCWSigner implements Signer {
 
     switch (request.method) {
       case 'eth_requestAccounts': {
-        const subAccountsConfig = store.subAccountsConfig.get();
-        if (subAccountsConfig?.enableAutoSubAccounts) {
-          // Wait for the popup to be loaded before making async calls
-          await this.communicator.waitForPopupLoaded?.();
-          await initSubAccountConfig();
-
-          // This will populate the store with the sub account
-          await this.request({
-            method: 'wallet_connect',
-            params: [
-              {
-                version: 1,
-                capabilities: subAccountsConfig?.capabilities ?? {},
-              },
-            ],
-          });
-
-          const subAccount = store.subAccounts.get();
-          assertPresence(subAccount, standardErrors.provider.unauthorized('No sub account found'));
-
-          return [subAccount.address] as Address[];
-        }
         this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
         return this.accounts;
       }
@@ -239,11 +240,23 @@ export class SCWSigner implements Signer {
             factoryData: capabilityResponse?.factoryData,
           });
         }
-        const accounts_ = [this.accounts[0]];
+        let accounts_ = [this.accounts[0]];
+
         const subAccount = store.subAccounts.get();
+        const subAccountsConfig = store.subAccountsConfig.get();
         if (subAccount?.address) {
-          accounts_.push(subAccount.address);
+          // Sub account is always at index 0 - does this break any assumptions?
+          accounts_ = [subAccount.address, ...this.accounts];
+
+          // Also update the accounts store if automatic sub accounts are enabled
+          if (subAccountsConfig?.enableAutoSubAccounts) {
+            store.account.set({
+              accounts: accounts_,
+            });
+            this.accounts = accounts_;
+          }
         }
+
         this.callback?.('accountsChanged', accounts_);
         break;
       }
