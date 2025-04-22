@@ -1,4 +1,5 @@
 import { AppMetadata, Preference } from ':core/provider/interface.js';
+import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
 import { OwnerAccount } from ':core/type/index.js';
 import { Address, Hex } from 'viem';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -105,12 +106,30 @@ const createConfigSlice: StateCreator<StoreState, [], [], ConfigSlice> = () => {
   };
 };
 
+type WalletConnectSlice = {
+  walletConnectResponse: WalletConnectResponse | undefined;
+};
+
+const createWalletConnectSlice: StateCreator<StoreState, [], [], WalletConnectSlice> = () => {
+  return {
+    walletConnectResponse: undefined,
+  };
+};
+
 type MergeTypes<T extends unknown[]> = T extends [infer First, ...infer Rest]
   ? First & (Rest extends unknown[] ? MergeTypes<Rest> : Record<string, unknown>)
   : Record<string, unknown>;
 
 export type StoreState = MergeTypes<
-  [ChainSlice, KeysSlice, AccountSlice, SubAccountSlice, SubAccountConfigSlice, ConfigSlice]
+  [
+    ChainSlice,
+    KeysSlice,
+    AccountSlice,
+    SubAccountSlice,
+    SubAccountConfigSlice,
+    ConfigSlice,
+    WalletConnectSlice,
+  ]
 >;
 
 export const sdkstore = createStore(
@@ -122,6 +141,7 @@ export const sdkstore = createStore(
       ...createSubAccountSlice(...args),
       ...createConfigSlice(...args),
       ...createSubAccountConfigSlice(...args),
+      ...createWalletConnectSlice(...args),
     }),
     {
       name: 'cbwsdk.store',
@@ -135,6 +155,7 @@ export const sdkstore = createStore(
           account: state.account,
           subAccount: state.subAccount,
           config: state.config,
+          walletConnectResponse: state.walletConnectResponse,
         } as StoreState;
       },
     }
@@ -218,6 +239,16 @@ export const config = {
   },
 };
 
+export const walletConnect = {
+  get: () => sdkstore.getState().walletConnectResponse,
+  set: (response: WalletConnectResponse | undefined) => {
+    sdkstore.setState({ walletConnectResponse: response });
+  },
+  clear: () => {
+    sdkstore.setState({ walletConnectResponse: undefined });
+  },
+};
+
 const actions = {
   subAccounts,
   subAccountsConfig,
@@ -225,6 +256,7 @@ const actions = {
   chains,
   keys,
   config,
+  walletConnect,
 };
 
 export const store = {

@@ -232,6 +232,7 @@ describe('SCWSigner', () => {
           version: '1.0.0',
         },
         subAccountConfig: undefined,
+        walletConnectResponse: undefined,
       }));
     });
 
@@ -367,12 +368,21 @@ describe('SCWSigner', () => {
     it('should disconnect successfully', async () => {
       const mockClear = vi.spyOn(store.account, 'clear');
 
+      store.walletConnect.set({
+        accounts: [
+          {
+            address: '0x7838d2724FC686813CAf81d4429beff1110c739a',
+          },
+        ],
+      });
+
       await signer.cleanup();
 
       expect(mockClear).toHaveBeenCalled();
       expect(mockKeyManager.clear).toHaveBeenCalled();
       expect(signer['accounts']).toEqual([]);
       expect(signer['chain']).toEqual({ id: 1 });
+      expect(store.walletConnect.get()).toBeUndefined();
     });
   });
 
@@ -423,6 +433,27 @@ describe('SCWSigner', () => {
         '0x7838d2724FC686813CAf81d4429beff1110c739a',
         '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
       ]);
+
+      await signer.cleanup();
+    });
+
+    it('should return cached wallet connect response if available', async () => {
+      store.walletConnect.set({
+        accounts: [
+          {
+            address: '0x7838d2724FC686813CAf81d4429beff1110c739a',
+          },
+        ],
+      });
+
+      const mockRequest: RequestArguments = {
+        method: 'wallet_connect',
+        params: [],
+      };
+
+      const result = await signer.request(mockRequest);
+
+      expect(result).toEqual(store.walletConnect.get());
 
       await signer.cleanup();
     });
