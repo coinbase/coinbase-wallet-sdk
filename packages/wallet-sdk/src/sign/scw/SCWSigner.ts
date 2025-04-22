@@ -171,6 +171,12 @@ export class SCWSigner implements Signer {
       case 'wallet_grantPermissions':
         return this.sendRequestToPopup(request);
       case 'wallet_connect': {
+        // Return cached wallet connect response if available
+        const walletConnectResponse = store.walletConnect.get();
+        if (walletConnectResponse) {
+          return walletConnectResponse;
+        }
+
         // Wait for the popup to be loaded before making async calls
         await this.communicator.waitForPopupLoaded?.();
         await initSubAccountConfig();
@@ -221,12 +227,12 @@ export class SCWSigner implements Signer {
       }
       case 'wallet_connect': {
         const response = result.value as WalletConnectResponse;
+        store.walletConnect.set(response);
         const accounts = response.accounts.map((account) => account.address);
         this.accounts = accounts;
         store.account.set({
           accounts,
         });
-
         // TODO: support multiple accounts?
         const account = response.accounts.at(0);
         const capabilities = account?.capabilities;
@@ -273,6 +279,7 @@ export class SCWSigner implements Signer {
     // clear the store
     store.account.clear();
     store.subAccounts.clear();
+    store.walletConnect.clear();
 
     // reset the signer
     this.accounts = [];
