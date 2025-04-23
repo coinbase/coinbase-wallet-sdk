@@ -1,4 +1,4 @@
-import { Address, numberToHex } from 'viem';
+import { Address, Hex, PublicClient, numberToHex } from 'viem';
 
 import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
@@ -8,7 +8,9 @@ import {
 } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { store } from ':store/store.js';
 import { get } from ':util/get.js';
+import { waitForCallsStatus } from 'viem/experimental';
 import { getCryptoKeyAccount } from '../../kms/crypto-key/index.js';
+import { spendPermissionManagerAddress } from './utils/constants.js';
 
 // ***************************************************************
 // Utility
@@ -75,7 +77,7 @@ export function injectRequestCapabilities(
   // Modify request to include auto sub account capabilities
   const modifiedRequest = { ...request };
 
-  if (capabilities && ['wallet_sendCalls', 'wallet_connect'].includes(request.method)) {
+  if (capabilities && request.method.startsWith('wallet_')) {
     let requestCapabilities = get(modifiedRequest, 'params.0.capabilities');
 
     if (typeof requestCapabilities === 'undefined') {
@@ -107,7 +109,7 @@ export function injectRequestCapabilities(
  * @returns void
  */
 export async function initSubAccountConfig() {
-  const config = store.subAccountsConfig.get();
+  const { config } = store.subAccountsConfig.get() ?? {};
 
   if (!config?.enableAutoSubAccounts) {
     return;
@@ -143,6 +145,29 @@ export async function initSubAccountConfig() {
     capabilities,
   });
 }
+
+export type PermissionDetails = {
+  spender: Address;
+  token: Address;
+  allowance: Hex;
+  salt: Hex;
+  extraData: Hex;
+};
+
+export type SpendPermission = PermissionDetails & {
+  account: Address;
+  period: number;
+  start: number;
+  end: number;
+};
+
+export type SpendPermissionBatch = {
+  account: Address;
+  period: number;
+  start: number;
+  end: number;
+  permissions: PermissionDetails[];
+};
 
 export function assertFetchPermissionsRequest(
   request: RequestArguments
@@ -219,4 +244,80 @@ export function fillMissingParamsForFetchPermissions(
       },
     ],
   };
+}
+
+export function createSpendPermissionMessage({
+  spendPermission,
+  chainId,
+}: {
+  spendPermission: SpendPermission;
+  chainId: number;
+}) {
+  return {
+    domain: {
+      name: 'Spend Permission Manager',
+      version: '1',
+      chainId: chainId,
+      verifyingContract: spendPermissionManagerAddress,
+    },
+    types: {
+      SpendPermission: [
+        { name: 'account', type: 'address' },
+        { name: 'spender', type: 'address' },
+        { name: 'token', type: 'address' },
+        { name: 'allowance', type: 'uint160' },
+        { name: 'period', type: 'uint48' },
+        { name: 'start', type: 'uint48' },
+        { name: 'end', type: 'uint48' },
+        { name: 'salt', type: 'uint256' },
+        { name: 'extraData', type: 'bytes' },
+      ],
+    },
+    primaryType: 'SpendPermission',
+    message: {
+      account: spendPermission.account,
+      spender: spendPermission.spender,
+      token: spendPermission.token,
+      allowance: spendPermission.allowance,
+      period: spendPermission.period,
+      start: spendPermission.start,
+      end: spendPermission.end,
+      salt: spendPermission.salt,
+      extraData: spendPermission.extraData,
+    },
+  } as const;
+}
+
+export function createSpendPermissionBatchMessage({
+  spendPermissionBatch,
+  chainId,
+}: {
+  spendPermissionBatch: SpendPermissionBatch;
+  chainId: number;
+}) {
+  // TODO: Batch spend permission message
+  return {
+    domain: {
+      name: 'Spend Permission Manager',
+      version: '1',
+      chainId,
+      verifyingContract: spendPermissionManagerAddress,
+    },
+    spendPermissionBatch,
+  } as const;
+}
+
+export async function awaitSendCallsAsEthSendTransaction({
+  client,
+  id,
+}: { client: PublicClient; id: string }) {
+  const result = await waitForCallsStatus(client, {
+    id,
+  });
+
+  if (result.status === 'success') {
+    return result.receipts?.[0].transactionHash;
+  }
+
+  throw standardErrors.rpc.internal('failed to send transaction');
 }

@@ -11,6 +11,7 @@ import {
 } from '@chakra-ui/react';
 import { SpendLimitConfig } from '@coinbase/wallet-sdk/dist/core/provider/interface';
 import { useState } from 'react';
+import { parseEther } from 'viem';
 import { baseSepolia } from 'viem/chains';
 import { useConfig } from '../../context/ConfigContextProvider';
 import { useEIP1193Provider } from '../../context/EIP1193ProviderContextProvider';
@@ -117,6 +118,33 @@ export default function AutoSubAccount() {
       setSubAccountsConfig({ defaultSpendLimits: {} });
     }
   };
+  const handleRandomTransfer = async () => {
+    if (!provider || !accounts.length) return;
+
+    try {
+      // Generate a random Ethereum address using viem
+      const randomAddress = '0x8d25687829d6b85d9e0020b8c89e3ca24de20a89';
+
+      // Convert 0.01 ETH to Wei (as hex)
+      const valueInWei = parseEther('0.00001').toString(16);
+
+      const response = await provider.request({
+        method: 'eth_sendTransaction',
+        params: [
+          {
+            from: accounts[0],
+            to: randomAddress,
+            value: `0x${valueInWei}`,
+            data: '0x',
+          },
+        ],
+      });
+      setLastResult(JSON.stringify(response, null, 2));
+    } catch (e) {
+      console.error('error', e);
+      setLastResult(JSON.stringify(e, null, 2));
+    }
+  };
 
   return (
     <Container mb={16}>
@@ -145,6 +173,23 @@ export default function AutoSubAccount() {
             </Stack>
           </RadioGroup>
         </FormControl>
+        <FormControl>
+          <FormLabel>Dynamic Spend Limits</FormLabel>
+          <RadioGroup
+            value={(subAccountsConfig?.dynamicSpendLimits || false).toString()}
+            onChange={(value) =>
+              setSubAccountsConfig((prev) => ({
+                ...prev,
+                dynamicSpendLimits: value === 'true',
+              }))
+            }
+          >
+            <Stack direction="row">
+              <Radio value="true">Enabled</Radio>
+              <Radio value="false">Disabled</Radio>
+            </Stack>
+          </RadioGroup>
+        </FormControl>
         <Button w="full" onClick={handleRequestAccounts}>
           eth_requestAccounts
         </Button>
@@ -153,6 +198,14 @@ export default function AutoSubAccount() {
         </Button>
         <Button w="full" onClick={handleSignTypedData} isDisabled={!accounts.length}>
           eth_signTypedData_v4
+        </Button>
+        <Button
+          w="full"
+          onClick={handleRandomTransfer}
+          isDisabled={!accounts.length}
+          colorScheme="purple"
+        >
+          Transfer 0.00001 ETH
         </Button>
         {lastResult && (
           <Box

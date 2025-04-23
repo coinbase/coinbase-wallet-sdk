@@ -50,13 +50,14 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
           case 'eth_requestAccounts': {
             let signerType: SignerType;
             const subAccountsConfig = store.subAccountsConfig.get();
-            if (subAccountsConfig?.enableAutoSubAccounts) {
+            if (subAccountsConfig?.config?.enableAutoSubAccounts) {
               signerType = 'scw';
             } else {
               signerType = await this.requestSignerSelection(args);
             }
             const signer = this.initSigner(signerType);
-            if (signerType === 'scw' && subAccountsConfig?.enableAutoSubAccounts) {
+
+            if (signerType === 'scw' && subAccountsConfig?.config?.enableAutoSubAccounts) {
               await signer.handshake({ method: 'handshake' });
               await signer.request(args);
             } else {

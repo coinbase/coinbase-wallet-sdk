@@ -1,8 +1,16 @@
-import { Hex, hexToNumber, numberToHex } from 'viem';
+import { CB_WALLET_RPC_URL } from ':core/constants.js';
+import {
+  Hex,
+  HttpRequestError,
+  encodeFunctionData,
+  erc20Abi,
+  hexToBigInt,
+  hexToNumber,
+  numberToHex,
+} from 'viem';
 
 import { Communicator } from ':core/communicator/Communicator.js';
-import { CB_WALLET_RPC_URL } from ':core/constants.js';
-import { standardErrors } from ':core/error/errors.js';
+import { isActionableHttpRequestError, standardErrors } from ':core/error/errors.js';
 import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage.js';
 import { RPCResponse } from ':core/message/RPCResponse.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
@@ -21,6 +29,7 @@ import {
   importKeyFromHexString,
 } from ':util/cipher.js';
 import { fetchRPCRequest } from ':util/provider.js';
+import { SendCallsParameters } from 'viem/experimental';
 import { getCryptoKeyAccount } from '../../kms/crypto-key/index.js';
 import { Signer } from '../interface.js';
 import { SCWKeyManager } from './SCWKeyManager.js';
@@ -28,11 +37,15 @@ import {
   addSenderToRequest,
   assertFetchPermissionsRequest,
   assertParamsChainId,
+  awaitSendCallsAsEthSendTransaction,
+  createSpendPermissionBatchMessage,
+  createSpendPermissionMessage,
   fillMissingParamsForFetchPermissions,
   getSenderFromRequest,
   initSubAccountConfig,
   injectRequestCapabilities,
 } from './utils.js';
+import { abi } from './utils/constants.js';
 import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
 
 type ConstructorOptions = {
@@ -95,7 +108,7 @@ export class SCWSigner implements Signer {
       switch (request.method) {
         case 'eth_requestAccounts': {
           const subAccountsConfig = store.subAccountsConfig.get();
-          if (subAccountsConfig?.enableAutoSubAccounts) {
+          if (subAccountsConfig?.config?.enableAutoSubAccounts) {
             // Wait for the popup to be loaded before making async calls
             await this.communicator.waitForPopupLoaded?.();
             await initSubAccountConfig();
@@ -265,7 +278,7 @@ export class SCWSigner implements Signer {
           accounts_ = [subAccount.address, ...this.accounts];
 
           // Also update the accounts store if automatic sub accounts are enabled
-          if (subAccountsConfig?.enableAutoSubAccounts) {
+          if (subAccountsConfig?.config?.enableAutoSubAccounts) {
             store.account.set({
               accounts: accounts_,
             });
@@ -459,7 +472,7 @@ export class SCWSigner implements Signer {
 
   private async sendRequestToSubAccountSigner(request: RequestArguments) {
     const subAccount = store.subAccounts.get();
-    const config = store.subAccountsConfig.get();
+    const { config } = store.subAccountsConfig.get() ?? {};
 
     assertPresence(
       subAccount?.address,
@@ -489,14 +502,222 @@ export class SCWSigner implements Signer {
       standardErrors.rpc.internal(`client not found for chainId ${this.chain.id}`)
     );
 
+    const globalAccountAddress = this.accounts.find(
+      (account) => account.toLowerCase() !== subAccount.address.toLowerCase()
+    );
+
+    assertPresence(
+      globalAccountAddress,
+      standardErrors.provider.unauthorized('no global account found')
+    );
+
     const { request: subAccountRequest } = await createSubAccountSigner({
       address: subAccount.address,
       owner: ownerAccount.account,
       client: client,
       factory: subAccount.factory,
       factoryData: subAccount.factoryData,
+      parentAddress: globalAccountAddress,
     });
 
-    return subAccountRequest(request);
+    try {
+      const result = await subAccountRequest(request);
+      return result;
+    } catch (error) {
+      // TODO: Ask the user what they want to do via snackbar
+
+      if (!(error instanceof HttpRequestError)) {
+        throw error;
+      }
+
+      const errorObject = JSON.parse(error.details);
+
+      if (
+        !(
+          isActionableHttpRequestError(errorObject) &&
+          config?.dynamicSpendLimits &&
+          config.enableAutoSubAccounts
+        )
+      ) {
+        throw error;
+      }
+
+      // Build spend permission requests for each token
+      // and check that each token has global account as sufficient source
+      const spendPermissionRequests: {
+        token: Address;
+        requiredAmount: bigint;
+      }[] = [];
+      for (const [token, { amount, sources }] of Object.entries(
+        errorObject?.data?.required ?? {}
+      )) {
+        const sourcesWithSufficientBalance = sources.filter((source) => {
+          return (
+            hexToBigInt(source.balance) >= hexToBigInt(amount) &&
+            source.address.toLowerCase() === globalAccountAddress?.toLowerCase()
+          );
+        });
+        if (sourcesWithSufficientBalance.length === 0) {
+          throw error;
+        }
+
+        spendPermissionRequests.push({
+          token: token as `0x${string}`,
+          requiredAmount: hexToBigInt(amount),
+        });
+      }
+
+      if (spendPermissionRequests.length === 0) {
+        throw error;
+      }
+
+      let signatureRequest: RequestArguments;
+
+      // Request 3x the amount per day -- maybe we can do something smarter here
+      const defaultPeriod = 60 * 60 * 24;
+      const defaultMultiplier = 3;
+
+      if (spendPermissionRequests.length === 1) {
+        const spendPermission = spendPermissionRequests[0];
+
+        const message = createSpendPermissionMessage({
+          spendPermission: {
+            token: spendPermission.token,
+            allowance: numberToHex(spendPermission.requiredAmount * BigInt(defaultMultiplier)),
+            period: defaultPeriod,
+            account: globalAccountAddress,
+            spender: subAccount.address,
+            start: 0,
+            end: 281474976710655,
+            salt: numberToHex(BigInt(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER))),
+            extraData: '0x',
+          },
+          chainId: this.chain.id,
+        });
+
+        // Frontend will store the spend permission for future use
+        signatureRequest = {
+          method: 'eth_signTypedData_v4',
+          params: [globalAccountAddress, message],
+        };
+      } else {
+        // Batch spend permission request
+        const message = createSpendPermissionBatchMessage({
+          spendPermissionBatch: {
+            account: globalAccountAddress,
+            period: defaultPeriod,
+            start: 0,
+            end: 281474976710655,
+            permissions: spendPermissionRequests.map((spendPermission) => ({
+              token: spendPermission.token,
+              allowance: numberToHex(spendPermission.requiredAmount * BigInt(defaultMultiplier)),
+              period: defaultPeriod,
+              account: globalAccountAddress,
+              spender: subAccount.address,
+              salt: '0x0',
+              extraData: '0x',
+            })),
+          },
+          chainId: this.chain.id,
+        });
+
+        signatureRequest = {
+          method: 'eth_signTypedData_v4',
+          params: [globalAccountAddress, message],
+        };
+      }
+
+      try {
+        // TODO: Handle blocked popup
+        await this.request(signatureRequest);
+      } catch (_) {
+        // If error is user rejected, request from global account
+        // TODO: Check if error is user rejected
+
+        const transferCalls: {
+          to: Address;
+          value: Hex;
+          data: Hex;
+        }[] = spendPermissionRequests.map((spendPermission) => {
+          const isNative =
+            spendPermission.token.toLowerCase() ===
+            '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'.toLowerCase();
+
+          if (isNative) {
+            return {
+              to: subAccount.address,
+              value: numberToHex(spendPermission.requiredAmount),
+              data: '0x',
+            };
+          }
+
+          return {
+            to: spendPermission.token,
+            value: '0x0',
+            data: encodeFunctionData({
+              abi: erc20Abi,
+              functionName: 'transfer',
+              args: [subAccount.address, spendPermission.requiredAmount],
+            }),
+          };
+        });
+
+        // Construct call to execute the original calls using executeBatch
+        // TODO: Consider using original request directly instead of grabbing it from the error
+        // This will actually be a wallet_sendPreparedCalls request
+        if (!isSendCallsParams(error.body)) {
+          throw error;
+        }
+
+        const originalParams = error.body.params[0];
+
+        const originalCalls = originalParams.calls as {
+          to: Address;
+          data: Hex;
+          value: Hex;
+        }[];
+
+        const executeBatchSubAccountCallData = encodeFunctionData({
+          abi,
+          functionName: 'executeBatch',
+          args: [
+            originalCalls.map((call) => ({
+              target: call.to,
+              value: hexToBigInt(call.value),
+              data: call.data,
+            })),
+          ],
+        });
+
+        // Send using wallet_sendCalls
+        const calls: { to: Address; data: Hex; value: Hex }[] = [
+          ...transferCalls,
+          { data: executeBatchSubAccountCallData, to: subAccount.address, value: '0x0' },
+        ];
+
+        const result = await this.request({
+          method: 'wallet_sendCalls',
+          params: [{ ...originalParams, calls, from: globalAccountAddress }],
+        });
+
+        if (request.method === 'eth_sendTransaction') {
+          return awaitSendCallsAsEthSendTransaction({
+            client,
+            id: result,
+          });
+        }
+
+        return result;
+      }
+
+      // Retry the original request
+      return subAccountRequest(request);
+    }
   }
+}
+
+function isSendCallsParams(
+  body: unknown
+): body is { method: string; params: [SendCallsParameters] } {
+  return typeof body === 'object' && body !== null && 'method' in body && 'params' in body;
 }

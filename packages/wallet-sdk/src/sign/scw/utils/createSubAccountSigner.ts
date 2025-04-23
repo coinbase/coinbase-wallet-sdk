@@ -19,7 +19,7 @@ import {
   numberToHex,
 } from 'viem';
 import { getCode } from 'viem/actions';
-import { waitForCallsStatus } from 'viem/experimental';
+import { awaitSendCallsAsEthSendTransaction, injectRequestCapabilities } from '../utils.js';
 import { createSmartAccount } from './createSmartAccount.js';
 import { getOwnerIndex } from './getOwnerIndex.js';
 
@@ -29,10 +29,12 @@ export async function createSubAccountSigner({
   client,
   factory,
   factoryData,
+  parentAddress,
 }: {
   address: Address;
   owner: OwnerAccount;
   client: PublicClient;
+  parentAddress?: Address;
   factoryData?: Hex;
   factory?: Address;
 }) {
@@ -101,15 +103,10 @@ export async function createSubAccountSigner({
           ] satisfies WalletSendCallsParameters,
         })) as string;
 
-        const result = await waitForCallsStatus(client, {
+        return awaitSendCallsAsEthSendTransaction({
+          client,
           id: response,
         });
-
-        if (result.status === 'success') {
-          return result.receipts?.[0].transactionHash;
-        }
-
-        throw standardErrors.rpc.internal('failed to send transaction');
       }
       case 'wallet_sendCalls': {
         assertArrayPresence(args.params);
@@ -131,10 +128,11 @@ export async function createSubAccountSigner({
           throw standardErrors.rpc.invalidParams('calls are required');
         }
 
-        const prepareCallsResponse = (await request({
+        let prepareCallsRequest: RequestArguments = {
           method: 'wallet_prepareCalls',
           params: [
             {
+              version: '1.0',
               calls: args.params[0].calls as {
                 to: Address;
                 data: Hex;
@@ -148,7 +146,26 @@ export async function createSubAccountSigner({
                   : {},
             },
           ],
-        })) as PrepareCallsSchema['ReturnType'];
+        };
+
+        if (parentAddress) {
+          prepareCallsRequest = injectRequestCapabilities(prepareCallsRequest, {
+            funding: [
+              {
+                type: 'spendPermission',
+                data: {
+                  autoApply: true,
+                  sources: [parentAddress],
+                  preference: 'PREFER_DIRECT_BALANCE',
+                },
+              },
+            ],
+          });
+        }
+
+        let prepareCallsResponse = (await request(
+          prepareCallsRequest
+        )) as PrepareCallsSchema['ReturnType'];
 
         const signResponse = await owner!.sign?.({
           // Hash returned from wallet_prepareCalls is double hex encoded

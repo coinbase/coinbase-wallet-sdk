@@ -212,7 +212,9 @@ describe('Signer configuration', () => {
     it('call handshake without method when enableAutoSubAccounts is true', async () => {
       mockLoadSignerType.mockReturnValue('scw');
       vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
-        enableAutoSubAccounts: true,
+        config: {
+          enableAutoSubAccounts: true,
+        },
       });
 
       await provider.request({ method: 'eth_requestAccounts' });

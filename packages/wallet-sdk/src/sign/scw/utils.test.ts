@@ -183,13 +183,15 @@ describe('injectRequestCapabilities', () => {
 describe('initSubAccountConfig', () => {
   it('should initialize the sub account config', async () => {
     store.subAccountsConfig.set({
-      enableAutoSubAccounts: true,
-      toOwnerAccount: vi.fn().mockResolvedValue({
-        account: {
-          address: '0x123',
-          type: 'local',
-        },
-      }),
+      config: {
+        enableAutoSubAccounts: true,
+        toOwnerAccount: vi.fn().mockResolvedValue({
+          account: {
+            address: '0x123',
+            type: 'local',
+          },
+        }),
+      },
     });
 
     await initSubAccountConfig();

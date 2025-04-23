@@ -55,7 +55,7 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
   store.subAccountsConfig.set({
     toOwnerAccount: params.subAccounts?.toOwnerAccount,
     enableAutoSubAccounts: params.subAccounts?.enableAutoSubAccounts,
-    defaultSpendLimits: params.subAccounts?.defaultSpendLimits, 
+    defaultSpendLimits: params.subAccounts?.defaultSpendLimits,
     dynamicSpendLimit: params.subAccounts?.dynamicSpendLimit,
   });
 
@@ -162,8 +162,13 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
       },
       setToOwnerAccount(toSubAccountOwner: ToOwnerAccountFn): void {
         validateSubAccount(toSubAccountOwner);
+        // TODO: Add deep merging of the config
+        const { config } = store.subAccountsConfig.get() ?? {};
         store.subAccountsConfig.set({
-          toOwnerAccount: toSubAccountOwner,
+          config: {
+            ...config,
+            toOwnerAccount: toSubAccountOwner,
+          },
         });
       },
     },

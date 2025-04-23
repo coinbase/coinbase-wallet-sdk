@@ -435,7 +435,9 @@ describe('SCWSigner', () => {
       await signer.cleanup();
 
       vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
-        enableAutoSubAccounts: true,
+        config: {
+          enableAutoSubAccounts: true,
+        },
       });
 
       const mockRequest: RequestArguments = {
