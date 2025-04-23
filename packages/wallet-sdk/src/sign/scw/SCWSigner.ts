@@ -90,7 +90,7 @@ export class SCWSigner implements Signer {
   }
 
   // TODO: Properly type the return value
-  async request(request: RequestArguments): Promise<any> {
+  async request(request: RequestArguments) {
     if (this.accounts.length === 0) {
       switch (request.method) {
         case 'eth_requestAccounts': {
@@ -99,7 +99,6 @@ export class SCWSigner implements Signer {
             // Wait for the popup to be loaded before making async calls
             await this.communicator.waitForPopupLoaded?.();
             await initSubAccountConfig();
-
             // This will populate the store with the sub account
             await this.request({
               method: 'wallet_connect',
@@ -244,7 +243,6 @@ export class SCWSigner implements Signer {
           accounts,
         });
 
-        // TODO: support multiple accounts?
         const account = response.accounts.at(0);
         const capabilities = account?.capabilities;
         if (capabilities?.addSubAccount || capabilities?.getSubAccounts) {
@@ -273,6 +271,10 @@ export class SCWSigner implements Signer {
             this.accounts = accounts_;
           }
         }
+
+        // TODO: cache spend limits response
+        // Depends on coinbase_fetchPermissions PR
+        // const spendLimits = response?.accounts?.[0].capabilities?.spendLimits;
 
         this.callback?.('accountsChanged', accounts_);
         break;

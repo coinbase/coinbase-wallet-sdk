@@ -1,4 +1,4 @@
-import { AppMetadata, Preference } from ':core/provider/interface.js';
+import { AppMetadata, Preference, SpendLimitConfig } from ':core/provider/interface.js';
 import { SpendLimit } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { OwnerAccount } from ':core/type/index.js';
 import { Address, Hex } from 'viem';
@@ -24,12 +24,17 @@ export type SubAccount = {
   address: Address;
   factory?: Address;
   factoryData?: Hex;
+  config?: {
+    capabilities: Record<string, unknown>;
+  };
 };
 
 type SubAccountConfig = {
   toOwnerAccount?: ToOwnerAccountFn;
   capabilities?: Record<string, unknown>;
   enableAutoSubAccounts?: boolean;
+  defaultSpendLimits?: Record<number, SpendLimitConfig[]>;
+  dynamicSpendLimit?: boolean;
 };
 
 type Account = {

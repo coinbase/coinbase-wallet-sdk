@@ -1,5 +1,7 @@
-import { AddSubAccountAccount } from './wallet_addSubAccount.js';
 import { SerializedEthereumRpcError } from ':core/error/utils.js';
+import { SpendLimitConfig } from ':core/provider/interface.js';
+import { Hex } from 'viem';
+import { AddSubAccountAccount } from './wallet_addSubAccount.js';
 
 export type SignInWithEthereumCapabilityRequest = {
   nonce: string;
@@ -21,17 +23,17 @@ export type SignInWithEthereumCapabilityResponse = {
   signature: `0x${string}`;
 };
 
-export type SpendPermissionsCapabilityRequest = {
-  token: `0x${string}`;
-  allowance: string;
-  period: number;
-  salt?: `0x${string}`;
-  extraData?: `0x${string}`;
-};
+export type SpendLimitsCapabilityRequest = Record<number, SpendLimitConfig[]>;
 
-export type SpendPermissionsCapabilityResponse = {
+type SpendLimitResult = {
+  createdAt: number;
+  message: SpendLimitConfig;
   signature: `0x${string}`;
-};
+  permissionHash: Hex;
+  isRevoked: boolean;
+}
+
+export type SpendLimitsCapabilityResponse = Record<number, SpendLimitResult[]>;
 
 export type AddSubAccountCapabilityRequest = {
   account: AddSubAccountAccount;
@@ -53,7 +55,7 @@ export type WalletConnectRequest = {
       capabilities?: {
         addSubAccount?: AddSubAccountCapabilityRequest;
         getSubAccounts?: boolean;
-        spendPermissions?: SpendPermissionsCapabilityRequest;
+        spendLimits?: SpendLimitsCapabilityRequest;
         signInWithEthereum?: SignInWithEthereumCapabilityRequest;
       };
     },
@@ -68,7 +70,7 @@ export type WalletConnectResponse = {
     capabilities?: {
       addSubAccount?: AddSubAccountCapabilityResponse | SerializedEthereumRpcError;
       getSubAccounts?: AddSubAccountCapabilityResponse[];
-      spendPermissions?: SpendPermissionsCapabilityResponse | SerializedEthereumRpcError;
+      spendLimits?: SpendLimitsCapabilityResponse | SerializedEthereumRpcError;
       signInWithEthereum?: SignInWithEthereumCapabilityResponse | SerializedEthereumRpcError;
     };
   }[];

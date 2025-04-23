@@ -9,6 +9,7 @@ import {
   Stack,
   VStack,
 } from '@chakra-ui/react';
+import { SpendLimitConfig } from '@coinbase/wallet-sdk/dist/core/provider/interface';
 import { useState } from 'react';
 import { baseSepolia } from 'viem/chains';
 import { useConfig } from '../../context/ConfigContextProvider';
@@ -45,7 +46,7 @@ export default function AutoSubAccount() {
         params: [
           {
             from: accounts[0],
-            to: '0x000000000000000000000000000000000000dead',
+            to: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
             value: '0x0',
             data: '0x',
           },
@@ -99,6 +100,24 @@ export default function AutoSubAccount() {
     }
   };
 
+  const handleSetDefaultSpendLimits = (value: string) => {
+    const defaultSpendLimits = {
+      [baseSepolia.id]: [
+        {
+          token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+          allowance: '0x2386F26FC10000',
+          period: 86400,
+        } as SpendLimitConfig,
+      ],
+    };
+
+    if (value === 'true') {
+      setSubAccountsConfig({ defaultSpendLimits });
+    } else {
+      setSubAccountsConfig({ defaultSpendLimits: {} });
+    }
+  };
+
   return (
     <Container mb={16}>
       <VStack w="full" spacing={4}>
@@ -107,6 +126,18 @@ export default function AutoSubAccount() {
           <RadioGroup
             value={(subAccountsConfig?.enableAutoSubAccounts || false).toString()}
             onChange={(value) => setSubAccountsConfig({ enableAutoSubAccounts: value === 'true' })}
+          >
+            <Stack direction="row">
+              <Radio value="true">Enabled</Radio>
+              <Radio value="false">Disabled</Radio>
+            </Stack>
+          </RadioGroup>
+        </FormControl>
+        <FormControl>
+          <FormLabel>Default Spend Limit</FormLabel>
+          <RadioGroup
+            value={subAccountsConfig?.defaultSpendLimits?.[baseSepolia.id] ? 'true' : 'false'}
+            onChange={handleSetDefaultSpendLimits}
           >
             <Stack direction="row">
               <Radio value="true">Enabled</Radio>

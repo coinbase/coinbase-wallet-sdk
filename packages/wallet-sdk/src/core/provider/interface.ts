@@ -39,6 +39,8 @@ export type SpendLimitConfig = {
   token: Address;
   allowance: Hex;
   period: number;
+  salt?: Hex;
+  extraData?: Hex;
 };
 
 export interface AppMetadata {
@@ -93,7 +95,7 @@ export type SubAccountOptions = {
    * Spend limits requested on app connect if a matching existing one does not exist.
    * Only supports native chain tokens currently.
    */
-  defaultSpendLimits?: Record<Hex, SpendLimitConfig[]>;
+  defaultSpendLimits?: Record<number, SpendLimitConfig[]>;
   /**
    * Used when users have insufficient funds, the SDK will request a new spend limit (only used when auto sub accounts is enabled)
    */
