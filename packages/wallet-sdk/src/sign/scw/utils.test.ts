@@ -248,7 +248,7 @@ describe('fillMissingParamsForFetchPermissions', () => {
       subAccount: { address: '0x456' },
       chains: [],
       keys: {},
-      spendLimits: [],
+      spendLimits: {},
       config: {
         version: '1.0.0',
       },
