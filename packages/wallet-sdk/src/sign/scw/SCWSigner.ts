@@ -1,10 +1,12 @@
-import { Hex, numberToHex } from 'viem';
+import { Hex, hexToNumber, numberToHex } from 'viem';
 
 import { Communicator } from ':core/communicator/Communicator.js';
+import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage.js';
 import { RPCResponse } from ':core/message/RPCResponse.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
+import { FetchPermissionsResponse } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
 import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
@@ -24,7 +26,9 @@ import { Signer } from '../interface.js';
 import { SCWKeyManager } from './SCWKeyManager.js';
 import {
   addSenderToRequest,
+  assertFetchPermissionsRequest,
   assertParamsChainId,
+  fillMissingParamsForFetchPermissions,
   getSenderFromRequest,
   initSubAccountConfig,
   injectRequestCapabilities,
@@ -184,6 +188,19 @@ export class SCWSigner implements Signer {
       // Sub Account Support
       case 'wallet_addSubAccount':
         return this.addSubAccount(request);
+      case 'coinbase_fetchPermissions': {
+        assertFetchPermissionsRequest(request);
+        const completeRequest = fillMissingParamsForFetchPermissions(request);
+        const permissions = (await fetchRPCRequest(
+          completeRequest,
+          CB_WALLET_RPC_URL
+        )) as FetchPermissionsResponse;
+        const requestedChainId = hexToNumber(completeRequest.params?.[0].chainId);
+        store.spendLimits.set({
+          [requestedChainId]: permissions.permissions,
+        });
+        return permissions;
+      }
       default:
         if (!this.chain.rpcUrl) {
           throw standardErrors.rpc.internal('No RPC URL set for chain');

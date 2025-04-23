@@ -1,7 +1,9 @@
 import { store } from ':store/store.js';
 import {
   addSenderToRequest,
+  assertFetchPermissionsRequest,
   assertParamsChainId,
+  fillMissingParamsForFetchPermissions,
   getSenderFromRequest,
   initSubAccountConfig,
   injectRequestCapabilities,
@@ -194,5 +196,70 @@ describe('initSubAccountConfig', () => {
 
     const config = store.subAccountsConfig.get();
     expect(config?.capabilities?.addSubAccount).toBeDefined();
+  });
+});
+
+describe('assertFetchPermissionsRequest', () => {
+  it('should throw if the request is not a fetch permissions request', () => {
+    expect(() => assertFetchPermissionsRequest({ method: 'eth_sendTransaction' })).toThrow();
+  });
+
+  it('should throw if the request params are the correct shape', () => {
+    expect(() =>
+      assertFetchPermissionsRequest({
+        method: 'coinbase_fetchPermissions',
+        params: [{ account: 'non-hex-string' }],
+      })
+    ).toThrow();
+  });
+
+  it('should pass if the params is omitted completely', () => {
+    expect(() =>
+      assertFetchPermissionsRequest({ method: 'coinbase_fetchPermissions' })
+    ).not.toThrow();
+  });
+
+  it('should pass if the params is correct shape', () => {
+    expect(() =>
+      assertFetchPermissionsRequest({
+        method: 'coinbase_fetchPermissions',
+        params: [{ account: '0x123', chainId: '0x123', spender: '0x123' }],
+      })
+    ).not.toThrow();
+  });
+});
+
+describe('fillMissingParamsForFetchPermissions', () => {
+  it('should return the request if the params are present', () => {
+    const request = {
+      method: 'coinbase_fetchPermissions',
+      params: [{ account: '0x123', chainId: '0x123', spender: '0x123' }],
+    };
+    assertFetchPermissionsRequest(request);
+    expect(fillMissingParamsForFetchPermissions(request)).toEqual(request);
+  });
+
+  it('should fill in the missing params if the params are not present', () => {
+    vi.spyOn(store, 'getState').mockImplementation(() => ({
+      account: {
+        accounts: ['0x123'],
+        chain: { id: 1 },
+      },
+      subAccount: { address: '0x456' },
+      chains: [],
+      keys: {},
+      spendLimits: {},
+      config: {
+        version: '1.0.0',
+      },
+    }));
+    const request = {
+      method: 'coinbase_fetchPermissions',
+    };
+    assertFetchPermissionsRequest(request);
+    expect(fillMissingParamsForFetchPermissions(request)).toEqual({
+      method: 'coinbase_fetchPermissions',
+      params: [{ account: '0x123', chainId: '0x1', spender: '0x456' }],
+    });
   });
 });

@@ -1,7 +1,11 @@
-import { Address } from 'viem';
+import { Address, numberToHex } from 'viem';
 
 import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
+import {
+  EmptyFetchPermissionsRequest,
+  FetchPermissionsRequest,
+} from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { store } from ':store/store.js';
 import { get } from ':util/get.js';
 import { getCryptoKeyAccount } from '../../kms/crypto-key/index.js';
@@ -137,4 +141,81 @@ export async function initSubAccountConfig() {
   store.subAccountsConfig.set({
     capabilities,
   });
+}
+
+export function assertFetchPermissionsRequest(
+  request: RequestArguments
+): asserts request is FetchPermissionsRequest | EmptyFetchPermissionsRequest {
+  if (request.method === 'coinbase_fetchPermissions' && request.params === undefined) {
+    return;
+  }
+
+  if (
+    request.method === 'coinbase_fetchPermissions' &&
+    Array.isArray(request.params) &&
+    request.params.length === 1 &&
+    typeof request.params[0] === 'object'
+  ) {
+    if (
+      typeof request.params[0].account !== 'string' ||
+      !request.params[0].chainId.startsWith('0x')
+    ) {
+      throw standardErrors.rpc.invalidParams(
+        'FetchPermissions - Invalid params: params[0].account must be a hex string'
+      );
+    }
+
+    if (
+      typeof request.params[0].chainId !== 'string' ||
+      !request.params[0].chainId.startsWith('0x')
+    ) {
+      throw standardErrors.rpc.invalidParams(
+        'FetchPermissions - Invalid params: params[0].chainId must be a hex string'
+      );
+    }
+
+    if (
+      typeof request.params[0].spender !== 'string' ||
+      !request.params[0].spender.startsWith('0x')
+    ) {
+      throw standardErrors.rpc.invalidParams(
+        'FetchPermissions - Invalid params: params[0].spender must be a hex string'
+      );
+    }
+
+    return;
+  }
+
+  throw standardErrors.rpc.invalidParams();
+}
+
+export function fillMissingParamsForFetchPermissions(
+  request: FetchPermissionsRequest | EmptyFetchPermissionsRequest
+): FetchPermissionsRequest {
+  if (request.params !== undefined) {
+    return request as FetchPermissionsRequest;
+  }
+
+  // this is based on the assumption that the first account is the active account
+  // it could change in the context of multi-(universal)-account
+  const accountFromStore = store.getState().account.accounts?.[0];
+  const chainId = store.getState().account.chain?.id;
+  const subAccountFromStore = store.getState().subAccount?.address;
+
+  if (!accountFromStore || !subAccountFromStore || !chainId) {
+    throw standardErrors.rpc.invalidParams(
+      'FetchPermissions - one or more of account, sub account, or chain id is missing, connect to sub account via wallet_connect first'
+    );
+  }
+
+  return {
+    method: 'coinbase_fetchPermissions',
+    params: [
+      {
+        account: accountFromStore,
+        chainId: numberToHex(chainId),
+        spender: subAccountFromStore,
+      },
+    ],
+  };
 }
