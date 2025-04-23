@@ -10,7 +10,7 @@ import {
   useEffect,
   useMemo,
   useState,
-} from "react";
+} from 'react';
 import {
   OPTIONS_KEY,
   OptionsType,
@@ -21,8 +21,8 @@ import {
   options,
   scwUrls,
   sdkVersions,
-} from "../store/config";
-import { cleanupSDKLocalStorage } from "../utils/cleanupSDKLocalStorage";
+} from '../store/config';
+import { cleanupSDKLocalStorage } from '../utils/cleanupSDKLocalStorage';
 
 type ConfigContextProviderProps = {
   children: ReactNode;
