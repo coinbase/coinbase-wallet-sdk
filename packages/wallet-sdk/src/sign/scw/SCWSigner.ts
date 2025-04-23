@@ -190,11 +190,15 @@ export class SCWSigner implements Signer {
         return this.addSubAccount(request);
       case 'coinbase_fetchPermissions': {
         assertFetchPermissionsRequest(request);
+        const completeRequest = fillMissingParamsForFetchPermissions(request);
         const permissions = (await fetchRPCRequest(
-          fillMissingParamsForFetchPermissions(request),
+          completeRequest,
           CB_WALLET_RPC_URL
         )) as FetchPermissionsResponse;
-        store.spendLimits.set(permissions.permissions);
+        const requestedChainIdInHex = completeRequest.params?.[0].chainId;
+        store.spendLimits.set({
+          [requestedChainIdInHex]: permissions.permissions,
+        });
         return permissions;
       }
       default:
