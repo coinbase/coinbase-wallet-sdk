@@ -1,4 +1,4 @@
-import { Hex, numberToHex } from 'viem';
+import { Hex, hexToNumber, numberToHex } from 'viem';
 
 import { Communicator } from ':core/communicator/Communicator.js';
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
@@ -195,9 +195,9 @@ export class SCWSigner implements Signer {
           completeRequest,
           CB_WALLET_RPC_URL
         )) as FetchPermissionsResponse;
-        const requestedChainIdInHex = completeRequest.params?.[0].chainId;
+        const requestedChainId = hexToNumber(completeRequest.params?.[0].chainId);
         store.spendLimits.set({
-          [requestedChainIdInHex]: permissions.permissions,
+          [requestedChainId]: permissions.permissions,
         });
         return permissions;
       }

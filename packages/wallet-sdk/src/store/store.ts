@@ -95,7 +95,7 @@ const createSubAccountConfigSlice: StateCreator<StoreState, [], [], SubAccountCo
 };
 
 type SpendLimitsSlice = {
-  spendLimits: Record<string, SpendLimit[]>;
+  spendLimits: Record<number, SpendLimit[]>;
 };
 
 const createSpendLimitsSlice: StateCreator<StoreState, [], [], SpendLimitsSlice> = () => {

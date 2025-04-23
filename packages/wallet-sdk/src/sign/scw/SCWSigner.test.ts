@@ -529,7 +529,7 @@ describe('SCWSigner', () => {
       await signer.request(mockRequest);
 
       expect(mockSetSpendLimits).toHaveBeenCalledWith({
-        '0xa': mockSpendLimits,
+        '10': mockSpendLimits,
       });
     });
   });
