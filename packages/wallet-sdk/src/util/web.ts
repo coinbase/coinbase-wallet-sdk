@@ -94,7 +94,7 @@ function appendAppInfoQueryParams(url: URL) {
   }
 }
 
-function initSnackbar() {
+export function initSnackbar() {
   if (!snackbar) {
     const root = document.createElement('div');
     root.className = '-cbwsdk-css-reset';

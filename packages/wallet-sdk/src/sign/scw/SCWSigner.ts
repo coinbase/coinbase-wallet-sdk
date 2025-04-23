@@ -29,6 +29,7 @@ import {
   importKeyFromHexString,
 } from ':util/cipher.js';
 import { fetchRPCRequest } from ':util/provider.js';
+import { initSnackbar } from ':util/web.js';
 import { SendCallsParameters } from 'viem/experimental';
 import { getCryptoKeyAccount } from '../../kms/crypto-key/index.js';
 import { Signer } from '../interface.js';
@@ -524,8 +525,6 @@ export class SCWSigner implements Signer {
       const result = await subAccountRequest(request);
       return result;
     } catch (error) {
-      // TODO: Ask the user what they want to do via snackbar
-
       if (!(error instanceof HttpRequestError)) {
         throw error;
       }
@@ -571,147 +570,205 @@ export class SCWSigner implements Signer {
         throw error;
       }
 
+      // Present options to user via snackbar
+      const snackbar = initSnackbar();
+      const userChoice = await new Promise<'update_permission' | 'continue_popup' | 'cancel'>(
+        (resolve) => {
+          snackbar.presentItem({
+            autoExpand: true,
+            message: 'Insufficient spend permission. Choose how to proceed:',
+            menuItems: [
+              {
+                isRed: false,
+                info: 'Update Spend Limit',
+                svgWidth: '10',
+                svgHeight: '11',
+                path: '',
+                defaultFillRule: 'evenodd',
+                defaultClipRule: 'evenodd',
+                onClick: () => {
+                  snackbar.clear();
+                  resolve('update_permission');
+                },
+              },
+              {
+                isRed: false,
+                info: 'Continue in Popup',
+                svgWidth: '10',
+                svgHeight: '11',
+                path: '',
+                defaultFillRule: 'evenodd',
+                defaultClipRule: 'evenodd',
+                onClick: () => {
+                  snackbar.clear();
+                  resolve('continue_popup');
+                },
+              },
+              {
+                isRed: true,
+                info: 'Cancel',
+                svgWidth: '10',
+                svgHeight: '11',
+                path: '',
+                defaultFillRule: 'evenodd',
+                defaultClipRule: 'evenodd',
+                onClick: () => {
+                  snackbar.clear();
+                  resolve('cancel');
+                },
+              },
+            ],
+          });
+        }
+      );
+
+      if (userChoice === 'cancel') {
+        throw error;
+      }
+
       let signatureRequest: RequestArguments;
 
       // Request 3x the amount per day -- maybe we can do something smarter here
       const defaultPeriod = 60 * 60 * 24;
       const defaultMultiplier = 3;
 
-      if (spendPermissionRequests.length === 1) {
-        const spendPermission = spendPermissionRequests[0];
+      if (userChoice === 'update_permission') {
+        if (spendPermissionRequests.length === 1) {
+          const spendPermission = spendPermissionRequests[0];
 
-        const message = createSpendPermissionMessage({
-          spendPermission: {
-            token: spendPermission.token,
-            allowance: numberToHex(spendPermission.requiredAmount * BigInt(defaultMultiplier)),
-            period: defaultPeriod,
-            account: globalAccountAddress,
-            spender: subAccount.address,
-            start: 0,
-            end: 281474976710655,
-            salt: numberToHex(BigInt(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER))),
-            extraData: '0x',
-          },
-          chainId: this.chain.id,
-        });
-
-        // Frontend will store the spend permission for future use
-        signatureRequest = {
-          method: 'eth_signTypedData_v4',
-          params: [globalAccountAddress, message],
-        };
-      } else {
-        // Batch spend permission request
-        const message = createSpendPermissionBatchMessage({
-          spendPermissionBatch: {
-            account: globalAccountAddress,
-            period: defaultPeriod,
-            start: 0,
-            end: 281474976710655,
-            permissions: spendPermissionRequests.map((spendPermission) => ({
+          const message = createSpendPermissionMessage({
+            spendPermission: {
               token: spendPermission.token,
               allowance: numberToHex(spendPermission.requiredAmount * BigInt(defaultMultiplier)),
               period: defaultPeriod,
               account: globalAccountAddress,
               spender: subAccount.address,
-              salt: '0x0',
+              start: 0,
+              end: 281474976710655,
+              salt: numberToHex(BigInt(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER))),
               extraData: '0x',
-            })),
-          },
-          chainId: this.chain.id,
-        });
+            },
+            chainId: this.chain.id,
+          });
 
-        signatureRequest = {
-          method: 'eth_signTypedData_v4',
-          params: [globalAccountAddress, message],
-        };
-      }
-
-      try {
-        // TODO: Handle blocked popup
-        await this.request(signatureRequest);
-      } catch (_) {
-        // If error is user rejected, request from global account
-        // TODO: Check if error is user rejected
-
-        const transferCalls: {
-          to: Address;
-          value: Hex;
-          data: Hex;
-        }[] = spendPermissionRequests.map((spendPermission) => {
-          const isNative =
-            spendPermission.token.toLowerCase() ===
-            '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'.toLowerCase();
-
-          if (isNative) {
-            return {
-              to: subAccount.address,
-              value: numberToHex(spendPermission.requiredAmount),
-              data: '0x',
-            };
-          }
-
-          return {
-            to: spendPermission.token,
-            value: '0x0',
-            data: encodeFunctionData({
-              abi: erc20Abi,
-              functionName: 'transfer',
-              args: [subAccount.address, spendPermission.requiredAmount],
-            }),
+          // Frontend will store the spend permission for future use
+          signatureRequest = {
+            method: 'eth_signTypedData_v4',
+            params: [globalAccountAddress, message],
           };
-        });
+        } else {
+          // Batch spend permission request
+          const message = createSpendPermissionBatchMessage({
+            spendPermissionBatch: {
+              account: globalAccountAddress,
+              period: defaultPeriod,
+              start: 0,
+              end: 281474976710655,
+              permissions: spendPermissionRequests.map((spendPermission) => ({
+                token: spendPermission.token,
+                allowance: numberToHex(spendPermission.requiredAmount * BigInt(defaultMultiplier)),
+                period: defaultPeriod,
+                account: globalAccountAddress,
+                spender: subAccount.address,
+                salt: '0x0',
+                extraData: '0x',
+              })),
+            },
+            chainId: this.chain.id,
+          });
 
-        // Construct call to execute the original calls using executeBatch
-        // TODO: Consider using original request directly instead of grabbing it from the error
-        // This will actually be a wallet_sendPreparedCalls request
-        if (!isSendCallsParams(error.body)) {
+          signatureRequest = {
+            method: 'eth_signTypedData_v4',
+            params: [globalAccountAddress, message],
+          };
+        }
+
+        // Request the signature - will be stored in backend
+        try {
+          await this.request(signatureRequest);
+        } catch (_) {
           throw error;
         }
 
-        const originalParams = error.body.params[0];
-
-        const originalCalls = originalParams.calls as {
-          to: Address;
-          data: Hex;
-          value: Hex;
-        }[];
-
-        const executeBatchSubAccountCallData = encodeFunctionData({
-          abi,
-          functionName: 'executeBatch',
-          args: [
-            originalCalls.map((call) => ({
-              target: call.to,
-              value: hexToBigInt(call.value),
-              data: call.data,
-            })),
-          ],
-        });
-
-        // Send using wallet_sendCalls
-        const calls: { to: Address; data: Hex; value: Hex }[] = [
-          ...transferCalls,
-          { data: executeBatchSubAccountCallData, to: subAccount.address, value: '0x0' },
-        ];
-
-        const result = await this.request({
-          method: 'wallet_sendCalls',
-          params: [{ ...originalParams, calls, from: globalAccountAddress }],
-        });
-
-        if (request.method === 'eth_sendTransaction') {
-          return awaitSendCallsAsEthSendTransaction({
-            client,
-            id: result,
-          });
-        }
-
-        return result;
+        // Retry the original request after updating permissions
+        return subAccountRequest(request);
       }
 
-      // Retry the original request
-      return subAccountRequest(request);
+      // Handle continue_popup path (either by choice or signature failure)
+      const transferCalls: {
+        to: Address;
+        value: Hex;
+        data: Hex;
+      }[] = spendPermissionRequests.map((spendPermission) => {
+        const isNative =
+          spendPermission.token.toLowerCase() ===
+          '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'.toLowerCase();
+
+        if (isNative) {
+          return {
+            to: subAccount.address,
+            value: numberToHex(spendPermission.requiredAmount),
+            data: '0x',
+          };
+        }
+
+        return {
+          to: spendPermission.token,
+          value: '0x0',
+          data: encodeFunctionData({
+            abi: erc20Abi,
+            functionName: 'transfer',
+            args: [subAccount.address, spendPermission.requiredAmount],
+          }),
+        };
+      });
+
+      // Construct call to execute the original calls using executeBatch
+      // TODO: Consider using original request directly instead of grabbing it from the error
+      // This will actually be a wallet_sendPreparedCalls request
+      if (!isSendCallsParams(error.body)) {
+        throw error;
+      }
+
+      const originalParams = error.body.params[0];
+
+      const originalCalls = originalParams.calls as {
+        to: Address;
+        data: Hex;
+        value: Hex;
+      }[];
+
+      const executeBatchSubAccountCallData = encodeFunctionData({
+        abi,
+        functionName: 'executeBatch',
+        args: [
+          originalCalls.map((call) => ({
+            target: call.to,
+            value: hexToBigInt(call.value),
+            data: call.data,
+          })),
+        ],
+      });
+
+      // Send using wallet_sendCalls
+      const calls: { to: Address; data: Hex; value: Hex }[] = [
+        ...transferCalls,
+        { data: executeBatchSubAccountCallData, to: subAccount.address, value: '0x0' },
+      ];
+
+      const result = await this.request({
+        method: 'wallet_sendCalls',
+        params: [{ ...originalParams, calls, from: globalAccountAddress }],
+      });
+
+      if (request.method === 'eth_sendTransaction') {
+        return awaitSendCallsAsEthSendTransaction({
+          client,
+          id: result,
+        });
+      }
+
+      return result;
     }
   }
 }
