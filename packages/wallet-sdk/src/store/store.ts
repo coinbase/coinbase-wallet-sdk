@@ -201,7 +201,7 @@ export const subAccounts = {
 
 export const spendLimits = {
   get: () => sdkstore.getState().spendLimits,
-  set: (spendLimits: Record<string, SpendLimit[]>) => {
+  set: (spendLimits: Record<number, SpendLimit[]>) => {
     sdkstore.setState((state) => ({ spendLimits: { ...state.spendLimits, ...spendLimits } }));
   },
   clear: () => {

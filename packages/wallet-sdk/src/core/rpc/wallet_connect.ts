@@ -1,6 +1,6 @@
 import { SerializedEthereumRpcError } from ':core/error/utils.js';
 import { SpendLimitConfig } from ':core/provider/interface.js';
-import { Hex } from 'viem';
+import { SpendLimit } from './coinbase_fetchSpendPermissions.js';
 import { AddSubAccountAccount } from './wallet_addSubAccount.js';
 
 export type SignInWithEthereumCapabilityRequest = {
@@ -25,15 +25,7 @@ export type SignInWithEthereumCapabilityResponse = {
 
 export type SpendLimitsCapabilityRequest = Record<number, SpendLimitConfig[]>;
 
-type SpendLimitResult = {
-  createdAt: number;
-  message: SpendLimitConfig;
-  signature: `0x${string}`;
-  permissionHash: Hex;
-  isRevoked: boolean;
-}
-
-export type SpendLimitsCapabilityResponse = Record<number, SpendLimitResult[]>;
+export type SpendLimitsCapabilityResponse = SpendLimit;
 
 export type AddSubAccountCapabilityRequest = {
   account: AddSubAccountAccount;
@@ -43,6 +35,12 @@ export type AddSubAccountCapabilityResponse = {
   address?: `0x${string}`;
   factory?: `0x${string}`;
   factoryData?: `0x${string}`;
+};
+
+export type GetSpendLimitsCapabilityRequest = boolean;
+
+export type GetSpendLimitsCapabilityResponse = {
+  permissions: SpendLimit[];
 };
 
 export type WalletConnectRequest = {
@@ -56,6 +54,7 @@ export type WalletConnectRequest = {
         addSubAccount?: AddSubAccountCapabilityRequest;
         getSubAccounts?: boolean;
         spendLimits?: SpendLimitsCapabilityRequest;
+        getSpendLimits?: GetSpendLimitsCapabilityRequest;
         signInWithEthereum?: SignInWithEthereumCapabilityRequest;
       };
     },
@@ -71,6 +70,7 @@ export type WalletConnectResponse = {
       addSubAccount?: AddSubAccountCapabilityResponse | SerializedEthereumRpcError;
       getSubAccounts?: AddSubAccountCapabilityResponse[];
       spendLimits?: SpendLimitsCapabilityResponse | SerializedEthereumRpcError;
+      getSpendLimits?: GetSpendLimitsCapabilityResponse | SerializedEthereumRpcError;
       signInWithEthereum?: SignInWithEthereumCapabilityResponse | SerializedEthereumRpcError;
     };
   }[];

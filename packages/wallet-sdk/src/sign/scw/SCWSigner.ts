@@ -105,7 +105,10 @@ export class SCWSigner implements Signer {
               params: [
                 {
                   version: 1,
-                  capabilities: subAccountsConfig?.capabilities ?? {},
+                  capabilities: {
+                    ...subAccountsConfig?.capabilities ?? {},
+                    getSpendLimits: true,
+                  },
                 },
               ],
             });
@@ -195,9 +198,7 @@ export class SCWSigner implements Signer {
           CB_WALLET_RPC_URL
         )) as FetchPermissionsResponse;
         const requestedChainId = hexToNumber(completeRequest.params?.[0].chainId);
-        store.spendLimits.set({
-          [requestedChainId]: permissions.permissions,
-        });
+        store.spendLimits.set({ [requestedChainId]: permissions.permissions });
         return permissions;
       }
       default:
@@ -272,9 +273,20 @@ export class SCWSigner implements Signer {
           }
         }
 
-        // TODO: cache spend limits response
-        // Depends on coinbase_fetchPermissions PR
-        // const spendLimits = response?.accounts?.[0].capabilities?.spendLimits;
+        const getSpendLimits = response?.accounts?.[0].capabilities?.getSpendLimits;
+        if (getSpendLimits && 'permissions' in getSpendLimits) {
+          store.spendLimits.set({
+            [this.chain.id]: getSpendLimits.permissions,
+          });
+        }
+
+        const spendLimit = response?.accounts?.[0].capabilities?.spendLimits;
+        if (spendLimit && 'permission' in spendLimit) {
+          const spendLimitsStore = store.spendLimits.get();
+          store.spendLimits.set({
+            [this.chain.id]: spendLimitsStore[this.chain.id].concat([spendLimit]),
+          });
+        }
 
         this.callback?.('accountsChanged', accounts_);
         break;
