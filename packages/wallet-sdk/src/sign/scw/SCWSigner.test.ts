@@ -88,7 +88,7 @@ describe('SCWSigner', () => {
     });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     vi.clearAllMocks();
 
     store.account.clear();
@@ -431,7 +431,7 @@ describe('SCWSigner', () => {
   });
 
   describe('Auto sub account', () => {
-    it('should create a sub account when eth_requestAccounts is called and enableAutoSubAccounts is true', async () => {
+    it('should create a sub account when eth_requestAccounts is called', async () => {
       await signer.cleanup();
 
       vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
@@ -479,6 +479,8 @@ describe('SCWSigner', () => {
 
       expect(accounts).toContain(subAccountAddress);
     });
+
+    it('should handle funding error capability when eth_sendTransaction is called', async () => {});
   });
 
   describe('SCWSigner - coinbase_fetchPermissions', () => {

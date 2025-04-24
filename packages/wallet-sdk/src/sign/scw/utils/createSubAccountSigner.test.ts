@@ -50,6 +50,9 @@ vi.mock(':store/chain-clients/utils.js', () => ({
   getClient: vi.fn().mockReturnValue({
     request: vi.fn(),
     getChainId: vi.fn().mockResolvedValue(84532),
+    chain: {
+      id: 84532,
+    },
   }),
 }));
 
@@ -117,6 +120,9 @@ describe('createSubAccountSigner', () => {
     (getClient as any).mockReturnValue({
       request,
       getChainId: vi.fn().mockResolvedValue(84532),
+      chain: {
+        id: 84532,
+      },
     });
 
     const signer = await createSubAccountSigner({
@@ -150,6 +156,7 @@ describe('createSubAccountSigner', () => {
           capabilities: {},
           chainId: numberToHex(84532),
           from: '0x',
+          version: '1.0',
         },
       ],
     });
@@ -212,6 +219,9 @@ describe('createSubAccountSigner', () => {
     (getClient as any).mockReturnValue({
       request,
       getChainId: vi.fn().mockResolvedValue(84532),
+      chain: {
+        id: 84532,
+      },
     });
 
     const signer = await createSubAccountSigner({
