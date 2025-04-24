@@ -79,8 +79,8 @@ export function assertParamsChainId(params: unknown): asserts params is [
   }
 }
 
-export function injectRequestCapabilities(
-  request: RequestArguments,
+export function injectRequestCapabilities<T extends RequestArguments>(
+  request: T,
   capabilities: Record<string, unknown>
 ) {
   // Modify request to include auto sub account capabilities
@@ -110,7 +110,7 @@ export function injectRequestCapabilities(
     }
   }
 
-  return modifiedRequest;
+  return modifiedRequest as T;
 }
 
 /**
@@ -363,14 +363,16 @@ export function createWalletSendCallsRequest({
   calls,
   from,
   chainId,
+  capabilities,
 }: {
   calls: { to: Address; data: Hex; value: Hex }[];
   from: Address;
   chainId: Hex;
+  capabilities?: Record<string, unknown>;
 }) {
   const paymasterUrls = config.get().paymasterUrls;
 
-  return {
+  let request: { method: 'wallet_sendCalls'; params: WalletSendCallsParameters } = {
     method: 'wallet_sendCalls',
     params: [
       {
@@ -379,12 +381,18 @@ export function createWalletSendCallsRequest({
         chainId,
         from,
         atomicRequired: true,
-        capabilities: {
-          paymasterService: { url: paymasterUrls?.[hexToNumber(chainId)] },
-        },
+        capabilities,
       },
     ],
   };
+
+  if (paymasterUrls?.[hexToNumber(chainId)]) {
+    request = injectRequestCapabilities(request, {
+      paymasterService: { url: paymasterUrls?.[hexToNumber(chainId)] },
+    });
+  }
+
+  return request;
 }
 
 export async function presentSubAccountFundingDialog() {
