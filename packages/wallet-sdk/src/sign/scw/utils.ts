@@ -1,4 +1,11 @@
-import { Hex, PublicClient, WalletSendCallsParameters, hexToBigInt, numberToHex } from 'viem';
+import {
+  Hex,
+  PublicClient,
+  WalletSendCallsParameters,
+  hexToBigInt,
+  hexToNumber,
+  numberToHex,
+} from 'viem';
 
 import { InsufficientBalanceErrorData, standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
@@ -7,7 +14,7 @@ import {
   FetchPermissionsRequest,
 } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { Address } from ':core/type/index.js';
-import { store } from ':store/store.js';
+import { config, store } from ':store/store.js';
 import { get } from ':util/get.js';
 import { initSnackbar } from ':util/web.js';
 import { waitForCallsStatus } from 'viem/experimental';
@@ -353,34 +360,28 @@ export async function waitForCallsTransactionHash({
 }
 
 export function createWalletSendCallsRequest({
-  to,
-  data,
-  value,
+  calls,
   from,
   chainId,
 }: {
-  to: Address;
-  data: Hex;
-  value: Hex;
+  calls: { to: Address; data: Hex; value: Hex }[];
   from: Address;
   chainId: Hex;
 }) {
+  const paymasterUrls = config.get().paymasterUrls;
+
   return {
     method: 'wallet_sendCalls',
     params: [
       {
         version: '1.0',
-        calls: [
-          {
-            to,
-            data,
-            value,
-          },
-        ],
+        calls,
         chainId,
         from,
         atomicRequired: true,
-        // TODO: Add paymaster capabilities from config
+        capabilities: {
+          paymasterService: { url: paymasterUrls?.[hexToNumber(chainId)] },
+        },
       },
     ],
   };

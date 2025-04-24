@@ -40,6 +40,7 @@ type Config = {
   metadata?: AppMetadata;
   preference?: Preference;
   version: string;
+  paymasterUrls?: Record<number, string>;
 };
 
 type ChainSlice = {
