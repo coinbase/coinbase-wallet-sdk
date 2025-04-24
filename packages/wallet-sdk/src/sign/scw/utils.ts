@@ -135,6 +135,7 @@ export async function initSubAccountConfig() {
         ],
       },
     },
+    spendLimits: config?.defaultSpendLimits ?? undefined,
   };
 
   // Store the owner account and capabilities in the non-persisted config

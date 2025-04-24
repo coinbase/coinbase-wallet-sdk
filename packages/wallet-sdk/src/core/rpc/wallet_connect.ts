@@ -1,5 +1,7 @@
-import { AddSubAccountAccount } from './wallet_addSubAccount.js';
 import { SerializedEthereumRpcError } from ':core/error/utils.js';
+import { SpendLimitConfig } from ':core/provider/interface.js';
+import { SpendLimit } from './coinbase_fetchSpendPermissions.js';
+import { AddSubAccountAccount } from './wallet_addSubAccount.js';
 
 export type SignInWithEthereumCapabilityRequest = {
   nonce: string;
@@ -21,17 +23,9 @@ export type SignInWithEthereumCapabilityResponse = {
   signature: `0x${string}`;
 };
 
-export type SpendPermissionsCapabilityRequest = {
-  token: `0x${string}`;
-  allowance: string;
-  period: number;
-  salt?: `0x${string}`;
-  extraData?: `0x${string}`;
-};
+export type SpendLimitsCapabilityRequest = Record<number, SpendLimitConfig[]>;
 
-export type SpendPermissionsCapabilityResponse = {
-  signature: `0x${string}`;
-};
+export type SpendLimitsCapabilityResponse = SpendLimit;
 
 export type AddSubAccountCapabilityRequest = {
   account: AddSubAccountAccount;
@@ -41,6 +35,12 @@ export type AddSubAccountCapabilityResponse = {
   address?: `0x${string}`;
   factory?: `0x${string}`;
   factoryData?: `0x${string}`;
+};
+
+export type GetSpendLimitsCapabilityRequest = boolean;
+
+export type GetSpendLimitsCapabilityResponse = {
+  permissions: SpendLimit[];
 };
 
 export type WalletConnectRequest = {
@@ -53,7 +53,8 @@ export type WalletConnectRequest = {
       capabilities?: {
         addSubAccount?: AddSubAccountCapabilityRequest;
         getSubAccounts?: boolean;
-        spendPermissions?: SpendPermissionsCapabilityRequest;
+        spendLimits?: SpendLimitsCapabilityRequest;
+        getSpendLimits?: GetSpendLimitsCapabilityRequest;
         signInWithEthereum?: SignInWithEthereumCapabilityRequest;
       };
     },
@@ -68,7 +69,8 @@ export type WalletConnectResponse = {
     capabilities?: {
       addSubAccount?: AddSubAccountCapabilityResponse | SerializedEthereumRpcError;
       getSubAccounts?: AddSubAccountCapabilityResponse[];
-      spendPermissions?: SpendPermissionsCapabilityResponse | SerializedEthereumRpcError;
+      spendLimits?: SpendLimitsCapabilityResponse | SerializedEthereumRpcError;
+      getSpendLimits?: GetSpendLimitsCapabilityResponse | SerializedEthereumRpcError;
       signInWithEthereum?: SignInWithEthereumCapabilityResponse | SerializedEthereumRpcError;
     };
   }[];

@@ -90,7 +90,7 @@ export class SCWSigner implements Signer {
   }
 
   // TODO: Properly type the return value
-  async request(request: RequestArguments): Promise<any> {
+  async request(request: RequestArguments) {
     if (this.accounts.length === 0) {
       switch (request.method) {
         case 'eth_requestAccounts': {
@@ -99,14 +99,16 @@ export class SCWSigner implements Signer {
             // Wait for the popup to be loaded before making async calls
             await this.communicator.waitForPopupLoaded?.();
             await initSubAccountConfig();
-
             // This will populate the store with the sub account
             await this.request({
               method: 'wallet_connect',
               params: [
                 {
                   version: 1,
-                  capabilities: subAccountsConfig?.capabilities ?? {},
+                  capabilities: {
+                    ...subAccountsConfig?.capabilities ?? {},
+                    getSpendLimits: true,
+                  },
                 },
               ],
             });
@@ -196,9 +198,7 @@ export class SCWSigner implements Signer {
           CB_WALLET_RPC_URL
         )) as FetchPermissionsResponse;
         const requestedChainId = hexToNumber(completeRequest.params?.[0].chainId);
-        store.spendLimits.set({
-          [requestedChainId]: permissions.permissions,
-        });
+        store.spendLimits.set({ [requestedChainId]: permissions.permissions });
         return permissions;
       }
       default:
@@ -244,7 +244,6 @@ export class SCWSigner implements Signer {
           accounts,
         });
 
-        // TODO: support multiple accounts?
         const account = response.accounts.at(0);
         const capabilities = account?.capabilities;
         if (capabilities?.addSubAccount || capabilities?.getSubAccounts) {
@@ -272,6 +271,21 @@ export class SCWSigner implements Signer {
             });
             this.accounts = accounts_;
           }
+        }
+
+        const getSpendLimits = response?.accounts?.[0].capabilities?.getSpendLimits;
+        if (getSpendLimits && 'permissions' in getSpendLimits) {
+          store.spendLimits.set({
+            [this.chain.id]: getSpendLimits.permissions,
+          });
+        }
+
+        const spendLimit = response?.accounts?.[0].capabilities?.spendLimits;
+        if (spendLimit && 'permission' in spendLimit) {
+          const spendLimitsStore = store.spendLimits.get();
+          store.spendLimits.set({
+            [this.chain.id]: spendLimitsStore[this.chain.id].concat([spendLimit]),
+          });
         }
 
         this.callback?.('accountsChanged', accounts_);

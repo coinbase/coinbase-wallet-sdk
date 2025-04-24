@@ -1,4 +1,4 @@
-import { AppMetadata, Preference } from ':core/provider/interface.js';
+import { AppMetadata, Preference, SpendLimitConfig } from ':core/provider/interface.js';
 import { SpendLimit } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { OwnerAccount } from ':core/type/index.js';
 import { Address, Hex } from 'viem';
@@ -30,6 +30,8 @@ type SubAccountConfig = {
   toOwnerAccount?: ToOwnerAccountFn;
   capabilities?: Record<string, unknown>;
   enableAutoSubAccounts?: boolean;
+  defaultSpendLimits?: Record<number, SpendLimitConfig[]>;
+  dynamicSpendLimit?: boolean;
 };
 
 type Account = {
@@ -196,7 +198,7 @@ export const subAccounts = {
 
 export const spendLimits = {
   get: () => sdkstore.getState().spendLimits,
-  set: (spendLimits: Record<string, SpendLimit[]>) => {
+  set: (spendLimits: Record<number, SpendLimit[]>) => {
     sdkstore.setState((state) => ({ spendLimits: { ...state.spendLimits, ...spendLimits } }));
   },
   clear: () => {

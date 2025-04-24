@@ -14,9 +14,9 @@ export type EmptyFetchPermissionsRequest = Omit<FetchPermissionsRequest, 'params
  */
 export type SpendLimit = {
   /** UTC timestamp for when the permission was granted */
-  createdAt: number;
+  createdAt?: number;
   /** Hash of the permission in hex format */
-  permissionHash: string;
+  permissionHash?: string;
   /** Cryptographic signature in hex format */
   signature: string;
   /** The permission details */
