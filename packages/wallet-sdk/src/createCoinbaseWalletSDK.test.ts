@@ -43,7 +43,7 @@ describe('createCoinbaseWalletSDK', () => {
       },
     });
 
-    expect(store.subAccountsConfig.get()?.config?.enableAutoSubAccounts).toBe(true);
+    expect(store.subAccountsConfig.get()?.config?.toOwnerAccount).toBeDefined();
   });
 
   it('should throw an error if the signer is not a function', () => {
@@ -66,7 +66,7 @@ describe('createCoinbaseWalletSDK', () => {
 
     sdk.subAccount.setToOwnerAccount(toAccount);
 
-    expect(store.subAccountsConfig.get()?.config?.enableAutoSubAccounts).toBe(true);
+    expect(store.subAccountsConfig.get()?.config?.toOwnerAccount).toBeDefined();
   });
 
   describe('subaccount.create', () => {

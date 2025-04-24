@@ -307,7 +307,7 @@ export function createSpendPermissionBatchMessage({
   } as const;
 }
 
-export async function awaitSendCallsAsEthSendTransaction({
+export async function waitForCallsTransactionHash({
   client,
   id,
 }: { client: PublicClient; id: string }) {
@@ -320,4 +320,38 @@ export async function awaitSendCallsAsEthSendTransaction({
   }
 
   throw standardErrors.rpc.internal('failed to send transaction');
+}
+
+export function createWalletSendCallsRequest({
+  to,
+  data,
+  value,
+  from,
+  chainId,
+}: {
+  to: Address;
+  data: Hex;
+  value: Hex;
+  from: Address;
+  chainId: Hex;
+}) {
+  return {
+    method: 'wallet_sendCalls',
+    params: [
+      {
+        version: '1.0',
+        calls: [
+          {
+            to,
+            data,
+            value,
+          },
+        ],
+        chainId,
+        from,
+        atomicRequired: true,
+        // TODO: Add paymaster capabilities from config
+      },
+    ],
+  };
 }

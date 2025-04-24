@@ -3,6 +3,7 @@ import { RequestArguments } from ':core/provider/interface.js';
 import { PrepareCallsSchema } from ':core/rpc/wallet_prepareCalls.js';
 import { SendPreparedCallsSchema } from ':core/rpc/wallet_sendPreparedCalls.js';
 import { OwnerAccount } from ':core/type/index.js';
+import { ensureHexString } from ':core/type/util.js';
 import { SubAccount } from ':store/store.js';
 import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
 import { convertCredentialToJSON } from ':util/encoding.js';
@@ -13,13 +14,16 @@ import {
   PublicClient,
   SignableMessage,
   TypedDataDefinition,
-  WalletSendCallsParameters,
   hexToString,
   isHex,
   numberToHex,
 } from 'viem';
 import { getCode } from 'viem/actions';
-import { awaitSendCallsAsEthSendTransaction, injectRequestCapabilities } from '../utils.js';
+import {
+  createWalletSendCallsRequest,
+  injectRequestCapabilities,
+  waitForCallsTransactionHash,
+} from '../utils.js';
 import { createSmartAccount } from './createSmartAccount.js';
 import { getOwnerIndex } from './getOwnerIndex.js';
 
@@ -63,7 +67,10 @@ export async function createSubAccountSigner({
     factoryData,
   };
 
-  const chainId = await client.getChainId();
+  const chainId = client.chain?.id;
+  if (!chainId) {
+    throw standardErrors.rpc.internal('chainId not found');
+  }
 
   const account = await createSmartAccount({
     owner,
@@ -88,22 +95,31 @@ export async function createSubAccountSigner({
       case 'eth_sendTransaction': {
         assertArrayPresence(args.params);
 
-        // Transform into wallet_sendCalls request
-        const response = (await request({
-          method: 'wallet_sendCalls',
-          params: [
-            {
-              version: '1.0',
-              calls: [args.params[0]],
-              chainId: numberToHex(chainId),
-              from: subAccount.address,
-              atomicRequired: true,
-              // TODO: Add paymaster capabilities from config
-            },
-          ] satisfies WalletSendCallsParameters,
-        })) as string;
+        const rawParams = args.params[0] as {
+          to: Address;
+          data?: Hex;
+          value?: Hex;
+          from?: Address;
+        };
 
-        return awaitSendCallsAsEthSendTransaction({
+        assertPresence(rawParams.to, standardErrors.rpc.invalidParams('to is required'));
+
+        const params = {
+          to: rawParams.to,
+          data: ensureHexString(rawParams.data ?? '0x', true) as Hex,
+          value: ensureHexString(rawParams.value ?? '0x', true) as Hex,
+          from: rawParams.from ?? subAccount.address,
+        };
+
+        // Transform into wallet_sendCalls request
+        const sendCallsRequest = createWalletSendCallsRequest({
+          ...params,
+          chainId: numberToHex(chainId),
+        });
+
+        const response = (await request(sendCallsRequest)) as string;
+
+        return waitForCallsTransactionHash({
           client,
           id: response,
         });

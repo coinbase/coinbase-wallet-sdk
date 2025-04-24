@@ -4,6 +4,7 @@ import {
   Container,
   FormControl,
   FormLabel,
+  HStack,
   Radio,
   RadioGroup,
   Stack,
@@ -11,7 +12,7 @@ import {
 } from '@chakra-ui/react';
 import { SpendLimitConfig } from '@coinbase/wallet-sdk/dist/core/provider/interface';
 import { useState } from 'react';
-import { parseEther } from 'viem';
+import { numberToHex, parseEther } from 'viem';
 import { baseSepolia } from 'viem/chains';
 import { useConfig } from '../../context/ConfigContextProvider';
 import { useEIP1193Provider } from '../../context/EIP1193ProviderContextProvider';
@@ -19,6 +20,7 @@ import { useEIP1193Provider } from '../../context/EIP1193ProviderContextProvider
 export default function AutoSubAccount() {
   const [accounts, setAccounts] = useState<string[]>([]);
   const [lastResult, setLastResult] = useState<string>();
+  const [sendingAmounts, setSendingAmounts] = useState<Record<number, boolean>>({});
   const { subAccountsConfig, setSubAccountsConfig } = useConfig();
   const { provider } = useEIP1193Provider();
 
@@ -118,23 +120,22 @@ export default function AutoSubAccount() {
       setSubAccountsConfig({ defaultSpendLimits: {} });
     }
   };
-  const handleRandomTransfer = async () => {
+
+  const handleEthSend = async (amount: string) => {
     if (!provider || !accounts.length) return;
 
     try {
-      // Generate a random Ethereum address using viem
-      const randomAddress = '0x8d25687829d6b85d9e0020b8c89e3ca24de20a89';
-
-      // Convert 0.01 ETH to Wei (as hex)
-      const valueInWei = parseEther('0.00001').toString(16);
+      setSendingAmounts((prev) => ({ ...prev, [amount]: true }));
+      const to = '0x8d25687829d6b85d9e0020b8c89e3ca24de20a89';
+      const value = parseEther(amount);
 
       const response = await provider.request({
         method: 'eth_sendTransaction',
         params: [
           {
             from: accounts[0],
-            to: randomAddress,
-            value: `0x${valueInWei}`,
+            to: to,
+            value: numberToHex(value),
             data: '0x',
           },
         ],
@@ -143,6 +144,8 @@ export default function AutoSubAccount() {
     } catch (e) {
       console.error('error', e);
       setLastResult(JSON.stringify(e, null, 2));
+    } finally {
+      setSendingAmounts((prev) => ({ ...prev, [amount]: false }));
     }
   };
 
@@ -199,14 +202,24 @@ export default function AutoSubAccount() {
         <Button w="full" onClick={handleSignTypedData} isDisabled={!accounts.length}>
           eth_signTypedData_v4
         </Button>
-        <Button
-          w="full"
-          onClick={handleRandomTransfer}
-          isDisabled={!accounts.length}
-          colorScheme="purple"
-        >
-          Transfer 0.00001 ETH
-        </Button>
+        <Box w="full" textAlign="left" fontSize="lg" fontWeight="bold">
+          Send
+        </Box>
+        <HStack w="full" spacing={4}>
+          {['0.0001', '0.001', '0.01'].map((amount) => (
+            <Button
+              key={amount}
+              flex={1}
+              onClick={() => handleEthSend(amount)}
+              isDisabled={!accounts.length || sendingAmounts[amount]}
+              isLoading={sendingAmounts[amount]}
+              loadingText="Sending..."
+              size="lg"
+            >
+              {amount} ETH
+            </Button>
+          ))}
+        </HStack>
         {lastResult && (
           <Box
             as="pre"

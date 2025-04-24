@@ -2,6 +2,7 @@ import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import {
   Hex,
   HttpRequestError,
+  WalletSendCallsParameters,
   encodeFunctionData,
   erc20Abi,
   hexToBigInt,
@@ -30,7 +31,6 @@ import {
 } from ':util/cipher.js';
 import { fetchRPCRequest } from ':util/provider.js';
 import { initSnackbar } from ':util/web.js';
-import { SendCallsParameters } from 'viem/experimental';
 import { getCryptoKeyAccount } from '../../kms/crypto-key/index.js';
 import { Signer } from '../interface.js';
 import { SCWKeyManager } from './SCWKeyManager.js';
@@ -38,13 +38,14 @@ import {
   addSenderToRequest,
   assertFetchPermissionsRequest,
   assertParamsChainId,
-  awaitSendCallsAsEthSendTransaction,
   createSpendPermissionBatchMessage,
   createSpendPermissionMessage,
+  createWalletSendCallsRequest,
   fillMissingParamsForFetchPermissions,
   getSenderFromRequest,
   initSubAccountConfig,
   injectRequestCapabilities,
+  waitForCallsTransactionHash,
 } from './utils.js';
 import { abi } from './utils/constants.js';
 import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
@@ -651,7 +652,6 @@ export class SCWSigner implements Signer {
             chainId: this.chain.id,
           });
 
-          // Frontend will store the spend permission for future use
           signatureRequest = {
             method: 'eth_signTypedData_v4',
             params: [globalAccountAddress, message],
@@ -683,10 +683,11 @@ export class SCWSigner implements Signer {
           };
         }
 
-        // Request the signature - will be stored in backend
         try {
+          // Request the signature - will be stored in backend
           await this.request(signatureRequest);
         } catch (_) {
+          // If the signature request is denied, we throw the original error
           throw error;
         }
 
@@ -694,7 +695,7 @@ export class SCWSigner implements Signer {
         return subAccountRequest(request);
       }
 
-      // Handle continue_popup path (either by choice or signature failure)
+      // Handle continue_popup path
       const transferCalls: {
         to: Address;
         value: Hex;
@@ -724,28 +725,33 @@ export class SCWSigner implements Signer {
       });
 
       // Construct call to execute the original calls using executeBatch
-      // TODO: Consider using original request directly instead of grabbing it from the error
-      // This will actually be a wallet_sendPreparedCalls request
-      if (!isSendCallsParams(error.body)) {
+      let originalSendCallsParams: WalletSendCallsParameters[0];
+
+      if (request.method === 'wallet_sendCalls' && isSendCallsParams(request.params)) {
+        originalSendCallsParams = request.params[0];
+      } else if (
+        request.method === 'eth_sendTransaction' &&
+        isEthSendTransactionParams(request.params)
+      ) {
+        const sendCallsRequest = createWalletSendCallsRequest({
+          ...request.params[0],
+          chainId: numberToHex(this.chain.id),
+        });
+
+        originalSendCallsParams = sendCallsRequest.params[0];
+      } else {
+        console.error('could not get original call');
         throw error;
       }
 
-      const originalParams = error.body.params[0];
-
-      const originalCalls = originalParams.calls as {
-        to: Address;
-        data: Hex;
-        value: Hex;
-      }[];
-
-      const executeBatchSubAccountCallData = encodeFunctionData({
+      const subAccountCallData = encodeFunctionData({
         abi,
         functionName: 'executeBatch',
         args: [
-          originalCalls.map((call) => ({
-            target: call.to,
-            value: hexToBigInt(call.value),
-            data: call.data,
+          originalSendCallsParams.calls.map((call) => ({
+            target: call.to!,
+            value: hexToBigInt(call.value ?? '0x0'),
+            data: call.data ?? '0x',
           })),
         ],
       });
@@ -753,16 +759,16 @@ export class SCWSigner implements Signer {
       // Send using wallet_sendCalls
       const calls: { to: Address; data: Hex; value: Hex }[] = [
         ...transferCalls,
-        { data: executeBatchSubAccountCallData, to: subAccount.address, value: '0x0' },
+        { data: subAccountCallData, to: subAccount.address, value: '0x0' },
       ];
 
       const result = await this.request({
         method: 'wallet_sendCalls',
-        params: [{ ...originalParams, calls, from: globalAccountAddress }],
+        params: [{ ...originalSendCallsParams, calls, from: globalAccountAddress }],
       });
 
       if (request.method === 'eth_sendTransaction') {
-        return awaitSendCallsAsEthSendTransaction({
+        return waitForCallsTransactionHash({
           client,
           id: result,
         });
@@ -773,8 +779,23 @@ export class SCWSigner implements Signer {
   }
 }
 
-function isSendCallsParams(
-  body: unknown
-): body is { method: string; params: [SendCallsParameters] } {
-  return typeof body === 'object' && body !== null && 'method' in body && 'params' in body;
+function isSendCallsParams(params: unknown): params is WalletSendCallsParameters {
+  return typeof params === 'object' && params !== null && 'calls' in params;
+}
+
+function isEthSendTransactionParams(params: unknown): params is [
+  {
+    to: Address;
+    data: Hex;
+    from: Address;
+    value: Hex;
+  },
+] {
+  return (
+    Array.isArray(params) &&
+    params.length === 1 &&
+    typeof params[0] === 'object' &&
+    params[0] !== null &&
+    'to' in params[0]
+  );
 }
