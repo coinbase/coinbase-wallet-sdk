@@ -111,7 +111,7 @@ export function injectRequestCapabilities(
  * @returns void
  */
 export async function initSubAccountConfig() {
-  const { config } = store.subAccountsConfig.get() ?? {};
+  const config = store.subAccountsConfig.get() ?? {};
 
   if (!config?.enableAutoSubAccounts) {
     return;

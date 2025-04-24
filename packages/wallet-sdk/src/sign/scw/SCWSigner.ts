@@ -96,7 +96,7 @@ export class SCWSigner implements Signer {
       switch (request.method) {
         case 'eth_requestAccounts': {
           const subAccountsConfig = store.subAccountsConfig.get();
-          if (subAccountsConfig?.config?.enableAutoSubAccounts) {
+          if (subAccountsConfig?.enableAutoSubAccounts) {
             // Wait for the popup to be loaded before making async calls
             await this.communicator.waitForPopupLoaded?.();
             await initSubAccountConfig();
@@ -266,7 +266,7 @@ export class SCWSigner implements Signer {
           accounts_ = [subAccount.address, ...this.accounts];
 
           // Also update the accounts store if automatic sub accounts are enabled
-          if (subAccountsConfig?.config?.enableAutoSubAccounts) {
+          if (subAccountsConfig?.enableAutoSubAccounts) {
             store.account.set({
               accounts: accounts_,
             });
@@ -460,7 +460,7 @@ export class SCWSigner implements Signer {
 
   private async sendRequestToSubAccountSigner(request: RequestArguments) {
     const subAccount = store.subAccounts.get();
-    const { config } = store.subAccountsConfig.get() ?? {};
+    const config = store.subAccountsConfig.get() ?? {};
 
     assertPresence(
       subAccount?.address,
