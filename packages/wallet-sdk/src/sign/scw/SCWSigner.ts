@@ -30,11 +30,11 @@ import {
   assertParamsChainId,
   fillMissingParamsForFetchPermissions,
   getSenderFromRequest,
-  handleInsufficientBalanceError,
   initSubAccountConfig,
   injectRequestCapabilities,
 } from './utils.js';
 import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
+import { handleInsufficientBalanceError } from './utils/handleInsufficientBalance.js';
 
 type ConstructorOptions = {
   metadata: AppMetadata;

@@ -17,8 +17,8 @@ import { fetchRPCRequest } from ':util/provider.js';
 import { HttpRequestError, numberToHex } from 'viem';
 import { SCWKeyManager } from './SCWKeyManager.js';
 import { SCWSigner } from './SCWSigner.js';
-import { handleInsufficientBalanceError } from './utils.js';
 import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
+import { handleInsufficientBalanceError } from './utils/handleInsufficientBalance.js';
 
 vi.mock('./utils/createSubAccountSigner.js', () => ({
   createSubAccountSigner: vi.fn(),
@@ -35,13 +35,9 @@ vi.mock(':store/chain-clients/utils.js', () => ({
   createClients: vi.fn(),
 }));
 
-vi.mock(import('./utils.js'), async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    handleInsufficientBalanceError: vi.fn(),
-  };
-});
+vi.mock('./utils/handleInsufficientBalance.js', () => ({
+  handleInsufficientBalanceError: vi.fn(),
+}));
 
 vi.mock(':util/provider');
 vi.mock('./SCWKeyManager');
