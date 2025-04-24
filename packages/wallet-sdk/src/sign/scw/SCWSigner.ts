@@ -90,7 +90,6 @@ export class SCWSigner implements Signer {
     this.handleResponse(args, decrypted);
   }
 
-  // TODO: Properly type the return value
   async request(request: RequestArguments) {
     if (this.accounts.length === 0) {
       switch (request.method) {
@@ -107,7 +106,7 @@ export class SCWSigner implements Signer {
                 {
                   version: 1,
                   capabilities: {
-                    ...subAccountsConfig?.capabilities ?? {},
+                    ...(subAccountsConfig?.capabilities ?? {}),
                     getSpendLimits: true,
                   },
                 },

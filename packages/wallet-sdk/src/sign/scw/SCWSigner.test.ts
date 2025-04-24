@@ -467,9 +467,7 @@ describe('SCWSigner', () => {
       await signer.cleanup();
 
       vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
-        config: {
-          enableAutoSubAccounts: true,
-        },
+        enableAutoSubAccounts: true,
       });
 
       (decryptContent as Mock).mockResolvedValueOnce({
@@ -512,10 +510,8 @@ describe('SCWSigner', () => {
 
     it('should handle insufficient balance error if external funding source is present', async () => {
       vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
-        config: {
-          enableAutoSubAccounts: true,
-          dynamicSpendLimits: true,
-        },
+        enableAutoSubAccounts: true,
+        dynamicSpendLimits: true,
       });
 
       (createSubAccountSigner as Mock).mockImplementation(async () => {
