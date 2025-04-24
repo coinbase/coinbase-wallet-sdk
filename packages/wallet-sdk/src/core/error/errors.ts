@@ -165,9 +165,9 @@ class EthereumProviderError<T> extends EthereumRpcError<T> {
   }
 }
 
-class ActionableInsufficientBalanceError extends EthereumRpcError<{
+export type InsufficientBalanceErrorData = {
   type: 'INSUFFICIENT_FUNDS';
-  reason: 'NO_SUITABLE_SPEND_PERMISSION_FOUND | SPEND_PERMISSION_ALLOWANCE_EXCEEDED';
+  reason: 'NO_SUITABLE_SPEND_PERMISSION_FOUND' | 'SPEND_PERMISSION_ALLOWANCE_EXCEEDED';
   account: {
     address: Address;
   };
@@ -184,7 +184,9 @@ class ActionableInsufficientBalanceError extends EthereumRpcError<{
       sources: { address: Address; balance: `0x${string}` }[];
     }
   >;
-}> {}
+};
+
+class ActionableInsufficientBalanceError extends EthereumRpcError<InsufficientBalanceErrorData> {}
 
 function isValidEthProviderCode(code: number): boolean {
   return Number.isInteger(code) && code >= 1000 && code <= 4999;

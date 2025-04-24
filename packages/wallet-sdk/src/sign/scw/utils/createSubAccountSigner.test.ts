@@ -49,7 +49,6 @@ vi.mock(':store/chain-clients/utils.js', () => ({
   getBundlerClient: vi.fn().mockReturnValue({}),
   getClient: vi.fn().mockReturnValue({
     request: vi.fn(),
-    getChainId: vi.fn().mockResolvedValue(84532),
     chain: {
       id: 84532,
     },
@@ -98,7 +97,7 @@ describe('createSubAccountSigner', () => {
   });
 
   it('handle send calls', async () => {
-    // // Mock store subaccount sign method
+    // Mock store subaccount sign method
     const request = vi.fn((args) => {
       if (args.method === 'wallet_prepareCalls') {
         return {
@@ -119,7 +118,6 @@ describe('createSubAccountSigner', () => {
 
     (getClient as any).mockReturnValue({
       request,
-      getChainId: vi.fn().mockResolvedValue(84532),
       chain: {
         id: 84532,
       },
@@ -175,6 +173,82 @@ describe('createSubAccountSigner', () => {
     });
   });
 
+  it('handle send calls with funding capability if parentAddress is provided', async () => {
+    // Mock store subaccount sign method
+    const request = vi.fn((args) => {
+      if (args.method === 'wallet_prepareCalls') {
+        return {
+          signatureRequest: {
+            hash: '0x',
+          },
+          type: '0x',
+          userOp: '0x',
+          chainId: numberToHex(84532),
+        };
+      }
+
+      if (args.method === 'wallet_sendPreparedCalls') {
+        return ['0x'];
+      }
+      return undefined;
+    });
+
+    (getClient as any).mockReturnValue({
+      request,
+      chain: {
+        id: 84532,
+      },
+    });
+
+    const signer = await createSubAccountSigner({
+      address: '0x',
+      client: getClient(84532)!,
+      owner,
+      parentAddress: '0x',
+    });
+
+    await signer.request({
+      method: 'wallet_sendCalls',
+      params: [
+        {
+          chainId: numberToHex(84532),
+          calls: [
+            {
+              to: '0x',
+              data: '0x',
+            },
+          ],
+          from: '0x',
+          version: '1.0',
+        },
+      ],
+    });
+
+    expect(request).toHaveBeenCalledWith({
+      method: 'wallet_prepareCalls',
+      params: [
+        {
+          calls: [{ to: '0x', data: '0x' }],
+          capabilities: {
+            funding: [
+              {
+                type: 'spendPermission',
+                data: {
+                  autoApply: true,
+                  sources: ['0x'],
+                  preference: 'PREFER_DIRECT_BALANCE',
+                },
+              },
+            ],
+          },
+          chainId: numberToHex(84532),
+          from: '0x',
+          version: '1.0',
+        },
+      ],
+    });
+  });
+
   it('handle send transaction', async () => {
     const mock = vi.fn();
     (createSmartAccount as any).mockResolvedValue({
@@ -218,7 +292,6 @@ describe('createSubAccountSigner', () => {
 
     (getClient as any).mockReturnValue({
       request,
-      getChainId: vi.fn().mockResolvedValue(84532),
       chain: {
         id: 84532,
       },

@@ -1,4 +1,4 @@
-import { Mock, Mocked, vi } from 'vitest';
+import { Mock, MockInstance, Mocked, vi } from 'vitest';
 
 import { Communicator } from ':core/communicator/Communicator.js';
 import { CB_KEYS_URL } from ':core/constants.js';
@@ -14,8 +14,34 @@ import {
   importKeyFromHexString,
 } from ':util/cipher.js';
 import { fetchRPCRequest } from ':util/provider.js';
+import { HttpRequestError, numberToHex } from 'viem';
 import { SCWKeyManager } from './SCWKeyManager.js';
 import { SCWSigner } from './SCWSigner.js';
+import { handleInsufficientBalanceError } from './utils.js';
+import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
+
+vi.mock('./utils/createSubAccountSigner.js', () => ({
+  createSubAccountSigner: vi.fn(),
+}));
+
+vi.mock(':store/chain-clients/utils.js', () => ({
+  getBundlerClient: vi.fn().mockReturnValue({}),
+  getClient: vi.fn().mockReturnValue({
+    request: vi.fn(),
+    chain: {
+      id: 84532,
+    },
+  }),
+  createClients: vi.fn(),
+}));
+
+vi.mock(import('./utils.js'), async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    handleInsufficientBalanceError: vi.fn(),
+  };
+});
 
 vi.mock(':util/provider');
 vi.mock('./SCWKeyManager');
@@ -219,8 +245,10 @@ describe('SCWSigner', () => {
   });
 
   describe('request', () => {
+    let stateSpy: MockInstance;
+
     beforeAll(() => {
-      vi.spyOn(store, 'getState').mockImplementation(() => ({
+      stateSpy = vi.spyOn(store, 'getState').mockImplementation(() => ({
         account: {
           accounts: ['0xAddress'],
           chain: { id: 1, rpcUrl: 'https://eth-rpc.example.com/1' },
@@ -235,6 +263,11 @@ describe('SCWSigner', () => {
         },
         subAccountConfig: undefined,
       }));
+    });
+
+    afterAll(() => {
+      // For some reason vi.restoreAllMocks() doesn't work for this spy
+      stateSpy.mockRestore();
     });
 
     it('should perform a successful request', async () => {
@@ -431,7 +464,10 @@ describe('SCWSigner', () => {
   });
 
   describe('Auto sub account', () => {
-    it('should create a sub account when eth_requestAccounts is called', async () => {
+    const subAccountAddress = '0x7838d2724FC686813CAf81d4429beff1110c739a';
+    const globalAccountAddress = '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54';
+
+    beforeEach(async () => {
       await signer.cleanup();
 
       vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
@@ -440,11 +476,6 @@ describe('SCWSigner', () => {
         },
       });
 
-      const mockRequest: RequestArguments = {
-        method: 'eth_requestAccounts',
-        params: [],
-      };
-
       (decryptContent as Mock).mockResolvedValueOnce({
         result: {
           value: null,
@@ -452,16 +483,13 @@ describe('SCWSigner', () => {
       });
 
       await signer.handshake({ method: 'handshake' });
-      expect(signer['accounts']).toEqual([]);
-
-      const subAccountAddress = '0x7838d2724FC686813CAf81d4429beff1110c739a';
 
       (decryptContent as Mock).mockResolvedValueOnce({
         result: {
           value: {
             accounts: [
               {
-                address: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+                address: globalAccountAddress,
                 capabilities: {
                   addSubAccount: {
                     address: subAccountAddress,
@@ -474,13 +502,94 @@ describe('SCWSigner', () => {
           },
         },
       });
+    });
+
+    it('should create a sub account when eth_requestAccounts is called', async () => {
+      const mockRequest: RequestArguments = {
+        method: 'eth_requestAccounts',
+        params: [],
+      };
 
       const accounts = await signer.request(mockRequest);
-
       expect(accounts).toContain(subAccountAddress);
     });
 
-    it('should handle funding error capability when eth_sendTransaction is called', async () => {});
+    it('should handle insufficient balance error if external funding source is present', async () => {
+      vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
+        config: {
+          enableAutoSubAccounts: true,
+          dynamicSpendLimits: true,
+        },
+      });
+
+      (createSubAccountSigner as Mock).mockImplementation(async () => {
+        const request = vi.fn((args) => {
+          throw new HttpRequestError({
+            body: args,
+            url: 'https://eth-rpc.example.com/1',
+            details: JSON.stringify({
+              code: -32090,
+              message: 'transfer amount exceeds balance',
+              data: {
+                type: 'INSUFFICIENT_FUNDS',
+                reason: 'NO_SUITABLE_SPEND_PERMISSION_FOUND',
+                account: {
+                  address: subAccountAddress,
+                },
+                required: {
+                  '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee': {
+                    amount: '0x38d7ea4c68000',
+                    sources: [
+                      {
+                        address: globalAccountAddress,
+                        balance: '0x1d73b609302000',
+                      },
+                    ],
+                  },
+                },
+              },
+            }),
+          });
+        });
+
+        return {
+          request,
+        };
+      });
+
+      await signer.request({
+        method: 'eth_requestAccounts',
+        params: [],
+      });
+
+      const mockRequest: RequestArguments = {
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            calls: [
+              {
+                to: '0x',
+                value: '0x0',
+                data: '0x',
+              },
+            ],
+            chainId: numberToHex(84532),
+            from: subAccountAddress,
+            version: '1.0',
+          },
+        ],
+      };
+
+      signer = new SCWSigner({
+        metadata: mockMetadata,
+        communicator: mockCommunicator,
+        callback: mockCallback,
+      });
+
+      await signer.request(mockRequest);
+
+      expect(handleInsufficientBalanceError).toHaveBeenCalled();
+    });
   });
 
   describe('SCWSigner - coinbase_fetchPermissions', () => {
