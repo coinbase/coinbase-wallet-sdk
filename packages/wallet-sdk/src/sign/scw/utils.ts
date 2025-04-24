@@ -297,7 +297,6 @@ export function createSpendPermissionBatchMessage({
   spendPermissionBatch: SpendPermissionBatch;
   chainId: number;
 }) {
-  // TODO: Batch spend permission message
   return {
     domain: {
       name: 'Spend Permission Manager',
@@ -305,7 +304,36 @@ export function createSpendPermissionBatchMessage({
       chainId,
       verifyingContract: spendPermissionManagerAddress,
     },
-    spendPermissionBatch,
+    types: {
+      SpendPermissionBatch: [
+        { name: 'account', type: 'address' },
+        { name: 'period', type: 'uint48' },
+        { name: 'start', type: 'uint48' },
+        { name: 'end', type: 'uint48' },
+        { name: 'permissions', type: 'PermissionDetails[]' },
+      ],
+      PermissionDetails: [
+        { name: 'spender', type: 'address' },
+        { name: 'token', type: 'address' },
+        { name: 'allowance', type: 'uint160' },
+        { name: 'salt', type: 'uint256' },
+        { name: 'extraData', type: 'bytes' },
+      ],
+    },
+    primaryType: 'SpendPermissionBatch',
+    message: {
+      account: spendPermissionBatch.account,
+      period: spendPermissionBatch.period,
+      start: spendPermissionBatch.start,
+      end: spendPermissionBatch.end,
+      permissions: spendPermissionBatch.permissions.map((p) => ({
+        spender: p.spender,
+        token: p.token,
+        allowance: p.allowance,
+        salt: p.salt,
+        extraData: p.extraData,
+      })),
+    },
   } as const;
 }
 
