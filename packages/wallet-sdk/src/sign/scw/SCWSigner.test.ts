@@ -6,7 +6,6 @@ import { standardErrors } from ':core/error/errors.js';
 import { EncryptedData, RPCResponseMessage } from ':core/message/RPCMessage.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
 import { SpendLimit } from ':core/rpc/coinbase_fetchSpendPermissions.js';
-import { getClient } from ':store/chain-clients/utils.js';
 import { store } from ':store/store.js';
 import {
   decryptContent,
@@ -34,6 +33,9 @@ vi.mock(':store/chain-clients/utils.js', () => ({
     chain: {
       id: 84532,
     },
+    waitForTransaction: vi.fn().mockResolvedValue({
+      status: 'success',
+    }),
   }),
   createClients: vi.fn(),
 }));
@@ -163,7 +165,7 @@ describe('SCWSigner', () => {
       ]);
       expect(mockSetAccount).toHaveBeenNthCalledWith(1, {
         chain: {
-          id: 1,
+          id: 1,  
           rpcUrl: 'https://eth-rpc.example.com/1',
         },
       });
@@ -724,7 +726,7 @@ describe('SCWSigner', () => {
       });
     });
   });
-  
+
   describe('auto ownership change', () => {
     beforeEach(() => {
       vi.spyOn(store, 'getState').mockImplementation(() => ({
@@ -760,13 +762,6 @@ describe('SCWSigner', () => {
         },
       });
 
-      (getClient as Mock).mockReturnValue({
-        getChainId: vi.fn().mockReturnValue(84532),
-        waitForTransaction: vi.fn().mockResolvedValue({
-          status: 'success',
-        }),
-      });
-
       await signer.handshake({ method: 'handshake' });
       expect(signer['accounts']).toEqual([]);
 
@@ -780,8 +775,8 @@ describe('SCWSigner', () => {
             version: '1',
             calls: [],
             from: '0x7838d2724FC686813CAf81d4429beff1110c739a',
-          }
-        ]
+          },
+        ],
       };
 
       (decryptContent as Mock).mockResolvedValueOnce({
