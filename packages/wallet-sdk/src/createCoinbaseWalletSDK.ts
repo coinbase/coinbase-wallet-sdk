@@ -19,6 +19,7 @@ import { SubAccount, ToOwnerAccountFn, store } from './store/store.js';
 export type CreateCoinbaseWalletSDKOptions = Partial<AppMetadata> & {
   preference?: Preference;
   subAccounts?: SubAccountOptions;
+  paymasterUrls?: Record<number, string>;
 };
 
 const DEFAULT_PREFERENCE: Preference = {
@@ -44,6 +45,7 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
       appChainIds: params.appChainIds || [],
     },
     preference: Object.assign(DEFAULT_PREFERENCE, params.preference ?? {}),
+    paymasterUrls: params.paymasterUrls,
   };
 
   // If we have a toOwnerAccount function, set it in the non-persisted config

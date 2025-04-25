@@ -43,6 +43,9 @@ vi.mock(':store/store.js', () => ({
       }),
     },
   },
+  config: {
+    get: vi.fn().mockReturnValue({}),
+  },
 }));
 
 vi.mock(':store/chain-clients/utils.js', () => ({

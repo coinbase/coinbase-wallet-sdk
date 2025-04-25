@@ -7,7 +7,7 @@ import {
   FetchPermissionsRequest,
 } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { Address } from ':core/type/index.js';
-import { store } from ':store/store.js';
+import { config, store } from ':store/store.js';
 import { get } from ':util/get.js';
 import { initSnackbar } from ':util/web.js';
 import { waitForCallsStatus } from 'viem/experimental';
@@ -72,8 +72,8 @@ export function assertParamsChainId(params: unknown): asserts params is [
   }
 }
 
-export function injectRequestCapabilities(
-  request: RequestArguments,
+export function injectRequestCapabilities<T extends RequestArguments>(
+  request: T,
   capabilities: Record<string, unknown>
 ) {
   // Modify request to include auto sub account capabilities
@@ -103,7 +103,7 @@ export function injectRequestCapabilities(
     }
   }
 
-  return modifiedRequest;
+  return modifiedRequest as T;
 }
 
 /**
@@ -353,37 +353,39 @@ export async function waitForCallsTransactionHash({
 }
 
 export function createWalletSendCallsRequest({
-  to,
-  data,
-  value,
+  calls,
   from,
   chainId,
+  capabilities,
 }: {
-  to: Address;
-  data: Hex;
-  value: Hex;
+  calls: { to: Address; data: Hex; value: Hex }[];
   from: Address;
-  chainId: Hex;
+  chainId: number;
+  capabilities?: Record<string, unknown>;
 }) {
-  return {
+  const paymasterUrls = config.get().paymasterUrls;
+
+  let request: { method: 'wallet_sendCalls'; params: WalletSendCallsParameters } = {
     method: 'wallet_sendCalls',
     params: [
       {
         version: '1.0',
-        calls: [
-          {
-            to,
-            data,
-            value,
-          },
-        ],
-        chainId,
+        calls,
+        chainId: numberToHex(chainId),
         from,
         atomicRequired: true,
-        // TODO: Add paymaster capabilities from config
+        capabilities,
       },
     ],
   };
+
+  if (paymasterUrls?.[chainId]) {
+    request = injectRequestCapabilities(request, {
+      paymasterService: { url: paymasterUrls?.[chainId] },
+    });
+  }
+
+  return request;
 }
 
 export async function presentSubAccountFundingDialog() {

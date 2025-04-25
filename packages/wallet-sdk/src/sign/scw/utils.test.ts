@@ -6,6 +6,7 @@ import {
   assertFetchPermissionsRequest,
   assertParamsChainId,
   createSpendPermissionBatchMessage,
+  createWalletSendCallsRequest,
   fillMissingParamsForFetchPermissions,
   getSenderFromRequest,
   initSubAccountConfig,
@@ -315,5 +316,40 @@ describe('createSpendPermissionBatchMessage', () => {
     });
 
     expect(hash).toEqual('0x010415415ed40b5f566f89869e2aa4cd26c6af3b22710dda12c6bd1c906095d3');
+  });
+});
+
+describe('createWalletSendCallsRequest', () => {
+  it('should inject paymaster url if provided', () => {
+    // mock store config
+    vi.spyOn(store.config, 'get').mockReturnValue({
+      paymasterUrls: {
+        1: 'https://paymaster.example.com',
+      },
+      version: '1.0.0',
+    });
+
+    const request = createWalletSendCallsRequest({
+      calls: [
+        {
+          to: '0x123',
+          data: '0x123',
+          value: '0x123',
+        },
+      ],
+      from: '0x123',
+      chainId: 1,
+    });
+
+    expect(request).toEqual({
+      method: 'wallet_sendCalls',
+      params: [
+        expect.objectContaining({
+          capabilities: {
+            paymasterService: { url: 'https://paymaster.example.com' },
+          },
+        }),
+      ],
+    });
   });
 });

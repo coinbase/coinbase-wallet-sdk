@@ -105,4 +105,5 @@ export type SubAccountOptions = {
 export interface ConstructorOptions {
   metadata: AppMetadata;
   preference: Preference;
+  paymasterUrls?: Record<number, string>;
 }
