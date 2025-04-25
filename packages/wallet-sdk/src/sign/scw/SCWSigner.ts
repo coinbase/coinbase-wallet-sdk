@@ -32,6 +32,7 @@ import {
   getSenderFromRequest,
   initSubAccountConfig,
   injectRequestCapabilities,
+  makeDataSuffix,
 } from './utils.js';
 import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
 import { handleInsufficientBalanceError } from './utils/handleInsufficientBalance.js';
@@ -471,7 +472,8 @@ export class SCWSigner implements Signer {
 
   private async sendRequestToSubAccountSigner(request: RequestArguments) {
     const subAccount = store.subAccounts.get();
-    const config = store.subAccountsConfig.get() ?? {};
+    const subAccountsConfig = store.subAccountsConfig.get();
+    const config = store.config.get();
 
     assertPresence(
       subAccount?.address,
@@ -479,8 +481,8 @@ export class SCWSigner implements Signer {
     );
 
     // Get the owner account from the config
-    const ownerAccount = config?.toOwnerAccount
-      ? await config.toOwnerAccount()
+    const ownerAccount = subAccountsConfig?.toOwnerAccount
+      ? await subAccountsConfig.toOwnerAccount()
       : await getCryptoKeyAccount();
 
     assertPresence(
@@ -509,6 +511,10 @@ export class SCWSigner implements Signer {
       globalAccountAddress,
       standardErrors.provider.unauthorized('no global account found')
     );
+    const dataSuffix = makeDataSuffix({
+      attribution: config.preference?.attribution,
+      dappOrigin: window.location.origin,
+    });
 
     const { request: subAccountRequest } = await createSubAccountSigner({
       address: subAccount.address,
@@ -517,6 +523,7 @@ export class SCWSigner implements Signer {
       factory: subAccount.factory,
       factoryData: subAccount.factoryData,
       parentAddress: globalAccountAddress,
+      attribution: dataSuffix ? { suffix: dataSuffix } : undefined,
     });
 
     try {
@@ -536,8 +543,8 @@ export class SCWSigner implements Signer {
       if (
         !(
           isActionableHttpRequestError(errorObject) &&
-          config?.dynamicSpendLimits &&
-          config.enableAutoSubAccounts &&
+          subAccountsConfig?.dynamicSpendLimits &&
+          subAccountsConfig?.enableAutoSubAccounts &&
           errorObject.data
         )
       ) {
