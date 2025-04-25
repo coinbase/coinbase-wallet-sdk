@@ -1,8 +1,12 @@
 import { store } from ':store/store.js';
+import { hashTypedData, hexToBigInt, numberToHex } from 'viem';
 import {
+  SpendPermissionBatch,
   addSenderToRequest,
   assertFetchPermissionsRequest,
   assertParamsChainId,
+  createSpendPermissionBatchMessage,
+  createWalletSendCallsRequest,
   fillMissingParamsForFetchPermissions,
   getSenderFromRequest,
   initSubAccountConfig,
@@ -260,6 +264,92 @@ describe('fillMissingParamsForFetchPermissions', () => {
     expect(fillMissingParamsForFetchPermissions(request)).toEqual({
       method: 'coinbase_fetchPermissions',
       params: [{ account: '0x123', chainId: '0x1', spender: '0x456' }],
+    });
+  });
+});
+
+describe('createSpendPermissionBatchMessage', () => {
+  it('should create a correctly structured batch message that produces the expected hash', () => {
+    const spendPermissionBatch: SpendPermissionBatch = {
+      account: '0x1234567890123456789012345678901234567890' as `0x${string}`,
+      period: 86400,
+      start: 1745516872,
+      end: 1748108872,
+      permissions: [
+        {
+          spender: '0xabcdef0123456789abcdef0123456789abcdef01' as `0x${string}`,
+          token: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' as `0x${string}`,
+          allowance: numberToHex(BigInt('1000000000000')),
+          salt: '0x1',
+          extraData: '0x',
+        },
+        {
+          spender: '0x2222222222222222222222222222222222222222' as `0x${string}`,
+          token: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' as `0x${string}`,
+          allowance: numberToHex(BigInt('1000000000000000000')),
+          salt: '0x2',
+          extraData: '0x1234',
+        },
+      ],
+    } as const;
+
+    const message = createSpendPermissionBatchMessage({
+      spendPermissionBatch,
+      chainId: 8453, // Using mainnet chain ID
+    });
+
+    // Convert hex values to bigint for EIP-712 typed data
+    const typedDataMessage = {
+      ...message.message,
+      permissions: message.message.permissions.map((p) => ({
+        ...p,
+        allowance: hexToBigInt(p.allowance),
+        salt: hexToBigInt(p.salt),
+      })),
+    };
+
+    const hash = hashTypedData({
+      domain: message.domain,
+      types: message.types,
+      primaryType: message.primaryType,
+      message: typedDataMessage,
+    });
+
+    expect(hash).toEqual('0x010415415ed40b5f566f89869e2aa4cd26c6af3b22710dda12c6bd1c906095d3');
+  });
+});
+
+describe('createWalletSendCallsRequest', () => {
+  it('should inject paymaster url if provided', () => {
+    // mock store config
+    vi.spyOn(store.config, 'get').mockReturnValue({
+      paymasterUrls: {
+        1: 'https://paymaster.example.com',
+      },
+      version: '1.0.0',
+    });
+
+    const request = createWalletSendCallsRequest({
+      calls: [
+        {
+          to: '0x123',
+          data: '0x123',
+          value: '0x123',
+        },
+      ],
+      from: '0x123',
+      chainId: 1,
+    });
+
+    expect(request).toEqual({
+      method: 'wallet_sendCalls',
+      params: [
+        expect.objectContaining({
+          capabilities: {
+            paymasterService: { url: 'https://paymaster.example.com' },
+          },
+        }),
+      ],
     });
   });
 });

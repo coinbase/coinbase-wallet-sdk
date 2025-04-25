@@ -1,3 +1,4 @@
+import { Address, HttpRequestError } from 'viem';
 import { standardErrorCodes } from './constants.js';
 import { getMessageFromCode } from './utils.js';
 
@@ -164,6 +165,59 @@ class EthereumProviderError<T> extends EthereumRpcError<T> {
   }
 }
 
+export type InsufficientBalanceErrorData = {
+  type: 'INSUFFICIENT_FUNDS';
+  reason: 'NO_SUITABLE_SPEND_PERMISSION_FOUND' | 'SPEND_PERMISSION_ALLOWANCE_EXCEEDED';
+  account: {
+    address: Address;
+  };
+  /**
+   * The amount of each token that is required to send the transaction.
+   */
+  required: Record<
+    Address,
+    {
+      amount: `0x${string}`;
+      /**
+       * Sources of funds available to the account with sufficient balance to cover the required amount
+       */
+      sources: { address: Address; balance: `0x${string}` }[];
+    }
+  >;
+};
+
+class ActionableInsufficientBalanceError extends EthereumRpcError<InsufficientBalanceErrorData> {}
+
 function isValidEthProviderCode(code: number): boolean {
   return Number.isInteger(code) && code >= 1000 && code <= 4999;
+}
+
+export function isActionableHttpRequestError(
+  errorObject: unknown
+): errorObject is ActionableInsufficientBalanceError {
+  return (
+    typeof errorObject === 'object' &&
+    errorObject !== null &&
+    'code' in errorObject &&
+    'data' in errorObject &&
+    errorObject.code === -32090 &&
+    typeof errorObject.data === 'object' &&
+    errorObject.data !== null &&
+    'type' in errorObject.data &&
+    errorObject.data.type === 'INSUFFICIENT_FUNDS'
+  );
+}
+
+export function isViemError(error: unknown): error is HttpRequestError {
+  // Check if object and has code, message, and details
+  return typeof error === 'object' && error !== null && 'details' in error;
+}
+
+export function viemHttpErrorToProviderError(error: HttpRequestError) {
+  try {
+    const details = JSON.parse(error.details);
+    return new EthereumRpcError(details.code, details.message, details.data);
+  } catch (_) {
+    return null;
+  }
 }

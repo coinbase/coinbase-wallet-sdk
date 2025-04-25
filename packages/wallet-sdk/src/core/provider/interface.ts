@@ -99,10 +99,11 @@ export type SubAccountOptions = {
   /**
    * Used when users have insufficient funds, the SDK will request a new spend limit (only used when auto sub accounts is enabled)
    */
-  dynamicSpendLimit?: boolean;
+  dynamicSpendLimits?: boolean;
 };
 
 export interface ConstructorOptions {
   metadata: AppMetadata;
   preference: Preference;
+  paymasterUrls?: Record<number, string>;
 }

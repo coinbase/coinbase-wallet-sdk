@@ -56,6 +56,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
               signerType = await this.requestSignerSelection(args);
             }
             const signer = this.initSigner(signerType);
+
             if (signerType === 'scw' && subAccountsConfig?.enableAutoSubAccounts) {
               await signer.handshake({ method: 'handshake' });
               await signer.request(args);

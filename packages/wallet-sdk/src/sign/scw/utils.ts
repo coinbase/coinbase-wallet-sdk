@@ -1,14 +1,21 @@
-import { Address, numberToHex } from 'viem';
+import { PublicClient, WalletSendCallsParameters, hexToBigInt } from 'viem';
+
+import { InsufficientBalanceErrorData } from ':core/error/errors.js';
+import { Hex, keccak256, numberToHex, slice, toHex } from 'viem';
 
 import { standardErrors } from ':core/error/errors.js';
-import { RequestArguments } from ':core/provider/interface.js';
+import { Attribution, RequestArguments } from ':core/provider/interface.js';
 import {
   EmptyFetchPermissionsRequest,
   FetchPermissionsRequest,
 } from ':core/rpc/coinbase_fetchSpendPermissions.js';
-import { store } from ':store/store.js';
+import { Address } from ':core/type/index.js';
+import { config, store } from ':store/store.js';
 import { get } from ':util/get.js';
+import { initSnackbar } from ':util/web.js';
+import { waitForCallsStatus } from 'viem/experimental';
 import { getCryptoKeyAccount } from '../../kms/crypto-key/index.js';
+import { spendPermissionManagerAddress } from './utils/constants.js';
 
 // ***************************************************************
 // Utility
@@ -68,14 +75,14 @@ export function assertParamsChainId(params: unknown): asserts params is [
   }
 }
 
-export function injectRequestCapabilities(
-  request: RequestArguments,
+export function injectRequestCapabilities<T extends RequestArguments>(
+  request: T,
   capabilities: Record<string, unknown>
 ) {
   // Modify request to include auto sub account capabilities
   const modifiedRequest = { ...request };
 
-  if (capabilities && ['wallet_sendCalls', 'wallet_connect'].includes(request.method)) {
+  if (capabilities && request.method.startsWith('wallet_')) {
     let requestCapabilities = get(modifiedRequest, 'params.0.capabilities');
 
     if (typeof requestCapabilities === 'undefined') {
@@ -99,7 +106,7 @@ export function injectRequestCapabilities(
     }
   }
 
-  return modifiedRequest;
+  return modifiedRequest as T;
 }
 
 /**
@@ -107,7 +114,7 @@ export function injectRequestCapabilities(
  * @returns void
  */
 export async function initSubAccountConfig() {
-  const config = store.subAccountsConfig.get();
+  const config = store.subAccountsConfig.get() ?? {};
 
   if (!config?.enableAutoSubAccounts) {
     return;
@@ -143,6 +150,29 @@ export async function initSubAccountConfig() {
     capabilities,
   });
 }
+
+export type PermissionDetails = {
+  spender: Address;
+  token: Address;
+  allowance: Hex;
+  salt: Hex;
+  extraData: Hex;
+};
+
+export type SpendPermission = PermissionDetails & {
+  account: Address;
+  period: number;
+  start: number;
+  end: number;
+};
+
+export type SpendPermissionBatch = {
+  account: Address;
+  period: number;
+  start: number;
+  end: number;
+  permissions: PermissionDetails[];
+};
 
 export function assertFetchPermissionsRequest(
   request: RequestArguments
@@ -219,4 +249,267 @@ export function fillMissingParamsForFetchPermissions(
       },
     ],
   };
+}
+
+export function createSpendPermissionMessage({
+  spendPermission,
+  chainId,
+}: {
+  spendPermission: SpendPermission;
+  chainId: number;
+}) {
+  return {
+    domain: {
+      name: 'Spend Permission Manager',
+      version: '1',
+      chainId: chainId,
+      verifyingContract: spendPermissionManagerAddress,
+    },
+    types: {
+      SpendPermission: [
+        { name: 'account', type: 'address' },
+        { name: 'spender', type: 'address' },
+        { name: 'token', type: 'address' },
+        { name: 'allowance', type: 'uint160' },
+        { name: 'period', type: 'uint48' },
+        { name: 'start', type: 'uint48' },
+        { name: 'end', type: 'uint48' },
+        { name: 'salt', type: 'uint256' },
+        { name: 'extraData', type: 'bytes' },
+      ],
+    },
+    primaryType: 'SpendPermission',
+    message: {
+      account: spendPermission.account,
+      spender: spendPermission.spender,
+      token: spendPermission.token,
+      allowance: spendPermission.allowance,
+      period: spendPermission.period,
+      start: spendPermission.start,
+      end: spendPermission.end,
+      salt: spendPermission.salt,
+      extraData: spendPermission.extraData,
+    },
+  } as const;
+}
+
+export function createSpendPermissionBatchMessage({
+  spendPermissionBatch,
+  chainId,
+}: {
+  spendPermissionBatch: SpendPermissionBatch;
+  chainId: number;
+}) {
+  return {
+    domain: {
+      name: 'Spend Permission Manager',
+      version: '1',
+      chainId,
+      verifyingContract: spendPermissionManagerAddress,
+    },
+    types: {
+      SpendPermissionBatch: [
+        { name: 'account', type: 'address' },
+        { name: 'period', type: 'uint48' },
+        { name: 'start', type: 'uint48' },
+        { name: 'end', type: 'uint48' },
+        { name: 'permissions', type: 'PermissionDetails[]' },
+      ],
+      PermissionDetails: [
+        { name: 'spender', type: 'address' },
+        { name: 'token', type: 'address' },
+        { name: 'allowance', type: 'uint160' },
+        { name: 'salt', type: 'uint256' },
+        { name: 'extraData', type: 'bytes' },
+      ],
+    },
+    primaryType: 'SpendPermissionBatch',
+    message: {
+      account: spendPermissionBatch.account,
+      period: spendPermissionBatch.period,
+      start: spendPermissionBatch.start,
+      end: spendPermissionBatch.end,
+      permissions: spendPermissionBatch.permissions.map((p) => ({
+        spender: p.spender,
+        token: p.token,
+        allowance: p.allowance,
+        salt: p.salt,
+        extraData: p.extraData,
+      })),
+    },
+  } as const;
+}
+
+export async function waitForCallsTransactionHash({
+  client,
+  id,
+}: { client: PublicClient; id: string }) {
+  const result = await waitForCallsStatus(client, {
+    id,
+  });
+
+  if (result.status === 'success') {
+    return result.receipts?.[0].transactionHash;
+  }
+
+  throw standardErrors.rpc.internal('failed to send transaction');
+}
+
+export function createWalletSendCallsRequest({
+  calls,
+  from,
+  chainId,
+  capabilities,
+}: {
+  calls: { to: Address; data: Hex; value: Hex }[];
+  from: Address;
+  chainId: number;
+  capabilities?: Record<string, unknown>;
+}) {
+  const paymasterUrls = config.get().paymasterUrls;
+
+  let request: { method: 'wallet_sendCalls'; params: WalletSendCallsParameters } = {
+    method: 'wallet_sendCalls',
+    params: [
+      {
+        version: '1.0',
+        calls,
+        chainId: numberToHex(chainId),
+        from,
+        atomicRequired: true,
+        capabilities,
+      },
+    ],
+  };
+
+  if (paymasterUrls?.[chainId]) {
+    request = injectRequestCapabilities(request, {
+      paymasterService: { url: paymasterUrls?.[chainId] },
+    });
+  }
+
+  return request;
+}
+
+export async function presentSubAccountFundingDialog() {
+  const snackbar = initSnackbar();
+  const userChoice = await new Promise<'update_permission' | 'continue_popup' | 'cancel'>(
+    (resolve) => {
+      snackbar.presentItem({
+        autoExpand: true,
+        message: 'Insufficient spend permission. Choose how to proceed:',
+        menuItems: [
+          {
+            isRed: false,
+            info: 'Create new Spend Limit',
+            svgWidth: '10',
+            svgHeight: '11',
+            path: '',
+            defaultFillRule: 'evenodd',
+            defaultClipRule: 'evenodd',
+            onClick: () => {
+              snackbar.clear();
+              resolve('update_permission');
+            },
+          },
+          {
+            isRed: false,
+            info: 'Continue in Popup',
+            svgWidth: '10',
+            svgHeight: '11',
+            path: '',
+            defaultFillRule: 'evenodd',
+            defaultClipRule: 'evenodd',
+            onClick: () => {
+              snackbar.clear();
+              resolve('continue_popup');
+            },
+          },
+          {
+            isRed: true,
+            info: 'Cancel',
+            svgWidth: '10',
+            svgHeight: '11',
+            path: '',
+            defaultFillRule: 'evenodd',
+            defaultClipRule: 'evenodd',
+            onClick: () => {
+              snackbar.clear();
+              resolve('cancel');
+            },
+          },
+        ],
+      });
+    }
+  );
+
+  return userChoice;
+}
+export function parseFundingOptions({
+  errorData,
+  sourceAddress,
+}: { errorData: InsufficientBalanceErrorData; sourceAddress: Address }) {
+  const spendPermissionRequests: {
+    token: Address;
+    requiredAmount: bigint;
+  }[] = [];
+  for (const [token, { amount, sources }] of Object.entries(errorData?.required ?? {})) {
+    const sourcesWithSufficientBalance = sources.filter((source) => {
+      return (
+        hexToBigInt(source.balance) >= hexToBigInt(amount) &&
+        source.address.toLowerCase() === sourceAddress?.toLowerCase()
+      );
+    });
+    if (sourcesWithSufficientBalance.length === 0) {
+      throw new Error('Source address has insufficient balance for a token');
+    }
+
+    spendPermissionRequests.push({
+      token: token as `0x${string}`,
+      requiredAmount: hexToBigInt(amount),
+    });
+  }
+
+  return spendPermissionRequests;
+}
+export function isSendCallsParams(params: unknown): params is WalletSendCallsParameters {
+  return typeof params === 'object' && params !== null && 'calls' in params;
+}
+export function isEthSendTransactionParams(params: unknown): params is [
+  {
+    to: Address;
+    data: Hex;
+    from: Address;
+    value: Hex;
+  },
+] {
+  return (
+    Array.isArray(params) &&
+    params.length === 1 &&
+    typeof params[0] === 'object' &&
+    params[0] !== null &&
+    'to' in params[0]
+  );
+}
+export function compute16ByteHash(input: string): Hex {
+  return slice(keccak256(toHex(input)), 0, 16);
+}
+
+export function makeDataSuffix({
+  attribution,
+  dappOrigin,
+}: { attribution?: Attribution; dappOrigin: string }): Hex | undefined {
+  if (!attribution) {
+    return;
+  }
+
+  if ('auto' in attribution && attribution.auto && dappOrigin) {
+    return compute16ByteHash(dappOrigin);
+  }
+
+  if ('dataSuffix' in attribution) {
+    return attribution.dataSuffix;
+  }
+
+  return;
 }

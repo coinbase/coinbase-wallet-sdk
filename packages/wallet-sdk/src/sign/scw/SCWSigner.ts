@@ -1,8 +1,8 @@
+import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { Hex, hexToNumber, numberToHex } from 'viem';
 
 import { Communicator } from ':core/communicator/Communicator.js';
-import { CB_WALLET_RPC_URL } from ':core/constants.js';
-import { standardErrors } from ':core/error/errors.js';
+import { isActionableHttpRequestError, isViemError, standardErrors } from ':core/error/errors.js';
 import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage.js';
 import { RPCResponse } from ':core/message/RPCResponse.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
@@ -32,8 +32,10 @@ import {
   getSenderFromRequest,
   initSubAccountConfig,
   injectRequestCapabilities,
+  makeDataSuffix,
 } from './utils.js';
 import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
+import { handleInsufficientBalanceError } from './utils/handleInsufficientBalance.js';
 
 type ConstructorOptions = {
   metadata: AppMetadata;
@@ -89,7 +91,6 @@ export class SCWSigner implements Signer {
     this.handleResponse(args, decrypted);
   }
 
-  // TODO: Properly type the return value
   async request(request: RequestArguments) {
     if (this.accounts.length === 0) {
       switch (request.method) {
@@ -106,7 +107,7 @@ export class SCWSigner implements Signer {
                 {
                   version: 1,
                   capabilities: {
-                    ...subAccountsConfig?.capabilities ?? {},
+                    ...(subAccountsConfig?.capabilities ?? {}),
                     getSpendLimits: true,
                   },
                 },
@@ -428,7 +429,12 @@ export class SCWSigner implements Signer {
     const state = store.getState();
     const subAccount = state.subAccount;
     if (subAccount?.address) {
-      this.callback?.('accountsChanged', [this.accounts[0], subAccount.address]);
+      const allAccounts = this.accounts.filter(
+        (account) => account.toLowerCase() !== subAccount.address.toLowerCase()
+      );
+      this.accounts = allAccounts;
+
+      this.callback?.('accountsChanged', [subAccount.address, ...allAccounts]);
       return subAccount;
     }
 
@@ -444,7 +450,14 @@ export class SCWSigner implements Signer {
       factory: response.factory,
       factoryData: response.factoryData,
     });
-    this.callback?.('accountsChanged', [this.accounts[0], response.address]);
+    const existingAccounts = this.accounts.filter(
+      (account) => account.toLowerCase() !== response.address.toLowerCase()
+    );
+    const allAccounts = [response.address, ...existingAccounts];
+    store.account.set({ accounts: allAccounts });
+    this.accounts = allAccounts;
+
+    this.callback?.('accountsChanged', allAccounts);
     return response;
   }
 
@@ -459,7 +472,8 @@ export class SCWSigner implements Signer {
 
   private async sendRequestToSubAccountSigner(request: RequestArguments) {
     const subAccount = store.subAccounts.get();
-    const config = store.subAccountsConfig.get();
+    const subAccountsConfig = store.subAccountsConfig.get();
+    const config = store.config.get();
 
     assertPresence(
       subAccount?.address,
@@ -467,8 +481,8 @@ export class SCWSigner implements Signer {
     );
 
     // Get the owner account from the config
-    const ownerAccount = config?.toOwnerAccount
-      ? await config.toOwnerAccount()
+    const ownerAccount = subAccountsConfig?.toOwnerAccount
+      ? await subAccountsConfig.toOwnerAccount()
       : await getCryptoKeyAccount();
 
     assertPresence(
@@ -489,14 +503,69 @@ export class SCWSigner implements Signer {
       standardErrors.rpc.internal(`client not found for chainId ${this.chain.id}`)
     );
 
+    const globalAccountAddress = this.accounts.find(
+      (account) => account.toLowerCase() !== subAccount.address.toLowerCase()
+    );
+
+    assertPresence(
+      globalAccountAddress,
+      standardErrors.provider.unauthorized('no global account found')
+    );
+    const dataSuffix = makeDataSuffix({
+      attribution: config.preference?.attribution,
+      dappOrigin: window.location.origin,
+    });
+
     const { request: subAccountRequest } = await createSubAccountSigner({
       address: subAccount.address,
       owner: ownerAccount.account,
       client: client,
       factory: subAccount.factory,
       factoryData: subAccount.factoryData,
+      parentAddress: globalAccountAddress,
+      attribution: dataSuffix ? { suffix: dataSuffix } : undefined,
     });
 
-    return subAccountRequest(request);
+    try {
+      const result = await subAccountRequest(request);
+      return result;
+    } catch (error) {
+      let errorObject: unknown;
+
+      if (isViemError(error)) {
+        errorObject = JSON.parse(error.details);
+      } else if (isActionableHttpRequestError(error)) {
+        errorObject = error;
+      } else {
+        throw error;
+      }
+
+      if (
+        !(
+          isActionableHttpRequestError(errorObject) &&
+          subAccountsConfig?.dynamicSpendLimits &&
+          subAccountsConfig?.enableAutoSubAccounts &&
+          errorObject.data
+        )
+      ) {
+        throw error;
+      }
+
+      try {
+        const result = await handleInsufficientBalanceError({
+          errorData: errorObject.data,
+          globalAccountAddress,
+          subAccountAddress: subAccount.address,
+          client,
+          request,
+          subAccountRequest,
+          globalAccountRequest: this.request.bind(this),
+        });
+        return result;
+      } catch (handlingError) {
+        console.error(handlingError);
+        throw error;
+      }
+    }
   }
 }
