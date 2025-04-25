@@ -1,11 +1,4 @@
-import {
-  Hex,
-  PublicClient,
-  WalletSendCallsParameters,
-  hexToBigInt,
-  hexToNumber,
-  numberToHex,
-} from 'viem';
+import { Hex, PublicClient, WalletSendCallsParameters, hexToBigInt, numberToHex } from 'viem';
 
 import { InsufficientBalanceErrorData, standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
@@ -367,7 +360,7 @@ export function createWalletSendCallsRequest({
 }: {
   calls: { to: Address; data: Hex; value: Hex }[];
   from: Address;
-  chainId: Hex;
+  chainId: number;
   capabilities?: Record<string, unknown>;
 }) {
   const paymasterUrls = config.get().paymasterUrls;
@@ -378,7 +371,7 @@ export function createWalletSendCallsRequest({
       {
         version: '1.0',
         calls,
-        chainId,
+        chainId: numberToHex(chainId),
         from,
         atomicRequired: true,
         capabilities,
@@ -386,9 +379,9 @@ export function createWalletSendCallsRequest({
     ],
   };
 
-  if (paymasterUrls?.[hexToNumber(chainId)]) {
+  if (paymasterUrls?.[chainId]) {
     request = injectRequestCapabilities(request, {
-      paymasterService: { url: paymasterUrls?.[hexToNumber(chainId)] },
+      paymasterService: { url: paymasterUrls?.[chainId] },
     });
   }
 

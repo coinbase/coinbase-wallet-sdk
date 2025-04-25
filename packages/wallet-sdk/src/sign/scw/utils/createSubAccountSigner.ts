@@ -114,7 +114,7 @@ export async function createSubAccountSigner({
         // Transform into wallet_sendCalls request
         const sendCallsRequest = createWalletSendCallsRequest({
           calls: [params],
-          chainId: numberToHex(chainId),
+          chainId,
           from: params.from,
         });
 

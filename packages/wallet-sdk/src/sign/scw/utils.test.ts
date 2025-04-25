@@ -338,7 +338,7 @@ describe('createWalletSendCallsRequest', () => {
         },
       ],
       from: '0x123',
-      chainId: '0x1',
+      chainId: 1,
     });
 
     expect(request).toEqual({

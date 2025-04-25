@@ -168,7 +168,7 @@ export async function handleInsufficientBalanceError({
   ) {
     const sendCallsRequest = createWalletSendCallsRequest({
       calls: [request.params[0]],
-      chainId: numberToHex(chainId),
+      chainId,
       from: request.params[0].from,
     });
 
