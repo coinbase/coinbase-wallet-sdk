@@ -193,15 +193,31 @@ function isValidEthProviderCode(code: number): boolean {
 }
 
 export function isActionableHttpRequestError(
-  errorObject: any
+  errorObject: unknown
 ): errorObject is ActionableInsufficientBalanceError {
-  return errorObject.code === -32090 && errorObject.data?.type === 'INSUFFICIENT_FUNDS';
+  return (
+    typeof errorObject === 'object' &&
+    errorObject !== null &&
+    'code' in errorObject &&
+    'data' in errorObject &&
+    errorObject.code === -32090 &&
+    typeof errorObject.data === 'object' &&
+    errorObject.data !== null &&
+    'type' in errorObject.data &&
+    errorObject.data.type === 'INSUFFICIENT_FUNDS'
+  );
 }
 
-export function serializeHttpRequestError(error: unknown) {
-  if (!(error instanceof HttpRequestError)) {
+export function isViemError(error: unknown): error is HttpRequestError {
+  // Check if object and has code, message, and details
+  return typeof error === 'object' && error !== null && 'details' in error;
+}
+
+export function viemHttpErrorToProviderError(error: HttpRequestError) {
+  try {
+    const details = JSON.parse(error.details);
+    return new EthereumRpcError(details.code, details.message, details.data);
+  } catch (_) {
     return null;
   }
-
-  return JSON.stringify(error.details);
 }

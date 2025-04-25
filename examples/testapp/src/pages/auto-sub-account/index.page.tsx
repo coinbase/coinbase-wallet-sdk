@@ -10,19 +10,55 @@ import {
   Stack,
   VStack,
 } from '@chakra-ui/react';
+import { getCryptoKeyAccount } from '@coinbase/wallet-sdk';
 import { SpendLimitConfig } from '@coinbase/wallet-sdk/dist/core/provider/interface';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { numberToHex, parseEther } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
 import { useConfig } from '../../context/ConfigContextProvider';
 import { useEIP1193Provider } from '../../context/EIP1193ProviderContextProvider';
+import { unsafe_generateOrLoadPrivateKey } from '../../utils/unsafe_generateOrLoadPrivateKey';
+
+type SignerType = 'cryptokey' | 'secp256k1';
 
 export default function AutoSubAccount() {
   const [accounts, setAccounts] = useState<string[]>([]);
   const [lastResult, setLastResult] = useState<string>();
   const [sendingAmounts, setSendingAmounts] = useState<Record<number, boolean>>({});
+  const [signerType, setSignerType] = useState<SignerType>('cryptokey');
   const { subAccountsConfig, setSubAccountsConfig } = useConfig();
   const { provider } = useEIP1193Provider();
+
+  useEffect(() => {
+    const stored = localStorage.getItem('signer-type');
+    if (stored !== null) {
+      setSignerType(stored as SignerType);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('signer-type', signerType);
+  }, [signerType]);
+
+  useEffect(() => {
+    const getSigner =
+      signerType === 'cryptokey'
+        ? getCryptoKeyAccount
+        : async () => {
+            // THIS IS NOT SAFE, THIS IS ONLY FOR TESTING
+            // IN A REAL APP YOU SHOULD NOT STORE/EXPOSE A PRIVATE KEY
+            const privateKey = unsafe_generateOrLoadPrivateKey();
+            return {
+              account: privateKeyToAccount(privateKey),
+            };
+          };
+
+    setSubAccountsConfig((prev) => ({
+      ...prev,
+      toOwnerAccount: getSigner,
+    }));
+  }, [signerType, setSubAccountsConfig]);
 
   const handleRequestAccounts = async () => {
     if (!provider) return;
@@ -153,6 +189,15 @@ export default function AutoSubAccount() {
     <Container mb={16}>
       <VStack w="full" spacing={4}>
         <FormControl>
+          <FormLabel>Select Signer Type</FormLabel>
+          <RadioGroup value={signerType} onChange={(value: SignerType) => setSignerType(value)}>
+            <Stack direction="row">
+              <Radio value="cryptokey">CryptoKey</Radio>
+              <Radio value="secp256k1">secp256k1</Radio>
+            </Stack>
+          </RadioGroup>
+        </FormControl>
+        <FormControl>
           <FormLabel>Auto Sub-Accounts</FormLabel>
           <RadioGroup
             value={(subAccountsConfig?.enableAutoSubAccounts || false).toString()}
@@ -181,10 +226,10 @@ export default function AutoSubAccount() {
           <RadioGroup
             value={(subAccountsConfig?.dynamicSpendLimits || false).toString()}
             onChange={(value) =>
-              setSubAccountsConfig((prev) => ({
-                ...prev,
+              setSubAccountsConfig({
+                ...subAccountsConfig,
                 dynamicSpendLimits: value === 'true',
-              }))
+              })
             }
           >
             <Stack direction="row">

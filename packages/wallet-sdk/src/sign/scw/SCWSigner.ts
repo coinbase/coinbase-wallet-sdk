@@ -1,8 +1,8 @@
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
-import { Hex, HttpRequestError, hexToNumber, numberToHex } from 'viem';
+import { Hex, hexToNumber, numberToHex } from 'viem';
 
 import { Communicator } from ':core/communicator/Communicator.js';
-import { isActionableHttpRequestError, standardErrors } from ':core/error/errors.js';
+import { isActionableHttpRequestError, isViemError, standardErrors } from ':core/error/errors.js';
 import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage.js';
 import { RPCResponse } from ':core/message/RPCResponse.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
@@ -428,7 +428,12 @@ export class SCWSigner implements Signer {
     const state = store.getState();
     const subAccount = state.subAccount;
     if (subAccount?.address) {
-      this.callback?.('accountsChanged', [this.accounts[0], subAccount.address]);
+      const allAccounts = this.accounts.filter(
+        (account) => account.toLowerCase() !== subAccount.address.toLowerCase()
+      );
+      this.accounts = allAccounts;
+
+      this.callback?.('accountsChanged', [subAccount.address, ...allAccounts]);
       return subAccount;
     }
 
@@ -444,7 +449,14 @@ export class SCWSigner implements Signer {
       factory: response.factory,
       factoryData: response.factoryData,
     });
-    this.callback?.('accountsChanged', [this.accounts[0], response.address]);
+    const existingAccounts = this.accounts.filter(
+      (account) => account.toLowerCase() !== response.address.toLowerCase()
+    );
+    const allAccounts = [response.address, ...existingAccounts];
+    store.account.set({ accounts: allAccounts });
+    this.accounts = allAccounts;
+
+    this.callback?.('accountsChanged', allAccounts);
     return response;
   }
 
@@ -511,11 +523,15 @@ export class SCWSigner implements Signer {
       const result = await subAccountRequest(request);
       return result;
     } catch (error) {
-      if (!(error instanceof HttpRequestError)) {
+      let errorObject: unknown;
+
+      if (isViemError(error)) {
+        errorObject = JSON.parse(error.details);
+      } else if (isActionableHttpRequestError(error)) {
+        errorObject = error;
+      } else {
         throw error;
       }
-
-      const errorObject = JSON.parse(error.details);
 
       if (
         !(
