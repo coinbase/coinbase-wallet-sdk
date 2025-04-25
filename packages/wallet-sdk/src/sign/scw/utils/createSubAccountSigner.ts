@@ -1,4 +1,4 @@
-import { standardErrors, viemHttpErrorToProviderError } from ':core/error/errors.js';
+import { isViemError, standardErrors, viemHttpErrorToProviderError } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
 import { PrepareCallsSchema } from ':core/rpc/wallet_prepareCalls.js';
 import { SendPreparedCallsSchema } from ':core/rpc/wallet_sendPreparedCalls.js';
@@ -11,7 +11,6 @@ import { get } from ':util/get.js';
 import {
   Address,
   Hex,
-  HttpRequestError,
   PublicClient,
   SignableMessage,
   TypedDataDefinition,
@@ -302,7 +301,7 @@ export async function createSubAccountSigner({
       }
     } catch (error) {
       // Convert error to RPC error if possible
-      if (error instanceof HttpRequestError) {
+      if (isViemError(error)) {
         const newError = viemHttpErrorToProviderError(error);
         if (newError) {
           throw newError;

@@ -1,8 +1,8 @@
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
-import { Hex, HttpRequestError, hexToNumber, numberToHex } from 'viem';
+import { Hex, hexToNumber, numberToHex } from 'viem';
 
 import { Communicator } from ':core/communicator/Communicator.js';
-import { isActionableHttpRequestError, standardErrors } from ':core/error/errors.js';
+import { isActionableHttpRequestError, isViemError, standardErrors } from ':core/error/errors.js';
 import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage.js';
 import { RPCResponse } from ':core/message/RPCResponse.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
@@ -523,11 +523,15 @@ export class SCWSigner implements Signer {
       const result = await subAccountRequest(request);
       return result;
     } catch (error) {
-      if (!(error instanceof HttpRequestError)) {
+      let errorObject: unknown;
+
+      if (isViemError(error)) {
+        errorObject = JSON.parse(error.details);
+      } else if (isActionableHttpRequestError(error)) {
+        errorObject = error;
+      } else {
         throw error;
       }
-
-      const errorObject = JSON.parse(error.details);
 
       if (
         !(
