@@ -35,6 +35,8 @@ import {
   makeDataSuffix,
 } from './utils.js';
 import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
+import { findOwnerIndex } from './utils/findOwnerIndex.js';
+import { handleAddSubAccountOwner } from './utils/handleAddSubAccountOwner.js';
 import { handleInsufficientBalanceError } from './utils/handleInsufficientBalance.js';
 
 type ConstructorOptions = {
@@ -484,9 +486,9 @@ export class SCWSigner implements Signer {
     const ownerAccount = subAccountsConfig?.toOwnerAccount
       ? await subAccountsConfig.toOwnerAccount()
       : await getCryptoKeyAccount();
-
+  
     assertPresence(
-      ownerAccount.account,
+      ownerAccount?.account,
       standardErrors.provider.unauthorized('no active sub account owner')
     );
 
@@ -515,6 +517,29 @@ export class SCWSigner implements Signer {
       attribution: config.preference?.attribution,
       dappOrigin: window.location.origin,
     });
+
+    
+    const publicKey =
+      ownerAccount.account.type === 'local' ? ownerAccount.account.address : ownerAccount.account.publicKey;
+
+    const ownerIndex = await findOwnerIndex({
+      address: subAccount.address,
+      publicKey,
+      client,
+      factory: subAccount.factory,
+      factoryData: subAccount.factoryData,
+    });
+
+    if (ownerIndex === -1) {
+      try {
+        await handleAddSubAccountOwner({
+          ownerAccount: ownerAccount.account,
+          globalAccountRequest: this.sendRequestToPopup.bind(this),
+        });
+      } catch {
+        return standardErrors.provider.unauthorized('failed to add sub account owner');
+      }
+    }
 
     const { request: subAccountRequest } = await createSubAccountSigner({
       address: subAccount.address,

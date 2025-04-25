@@ -9,7 +9,7 @@ export type PrepareCallsParams = [
       data: Hex;
       value: Hex;
     }[];
-    capabilities: Record<string, any>;
+    capabilities: Record<string, unknown>;
   },
 ];
 
@@ -19,8 +19,8 @@ export type PrepareCallsReturnValue = {
   signatureRequest: {
     hash: Hex;
   };
-  capabilities: Record<string, any>;
-  userOp: any;
+  capabilities: Record<string, unknown>;
+  userOp: unknown;
 };
 
 export type PrepareCallsSchema = {

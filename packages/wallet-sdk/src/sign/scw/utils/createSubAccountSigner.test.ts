@@ -1,18 +1,12 @@
 import { OwnerAccount } from ':core/type/index.js';
-import { getBundlerClient, getClient } from ':store/chain-clients/utils.js';
+import { getClient } from ':store/chain-clients/utils.js';
 import { Signature } from 'ox';
 import { numberToHex } from 'viem';
-import { getCode } from 'viem/actions';
 import { createSmartAccount } from './createSmartAccount.js';
 import { createSubAccountSigner } from './createSubAccountSigner.js';
-import { getOwnerIndex } from './getOwnerIndex.js';
 
 vi.mock('viem/actions', () => ({
   getCode: vi.fn().mockResolvedValue(undefined),
-}));
-
-vi.mock('./getOwnerIndex.js', () => ({
-  getOwnerIndex: vi.fn(),
 }));
 
 vi.mock(':store/store.js', () => ({
@@ -348,43 +342,7 @@ describe('createSubAccountSigner', () => {
 
     expect(mock).toHaveBeenCalledWith({ hash: '0x' });
   });
-
-  it('checks the owner index if the contract is deployed', async () => {
-    const sendUserOperation = vi.fn();
-    (getBundlerClient as any).mockReturnValue({
-      sendUserOperation,
-    });
-    const mockGetOwnerIndex = vi.fn();
-    (getCode as any).mockResolvedValue('0x123');
-
-    (getOwnerIndex as any).mockImplementation(mockGetOwnerIndex);
-
-    const signer = await createSubAccountSigner({
-      address: '0x',
-      client: getClient(84532)!,
-      owner,
-    });
-
-    await signer.request({
-      method: 'wallet_sendCalls',
-      params: [
-        {
-          chainId: numberToHex(84532),
-          calls: [{ to: '0x', data: '0x' }],
-          version: '1.0',
-          from: '0x',
-        },
-      ],
-    });
-
-    expect(mockGetOwnerIndex).toHaveBeenCalledWith(
-      expect.objectContaining({
-        address: '0x',
-        publicKey: '0x',
-      })
-    );
-  });
-
+  
   it('handles attribution', async () => {
     const request = vi.fn((args) => {
       if (args.method === 'wallet_prepareCalls') {
