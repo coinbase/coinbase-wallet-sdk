@@ -5,6 +5,7 @@ import {
   FormControl,
   FormLabel,
   HStack,
+  Input,
   Radio,
   RadioGroup,
   Stack,
@@ -12,7 +13,7 @@ import {
 } from '@chakra-ui/react';
 import { getCryptoKeyAccount } from '@coinbase/wallet-sdk';
 import { SpendLimitConfig } from '@coinbase/wallet-sdk/dist/core/provider/interface';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { numberToHex, parseEther } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
@@ -27,7 +28,7 @@ export default function AutoSubAccount() {
   const [lastResult, setLastResult] = useState<string>();
   const [sendingAmounts, setSendingAmounts] = useState<Record<number, boolean>>({});
   const [signerType, setSignerType] = useState<SignerType>('cryptokey');
-  const { subAccountsConfig, setSubAccountsConfig } = useConfig();
+  const { subAccountsConfig, setSubAccountsConfig, config, setConfig } = useConfig();
   const { provider } = useEIP1193Provider();
 
   useEffect(() => {
@@ -185,6 +186,42 @@ export default function AutoSubAccount() {
     }
   };
 
+  const handleAttributionDataSuffixChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value) {
+      setConfig({
+        ...config,
+        attribution: { dataSuffix: value as `0x${string}` },
+      });
+    } else {
+      const { attribution, ...rest } = config;
+      setConfig(rest);
+    }
+  };
+
+  const handleAttributionModeChange = (value: string) => {
+    if (value === 'auto') {
+      setConfig({
+        ...config,
+        attribution: { auto: true },
+      });
+    } else if (value === 'manual') {
+      setConfig({
+        ...config,
+        attribution: { dataSuffix: '0x' as `0x${string}` },
+      });
+    } else {
+      const { attribution, ...restConfig } = config;
+      setConfig(restConfig);
+    }
+  };
+
+  const getAttributionMode = () => {
+    if (!config.attribution) return 'none';
+    if (config.attribution.auto) return 'auto';
+    return 'manual';
+  };
+
   return (
     <Container mb={16}>
       <VStack w="full" spacing={4}>
@@ -238,6 +275,26 @@ export default function AutoSubAccount() {
             </Stack>
           </RadioGroup>
         </FormControl>
+        <FormControl>
+          <FormLabel>Attribution</FormLabel>
+          <RadioGroup value={getAttributionMode()} onChange={handleAttributionModeChange}>
+            <Stack direction="row">
+              <Radio value="none">None</Radio>
+              <Radio value="auto">Auto</Radio>
+              <Radio value="manual">Manual</Radio>
+            </Stack>
+          </RadioGroup>
+        </FormControl>
+        {getAttributionMode() === 'manual' && (
+          <FormControl>
+            <FormLabel>Attribution Data Suffix (hex)</FormLabel>
+            <Input
+              placeholder="0x..."
+              value={config.attribution?.dataSuffix || ''}
+              onChange={handleAttributionDataSuffixChange}
+            />
+          </FormControl>
+        )}
         <Button w="full" onClick={handleRequestAccounts}>
           eth_requestAccounts
         </Button>

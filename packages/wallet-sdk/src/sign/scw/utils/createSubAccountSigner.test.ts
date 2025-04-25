@@ -384,4 +384,85 @@ describe('createSubAccountSigner', () => {
       })
     );
   });
+
+  it('handles attribution', async () => {
+    const request = vi.fn((args) => {
+      if (args.method === 'wallet_prepareCalls') {
+        return {
+          signatureRequest: {
+            hash: '0x',
+          },
+          type: '0x',
+          userOp: '0x',
+          chainId: numberToHex(84532),
+        };
+      }
+
+      if (args.method === 'wallet_sendPreparedCalls') {
+        return ['0x'];
+      }
+
+      if (args.method === 'wallet_getCallsStatus') {
+        return {
+          status: 'CONFIRMED',
+          receipts: [
+            {
+              logs: [],
+              status: 1,
+              blockHash: '0x',
+              blockNumber: 1,
+              gasUsed: 130161,
+              transactionHash: '0x',
+            },
+          ],
+        };
+      }
+
+      return undefined;
+    });
+    (getClient as any).mockReturnValue({
+      request,
+      getChainId: vi.fn().mockResolvedValue(84532),
+    });
+
+    const signer = await createSubAccountSigner({
+      address: '0x',
+      client: getClient(84532)!,
+      owner,
+      attribution: {
+        suffix: '0x7890',
+      },
+    });
+
+    // Typecheck for appOrigin option
+    await createSubAccountSigner({
+      address: '0x',
+      client: getClient(84532)!,
+      owner,
+      attribution: {
+        appOrigin: 'https://app.com',
+      },
+    });
+
+    await signer.request({
+      method: 'wallet_sendCalls',
+      params: [
+        {
+          calls: [{ to: '0x', data: '0x123456' }],
+          chainId: numberToHex(84532),
+          from: '0x',
+          version: '1.0',
+        },
+      ],
+    });
+
+    expect(request).toHaveBeenCalledWith({
+      method: 'wallet_prepareCalls',
+      params: [
+        expect.objectContaining({
+          capabilities: expect.objectContaining({ attribution: { suffix: '0x7890' } }),
+        }),
+      ],
+    });
+  });
 });

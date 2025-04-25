@@ -1,7 +1,10 @@
-import { Hex, PublicClient, WalletSendCallsParameters, hexToBigInt, numberToHex } from 'viem';
+import { PublicClient, WalletSendCallsParameters, hexToBigInt } from 'viem';
 
-import { InsufficientBalanceErrorData, standardErrors } from ':core/error/errors.js';
-import { RequestArguments } from ':core/provider/interface.js';
+import { InsufficientBalanceErrorData } from ':core/error/errors.js';
+import { Hex, keccak256, numberToHex, slice, toHex } from 'viem';
+
+import { standardErrors } from ':core/error/errors.js';
+import { Attribution, RequestArguments } from ':core/provider/interface.js';
 import {
   EmptyFetchPermissionsRequest,
   FetchPermissionsRequest,
@@ -487,4 +490,26 @@ export function isEthSendTransactionParams(params: unknown): params is [
     params[0] !== null &&
     'to' in params[0]
   );
+}
+export function compute16ByteHash(input: string): Hex {
+  return slice(keccak256(toHex(input)), 0, 16);
+}
+
+export function makeDataSuffix({
+  attribution,
+  dappOrigin,
+}: { attribution?: Attribution; dappOrigin: string }): Hex | undefined {
+  if (!attribution) {
+    return;
+  }
+
+  if ('auto' in attribution && attribution.auto && dappOrigin) {
+    return compute16ByteHash(dappOrigin);
+  }
+
+  if ('dataSuffix' in attribution) {
+    return attribution.dataSuffix;
+  }
+
+  return;
 }

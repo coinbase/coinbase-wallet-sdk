@@ -34,6 +34,7 @@ export async function createSubAccountSigner({
   factory,
   factoryData,
   parentAddress,
+  attribution,
 }: {
   address: Address;
   owner: OwnerAccount;
@@ -41,6 +42,13 @@ export async function createSubAccountSigner({
   parentAddress?: Address;
   factoryData?: Hex;
   factory?: Address;
+  attribution?:
+    | {
+        suffix: Hex;
+      }
+    | {
+        appOrigin: string;
+      };
 }) {
   const code = await getCode(client, {
     address,
@@ -271,6 +279,16 @@ export async function createSubAccountSigner({
 
           if (!get(args.params[0], 'calls')) {
             throw standardErrors.rpc.invalidParams('calls are required');
+          }
+
+          const prepareCallsParams = args.params[0] as PrepareCallsSchema['Parameters'][0];
+
+          if (
+            attribution &&
+            prepareCallsParams.capabilities &&
+            !('attribution' in prepareCallsParams.capabilities)
+          ) {
+            prepareCallsParams.capabilities.attribution = attribution;
           }
 
           const prepareCallsResponse = await client.request<PrepareCallsSchema>({
