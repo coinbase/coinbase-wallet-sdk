@@ -428,7 +428,12 @@ export class SCWSigner implements Signer {
     const state = store.getState();
     const subAccount = state.subAccount;
     if (subAccount?.address) {
-      this.callback?.('accountsChanged', [this.accounts[0], subAccount.address]);
+      const allAccounts = this.accounts.filter(
+        (account) => account.toLowerCase() !== subAccount.address.toLowerCase()
+      );
+      this.accounts = allAccounts;
+
+      this.callback?.('accountsChanged', [subAccount.address, ...allAccounts]);
       return subAccount;
     }
 
@@ -444,7 +449,14 @@ export class SCWSigner implements Signer {
       factory: response.factory,
       factoryData: response.factoryData,
     });
-    this.callback?.('accountsChanged', [this.accounts[0], response.address]);
+    const existingAccounts = this.accounts.filter(
+      (account) => account.toLowerCase() !== response.address.toLowerCase()
+    );
+    const allAccounts = [response.address, ...existingAccounts];
+    store.account.set({ accounts: allAccounts });
+    this.accounts = allAccounts;
+
+    this.callback?.('accountsChanged', allAccounts);
     return response;
   }
 

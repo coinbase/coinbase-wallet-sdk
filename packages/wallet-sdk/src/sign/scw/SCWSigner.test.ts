@@ -70,6 +70,8 @@ const mockSuccessResponse: RPCResponseMessage = {
   content: { encrypted: encryptedData },
   timestamp: new Date(),
 };
+const subAccountAddress = '0x7838d2724FC686813CAf81d4429beff1110c739a';
+const globalAccountAddress = '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54';
 
 describe('SCWSigner', () => {
   let signer: SCWSigner;
@@ -431,10 +433,10 @@ describe('SCWSigner', () => {
           value: {
             accounts: [
               {
-                address: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+                address: globalAccountAddress,
                 capabilities: {
                   addSubAccount: {
-                    address: '0x7838d2724FC686813CAf81d4429beff1110c739a',
+                    address: subAccountAddress,
                     factory: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
                     factoryData: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
                   },
@@ -459,10 +461,78 @@ describe('SCWSigner', () => {
     });
   });
 
-  describe('Auto sub account', () => {
-    const subAccountAddress = '0x7838d2724FC686813CAf81d4429beff1110c739a';
-    const globalAccountAddress = '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54';
+  describe('SCWSigner - wallet_addSubAccount', () => {
+    it('should update internal state for successful wallet_addSubAccount', async () => {
+      await signer.cleanup();
 
+      const mockRequest: RequestArguments = {
+        method: 'wallet_connect',
+        params: [],
+      };
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: null,
+        },
+      });
+      const mockSetAccount = vi.spyOn(store.account, 'set');
+
+      await signer.handshake({ method: 'handshake' });
+      expect(signer['accounts']).toEqual([]);
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {},
+              },
+            ],
+          },
+        },
+      });
+
+      await signer.request(mockRequest);
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            address: subAccountAddress,
+            factory: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+            factoryData: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+          },
+        },
+      });
+
+      await signer.request({
+        method: 'wallet_addSubAccount',
+        params: [
+          {
+            version: '1',
+            account: {
+              type: 'create',
+              keys: [
+                {
+                  key: '0x123',
+                  type: 'p256',
+                },
+              ],
+            },
+          },
+        ],
+      });
+
+      const accounts = await signer.request({ method: 'eth_accounts' });
+      expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
+
+      expect(mockSetAccount).toHaveBeenCalledWith({
+        accounts: [subAccountAddress, globalAccountAddress],
+      });
+    });
+  });
+
+  describe('Auto sub account', () => {
     beforeEach(async () => {
       await signer.cleanup();
 
