@@ -526,6 +526,8 @@ export class SCWSigner implements Signer {
       address: subAccount.address,
       publicKey,
       client,
+      factory: subAccount.factory,
+      factoryData: subAccount.factoryData,
     });
 
     if (ownerIndex === -1) {
