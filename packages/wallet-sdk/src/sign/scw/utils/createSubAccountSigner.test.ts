@@ -423,6 +423,9 @@ describe('createSubAccountSigner', () => {
     (getClient as any).mockReturnValue({
       request,
       getChainId: vi.fn().mockResolvedValue(84532),
+      chain: {
+        id: 84532,
+      },
     });
 
     const signer = await createSubAccountSigner({
