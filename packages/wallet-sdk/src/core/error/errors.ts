@@ -205,3 +205,12 @@ export function serializeHttpRequestError(error: unknown) {
 
   return JSON.stringify(error.details);
 }
+
+export function viemHttpErrorToProviderError(error: HttpRequestError) {
+  try {
+    const details = JSON.parse(error.details);
+    return new EthereumRpcError(details.code, details.message, details.data);
+  } catch (_) {
+    return null;
+  }
+}
