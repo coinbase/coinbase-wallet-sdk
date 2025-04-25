@@ -168,7 +168,7 @@ export async function createSubAccountSigner({
                 from: subAccount.address,
                 capabilities:
                   'capabilities' in args.params[0]
-                    ? (args.params[0].capabilities as Record<string, any>)
+                    ? (args.params[0].capabilities as Record<string, unknown>)
                     : {},
               },
             ],
