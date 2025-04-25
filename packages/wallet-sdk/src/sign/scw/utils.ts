@@ -398,7 +398,7 @@ export async function presentSubAccountFundingDialog() {
         menuItems: [
           {
             isRed: false,
-            info: 'Update Spend Limit',
+            info: 'Create new Spend Limit',
             svgWidth: '10',
             svgHeight: '11',
             path: '',
