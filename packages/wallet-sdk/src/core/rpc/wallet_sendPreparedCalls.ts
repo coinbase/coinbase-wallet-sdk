@@ -36,7 +36,7 @@ export type SendPreparedCallsParams = [
   {
     version: string;
     type: string;
-    data: any;
+    data: unknown;
     chainId: Hex;
     signature: WebauthnSignatureType | Secp256k1SignatureType;
   },

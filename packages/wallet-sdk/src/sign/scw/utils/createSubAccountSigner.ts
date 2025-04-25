@@ -18,26 +18,17 @@ import {
   isHex,
   numberToHex,
 } from 'viem';
-import { getCode } from 'viem/actions';
 import {
   createWalletSendCallsRequest,
   injectRequestCapabilities,
   waitForCallsTransactionHash,
 } from '../utils.js';
 import { createSmartAccount } from './createSmartAccount.js';
-import { getOwnerIndex } from './getOwnerIndex.js';
 
-export async function createSubAccountSigner({
-  address,
-  owner,
-  client,
-  factory,
-  factoryData,
-  parentAddress,
-  attribution,
-}: {
+type CreateSubAccountSignerParams = {
   address: Address;
   owner: OwnerAccount;
+  ownerIndex?: number;
   client: PublicClient;
   parentAddress?: Address;
   factoryData?: Hex;
@@ -49,26 +40,18 @@ export async function createSubAccountSigner({
     | {
         appOrigin: string;
       };
-}) {
-  const code = await getCode(client, {
-    address,
-  });
+};
 
-  // Default index to 1 if the contract is not deployed
-  // Note: importing an undeployed contract might need to be handled differently
-  // The implemention will likely require the signer to tell us the index
-  let index = 1;
-  if (code) {
-    const ownerPublicKey = owner.type === 'local' ? owner.address : owner.publicKey;
-    assertPresence(ownerPublicKey, standardErrors.rpc.internal('owner public key not found'));
-
-    index = await getOwnerIndex({
-      address,
-      publicKey: ownerPublicKey,
-      client,
-    });
-  }
-
+export async function createSubAccountSigner({
+  address,
+  client,
+  factory,
+  factoryData,
+  owner,
+  ownerIndex,
+  parentAddress,
+  attribution,
+}: CreateSubAccountSignerParams) {
   const subAccount: SubAccount = {
     address,
     factory,
@@ -82,7 +65,7 @@ export async function createSubAccountSigner({
 
   const account = await createSmartAccount({
     owner,
-    ownerIndex: index,
+    ownerIndex: ownerIndex ?? 1,
     address,
     client,
     factoryData,
