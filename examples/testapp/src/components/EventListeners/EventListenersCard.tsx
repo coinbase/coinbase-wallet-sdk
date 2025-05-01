@@ -16,23 +16,23 @@ export function EventListenersCard() {
 
   useEffect(() => {
     if (!provider) return;
-    provider.on('connect', (info) => {
+    provider?.on('connect', (info) => {
       setConnect(info);
     });
-    provider.on('disconnect', (error) => {
+    provider?.on('disconnect', (error) => {
       setDisconnect({ code: error.code, message: error.message });
     });
-    provider.on('accountsChanged', (accounts) => {
+    provider?.on('accountsChanged', (accounts) => {
       setAccountsChanged(accounts);
     });
-    provider.on('chainChanged', (chainId) => {
+    provider?.on('chainChanged', (chainId) => {
       setChainChanged(chainId);
     });
 
     return () => {
       if (!provider) return;
       // Clean up all listeners on unmount
-      provider.removeAllListeners();
+      provider?.removeAllListeners();
     };
   }, [provider]);
 
