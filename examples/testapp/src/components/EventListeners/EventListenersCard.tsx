@@ -1,40 +1,65 @@
 import { Box, Card, CardBody, Code, Flex, Heading } from '@chakra-ui/react';
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 import { ProviderConnectInfo } from 'viem';
 import { useEIP1193Provider } from '../../context/EIP1193ProviderContextProvider';
 
 export function EventListenersCard() {
-  const [connect, setConnect] = React.useState<ProviderConnectInfo | null>(null);
-  const [disconnect, setDisconnect] = React.useState<{ code: number; message: string } | null>(
+  const [connect, setConnect] = React.useState<ProviderConnectInfo | null>(
     null
   );
-  const [accountsChanged, setAccountsChanged] = React.useState<string[] | null>(null);
+  const [disconnect, setDisconnect] = React.useState<{
+    code: number;
+    message: string;
+  } | null>(null);
+  const [accountsChanged, setAccountsChanged] = React.useState<string[] | null>(
+    null
+  );
   const [chainChanged, setChainChanged] = React.useState<string | null>(null);
 
   const { provider } = useEIP1193Provider();
 
+  const handleConnect = useCallback((info: ProviderConnectInfo) => {
+    setConnect(info);
+  }, []);
+
+  const handleDisconnect = useCallback(
+    (error: { code: number; message: string }) => {
+      setDisconnect({ code: error.code, message: error.message });
+    },
+    []
+  );
+
+  const handleAccountsChanged = useCallback((accounts: string[]) => {
+    setAccountsChanged(accounts);
+  }, []);
+
+  const handleChainChanged = useCallback((chainId: string) => {
+    setChainChanged(chainId);
+  }, []);
+
   useEffect(() => {
     if (!provider) return;
-    provider?.on('connect', (info) => {
-      setConnect(info);
-    });
-    provider?.on('disconnect', (error) => {
-      setDisconnect({ code: error.code, message: error.message });
-    });
-    provider?.on('accountsChanged', (accounts) => {
-      setAccountsChanged(accounts);
-    });
-    provider?.on('chainChanged', (chainId) => {
-      setChainChanged(chainId);
-    });
+    provider?.on('connect', handleConnect);
+    provider?.on('disconnect', handleDisconnect);
+    provider?.on('accountsChanged', handleAccountsChanged);
+    provider?.on('chainChanged', handleChainChanged);
 
     return () => {
       if (!provider) return;
       // Clean up all listeners on unmount
-      provider?.removeAllListeners();
+      provider?.removeListener('connect', handleConnect);
+      provider?.removeListener('disconnect', handleDisconnect);
+      provider?.removeListener('accountsChanged', handleAccountsChanged);
+      provider?.removeListener('chainChanged', handleChainChanged);
     };
-  }, [provider]);
+  }, [
+    provider,
+    handleConnect,
+    handleDisconnect,
+    handleAccountsChanged,
+    handleChainChanged,
+  ]);
 
   return (
     <Card shadow="lg">
@@ -46,7 +71,14 @@ export function EventListenersCard() {
             </Heading>
           </Flex>
           {accountsChanged && (
-            <Code mt={2} as="pre" p={4} wordBreak="break-word" whiteSpace="pre-wrap" w="100%">
+            <Code
+              mt={2}
+              as="pre"
+              p={4}
+              wordBreak="break-word"
+              whiteSpace="pre-wrap"
+              w="100%"
+            >
               {JSON.stringify(accountsChanged, null, 2)}
             </Code>
           )}
@@ -58,7 +90,14 @@ export function EventListenersCard() {
             </Heading>
           </Flex>
           {chainChanged && (
-            <Code mt={2} as="pre" p={4} wordBreak="break-word" whiteSpace="pre-wrap" w="100%">
+            <Code
+              mt={2}
+              as="pre"
+              p={4}
+              wordBreak="break-word"
+              whiteSpace="pre-wrap"
+              w="100%"
+            >
               {JSON.stringify(chainChanged, null, 2)}
             </Code>
           )}
@@ -70,7 +109,14 @@ export function EventListenersCard() {
             </Heading>
           </Flex>
           {connect && (
-            <Code mt={2} as="pre" p={4} wordBreak="break-word" whiteSpace="pre-wrap" w="100%">
+            <Code
+              mt={2}
+              as="pre"
+              p={4}
+              wordBreak="break-word"
+              whiteSpace="pre-wrap"
+              w="100%"
+            >
               {JSON.stringify(connect, null, 2)}
             </Code>
           )}
@@ -82,7 +128,14 @@ export function EventListenersCard() {
             </Heading>
           </Flex>
           {disconnect && (
-            <Code mt={2} as="pre" p={4} wordBreak="break-word" whiteSpace="pre-wrap" w="100%">
+            <Code
+              mt={2}
+              as="pre"
+              p={4}
+              wordBreak="break-word"
+              whiteSpace="pre-wrap"
+              w="100%"
+            >
               {JSON.stringify(disconnect, null, 2)}
             </Code>
           )}
