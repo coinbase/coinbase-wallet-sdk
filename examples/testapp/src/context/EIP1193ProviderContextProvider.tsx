@@ -53,6 +53,9 @@ export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderCont
     setSdk(sdk);
 
     const newProvider = sdk.getProvider();
+    // biome-ignore lint/suspicious/noConsole: developer feedback
+    console.log('Provider:', newProvider);
+
     addEventListeners(newProvider);
     spyOnDisconnectedError(newProvider);
 
