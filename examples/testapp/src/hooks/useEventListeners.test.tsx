@@ -17,7 +17,7 @@ describe('useEventListeners', () => {
 
     mockProvider = {
       on: vi.fn(),
-      off: vi.fn(),
+      removeListener: vi.fn(),
     };
   });
 
@@ -46,11 +46,11 @@ describe('useEventListeners', () => {
       result.current.removeEventListeners(mockProvider);
     });
 
-    expect(mockProvider.off).toHaveBeenCalledTimes(4);
-    expect(mockProvider.off).toHaveBeenCalledWith('connect', expect.any(Function));
-    expect(mockProvider.off).toHaveBeenCalledWith('accountsChanged', expect.any(Function));
-    expect(mockProvider.off).toHaveBeenCalledWith('chainChanged', expect.any(Function));
-    expect(mockProvider.off).toHaveBeenCalledWith('disconnect', expect.any(Function));
+    expect(mockProvider.removeListener).toHaveBeenCalledTimes(4);
+    expect(mockProvider.removeListener).toHaveBeenCalledWith('connect', expect.any(Function));
+    expect(mockProvider.removeListener).toHaveBeenCalledWith('accountsChanged', expect.any(Function));
+    expect(mockProvider.removeListener).toHaveBeenCalledWith('chainChanged', expect.any(Function));
+    expect(mockProvider.removeListener).toHaveBeenCalledWith('disconnect', expect.any(Function));
   });
 
   test('should show toast on connect event', () => {
