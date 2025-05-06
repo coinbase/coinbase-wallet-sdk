@@ -18,7 +18,7 @@ const walletConnectShortcuts: ShortcutType[] = [
     data: {
       version: '1',
       capabilities: {
-        getAppAccounts: {
+        getSubAccounts: {
           chainId: 84532,
         },
       },

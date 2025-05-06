@@ -111,7 +111,7 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
             {
               version: 1,
               capabilities: {
-                getAppAccounts: true,
+                getSubAccounts: true,
               },
             },
           ],
