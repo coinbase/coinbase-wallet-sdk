@@ -167,7 +167,7 @@ describe('createCoinbaseWalletSDK', () => {
           {
             version: 1,
             capabilities: {
-              getAppAccounts: true,
+              getSubAccounts: true,
             },
           },
         ],
