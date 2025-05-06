@@ -397,7 +397,7 @@ export async function presentSubAccountFundingDialog() {
     (resolve) => {
       snackbar.presentItem({
         autoExpand: true,
-        message: 'Insufficient spend permission. Choose how to proceed:',
+        message: 'Insufficient spend limit. Choose how to proceed:',
         menuItems: [
           {
             isRed: false,
