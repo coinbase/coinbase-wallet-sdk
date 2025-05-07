@@ -9,6 +9,7 @@ import {
   EmptyFetchPermissionsRequest,
   FetchPermissionsRequest,
 } from ':core/rpc/coinbase_fetchSpendPermissions.js';
+import { AddSubAccountCapabilityRequest } from ':core/rpc/wallet_connect.js';
 import { Address } from ':core/type/index.js';
 import { config, store } from ':store/store.js';
 import { get } from ':util/get.js';
@@ -137,11 +138,11 @@ export async function initSubAccountConfig() {
         keys: [
           {
             type: owner.address ? 'address' : 'webauthn-p256',
-            key: owner.address || owner.publicKey,
+            publicKey: owner.address || owner.publicKey,
           },
         ],
       },
-    },
+    } satisfies AddSubAccountCapabilityRequest,
     spendLimits: config?.defaultSpendLimits ?? undefined,
   };
 

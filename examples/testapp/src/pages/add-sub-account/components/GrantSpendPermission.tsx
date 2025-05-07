@@ -86,9 +86,7 @@ export function GrantSpendPermission({
         params: [
           {
             version: '1',
-            capabilities: {
-              getSubAccounts: true,
-            },
+            capabilities: {},
           },
         ],
       })) as string[];

@@ -88,7 +88,7 @@ describe('injectRequestCapabilities', () => {
         keys: [
           {
             type: 'address',
-            key: '0x123',
+            publicKey: '0x123',
           },
         ],
       },

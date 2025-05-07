@@ -162,7 +162,7 @@ describe('SCWSigner', () => {
       ]);
       expect(mockSetAccount).toHaveBeenNthCalledWith(1, {
         chain: {
-          id: 1,  
+          id: 1,
           rpcUrl: 'https://eth-rpc.example.com/1',
         },
       });
@@ -450,11 +450,13 @@ describe('SCWSigner', () => {
               {
                 address: globalAccountAddress,
                 capabilities: {
-                  addSubAccount: {
-                    address: subAccountAddress,
-                    factory: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
-                    factoryData: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
-                  },
+                  subAccounts: [
+                    {
+                      address: subAccountAddress,
+                      factory: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+                      factoryData: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+                    },
+                  ],
                 },
               },
             ],
@@ -529,7 +531,7 @@ describe('SCWSigner', () => {
               type: 'create',
               keys: [
                 {
-                  key: '0x123',
+                  publicKey: '0x123',
                   type: 'p256',
                 },
               ],
@@ -577,11 +579,13 @@ describe('SCWSigner', () => {
               {
                 address: globalAccountAddress,
                 capabilities: {
-                  addSubAccount: {
-                    address: subAccountAddress,
-                    factory: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
-                    factoryData: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
-                  },
+                  subAccounts: [
+                    {
+                      address: subAccountAddress,
+                      factory: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+                      factoryData: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+                    },
+                  ],
                 },
               },
             ],
@@ -617,7 +621,10 @@ describe('SCWSigner', () => {
       await signer.handshake({ method: 'handshake' });
       expect(signer['accounts']).toEqual([]);
 
-      signer['accounts'] = ['0x7838d2724FC686813CAf81d4429beff1110c739a', '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54'];
+      signer['accounts'] = [
+        '0x7838d2724FC686813CAf81d4429beff1110c739a',
+        '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+      ];
 
       const mockRequest: RequestArguments = {
         method: 'wallet_sendCalls',
@@ -638,11 +645,13 @@ describe('SCWSigner', () => {
               {
                 address: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
                 capabilities: {
-                  addSubAccount: {
-                    address: '0x7838d2724FC686813CAf81d4429beff1110c739a',
-                    factory: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
-                    factoryData: '0x',
-                  },
+                  subAccounts: [
+                    {
+                      address: '0x7838d2724FC686813CAf81d4429beff1110c739a',
+                      factory: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+                      factoryData: '0x',
+                    },
+                  ],
                 },
               },
             ],

@@ -4,7 +4,7 @@ type AccountCreate = {
   type: 'create';
   keys: {
     type: 'address' | 'p256' | 'webcrypto-p256' | 'webauthn-p256';
-    key: `0x${string}`;
+    publicKey: `0x${string}`;
   }[];
 };
 

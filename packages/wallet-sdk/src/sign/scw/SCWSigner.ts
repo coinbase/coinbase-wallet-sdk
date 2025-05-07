@@ -12,7 +12,7 @@ import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
 import { SDKChain, createClients, getClient } from ':store/chain-clients/utils.js';
 import { store } from ':store/store.js';
-import { assertPresence } from ':util/assertPresence.js';
+import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
 import { assertSubAccount } from ':util/assertSubAccount.js';
 import {
   decryptContent,
@@ -249,14 +249,14 @@ export class SCWSigner implements Signer {
 
         const account = response.accounts.at(0);
         const capabilities = account?.capabilities;
-        if (capabilities?.addSubAccount || capabilities?.getSubAccounts) {
-          const capabilityResponse =
-            capabilities?.addSubAccount ?? capabilities?.getSubAccounts?.[0];
-          assertSubAccount(capabilityResponse);
+        if (capabilities?.subAccounts) {
+          const capabilityResponse = capabilities?.subAccounts;
+          assertArrayPresence(capabilityResponse, 'subAccounts');
+          assertSubAccount(capabilityResponse[0]);
           store.subAccounts.set({
-            address: capabilityResponse?.address,
-            factory: capabilityResponse?.factory,
-            factoryData: capabilityResponse?.factoryData,
+            address: capabilityResponse[0].address,
+            factory: capabilityResponse[0].factory,
+            factoryData: capabilityResponse[0].factoryData,
           });
         }
         let accounts_ = [this.accounts[0]];
@@ -276,18 +276,10 @@ export class SCWSigner implements Signer {
           }
         }
 
-        const getSpendLimits = response?.accounts?.[0].capabilities?.getSpendLimits;
-        if (getSpendLimits && 'permissions' in getSpendLimits) {
+        const spendLimits = response?.accounts?.[0].capabilities?.spendLimits;
+        if (spendLimits && 'permissions' in spendLimits) {
           store.spendLimits.set({
-            [this.chain.id]: getSpendLimits.permissions,
-          });
-        }
-
-        const spendLimit = response?.accounts?.[0].capabilities?.spendLimits;
-        if (spendLimit && 'permission' in spendLimit) {
-          const spendLimitsStore = store.spendLimits.get();
-          store.spendLimits.set({
-            [this.chain.id]: spendLimitsStore[this.chain.id].concat([spendLimit]),
+            [this.chain.id]: spendLimits.permissions,
           });
         }
 
@@ -486,7 +478,7 @@ export class SCWSigner implements Signer {
     const ownerAccount = subAccountsConfig?.toOwnerAccount
       ? await subAccountsConfig.toOwnerAccount()
       : await getCryptoKeyAccount();
-  
+
     assertPresence(
       ownerAccount?.account,
       standardErrors.provider.unauthorized('no active sub account owner')
@@ -518,9 +510,10 @@ export class SCWSigner implements Signer {
       dappOrigin: window.location.origin,
     });
 
-    
     const publicKey =
-      ownerAccount.account.type === 'local' ? ownerAccount.account.address : ownerAccount.account.publicKey;
+      ownerAccount.account.type === 'local'
+        ? ownerAccount.account.address
+        : ownerAccount.account.publicKey;
 
     const ownerIndex = await findOwnerIndex({
       address: subAccount.address,

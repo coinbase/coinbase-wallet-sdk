@@ -52,9 +52,7 @@ export type WalletConnectRequest = {
       // Optional capabilities to request (e.g. Sign In With Ethereum).
       capabilities?: {
         addSubAccount?: AddSubAccountCapabilityRequest;
-        getSubAccounts?: boolean;
         spendLimits?: SpendLimitsCapabilityRequest;
-        getSpendLimits?: GetSpendLimitsCapabilityRequest;
         signInWithEthereum?: SignInWithEthereumCapabilityRequest;
       };
     },
@@ -67,10 +65,8 @@ export type WalletConnectResponse = {
     address: `0x${string}`;
     // Capabilities granted that is associated with this account.
     capabilities?: {
-      addSubAccount?: AddSubAccountCapabilityResponse | SerializedEthereumRpcError;
-      getSubAccounts?: AddSubAccountCapabilityResponse[];
-      spendLimits?: SpendLimitsCapabilityResponse | SerializedEthereumRpcError;
-      getSpendLimits?: GetSpendLimitsCapabilityResponse | SerializedEthereumRpcError;
+      subAccounts?: AddSubAccountCapabilityResponse[] | SerializedEthereumRpcError;
+      spendLimits?: GetSpendLimitsCapabilityResponse | SerializedEthereumRpcError;
       signInWithEthereum?: SignInWithEthereumCapabilityResponse | SerializedEthereumRpcError;
     };
   }[];
