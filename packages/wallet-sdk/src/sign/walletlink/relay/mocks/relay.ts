@@ -1,7 +1,7 @@
+import { HexString } from ':core/type/index.js';
 import { Web3Response } from '../type/Web3Response.js';
 import { WalletLinkRelay } from '../WalletLinkRelay.js';
-import { MOCK_ADDERESS, MOCK_TX } from './fixtures.js';
-import { HexString } from ':core/type/index.js';
+import { MOCK_ADDRESS, MOCK_TX } from './fixtures.js';
 
 export function mockedWalletLinkRelay(): WalletLinkRelay {
   return mock as unknown as WalletLinkRelay;
@@ -16,7 +16,7 @@ const mock = {
   requestEthereumAccounts() {
     return makeMockReturn({
       method: 'requestEthereumAccounts',
-      result: [MOCK_ADDERESS],
+      result: [MOCK_ADDRESS],
     });
   },
   addEthereumChain() {
