@@ -7,7 +7,7 @@ import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage.
 import { RPCResponse } from ':core/message/RPCResponse.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
 import { FetchPermissionsResponse } from ':core/rpc/coinbase_fetchSpendPermissions.js';
-import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
+import { WalletConnectRequest, WalletConnectResponse } from ':core/rpc/wallet_connect.js';
 import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
 import { SDKChain, createClients, getClient } from ':store/chain-clients/utils.js';
@@ -110,7 +110,6 @@ export class SCWSigner implements Signer {
                   version: 1,
                   capabilities: {
                     ...(subAccountsConfig?.capabilities ?? {}),
-                    getSpendLimits: true,
                   },
                 },
               ],
@@ -249,6 +248,8 @@ export class SCWSigner implements Signer {
 
         const account = response.accounts.at(0);
         const capabilities = account?.capabilities;
+        const requestCapabilities = (request as WalletConnectRequest).params?.[0]?.capabilities;
+
         if (capabilities?.subAccounts) {
           const capabilityResponse = capabilities?.subAccounts;
           assertArrayPresence(capabilityResponse, 'subAccounts');
@@ -263,17 +264,14 @@ export class SCWSigner implements Signer {
 
         const subAccount = store.subAccounts.get();
         const subAccountsConfig = store.subAccountsConfig.get();
-        if (subAccount?.address) {
-          // Sub account is always at index 0
-          accounts_ = [subAccount.address, ...this.accounts];
 
-          // Also update the accounts store if automatic sub accounts are enabled
-          if (subAccountsConfig?.enableAutoSubAccounts) {
-            store.account.set({
-              accounts: accounts_,
-            });
-            this.accounts = accounts_;
-          }
+        // Sub account should be returned as a top level account if auto sub accounts are enabled
+        const shouldUseSubAccount =
+          subAccountsConfig?.enableAutoSubAccounts || !!requestCapabilities?.addSubAccount;
+
+        if (subAccount?.address && shouldUseSubAccount) {
+          // Sub account is always at index 0
+          this.accounts = [subAccount.address, ...this.accounts];
         }
 
         const spendLimits = response?.accounts?.[0].capabilities?.spendLimits;
@@ -448,7 +446,6 @@ export class SCWSigner implements Signer {
       (account) => account.toLowerCase() !== response.address.toLowerCase()
     );
     const allAccounts = [response.address, ...existingAccounts];
-    store.account.set({ accounts: allAccounts });
     this.accounts = allAccounts;
 
     this.callback?.('accountsChanged', allAccounts);
