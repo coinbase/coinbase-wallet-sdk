@@ -147,6 +147,13 @@ export class SCWSigner implements Signer {
 
     switch (request.method) {
       case 'eth_requestAccounts': {
+        // if auto sub accounts are enabled and we have a sub account, we need to return it as a top level account
+        const subAccount = store.subAccounts.get();
+        const subAccountsConfig = store.subAccountsConfig.get();
+        if (subAccountsConfig?.enableAutoSubAccounts && subAccount?.address) {
+          this.accounts = [subAccount.address, ...this.accounts];
+        }
+
         this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
         return this.accounts;
       }
@@ -421,12 +428,12 @@ export class SCWSigner implements Signer {
     const state = store.getState();
     const subAccount = state.subAccount;
     if (subAccount?.address) {
-      const allAccounts = this.accounts.filter(
+      // Move the sub account to the top level accounts to make it active
+      const existingAccounts = this.accounts.filter(
         (account) => account.toLowerCase() !== subAccount.address.toLowerCase()
       );
-      this.accounts = allAccounts;
-
-      this.callback?.('accountsChanged', [subAccount.address, ...allAccounts]);
+      this.accounts = [subAccount.address, ...existingAccounts];
+      this.callback?.('accountsChanged', this.accounts);
       return subAccount;
     }
 
@@ -445,10 +452,8 @@ export class SCWSigner implements Signer {
     const existingAccounts = this.accounts.filter(
       (account) => account.toLowerCase() !== response.address.toLowerCase()
     );
-    const allAccounts = [response.address, ...existingAccounts];
-    this.accounts = allAccounts;
-
-    this.callback?.('accountsChanged', allAccounts);
+    this.accounts = [response.address, ...existingAccounts];
+    this.callback?.('accountsChanged', this.accounts);
     return response;
   }
 
