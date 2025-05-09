@@ -99,8 +99,9 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
           ],
         })) as SubAccount;
       },
-      async get(): Promise<SubAccount> {
+      async get(): Promise<SubAccount | null> {
         const subAccount = store.subAccounts.get();
+
         if (subAccount?.address) {
           return subAccount;
         }
@@ -110,13 +111,17 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
           params: [
             {
               version: 1,
-              capabilities: {
-                getSubAccounts: true,
-              },
+              capabilities: {},
             },
           ],
         })) as WalletConnectResponse;
-        return response.accounts[0].capabilities?.getSubAccounts?.[0] as SubAccount;
+
+        const subAccounts = response.accounts[0].capabilities?.subAccounts;
+        if (!Array.isArray(subAccounts)) {
+          return null;
+        }
+
+        return subAccounts[0] as SubAccount;
       },
       async addOwner({ address, publicKey, chainId }: SubAccountAddOwnerParams): Promise<string> {
         const subAccount = store.subAccounts.get();

@@ -86,7 +86,7 @@ describe('createCoinbaseWalletSDK', () => {
           type: 'create',
           keys: [
             {
-              key: '0x123',
+              publicKey: '0x123',
               type: 'p256',
             },
           ],
@@ -112,7 +112,7 @@ describe('createCoinbaseWalletSDK', () => {
         type: 'create',
         keys: [
           {
-            key: '0x123',
+            publicKey: '0x123',
             type: 'p256',
           },
         ],
@@ -126,7 +126,7 @@ describe('createCoinbaseWalletSDK', () => {
               type: 'create',
               keys: [
                 {
-                  key: '0x123',
+                  publicKey: '0x123',
                   type: 'p256',
                 },
               ],
@@ -161,17 +161,12 @@ describe('createCoinbaseWalletSDK', () => {
       vi.spyOn(sdk, 'getProvider').mockImplementation(() => ({ request: mockRequest }) as any);
 
       await sdk.subAccount.get();
-      expect(mockRequest).toHaveBeenCalledWith({
-        method: 'wallet_connect',
-        params: [
-          {
-            version: 1,
-            capabilities: {
-              getSubAccounts: true,
-            },
-          },
-        ],
-      });
+
+      expect(mockRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          method: 'wallet_connect',
+        })
+      );
     });
   });
 

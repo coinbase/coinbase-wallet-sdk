@@ -28,7 +28,7 @@ type LayoutProps = {
 
 export const WIDTH_2XL = '1536px';
 
-const PAGES = ['/', '/add-sub-account', '/import-sub-account'];
+const PAGES = ['/', '/add-sub-account', '/import-sub-account', '/auto-sub-account'];
 
 export function Layout({ children }: LayoutProps) {
   const { option, setPreference, version, setSDKVersion, scwUrl, setScwUrlAndSave } = useConfig();

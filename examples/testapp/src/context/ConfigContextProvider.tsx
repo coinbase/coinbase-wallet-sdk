@@ -43,9 +43,7 @@ type ConfigContextType = {
 
 const ConfigContext = createContext<ConfigContextType | null>(null);
 
-export const ConfigContextProvider = ({
-  children,
-}: ConfigContextProviderProps) => {
+export const ConfigContextProvider = ({ children }: ConfigContextProviderProps) => {
   const [version, setVersion] = useState<SDKVersionType | undefined>(undefined);
   const [option, setOption] = useState<OptionsType | undefined>(undefined);
   const [scwUrl, setScwUrl] = useState<ScwUrlType | undefined>(undefined);
@@ -55,20 +53,14 @@ export const ConfigContextProvider = ({
       auto: false,
     },
   });
-  const [subAccountsConfig, setSAConfig] = useState<
-    SubAccountOptions | undefined
-  >(undefined);
+  const [subAccountsConfig, setSAConfig] = useState<SubAccountOptions | undefined>(undefined);
 
   useEffect(
     function initializeSDKVersion() {
       if (version === undefined) {
-        const savedVersion = localStorage.getItem(
-          SELECTED_SDK_KEY
-        ) as SDKVersionType;
+        const savedVersion = localStorage.getItem(SELECTED_SDK_KEY) as SDKVersionType;
         setVersion(
-          sdkVersions.includes(savedVersion)
-            ? (savedVersion as SDKVersionType)
-            : sdkVersions[0]
+          sdkVersions.includes(savedVersion) ? (savedVersion as SDKVersionType) : sdkVersions[0]
         );
       }
     },
@@ -79,7 +71,7 @@ export const ConfigContextProvider = ({
     function initializeOption() {
       if (option === undefined) {
         const option = localStorage.getItem(OPTIONS_KEY) as OptionsType;
-        setOption(options.includes(option) ? (option as OptionsType) : "all");
+        setOption(options.includes(option) ? (option as OptionsType) : 'all');
       }
     },
     [option]
@@ -88,14 +80,8 @@ export const ConfigContextProvider = ({
   useEffect(
     function initializeScwUrl() {
       if (scwUrl === undefined) {
-        const savedScwUrl = localStorage.getItem(
-          SELECTED_SCW_URL_KEY
-        ) as ScwUrlType;
-        setScwUrl(
-          scwUrls.includes(savedScwUrl)
-            ? (savedScwUrl as ScwUrlType)
-            : scwUrls[0]
-        );
+        const savedScwUrl = localStorage.getItem(SELECTED_SCW_URL_KEY) as ScwUrlType;
+        setScwUrl(scwUrls.includes(savedScwUrl) ? (savedScwUrl as ScwUrlType) : scwUrls[0]);
       }
     },
     [scwUrl]
@@ -120,8 +106,8 @@ export const ConfigContextProvider = ({
   }, []);
 
   const setSubAccountsConfig = useCallback(
-    (subAccountsConfig: SubAccountOptions) => {
-      setSAConfig((prev) => ({ ...prev, ...subAccountsConfig }));
+    (...args: Parameters<Dispatch<SetStateAction<SubAccountOptions>>>) => {
+      setSAConfig(...args);
     },
     []
   );
@@ -151,15 +137,13 @@ export const ConfigContextProvider = ({
     setSubAccountsConfig,
   ]);
 
-  return (
-    <ConfigContext.Provider value={value}>{children}</ConfigContext.Provider>
-  );
+  return <ConfigContext.Provider value={value}>{children}</ConfigContext.Provider>;
 };
 
 export function useConfig() {
   const context = useContext(ConfigContext);
   if (context === undefined) {
-    throw new Error("useConfig must be used within a ConfigContextProvider");
+    throw new Error('useConfig must be used within a ConfigContextProvider');
   }
   return context;
 }

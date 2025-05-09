@@ -41,13 +41,13 @@ export function AddSubAccount({ sdk, onAddSubAccount, signerFn }: AddSubAccountP
                 ? [
                     {
                       type: 'webauthn-p256',
-                      key: account.publicKey,
+                      publicKey: account.publicKey,
                     },
                   ]
                 : [
                     {
                       type: 'address',
-                      key: account.address,
+                      publicKey: account.address,
                     },
                   ],
           },

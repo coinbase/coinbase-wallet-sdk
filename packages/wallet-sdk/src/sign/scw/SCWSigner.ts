@@ -7,12 +7,12 @@ import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage.
 import { RPCResponse } from ':core/message/RPCResponse.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
 import { FetchPermissionsResponse } from ':core/rpc/coinbase_fetchSpendPermissions.js';
-import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
+import { WalletConnectRequest, WalletConnectResponse } from ':core/rpc/wallet_connect.js';
 import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
 import { SDKChain, createClients, getClient } from ':store/chain-clients/utils.js';
-import { store } from ':store/store.js';
-import { assertPresence } from ':util/assertPresence.js';
+import { store, subAccountsConfig } from ':store/store.js';
+import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
 import { assertSubAccount } from ':util/assertSubAccount.js';
 import {
   decryptContent,
@@ -33,6 +33,7 @@ import {
   initSubAccountConfig,
   injectRequestCapabilities,
   makeDataSuffix,
+  requestHasCapability,
 } from './utils.js';
 import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
 import { findOwnerIndex } from './utils/findOwnerIndex.js';
@@ -110,7 +111,6 @@ export class SCWSigner implements Signer {
                   version: 1,
                   capabilities: {
                     ...(subAccountsConfig?.capabilities ?? {}),
-                    getSpendLimits: true,
                   },
                 },
               ],
@@ -128,10 +128,13 @@ export class SCWSigner implements Signer {
           // Wait for the popup to be loaded before making async calls
           await this.communicator.waitForPopupLoaded?.();
           await initSubAccountConfig();
-          const modifiedRequest = injectRequestCapabilities(
-            request,
-            store.subAccountsConfig.get()?.capabilities ?? {}
-          );
+
+          // Check if addSubAccount capability is present and if so, inject the the sub account capabilities
+          let capabilitiesToInject: Record<string, unknown> = {};
+          if (requestHasCapability(request, 'addSubAccount')) {
+            capabilitiesToInject = subAccountsConfig.get()?.capabilities ?? {};
+          }
+          const modifiedRequest = injectRequestCapabilities(request, capabilitiesToInject);
           return this.sendRequestToPopup(modifiedRequest);
         }
         case 'wallet_sendCalls': {
@@ -148,6 +151,13 @@ export class SCWSigner implements Signer {
 
     switch (request.method) {
       case 'eth_requestAccounts': {
+        // if auto sub accounts are enabled and we have a sub account, we need to return it as a top level account
+        const subAccount = store.subAccounts.get();
+        const subAccountsConfig = store.subAccountsConfig.get();
+        if (subAccountsConfig?.enableAutoSubAccounts && subAccount?.address) {
+          this.accounts = [subAccount.address, ...this.accounts];
+        }
+
         this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
         return this.accounts;
       }
@@ -249,45 +259,36 @@ export class SCWSigner implements Signer {
 
         const account = response.accounts.at(0);
         const capabilities = account?.capabilities;
-        if (capabilities?.addSubAccount || capabilities?.getSubAccounts) {
-          const capabilityResponse =
-            capabilities?.addSubAccount ?? capabilities?.getSubAccounts?.[0];
-          assertSubAccount(capabilityResponse);
+        const requestCapabilities = (request as WalletConnectRequest).params?.[0]?.capabilities;
+
+        if (capabilities?.subAccounts) {
+          const capabilityResponse = capabilities?.subAccounts;
+          assertArrayPresence(capabilityResponse, 'subAccounts');
+          assertSubAccount(capabilityResponse[0]);
           store.subAccounts.set({
-            address: capabilityResponse?.address,
-            factory: capabilityResponse?.factory,
-            factoryData: capabilityResponse?.factoryData,
+            address: capabilityResponse[0].address,
+            factory: capabilityResponse[0].factory,
+            factoryData: capabilityResponse[0].factoryData,
           });
         }
         let accounts_ = [this.accounts[0]];
 
         const subAccount = store.subAccounts.get();
         const subAccountsConfig = store.subAccountsConfig.get();
-        if (subAccount?.address) {
+
+        // Sub account should be returned as a top level account if auto sub accounts are enabled
+        const shouldUseSubAccount =
+          subAccountsConfig?.enableAutoSubAccounts || !!requestCapabilities?.addSubAccount;
+
+        if (subAccount?.address && shouldUseSubAccount) {
           // Sub account is always at index 0
-          accounts_ = [subAccount.address, ...this.accounts];
-
-          // Also update the accounts store if automatic sub accounts are enabled
-          if (subAccountsConfig?.enableAutoSubAccounts) {
-            store.account.set({
-              accounts: accounts_,
-            });
-            this.accounts = accounts_;
-          }
+          this.accounts = [subAccount.address, ...this.accounts];
         }
 
-        const getSpendLimits = response?.accounts?.[0].capabilities?.getSpendLimits;
-        if (getSpendLimits && 'permissions' in getSpendLimits) {
+        const spendLimits = response?.accounts?.[0].capabilities?.spendLimits;
+        if (spendLimits && 'permissions' in spendLimits) {
           store.spendLimits.set({
-            [this.chain.id]: getSpendLimits.permissions,
-          });
-        }
-
-        const spendLimit = response?.accounts?.[0].capabilities?.spendLimits;
-        if (spendLimit && 'permission' in spendLimit) {
-          const spendLimitsStore = store.spendLimits.get();
-          store.spendLimits.set({
-            [this.chain.id]: spendLimitsStore[this.chain.id].concat([spendLimit]),
+            [this.chain.id]: spendLimits.permissions,
           });
         }
 
@@ -431,17 +432,38 @@ export class SCWSigner implements Signer {
     const state = store.getState();
     const subAccount = state.subAccount;
     if (subAccount?.address) {
-      const allAccounts = this.accounts.filter(
+      // Move the sub account to the top level accounts to make it active
+      const existingAccounts = this.accounts.filter(
         (account) => account.toLowerCase() !== subAccount.address.toLowerCase()
       );
-      this.accounts = allAccounts;
-
-      this.callback?.('accountsChanged', [subAccount.address, ...allAccounts]);
+      this.accounts = [subAccount.address, ...existingAccounts];
+      this.callback?.('accountsChanged', this.accounts);
       return subAccount;
     }
 
     // Wait for the popup to be loaded before sending the request
     await this.communicator.waitForPopupLoaded?.();
+
+    if (Array.isArray(request.params) && request.params.length > 0 && request.params[0].account) {
+      let keys: { type: string; publicKey: string }[];
+      if (request.params[0].account.keys && request.params[0].account.keys.length > 0) {
+        keys = request.params[0].account.keys;
+      } else {
+        const { account: ownerAccount } = await getCryptoKeyAccount();
+
+        if (!ownerAccount) {
+          throw standardErrors.provider.unauthorized('could not get subaccount owner account');
+        }
+
+        keys = [
+          {
+            type: 'webauthn-p256',
+            publicKey: ownerAccount.publicKey,
+          },
+        ];
+      }
+      request.params[0].account.keys = keys;
+    }
 
     const response = await this.sendRequestToPopup(request);
     assertSubAccount(response);
@@ -455,11 +477,8 @@ export class SCWSigner implements Signer {
     const existingAccounts = this.accounts.filter(
       (account) => account.toLowerCase() !== response.address.toLowerCase()
     );
-    const allAccounts = [response.address, ...existingAccounts];
-    store.account.set({ accounts: allAccounts });
-    this.accounts = allAccounts;
-
-    this.callback?.('accountsChanged', allAccounts);
+    this.accounts = [response.address, ...existingAccounts];
+    this.callback?.('accountsChanged', this.accounts);
     return response;
   }
 
@@ -486,7 +505,7 @@ export class SCWSigner implements Signer {
     const ownerAccount = subAccountsConfig?.toOwnerAccount
       ? await subAccountsConfig.toOwnerAccount()
       : await getCryptoKeyAccount();
-  
+
     assertPresence(
       ownerAccount?.account,
       standardErrors.provider.unauthorized('no active sub account owner')
@@ -518,9 +537,10 @@ export class SCWSigner implements Signer {
       dappOrigin: window.location.origin,
     });
 
-    
     const publicKey =
-      ownerAccount.account.type === 'local' ? ownerAccount.account.address : ownerAccount.account.publicKey;
+      ownerAccount.account.type === 'local'
+        ? ownerAccount.account.address
+        : ownerAccount.account.publicKey;
 
     const ownerIndex = await findOwnerIndex({
       address: subAccount.address,

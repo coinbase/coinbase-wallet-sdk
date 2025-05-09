@@ -162,7 +162,7 @@ describe('SCWSigner', () => {
       ]);
       expect(mockSetAccount).toHaveBeenNthCalledWith(1, {
         chain: {
-          id: 1,  
+          id: 1,
           rpcUrl: 'https://eth-rpc.example.com/1',
         },
       });
@@ -425,23 +425,25 @@ describe('SCWSigner', () => {
   });
 
   describe('wallet_connect', () => {
-    it('should update internal state for successful wallet_connect', async () => {
+    beforeEach(async () => {
       await signer.cleanup();
-
-      const mockRequest: RequestArguments = {
-        method: 'wallet_connect',
-        params: [],
-      };
-
       (decryptContent as Mock).mockResolvedValueOnce({
         result: {
           value: null,
         },
       });
-      const mockSetAccount = vi.spyOn(store.account, 'set');
-
       await signer.handshake({ method: 'handshake' });
+    });
+
+    it('should handle wallet_connect with no capabilities', async () => {
       expect(signer['accounts']).toEqual([]);
+      const mockRequest: RequestArguments = {
+        method: 'wallet_connect',
+        params: [],
+      };
+
+      const mockSetAccount = vi.spyOn(store.account, 'set');
+      const mockSetSubAccounts = vi.spyOn(store.subAccounts, 'set');
 
       (decryptContent as Mock).mockResolvedValueOnce({
         result: {
@@ -450,11 +452,13 @@ describe('SCWSigner', () => {
               {
                 address: globalAccountAddress,
                 capabilities: {
-                  addSubAccount: {
-                    address: subAccountAddress,
-                    factory: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
-                    factoryData: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
-                  },
+                  subAccounts: [
+                    {
+                      address: subAccountAddress,
+                      factory: globalAccountAddress,
+                      factoryData: '0x',
+                    },
+                  ],
                 },
               },
             ],
@@ -464,15 +468,211 @@ describe('SCWSigner', () => {
 
       await signer.request(mockRequest);
 
+      // Should only persist global account to accounts store
       expect(mockSetAccount).toHaveBeenCalledWith({
-        accounts: ['0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54'],
+        accounts: [globalAccountAddress],
       });
-      expect(mockCallback).toHaveBeenCalledWith('accountsChanged', [
-        '0x7838d2724FC686813CAf81d4429beff1110c739a',
-        '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
-      ]);
 
-      await signer.cleanup();
+      // Should persist sub account to subAccounts store
+      expect(mockSetSubAccounts).toHaveBeenCalledWith({
+        address: subAccountAddress,
+        factory: globalAccountAddress,
+        factoryData: '0x',
+      });
+
+      // eth_accounts should return only global account
+      const accounts = await signer.request({ method: 'eth_accounts' });
+      expect(accounts).toEqual([globalAccountAddress]);
+    });
+
+    it('should handle wallet_connect with addSubAccount capability', async () => {
+      expect(signer['accounts']).toEqual([]);
+      const mockRequest: RequestArguments = {
+        method: 'wallet_connect',
+        params: [
+          {
+            capabilities: {
+              addSubAccount: {
+                account: {
+                  type: 'create',
+                  keys: [{ type: 'p256', publicKey: '0x123' }],
+                },
+              },
+            },
+          },
+        ],
+      };
+
+      const mockSetAccount = vi.spyOn(store.account, 'set');
+      const mockSetSubAccounts = vi.spyOn(store.subAccounts, 'set');
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {
+                  subAccounts: [
+                    {
+                      address: subAccountAddress,
+                      factory: globalAccountAddress,
+                      factoryData: '0x',
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      await signer.request(mockRequest);
+
+      // Should persist global account to accounts store
+      expect(mockSetAccount).toHaveBeenCalledWith({
+        accounts: [globalAccountAddress],
+      });
+
+      // Should persist sub account to subAccounts store
+      expect(mockSetSubAccounts).toHaveBeenCalledWith({
+        address: subAccountAddress,
+        factory: globalAccountAddress,
+        factoryData: '0x',
+      });
+
+      // eth_accounts should return [subAccount, globalAccount]
+      const accounts = await signer.request({ method: 'eth_accounts' });
+
+      expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
+    });
+
+    it('should handle wallet_addSubAccount creating new sub account', async () => {
+      expect(signer['accounts']).toEqual([]);
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {},
+              },
+            ],
+          },
+        },
+      });
+
+      // First connect without sub account
+      await signer.request({
+        method: 'wallet_connect',
+        params: [],
+      });
+
+      const mockSetSubAccounts = vi.spyOn(store.subAccounts, 'set');
+
+      // Then add sub account
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            address: subAccountAddress,
+            factory: globalAccountAddress,
+            factoryData: '0x',
+          },
+        },
+      });
+
+      await signer.request({
+        method: 'wallet_addSubAccount',
+        params: [
+          {
+            version: '1',
+            account: {
+              type: 'create',
+              keys: [
+                {
+                  publicKey: '0x123',
+                  type: 'p256',
+                },
+              ],
+            },
+          },
+        ],
+      });
+
+      // Should persist sub account to subAccounts store
+      expect(mockSetSubAccounts).toHaveBeenCalledWith({
+        address: subAccountAddress,
+        factory: globalAccountAddress,
+        factoryData: '0x',
+      });
+
+      // eth_accounts should return [subAccount, globalAccount]
+      const accounts = await signer.request({ method: 'eth_accounts' });
+      expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
+    });
+
+    it('should handle eth_requestAccounts with auto sub accounts enabled', async () => {
+      expect(signer['accounts']).toEqual([]);
+      vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
+        enableAutoSubAccounts: true,
+        capabilities: {
+          addSubAccount: {
+            account: {
+              type: 'create',
+              keys: [{ type: 'p256', publicKey: '0x123' }],
+            },
+          },
+        },
+      });
+
+      const mockSetAccount = vi.spyOn(store.account, 'set');
+      const mockSetSubAccounts = vi.spyOn(store.subAccounts, 'set');
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {
+                  subAccounts: [
+                    {
+                      address: subAccountAddress,
+                      factory: globalAccountAddress,
+                      factoryData: '0x',
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      const accounts = await signer.request({
+        method: 'eth_requestAccounts',
+        params: [],
+      });
+
+      // Should persist global account to accounts store
+      expect(mockSetAccount).toHaveBeenCalledWith({
+        accounts: [globalAccountAddress],
+      });
+
+      // Should persist sub account to subAccounts store
+      expect(mockSetSubAccounts).toHaveBeenCalledWith({
+        address: subAccountAddress,
+        factory: globalAccountAddress,
+        factoryData: '0x',
+      });
+
+      // Should return [subAccount, globalAccount]
+      expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
+
+      // eth_accounts should also return [subAccount, globalAccount]
+      const ethAccounts = await signer.request({ method: 'eth_accounts' });
+      expect(ethAccounts).toEqual([subAccountAddress, globalAccountAddress]);
     });
   });
 
@@ -529,7 +729,7 @@ describe('SCWSigner', () => {
               type: 'create',
               keys: [
                 {
-                  key: '0x123',
+                  publicKey: '0x123',
                   type: 'p256',
                 },
               ],
@@ -542,8 +742,66 @@ describe('SCWSigner', () => {
       expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
 
       expect(mockSetAccount).toHaveBeenCalledWith({
-        accounts: [subAccountAddress, globalAccountAddress],
+        accounts: [globalAccountAddress],
       });
+    });
+
+    it('should fall back to local account if no keys are provided', async () => {
+      await signer.cleanup();
+
+      const mockRequest: RequestArguments = {
+        method: 'wallet_connect',
+        params: [],
+      };
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: null,
+        },
+      });
+
+      await signer.handshake({ method: 'handshake' });
+      expect(signer['accounts']).toEqual([]);
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {},
+              },
+            ],
+          },
+        },
+      });
+
+      await signer.request(mockRequest);
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            address: subAccountAddress,
+            factory: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+            factoryData: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+          },
+        },
+      });
+
+      await signer.request({
+        method: 'wallet_addSubAccount',
+        params: [
+          {
+            version: '1',
+            account: {
+              type: 'create',
+            },
+          },
+        ],
+      });
+
+      const accounts = await signer.request({ method: 'eth_accounts' });
+      expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
     });
   });
 
@@ -577,11 +835,13 @@ describe('SCWSigner', () => {
               {
                 address: globalAccountAddress,
                 capabilities: {
-                  addSubAccount: {
-                    address: subAccountAddress,
-                    factory: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
-                    factoryData: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
-                  },
+                  subAccounts: [
+                    {
+                      address: subAccountAddress,
+                      factory: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+                      factoryData: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+                    },
+                  ],
                 },
               },
             ],
@@ -617,7 +877,10 @@ describe('SCWSigner', () => {
       await signer.handshake({ method: 'handshake' });
       expect(signer['accounts']).toEqual([]);
 
-      signer['accounts'] = ['0x7838d2724FC686813CAf81d4429beff1110c739a', '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54'];
+      signer['accounts'] = [
+        '0x7838d2724FC686813CAf81d4429beff1110c739a',
+        '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+      ];
 
       const mockRequest: RequestArguments = {
         method: 'wallet_sendCalls',
@@ -638,11 +901,13 @@ describe('SCWSigner', () => {
               {
                 address: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
                 capabilities: {
-                  addSubAccount: {
-                    address: '0x7838d2724FC686813CAf81d4429beff1110c739a',
-                    factory: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
-                    factoryData: '0x',
-                  },
+                  subAccounts: [
+                    {
+                      address: '0x7838d2724FC686813CAf81d4429beff1110c739a',
+                      factory: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+                      factoryData: '0x',
+                    },
+                  ],
                 },
               },
             ],
