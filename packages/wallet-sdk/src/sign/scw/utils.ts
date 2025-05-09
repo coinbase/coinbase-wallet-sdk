@@ -9,7 +9,7 @@ import {
   EmptyFetchPermissionsRequest,
   FetchPermissionsRequest,
 } from ':core/rpc/coinbase_fetchSpendPermissions.js';
-import { AddSubAccountCapabilityRequest } from ':core/rpc/wallet_connect.js';
+import { WalletConnectRequest } from ':core/rpc/wallet_connect.js';
 import { Address } from ':core/type/index.js';
 import { config, store } from ':store/store.js';
 import { get } from ':util/get.js';
@@ -117,22 +117,19 @@ export function injectRequestCapabilities<T extends RequestArguments>(
 export async function initSubAccountConfig() {
   const config = store.subAccountsConfig.get() ?? {};
 
-  if (!config?.enableAutoSubAccounts) {
-    return;
-  }
+  const capabilities: WalletConnectRequest['params'][0]['capabilities'] = {};
 
-  // Get the owner account
-  const { account: owner } = config.toOwnerAccount
-    ? await config.toOwnerAccount()
-    : await getCryptoKeyAccount();
+  if (config.enableAutoSubAccounts) {
+    // Get the owner account
+    const { account: owner } = config.toOwnerAccount
+      ? await config.toOwnerAccount()
+      : await getCryptoKeyAccount();
 
-  if (!owner) {
-    throw standardErrors.provider.unauthorized('No owner account found');
-  }
+    if (!owner) {
+      throw standardErrors.provider.unauthorized('No owner account found');
+    }
 
-  // Set the capabilities for the sub account
-  const capabilities = {
-    addSubAccount: {
+    capabilities.addSubAccount = {
       account: {
         type: 'create',
         keys: [
@@ -142,9 +139,12 @@ export async function initSubAccountConfig() {
           },
         ],
       },
-    } satisfies AddSubAccountCapabilityRequest,
-    spendLimits: config?.defaultSpendLimits ?? undefined,
-  };
+    };
+  }
+
+  if (config.defaultSpendLimits) {
+    capabilities.spendLimits = config.defaultSpendLimits;
+  }
 
   // Store the owner account and capabilities in the non-persisted config
   store.subAccountsConfig.set({
@@ -513,4 +513,17 @@ export function makeDataSuffix({
   }
 
   return;
+}
+
+/**
+ * Checks if a specific capability is present in a request's params
+ * @param request The request object to check
+ * @param capabilityName The name of the capability to check for
+ * @returns boolean indicating if the capability is present
+ */
+export function requestHasCapability(request: RequestArguments, capabilityName: string): boolean {
+  if (!Array.isArray(request?.params)) return false;
+  const capabilities = request.params[0]?.capabilities;
+  if (!capabilities || typeof capabilities !== 'object') return false;
+  return capabilityName in capabilities;
 }

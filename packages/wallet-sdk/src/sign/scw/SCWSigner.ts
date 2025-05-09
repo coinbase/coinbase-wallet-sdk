@@ -11,7 +11,7 @@ import { WalletConnectRequest, WalletConnectResponse } from ':core/rpc/wallet_co
 import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
 import { SDKChain, createClients, getClient } from ':store/chain-clients/utils.js';
-import { store } from ':store/store.js';
+import { store, subAccountsConfig } from ':store/store.js';
 import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
 import { assertSubAccount } from ':util/assertSubAccount.js';
 import {
@@ -33,6 +33,7 @@ import {
   initSubAccountConfig,
   injectRequestCapabilities,
   makeDataSuffix,
+  requestHasCapability,
 } from './utils.js';
 import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
 import { findOwnerIndex } from './utils/findOwnerIndex.js';
@@ -127,10 +128,13 @@ export class SCWSigner implements Signer {
           // Wait for the popup to be loaded before making async calls
           await this.communicator.waitForPopupLoaded?.();
           await initSubAccountConfig();
-          const modifiedRequest = injectRequestCapabilities(
-            request,
-            store.subAccountsConfig.get()?.capabilities ?? {}
-          );
+
+          // Check if addSubAccount capability is present and if so, inject the the sub account capabilities
+          let capabilitiesToInject: Record<string, unknown> = {};
+          if (requestHasCapability(request, 'addSubAccount')) {
+            capabilitiesToInject = subAccountsConfig.get()?.capabilities ?? {};
+          }
+          const modifiedRequest = injectRequestCapabilities(request, capabilitiesToInject);
           return this.sendRequestToPopup(modifiedRequest);
         }
         case 'wallet_sendCalls': {
