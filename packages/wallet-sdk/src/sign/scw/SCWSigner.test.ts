@@ -745,6 +745,64 @@ describe('SCWSigner', () => {
         accounts: [globalAccountAddress],
       });
     });
+
+    it('should fall back to local account if no keys are provided', async () => {
+      await signer.cleanup();
+
+      const mockRequest: RequestArguments = {
+        method: 'wallet_connect',
+        params: [],
+      };
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: null,
+        },
+      });
+
+      await signer.handshake({ method: 'handshake' });
+      expect(signer['accounts']).toEqual([]);
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {},
+              },
+            ],
+          },
+        },
+      });
+
+      await signer.request(mockRequest);
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            address: subAccountAddress,
+            factory: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+            factoryData: '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54',
+          },
+        },
+      });
+
+      await signer.request({
+        method: 'wallet_addSubAccount',
+        params: [
+          {
+            version: '1',
+            account: {
+              type: 'create',
+            },
+          },
+        ],
+      });
+
+      const accounts = await signer.request({ method: 'eth_accounts' });
+      expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
+    });
   });
 
   describe('auto sub account', () => {

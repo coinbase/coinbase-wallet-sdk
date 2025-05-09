@@ -444,6 +444,27 @@ export class SCWSigner implements Signer {
     // Wait for the popup to be loaded before sending the request
     await this.communicator.waitForPopupLoaded?.();
 
+    if (Array.isArray(request.params) && request.params.length > 0 && request.params[0].account) {
+      let keys: { type: string; publicKey: string }[];
+      if (request.params[0].account.keys && request.params[0].account.keys.length > 0) {
+        keys = request.params[0].account.keys;
+      } else {
+        const { account: ownerAccount } = await getCryptoKeyAccount();
+
+        if (!ownerAccount) {
+          throw standardErrors.provider.unauthorized('could not get subaccount owner account');
+        }
+
+        keys = [
+          {
+            type: 'webauthn-p256',
+            publicKey: ownerAccount.publicKey,
+          },
+        ];
+      }
+      request.params[0].account.keys = keys;
+    }
+
     const response = await this.sendRequestToPopup(request);
     assertSubAccount(response);
     // Only store the sub account information after the popup has been closed and the
