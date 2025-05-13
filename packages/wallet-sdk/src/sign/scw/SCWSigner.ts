@@ -450,7 +450,10 @@ export class SCWSigner implements Signer {
       if (request.params[0].account.keys && request.params[0].account.keys.length > 0) {
         keys = request.params[0].account.keys;
       } else {
-        const { account: ownerAccount } = await getCryptoKeyAccount();
+        const config = store.subAccountsConfig.get() ?? {};
+        const { account: ownerAccount } = config.toOwnerAccount
+          ? await config.toOwnerAccount()
+          : await getCryptoKeyAccount();
 
         if (!ownerAccount) {
           throw standardErrors.provider.unauthorized('could not get subaccount owner account');
@@ -458,8 +461,8 @@ export class SCWSigner implements Signer {
 
         keys = [
           {
-            type: 'webcrypto-p256',
-            publicKey: ownerAccount.publicKey,
+            type: ownerAccount.address ? 'address' : 'webauthn-p256',
+            publicKey: ownerAccount.address || ownerAccount.publicKey,
           },
         ];
       }
