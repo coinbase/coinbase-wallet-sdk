@@ -444,7 +444,12 @@ export class SCWSigner implements Signer {
     // Wait for the popup to be loaded before sending the request
     await this.communicator.waitForPopupLoaded?.();
 
-    if (Array.isArray(request.params) && request.params.length > 0 && request.params[0].account) {
+    if (
+      Array.isArray(request.params) &&
+      request.params.length > 0 &&
+      request.params[0].account &&
+      request.params[0].type === 'create'
+    ) {
       let keys: { type: string; publicKey: string }[];
       if (request.params[0].account.keys && request.params[0].account.keys.length > 0) {
         keys = request.params[0].account.keys;
@@ -457,7 +462,7 @@ export class SCWSigner implements Signer {
 
         keys = [
           {
-            type: 'webauthn-p256',
+            type: 'webcrypto-p256',
             publicKey: ownerAccount.publicKey,
           },
         ];
