@@ -25,8 +25,6 @@ export type SignInWithEthereumCapabilityResponse = {
 
 export type SpendLimitsCapabilityRequest = Record<number, SpendLimitConfig[]>;
 
-export type SpendLimitsCapabilityResponse = SpendLimit;
-
 export type AddSubAccountCapabilityRequest = {
   account: AddSubAccountAccount;
 };
@@ -37,9 +35,7 @@ export type AddSubAccountCapabilityResponse = {
   factoryData?: `0x${string}`;
 };
 
-export type GetSpendLimitsCapabilityRequest = boolean;
-
-export type GetSpendLimitsCapabilityResponse = {
+export type SpendLimitsCapabilityResponse = {
   permissions: SpendLimit[];
 };
 
@@ -66,7 +62,7 @@ export type WalletConnectResponse = {
     // Capabilities granted that is associated with this account.
     capabilities?: {
       subAccounts?: AddSubAccountCapabilityResponse[] | SerializedEthereumRpcError;
-      spendLimits?: GetSpendLimitsCapabilityResponse | SerializedEthereumRpcError;
+      spendLimits?: SpendLimitsCapabilityResponse | SerializedEthereumRpcError;
       signInWithEthereum?: SignInWithEthereumCapabilityResponse | SerializedEthereumRpcError;
     };
   }[];
