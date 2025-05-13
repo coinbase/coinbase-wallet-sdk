@@ -11,6 +11,7 @@ import {
   getSenderFromRequest,
   initSubAccountConfig,
   injectRequestCapabilities,
+  prependWithoutDuplicates,
   requestHasCapability,
 } from './utils.js';
 
@@ -390,5 +391,15 @@ describe('requestCapabilities', () => {
         )
       ).toBe(false);
     });
+  });
+});
+
+describe('prependWithoutDuplicates', () => {
+  it('should prepend an item to an array without duplicates', () => {
+    expect(prependWithoutDuplicates(['1', '2', '3'], '4')).toEqual(['4', '1', '2', '3']);
+  });
+
+  it('should not prepend an item to an array if it is already present', () => {
+    expect(prependWithoutDuplicates(['1', '2', '3'], '2')).toEqual(['2', '1', '3']);
   });
 });

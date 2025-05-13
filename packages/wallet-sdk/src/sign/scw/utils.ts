@@ -527,3 +527,14 @@ export function requestHasCapability(request: RequestArguments, capabilityName: 
   if (!capabilities || typeof capabilities !== 'object') return false;
   return capabilityName in capabilities;
 }
+
+/**
+ * Prepends an item to an array without duplicates
+ * @param array The array to prepend to
+ * @param item The item to prepend
+ * @returns The array with the item prepended
+ */
+export function prependWithoutDuplicates<T>(array: T[], item: T): T[] {
+  const filtered = array.filter((i) => i !== item);
+  return [item, ...filtered];
+}

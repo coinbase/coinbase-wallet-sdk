@@ -33,6 +33,7 @@ import {
   initSubAccountConfig,
   injectRequestCapabilities,
   makeDataSuffix,
+  prependWithoutDuplicates,
   requestHasCapability,
 } from './utils.js';
 import { createSubAccountSigner } from './utils/createSubAccountSigner.js';
@@ -153,9 +154,8 @@ export class SCWSigner implements Signer {
       case 'eth_requestAccounts': {
         // if auto sub accounts are enabled and we have a sub account, we need to return it as a top level account
         const subAccount = store.subAccounts.get();
-        const subAccountsConfig = store.subAccountsConfig.get();
-        if (subAccountsConfig?.enableAutoSubAccounts && subAccount?.address) {
-          this.accounts = [subAccount.address, ...this.accounts];
+        if (subAccount?.address) {
+          this.accounts = prependWithoutDuplicates(this.accounts, subAccount.address);
         }
 
         this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
@@ -281,8 +281,7 @@ export class SCWSigner implements Signer {
           subAccountsConfig?.enableAutoSubAccounts || !!requestCapabilities?.addSubAccount;
 
         if (subAccount?.address && shouldUseSubAccount) {
-          // Sub account is always at index 0
-          this.accounts = [subAccount.address, ...this.accounts];
+          this.accounts = prependWithoutDuplicates(this.accounts, subAccount.address);
         }
 
         const spendLimits = response?.accounts?.[0].capabilities?.spendLimits;
@@ -433,10 +432,7 @@ export class SCWSigner implements Signer {
     const subAccount = state.subAccount;
     if (subAccount?.address) {
       // Move the sub account to the top level accounts to make it active
-      const existingAccounts = this.accounts.filter(
-        (account) => account.toLowerCase() !== subAccount.address.toLowerCase()
-      );
-      this.accounts = [subAccount.address, ...existingAccounts];
+      this.accounts = prependWithoutDuplicates(this.accounts, subAccount.address);
       this.callback?.('accountsChanged', this.accounts);
       return subAccount;
     }
@@ -479,10 +475,7 @@ export class SCWSigner implements Signer {
       factory: response.factory,
       factoryData: response.factoryData,
     });
-    const existingAccounts = this.accounts.filter(
-      (account) => account.toLowerCase() !== response.address.toLowerCase()
-    );
-    this.accounts = [response.address, ...existingAccounts];
+    this.accounts = prependWithoutDuplicates(this.accounts, response.address);
     this.callback?.('accountsChanged', this.accounts);
     return response;
   }
