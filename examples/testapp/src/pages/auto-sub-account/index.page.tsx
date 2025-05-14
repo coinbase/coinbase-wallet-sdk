@@ -23,6 +23,13 @@ import { unsafe_generateOrLoadPrivateKey } from '../../utils/unsafe_generateOrLo
 
 type SignerType = 'cryptokey' | 'secp256k1';
 
+interface WalletConnectResponse {
+  accounts: Array<{
+    address: string;
+    capabilities?: Record<string, unknown>;
+  }>;
+}
+
 export default function AutoSubAccount() {
   const [accounts, setAccounts] = useState<string[]>([]);
   const [lastResult, setLastResult] = useState<string>();
@@ -55,10 +62,7 @@ export default function AutoSubAccount() {
             };
           };
 
-    setSubAccountsConfig((prev) => ({
-      ...prev,
-      toOwnerAccount: getSigner,
-    }));
+    setSubAccountsConfig((prev) => ({ ...prev, toOwnerAccount: getSigner }));
   }, [signerType, setSubAccountsConfig]);
 
   const handleRequestAccounts = async () => {
@@ -140,6 +144,62 @@ export default function AutoSubAccount() {
     }
   };
 
+  const handleWalletConnectWithSubAccount = async () => {
+    if (!provider) return;
+
+    const { account: ownerAccount } = await subAccountsConfig.toOwnerAccount();
+
+    const params = [
+      {
+        capabilities: {
+          addSubAccount: {
+            account: {
+              type: 'create',
+              keys: [
+                {
+                  type: ownerAccount.address ? 'address' : 'webauthn-p256',
+                  publicKey: ownerAccount.address ?? ownerAccount.publicKey,
+                },
+              ],
+            },
+          },
+        },
+      },
+    ];
+
+    try {
+      const response = (await provider.request({
+        method: 'wallet_connect',
+        params,
+      })) as WalletConnectResponse;
+      setLastResult(JSON.stringify(response, null, 2));
+      const accounts = await provider.request({
+        method: 'eth_requestAccounts',
+        params: [],
+      });
+      setAccounts(accounts as string[]);
+    } catch (e) {
+      console.error('error', e);
+      setLastResult(JSON.stringify(e, null, 2));
+    }
+  };
+
+  const handleWalletConnect = async () => {
+    if (!provider) return;
+
+    try {
+      const response = (await provider.request({
+        method: 'wallet_connect',
+        params: [],
+      })) as WalletConnectResponse;
+      setLastResult(JSON.stringify(response, null, 2));
+      setAccounts(response.accounts.map((acc) => acc.address));
+    } catch (e) {
+      console.error('error', e);
+      setLastResult(JSON.stringify(e, null, 2));
+    }
+  };
+
   const handleSetDefaultSpendLimits = (value: string) => {
     const defaultSpendLimits = {
       [baseSepolia.id]: [
@@ -152,9 +212,9 @@ export default function AutoSubAccount() {
     };
 
     if (value === 'true') {
-      setSubAccountsConfig({ defaultSpendLimits });
+      setSubAccountsConfig((prev) => ({ ...prev, defaultSpendLimits }));
     } else {
-      setSubAccountsConfig({ defaultSpendLimits: {} });
+      setSubAccountsConfig((prev) => ({ ...prev, defaultSpendLimits: {} }));
     }
   };
 
@@ -225,6 +285,9 @@ export default function AutoSubAccount() {
   return (
     <Container mb={16}>
       <VStack w="full" spacing={4}>
+        <Box w="full" textAlign="left" fontSize="lg" fontWeight="bold">
+          Configuration
+        </Box>
         <FormControl>
           <FormLabel>Select Signer Type</FormLabel>
           <RadioGroup value={signerType} onChange={(value: SignerType) => setSignerType(value)}>
@@ -238,7 +301,9 @@ export default function AutoSubAccount() {
           <FormLabel>Auto Sub-Accounts</FormLabel>
           <RadioGroup
             value={(subAccountsConfig?.enableAutoSubAccounts || false).toString()}
-            onChange={(value) => setSubAccountsConfig({ enableAutoSubAccounts: value === 'true' })}
+            onChange={(value) =>
+              setSubAccountsConfig((prev) => ({ ...prev, enableAutoSubAccounts: value === 'true' }))
+            }
           >
             <Stack direction="row">
               <Radio value="true">Enabled</Radio>
@@ -263,10 +328,7 @@ export default function AutoSubAccount() {
           <RadioGroup
             value={(subAccountsConfig?.dynamicSpendLimits || false).toString()}
             onChange={(value) =>
-              setSubAccountsConfig({
-                ...subAccountsConfig,
-                dynamicSpendLimits: value === 'true',
-              })
+              setSubAccountsConfig((prev) => ({ ...prev, dynamicSpendLimits: value === 'true' }))
             }
           >
             <Stack direction="row">
@@ -295,6 +357,30 @@ export default function AutoSubAccount() {
             />
           </FormControl>
         )}
+        {accounts.length > 0 && (
+          <Box w="full">
+            <Box fontSize="lg" fontWeight="bold" mb={2}>
+              Connected Accounts
+            </Box>
+            <VStack w="full" spacing={2} align="stretch">
+              {accounts.map((account) => (
+                <Box
+                  key={account}
+                  p={3}
+                  bg="gray.700"
+                  borderRadius="md"
+                  fontFamily="monospace"
+                  fontSize="sm"
+                >
+                  {account}
+                </Box>
+              ))}
+            </VStack>
+          </Box>
+        )}
+        <Box w="full" textAlign="left" fontSize="lg" fontWeight="bold">
+          RPCs
+        </Box>
         <Button w="full" onClick={handleRequestAccounts}>
           eth_requestAccounts
         </Button>
@@ -303,6 +389,12 @@ export default function AutoSubAccount() {
         </Button>
         <Button w="full" onClick={handleSignTypedData} isDisabled={!accounts.length}>
           eth_signTypedData_v4
+        </Button>
+        <Button w="full" onClick={handleWalletConnectWithSubAccount}>
+          wallet_connect (addSubAccount)
+        </Button>
+        <Button w="full" onClick={handleWalletConnect}>
+          wallet_connect
         </Button>
         <Box w="full" textAlign="left" fontSize="lg" fontWeight="bold">
           Send

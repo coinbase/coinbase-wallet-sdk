@@ -7,10 +7,12 @@ import {
   Stack,
   VStack,
 } from '@chakra-ui/react';
-import { createCoinbaseWalletSDK, getCryptoKeyAccount } from '@coinbase/wallet-sdk';
+import { getCryptoKeyAccount } from '@coinbase/wallet-sdk';
 import { useEffect, useState } from 'react';
 import { privateKeyToAccount } from 'viem/accounts';
 
+import { useConfig } from '../../context/ConfigContextProvider';
+import { useEIP1193Provider } from '../../context/EIP1193ProviderContextProvider';
 import { unsafe_generateOrLoadPrivateKey } from '../../utils/unsafe_generateOrLoadPrivateKey';
 import { AddOwner } from './components/AddOwner';
 import { AddSubAccount } from './components/AddSubAccount';
@@ -24,7 +26,8 @@ import { SpendPermissions } from './components/SpendPermissions';
 type SignerType = 'cryptokey' | 'secp256k1';
 
 export default function SubAccounts() {
-  const [sdk, setSDK] = useState<ReturnType<typeof createCoinbaseWalletSDK>>();
+  const { sdk } = useEIP1193Provider();
+  const { setSubAccountsConfig } = useConfig();
   const [subAccountAddress, setSubAccountAddress] = useState<string>();
   const [signerType, setSignerType] = useState<SignerType>('cryptokey');
   const [getSubAccountSigner, setGetSubAccountSigner] = useState<typeof getCryptoKeyAccount>(
@@ -56,27 +59,8 @@ export default function SubAccounts() {
           };
 
     setGetSubAccountSigner(() => getSigner);
-  }, [signerType]);
-
-  useEffect(() => {
-    const sdk = createCoinbaseWalletSDK({
-      appName: 'CryptoPlayground',
-      preference: {
-        keysUrl: 'https://keys-dev.coinbase.com/connect',
-        options: 'smartWalletOnly',
-      },
-      subAccounts: {
-        toOwnerAccount: getSubAccountSigner,
-      },
-    });
-
-    setSDK(sdk);
-    const provider = sdk.getProvider();
-
-    provider.on('accountsChanged', (accounts) => {
-      console.info('accountsChanged', accounts);
-    });
-  }, [getSubAccountSigner]);
+    setSubAccountsConfig({ toOwnerAccount: getSigner });
+  }, [signerType, setSubAccountsConfig]);
 
   return (
     <Container mb={16}>

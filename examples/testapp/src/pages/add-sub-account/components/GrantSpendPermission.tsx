@@ -86,29 +86,14 @@ export function GrantSpendPermission({
         params: [
           {
             version: '1',
-            capabilities: {
-              getSubAccounts: true,
-            },
+            capabilities: {},
           },
         ],
       })) as string[];
 
       const data = {
         chainId: baseSepolia.id,
-        account: accounts[0],
-        spender: subAccountAddress,
-        token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-        allowance: '0x2386F26FC10000',
-        period: 86400,
-        start: 1724264802,
-        end: 17242884802,
-        salt: '0x1',
-        extraData: '0x',
-      };
-
-      const spendPermission = makeSpendPermissionTypedData({
-        chainId: baseSepolia.id,
-        account: accounts[0] as Address,
+        account: accounts[1] as Address,
         spender: subAccountAddress as Address,
         token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
         allowance: '0x2386F26FC10000',
@@ -117,7 +102,9 @@ export function GrantSpendPermission({
         end: 17242884802,
         salt: '0x1',
         extraData: '0x',
-      });
+      } as const;
+
+      const spendPermission = makeSpendPermissionTypedData(data);
 
       const response = await provider?.request({
         method: 'eth_signTypedData_v4',

@@ -11,6 +11,8 @@ import {
   getSenderFromRequest,
   initSubAccountConfig,
   injectRequestCapabilities,
+  prependWithoutDuplicates,
+  requestHasCapability,
 } from './utils.js';
 
 describe('utils', () => {
@@ -88,7 +90,7 @@ describe('injectRequestCapabilities', () => {
         keys: [
           {
             type: 'address',
-            key: '0x123',
+            publicKey: '0x123',
           },
         ],
       },
@@ -351,5 +353,53 @@ describe('createWalletSendCallsRequest', () => {
         }),
       ],
     });
+  });
+});
+
+describe('requestCapabilities', () => {
+  describe('requestHasCapability', () => {
+    it('returns false for requests without params', () => {
+      expect(requestHasCapability({} as any, 'test')).toBe(false);
+      expect(requestHasCapability({ params: null } as any, 'test')).toBe(false);
+    });
+
+    it('returns false for requests without capabilities', () => {
+      expect(requestHasCapability({ params: [] } as any, 'test')).toBe(false);
+      expect(requestHasCapability({ params: [{}] } as any, 'test')).toBe(false);
+    });
+
+    it('returns false when capabilities is not an object', () => {
+      expect(
+        requestHasCapability({ params: [{ capabilities: 'not-an-object' }] } as any, 'test')
+      ).toBe(false);
+    });
+
+    it('returns true when capability exists', () => {
+      expect(
+        requestHasCapability(
+          { params: [{ capabilities: { testCapability: true } }] } as any,
+          'testCapability'
+        )
+      ).toBe(true);
+    });
+
+    it('returns false when capability does not exist', () => {
+      expect(
+        requestHasCapability(
+          { params: [{ capabilities: { otherCapability: true } }] } as any,
+          'testCapability'
+        )
+      ).toBe(false);
+    });
+  });
+});
+
+describe('prependWithoutDuplicates', () => {
+  it('should prepend an item to an array without duplicates', () => {
+    expect(prependWithoutDuplicates(['1', '2', '3'], '4')).toEqual(['4', '1', '2', '3']);
+  });
+
+  it('should not prepend an item to an array if it is already present', () => {
+    expect(prependWithoutDuplicates(['1', '2', '3'], '2')).toEqual(['2', '1', '3']);
   });
 });
