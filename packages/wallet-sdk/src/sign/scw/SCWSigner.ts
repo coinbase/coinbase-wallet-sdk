@@ -11,7 +11,7 @@ import { WalletConnectRequest, WalletConnectResponse } from ':core/rpc/wallet_co
 import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
 import { SDKChain, createClients, getClient } from ':store/chain-clients/utils.js';
-import { store, subAccountsConfig } from ':store/store.js';
+import { store } from ':store/store.js';
 import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
 import { assertSubAccount } from ':util/assertSubAccount.js';
 import {
@@ -133,7 +133,7 @@ export class SCWSigner implements Signer {
           // Check if addSubAccount capability is present and if so, inject the the sub account capabilities
           let capabilitiesToInject: Record<string, unknown> = {};
           if (requestHasCapability(request, 'addSubAccount')) {
-            capabilitiesToInject = subAccountsConfig.get()?.capabilities ?? {};
+            capabilitiesToInject = store.subAccountsConfig.get()?.capabilities ?? {};
           }
           const modifiedRequest = injectRequestCapabilities(request, capabilitiesToInject);
           return this.sendRequestToPopup(modifiedRequest);
