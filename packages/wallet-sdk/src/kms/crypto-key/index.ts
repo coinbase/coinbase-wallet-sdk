@@ -69,7 +69,7 @@ async function getOrCreateKeypair(): Promise<P256KeyPair> {
 }
 
 async function getAccount(): Promise<WebAuthnAccount> {
-  if (!isContextAllowedToSign()) {
+  if (!(await isContextAllowedToSign())) {
     throw new Error('Context is not allowed to sign. Ensure that the page is not in an iframe.');
   }
 
@@ -81,7 +81,7 @@ async function getAccount(): Promise<WebAuthnAccount> {
   const publicKey = Hex.slice(PublicKey.toHex(keypair.publicKey), 1);
 
   const sign = async (payload: Hex.Hex) => {
-    if (!isContextAllowedToSign()) {
+    if (!(await isContextAllowedToSign())) {
       throw new Error('Context is not allowed to sign. Ensure that the page is not in an iframe.');
     }
 
