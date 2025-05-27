@@ -1,5 +1,5 @@
 import { Hex, PublicKey, Signature, WebAuthnP256, WebCryptoP256 } from 'ox';
-import { hashMessage, hashTypedData, LocalAccount, OneOf } from 'viem';
+import { LocalAccount, OneOf, hashMessage, hashTypedData } from 'viem';
 import { type WebAuthnAccount } from 'viem/account-abstraction';
 
 import { createStorage } from './storage.js';
@@ -35,6 +35,15 @@ export async function generateKeyPair(): Promise<P256KeyPair> {
   return keypair;
 }
 
+export async function isContextAllowedToSign(): Promise<boolean> {
+  // Check if we are in an iframe
+  if (window.top !== window.self) {
+    return false;
+  }
+
+  return true;
+}
+
 export async function getKeypair(): Promise<P256KeyPair | null> {
   const id = await storage.getItem<string>(ACTIVE_ID_KEY);
   if (!id) {
@@ -60,6 +69,10 @@ async function getOrCreateKeypair(): Promise<P256KeyPair> {
 }
 
 async function getAccount(): Promise<WebAuthnAccount> {
+  if (!isContextAllowedToSign()) {
+    throw new Error('Context is not allowed to sign. Ensure that the page is not in an iframe.');
+  }
+
   const keypair = await getOrCreateKeypair();
 
   /**
@@ -68,6 +81,10 @@ async function getAccount(): Promise<WebAuthnAccount> {
   const publicKey = Hex.slice(PublicKey.toHex(keypair.publicKey), 1);
 
   const sign = async (payload: Hex.Hex) => {
+    if (!isContextAllowedToSign()) {
+      throw new Error('Context is not allowed to sign. Ensure that the page is not in an iframe.');
+    }
+
     const { payload: message, metadata } = WebAuthnP256.getSignPayload({
       challenge: payload,
       origin: 'https://keys.coinbase.com',
