@@ -9,7 +9,7 @@ import {
   EmptyFetchPermissionsRequest,
   FetchPermissionsRequest,
 } from ':core/rpc/coinbase_fetchSpendPermissions.js';
-import { WalletConnectRequest } from ':core/rpc/wallet_connect.js';
+import { WalletConnectRequest, WalletConnectResponse } from ':core/rpc/wallet_connect.js';
 import { Address } from ':core/type/index.js';
 import { config, store } from ':store/store.js';
 import { get } from ':util/get.js';
@@ -537,4 +537,28 @@ export function requestHasCapability(request: RequestArguments, capabilityName: 
 export function prependWithoutDuplicates<T>(array: T[], item: T): T[] {
   const filtered = array.filter((i) => i !== item);
   return [item, ...filtered];
+}
+
+export async function getCachedWalletConnectResponse(): Promise<WalletConnectResponse | null> {
+  const spendLimits = store.spendLimits.get();
+  const subAccount = store.subAccounts.get();
+  const accounts = store.account.get().accounts;
+
+  if (!accounts) {
+    return null;
+  }
+
+  const walletConnectAccounts = accounts?.map<WalletConnectResponse['accounts'][number]>(
+    (account) => ({
+      address: account,
+      capabilities: {
+        subAccounts: subAccount ? [subAccount] : undefined,
+        spendLimits: spendLimits.length > 0 ? { permissions: spendLimits } : undefined,
+      },
+    })
+  );
+
+  return {
+    accounts: walletConnectAccounts,
+  };
 }

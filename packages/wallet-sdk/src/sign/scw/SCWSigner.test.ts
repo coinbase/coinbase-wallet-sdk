@@ -268,7 +268,7 @@ describe('SCWSigner', () => {
         },
         chains: [],
         keys: {},
-        spendLimits: {},
+        spendLimits: [],
         config: {
           metadata: mockMetadata,
           preference: { keysUrl: CB_KEYS_URL, options: 'all' },
@@ -674,6 +674,83 @@ describe('SCWSigner', () => {
       const ethAccounts = await signer.request({ method: 'eth_accounts' });
       expect(ethAccounts).toEqual([subAccountAddress, globalAccountAddress]);
     });
+
+    it('should use cached response for subsequent wallet_connect calls', async () => {
+      // First wallet_connect call
+      const mockRequest: RequestArguments = {
+        method: 'wallet_connect',
+        params: [],
+      };
+
+      const mockSpendLimits = [
+        {
+          permissionHash: '0xPermissionHash',
+          signature: '0xSignature',
+          chainId: 1,
+          permission: {
+            account: globalAccountAddress,
+            spender: subAccountAddress,
+          },
+        },
+      ];
+
+      (decryptContent as Mock).mockResolvedValueOnce({
+        result: {
+          value: {
+            accounts: [
+              {
+                address: globalAccountAddress,
+                capabilities: {
+                  subAccounts: [
+                    {
+                      address: subAccountAddress,
+                      factory: globalAccountAddress,
+                      factoryData: '0x',
+                    },
+                  ],
+                  spendLimits: {
+                    permissions: mockSpendLimits,
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      // First wallet_connect call
+      await signer.request(mockRequest);
+
+      // Reset decryptContent mock to verify it's not called again
+      (decryptContent as Mock).mockReset();
+
+      // Second wallet_connect call
+      const cachedResponse = await signer.request(mockRequest);
+
+      // Verify decryptContent was not called for the second request
+      expect(decryptContent).not.toHaveBeenCalled();
+
+      // Verify cached response matches expected format
+      expect(cachedResponse).toEqual({
+        accounts: [
+          {
+            address: globalAccountAddress,
+            capabilities: {
+              subAccounts: [
+                {
+                  address: subAccountAddress,
+                  factory: globalAccountAddress,
+                  factoryData: '0x',
+                },
+              ],
+              spendLimits: {
+                permissions: mockSpendLimits,
+              },
+            },
+          },
+        ],
+      });
+    });
   });
 
   describe('wallet_addSubAccount', () => {
@@ -1007,6 +1084,7 @@ describe('SCWSigner', () => {
           account: '0xAddress',
           spender: '0xSubAccount',
         },
+        chainId: 10,
       },
     ] as [SpendLimit];
 
@@ -1021,7 +1099,7 @@ describe('SCWSigner', () => {
         },
         chains: [],
         keys: {},
-        spendLimits: {},
+        spendLimits: [],
         config: {
           metadata: mockMetadata,
           preference: { keysUrl: CB_KEYS_URL, options: 'all' },
@@ -1047,9 +1125,7 @@ describe('SCWSigner', () => {
 
       await signer.request(mockRequest);
 
-      expect(mockSetSpendLimits).toHaveBeenCalledWith({
-        '10': mockSpendLimits,
-      });
+      expect(mockSetSpendLimits).toHaveBeenCalledWith(mockSpendLimits);
     });
   });
 });

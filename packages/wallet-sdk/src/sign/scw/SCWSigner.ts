@@ -29,6 +29,7 @@ import {
   assertFetchPermissionsRequest,
   assertParamsChainId,
   fillMissingParamsForFetchPermissions,
+  getCachedWalletConnectResponse,
   getSenderFromRequest,
   initSubAccountConfig,
   injectRequestCapabilities,
@@ -190,6 +191,12 @@ export class SCWSigner implements Signer {
       case 'wallet_grantPermissions':
         return this.sendRequestToPopup(request);
       case 'wallet_connect': {
+        // Return cached wallet connect response if available
+        const cachedResponse = await getCachedWalletConnectResponse();
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
         // Wait for the popup to be loaded before making async calls
         await this.communicator.waitForPopupLoaded?.();
         await initSubAccountConfig();
@@ -211,7 +218,12 @@ export class SCWSigner implements Signer {
           CB_WALLET_RPC_URL
         )) as FetchPermissionsResponse;
         const requestedChainId = hexToNumber(completeRequest.params?.[0].chainId);
-        store.spendLimits.set({ [requestedChainId]: permissions.permissions });
+        store.spendLimits.set(
+          permissions.permissions.map((permission) => ({
+            ...permission,
+            chainId: requestedChainId,
+          }))
+        );
         return permissions;
       }
       default:
@@ -285,10 +297,9 @@ export class SCWSigner implements Signer {
         }
 
         const spendLimits = response?.accounts?.[0].capabilities?.spendLimits;
+
         if (spendLimits && 'permissions' in spendLimits) {
-          store.spendLimits.set({
-            [this.chain.id]: spendLimits.permissions,
-          });
+          store.spendLimits.set(spendLimits?.permissions);
         }
 
         this.callback?.('accountsChanged', accounts_);
