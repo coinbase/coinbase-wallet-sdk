@@ -6,7 +6,7 @@ import { isActionableHttpRequestError, isViemError, standardErrors } from ':core
 import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage.js';
 import { RPCResponse } from ':core/message/RPCResponse.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
-import { FetchPermissionsResponse, SpendLimit } from ':core/rpc/coinbase_fetchSpendPermissions.js';
+import { FetchPermissionsResponse } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { WalletConnectRequest, WalletConnectResponse } from ':core/rpc/wallet_connect.js';
 import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
@@ -29,6 +29,7 @@ import {
   assertFetchPermissionsRequest,
   assertParamsChainId,
   fillMissingParamsForFetchPermissions,
+  getCachedWalletConnectResponse,
   getSenderFromRequest,
   initSubAccountConfig,
   injectRequestCapabilities,
@@ -191,7 +192,7 @@ export class SCWSigner implements Signer {
         return this.sendRequestToPopup(request);
       case 'wallet_connect': {
         // Return cached wallet connect response if available
-        const cachedResponse = await this.getCachedWalletConnectResponse();
+        const cachedResponse = await getCachedWalletConnectResponse();
         if (cachedResponse) {
           return cachedResponse;
         }
@@ -217,12 +218,12 @@ export class SCWSigner implements Signer {
           CB_WALLET_RPC_URL
         )) as FetchPermissionsResponse;
         const requestedChainId = hexToNumber(completeRequest.params?.[0].chainId);
-        store.spendLimits.set({
-          [requestedChainId]: permissions.permissions.map((permission) => ({
+        store.spendLimits.set(
+          permissions.permissions.map((permission) => ({
             ...permission,
             chainId: requestedChainId,
-          })),
-        });
+          }))
+        );
         return permissions;
       }
       default:
@@ -231,30 +232,6 @@ export class SCWSigner implements Signer {
         }
         return fetchRPCRequest(request, this.chain.rpcUrl);
     }
-  }
-
-  private async getCachedWalletConnectResponse(): Promise<WalletConnectResponse | null> {
-    const spendLimits = store.spendLimits.get();
-    const subAccount = store.subAccounts.get();
-    const accounts = store.account.get().accounts;
-
-    if (!accounts) {
-      return null;
-    }
-
-    const walletConnectAccounts = accounts?.map<WalletConnectResponse['accounts'][number]>(
-      (account) => ({
-        address: account,
-        capabilities: {
-          subAccounts: subAccount ? [subAccount] : undefined,
-          spendLimits: spendLimits ? { permissions: Object.values(spendLimits).flat() } : undefined,
-        },
-      })
-    );
-
-    return {
-      accounts: walletConnectAccounts,
-    };
   }
 
   private async sendRequestToPopup(request: RequestArguments) {
@@ -322,19 +299,7 @@ export class SCWSigner implements Signer {
         const spendLimits = response?.accounts?.[0].capabilities?.spendLimits;
 
         if (spendLimits && 'permissions' in spendLimits) {
-          const spendLimitsByChainId = spendLimits?.permissions.reduce(
-            (acc, permission) => {
-              if (!acc[permission.chainId]) {
-                acc[permission.chainId] = [];
-              }
-
-              acc[permission.chainId].push(permission);
-              return acc;
-            },
-            {} as Record<number, SpendLimit[]>
-          );
-
-          store.spendLimits.set(spendLimitsByChainId);
+          store.spendLimits.set(spendLimits?.permissions);
         }
 
         this.callback?.('accountsChanged', accounts_);

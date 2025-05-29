@@ -268,7 +268,7 @@ describe('SCWSigner', () => {
         },
         chains: [],
         keys: {},
-        spendLimits: {},
+        spendLimits: [],
         config: {
           metadata: mockMetadata,
           preference: { keysUrl: CB_KEYS_URL, options: 'all' },
@@ -1099,7 +1099,7 @@ describe('SCWSigner', () => {
         },
         chains: [],
         keys: {},
-        spendLimits: {},
+        spendLimits: [],
         config: {
           metadata: mockMetadata,
           preference: { keysUrl: CB_KEYS_URL, options: 'all' },
@@ -1125,9 +1125,7 @@ describe('SCWSigner', () => {
 
       await signer.request(mockRequest);
 
-      expect(mockSetSpendLimits).toHaveBeenCalledWith({
-        '10': mockSpendLimits,
-      });
+      expect(mockSetSpendLimits).toHaveBeenCalledWith(mockSpendLimits);
     });
   });
 });

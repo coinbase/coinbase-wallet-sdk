@@ -94,12 +94,12 @@ const createSubAccountConfigSlice: StateCreator<StoreState, [], [], SubAccountCo
 };
 
 type SpendLimitsSlice = {
-  spendLimits: Record<number, SpendLimit[]>;
+  spendLimits: SpendLimit[];
 };
 
 const createSpendLimitsSlice: StateCreator<StoreState, [], [], SpendLimitsSlice> = () => {
   return {
-    spendLimits: {},
+    spendLimits: [],
   };
 };
 
@@ -195,12 +195,12 @@ export const subAccounts = {
 
 export const spendLimits = {
   get: () => sdkstore.getState().spendLimits,
-  set: (spendLimits: Record<number, SpendLimit[]>) => {
-    sdkstore.setState((state) => ({ spendLimits: { ...state.spendLimits, ...spendLimits } }));
+  set: (spendLimits: SpendLimit[]) => {
+    sdkstore.setState({ spendLimits });
   },
   clear: () => {
     sdkstore.setState({
-      spendLimits: {},
+      spendLimits: [],
     });
   },
 };

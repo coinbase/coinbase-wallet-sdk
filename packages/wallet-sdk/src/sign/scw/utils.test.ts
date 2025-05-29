@@ -8,6 +8,7 @@ import {
   createSpendPermissionBatchMessage,
   createWalletSendCallsRequest,
   fillMissingParamsForFetchPermissions,
+  getCachedWalletConnectResponse,
   getSenderFromRequest,
   initSubAccountConfig,
   injectRequestCapabilities,
@@ -254,7 +255,7 @@ describe('fillMissingParamsForFetchPermissions', () => {
       subAccount: { address: '0x456' },
       chains: [],
       keys: {},
-      spendLimits: {},
+      spendLimits: [],
       config: {
         version: '1.0.0',
       },
@@ -401,5 +402,215 @@ describe('prependWithoutDuplicates', () => {
 
   it('should not prepend an item to an array if it is already present', () => {
     expect(prependWithoutDuplicates(['1', '2', '3'], '2')).toEqual(['2', '1', '3']);
+  });
+});
+
+describe('getCachedWalletConnectResponse', () => {
+  beforeEach(() => {
+    vi.spyOn(store.spendLimits, 'get').mockReturnValue([]);
+    vi.spyOn(store.subAccounts, 'get').mockReturnValue(undefined);
+    vi.spyOn(store.account, 'get').mockReturnValue({ accounts: undefined });
+  });
+
+  it('should return null if no accounts exist', async () => {
+    const result = await getCachedWalletConnectResponse();
+    expect(result).toBeNull();
+  });
+
+  it('should return accounts with no capabilities if no spend limits or sub accounts', async () => {
+    vi.spyOn(store.account, 'get').mockReturnValue({ accounts: ['0x123', '0x456'] });
+
+    const result = await getCachedWalletConnectResponse();
+    expect(result).toEqual({
+      accounts: [
+        {
+          address: '0x123',
+          capabilities: {
+            subAccounts: undefined,
+            spendLimits: undefined,
+          },
+        },
+        {
+          address: '0x456',
+          capabilities: {
+            subAccounts: undefined,
+            spendLimits: undefined,
+          },
+        },
+      ],
+    });
+  });
+
+  it('should include sub account capability if sub account exists', async () => {
+    vi.spyOn(store.account, 'get').mockReturnValue({ accounts: ['0x123'] });
+    vi.spyOn(store.subAccounts, 'get').mockReturnValue({
+      address: '0xsub',
+      factory: '0xfactory',
+      factoryData: '0xdata',
+    });
+
+    const result = await getCachedWalletConnectResponse();
+    expect(result).toEqual({
+      accounts: [
+        {
+          address: '0x123',
+          capabilities: {
+            subAccounts: [
+              {
+                address: '0xsub',
+                factory: '0xfactory',
+                factoryData: '0xdata',
+              },
+            ],
+            spendLimits: undefined,
+          },
+        },
+      ],
+    });
+  });
+
+  it('should include spend limits capability if spend limits exist', async () => {
+    vi.spyOn(store.account, 'get').mockReturnValue({ accounts: ['0x123'] });
+    vi.spyOn(store.spendLimits, 'get').mockReturnValue([
+      {
+        signature: '0xsig1',
+        chainId: 1,
+        permission: {
+          account: '0x123',
+          spender: '0xspender1',
+          token: '0xtoken1',
+          allowance: '1000000',
+          period: 86400,
+          start: 1234567890,
+          end: 1234567890 + 86400,
+          salt: '0xsalt1',
+          extraData: '0x',
+        },
+      },
+      {
+        signature: '0xsig2',
+        chainId: 1,
+        permission: {
+          account: '0x123',
+          spender: '0xspender2',
+          token: '0xtoken2',
+          allowance: '2000000',
+          period: 86400,
+          start: 1234567890,
+          end: 1234567890 + 86400,
+          salt: '0xsalt2',
+          extraData: '0x',
+        },
+      },
+    ]);
+
+    const result = await getCachedWalletConnectResponse();
+    expect(result).toEqual({
+      accounts: [
+        {
+          address: '0x123',
+          capabilities: {
+            subAccounts: undefined,
+            spendLimits: {
+              permissions: [
+                {
+                  signature: '0xsig1',
+                  chainId: 1,
+                  permission: {
+                    account: '0x123',
+                    spender: '0xspender1',
+                    token: '0xtoken1',
+                    allowance: '1000000',
+                    period: 86400,
+                    start: 1234567890,
+                    end: 1234567890 + 86400,
+                    salt: '0xsalt1',
+                    extraData: '0x',
+                  },
+                },
+                {
+                  signature: '0xsig2',
+                  chainId: 1,
+                  permission: {
+                    account: '0x123',
+                    spender: '0xspender2',
+                    token: '0xtoken2',
+                    allowance: '2000000',
+                    period: 86400,
+                    start: 1234567890,
+                    end: 1234567890 + 86400,
+                    salt: '0xsalt2',
+                    extraData: '0x',
+                  },
+                },
+              ],
+            },
+          },
+        },
+      ],
+    });
+  });
+
+  it('should include both sub account and spend limits capabilities if both exist', async () => {
+    vi.spyOn(store.account, 'get').mockReturnValue({ accounts: ['0x123'] });
+    vi.spyOn(store.subAccounts, 'get').mockReturnValue({
+      address: '0xsub',
+      factory: '0xfactory',
+      factoryData: '0xdata',
+    });
+    vi.spyOn(store.spendLimits, 'get').mockReturnValue([
+      {
+        signature: '0xsig1',
+        chainId: 1,
+        permission: {
+          account: '0x123',
+          spender: '0xspender1',
+          token: '0xtoken1',
+          allowance: '1000000',
+          period: 86400,
+          start: 1234567890,
+          end: 1234567890 + 86400,
+          salt: '0xsalt1',
+          extraData: '0x',
+        },
+      },
+    ]);
+
+    const result = await getCachedWalletConnectResponse();
+    expect(result).toEqual({
+      accounts: [
+        {
+          address: '0x123',
+          capabilities: {
+            subAccounts: [
+              {
+                address: '0xsub',
+                factory: '0xfactory',
+                factoryData: '0xdata',
+              },
+            ],
+            spendLimits: {
+              permissions: [
+                {
+                  signature: '0xsig1',
+                  chainId: 1,
+                  permission: {
+                    account: '0x123',
+                    spender: '0xspender1',
+                    token: '0xtoken1',
+                    allowance: '1000000',
+                    period: 86400,
+                    start: 1234567890,
+                    end: 1234567890 + 86400,
+                    salt: '0xsalt1',
+                    extraData: '0x',
+                  },
+                },
+              ],
+            },
+          },
+        },
+      ],
+    });
   });
 });
