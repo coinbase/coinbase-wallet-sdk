@@ -20,7 +20,7 @@ export type SpendLimit = {
   /** Cryptographic signature in hex format */
   signature: string;
   /** Chain ID */
-  chainId: number;
+  chainId?: number;
   /** The permission details */
   permission: {
     /** Wallet address of the account */
