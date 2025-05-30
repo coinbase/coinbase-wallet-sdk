@@ -324,20 +324,6 @@ export default function AutoSubAccount() {
           </RadioGroup>
         </FormControl>
         <FormControl>
-          <FormLabel>Dynamic Spend Limits</FormLabel>
-          <RadioGroup
-            value={(subAccountsConfig?.dynamicSpendLimits || false).toString()}
-            onChange={(value) =>
-              setSubAccountsConfig((prev) => ({ ...prev, dynamicSpendLimits: value === 'true' }))
-            }
-          >
-            <Stack direction="row">
-              <Radio value="true">Enabled</Radio>
-              <Radio value="false">Disabled</Radio>
-            </Stack>
-          </RadioGroup>
-        </FormControl>
-        <FormControl>
           <FormLabel>Attribution</FormLabel>
           <RadioGroup value={getAttributionMode()} onChange={handleAttributionModeChange}>
             <Stack direction="row">
