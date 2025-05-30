@@ -586,14 +586,7 @@ export class SCWSigner implements Signer {
         throw error;
       }
 
-      if (
-        !(
-          isActionableHttpRequestError(errorObject) &&
-          subAccountsConfig?.dynamicSpendLimits &&
-          subAccountsConfig?.enableAutoSubAccounts &&
-          errorObject.data
-        )
-      ) {
+      if (!(isActionableHttpRequestError(errorObject) && errorObject.data)) {
         throw error;
       }
 

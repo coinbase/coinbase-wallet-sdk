@@ -96,10 +96,6 @@ export type SubAccountOptions = {
    * Only supports native chain tokens currently.
    */
   defaultSpendLimits?: Record<number, SpendLimitConfig[]>;
-  /**
-   * Used when users have insufficient funds, the SDK will request a new spend limit (only used when auto sub accounts is enabled)
-   */
-  dynamicSpendLimits?: boolean;
 };
 
 export interface ConstructorOptions {
