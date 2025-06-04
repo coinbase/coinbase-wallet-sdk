@@ -14,7 +14,7 @@ import {
 import { getCryptoKeyAccount } from '@coinbase/wallet-sdk';
 import { SpendLimitConfig } from '@coinbase/wallet-sdk/dist/core/provider/interface';
 import React, { useEffect, useState } from 'react';
-import { numberToHex, parseEther } from 'viem';
+import { createPublicClient, http, numberToHex, parseEther } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
 import { useConfig } from '../../context/ConfigContextProvider';
@@ -125,7 +125,7 @@ export default function AutoSubAccount() {
           name: 'Test Domain',
           version: '1',
           chainId: baseSepolia.id,
-          verifyingContract: '0x0000000000000000000000000000000000000000',
+          verifyingContract: '0x0000000000000000000000000000000000000000' as `0x${string}`,
         },
         message: {
           name: 'Test User',
@@ -137,7 +137,22 @@ export default function AutoSubAccount() {
         method: 'eth_signTypedData_v4',
         params: [accounts[0], JSON.stringify(typedData)],
       });
-      setLastResult(JSON.stringify(response, null, 2));
+
+      const publicClient = createPublicClient({
+        chain: baseSepolia,
+        transport: http(),
+      });
+
+      const isValid = await publicClient.verifyTypedData({
+        address: accounts[0] as `0x${string}`,
+        domain: typedData.domain,
+        types: typedData.types,
+        primaryType: typedData.primaryType,
+        message: typedData.message,
+        signature: response as `0x${string}`,
+      });
+
+      setLastResult(`isValid: ${isValid}\n${response}`);
     } catch (e) {
       console.error('error', e);
       setLastResult(JSON.stringify(e, null, 2));

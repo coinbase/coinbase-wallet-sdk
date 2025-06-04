@@ -1,7 +1,7 @@
 import { OwnerAccount } from ':core/type/index.js';
 import { getClient } from ':store/chain-clients/utils.js';
 import { Signature } from 'ox';
-import { numberToHex } from 'viem';
+import { numberToHex, toHex } from 'viem';
 import { createSmartAccount } from './createSmartAccount.js';
 import { createSubAccountSigner } from './createSubAccountSigner.js';
 
@@ -317,12 +317,14 @@ describe('createSubAccountSigner', () => {
       client: getClient(84532)!,
       owner,
     });
+    const message = 'hello world';
+    const hexMessage = toHex(message);
     await signer.request({
       method: 'personal_sign',
-      params: ['hello world', '0x'],
+      params: [hexMessage, '0x'],
     });
 
-    expect(mock).toHaveBeenCalledWith({ message: 'hello world' });
+    expect(mock).toHaveBeenCalledWith({ message});
   });
 
   it('handle sign typed data', async () => {
@@ -342,7 +344,30 @@ describe('createSubAccountSigner', () => {
 
     expect(mock).toHaveBeenCalledWith({ hash: '0x' });
   });
-  
+
+  it('personal_sign calls signMessage with decoded message', async () => {
+    const mock = vi.fn();
+    (createSmartAccount as any).mockResolvedValue({
+      signMessage: mock,
+    });
+
+    const signer = await createSubAccountSigner({
+      address: '0x',
+      client: getClient(84532)!,
+      owner,
+    });
+
+    const message = 'hello';
+    const hexMessage = toHex(message);  
+
+    await signer.request({
+      method: 'personal_sign',
+      params: [hexMessage, '0x'], // hex encoded "hello"
+    });
+
+    expect(mock).toHaveBeenCalledWith({ message });
+  });
+
   it('handles attribution', async () => {
     const request = vi.fn((args) => {
       if (args.method === 'wallet_prepareCalls') {

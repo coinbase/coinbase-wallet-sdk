@@ -12,7 +12,6 @@ import {
   Address,
   Hex,
   PublicClient,
-  SignableMessage,
   TypedDataDefinition,
   hexToString,
   isHex,
@@ -283,9 +282,13 @@ export async function createSubAccountSigner({
         }
         case 'personal_sign': {
           assertArrayPresence(args.params);
-          return account.signMessage({ message: args.params[0] } as {
-            message: SignableMessage;
-          });
+          // Param is expected to be a hex encoded string
+          if (!isHex(args.params[0])) {
+            throw standardErrors.rpc.invalidParams('message must be a hex encoded string');
+          }
+          // signMessage expects the unencoded message
+          const message = hexToString(args.params[0] as `0x${string}`);
+          return account.signMessage({ message });
         }
         case 'eth_signTypedData_v4': {
           assertArrayPresence(args.params);
