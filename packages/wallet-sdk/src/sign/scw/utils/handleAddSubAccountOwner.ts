@@ -74,7 +74,7 @@ export async function handleAddSubAccountOwner({
     method: "wallet_sendCalls",
     params: [
       {
-        version: 1,
+        version: "1",
         calls,
         chainId: numberToHex(84532),
         from: globalAccount,

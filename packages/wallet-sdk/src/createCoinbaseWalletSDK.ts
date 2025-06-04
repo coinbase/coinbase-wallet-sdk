@@ -109,7 +109,7 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
           method: 'wallet_connect',
           params: [
             {
-              version: 1,
+              version: "1",
               capabilities: {},
             },
           ],
