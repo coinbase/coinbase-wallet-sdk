@@ -100,8 +100,7 @@ export class SCWSigner implements Signer {
     if (this.accounts.length === 0) {
       switch (request.method) {
         case 'eth_requestAccounts': {
-          const subAccountsConfig = store.subAccountsConfig.get();
-          if (subAccountsConfig?.enableAutoSubAccounts) {
+          if (store.subAccountsConfig.get()?.enableAutoSubAccounts) {
             // Wait for the popup to be loaded before making async calls
             await this.communicator.waitForPopupLoaded?.();
             await initSubAccountConfig();
@@ -112,7 +111,7 @@ export class SCWSigner implements Signer {
                 {
                   version: "1",
                   capabilities: {
-                    ...(subAccountsConfig?.capabilities ?? {}),
+                    ...(store.subAccountsConfig.get()?.capabilities ?? {}),
                   },
                 },
               ],
