@@ -3192,6 +3192,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vitest/web-worker@npm:3.2.1":
+  version: 3.2.1
+  resolution: "@vitest/web-worker@npm:3.2.1"
+  dependencies:
+    debug: "npm:^4.4.1"
+  peerDependencies:
+    vitest: 3.2.1
+  checksum: 10/a27a41fb588975b38d2fd592a8be60a11d363ec94c183a4cc1ad44b9fc768c0d4df46be3aa97d231bd8d54b1694f346d3cdb935f97462c714b7b44c06c2fe867
+  languageName: node
+  linkType: hard
+
 "@webassemblyjs/ast@npm:1.12.1, @webassemblyjs/ast@npm:^1.12.1":
   version: 1.12.1
   resolution: "@webassemblyjs/ast@npm:1.12.1"
@@ -4437,6 +4448,18 @@ __metadata:
     supports-color:
       optional: true
   checksum: 3dbad3f94ea64f34431a9cbf0bafb61853eda57bff2880036153438f50fb5a84f27683ba0d8e5426bf41a8c6ff03879488120cf5b3a761e77953169c0600a708
+  languageName: node
+  linkType: hard
+
+"debug@npm:^4.4.1":
+  version: 4.4.1
+  resolution: "debug@npm:4.4.1"
+  dependencies:
+    ms: "npm:^2.1.3"
+  peerDependenciesMeta:
+    supports-color:
+      optional: true
+  checksum: 10/8e2709b2144f03c7950f8804d01ccb3786373df01e406a0f66928e47001cf2d336cbed9ee137261d4f90d68d8679468c755e3548ed83ddacdc82b194d2468afe
   languageName: node
   linkType: hard
 
