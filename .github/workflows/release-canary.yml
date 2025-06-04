@@ -29,7 +29,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Set version
-        run: yarn workspace @coinbase/wallet-sdk version ${{ env.PACKAGE_VERSION }}-canary.$(date +'%Y%m%d')
+        run: yarn workspace @coinbase/wallet-sdk version ${{ env.PACKAGE_VERSION }}-canary.$(date +'%Y%m%d%H%M%S')
         
       # Build the package
       - name: Prebuild Packages
