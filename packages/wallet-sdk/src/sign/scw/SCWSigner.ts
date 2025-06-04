@@ -110,7 +110,7 @@ export class SCWSigner implements Signer {
               method: 'wallet_connect',
               params: [
                 {
-                  version: 1,
+                  version: "1",
                   capabilities: {
                     ...(subAccountsConfig?.capabilities ?? {}),
                   },
