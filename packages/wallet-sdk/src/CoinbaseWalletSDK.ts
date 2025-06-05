@@ -56,6 +56,7 @@ export class CoinbaseWalletSDK {
   private _overrideIsCoinbaseBrowser: boolean;
   private _diagnosticLogger?: DiagnosticLogger;
   private _reloadOnDisconnect?: boolean;
+  private _provider?: CoinbaseWalletProvider;
 
   /**
    * Constructor
@@ -103,6 +104,7 @@ export class CoinbaseWalletSDK {
       diagnosticLogger: this._diagnosticLogger,
       reloadOnDisconnect: this._reloadOnDisconnect,
       enableMobileWalletLink: options.enableMobileWalletLink,
+      updateQrUrl: this.updateQrUrl.bind(this),
     };
 
     this._relay = isMobile ? new MobileRelay(relayOption) : new WalletLinkRelay(relayOption);
@@ -148,7 +150,7 @@ export class CoinbaseWalletSDK {
 
     if (!jsonRpcUrl) relay.setConnectDisabled(true);
 
-    return new CoinbaseWalletProvider({
+    this._provider = new CoinbaseWalletProvider({
       relayProvider: () => Promise.resolve(relay),
       relayEventManager: this._relayEventManager,
       storage: this._storage,
@@ -160,6 +162,8 @@ export class CoinbaseWalletSDK {
       overrideIsCoinbaseWallet: this._overrideIsCoinbaseWallet,
       overrideIsCoinbaseBrowser: this._overrideIsCoinbaseBrowser,
     });
+
+    return this._provider;
   }
 
   /**
@@ -199,6 +203,13 @@ export class CoinbaseWalletSDK {
    */
   public getQrUrl(): string | null {
     return this._relay?.getQRCodeUrl() ?? null;
+  }
+
+  public updateQrUrl(): void {
+    const url = this.getQrUrl();
+    if (url && this._provider) {
+      this._provider.qrUrl = url;
+    }
   }
 
   /**
