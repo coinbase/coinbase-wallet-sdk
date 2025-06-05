@@ -1,6 +1,6 @@
 {
   "name": "@coinbase/wallet-sdk",
-  "version": "3.9.3",
+  "version": "3.9.4",
   "description": "Coinbase Wallet JavaScript SDK",
   "keywords": [
     "cipher",
