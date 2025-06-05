@@ -7,7 +7,6 @@ import { ServerMessage, ServerMessageType } from '../type/ServerMessage.js';
 import { WalletLinkEventData } from '../type/WalletLinkEventData.js';
 import { WalletLinkSession } from '../type/WalletLinkSession.js';
 import { Web3Response } from '../type/Web3Response.js';
-import { WorkerResponse } from './HeartbeatWorker.js';
 import { WalletLinkCipher } from './WalletLinkCipher.js';
 import { WalletLinkHTTP } from './WalletLinkHTTP.js';
 import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket.js';
@@ -329,7 +328,7 @@ export class WalletLinkConnection {
   private setupWorkerListeners(): void {
     if (!this.heartbeatWorker) return;
 
-    this.heartbeatWorker.addEventListener('message', (event: MessageEvent<WorkerResponse>) => {
+    this.heartbeatWorker.addEventListener('message', (event: MessageEvent<{ type: 'heartbeat' | 'started' | 'stopped' }>) => {
       const { type } = event.data;
       
       switch (type) {

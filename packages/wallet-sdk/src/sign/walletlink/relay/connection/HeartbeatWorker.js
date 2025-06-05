@@ -1,26 +1,18 @@
 // Copyright (c) 2018-2025 Coinbase, Inc. <https://www.coinbase.com/>
 
-
 /**
  * This worker is used to send heartbeat messages to the main thread.
  * It is used to keep the websocket connection alive when the webpage is backgrounded.
  * 
  */
 
-const HEARTBEAT_INTERVAL = 10000; // 10 seconds
+// Define the heartbeat interval constant directly in the worker to avoid import issues
+const HEARTBEAT_INTERVAL = 10000;
 
-type WorkerMessage = {
-  type: 'start' | 'stop';
-}
-
-export type WorkerResponse = {
-  type: 'heartbeat' | 'started' | 'stopped';
-}
-
-let heartbeatInterval: NodeJS.Timeout | undefined;
+let heartbeatInterval;
 
 // Listen for messages from the main thread
-self.addEventListener('message', (event: MessageEvent<WorkerMessage>) => {
+self.addEventListener('message', (event) => {
   const { type } = event.data;
 
   switch (type) {
@@ -35,7 +27,7 @@ self.addEventListener('message', (event: MessageEvent<WorkerMessage>) => {
   }
 });
 
-function startHeartbeat(): void {
+function startHeartbeat() {
   // Clear any existing interval
   if (heartbeatInterval) {
     clearInterval(heartbeatInterval);
@@ -44,27 +36,27 @@ function startHeartbeat(): void {
   // Start the heartbeat interval
   heartbeatInterval = setInterval(() => {
     // Send heartbeat message to main thread
-    const response: WorkerResponse = { type: 'heartbeat' };
+    const response = { type: 'heartbeat' };
     self.postMessage(response);
   }, HEARTBEAT_INTERVAL);
 
   // Send confirmation that heartbeat started
-  const response: WorkerResponse = { type: 'started' };
+  const response = { type: 'started' };
   self.postMessage(response);
 }
 
-function stopHeartbeat(): void {
+function stopHeartbeat() {
   if (heartbeatInterval) {
     clearInterval(heartbeatInterval);
     heartbeatInterval = undefined;
   }
 
   // Send confirmation that heartbeat stopped
-  const response: WorkerResponse = { type: 'stopped' };
+  const response = { type: 'stopped' };
   self.postMessage(response);
 }
 
 // Handle worker termination
 self.addEventListener('beforeunload', () => {
   stopHeartbeat();
-});
+}); 

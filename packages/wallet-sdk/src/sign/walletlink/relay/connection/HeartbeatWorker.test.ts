@@ -6,7 +6,7 @@ describe('HeartbeatWorker', () => {
 
   beforeEach(async () => {
     // Create a new worker instance for each test
-    worker = new Worker(new URL('./HeartbeatWorker.ts', import.meta.url));
+    worker = new Worker(new URL('./HeartbeatWorker.js', import.meta.url));
   });
 
   afterEach(() => {
