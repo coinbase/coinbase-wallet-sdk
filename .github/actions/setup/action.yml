@@ -1,0 +1,19 @@
+name: Setup
+permissions:
+  contents: read
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: '.nvmrc'
+        registry-url: https://registry.npmjs.org
+
+    # For provenance https://docs.npmjs.com/generating-provenance-statements#prerequisites
+    - name: Install npm 9.5
+      run: npm install -g npm@^9.5.0
+      shell: bash
+
+    - name: Install node modules
+      run: yarn install --immutable
+      shell: bash
