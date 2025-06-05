@@ -43,6 +43,7 @@ export interface WalletLinkRelayOptions {
   diagnosticLogger?: DiagnosticLogger;
   reloadOnDisconnect?: boolean;
   enableMobileWalletLink?: boolean;
+  updateQrUrl?: () => void;
 }
 
 export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnectionUpdateListener {
@@ -236,6 +237,8 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
         this._session = session;
         this.connection = connection;
         this.ui = ui;
+
+        this.options.updateQrUrl?.();
 
         if (isStandalone && this.ui.setStandalone) this.ui.setStandalone(true);
 

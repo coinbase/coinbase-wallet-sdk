@@ -87,7 +87,7 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
   // So dapps can easily identify Coinbase Dapp Browser for enabling dapp browser specific features
   public readonly isCoinbaseBrowser: boolean;
 
-  public readonly qrUrl?: string | null;
+  public qrUrl?: string | null;
   public reloadOnDisconnect: boolean;
 
   private readonly _filterPolyfill = new FilterPolyfill(this);
