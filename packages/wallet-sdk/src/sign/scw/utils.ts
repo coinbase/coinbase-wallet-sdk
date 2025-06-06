@@ -13,7 +13,7 @@ export function assertGetCapabilitiesParams(
     throw standardErrors.rpc.invalidParams();
   }
 
-  if (params.length === 2) {
+  if (params.length === 2 && Boolean(params[1])) {
     if (!Array.isArray(params[1])) {
       throw standardErrors.rpc.invalidParams();
     }
