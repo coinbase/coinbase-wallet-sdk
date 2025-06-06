@@ -9,10 +9,10 @@ import { SpendLimit } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { getClient } from ':store/chain-clients/utils.js';
 import { store } from ':store/store.js';
 import {
-    decryptContent,
-    encryptContent,
-    exportKeyToHexString,
-    importKeyFromHexString,
+  decryptContent,
+  encryptContent,
+  exportKeyToHexString,
+  importKeyFromHexString,
 } from ':util/cipher.js';
 import { fetchRPCRequest } from ':util/provider.js';
 import { HttpRequestError, numberToHex } from 'viem';
