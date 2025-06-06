@@ -1,5 +1,7 @@
 import { Signer } from '../interface.js';
 import { SCWKeyManager } from './SCWKeyManager.js';
+import { hexToNumber, isAddressEqual } from 'viem';
+
 import { Communicator } from ':core/communicator/Communicator.js';
 import { standardErrors } from ':core/error/errors.js';
 import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage.js';
@@ -25,6 +27,11 @@ type Chain = {
   id: number;
   rpcUrl?: string;
 };
+
+import {
+  assertGetCapabilitiesParams,
+} from './utils.js';
+
 
 type ConstructorOptions = {
   metadata: AppMetadata;
@@ -118,7 +125,7 @@ export class SCWSigner implements Signer {
       case 'eth_chainId':
         return hexStringFromNumber(this.chain.id);
       case 'wallet_getCapabilities':
-        return this.storage.loadObject(WALLET_CAPABILITIES_STORAGE_KEY);
+        return this.handleGetCapabilitiesRequest(request);
       case 'wallet_switchEthereumChain':
         return this.handleSwitchChainRequest(request);
       case 'eth_ecRecover':
@@ -189,6 +196,47 @@ export class SCWSigner implements Signer {
       this.updateChain(chainId);
     }
     return popupResult;
+  }
+
+  private async handleGetCapabilitiesRequest(request: RequestArguments) {
+    assertGetCapabilitiesParams(request.params);
+    
+    const requestedAccount = request.params[0];
+    const filterChainIds = request.params[1]; // Optional second parameter
+
+    if (!this.accounts.some((account: AddressString) => isAddressEqual(account as `0x${string}`, requestedAccount))) {
+      throw standardErrors.provider.unauthorized('no active account found');
+    }
+
+    const capabilities = this.storage.loadObject(WALLET_CAPABILITIES_STORAGE_KEY);
+    
+    // Return empty object if capabilities is undefined
+    if (!capabilities) {
+      return {};
+    }
+    
+    // If no filter is provided, return all capabilities
+    if (!filterChainIds || filterChainIds.length === 0) {
+      return capabilities;
+    }
+
+    // Convert filter chain IDs to numbers once for efficient lookup
+    const filterChainNumbers = new Set(filterChainIds.map(chainId => hexToNumber(chainId)));
+
+    // Filter capabilities
+    const filteredCapabilities = Object.fromEntries(
+      Object.entries(capabilities).filter(([capabilityKey]) => {
+        try {
+          const capabilityChainNumber = hexToNumber(capabilityKey as `0x${string}`);
+          return filterChainNumbers.has(capabilityChainNumber);
+        } catch {
+          // If capabilityKey is not a valid hex string, exclude it
+          return false;
+        }
+      })
+    );
+    
+    return filteredCapabilities;
   }
 
   private async sendEncryptedRequest(request: RequestArguments): Promise<RPCResponseMessage> {
