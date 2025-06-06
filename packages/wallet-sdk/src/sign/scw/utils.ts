@@ -1,8 +1,10 @@
-import {  isAddress } from 'viem';
+import { isAddress } from 'viem';
 
 import { standardErrors } from ':core/error/errors.js';
 
-export function assertGetCapabilitiesParams(params: unknown): asserts params is [`0x${string}`, (`0x${string}`[])? ] {
+export function assertGetCapabilitiesParams(
+  params: unknown
+): asserts params is [`0x${string}`, `0x${string}`[]?] {
   if (!params || !Array.isArray(params) || (params.length !== 1 && params.length !== 2)) {
     throw standardErrors.rpc.invalidParams();
   }

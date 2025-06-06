@@ -1,7 +1,8 @@
-import { Signer } from '../interface.js';
-import { SCWKeyManager } from './SCWKeyManager.js';
 import { hexToNumber, isAddressEqual } from 'viem';
 
+import { Signer } from '../interface.js';
+import { SCWKeyManager } from './SCWKeyManager.js';
+import { assertGetCapabilitiesParams } from './utils.js';
 import { Communicator } from ':core/communicator/Communicator.js';
 import { standardErrors } from ':core/error/errors.js';
 import { RPCRequestMessage, RPCResponseMessage } from ':core/message/RPCMessage.js';
@@ -27,11 +28,6 @@ type Chain = {
   id: number;
   rpcUrl?: string;
 };
-
-import {
-  assertGetCapabilitiesParams,
-} from './utils.js';
-
 
 type ConstructorOptions = {
   metadata: AppMetadata;
@@ -200,28 +196,32 @@ export class SCWSigner implements Signer {
 
   private async handleGetCapabilitiesRequest(request: RequestArguments) {
     assertGetCapabilitiesParams(request.params);
-    
+
     const requestedAccount = request.params[0];
     const filterChainIds = request.params[1]; // Optional second parameter
 
-    if (!this.accounts.some((account: AddressString) => isAddressEqual(account as `0x${string}`, requestedAccount))) {
+    if (
+      !this.accounts.some((account: AddressString) =>
+        isAddressEqual(account as `0x${string}`, requestedAccount)
+      )
+    ) {
       throw standardErrors.provider.unauthorized('no active account found');
     }
 
     const capabilities = this.storage.loadObject(WALLET_CAPABILITIES_STORAGE_KEY);
-    
+
     // Return empty object if capabilities is undefined
     if (!capabilities) {
       return {};
     }
-    
+
     // If no filter is provided, return all capabilities
     if (!filterChainIds || filterChainIds.length === 0) {
       return capabilities;
     }
 
     // Convert filter chain IDs to numbers once for efficient lookup
-    const filterChainNumbers = new Set(filterChainIds.map(chainId => hexToNumber(chainId)));
+    const filterChainNumbers = new Set(filterChainIds.map((chainId) => hexToNumber(chainId)));
 
     // Filter capabilities
     const filteredCapabilities = Object.fromEntries(
@@ -235,7 +235,7 @@ export class SCWSigner implements Signer {
         }
       })
     );
-    
+
     return filteredCapabilities;
   }
 
