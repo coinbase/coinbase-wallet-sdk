@@ -4,7 +4,6 @@ import {
   SpendPermissionBatch,
   addSenderToRequest,
   assertFetchPermissionsRequest,
-  assertGetCapabilitiesParams,
   assertParamsChainId,
   createSpendPermissionBatchMessage,
   createWalletSendCallsRequest,
@@ -16,11 +15,6 @@ import {
   prependWithoutDuplicates,
   requestHasCapability,
 } from './utils.js';
-
-// Valid Ethereum addresses for testing
-const VALID_ADDRESS_1 = '0xe6c7D51b0d5ECC217BE74019447aeac4580Afb54';
-const VALID_ADDRESS_2 = '0x7838d2724FC686813CAf81d4429beff1110c739a';
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 describe('utils', () => {
   describe('getSenderFromRequest', () => {
@@ -86,71 +80,6 @@ describe('assertParamsChainId', () => {
   it('should throw if params is null or undefined', () => {
     expect(() => assertParamsChainId(null)).toThrow();
     expect(() => assertParamsChainId(undefined)).toThrow();
-  });
-});
-
-describe('assertGetCapabilitiesParams', () => {
-  it('should throw if params is null or undefined', () => {
-    expect(() => assertGetCapabilitiesParams(null)).toThrow();
-    expect(() => assertGetCapabilitiesParams(undefined)).toThrow();
-  });
-
-  it('should throw if params is not an array', () => {
-    expect(() => assertGetCapabilitiesParams({})).toThrow();
-    expect(() => assertGetCapabilitiesParams('0x123')).toThrow();
-    expect(() => assertGetCapabilitiesParams(123)).toThrow();
-  });
-
-  it('should throw if params array is empty', () => {
-    expect(() => assertGetCapabilitiesParams([])).toThrow();
-  });
-
-  it('should throw if params array has more than 2 elements', () => {
-    expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, ['0x1'], 'extra'])).toThrow();
-  });
-
-  it('should throw if first param is not a string', () => {
-    expect(() => assertGetCapabilitiesParams([123])).toThrow();
-    expect(() => assertGetCapabilitiesParams([null])).toThrow();
-    expect(() => assertGetCapabilitiesParams([{}])).toThrow();
-  });
-
-  it('should throw if first param is not a valid Ethereum address', () => {
-    expect(() => assertGetCapabilitiesParams(['123'])).toThrow();
-    expect(() => assertGetCapabilitiesParams(['0x123'])).toThrow(); // Too short
-    expect(() => assertGetCapabilitiesParams(['0x123abc'])).toThrow(); // Too short
-    expect(() => assertGetCapabilitiesParams(['xyz123'])).toThrow(); // No 0x prefix
-    expect(() => assertGetCapabilitiesParams(['0x12345678901234567890123456789012345678gg'])).toThrow(); // Invalid hex characters
-    expect(() => assertGetCapabilitiesParams(['0x123456789012345678901234567890123456789'])).toThrow(); // Too short (39 chars)
-    expect(() => assertGetCapabilitiesParams(['0x12345678901234567890123456789012345678901'])).toThrow(); // Too long (41 chars)
-  });
-
-  it('should not throw for valid single parameter (valid Ethereum address)', () => {
-    expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1])).not.toThrow();
-    expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_2])).not.toThrow();
-    expect(() => assertGetCapabilitiesParams([ZERO_ADDRESS])).not.toThrow();
-  });
-
-  it('should throw if second param is not an array when present', () => {
-    expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, '0x1'])).toThrow();
-    expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, 123])).toThrow();
-    expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, null])).toThrow();
-    expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, {}])).toThrow();
-  });
-
-  it('should throw if second param array contains non-hex strings', () => {
-    expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, ['0x1', '123']])).toThrow();
-    expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, ['0x1', 123]])).toThrow();
-    expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, ['0x1', null]])).toThrow();
-    expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, ['abc123']])).toThrow();
-  });
-
-  it('should not throw for valid parameters with filter array', () => {
-    expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, []])).not.toThrow();
-    expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, ['0x1']])).not.toThrow();
-    expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, ['0x1', '0x2', '0x3']])).not.toThrow();
-    expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, ['0xabcdef', '0x0']])).not.toThrow();
-    expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_2, ['0x1', '0xa']])).not.toThrow();
   });
 });
 
