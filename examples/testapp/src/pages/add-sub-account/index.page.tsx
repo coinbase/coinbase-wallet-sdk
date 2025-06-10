@@ -16,6 +16,7 @@ import { useEIP1193Provider } from '../../context/EIP1193ProviderContextProvider
 import { unsafe_generateOrLoadPrivateKey } from '../../utils/unsafe_generateOrLoadPrivateKey';
 import { AddOwner } from './components/AddOwner';
 import { AddSubAccount } from './components/AddSubAccount';
+import { AddSubAccountWithoutKeys } from './components/AddSubAccountWithoutKeys';
 import { Connect } from './components/Connect';
 import { GenerateNewSigner } from './components/GenerateNewSigner';
 import { GrantSpendPermission } from './components/GrantSpendPermission';
@@ -76,6 +77,11 @@ export default function SubAccounts() {
         </FormControl>
         <Connect sdk={sdk} />
         <AddSubAccount
+          sdk={sdk}
+          onAddSubAccount={setSubAccountAddress}
+          signerFn={getSubAccountSigner}
+        />
+        <AddSubAccountWithoutKeys
           sdk={sdk}
           onAddSubAccount={setSubAccountAddress}
           signerFn={getSubAccountSigner}

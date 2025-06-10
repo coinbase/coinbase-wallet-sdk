@@ -865,6 +865,10 @@ describe('SCWSigner', () => {
         },
       });
 
+      // Clear previous mock calls to isolate the wallet_addSubAccount call
+      mockCommunicator.postRequestAndWaitForResponse.mockClear();
+      (encryptContent as Mock).mockClear();
+
       await signer.request({
         method: 'wallet_addSubAccount',
         params: [
@@ -876,6 +880,31 @@ describe('SCWSigner', () => {
           },
         ],
       });
+
+      // Verify that encryptContent was called with a request containing populated keys
+      expect(encryptContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: expect.objectContaining({
+            method: 'wallet_addSubAccount',
+            params: [
+              {
+                version: '1',
+                account: {
+                  type: 'create',
+                  keys: expect.arrayContaining([
+                    expect.objectContaining({
+                      type: expect.any(String),
+                      publicKey: expect.any(String),
+                    }),
+                  ]),
+                },
+              },
+            ],
+          }),
+          chainId: expect.any(Number),
+        }),
+        mockCryptoKey
+      );
 
       const accounts = await signer.request({ method: 'eth_accounts' });
       expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
