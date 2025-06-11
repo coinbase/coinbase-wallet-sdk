@@ -2,6 +2,7 @@
 
 import { getFavicon } from ':core/type/util.js';
 import { store } from ':store/store.js';
+import { loadAnalyticsScript } from ':util/analytics.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { getCoinbaseInjectedProvider } from ':util/provider.js';
 import { validatePreferences } from ':util/validatePreferences.js';
@@ -35,6 +36,7 @@ export class CoinbaseWalletSDK {
     });
 
     void checkCrossOriginOpenerPolicy();
+    void loadAnalyticsScript();
   }
 
   public makeWeb3Provider(
