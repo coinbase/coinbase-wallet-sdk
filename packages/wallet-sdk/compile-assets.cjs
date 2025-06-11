@@ -23,7 +23,7 @@ async function main() {
   // Compiling Analytics Script
   // ================================
   const analyticsSource = path.join(__dirname, 'src/vendor-js/client-analytics/ca.js');
-  const analyticsOutputTs = path.join(__dirname, 'src/util/analytics-content.ts');
+  const analyticsOutputTs = path.join(__dirname, 'src/core/analytics/analytics-content.ts');
   if (fs.existsSync(analyticsSource)) {
     console.info('\nGenerating Stringified Analytics Script...');
     const analyticsContent = fs.readFileSync(analyticsSource, 'utf8');
