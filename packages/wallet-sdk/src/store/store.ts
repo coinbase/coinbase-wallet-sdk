@@ -1,5 +1,5 @@
 import { AppMetadata, Preference, SubAccountOptions } from ':core/provider/interface.js';
-import { SpendLimit } from ':core/rpc/coinbase_fetchSpendPermissions.js';
+import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { OwnerAccount } from ':core/type/index.js';
 import { Address, Hex } from 'viem';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -93,13 +93,13 @@ const createSubAccountConfigSlice: StateCreator<StoreState, [], [], SubAccountCo
   };
 };
 
-type SpendLimitsSlice = {
-  spendLimits: SpendLimit[];
+type SpendPermissionsSlice = {
+  spendPermissions: SpendPermission[];
 };
 
-const createSpendLimitsSlice: StateCreator<StoreState, [], [], SpendLimitsSlice> = () => {
+const createSpendPermissionsSlice: StateCreator<StoreState, [], [], SpendPermissionsSlice> = () => {
   return {
-    spendLimits: [],
+    spendPermissions: [],
   };
 };
 
@@ -126,7 +126,7 @@ export type StoreState = MergeTypes<
     AccountSlice,
     SubAccountSlice,
     SubAccountConfigSlice,
-    SpendLimitsSlice,
+    SpendPermissionsSlice,
     ConfigSlice,
   ]
 >;
@@ -138,7 +138,7 @@ export const sdkstore = createStore(
       ...createKeysSlice(...args),
       ...createAccountSlice(...args),
       ...createSubAccountSlice(...args),
-      ...createSpendLimitsSlice(...args),
+      ...createSpendPermissionsSlice(...args),
       ...createConfigSlice(...args),
       ...createSubAccountConfigSlice(...args),
     }),
@@ -153,7 +153,7 @@ export const sdkstore = createStore(
           keys: state.keys,
           account: state.account,
           subAccount: state.subAccount,
-          spendLimits: state.spendLimits,
+          spendPermissions: state.spendPermissions,
           config: state.config,
         } as StoreState;
       },
@@ -193,14 +193,14 @@ export const subAccounts = {
   },
 };
 
-export const spendLimits = {
-  get: () => sdkstore.getState().spendLimits,
-  set: (spendLimits: SpendLimit[]) => {
-    sdkstore.setState({ spendLimits });
+export const spendPermissions = {
+  get: () => sdkstore.getState().spendPermissions,
+  set: (spendPermissions: SpendPermission[]) => {
+    sdkstore.setState({ spendPermissions });
   },
   clear: () => {
     sdkstore.setState({
-      spendLimits: [],
+      spendPermissions: [],
     });
   },
 };
@@ -253,7 +253,7 @@ export const config = {
 const actions = {
   subAccounts,
   subAccountsConfig,
-  spendLimits,
+  spendPermissions,
   account,
   chains,
   keys,

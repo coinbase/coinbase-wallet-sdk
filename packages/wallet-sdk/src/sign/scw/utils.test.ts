@@ -326,7 +326,7 @@ describe('fillMissingParamsForFetchPermissions', () => {
       subAccount: { address: '0x456' },
       chains: [],
       keys: {},
-      spendLimits: [],
+      spendPermissions: [],
       config: {
         version: '1.0.0',
       },
@@ -478,7 +478,7 @@ describe('prependWithoutDuplicates', () => {
 
 describe('getCachedWalletConnectResponse', () => {
   beforeEach(() => {
-    vi.spyOn(store.spendLimits, 'get').mockReturnValue([]);
+    vi.spyOn(store.spendPermissions, 'get').mockReturnValue([]);
     vi.spyOn(store.subAccounts, 'get').mockReturnValue(undefined);
     vi.spyOn(store.account, 'get').mockReturnValue({ accounts: undefined });
   });
@@ -488,7 +488,7 @@ describe('getCachedWalletConnectResponse', () => {
     expect(result).toBeNull();
   });
 
-  it('should return accounts with no capabilities if no spend limits or sub accounts', async () => {
+  it('should return accounts with no capabilities if no spend permissions or sub accounts', async () => {
     vi.spyOn(store.account, 'get').mockReturnValue({ accounts: ['0x123', '0x456'] });
 
     const result = await getCachedWalletConnectResponse();
@@ -498,14 +498,14 @@ describe('getCachedWalletConnectResponse', () => {
           address: '0x123',
           capabilities: {
             subAccounts: undefined,
-            spendLimits: undefined,
+            spendPermissions: undefined,
           },
         },
         {
           address: '0x456',
           capabilities: {
             subAccounts: undefined,
-            spendLimits: undefined,
+            spendPermissions: undefined,
           },
         },
       ],
@@ -533,16 +533,16 @@ describe('getCachedWalletConnectResponse', () => {
                 factoryData: '0xdata',
               },
             ],
-            spendLimits: undefined,
+            spendPermissions: undefined,
           },
         },
       ],
     });
   });
 
-  it('should include spend limits capability if spend limits exist', async () => {
+  it('should include spend permissions capability if spend permissions exist', async () => {
     vi.spyOn(store.account, 'get').mockReturnValue({ accounts: ['0x123'] });
-    vi.spyOn(store.spendLimits, 'get').mockReturnValue([
+    vi.spyOn(store.spendPermissions, 'get').mockReturnValue([
       {
         signature: '0xsig1',
         chainId: 1,
@@ -582,7 +582,7 @@ describe('getCachedWalletConnectResponse', () => {
           address: '0x123',
           capabilities: {
             subAccounts: undefined,
-            spendLimits: {
+            spendPermissions: {
               permissions: [
                 {
                   signature: '0xsig1',
@@ -622,14 +622,14 @@ describe('getCachedWalletConnectResponse', () => {
     });
   });
 
-  it('should include both sub account and spend limits capabilities if both exist', async () => {
+  it('should include both sub account and spend permissions capabilities if both exist', async () => {
     vi.spyOn(store.account, 'get').mockReturnValue({ accounts: ['0x123'] });
     vi.spyOn(store.subAccounts, 'get').mockReturnValue({
       address: '0xsub',
       factory: '0xfactory',
       factoryData: '0xdata',
     });
-    vi.spyOn(store.spendLimits, 'get').mockReturnValue([
+    vi.spyOn(store.spendPermissions, 'get').mockReturnValue([
       {
         signature: '0xsig1',
         chainId: 1,
@@ -660,7 +660,7 @@ describe('getCachedWalletConnectResponse', () => {
                 factoryData: '0xdata',
               },
             ],
-            spendLimits: {
+            spendPermissions: {
               permissions: [
                 {
                   signature: '0xsig1',
