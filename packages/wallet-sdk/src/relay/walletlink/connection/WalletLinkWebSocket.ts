@@ -17,6 +17,7 @@ export class WalletLinkWebSocket {
   private readonly url: string;
   private webSocket: WebSocket | null = null;
   private pendingData: string[] = [];
+  private isDisconnecting = false;
 
   private connectionStateListener?: (_: ConnectionState) => void;
   setConnectionStateListener(listener: (_: ConnectionState) => void): void {
@@ -52,6 +53,9 @@ export class WalletLinkWebSocket {
   public async connect() {
     if (this.webSocket) {
       throw new Error('webSocket object is not null');
+    }
+    if (this.isDisconnecting) {
+      throw new Error('WebSocket is disconnecting, cannot reconnect on same instance');
     }
     console.debug(`[WalletLinkWebSocket] Instance #${this.instanceId} starting connection attempt to: ${this.url}. Active instances: ${WalletLinkWebSocket.activeInstances.size}`);
     return new Promise<void>((resolve, reject) => {
@@ -130,13 +134,21 @@ export class WalletLinkWebSocket {
       console.debug(`[WalletLinkWebSocket] Instance #${this.instanceId} disconnect called but no active connection`);
       return;
     }
+    
+    // Mark as disconnecting to prevent reconnection attempts on this instance
+    this.isDisconnecting = true;
+    
     console.debug(`[WalletLinkWebSocket] Instance #${this.instanceId} disconnecting. Active instances before disconnect: ${WalletLinkWebSocket.activeInstances.size}`);
     this.clearWebSocket();
 
-    this.connectionStateListener?.(ConnectionState.DISCONNECTED);
-    console.debug(`[WalletLinkWebSocket] Instance #${this.instanceId} state changed to: DISCONNECTED`);
+    // Clear listeners to prevent memory leaks
+    const tempListener = this.connectionStateListener;
     this.connectionStateListener = undefined;
     this.incomingDataListener = undefined;
+    
+    // Call the listener one last time with DISCONNECTED state
+    tempListener?.(ConnectionState.DISCONNECTED);
+    console.debug(`[WalletLinkWebSocket] Instance #${this.instanceId} state changed to: DISCONNECTED`);
 
     try {
       webSocket.close();
@@ -155,7 +167,10 @@ export class WalletLinkWebSocket {
     if (!webSocket) {
       console.debug(`[WalletLinkWebSocket] Instance #${this.instanceId} no active connection, queuing data:`, data);
       this.pendingData.push(data);
-      this.connect();
+      // Don't auto-connect if we're disconnecting
+      if (!this.isDisconnecting) {
+        this.connect();
+      }
       return;
     }
     
@@ -170,18 +185,18 @@ export class WalletLinkWebSocket {
     webSocket.send(data);
   }
 
-      private clearWebSocket(): void {
-      const { webSocket } = this;
-      if (!webSocket) {
-        return;
-      }
-      console.debug(`[WalletLinkWebSocket] Instance #${this.instanceId} clearing event handlers`);
-      this.webSocket = null;
-      webSocket.onclose = null;
-      webSocket.onerror = null;
-      webSocket.onmessage = null;
-      webSocket.onopen = null;
+  private clearWebSocket(): void {
+    const { webSocket } = this;
+    if (!webSocket) {
+      return;
     }
+    console.debug(`[WalletLinkWebSocket] Instance #${this.instanceId} clearing event handlers`);
+    this.webSocket = null;
+    webSocket.onclose = null;
+    webSocket.onerror = null;
+    webSocket.onmessage = null;
+    webSocket.onopen = null;
+  }
 
   public static getActiveInstances(): number {
     return WalletLinkWebSocket.activeInstances.size;

@@ -43,6 +43,10 @@ export class WalletLinkConnection {
   private nextReqId = IntNumber(1);
   private heartbeatIntervalId?: number;
   private reconnectAttempts = 0;
+  private visibilityChangeHandler?: () => void;
+  private focusHandler?: () => void;
+  private activeWsInstance?: WalletLinkWebSocket;
+  private isReconnecting = false;
 
   private readonly session: Session;
 
@@ -51,6 +55,8 @@ export class WalletLinkConnection {
   private cipher: Cipher;
   private ws: WalletLinkWebSocket;
   private http: WalletLinkHTTP;
+  private readonly linkAPIUrl: string;
+  private readonly WebSocketClass: typeof WebSocket;
 
   /**
    * Constructor
@@ -70,16 +76,38 @@ export class WalletLinkConnection {
     this.cipher = new Cipher(session.secret);
     this.diagnostic = diagnostic;
     this.listener = listener;
+    this.linkAPIUrl = linkAPIUrl;
+    this.WebSocketClass = WebSocketClass;
 
     console.debug('[WalletLinkConnection] Creating new WalletLinkWebSocket instance');
-    const ws = new WalletLinkWebSocket(`${linkAPIUrl}/rpc`, WebSocketClass);
+    const ws = this.createWebSocket();
+    this.ws = ws;
+
+    this.http = new WalletLinkHTTP(linkAPIUrl, session.id, session.key);
+
+    // Set up visibility and focus handlers for mobile Safari
+    this.setupMobileSafariHandlers();
+  }
+
+  private createWebSocket(): WalletLinkWebSocket {
+    const ws = new WalletLinkWebSocket(`${this.linkAPIUrl}/rpc`, this.WebSocketClass);
     console.debug('[WalletLinkConnection] WebSocket instance created. Total active WebSocket instances:', (WalletLinkWebSocket as any).getActiveInstances());
+    
+    // Track this as the active WebSocket instance
+    this.activeWsInstance = ws;
+    
     ws.setConnectionStateListener(async (state) => {
+      // Ignore events from non-active WebSocket instances
+      if (ws !== this.activeWsInstance) {
+        console.debug('[WalletLinkConnection] Ignoring state change from non-active WebSocket instance');
+        return;
+      }
+      
       // attempt to reconnect every 5 seconds when disconnected
       console.debug('[WalletLinkConnection] Connection state changed to:', ConnectionState[state], 'shouldFetchUnseenEventsOnConnect:', this.shouldFetchUnseenEventsOnConnect);
       this.diagnostic?.log(EVENTS.CONNECTED_STATE_CHANGE, {
         state,
-        sessionIdHash: Session.hash(session.id),
+        sessionIdHash: Session.hash(this.session.id),
       });
 
       let connected = false;
@@ -92,26 +120,55 @@ export class WalletLinkConnection {
             console.debug('[WalletLinkConnection] Cleared heartbeat timer');
           }
           
+          // Reset lastHeartbeatResponse to prevent false timeout on reconnection
+          this.lastHeartbeatResponse = 0;
+          console.debug('[WalletLinkConnection] Reset lastHeartbeatResponse on disconnect');
+          
           // Reset connected state to false on disconnect
           connected = false;
           console.debug('[WalletLinkConnection] DISCONNECTED case - shouldFetchUnseenEventsOnConnect:', this.shouldFetchUnseenEventsOnConnect);
           
-          // if DISCONNECTED and not destroyed
+          // if DISCONNECTED and not destroyed, create a fresh WebSocket connection
           if (!this.destroyed) {
-            const connect = async () => {
+            const reconnect = async () => {
+              // Prevent multiple concurrent reconnection attempts
+              if (this.isReconnecting) {
+                console.debug('[WalletLinkConnection] Reconnection already in progress, skipping');
+                return;
+              }
+              
+              this.isReconnecting = true;
+              
+              // Calculate delay with exponential backoff (max 30 seconds)
+              const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+              console.debug(`[WalletLinkConnection] Waiting ${delay}ms before reconnection attempt ${this.reconnectAttempts + 1}`);
+              
               // wait with exponential backoff
               await new Promise((resolve) => setTimeout(resolve, delay));
-              // check whether it's destroyed again
-              if (!this.destroyed && state === ConnectionState.DISCONNECTED) {
-                // reconnect
+              
+              // check whether it's destroyed again and ensure this is still the active instance
+              if (!this.destroyed && ws === this.activeWsInstance) {
                 this.reconnectAttempts++;
-                console.debug('[WalletLinkConnection] Attempting to reconnect');
-                ws.connect().catch(() => {
-                  connect();
+                console.debug('[WalletLinkConnection] Creating fresh WebSocket for reconnection');
+                
+                // Clean up the old WebSocket instance
+                if ('cleanup' in this.ws && typeof this.ws.cleanup === 'function') {
+                  (this.ws as any).cleanup();
+                }
+                
+                // Create a fresh WebSocket instance
+                this.ws = this.createWebSocket();
+                this.ws.connect().catch(() => {
+                  console.error('[WalletLinkConnection] Reconnection failed, will retry');
+                }).finally(() => {
+                  this.isReconnecting = false;
                 });
+              } else {
+                console.debug('[WalletLinkConnection] Skipping reconnection - destroyed or not active instance');
+                this.isReconnecting = false;
               }
             };
-            connect();
+            reconnect();
           }
           break;
 
@@ -144,7 +201,14 @@ export class WalletLinkConnection {
             });
           } catch (error) {
             console.error('[WalletLinkConnection] Authentication failed:', error);
+            // Don't set connected to true if authentication fails
+            break;
           }
+
+          // Update connected state immediately after successful authentication
+          // This ensures heartbeats won't be skipped
+          console.debug('[WalletLinkConnection] Setting connected state to true before starting heartbeat');
+          this.connected = connected;
 
           // send heartbeat every n seconds while connected
           // if CONNECTED, start the heartbeat timer
@@ -162,6 +226,13 @@ export class WalletLinkConnection {
           }, HEARTBEAT_INTERVAL);
           console.debug('[WalletLinkConnection] Started heartbeat timer');
 
+          // Send an immediate heartbeat to verify connection is alive
+          // This is especially important for reconnections
+          setTimeout(() => {
+            console.debug('[WalletLinkConnection] Sending initial heartbeat after connection');
+            this.heartbeat();
+          }, 100);
+
           break;
 
         case ConnectionState.CONNECTING:
@@ -169,10 +240,14 @@ export class WalletLinkConnection {
           break;
       }
 
-      // Always update connected state to ensure proper transitions
-      console.debug('[WalletLinkConnection] Updating connected state from', this.connected, 'to', connected);
-      this.connected = connected;
+      // Update connected state for DISCONNECTED and CONNECTING cases
+      // For CONNECTED case, it's already set above
+      if (state !== ConnectionState.CONNECTED) {
+        console.debug('[WalletLinkConnection] Updating connected state from', this.connected, 'to', connected);
+        this.connected = connected;
+      }
     });
+    
     ws.setIncomingDataListener((m) => {
       console.debug('[WalletLinkConnection] Received message type:', m.type, 'Full message:', m);
       switch (m.type) {
@@ -187,7 +262,7 @@ export class WalletLinkConnection {
           const linked = m.type === 'IsLinkedOK' ? m.linked : undefined;
           console.debug('[WalletLinkConnection] Link status update:', { linked, onlineGuests: m.onlineGuests });
           this.diagnostic?.log(EVENTS.LINKED, {
-            sessionIdHash: Session.hash(session.id),
+            sessionIdHash: Session.hash(this.session.id),
             linked,
             type: m.type,
             onlineGuests: m.onlineGuests,
@@ -202,7 +277,7 @@ export class WalletLinkConnection {
         case 'SessionConfigUpdated': {
           console.debug('[WalletLinkConnection] Session config received:', m.metadata);
           this.diagnostic?.log(EVENTS.SESSION_CONFIG_RECEIVED, {
-            sessionIdHash: Session.hash(session.id),
+            sessionIdHash: Session.hash(this.session.id),
             metadata_keys: m && m.metadata ? Object.keys(m.metadata) : undefined,
           });
           this.handleSessionMetadataUpdated(m.metadata);
@@ -233,9 +308,77 @@ export class WalletLinkConnection {
         this.requestResolutions.get(m.id)?.(m);
       }
     });
-    this.ws = ws;
+    
+    return ws;
+  }
 
-    this.http = new WalletLinkHTTP(linkAPIUrl, session.id, session.key);
+  private setupMobileSafariHandlers(): void {
+    // Handle visibility changes (when app is backgrounded/foregrounded)
+    this.visibilityChangeHandler = () => {
+      console.debug('[WalletLinkConnection] Visibility changed, document.hidden:', document.hidden);
+      
+      if (!document.hidden && !this.destroyed) {
+        // Page became visible - check connection and reconnect if needed
+        console.debug('[WalletLinkConnection] Page became visible, checking connection status');
+        
+        // Force a fresh connection if we're disconnected
+        if (!this.connected) {
+          console.debug('[WalletLinkConnection] Not connected, forcing fresh connection');
+          this.reconnectWithFreshWebSocket();
+        } else {
+          // Send a heartbeat to check if connection is still alive
+          this.heartbeat();
+        }
+      }
+    };
+
+    // Handle focus events (when user switches back to the tab/app)
+    this.focusHandler = () => {
+      console.debug('[WalletLinkConnection] Window focused');
+      
+      if (!this.destroyed && !this.connected) {
+        console.debug('[WalletLinkConnection] Window focused but not connected, forcing fresh connection');
+        this.reconnectWithFreshWebSocket();
+      }
+    };
+
+    // Add event listeners
+    document.addEventListener('visibilitychange', this.visibilityChangeHandler);
+    window.addEventListener('focus', this.focusHandler);
+    
+    // Also handle pageshow event for iOS Safari
+    window.addEventListener('pageshow', (event) => {
+      if (event.persisted) {
+        console.debug('[WalletLinkConnection] Page restored from bfcache');
+        if (this.focusHandler) {
+          this.focusHandler();
+        }
+      }
+    });
+  }
+
+  private reconnectWithFreshWebSocket(): void {
+    if (this.destroyed) return;
+    
+    console.debug('[WalletLinkConnection] Reconnecting with fresh WebSocket');
+    
+    // Clear the active instance reference before disconnecting
+    const oldWs = this.ws;
+    this.activeWsInstance = undefined;
+    
+    // Disconnect current WebSocket
+    oldWs.disconnect();
+    
+    // Clean up the old instance
+    if ('cleanup' in oldWs && typeof oldWs.cleanup === 'function') {
+      (oldWs as any).cleanup();
+    }
+    
+    // Create and connect fresh WebSocket
+    this.ws = this.createWebSocket();
+    this.ws.connect().catch((error) => {
+      console.error('[WalletLinkConnection] Fresh reconnection failed:', error);
+    });
   }
 
   /**
@@ -257,12 +400,23 @@ export class WalletLinkConnection {
    */
   public destroy(): void {
     this.destroyed = true;
+    
+    // Clear the active instance reference
+    this.activeWsInstance = undefined;
 
     // Clear heartbeat timer
     if (this.heartbeatIntervalId) {
       clearInterval(this.heartbeatIntervalId);
       this.heartbeatIntervalId = undefined;
       console.debug('[WalletLinkConnection] Cleared heartbeat timer on destroy');
+    }
+
+    // Remove event listeners
+    if (this.visibilityChangeHandler) {
+      document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
+    }
+    if (this.focusHandler) {
+      window.removeEventListener('focus', this.focusHandler);
     }
 
     console.debug('[WalletLinkConnection] Destroying connection - calling disconnect');
