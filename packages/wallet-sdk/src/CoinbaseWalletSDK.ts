@@ -1,8 +1,6 @@
-// Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
-
+import { loadAnalyticsScript } from ':core/analytics/initCCA.js';
 import { getFavicon } from ':core/type/util.js';
 import { store } from ':store/store.js';
-import { loadAnalyticsScript } from ':util/analytics.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { getCoinbaseInjectedProvider } from ':util/provider.js';
 import { validatePreferences } from ':util/validatePreferences.js';
@@ -36,7 +34,6 @@ export class CoinbaseWalletSDK {
     });
 
     void checkCrossOriginOpenerPolicy();
-    void loadAnalyticsScript();
   }
 
   public makeWeb3Provider(
@@ -45,6 +42,9 @@ export class CoinbaseWalletSDK {
     }
   ): ProviderInterface {
     validatePreferences(preference);
+    if (preference.analytics !== false) {
+      void loadAnalyticsScript();
+    }
     store.config.set({
       preference,
     });

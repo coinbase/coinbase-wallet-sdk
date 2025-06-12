@@ -80,3 +80,28 @@ describe('validateSubAccount', () => {
     expect(() => validateSubAccount(toSubAccountSigner)).not.toThrow();
   });
 });
+
+describe('validateAnalytics', () => {
+  it('should not throw an error if analytics is true', () => {
+    const validPreference: Preference = {
+      options: 'all',
+      analytics: true,
+    };
+    expect(() => validatePreferences(validPreference)).not.toThrow();
+  });
+
+  it('should not throw an error if analytics is undefined', () => {
+    const validPreference: Preference = {
+      options: 'all',
+    };
+    expect(() => validatePreferences(validPreference)).not.toThrow();
+  });
+
+  it('should throw an error if analytics is not a boolean', () => {
+    const invalidPreference: Preference = {
+      options: 'all',
+      analytics: 'true' as any,
+    };
+    expect(() => validatePreferences(invalidPreference)).toThrow('Analytics must be a boolean');
+  });
+});

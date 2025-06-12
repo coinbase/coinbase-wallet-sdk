@@ -1,3 +1,6 @@
+import { store } from ':store/store.js';
+import { VERSION } from '../../sdk-info.js';
+
 enum ComponentType {
   unknown = 'unknown',
   banner = 'banner',
@@ -48,6 +51,10 @@ type CCAEventData = {
   // Standard Attributes
   action: ActionType;
   componentType: ComponentType;
+  // Metadata
+  sdkVersion: string;
+  appName: string;
+  appOrigin: string;
   // Custom Attributes
   method?: string; // RPC method
 };
@@ -70,7 +77,16 @@ export function logEvent(
   importance: AnalyticsEventImportance | undefined
 ) {
   if (window.ClientAnalytics) {
-    window.ClientAnalytics?.logEvent(name, event, importance);
+    window.ClientAnalytics?.logEvent(
+      name,
+      {
+        ...event,
+        sdkVersion: VERSION,
+        appName: store.config.get().metadata?.appName ?? '',
+        appOrigin: window.location.origin,
+      },
+      importance
+    );
   }
 }
 

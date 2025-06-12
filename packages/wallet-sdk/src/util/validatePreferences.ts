@@ -22,6 +22,12 @@ export function validatePreferences(preference?: Preference) {
       throw new Error(`Attribution cannot contain both auto and dataSuffix properties`);
     }
   }
+
+  if (preference.analytics) {
+    if (typeof preference.analytics !== 'boolean') {
+      throw new Error(`Analytics must be a boolean`);
+    }
+  }
 }
 
 /**

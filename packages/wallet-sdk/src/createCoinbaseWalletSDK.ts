@@ -10,7 +10,8 @@ import {
 import { AddSubAccountAccount } from ':core/rpc/wallet_addSubAccount.js';
 import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
 import { abi } from ':sign/scw/utils/constants.js';
-import { loadAnalyticsScript } from ':util/analytics.js';
+
+import { loadAnalyticsScript } from ':core/analytics/initCCA.js';
 import { assertPresence } from ':util/assertPresence.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { validatePreferences, validateSubAccount } from ':util/validatePreferences.js';
@@ -71,7 +72,9 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
   void checkCrossOriginOpenerPolicy();
 
   // load the analytics script
-  void loadAnalyticsScript();
+  if (options.preference.analytics !== false) {
+    void loadAnalyticsScript();
+  }
 
   // Validate user supplied preferences. Throws if key/values are not valid.
   validatePreferences(options.preference);

@@ -40,6 +40,7 @@ type Config = {
   metadata?: AppMetadata;
   preference?: Preference;
   version: string;
+  deviceId?: string;
   paymasterUrls?: Record<number, string>;
 };
 

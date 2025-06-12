@@ -1,3 +1,4 @@
+import { store } from ':store/store.js';
 import { ANALYTICS_SCRIPT_CONTENT } from './analytics-content.js';
 
 export const loadAnalyticsScript = (): Promise<void> => {
@@ -12,7 +13,7 @@ export const loadAnalyticsScript = (): Promise<void> => {
       script.type = 'text/javascript';
       document.head.appendChild(script);
 
-      initCCA({ isDevelopment: false });
+      initCCA();
 
       document.head.removeChild(script);
       resolve();
@@ -23,31 +24,25 @@ export const loadAnalyticsScript = (): Promise<void> => {
   });
 };
 
-const initCCA = ({
-  isDevelopment,
-}: {
-  isDevelopment: boolean;
-}) => {
+const initCCA = () => {
   if (typeof window !== 'undefined') {
-    // TODO: to cache deviceId in cookies
-    const deviceId = window.crypto?.randomUUID();
+    const deviceId = store.config.get().deviceId ?? window.crypto?.randomUUID() ?? '';
 
     if (window.ClientAnalytics) {
       const { init, identify, PlatformName } = window.ClientAnalytics;
 
       init({
-        isProd: !isDevelopment,
-        amplitudeApiKey: isDevelopment
-          ? '3087329ad5383dcba74b9be7da3f829d'
-          : 'c66737ad47ec354ced777935b0af822e',
+        isProd: true,
+        amplitudeApiKey: 'c66737ad47ec354ced777935b0af822e',
         platform: PlatformName.web,
         projectName: 'base_account_sdk',
-        showDebugLogging: isDevelopment,
+        showDebugLogging: false,
         version: '1.0.0',
         apiEndpoint: 'https://cca-lite.coinbase.com',
       });
 
-      identify({ deviceId: deviceId });
+      identify({ deviceId });
+      store.config.set({ deviceId });
     }
   }
 };
