@@ -116,6 +116,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
   }
 
   linkedUpdated = (linked: boolean) => {
+    console.debug('[WalletLinkRelay] Link status updated:', linked);
     this.isLinked = linked;
     const cachedAddresses = this.storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
 
@@ -140,10 +141,12 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
   };
 
   metadataUpdated = (key: string, value: string) => {
+    console.debug('[WalletLinkRelay] Metadata updated:', { key, value });
     this.storage.setItem(key, value);
   };
 
   chainUpdated = (chainId: string, jsonRpcUrl: string) => {
+    console.debug('[WalletLinkRelay] Chain updated:', { chainId, jsonRpcUrl });
     if (
       this.chainCallbackParams.chainId === chainId &&
       this.chainCallbackParams.jsonRpcUrl === jsonRpcUrl
@@ -161,6 +164,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
   };
 
   accountUpdated = (selectedAddress: string) => {
+    console.debug('[WalletLinkRelay] Account updated:', selectedAddress);
     if (this.accountsCallback) {
       this.accountsCallback([selectedAddress]);
     }
@@ -170,7 +174,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
       // reason we don't get a response via an explicit web3 message
       // we can still fulfill the eip1102 request.
       Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach((id) => {
-        const message: WalletLinkEventData = {
+        const message: WalletLinkResponseEventData = {
           type: 'WEB3_RESPONSE',
           id,
           response: {
@@ -178,14 +182,19 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
             result: [selectedAddress as AddressString],
           },
         };
-        this.invokeCallback({ ...message, id });
+        this.invokeCallback(message);
       });
       WalletLinkRelay.accountRequestCallbackIds.clear();
     }
   };
 
   connectedUpdated = (connected: boolean) => {
-    this.ui.setConnected(connected);
+    console.debug('[WalletLinkRelay] Connection status updated:', connected);
+    if (this.ui) {
+      this.ui.setConnected(connected);
+    } else {
+      console.warn('[WalletLinkRelay] UI not initialized, skipping setConnected call');
+    }
   };
 
   public attachUI() {
@@ -193,6 +202,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
   }
 
   public resetAndReload(): void {
+    console.debug('[WalletLinkRelay] Reset and reload triggered');
     Promise.race([
       this.connection.setSessionMetadata('__destroyed', '1'),
       new Promise((resolve) => setTimeout(() => resolve(null), 1000)),
@@ -452,6 +462,13 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
   protected publishWeb3RequestEvent(id: string, request: Web3Request): void {
     const message: WalletLinkEventData = { type: 'WEB3_REQUEST', id, request };
     const storedSession = Session.load(this.storage);
+    console.debug('[WalletLinkRelay] Publishing Web3Request:', {
+      id,
+      method: request.method,
+      params: 'params' in request ? request.params : undefined,
+      sessionId: this._session.id,
+    });
+    
     this.diagnostic?.log(EVENTS.WEB3_REQUEST, {
       eventId: message.id,
       method: `relay::${request.method}`,
@@ -461,7 +478,12 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
     });
 
     this.publishEvent('Web3Request', message, true)
-      .then((_) => {
+      .then((eventId) => {
+        console.debug('[WalletLinkRelay] Web3Request published successfully:', {
+          id,
+          eventId,
+          method: request.method,
+        });
         this.diagnostic?.log(EVENTS.WEB3_REQUEST_PUBLISHED, {
           eventId: message.id,
           method: `relay::${request.method}`,
@@ -471,6 +493,11 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
         });
       })
       .catch((err) => {
+        console.error('[WalletLinkRelay] Failed to publish Web3Request:', {
+          id,
+          method: request.method,
+          error: err.message,
+        });
         this.handleWeb3ResponseMessage({
           type: 'WEB3_RESPONSE',
           id: message.id,
@@ -487,6 +514,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
       type: 'WEB3_REQUEST_CANCELED',
       id,
     };
+    console.debug('[WalletLinkRelay] Publishing Web3RequestCanceled:', { id });
     this.publishEvent('Web3RequestCanceled', message, false).then();
   }
 
@@ -495,11 +523,23 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
     message: WalletLinkEventData,
     callWebhook: boolean
   ): Promise<string> {
+    console.debug('[WalletLinkRelay] Publishing event:', {
+      event,
+      message,
+      callWebhook,
+    });
     return this.connection.publishEvent(event, message, callWebhook);
   }
 
   handleWeb3ResponseMessage(message: WalletLinkResponseEventData) {
     const { response } = message;
+    console.debug('[WalletLinkRelay] Handling Web3Response:', {
+      id: message.id,
+      method: response.method,
+      hasResult: 'result' in response,
+      hasError: 'errorMessage' in response,
+      errorMessage: 'errorMessage' in response ? response.errorMessage : undefined,
+    });
 
     this.diagnostic?.log(EVENTS.WEB3_RESPONSE, {
       eventId: message.id,
@@ -507,6 +547,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
       sessionIdHash: this.getSessionIdHash(),
     });
     if (response.method === 'requestEthereumAccounts') {
+      console.debug('[WalletLinkRelay] Processing requestEthereumAccounts response for all callbacks');
       WalletLinkRelay.accountRequestCallbackIds.forEach((id) =>
         this.invokeCallback({ ...message, id })
       );
@@ -524,6 +565,12 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
     errorCode?: number
   ) {
     const errorMessage = error?.message ?? getMessageFromCode(errorCode);
+    console.debug('[WalletLinkRelay] Handling error response:', {
+      id,
+      method,
+      errorMessage,
+      errorCode,
+    });
     this.handleWeb3ResponseMessage({
       type: 'WEB3_RESPONSE',
       id,
@@ -537,9 +584,16 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
 
   private invokeCallback(message: WalletLinkResponseEventData) {
     const callback = this.relayEventManager.callbacks.get(message.id);
+    console.debug('[WalletLinkRelay] Invoking callback:', {
+      id: message.id,
+      hasCallback: !!callback,
+      method: message.response.method,
+    });
     if (callback) {
       callback(message.response);
       this.relayEventManager.callbacks.delete(message.id);
+    } else {
+      console.warn('[WalletLinkRelay] No callback found for response:', message.id);
     }
   }
 

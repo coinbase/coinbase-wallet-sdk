@@ -19,6 +19,7 @@ describe('WalletLinkRelay', () => {
     linkAPIUrl: 'http://link-api-url',
     version: '0.0.0',
     darkMode: false,
+    headlessMode: false,
     storage: new ScopedLocalStorage('test'),
     relayEventManager: new RelayEventManager(),
     uiConstructor: jest.fn(),
