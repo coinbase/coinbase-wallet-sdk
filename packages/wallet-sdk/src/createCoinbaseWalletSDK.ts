@@ -11,7 +11,7 @@ import { AddSubAccountAccount } from ':core/rpc/wallet_addSubAccount.js';
 import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
 import { abi } from ':sign/scw/utils/constants.js';
 
-import { loadAnalyticsScript } from ':core/analytics/initCCA.js';
+import { loadTelemetryScript } from ':core/telemetry/initCCA.js';
 import { assertPresence } from ':util/assertPresence.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { validatePreferences, validateSubAccount } from ':util/validatePreferences.js';
@@ -71,9 +71,9 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
   // check the cross origin opener policy
   void checkCrossOriginOpenerPolicy();
 
-  // load the analytics script
-  if (options.preference.analytics !== false) {
-    void loadAnalyticsScript();
+  // load the telemetry script
+  if (options.preference.telemetry !== false) {
+    void loadTelemetryScript();
   }
 
   // Validate user supplied preferences. Throws if key/values are not valid.

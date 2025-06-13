@@ -1,7 +1,7 @@
 import { store } from ':store/store.js';
-import { ANALYTICS_SCRIPT_CONTENT } from './analytics-content.js';
+import { TELEMETRY_SCRIPT_CONTENT } from './telemetry-content.js';
 
-export const loadAnalyticsScript = (): Promise<void> => {
+export const loadTelemetryScript = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     if (window.ClientAnalytics) {
       return resolve();
@@ -9,7 +9,7 @@ export const loadAnalyticsScript = (): Promise<void> => {
 
     try {
       const script = document.createElement('script');
-      script.textContent = ANALYTICS_SCRIPT_CONTENT;
+      script.textContent = TELEMETRY_SCRIPT_CONTENT;
       script.type = 'text/javascript';
       document.head.appendChild(script);
 
@@ -18,7 +18,7 @@ export const loadAnalyticsScript = (): Promise<void> => {
       document.head.removeChild(script);
       resolve();
     } catch {
-      console.error('Failed to execute inlined analytics script');
+      console.error('Failed to execute inlined telemetry script');
       reject();
     }
   });

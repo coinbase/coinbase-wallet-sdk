@@ -86,7 +86,7 @@ export type Preference = {
    * Whether to enable functional telemetry.
    * @default true
    */
-  analytics?: boolean;
+  telemetry?: boolean;
 } & Record<string, unknown>;
 
 export type SubAccountOptions = {
