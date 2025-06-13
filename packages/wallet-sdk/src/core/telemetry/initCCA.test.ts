@@ -1,9 +1,9 @@
 import { store } from ':store/store.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { loadAnalyticsScript } from './initCCA.js';
+import { loadTelemetryScript } from './initCCA.js';
 
-vi.mock('./analytics-content.js', () => ({
-  ANALYTICS_SCRIPT_CONTENT: 'mock-analytics-script-content',
+vi.mock('./telemetry-content.js', () => ({
+  TELEMETRY_SCRIPT_CONTENT: 'mock-telemetry-script-content',
 }));
 
 vi.mock(':store/store.js', () => ({
@@ -71,8 +71,8 @@ describe('initCCA', () => {
     delete (global.window as any).ClientAnalytics;
   });
 
-  describe('loadAnalyticsScript', () => {
-    it('should create and execute analytics script when ClientAnalytics does not exist', async () => {
+  describe('loadTelemetryScript', () => {
+    it('should create and execute telemetry script when ClientAnalytics does not exist', async () => {
       const mockScript = {
         textContent: '',
         type: '',
@@ -86,11 +86,11 @@ describe('initCCA', () => {
 
       global.document.head.appendChild = mockAppendChild;
 
-      const result = await loadAnalyticsScript();
+      const result = await loadTelemetryScript();
 
       expect(result).toBeUndefined();
       expect(global.document.createElement).toHaveBeenCalledWith('script');
-      expect(mockScript.textContent).toBe('mock-analytics-script-content');
+      expect(mockScript.textContent).toBe('mock-telemetry-script-content');
       expect(mockScript.type).toBe('text/javascript');
       expect(mockAppendChild).toHaveBeenCalledWith(mockScript);
       expect(global.document.head.removeChild).toHaveBeenCalledWith(mockScript);
@@ -110,7 +110,7 @@ describe('initCCA', () => {
 
       global.document.head.appendChild = mockAppendChild;
 
-      await loadAnalyticsScript();
+      await loadTelemetryScript();
 
       expect(mockClientAnalytics.init).toHaveBeenCalledWith({
         isProd: true,
@@ -138,7 +138,7 @@ describe('initCCA', () => {
 
       global.document.head.appendChild = mockAppendChild;
 
-      await loadAnalyticsScript();
+      await loadTelemetryScript();
 
       expect(mockClientAnalytics.identify).toHaveBeenCalledWith({
         deviceId: 'store-device-id-123',
@@ -164,7 +164,7 @@ describe('initCCA', () => {
 
       global.document.head.appendChild = mockAppendChild;
 
-      await loadAnalyticsScript();
+      await loadTelemetryScript();
 
       expect(mockClientAnalytics.identify).toHaveBeenCalledWith({
         deviceId: 'mock-uuid-123',
@@ -191,7 +191,7 @@ describe('initCCA', () => {
 
       global.document.head.appendChild = mockAppendChild;
 
-      await loadAnalyticsScript();
+      await loadTelemetryScript();
 
       expect(mockClientAnalytics.identify).toHaveBeenCalledWith({
         deviceId: '',
@@ -216,7 +216,7 @@ describe('initCCA', () => {
 
       global.document.head.appendChild = mockAppendChild;
 
-      await loadAnalyticsScript();
+      await loadTelemetryScript();
 
       expect(mockClientAnalytics.identify).toHaveBeenCalledWith({
         deviceId: 'mock-uuid-123',
@@ -243,9 +243,9 @@ describe('initCCA', () => {
 
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      await expect(loadAnalyticsScript()).rejects.toBeUndefined();
+      await expect(loadTelemetryScript()).rejects.toBeUndefined();
 
-      expect(consoleSpy).toHaveBeenCalledWith('Failed to execute inlined analytics script');
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to execute inlined telemetry script');
 
       consoleSpy.mockRestore();
     });
