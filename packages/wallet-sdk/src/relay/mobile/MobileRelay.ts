@@ -50,7 +50,7 @@ export class MobileRelay extends WalletLinkRelay {
         return;
       default:
         navigatedToCBW = true;
-        this.ui.openCoinbaseWalletDeeplink();
+        // this.ui.openCoinbaseWalletDeeplink();
         break;
     }
 

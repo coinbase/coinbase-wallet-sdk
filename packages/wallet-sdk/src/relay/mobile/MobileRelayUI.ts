@@ -27,7 +27,7 @@ export class MobileRelayUI implements RelayUI {
   private redirectToCoinbaseWallet(walletLinkUrl?: string): void {
     const url = new URL('https://go.cb-w.com/walletlink');
 
-    url.searchParams.append('redirect_url', window.location.href);
+    // url.searchParams.append('redirect_url', window.location.href);
     if (walletLinkUrl) {
       url.searchParams.append('wl_url', walletLinkUrl);
     }
