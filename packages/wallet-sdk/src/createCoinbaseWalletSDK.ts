@@ -9,9 +9,8 @@ import {
 } from ':core/provider/interface.js';
 import { AddSubAccountAccount } from ':core/rpc/wallet_addSubAccount.js';
 import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
-import { abi } from ':sign/scw/utils/constants.js';
-
 import { loadTelemetryScript } from ':core/telemetry/initCCA.js';
+import { abi } from ':sign/scw/utils/constants.js';
 import { assertPresence } from ':util/assertPresence.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { validatePreferences, validateSubAccount } from ':util/validatePreferences.js';
