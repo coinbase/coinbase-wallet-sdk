@@ -82,6 +82,11 @@ export type Preference = {
    * the Smart Wallet will generate a 16 byte hex string from the apps origin.
    */
   attribution?: Attribution;
+  /**
+   * Whether to enable functional telemetry.
+   * @default true
+   */
+  telemetry?: boolean;
 } & Record<string, unknown>;
 
 export type SubAccountOptions = {

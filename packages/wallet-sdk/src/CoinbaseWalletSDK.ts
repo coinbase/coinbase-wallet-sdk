@@ -1,5 +1,4 @@
-// Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
-
+import { loadTelemetryScript } from ':core/telemetry/initCCA.js';
 import { getFavicon } from ':core/type/util.js';
 import { store } from ':store/store.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
@@ -43,6 +42,9 @@ export class CoinbaseWalletSDK {
     }
   ): ProviderInterface {
     validatePreferences(preference);
+    if (preference.telemetry !== false) {
+      void loadTelemetryScript();
+    }
     store.config.set({
       preference,
     });
