@@ -10,9 +10,15 @@ export enum ConnectionState {
 }
 
 export class WalletLinkWebSocket {
+  // used to differentiate instances
+  private static instanceCounter = 0;
+  private static activeInstances = new Set<number>();
+
+  private readonly instanceId: number;
   private readonly url: string;
   private webSocket: WebSocket | null = null;
   private pendingData: string[] = [];
+  private isDisconnecting = false;
 
   private connectionStateListener?: (_: ConnectionState) => void;
   setConnectionStateListener(listener: (_: ConnectionState) => void): void {
@@ -34,6 +40,8 @@ export class WalletLinkWebSocket {
     private readonly WebSocketClass: typeof WebSocket = WebSocket
   ) {
     this.url = url.replace(/^http/, 'ws');
+    this.instanceId = WalletLinkWebSocket.instanceCounter++;
+    WalletLinkWebSocket.activeInstances.add(this.instanceId);
   }
 
   /**
@@ -43,6 +51,9 @@ export class WalletLinkWebSocket {
   public async connect() {
     if (this.webSocket) {
       throw new Error('webSocket object is not null');
+    }
+    if (this.isDisconnecting) {
+      throw new Error('WebSocket is disconnecting, cannot reconnect on same instance');
     }
     return new Promise<void>((resolve, reject) => {
       let webSocket: WebSocket;
@@ -55,9 +66,15 @@ export class WalletLinkWebSocket {
       this.connectionStateListener?.(ConnectionState.CONNECTING);
       webSocket.onclose = (evt) => {
         this.clearWebSocket();
-        reject(new Error(`websocket error ${evt.code}: ${evt.reason}`));
+
+        // Only reject the connection promise if we haven't connected yet
+        if (webSocket.readyState !== WebSocket.OPEN) {
+          reject(new Error(`websocket error ${evt.code}: ${evt.reason}`));
+        }
+
         this.connectionStateListener?.(ConnectionState.DISCONNECTED);
       };
+
       webSocket.onopen = (_) => {
         resolve();
         this.connectionStateListener?.(ConnectionState.CONNECTED);
@@ -93,8 +110,12 @@ export class WalletLinkWebSocket {
     if (!webSocket) {
       return;
     }
+
+    // Mark as disconnecting to prevent reconnection attempts on this instance
+    this.isDisconnecting = true;
     this.clearWebSocket();
 
+    // Clear listeners
     this.connectionStateListener?.(ConnectionState.DISCONNECTED);
     this.connectionStateListener = undefined;
     this.incomingDataListener = undefined;
@@ -113,10 +134,21 @@ export class WalletLinkWebSocket {
   public sendData(data: string): void {
     const { webSocket } = this;
     if (!webSocket) {
+      // no active ws - queue data
       this.pendingData.push(data);
-      this.connect();
+      // Don't auto-connect if we're disconnecting - reconnect logic will handle sending data
+      if (!this.isDisconnecting) {
+        this.connect();
+      }
       return;
     }
+
+    // Check if WebSocket is actually open before sending
+    if (webSocket.readyState !== WebSocket.OPEN) {
+      this.pendingData.push(data);
+      return;
+    }
+
     webSocket.send(data);
   }
 
@@ -130,5 +162,12 @@ export class WalletLinkWebSocket {
     webSocket.onerror = null;
     webSocket.onmessage = null;
     webSocket.onopen = null;
+  }
+
+  /**
+   * remove ws from active instances
+   */
+  public cleanup(): void {
+    WalletLinkWebSocket.activeInstances.delete(this.instanceId);
   }
 }
