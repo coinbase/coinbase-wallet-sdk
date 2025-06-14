@@ -218,7 +218,7 @@ export class SCWSigner implements Signer {
           CB_WALLET_RPC_URL
         )) as FetchPermissionsResponse;
         const requestedChainId = hexToNumber(completeRequest.params?.[0].chainId);
-        store.spendLimits.set(
+        store.spendPermissions.set(
           permissions.permissions.map((permission) => ({
             ...permission,
             chainId: requestedChainId,
@@ -296,10 +296,10 @@ export class SCWSigner implements Signer {
           this.accounts = prependWithoutDuplicates(this.accounts, subAccount.address);
         }
 
-        const spendLimits = response?.accounts?.[0].capabilities?.spendLimits;
+        const spendPermissions = response?.accounts?.[0].capabilities?.spendPermissions;
 
-        if (spendLimits && 'permissions' in spendLimits) {
-          store.spendLimits.set(spendLimits?.permissions);
+        if (spendPermissions && 'permissions' in spendPermissions) {
+          store.spendPermissions.set(spendPermissions?.permissions);
         }
 
         this.callback?.('accountsChanged', accounts_);

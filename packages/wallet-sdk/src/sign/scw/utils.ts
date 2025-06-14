@@ -164,8 +164,8 @@ export async function initSubAccountConfig() {
     };
   }
 
-  if (config.defaultSpendLimits) {
-    capabilities.spendLimits = config.defaultSpendLimits;
+  if (config.defaultSpendPermissions) {
+    capabilities.spendPermissions = config.defaultSpendPermissions;
   }
 
   // Store the owner account and capabilities in the non-persisted config
@@ -562,7 +562,7 @@ export function prependWithoutDuplicates<T>(array: T[], item: T): T[] {
 }
 
 export async function getCachedWalletConnectResponse(): Promise<WalletConnectResponse | null> {
-  const spendLimits = store.spendLimits.get();
+  const spendPermissions = store.spendPermissions.get();
   const subAccount = store.subAccounts.get();
   const accounts = store.account.get().accounts;
 
@@ -575,7 +575,7 @@ export async function getCachedWalletConnectResponse(): Promise<WalletConnectRes
       address: account,
       capabilities: {
         subAccounts: subAccount ? [subAccount] : undefined,
-        spendLimits: spendLimits.length > 0 ? { permissions: spendLimits } : undefined,
+        spendPermissions: spendPermissions.length > 0 ? { permissions: spendPermissions } : undefined,
       },
     })
   );

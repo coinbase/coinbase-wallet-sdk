@@ -5,7 +5,7 @@ import { CB_KEYS_URL } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { EncryptedData, RPCResponseMessage } from ':core/message/RPCMessage.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
-import { SpendLimit } from ':core/rpc/coinbase_fetchSpendPermissions.js';
+import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { getClient } from ':store/chain-clients/utils.js';
 import { store } from ':store/store.js';
 import {
@@ -268,7 +268,7 @@ describe('SCWSigner', () => {
         },
         chains: [],
         keys: {},
-        spendLimits: [],
+        spendPermissions: [],
         config: {
           metadata: mockMetadata,
           preference: { keysUrl: CB_KEYS_URL, options: 'all' },
@@ -682,7 +682,7 @@ describe('SCWSigner', () => {
         params: [],
       };
 
-      const mockSpendLimits = [
+      const mockSpendPermissions = [
         {
           permissionHash: '0xPermissionHash',
           signature: '0xSignature',
@@ -708,8 +708,8 @@ describe('SCWSigner', () => {
                       factoryData: '0x',
                     },
                   ],
-                  spendLimits: {
-                    permissions: mockSpendLimits,
+                  spendPermissions: {
+                    permissions: mockSpendPermissions,
                   },
                 },
               },
@@ -743,8 +743,8 @@ describe('SCWSigner', () => {
                   factoryData: '0x',
                 },
               ],
-              spendLimits: {
-                permissions: mockSpendLimits,
+              spendPermissions: {
+                permissions: mockSpendPermissions,
               },
             },
           },
@@ -1121,7 +1121,7 @@ describe('SCWSigner', () => {
         },
         chains: [],
         keys: {},
-        spendLimits: [],
+        spendPermissions: [],
         config: {
           metadata: mockMetadata,
           preference: { keysUrl: CB_KEYS_URL, options: 'all' },
@@ -1216,7 +1216,7 @@ describe('SCWSigner', () => {
         },
         chains: [],
         keys: {},
-        spendLimits: [],
+        spendPermissions: [],
         config: {
           metadata: mockMetadata,
           preference: { keysUrl: CB_KEYS_URL, options: 'all' },
@@ -1268,7 +1268,7 @@ describe('SCWSigner', () => {
         },
         chains: [],
         keys: {},
-        spendLimits: [],
+        spendPermissions: [],
         config: {
           metadata: mockMetadata,
           preference: { keysUrl: CB_KEYS_URL, options: 'all' },
@@ -1317,7 +1317,7 @@ describe('SCWSigner', () => {
   });
 
   describe('coinbase_fetchPermissions', () => {
-    const mockSpendLimits = [
+    const mockSpendPermissions = [
       {
         permissionHash: '0xPermissionHash',
         signature: '0xSignature',
@@ -1327,7 +1327,7 @@ describe('SCWSigner', () => {
         },
         chainId: 10,
       },
-    ] as [SpendLimit];
+    ] as [SpendPermission];
 
     beforeEach(() => {
       vi.spyOn(store, 'getState').mockImplementation(() => ({
@@ -1340,7 +1340,7 @@ describe('SCWSigner', () => {
         },
         chains: [],
         keys: {},
-        spendLimits: [],
+        spendPermissions: [],
         config: {
           metadata: mockMetadata,
           preference: { keysUrl: CB_KEYS_URL, options: 'all' },
@@ -1349,7 +1349,7 @@ describe('SCWSigner', () => {
       }));
 
       (fetchRPCRequest as Mock).mockResolvedValue({
-        permissions: mockSpendLimits,
+        permissions: mockSpendPermissions,
       });
     });
 
@@ -1362,11 +1362,11 @@ describe('SCWSigner', () => {
 
       signer['accounts'] = ['0xAddress']; // mock the logged in state
 
-      const mockSetSpendLimits = vi.spyOn(store.spendLimits, 'set');
+      const mockSetSpendPermissions = vi.spyOn(store.spendPermissions, 'set');
 
       await signer.request(mockRequest);
 
-      expect(mockSetSpendLimits).toHaveBeenCalledWith(mockSpendLimits);
+      expect(mockSetSpendPermissions).toHaveBeenCalledWith(mockSpendPermissions);
     });
   });
 });
