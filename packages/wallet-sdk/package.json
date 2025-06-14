@@ -41,7 +41,7 @@
     "zustand": "5.0.3"
   },
   "devDependencies": {
-    "@size-limit/preset-big-lib": "^11.1.6",
+    "@size-limit/preset-big-lib": "^11.2.0",
     "@testing-library/jest-dom": "^6.5.0",
     "@testing-library/preact": "^3.2.4",
     "@types/node": "^14.18.54",
