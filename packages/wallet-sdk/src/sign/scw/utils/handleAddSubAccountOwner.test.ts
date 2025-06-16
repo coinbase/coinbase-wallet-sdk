@@ -67,7 +67,7 @@ describe('handleAddSubAccountOwner', () => {
         ownerAccount: mockOwnerAccount,
         globalAccountRequest: mockGlobalAccountRequest,
       })
-    ).rejects.toThrow(standardErrors.rpc.internal("failed to add owner to sub account"));
+    ).rejects.toThrow(standardErrors.rpc.internal("add owner call failed"));
   });
 
   it('should successfully add owner when all conditions are met', async () => {

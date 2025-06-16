@@ -454,7 +454,7 @@ export class SCWSigner implements Signer {
       Array.isArray(request.params) &&
       request.params.length > 0 &&
       request.params[0].account &&
-      request.params[0].type === 'create'
+      request.params[0].account.type === 'create'
     ) {
       let keys: { type: string; publicKey: string }[];
       if (request.params[0].account.keys && request.params[0].account.keys.length > 0) {
@@ -553,17 +553,17 @@ export class SCWSigner implements Signer {
         ? ownerAccount.account.address
         : ownerAccount.account.publicKey;
 
-    const ownerIndex = await findOwnerIndex({
+    let ownerIndex = await findOwnerIndex({
       address: subAccount.address,
-      publicKey,
-      client,
       factory: subAccount.factory,
       factoryData: subAccount.factoryData,
+      publicKey,
+      client,
     });
 
     if (ownerIndex === -1) {
       try {
-        await handleAddSubAccountOwner({
+        ownerIndex = await handleAddSubAccountOwner({
           ownerAccount: ownerAccount.account,
           globalAccountRequest: this.sendRequestToPopup.bind(this),
         });
@@ -580,6 +580,7 @@ export class SCWSigner implements Signer {
       factoryData: subAccount.factoryData,
       parentAddress: globalAccountAddress,
       attribution: dataSuffix ? { suffix: dataSuffix } : undefined,
+      ownerIndex,
     });
 
     try {

@@ -101,19 +101,22 @@ export async function handleAddSubAccountOwner({
     id: callsId,
   });
 
-  if (callsResult.status === "success") {
-    const ownerIndex = await findOwnerIndex({
-      address: subAccount.address,
-      publicKey:
-        ownerAccount.type === "local" && ownerAccount.address
-          ? ownerAccount.address
-          : ownerAccount.publicKey,
-      client,
-    });
-    if (ownerIndex !== -1) {
-      return;
-    }
-  } else {
-    throw standardErrors.rpc.internal("failed to add owner to sub account");
+  if (callsResult.status !== 'success') {
+    throw standardErrors.rpc.internal("add owner call failed");
   }
+
+  const ownerIndex = await findOwnerIndex({
+    address: subAccount.address,
+    publicKey:
+      ownerAccount.type === "local" && ownerAccount.address
+        ? ownerAccount.address
+        : ownerAccount.publicKey,
+    client,
+  });
+
+  if (ownerIndex === -1) {
+    throw standardErrors.rpc.internal("failed to find owner index");
+  }
+
+  return ownerIndex;
 }

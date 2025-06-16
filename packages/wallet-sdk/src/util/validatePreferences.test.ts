@@ -80,3 +80,28 @@ describe('validateSubAccount', () => {
     expect(() => validateSubAccount(toSubAccountSigner)).not.toThrow();
   });
 });
+
+describe('validateTelemetry', () => {
+  it('should not throw an error if telemetry is true', () => {
+    const validPreference: Preference = {
+      options: 'all',
+      telemetry: true,
+    };
+    expect(() => validatePreferences(validPreference)).not.toThrow();
+  });
+
+  it('should not throw an error if telemetry is undefined', () => {
+    const validPreference: Preference = {
+      options: 'all',
+    };
+    expect(() => validatePreferences(validPreference)).not.toThrow();
+  });
+
+  it('should throw an error if telemetry is not a boolean', () => {
+    const invalidPreference: Preference = {
+      options: 'all',
+      telemetry: 'true' as any,
+    };
+    expect(() => validatePreferences(invalidPreference)).toThrow('Telemetry must be a boolean');
+  });
+});

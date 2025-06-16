@@ -22,6 +22,12 @@ export function validatePreferences(preference?: Preference) {
       throw new Error(`Attribution cannot contain both auto and dataSuffix properties`);
     }
   }
+
+  if (preference.telemetry) {
+    if (typeof preference.telemetry !== 'boolean') {
+      throw new Error(`Telemetry must be a boolean`);
+    }
+  }
 }
 
 /**
