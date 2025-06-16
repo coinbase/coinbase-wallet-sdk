@@ -13,14 +13,14 @@
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
-    "@chakra-ui/react": "^2.8.0",
-    "@coinbase/wallet-sdk": "workspace:*",
+    "@chakra-ui/react": "^2.9.0",
+    "@coinbase/wallet-sdk": "3.0.1",
     "@coinbase/wallet-sdk-latest": "npm:@coinbase/wallet-sdk@latest",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@metamask/eth-sig-util": "^7.0.0",
     "framer-motion": "^10.13.1",
-    "next": "^14.2.10",
+    "next": "^15.2.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "7.45.2",
@@ -30,6 +30,6 @@
     "@testing-library/react": "^16.2.0",
     "@types/react": "18.2.15",
     "typescript": "^5.1.6",
-    "vitest": "^3.0.4"
+    "vitest": "^3.0.5"
   }
 }
