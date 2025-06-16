@@ -10,7 +10,7 @@ import {
   Preference,
   ProviderEventEmitter,
   ProviderInterface,
-  RequestArguments,
+  RequestArguments
 } from ':core/provider/interface.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { hexStringFromNumber } from ':core/type/util.js';
@@ -75,7 +75,8 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
             this.signer = signer;
             return result as T;
           }
-          case 'wallet_sendCalls': {
+          case 'wallet_sendCalls':
+          case 'wallet_sign': {
             const ephemeralSigner = this.initSigner('scw');
             await ephemeralSigner.handshake({ method: 'handshake' }); // exchange session keys
             const result = await ephemeralSigner.request(args); // send diffie-hellman encrypted request

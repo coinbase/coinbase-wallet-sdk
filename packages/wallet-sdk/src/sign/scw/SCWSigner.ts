@@ -139,7 +139,8 @@ export class SCWSigner implements Signer {
           const modifiedRequest = injectRequestCapabilities(request, capabilitiesToInject);
           return this.sendRequestToPopup(modifiedRequest);
         }
-        case 'wallet_sendCalls': {
+        case 'wallet_sendCalls':
+        case 'wallet_sign': {
           return this.sendRequestToPopup(request);
         }
         default:
