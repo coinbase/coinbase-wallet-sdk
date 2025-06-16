@@ -12,7 +12,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { getCryptoKeyAccount } from '@coinbase/wallet-sdk';
-import { SpendLimitConfig } from '@coinbase/wallet-sdk/dist/core/provider/interface';
+import { SpendPermissionConfig } from '@coinbase/wallet-sdk/dist/core/provider/interface';
 import React, { useEffect, useState } from 'react';
 import { createPublicClient, http, numberToHex, parseEther } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
@@ -215,21 +215,21 @@ export default function AutoSubAccount() {
     }
   };
 
-  const handleSetDefaultSpendLimits = (value: string) => {
-    const defaultSpendLimits = {
+  const handleSetDefaultSpendPermissions = (value: string) => {
+    const defaultSpendPermissions = {
       [baseSepolia.id]: [
         {
           token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
           allowance: '0x2386F26FC10000',
           period: 86400,
-        } as SpendLimitConfig,
+        } as SpendPermissionConfig,
       ],
     };
 
     if (value === 'true') {
-      setSubAccountsConfig((prev) => ({ ...prev, defaultSpendLimits }));
+      setSubAccountsConfig((prev) => ({ ...prev, defaultSpendPermissions }));
     } else {
-      setSubAccountsConfig((prev) => ({ ...prev, defaultSpendLimits: {} }));
+      setSubAccountsConfig((prev) => ({ ...prev, defaultSpendPermissions: {} }));
     }
   };
 
@@ -327,10 +327,10 @@ export default function AutoSubAccount() {
           </RadioGroup>
         </FormControl>
         <FormControl>
-          <FormLabel>Default Spend Limit</FormLabel>
+          <FormLabel>Default Spend Permissions</FormLabel>
           <RadioGroup
-            value={subAccountsConfig?.defaultSpendLimits?.[baseSepolia.id] ? 'true' : 'false'}
-            onChange={handleSetDefaultSpendLimits}
+            value={subAccountsConfig?.defaultSpendPermissions?.[baseSepolia.id] ? 'true' : 'false'}
+            onChange={handleSetDefaultSpendPermissions}
           >
             <Stack direction="row">
               <Radio value="true">Enabled</Radio>

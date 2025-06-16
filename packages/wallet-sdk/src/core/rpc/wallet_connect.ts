@@ -1,6 +1,6 @@
 import { SerializedEthereumRpcError } from ':core/error/utils.js';
-import { SpendLimitConfig } from ':core/provider/interface.js';
-import { SpendLimit } from './coinbase_fetchSpendPermissions.js';
+import { SpendPermissionConfig } from ':core/provider/interface.js';
+import { SpendPermission } from './coinbase_fetchSpendPermissions.js';
 import { AddSubAccountAccount } from './wallet_addSubAccount.js';
 
 export type SignInWithEthereumCapabilityRequest = {
@@ -23,7 +23,7 @@ export type SignInWithEthereumCapabilityResponse = {
   signature: `0x${string}`;
 };
 
-export type SpendLimitsCapabilityRequest = Record<number, SpendLimitConfig[]>;
+export type SpendPermissionsCapabilityRequest = Record<number, SpendPermissionConfig[]>;
 
 export type AddSubAccountCapabilityRequest = {
   account: AddSubAccountAccount;
@@ -35,8 +35,8 @@ export type AddSubAccountCapabilityResponse = {
   factoryData?: `0x${string}`;
 };
 
-export type SpendLimitsCapabilityResponse = {
-  permissions: SpendLimit[];
+export type SpendPermissionsCapabilityResponse = {
+  permissions: SpendPermission[];
 };
 
 export type WalletConnectRequest = {
@@ -48,7 +48,7 @@ export type WalletConnectRequest = {
       // Optional capabilities to request (e.g. Sign In With Ethereum).
       capabilities?: {
         addSubAccount?: AddSubAccountCapabilityRequest;
-        spendLimits?: SpendLimitsCapabilityRequest;
+        spendPermissions?: SpendPermissionsCapabilityRequest;
         signInWithEthereum?: SignInWithEthereumCapabilityRequest;
       };
     },
@@ -62,7 +62,7 @@ export type WalletConnectResponse = {
     // Capabilities granted that is associated with this account.
     capabilities?: {
       subAccounts?: AddSubAccountCapabilityResponse[] | SerializedEthereumRpcError;
-      spendLimits?: SpendLimitsCapabilityResponse | SerializedEthereumRpcError;
+      spendPermissions?: SpendPermissionsCapabilityResponse | SerializedEthereumRpcError;
       signInWithEthereum?: SignInWithEthereumCapabilityResponse | SerializedEthereumRpcError;
     };
   }[];
