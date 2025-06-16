@@ -222,7 +222,7 @@ describe('SCWSigner', () => {
   });
 
   describe('request - ephemeral signer', () => {
-    it.each(['wallet_sendCalls'])(
+    it.each(['wallet_sendCalls', 'wallet_sign'])(
       'should perform a successful request after handshake',
       async (method) => {
         const mockRequest: RequestArguments = { method };
