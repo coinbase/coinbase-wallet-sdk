@@ -1,15 +1,15 @@
 import { store } from ':store/store.js';
 import { ActionType, AnalyticsEventImportance, ComponentType, logEvent } from '../logEvent.js';
 
-export const logHandshakeStarted = ({
+export const logSubAccountRequestStarted = ({
   method,
   correlationId,
 }: {
   method: string;
-  correlationId: string | undefined;
+  correlationId: string;
 }) => {
   logEvent(
-    'scw_signer.handshake.started',
+    'scw_sub_account.request.started',
     {
       action: ActionType.unknown,
       componentType: ComponentType.unknown,
@@ -21,17 +21,37 @@ export const logHandshakeStarted = ({
   );
 };
 
-export const logHandshakeError = ({
+export const logSubAccountRequestCompleted = ({
+  method,
+  correlationId,
+}: {
+  method: string;
+  correlationId: string;
+}) => {
+  logEvent(
+    'scw_sub_account.request.completed',
+    {
+      action: ActionType.unknown,
+      componentType: ComponentType.unknown,
+      method,
+      correlationId,
+      enableAutoSubAccounts: store.subAccountsConfig.get()?.enableAutoSubAccounts,
+    },
+    AnalyticsEventImportance.high
+  );
+};
+
+export const logSubAccountRequestError = ({
   method,
   correlationId,
   errorMessage,
 }: {
   method: string;
-  correlationId: string | undefined;
+  correlationId: string;
   errorMessage: string;
 }) => {
   logEvent(
-    'scw_signer.handshake.error',
+    'scw_sub_account.request.error',
     {
       action: ActionType.error,
       componentType: ComponentType.unknown,
@@ -44,15 +64,15 @@ export const logHandshakeError = ({
   );
 };
 
-export const logHandshakeCompleted = ({
+export const logAddOwnerStarted = ({
   method,
   correlationId,
 }: {
   method: string;
-  correlationId: string | undefined;
+  correlationId: string;
 }) => {
   logEvent(
-    'scw_signer.handshake.completed',
+    'scw_sub_account.add_owner.started',
     {
       action: ActionType.unknown,
       componentType: ComponentType.unknown,
@@ -64,15 +84,15 @@ export const logHandshakeCompleted = ({
   );
 };
 
-export const logRequestStarted = ({
+export const logAddOwnerCompleted = ({
   method,
   correlationId,
 }: {
   method: string;
-  correlationId: string | undefined;
+  correlationId: string;
 }) => {
   logEvent(
-    'scw_signer.request.started',
+    'scw_sub_account.add_owner.completed',
     {
       action: ActionType.unknown,
       componentType: ComponentType.unknown,
@@ -84,17 +104,17 @@ export const logRequestStarted = ({
   );
 };
 
-export const logRequestError = ({
+export const logAddOwnerError = ({
   method,
   correlationId,
   errorMessage,
 }: {
   method: string;
-  correlationId: string | undefined;
+  correlationId: string;
   errorMessage: string;
 }) => {
   logEvent(
-    'scw_signer.request.error',
+    'scw_sub_account.add_owner.error',
     {
       action: ActionType.error,
       componentType: ComponentType.unknown,
@@ -107,20 +127,63 @@ export const logRequestError = ({
   );
 };
 
-export const logRequestCompleted = ({
+export const logInsufficientBalanceErrorHandlingStarted = ({
   method,
   correlationId,
 }: {
   method: string;
-  correlationId: string | undefined;
+  correlationId: string;
 }) => {
   logEvent(
-    'scw_signer.request.completed',
+    'scw_sub_account.insufficient_balance.error_handling.started',
     {
       action: ActionType.unknown,
       componentType: ComponentType.unknown,
       method,
       correlationId,
+      enableAutoSubAccounts: store.subAccountsConfig.get()?.enableAutoSubAccounts,
+    },
+    AnalyticsEventImportance.high
+  );
+};
+
+export const logInsufficientBalanceErrorHandlingCompleted = ({
+  method,
+  correlationId,
+}: {
+  method: string;
+  correlationId: string;
+}) => {
+  logEvent(
+    'scw_sub_account.insufficient_balance.error_handling.completed',
+    {
+      action: ActionType.unknown,
+      componentType: ComponentType.unknown,
+      method,
+      correlationId,
+      enableAutoSubAccounts: store.subAccountsConfig.get()?.enableAutoSubAccounts,
+    },
+    AnalyticsEventImportance.high
+  );
+};
+
+export const logInsufficientBalanceErrorHandlingError = ({
+  method,
+  correlationId,
+  errorMessage,
+}: {
+  method: string;
+  correlationId: string;
+  errorMessage: string;
+}) => {
+  logEvent(
+    'scw_sub_account.insufficient_balance.error_handling.error',
+    {
+      action: ActionType.error,
+      componentType: ComponentType.unknown,
+      method,
+      correlationId,
+      errorMessage,
       enableAutoSubAccounts: store.subAccountsConfig.get()?.enableAutoSubAccounts,
     },
     AnalyticsEventImportance.high

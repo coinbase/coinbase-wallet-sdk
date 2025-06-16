@@ -5,7 +5,7 @@ export const logSignerLoadedFromStorage = ({ signerType }: { signerType: SignerT
   logEvent(
     'provider.signer.loaded_from_storage',
     {
-      action: ActionType.unknown,
+      action: ActionType.measurement,
       componentType: ComponentType.unknown,
       signerType,
     },
@@ -46,7 +46,7 @@ export const logRequestError = ({
   logEvent(
     'provider.request.error',
     {
-      action: ActionType.unknown,
+      action: ActionType.error,
       componentType: ComponentType.unknown,
       method,
       signerType,
@@ -74,6 +74,17 @@ export const logRequestResponded = ({
       method,
       signerType,
       correlationId,
+    },
+    AnalyticsEventImportance.high
+  );
+};
+
+export const logEnableFunctionCalled = () => {
+  logEvent(
+    'provider.enable_function.called',
+    {
+      action: ActionType.measurement,
+      componentType: ComponentType.unknown,
     },
     AnalyticsEventImportance.high
   );

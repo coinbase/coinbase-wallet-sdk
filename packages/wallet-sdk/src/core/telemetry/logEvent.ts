@@ -63,6 +63,8 @@ type CCAEventData = {
   correlationId?: string;
   errorMessage?: string;
   snackbarContext?: string;
+  snackbarAction?: string;
+  enableAutoSubAccounts?: boolean;
 };
 
 type AnalyticsEventData = {

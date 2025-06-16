@@ -1,5 +1,5 @@
 import { standardErrors } from ':core/error/errors.js';
-import { logSnackbarShown } from ':core/telemetry/events/snackbar.js';
+import { logSnackbarActionClicked, logSnackbarShown } from ':core/telemetry/events/snackbar.js';
 import { RETRY_SVG_PATH } from ':sign/walletlink/relay/ui/WalletLinkRelayUI.js';
 import { Snackbar } from ':sign/walletlink/relay/ui/components/Snackbar/Snackbar.js';
 import { NAME, VERSION } from '../sdk-info.js';
@@ -58,6 +58,10 @@ export function openPopup(url: URL): Promise<Window> {
           {
             ...RETRY_BUTTON,
             onClick: () => {
+              logSnackbarActionClicked({
+                snackbarContext: 'popup_blocked',
+                snackbarAction: 'confirm',
+              });
               popup = tryOpenPopup();
               if (popup) {
                 resolve(popup);
