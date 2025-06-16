@@ -13,11 +13,11 @@ export class WalletLinkWebSocket {
   // used to differentiate instances
   private static instanceCounter = 0;
   private static activeInstances = new Set<number>();
+  private static pendingData: string[] = [];
 
   private readonly instanceId: number;
   private readonly url: string;
   private webSocket: WebSocket | null = null;
-  private pendingData: string[] = [];
   private isDisconnecting = false;
 
   private connectionStateListener?: (_: ConnectionState) => void;
@@ -79,10 +79,10 @@ export class WalletLinkWebSocket {
         resolve();
         this.connectionStateListener?.(ConnectionState.CONNECTED);
 
-        if (this.pendingData.length > 0) {
-          const pending = [...this.pendingData];
+        if (WalletLinkWebSocket.pendingData.length > 0) {
+          const pending = [...WalletLinkWebSocket.pendingData];
           pending.forEach((data) => this.sendData(data));
-          this.pendingData = [];
+          WalletLinkWebSocket.pendingData = [];
         }
       };
       webSocket.onmessage = (evt) => {
@@ -135,7 +135,7 @@ export class WalletLinkWebSocket {
     const { webSocket } = this;
     if (!webSocket) {
       // no active ws - queue data
-      this.pendingData.push(data);
+      WalletLinkWebSocket.pendingData.push(data);
       // Don't auto-connect if we're disconnecting - reconnect logic will handle sending data
       if (!this.isDisconnecting) {
         this.connect();
@@ -145,7 +145,7 @@ export class WalletLinkWebSocket {
 
     // Check if WebSocket is actually open before sending
     if (webSocket.readyState !== WebSocket.OPEN) {
-      this.pendingData.push(data);
+      WalletLinkWebSocket.pendingData.push(data);
       return;
     }
 
