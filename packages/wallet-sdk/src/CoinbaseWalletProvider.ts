@@ -26,7 +26,6 @@ import {
 import { hexStringFromNumber } from ':core/type/util.js';
 import { store } from ':store/store.js';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from ':util/provider.js';
-import { UUID } from 'crypto';
 import { Signer } from './sign/interface.js';
 import {
   createSigner,
@@ -80,7 +79,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
     }
   }
 
-  private async _request<T>(args: RequestArguments, correlationId: UUID): Promise<T> {
+  private async _request<T>(args: RequestArguments, correlationId: string): Promise<T> {
     try {
       checkErrorForInvalidRequestArgs(args);
       if (!this.signer) {

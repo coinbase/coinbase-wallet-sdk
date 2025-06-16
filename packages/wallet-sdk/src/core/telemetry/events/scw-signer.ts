@@ -1,7 +1,6 @@
-import { UUID } from 'crypto';
 import { ActionType, AnalyticsEventImportance, ComponentType, logEvent } from '../logEvent.js';
 
-export const logHandshakeStarted = (method: string, correlationId: UUID) => {
+export const logHandshakeStarted = (method: string, correlationId: string) => {
   logEvent(
     'scw_signer.handshake.started',
     {
@@ -14,7 +13,7 @@ export const logHandshakeStarted = (method: string, correlationId: UUID) => {
   );
 };
 
-export const logHandshakeError = (method: string, correlationId: UUID, errorMessage: string) => {
+export const logHandshakeError = (method: string, correlationId: string, errorMessage: string) => {
   logEvent(
     'scw_signer.handshake.error',
     {
@@ -28,7 +27,7 @@ export const logHandshakeError = (method: string, correlationId: UUID, errorMess
   );
 };
 
-export const logHandshakeCompleted = (method: string, correlationId: UUID) => {
+export const logHandshakeCompleted = (method: string, correlationId: string) => {
   logEvent(
     'scw_signer.handshake.completed',
     {
@@ -41,7 +40,7 @@ export const logHandshakeCompleted = (method: string, correlationId: UUID) => {
   );
 };
 
-export const logRequestStarted = (method: string, correlationId: UUID) => {
+export const logRequestStarted = (method: string, correlationId: string) => {
   logEvent(
     'scw_signer.request.started',
     {
@@ -54,7 +53,7 @@ export const logRequestStarted = (method: string, correlationId: UUID) => {
   );
 };
 
-export const logRequestError = (method: string, correlationId: UUID, errorMessage: string) => {
+export const logRequestError = (method: string, correlationId: string, errorMessage: string) => {
   logEvent(
     'scw_signer.request.error',
     {
@@ -68,7 +67,7 @@ export const logRequestError = (method: string, correlationId: UUID, errorMessag
   );
 };
 
-export const logRequestCompleted = (method: string, correlationId: UUID) => {
+export const logRequestCompleted = (method: string, correlationId: string) => {
   logEvent(
     'scw_signer.request.completed',
     {

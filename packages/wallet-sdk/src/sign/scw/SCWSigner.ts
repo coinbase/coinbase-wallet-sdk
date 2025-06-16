@@ -29,7 +29,6 @@ import {
   importKeyFromHexString,
 } from ':util/cipher.js';
 import { fetchRPCRequest } from ':util/provider.js';
-import { UUID } from 'crypto';
 import { getCryptoKeyAccount } from '../../kms/crypto-key/index.js';
 import { Signer } from '../interface.js';
 import { SCWKeyManager } from './SCWKeyManager.js';
@@ -82,7 +81,7 @@ export class SCWSigner implements Signer {
     }
   }
 
-  async handshake(args: RequestArguments, correlationId: UUID) {
+  async handshake(args: RequestArguments, correlationId: string) {
     logHandshakeStarted(args.method, correlationId);
     // Open the popup before constructing the request message.
     // This is to ensure that the popup is not blocked by some browsers (i.e. Safari)
@@ -115,7 +114,7 @@ export class SCWSigner implements Signer {
     logHandshakeCompleted(args.method, correlationId);
   }
 
-  async request(request: RequestArguments, correlationId: UUID) {
+  async request(request: RequestArguments, correlationId: string) {
     logRequestStarted(request.method, correlationId);
 
     try {
@@ -132,7 +131,7 @@ export class SCWSigner implements Signer {
     }
   }
 
-  async _request(request: RequestArguments, correlationId: UUID) {
+  async _request(request: RequestArguments, correlationId: string) {
     if (this.accounts.length === 0) {
       switch (request.method) {
         case 'eth_requestAccounts': {
@@ -273,7 +272,7 @@ export class SCWSigner implements Signer {
     }
   }
 
-  private async sendRequestToPopup(request: RequestArguments, correlationId: UUID) {
+  private async sendRequestToPopup(request: RequestArguments, correlationId: string) {
     // Open the popup before constructing the request message.
     // This is to ensure that the popup is not blocked by some browsers (i.e. Safari)
     await this.communicator.waitForPopupLoaded?.();
@@ -369,7 +368,7 @@ export class SCWSigner implements Signer {
    * @returns `null` if the request was successful.
    * https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
    */
-  private async handleSwitchChainRequest(request: RequestArguments, correlationId: UUID) {
+  private async handleSwitchChainRequest(request: RequestArguments, correlationId: string) {
     assertParamsChainId(request.params);
 
     const chainId = ensureIntNumber(request.params[0].chainId);
@@ -428,7 +427,7 @@ export class SCWSigner implements Signer {
 
   private async sendEncryptedRequest(
     request: RequestArguments,
-    correlationId: UUID
+    correlationId: string
   ): Promise<RPCResponseMessage> {
     const sharedSecret = await this.keyManager.getSharedSecret();
     if (!sharedSecret) {
@@ -449,7 +448,7 @@ export class SCWSigner implements Signer {
 
   private async createRequestMessage(
     content: RPCRequestMessage['content'],
-    correlationId: UUID
+    correlationId: string
   ): Promise<RPCRequestMessage> {
     const publicKey = await exportKeyToHexString('public', await this.keyManager.getOwnPublicKey());
     return {
@@ -523,7 +522,7 @@ export class SCWSigner implements Signer {
 
   private async addSubAccount(
     request: RequestArguments,
-    correlationId: UUID
+    correlationId: string
   ): Promise<{
     address: Address;
     factory?: Address;
@@ -595,7 +594,7 @@ export class SCWSigner implements Signer {
     return false;
   }
 
-  private async sendRequestToSubAccountSigner(request: RequestArguments, correlationId: UUID) {
+  private async sendRequestToSubAccountSigner(request: RequestArguments, correlationId: string) {
     const subAccount = store.subAccounts.get();
     const subAccountsConfig = store.subAccountsConfig.get();
     const config = store.config.get();

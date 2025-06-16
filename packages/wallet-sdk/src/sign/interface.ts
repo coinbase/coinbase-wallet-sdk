@@ -1,8 +1,7 @@
 import { RequestArguments } from ':core/provider/interface.js';
-import { UUID } from 'crypto';
 
 export interface Signer {
-  handshake(_: RequestArguments, requestId: UUID): Promise<void>;
-  request<T>(_: RequestArguments, requestId: UUID): Promise<T>;
+  handshake(_: RequestArguments, requestId: string): Promise<void>;
+  request<T>(_: RequestArguments, requestId: string): Promise<T>;
   cleanup: () => Promise<void>;
 }

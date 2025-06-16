@@ -1,11 +1,10 @@
 import { RequestArguments } from ':core/provider/interface.js';
-import { UUID } from 'crypto';
 import { SerializedEthereumRpcError } from '../error/utils.js';
 import { Message, MessageID } from './Message.js';
 
 interface RPCMessage extends Message {
   id: MessageID;
-  correlationId: UUID;
+  correlationId: string;
   sender: string; // hex encoded public key of the sender
   content: unknown;
   timestamp: Date;

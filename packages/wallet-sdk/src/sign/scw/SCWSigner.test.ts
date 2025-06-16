@@ -78,8 +78,10 @@ const mockChains = {
 const mockCapabilities = {};
 
 const mockError = standardErrors.provider.unauthorized();
+const mockCorrelationId = '2-2-3-4-5';
 const mockSuccessResponse: RPCResponseMessage = {
   id: '1-2-3-4-5',
+  correlationId: mockCorrelationId,
   requestId: '1-2-3-4-5',
   sender: '0xPublicKey',
   content: { encrypted: encryptedData },
@@ -150,7 +152,7 @@ describe('SCWSigner', () => {
       const mockSetChains = vi.spyOn(store.chains, 'set');
       const mockSetAccount = vi.spyOn(store.account, 'set');
 
-      await signer.handshake({ method: 'eth_requestAccounts' });
+      await signer.handshake({ method: 'eth_requestAccounts' }, mockCorrelationId);
 
       expect(importKeyFromHexString).toHaveBeenCalledWith('public', '0xPublicKey');
       expect(mockKeyManager.setPeerPublicKey).toHaveBeenCalledWith(mockCryptoKey);
@@ -170,9 +172,9 @@ describe('SCWSigner', () => {
         capabilities: mockCapabilities,
       });
 
-      await expect(signer.request({ method: 'eth_requestAccounts' })).resolves.toEqual([
-        '0xAddress',
-      ]);
+      await expect(
+        signer.request({ method: 'eth_requestAccounts' }, mockCorrelationId)
+      ).resolves.toEqual(['0xAddress']);
       expect(mockCallback).toHaveBeenCalledWith('accountsChanged', ['0xAddress']);
       expect(mockCallback).toHaveBeenCalledWith('connect', { chainId: '0x1' });
     });
@@ -186,7 +188,7 @@ describe('SCWSigner', () => {
 
       const mockSetAccount = vi.spyOn(store.account, 'set');
 
-      await signer.handshake({ method: 'handshake' });
+      await signer.handshake({ method: 'handshake' }, mockCorrelationId);
 
       expect(importKeyFromHexString).toHaveBeenCalledWith('public', '0xPublicKey');
       expect(mockCommunicator.postRequestAndWaitForResponse).toHaveBeenCalledWith(
@@ -208,6 +210,7 @@ describe('SCWSigner', () => {
     it('should throw an error if failure in response.content', async () => {
       const mockResponse: RPCResponseMessage = {
         id: '1-2-3-4-5',
+        correlationId: mockCorrelationId,
         requestId: '1-2-3-4-5',
         sender: '0xPublicKey',
         content: { failure: mockError },
@@ -215,9 +218,9 @@ describe('SCWSigner', () => {
       };
       mockCommunicator.postRequestAndWaitForResponse.mockResolvedValue(mockResponse);
 
-      await expect(signer.handshake({ method: 'eth_requestAccounts' })).rejects.toThrowError(
-        mockError
-      );
+      await expect(
+        signer.handshake({ method: 'eth_requestAccounts' }, mockCorrelationId)
+      ).rejects.toThrowError(mockError);
     });
   });
 
@@ -232,7 +235,7 @@ describe('SCWSigner', () => {
           },
         });
 
-        await signer.handshake({ method: 'handshake' });
+        await signer.handshake({ method: 'handshake' }, mockCorrelationId);
         expect(signer['accounts']).toEqual([]);
 
         (decryptContent as Mock).mockResolvedValueOnce({
@@ -242,7 +245,7 @@ describe('SCWSigner', () => {
         });
         (exportKeyToHexString as Mock).mockResolvedValueOnce('0xPublicKey');
 
-        const result = await signer.request(mockRequest);
+        const result = await signer.request(mockRequest, mockCorrelationId);
 
         expect(encryptContent).toHaveBeenCalled();
         expect(mockCommunicator.postRequestAndWaitForResponse).toHaveBeenNthCalledWith(
@@ -295,7 +298,7 @@ describe('SCWSigner', () => {
         },
       });
 
-      const result = await signer.request(mockRequest);
+      const result = await signer.request(mockRequest, mockCorrelationId);
 
       expect(encryptContent).toHaveBeenCalled();
       expect(mockCommunicator.postRequestAndWaitForResponse).toHaveBeenCalledWith(
@@ -335,7 +338,7 @@ describe('SCWSigner', () => {
         },
       });
 
-      await signer.request(mockRequest);
+      await signer.request(mockRequest, mockCorrelationId);
 
       expect(mockCommunicator.postRequestAndWaitForResponse).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -356,7 +359,7 @@ describe('SCWSigner', () => {
         params: [],
       };
 
-      await signer.request(mockRequest);
+      await signer.request(mockRequest, mockCorrelationId);
 
       expect(fetchRPCRequest).toHaveBeenCalledWith(mockRequest, 'https://eth-rpc.example.com/1');
     });
@@ -373,7 +376,7 @@ describe('SCWSigner', () => {
         },
       });
 
-      await expect(signer.request(mockRequest)).rejects.toThrowError(mockError);
+      await expect(signer.request(mockRequest, mockCorrelationId)).rejects.toThrowError(mockError);
     });
 
     it('should update internal state for successful wallet_switchEthereumChain', async () => {
@@ -395,7 +398,7 @@ describe('SCWSigner', () => {
       const mockSetChains = vi.spyOn(store.chains, 'set');
       const mockSetAccount = vi.spyOn(store.account, 'set');
 
-      await signer.request(mockRequest);
+      await signer.request(mockRequest, mockCorrelationId);
 
       expect(mockSetChains).toHaveBeenCalledWith([
         { id: 1, rpcUrl: 'https://eth-rpc.example.com/1' },
@@ -432,7 +435,7 @@ describe('SCWSigner', () => {
           value: null,
         },
       });
-      await signer.handshake({ method: 'handshake' });
+      await signer.handshake({ method: 'handshake' }, mockCorrelationId);
     });
 
     it('should handle wallet_connect with no capabilities', async () => {
@@ -466,7 +469,7 @@ describe('SCWSigner', () => {
         },
       });
 
-      await signer.request(mockRequest);
+      await signer.request(mockRequest, mockCorrelationId);
 
       // Should only persist global account to accounts store
       expect(mockSetAccount).toHaveBeenCalledWith({
@@ -481,7 +484,7 @@ describe('SCWSigner', () => {
       });
 
       // eth_accounts should return only global account
-      const accounts = await signer.request({ method: 'eth_accounts' });
+      const accounts = await signer.request({ method: 'eth_accounts' }, mockCorrelationId);
       expect(accounts).toEqual([globalAccountAddress]);
     });
 
@@ -527,7 +530,7 @@ describe('SCWSigner', () => {
         },
       });
 
-      await signer.request(mockRequest);
+      await signer.request(mockRequest, mockCorrelationId);
 
       // Should persist global account to accounts store
       expect(mockSetAccount).toHaveBeenCalledWith({
@@ -542,7 +545,7 @@ describe('SCWSigner', () => {
       });
 
       // eth_accounts should return [subAccount, globalAccount]
-      const accounts = await signer.request({ method: 'eth_accounts' });
+      const accounts = await signer.request({ method: 'eth_accounts' }, mockCorrelationId);
 
       expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
     });
@@ -564,10 +567,13 @@ describe('SCWSigner', () => {
       });
 
       // First connect without sub account
-      await signer.request({
-        method: 'wallet_connect',
-        params: [],
-      });
+      await signer.request(
+        {
+          method: 'wallet_connect',
+          params: [],
+        },
+        mockCorrelationId
+      );
 
       const mockSetSubAccounts = vi.spyOn(store.subAccounts, 'set');
 
@@ -582,23 +588,26 @@ describe('SCWSigner', () => {
         },
       });
 
-      await signer.request({
-        method: 'wallet_addSubAccount',
-        params: [
-          {
-            version: '1',
-            account: {
-              type: 'create',
-              keys: [
-                {
-                  publicKey: '0x123',
-                  type: 'p256',
-                },
-              ],
+      await signer.request(
+        {
+          method: 'wallet_addSubAccount',
+          params: [
+            {
+              version: '1',
+              account: {
+                type: 'create',
+                keys: [
+                  {
+                    publicKey: '0x123',
+                    type: 'p256',
+                  },
+                ],
+              },
             },
-          },
-        ],
-      });
+          ],
+        },
+        mockCorrelationId
+      );
 
       // Should persist sub account to subAccounts store
       expect(mockSetSubAccounts).toHaveBeenCalledWith({
@@ -608,7 +617,7 @@ describe('SCWSigner', () => {
       });
 
       // eth_accounts should return [subAccount, globalAccount]
-      const accounts = await signer.request({ method: 'eth_accounts' });
+      const accounts = await signer.request({ method: 'eth_accounts' }, mockCorrelationId);
       expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
     });
 
@@ -650,10 +659,13 @@ describe('SCWSigner', () => {
         },
       });
 
-      const accounts = await signer.request({
-        method: 'eth_requestAccounts',
-        params: [],
-      });
+      const accounts = await signer.request(
+        {
+          method: 'eth_requestAccounts',
+          params: [],
+        },
+        mockCorrelationId
+      );
 
       // Should persist global account to accounts store
       expect(mockSetAccount).toHaveBeenCalledWith({
@@ -671,7 +683,7 @@ describe('SCWSigner', () => {
       expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
 
       // eth_accounts should also return [subAccount, globalAccount]
-      const ethAccounts = await signer.request({ method: 'eth_accounts' });
+      const ethAccounts = await signer.request({ method: 'eth_accounts' }, mockCorrelationId);
       expect(ethAccounts).toEqual([subAccountAddress, globalAccountAddress]);
     });
 
@@ -719,13 +731,13 @@ describe('SCWSigner', () => {
       });
 
       // First wallet_connect call
-      await signer.request(mockRequest);
+      await signer.request(mockRequest, mockCorrelationId);
 
       // Reset decryptContent mock to verify it's not called again
       (decryptContent as Mock).mockReset();
 
       // Second wallet_connect call
-      const cachedResponse = await signer.request(mockRequest);
+      const cachedResponse = await signer.request(mockRequest, mockCorrelationId);
 
       // Verify decryptContent was not called for the second request
       expect(decryptContent).not.toHaveBeenCalled();
@@ -769,7 +781,7 @@ describe('SCWSigner', () => {
       });
       const mockSetAccount = vi.spyOn(store.account, 'set');
 
-      await signer.handshake({ method: 'handshake' });
+      await signer.handshake({ method: 'handshake' }, mockCorrelationId);
       expect(signer['accounts']).toEqual([]);
 
       (decryptContent as Mock).mockResolvedValueOnce({
@@ -785,7 +797,7 @@ describe('SCWSigner', () => {
         },
       });
 
-      await signer.request(mockRequest);
+      await signer.request(mockRequest, mockCorrelationId);
 
       (decryptContent as Mock).mockResolvedValueOnce({
         result: {
@@ -797,25 +809,28 @@ describe('SCWSigner', () => {
         },
       });
 
-      await signer.request({
-        method: 'wallet_addSubAccount',
-        params: [
-          {
-            version: '1',
-            account: {
-              type: 'create',
-              keys: [
-                {
-                  publicKey: '0x123',
-                  type: 'p256',
-                },
-              ],
+      await signer.request(
+        {
+          method: 'wallet_addSubAccount',
+          params: [
+            {
+              version: '1',
+              account: {
+                type: 'create',
+                keys: [
+                  {
+                    publicKey: '0x123',
+                    type: 'p256',
+                  },
+                ],
+              },
             },
-          },
-        ],
-      });
+          ],
+        },
+        mockCorrelationId
+      );
 
-      const accounts = await signer.request({ method: 'eth_accounts' });
+      const accounts = await signer.request({ method: 'eth_accounts' }, mockCorrelationId);
       expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
 
       expect(mockSetAccount).toHaveBeenCalledWith({
@@ -837,7 +852,7 @@ describe('SCWSigner', () => {
         },
       });
 
-      await signer.handshake({ method: 'handshake' });
+      await signer.handshake({ method: 'handshake' }, mockCorrelationId);
       expect(signer['accounts']).toEqual([]);
 
       (decryptContent as Mock).mockResolvedValueOnce({
@@ -853,7 +868,7 @@ describe('SCWSigner', () => {
         },
       });
 
-      await signer.request(mockRequest);
+      await signer.request(mockRequest, mockCorrelationId);
 
       (decryptContent as Mock).mockResolvedValueOnce({
         result: {
@@ -869,17 +884,20 @@ describe('SCWSigner', () => {
       mockCommunicator.postRequestAndWaitForResponse.mockClear();
       (encryptContent as Mock).mockClear();
 
-      await signer.request({
-        method: 'wallet_addSubAccount',
-        params: [
-          {
-            version: '1',
-            account: {
-              type: 'create',
+      await signer.request(
+        {
+          method: 'wallet_addSubAccount',
+          params: [
+            {
+              version: '1',
+              account: {
+                type: 'create',
+              },
             },
-          },
-        ],
-      });
+          ],
+        },
+        mockCorrelationId
+      );
 
       // Verify that encryptContent was called with a request containing populated keys
       expect(encryptContent).toHaveBeenCalledWith(
@@ -906,7 +924,7 @@ describe('SCWSigner', () => {
         mockCryptoKey
       );
 
-      const accounts = await signer.request({ method: 'eth_accounts' });
+      const accounts = await signer.request({ method: 'eth_accounts' }, mockCorrelationId);
       expect(accounts).toEqual([subAccountAddress, globalAccountAddress]);
     });
   });
@@ -932,7 +950,7 @@ describe('SCWSigner', () => {
         },
       });
 
-      await signer.handshake({ method: 'handshake' });
+      await signer.handshake({ method: 'handshake' }, mockCorrelationId);
 
       (decryptContent as Mock).mockResolvedValueOnce({
         result: {
@@ -962,7 +980,7 @@ describe('SCWSigner', () => {
         params: [],
       };
 
-      const accounts = await signer.request(mockRequest);
+      const accounts = await signer.request(mockRequest, mockCorrelationId);
       expect(accounts).toContain(subAccountAddress);
     });
 
@@ -980,7 +998,7 @@ describe('SCWSigner', () => {
         },
       });
 
-      await signer.handshake({ method: 'handshake' });
+      await signer.handshake({ method: 'handshake' }, mockCorrelationId);
       expect(signer['accounts']).toEqual([]);
 
       signer['accounts'] = [
@@ -1021,7 +1039,7 @@ describe('SCWSigner', () => {
         },
       });
 
-      await signer.request(mockRequest);
+      await signer.request(mockRequest, mockCorrelationId);
 
       expect(handleAddSubAccountOwner).toHaveBeenCalled();
     });
@@ -1062,10 +1080,13 @@ describe('SCWSigner', () => {
         };
       });
 
-      await signer.request({
-        method: 'eth_requestAccounts',
-        params: [],
-      });
+      await signer.request(
+        {
+          method: 'eth_requestAccounts',
+          params: [],
+        },
+        mockCorrelationId
+      );
 
       const mockRequest: RequestArguments = {
         method: 'wallet_sendCalls',
@@ -1091,7 +1112,7 @@ describe('SCWSigner', () => {
         callback: mockCallback,
       });
 
-      await signer.request(mockRequest);
+      await signer.request(mockRequest, mockCorrelationId);
 
       expect(handleInsufficientBalanceError).toHaveBeenCalled();
 
@@ -1107,16 +1128,16 @@ describe('SCWSigner', () => {
         account: {
           accounts: [globalAccountAddress],
           capabilities: {
-            '0x1': { 
+            '0x1': {
               atomicBatch: { supported: true },
-              paymasterService: { supported: true }
+              paymasterService: { supported: true },
             },
             '0x5': {
-              atomicBatch: { supported: false }
+              atomicBatch: { supported: false },
             },
             '0xa': {
-              paymasterService: { supported: true }
-            }
+              paymasterService: { supported: true },
+            },
           },
         },
         chains: [],
@@ -1142,19 +1163,19 @@ describe('SCWSigner', () => {
         params: [globalAccountAddress],
       };
 
-      const result = await signer.request(request);
+      const result = await signer.request(request, mockCorrelationId);
 
       expect(result).toEqual({
-        '0x1': { 
+        '0x1': {
           atomicBatch: { supported: true },
-          paymasterService: { supported: true }
+          paymasterService: { supported: true },
         },
         '0x5': {
-          atomicBatch: { supported: false }
+          atomicBatch: { supported: false },
         },
         '0xa': {
-          paymasterService: { supported: true }
-        }
+          paymasterService: { supported: true },
+        },
       });
     });
 
@@ -1164,16 +1185,16 @@ describe('SCWSigner', () => {
         params: [globalAccountAddress, ['0x1', '0xa']],
       };
 
-      const result = await signer.request(request);
+      const result = await signer.request(request, mockCorrelationId);
 
       expect(result).toEqual({
-        '0x1': { 
+        '0x1': {
           atomicBatch: { supported: true },
-          paymasterService: { supported: true }
+          paymasterService: { supported: true },
         },
         '0xa': {
-          paymasterService: { supported: true }
-        }
+          paymasterService: { supported: true },
+        },
       });
     });
 
@@ -1184,16 +1205,16 @@ describe('SCWSigner', () => {
         params: [globalAccountAddress, ['0x01', '0x05']],
       };
 
-      const result = await signer.request(request);
+      const result = await signer.request(request, mockCorrelationId);
 
       expect(result).toEqual({
-        '0x1': { 
+        '0x1': {
           atomicBatch: { supported: true },
-          paymasterService: { supported: true }
+          paymasterService: { supported: true },
         },
         '0x5': {
-          atomicBatch: { supported: false }
-        }
+          atomicBatch: { supported: false },
+        },
       });
     });
 
@@ -1203,7 +1224,7 @@ describe('SCWSigner', () => {
         params: [globalAccountAddress, ['0x99', '0x100']],
       };
 
-      const result = await signer.request(request);
+      const result = await signer.request(request, mockCorrelationId);
 
       expect(result).toEqual({});
     });
@@ -1229,7 +1250,7 @@ describe('SCWSigner', () => {
         params: [globalAccountAddress],
       };
 
-      const result = await signer.request(request);
+      const result = await signer.request(request, mockCorrelationId);
 
       expect(result).toEqual({});
     });
@@ -1240,19 +1261,19 @@ describe('SCWSigner', () => {
         params: [globalAccountAddress, []],
       };
 
-      const result = await signer.request(request);
+      const result = await signer.request(request, mockCorrelationId);
 
       expect(result).toEqual({
-        '0x1': { 
+        '0x1': {
           atomicBatch: { supported: true },
-          paymasterService: { supported: true }
+          paymasterService: { supported: true },
         },
         '0x5': {
-          atomicBatch: { supported: false }
+          atomicBatch: { supported: false },
         },
         '0xa': {
-          paymasterService: { supported: true }
-        }
+          paymasterService: { supported: true },
+        },
       });
     });
 
@@ -1263,7 +1284,7 @@ describe('SCWSigner', () => {
           capabilities: {
             '0x1': { atomicBatch: { supported: true } },
             'invalid-key': { someFeature: true },
-            '0x5': { paymasterService: { supported: true } }
+            '0x5': { paymasterService: { supported: true } },
           },
         },
         chains: [],
@@ -1281,10 +1302,10 @@ describe('SCWSigner', () => {
         params: [globalAccountAddress, ['0x1']],
       };
 
-      const result = await signer.request(request);
+      const result = await signer.request(request, mockCorrelationId);
 
       expect(result).toEqual({
-        '0x1': { atomicBatch: { supported: true } }
+        '0x1': { atomicBatch: { supported: true } },
       });
     });
 
@@ -1294,7 +1315,9 @@ describe('SCWSigner', () => {
         params: [subAccountAddress],
       };
 
-      await expect(signer.request(request)).rejects.toThrow('no active account found');
+      await expect(signer.request(request, mockCorrelationId)).rejects.toThrow(
+        'no active account found'
+      );
     });
 
     it('should throw error when account parameter is invalid', async () => {
@@ -1303,7 +1326,7 @@ describe('SCWSigner', () => {
         params: ['invalid-address'],
       };
 
-      await expect(signer.request(request)).rejects.toThrow();
+      await expect(signer.request(request, mockCorrelationId)).rejects.toThrow();
     });
 
     it('should throw error when filter contains invalid hex strings', async () => {
@@ -1312,7 +1335,7 @@ describe('SCWSigner', () => {
         params: [globalAccountAddress, ['0x1', 'invalid-hex']],
       };
 
-      await expect(signer.request(request)).rejects.toThrow();
+      await expect(signer.request(request, mockCorrelationId)).rejects.toThrow();
     });
   });
 
@@ -1364,7 +1387,7 @@ describe('SCWSigner', () => {
 
       const mockSetSpendPermissions = vi.spyOn(store.spendPermissions, 'set');
 
-      await signer.request(mockRequest);
+      await signer.request(mockRequest, mockCorrelationId);
 
       expect(mockSetSpendPermissions).toHaveBeenCalledWith(mockSpendPermissions);
     });
