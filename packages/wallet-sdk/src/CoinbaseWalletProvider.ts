@@ -28,7 +28,13 @@ import { store } from ':store/store.js';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from ':util/provider.js';
 import { UUID } from 'crypto';
 import { Signer } from './sign/interface.js';
-import { createSigner, fetchSignerType, loadSignerType, storeSignerType } from './sign/util.js';
+import {
+  createSigner,
+  fetchSignerType,
+  loadSignerType,
+  signerToSignerType,
+  storeSignerType,
+} from './sign/util.js';
 
 export class CoinbaseWalletProvider extends ProviderEventEmitter implements ProviderInterface {
   private readonly metadata: AppMetadata;
@@ -61,10 +67,15 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
 
     try {
       const result = await this._request(args, correlationId);
-      logRequestResponded(args.method, correlationId);
+      logRequestResponded(args.method, signerToSignerType(this.signer), correlationId);
       return result as T;
     } catch (error) {
-      logRequestError(args.method, correlationId, error instanceof Error ? error.message : '');
+      logRequestError(
+        args.method,
+        correlationId,
+        signerToSignerType(this.signer),
+        error instanceof Error ? error.message : ''
+      );
       throw error;
     }
   }

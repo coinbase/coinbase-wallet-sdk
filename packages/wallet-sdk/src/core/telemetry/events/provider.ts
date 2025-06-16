@@ -26,13 +26,19 @@ export const logRequestStarted = (method: string, correlationId: string) => {
   );
 };
 
-export const logRequestError = (method: string, correlationId: string, errorMessage: string) => {
+export const logRequestError = (
+  method: string,
+  correlationId: string,
+  signerType: SignerType | undefined,
+  errorMessage: string
+) => {
   logEvent(
     'provider.request.error',
     {
       action: ActionType.unknown,
       componentType: ComponentType.unknown,
       method,
+      signerType,
       correlationId,
       errorMessage,
     },
@@ -40,13 +46,18 @@ export const logRequestError = (method: string, correlationId: string, errorMess
   );
 };
 
-export const logRequestResponded = (method: string, correlationId: string) => {
+export const logRequestResponded = (
+  method: string,
+  signerType: SignerType | undefined,
+  correlationId: string
+) => {
   logEvent(
     'provider.request.responded',
     {
       action: ActionType.unknown,
       componentType: ComponentType.unknown,
       method,
+      signerType,
       correlationId,
     },
     AnalyticsEventImportance.high

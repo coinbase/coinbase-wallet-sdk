@@ -3,7 +3,7 @@ import { ActionType, AnalyticsEventImportance, ComponentType, logEvent } from '.
 
 export const logHandshakeStarted = (method: string, correlationId: UUID) => {
   logEvent(
-    'scw-signer.handshake.started',
+    'scw_signer.handshake.started',
     {
       action: ActionType.unknown,
       componentType: ComponentType.unknown,
@@ -16,7 +16,7 @@ export const logHandshakeStarted = (method: string, correlationId: UUID) => {
 
 export const logHandshakeError = (method: string, correlationId: UUID, errorMessage: string) => {
   logEvent(
-    'scw-signer.handshake.error',
+    'scw_signer.handshake.error',
     {
       action: ActionType.unknown,
       componentType: ComponentType.unknown,
@@ -30,7 +30,7 @@ export const logHandshakeError = (method: string, correlationId: UUID, errorMess
 
 export const logHandshakeCompleted = (method: string, correlationId: UUID) => {
   logEvent(
-    'scw-signer.handshake.completed',
+    'scw_signer.handshake.completed',
     {
       action: ActionType.unknown,
       componentType: ComponentType.unknown,
@@ -43,7 +43,7 @@ export const logHandshakeCompleted = (method: string, correlationId: UUID) => {
 
 export const logRequestStarted = (method: string, correlationId: UUID) => {
   logEvent(
-    'scw-signer.request.started',
+    'scw_signer.request.started',
     {
       action: ActionType.unknown,
       componentType: ComponentType.unknown,
@@ -56,7 +56,7 @@ export const logRequestStarted = (method: string, correlationId: UUID) => {
 
 export const logRequestError = (method: string, correlationId: UUID, errorMessage: string) => {
   logEvent(
-    'scw-signer.request.error',
+    'scw_signer.request.error',
     {
       action: ActionType.unknown,
       componentType: ComponentType.unknown,
@@ -70,7 +70,7 @@ export const logRequestError = (method: string, correlationId: UUID, errorMessag
 
 export const logRequestCompleted = (method: string, correlationId: UUID) => {
   logEvent(
-    'scw-signer.request.completed',
+    'scw_signer.request.completed',
     {
       action: ActionType.unknown,
       componentType: ComponentType.unknown,
