@@ -1,7 +1,7 @@
 import { SignerType } from ':core/message/ConfigMessage.js';
 import { ActionType, AnalyticsEventImportance, ComponentType, logEvent } from '../logEvent.js';
 
-export const logSignerLoadedFromStorage = (signerType: SignerType) => {
+export const logSignerLoadedFromStorage = ({ signerType }: { signerType: SignerType }) => {
   logEvent(
     'provider.signer.loaded_from_storage',
     {
@@ -13,7 +13,13 @@ export const logSignerLoadedFromStorage = (signerType: SignerType) => {
   );
 };
 
-export const logRequestStarted = (method: string, correlationId: string) => {
+export const logRequestStarted = ({
+  method,
+  correlationId,
+}: {
+  method: string;
+  correlationId: string;
+}) => {
   logEvent(
     'provider.request.started',
     {
@@ -26,12 +32,17 @@ export const logRequestStarted = (method: string, correlationId: string) => {
   );
 };
 
-export const logRequestError = (
-  method: string,
-  correlationId: string,
-  signerType: SignerType | undefined,
-  errorMessage: string
-) => {
+export const logRequestError = ({
+  method,
+  correlationId,
+  signerType,
+  errorMessage,
+}: {
+  method: string;
+  correlationId: string;
+  signerType: SignerType | undefined;
+  errorMessage: string;
+}) => {
   logEvent(
     'provider.request.error',
     {
@@ -46,11 +57,15 @@ export const logRequestError = (
   );
 };
 
-export const logRequestResponded = (
-  method: string,
-  signerType: SignerType | undefined,
-  correlationId: string
-) => {
+export const logRequestResponded = ({
+  method,
+  signerType,
+  correlationId,
+}: {
+  method: string;
+  signerType: SignerType | undefined;
+  correlationId: string;
+}) => {
   logEvent(
     'provider.request.responded',
     {

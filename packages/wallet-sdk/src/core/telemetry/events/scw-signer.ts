@@ -1,6 +1,12 @@
 import { ActionType, AnalyticsEventImportance, ComponentType, logEvent } from '../logEvent.js';
 
-export const logHandshakeStarted = (method: string, correlationId: string) => {
+export const logHandshakeStarted = ({
+  method,
+  correlationId,
+}: {
+  method: string;
+  correlationId: string;
+}) => {
   logEvent(
     'scw_signer.handshake.started',
     {
@@ -13,7 +19,15 @@ export const logHandshakeStarted = (method: string, correlationId: string) => {
   );
 };
 
-export const logHandshakeError = (method: string, correlationId: string, errorMessage: string) => {
+export const logHandshakeError = ({
+  method,
+  correlationId,
+  errorMessage,
+}: {
+  method: string;
+  correlationId: string;
+  errorMessage: string;
+}) => {
   logEvent(
     'scw_signer.handshake.error',
     {
@@ -27,7 +41,13 @@ export const logHandshakeError = (method: string, correlationId: string, errorMe
   );
 };
 
-export const logHandshakeCompleted = (method: string, correlationId: string) => {
+export const logHandshakeCompleted = ({
+  method,
+  correlationId,
+}: {
+  method: string;
+  correlationId: string;
+}) => {
   logEvent(
     'scw_signer.handshake.completed',
     {
@@ -40,7 +60,13 @@ export const logHandshakeCompleted = (method: string, correlationId: string) => 
   );
 };
 
-export const logRequestStarted = (method: string, correlationId: string) => {
+export const logRequestStarted = ({
+  method,
+  correlationId,
+}: {
+  method: string;
+  correlationId: string;
+}) => {
   logEvent(
     'scw_signer.request.started',
     {
@@ -53,7 +79,15 @@ export const logRequestStarted = (method: string, correlationId: string) => {
   );
 };
 
-export const logRequestError = (method: string, correlationId: string, errorMessage: string) => {
+export const logRequestError = ({
+  method,
+  correlationId,
+  errorMessage,
+}: {
+  method: string;
+  correlationId: string;
+  errorMessage: string;
+}) => {
   logEvent(
     'scw_signer.request.error',
     {
@@ -67,7 +101,13 @@ export const logRequestError = (method: string, correlationId: string, errorMess
   );
 };
 
-export const logRequestCompleted = (method: string, correlationId: string) => {
+export const logRequestCompleted = ({
+  method,
+  correlationId,
+}: {
+  method: string;
+  correlationId: string;
+}) => {
   logEvent(
     'scw_signer.request.completed',
     {

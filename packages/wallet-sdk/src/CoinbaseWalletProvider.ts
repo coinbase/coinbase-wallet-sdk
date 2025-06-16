@@ -55,26 +55,30 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
     const signerType = loadSignerType();
     if (signerType) {
       this.signer = this.initSigner(signerType);
-      logSignerLoadedFromStorage(signerType);
+      logSignerLoadedFromStorage({ signerType });
     }
   }
 
   public async request<T>(args: RequestArguments): Promise<T> {
     // correlation id across the entire request lifecycle
     const correlationId = crypto.randomUUID();
-    logRequestStarted(args.method, correlationId);
+    logRequestStarted({ method: args.method, correlationId });
 
     try {
       const result = await this._request(args, correlationId);
-      logRequestResponded(args.method, signerToSignerType(this.signer), correlationId);
+      logRequestResponded({
+        method: args.method,
+        signerType: signerToSignerType(this.signer),
+        correlationId,
+      });
       return result as T;
     } catch (error) {
-      logRequestError(
-        args.method,
+      logRequestError({
+        method: args.method,
         correlationId,
-        signerToSignerType(this.signer),
-        error instanceof Error ? error.message : ''
-      );
+        signerType: signerToSignerType(this.signer),
+        errorMessage: error instanceof Error ? error.message : '',
+      });
       throw error;
     }
   }

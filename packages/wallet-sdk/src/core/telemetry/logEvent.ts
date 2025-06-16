@@ -60,8 +60,9 @@ type CCAEventData = {
   // Custom Attributes
   signerType?: SignerType;
   method?: string; // RPC method
-  correlationId?: string; // correlation id
-  errorMessage?: string; // error message
+  correlationId?: string;
+  errorMessage?: string;
+  snackbarContext?: string;
 };
 
 type AnalyticsEventData = {

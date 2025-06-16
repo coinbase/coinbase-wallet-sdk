@@ -82,7 +82,7 @@ export class SCWSigner implements Signer {
   }
 
   async handshake(args: RequestArguments, correlationId: string) {
-    logHandshakeStarted(args.method, correlationId);
+    logHandshakeStarted({ method: args.method, correlationId });
     // Open the popup before constructing the request message.
     // This is to ensure that the popup is not blocked by some browsers (i.e. Safari)
     await this.communicator.waitForPopupLoaded?.();
@@ -101,7 +101,11 @@ export class SCWSigner implements Signer {
 
     // store peer's public key
     if ('failure' in response.content) {
-      logHandshakeError(args.method, correlationId, response.content.failure.message);
+      logHandshakeError({
+        method: args.method,
+        correlationId,
+        errorMessage: response.content.failure.message,
+      });
       throw response.content.failure;
     }
 
@@ -111,22 +115,22 @@ export class SCWSigner implements Signer {
     const decrypted = await this.decryptResponseMessage(response);
 
     this.handleResponse(args, decrypted);
-    logHandshakeCompleted(args.method, correlationId);
+    logHandshakeCompleted({ method: args.method, correlationId });
   }
 
   async request(request: RequestArguments, correlationId: string) {
-    logRequestStarted(request.method, correlationId);
+    logRequestStarted({ method: request.method, correlationId });
 
     try {
       const result = await this._request(request, correlationId);
-      logRequestCompleted(request.method, correlationId);
+      logRequestCompleted({ method: request.method, correlationId });
       return result;
     } catch (error: any) {
-      logRequestError(
-        request.method,
+      logRequestError({
+        method: request.method,
         correlationId,
-        'message' in error && typeof error.message === 'string' ? error.message : ''
-      );
+        errorMessage: 'message' in error && typeof error.message === 'string' ? error.message : '',
+      });
       throw error;
     }
   }
