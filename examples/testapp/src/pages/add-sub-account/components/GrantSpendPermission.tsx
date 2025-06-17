@@ -108,7 +108,7 @@ export function GrantSpendPermission({
 
       const response = await provider?.request({
         method: 'eth_signTypedData_v4',
-        params: [accounts[0] as Address, spendPermission],
+        params: [accounts[1] as Address, spendPermission],
       });
       console.info('response', response);
       localStorage.setItem('cbwsdk.demo.spend-permission.signature', response as Hex);
