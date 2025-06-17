@@ -4,6 +4,7 @@ import { Message, MessageID } from './Message.js';
 
 interface RPCMessage extends Message {
   id: MessageID;
+  correlationId: string;
   sender: string; // hex encoded public key of the sender
   content: unknown;
   timestamp: Date;

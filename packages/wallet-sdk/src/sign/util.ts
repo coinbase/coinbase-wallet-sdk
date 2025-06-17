@@ -23,6 +23,14 @@ export function storeSignerType(signerType: SignerType) {
   storage.setItem(SIGNER_TYPE_KEY, signerType);
 }
 
+export function signerToSignerType(signer: Signer | null): SignerType | undefined {
+  if (!signer) {
+    return undefined;
+  }
+
+  return signer instanceof SCWSigner ? 'scw' : 'walletlink';
+}
+
 export async function fetchSignerType(params: {
   communicator: Communicator;
   preference: Preference;

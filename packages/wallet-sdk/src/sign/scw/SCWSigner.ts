@@ -8,9 +8,18 @@ import { RPCResponse } from ':core/message/RPCResponse.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
 import { FetchPermissionsResponse } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { WalletConnectRequest, WalletConnectResponse } from ':core/rpc/wallet_connect.js';
+import {
+  logHandshakeCompleted,
+  logHandshakeError,
+  logHandshakeStarted,
+  logRequestCompleted,
+  logRequestError,
+  logRequestStarted,
+} from ':core/telemetry/events/scw-signer.js';
 import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
 import { SDKChain, createClients, getClient } from ':store/chain-clients/utils.js';
+import { correlationIds } from ':store/correlation-ids/store.js';
 import { store } from ':store/store.js';
 import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
 import { assertSubAccount } from ':util/assertSubAccount.js';
@@ -74,6 +83,8 @@ export class SCWSigner implements Signer {
   }
 
   async handshake(args: RequestArguments) {
+    const correlationId = correlationIds.get(args);
+    logHandshakeStarted({ method: args.method, correlationId });
     // Open the popup before constructing the request message.
     // This is to ensure that the popup is not blocked by some browsers (i.e. Safari)
     await this.communicator.waitForPopupLoaded?.();
@@ -88,16 +99,43 @@ export class SCWSigner implements Signer {
       await this.communicator.postRequestAndWaitForResponse(handshakeMessage);
 
     // store peer's public key
-    if ('failure' in response.content) throw response.content.failure;
+    if ('failure' in response.content) {
+      logHandshakeError({
+        method: args.method,
+        correlationId,
+        errorMessage: response.content.failure.message,
+      });
+      throw response.content.failure;
+    }
+
     const peerPublicKey = await importKeyFromHexString('public', response.sender);
     await this.keyManager.setPeerPublicKey(peerPublicKey);
 
     const decrypted = await this.decryptResponseMessage(response);
 
     this.handleResponse(args, decrypted);
+    logHandshakeCompleted({ method: args.method, correlationId });
   }
 
   async request(request: RequestArguments) {
+    const correlationId = correlationIds.get(request);
+    logRequestStarted({ method: request.method, correlationId });
+
+    try {
+      const result = await this._request(request);
+      logRequestCompleted({ method: request.method, correlationId });
+      return result;
+    } catch (error: any) {
+      logRequestError({
+        method: request.method,
+        correlationId,
+        errorMessage: 'message' in error && typeof error.message === 'string' ? error.message : '',
+      });
+      throw error;
+    }
+  }
+
+  async _request(request: RequestArguments) {
     if (this.accounts.length === 0) {
       switch (request.method) {
         case 'eth_requestAccounts': {
@@ -110,7 +148,7 @@ export class SCWSigner implements Signer {
               method: 'wallet_connect',
               params: [
                 {
-                  version: "1",
+                  version: '1',
                   capabilities: {
                     ...(store.subAccountsConfig.get()?.capabilities ?? {}),
                   },
@@ -319,6 +357,8 @@ export class SCWSigner implements Signer {
     // clear the store
     store.account.clear();
     store.subAccounts.clear();
+    store.spendPermissions.clear();
+    store.chains.clear();
 
     // reset the signer
     this.accounts = [];
@@ -347,28 +387,30 @@ export class SCWSigner implements Signer {
 
   private async handleGetCapabilitiesRequest(request: RequestArguments) {
     assertGetCapabilitiesParams(request.params);
-    
+
     const requestedAccount = request.params[0];
     const filterChainIds = request.params[1]; // Optional second parameter
 
     if (!this.accounts.some((account) => isAddressEqual(account, requestedAccount))) {
-      throw standardErrors.provider.unauthorized('no active account found');
+      throw standardErrors.provider.unauthorized(
+        'no active account found when getting capabilities'
+      );
     }
 
     const capabilities = store.getState().account.capabilities;
-    
+
     // Return empty object if capabilities is undefined
     if (!capabilities) {
       return {};
     }
-    
+
     // If no filter is provided, return all capabilities
     if (!filterChainIds || filterChainIds.length === 0) {
       return capabilities;
     }
 
     // Convert filter chain IDs to numbers once for efficient lookup
-    const filterChainNumbers = new Set(filterChainIds.map(chainId => hexToNumber(chainId)));
+    const filterChainNumbers = new Set(filterChainIds.map((chainId) => hexToNumber(chainId)));
 
     // Filter capabilities
     const filteredCapabilities = Object.fromEntries(
@@ -382,16 +424,14 @@ export class SCWSigner implements Signer {
         }
       })
     );
-    
+
     return filteredCapabilities;
   }
 
   private async sendEncryptedRequest(request: RequestArguments): Promise<RPCResponseMessage> {
     const sharedSecret = await this.keyManager.getSharedSecret();
     if (!sharedSecret) {
-      throw standardErrors.provider.unauthorized(
-        'No valid session found, try requestAccounts before other methods'
-      );
+      throw standardErrors.provider.unauthorized('No shared secret found when encrypting request');
     }
 
     const encrypted = await encryptContent(
@@ -412,6 +452,7 @@ export class SCWSigner implements Signer {
     const publicKey = await exportKeyToHexString('public', await this.keyManager.getOwnPublicKey());
     return {
       id: crypto.randomUUID(),
+      correlationId: correlationIds.get(content),
       sender: publicKey,
       content,
       timestamp: new Date(),
@@ -428,7 +469,9 @@ export class SCWSigner implements Signer {
 
     const sharedSecret = await this.keyManager.getSharedSecret();
     if (!sharedSecret) {
-      throw standardErrors.provider.unauthorized('Invalid session');
+      throw standardErrors.provider.unauthorized(
+        'Invalid session: no shared secret found when decrypting response'
+      );
     }
 
     const response: RPCResponse = await decryptContent(content.encrypted, sharedSecret);
@@ -509,7 +552,9 @@ export class SCWSigner implements Signer {
           : await getCryptoKeyAccount();
 
         if (!ownerAccount) {
-          throw standardErrors.provider.unauthorized('could not get subaccount owner account');
+          throw standardErrors.provider.unauthorized(
+            'could not get subaccount owner account when adding sub account'
+          );
         }
 
         keys = [
@@ -552,7 +597,9 @@ export class SCWSigner implements Signer {
 
     assertPresence(
       subAccount?.address,
-      standardErrors.provider.unauthorized('no active sub account')
+      standardErrors.provider.unauthorized(
+        'no active sub account when sending request to sub account signer'
+      )
     );
 
     // Get the owner account from the config
@@ -562,7 +609,9 @@ export class SCWSigner implements Signer {
 
     assertPresence(
       ownerAccount?.account,
-      standardErrors.provider.unauthorized('no active sub account owner')
+      standardErrors.provider.unauthorized(
+        'no active sub account owner when sending request to sub account signer'
+      )
     );
 
     const sender = getSenderFromRequest(request);
@@ -575,7 +624,9 @@ export class SCWSigner implements Signer {
     const client = getClient(this.chain.id);
     assertPresence(
       client,
-      standardErrors.rpc.internal(`client not found for chainId ${this.chain.id}`)
+      standardErrors.rpc.internal(
+        `client not found for chainId ${this.chain.id} when sending request to sub account signer`
+      )
     );
 
     const globalAccountAddress = this.accounts.find(
@@ -584,7 +635,9 @@ export class SCWSigner implements Signer {
 
     assertPresence(
       globalAccountAddress,
-      standardErrors.provider.unauthorized('no global account found')
+      standardErrors.provider.unauthorized(
+        'no global account found when sending request to sub account signer'
+      )
     );
     const dataSuffix = makeDataSuffix({
       attribution: config.preference?.attribution,
@@ -611,7 +664,9 @@ export class SCWSigner implements Signer {
           globalAccountRequest: this.sendRequestToPopup.bind(this),
         });
       } catch {
-        return standardErrors.provider.unauthorized('failed to add sub account owner');
+        return standardErrors.provider.unauthorized(
+          'failed to add sub account owner when sending request to sub account signer'
+        );
       }
     }
 

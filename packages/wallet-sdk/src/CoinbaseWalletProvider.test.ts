@@ -121,7 +121,6 @@ describe('Ephemeral methods', () => {
       expect(provider['signer']).toBeNull();
     }
   );
-
 });
 
 describe('Signer configuration', () => {
