@@ -19,6 +19,7 @@ import {
 import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
 import { SDKChain, createClients, getClient } from ':store/chain-clients/utils.js';
+import { correlationIds } from ':store/correlation-ids/store.js';
 import { store } from ':store/store.js';
 import { assertArrayPresence, assertPresence } from ':util/assertPresence.js';
 import { assertSubAccount } from ':util/assertSubAccount.js';
@@ -81,21 +82,19 @@ export class SCWSigner implements Signer {
     }
   }
 
-  async handshake(args: RequestArguments, correlationId: string) {
+  async handshake(args: RequestArguments) {
+    const correlationId = correlationIds.get(args);
     logHandshakeStarted({ method: args.method, correlationId });
     // Open the popup before constructing the request message.
     // This is to ensure that the popup is not blocked by some browsers (i.e. Safari)
     await this.communicator.waitForPopupLoaded?.();
 
-    const handshakeMessage = await this.createRequestMessage(
-      {
-        handshake: {
-          method: args.method,
-          params: args.params ?? [],
-        },
+    const handshakeMessage = await this.createRequestMessage({
+      handshake: {
+        method: args.method,
+        params: args.params ?? [],
       },
-      correlationId
-    );
+    });
     const response: RPCResponseMessage =
       await this.communicator.postRequestAndWaitForResponse(handshakeMessage);
 
@@ -118,11 +117,12 @@ export class SCWSigner implements Signer {
     logHandshakeCompleted({ method: args.method, correlationId });
   }
 
-  async request(request: RequestArguments, correlationId: string) {
+  async request(request: RequestArguments) {
+    const correlationId = correlationIds.get(request);
     logRequestStarted({ method: request.method, correlationId });
 
     try {
-      const result = await this._request(request, correlationId);
+      const result = await this._request(request);
       logRequestCompleted({ method: request.method, correlationId });
       return result;
     } catch (error: any) {
@@ -135,7 +135,7 @@ export class SCWSigner implements Signer {
     }
   }
 
-  async _request(request: RequestArguments, correlationId: string) {
+  async _request(request: RequestArguments) {
     if (this.accounts.length === 0) {
       switch (request.method) {
         case 'eth_requestAccounts': {
@@ -144,20 +144,17 @@ export class SCWSigner implements Signer {
             await this.communicator.waitForPopupLoaded?.();
             await initSubAccountConfig();
             // This will populate the store with the sub account
-            await this.request(
-              {
-                method: 'wallet_connect',
-                params: [
-                  {
-                    version: '1',
-                    capabilities: {
-                      ...(store.subAccountsConfig.get()?.capabilities ?? {}),
-                    },
+            await this.request({
+              method: 'wallet_connect',
+              params: [
+                {
+                  version: '1',
+                  capabilities: {
+                    ...(store.subAccountsConfig.get()?.capabilities ?? {}),
                   },
-                ],
-              },
-              correlationId
-            );
+                },
+              ],
+            });
           }
           this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
           return this.accounts;
@@ -178,11 +175,11 @@ export class SCWSigner implements Signer {
             capabilitiesToInject = store.subAccountsConfig.get()?.capabilities ?? {};
           }
           const modifiedRequest = injectRequestCapabilities(request, capabilitiesToInject);
-          return this.sendRequestToPopup(modifiedRequest, correlationId);
+          return this.sendRequestToPopup(modifiedRequest);
         }
         case 'wallet_sendCalls':
         case 'wallet_sign': {
-          return this.sendRequestToPopup(request, correlationId);
+          return this.sendRequestToPopup(request);
         }
         default:
           throw standardErrors.provider.unauthorized();
@@ -190,7 +187,7 @@ export class SCWSigner implements Signer {
     }
 
     if (this.shouldRequestUseSubAccountSigner(request)) {
-      return this.sendRequestToSubAccountSigner(request, correlationId);
+      return this.sendRequestToSubAccountSigner(request);
     }
 
     switch (request.method) {
@@ -215,7 +212,7 @@ export class SCWSigner implements Signer {
       case 'wallet_getCapabilities':
         return this.handleGetCapabilitiesRequest(request);
       case 'wallet_switchEthereumChain':
-        return this.handleSwitchChainRequest(request, correlationId);
+        return this.handleSwitchChainRequest(request);
       case 'eth_ecRecover':
       case 'personal_sign':
       case 'wallet_sign':
@@ -231,7 +228,7 @@ export class SCWSigner implements Signer {
       case 'wallet_sendCalls':
       case 'wallet_showCallsStatus':
       case 'wallet_grantPermissions':
-        return this.sendRequestToPopup(request, correlationId);
+        return this.sendRequestToPopup(request);
       case 'wallet_connect': {
         // Return cached wallet connect response if available
         const cachedResponse = await getCachedWalletConnectResponse();
@@ -247,11 +244,11 @@ export class SCWSigner implements Signer {
           request,
           subAccountsConfig?.capabilities ?? {}
         );
-        return this.sendRequestToPopup(modifiedRequest, correlationId);
+        return this.sendRequestToPopup(modifiedRequest);
       }
       // Sub Account Support
       case 'wallet_addSubAccount':
-        return this.addSubAccount(request, correlationId);
+        return this.addSubAccount(request);
       case 'coinbase_fetchPermissions': {
         assertFetchPermissionsRequest(request);
         const completeRequest = fillMissingParamsForFetchPermissions(request);
@@ -276,12 +273,12 @@ export class SCWSigner implements Signer {
     }
   }
 
-  private async sendRequestToPopup(request: RequestArguments, correlationId: string) {
+  private async sendRequestToPopup(request: RequestArguments) {
     // Open the popup before constructing the request message.
     // This is to ensure that the popup is not blocked by some browsers (i.e. Safari)
     await this.communicator.waitForPopupLoaded?.();
 
-    const response = await this.sendEncryptedRequest(request, correlationId);
+    const response = await this.sendEncryptedRequest(request);
     const decrypted = await this.decryptResponseMessage(response);
 
     return this.handleResponse(request, decrypted);
@@ -360,6 +357,8 @@ export class SCWSigner implements Signer {
     // clear the store
     store.account.clear();
     store.subAccounts.clear();
+    store.spendPermissions.clear();
+    store.chains.clear();
 
     // reset the signer
     this.accounts = [];
@@ -372,14 +371,14 @@ export class SCWSigner implements Signer {
    * @returns `null` if the request was successful.
    * https://eips.ethereum.org/EIPS/eip-3326#wallet_switchethereumchain
    */
-  private async handleSwitchChainRequest(request: RequestArguments, correlationId: string) {
+  private async handleSwitchChainRequest(request: RequestArguments) {
     assertParamsChainId(request.params);
 
     const chainId = ensureIntNumber(request.params[0].chainId);
     const localResult = this.updateChain(chainId);
     if (localResult) return null;
 
-    const popupResult = await this.sendRequestToPopup(request, correlationId);
+    const popupResult = await this.sendRequestToPopup(request);
     if (popupResult === null) {
       this.updateChain(chainId);
     }
@@ -429,10 +428,7 @@ export class SCWSigner implements Signer {
     return filteredCapabilities;
   }
 
-  private async sendEncryptedRequest(
-    request: RequestArguments,
-    correlationId: string
-  ): Promise<RPCResponseMessage> {
+  private async sendEncryptedRequest(request: RequestArguments): Promise<RPCResponseMessage> {
     const sharedSecret = await this.keyManager.getSharedSecret();
     if (!sharedSecret) {
       throw standardErrors.provider.unauthorized('No shared secret found when encrypting request');
@@ -445,19 +441,18 @@ export class SCWSigner implements Signer {
       },
       sharedSecret
     );
-    const message = await this.createRequestMessage({ encrypted }, correlationId);
+    const message = await this.createRequestMessage({ encrypted });
 
     return this.communicator.postRequestAndWaitForResponse(message);
   }
 
   private async createRequestMessage(
-    content: RPCRequestMessage['content'],
-    correlationId: string
+    content: RPCRequestMessage['content']
   ): Promise<RPCRequestMessage> {
     const publicKey = await exportKeyToHexString('public', await this.keyManager.getOwnPublicKey());
     return {
       id: crypto.randomUUID(),
-      correlationId,
+      correlationId: correlationIds.get(content),
       sender: publicKey,
       content,
       timestamp: new Date(),
@@ -524,10 +519,7 @@ export class SCWSigner implements Signer {
     return true;
   }
 
-  private async addSubAccount(
-    request: RequestArguments,
-    correlationId: string
-  ): Promise<{
+  private async addSubAccount(request: RequestArguments): Promise<{
     address: Address;
     factory?: Address;
     factoryData?: Hex;
@@ -575,7 +567,7 @@ export class SCWSigner implements Signer {
       request.params[0].account.keys = keys;
     }
 
-    const response = await this.sendRequestToPopup(request, correlationId);
+    const response = await this.sendRequestToPopup(request);
     assertSubAccount(response);
     // Only store the sub account information after the popup has been closed and the
     // user has confirmed the creation
@@ -598,7 +590,7 @@ export class SCWSigner implements Signer {
     return false;
   }
 
-  private async sendRequestToSubAccountSigner(request: RequestArguments, correlationId: string) {
+  private async sendRequestToSubAccountSigner(request: RequestArguments) {
     const subAccount = store.subAccounts.get();
     const subAccountsConfig = store.subAccountsConfig.get();
     const config = store.config.get();
@@ -669,8 +661,7 @@ export class SCWSigner implements Signer {
       try {
         ownerIndex = await handleAddSubAccountOwner({
           ownerAccount: ownerAccount.account,
-          globalAccountRequest: (request: RequestArguments) =>
-            this.sendRequestToPopup(request, correlationId),
+          globalAccountRequest: this.sendRequestToPopup.bind(this),
         });
       } catch {
         return standardErrors.provider.unauthorized(
@@ -716,7 +707,7 @@ export class SCWSigner implements Signer {
           client,
           request,
           subAccountRequest,
-          globalAccountRequest: (request: RequestArguments) => this.request(request, correlationId),
+          globalAccountRequest: this.request.bind(this),
         });
         return result;
       } catch (handlingError) {

@@ -9,7 +9,7 @@ export const logSignerLoadedFromStorage = ({ signerType }: { signerType: SignerT
       componentType: ComponentType.unknown,
       signerType,
     },
-    AnalyticsEventImportance.high
+    AnalyticsEventImportance.low
   );
 };
 

@@ -10,7 +10,7 @@ import {
   Preference,
   ProviderEventEmitter,
   ProviderInterface,
-  RequestArguments
+  RequestArguments,
 } from ':core/provider/interface.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import {
@@ -24,6 +24,7 @@ import {
   logSignerSelectionResponded,
 } from ':core/telemetry/events/signer-selection.js';
 import { hexStringFromNumber } from ':core/type/util.js';
+import { correlationIds } from ':store/correlation-ids/store.js';
 import { store } from ':store/store.js';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from ':util/provider.js';
 import { Signer } from './sign/interface.js';
@@ -62,10 +63,11 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
   public async request<T>(args: RequestArguments): Promise<T> {
     // correlation id across the entire request lifecycle
     const correlationId = crypto.randomUUID();
+    correlationIds.set(args, correlationId);
     logRequestStarted({ method: args.method, correlationId });
 
     try {
-      const result = await this._request(args, correlationId);
+      const result = await this._request(args);
       logRequestResponded({
         method: args.method,
         signerType: signerToSignerType(this.signer),
@@ -80,10 +82,12 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
         errorMessage: error instanceof Error ? error.message : '',
       });
       throw error;
+    } finally {
+      correlationIds.delete(args);
     }
   }
 
-  private async _request<T>(args: RequestArguments, correlationId: string): Promise<T> {
+  private async _request<T>(args: RequestArguments): Promise<T> {
     try {
       checkErrorForInvalidRequestArgs(args);
       if (!this.signer) {
@@ -99,11 +103,11 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
             const signer = this.initSigner(signerType);
 
             if (signerType === 'scw' && subAccountsConfig?.enableAutoSubAccounts) {
-              await signer.handshake({ method: 'handshake' }, correlationId);
+              await signer.handshake({ method: 'handshake' });
               // eth_requestAccounts gets translated to wallet_connect at SCWSigner level
-              await signer.request(args, correlationId);
+              await signer.request(args);
             } else {
-              await signer.handshake(args, correlationId);
+              await signer.handshake(args);
             }
 
             this.signer = signer;
@@ -112,16 +116,16 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
           }
           case 'wallet_connect': {
             const signer = this.initSigner('scw');
-            await signer.handshake({ method: 'handshake' }, correlationId); // exchange session keys
-            const result = await signer.request(args, correlationId); // send diffie-hellman encrypted request
+            await signer.handshake({ method: 'handshake' }); // exchange session keys
+            const result = await signer.request(args); // send diffie-hellman encrypted request
             this.signer = signer;
             return result as T;
           }
           case 'wallet_sendCalls':
           case 'wallet_sign': {
             const ephemeralSigner = this.initSigner('scw');
-            await ephemeralSigner.handshake({ method: 'handshake' }, correlationId); // exchange session keys
-            const result = await ephemeralSigner.request(args, correlationId); // send diffie-hellman encrypted request
+            await ephemeralSigner.handshake({ method: 'handshake' }); // exchange session keys
+            const result = await ephemeralSigner.request(args); // send diffie-hellman encrypted request
             await ephemeralSigner.cleanup(); // clean up (rotate) the ephemeral session keys
             return result as T;
           }
@@ -144,7 +148,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
           }
         }
       }
-      const result = await this.signer.request(args, correlationId);
+      const result = await this.signer.request(args);
       return result as T;
     } catch (error) {
       const { code } = error as { code?: number };
@@ -167,6 +171,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
     await this.signer?.cleanup();
     this.signer = null;
     ScopedLocalStorage.clearAll();
+    correlationIds.clear();
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
 

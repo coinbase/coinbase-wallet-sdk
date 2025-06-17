@@ -115,8 +115,8 @@ describe('Ephemeral methods', () => {
       const args = { method, params: ['0xdeadbeef'] };
       expect(provider['signer']).toBeNull();
       await provider.request(args);
-      expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' }, expect.any(String));
-      expect(mockRequest).toHaveBeenCalledWith(args, expect.any(String));
+      expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
+      expect(mockRequest).toHaveBeenCalledWith(args);
       expect(mockCleanup).toHaveBeenCalled();
       expect(provider['signer']).toBeNull();
     }
@@ -129,7 +129,7 @@ describe('Signer configuration', () => {
 
     const args = { method: 'eth_requestAccounts' };
     await provider.request(args);
-    expect(mockHandshake).toHaveBeenCalledWith(args, expect.any(String));
+    expect(mockHandshake).toHaveBeenCalledWith(args);
   });
 
   it('should support enable', async () => {
@@ -137,10 +137,7 @@ describe('Signer configuration', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     await provider.enable();
-    expect(mockHandshake).toHaveBeenCalledWith(
-      { method: 'eth_requestAccounts' },
-      expect.any(String)
-    );
+    expect(mockHandshake).toHaveBeenCalledWith({ method: 'eth_requestAccounts' });
   });
 
   it('should pass handshake request args', async () => {
@@ -192,7 +189,7 @@ describe('Signer configuration', () => {
 
     const request = { method: 'personal_sign', params: ['0x123', '0xdeadbeef'] };
     await providerLoadedFromStorage.request(request);
-    expect(mockRequest).toHaveBeenCalledWith(request, expect.any(String));
+    expect(mockRequest).toHaveBeenCalledWith(request);
 
     await providerLoadedFromStorage.disconnect();
     expect(mockCleanup).toHaveBeenCalled();
@@ -222,7 +219,7 @@ describe('Signer configuration', () => {
       });
 
       await provider.request({ method: 'eth_requestAccounts' });
-      expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' }, expect.any(String));
+      expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
     });
   });
 });
