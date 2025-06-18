@@ -14,6 +14,7 @@ import {
 } from ':core/provider/interface.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import {
+  logEnableFunctionCalled,
   logRequestError,
   logRequestResponded,
   logRequestStarted,
@@ -162,6 +163,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
     console.warn(
       `.enable() has been deprecated. Please use .request({ method: "eth_requestAccounts" }) instead.`
     );
+    logEnableFunctionCalled();
     return await this.request({
       method: 'eth_requestAccounts',
     });

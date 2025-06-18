@@ -16,6 +16,18 @@ import {
   logRequestError,
   logRequestStarted,
 } from ':core/telemetry/events/scw-signer.js';
+import {
+  logAddOwnerCompleted,
+  logAddOwnerError,
+  logAddOwnerStarted,
+  logInsufficientBalanceErrorHandlingCompleted,
+  logInsufficientBalanceErrorHandlingError,
+  logInsufficientBalanceErrorHandlingStarted,
+  logSubAccountRequestCompleted,
+  logSubAccountRequestError,
+  logSubAccountRequestStarted,
+} from ':core/telemetry/events/scw-sub-account.js';
+import { parseErrorMessageFromAny } from ':core/telemetry/utils.js';
 import { Address } from ':core/type/index.js';
 import { ensureIntNumber, hexStringFromNumber } from ':core/type/util.js';
 import { SDKChain, createClients, getClient } from ':store/chain-clients/utils.js';
@@ -125,11 +137,11 @@ export class SCWSigner implements Signer {
       const result = await this._request(request);
       logRequestCompleted({ method: request.method, correlationId });
       return result;
-    } catch (error: any) {
+    } catch (error) {
       logRequestError({
         method: request.method,
         correlationId,
-        errorMessage: 'message' in error && typeof error.message === 'string' ? error.message : '',
+        errorMessage: parseErrorMessageFromAny(error),
       });
       throw error;
     }
@@ -187,7 +199,20 @@ export class SCWSigner implements Signer {
     }
 
     if (this.shouldRequestUseSubAccountSigner(request)) {
-      return this.sendRequestToSubAccountSigner(request);
+      const correlationId = correlationIds.get(request);
+      logSubAccountRequestStarted({ method: request.method, correlationId });
+      try {
+        const result = await this.sendRequestToSubAccountSigner(request);
+        logSubAccountRequestCompleted({ method: request.method, correlationId });
+        return result;
+      } catch (error) {
+        logSubAccountRequestError({
+          method: request.method,
+          correlationId,
+          errorMessage: parseErrorMessageFromAny(error),
+        });
+        throw error;
+      }
     }
 
     switch (request.method) {
@@ -661,12 +686,20 @@ export class SCWSigner implements Signer {
     });
 
     if (ownerIndex === -1) {
+      const correlationId = correlationIds.get(request);
+      logAddOwnerStarted({ method: request.method, correlationId });
       try {
         ownerIndex = await handleAddSubAccountOwner({
           ownerAccount: ownerAccount.account,
           globalAccountRequest: this.sendRequestToPopup.bind(this),
         });
-      } catch {
+        logAddOwnerCompleted({ method: request.method, correlationId });
+      } catch (error) {
+        logAddOwnerError({
+          method: request.method,
+          correlationId,
+          errorMessage: parseErrorMessageFromAny(error),
+        });
         return standardErrors.provider.unauthorized(
           'failed to add sub account owner when sending request to sub account signer'
         );
@@ -702,6 +735,8 @@ export class SCWSigner implements Signer {
         throw error;
       }
 
+      const correlationId = correlationIds.get(request);
+      logInsufficientBalanceErrorHandlingStarted({ method: request.method, correlationId });
       try {
         const result = await handleInsufficientBalanceError({
           errorData: errorObject.data,
@@ -712,9 +747,15 @@ export class SCWSigner implements Signer {
           subAccountRequest,
           globalAccountRequest: this.request.bind(this),
         });
+        logInsufficientBalanceErrorHandlingCompleted({ method: request.method, correlationId });
         return result;
       } catch (handlingError) {
         console.error(handlingError);
+        logInsufficientBalanceErrorHandlingError({
+          method: request.method,
+          correlationId,
+          errorMessage: parseErrorMessageFromAny(handlingError),
+        });
         throw error;
       }
     }

@@ -10,6 +10,7 @@ import {
   FetchPermissionsRequest,
 } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { WalletConnectRequest, WalletConnectResponse } from ':core/rpc/wallet_connect.js';
+import { logSnackbarActionClicked, logSnackbarShown } from ':core/telemetry/events/snackbar.js';
 import { Address } from ':core/type/index.js';
 import { config, store } from ':store/store.js';
 import { get } from ':util/get.js';
@@ -76,7 +77,9 @@ export function assertParamsChainId(params: unknown): asserts params is [
   }
 }
 
-export function assertGetCapabilitiesParams(params: unknown): asserts params is [`0x${string}`, (`0x${string}`[])? ] {
+export function assertGetCapabilitiesParams(
+  params: unknown
+): asserts params is [`0x${string}`, `0x${string}`[]?] {
   if (!params || !Array.isArray(params) || (params.length !== 1 && params.length !== 2)) {
     throw standardErrors.rpc.invalidParams();
   }
@@ -418,6 +421,7 @@ export async function presentSubAccountFundingDialog() {
   const snackbar = initSnackbar();
   const userChoice = await new Promise<'update_permission' | 'continue_popup' | 'cancel'>(
     (resolve) => {
+      logSnackbarShown({ snackbarContext: 'sub_account_insufficient_balance' });
       snackbar.presentItem({
         autoExpand: true,
         message: 'Insufficient spend limit. Choose how to proceed:',
@@ -431,6 +435,10 @@ export async function presentSubAccountFundingDialog() {
             defaultFillRule: 'evenodd',
             defaultClipRule: 'evenodd',
             onClick: () => {
+              logSnackbarActionClicked({
+                snackbarContext: 'sub_account_insufficient_balance',
+                snackbarAction: 'create_permission',
+              });
               snackbar.clear();
               resolve('update_permission');
             },
@@ -444,6 +452,10 @@ export async function presentSubAccountFundingDialog() {
             defaultFillRule: 'evenodd',
             defaultClipRule: 'evenodd',
             onClick: () => {
+              logSnackbarActionClicked({
+                snackbarContext: 'sub_account_insufficient_balance',
+                snackbarAction: 'continue_in_popup',
+              });
               snackbar.clear();
               resolve('continue_popup');
             },
@@ -457,6 +469,10 @@ export async function presentSubAccountFundingDialog() {
             defaultFillRule: 'evenodd',
             defaultClipRule: 'evenodd',
             onClick: () => {
+              logSnackbarActionClicked({
+                snackbarContext: 'sub_account_insufficient_balance',
+                snackbarAction: 'cancel',
+              });
               snackbar.clear();
               resolve('cancel');
             },
