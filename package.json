@@ -13,7 +13,7 @@
   "scripts": {
     "lint": "yarn workspaces foreach -pt run lint",
     "typecheck": "yarn workspaces foreach -pt run typecheck",
-    "dev": "yarn workspaces foreach -ipv run dev",
+    "dev": "yarn workspaces foreach -Aipv run dev",
     "release": "./scripts/release.sh"
   },
   "devDependencies": {

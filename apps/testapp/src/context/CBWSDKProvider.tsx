@@ -48,6 +48,7 @@ export function CBWSDKProvider({ children }: CBWSDKProviderProps) {
       });
       setSdk(cbwsdk);
       const cbwprovider = cbwsdk.makeWeb3Provider('http');
+      window.ethereum = cbwprovider;
       setProvider(cbwprovider);
     }
   }, [version]);

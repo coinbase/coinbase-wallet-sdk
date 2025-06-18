@@ -110,6 +110,11 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
       session,
     });
 
+    // Upon successful connection, connected flag is being updated in the this.ui
+    // this line is the same as the line in the constructor, but we need to do it here
+    // to avoid race condition
+    this.ui = ui;
+
     connection.connect();
 
     return { session, ui, connection };

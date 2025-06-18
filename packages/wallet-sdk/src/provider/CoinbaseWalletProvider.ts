@@ -37,6 +37,8 @@ import {
   SubscriptionResult,
 } from './SubscriptionManager';
 import { RequestArguments, Web3Provider } from './Web3Provider';
+import { logRequestCompleted, logRequestError, logRequestStarted } from '../telemetry/events/provider';
+import { parseErrorMessageFromAny } from '../telemetry/utils';
 
 const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
 const DEFAULT_JSON_RPC_URL = 'DefaultJsonRpcUrl';
@@ -469,11 +471,18 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
   }
 
   public async request<T>(args: RequestArguments): Promise<T> {
+    logRequestStarted({ method: args.method });
     try {
-      return this._request<T>(args).catch((error) => {
+      const result = await this._request<T>(args).catch((error) => {
         throw serializeError(error, args.method);
       });
+      logRequestCompleted({ method: args.method });
+      return result;
     } catch (error) {
+      logRequestError({
+        method: args.method,
+        errorMessage: parseErrorMessageFromAny(error),
+      });
       return Promise.reject(serializeError(error, args.method));
     }
   }
