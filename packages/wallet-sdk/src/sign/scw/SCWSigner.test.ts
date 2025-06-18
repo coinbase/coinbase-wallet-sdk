@@ -5,8 +5,9 @@ import { CB_KEYS_URL } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { EncryptedData, RPCResponseMessage } from ':core/message/RPCMessage.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
-import { SpendLimit } from ':core/rpc/coinbase_fetchSpendPermissions.js';
+import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { getClient } from ':store/chain-clients/utils.js';
+import { correlationIds } from ':store/correlation-ids/store.js';
 import { store } from ':store/store.js';
 import {
   decryptContent,
@@ -78,8 +79,10 @@ const mockChains = {
 const mockCapabilities = {};
 
 const mockError = standardErrors.provider.unauthorized();
+const mockCorrelationId = '2-2-3-4-5';
 const mockSuccessResponse: RPCResponseMessage = {
   id: '1-2-3-4-5',
+  correlationId: mockCorrelationId,
   requestId: '1-2-3-4-5',
   sender: '0xPublicKey',
   content: { encrypted: encryptedData },
@@ -119,6 +122,7 @@ describe('SCWSigner', () => {
     (exportKeyToHexString as Mock).mockResolvedValueOnce('0xPublicKey');
     mockKeyManager.getSharedSecret.mockResolvedValue(mockCryptoKey);
     (encryptContent as Mock).mockResolvedValueOnce(encryptedData);
+    vi.spyOn(correlationIds, 'get').mockReturnValue(mockCorrelationId);
 
     signer = new SCWSigner({
       metadata: mockMetadata,
@@ -132,6 +136,9 @@ describe('SCWSigner', () => {
 
     store.account.clear();
     store.chains.clear();
+    store.keys.clear();
+    store.spendPermissions.clear();
+    store.subAccounts.clear();
     store.setState({});
   });
 
@@ -208,6 +215,7 @@ describe('SCWSigner', () => {
     it('should throw an error if failure in response.content', async () => {
       const mockResponse: RPCResponseMessage = {
         id: '1-2-3-4-5',
+        correlationId: mockCorrelationId,
         requestId: '1-2-3-4-5',
         sender: '0xPublicKey',
         content: { failure: mockError },
@@ -222,7 +230,7 @@ describe('SCWSigner', () => {
   });
 
   describe('request - ephemeral signer', () => {
-    it.each(['wallet_sendCalls'])(
+    it.each(['wallet_sendCalls', 'wallet_sign'])(
       'should perform a successful request after handshake',
       async (method) => {
         const mockRequest: RequestArguments = { method };
@@ -268,7 +276,7 @@ describe('SCWSigner', () => {
         },
         chains: [],
         keys: {},
-        spendLimits: [],
+        spendPermissions: [],
         config: {
           metadata: mockMetadata,
           preference: { keysUrl: CB_KEYS_URL, options: 'all' },
@@ -682,7 +690,7 @@ describe('SCWSigner', () => {
         params: [],
       };
 
-      const mockSpendLimits = [
+      const mockSpendPermissions = [
         {
           permissionHash: '0xPermissionHash',
           signature: '0xSignature',
@@ -708,8 +716,8 @@ describe('SCWSigner', () => {
                       factoryData: '0x',
                     },
                   ],
-                  spendLimits: {
-                    permissions: mockSpendLimits,
+                  spendPermissions: {
+                    permissions: mockSpendPermissions,
                   },
                 },
               },
@@ -743,8 +751,8 @@ describe('SCWSigner', () => {
                   factoryData: '0x',
                 },
               ],
-              spendLimits: {
-                permissions: mockSpendLimits,
+              spendPermissions: {
+                permissions: mockSpendPermissions,
               },
             },
           },
@@ -1107,21 +1115,21 @@ describe('SCWSigner', () => {
         account: {
           accounts: [globalAccountAddress],
           capabilities: {
-            '0x1': { 
+            '0x1': {
               atomicBatch: { supported: true },
-              paymasterService: { supported: true }
+              paymasterService: { supported: true },
             },
             '0x5': {
-              atomicBatch: { supported: false }
+              atomicBatch: { supported: false },
             },
             '0xa': {
-              paymasterService: { supported: true }
-            }
+              paymasterService: { supported: true },
+            },
           },
         },
         chains: [],
         keys: {},
-        spendLimits: [],
+        spendPermissions: [],
         config: {
           metadata: mockMetadata,
           preference: { keysUrl: CB_KEYS_URL, options: 'all' },
@@ -1145,16 +1153,16 @@ describe('SCWSigner', () => {
       const result = await signer.request(request);
 
       expect(result).toEqual({
-        '0x1': { 
+        '0x1': {
           atomicBatch: { supported: true },
-          paymasterService: { supported: true }
+          paymasterService: { supported: true },
         },
         '0x5': {
-          atomicBatch: { supported: false }
+          atomicBatch: { supported: false },
         },
         '0xa': {
-          paymasterService: { supported: true }
-        }
+          paymasterService: { supported: true },
+        },
       });
     });
 
@@ -1167,13 +1175,13 @@ describe('SCWSigner', () => {
       const result = await signer.request(request);
 
       expect(result).toEqual({
-        '0x1': { 
+        '0x1': {
           atomicBatch: { supported: true },
-          paymasterService: { supported: true }
+          paymasterService: { supported: true },
         },
         '0xa': {
-          paymasterService: { supported: true }
-        }
+          paymasterService: { supported: true },
+        },
       });
     });
 
@@ -1187,13 +1195,13 @@ describe('SCWSigner', () => {
       const result = await signer.request(request);
 
       expect(result).toEqual({
-        '0x1': { 
+        '0x1': {
           atomicBatch: { supported: true },
-          paymasterService: { supported: true }
+          paymasterService: { supported: true },
         },
         '0x5': {
-          atomicBatch: { supported: false }
-        }
+          atomicBatch: { supported: false },
+        },
       });
     });
 
@@ -1216,7 +1224,7 @@ describe('SCWSigner', () => {
         },
         chains: [],
         keys: {},
-        spendLimits: [],
+        spendPermissions: [],
         config: {
           metadata: mockMetadata,
           preference: { keysUrl: CB_KEYS_URL, options: 'all' },
@@ -1243,16 +1251,16 @@ describe('SCWSigner', () => {
       const result = await signer.request(request);
 
       expect(result).toEqual({
-        '0x1': { 
+        '0x1': {
           atomicBatch: { supported: true },
-          paymasterService: { supported: true }
+          paymasterService: { supported: true },
         },
         '0x5': {
-          atomicBatch: { supported: false }
+          atomicBatch: { supported: false },
         },
         '0xa': {
-          paymasterService: { supported: true }
-        }
+          paymasterService: { supported: true },
+        },
       });
     });
 
@@ -1263,12 +1271,12 @@ describe('SCWSigner', () => {
           capabilities: {
             '0x1': { atomicBatch: { supported: true } },
             'invalid-key': { someFeature: true },
-            '0x5': { paymasterService: { supported: true } }
+            '0x5': { paymasterService: { supported: true } },
           },
         },
         chains: [],
         keys: {},
-        spendLimits: [],
+        spendPermissions: [],
         config: {
           metadata: mockMetadata,
           preference: { keysUrl: CB_KEYS_URL, options: 'all' },
@@ -1284,7 +1292,7 @@ describe('SCWSigner', () => {
       const result = await signer.request(request);
 
       expect(result).toEqual({
-        '0x1': { atomicBatch: { supported: true } }
+        '0x1': { atomicBatch: { supported: true } },
       });
     });
 
@@ -1317,7 +1325,7 @@ describe('SCWSigner', () => {
   });
 
   describe('coinbase_fetchPermissions', () => {
-    const mockSpendLimits = [
+    const mockSpendPermissions = [
       {
         permissionHash: '0xPermissionHash',
         signature: '0xSignature',
@@ -1327,7 +1335,7 @@ describe('SCWSigner', () => {
         },
         chainId: 10,
       },
-    ] as [SpendLimit];
+    ] as [SpendPermission];
 
     beforeEach(() => {
       vi.spyOn(store, 'getState').mockImplementation(() => ({
@@ -1340,7 +1348,7 @@ describe('SCWSigner', () => {
         },
         chains: [],
         keys: {},
-        spendLimits: [],
+        spendPermissions: [],
         config: {
           metadata: mockMetadata,
           preference: { keysUrl: CB_KEYS_URL, options: 'all' },
@@ -1349,7 +1357,7 @@ describe('SCWSigner', () => {
       }));
 
       (fetchRPCRequest as Mock).mockResolvedValue({
-        permissions: mockSpendLimits,
+        permissions: mockSpendPermissions,
       });
     });
 
@@ -1362,11 +1370,11 @@ describe('SCWSigner', () => {
 
       signer['accounts'] = ['0xAddress']; // mock the logged in state
 
-      const mockSetSpendLimits = vi.spyOn(store.spendLimits, 'set');
+      const mockSetSpendPermissions = vi.spyOn(store.spendPermissions, 'set');
 
       await signer.request(mockRequest);
 
-      expect(mockSetSpendLimits).toHaveBeenCalledWith(mockSpendLimits);
+      expect(mockSetSpendPermissions).toHaveBeenCalledWith(mockSpendPermissions);
     });
   });
 });
