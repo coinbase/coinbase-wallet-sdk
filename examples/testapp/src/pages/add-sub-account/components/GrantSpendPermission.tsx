@@ -96,7 +96,7 @@ export function GrantSpendPermission({
         account: accounts[1] as Address,
         spender: subAccountAddress as Address,
         token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-        allowance: '0x2386F26FC10000',
+        allowance: '0x5AF3107A4000',
         period: 86400,
         start: 1724264802,
         end: 17242884802,
