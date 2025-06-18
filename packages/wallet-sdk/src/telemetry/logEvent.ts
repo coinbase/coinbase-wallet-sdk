@@ -72,7 +72,6 @@ export function logEvent(
   importance: AnalyticsEventImportance | undefined
 ) {
   if (window.ClientAnalytics) {
-    console.log('logEvent', name, event, importance);
     window.ClientAnalytics?.logEvent(
       name,
       {
