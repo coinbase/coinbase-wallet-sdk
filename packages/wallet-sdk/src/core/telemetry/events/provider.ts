@@ -18,7 +18,7 @@ export const logRequestStarted = ({
   correlationId,
 }: {
   method: string;
-  correlationId: string;
+  correlationId: string | undefined;
 }) => {
   logEvent(
     'provider.request.started',
@@ -39,7 +39,7 @@ export const logRequestError = ({
   errorMessage,
 }: {
   method: string;
-  correlationId: string;
+  correlationId: string | undefined;
   signerType: SignerType | undefined;
   errorMessage: string;
 }) => {
@@ -64,7 +64,7 @@ export const logRequestResponded = ({
 }: {
   method: string;
   signerType: SignerType | undefined;
-  correlationId: string;
+  correlationId: string | undefined;
 }) => {
   logEvent(
     'provider.request.responded',

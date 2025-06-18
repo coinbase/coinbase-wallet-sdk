@@ -94,7 +94,7 @@ export class SCWSigner implements Signer {
         method: args.method,
         params: args.params ?? [],
       },
-    });
+    }, correlationId);
     const response: RPCResponseMessage =
       await this.communicator.postRequestAndWaitForResponse(handshakeMessage);
 
@@ -441,18 +441,21 @@ export class SCWSigner implements Signer {
       },
       sharedSecret
     );
-    const message = await this.createRequestMessage({ encrypted });
+    const correlationId = correlationIds.get(request);
+    const message = await this.createRequestMessage({ encrypted }, correlationId);
 
     return this.communicator.postRequestAndWaitForResponse(message);
   }
 
   private async createRequestMessage(
-    content: RPCRequestMessage['content']
+    content: RPCRequestMessage['content'],
+    correlationId: string | undefined
   ): Promise<RPCRequestMessage> {
     const publicKey = await exportKeyToHexString('public', await this.keyManager.getOwnPublicKey());
+
     return {
       id: crypto.randomUUID(),
-      correlationId: correlationIds.get(content),
+      correlationId,
       sender: publicKey,
       content,
       timestamp: new Date(),
