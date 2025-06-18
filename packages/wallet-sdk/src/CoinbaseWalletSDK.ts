@@ -13,6 +13,7 @@ import { RelayEventManager } from './relay/RelayEventManager';
 import { RelayUI, RelayUIOptions } from './relay/RelayUI';
 import { WalletLinkRelayUI } from './relay/walletlink/ui/WalletLinkRelayUI';
 import { WalletLinkRelay } from './relay/walletlink/WalletLinkRelay';
+import { loadTelemetryScript } from './telemetry/initCCA';
 import { LIB_VERSION } from './version';
 
 /** Coinbase Wallet SDK Constructor Options */
@@ -85,6 +86,8 @@ export class CoinbaseWalletSDK {
     if (this.walletExtension || this.coinbaseBrowser) {
       return;
     }
+
+    void loadTelemetryScript();
 
     this._relayEventManager = new RelayEventManager();
 

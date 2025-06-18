@@ -4,6 +4,10 @@
 import { IntNumber } from '../../../core/type';
 import { Cipher } from '../../../lib/Cipher';
 import { DiagnosticLogger, EVENTS } from '../../../provider/DiagnosticLogger';
+import {
+  logWalletLinkConnectionConnectionFailed,
+  logWalletLinkConnectionFetchUnseenEventsFailed,
+} from '../../../telemetry/events/walletlink';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../../RelayAbstract';
 import { Session } from '../../Session';
 import { ClientMessage } from '../type/ClientMessage';
@@ -146,6 +150,7 @@ export class WalletLinkConnection {
                   .connect()
                   .catch(() => {
                     // Reconnection failed, will retry
+                    logWalletLinkConnectionConnectionFailed();
                   })
                   .finally(() => {
                     this.isReconnecting = false;
@@ -317,6 +322,7 @@ export class WalletLinkConnection {
     this.ws = this.createWebSocket();
     this.ws.connect().catch(() => {
       // Fresh reconnection failed
+      logWalletLinkConnectionConnectionFailed();
     });
   }
 
@@ -484,6 +490,7 @@ export class WalletLinkConnection {
       });
     } catch (error) {
       // Failed to fetch unseen events
+      logWalletLinkConnectionFetchUnseenEventsFailed();
     }
   }
 
