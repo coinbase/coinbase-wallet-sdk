@@ -5,7 +5,7 @@ export const logHandshakeStarted = ({
   correlationId,
 }: {
   method: string;
-  correlationId: string;
+  correlationId: string | undefined;
 }) => {
   logEvent(
     'scw_signer.handshake.started',
@@ -25,7 +25,7 @@ export const logHandshakeError = ({
   errorMessage,
 }: {
   method: string;
-  correlationId: string;
+  correlationId: string | undefined;
   errorMessage: string;
 }) => {
   logEvent(
@@ -46,7 +46,7 @@ export const logHandshakeCompleted = ({
   correlationId,
 }: {
   method: string;
-  correlationId: string;
+  correlationId: string | undefined;
 }) => {
   logEvent(
     'scw_signer.handshake.completed',
@@ -65,7 +65,7 @@ export const logRequestStarted = ({
   correlationId,
 }: {
   method: string;
-  correlationId: string;
+  correlationId: string | undefined;
 }) => {
   logEvent(
     'scw_signer.request.started',
@@ -85,7 +85,7 @@ export const logRequestError = ({
   errorMessage,
 }: {
   method: string;
-  correlationId: string;
+  correlationId: string | undefined;
   errorMessage: string;
 }) => {
   logEvent(
@@ -106,7 +106,7 @@ export const logRequestCompleted = ({
   correlationId,
 }: {
   method: string;
-  correlationId: string;
+  correlationId: string | undefined;
 }) => {
   logEvent(
     'scw_signer.request.completed',

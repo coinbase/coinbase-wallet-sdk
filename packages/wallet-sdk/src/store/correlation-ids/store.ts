@@ -1,4 +1,3 @@
-import { standardErrors } from ':core/error/errors.js';
 import { createStore } from 'zustand/vanilla';
 
 type CorrelationIdsState = {
@@ -12,7 +11,6 @@ const correlationIdsStore = createStore<CorrelationIdsState>(() => ({
 export const correlationIds = {
   get: (key: object) => {
     const correlationId = correlationIdsStore.getState().correlationIds.get(key);
-    if (!correlationId) throw standardErrors.rpc.internal('Correlation ID not found');
     return correlationId;
   },
   set: (key: object, correlationId: string) => {
