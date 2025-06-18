@@ -36,7 +36,6 @@ export class WalletLinkConnection {
   private destroyed = false;
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
-  private heartbeatIntervalId?: number;
   private reconnectAttempts = 0;
   private visibilityChangeHandler?: () => void;
   private focusHandler?: () => void;
@@ -49,6 +48,7 @@ export class WalletLinkConnection {
   private cipher: WalletLinkCipher;
   private ws: WalletLinkWebSocket;
   private http: WalletLinkHTTP;
+  private heartbeatWorker?: Worker;
   private readonly linkAPIUrl: string;
   private readonly WebSocketClass: typeof WebSocket;
 
@@ -90,15 +90,9 @@ export class WalletLinkConnection {
       let connected = false;
       switch (state) {
         case ConnectionState.DISCONNECTED:
-          // Clear heartbeat timer when disconnected
-          if (this.heartbeatIntervalId) {
-            clearInterval(this.heartbeatIntervalId);
-            this.heartbeatIntervalId = undefined;
-          }
-
-          // Reset lastHeartbeatResponse to prevent false timeout on reconnection
-          this.lastHeartbeatResponse = 0;
-
+          // Stop heartbeat when disconnected
+          this.stopHeartbeat();
+          
           // Reset connected state to false on disconnect
           connected = false;
 
@@ -168,24 +162,9 @@ export class WalletLinkConnection {
           this.connected = connected;
 
           // send heartbeat every n seconds while connected
-          // if CONNECTED, start the heartbeat timer
-          // first timer event updates lastHeartbeat timestamp
-          // subsequent calls send heartbeat message
+          // if CONNECTED, start the heartbeat timer using WebWorker
           this.updateLastHeartbeat();
-
-          // Clear existing heartbeat timer
-          if (this.heartbeatIntervalId) {
-            clearInterval(this.heartbeatIntervalId);
-          }
-
-          this.heartbeatIntervalId = window.setInterval(() => {
-            this.heartbeat();
-          }, HEARTBEAT_INTERVAL);
-
-          // Send an immediate heartbeat
-          setTimeout(() => {
-            this.heartbeat();
-          }, 100);
+          this.startHeartbeat();
 
           break;
 
@@ -324,11 +303,8 @@ export class WalletLinkConnection {
     // Clear the active instance reference
     this.activeWsInstance = undefined;
 
-    // Clear heartbeat timer
-    if (this.heartbeatIntervalId) {
-      clearInterval(this.heartbeatIntervalId);
-      this.heartbeatIntervalId = undefined;
-    }
+    // Stop heartbeat worker
+    this.stopHeartbeat();
 
     // Remove event listeners
     if (this.visibilityChangeHandler) {
@@ -481,21 +457,62 @@ export class WalletLinkConnection {
     this.lastHeartbeatResponse = Date.now();
   }
 
+  private startHeartbeat(): void {
+    if (this.heartbeatWorker) {
+      this.heartbeatWorker.terminate();
+    }
+
+    try {
+      // We put the heartbeat interval on a worker to avoid dropping the websocket connection when the webpage is backgrounded.
+      const workerUrl = new URL('./HeartbeatWorker.js', import.meta.url);
+      this.heartbeatWorker = new Worker(workerUrl, { type: 'module' });
+      this.setupWorkerListeners();
+      
+      this.heartbeatWorker.postMessage({ type: 'start' });
+    } catch (error) {
+      console.warn('Failed to create external heartbeat worker', error);
+    }
+  }
+
+  private setupWorkerListeners(): void {
+    if (!this.heartbeatWorker) return;
+
+    this.heartbeatWorker.addEventListener('message', (event: MessageEvent<{ type: 'heartbeat' | 'started' | 'stopped' }>) => {
+      const { type } = event.data;
+      
+      switch (type) {
+        case 'heartbeat':
+          this.heartbeat();
+          break;
+        case 'started':
+        case 'stopped':
+          // noop
+          break;
+      }
+    });
+
+    this.heartbeatWorker.addEventListener('error', (error) => {
+      console.error('Heartbeat worker error:', error);
+    });
+  }
+
+  private stopHeartbeat(): void {
+    if (this.heartbeatWorker) {
+      this.heartbeatWorker.postMessage({ type: 'stop' });
+      this.heartbeatWorker.terminate();
+      this.heartbeatWorker = undefined;
+    }
+  }
+
   private heartbeat(): void {
     if (Date.now() - this.lastHeartbeatResponse > HEARTBEAT_INTERVAL * 2) {
       this.ws.disconnect();
       return;
     }
-
-    // Only send heartbeat if we're connected
-    if (!this.connected) {
-      return;
-    }
-
     try {
       this.ws.sendData('h');
-    } catch (_error) {
-      // Error sending heartbeat
+    } catch {
+      // noop
     }
   }
 

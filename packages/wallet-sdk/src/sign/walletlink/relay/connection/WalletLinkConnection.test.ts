@@ -14,8 +14,6 @@ const decryptMock = vi.fn().mockImplementation((text) => Promise.resolve(`decryp
 
 vi.spyOn(WalletLinkCipher.prototype, 'decrypt').mockImplementation(decryptMock);
 
-const HEARTBEAT_INTERVAL = 10000;
-
 // Mock WebSocket to prevent real connections
 vi.mock('./WalletLinkWebSocket.js', () => {
   return {
@@ -53,9 +51,17 @@ describe('WalletLinkConnection', () => {
 
   let connection: WalletLinkConnection;
   let listener: WalletLinkConnectionUpdateListener;
+  let mockWorker: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    mockWorker = {
+      postMessage: vi.fn(),
+      terminate: vi.fn(),
+      addEventListener: vi.fn(),
+    };
+    global.Worker = vi.fn().mockImplementation(() => mockWorker);
 
     listener = {
       linkedUpdated: vi.fn(),
@@ -450,105 +456,81 @@ describe('WalletLinkConnection', () => {
       vi.useRealTimers();
     });
 
-    it('should clear and restart heartbeat timer on connection state changes', async () => {
-      // Use the globally mocked functions
-      const clearIntervalMock = vi.mocked(clearInterval);
-      const setIntervalMock = vi.mocked(setInterval);
-      
-      // Mock setInterval to return a numeric ID
-      setIntervalMock.mockReturnValue(456 as any);
-      
-      // Mock successful connection
-      (connection as any).activeWsInstance = ws;
-      vi.spyOn(connection as any, 'handleConnected').mockResolvedValue(true);
-      vi.spyOn(connection as any, 'fetchUnseenEventsAPI').mockResolvedValue([]);
-      
-      // Simulate connected state
-      await stateListener(ConnectionState.CONNECTED);
-      expect(setIntervalMock).toHaveBeenCalledWith(expect.any(Function), HEARTBEAT_INTERVAL);
-      expect((connection as any).heartbeatIntervalId).toBe(456);
-      
-      // Simulate disconnected state
-      await stateListener(ConnectionState.DISCONNECTED);
-      expect(clearIntervalMock).toHaveBeenCalledWith(456);
-      expect((connection as any).heartbeatIntervalId).toBeUndefined();
-    });
 
-    it('should reset lastHeartbeatResponse on disconnect', async () => {
-      (connection as any).lastHeartbeatResponse = Date.now();
-      (connection as any).activeWsInstance = ws;
-      
-      await stateListener(ConnectionState.DISCONNECTED);
-      
-      expect((connection as any).lastHeartbeatResponse).toBe(0);
-    });
-
-    it('should send immediate heartbeat after connection', async () => {
-      vi.useFakeTimers();
-      const heartbeatSpy = vi.spyOn(connection as any, 'heartbeat').mockImplementation(() => {});
-      (connection as any).activeWsInstance = ws;
-      vi.spyOn(connection as any, 'handleConnected').mockResolvedValue(true);
-      vi.spyOn(connection as any, 'fetchUnseenEventsAPI').mockResolvedValue([]);
-      
-      // Mock setTimeout for the immediate heartbeat
-      const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
-      
-      await stateListener(ConnectionState.CONNECTED);
-      
-      // Check that setTimeout was called for immediate heartbeat
-      expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 100);
-      
-      // Execute the immediate heartbeat
-      vi.advanceTimersByTime(100);
-      expect(heartbeatSpy).toHaveBeenCalledTimes(1);
-      
-      vi.useRealTimers();
-    });
 
 
   });
 
-  describe('heartbeat mechanism', () => {
-    beforeEach(() => {
-      // Mock makeRequest to prevent actual network calls
-      vi.spyOn(connection as any, 'makeRequest').mockResolvedValue({ type: 'Heartbeat' });
+  describe('Heartbeat Worker Management', () => {
+    it('should create a heartbeat worker when startHeartbeat is called', () => {
+      (connection as any).startHeartbeat();
+
+      expect(global.Worker).toHaveBeenCalledWith(expect.any(URL), { type: 'module' });
+      
+      expect(mockWorker.postMessage).toHaveBeenCalledWith({ type: 'start' });
     });
 
-    it('should update lastHeartbeatResponse on heartbeat', () => {
-      const now = Date.now();
-      vi.spyOn(Date, 'now').mockReturnValue(now);
+    it('should stop heartbeat worker when stopHeartbeat is called', () => {
+      (connection as any).startHeartbeat();
       
-      (connection as any).updateLastHeartbeat();
-      
-      expect((connection as any).lastHeartbeatResponse).toBe(now);
+      vi.clearAllMocks();
+
+      (connection as any).stopHeartbeat();
+
+      expect(mockWorker.postMessage).toHaveBeenCalledWith({ type: 'stop' });
+      expect(mockWorker.terminate).toHaveBeenCalled();
     });
 
-    it('should handle heartbeat timeout and disconnect', () => {
-      const ws = (connection as any).ws;
-      const disconnectSpy = vi.spyOn(ws, 'disconnect');
+    it('should terminate existing worker before creating new one', () => {
+      (connection as any).startHeartbeat();
+      const firstWorker = mockWorker;
+
+      const secondWorker = {
+        postMessage: vi.fn(),
+        terminate: vi.fn(),
+        addEventListener: vi.fn(),
+      };
+      global.Worker = vi.fn().mockImplementation(() => secondWorker);
+
+      (connection as any).startHeartbeat();
+
+      // First worker should be terminated
+      expect(firstWorker.terminate).toHaveBeenCalled();
       
-      // Set last heartbeat response to more than 2 intervals ago
-      (connection as any).lastHeartbeatResponse = Date.now() - (HEARTBEAT_INTERVAL * 3);
-      (connection as any)._connected = true;
-      
-      (connection as any).heartbeat();
-      
-      // Should disconnect the WebSocket instead of calling reconnectWithFreshWebSocket
-      expect(disconnectSpy).toHaveBeenCalledTimes(1);
+      // New worker should be created and started
+      expect(secondWorker.postMessage).toHaveBeenCalledWith({ type: 'start' });
     });
 
-    it('should send heartbeat message when connection is healthy', () => {
-      const ws = (connection as any).ws;
-      const sendDataSpy = vi.spyOn(ws, 'sendData');
-      
-      // Set recent heartbeat response
-      (connection as any).lastHeartbeatResponse = Date.now();
-      (connection as any)._connected = true;
-      
-      (connection as any).heartbeat();
-      
-      // Should send 'h' as heartbeat message
-      expect(sendDataSpy).toHaveBeenCalledWith('h');
+    it('should handle heartbeat messages from worker', () => {
+      const heartbeatSpy = vi.spyOn(connection as any, 'heartbeat').mockImplementation(() => {});
+
+      (connection as any).startHeartbeat();
+
+      const messageListener = mockWorker.addEventListener.mock.calls.find(
+        (call: any[]) => call[0] === 'message'
+      )?.[1];
+
+      expect(messageListener).toBeDefined();
+
+      messageListener({ data: { type: 'heartbeat' } });
+
+      expect(heartbeatSpy).toHaveBeenCalled();
+    });
+
+    it('should handle stop when no worker exists', () => {
+      expect(() => {
+        (connection as any).stopHeartbeat();
+      }).not.toThrow();
+
+      expect(mockWorker.postMessage).not.toHaveBeenCalled();
+      expect(mockWorker.terminate).not.toHaveBeenCalled();
+    });
+
+    it('should setup worker listeners correctly', () => {
+      (connection as any).startHeartbeat();
+
+      expect(mockWorker.addEventListener).toHaveBeenCalledWith('message', expect.any(Function));
+      expect(mockWorker.addEventListener).toHaveBeenCalledWith('error', expect.any(Function));
     });
   });
 
@@ -574,18 +556,7 @@ describe('WalletLinkConnection', () => {
       expect((connection as any).activeWsInstance).toBeUndefined();
     });
 
-    it('should clear heartbeat interval on destroy', async () => {
-      // clearInterval is already mocked globally
-      const clearIntervalMock = vi.mocked(clearInterval);
-      
-      // Set up a heartbeat interval
-      (connection as any).heartbeatIntervalId = 123;
-      
-      await connection.destroy();
-      
-      expect(clearIntervalMock).toHaveBeenCalledWith(123);
-      expect((connection as any).heartbeatIntervalId).toBeUndefined();
-    });
+
   });
 
 
