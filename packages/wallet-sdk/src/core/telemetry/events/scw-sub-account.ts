@@ -6,7 +6,7 @@ export const logSubAccountRequestStarted = ({
   correlationId,
 }: {
   method: string;
-  correlationId: string;
+  correlationId: string | undefined;
 }) => {
   logEvent(
     'scw_sub_account.request.started',
@@ -26,7 +26,7 @@ export const logSubAccountRequestCompleted = ({
   correlationId,
 }: {
   method: string;
-  correlationId: string;
+  correlationId: string | undefined;
 }) => {
   logEvent(
     'scw_sub_account.request.completed',
@@ -47,7 +47,7 @@ export const logSubAccountRequestError = ({
   errorMessage,
 }: {
   method: string;
-  correlationId: string;
+  correlationId: string | undefined;
   errorMessage: string;
 }) => {
   logEvent(
@@ -69,7 +69,7 @@ export const logAddOwnerStarted = ({
   correlationId,
 }: {
   method: string;
-  correlationId: string;
+  correlationId: string | undefined;
 }) => {
   logEvent(
     'scw_sub_account.add_owner.started',
@@ -89,7 +89,7 @@ export const logAddOwnerCompleted = ({
   correlationId,
 }: {
   method: string;
-  correlationId: string;
+  correlationId: string | undefined;
 }) => {
   logEvent(
     'scw_sub_account.add_owner.completed',
@@ -110,7 +110,7 @@ export const logAddOwnerError = ({
   errorMessage,
 }: {
   method: string;
-  correlationId: string;
+  correlationId: string | undefined;
   errorMessage: string;
 }) => {
   logEvent(
@@ -132,7 +132,7 @@ export const logInsufficientBalanceErrorHandlingStarted = ({
   correlationId,
 }: {
   method: string;
-  correlationId: string;
+  correlationId: string | undefined;
 }) => {
   logEvent(
     'scw_sub_account.insufficient_balance.error_handling.started',
@@ -152,7 +152,7 @@ export const logInsufficientBalanceErrorHandlingCompleted = ({
   correlationId,
 }: {
   method: string;
-  correlationId: string;
+  correlationId: string | undefined;
 }) => {
   logEvent(
     'scw_sub_account.insufficient_balance.error_handling.completed',
@@ -173,7 +173,7 @@ export const logInsufficientBalanceErrorHandlingError = ({
   errorMessage,
 }: {
   method: string;
-  correlationId: string;
+  correlationId: string | undefined;
   errorMessage: string;
 }) => {
   logEvent(
