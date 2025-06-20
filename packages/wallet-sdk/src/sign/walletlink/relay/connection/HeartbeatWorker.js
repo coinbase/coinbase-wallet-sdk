@@ -12,7 +12,14 @@ const HEARTBEAT_INTERVAL = 10000;
 let heartbeatInterval;
 
 // Listen for messages from the main thread
+const TRUSTED_ORIGIN = 'https://www.example.com'; // Replace with the actual trusted origin
+
 self.addEventListener('message', (event) => {
+  if (event.origin !== TRUSTED_ORIGIN) {
+    console.warn('Untrusted origin:', event.origin);
+    return; // Ignore messages from untrusted origins
+  }
+
   const { type } = event.data;
 
   switch (type) {
