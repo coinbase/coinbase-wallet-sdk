@@ -97,36 +97,44 @@ export class SCWSigner implements Signer {
   async handshake(args: RequestArguments) {
     const correlationId = correlationIds.get(args);
     logHandshakeStarted({ method: args.method, correlationId });
-    // Open the popup before constructing the request message.
-    // This is to ensure that the popup is not blocked by some browsers (i.e. Safari)
-    await this.communicator.waitForPopupLoaded?.();
 
-    const handshakeMessage = await this.createRequestMessage({
-      handshake: {
-        method: args.method,
-        params: args.params ?? [],
-      },
-    }, correlationId);
-    const response: RPCResponseMessage =
-      await this.communicator.postRequestAndWaitForResponse(handshakeMessage);
+    try {
+      // Open the popup before constructing the request message.
+      // This is to ensure that the popup is not blocked by some browsers (i.e. Safari)
+      await this.communicator.waitForPopupLoaded?.();
 
-    // store peer's public key
-    if ('failure' in response.content) {
+      const handshakeMessage = await this.createRequestMessage(
+        {
+          handshake: {
+            method: args.method,
+            params: args.params ?? [],
+          },
+        },
+        correlationId
+      );
+      const response: RPCResponseMessage =
+        await this.communicator.postRequestAndWaitForResponse(handshakeMessage);
+
+      // store peer's public key
+      if ('failure' in response.content) {
+        throw response.content.failure;
+      }
+
+      const peerPublicKey = await importKeyFromHexString('public', response.sender);
+      await this.keyManager.setPeerPublicKey(peerPublicKey);
+
+      const decrypted = await this.decryptResponseMessage(response);
+
+      this.handleResponse(args, decrypted);
+      logHandshakeCompleted({ method: args.method, correlationId });
+    } catch (error) {
       logHandshakeError({
         method: args.method,
         correlationId,
-        errorMessage: response.content.failure.message,
+        errorMessage: parseErrorMessageFromAny(error),
       });
-      throw response.content.failure;
+      throw error;
     }
-
-    const peerPublicKey = await importKeyFromHexString('public', response.sender);
-    await this.keyManager.setPeerPublicKey(peerPublicKey);
-
-    const decrypted = await this.decryptResponseMessage(response);
-
-    this.handleResponse(args, decrypted);
-    logHandshakeCompleted({ method: args.method, correlationId });
   }
 
   async request(request: RequestArguments) {
