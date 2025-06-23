@@ -119,3 +119,25 @@ export const logRequestCompleted = ({
     AnalyticsEventImportance.high
   );
 };
+
+export const logWalletLinkConnectionConnectionFailed = () => {
+  logEvent(
+    'walletlink_signer.walletlink_connection.connection_failed',
+    {
+      action: ActionType.measurement,
+      componentType: ComponentType.unknown,
+    },
+    AnalyticsEventImportance.high
+  );
+};
+
+export const logWalletLinkConnectionFetchUnseenEventsFailed = () => {
+  logEvent(
+    'walletlink_signer.walletlink_connection.fetch_unseen_events_failed',
+    {
+      action: ActionType.measurement,
+      componentType: ComponentType.unknown,
+    },
+    AnalyticsEventImportance.high
+  );
+};
