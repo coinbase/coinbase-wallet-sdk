@@ -39,7 +39,9 @@ export async function fetchSignerType(params: {
   callback: ProviderEventCallback;
 }): Promise<SignerType> {
   const { communicator, metadata, handshakeRequest, callback } = params;
-  listenForWalletLinkSessionRequest(communicator, metadata, callback).catch(() => {});
+  listenForWalletLinkSessionRequest(communicator, metadata, callback, handshakeRequest).catch(
+    () => {}
+  );
 
   const request: ConfigMessage & { id: MessageID } = {
     id: crypto.randomUUID(),
@@ -80,7 +82,8 @@ export function createSigner(params: {
 async function listenForWalletLinkSessionRequest(
   communicator: Communicator,
   metadata: AppMetadata,
-  callback: ProviderEventCallback
+  callback: ProviderEventCallback,
+  handshakeRequest: RequestArguments
 ) {
   await communicator.onMessage<ConfigMessage>(({ event }) => event === 'WalletLinkSessionRequest');
 
@@ -98,7 +101,7 @@ async function listenForWalletLinkSessionRequest(
   } as ConfigMessage);
 
   // wait for handshake to complete
-  await walletlink.handshake();
+  await walletlink.handshake(handshakeRequest);
 
   // send connected status to popup
   communicator.postMessage({
