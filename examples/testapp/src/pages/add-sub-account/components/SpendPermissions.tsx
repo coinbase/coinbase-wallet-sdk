@@ -1,7 +1,7 @@
 import { Box, Button } from '@chakra-ui/react';
 import { createCoinbaseWalletSDK, getCryptoKeyAccount } from '@coinbase/wallet-sdk';
 import { useCallback, useState } from 'react';
-import { Hex, numberToHex } from 'viem';
+import { encodeFunctionData, Hex, numberToHex } from 'viem';
 import { baseSepolia } from 'viem/chains';
 
 import {
@@ -45,6 +45,7 @@ export function SpendPermissions({
       extraData: data.extraData,
     };
 
+
     try {
       const response = await provider?.request({
         method: 'wallet_sendCalls',
@@ -56,15 +57,21 @@ export function SpendPermissions({
             calls: [
               {
                 to: SPEND_PERMISSION_MANAGER_ADDRESS,
-                abi: spendPermissionManagerAbi,
-                functionName: 'approveWithSignature',
-                args: [spendPermission, signature],
+                data: encodeFunctionData({
+                  abi: spendPermissionManagerAbi,
+                  functionName: 'approveWithSignature',
+                  args: [spendPermission, signature],
+                }),
+                value: '0x0',
               },
               {
                 to: SPEND_PERMISSION_MANAGER_ADDRESS,
-                abi: spendPermissionManagerAbi,
-                functionName: 'spend',
-                args: [spendPermission, BigInt(1)],
+                data: encodeFunctionData({
+                  abi: spendPermissionManagerAbi,
+                  functionName: 'spend',
+                  args: [spendPermission, BigInt(1)],
+                }),
+                value: '0x0',
               },
               // extra calls...
             ],
