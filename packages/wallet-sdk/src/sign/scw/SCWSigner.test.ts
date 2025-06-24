@@ -1034,6 +1034,61 @@ describe('SCWSigner', () => {
       expect(handleAddSubAccountOwner).toHaveBeenCalled();
     });
 
+    it('should not handle insufficient balance error if external funding source data is not provided', async () => {
+      (createSubAccountSigner as Mock).mockImplementation(async () => {
+        const request = vi.fn((args) => {
+          throw new HttpRequestError({
+            body: args,
+            url: 'https://eth-rpc.example.com/1',
+            details: JSON.stringify({
+              code: -32090,
+              message: 'transfer amount exceeds balance',
+              data: undefined,
+            }),
+          });
+        });
+
+        return {
+          request,
+        };
+      });
+
+      await signer.request({
+        method: 'eth_requestAccounts',
+        params: [],
+      });
+
+      const mockRequest: RequestArguments = {
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            calls: [
+              {
+                to: '0x',
+                value: '0x0',
+                data: '0x',
+              },
+            ],
+            chainId: numberToHex(84532),
+            from: subAccountAddress,
+            version: '1.0',
+          },
+        ],
+      };
+
+      signer = new SCWSigner({
+        metadata: mockMetadata,
+        communicator: mockCommunicator,
+        callback: mockCallback,
+      });
+
+      await expect(signer.request(mockRequest)).rejects.toThrow();
+
+      expect(handleInsufficientBalanceError).not.toHaveBeenCalled();
+
+      (createSubAccountSigner as Mock).mockRestore();
+    });
+
     it('should handle insufficient balance error if external funding source is present', async () => {
       (createSubAccountSigner as Mock).mockImplementation(async () => {
         const request = vi.fn((args) => {
