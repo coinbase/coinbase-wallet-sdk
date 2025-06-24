@@ -743,6 +743,10 @@ export class SCWSigner implements Signer {
         throw error;
       }
 
+      if (!errorObject.data) {
+        throw error;
+      }
+
       const correlationId = correlationIds.get(request);
       logInsufficientBalanceErrorHandlingStarted({ method: request.method, correlationId });
       try {

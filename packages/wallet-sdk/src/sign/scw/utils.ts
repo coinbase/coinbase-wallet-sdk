@@ -424,11 +424,11 @@ export async function presentSubAccountFundingDialog() {
       logSnackbarShown({ snackbarContext: 'sub_account_insufficient_balance' });
       snackbar.presentItem({
         autoExpand: true,
-        message: 'Insufficient spend limit. Choose how to proceed:',
+        message: 'Insufficient spend permission. Choose how to proceed:',
         menuItems: [
           {
             isRed: false,
-            info: 'Create new Spend Limit',
+            info: 'Create new Spend Permission',
             svgWidth: '10',
             svgHeight: '11',
             path: '',
