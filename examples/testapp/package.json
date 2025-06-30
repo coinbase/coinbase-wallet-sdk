@@ -19,6 +19,8 @@
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@metamask/eth-sig-util": "^7.0.0",
+    "@privy-io/react-auth": "latest",
+    "@solana/web3.js": "^1.98.0",
     "framer-motion": "^10.13.1",
     "next": "^14.2.10",
     "react": "^18.2.0",

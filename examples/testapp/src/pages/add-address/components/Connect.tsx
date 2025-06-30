@@ -21,7 +21,7 @@ export function Connect({ sdk }: { sdk: ReturnType<typeof createCoinbaseWalletSD
   return (
     <>
       <Button w="full" onClick={handleConnect}>
-        Connect
+        Connect coinbase smart wallet
       </Button>
       {state && (
         <Box
