@@ -155,7 +155,7 @@ export class SCWSigner implements Signer {
     }
   }
 
-  async _request(request: RequestArguments) {
+  async  _request(request: RequestArguments) {
     if (this.accounts.length === 0) {
       switch (request.method) {
         case 'eth_requestAccounts': {
@@ -179,7 +179,7 @@ export class SCWSigner implements Signer {
           this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
           return this.accounts;
         }
-        case 'wallet_switchEthereumChain': {
+        case 'wallet_switchEthereumChain': { 
           assertParamsChainId(request.params);
           this.chain.id = Number(request.params[0].chainId);
           return;
@@ -280,6 +280,15 @@ export class SCWSigner implements Signer {
         return this.sendRequestToPopup(modifiedRequest);
       }
       // Sub Account Support
+      case 'wallet_getSubAccounts':
+        const client = getClient(this.chain.id);
+        assertPresence(
+          client,
+          standardErrors.rpc.internal(
+            `client not found for chainId ${this.chain.id} when fetching sub accounts`
+          )
+        );
+        return client.request(request);
       case 'wallet_addSubAccount':
         return this.addSubAccount(request);
       case 'coinbase_fetchPermissions': {
