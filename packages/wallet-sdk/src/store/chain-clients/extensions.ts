@@ -33,7 +33,7 @@ export function createExtendedClient(baseClient: PublicClient): PublicClient & E
     const extensions = {} as ExtendedRpcMethods;
     
     extendedRpcMethods.forEach((config) => {
-      extensions[config.methodName] = (args: any) => config.handler(client, args);
+      extensions[config.methodName] = (args: Parameters<ExtendedRpcMethods[typeof config.methodName]>[0]) => config.handler(client, args);
     });
     
     return extensions;

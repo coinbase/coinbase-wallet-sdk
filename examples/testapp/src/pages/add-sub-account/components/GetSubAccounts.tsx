@@ -7,7 +7,14 @@ type GetSubAccountsProps = {
 };
 
 export function GetSubAccounts({ sdk }: GetSubAccountsProps) {
-  const [subAccounts, setSubAccounts] = useState<any>();
+  const [subAccounts, setSubAccounts] = useState<{
+    subAccounts: {
+      address: string;
+      factory: string;
+      factoryCalldata: string;
+    }[];
+  }>();
+  const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGetSubAccounts = useCallback(async () => {
@@ -33,10 +40,10 @@ export function GetSubAccounts({ sdk }: GetSubAccountsProps) {
       });
 
       console.info('getSubAccounts response', response);
-      setSubAccounts(response);
+      setSubAccounts(response as { subAccounts: { address: string; factory: string; factoryCalldata: string; }[] });
     } catch (error) {
       console.error('Error getting sub accounts:', error);
-      setSubAccounts({ error: error instanceof Error ? error.message : 'Unknown error' });
+      setError(error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setIsLoading(false);
     }
@@ -60,6 +67,21 @@ export function GetSubAccounts({ sdk }: GetSubAccountsProps) {
           whiteSpace="pre-wrap"
         >
           {JSON.stringify(subAccounts, null, 2)}
+        </Box>
+      )}
+      {error && (
+        <Box
+          as="pre"
+          w="full"
+          p={2}
+          bg="red.900"
+          borderRadius="md"
+          border="1px solid"
+          borderColor="red.700"
+          overflow="auto"
+          whiteSpace="pre-wrap"
+        >
+          {error}
         </Box>
       )}
     </>

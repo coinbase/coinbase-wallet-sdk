@@ -281,7 +281,7 @@ export class SCWSigner implements Signer {
         return this.sendRequestToPopup(modifiedRequest);
       }
       // Sub Account Support
-      case 'wallet_getSubAccounts':
+      case 'wallet_getSubAccounts': {
         const client = getClient(this.chain.id);
         assertPresence(
           client,
@@ -293,6 +293,7 @@ export class SCWSigner implements Signer {
           method: 'wallet_getSubAccount',
           params: request.params as GetSubAccountSchema['Parameters'],
         });
+      }
       case 'wallet_addSubAccount':
         return this.addSubAccount(request);
       case 'coinbase_fetchPermissions': {
