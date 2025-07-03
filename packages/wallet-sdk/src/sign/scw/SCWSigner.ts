@@ -159,23 +159,21 @@ export class SCWSigner implements Signer {
     if (this.accounts.length === 0) {
       switch (request.method) {
         case 'eth_requestAccounts': {
-          if (store.subAccountsConfig.get()?.enableAutoSubAccounts) {
-            // Wait for the popup to be loaded before making async calls
-            await this.communicator.waitForPopupLoaded?.();
-            await initSubAccountConfig();
-            // This will populate the store with the sub account
-            await this.request({
-              method: 'wallet_connect',
-              params: [
-                {
-                  version: '1',
-                  capabilities: {
-                    ...(store.subAccountsConfig.get()?.capabilities ?? {}),
-                  },
+          // Wait for the popup to be loaded before making async calls
+          await this.communicator.waitForPopupLoaded?.();
+          await initSubAccountConfig();
+          // This will populate the store with the sub account
+          await this.request({
+            method: 'wallet_connect',
+            params: [
+              {
+                version: '1',
+                capabilities: {
+                  ...(store.subAccountsConfig.get()?.capabilities ?? {}),
                 },
-              ],
-            });
-          }
+              },
+            ],
+          });
           this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
           return this.accounts;
         }
@@ -375,6 +373,16 @@ export class SCWSigner implements Signer {
         }
 
         this.callback?.('accountsChanged', accounts_);
+        break;
+      }
+      case 'wallet_addSubAccount': {
+        assertSubAccount(result.value);
+        const subAccount = result.value;
+        store.subAccounts.set(subAccount);
+
+        // Sub account becomes the active account
+        this.accounts = prependWithoutDuplicates(this.accounts, subAccount.address);
+        this.callback?.('accountsChanged', this.accounts);
         break;
       }
       default:
@@ -605,15 +613,7 @@ export class SCWSigner implements Signer {
 
     const response = await this.sendRequestToPopup(request);
     assertSubAccount(response);
-    // Only store the sub account information after the popup has been closed and the
-    // user has confirmed the creation
-    store.subAccounts.set({
-      address: response.address,
-      factory: response.factory,
-      factoryData: response.factoryData,
-    });
-    this.accounts = prependWithoutDuplicates(this.accounts, response.address);
-    this.callback?.('accountsChanged', this.accounts);
+
     return response;
   }
 
