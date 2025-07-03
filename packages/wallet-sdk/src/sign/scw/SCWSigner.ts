@@ -8,6 +8,7 @@ import { RPCResponse } from ':core/message/RPCResponse.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
 import { FetchPermissionsResponse } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { WalletConnectRequest, WalletConnectResponse } from ':core/rpc/wallet_connect.js';
+import { GetSubAccountSchema } from ':core/rpc/wallet_getSubAccount.js';
 import {
   logHandshakeCompleted,
   logHandshakeError,
@@ -155,7 +156,7 @@ export class SCWSigner implements Signer {
     }
   }
 
-  async  _request(request: RequestArguments) {
+  async _request(request: RequestArguments) {
     if (this.accounts.length === 0) {
       switch (request.method) {
         case 'eth_requestAccounts': {
@@ -288,7 +289,10 @@ export class SCWSigner implements Signer {
             `client not found for chainId ${this.chain.id} when fetching sub accounts`
           )
         );
-        return client.request(request);
+        return client.request<GetSubAccountSchema>({
+          method: 'wallet_getSubAccount',
+          params: request.params as GetSubAccountSchema['Parameters'],
+        });
       case 'wallet_addSubAccount':
         return this.addSubAccount(request);
       case 'coinbase_fetchPermissions': {
