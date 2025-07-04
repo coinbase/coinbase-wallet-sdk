@@ -8,6 +8,7 @@ import { RPCResponse } from ':core/message/RPCResponse.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
 import { FetchPermissionsResponse } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { WalletConnectRequest, WalletConnectResponse } from ':core/rpc/wallet_connect.js';
+import { GetSubAccountSchema } from ':core/rpc/wallet_getSubAccount.js';
 import {
   logHandshakeCompleted,
   logHandshakeError,
@@ -177,7 +178,7 @@ export class SCWSigner implements Signer {
           this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
           return this.accounts;
         }
-        case 'wallet_switchEthereumChain': {
+        case 'wallet_switchEthereumChain': { 
           assertParamsChainId(request.params);
           this.chain.id = Number(request.params[0].chainId);
           return;
@@ -278,6 +279,19 @@ export class SCWSigner implements Signer {
         return this.sendRequestToPopup(modifiedRequest);
       }
       // Sub Account Support
+      case 'wallet_getSubAccounts': {
+        const client = getClient(this.chain.id);
+        assertPresence(
+          client,
+          standardErrors.rpc.internal(
+            `client not found for chainId ${this.chain.id} when fetching sub accounts`
+          )
+        );
+        return client.request<GetSubAccountSchema>({
+          method: 'wallet_getSubAccount',
+          params: request.params as GetSubAccountSchema['Parameters'],
+        });
+      }
       case 'wallet_addSubAccount':
         return this.addSubAccount(request);
       case 'coinbase_fetchPermissions': {

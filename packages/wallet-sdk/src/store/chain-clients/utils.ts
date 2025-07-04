@@ -1,8 +1,9 @@
-import { createPublicClient, defineChain, http, PublicClient } from 'viem';
+import { createPublicClient, defineChain, http } from 'viem';
 import { BundlerClient, createBundlerClient } from 'viem/account-abstraction';
 
-import { ChainClients } from './store.js';
 import { RPCResponseNativeCurrency } from ':core/message/RPCResponse.js';
+import { createExtendedClient } from './extensions.js';
+import { ChainClients } from './store.js';
 
 export type SDKChain = {
   id: number;
@@ -30,12 +31,16 @@ export function createClients(chains: SDKChain[]) {
       },
     });
 
-    const client = createPublicClient({
+    const baseClient = createPublicClient({
       chain: viemchain,
       transport: http(c.rpcUrl),
     });
+
+    // Create extended client with all custom RPC methods
+    const client = createExtendedClient(baseClient);
+
     const bundlerClient = createBundlerClient({
-      client,
+      client: baseClient,
       transport: http(c.rpcUrl),
     });
 
@@ -48,7 +53,7 @@ export function createClients(chains: SDKChain[]) {
   });
 }
 
-export function getClient(chainId: number): PublicClient | undefined {
+export function getClient(chainId: number) {
   return ChainClients.getState()[chainId]?.client;
 }
 
