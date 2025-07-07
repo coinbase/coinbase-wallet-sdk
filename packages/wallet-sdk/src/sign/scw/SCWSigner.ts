@@ -282,13 +282,13 @@ export class SCWSigner implements Signer {
       }
       // Sub Account Support
       case 'wallet_getSubAccounts': {
-        const client = getClient(this.chain.id);
-        assertPresence(
-          client,
-          standardErrors.rpc.internal(
-            `client not found for chainId ${this.chain.id} when fetching sub accounts`
-          )
-        );
+        const subAccount = store.subAccounts.get();
+        if (subAccount?.address) {
+          return {
+            subAccounts: [subAccount],
+          };
+        }
+
         if (!this.chain.rpcUrl) {
           throw standardErrors.rpc.internal('No RPC URL set for chain');
         }
