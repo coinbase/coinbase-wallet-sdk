@@ -19,6 +19,7 @@ import { AddSubAccount } from './components/AddSubAccount';
 import { AddSubAccountWithoutKeys } from './components/AddSubAccountWithoutKeys';
 import { Connect } from './components/Connect';
 import { GenerateNewSigner } from './components/GenerateNewSigner';
+import { GetSubAccounts } from './components/GetSubAccounts';
 import { GrantSpendPermission } from './components/GrantSpendPermission';
 import { PersonalSign } from './components/PersonalSign';
 import { SendCalls } from './components/SendCalls';
@@ -81,6 +82,7 @@ export default function SubAccounts() {
           onAddSubAccount={setSubAccountAddress}
           signerFn={getSubAccountSigner}
         />
+        <GetSubAccounts sdk={sdk} />
         <AddSubAccountWithoutKeys
           sdk={sdk}
           onAddSubAccount={setSubAccountAddress}
