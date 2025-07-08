@@ -80,6 +80,22 @@ export default function AutoSubAccount() {
     }
   };
 
+  const handleEthAccounts = async () => {
+    if (!provider) return;
+
+    try {
+      const response = await provider.request({
+        method: 'eth_accounts',
+        params: [],
+      });
+      setAccounts(response as string[]);
+      setLastResult(JSON.stringify(response, null, 2));
+    } catch (e) {
+      console.error('error', e);
+      setLastResult(JSON.stringify(e, null, 2));
+    }
+  };
+
   const handleSendTransaction = async () => {
     if (!provider || !accounts.length) return;
 
@@ -353,6 +369,9 @@ export default function AutoSubAccount() {
         </Box>
         <Button w="full" onClick={handleRequestAccounts}>
           eth_requestAccounts
+        </Button>
+        <Button w="full" onClick={handleEthAccounts}>
+          eth_accounts
         </Button>
         <Button w="full" onClick={handleSendTransaction} isDisabled={!accounts.length}>
           eth_sendTransaction

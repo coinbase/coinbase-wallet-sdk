@@ -3,6 +3,7 @@ import { hashTypedData, hexToBigInt, numberToHex } from 'viem';
 import {
   SpendPermissionBatch,
   addSenderToRequest,
+  appendWithoutDuplicates,
   assertFetchPermissionsRequest,
   assertGetCapabilitiesParams,
   assertParamsChainId,
@@ -481,6 +482,16 @@ describe('prependWithoutDuplicates', () => {
 
   it('should not prepend an item to an array if it is already present', () => {
     expect(prependWithoutDuplicates(['1', '2', '3'], '2')).toEqual(['2', '1', '3']);
+  });
+});
+
+describe('appendWithoutDuplicates', () => {
+  it('should append an item to an array without duplicates', () => {
+    expect(appendWithoutDuplicates(['1', '2', '3'], '4')).toEqual(['1', '2', '3', '4']);
+  });
+
+  it('should move an existing item to the end of the array', () => {
+    expect(appendWithoutDuplicates(['1', '2', '3'], '2')).toEqual(['1', '3', '2']);
   });
 });
 

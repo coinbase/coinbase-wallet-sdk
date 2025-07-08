@@ -573,6 +573,17 @@ export function prependWithoutDuplicates<T>(array: T[], item: T): T[] {
   return [item, ...filtered];
 }
 
+/**
+ * Appends an item to an array without duplicates
+ * @param array The array to append to
+ * @param item The item to append
+ * @returns The array with the item appended
+ */
+export function appendWithoutDuplicates<T>(array: T[], item: T): T[] {
+  const filtered = array.filter((i) => i !== item);
+  return [...filtered, item];
+}
+
 export async function getCachedWalletConnectResponse(): Promise<WalletConnectResponse | null> {
   const spendPermissions = store.spendPermissions.get();
   const subAccount = store.subAccounts.get();
