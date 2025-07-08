@@ -8,6 +8,7 @@ import { RPCResponse } from ':core/message/RPCResponse.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
 import { FetchPermissionsResponse } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { WalletConnectRequest, WalletConnectResponse } from ':core/rpc/wallet_connect.js';
+import { GetSubAccountsResponse } from ':core/rpc/wallet_getSubAccount.js';
 import {
   logHandshakeCompleted,
   logHandshakeError,
@@ -177,7 +178,7 @@ export class SCWSigner implements Signer {
           this.callback?.('connect', { chainId: numberToHex(this.chain.id) });
           return this.accounts;
         }
-        case 'wallet_switchEthereumChain': {
+        case 'wallet_switchEthereumChain': { 
           assertParamsChainId(request.params);
           this.chain.id = Number(request.params[0].chainId);
           return;
@@ -278,6 +279,31 @@ export class SCWSigner implements Signer {
         return this.sendRequestToPopup(modifiedRequest);
       }
       // Sub Account Support
+      case 'wallet_getSubAccounts': {
+        const subAccount = store.subAccounts.get();
+        if (subAccount?.address) {
+          return {
+            subAccounts: [subAccount],
+          };
+        }
+
+        if (!this.chain.rpcUrl) {
+          throw standardErrors.rpc.internal('No RPC URL set for chain');
+        }
+        const response = await fetchRPCRequest(request, this.chain.rpcUrl) as GetSubAccountsResponse;
+        assertArrayPresence(response.subAccounts, 'subAccounts');
+        if (response.subAccounts.length > 0) {
+          // cache the sub account
+          assertSubAccount(response.subAccounts[0]);
+          const subAccount = response.subAccounts[0];
+          store.subAccounts.set({
+            address: subAccount.address,
+            factory: subAccount.factory,
+            factoryData: subAccount.factoryData,
+          });
+        }
+        return response;
+      }
       case 'wallet_addSubAccount':
         return this.addSubAccount(request);
       case 'coinbase_fetchPermissions': {
