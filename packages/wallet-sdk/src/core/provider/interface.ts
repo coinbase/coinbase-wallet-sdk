@@ -96,11 +96,6 @@ export type SubAccountOptions = {
    * @returns The owner account that will be used to sign the subaccount transactions.
    */
   toOwnerAccount?: ToOwnerAccountFn;
-  /**
-   * Spend permissions requested on app connect if a matching existing one does not exist.
-   * Only supports native chain tokens currently.
-   */
-  defaultSpendPermissions?: Record<number, SpendPermissionConfig[]>;
 };
 
 export interface ConstructorOptions {

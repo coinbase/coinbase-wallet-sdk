@@ -58,7 +58,6 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
   store.subAccountsConfig.set({
     toOwnerAccount: params.subAccounts?.toOwnerAccount,
     enableAutoSubAccounts: params.subAccounts?.enableAutoSubAccounts,
-    defaultSpendPermissions: params.subAccounts?.defaultSpendPermissions,
   });
 
   // set the options in the store

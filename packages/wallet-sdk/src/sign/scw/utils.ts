@@ -167,10 +167,6 @@ export async function initSubAccountConfig() {
     };
   }
 
-  if (config.defaultSpendPermissions) {
-    capabilities.spendPermissions = config.defaultSpendPermissions;
-  }
-
   // Store the owner account and capabilities in the non-persisted config
   store.subAccountsConfig.set({
     capabilities,
@@ -591,7 +587,8 @@ export async function getCachedWalletConnectResponse(): Promise<WalletConnectRes
       address: account,
       capabilities: {
         subAccounts: subAccount ? [subAccount] : undefined,
-        spendPermissions: spendPermissions.length > 0 ? { permissions: spendPermissions } : undefined,
+        spendPermissions:
+          spendPermissions.length > 0 ? { permissions: spendPermissions } : undefined,
       },
     })
   );
