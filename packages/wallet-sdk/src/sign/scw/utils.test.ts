@@ -3,6 +3,7 @@ import { hashTypedData, hexToBigInt, numberToHex } from 'viem';
 import {
   SpendPermissionBatch,
   addSenderToRequest,
+  appendWithoutDuplicates,
   assertFetchPermissionsRequest,
   assertGetCapabilitiesParams,
   assertParamsChainId,
@@ -120,9 +121,15 @@ describe('assertGetCapabilitiesParams', () => {
     expect(() => assertGetCapabilitiesParams(['0x123'])).toThrow(); // Too short
     expect(() => assertGetCapabilitiesParams(['0x123abc'])).toThrow(); // Too short
     expect(() => assertGetCapabilitiesParams(['xyz123'])).toThrow(); // No 0x prefix
-    expect(() => assertGetCapabilitiesParams(['0x12345678901234567890123456789012345678gg'])).toThrow(); // Invalid hex characters
-    expect(() => assertGetCapabilitiesParams(['0x123456789012345678901234567890123456789'])).toThrow(); // Too short (39 chars)
-    expect(() => assertGetCapabilitiesParams(['0x12345678901234567890123456789012345678901'])).toThrow(); // Too long (41 chars)
+    expect(() =>
+      assertGetCapabilitiesParams(['0x12345678901234567890123456789012345678gg'])
+    ).toThrow(); // Invalid hex characters
+    expect(() =>
+      assertGetCapabilitiesParams(['0x123456789012345678901234567890123456789'])
+    ).toThrow(); // Too short (39 chars)
+    expect(() =>
+      assertGetCapabilitiesParams(['0x12345678901234567890123456789012345678901'])
+    ).toThrow(); // Too long (41 chars)
   });
 
   it('should not throw for valid single parameter (valid Ethereum address)', () => {
@@ -148,7 +155,9 @@ describe('assertGetCapabilitiesParams', () => {
   it('should not throw for valid parameters with filter array', () => {
     expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, []])).not.toThrow();
     expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, ['0x1']])).not.toThrow();
-    expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, ['0x1', '0x2', '0x3']])).not.toThrow();
+    expect(() =>
+      assertGetCapabilitiesParams([VALID_ADDRESS_1, ['0x1', '0x2', '0x3']])
+    ).not.toThrow();
     expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, ['0xabcdef', '0x0']])).not.toThrow();
     expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_2, ['0x1', '0xa']])).not.toThrow();
   });
@@ -473,6 +482,16 @@ describe('prependWithoutDuplicates', () => {
 
   it('should not prepend an item to an array if it is already present', () => {
     expect(prependWithoutDuplicates(['1', '2', '3'], '2')).toEqual(['2', '1', '3']);
+  });
+});
+
+describe('appendWithoutDuplicates', () => {
+  it('should append an item to an array without duplicates', () => {
+    expect(appendWithoutDuplicates(['1', '2', '3'], '4')).toEqual(['1', '2', '3', '4']);
+  });
+
+  it('should not append an item to an array if it is already present', () => {
+    expect(appendWithoutDuplicates(['1', '2', '3'], '2')).toEqual(['1', '2', '3']);
   });
 });
 
