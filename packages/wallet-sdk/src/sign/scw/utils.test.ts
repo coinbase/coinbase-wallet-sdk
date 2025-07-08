@@ -120,9 +120,15 @@ describe('assertGetCapabilitiesParams', () => {
     expect(() => assertGetCapabilitiesParams(['0x123'])).toThrow(); // Too short
     expect(() => assertGetCapabilitiesParams(['0x123abc'])).toThrow(); // Too short
     expect(() => assertGetCapabilitiesParams(['xyz123'])).toThrow(); // No 0x prefix
-    expect(() => assertGetCapabilitiesParams(['0x12345678901234567890123456789012345678gg'])).toThrow(); // Invalid hex characters
-    expect(() => assertGetCapabilitiesParams(['0x123456789012345678901234567890123456789'])).toThrow(); // Too short (39 chars)
-    expect(() => assertGetCapabilitiesParams(['0x12345678901234567890123456789012345678901'])).toThrow(); // Too long (41 chars)
+    expect(() =>
+      assertGetCapabilitiesParams(['0x12345678901234567890123456789012345678gg'])
+    ).toThrow(); // Invalid hex characters
+    expect(() =>
+      assertGetCapabilitiesParams(['0x123456789012345678901234567890123456789'])
+    ).toThrow(); // Too short (39 chars)
+    expect(() =>
+      assertGetCapabilitiesParams(['0x12345678901234567890123456789012345678901'])
+    ).toThrow(); // Too long (41 chars)
   });
 
   it('should not throw for valid single parameter (valid Ethereum address)', () => {
@@ -148,7 +154,9 @@ describe('assertGetCapabilitiesParams', () => {
   it('should not throw for valid parameters with filter array', () => {
     expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, []])).not.toThrow();
     expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, ['0x1']])).not.toThrow();
-    expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, ['0x1', '0x2', '0x3']])).not.toThrow();
+    expect(() =>
+      assertGetCapabilitiesParams([VALID_ADDRESS_1, ['0x1', '0x2', '0x3']])
+    ).not.toThrow();
     expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_1, ['0xabcdef', '0x0']])).not.toThrow();
     expect(() => assertGetCapabilitiesParams([VALID_ADDRESS_2, ['0x1', '0xa']])).not.toThrow();
   });
