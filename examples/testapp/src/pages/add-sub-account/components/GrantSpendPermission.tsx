@@ -91,9 +91,10 @@ export function GrantSpendPermission({
         ],
       })) as string[];
 
+      const universalAddress = accounts[0] as Address;
       const data = {
         chainId: baseSepolia.id,
-        account: accounts[1] as Address,
+        account: universalAddress,
         spender: subAccountAddress as Address,
         token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
         allowance: '0x5AF3107A4000',
@@ -108,7 +109,7 @@ export function GrantSpendPermission({
 
       const response = await provider?.request({
         method: 'eth_signTypedData_v4',
-        params: [accounts[1] as Address, spendPermission],
+        params: [universalAddress, spendPermission],
       });
       console.info('response', response);
       localStorage.setItem('cbwsdk.demo.spend-permission.signature', response as Hex);
