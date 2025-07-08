@@ -51,6 +51,7 @@ describe('createCoinbaseWalletSDK', () => {
       createCoinbaseWalletSDK({
         ...options,
         subAccounts: {
+          // @ts-expect-error - enableAutoSubAccounts is not officially supported yet
           enableAutoSubAccounts: true,
           toOwnerAccount: {} as any,
         },
@@ -233,7 +234,7 @@ describe('createCoinbaseWalletSDK', () => {
         method: 'wallet_sendCalls',
         params: [
           {
-            version: "1",
+            version: '1',
             chainId: '0x1',
             calls: [
               {
@@ -279,7 +280,7 @@ describe('createCoinbaseWalletSDK', () => {
         method: 'wallet_sendCalls',
         params: [
           {
-            version: "1",
+            version: '1',
             chainId: '0x1',
             calls: [
               {
