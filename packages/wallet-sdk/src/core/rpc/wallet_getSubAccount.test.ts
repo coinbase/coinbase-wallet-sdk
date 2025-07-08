@@ -67,4 +67,4 @@ describe('wallet_getSubAccounts schema', () => {
     expect(Array.isArray(response.subAccounts)).toBe(true);
     expect(response.subAccounts.length).toBe(0);
   });
-}); 
+});
