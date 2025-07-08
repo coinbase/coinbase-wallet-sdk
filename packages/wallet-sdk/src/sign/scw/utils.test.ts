@@ -490,8 +490,8 @@ describe('appendWithoutDuplicates', () => {
     expect(appendWithoutDuplicates(['1', '2', '3'], '4')).toEqual(['1', '2', '3', '4']);
   });
 
-  it('should not append an item to an array if it is already present', () => {
-    expect(appendWithoutDuplicates(['1', '2', '3'], '2')).toEqual(['1', '2', '3']);
+  it('should move an existing item to the end of the array', () => {
+    expect(appendWithoutDuplicates(['1', '2', '3'], '2')).toEqual(['1', '3', '2']);
   });
 });
 
