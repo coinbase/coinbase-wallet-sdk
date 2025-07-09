@@ -26,7 +26,6 @@ import {
 } from ':core/telemetry/events/signer-selection.js';
 import { hexStringFromNumber } from ':core/type/util.js';
 import { correlationIds } from ':store/correlation-ids/store.js';
-import { store } from ':store/store.js';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from ':util/provider.js';
 import { Signer } from './sign/interface.js';
 import {
@@ -95,23 +94,17 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
         switch (args.method) {
           case 'eth_requestAccounts': {
             let signerType: SignerType;
-            const subAccountsConfig = store.subAccountsConfig.get();
-            if (subAccountsConfig?.enableAutoSubAccounts) {
+            if (this.preference.options === 'smartWalletOnly') {
               signerType = 'scw';
+              await this._request({ method: 'wallet_connect' });
             } else {
+              // For some reason calling wallet_connect request hangs after requestSignerSelection
               signerType = await this.requestSignerSelection(args);
-            }
-            const signer = this.initSigner(signerType);
-
-            if (signerType === 'scw' && subAccountsConfig?.enableAutoSubAccounts) {
-              await signer.handshake({ method: 'handshake' });
-              // eth_requestAccounts gets translated to wallet_connect at SCWSigner level
-              await signer.request(args);
-            } else {
+              const signer = this.initSigner(signerType);
               await signer.handshake(args);
+              this.signer = signer;
             }
 
-            this.signer = signer;
             storeSignerType(signerType);
             break;
           }
@@ -149,7 +142,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
           }
         }
       }
-      const result = await this.signer.request(args);
+      const result = await this.signer!.request(args);
       return result as T;
     } catch (error) {
       const { code } = error as { code?: number };
