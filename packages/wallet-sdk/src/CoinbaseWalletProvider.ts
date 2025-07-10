@@ -95,6 +95,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
         switch (args.method) {
           case 'eth_requestAccounts': {
             let signerType: SignerType;
+
             const subAccountsConfig = store.subAccountsConfig.get();
             if (subAccountsConfig?.enableAutoSubAccounts) {
               signerType = 'scw';
@@ -103,7 +104,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
             }
             const signer = this.initSigner(signerType);
 
-            if (signerType === 'scw') {
+            if (signerType === 'scw' && subAccountsConfig?.enableAutoSubAccounts) {
               await signer.handshake({ method: 'handshake' });
               // eth_requestAccounts gets translated to wallet_connect at SCWSigner level
               await signer.request(args);
