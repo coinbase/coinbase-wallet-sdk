@@ -1,7 +1,7 @@
+import { CBW_MOBILE_DEEPLINK_URL } from ':core/constants.js';
+import { RelayUI } from './RelayUI.js';
 import { RedirectDialog } from './components/RedirectDialog/RedirectDialog.js';
 import { getLocation } from './components/util.js';
-import { RelayUI } from './RelayUI.js';
-import { CBW_MOBILE_DEEPLINK_URL } from ':core/constants.js';
 
 export class WLMobileRelayUI implements RelayUI {
   private readonly redirectDialog: RedirectDialog;
@@ -35,16 +35,17 @@ export class WLMobileRelayUI implements RelayUI {
   }
 
   openCoinbaseWalletDeeplink(walletLinkUrl?: string): void {
-    this.redirectDialog.present({
-      title: 'Redirecting to Coinbase Wallet...',
-      buttonText: 'Open',
-      onButtonClick: () => {
-        this.redirectToCoinbaseWallet(walletLinkUrl);
-      },
-    });
+    // redirect to coinbase wallet immediately to avoid Safari/Chrome popup(deeplink) blocking
+    this.redirectToCoinbaseWallet(walletLinkUrl);
 
     setTimeout(() => {
-      this.redirectToCoinbaseWallet(walletLinkUrl);
+      this.redirectDialog.present({
+        title: 'Redirecting to Coinbase Wallet...',
+        buttonText: 'Open',
+        onButtonClick: () => {
+          this.redirectToCoinbaseWallet(walletLinkUrl);
+        },
+      });
     }, 99);
   }
 
