@@ -39,7 +39,7 @@ export async function findOwnerIndex({
 
   // Check index of owner in the factoryData
   // Note: importing an undeployed contract might need to be handled differently
-  // The implemention will likely require the signer to tell us the index
+  // The implementation will likely require the signer to tell us the index
   if (!code && factory && factoryData) {
     if (getAddress(factory) !== getAddress(factoryAddress)) {
       throw standardErrors.rpc.internal('unknown factory address');
