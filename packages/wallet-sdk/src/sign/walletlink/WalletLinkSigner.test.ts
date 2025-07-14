@@ -221,25 +221,6 @@ describe('LegacyProvider', () => {
       });
     });
 
-    test.skip('eth_signTypedData_v1', async () => {
-      const hashSpy = vi.spyOn(eip712, 'hashForSignTypedDataLegacy');
-      const response = await provider?.request({
-        method: 'eth_signTypedData_v1',
-        params: [[MOCK_TYPED_DATA], MOCK_ADDERESS],
-      });
-      expect(hashSpy).toHaveBeenCalled();
-      expect(sendRequestSpy).toBeCalledWith({
-        method: 'signEthereumMessage',
-        params: {
-          address: MOCK_ADDERESS.toLowerCase(),
-          message: ENCODED_MESSAGE,
-          addPrefix: false,
-          typedDataJson: ENCODED_TYPED_DATA_JSON,
-        },
-      });
-      expect(response).toBe('signTypedData mocked result');
-    });
-
     test('eth_signTypedData_v3', async () => {
       const hashSpy = vi.spyOn(eip712, 'hashForSignTypedData_v3');
       const response = await provider?.request({
