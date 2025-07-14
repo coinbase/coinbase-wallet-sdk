@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
 
+import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../constants.js';
 import { WalletLinkSession } from '../type/WalletLinkSession.js';
 import { WalletLinkCipher } from './WalletLinkCipher.js';
@@ -7,7 +8,6 @@ import {
   WalletLinkConnection,
   WalletLinkConnectionUpdateListener,
 } from './WalletLinkConnection.js';
-import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 
 const decryptMock = vi.fn().mockImplementation((text) => Promise.resolve(`decrypted ${text}`));
 
@@ -18,9 +18,17 @@ describe('WalletLinkConnection', () => {
 
   let connection: WalletLinkConnection;
   let listener: WalletLinkConnectionUpdateListener;
+  let mockWorker: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    mockWorker = {
+      postMessage: vi.fn(),
+      terminate: vi.fn(),
+      addEventListener: vi.fn(),
+    };
+    global.Worker = vi.fn().mockImplementation(() => mockWorker);
 
     connection = new WalletLinkConnection({
       session,
@@ -140,6 +148,79 @@ describe('WalletLinkConnection', () => {
           await decryptMock(update.JsonRpcUrl)
         );
       });
+    });
+  });
+
+  describe('Heartbeat Worker Management', () => {
+    it('should create a heartbeat worker when startHeartbeat is called', () => {
+      (connection as any).startHeartbeat();
+
+      expect(global.Worker).toHaveBeenCalledWith(expect.any(URL), { type: 'module' });
+      
+      expect(mockWorker.postMessage).toHaveBeenCalledWith({ type: 'start' });
+    });
+
+    it('should stop heartbeat worker when stopHeartbeat is called', () => {
+      (connection as any).startHeartbeat();
+      
+      vi.clearAllMocks();
+
+      (connection as any).stopHeartbeat();
+
+      expect(mockWorker.postMessage).toHaveBeenCalledWith({ type: 'stop' });
+      expect(mockWorker.terminate).toHaveBeenCalled();
+    });
+
+    it('should terminate existing worker before creating new one', () => {
+      (connection as any).startHeartbeat();
+      const firstWorker = mockWorker;
+
+      const secondWorker = {
+        postMessage: vi.fn(),
+        terminate: vi.fn(),
+        addEventListener: vi.fn(),
+      };
+      global.Worker = vi.fn().mockImplementation(() => secondWorker);
+
+      (connection as any).startHeartbeat();
+
+      // First worker should be terminated
+      expect(firstWorker.terminate).toHaveBeenCalled();
+      
+      // New worker should be created and started
+      expect(secondWorker.postMessage).toHaveBeenCalledWith({ type: 'start' });
+    });
+
+    it('should handle heartbeat messages from worker', () => {
+      const heartbeatSpy = vi.spyOn(connection as any, 'heartbeat').mockImplementation(() => {});
+
+      (connection as any).startHeartbeat();
+
+      const messageListener = mockWorker.addEventListener.mock.calls.find(
+        (call: any[]) => call[0] === 'message'
+      )?.[1];
+
+      expect(messageListener).toBeDefined();
+
+      messageListener({ data: { type: 'heartbeat' } });
+
+      expect(heartbeatSpy).toHaveBeenCalled();
+    });
+
+    it('should handle stop when no worker exists', () => {
+      expect(() => {
+        (connection as any).stopHeartbeat();
+      }).not.toThrow();
+
+      expect(mockWorker.postMessage).not.toHaveBeenCalled();
+      expect(mockWorker.terminate).not.toHaveBeenCalled();
+    });
+
+    it('should setup worker listeners correctly', () => {
+      (connection as any).startHeartbeat();
+
+      expect(mockWorker.addEventListener).toHaveBeenCalledWith('message', expect.any(Function));
+      expect(mockWorker.addEventListener).toHaveBeenCalledWith('error', expect.any(Function));
     });
   });
 });

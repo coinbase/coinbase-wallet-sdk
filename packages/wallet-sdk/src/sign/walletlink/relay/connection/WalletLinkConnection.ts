@@ -1,5 +1,6 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
+import { IntNumber } from ':core/type/index.js';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../constants.js';
 import { ClientMessage } from '../type/ClientMessage.js';
 import { ServerMessage, ServerMessageType } from '../type/ServerMessage.js';
@@ -9,7 +10,6 @@ import { Web3Response } from '../type/Web3Response.js';
 import { WalletLinkCipher } from './WalletLinkCipher.js';
 import { WalletLinkHTTP } from './WalletLinkHTTP.js';
 import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket.js';
-import { IntNumber } from ':core/type/index.js';
 
 const HEARTBEAT_INTERVAL = 10000;
 const REQUEST_TIMEOUT = 60000;
@@ -43,6 +43,7 @@ export class WalletLinkConnection {
   private cipher: WalletLinkCipher;
   private ws: WalletLinkWebSocket;
   private http: WalletLinkHTTP;
+  private heartbeatWorker?: Worker;
 
   /**
    * Constructor
@@ -62,6 +63,9 @@ export class WalletLinkConnection {
       let connected = false;
       switch (state) {
         case ConnectionState.DISCONNECTED:
+          // Stop heartbeat when disconnected
+          this.stopHeartbeat();
+          
           // if DISCONNECTED and not destroyed
           if (!this.destroyed) {
             const connect = async () => {
@@ -85,13 +89,9 @@ export class WalletLinkConnection {
           connected = await this.handleConnected();
 
           // send heartbeat every n seconds while connected
-          // if CONNECTED, start the heartbeat timer
-          // first timer event updates lastHeartbeat timestamp
-          // subsequent calls send heartbeat message
+          // if CONNECTED, start the heartbeat timer using WebWorker
           this.updateLastHeartbeat();
-          setInterval(() => {
-            this.heartbeat();
-          }, HEARTBEAT_INTERVAL);
+          this.startHeartbeat();
 
           // check for unseen events
           if (this.shouldFetchUnseenEventsOnConnect) {
@@ -174,6 +174,7 @@ export class WalletLinkConnection {
     );
 
     this.destroyed = true;
+    this.stopHeartbeat();
     this.ws.disconnect();
     this.listener = undefined;
   }
@@ -305,6 +306,53 @@ export class WalletLinkConnection {
 
   private updateLastHeartbeat(): void {
     this.lastHeartbeatResponse = Date.now();
+  }
+
+  private startHeartbeat(): void {
+    if (this.heartbeatWorker) {
+      this.heartbeatWorker.terminate();
+    }
+
+    try {
+      // We put the heartbeat interval on a worker to avoid dropping the websocket connection when the webpage is backgrounded.
+      const workerUrl = new URL('./HeartbeatWorker.js', import.meta.url);
+      this.heartbeatWorker = new Worker(workerUrl, { type: 'module' });
+      this.setupWorkerListeners();
+      
+      this.heartbeatWorker.postMessage({ type: 'start' });
+    } catch (error) {
+      console.warn('Failed to create external heartbeat worker', error);
+    }
+  }
+
+  private setupWorkerListeners(): void {
+    if (!this.heartbeatWorker) return;
+
+    this.heartbeatWorker.addEventListener('message', (event: MessageEvent<{ type: 'heartbeat' | 'started' | 'stopped' }>) => {
+      const { type } = event.data;
+      
+      switch (type) {
+        case 'heartbeat':
+          this.heartbeat();
+          break;
+        case 'started':
+        case 'stopped':
+          // noop
+          break;
+      }
+    });
+
+    this.heartbeatWorker.addEventListener('error', (error) => {
+      console.error('Heartbeat worker error:', error);
+    });
+  }
+
+  private stopHeartbeat(): void {
+    if (this.heartbeatWorker) {
+      this.heartbeatWorker.postMessage({ type: 'stop' });
+      this.heartbeatWorker.terminate();
+      this.heartbeatWorker = undefined;
+    }
   }
 
   private heartbeat(): void {
