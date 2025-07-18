@@ -31,8 +31,6 @@ export interface CBWindow {
   top: CBWindow;
   ethereum?: CBInjectedProvider;
   coinbaseWalletExtension?: CBInjectedProvider;
-  ReactNativeWebView?: unknown;
-  __CIPHER_BRIDGE__?: unknown;
 }
 
 export interface CBInjectedProvider extends ProviderInterface {
@@ -43,18 +41,6 @@ export interface CBInjectedProvider extends ProviderInterface {
 function getCoinbaseInjectedLegacyProvider(): CBInjectedProvider | undefined {
   const window = globalThis as CBWindow;
   return window.coinbaseWalletExtension;
-}
-
-function alignIframeWithParentIfNeeded() {
-  const window = globalThis as CBWindow;
-  if (window !== window.top && window.top.ethereum?.isCoinbaseBrowser) {
-    if (window.top?.ReactNativeWebView) {
-      window.ReactNativeWebView = window.top.ReactNativeWebView;
-    }
-    if (window.top?.__CIPHER_BRIDGE__) {
-      window.__CIPHER_BRIDGE__ = window.top.__CIPHER_BRIDGE__;
-    }
-  }
 }
 
 function getInjectedEthereum(): CBInjectedProvider | undefined {
@@ -82,7 +68,6 @@ export function getCoinbaseInjectedProvider({
 
   const ethereum = getInjectedEthereum();
   if (ethereum?.isCoinbaseBrowser) {
-    alignIframeWithParentIfNeeded();
     ethereum.setAppInfo?.(appName, appLogoUrl, appChainIds, preference);
     return ethereum;
   }
