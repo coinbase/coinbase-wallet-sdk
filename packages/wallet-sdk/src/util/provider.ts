@@ -46,7 +46,7 @@ function getCoinbaseInjectedLegacyProvider(): CBInjectedProvider | undefined {
 function getInjectedEthereum(): CBInjectedProvider | undefined {
   try {
     const window = globalThis as CBWindow;
-    return window.ethereum ?? window.top?.ethereum;
+    return window.top?.ethereum ?? window.ethereum;
   } catch {
     return undefined;
   }
