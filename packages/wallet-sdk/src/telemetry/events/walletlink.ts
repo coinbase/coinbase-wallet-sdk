@@ -21,3 +21,19 @@ export const logWalletLinkConnectionFetchUnseenEventsFailed = () => {
     AnalyticsEventImportance.high
   );
 };
+
+export const logMobileWalletLinkRequestAccountsDeeplinked = ({
+  commerceCorrelationId,
+}: {
+  commerceCorrelationId: string | null;
+}) => {
+  logEvent(
+    'commerce.walletlink_connection.mobile_request_accounts_deeplinked',
+    {
+      action: ActionType.measurement,
+      componentType: ComponentType.unknown,
+      commerceCorrelationId: commerceCorrelationId ?? '',
+    },
+    AnalyticsEventImportance.high
+  );
+};

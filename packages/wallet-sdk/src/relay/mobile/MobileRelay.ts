@@ -1,4 +1,6 @@
-import { getLocation } from '../../core/util';
+import { createQrUrl, getLocation } from '../../core/util';
+import { getCommerceCorrelationId } from '../../telemetry/commerceCorrelationId';
+import { logMobileWalletLinkRequestAccountsDeeplinked } from '../../telemetry/events/walletlink';
 import { CancelablePromise } from '../RelayAbstract';
 import { WalletLinkResponseEventData } from '../walletlink/type/WalletLinkEventData';
 import { Web3Request } from '../walletlink/type/Web3Request';
@@ -41,10 +43,13 @@ export class MobileRelay extends WalletLinkRelay {
     // For mobile relay requests, open the Coinbase Wallet app
     switch (request.method) {
       case 'requestEthereumAccounts':
-      case 'connectAndSignIn':
+      case 'connectAndSignIn': {
         navigatedToCBW = true;
+        const commerceCorrelationId = getCommerceCorrelationId();
+        logMobileWalletLinkRequestAccountsDeeplinked({ commerceCorrelationId });
         this.ui.openCoinbaseWalletDeeplink(this.getQRCodeUrl());
         break;
+      }
       case 'switchEthereumChain':
         // switchEthereumChain doesn't need to open the app
         return;
@@ -71,6 +76,19 @@ export class MobileRelay extends WalletLinkRelay {
         { once: true }
       );
     }
+  }
+
+  // override
+  getQRCodeUrl() {
+    return createQrUrl(
+      this._session.id,
+      this._session.secret,
+      this.linkAPIUrl,
+      false,
+      this.options.version,
+      this.dappDefaultChain,
+      true // adding isMobileWalletlink flag to the query params
+    );
   }
 
   // override

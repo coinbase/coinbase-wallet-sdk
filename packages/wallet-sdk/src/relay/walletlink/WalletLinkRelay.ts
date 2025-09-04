@@ -49,9 +49,9 @@ export interface WalletLinkRelayOptions {
 export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnectionUpdateListener {
   private static accountRequestCallbackIds = new Set<string>();
 
-  private readonly linkAPIUrl: string;
+  protected readonly linkAPIUrl: string;
   protected readonly storage: ScopedLocalStorage;
-  private _session: Session;
+  protected _session: Session;
   private readonly relayEventManager: RelayEventManager;
   protected readonly diagnostic?: DiagnosticLogger;
   protected connection: WalletLinkConnection;
@@ -59,7 +59,7 @@ export class WalletLinkRelay extends RelayAbstract implements WalletLinkConnecti
   private chainCallbackParams = { chainId: '', jsonRpcUrl: '' }; // to implement distinctUntilChanged
   private chainCallback: ((chainId: string, jsonRpcUrl: string) => void) | null = null;
   protected dappDefaultChain = 1;
-  private readonly options: WalletLinkRelayOptions;
+  protected readonly options: WalletLinkRelayOptions;
 
   protected ui: RelayUI;
 

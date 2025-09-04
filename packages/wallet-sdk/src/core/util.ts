@@ -3,6 +3,7 @@
 
 import BN from 'bn.js';
 
+import { getCommerceCorrelationId } from '../telemetry/commerceCorrelationId';
 import { standardErrors } from './error';
 import { AddressString, BigIntString, HexString, IntNumber, RegExpString } from './type';
 
@@ -200,9 +201,11 @@ export function createQrUrl(
   serverUrl: string,
   isParentConnection: boolean,
   version: string,
-  chainId: number
+  chainId: number,
+  isMobileRelay?: boolean | undefined
 ): string {
   const sessionIdKey = isParentConnection ? 'parent-id' : 'id';
+  const commerceCorrelationId = getCommerceCorrelationId();
 
   const query = new URLSearchParams({
     [sessionIdKey]: sessionId,
@@ -210,6 +213,9 @@ export function createQrUrl(
     server: serverUrl,
     v: version,
     chainId: chainId.toString(),
+    pl: 't', // this is custom build of SDK for Payment Link
+    ...(isMobileRelay ? { m: 't' } : {}),
+    ...(commerceCorrelationId ? { cid: commerceCorrelationId } : {}),
   }).toString();
 
   const qrUrl = `${serverUrl}/#/link?${query}`;

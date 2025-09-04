@@ -27,6 +27,13 @@ import { RelayEventManager } from '../relay/RelayEventManager';
 import { Session } from '../relay/Session';
 import { EthereumTransactionParams } from '../relay/walletlink/type/EthereumTransactionParams';
 import { isErrorResponse, Web3Response } from '../relay/walletlink/type/Web3Response';
+import { getCommerceCorrelationId } from '../telemetry/commerceCorrelationId';
+import {
+  logRequestCompleted,
+  logRequestError,
+  logRequestStarted,
+} from '../telemetry/events/provider';
+import { parseErrorMessageFromAny } from '../telemetry/utils';
 import eip712 from '../vendor-js/eth-eip712-util';
 import { DiagnosticLogger, EVENTS } from './DiagnosticLogger';
 import { FilterPolyfill } from './FilterPolyfill';
@@ -37,8 +44,6 @@ import {
   SubscriptionResult,
 } from './SubscriptionManager';
 import { RequestArguments, Web3Provider } from './Web3Provider';
-import { logRequestCompleted, logRequestError, logRequestStarted } from '../telemetry/events/provider';
-import { parseErrorMessageFromAny } from '../telemetry/utils';
 
 const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
 const DEFAULT_JSON_RPC_URL = 'DefaultJsonRpcUrl';
@@ -471,17 +476,19 @@ export class CoinbaseWalletProvider extends EventEmitter implements Web3Provider
   }
 
   public async request<T>(args: RequestArguments): Promise<T> {
-    logRequestStarted({ method: args.method });
+    const commerceCorrelationId = getCommerceCorrelationId();
+    logRequestStarted({ method: args.method, commerceCorrelationId });
     try {
       const result = await this._request<T>(args).catch((error) => {
         throw serializeError(error, args.method);
       });
-      logRequestCompleted({ method: args.method });
+      logRequestCompleted({ method: args.method, commerceCorrelationId });
       return result;
     } catch (error) {
       logRequestError({
         method: args.method,
         errorMessage: parseErrorMessageFromAny(error),
+        commerceCorrelationId,
       });
       return Promise.reject(serializeError(error, args.method));
     }

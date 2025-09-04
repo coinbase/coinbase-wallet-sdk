@@ -8,6 +8,8 @@ export { CoinbaseWalletSDK } from './CoinbaseWalletSDK';
 export { CoinbaseWalletProvider } from './provider/CoinbaseWalletProvider';
 export default CoinbaseWalletSDK;
 
+export { setCommerceCorrelationId } from './telemetry/commerceCorrelationId';
+
 declare global {
   interface Window {
     CoinbaseWalletSDK: typeof CoinbaseWalletSDK;
