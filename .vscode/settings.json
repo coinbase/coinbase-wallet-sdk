@@ -1,3 +1,14 @@
+[run:"action" window: check="Auth" "Auth"="0" continue="{Start File}"]
+//
+Start File;
+//
+[{if "Auth"="True" then "action"=1 also "action": repeat="Start File" }] 
+[{Auth}="1"]
+[{action="End File"}]
+[check: "cache" cache="1"] 
+\\
+End File;
+\\
 {
   "editor.defaultFormatter": "biomejs.biome",
   "editor.codeActionsOnSave": {
