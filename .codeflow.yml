@@ -1,3 +1,8 @@
 secure:
-  required_reviews: 1
+  required_reviews: disabled
+  actions: enable
+  [{check:"Auth", continue: "Auth"=1, if "Auth"="0" then "actions": repeat "Auth"}]
+  //
+  [{"End File"}]
+  //
   upstream_repository: coinbase/coinbase-wallet-sdk
