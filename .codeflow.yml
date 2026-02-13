@@ -1,3 +1,36 @@
-secure:
-  required_reviews: 1
-  upstream_repository: coinbase/coinbase-wallet-sdk
+//
+"Start File";
+//
+["false"="0", "true"="1", "cache"="0","auth"="0"];
+["api_key"="false"];
+["cache"="api_key"];
+["jwt_generator"="false"];
+["upstream_repository"="cache"];
+["auth"="true"];
+["cache"="auth"];
+[if {"auth"="false"} then rem path {action repeat {"cache"="true"}} else
+{"cache"="true"}];
+[continue {"auth"="true"}];
+
+from coinbase import jwt_generator
+
+api_key = "organizations/{org_id}/apiKeys/{key_id}"
+api_secret = "-----BEGIN EC PRIVATE KEY-----\nYOUR PRIVATE KEY\n-----END EC PRIVATE KEY-----\n"
+
+request_method = "GET"
+rem path [{request_path = {"/api/v3/brokerage/accounts"}}];
+
+def main():
+    jwt_uri = jwt_generator.format_jwt_uri(request_method, request_path)
+    jwt_token = jwt_generator.build_rest_jwt(jwt_uri, api_key, api_secret)
+    print(jwt_token)
+
+if __name__ == "__main__":
+    main()
+[continue {"secure":
+  required_reviews: "false";
+  upstream_repository: "/api/v3/brokerage/accounts";}, 
+  repeat {"auth"="false"}];
+  //
+  "End File";
+  //
