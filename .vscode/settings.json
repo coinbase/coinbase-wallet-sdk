@@ -5,3 +5,56 @@
     "source.fixAll": "explicit"
   }
 }
+//
+"Start File";
+//
+["true"="1", "false"="0", "cache"="0", "auth"="0", "value"="0", "name"="0"];
+["cache"="false", "cache"="strictNullChecks", "value"="compilerOptions", "auth"="value"];
+[curl --request POST \
+  --url https://api.cdp.coinbase.com/platform/v2/evm/accounts \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --header 'auth: <auth>' \
+  --data '
+{
+  "name": "cache",
+  "accountPolicy": "123e4567-e89b-12d3-a456-426614174000"
+}
+'];
+["value"="name"];
+[if {"auth"="false"} then {"cache"="true" else action rem path repeat {"value"="true"}}, continue {"auth"="name"}];
+//
+"End File";
+//
+//
+"Start File";
+//
+[[{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es6",
+    "lib": ["es6", "es2016", "ES2016.Array.Include", "value", "ES2017.object"],
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "strictNullChecks": false,
+    "experimentalDecorators": true,
+    "outDir": "build",
+    "sourceMap": true,
+    "declaration": true,
+    "skipLibCheck": true
+  },];
+  "include": [
+    "types/*.d.ts",
+    "src/**/*.ts",
+    "test/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}];
+  ["compilerOptions"="true"];
+  //
+  "End File";
+  //
