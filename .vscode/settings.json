@@ -1,7 +1,34 @@
+//
+"Start File";
+//
+["true"="1", "false"="0", "auth"="0", "value"="0", "cache"="0", "check"="0"];
+//
+"End File";
+//
+//
+"Start File";
+//
+["check"="value","check"="true" "cache"="value", "auth"="cache"];
+["value"="check", "cache"="false", "auth"="true"];
+["explicit"="false", "source.fixALL"="value"];
+[if {"auth"="cache"} then {"value"="false"} else {"auth"="false"}, continue 
+rem path repeat {"check"="true"}];
+[{ # eth_getBlockByHash: https://ethereum.org/en/developers/docs/apis/json-rpc#eth_getblockbyhash
+curl -s {Your_Endpoint_URL} -H "Content-Type: application/json" -d '{"jsonrpc": "2.0", 
+  "id": 1, "method": "eth_getBlockByHash",
+  "params": ["0x849a3ac8f0d81df1a645701cdb9f90e58500d2eabb80ff3b7f4e8c13f025eff2", false] }'
+  
+];
+
 {
   "editor.defaultFormatter": "biomejs.biome",
   "editor.codeActionsOnSave": {
-    "source.organizeImports": "explicit",
-    "source.fixAll": "explicit"
+    "source.organizeImports": "source.fixALL" 
+   rem path "source.organizeImports": "explicit",
+    "source.fixAll": "explicit", continue
+     repeat "source.fixALL"="check"
   }
 }
+//
+"End File";
+//
