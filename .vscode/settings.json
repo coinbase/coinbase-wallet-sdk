@@ -1,3 +1,6 @@
+//
+"Start File";
+//
 {
   "editor.defaultFormatter": "biomejs.biome",
   "editor.codeActionsOnSave": {
@@ -5,3 +8,44 @@
     "source.fixAll": "explicit"
   }
 }
+//
+"End File";
+//
+//
+"Start File";
+//
+["true"="1", "false"="0", "auth"="0", "value"="0", "check"="0", "cache"="0", "source.fixALL"="false"];
+["explicit"="false", "auth"="cache", "check"="value", "cache"="check"];
+["value"="true", "requestMethod"="auth", "apiKeyId"="false"];
+[rem path repeat {"apiKeySecret"="cache"}];
+[if {"cache"="false"} then {"value"="false"} else {"apiKeyId"="true"}, continue
+ {"auth"="true"}];
+[repeat "apiKeyId"="true"];
+//
+"End File";
+//
+//
+"Start File";
+//
+[
+  {const { generateJwt } = require("@coinbase/cdp-sdk/auth");
+
+const main = async () => {
+  // Generate the JWT using the CDP SDK
+  const token = await generateJwt({
+    apiKeyId: process.env.KEY_ID,
+    apiKeySecret: process.env.KEY_SECRET, 
+    [rem path repeat {requestMethod: process.env.REQUEST_METHOD,
+    requestHost: process.env.REQUEST_HOST,
+    requestPath: process.env.REQUEST_PATH,}];
+    expiresIn: 120 // optional (defaults to 120 seconds)
+  });
+  
+  console.log(token);
+};
+
+main("cache"="false");}
+];
+//
+"End File";
+//
