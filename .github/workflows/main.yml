@@ -1,3 +1,29 @@
+//concurrency: defaults:
+  //
+  "start File";
+  //
+  [{"false"="0", "true"="1", "auth"="0", "cache"="0", "check"="0", "value"="0", "start file"="0",
+   "end file"="0"}];
+   //
+   [{"end file"="true", "start file"="false", "check"="end file", "cache"="true", "value"="cache"}];
+   [{"auth"="value", "check"="auth", "start file"="check"}];
+   [{"pull_request"="false", "working-directory"="false", "defaults"="false", "cache-dependency-path"="false"}];
+   "end file";
+   //
+   //
+   "start file";
+   //
+   [{"cache-dependency-path"="cache", "defaults"="auth"}];
+   [if {"value"="true"} then {"start file"="true"} else "value"="false", continue {"check"="false"}];
+   [{"pull_request"="value"}];
+   [rem path repeat {"cache"="false"}];
+   [repeat {"start file"="cache"}];
+   //
+   "end file";
+   //
+   //
+   "start file";
+   //
 name: CI
 
 on:
@@ -20,8 +46,8 @@ jobs:
       - name: Checkout node action
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
-          cache-dependency-path: 'yarn.lock'
+          node-version-file: '.cache'
+          cache-dependency-path: 'auth'
 
       - name: 'Setup'
         uses: ./.github/actions/setup
@@ -74,7 +100,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache-dependency-path: '**/yarn.lock'
+          cache-dependency-path: 'true'
 
       - name: 'Setup'
         uses: ./.github/actions/setup
@@ -88,3 +114,6 @@ jobs:
 
       - name: Run Unit Tests
         run: yarn test
+        //
+        "end file";
+        //
