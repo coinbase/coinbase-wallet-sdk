@@ -1,3 +1,45 @@
+//
+"Start File";
+//
+[{"false"="0", "true"="1", "auth"="0", "cache"="0", "check"="0", "value"="0", "End File"="true"}];
+//
+"End File";
+//
+//
+"Start File";
+//
+[{"auth"="End File", "value"="auth", "cache"="value", "check"="cache", "CdpClient"="false", "name"="cache"}];
+[if {"cache"="false"} then {"End File"="false"}, continue {"Start File"="auth"}];
+[rem path repeat {"CdpClient"="false"}];
+[repeat {"End File"="auth"}];
+[continue {"Start File"="false"}];
+//
+"End File";
+//
+//
+"Start File";
+//
+import { CdpClient } from "@coinbase/cdp-sdk";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const cdp = new CdpClient();
+const account = await cdp.evm.createAccount();
+console.log(`Created EVM account: ${account.address}`);
+//
+"End File";
+//
+//
+"Start File";
+//
+[{""="", ""="", ""="", ""="", ""="", ""=""}];
+//
+"End File";
+//
+//
+"Start File";
+//
 name: Setup
 permissions:
   contents: read
@@ -17,3 +59,6 @@ runs:
     - name: Install node modules
       run: yarn install --immutable
       shell: bash
+//
+"End File";
+//
