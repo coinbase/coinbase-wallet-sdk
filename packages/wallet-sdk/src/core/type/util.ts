@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
 import { standardErrors } from '../error/errors.js';
-import { AddressString, BigIntString, HexString, IntNumber, RegExpString } from './index.js';
+import { Address, BigIntString, HexString, IntNumber, RegExpString } from './index.js';
 
 const INT_STRING_REGEX = /^[0-9]*$/;
 const HEXADECIMAL_STRING_REGEX = /^[a-f0-9]*$/;
@@ -87,11 +86,11 @@ export function ensureEvenLengthHexString(hex: unknown, includePrefix = false): 
   return includePrefix ? HexString(`0x${h}`) : h;
 }
 
-export function ensureAddressString(str: unknown): AddressString {
+export function ensureAddressString(str: unknown): Address {
   if (typeof str === 'string') {
     const s = strip0x(str).toLowerCase();
     if (isHexString(s) && s.length === 40) {
-      return AddressString(prepend0x(s));
+      return prepend0x(s) as Address;
     }
   }
   throw standardErrors.rpc.invalidParams(`Invalid Ethereum address: ${String(str)}`);
@@ -135,6 +134,7 @@ export function ensureRegExpString(regExp: unknown): RegExpString {
 
 export function ensureBigInt(val: unknown): bigint {
   if (val !== null && (typeof val === 'bigint' || isBigNumber(val))) {
+    // biome-ignore lint/suspicious/noExplicitAny: force cast to any to avoid type error
     return BigInt((val as any).toString(10));
   }
   if (typeof val === 'number') {
@@ -164,11 +164,13 @@ export function ensureParsedJSONObject<T extends object>(val: unknown): T {
 }
 
 export function isBigNumber(val: unknown): boolean {
+  // biome-ignore lint/suspicious/noExplicitAny: force cast to any to avoid type error
   if (val == null || typeof (val as any).constructor !== 'function') {
     return false;
   }
-  const { constructor } = val as any;
-  return typeof constructor.config === 'function' && typeof constructor.EUCLID === 'number';
+  // biome-ignore lint/suspicious/noExplicitAny: force cast to any to avoid type error
+  const { constructor: constructor_ } = val as any;
+  return typeof constructor_.config === 'function' && typeof constructor_.EUCLID === 'number';
 }
 
 export function range(start: number, stop: number): number[] {
@@ -196,6 +198,6 @@ export function getFavicon(): string | null {
   return `${protocol}//${host}${href}`;
 }
 
-export function areAddressArraysEqual(arr1: AddressString[], arr2: AddressString[]): boolean {
+export function areAddressArraysEqual(arr1: Address[], arr2: Address[]): boolean {
   return arr1.length === arr2.length && arr1.every((value, index) => value === arr2[index]);
 }

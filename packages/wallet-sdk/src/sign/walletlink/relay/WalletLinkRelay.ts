@@ -1,5 +1,10 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
+import { standardErrors } from ':core/error/errors.js';
+import { AppMetadata } from ':core/provider/interface.js';
+import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
+import { Address } from ':core/type/index.js';
+import { bigIntStringFromBigInt, hexStringFromBuffer, randomBytesHex } from ':core/type/util.js';
 import {
   WalletLinkConnection,
   WalletLinkConnectionUpdateListener,
@@ -15,11 +20,6 @@ import { isMobileWeb } from './ui/components/util.js';
 import { RelayUI } from './ui/RelayUI.js';
 import { WalletLinkRelayUI } from './ui/WalletLinkRelayUI.js';
 import { WLMobileRelayUI } from './ui/WLMobileRelayUI.js';
-import { standardErrors } from ':core/error/errors.js';
-import { AppMetadata } from ':core/provider/interface.js';
-import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
-import { AddressString } from ':core/type/index.js';
-import { bigIntStringFromBigInt, hexStringFromBuffer, randomBytesHex } from ':core/type/util.js';
 
 export interface WalletLinkRelayOptions {
   linkAPIUrl: string;
@@ -97,7 +97,7 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
     this.isUnlinkedErrorState = false;
 
     if (cachedAddresses) {
-      const addresses = cachedAddresses.split(' ') as AddressString[];
+      const addresses = cachedAddresses.split(' ') as string[];
       const wasConnectedViaStandalone = this.storage.getItem('IsStandaloneSigning') === 'true';
       if (addresses[0] !== '' && !linked && this._session.linked && !wasConnectedViaStandalone) {
         this.isUnlinkedErrorState = true;
@@ -137,7 +137,7 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
       Array.from(WalletLinkRelay.accountRequestCallbackIds.values()).forEach((id) => {
         this.invokeCallback(id, {
           method: 'requestEthereumAccounts',
-          result: [selectedAddress as AddressString],
+          result: [selectedAddress as Address],
         });
       });
       WalletLinkRelay.accountRequestCallbackIds.clear();
@@ -241,7 +241,7 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
         hideSnackbarItem = this.ui.showConnecting({
           isUnlinkedErrorState: this.isUnlinkedErrorState,
           onCancel: cancel,
-          onResetConnection: this.resetAndReload, // eslint-disable-line @typescript-eslint/unbound-method
+          onResetConnection: this.resetAndReload,
         });
       }
 
@@ -359,7 +359,6 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
 
     return new Promise<Web3Response<'requestEthereumAccounts'>>((resolve, reject) => {
       this.relayEventManager.callbacks.set(id, (response) => {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         hideSnackbarItem?.();
         if (isErrorResponse(response)) {
@@ -407,7 +406,7 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
       hideSnackbarItem = this.ui.showConnecting({
         isUnlinkedErrorState: this.isUnlinkedErrorState,
         onCancel: cancel,
-        onResetConnection: this.resetAndReload, // eslint-disable-line @typescript-eslint/unbound-method
+        onResetConnection: this.resetAndReload,
       });
     }
 
@@ -462,7 +461,7 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
       hideSnackbarItem = this.ui.showConnecting({
         isUnlinkedErrorState: this.isUnlinkedErrorState,
         onCancel: cancel,
-        onResetConnection: this.resetAndReload, // eslint-disable-line @typescript-eslint/unbound-method
+        onResetConnection: this.resetAndReload,
       });
     }
 
@@ -505,7 +504,7 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
       hideSnackbarItem = this.ui.showConnecting({
         isUnlinkedErrorState: this.isUnlinkedErrorState,
         onCancel: cancel,
-        onResetConnection: this.resetAndReload, // eslint-disable-line @typescript-eslint/unbound-method
+        onResetConnection: this.resetAndReload,
       });
     }
 
@@ -519,7 +518,8 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
               message: `Unrecognized chain ID. Try adding the chain using addEthereumChain first.`,
             })
           );
-        } else if (isErrorResponse(response)) {
+        } 
+        if (isErrorResponse(response)) {
           return reject(new Error(response.errorMessage));
         }
 

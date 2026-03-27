@@ -1,6 +1,6 @@
-import { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js';
 import { AppMetadata, ConstructorOptions, Preference } from ':core/provider/interface.js';
 import { getCoinbaseInjectedProvider } from ':util/provider.js';
+import { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js';
 
 export type CreateProviderOptions = {
   metadata: AppMetadata;

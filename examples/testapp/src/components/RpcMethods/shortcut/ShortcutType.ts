@@ -1,5 +1,7 @@
 import { MessageTypes, TypedDataV1, TypedMessage } from '@metamask/eth-sig-util';
 
+import { compressJsonString } from '../utils/compressJsonString';
+
 type messageType = TypedDataV1 | TypedMessage<MessageTypes>;
 
 export type ShortcutType = {
@@ -8,9 +10,13 @@ export type ShortcutType = {
 };
 
 export const parseMessage = (message: string | messageType) => {
+  let parsedResult;
   if (typeof message === 'string') {
-    return JSON.parse(message);
+    const compressedMessage = compressJsonString(message);
+    parsedResult = JSON.parse(compressedMessage);
+  } else {
+    parsedResult = message;
   }
 
-  return message;
+  return parsedResult;
 };

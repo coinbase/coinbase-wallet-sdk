@@ -7,24 +7,20 @@
   "private": true,
   "workspaces": [
     "packages/*",
+    "libs/*",
     "examples/*"
   ],
   "scripts": {
-    "lint": "yarn workspaces foreach -pt run lint",
-    "typecheck": "yarn workspaces foreach -pt run typecheck",
-    "dev": "yarn workspaces foreach -ipv run dev",
-    "deploy": "yarn workspace @coinbase/wallet-sdk build && yarn workspace sdk-playground export"
+    "build:packages": "yarn workspace @coinbase/wallet-sdk build",
+    "clean": "yarn workspaces foreach -A -ipv run clean && rm -rf node_modules && yarn",
+    "deploy": "yarn build:packages && yarn workspace sdk-playground export",
+    "dev": "yarn workspaces foreach -A -ipv run dev",
+    "lint": "yarn workspaces foreach -A -pt run lint",
+    "test": "yarn workspaces foreach -A -ipv run test",
+    "typecheck": "yarn workspaces foreach -A -pt run typecheck"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^6.2.0",
-    "@typescript-eslint/parser": "^6.2.0",
-    "eslint": "^8.45.0",
-    "eslint-config-preact": "^1.3.0",
-    "eslint-config-prettier": "^8.8.0",
-    "eslint-plugin-prettier": "^5.0.0",
-    "eslint-plugin-simple-import-sort": "^10.0.0",
-    "eslint-plugin-unused-imports": "^3.0.0",
-    "prettier": "^3.0.0"
+    "@biomejs/biome": "^1.9.4"
   },
-  "packageManager": "yarn@3.6.1"
+  "packageManager": "yarn@4.8.1"
 }

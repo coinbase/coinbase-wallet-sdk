@@ -14,7 +14,8 @@
     "paths": {
       ":util/*": ["src/util/*"],
       ":core/*": ["src/core/*"],
-      ":sign/*": ["src/sign/*"]
+      ":store/*": ["src/store/*"],
+      ":sign/*": ["src/sign/*"],
     },
     "target": "es2017",
     "jsx": "react",

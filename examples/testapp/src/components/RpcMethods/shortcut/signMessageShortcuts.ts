@@ -137,7 +137,7 @@ const ethSignTypedDataV4Shortcuts: (chainId: number) => ShortcutType[] = (chainI
         domain: {
           name: 'Spend Permission Manager',
           version: '1',
-          chainId,
+          chainId: Number(chainId),
           verifyingContract: '0xf85210B21cC50302F477BA56686d2019dC9b67Ad',
         },
         types: {
@@ -157,7 +157,7 @@ const ethSignTypedDataV4Shortcuts: (chainId: number) => ShortcutType[] = (chainI
         message: {
           account: 'YOUR_ADDRESS_HERE',
           spender: '0xd4e17478581878A967aA22d45a5158A9fE96AA08',
-          token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+          token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
           allowance: '1000000',
           period: 86400,
           start: 1724264802,

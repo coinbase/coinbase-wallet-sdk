@@ -100,14 +100,15 @@ export const verifySignMsg = async ({
         transport: http(),
       });
 
+      // Parse the message if it's a string
+      const typedData = typeof message === 'string' ? JSON.parse(message) : message;
+
       const valid = await client.verifyTypedData({
         address: from as `0x${string}`,
-        domain: message['domain'] as TypedDataDomain,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        types: message['types'] as any,
-        primaryType: message['primaryType'] as string,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        message: message['message'] as any,
+        domain: typedData['domain'] as TypedDataDomain,
+        types: typedData['types'],
+        primaryType: typedData['primaryType'] as string,
+        message: typedData['message'],
         signature: sign as `0x${string}`,
       });
       if (valid) {

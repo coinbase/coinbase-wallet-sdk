@@ -1,7 +1,7 @@
 import { Web3Response } from '../type/Web3Response.js';
 import { WalletLinkRelay } from '../WalletLinkRelay.js';
 import { MOCK_ADDERESS, MOCK_TX } from './fixtures.js';
-import { AddressString, HexString } from ':core/type/index.js';
+import { HexString } from ':core/type/index.js';
 
 export function mockedWalletLinkRelay(): WalletLinkRelay {
   return mock as unknown as WalletLinkRelay;
@@ -16,7 +16,7 @@ const mock = {
   requestEthereumAccounts() {
     return makeMockReturn({
       method: 'requestEthereumAccounts',
-      result: [AddressString(MOCK_ADDERESS)],
+      result: [MOCK_ADDERESS],
     });
   },
   addEthereumChain() {

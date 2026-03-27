@@ -9,18 +9,9 @@ on:
         default: ""
 
 jobs:
-  authorize:
-    name: Authorize
-    runs-on: ubuntu-latest
-    steps:
-      - name: ${{ github.actor }} permission check to update release version
-        uses: "lannonbr/repo-permission-check-action@2.0.2"
-        with:
-          permission: "write"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   release:
+    env:
+      PACKAGE_VERSION: ${{ github.event.inputs.packageVersion }}
     name: Release
     runs-on: ubuntu-latest
     environment: release
@@ -38,32 +29,22 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Set version
-        run: npm version ${{ env.PACKAGE_VERSION }} -w packages/wallet-sdk
+        run: yarn workspace @coinbase/wallet-sdk version ${{ env.PACKAGE_VERSION }}
 
       # Build the package
-      - name: Prebuild
+      - name: Prebuild Packages
         run: yarn workspace @coinbase/wallet-sdk prebuild
 
-      - name: Build SDK
-        shell: bash
+      - name: Build Packages
         run: yarn workspace @coinbase/wallet-sdk build
-
-      # Create a pull request to update the version
-      - name: Create pull request
-        uses: peter-evans/create-pull-request@v4
-        with:
-          title: "[Version update] v${{ env.PACKAGE_VERSION }}"
-          body: "Automated workflow: version update"
-          branch: release-v${{ env.PACKAGE_VERSION }}
-          delete-branch: true
-          commit-message: "v${{ env.PACKAGE_VERSION }}"
-          labels: version-update
 
       # Publish to npm
       - name: Set deployment token
         run: npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
 
       - name: Publish to npm
-        run: cd packages/wallet-sdk && npm publish --tag latest
+        run: |
+          cd packages/wallet-sdk
+          npm publish --tag latest
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

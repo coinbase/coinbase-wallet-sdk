@@ -1,8 +1,8 @@
-import { AddressString, IntNumber } from ':core/type/index.js';
+import { Address, IntNumber } from ':core/type/index.js';
 
 export interface EthereumTransactionParams {
-  fromAddress: AddressString;
-  toAddress: AddressString | null;
+  fromAddress: Address;
+  toAddress: Address | null;
   weiValue: bigint;
   data: Buffer;
   nonce: IntNumber | null;

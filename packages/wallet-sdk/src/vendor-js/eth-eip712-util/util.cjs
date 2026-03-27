@@ -15,6 +15,29 @@ function zeros (bytes) {
   return Buffer.allocUnsafe(bytes).fill(0)
 }
 
+
+/**
+ * Converts a `Number` into a hex `String` (https://github.com/ethjs/ethjs-util/blob/master/src/index.js)
+ * @param {Number} i
+ * @return {String}
+ */
+function intToHex(i) {
+  const hex = i.toString(16); // eslint-disable-line
+
+  return `0x${hex}`;
+}
+
+/**
+ * Converts an `Number` to a `Buffer` (https://github.com/ethjs/ethjs-util/blob/master/src/index.js)
+ * @param {Number} i
+ * @return {Buffer}
+ */
+function intToBuffer(i) {
+  const hex = intToHex(i);
+
+  return new Buffer(padToEven(hex.slice(2)), 'hex');
+}
+
 function bitLengthFromBigInt (num) {
   return num.toString(2).length
 }

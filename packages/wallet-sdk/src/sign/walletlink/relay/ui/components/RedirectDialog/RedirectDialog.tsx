@@ -1,5 +1,7 @@
 import { clsx } from 'clsx';
-import { FunctionComponent, h, render } from 'preact';
+import { FunctionComponent, render } from 'preact';
+// biome-ignore lint/correctness/noUnusedImports: preact
+import { h } from 'preact';
 
 import { injectCssReset } from '../cssReset/cssReset.js';
 import { SnackbarContainer } from '../Snackbar/Snackbar.js';

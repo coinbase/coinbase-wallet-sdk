@@ -1,5 +1,10 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
+import {
+  logWalletLinkConnectionConnectionFailed,
+  logWalletLinkConnectionFetchUnseenEventsFailed,
+} from ':core/telemetry/events/walletlink-signer.js';
+import { IntNumber } from ':core/type/index.js';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../constants.js';
 import { ClientMessage } from '../type/ClientMessage.js';
 import { ServerMessage, ServerMessageType } from '../type/ServerMessage.js';
@@ -9,7 +14,6 @@ import { Web3Response } from '../type/Web3Response.js';
 import { WalletLinkCipher } from './WalletLinkCipher.js';
 import { WalletLinkHTTP } from './WalletLinkHTTP.js';
 import { ConnectionState, WalletLinkWebSocket } from './WalletLinkWebSocket.js';
-import { IntNumber } from ':core/type/index.js';
 
 const HEARTBEAT_INTERVAL = 10000;
 const REQUEST_TIMEOUT = 60000;
@@ -133,6 +137,7 @@ export class WalletLinkConnection {
                   .connect()
                   .catch(() => {
                     // Reconnection failed, will retry
+                    logWalletLinkConnectionConnectionFailed();
                   })
                   .finally(() => {
                     this.isReconnecting = false;
@@ -289,6 +294,7 @@ export class WalletLinkConnection {
     this.ws = this.createWebSocket();
     this.ws.connect().catch(() => {
       // Fresh reconnection failed
+      logWalletLinkConnectionConnectionFailed();
     });
   }
 
@@ -426,6 +432,7 @@ export class WalletLinkConnection {
       });
     } catch (_error) {
       // Failed to fetch unseen events
+      logWalletLinkConnectionFetchUnseenEventsFailed();
     }
   }
 

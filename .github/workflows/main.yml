@@ -23,10 +23,10 @@ jobs:
           node-version-file: '.nvmrc'
           cache-dependency-path: 'yarn.lock'
 
-      - name: Install NPM dependencies
-        run: yarn install --immutable
+      - name: 'Setup'
+        uses: ./.github/actions/setup
 
-      - name: Check ESLint
+      - name: Lint
         run: yarn lint
 
   typecheck:
@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./packages/wallet-sdk
+        working-directory: ./
 
     steps:
       - name: Checkout
@@ -46,11 +46,11 @@ jobs:
           node-version-file: '.nvmrc'
           cache-dependency-path: '**/yarn.lock'
 
-      - name: Install NPM dependencies
-        run: yarn install --immutable
+      - name: 'Setup'
+        uses: ./.github/actions/setup
 
-      - name: Runs compile asset script
-        run: node ./compile-assets.cjs
+      - name: Build packages
+        run: yarn build:packages
 
       - name: Check Types
         run: yarn typecheck
@@ -60,11 +60,11 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./packages/wallet-sdk
+        working-directory: ./
 
     strategy:
       matrix:
-        node-version: [20.x, 22.x]
+        node-version: [20.x, 22.x,24.x]
 
     steps:
       - name: Checkout
@@ -76,34 +76,15 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache-dependency-path: '**/yarn.lock'
 
-      - name: Install NPM dependencies
-        run: yarn install --immutable
+      - name: 'Setup'
+        uses: ./.github/actions/setup
 
       - name: Runs compile asset script
-        run: node ./compile-assets.cjs
+        run: |
+          cd ./packages/wallet-sdk
+          yarn build
+          node ./compile-assets.cjs
+          cd ../../
 
       - name: Run Unit Tests
         run: yarn test
-        
-  lint-testapp:
-    name: Lint Testapp
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./examples/testapp
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Checkout node action
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache-dependency-path: 'yarn.lock'
-
-      - name: Install NPM dependencies
-        run: yarn install --immutable
-
-      - name: eslint
-        run: yarn lint

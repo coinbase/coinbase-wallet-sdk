@@ -24,7 +24,7 @@ export function createQrUrl(
 function isInIFrame(): boolean {
   try {
     return window.frameElement !== null;
-  } catch (e) {
+  } catch (_) {
     return false;
   }
 }
@@ -35,7 +35,7 @@ export function getLocation(): Location {
       return window.top.location;
     }
     return window.location;
-  } catch (e) {
+  } catch (_) {
     return window.location;
   }
 }

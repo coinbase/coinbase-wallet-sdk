@@ -11,8 +11,8 @@ import {
   Flex,
   FormControl,
   FormErrorMessage,
-  Heading,
   HStack,
+  Heading,
   InputGroup,
   InputLeftAddon,
   Textarea,
@@ -23,18 +23,44 @@ import { useForm } from 'react-hook-form';
 import { Chain, hexToNumber } from 'viem';
 import { mainnet } from 'viem/chains';
 
-import { useCBWSDK } from '../../context/CBWSDKReactContextProvider';
+import { useEIP1193Provider } from '../../context/EIP1193ProviderContextProvider';
 import { verifySignMsg } from './method/signMessageMethods';
 import { ADDR_TO_FILL, CHAIN_ID_TO_FILL } from './shortcut/const';
 import { multiChainShortcutsMap } from './shortcut/multipleChainShortcuts';
 
 type ResponseType = string;
 
+// Replace address placeholders in string or object values
+// biome-ignore lint/suspicious/noExplicitAny: old code
+const replaceAddressInValue = async (value: any, getCurrentAddress: () => Promise<[string]>) => {
+  if (typeof value === 'string' && (value === ADDR_TO_FILL || value === 'YOUR_ADDRESS_HERE')) {
+    const currentAddress = (await getCurrentAddress())[0];
+    return currentAddress;
+  }
+
+  if (typeof value === 'object') {
+    try {
+      const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+      const stringified = JSON.stringify(parsed);
+      if (stringified.includes(ADDR_TO_FILL) || stringified.includes('YOUR_ADDRESS_HERE')) {
+        const currentAddress = (await getCurrentAddress())[0];
+        const replaced = stringified
+          .replace(new RegExp(ADDR_TO_FILL, 'g'), currentAddress)
+          .replace(new RegExp('YOUR_ADDRESS_HERE', 'g'), currentAddress);
+        return typeof value === 'object' ? JSON.parse(replaced) : replaced;
+      }
+    } catch (_) {
+      // If parsing fails, return original value
+    }
+  }
+  return value;
+};
+
 export function RpcMethodCard({ format, method, params, shortcuts }) {
   const [response, setResponse] = React.useState<Response | null>(null);
   const [verifyResult, setVerifyResult] = React.useState<string | null>(null);
   const [error, setError] = React.useState<Record<string, unknown> | string | number | null>(null);
-  const { provider } = useCBWSDK();
+  const { provider } = useEIP1193Provider();
 
   const {
     handleSubmit,
@@ -44,7 +70,7 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
 
   const verify = useCallback(
     async (response: ResponseType, data: Record<string, string>) => {
-      const chainId = await provider.request({ method: 'eth_chainId' });
+      const chainId = (await provider.request({ method: 'eth_chainId' })) as `0x${string}`;
       const chain =
         multiChainShortcutsMap['wallet_switchEthereumChain'].find(
           (shortcut) => Number(shortcut.data.chainId) === hexToNumber(chainId)
@@ -75,15 +101,15 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
       const dataToSubmit = { ...data };
       let values = dataToSubmit;
       if (format) {
+        const getCurrentAddress = async () =>
+          (await provider.request({ method: 'eth_accounts' })) as [string];
+
         for (const key in dataToSubmit) {
           if (Object.prototype.hasOwnProperty.call(data, key)) {
-            if (dataToSubmit[key] === ADDR_TO_FILL) {
-              const addresses = await provider.request({ method: 'eth_accounts' });
-              dataToSubmit[key] = addresses[0];
-            }
+            dataToSubmit[key] = await replaceAddressInValue(dataToSubmit[key], getCurrentAddress);
 
             if (dataToSubmit[key] === CHAIN_ID_TO_FILL) {
-              const chainId = await provider.request({ method: 'eth_chainId' });
+              const chainId = (await provider.request({ method: 'eth_chainId' })) as string;
               dataToSubmit[key] = chainId;
             }
           }
@@ -91,12 +117,13 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
         values = format(dataToSubmit);
       }
       try {
-        const response = await provider.request({
+        const response = (await provider.request({
           method,
           params: values,
-        });
+          // biome-ignore lint/suspicious/noExplicitAny: old code, refactor soon
+        })) as any;
         setResponse(response);
-        await verify(response, dataToSubmit);
+        await verify(response as string, dataToSubmit);
       } catch (err) {
         const { code, message, data } = err;
         setError({ code, message, data });

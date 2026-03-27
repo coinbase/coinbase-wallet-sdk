@@ -1,11 +1,12 @@
+import { standardErrors } from ':core/error/errors.js';
+import { logSnackbarActionClicked, logSnackbarShown } from ':core/telemetry/events/snackbar.js';
+import { RETRY_SVG_PATH } from ':sign/walletlink/relay/ui/WalletLinkRelayUI.js';
+import { Snackbar } from ':sign/walletlink/relay/ui/components/Snackbar/Snackbar.js';
 import { NAME, VERSION } from '../sdk-info.js';
 import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
-import { standardErrors } from ':core/error/errors.js';
-import { Snackbar } from ':sign/walletlink/relay/ui/components/Snackbar/Snackbar.js';
-import { RETRY_SVG_PATH } from ':sign/walletlink/relay/ui/WalletLinkRelayUI.js';
 
 const POPUP_WIDTH = 420;
-const POPUP_HEIGHT = 540;
+const POPUP_HEIGHT = 700;
 
 const RETRY_BUTTON = {
   isRed: false,
@@ -49,6 +50,7 @@ export function openPopup(url: URL): Promise<Window> {
   if (!popup) {
     const sb = initSnackbar();
     return new Promise<Window>((resolve, reject) => {
+      logSnackbarShown({ snackbarContext: 'popup_blocked' });
       sb.presentItem({
         autoExpand: true,
         message: POPUP_BLOCKED_MESSAGE,
@@ -56,6 +58,10 @@ export function openPopup(url: URL): Promise<Window> {
           {
             ...RETRY_BUTTON,
             onClick: () => {
+              logSnackbarActionClicked({
+                snackbarContext: 'popup_blocked',
+                snackbarAction: 'confirm',
+              });
               popup = tryOpenPopup();
               if (popup) {
                 resolve(popup);
@@ -88,11 +94,13 @@ function appendAppInfoQueryParams(url: URL) {
   };
 
   for (const [key, value] of Object.entries(params)) {
-    url.searchParams.append(key, value.toString());
+    if (!url.searchParams.has(key)) {
+      url.searchParams.append(key, value.toString());
+    }
   }
 }
 
-function initSnackbar() {
+export function initSnackbar() {
   if (!snackbar) {
     const root = document.createElement('div');
     root.className = '-cbwsdk-css-reset';

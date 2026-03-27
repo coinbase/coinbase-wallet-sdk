@@ -1,5 +1,4 @@
 import { Box, Grid, GridItem, Heading } from '@chakra-ui/react';
-import React from 'react';
 
 import { RpcRequestInput } from '../RpcMethods/method/RpcRequestInput';
 import { RpcMethodCard } from '../RpcMethods/RpcMethodCard';

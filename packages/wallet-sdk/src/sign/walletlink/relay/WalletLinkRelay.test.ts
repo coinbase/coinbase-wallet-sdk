@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { vi } from 'vitest';
 
 import { WalletLinkCipher } from './connection/WalletLinkCipher.js';

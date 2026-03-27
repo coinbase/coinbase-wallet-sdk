@@ -1,4 +1,6 @@
+import { ToOwnerAccountFn } from ':store/store.js';
 import { EventEmitter } from 'eventemitter3';
+import { Address, Hex } from 'viem';
 
 export interface RequestArguments {
   readonly method: string;
@@ -32,6 +34,14 @@ export interface ProviderInterface extends ProviderEventEmitter {
 }
 
 export type ProviderEventCallback = ProviderInterface['emit'];
+
+export type SpendPermissionConfig = {
+  token: Address;
+  allowance: Hex;
+  period: number;
+  salt?: Hex;
+  extraData?: Hex;
+};
 
 export interface AppMetadata {
   /** Application name */
@@ -72,9 +82,24 @@ export type Preference = {
    * the Smart Wallet will generate a 16 byte hex string from the apps origin.
    */
   attribution?: Attribution;
+  /**
+   * Whether to enable functional telemetry.
+   * @default true
+   */
+  telemetry?: boolean;
 } & Record<string, unknown>;
+
+export type SubAccountOptions = {
+  /* Automatically create a subaccount for the user and use it for all transactions. */
+  enableAutoSubAccounts?: boolean;
+  /**
+   * @returns The owner account that will be used to sign the subaccount transactions.
+   */
+  toOwnerAccount?: ToOwnerAccountFn;
+};
 
 export interface ConstructorOptions {
   metadata: AppMetadata;
   preference: Preference;
+  paymasterUrls?: Record<number, string>;
 }

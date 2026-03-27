@@ -52,7 +52,7 @@ describe('PopupManager', () => {
       1,
       url,
       expect.stringContaining('wallet_'),
-      'width=420, height=540, left=302, top=114'
+      'width=420, height=700, left=302, top=34'
     );
     expect(popup.focus).toHaveBeenCalledTimes(1);
 
@@ -60,6 +60,21 @@ describe('PopupManager', () => {
     expect(url.searchParams.get('sdkVersion')).toBe(VERSION);
     expect(url.searchParams.get('origin')).toBe(mockOrigin);
     expect(url.searchParams.get('coop')).toBe('null');
+  });
+
+  it('should not duplicate parameters when opening a popup with existing params', async () => {
+    const url = new URL('https://example.com');
+    url.searchParams.append('sdkName', NAME);
+    url.searchParams.append('sdkVersion', VERSION);
+    url.searchParams.append('origin', mockOrigin);
+    url.searchParams.append('coop', 'null');
+    
+    (window.open as Mock).mockReturnValue({ focus: vi.fn() });
+
+    await openPopup(url);
+
+    const paramCount = url.searchParams.toString().split('&').length;
+    expect(paramCount).toBe(4);
   });
 
   it('should show snackbar with retry button when popup is blocked and retry successfully', async () => {

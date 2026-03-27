@@ -1,4 +1,4 @@
-import { extendTheme, ThemeConfig } from '@chakra-ui/react';
+import { ThemeConfig, extendTheme } from '@chakra-ui/react';
 
 const colors = {
   brand: {
@@ -27,3 +27,13 @@ export const theme = extendTheme({
   colors,
   config,
 });
+
+/*
+ * Custom storage manager that disables persisting color mode, so on each page load,
+ * playground will default to the current system color mode.
+ */
+export const systemStorageManager = {
+  get: () => undefined,
+  set: () => {},
+  type: 'localStorage' as const,
+};

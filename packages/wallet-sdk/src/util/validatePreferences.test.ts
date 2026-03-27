@@ -1,5 +1,6 @@
+import { ToOwnerAccountFn } from ':store/store.js';
 import { Preference } from '../core/provider/interface.js';
-import { validatePreferences } from './validatePreferences.js';
+import { validatePreferences, validateSubAccount } from './validatePreferences.js';
 
 describe('validatePreferences', () => {
   it('should not throw an error if preference is undefined', () => {
@@ -66,5 +67,41 @@ describe('validatePreferences', () => {
       },
     };
     expect(() => validatePreferences(validPreference)).not.toThrow();
+  });
+});
+
+describe('validateSubAccount', () => {
+  it('should throw an error if toSubAccountSigner is not a function', () => {
+    expect(() => validateSubAccount(undefined as any)).toThrow('toAccount is not a function');
+  });
+
+  it('should not throw an error if toSubAccountSigner is a function', () => {
+    const toSubAccountSigner: ToOwnerAccountFn = () => Promise.resolve({} as any);
+    expect(() => validateSubAccount(toSubAccountSigner)).not.toThrow();
+  });
+});
+
+describe('validateTelemetry', () => {
+  it('should not throw an error if telemetry is true', () => {
+    const validPreference: Preference = {
+      options: 'all',
+      telemetry: true,
+    };
+    expect(() => validatePreferences(validPreference)).not.toThrow();
+  });
+
+  it('should not throw an error if telemetry is undefined', () => {
+    const validPreference: Preference = {
+      options: 'all',
+    };
+    expect(() => validatePreferences(validPreference)).not.toThrow();
+  });
+
+  it('should throw an error if telemetry is not a boolean', () => {
+    const invalidPreference: Preference = {
+      options: 'all',
+      telemetry: 'true' as any,
+    };
+    expect(() => validatePreferences(invalidPreference)).toThrow('Telemetry must be a boolean');
   });
 });

@@ -1,6 +1,11 @@
 name: Release (Canary)
 on:
   workflow_dispatch:
+    inputs:
+      packageVersion:
+        description: "The version to publish in MAJOR.MINOR.PATCH format"
+        required: true
+        default: ""
 
 jobs:
   canary:
@@ -12,6 +17,8 @@ jobs:
       pull-requests: write
       id-token: write
     timeout-minutes: 5
+    env:
+      PACKAGE_VERSION: ${{ github.event.inputs.packageVersion }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,21 +29,23 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Set version
-        run: npm --no-git-tag-version version $(node -p "require('./packages/wallet-sdk/package.json').version")-canary.$(date +'%Y%m%d') -w packages/wallet-sdk
-      
+        run: yarn workspace @coinbase/wallet-sdk version ${{ env.PACKAGE_VERSION }}-canary.$(date +'%Y%m%d%H%M%S')
+        
       # Build the package
-      - name: Prebuild
+      - name: Prebuild Packages
         run: yarn workspace @coinbase/wallet-sdk prebuild
-      
-      - name: Build Packages
-        shell: bash
-        run: yarn build:packages
 
+      - name: Build Packages
+        run: yarn workspace @coinbase/wallet-sdk build
+
+      # Publish to npm
       - name: Set deployment token
         run: npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
 
       - name: Publish to npm
-        run: cd packages/wallet-sdk && npm publish --tag canary
+        run: |
+          cd packages/wallet-sdk
+          npm publish --tag canary
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
  

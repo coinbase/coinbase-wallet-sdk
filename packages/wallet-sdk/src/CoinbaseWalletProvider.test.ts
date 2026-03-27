@@ -1,11 +1,11 @@
-import { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js';
-import * as util from './sign/util.js';
-import * as providerUtil from './util/provider.js';
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
-import { AddressString } from ':core/type/index.js';
+import { store } from ':store/store.js';
+import { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js';
+import * as util from './sign/util.js';
+import * as providerUtil from './util/provider.js';
 
 function createProvider() {
   return new CoinbaseWalletProvider({
@@ -30,7 +30,7 @@ beforeEach(() => {
   vi.spyOn(util, 'createSigner').mockImplementation((params) => {
     callback = params.callback;
     return {
-      accounts: [AddressString('0x123')],
+      accounts: ['0x123'],
       chainId: 1,
       handshake: mockHandshake,
       request: mockRequest,
@@ -109,15 +109,18 @@ describe('Ephemeral methods', () => {
     expect(provider['signer']).toBeNull();
   });
 
-  it('should pass args to SCWSigner', async () => {
-    const args = { method: 'wallet_sendCalls', params: ['0xdeadbeef'] };
-    expect(provider['signer']).toBeNull();
-    await provider.request(args);
-    expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
-    expect(mockRequest).toHaveBeenCalledWith(args);
-    expect(mockCleanup).toHaveBeenCalled();
-    expect(provider['signer']).toBeNull();
-  });
+  it.each(['wallet_sendCalls', 'wallet_sign'])(
+    'should perform a successful request after handshake',
+    async (method) => {
+      const args = { method, params: ['0xdeadbeef'] };
+      expect(provider['signer']).toBeNull();
+      await provider.request(args);
+      expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
+      expect(mockRequest).toHaveBeenCalledWith(args);
+      expect(mockCleanup).toHaveBeenCalled();
+      expect(provider['signer']).toBeNull();
+    }
+  );
 });
 
 describe('Signer configuration', () => {
@@ -206,5 +209,17 @@ describe('Signer configuration', () => {
     await provider.disconnect();
     expect(mockCleanup).toHaveBeenCalled();
     expect(provider['signer']).toBeNull();
+  });
+
+  describe('Auto sub account', () => {
+    it('call handshake without method when enableAutoSubAccounts is true', async () => {
+      mockLoadSignerType.mockReturnValue('scw');
+      vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
+        enableAutoSubAccounts: true,
+      });
+
+      await provider.request({ method: 'eth_requestAccounts' });
+      expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
+    });
   });
 });

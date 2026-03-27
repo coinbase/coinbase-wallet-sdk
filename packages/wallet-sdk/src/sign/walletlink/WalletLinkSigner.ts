@@ -1,18 +1,19 @@
 // Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
-import eip712 from '../../vendor-js/eth-eip712-util/index.cjs';
-import { Signer } from '../interface.js';
-import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants.js';
-import { EthereumTransactionParams } from './relay/type/EthereumTransactionParams.js';
-import { isErrorResponse } from './relay/type/Web3Response.js';
-import { WalletLinkRelay } from './relay/WalletLinkRelay.js';
 import { WALLETLINK_URL } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { AppMetadata, ProviderEventCallback, RequestArguments } from ':core/provider/interface.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
-import { AddressString } from ':core/type/index.js';
+import {
+  logHandshakeCompleted,
+  logHandshakeError,
+  logHandshakeStarted,
+  logRequestCompleted,
+  logRequestError,
+  logRequestStarted,
+} from ':core/telemetry/events/walletlink-signer.js';
+import { parseErrorMessageFromAny } from ':core/telemetry/utils.js';
+import { Address } from ':core/type/index.js';
 import {
   encodeToHexString,
   ensureAddressString,
@@ -23,7 +24,15 @@ import {
   hexStringFromBuffer,
   hexStringFromNumber,
 } from ':core/type/util.js';
+import { correlationIds } from ':store/correlation-ids/store.js';
 import { fetchRPCRequest } from ':util/provider.js';
+import eip712 from '../../vendor-js/eth-eip712-util/index.cjs';
+import { Signer } from '../interface.js';
+import { WalletLinkRelay } from './relay/WalletLinkRelay.js';
+import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants.js';
+import { EthereumTransactionParams } from './relay/type/EthereumTransactionParams.js';
+import { isErrorResponse } from './relay/type/Web3Response.js';
+
 const DEFAULT_CHAIN_ID_KEY = 'DefaultChainId';
 const DEFAULT_JSON_RPC_URL = 'DefaultJsonRpcUrl';
 
@@ -34,7 +43,7 @@ export class WalletLinkSigner implements Signer {
   private metadata: AppMetadata;
   private _relay: WalletLinkRelay | null = null;
   private readonly _storage: ScopedLocalStorage;
-  private _addresses: AddressString[] = [];
+  private _addresses: Address[] = [];
   private callback: ProviderEventCallback | null;
 
   constructor(options: { metadata: AppMetadata; callback?: ProviderEventCallback }) {
@@ -44,7 +53,7 @@ export class WalletLinkSigner implements Signer {
 
     const cachedAddresses = this._storage.getItem(LOCAL_STORAGE_ADDRESSES_KEY);
     if (cachedAddresses) {
-      const addresses = cachedAddresses.split(' ') as AddressString[];
+      const addresses = cachedAddresses.split(' ') as string[];
       if (addresses[0] !== '') {
         this._addresses = addresses.map((address) => ensureAddressString(address));
       }
@@ -59,11 +68,31 @@ export class WalletLinkSigner implements Signer {
     return { id, secret };
   }
 
-  async handshake() {
-    await this._eth_requestAccounts();
+  async handshake(args: RequestArguments) {
+    // only eth_requestAccounts is supported for handshake in WalletLink
+    const method = 'eth_requestAccounts';
+    const correlationId = correlationIds.get(args);
+    logHandshakeStarted({
+      method,
+      correlationId,
+    });
+    try {
+      await this._eth_requestAccounts();
+      logHandshakeCompleted({
+        method,
+        correlationId,
+      });
+    } catch (error) {
+      logHandshakeError({
+        method,
+        correlationId,
+        errorMessage: parseErrorMessageFromAny(error),
+      });
+      throw error;
+    }
   }
 
-  private get selectedAddress(): AddressString | undefined {
+  private get selectedAddress(): Address | undefined {
     return this._addresses[0] || undefined;
   }
 
@@ -238,6 +267,24 @@ export class WalletLinkSigner implements Signer {
   }
 
   async request(request: RequestArguments) {
+    const correlationId = correlationIds.get(request);
+    logRequestStarted({ method: request.method, correlationId });
+
+    try {
+      const result = await this._request(request);
+      logRequestCompleted({ method: request.method, correlationId });
+      return result;
+    } catch (error) {
+      logRequestError({
+        method: request.method,
+        correlationId,
+        errorMessage: parseErrorMessageFromAny(error),
+      });
+      throw error;
+    }
+  }
+
+  private async _request(request: RequestArguments) {
     const params = (request.params as RequestParam) || [];
 
     switch (request.method) {

@@ -1,24 +1,69 @@
 import { fireEvent } from '@testing-library/preact';
 import { vi } from 'vitest';
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
-import eip712 from '../../vendor-js/eth-eip712-util/index.cjs';
-import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants.js';
-import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from './relay/mocks/fixtures.js';
-import { mockedWalletLinkRelay } from './relay/mocks/relay.js';
-import { WalletLinkRelay } from './relay/WalletLinkRelay.js';
-import { WalletLinkSigner } from './WalletLinkSigner.js';
 import { WALLETLINK_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { ProviderEventCallback } from ':core/provider/interface.js';
 import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
-import { AddressString } from ':core/type/index.js';
+import { Address, HexString } from ':core/type/index.js';
+
+// @ts-nocheck
+import eip712 from '../../vendor-js/eth-eip712-util/index.cjs';
+import { WalletLinkSigner } from './WalletLinkSigner.js';
+import { WalletLinkRelay } from './relay/WalletLinkRelay.js';
+import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants.js';
+import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from './relay/mocks/fixtures.js';
+import { mockedWalletLinkRelay } from './relay/mocks/relay.js';
 
 vi.mock('./relay/WalletLinkRelay', () => {
   return {
-    WalletLinkRelay: mockedWalletLinkRelay,
+    WalletLinkRelay: vi.fn().mockImplementation(() => ({
+      resetAndReload: vi.fn(),
+      sendRequest: vi.fn().mockRejectedValue(null),
+      watchAsset: vi.fn().mockResolvedValue({
+        method: 'watchAsset',
+        result: true,
+      }),
+      switchEthereumChain: vi.fn().mockResolvedValue({
+        method: 'switchEthereumChain',
+        result: {
+          isApproved: true,
+          rpcUrl: 'https://node.ethchain.com',
+        },
+      }),
+      addEthereumChain: vi.fn().mockResolvedValue({
+        method: 'addEthereumChain',
+        result: {
+          isApproved: true,
+          rpcUrl: 'https://node.ethchain.com',
+        },
+      }),
+      requestEthereumAccounts: vi.fn().mockResolvedValue({
+        method: 'requestEthereumAccounts',
+        result: [MOCK_ADDERESS],
+      }),
+      signAndSubmitEthereumTransaction: vi.fn().mockResolvedValue({
+        method: 'signAndSubmitEthereumTransaction',
+        result: HexString(MOCK_TX),
+      }),
+      signEthereumMessage: vi.fn().mockResolvedValue(MOCK_SIGNED_TX),
+      signEthereumTransaction: vi.fn().mockResolvedValue({
+        method: 'signEthereumTransaction',
+        result: HexString(MOCK_TX),
+      }),
+      submitEthereumTransaction: vi.fn().mockResolvedValue({
+        method: 'submitEthereumTransaction',
+        result: HexString(MOCK_TX),
+      }),
+      scanQRCode: vi.fn().mockResolvedValue('result'),
+      showQRCode: vi.fn(),
+      cancel: vi.fn(),
+      setAppInfo: vi.fn(),
+      setAccountsCallback: vi.fn(),
+      setLinkAPIUrl: vi.fn(),
+      setJsonRpcUrl: vi.fn(),
+    })),
   };
 });
 
@@ -43,7 +88,7 @@ describe('LegacyProvider', () => {
 
   it('handles enabling the provider successfully', async () => {
     const provider = createAdapter();
-    const response = (await provider.request({ method: 'eth_requestAccounts' })) as AddressString[];
+    const response = (await provider.request({ method: 'eth_requestAccounts' })) as Address[];
     expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
     expect(mockCallback).toHaveBeenCalledWith('connect', { chainId: '0x1' });
   });
@@ -61,7 +106,7 @@ describe('LegacyProvider', () => {
     const provider = createAdapter();
     const response = (await provider.request({
       method: 'eth_requestAccounts',
-    })) as AddressString[];
+    })) as Address[];
     expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
   });
 
@@ -97,7 +142,7 @@ describe('LegacyProvider', () => {
     // Set the account on the first request
     const response1 = (await provider.request({
       method: 'eth_requestAccounts',
-    })) as AddressString[];
+    })) as Address[];
     expect(response1[0]).toBe(MOCK_ADDERESS.toLowerCase());
 
     // @ts-expect-error accessing private value for test
@@ -106,7 +151,7 @@ describe('LegacyProvider', () => {
     // Set the account on the first request
     const response2 = (await provider.request({
       method: 'eth_requestAccounts',
-    })) as AddressString[];
+    })) as Address[];
     expect(response2[0]).toBe(MOCK_ADDERESS.toLowerCase());
   });
 
@@ -120,7 +165,7 @@ describe('LegacyProvider', () => {
     // Set the account on the first request
     const response = (await provider.request({
       method: 'eth_requestAccounts',
-    })) as AddressString[];
+    })) as Address[];
     expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
   });
 
@@ -131,7 +176,7 @@ describe('LegacyProvider', () => {
 
     beforeEach(() => {
       sendRequestSpy.mockResolvedValue({
-        result: AddressString(MOCK_ADDERESS),
+        result: MOCK_ADDERESS,
       });
     });
 
@@ -219,6 +264,26 @@ describe('LegacyProvider', () => {
       sendRequestSpy.mockResolvedValue({
         result: 'signTypedData mocked result',
       });
+    });
+
+    // biome-ignore lint/suspicious/noSkippedTests: eth_signTypedData_v1 is deprecated
+    test.skip('eth_signTypedData_v1', async () => {
+      const hashSpy = vi.spyOn(eip712, 'hashForSignTypedDataLegacy');
+      const response = await provider?.request({
+        method: 'eth_signTypedData_v1',
+        params: [[MOCK_TYPED_DATA], MOCK_ADDERESS],
+      });
+      expect(hashSpy).toHaveBeenCalled();
+      expect(sendRequestSpy).toBeCalledWith({
+        method: 'signEthereumMessage',
+        params: {
+          address: MOCK_ADDERESS.toLowerCase(),
+          message: ENCODED_MESSAGE,
+          addPrefix: false,
+          typedDataJson: ENCODED_TYPED_DATA_JSON,
+        },
+      });
+      expect(response).toBe('signTypedData mocked result');
     });
 
     test('eth_signTypedData_v3', async () => {

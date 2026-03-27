@@ -19,7 +19,7 @@ const walletSendCalls: RpcRequestInput = {
     {
       chainId: data.chainId,
       from: data.from,
-      calls: data.calls,
+      calls: parseMessage(data.calls),
       version: data.version,
       capabilities: parseMessage(data.capabilities),
     },
