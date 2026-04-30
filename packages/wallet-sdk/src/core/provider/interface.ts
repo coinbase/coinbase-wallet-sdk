@@ -35,7 +35,7 @@ export interface ProviderInterface extends ProviderEventEmitter {
 
 export type ProviderEventCallback = ProviderInterface['emit'];
 
-export type SpendLimitConfig = {
+export type SpendPermissionConfig = {
   token: Address;
   allowance: Hex;
   period: number;
@@ -96,11 +96,6 @@ export type SubAccountOptions = {
    * @returns The owner account that will be used to sign the subaccount transactions.
    */
   toOwnerAccount?: ToOwnerAccountFn;
-  /**
-   * Spend limits requested on app connect if a matching existing one does not exist.
-   * Only supports native chain tokens currently.
-   */
-  defaultSpendLimits?: Record<number, SpendLimitConfig[]>;
 };
 
 export interface ConstructorOptions {

@@ -12,7 +12,6 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { getCryptoKeyAccount } from '@coinbase/wallet-sdk';
-import { SpendLimitConfig } from '@coinbase/wallet-sdk/dist/core/provider/interface';
 import React, { useEffect, useState } from 'react';
 import { createPublicClient, http, numberToHex, parseEther } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
@@ -71,6 +70,22 @@ export default function AutoSubAccount() {
     try {
       const response = await provider.request({
         method: 'eth_requestAccounts',
+        params: [],
+      });
+      setAccounts(response as string[]);
+      setLastResult(JSON.stringify(response, null, 2));
+    } catch (e) {
+      console.error('error', e);
+      setLastResult(JSON.stringify(e, null, 2));
+    }
+  };
+
+  const handleEthAccounts = async () => {
+    if (!provider) return;
+
+    try {
+      const response = await provider.request({
+        method: 'eth_accounts',
         params: [],
       });
       setAccounts(response as string[]);
@@ -215,24 +230,6 @@ export default function AutoSubAccount() {
     }
   };
 
-  const handleSetDefaultSpendLimits = (value: string) => {
-    const defaultSpendLimits = {
-      [baseSepolia.id]: [
-        {
-          token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-          allowance: '0x2386F26FC10000',
-          period: 86400,
-        } as SpendLimitConfig,
-      ],
-    };
-
-    if (value === 'true') {
-      setSubAccountsConfig((prev) => ({ ...prev, defaultSpendLimits }));
-    } else {
-      setSubAccountsConfig((prev) => ({ ...prev, defaultSpendLimits: {} }));
-    }
-  };
-
   const handleEthSend = async (amount: string) => {
     if (!provider || !accounts.length) return;
 
@@ -327,18 +324,6 @@ export default function AutoSubAccount() {
           </RadioGroup>
         </FormControl>
         <FormControl>
-          <FormLabel>Default Spend Limit</FormLabel>
-          <RadioGroup
-            value={subAccountsConfig?.defaultSpendLimits?.[baseSepolia.id] ? 'true' : 'false'}
-            onChange={handleSetDefaultSpendLimits}
-          >
-            <Stack direction="row">
-              <Radio value="true">Enabled</Radio>
-              <Radio value="false">Disabled</Radio>
-            </Stack>
-          </RadioGroup>
-        </FormControl>
-        <FormControl>
           <FormLabel>Attribution</FormLabel>
           <RadioGroup value={getAttributionMode()} onChange={handleAttributionModeChange}>
             <Stack direction="row">
@@ -384,6 +369,9 @@ export default function AutoSubAccount() {
         </Box>
         <Button w="full" onClick={handleRequestAccounts}>
           eth_requestAccounts
+        </Button>
+        <Button w="full" onClick={handleEthAccounts}>
+          eth_accounts
         </Button>
         <Button w="full" onClick={handleSendTransaction} isDisabled={!accounts.length}>
           eth_sendTransaction
