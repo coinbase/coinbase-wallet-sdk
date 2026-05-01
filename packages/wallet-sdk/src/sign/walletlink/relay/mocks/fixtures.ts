@@ -1,4 +1,4 @@
-export const MOCK_ADDERESS = '0xFadAFCE89EA2221fa33005640Acf2C923312F2b9';
+export const MOCK_ADDRESS = '0xFadAFCE89EA2221fa33005640Acf2C923312F2b9';
 
 export const MOCK_TX = '0xc21a1aaace40a8ee9dd3827ae5a85412a05755cc004469efaf3cfdd82c59a670';
 
@@ -27,7 +27,7 @@ export const MOCK_TYPED_DATA = JSON.stringify({
     name: 'Provider Test',
     version: '1',
     chainId: Number.parseInt('1', 10),
-    verifyingContract: MOCK_ADDERESS,
+    verifyingContract: MOCK_ADDRESS,
     salt: '0xf2d857f4a3edcb9b78b4d503bfe733db1e3f6cdc2b7971ee739626c97e86a558',
   },
   primaryType: 'Bid',
@@ -35,7 +35,7 @@ export const MOCK_TYPED_DATA = JSON.stringify({
     amount: 100,
     bidder: {
       userId: 323,
-      wallet: MOCK_ADDERESS,
+      wallet: MOCK_ADDRESS,
     },
   },
 });
