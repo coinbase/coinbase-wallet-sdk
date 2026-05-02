@@ -9,10 +9,13 @@ jobs:
   lint:
     name: Lint Check
     runs-on: ubuntu-latest
+<<<<<<< Updated upstream:.github/workflows/main.yml
     defaults:
       run:
         working-directory: ./
 
+=======
+>>>>>>> Stashed changes:.github/workflows/CI.yml
     steps:
       - name: Checkout
         uses: actions/checkout@v4
