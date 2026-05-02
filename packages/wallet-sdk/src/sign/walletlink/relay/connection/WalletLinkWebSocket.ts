@@ -12,7 +12,7 @@ export class WalletLinkWebSocket {
   // used to differentiate instances
   private static instanceCounter = 0;
   private static activeInstances = new Set<number>();
-  private static pendingData: string[] = [];
+  private pendingData: string[] = [];
 
   private readonly instanceId: number;
   private readonly url: string;
