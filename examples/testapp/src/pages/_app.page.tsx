@@ -1,5 +1,4 @@
 import { ChakraProvider } from '@chakra-ui/react';
-import { Analytics } from '@vercel/analytics/next';
 
 import { Layout } from '../components/Layout';
 import { ConfigContextProvider } from '../context/ConfigContextProvider';
@@ -16,7 +15,6 @@ export default function App({ Component, pageProps }) {
           </Layout>
         </EIP1193ProviderContextProvider>
       </ConfigContextProvider>
-      <Analytics />
     </ChakraProvider>
   );
 }

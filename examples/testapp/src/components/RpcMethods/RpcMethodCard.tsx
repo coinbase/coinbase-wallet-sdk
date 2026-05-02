@@ -56,7 +56,7 @@ const replaceAddressInValue = async (value: any, getCurrentAddress: () => Promis
   return value;
 };
 
-export function RpcMethodCard({ format, method, params, shortcuts }) {
+export function RpcMethodCard({ format, method, params, shortcuts, children = null }) {
   const [response, setResponse] = React.useState<Response | null>(null);
   const [verifyResult, setVerifyResult] = React.useState<string | null>(null);
   const [error, setError] = React.useState<Record<string, unknown> | string | number | null>(null);
@@ -258,6 +258,7 @@ export function RpcMethodCard({ format, method, params, shortcuts }) {
             </Code>
           </VStack>
         )}
+        {children}
       </CardBody>
     </Card>
   );
