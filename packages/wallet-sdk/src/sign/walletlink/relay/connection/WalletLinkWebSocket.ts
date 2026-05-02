@@ -132,7 +132,7 @@ export class WalletLinkWebSocket {
   public sendData(data: string): void {
     const { webSocket } = this;
     if (!webSocket) {
-      WalletLinkWebSocket.pendingData.push(data);
+      this.pendingData.push(data);
       if (!this.isDisconnecting) {
         this.connect();
       }
