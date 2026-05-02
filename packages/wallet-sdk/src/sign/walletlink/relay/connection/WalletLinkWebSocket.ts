@@ -141,7 +141,7 @@ export class WalletLinkWebSocket {
 
     // Check if WebSocket is actually open before sending
     if (webSocket.readyState !== WebSocket.OPEN) {
-      WalletLinkWebSocket.pendingData.push(data);
+      this.pendingData.push(data);
       return;
     }
 
