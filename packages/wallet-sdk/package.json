@@ -45,7 +45,7 @@
     "@testing-library/jest-dom": "^6.5.0",
     "@testing-library/preact": "^3.2.4",
     "@types/node": "^14.18.54",
-    "@vitest/coverage-v8": "2.1.2",
+    "@vitest/coverage-v8": "4.0.0",
     "@vitest/web-worker": "3.2.1",
     "fake-indexeddb": "^6.0.0",
     "glob": "^12.0.0",
