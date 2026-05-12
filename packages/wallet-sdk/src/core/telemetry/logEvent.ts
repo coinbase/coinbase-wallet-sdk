@@ -1,3 +1,4 @@
+import { SignerType } from ':core/message/ConfigMessage.js';
 import { store } from ':store/store.js';
 import { VERSION } from '../../sdk-info.js';
 
@@ -52,11 +53,18 @@ type CCAEventData = {
   action: ActionType;
   componentType: ComponentType;
   // Metadata
-  sdkVersion: string;
-  appName: string;
-  appOrigin: string;
+  sdkVersion?: string;
+  appName?: string;
+  appOrigin?: string;
+  appPreferredSigner?: string;
   // Custom Attributes
+  signerType?: SignerType;
   method?: string; // RPC method
+  correlationId?: string;
+  errorMessage?: string;
+  snackbarContext?: string;
+  snackbarAction?: string;
+  enableAutoSubAccounts?: boolean;
 };
 
 type AnalyticsEventData = {
@@ -84,6 +92,7 @@ export function logEvent(
         sdkVersion: VERSION,
         appName: store.config.get().metadata?.appName ?? '',
         appOrigin: window.location.origin,
+        appPreferredSigner: store.config.get().preference?.options,
       },
       importance
     );
