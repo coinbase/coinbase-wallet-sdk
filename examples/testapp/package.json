@@ -21,7 +21,7 @@
     "@metamask/eth-sig-util": "^7.0.0",
     "@vercel/analytics": "^1.4.1",
     "framer-motion": "^10.13.1",
-    "next": "^16.1.6",
+    "next": "^15.5.18",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "7.45.2",
