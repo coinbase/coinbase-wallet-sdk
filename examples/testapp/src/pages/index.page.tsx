@@ -1,9 +1,11 @@
-import { Box, Container, Grid, Heading } from '@chakra-ui/react';
-import React, { useEffect } from 'react';
+import { Box, Container, Flex, Grid, GridItem, Heading, Switch, Text } from '@chakra-ui/react';
+import React, { useCallback, useEffect } from 'react';
 
 import { EventListenersCard } from '../components/EventListeners/EventListenersCard';
 import { WIDTH_2XL } from '../components/Layout';
 import { MethodsSection } from '../components/MethodsSection/MethodsSection';
+import { RpcMethodCard } from '../components/RpcMethods/RpcMethodCard';
+import { useConfig } from '../context/ConfigContextProvider';
 import { connectionMethods } from '../components/RpcMethods/method/connectionMethods';
 import { ephemeralMethods } from '../components/RpcMethods/method/ephemeralMethods';
 import { multiChainMethods } from '../components/RpcMethods/method/multiChainMethods';
@@ -23,6 +25,22 @@ import { useEIP1193Provider } from '../context/EIP1193ProviderContextProvider';
 
 export default function Home() {
   const { provider } = useEIP1193Provider();
+  const { scwUrl, setScwUrlAndSave } = useConfig();
+
+  const simulateCoop = new URL(scwUrl).searchParams.get('coop') === 'same-origin';
+
+  const handleSimulateCoopToggle = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const url = new URL(scwUrl);
+      if (e.target.checked) {
+        url.searchParams.set('coop', 'same-origin');
+      } else {
+        url.searchParams.delete('coop');
+      }
+      setScwUrlAndSave(url.toString() as Parameters<typeof setScwUrlAndSave>[0]);
+    },
+    [scwUrl, setScwUrlAndSave]
+  );
   // @ts-expect-error refactor soon
   const [connected, setConnected] = React.useState(Boolean(provider?.connected));
   const [chainId, setChainId] = React.useState<number | undefined>(undefined);
@@ -76,11 +94,40 @@ export default function Home() {
       <Box mt={4}>
         <SDKConfig />
       </Box>
-      <MethodsSection
-        title="Wallet Connection"
-        methods={connectionMethods}
-        shortcutsMap={connectionMethodShortcutsMap}
-      />
+      <Box mt={4}>
+        <Heading size="md">Wallet Connection</Heading>
+        <Grid
+          mt={2}
+          templateColumns={{ base: '100%', md: 'repeat(2, 50%)', xl: 'repeat(3, 33%)' }}
+          gap={2}
+        >
+          <GridItem w="100%" key="eth_requestAccounts">
+            <RpcMethodCard
+              method="eth_requestAccounts"
+              params={[]}
+              format={undefined}
+              shortcuts={connectionMethodShortcutsMap?.['eth_requestAccounts']}
+            >
+              <Flex align="center" justify="space-between" mt={4} pt={3} borderTopWidth={1}>
+                <Text fontSize="sm" fontWeight="medium">Simulate COOP</Text>
+                <Switch isChecked={simulateCoop} onChange={handleSimulateCoopToggle} />
+              </Flex>
+            </RpcMethodCard>
+          </GridItem>
+          {connectionMethods
+            .filter((rpc) => rpc.method !== 'eth_requestAccounts')
+            .map((rpc) => (
+              <GridItem w="100%" key={rpc.method}>
+                <RpcMethodCard
+                  method={rpc.method}
+                  params={rpc.params}
+                  format={rpc.format}
+                  shortcuts={connectionMethodShortcutsMap?.[rpc.method]}
+                />
+              </GridItem>
+            ))}
+        </Grid>
+      </Box>
       <MethodsSection
         title="Ephemeral Methods"
         methods={ephemeralMethods}
