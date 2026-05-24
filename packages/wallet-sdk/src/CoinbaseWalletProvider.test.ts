@@ -109,15 +109,18 @@ describe('Ephemeral methods', () => {
     expect(provider['signer']).toBeNull();
   });
 
-  it('should pass args to SCWSigner', async () => {
-    const args = { method: 'wallet_sendCalls', params: ['0xdeadbeef'] };
-    expect(provider['signer']).toBeNull();
-    await provider.request(args);
-    expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
-    expect(mockRequest).toHaveBeenCalledWith(args);
-    expect(mockCleanup).toHaveBeenCalled();
-    expect(provider['signer']).toBeNull();
-  });
+  it.each(['wallet_sendCalls', 'wallet_sign'])(
+    'should perform a successful request after handshake',
+    async (method) => {
+      const args = { method, params: ['0xdeadbeef'] };
+      expect(provider['signer']).toBeNull();
+      await provider.request(args);
+      expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
+      expect(mockRequest).toHaveBeenCalledWith(args);
+      expect(mockCleanup).toHaveBeenCalled();
+      expect(provider['signer']).toBeNull();
+    }
+  );
 });
 
 describe('Signer configuration', () => {

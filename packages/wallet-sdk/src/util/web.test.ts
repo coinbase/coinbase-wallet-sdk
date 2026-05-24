@@ -68,13 +68,25 @@ describe('PopupManager', () => {
     url.searchParams.append('sdkVersion', VERSION);
     url.searchParams.append('origin', mockOrigin);
     url.searchParams.append('coop', 'null');
-    
+
     (window.open as Mock).mockReturnValue({ focus: vi.fn() });
 
     await openPopup(url);
 
     const paramCount = url.searchParams.toString().split('&').length;
     expect(paramCount).toBe(4);
+  });
+
+  it('should not overwrite coop=same-origin when already present in the URL', async () => {
+    const url = new URL('https://example.com');
+    url.searchParams.set('coop', 'same-origin');
+
+    (window.open as Mock).mockReturnValue({ focus: vi.fn() });
+
+    await openPopup(url);
+
+    expect(url.searchParams.get('coop')).toBe('same-origin');
+    expect(url.searchParams.getAll('coop')).toHaveLength(1);
   });
 
   it('should show snackbar with retry button when popup is blocked and retry successfully', async () => {

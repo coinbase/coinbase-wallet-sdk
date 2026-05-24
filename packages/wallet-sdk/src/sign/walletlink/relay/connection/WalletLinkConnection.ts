@@ -1,5 +1,9 @@
 // Copyright (c) 2018-2023 Coinbase, Inc. <https://www.coinbase.com/>
 
+import {
+  logWalletLinkConnectionConnectionFailed,
+  logWalletLinkConnectionFetchUnseenEventsFailed,
+} from ':core/telemetry/events/walletlink-signer.js';
 import { IntNumber } from ':core/type/index.js';
 import { APP_VERSION_KEY, WALLET_USER_NAME_KEY } from '../constants.js';
 import { ClientMessage } from '../type/ClientMessage.js';
@@ -36,6 +40,12 @@ export class WalletLinkConnection {
   private destroyed = false;
   private lastHeartbeatResponse = 0;
   private nextReqId = IntNumber(1);
+  private heartbeatIntervalId?: number;
+  private reconnectAttempts = 0;
+  private visibilityChangeHandler?: () => void;
+  private focusHandler?: () => void;
+  private activeWsInstance?: WalletLinkWebSocket;
+  private isReconnecting = false;
 
   private readonly session: WalletLinkSession;
 
@@ -43,7 +53,8 @@ export class WalletLinkConnection {
   private cipher: WalletLinkCipher;
   private ws: WalletLinkWebSocket;
   private http: WalletLinkHTTP;
-  private heartbeatWorker?: Worker;
+  private readonly linkAPIUrl: string;
+  private readonly WebSocketClass: typeof WebSocket;
 
   /**
    * Constructor
@@ -56,58 +67,144 @@ export class WalletLinkConnection {
     this.session = session;
     this.cipher = new WalletLinkCipher(session.secret);
     this.listener = listener;
+    this.linkAPIUrl = linkAPIUrl;
+    this.WebSocketClass = WebSocket;
 
-    const ws = new WalletLinkWebSocket(`${linkAPIUrl}/rpc`, WebSocket);
+    const ws = this.createWebSocket();
+    this.ws = ws;
+
+    this.http = new WalletLinkHTTP(linkAPIUrl, session.id, session.key);
+
+    this.setupVisibilityChangeHandler();
+  }
+
+  private createWebSocket(): WalletLinkWebSocket {
+    const ws = new WalletLinkWebSocket(`${this.linkAPIUrl}/rpc`, this.WebSocketClass);
+
+    // Track this as the active WebSocket instance
+    this.activeWsInstance = ws;
+
     ws.setConnectionStateListener(async (state) => {
+      // Ignore events from non-active WebSocket instances
+      if (ws !== this.activeWsInstance) {
+        return;
+      }
+
       // attempt to reconnect every 5 seconds when disconnected
       let connected = false;
       switch (state) {
         case ConnectionState.DISCONNECTED:
-          // Stop heartbeat when disconnected
-          this.stopHeartbeat();
-          
-          // if DISCONNECTED and not destroyed
+          // Clear heartbeat timer when disconnected
+          if (this.heartbeatIntervalId) {
+            clearInterval(this.heartbeatIntervalId);
+            this.heartbeatIntervalId = undefined;
+          }
+
+          // Reset lastHeartbeatResponse to prevent false timeout on reconnection
+          this.lastHeartbeatResponse = 0;
+
+          // Reset connected state to false on disconnect
+          connected = false;
+
+          // if DISCONNECTED and not destroyed, create a fresh WebSocket connection
           if (!this.destroyed) {
-            const connect = async () => {
-              // wait 5 seconds
-              await new Promise((resolve) => setTimeout(resolve, 5000));
-              // check whether it's destroyed again
-              if (!this.destroyed) {
-                // reconnect
-                ws.connect().catch(() => {
-                  connect();
-                });
+            const reconnect = async () => {
+              // Prevent multiple concurrent reconnection attempts
+              if (this.isReconnecting) {
+                return;
+              }
+
+              this.isReconnecting = true;
+
+              // 0 second delay on first attempt, then 3 seconds
+              const delay = this.reconnectAttempts === 0 ? 0 : 3000;
+
+              // wait before reconnecting
+              await new Promise((resolve) => setTimeout(resolve, delay));
+
+              // check whether it's destroyed again and ensure this is still the active instance
+              if (!this.destroyed && ws === this.activeWsInstance) {
+                this.reconnectAttempts++;
+
+                // Clean up the old WebSocket instance
+                if ('cleanup' in this.ws && typeof this.ws.cleanup === 'function') {
+                  this.ws.cleanup();
+                }
+
+                // Create a fresh WebSocket instance
+                this.ws = this.createWebSocket();
+                this.ws
+                  .connect()
+                  .catch(() => {
+                    // Reconnection failed, will retry
+                    logWalletLinkConnectionConnectionFailed();
+                  })
+                  .finally(() => {
+                    this.isReconnecting = false;
+                  });
+              } else {
+                this.isReconnecting = false;
               }
             };
-            connect();
+            reconnect();
           }
           break;
 
         case ConnectionState.CONNECTED:
+          // Reset reconnect attempts on successful connection
+          this.reconnectAttempts = 0;
+
           // perform authentication upon connection
-          // if CONNECTED, authenticate, and then check link status
-          connected = await this.handleConnected();
+          try {
+            // if CONNECTED, authenticate, and then check link status
+            connected = await this.handleConnected();
+
+            // Always fetch unseen events when WebSocket state changes to CONNECTED
+            this.fetchUnseenEventsAPI().catch(() => {
+              // Failed to fetch unseen events after connection
+            });
+          } catch (_error) {
+            // Don't set connected to true if authentication fails
+            break;
+          }
+
+          // Update connected state immediately after successful authentication
+          // This ensures heartbeats won't be skipped
+          this.connected = connected;
 
           // send heartbeat every n seconds while connected
-          // if CONNECTED, start the heartbeat timer using WebWorker
+          // if CONNECTED, start the heartbeat timer
+          // first timer event updates lastHeartbeat timestamp
+          // subsequent calls send heartbeat message
           this.updateLastHeartbeat();
-          this.startHeartbeat();
 
-          // check for unseen events
-          if (this.shouldFetchUnseenEventsOnConnect) {
-            this.fetchUnseenEventsAPI();
+          // Clear existing heartbeat timer
+          if (this.heartbeatIntervalId) {
+            clearInterval(this.heartbeatIntervalId);
           }
+
+          this.heartbeatIntervalId = window.setInterval(() => {
+            this.heartbeat();
+          }, HEARTBEAT_INTERVAL);
+
+          // Send an immediate heartbeat
+          setTimeout(() => {
+            this.heartbeat();
+          }, 100);
+
           break;
 
         case ConnectionState.CONNECTING:
           break;
       }
 
-      // distinctUntilChanged
-      if (this.connected !== connected) {
+      // Update connected state for DISCONNECTED and CONNECTING cases
+      // For CONNECTED case, it's already set above
+      if (state !== ConnectionState.CONNECTED) {
         this.connected = connected;
       }
     });
+
     ws.setIncomingDataListener((m) => {
       switch (m.type) {
         // handle server's heartbeat responses
@@ -141,9 +238,64 @@ export class WalletLinkConnection {
         this.requestResolutions.get(m.id)?.(m);
       }
     });
-    this.ws = ws;
 
-    this.http = new WalletLinkHTTP(linkAPIUrl, session.id, session.key);
+    return ws;
+  }
+
+  private setupVisibilityChangeHandler(): void {
+    this.visibilityChangeHandler = () => {
+      if (!document.hidden && !this.destroyed) {
+        if (!this.connected) {
+          // Force a fresh connection if we're disconnected
+          this.reconnectWithFreshWebSocket();
+        } else {
+          // Otherwise send a heartbeat to check if connection is still alive
+          this.heartbeat();
+        }
+      }
+    };
+
+    // Handle focus events (when user switches back to the tab/app)
+    this.focusHandler = () => {
+      if (!this.destroyed && !this.connected) {
+        this.reconnectWithFreshWebSocket();
+      }
+    };
+
+    // Add event listeners
+    document.addEventListener('visibilitychange', this.visibilityChangeHandler);
+    window.addEventListener('focus', this.focusHandler);
+
+    window.addEventListener('pageshow', (event) => {
+      if (event.persisted) {
+        if (this.focusHandler) {
+          this.focusHandler();
+        }
+      }
+    });
+  }
+
+  private reconnectWithFreshWebSocket(): void {
+    if (this.destroyed) return;
+
+    // Clear the active instance reference before disconnecting
+    const oldWs = this.ws;
+    this.activeWsInstance = undefined;
+
+    // Disconnect current WebSocket
+    oldWs.disconnect();
+
+    // Clean up the old instance
+    if ('cleanup' in oldWs && typeof oldWs.cleanup === 'function') {
+      oldWs.cleanup();
+    }
+
+    // Create and connect fresh WebSocket
+    this.ws = this.createWebSocket();
+    this.ws.connect().catch(() => {
+      // Fresh reconnection failed
+      logWalletLinkConnectionConnectionFailed();
+    });
   }
 
   /**
@@ -174,8 +326,31 @@ export class WalletLinkConnection {
     );
 
     this.destroyed = true;
-    this.stopHeartbeat();
+
+    // Clear the active instance reference
+    this.activeWsInstance = undefined;
+
+    // Clear heartbeat timer
+    if (this.heartbeatIntervalId) {
+      clearInterval(this.heartbeatIntervalId);
+      this.heartbeatIntervalId = undefined;
+    }
+
+    // Remove event listeners
+    if (this.visibilityChangeHandler) {
+      document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
+    }
+    if (this.focusHandler) {
+      window.removeEventListener('focus', this.focusHandler);
+    }
+
     this.ws.disconnect();
+
+    // Call cleanup on the WebSocket instance if it has the method
+    if ('cleanup' in this.ws && typeof this.ws.cleanup === 'function') {
+      this.ws.cleanup();
+    }
+
     this.listener = undefined;
   }
 
@@ -226,23 +401,20 @@ export class WalletLinkConnection {
       return;
     }
 
-    const decryptedData = await this.cipher.decrypt(m.data);
-    const message: WalletLinkEventData = JSON.parse(decryptedData);
+    try {
+      const decryptedData = await this.cipher.decrypt(m.data);
+      const message: WalletLinkEventData = JSON.parse(decryptedData);
 
-    if (message.type !== 'WEB3_RESPONSE') return;
+      if (message.type !== 'WEB3_RESPONSE') return;
 
-    const { id, response } = message;
-    this.listener?.handleWeb3ResponseMessage(id, response);
+      this.listener?.handleWeb3ResponseMessage(message.id, message.response);
+    } catch (_error) {
+      // Had error decrypting
+    }
   }
 
-  private shouldFetchUnseenEventsOnConnect = false;
-
   public async checkUnseenEvents() {
-    if (!this.connected) {
-      this.shouldFetchUnseenEventsOnConnect = true;
-      return;
-    }
-
+    // Add a small delay to ensure any pending operations complete
     await new Promise((resolve) => setTimeout(resolve, 250));
     try {
       await this.fetchUnseenEventsAPI();
@@ -252,10 +424,16 @@ export class WalletLinkConnection {
   }
 
   private async fetchUnseenEventsAPI() {
-    this.shouldFetchUnseenEventsOnConnect = false;
+    try {
+      const responseEvents = await this.http.fetchUnseenEvents();
 
-    const responseEvents = await this.http.fetchUnseenEvents();
-    responseEvents.forEach((e) => this.handleIncomingEvent(e));
+      responseEvents.forEach((e) => {
+        this.handleIncomingEvent(e);
+      });
+    } catch (_error) {
+      // Failed to fetch unseen events
+      logWalletLinkConnectionFetchUnseenEventsFailed();
+    }
   }
 
   /**
@@ -308,62 +486,21 @@ export class WalletLinkConnection {
     this.lastHeartbeatResponse = Date.now();
   }
 
-  private startHeartbeat(): void {
-    if (this.heartbeatWorker) {
-      this.heartbeatWorker.terminate();
-    }
-
-    try {
-      // We put the heartbeat interval on a worker to avoid dropping the websocket connection when the webpage is backgrounded.
-      const workerUrl = new URL('./HeartbeatWorker.js', import.meta.url);
-      this.heartbeatWorker = new Worker(workerUrl, { type: 'module' });
-      this.setupWorkerListeners();
-      
-      this.heartbeatWorker.postMessage({ type: 'start' });
-    } catch (error) {
-      console.warn('Failed to create external heartbeat worker', error);
-    }
-  }
-
-  private setupWorkerListeners(): void {
-    if (!this.heartbeatWorker) return;
-
-    this.heartbeatWorker.addEventListener('message', (event: MessageEvent<{ type: 'heartbeat' | 'started' | 'stopped' }>) => {
-      const { type } = event.data;
-      
-      switch (type) {
-        case 'heartbeat':
-          this.heartbeat();
-          break;
-        case 'started':
-        case 'stopped':
-          // noop
-          break;
-      }
-    });
-
-    this.heartbeatWorker.addEventListener('error', (error) => {
-      console.error('Heartbeat worker error:', error);
-    });
-  }
-
-  private stopHeartbeat(): void {
-    if (this.heartbeatWorker) {
-      this.heartbeatWorker.postMessage({ type: 'stop' });
-      this.heartbeatWorker.terminate();
-      this.heartbeatWorker = undefined;
-    }
-  }
-
   private heartbeat(): void {
     if (Date.now() - this.lastHeartbeatResponse > HEARTBEAT_INTERVAL * 2) {
       this.ws.disconnect();
       return;
     }
+
+    // Only send heartbeat if we're connected
+    if (!this.connected) {
+      return;
+    }
+
     try {
       this.ws.sendData('h');
-    } catch {
-      // noop
+    } catch (_error) {
+      // Error sending heartbeat
     }
   }
 
@@ -401,7 +538,9 @@ export class WalletLinkConnection {
       sessionId: this.session.id,
       sessionKey: this.session.key,
     });
-    if (res.type === 'Fail') return false;
+    if (res.type === 'Fail') {
+      return false;
+    }
 
     this.sendData({
       type: 'IsLinked',
@@ -448,13 +587,21 @@ export class WalletLinkConnection {
   };
 
   private handleAccountUpdated = async (encryptedEthereumAddress: string) => {
-    const address = await this.cipher.decrypt(encryptedEthereumAddress);
-    this.listener?.accountUpdated(address);
+    try {
+      const address = await this.cipher.decrypt(encryptedEthereumAddress);
+      this.listener?.accountUpdated(address);
+    } catch {
+      // Had error decrypting
+    }
   };
 
   private handleMetadataUpdated = async (key: string, encryptedMetadataValue: string) => {
-    const decryptedValue = await this.cipher.decrypt(encryptedMetadataValue);
-    this.listener?.metadataUpdated(key, decryptedValue);
+    try {
+      const decryptedValue = await this.cipher.decrypt(encryptedMetadataValue);
+      this.listener?.metadataUpdated(key, decryptedValue);
+    } catch {
+      // Had error decrypting
+    }
   };
 
   private handleWalletUsernameUpdated = async (walletUsername: string) => {
@@ -466,8 +613,12 @@ export class WalletLinkConnection {
   };
 
   private handleChainUpdated = async (encryptedChainId: string, encryptedJsonRpcUrl: string) => {
-    const chainId = await this.cipher.decrypt(encryptedChainId);
-    const jsonRpcUrl = await this.cipher.decrypt(encryptedJsonRpcUrl);
-    this.listener?.chainUpdated(chainId, jsonRpcUrl);
+    try {
+      const chainId = await this.cipher.decrypt(encryptedChainId);
+      const jsonRpcUrl = await this.cipher.decrypt(encryptedJsonRpcUrl);
+      this.listener?.chainUpdated(chainId, jsonRpcUrl);
+    } catch {
+      // Had error decrypting
+    }
   };
 }
