@@ -57,7 +57,7 @@
     "tsc-alias": "^1.8.8",
     "tslib": "^2.6.0",
     "typescript": "^5.1.6",
-    "vitest": "^3.0.5"
+    "vitest": "^3.2.6"
   },
   "size-limit": [
     {

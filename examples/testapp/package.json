@@ -31,6 +31,6 @@
     "@testing-library/react": "^16.2.0",
     "@types/react": "18.2.15",
     "typescript": "^5.1.6",
-    "vitest": "^4.0.18"
+    "vitest": "^3.2.6"
   }
 }
