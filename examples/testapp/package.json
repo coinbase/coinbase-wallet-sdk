@@ -14,23 +14,23 @@
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
     "@chakra-ui/react": "^2.8.0",
-    "@coinbase/wallet-sdk": "workspace:*",
+    "@coinbase/wallet-sdk": "3.6.4",
     "@coinbase/wallet-sdk-latest": "npm:@coinbase/wallet-sdk@latest",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@metamask/eth-sig-util": "^7.0.0",
     "@vercel/analytics": "^1.4.1",
     "framer-motion": "^10.13.1",
-    "next": "^14.2.10",
+    "next": "^16.1.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "7.45.2",
-    "viem": "^2.27.2"
+    "viem": "^2.50.3"
   },
   "devDependencies": {
     "@testing-library/react": "^16.2.0",
     "@types/react": "18.2.15",
     "typescript": "^5.1.6",
-    "vitest": "^3.0.4"
+    "vitest": "^3.2.6"
   }
 }

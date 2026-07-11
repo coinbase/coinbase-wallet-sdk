@@ -12,7 +12,6 @@ jobs:
     defaults:
       run:
         working-directory: ./
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
