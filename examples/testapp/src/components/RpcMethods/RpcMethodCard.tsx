@@ -1,22 +1,25 @@
+import { CheckIcon, CopyIcon } from '@chakra-ui/icons';
 import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
-  Button,
-  Card,
-  CardBody,
-  Code,
-  Flex,
-  FormControl,
-  FormErrorMessage,
-  HStack,
-  Heading,
-  InputGroup,
-  InputLeftAddon,
-  Textarea,
-  VStack,
+    Accordion,
+    AccordionButton,
+    AccordionIcon,
+    AccordionItem,
+    AccordionPanel,
+    Button,
+    ButtonGroup,
+    Card,
+    CardBody,
+    Code,
+    Flex,
+    FormControl,
+    FormErrorMessage,
+    HStack,
+    Heading,
+    IconButton,
+    InputGroup,
+    InputLeftAddon,
+    Textarea,
+    VStack,
 } from '@chakra-ui/react';
 import React, { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
@@ -56,11 +59,21 @@ const replaceAddressInValue = async (value: any, getCurrentAddress: () => Promis
   return value;
 };
 
-export function RpcMethodCard({ format, method, params, shortcuts, children = null }) {
+export function RpcMethodCard({format, method, params, shortcuts, children = null }) {
   const [response, setResponse] = React.useState<Response | null>(null);
   const [verifyResult, setVerifyResult] = React.useState<string | null>(null);
-  const [error, setError] = React.useState<Record<string, unknown> | string | number | null>(null);
+  const [error, setError] = React.useState<Record<string, unknown> | string | number | null >(null);
+  const [copiedShortcut, setCopiedShortcut] = React.useState<string | null>(null);
   const { provider } = useEIP1193Provider();
+
+  const copyShortcutMessage = useCallback(
+    async (key: string, message: unknown) => {
+      await navigator.clipboard.writeText(JSON.stringify(message, null, 2));
+      setCopiedShortcut(key);
+      window.setTimeout(() => setCopiedShortcut(null), 1500);
+    },
+    [],
+  );
 
   const {
     handleSubmit,
@@ -106,7 +119,10 @@ export function RpcMethodCard({ format, method, params, shortcuts, children = nu
 
         for (const key in dataToSubmit) {
           if (Object.prototype.hasOwnProperty.call(data, key)) {
-            dataToSubmit[key] = await replaceAddressInValue(dataToSubmit[key], getCurrentAddress);
+            dataToSubmit[key] = await replaceAddressInValue(
+              dataToSubmit[key],
+              getCurrentAddress,
+            );
 
             if (dataToSubmit[key] === CHAIN_ID_TO_FILL) {
               const chainId = (await provider.request({ method: 'eth_chainId' })) as string;
@@ -129,7 +145,7 @@ export function RpcMethodCard({ format, method, params, shortcuts, children = nu
         setError({ code, message, data });
       }
     },
-    [format, method, provider, verify]
+    [format, method, provider, verify],
   );
 
   return (
@@ -198,24 +214,32 @@ export function RpcMethodCard({ format, method, params, shortcuts, children = nu
                   <AccordionIcon />
                 </AccordionButton>
                 <AccordionPanel pb={4}>
-                  <HStack spacing={2}>
+                  <HStack spacing={2} flexWrap="wrap">
                     {shortcuts.map((shortcut) => (
-                      <VStack key={shortcut.key} spacing={1}>
-                        <Button onClick={() => submit(shortcut.data)}>{shortcut.key}</Button>
+                      <ButtonGroup key={shortcut.key} size="sm" isAttached>
+                        <Button onClick={() => submit(shortcut.data)}>
+                          {shortcut.key}
+                        </Button>
                         {shortcut.data.message && (
-                          <Button
-                            onClick={() =>
-                              navigator.clipboard.writeText(
-                                JSON.stringify(shortcut.data.message, null, 2)
+                          <IconButton
+                            aria-label="Copy message payload"
+                            title="Copy message payload"
+                            icon={
+                              copiedShortcut === shortcut.key ? (
+                                <CheckIcon />
+                              ) : (
+                                <CopyIcon />
                               )
                             }
-                            variant="outline"
-                            size="sm"
-                          >
-                            Copy
-                          </Button>
+                            onClick={() =>
+                              copyShortcutMessage(
+                                shortcut.key,
+                                shortcut.data.message,
+                              )
+                            }
+                          />
                         )}
-                      </VStack>
+                      </ButtonGroup>
                     ))}
                   </HStack>
                 </AccordionPanel>
