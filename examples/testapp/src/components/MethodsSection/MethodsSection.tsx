@@ -1,7 +1,7 @@
 import { Box, Grid, GridItem, Heading } from '@chakra-ui/react';
 
-import { RpcRequestInput } from '../RpcMethods/method/RpcRequestInput';
 import { RpcMethodCard } from '../RpcMethods/RpcMethodCard';
+import { RpcRequestInput } from '../RpcMethods/method/RpcRequestInput';
 import { ShortcutType } from '../RpcMethods/shortcut/ShortcutType';
 
 export function MethodsSection({
