@@ -22,5 +22,19 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4"
   },
-  "packageManager": "yarn@4.8.1"
+  "packageManager": "yarn@4.12.0+sha512.f45ab632439a67f8bc759bf32ead036a1f413287b9042726b7cc4818b7b49e14e9423ba49b18f9e06ea4941c1ad062385b1d8760a8d5091a1a31e5f6219afca8",
+  "dependencies": {
+    "@base-org/account": "^2.5.1",
+    "@base-org/account-ui": "^1.0.1",
+    "@chakra-ui/system": "^2.6.2",
+    "@coinbase/wallet-sdk": "workspace:^",
+    "@typescript-eslint/eslint-plugin": "^8.51.0",
+    "clsx": "^2.1.1",
+    "coinbase-wallet-sdk": "^0.0.1-security",
+    "next": "^16.1.1",
+    "preact": "^10.28.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "sdk-playground": "workspace:^"
+  }
 }

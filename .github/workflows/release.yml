@@ -48,12 +48,3 @@ jobs:
           npm publish --tag latest
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          
-      - name: Setup
-        uses: ./.github/actions/setup
-      - name: Install dependencies
-        run: yarn install --immutable
-      - name: Ensure lockfile hasn't changed
-        run: git diff --exit-code yarn.lock
-      - name: Set version
-        run: yarn workspace @coinbase/wallet-sdk version ${{ env.PACKAGE_VERSION }}
