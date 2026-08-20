@@ -48,6 +48,7 @@ type Config = {
 type ChainSlice = { chains: Chain[] };
 const createChainSlice: StateCreator<StoreState, [], [], ChainSlice> = () => ({ chains: [] });
 
+/** ECDH transport keys (`KeyManager`), not sub-account owner keys. */
 type KeysSlice = { keys: Record<string, string | null> };
 const createKeysSlice: StateCreator<StoreState, [], [], KeysSlice> = () => ({ keys: {} });
 
@@ -149,14 +150,16 @@ export function createStoreInstance(options?: {
   return createStore(storeCreator);
 }
 
-export const sdkstore = createStoreInstance({ persist: true });
+/** Default persisted zustand instance. Ephemeral payment flows pass their own. */
+export const defaultStoreInstance = createStoreInstance({ persist: true });
 
 export type StoreInstance = ReturnType<typeof createStoreInstance>;
 
 /**
- * Slice accessors for one zustand store instance (global SDK store or an ephemeral payment store).
+ * Slice accessors for one zustand instance (persisted SDK store or an ephemeral payment store).
+ * This is the object on `WalletRuntime.store` — `store.account.get()`, `store.session.set()`, …
  */
-export function createStoreHelpers(storeInstance: StoreInstance) {
+export function bindStore(storeInstance: StoreInstance) {
   return {
     subAccountsConfig: {
       get: () => storeInstance.getState().subAccountConfig,
@@ -257,25 +260,25 @@ export function createStoreHelpers(storeInstance: StoreInstance) {
   };
 }
 
-export type StoreHelpers = ReturnType<typeof createStoreHelpers>;
+export type Store = ReturnType<typeof bindStore>;
 
-const globalStoreHelpers = createStoreHelpers(sdkstore);
+const bound = bindStore(defaultStoreInstance);
 
-export const subAccountsConfig = globalStoreHelpers.subAccountsConfig;
-export const subAccounts = globalStoreHelpers.subAccounts;
-export const spendPermissions = globalStoreHelpers.spendPermissions;
-export const account = globalStoreHelpers.account;
-export const chains = globalStoreHelpers.chains;
-export const keys = globalStoreHelpers.keys;
-export const config = globalStoreHelpers.config;
-export const session = globalStoreHelpers.session;
+export const subAccountsConfig = bound.subAccountsConfig;
+export const subAccounts = bound.subAccounts;
+export const spendPermissions = bound.spendPermissions;
+export const account = bound.account;
+export const chains = bound.chains;
+export const keys = bound.keys;
+export const config = bound.config;
+export const session = bound.session;
 
 type GlobalSdkPersistApi = {
   rehydrate: () => Promise<void> | void;
 };
 
 export const store = {
-  ...sdkstore,
-  ...globalStoreHelpers,
-  persist: (sdkstore as StoreInstance & { persist: GlobalSdkPersistApi }).persist,
+  ...defaultStoreInstance,
+  ...bound,
+  persist: (defaultStoreInstance as StoreInstance & { persist: GlobalSdkPersistApi }).persist,
 };

@@ -1,5 +1,6 @@
-import type { Popup } from ':core/popup/types.js';
 import type { RequestArguments } from ':core/provider/interface.js';
+import { toLegacyRequest } from ':core/translators/eip155/index.js';
+import type { WalletRuntime } from ':core/transport/index.js';
 import type { ToOwnerAccountFn } from ':store/store.js';
 import { projectEthAccounts } from './eip155.js';
 import { ingestConnectResult, pair, walletConnectParams } from './pair.js';
@@ -9,14 +10,14 @@ const SUB = '0x0000000000000000000000000000000000000002';
 const OWNER = '0x00000000000000000000000000000000000000aa';
 
 function runtime(
-  send: Popup['send'],
+  send: WalletRuntime['send'],
   opts?: {
     defaultAccount?: 'sub' | 'universal';
     creation?: 'on-connect' | 'manual';
     toOwnerAccount?: ToOwnerAccountFn;
   }
-): Popup {
-  const sessionStore: { current?: Parameters<Popup['writeSession']>[0] } = {};
+): WalletRuntime {
+  const sessionStore: { current?: Parameters<WalletRuntime['writeSession']>[0] } = {};
   let accounts: `0x${string}`[] = [];
   let subAccount: { address: `0x${string}` } | undefined;
   let subAccountsConfig = {
@@ -26,7 +27,7 @@ function runtime(
     capabilities: undefined as Record<string, unknown> | undefined,
   };
   return {
-    helpers: {
+    store: {
       account: {
         get: () => ({ accounts }),
         set: vi.fn((value: { accounts?: `0x${string}`[] }) => {
@@ -53,11 +54,11 @@ function runtime(
         }),
         clear: vi.fn(),
       },
-    } as unknown as Popup['helpers'],
+    } as unknown as WalletRuntime['store'],
     chainId: () => 1,
     handshake: vi.fn().mockResolvedValue(undefined),
     send,
-    transport: { kind: 'popup', send },
+    transport: { kind: 'popup', send: (envelope) => send(toLegacyRequest(envelope)) },
     readSession: () => sessionStore.current,
     writeSession: (session) => {
       sessionStore.current = session;
@@ -182,7 +183,7 @@ describe('ingestConnectResult', () => {
     });
 
     expect(projectEthAccounts(session)).toEqual([ADDRESS, SUB]);
-    expect(rt.helpers.subAccounts.set).toHaveBeenCalledWith(
+    expect(rt.store.subAccounts.set).toHaveBeenCalledWith(
       expect.objectContaining({ address: SUB })
     );
   });

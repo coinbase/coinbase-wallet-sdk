@@ -1,16 +1,16 @@
-import type { Popup } from ':core/popup/types.js';
+import type { WalletRuntime } from ':core/transport/index.js';
 import { shouldUseSubAccount } from './dispatch.js';
 
 const GLOBAL = '0x0000000000000000000000000000000000000001';
 const SUB = '0x0000000000000000000000000000000000000002';
 
-function runtime(sub?: string): Popup {
+function runtime(sub?: string): WalletRuntime {
   return {
-    helpers: {
+    store: {
       subAccounts: {
         get: () => (sub ? { address: sub as `0x${string}` } : undefined),
       },
-    } as unknown as Popup['helpers'],
+    } as unknown as WalletRuntime['store'],
     chainId: () => 1,
     handshake: vi.fn(),
     send: vi.fn(),

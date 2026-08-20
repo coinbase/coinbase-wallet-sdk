@@ -1,4 +1,9 @@
-/** CAIP-2 chain id, e.g. `eip155:8453`. */
+/**
+ * CAIP-2 / CAIP-10 helpers used by `Session` and `Envelope`.
+ *
+ * CAIP-2 chain id: `eip155:8453`. CAIP-10 account: `eip155:8453:0xabc…`.
+ * Session scopes are keyed by CAIP-2; `selected` accounts are CAIP-10.
+ */
 export type Caip2 = `${string}:${string}`;
 
 /** CAIP-10 account id, e.g. `eip155:8453:0xabc…`. */

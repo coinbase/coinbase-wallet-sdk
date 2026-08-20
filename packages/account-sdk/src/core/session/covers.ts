@@ -3,7 +3,14 @@ import type { Session } from './types.js';
 
 /**
  * True when `session` already has accounts for every required CAIP-2 chain.
- * eip155 is chain-agnostic here: any eip155 scope covers any other eip155 chain id.
+ *
+ * Used by `ensureSession` to skip `pair`. Empty `required` means “any account
+ * on any chain is enough.”
+ *
+ * eip155 is treated as chain-agnostic: a scope on `eip155:1` also covers
+ * `eip155:8453`. EVM addresses are the same across chains in this SDK, so we
+ * do not force another `wallet_connect` just to switch chain id. Solana /
+ * bip122 later must match the exact CAIP-2.
  */
 export function sessionCovers(session: Session | undefined, required: Caip2[]): boolean {
   if (!session) return false;

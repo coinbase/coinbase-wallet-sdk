@@ -1,4 +1,4 @@
-import { createPublicClient, http, PublicClient } from 'viem';
+import { http, PublicClient, createPublicClient } from 'viem';
 import * as chains from 'viem/chains';
 
 /**

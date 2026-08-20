@@ -1,9 +1,10 @@
-import type { Popup } from ':core/popup/types.js';
 import { sessionFromAccounts } from ':core/session/index.js';
+import { toLegacyRequest } from ':core/translators/eip155/index.js';
+import type { WalletRuntime } from ':core/transport/index.js';
 import { getCryptoKeyAccount } from ':owner-key/index.js';
 import { addSubAccount } from './add.js';
 
-vi.mock('../../owner-key/index.js', () => ({
+vi.mock(':owner-key/index.js', () => ({
   getCryptoKeyAccount: vi.fn().mockResolvedValue({
     account: {
       type: 'local',
@@ -16,12 +17,12 @@ const GLOBAL = '0x0000000000000000000000000000000000000001' as const;
 const SUB = '0x0000000000000000000000000000000000000002' as const;
 const OTHER = '0x0000000000000000000000000000000000000003' as const;
 
-function runtime(send: Popup['send']): Popup {
-  const sessionStore: { current?: Parameters<Popup['writeSession']>[0] } = {};
+function runtime(send: WalletRuntime['send']): WalletRuntime {
+  const sessionStore: { current?: Parameters<WalletRuntime['writeSession']>[0] } = {};
   let accounts: `0x${string}`[] = [GLOBAL];
   let subAccount: { address: `0x${string}` } | undefined;
   return {
-    helpers: {
+    store: {
       account: {
         get: () => ({ accounts }),
         set: vi.fn((value: { accounts?: `0x${string}`[] }) => {
@@ -41,11 +42,11 @@ function runtime(send: Popup['send']): Popup {
         set: vi.fn(),
         clear: vi.fn(),
       },
-    } as unknown as Popup['helpers'],
+    } as unknown as WalletRuntime['store'],
     chainId: () => 1,
     handshake: vi.fn(),
     send,
-    transport: { kind: 'popup', send },
+    transport: { kind: 'popup', send: (envelope) => send(toLegacyRequest(envelope)) },
     readSession: () => sessionStore.current,
     writeSession: (session) => {
       sessionStore.current = session;
@@ -60,7 +61,7 @@ describe('addSubAccount', () => {
   it('returns the cache when no address is requested', async () => {
     const send = vi.fn();
     const rt = runtime(send);
-    rt.helpers.subAccounts.set({ address: SUB });
+    rt.store.subAccounts.set({ address: SUB });
 
     const result = await addSubAccount(rt, session, {
       method: 'wallet_addSubAccount',
@@ -74,7 +75,7 @@ describe('addSubAccount', () => {
   it('skips the cache when a different address is requested', async () => {
     const send = vi.fn().mockResolvedValue({ address: OTHER });
     const rt = runtime(send);
-    rt.helpers.subAccounts.set({ address: SUB });
+    rt.store.subAccounts.set({ address: SUB });
 
     const result = await addSubAccount(rt, session, {
       method: 'wallet_addSubAccount',

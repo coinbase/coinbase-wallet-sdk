@@ -3,7 +3,7 @@ import {
   spendPermissionManagerAddress,
 } from ':core/sub-account/constants.js';
 import { createClients, getClient } from ':store/chain-clients/utils.js';
-import { createPublicClient, http } from 'viem';
+import { http, createPublicClient } from 'viem';
 import { readContract } from 'viem/actions';
 import { Mock, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SpendPermissionTypedData } from '../utils.js';

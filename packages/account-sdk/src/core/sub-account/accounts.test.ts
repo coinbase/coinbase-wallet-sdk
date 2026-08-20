@@ -1,17 +1,17 @@
-import type { Popup } from ':core/popup/types.js';
 import { sessionFromAccounts } from ':core/session/index.js';
+import type { WalletRuntime } from ':core/transport/index.js';
 import { orderedEthAccounts, persistSubAccount } from './accounts.js';
 
 const GLOBAL = '0x0000000000000000000000000000000000000001' as const;
 const SUB = '0x0000000000000000000000000000000000000002' as const;
 
-function runtime(opts?: { defaultAccount?: 'sub' | 'universal' }): Popup {
-  const sessionStore: { current?: Parameters<Popup['writeSession']>[0] } = {};
+function runtime(opts?: { defaultAccount?: 'sub' | 'universal' }): WalletRuntime {
+  const sessionStore: { current?: Parameters<WalletRuntime['writeSession']>[0] } = {};
   let accounts: `0x${string}`[] = [GLOBAL];
   let subAccount: { address: `0x${string}` } | undefined;
   const emit = vi.fn();
   return {
-    helpers: {
+    store: {
       account: {
         get: () => ({ accounts }),
         set: vi.fn((value: { accounts?: `0x${string}`[] }) => {
@@ -31,7 +31,7 @@ function runtime(opts?: { defaultAccount?: 'sub' | 'universal' }): Popup {
         set: vi.fn(),
         clear: vi.fn(),
       },
-    } as unknown as Popup['helpers'],
+    } as unknown as WalletRuntime['store'],
     emit,
     chainId: () => 1,
     handshake: vi.fn(),
@@ -53,13 +53,13 @@ describe('orderedEthAccounts', () => {
 
   it('appends the sub-account by default', () => {
     const rt = runtime();
-    rt.helpers.subAccounts.set({ address: SUB });
+    rt.store.subAccounts.set({ address: SUB });
     expect(orderedEthAccounts(rt, [GLOBAL])).toEqual([GLOBAL, SUB]);
   });
 
   it('prepends the sub-account when defaultAccount is sub', () => {
     const rt = runtime({ defaultAccount: 'sub' });
-    rt.helpers.subAccounts.set({ address: SUB });
+    rt.store.subAccounts.set({ address: SUB });
     expect(orderedEthAccounts(rt, [GLOBAL])).toEqual([SUB, GLOBAL]);
   });
 });
@@ -71,7 +71,7 @@ describe('persistSubAccount', () => {
     const accounts = persistSubAccount(rt, session, { address: SUB });
 
     expect(accounts).toEqual([GLOBAL, SUB]);
-    expect(rt.helpers.account.get().accounts).toEqual([GLOBAL, SUB]);
+    expect(rt.store.account.get().accounts).toEqual([GLOBAL, SUB]);
     expect(rt.emit).toHaveBeenCalledWith('accountsChanged', [GLOBAL, SUB]);
     expect(rt.readSession()?.scopes['eip155:1']?.accounts).toEqual([
       'eip155:1:0x0000000000000000000000000000000000000001',

@@ -1,6 +1,4 @@
 import { isActionableHttpRequestError, isViemError, standardErrors } from ':core/error/errors.js';
-import { toEnvelope } from ':core/namespaces/eip155/index.js';
-import type { Popup } from ':core/popup/types.js';
 import type { RequestArguments } from ':core/provider/interface.js';
 import type { Session } from ':core/session/index.js';
 import { invoke } from ':core/session/invoke.js';
@@ -16,6 +14,8 @@ import {
   logSubAccountRequestStarted,
 } from ':core/telemetry/events/scw-sub-account.js';
 import { parseErrorMessageFromAny } from ':core/telemetry/utils.js';
+import { toEnvelope } from ':core/translators/eip155/index.js';
+import type { WalletRuntime } from ':core/transport/index.js';
 import { getCryptoKeyAccount } from ':owner-key/index.js';
 import { getClient } from ':store/chain-clients/utils.js';
 import { correlationIds } from ':store/correlation-ids/store.js';
@@ -30,26 +30,29 @@ import { addSenderToRequest, getSenderFromRequest, makeDataSuffix } from './util
 
 /**
  * True when the request's `from` / signer address is the cached sub-account.
- * Requests without a sender stay on the global popup path.
+ * Requests without a sender stay on the global account transport.
  */
-export function shouldUseSubAccount(runtime: Popup, request: RequestArguments): boolean {
+export function shouldUseSubAccount(runtime: WalletRuntime, request: RequestArguments): boolean {
   const sender = getSenderFromRequest(request);
-  const subAccount = runtime.helpers.subAccounts.get();
+  const subAccount = runtime.store.subAccounts.get();
   if (!sender || !subAccount?.address) return false;
   return sender.toLowerCase() === subAccount.address.toLowerCase();
 }
 
-/** Popup send used as `globalAccountRequest` for add-owner and funding. */
-function sendViaPopup(runtime: Popup, session: Session, request: RequestArguments) {
-  return invoke(session, toEnvelope(session, request, runtime.chainId()), runtime.transport);
+/** `invoke` on the global account — used as `globalAccountRequest` for add-owner and funding. */
+function sendViaWallet(runtime: WalletRuntime, session: Session, request: RequestArguments) {
+  return invoke(session, toEnvelope(request, runtime.chainId()), runtime.transport);
 }
 
 /**
- * Sign/send as the sub-account: local smart-account owner, or global popup for first
- * spend-permission funding / add-owner.
+ * Sign/send as the sub-account (fork off `invoke`).
+ *
+ * The sub-account is not a transport. Local `:owner-key` signs UserOperations.
+ * When the owner is missing on-chain, or the sub-account has no funds, this
+ * still `invoke`s the **global** account (`sendViaWallet`) to add-owner or fund.
  */
 export async function dispatchSubAccount(
-  runtime: Popup,
+  runtime: WalletRuntime,
   session: Session,
   request: RequestArguments
 ): Promise<unknown> {
@@ -70,14 +73,15 @@ export async function dispatchSubAccount(
 }
 
 async function sendToSubAccount(
-  runtime: Popup,
+  runtime: WalletRuntime,
   session: Session,
   request: RequestArguments
 ): Promise<unknown> {
-  const subAccount = runtime.helpers.subAccounts.get();
-  const subAccountsConfig = runtime.helpers.subAccountsConfig.get();
-  const config = runtime.helpers.config.get();
+  const subAccount = runtime.store.subAccounts.get();
+  const subAccountsConfig = runtime.store.subAccountsConfig.get();
+  const config = runtime.store.config.get();
 
+  // --- Resolve sub-account + local owner key ---
   assertPresence(
     subAccount?.address,
     standardErrors.provider.unauthorized(
@@ -101,7 +105,7 @@ async function sendToSubAccount(
     request = addSenderToRequest(request, subAccount.address);
   }
 
-  const globalAccountAddress = (runtime.helpers.account.get().accounts ?? []).find(
+  const globalAccountAddress = (runtime.store.account.get().accounts ?? []).find(
     (account) => account.toLowerCase() !== subAccount.address.toLowerCase()
   );
 
@@ -130,11 +134,12 @@ async function sendToSubAccount(
     )
   );
 
-  const globalAccountRequest = (args: RequestArguments) => sendViaPopup(runtime, session, args);
+  const globalAccountRequest = (args: RequestArguments) => sendViaWallet(runtime, session, args);
 
+  // --- Funding: no spend-permission grant yet → route the tx through global ---
   if (['eth_sendTransaction', 'wallet_sendCalls'].includes(request.method)) {
     if (subAccountsConfig?.funding === 'spend-permissions') {
-      const storedSpendPermissions = runtime.helpers.spendPermissions.get();
+      const storedSpendPermissions = runtime.store.spendPermissions.get();
       if (storedSpendPermissions.length === 0) {
         return routeThroughGlobalAccount({
           request,
@@ -153,6 +158,7 @@ async function sendToSubAccount(
       ? ownerAccount.account.address
       : ownerAccount.account.publicKey;
 
+  // --- Owner index: add this owner on-chain via the global account if missing ---
   let ownerIndex = await findOwnerIndex({
     address: subAccount.address,
     factory: subAccount.factory,
@@ -183,6 +189,7 @@ async function sendToSubAccount(
     }
   }
 
+  // --- Local AA: sign the UserOp with the owner key ---
   const { request: subAccountRequest } = await createSubAccountSigner({
     address: subAccount.address,
     owner: ownerAccount.account,
@@ -197,6 +204,8 @@ async function sendToSubAccount(
   try {
     return await subAccountRequest(request);
   } catch (error) {
+    // Insufficient-balance errors can be funded via the global account unless
+    // the dapp chose `funding: 'manual'`.
     if (subAccountsConfig?.funding === 'manual') {
       throw error;
     }

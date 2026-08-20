@@ -1,14 +1,14 @@
-import type { Popup } from ':core/popup/types.js';
+import type { WalletRuntime } from ':core/transport/index.js';
 import * as providerUtil from ':util/provider.js';
 import { getSubAccounts } from './get.js';
 
 const SUB = '0x0000000000000000000000000000000000000002' as const;
 const FACTORY = '0x00000000000000000000000000000000000000f1' as const;
 
-function runtime(): Popup {
+function runtime(): WalletRuntime {
   let subAccount: { address: `0x${string}`; factory?: `0x${string}` } | undefined;
   return {
-    helpers: {
+    store: {
       account: {
         get: () => ({ chain: { id: 1, rpcUrl: 'https://example.rpc' } }),
         set: vi.fn(),
@@ -21,7 +21,7 @@ function runtime(): Popup {
         }),
         clear: vi.fn(),
       },
-    } as unknown as Popup['helpers'],
+    } as unknown as WalletRuntime['store'],
     chainId: () => 1,
     handshake: vi.fn(),
     send: vi.fn(),
@@ -35,7 +35,7 @@ function runtime(): Popup {
 describe('getSubAccounts', () => {
   it('returns the cached sub-account without hitting RPC', async () => {
     const rt = runtime();
-    rt.helpers.subAccounts.set({ address: SUB });
+    rt.store.subAccounts.set({ address: SUB });
     const fetchSpy = vi.spyOn(providerUtil, 'fetchRPCRequest');
 
     const result = await getSubAccounts(rt, { method: 'wallet_getSubAccounts' });
@@ -55,12 +55,12 @@ describe('getSubAccounts', () => {
     expect(result).toEqual({
       subAccounts: [{ address: SUB, factory: FACTORY, factoryData: '0xab' }],
     });
-    expect(rt.helpers.subAccounts.get()?.address).toBe(SUB);
+    expect(rt.store.subAccounts.get()?.address).toBe(SUB);
   });
 
   it('throws when no RPC URL is set and nothing is cached', async () => {
     const rt = runtime();
-    rt.helpers.account.get = () => ({ chain: { id: 1 } });
+    rt.store.account.get = () => ({ chain: { id: 1 } });
 
     await expect(getSubAccounts(rt, { method: 'wallet_getSubAccounts' })).rejects.toMatchObject({
       message: 'No RPC URL set for chain',

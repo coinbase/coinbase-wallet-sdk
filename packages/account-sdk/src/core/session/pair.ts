@@ -1,8 +1,8 @@
-import type { Popup } from ':core/popup/types.js';
 import type { RequestArguments } from ':core/provider/interface.js';
 import type { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { persistSubAccount } from ':core/sub-account/accounts.js';
 import { initSubAccountConfig } from ':core/sub-account/utils.js';
+import type { WalletRuntime } from ':core/transport/index.js';
 import { Address } from ':core/type/index.js';
 import { assertSubAccount } from ':util/assertSubAccount.js';
 import { numberToHex } from 'viem';
@@ -21,7 +21,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Build the `wallet_connect` params posted to the popup after handshake.
+ * Build the `wallet_connect` params sent after handshake.
  *
  * Merges SDK-injected capabilities (e.g. `addSubAccount` when `creation: 'on-connect'`)
  * with the dapp's params. Dapp capabilities win on key conflict.
@@ -41,7 +41,7 @@ export function walletConnectParams(
   return [{ version, capabilities }];
 }
 
-/** True when a popup result looks like a `wallet_connect` accounts payload. */
+/** True when a result looks like a `wallet_connect` accounts payload. */
 export function isConnectResult(value: unknown): value is ConnectResult {
   return (
     isRecord(value) &&
@@ -51,22 +51,27 @@ export function isConnectResult(value: unknown): value is ConnectResult {
 }
 
 /**
- * Write connected accounts onto the session + EIP-1193 store.
- * Persists sub-account + spend-permission grants from the first account's capabilities.
+ * Write `wallet_connect` accounts onto the session + EIP-1193 store.
+ *
+ * First account's capabilities may include spend-permission grants and
+ * `subAccounts` (when pairing injected `addSubAccount`). Those are persisted
+ * here so later `invoke` / sub-account dispatch can see them.
  */
-export function ingestConnectResult(runtime: Popup, value: ConnectResult) {
+export function ingestConnectResult(runtime: WalletRuntime, value: ConnectResult) {
   const granted = value.accounts[0]?.capabilities;
   const addresses = value.accounts.map((account) => account.address as Address);
 
-  runtime.helpers.account.set({
+  // --- EIP-1193 account slice (legacy store used by eth_accounts) ---
+  runtime.store.account.set({
     accounts: addresses,
-    chain: { ...runtime.helpers.account.get().chain, id: runtime.chainId() },
+    chain: { ...runtime.store.account.get().chain, id: runtime.chainId() },
     ...(granted ? { capabilities: granted } : {}),
   });
 
+  // --- Optional grants on the first connected account ---
   const spend = granted?.spendPermissions;
   if (isRecord(spend) && Array.isArray(spend.permissions) && spend.permissions.every(isRecord)) {
-    runtime.helpers.spendPermissions.set(spend.permissions as SpendPermission[]);
+    runtime.store.spendPermissions.set(spend.permissions as SpendPermission[]);
   }
 
   const subAccounts = granted?.subAccounts;
@@ -87,6 +92,7 @@ export function ingestConnectResult(runtime: Popup, value: ConnectResult) {
     );
   }
 
+  // --- Kernel session (what `invoke` / `ensureSession` read) ---
   const session = sessionFromAccounts({
     accounts: addresses,
     chainId: runtime.chainId(),
@@ -98,14 +104,31 @@ export function ingestConnectResult(runtime: Popup, value: ConnectResult) {
 }
 
 /**
- * Open the keys popup, exchange encryption keys, then request accounts via `wallet_connect`.
- * Injects `addSubAccount` when `creation: 'on-connect'`. Pass the dapp request so SIWE /
- * spend-permission / addSubAccount capabilities reach the wallet.
+ * Create a session: handshake, then `wallet_connect`, then persist.
+ *
+ * This is the kernel **pair** verb. Call it when there is no session (or
+ * `ensureSession` decided the stored scopes are not enough). It does not send
+ * dapp method calls — that is `invoke`.
+ *
+ * Steps:
+ * 1. `handshake` — ECDH public-key exchange (plaintext). Later `send` encrypts.
+ * 2. Inject `addSubAccount` when `creation: 'on-connect'`.
+ * 3. Encrypted `wallet_connect` (SIWE / spend-permission / addSubAccount caps
+ *    from the dapp request win over SDK-injected caps).
+ * 4. `ingestConnectResult` writes Session + account store.
  */
-export async function pair(runtime: Popup, request?: RequestArguments): Promise<PairResult> {
+export async function pair(
+  runtime: WalletRuntime,
+  request?: RequestArguments
+): Promise<PairResult> {
+  // 1. Key exchange (must happen before any encrypted RPC)
   await runtime.handshake({ method: 'handshake' });
-  await initSubAccountConfig(runtime.helpers);
-  const injected = runtime.helpers.subAccountsConfig.get()?.capabilities ?? {};
+
+  // 2. SDK-injected capabilities (sub-account on connect)
+  await initSubAccountConfig(runtime.store);
+  const injected = runtime.store.subAccountsConfig.get()?.capabilities ?? {};
+
+  // 3. Request accounts
   const result = await runtime.send({
     method: 'wallet_connect',
     params: walletConnectParams(request, injected),
@@ -113,5 +136,7 @@ export async function pair(runtime: Popup, request?: RequestArguments): Promise<
   if (!isConnectResult(result)) {
     throw new Error('wallet_connect did not return accounts');
   }
+
+  // 4. Persist session
   return { session: ingestConnectResult(runtime, result), result };
 }

@@ -1,10 +1,10 @@
-import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import {
   spendPermissionManagerAbi,
   spendPermissionManagerAddress,
 } from ':core/sub-account/constants.js';
+import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { getClient } from ':store/chain-clients/utils.js';
-import { PublicClient, createPublicClient, http } from 'viem';
+import { http, PublicClient, createPublicClient } from 'viem';
 import { multicall, unwrapMulticallResults } from '../../multicall/index.js';
 import { timestampInSecondsToDate, toSpendPermissionArgs } from '../utils.js';
 import { getPublicClientFromChainId } from '../utils.node.js';

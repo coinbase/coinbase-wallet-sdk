@@ -26,7 +26,9 @@ export const EIP155_METHODS = [
 
 /**
  * Build a Session from a flat eip155 address list.
- * Used after wallet_connect and when hydrating from the legacy `account.accounts` store.
+ *
+ * Used after `wallet_connect` (`ingestConnectResult`) and when hydrating from
+ * the legacy `account.accounts` store (no `session` slice yet).
  */
 export function sessionFromAccounts(opts: {
   accounts: Address[];

@@ -1,8 +1,9 @@
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
-import type { Popup } from ':core/popup/index.js';
 import { RequestArguments } from ':core/provider/interface.js';
+import { toLegacyRequest } from ':core/translators/eip155/index.js';
+import type { WalletRuntime } from ':core/transport/index.js';
 import { store } from ':store/store.js';
 import * as providerUtil from ':util/provider.js';
 import { BaseAccountProvider } from './BaseAccountProvider.js';
@@ -14,13 +15,13 @@ const mockSend = vi.fn();
 const mockCleanup = vi.fn();
 const mockFetchRPCRequest = vi.fn();
 
-function mockRuntime(): Popup {
+function mockRuntime(): WalletRuntime {
   return {
-    helpers: store,
+    store,
     chainId: () => 1,
     handshake: mockHandshake,
     send: mockSend,
-    transport: { kind: 'popup', send: mockSend },
+    transport: { kind: 'popup', send: (envelope) => mockSend(toLegacyRequest(envelope)) },
     readSession: () => store.session.get(),
     writeSession: (session) => store.session.set(session),
     cleanup: mockCleanup,
@@ -247,5 +248,49 @@ describe('sub-account', () => {
       subAccounts: [expect.objectContaining({ address: SUB })],
     });
     expect(mockFetchRPCRequest).not.toHaveBeenCalled();
+  });
+});
+
+describe('ephemeral: true', () => {
+  const params = {
+    metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1] },
+    preference: { telemetry: false },
+    ephemeral: true as const,
+  };
+
+  function createEphemeralProvider() {
+    return new BaseAccountProvider(params, mockRuntime());
+  }
+
+  it.each(['wallet_sendCalls', 'wallet_sign'])(
+    'handshakes, sends, and cleans up for %s',
+    async (method) => {
+      mockSend.mockResolvedValueOnce('0xok');
+      const ephemeral = createEphemeralProvider();
+      const args = { method, params: ['0xdeadbeef'] };
+      await expect(ephemeral.request(args)).resolves.toBe('0xok');
+      expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
+      expect(mockSend).toHaveBeenCalledWith(args);
+      expect(mockCleanup).toHaveBeenCalled();
+    }
+  );
+
+  it('forwards wallet_getCallsStatus to wallet rpc url', async () => {
+    const ephemeral = createEphemeralProvider();
+    const args = { method: 'wallet_getCallsStatus' };
+    await ephemeral.request(args);
+    expect(mockFetchRPCRequest).toHaveBeenCalledWith(args, CB_WALLET_RPC_URL);
+  });
+
+  it('rejects pairing so pay() cannot write a Session', async () => {
+    const ephemeral = createEphemeralProvider();
+    const disconnectSpy = vi.spyOn(ephemeral, 'disconnect');
+
+    await expect(ephemeral.request({ method: 'eth_requestAccounts' })).rejects.toMatchObject({
+      code: standardErrorCodes.provider.unauthorized,
+    });
+
+    expect(disconnectSpy).toHaveBeenCalledTimes(1);
+    expect(mockHandshake).not.toHaveBeenCalled();
   });
 });

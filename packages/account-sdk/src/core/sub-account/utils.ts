@@ -17,7 +17,7 @@ import {
 } from ':core/telemetry/events/dialog.js';
 import { Address } from ':core/type/index.js';
 import { getCryptoKeyAccount } from ':owner-key/index.js';
-import { type StoreHelpers, config, store } from ':store/store.js';
+import { type Store, config, store } from ':store/store.js';
 import { initDialog } from ':ui/Dialog/index.js';
 import { get } from ':util/get.js';
 import { waitForCallsStatus } from 'viem/actions';
@@ -143,13 +143,13 @@ export function injectRequestCapabilities<T extends RequestArguments>(
 }
 
 /**
- * Initializes the `subAccountConfig` store with the owner account function and capabilities.
- * Pass the popup runtime's helpers so on-connect injection uses the same store as `pair`.
+ * Initializes the `subAccountConfig` slice (owner account + on-connect capabilities).
+ * Pass `runtime.store` so on-connect injection uses the same store as `pair`.
  */
-export async function initSubAccountConfig(
-  helpers: Pick<StoreHelpers, 'subAccountsConfig'> = store
-) {
-  const config = helpers.subAccountsConfig.get() ?? {};
+export async function initSubAccountConfig({
+  subAccountsConfig,
+}: Pick<Store, 'subAccountsConfig'> = store) {
+  const config = subAccountsConfig.get() ?? {};
 
   const capabilities: WalletConnectRequest['params'][0]['capabilities'] = {};
 
@@ -177,7 +177,7 @@ export async function initSubAccountConfig(
   }
 
   // Merge capabilities with existing config (don't overwrite the other properties!)
-  helpers.subAccountsConfig.set({
+  subAccountsConfig.set({
     ...config,
     capabilities,
   });
