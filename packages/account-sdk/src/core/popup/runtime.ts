@@ -1,30 +1,30 @@
-import { Communicator } from ':core/channel/Communicator.js';
-import { KeyManager } from ':core/channel/KeyManager.js';
 import { toLegacyRequest } from ':core/namespaces/eip155/index.js';
+import { Communicator } from ':core/popup/Communicator.js';
+import { PopupKeys } from ':core/popup/PopupKeys.js';
 import { AppMetadata, Preference, ProviderEventCallback } from ':core/provider/interface.js';
 import { sessionFromAccounts } from ':core/session/index.js';
 import { type StoreInstance, createStoreHelpers, sdkstore } from ':store/store.js';
 import { handshake } from './handshake.js';
 import { send } from './send.js';
-import type { PopupRuntime, PopupWire } from './types.js';
+import type { Popup, PopupIO } from './types.js';
 
 /**
- * Build Communicator + KeyManager + session helpers for one provider instance.
+ * Build Communicator + PopupKeys + session helpers for one provider instance.
  *
- * Handshake/send encrypt through this runtime. `channel.send` strips CAIP fields before
- * posting to the popup. The default store is the persisted SDK singleton;
+ * Handshake/send encrypt through this popup. `transport.send` strips CAIP fields before
+ * posting to keys.coinbase.com. The default store is the persisted SDK singleton;
  * ephemeral providers pass their own store. Do not persist `send`.
  */
-export function createPopupRuntime(opts: {
+export function createPopup(opts: {
   metadata: AppMetadata;
   preference: Preference;
   walletUrl?: string;
   storeInstance?: StoreInstance;
   emit?: ProviderEventCallback;
-}): PopupRuntime {
+}): Popup {
   const storeInstance = opts.storeInstance ?? sdkstore;
   const helpers = createStoreHelpers(storeInstance);
-  const keyManager = new KeyManager(storeInstance);
+  const keys = new PopupKeys(storeInstance);
   const communicator = new Communicator({
     url: opts.walletUrl,
     metadata: opts.metadata,
@@ -33,9 +33,9 @@ export function createPopupRuntime(opts: {
 
   const chainId = () => helpers.account.get().chain?.id ?? opts.metadata.appChainIds?.[0] ?? 1;
 
-  const wire: PopupWire = { communicator, keyManager, helpers, chainId };
+  const wire: PopupIO = { communicator, keys, helpers, chainId };
 
-  const sendRequest = (request: Parameters<PopupRuntime['send']>[0]) => send(wire, request);
+  const sendRequest = (request: Parameters<Popup['send']>[0]) => send(wire, request);
 
   return {
     helpers,
@@ -43,7 +43,7 @@ export function createPopupRuntime(opts: {
     chainId,
     handshake: (args) => handshake(wire, args),
     send: sendRequest,
-    channel: {
+    transport: {
       kind: 'popup',
       send: (envelope) => sendRequest(toLegacyRequest(envelope)),
     },
@@ -59,7 +59,7 @@ export function createPopupRuntime(opts: {
     },
     writeSession: (session) => helpers.session.set(session),
     cleanup: async () => {
-      await keyManager.clear();
+      await keys.clear();
       helpers.account.clear();
       helpers.session.clear();
       helpers.subAccounts.clear();

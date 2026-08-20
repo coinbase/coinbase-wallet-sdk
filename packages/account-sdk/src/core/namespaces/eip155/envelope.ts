@@ -9,7 +9,7 @@ import {
   isCaip10,
   namespaceOf,
 } from '../../session/caip.js';
-import type { Caip27Envelope, SessionData } from '../../session/index.js';
+import type { Envelope, Session } from '../../session/index.js';
 import { extractFrom } from './from.js';
 
 function sameAccount(a: string, b: string): boolean {
@@ -20,7 +20,7 @@ function sameAccount(a: string, b: string): boolean {
 }
 
 /** True when `account` (CAIP-10 or raw address) is in this session's eip155 scopes. */
-function inSession(session: SessionData, account: string): boolean {
+function inSession(session: Session, account: string): boolean {
   return Object.entries(session.scopes).some(
     ([id, scope]) =>
       namespaceOf(id) === 'eip155' && scope.accounts.some((item) => sameAccount(item, account))
@@ -28,17 +28,13 @@ function inSession(session: SessionData, account: string): boolean {
 }
 
 /**
- * Wrap an EIP-1193 request as an internal CAIP-27 envelope.
+ * Wrap an EIP-1193 request as an internal envelope.
  *
  * `from` is the dapp-supplied signing address when present (`personal_sign` params[1],
  * tx `from`, …). Otherwise the session's selected eip155 account. `params` are copied
  * through unchanged, so `wallet_connect` capabilities stay on the envelope.
  */
-export function toEnvelope(
-  session: SessionData,
-  request: RequestArguments,
-  chainId: number
-): Caip27Envelope {
+export function toEnvelope(session: Session, request: RequestArguments, chainId: number): Envelope {
   const extracted = extractFrom(request);
   const from: Caip10 | undefined = extracted
     ? isCaip10(extracted)
@@ -58,9 +54,9 @@ export function toEnvelope(
  * Fill `from` if missing and reject the call when that account is not in this eip155 session.
  * Called by `invoke` before the popup sees the request.
  */
-export function localize(session: SessionData, envelope: Caip27Envelope): Caip27Envelope {
+export function qualify(session: Session, envelope: Envelope): Envelope {
   if (namespaceOf(envelope.chainId) !== 'eip155') {
-    throw standardErrors.provider.unsupportedMethod(`eip155 localize received ${envelope.chainId}`);
+    throw standardErrors.provider.unsupportedMethod(`eip155 qualify received ${envelope.chainId}`);
   }
   const from = envelope.from ?? session.selected.eip155;
   if (!from) throw standardErrors.provider.unauthorized('No eip155 account selected');
@@ -71,6 +67,6 @@ export function localize(session: SessionData, envelope: Caip27Envelope): Caip27
 }
 
 /** Strip CAIP `chainId`/`from`. The v1 popup decrypts `{ action: { method, params }, chainId: number }`. */
-export function toLegacyRequest(envelope: Caip27Envelope): RequestArguments {
+export function toLegacyRequest(envelope: Envelope): RequestArguments {
   return { method: envelope.method, params: envelope.params };
 }

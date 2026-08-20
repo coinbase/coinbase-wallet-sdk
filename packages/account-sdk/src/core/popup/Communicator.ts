@@ -21,7 +21,7 @@ export type CommunicatorOptions = {
  * Popup window I/O via `window.postMessage`, restricted to `targetOrigin`.
  *
  * Opens the keys popup, posts handshake and encrypted RPC messages, and waits
- * for replies. Used by `createPopupRuntime`.
+ * for replies. Used by `createPopup`.
  */
 export class Communicator {
   private readonly metadata: AppMetadata;

@@ -1,11 +1,11 @@
 import { type Caip2, namespaceOf, parseCaip2 } from './caip.js';
-import type { SessionData } from './types.js';
+import type { Session } from './types.js';
 
 /**
  * True when `session` already has accounts for every required CAIP-2 chain.
  * eip155 is chain-agnostic here: any eip155 scope covers any other eip155 chain id.
  */
-export function sessionCovers(session: SessionData | undefined, required: Caip2[]): boolean {
+export function sessionCovers(session: Session | undefined, required: Caip2[]): boolean {
   if (!session) return false;
   if (required.length === 0) {
     return Object.values(session.scopes).some((scope) => scope.accounts.length > 0);

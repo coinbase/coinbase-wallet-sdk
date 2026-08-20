@@ -1,16 +1,16 @@
 import { Address } from ':core/type/index.js';
-import { createSession } from './createSession.js';
 import { sessionFromAccounts } from './eip155.js';
+import { ensureSession } from './ensureSession.js';
 import { invoke } from './invoke.js';
-import type { Channel } from './types.js';
+import type { Transport } from './types.js';
 
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as Address;
 
-describe('createSession', () => {
+describe('ensureSession', () => {
   it('skips pair when eip155 is already covered', async () => {
     const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 1 });
     const pair = vi.fn();
-    const result = await createSession({
+    const result = await ensureSession({
       session,
       requiredScopes: ['eip155:8453'],
       pair,
@@ -21,15 +21,15 @@ describe('createSession', () => {
 });
 
 describe('invoke', () => {
-  it('localizes then sends', async () => {
+  it('qualifies then sends', async () => {
     const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 });
     const send = vi.fn().mockResolvedValue('0xsig');
-    const channel: Channel = { kind: 'popup', send };
+    const transport: Transport = { kind: 'popup', send };
 
     await invoke(
       session,
       { chainId: 'eip155:8453', method: 'personal_sign', params: ['0x68656c6c6f'] },
-      channel
+      transport
     );
 
     expect(send).toHaveBeenCalledWith(expect.objectContaining({ from: `eip155:8453:${ADDRESS}` }));

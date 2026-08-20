@@ -1,6 +1,6 @@
 import type { Caip2, Caip10 } from './caip.js';
 
-export type ChannelKind = 'popup' | 'walletlink2' | 'injected';
+export type TransportKind = 'popup' | 'walletlink2' | 'injected';
 
 export type ScopeState = {
   accounts: Caip10[];
@@ -8,14 +8,14 @@ export type ScopeState = {
 };
 
 /** Persisted session. Never store `send`. */
-export type SessionData = {
+export type Session = {
   scopes: Record<Caip2, ScopeState>;
   selected: Partial<Record<string, Caip10>>;
-  channelKind: ChannelKind;
+  transportKind: TransportKind;
 };
 
 /** Internal request after namespace adaptation. `from` is a CAIP-10 account. */
-export type Caip27Envelope = {
+export type Envelope = {
   chainId: Caip2;
   method: string;
   params?: readonly unknown[] | object;
@@ -23,7 +23,7 @@ export type Caip27Envelope = {
 };
 
 /** Transport used to deliver envelopes. Only `kind` is persisted on the session. */
-export type Channel = {
-  kind: ChannelKind;
-  send: (envelope: Caip27Envelope) => Promise<unknown>;
+export type Transport = {
+  kind: TransportKind;
+  send: (envelope: Envelope) => Promise<unknown>;
 };

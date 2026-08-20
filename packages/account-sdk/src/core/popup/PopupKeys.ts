@@ -23,7 +23,7 @@ const PEER_PUBLIC_KEY = {
   keyType: 'public',
 } as const;
 
-export class KeyManager {
+export class PopupKeys {
   private ownPrivateKey: CryptoKey | null = null;
   private ownPublicKey: CryptoKey | null = null;
   private peerPublicKey: CryptoKey | null = null;

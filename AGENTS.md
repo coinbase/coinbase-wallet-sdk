@@ -17,7 +17,7 @@ Build order matters: `@base-org/account` must build before `@base-org/account-ui
 
 Imports use a **`:` prefix** convention, not `@/` or `~/`:
 
-- `':core/*'`, `':util/*'`, `':store/*'`, `':kms/*'`, `':ui/*'`, `':interface/*'` in account-sdk
+- `':core/*'`, `':util/*'`, `':store/*'`, `':owner-key/*'`, `':ui/*'`, `':interface/*'` in account-sdk
 - `':types/*'` in account-ui
 
 These are defined in each package's `tsconfig.base.json` and resolved at build time by `tsc-alias`.

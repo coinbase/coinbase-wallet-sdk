@@ -1,9 +1,9 @@
 import type { Caip2 } from './caip.js';
 import { sessionCovers } from './covers.js';
-import type { SessionData } from './types.js';
+import type { Session } from './types.js';
 
 export type PairResult = {
-  session: SessionData;
+  session: Session;
   result?: unknown;
 };
 
@@ -13,8 +13,8 @@ export type PairResult = {
  * If `session` already has accounts for those CAIP-2 chains, returns it unchanged
  * (no popup). Otherwise calls `pair` — typically handshake + `wallet_connect`.
  */
-export async function createSession(opts: {
-  session: SessionData | undefined;
+export async function ensureSession(opts: {
+  session: Session | undefined;
   requiredScopes: Caip2[];
   pair: () => Promise<PairResult>;
 }): Promise<PairResult> {

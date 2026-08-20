@@ -1,9 +1,9 @@
-import type { PopupRuntime } from ':core/channel/types.js';
+import type { Popup } from ':core/popup/types.js';
 import { sessionFromAccounts } from ':core/session/index.js';
-import { getCryptoKeyAccount } from ':kms/crypto-key/index.js';
+import { getCryptoKeyAccount } from ':owner-key/index.js';
 import { addSubAccount } from './add.js';
 
-vi.mock('../../kms/crypto-key/index.js', () => ({
+vi.mock('../../owner-key/index.js', () => ({
   getCryptoKeyAccount: vi.fn().mockResolvedValue({
     account: {
       type: 'local',
@@ -16,8 +16,8 @@ const GLOBAL = '0x0000000000000000000000000000000000000001' as const;
 const SUB = '0x0000000000000000000000000000000000000002' as const;
 const OTHER = '0x0000000000000000000000000000000000000003' as const;
 
-function runtime(send: PopupRuntime['send']): PopupRuntime {
-  const sessionStore: { current?: Parameters<PopupRuntime['writeSession']>[0] } = {};
+function runtime(send: Popup['send']): Popup {
+  const sessionStore: { current?: Parameters<Popup['writeSession']>[0] } = {};
   let accounts: `0x${string}`[] = [GLOBAL];
   let subAccount: { address: `0x${string}` } | undefined;
   return {
@@ -41,11 +41,11 @@ function runtime(send: PopupRuntime['send']): PopupRuntime {
         set: vi.fn(),
         clear: vi.fn(),
       },
-    } as unknown as PopupRuntime['helpers'],
+    } as unknown as Popup['helpers'],
     chainId: () => 1,
     handshake: vi.fn(),
     send,
-    channel: { kind: 'popup', send },
+    transport: { kind: 'popup', send },
     readSession: () => sessionStore.current,
     writeSession: (session) => {
       sessionStore.current = session;

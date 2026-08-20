@@ -1,8 +1,8 @@
-import { handleEip1193Request } from ':core/adapter/eip1193.js';
-import { type PopupRuntime, createPopupRuntime } from ':core/channel/index.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { serializeError } from ':core/error/serialize.js';
+import { handleEip1193Request } from ':core/host/eip1193.js';
+import { type Popup, createPopup } from ':core/popup/index.js';
 import {
   ConstructorOptions,
   ProviderEventEmitter,
@@ -15,9 +15,9 @@ import { withMeasurement } from './withMeasurement.js';
 
 /** EIP-1193 shell. `request` validates args then delegates to `handleEip1193Request`. */
 export class BaseAccountProvider extends ProviderEventEmitter implements ProviderInterface {
-  private readonly runtime: PopupRuntime;
+  private readonly runtime: Popup;
 
-  constructor(params: Readonly<ConstructorOptions>, runtime?: PopupRuntime) {
+  constructor(params: Readonly<ConstructorOptions>, runtime?: Popup) {
     super();
     const {
       metadata,
@@ -25,7 +25,7 @@ export class BaseAccountProvider extends ProviderEventEmitter implements Provide
     } = params;
     this.runtime =
       runtime ??
-      createPopupRuntime({
+      createPopup({
         metadata,
         preference,
         walletUrl,

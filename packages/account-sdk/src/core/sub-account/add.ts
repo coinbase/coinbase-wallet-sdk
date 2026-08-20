@@ -1,11 +1,11 @@
-import type { PopupRuntime } from ':core/channel/types.js';
 import { standardErrors } from ':core/error/errors.js';
 import { toEnvelope } from ':core/namespaces/eip155/index.js';
+import type { Popup } from ':core/popup/types.js';
 import type { RequestArguments } from ':core/provider/interface.js';
 import type { AddSubAccountAccount } from ':core/rpc/wallet_addSubAccount.js';
-import type { SessionData } from ':core/session/index.js';
+import type { Session } from ':core/session/index.js';
 import { invoke } from ':core/session/invoke.js';
-import { getCryptoKeyAccount } from ':kms/crypto-key/index.js';
+import { getCryptoKeyAccount } from ':owner-key/index.js';
 import { assertSubAccount } from ':util/assertSubAccount.js';
 import { isAddressEqual } from 'viem';
 import { persistSubAccount } from './accounts.js';
@@ -27,11 +27,7 @@ function firstParam(request: RequestArguments): AddSubAccountParams | undefined 
 /**
  * `wallet_addSubAccount`: return cache when it matches, otherwise fill create-keys and popup.
  */
-export async function addSubAccount(
-  runtime: PopupRuntime,
-  session: SessionData,
-  request: RequestArguments
-) {
+export async function addSubAccount(runtime: Popup, session: Session, request: RequestArguments) {
   const cached = runtime.helpers.subAccounts.get();
   const account = firstParam(request)?.account;
   const requestedAddress = account && 'address' in account ? account.address : undefined;
@@ -76,7 +72,7 @@ export async function addSubAccount(
   const response = await invoke(
     session,
     toEnvelope(session, next, runtime.chainId()),
-    runtime.channel
+    runtime.transport
   );
   assertSubAccount(response);
   persistSubAccount(runtime, session, response);

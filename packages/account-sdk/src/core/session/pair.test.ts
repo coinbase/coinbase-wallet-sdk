@@ -1,4 +1,4 @@
-import type { PopupRuntime } from ':core/channel/types.js';
+import type { Popup } from ':core/popup/types.js';
 import type { RequestArguments } from ':core/provider/interface.js';
 import type { ToOwnerAccountFn } from ':store/store.js';
 import { projectEthAccounts } from './eip155.js';
@@ -9,14 +9,14 @@ const SUB = '0x0000000000000000000000000000000000000002';
 const OWNER = '0x00000000000000000000000000000000000000aa';
 
 function runtime(
-  send: PopupRuntime['send'],
+  send: Popup['send'],
   opts?: {
     defaultAccount?: 'sub' | 'universal';
     creation?: 'on-connect' | 'manual';
     toOwnerAccount?: ToOwnerAccountFn;
   }
-): PopupRuntime {
-  const sessionStore: { current?: Parameters<PopupRuntime['writeSession']>[0] } = {};
+): Popup {
+  const sessionStore: { current?: Parameters<Popup['writeSession']>[0] } = {};
   let accounts: `0x${string}`[] = [];
   let subAccount: { address: `0x${string}` } | undefined;
   let subAccountsConfig = {
@@ -53,11 +53,11 @@ function runtime(
         }),
         clear: vi.fn(),
       },
-    } as unknown as PopupRuntime['helpers'],
+    } as unknown as Popup['helpers'],
     chainId: () => 1,
     handshake: vi.fn().mockResolvedValue(undefined),
     send,
-    channel: { kind: 'popup', send },
+    transport: { kind: 'popup', send },
     readSession: () => sessionStore.current,
     writeSession: (session) => {
       sessionStore.current = session;

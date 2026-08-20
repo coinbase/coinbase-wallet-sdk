@@ -1,7 +1,7 @@
-import type { PopupRuntime } from ':core/channel/index.js';
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
+import type { Popup } from ':core/popup/index.js';
 import { RequestArguments } from ':core/provider/interface.js';
 import * as providerUtil from ':util/provider.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -12,13 +12,13 @@ const mockSend = vi.fn();
 const mockCleanup = vi.fn();
 const mockFetchRPCRequest = vi.fn();
 
-function mockRuntime(): PopupRuntime {
+function mockRuntime(): Popup {
   return {
-    helpers: {} as PopupRuntime['helpers'],
+    helpers: {} as Popup['helpers'],
     chainId: () => 1,
     handshake: mockHandshake,
     send: mockSend,
-    channel: { kind: 'popup', send: mockSend },
+    transport: { kind: 'popup', send: mockSend },
     readSession: () => undefined,
     writeSession: vi.fn(),
     cleanup: mockCleanup,

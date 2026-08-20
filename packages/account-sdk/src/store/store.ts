@@ -1,7 +1,7 @@
 import { PACKAGE_VERSION } from ':core/constants.js';
 import type { AppMetadata, Preference, SubAccountOptions } from ':core/provider/interface.js';
 import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
-import type { SessionData } from ':core/session/index.js';
+import type { Session } from ':core/session/index.js';
 import { OwnerAccount } from ':core/type/index.js';
 import { Address, Hex } from 'viem';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -84,7 +84,7 @@ const createConfigSlice: StateCreator<StoreState, [], [], ConfigSlice> = () => (
   config: { version: PACKAGE_VERSION },
 });
 
-type SessionSlice = { session?: SessionData };
+type SessionSlice = { session?: Session };
 const createSessionSlice: StateCreator<StoreState, [], [], SessionSlice> = () => ({
   session: undefined,
 });
@@ -246,8 +246,8 @@ export function createStoreHelpers(storeInstance: StoreInstance) {
     },
 
     session: {
-      get: (): SessionData | undefined => storeInstance.getState().session,
-      set: (session: SessionData) => {
+      get: (): Session | undefined => storeInstance.getState().session,
+      set: (session: Session) => {
         storeInstance.setState({ session });
       },
       clear: () => {

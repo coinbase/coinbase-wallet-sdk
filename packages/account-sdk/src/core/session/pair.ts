@@ -1,4 +1,4 @@
-import type { PopupRuntime } from ':core/channel/types.js';
+import type { Popup } from ':core/popup/types.js';
 import type { RequestArguments } from ':core/provider/interface.js';
 import type { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { persistSubAccount } from ':core/sub-account/accounts.js';
@@ -6,8 +6,8 @@ import { initSubAccountConfig } from ':core/sub-account/utils.js';
 import { Address } from ':core/type/index.js';
 import { assertSubAccount } from ':util/assertSubAccount.js';
 import { numberToHex } from 'viem';
-import type { PairResult } from './createSession.js';
 import { projectEthAccounts, sessionFromAccounts } from './eip155.js';
+import type { PairResult } from './ensureSession.js';
 
 export type ConnectResult = {
   accounts: {
@@ -54,7 +54,7 @@ export function isConnectResult(value: unknown): value is ConnectResult {
  * Write connected accounts onto the session + EIP-1193 store.
  * Persists sub-account + spend-permission grants from the first account's capabilities.
  */
-export function ingestConnectResult(runtime: PopupRuntime, value: ConnectResult) {
+export function ingestConnectResult(runtime: Popup, value: ConnectResult) {
   const granted = value.accounts[0]?.capabilities;
   const addresses = value.accounts.map((account) => account.address as Address);
 
@@ -102,7 +102,7 @@ export function ingestConnectResult(runtime: PopupRuntime, value: ConnectResult)
  * Injects `addSubAccount` when `creation: 'on-connect'`. Pass the dapp request so SIWE /
  * spend-permission / addSubAccount capabilities reach the wallet.
  */
-export async function pair(runtime: PopupRuntime, request?: RequestArguments): Promise<PairResult> {
+export async function pair(runtime: Popup, request?: RequestArguments): Promise<PairResult> {
   await runtime.handshake({ method: 'handshake' });
   await initSubAccountConfig(runtime.helpers);
   const injected = runtime.helpers.subAccountsConfig.get()?.capabilities ?? {};

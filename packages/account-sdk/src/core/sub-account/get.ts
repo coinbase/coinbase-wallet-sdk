@@ -1,5 +1,5 @@
-import type { PopupRuntime } from ':core/channel/types.js';
 import { standardErrors } from ':core/error/errors.js';
+import type { Popup } from ':core/popup/types.js';
 import type { RequestArguments } from ':core/provider/interface.js';
 import type { GetSubAccountsResponse } from ':core/rpc/wallet_getSubAccount.js';
 import { assertArrayPresence } from ':util/assertPresence.js';
@@ -9,7 +9,7 @@ import { fetchRPCRequest } from ':util/provider.js';
 /**
  * `wallet_getSubAccounts`: cached store value, else the chain RPC URL from handshake.
  */
-export async function getSubAccounts(runtime: PopupRuntime, args: RequestArguments) {
+export async function getSubAccounts(runtime: Popup, args: RequestArguments) {
   const cached = runtime.helpers.subAccounts.get();
   if (cached?.address) {
     return { subAccounts: [cached] };

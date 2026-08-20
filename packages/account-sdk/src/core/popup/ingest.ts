@@ -1,13 +1,13 @@
 import { RPCResponse } from ':core/message/RPCResponse.js';
 import { SDKChain, createClients } from ':store/chain-clients/utils.js';
-import type { PopupWire } from './types.js';
+import type { PopupIO } from './types.js';
 
 /**
  * Persist chain list, native currency, and wallet-level capabilities from a decrypted popup
  * response. Handshake `capabilities` here are EIP-5792 per-chain maps, not `wallet_connect`
  * account capabilities.
  */
-export function ingestPopupData(wire: PopupWire, response: RPCResponse) {
+export function ingestPopupData(wire: PopupIO, response: RPCResponse) {
   const availableChains = response.data?.chains;
   if (availableChains) {
     const nativeCurrencies = response.data?.nativeCurrencies;

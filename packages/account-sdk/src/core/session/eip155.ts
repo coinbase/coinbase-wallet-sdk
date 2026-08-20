@@ -9,7 +9,7 @@ import {
   formatEip155Account,
   namespaceOf,
 } from './caip.js';
-import type { ChannelKind, SessionData } from './types.js';
+import type { Session, TransportKind } from './types.js';
 
 /** Methods recorded on an eip155 session scope after `wallet_connect`. */
 export const EIP155_METHODS = [
@@ -25,14 +25,14 @@ export const EIP155_METHODS = [
 ] as const;
 
 /**
- * Build a SessionData from a flat eip155 address list.
+ * Build a Session from a flat eip155 address list.
  * Used after wallet_connect and when hydrating from the legacy `account.accounts` store.
  */
 export function sessionFromAccounts(opts: {
   accounts: Address[];
   chainId: number;
-  channelKind?: ChannelKind;
-}): SessionData {
+  transportKind?: TransportKind;
+}): Session {
   const chainId = eip155Caip2(opts.chainId);
   const accounts = opts.accounts.map((address) => formatEip155Account(opts.chainId, address));
   return {
@@ -40,12 +40,12 @@ export function sessionFromAccounts(opts: {
       [chainId]: { accounts, methods: [...EIP155_METHODS] },
     },
     selected: accounts[0] ? { eip155: accounts[0] } : {},
-    channelKind: opts.channelKind ?? 'popup',
+    transportKind: opts.transportKind ?? 'popup',
   };
 }
 
 /** eip155 addresses only. Solana / bip122 never appear here. */
-export function projectEthAccounts(session: SessionData): Address[] {
+export function projectEthAccounts(session: Session): Address[] {
   const seen = new Set<string>();
   const addresses: Address[] = [];
 
@@ -67,7 +67,7 @@ export function projectEthAccounts(session: SessionData): Address[] {
 }
 
 /** Numeric chain id of the selected eip155 account, else the first eip155 scope. */
-export function selectedEip155ChainId(session: SessionData): number | undefined {
+export function selectedEip155ChainId(session: Session): number | undefined {
   if (session.selected.eip155) {
     const n = eip155ChainId(chainIdOf(session.selected.eip155));
     if (n !== null) return n;
@@ -80,7 +80,7 @@ export function selectedEip155ChainId(session: SessionData): number | undefined 
 }
 
 /** Copy eip155 accounts onto a new chain id without changing the address list. */
-export function withEip155Chain(session: SessionData, chainId: number): SessionData {
+export function withEip155Chain(session: Session, chainId: number): Session {
   const nextId = eip155Caip2(chainId);
   const source =
     session.scopes[nextId] ??

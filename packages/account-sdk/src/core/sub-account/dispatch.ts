@@ -1,8 +1,8 @@
-import type { PopupRuntime } from ':core/channel/types.js';
 import { isActionableHttpRequestError, isViemError, standardErrors } from ':core/error/errors.js';
 import { toEnvelope } from ':core/namespaces/eip155/index.js';
+import type { Popup } from ':core/popup/types.js';
 import type { RequestArguments } from ':core/provider/interface.js';
-import type { SessionData } from ':core/session/index.js';
+import type { Session } from ':core/session/index.js';
 import { invoke } from ':core/session/invoke.js';
 import {
   logAddOwnerCompleted,
@@ -16,7 +16,7 @@ import {
   logSubAccountRequestStarted,
 } from ':core/telemetry/events/scw-sub-account.js';
 import { parseErrorMessageFromAny } from ':core/telemetry/utils.js';
-import { getCryptoKeyAccount } from ':kms/crypto-key/index.js';
+import { getCryptoKeyAccount } from ':owner-key/index.js';
 import { getClient } from ':store/chain-clients/utils.js';
 import { correlationIds } from ':store/correlation-ids/store.js';
 import { assertPresence } from ':util/assertPresence.js';
@@ -32,7 +32,7 @@ import { addSenderToRequest, getSenderFromRequest, makeDataSuffix } from './util
  * True when the request's `from` / signer address is the cached sub-account.
  * Requests without a sender stay on the global popup path.
  */
-export function shouldUseSubAccount(runtime: PopupRuntime, request: RequestArguments): boolean {
+export function shouldUseSubAccount(runtime: Popup, request: RequestArguments): boolean {
   const sender = getSenderFromRequest(request);
   const subAccount = runtime.helpers.subAccounts.get();
   if (!sender || !subAccount?.address) return false;
@@ -40,8 +40,8 @@ export function shouldUseSubAccount(runtime: PopupRuntime, request: RequestArgum
 }
 
 /** Popup send used as `globalAccountRequest` for add-owner and funding. */
-function sendViaPopup(runtime: PopupRuntime, session: SessionData, request: RequestArguments) {
-  return invoke(session, toEnvelope(session, request, runtime.chainId()), runtime.channel);
+function sendViaPopup(runtime: Popup, session: Session, request: RequestArguments) {
+  return invoke(session, toEnvelope(session, request, runtime.chainId()), runtime.transport);
 }
 
 /**
@@ -49,8 +49,8 @@ function sendViaPopup(runtime: PopupRuntime, session: SessionData, request: Requ
  * spend-permission funding / add-owner.
  */
 export async function dispatchSubAccount(
-  runtime: PopupRuntime,
-  session: SessionData,
+  runtime: Popup,
+  session: Session,
   request: RequestArguments
 ): Promise<unknown> {
   const correlationId = correlationIds.get(request);
@@ -70,8 +70,8 @@ export async function dispatchSubAccount(
 }
 
 async function sendToSubAccount(
-  runtime: PopupRuntime,
-  session: SessionData,
+  runtime: Popup,
+  session: Session,
   request: RequestArguments
 ): Promise<unknown> {
   const subAccount = runtime.helpers.subAccounts.get();

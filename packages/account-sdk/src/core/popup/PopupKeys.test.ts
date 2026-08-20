@@ -1,15 +1,15 @@
 import { createStoreInstance } from ':store/store.js';
 import { generateKeyPair } from ':util/cipher.js';
-import { KeyManager } from './KeyManager.js';
+import { PopupKeys } from './PopupKeys.js';
 
-describe('KeyManager', () => {
-  let keyStorage: KeyManager;
+describe('PopupKeys', () => {
+  let keyStorage: PopupKeys;
   let storeInstance: ReturnType<typeof createStoreInstance>;
 
   beforeEach(() => {
     // Create a fresh ephemeral store instance for each test
     storeInstance = createStoreInstance({ persist: false });
-    keyStorage = new KeyManager(storeInstance);
+    keyStorage = new PopupKeys(storeInstance);
   });
 
   describe('getOwnPublicKey', () => {
@@ -36,8 +36,8 @@ describe('KeyManager', () => {
     it('should load the same public key from storage with new instance', async () => {
       const firstPublicKey = await keyStorage.getOwnPublicKey();
 
-      // Create a new KeyManager with the same store instance to simulate persistence
-      const anotherKeyStorage = new KeyManager(storeInstance);
+      // Create a new PopupKeys with the same store instance to simulate persistence
+      const anotherKeyStorage = new PopupKeys(storeInstance);
       const secondPublicKey = await anotherKeyStorage.getOwnPublicKey();
 
       expect(firstPublicKey).toStrictEqual(secondPublicKey);
@@ -65,8 +65,8 @@ describe('KeyManager', () => {
 
       const sharedSecret = await keyStorage.getSharedSecret();
 
-      // Create a new KeyManager with the same store instance to simulate persistence
-      const anotherKeyStorage = new KeyManager(storeInstance);
+      // Create a new PopupKeys with the same store instance to simulate persistence
+      const anotherKeyStorage = new PopupKeys(storeInstance);
       const sharedSecretFromAnotherStorage = await anotherKeyStorage.getSharedSecret();
 
       expect(sharedSecret).toStrictEqual(sharedSecretFromAnotherStorage);

@@ -23,4 +23,4 @@ export {
   sessionFromAccounts,
   withEip155Chain,
 } from './eip155.js';
-export type { Caip27Envelope, Channel, ChannelKind, ScopeState, SessionData } from './types.js';
+export type { Envelope, Transport, TransportKind, ScopeState, Session } from './types.js';

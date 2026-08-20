@@ -1,14 +1,14 @@
-import type { PopupRuntime } from ':core/channel/types.js';
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { POPUP_METHODS, toEnvelope } from ':core/namespaces/eip155/index.js';
+import type { Popup } from ':core/popup/types.js';
 import { RequestArguments } from ':core/provider/interface.js';
 import type {
   FetchPermissionRequest,
   FetchPermissionResponse,
 } from ':core/rpc/coinbase_fetchPermission.js';
 import type { FetchPermissionsResponse } from ':core/rpc/coinbase_fetchSpendPermissions.js';
-import { type SessionData, projectEthAccounts, withEip155Chain } from ':core/session/index.js';
+import { type Session, projectEthAccounts, withEip155Chain } from ':core/session/index.js';
 import { invoke } from ':core/session/invoke.js';
 import { ingestConnectResult, isConnectResult, walletConnectParams } from ':core/session/pair.js';
 import {
@@ -35,10 +35,10 @@ import { switchChainId } from './chainParams.js';
  * popup). Otherwise sign/send go through `invoke` → popup. `wallet_addSubAccount` /
  * `wallet_getSubAccounts` are handled here.
  */
-export async function handlePaired(
-  runtime: PopupRuntime,
+export async function handleConnected(
+  runtime: Popup,
   args: RequestArguments,
-  session: SessionData
+  session: Session
 ): Promise<unknown> {
   if (shouldUseSubAccount(runtime, args)) {
     return dispatchSubAccount(runtime, session, args);
@@ -57,7 +57,7 @@ export async function handlePaired(
         : orderedEthAccounts(runtime, projectEthAccounts(session));
     }
     case 'eth_coinbase': {
-      const accounts = await handlePaired(runtime, { method: 'eth_accounts' }, session);
+      const accounts = await handleConnected(runtime, { method: 'eth_accounts' }, session);
       return (accounts as string[])[0];
     }
     case 'net_version':
@@ -73,7 +73,7 @@ export async function handlePaired(
         runtime.emit?.('chainChanged', hexStringFromNumber(chainId));
         return null;
       }
-      return invoke(session, toEnvelope(session, args, runtime.chainId()), runtime.channel);
+      return invoke(session, toEnvelope(session, args, runtime.chainId()), runtime.transport);
     }
     case 'wallet_connect': {
       await initSubAccountConfig(runtime.helpers);
@@ -85,7 +85,7 @@ export async function handlePaired(
           { method: 'wallet_connect', params: walletConnectParams(args, injected) },
           runtime.chainId()
         ),
-        runtime.channel
+        runtime.transport
       );
       if (isConnectResult(result)) ingestConnectResult(runtime, result);
       return result;
@@ -122,7 +122,7 @@ export async function handlePaired(
     }
     default: {
       if (POPUP_METHODS.has(args.method) || args.method.startsWith('experimental_')) {
-        return invoke(session, toEnvelope(session, args, runtime.chainId()), runtime.channel);
+        return invoke(session, toEnvelope(session, args, runtime.chainId()), runtime.transport);
       }
       const rpcUrl = runtime.helpers.account.get().chain?.rpcUrl;
       if (!rpcUrl) throw standardErrors.rpc.internal('No RPC URL set for chain');

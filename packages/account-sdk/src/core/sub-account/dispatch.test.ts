@@ -1,20 +1,20 @@
-import type { PopupRuntime } from ':core/channel/types.js';
+import type { Popup } from ':core/popup/types.js';
 import { shouldUseSubAccount } from './dispatch.js';
 
 const GLOBAL = '0x0000000000000000000000000000000000000001';
 const SUB = '0x0000000000000000000000000000000000000002';
 
-function runtime(sub?: string): PopupRuntime {
+function runtime(sub?: string): Popup {
   return {
     helpers: {
       subAccounts: {
         get: () => (sub ? { address: sub as `0x${string}` } : undefined),
       },
-    } as unknown as PopupRuntime['helpers'],
+    } as unknown as Popup['helpers'],
     chainId: () => 1,
     handshake: vi.fn(),
     send: vi.fn(),
-    channel: { kind: 'popup', send: vi.fn() },
+    transport: { kind: 'popup', send: vi.fn() },
     readSession: () => undefined,
     writeSession: vi.fn(),
     cleanup: vi.fn(),

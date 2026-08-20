@@ -1,11 +1,11 @@
-import type { PopupRuntime } from ':core/channel/types.js';
+import type { Popup } from ':core/popup/types.js';
 import * as providerUtil from ':util/provider.js';
 import { getSubAccounts } from './get.js';
 
 const SUB = '0x0000000000000000000000000000000000000002' as const;
 const FACTORY = '0x00000000000000000000000000000000000000f1' as const;
 
-function runtime(): PopupRuntime {
+function runtime(): Popup {
   let subAccount: { address: `0x${string}`; factory?: `0x${string}` } | undefined;
   return {
     helpers: {
@@ -21,11 +21,11 @@ function runtime(): PopupRuntime {
         }),
         clear: vi.fn(),
       },
-    } as unknown as PopupRuntime['helpers'],
+    } as unknown as Popup['helpers'],
     chainId: () => 1,
     handshake: vi.fn(),
     send: vi.fn(),
-    channel: { kind: 'popup', send: vi.fn() },
+    transport: { kind: 'popup', send: vi.fn() },
     readSession: () => undefined,
     writeSession: vi.fn(),
     cleanup: vi.fn(),

@@ -1,8 +1,8 @@
-import type { PopupRuntime } from ':core/channel/types.js';
 import { standardErrors } from ':core/error/errors.js';
+import type { Popup } from ':core/popup/types.js';
 import { RequestArguments } from ':core/provider/interface.js';
 import { eip155Caip2 } from ':core/session/caip.js';
-import { createSession } from ':core/session/createSession.js';
+import { ensureSession } from ':core/session/ensureSession.js';
 import { projectEthAccounts } from ':core/session/index.js';
 import { pair } from ':core/session/pair.js';
 import { hexStringFromNumber } from ':core/type/util.js';
@@ -18,10 +18,7 @@ import { switchChainId } from './chainParams.js';
  *   permissions, addSubAccount, …).
  * - `wallet_sendCalls` / `wallet_sign` are one-shot: handshake, send, wipe keys.
  */
-export async function handleUnpaired(
-  runtime: PopupRuntime,
-  args: RequestArguments
-): Promise<unknown> {
+export async function handleDisconnected(runtime: Popup, args: RequestArguments): Promise<unknown> {
   switch (args.method) {
     case 'eth_accounts':
       return [];
@@ -34,7 +31,7 @@ export async function handleUnpaired(
       return undefined;
     }
     case 'eth_requestAccounts': {
-      const { session } = await createSession({
+      const { session } = await ensureSession({
         session: undefined,
         requiredScopes: [eip155Caip2(runtime.chainId())],
         pair: () => pair(runtime),
@@ -42,7 +39,7 @@ export async function handleUnpaired(
       return projectEthAccounts(session);
     }
     case 'wallet_connect': {
-      const { result } = await createSession({
+      const { result } = await ensureSession({
         session: undefined,
         requiredScopes: [eip155Caip2(runtime.chainId())],
         pair: () => pair(runtime, args),

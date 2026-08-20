@@ -1,8 +1,8 @@
-import { type PopupRuntime, createPopupRuntime } from ':core/channel/index.js';
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { serializeError } from ':core/error/serialize.js';
+import { type Popup, createPopup } from ':core/popup/index.js';
 import {
   ConstructorOptions,
   ProviderEventEmitter,
@@ -22,10 +22,10 @@ export class EphemeralBaseAccountProvider
   extends ProviderEventEmitter
   implements ProviderInterface
 {
-  private readonly runtime: PopupRuntime;
+  private readonly runtime: Popup;
   private readonly ephemeralStore: StoreInstance;
 
-  constructor(params: Readonly<ConstructorOptions>, runtime?: PopupRuntime) {
+  constructor(params: Readonly<ConstructorOptions>, runtime?: Popup) {
     super();
     const {
       metadata,
@@ -34,7 +34,7 @@ export class EphemeralBaseAccountProvider
     this.ephemeralStore = createStoreInstance({ persist: false });
     this.runtime =
       runtime ??
-      createPopupRuntime({
+      createPopup({
         metadata,
         preference,
         walletUrl,

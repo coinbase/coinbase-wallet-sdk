@@ -16,7 +16,7 @@ import {
   logDialogShown,
 } from ':core/telemetry/events/dialog.js';
 import { Address } from ':core/type/index.js';
-import { getCryptoKeyAccount } from ':kms/crypto-key/index.js';
+import { getCryptoKeyAccount } from ':owner-key/index.js';
 import { type StoreHelpers, config, store } from ':store/store.js';
 import { initDialog } from ':ui/Dialog/index.js';
 import { get } from ':util/get.js';

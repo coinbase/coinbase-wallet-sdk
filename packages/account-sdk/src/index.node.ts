@@ -5,7 +5,7 @@ export type { AppMetadata, Preference, ProviderInterface } from ':core/provider/
 
 export { createBaseAccountSDK } from './interface/builder/core/createBaseAccountSDK.js';
 
-export { getCryptoKeyAccount, removeCryptoKey } from './kms/crypto-key/index.js';
+export { getCryptoKeyAccount, removeCryptoKey } from './owner-key/index.js';
 
 export { PACKAGE_VERSION as VERSION } from './core/constants.js';
 

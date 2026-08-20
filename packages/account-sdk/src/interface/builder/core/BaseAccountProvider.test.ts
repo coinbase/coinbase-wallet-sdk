@@ -1,7 +1,7 @@
-import type { PopupRuntime } from ':core/channel/index.js';
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
+import type { Popup } from ':core/popup/index.js';
 import { RequestArguments } from ':core/provider/interface.js';
 import { store } from ':store/store.js';
 import * as providerUtil from ':util/provider.js';
@@ -14,13 +14,13 @@ const mockSend = vi.fn();
 const mockCleanup = vi.fn();
 const mockFetchRPCRequest = vi.fn();
 
-function mockRuntime(): PopupRuntime {
+function mockRuntime(): Popup {
   return {
     helpers: store,
     chainId: () => 1,
     handshake: mockHandshake,
     send: mockSend,
-    channel: { kind: 'popup', send: mockSend },
+    transport: { kind: 'popup', send: mockSend },
     readSession: () => store.session.get(),
     writeSession: (session) => store.session.set(session),
     cleanup: mockCleanup,
@@ -131,7 +131,7 @@ describe('Ephemeral methods', () => {
   );
 });
 
-describe('createSession / pair', () => {
+describe('ensureSession / pair', () => {
   it('pairs on eth_requestAccounts and returns eip155 accounts', async () => {
     const accounts = await provider.request({ method: 'eth_requestAccounts' });
 
