@@ -1,3 +1,4 @@
+import type { PopupRuntime } from ':core/channel/index.js';
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
@@ -6,28 +7,43 @@ import * as providerUtil from ':util/provider.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EphemeralBaseAccountProvider } from './EphemeralBaseAccountProvider.js';
 
-function createProvider() {
-  return new EphemeralBaseAccountProvider({
-    metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1] },
-    preference: { telemetry: false },
-  });
-}
-
 const mockHandshake = vi.fn();
-const mockRequest = vi.fn();
+const mockSend = vi.fn();
 const mockCleanup = vi.fn();
 const mockFetchRPCRequest = vi.fn();
+
+function mockRuntime(): PopupRuntime {
+  return {
+    helpers: {} as PopupRuntime['helpers'],
+    chainId: () => 1,
+    handshake: mockHandshake,
+    send: mockSend,
+    channel: { kind: 'popup', send: mockSend },
+    readSession: () => undefined,
+    writeSession: vi.fn(),
+    cleanup: mockCleanup,
+  };
+}
+
+function createProvider() {
+  return new EphemeralBaseAccountProvider(
+    {
+      metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1] },
+      preference: { telemetry: false },
+    },
+    mockRuntime()
+  );
+}
 
 let provider: EphemeralBaseAccountProvider;
 
 beforeEach(() => {
   vi.resetAllMocks();
+  mockHandshake.mockResolvedValue(undefined);
+  mockSend.mockResolvedValue('0xok');
+  mockCleanup.mockResolvedValue(undefined);
   vi.spyOn(providerUtil, 'fetchRPCRequest').mockImplementation(mockFetchRPCRequest);
-
   provider = createProvider();
-  provider['signer'].handshake = mockHandshake;
-  provider['signer'].request = mockRequest;
-  provider['signer'].cleanup = mockCleanup;
 });
 
 describe('EphemeralBaseAccountProvider', () => {
@@ -37,6 +53,7 @@ describe('EphemeralBaseAccountProvider', () => {
 
     await provider.disconnect();
 
+    expect(mockCleanup).toHaveBeenCalled();
     expect(disconnectListener).toHaveBeenCalledWith(
       standardErrors.provider.disconnected('User initiated disconnection')
     );
@@ -49,12 +66,12 @@ describe('EphemeralBaseAccountProvider', () => {
   });
 
   it.each(['wallet_sendCalls', 'wallet_sign'])(
-    'performs handshake, request, and cleanup for %s',
+    'performs handshake, send, and cleanup for %s',
     async (method) => {
       const args = { method, params: ['0xdeadbeef'] } as RequestArguments;
-      await provider.request(args);
+      await expect(provider.request(args)).resolves.toBe('0xok');
       expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
-      expect(mockRequest).toHaveBeenCalledWith(args);
+      expect(mockSend).toHaveBeenCalledWith(args);
       expect(mockCleanup).toHaveBeenCalled();
     }
   );

@@ -1,4 +1,4 @@
-import { ToOwnerAccountFn } from ':store/store.js';
+import type { ToOwnerAccountFn } from ':store/store.js';
 import { EventEmitter } from 'eventemitter3';
 import { Address, Hex } from 'viem';
 
@@ -105,7 +105,7 @@ export type SubAccountOptions = {
   defaultAccount?: SubAccountDefaultAccount;
   /**
    * Controls how sub accounts are funded.
-   * - 'spend-permissions': Routes through global account if no spend permissions exist, handles insufficient balance errors
+   * - 'spend-permissions': Routes through global account if no spend permissions exist
    * - 'manual': Direct execution from sub account without automatic fallbacks
    * @default 'spend-permissions'
    */

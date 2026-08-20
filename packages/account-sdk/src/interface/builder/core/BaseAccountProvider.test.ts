@@ -1,43 +1,61 @@
+import type { PopupRuntime } from ':core/channel/index.js';
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
-import * as signerUtils from ':sign/base-account/utils.js';
 import { store } from ':store/store.js';
 import * as providerUtil from ':util/provider.js';
 import { BaseAccountProvider } from './BaseAccountProvider.js';
 
-function createProvider() {
-  return new BaseAccountProvider({
-    metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1] },
-    preference: { telemetry: false },
-  });
-}
+const ACCOUNT = '0x0000000000000000000000000000000000000001';
 
 const mockHandshake = vi.fn();
-const mockRequest = vi.fn();
+const mockSend = vi.fn();
 const mockCleanup = vi.fn();
 const mockFetchRPCRequest = vi.fn();
-const mockInitSubAccountConfig = vi.fn();
+
+function mockRuntime(): PopupRuntime {
+  return {
+    helpers: store,
+    chainId: () => 1,
+    handshake: mockHandshake,
+    send: mockSend,
+    channel: { kind: 'popup', send: mockSend },
+    readSession: () => store.session.get(),
+    writeSession: (session) => store.session.set(session),
+    cleanup: mockCleanup,
+  };
+}
+
+function createProvider() {
+  return new BaseAccountProvider(
+    {
+      metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1] },
+      preference: { telemetry: false },
+    },
+    mockRuntime()
+  );
+}
 
 let provider: BaseAccountProvider;
 
 beforeEach(() => {
   vi.resetAllMocks();
+  mockHandshake.mockResolvedValue(undefined);
+  mockSend.mockResolvedValue({
+    accounts: [{ address: ACCOUNT, capabilities: {} }],
+  });
+  mockCleanup.mockResolvedValue(undefined);
 
   vi.spyOn(providerUtil, 'fetchRPCRequest').mockImplementation(mockFetchRPCRequest);
-  vi.spyOn(signerUtils, 'initSubAccountConfig').mockImplementation(mockInitSubAccountConfig);
+
+  store.session.clear();
+  store.account.clear();
+  store.subAccounts.clear();
+  store.subAccountsConfig.clear();
+  store.spendPermissions.clear();
 
   provider = createProvider();
-  provider['signer'].request = mockRequest;
-  provider['signer'].handshake = mockHandshake;
-  provider['signer'].cleanup = mockCleanup;
-
-  // Ensure signer is not connected initially
-  Object.defineProperty(provider['signer'], 'isConnected', {
-    value: false,
-    writable: true,
-  });
 });
 
 describe('Event handling', () => {
@@ -47,32 +65,29 @@ describe('Event handling', () => {
 
     await provider.disconnect();
 
+    expect(mockCleanup).toHaveBeenCalled();
     expect(disconnectListener).toHaveBeenCalledWith(
       standardErrors.provider.disconnected('User initiated disconnection')
     );
   });
 
-  it('should emit chainChanged event on chainId change', async () => {
+  it('emits chainChanged', () => {
     const chainChangedListener = vi.fn();
     provider.on('chainChanged', chainChangedListener);
-
-    provider['signer']?.['callback']?.('chainChanged', '0x1');
-
+    provider.emit('chainChanged', '0x1');
     expect(chainChangedListener).toHaveBeenCalledWith('0x1');
   });
 
-  it('should emit accountsChanged event on account change', async () => {
+  it('emits accountsChanged', () => {
     const accountsChangedListener = vi.fn();
     provider.on('accountsChanged', accountsChangedListener);
-
-    provider['signer']?.['callback']?.('accountsChanged', ['0x123']);
-
+    provider.emit('accountsChanged', ['0x123']);
     expect(accountsChangedListener).toHaveBeenCalledWith(['0x123']);
   });
 });
 
 describe('Request Handling', () => {
-  it('returns default chain id even without signer set up', async () => {
+  it('returns default chain id before pairing', async () => {
     await expect(provider.request({ method: 'eth_chainId' })).resolves.toBe('0x1');
     await expect(provider.request({ method: 'net_version' })).resolves.toBe(1);
   });
@@ -104,100 +119,133 @@ describe('Ephemeral methods', () => {
   });
 
   it.each(['wallet_sendCalls', 'wallet_sign'])(
-    'should perform a successful request after handshake',
+    'handshakes, sends, and cleans up for %s',
     async (method) => {
+      mockSend.mockResolvedValueOnce('0xok');
       const args = { method, params: ['0xdeadbeef'] };
-      await provider.request(args);
+      await expect(provider.request(args)).resolves.toBe('0xok');
       expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
-      expect(mockRequest).toHaveBeenCalledWith(args);
+      expect(mockSend).toHaveBeenCalledWith(args);
       expect(mockCleanup).toHaveBeenCalled();
     }
   );
 });
 
-describe('Auto sub account', () => {
-  it('call handshake without method when creation is on-connect', async () => {
-    vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
-      creation: 'on-connect',
-      defaultAccount: 'sub',
-      funding: 'spend-permissions',
+describe('createSession / pair', () => {
+  it('pairs on eth_requestAccounts and returns eip155 accounts', async () => {
+    const accounts = await provider.request({ method: 'eth_requestAccounts' });
+
+    expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
+    expect(mockSend).toHaveBeenCalledWith({
+      method: 'wallet_connect',
+      params: [{ version: '1' }],
+    });
+    expect(accounts).toEqual([ACCOUNT]);
+  });
+
+  it('pairs on wallet_connect and forwards capabilities', async () => {
+    const result = await provider.request({
+      method: 'wallet_connect',
+      params: [
+        {
+          version: '1',
+          capabilities: { signInWithEthereum: { nonce: 'n', chainId: '0x1' } },
+        },
+      ],
     });
 
-    await provider.request({ method: 'eth_requestAccounts' });
     expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
+    expect(mockSend).toHaveBeenCalledWith({
+      method: 'wallet_connect',
+      params: [
+        {
+          version: '1',
+          capabilities: { signInWithEthereum: { nonce: 'n', chainId: '0x1' } },
+        },
+      ],
+    });
+    expect(result).toEqual({
+      accounts: [{ address: ACCOUNT, capabilities: {} }],
+    });
+  });
+
+  it('forwards wallet_connect capabilities after pairing', async () => {
+    await provider.request({ method: 'eth_requestAccounts' });
+    mockSend.mockClear();
+    mockSend.mockResolvedValue({
+      accounts: [
+        {
+          address: ACCOUNT,
+          capabilities: { signInWithEthereum: { message: 'm', signature: '0x' } },
+        },
+      ],
+    });
+
+    await provider.request({
+      method: 'wallet_connect',
+      params: [
+        {
+          version: '1',
+          capabilities: { signInWithEthereum: { nonce: 'n', chainId: '0x1' } },
+        },
+      ],
+    });
+
+    expect(mockSend).toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: 'wallet_connect',
+        params: [
+          {
+            version: '1',
+            capabilities: { signInWithEthereum: { nonce: 'n', chainId: '0x1' } },
+          },
+        ],
+      })
+    );
   });
 });
 
-describe('Auto translate eth_requestAccounts to wallet_connect', () => {
-  it('should call handshake, initSubAccountConfig, and request with proper parameters', async () => {
-    const mockCapabilities = {
-      subAccounts: { enabled: true },
-      spendPermissions: { enabled: true },
-    };
+describe('sub-account', () => {
+  const SUB = '0x0000000000000000000000000000000000000002';
 
-    vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
-      capabilities: mockCapabilities,
-    });
-
-    await provider.request({ method: 'eth_requestAccounts' });
-
-    // Verify handshake is called first
-    expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
-
-    // Verify initSubAccountConfig is called
-    expect(mockInitSubAccountConfig).toHaveBeenCalled();
-
-    // Verify wallet_connect is called with correct parameters
-    expect(mockRequest).toHaveBeenNthCalledWith(1, {
-      method: 'wallet_connect',
-      params: [
-        {
-          version: '1',
-          capabilities: mockCapabilities,
-        },
-      ],
-    });
-
-    // Verify eth_requestAccounts is called after wallet_connect
-    expect(mockRequest).toHaveBeenNthCalledWith(2, {
-      method: 'eth_requestAccounts',
-    });
-
-    // Verify the order of operations and total calls
-    expect(mockRequest).toHaveBeenCalledTimes(2);
-  });
-
-  it('should handle empty capabilities from store', async () => {
-    vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue({
-      capabilities: undefined,
-    });
-
-    await provider.request({ method: 'eth_requestAccounts' });
-
-    expect(mockRequest).toHaveBeenNthCalledWith(1, {
-      method: 'wallet_connect',
-      params: [
-        {
-          version: '1',
-          capabilities: {},
-        },
-      ],
+  it('rejects wallet_addSubAccount before pairing', async () => {
+    await expect(
+      provider.request({
+        method: 'wallet_addSubAccount',
+        params: [{ version: '1', account: { type: 'deployed', address: SUB } }],
+      })
+    ).rejects.toMatchObject({
+      message: "Must call 'eth_requestAccounts' before other methods",
     });
   });
 
-  it('should handle undefined subAccountsConfig from store', async () => {
-    vi.spyOn(store.subAccountsConfig, 'get').mockReturnValue(undefined);
-
+  it('adds a sub-account through the popup after pairing', async () => {
     await provider.request({ method: 'eth_requestAccounts' });
+    mockSend.mockClear();
+    mockSend.mockResolvedValue({ address: SUB });
 
-    expect(mockRequest).toHaveBeenNthCalledWith(1, {
-      method: 'wallet_connect',
-      params: [
-        {
-          version: '1',
-          capabilities: {},
-        },
-      ],
+    const result = await provider.request({
+      method: 'wallet_addSubAccount',
+      params: [{ version: '1', account: { type: 'deployed', address: SUB } }],
     });
+
+    expect(result).toMatchObject({ address: SUB });
+    expect(store.subAccounts.get()?.address).toBe(SUB);
+    await expect(provider.request({ method: 'eth_accounts' })).resolves.toEqual([ACCOUNT, SUB]);
+  });
+
+  it('returns the cached sub-account from wallet_getSubAccounts', async () => {
+    await provider.request({ method: 'eth_requestAccounts' });
+    mockSend.mockResolvedValue({ address: SUB });
+    await provider.request({
+      method: 'wallet_addSubAccount',
+      params: [{ version: '1', account: { type: 'deployed', address: SUB } }],
+    });
+    mockFetchRPCRequest.mockClear();
+
+    await expect(provider.request({ method: 'wallet_getSubAccounts' })).resolves.toEqual({
+      subAccounts: [expect.objectContaining({ address: SUB })],
+    });
+    expect(mockFetchRPCRequest).not.toHaveBeenCalled();
   });
 });

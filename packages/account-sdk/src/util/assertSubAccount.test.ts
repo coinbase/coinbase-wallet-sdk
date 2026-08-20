@@ -1,5 +1,5 @@
-import { assertSubAccount } from './assertSubAccount.js';
 import { standardErrors } from ':core/error/errors.js';
+import { assertSubAccount } from './assertSubAccount.js';
 
 describe('assertSubAccount', () => {
   it('should throw an error if the info is not an object', () => {

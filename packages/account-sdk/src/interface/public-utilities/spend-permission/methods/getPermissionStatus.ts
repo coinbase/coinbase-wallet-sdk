@@ -2,7 +2,7 @@ import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import {
   spendPermissionManagerAbi,
   spendPermissionManagerAddress,
-} from ':sign/base-account/utils/constants.js';
+} from ':core/sub-account/constants.js';
 import { getClient } from ':store/chain-clients/utils.js';
 import { PublicClient, createPublicClient, http } from 'viem';
 import { multicall, unwrapMulticallResults } from '../../multicall/index.js';

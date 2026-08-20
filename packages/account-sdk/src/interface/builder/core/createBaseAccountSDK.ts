@@ -8,7 +8,7 @@ import {
 import { AddSubAccountAccount } from ':core/rpc/wallet_addSubAccount.js';
 import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
 import { loadTelemetryScript } from ':core/telemetry/initCCA.js';
-import { abi } from ':sign/base-account/utils/constants.js';
+import { abi } from ':core/sub-account/constants.js';
 import { SubAccount, ToOwnerAccountFn, store } from ':store/store.js';
 import { assertPresence } from ':util/assertPresence.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
@@ -75,7 +75,8 @@ export function _resetGlobalInitialization(): void {
 /**
  * Create Base AccountSDK instance with EIP-1193 compliant provider
  * @param params - Options to create a base account SDK instance.
- * @returns An SDK object with a getProvider method that returns an EIP-1193 compliant provider.
+ * Pairing is `createSession` → `pair` (handshake + `wallet_connect`). Signing is `invoke`
+ * through the popup channel, or the sub-account local path when `from` is the sub-account.
  */
 export function createBaseAccountSDK(params: CreateProviderOptions) {
   const options: ConstructorOptions = {

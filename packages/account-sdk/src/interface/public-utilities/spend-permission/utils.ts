@@ -1,5 +1,5 @@
 import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
-import { spendPermissionManagerAddress } from ':sign/base-account/utils/constants.js';
+import { spendPermissionManagerAddress } from ':core/sub-account/constants.js';
 import { Address, Hex, getAddress } from 'viem';
 import { RequestSpendPermissionType } from './methods/requestSpendPermission.js';
 

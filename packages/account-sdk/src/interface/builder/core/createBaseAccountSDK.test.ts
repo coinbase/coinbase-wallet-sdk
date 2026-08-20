@@ -2,13 +2,13 @@ import * as telemetryModule from ':core/telemetry/initCCA.js';
 import { store } from ':store/store.js';
 import * as checkCrossOriginModule from ':util/checkCrossOriginOpenerPolicy.js';
 import * as validatePreferencesModule from ':util/validatePreferences.js';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Hex } from 'viem';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BaseAccountProvider } from './BaseAccountProvider.js';
 import {
   CreateProviderOptions,
-  createBaseAccountSDK,
   _resetGlobalInitialization,
+  createBaseAccountSDK,
 } from './createBaseAccountSDK.js';
 import * as getInjectedProviderModule from './getInjectedProvider.js';
 

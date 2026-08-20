@@ -16,7 +16,7 @@
       ":util/*": ["src/util/*"],
       ":core/*": ["src/core/*"],
       ":store/*": ["src/store/*"],
-      ":sign/*": ["src/sign/*"],
+      ":kms/*": ["src/kms/*"],
       ":ui/*": ["src/ui/*"],
       ":interface/*": ["src/interface/*"]
     },

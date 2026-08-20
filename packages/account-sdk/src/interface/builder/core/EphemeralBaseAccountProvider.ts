@@ -1,4 +1,4 @@
-import { Communicator } from ':core/communicator/Communicator.js';
+import { type PopupRuntime, createPopupRuntime } from ':core/channel/index.js';
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
@@ -10,92 +10,65 @@ import {
   RequestArguments,
 } from ':core/provider/interface.js';
 import { hexStringFromNumber } from ':core/type/util.js';
-import { EphemeralSigner } from ':sign/base-account/EphemeralSigner.js';
 import { type StoreInstance, createStoreInstance } from ':store/store.js';
 import { fetchRPCRequest } from ':util/provider.js';
 import { withMeasurement } from './withMeasurement.js';
 
 /**
- * EphemeralBaseAccountProvider is a provider designed for single-use payment flows.
- *
- * Key differences from BaseAccountProvider:
- * 1. Creates its own isolated store instance (no persistence, no global state pollution)
- * 2. Uses EphemeralSigner with the isolated store to prevent concurrent operation interference
- * 3. Cleanup clears the entire ephemeral store instance
- * 4. Optimized for one-shot operations like pay() and subscribe()
- *
- * This prevents:
- * - Race conditions when multiple ephemeral payment flows run concurrently
- * - KeyManager interference (each instance has its own isolated keys)
- * - Memory leaks (store instance is garbage collected after cleanup)
+ * One-shot payment provider: handshake → send → cleanup.
+ * Uses an isolated in-memory store so it cannot share a session with the main provider.
  */
 export class EphemeralBaseAccountProvider
   extends ProviderEventEmitter
   implements ProviderInterface
 {
-  private readonly communicator: Communicator;
-  private readonly signer: EphemeralSigner;
+  private readonly runtime: PopupRuntime;
   private readonly ephemeralStore: StoreInstance;
 
-  constructor({
-    metadata,
-    preference: { walletUrl, ...preference },
-  }: Readonly<ConstructorOptions>) {
+  constructor(params: Readonly<ConstructorOptions>, runtime?: PopupRuntime) {
     super();
-    this.communicator = new Communicator({
-      url: walletUrl,
+    const {
       metadata,
-      preference,
-    });
-    // Create an isolated ephemeral store for this provider instance
-    // persist: false means no localStorage persistence
+      preference: { walletUrl, ...preference },
+    } = params;
     this.ephemeralStore = createStoreInstance({ persist: false });
-
-    this.signer = new EphemeralSigner({
-      metadata,
-      communicator: this.communicator,
-      callback: this.emit.bind(this),
-      storeInstance: this.ephemeralStore,
-    });
+    this.runtime =
+      runtime ??
+      createPopupRuntime({
+        metadata,
+        preference,
+        walletUrl,
+        storeInstance: this.ephemeralStore,
+        emit: this.emit.bind(this),
+      });
   }
 
   public request = withMeasurement(
     { isEphemeral: true },
     async <T>(args: RequestArguments): Promise<T> => {
       try {
-        // For ephemeral providers, we only support a subset of methods
-        // that are needed for payment flows
         switch (args.method) {
           case 'wallet_sendCalls':
           case 'wallet_sign': {
             try {
-              await this.signer.handshake({ method: 'handshake' }); // exchange session keys
-              const result = await this.signer.request(args); // send diffie-hellman encrypted request
-              return result as T;
+              await this.runtime.handshake({ method: 'handshake' });
+              return (await this.runtime.send(args)) as T;
             } finally {
-              await this.signer.cleanup(); // clean up (rotate) the ephemeral session keys
+              await this.runtime.cleanup();
             }
           }
-          case 'wallet_getCallsStatus': {
-            const result = await fetchRPCRequest(args, CB_WALLET_RPC_URL);
-            return result as T;
-          }
-          case 'eth_accounts': {
+          case 'wallet_getCallsStatus':
+            return (await fetchRPCRequest(args, CB_WALLET_RPC_URL)) as T;
+          case 'eth_accounts':
             return [] as T;
-          }
-          case 'net_version': {
-            const result = 1 as T; // default value
-            return result;
-          }
-          case 'eth_chainId': {
-            const result = hexStringFromNumber(1) as T; // default value
-            return result;
-          }
-          default: {
+          case 'net_version':
+            return 1 as T;
+          case 'eth_chainId':
+            return hexStringFromNumber(1) as T;
+          default:
             throw standardErrors.provider.unauthorized(
               `Method '${args.method}' is not supported by ephemeral provider. Ephemeral providers only support: wallet_sendCalls, wallet_sign, wallet_getCallsStatus`
             );
-          }
         }
       } catch (error) {
         const { code } = error as { code?: number };
@@ -108,10 +81,7 @@ export class EphemeralBaseAccountProvider
   );
 
   async disconnect() {
-    // Cleanup ephemeral signer state and its isolated store
-    await this.signer.cleanup();
-    // Note: The ephemeral store instance will be garbage collected
-    // when this provider instance is no longer referenced
+    await this.runtime.cleanup();
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
 

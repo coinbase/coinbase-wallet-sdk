@@ -1,7 +1,7 @@
 import {
   spendPermissionManagerAbi,
   spendPermissionManagerAddress,
-} from ':sign/base-account/utils/constants.js';
+} from ':core/sub-account/constants.js';
 import { createClients, getClient } from ':store/chain-clients/utils.js';
 import { createPublicClient, http } from 'viem';
 import { readContract } from 'viem/actions';
