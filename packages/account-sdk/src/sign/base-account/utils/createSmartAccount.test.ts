@@ -1,5 +1,5 @@
 // pulled from viem, modified for our use case
-import { createClient, http } from 'viem';
+import { createClient, custom } from 'viem';
 import { toWebAuthnAccount } from 'viem/account-abstraction';
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
@@ -14,9 +14,16 @@ const signerWebauthn = toWebAuthnAccount({
   credential: { id: 'abc', publicKey: '0xdeadbeef' },
 });
 
+// Do not hit live RPCs (sepolia.base.org 503s in GHE CI).
 const client = createClient({
-  transport: http(),
   chain: baseSepolia,
+  transport: custom({
+    request: async ({ method }) => {
+      if (method === 'eth_getCode') return '0x';
+      if (method === 'eth_call') return `0x${'0'.repeat(64)}`;
+      throw new Error(`unexpected RPC method: ${method}`);
+    },
+  }),
 });
 
 describe('encodeCalls', () => {

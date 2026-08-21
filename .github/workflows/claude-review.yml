@@ -4,153 +4,16 @@ on:
   pull_request:
     types: [opened, synchronize, ready_for_review, reopened]
 
-concurrency:
-  group: claude-review-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
-
 permissions:
   contents: read
-  # This allows posting comments and reviews
-  # It does not allow pushing any commits or modifying any files in the repo
-  pull-requests: write
+  pull-requests: read
 
 jobs:
   review:
     name: Review PR
-    # BaseRunnerGroup is github.com-only. Use wallet-mobile GHE self-hosted labels.
-    # Skip for external contributor PRs (forks) — secrets are unavailable.
-    if: github.event.pull_request.head.repo.full_name == github.repository
-    timeout-minutes: 30
     runs-on: [default-config, medium, amd64]
     steps:
-      - name: Harden the runner (Block unauthorized outbound calls)
-        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
-        with:
-          egress-policy: block
-          allowed-endpoints: >
-            api.github.com:443
-            bun.sh:443
-            github.com:443
-            objects.githubusercontent.com:443
-            registry.npmjs.org:443
-            release-assets.githubusercontent.com:443
-            ${{ vars.LLM_GATEWAY_HOSTNAME }}:443
-
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          fetch-depth: 1
-      - name: Run Claude Code
-        id: claude-review
-        uses: anthropics/claude-code-action@1b8ee3b94104046d71fde52ec3557651ad8c0d71 # v1.0.29
-        env:
-          ANTHROPIC_BASE_URL: https://${{ vars.LLM_GATEWAY_HOSTNAME }}
-
-        with:
-          anthropic_api_key: ${{ secrets.LLM_GATEWAY_API_KEY }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
-          # When track_progress is enabled:
-          # - Creates a tracking comment with progress checkboxes
-          # - Includes all PR context (comments, attachments, images)
-          # - Updates progress as the review proceeds
-          # - Marks as completed when done
-          track_progress: false
-
-          # review instructions
-          prompt: |
-            You are reviewing a Pull Request for Base Account SDK — a TypeScript monorepo providing Coinbase Base's account, payment, and subscription libraries.
-
-            CODEBASE:
-            - Yarn 4 (Berry) workspaces monorepo, Node 20
-            - packages/account-sdk (@base-org/account): core SDK — payments, subscriptions, EIP-1193 provider, signing, RPC, embedded UI (Preact + zustand)
-            - packages/account-ui (@base-org/account-ui): multi-framework UI components (Preact, React, Vue, Svelte entrypoints)
-            - packages/account-cli (@base-org/account-cli): CLI tool
-            - examples/testapp: Next.js 14 playground/demo app
-            - Key dependencies: viem, ox, @coinbase/cdp-sdk, preact, zustand, eventemitter3
-            - Dual browser/node entrypoints via conditional exports in package.json
-            - Browser bundle built with Rollup + terser, bundle size budget enforced by size-limit (31 KB)
-            - CI already enforces: Biome lint + format (explicit ruleset, not recommended preset), TypeScript strict typecheck, Vitest tests on Node 20 & 22, CodeQL
-
-            PR TITLE ENFORCEMENT (do this FIRST, before the code review):
-            The PR title MUST follow Conventional Commits: `type(optional-scope): description` or `type!: description` for breaking changes.
-            Allowed types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert.
-            Rules:
-            - The type must be lowercase
-            - A colon and space (": ") must follow the type (or scope, or "!")
-            - The description must start with a lowercase letter
-            - Example valid titles: "feat: add payment retry logic", "fix(provider): handle null RPC response", "feat!: redesign subscription API"
-            Steps:
-            1. Get the current PR title: gh pr view ${{ github.event.pull_request.number }} --json title --jq '.title'
-            2. Check if it matches the pattern: ^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?!?: .+
-            3. If it does NOT match, infer the correct type from the PR diff and description, then fix it:
-               gh pr edit ${{ github.event.pull_request.number }} --title "<corrected title>"
-            4. Post a short comment explaining what you changed and why (use the summary comment, not a separate one)
-
-            REVIEW GUIDELINES:
-            - Review like a senior TypeScript engineer who owns this SDK
-            - Focus on correctness, type safety, security, and public API design
-            - DO NOT comment on formatting, import ordering, or style — Biome handles all of that
-            - DO NOT post praise, "looks good", or filler comments. If everything is fine, post nothing
-            - Use inline comments for specific code feedback via mcp__github_inline_comment__create_inline_comment
-            - Post one summary comment at the end with your overall assessment (only if you have findings)
-
-            DUPLICATE AVOIDANCE:
-            Before posting any inline comment, first fetch all existing inline review comments on this PR by running:
-            gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/comments --jq '.[] | select(.user.login == "github-actions[bot]") | {path, body}'
-            Do NOT post a comment if there is already a comment from github-actions[bot] on the same file raising the same or substantially similar issue.
-            Only post new findings that haven't been raised before.
-
-            WHAT TO LOOK FOR (ordered by severity):
-
-            1. Security (critical):
-               - Private keys, mnemonics, or secrets leaking into logs, error messages, or analytics
-               - Signature validation gaps — verify that signed data is checked before trust
-               - Untrusted RPC responses used without validation (e.g., trusting returned addresses or amounts)
-               - XSS vectors in embedded UI: innerHTML, dangerouslySetInnerHTML, unsanitized user input rendered in Preact components
-               - postMessage handlers without origin checks
-               - Sensitive data in localStorage/IndexedDB without encryption
-
-            2. Correctness & type safety:
-               - `as` type assertions that bypass the compiler — prefer type guards or narrowing
-               - `any` types leaking into non-test code (Biome warns, but review for subtle cases)
-               - Non-null assertions (`!`) on values that can genuinely be null/undefined at runtime
-               - Unhandled promise rejections — async functions called without await or .catch()
-               - Race conditions in async state management (zustand store updates, concurrent provider calls)
-               - BigInt / numeric handling: mixing Number and BigInt, precision loss on token amounts or gas values
-               - Incorrect error subclassing or swallowed error context in catch blocks
-
-            3. Public API & SDK design (this is a published npm package):
-               - Breaking changes to exported types, function signatures, or behavior without a major version bump
-               - New exports missing from package.json "exports" map (browser/node conditional paths)
-               - Leaking internal types or implementation details through the public API surface
-               - Generic error messages that don't help SDK consumers debug integration issues
-               - Missing or incorrect JSDoc on public APIs — consumers rely on these for IDE hints
-
-            4. Performance & bundle size:
-               - Large new dependencies or deep dependency trees that inflate the browser bundle (31 KB budget)
-               - Top-level side effects in modules that should be tree-shakeable
-               - Heavy operations (crypto, encoding, network calls) on the main thread without consideration for web workers
-               - Unnecessary re-renders in Preact components: missing memoization, new object/array refs in render
-
-            5. Architecture & patterns:
-               - Circular dependencies between packages or within the SDK's internal modules
-               - Browser-only APIs (window, document, DOM) used in code paths reachable from the node entrypoint
-               - Node-only APIs (fs, crypto, Buffer) used in code paths reachable from the browser entrypoint
-               - State management anti-patterns: direct store mutation, subscriptions without cleanup
-               - Event listener or WebSocket connections not cleaned up on unmount/disconnect
-
-            6. Testing gaps:
-               - New logic paths introduced without corresponding test coverage
-               - Tests that pass trivially (e.g., testing mocks instead of behavior)
-               - Flaky patterns: real timers, undeterministic ordering, network calls in unit tests
-
-            COMMENT MANAGEMENT:
-            Before posting your review summary, clean up previous summary comments from earlier runs:
-            1. Delete your previous summary comments by running: gh pr comment ${{ github.event.pull_request.number }} --delete-last --yes
-            2. Repeat step 1 until it returns an error (no more comments to delete)
-            3. Then post your new summary using: gh pr comment ${{ github.event.pull_request.number }} --body "<!-- CLAUDE_REVIEW_SUMMARY -->\n\n<your summary>"
-            Note: --delete-last only deletes your own top-level comments, not inline review comments or other users' comments.
-
-          claude_args: |
-            --model claude-opus-4-6-default
-            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr edit ${{ github.event.pull_request.number }} --title:*),Bash(gh pr comment ${{ github.event.pull_request.number }} --body:*),Bash(gh pr comment ${{ github.event.pull_request.number }} --edit-last --body:*),Bash(gh pr comment ${{ github.event.pull_request.number }} --delete-last:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/comments:*)"
+      - name: Skip on Coinbase GHE
+        run: |
+          echo "Claude Code Review is not available on Coinbase GHE."
+          echo "anthropics/claude-code-action and step-security/harden-runner are not allowlisted."
