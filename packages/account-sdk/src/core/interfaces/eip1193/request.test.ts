@@ -34,7 +34,7 @@ function runtime(opts?: { session?: ReturnType<typeof sessionFromAccounts> }): W
 }
 
 describe('handleEip1193Request', () => {
-  it('forwards wallet_getCallsStatus to Coinbase HTTP', async () => {
+  it('forwards disconnected wallet_getCallsStatus to Coinbase HTTP', async () => {
     const fetchRPC = vi.spyOn(providerUtil, 'fetchRPCRequest').mockResolvedValue({ status: 200 });
     const args = { method: 'wallet_getCallsStatus', params: ['0x1'] };
     await expect(handleEip1193Request(runtime(), args)).resolves.toEqual({ status: 200 });

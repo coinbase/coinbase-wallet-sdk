@@ -62,10 +62,11 @@ export function ingestConnectResult(runtime: WalletRuntime, value: ConnectResult
   const addresses = value.accounts.map((account) => account.address as Address);
 
   // --- EIP-1193 account slice (legacy store used by eth_accounts) ---
+  // Accounts only — do not overwrite handshake EIP-5792 `account.capabilities`.
+  // SIWE / spend / subAccounts live on the connect result and the slices below.
   runtime.store.account.set({
     accounts: addresses,
     chain: { ...runtime.store.account.get().chain, id: runtime.chainId() },
-    ...(granted ? { capabilities: granted } : {}),
   });
 
   // --- Optional grants on the first connected account ---

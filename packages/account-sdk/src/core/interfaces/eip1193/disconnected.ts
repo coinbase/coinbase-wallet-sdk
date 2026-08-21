@@ -1,3 +1,4 @@
+import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
 import { eip155Caip2 } from ':core/session/caip.js';
@@ -6,6 +7,7 @@ import { projectEthAccounts } from ':core/session/index.js';
 import { pair } from ':core/session/pair.js';
 import type { WalletRuntime } from ':core/transport/index.js';
 import { hexStringFromNumber } from ':core/type/util.js';
+import { fetchRPCRequest } from ':util/provider.js';
 import { switchChainId } from './chainParams.js';
 
 /**
@@ -13,8 +15,8 @@ import { switchChainId } from './chainParams.js';
  *
  * Pairing (`eth_requestAccounts` / `wallet_connect`) is the only way to get a
  * session. Other methods either return empty defaults, remember a chain id
- * locally, or are one-shot (handshake → send → wipe keys) so they never leave
- * a session behind.
+ * locally, post `wallet_getCallsStatus` to Coinbase HTTP, or are one-shot
+ * (handshake → send → wipe keys) so they never leave a session behind.
  */
 export async function handleDisconnected(
   runtime: WalletRuntime,
@@ -32,6 +34,10 @@ export async function handleDisconnected(
       runtime.store.account.set({ chain: { id: switchChainId(args.params) } });
       return undefined;
     }
+    // Same as old BaseAccountProvider: Coinbase HTTP before a session exists.
+    // After pairing, Signer defaulted this to chain.rpcUrl (`handleConnected`).
+    case 'wallet_getCallsStatus':
+      return fetchRPCRequest(args, CB_WALLET_RPC_URL);
 
     // --- Pair: handshake + wallet_connect → persist Session ---
     case 'eth_requestAccounts': {

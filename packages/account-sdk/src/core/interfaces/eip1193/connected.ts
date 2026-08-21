@@ -32,14 +32,26 @@ import type { WalletRuntime } from ':core/transport/index.js';
 import { hexStringFromNumber } from ':core/type/util.js';
 import { fetchRPCRequest } from ':util/provider.js';
 import { hexToNumber, numberToHex } from 'viem';
+import { getCapabilities } from './capabilities.js';
 import { switchChainId } from './chainParams.js';
+
+/** Persist a known chain on the store + session and emit `chainChanged`. */
+function applyLocalChain(runtime: WalletRuntime, session: Session, chainId: number): boolean {
+  const chain = runtime.store.chains.get().find((item) => item.id === chainId);
+  if (!chain) return false;
+  runtime.store.account.set({ chain });
+  runtime.writeSession(withEip155Chain(session, chainId));
+  runtime.emit?.('chainChanged', hexStringFromNumber(chainId));
+  return true;
+}
 
 /**
  * EIP-1193 methods after a session exists.
  *
- * Default path is `invoke` (already paired → transport). Two exceptions:
+ * Default path is `invoke` (already paired → transport). Exceptions:
  * - `from` is the cached sub-account → local AA (`dispatchSubAccount`)
- * - chain/account reads are projections of the session (no wallet I/O)
+ * - chain/account reads and `wallet_getCapabilities` are projections (no wallet I/O)
+ * - unsigned chain JSON-RPC (incl. `wallet_getCallsStatus`) uses `chain.rpcUrl`
  */
 export async function handleConnected(
   runtime: WalletRuntime,
@@ -101,19 +113,17 @@ export async function handleConnected(
       return runtime.chainId();
     case 'eth_chainId':
       return numberToHex(runtime.chainId());
+    case 'wallet_getCapabilities':
+      return getCapabilities(runtime, args, session);
 
     // --- Chain: update session locally if we already know the chain ---
     case 'wallet_switchEthereumChain': {
       const chainId = switchChainId(args.params);
-      const chain = runtime.store.chains.get().find((item) => item.id === chainId);
-      if (chain) {
-        runtime.store.account.set({ chain });
-        runtime.writeSession(withEip155Chain(session, chainId));
-        runtime.emit?.('chainChanged', hexStringFromNumber(chainId));
-        return null;
-      }
-      // Unknown chain: wallet must add/switch it.
-      return invoke(session, toEnvelope(args, runtime.chainId()), runtime.transport);
+      if (applyLocalChain(runtime, session, chainId)) return null;
+      // Unknown chain: wallet must add/switch it, then apply locally (EIP-3326 null).
+      const result = await invoke(session, toEnvelope(args, runtime.chainId()), runtime.transport);
+      if (result === null) applyLocalChain(runtime, session, chainId);
+      return result;
     }
 
     // --- Re-pair capabilities on an existing session (SIWE, spend, …) ---
@@ -166,7 +176,7 @@ export async function handleConnected(
       return response;
     }
 
-    // --- Sign/send: invoke, else chain JSON-RPC ---
+    // --- Sign/send: invoke, else chain JSON-RPC (incl. wallet_getCallsStatus) ---
     default: {
       if (WALLET_METHODS.has(args.method) || args.method.startsWith('experimental_')) {
         return invoke(session, toEnvelope(args, runtime.chainId()), runtime.transport);

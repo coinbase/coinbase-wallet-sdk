@@ -44,6 +44,11 @@ describe('handleConnected', () => {
     await expect(handleConnected(rt, { method: 'eth_coinbase' }, session)).resolves.toBe(ADDRESS);
     await expect(handleConnected(rt, { method: 'eth_chainId' }, session)).resolves.toBe('0x2105');
     await expect(handleConnected(rt, { method: 'net_version' }, session)).resolves.toBe(8453);
+    await expect(
+      handleConnected(rt, { method: 'wallet_getCapabilities', params: [ADDRESS] }, session)
+    ).resolves.toEqual({
+      '0x0': { gasLimitOverride: { supported: true } },
+    });
     expect(send).not.toHaveBeenCalled();
   });
 
@@ -87,6 +92,24 @@ describe('handleConnected', () => {
       method: 'wallet_switchEthereumChain',
       params: [{ chainId: '0xa' }],
     });
+    expect(rt.emit).not.toHaveBeenCalledWith('chainChanged', '0xa');
+  });
+
+  it('applies wallet_switchEthereumChain locally after the popup when the chain is now known', async () => {
+    let rt: WalletRuntime;
+    const send = vi.fn().mockImplementation(async () => {
+      rt.store.chains.get = () => [{ id: 10, rpcUrl: 'https://op.invalid' }];
+      return null;
+    });
+    rt = runtime(send);
+    rt.store.chains.get = () => [];
+    await handleConnected(
+      rt,
+      { method: 'wallet_switchEthereumChain', params: [{ chainId: '0xa' }] },
+      session
+    );
+    expect(rt.emit).toHaveBeenCalledWith('chainChanged', '0xa');
+    expect(rt.writeSession).toHaveBeenCalled();
   });
 
   it('forwards chain RPC when the method is not a wallet method', async () => {

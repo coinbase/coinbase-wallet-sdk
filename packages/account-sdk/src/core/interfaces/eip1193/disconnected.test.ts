@@ -1,7 +1,9 @@
+import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import type { RequestArguments } from ':core/provider/interface.js';
 import { toLegacyRequest } from ':core/translators/eip155/index.js';
 import type { WalletRuntime } from ':core/transport/index.js';
+import * as providerUtil from ':util/provider.js';
 import { handleDisconnected } from './disconnected.js';
 
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as const;
@@ -90,6 +92,14 @@ describe('handleDisconnected', () => {
       expect(rt.cleanup).toHaveBeenCalled();
     }
   );
+
+  it('posts wallet_getCallsStatus to Coinbase HTTP', async () => {
+    const fetchRPC = vi.spyOn(providerUtil, 'fetchRPCRequest').mockResolvedValue({ status: 200 });
+    const args: RequestArguments = { method: 'wallet_getCallsStatus', params: ['0x1'] };
+    await expect(handleDisconnected(runtime(), args)).resolves.toEqual({ status: 200 });
+    expect(fetchRPC).toHaveBeenCalledWith(args, CB_WALLET_RPC_URL);
+    fetchRPC.mockRestore();
+  });
 
   it('requires eth_requestAccounts for other methods', async () => {
     await expect(handleDisconnected(runtime(), { method: 'personal_sign' })).rejects.toMatchObject({

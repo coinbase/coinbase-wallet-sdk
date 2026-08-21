@@ -188,6 +188,24 @@ describe('ingestConnectResult', () => {
     );
   });
 
+  it('does not overwrite handshake EIP-5792 capabilities with wallet_connect grants', () => {
+    const rt = runtime(vi.fn());
+    ingestConnectResult(rt, {
+      accounts: [
+        {
+          address: ADDRESS,
+          capabilities: { signInWithEthereum: { message: 'm' } },
+        },
+      ],
+    });
+
+    expect(rt.store.account.set).toHaveBeenCalledWith(
+      expect.not.objectContaining({
+        capabilities: expect.objectContaining({ signInWithEthereum: { message: 'm' } }),
+      })
+    );
+  });
+
   it('puts the sub-account first when defaultAccount is sub', () => {
     const rt = runtime(vi.fn(), { defaultAccount: 'sub' });
     const session = ingestConnectResult(rt, {

@@ -9,3 +9,4 @@
 export { handleEip1193Request } from './request.js';
 export { handleConnected } from './connected.js';
 export { handleDisconnected } from './disconnected.js';
+export { ALL_CHAINS_KEY, getCapabilities, projectCapabilities } from './capabilities.js';

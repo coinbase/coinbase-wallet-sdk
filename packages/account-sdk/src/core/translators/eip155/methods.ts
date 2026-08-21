@@ -1,6 +1,6 @@
 /**
  * Methods that must go through `invoke` → wallet transport, not the chain RPC URL.
- * `eth_call` / `eth_getBalance` / etc. hit `chain.rpcUrl` instead.
+ * `eth_call` / `eth_getBalance` / `wallet_getCallsStatus` hit `chain.rpcUrl` instead.
  */
 export const WALLET_METHODS = new Set<string>([
   'personal_sign',
