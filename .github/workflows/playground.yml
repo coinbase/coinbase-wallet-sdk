@@ -25,6 +25,10 @@ jobs:
         with:
           node-version: "20"
           cache: yarn
+      - name: Enable Yarn via Corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.8.1 --activate
       - name: Setup Pages
         uses: actions/configure-pages@v4
         with:
