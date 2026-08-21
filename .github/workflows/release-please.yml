@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   release-please:
-    runs-on: ubuntu-latest
+    runs-on: [default-config, medium, amd64]
     outputs:
       account--release_created: ${{ steps.release.outputs['packages/account-sdk--release_created'] }}
       account-ui--release_created: ${{ steps.release.outputs['packages/account-ui--release_created'] }}
@@ -29,7 +29,7 @@ jobs:
     needs: release-please
     if: ${{ needs.release-please.outputs.account--release_created == 'true' }}
     name: Publish @base-org/account
-    runs-on: ubuntu-latest
+    runs-on: [default-config, medium, amd64]
     environment: publish
     permissions:
       contents: write
@@ -62,7 +62,7 @@ jobs:
     needs: release-please
     if: ${{ needs.release-please.outputs.account-ui--release_created == 'true' }}
     name: Publish @base-org/account-ui
-    runs-on: ubuntu-latest
+    runs-on: [default-config, medium, amd64]
     environment: publish
     permissions:
       contents: write

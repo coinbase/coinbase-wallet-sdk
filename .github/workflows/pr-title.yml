@@ -10,24 +10,17 @@ permissions:
 jobs:
   lint:
     name: Validate Conventional Commit format
-    runs-on: ubuntu-latest
+    runs-on: [default-config, medium, amd64]
     steps:
-      - uses: amannn/action-semantic-pull-request@v5
+      # Inline check: GHE rejects amannn/action-semantic-pull-request at startup.
+      - name: Check PR title
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          types: |
-            feat
-            fix
-            chore
-            docs
-            style
-            refactor
-            perf
-            test
-            build
-            ci
-            revert
-          requireScope: false
-          subjectPattern: ^.+$
-          subjectPatternError: "PR title must not be empty after the type prefix."
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          set -euo pipefail
+          if echo "$TITLE" | grep -Eq '^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)(\(.+\))?!?: .+'; then
+            echo "PR title is valid: $TITLE"
+            exit 0
+          fi
+          echo "::error::PR title must follow Conventional Commits (e.g. ci: use GHE runners)"
+          exit 1

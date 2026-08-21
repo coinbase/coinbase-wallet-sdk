@@ -1,5 +1,5 @@
 // pulled from viem, modified for our use case
-import { createClient, http } from 'viem';
+import { createClient, custom } from 'viem';
 import { toWebAuthnAccount } from 'viem/account-abstraction';
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
@@ -14,9 +14,22 @@ const signerWebauthn = toWebAuthnAccount({
   credential: { id: 'abc', publicKey: '0xdeadbeef' },
 });
 
+// Do not hit live RPCs (sepolia.base.org 503s in GHE CI).
 const client = createClient({
-  transport: http(),
   chain: baseSepolia,
+  transport: custom({
+    request: async ({ method, params }) => {
+      // Deployed account: viem uses timestamp-keyed nonce + wrapped signatures.
+      if (method === 'eth_getCode') return '0x6080604052';
+      if (method === 'eth_call') {
+        const data = (params as [{ data?: string }] | undefined)?.[0]?.data ?? '';
+        const key = BigInt(`0x${data.slice(-64) || '0'}`);
+        const nonce = key << 64n;
+        return `0x${nonce.toString(16).padStart(64, '0')}`;
+      }
+      throw new Error(`unexpected RPC method: ${method}`);
+    },
+  }),
 });
 
 describe('encodeCalls', () => {
@@ -246,7 +259,7 @@ describe('getNonce', () => {
     });
 
     const nonce = await account.getNonce();
-    expect(nonce).toMatchInlineSnapshot('30902162761021348478818713600000n');
+    expect(nonce).toBe(BigInt(Date.UTC(2023, 1, 1)) << 64n);
   });
 
   it('args: key', async () => {
