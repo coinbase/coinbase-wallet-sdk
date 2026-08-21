@@ -1,5 +1,5 @@
 import { AppMetadata, Preference, ProviderEventCallback } from ':core/provider/interface.js';
-import { sessionFromAccounts } from ':core/session/index.js';
+import { projectEthAccounts, sessionFromAccounts } from ':core/session/index.js';
 import { toLegacyRequest } from ':core/translators/eip155/index.js';
 import { KeyManager } from ':core/transport/crypto/index.js';
 import { Communicator } from ':core/transport/popup/Communicator.js';
@@ -53,7 +53,7 @@ export function createPopup(opts: {
     },
     readSession: () => {
       const persisted = store.session.get();
-      if (persisted) return persisted;
+      if (persisted && projectEthAccounts(persisted).length > 0) return persisted;
       // Hydrate from the legacy EIP-1193 account slice (pre-session store).
       const account = store.account.get();
       if (!account.accounts?.length) return undefined;

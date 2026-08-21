@@ -34,6 +34,13 @@ describe('createPopup', () => {
     );
   });
 
+  it('ignores an accountless persisted session', () => {
+    const storeInstance = createStoreInstance({ persist: false });
+    const runtime = createPopup({ metadata, preference, storeInstance });
+    runtime.writeSession({ scopes: {}, selected: {}, transportKind: 'popup' });
+    expect(runtime.readSession()).toBeUndefined();
+  });
+
   it('unwraps an envelope before popup send', async () => {
     const { send } = await import('./send.js');
     const runtime = createPopup({
