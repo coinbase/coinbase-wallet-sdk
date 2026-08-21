@@ -17,13 +17,11 @@ permissions:
 jobs:
   review:
     name: Review PR
-    # Note: This job runs on the BaseRunnerGroup to be able to access LLM Gateway
-    # It will not work on other runners
-    # Skip for external contributor PRs (forks) — secrets and runner group are unavailable
+    # BaseRunnerGroup is github.com-only. Use wallet-mobile GHE self-hosted labels.
+    # Skip for external contributor PRs (forks) — secrets are unavailable.
     if: github.event.pull_request.head.repo.full_name == github.repository
     timeout-minutes: 30
-    runs-on:
-      group: BaseRunnerGroup
+    runs-on: [default-config, medium, amd64]
     steps:
       - name: Harden the runner (Block unauthorized outbound calls)
         uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1

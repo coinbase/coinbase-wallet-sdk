@@ -12,7 +12,7 @@ env:
 
 jobs:
   checks:
-    runs-on: ubuntu-latest
+    runs-on: [default-config-s, xsmall, amd64]
     outputs:
       skip: ${{ env.skip }}
     steps:
@@ -23,7 +23,7 @@ jobs:
         echo "::error:: Spam label found."
         
   notify:
-    runs-on: ubuntu-latest
+    runs-on: [default-config-s, xsmall, amd64]
     needs: checks
     if: ${{ vars.SLACK_ENABLED == 'true' && needs.checks.outputs.skip != 'true' }}
     steps:
