@@ -1,14 +1,5 @@
-import { ShortcutType } from './ShortcutType';
 import { ADDR_TO_FILL, CHAIN_ID_TO_FILL } from './const';
-
-const walletGetCapabilitiesShortcuts: ShortcutType[] = [
-  {
-    key: 'wallet_getCapabilities',
-    data: {
-      address: ADDR_TO_FILL,
-    },
-  },
-];
+import { ShortcutType } from './ShortcutType';
 
 const walletSendCallsShortcuts: ShortcutType[] = [
   {
@@ -61,6 +52,5 @@ const walletSendCallsShortcuts: ShortcutType[] = [
 ];
 
 export const walletTxShortcutsMap = {
-  wallet_getCapabilities: walletGetCapabilitiesShortcuts,
   wallet_sendCalls: walletSendCallsShortcuts,
 };
