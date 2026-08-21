@@ -12,6 +12,8 @@ vi.mock('./ingest.js', () => ({
 
 const decryptMock = vi.mocked(decrypt);
 const ingestMock = vi.mocked(ingestPopupData);
+const RESPONSE_ID = '00000000-0000-4000-8000-000000000001';
+const REQUEST_ID = '00000000-0000-4000-8000-000000000002';
 
 describe('decryptPopup', () => {
   const wire = {
@@ -31,8 +33,8 @@ describe('decryptPopup', () => {
 
     await expect(
       decryptPopup(wire, {
-        id: 'resp',
-        requestId: 'req',
+        id: RESPONSE_ID,
+        requestId: REQUEST_ID,
         correlationId: undefined,
         sender: 'peer',
         timestamp: new Date(),
@@ -47,8 +49,8 @@ describe('decryptPopup', () => {
     const failure = { code: 4001, message: 'rejected' };
     await expect(
       decryptPopup(wire, {
-        id: 'resp',
-        requestId: 'req',
+        id: RESPONSE_ID,
+        requestId: REQUEST_ID,
         correlationId: undefined,
         sender: 'peer',
         timestamp: new Date(),

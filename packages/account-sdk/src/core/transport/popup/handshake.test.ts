@@ -10,6 +10,8 @@ vi.mock('./decrypt.js', () => ({ decryptPopup: vi.fn() }));
 
 const postPopupMock = vi.mocked(postPopup);
 const decryptPopupMock = vi.mocked(decryptPopup);
+const RESPONSE_ID = '00000000-0000-4000-8000-000000000001';
+const REQUEST_ID = '00000000-0000-4000-8000-000000000002';
 
 function wire(): PopupWire {
   return {
@@ -32,8 +34,8 @@ describe('handshake', () => {
     const w = wire();
     const setPeer = vi.spyOn(w.keys, 'setPeerPublicKeyFromHex').mockResolvedValue(undefined);
     postPopupMock.mockResolvedValue({
-      id: 'resp',
-      requestId: 'req',
+      id: RESPONSE_ID,
+      requestId: REQUEST_ID,
       correlationId: undefined,
       sender: 'peer-hex',
       timestamp: new Date(),
@@ -57,8 +59,8 @@ describe('handshake', () => {
     const w = wire();
     const failure = { code: 4001, message: 'rejected' };
     postPopupMock.mockResolvedValue({
-      id: 'resp',
-      requestId: 'req',
+      id: RESPONSE_ID,
+      requestId: REQUEST_ID,
       correlationId: undefined,
       sender: 'peer-hex',
       timestamp: new Date(),

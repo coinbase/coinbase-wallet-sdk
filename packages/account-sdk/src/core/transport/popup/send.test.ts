@@ -13,6 +13,8 @@ vi.mock('./decrypt.js', () => ({ decryptPopup: vi.fn() }));
 const encryptMock = vi.mocked(encrypt);
 const postPopupMock = vi.mocked(postPopup);
 const decryptPopupMock = vi.mocked(decryptPopup);
+const RESPONSE_ID = '00000000-0000-4000-8000-000000000001';
+const REQUEST_ID = '00000000-0000-4000-8000-000000000002';
 
 function wire(): PopupWire {
   return {
@@ -37,8 +39,8 @@ describe('send', () => {
     const encrypted = { iv: new Uint8Array([1]), cipherText: new ArrayBuffer(0) };
     encryptMock.mockResolvedValue(encrypted);
     postPopupMock.mockResolvedValue({
-      id: 'resp',
-      requestId: 'req',
+      id: RESPONSE_ID,
+      requestId: REQUEST_ID,
       correlationId: undefined,
       sender: 'peer',
       timestamp: new Date(),
@@ -55,8 +57,8 @@ describe('send', () => {
     const w = wire();
     encryptMock.mockResolvedValue({ iv: new Uint8Array(), cipherText: new ArrayBuffer(0) });
     postPopupMock.mockResolvedValue({
-      id: 'resp',
-      requestId: 'req',
+      id: RESPONSE_ID,
+      requestId: REQUEST_ID,
       correlationId: undefined,
       sender: 'peer',
       timestamp: new Date(),
