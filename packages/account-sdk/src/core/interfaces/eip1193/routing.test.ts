@@ -170,14 +170,26 @@ describe('RPC routing vs Base Account SDK', () => {
     }
   });
 
-  it.each(['wallet_sendCalls', 'wallet_sign'] as const)(
-    'one-shots handshake+send+cleanup for disconnected %s',
+  it.each(['wallet_sendCalls', 'wallet_sign', 'experimental_requestInfo'] as const)(
+    'one-shots handshake+envelope transport+cleanup for disconnected %s',
     async (method) => {
       const rt = runtime();
-      rt.send = vi.fn().mockResolvedValue('0xok');
-      rt.transport.send = (envelope) => rt.send(toLegacyRequest(envelope));
-      await expect(handleEip1193Request(rt, { method, params: [] })).resolves.toBe('0xok');
+      const transportSend = vi.fn().mockResolvedValue('0xok');
+      rt.transport.send = transportSend;
+      const params =
+        method === 'wallet_sendCalls'
+          ? [{ chainId: '0x2105', calls: [], version: '1' }]
+          : method === 'wallet_sign'
+            ? [{ version: '1.0', data: {} }]
+            : [{ requests: [] }];
+
+      await expect(handleEip1193Request(rt, { method, params })).resolves.toBe('0xok');
       expect(rt.handshake).toHaveBeenCalled();
+      expect(transportSend).toHaveBeenCalledWith({
+        chainId: 'eip155:8453',
+        request: { method, params },
+      });
+      expect(rt.send).not.toHaveBeenCalled();
       expect(rt.cleanup).toHaveBeenCalled();
     }
   );
@@ -269,7 +281,6 @@ describe('RPC routing vs Base Account SDK', () => {
     'wallet_getCapabilities',
     'wallet_addSubAccount',
     'wallet_getSubAccounts',
-    'experimental_requestInfo',
     'coinbase_fetchPermissions',
     'eth_getBalance',
   ] as const)('rejects disconnected %s until eth_requestAccounts (4100)', async (method) => {

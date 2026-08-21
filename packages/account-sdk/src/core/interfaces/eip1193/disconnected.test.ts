@@ -80,16 +80,43 @@ describe('handleDisconnected', () => {
     ).rejects.toMatchObject({ code: 4100 });
   });
 
-  it.each(['wallet_sendCalls', 'wallet_sign'])(
-    'one-shots handshake + send + cleanup for %s',
+  it.each(['wallet_sendCalls', 'wallet_sign', 'experimental_requestInfo'] as const)(
+    'one-shots handshake + envelope transport + cleanup for %s',
     async (method) => {
-      const send = vi.fn().mockResolvedValue('0xok');
+      const order: string[] = [];
+      const send = vi.fn();
       const rt = runtime(send);
-      const args: RequestArguments = { method, params: ['0xdeadbeef'] };
+      const transportSend = vi.fn().mockImplementation(async () => {
+        order.push('transport-start');
+        await Promise.resolve();
+        order.push('transport-end');
+        return '0xok';
+      });
+      rt.handshake = vi.fn().mockImplementation(async () => {
+        order.push('handshake');
+      });
+      rt.transport.send = transportSend;
+      rt.cleanup = vi.fn().mockImplementation(async () => {
+        order.push('cleanup');
+      });
+
+      const params =
+        method === 'wallet_sendCalls'
+          ? [{ chainId: '0x1', calls: [], version: '1' }]
+          : method === 'wallet_sign'
+            ? [{ version: '1.0', data: {} }]
+            : [{ requests: [] }];
+      const args: RequestArguments = { method, params };
+
       await expect(handleDisconnected(rt, args)).resolves.toBe('0xok');
       expect(rt.handshake).toHaveBeenCalledWith({ method: 'handshake' });
-      expect(send).toHaveBeenCalledWith(args);
+      expect(transportSend).toHaveBeenCalledWith({
+        chainId: 'eip155:1',
+        request: args,
+      });
+      expect(send).not.toHaveBeenCalled();
       expect(rt.cleanup).toHaveBeenCalled();
+      expect(order).toEqual(['handshake', 'transport-start', 'transport-end', 'cleanup']);
     }
   );
 

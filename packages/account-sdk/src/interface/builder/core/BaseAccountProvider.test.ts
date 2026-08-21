@@ -119,7 +119,7 @@ describe('Ephemeral methods', () => {
     expect(mockFetchRPCRequest).toHaveBeenCalledWith(args, CB_WALLET_RPC_URL);
   });
 
-  it.each(['wallet_sendCalls', 'wallet_sign'])(
+  it.each(['wallet_sendCalls', 'wallet_sign', 'experimental_requestInfo'])(
     'handshakes, sends, and cleans up for %s',
     async (method) => {
       mockSend.mockResolvedValueOnce('0xok');

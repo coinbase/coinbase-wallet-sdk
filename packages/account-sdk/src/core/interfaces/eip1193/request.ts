@@ -8,7 +8,8 @@ import { handleDisconnected } from './disconnected.js';
  *
  * Splits on whether a `Session` already exists:
  * - no session → `handleDisconnected` (pair on `eth_requestAccounts` /
- *   `wallet_connect`; one-shot handshake+send for `wallet_sendCalls` / `wallet_sign`;
+ *   `wallet_connect`; one-shot envelope transport for `wallet_sendCalls` / `wallet_sign` /
+ *   `experimental_requestInfo`;
  *   `wallet_getCallsStatus` → Coinbase HTTP)
  * - session → `handleConnected` (`invoke` for wallet methods, chain RPC for
  *   `wallet_getCallsStatus` / `eth_call` / etc., or local sub-account signing)

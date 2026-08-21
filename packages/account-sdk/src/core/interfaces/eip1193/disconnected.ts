@@ -5,6 +5,7 @@ import { eip155Caip2 } from ':core/session/caip.js';
 import { ensureSession } from ':core/session/ensureSession.js';
 import { projectEthAccounts } from ':core/session/index.js';
 import { pair } from ':core/session/pair.js';
+import { toEnvelope } from ':core/translators/eip155/index.js';
 import type { WalletRuntime } from ':core/transport/index.js';
 import { hexStringFromNumber } from ':core/type/util.js';
 import { fetchRPCRequest } from ':util/provider.js';
@@ -63,12 +64,13 @@ export async function handleDisconnected(
         'wallet_invokeMethod requires a session. Call eth_requestAccounts first.'
       );
 
-    // --- One-shot: do not leave a session (ephemeral sign / sendCalls) ---
+    // --- One-shot envelope: handshake → transport → cleanup; do not persist a session. ---
     case 'wallet_sendCalls':
-    case 'wallet_sign': {
+    case 'wallet_sign':
+    case 'experimental_requestInfo': {
       try {
         await runtime.handshake({ method: 'handshake' });
-        return runtime.send(args);
+        return await runtime.transport.send(toEnvelope(args, runtime.chainId()));
       } finally {
         await runtime.cleanup();
       }
