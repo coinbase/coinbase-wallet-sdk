@@ -19,7 +19,8 @@ const client = createClient({
   chain: baseSepolia,
   transport: custom({
     request: async ({ method }) => {
-      if (method === 'eth_getCode') return '0x';
+      // Deployed account: viem uses timestamp-keyed nonce + wrapped signatures.
+      if (method === 'eth_getCode') return '0x6080604052';
       if (method === 'eth_call') return `0x${'0'.repeat(64)}`;
       throw new Error(`unexpected RPC method: ${method}`);
     },

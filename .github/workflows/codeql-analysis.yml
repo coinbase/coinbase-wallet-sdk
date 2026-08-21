@@ -11,14 +11,12 @@
 #
 name: "CodeQL"
 
+# GHE default Code Scanning setup is already enabled for this repo.
+# A custom CodeQL workflow cannot upload SARIF while default setup is on:
+# "CodeQL analyses from advanced configurations cannot be processed when
+# the default setup is enabled".
 on:
-  push:
-    branches: [master]
-  pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [master]
-  schedule:
-    - cron: "45 14 * * 6"
+  workflow_dispatch:
 
 # paths-ignore:
 #   - packages/wallet-native-sdk
