@@ -1,7 +1,7 @@
 import { isAddress, isHex } from 'viem';
 
-import { SubAccount } from '../store/store.js';
 import { standardErrors } from ':core/error/errors.js';
+import { SubAccount } from '../store/store.js';
 
 export function assertSubAccount(info: unknown): asserts info is SubAccount {
   if (typeof info !== 'object' || info === null) {

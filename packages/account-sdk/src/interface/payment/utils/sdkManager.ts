@@ -1,8 +1,8 @@
-import type { Hex } from 'viem';
-import { EphemeralBaseAccountProvider } from '../../builder/core/EphemeralBaseAccountProvider.js';
 import { ProviderInterface } from ':core/provider/interface.js';
 import { loadTelemetryScript } from ':core/telemetry/initCCA.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
+import type { Hex } from 'viem';
+import { BaseAccountProvider } from '../../builder/core/BaseAccountProvider.js';
 import { CHAIN_IDS } from '../constants.js';
 import type { PayerInfoResponses } from '../types.js';
 
@@ -106,10 +106,10 @@ function getQueueKey({ testnet, walletUrl }: QueueKeyParams): string {
 /**
  * Creates an ephemeral provider configured for payments.
  *
- * Uses EphemeralBaseAccountProvider which:
- * - Maintains isolated state (doesn't pollute global store)
- * - Only supports payment-related methods (wallet_sendCalls, wallet_sign)
- * - Cleans up without affecting other SDK instances
+ * Uses `BaseAccountProvider` with `ephemeral: true`:
+ * - Isolated in-memory store (does not share Session / keys with the main SDK)
+ * - Cannot pair (`eth_requestAccounts` / `wallet_connect` are rejected)
+ * - `wallet_sendCalls` / `wallet_sign` handshake → send → cleanup
  *
  * @param params.chainId - The chain ID to use
  * @param params.walletUrl - Optional wallet URL to use
@@ -142,7 +142,7 @@ export function createEphemeralSDK({
   }
 
   // Create ephemeral provider with isolated state
-  const provider = new EphemeralBaseAccountProvider({
+  const provider = new BaseAccountProvider({
     metadata: {
       appName,
       appLogoUrl: '',
@@ -153,6 +153,7 @@ export function createEphemeralSDK({
       walletUrl,
       attribution: dataSuffix ? { dataSuffix } : undefined,
     },
+    ephemeral: true,
   });
 
   // Return SDK-like interface for compatibility

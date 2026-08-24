@@ -63,7 +63,7 @@ type CCAEventData = {
   errorMessage?: string;
   dialogContext?: string;
   dialogAction?: string;
-  isEphemeral?: boolean; // Whether operation is using ephemeral signer
+  isEphemeral?: boolean;
   subAccountCreation?: 'on-connect' | 'manual';
   subAccountDefaultAccount?: 'sub' | 'universal';
   subAccountFunding?: 'spend-permissions' | 'manual';

@@ -1,6 +1,7 @@
 import { PACKAGE_VERSION } from ':core/constants.js';
-import { AppMetadata, Preference, SubAccountOptions } from ':core/provider/interface.js';
+import type { AppMetadata, Preference, SubAccountOptions } from ':core/provider/interface.js';
 import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
+import type { Session } from ':core/session/index.js';
 import { OwnerAccount } from ':core/type/index.js';
 import { Address, Hex } from 'viem';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -44,77 +45,50 @@ type Config = {
   paymasterUrls?: Record<number, string>;
 };
 
-type ChainSlice = {
-  chains: Chain[];
-};
+type ChainSlice = { chains: Chain[] };
+const createChainSlice: StateCreator<StoreState, [], [], ChainSlice> = () => ({ chains: [] });
 
-const createChainSlice: StateCreator<StoreState, [], [], ChainSlice> = () => {
-  return {
-    chains: [],
-  };
-};
+/** ECDH transport keys (`KeyManager`), not sub-account owner keys. */
+type KeysSlice = { keys: Record<string, string | null> };
+const createKeysSlice: StateCreator<StoreState, [], [], KeysSlice> = () => ({ keys: {} });
 
-type KeysSlice = {
-  keys: Record<string, string | null>;
-};
+type AccountSlice = { account: Account };
+const createAccountSlice: StateCreator<StoreState, [], [], AccountSlice> = () => ({ account: {} });
 
-const createKeysSlice: StateCreator<StoreState, [], [], KeysSlice> = () => {
-  return {
-    keys: {},
-  };
-};
+type SubAccountSlice = { subAccount?: SubAccount };
+const createSubAccountSlice: StateCreator<StoreState, [], [], SubAccountSlice> = () => ({
+  subAccount: undefined,
+});
 
-type AccountSlice = {
-  account: Account;
-};
+type SubAccountConfigSlice = { subAccountConfig?: SubAccountConfig };
+const createSubAccountConfigSlice: StateCreator<
+  StoreState,
+  [],
+  [],
+  SubAccountConfigSlice
+> = () => ({
+  subAccountConfig: {},
+});
 
-const createAccountSlice: StateCreator<StoreState, [], [], AccountSlice> = () => {
-  return {
-    account: {},
-  };
-};
+type SpendPermissionsSlice = { spendPermissions: SpendPermission[] };
+const createSpendPermissionsSlice: StateCreator<
+  StoreState,
+  [],
+  [],
+  SpendPermissionsSlice
+> = () => ({
+  spendPermissions: [],
+});
 
-type SubAccountSlice = {
-  subAccount?: SubAccount;
-};
+type ConfigSlice = { config: Config };
+const createConfigSlice: StateCreator<StoreState, [], [], ConfigSlice> = () => ({
+  config: { version: PACKAGE_VERSION },
+});
 
-const createSubAccountSlice: StateCreator<StoreState, [], [], SubAccountSlice> = () => {
-  return {
-    subAccount: undefined,
-  };
-};
-
-type SubAccountConfigSlice = {
-  subAccountConfig?: SubAccountConfig;
-};
-
-const createSubAccountConfigSlice: StateCreator<StoreState, [], [], SubAccountConfigSlice> = () => {
-  return {
-    subAccountConfig: {},
-  };
-};
-
-type SpendPermissionsSlice = {
-  spendPermissions: SpendPermission[];
-};
-
-const createSpendPermissionsSlice: StateCreator<StoreState, [], [], SpendPermissionsSlice> = () => {
-  return {
-    spendPermissions: [],
-  };
-};
-
-type ConfigSlice = {
-  config: Config;
-};
-
-const createConfigSlice: StateCreator<StoreState, [], [], ConfigSlice> = () => {
-  return {
-    config: {
-      version: PACKAGE_VERSION,
-    },
-  };
-};
+type SessionSlice = { session?: Session };
+const createSessionSlice: StateCreator<StoreState, [], [], SessionSlice> = () => ({
+  session: undefined,
+});
 
 type MergeTypes<T extends unknown[]> = T extends [infer First, ...infer Rest]
   ? First & (Rest extends unknown[] ? MergeTypes<Rest> : Record<string, unknown>)
@@ -129,6 +103,7 @@ export type StoreState = MergeTypes<
     SubAccountConfigSlice,
     SpendPermissionsSlice,
     ConfigSlice,
+    SessionSlice,
   ]
 >;
 
@@ -147,9 +122,10 @@ export function createStoreInstance(options?: {
     ...createKeysSlice(...args),
     ...createAccountSlice(...args),
     ...createSubAccountSlice(...args),
+    ...createSubAccountConfigSlice(...args),
     ...createSpendPermissionsSlice(...args),
     ...createConfigSlice(...args),
-    ...createSubAccountConfigSlice(...args),
+    ...createSessionSlice(...args),
   });
 
   if (shouldPersist) {
@@ -158,8 +134,6 @@ export function createStoreInstance(options?: {
         name: storageName,
         storage: createJSONStorage(() => localStorage),
         partialize: (state) => {
-          // Explicitly select only the data properties we want to persist
-          // (not the methods)
           return {
             chains: state.chains,
             keys: state.keys,
@@ -167,26 +141,25 @@ export function createStoreInstance(options?: {
             subAccount: state.subAccount,
             spendPermissions: state.spendPermissions,
             config: state.config,
+            session: state.session,
           } as StoreState;
         },
       })
     );
   }
-  // Create ephemeral store without persistence
   return createStore(storeCreator);
 }
 
-// Global singleton store for backwards compatibility and persistent SDK instances
-export const sdkstore = createStoreInstance({ persist: true });
+/** Default persisted zustand instance. Ephemeral payment flows pass their own. */
+export const defaultStoreInstance = createStoreInstance({ persist: true });
 
-// Type for store instance returned by createStoreInstance
 export type StoreInstance = ReturnType<typeof createStoreInstance>;
 
 /**
- * Creates store accessor helpers for a given store instance.
- * This allows both the global store and ephemeral stores to use the same API.
+ * Slice accessors for one zustand instance (persisted SDK store or an ephemeral payment store).
+ * This is the object on `WalletRuntime.store` — `store.account.get()`, `store.session.set()`, …
  */
-export function createStoreHelpers(storeInstance: StoreInstance) {
+export function bindStore(storeInstance: StoreInstance) {
   return {
     subAccountsConfig: {
       get: () => storeInstance.getState().subAccountConfig,
@@ -274,28 +247,38 @@ export function createStoreHelpers(storeInstance: StoreInstance) {
         storeInstance.setState((state) => ({ config: { ...state.config, ...config } }));
       },
     },
+
+    session: {
+      get: (): Session | undefined => storeInstance.getState().session,
+      set: (session: Session) => {
+        storeInstance.setState({ session });
+      },
+      clear: () => {
+        storeInstance.setState({ session: undefined });
+      },
+    },
   };
 }
 
-// Global store with helpers for backwards compatibility
-const globalStoreHelpers = createStoreHelpers(sdkstore);
+export type Store = ReturnType<typeof bindStore>;
 
-// Re-export global helpers for backwards compatibility
-export const subAccountsConfig = globalStoreHelpers.subAccountsConfig;
-export const subAccounts = globalStoreHelpers.subAccounts;
-export const spendPermissions = globalStoreHelpers.spendPermissions;
-export const account = globalStoreHelpers.account;
-export const chains = globalStoreHelpers.chains;
-export const keys = globalStoreHelpers.keys;
-export const config = globalStoreHelpers.config;
+const bound = bindStore(defaultStoreInstance);
 
-/** Persist middleware API — only exists on `sdkstore` because it is always created with `persist: true`. */
+export const subAccountsConfig = bound.subAccountsConfig;
+export const subAccounts = bound.subAccounts;
+export const spendPermissions = bound.spendPermissions;
+export const account = bound.account;
+export const chains = bound.chains;
+export const keys = bound.keys;
+export const config = bound.config;
+export const session = bound.session;
+
 type GlobalSdkPersistApi = {
   rehydrate: () => Promise<void> | void;
 };
 
 export const store = {
-  ...sdkstore,
-  ...globalStoreHelpers,
-  persist: (sdkstore as StoreInstance & { persist: GlobalSdkPersistApi }).persist,
+  ...defaultStoreInstance,
+  ...bound,
+  persist: (defaultStoreInstance as StoreInstance & { persist: GlobalSdkPersistApi }).persist,
 };

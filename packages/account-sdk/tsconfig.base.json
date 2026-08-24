@@ -16,7 +16,7 @@
       ":util/*": ["src/util/*"],
       ":core/*": ["src/core/*"],
       ":store/*": ["src/store/*"],
-      ":sign/*": ["src/sign/*"],
+      ":owner-key/*": ["src/owner-key/*"],
       ":ui/*": ["src/ui/*"],
       ":interface/*": ["src/interface/*"]
     },

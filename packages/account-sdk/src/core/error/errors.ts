@@ -209,7 +209,6 @@ export function isActionableHttpRequestError(
 }
 
 export function isViemError(error: unknown): error is HttpRequestError {
-  // Check if object and has code, message, and details
   return typeof error === 'object' && error !== null && 'details' in error;
 }
 
