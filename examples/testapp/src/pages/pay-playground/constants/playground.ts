@@ -4,7 +4,7 @@ try {
   const result = await base.pay({
     amount: '.01',
     to: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
-    testnet: true
+    testnet: false
   })
   
   return result;
@@ -19,7 +19,7 @@ try {
   const result = await base.pay({
     amount: '.01',
     to: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
-    testnet: true,
+    testnet: false,
     payerInfo: {
       requests: [
         { type: 'name'},
@@ -46,7 +46,7 @@ try {
       amount: '.01', // Load from your server-side order in production
       recipient: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
     },
-    testnet: true
+    testnet: false
   })
   
   return result;
@@ -58,7 +58,7 @@ try {
 
 export const PAY_QUICK_TIPS = [
   'Get testnet ETH at <a href="https://faucet.circle.com/" target="_blank" rel="noopener noreferrer">https://faucet.circle.com/</a> - select "Base Sepolia" as the network',
-  'testnet (`true`) toggles base sepolia testnet',
+  'testnet (`true`) uses Base Sepolia; omit or set `false` for Base mainnet',
   'Amount is in USDC (e.g., "1" = $1 of USDC)',
   'Only USDC on base and base sepolia are supported',
   'Use payerInfo to request user information.',

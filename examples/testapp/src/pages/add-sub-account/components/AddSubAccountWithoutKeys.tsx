@@ -30,7 +30,7 @@ export function AddSubAccountWithoutKeys({
     const provider = sdk.getProvider();
     await provider.request({
       method: 'wallet_switchEthereumChain',
-      params: [{ chainId: numberToHex(84532) }],
+      params: [{ chainId: numberToHex(8453) }],
     });
 
     const response = (await provider.request({

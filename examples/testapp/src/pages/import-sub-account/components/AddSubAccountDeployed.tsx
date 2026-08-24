@@ -3,7 +3,7 @@ import { Box, Button, Input, VStack, FormControl, FormLabel } from '@chakra-ui/r
 import { useCallback, useState } from 'react';
 import { numberToHex } from 'viem';
 import { SmartAccount } from 'viem/account-abstraction';
-import { baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 
 type AddSubAccountProps = {
   sdk: ReturnType<typeof createBaseAccountSDK>;
@@ -21,7 +21,7 @@ export function AddSubAccountDeployed({ sdk, subAccount }: AddSubAccountProps) {
     const provider = sdk.getProvider();
     await provider.request({
       method: 'wallet_switchEthereumChain',
-      params: [{ chainId: numberToHex(84532) }],
+      params: [{ chainId: numberToHex(8453) }],
     });
 
     const response = (await provider.request({
@@ -32,7 +32,7 @@ export function AddSubAccountDeployed({ sdk, subAccount }: AddSubAccountProps) {
           account: {
             type: 'deployed',
             address: subAccount.address,
-            chainId: baseSepolia.id,
+            chainId: base.id,
             ...(customLabel && { label: customLabel }),
           },
         },

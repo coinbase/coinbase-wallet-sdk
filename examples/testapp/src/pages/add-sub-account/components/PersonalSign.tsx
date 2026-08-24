@@ -2,7 +2,7 @@ import { createBaseAccountSDK } from '@base-org/account';
 import { Box, Button } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
 import { createPublicClient, http, toHex } from 'viem';
-import { baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 
 export function PersonalSign({
   sdk,
@@ -25,7 +25,7 @@ export function PersonalSign({
       });
 
       const publicClient = createPublicClient({
-        chain: baseSepolia,
+        chain: base,
         transport: http(),
       });
 

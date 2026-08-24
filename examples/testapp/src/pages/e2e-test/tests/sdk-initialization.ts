@@ -28,7 +28,7 @@ export async function testSDKInitialization(
       const sdkInstance = ctx.loadedSDK.createBaseAccountSDK({
         appName: 'E2E Test Suite',
         appLogoUrl: undefined,
-        appChainIds: [84532], // Base Sepolia
+        appChainIds: [8453], // Base mainnet
       });
 
       // Update provider in context (this is a side effect but necessary for subsequent tests)

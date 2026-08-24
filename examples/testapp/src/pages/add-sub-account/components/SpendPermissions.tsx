@@ -2,7 +2,7 @@ import { createBaseAccountSDK, getCryptoKeyAccount } from '@base-org/account';
 import { Box, Button } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
 import { Hex, encodeFunctionData, numberToHex } from 'viem';
-import { baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 
 import {
   SPEND_PERMISSION_MANAGER_ADDRESS,
@@ -53,7 +53,7 @@ export function SpendPermissions({
         params: [
           {
             version: '1',
-            chainId: numberToHex(baseSepolia.id),
+            chainId: numberToHex(base.id),
             from: subAccountAddress,
             calls: [
               {

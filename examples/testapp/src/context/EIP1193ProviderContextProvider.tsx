@@ -32,7 +32,7 @@ export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderCont
   useEffect(() => {
     const sdkParams = {
       appName: 'SDK Playground',
-      appChainIds: [84532, 8452],
+      appChainIds: [8453],
       preference: {
         attribution: config.attribution,
         walletUrl: scwUrl ?? scwUrls[0],

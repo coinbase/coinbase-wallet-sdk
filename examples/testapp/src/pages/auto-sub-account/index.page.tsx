@@ -303,7 +303,7 @@ export default function AutoSubAccount() {
       // Add SIWE capability if selected
       if (walletConnectCapabilities.siwe) {
         capabilities.signInWithEthereum = {
-          chainId: toHex(84532),
+          chainId: toHex(8453),
           nonce: Math.random().toString(36).substring(2, 15),
         };
       }

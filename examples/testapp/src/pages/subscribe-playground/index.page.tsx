@@ -67,7 +67,7 @@ function SubscribePlayground() {
 try {
   const result = await base.subscription.getStatus({
     id: '${subscriptionId}', // Automatically filled with your recent subscription
-    testnet: true
+    testnet: false
   })
   
   return result;

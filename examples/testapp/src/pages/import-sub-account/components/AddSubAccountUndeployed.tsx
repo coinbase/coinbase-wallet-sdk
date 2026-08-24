@@ -20,7 +20,7 @@ export function AddSubAccountUndeployed({ sdk, subAccount }: AddSubAccountUndepl
     const provider = sdk.getProvider();
     await provider.request({
       method: 'wallet_switchEthereumChain',
-      params: [{ chainId: numberToHex(84532) }],
+      params: [{ chainId: numberToHex(8453) }],
     });
 
     const factoryArgs = await subAccount.getFactoryArgs();

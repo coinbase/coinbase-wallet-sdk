@@ -45,7 +45,7 @@ export async function testRequestSpendPermission(
       const account = accounts[0];
 
       // Check if TOKENS are available
-      if (!ctx.loadedSDK.TOKENS?.USDC?.addresses?.baseSepolia) {
+      if (!ctx.loadedSDK.TOKENS?.USDC?.addresses?.base) {
         throw new Error('TOKENS.USDC not available');
       }
 
@@ -53,8 +53,8 @@ export async function testRequestSpendPermission(
         provider: ctx.provider,
         account,
         spender: '0x0000000000000000000000000000000000000001',
-        token: ctx.loadedSDK.TOKENS.USDC.addresses.baseSepolia,
-        chainId: 84532,
+        token: ctx.loadedSDK.TOKENS.USDC.addresses.base,
+        chainId: 8453,
         allowance: parseUnits('100', 6),
         periodInDays: 30,
       });
@@ -213,7 +213,7 @@ export async function testFetchPermissions(
           provider: ctx.provider,
           account,
           spender: '0x0000000000000000000000000000000000000001',
-          chainId: 84532,
+          chainId: 8453,
         });
 
         return permissions;

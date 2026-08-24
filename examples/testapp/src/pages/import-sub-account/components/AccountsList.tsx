@@ -16,7 +16,7 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import { numberToHex } from 'viem';
 import { SmartAccount } from 'viem/account-abstraction';
-import { baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 import { abi } from '../../../constants';
 import type { StoredAccount } from '../../../utils/unsafe_manageMultipleAccounts';
 import { AddGlobalOwner } from './AddGlobalOwner';
@@ -123,7 +123,7 @@ export function AccountsList({
         const provider = sdk.getProvider();
         await provider.request({
           method: 'wallet_switchEthereumChain',
-          params: [{ chainId: numberToHex(84532) }],
+          params: [{ chainId: numberToHex(8453) }],
         });
 
         const customLabel = customLabels[account.stored.id] || '';
@@ -138,7 +138,7 @@ export function AccountsList({
                 account: {
                   type: 'deployed',
                   address: account.smartAccount.address,
-                  chainId: baseSepolia.id,
+                  chainId: base.id,
                   ...(customLabel && { label: customLabel }),
                 },
               },
@@ -339,10 +339,10 @@ export function AccountsList({
                 </Text>
                 <HStack spacing={1}>
                   <Text fontSize="sm" fontWeight="medium">
-                    Base Sepolia
+                    Base
                   </Text>
                   <Badge colorScheme="purple" fontSize="xs">
-                    {baseSepolia.id}
+                    {base.id}
                   </Badge>
                 </HStack>
               </Box>

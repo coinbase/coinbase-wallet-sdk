@@ -25,7 +25,7 @@ export async function testPay(
       const result = await ctx.loadedSDK.base.pay({
         amount: '0.01',
         to: '0x0000000000000000000000000000000000000001',
-        testnet: true,
+        testnet: false,
         walletUrl: ctx.walletUrl,
       });
 
@@ -67,7 +67,7 @@ export async function testGetPaymentStatus(
           amount: '0.01',
           recipient: '0x0000000000000000000000000000000000000001',
         },
-        testnet: true,
+        testnet: false,
       });
 
       const details = [

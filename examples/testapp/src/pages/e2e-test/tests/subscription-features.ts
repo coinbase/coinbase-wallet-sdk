@@ -28,7 +28,7 @@ export async function testSubscribe(
         subscriptionOwner: '0x0000000000000000000000000000000000000001',
         periodInDays: 30,
         requireBalance: false,
-        testnet: true,
+        testnet: false,
         walletUrl: ctx.walletUrl,
       });
 
@@ -66,7 +66,7 @@ export async function testGetSubscriptionStatus(
     async (ctx) => {
       const status = await ctx.loadedSDK.base.subscription.getStatus({
         id: ctx.subscriptionId!,
-        testnet: true,
+        testnet: false,
       });
 
       const details = [
@@ -120,7 +120,7 @@ export async function testPrepareCharge(
       const chargeCalls = await ctx.loadedSDK.base.subscription.prepareCharge({
         id: ctx.subscriptionId!,
         amount: '1.00',
-        testnet: true,
+        testnet: false,
       });
 
       return chargeCalls;
@@ -140,7 +140,7 @@ export async function testPrepareCharge(
       const maxChargeCalls = await ctx.loadedSDK.base.subscription.prepareCharge({
         id: ctx.subscriptionId!,
         amount: 'max-remaining-charge',
-        testnet: true,
+        testnet: false,
       });
 
       return maxChargeCalls;
