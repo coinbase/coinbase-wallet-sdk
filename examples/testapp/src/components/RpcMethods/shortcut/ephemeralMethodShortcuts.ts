@@ -86,7 +86,7 @@ const walletSendCallsEphemeralShortcuts: ShortcutType[] = [
   {
     key: 'wallet_sendCalls',
     data: {
-      chainId: '84532',
+      chainId: '8453',
       calls: [],
       version: '1',
     },

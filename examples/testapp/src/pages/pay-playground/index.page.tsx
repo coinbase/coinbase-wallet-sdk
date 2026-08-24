@@ -64,7 +64,7 @@ try {
       amount: '${amount}',
       recipient: '${recipient}'
     },
-    testnet: true
+    testnet: false
   })
   
   return result;

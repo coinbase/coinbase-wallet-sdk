@@ -2,7 +2,7 @@ import { createBaseAccountSDK } from '@base-org/account';
 import { Box, Button } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
 import { numberToHex } from 'viem';
-import { baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 
 export function SendCalls({
   sdk,
@@ -23,7 +23,7 @@ export function SendCalls({
         method: 'wallet_sendCalls',
         params: [
           {
-            chainId: numberToHex(baseSepolia.id),
+            chainId: numberToHex(base.id),
             from: subAccountAddress,
             calls: [
               {

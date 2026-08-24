@@ -3,7 +3,7 @@ import { Box, Button } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
 import { Client, createPublicClient, encodeFunctionData, http, toHex } from 'viem';
 import { SmartAccount, createBundlerClient, createPaymasterClient } from 'viem/account-abstraction';
-import { baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 import { abi } from '../../../constants';
 
 // Demo placeholder. Replace with your own paymaster/bundler endpoint in real usage.
@@ -38,7 +38,7 @@ export function AddGlobalOwner({
       console.log('customlogs: accounts', accounts);
 
       const client = createPublicClient({
-        chain: baseSepolia,
+        chain: base,
         transport: http(),
       });
       const paymasterClient = createPaymasterClient({

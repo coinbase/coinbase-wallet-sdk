@@ -84,7 +84,7 @@ describe('EIP1193ProviderContextProvider', () => {
 
     expect(createBaseAccountSDKHEAD).toHaveBeenCalledWith({
       appName: 'SDK Playground',
-      appChainIds: [84532, 8452],
+      appChainIds: [8453],
       preference: {
         attribution: { dataSuffix: '0xtestattribution' },
         walletUrl: 'https://keys-dev.coinbase.com/connect',
@@ -125,7 +125,7 @@ describe('EIP1193ProviderContextProvider', () => {
 
     expect(createBaseAccountSDKHEAD).toHaveBeenCalledWith({
       appName: 'SDK Playground',
-      appChainIds: [84532, 8452],
+      appChainIds: [8453],
       preference: {
         attribution: { dataSuffix: '0xtestattribution' },
         walletUrl: 'https://keys-dev.coinbase.com/connect',

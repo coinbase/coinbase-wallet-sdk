@@ -2,7 +2,7 @@ import { createBaseAccountSDK } from '@base-org/account';
 import { Box, Button } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
 import { SmartAccount } from 'viem/account-abstraction';
-import { baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 
 // Demo placeholder. Replace with your own paymaster service endpoint in real usage.
 const PAYMASTER_URL = 'https://example.paymaster.com';
@@ -26,7 +26,7 @@ export function SendCalls({
         method: 'wallet_sendCalls',
         params: [
           {
-            chainId: baseSepolia.id,
+            chainId: base.id,
             from: subAccount.address,
             calls: [],
             version: '1',

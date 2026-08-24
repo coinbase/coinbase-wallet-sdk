@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Client, createPublicClient, http } from 'viem';
 import { SmartAccount, toCoinbaseSmartAccount } from 'viem/account-abstraction';
 import { privateKeyToAccount } from 'viem/accounts';
-import { baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 
 import { useConfig } from '../../context/ConfigContextProvider';
 import {
@@ -30,7 +30,7 @@ export default function SubAccounts() {
   async function createSmartAccount(stored: StoredAccount) {
     const account = privateKeyToAccount(stored.privateKey);
     const client = createPublicClient({
-      chain: baseSepolia,
+      chain: base,
       transport: http(),
     });
 

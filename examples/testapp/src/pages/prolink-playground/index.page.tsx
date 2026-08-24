@@ -79,10 +79,10 @@ export default function ProlinkPlayground() {
   const [methodType, setMethodType] = useState<'wallet_sendCalls' | 'generic'>('wallet_sendCalls');
 
   // Common fields
-  const [chainId, setChainId] = useState('84532'); // Base Sepolia (testnet)
+  const [chainId, setChainId] = useState('8453'); // Base
 
   // wallet_sendCalls fields
-  const [callsTo, setCallsTo] = useState('0x036CbD53842c5426634e7929541eC2318f3dCF7e'); // USDC on Base Sepolia
+  const [callsTo, setCallsTo] = useState('0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'); // USDC on Base
   const [callsData, setCallsData] = useState(
     '0xa9059cbb000000000000000000000000fe21034794a5a574b94fe4fdfd16e005f1c96e5100000000000000000000000000000000000000000000000000000000004c4b40'
   ); // ERC20 transfer

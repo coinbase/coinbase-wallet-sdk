@@ -3,7 +3,7 @@ import { ADDR_TO_FILL, EXAMPLE_MESSAGE } from './const';
 
 const TYPED_DATA_V4_DATA = {
   domain: {
-    chainId: '84532',
+    chainId: '8453',
     name: 'Ether Mail',
     verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC',
     version: '1',

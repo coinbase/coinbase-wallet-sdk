@@ -6,12 +6,12 @@
  */
 
 import { http, createPublicClient, toHex } from 'viem';
-import { baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 import type { TestContext, TestHandlers } from '../types';
 import { runTest } from '../utils/test-helpers';
 
-const DEFAULT_TESTNET_PAYMASTER_URL =
-  'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O';
+const DEFAULT_PAYMASTER_URL =
+  'https://api.developer.coinbase.com/rpc/v1/base/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O';
 
 /**
  * Test creating a sub-account with wallet_addSubAccount
@@ -49,10 +49,10 @@ export async function testCreateSubAccount(
 
       const accountType = account.type as string;
 
-      // Switch to Base Sepolia
+      // Switch to Base
       await ctx.provider.request({
         method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0x14a34' }], // 84532 in hex
+        params: [{ chainId: '0x2105' }], // 8453 in hex
       });
 
       // Prepare keys
@@ -174,7 +174,7 @@ export async function testSignWithSubAccount(
 
       // Verify signature
       const publicClient = createPublicClient({
-        chain: baseSepolia,
+        chain: base,
         transport: http(),
       });
 
@@ -226,7 +226,7 @@ export async function testSendCallsFromSubAccount(
         params: [
           {
             version: '1.0',
-            chainId: '0x14a34', // Base Sepolia
+            chainId: '0x2105', // Base
             from: ctx.subAccountAddress!,
             calls: [
               {
@@ -237,7 +237,7 @@ export async function testSendCallsFromSubAccount(
             ],
             capabilities: {
               paymasterService: {
-                url: DEFAULT_TESTNET_PAYMASTER_URL,
+                url: DEFAULT_PAYMASTER_URL,
               },
             },
           },

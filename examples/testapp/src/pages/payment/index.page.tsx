@@ -53,7 +53,7 @@ export default function Payment() {
 
   // Optional parameters state
   const [customWalletUrl, setCustomWalletUrl] = useState('');
-  const [useTestnet, setUseTestnet] = useState(true);
+  const [useTestnet, setUseTestnet] = useState(false);
   const [enableTelemetry, setEnableTelemetry] = useState(true);
 
   // Payer info state
@@ -76,7 +76,7 @@ export default function Payment() {
   const [statusError, setStatusError] = useState<{ error: string; errorDetails?: unknown } | null>(
     null
   );
-  const [statusTestnet, setStatusTestnet] = useState(true); // Separate testnet state for status check
+  const [statusTestnet, setStatusTestnet] = useState(false); // Separate testnet state for status check
 
   const handlePay = async () => {
     if (!payAmount || !payTo) {

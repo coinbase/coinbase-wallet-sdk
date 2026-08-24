@@ -5,7 +5,7 @@ try {
     recurringCharge: "10.50",
     subscriptionOwner: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51", // Your app's address
     periodInDays: 30,
-    testnet: true
+    testnet: false
   })
   
   return subscription;
@@ -38,7 +38,7 @@ try {
     subscriptionOwner: "0xFe21034794A5a574B94fE4fDfD16e005F1C96e51", // Your app's address
     periodInDays: 30,
     minimumBalance: false, // Don't require minimum balance check
-    testnet: true
+    testnet: false
   })
   
   return subscription;
@@ -52,7 +52,7 @@ export const DEFAULT_GET_SUBSCRIPTION_STATUS_CODE = `import { base } from '@base
 try {
   const result = await base.subscription.getStatus({
     id: '0x...', // Replace with a subscription ID
-    testnet: true
+    testnet: false
   })
   
   return result;

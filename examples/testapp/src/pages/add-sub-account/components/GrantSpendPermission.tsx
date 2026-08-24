@@ -2,7 +2,7 @@ import { createBaseAccountSDK } from '@base-org/account';
 import { Box, Button } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
 import { Address, Hex } from 'viem';
-import { baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 
 export const SPEND_PERMISSION_MANAGER_ADDRESS =
   '0xf85210B21cC50302F477BA56686d2019dC9b67Ad' as Address;
@@ -93,7 +93,7 @@ export function GrantSpendPermission({
 
       const universalAddress = accounts[0] as Address;
       const data = {
-        chainId: baseSepolia.id,
+        chainId: base.id,
         account: universalAddress,
         spender: subAccountAddress as Address,
         token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
