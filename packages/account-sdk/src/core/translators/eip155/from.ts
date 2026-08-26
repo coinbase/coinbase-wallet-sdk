@@ -6,8 +6,8 @@ function paramsArray(params: RequestArguments['params']): unknown[] {
 
 /**
  * Extract the signing/sending address from an EIP-1193 / CAIP-27 inner request,
- * if the dapp supplied one. `personal_sign` uses params[1]; typed data uses
- * params[0]; txs use params[0].from.
+ * if the dapp supplied one. `personal_sign` uses params[1]; `eth_sign` and typed
+ * data use params[0]; wallet/transaction objects carry `address` / `from`.
  */
 export function extractFrom(request: {
   method: string;
@@ -15,6 +15,8 @@ export function extractFrom(request: {
 }): string | undefined {
   const params = paramsArray(request.params);
   switch (request.method) {
+    case 'eth_sign':
+      return typeof params[0] === 'string' ? params[0] : undefined;
     case 'personal_sign':
     case 'personal_ecRecover':
     case 'eth_ecRecover':
@@ -24,6 +26,18 @@ export function extractFrom(request: {
     case 'eth_signTypedData_v3':
     case 'eth_signTypedData_v4':
       return typeof params[0] === 'string' ? params[0] : undefined;
+    case 'wallet_sign': {
+      const payload = params[0];
+      if (
+        payload &&
+        typeof payload === 'object' &&
+        'address' in payload &&
+        typeof payload.address === 'string'
+      ) {
+        return payload.address;
+      }
+      return undefined;
+    }
     case 'eth_sendTransaction':
     case 'eth_signTransaction':
     case 'wallet_sendCalls': {

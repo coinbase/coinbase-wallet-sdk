@@ -3,6 +3,7 @@
  *
  * `toEnvelope` — 1193 `{ method, params }` + chain id → `{ chainId, request }`.
  * `qualify` — signer in `request.params` must be in the session (`invoke`).
+ * `eip155Translator` — request qualification + CAIP-27 response decoding.
  * `toLegacyRequest` — unwrap for keys protocol v1 (popup today).
  *
  * Solana is `translators/solana`, not a second Signer.
@@ -10,3 +11,4 @@
 export { qualify, toEnvelope, toLegacyRequest } from './envelope.js';
 export { extractFrom } from './from.js';
 export { WALLET_METHODS } from './methods.js';
+export { eip155Translator } from './translator.js';

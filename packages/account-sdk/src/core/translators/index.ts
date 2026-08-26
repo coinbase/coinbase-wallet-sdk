@@ -9,8 +9,11 @@
  */
 export {
   WALLET_METHODS,
+  eip155Translator,
   extractFrom,
   qualify,
   toEnvelope,
   toLegacyRequest,
 } from './eip155/index.js';
+export { getNamespaceTranslator } from './registry.js';
+export type { NamespaceTranslator, SupportedNamespace } from './types.js';
