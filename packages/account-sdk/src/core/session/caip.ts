@@ -4,12 +4,14 @@
  * CAIP-2 chain id: `eip155:8453`. CAIP-10 account: `eip155:8453:0xabc…`.
  * Session scopes are keyed by CAIP-2; `selected` accounts are CAIP-10.
  */
+export type Namespace = string;
+
 export type Caip2 = `${string}:${string}`;
 
 /** CAIP-10 account id, e.g. `eip155:8453:0xabc…`. */
 export type Caip10 = `${Caip2}:${string}`;
 
-export type ParsedCaip2 = { namespace: string; reference: string };
+export type ParsedCaip2 = { namespace: Namespace; reference: string };
 export type ParsedCaip10 = ParsedCaip2 & { account: string };
 
 export const BITCOIN_MAINNET = 'bip122:000000000019d6689c085ae165831e93' as const satisfies Caip2;
@@ -31,7 +33,7 @@ export function isCaip2(value: string): value is Caip2 {
 }
 
 /** Build a CAIP-2 id and throw if the result is not a valid CAIP-2 string. */
-export function formatCaip2(namespace: string, reference: string): Caip2 {
+export function formatCaip2(namespace: Namespace, reference: string): Caip2 {
   const value = `${namespace}:${reference}`;
   if (!isCaip2(value)) throw new Error(`Invalid CAIP-2: ${value}`);
   return value;
@@ -62,7 +64,7 @@ export function formatCaip10(chainId: Caip2, account: string): Caip10 {
 }
 
 /** Namespace of a CAIP-2 chain or CAIP-10 account (`eip155`, `solana`, `bip122`, …). */
-export function namespaceOf(id: string): string {
+export function namespaceOf(id: string): Namespace {
   const parsed = parseCaip10(id) ?? parseCaip2(id);
   if (!parsed) throw new Error(`Not a CAIP-2 or CAIP-10 identifier: ${id}`);
   return parsed.namespace;

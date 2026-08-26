@@ -32,12 +32,33 @@ export {
   parseCaip10,
   parseCaip2,
 } from './caip.js';
-export type { Caip10, Caip2, ParsedCaip10, ParsedCaip2 } from './caip.js';
+export type { Caip10, Caip2, Namespace, ParsedCaip10, ParsedCaip2 } from './caip.js';
+export {
+  WALLET_CREATE_SESSION,
+  connectResultFromSession,
+  createCaip25Request,
+  parseCaip25Request,
+  parseCaip25Result,
+  sessionFromCaip25Result,
+} from './caip25.js';
+export type {
+  Caip25ConnectResult,
+  Caip25PrivateRequestScopeExtensions,
+  Caip25PrivateScopeParams,
+  Caip25Request,
+  Caip25RequestParams,
+  Caip25RequestScope,
+  Caip25Result,
+  Caip25ResultScope,
+} from './caip25.js';
 export {
   WALLET_INVOKE_METHOD,
   assertInvokeAuthorized,
+  createCaip27Request,
   parseCaip27,
+  parseCaip27Response,
   toCaip27,
+  unwrapCaip27Response,
 } from './caip27.js';
 export { sessionCovers } from './covers.js';
 export {
@@ -48,11 +69,14 @@ export {
   withEip155Chain,
 } from './eip155.js';
 export type {
+  Caip27Error,
   Caip27Params,
   Caip27Request,
+  Caip27Response,
+  Caip27Result,
   Envelope,
-  Transport,
-  TransportKind,
   ScopeState,
   Session,
+  Transport,
+  TransportKind,
 } from './types.js';

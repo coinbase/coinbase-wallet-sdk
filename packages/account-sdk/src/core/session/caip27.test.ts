@@ -1,4 +1,12 @@
-import { WALLET_INVOKE_METHOD, assertInvokeAuthorized, parseCaip27, toCaip27 } from './caip27.js';
+import {
+  WALLET_INVOKE_METHOD,
+  assertInvokeAuthorized,
+  createCaip27Request,
+  parseCaip27,
+  parseCaip27Response,
+  toCaip27,
+  unwrapCaip27Response,
+} from './caip27.js';
 import { sessionFromAccounts } from './eip155.js';
 
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as const;
@@ -25,7 +33,7 @@ describe('parseCaip27', () => {
     expect(
       parseCaip27({
         method: WALLET_INVOKE_METHOD,
-        params: [{ scope: 'eip155:1', request: { method: 'eth_accounts', params: [] } }],
+        params: [{ scope: 'eip155:1', request: { method: 'eth_accounts' } }],
       })
     ).toEqual({
       chainId: 'eip155:1',
@@ -62,6 +70,99 @@ describe('toCaip27', () => {
       request: { method: 'personal_sign', params: [] },
       capabilities: { atomic: { status: 'supported' } },
     });
+  });
+
+  it('builds the wallet_invokeMethod wire request without changing popup runtime', () => {
+    expect(
+      createCaip27Request({
+        sessionId: 'session-1',
+        chainId: 'eip155:8453',
+        request: { method: 'personal_sign' },
+      })
+    ).toEqual({
+      method: WALLET_INVOKE_METHOD,
+      params: {
+        sessionId: 'session-1',
+        chainId: 'eip155:8453',
+        request: { method: 'personal_sign', params: [] },
+      },
+    });
+  });
+});
+
+describe('CAIP-27 responses', () => {
+  const request = {
+    sessionId: 'session-1',
+    chainId: 'eip155:8453',
+    request: { method: 'personal_sign', params: [] },
+  } as const;
+
+  it('validates and unwraps a successful response envelope', () => {
+    const response = parseCaip27Response(
+      {
+        sessionId: 'session-1',
+        chainId: 'eip155:8453',
+        result: { method: 'personal_sign', result: '0xsig' },
+      },
+      request
+    );
+
+    expect(unwrapCaip27Response(response)).toBe('0xsig');
+  });
+
+  it('preserves a method-level error inside the response envelope', () => {
+    const response = parseCaip27Response(
+      {
+        sessionId: 'session-1',
+        chainId: 'eip155:8453',
+        error: { code: 4100, message: 'not authorized', data: { reason: 'method' } },
+      },
+      request
+    );
+
+    expect(() => unwrapCaip27Response(response)).toThrow();
+    try {
+      unwrapCaip27Response(response);
+    } catch (error) {
+      expect(error).toEqual({
+        code: 4100,
+        message: 'not authorized',
+        data: { reason: 'method' },
+      });
+    }
+  });
+
+  it('rejects mismatched targeting and malformed envelopes', () => {
+    expect(() =>
+      parseCaip27Response(
+        {
+          sessionId: 'wrong',
+          chainId: 'eip155:8453',
+          result: { method: 'personal_sign', result: '0xsig' },
+        },
+        request
+      )
+    ).toThrow(/sessionId/);
+    expect(() =>
+      parseCaip27Response(
+        {
+          sessionId: 'session-1',
+          chainId: 'eip155:1',
+          result: { method: 'personal_sign', result: '0xsig' },
+        },
+        request
+      )
+    ).toThrow(/chainId/);
+    expect(() =>
+      parseCaip27Response(
+        {
+          sessionId: 'session-1',
+          chainId: 'eip155:8453',
+          result: { method: 'eth_sendTransaction', result: '0xsig' },
+        },
+        request
+      )
+    ).toThrow(/requested method/);
   });
 });
 
