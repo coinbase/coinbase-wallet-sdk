@@ -6,15 +6,15 @@
  *
  * **pair** and **invoke** are the only verbs:
  * - `pair` — no session (or scopes do not cover the request): handshake +
- *   `wallet_connect`, then write a Session.
+ *   CAIP-25 `wallet_createSession`, then write a Session.
  * - `invoke` — already paired: send one envelope on the existing session.
  *
  * `ensureSession` is the gate in front of `pair` (reuse the stored session when
  * it already covers the required CAIP-2 chains).
  *
  * Interfaces, translators, and transports sit around this kernel:
- * dapp request → CAIP-27 envelope → transport.send. Sub-account signing is a
- * fork off invoke (local owner keys), not a fourth edge.
+ * dapp request → Envelope → transport.send → translator response unwrapping.
+ * Sub-account signing is a fork off invoke (local owner keys), not a fourth edge.
  */
 export {
   BITCOIN_MAINNET,
@@ -32,7 +32,7 @@ export {
   parseCaip10,
   parseCaip2,
 } from './caip.js';
-export type { Caip10, Caip2, Namespace, ParsedCaip10, ParsedCaip2 } from './caip.js';
+export type { Caip10, Caip2, ParsedCaip10, ParsedCaip2 } from './caip.js';
 export {
   WALLET_CREATE_SESSION,
   connectResultFromSession,
@@ -61,11 +61,13 @@ export {
   unwrapCaip27Response,
 } from './caip27.js';
 export { sessionCovers } from './covers.js';
+export type { ScopeRequirement } from './covers.js';
 export {
   EIP155_METHODS,
   projectEthAccounts,
   selectedEip155ChainId,
   sessionFromAccounts,
+  withEip155Accounts,
   withEip155Chain,
 } from './eip155.js';
 export type {

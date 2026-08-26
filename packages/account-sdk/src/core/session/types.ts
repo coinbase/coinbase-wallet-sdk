@@ -33,25 +33,17 @@ export type Session = {
 
 /**
  * Nested JSON-RPC body inside CAIP-27 `wallet_invokeMethod` params.
- *
- * CAIP-27 requires `params` on the wire. It remains optional internally so
- * current direct EIP-1193 calls keep working; `toCaip27` normalizes it to `[]`.
+ * Spec: `params` is required and may be empty.
  */
 export type Caip27Request = {
   method: string;
-  params?: readonly unknown[] | object;
+  params: readonly unknown[] | object;
 };
 
 /**
  * CAIP-27 `wallet_invokeMethod` params (`chainId` + `request`).
  *
- * MetaMask MIP-5 uses `scope` for the same CAIP-2 string; `parseCaip27`
- * accepts either. `sessionId` (CAIP-171) is stored if the dapp sends it;
- * this SDK does not issue session ids yet.
- *
- * This is **not** the popup wire format. Keys protocol v1 still encrypts
- * `{ action: { method, params }, chainId: number }`. Use `toCaip27` when
- * keys ingest `protocolVersion: 2`.
+ * `sessionId` is included whenever the CAIP-25 response issued one.
  */
 export type Caip27Params = {
   chainId: Caip2;
@@ -92,7 +84,9 @@ export type Caip27Response =
 export type Envelope = Caip27Params;
 
 /**
- * Delivery of envelopes to a wallet. `kind` is persisted; `send` is not.
+ * Namespace-neutral delivery of envelopes to a wallet. `kind` is persisted;
+ * `send` is not. The response stays opaque until the selected namespace
+ * translator validates and unwraps it.
  *
  * `invoke(session, envelope, transport)` is the only kernel caller of `send`.
  * Pairing uses `WalletRuntime.handshake` / `.send` (JSON-RPC) instead, because

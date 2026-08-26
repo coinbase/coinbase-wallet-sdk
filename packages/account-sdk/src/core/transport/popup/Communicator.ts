@@ -8,7 +8,7 @@ import {
 } from ':core/telemetry/events/communicator.js';
 import { closePopup, openPopup } from ':util/web.js';
 
-import { ConfigMessage } from ':core/message/ConfigMessage.js';
+import { ConfigMessage, PopupSetupV2Message } from ':core/message/ConfigMessage.js';
 import { Message, MessageID } from ':core/message/Message.js';
 
 export type CommunicatorOptions = {
@@ -92,7 +92,7 @@ export class Communicator {
   };
 
   /**
-   * Waits for the popup window to fully load and then sends a version message.
+   * Waits for the protocol-v2 popup and sends fixed v2 setup metadata.
    */
   waitForPopupLoaded = async (): Promise<Window> => {
     if (this.popup && !this.popup.closed) {
@@ -111,18 +111,22 @@ export class Communicator {
       })
       .catch(() => {});
 
-    return this.onMessage<ConfigMessage>(({ event }) => event === 'PopupLoaded')
+    return this.onMessage<ConfigMessage>(({ event }) => event === 'PopupLoadedV2')
       .then((message) => {
-        this.postMessage({
+        if (!message.id) throw standardErrors.rpc.invalidRequest('PopupLoadedV2 is missing id');
+        const setup: PopupSetupV2Message = {
+          event: 'PopupSetupV2',
           requestId: message.id,
           data: {
             version: PACKAGE_VERSION,
             sdkName: PACKAGE_NAME,
+            protocolVersion: 2,
             metadata: this.metadata,
             preference: this.preference,
             location: window.location.toString(),
           },
-        });
+        };
+        this.postMessage(setup);
       })
       .then(() => {
         if (!this.popup) throw standardErrors.rpc.internal();

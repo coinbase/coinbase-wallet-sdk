@@ -20,8 +20,9 @@ function dispatchMessageEvent({ data, origin }: { data: Record<string, any>; ori
   window.dispatchEvent(messageEvent);
 }
 
+const POPUP_SETUP_ID = '00000000-0000-4000-8000-000000000000';
 const popupLoadedMessage = {
-  data: { event: 'PopupLoaded' },
+  data: { id: POPUP_SETUP_ID, event: 'PopupLoadedV2' },
 };
 
 /**
@@ -113,9 +114,12 @@ describe('Communicator', () => {
       expect(mockPopup.postMessage).toHaveBeenNthCalledWith(
         1,
         {
+          event: 'PopupSetupV2',
+          requestId: POPUP_SETUP_ID,
           data: {
             version: PACKAGE_VERSION,
             sdkName: PACKAGE_NAME,
+            protocolVersion: 2,
             metadata: appMetadata,
             preference,
             location: 'http://localhost:3000/',
@@ -142,9 +146,12 @@ describe('Communicator', () => {
       expect(mockPopup.postMessage).toHaveBeenNthCalledWith(
         1,
         {
+          event: 'PopupSetupV2',
+          requestId: POPUP_SETUP_ID,
           data: {
             version: PACKAGE_VERSION,
             sdkName: PACKAGE_NAME,
+            protocolVersion: 2,
             metadata: appMetadata,
             preference,
             location: 'http://localhost:3000/',
@@ -157,6 +164,31 @@ describe('Communicator', () => {
   });
 
   describe('waitForPopupLoaded', () => {
+    it('ignores the legacy PopupLoaded event and waits for PopupLoadedV2', async () => {
+      const loaded = communicator.waitForPopupLoaded();
+      await Promise.resolve();
+      dispatchMessageEvent({
+        data: { event: 'PopupLoaded' },
+        origin: urlOrigin,
+      });
+      await Promise.resolve();
+      expect(mockPopup.postMessage).not.toHaveBeenCalled();
+
+      dispatchMessageEvent({
+        data: { id: 'popup-v2', event: 'PopupLoadedV2' },
+        origin: urlOrigin,
+      });
+      await loaded;
+      expect(mockPopup.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'PopupSetupV2',
+          requestId: 'popup-v2',
+          data: expect.objectContaining({ protocolVersion: 2 }),
+        }),
+        urlOrigin
+      );
+    });
+
     it('should open a popup window and finish handshake', async () => {
       queueMessageEvent(popupLoadedMessage);
 
@@ -166,9 +198,12 @@ describe('Communicator', () => {
       expect(mockPopup.postMessage).toHaveBeenNthCalledWith(
         1,
         {
+          event: 'PopupSetupV2',
+          requestId: POPUP_SETUP_ID,
           data: {
             version: PACKAGE_VERSION,
             sdkName: PACKAGE_NAME,
+            protocolVersion: 2,
             metadata: appMetadata,
             preference,
             location: 'http://localhost:3000/',
@@ -177,6 +212,21 @@ describe('Communicator', () => {
         urlOrigin
       );
       expect(popup).toBeTruthy();
+    });
+
+    it('exposes only the setup marker to frozen-v1 mismatch logging', async () => {
+      queueMessageEvent(popupLoadedMessage);
+      await communicator.waitForPopupLoaded();
+
+      const setup = vi.mocked(mockPopup.postMessage).mock.calls[0]?.[0] as {
+        event?: string;
+        data?: { location?: string };
+      };
+      const frozenV1ReceivedEvent = setup.event ?? JSON.stringify(setup);
+
+      expect(setup.data?.location).toBe('http://localhost:3000/');
+      expect(frozenV1ReceivedEvent).toBe('PopupSetupV2');
+      expect(frozenV1ReceivedEvent).not.toContain('localhost');
     });
 
     it('should re-focus and return the existing popup window if one is already open.', async () => {

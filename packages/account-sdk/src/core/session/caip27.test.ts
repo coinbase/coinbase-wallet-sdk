@@ -12,48 +12,62 @@ import { sessionFromAccounts } from './eip155.js';
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as const;
 
 describe('parseCaip27', () => {
-  it('parses named CAIP-27 params', () => {
+  it('strictly parses named eip155 CAIP-27 params', () => {
     expect(
       parseCaip27({
         method: WALLET_INVOKE_METHOD,
         params: {
           chainId: 'eip155:8453',
+          sessionId: 'session-1',
           request: { method: 'personal_sign', params: ['0x68656c6c6f'] },
           capabilities: { atomic: { status: 'supported' } },
         },
       })
     ).toEqual({
       chainId: 'eip155:8453',
+      sessionId: 'session-1',
       request: { method: 'personal_sign', params: ['0x68656c6c6f'] },
       capabilities: { atomic: { status: 'supported' } },
     });
   });
 
-  it('accepts MetaMask scope and array params', () => {
-    expect(
-      parseCaip27({
-        method: WALLET_INVOKE_METHOD,
-        params: [{ scope: 'eip155:1', request: { method: 'eth_accounts' } }],
-      })
-    ).toEqual({
-      chainId: 'eip155:1',
-      request: { method: 'eth_accounts', params: [] },
-    });
-  });
-
-  it('rejects nested wallet_invokeMethod and a missing chainId', () => {
+  it('rejects aliases, array params, non-eip155 chains, and missing inner params', () => {
     expect(() =>
       parseCaip27({
         method: WALLET_INVOKE_METHOD,
-        params: { chainId: 'eip155:1', request: { method: WALLET_INVOKE_METHOD } },
+        params: [{ chainId: 'eip155:1', request: { method: 'personal_sign', params: [] } }],
       })
     ).toThrow();
     expect(() =>
       parseCaip27({
         method: WALLET_INVOKE_METHOD,
-        params: { request: { method: 'personal_sign' } },
+        params: { scope: 'eip155:1', request: { method: 'personal_sign', params: [] } },
       })
     ).toThrow();
+    expect(() =>
+      parseCaip27({
+        method: WALLET_INVOKE_METHOD,
+        params: {
+          chainId: 'solana:mainnet',
+          request: { method: 'solana_signMessage', params: [] },
+        },
+      })
+    ).toThrow();
+    expect(() =>
+      parseCaip27({
+        method: WALLET_INVOKE_METHOD,
+        params: { chainId: 'eip155:1', request: { method: 'personal_sign' } },
+      })
+    ).toThrow();
+    expect(() =>
+      parseCaip27({
+        method: WALLET_INVOKE_METHOD,
+        params: {
+          chainId: 'eip155:1',
+          request: { method: 'wallet_createSession', params: {} },
+        },
+      })
+    ).toThrow(/nested CAIP carrier/);
   });
 });
 
@@ -72,12 +86,12 @@ describe('toCaip27', () => {
     });
   });
 
-  it('builds the wallet_invokeMethod wire request without changing popup runtime', () => {
+  it('builds the wallet_invokeMethod wire request', () => {
     expect(
       createCaip27Request({
         sessionId: 'session-1',
         chainId: 'eip155:8453',
-        request: { method: 'personal_sign' },
+        request: { method: 'personal_sign', params: [] },
       })
     ).toEqual({
       method: WALLET_INVOKE_METHOD,
@@ -106,11 +120,10 @@ describe('CAIP-27 responses', () => {
       },
       request
     );
-
     expect(unwrapCaip27Response(response)).toBe('0xsig');
   });
 
-  it('preserves a method-level error inside the response envelope', () => {
+  it('throws a method-level error inside the response envelope', () => {
     const response = parseCaip27Response(
       {
         sessionId: 'session-1',
@@ -119,7 +132,6 @@ describe('CAIP-27 responses', () => {
       },
       request
     );
-
     expect(() => unwrapCaip27Response(response)).toThrow();
     try {
       unwrapCaip27Response(response);
@@ -167,23 +179,35 @@ describe('CAIP-27 responses', () => {
 });
 
 describe('assertInvokeAuthorized', () => {
-  it('allows eip155 chain-agnostic coverage', () => {
+  it('requires an exact chain, granted method, and matching session id', () => {
     const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 });
+    session.sessionId = 'session-1';
+
+    expect(() =>
+      assertInvokeAuthorized(session, {
+        sessionId: 'session-1',
+        chainId: 'eip155:8453',
+        request: { method: 'personal_sign', params: [] },
+      })
+    ).not.toThrow();
     expect(() =>
       assertInvokeAuthorized(session, {
         chainId: 'eip155:1',
         request: { method: 'personal_sign', params: [] },
       })
-    ).not.toThrow();
-  });
-
-  it('rejects an uncovered namespace', () => {
-    const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 });
+    ).toThrow(/not in the session/);
     expect(() =>
       assertInvokeAuthorized(session, {
-        chainId: 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp',
-        request: { method: 'solana_signMessage', params: [] },
+        chainId: 'eip155:8453',
+        request: { method: 'eth_subscribe', params: [] },
       })
-    ).toThrow(/not in the session/);
+    ).toThrow(/not authorized/);
+    expect(() =>
+      assertInvokeAuthorized(session, {
+        sessionId: 'wrong',
+        chainId: 'eip155:8453',
+        request: { method: 'personal_sign', params: [] },
+      })
+    ).toThrow(/sessionId/);
   });
 });

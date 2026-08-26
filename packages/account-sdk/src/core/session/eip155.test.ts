@@ -3,6 +3,7 @@ import {
   projectEthAccounts,
   selectedEip155ChainId,
   sessionFromAccounts,
+  withEip155Accounts,
   withEip155Chain,
 } from './eip155.js';
 
@@ -43,9 +44,22 @@ describe('selectedEip155ChainId', () => {
 });
 
 describe('withEip155Chain', () => {
-  it('copies eip155 accounts onto a new chain id', () => {
+  it('does not copy grants onto an unauthorized chain id', () => {
     const session = withEip155Chain(sessionFromAccounts({ accounts: [ADDRESS], chainId: 1 }), 8453);
-    expect(session.selected.eip155).toBe(`eip155:8453:${ADDRESS}`);
-    expect(session.scopes['eip155:8453']?.accounts).toEqual([`eip155:8453:${ADDRESS}`]);
+    expect(session.selected.eip155).toBe(`eip155:1:${ADDRESS}`);
+    expect(session.scopes['eip155:8453']).toBeUndefined();
+  });
+
+  it('updates accounts without losing session grants', () => {
+    const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 1 });
+    session.sessionId = 'session-1';
+    session.scopes['eip155:1'].capabilities = { atomic: true };
+    const updated = withEip155Accounts(session, 1, [OTHER]);
+    expect(updated.sessionId).toBe('session-1');
+    expect(updated.scopes['eip155:1']).toEqual({
+      accounts: [`eip155:1:${OTHER}`],
+      methods: session.scopes['eip155:1'].methods,
+      capabilities: { atomic: true },
+    });
   });
 });

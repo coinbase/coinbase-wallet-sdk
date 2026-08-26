@@ -18,10 +18,15 @@ describe('sessionCovers', () => {
     expect(sessionCovers(session, [])).toBe(true);
   });
 
-  it('treats eip155 as chain-agnostic', () => {
+  it('requires exact eip155 chains and granted methods', () => {
     const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 1 });
-    expect(sessionCovers(session, ['eip155:8453'])).toBe(true);
-    expect(sessionCovers(session, ['eip155:1', 'eip155:8453'])).toBe(true);
+    expect(sessionCovers(session, ['eip155:8453'])).toBe(false);
+    expect(sessionCovers(session, [{ chainId: 'eip155:1', methods: ['personal_sign'] }])).toBe(
+      true
+    );
+    expect(sessionCovers(session, [{ chainId: 'eip155:1', methods: ['eth_subscribe'] }])).toBe(
+      false
+    );
   });
 
   it('requires an exact CAIP-2 match for non-eip155', () => {

@@ -16,8 +16,8 @@ import { withMeasurement } from './withMeasurement.js';
 
 export type BaseAccountProviderParams = Readonly<ConstructorOptions> & {
   /**
-   * Isolated in-memory store; cannot pair. `pay()` uses this so it does not
-   * share Session / ECDH keys with `createBaseAccountSDK`.
+   * Isolated in-memory store. `pay()` uses this so its one-shot ECDH keys and
+   * transient state are not shared with `createBaseAccountSDK`.
    */
   ephemeral?: boolean;
 };

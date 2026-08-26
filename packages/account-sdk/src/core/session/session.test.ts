@@ -17,11 +17,12 @@ describe('session', () => {
       methods: ['solana_signMessage'],
     };
     expect(projectEthAccounts(session)).toEqual([ADDRESS]);
-    expect(sessionCovers(session, ['eip155:1'])).toBe(true);
+    expect(sessionCovers(session, ['eip155:8453'])).toBe(true);
   });
 
-  it('rewrites the selected eip155 chain', () => {
+  it('does not fabricate authorization while switching chains', () => {
     const session = withEip155Chain(sessionFromAccounts({ accounts: [ADDRESS], chainId: 1 }), 8453);
-    expect(session.selected.eip155).toBe(`eip155:8453:${ADDRESS}`);
+    expect(session.scopes['eip155:8453']).toBeUndefined();
+    expect(session.selected.eip155).toBe(`eip155:1:${ADDRESS}`);
   });
 });

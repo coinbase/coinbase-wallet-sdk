@@ -108,8 +108,8 @@ function getQueueKey({ testnet, walletUrl }: QueueKeyParams): string {
  *
  * Uses `BaseAccountProvider` with `ephemeral: true`:
  * - Isolated in-memory store (does not share Session / keys with the main SDK)
- * - Cannot pair (`eth_requestAccounts` / `wallet_connect` are rejected)
- * - `wallet_sendCalls` / `wallet_sign` handshake → send → cleanup
+ * - Public `eth_requestAccounts` / `wallet_connect` calls are rejected
+ * - Wallet-bound calls handshake, invoke once through CAIP-27, then clean up
  *
  * @param params.chainId - The chain ID to use
  * @param params.walletUrl - Optional wallet URL to use

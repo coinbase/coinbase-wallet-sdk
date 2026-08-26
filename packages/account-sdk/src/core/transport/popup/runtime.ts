@@ -1,6 +1,5 @@
 import { AppMetadata, Preference, ProviderEventCallback } from ':core/provider/interface.js';
-import { projectEthAccounts, sessionFromAccounts } from ':core/session/index.js';
-import { toLegacyRequest } from ':core/translators/eip155/index.js';
+import { createCaip27Request, projectEthAccounts } from ':core/session/index.js';
 import { KeyManager } from ':core/transport/crypto/index.js';
 import { Communicator } from ':core/transport/popup/Communicator.js';
 import type { WalletRuntime } from ':core/transport/types.js';
@@ -13,7 +12,7 @@ import type { PopupWire } from './types.js';
  * Build the popup `WalletRuntime` for one provider instance.
  *
  * Wires Communicator (postMessage) + KeyManager (ECDH) + session store.
- * `transport.send` strips CAIP then encrypts v1 RPC to keys.coinbase.com.
+ * `transport.send` encrypts CAIP-27 RPC to keys.coinbase.com.
  * Pass `storeInstance` for an isolated in-memory store (`pay()`). WalletLink 2.0
  * should return the same `WalletRuntime` with a different delivery path. Do not
  * persist `send`.
@@ -46,21 +45,18 @@ export function createPopup(opts: {
     chainId,
     handshake: (args) => handshake(wire, args),
     send: sendRequest,
-    // Envelope path used by `invoke`: unwrap CAIP-27, then encrypted v1 JSON-RPC.
+    // Envelope path used by `invoke`: encrypted CAIP-27 JSON-RPC.
     transport: {
       kind: 'popup',
-      send: (envelope) => sendRequest(toLegacyRequest(envelope)),
+      send: (envelope) => sendRequest(createCaip27Request(envelope)),
     },
+    // The legacy account slice can exist without CAIP-25 authorization. Require
+    // both the wallet-issued id and granted accounts before entering connected routing.
+    // This SDK cache also does not prove SCW still persists the session; pair handles stale 4100.
     readSession: () => {
       const persisted = store.session.get();
-      if (persisted && projectEthAccounts(persisted).length > 0) return persisted;
-      // Hydrate from the legacy EIP-1193 account slice (pre-session store).
-      const account = store.account.get();
-      if (!account.accounts?.length) return undefined;
-      return sessionFromAccounts({
-        accounts: account.accounts,
-        chainId: account.chain?.id ?? chainId(),
-      });
+      if (persisted?.sessionId && projectEthAccounts(persisted).length > 0) return persisted;
+      return undefined;
     },
     writeSession: (session) => store.session.set(session),
     cleanup: async () => {
