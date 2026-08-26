@@ -73,9 +73,25 @@ describe('persistSubAccount', () => {
     expect(accounts).toEqual([GLOBAL, SUB]);
     expect(rt.store.account.get().accounts).toEqual([GLOBAL, SUB]);
     expect(rt.emit).toHaveBeenCalledWith('accountsChanged', [GLOBAL, SUB]);
+    expect(rt.emit).toHaveBeenCalledWith('connect', { chainId: '0x1' });
     expect(rt.readSession()?.scopes['eip155:1']?.accounts).toEqual([
       'eip155:1:0x0000000000000000000000000000000000000001',
       'eip155:1:0x0000000000000000000000000000000000000002',
     ]);
+  });
+
+  it('uses a custom chain id for the session scope and connect event', () => {
+    const rt = runtime();
+    const session = sessionFromAccounts({ accounts: [GLOBAL], chainId: 8453 });
+    const accounts = persistSubAccount(rt, session, { address: SUB }, 8453);
+
+    expect(accounts).toEqual([GLOBAL, SUB]);
+    expect(rt.emit).toHaveBeenCalledWith('accountsChanged', [GLOBAL, SUB]);
+    expect(rt.emit).toHaveBeenCalledWith('connect', { chainId: '0x2105' });
+    expect(rt.readSession()?.scopes['eip155:8453']?.accounts).toEqual([
+      'eip155:8453:0x0000000000000000000000000000000000000001',
+      'eip155:8453:0x0000000000000000000000000000000000000002',
+    ]);
+    expect(rt.readSession()?.scopes['eip155:1']).toBeUndefined();
   });
 });

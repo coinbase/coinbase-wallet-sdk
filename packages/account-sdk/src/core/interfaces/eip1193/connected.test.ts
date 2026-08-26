@@ -4,6 +4,7 @@ import * as providerUtil from ':util/provider.js';
 import { handleConnected } from './connected.js';
 
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as const;
+const OTHER = '0x0000000000000000000000000000000000000001' as const;
 
 function runtime(
   send: WalletRuntime['send'] = vi.fn(),
@@ -81,6 +82,88 @@ describe('handleConnected', () => {
         request: { method: 'personal_sign', params: ['0x68656c6c6f'] },
       },
     });
+  });
+
+  it('ingests a standalone wallet_connect result', async () => {
+    const connectResult = { accounts: [{ address: OTHER }] };
+    const send = vi.fn().mockResolvedValue(connectResult);
+    const rt = runtime(send);
+
+    await expect(
+      handleConnected(rt, { method: 'wallet_connect', params: [{ version: '1' }] }, session)
+    ).resolves.toEqual(connectResult);
+
+    expect(send).toHaveBeenCalledWith({
+      method: 'wallet_invokeMethod',
+      params: {
+        chainId: 'eip155:8453',
+        request: { method: 'wallet_connect', params: [{ version: '1' }] },
+      },
+    });
+    expect(rt.writeSession).toHaveBeenCalledTimes(1);
+    expect(rt.readSession()?.selected.eip155).toBe(`eip155:8453:${OTHER}`);
+  });
+
+  it('passes through a standalone wallet_connect non-connect result', async () => {
+    const passthrough = { status: 'pending' };
+    const rt = runtime(vi.fn().mockResolvedValue(passthrough));
+
+    await expect(
+      handleConnected(rt, { method: 'wallet_connect', params: [{ version: '1' }] }, session)
+    ).resolves.toEqual(passthrough);
+
+    expect(rt.writeSession).not.toHaveBeenCalled();
+  });
+
+  it('ingests wallet_connect nested in wallet_invokeMethod', async () => {
+    const connectResult = { accounts: [{ address: OTHER }] };
+    const send = vi.fn().mockResolvedValue(connectResult);
+    const rt = runtime(send);
+
+    await expect(
+      handleConnected(
+        rt,
+        {
+          method: 'wallet_invokeMethod',
+          params: {
+            chainId: 'eip155:8453',
+            request: { method: 'wallet_connect', params: [{ version: '1' }] },
+          },
+        },
+        session
+      )
+    ).resolves.toEqual(connectResult);
+
+    expect(send).toHaveBeenCalledWith({
+      method: 'wallet_invokeMethod',
+      params: {
+        chainId: 'eip155:8453',
+        request: { method: 'wallet_connect', params: [{ version: '1' }] },
+      },
+    });
+    expect(rt.writeSession).toHaveBeenCalledTimes(1);
+    expect(rt.readSession()?.selected.eip155).toBe(`eip155:8453:${OTHER}`);
+  });
+
+  it('passes through nested wallet_connect non-connect result', async () => {
+    const passthrough = { status: 'pending' };
+    const rt = runtime(vi.fn().mockResolvedValue(passthrough));
+
+    await expect(
+      handleConnected(
+        rt,
+        {
+          method: 'wallet_invokeMethod',
+          params: {
+            chainId: 'eip155:8453',
+            request: { method: 'wallet_connect', params: [{ version: '1' }] },
+          },
+        },
+        session
+      )
+    ).resolves.toEqual(passthrough);
+
+    expect(rt.writeSession).not.toHaveBeenCalled();
   });
 
   it('switches a known chain locally', async () => {

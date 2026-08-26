@@ -1,4 +1,5 @@
 import { Address } from ':core/type/index.js';
+import { standardErrorCodes } from ':core/error/constants.js';
 import { eip155Translator } from '../translators/eip155/translator.js';
 import { sessionFromAccounts } from './eip155.js';
 import { invoke, invokeEphemeral } from './invoke.js';
@@ -48,6 +49,26 @@ describe('invoke', () => {
     });
   });
 
+  it('sends and unwraps a persistent invoke without a session id', async () => {
+    const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 });
+    const envelope: Envelope = {
+      chainId: 'eip155:8453',
+      request: { method: 'personal_sign', params: ['0x68656c6c6f'] },
+    };
+    const response = {
+      chainId: envelope.chainId,
+      result: { method: envelope.request.method, result: '0xsig' },
+    };
+    const send = vi.fn().mockResolvedValue(response);
+    const unwrapResponse = vi.spyOn(eip155Translator, 'unwrapResponse');
+
+    await expect(invoke(session, envelope, { kind: 'popup', send })).resolves.toBe('0xsig');
+
+    expect(send).toHaveBeenCalledWith(envelope);
+    expect(send.mock.calls[0]?.[0]).not.toHaveProperty('sessionId');
+    expect(unwrapResponse).toHaveBeenCalledWith(response, envelope);
+  });
+
   it('unwraps an ephemeral response without session qualification', async () => {
     const envelope: Envelope = {
       chainId: 'eip155:8453',
@@ -66,6 +87,21 @@ describe('invoke', () => {
     expect(send).toHaveBeenCalledWith(envelope);
     expect(qualify).not.toHaveBeenCalled();
     expect(unwrapResponse).toHaveBeenCalledWith(response, envelope);
+  });
+
+  it('rejects an ephemeral session id before calling the transport', async () => {
+    const envelope: Envelope = {
+      sessionId: 'session-1',
+      chainId: 'eip155:8453',
+      request: { method: 'wallet_sendCalls', params: [{ calls: [] }] },
+    };
+    const send = vi.fn();
+
+    await expect(invokeEphemeral(envelope, { kind: 'popup', send })).rejects.toMatchObject({
+      code: standardErrorCodes.rpc.invalidParams,
+      message: expect.stringContaining('sessionId'),
+    });
+    expect(send).not.toHaveBeenCalled();
   });
 
   it('throws an enveloped method error and preserves top-level transport errors', async () => {

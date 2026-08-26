@@ -30,6 +30,7 @@ export function sessionCovers(
     const chainId = typeof requirement === 'string' ? requirement : requirement.chainId;
     const methods = typeof requirement === 'string' ? [] : (requirement.methods ?? []);
     const scope = session.scopes[chainId];
-    return !!scope?.accounts.length && methods.every((method) => scope.methods.includes(method));
+    if (!scope?.accounts.length) return false;
+    return methods.every((method) => scope.methods.includes(method));
   });
 }

@@ -97,11 +97,11 @@ export function withEip155Chain(session: Session, chainId: number): Session {
   const nextId = eip155Caip2(chainId);
   const accounts = session.scopes[nextId]?.accounts ?? [];
   const selected = session.selected.eip155
-    ? accounts.find(
+    ? (accounts.find(
         (account) =>
           accountOf(account).toLowerCase() ===
           accountOf(session.selected.eip155 as Caip10).toLowerCase()
-      )
+      ) ?? accounts[0])
     : accounts[0];
 
   return {

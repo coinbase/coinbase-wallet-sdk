@@ -3,6 +3,7 @@ import { Mock, vi } from 'vitest';
 import { AppMetadata, Preference } from ':core/provider/interface.js';
 
 import { CB_KEYS_URL, PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
+import { standardErrorCodes } from ':core/error/constants.js';
 import { Message, MessageID } from ':core/message/Message.js';
 import { openPopup } from ':util/web.js';
 import { Communicator } from './Communicator.js';
@@ -187,6 +188,22 @@ describe('Communicator', () => {
         }),
         urlOrigin
       );
+    });
+
+    it('rejects PopupLoadedV2 without an id and does not send setup', async () => {
+      const loaded = communicator.waitForPopupLoaded();
+      await Promise.resolve();
+
+      dispatchMessageEvent({
+        data: { event: 'PopupLoadedV2' },
+        origin: urlOrigin,
+      });
+
+      await expect(loaded).rejects.toMatchObject({
+        code: standardErrorCodes.rpc.invalidRequest,
+        message: 'PopupLoadedV2 is missing id',
+      });
+      expect(mockPopup.postMessage).not.toHaveBeenCalled();
     });
 
     it('should open a popup window and finish handshake', async () => {

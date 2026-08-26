@@ -1,3 +1,4 @@
+import { sessionFromAccounts } from ':core/session/index.js';
 import { createStoreInstance } from ':store/store.js';
 import { createPopup } from './runtime.js';
 
@@ -18,6 +19,7 @@ vi.mock('./send.js', () => ({
 
 const metadata = { appName: 'Test', appLogoUrl: null, appChainIds: [8453] };
 const preference = { telemetry: false };
+const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as const;
 
 describe('createPopup', () => {
   it('does not treat legacy account state as CAIP authorization', () => {
@@ -56,6 +58,22 @@ describe('createPopup', () => {
       transportKind: 'popup',
     });
     expect(runtime.readSession()).toBeUndefined();
+  });
+
+  it('returns a persisted session with a session id and ETH accounts', () => {
+    const runtime = createPopup({
+      metadata,
+      preference,
+      storeInstance: createStoreInstance({ persist: false }),
+    });
+    const session = {
+      ...sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 }),
+      sessionId: 'session-1',
+    };
+
+    runtime.writeSession(session);
+
+    expect(runtime.readSession()).toEqual(session);
   });
 
   it('wraps an envelope as wallet_invokeMethod before popup send', async () => {
