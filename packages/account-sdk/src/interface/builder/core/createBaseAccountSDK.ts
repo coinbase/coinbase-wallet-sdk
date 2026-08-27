@@ -75,7 +75,7 @@ export function _resetGlobalInitialization(): void {
 /**
  * Create Base AccountSDK instance with EIP-1193 compliant provider
  * @param params - Options to create a base account SDK instance.
- * Pairing is `ensureSession` → `pair` (handshake + `wallet_connect`). Signing is `invoke`
+ * Pairing is `ensureSession` → `pair` (handshake + CAIP-25). Signing is `invoke`
  * through the popup transport, or the sub-account local path when `from` is the sub-account.
  */
 export function createBaseAccountSDK(params: CreateProviderOptions) {

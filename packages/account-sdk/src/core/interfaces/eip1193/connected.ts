@@ -6,15 +6,22 @@ import type {
   FetchPermissionResponse,
 } from ':core/rpc/coinbase_fetchPermission.js';
 import type { FetchPermissionsResponse } from ':core/rpc/coinbase_fetchSpendPermissions.js';
-import { WALLET_INVOKE_METHOD, assertInvokeAuthorized, parseCaip27 } from ':core/session/caip27.js';
+import { WALLET_INVOKE_METHOD, parseCaip27 } from ':core/session/caip27.js';
 import {
+  EIP155_METHODS,
   type Session,
-  eip155ChainId,
+  eip155Caip2,
   projectEthAccounts,
+  sessionCovers,
   withEip155Chain,
 } from ':core/session/index.js';
 import { invoke } from ':core/session/invoke.js';
-import { ingestConnectResult, isConnectResult, walletConnectParams } from ':core/session/pair.js';
+import {
+  ingestConnectResult,
+  isConnectResult,
+  pair,
+  prepareWalletConnectRequest,
+} from ':core/session/pair.js';
 import {
   addSubAccount,
   dispatchSubAccount,
@@ -25,9 +32,8 @@ import {
 import {
   assertFetchPermissionsRequest,
   fillMissingParamsForFetchPermissions,
-  initSubAccountConfig,
 } from ':core/sub-account/utils.js';
-import { WALLET_METHODS, toEnvelope, toLegacyRequest } from ':core/translators/eip155/index.js';
+import { WALLET_METHODS, toEnvelope } from ':core/translators/eip155/index.js';
 import type { WalletRuntime } from ':core/transport/index.js';
 import { hexStringFromNumber } from ':core/type/util.js';
 import { fetchRPCRequest } from ':util/provider.js';
@@ -35,10 +41,14 @@ import { hexToNumber, numberToHex } from 'viem';
 import { getCapabilities } from './capabilities.js';
 import { switchChainId } from './chainParams.js';
 
-/** Persist a known chain on the store + session and emit `chainChanged`. */
+/** Persist an authorized chain on the store + session and emit `chainChanged`. */
 function applyLocalChain(runtime: WalletRuntime, session: Session, chainId: number): boolean {
-  const chain = runtime.store.chains.get().find((item) => item.id === chainId);
-  if (!chain) return false;
+  if (!sessionCovers(session, [eip155Caip2(chainId)])) return false;
+  const chain =
+    runtime.store.chains.get().find((item) => item.id === chainId) ??
+    (runtime.store.account.get().chain?.id === chainId
+      ? runtime.store.account.get().chain
+      : { id: chainId });
   runtime.store.account.set({ chain });
   runtime.writeSession(withEip155Chain(session, chainId));
   runtime.emit?.('chainChanged', hexStringFromNumber(chainId));
@@ -64,33 +74,22 @@ export async function handleConnected(
   }
 
   switch (args.method) {
-    // --- CAIP-27: unwrap to the inner request. Wallet methods keep the
-    // envelope chainId via `invoke`; reads / projections re-enter below. ---
+    // --- Direct CAIP-27: preserve the caller's target and invoke it as-is. ---
     case WALLET_INVOKE_METHOD: {
-      const parsed = parseCaip27(args);
-      assertInvokeAuthorized(session, parsed);
-      const inner = toLegacyRequest(parsed);
+      let parsed = parseCaip27(args);
+      let inner = parsed.request;
       if (shouldUseSubAccount(runtime, inner)) {
         return dispatchSubAccount(runtime, session, inner);
       }
-      if (WALLET_METHODS.has(inner.method) || inner.method.startsWith('experimental_')) {
-        const chainNum = eip155ChainId(parsed.chainId);
-        if (chainNum === null) {
-          throw standardErrors.provider.unsupportedMethod(
-            `Namespace of ${parsed.chainId} is not enabled in this SDK version`
-          );
-        }
-        return invoke(
-          session,
-          {
-            ...toEnvelope(inner, chainNum),
-            ...(parsed.capabilities ? { capabilities: parsed.capabilities } : {}),
-            ...(parsed.sessionId ? { sessionId: parsed.sessionId } : {}),
-          },
-          runtime.transport
-        );
+      if (inner.method === 'wallet_connect') {
+        inner = await prepareWalletConnectRequest(runtime, inner);
+        parsed = { ...parsed, request: inner };
       }
-      return handleConnected(runtime, inner, session);
+      const result = await invoke(session, parsed, runtime.transport);
+      if (inner.method === 'wallet_connect' && isConnectResult(result)) {
+        ingestConnectResult(runtime, result, session, parsed.chainId);
+      }
+      return result;
     }
 
     // --- Session projections (no wallet round-trip) ---
@@ -116,29 +115,39 @@ export async function handleConnected(
     case 'wallet_getCapabilities':
       return getCapabilities(runtime, args, session);
 
-    // --- Chain: update session locally if we already know the chain ---
+    // --- Chain: switch locally when the exact target scope is authorized ---
     case 'wallet_switchEthereumChain': {
       const chainId = switchChainId(args.params);
       if (applyLocalChain(runtime, session, chainId)) return null;
+      const targetChainId = eip155Caip2(chainId);
+      if (!sessionCovers(session, [targetChainId])) {
+        // A missing chain is an authorization expansion; wallet_switch alone cannot grant a scope.
+        const { session: updated } = await pair(runtime, undefined, {
+          chainId: targetChainId,
+          methods: EIP155_METHODS,
+          sessionId: session.sessionId,
+        });
+        if (!applyLocalChain(runtime, updated, chainId)) {
+          throw standardErrors.provider.unsupportedChain();
+        }
+        return null;
+      }
       // Unknown chain: wallet must add/switch it, then apply locally (EIP-3326 null).
       const result = await invoke(session, toEnvelope(args, runtime.chainId()), runtime.transport);
       if (result === null) applyLocalChain(runtime, session, chainId);
       return result;
     }
 
-    // --- Re-pair capabilities on an existing session (SIWE, spend, …) ---
+    // --- Refresh grants inside the existing session; CAIP-25 is only for scope expansion. ---
     case 'wallet_connect': {
-      await initSubAccountConfig(runtime.store);
-      const injected = runtime.store.subAccountsConfig.get()?.capabilities ?? {};
+      // ERC-7846 wallet_connect remains an inner CAIP-27 method once the chain is authorized.
+      const request = await prepareWalletConnectRequest(runtime, args);
       const result = await invoke(
         session,
-        toEnvelope(
-          { method: 'wallet_connect', params: walletConnectParams(args, injected) },
-          runtime.chainId()
-        ),
+        toEnvelope(request, runtime.chainId()),
         runtime.transport
       );
-      if (isConnectResult(result)) ingestConnectResult(runtime, result);
+      if (isConnectResult(result)) ingestConnectResult(runtime, result, session);
       return result;
     }
 

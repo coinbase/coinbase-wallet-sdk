@@ -1,5 +1,5 @@
 /**
- * Family RPC ↔ CAIP-27 Envelope (diagram: Translators).
+ * Family RPC ↔ Envelope translators.
  *
  * `toEnvelope` wraps a chain-standard request as `{ chainId, request }`.
  * `wallet_invokeMethod` is the JSON-RPC carrier on the wire (transport, keys v2),
@@ -9,11 +9,7 @@
  */
 export {
   WALLET_METHODS,
-  eip155Translator,
   extractFrom,
   qualify,
   toEnvelope,
-  toLegacyRequest,
 } from './eip155/index.js';
-export { getNamespaceTranslator } from './registry.js';
-export type { NamespaceTranslator, SupportedNamespace } from './types.js';

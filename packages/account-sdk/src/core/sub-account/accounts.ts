@@ -1,5 +1,5 @@
 import type { Session } from ':core/session/index.js';
-import { sessionFromAccounts } from ':core/session/index.js';
+import { withEip155Accounts } from ':core/session/index.js';
 import type { WalletRuntime } from ':core/transport/index.js';
 import type { Address } from ':core/type/index.js';
 import type { SubAccount } from ':store/store.js';
@@ -24,22 +24,17 @@ export function orderedEthAccounts(runtime: WalletRuntime, accounts: Address[]):
 export function persistSubAccount(
   runtime: WalletRuntime,
   session: Session,
-  subAccount: SubAccount
+  subAccount: SubAccount,
+  chainId = runtime.chainId()
 ) {
   runtime.store.subAccounts.set(subAccount);
   const accounts = orderedEthAccounts(runtime, [
     ...((runtime.store.account.get().accounts ?? []) as Address[]),
     subAccount.address,
   ]);
-  runtime.writeSession(
-    sessionFromAccounts({
-      accounts,
-      chainId: runtime.chainId(),
-      transportKind: session.transportKind,
-    })
-  );
+  runtime.writeSession(withEip155Accounts(session, chainId, accounts));
   runtime.store.account.set({ accounts });
   runtime.emit?.('accountsChanged', accounts);
-  runtime.emit?.('connect', { chainId: numberToHex(runtime.chainId()) });
+  runtime.emit?.('connect', { chainId: numberToHex(chainId) });
   return accounts;
 }

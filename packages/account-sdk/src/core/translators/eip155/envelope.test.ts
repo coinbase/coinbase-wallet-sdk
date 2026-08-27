@@ -1,5 +1,5 @@
 import { sessionFromAccounts } from '../../session/eip155.js';
-import { qualify, toEnvelope, toLegacyRequest } from './envelope.js';
+import { qualify, toEnvelope } from './envelope.js';
 
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as const;
 const OTHER = '0x0000000000000000000000000000000000000001' as const;
@@ -7,7 +7,7 @@ const OTHER = '0x0000000000000000000000000000000000000001' as const;
 describe('eip155 envelope', () => {
   const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 });
 
-  it('wraps EIP-1193 as CAIP-27 and unwraps for keys v1', () => {
+  it('wraps EIP-1193 as a CAIP-27 envelope', () => {
     const envelope = toEnvelope(
       { method: 'personal_sign', params: ['0x68656c6c6f', ADDRESS] },
       8453
@@ -16,10 +16,6 @@ describe('eip155 envelope', () => {
     expect(envelope).toEqual({
       chainId: 'eip155:8453',
       request: { method: 'personal_sign', params: ['0x68656c6c6f', ADDRESS] },
-    });
-    expect(toLegacyRequest(envelope)).toEqual({
-      method: 'personal_sign',
-      params: ['0x68656c6c6f', ADDRESS],
     });
   });
 

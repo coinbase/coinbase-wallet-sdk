@@ -33,7 +33,7 @@ describe('send', () => {
     vi.clearAllMocks();
   });
 
-  it('encrypts v1 { action, chainId }, posts, and returns the decrypted value', async () => {
+  it('encrypts v2 { action } without an outer numeric chain id', async () => {
     const w = wire();
     const request = { method: 'personal_sign', params: ['0x01'] };
     const encrypted = { iv: new Uint8Array([1]), cipherText: new ArrayBuffer(0) };
@@ -49,7 +49,7 @@ describe('send', () => {
     decryptPopupMock.mockResolvedValue({ result: { value: '0xsig' } });
 
     await expect(send(w, request)).resolves.toBe('0xsig');
-    expect(encryptMock).toHaveBeenCalledWith(w.keys, { action: request, chainId: 8453 });
+    expect(encryptMock).toHaveBeenCalledWith(w.keys, { action: request });
     expect(postPopupMock).toHaveBeenCalledWith(w, { encrypted }, undefined);
   });
 

@@ -1,6 +1,5 @@
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { sessionFromAccounts } from ':core/session/index.js';
-import { toLegacyRequest } from ':core/translators/eip155/index.js';
 import type { WalletRuntime } from ':core/transport/index.js';
 import * as providerUtil from ':util/provider.js';
 import { handleEip1193Request } from './request.js';
@@ -26,7 +25,7 @@ function runtime(opts?: { session?: ReturnType<typeof sessionFromAccounts> }): W
     chainId: () => 1,
     handshake: vi.fn().mockResolvedValue(undefined),
     send,
-    transport: { kind: 'popup', send: (envelope) => send(toLegacyRequest(envelope)) },
+    transport: { kind: 'popup', send: vi.fn() },
     readSession: () => opts?.session,
     writeSession: vi.fn(),
     cleanup: vi.fn(),

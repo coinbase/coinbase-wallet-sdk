@@ -11,12 +11,15 @@ describe('createEphemeralStore', () => {
 });
 
 describe('assertEphemeralMethod', () => {
-  it.each(['wallet_sendCalls', 'wallet_sign', 'wallet_getCallsStatus', 'eth_accounts'])(
-    'allows %s',
-    (method) => {
-      expect(() => assertEphemeralMethod(method)).not.toThrow();
-    }
-  );
+  it.each([
+    'wallet_sendCalls',
+    'wallet_sign',
+    'experimental_requestInfo',
+    'wallet_getCallsStatus',
+    'eth_accounts',
+  ])('allows %s', (method) => {
+    expect(() => assertEphemeralMethod(method)).not.toThrow();
+  });
 
   it('rejects pairing', () => {
     try {

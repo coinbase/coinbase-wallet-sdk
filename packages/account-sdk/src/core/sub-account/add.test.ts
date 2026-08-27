@@ -1,5 +1,4 @@
-import { sessionFromAccounts } from ':core/session/index.js';
-import { toLegacyRequest } from ':core/translators/eip155/index.js';
+import { createCaip27Request, sessionFromAccounts } from ':core/session/index.js';
 import type { WalletRuntime } from ':core/transport/index.js';
 import { getCryptoKeyAccount } from ':owner-key/index.js';
 import { addSubAccount } from './add.js';
@@ -46,7 +45,16 @@ function runtime(send: WalletRuntime['send']): WalletRuntime {
     chainId: () => 1,
     handshake: vi.fn(),
     send,
-    transport: { kind: 'popup', send: (envelope) => send(toLegacyRequest(envelope)) },
+    transport: {
+      kind: 'popup',
+      send: async (envelope) => ({
+        chainId: envelope.chainId,
+        result: {
+          method: envelope.request.method,
+          result: await send(createCaip27Request(envelope)),
+        },
+      }),
+    },
     readSession: () => sessionStore.current,
     writeSession: (session) => {
       sessionStore.current = session;
@@ -98,21 +106,26 @@ describe('addSubAccount', () => {
     expect(getCryptoKeyAccount).toHaveBeenCalled();
     expect(send).toHaveBeenCalledWith(
       expect.objectContaining({
-        method: 'wallet_addSubAccount',
-        params: [
-          {
-            version: '1',
-            account: {
-              type: 'create',
-              keys: [
-                {
-                  type: 'address',
-                  publicKey: '0x00000000000000000000000000000000000000aa',
+        method: 'wallet_invokeMethod',
+        params: expect.objectContaining({
+          request: {
+            method: 'wallet_addSubAccount',
+            params: [
+              {
+                version: '1',
+                account: {
+                  type: 'create',
+                  keys: [
+                    {
+                      type: 'address',
+                      publicKey: '0x00000000000000000000000000000000000000aa',
+                    },
+                  ],
                 },
-              ],
-            },
+              },
+            ],
           },
-        ],
+        }),
       })
     );
   });

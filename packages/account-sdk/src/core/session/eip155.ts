@@ -11,9 +11,12 @@ import {
 } from './caip.js';
 import type { Session, TransportKind } from './types.js';
 
-/** Methods recorded on an eip155 session scope after `wallet_connect`. */
+/** Default methods requested in an eip155 CAIP-25 session scope. */
 export const EIP155_METHODS = [
+  'eth_accounts',
   'personal_sign',
+  'personal_ecRecover',
+  'eth_ecRecover',
   'eth_sendTransaction',
   'eth_signTransaction',
   'eth_signTypedData',
@@ -21,14 +24,22 @@ export const EIP155_METHODS = [
   'eth_signTypedData_v3',
   'eth_signTypedData_v4',
   'wallet_sendCalls',
+  'wallet_showCallsStatus',
   'wallet_sign',
+  'wallet_grantPermissions',
+  'wallet_switchEthereumChain',
+  'wallet_addEthereumChain',
+  'wallet_watchAsset',
+  'wallet_connect',
+  'wallet_addSubAccount',
+  'experimental_requestInfo',
 ] as const;
 
 /**
  * Build a Session from a flat eip155 address list.
  *
- * Used after `wallet_connect` (`ingestConnectResult`) and when hydrating from
- * the legacy `account.accounts` store (no `session` slice yet).
+ * Used for internal test/local state and as a defensive fallback when an
+ * ERC-7846 account refresh is ingested without a session.
  */
 export function sessionFromAccounts(opts: {
   accounts: Address[];
@@ -81,25 +92,43 @@ export function selectedEip155ChainId(session: Session): number | undefined {
   return undefined;
 }
 
-/** Copy eip155 accounts onto a new chain id without changing the address list. */
+/** Select an already-authorized eip155 chain without fabricating a new grant. */
 export function withEip155Chain(session: Session, chainId: number): Session {
   const nextId = eip155Caip2(chainId);
-  const source =
-    session.scopes[nextId] ??
-    Object.entries(session.scopes).find(([id]) => namespaceOf(id) === 'eip155')?.[1];
-  const accounts = (source?.accounts ?? []).map((account) =>
-    formatEip155Account(chainId, accountOf(account) as Address)
-  );
+  const accounts = session.scopes[nextId]?.accounts ?? [];
   const selected = session.selected.eip155
-    ? formatEip155Account(chainId, accountOf(session.selected.eip155) as Address)
+    ? (accounts.find(
+        (account) =>
+          accountOf(account).toLowerCase() ===
+          accountOf(session.selected.eip155 as Caip10).toLowerCase()
+      ) ?? accounts[0])
     : accounts[0];
 
   return {
     ...session,
+    selected: { ...session.selected, ...(selected ? { eip155: selected } : {}) },
+  };
+}
+
+/** Replace accounts on one granted scope while preserving methods, capabilities, and session id. */
+export function withEip155Accounts(
+  session: Session,
+  chainId: number,
+  addresses: Address[]
+): Session {
+  const id = eip155Caip2(chainId);
+  const scope = session.scopes[id];
+  if (!scope) return session;
+  const accounts = addresses.map((address) => formatEip155Account(chainId, address));
+  return {
+    ...session,
     scopes: {
       ...session.scopes,
-      [nextId]: { accounts, methods: source?.methods ?? [...EIP155_METHODS] },
+      [id]: { ...scope, accounts },
     },
-    selected: { ...session.selected, ...(selected ? { eip155: selected } : {}) },
+    selected: {
+      ...session.selected,
+      ...(accounts[0] ? { eip155: accounts[0] } : {}),
+    },
   };
 }

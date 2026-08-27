@@ -1,10 +1,10 @@
 import { standardErrors } from ':core/error/errors.js';
 import type { RequestArguments } from ':core/provider/interface.js';
-import { type Caip2, isCaip2, parseCaip2 } from './caip.js';
-import { sessionCovers } from './covers.js';
+import { type Caip2, parseCaip2 } from './caip.js';
 import type { Caip27Error, Caip27Params, Caip27Response, Envelope, Session } from './types.js';
+import { WALLET_CREATE_SESSION } from './caip25.js';
 
-/** CAIP-27 JSON-RPC method. Dapp-facing; not sent to keys until protocol v2. */
+/** CAIP-27 JSON-RPC method used for every wallet invocation. */
 export const WALLET_INVOKE_METHOD = 'wallet_invokeMethod';
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -12,6 +12,12 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     return value as Record<string, unknown>;
   }
   return null;
+}
+
+function namedParams(params: RequestArguments['params']): Record<string, unknown> {
+  const direct = asRecord(params);
+  if (direct) return direct;
+  throw standardErrors.rpc.invalidParams('wallet_invokeMethod params must be an object');
 }
 
 function isEip155ChainId(value: unknown): value is Caip2 {
@@ -24,24 +30,11 @@ function isEip155ChainId(value: unknown): value is Caip2 {
   return Number.isSafeInteger(chainId) && String(chainId) === parsed.reference;
 }
 
-/** Named CAIP-27 params, or EIP-1193-style `[{ ... }]`. */
-function namedParams(params: RequestArguments['params']): Record<string, unknown> {
-  const direct = asRecord(params);
-  if (direct) return direct;
-  if (Array.isArray(params)) {
-    const first = asRecord(params[0]);
-    if (first) return first;
-  }
-  throw standardErrors.rpc.invalidParams('wallet_invokeMethod params must be an object');
-}
-
 function parseChainId(params: Record<string, unknown>): Caip2 {
-  // CAIP-27 uses `chainId`; MetaMask MIP-5 uses `scope` for the same CAIP-2.
-  const raw = params.chainId ?? params.scope;
-  if (typeof raw !== 'string' || !isCaip2(raw)) {
-    throw standardErrors.rpc.invalidParams('wallet_invokeMethod requires a CAIP-2 chainId');
+  if (!isEip155ChainId(params.chainId)) {
+    throw standardErrors.rpc.invalidParams('wallet_invokeMethod requires an eip155 CAIP-2 chainId');
   }
-  return raw;
+  return params.chainId;
 }
 
 function parseRequest(params: Record<string, unknown>): Caip27Params['request'] {
@@ -49,15 +42,29 @@ function parseRequest(params: Record<string, unknown>): Caip27Params['request'] 
   if (!request || typeof request.method !== 'string' || request.method.length === 0) {
     throw standardErrors.rpc.invalidParams('wallet_invokeMethod.request.method is required');
   }
-  if (request.method === WALLET_INVOKE_METHOD) {
-    throw standardErrors.rpc.invalidParams('nested wallet_invokeMethod is not supported');
+  if (request.method === WALLET_INVOKE_METHOD || request.method === WALLET_CREATE_SESSION) {
+    throw standardErrors.rpc.invalidParams('nested CAIP carrier methods are not supported');
   }
-  return { method: request.method, params: request.params ?? [] };
+  if (request.params === undefined) {
+    throw standardErrors.rpc.invalidParams('wallet_invokeMethod.request.params is required');
+  }
+  if (!Array.isArray(request.params) && !asRecord(request.params)) {
+    throw standardErrors.rpc.invalidParams(
+      'wallet_invokeMethod.request.params must be an array or object'
+    );
+  }
+  return {
+    method: request.method,
+    params: request.params as readonly unknown[] | object,
+  };
 }
 
 /**
- * Parse a dapp `wallet_invokeMethod` call into CAIP-27 params.
- * Does not send on the wire.
+ * Parse a dapp-facing EIP-1193 `wallet_invokeMethod` call into CAIP-27 params.
+ *
+ * This edge parser currently accepts eip155 chains only. It is not the
+ * namespace registry extension path; `invoke` selects translators from an
+ * already-formed `Envelope`. Does not send on the wire.
  */
 export function parseCaip27(args: RequestArguments): Caip27Params {
   if (args.method !== WALLET_INVOKE_METHOD) {
@@ -78,8 +85,10 @@ export function parseCaip27(args: RequestArguments): Caip27Params {
 
   let sessionId: string | undefined;
   if (params.sessionId !== undefined) {
-    if (typeof params.sessionId !== 'string') {
-      throw standardErrors.rpc.invalidParams('wallet_invokeMethod.sessionId must be a string');
+    if (typeof params.sessionId !== 'string' || params.sessionId.length === 0) {
+      throw standardErrors.rpc.invalidParams(
+        'wallet_invokeMethod.sessionId must be a non-empty string'
+      );
     }
     sessionId = params.sessionId;
   }
@@ -92,28 +101,20 @@ export function parseCaip27(args: RequestArguments): Caip27Params {
   };
 }
 
-/**
- * CAIP-27 params for keys protocol v2.
- * Popup still uses `toLegacyRequest` (v1) today.
- */
+/** CAIP-27 params for the wallet wire. */
 export function toCaip27(envelope: Envelope): Caip27Params {
   return {
     chainId: envelope.chainId,
     request: {
       method: envelope.request.method,
-      params: envelope.request.params ?? [],
+      params: envelope.request.params,
     },
     ...(envelope.capabilities ? { capabilities: envelope.capabilities } : {}),
     ...(envelope.sessionId ? { sessionId: envelope.sessionId } : {}),
   };
 }
 
-/**
- * Build the namespace-neutral CAIP-27 JSON-RPC carrier.
- *
- * This codec is intentionally not wired into popup transport yet; protocol v1
- * continues to use `toLegacyRequest` until the runtime cutover.
- */
+/** Namespace-neutral JSON-RPC carrier put in the encrypted transport `action`. */
 export function createCaip27Request(envelope: Envelope): RequestArguments {
   return {
     method: WALLET_INVOKE_METHOD,
@@ -139,11 +140,8 @@ function responseError(value: unknown): Caip27Error | null {
 }
 
 /**
- * Validate a decrypted eip155 CAIP-27 response against its issued request.
- *
- * Malformed wallet responses are internal RPC errors because the dapp request
- * has already crossed the validated boundary. Transport/session errors are
- * handled before this method-level response envelope.
+ * Validate the decrypted CAIP-27 result envelope against its issued request.
+ * Top-level transport/session errors are thrown by the transport before this.
  */
 export function parseCaip27Response(value: unknown, request: Envelope): Caip27Response {
   const invalid = (message: string): never => {
@@ -200,15 +198,24 @@ export function parseCaip27Response(value: unknown, request: Envelope): Caip27Re
   };
 }
 
-/** Return a method result or preserve and throw the wallet's method-level error. */
+/** Return a method result or throw a method-level error from the CAIP-27 envelope. */
 export function unwrapCaip27Response(response: Caip27Response): unknown {
   if ('error' in response) throw response.error;
   return response.result.result;
 }
 
-/** CAIP-27: `chainId` must already be authorized on the session. */
+/** CAIP-27 chain, method, and session id must be exactly authorized. */
 export function assertInvokeAuthorized(session: Session, envelope: Envelope): void {
-  if (!sessionCovers(session, [envelope.chainId])) {
+  const scope = session.scopes[envelope.chainId];
+  if (!scope?.accounts.length) {
     throw standardErrors.provider.unauthorized(`chainId ${envelope.chainId} is not in the session`);
+  }
+  if (!scope.methods.includes(envelope.request.method)) {
+    throw standardErrors.provider.unauthorized(
+      `method ${envelope.request.method} is not authorized for ${envelope.chainId}`
+    );
+  }
+  if (envelope.sessionId !== undefined && envelope.sessionId !== session.sessionId) {
+    throw standardErrors.provider.unauthorized('sessionId does not match the active session');
   }
 }

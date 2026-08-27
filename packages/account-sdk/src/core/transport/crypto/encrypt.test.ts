@@ -7,8 +7,13 @@ import { encrypt } from './encrypt.js';
 
 describe('encrypt and decrypt', () => {
   const request: RPCRequest = {
-    action: { method: 'eth_accounts', params: [] },
-    chainId: 8453,
+    action: {
+      method: 'wallet_invokeMethod',
+      params: {
+        chainId: 'eip155:8453',
+        request: { method: 'eth_accounts', params: [] },
+      },
+    },
   };
 
   let keys: KeyManager;

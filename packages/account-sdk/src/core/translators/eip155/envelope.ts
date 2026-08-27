@@ -2,7 +2,7 @@ import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
 import { isAddress, isAddressEqual } from 'viem';
 import { accountOf, eip155Caip2, namespaceOf } from '../../session/caip.js';
-import type { Caip27Params, Envelope, Session } from '../../session/types.js';
+import type { Envelope, Session } from '../../session/types.js';
 import { extractFrom } from './from.js';
 
 function sameAccount(a: string, b: string): boolean {
@@ -24,8 +24,7 @@ function inSession(session: Session, account: string): boolean {
  * Wrap an EIP-1193 request as a CAIP-27 envelope (`chainId` + `request`).
  *
  * The signer stays in `request.params`. `qualify` (called by `invoke`) checks it
- * against the session. Popup `transport.send` still unwraps via `toLegacyRequest`
- * (keys protocol v1).
+ * against the session.
  */
 export function toEnvelope(request: RequestArguments, chainId: number): Envelope {
   return {
@@ -52,14 +51,4 @@ export function qualify(session: Session, envelope: Envelope): Envelope {
     throw standardErrors.provider.unauthorized('from is not in the eip155 session');
   }
   return envelope;
-}
-
-/**
- * Unwrap CAIP-27 `request` for keys protocol v1.
- *
- * The popup (and today's wallet) decrypt `{ action: { method, params }, chainId: number }`.
- * Do not send `wallet_invokeMethod` until keys ingest `protocolVersion: 2`.
- */
-export function toLegacyRequest(envelope: Caip27Params): RequestArguments {
-  return { method: envelope.request.method, params: envelope.request.params };
 }

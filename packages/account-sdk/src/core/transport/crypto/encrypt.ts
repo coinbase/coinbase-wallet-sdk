@@ -6,7 +6,7 @@ import { encryptContent } from ':util/cipher.js';
 import type { KeyManager } from './KeyManager.js';
 
 /**
- * Seal `{ action, chainId }` (or a response) with the ECDH shared secret.
+ * Seal a CAIP `{ action }` (or a response) with the ECDH shared secret.
  *
  * Callers: popup `send` and future WalletLink 2.0. Requires a prior handshake
  * (`KeyManager.setPeerPublicKey`). Throws unauthorized if the secret is missing.

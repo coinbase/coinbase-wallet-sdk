@@ -10,10 +10,11 @@ export function createEphemeralStore(): StoreInstance {
   return createStoreInstance({ persist: false });
 }
 
-/** Methods `pay()` may call. Pairing is excluded so this instance cannot write a Session. */
+/** Public methods `pay()` may call. Wallet-bound methods use the disconnected one-shot path. */
 const EPHEMERAL_METHODS = new Set([
   'wallet_sendCalls',
   'wallet_sign',
+  'experimental_requestInfo',
   'wallet_getCallsStatus',
   'eth_accounts',
   'net_version',
@@ -21,12 +22,12 @@ const EPHEMERAL_METHODS = new Set([
 ]);
 
 /**
- * Reject pairing and anything else `pay()` does not need.
- * `wallet_sendCalls` / `wallet_sign` still go through disconnected handshake → send → cleanup.
+ * Reject public account connection and anything else `pay()` does not need.
+ * Wallet-bound methods handshake, invoke once without a session, then clean up.
  */
 export function assertEphemeralMethod(method: RequestArguments['method']): void {
   if (EPHEMERAL_METHODS.has(method)) return;
   throw standardErrors.provider.unauthorized(
-    `Method '${method}' is not supported by ephemeral provider. Ephemeral providers only support: wallet_sendCalls, wallet_sign, wallet_getCallsStatus`
+    `Method '${method}' is not supported by ephemeral provider. Ephemeral providers only support: wallet_sendCalls, wallet_sign, experimental_requestInfo, wallet_getCallsStatus`
   );
 }

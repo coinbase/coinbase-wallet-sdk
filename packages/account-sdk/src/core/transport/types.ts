@@ -26,8 +26,8 @@ export type WalletRuntime = {
    */
   handshake: (args?: RequestArguments) => Promise<void>;
   /**
-   * Encrypted JSON-RPC `{ method, params }` (keys protocol v1). Used by `pair`
-   * for `wallet_connect`. Envelope traffic uses `transport.send` instead.
+   * Encrypted CAIP JSON-RPC action. Used by `pair` for
+   * `wallet_createSession`; envelope traffic uses `transport.send`.
    */
   send: (request: RequestArguments) => Promise<unknown>;
   /** Envelope delivery used by `invoke`. Only `kind` is stored on the session. */
