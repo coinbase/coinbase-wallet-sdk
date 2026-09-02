@@ -171,10 +171,14 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
   }
 
   async disconnect() {
+    const wasConnected = this.signer !== null;
     await this.signer?.cleanup();
     this.signer = null;
     ScopedLocalStorage.clearAll();
     correlationIds.clear();
+    if (wasConnected) {
+      this.emit('accountsChanged', []);
+    }
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
 
