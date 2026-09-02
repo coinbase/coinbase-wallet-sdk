@@ -54,6 +54,35 @@ describe('Event handling', () => {
     );
   });
 
+  it('does not clear accounts when disconnected before connecting', async () => {
+    const accountsChangedListener = vi.fn();
+    provider.on('accountsChanged', accountsChangedListener);
+
+    await provider.disconnect();
+
+    expect(accountsChangedListener).not.toHaveBeenCalled();
+  });
+
+  it('clears accounts once before disconnecting a connected provider', async () => {
+    const accountsChangedListener = vi.fn();
+    const eventOrder: string[] = [];
+    provider.on('accountsChanged', (...args) => {
+      accountsChangedListener(...args);
+      eventOrder.push('accountsChanged');
+    });
+    provider.on('disconnect', () => eventOrder.push('disconnect'));
+
+    await provider.request({ method: 'eth_requestAccounts' });
+    await provider.disconnect();
+
+    expect(accountsChangedListener).toHaveBeenCalledOnce();
+    expect(accountsChangedListener).toHaveBeenCalledWith([]);
+    expect(eventOrder).toEqual(['accountsChanged', 'disconnect']);
+
+    await provider.disconnect();
+    expect(accountsChangedListener).toHaveBeenCalledOnce();
+  });
+
   it('should emit chainChanged event on chainId change', async () => {
     const chainChangedListener = vi.fn();
     provider.on('chainChanged', chainChangedListener);
