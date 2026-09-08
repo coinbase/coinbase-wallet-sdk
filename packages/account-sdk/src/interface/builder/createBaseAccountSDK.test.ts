@@ -12,6 +12,7 @@ import {
 import * as transportModule from './createTransport.js';
 import { BaseAccountProvider } from './eip1193/BaseAccountProvider.js';
 import * as getInjectedProviderModule from './eip1193/getInjectedProvider.js';
+import * as solanaModule from './solana/registerSolanaWallet.js';
 
 // Mock all dependencies
 vi.mock(':store/store.js', () => ({
@@ -68,6 +69,11 @@ vi.mock('./eip1193/getInjectedProvider.js', () => ({
   getInjectedProvider: vi.fn(),
 }));
 
+vi.mock('./solana/registerSolanaWallet.js', () => ({
+  _resetSolanaWalletRegistration: vi.fn(),
+  registerSolanaWallet: vi.fn(),
+}));
+
 const mockStore = store as any;
 const mockLoadTelemetryScript = telemetryModule.loadTelemetryScript as any;
 const mockCheckCrossOriginOpenerPolicy = checkCrossOriginModule.checkCrossOriginOpenerPolicy as any;
@@ -75,6 +81,7 @@ const mockValidatePreferences = validatePreferencesModule.validatePreferences as
 const mockValidateSubAccount = validatePreferencesModule.validateSubAccount as any;
 const mockBaseAccountProvider = BaseAccountProvider as any;
 const mockGetInjectedProvider = getInjectedProviderModule.getInjectedProvider as any;
+const mockRegisterSolanaWallet = solanaModule.registerSolanaWallet as any;
 const mockCreateTransport = transportModule.createTransport as any;
 
 describe('createProvider', () => {
@@ -96,6 +103,7 @@ describe('createProvider', () => {
 
       expect(mockCreateTransport).toHaveBeenCalledOnce();
       expect(mockBaseAccountProvider).not.toHaveBeenCalled();
+      expect(mockRegisterSolanaWallet).not.toHaveBeenCalled();
     });
 
     it('should create a provider with minimal parameters', () => {
@@ -404,6 +412,46 @@ describe('createProvider', () => {
   });
 
   describe('Provider fallback behavior', () => {
+    it('registers Solana only after explicit opt-in', () => {
+      const sdk = createBaseAccountSDK({});
+
+      expect(mockRegisterSolanaWallet).not.toHaveBeenCalled();
+      expect(sdk.registerSolanaWallet()).toBeUndefined();
+      expect(mockRegisterSolanaWallet).toHaveBeenCalledOnce();
+    });
+
+    it('shares one popup transport when Solana initializes first', () => {
+      const sdk = createBaseAccountSDK({});
+      let solanaTransport: unknown;
+      mockRegisterSolanaWallet.mockImplementation((transport: unknown) => {
+        solanaTransport = transport;
+      });
+
+      sdk.registerSolanaWallet();
+      sdk.getProvider();
+
+      expect(mockCreateTransport).toHaveBeenCalledOnce();
+      expect(mockBaseAccountProvider).toHaveBeenCalledWith(
+        expect.any(Object),
+        solanaTransport,
+        store
+      );
+    });
+
+    it('shares one popup transport when EVM initializes first', () => {
+      const sdk = createBaseAccountSDK({});
+      let solanaTransport: unknown;
+      mockRegisterSolanaWallet.mockImplementation((transport: unknown) => {
+        solanaTransport = transport;
+      });
+
+      sdk.getProvider();
+      sdk.registerSolanaWallet();
+
+      expect(mockCreateTransport).toHaveBeenCalledOnce();
+      expect(solanaTransport).toBe(mockBaseAccountProvider.mock.calls[0][1]);
+    });
+
     it('should use injected provider when getInjectedProvider returns a provider', () => {
       const mockInjectedProvider = {
         request: vi.fn(),

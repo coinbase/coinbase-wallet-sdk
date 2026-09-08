@@ -19,6 +19,10 @@ import type { SubAccount, ToOwnerAccountFn } from '../../storage/schema.js';
 import { createTransport } from './createTransport.js';
 import { BaseAccountProvider } from './eip1193/BaseAccountProvider.js';
 import { getInjectedProvider } from './eip1193/getInjectedProvider.js';
+import {
+  _resetSolanaWalletRegistration,
+  registerSolanaWallet,
+} from './solana/registerSolanaWallet.js';
 
 export type CreateProviderOptions = Partial<AppMetadata> & {
   preference?: Preference;
@@ -73,6 +77,7 @@ export function _resetGlobalInitialization(): void {
   globalInitialized = false;
   telemetryInitialized = false;
   rehydrationPromise = null;
+  _resetSolanaWalletRegistration();
 }
 
 /**
@@ -144,6 +149,7 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
 
       return provider;
     },
+    registerSolanaWallet: () => registerSolanaWallet(transport, store.session),
     subAccount: {
       async create(accountParam: AddSubAccountAccount): Promise<SubAccount> {
         return (await sdk.getProvider()?.request({
