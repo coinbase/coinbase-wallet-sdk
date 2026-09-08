@@ -1,13 +1,20 @@
-import type { RequestArguments } from ':core/provider/interface.js';
-import type { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
-import { persistSubAccount } from ':core/sub-account/accounts.js';
-import { initSubAccountConfig } from ':core/sub-account/utils.js';
+import { persistSubAccount } from ':core/namespaces/eip155/eip1193/sub-account/accounts.js';
+import { initSubAccountConfig } from ':core/namespaces/eip155/eip1193/sub-account/utils.js';
+import type { RequestArguments } from ':core/provider/interface.js';
+import type { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import type { WalletRuntime } from ':core/transport/index.js';
 import { Address } from ':core/type/index.js';
 import { assertSubAccount } from ':util/assertSubAccount.js';
 import { numberToHex } from 'viem';
+import {
+  EIP155_METHODS,
+  projectEthAccounts,
+  sessionFromAccounts,
+  withEip155Accounts,
+} from '../namespaces/eip155/session.js';
+import { type Caip2, eip155Caip2, eip155ChainId } from './caip.js';
 import {
   type Caip25ConnectResult,
   type Caip25PrivateRequestScopeExtensions,
@@ -15,13 +22,6 @@ import {
   createCaip25Request,
   sessionFromCaip25Result,
 } from './caip25.js';
-import { type Caip2, eip155Caip2, eip155ChainId } from './caip.js';
-import {
-  EIP155_METHODS,
-  projectEthAccounts,
-  sessionFromAccounts,
-  withEip155Accounts,
-} from './eip155.js';
 import type { PairResult } from './ensureSession.js';
 import type { Caip27Request, Session } from './types.js';
 

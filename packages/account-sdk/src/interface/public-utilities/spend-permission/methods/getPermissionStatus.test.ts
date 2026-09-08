@@ -1,9 +1,9 @@
+import { getClient } from ':core/namespaces/eip155/client/index.js';
 import {
   spendPermissionManagerAbi,
   spendPermissionManagerAddress,
-} from ':core/sub-account/constants.js';
+} from ':core/namespaces/eip155/eip1193/sub-account/constants.js';
 import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
-import { getClient } from ':store/chain-clients/utils.js';
 import { http, PublicClient, createPublicClient } from 'viem';
 import { Mock, beforeEach, describe, expect, it, vi } from 'vitest';
 import { multicall } from '../../multicall/index.js';
@@ -11,7 +11,7 @@ import { timestampInSecondsToDate, toSpendPermissionArgs } from '../utils.js';
 import { getPublicClientFromChainId } from '../utils.node.js';
 import { GetPermissionStatusResponseType, getPermissionStatus } from './getPermissionStatus.js';
 
-vi.mock(':store/chain-clients/utils.js', () => ({
+vi.mock(':core/namespaces/eip155/client/index.js', () => ({
   getClient: vi.fn(),
 }));
 

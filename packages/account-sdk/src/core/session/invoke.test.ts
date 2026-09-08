@@ -1,7 +1,7 @@
-import { Address } from ':core/type/index.js';
 import { standardErrorCodes } from ':core/error/constants.js';
-import { eip155Translator } from '../translators/eip155/translator.js';
-import { sessionFromAccounts } from './eip155.js';
+import { Address } from ':core/type/index.js';
+import { sessionFromAccounts } from '../namespaces/eip155/session.js';
+import { eip155Translator } from '../namespaces/eip155/translator.js';
 import { invoke, invokeEphemeral } from './invoke.js';
 import type { Envelope, Session, Transport } from './types.js';
 

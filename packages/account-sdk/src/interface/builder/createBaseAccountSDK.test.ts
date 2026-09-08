@@ -4,13 +4,13 @@ import * as checkCrossOriginModule from ':util/checkCrossOriginOpenerPolicy.js';
 import * as validatePreferencesModule from ':util/validatePreferences.js';
 import type { Hex } from 'viem';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { BaseAccountProvider } from './BaseAccountProvider.js';
 import {
   CreateProviderOptions,
   _resetGlobalInitialization,
   createBaseAccountSDK,
 } from './createBaseAccountSDK.js';
-import * as getInjectedProviderModule from './getInjectedProvider.js';
+import { BaseAccountProvider } from './eip1193/BaseAccountProvider.js';
+import * as getInjectedProviderModule from './eip1193/getInjectedProvider.js';
 
 // Mock all dependencies
 vi.mock(':store/store.js', () => ({
@@ -40,11 +40,11 @@ vi.mock(':util/validatePreferences.js', () => ({
   validateSubAccount: vi.fn(),
 }));
 
-vi.mock('./BaseAccountProvider.js', () => ({
+vi.mock('./eip1193/BaseAccountProvider.js', () => ({
   BaseAccountProvider: vi.fn(),
 }));
 
-vi.mock('./getInjectedProvider.js', () => ({
+vi.mock('./eip1193/getInjectedProvider.js', () => ({
   getInjectedProvider: vi.fn(),
 }));
 

@@ -1,5 +1,5 @@
-import { sessionFromAccounts } from '../../session/eip155.js';
 import { qualify, toEnvelope } from './envelope.js';
+import { sessionFromAccounts } from './session.js';
 
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as const;
 const OTHER = '0x0000000000000000000000000000000000000001' as const;

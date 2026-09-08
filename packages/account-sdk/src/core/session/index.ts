@@ -69,7 +69,7 @@ export {
   sessionFromAccounts,
   withEip155Accounts,
   withEip155Chain,
-} from './eip155.js';
+} from '../namespaces/eip155/session.js';
 export type {
   Caip27Error,
   Caip27Params,

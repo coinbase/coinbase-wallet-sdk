@@ -1,7 +1,7 @@
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { serializeError } from ':core/error/serialize.js';
-import { handleEip1193Request } from ':core/interfaces/eip1193/request.js';
+import { handleEip1193Request } from ':core/namespaces/eip155/eip1193/request.js';
 import {
   ConstructorOptions,
   ProviderEventEmitter,

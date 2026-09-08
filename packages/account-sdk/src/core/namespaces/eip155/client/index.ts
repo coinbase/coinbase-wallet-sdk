@@ -1,4 +1,4 @@
-import { Chain, createPublicClient, defineChain, http, PublicClient } from 'viem';
+import { http, Chain, PublicClient, createPublicClient, defineChain } from 'viem';
 import { BundlerClient, createBundlerClient } from 'viem/account-abstraction';
 import {
   arbitrum,

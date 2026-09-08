@@ -1,6 +1,6 @@
 import { Address } from ':core/type/index.js';
+import { sessionFromAccounts } from '../namespaces/eip155/session.js';
 import { sessionCovers } from './covers.js';
-import { sessionFromAccounts } from './eip155.js';
 import type { Session } from './types.js';
 
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as Address;

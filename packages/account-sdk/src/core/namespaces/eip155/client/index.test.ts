@@ -1,7 +1,7 @@
 import { base, baseSepolia, optimismSepolia, sepolia } from 'viem/chains';
 
+import { createClients } from './index.js';
 import { ChainClients } from './store.js';
-import { createClients } from './utils.js';
 
 describe('chain-clients/utils', () => {
   beforeEach(() => {

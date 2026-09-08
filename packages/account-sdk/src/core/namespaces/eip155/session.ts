@@ -8,8 +8,8 @@ import {
   eip155ChainId,
   formatEip155Account,
   namespaceOf,
-} from './caip.js';
-import type { Session, TransportKind } from './types.js';
+} from '../../session/caip.js';
+import type { Session, TransportKind } from '../../session/types.js';
 
 /** Default methods requested in an eip155 CAIP-25 session scope. */
 export const EIP155_METHODS = [

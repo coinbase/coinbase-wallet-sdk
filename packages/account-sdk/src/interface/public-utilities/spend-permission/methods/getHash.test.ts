@@ -1,15 +1,15 @@
+import { createClients, getClient } from ':core/namespaces/eip155/client/index.js';
 import {
   spendPermissionManagerAbi,
   spendPermissionManagerAddress,
-} from ':core/sub-account/constants.js';
-import { createClients, getClient } from ':store/chain-clients/utils.js';
+} from ':core/namespaces/eip155/eip1193/sub-account/constants.js';
 import { http, createPublicClient } from 'viem';
 import { readContract } from 'viem/actions';
 import { Mock, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SpendPermissionTypedData } from '../utils.js';
 import { getHash } from './getHash.js';
 
-vi.mock(':store/chain-clients/utils.js', () => ({
+vi.mock(':core/namespaces/eip155/client/index.js', () => ({
   getClient: vi.fn(),
   createClients: vi.fn(),
 }));

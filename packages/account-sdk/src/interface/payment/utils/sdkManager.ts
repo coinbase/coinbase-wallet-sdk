@@ -2,7 +2,7 @@ import { ProviderInterface } from ':core/provider/interface.js';
 import { loadTelemetryScript } from ':core/telemetry/initCCA.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import type { Hex } from 'viem';
-import { BaseAccountProvider } from '../../builder/core/BaseAccountProvider.js';
+import { BaseAccountProvider } from '../../builder/eip1193/BaseAccountProvider.js';
 import { CHAIN_IDS } from '../constants.js';
 import type { PayerInfoResponses } from '../types.js';
 

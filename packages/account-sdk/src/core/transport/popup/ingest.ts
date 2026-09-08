@@ -1,5 +1,5 @@
 import { RPCResponse } from ':core/message/RPCResponse.js';
-import { SDKChain, createClients } from ':store/chain-clients/utils.js';
+import { SDKChain, createClients } from ':core/namespaces/eip155/client/index.js';
 import type { PopupWire } from './types.js';
 
 /**
