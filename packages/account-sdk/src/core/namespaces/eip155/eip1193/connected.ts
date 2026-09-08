@@ -7,7 +7,7 @@ import type {
 } from ':core/rpc/coinbase_fetchPermission.js';
 import type { FetchPermissionsResponse } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { WALLET_INVOKE_METHOD } from ':core/session/caip27.js';
-import { type Session, sessionCovers } from ':core/session/index.js';
+import type { Session } from ':core/session/index.js';
 import { invoke } from ':core/session/invoke.js';
 import {
   addSubAccount,
@@ -20,11 +20,11 @@ import {
   assertFetchPermissionsRequest,
   fillMissingParamsForFetchPermissions,
 } from './sub-account/utils.js';
-import { eip155Caip2, eip155ChainId } from '../caip.js';
+import { eip155ChainId } from '../caip.js';
 import { toEnvelope } from '../envelope.js';
 import { WALLET_METHODS } from '../methods.js';
 import {
-  EIP155_METHODS,
+  firstEip155ChainId,
   isKnownEip155Chain,
   projectEthAccountsForChain,
   rpcUrlForEip155Chain,
@@ -108,17 +108,18 @@ export async function handleConnected(
     case 'wallet_switchEthereumChain': {
       const chainId = switchChainId(args.params);
       if (applyLocalChain(context, session, chainId)) return null;
-      const targetChainId = eip155Caip2(chainId);
-      const { session: updated } = await connectEip155(context, undefined, {
-        chainId: targetChainId,
-        methods: EIP155_METHODS,
-        sessionId: session.sessionId,
-      });
-      if (!sessionCovers(updated, [targetChainId])) {
-        throw standardErrors.provider.unsupportedChain();
+      const authorizationChainId = firstEip155ChainId(session);
+      if (authorizationChainId === undefined) {
+        throw standardErrors.provider.unauthorized('No EIP-155 account is authorized');
       }
-      chain.select(chainId);
-      return null;
+      const result = await invoke(
+        session,
+        toEnvelope(args, authorizationChainId),
+        transport,
+        eip155Translator
+      );
+      if (result === null) chain.select(chainId);
+      return result;
     }
 
     // --- Refresh grants through CAIP-25 and translate back to ERC-7846. ---
