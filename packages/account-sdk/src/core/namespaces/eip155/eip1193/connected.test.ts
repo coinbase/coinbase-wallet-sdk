@@ -256,30 +256,18 @@ describe('handleConnected', () => {
     expect(send).not.toHaveBeenCalled();
   });
 
-  it('updates CAIP-25 before switching to a known ungranted chain', async () => {
-    const sessionWithId = { ...session, sessionId: 'session-1' };
-    const send = vi.fn().mockResolvedValue({
+  it('switches a metadata-known ungranted chain without wallet I/O', async () => {
+    const sessionWithId = {
+      ...session,
       sessionId: 'session-1',
-      scopes: {
-        ...Object.fromEntries(
-          Object.entries(sessionWithId.scopes).map(([chainId, scope]) => [
-            chainId,
-            {
-              accounts: scope.accounts.map((account) =>
-                account.slice(account.lastIndexOf(':') + 1)
-              ),
-              methods: scope.methods,
-              notifications: [],
-            },
-          ])
-        ),
-        'eip155:10': {
-          accounts: [ADDRESS],
-          methods: ['wallet_switchEthereumChain'],
-          notifications: [],
+      properties: {
+        chainMetadata: {
+          'eip155:8453': { rpcUrl: 'https://example.invalid' },
+          'eip155:10': { rpcUrl: 'https://optimism.invalid' },
         },
       },
-    });
+    };
+    const send = vi.fn();
     const rt = context(send, sessionWithId);
 
     await expect(
@@ -290,30 +278,13 @@ describe('handleConnected', () => {
       )
     ).resolves.toBeNull();
 
-    expect(rt.transport.handshake).not.toHaveBeenCalled();
-    expect(send).toHaveBeenCalledTimes(1);
-    expect(send).toHaveBeenCalledWith(
-      expect.objectContaining({
-        method: 'wallet_createSession',
-        params: expect.objectContaining({
-          sessionId: 'session-1',
-          scopes: {
-            eip155: expect.objectContaining({
-              chains: ['10'],
-              params: [{ version: '1' }],
-            }),
-          },
-        }),
-      })
-    );
+    expect(send).not.toHaveBeenCalled();
+    expect(rt.transport.writeSession).not.toHaveBeenCalled();
     expect(rt.emit).toHaveBeenCalledWith('chainChanged', '0xa');
-    expect(rt.transport.readSession()?.scopes['eip155:10']?.accounts).toEqual([
-      `eip155:10:${ADDRESS}`,
-    ]);
     expect(rt.chain.get()).toBe(10);
   });
 
-  it('does not report a local switch when target authorization fails', async () => {
+  it('routes a metadata-unknown chain to SCW and does not switch when authorization fails', async () => {
     const sessionWithId = { ...session, sessionId: 'session-1' };
     const rt = context(vi.fn().mockRejectedValue(new Error('rejected')), sessionWithId);
 
