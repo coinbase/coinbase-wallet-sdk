@@ -24,6 +24,25 @@ describe('createActiveChain', () => {
     expect(chain.get()).toBe(8453);
   });
 
+  it('keeps a metadata-known default chain without requiring a grant', () => {
+    const session = {
+      ...sessionFromAccounts({ accounts: [ACCOUNT], chainId: 8453 }),
+      properties: {
+        chainMetadata: {
+          'eip155:1': { rpcUrl: 'https://ethereum.invalid' },
+          'eip155:8453': { rpcUrl: 'https://base.invalid' },
+        },
+      },
+    };
+    const chain = createActiveChain({
+      defaultChainId: 1,
+      session,
+      onChange: vi.fn(),
+    });
+
+    expect(chain.get()).toBe(1);
+  });
+
   it('notifies only for actual, notifying selections', () => {
     const onChange = vi.fn();
     const chain = createActiveChain({ defaultChainId: 1, onChange });

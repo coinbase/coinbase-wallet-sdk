@@ -128,6 +128,14 @@ export function rpcUrlForEip155Chain(session: Session, chainId: number): string 
   return projectEip155ChainMetadata(session).find((chain) => chain.id === chainId)?.rpcUrl;
 }
 
+/** True when a chain is already granted or described by the wallet's chain catalog. */
+export function isKnownEip155Chain(session: Session, chainId: number): boolean {
+  return (
+    session.scopes[eip155Caip2(chainId)] !== undefined ||
+    projectEip155ChainMetadata(session).some((chain) => chain.id === chainId)
+  );
+}
+
 /** EIP-5792 capabilities keyed by hex chain id. */
 export function projectEip155Capabilities(session: Session): Record<string, unknown> {
   return Object.fromEntries(

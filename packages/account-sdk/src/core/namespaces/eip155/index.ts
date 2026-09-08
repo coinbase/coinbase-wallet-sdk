@@ -7,6 +7,7 @@ export {
   EIP155_METHODS,
   firstEip155ChainId,
   firstGlobalEip155Account,
+  isKnownEip155Chain,
   projectEip155Capabilities,
   projectEip155ChainMetadata,
   projectEthAccounts,
