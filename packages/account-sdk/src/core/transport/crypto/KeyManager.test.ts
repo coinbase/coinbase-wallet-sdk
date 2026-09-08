@@ -1,4 +1,4 @@
-import { createStoreInstance } from ':store/store.js';
+import { bindStore, createStoreInstance } from ':store/store.js';
 import { generateKeyPair } from ':util/cipher.js';
 import { KeyManager } from './KeyManager.js';
 
@@ -8,7 +8,7 @@ describe('KeyManager', () => {
 
   beforeEach(() => {
     storeInstance = createStoreInstance({ persist: false });
-    keys = new KeyManager(storeInstance);
+    keys = new KeyManager(bindStore(storeInstance).keys);
   });
 
   describe('getOwnPublicKey', () => {
@@ -35,7 +35,7 @@ describe('KeyManager', () => {
     it('should load the same public key from storage with new instance', async () => {
       const firstPublicKey = await keys.getOwnPublicKey();
 
-      const another = new KeyManager(storeInstance);
+      const another = new KeyManager(bindStore(storeInstance).keys);
       const secondPublicKey = await another.getOwnPublicKey();
 
       expect(firstPublicKey).toStrictEqual(secondPublicKey);
@@ -63,7 +63,7 @@ describe('KeyManager', () => {
 
       const sharedSecret = await keys.getSharedSecret();
 
-      const another = new KeyManager(storeInstance);
+      const another = new KeyManager(bindStore(storeInstance).keys);
       const sharedSecretFromAnother = await another.getSharedSecret();
 
       expect(sharedSecret).toStrictEqual(sharedSecretFromAnother);

@@ -8,8 +8,8 @@ import type { KeyManager } from './KeyManager.js';
 /**
  * Seal a CAIP `{ action }` (or a response) with the ECDH shared secret.
  *
- * Callers: popup `send` and future WalletLink 2.0. Requires a prior handshake
- * (`KeyManager.setPeerPublicKey`). Throws unauthorized if the secret is missing.
+ * Popup requests require a prior handshake (`KeyManager.setPeerPublicKey`).
+ * Throws unauthorized if the secret is missing.
  */
 export async function encrypt(
   keys: KeyManager,

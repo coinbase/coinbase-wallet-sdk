@@ -1,8 +1,7 @@
 import { standardErrors } from ':core/error/errors.js';
-import { getClient } from ':core/namespaces/eip155/client/index.js';
 import { RequestArguments } from ':core/provider/interface.js';
-import { OwnerAccount } from ':core/type/index.js';
-import { store } from ':store/store.js';
+import { Address, OwnerAccount } from ':core/type/index.js';
+import { getClient } from ':core/namespaces/eip155/client/index.js';
 import { assertPresence } from ':util/assertPresence.js';
 import { decodeAbiParameters, encodeFunctionData, numberToHex, toHex } from 'viem';
 import { waitForCallsStatus } from 'viem/actions';
@@ -14,24 +13,21 @@ export async function handleAddSubAccountOwner({
   ownerAccount,
   globalAccountRequest,
   chainId,
+  globalAccount,
+  subAccount,
+  appName,
 }: {
   ownerAccount: OwnerAccount;
   globalAccountRequest: (request: RequestArguments) => Promise<unknown>;
   chainId: number;
+  globalAccount: Address;
+  subAccount: Address;
+  appName?: string;
 }) {
-  const account = store.account.get();
-  const subAccount = store.subAccounts.get();
-  const globalAccount = account.accounts?.find(
-    (account) => account.toLowerCase() !== subAccount?.address.toLowerCase()
-  );
-
-  assertPresence(globalAccount, standardErrors.provider.unauthorized('no global account'));
-  assertPresence(subAccount?.address, standardErrors.provider.unauthorized('no sub account'));
-
   const calls = [];
   if (ownerAccount.type === 'local' && ownerAccount.address) {
     calls.push({
-      to: subAccount.address,
+      to: subAccount,
       data: encodeFunctionData({
         abi,
         functionName: 'addOwnerAddress',
@@ -47,7 +43,7 @@ export async function handleAddSubAccountOwner({
       ownerAccount.publicKey
     );
     calls.push({
-      to: subAccount.address,
+      to: subAccount,
       data: encodeFunctionData({
         abi,
         functionName: 'addOwnerPublicKey',
@@ -69,7 +65,7 @@ export async function handleAddSubAccountOwner({
     ],
   };
 
-  const selection = await presentAddOwnerDialog();
+  const selection = await presentAddOwnerDialog(appName);
   if (selection === 'cancel') {
     throw standardErrors.provider.unauthorized('user cancelled');
   }
@@ -88,7 +84,7 @@ export async function handleAddSubAccountOwner({
   }
 
   const ownerIndex = await findOwnerIndex({
-    address: subAccount.address,
+    address: subAccount,
     publicKey:
       ownerAccount.type === 'local' && ownerAccount.address
         ? ownerAccount.address

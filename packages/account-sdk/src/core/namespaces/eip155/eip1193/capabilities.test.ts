@@ -1,5 +1,5 @@
-import { sessionFromAccounts } from ':core/session/index.js';
-import type { WalletRuntime } from ':core/transport/index.js';
+import type { Store } from ':store/store.js';
+import type { Session } from ':core/session/types.js';
 import { getCapabilities, projectCapabilities } from './capabilities.js';
 
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as const;
@@ -18,36 +18,17 @@ const STORED = {
   },
 };
 
-function runtime(opts?: {
-  accounts?: `0x${string}`[];
-  capabilities?: Record<string, unknown>;
-  subAccount?: `0x${string}`;
-}): WalletRuntime {
-  const accounts = opts?.accounts ?? [ADDRESS];
+function state(opts?: { subAccount?: `0x${string}` }): Store['eip155'] {
   return {
-    store: {
-      account: {
-        get: () => ({ accounts, capabilities: opts?.capabilities ?? STORED }),
-        set: vi.fn(),
-        clear: vi.fn(),
-      },
-      chains: { get: () => [], set: vi.fn(), clear: vi.fn() },
-      subAccounts: {
-        get: () => (opts?.subAccount ? { address: opts.subAccount } : undefined),
-        set: vi.fn(),
-        clear: vi.fn(),
-      },
-      subAccountsConfig: { get: () => ({}), set: vi.fn(), clear: vi.fn() },
-      spendPermissions: { get: () => [], set: vi.fn(), clear: vi.fn() },
-    } as unknown as WalletRuntime['store'],
-    chainId: () => 8453,
-    handshake: vi.fn(),
-    send: vi.fn(),
-    transport: { kind: 'popup', send: vi.fn() },
-    readSession: () => undefined,
-    writeSession: vi.fn(),
-    cleanup: vi.fn(),
-  };
+    subAccounts: {
+      get: () => (opts?.subAccount ? { address: opts.subAccount } : undefined),
+      set: vi.fn(),
+      clear: vi.fn(),
+    },
+    subAccountsConfig: { get: () => ({}), set: vi.fn(), clear: vi.fn() },
+    spendPermissions: { get: () => [], set: vi.fn(), clear: vi.fn() },
+    paymasterUrls: { get: () => undefined, set: vi.fn() },
+  } as unknown as Store['eip155'];
 }
 
 describe('projectCapabilities', () => {
@@ -122,11 +103,38 @@ describe('projectCapabilities', () => {
 });
 
 describe('getCapabilities', () => {
-  const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 });
+  const session: Session = {
+    scopes: {
+      'eip155:1': {
+        accounts: [`eip155:1:${ADDRESS}`],
+        methods: [],
+        capabilities: STORED['0x1'],
+      },
+      'eip155:5': {
+        accounts: [`eip155:5:${ADDRESS}`],
+        methods: [],
+        capabilities: STORED['0x5'],
+      },
+      'eip155:10': {
+        accounts: [`eip155:10:${ADDRESS}`],
+        methods: [],
+        capabilities: STORED['0xa'],
+      },
+      'eip155:8453': {
+        accounts: [`eip155:8453:${ADDRESS}`],
+        methods: [],
+      },
+    },
+  };
 
   it('returns the projected map for a connected account', () => {
     expect(
-      getCapabilities(runtime(), { method: 'wallet_getCapabilities', params: [ADDRESS] }, session)
+      getCapabilities(
+        state(),
+        { method: 'wallet_getCapabilities', params: [ADDRESS] },
+        session,
+        8453
+      )
     ).toEqual({
       '0x0': { gasLimitOverride: { supported: true } },
       ...STORED,
@@ -137,9 +145,10 @@ describe('getCapabilities', () => {
     const sub = '0x1111111111111111111111111111111111111111' as const;
     expect(
       getCapabilities(
-        runtime({ subAccount: sub }),
+        state({ subAccount: sub }),
         { method: 'wallet_getCapabilities', params: [sub] },
-        session
+        session,
+        8453
       )
     ).toEqual({
       '0x0': { gasLimitOverride: { supported: true } },
@@ -149,26 +158,28 @@ describe('getCapabilities', () => {
 
   it('throws when the account is not in the session', () => {
     expect(() =>
-      getCapabilities(runtime(), { method: 'wallet_getCapabilities', params: [OTHER] }, session)
+      getCapabilities(state(), { method: 'wallet_getCapabilities', params: [OTHER] }, session, 8453)
     ).toThrow('no active account found when getting capabilities');
   });
 
   it('throws when params are missing or invalid', () => {
     expect(() =>
-      getCapabilities(runtime(), { method: 'wallet_getCapabilities' }, session)
+      getCapabilities(state(), { method: 'wallet_getCapabilities' }, session, 8453)
     ).toThrow();
     expect(() =>
       getCapabilities(
-        runtime(),
+        state(),
         { method: 'wallet_getCapabilities', params: ['invalid-address'] },
-        session
+        session,
+        8453
       )
     ).toThrow();
     expect(() =>
       getCapabilities(
-        runtime(),
+        state(),
         { method: 'wallet_getCapabilities', params: [ADDRESS, ['0x1', 'invalid-hex']] },
-        session
+        session,
+        8453
       )
     ).toThrow();
   });

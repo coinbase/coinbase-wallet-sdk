@@ -12,11 +12,11 @@ export type ScopeRequirement =
  * True when the session has accounts and all requested methods on every exact
  * CAIP-2 chain.
  *
- * Used by `ensureSession` to skip `pair`. Empty `required` means “any account
+ * Used by `ensureSession` to skip `createSession`. Empty `required` means “any account
  * on any chain is enough.”
  *
- * CAIP-25 grants are never inferred across chains, even when eip155 addresses
- * happen to be identical.
+ * CAIP-25 grants are never inferred across chains, even when account
+ * identifiers happen to be identical.
  */
 export function sessionCovers(
   session: Session | undefined,

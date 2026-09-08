@@ -1,5 +1,5 @@
 import { RPCRequest } from ':core/message/RPCRequest.js';
-import { createStoreInstance } from ':store/store.js';
+import { bindStore, createStoreInstance } from ':store/store.js';
 import { decryptContent, deriveSharedSecret, generateKeyPair } from ':util/cipher.js';
 import { KeyManager } from './KeyManager.js';
 import { decrypt } from './decrypt.js';
@@ -19,7 +19,7 @@ describe('encrypt and decrypt', () => {
   let keys: KeyManager;
 
   beforeEach(() => {
-    keys = new KeyManager(createStoreInstance({ persist: false }));
+    keys = new KeyManager(bindStore(createStoreInstance({ persist: false })).keys);
   });
 
   it('should throw when encrypting before a peer public key is set', async () => {

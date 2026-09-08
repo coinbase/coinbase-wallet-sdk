@@ -1,29 +1,21 @@
 import { type ScopeRequirement, sessionCovers } from './covers.js';
 import type { Session } from './types.js';
 
-/** Outcome of `pair` / `ensureSession`: session plus an optional public projection. */
-export type PairResult = {
-  session: Session;
-  result?: unknown;
-};
-
 /**
- * Return a session that covers `requiredScopes`, pairing only when necessary.
+ * Return a session that covers `requiredScopes`, creating one only when necessary.
  *
- * Not a third kernel verb — a gate in front of `pair`:
+ * This is a gate in front of `createSession`:
  * - If `session` already has accounts for those CAIP-2 chains (`sessionCovers`),
  *   return it unchanged. No handshake, no popup.
- * - Otherwise call `opts.pair` (handshake + CAIP-25 `wallet_createSession`).
- *
- * Disconnected EIP-1193 uses this on `eth_requestAccounts` / `wallet_connect`.
+ * - Otherwise call `opts.createSession` (handshake + CAIP-25 `wallet_createSession`).
  */
 export async function ensureSession(opts: {
   session: Session | undefined;
   requiredScopes: readonly ScopeRequirement[];
-  pair: () => Promise<PairResult>;
-}): Promise<PairResult> {
+  createSession: () => Promise<Session>;
+}): Promise<Session> {
   if (sessionCovers(opts.session, opts.requiredScopes) && opts.session) {
-    return { session: opts.session };
+    return opts.session;
   }
-  return opts.pair();
+  return opts.createSession();
 }

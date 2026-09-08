@@ -1,10 +1,15 @@
-import { type Store, type StoreInstance, bindStore } from ':store/store.js';
 import {
   deriveSharedSecret,
   exportKeyToHexString,
   generateKeyPair,
   importKeyFromHexString,
 } from ':util/cipher.js';
+
+export type KeyStore = {
+  get(key: string): string | null | undefined;
+  set(key: string, value: string | null): void;
+  clear(): void;
+};
 
 interface StorageItem {
   storageKey: string;
@@ -26,9 +31,8 @@ const PEER_PUBLIC_KEY = {
 /**
  * ECDH P-256 session keys used to encrypt RPC between this SDK and a wallet.
  *
- * Popup and WalletLink 2.0 share this manager. The delivery path (postMessage vs
- * relay) lives on the transport; encrypt/decrypt live as functions next to this
- * class. This manager only owns the keypair and shared secret.
+ * This manager owns one connection's keypair and shared secret.
+ * Encrypt/decrypt live as functions next to this class.
  *
  * Distinct from `:owner-key`, which holds WebCrypto owner keys for sub-account
  * UserOperations.
@@ -38,10 +42,10 @@ export class KeyManager {
   private ownPublicKey: CryptoKey | null = null;
   private peerPublicKey: CryptoKey | null = null;
   private sharedSecret: CryptoKey | null = null;
-  private readonly store: Store;
+  private readonly store: KeyStore;
 
-  constructor(storeInstance: StoreInstance) {
-    this.store = bindStore(storeInstance);
+  constructor(store: KeyStore) {
+    this.store = store;
   }
 
   async getOwnPublicKey(): Promise<CryptoKey> {
@@ -80,7 +84,7 @@ export class KeyManager {
     this.peerPublicKey = null;
     this.sharedSecret = null;
 
-    this.store.keys.clear();
+    this.store.clear();
   }
 
   private async generateOwnKeyPair() {
@@ -117,7 +121,7 @@ export class KeyManager {
   }
 
   private async loadKey(item: StorageItem): Promise<CryptoKey | null> {
-    const key = this.store.keys.get(item.storageKey);
+    const key = this.store.get(item.storageKey);
     if (!key) return null;
 
     return importKeyFromHexString(item.keyType, key);
@@ -125,6 +129,6 @@ export class KeyManager {
 
   private async storeKey(item: StorageItem, key: CryptoKey) {
     const hexString = await exportKeyToHexString(item.keyType, key);
-    this.store.keys.set(item.storageKey, hexString);
+    this.store.set(item.storageKey, hexString);
   }
 }

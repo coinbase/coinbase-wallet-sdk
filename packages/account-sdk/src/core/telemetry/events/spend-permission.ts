@@ -1,7 +1,14 @@
-import * as spendPermissionUtils from ':interface/public-utilities/spend-permission/index.js';
 import { ActionType, AnalyticsEventImportance, ComponentType, logEvent } from '../logEvent.js';
 
-export type SpendPermissionUtilType = keyof typeof spendPermissionUtils;
+export type SpendPermissionUtilType =
+  | 'fetchPermission'
+  | 'fetchPermissions'
+  | 'getHash'
+  | 'getPermissionStatus'
+  | 'prepareRevokeCallData'
+  | 'prepareSpendCallData'
+  | 'requestRevoke'
+  | 'requestSpendPermission';
 
 export const logSpendPermissionUtilStarted = (functionName: SpendPermissionUtilType) => {
   logEvent(

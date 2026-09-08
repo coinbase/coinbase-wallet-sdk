@@ -1,4 +1,3 @@
-import { abi } from ':core/namespaces/eip155/eip1193/sub-account/constants.js';
 import {
   AppMetadata,
   ConstructorOptions,
@@ -8,12 +7,16 @@ import {
 } from ':core/provider/interface.js';
 import { AddSubAccountAccount } from ':core/rpc/wallet_addSubAccount.js';
 import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
+import { abi } from ':core/namespaces/eip155/eip1193/sub-account/constants.js';
+import { projectEthAccountsForChain } from ':core/namespaces/eip155/session.js';
 import { loadTelemetryScript } from ':core/telemetry/initCCA.js';
-import { SubAccount, ToOwnerAccountFn, store } from ':store/store.js';
+import { store } from ':store/store.js';
 import { assertPresence } from ':util/assertPresence.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { validatePreferences, validateSubAccount } from ':util/validatePreferences.js';
 import { decodeAbiParameters, encodeFunctionData, toHex } from 'viem';
+import type { SubAccount, ToOwnerAccountFn } from '../../storage/schema.js';
+import { createTransport } from './createTransport.js';
 import { BaseAccountProvider } from './eip1193/BaseAccountProvider.js';
 import { getInjectedProvider } from './eip1193/getInjectedProvider.js';
 
@@ -75,7 +78,7 @@ export function _resetGlobalInitialization(): void {
 /**
  * Create Base AccountSDK instance with EIP-1193 compliant provider
  * @param params - Options to create a base account SDK instance.
- * Pairing is `ensureSession` → `pair` (handshake + CAIP-25). Signing is `invoke`
+ * Connection is `ensureSession` → `createSession` (handshake + CAIP-25). Signing is `invoke`
  * through the popup transport, or the sub-account local path when `from` is the sub-account.
  */
 export function createBaseAccountSDK(params: CreateProviderOptions) {
@@ -97,7 +100,7 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
     validateSubAccount(params.subAccounts.toOwnerAccount);
   }
 
-  store.subAccountsConfig.set({
+  store.eip155.subAccountsConfig.set({
     toOwnerAccount: params.subAccounts?.toOwnerAccount,
     creation: params.subAccounts?.creation ?? 'manual',
     defaultAccount: params.subAccounts?.defaultAccount ?? 'universal',
@@ -108,7 +111,9 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
   //  Set the options in the store and rehydrate the store from storage
   //  ====================================================================
 
-  store.config.set(options);
+  const { paymasterUrls, ...config } = options;
+  store.config.set(config);
+  store.eip155.paymasterUrls.set(paymasterUrls);
 
   //  ====================================================================
   //  One-time initialization and validation
@@ -129,11 +134,12 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
   //  ====================================================================
 
   let provider: ProviderInterface | null = null;
+  const transport = createTransport(options, store);
 
   const sdk = {
     getProvider: () => {
       if (!provider) {
-        provider = getInjectedProvider() ?? new BaseAccountProvider(options);
+        provider = getInjectedProvider() ?? new BaseAccountProvider(options, transport, store);
       }
 
       return provider;
@@ -151,7 +157,7 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
         })) as SubAccount;
       },
       async get(): Promise<SubAccount | null> {
-        const subAccount = store.subAccounts.get();
+        const subAccount = store.eip155.subAccounts.get();
 
         if (subAccount?.address) {
           return subAccount;
@@ -183,8 +189,9 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
         publicKey?: `0x${string}`;
         chainId: number;
       }) => {
-        const subAccount = store.subAccounts.get();
-        const account = store.account.get();
+        const subAccount = store.eip155.subAccounts.get();
+        const session = store.session.get();
+        const account = session ? projectEthAccountsForChain(session, chainId)[0] : undefined;
         assertPresence(account, new Error('account does not exist'));
         assertPresence(subAccount?.address, new Error('subaccount does not exist'));
 
@@ -220,7 +227,7 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
             {
               calls,
               chainId: toHex(chainId),
-              from: account.accounts?.[0],
+              from: account,
               version: '1',
             },
           ],
@@ -228,7 +235,7 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
       },
       setToOwnerAccount(toSubAccountOwner: ToOwnerAccountFn): void {
         validateSubAccount(toSubAccountOwner);
-        store.subAccountsConfig.set({
+        store.eip155.subAccountsConfig.set({
           toOwnerAccount: toSubAccountOwner,
         });
       },

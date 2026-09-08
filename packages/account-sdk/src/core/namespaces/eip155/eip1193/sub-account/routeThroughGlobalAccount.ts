@@ -1,6 +1,6 @@
 import { RequestArguments } from ':core/provider/interface.js';
 import type { CallCapabilities } from ':core/rpc/wallet_sendCalls.js';
-import { spendPermissions } from ':store/store.js';
+import type { Store } from ':store/store.js';
 import {
   Address,
   Hex,
@@ -34,6 +34,8 @@ export async function routeThroughGlobalAccount({
   globalAccountRequest,
   chainId,
   prependCalls,
+  spendPermissions,
+  paymasterUrls,
 }: {
   /** The request to send to the global account. */
   request: RequestArguments;
@@ -51,6 +53,8 @@ export async function routeThroughGlobalAccount({
     | undefined;
   /** The function to use to send the request to the global account. */
   globalAccountRequest: (request: RequestArguments) => Promise<unknown>;
+  spendPermissions: Store['eip155']['spendPermissions'];
+  paymasterUrls?: Record<number, string>;
 }) {
   // Construct call to execute the original calls using executeBatch
   let originalSendCallsParams: WalletSendCallsParameters[0];
@@ -65,6 +69,7 @@ export async function routeThroughGlobalAccount({
       calls: [request.params[0]],
       chainId,
       from: request.params[0].from,
+      paymasterUrls,
     });
 
     originalSendCallsParams = sendCallsRequest.params[0];

@@ -12,8 +12,6 @@ describe('postPopup', () => {
       keys: {
         exportOwnPublicKeyHex: vi.fn().mockResolvedValue('own-hex'),
       } as unknown as PopupWire['keys'],
-      store: {} as PopupWire['store'],
-      chainId: () => 1,
     };
 
     await expect(

@@ -1,10 +1,6 @@
 import { Address } from ':core/type/index.js';
-import {
-  projectEthAccounts,
-  sessionCovers,
-  sessionFromAccounts,
-  withEip155Chain,
-} from './index.js';
+import { sessionCovers } from ':core/session/covers.js';
+import { projectEthAccounts, sessionFromAccounts } from './session.js';
 
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as Address;
 const SOLANA = 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp';
@@ -18,11 +14,5 @@ describe('session', () => {
     };
     expect(projectEthAccounts(session)).toEqual([ADDRESS]);
     expect(sessionCovers(session, ['eip155:8453'])).toBe(true);
-  });
-
-  it('does not fabricate authorization while switching chains', () => {
-    const session = withEip155Chain(sessionFromAccounts({ accounts: [ADDRESS], chainId: 1 }), 8453);
-    expect(session.scopes['eip155:8453']).toBeUndefined();
-    expect(session.selected.eip155).toBe(`eip155:1:${ADDRESS}`);
   });
 });

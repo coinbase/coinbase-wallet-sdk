@@ -1,6 +1,5 @@
-import { parseCaip27Response, unwrapCaip27Response } from '../../session/caip27.js';
-import type { Envelope } from '../../session/types.js';
-import type { NamespaceTranslator } from '../../translators/types.js';
+import { parseCaip27Response, unwrapCaip27Response } from ':core/session/caip27.js';
+import type { Envelope, NamespaceTranslator } from ':core/session/types.js';
 import { qualify } from './envelope.js';
 
 function unwrapResponse(response: unknown, envelope: Envelope): unknown {
@@ -8,7 +7,6 @@ function unwrapResponse(response: unknown, envelope: Envelope): unknown {
 }
 
 export const eip155Translator = {
-  namespace: 'eip155',
   qualify,
   unwrapResponse,
-} satisfies NamespaceTranslator<'eip155'>;
+} satisfies NamespaceTranslator;

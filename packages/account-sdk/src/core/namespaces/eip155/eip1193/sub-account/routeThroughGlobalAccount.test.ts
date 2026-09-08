@@ -1,4 +1,3 @@
-import { spendPermissions } from ':store/store.js';
 import { encodeFunctionData, hexToBigInt, numberToHex } from 'viem';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { routeThroughGlobalAccount } from './routeThroughGlobalAccount.js';
@@ -10,14 +9,13 @@ import {
   waitForCallsTransactionHash,
 } from './utils.js';
 
-// Mock all dependencies
-vi.mock(':store/store.js', () => ({
-  spendPermissions: {
-    set: vi.fn(),
-    get: vi.fn().mockReturnValue([]),
-  },
-}));
+const spendPermissions = {
+  set: vi.fn(),
+  get: vi.fn().mockReturnValue([]),
+  clear: vi.fn(),
+};
 
+// Mock all dependencies
 vi.mock('viem', () => ({
   encodeFunctionData: vi.fn(),
   hexToBigInt: vi.fn(),
@@ -80,6 +78,7 @@ describe('routeThroughGlobalAccount', () => {
       client: mockClient,
       globalAccountRequest: mockGlobalAccountRequest,
       chainId,
+      spendPermissions,
     };
 
     // Setup default mocks

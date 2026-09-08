@@ -1,4 +1,5 @@
 import { store } from ':store/store.js';
+import { sessionFromAccounts } from '../../session.js';
 import { hashTypedData, hexToBigInt, numberToHex } from 'viem';
 import {
   SpendPermissionBatch,
@@ -377,7 +378,7 @@ describe('injectRequestCapabilities', () => {
 
 describe('initSubAccountConfig', () => {
   it('should initialize the sub account config', async () => {
-    store.subAccountsConfig.set({
+    store.eip155.subAccountsConfig.set({
       creation: 'on-connect',
       toOwnerAccount: vi.fn().mockResolvedValue({
         account: {
@@ -387,9 +388,9 @@ describe('initSubAccountConfig', () => {
       }),
     });
 
-    await initSubAccountConfig();
+    await initSubAccountConfig(store.eip155.subAccountsConfig);
 
-    const config = store.subAccountsConfig.get();
+    const config = store.eip155.subAccountsConfig.get();
     expect(config?.capabilities?.addSubAccount).toBeDefined();
   });
 });
@@ -435,26 +436,15 @@ describe('fillMissingParamsForFetchPermissions', () => {
   });
 
   it('should fill in the missing params if the params are not present', () => {
-    vi.spyOn(store, 'getState').mockImplementation(() => ({
-      account: {
-        accounts: ['0x123'],
-        chain: { id: 1 },
-      },
-      subAccount: { address: '0x456' },
-      chains: [],
-      keys: {},
-      spendPermissions: [],
-      config: {
-        version: '1.0.0',
-      },
-    }));
+    const session = sessionFromAccounts({ accounts: [VALID_ADDRESS_1], chainId: 1 });
+    vi.spyOn(store.eip155.subAccounts, 'get').mockReturnValue({ address: VALID_ADDRESS_2 });
     const request = {
       method: 'coinbase_fetchPermissions',
     };
     assertFetchPermissionsRequest(request);
-    expect(fillMissingParamsForFetchPermissions(request)).toEqual({
+    expect(fillMissingParamsForFetchPermissions(request, session, store.eip155, 1)).toEqual({
       method: 'coinbase_fetchPermissions',
-      params: [{ account: '0x123', chainId: '0x1', spender: '0x456' }],
+      params: [{ account: VALID_ADDRESS_1, chainId: '0x1', spender: VALID_ADDRESS_2 }],
     });
   });
 });
@@ -512,14 +502,6 @@ describe('createSpendPermissionBatchMessage', () => {
 
 describe('createWalletSendCallsRequest', () => {
   it('should inject paymaster url if provided', () => {
-    // mock store config
-    vi.spyOn(store.config, 'get').mockReturnValue({
-      paymasterUrls: {
-        1: 'https://paymaster.example.com',
-      },
-      version: '1.0.0',
-    });
-
     const request = createWalletSendCallsRequest({
       calls: [
         {
@@ -530,6 +512,7 @@ describe('createWalletSendCallsRequest', () => {
       ],
       from: '0x123',
       chainId: 1,
+      paymasterUrls: { 1: 'https://paymaster.example.com' },
     });
 
     expect(request).toEqual({
@@ -660,31 +643,32 @@ describe('isSendCallsParams', () => {
 
 describe('getCachedWalletConnectResponse', () => {
   beforeEach(() => {
-    vi.spyOn(store.spendPermissions, 'get').mockReturnValue([]);
-    vi.spyOn(store.subAccounts, 'get').mockReturnValue(undefined);
-    vi.spyOn(store.account, 'get').mockReturnValue({ accounts: undefined });
+    vi.spyOn(store.eip155.spendPermissions, 'get').mockReturnValue([]);
+    vi.spyOn(store.eip155.subAccounts, 'get').mockReturnValue(undefined);
   });
 
   it('should return null if no accounts exist', async () => {
-    const result = await getCachedWalletConnectResponse();
+    const result = await getCachedWalletConnectResponse({ scopes: {} }, store.eip155, 1);
     expect(result).toBeNull();
   });
 
   it('should return accounts with no capabilities if no spend permissions or sub accounts', async () => {
-    vi.spyOn(store.account, 'get').mockReturnValue({ accounts: ['0x123', '0x456'] });
-
-    const result = await getCachedWalletConnectResponse();
+    const session = sessionFromAccounts({
+      accounts: [VALID_ADDRESS_1, VALID_ADDRESS_2],
+      chainId: 1,
+    });
+    const result = await getCachedWalletConnectResponse(session, store.eip155, 1);
     expect(result).toEqual({
       accounts: [
         {
-          address: '0x123',
+          address: VALID_ADDRESS_1,
           capabilities: {
             subAccounts: undefined,
             spendPermissions: undefined,
           },
         },
         {
-          address: '0x456',
+          address: VALID_ADDRESS_2,
           capabilities: {
             subAccounts: undefined,
             spendPermissions: undefined,
@@ -695,18 +679,18 @@ describe('getCachedWalletConnectResponse', () => {
   });
 
   it('should include sub account capability if sub account exists', async () => {
-    vi.spyOn(store.account, 'get').mockReturnValue({ accounts: ['0x123'] });
-    vi.spyOn(store.subAccounts, 'get').mockReturnValue({
+    const session = sessionFromAccounts({ accounts: [VALID_ADDRESS_1], chainId: 1 });
+    vi.spyOn(store.eip155.subAccounts, 'get').mockReturnValue({
       address: '0xsub',
       factory: '0xfactory',
       factoryData: '0xdata',
     });
 
-    const result = await getCachedWalletConnectResponse();
+    const result = await getCachedWalletConnectResponse(session, store.eip155, 1);
     expect(result).toEqual({
       accounts: [
         {
-          address: '0x123',
+          address: VALID_ADDRESS_1,
           capabilities: {
             subAccounts: [
               {
@@ -723,8 +707,8 @@ describe('getCachedWalletConnectResponse', () => {
   });
 
   it('should include spend permissions capability if spend permissions exist', async () => {
-    vi.spyOn(store.account, 'get').mockReturnValue({ accounts: ['0x123'] });
-    vi.spyOn(store.spendPermissions, 'get').mockReturnValue([
+    const session = sessionFromAccounts({ accounts: [VALID_ADDRESS_1], chainId: 1 });
+    vi.spyOn(store.eip155.spendPermissions, 'get').mockReturnValue([
       {
         signature: '0xsig1',
         chainId: 1,
@@ -757,11 +741,11 @@ describe('getCachedWalletConnectResponse', () => {
       },
     ]);
 
-    const result = await getCachedWalletConnectResponse();
+    const result = await getCachedWalletConnectResponse(session, store.eip155, 1);
     expect(result).toEqual({
       accounts: [
         {
-          address: '0x123',
+          address: VALID_ADDRESS_1,
           capabilities: {
             subAccounts: undefined,
             spendPermissions: {
@@ -805,13 +789,13 @@ describe('getCachedWalletConnectResponse', () => {
   });
 
   it('should include both sub account and spend permissions capabilities if both exist', async () => {
-    vi.spyOn(store.account, 'get').mockReturnValue({ accounts: ['0x123'] });
-    vi.spyOn(store.subAccounts, 'get').mockReturnValue({
+    const session = sessionFromAccounts({ accounts: [VALID_ADDRESS_1], chainId: 1 });
+    vi.spyOn(store.eip155.subAccounts, 'get').mockReturnValue({
       address: '0xsub',
       factory: '0xfactory',
       factoryData: '0xdata',
     });
-    vi.spyOn(store.spendPermissions, 'get').mockReturnValue([
+    vi.spyOn(store.eip155.spendPermissions, 'get').mockReturnValue([
       {
         signature: '0xsig1',
         chainId: 1,
@@ -829,11 +813,11 @@ describe('getCachedWalletConnectResponse', () => {
       },
     ]);
 
-    const result = await getCachedWalletConnectResponse();
+    const result = await getCachedWalletConnectResponse(session, store.eip155, 1);
     expect(result).toEqual({
       accounts: [
         {
-          address: '0x123',
+          address: VALID_ADDRESS_1,
           capabilities: {
             subAccounts: [
               {

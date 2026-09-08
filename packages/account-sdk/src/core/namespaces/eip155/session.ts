@@ -1,15 +1,9 @@
 import { Address } from ':core/type/index.js';
-import {
-  type Caip2,
-  type Caip10,
-  accountOf,
-  chainIdOf,
-  eip155Caip2,
-  eip155ChainId,
-  formatEip155Account,
-  namespaceOf,
-} from '../../session/caip.js';
-import type { Session, TransportKind } from '../../session/types.js';
+import { type Caip2, type Caip10, accountOf, chainIdOf, namespaceOf } from ':core/session/caip.js';
+import type { Session } from ':core/session/types.js';
+import type { SDKChain } from './client/index.js';
+import { isAddress, numberToHex } from 'viem';
+import { eip155Caip2, eip155ChainId, formatEip155Account } from './caip.js';
 
 /** Default methods requested in an eip155 CAIP-25 session scope. */
 export const EIP155_METHODS = [
@@ -38,13 +32,11 @@ export const EIP155_METHODS = [
 /**
  * Build a Session from a flat eip155 address list.
  *
- * Used for internal test/local state and as a defensive fallback when an
- * ERC-7846 account refresh is ingested without a session.
+ * Used for internal tests and local session state.
  */
 export function sessionFromAccounts(opts: {
   accounts: Address[];
   chainId: number;
-  transportKind?: TransportKind;
 }): Session {
   const chainId = eip155Caip2(opts.chainId);
   const accounts = opts.accounts.map((address) => formatEip155Account(opts.chainId, address));
@@ -52,8 +44,6 @@ export function sessionFromAccounts(opts: {
     scopes: {
       [chainId]: { accounts, methods: [...EIP155_METHODS] },
     },
-    selected: accounts[0] ? { eip155: accounts[0] } : {},
-    transportKind: opts.transportKind ?? 'popup',
   };
 }
 
@@ -64,14 +54,15 @@ export function projectEthAccounts(session: Session): Address[] {
 
   const push = (account: Caip10) => {
     if (namespaceOf(account) !== 'eip155') return;
-    const address = accountOf(account) as Address;
+    if (eip155ChainId(chainIdOf(account)) === null) return;
+    const address = accountOf(account);
+    if (!isAddress(address)) return;
     const key = address.toLowerCase();
     if (seen.has(key)) return;
     seen.add(key);
-    addresses.push(address);
+    addresses.push(address as Address);
   };
 
-  if (session.selected.eip155) push(session.selected.eip155);
   for (const [id, scope] of Object.entries(session.scopes)) {
     if (namespaceOf(id) !== 'eip155') continue;
     for (const account of scope.accounts) push(account);
@@ -79,35 +70,93 @@ export function projectEthAccounts(session: Session): Address[] {
   return addresses;
 }
 
-/** Numeric chain id of the selected eip155 account, else the first eip155 scope. */
-export function selectedEip155ChainId(session: Session): number | undefined {
-  if (session.selected.eip155) {
-    const n = eip155ChainId(chainIdOf(session.selected.eip155));
-    if (n !== null) return n;
+/** EIP-155 addresses granted on one exact chain, preserving wallet order. */
+export function projectEthAccountsForChain(session: Session, chainId: number): Address[] {
+  const accounts = session.scopes[eip155Caip2(chainId)]?.accounts ?? [];
+  return accounts.flatMap((account) => {
+    const address = accountOf(account);
+    return isAddress(address) ? [address as Address] : [];
+  });
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function parseRpcUrl(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:' ? value : undefined;
+  } catch {
+    return undefined;
   }
-  for (const id of Object.keys(session.scopes)) {
-    const n = eip155ChainId(id as Caip2);
-    if (n !== null) return n;
+}
+
+function parseNativeCurrency(value: unknown): SDKChain['nativeCurrency'] | undefined {
+  if (!isRecord(value)) return undefined;
+  const { name, symbol, decimal } = value;
+  if (
+    typeof name !== 'string' ||
+    typeof symbol !== 'string' ||
+    !Number.isInteger(decimal) ||
+    (decimal as number) < 0
+  ) {
+    return undefined;
+  }
+  return { name, symbol, decimal: decimal as number };
+}
+
+/** Wallet-provided EIP-155 chain metadata from CAIP-25 session properties. */
+export function projectEip155ChainMetadata(session: Session): SDKChain[] {
+  const metadata = session.properties?.chainMetadata;
+  if (!isRecord(metadata)) return [];
+
+  return Object.entries(metadata).flatMap(([caip2, value]) => {
+    const id = eip155ChainId(caip2 as `eip155:${string}`);
+    const entry = isRecord(value) ? value : undefined;
+    if (id === null || !entry) return [];
+
+    const rpcUrl = parseRpcUrl(entry.rpcUrl);
+    const nativeCurrency = parseNativeCurrency(entry.nativeCurrency);
+    if (!rpcUrl && !nativeCurrency) return [];
+    return [{ id, ...(rpcUrl ? { rpcUrl } : {}), ...(nativeCurrency ? { nativeCurrency } : {}) }];
+  });
+}
+
+export function rpcUrlForEip155Chain(session: Session, chainId: number): string | undefined {
+  return projectEip155ChainMetadata(session).find((chain) => chain.id === chainId)?.rpcUrl;
+}
+
+/** EIP-5792 capabilities keyed by hex chain id. */
+export function projectEip155Capabilities(session: Session): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(session.scopes).flatMap(([caip2, scope]) => {
+      const chainId = eip155ChainId(caip2 as `eip155:${string}`);
+      return chainId === null || !scope.capabilities
+        ? []
+        : [[numberToHex(chainId), scope.capabilities]];
+    })
+  );
+}
+
+/** First granted EIP-155 chain in wallet response order. */
+export function firstEip155ChainId(session: Session): number | undefined {
+  for (const [id, scope] of Object.entries(session.scopes)) {
+    const chainId = eip155ChainId(id as Caip2);
+    if (chainId !== null && scope.accounts.length > 0) return chainId;
   }
   return undefined;
 }
 
-/** Select an already-authorized eip155 chain without fabricating a new grant. */
-export function withEip155Chain(session: Session, chainId: number): Session {
-  const nextId = eip155Caip2(chainId);
-  const accounts = session.scopes[nextId]?.accounts ?? [];
-  const selected = session.selected.eip155
-    ? (accounts.find(
-        (account) =>
-          accountOf(account).toLowerCase() ===
-          accountOf(session.selected.eip155 as Caip10).toLowerCase()
-      ) ?? accounts[0])
-    : accounts[0];
-
-  return {
-    ...session,
-    selected: { ...session.selected, ...(selected ? { eip155: selected } : {}) },
-  };
+export function firstGlobalEip155Account(
+  session: Session,
+  chainId: number,
+  excluded?: Address
+): Address | undefined {
+  return projectEthAccountsForChain(session, chainId).find(
+    (account) => !excluded || account.toLowerCase() !== excluded.toLowerCase()
+  );
 }
 
 /** Replace accounts on one granted scope while preserving methods, capabilities, and session id. */
@@ -125,10 +174,6 @@ export function withEip155Accounts(
     scopes: {
       ...session.scopes,
       [id]: { ...scope, accounts },
-    },
-    selected: {
-      ...session.selected,
-      ...(accounts[0] ? { eip155: accounts[0] } : {}),
     },
   };
 }

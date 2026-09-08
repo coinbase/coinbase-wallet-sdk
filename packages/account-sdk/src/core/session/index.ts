@@ -2,30 +2,25 @@
  * Session kernel.
  *
  * A **session** is the noun: the persisted fact of being paired with a wallet
- * (which accounts, which methods, which transport kind). Never persist `send`.
+ * (which accounts and methods the wallet granted). Never persist transport delivery.
  *
- * **pair** and **invoke** are the only verbs:
- * - `pair` — no session (or scopes do not cover the request): handshake +
+ * **createSession** and **invoke** are the only verbs:
+ * - `createSession` — no session (or scopes do not cover the request): handshake +
  *   CAIP-25 `wallet_createSession`, then write a Session.
  * - `invoke` — already paired: send one envelope on the existing session.
  *
- * `ensureSession` is the gate in front of `pair` (reuse the stored session when
+ * `ensureSession` is the gate in front of `createSession` (reuse the stored session when
  * it already covers the required CAIP-2 chains).
  *
- * Interfaces, translators, and transports sit around this kernel:
- * dapp request → Envelope → transport.send → translator response unwrapping.
- * Sub-account signing is a fork off invoke (local owner keys), not a fourth edge.
+ * Namespace adapters and transports sit around this kernel:
+ * dapp request → CAIP JSON-RPC → transport.request → translator response unwrapping.
  */
+export { activeSession } from './activeSession.js';
 export {
-  BITCOIN_MAINNET,
-  SOLANA_MAINNET,
   accountOf,
   chainIdOf,
-  eip155Caip2,
-  eip155ChainId,
   formatCaip10,
   formatCaip2,
-  formatEip155Account,
   isCaip10,
   isCaip2,
   namespaceOf,
@@ -35,14 +30,12 @@ export {
 export type { Caip10, Caip2, ParsedCaip10, ParsedCaip2 } from './caip.js';
 export {
   WALLET_CREATE_SESSION,
-  connectResultFromSession,
   createCaip25Request,
   parseCaip25Request,
   parseCaip25Result,
   sessionFromCaip25Result,
 } from './caip25.js';
 export type {
-  Caip25ConnectResult,
   Caip25PrivateRequestScopeExtensions,
   Caip25PrivateScopeParams,
   Caip25Request,
@@ -51,25 +44,19 @@ export type {
   Caip25Result,
   Caip25ResultScope,
 } from './caip25.js';
+export { createSession } from './createSession.js';
+export type { CreateSessionOptions } from './createSession.js';
+export { ensureSession } from './ensureSession.js';
 export {
   WALLET_INVOKE_METHOD,
   assertInvokeAuthorized,
   createCaip27Request,
-  parseCaip27,
   parseCaip27Response,
   toCaip27,
   unwrapCaip27Response,
 } from './caip27.js';
 export { sessionCovers } from './covers.js';
 export type { ScopeRequirement } from './covers.js';
-export {
-  EIP155_METHODS,
-  projectEthAccounts,
-  selectedEip155ChainId,
-  sessionFromAccounts,
-  withEip155Accounts,
-  withEip155Chain,
-} from '../namespaces/eip155/session.js';
 export type {
   Caip27Error,
   Caip27Params,
@@ -77,8 +64,7 @@ export type {
   Caip27Response,
   Caip27Result,
   Envelope,
+  NamespaceTranslator,
   ScopeState,
   Session,
-  Transport,
-  TransportKind,
 } from './types.js';

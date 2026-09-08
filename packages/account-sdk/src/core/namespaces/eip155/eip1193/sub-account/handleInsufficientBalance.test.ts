@@ -72,6 +72,11 @@ describe('handleInsufficientBalanceError', () => {
           },
         ],
       },
+      spendPermissions: {
+        get: vi.fn(() => []),
+        set: vi.fn(),
+        clear: vi.fn(),
+      },
     };
   });
 

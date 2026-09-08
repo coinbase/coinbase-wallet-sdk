@@ -1,6 +1,10 @@
 import {
+  SOLANA_MAINNET,
+  SOLANA_MAINNET_REFERENCE,
+  createSolanaMainnetScopes,
+} from ':core/namespaces/solana/index.js';
+import {
   WALLET_CREATE_SESSION,
-  connectResultFromSession,
   createCaip25Request,
   parseCaip25Request,
   parseCaip25Result,
@@ -8,39 +12,39 @@ import {
 } from './caip25.js';
 
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as const;
+const SOLANA_PUBLIC_KEY = 'So11111111111111111111111111111111111111112';
 
 describe('CAIP-25 request', () => {
-  it('builds the private extensions on the eip155 namespace scope', () => {
+  it('builds a Solana namespace scope without EVM private extensions', () => {
     const request = createCaip25Request({
-      chainId: 'eip155:8453',
-      methods: ['personal_sign', 'wallet_connect'],
-      requestParts: {
-        capabilities: { signInWithEthereum: { nonce: 'n', chainId: '0x2105' } },
-        params: [{ version: '1', optionalMetadata: 'preserved' }],
-      },
-      properties: { walletInfo: { name: 'generic session metadata' } },
+      scopes: createSolanaMainnetScopes(),
+      properties: { source: 'wallet-standard' },
     });
 
     expect(request).toEqual({
       method: WALLET_CREATE_SESSION,
       params: {
         scopes: {
-          eip155: {
-            chains: ['8453'],
-            methods: ['personal_sign', 'wallet_connect'],
-            notifications: ['accountsChanged', 'chainChanged'],
-            capabilities: { signInWithEthereum: { nonce: 'n', chainId: '0x2105' } },
-            params: [{ version: '1', optionalMetadata: 'preserved' }],
+          solana: {
+            chains: [SOLANA_MAINNET_REFERENCE],
+            methods: [
+              'solana_signMessage',
+              'solana_signTransaction',
+              'solana_signAndSendTransaction',
+              'solana_signAndSendAllTransactions',
+            ],
+            notifications: [],
           },
         },
-        properties: { walletInfo: { name: 'generic session metadata' } },
+        properties: { source: 'wallet-standard' },
       },
     });
-    expect(request.params.scopes.eip155?.params?.[0]).not.toHaveProperty('capabilities');
+    expect(request.params.scopes.solana).not.toHaveProperty('params');
+    expect(request.params.scopes.solana).not.toHaveProperty('capabilities');
     expect(parseCaip25Request(request)).toEqual(request.params);
   });
 
-  it('strictly validates private request extensions and eip155 scopes', () => {
+  it('strictly validates generic scopes and private request extension shapes', () => {
     expect(() =>
       parseCaip25Request({
         method: WALLET_CREATE_SESSION,
@@ -76,11 +80,32 @@ describe('CAIP-25 request', () => {
         method: WALLET_CREATE_SESSION,
         params: {
           scopes: {
-            'solana:mainnet': { methods: [], notifications: [] },
+            'not a scope': { chains: ['mainnet'], methods: [], notifications: [] },
           },
         },
       })
-    ).toThrow(/eip155/);
+    ).toThrow(/valid CAIP namespace/);
+    expect(
+      parseCaip25Request({
+        method: WALLET_CREATE_SESSION,
+        params: {
+          scopes: {
+            solana: {
+              chains: [SOLANA_MAINNET_REFERENCE],
+              methods: [],
+              notifications: [],
+              capabilities: { evmOnly: true },
+            },
+          },
+        },
+      })
+    ).toMatchObject({
+      scopes: {
+        solana: {
+          capabilities: { evmOnly: true },
+        },
+      },
+    });
   });
 });
 
@@ -101,10 +126,7 @@ describe('CAIP-25 result', () => {
 
   it('strictly parses raw accounts and expands exact chains to CAIP-10 state', () => {
     expect(parseCaip25Result(raw)).toEqual(raw);
-    const session = sessionFromCaip25Result(raw, {
-      preferredChainId: 'eip155:8453',
-      transportKind: 'popup',
-    });
+    const session = sessionFromCaip25Result(raw);
 
     expect(session).toEqual({
       sessionId: 'session-1',
@@ -120,15 +142,46 @@ describe('CAIP-25 result', () => {
           capabilities: raw.scopes.eip155.capabilities,
         },
       },
-      selected: { eip155: `eip155:8453:${ADDRESS}` },
-      transportKind: 'popup',
-    });
-    expect(connectResultFromSession(session, 'eip155:8453')).toEqual({
-      accounts: [{ address: ADDRESS, capabilities: raw.scopes.eip155.capabilities }],
+      properties: raw.properties,
     });
   });
 
-  it('rejects CAIP-10 response accounts and malformed grants', () => {
+  it('expands mixed namespace account lists without synthesizing selection', () => {
+    const mixed = {
+      sessionId: 'session-mixed',
+      scopes: {
+        'eip155:1': {
+          accounts: [ADDRESS],
+          methods: ['personal_sign'],
+          notifications: [],
+        },
+        [SOLANA_MAINNET]: {
+          accounts: [SOLANA_PUBLIC_KEY],
+          methods: ['solana_signMessage'],
+          notifications: [],
+          capabilities: { messageSigning: true },
+        },
+      },
+    };
+
+    expect(parseCaip25Result(mixed)).toEqual(mixed);
+    expect(sessionFromCaip25Result(mixed)).toEqual({
+      sessionId: 'session-mixed',
+      scopes: {
+        'eip155:1': {
+          accounts: [`eip155:1:${ADDRESS}`],
+          methods: ['personal_sign'],
+        },
+        [SOLANA_MAINNET]: {
+          accounts: [`${SOLANA_MAINNET}:${SOLANA_PUBLIC_KEY}`],
+          methods: ['solana_signMessage'],
+          capabilities: { messageSigning: true },
+        },
+      },
+    });
+  });
+
+  it('validates generic result shape without applying namespace account policy', () => {
     expect(() =>
       parseCaip25Result({
         scopes: {
@@ -151,7 +204,7 @@ describe('CAIP-25 result', () => {
           },
         },
       })
-    ).toThrow(/raw eip155 addresses/);
+    ).toThrow(/raw CAIP account addresses/);
     expect(() =>
       parseCaip25Result({
         sessionId: 'session-1',
@@ -178,5 +231,24 @@ describe('CAIP-25 result', () => {
         },
       })
     ).toThrow(/params is not permitted/);
+    expect(
+      parseCaip25Result({
+        sessionId: 'session-1',
+        scopes: {
+          solana: {
+            chains: [SOLANA_MAINNET_REFERENCE],
+            accounts: ['0OIl-not-base58'],
+            methods: ['solana_signMessage'],
+            notifications: [],
+          },
+        },
+      })
+    ).toMatchObject({
+      scopes: {
+        solana: {
+          accounts: ['0OIl-not-base58'],
+        },
+      },
+    });
   });
 });

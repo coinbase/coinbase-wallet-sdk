@@ -1,18 +1,22 @@
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
-import { WALLET_METHODS } from ':core/namespaces/eip155/index.js';
 import type { RequestArguments } from ':core/provider/interface.js';
-import { createCaip27Request, sessionFromAccounts } from ':core/session/index.js';
-import type { WalletRuntime } from ':core/transport/index.js';
+import type { WalletTransport } from ':core/transport/index.js';
+import type { Store } from ':store/store.js';
+import { numberToHex } from 'viem';
+import { sessionFromAccounts } from '../session.js';
+import { WALLET_METHODS } from '../methods.js';
 import * as providerUtil from ':util/provider.js';
+import type { Eip1193Context } from './context.js';
 import { handleEip1193Request } from './request.js';
+import { createActiveChain } from './activeChain.js';
 
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as const;
 
 /**
  * Every JSON-RPC the Base Account `Signer` + `BaseAccountProvider` handled.
  * Destination must match that stack (popup = encrypted wallet, http = Coinbase
- * wallet RPC, chain = handshake rpcUrl, local = no I/O, pair = handshake +
+ * wallet RPC, chain = handshake rpcUrl, local = no I/O, session = handshake +
  * wallet_connect, ephemeral = handshake + one invoke + cleanup, reject = 4100).
  */
 const SIGNER_POPUP_METHODS = [
@@ -33,10 +37,23 @@ const SIGNER_POPUP_METHODS = [
   'wallet_watchAsset',
 ] as const;
 
-function runtime(opts?: { connected?: boolean }): WalletRuntime {
+function context(opts?: { connected?: boolean }): Eip1193Context {
   const session = opts?.connected
-    ? sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 })
+    ? {
+        ...sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 }),
+        sessionId: 'session-1',
+        properties: {
+          chainMetadata: {
+            'eip155:8453': { rpcUrl: 'https://example.invalid' },
+          },
+        },
+      }
     : undefined;
+  if (session) {
+    session.scopes['eip155:8453'].capabilities = {
+      atomic: { status: 'supported' },
+    };
+  }
   const send = vi.fn(async (request: RequestArguments) => {
     if (request.method === 'wallet_createSession') {
       const params = request.params as {
@@ -82,31 +99,31 @@ function runtime(opts?: { connected?: boolean }): WalletRuntime {
       result: { method: params.request.method, result },
     };
   });
-  const chains = [{ id: 8453, rpcUrl: 'https://example.invalid' }];
-  return {
-    store: {
-      account: {
-        get: () => ({
-          accounts: opts?.connected ? [ADDRESS] : [],
-          chain: chains[0],
-          capabilities: { '0x1': { atomic: { status: 'supported' } } },
-        }),
-        set: vi.fn(),
-        clear: vi.fn(),
-      },
-      chains: { get: () => chains, set: vi.fn(), clear: vi.fn() },
-      subAccounts: { get: () => undefined, set: vi.fn(), clear: vi.fn() },
-      subAccountsConfig: { get: () => ({}), set: vi.fn(), clear: vi.fn() },
-      spendPermissions: { get: () => [], set: vi.fn(), clear: vi.fn() },
-    } as unknown as WalletRuntime['store'],
-    emit: vi.fn(),
-    chainId: () => 8453,
+  const emit = vi.fn();
+  const state = {
+    subAccounts: { get: () => undefined, set: vi.fn(), clear: vi.fn() },
+    subAccountsConfig: { get: () => ({}), set: vi.fn(), clear: vi.fn() },
+    spendPermissions: { get: () => [], set: vi.fn(), clear: vi.fn() },
+    paymasterUrls: { get: () => undefined, set: vi.fn() },
+  } as unknown as Store['eip155'];
+  const transport: WalletTransport = {
     handshake: vi.fn().mockResolvedValue(undefined),
-    send,
-    transport: { kind: 'popup', send: (envelope) => send(createCaip27Request(envelope)) },
+    request: send,
     readSession: () => session,
     writeSession: vi.fn(),
     cleanup: vi.fn().mockResolvedValue(undefined),
+  };
+  const chain = createActiveChain({
+    defaultChainId: 8453,
+    session,
+    onChange: (chainId) => emit('chainChanged', numberToHex(chainId)),
+  });
+  return {
+    transport,
+    cache: state,
+    config: { get: () => ({ version: 'test' }), set: vi.fn() },
+    emit,
+    chain,
   };
 }
 
@@ -114,9 +131,9 @@ describe('RPC routing vs Base Account SDK', () => {
   it('sends every Signer popup method through the wallet transport when connected', async () => {
     for (const method of SIGNER_POPUP_METHODS) {
       expect(WALLET_METHODS.has(method)).toBe(true);
-      const rt = runtime({ connected: true });
+      const rt = context({ connected: true });
       await handleEip1193Request(rt, { method, params: [] });
-      expect(rt.send, method).toHaveBeenCalledWith(
+      expect(rt.transport.request, method).toHaveBeenCalledWith(
         expect.objectContaining({
           method: 'wallet_invokeMethod',
           params: expect.objectContaining({
@@ -128,9 +145,9 @@ describe('RPC routing vs Base Account SDK', () => {
   });
 
   it('sends experimental_* to the wallet transport when connected (Signer prefix)', async () => {
-    const rt = runtime({ connected: true });
+    const rt = context({ connected: true });
     await handleEip1193Request(rt, { method: 'experimental_requestInfo', params: [] });
-    expect(rt.send).toHaveBeenCalledWith(
+    expect(rt.transport.request).toHaveBeenCalledWith(
       expect.objectContaining({
         method: 'wallet_invokeMethod',
         params: expect.objectContaining({
@@ -146,37 +163,35 @@ describe('RPC routing vs Base Account SDK', () => {
     ['eth_chainId', '0x2105'],
     ['net_version', 8453],
   ] as const)('projects %s locally when connected (no popup)', async (method, expected) => {
-    const rt = runtime({ connected: true });
+    const rt = context({ connected: true });
     await expect(handleEip1193Request(rt, { method })).resolves.toEqual(expected);
-    expect(rt.send).not.toHaveBeenCalled();
+    expect(rt.transport.request).not.toHaveBeenCalled();
   });
 
   it('projects wallet_getCapabilities locally when connected', async () => {
-    const rt = runtime({ connected: true });
+    const rt = context({ connected: true });
     await expect(
       handleEip1193Request(rt, { method: 'wallet_getCapabilities', params: [ADDRESS] })
     ).resolves.toEqual({
       '0x0': { gasLimitOverride: { supported: true } },
-      '0x1': { atomic: { status: 'supported' } },
+      '0x2105': { atomic: { status: 'supported' } },
     });
-    expect(rt.send).not.toHaveBeenCalled();
+    expect(rt.transport.request).not.toHaveBeenCalled();
   });
 
-  it('re-pairs wallet_connect through invoke when already connected', async () => {
-    const rt = runtime({ connected: true });
+  it('routes wallet_connect through CAIP-25 when already connected', async () => {
+    const rt = context({ connected: true });
     await handleEip1193Request(rt, { method: 'wallet_connect', params: [{ version: '1' }] });
-    expect(rt.send).toHaveBeenCalledWith(
+    expect(rt.transport.request).toHaveBeenCalledWith(
       expect.objectContaining({
-        method: 'wallet_invokeMethod',
-        params: expect.objectContaining({
-          request: expect.objectContaining({ method: 'wallet_connect' }),
-        }),
+        method: 'wallet_createSession',
+        params: expect.objectContaining({ scopes: expect.any(Object) }),
       })
     );
   });
 
   it('invokes wallet_addSubAccount when connected and nothing is cached', async () => {
-    const rt = runtime({ connected: true });
+    const rt = context({ connected: true });
     await handleEip1193Request(rt, {
       method: 'wallet_addSubAccount',
       params: [
@@ -189,7 +204,7 @@ describe('RPC routing vs Base Account SDK', () => {
         },
       ],
     });
-    expect(rt.send).toHaveBeenCalledWith(
+    expect(rt.transport.request).toHaveBeenCalledWith(
       expect.objectContaining({
         method: 'wallet_invokeMethod',
         params: expect.objectContaining({
@@ -200,32 +215,32 @@ describe('RPC routing vs Base Account SDK', () => {
   });
 
   it('stores disconnected wallet_switchEthereumChain locally', async () => {
-    const rt = runtime();
+    const rt = context();
     await expect(
       handleEip1193Request(rt, {
         method: 'wallet_switchEthereumChain',
         params: [{ chainId: '0x2105' }],
       })
     ).resolves.toBeUndefined();
-    expect(rt.store.account.set).toHaveBeenCalledWith({ chain: { id: 8453 } });
-    expect(rt.send).not.toHaveBeenCalled();
+    expect(rt.chain.get()).toBe(8453);
+    expect(rt.transport.request).not.toHaveBeenCalled();
   });
 
   it('projects eth_requestAccounts locally when already connected', async () => {
-    const rt = runtime({ connected: true });
+    const rt = context({ connected: true });
     await expect(handleEip1193Request(rt, { method: 'eth_requestAccounts' })).resolves.toEqual([
       ADDRESS,
     ]);
-    expect(rt.handshake).not.toHaveBeenCalled();
-    expect(rt.send).not.toHaveBeenCalled();
+    expect(rt.transport.handshake).not.toHaveBeenCalled();
+    expect(rt.transport.request).not.toHaveBeenCalled();
   });
 
   it('pairs on eth_requestAccounts / wallet_connect when disconnected', async () => {
     for (const method of ['eth_requestAccounts', 'wallet_connect'] as const) {
-      const rt = runtime();
+      const rt = context();
       await handleEip1193Request(rt, { method });
-      expect(rt.handshake, method).toHaveBeenCalledWith({ method: 'handshake' });
-      expect(rt.send, method).toHaveBeenCalledWith(
+      expect(rt.transport.handshake, method).toHaveBeenCalledWith({ method: 'handshake' });
+      expect(rt.transport.request, method).toHaveBeenCalledWith(
         expect.objectContaining({ method: 'wallet_createSession' })
       );
     }
@@ -234,7 +249,7 @@ describe('RPC routing vs Base Account SDK', () => {
   it.each(['wallet_sendCalls', 'wallet_sign', 'experimental_requestInfo'] as const)(
     'invokes disconnected %s without creating a session',
     async (method) => {
-      const rt = runtime();
+      const rt = context();
       const params =
         method === 'wallet_sendCalls'
           ? [{ chainId: '0x2105', calls: [], version: '1' }]
@@ -243,24 +258,24 @@ describe('RPC routing vs Base Account SDK', () => {
             : [{ requests: [] }];
 
       await expect(handleEip1193Request(rt, { method, params })).resolves.toBe('0xok');
-      expect(rt.handshake).toHaveBeenCalled();
-      expect(rt.send).toHaveBeenCalledTimes(1);
-      expect(rt.send).toHaveBeenCalledWith({
+      expect(rt.transport.handshake).toHaveBeenCalled();
+      expect(rt.transport.request).toHaveBeenCalledTimes(1);
+      expect(rt.transport.request).toHaveBeenCalledWith({
         method: 'wallet_invokeMethod',
         params: {
           chainId: 'eip155:8453',
           request: { method, params },
         },
       });
-      expect(rt.writeSession).not.toHaveBeenCalled();
-      expect(rt.cleanup).toHaveBeenCalledTimes(1);
+      expect(rt.transport.writeSession).not.toHaveBeenCalled();
+      expect(rt.transport.cleanup).toHaveBeenCalledTimes(1);
     }
   );
 
   it('posts disconnected wallet_getCallsStatus to Coinbase HTTP', async () => {
     const fetchRPC = vi.spyOn(providerUtil, 'fetchRPCRequest').mockResolvedValue({ status: 200 });
     const args: RequestArguments = { method: 'wallet_getCallsStatus', params: ['0x1'] };
-    await handleEip1193Request(runtime(), args);
+    await handleEip1193Request(context(), args);
     expect(fetchRPC).toHaveBeenCalledWith(args, CB_WALLET_RPC_URL);
     fetchRPC.mockRestore();
   });
@@ -268,10 +283,10 @@ describe('RPC routing vs Base Account SDK', () => {
   it('posts connected wallet_getCallsStatus to the chain RPC (Signer default)', async () => {
     const fetchRPC = vi.spyOn(providerUtil, 'fetchRPCRequest').mockResolvedValue({ status: 200 });
     const args: RequestArguments = { method: 'wallet_getCallsStatus', params: ['0x1'] };
-    const rt = runtime({ connected: true });
+    const rt = context({ connected: true });
     await handleEip1193Request(rt, args);
     expect(fetchRPC).toHaveBeenCalledWith(args, 'https://example.invalid');
-    expect(rt.send).not.toHaveBeenCalled();
+    expect(rt.transport.request).not.toHaveBeenCalled();
     fetchRPC.mockRestore();
   });
 
@@ -280,7 +295,7 @@ describe('RPC routing vs Base Account SDK', () => {
       permissions: [],
       permission: { chainId: 8453 },
     });
-    const rt = runtime({ connected: true });
+    const rt = context({ connected: true });
     await handleEip1193Request(rt, {
       method: 'coinbase_fetchPermissions',
       params: [{ account: ADDRESS, chainId: '0x2105', spender: ADDRESS }],
@@ -291,7 +306,7 @@ describe('RPC routing vs Base Account SDK', () => {
       params: [{ permissionHash: '0xabc' }],
     });
     expect(fetchRPC).toHaveBeenCalledWith(expect.anything(), CB_WALLET_RPC_URL);
-    expect(rt.send).not.toHaveBeenCalled();
+    expect(rt.transport.request).not.toHaveBeenCalled();
     fetchRPC.mockRestore();
   });
 
@@ -299,19 +314,19 @@ describe('RPC routing vs Base Account SDK', () => {
     const fetchRPC = vi.spyOn(providerUtil, 'fetchRPCRequest').mockResolvedValue({
       subAccounts: [],
     });
-    const rt = runtime({ connected: true });
+    const rt = context({ connected: true });
     await handleEip1193Request(rt, { method: 'wallet_getSubAccounts', params: [] });
     expect(fetchRPC).toHaveBeenCalledWith(
       { method: 'wallet_getSubAccounts', params: [] },
       'https://example.invalid'
     );
-    expect(rt.send).not.toHaveBeenCalled();
+    expect(rt.transport.request).not.toHaveBeenCalled();
     fetchRPC.mockRestore();
   });
 
   it('forwards eth_getBalance / eth_call to the chain RPC when connected', async () => {
     const fetchRPC = vi.spyOn(providerUtil, 'fetchRPCRequest').mockResolvedValue('0x1');
-    const rt = runtime({ connected: true });
+    const rt = context({ connected: true });
     await handleEip1193Request(rt, { method: 'eth_getBalance', params: [ADDRESS, 'latest'] });
     await handleEip1193Request(rt, { method: 'eth_call', params: [{ to: ADDRESS }, 'latest'] });
     expect(fetchRPC).toHaveBeenCalledWith(
@@ -322,19 +337,19 @@ describe('RPC routing vs Base Account SDK', () => {
       expect.objectContaining({ method: 'eth_call' }),
       'https://example.invalid'
     );
-    expect(rt.send).not.toHaveBeenCalled();
+    expect(rt.transport.request).not.toHaveBeenCalled();
     fetchRPC.mockRestore();
   });
 
   it.each(['eth_accounts', 'eth_chainId', 'net_version'] as const)(
-    'returns disconnected runtime state for %s',
+    'returns disconnected transport state for %s',
     async (method) => {
-      const rt = runtime();
+      const rt = context();
       const result = await handleEip1193Request(rt, { method });
       if (method === 'eth_accounts') expect(result).toEqual([]);
       if (method === 'eth_chainId') expect(result).toBe('0x2105');
       if (method === 'net_version') expect(result).toBe(8453);
-      expect(rt.send).not.toHaveBeenCalled();
+      expect(rt.transport.request).not.toHaveBeenCalled();
     }
   );
 
@@ -344,7 +359,7 @@ describe('RPC routing vs Base Account SDK', () => {
     'coinbase_fetchPermissions',
     'eth_getBalance',
   ] as const)('rejects disconnected %s until eth_requestAccounts (4100)', async (method) => {
-    await expect(handleEip1193Request(runtime(), { method, params: [] })).rejects.toMatchObject({
+    await expect(handleEip1193Request(context(), { method, params: [] })).rejects.toMatchObject({
       code: standardErrorCodes.provider.unauthorized,
     });
   });

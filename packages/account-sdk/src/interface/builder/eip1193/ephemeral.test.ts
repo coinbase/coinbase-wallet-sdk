@@ -1,5 +1,5 @@
 import { standardErrorCodes } from ':core/error/constants.js';
-import { defaultStoreInstance } from ':store/store.js';
+import { bindStore, defaultStoreInstance } from ':store/store.js';
 import { assertEphemeralMethod, createEphemeralStore } from './ephemeral.js';
 
 describe('createEphemeralStore', () => {
@@ -7,6 +7,19 @@ describe('createEphemeralStore', () => {
     const ephemeral = createEphemeralStore();
     expect(ephemeral).not.toBe(defaultStoreInstance);
     expect('persist' in ephemeral).toBe(false);
+  });
+
+  it('does not share session or keys with the default store', () => {
+    const persisted = bindStore(defaultStoreInstance);
+    const ephemeral = bindStore(createEphemeralStore());
+    persisted.session.clear();
+    persisted.keys.clear();
+
+    ephemeral.session.set({ scopes: {} });
+    ephemeral.keys.set('peer', 'key');
+
+    expect(persisted.session.get()).toBeUndefined();
+    expect(persisted.keys.get('peer')).toBeUndefined();
   });
 });
 

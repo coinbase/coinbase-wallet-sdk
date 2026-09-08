@@ -1,35 +1,5 @@
-import type { Caip2, Caip10, Namespace } from './caip.js';
-
-/**
- * How envelopes reach the wallet. Only this string is stored on `Session`.
- * Implementations: `core/transport/popup` today; `walletlink2` / `injected` later.
- */
-export type TransportKind = 'popup' | 'walletlink2' | 'injected';
-
-/** Accounts and methods granted for one CAIP-2 chain (one key in `Session.scopes`). */
-export type ScopeState = {
-  accounts: Caip10[];
-  methods: string[];
-  capabilities?: Record<string, unknown>;
-};
-
-/**
- * Persisted pairing with a wallet. This is the kernel noun.
- *
- * - `scopes` — per CAIP-2 chain (`eip155:8453`): which CAIP-10 accounts and methods
- * - `selected` — active account per namespace (`eip155` → one CAIP-10)
- * - `sessionId` — CAIP-171 id issued by the wallet, when present
- * - `transportKind` — which delivery path was used (`popup`, later `walletlink2`)
- *
- * Reload hydrates this from the store. Do not persist `send`, a popup handle,
- * or a communicator — those live on `WalletRuntime` only for the page lifetime.
- */
-export type Session = {
-  sessionId?: string;
-  scopes: Record<Caip2, ScopeState>;
-  selected: Partial<Record<Namespace, Caip10>>;
-  transportKind: TransportKind;
-};
+import type { Caip2, Session } from '../../storage/schema.js';
+export type { ScopeState, Session } from '../../storage/schema.js';
 
 /**
  * Nested JSON-RPC body inside CAIP-27 `wallet_invokeMethod` params.
@@ -78,21 +48,13 @@ export type Caip27Response =
 /**
  * Kernel request after the namespace adapter has run.
  *
- * Same shape as CAIP-27 params. The signer stays inside `request.params`
- * (e.g. `eth_sendTransaction.from`); eip155 `qualify` reads it from there.
+ * Same shape as CAIP-27 params. Namespace-specific fields stay inside
+ * `request.params`; the injected namespace translator interprets them.
  */
 export type Envelope = Caip27Params;
 
-/**
- * Namespace-neutral delivery of envelopes to a wallet. `kind` is persisted;
- * `send` is not. The response stays opaque until the selected namespace
- * translator validates and unwraps it.
- *
- * `invoke(session, envelope, transport)` is the only kernel caller of `send`.
- * Pairing uses `WalletRuntime.handshake` / `.send` (JSON-RPC) instead, because
- * handshake is plaintext key exchange, not an envelope.
- */
-export type Transport = {
-  kind: TransportKind;
-  send: (envelope: Envelope) => Promise<unknown>;
+/** Namespace-owned policy injected into the chain-neutral invoke kernel. */
+export type NamespaceTranslator = {
+  qualify(session: Session, envelope: Envelope): Envelope;
+  unwrapResponse(response: unknown, envelope: Envelope): unknown;
 };

@@ -1,5 +1,5 @@
 import { KeyManager } from ':core/transport/crypto/index.js';
-import { createStoreInstance } from ':store/store.js';
+import { bindStore, createStoreInstance } from ':store/store.js';
 import { decryptPopup } from './decrypt.js';
 import { handshake } from './handshake.js';
 import { postPopup } from './post.js';
@@ -19,9 +19,7 @@ function wire(): PopupWire {
       postRequestAndWaitForResponse: vi.fn(),
       waitForPopupLoaded: vi.fn().mockResolvedValue(undefined),
     },
-    keys: new KeyManager(createStoreInstance({ persist: false })),
-    store: {} as PopupWire['store'],
-    chainId: () => 1,
+    keys: new KeyManager(bindStore(createStoreInstance({ persist: false })).keys),
   };
 }
 

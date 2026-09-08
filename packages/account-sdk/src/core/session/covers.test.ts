@@ -1,5 +1,5 @@
+import { sessionFromAccounts } from ':core/namespaces/eip155/session.js';
 import { Address } from ':core/type/index.js';
-import { sessionFromAccounts } from '../namespaces/eip155/session.js';
 import { sessionCovers } from './covers.js';
 import type { Session } from './types.js';
 
@@ -12,7 +12,7 @@ describe('sessionCovers', () => {
   });
 
   it('treats empty required as any account on any chain', () => {
-    const empty: Session = { scopes: {}, selected: {}, transportKind: 'popup' };
+    const empty: Session = { scopes: {} };
     const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 1 });
     expect(sessionCovers(empty, [])).toBe(false);
     expect(sessionCovers(session, [])).toBe(true);
