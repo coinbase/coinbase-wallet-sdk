@@ -116,6 +116,43 @@
    });
    ```
 
+### CAIP sessions
+
+`wallet_connect` remains available as the dapp-facing ERC-7846 API. The SDK
+translates every connect request into CAIP-25 `wallet_createSession`, persists
+the wallet-issued grants, and maps the result back to the `wallet_connect`
+accounts response. Connected-session refreshes use the same CAIP-25 path rather
+than invoking `wallet_connect` through CAIP-27.
+
+### Experimental Solana API
+
+Solana is explicitly enabled by registering a Wallet Standard wallet:
+
+```ts
+const sdk = createBaseAccountSDK({ appName: 'My dapp' });
+sdk.registerSolanaWallet();
+```
+
+The initial scope supports Solana mainnet, `connect`, `disconnect`,
+`signMessage`, `signTransaction`, `signAndSendTransaction`, and
+`signAndSendAllTransactions`. Batch sign-and-send uses one dedicated CAIP-27
+request and preserves serial/parallel mode plus ordered settled results.
+`solana:signIn` is not advertised yet. Inside the Coinbase Wallet InAppBrowser,
+the host already provides Wallet Standard registration, so this function is a no-op.
+
+For new dapps, Solana recommends
+[`@solana/kit`](https://solana.com/docs/clients/official/javascript) with Wallet
+Standard. The dapp's Wallet Standard or Kit wallet plugin discovers the wallet
+registered above. Calling `createBaseAccountSDK()` by itself performs no Solana
+initialization or global registration.
+
+> **Release boundary:** Normal-browser popup requests already use CAIP-25
+> (`wallet_createSession`) and CAIP-27 (`wallet_invokeMethod`), but they are not
+> production-ready until SCW accepts Solana scopes and methods into its request
+> queue and ships the corresponding approval UI, including batch transaction
+> handling. Do not enable the popup fallback for production Solana traffic
+> before that wallet release lands.
+
 ### Developing locally and running the test dapp
 
 - The Base Account SDK test dapp can be viewed here https://base.github.io/account-sdk/.
