@@ -286,7 +286,8 @@ describe('handleConnected', () => {
 
   it('routes a metadata-unknown chain to SCW and does not switch when authorization fails', async () => {
     const sessionWithId = { ...session, sessionId: 'session-1' };
-    const rt = context(vi.fn().mockRejectedValue(new Error('rejected')), sessionWithId);
+    const send = vi.fn().mockRejectedValue(new Error('rejected'));
+    const rt = context(send, sessionWithId);
 
     await expect(
       handleConnected(
@@ -295,7 +296,36 @@ describe('handleConnected', () => {
         sessionWithId
       )
     ).rejects.toThrow('rejected');
+    expect(send).toHaveBeenCalledWith({
+      method: 'wallet_invokeMethod',
+      params: {
+        sessionId: 'session-1',
+        chainId: 'eip155:8453',
+        request: {
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0xa' }],
+        },
+      },
+    });
     expect(rt.emit).not.toHaveBeenCalledWith('chainChanged', '0xa');
+  });
+
+  it('selects a metadata-unknown chain only after SCW approves it', async () => {
+    const sessionWithId = { ...session, sessionId: 'session-1' };
+    const send = vi.fn().mockResolvedValue(null);
+    const rt = context(send, sessionWithId);
+
+    await expect(
+      handleConnected(
+        rt,
+        { method: 'wallet_switchEthereumChain', params: [{ chainId: '0xa' }] },
+        sessionWithId
+      )
+    ).resolves.toBeNull();
+
+    expect(rt.chain.get()).toBe(10);
+    expect(rt.emit).toHaveBeenCalledWith('chainChanged', '0xa');
+    expect(rt.transport.writeSession).not.toHaveBeenCalled();
   });
 
   it('forwards chain RPC when the method is not a wallet method', async () => {
