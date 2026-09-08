@@ -1,6 +1,5 @@
 import type { Session } from ':core/session/types.js';
-import { eip155Caip2 } from '../caip.js';
-import { firstEip155ChainId } from '../session.js';
+import { firstEip155ChainId, isKnownEip155Chain } from '../session.js';
 
 export type ActiveChain = {
   get: () => number;
@@ -9,7 +8,7 @@ export type ActiveChain = {
 };
 
 function initialChainId(session: Session | undefined, defaultChainId: number): number {
-  if (session?.scopes[eip155Caip2(defaultChainId)]?.accounts.length) {
+  if (session && isKnownEip155Chain(session, defaultChainId)) {
     return defaultChainId;
   }
   return (session ? firstEip155ChainId(session) : undefined) ?? defaultChainId;
@@ -38,7 +37,7 @@ export function createActiveChain({
     get: () => activeChainId,
     select,
     reconcile: (nextSession) => {
-      if (nextSession?.scopes[eip155Caip2(activeChainId)]?.accounts.length) return;
+      if (nextSession && isKnownEip155Chain(nextSession, activeChainId)) return;
       const fallbackChainId = nextSession ? firstEip155ChainId(nextSession) : undefined;
       if (fallbackChainId !== undefined) select(fallbackChainId);
     },

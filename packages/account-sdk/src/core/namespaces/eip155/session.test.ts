@@ -2,6 +2,7 @@ import { Address } from ':core/type/index.js';
 import {
   firstEip155ChainId,
   firstGlobalEip155Account,
+  isKnownEip155Chain,
   projectEip155Capabilities,
   projectEip155ChainMetadata,
   projectEthAccounts,
@@ -69,6 +70,8 @@ describe('EIP-155 session selectors', () => {
       },
     ]);
     expect(rpcUrlForEip155Chain(session, 8453)).toBe('https://mainnet.base.org');
+    expect(isKnownEip155Chain(session, 8453)).toBe(true);
+    expect(isKnownEip155Chain(session, 1)).toBe(false);
     expect(projectEip155Capabilities(session)).toEqual({
       '0x2105': { atomic: { supported: true } },
     });

@@ -23,7 +23,12 @@ import {
 import { eip155Caip2, eip155ChainId } from '../caip.js';
 import { toEnvelope } from '../envelope.js';
 import { WALLET_METHODS } from '../methods.js';
-import { EIP155_METHODS, projectEthAccountsForChain, rpcUrlForEip155Chain } from '../session.js';
+import {
+  EIP155_METHODS,
+  isKnownEip155Chain,
+  projectEthAccountsForChain,
+  rpcUrlForEip155Chain,
+} from '../session.js';
 import { eip155Translator } from '../translator.js';
 import { fetchRPCRequest } from ':util/provider.js';
 import { hexToNumber, numberToHex } from 'viem';
@@ -33,9 +38,9 @@ import { connectEip155 } from './connect.js';
 import type { Eip1193Context } from './context.js';
 import { parseCaip27 } from './parseCaip27.js';
 
-/** Select an authorized chain on this EIP-1193 provider and emit `chainChanged`. */
+/** Select a wallet-known chain locally and emit `chainChanged`. */
 function applyLocalChain(context: Eip1193Context, session: Session, chainId: number): boolean {
-  if (!sessionCovers(session, [eip155Caip2(chainId)])) return false;
+  if (!isKnownEip155Chain(session, chainId)) return false;
   context.chain.select(chainId);
   return true;
 }
