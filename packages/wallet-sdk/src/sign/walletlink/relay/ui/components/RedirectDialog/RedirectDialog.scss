@@ -29,7 +29,16 @@ $black: #0a0b0d;
       border-radius: 8px;
       background-color: $white;
       color: $black;
-    
+
+      &:focus {
+        outline: none;
+      }
+
+      &:focus-visible {
+        outline: 2px solid $primary;
+        outline-offset: 2px;
+      }
+
       p {
         display: block;
         font-weight: 400;
@@ -38,7 +47,7 @@ $black: #0a0b0d;
         padding-bottom: 12px;
         color: $foreground-muted;
       }
-    
+
       button {
         appearance: none;
         border: none;
@@ -50,6 +59,17 @@ $black: #0a0b0d;
         font-weight: 600;
         font-size: 16px;
         line-height: 24px;
+        cursor: pointer;
+
+        &:focus {
+          outline: none;
+        }
+
+        &:focus-visible {
+          outline: 2px solid $primary;
+          outline-offset: 2px;
+          border-radius: 2px;
+        }
       }
 
       &.dark {

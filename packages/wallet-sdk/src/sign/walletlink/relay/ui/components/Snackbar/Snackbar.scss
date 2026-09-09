@@ -56,15 +56,31 @@
       }
 
       &-header {
+        appearance: none;
         display: flex;
         align-items: center;
         background: #ffffff;
         overflow: hidden;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        font: inherit;
+        text-align: left;
+        color: inherit;
 
         border: 1px solid #e7ebee;
         box-sizing: border-box;
         border-radius: 8px;
         cursor: pointer;
+
+        &:focus {
+          outline: none;
+        }
+
+        &:focus-visible {
+          outline: 2px solid #1652f0;
+          outline-offset: 2px;
+        }
 
         &-cblogo {
           margin: 8px 8px 8px 8px;
@@ -119,6 +135,7 @@
         }
 
         &-item {
+          appearance: none;
           visibility: inherit;
           height: 35px;
           margin-top: 8px;
@@ -127,7 +144,23 @@
           flex-direction: row;
           align-items: center;
           padding: 8px;
+          width: 100%;
+          border: none;
+          background: transparent;
+          font: inherit;
+          text-align: left;
+          color: inherit;
           cursor: pointer;
+
+          &:focus {
+            outline: none;
+          }
+
+          &:focus-visible {
+            outline: 2px solid #1652f0;
+            outline-offset: 2px;
+            border-radius: 6px;
+          }
 
           * {
             visibility: inherit;

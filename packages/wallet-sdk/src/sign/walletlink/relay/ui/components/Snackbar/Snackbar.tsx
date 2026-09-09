@@ -5,7 +5,7 @@ import { FunctionComponent, render } from 'preact';
 // biome-ignore lint/correctness/noUnusedImports: preact
 import { h } from 'preact';
 
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useId, useState } from 'preact/hooks';
 
 import { isDarkMode } from '../util.js';
 import css from './Snackbar-css.js';
@@ -99,6 +99,7 @@ export const SnackbarInstance: FunctionComponent<SnackbarInstanceProps> = ({
 }) => {
   const [hidden, setHidden] = useState(true);
   const [expanded, setExpanded] = useState(autoExpand ?? false);
+  const menuId = useId();
 
   useEffect(() => {
     const timers = [
@@ -119,6 +120,12 @@ export const SnackbarInstance: FunctionComponent<SnackbarInstanceProps> = ({
     setExpanded(!expanded);
   };
 
+  const headerLabel = message
+    ? `${message}. ${expanded ? 'Collapse' : 'Expand'} menu`
+    : expanded
+      ? 'Collapse menu'
+      : 'Expand menu';
+
   return (
     <div
       class={clsx(
@@ -127,10 +134,24 @@ export const SnackbarInstance: FunctionComponent<SnackbarInstanceProps> = ({
         expanded && '-cbwsdk-snackbar-instance-expanded'
       )}
     >
-      <div class="-cbwsdk-snackbar-instance-header" onClick={toggleExpanded}>
-        <img src={cblogo} class="-cbwsdk-snackbar-instance-header-cblogo" />{' '}
-        <div class="-cbwsdk-snackbar-instance-header-message">{message}</div>
-        <div class="-gear-container">
+      <button
+        type="button"
+        class="-cbwsdk-snackbar-instance-header"
+        onClick={toggleExpanded}
+        aria-expanded={expanded}
+        aria-controls={menuItems && menuItems.length > 0 ? menuId : undefined}
+        aria-label={headerLabel}
+      >
+        <img
+          src={cblogo}
+          class="-cbwsdk-snackbar-instance-header-cblogo"
+          alt=""
+          aria-hidden="true"
+        />{' '}
+        <span class="-cbwsdk-snackbar-instance-header-message" aria-hidden="true">
+          {message}
+        </span>
+        <span class="-gear-container" aria-hidden="true">
           {!expanded && (
             <svg
               width="24"
@@ -142,18 +163,27 @@ export const SnackbarInstance: FunctionComponent<SnackbarInstanceProps> = ({
               <circle cx="12" cy="12" r="12" fill="#F5F7F8" />
             </svg>
           )}
-          <img src={gearIcon} class="-gear-icon" title="Expand" />
-        </div>
-      </div>
+          <img src={gearIcon} class="-gear-icon" alt="" />
+        </span>
+      </button>
       {menuItems && menuItems.length > 0 && (
-        <div class="-cbwsdk-snackbar-instance-menu">
+        <div
+          id={menuId}
+          class="-cbwsdk-snackbar-instance-menu"
+          role="menu"
+          aria-label="Snackbar actions"
+          aria-hidden={!expanded}
+        >
           {menuItems.map((action, i) => (
-            <div
+            <button
+              type="button"
+              role="menuitem"
               class={clsx(
                 '-cbwsdk-snackbar-instance-menu-item',
                 action.isRed && '-cbwsdk-snackbar-instance-menu-item-is-red'
               )}
               onClick={action.onClick}
+              tabIndex={expanded ? 0 : -1}
               key={i}
             >
               <svg
@@ -162,6 +192,8 @@ export const SnackbarInstance: FunctionComponent<SnackbarInstanceProps> = ({
                 viewBox="0 0 10 11"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+                focusable="false"
               >
                 <path
                   fill-rule={action.defaultFillRule}
@@ -178,7 +210,7 @@ export const SnackbarInstance: FunctionComponent<SnackbarInstanceProps> = ({
               >
                 {action.info}
               </span>
-            </div>
+            </button>
           ))}
         </div>
       )}

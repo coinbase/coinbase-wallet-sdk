@@ -1,9 +1,9 @@
 import '@testing-library/jest-dom';
 
 import { render, screen, waitFor } from '@testing-library/preact';
-import { vi } from 'vitest';
 // biome-ignore lint/correctness/noUnusedImports: preact
 import { h } from 'preact';
+import { vi } from 'vitest';
 
 import { Snackbar } from './Snackbar.js';
 
@@ -59,6 +59,15 @@ describe('Snackbar', () => {
           document.getElementsByClassName('-cbwsdk-snackbar-instance-menu-item-info-is-red').length
         ).toEqual(2);
       });
+
+      const header = document.querySelector(
+        'button.-cbwsdk-snackbar-instance-header'
+      ) as HTMLButtonElement;
+      expect(header).toBeTruthy();
+      expect(header.getAttribute('aria-expanded')).toBeTruthy();
+
+      const menuItems = document.querySelectorAll('button.-cbwsdk-snackbar-instance-menu-item');
+      expect(menuItems.length).toEqual(2);
     });
 
     test('@clear', () => {
