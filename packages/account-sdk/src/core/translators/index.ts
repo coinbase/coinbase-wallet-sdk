@@ -12,4 +12,4 @@ export {
   extractFrom,
   qualify,
   toEnvelope,
-} from './eip155/index.js';
+} from '../namespaces/eip155/index.js';

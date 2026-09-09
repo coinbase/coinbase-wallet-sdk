@@ -1,5 +1,5 @@
+import { getClient } from ':core/namespaces/eip155/client/index.js';
 import { OwnerAccount } from ':core/type/index.js';
-import { getClient } from ':store/chain-clients/utils.js';
 import { Signature } from 'ox';
 import { numberToHex, toHex } from 'viem';
 import { createSmartAccount } from './createSmartAccount.js';
@@ -55,7 +55,7 @@ vi.mock(':store/store.js', () => ({
   },
 }));
 
-vi.mock(':store/chain-clients/utils.js', () => ({
+vi.mock(':core/namespaces/eip155/client/index.js', () => ({
   getBundlerClient: vi.fn().mockReturnValue({}),
   getClient: vi.fn().mockReturnValue({
     request: vi.fn(),

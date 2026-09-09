@@ -1,9 +1,9 @@
 import { standardErrors } from ':core/error/errors.js';
+import { orderedEthAccounts } from ':core/namespaces/eip155/eip1193/sub-account/index.js';
+import { assertGetCapabilitiesParams } from ':core/namespaces/eip155/eip1193/sub-account/utils.js';
 import type { RequestArguments } from ':core/provider/interface.js';
 import { projectEthAccounts } from ':core/session/index.js';
 import type { Session } from ':core/session/index.js';
-import { orderedEthAccounts } from ':core/sub-account/index.js';
-import { assertGetCapabilitiesParams } from ':core/sub-account/utils.js';
 import type { WalletRuntime } from ':core/transport/index.js';
 import type { Address } from ':core/type/index.js';
 import { hexToNumber, isAddressEqual } from 'viem';

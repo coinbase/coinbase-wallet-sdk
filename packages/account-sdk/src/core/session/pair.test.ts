@@ -2,8 +2,8 @@ import { standardErrors } from ':core/error/errors.js';
 import type { RequestArguments } from ':core/provider/interface.js';
 import type { WalletRuntime } from ':core/transport/index.js';
 import type { ToOwnerAccountFn } from ':store/store.js';
+import { projectEthAccounts, sessionFromAccounts } from '../namespaces/eip155/session.js';
 import type { Caip2 } from './caip.js';
-import { projectEthAccounts, sessionFromAccounts } from './eip155.js';
 import {
   ingestConnectResult,
   pair,

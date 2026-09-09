@@ -1,7 +1,7 @@
 import { standardErrors } from ':core/error/errors.js';
+import { getClient } from ':core/namespaces/eip155/client/index.js';
 import { RequestArguments } from ':core/provider/interface.js';
 import { OwnerAccount } from ':core/type/index.js';
-import { getClient } from ':store/chain-clients/utils.js';
 import { store } from ':store/store.js';
 import { assertPresence } from ':util/assertPresence.js';
 import { decodeAbiParameters, encodeFunctionData, numberToHex, toHex } from 'viem';

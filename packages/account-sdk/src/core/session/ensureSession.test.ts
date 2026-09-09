@@ -1,5 +1,5 @@
 import { Address } from ':core/type/index.js';
-import { sessionFromAccounts } from './eip155.js';
+import { sessionFromAccounts } from '../namespaces/eip155/session.js';
 import { ensureSession } from './ensureSession.js';
 
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as Address;

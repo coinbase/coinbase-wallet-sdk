@@ -1,24 +1,24 @@
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
+import { WALLET_METHODS, toEnvelope } from ':core/namespaces/eip155/index.js';
 import { RequestArguments } from ':core/provider/interface.js';
 import { eip155Caip2 } from ':core/session/caip.js';
 import { WALLET_INVOKE_METHOD, parseCaip27 } from ':core/session/caip27.js';
 import { ensureSession } from ':core/session/ensureSession.js';
 import { EIP155_METHODS, projectEthAccounts } from ':core/session/index.js';
 import { invoke, invokeEphemeral } from ':core/session/invoke.js';
-import type { Envelope } from ':core/session/types.js';
 import {
   ingestConnectResult,
   isConnectResult,
   pair,
   prepareWalletConnectRequest,
 } from ':core/session/pair.js';
-import { WALLET_METHODS, toEnvelope } from ':core/translators/eip155/index.js';
+import type { Envelope } from ':core/session/types.js';
 import type { WalletRuntime } from ':core/transport/index.js';
 import { hexStringFromNumber } from ':core/type/util.js';
 import { fetchRPCRequest } from ':util/provider.js';
-import { handleConnected } from './connected.js';
 import { switchChainId } from './chainParams.js';
+import { handleConnected } from './connected.js';
 
 const DISCONNECTED_EPHEMERAL_METHODS = new Set([
   'wallet_sendCalls',

@@ -4,7 +4,7 @@
  */
 
 import { PACKAGE_VERSION } from './core/constants.js';
-import { createBaseAccountSDK } from './interface/builder/core/createBaseAccountSDK.js';
+import { createBaseAccountSDK } from './interface/builder/createBaseAccountSDK.js';
 import { base } from './interface/payment/base.browser.js';
 import { CHAIN_IDS, TOKENS } from './interface/payment/constants.js';
 import { getPaymentStatus } from './interface/payment/getPaymentStatus.js';
@@ -48,7 +48,7 @@ export type {
   ProviderInterface,
 } from ':core/provider/interface.js';
 export { PACKAGE_VERSION as VERSION } from './core/constants.js';
-export { createBaseAccountSDK } from './interface/builder/core/createBaseAccountSDK.js';
+export { createBaseAccountSDK } from './interface/builder/createBaseAccountSDK.js';
 export { getCryptoKeyAccount, removeCryptoKey } from './owner-key/index.js';
 export { base, CHAIN_IDS, getPaymentStatus, pay, subscribe, TOKENS };
 export type {

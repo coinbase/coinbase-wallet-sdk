@@ -1,3 +1,4 @@
+import { abi } from ':core/namespaces/eip155/eip1193/sub-account/constants.js';
 import {
   AppMetadata,
   ConstructorOptions,
@@ -7,15 +8,14 @@ import {
 } from ':core/provider/interface.js';
 import { AddSubAccountAccount } from ':core/rpc/wallet_addSubAccount.js';
 import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
-import { abi } from ':core/sub-account/constants.js';
 import { loadTelemetryScript } from ':core/telemetry/initCCA.js';
 import { SubAccount, ToOwnerAccountFn, store } from ':store/store.js';
 import { assertPresence } from ':util/assertPresence.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { validatePreferences, validateSubAccount } from ':util/validatePreferences.js';
 import { decodeAbiParameters, encodeFunctionData, toHex } from 'viem';
-import { BaseAccountProvider } from './BaseAccountProvider.js';
-import { getInjectedProvider } from './getInjectedProvider.js';
+import { BaseAccountProvider } from './eip1193/BaseAccountProvider.js';
+import { getInjectedProvider } from './eip1193/getInjectedProvider.js';
 
 export type CreateProviderOptions = Partial<AppMetadata> & {
   preference?: Preference;

@@ -1,8 +1,8 @@
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
+import { WALLET_METHODS } from ':core/namespaces/eip155/index.js';
 import type { RequestArguments } from ':core/provider/interface.js';
 import { createCaip27Request, sessionFromAccounts } from ':core/session/index.js';
-import { WALLET_METHODS } from ':core/translators/eip155/index.js';
 import type { WalletRuntime } from ':core/transport/index.js';
 import * as providerUtil from ':util/provider.js';
 import { handleEip1193Request } from './request.js';

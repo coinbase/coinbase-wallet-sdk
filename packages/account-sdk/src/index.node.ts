@@ -3,7 +3,7 @@
 // Node.js-specific exports that include CDP SDK dependencies
 export type { AppMetadata, Preference, ProviderInterface } from ':core/provider/interface.js';
 
-export { createBaseAccountSDK } from './interface/builder/core/createBaseAccountSDK.js';
+export { createBaseAccountSDK } from './interface/builder/createBaseAccountSDK.js';
 
 export { getCryptoKeyAccount, removeCryptoKey } from './owner-key/index.js';
 

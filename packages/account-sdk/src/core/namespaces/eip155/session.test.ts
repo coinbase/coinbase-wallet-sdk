@@ -5,7 +5,7 @@ import {
   sessionFromAccounts,
   withEip155Accounts,
   withEip155Chain,
-} from './eip155.js';
+} from './session.js';
 
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as Address;
 const OTHER = '0x0000000000000000000000000000000000000001' as Address;

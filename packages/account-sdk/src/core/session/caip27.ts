@@ -1,8 +1,8 @@
 import { standardErrors } from ':core/error/errors.js';
 import type { RequestArguments } from ':core/provider/interface.js';
 import { type Caip2, parseCaip2 } from './caip.js';
-import type { Caip27Error, Caip27Params, Caip27Response, Envelope, Session } from './types.js';
 import { WALLET_CREATE_SESSION } from './caip25.js';
+import type { Caip27Error, Caip27Params, Caip27Response, Envelope, Session } from './types.js';
 
 /** CAIP-27 JSON-RPC method used for every wallet invocation. */
 export const WALLET_INVOKE_METHOD = 'wallet_invokeMethod';

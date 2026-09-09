@@ -11,7 +11,7 @@ vi.mock('viem', () => ({
   }),
 }));
 
-vi.mock('../../store/chain-clients/utils.js', () => ({
+vi.mock('../../core/namespaces/eip155/client/index.js', () => ({
   createClients: vi.fn(),
   getClient: vi.fn(),
 }));
@@ -68,7 +68,7 @@ describe('getSubscriptionStatus', () => {
 
       const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
       const { getPermissionStatus } = await import('../public-utilities/spend-permission/index.js');
-      const { getClient } = await import('../../store/chain-clients/utils.js');
+      const { getClient } = await import('../../core/namespaces/eip155/client/index.js');
       const { timestampInSecondsToDate } = await import(
         '../public-utilities/spend-permission/utils.js'
       );
@@ -122,7 +122,7 @@ describe('getSubscriptionStatus', () => {
 
       const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
       const { getPermissionStatus } = await import('../public-utilities/spend-permission/index.js');
-      const { getClient } = await import('../../store/chain-clients/utils.js');
+      const { getClient } = await import('../../core/namespaces/eip155/client/index.js');
 
       vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
       vi.mocked(getClient).mockReturnValue(mockClient);
@@ -164,7 +164,7 @@ describe('getSubscriptionStatus', () => {
 
       const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
       const { getPermissionStatus } = await import('../public-utilities/spend-permission/index.js');
-      const { getClient } = await import('../../store/chain-clients/utils.js');
+      const { getClient } = await import('../../core/namespaces/eip155/client/index.js');
 
       vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
       vi.mocked(getClient).mockReturnValue(mockClient);
@@ -200,7 +200,7 @@ describe('getSubscriptionStatus', () => {
 
       const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
       const { getPermissionStatus } = await import('../public-utilities/spend-permission/index.js');
-      const { getClient } = await import('../../store/chain-clients/utils.js');
+      const { getClient } = await import('../../core/namespaces/eip155/client/index.js');
 
       vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
       vi.mocked(getClient).mockReturnValue(null as any); // No client available
@@ -231,7 +231,7 @@ describe('getSubscriptionStatus', () => {
 
       const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
       const { getPermissionStatus } = await import('../public-utilities/spend-permission/index.js');
-      const { getClient } = await import('../../store/chain-clients/utils.js');
+      const { getClient } = await import('../../core/namespaces/eip155/client/index.js');
 
       vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
       vi.mocked(getClient).mockReturnValue(mockClient);
@@ -294,7 +294,7 @@ describe('getSubscriptionStatus', () => {
 
       const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
       const { getPermissionStatus } = await import('../public-utilities/spend-permission/index.js');
-      const { getClient } = await import('../../store/chain-clients/utils.js');
+      const { getClient } = await import('../../core/namespaces/eip155/client/index.js');
 
       vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
       vi.mocked(getClient).mockReturnValue(mockClient);
@@ -327,7 +327,7 @@ describe('getSubscriptionStatus', () => {
 
       const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
       const { getPermissionStatus } = await import('../public-utilities/spend-permission/index.js');
-      const { getClient } = await import('../../store/chain-clients/utils.js');
+      const { getClient } = await import('../../core/namespaces/eip155/client/index.js');
 
       vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
       vi.mocked(getClient).mockReturnValue(mockClient);
@@ -360,7 +360,7 @@ describe('getSubscriptionStatus', () => {
 
       const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
       const { getPermissionStatus } = await import('../public-utilities/spend-permission/index.js');
-      const { getClient } = await import('../../store/chain-clients/utils.js');
+      const { getClient } = await import('../../core/namespaces/eip155/client/index.js');
 
       vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
       vi.mocked(getClient).mockReturnValue(mockClient);
@@ -517,7 +517,7 @@ describe('getSubscriptionStatus', () => {
 
       const { fetchPermission } = await import('../public-utilities/spend-permission/index.js');
       const { getPermissionStatus } = await import('../public-utilities/spend-permission/index.js');
-      const { getClient } = await import('../../store/chain-clients/utils.js');
+      const { getClient } = await import('../../core/namespaces/eip155/client/index.js');
 
       vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
       // getClient now automatically creates fallback clients for chains in the supported list
@@ -573,7 +573,7 @@ describe('getSubscriptionStatus', () => {
         const { getPermissionStatus } = await import(
           '../public-utilities/spend-permission/index.js'
         );
-        const { getClient } = await import('../../store/chain-clients/utils.js');
+        const { getClient } = await import('../../core/namespaces/eip155/client/index.js');
 
         vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
         vi.mocked(getClient).mockReturnValue(mockClient);
@@ -628,7 +628,7 @@ describe('getSubscriptionStatus', () => {
         const { getPermissionStatus } = await import(
           '../public-utilities/spend-permission/index.js'
         );
-        const { getClient } = await import('../../store/chain-clients/utils.js');
+        const { getClient } = await import('../../core/namespaces/eip155/client/index.js');
 
         vi.mocked(fetchPermission).mockResolvedValue(mockPermission);
         vi.mocked(getClient).mockReturnValue(mockClient);

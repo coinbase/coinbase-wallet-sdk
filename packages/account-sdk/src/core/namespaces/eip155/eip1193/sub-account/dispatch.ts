@@ -1,4 +1,6 @@
 import { isActionableHttpRequestError, isViemError, standardErrors } from ':core/error/errors.js';
+import { getClient } from ':core/namespaces/eip155/client/index.js';
+import { toEnvelope } from ':core/namespaces/eip155/index.js';
 import type { RequestArguments } from ':core/provider/interface.js';
 import type { Session } from ':core/session/index.js';
 import { invoke } from ':core/session/invoke.js';
@@ -14,10 +16,8 @@ import {
   logSubAccountRequestStarted,
 } from ':core/telemetry/events/scw-sub-account.js';
 import { parseErrorMessageFromAny } from ':core/telemetry/utils.js';
-import { toEnvelope } from ':core/translators/eip155/index.js';
 import type { WalletRuntime } from ':core/transport/index.js';
 import { getCryptoKeyAccount } from ':owner-key/index.js';
-import { getClient } from ':store/chain-clients/utils.js';
 import { correlationIds } from ':store/correlation-ids/store.js';
 import { assertPresence } from ':util/assertPresence.js';
 import { type WalletSendCallsParameters, hexToNumber } from 'viem';

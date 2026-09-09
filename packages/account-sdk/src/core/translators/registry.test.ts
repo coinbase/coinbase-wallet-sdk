@@ -1,6 +1,6 @@
 import { standardErrorCodes } from ':core/error/constants.js';
 import type { Address } from ':core/type/index.js';
-import { sessionFromAccounts } from '../session/eip155.js';
+import { sessionFromAccounts } from '../namespaces/eip155/session.js';
 import type { Envelope } from '../session/types.js';
 import { getNamespaceTranslator } from './registry.js';
 

@@ -1,8 +1,8 @@
 import { ingestPopupData } from './ingest.js';
 import type { PopupWire } from './types.js';
 
-vi.mock(':store/chain-clients/utils.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import(':store/chain-clients/utils.js')>();
+vi.mock(':core/namespaces/eip155/client/index.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import(':core/namespaces/eip155/client/index.js')>();
   return { ...actual, createClients: vi.fn() };
 });
 

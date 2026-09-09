@@ -1,6 +1,6 @@
 import { standardErrors } from ':core/error/errors.js';
+import { getClient } from ':core/namespaces/eip155/client/index.js';
 import { OwnerAccount } from ':core/type/index.js';
-import { getClient } from ':store/chain-clients/utils.js';
 import { store } from ':store/store.js';
 import { waitForCallsStatus } from 'viem/actions';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -9,7 +9,7 @@ import { handleAddSubAccountOwner } from './handleAddSubAccountOwner.js';
 import { presentAddOwnerDialog } from './presentAddOwnerDialog.js';
 
 vi.mock(':store/store.js');
-vi.mock(':store/chain-clients/utils.js');
+vi.mock(':core/namespaces/eip155/client/index.js');
 vi.mock('viem/actions', () => ({
   waitForCallsStatus: vi.fn().mockResolvedValue({ status: 'success' }),
 }));

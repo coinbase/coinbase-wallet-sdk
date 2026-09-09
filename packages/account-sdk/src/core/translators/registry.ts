@@ -1,6 +1,6 @@
 import { standardErrors } from ':core/error/errors.js';
+import { eip155Translator } from '../namespaces/eip155/index.js';
 import type { Namespace } from '../session/caip.js';
-import { eip155Translator } from './eip155/index.js';
 import type { NamespaceTranslator, SupportedNamespace } from './types.js';
 
 // SupportedNamespace reserves recognized family slots; only entries here are

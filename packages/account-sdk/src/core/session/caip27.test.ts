@@ -1,3 +1,4 @@
+import { sessionFromAccounts } from '../namespaces/eip155/session.js';
 import {
   WALLET_INVOKE_METHOD,
   assertInvokeAuthorized,
@@ -7,7 +8,6 @@ import {
   toCaip27,
   unwrapCaip27Response,
 } from './caip27.js';
-import { sessionFromAccounts } from './eip155.js';
 
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as const;
 
