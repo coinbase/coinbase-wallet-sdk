@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/npm/v/@coinbase/wallet-sdk.svg)](https://www.npmjs.com/package/@coinbase/wallet-sdk)
 
-> **Rebrand:** Base Account is now Coinbase Wallet. The npm package remains `@coinbase/wallet-sdk` — it has not been renamed or merged. Keep using `@coinbase/wallet-sdk` until the next-generation Coinbase Wallet SDK is ready. For new integrations, `@base-org/account` (Base Account SDK) is the current recommended SDK.
+> **Rebrand:** Base Account is now Coinbase Wallet. The npm package remains `@coinbase/wallet-sdk` — it has not been renamed or merged. `@coinbase/wallet-sdk` is **not** the current recommended SDK. Use `@base-org/account` (Base Account SDK) until the next-generation Coinbase Wallet SDK is ready. Existing `@coinbase/wallet-sdk` integrations continue to work.
 
 ## Coinbase Wallet SDK allows dapps to connect to Coinbase Wallet
 
