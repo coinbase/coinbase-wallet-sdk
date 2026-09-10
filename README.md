@@ -6,7 +6,7 @@
 
 ## Coinbase Wallet SDK allows dapps to connect to Coinbase Wallet
 
-1. [Coinbase Wallet](https://keys.coinbase.com/onboarding)
+1. [Coinbase Wallet](https://wallet.coinbase.com)
    - [Docs](https://www.smartwallet.dev/)
 1. Coinbase Wallet mobile for [Android](https://play.google.com/store/apps/details?id=org.toshi&referrer=utm_source%3DWallet_LP) and [iOS](https://apps.apple.com/app/apple-store/id1278383455?pt=118788940&ct=Wallet_LP&mt=8)
    - Desktop: Users can connect to your dapp by scanning a QR code
