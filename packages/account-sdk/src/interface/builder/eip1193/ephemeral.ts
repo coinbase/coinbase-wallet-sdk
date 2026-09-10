@@ -4,7 +4,7 @@ import { type StoreInstance, createStoreInstance } from ':store/store.js';
 
 /**
  * Isolated in-memory store for `pay()`. Does not share Session or ECDH keys
- * with `createBaseAccountSDK`.
+ * with `createCoinbaseWalletSDK`.
  */
 export function createEphemeralStore(): StoreInstance {
   return createStoreInstance({ persist: false });

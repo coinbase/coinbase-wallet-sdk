@@ -1,13 +1,14 @@
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { serializeError } from ':core/error/serialize.js';
+import { createClients } from ':core/namespaces/eip155/client/index.js';
+import { createActiveChain } from ':core/namespaces/eip155/eip1193/activeChain.js';
 import {
+  type Eip1193Context,
   handleEip1193Request,
   projectEip155ChainMetadata,
   projectEthAccounts,
-  type Eip1193Context,
 } from ':core/namespaces/eip155/index.js';
-import { createClients } from ':core/namespaces/eip155/client/index.js';
 import {
   ConstructorOptions,
   ProviderEventEmitter,
@@ -22,9 +23,8 @@ import type { Store } from ':store/store.js';
 import { checkErrorForInvalidRequestArgs } from ':util/provider.js';
 import { assertEphemeralMethod } from './ephemeral.js';
 import { withMeasurement } from './withMeasurement.js';
-import { createActiveChain } from ':core/namespaces/eip155/eip1193/activeChain.js';
 
-export type BaseAccountProviderParams = Readonly<ConstructorOptions> & {
+export type CoinbaseWalletProviderParams = Readonly<ConstructorOptions> & {
   /**
    * Restricts requests to the one-shot methods used by `pay()`.
    * The caller owns the corresponding isolated transport.
@@ -33,13 +33,13 @@ export type BaseAccountProviderParams = Readonly<ConstructorOptions> & {
 };
 
 /** EIP-1193 shell. Validates args, then `handleEip1193Request` (createSession / invoke). */
-export class BaseAccountProvider extends ProviderEventEmitter implements ProviderInterface {
+export class CoinbaseWalletProvider extends ProviderEventEmitter implements ProviderInterface {
   private readonly context: Eip1193Context;
   private readonly ephemeral: boolean;
   private isDisconnecting = false;
   public readonly request: ProviderInterface['request'];
 
-  constructor(params: BaseAccountProviderParams, transport: WalletTransport, store: Store) {
+  constructor(params: CoinbaseWalletProviderParams, transport: WalletTransport, store: Store) {
     super();
     const { ephemeral = false, metadata } = params;
     const restored = transport.readSession();
@@ -114,5 +114,5 @@ export class BaseAccountProvider extends ProviderEventEmitter implements Provide
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
 
-  readonly isBaseAccount = true;
+  readonly isCoinbaseWallet = true;
 }

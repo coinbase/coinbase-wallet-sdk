@@ -25,7 +25,7 @@ export async function testSDKInitialization(
       requiresSDK: true,
     },
     async (ctx) => {
-      const sdkInstance = ctx.loadedSDK.createBaseAccountSDK({
+      const sdkInstance = ctx.loadedSDK.createCoinbaseWalletSDK({
         appName: 'E2E Test Suite',
         appLogoUrl: undefined,
         appChainIds: [8453], // Base mainnet
@@ -42,7 +42,7 @@ export async function testSDKInitialization(
 
   // Test core exports (these don't need runTest wrapper as they're synchronous checks)
   const coreExports = [
-    { name: 'createBaseAccountSDK', value: context.loadedSDK.createBaseAccountSDK },
+    { name: 'createCoinbaseWalletSDK', value: context.loadedSDK.createCoinbaseWalletSDK },
     { name: 'base.pay', value: context.loadedSDK.base?.pay },
     { name: 'base.subscribe', value: context.loadedSDK.base?.subscribe },
     { name: 'base.subscription.getStatus', value: context.loadedSDK.base?.subscription?.getStatus },

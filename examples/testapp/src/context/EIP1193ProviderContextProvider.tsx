@@ -1,4 +1,4 @@
-import { createBaseAccountSDK as createBaseAccountSDKHEAD } from '@base-org/account';
+import { createCoinbaseWalletSDK as createCoinbaseWalletSDKHEAD } from '@base-org/account';
 import { ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { DisconnectedAlert } from '../components/alerts/DisconnectedAlert';
 import { useEventListeners } from '../hooks/useEventListeners';
@@ -11,7 +11,7 @@ type EIP1193ProviderContextProviderProps = {
 };
 
 type EIP1193ProviderContextType = {
-  sdk: ReturnType<typeof createBaseAccountSDKHEAD>;
+  sdk: ReturnType<typeof createCoinbaseWalletSDKHEAD>;
   provider: ReturnType<EIP1193ProviderContextType['sdk']['getProvider']>;
 };
 
@@ -39,7 +39,7 @@ export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderCont
       },
     };
 
-    const sdk = createBaseAccountSDKHEAD(sdkParams);
+    const sdk = createCoinbaseWalletSDKHEAD(sdkParams);
 
     setSdk(sdk);
 

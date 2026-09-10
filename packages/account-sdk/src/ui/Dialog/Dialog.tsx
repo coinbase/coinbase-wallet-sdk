@@ -225,7 +225,7 @@ export const DialogInstance: FunctionComponent<DialogInstanceProps> = ({
   }, []);
 
   const headerTitle = useMemo(() => {
-    return username ? `Signed in as ${username}` : 'Base Account';
+    return username ? `Signed in as ${username}` : 'Coinbase Wallet';
   }, [username]);
 
   const shouldShowHeaderTitle = !isLoadingUsername;

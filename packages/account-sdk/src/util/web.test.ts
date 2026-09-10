@@ -95,7 +95,7 @@ describe('PopupManager', () => {
     await waitFor(() => {
       expect(mockPresentItem).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: 'Test App wants to continue in Base Account',
+          title: 'Test App wants to continue in Coinbase Wallet',
           message: 'This action requires your permission to open a new window.',
           actionItems: expect.arrayContaining([
             expect.objectContaining({
@@ -125,7 +125,7 @@ describe('PopupManager', () => {
     await waitFor(() => {
       expect(mockPresentItem).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: 'Test App wants to continue in Base Account',
+          title: 'Test App wants to continue in Coinbase Wallet',
           message: 'This action requires your permission to open a new window.',
           actionItems: expect.arrayContaining([
             expect.objectContaining({

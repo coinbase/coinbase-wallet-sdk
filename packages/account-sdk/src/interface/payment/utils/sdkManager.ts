@@ -3,11 +3,11 @@ import { loadTelemetryScript } from ':core/telemetry/initCCA.js';
 import { bindStore } from ':store/store.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import type { Hex } from 'viem';
-import { BaseAccountProvider } from '../../builder/eip1193/BaseAccountProvider.js';
+import { createTransport } from '../../builder/createTransport.js';
+import { CoinbaseWalletProvider } from '../../builder/eip1193/CoinbaseWalletProvider.js';
 import { createEphemeralStore } from '../../builder/eip1193/ephemeral.js';
 import { CHAIN_IDS } from '../constants.js';
 import type { PayerInfoResponses } from '../types.js';
-import { createTransport } from '../../builder/createTransport.js';
 
 /**
  * Type for wallet_sendCalls request parameters
@@ -109,7 +109,7 @@ function getQueueKey({ testnet, walletUrl }: QueueKeyParams): string {
 /**
  * Creates an ephemeral provider configured for payments.
  *
- * Uses `BaseAccountProvider` with `ephemeral: true`:
+ * Uses `CoinbaseWalletProvider` with `ephemeral: true`:
  * - Isolated in-memory store (does not share Session / keys with the main SDK)
  * - Public `eth_requestAccounts` / `wallet_connect` calls are rejected
  * - Wallet-bound calls handshake, invoke once through CAIP-27, then clean up
@@ -160,7 +160,7 @@ export function createEphemeralSDK({
   };
   const store = bindStore(createEphemeralStore());
   const transport = createTransport(options, store);
-  const provider = new BaseAccountProvider(options, transport, store);
+  const provider = new CoinbaseWalletProvider(options, transport, store);
 
   // Return SDK-like interface for compatibility
   return {

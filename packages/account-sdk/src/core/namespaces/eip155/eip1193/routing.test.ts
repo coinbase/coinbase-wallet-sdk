@@ -14,7 +14,7 @@ import { createActiveChain } from './activeChain.js';
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as const;
 
 /**
- * Every JSON-RPC the Base Account `Signer` + `BaseAccountProvider` handled.
+ * Every JSON-RPC the Coinbase Wallet `Signer` + `CoinbaseWalletProvider` handled.
  * Destination must match that stack (popup = encrypted wallet, http = Coinbase
  * wallet RPC, chain = handshake rpcUrl, local = no I/O, session = handshake +
  * wallet_connect, ephemeral = handshake + one invoke + cleanup, reject = 4100).
@@ -127,7 +127,7 @@ function context(opts?: { connected?: boolean }): Eip1193Context {
   };
 }
 
-describe('RPC routing vs Base Account SDK', () => {
+describe('RPC routing vs Coinbase Wallet SDK', () => {
   it('sends every Signer popup method through the wallet transport when connected', async () => {
     for (const method of SIGNER_POPUP_METHODS) {
       expect(WALLET_METHODS.has(method)).toBe(true);

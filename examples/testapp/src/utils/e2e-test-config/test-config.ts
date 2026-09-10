@@ -105,7 +105,7 @@ export const TEST_MESSAGES = {
   /**
    * Personal sign test message
    */
-  PERSONAL_SIGN: 'Hello from Base Account SDK E2E Test!',
+  PERSONAL_SIGN: 'Hello from Coinbase Wallet SDK E2E Test!',
 
   /**
    * Sub-account sign test message

@@ -8,7 +8,7 @@ import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
 const POPUP_WIDTH = 420;
 const POPUP_HEIGHT = 700;
 
-const POPUP_BLOCKED_TITLE = '{app} wants to continue in Base Account';
+const POPUP_BLOCKED_TITLE = '{app} wants to continue in Coinbase Wallet';
 const POPUP_BLOCKED_MESSAGE = 'This action requires your permission to open a new window.';
 
 export function openPopup(url: URL): Promise<Window> {

@@ -1,7 +1,7 @@
 import { WALLET_METHODS } from './methods.js';
 
 describe('WALLET_METHODS', () => {
-  it('matches Base Account Signer popup methods', () => {
+  it('matches Coinbase Wallet Signer popup methods', () => {
     const signerPopup = [
       'personal_sign',
       'personal_ecRecover',

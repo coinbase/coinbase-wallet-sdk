@@ -1,4 +1,4 @@
-import { createBaseAccountSDK as createBaseAccountSDKHEAD } from '@base-org/account';
+import { createCoinbaseWalletSDK as createCoinbaseWalletSDKHEAD } from '@base-org/account';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -12,7 +12,7 @@ import {
 } from './EIP1193ProviderContextProvider';
 
 vi.mock('@base-org/account', () => ({
-  createBaseAccountSDK: vi.fn(() => ({
+  createCoinbaseWalletSDK: vi.fn(() => ({
     getProvider: vi.fn(() => mockProvider),
   })),
 }));
@@ -76,7 +76,7 @@ describe('EIP1193ProviderContextProvider', () => {
       </EIP1193ProviderContextProvider>
     );
 
-    expect(createBaseAccountSDKHEAD).toHaveBeenCalledWith({
+    expect(createCoinbaseWalletSDKHEAD).toHaveBeenCalledWith({
       appName: 'SDK Playground',
       appChainIds: [8453],
       preference: {
@@ -106,7 +106,7 @@ describe('EIP1193ProviderContextProvider', () => {
       </EIP1193ProviderContextProvider>
     );
 
-    expect(createBaseAccountSDKHEAD).toHaveBeenCalledWith({
+    expect(createCoinbaseWalletSDKHEAD).toHaveBeenCalledWith({
       appName: 'SDK Playground',
       appChainIds: [8453],
       preference: {

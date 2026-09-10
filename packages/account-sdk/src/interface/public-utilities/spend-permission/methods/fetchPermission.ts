@@ -32,7 +32,7 @@ type FetchPermissionType = {
  *
  * // Fetch a specific permission by its hash (with provider)
  * const permission = await fetchPermission({
- *   provider, // Base Account Provider
+ *   provider, // Coinbase Wallet Provider
  *   permissionHash: '0x71319cd488f8e4f24687711ec5c95d9e0c1bacbf5c1064942937eba4c7cf2984'
  * });
  *

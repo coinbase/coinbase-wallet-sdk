@@ -1,16 +1,16 @@
-# Base Account SDK
+# Coinbase Wallet SDK
 
 [![npm](https://img.shields.io/npm/v/@base-org/account.svg)](https://www.npmjs.com/package/@base-org/account)
 
 ## Overview
 
-The Base Account SDK provides two distinct sets of functionality:
+The Coinbase Wallet SDK provides two distinct sets of functionality:
 
 ### 1. **Base Pay & Base Subscriptions** (Standalone Functions)
 Purely functional payment and subscription APIs that work immediately without any SDK setup or wallet connection.
 
-### 2. **Base Account SDK** (Full SDK)
-Complete SDK for connecting to Base Account wallets and interacting with the Ethereum blockchain.
+### 2. **Coinbase Wallet SDK** (Full SDK)
+Complete SDK for connecting to Coinbase Wallet and interacting with the Ethereum blockchain.
 
 ---
 
@@ -140,11 +140,11 @@ const charge = await base.subscription.charge({
 
 
 
-## Base Account SDK (Full SDK)
+## Coinbase Wallet SDK (Full SDK)
 
 For applications that need full wallet connectivity and blockchain interactions beyond payments:
 
-1. [Base Account](https://account.base.app)
+1. [Coinbase Wallet](https://account.base.app)
    - [Docs](https://docs.base.org/base-account/quickstart/web)
 
 ### Installing the SDK
@@ -159,7 +159,7 @@ yarn add @base-org/account
 
 ### SDK Setup and Usage
 
-> **Note:** The following sections apply only to the full Base Account SDK functionality. For payments and subscriptions, use the standalone functions shown above.
+> **Note:** The following sections apply only to the full Coinbase Wallet SDK functionality. For payments and subscriptions, use the standalone functions shown above.
 
 #### Upgrading the SDK
 
@@ -188,12 +188,12 @@ yarn add @base-org/account
 1. Initialize the SDK
 
    ```js
-   const sdk = createBaseAccountSDK({
+   const sdk = createCoinbaseWalletSDK({
      appName: 'SDK Playground',
    });
    ```
 
-2. Make Base Account Provider
+2. Make Coinbase Wallet Provider
 
    ```js
    const provider = sdk.getProvider();
@@ -242,7 +242,7 @@ yarn add @base-org/account
 
 ### Developing locally and running the test app
 
-- The Base Account SDK test app can be viewed here https://base.github.io/account-sdk/.
+- The Coinbase Wallet SDK test app can be viewed here https://base.github.io/account-sdk/.
 - To run it locally follow these steps:
 
   1. Fork this repo and clone it

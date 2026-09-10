@@ -1,3 +1,5 @@
+import { abi } from ':core/namespaces/eip155/eip1193/sub-account/constants.js';
+import { projectEthAccountsForChain } from ':core/namespaces/eip155/session.js';
 import {
   AppMetadata,
   ConstructorOptions,
@@ -9,7 +11,7 @@ import { store } from ':store/store.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { validatePreferences } from ':util/validatePreferences.js';
 import { createTransport } from './createTransport.js';
-import { BaseAccountProvider } from './eip1193/BaseAccountProvider.js';
+import { CoinbaseWalletProvider } from './eip1193/CoinbaseWalletProvider.js';
 import { getInjectedProvider } from './eip1193/getInjectedProvider.js';
 import {
   _resetSolanaWalletRegistration,
@@ -72,12 +74,12 @@ export function _resetGlobalInitialization(): void {
 }
 
 /**
- * Create Base AccountSDK instance with EIP-1193 compliant provider
- * @param params - Options to create a base account SDK instance.
+ * Create a Coinbase Wallet SDK instance with an EIP-1193 compliant provider
+ * @param params - Options to create a Coinbase Wallet SDK instance.
  * Connection is `ensureSession` → `createSession` (handshake + CAIP-25). Signing is `invoke`
  * through the popup transport, or the sub-account local path when `from` is the sub-account.
  */
-export function createBaseAccountSDK(params: CreateProviderOptions) {
+export function createCoinbaseWalletSDK(params: CreateProviderOptions) {
   const options: ConstructorOptions = {
     metadata: {
       appName: params.appName || 'App',
@@ -121,7 +123,7 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
   const sdk = {
     getProvider: () => {
       if (!provider) {
-        provider = getInjectedProvider() ?? new BaseAccountProvider(options, transport, store);
+        provider = getInjectedProvider() ?? new CoinbaseWalletProvider(options, transport, store);
       }
 
       return provider;

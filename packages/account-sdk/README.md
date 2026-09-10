@@ -1,11 +1,11 @@
-# Base Account SDK
+# Coinbase Wallet SDK
 
-## Base Account SDK allows dapps to connect to Base Account
+## Coinbase Wallet SDK allows dapps to connect to Coinbase Wallet
 
-1. [Base Account](https://account.base.org/)
+1. [Coinbase Wallet](https://account.base.org/)
    - [Docs](https://www.base.org/builders/smart-wallet)
 
-### Installing Base Account SDK
+### Installing Coinbase Wallet SDK
 
 1. Check available versions:
 
@@ -37,7 +37,7 @@
    npm list @base-org/account
    ```
 
-### Upgrading Base Account SDK
+### Upgrading Coinbase Wallet SDK
 
 1. Compare the installed version with the latest:
 
@@ -61,15 +61,15 @@
 
 ### Basic Usage
 
-1. Initialize Base Account SDK
+1. Initialize Coinbase Wallet SDK
 
    ```js
-   const sdk = createBaseAccountSDK({
+   const sdk = createCoinbaseWalletSDK({
      appName: 'SDK Playground',
    });
    ```
 
-2. Make Base Account Provider
+2. Make Coinbase Wallet Provider
 
    ```js
    const provider = sdk.getProvider();
@@ -129,7 +129,7 @@ than invoking `wallet_connect` through CAIP-27.
 Solana is explicitly enabled by registering a Wallet Standard wallet:
 
 ```ts
-const sdk = createBaseAccountSDK({ appName: 'My dapp' });
+const sdk = createCoinbaseWalletSDK({ appName: 'My dapp' });
 sdk.registerSolanaWallet();
 ```
 
@@ -143,7 +143,7 @@ the host already provides Wallet Standard registration, so this function is a no
 For new dapps, Solana recommends
 [`@solana/kit`](https://solana.com/docs/clients/official/javascript) with Wallet
 Standard. The dapp's Wallet Standard or Kit wallet plugin discovers the wallet
-registered above. Calling `createBaseAccountSDK()` by itself performs no Solana
+registered above. Calling `createCoinbaseWalletSDK()` by itself performs no Solana
 initialization or global registration.
 
 > **Release boundary:** Normal-browser popup requests already use CAIP-25
@@ -155,7 +155,7 @@ initialization or global registration.
 
 ### Developing locally and running the test dapp
 
-- The Base Account SDK test dapp can be viewed here https://base.github.io/account-sdk/.
+- The Coinbase Wallet SDK test dapp can be viewed here https://base.github.io/account-sdk/.
 - To run it locally follow these steps:
 
   1. Fork this repo and clone it
@@ -164,7 +164,7 @@ initialization or global registration.
 
 ## Script Tag Usage
 
-Base Accunt can be used directly in HTML pages via a script tag, without any build tools:
+Coinbase Wallet can be used directly in HTML pages via a script tag, without any build tools:
 
 ```html
 <!-- Via unpkg -->
@@ -174,7 +174,7 @@ Base Accunt can be used directly in HTML pages via a script tag, without any bui
 <script src="https://cdn.jsdelivr.net/npm/@base-org/account/dist/base-account.min.js"></script>
 ```
 
-Once loaded, the SDK is available as `window.base` and `window.createBaseAccountSDK`:
+Once loaded, the SDK is available as `window.base` and `window.createCoinbaseWalletSDK`:
 
 ```javascript
 // Make a payment
@@ -194,8 +194,8 @@ const status = await window.base.getPaymentStatus({
   testnet: true
 });
 
-// Create Base Account Provider
-const provider = window.createBaseAccountSDK().getProvider()
+// Create Coinbase Wallet Provider
+const provider = window.createCoinbaseWalletSDK().getProvider()
 ```
 
 For production payment verification, call `getPaymentStatus` on your backend and populate

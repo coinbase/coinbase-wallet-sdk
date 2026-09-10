@@ -527,7 +527,7 @@ export default function E2ETestPage() {
                   color="purple.500"
                   fontWeight="bold"
                 >
-                  Base Account Documentation
+                  Coinbase Wallet Documentation
                 </Link>
               </Flex>
             </CardBody>

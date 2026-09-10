@@ -5,7 +5,7 @@ export type {
   ProviderInterface,
 } from ':core/provider/interface.js';
 
-export { createBaseAccountSDK } from './interface/builder/createBaseAccountSDK.js';
+export { createCoinbaseWalletSDK } from './interface/builder/createCoinbaseWalletSDK.js';
 
 export { PACKAGE_VERSION as VERSION } from './core/constants.js';
 

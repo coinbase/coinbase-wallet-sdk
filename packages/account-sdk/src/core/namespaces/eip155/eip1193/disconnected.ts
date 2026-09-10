@@ -66,7 +66,7 @@ export async function handleDisconnected(
       chain.select(switchChainId(args.params), { notify: false });
       return undefined;
     }
-    // Same as old BaseAccountProvider: Coinbase HTTP before a session exists.
+    // Same as old CoinbaseWalletProvider: Coinbase HTTP before a session exists.
     // After pairing, Signer defaulted this to chain.rpcUrl (`handleConnected`).
     case 'wallet_getCallsStatus':
       return fetchRPCRequest(args, CB_WALLET_RPC_URL);

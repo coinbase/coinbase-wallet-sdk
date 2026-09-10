@@ -36,7 +36,7 @@ export type RequestSpendPermissionType = {
  * the signature and all necessary data for later use.
  *
  * @param params - The parameters for the requestSpendPermission method.
- * @param params.provider - Base Account Provider
+ * @param params.provider - Coinbase Wallet Provider
  * @param params.account - The account to request a spend permission for.
  * @param params.spender - The spender to request a spend permission for.
  * @param params.token - The token to request a spend permission for.
@@ -56,7 +56,7 @@ export type RequestSpendPermissionType = {
  *
  * // Request approval for a spend permission
  * const permission = await requestSpendPermission({
- *   provider, // Base Account Provider
+ *   provider, // Coinbase Wallet Provider
  *   account: '0x1234...',
  *   spender: '0x5678...',
  *   token: '0xabcd...', // USDC address

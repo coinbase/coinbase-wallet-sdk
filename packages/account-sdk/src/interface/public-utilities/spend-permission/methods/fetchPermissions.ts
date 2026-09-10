@@ -39,7 +39,7 @@ type FetchPermissionsType = {
  *
  * // Fetch all permissions for an account-spender pair (with provider)
  * const permissions = await fetchPermissions({
- *   provider, // Base Account Provider
+ *   provider, // Coinbase Wallet Provider
  *   account: '0x1234...',
  *   spender: '0x5678...',
  *   chainId: 8453 // Base mainnet

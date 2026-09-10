@@ -111,7 +111,7 @@ export function Layout({ children }: LayoutProps) {
             direction={isSmallScreen ? 'column' : 'row'}
             gap={2}
           >
-            <Heading onClick={handleGoToHome}>Base Account SDK</Heading>
+            <Heading onClick={handleGoToHome}>Coinbase Wallet SDK</Heading>
             <Flex justifyContent="space-between" alignItems="center" gap={4}>
               {isSmallScreen ? (
                 <Button colorScheme="telegram" onClick={onOpen}>

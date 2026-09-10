@@ -7,10 +7,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   CreateProviderOptions,
   _resetGlobalInitialization,
-  createBaseAccountSDK,
-} from './createBaseAccountSDK.js';
+  createCoinbaseWalletSDK,
+} from './createCoinbaseWalletSDK.js';
 import * as transportModule from './createTransport.js';
-import { BaseAccountProvider } from './eip1193/BaseAccountProvider.js';
+import { CoinbaseWalletProvider } from './eip1193/CoinbaseWalletProvider.js';
 import * as getInjectedProviderModule from './eip1193/getInjectedProvider.js';
 import * as solanaModule from './solana/registerSolanaWallet.js';
 
@@ -61,8 +61,8 @@ vi.mock(':util/validatePreferences.js', () => ({
   validateSubAccount: vi.fn(),
 }));
 
-vi.mock('./eip1193/BaseAccountProvider.js', () => ({
-  BaseAccountProvider: vi.fn(),
+vi.mock('./eip1193/CoinbaseWalletProvider.js', () => ({
+  CoinbaseWalletProvider: vi.fn(),
 }));
 
 vi.mock('./eip1193/getInjectedProvider.js', () => ({
@@ -88,27 +88,27 @@ describe('createProvider', () => {
     vi.clearAllMocks();
     // Reset the one-time initialization state so each test can verify initialization behavior
     _resetGlobalInitialization();
-    mockBaseAccountProvider.mockReturnValue({
+    mockCoinbaseWalletProvider.mockReturnValue({
       mockProvider: true,
     });
     mockCreateTransport.mockReturnValue({ mockTransport: true });
-    // Default: getInjectedProvider returns null to test BaseAccountProvider fallback
+    // Default: getInjectedProvider returns null to test CoinbaseWalletProvider fallback
     mockGetInjectedProvider.mockReturnValue(null);
   });
 
   describe('Basic functionality', () => {
     it('constructs one inert transport without initializing either interface', () => {
-      createBaseAccountSDK({});
+      createCoinbaseWalletSDK({});
 
       expect(mockCreateTransport).toHaveBeenCalledOnce();
-      expect(mockBaseAccountProvider).not.toHaveBeenCalled();
+      expect(mockCoinbaseWalletProvider).not.toHaveBeenCalled();
       expect(mockRegisterSolanaWallet).not.toHaveBeenCalled();
     });
 
     it('should create a provider with minimal parameters', () => {
-      const result = createBaseAccountSDK({}).getProvider();
+      const result = createCoinbaseWalletSDK({}).getProvider();
 
-      expect(mockBaseAccountProvider).toHaveBeenCalledWith(
+      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
         {
           metadata: {
             appName: 'App',
@@ -132,9 +132,9 @@ describe('createProvider', () => {
         appChainIds: [1, 137],
       };
 
-      createBaseAccountSDK(params).getProvider();
+      createCoinbaseWalletSDK(params).getProvider();
 
-      expect(mockBaseAccountProvider).toHaveBeenCalledWith(
+      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
         {
           metadata: {
             appName: 'Test App',
@@ -156,9 +156,9 @@ describe('createProvider', () => {
         },
       };
 
-      createBaseAccountSDK(params).getProvider();
+      createCoinbaseWalletSDK(params).getProvider();
 
-      expect(mockBaseAccountProvider).toHaveBeenCalledWith(
+      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
         {
           metadata: {
             appName: 'App',
@@ -183,9 +183,9 @@ describe('createProvider', () => {
         },
       };
 
-      createBaseAccountSDK(params).getProvider();
+      createCoinbaseWalletSDK(params).getProvider();
 
-      expect(mockBaseAccountProvider).toHaveBeenCalledWith(
+      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
         expect.objectContaining({
           paymasterUrls: {
             1: 'https://paymaster.example.com',
@@ -206,7 +206,7 @@ describe('createProvider', () => {
         paymasterUrls: { 1: 'https://paymaster.example.com' },
       };
 
-      createBaseAccountSDK(params).getProvider();
+      createCoinbaseWalletSDK(params).getProvider();
 
       expect(mockStore.config.set).toHaveBeenCalledWith({
         metadata: {
@@ -222,7 +222,7 @@ describe('createProvider', () => {
     });
 
     it('should rehydrate store from storage', () => {
-      createBaseAccountSDK({}).getProvider();
+      createCoinbaseWalletSDK({}).getProvider();
 
       expect(mockStore.persist.rehydrate).toHaveBeenCalled();
     });
@@ -231,13 +231,13 @@ describe('createProvider', () => {
   describe('Validation', () => {
     it('should validate preferences', () => {
       const preference = { telemetry: true };
-      createBaseAccountSDK({ preference }).getProvider();
+      createCoinbaseWalletSDK({ preference }).getProvider();
 
       expect(mockValidatePreferences).toHaveBeenCalledWith(preference);
     });
 
     it('should check cross-origin opener policy', () => {
-      createBaseAccountSDK({}).getProvider();
+      createCoinbaseWalletSDK({}).getProvider();
 
       expect(mockCheckCrossOriginOpenerPolicy).toHaveBeenCalled();
     });
@@ -245,7 +245,7 @@ describe('createProvider', () => {
 
   describe('Telemetry', () => {
     it('should load telemetry script when telemetry is not disabled', () => {
-      createBaseAccountSDK({
+      createCoinbaseWalletSDK({
         preference: { telemetry: true },
       }).getProvider();
 
@@ -253,7 +253,7 @@ describe('createProvider', () => {
     });
 
     it('should load telemetry script when telemetry is undefined (default)', () => {
-      createBaseAccountSDK({
+      createCoinbaseWalletSDK({
         preference: {},
       }).getProvider();
 
@@ -261,7 +261,7 @@ describe('createProvider', () => {
     });
 
     it('should not load telemetry script when telemetry is disabled', () => {
-      createBaseAccountSDK({
+      createCoinbaseWalletSDK({
         preference: { telemetry: false },
       }).getProvider();
 
@@ -271,7 +271,7 @@ describe('createProvider', () => {
 
   describe('Provider fallback behavior', () => {
     it('registers Solana only after explicit opt-in', () => {
-      const sdk = createBaseAccountSDK({});
+      const sdk = createCoinbaseWalletSDK({});
 
       expect(mockRegisterSolanaWallet).not.toHaveBeenCalled();
       expect(sdk.registerSolanaWallet()).toBeUndefined();
@@ -279,7 +279,7 @@ describe('createProvider', () => {
     });
 
     it('shares one popup transport when Solana initializes first', () => {
-      const sdk = createBaseAccountSDK({});
+      const sdk = createCoinbaseWalletSDK({});
       let solanaTransport: unknown;
       mockRegisterSolanaWallet.mockImplementation((transport: unknown) => {
         solanaTransport = transport;
@@ -289,7 +289,7 @@ describe('createProvider', () => {
       sdk.getProvider();
 
       expect(mockCreateTransport).toHaveBeenCalledOnce();
-      expect(mockBaseAccountProvider).toHaveBeenCalledWith(
+      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
         expect.any(Object),
         solanaTransport,
         store
@@ -297,7 +297,7 @@ describe('createProvider', () => {
     });
 
     it('shares one popup transport when EVM initializes first', () => {
-      const sdk = createBaseAccountSDK({});
+      const sdk = createCoinbaseWalletSDK({});
       let solanaTransport: unknown;
       mockRegisterSolanaWallet.mockImplementation((transport: unknown) => {
         solanaTransport = transport;
@@ -307,7 +307,7 @@ describe('createProvider', () => {
       sdk.registerSolanaWallet();
 
       expect(mockCreateTransport).toHaveBeenCalledOnce();
-      expect(solanaTransport).toBe(mockBaseAccountProvider.mock.calls[0][1]);
+      expect(solanaTransport).toBe(mockCoinbaseWalletProvider.mock.calls[0][1]);
     });
 
     it('should use injected provider when getInjectedProvider returns a provider', () => {
@@ -318,21 +318,21 @@ describe('createProvider', () => {
       };
       mockGetInjectedProvider.mockReturnValue(mockInjectedProvider);
 
-      const result = createBaseAccountSDK({}).getProvider();
+      const result = createCoinbaseWalletSDK({}).getProvider();
 
       expect(mockGetInjectedProvider).toHaveBeenCalled();
-      expect(mockBaseAccountProvider).not.toHaveBeenCalled();
+      expect(mockCoinbaseWalletProvider).not.toHaveBeenCalled();
       expect(mockCreateTransport).toHaveBeenCalledOnce();
       expect(result).toBe(mockInjectedProvider);
     });
 
-    it('should fallback to BaseAccountProvider when getInjectedProvider returns null', () => {
+    it('should fallback to CoinbaseWalletProvider when getInjectedProvider returns null', () => {
       mockGetInjectedProvider.mockReturnValue(null);
 
-      const result = createBaseAccountSDK({}).getProvider();
+      const result = createCoinbaseWalletSDK({}).getProvider();
 
       expect(mockGetInjectedProvider).toHaveBeenCalled();
-      expect(mockBaseAccountProvider).toHaveBeenCalledWith(
+      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
         {
           metadata: {
             appName: 'App',
@@ -351,9 +351,9 @@ describe('createProvider', () => {
 
   describe('Edge cases', () => {
     it('should handle null app logo URL', () => {
-      createBaseAccountSDK({ appLogoUrl: null }).getProvider();
+      createCoinbaseWalletSDK({ appLogoUrl: null }).getProvider();
 
-      expect(mockBaseAccountProvider).toHaveBeenCalledWith(
+      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
         expect.objectContaining({
           metadata: expect.objectContaining({
             appLogoUrl: '',
@@ -365,9 +365,9 @@ describe('createProvider', () => {
     });
 
     it('should handle empty app chain IDs array', () => {
-      createBaseAccountSDK({ appChainIds: [] }).getProvider();
+      createCoinbaseWalletSDK({ appChainIds: [] }).getProvider();
 
-      expect(mockBaseAccountProvider).toHaveBeenCalledWith(
+      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
         expect.objectContaining({
           metadata: expect.objectContaining({
             appChainIds: [],
@@ -412,10 +412,10 @@ describe('createProvider', () => {
         customProperty: 'custom value',
       };
 
-      createBaseAccountSDK({ preference: complexPreference }).getProvider();
+      createCoinbaseWalletSDK({ preference: complexPreference }).getProvider();
 
       expect(mockValidatePreferences).toHaveBeenCalledWith(complexPreference);
-      expect(mockBaseAccountProvider).toHaveBeenCalledWith(
+      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
         expect.objectContaining({
           preference: complexPreference,
         }),

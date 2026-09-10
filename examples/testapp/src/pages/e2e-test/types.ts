@@ -35,7 +35,7 @@ export interface TestResults {
 // SDK Types
 // ============================================================================
 
-export interface BaseAccountSDK {
+export interface CoinbaseWalletSDK {
   getProvider: () => EIP1193Provider;
 }
 
@@ -151,7 +151,7 @@ export interface LoadedSDK {
   // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions
   base: any; // Actual type varies, includes pay, subscribe, subscription methods
   // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions
-  createBaseAccountSDK: (config: SDKConfig) => any; // Returns SDK instance with getProvider
+  createCoinbaseWalletSDK: (config: SDKConfig) => any; // Returns SDK instance with getProvider
   createProlinkUrl?: (encoded: string) => string;
   // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions
   decodeProlink?: (encoded: string) => Promise<any>;

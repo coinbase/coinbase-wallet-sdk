@@ -1,10 +1,10 @@
 /**
- * Browser entry point for Base Account SDK
+ * Browser entry point for Coinbase Wallet SDK
  * This file exposes the account interface to the global window object
  */
 
 import { PACKAGE_VERSION } from './core/constants.js';
-import { createBaseAccountSDK } from './interface/builder/createBaseAccountSDK.js';
+import { createCoinbaseWalletSDK } from './interface/builder/createCoinbaseWalletSDK.js';
 import { base } from './interface/payment/base.browser.js';
 import { CHAIN_IDS, TOKENS } from './interface/payment/constants.js';
 import { getPaymentStatus } from './interface/payment/getPaymentStatus.js';
@@ -25,8 +25,8 @@ import type {
 declare global {
   interface Window {
     base: typeof base;
-    createBaseAccountSDK: typeof createBaseAccountSDK;
-    BaseAccountSDK: {
+    createCoinbaseWalletSDK: typeof createCoinbaseWalletSDK;
+    CoinbaseWalletSDK: {
       VERSION: string;
     };
   }
@@ -35,8 +35,8 @@ declare global {
 // Expose to global window object
 if (typeof window !== 'undefined') {
   window.base = base;
-  window.createBaseAccountSDK = createBaseAccountSDK;
-  window.BaseAccountSDK = {
+  window.createCoinbaseWalletSDK = createCoinbaseWalletSDK;
+  window.CoinbaseWalletSDK = {
     VERSION: PACKAGE_VERSION,
   };
 }
@@ -48,7 +48,7 @@ export type {
   ProviderInterface,
 } from ':core/provider/interface.js';
 export { PACKAGE_VERSION as VERSION } from './core/constants.js';
-export { createBaseAccountSDK } from './interface/builder/createBaseAccountSDK.js';
+export { createCoinbaseWalletSDK } from './interface/builder/createCoinbaseWalletSDK.js';
 export { base, CHAIN_IDS, getPaymentStatus, pay, subscribe, TOKENS };
 export type {
   InfoRequest,

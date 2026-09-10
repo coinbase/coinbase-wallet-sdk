@@ -1,12 +1,12 @@
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
-import { RequestArguments } from ':core/provider/interface.js';
 import { sessionFromAccounts } from ':core/namespaces/eip155/index.js';
+import { RequestArguments } from ':core/provider/interface.js';
 import type { WalletTransport } from ':core/transport/index.js';
 import { store } from ':store/store.js';
 import * as providerUtil from ':util/provider.js';
-import { BaseAccountProvider } from './BaseAccountProvider.js';
+import { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js';
 
 const ACCOUNT = '0x0000000000000000000000000000000000000001';
 const SUB_ACCOUNT = '0x0000000000000000000000000000000000000002';
@@ -27,7 +27,7 @@ function mockTransport(): WalletTransport {
 }
 
 function createProvider() {
-  return new BaseAccountProvider(
+  return new CoinbaseWalletProvider(
     {
       metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1] },
       preference: { telemetry: false },
@@ -37,7 +37,7 @@ function createProvider() {
   );
 }
 
-let provider: BaseAccountProvider;
+let provider: CoinbaseWalletProvider;
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -95,6 +95,12 @@ beforeEach(() => {
   store.eip155.spendPermissions.clear();
 
   provider = createProvider();
+});
+
+describe('Provider identity', () => {
+  it('identifies as Coinbase Wallet', () => {
+    expect(provider.isCoinbaseWallet).toBe(true);
+  });
 });
 
 describe('Event handling', () => {
@@ -304,7 +310,7 @@ describe('ephemeral: true', () => {
   };
 
   function createEphemeralProvider() {
-    return new BaseAccountProvider(params, mockTransport(), store);
+    return new CoinbaseWalletProvider(params, mockTransport(), store);
   }
 
   it.each(['wallet_sendCalls', 'wallet_sign', 'experimental_requestInfo'])(

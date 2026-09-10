@@ -3,7 +3,7 @@
  *
  * `request.ts` is `provider.request`. Sub-account is a local fork here
  * (local owner-key; funding / add-owner still `invoke`).
- * Does not own keys or the popup. `BaseAccountProvider` is a thin
+ * Does not own keys or the popup. `CoinbaseWalletProvider` is a thin
  * EventEmitter over `handleEip1193Request`.
  */
 export { handleEip1193Request } from './request.js';
