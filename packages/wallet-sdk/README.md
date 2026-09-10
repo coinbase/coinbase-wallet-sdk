@@ -1,9 +1,11 @@
 # Coinbase Wallet SDK
 
+> **Rebrand:** Base Account is now Coinbase Wallet. The npm package remains `@coinbase/wallet-sdk` — it has not been renamed or merged. `@coinbase/wallet-sdk` is **not** the current recommended SDK. Use `@base-org/account` (Base Account SDK) until the next-generation Coinbase Wallet SDK is ready. Existing `@coinbase/wallet-sdk` integrations continue to work.
+
 ## Coinbase Wallet SDK lets developers connect their dapps to Coinbase Wallet in the following ways:
 
-1. [Coinbase Smart Wallet](https://keys.coinbase.com/onboarding)
-   - [Docs](https://www.smartwallet.dev/)
+1. [Coinbase Wallet](https://wallet.coinbase.com)
+   - [Docs](https://docs.cdp.coinbase.com/coinbase-wallet/overview)
 1. Coinbase Wallet mobile for [Android](https://play.google.com/store/apps/details?id=org.toshi&referrer=utm_source%3DWallet_LP) and [iOS](https://apps.apple.com/app/apple-store/id1278383455?pt=118788940&ct=Wallet_LP&mt=8)
    - Desktop: Users can connect to your dapp by scanning a QR code
    - Mobile: Users can connect to your mobile dapp through a deeplink to the dapp browser
