@@ -41,5 +41,6 @@ examples/**/yarn.lock
 
 # next.js
 .next
-
-/**/tsconfig.tsbuildinfo
+tsconfig.tsbuildinfo
+.vercel
+.env*.local
