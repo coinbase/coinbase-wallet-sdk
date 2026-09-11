@@ -181,8 +181,9 @@ export class SCWSigner implements Signer {
         }
         case 'wallet_switchEthereumChain': {
           assertParamsChainId(request.params);
-          this.chain.id = Number(request.params[0].chainId);
-          return;
+          const chainId = ensureIntNumber(request.params[0].chainId);
+          this.updateChain(chainId);
+          return null;
         }
         case 'wallet_connect': {
           // Wait for the popup to be loaded before making async calls
