@@ -1,19 +1,14 @@
-import { standardErrors } from ":core/error/errors.js";
-import { RequestArguments } from ":core/provider/interface.js";
-import { OwnerAccount } from ":core/type/index.js";
-import { getClient } from ":store/chain-clients/utils.js";
-import { store } from ":store/store.js";
-import { assertPresence } from ":util/assertPresence.js";
-import {
-  decodeAbiParameters,
-  encodeFunctionData,
-  numberToHex,
-  toHex,
-} from "viem";
-import { waitForCallsStatus } from "viem/experimental";
-import { abi } from "../utils/constants.js";
-import { findOwnerIndex } from "../utils/findOwnerIndex.js";
-import { presentAddOwnerDialog } from "./presentAddOwnerDialog.js";
+import { standardErrors } from ':core/error/errors.js';
+import { RequestArguments } from ':core/provider/interface.js';
+import { OwnerAccount } from ':core/type/index.js';
+import { getClient } from ':store/chain-clients/utils.js';
+import { store } from ':store/store.js';
+import { assertPresence } from ':util/assertPresence.js';
+import { decodeAbiParameters, encodeFunctionData, numberToHex, toHex } from 'viem';
+import { waitForCallsStatus } from 'viem/experimental';
+import { abi } from '../utils/constants.js';
+import { findOwnerIndex } from '../utils/findOwnerIndex.js';
+import { presentAddOwnerDialog } from './presentAddOwnerDialog.js';
 
 export async function handleAddSubAccountOwner({
   ownerAccount,
@@ -28,26 +23,17 @@ export async function handleAddSubAccountOwner({
     (account) => account.toLowerCase() !== subAccount?.address.toLowerCase()
   );
 
-  assertPresence(
-    globalAccount,
-    standardErrors.provider.unauthorized("no global account")
-  );
-  assertPresence(
-    account.chain?.id,
-    standardErrors.provider.unauthorized("no chain id")
-  );
-  assertPresence(
-    subAccount?.address,
-    standardErrors.provider.unauthorized("no sub account")
-  );
+  assertPresence(globalAccount, standardErrors.provider.unauthorized('no global account'));
+  assertPresence(account.chain?.id, standardErrors.provider.unauthorized('no chain id'));
+  assertPresence(subAccount?.address, standardErrors.provider.unauthorized('no sub account'));
 
   const calls = [];
-  if (ownerAccount.type === "local" && ownerAccount.address) {
+  if (ownerAccount.type === 'local' && ownerAccount.address) {
     calls.push({
       to: subAccount.address,
       data: encodeFunctionData({
         abi,
-        functionName: "addOwnerAddress",
+        functionName: 'addOwnerAddress',
         args: [ownerAccount.address] as const,
       }),
       value: toHex(0),
@@ -56,35 +42,44 @@ export async function handleAddSubAccountOwner({
 
   if (ownerAccount.publicKey) {
     const [x, y] = decodeAbiParameters(
-      [{ type: "bytes32" }, { type: "bytes32" }],
+      [{ type: 'bytes32' }, { type: 'bytes32' }],
       ownerAccount.publicKey
     );
     calls.push({
       to: subAccount.address,
       data: encodeFunctionData({
         abi,
-        functionName: "addOwnerPublicKey",
+        functionName: 'addOwnerPublicKey',
         args: [x, y] as const,
       }),
       value: toHex(0),
     });
   }
 
+  const chainId = account.chain.id;
+  const chainIdHex = numberToHex(chainId);
+  const paymasterUrls = store.config.get().paymasterUrls;
+  const capabilities: Record<string, unknown> = {};
+  if (paymasterUrls?.[chainId]) {
+    capabilities.paymasterService = { url: paymasterUrls[chainId] };
+  }
+
   const request: RequestArguments = {
-    method: "wallet_sendCalls",
+    method: 'wallet_sendCalls',
     params: [
       {
-        version: "1",
+        version: '1',
         calls,
-        chainId: numberToHex(84532),
+        chainId: chainIdHex,
         from: globalAccount,
+        ...(Object.keys(capabilities).length > 0 && { capabilities }),
       },
     ],
   };
 
   const selection = await presentAddOwnerDialog();
-  if (selection === "cancel") {
-    throw standardErrors.provider.unauthorized("user cancelled");
+  if (selection === 'cancel') {
+    throw standardErrors.provider.unauthorized('user cancelled');
   }
 
   const callsId = (await globalAccountRequest(request)) as string;
@@ -92,9 +87,7 @@ export async function handleAddSubAccountOwner({
   const client = getClient(account.chain.id);
   assertPresence(
     client,
-    standardErrors.rpc.internal(
-      `client not found for chainId ${account.chain.id}`
-    )
+    standardErrors.rpc.internal(`client not found for chainId ${account.chain.id}`)
   );
 
   const callsResult = await waitForCallsStatus(client, {
@@ -102,20 +95,20 @@ export async function handleAddSubAccountOwner({
   });
 
   if (callsResult.status !== 'success') {
-    throw standardErrors.rpc.internal("add owner call failed");
+    throw standardErrors.rpc.internal('add owner call failed');
   }
 
   const ownerIndex = await findOwnerIndex({
     address: subAccount.address,
     publicKey:
-      ownerAccount.type === "local" && ownerAccount.address
+      ownerAccount.type === 'local' && ownerAccount.address
         ? ownerAccount.address
         : ownerAccount.publicKey,
     client,
   });
 
   if (ownerIndex === -1) {
-    throw standardErrors.rpc.internal("failed to find owner index");
+    throw standardErrors.rpc.internal('failed to find owner index');
   }
 
   return ownerIndex;

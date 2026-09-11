@@ -45,10 +45,11 @@ describe('handleAddSubAccountOwner', () => {
     (store.subAccounts.get as ReturnType<typeof vi.fn>).mockReturnValue({
       address: '0xsub',
     });
+    (store.config.get as ReturnType<typeof vi.fn>).mockReturnValue({});
     (getClient as ReturnType<typeof vi.fn>).mockReturnValue(mockClient);
   });
 
-  it("should throw error when client is not found", async () => {
+  it('should throw error when client is not found', async () => {
     (getClient as ReturnType<typeof vi.fn>).mockReturnValue(null);
 
     await expect(
@@ -56,22 +57,22 @@ describe('handleAddSubAccountOwner', () => {
         ownerAccount: mockOwnerAccount,
         globalAccountRequest: mockGlobalAccountRequest,
       })
-    ).rejects.toThrow(standardErrors.rpc.internal("client not found for chainId 1"));
+    ).rejects.toThrow(standardErrors.rpc.internal('client not found for chainId 1'));
   });
 
-  it("should throw error when calls fail", async () => {
-    (waitForCallsStatus as ReturnType<typeof vi.fn>).mockResolvedValue({ status: "failed" });
+  it('should throw error when calls fail', async () => {
+    (waitForCallsStatus as ReturnType<typeof vi.fn>).mockResolvedValue({ status: 'failed' });
 
     await expect(
       handleAddSubAccountOwner({
         ownerAccount: mockOwnerAccount,
         globalAccountRequest: mockGlobalAccountRequest,
       })
-    ).rejects.toThrow(standardErrors.rpc.internal("add owner call failed"));
+    ).rejects.toThrow(standardErrors.rpc.internal('add owner call failed'));
   });
 
   it('should successfully add owner when all conditions are met', async () => {
-    (waitForCallsStatus as ReturnType<typeof vi.fn>).mockResolvedValue({ status: "success" });
+    (waitForCallsStatus as ReturnType<typeof vi.fn>).mockResolvedValue({ status: 'success' });
 
     await handleAddSubAccountOwner({
       ownerAccount: mockOwnerAccount,
@@ -83,6 +84,43 @@ describe('handleAddSubAccountOwner', () => {
       params: expect.any(Array),
     });
     expect(findOwnerIndex).toHaveBeenCalled();
+  });
+
+  it('should use chain ID from store instead of hardcoded value', async () => {
+    (store.account.get as ReturnType<typeof vi.fn>).mockReturnValue({
+      accounts: ['0xglobal', '0xsub'],
+      chain: { id: 8453 },
+    });
+    (waitForCallsStatus as ReturnType<typeof vi.fn>).mockResolvedValue({ status: 'success' });
+
+    await handleAddSubAccountOwner({
+      ownerAccount: mockOwnerAccount,
+      globalAccountRequest: mockGlobalAccountRequest,
+    });
+
+    const sendCallsParams = mockGlobalAccountRequest.mock.calls[0][0].params[0];
+    expect(sendCallsParams.chainId).toBe('0x2105');
+  });
+
+  it('should inject paymaster capabilities when paymasterUrls is configured', async () => {
+    (store.account.get as ReturnType<typeof vi.fn>).mockReturnValue({
+      accounts: ['0xglobal', '0xsub'],
+      chain: { id: 8453 },
+    });
+    (store.config.get as ReturnType<typeof vi.fn>).mockReturnValue({
+      paymasterUrls: { 8453: 'https://paymaster.example.com' },
+    });
+    (waitForCallsStatus as ReturnType<typeof vi.fn>).mockResolvedValue({ status: 'success' });
+
+    await handleAddSubAccountOwner({
+      ownerAccount: mockOwnerAccount,
+      globalAccountRequest: mockGlobalAccountRequest,
+    });
+
+    const sendCallsParams = mockGlobalAccountRequest.mock.calls[0][0].params[0];
+    expect(sendCallsParams.capabilities).toEqual({
+      paymasterService: { url: 'https://paymaster.example.com' },
+    });
   });
 
   it('should throw error when no global account is found', async () => {
