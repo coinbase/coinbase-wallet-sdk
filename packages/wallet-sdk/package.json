@@ -48,7 +48,7 @@
     "@vitest/coverage-v8": "2.1.2",
     "@vitest/web-worker": "3.2.1",
     "fake-indexeddb": "^6.0.0",
-    "glob": "^11.0.0",
+    "glob": "^11.1.0",
     "jest-websocket-mock": "^2.4.0",
     "jsdom": "^25.0.1",
     "nodemon": "^3.1.0",
@@ -57,7 +57,7 @@
     "tsc-alias": "^1.8.8",
     "tslib": "^2.6.0",
     "typescript": "^5.1.6",
-    "vitest": "^2.1.9"
+    "vitest": "^3.0.5"
   },
   "size-limit": [
     {

@@ -6,8 +6,8 @@ import { ScopedLocalStorage } from ':core/storage/ScopedLocalStorage.js';
 import { Address } from ':core/type/index.js';
 import { bigIntStringFromBigInt, hexStringFromBuffer, randomBytesHex } from ':core/type/util.js';
 import {
-  WalletLinkConnection,
-  WalletLinkConnectionUpdateListener,
+    WalletLinkConnection,
+    WalletLinkConnectionUpdateListener,
 } from './connection/WalletLinkConnection.js';
 import { LOCAL_STORAGE_ADDRESSES_KEY } from './constants.js';
 import { RelayEventManager } from './RelayEventManager.js';
@@ -260,6 +260,13 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
 
   private publishWeb3RequestEvent(id: string, request: Web3Request): void {
     const message: WalletLinkEventData = { type: 'WEB3_REQUEST', id, request };
+    
+    // Fire deeplink immediately for mobile web to avoid Safari popup blocking
+    if (this.isMobileWeb) {
+      this.openCoinbaseWalletDeeplink(request.method);
+    }
+    
+    // Then publish the event asynchronously
     this.publishEvent('Web3Request', message, true)
       .then((_) => {})
       .catch((err) => {
@@ -268,10 +275,6 @@ export class WalletLinkRelay implements WalletLinkConnectionUpdateListener {
           errorMessage: err.message,
         });
       });
-
-    if (this.isMobileWeb) {
-      this.openCoinbaseWalletDeeplink(request.method);
-    }
   }
 
   // copied from MobileRelay
