@@ -49,6 +49,7 @@ import { SCWKeyManager } from './SCWKeyManager.js';
 import {
   addSenderToRequest,
   appendWithoutDuplicates,
+  prependWithoutDuplicates,
   assertFetchPermissionsRequest,
   assertGetCapabilitiesParams,
   assertParamsChainId,

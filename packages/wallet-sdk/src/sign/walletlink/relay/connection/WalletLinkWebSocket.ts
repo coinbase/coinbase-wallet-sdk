@@ -12,7 +12,7 @@ export class WalletLinkWebSocket {
   // used to differentiate instances
   private static instanceCounter = 0;
   private static activeInstances = new Set<number>();
-  private static pendingData: string[] = [];
+  private pendingData: string[] = [];
 
   private readonly instanceId: number;
   private readonly url: string;
@@ -132,7 +132,7 @@ export class WalletLinkWebSocket {
   public sendData(data: string): void {
     const { webSocket } = this;
     if (!webSocket) {
-      WalletLinkWebSocket.pendingData.push(data);
+      this.pendingData.push(data);
       if (!this.isDisconnecting) {
         this.connect();
       }
@@ -141,7 +141,7 @@ export class WalletLinkWebSocket {
 
     // Check if WebSocket is actually open before sending
     if (webSocket.readyState !== WebSocket.OPEN) {
-      WalletLinkWebSocket.pendingData.push(data);
+      this.pendingData.push(data);
       return;
     }
 
