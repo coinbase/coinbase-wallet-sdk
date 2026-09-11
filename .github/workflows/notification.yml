@@ -10,12 +10,20 @@ env:
   ON_CALL_WALLET: ${{ vars.ON_CALL_WALLET }}
   ON_CALL_BUILD_SQUAD: ${{ vars.ON_CALL_BUILD_SQUAD }}
 
+permissions:
+  contents: read
+
 jobs:
   checks:
     runs-on: ubuntu-latest
     outputs:
       skip: ${{ env.skip }}
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+      with:
+        egress-policy: audit
+
     - name: Check spam labels
       if: ${{ contains(github.event.*.labels.*.name, 'spam') }}
       run: |
@@ -27,6 +35,11 @@ jobs:
     needs: checks
     if: ${{ vars.SLACK_ENABLED == 'true' && needs.checks.outputs.skip != 'true' }}
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+      with:
+        egress-policy: audit
+
     - name: Set channel and mention
       run: |
         if ${{ contains(join(github.event.issue.labels.*.name), 'type:') }}; then
@@ -54,7 +67,7 @@ jobs:
         url: ${{ github.event.issue.html_url }}
 
     - name: Notify Slack
-      uses: slackapi/slack-github-action@v1.23.0
+      uses: slackapi/slack-github-action@007b2c3c751a190b6f0f040e47ed024deaa72844 # v1.23.0
       with:
         payload: |
           {
