@@ -1,7 +1,7 @@
 import { Box, Grid, GridItem, Heading } from '@chakra-ui/react';
 
-import { RpcRequestInput } from '../RpcMethods/method/RpcRequestInput';
 import { RpcMethodCard } from '../RpcMethods/RpcMethodCard';
+import { RpcRequestInput } from '../RpcMethods/method/RpcRequestInput';
 import { ShortcutType } from '../RpcMethods/shortcut/ShortcutType';
 
 export function MethodsSection({
@@ -9,19 +9,19 @@ export function MethodsSection({
   methods,
   shortcutsMap,
 }: {
-  title: string;
+  title?: string;
   methods: RpcRequestInput[];
   shortcutsMap?: Record<string, ShortcutType[]>;
 }) {
   return (
-    <Box mt={4}>
-      <Heading size="md">{title}</Heading>
+    <Box mt={title ? 4 : 0}>
+      {title ? <Heading size="md">{title}</Heading> : null}
       <Grid
-        mt={2}
+        mt={title ? 2 : 0}
         templateColumns={{
-          base: '100%',
-          md: 'repeat(2, 50%)',
-          xl: 'repeat(3, 33%)',
+          base: '1fr',
+          md: 'repeat(2, 1fr)',
+          xl: 'repeat(1, 1fr)',
         }}
         gap={2}
       >
