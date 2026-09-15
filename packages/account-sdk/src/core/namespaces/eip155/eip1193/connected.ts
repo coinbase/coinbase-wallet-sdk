@@ -20,12 +20,13 @@ import {
   assertFetchPermissionsRequest,
   fillMissingParamsForFetchPermissions,
 } from './sub-account/utils.js';
-import { eip155ChainId } from '../caip.js';
+import { eip155Caip2, eip155ChainId } from '../caip.js';
 import { toEnvelope } from '../envelope.js';
 import { WALLET_METHODS } from '../methods.js';
 import {
   firstEip155ChainId,
   isKnownEip155Chain,
+  projectEthAccounts,
   projectEthAccountsForChain,
   rpcUrlForEip155Chain,
 } from '../session.js';
@@ -43,6 +44,28 @@ function applyLocalChain(context: Eip1193Context, session: Session, chainId: num
   if (!isKnownEip155Chain(session, chainId)) return false;
   context.chain.select(chainId);
   return true;
+}
+
+/**
+ * Authorize the active chain, expanding the CAIP-25 grant when the wallet granted
+ * a narrower chain set than the provider is now using.
+ *
+ * Switching chains is provider state and never rewrites authorization. A wallet that
+ * grants the eip155 namespace covers every chain, so this never opens a popup. Wallets
+ * that still grant one chain at a time expand here, on the first request that needs it,
+ * rather than failing `assertInvokeAuthorized` after a successful switch.
+ */
+async function sessionForChain(
+  context: Eip1193Context,
+  session: Session,
+  chainId: number
+): Promise<Session> {
+  if (session.scopes[eip155Caip2(chainId)]?.accounts.length) return session;
+  const { session: expanded } = await connectEip155(context, undefined, {
+    chainId: eip155Caip2(chainId),
+    ...(session.sessionId ? { sessionId: session.sessionId } : {}),
+  });
+  return expanded;
 }
 
 /**
@@ -89,7 +112,13 @@ export async function handleConnected(
     // --- Session projections (no wallet round-trip) ---
     case 'eth_requestAccounts':
     case 'eth_accounts': {
-      const accounts = orderedEthAccounts(cache, projectEthAccountsForChain(session, getChainId()));
+      // A locally selected chain can sit outside a narrow grant; the account list is
+      // the same across eip155 chains, so fall back to the session-wide projection.
+      const granted = projectEthAccountsForChain(session, getChainId());
+      const accounts = orderedEthAccounts(
+        cache,
+        granted.length > 0 ? granted : projectEthAccounts(session)
+      );
       emit('connect', { chainId: numberToHex(getChainId()) });
       return accounts;
     }
@@ -104,7 +133,7 @@ export async function handleConnected(
     case 'wallet_getCapabilities':
       return getCapabilities(cache, args, session, getChainId());
 
-    // --- Chain: switch locally when the exact target scope is authorized ---
+    // --- Chain: provider-local selection; authorization is never rewritten here ---
     case 'wallet_switchEthereumChain': {
       const chainId = switchChainId(args.params);
       if (applyLocalChain(context, session, chainId)) return null;
@@ -172,7 +201,8 @@ export async function handleConnected(
     // --- Sign/send: invoke, else chain JSON-RPC (incl. wallet_getCallsStatus) ---
     default: {
       if (WALLET_METHODS.has(args.method) || args.method.startsWith('experimental_')) {
-        return invoke(session, toEnvelope(args, getChainId()), transport, eip155Translator);
+        const authorized = await sessionForChain(context, session, getChainId());
+        return invoke(authorized, toEnvelope(args, getChainId()), transport, eip155Translator);
       }
       const rpcUrl = rpcUrlForEip155Chain(session, getChainId());
       if (!rpcUrl) throw standardErrors.rpc.internal('No RPC URL set for chain');

@@ -328,6 +328,123 @@ describe('handleConnected', () => {
     expect(rt.transport.writeSession).not.toHaveBeenCalled();
   });
 
+  it('expands a narrow grant on the first transaction after a local switch', async () => {
+    const sessionWithId = {
+      ...session,
+      sessionId: 'session-1',
+      properties: {
+        chainMetadata: {
+          'eip155:8453': { rpcUrl: 'https://example.invalid' },
+          'eip155:10': { rpcUrl: 'https://optimism.invalid' },
+        },
+      },
+    };
+    const expandedGrant = {
+      sessionId: 'session-1',
+      scopes: {
+        eip155: {
+          chains: ['10'],
+          accounts: [ADDRESS],
+          methods: ['eth_sendTransaction'],
+          notifications: ['accountsChanged', 'chainChanged'],
+        },
+      },
+    };
+    const send = vi.fn(async (request: RequestArguments) =>
+      request.method === 'wallet_createSession' ? expandedGrant : '0xhash'
+    );
+    const rt = context(send, sessionWithId);
+
+    await expect(
+      handleConnected(
+        rt,
+        { method: 'wallet_switchEthereumChain', params: [{ chainId: '0xa' }] },
+        sessionWithId
+      )
+    ).resolves.toBeNull();
+    expect(send).not.toHaveBeenCalled();
+
+    await expect(
+      handleConnected(
+        rt,
+        { method: 'eth_sendTransaction', params: [{ from: ADDRESS }] },
+        sessionWithId
+      )
+    ).resolves.toBe('0xhash');
+
+    expect(send).toHaveBeenCalledWith(expect.objectContaining({ method: 'wallet_createSession' }));
+    expect(send).toHaveBeenCalledWith({
+      method: 'wallet_invokeMethod',
+      params: {
+        sessionId: 'session-1',
+        chainId: 'eip155:10',
+        request: { method: 'eth_sendTransaction', params: [{ from: ADDRESS }] },
+      },
+    });
+  });
+
+  it('transacts after a switch without expanding when the chain is already granted', async () => {
+    const grantedBoth = {
+      ...session,
+      sessionId: 'session-1',
+      scopes: {
+        ...session.scopes,
+        'eip155:10': session.scopes['eip155:8453'],
+      },
+    };
+    const send = vi.fn().mockResolvedValue('0xhash');
+    const rt = context(send, grantedBoth);
+
+    await expect(
+      handleConnected(
+        rt,
+        { method: 'wallet_switchEthereumChain', params: [{ chainId: '0xa' }] },
+        grantedBoth
+      )
+    ).resolves.toBeNull();
+    await expect(
+      handleConnected(
+        rt,
+        { method: 'eth_sendTransaction', params: [{ from: ADDRESS }] },
+        grantedBoth
+      )
+    ).resolves.toBe('0xhash');
+
+    expect(send).not.toHaveBeenCalledWith(
+      expect.objectContaining({ method: 'wallet_createSession' })
+    );
+    expect(send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        params: expect.objectContaining({ chainId: 'eip155:10' }),
+      })
+    );
+  });
+
+  it('still reports accounts after switching to a chain outside the grant', async () => {
+    const sessionWithId = {
+      ...session,
+      properties: {
+        chainMetadata: {
+          'eip155:8453': { rpcUrl: 'https://example.invalid' },
+          'eip155:10': { rpcUrl: 'https://optimism.invalid' },
+        },
+      },
+    };
+    const send = vi.fn();
+    const rt = context(send, sessionWithId);
+
+    await handleConnected(
+      rt,
+      { method: 'wallet_switchEthereumChain', params: [{ chainId: '0xa' }] },
+      sessionWithId
+    );
+
+    await expect(handleConnected(rt, { method: 'eth_accounts' }, sessionWithId)).resolves.toEqual([
+      ADDRESS,
+    ]);
+    expect(send).not.toHaveBeenCalled();
+  });
+
   it('forwards chain RPC when the method is not a wallet method', async () => {
     const fetchRPC = vi.spyOn(providerUtil, 'fetchRPCRequest').mockResolvedValue('0x1');
     const send = vi.fn();

@@ -1,7 +1,7 @@
 import { standardErrors } from ':core/error/errors.js';
 import type { RequestArguments } from ':core/provider/interface.js';
 import type { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
-import { type Caip2, accountOf, parseCaip2 } from ':core/session/caip.js';
+import { type Caip2, parseCaip2 } from ':core/session/caip.js';
 import {
   type Caip25PrivateRequestScopeExtensions,
   type Caip25RequestScope,
@@ -80,12 +80,21 @@ export function walletConnectScopeRequestParts(
     : { capabilities, params: [params] };
 }
 
-/** Project one granted EIP-155 scope into the dapp-facing ERC-7846 result. */
+/**
+ * Project one granted EIP-155 scope into the dapp-facing ERC-7846 result.
+ *
+ * Projected through the same `isAddress` filter as `eth_accounts` so a malformed
+ * wallet grant cannot surface a non-address here and then disappear from later reads.
+ * `connectEip155` rejects the connect when this leaves no accounts.
+ */
 function connectResultFromSession(session: Session, chainId: Caip2): ConnectResult {
   const scope = session.scopes[chainId];
+  const numericChainId = eip155ChainId(chainId);
+  const addresses =
+    numericChainId === null ? [] : projectEthAccountsForChain(session, numericChainId);
   return {
-    accounts: (scope?.accounts ?? []).map((account) => ({
-      address: accountOf(account) as Address,
+    accounts: addresses.map((address) => ({
+      address,
       ...(scope?.capabilities ? { capabilities: scope.capabilities } : {}),
     })),
   };

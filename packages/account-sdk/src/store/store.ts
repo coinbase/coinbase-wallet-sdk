@@ -80,6 +80,62 @@ export type StoreState = MergeTypes<
 >;
 
 /**
+ * Persisted schema version.
+ *
+ * v0 is the pre-CAIP blob: removed `account` / `chains` mirrors plus a `Session`
+ * shape that predates `scopes` and `properties.chainMetadata`.
+ */
+const PERSISTED_STORE_VERSION = 1;
+
+/**
+ * Accept only a session the current selectors can read.
+ *
+ * v0 sessions carry `selected` (an SDK-chosen account per namespace) and `transportKind`,
+ * and predate `properties.chainMetadata`, so they have no RPC URLs or native-currency data.
+ * Dropping one costs a reconnect; keeping it fails every chain read instead.
+ */
+function persistedSession(value: unknown): Session | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const candidate = value as Partial<Session> & Record<string, unknown>;
+  if ('selected' in candidate || 'transportKind' in candidate) return undefined;
+  const { scopes } = candidate;
+  if (!scopes || typeof scopes !== 'object' || Array.isArray(scopes)) return undefined;
+  return candidate as Session;
+}
+
+/**
+ * Rebuild hydrated state from the current keys only.
+ *
+ * `migrate` runs only when the stored blob carries a numeric `version`, and v0 was
+ * written without one, so shape-based sanitizing has to happen on every hydrate.
+ * Unknown top-level keys (the removed `account` / `chains` mirrors) are dropped here.
+ */
+function mergePersistedState(persistedState: unknown, currentState: StoreState): StoreState {
+  const state = (persistedState ?? {}) as Partial<StoreState>;
+  return {
+    ...currentState,
+    keys: state.keys ?? currentState.keys,
+    subAccount: state.subAccount,
+    spendPermissions: state.spendPermissions ?? currentState.spendPermissions,
+    config: { ...currentState.config, ...state.config },
+    session: persistedSession(state.session),
+  };
+}
+
+function migratePersistedState(persistedState: unknown, version: number): StoreState {
+  const state = (persistedState ?? {}) as Partial<StoreState>;
+  if (version >= PERSISTED_STORE_VERSION) return state as StoreState;
+  return {
+    keys: state.keys ?? {},
+    subAccount: state.subAccount,
+    spendPermissions: state.spendPermissions ?? [],
+    config: state.config ?? { version: pkg.version },
+    // Same rule as `mergePersistedState`, for blobs that do carry an older version.
+    session: persistedSession(state.session),
+  } as StoreState;
+}
+
+/**
  * Factory function to create a store instance.
  * Allows creating either persistent (for regular SDK) or ephemeral (for payment flows) stores.
  */
@@ -102,6 +158,9 @@ export function createStoreInstance(options?: {
     return createStore(
       persist<StoreState>(storeCreator, {
         name: storageName,
+        version: PERSISTED_STORE_VERSION,
+        migrate: migratePersistedState,
+        merge: mergePersistedState,
         storage: createJSONStorage(() => localStorage),
         partialize: (state) => {
           return {

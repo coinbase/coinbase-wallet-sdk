@@ -72,6 +72,27 @@ describe('createPopupTransport', () => {
     expect(send).toHaveBeenCalledWith(expect.anything(), request, undefined);
   });
 
+  it('clears pairing keys and session state in one cleanup', async () => {
+    const store = bindStore(createStoreInstance({ persist: false }));
+    const transport = createPopupTransport({
+      metadata,
+      preference,
+      keys: store.keys,
+      session: store.session,
+    });
+    store.keys.set('ownPrivateKey', 'stale-key-material');
+    transport.writeSession({
+      ...sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 }),
+      sessionId: 'session-1',
+    });
+
+    await transport.cleanup();
+
+    // Disconnect is atomic: leaving ECDH material behind would keep the pairing usable.
+    expect(store.keys.get('ownPrivateKey')).toBeUndefined();
+    expect(transport.readSession()).toBeUndefined();
+  });
+
   it('clears session state', async () => {
     const transport = createTestTransport();
     transport.writeSession({
