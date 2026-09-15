@@ -127,6 +127,27 @@
    });
    ```
 
+### One connection at a time
+
+The SDK keeps its connection state — configuration, connected account, sub-accounts and
+keys — in a single module-level store. Creating a second SDK instance therefore replaces
+the first rather than sitting alongside it, so a page cannot hold connections to two
+wallets at once:
+
+```js
+const a = createCoinbaseWalletSDK({ appName: 'Wallet A' });
+const b = createCoinbaseWalletSDK({ appName: 'Wallet B' });
+// `a` and `b` are different objects, but they share one connection state,
+// and it now belongs to B.
+```
+
+Calling it again with the same metadata is fine and expected — React strict mode and hot
+reloading both do it. Calling it with *different* metadata logs a warning, because that is
+almost always a caller expecting two independent connections.
+
+Support for connecting multiple wallets simultaneously is tracked in
+[#1860](https://github.com/coinbase/coinbase-wallet-sdk/issues/1860).
+
 ### Developing locally and running the test dapp
 
 - The Coinbase Wallet SDK test dapp can be viewed here https://coinbase.github.io/coinbase-wallet-sdk/.
