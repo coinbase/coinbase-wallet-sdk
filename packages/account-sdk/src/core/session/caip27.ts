@@ -1,6 +1,7 @@
 import { standardErrors } from ':core/error/errors.js';
 import type { RequestArguments } from ':core/message/RequestArguments.js';
 import { type Caip2, isCaip2 } from './caip.js';
+import { grantFor } from './grants.js';
 import type { Caip27Error, Caip27Params, Caip27Response, Envelope, Session } from './types.js';
 
 /** CAIP-27 JSON-RPC method used for every wallet invocation. */
@@ -121,10 +122,16 @@ export function unwrapCaip27Response(response: Caip27Response): unknown {
   return response.result.result;
 }
 
-/** CAIP-27 chain, method, and session id must be exactly authorized. */
+/**
+ * CAIP-27 chain, method, and session id must be authorized.
+ *
+ * The chain is authorized by an exact chain grant or by a grant on its whole
+ * namespace; `grantFor` resolves both. Chains the wallet does not support are
+ * rejected by the wallet, not invented as an authorization failure here.
+ */
 export function assertInvokeAuthorized(session: Session, envelope: Envelope): void {
-  const scope = session.scopes[envelope.chainId];
-  if (!scope?.accounts.length) {
+  const scope = grantFor(session, envelope.chainId);
+  if (!scope) {
     throw standardErrors.provider.unauthorized(`chainId ${envelope.chainId} is not in the session`);
   }
   if (!scope.methods.includes(envelope.request.method)) {

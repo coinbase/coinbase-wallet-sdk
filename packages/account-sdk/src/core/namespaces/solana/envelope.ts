@@ -1,14 +1,10 @@
 import { standardErrors } from ':core/error/errors.js';
 import type { SolanaInvokeRequest } from './types.js';
-import { parseCaip10 } from ':core/session/caip.js';
+import { accountsFor } from ':core/session/grants.js';
 import { solanaChainId } from './session.js';
 import type { Envelope, Session } from ':core/session/types.js';
 import { encodeSolanaRequest } from './codec.js';
-import {
-  SOLANA_MAINNET,
-  SOLANA_MAINNET_REFERENCE,
-  SOLANA_WALLET_STANDARD_MAINNET,
-} from './caip.js';
+import { SOLANA_MAINNET, SOLANA_WALLET_STANDARD_MAINNET } from './caip.js';
 import { SOLANA_WALLET_METHODS } from './methods.js';
 import { extractPubkeys } from './pubkey.js';
 
@@ -27,14 +23,7 @@ export function assertSolanaEnvelope(envelope: Envelope): void {
 }
 
 function scopeContains(session: Session, envelope: Envelope, publicKey: string): boolean {
-  return (session.scopes[envelope.chainId]?.accounts ?? []).some((account) => {
-    const parsed = parseCaip10(account);
-    return (
-      parsed?.namespace === 'solana' &&
-      parsed.reference === SOLANA_MAINNET_REFERENCE &&
-      parsed.account === publicKey
-    );
-  });
+  return accountsFor(session, envelope.chainId).includes(publicKey);
 }
 
 /** Wrap an internal Solana request as an exact-mainnet CAIP-27 envelope. */

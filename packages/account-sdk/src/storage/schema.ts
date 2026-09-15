@@ -5,8 +5,14 @@ export type Namespace = string;
 export type Caip2 = `${string}:${string}`;
 export type Caip10 = `${Caip2}:${string}`;
 
+/**
+ * One CAIP-25 grant.
+ *
+ * `accounts` holds CAIP-10 ids under a chain-keyed scope and raw accounts under a
+ * namespace-keyed scope, where no single chain qualifies them.
+ */
 export type ScopeState = {
-  accounts: Caip10[];
+  accounts: string[];
   methods: string[];
   capabilities?: Record<string, unknown>;
 };
@@ -14,7 +20,11 @@ export type ScopeState = {
 /** Persisted CAIP authorization state. Delivery state never belongs here. */
 export type Session = {
   sessionId?: string;
-  scopes: Record<Caip2, ScopeState>;
+  /**
+   * Grants keyed by namespace (`eip155` — every chain in that namespace) or by exact
+   * CAIP-2 chain (`eip155:8453` — that chain only).
+   */
+  scopes: Record<string, ScopeState>;
   /** Global CAIP-25 session metadata returned by the wallet. */
   properties?: Record<string, unknown>;
 };

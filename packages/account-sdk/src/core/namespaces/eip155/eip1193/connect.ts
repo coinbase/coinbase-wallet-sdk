@@ -7,6 +7,7 @@ import {
   type Caip25RequestScope,
 } from ':core/session/caip25.js';
 import { createSession } from ':core/session/createSession.js';
+import { grantFor } from ':core/session/grants.js';
 import { EIP155_METHODS, projectEthAccountsForChain } from '../session.js';
 import type { Session } from ':core/session/types.js';
 import { persistSubAccount } from './sub-account/accounts.js';
@@ -88,7 +89,7 @@ export function walletConnectScopeRequestParts(
  * `connectEip155` rejects the connect when this leaves no accounts.
  */
 function connectResultFromSession(session: Session, chainId: Caip2): ConnectResult {
-  const scope = session.scopes[chainId];
+  const scope = grantFor(session, chainId);
   const numericChainId = eip155ChainId(chainId);
   const addresses =
     numericChainId === null ? [] : projectEthAccountsForChain(session, numericChainId);

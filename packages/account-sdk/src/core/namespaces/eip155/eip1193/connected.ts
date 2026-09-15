@@ -8,6 +8,7 @@ import type {
 import type { FetchPermissionsResponse } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { WALLET_INVOKE_METHOD } from ':core/session/caip27.js';
 import type { Session } from ':core/session/index.js';
+import { grantFor } from ':core/session/grants.js';
 import { invoke } from ':core/session/invoke.js';
 import {
   addSubAccount,
@@ -60,7 +61,7 @@ async function sessionForChain(
   session: Session,
   chainId: number
 ): Promise<Session> {
-  if (session.scopes[eip155Caip2(chainId)]?.accounts.length) return session;
+  if (grantFor(session, eip155Caip2(chainId))) return session;
   const { session: expanded } = await connectEip155(context, undefined, {
     chainId: eip155Caip2(chainId),
     ...(session.sessionId ? { sessionId: session.sessionId } : {}),
@@ -137,7 +138,11 @@ export async function handleConnected(
     case 'wallet_switchEthereumChain': {
       const chainId = switchChainId(args.params);
       if (applyLocalChain(context, session, chainId)) return null;
-      const authorizationChainId = firstEip155ChainId(session);
+      // Prefer the active chain: a namespace grant authorizes it and keeps the
+      // wallet's own switch prompt on the chain the dapp is actually using.
+      const authorizationChainId = grantFor(session, eip155Caip2(getChainId()))
+        ? getChainId()
+        : firstEip155ChainId(session);
       if (authorizationChainId === undefined) {
         throw standardErrors.provider.unauthorized('No EIP-155 account is authorized');
       }

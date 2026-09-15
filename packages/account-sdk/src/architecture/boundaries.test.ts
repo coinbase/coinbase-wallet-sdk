@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 
 const src = existsSync(join(process.cwd(), 'src/core'))
   ? join(process.cwd(), 'src')
@@ -70,6 +70,24 @@ describe('architecture boundaries', () => {
         readFileSync(path, 'utf8').includes('projectEip1193Session') ? [path] : []
       )
     ).toEqual([]);
+  });
+
+  it('resolves chain authorization through the grant accessor only', () => {
+    // A namespace grant (`scopes.eip155`) authorizes every chain in that namespace.
+    // Reading `scopes[chainId]` directly silently ignores it and reintroduces the
+    // switch-then-fail bug, so authorization has to go through `grantFor`.
+    const offenders = [
+      ...productionFiles(join(src, 'core/namespaces')),
+      ...productionFiles(join(src, 'core/session')),
+    ].flatMap((path) => {
+      // `grants.ts` owns the lookup and `caip25.ts` builds the scope map from a wallet
+      // result; every other reader has to ask `grantFor`.
+      if (path.endsWith(`${sep}grants.ts`) || path.endsWith(`${sep}caip25.ts`)) return [];
+      const source = readFileSync(path, 'utf8');
+      return /\bscopes\[[^\]]*(chainId|caip2|envelope\.chainId)/i.test(source) ? [path] : [];
+    });
+
+    expect(offenders).toEqual([]);
   });
 
   it('has one vertical home for namespace policy', () => {

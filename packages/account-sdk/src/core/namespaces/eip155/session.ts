@@ -1,5 +1,6 @@
 import { Address } from ':core/type/index.js';
-import { type Caip2, type Caip10, accountOf, chainIdOf, namespaceOf } from ':core/session/caip.js';
+import { type Caip2, accountOf } from ':core/session/caip.js';
+import { accountsFor, grantFor, grantsInNamespace } from ':core/session/grants.js';
 import type { Session } from ':core/session/types.js';
 import type { SDKChain } from './client/index.js';
 import { isAddress, numberToHex } from 'viem';
@@ -47,36 +48,34 @@ export function sessionFromAccounts(opts: {
   };
 }
 
-/** eip155 addresses only. Solana / bip122 never appear here. */
+/**
+ * eip155 addresses only, across every eip155 grant. Solana / bip122 never appear here.
+ *
+ * Chain-keyed grants hold CAIP-10 ids and namespace grants hold raw addresses;
+ * `accountOf` normalizes both.
+ */
 export function projectEthAccounts(session: Session): Address[] {
   const seen = new Set<string>();
   const addresses: Address[] = [];
 
-  const push = (account: Caip10) => {
-    if (namespaceOf(account) !== 'eip155') return;
-    if (eip155ChainId(chainIdOf(account)) === null) return;
-    const address = accountOf(account);
-    if (!isAddress(address)) return;
-    const key = address.toLowerCase();
-    if (seen.has(key)) return;
-    seen.add(key);
-    addresses.push(address as Address);
-  };
-
-  for (const [id, scope] of Object.entries(session.scopes)) {
-    if (namespaceOf(id) !== 'eip155') continue;
-    for (const account of scope.accounts) push(account);
+  for (const [, scope] of grantsInNamespace(session, 'eip155')) {
+    for (const account of scope.accounts) {
+      const address = accountOf(account);
+      if (!isAddress(address)) continue;
+      const key = address.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      addresses.push(address as Address);
+    }
   }
   return addresses;
 }
 
-/** EIP-155 addresses granted on one exact chain, preserving wallet order. */
+/** EIP-155 addresses authorized on one chain, preserving wallet order. */
 export function projectEthAccountsForChain(session: Session, chainId: number): Address[] {
-  const accounts = session.scopes[eip155Caip2(chainId)]?.accounts ?? [];
-  return accounts.flatMap((account) => {
-    const address = accountOf(account);
-    return isAddress(address) ? [address as Address] : [];
-  });
+  return accountsFor(session, eip155Caip2(chainId)).flatMap((address) =>
+    isAddress(address) ? [address as Address] : []
+  );
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -131,24 +130,34 @@ export function rpcUrlForEip155Chain(session: Session, chainId: number): string 
 /** True when a chain is already granted or described by the wallet's chain catalog. */
 export function isKnownEip155Chain(session: Session, chainId: number): boolean {
   return (
-    session.scopes[eip155Caip2(chainId)] !== undefined ||
+    grantFor(session, eip155Caip2(chainId)) !== undefined ||
     projectEip155ChainMetadata(session).some((chain) => chain.id === chainId)
   );
 }
 
-/** EIP-5792 capabilities keyed by hex chain id. */
+/**
+ * EIP-5792 capabilities keyed by hex chain id.
+ *
+ * A namespace grant is not chain-specific, so its capabilities are reported under the
+ * EIP-5792 all-chains key (`0x0`). Per-chain wallet capabilities arrive as chain-keyed
+ * grants or in `properties.chainMetadata`.
+ */
 export function projectEip155Capabilities(session: Session): Record<string, unknown> {
   return Object.fromEntries(
-    Object.entries(session.scopes).flatMap(([caip2, scope]) => {
-      const chainId = eip155ChainId(caip2 as `eip155:${string}`);
-      return chainId === null || !scope.capabilities
-        ? []
-        : [[numberToHex(chainId), scope.capabilities]];
+    grantsInNamespace(session, 'eip155').flatMap(([scopeKey, scope]) => {
+      if (!scope.capabilities) return [];
+      const chainId = eip155ChainId(scopeKey as Caip2);
+      return [[chainId === null ? '0x0' : numberToHex(chainId), scope.capabilities]];
     })
   );
 }
 
-/** First granted EIP-155 chain in wallet response order. */
+/**
+ * First chain-keyed EIP-155 grant in wallet response order.
+ *
+ * A session whose only eip155 grant is namespace-wide has no such chain: the caller
+ * already knows which chain it wants, and `grantFor` authorizes it.
+ */
 export function firstEip155ChainId(session: Session): number | undefined {
   for (const [id, scope] of Object.entries(session.scopes)) {
     const chainId = eip155ChainId(id as Caip2);
@@ -174,14 +183,19 @@ export function withEip155Accounts(
   addresses: Address[]
 ): Session {
   const id = eip155Caip2(chainId);
-  const scope = session.scopes[id];
+  const scopeKey = session.scopes[id] ? id : 'eip155';
+  const scope = session.scopes[scopeKey];
   if (!scope) return session;
-  const accounts = addresses.map((address) => formatEip155Account(chainId, address));
+  // Chain-keyed grants store CAIP-10 ids; a namespace grant stores raw addresses.
+  const accounts =
+    scopeKey === id
+      ? addresses.map((address) => formatEip155Account(chainId, address))
+      : [...addresses];
   return {
     ...session,
     scopes: {
       ...session.scopes,
-      [id]: { ...scope, accounts },
+      [scopeKey]: { ...scope, accounts },
     },
   };
 }

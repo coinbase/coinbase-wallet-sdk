@@ -1,15 +1,15 @@
 import { RequestArguments } from ':core/provider/interface.js';
 import { activeSession } from ':core/session/activeSession.js';
-import { parseCaip2 } from ':core/session/caip.js';
+import { hasNamespaceGrant } from ':core/session/grants.js';
 import type { Session } from ':core/session/types.js';
 import { handleConnected } from './connected.js';
 import type { Eip1193Context } from './context.js';
 import { handleDisconnected } from './disconnected.js';
 
 function hasEip155Account(session: Session): boolean {
-  return Object.entries(session.scopes).some(
-    ([chainId, scope]) => parseCaip2(chainId)?.namespace === 'eip155' && scope.accounts.length > 0
-  );
+  // Any eip155 grant counts: a namespace grant and a chain-keyed grant are both
+  // connections, and neither implies a particular active chain.
+  return hasNamespaceGrant(session, 'eip155');
 }
 
 /**

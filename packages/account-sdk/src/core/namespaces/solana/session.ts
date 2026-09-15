@@ -1,6 +1,7 @@
 import { standardErrors } from ':core/error/errors.js';
 import * as Base58 from 'ox/Base58';
-import { type Caip2, type Caip10, formatCaip10, parseCaip10 } from ':core/session/caip.js';
+import { type Caip2, type Caip10, accountOf, formatCaip10 } from ':core/session/caip.js';
+import { grantsInNamespace } from ':core/session/grants.js';
 import type { Caip25RequestScope } from ':core/session/caip25.js';
 import type { ScopeRequirement } from ':core/session/covers.js';
 import type { Session } from ':core/session/types.js';
@@ -86,29 +87,24 @@ export function sessionFromSolanaAccounts(opts: {
   };
 }
 
-/** Raw mainnet public keys in wallet-granted order, without duplicates. */
+/**
+ * Raw mainnet public keys in wallet-granted order, without duplicates.
+ *
+ * Chain-keyed grants hold CAIP-10 ids and a namespace grant holds raw public keys;
+ * `accountOf` normalizes both.
+ */
 export function projectSolanaAccounts(session: Session): string[] {
   const seen = new Set<string>();
   const publicKeys: string[] = [];
 
-  const push = (account: Caip10) => {
-    const parsed = parseCaip10(account);
-    if (
-      !parsed ||
-      parsed.namespace !== 'solana' ||
-      parsed.reference !== SOLANA_MAINNET_REFERENCE ||
-      !isSolanaPublicKey(parsed.account) ||
-      seen.has(parsed.account)
-    ) {
-      return;
+  for (const [scopeKey, scope] of grantsInNamespace(session, 'solana')) {
+    if (scopeKey !== 'solana' && scopeKey !== SOLANA_MAINNET) continue;
+    for (const account of scope.accounts) {
+      const publicKey = accountOf(account);
+      if (!isSolanaPublicKey(publicKey) || seen.has(publicKey)) continue;
+      seen.add(publicKey);
+      publicKeys.push(publicKey);
     }
-    seen.add(parsed.account);
-    publicKeys.push(parsed.account);
-  };
-
-  for (const [chainId, scope] of Object.entries(session.scopes)) {
-    if (chainId !== SOLANA_MAINNET) continue;
-    for (const account of scope.accounts) push(account);
   }
   return publicKeys;
 }

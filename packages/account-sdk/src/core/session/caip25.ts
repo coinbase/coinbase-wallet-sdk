@@ -128,18 +128,18 @@ function scopeChainIds(
   chains: string[] | undefined,
   field: string,
   invalid: Invalid
-): { chainIds: Caip2[] } {
+): { namespace: Namespace; chainIds: Caip2[] } {
   const namespace = scopeNamespace(scopeKey, field, invalid);
   const parsed = parseCaip2(scopeKey);
-  if (!parsed && !chains?.length) {
-    invalid(`${field}.chains must identify at least one ${namespace} chain`);
-  }
   if (parsed && chains?.some((chain) => chain !== parsed.reference)) {
     invalid(`${field}.chains must match its ${namespace} scope key`);
   }
 
-  const references = parsed ? [parsed.reference] : (chains as string[]);
+  // A namespace scope key with no `chains` is namespace-wide: there is no chain list
+  // to expand, and authorization resolves through the namespace grant instead.
+  const references = parsed ? [parsed.reference] : (chains ?? []);
   return {
+    namespace,
     chainIds: references.map((reference, index) => {
       const referenceField = parsed ? field : `${field}.chains[${index}]`;
       const chainId = `${namespace}:${reference}`;
@@ -149,13 +149,17 @@ function scopeChainIds(
   };
 }
 
-function validateRawAccounts(
+function validateScopeAccounts(
   accounts: string[],
-  chainId: Caip2,
+  namespace: Namespace,
+  chainId: Caip2 | undefined,
   field: string,
   invalid: Invalid
 ): void {
-  if (accounts.some((account) => !isCaip10(`${chainId}:${account}`))) {
+  // A namespace grant has no chain to qualify its accounts with, so validate the
+  // account portion against a placeholder reference in the same namespace.
+  const prefix = chainId ?? `${namespace}:0`;
+  if (accounts.some((account) => !isCaip10(`${prefix}:${account}`))) {
     invalid(`${field} must contain raw CAIP account addresses`);
   }
 }
@@ -168,7 +172,7 @@ function parseRequestScope(value: unknown, field: string, invalid: Invalid): Cai
     record.chains === undefined
       ? undefined
       : stringArray(record.chains, `${field}.chains`, invalid);
-  const { chainIds } = scopeChainIds(
+  const { namespace, chainIds } = scopeChainIds(
     field.slice('wallet_createSession.scopes.'.length),
     chains,
     field,
@@ -178,7 +182,9 @@ function parseRequestScope(value: unknown, field: string, invalid: Invalid): Cai
     record.accounts === undefined
       ? undefined
       : stringArray(record.accounts, `${field}.accounts`, invalid);
-  if (accounts) validateRawAccounts(accounts, chainIds[0] as Caip2, `${field}.accounts`, invalid);
+  if (accounts) {
+    validateScopeAccounts(accounts, namespace, chainIds[0], `${field}.accounts`, invalid);
+  }
   const capabilities = optionalRecord(record.capabilities, `${field}.capabilities`, invalid);
   const params = requestScopeParams(record.params, `${field}.params`, invalid);
   return {
@@ -202,14 +208,14 @@ function parseResultScope(value: unknown, field: string, invalid: Invalid): Caip
     record.chains === undefined
       ? undefined
       : stringArray(record.chains, `${field}.chains`, invalid);
-  const { chainIds } = scopeChainIds(
+  const { namespace, chainIds } = scopeChainIds(
     field.slice('wallet_createSession.result.scopes.'.length),
     chains,
     field,
     invalid
   );
   const accounts = stringArray(record.accounts, `${field}.accounts`, invalid);
-  validateRawAccounts(accounts, chainIds[0] as Caip2, `${field}.accounts`, invalid);
+  validateScopeAccounts(accounts, namespace, chainIds[0], `${field}.accounts`, invalid);
   const capabilities = optionalRecord(record.capabilities, `${field}.capabilities`, invalid);
   return {
     ...(chains ? { chains } : {}),
@@ -314,10 +320,12 @@ export function createCaip25Request(opts: {
 }
 
 /**
- * Expand compact namespace grants into exact CAIP-2 scopes.
+ * Turn CAIP-25 grants into kernel authorization state.
  *
- * CAIP-25 may grant a namespace plus chain references, while kernel authorization
- * needs one concrete `Session.scopes[chainId]` entry per chain.
+ * A namespace scope with chain references expands into one concrete
+ * `Session.scopes[chainId]` entry per chain. A namespace scope with no references is
+ * kept as a single namespace grant covering every chain in that namespace, with raw
+ * accounts, since no chain qualifies them.
  */
 export function sessionFromCaip25Result(value: unknown): Session {
   const result = parseCaip25Result(value);
@@ -327,12 +335,21 @@ export function sessionFromCaip25Result(value: unknown): Session {
     const invalid: Invalid = (message) => {
       throw standardErrors.rpc.internal(`Invalid wallet_createSession result: ${message}`);
     };
-    const { chainIds } = scopeChainIds(
+    const { namespace, chainIds } = scopeChainIds(
       scopeKey,
       scope.chains,
       `wallet_createSession.result.scopes.${scopeKey}`,
       invalid
     );
+    if (chainIds.length === 0) {
+      if (scopes[namespace]) invalid(`duplicate namespace grant ${namespace}`);
+      scopes[namespace] = {
+        accounts: [...scope.accounts],
+        methods: [...scope.methods],
+        ...(scope.capabilities ? { capabilities: scope.capabilities } : {}),
+      };
+      continue;
+    }
     for (const chainId of chainIds) {
       if (scopes[chainId]) {
         throw standardErrors.rpc.internal(

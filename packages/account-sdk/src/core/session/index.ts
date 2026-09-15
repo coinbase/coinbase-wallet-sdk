@@ -44,6 +44,13 @@ export type {
   Caip25Result,
   Caip25ResultScope,
 } from './caip25.js';
+export {
+  accountsFor,
+  grantFor,
+  grantsInNamespace,
+  hasNamespaceGrant,
+  scopeNamespace,
+} from './grants.js';
 export { createSession } from './createSession.js';
 export type { CreateSessionOptions } from './createSession.js';
 export { ensureSession } from './ensureSession.js';

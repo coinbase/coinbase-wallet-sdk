@@ -1,4 +1,5 @@
 import type { Caip2 } from './caip.js';
+import { grantFor } from './grants.js';
 import type { Session } from './types.js';
 
 export type ScopeRequirement =
@@ -29,8 +30,8 @@ export function sessionCovers(
   return required.every((requirement) => {
     const chainId = typeof requirement === 'string' ? requirement : requirement.chainId;
     const methods = typeof requirement === 'string' ? [] : (requirement.methods ?? []);
-    const scope = session.scopes[chainId];
-    if (!scope?.accounts.length) return false;
+    const scope = grantFor(session, chainId);
+    if (!scope) return false;
     return methods.every((method) => scope.methods.includes(method));
   });
 }
