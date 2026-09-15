@@ -1,24 +1,25 @@
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
-import { WALLET_METHODS, toEnvelope } from ':core/namespaces/eip155/index.js';
 import { RequestArguments } from ':core/provider/interface.js';
-import { eip155Caip2 } from ':core/session/caip.js';
-import { WALLET_INVOKE_METHOD, parseCaip27 } from ':core/session/caip27.js';
+import { activeSession } from ':core/session/activeSession.js';
+import { WALLET_INVOKE_METHOD } from ':core/session/caip27.js';
 import { ensureSession } from ':core/session/ensureSession.js';
-import { EIP155_METHODS, projectEthAccounts } from ':core/session/index.js';
+import { toEnvelope } from '../envelope.js';
+import { WALLET_METHODS } from '../methods.js';
+import { EIP155_METHODS, projectEthAccountsForChain } from '../session.js';
+import { eip155Translator } from '../translator.js';
 import { invoke, invokeEphemeral } from ':core/session/invoke.js';
-import {
-  ingestConnectResult,
-  isConnectResult,
-  pair,
-  prepareWalletConnectRequest,
-} from ':core/session/pair.js';
 import type { Envelope } from ':core/session/types.js';
-import type { WalletRuntime } from ':core/transport/index.js';
+import type { WalletTransport } from ':core/transport/index.js';
 import { hexStringFromNumber } from ':core/type/util.js';
 import { fetchRPCRequest } from ':util/provider.js';
+import { eip155Caip2, eip155ChainId } from '../caip.js';
 import { switchChainId } from './chainParams.js';
+import { connectEip155 } from './connect.js';
 import { handleConnected } from './connected.js';
+import type { Eip1193Context } from './context.js';
+import { parseCaip27 } from './parseCaip27.js';
+import { orderedEthAccounts } from './sub-account/index.js';
 
 const DISCONNECTED_EPHEMERAL_METHODS = new Set([
   'wallet_sendCalls',
@@ -31,12 +32,12 @@ function isDisconnectedEphemeralMethod(method: string): boolean {
 }
 
 /** Temporary handshake keys must be cleared even when transport or response decoding fails. */
-async function sendEphemeral(runtime: WalletRuntime, envelope: Envelope): Promise<unknown> {
+async function sendEphemeral(transport: WalletTransport, envelope: Envelope): Promise<unknown> {
   try {
-    await runtime.handshake({ method: 'handshake' });
-    return await invokeEphemeral(envelope, runtime.transport);
+    await transport.handshake({ method: 'handshake' });
+    return await invokeEphemeral(envelope, transport, eip155Translator);
   } finally {
-    await runtime.cleanup();
+    await transport.cleanup();
   }
 }
 
@@ -48,19 +49,22 @@ async function sendEphemeral(runtime: WalletRuntime, envelope: Envelope): Promis
  * exact CAIP-25 authorization before invocation.
  */
 export async function handleDisconnected(
-  runtime: WalletRuntime,
+  context: Eip1193Context,
   args: RequestArguments
 ): Promise<unknown> {
+  const { transport, cache, chain } = context;
+  const getChainId = chain.get;
+
   switch (args.method) {
     // --- Defaults: nothing is connected yet ---
     case 'eth_accounts':
       return [];
     case 'net_version':
-      return runtime.chainId();
+      return getChainId();
     case 'eth_chainId':
-      return hexStringFromNumber(runtime.chainId());
+      return hexStringFromNumber(getChainId());
     case 'wallet_switchEthereumChain': {
-      runtime.store.account.set({ chain: { id: switchChainId(args.params) } });
+      chain.select(switchChainId(args.params), { notify: false });
       return undefined;
     }
     // Same as old BaseAccountProvider: Coinbase HTTP before a session exists.
@@ -68,78 +72,70 @@ export async function handleDisconnected(
     case 'wallet_getCallsStatus':
       return fetchRPCRequest(args, CB_WALLET_RPC_URL);
 
-    // --- Pair: handshake + CAIP-25 → persist Session ---
+    // --- Connect: translate EIP-1193 into CAIP-25. ---
     case 'eth_requestAccounts': {
-      const { session } = await ensureSession({
+      const session = await ensureSession({
         session: undefined,
-        requiredScopes: [eip155Caip2(runtime.chainId())],
-        pair: () => pair(runtime),
+        requiredScopes: [eip155Caip2(getChainId())],
+        createSession: async () => (await connectEip155(context)).session,
       });
-      return projectEthAccounts(session);
+      return orderedEthAccounts(cache, projectEthAccountsForChain(session, getChainId()));
     }
     case 'wallet_connect': {
-      const { result } = await ensureSession({
-        session: undefined,
-        requiredScopes: [eip155Caip2(runtime.chainId())],
-        pair: () => pair(runtime, args),
-      });
+      const { result } = await connectEip155(context, args);
       return result;
     }
 
-    // --- Direct CAIP-27: establish its requested chain + method first. ---
+    // --- Direct CAIP-27: wallet_connect is CAIP-25; authorize other methods before invoke. ---
     case WALLET_INVOKE_METHOD: {
-      let envelope = parseCaip27(args);
+      const envelope = parseCaip27(args);
+      if (envelope.request.method === 'wallet_connect') {
+        const { result } = await connectEip155(context, envelope.request, {
+          chainId: envelope.chainId,
+          sessionId: envelope.sessionId ?? activeSession(transport.readSession())?.sessionId,
+        });
+        const chainId = eip155ChainId(envelope.chainId);
+        if (chainId !== null) chain.select(chainId, { notify: false });
+        return result;
+      }
       // A caller-supplied session id expresses persisted-session intent and must never bypass pairing.
       if (
         envelope.sessionId === undefined &&
         isDisconnectedEphemeralMethod(envelope.request.method)
       ) {
-        return sendEphemeral(runtime, envelope);
-      }
-      if (envelope.request.method === 'wallet_connect') {
-        envelope = {
-          ...envelope,
-          request: await prepareWalletConnectRequest(runtime, envelope.request),
-        };
+        return sendEphemeral(transport, envelope);
       }
       // The follow-up invoke needs both the baseline family grant and this exact inner method.
       const methods = [...new Set([...EIP155_METHODS, envelope.request.method])];
-      const { session } = await ensureSession({
-        session: runtime.readSession(),
+      const session = await ensureSession({
+        session: activeSession(transport.readSession()),
         requiredScopes: [{ chainId: envelope.chainId, methods: [envelope.request.method] }],
-        pair: () =>
-          pair(
-            runtime,
-            envelope.request.method === 'wallet_connect' ? envelope.request : undefined,
-            { chainId: envelope.chainId, methods }
-          ),
+        createSession: async () =>
+          (await connectEip155(context, undefined, { chainId: envelope.chainId, methods })).session,
       });
-      const result = await invoke(session, envelope, runtime.transport);
-      if (envelope.request.method === 'wallet_connect' && isConnectResult(result)) {
-        ingestConnectResult(runtime, result, session, envelope.chainId);
-      }
-      return result;
+      return invoke(session, envelope, transport, eip155Translator);
     }
 
     default: {
       if (isDisconnectedEphemeralMethod(args.method)) {
-        return sendEphemeral(runtime, toEnvelope(args, runtime.chainId()));
+        return sendEphemeral(transport, toEnvelope(args, getChainId()));
       }
       if (
         WALLET_METHODS.has(args.method) ||
         args.method.startsWith('experimental_') ||
         args.method === 'wallet_addSubAccount'
       ) {
-        const chainId = eip155Caip2(runtime.chainId());
+        const chainId = eip155Caip2(getChainId());
         // Include the target method because the wallet response, not our defaults, defines the grant.
         const methods = [...new Set([...EIP155_METHODS, args.method])];
-        const { session } = await ensureSession({
-          session: runtime.readSession(),
+        const session = await ensureSession({
+          session: activeSession(transport.readSession()),
           requiredScopes: [{ chainId, methods: [args.method] }],
-          pair: () => pair(runtime, undefined, { chainId, methods }),
+          createSession: async () =>
+            (await connectEip155(context, undefined, { chainId, methods })).session,
         });
         // Re-enter connected routing so method-specific behavior uses the newly authoritative grant.
-        return handleConnected(runtime, args, session);
+        return handleConnected(context, args, session);
       }
       throw standardErrors.provider.unauthorized(
         "Must call 'eth_requestAccounts' before other methods"

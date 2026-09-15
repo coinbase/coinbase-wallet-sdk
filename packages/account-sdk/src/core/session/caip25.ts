@@ -1,9 +1,7 @@
 import { standardErrors } from ':core/error/errors.js';
-import type { RequestArguments } from ':core/provider/interface.js';
-import type { Address } from ':core/type/index.js';
-import { isAddress } from 'viem';
-import { type Caip2, accountOf, eip155Caip2, formatEip155Account, parseCaip2 } from './caip.js';
-import type { Session, TransportKind } from './types.js';
+import type { RequestArguments } from ':core/message/RequestArguments.js';
+import { type Caip2, type Namespace, formatCaip10, isCaip10, parseCaip2 } from './caip.js';
+import type { Session } from './types.js';
 
 export const WALLET_CREATE_SESSION = 'wallet_createSession';
 
@@ -63,14 +61,8 @@ export type Caip25Request = {
   params: Caip25RequestParams;
 };
 
-export type Caip25ConnectResult = {
-  accounts: {
-    address: Address;
-    capabilities?: Record<string, unknown>;
-  }[];
-};
-
 type Invalid = (message: string) => never;
+const CAIP_NAMESPACE_RE = /^[-a-z0-9]{3,8}$/;
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
@@ -123,12 +115,12 @@ function requestScopeParams(
   return [{ ...record, version }];
 }
 
-function eip155Reference(value: string, field: string, invalid: Invalid): string {
-  const chainId = Number(value);
-  if (!/^[1-9]\d*$/.test(value) || !Number.isSafeInteger(chainId) || String(chainId) !== value) {
-    invalid(`${field} must be a positive eip155 chain reference`);
+function scopeNamespace(scopeKey: string, field: string, invalid: Invalid): Namespace {
+  const namespace = parseCaip2(scopeKey)?.namespace ?? scopeKey;
+  if (!CAIP_NAMESPACE_RE.test(namespace)) {
+    invalid(`${field} must use a valid CAIP namespace or CAIP-2 scope`);
   }
-  return String(chainId);
+  return namespace;
 }
 
 function scopeChainIds(
@@ -136,27 +128,40 @@ function scopeChainIds(
   chains: string[] | undefined,
   field: string,
   invalid: Invalid
-): Caip2[] {
-  if (scopeKey === 'eip155') {
-    if (!chains?.length) invalid(`${field}.chains must identify at least one eip155 chain`);
-    return (chains as string[]).map((reference, index) =>
-      eip155Caip2(Number(eip155Reference(reference, `${field}.chains[${index}]`, invalid)))
-    );
+): { namespace: Namespace; chainIds: Caip2[] } {
+  const namespace = scopeNamespace(scopeKey, field, invalid);
+  const parsed = parseCaip2(scopeKey);
+  if (parsed && chains?.some((chain) => chain !== parsed.reference)) {
+    invalid(`${field}.chains must match its ${namespace} scope key`);
   }
 
-  const parsed = parseCaip2(scopeKey);
-  if (!parsed || parsed.namespace !== 'eip155') {
-    invalid(`${field} must be an eip155 scope`);
+  // A namespace scope key with no `chains` is namespace-wide: there is no chain list
+  // to expand, and authorization resolves through the namespace grant instead.
+  const references = parsed ? [parsed.reference] : (chains ?? []);
+  return {
+    namespace,
+    chainIds: references.map((reference, index) => {
+      const referenceField = parsed ? field : `${field}.chains[${index}]`;
+      const chainId = `${namespace}:${reference}`;
+      if (!parseCaip2(chainId)) invalid(`${referenceField} must be a valid CAIP-2 reference`);
+      return chainId as Caip2;
+    }),
+  };
+}
+
+function validateScopeAccounts(
+  accounts: string[],
+  namespace: Namespace,
+  chainId: Caip2 | undefined,
+  field: string,
+  invalid: Invalid
+): void {
+  // A namespace grant has no chain to qualify its accounts with, so validate the
+  // account portion against a placeholder reference in the same namespace.
+  const prefix = chainId ?? `${namespace}:0`;
+  if (accounts.some((account) => !isCaip10(`${prefix}:${account}`))) {
+    invalid(`${field} must contain raw CAIP account addresses`);
   }
-  const reference = eip155Reference(
-    (parsed as NonNullable<typeof parsed>).reference,
-    field,
-    invalid
-  );
-  if (chains?.some((chain) => chain !== reference)) {
-    invalid(`${field}.chains must match its eip155 scope key`);
-  }
-  return [scopeKey as Caip2];
 }
 
 function parseRequestScope(value: unknown, field: string, invalid: Invalid): Caip25RequestScope {
@@ -167,13 +172,18 @@ function parseRequestScope(value: unknown, field: string, invalid: Invalid): Cai
     record.chains === undefined
       ? undefined
       : stringArray(record.chains, `${field}.chains`, invalid);
-  scopeChainIds(field.slice('wallet_createSession.scopes.'.length), chains, field, invalid);
+  const { namespace, chainIds } = scopeChainIds(
+    field.slice('wallet_createSession.scopes.'.length),
+    chains,
+    field,
+    invalid
+  );
   const accounts =
     record.accounts === undefined
       ? undefined
       : stringArray(record.accounts, `${field}.accounts`, invalid);
-  if (accounts?.some((account) => !isAddress(account))) {
-    invalid(`${field}.accounts must contain raw eip155 addresses`);
+  if (accounts) {
+    validateScopeAccounts(accounts, namespace, chainIds[0], `${field}.accounts`, invalid);
   }
   const capabilities = optionalRecord(record.capabilities, `${field}.capabilities`, invalid);
   const params = requestScopeParams(record.params, `${field}.params`, invalid);
@@ -198,11 +208,14 @@ function parseResultScope(value: unknown, field: string, invalid: Invalid): Caip
     record.chains === undefined
       ? undefined
       : stringArray(record.chains, `${field}.chains`, invalid);
-  scopeChainIds(field.slice('wallet_createSession.result.scopes.'.length), chains, field, invalid);
+  const { namespace, chainIds } = scopeChainIds(
+    field.slice('wallet_createSession.result.scopes.'.length),
+    chains,
+    field,
+    invalid
+  );
   const accounts = stringArray(record.accounts, `${field}.accounts`, invalid);
-  if (accounts.some((account) => !isAddress(account))) {
-    invalid(`${field}.accounts must contain raw eip155 addresses`);
-  }
+  validateScopeAccounts(accounts, namespace, chainIds[0], `${field}.accounts`, invalid);
   const capabilities = optionalRecord(record.capabilities, `${field}.capabilities`, invalid);
   return {
     ...(chains ? { chains } : {}),
@@ -287,45 +300,17 @@ export function parseCaip25Result(value: unknown): Caip25Result {
   };
 }
 
-/**
- * Build the eip155 CAIP-25 request used by this SDK.
- *
- * The namespace scope and decimal `chains` shape are standard CAIP-25. The
- * scope `capabilities` and `params` fields are the private SDK↔SCW extension.
- */
+/** Build and boundary-check a namespace-specific CAIP-25 request. */
 export function createCaip25Request(opts: {
-  chainId: Caip2;
-  methods: readonly string[];
-  requestParts: Caip25PrivateRequestScopeExtensions;
+  scopes: Record<string, Caip25RequestScope>;
   sessionId?: string;
   properties?: Record<string, unknown>;
 }): Caip25Request {
-  const parsed = parseCaip2(opts.chainId);
-  const numericChainId = parsed ? Number(parsed.reference) : Number.NaN;
-  if (
-    !parsed ||
-    parsed.namespace !== 'eip155' ||
-    !/^[1-9]\d*$/.test(parsed.reference) ||
-    !Number.isSafeInteger(numericChainId) ||
-    String(numericChainId) !== parsed.reference
-  ) {
-    throw standardErrors.provider.unsupportedChain(`Unsupported CAIP-25 chain ${opts.chainId}`);
-  }
   const request: Caip25Request = {
     method: WALLET_CREATE_SESSION,
     params: {
       ...(opts.sessionId ? { sessionId: opts.sessionId } : {}),
-      scopes: {
-        eip155: {
-          chains: [parsed.reference],
-          methods: [...new Set(opts.methods)],
-          notifications: ['accountsChanged', 'chainChanged'],
-          ...(opts.requestParts.capabilities
-            ? { capabilities: opts.requestParts.capabilities }
-            : {}),
-          params: [{ ...opts.requestParts.params[0] }],
-        },
-      },
+      scopes: opts.scopes,
       ...(opts.properties ? { properties: opts.properties } : {}),
     },
   };
@@ -335,15 +320,14 @@ export function createCaip25Request(opts: {
 }
 
 /**
- * Expand compact namespace grants into exact CAIP-2 scopes.
+ * Turn CAIP-25 grants into kernel authorization state.
  *
- * CAIP-25 may grant `eip155` plus multiple chain references, while kernel
- * authorization needs one concrete `Session.scopes[chainId]` entry per chain.
+ * A namespace scope with chain references expands into one concrete
+ * `Session.scopes[chainId]` entry per chain. A namespace scope with no references is
+ * kept as a single namespace grant covering every chain in that namespace, with raw
+ * accounts, since no chain qualifies them.
  */
-export function sessionFromCaip25Result(
-  value: unknown,
-  opts: { preferredChainId: Caip2; transportKind?: TransportKind }
-): Session {
+export function sessionFromCaip25Result(value: unknown): Session {
   const result = parseCaip25Result(value);
   const scopes: Session['scopes'] = {};
 
@@ -351,47 +335,38 @@ export function sessionFromCaip25Result(
     const invalid: Invalid = (message) => {
       throw standardErrors.rpc.internal(`Invalid wallet_createSession result: ${message}`);
     };
-    const chainIds = scopeChainIds(
+    const { namespace, chainIds } = scopeChainIds(
       scopeKey,
       scope.chains,
       `wallet_createSession.result.scopes.${scopeKey}`,
       invalid
     );
+    if (chainIds.length === 0) {
+      if (scopes[namespace]) invalid(`duplicate namespace grant ${namespace}`);
+      scopes[namespace] = {
+        accounts: [...scope.accounts],
+        methods: [...scope.methods],
+        ...(scope.capabilities ? { capabilities: scope.capabilities } : {}),
+      };
+      continue;
+    }
     for (const chainId of chainIds) {
       if (scopes[chainId]) {
         throw standardErrors.rpc.internal(
           `Invalid wallet_createSession result: duplicate expanded scope ${chainId}`
         );
       }
-      const chain = Number(
-        (parseCaip2(chainId) as NonNullable<ReturnType<typeof parseCaip2>>).reference
-      );
       scopes[chainId] = {
-        accounts: scope.accounts.map((account) => formatEip155Account(chain, account)),
+        accounts: scope.accounts.map((account) => formatCaip10(chainId, account)),
         methods: [...scope.methods],
         ...(scope.capabilities ? { capabilities: scope.capabilities } : {}),
       };
     }
   }
 
-  const preferred = scopes[opts.preferredChainId]?.accounts[0];
-  const selected =
-    preferred ?? Object.values(scopes).find((scope) => scope.accounts[0])?.accounts[0];
   return {
     sessionId: result.sessionId,
     scopes,
-    selected: selected ? { eip155: selected } : {},
-    transportKind: opts.transportKind ?? 'popup',
-  };
-}
-
-/** ERC-7846 projection of the granted accounts on one exact CAIP-25 scope. */
-export function connectResultFromSession(session: Session, chainId: Caip2): Caip25ConnectResult {
-  const scope = session.scopes[chainId];
-  return {
-    accounts: (scope?.accounts ?? []).map((account) => ({
-      address: accountOf(account) as Address,
-      ...(scope?.capabilities ? { capabilities: scope.capabilities } : {}),
-    })),
+    ...(result.properties ? { properties: result.properties } : {}),
   };
 }

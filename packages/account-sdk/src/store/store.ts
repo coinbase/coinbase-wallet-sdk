@@ -1,40 +1,19 @@
-import { PACKAGE_VERSION } from ':core/constants.js';
-import type { AppMetadata, Preference, SubAccountOptions } from ':core/provider/interface.js';
-import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
-import type { Session } from ':core/session/index.js';
-import { OwnerAccount } from ':core/type/index.js';
-import { Address, Hex } from 'viem';
+import { Address } from 'viem';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { StateCreator, createStore } from 'zustand/vanilla';
-
-export type ToOwnerAccountFn = () => Promise<{
-  account: OwnerAccount | null;
-}>;
-
-type Chain = {
-  id: number;
-  rpcUrl?: string;
-  nativeCurrency?: {
-    name?: string;
-    symbol?: string;
-    decimal?: number;
-  };
-};
-
-export type SubAccount = {
-  address: Address;
-  factory?: Address;
-  factoryData?: Hex;
-};
+import pkg from '../../package.json' with { type: 'json' };
+import type {
+  AppMetadata,
+  Preference,
+  Session,
+  SpendPermission,
+  SubAccount,
+  SubAccountOptions,
+} from '../storage/schema.js';
+export type { SubAccount, ToOwnerAccountFn } from '../storage/schema.js';
 
 type SubAccountConfig = SubAccountOptions & {
   capabilities?: Record<string, unknown>;
-};
-
-type Account = {
-  accounts?: Address[];
-  capabilities?: Record<string, unknown>;
-  chain?: Chain;
 };
 
 type Config = {
@@ -44,16 +23,11 @@ type Config = {
   deviceId?: string;
   paymasterUrls?: Record<number, string>;
 };
-
-type ChainSlice = { chains: Chain[] };
-const createChainSlice: StateCreator<StoreState, [], [], ChainSlice> = () => ({ chains: [] });
+type CoreConfig = Omit<Config, 'paymasterUrls'>;
 
 /** ECDH transport keys (`KeyManager`), not sub-account owner keys. */
 type KeysSlice = { keys: Record<string, string | null> };
 const createKeysSlice: StateCreator<StoreState, [], [], KeysSlice> = () => ({ keys: {} });
-
-type AccountSlice = { account: Account };
-const createAccountSlice: StateCreator<StoreState, [], [], AccountSlice> = () => ({ account: {} });
 
 type SubAccountSlice = { subAccount?: SubAccount };
 const createSubAccountSlice: StateCreator<StoreState, [], [], SubAccountSlice> = () => ({
@@ -82,7 +56,7 @@ const createSpendPermissionsSlice: StateCreator<
 
 type ConfigSlice = { config: Config };
 const createConfigSlice: StateCreator<StoreState, [], [], ConfigSlice> = () => ({
-  config: { version: PACKAGE_VERSION },
+  config: { version: pkg.version },
 });
 
 type SessionSlice = { session?: Session };
@@ -96,9 +70,7 @@ type MergeTypes<T extends unknown[]> = T extends [infer First, ...infer Rest]
 
 export type StoreState = MergeTypes<
   [
-    ChainSlice,
     KeysSlice,
-    AccountSlice,
     SubAccountSlice,
     SubAccountConfigSlice,
     SpendPermissionsSlice,
@@ -106,6 +78,62 @@ export type StoreState = MergeTypes<
     SessionSlice,
   ]
 >;
+
+/**
+ * Persisted schema version.
+ *
+ * v0 is the pre-CAIP blob: removed `account` / `chains` mirrors plus a `Session`
+ * shape that predates `scopes` and `properties.chainMetadata`.
+ */
+const PERSISTED_STORE_VERSION = 1;
+
+/**
+ * Accept only a session the current selectors can read.
+ *
+ * v0 sessions carry `selected` (an SDK-chosen account per namespace) and `transportKind`,
+ * and predate `properties.chainMetadata`, so they have no RPC URLs or native-currency data.
+ * Dropping one costs a reconnect; keeping it fails every chain read instead.
+ */
+function persistedSession(value: unknown): Session | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const candidate = value as Partial<Session> & Record<string, unknown>;
+  if ('selected' in candidate || 'transportKind' in candidate) return undefined;
+  const { scopes } = candidate;
+  if (!scopes || typeof scopes !== 'object' || Array.isArray(scopes)) return undefined;
+  return candidate as Session;
+}
+
+/**
+ * Rebuild hydrated state from the current keys only.
+ *
+ * `migrate` runs only when the stored blob carries a numeric `version`, and v0 was
+ * written without one, so shape-based sanitizing has to happen on every hydrate.
+ * Unknown top-level keys (the removed `account` / `chains` mirrors) are dropped here.
+ */
+function mergePersistedState(persistedState: unknown, currentState: StoreState): StoreState {
+  const state = (persistedState ?? {}) as Partial<StoreState>;
+  return {
+    ...currentState,
+    keys: state.keys ?? currentState.keys,
+    subAccount: state.subAccount,
+    spendPermissions: state.spendPermissions ?? currentState.spendPermissions,
+    config: { ...currentState.config, ...state.config },
+    session: persistedSession(state.session),
+  };
+}
+
+function migratePersistedState(persistedState: unknown, version: number): StoreState {
+  const state = (persistedState ?? {}) as Partial<StoreState>;
+  if (version >= PERSISTED_STORE_VERSION) return state as StoreState;
+  return {
+    keys: state.keys ?? {},
+    subAccount: state.subAccount,
+    spendPermissions: state.spendPermissions ?? [],
+    config: state.config ?? { version: pkg.version },
+    // Same rule as `mergePersistedState`, for blobs that do carry an older version.
+    session: persistedSession(state.session),
+  } as StoreState;
+}
 
 /**
  * Factory function to create a store instance.
@@ -118,9 +146,7 @@ export function createStoreInstance(options?: {
   const { persist: shouldPersist = true, storageName = 'base-acc-sdk.store' } = options ?? {};
 
   const storeCreator = (...args: Parameters<StateCreator<StoreState, [], []>>) => ({
-    ...createChainSlice(...args),
     ...createKeysSlice(...args),
-    ...createAccountSlice(...args),
     ...createSubAccountSlice(...args),
     ...createSubAccountConfigSlice(...args),
     ...createSpendPermissionsSlice(...args),
@@ -132,12 +158,13 @@ export function createStoreInstance(options?: {
     return createStore(
       persist<StoreState>(storeCreator, {
         name: storageName,
+        version: PERSISTED_STORE_VERSION,
+        migrate: migratePersistedState,
+        merge: mergePersistedState,
         storage: createJSONStorage(() => localStorage),
         partialize: (state) => {
           return {
-            chains: state.chains,
             keys: state.keys,
-            account: state.account,
             subAccount: state.subAccount,
             spendPermissions: state.spendPermissions,
             config: state.config,
@@ -157,10 +184,11 @@ export type StoreInstance = ReturnType<typeof createStoreInstance>;
 
 /**
  * Slice accessors for one zustand instance (persisted SDK store or an ephemeral payment store).
- * This is the object on `WalletRuntime.store` — `store.account.get()`, `store.session.set()`, …
+ * The backing state stays flat for persistence compatibility; the bound API namespaces EIP-155
+ * state so shared infrastructure does not present itself as an EVM-only store.
  */
 export function bindStore(storeInstance: StoreInstance) {
-  return {
+  const flat = {
     subAccountsConfig: {
       get: () => storeInstance.getState().subAccountConfig,
       set: (subAccountConfig: Partial<SubAccountConfig>) => {
@@ -203,32 +231,6 @@ export function bindStore(storeInstance: StoreInstance) {
       },
     },
 
-    account: {
-      get: () => storeInstance.getState().account,
-      set: (account: Partial<Account>) => {
-        storeInstance.setState((state) => ({
-          account: { ...state.account, ...account },
-        }));
-      },
-      clear: () => {
-        storeInstance.setState({
-          account: {},
-        });
-      },
-    },
-
-    chains: {
-      get: () => storeInstance.getState().chains,
-      set: (chains: Chain[]) => {
-        storeInstance.setState({ chains });
-      },
-      clear: () => {
-        storeInstance.setState({
-          chains: [],
-        });
-      },
-    },
-
     keys: {
       get: (key: string) => storeInstance.getState().keys[key],
       set: (key: string, value: string | null) => {
@@ -256,6 +258,34 @@ export function bindStore(storeInstance: StoreInstance) {
       clear: () => {
         storeInstance.setState({ session: undefined });
       },
+      subscribe: (
+        listener: (session: Session | undefined, previousSession: Session | undefined) => void
+      ) =>
+        storeInstance.subscribe((state, previous) => {
+          if (state.session !== previous.session) listener(state.session, previous.session);
+        }),
+    },
+  };
+
+  return {
+    keys: flat.keys,
+    session: flat.session,
+    config: {
+      get: (): CoreConfig => {
+        const { paymasterUrls: _, ...config } = flat.config.get();
+        return config;
+      },
+      set: (config: Partial<CoreConfig>) => flat.config.set(config),
+    },
+    eip155: {
+      subAccounts: flat.subAccounts,
+      subAccountsConfig: flat.subAccountsConfig,
+      spendPermissions: flat.spendPermissions,
+      paymasterUrls: {
+        get: () => flat.config.get().paymasterUrls,
+        set: (paymasterUrls: Record<number, string> | undefined) =>
+          flat.config.set({ paymasterUrls }),
+      },
     },
   };
 }
@@ -263,15 +293,6 @@ export function bindStore(storeInstance: StoreInstance) {
 export type Store = ReturnType<typeof bindStore>;
 
 const bound = bindStore(defaultStoreInstance);
-
-export const subAccountsConfig = bound.subAccountsConfig;
-export const subAccounts = bound.subAccounts;
-export const spendPermissions = bound.spendPermissions;
-export const account = bound.account;
-export const chains = bound.chains;
-export const keys = bound.keys;
-export const config = bound.config;
-export const session = bound.session;
 
 type GlobalSdkPersistApi = {
   rehydrate: () => Promise<void> | void;

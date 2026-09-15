@@ -38,6 +38,7 @@ const PAGES = [
   '/pay-playground',
   '/subscribe-playground',
   '/prolink-playground',
+  '/solana',
   '/e2e-test',
 ];
 

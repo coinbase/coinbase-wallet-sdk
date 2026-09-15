@@ -1,10 +1,11 @@
 import { standardErrors } from ':core/error/errors.js';
-import { toEnvelope } from ':core/namespaces/eip155/index.js';
+import type { Eip1193Context } from '../context.js';
 import type { RequestArguments } from ':core/provider/interface.js';
 import type { AddSubAccountAccount } from ':core/rpc/wallet_addSubAccount.js';
 import type { Session } from ':core/session/index.js';
 import { invoke } from ':core/session/invoke.js';
-import type { WalletRuntime } from ':core/transport/index.js';
+import { toEnvelope } from '../../envelope.js';
+import { eip155Translator } from '../../translator.js';
 import { getCryptoKeyAccount } from ':owner-key/index.js';
 import { assertSubAccount } from ':util/assertSubAccount.js';
 import { isAddressEqual } from 'viem';
@@ -29,11 +30,12 @@ function firstParam(request: RequestArguments): AddSubAccountParams | undefined 
  * and `invoke` the global account (the wallet deploys / records the sub-account).
  */
 export async function addSubAccount(
-  runtime: WalletRuntime,
+  context: Eip1193Context,
   session: Session,
   request: RequestArguments
 ) {
-  const cached = runtime.store.subAccounts.get();
+  const { transport, cache, chain } = context;
+  const cached = cache.subAccounts.get();
   const account = firstParam(request)?.account;
   const requestedAddress = account && 'address' in account ? account.address : undefined;
 
@@ -41,7 +43,7 @@ export async function addSubAccount(
   if (cached?.address) {
     const shouldUseCache = !requestedAddress || isAddressEqual(requestedAddress, cached.address);
     if (shouldUseCache) {
-      persistSubAccount(runtime, session, cached);
+      persistSubAccount(context, session, cached);
       return cached;
     }
   }
@@ -54,7 +56,7 @@ export async function addSubAccount(
     if (params.account.keys && params.account.keys.length > 0) {
       keys = params.account.keys;
     } else {
-      const config = runtime.store.subAccountsConfig.get() ?? {};
+      const config = cache.subAccountsConfig.get() ?? {};
       const { account: ownerAccount } = config.toOwnerAccount
         ? await config.toOwnerAccount()
         : await getCryptoKeyAccount();
@@ -77,8 +79,13 @@ export async function addSubAccount(
   }
 
   // Wallet records the sub-account on the global account (encrypted RPC).
-  const response = await invoke(session, toEnvelope(next, runtime.chainId()), runtime.transport);
+  const response = await invoke(
+    session,
+    toEnvelope(next, chain.get()),
+    transport,
+    eip155Translator
+  );
   assertSubAccount(response);
-  persistSubAccount(runtime, session, response);
+  persistSubAccount(context, session, response);
   return response;
 }

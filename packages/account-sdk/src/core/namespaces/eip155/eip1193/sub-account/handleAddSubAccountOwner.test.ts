@@ -1,14 +1,12 @@
 import { standardErrors } from ':core/error/errors.js';
-import { getClient } from ':core/namespaces/eip155/client/index.js';
 import { OwnerAccount } from ':core/type/index.js';
-import { store } from ':store/store.js';
+import { getClient } from ':core/namespaces/eip155/client/index.js';
 import { waitForCallsStatus } from 'viem/actions';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { findOwnerIndex } from './findOwnerIndex.js';
 import { handleAddSubAccountOwner } from './handleAddSubAccountOwner.js';
 import { presentAddOwnerDialog } from './presentAddOwnerDialog.js';
 
-vi.mock(':store/store.js');
 vi.mock(':core/namespaces/eip155/client/index.js');
 vi.mock('viem/actions', () => ({
   waitForCallsStatus: vi.fn().mockResolvedValue({ status: 'success' }),
@@ -21,6 +19,8 @@ vi.mock('./presentAddOwnerDialog.js', () => ({
 }));
 
 describe('handleAddSubAccountOwner', () => {
+  const globalAccount = '0x0000000000000000000000000000000000000001';
+  const subAccount = '0x0000000000000000000000000000000000000002';
   const mockOwnerAccount: OwnerAccount = {
     type: 'webAuthn',
     id: 'test',
@@ -51,13 +51,6 @@ describe('handleAddSubAccountOwner', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (store.account.get as ReturnType<typeof vi.fn>).mockReturnValue({
-      accounts: ['0xglobal', '0xsub'],
-      chain: { id: 1 },
-    });
-    (store.subAccounts.get as ReturnType<typeof vi.fn>).mockReturnValue({
-      address: '0xsub',
-    });
     (getClient as ReturnType<typeof vi.fn>).mockReturnValue(mockClient);
     (waitForCallsStatus as ReturnType<typeof vi.fn>).mockResolvedValue({ status: 'success' });
     (findOwnerIndex as ReturnType<typeof vi.fn>).mockResolvedValue(1);
@@ -72,6 +65,8 @@ describe('handleAddSubAccountOwner', () => {
         ownerAccount: mockOwnerAccount,
         globalAccountRequest: mockGlobalAccountRequest,
         chainId: testChainId,
+        globalAccount,
+        subAccount,
       })
     ).rejects.toThrow(standardErrors.rpc.internal(`client not found for chainId ${testChainId}`));
   });
@@ -84,6 +79,8 @@ describe('handleAddSubAccountOwner', () => {
         ownerAccount: mockOwnerAccount,
         globalAccountRequest: mockGlobalAccountRequest,
         chainId: testChainId,
+        globalAccount,
+        subAccount,
       })
     ).rejects.toThrow(standardErrors.rpc.internal('add owner call failed'));
   });
@@ -93,6 +90,8 @@ describe('handleAddSubAccountOwner', () => {
       ownerAccount: mockOwnerAccount,
       globalAccountRequest: mockGlobalAccountRequest,
       chainId: testChainId,
+      globalAccount,
+      subAccount,
     });
 
     expect(result).toBe(1);
@@ -103,18 +102,18 @@ describe('handleAddSubAccountOwner', () => {
           version: '1',
           calls: expect.arrayContaining([
             expect.objectContaining({
-              to: '0xsub',
+              to: subAccount,
               data: expect.any(String),
               value: '0x0',
             }),
           ]),
           chainId: expect.any(String),
-          from: '0xglobal',
+          from: globalAccount,
         }),
       ]),
     });
     expect(findOwnerIndex).toHaveBeenCalledWith({
-      address: '0xsub',
+      address: subAccount,
       publicKey: mockOwnerAccount.publicKey,
       client: mockClient,
     });
@@ -125,6 +124,8 @@ describe('handleAddSubAccountOwner', () => {
       ownerAccount: mockLocalOwnerAccount,
       globalAccountRequest: mockGlobalAccountRequest,
       chainId: testChainId,
+      globalAccount,
+      subAccount,
     });
 
     expect(result).toBe(1);
@@ -135,11 +136,11 @@ describe('handleAddSubAccountOwner', () => {
           calls: expect.arrayContaining([
             // Should include both addOwnerAddress and addOwnerPublicKey calls
             expect.objectContaining({
-              to: '0xsub',
+              to: subAccount,
               data: expect.stringContaining('0x'), // addOwnerAddress call
             }),
             expect.objectContaining({
-              to: '0xsub',
+              to: subAccount,
               data: expect.stringContaining('0x'), // addOwnerPublicKey call
             }),
           ]),
@@ -147,37 +148,10 @@ describe('handleAddSubAccountOwner', () => {
       ]),
     });
     expect(findOwnerIndex).toHaveBeenCalledWith({
-      address: '0xsub',
+      address: subAccount,
       publicKey: mockLocalOwnerAccount.address, // For local accounts, uses address for finding
       client: mockClient,
     });
-  });
-
-  it('should throw error when no global account is found', async () => {
-    (store.account.get as ReturnType<typeof vi.fn>).mockReturnValue({
-      accounts: ['0xsub'],
-      chain: { id: 1 },
-    });
-
-    await expect(
-      handleAddSubAccountOwner({
-        ownerAccount: mockOwnerAccount,
-        globalAccountRequest: mockGlobalAccountRequest,
-        chainId: testChainId,
-      })
-    ).rejects.toThrow(standardErrors.provider.unauthorized('no global account'));
-  });
-
-  it('should throw error when no sub account is found', async () => {
-    (store.subAccounts.get as ReturnType<typeof vi.fn>).mockReturnValue(null);
-
-    await expect(
-      handleAddSubAccountOwner({
-        ownerAccount: mockOwnerAccount,
-        globalAccountRequest: mockGlobalAccountRequest,
-        chainId: testChainId,
-      })
-    ).rejects.toThrow(standardErrors.provider.unauthorized('no sub account'));
   });
 
   it('should throw error when user cancels the dialog', async () => {
@@ -188,6 +162,8 @@ describe('handleAddSubAccountOwner', () => {
         ownerAccount: mockOwnerAccount,
         globalAccountRequest: mockGlobalAccountRequest,
         chainId: testChainId,
+        globalAccount,
+        subAccount,
       })
     ).rejects.toThrow(standardErrors.provider.unauthorized('user cancelled'));
   });
@@ -200,6 +176,8 @@ describe('handleAddSubAccountOwner', () => {
         ownerAccount: mockOwnerAccount,
         globalAccountRequest: mockGlobalAccountRequest,
         chainId: testChainId,
+        globalAccount,
+        subAccount,
       })
     ).rejects.toThrow(standardErrors.rpc.internal('failed to find owner index'));
   });
@@ -221,6 +199,8 @@ describe('handleAddSubAccountOwner', () => {
       ownerAccount: mockLocalAccountNoAddress,
       globalAccountRequest: mockGlobalAccountRequest,
       chainId: testChainId,
+      globalAccount,
+      subAccount,
     });
 
     expect(result).toBe(1);
@@ -231,11 +211,11 @@ describe('handleAddSubAccountOwner', () => {
           calls: expect.arrayContaining([
             // Should include both addOwnerAddress and addOwnerPublicKey calls for local accounts
             expect.objectContaining({
-              to: '0xsub',
+              to: subAccount,
               data: expect.stringContaining('0x'),
             }),
             expect.objectContaining({
-              to: '0xsub',
+              to: subAccount,
               data: expect.stringContaining('0x'),
             }),
           ]),
@@ -244,7 +224,7 @@ describe('handleAddSubAccountOwner', () => {
     });
     // Should use address for finding since it's a local account
     expect(findOwnerIndex).toHaveBeenCalledWith({
-      address: '0xsub',
+      address: subAccount,
       publicKey: mockLocalAccountNoAddress.address,
       client: mockClient,
     });

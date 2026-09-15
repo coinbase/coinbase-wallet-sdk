@@ -1,6 +1,5 @@
 import { isActionableHttpRequestError, isViemError, standardErrors } from ':core/error/errors.js';
-import { getClient } from ':core/namespaces/eip155/client/index.js';
-import { toEnvelope } from ':core/namespaces/eip155/index.js';
+import type { Eip1193Context } from '../context.js';
 import type { RequestArguments } from ':core/provider/interface.js';
 import type { Session } from ':core/session/index.js';
 import { invoke } from ':core/session/invoke.js';
@@ -16,9 +15,13 @@ import {
   logSubAccountRequestStarted,
 } from ':core/telemetry/events/scw-sub-account.js';
 import { parseErrorMessageFromAny } from ':core/telemetry/utils.js';
-import type { WalletRuntime } from ':core/transport/index.js';
+import { toEnvelope } from '../../envelope.js';
+import { eip155Translator } from '../../translator.js';
+import { firstGlobalEip155Account } from '../../session.js';
 import { getCryptoKeyAccount } from ':owner-key/index.js';
+import { getClient } from ':core/namespaces/eip155/client/index.js';
 import { correlationIds } from ':store/correlation-ids/store.js';
+import type { Store } from ':store/store.js';
 import { assertPresence } from ':util/assertPresence.js';
 import { type WalletSendCallsParameters, hexToNumber } from 'viem';
 import { createSubAccountSigner } from './createSubAccountSigner.js';
@@ -32,16 +35,21 @@ import { addSenderToRequest, getSenderFromRequest, makeDataSuffix } from './util
  * True when the request's `from` / signer address is the cached sub-account.
  * Requests without a sender stay on the global account transport.
  */
-export function shouldUseSubAccount(runtime: WalletRuntime, request: RequestArguments): boolean {
+export function shouldUseSubAccount(cache: Store['eip155'], request: RequestArguments): boolean {
   const sender = getSenderFromRequest(request);
-  const subAccount = runtime.store.subAccounts.get();
+  const subAccount = cache.subAccounts.get();
   if (!sender || !subAccount?.address) return false;
   return sender.toLowerCase() === subAccount.address.toLowerCase();
 }
 
 /** `invoke` on the global account — used as `globalAccountRequest` for add-owner and funding. */
-function sendViaWallet(runtime: WalletRuntime, session: Session, request: RequestArguments) {
-  return invoke(session, toEnvelope(request, runtime.chainId()), runtime.transport);
+function sendViaWallet(context: Eip1193Context, session: Session, request: RequestArguments) {
+  return invoke(
+    session,
+    toEnvelope(request, context.chain.get()),
+    context.transport,
+    eip155Translator
+  );
 }
 
 /**
@@ -52,14 +60,14 @@ function sendViaWallet(runtime: WalletRuntime, session: Session, request: Reques
  * still `invoke`s the **global** account (`sendViaWallet`) to add-owner or fund.
  */
 export async function dispatchSubAccount(
-  runtime: WalletRuntime,
+  context: Eip1193Context,
   session: Session,
   request: RequestArguments
 ): Promise<unknown> {
   const correlationId = correlationIds.get(request);
   logSubAccountRequestStarted({ method: request.method, correlationId });
   try {
-    const result = await sendToSubAccount(runtime, session, request);
+    const result = await sendToSubAccount(context, session, request);
     logSubAccountRequestCompleted({ method: request.method, correlationId });
     return result;
   } catch (error) {
@@ -73,13 +81,16 @@ export async function dispatchSubAccount(
 }
 
 async function sendToSubAccount(
-  runtime: WalletRuntime,
+  context: Eip1193Context,
   session: Session,
   request: RequestArguments
 ): Promise<unknown> {
-  const subAccount = runtime.store.subAccounts.get();
-  const subAccountsConfig = runtime.store.subAccountsConfig.get();
-  const config = runtime.store.config.get();
+  const { cache, config, chain } = context;
+  const getChainId = chain.get;
+  const subAccount = cache.subAccounts.get();
+  const subAccountsConfig = cache.subAccountsConfig.get();
+  const coreConfig = config.get();
+  const paymasterUrls = cache.paymasterUrls.get();
 
   // --- Resolve sub-account + local owner key ---
   assertPresence(
@@ -105,9 +116,7 @@ async function sendToSubAccount(
     request = addSenderToRequest(request, subAccount.address);
   }
 
-  const globalAccountAddress = (runtime.store.account.get().accounts ?? []).find(
-    (account) => account.toLowerCase() !== subAccount.address.toLowerCase()
-  );
+  const globalAccountAddress = firstGlobalEip155Account(session, getChainId(), subAccount.address);
 
   assertPresence(
     globalAccountAddress,
@@ -117,14 +126,14 @@ async function sendToSubAccount(
   );
 
   const dataSuffix = makeDataSuffix({
-    attribution: config.preference?.attribution,
+    attribution: coreConfig.preference?.attribution,
     dappOrigin: window.location.origin,
   });
 
   const walletSendCallsChainId =
     request.method === 'wallet_sendCalls' &&
     (request.params as WalletSendCallsParameters)?.[0]?.chainId;
-  const chainId = walletSendCallsChainId ? hexToNumber(walletSendCallsChainId) : runtime.chainId();
+  const chainId = walletSendCallsChainId ? hexToNumber(walletSendCallsChainId) : getChainId();
 
   const client = getClient(chainId);
   assertPresence(
@@ -134,12 +143,12 @@ async function sendToSubAccount(
     )
   );
 
-  const globalAccountRequest = (args: RequestArguments) => sendViaWallet(runtime, session, args);
+  const globalAccountRequest = (args: RequestArguments) => sendViaWallet(context, session, args);
 
   // --- Funding: no spend-permission grant yet → route the tx through global ---
   if (['eth_sendTransaction', 'wallet_sendCalls'].includes(request.method)) {
     if (subAccountsConfig?.funding === 'spend-permissions') {
-      const storedSpendPermissions = runtime.store.spendPermissions.get();
+      const storedSpendPermissions = cache.spendPermissions.get();
       if (storedSpendPermissions.length === 0) {
         return routeThroughGlobalAccount({
           request,
@@ -148,6 +157,8 @@ async function sendToSubAccount(
           client,
           globalAccountRequest,
           chainId,
+          spendPermissions: cache.spendPermissions,
+          paymasterUrls,
         });
       }
     }
@@ -175,6 +186,9 @@ async function sendToSubAccount(
         ownerAccount: ownerAccount.account,
         globalAccountRequest,
         chainId,
+        globalAccount: globalAccountAddress,
+        subAccount: subAccount.address,
+        appName: coreConfig.metadata?.appName,
       });
       logAddOwnerCompleted({ method: request.method, correlationId: addOwnerCorrelationId });
     } catch (error) {
@@ -199,6 +213,7 @@ async function sendToSubAccount(
     parentAddress: globalAccountAddress,
     attribution: dataSuffix ? { suffix: dataSuffix } : undefined,
     ownerIndex,
+    paymasterUrls,
   });
 
   try {
@@ -236,6 +251,8 @@ async function sendToSubAccount(
         client,
         request,
         globalAccountRequest,
+        spendPermissions: cache.spendPermissions,
+        paymasterUrls,
       });
       logInsufficientBalanceErrorHandlingCompleted({
         method: request.method,

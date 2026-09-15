@@ -1,9 +1,8 @@
 import {
-  BITCOIN_MAINNET,
-  SOLANA_MAINNET,
   accountOf,
-  eip155Caip2,
-  formatEip155Account,
+  chainIdOf,
+  formatCaip2,
+  formatCaip10,
   namespaceOf,
   parseCaip2,
 } from './caip.js';
@@ -11,9 +10,19 @@ import {
 describe('caip', () => {
   it('parses eip155, solana, and bip122', () => {
     expect(parseCaip2('eip155:8453')).toEqual({ namespace: 'eip155', reference: '8453' });
-    expect(namespaceOf(SOLANA_MAINNET)).toBe('solana');
-    expect(namespaceOf(BITCOIN_MAINNET)).toBe('bip122');
-    expect(eip155Caip2(1)).toBe('eip155:1');
-    expect(accountOf(formatEip155Account(8453, '0xabc'))).toBe('0xabc');
+    expect(namespaceOf('solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp')).toBe('solana');
+    expect(namespaceOf('bip122:000000000019d6689c085ae165831e93')).toBe('bip122');
+    expect(accountOf(formatCaip10('eip155:8453', '0xabc'))).toBe('0xabc');
+  });
+
+  it('uses standardized invalid-params errors for malformed identifiers', () => {
+    expect(() => formatCaip2('x', '')).toThrowError(expect.objectContaining({ code: -32602 }));
+    expect(() => formatCaip10('eip155:1', '')).toThrowError(
+      expect.objectContaining({ code: -32602 })
+    );
+    expect(() => namespaceOf('invalid')).toThrowError(expect.objectContaining({ code: -32602 }));
+    expect(() => chainIdOf('invalid' as never)).toThrowError(
+      expect.objectContaining({ code: -32602 })
+    );
   });
 });

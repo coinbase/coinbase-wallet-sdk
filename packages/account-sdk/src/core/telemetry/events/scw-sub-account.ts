@@ -8,7 +8,7 @@ export const logSubAccountRequestStarted = ({
   method: string;
   correlationId: string | undefined;
 }) => {
-  const config = store.subAccountsConfig.get();
+  const config = store.eip155.subAccountsConfig.get();
   logEvent(
     'scw_sub_account.request.started',
     {
@@ -31,7 +31,7 @@ export const logSubAccountRequestCompleted = ({
   method: string;
   correlationId: string | undefined;
 }) => {
-  const config = store.subAccountsConfig.get();
+  const config = store.eip155.subAccountsConfig.get();
   logEvent(
     'scw_sub_account.request.completed',
     {
@@ -56,7 +56,7 @@ export const logSubAccountRequestError = ({
   correlationId: string | undefined;
   errorMessage: string;
 }) => {
-  const config = store.subAccountsConfig.get();
+  const config = store.eip155.subAccountsConfig.get();
   logEvent(
     'scw_sub_account.request.error',
     {
@@ -80,7 +80,7 @@ export const logAddOwnerStarted = ({
   method: string;
   correlationId: string | undefined;
 }) => {
-  const config = store.subAccountsConfig.get();
+  const config = store.eip155.subAccountsConfig.get();
   logEvent(
     'scw_sub_account.add_owner.started',
     {
@@ -103,7 +103,7 @@ export const logAddOwnerCompleted = ({
   method: string;
   correlationId: string | undefined;
 }) => {
-  const config = store.subAccountsConfig.get();
+  const config = store.eip155.subAccountsConfig.get();
   logEvent(
     'scw_sub_account.add_owner.completed',
     {
@@ -128,7 +128,7 @@ export const logAddOwnerError = ({
   correlationId: string | undefined;
   errorMessage: string;
 }) => {
-  const config = store.subAccountsConfig.get();
+  const config = store.eip155.subAccountsConfig.get();
   logEvent(
     'scw_sub_account.add_owner.error',
     {
@@ -152,7 +152,7 @@ export const logInsufficientBalanceErrorHandlingStarted = ({
   method: string;
   correlationId: string | undefined;
 }) => {
-  const config = store.subAccountsConfig.get();
+  const config = store.eip155.subAccountsConfig.get();
   logEvent(
     'scw_sub_account.insufficient_balance.error_handling.started',
     {
@@ -175,7 +175,7 @@ export const logInsufficientBalanceErrorHandlingCompleted = ({
   method: string;
   correlationId: string | undefined;
 }) => {
-  const config = store.subAccountsConfig.get();
+  const config = store.eip155.subAccountsConfig.get();
   logEvent(
     'scw_sub_account.insufficient_balance.error_handling.completed',
     {
@@ -200,7 +200,7 @@ export const logInsufficientBalanceErrorHandlingError = ({
   correlationId: string | undefined;
   errorMessage: string;
 }) => {
-  const config = store.subAccountsConfig.get();
+  const config = store.eip155.subAccountsConfig.get();
   logEvent(
     'scw_sub_account.insufficient_balance.error_handling.error',
     {

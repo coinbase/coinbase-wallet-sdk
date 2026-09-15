@@ -1,18 +1,18 @@
+import type { Eip1193Context } from '../context.js';
 import type { Session } from ':core/session/index.js';
-import { withEip155Accounts } from ':core/session/index.js';
-import type { WalletRuntime } from ':core/transport/index.js';
 import type { Address } from ':core/type/index.js';
-import type { SubAccount } from ':store/store.js';
+import type { Store, SubAccount } from ':store/store.js';
 import { numberToHex } from 'viem';
+import { projectEthAccountsForChain, withEip155Accounts } from '../../session.js';
 import { appendWithoutDuplicates, prependWithoutDuplicates } from './utils.js';
 
 /**
  * EIP-1193 accounts with the sub-account first or last based on `defaultAccount`.
  */
-export function orderedEthAccounts(runtime: WalletRuntime, accounts: Address[]): Address[] {
-  const sub = runtime.store.subAccounts.get()?.address;
+export function orderedEthAccounts(store: Store['eip155'], accounts: Address[]): Address[] {
+  const sub = store.subAccounts.get()?.address;
   if (!sub) return accounts;
-  return runtime.store.subAccountsConfig.get()?.defaultAccount === 'sub'
+  return store.subAccountsConfig.get()?.defaultAccount === 'sub'
     ? prependWithoutDuplicates(accounts, sub)
     : appendWithoutDuplicates(accounts, sub);
 }
@@ -22,19 +22,19 @@ export function orderedEthAccounts(runtime: WalletRuntime, accounts: Address[]):
  * Called from `ingestConnectResult` (on-connect) and `addSubAccount`.
  */
 export function persistSubAccount(
-  runtime: WalletRuntime,
+  context: Eip1193Context,
   session: Session,
   subAccount: SubAccount,
-  chainId = runtime.chainId()
+  chainId = context.chain.get()
 ) {
-  runtime.store.subAccounts.set(subAccount);
-  const accounts = orderedEthAccounts(runtime, [
-    ...((runtime.store.account.get().accounts ?? []) as Address[]),
+  const { transport, cache, emit } = context;
+  cache.subAccounts.set(subAccount);
+  const accounts = orderedEthAccounts(cache, [
+    ...projectEthAccountsForChain(session, chainId),
     subAccount.address,
   ]);
-  runtime.writeSession(withEip155Accounts(session, chainId, accounts));
-  runtime.store.account.set({ accounts });
-  runtime.emit?.('accountsChanged', accounts);
-  runtime.emit?.('connect', { chainId: numberToHex(chainId) });
+  transport.writeSession(withEip155Accounts(session, chainId, accounts));
+  emit('accountsChanged', accounts);
+  emit('connect', { chainId: numberToHex(chainId) });
   return accounts;
 }

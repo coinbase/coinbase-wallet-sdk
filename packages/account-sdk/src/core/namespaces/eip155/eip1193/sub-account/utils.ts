@@ -10,6 +10,7 @@ import {
   FetchPermissionsRequest,
 } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { WalletConnectRequest, WalletConnectResponse } from ':core/rpc/wallet_connect.js';
+import type { Session } from ':core/session/types.js';
 import {
   logDialogActionClicked,
   logDialogDismissed,
@@ -17,11 +18,12 @@ import {
 } from ':core/telemetry/events/dialog.js';
 import { Address } from ':core/type/index.js';
 import { getCryptoKeyAccount } from ':owner-key/index.js';
-import { type Store, config, store } from ':store/store.js';
+import type { Store } from ':store/store.js';
 import { initDialog } from ':ui/Dialog/index.js';
 import { get } from ':util/get.js';
 import { waitForCallsStatus } from 'viem/actions';
 import { spendPermissionManagerAddress } from './constants.js';
+import { projectEthAccountsForChain } from '../../session.js';
 
 // ***************************************************************
 // Utility
@@ -144,11 +146,10 @@ export function injectRequestCapabilities<T extends RequestArguments>(
 
 /**
  * Initializes the `subAccountConfig` slice (owner account + on-connect capabilities).
- * Pass `runtime.store` so on-connect injection uses the same store as `pair`.
  */
-export async function initSubAccountConfig({
-  subAccountsConfig,
-}: Pick<Store, 'subAccountsConfig'> = store) {
+export async function initSubAccountConfig(
+  subAccountsConfig: Store['eip155']['subAccountsConfig']
+) {
   const config = subAccountsConfig.get() ?? {};
 
   const capabilities: WalletConnectRequest['params'][0]['capabilities'] = {};
@@ -253,7 +254,10 @@ export function assertFetchPermissionsRequest(
 }
 
 export function fillMissingParamsForFetchPermissions(
-  request: FetchPermissionsRequest | EmptyFetchPermissionsRequest
+  request: FetchPermissionsRequest | EmptyFetchPermissionsRequest,
+  session?: Session,
+  cache?: Store['eip155'],
+  chainId?: number
 ): FetchPermissionsRequest {
   if (request.params !== undefined) {
     return request as FetchPermissionsRequest;
@@ -261,9 +265,9 @@ export function fillMissingParamsForFetchPermissions(
 
   // this is based on the assumption that the first account is the active account
   // it could change in the context of multi-(universal)-account
-  const accountFromStore = store.getState().account.accounts?.[0];
-  const chainId = store.getState().account.chain?.id;
-  const subAccountFromStore = store.getState().subAccount?.address;
+  const accountFromStore =
+    session && chainId !== undefined ? projectEthAccountsForChain(session, chainId)[0] : undefined;
+  const subAccountFromStore = cache?.subAccounts.get()?.address;
 
   if (!accountFromStore || !subAccountFromStore || !chainId) {
     throw standardErrors.rpc.invalidParams(
@@ -392,14 +396,14 @@ export function createWalletSendCallsRequest({
   from,
   chainId,
   capabilities,
+  paymasterUrls,
 }: {
   calls: { to: Address; data: Hex; value: Hex; capabilities?: Record<string, unknown> }[];
   from: Address;
   chainId: number;
   capabilities?: Record<string, unknown>;
+  paymasterUrls?: Record<number, string>;
 }) {
-  const paymasterUrls = config.get().paymasterUrls;
-
   let request: { method: 'wallet_sendCalls'; params: WalletSendCallsParameters } = {
     method: 'wallet_sendCalls',
     params: [
@@ -586,12 +590,16 @@ export function appendWithoutDuplicates<T>(array: T[], item: T): T[] {
   return [...filtered, item];
 }
 
-export async function getCachedWalletConnectResponse(): Promise<WalletConnectResponse | null> {
+export async function getCachedWalletConnectResponse(
+  session: Session,
+  store: Store['eip155'],
+  chainId: number
+): Promise<WalletConnectResponse | null> {
   const spendPermissions = store.spendPermissions.get();
   const subAccount = store.subAccounts.get();
-  const accounts = store.account.get().accounts;
+  const accounts = projectEthAccountsForChain(session, chainId);
 
-  if (!accounts) {
+  if (accounts.length === 0) {
     return null;
   }
 

@@ -3,6 +3,7 @@
 import { clsx } from 'clsx';
 import { FunctionComponent, JSX, render } from 'preact';
 
+import { projectEthAccounts } from ':core/namespaces/eip155/session.js';
 import { getDisplayableUsername } from ':core/username/getDisplayableUsername.js';
 import { store } from ':store/store.js';
 import { BaseLogo } from ':ui/assets/BaseLogo.js';
@@ -210,7 +211,8 @@ export const DialogInstance: FunctionComponent<DialogInstanceProps> = ({
 
   useEffect(() => {
     const fetchEnsName = async () => {
-      const address = store.account.get().accounts?.[0];
+      const session = store.session.get();
+      const address = session ? projectEthAccounts(session)[0] : undefined;
 
       if (address) {
         const username = await getDisplayableUsername(address);

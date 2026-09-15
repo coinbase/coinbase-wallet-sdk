@@ -1,39 +1,35 @@
 import { standardErrors } from ':core/error/errors.js';
-import { getNamespaceTranslator } from '../translators/registry.js';
-import { namespaceOf } from './caip.js';
-import { assertInvokeAuthorized } from './caip27.js';
-import type { Envelope, Session, Transport } from './types.js';
+import type { WalletTransport } from ':core/transport/index.js';
+import { assertInvokeAuthorized, createCaip27Request } from './caip27.js';
+import type { Envelope, NamespaceTranslator, Session } from './types.js';
 
 /**
  * Send one request on an **already-paired** session.
  *
- * Use this after `pair` / `ensureSession` has written a `Session`. It does not
+ * Use this after `createSession` / `ensureSession` has written a `Session`. It does not
  * open a popup, handshake, or `wallet_connect`. Flow:
  *
  * 1. CAIP-27: `chainId` must already be in the session (`assertInvokeAuthorized`).
- * 2. Select the registered namespace translator (only `eip155` today).
+ * 2. Apply the namespace translator supplied by the caller.
  * 3. `qualify` — validate namespace-specific session requirements.
  * 4. Add the CAIP-25 `sessionId` when one was issued.
- * 5. `transport.send(envelope)` — popup sends CAIP-27 `wallet_invokeMethod`.
+ * 5. `transport.request(wallet_invokeMethod)` — deliver the complete CAIP-27 JSON-RPC request.
  * 6. The selected translator validates and unwraps the opaque response.
  *
- * Contrast with `pair`, which creates the session. Funding / add-owner for a
- * sub-account still call `invoke` on the **global** account (the sub-account
- * itself is signed locally via `:owner-key`).
+ * Contrast with `createSession`, which creates the session.
  */
 export async function invoke(
   session: Session,
   envelope: Envelope,
-  transport: Transport
+  transport: WalletTransport,
+  translator: NamespaceTranslator
 ): Promise<unknown> {
   assertInvokeAuthorized(session, envelope);
-  // Namespace semantics, not the delivery transport, determine qualification and response decoding.
-  const translator = getNamespaceTranslator(namespaceOf(envelope.chainId));
   const qualified = translator.qualify(session, {
     ...envelope,
     ...(session.sessionId ? { sessionId: session.sessionId } : {}),
   });
-  const response = await transport.send(qualified);
+  const response = await transport.request(createCaip27Request(qualified));
   return translator.unwrapResponse(response, qualified);
 }
 
@@ -45,11 +41,14 @@ export async function invoke(
  * handling to the namespace translator. A session id is forbidden so this
  * path cannot bypass persisted-session authorization.
  */
-export async function invokeEphemeral(envelope: Envelope, transport: Transport): Promise<unknown> {
+export async function invokeEphemeral(
+  envelope: Envelope,
+  transport: WalletTransport,
+  translator: NamespaceTranslator
+): Promise<unknown> {
   if (envelope.sessionId !== undefined) {
     throw standardErrors.rpc.invalidParams('Ephemeral invoke cannot include a sessionId');
   }
-  const translator = getNamespaceTranslator(namespaceOf(envelope.chainId));
-  const response = await transport.send(envelope);
+  const response = await transport.request(createCaip27Request(envelope));
   return translator.unwrapResponse(response, envelope);
 }

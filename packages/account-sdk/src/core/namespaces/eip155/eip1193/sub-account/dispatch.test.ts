@@ -1,34 +1,25 @@
-import type { WalletRuntime } from ':core/transport/index.js';
+import type { Store } from ':store/store.js';
 import { shouldUseSubAccount } from './dispatch.js';
 
 const GLOBAL = '0x0000000000000000000000000000000000000001';
 const SUB = '0x0000000000000000000000000000000000000002';
 
-function runtime(sub?: string): WalletRuntime {
+function state(sub?: string): Store['eip155'] {
   return {
-    store: {
-      subAccounts: {
-        get: () => (sub ? { address: sub as `0x${string}` } : undefined),
-      },
-    } as unknown as WalletRuntime['store'],
-    chainId: () => 1,
-    handshake: vi.fn(),
-    send: vi.fn(),
-    transport: { kind: 'popup', send: vi.fn() },
-    readSession: () => undefined,
-    writeSession: vi.fn(),
-    cleanup: vi.fn(),
-  };
+    subAccounts: {
+      get: () => (sub ? { address: sub as `0x${string}` } : undefined),
+    },
+  } as unknown as Store['eip155'];
 }
 
 describe('shouldUseSubAccount', () => {
   it('is false when the request has no sender', () => {
-    expect(shouldUseSubAccount(runtime(SUB), { method: 'personal_sign' })).toBe(false);
+    expect(shouldUseSubAccount(state(SUB), { method: 'personal_sign' })).toBe(false);
   });
 
   it('is false when no sub-account is cached', () => {
     expect(
-      shouldUseSubAccount(runtime(), {
+      shouldUseSubAccount(state(), {
         method: 'eth_sendTransaction',
         params: [{ from: SUB }],
       })
@@ -37,7 +28,7 @@ describe('shouldUseSubAccount', () => {
 
   it('is true when from is the cached sub-account', () => {
     expect(
-      shouldUseSubAccount(runtime(SUB), {
+      shouldUseSubAccount(state(SUB), {
         method: 'wallet_sendCalls',
         params: [{ from: SUB }],
       })
@@ -46,7 +37,7 @@ describe('shouldUseSubAccount', () => {
 
   it('is false when from is the global account', () => {
     expect(
-      shouldUseSubAccount(runtime(SUB), {
+      shouldUseSubAccount(state(SUB), {
         method: 'eth_sendTransaction',
         params: [{ from: GLOBAL }],
       })

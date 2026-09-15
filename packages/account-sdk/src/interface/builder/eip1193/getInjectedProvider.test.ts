@@ -38,7 +38,7 @@ describe('getInjectedProvider', () => {
   });
 
   describe('when window.ethereum exists', () => {
-    it('should return the provider when it has the TBA identifier', () => {
+    it('should return the provider when it has the InAppBrowser identifier', () => {
       const mockProvider = {
         isCoinbaseBrowser: true,
         request: vi.fn(),
@@ -50,7 +50,7 @@ describe('getInjectedProvider', () => {
       expect(result).toBe(mockProvider);
     });
 
-    it('should return null when provider does not have the TBA identifier', () => {
+    it('should return null when provider does not have the InAppBrowser identifier', () => {
       const mockProvider = {
         request: vi.fn(),
       };
@@ -61,7 +61,7 @@ describe('getInjectedProvider', () => {
       expect(result).toBeNull();
     });
 
-    it('should return null when TBA identifier is false', () => {
+    it('should return null when InAppBrowser identifier is false', () => {
       const mockProvider = {
         isCoinbaseBrowser: false,
         request: vi.fn(),
@@ -75,7 +75,7 @@ describe('getInjectedProvider', () => {
   });
 
   describe('when window.ethereum does not exist', () => {
-    it('should return window.top.ethereum when it has the TBA identifier', () => {
+    it('should return window.top.ethereum when it has the InAppBrowser identifier', () => {
       const mockProvider = {
         isCoinbaseBrowser: true,
         request: vi.fn(),
@@ -88,7 +88,7 @@ describe('getInjectedProvider', () => {
       expect(result).toBe(mockProvider);
     });
 
-    it('should return null when window.top.ethereum does not have the TBA identifier', () => {
+    it('should return null when window.top.ethereum lacks the InAppBrowser identifier', () => {
       const mockProvider = {
         request: vi.fn(),
       };
@@ -132,7 +132,7 @@ describe('getInjectedProvider', () => {
       expect(result).toBe(topProvider);
     });
 
-    it('should return null when window.top.ethereum exists but lacks TBA identifier (does not fallback)', () => {
+    it('should return null when window.top.ethereum lacks the InAppBrowser identifier', () => {
       const windowProvider = {
         request: vi.fn(),
         source: 'window',
@@ -161,7 +161,7 @@ describe('getInjectedProvider', () => {
       expect(result).toBe(topProvider);
     });
 
-    it('should return null when neither has TBA identifier', () => {
+    it('should return null when neither has the InAppBrowser identifier', () => {
       const windowProvider = {
         request: vi.fn(),
         source: 'window',

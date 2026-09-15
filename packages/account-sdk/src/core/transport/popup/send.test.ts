@@ -23,8 +23,6 @@ function wire(): PopupWire {
       waitForPopupLoaded: vi.fn().mockResolvedValue(undefined),
     },
     keys: {} as PopupWire['keys'],
-    store: {} as PopupWire['store'],
-    chainId: () => 8453,
   };
 }
 
@@ -48,12 +46,12 @@ describe('send', () => {
     });
     decryptPopupMock.mockResolvedValue({ result: { value: '0xsig' } });
 
-    await expect(send(w, request)).resolves.toBe('0xsig');
+    await expect(send(w, request)).resolves.toEqual({ result: { value: '0xsig' } });
     expect(encryptMock).toHaveBeenCalledWith(w.keys, { action: request });
     expect(postPopupMock).toHaveBeenCalledWith(w, { encrypted }, undefined);
   });
 
-  it('throws a decrypted RPC error', async () => {
+  it('returns a decrypted RPC error for the transport facade to handle', async () => {
     const w = wire();
     encryptMock.mockResolvedValue({ iv: new Uint8Array(), cipherText: new ArrayBuffer(0) });
     postPopupMock.mockResolvedValue({
@@ -68,9 +66,8 @@ describe('send', () => {
       result: { error: { code: -32000, message: 'fail' } },
     });
 
-    await expect(send(w, { method: 'eth_accounts' })).rejects.toEqual({
-      code: -32000,
-      message: 'fail',
+    await expect(send(w, { method: 'eth_accounts' })).resolves.toEqual({
+      result: { error: { code: -32000, message: 'fail' } },
     });
   });
 });

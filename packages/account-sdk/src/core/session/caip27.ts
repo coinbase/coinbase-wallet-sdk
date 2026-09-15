@@ -1,7 +1,7 @@
 import { standardErrors } from ':core/error/errors.js';
-import type { RequestArguments } from ':core/provider/interface.js';
-import { type Caip2, parseCaip2 } from './caip.js';
-import { WALLET_CREATE_SESSION } from './caip25.js';
+import type { RequestArguments } from ':core/message/RequestArguments.js';
+import { type Caip2, isCaip2 } from './caip.js';
+import { grantFor } from './grants.js';
 import type { Caip27Error, Caip27Params, Caip27Response, Envelope, Session } from './types.js';
 
 /** CAIP-27 JSON-RPC method used for every wallet invocation. */
@@ -12,93 +12,6 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     return value as Record<string, unknown>;
   }
   return null;
-}
-
-function namedParams(params: RequestArguments['params']): Record<string, unknown> {
-  const direct = asRecord(params);
-  if (direct) return direct;
-  throw standardErrors.rpc.invalidParams('wallet_invokeMethod params must be an object');
-}
-
-function isEip155ChainId(value: unknown): value is Caip2 {
-  if (typeof value !== 'string') return false;
-  const parsed = parseCaip2(value);
-  if (!parsed || parsed.namespace !== 'eip155' || !/^[1-9]\d*$/.test(parsed.reference)) {
-    return false;
-  }
-  const chainId = Number(parsed.reference);
-  return Number.isSafeInteger(chainId) && String(chainId) === parsed.reference;
-}
-
-function parseChainId(params: Record<string, unknown>): Caip2 {
-  if (!isEip155ChainId(params.chainId)) {
-    throw standardErrors.rpc.invalidParams('wallet_invokeMethod requires an eip155 CAIP-2 chainId');
-  }
-  return params.chainId;
-}
-
-function parseRequest(params: Record<string, unknown>): Caip27Params['request'] {
-  const request = asRecord(params.request);
-  if (!request || typeof request.method !== 'string' || request.method.length === 0) {
-    throw standardErrors.rpc.invalidParams('wallet_invokeMethod.request.method is required');
-  }
-  if (request.method === WALLET_INVOKE_METHOD || request.method === WALLET_CREATE_SESSION) {
-    throw standardErrors.rpc.invalidParams('nested CAIP carrier methods are not supported');
-  }
-  if (request.params === undefined) {
-    throw standardErrors.rpc.invalidParams('wallet_invokeMethod.request.params is required');
-  }
-  if (!Array.isArray(request.params) && !asRecord(request.params)) {
-    throw standardErrors.rpc.invalidParams(
-      'wallet_invokeMethod.request.params must be an array or object'
-    );
-  }
-  return {
-    method: request.method,
-    params: request.params as readonly unknown[] | object,
-  };
-}
-
-/**
- * Parse a dapp-facing EIP-1193 `wallet_invokeMethod` call into CAIP-27 params.
- *
- * This edge parser currently accepts eip155 chains only. It is not the
- * namespace registry extension path; `invoke` selects translators from an
- * already-formed `Envelope`. Does not send on the wire.
- */
-export function parseCaip27(args: RequestArguments): Caip27Params {
-  if (args.method !== WALLET_INVOKE_METHOD) {
-    throw standardErrors.rpc.invalidParams(`expected ${WALLET_INVOKE_METHOD}`);
-  }
-  const params = namedParams(args.params);
-  const chainId = parseChainId(params);
-  const request = parseRequest(params);
-
-  let capabilities: Record<string, unknown> | undefined;
-  if (params.capabilities !== undefined) {
-    const parsed = asRecord(params.capabilities);
-    if (!parsed) {
-      throw standardErrors.rpc.invalidParams('wallet_invokeMethod.capabilities must be an object');
-    }
-    capabilities = parsed;
-  }
-
-  let sessionId: string | undefined;
-  if (params.sessionId !== undefined) {
-    if (typeof params.sessionId !== 'string' || params.sessionId.length === 0) {
-      throw standardErrors.rpc.invalidParams(
-        'wallet_invokeMethod.sessionId must be a non-empty string'
-      );
-    }
-    sessionId = params.sessionId;
-  }
-
-  return {
-    chainId,
-    request,
-    ...(capabilities ? { capabilities } : {}),
-    ...(sessionId ? { sessionId } : {}),
-  };
 }
 
 /** CAIP-27 params for the wallet wire. */
@@ -150,7 +63,12 @@ export function parseCaip27Response(value: unknown, request: Envelope): Caip27Re
   const response = asRecord(value);
   if (!response) invalid('response must be an object');
   const record = response as Record<string, unknown>;
-  if (!isEip155ChainId(record.chainId) || record.chainId !== request.chainId) {
+  if (
+    !isCaip2(request.chainId) ||
+    typeof record.chainId !== 'string' ||
+    !isCaip2(record.chainId) ||
+    record.chainId !== request.chainId
+  ) {
     invalid('chainId does not match the request');
   }
 
@@ -204,10 +122,16 @@ export function unwrapCaip27Response(response: Caip27Response): unknown {
   return response.result.result;
 }
 
-/** CAIP-27 chain, method, and session id must be exactly authorized. */
+/**
+ * CAIP-27 chain, method, and session id must be authorized.
+ *
+ * The chain is authorized by an exact chain grant or by a grant on its whole
+ * namespace; `grantFor` resolves both. Chains the wallet does not support are
+ * rejected by the wallet, not invented as an authorization failure here.
+ */
 export function assertInvokeAuthorized(session: Session, envelope: Envelope): void {
-  const scope = session.scopes[envelope.chainId];
-  if (!scope?.accounts.length) {
+  const scope = grantFor(session, envelope.chainId);
+  if (!scope) {
     throw standardErrors.provider.unauthorized(`chainId ${envelope.chainId} is not in the session`);
   }
   if (!scope.methods.includes(envelope.request.method)) {

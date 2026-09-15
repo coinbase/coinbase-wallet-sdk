@@ -1,10 +1,13 @@
 import { ProviderInterface } from ':core/provider/interface.js';
 import { loadTelemetryScript } from ':core/telemetry/initCCA.js';
+import { bindStore } from ':store/store.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import type { Hex } from 'viem';
 import { BaseAccountProvider } from '../../builder/eip1193/BaseAccountProvider.js';
+import { createEphemeralStore } from '../../builder/eip1193/ephemeral.js';
 import { CHAIN_IDS } from '../constants.js';
 import type { PayerInfoResponses } from '../types.js';
+import { createTransport } from '../../builder/createTransport.js';
 
 /**
  * Type for wallet_sendCalls request parameters
@@ -142,7 +145,7 @@ export function createEphemeralSDK({
   }
 
   // Create ephemeral provider with isolated state
-  const provider = new BaseAccountProvider({
+  const options = {
     metadata: {
       appName,
       appLogoUrl: '',
@@ -154,7 +157,10 @@ export function createEphemeralSDK({
       attribution: dataSuffix ? { dataSuffix } : undefined,
     },
     ephemeral: true,
-  });
+  };
+  const store = bindStore(createEphemeralStore());
+  const transport = createTransport(options, store);
+  const provider = new BaseAccountProvider(options, transport, store);
 
   // Return SDK-like interface for compatibility
   return {

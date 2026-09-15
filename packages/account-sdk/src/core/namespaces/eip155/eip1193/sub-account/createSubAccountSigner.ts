@@ -54,6 +54,7 @@ type CreateSubAccountSignerParams = {
   parentAddress?: Address;
   factoryData?: Hex;
   factory?: Address;
+  paymasterUrls?: Record<number, string>;
   attribution?:
     | {
         suffix: Hex;
@@ -72,6 +73,7 @@ export async function createSubAccountSigner({
   ownerIndex,
   parentAddress,
   attribution,
+  paymasterUrls,
 }: CreateSubAccountSignerParams) {
   const subAccount: SubAccount = {
     address,
@@ -129,6 +131,7 @@ export async function createSubAccountSigner({
             calls: [params],
             chainId,
             from: params.from,
+            paymasterUrls,
           });
 
           const response = (await request(sendCallsRequest)) as string;

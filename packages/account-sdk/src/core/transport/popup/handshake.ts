@@ -1,5 +1,4 @@
-import { RequestArguments } from ':core/provider/interface.js';
-import { correlationIds } from ':store/correlation-ids/store.js';
+import { RequestArguments } from ':core/message/RequestArguments.js';
 import { decryptPopup } from './decrypt.js';
 import { postPopup } from './post.js';
 import type { PopupWire } from './types.js';
@@ -12,18 +11,22 @@ import type { PopupWire } from './types.js';
  * 3. Store the wallet's public key on `KeyManager` → derive shared secret.
  * 4. Decrypt the encrypted payload (chain list / capabilities) with that secret.
  *
- * After this, `send` can encrypt. WalletLink 2.0 should do 3–4 the same way
- * after its own delivery of the peer public key.
+ * After this, popup requests can encrypt.
  */
-export async function handshake(wire: PopupWire, args: RequestArguments = { method: 'handshake' }) {
+export async function handshake(
+  wire: PopupWire,
+  args: RequestArguments = { method: 'handshake' },
+  correlationId?: string
+) {
   await wire.communicator.waitForPopupLoaded?.();
   const response = await postPopup(
     wire,
     { handshake: { method: args.method, params: args.params ?? [] } },
-    correlationIds.get(args)
+    correlationId
   );
   if ('failure' in response.content) throw response.content.failure;
   await wire.keys.setPeerPublicKeyFromHex(response.sender);
   const decrypted = await decryptPopup(wire, response);
   if ('error' in decrypted.result) throw decrypted.result.error;
+  return decrypted;
 }

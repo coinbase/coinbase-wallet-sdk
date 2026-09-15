@@ -1,13 +1,28 @@
 import { standardErrorCodes } from ':core/error/constants.js';
+import { eip155Translator, sessionFromAccounts } from ':core/namespaces/eip155/index.js';
+import {
+  SOLANA_MAINNET,
+  sessionFromSolanaAccounts,
+  solanaTranslator,
+} from ':core/namespaces/solana/index.js';
+import type { WalletTransport } from ':core/transport/index.js';
 import { Address } from ':core/type/index.js';
-import { sessionFromAccounts } from '../namespaces/eip155/session.js';
-import { eip155Translator } from '../namespaces/eip155/translator.js';
 import { invoke, invokeEphemeral } from './invoke.js';
-import type { Envelope, Session, Transport } from './types.js';
+import type { Envelope } from './types.js';
 
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as Address;
 const OTHER = '0x0000000000000000000000000000000000000001' as Address;
-const SOLANA = 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp';
+const SOLANA = SOLANA_MAINNET;
+
+function transport(request: WalletTransport['request'] = vi.fn()): WalletTransport {
+  return {
+    handshake: vi.fn(),
+    request,
+    readSession: () => undefined,
+    writeSession: vi.fn(),
+    cleanup: vi.fn(),
+  };
+}
 
 describe('invoke', () => {
   afterEach(() => {
@@ -23,7 +38,6 @@ describe('invoke', () => {
       result: { method: 'personal_sign', result: '0xsig' },
     };
     const send = vi.fn().mockResolvedValue(response);
-    const transport: Transport = { kind: 'popup', send };
     const unwrapResponse = vi.spyOn(eip155Translator, 'unwrapResponse');
 
     await expect(
@@ -33,14 +47,18 @@ describe('invoke', () => {
           chainId: 'eip155:8453',
           request: { method: 'personal_sign', params: ['0x68656c6c6f'] },
         },
-        transport
+        transport(send),
+        eip155Translator
       )
     ).resolves.toBe('0xsig');
 
     expect(send).toHaveBeenCalledWith({
-      sessionId: 'session-1',
-      chainId: 'eip155:8453',
-      request: { method: 'personal_sign', params: ['0x68656c6c6f'] },
+      method: 'wallet_invokeMethod',
+      params: {
+        sessionId: 'session-1',
+        chainId: 'eip155:8453',
+        request: { method: 'personal_sign', params: ['0x68656c6c6f'] },
+      },
     });
     expect(unwrapResponse).toHaveBeenCalledWith(response, {
       sessionId: 'session-1',
@@ -62,10 +80,12 @@ describe('invoke', () => {
     const send = vi.fn().mockResolvedValue(response);
     const unwrapResponse = vi.spyOn(eip155Translator, 'unwrapResponse');
 
-    await expect(invoke(session, envelope, { kind: 'popup', send })).resolves.toBe('0xsig');
+    await expect(invoke(session, envelope, transport(send), eip155Translator)).resolves.toBe(
+      '0xsig'
+    );
 
-    expect(send).toHaveBeenCalledWith(envelope);
-    expect(send.mock.calls[0]?.[0]).not.toHaveProperty('sessionId');
+    expect(send).toHaveBeenCalledWith({ method: 'wallet_invokeMethod', params: envelope });
+    expect(send.mock.calls[0]?.[0]).not.toHaveProperty('params.sessionId');
     expect(unwrapResponse).toHaveBeenCalledWith(response, envelope);
   });
 
@@ -82,9 +102,11 @@ describe('invoke', () => {
     const qualify = vi.spyOn(eip155Translator, 'qualify');
     const unwrapResponse = vi.spyOn(eip155Translator, 'unwrapResponse');
 
-    await expect(invokeEphemeral(envelope, { kind: 'popup', send })).resolves.toBe('0xhash');
+    await expect(invokeEphemeral(envelope, transport(send), eip155Translator)).resolves.toBe(
+      '0xhash'
+    );
 
-    expect(send).toHaveBeenCalledWith(envelope);
+    expect(send).toHaveBeenCalledWith({ method: 'wallet_invokeMethod', params: envelope });
     expect(qualify).not.toHaveBeenCalled();
     expect(unwrapResponse).toHaveBeenCalledWith(response, envelope);
   });
@@ -97,7 +119,9 @@ describe('invoke', () => {
     };
     const send = vi.fn();
 
-    await expect(invokeEphemeral(envelope, { kind: 'popup', send })).rejects.toMatchObject({
+    await expect(
+      invokeEphemeral(envelope, transport(send), eip155Translator)
+    ).rejects.toMatchObject({
       code: standardErrorCodes.rpc.invalidParams,
       message: expect.stringContaining('sessionId'),
     });
@@ -107,13 +131,12 @@ describe('invoke', () => {
   it('throws an enveloped method error and preserves top-level transport errors', async () => {
     const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 });
     const methodError = { code: 4100, message: 'method denied' };
-    const methodTransport: Transport = {
-      kind: 'popup',
-      send: vi.fn().mockResolvedValue({
+    const methodTransport = transport(
+      vi.fn().mockResolvedValue({
         chainId: 'eip155:8453',
         error: methodError,
-      }),
-    };
+      })
+    );
     await expect(
       invoke(
         session,
@@ -121,7 +144,8 @@ describe('invoke', () => {
           chainId: 'eip155:8453',
           request: { method: 'personal_sign', params: [] },
         },
-        methodTransport
+        methodTransport,
+        eip155Translator
       )
     ).rejects.toEqual(methodError);
 
@@ -133,7 +157,8 @@ describe('invoke', () => {
           chainId: 'eip155:8453',
           request: { method: 'personal_sign', params: [] },
         },
-        { kind: 'popup', send: vi.fn().mockRejectedValue(transportError) }
+        transport(vi.fn().mockRejectedValue(transportError)),
+        eip155Translator
       )
     ).rejects.toBe(transportError);
   });
@@ -141,7 +166,6 @@ describe('invoke', () => {
   it('rejects a from that is not in the session', async () => {
     const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 });
     const send = vi.fn();
-    const transport: Transport = { kind: 'popup', send };
 
     await expect(
       invoke(
@@ -150,9 +174,10 @@ describe('invoke', () => {
           chainId: 'eip155:8453',
           request: { method: 'personal_sign', params: ['0x68656c6c6f', OTHER] },
         },
-        transport
+        transport(send),
+        eip155Translator
       )
-    ).rejects.toThrow(/not in the eip155 session/);
+    ).rejects.toThrow(/not granted on the target chain/);
     expect(send).not.toHaveBeenCalled();
   });
 
@@ -167,31 +192,44 @@ describe('invoke', () => {
           chainId: SOLANA,
           request: { method: 'solana_signMessage', params: [] },
         },
-        { kind: 'popup', send }
+        transport(send),
+        solanaTranslator
       )
     ).rejects.toThrow(/not in the session/);
     expect(send).not.toHaveBeenCalled();
   });
 
-  it('rejects a covered non-eip155 namespace', async () => {
-    const session: Session = {
-      ...sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 }),
-      scopes: {
-        [SOLANA]: {
-          accounts: [`${SOLANA}:So11111111111111111111111111111111111111112`],
-          methods: ['solana_signMessage'],
-        },
-      },
+  it('delegates a covered Solana request to the registered translator', async () => {
+    const session = {
+      ...sessionFromSolanaAccounts({
+        accounts: ['So11111111111111111111111111111111111111112'],
+      }),
+      sessionId: 'solana-session',
     };
-    const send = vi.fn();
+    const signature = btoa(String.fromCharCode(...new Uint8Array(64).fill(1)));
+    const response = {
+      sessionId: 'solana-session',
+      chainId: SOLANA,
+      result: { method: 'solana_signMessage', result: { signature } },
+    };
+    const send = vi.fn().mockResolvedValue(response);
+    const unwrapResponse = vi.spyOn(solanaTranslator, 'unwrapResponse');
+    const request = {
+      method: 'solana_signMessage',
+      params: [{ pubkey: 'So11111111111111111111111111111111111111112' }],
+    };
 
     await expect(
-      invoke(
-        session,
-        { chainId: SOLANA, request: { method: 'solana_signMessage', params: [] } },
-        { kind: 'popup', send }
-      )
-    ).rejects.toThrow(/not enabled in this SDK version/);
-    expect(send).not.toHaveBeenCalled();
+      invoke(session, { chainId: SOLANA, request }, transport(send), solanaTranslator)
+    ).resolves.toEqual({ signature: new Uint8Array(64).fill(1) });
+    expect(send).toHaveBeenCalledWith({
+      method: 'wallet_invokeMethod',
+      params: {
+        sessionId: 'solana-session',
+        chainId: SOLANA,
+        request,
+      },
+    });
+    expect(unwrapResponse).toHaveBeenCalledWith(response, expect.anything());
   });
 });

@@ -3,11 +3,9 @@ import {
   logDialogDismissed,
   logDialogShown,
 } from ':core/telemetry/events/dialog.js';
-import { store } from ':store/store.js';
 import { initDialog } from ':ui/Dialog/index.js';
 
-export async function presentAddOwnerDialog() {
-  const appName = store.config.get().metadata?.appName ?? 'App';
+export async function presentAddOwnerDialog(appName = 'App') {
   const dialog = initDialog();
   return new Promise<'authenticate' | 'cancel'>((resolve) => {
     logDialogShown({ dialogContext: 'sub_account_add_owner' });

@@ -2,8 +2,8 @@ import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
-import { createCaip27Request } from ':core/session/index.js';
-import type { WalletRuntime } from ':core/transport/index.js';
+import { sessionFromAccounts } from ':core/namespaces/eip155/index.js';
+import type { WalletTransport } from ':core/transport/index.js';
 import { store } from ':store/store.js';
 import * as providerUtil from ':util/provider.js';
 import { BaseAccountProvider } from './BaseAccountProvider.js';
@@ -16,13 +16,10 @@ const mockSend = vi.fn();
 const mockCleanup = vi.fn();
 const mockFetchRPCRequest = vi.fn();
 
-function mockRuntime(): WalletRuntime {
+function mockTransport(): WalletTransport {
   return {
-    store,
-    chainId: () => 1,
     handshake: mockHandshake,
-    send: mockSend,
-    transport: { kind: 'popup', send: (envelope) => mockSend(createCaip27Request(envelope)) },
+    request: mockSend,
     readSession: () => store.session.get(),
     writeSession: (session) => store.session.set(session),
     cleanup: mockCleanup,
@@ -35,7 +32,8 @@ function createProvider() {
       metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1] },
       preference: { telemetry: false },
     },
-    mockRuntime()
+    mockTransport(),
+    store
   );
 }
 
@@ -94,10 +92,9 @@ beforeEach(() => {
   vi.spyOn(providerUtil, 'fetchRPCRequest').mockImplementation(mockFetchRPCRequest);
 
   store.session.clear();
-  store.account.clear();
-  store.subAccounts.clear();
-  store.subAccountsConfig.clear();
-  store.spendPermissions.clear();
+  store.eip155.subAccounts.clear();
+  store.eip155.subAccountsConfig.clear();
+  store.eip155.spendPermissions.clear();
 
   provider = createProvider();
 });
@@ -115,6 +112,24 @@ describe('Event handling', () => {
     );
   });
 
+  it('emits disconnected state when another interface clears the shared session', () => {
+    const accountsChangedListener = vi.fn();
+    const disconnectListener = vi.fn();
+    provider.on('accountsChanged', accountsChangedListener);
+    provider.on('disconnect', disconnectListener);
+    store.session.set({
+      ...sessionFromAccounts({ accounts: [ACCOUNT], chainId: 1 }),
+      sessionId: 'shared-session',
+    });
+
+    store.session.clear();
+
+    expect(accountsChangedListener).toHaveBeenCalledWith([]);
+    expect(disconnectListener).toHaveBeenCalledWith(
+      standardErrors.provider.disconnected('Shared wallet session disconnected')
+    );
+  });
+
   it('emits chainChanged', () => {
     const chainChangedListener = vi.fn();
     provider.on('chainChanged', chainChangedListener);
@@ -127,6 +142,25 @@ describe('Event handling', () => {
     provider.on('accountsChanged', accountsChangedListener);
     provider.emit('accountsChanged', ['0x123']);
     expect(accountsChangedListener).toHaveBeenCalledWith(['0x123']);
+  });
+
+  it('restores the first authorized chain when the metadata chain is not granted', async () => {
+    store.session.set(sessionFromAccounts({ accounts: [ACCOUNT], chainId: 8453 }));
+    const restoredProvider = createProvider();
+
+    await expect(restoredProvider.request({ method: 'eth_chainId' })).resolves.toBe('0x2105');
+  });
+
+  it('falls back when a session update removes the active chain', async () => {
+    const chainChangedListener = vi.fn();
+    provider.on('chainChanged', chainChangedListener);
+    store.session.set(sessionFromAccounts({ accounts: [ACCOUNT], chainId: 1 }));
+
+    store.session.set(sessionFromAccounts({ accounts: [ACCOUNT], chainId: 8453 }));
+
+    expect(chainChangedListener).toHaveBeenCalledOnce();
+    expect(chainChangedListener).toHaveBeenCalledWith('0x2105');
+    await expect(provider.request({ method: 'eth_chainId' })).resolves.toBe('0x2105');
   });
 });
 
@@ -181,7 +215,7 @@ describe('Ephemeral methods', () => {
   );
 });
 
-describe('ensureSession / pair', () => {
+describe('ensureSession / createSession', () => {
   it('pairs on eth_requestAccounts and returns eip155 accounts', async () => {
     const accounts = await provider.request({ method: 'eth_requestAccounts' });
 
@@ -249,16 +283,14 @@ describe('ensureSession / pair', () => {
 
     expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({
-        method: 'wallet_invokeMethod',
+        method: 'wallet_createSession',
         params: expect.objectContaining({
-          request: {
-            method: 'wallet_connect',
-            params: [
-              {
-                version: '1',
-                capabilities: { signInWithEthereum: { nonce: 'n', chainId: '0x1' } },
-              },
-            ],
+          sessionId: 'session-1',
+          scopes: {
+            eip155: expect.objectContaining({
+              capabilities: { signInWithEthereum: { nonce: 'n', chainId: '0x1' } },
+              params: [{ version: '1' }],
+            }),
           },
         }),
       })
@@ -300,7 +332,7 @@ describe('sub-account', () => {
     });
 
     expect(result).toMatchObject({ address: SUB });
-    expect(store.subAccounts.get()?.address).toBe(SUB);
+    expect(store.eip155.subAccounts.get()?.address).toBe(SUB);
     await expect(provider.request({ method: 'eth_accounts' })).resolves.toEqual([ACCOUNT, SUB]);
   });
 
@@ -327,7 +359,7 @@ describe('ephemeral: true', () => {
   };
 
   function createEphemeralProvider() {
-    return new BaseAccountProvider(params, mockRuntime());
+    return new BaseAccountProvider(params, mockTransport(), store);
   }
 
   it.each(['wallet_sendCalls', 'wallet_sign', 'experimental_requestInfo'])(

@@ -1,12 +1,11 @@
 import { standardErrors } from ':core/error/errors.js';
-import { orderedEthAccounts } from ':core/namespaces/eip155/eip1193/sub-account/index.js';
-import { assertGetCapabilitiesParams } from ':core/namespaces/eip155/eip1193/sub-account/utils.js';
 import type { RequestArguments } from ':core/provider/interface.js';
-import { projectEthAccounts } from ':core/session/index.js';
 import type { Session } from ':core/session/index.js';
-import type { WalletRuntime } from ':core/transport/index.js';
-import type { Address } from ':core/type/index.js';
+import type { Store } from ':store/store.js';
 import { hexToNumber, isAddressEqual } from 'viem';
+import { projectEip155Capabilities, projectEthAccountsForChain } from '../session.js';
+import { orderedEthAccounts } from './sub-account/index.js';
+import { assertGetCapabilitiesParams } from './sub-account/utils.js';
 
 /** EIP-5792 "all chains" key. SDK always reports `gasLimitOverride` here (ERC-8132). */
 export const ALL_CHAINS_KEY = '0x0';
@@ -20,7 +19,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Merge handshake-ingested EIP-5792 maps with the SDK wildcard, then optionally
+ * Merge CAIP-25 session capabilities with the SDK wildcard, then optionally
  * filter by chain id. `0x0` is always included.
  */
 export function projectCapabilities(
@@ -55,29 +54,23 @@ export function projectCapabilities(
 }
 
 /**
- * ERC-5792 `wallet_getCapabilities`. Local projection of handshake-ingested
+ * ERC-5792 `wallet_getCapabilities`. Local projection of session-ingested
  * `account.capabilities` — not a popup round-trip and not chain JSON-RPC.
  */
 export function getCapabilities(
-  runtime: WalletRuntime,
+  store: Store['eip155'],
   args: RequestArguments,
-  session: Session
+  session: Session,
+  chainId: number
 ): Record<string, unknown> {
   assertGetCapabilitiesParams(args.params);
 
   const [requestedAccount, filterChainIds] = args.params;
-  const storeAccounts = (runtime.store.account.get().accounts ?? []) as Address[];
-  const accounts = orderedEthAccounts(
-    runtime,
-    storeAccounts.length > 0 ? storeAccounts : projectEthAccounts(session)
-  );
+  const accounts = orderedEthAccounts(store, projectEthAccountsForChain(session, chainId));
 
   if (!accounts.some((account) => isAddressEqual(account, requestedAccount))) {
     throw standardErrors.provider.unauthorized('no active account found when getting capabilities');
   }
 
-  return projectCapabilities(
-    (runtime.store.account.get().capabilities ?? {}) as Record<string, unknown>,
-    filterChainIds
-  );
+  return projectCapabilities(projectEip155Capabilities(session), filterChainIds);
 }

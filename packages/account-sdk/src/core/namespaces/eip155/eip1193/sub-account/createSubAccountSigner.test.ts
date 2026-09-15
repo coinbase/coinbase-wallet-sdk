@@ -1,5 +1,5 @@
-import { getClient } from ':core/namespaces/eip155/client/index.js';
 import { OwnerAccount } from ':core/type/index.js';
+import { getClient } from ':core/namespaces/eip155/client/index.js';
 import { Signature } from 'ox';
 import { numberToHex, toHex } from 'viem';
 import { createSmartAccount } from './createSmartAccount.js';

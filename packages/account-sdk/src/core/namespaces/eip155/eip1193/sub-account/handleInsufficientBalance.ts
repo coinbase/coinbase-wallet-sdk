@@ -1,6 +1,7 @@
 import { InsufficientBalanceErrorData, standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
 import { Address } from ':core/type/index.js';
+import type { Store } from ':store/store.js';
 import { assertPresence } from ':util/assertPresence.js';
 import { PublicClient } from 'viem';
 import { routeThroughGlobalAccount } from './routeThroughGlobalAccount.js';
@@ -12,6 +13,8 @@ export async function handleInsufficientBalanceError({
   client,
   request,
   globalAccountRequest,
+  spendPermissions,
+  paymasterUrls,
 }: {
   errorData: InsufficientBalanceErrorData;
   globalAccountAddress: Address;
@@ -19,6 +22,8 @@ export async function handleInsufficientBalanceError({
   request: RequestArguments;
   client: PublicClient;
   globalAccountRequest: (request: RequestArguments) => Promise<unknown>;
+  spendPermissions: Store['eip155']['spendPermissions'];
+  paymasterUrls?: Record<number, string>;
 }) {
   const chainId = client.chain?.id;
   assertPresence(chainId, standardErrors.rpc.internal(`invalid chainId`));
@@ -38,6 +43,8 @@ export async function handleInsufficientBalanceError({
     client,
     globalAccountRequest,
     chainId,
+    spendPermissions,
+    paymasterUrls,
   });
 
   return result;

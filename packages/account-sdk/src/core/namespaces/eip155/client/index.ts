@@ -1,4 +1,4 @@
-import { http, Chain, PublicClient, createPublicClient, defineChain } from 'viem';
+import { Chain, createPublicClient, defineChain, http, PublicClient } from 'viem';
 import { BundlerClient, createBundlerClient } from 'viem/account-abstraction';
 import {
   arbitrum,
@@ -14,13 +14,18 @@ import {
   zora,
 } from 'viem/chains';
 
-import { RPCResponseNativeCurrency } from ':core/message/RPCResponse.js';
 import { ChainClients } from './store.js';
+
+export type SDKNativeCurrency = {
+  name?: string;
+  symbol?: string;
+  decimal?: number;
+};
 
 export type SDKChain = {
   id: number;
   rpcUrl?: string;
-  nativeCurrency?: RPCResponseNativeCurrency;
+  nativeCurrency?: SDKNativeCurrency;
 };
 
 export const SUPPORTED_MAINNET_CHAINS: [Chain, ...Chain[]] = [
@@ -67,7 +72,7 @@ function defineChainConfig(
   rpcUrl: string,
   options?: {
     viemChain?: Chain;
-    nativeCurrency?: RPCResponseNativeCurrency;
+    nativeCurrency?: SDKNativeCurrency;
   }
 ): Chain {
   const viemChain = options?.viemChain;
@@ -127,7 +132,7 @@ type ClientPair = {
 function createClientPair(options: {
   chainId: number;
   rpcUrl: string;
-  nativeCurrency?: RPCResponseNativeCurrency;
+  nativeCurrency?: SDKNativeCurrency;
   viemChain?: Chain;
 }): ClientPair {
   const { chainId, rpcUrl, nativeCurrency, viemChain } = options;

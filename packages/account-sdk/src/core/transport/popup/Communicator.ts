@@ -1,6 +1,5 @@
 import { CB_KEYS_URL, PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
-import { AppMetadata, Preference } from ':core/provider/interface.js';
 import {
   logPopupSetupCompleted,
   logPopupSetupStarted,
@@ -10,6 +9,7 @@ import { closePopup, openPopup } from ':util/web.js';
 
 import { ConfigMessage, PopupSetupV2Message } from ':core/message/ConfigMessage.js';
 import { Message, MessageID } from ':core/message/Message.js';
+import type { AppMetadata, Preference } from '../../../storage/schema.js';
 
 export type CommunicatorOptions = {
   url?: string;
