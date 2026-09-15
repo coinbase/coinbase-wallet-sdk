@@ -99,9 +99,9 @@ describe('namespace grants through the kernel', () => {
 
   it('covers any chain requirement in the namespace', () => {
     expect(sessionCovers(namespaceSession, ['eip155:10'])).toBe(true);
-    expect(sessionCovers(namespaceSession, [{ chainId: 'eip155:10', methods: ['personal_sign'] }])).toBe(
-      true
-    );
+    expect(
+      sessionCovers(namespaceSession, [{ chainId: 'eip155:10', methods: ['personal_sign'] }])
+    ).toBe(true);
     expect(
       sessionCovers(namespaceSession, [{ chainId: 'eip155:10', methods: ['wallet_sendCalls'] }])
     ).toBe(false);

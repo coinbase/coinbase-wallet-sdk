@@ -43,7 +43,20 @@ export interface AppMetadata {
   appName: string;
   /** Application logo URL, or null to use the favicon. */
   appLogoUrl: string | null;
-  /** EVM chain IDs supported by the application. */
+  /**
+   * Chain the provider starts on before a session exists.
+   *
+   * Authorization is per namespace, so this only picks the initial active chain.
+   * Defaults to the first `appChainIds` entry, then Ethereum mainnet.
+   */
+  defaultChainId?: number;
+  /**
+   * EVM chain IDs the application expects to use.
+   *
+   * @deprecated Chain access is authorized per namespace, not per chain, and chain
+   * metadata comes from the wallet grant. Only the first entry is still read, as a
+   * fallback for `defaultChainId`.
+   */
   appChainIds: number[];
 }
 

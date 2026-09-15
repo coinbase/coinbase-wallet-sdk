@@ -92,6 +92,7 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
       appName: params.appName || 'App',
       appLogoUrl: params.appLogoUrl || '',
       appChainIds: params.appChainIds || [],
+      ...(params.defaultChainId !== undefined ? { defaultChainId: params.defaultChainId } : {}),
     },
     preference: params.preference ?? {},
     paymasterUrls: params.paymasterUrls,

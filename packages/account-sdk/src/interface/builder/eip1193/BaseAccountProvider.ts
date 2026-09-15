@@ -44,7 +44,8 @@ export class BaseAccountProvider extends ProviderEventEmitter implements Provide
     const { ephemeral = false, metadata } = params;
     const restored = transport.readSession();
     const chain = createActiveChain({
-      defaultChainId: metadata.appChainIds?.[0] ?? 1,
+      // Active chain only: a session authorizes the eip155 namespace, not one chain.
+      defaultChainId: metadata.defaultChainId ?? metadata.appChainIds?.[0] ?? 1,
       session: restored,
       onChange: (chainId) => this.emit('chainChanged', hexStringFromNumber(chainId)),
     });

@@ -489,9 +489,9 @@ describe('handleConnected', () => {
         request: { method: 'eth_sendTransaction', params: [{ from: ADDRESS }] },
       },
     });
-    await expect(handleConnected(rt, { method: 'eth_accounts' }, namespaceSession)).resolves.toEqual(
-      [ADDRESS]
-    );
+    await expect(
+      handleConnected(rt, { method: 'eth_accounts' }, namespaceSession)
+    ).resolves.toEqual([ADDRESS]);
   });
 
   it('forwards chain RPC when the method is not a wallet method', async () => {

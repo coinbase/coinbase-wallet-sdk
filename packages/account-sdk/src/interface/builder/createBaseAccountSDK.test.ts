@@ -602,6 +602,33 @@ describe('createProvider', () => {
       );
     });
 
+    it('should pass an explicit defaultChainId through to the provider', () => {
+      createBaseAccountSDK({ appChainIds: [1, 137], defaultChainId: 8453 }).getProvider();
+
+      expect(mockBaseAccountProvider).toHaveBeenCalledWith(
+        expect.objectContaining({
+          metadata: expect.objectContaining({
+            defaultChainId: 8453,
+            appChainIds: [1, 137],
+          }),
+        }),
+        { mockTransport: true },
+        store
+      );
+    });
+
+    it('should omit defaultChainId when the app does not set one', () => {
+      createBaseAccountSDK({ appChainIds: [1, 137] }).getProvider();
+
+      expect(mockBaseAccountProvider).toHaveBeenCalledWith(
+        expect.objectContaining({
+          metadata: expect.not.objectContaining({ defaultChainId: expect.anything() }),
+        }),
+        { mockTransport: true },
+        store
+      );
+    });
+
     it('should handle complex nested preference objects', () => {
       const complexPreference = {
         attribution: { dataSuffix: '0x1234567890123456' as Hex },
