@@ -20,6 +20,63 @@ describe('createCoinbaseWalletSDK', () => {
     store.setState({});
   });
 
+  describe('replacing a live instance (#1860)', () => {
+    // The module-level `activeInstanceMetadata` persists across tests in this
+    // file, so each case starts from a known instance rather than a blank slate.
+    let warn: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      // `activeInstanceMetadata` is module-level and outlives each test, so restore
+      // it to `options` while console.warn is still mocked. Otherwise the next test
+      // in this file looks like an instance replacement and logs a stray warning.
+      createCoinbaseWalletSDK(options);
+      warn.mockRestore();
+    });
+
+    it('warns that a second instance with different metadata replaced the first', () => {
+      createCoinbaseWalletSDK({ ...options, appName: 'Wallet A' });
+      warn.mockClear();
+
+      createCoinbaseWalletSDK({ ...options, appName: 'Wallet B' });
+
+      expect(warn).toHaveBeenCalledTimes(1);
+      const message = warn.mock.calls[0][0] as string;
+      expect(message).toContain('"Wallet A" -> "Wallet B"');
+      expect(message).toContain('single');
+      expect(message).toContain('issues/1860');
+    });
+
+    it('does not warn when re-created with identical metadata (strict mode, HMR)', () => {
+      createCoinbaseWalletSDK({ ...options, appName: 'Same App', appChainIds: [1, 8453] });
+      warn.mockClear();
+
+      createCoinbaseWalletSDK({ ...options, appName: 'Same App', appChainIds: [1, 8453] });
+
+      expect(warn).not.toHaveBeenCalled();
+    });
+
+    it('warns when only the chain ids differ', () => {
+      createCoinbaseWalletSDK({ ...options, appName: 'Chains', appChainIds: [1] });
+      warn.mockClear();
+
+      createCoinbaseWalletSDK({ ...options, appName: 'Chains', appChainIds: [8453] });
+
+      expect(warn).toHaveBeenCalledTimes(1);
+    });
+
+    it('still replaces the stored config, so the warning describes real behaviour', () => {
+      createCoinbaseWalletSDK({ ...options, appName: 'Wallet A', appChainIds: [1] });
+      createCoinbaseWalletSDK({ ...options, appName: 'Wallet B', appChainIds: [8453] });
+
+      expect(store.config.get()?.metadata?.appName).toBe('Wallet B');
+      expect(store.config.get()?.metadata?.appChainIds).toEqual([8453]);
+    });
+  });
+
   it('should return an object with a getProvider method', () => {
     const sdk = createCoinbaseWalletSDK(options);
     expect(sdk).toHaveProperty('getProvider');

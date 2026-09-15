@@ -27,6 +27,49 @@ const DEFAULT_PREFERENCE: Preference = {
   options: 'all',
 };
 
+/**
+ * Metadata of the most recent instance created in this page session.
+ *
+ * Deliberately not read from the store: `config` is persisted to localStorage and
+ * rehydrated on load, so comparing against it would warn whenever a dapp changed
+ * its own metadata between deploys.
+ */
+let activeInstanceMetadata: AppMetadata | undefined;
+
+function isSameMetadata(a: AppMetadata, b: AppMetadata): boolean {
+  return (
+    a.appName === b.appName &&
+    a.appLogoUrl === b.appLogoUrl &&
+    a.appChainIds.length === b.appChainIds.length &&
+    a.appChainIds.every((chainId, i) => chainId === b.appChainIds[i])
+  );
+}
+
+/**
+ * Connection state lives in a single module-level store, so a second instance
+ * replaces the first rather than sitting alongside it. Creating one repeatedly
+ * with the same metadata is fine and expected (React strict mode, HMR), so only
+ * a genuinely different configuration is worth reporting.
+ *
+ * See https://github.com/coinbase/coinbase-wallet-sdk/issues/1860
+ */
+function warnIfReplacingActiveInstance(metadata: AppMetadata): void {
+  if (activeInstanceMetadata && !isSameMetadata(activeInstanceMetadata, metadata)) {
+    console.warn(
+      [
+        '[Coinbase Wallet SDK] createCoinbaseWalletSDK was called again with different metadata',
+        `("${activeInstanceMetadata.appName}" -> "${metadata.appName}").`,
+        'The SDK keeps a single shared connection state, so this replaced the previous',
+        "instance's configuration and any connected account rather than creating a second,",
+        'independent connection. Connecting multiple wallets at once is not supported yet:',
+        'https://github.com/coinbase/coinbase-wallet-sdk/issues/1860',
+      ].join(' ')
+    );
+  }
+
+  activeInstanceMetadata = metadata;
+}
+
 type SubAccountAddOwnerParams = {
   address?: `0x${string}`;
   publicKey?: `0x${string}`;
@@ -60,6 +103,9 @@ export function createCoinbaseWalletSDK(params: CreateCoinbaseWalletSDKOptions) 
     // @ts-expect-error - enableSubAccounts is not officially supported yet
     enableAutoSubAccounts: params.subAccounts?.enableAutoSubAccounts,
   });
+
+  // Report, before the store is overwritten, that this replaces any live instance
+  warnIfReplacingActiveInstance(options.metadata);
 
   // set the options in the store
   store.config.set(options);
