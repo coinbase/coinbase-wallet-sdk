@@ -22,7 +22,7 @@ import type { SubscriptionStatus, SubscriptionStatusOptions } from './types.js';
  *
  * @example
  * ```typescript
- * import { getSubscriptionStatus } from '@base-org/account/payment';
+ * import { getSubscriptionStatus } from '@coinbase/wallet-sdk/payment';
  *
  * // Check status of a subscription using its ID
  * const status = await getSubscriptionStatus({

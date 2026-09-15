@@ -27,7 +27,7 @@ jobs:
   publish-account:
     needs: release-please
     if: ${{ needs.release-please.outputs.account--release_created == 'true' }}
-    name: Publish @base-org/account
+    name: Publish @coinbase/wallet-sdk
     runs-on: [default-config, medium, amd64]
     environment: publish
     permissions:
@@ -47,10 +47,10 @@ jobs:
         run: npm install -g npm@latest
 
       - name: Prebuild Packages
-        run: yarn workspace @base-org/account prebuild
+        run: yarn workspace @coinbase/wallet-sdk prebuild
 
       - name: Build Packages
-        run: yarn workspace @base-org/account build
+        run: yarn workspace @coinbase/wallet-sdk build
 
       - name: Publish to npm
         run: |

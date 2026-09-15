@@ -29,7 +29,7 @@ import type {
  *
  * @example
  * ```typescript
- * import { base } from '@base-org/account/payment';
+ * import { base } from '@coinbase/wallet-sdk/payment';
  *
  * // Using environment variables (CDP_API_KEY_ID, CDP_API_KEY_SECRET, CDP_WALLET_SECRET)
  * const owner = await base.subscription.getOrCreateSubscriptionOwnerWallet();

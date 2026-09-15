@@ -11,7 +11,7 @@ import type { ContractCall, MulticallFailure, MulticallResult, MulticallSuccess 
  *
  * @example
  * ```typescript
- * import { multicall } from '@base-org/account';
+ * import { multicall } from '@coinbase/wallet-sdk';
  * import { createPublicClient, http } from 'viem';
  * import { base } from 'viem/chains';
  *

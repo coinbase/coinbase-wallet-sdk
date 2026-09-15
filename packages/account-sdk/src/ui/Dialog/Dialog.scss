@@ -1,9 +1,9 @@
 
-.-base-acc-sdk-css-reset {
+.-coinbase-wallet-sdk-css-reset {
   -webkit-font-smoothing: antialiased;
   pointer-events: auto !important; // important to override the parent pointer-events: none;
   
-  .-base-acc-sdk-dialog-container {
+  .-coinbase-wallet-sdk-dialog-container {
     position: fixed;
     top: 0;
     left: 0;
@@ -17,7 +17,7 @@
     }
   }
 
-  .-base-acc-sdk-dialog-backdrop {
+  .-coinbase-wallet-sdk-dialog-backdrop {
     position: fixed;
     top: 0;
     left: 0;
@@ -37,7 +37,7 @@
     }
   }
 
-  .-base-acc-sdk-dialog {
+  .-coinbase-wallet-sdk-dialog {
     position: relative;
     z-index: 2147483648;
 
@@ -47,7 +47,7 @@
     }
   }
 
-  .-base-acc-sdk-dialog-instance {
+  .-coinbase-wallet-sdk-dialog-instance {
     background: #ffffff;
     border-radius: 12px;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -74,7 +74,7 @@
       }
     }
 
-    &:not(.-base-acc-sdk-dialog-instance-hidden) {
+    &:not(.-coinbase-wallet-sdk-dialog-instance-hidden) {
       transform: scale(1);
       opacity: 1;
 
@@ -98,7 +98,7 @@
         opacity: 1;
       }
 
-      &:not(.-base-acc-sdk-dialog-instance-hidden) {
+      &:not(.-coinbase-wallet-sdk-dialog-instance-hidden) {
         transform: translateY(0);
         opacity: 1;
       }
@@ -243,7 +243,7 @@
   }
 
   // Handle bar component styles
-  .-base-acc-sdk-dialog-handle-bar {
+  .-coinbase-wallet-sdk-dialog-handle-bar {
     position: absolute;
     top: -16px;
     left: 50%;

@@ -28,7 +28,7 @@ import { validateUSDCBasePermission } from './utils/validateUSDCBasePermission.j
  *
  * @example
  * ```typescript
- * import { base } from '@base-org/account/payment';
+ * import { base } from '@coinbase/wallet-sdk/payment';
  *
  * // Prepare to revoke a subscription
  * const revokeCall = await base.subscription.prepareRevoke({

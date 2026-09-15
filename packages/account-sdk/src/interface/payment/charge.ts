@@ -38,7 +38,7 @@ import { sendUserOpAndWait } from './utils/sendUserOpAndWait.js';
  *
  * @example
  * ```typescript
- * import { base } from '@base-org/account/node';
+ * import { base } from '@coinbase/wallet-sdk/node';
  *
  * // Using environment variables for credentials and paymaster.
  * // Prefer a server-stored subscription id bound to the authenticated user.

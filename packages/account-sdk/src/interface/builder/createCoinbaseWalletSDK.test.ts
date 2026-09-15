@@ -379,9 +379,9 @@ describe('createProvider', () => {
     });
 
     it('should pass an explicit defaultChainId through to the provider', () => {
-      createBaseAccountSDK({ appChainIds: [1, 137], defaultChainId: 8453 }).getProvider();
+      createCoinbaseWalletSDK({ appChainIds: [1, 137], defaultChainId: 8453 }).getProvider();
 
-      expect(mockBaseAccountProvider).toHaveBeenCalledWith(
+      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
         expect.objectContaining({
           metadata: expect.objectContaining({
             defaultChainId: 8453,
@@ -394,9 +394,9 @@ describe('createProvider', () => {
     });
 
     it('should omit defaultChainId when the app does not set one', () => {
-      createBaseAccountSDK({ appChainIds: [1, 137] }).getProvider();
+      createCoinbaseWalletSDK({ appChainIds: [1, 137] }).getProvider();
 
-      expect(mockBaseAccountProvider).toHaveBeenCalledWith(
+      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
         expect.objectContaining({
           metadata: expect.not.objectContaining({ defaultChainId: expect.anything() }),
         }),

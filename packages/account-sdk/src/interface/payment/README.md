@@ -5,7 +5,7 @@ The payment interface provides a simple way to make USDC payments on Base networ
 ## Basic Usage
 
 ```typescript
-import { pay } from '@base-org/account';
+import { pay } from '@coinbase/wallet-sdk';
 
 try {
   const payment = await pay({
@@ -26,7 +26,7 @@ try {
 You can check the status of a payment using the transaction ID returned from the pay function:
 
 ```typescript
-import { getPaymentStatus } from '@base-org/account';
+import { getPaymentStatus } from '@coinbase/wallet-sdk';
 
 // Check payment status
 const status = await getPaymentStatus({
@@ -75,7 +75,7 @@ that have already been used for fulfillment.
 You can request additional information from the user during payment using the `payerInfo` parameter:
 
 ```typescript
-import { pay } from '@base-org/account';
+import { pay } from '@coinbase/wallet-sdk';
 
 const payment = await pay({
   amount: "10.50",

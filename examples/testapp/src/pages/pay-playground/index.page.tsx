@@ -55,7 +55,7 @@ function PayPlayground() {
       const transactionId = payExecution.result.id;
       const amount = payExecution.result.amount;
       const recipient = payExecution.result.to;
-      const updatedCode = `import { base } from '@base-org/account'
+      const updatedCode = `import { base } from '@coinbase/wallet-sdk'
 
 try {
   const result = await base.getPaymentStatus({

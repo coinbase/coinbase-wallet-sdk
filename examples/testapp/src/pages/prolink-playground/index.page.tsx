@@ -1,4 +1,4 @@
-import { createProlinkUrl, decodeProlink, encodeProlink } from '@base-org/account';
+import { createProlinkUrl, decodeProlink, encodeProlink } from '@coinbase/wallet-sdk';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
 import {
   Box,

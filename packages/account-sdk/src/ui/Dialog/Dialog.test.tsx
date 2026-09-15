@@ -55,7 +55,9 @@ describe('DialogContainer', () => {
     const setTimeoutSpy = vi.spyOn(window, 'setTimeout');
     renderDialogContainer();
 
-    const hiddenClass = document.getElementsByClassName('-base-acc-sdk-dialog-instance-hidden');
+    const hiddenClass = document.getElementsByClassName(
+      '-coinbase-wallet-sdk-dialog-instance-hidden'
+    );
     expect(hiddenClass.length).toEqual(1);
 
     vi.runAllTimers();
@@ -106,7 +108,7 @@ describe('DialogContainer', () => {
     renderDialogContainer({ handleClose });
 
     const closeButton = document.getElementsByClassName(
-      '-base-acc-sdk-dialog-instance-header-close'
+      '-coinbase-wallet-sdk-dialog-instance-header-close'
     )[0];
     fireEvent.click(closeButton);
 
@@ -157,7 +159,7 @@ describe('DialogInstance session header', () => {
 
     renderDialogContainer();
 
-    expect(await screen.findByText('Base Account')).toBeInTheDocument();
+    expect(await screen.findByText('Coinbase Wallet')).toBeInTheDocument();
     expect(getDisplayableUsername).not.toHaveBeenCalled();
   });
 });

@@ -62,7 +62,7 @@ function SubscribePlayground() {
       subscribeExecution.result.id
     ) {
       const subscriptionId = subscribeExecution.result.id;
-      const updatedCode = `import { base } from '@base-org/account'
+      const updatedCode = `import { base } from '@coinbase/wallet-sdk'
 
 try {
   const result = await base.subscription.getStatus({

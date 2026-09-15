@@ -35,7 +35,7 @@ type FetchPermissionsType = {
  *
  * @example
  * ```typescript
- * import { fetchPermissions } from '@base-org/account/spend-permission';
+ * import { fetchPermissions } from '@coinbase/wallet-sdk/spend-permission';
  *
  * // Fetch all permissions for an account-spender pair (with provider)
  * const permissions = await fetchPermissions({

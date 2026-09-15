@@ -104,7 +104,8 @@ export function createStoreInstance(options?: {
   persist?: boolean;
   storageName?: string;
 }) {
-  const { persist: shouldPersist = true, storageName = 'base-acc-sdk.store' } = options ?? {};
+  const { persist: shouldPersist = true, storageName = 'coinbase-wallet-sdk.store' } =
+    options ?? {};
 
   const storeCreator = (...args: Parameters<StateCreator<StoreState, [], []>>) => ({
     ...createKeysSlice(...args),

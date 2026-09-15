@@ -17,7 +17,7 @@ export default {
       exports: 'named',
     },
     {
-      file: 'dist/base-account.min.js',
+      file: 'dist/coinbase-wallet-sdk.min.js',
       format: 'umd',
       name: 'base',
       sourcemap: true,

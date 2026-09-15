@@ -1,4 +1,9 @@
-import { type PaymentResult, type PaymentStatus, getPaymentStatus, pay } from '@base-org/account';
+import {
+  type PaymentResult,
+  type PaymentStatus,
+  getPaymentStatus,
+  pay,
+} from '@coinbase/wallet-sdk';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
 import {
   Accordion,

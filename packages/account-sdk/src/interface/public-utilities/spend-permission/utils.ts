@@ -270,7 +270,7 @@ export function calculateCurrentPeriod(
  *
  * @example
  * ```typescript
- * import { toSpendPermissionArgs } from '@base-org/account/spend-permission';
+ * import { toSpendPermissionArgs } from '@coinbase/wallet-sdk/spend-permission';
  *
  * const args = toSpendPermissionArgs(permission);
  * const currentPeriod = await readContract(client, {

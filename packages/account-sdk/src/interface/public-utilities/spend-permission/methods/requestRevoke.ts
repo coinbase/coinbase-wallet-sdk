@@ -23,7 +23,7 @@ import { withTelemetry } from '../withTelemetry.js';
  *
  * @example
  * ```typescript
- * import { requestRevoke } from '@base-org/account/spend-permission';
+ * import { requestRevoke } from '@coinbase/wallet-sdk/spend-permission';
  *
  * // Revoke a spend permission with user approval
  * try {

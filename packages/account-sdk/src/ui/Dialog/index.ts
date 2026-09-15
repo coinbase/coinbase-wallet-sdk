@@ -6,7 +6,7 @@ let dialog: Dialog | null = null;
 export function initDialog() {
   if (!dialog) {
     const root = document.createElement('div');
-    root.className = '-base-acc-sdk-css-reset';
+    root.className = '-coinbase-wallet-sdk-css-reset';
     document.body.appendChild(root);
     dialog = new Dialog();
     dialog.attach(root);

@@ -1,6 +1,6 @@
 {
-  "name": "@base-org/account",
-  "version": "2.5.10",
+  "name": "@coinbase/wallet-sdk",
+  "version": "5.0.0",
   "description": "Coinbase Wallet SDK",
   "keywords": [
     "base",
@@ -14,7 +14,7 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "browser": "dist/base-account.min.js",
+  "browser": "dist/coinbase-wallet-sdk.min.js",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

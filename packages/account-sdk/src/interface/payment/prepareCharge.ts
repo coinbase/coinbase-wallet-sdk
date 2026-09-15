@@ -36,7 +36,7 @@ import { validateUSDCBasePermission } from './utils/validateUSDCBasePermission.j
  *
  * @example
  * ```typescript
- * import { base } from '@base-org/account/payment';
+ * import { base } from '@coinbase/wallet-sdk/payment';
  *
  * // Prepare to charge a specific amount from a subscription
  * const chargeCalls = await base.subscription.prepareCharge({

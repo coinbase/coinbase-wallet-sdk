@@ -1,4 +1,4 @@
-export const DEFAULT_SUBSCRIBE_CODE = `import { base } from '@base-org/account'
+export const DEFAULT_SUBSCRIBE_CODE = `import { base } from '@coinbase/wallet-sdk'
 
 try {
   const subscription = await base.subscription.subscribe({
@@ -14,7 +14,7 @@ try {
   throw error;
 }`;
 
-export const SUBSCRIBE_CODE_WITH_TEST_PERIOD = `import { base } from '@base-org/account'
+export const SUBSCRIBE_CODE_WITH_TEST_PERIOD = `import { base } from '@coinbase/wallet-sdk'
 
 try {
   const subscription = await base.subscription.subscribe({
@@ -30,7 +30,7 @@ try {
   throw error;
 }`;
 
-export const SUBSCRIBE_CODE_WITH_MINIMUM_BALANCE_FALSE = `import { base } from '@base-org/account'
+export const SUBSCRIBE_CODE_WITH_MINIMUM_BALANCE_FALSE = `import { base } from '@coinbase/wallet-sdk'
 
 try {
   const subscription = await base.subscription.subscribe({
@@ -47,7 +47,7 @@ try {
   throw error;
 }`;
 
-export const DEFAULT_GET_SUBSCRIPTION_STATUS_CODE = `import { base } from '@base-org/account'
+export const DEFAULT_GET_SUBSCRIPTION_STATUS_CODE = `import { base } from '@coinbase/wallet-sdk'
 
 try {
   const result = await base.subscription.getStatus({

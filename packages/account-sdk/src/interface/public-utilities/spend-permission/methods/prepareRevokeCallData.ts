@@ -28,7 +28,7 @@ type RevokeSpendPermissionResponse = {
  *
  * @example
  * ```typescript
- * import { prepareRevokeCallData } from '@base-org/account/spend-permission';
+ * import { prepareRevokeCallData } from '@coinbase/wallet-sdk/spend-permission';
  *
  * // Prepare revoke call data for silent execution
  * const { to, data } = await prepareRevokeCallData({ permission: myPermission });

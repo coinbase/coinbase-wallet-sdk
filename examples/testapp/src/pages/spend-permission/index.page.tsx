@@ -2,7 +2,7 @@ import {
   fetchPermissions,
   prepareSpendCallData,
   requestSpendPermission,
-} from '@base-org/account/spend-permission';
+} from '@coinbase/wallet-sdk/spend-permission';
 import { ChevronDownIcon, ChevronUpIcon, ExternalLinkIcon, RepeatIcon } from '@chakra-ui/icons';
 import {
   Badge,

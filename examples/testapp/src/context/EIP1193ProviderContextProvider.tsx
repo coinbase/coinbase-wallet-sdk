@@ -1,4 +1,4 @@
-import { createCoinbaseWalletSDK as createCoinbaseWalletSDKHEAD } from '@base-org/account';
+import { createCoinbaseWalletSDK as createCoinbaseWalletSDKHEAD } from '@coinbase/wallet-sdk';
 import { ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { DisconnectedAlert } from '../components/alerts/DisconnectedAlert';
 import { useEventListeners } from '../hooks/useEventListeners';

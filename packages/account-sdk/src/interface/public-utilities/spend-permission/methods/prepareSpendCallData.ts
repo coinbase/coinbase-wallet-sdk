@@ -45,7 +45,7 @@ export type PrepareSpendCallDataResponseType = Call[];
  *
  * @example
  * ```typescript
- * import { prepareSpendCallData } from '@base-org/account/spend-permission';
+ * import { prepareSpendCallData } from '@coinbase/wallet-sdk/spend-permission';
  *
  * // Prepare calls to approve and spend a specific amount from a permission
  * const spendCalls = await prepareSpendCallData(

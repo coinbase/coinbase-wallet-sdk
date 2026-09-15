@@ -11,30 +11,30 @@
 
    ```shell
      # yarn
-     yarn info @base-org/account versions
+     yarn info @coinbase/wallet-sdk versions
 
      # npm
-     npm view @base-org/account versions
+     npm view @coinbase/wallet-sdk versions
    ```
 
 2. Install latest version:
 
    ```shell
    # yarn
-   yarn add @base-org/account
+   yarn add @coinbase/wallet-sdk
 
    # npm
-   npm install @base-org/account
+   npm install @coinbase/wallet-sdk
    ```
 
 3. Check installed version:
 
    ```shell
    # yarn
-   yarn list @base-org/account
+   yarn list @coinbase/wallet-sdk
 
    # npm
-   npm list @base-org/account
+   npm list @coinbase/wallet-sdk
    ```
 
 ### Upgrading Coinbase Wallet SDK
@@ -43,20 +43,20 @@
 
    ```shell
    # yarn
-   yarn outdated @base-org/account
+   yarn outdated @coinbase/wallet-sdk
 
    # npm
-   npm outdated @base-org/account
+   npm outdated @coinbase/wallet-sdk
    ```
 
 2. Update to latest:
 
    ```shell
    # yarn
-   yarn upgrade @base-org/account --latest
+   yarn upgrade @coinbase/wallet-sdk --latest
 
    # npm
-   npm update @base-org/account
+   npm update @coinbase/wallet-sdk
    ```
 
 ### Basic Usage
@@ -168,10 +168,10 @@ Coinbase Wallet can be used directly in HTML pages via a script tag, without any
 
 ```html
 <!-- Via unpkg -->
-<script src="https://unpkg.com/@base-org/account/dist/base-account.min.js"></script>
+<script src="https://unpkg.com/@coinbase/wallet-sdk/dist/coinbase-wallet-sdk.min.js"></script>
 
 <!-- Via jsDelivr -->
-<script src="https://cdn.jsdelivr.net/npm/@base-org/account/dist/base-account.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@coinbase/wallet-sdk/dist/coinbase-wallet-sdk.min.js"></script>
 ```
 
 Once loaded, the SDK is available as `window.base` and `window.createCoinbaseWalletSDK`:

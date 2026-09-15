@@ -42,7 +42,7 @@ export type GetPermissionStatusResponseType = {
  *
  * @example
  * ```typescript
- * import { getPermissionStatus } from '@base-org/account/spend-permission';
+ * import { getPermissionStatus } from '@coinbase/wallet-sdk/spend-permission';
  *
  * // Check the status of a permission (no client needed)
  * const status = await getPermissionStatus(permission);

@@ -1,7 +1,7 @@
-# Manual publish workflow for @base-org/account.
+# Manual publish workflow for @coinbase/wallet-sdk.
 #
 # This is the canonical workflow tied to the npm Trusted Publisher entry
-# for @base-org/account (workflow filename: release-account.yml,
+# for @coinbase/wallet-sdk (workflow filename: release-account.yml,
 # environment: publish). The OIDC token minted by this workflow is the
 # only one npm will accept for publishing this package.
 #
@@ -43,14 +43,14 @@ jobs:
           npm install -g npm@latest
 
       - name: Set version
-        run: yarn workspace @base-org/account version ${{ env.PACKAGE_VERSION }}
+        run: yarn workspace @coinbase/wallet-sdk version ${{ env.PACKAGE_VERSION }}
 
       # Build the package
       - name: Prebuild Packages
-        run: yarn workspace @base-org/account prebuild
+        run: yarn workspace @coinbase/wallet-sdk prebuild
 
       - name: Build Packages
-        run: yarn workspace @base-org/account build
+        run: yarn workspace @coinbase/wallet-sdk build
 
       - name: Publish to npm
         run: |

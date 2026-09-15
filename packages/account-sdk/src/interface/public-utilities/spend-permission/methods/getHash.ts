@@ -20,7 +20,7 @@ import { withTelemetry } from '../withTelemetry.js';
  *
  * @example
  * ```typescript
- * import { getHash } from '@base-org/account/spend-permission';
+ * import { getHash } from '@coinbase/wallet-sdk/spend-permission';
  *
  * const permission = {
  *   account: '0x1234...',

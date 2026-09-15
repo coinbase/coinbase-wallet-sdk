@@ -1,4 +1,4 @@
-name: Deploy Base Account SDK Playground to Pages
+name: Deploy Coinbase Wallet SDK Playground to Pages
 
 on:
   workflow_dispatch:

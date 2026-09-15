@@ -1,7 +1,7 @@
 import { arbitrum, avalanche, base, bsc, mainnet, optimism, polygon } from 'viem/chains';
 
 // Local storage key for spender account
-export const SPENDER_ACCOUNT_STORAGE_KEY = 'base-acc-sdk.spend-permission.spender-pk';
+export const SPENDER_ACCOUNT_STORAGE_KEY = 'coinbase-wallet-sdk.spend-permission.spender-pk';
 
 // EIP-7702 delegation designation prefix
 export const EIP7702_DELEGATION_PREFIX = '0xef0100';

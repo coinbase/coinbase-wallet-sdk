@@ -1,4 +1,4 @@
-import { createCoinbaseWalletSDK as createCoinbaseWalletSDKHEAD } from '@base-org/account';
+import { createCoinbaseWalletSDK as createCoinbaseWalletSDKHEAD } from '@coinbase/wallet-sdk';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -11,7 +11,7 @@ import {
   useEIP1193Provider,
 } from './EIP1193ProviderContextProvider';
 
-vi.mock('@base-org/account', () => ({
+vi.mock('@coinbase/wallet-sdk', () => ({
   createCoinbaseWalletSDK: vi.fn(() => ({
     getProvider: vi.fn(() => mockProvider),
   })),

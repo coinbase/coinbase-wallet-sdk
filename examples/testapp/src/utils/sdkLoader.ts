@@ -47,8 +47,8 @@ async function loadFromNpm(): Promise<LoadedSDK> {
  */
 async function loadFromLocal(): Promise<LoadedSDK> {
   // Dynamic import of local workspace package
-  const mainModule = await import('@base-org/account');
-  const spendPermissionModule = await import('@base-org/account/spend-permission');
+  const mainModule = await import('@coinbase/wallet-sdk');
+  const spendPermissionModule = await import('@coinbase/wallet-sdk/spend-permission');
 
   return {
     base: mainModule.base,

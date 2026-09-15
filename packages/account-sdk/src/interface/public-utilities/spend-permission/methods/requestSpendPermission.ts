@@ -52,7 +52,7 @@ export type RequestSpendPermissionType = {
  *
  * @example
  * ```typescript
- * import { requestSpendPermission } from '@base-org/account/spend-permission';
+ * import { requestSpendPermission } from '@coinbase/wallet-sdk/spend-permission';
  *
  * // Request approval for a spend permission
  * const permission = await requestSpendPermission({
