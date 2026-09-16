@@ -1,8 +1,8 @@
 {
-  "name": "account-sdk",
+  "name": "coinbase-wallet-sdk",
   "version": "0.0.1",
-  "repository": "https://github.com/base/account-sdk",
-  "author": "Base",
+  "repository": "https://coinbase.ghe.com/wallet/coinbase-wallet-sdk-NG-2026",
+  "author": "Coinbase",
   "license": "MIT",
   "private": true,
   "workspaces": [

@@ -101,8 +101,6 @@ function context(opts?: { connected?: boolean }): Eip1193Context {
   });
   const emit = vi.fn();
   const state = {
-    subAccounts: { get: () => undefined, set: vi.fn(), clear: vi.fn() },
-    subAccountsConfig: { get: () => ({}), set: vi.fn(), clear: vi.fn() },
     spendPermissions: { get: () => [], set: vi.fn(), clear: vi.fn() },
     paymasterUrls: { get: () => undefined, set: vi.fn() },
   } as unknown as Store['eip155'];
@@ -287,9 +285,7 @@ describe('RPC routing vs Coinbase Wallet SDK', () => {
   });
 
   it('reads wallet_getSubAccounts from chain RPC when nothing is cached', async () => {
-    const fetchRPC = vi.spyOn(providerUtil, 'fetchRPCRequest').mockResolvedValue({
-      subAccounts: [],
-    });
+    const fetchRPC = vi.spyOn(providerUtil, 'fetchRPCRequest').mockResolvedValue({});
     const rt = context({ connected: true });
     await handleEip1193Request(rt, { method: 'wallet_getSubAccounts', params: [] });
     expect(fetchRPC).toHaveBeenCalledWith(

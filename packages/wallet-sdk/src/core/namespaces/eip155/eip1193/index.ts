@@ -2,7 +2,6 @@
  * EIP-1193 interface (diagram: EIP-1193 Interface + Handling).
  *
  * `request.ts` is `provider.request`. Sub-account is a local fork here
- * (local owner-key; funding / add-owner still `invoke`).
  * Does not own keys or the popup. `CoinbaseWalletProvider` is a thin
  * EventEmitter over `handleEip1193Request`.
  */

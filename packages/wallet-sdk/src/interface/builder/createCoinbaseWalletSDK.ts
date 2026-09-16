@@ -1,5 +1,3 @@
-import { abi } from ':core/namespaces/eip155/eip1193/sub-account/constants.js';
-import { projectEthAccountsForChain } from ':core/namespaces/eip155/session.js';
 import {
   AppMetadata,
   ConstructorOptions,
@@ -77,7 +75,7 @@ export function _resetGlobalInitialization(): void {
  * Create a Coinbase Wallet SDK instance with an EIP-1193 compliant provider
  * @param params - Options to create a Coinbase Wallet SDK instance.
  * Connection is `ensureSession` → `createSession` (handshake + CAIP-25). Signing is `invoke`
- * through the popup transport, or the sub-account local path when `from` is the sub-account.
+ * through the popup transport.
  */
 export function createCoinbaseWalletSDK(params: CreateProviderOptions) {
   const options: ConstructorOptions = {

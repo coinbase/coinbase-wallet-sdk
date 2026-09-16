@@ -24,8 +24,6 @@ function context(
     onChange: (chainId) => emit('chainChanged', numberToHex(chainId)),
   });
   const state = {
-    subAccounts: { get: () => undefined, set: vi.fn(), clear: vi.fn() },
-    subAccountsConfig: { get: () => ({}), set: vi.fn(), clear: vi.fn() },
     spendPermissions: { get: () => [], set: vi.fn(), clear: vi.fn() },
     paymasterUrls: { get: () => undefined, set: vi.fn() },
   } as unknown as Store['eip155'];

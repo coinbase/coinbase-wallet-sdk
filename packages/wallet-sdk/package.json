@@ -117,8 +117,8 @@
     "node": ">=20"
   },
   "sideEffects": false,
-  "repository": "https://github.com/base/account-sdk.git",
-  "author": "Base",
+  "repository": "https://coinbase.ghe.com/wallet/coinbase-wallet-sdk-NG-2026.git",
+  "author": "Coinbase",
   "license": "Apache-2.0",
   "scripts": {
     "clean": "rm -rf dist && rm -rf node_modules",

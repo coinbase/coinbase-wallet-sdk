@@ -62,5 +62,5 @@ jobs:
 
       - name: Publish to npm
         run: |
-          cd packages/account-sdk
+          cd packages/wallet-sdk
           npm publish --tag canary --access public

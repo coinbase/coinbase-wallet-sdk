@@ -3,7 +3,7 @@ import { join, sep } from 'node:path';
 
 const src = existsSync(join(process.cwd(), 'src/core'))
   ? join(process.cwd(), 'src')
-  : join(process.cwd(), 'packages/account-sdk/src');
+  : join(process.cwd(), 'packages/wallet-sdk/src');
 
 function productionFiles(directory: string): string[] {
   if (!existsSync(directory)) return [];

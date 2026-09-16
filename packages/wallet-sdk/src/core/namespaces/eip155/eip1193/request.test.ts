@@ -16,8 +16,6 @@ function context(opts?: { session?: Session }): Eip1193Context {
     accounts: [{ address: ADDRESS, capabilities: {} }],
   });
   const state = {
-    subAccounts: { get: () => undefined, set: vi.fn(), clear: vi.fn() },
-    subAccountsConfig: { get: () => ({}), set: vi.fn(), clear: vi.fn() },
     spendPermissions: { get: () => [], set: vi.fn(), clear: vi.fn() },
     paymasterUrls: { get: () => undefined, set: vi.fn() },
   } as unknown as Store['eip155'];

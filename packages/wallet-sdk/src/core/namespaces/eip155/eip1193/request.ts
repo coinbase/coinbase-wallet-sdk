@@ -19,7 +19,7 @@ function hasEip155Account(session: Session): boolean {
  * - no eip155 scope → `handleDisconnected` (explicit one-shot methods invoke
  *   ephemerally; other wallet-bound requests create a session; status → Coinbase HTTP)
  * - eip155 scope → `handleConnected` (`invoke` for wallet methods, chain RPC for
- *   `wallet_getCallsStatus` / `eth_call` / etc., or local sub-account signing)
+ *   `wallet_getCallsStatus` / `eth_call` / etc.)
  */
 export async function handleEip1193Request(
   context: Eip1193Context,

@@ -28,12 +28,6 @@ vi.mock(':store/store.js', () => ({
       set: vi.fn(),
     },
     eip155: {
-      subAccountsConfig: {
-        set: vi.fn(),
-      },
-      subAccounts: {
-        get: vi.fn(),
-      },
       paymasterUrls: {
         set: vi.fn(),
       },
@@ -78,7 +72,7 @@ const mockStore = store as any;
 const mockLoadTelemetryScript = telemetryModule.loadTelemetryScript as any;
 const mockCheckCrossOriginOpenerPolicy = checkCrossOriginModule.checkCrossOriginOpenerPolicy as any;
 const mockValidatePreferences = validatePreferencesModule.validatePreferences as any;
-const mockBaseAccountProvider = BaseAccountProvider as any;
+const mockCoinbaseWalletProvider = CoinbaseWalletProvider as any;
 const mockGetInjectedProvider = getInjectedProviderModule.getInjectedProvider as any;
 const mockRegisterSolanaWallet = solanaModule.registerSolanaWallet as any;
 const mockCreateTransport = transportModule.createTransport as any;

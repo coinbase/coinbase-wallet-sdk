@@ -333,7 +333,7 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
       await runTestCategory('Sub-Account Features');
       await delay(TEST_DELAYS.BETWEEN_TESTS);
 
-      // 5. Payment & Subscription tests (run AFTER sub-account tests)
+      // 5. Payment & Subscription tests
       await runTestCategory('Payment Features');
       await delay(TEST_DELAYS.BETWEEN_TESTS);
 
@@ -409,7 +409,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
    * Tests excluded (no external requests or not relevant for SCW Release):
    * - SDK Initialization & Exports (SDK already instantiated on page load)
    * - wallet_prepareCalls (no popup)
-   * - personal_sign (sub-account) (no popup)
    * - prepareSpendCallData (no popup)
    * - prepareRevokeCallData (no popup)
    * - prepareCharge variants (no popup)

@@ -34,8 +34,6 @@ const PEER_PUBLIC_KEY = {
  * This manager owns one connection's keypair and shared secret.
  * Encrypt/decrypt live as functions next to this class.
  *
- * Distinct from `:owner-key`, which holds WebCrypto owner keys for sub-account
- * UserOperations.
  */
 export class KeyManager {
   private ownPrivateKey: CryptoKey | null = null;

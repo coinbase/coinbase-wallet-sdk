@@ -12,7 +12,7 @@ type Config = {
 };
 type CoreConfig = Omit<Config, 'paymasterUrls'>;
 
-/** ECDH transport keys (`KeyManager`), not sub-account owner keys. */
+/** ECDH transport keys (`KeyManager`). */
 type KeysSlice = { keys: Record<string, string | null> };
 const createKeysSlice: StateCreator<StoreState, [], [], KeysSlice> = () => ({ keys: {} });
 

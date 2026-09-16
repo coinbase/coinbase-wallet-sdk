@@ -5,7 +5,6 @@
  * `encrypt` / `decrypt` use that secret — they are not methods on the manager.
  *
  * Popup delivery calls these around its postMessage transport. Distinct from
- * `:owner-key` (WebCrypto owner keys for sub-account UserOps).
  */
 export { decrypt } from './decrypt.js';
 export { encrypt } from './encrypt.js';
