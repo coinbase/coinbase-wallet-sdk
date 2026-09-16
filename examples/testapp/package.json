@@ -14,10 +14,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@base-org/account": "workspace:*",
     "@base-org/account-npm": "npm:@base-org/account@latest",
     "@chakra-ui/icons": "^2.1.1",
     "@chakra-ui/react": "^2.8.0",
+    "@coinbase/wallet-sdk": "workspace:*",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@metamask/eth-sig-util": "^7.0.0",

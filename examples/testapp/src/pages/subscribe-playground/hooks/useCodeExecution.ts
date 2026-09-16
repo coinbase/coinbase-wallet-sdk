@@ -3,8 +3,8 @@ import type {
   PaymentStatus,
   SubscriptionResult,
   SubscriptionStatus,
-} from '@base-org/account';
-import { getPaymentStatus, getSubscriptionStatus, pay, subscribe } from '@base-org/account';
+} from '@coinbase/wallet-sdk';
+import { getPaymentStatus, getSubscriptionStatus, pay, subscribe } from '@coinbase/wallet-sdk';
 import { useCallback, useState } from 'react';
 import { transformAndSanitizeCode } from '../utils/codeTransform';
 import { useConsoleCapture } from './useConsoleCapture';

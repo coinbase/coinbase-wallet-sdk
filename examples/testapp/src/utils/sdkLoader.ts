@@ -14,10 +14,14 @@ async function loadFromNpm(): Promise<LoadedSDK> {
   // Dynamic import of npm package (installed as @base-org/account-npm alias)
   const mainModule = await import('@base-org/account-npm');
   const spendPermissionModule = await import('@base-org/account-npm/spend-permission');
+  const npmModule = mainModule as typeof mainModule & {
+    createCoinbaseWalletSDK?: LoadedSDK['createCoinbaseWalletSDK'];
+    createBaseAccountSDK?: LoadedSDK['createCoinbaseWalletSDK'];
+  };
 
   return {
     base: mainModule.base,
-    createBaseAccountSDK: mainModule.createBaseAccountSDK,
+    createCoinbaseWalletSDK: npmModule.createCoinbaseWalletSDK ?? npmModule.createBaseAccountSDK,
     createProlinkUrl: mainModule.createProlinkUrl,
     decodeProlink: mainModule.decodeProlink,
     encodeProlink: mainModule.encodeProlink,
@@ -43,12 +47,12 @@ async function loadFromNpm(): Promise<LoadedSDK> {
  */
 async function loadFromLocal(): Promise<LoadedSDK> {
   // Dynamic import of local workspace package
-  const mainModule = await import('@base-org/account');
-  const spendPermissionModule = await import('@base-org/account/spend-permission');
+  const mainModule = await import('@coinbase/wallet-sdk');
+  const spendPermissionModule = await import('@coinbase/wallet-sdk/spend-permission');
 
   return {
     base: mainModule.base,
-    createBaseAccountSDK: mainModule.createBaseAccountSDK,
+    createCoinbaseWalletSDK: mainModule.createCoinbaseWalletSDK,
     createProlinkUrl: mainModule.createProlinkUrl,
     decodeProlink: mainModule.decodeProlink,
     encodeProlink: mainModule.encodeProlink,

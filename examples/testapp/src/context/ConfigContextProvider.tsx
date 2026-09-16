@@ -1,4 +1,4 @@
-import { Preference } from '@base-org/account';
+import { Preference } from '@coinbase/wallet-sdk';
 // @ts-ignore - this internal type is not exported, only used by this playground
 import {
   Dispatch,

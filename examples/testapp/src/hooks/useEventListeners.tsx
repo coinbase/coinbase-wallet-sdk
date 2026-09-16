@@ -1,4 +1,4 @@
-import { ProviderInterface } from '@base-org/account';
+import { ProviderInterface } from '@coinbase/wallet-sdk';
 import { useToast } from '@chakra-ui/react';
 import { useCallback } from 'react';
 

@@ -52,15 +52,15 @@ jobs:
         run: npm install -g npm@latest
 
       - name: Set version
-        run: yarn workspace @base-org/account version ${{ steps.version.outputs.base }}-canary.$(date +'%Y%m%d%H%M%S')
+        run: yarn workspace @coinbase/wallet-sdk version ${{ steps.version.outputs.base }}-canary.$(date +'%Y%m%d%H%M%S')
 
       - name: Prebuild Packages
-        run: yarn workspace @base-org/account prebuild
+        run: yarn workspace @coinbase/wallet-sdk prebuild
 
       - name: Build Packages
-        run: yarn workspace @base-org/account build
+        run: yarn workspace @coinbase/wallet-sdk build
 
       - name: Publish to npm
         run: |
-          cd packages/account-sdk
+          cd packages/wallet-sdk
           npm publish --tag canary --access public

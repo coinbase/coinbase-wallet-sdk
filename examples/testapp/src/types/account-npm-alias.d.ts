@@ -1,7 +1,7 @@
 declare module '@base-org/account-npm' {
-  export * from '@base-org/account';
+  export * from '@coinbase/wallet-sdk';
 }
 
 declare module '@base-org/account-npm/spend-permission' {
-  export * from '@base-org/account/spend-permission';
+  export * from '@coinbase/wallet-sdk/spend-permission';
 }

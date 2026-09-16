@@ -1,4 +1,4 @@
-import { Preference } from '@base-org/account';
+import { Preference } from '@coinbase/wallet-sdk';
 import {
   Box,
   Card,

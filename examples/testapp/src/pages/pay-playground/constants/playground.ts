@@ -1,4 +1,4 @@
-export const DEFAULT_PAY_CODE = `import { base } from '@base-org/account'
+export const DEFAULT_PAY_CODE = `import { base } from '@coinbase/wallet-sdk'
 
 try {
   const result = await base.pay({
@@ -13,7 +13,7 @@ try {
   throw error;
 }`;
 
-export const PAY_CODE_WITH_PAYER_INFO = `import { base } from '@base-org/account'
+export const PAY_CODE_WITH_PAYER_INFO = `import { base } from '@coinbase/wallet-sdk'
 
 try {
   const result = await base.pay({
@@ -37,7 +37,7 @@ try {
   throw error;
 }`;
 
-export const DEFAULT_GET_PAYMENT_STATUS_CODE = `import { base } from '@base-org/account'
+export const DEFAULT_GET_PAYMENT_STATUS_CODE = `import { base } from '@coinbase/wallet-sdk'
 
 try {
   const result = await base.getPaymentStatus({

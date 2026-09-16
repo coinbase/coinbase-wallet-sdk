@@ -1,13 +1,11 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "packages": {
-    "packages/account-sdk": {
-      "package-name": "@base-org/account",
+    "packages/wallet-sdk": {
+      "package-name": "@coinbase/wallet-sdk",
       "component": "account",
       "changelog-path": "CHANGELOG.md",
-      "include-paths": [
-        "packages/account-sdk"
-      ]
+      "include-paths": ["packages/wallet-sdk"]
     }
   },
   "separate-pull-requests": true

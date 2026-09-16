@@ -8,7 +8,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { SDK_CONFIG } from '../../../utils/e2e-test-config';
 import { type LoadedSDK, type SDKSource, loadSDK } from '../../../utils/sdkLoader';
-import type { BaseAccountSDK } from '../types';
+import type { CoinbaseWalletSDK } from '../types';
 
 // ============================================================================
 // Types
@@ -18,7 +18,7 @@ export interface UseSDKStateReturn {
   // State
   sdkSource: SDKSource;
   loadedSDK: LoadedSDK | null;
-  sdk: BaseAccountSDK | null;
+  sdk: CoinbaseWalletSDK | null;
   // biome-ignore lint/suspicious/noExplicitAny: EIP1193Provider type varies
   provider: any | null; // EIP1193Provider type
   isLoadingSDK: boolean;
@@ -32,7 +32,7 @@ export interface UseSDKStateReturn {
     appChainIds?: number[];
     walletUrl?: string;
   }) => Promise<void>;
-  setSdk: (sdk: BaseAccountSDK | null) => void;
+  setSdk: (sdk: CoinbaseWalletSDK | null) => void;
   // biome-ignore lint/suspicious/noExplicitAny: EIP1193Provider type varies
   setProvider: (provider: any | null) => void;
 }
@@ -44,7 +44,7 @@ export interface UseSDKStateReturn {
 export function useSDKState(): UseSDKStateReturn {
   const [sdkSource, setSdkSource] = useState<SDKSource>('local');
   const [loadedSDK, setLoadedSDK] = useState<LoadedSDK | null>(null);
-  const [sdk, setSdk] = useState<BaseAccountSDK | null>(null);
+  const [sdk, setSdk] = useState<CoinbaseWalletSDK | null>(null);
   // biome-ignore lint/suspicious/noExplicitAny: EIP1193Provider type varies
   const [provider, setProvider] = useState<any | null>(null);
   const [isLoadingSDK, setIsLoadingSDK] = useState(false);
@@ -78,7 +78,7 @@ export function useSDKState(): UseSDKStateReturn {
         setLoadedSDK(loaded);
 
         // Initialize SDK instance with provided or default config
-        const sdkInstance = loaded.createBaseAccountSDK({
+        const sdkInstance = loaded.createCoinbaseWalletSDK({
           appName: config?.appName || SDK_CONFIG.APP_NAME,
           appLogoUrl: config?.appLogoUrl || SDK_CONFIG.APP_LOGO_URL,
           appChainIds: config?.appChainIds || [...SDK_CONFIG.DEFAULT_CHAIN_IDS],

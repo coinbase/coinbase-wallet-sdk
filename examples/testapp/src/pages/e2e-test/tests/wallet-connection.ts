@@ -108,7 +108,7 @@ export async function testSignMessage(
       })) as string[];
 
       const account = accounts[0];
-      const message = 'Hello from Base Account SDK E2E Test!';
+      const message = 'Hello from Coinbase Wallet SDK E2E Test!';
 
       const signature = (await ctx.provider.request({
         method: 'personal_sign',

@@ -3,7 +3,7 @@ import type {
   PaymentStatus,
   SubscriptionResult,
   SubscriptionStatus,
-} from '@base-org/account';
+} from '@coinbase/wallet-sdk';
 import styles from './Output.module.css';
 
 interface OutputProps {
