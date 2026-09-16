@@ -21,7 +21,6 @@ async function loadFromNpm(): Promise<LoadedSDK> {
     createProlinkUrl: mainModule.createProlinkUrl,
     decodeProlink: mainModule.decodeProlink,
     encodeProlink: mainModule.encodeProlink,
-    getCryptoKeyAccount: mainModule.getCryptoKeyAccount, // May or may not be available
     VERSION: mainModule.VERSION,
     CHAIN_IDS: mainModule.CHAIN_IDS,
     TOKENS: mainModule.TOKENS,
@@ -53,7 +52,6 @@ async function loadFromLocal(): Promise<LoadedSDK> {
     createProlinkUrl: mainModule.createProlinkUrl,
     decodeProlink: mainModule.decodeProlink,
     encodeProlink: mainModule.encodeProlink,
-    getCryptoKeyAccount: mainModule.getCryptoKeyAccount,
     VERSION: mainModule.VERSION,
     CHAIN_IDS: mainModule.CHAIN_IDS,
     TOKENS: mainModule.TOKENS,

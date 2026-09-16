@@ -158,7 +158,6 @@ export interface LoadedSDK {
   // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions
   encodeProlink?: (request: any) => Promise<string>;
   // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions
-  getCryptoKeyAccount?: () => Promise<{ account: any }>; // Only available in local SDK
   VERSION: string;
   CHAIN_IDS: Record<string, number>;
   // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions
