@@ -1,7 +1,4 @@
-import {
-  spendPermissionManagerAbi,
-  spendPermissionManagerAddress,
-} from '../constants.js';
+import { spendPermissionManagerAbi, spendPermissionManagerAddress } from '../constants.js';
 import { ProviderInterface } from ':core/provider/interface.js';
 import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { type Address, type Hex, encodeFunctionData, numberToHex } from 'viem';
