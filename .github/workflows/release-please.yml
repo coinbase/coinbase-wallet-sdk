@@ -14,7 +14,6 @@ jobs:
     runs-on: [default-config, medium, amd64]
     outputs:
       account--release_created: ${{ steps.release.outputs['packages/account-sdk--release_created'] }}
-      account-ui--release_created: ${{ steps.release.outputs['packages/account-ui--release_created'] }}
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
@@ -56,34 +55,4 @@ jobs:
       - name: Publish to npm
         run: |
           cd packages/account-sdk
-          npm publish --tag latest --access public
-
-  publish-account-ui:
-    needs: release-please
-    if: ${{ needs.release-please.outputs.account-ui--release_created == 'true' }}
-    name: Publish @base-org/account-ui
-    runs-on: [default-config, medium, amd64]
-    environment: publish
-    permissions:
-      contents: write
-      pull-requests: write
-      id-token: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Setup
-        uses: ./.github/actions/setup
-
-      - name: Update npm
-        run: npm install -g npm@latest
-
-      - name: Build Packages
-        run: yarn build:packages
-
-      - name: Publish to npm
-        run: |
-          cd packages/account-ui
           npm publish --tag latest --access public
