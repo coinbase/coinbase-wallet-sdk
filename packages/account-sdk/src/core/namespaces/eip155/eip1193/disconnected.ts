@@ -19,7 +19,6 @@ import { connectEip155 } from './connect.js';
 import { handleConnected } from './connected.js';
 import type { Eip1193Context } from './context.js';
 import { parseCaip27 } from './parseCaip27.js';
-import { orderedEthAccounts } from './sub-account/index.js';
 
 const DISCONNECTED_EPHEMERAL_METHODS = new Set([
   'wallet_sendCalls',
@@ -52,7 +51,7 @@ export async function handleDisconnected(
   context: Eip1193Context,
   args: RequestArguments
 ): Promise<unknown> {
-  const { transport, cache, chain } = context;
+  const { transport, chain } = context;
   const getChainId = chain.get;
 
   switch (args.method) {
@@ -79,7 +78,7 @@ export async function handleDisconnected(
         requiredScopes: [eip155Caip2(getChainId())],
         createSession: async () => (await connectEip155(context)).session,
       });
-      return orderedEthAccounts(cache, projectEthAccountsForChain(session, getChainId()));
+      return projectEthAccountsForChain(session, getChainId());
     }
     case 'wallet_connect': {
       const { result } = await connectEip155(context, args);
@@ -120,11 +119,7 @@ export async function handleDisconnected(
       if (isDisconnectedEphemeralMethod(args.method)) {
         return sendEphemeral(transport, toEnvelope(args, getChainId()));
       }
-      if (
-        WALLET_METHODS.has(args.method) ||
-        args.method.startsWith('experimental_') ||
-        args.method === 'wallet_addSubAccount'
-      ) {
+      if (WALLET_METHODS.has(args.method) || args.method.startsWith('experimental_')) {
         const chainId = eip155Caip2(getChainId());
         // Include the target method because the wallet response, not our defaults, defines the grant.
         const methods = [...new Set([...EIP155_METHODS, args.method])];

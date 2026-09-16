@@ -64,9 +64,6 @@ type CCAEventData = {
   dialogContext?: string;
   dialogAction?: string;
   isEphemeral?: boolean;
-  subAccountCreation?: 'on-connect' | 'manual';
-  subAccountDefaultAccount?: 'sub' | 'universal';
-  subAccountFunding?: 'spend-permissions' | 'manual';
   // Payment-specific attributes
   amount?: string;
   testnet?: boolean;

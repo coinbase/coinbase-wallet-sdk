@@ -86,7 +86,6 @@ export class BaseAccountProvider extends ProviderEventEmitter implements Provide
       if (emitChainChange) this.context.chain.reconcile(session);
       return;
     }
-    this.context.cache.subAccounts.clear();
     this.context.cache.spendPermissions.clear();
   }
 

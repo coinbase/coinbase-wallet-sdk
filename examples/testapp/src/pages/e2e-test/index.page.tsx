@@ -53,7 +53,6 @@ export default function E2ETestPage() {
   const paymentIdRef = useRef<string | null>(null);
   const subscriptionIdRef = useRef<string | null>(null);
   const permissionHashRef = useRef<string | null>(null);
-  const subAccountAddressRef = useRef<string | null>(null);
 
   // State management hooks
   const testState = useTestState();
@@ -75,7 +74,6 @@ export default function E2ETestPage() {
     paymentIdRef,
     subscriptionIdRef,
     permissionHashRef,
-    subAccountAddressRef,
     walletUrl: scwUrl,
   });
 

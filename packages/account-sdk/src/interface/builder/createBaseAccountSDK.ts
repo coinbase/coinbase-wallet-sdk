@@ -3,19 +3,11 @@ import {
   ConstructorOptions,
   Preference,
   ProviderInterface,
-  SubAccountOptions,
 } from ':core/provider/interface.js';
-import { AddSubAccountAccount } from ':core/rpc/wallet_addSubAccount.js';
-import { WalletConnectResponse } from ':core/rpc/wallet_connect.js';
-import { abi } from ':core/namespaces/eip155/eip1193/sub-account/constants.js';
-import { projectEthAccountsForChain } from ':core/namespaces/eip155/session.js';
 import { loadTelemetryScript } from ':core/telemetry/initCCA.js';
 import { store } from ':store/store.js';
-import { assertPresence } from ':util/assertPresence.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
-import { validatePreferences, validateSubAccount } from ':util/validatePreferences.js';
-import { decodeAbiParameters, encodeFunctionData, toHex } from 'viem';
-import type { SubAccount, ToOwnerAccountFn } from '../../storage/schema.js';
+import { validatePreferences } from ':util/validatePreferences.js';
 import { createTransport } from './createTransport.js';
 import { BaseAccountProvider } from './eip1193/BaseAccountProvider.js';
 import { getInjectedProvider } from './eip1193/getInjectedProvider.js';
@@ -26,7 +18,6 @@ import {
 
 export type CreateProviderOptions = Partial<AppMetadata> & {
   preference?: Preference;
-  subAccounts?: SubAccountOptions;
   paymasterUrls?: Record<number, string>;
 };
 
@@ -99,21 +90,6 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
   };
 
   //  ====================================================================
-  //  If we have a toOwnerAccount function, set it in the non-persisted config
-  //  ====================================================================
-
-  if (params.subAccounts?.toOwnerAccount) {
-    validateSubAccount(params.subAccounts.toOwnerAccount);
-  }
-
-  store.eip155.subAccountsConfig.set({
-    toOwnerAccount: params.subAccounts?.toOwnerAccount,
-    creation: params.subAccounts?.creation ?? 'manual',
-    defaultAccount: params.subAccounts?.defaultAccount ?? 'universal',
-    funding: params.subAccounts?.funding ?? 'spend-permissions',
-  });
-
-  //  ====================================================================
   //  Set the options in the store and rehydrate the store from storage
   //  ====================================================================
 
@@ -151,102 +127,6 @@ export function createBaseAccountSDK(params: CreateProviderOptions) {
       return provider;
     },
     registerSolanaWallet: () => registerSolanaWallet(transport, store.session),
-    subAccount: {
-      async create(accountParam: AddSubAccountAccount): Promise<SubAccount> {
-        return (await sdk.getProvider()?.request({
-          method: 'wallet_addSubAccount',
-          params: [
-            {
-              version: '1',
-              account: accountParam,
-            },
-          ],
-        })) as SubAccount;
-      },
-      async get(): Promise<SubAccount | null> {
-        const subAccount = store.eip155.subAccounts.get();
-
-        if (subAccount?.address) {
-          return subAccount;
-        }
-
-        const response = (await sdk.getProvider()?.request({
-          method: 'wallet_connect',
-          params: [
-            {
-              version: '1',
-              capabilities: {},
-            },
-          ],
-        })) as WalletConnectResponse;
-
-        const subAccounts = response.accounts[0].capabilities?.subAccounts;
-        if (!Array.isArray(subAccounts)) {
-          return null;
-        }
-
-        return subAccounts[0] as SubAccount;
-      },
-      addOwner: async ({
-        address,
-        publicKey,
-        chainId,
-      }: {
-        address?: `0x${string}`;
-        publicKey?: `0x${string}`;
-        chainId: number;
-      }) => {
-        const subAccount = store.eip155.subAccounts.get();
-        const session = store.session.get();
-        const account = session ? projectEthAccountsForChain(session, chainId)[0] : undefined;
-        assertPresence(account, new Error('account does not exist'));
-        assertPresence(subAccount?.address, new Error('subaccount does not exist'));
-
-        const calls = [];
-        if (publicKey) {
-          const [x, y] = decodeAbiParameters([{ type: 'bytes32' }, { type: 'bytes32' }], publicKey);
-          calls.push({
-            to: subAccount.address,
-            data: encodeFunctionData({
-              abi,
-              functionName: 'addOwnerPublicKey',
-              args: [x, y] as const,
-            }),
-            value: toHex(0),
-          });
-        }
-
-        if (address) {
-          calls.push({
-            to: subAccount.address,
-            data: encodeFunctionData({
-              abi,
-              functionName: 'addOwnerAddress',
-              args: [address] as const,
-            }),
-            value: toHex(0),
-          });
-        }
-
-        return (await sdk.getProvider()?.request({
-          method: 'wallet_sendCalls',
-          params: [
-            {
-              calls,
-              chainId: toHex(chainId),
-              from: account,
-              version: '1',
-            },
-          ],
-        })) as string;
-      },
-      setToOwnerAccount(toSubAccountOwner: ToOwnerAccountFn): void {
-        validateSubAccount(toSubAccountOwner);
-        store.eip155.subAccountsConfig.set({
-          toOwnerAccount: toSubAccountOwner,
-        });
-      },
-    },
   };
 
   return sdk;

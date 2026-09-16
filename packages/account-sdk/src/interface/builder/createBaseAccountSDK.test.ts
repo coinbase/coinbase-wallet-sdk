@@ -78,7 +78,6 @@ const mockStore = store as any;
 const mockLoadTelemetryScript = telemetryModule.loadTelemetryScript as any;
 const mockCheckCrossOriginOpenerPolicy = checkCrossOriginModule.checkCrossOriginOpenerPolicy as any;
 const mockValidatePreferences = validatePreferencesModule.validatePreferences as any;
-const mockValidateSubAccount = validatePreferencesModule.validateSubAccount as any;
 const mockBaseAccountProvider = BaseAccountProvider as any;
 const mockGetInjectedProvider = getInjectedProviderModule.getInjectedProvider as any;
 const mockRegisterSolanaWallet = solanaModule.registerSolanaWallet as any;
@@ -199,124 +198,6 @@ describe('createProvider', () => {
     });
   });
 
-  describe('Sub-account configuration', () => {
-    it('should set sub-account configuration when provided', () => {
-      const mockToOwnerAccount = vi.fn();
-      const params: CreateProviderOptions = {
-        subAccounts: {
-          toOwnerAccount: mockToOwnerAccount,
-          creation: 'on-connect',
-          defaultAccount: 'sub',
-          funding: 'spend-permissions',
-        },
-      };
-
-      createBaseAccountSDK(params).getProvider();
-
-      expect(mockValidateSubAccount).toHaveBeenCalledWith(mockToOwnerAccount);
-      expect(mockStore.eip155.subAccountsConfig.set).toHaveBeenCalledWith({
-        toOwnerAccount: mockToOwnerAccount,
-        creation: 'on-connect',
-        defaultAccount: 'sub',
-        funding: 'spend-permissions',
-      });
-    });
-
-    it('should handle partial sub-account configuration', () => {
-      const params: CreateProviderOptions = {
-        subAccounts: {
-          creation: 'on-connect',
-        },
-      };
-
-      createBaseAccountSDK(params).getProvider();
-
-      expect(mockValidateSubAccount).not.toHaveBeenCalled();
-      expect(mockStore.eip155.subAccountsConfig.set).toHaveBeenCalledWith({
-        toOwnerAccount: undefined,
-        creation: 'on-connect',
-        defaultAccount: 'universal',
-        funding: 'spend-permissions',
-      });
-    });
-
-    it('should handle empty sub-account configuration', () => {
-      const params: CreateProviderOptions = {
-        subAccounts: undefined,
-      };
-
-      createBaseAccountSDK(params).getProvider();
-
-      expect(mockStore.eip155.subAccountsConfig.set).toHaveBeenCalledWith({
-        toOwnerAccount: undefined,
-        creation: 'manual',
-        defaultAccount: 'universal',
-        funding: 'spend-permissions',
-      });
-    });
-
-    it('should set funding mode when provided', () => {
-      const mockToOwnerAccount = vi.fn();
-      const params: CreateProviderOptions = {
-        subAccounts: {
-          toOwnerAccount: mockToOwnerAccount,
-          creation: 'on-connect',
-          defaultAccount: 'sub',
-          funding: 'manual',
-        },
-      };
-
-      createBaseAccountSDK(params).getProvider();
-
-      expect(mockValidateSubAccount).toHaveBeenCalledWith(mockToOwnerAccount);
-      expect(mockStore.eip155.subAccountsConfig.set).toHaveBeenCalledWith({
-        toOwnerAccount: mockToOwnerAccount,
-        creation: 'on-connect',
-        defaultAccount: 'sub',
-        funding: 'manual',
-      });
-    });
-
-    it('should apply default values when config options not provided', () => {
-      const mockToOwnerAccount = vi.fn();
-      const params: CreateProviderOptions = {
-        subAccounts: {
-          toOwnerAccount: mockToOwnerAccount,
-        },
-      };
-
-      createBaseAccountSDK(params).getProvider();
-
-      expect(mockStore.eip155.subAccountsConfig.set).toHaveBeenCalledWith({
-        toOwnerAccount: mockToOwnerAccount,
-        creation: 'manual',
-        defaultAccount: 'universal',
-        funding: 'spend-permissions',
-      });
-    });
-
-    it('should use default values when explicitly set to undefined', () => {
-      const mockToOwnerAccount = vi.fn();
-      const params: CreateProviderOptions = {
-        subAccounts: {
-          toOwnerAccount: mockToOwnerAccount,
-          creation: undefined,
-          defaultAccount: undefined,
-          funding: undefined,
-        },
-      };
-
-      createBaseAccountSDK(params).getProvider();
-
-      expect(mockStore.eip155.subAccountsConfig.set).toHaveBeenCalledWith({
-        toOwnerAccount: mockToOwnerAccount,
-        creation: 'manual',
-        defaultAccount: 'universal',
-        funding: 'spend-permissions',
-      });
-    });
-  });
-
   describe('Store configuration', () => {
     it('should set store configuration', () => {
       const params: CreateProviderOptions = {
@@ -355,15 +236,6 @@ describe('createProvider', () => {
       expect(mockValidatePreferences).toHaveBeenCalledWith(preference);
     });
 
-    it('should validate sub-account when toOwnerAccount is provided', () => {
-      const mockToOwnerAccount = vi.fn();
-      createBaseAccountSDK({
-        subAccounts: { toOwnerAccount: mockToOwnerAccount },
-      }).getProvider();
-
-      expect(mockValidateSubAccount).toHaveBeenCalledWith(mockToOwnerAccount);
-    });
-
     it('should check cross-origin opener policy', () => {
       createBaseAccountSDK({}).getProvider();
 
@@ -394,20 +266,6 @@ describe('createProvider', () => {
       }).getProvider();
 
       expect(mockLoadTelemetryScript).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('Error handling', () => {
-    it('should handle sub-account validation errors', () => {
-      mockValidateSubAccount.mockImplementationOnce(() => {
-        throw new Error('Invalid sub-account function');
-      });
-
-      expect(() => {
-        createBaseAccountSDK({
-          subAccounts: { toOwnerAccount: 'not-a-function' as any },
-        }).getProvider();
-      }).toThrow('Invalid sub-account function');
     });
   });
 
@@ -487,88 +345,6 @@ describe('createProvider', () => {
         { mockTransport: true },
         store
       );
-      expect(result).toEqual({ mockProvider: true });
-    });
-  });
-
-  describe('Integration', () => {
-    it('should perform all setup steps in correct order', () => {
-      const mockToOwnerAccount = vi.fn();
-      const params: CreateProviderOptions = {
-        appName: 'Integration Test',
-        appLogoUrl: 'https://example.com/logo.png',
-        appChainIds: [1, 137],
-        preference: {
-          telemetry: true,
-        },
-        subAccounts: {
-          toOwnerAccount: mockToOwnerAccount,
-          creation: 'on-connect',
-          defaultAccount: 'sub',
-          funding: 'spend-permissions',
-        },
-        paymasterUrls: {
-          1: 'https://paymaster.example.com',
-        },
-      };
-
-      const result = createBaseAccountSDK(params).getProvider();
-
-      // Check sub-account validation and configuration
-      expect(mockValidateSubAccount).toHaveBeenCalledWith(mockToOwnerAccount);
-      expect(mockStore.eip155.subAccountsConfig.set).toHaveBeenCalledWith({
-        toOwnerAccount: mockToOwnerAccount,
-        creation: 'on-connect',
-        defaultAccount: 'sub',
-        funding: 'spend-permissions',
-      });
-
-      // Check store configuration
-      expect(mockStore.config.set).toHaveBeenCalledWith({
-        metadata: {
-          appName: 'Integration Test',
-          appLogoUrl: 'https://example.com/logo.png',
-          appChainIds: [1, 137],
-        },
-        preference: {
-          telemetry: true,
-        },
-      });
-      expect(mockStore.eip155.paymasterUrls.set).toHaveBeenCalledWith({
-        1: 'https://paymaster.example.com',
-      });
-
-      // Check store rehydration
-      expect(mockStore.persist.rehydrate).toHaveBeenCalled();
-
-      // Check validation
-      expect(mockCheckCrossOriginOpenerPolicy).toHaveBeenCalled();
-      expect(mockValidatePreferences).toHaveBeenCalledWith({
-        telemetry: true,
-      });
-
-      // Check telemetry
-      expect(mockLoadTelemetryScript).toHaveBeenCalled();
-
-      // Check provider creation
-      expect(mockBaseAccountProvider).toHaveBeenCalledWith(
-        {
-          metadata: {
-            appName: 'Integration Test',
-            appLogoUrl: 'https://example.com/logo.png',
-            appChainIds: [1, 137],
-          },
-          preference: {
-            telemetry: true,
-          },
-          paymasterUrls: {
-            1: 'https://paymaster.example.com',
-          },
-        },
-        { mockTransport: true },
-        store
-      );
-
       expect(result).toEqual({ mockProvider: true });
     });
   });

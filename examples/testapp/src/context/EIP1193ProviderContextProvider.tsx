@@ -18,7 +18,7 @@ type EIP1193ProviderContextType = {
 const EIP1193ProviderContext = createContext<EIP1193ProviderContextType | null>(null);
 
 export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderContextProviderProps) {
-  const { scwUrl, config, subAccountsConfig } = useConfig();
+  const { scwUrl, config } = useConfig();
   const { addEventListeners, removeEventListeners } = useEventListeners();
   const {
     spyOnDisconnectedError,
@@ -37,7 +37,6 @@ export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderCont
         attribution: config.attribution,
         walletUrl: scwUrl ?? scwUrls[0],
       },
-      subAccounts: subAccountsConfig,
     };
 
     const sdk = createBaseAccountSDKHEAD(sdkParams);
@@ -58,14 +57,7 @@ export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderCont
     return () => {
       removeEventListeners(newProvider);
     };
-  }, [
-    scwUrl,
-    config,
-    subAccountsConfig,
-    spyOnDisconnectedError,
-    addEventListeners,
-    removeEventListeners,
-  ]);
+  }, [scwUrl, config, spyOnDisconnectedError, addEventListeners, removeEventListeners]);
 
   const value = useMemo(
     () => ({

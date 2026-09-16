@@ -1,5 +1,3 @@
-export type { OwnerAccount } from '../../storage/schema.js';
-
 // Copyright (c) 2018-2025 Coinbase, Inc. <https://www.coinbase.com/>
 interface Tag<T extends string, RealType> {
   __tag__: T;

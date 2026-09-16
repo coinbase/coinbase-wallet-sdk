@@ -1,5 +1,4 @@
 import { Preference } from ':core/provider/interface.js';
-import { ToOwnerAccountFn } from ':store/store.js';
 
 /**
  * Validates user supplied preferences. Throws if keys are not valid.
@@ -23,15 +22,5 @@ export function validatePreferences(preference?: Preference) {
     if (typeof preference.telemetry !== 'boolean') {
       throw new Error(`Telemetry must be a boolean`);
     }
-  }
-}
-
-/**
- * Validates user supplied toSubAccountSigner function. Throws if keys are not valid.
- * @param toAccount
- */
-export function validateSubAccount(toAccount: ToOwnerAccountFn) {
-  if (typeof toAccount !== 'function') {
-    throw new Error(`toAccount is not a function`);
   }
 }

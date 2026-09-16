@@ -1,7 +1,4 @@
-import {
-  spendPermissionManagerAbi,
-  spendPermissionManagerAddress,
-} from ':core/namespaces/eip155/eip1193/sub-account/constants.js';
+import { spendPermissionManagerAbi, spendPermissionManagerAddress } from '../constants.js';
 import { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { getClient } from ':core/namespaces/eip155/client/index.js';
 import { http, PublicClient, createPublicClient } from 'viem';

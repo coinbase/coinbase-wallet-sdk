@@ -22,12 +22,6 @@ import {
   testRequestSpendPermission,
 } from './spend-permissions';
 import {
-  testCreateSubAccount,
-  testGetSubAccounts,
-  testSendCallsFromSubAccount,
-  testSignWithSubAccount,
-} from './sub-account-features';
-import {
   testGetSubscriptionStatus,
   testPrepareCharge,
   testSubscribe,
@@ -96,12 +90,7 @@ export const testRegistry: TestCategoryDefinition[] = [
   },
   {
     name: 'Sub-Account Features',
-    tests: [
-      testCreateSubAccount,
-      testGetSubAccounts,
-      testSignWithSubAccount,
-      testSendCallsFromSubAccount,
-    ],
+    tests: [],
     requiresConnection: true,
   },
   {
@@ -217,7 +206,6 @@ export {
 } from './payment-features';
 export {
   testSubscribe,
-  testGetSubscriptionStatus,
   testPrepareCharge,
 } from './subscription-features';
 export {
@@ -228,12 +216,6 @@ export {
   testPrepareSpendCallData,
   testPrepareRevokeCallData,
 } from './spend-permissions';
-export {
-  testCreateSubAccount,
-  testGetSubAccounts,
-  testSignWithSubAccount,
-  testSendCallsFromSubAccount,
-} from './sub-account-features';
 export {
   testSignTypedData,
   testWalletSendCalls,

@@ -232,7 +232,6 @@ export interface TestContext {
   paymentId: string | null;
   subscriptionId: string | null;
   permissionHash: string | null;
-  subAccountAddress: string | null;
   // Configuration
   skipModal: boolean;
   walletUrl?: string;

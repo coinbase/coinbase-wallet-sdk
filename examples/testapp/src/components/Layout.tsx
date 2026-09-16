@@ -30,9 +30,6 @@ export const WIDTH_2XL = '1536px';
 
 const PAGES = [
   '/',
-  '/add-sub-account',
-  '/import-sub-account',
-  '/auto-sub-account',
   '/spend-permission',
   '/payment',
   '/pay-playground',

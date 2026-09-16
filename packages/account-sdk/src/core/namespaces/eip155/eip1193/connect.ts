@@ -10,10 +10,7 @@ import { createSession } from ':core/session/createSession.js';
 import { grantFor } from ':core/session/grants.js';
 import { EIP155_METHODS, projectEthAccountsForChain } from '../session.js';
 import type { Session } from ':core/session/types.js';
-import { persistSubAccount } from './sub-account/accounts.js';
-import { initSubAccountConfig } from './sub-account/utils.js';
 import type { Address } from ':core/type/index.js';
-import { assertSubAccount } from ':util/assertSubAccount.js';
 import { numberToHex } from 'viem';
 import { eip155Caip2, eip155ChainId } from '../caip.js';
 import type { Eip1193Context } from './context.js';
@@ -110,7 +107,7 @@ function ingestConnectResult(
   value: ConnectResult,
   targetChainId: Caip2
 ): Session {
-  const { transport, cache, emit } = context;
+  const { cache, emit } = context;
   const chainId = eip155ChainId(targetChainId);
   if (chainId === null) {
     throw standardErrors.provider.unsupportedChain(
@@ -123,22 +120,6 @@ function ingestConnectResult(
   const spend = granted?.spendPermissions;
   if (isRecord(spend) && Array.isArray(spend.permissions) && spend.permissions.every(isRecord)) {
     cache.spendPermissions.set(spend.permissions as SpendPermission[]);
-  }
-
-  const subAccounts = granted?.subAccounts;
-  if (Array.isArray(subAccounts) && subAccounts[0]) {
-    assertSubAccount(subAccounts[0]);
-    persistSubAccount(
-      context,
-      session,
-      {
-        address: subAccounts[0].address,
-        factory: subAccounts[0].factory,
-        factoryData: subAccounts[0].factoryData,
-      },
-      chainId
-    );
-    return transport.readSession() ?? session;
   }
 
   emit('accountsChanged', projectEthAccountsForChain(session, chainId));
@@ -160,14 +141,12 @@ export async function connectEip155(
   request?: RequestArguments,
   options: ConnectEip155Options = {}
 ): Promise<{ session: Session; result: ConnectResult }> {
-  const { transport, cache, chain } = context;
-  await initSubAccountConfig(cache.subAccountsConfig);
-  const injected = cache.subAccountsConfig.get()?.capabilities ?? {};
+  const { transport, chain } = context;
   const chainId = options.chainId ?? eip155Caip2(chain.get());
   const scopes = createEip155Scopes({
     chainId,
     methods: options.methods ?? EIP155_METHODS,
-    requestParts: walletConnectScopeRequestParts(request, injected),
+    requestParts: walletConnectScopeRequestParts(request),
   });
   const grantedSession = await createSession(transport, {
     scopes,
