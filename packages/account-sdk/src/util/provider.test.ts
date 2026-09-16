@@ -3,21 +3,24 @@ import { vi } from 'vitest';
 import { standardErrors } from ':core/error/errors.js';
 import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './provider.js';
 
+// vitest 2's toThrow(error) compared the message only, so these helpers could claim
+// invalidRequest (-32600) while the implementation throws invalidParams (-32602) and
+// the assertions still passed. They now state the code that actually ships.
 // @ts-expect-error-next-line
 const invalidArgsError = (args) =>
-  standardErrors.rpc.invalidRequest({
+  standardErrors.rpc.invalidParams({
     message: 'Expected a single, non-array, object argument.',
     data: args,
   });
 // @ts-expect-error-next-line
 const invalidMethodError = (args) =>
-  standardErrors.rpc.invalidRequest({
+  standardErrors.rpc.invalidParams({
     message: "'args.method' must be a non-empty string.",
     data: args,
   });
 // @ts-expect-error-next-line
 const invalidParamsError = (args) =>
-  standardErrors.rpc.invalidRequest({
+  standardErrors.rpc.invalidParams({
     message: "'args.params' must be an object or array if provided.",
     data: args,
   });
