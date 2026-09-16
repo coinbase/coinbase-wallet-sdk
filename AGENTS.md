@@ -7,7 +7,6 @@ Use **Yarn 4** (Berry). Never use `npm install` or `npx` -- use `yarn` and `yarn
 ## Monorepo structure
 
 - `packages/account-sdk` (`@base-org/account`) -- the core SDK
-- `packages/account-cli` (`@base-org/account-cli`) -- CLI tool
 - `examples/testapp` -- playground app (not published)
 
 
