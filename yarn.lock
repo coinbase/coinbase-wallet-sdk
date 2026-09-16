@@ -186,21 +186,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@base-org/account-cli@workspace:packages/account-cli":
-  version: 0.0.0-use.local
-  resolution: "@base-org/account-cli@workspace:packages/account-cli"
-  dependencies:
-    "@base-org/account": "workspace:*"
-    "@types/node": "npm:^20.0.0"
-    commander: "npm:^13.0.0"
-    typescript: "npm:^5.1.6"
-    viem: "npm:^2.31.7"
-    vitest: "npm:^3.2.5"
-  bin:
-    base-account: ./dist/index.js
-  languageName: unknown
-  linkType: soft
-
 "@base-org/account-npm@npm:@base-org/account@latest":
   version: 2.5.1
   resolution: "@base-org/account@npm:2.5.1"
@@ -4884,15 +4869,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^20.0.0":
-  version: 20.19.37
-  resolution: "@types/node@npm:20.19.37"
-  dependencies:
-    undici-types: "npm:~6.21.0"
-  checksum: 10/7e0d561d0d980109a0b64c6f797584a69d706421f18c0b24850206a15a4286443e676032abfa438590f25e4dfc3561ffc8d7f5c0c90edf08b705f6f9c35febba
-  languageName: node
-  linkType: hard
-
 "@types/parse-json@npm:^4.0.0":
   version: 4.0.2
   resolution: "@types/parse-json@npm:4.0.2"
@@ -6240,13 +6216,6 @@ __metadata:
   version: 12.1.0
   resolution: "commander@npm:12.1.0"
   checksum: 10/cdaeb672d979816853a4eed7f1310a9319e8b976172485c2a6b437ed0db0a389a44cfb222bfbde772781efa9f215bdd1b936f80d6b249485b465c6cb906e1f93
-  languageName: node
-  linkType: hard
-
-"commander@npm:^13.0.0":
-  version: 13.1.0
-  resolution: "commander@npm:13.1.0"
-  checksum: 10/d3b4b79e6be8471ddadacbb8cd441fe82154d7da7393b50e76165a9e29ccdb74fa911a186437b9a211d0fc071db6051915c94fb8ef16d77511d898e9dbabc6af
   languageName: node
   linkType: hard
 
@@ -10798,13 +10767,6 @@ __metadata:
   version: 6.19.8
   resolution: "undici-types@npm:6.19.8"
   checksum: 10/cf0b48ed4fc99baf56584afa91aaffa5010c268b8842f62e02f752df209e3dea138b372a60a963b3b2576ed932f32329ce7ddb9cb5f27a6c83040d8cd74b7a70
-  languageName: node
-  linkType: hard
-
-"undici-types@npm:~6.21.0":
-  version: 6.21.0
-  resolution: "undici-types@npm:6.21.0"
-  checksum: 10/ec8f41aa4359d50f9b59fa61fe3efce3477cc681908c8f84354d8567bb3701fafdddf36ef6bff307024d3feb42c837cf6f670314ba37fc8145e219560e473d14
   languageName: node
   linkType: hard
 

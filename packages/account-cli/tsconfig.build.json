@@ -1,9 +1,0 @@
-{
-  "extends": "./tsconfig.base.json",
-  "compilerOptions": {
-    "allowJs": false,
-    "emitDeclarationOnly": false
-  },
-  "include": ["src"],
-  "exclude": ["dist", "build", "**/*.test.*", "tests"]
-}
