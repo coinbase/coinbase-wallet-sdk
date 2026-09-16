@@ -7,26 +7,22 @@ Use **Yarn 4** (Berry). Never use `npm install` or `npx` -- use `yarn` and `yarn
 ## Monorepo structure
 
 - `packages/account-sdk` (`@base-org/account`) -- the core SDK
-- `packages/account-ui` (`@base-org/account-ui`) -- framework-specific UI components
 - `packages/account-cli` (`@base-org/account-cli`) -- CLI tool
 - `examples/testapp` -- playground app (not published)
 
-Build order matters: `@base-org/account` must build before `@base-org/account-ui` (it depends on it via `workspace:*`). Use `yarn build:packages` from root to build in the correct order.
 
 ## Path aliases
 
 Imports use a **`:` prefix** convention, not `@/` or `~/`:
 
 - `':core/*'`, `':util/*'`, `':store/*'`, `':owner-key/*'`, `':ui/*'`, `':interface/*'` in account-sdk
-- `':types/*'` in account-ui
 
 These are defined in each package's `tsconfig.base.json` and resolved at build time by `tsc-alias`.
 
 ## JSX runtime
 
-Both packages use **Preact**, not React. `jsxImportSource` is set to `"preact"` in tsconfig. Import from `preact` and `preact/hooks`, not `react`.
+The SDK uses **Preact**, not React. `jsxImportSource` is set to `"preact"` in tsconfig. Import from `preact` and `preact/hooks`, not `react`.
 
-The account-ui package has thin React adapters that use `createElement` from `react` -- these are the exception, not the rule.
 
 ## Browser vs Node entry points
 

@@ -1,4 +1,3 @@
 {
-  "packages/account-sdk": "2.5.10",
-  "packages/account-ui": "1.0.1"
+  "packages/account-sdk": "2.5.10"
 }

@@ -5,13 +5,9 @@
       "package-name": "@base-org/account",
       "component": "account",
       "changelog-path": "CHANGELOG.md",
-      "include-paths": ["packages/account-sdk"]
-    },
-    "packages/account-ui": {
-      "package-name": "@base-org/account-ui",
-      "component": "account-ui",
-      "changelog-path": "CHANGELOG.md",
-      "include-paths": ["packages/account-ui"]
+      "include-paths": [
+        "packages/account-sdk"
+      ]
     }
   },
   "separate-pull-requests": true
