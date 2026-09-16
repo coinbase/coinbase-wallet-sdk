@@ -26,7 +26,6 @@ export const EIP155_METHODS = [
   'wallet_addEthereumChain',
   'wallet_watchAsset',
   'wallet_connect',
-  'wallet_addSubAccount',
   'experimental_requestInfo',
 ] as const;
 

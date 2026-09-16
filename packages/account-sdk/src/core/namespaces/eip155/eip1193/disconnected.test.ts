@@ -10,15 +10,11 @@ import type { Eip1193Context } from './context.js';
 import { handleDisconnected } from './disconnected.js';
 
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as const;
-const SUB = '0x0000000000000000000000000000000000000002' as const;
 
 function context(request: WalletTransport['request'] = vi.fn()): Eip1193Context {
   let session: ReturnType<WalletTransport['readSession']>;
   const emit = vi.fn();
   const state = {
-    subAccounts: { get: () => undefined, set: vi.fn(), clear: vi.fn() },
-    subAccountsConfig: { get: () => ({}), set: vi.fn(), clear: vi.fn() },
-    spendPermissions: { get: () => [], set: vi.fn(), clear: vi.fn() },
     paymasterUrls: { get: () => undefined, set: vi.fn() },
   } as unknown as Store['eip155'];
   const transport: WalletTransport = {
@@ -304,49 +300,6 @@ describe('handleDisconnected', () => {
         request: { method: 'wallet_sign', params: [{ version: '1.0', data: {} }] },
       },
     });
-    expect(rt.transport.cleanup).not.toHaveBeenCalled();
-  });
-
-  it('pairs and persists before re-entering connected wallet_addSubAccount routing', async () => {
-    const result = { address: SUB };
-    const send = caipWire(result);
-    const rt = context(send);
-    const args: RequestArguments = {
-      method: 'wallet_addSubAccount',
-      params: [{ version: '1', account: { type: 'deployed', address: SUB } }],
-    };
-
-    await expect(handleDisconnected(rt, args)).resolves.toEqual(result);
-
-    expect(rt.transport.handshake).toHaveBeenCalledWith({ method: 'handshake' });
-    expect(send).toHaveBeenCalledTimes(2);
-    expect(send).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({
-        method: 'wallet_createSession',
-        params: expect.objectContaining({
-          scopes: {
-            eip155: expect.objectContaining({
-              chains: ['1'],
-              methods: expect.arrayContaining(['wallet_addSubAccount']),
-            }),
-          },
-        }),
-      })
-    );
-    expect(send).toHaveBeenNthCalledWith(2, {
-      method: 'wallet_invokeMethod',
-      params: {
-        sessionId: 'session-1',
-        chainId: 'eip155:1',
-        request: args,
-      },
-    });
-    expect(rt.cache.subAccounts.set).toHaveBeenCalledWith(result);
-    expect(rt.transport.readSession()?.scopes['eip155:1']?.accounts).toEqual([
-      `eip155:1:${ADDRESS}`,
-      `eip155:1:${SUB}`,
-    ]);
     expect(rt.transport.cleanup).not.toHaveBeenCalled();
   });
 

@@ -1,20 +1,7 @@
-import { Address } from 'viem';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { StateCreator, createStore } from 'zustand/vanilla';
 import pkg from '../../package.json' with { type: 'json' };
-import type {
-  AppMetadata,
-  Preference,
-  Session,
-  SpendPermission,
-  SubAccount,
-  SubAccountOptions,
-} from '../storage/schema.js';
-export type { SubAccount, ToOwnerAccountFn } from '../storage/schema.js';
-
-type SubAccountConfig = SubAccountOptions & {
-  capabilities?: Record<string, unknown>;
-};
+import type { AppMetadata, Preference, Session, SpendPermission } from '../storage/schema.js';
 
 type Config = {
   metadata?: AppMetadata;
@@ -28,21 +15,6 @@ type CoreConfig = Omit<Config, 'paymasterUrls'>;
 /** ECDH transport keys (`KeyManager`), not sub-account owner keys. */
 type KeysSlice = { keys: Record<string, string | null> };
 const createKeysSlice: StateCreator<StoreState, [], [], KeysSlice> = () => ({ keys: {} });
-
-type SubAccountSlice = { subAccount?: SubAccount };
-const createSubAccountSlice: StateCreator<StoreState, [], [], SubAccountSlice> = () => ({
-  subAccount: undefined,
-});
-
-type SubAccountConfigSlice = { subAccountConfig?: SubAccountConfig };
-const createSubAccountConfigSlice: StateCreator<
-  StoreState,
-  [],
-  [],
-  SubAccountConfigSlice
-> = () => ({
-  subAccountConfig: {},
-});
 
 type SpendPermissionsSlice = { spendPermissions: SpendPermission[] };
 const createSpendPermissionsSlice: StateCreator<
@@ -68,16 +40,7 @@ type MergeTypes<T extends unknown[]> = T extends [infer First, ...infer Rest]
   ? First & (Rest extends unknown[] ? MergeTypes<Rest> : Record<string, unknown>)
   : Record<string, unknown>;
 
-export type StoreState = MergeTypes<
-  [
-    KeysSlice,
-    SubAccountSlice,
-    SubAccountConfigSlice,
-    SpendPermissionsSlice,
-    ConfigSlice,
-    SessionSlice,
-  ]
->;
+export type StoreState = MergeTypes<[KeysSlice, SpendPermissionsSlice, ConfigSlice, SessionSlice]>;
 
 /**
  * Persisted schema version.
@@ -115,7 +78,6 @@ function mergePersistedState(persistedState: unknown, currentState: StoreState):
   return {
     ...currentState,
     keys: state.keys ?? currentState.keys,
-    subAccount: state.subAccount,
     spendPermissions: state.spendPermissions ?? currentState.spendPermissions,
     config: { ...currentState.config, ...state.config },
     session: persistedSession(state.session),
@@ -127,7 +89,6 @@ function migratePersistedState(persistedState: unknown, version: number): StoreS
   if (version >= PERSISTED_STORE_VERSION) return state as StoreState;
   return {
     keys: state.keys ?? {},
-    subAccount: state.subAccount,
     spendPermissions: state.spendPermissions ?? [],
     config: state.config ?? { version: pkg.version },
     // Same rule as `mergePersistedState`, for blobs that do carry an older version.
@@ -147,8 +108,6 @@ export function createStoreInstance(options?: {
 
   const storeCreator = (...args: Parameters<StateCreator<StoreState, [], []>>) => ({
     ...createKeysSlice(...args),
-    ...createSubAccountSlice(...args),
-    ...createSubAccountConfigSlice(...args),
     ...createSpendPermissionsSlice(...args),
     ...createConfigSlice(...args),
     ...createSessionSlice(...args),
@@ -165,7 +124,6 @@ export function createStoreInstance(options?: {
         partialize: (state) => {
           return {
             keys: state.keys,
-            subAccount: state.subAccount,
             spendPermissions: state.spendPermissions,
             config: state.config,
             session: state.session,
@@ -189,36 +147,6 @@ export type StoreInstance = ReturnType<typeof createStoreInstance>;
  */
 export function bindStore(storeInstance: StoreInstance) {
   const flat = {
-    subAccountsConfig: {
-      get: () => storeInstance.getState().subAccountConfig,
-      set: (subAccountConfig: Partial<SubAccountConfig>) => {
-        storeInstance.setState((state) => ({
-          subAccountConfig: { ...state.subAccountConfig, ...subAccountConfig },
-        }));
-      },
-      clear: () => {
-        storeInstance.setState({
-          subAccountConfig: {},
-        });
-      },
-    },
-
-    subAccounts: {
-      get: () => storeInstance.getState().subAccount,
-      set: (subAccount: Partial<SubAccount>) => {
-        storeInstance.setState((state) => ({
-          subAccount: state.subAccount
-            ? { ...state.subAccount, ...subAccount }
-            : { address: subAccount.address as Address, ...subAccount },
-        }));
-      },
-      clear: () => {
-        storeInstance.setState({
-          subAccount: undefined,
-        });
-      },
-    },
-
     spendPermissions: {
       get: () => storeInstance.getState().spendPermissions,
       set: (spendPermissions: SpendPermission[]) => {
@@ -278,8 +206,6 @@ export function bindStore(storeInstance: StoreInstance) {
       set: (config: Partial<CoreConfig>) => flat.config.set(config),
     },
     eip155: {
-      subAccounts: flat.subAccounts,
-      subAccountsConfig: flat.subAccountsConfig,
       spendPermissions: flat.spendPermissions,
       paymasterUrls: {
         get: () => flat.config.get().paymasterUrls,

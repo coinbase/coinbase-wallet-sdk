@@ -5,10 +5,8 @@ describe('bindStore', () => {
   it('keeps only local EIP-155 caches outside the canonical session', () => {
     const instance = createStoreInstance({ persist: false });
     const store = bindStore(instance);
-    const account = '0x0000000000000000000000000000000000000001';
 
     store.config.set({ deviceId: 'device' });
-    store.eip155.subAccounts.set({ address: account });
     store.eip155.paymasterUrls.set({ 8453: 'https://paymaster.example' });
 
     expect(store.config.get()).toMatchObject({ deviceId: 'device' });
@@ -19,7 +17,6 @@ describe('bindStore', () => {
       8453: 'https://paymaster.example',
     });
     expect(instance.getState()).toMatchObject({
-      subAccount: { address: account },
       config: {
         deviceId: 'device',
         paymasterUrls: { 8453: 'https://paymaster.example' },
@@ -47,7 +44,6 @@ describe('persisted store', () => {
           account: { accounts: [account], chain: { id: 8453 } },
           chains: [{ id: 8453, rpcUrl: 'https://legacy.invalid' }],
           keys: { ownPrivateKey: 'key-material' },
-          subAccount: { address: account },
           spendPermissions: [],
           config: { version: 'legacy', deviceId: 'device' },
           session: {
@@ -66,7 +62,6 @@ describe('persisted store', () => {
     // A v0 session predates properties.chainMetadata, so the selectors cannot read it.
     expect(state.session).toBeUndefined();
     expect(state.keys).toEqual({ ownPrivateKey: 'key-material' });
-    expect(state.subAccount).toEqual({ address: account });
     expect(state.config).toMatchObject({ deviceId: 'device' });
     expect(state).not.toHaveProperty('account');
     expect(state).not.toHaveProperty('chains');
@@ -75,12 +70,7 @@ describe('persisted store', () => {
     const persisted = JSON.parse(localStorage.getItem(storageName) as string);
     expect(persisted.version).toBe(1);
     // `session: undefined` is dropped by JSON serialization, so the legacy blob is gone.
-    expect(Object.keys(persisted.state).sort()).toEqual([
-      'config',
-      'keys',
-      'spendPermissions',
-      'subAccount',
-    ]);
+    expect(Object.keys(persisted.state).sort()).toEqual(['config', 'keys', 'spendPermissions']);
 
     localStorage.removeItem(storageName);
   });

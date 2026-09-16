@@ -176,7 +176,7 @@ export const WALLET_SEND_CALLS_CONFIG = {
   VERSION: '2.0.0',
 
   /**
-   * Version for wallet_addSubAccount
+   * Version for wallet_connect
    */
   SUB_ACCOUNT_VERSION: '1',
 

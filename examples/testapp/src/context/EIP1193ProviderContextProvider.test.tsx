@@ -48,12 +48,6 @@ describe('EIP1193ProviderContextProvider', () => {
       setSDKVersion: vi.fn(),
       setScwUrlAndSave: vi.fn(),
       setConfig: vi.fn(),
-      subAccountsConfig: {
-        creation: 'on-connect',
-        defaultAccount: 'sub',
-        funding: 'spend-permissions',
-      },
-      setSubAccountsConfig: vi.fn(),
     });
 
     vi.spyOn(EventListeners, 'useEventListeners').mockReturnValue({
@@ -89,11 +83,6 @@ describe('EIP1193ProviderContextProvider', () => {
         attribution: { dataSuffix: '0xtestattribution' },
         walletUrl: 'https://keys-dev.coinbase.com/connect',
       },
-      subAccounts: {
-        creation: 'on-connect',
-        defaultAccount: 'sub',
-        funding: 'spend-permissions',
-      },
     });
     expect(screen.getByTestId('sdk-exists')).toBeTruthy();
     expect(screen.getByTestId('provider-exists')).toBeTruthy();
@@ -106,15 +95,9 @@ describe('EIP1193ProviderContextProvider', () => {
       version: 'HEAD',
       scwUrl: 'https://keys-dev.coinbase.com/connect',
       config: { attribution: { dataSuffix: '0xtestattribution' } },
-      subAccountsConfig: {
-        creation: 'on-connect',
-        defaultAccount: 'sub',
-        funding: 'spend-permissions',
-      },
       setSDKVersion: vi.fn(),
       setScwUrlAndSave: vi.fn(),
       setConfig: vi.fn(),
-      setSubAccountsConfig: vi.fn(),
     });
 
     render(
@@ -129,11 +112,6 @@ describe('EIP1193ProviderContextProvider', () => {
       preference: {
         attribution: { dataSuffix: '0xtestattribution' },
         walletUrl: 'https://keys-dev.coinbase.com/connect',
-      },
-      subAccounts: {
-        creation: 'on-connect',
-        defaultAccount: 'sub',
-        funding: 'spend-permissions',
       },
     });
   });

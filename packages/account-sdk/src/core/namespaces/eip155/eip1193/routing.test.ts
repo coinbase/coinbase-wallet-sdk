@@ -190,30 +190,6 @@ describe('RPC routing vs Base Account SDK', () => {
     );
   });
 
-  it('invokes wallet_addSubAccount when connected and nothing is cached', async () => {
-    const rt = context({ connected: true });
-    await handleEip1193Request(rt, {
-      method: 'wallet_addSubAccount',
-      params: [
-        {
-          version: '1',
-          account: {
-            type: 'create',
-            keys: [{ type: 'address', publicKey: ADDRESS }],
-          },
-        },
-      ],
-    });
-    expect(rt.transport.request).toHaveBeenCalledWith(
-      expect.objectContaining({
-        method: 'wallet_invokeMethod',
-        params: expect.objectContaining({
-          request: expect.objectContaining({ method: 'wallet_addSubAccount' }),
-        }),
-      })
-    );
-  });
-
   it('stores disconnected wallet_switchEthereumChain locally', async () => {
     const rt = context();
     await expect(

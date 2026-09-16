@@ -30,7 +30,6 @@ export interface TestResultHandlerContext {
   paymentIdRef: MutableRefObject<string | null>;
   subscriptionIdRef: MutableRefObject<string | null>;
   permissionHashRef: MutableRefObject<string | null>;
-  subAccountAddressRef: MutableRefObject<string | null>;
 }
 
 /**
@@ -109,31 +108,6 @@ export const TEST_RESULT_HANDLERS: Record<string, TestResultHandler> = {
   },
 
   // Sub-account features
-  wallet_addSubAccount: (ctx) => {
-    if (ctx.result.address) {
-      ctx.subAccountAddressRef.current = ctx.result.address;
-      ctx.testState.updateTestStatus(
-        ctx.testCategory,
-        ctx.testName,
-        'passed',
-        undefined,
-        `Address: ${ctx.result.address}`
-      );
-    }
-  },
-  wallet_getSubAccounts: (ctx) => {
-    const result = ctx.result as { subAccounts?: Array<{ address: string }>; addresses?: string[] };
-    if (result.subAccounts) {
-      const addresses = result.addresses || result.subAccounts.map((sa) => sa.address);
-      ctx.testState.updateTestStatus(
-        ctx.testCategory,
-        ctx.testName,
-        'passed',
-        undefined,
-        addresses.join(', ')
-      );
-    }
-  },
   'wallet_sendCalls (sub-account)': (ctx) => {
     // Handle both direct string result and object with txHash property
     const hash = typeof ctx.result === 'string' ? ctx.result : ctx.result?.txHash;

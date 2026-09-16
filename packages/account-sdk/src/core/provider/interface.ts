@@ -6,11 +6,6 @@ export type {
   AppMetadata,
   Attribution,
   Preference,
-  SubAccountCreationMode,
-  SubAccountDefaultAccount,
-  SubAccountFundingMode,
-  SubAccountOptions,
-  ToOwnerAccountFn,
 } from '../../storage/schema.js';
 export type { RequestArguments } from '../message/RequestArguments.js';
 

@@ -1,7 +1,4 @@
-import {
-  spendPermissionManagerAbi,
-  spendPermissionManagerAddress,
-} from ':core/namespaces/eip155/eip1193/sub-account/constants.js';
+import { spendPermissionManagerAbi, spendPermissionManagerAddress } from '../constants.js';
 import { createClients, getClient } from ':core/namespaces/eip155/client/index.js';
 import { http, createPublicClient } from 'viem';
 import { readContract } from 'viem/actions';

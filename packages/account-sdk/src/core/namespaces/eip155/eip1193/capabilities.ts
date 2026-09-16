@@ -1,11 +1,9 @@
 import { standardErrors } from ':core/error/errors.js';
 import type { RequestArguments } from ':core/provider/interface.js';
 import type { Session } from ':core/session/index.js';
-import type { Store } from ':store/store.js';
 import { hexToNumber, isAddressEqual } from 'viem';
 import { projectEip155Capabilities, projectEthAccountsForChain } from '../session.js';
-import { orderedEthAccounts } from './sub-account/index.js';
-import { assertGetCapabilitiesParams } from './sub-account/utils.js';
+import { assertGetCapabilitiesParams } from './params.js';
 
 /** EIP-5792 "all chains" key. SDK always reports `gasLimitOverride` here (ERC-8132). */
 export const ALL_CHAINS_KEY = '0x0';
@@ -58,7 +56,6 @@ export function projectCapabilities(
  * `account.capabilities` — not a popup round-trip and not chain JSON-RPC.
  */
 export function getCapabilities(
-  store: Store['eip155'],
   args: RequestArguments,
   session: Session,
   chainId: number
@@ -66,7 +63,7 @@ export function getCapabilities(
   assertGetCapabilitiesParams(args.params);
 
   const [requestedAccount, filterChainIds] = args.params;
-  const accounts = orderedEthAccounts(store, projectEthAccountsForChain(session, chainId));
+  const accounts = projectEthAccountsForChain(session, chainId);
 
   if (!accounts.some((account) => isAddressEqual(account, requestedAccount))) {
     throw standardErrors.provider.unauthorized('no active account found when getting capabilities');

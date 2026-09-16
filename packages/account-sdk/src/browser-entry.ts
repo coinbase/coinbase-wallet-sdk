@@ -49,7 +49,6 @@ export type {
 } from ':core/provider/interface.js';
 export { PACKAGE_VERSION as VERSION } from './core/constants.js';
 export { createBaseAccountSDK } from './interface/builder/createBaseAccountSDK.js';
-export { getCryptoKeyAccount, removeCryptoKey } from './owner-key/index.js';
 export { base, CHAIN_IDS, getPaymentStatus, pay, subscribe, TOKENS };
 export type {
   InfoRequest,

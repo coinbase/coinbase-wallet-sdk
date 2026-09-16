@@ -92,8 +92,6 @@ beforeEach(() => {
   vi.spyOn(providerUtil, 'fetchRPCRequest').mockImplementation(mockFetchRPCRequest);
 
   store.session.clear();
-  store.eip155.subAccounts.clear();
-  store.eip155.subAccountsConfig.clear();
   store.eip155.spendPermissions.clear();
 
   provider = createProvider();
@@ -295,59 +293,6 @@ describe('ensureSession / createSession', () => {
         }),
       })
     );
-  });
-});
-
-describe('sub-account', () => {
-  const SUB = SUB_ACCOUNT;
-
-  it('pairs before wallet_addSubAccount when disconnected', async () => {
-    await expect(
-      provider.request({
-        method: 'wallet_addSubAccount',
-        params: [{ version: '1', account: { type: 'deployed', address: SUB } }],
-      })
-    ).resolves.toMatchObject({ address: SUB });
-    expect(mockSend).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({ method: 'wallet_createSession' })
-    );
-    expect(mockSend).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        method: 'wallet_invokeMethod',
-        params: expect.objectContaining({
-          request: expect.objectContaining({ method: 'wallet_addSubAccount' }),
-        }),
-      })
-    );
-  });
-
-  it('adds a sub-account through the popup after pairing', async () => {
-    await provider.request({ method: 'eth_requestAccounts' });
-    mockSend.mockClear();
-
-    const result = await provider.request({
-      method: 'wallet_addSubAccount',
-      params: [{ version: '1', account: { type: 'deployed', address: SUB } }],
-    });
-
-    expect(result).toMatchObject({ address: SUB });
-    expect(store.eip155.subAccounts.get()?.address).toBe(SUB);
-    await expect(provider.request({ method: 'eth_accounts' })).resolves.toEqual([ACCOUNT, SUB]);
-  });
-
-  it('returns the cached sub-account from wallet_getSubAccounts', async () => {
-    await provider.request({ method: 'eth_requestAccounts' });
-    await provider.request({
-      method: 'wallet_addSubAccount',
-      params: [{ version: '1', account: { type: 'deployed', address: SUB } }],
-    });
-    mockFetchRPCRequest.mockClear();
-
-    await expect(provider.request({ method: 'wallet_getSubAccounts' })).resolves.toEqual({
-      subAccounts: [expect.objectContaining({ address: SUB })],
-    });
-    expect(mockFetchRPCRequest).not.toHaveBeenCalled();
   });
 });
 

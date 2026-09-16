@@ -42,7 +42,6 @@ export interface UseTestRunnerOptions {
   paymentIdRef: MutableRefObject<string | null>;
   subscriptionIdRef: MutableRefObject<string | null>;
   permissionHashRef: MutableRefObject<string | null>;
-  subAccountAddressRef: MutableRefObject<string | null>;
 
   // Configuration
   walletUrl?: string;
@@ -68,7 +67,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
     paymentIdRef,
     subscriptionIdRef,
     permissionHashRef,
-    subAccountAddressRef,
     walletUrl,
   } = options;
 
@@ -95,7 +93,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
       paymentId: paymentIdRef.current,
       subscriptionId: subscriptionIdRef.current,
       permissionHash: permissionHashRef.current,
-      subAccountAddress: subAccountAddressRef.current,
       skipModal,
       walletUrl,
     };
@@ -108,7 +105,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
     paymentIdRef,
     subscriptionIdRef,
     permissionHashRef,
-    subAccountAddressRef,
     walletUrl,
   ]);
 
@@ -153,7 +149,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
             paymentIdRef,
             subscriptionIdRef,
             permissionHashRef,
-            subAccountAddressRef,
           });
         }
       } catch (error) {
@@ -170,7 +165,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
       buildTestContext,
       paymentIdRef,
       subscriptionIdRef,
-      subAccountAddressRef,
       permissionHashRef,
       testState,
       connectionState,
@@ -336,8 +330,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
       // Spend Permission tests
       await runTestCategory('Spend Permissions');
       await delay(TEST_DELAYS.BETWEEN_TESTS);
-
-      // 4. Sub-Account tests (run BEFORE pay/subscribe to avoid state conflicts)
       await runTestCategory('Sub-Account Features');
       await delay(TEST_DELAYS.BETWEEN_TESTS);
 
@@ -407,10 +399,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
    *    - testGetPermissionStatus
    *    - testFetchPermission
    *    - testFetchPermissions
-   * 4. Sub-Account Features:
-   *    - testCreateSubAccount (opens popup)
-   *    - testGetSubAccounts
-   *    - testSendCallsFromSubAccount (opens popup)
    * 5. Payment Features:
    *    - testPay (opens popup)
    *    - testGetPaymentStatus
@@ -477,8 +465,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
         TEST_INDICES.SPEND_PERMISSIONS.FETCH_PERMISSIONS
       );
       // testPrepareSpendCallData and testPrepareRevokeCallData don't require user interaction - skip
-
-      // 4. Sub-Account tests - testCreateSubAccount and testSendCallsFromSubAccount require user interaction
       await executeTestByIndex(
         'Sub-Account Features',
         TEST_INDICES.SUB_ACCOUNT_FEATURES.CREATE_SUB_ACCOUNT
@@ -487,7 +473,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
         'Sub-Account Features',
         TEST_INDICES.SUB_ACCOUNT_FEATURES.GET_SUB_ACCOUNTS
       );
-      // testSignWithSubAccount doesn't require user interaction - skip
       await executeTestByIndex(
         'Sub-Account Features',
         TEST_INDICES.SUB_ACCOUNT_FEATURES.SEND_CALLS_FROM_SUB_ACCOUNT

@@ -1,6 +1,3 @@
-import type { Address, Hex, LocalAccount, OneOf } from 'viem';
-import type { WebAuthnAccount } from 'viem/account-abstraction';
-
 export type Namespace = string;
 export type Caip2 = `${string}:${string}`;
 export type Caip10 = `${Caip2}:${string}`;
@@ -27,15 +24,6 @@ export type Session = {
   scopes: Record<string, ScopeState>;
   /** Global CAIP-25 session metadata returned by the wallet. */
   properties?: Record<string, unknown>;
-};
-
-export type OwnerAccount = OneOf<LocalAccount | WebAuthnAccount>;
-export type ToOwnerAccountFn = () => Promise<{ account: OwnerAccount | null }>;
-
-export type SubAccount = {
-  address: Address;
-  factory?: Address;
-  factoryData?: Hex;
 };
 
 export interface AppMetadata {
@@ -72,21 +60,6 @@ export type Preference = {
   /** Whether functional telemetry is enabled. */
   telemetry?: boolean;
 } & Record<string, unknown>;
-
-export type SubAccountCreationMode = 'on-connect' | 'manual';
-export type SubAccountDefaultAccount = 'sub' | 'universal';
-export type SubAccountFundingMode = 'spend-permissions' | 'manual';
-
-export type SubAccountOptions = {
-  /** When to create a sub-account. */
-  creation?: SubAccountCreationMode;
-  /** Which account is first when no account is specified. */
-  defaultAccount?: SubAccountDefaultAccount;
-  /** How sub-account transactions are funded. */
-  funding?: SubAccountFundingMode;
-  /** Supplies the local owner used for sub-account signing. */
-  toOwnerAccount?: ToOwnerAccountFn;
-};
 
 export type SpendPermission = {
   createdAt?: number;

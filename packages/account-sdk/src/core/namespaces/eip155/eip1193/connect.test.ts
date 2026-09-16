@@ -1,49 +1,24 @@
 import type { RequestArguments } from ':core/provider/interface.js';
-import { projectEthAccounts, sessionFromAccounts } from '../session.js';
 import type { Session } from ':core/session/types.js';
+import { sessionFromAccounts } from '../session.js';
 import type { WalletTransport } from ':core/transport/index.js';
-import type { Store, ToOwnerAccountFn } from ':store/store.js';
+import type { Store } from ':store/store.js';
 import { connectEip155, createEip155Scopes, walletConnectScopeRequestParts } from './connect.js';
 import { createActiveChain } from './activeChain.js';
 import type { Eip1193Context } from './context.js';
 
 const ADDRESS = '0x0000000000000000000000000000000000000001';
-const SUB = '0x0000000000000000000000000000000000000002';
 
 function setup(
   request: WalletTransport['request'],
   opts?: {
     restored?: Session;
-    defaultAccount?: 'sub' | 'universal';
-    creation?: 'on-connect' | 'manual';
-    toOwnerAccount?: ToOwnerAccountFn;
     chainId?: number;
   }
 ): { transport: WalletTransport; context: Eip1193Context } {
   let session = opts?.restored;
-  let subAccount: { address: `0x${string}` } | undefined;
-  let subAccountsConfig = {
-    defaultAccount: opts?.defaultAccount,
-    creation: opts?.creation,
-    toOwnerAccount: opts?.toOwnerAccount,
-    capabilities: undefined as Record<string, unknown> | undefined,
-  };
   const state = {
     spendPermissions: { get: () => [], set: vi.fn(), clear: vi.fn() },
-    subAccounts: {
-      get: () => subAccount,
-      set: vi.fn((value: { address: `0x${string}` }) => {
-        subAccount = { ...subAccount, ...value };
-      }),
-      clear: vi.fn(),
-    },
-    subAccountsConfig: {
-      get: () => subAccountsConfig,
-      set: vi.fn((value: Partial<typeof subAccountsConfig>) => {
-        subAccountsConfig = { ...subAccountsConfig, ...value };
-      }),
-      clear: vi.fn(),
-    },
     paymasterUrls: { get: () => undefined, set: vi.fn() },
   } as unknown as Store['eip155'];
   const transport: WalletTransport = {
@@ -192,22 +167,5 @@ describe('EIP-155 CAIP-25 connect translation', () => {
 
     await expect(connectEip155(context)).rejects.toMatchObject({ code: 4100 });
     expect(context.emit).not.toHaveBeenCalled();
-  });
-});
-
-describe('EIP-1193 connect result ingestion', () => {
-  it('persists a granted sub-account', async () => {
-    const send = vi.fn().mockResolvedValue(
-      eip155Result({
-        capabilities: { subAccounts: [{ address: SUB }] },
-      })
-    );
-    const { context } = setup(send);
-    const { session } = await connectEip155(context);
-
-    expect(projectEthAccounts(session)).toEqual([ADDRESS, SUB]);
-    expect(context.cache.subAccounts.set).toHaveBeenCalledWith(
-      expect.objectContaining({ address: SUB })
-    );
   });
 });

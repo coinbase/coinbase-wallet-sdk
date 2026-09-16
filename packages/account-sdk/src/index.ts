@@ -7,11 +7,6 @@ export type {
 
 export { createBaseAccountSDK } from './interface/builder/createBaseAccountSDK.js';
 
-export {
-  getCryptoKeyAccount,
-  removeCryptoKey,
-} from './owner-key/index.js';
-
 export { PACKAGE_VERSION as VERSION } from './core/constants.js';
 
 export {

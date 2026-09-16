@@ -9,13 +9,9 @@ import type { Eip1193Context } from './context.js';
 import { handleDisconnected } from './disconnected.js';
 
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as const;
-const OWNER = '0x00000000000000000000000000000000000000aa' as const;
 
 function context(send: (envelope: Envelope) => Promise<unknown>): Eip1193Context {
   const state = {
-    subAccounts: { get: () => undefined, set: vi.fn(), clear: vi.fn() },
-    subAccountsConfig: { get: () => ({}), set: vi.fn(), clear: vi.fn() },
-    spendPermissions: { get: () => [], set: vi.fn(), clear: vi.fn() },
     paymasterUrls: { get: () => undefined, set: vi.fn() },
   } as unknown as Store['eip155'];
   const transport: WalletTransport = {
@@ -89,72 +85,6 @@ describe('wallet_invokeMethod', () => {
       chainId: 'eip155:8453',
       request: { method: 'eth_accounts', params: [] },
     });
-  });
-
-  it('translates a direct inner wallet_connect and its capabilities to CAIP-25', async () => {
-    const transportSend = vi.fn();
-    const rt = context(transportSend);
-    const sessionSend = vi.fn().mockResolvedValue({
-      sessionId: 'session-1',
-      scopes: {
-        eip155: {
-          chains: ['8453'],
-          accounts: [ADDRESS],
-          methods: ['wallet_connect'],
-          notifications: ['accountsChanged', 'chainChanged'],
-        },
-      },
-    });
-    rt.transport.request = sessionSend;
-    let config: Record<string, unknown> = {
-      creation: 'on-connect',
-      toOwnerAccount: async () => ({ account: { type: 'local', address: OWNER } }),
-    };
-    rt.cache.subAccountsConfig.get = () => config;
-    rt.cache.subAccountsConfig.set = (value) => {
-      config = { ...config, ...value };
-    };
-
-    await handleConnected(
-      rt,
-      {
-        method: 'wallet_invokeMethod',
-        params: {
-          sessionId: 'session-1',
-          chainId: 'eip155:8453',
-          request: {
-            method: 'wallet_connect',
-            params: [{ version: '1', capabilities: { custom: { enabled: true } } }],
-          },
-        },
-      },
-      session
-    );
-
-    expect(sessionSend).toHaveBeenCalledWith({
-      method: 'wallet_createSession',
-      params: {
-        sessionId: 'session-1',
-        scopes: {
-          eip155: {
-            chains: ['8453'],
-            methods: expect.any(Array),
-            notifications: ['accountsChanged', 'chainChanged'],
-            capabilities: {
-              addSubAccount: {
-                account: {
-                  type: 'create',
-                  keys: [{ type: 'address', publicKey: OWNER }],
-                },
-              },
-              custom: { enabled: true },
-            },
-            params: [{ version: '1' }],
-          },
-        },
-      },
-    });
-    expect(transportSend).not.toHaveBeenCalled();
   });
 
   it('strictly rejects malformed direct invoke before pairing', async () => {

@@ -5,8 +5,6 @@ export type { AppMetadata, Preference, ProviderInterface } from ':core/provider/
 
 export { createBaseAccountSDK } from './interface/builder/createBaseAccountSDK.js';
 
-export { getCryptoKeyAccount, removeCryptoKey } from './owner-key/index.js';
-
 export { PACKAGE_VERSION as VERSION } from './core/constants.js';
 
 // Payment interface exports - Node version with CDP SDK methods

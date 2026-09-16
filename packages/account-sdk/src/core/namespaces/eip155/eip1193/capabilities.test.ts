@@ -1,4 +1,3 @@
-import type { Store } from ':store/store.js';
 import type { Session } from ':core/session/types.js';
 import { getCapabilities, projectCapabilities } from './capabilities.js';
 
@@ -17,19 +16,6 @@ const STORED = {
     paymasterService: { supported: true },
   },
 };
-
-function state(opts?: { subAccount?: `0x${string}` }): Store['eip155'] {
-  return {
-    subAccounts: {
-      get: () => (opts?.subAccount ? { address: opts.subAccount } : undefined),
-      set: vi.fn(),
-      clear: vi.fn(),
-    },
-    subAccountsConfig: { get: () => ({}), set: vi.fn(), clear: vi.fn() },
-    spendPermissions: { get: () => [], set: vi.fn(), clear: vi.fn() },
-    paymasterUrls: { get: () => undefined, set: vi.fn() },
-  } as unknown as Store['eip155'];
-}
 
 describe('projectCapabilities', () => {
   it('merges gasLimitOverride onto 0x0 and returns all chains', () => {
@@ -129,27 +115,7 @@ describe('getCapabilities', () => {
 
   it('returns the projected map for a connected account', () => {
     expect(
-      getCapabilities(
-        state(),
-        { method: 'wallet_getCapabilities', params: [ADDRESS] },
-        session,
-        8453
-      )
-    ).toEqual({
-      '0x0': { gasLimitOverride: { supported: true } },
-      ...STORED,
-    });
-  });
-
-  it('accepts a cached sub-account as the requested account', () => {
-    const sub = '0x1111111111111111111111111111111111111111' as const;
-    expect(
-      getCapabilities(
-        state({ subAccount: sub }),
-        { method: 'wallet_getCapabilities', params: [sub] },
-        session,
-        8453
-      )
+      getCapabilities({ method: 'wallet_getCapabilities', params: [ADDRESS] }, session, 8453)
     ).toEqual({
       '0x0': { gasLimitOverride: { supported: true } },
       ...STORED,
@@ -158,17 +124,14 @@ describe('getCapabilities', () => {
 
   it('throws when the account is not in the session', () => {
     expect(() =>
-      getCapabilities(state(), { method: 'wallet_getCapabilities', params: [OTHER] }, session, 8453)
+      getCapabilities({ method: 'wallet_getCapabilities', params: [OTHER] }, session, 8453)
     ).toThrow('no active account found when getting capabilities');
   });
 
   it('throws when params are missing or invalid', () => {
-    expect(() =>
-      getCapabilities(state(), { method: 'wallet_getCapabilities' }, session, 8453)
-    ).toThrow();
+    expect(() => getCapabilities({ method: 'wallet_getCapabilities' }, session, 8453)).toThrow();
     expect(() =>
       getCapabilities(
-        state(),
         { method: 'wallet_getCapabilities', params: ['invalid-address'] },
         session,
         8453
@@ -176,7 +139,6 @@ describe('getCapabilities', () => {
     ).toThrow();
     expect(() =>
       getCapabilities(
-        state(),
         { method: 'wallet_getCapabilities', params: [ADDRESS, ['0x1', 'invalid-hex']] },
         session,
         8453
