@@ -8,6 +8,7 @@ import { loadTelemetryScript } from ':core/telemetry/initCCA.js';
 import { store } from ':store/store.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { validatePreferences } from ':util/validatePreferences.js';
+import type { OpenerFn } from ':util/web.js';
 import { createTransport } from './createTransport.js';
 import { CoinbaseWalletProvider } from './eip1193/CoinbaseWalletProvider.js';
 import { getInjectedProvider } from './eip1193/getInjectedProvider.js';
@@ -19,6 +20,8 @@ import {
 export type CreateProviderOptions = Partial<AppMetadata> & {
   preference?: Preference;
   paymasterUrls?: Record<number, string>;
+  /** @internal Overrides the browser function used to open the wallet URL. */
+  openerFn?: OpenerFn;
 };
 
 //  ====================================================================
@@ -116,7 +119,7 @@ export function createCoinbaseWalletSDK(params: CreateProviderOptions) {
   //  ====================================================================
 
   let provider: ProviderInterface | null = null;
-  const transport = createTransport(options, store);
+  const transport = createTransport(options, store, params.openerFn);
 
   const sdk = {
     getProvider: () => {

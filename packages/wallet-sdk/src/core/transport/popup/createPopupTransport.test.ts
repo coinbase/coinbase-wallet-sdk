@@ -2,10 +2,18 @@ import { sessionFromAccounts } from ':core/namespaces/eip155/session.js';
 import { sessionFromSolanaAccounts } from ':core/namespaces/solana/session.js';
 import { send } from ':core/transport/popup/send.js';
 import { bindStore, createStoreInstance } from ':store/store.js';
+import type { OpenerFn } from ':util/web.js';
 import { createPopupTransport } from './createPopupTransport.js';
+
+const { mockCommunicatorConstructor } = vi.hoisted(() => ({
+  mockCommunicatorConstructor: vi.fn(),
+}));
 
 vi.mock(':core/transport/popup/Communicator.js', () => ({
   Communicator: class {
+    constructor(options: unknown) {
+      mockCommunicatorConstructor(options);
+    }
     postRequestAndWaitForResponse = vi.fn();
     waitForPopupLoaded = vi.fn();
   },
@@ -24,11 +32,12 @@ const preference = { telemetry: false };
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as const;
 const SOLANA_PUBLIC_KEY = 'So11111111111111111111111111111111111111112';
 
-function createTestTransport() {
+function createTestTransport(openerFn?: OpenerFn) {
   const store = bindStore(createStoreInstance({ persist: false }));
   return createPopupTransport({
     metadata,
     preference,
+    openerFn,
     keys: store.keys,
     session: store.session,
   });
@@ -41,6 +50,14 @@ describe('createPopupTransport', () => {
     expect(transport).not.toHaveProperty('store');
     expect(transport.readSession()).toBeUndefined();
     expect(send).not.toHaveBeenCalled();
+  });
+
+  it('passes the custom opener to the communicator', () => {
+    const openerFn: OpenerFn = vi.fn();
+
+    createTestTransport(openerFn);
+
+    expect(mockCommunicatorConstructor).toHaveBeenCalledWith(expect.objectContaining({ openerFn }));
   });
 
   it('reads and writes session state without applying authorization policy', () => {

@@ -70,6 +70,39 @@ describe('PopupManager', () => {
     expect(url.searchParams.get('coop')).toBe('null');
   });
 
+  it('should use a custom opener instead of window.open', async () => {
+    const url = new URL('https://example.com');
+    const mockPopup = { focus: vi.fn() } as unknown as Window;
+    const openerFn = vi.fn().mockReturnValue(mockPopup);
+
+    const popup = await openPopup(url, openerFn);
+
+    expect(openerFn).toHaveBeenCalledWith(
+      url,
+      expect.stringContaining('wallet_'),
+      'width=420, height=700, left=302, top=34'
+    );
+    expect(window.open).not.toHaveBeenCalled();
+    expect(popup).toBe(mockPopup);
+    expect(mockPopup.focus).toHaveBeenCalledOnce();
+  });
+
+  it('should retry with the custom opener when opening is blocked', async () => {
+    const url = new URL('https://example.com');
+    const mockPopup = { focus: vi.fn() } as unknown as Window;
+    const openerFn = vi.fn().mockReturnValueOnce(null).mockReturnValueOnce(mockPopup);
+
+    const promise = openPopup(url, openerFn);
+    await waitFor(() => expect(mockPresentItem).toHaveBeenCalled());
+
+    const retryButton = mockPresentItem.mock.calls[0][0].actionItems[0];
+    retryButton.onClick();
+
+    await expect(promise).resolves.toBe(mockPopup);
+    expect(openerFn).toHaveBeenCalledTimes(2);
+    expect(window.open).not.toHaveBeenCalled();
+  });
+
   it('should not duplicate parameters when opening a popup with existing params', async () => {
     const url = new URL('https://example.com');
     url.searchParams.append('sdkName', PACKAGE_NAME);
