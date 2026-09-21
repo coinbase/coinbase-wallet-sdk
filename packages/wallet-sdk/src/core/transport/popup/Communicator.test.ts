@@ -211,7 +211,7 @@ describe('Communicator', () => {
 
       const popup = await communicator.waitForPopupLoaded();
 
-      expect(openPopup).toHaveBeenCalledWith(new URL(CB_KEYS_URL));
+      expect(openPopup).toHaveBeenCalledWith(new URL(CB_KEYS_URL), undefined);
       expect(mockPopup.postMessage).toHaveBeenNthCalledWith(
         1,
         {
@@ -229,6 +229,21 @@ describe('Communicator', () => {
         urlOrigin
       );
       expect(popup).toBeTruthy();
+    });
+
+    it('passes a custom open function to openPopup', async () => {
+      const openFn = vi.fn();
+      communicator = new Communicator({
+        url: CB_KEYS_URL,
+        metadata: appMetadata,
+        preference,
+        openFn,
+      });
+      queueMessageEvent(popupLoadedMessage);
+
+      await communicator.waitForPopupLoaded();
+
+      expect(openPopup).toHaveBeenCalledWith(new URL(CB_KEYS_URL), openFn);
     });
 
     it('exposes only the setup marker to frozen-v1 mismatch logging', async () => {

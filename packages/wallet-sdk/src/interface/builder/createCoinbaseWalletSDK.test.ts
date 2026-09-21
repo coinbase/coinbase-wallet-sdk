@@ -99,6 +99,15 @@ describe('createProvider', () => {
       expect(mockRegisterSolanaWallet).not.toHaveBeenCalled();
     });
 
+    it('passes the custom open function to the transport without storing it', () => {
+      const openFn = vi.fn();
+
+      createCoinbaseWalletSDK({ openFn });
+
+      expect(mockCreateTransport).toHaveBeenCalledWith(expect.any(Object), store, openFn);
+      expect(mockStore.config.set).toHaveBeenCalledWith(expect.not.objectContaining({ openFn }));
+    });
+
     it('should create a provider with minimal parameters', () => {
       const result = createCoinbaseWalletSDK({}).getProvider();
 

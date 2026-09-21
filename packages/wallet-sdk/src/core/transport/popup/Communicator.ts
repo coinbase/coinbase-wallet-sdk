@@ -5,7 +5,7 @@ import {
   logPopupSetupStarted,
   logPopupUnloadReceived,
 } from ':core/telemetry/events/communicator.js';
-import { closePopup, openPopup } from ':util/web.js';
+import { closePopup, openPopup, type OpenFn } from ':util/web.js';
 
 import { ConfigMessage, PopupSetupV2Message } from ':core/message/ConfigMessage.js';
 import { Message, MessageID } from ':core/message/Message.js';
@@ -15,6 +15,7 @@ export type CommunicatorOptions = {
   url?: string;
   metadata: AppMetadata;
   preference: Preference;
+  openFn?: OpenFn;
 };
 
 /**
@@ -27,13 +28,15 @@ export class Communicator {
   private readonly metadata: AppMetadata;
   private readonly preference: Preference;
   private readonly url: URL;
+  private readonly openFn?: OpenFn;
   private popup: Window | null = null;
   private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>();
 
-  constructor({ url = CB_KEYS_URL, metadata, preference }: CommunicatorOptions) {
+  constructor({ url = CB_KEYS_URL, metadata, preference, openFn }: CommunicatorOptions) {
     this.url = new URL(url);
     this.metadata = metadata;
     this.preference = preference;
+    this.openFn = openFn;
   }
 
   /**
@@ -102,7 +105,7 @@ export class Communicator {
     }
 
     logPopupSetupStarted();
-    this.popup = await openPopup(this.url);
+    this.popup = await openPopup(this.url, this.openFn);
 
     this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload')
       .then(() => {

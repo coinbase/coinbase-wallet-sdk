@@ -70,6 +70,49 @@ describe('PopupManager', () => {
     expect(url.searchParams.get('coop')).toBe('null');
   });
 
+  it('should delegate opening completely to a custom opener', async () => {
+    const url = new URL('https://example.com');
+    const mockWindow = { focus: vi.fn() } as unknown as Window;
+    const openFn = vi.fn().mockReturnValue(mockWindow);
+
+    const openedWindow = await openPopup(url, openFn);
+
+    expect(openFn).toHaveBeenCalledWith(url);
+    expect(window.open).not.toHaveBeenCalled();
+    expect(mockPresentItem).not.toHaveBeenCalled();
+    expect(mockWindow.focus).not.toHaveBeenCalled();
+    expect(openedWindow).toBe(mockWindow);
+    expect(url.searchParams.get('sdkName')).toBe(PACKAGE_NAME);
+    expect(url.searchParams.get('sdkVersion')).toBe(PACKAGE_VERSION);
+    expect(url.searchParams.get('origin')).toBe(mockOrigin);
+    expect(url.searchParams.get('coop')).toBe('null');
+  });
+
+  it('should support an asynchronous custom opener', async () => {
+    const mockWindow = {} as Window;
+    const openFn = vi.fn().mockResolvedValue(mockWindow);
+
+    await expect(openPopup(new URL('https://example.com'), openFn)).resolves.toBe(mockWindow);
+  });
+
+  it('should use the default popup when the custom opener returns undefined', async () => {
+    const url = new URL('https://example.com');
+    const mockPopup = { focus: vi.fn() } as unknown as Window;
+    const openFn = vi.fn(() => undefined);
+    (window.open as Mock).mockReturnValue(mockPopup);
+
+    const openedWindow = await openPopup(url, openFn);
+
+    expect(openFn).toHaveBeenCalledWith(url);
+    expect(window.open).toHaveBeenCalledWith(
+      url,
+      expect.stringContaining('wallet_'),
+      'width=420, height=700, left=302, top=34'
+    );
+    expect(mockPopup.focus).toHaveBeenCalledOnce();
+    expect(openedWindow).toBe(mockPopup);
+  });
+
   it('should not duplicate parameters when opening a popup with existing params', async () => {
     const url = new URL('https://example.com');
     url.searchParams.append('sdkName', PACKAGE_NAME);
