@@ -66,6 +66,7 @@
    ```js
    const sdk = createCoinbaseWalletSDK({
      appName: 'SDK Playground',
+     appChainIds: [8453],
    });
    ```
 
@@ -124,6 +125,93 @@ the wallet-issued grants, and maps the result back to the `wallet_connect`
 accounts response. Connected-session refreshes use the same CAIP-25 path rather
 than invoking `wallet_connect` through CAIP-27.
 
+Use `sdk.connect()` to authorize EVM and Solana together with one CAIP-25 approval:
+
+```ts
+const connection = await sdk.connect();
+```
+
+EVM chains come from `appChainIds` passed to `createCoinbaseWalletSDK`; they are
+not repeated in `connect()`. Pass `true` to select a basic connection for only
+one namespace:
+
+```ts
+const evmConnection = await sdk.connect({ evm: true });
+const solanaConnection = await sdk.connect({ solana: true });
+```
+
+Use an options object instead of `true` to request capabilities. Capability
+payloads are intentionally opaque so new capabilities and namespaces do not
+require redesigning the shared API:
+
+```ts
+const connection = await sdk.connect({
+  evm: {
+    capabilities: {
+      aos: {
+        nonce: evmNonce,
+        apiUrl: 'https://api.wallet.coinbase.com',
+      },
+    },
+  },
+  solana: {
+    capabilities: {
+      aos: {
+        nonce: solanaNonce,
+        apiUrl: 'https://api.wallet.coinbase.com',
+      },
+    },
+  },
+});
+```
+
+Capability results belong to the account that granted them:
+
+```ts
+{
+  evm: {
+    accounts: [{
+      address: '0x1234...',
+      capabilities: {
+        aos: { signature: '0xabcd...', isSCW: true },
+      },
+    }],
+  },
+  solana: {
+    accounts: [{
+      address: '9xQeWvG816bUx9EP...',
+      capabilities: {
+        aos: { signature: '4vJ9JU1bJJE96FWS...' },
+      },
+    }],
+  },
+}
+```
+
+Each selected namespace remains in the result when the wallet grants only part
+of a request. For example, an account without Solana returns:
+
+```ts
+{
+  evm: { accounts: [{ address: '0x1234...' }] },
+  solana: { accounts: [] },
+}
+```
+
+An omitted capability result is returned on each connected account as a
+serialized `4200` unsupported-capability error. `addSubAccount` and
+`spendPermissions` are intentionally not forwarded by `sdk.connect()`; use the
+EIP-1193 provider or `sdk.subAccount` APIs for those flows. Inputs remain open
+to future namespaces, while EVM and Solana are the namespaces currently
+implemented.
+
+Inside a Coinbase-hosted in-app browser or extension, EVM uses the injected
+`wallet_connect` method and Solana reads the host Wallet Standard connection
+silently. The SDK does not open a popup or create a parallel CAIP session there.
+Outside a Coinbase host, calling `sdk.connect()` updates an already-created
+popup EIP-1193 provider and SDK-registered Solana Wallet Standard wallet from
+the shared session.
+
 ### Experimental Solana API
 
 Solana is explicitly enabled by registering a Wallet Standard wallet:
@@ -146,12 +234,9 @@ Standard. The dapp's Wallet Standard or Kit wallet plugin discovers the wallet
 registered above. Calling `createCoinbaseWalletSDK()` by itself performs no Solana
 initialization or global registration.
 
-> **Release boundary:** Normal-browser popup requests already use CAIP-25
-> (`wallet_createSession`) and CAIP-27 (`wallet_invokeMethod`), but they are not
-> production-ready until SCW accepts Solana scopes and methods into its request
-> queue and ships the corresponding approval UI, including batch transaction
-> handling. Do not enable the popup fallback for production Solana traffic
-> before that wallet release lands.
+> **Release boundary:** Normal-browser Solana popup requests require an SCW
+> release that supports the CAIP-25 Solana scopes and CAIP-27 methods described
+> above.
 
 ### Developing locally and running the test dapp
 

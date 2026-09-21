@@ -9,9 +9,12 @@ import { store } from ':store/store.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { validatePreferences } from ':util/validatePreferences.js';
 import type { OpenFn } from ':util/web.js';
+import { type ConnectOptions, type ConnectResult, connectWallet } from './connect.js';
+import { connectInjectedWallet } from './connectInjectedWallet.js';
 import { createTransport } from './createTransport.js';
 import { CoinbaseWalletProvider } from './eip1193/CoinbaseWalletProvider.js';
 import { getInjectedProvider } from './eip1193/getInjectedProvider.js';
+import { isCoinbaseWalletHost } from './isCoinbaseWalletHost.js';
 import {
   _resetSolanaWalletRegistration,
   registerSolanaWallet,
@@ -22,6 +25,8 @@ export type CreateProviderOptions = Partial<AppMetadata> & {
   /** @internal Overrides how the prepared wallet URL is presented. */
   openFn?: OpenFn;
 };
+
+export type { ConnectOptions, ConnectResult };
 
 //  ====================================================================
 //  One-time initialization tracking
@@ -116,6 +121,14 @@ export function createCoinbaseWalletSDK(params: CreateProviderOptions) {
   const transport = createTransport(options, store, params.openFn);
 
   const sdk = {
+    connect: async (request?: ConnectOptions): Promise<ConnectResult> => {
+      await rehydrationPromise;
+      const injectedProvider = getInjectedProvider();
+      if (injectedProvider || isCoinbaseWalletHost()) {
+        return connectInjectedWallet(injectedProvider ?? undefined, request);
+      }
+      return connectWallet({ request, transport });
+    },
     getProvider: () => {
       if (!provider) {
         provider = getInjectedProvider() ?? new CoinbaseWalletProvider({ transport, store });

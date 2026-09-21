@@ -1560,6 +1560,7 @@ __metadata:
     "@types/node": "npm:^14.18.54"
     "@vitest/coverage-v8": "npm:^3.2.5"
     "@vitest/web-worker": "npm:3.2.1"
+    "@wallet-standard/app": "npm:1.1.0"
     "@wallet-standard/base": "npm:1.1.0"
     "@wallet-standard/features": "npm:1.1.0"
     "@wallet-standard/wallet": "npm:1.1.0"
