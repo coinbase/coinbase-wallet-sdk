@@ -95,6 +95,24 @@ describe('PopupManager', () => {
     await expect(openPopup(new URL('https://example.com'), openerFn)).resolves.toBe(mockWindow);
   });
 
+  it('should use the default popup when the custom opener returns undefined', async () => {
+    const url = new URL('https://example.com');
+    const mockPopup = { focus: vi.fn() } as unknown as Window;
+    const openerFn = vi.fn(() => undefined);
+    (window.open as Mock).mockReturnValue(mockPopup);
+
+    const openedWindow = await openPopup(url, openerFn);
+
+    expect(openerFn).toHaveBeenCalledWith(url);
+    expect(window.open).toHaveBeenCalledWith(
+      url,
+      expect.stringContaining('wallet_'),
+      'width=420, height=700, left=302, top=34'
+    );
+    expect(mockPopup.focus).toHaveBeenCalledOnce();
+    expect(openedWindow).toBe(mockPopup);
+  });
+
   it('should not duplicate parameters when opening a popup with existing params', async () => {
     const url = new URL('https://example.com');
     url.searchParams.append('sdkName', PACKAGE_NAME);
