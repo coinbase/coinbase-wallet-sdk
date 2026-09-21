@@ -1,9 +1,5 @@
 import { RequestArguments } from ':core/provider/interface.js';
 
-function paramsArray(params: RequestArguments['params']): unknown[] {
-  return Array.isArray(params) ? [...params] : [];
-}
-
 /**
  * Extract the signing/sending address from an EIP-1193 / CAIP-27 inner request,
  * if the dapp supplied one. `personal_sign` uses params[1]; `eth_sign` and typed
@@ -13,7 +9,8 @@ export function extractFrom(request: {
   method: string;
   params?: RequestArguments['params'];
 }): string | undefined {
-  const params = paramsArray(request.params);
+  // The object param form carries no positional signer, so it reads as empty here.
+  const params: readonly unknown[] = Array.isArray(request.params) ? request.params : [];
   switch (request.method) {
     case 'eth_sign':
       return typeof params[0] === 'string' ? params[0] : undefined;

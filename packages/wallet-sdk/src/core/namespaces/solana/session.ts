@@ -1,15 +1,11 @@
 import { standardErrors } from ':core/error/errors.js';
 import * as Base58 from 'ox/Base58';
-import { type Caip2, type Caip10, accountOf, formatCaip10 } from ':core/session/caip.js';
-import { grantsInNamespace } from ':core/session/grants.js';
-import type { Caip25RequestScope } from ':core/session/caip25.js';
-import type { ScopeRequirement } from ':core/session/covers.js';
+import { type Caip2, type Caip10, formatCaip10 } from ':core/session/caip.js';
+import { activeGrantForNamespace } from ':core/session/grants.js';
+import type { Caip25RequestScope } from ':core/session/types.js';
+import type { ScopeRequirement } from ':core/session/types.js';
 import type { Session } from ':core/session/types.js';
-import {
-  SOLANA_MAINNET,
-  SOLANA_MAINNET_REFERENCE,
-  SOLANA_WALLET_STANDARD_MAINNET,
-} from './caip.js';
+import { SOLANA_MAINNET, SOLANA_NAMESPACE, SOLANA_WALLET_STANDARD_MAINNET } from './caip.js';
 
 /** CAIP-27 methods requested for the initial Solana mainnet session. */
 export const SOLANA_METHODS = [
@@ -62,13 +58,21 @@ export function formatSolanaAccount(publicKey: string): Caip10 {
   return formatCaip10(SOLANA_MAINNET, publicKey);
 }
 
-/** Namespace scope sent by Solana pairing. No EVM wallet_connect extensions. */
+/**
+ * Scope sent by Solana pairing. No EVM wallet_connect extensions.
+ *
+ * Keyed by the bare namespace, like eip155: the SDK supports exactly one Solana
+ * cluster, and `solanaChainId` / `assertSolanaEnvelope` reject every other one before
+ * a grant is ever looked up.
+ */
 export function createSolanaMainnetScopes(
   methods: readonly string[] = SOLANA_METHODS
-): Record<'solana', Caip25RequestScope> {
+): Record<string, Caip25RequestScope> {
+  // Namespace-keyed with no chain list, the same shape `createEip155Scopes` sends: the
+  // grant is stored per namespace either way, since `sessionFromCaip25Result` promotes a
+  // lone chain scope to its namespace and `activeGrantForChain` resolves through it.
   return {
-    solana: {
-      chains: [SOLANA_MAINNET_REFERENCE],
+    [SOLANA_NAMESPACE]: {
       methods: [...new Set(methods)],
       notifications: [],
     },
@@ -79,32 +83,27 @@ export function createSolanaMainnetScopes(
 export function sessionFromSolanaAccounts(opts: {
   accounts: string[];
 }): Session {
-  const accounts = opts.accounts.map(formatSolanaAccount);
+  // Scope accounts are raw; `formatSolanaAccount` still validates the key shape.
+  const accounts = opts.accounts.map((publicKey) => {
+    formatSolanaAccount(publicKey);
+    return publicKey;
+  });
   return {
-    scopes: {
-      [SOLANA_MAINNET]: { accounts, methods: [...SOLANA_METHODS] },
+    namespaces: {
+      [SOLANA_NAMESPACE]: { accounts, methods: [...SOLANA_METHODS] },
     },
   };
 }
 
-/**
- * Raw mainnet public keys in wallet-granted order, without duplicates.
- *
- * Chain-keyed grants hold CAIP-10 ids and a namespace grant holds raw public keys;
- * `accountOf` normalizes both.
- */
+/** Raw mainnet public keys in wallet-granted order, without duplicates. */
 export function projectSolanaAccounts(session: Session): string[] {
   const seen = new Set<string>();
   const publicKeys: string[] = [];
 
-  for (const [scopeKey, scope] of grantsInNamespace(session, 'solana')) {
-    if (scopeKey !== 'solana' && scopeKey !== SOLANA_MAINNET) continue;
-    for (const account of scope.accounts) {
-      const publicKey = accountOf(account);
-      if (!isSolanaPublicKey(publicKey) || seen.has(publicKey)) continue;
-      seen.add(publicKey);
-      publicKeys.push(publicKey);
-    }
+  for (const publicKey of activeGrantForNamespace(session, SOLANA_NAMESPACE)?.accounts ?? []) {
+    if (!isSolanaPublicKey(publicKey) || seen.has(publicKey)) continue;
+    seen.add(publicKey);
+    publicKeys.push(publicKey);
   }
   return publicKeys;
 }

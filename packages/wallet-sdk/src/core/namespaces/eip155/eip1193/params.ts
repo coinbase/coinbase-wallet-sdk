@@ -1,6 +1,7 @@
 import { standardErrors } from ':core/error/errors.js';
 import type { RequestArguments } from ':core/provider/interface.js';
 import type { FetchPermissionsRequest } from ':core/rpc/coinbase_fetchSpendPermissions.js';
+import { ensureIntNumber } from ':core/type/util.js';
 import { isAddress } from 'viem';
 
 /**
@@ -8,6 +9,19 @@ import { isAddress } from 'viem';
  *
  * These moved out of the removed sub-account module; neither is sub-account policy.
  */
+
+/**
+ * EIP-3326 `wallet_switchEthereumChain`: `[{ chainId }]`, hex, one array and one object
+ * deep. Returns the number the chain store keys on.
+ */
+export function parseSwitchChainId(params: RequestArguments['params']): number {
+  if (!Array.isArray(params) || !params[0] || typeof params[0] !== 'object') {
+    throw standardErrors.rpc.invalidParams(
+      'wallet_switchEthereumChain - Invalid params: expected [{ chainId }]'
+    );
+  }
+  return ensureIntNumber((params[0] as { chainId?: unknown }).chainId);
+}
 
 /** EIP-5792 `wallet_getCapabilities`: `[account]` or `[account, chainIds]`. */
 export function assertGetCapabilitiesParams(

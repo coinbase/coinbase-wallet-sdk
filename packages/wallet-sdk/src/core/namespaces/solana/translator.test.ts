@@ -10,21 +10,18 @@ const envelope: Envelope = {
 const SIGNATURE = btoa(String.fromCharCode(...new Uint8Array(64).fill(1)));
 const PUBLIC_KEY = 'So11111111111111111111111111111111111111112';
 
-describe('solanaTranslator', () => {
-  it('validates and unwraps an exact CAIP-27 response', () => {
-    expect(
-      solanaTranslator.unwrapResponse(
-        {
-          sessionId: 'solana-session',
-          chainId: SOLANA_MAINNET,
-          result: { method: 'solana_signMessage', result: { signature: SIGNATURE } },
-        },
-        envelope
-      )
-    ).toEqual({ signature: new Uint8Array(64).fill(1) });
+/**
+ * The kernel validates and unwraps the CAIP-27 envelope (see caip27.test.ts); this
+ * translator only decodes the method result Solana returns inside it.
+ */
+describe('solanaTranslator.decodeResult', () => {
+  it('decodes an encoded signature', () => {
+    expect(solanaTranslator.decodeResult({ signature: SIGNATURE }, envelope)).toEqual({
+      signature: new Uint8Array(64).fill(1),
+    });
   });
 
-  it('unwraps ordered batch settlement results', () => {
+  it('decodes ordered batch settlement results', () => {
     const batchEnvelope: Envelope = {
       sessionId: 'solana-session',
       chainId: SOLANA_MAINNET,
@@ -34,18 +31,11 @@ describe('solanaTranslator', () => {
       },
     };
     expect(
-      solanaTranslator.unwrapResponse(
-        {
-          sessionId: 'solana-session',
-          chainId: SOLANA_MAINNET,
-          result: {
-            method: 'solana_signAndSendAllTransactions',
-            result: [
-              { status: 'fulfilled', value: { signature: SIGNATURE } },
-              { status: 'rejected', reason: { code: 4001, message: 'rejected' } },
-            ],
-          },
-        },
+      solanaTranslator.decodeResult(
+        [
+          { status: 'fulfilled', value: { signature: SIGNATURE } },
+          { status: 'rejected', reason: { code: 4001, message: 'rejected' } },
+        ],
         batchEnvelope
       )
     ).toEqual([
@@ -54,33 +44,21 @@ describe('solanaTranslator', () => {
     ]);
   });
 
-  it('rejects a response for a different exact chain', () => {
+  it('refuses to decode for a chain outside Solana mainnet', () => {
     expect(() =>
-      solanaTranslator.unwrapResponse(
-        {
-          sessionId: 'solana-session',
-          chainId: 'solana:devnet',
-          result: { method: 'solana_signMessage', result: { signature: SIGNATURE } },
-        },
-        envelope
+      solanaTranslator.decodeResult(
+        { signature: SIGNATURE },
+        { ...envelope, chainId: 'solana:devnet' }
       )
-    ).toThrow(/chainId does not match/);
+    ).toThrow(/does not support/);
   });
 
-  it('throws a method-level CAIP-27 error unchanged', () => {
-    const error = { code: 4100, message: 'Solana account denied' };
-    expect.assertions(1);
-    try {
-      solanaTranslator.unwrapResponse(
-        {
-          sessionId: 'solana-session',
-          chainId: SOLANA_MAINNET,
-          error,
-        },
-        envelope
-      );
-    } catch (caught) {
-      expect(caught).toEqual(error);
-    }
+  it('refuses to decode an unsupported Solana method', () => {
+    expect(() =>
+      solanaTranslator.decodeResult(
+        { signature: SIGNATURE },
+        { ...envelope, request: { method: 'solana_unknown', params: [] } }
+      )
+    ).toThrow(/Unsupported Solana method/);
   });
 });

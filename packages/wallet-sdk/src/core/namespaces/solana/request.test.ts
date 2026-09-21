@@ -1,11 +1,11 @@
 import { standardErrorCodes } from ':core/error/constants.js';
+import { sessionFromAccounts } from ':core/namespaces/eip155/session.fixtures.js';
 import type { RequestArguments } from ':core/provider/interface.js';
-import type { WalletTransport } from ':core/transport/index.js';
-import { SOLANA_MAINNET } from './caip.js';
-import { sessionFromAccounts } from ':core/namespaces/eip155/session.js';
-import { sessionFromSolanaAccounts } from './session.js';
 import type { Envelope, Session } from ':core/session/types.js';
+import type { WalletTransport } from ':core/transport/index.js';
+import { SOLANA_MAINNET, SOLANA_NAMESPACE } from './caip.js';
 import { handleSolanaRequest } from './request.js';
+import { sessionFromSolanaAccounts } from './session.js';
 
 const PUBLIC_KEY = 'So11111111111111111111111111111111111111112';
 const EVM_ADDRESS = '0x0000000000000000000000000000000000000001';
@@ -16,14 +16,13 @@ function transportState(initialSession?: Session) {
   const send = vi.fn(async (request: RequestArguments) => {
     const params = request.params as {
       sessionId?: string;
-      scopes: Record<string, { chains?: string[]; methods: string[]; notifications: string[] }>;
+      scopes: Record<string, { methods: string[]; notifications: string[] }>;
     };
-    const scope = params.scopes.solana;
+    const scope = params.scopes[SOLANA_NAMESPACE];
     return {
       sessionId: params.sessionId ?? 'solana-session',
       scopes: {
-        solana: {
-          chains: scope.chains,
+        [SOLANA_NAMESPACE]: {
           accounts: [PUBLIC_KEY],
           methods: scope.methods,
           notifications: scope.notifications,
@@ -83,8 +82,7 @@ describe('handleSolanaRequest', () => {
       method: 'wallet_createSession',
       params: {
         scopes: {
-          solana: {
-            chains: ['5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp'],
+          [SOLANA_NAMESPACE]: {
             methods: [
               'solana_signMessage',
               'solana_signTransaction',
@@ -120,17 +118,17 @@ describe('handleSolanaRequest', () => {
       sessionId: 'shared-session',
     };
     const state = transportState(evmSession);
+    // The Solana grant comes back chain-keyed here: a namespace with no namespace
+    // grant takes its lone chain scope as the grant.
     state.send.mockResolvedValueOnce({
       sessionId: 'shared-session',
       scopes: {
         eip155: {
-          chains: ['1'],
           accounts: [EVM_ADDRESS],
           methods: ['personal_sign'],
           notifications: ['accountsChanged'],
         },
-        solana: {
-          chains: ['5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp'],
+        [SOLANA_MAINNET]: {
           accounts: [PUBLIC_KEY],
           methods: [
             'solana_signMessage',
@@ -150,9 +148,9 @@ describe('handleSolanaRequest', () => {
         params: expect.objectContaining({ sessionId: 'shared-session' }),
       })
     );
-    expect(state.transport.readSession()?.scopes).toMatchObject({
-      'eip155:1': { accounts: [`eip155:1:${EVM_ADDRESS}`] },
-      [SOLANA_MAINNET]: { accounts: [`${SOLANA_MAINNET}:${PUBLIC_KEY}`] },
+    expect(state.transport.readSession()?.namespaces).toMatchObject({
+      eip155: { accounts: [EVM_ADDRESS] },
+      solana: { accounts: [PUBLIC_KEY] },
     });
   });
 
@@ -165,7 +163,7 @@ describe('handleSolanaRequest', () => {
     state.send.mockResolvedValueOnce({
       sessionId: 'shared-session',
       scopes: {
-        'eip155:1': {
+        eip155: {
           accounts: [EVM_ADDRESS],
           methods: ['personal_sign'],
           notifications: [],
@@ -184,9 +182,7 @@ describe('handleSolanaRequest', () => {
         message: 'wallet_createSession did not grant a Solana mainnet account',
       }
     );
-    expect(state.transport.readSession()?.scopes['eip155:1']?.accounts).toEqual([
-      `eip155:1:${EVM_ADDRESS}`,
-    ]);
+    expect(state.transport.readSession()?.namespaces.eip155?.accounts).toEqual([EVM_ADDRESS]);
   });
 
   it('invokes signing through the exact Solana CAIP-27 envelope', async () => {

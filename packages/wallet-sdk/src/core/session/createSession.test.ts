@@ -30,8 +30,7 @@ function solanaResult(sessionId = 'solana-session') {
   return {
     sessionId,
     scopes: {
-      solana: {
-        chains: ['5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp'],
+      [SOLANA_MAINNET]: {
         accounts: [SOLANA_PUBLIC_KEY],
         methods: ['solana_signMessage', 'solana_signTransaction'],
         notifications: [],
@@ -80,8 +79,8 @@ describe('createSession', () => {
       scopes: createSolanaMainnetScopes(),
     });
 
-    expect(session.scopes[SOLANA_MAINNET]?.accounts).toEqual([]);
-    expect(session.scopes['eip155:1']?.accounts).toHaveLength(1);
+    expect(session.namespaces.solana?.accounts).toEqual([]);
+    expect(session.namespaces.eip155?.accounts).toHaveLength(1);
     expect(rt.readSession()).toBe(session);
   });
 
@@ -105,29 +104,26 @@ describe('createSession', () => {
     );
   });
 
-  it('retries a stale session once without its id', async () => {
+  it('never retries a 4100, so a decline does not re-prompt', async () => {
+    // The wallet answers 4100 both for a session id it no longer holds and for an
+    // approval that granted nothing. Retrying would re-prompt the second user.
+    const error = standardErrors.provider.unauthorized();
     const restored = {
       ...sessionFromSolanaAccounts({ accounts: [SOLANA_PUBLIC_KEY] }),
       sessionId: 'stale-session',
     };
-    const send = vi
-      .fn<(request: RequestArguments) => Promise<unknown>>()
-      .mockRejectedValueOnce(standardErrors.provider.unauthorized())
-      .mockResolvedValueOnce(solanaResult('fresh-session'));
+    const send = vi.fn<(request: RequestArguments) => Promise<unknown>>().mockRejectedValue(error);
     const rt = transport(send, restored);
 
-    const session = await createSession(rt, {
-      scopes: createSolanaMainnetScopes(),
-    });
-
-    expect(send).toHaveBeenCalledTimes(2);
+    await expect(createSession(rt, { scopes: createSolanaMainnetScopes() })).rejects.toBe(error);
+    expect(send).toHaveBeenCalledOnce();
     expect(send.mock.calls[0]?.[0]).toHaveProperty('params.sessionId', 'stale-session');
-    expect(send.mock.calls[1]?.[0]).not.toHaveProperty('params.sessionId');
-    expect(rt.handshake).toHaveBeenCalledOnce();
-    expect(session.sessionId).toBe('fresh-session');
+    // The provider resets on the 4100 it now sees; nothing is re-handshaked here.
+    expect(rt.handshake).not.toHaveBeenCalled();
+    expect(rt.writeSession).not.toHaveBeenCalled();
   });
 
-  it('does not retry errors other than stale authorization', async () => {
+  it('does not retry other errors either', async () => {
     const error = standardErrors.provider.userRejectedRequest();
     const restored = {
       ...sessionFromSolanaAccounts({ accounts: [SOLANA_PUBLIC_KEY] }),

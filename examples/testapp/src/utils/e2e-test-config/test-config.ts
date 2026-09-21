@@ -87,11 +87,6 @@ export const SDK_CONFIG = {
   APP_NAME: 'E2E Test Suite',
 
   /**
-   * Default chain IDs for SDK initialization (Base mainnet)
-   */
-  DEFAULT_CHAIN_IDS: [8453],
-
-  /**
    * App logo URL (optional)
    */
   APP_LOGO_URL: undefined,

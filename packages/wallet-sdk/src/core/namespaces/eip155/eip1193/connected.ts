@@ -8,24 +8,20 @@ import type {
 import type { FetchPermissionsResponse } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { WALLET_INVOKE_METHOD } from ':core/session/caip27.js';
 import type { Session } from ':core/session/index.js';
-import { grantFor } from ':core/session/grants.js';
 import { invoke } from ':core/session/invoke.js';
 import { assertFetchPermissionsRequest } from './params.js';
-import { eip155Caip2, eip155ChainId } from '../caip.js';
-import { toEnvelope } from '../envelope.js';
-import { WALLET_METHODS } from '../methods.js';
+import { eip155Translator, toEnvelope } from '../envelope.js';
+import { EIP155_METHODS } from '../methods.js';
 import {
-  firstEip155ChainId,
   isKnownEip155Chain,
   projectEthAccounts,
-  projectEthAccountsForChain,
   rpcUrlForEip155Chain,
+  withKnownEip155Chain,
 } from '../session.js';
-import { eip155Translator } from '../translator.js';
 import { fetchRPCRequest } from ':util/provider.js';
-import { hexToNumber, numberToHex } from 'viem';
+import { numberToHex } from 'viem';
 import { getCapabilities } from './capabilities.js';
-import { switchChainId } from './chainParams.js';
+import { parseSwitchChainId } from './params.js';
 import { connectEip155 } from './connect.js';
 import type { Eip1193Context } from './context.js';
 import { parseCaip27 } from './parseCaip27.js';
@@ -38,25 +34,16 @@ function applyLocalChain(context: Eip1193Context, session: Session, chainId: num
 }
 
 /**
- * Authorize the active chain, expanding the CAIP-25 grant when the wallet granted
- * a narrower chain set than the provider is now using.
+ * Record a chain the wallet just accepted, so later reads can reach it.
  *
- * Switching chains is provider state and never rewrites authorization. A wallet that
- * grants the eip155 namespace covers every chain, so this never opens a popup. Wallets
- * that still grant one chain at a time expand here, on the first request that needs it,
- * rather than failing `assertInvokeAuthorized` after a successful switch.
+ * The wallet's catalog is the only source of chain support, and a wallet-side switch
+ * is the one moment it grows without a reconnect. Authorization is untouched.
  */
-async function sessionForChain(
-  context: Eip1193Context,
-  session: Session,
-  chainId: number
-): Promise<Session> {
-  if (grantFor(session, eip155Caip2(chainId))) return session;
-  const { session: expanded } = await connectEip155(context, undefined, {
-    chainId: eip155Caip2(chainId),
-    ...(session.sessionId ? { sessionId: session.sessionId } : {}),
-  });
-  return expanded;
+function rememberChain(context: Eip1193Context, session: Session, chainId: number): void {
+  // Re-read so a session another interface wrote during the round trip is not clobbered.
+  const current = context.transport.readSession() ?? session;
+  if (isKnownEip155Chain(current, chainId)) return;
+  context.transport.writeSession(withKnownEip155Chain(current, chainId));
 }
 
 /**
@@ -72,66 +59,48 @@ export async function handleConnected(
   args: RequestArguments,
   session: Session
 ): Promise<unknown> {
-  const { transport, cache, emit, chain } = context;
+  const { transport, emit, chain } = context;
   const getChainId = chain.get;
 
   switch (args.method) {
-    // --- Direct CAIP-27: wallet_connect is CAIP-25; invoke everything else as-is. ---
-    case WALLET_INVOKE_METHOD: {
-      const parsed = parseCaip27(args);
-      const inner = parsed.request;
-      if (inner.method === 'wallet_connect') {
-        const { result } = await connectEip155(context, inner, {
-          chainId: parsed.chainId,
-          sessionId: parsed.sessionId ?? session.sessionId,
-        });
-        const chainId = eip155ChainId(parsed.chainId);
-        if (chainId !== null) chain.select(chainId, { notify: false });
-        return result;
-      }
-      return invoke(session, parsed, transport, eip155Translator);
-    }
+    // --- Direct CAIP-27: invoke the inner method on this session. ---
+    case WALLET_INVOKE_METHOD:
+      return invoke(session, parseCaip27(args), transport, eip155Translator);
 
     // --- Session projections (no wallet round-trip) ---
     case 'eth_requestAccounts':
-    case 'eth_accounts': {
-      // A locally selected chain can sit outside a narrow grant; the account list is
-      // the same across eip155 chains, so fall back to the session-wide projection.
-      const granted = projectEthAccountsForChain(session, getChainId());
-      const accounts = granted.length > 0 ? granted : projectEthAccounts(session);
-      emit('connect', { chainId: numberToHex(getChainId()) });
-      return accounts;
-    }
+    case 'eth_accounts':
     case 'eth_coinbase': {
-      const accounts = await handleConnected(context, { method: 'eth_accounts' }, session);
-      return (accounts as string[])[0];
+      // Authorization is namespace-wide, so the account list does not depend on the
+      // active chain. `eth_coinbase` is the same list narrowed to the primary account.
+      const accounts = projectEthAccounts(session);
+      emit('connect', { chainId: numberToHex(getChainId()) });
+      return args.method === 'eth_coinbase' ? accounts[0] : accounts;
     }
     case 'net_version':
       return getChainId();
     case 'eth_chainId':
       return numberToHex(getChainId());
     case 'wallet_getCapabilities':
-      return getCapabilities(args, session, getChainId());
+      return getCapabilities(args, session);
 
     // --- Chain: provider-local selection; authorization is never rewritten here ---
     case 'wallet_switchEthereumChain': {
-      const chainId = switchChainId(args.params);
+      const chainId = parseSwitchChainId(args.params);
       if (applyLocalChain(context, session, chainId)) return null;
-      // Prefer the active chain: a namespace grant authorizes it and keeps the
-      // wallet's own switch prompt on the chain the dapp is actually using.
-      const authorizationChainId = grantFor(session, eip155Caip2(getChainId()))
-        ? getChainId()
-        : firstEip155ChainId(session);
-      if (authorizationChainId === undefined) {
-        throw standardErrors.provider.unauthorized('No EIP-155 account is authorized');
-      }
+      // Not in the wallet's catalog: ask the wallet, which either adds the chain or
+      // returns 4902. The request rides the active chain, which the namespace-wide
+      // grant already authorizes — switching never needs new authorization.
       const result = await invoke(
         session,
-        toEnvelope(args, authorizationChainId),
+        toEnvelope(args, getChainId()),
         transport,
         eip155Translator
       );
-      if (result === null) chain.select(chainId);
+      if (result === null) {
+        rememberChain(context, session, chainId);
+        chain.select(chainId);
+      }
       return result;
     }
 
@@ -146,36 +115,19 @@ export async function handleConnected(
     // --- Spend-permission HTTP (not the wallet transport) ---
     case 'coinbase_fetchPermissions': {
       assertFetchPermissionsRequest(args);
-      const completeRequest = args;
-      const permissions = (await fetchRPCRequest(
-        completeRequest,
-        CB_WALLET_RPC_URL
-      )) as FetchPermissionsResponse;
-      const requestedChainId = hexToNumber(completeRequest.params[0].chainId);
-      cache.spendPermissions.set(
-        permissions.permissions.map((permission) => ({
-          ...permission,
-          chainId: requestedChainId,
-        }))
-      );
-      return permissions;
+      return (await fetchRPCRequest(args, CB_WALLET_RPC_URL)) as FetchPermissionsResponse;
     }
     case 'coinbase_fetchPermission': {
-      const response = (await fetchRPCRequest(
+      return (await fetchRPCRequest(
         args as FetchPermissionRequest,
         CB_WALLET_RPC_URL
       )) as FetchPermissionResponse;
-      if (response.permission?.chainId) {
-        cache.spendPermissions.set([response.permission]);
-      }
-      return response;
     }
 
     // --- Sign/send: invoke, else chain JSON-RPC (incl. wallet_getCallsStatus) ---
     default: {
-      if (WALLET_METHODS.has(args.method) || args.method.startsWith('experimental_')) {
-        const authorized = await sessionForChain(context, session, getChainId());
-        return invoke(authorized, toEnvelope(args, getChainId()), transport, eip155Translator);
+      if (EIP155_METHODS.includes(args.method) || args.method.startsWith('experimental_')) {
+        return invoke(session, toEnvelope(args, getChainId()), transport, eip155Translator);
       }
       const rpcUrl = rpcUrlForEip155Chain(session, getChainId());
       if (!rpcUrl) throw standardErrors.rpc.internal('No RPC URL set for chain');

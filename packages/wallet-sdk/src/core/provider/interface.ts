@@ -1,7 +1,7 @@
 import { EventEmitter } from 'eventemitter3';
 import { Address, Hex } from 'viem';
-import type { RequestArguments } from '../message/RequestArguments.js';
 import type { AppMetadata, Preference } from '../../storage/schema.js';
+import type { RequestArguments } from '../message/RequestArguments.js';
 export type {
   AppMetadata,
   Attribution,
@@ -48,5 +48,4 @@ export type SpendPermissionConfig = {
 export interface ConstructorOptions {
   metadata: AppMetadata;
   preference: Preference;
-  paymasterUrls?: Record<number, string>;
 }

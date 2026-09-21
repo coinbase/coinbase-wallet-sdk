@@ -1,4 +1,5 @@
 import { standardErrors } from ':core/error/errors.js';
+import { EPHEMERAL_METHODS } from ':core/namespaces/eip155/index.js';
 import type { RequestArguments } from ':core/provider/interface.js';
 import { type StoreInstance, createStoreInstance } from ':store/store.js';
 
@@ -10,24 +11,17 @@ export function createEphemeralStore(): StoreInstance {
   return createStoreInstance({ persist: false });
 }
 
-/** Public methods `pay()` may call. Wallet-bound methods use the disconnected one-shot path. */
-const EPHEMERAL_METHODS = new Set([
-  'wallet_sendCalls',
-  'wallet_sign',
-  'experimental_requestInfo',
-  'wallet_getCallsStatus',
-  'eth_accounts',
-  'net_version',
-  'eth_chainId',
-]);
-
 /**
- * Reject public account connection and anything else `pay()` does not need.
- * Wallet-bound methods handshake, invoke once without a session, then clean up.
+ * Reject public account connection and anything else that would create a session.
+ *
+ * `pay()` may call exactly what the disconnected router serves without pairing, so the
+ * allowlist is that router's own set rather than a copy of it. Adding a method here that
+ * the router does not know would silently fall through to `createSession`, which is the
+ * one thing a one-shot provider must never do.
  */
 export function assertEphemeralMethod(method: RequestArguments['method']): void {
   if (EPHEMERAL_METHODS.has(method)) return;
   throw standardErrors.provider.unauthorized(
-    `Method '${method}' is not supported by ephemeral provider. Ephemeral providers only support: wallet_sendCalls, wallet_sign, experimental_requestInfo, wallet_getCallsStatus`
+    `Method '${method}' is not supported by ephemeral provider. Ephemeral providers only support: ${[...EPHEMERAL_METHODS].join(', ')}`
   );
 }

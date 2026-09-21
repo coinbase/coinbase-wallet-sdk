@@ -15,7 +15,7 @@ describe('createEphemeralStore', () => {
     persisted.session.clear();
     persisted.keys.clear();
 
-    ephemeral.session.set({ scopes: {} });
+    ephemeral.session.set({ namespaces: {} });
     ephemeral.keys.set('peer', 'key');
 
     expect(persisted.session.get()).toBeUndefined();

@@ -1,18 +1,17 @@
 import { standardErrors } from ':core/error/errors.js';
 import type { RequestArguments } from ':core/provider/interface.js';
-import type { SpendPermission } from ':core/rpc/coinbase_fetchSpendPermissions.js';
-import { type Caip2, parseCaip2 } from ':core/session/caip.js';
-import {
-  type Caip25PrivateRequestScopeExtensions,
-  type Caip25RequestScope,
-} from ':core/session/caip25.js';
+import { isRecord } from ':util/wire.js';
 import { createSession } from ':core/session/createSession.js';
-import { grantFor } from ':core/session/grants.js';
-import { EIP155_METHODS, projectEthAccountsForChain } from '../session.js';
-import type { Session } from ':core/session/types.js';
+import { EIP155_METHODS } from '../methods.js';
+import { activeEip155Grant, projectEthAccounts } from '../session.js';
+import type {
+  Caip25PrivateRequestScopeExtensions,
+  Caip25RequestScope,
+  Session,
+} from ':core/session/types.js';
 import type { Address } from ':core/type/index.js';
 import { numberToHex } from 'viem';
-import { eip155Caip2, eip155ChainId } from '../caip.js';
+import { EIP155_NAMESPACE } from '../caip.js';
 import type { Eip1193Context } from './context.js';
 
 export type ConnectResult = {
@@ -22,33 +21,25 @@ export type ConnectResult = {
   }[];
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === 'object' && !Array.isArray(value);
-}
-
 /**
  * Build the EIP-155 CAIP-25 scope, including private wallet_connect fields.
+ *
+ * One scope, keyed by the bare `eip155` namespace with no chain list. The user consents
+ * to accounts and methods, not to a chain list, so nothing here is chain-dependent and
+ * switching chains never reconnects.
+ *
+ * To SCW, that missing chain list means every EVM chain it supports. That reading is an
+ * SDK↔SCW agreement rather than a spec guarantee: CAIP-217 reads an absent chain list as
+ * zero chains, so a wallet going by the letter of the spec grants nothing. That case is
+ * safe — `connectEip155` throws on a grant with no accounts instead of quietly
+ * continuing with a narrowed session.
  */
 export function createEip155Scopes(opts: {
-  chainId: Caip2;
   methods: readonly string[];
   requestParts: Caip25PrivateRequestScopeExtensions;
-}): Record<'eip155', Caip25RequestScope> {
-  const parsed = parseCaip2(opts.chainId);
-  const numericChainId = parsed ? Number(parsed.reference) : Number.NaN;
-  if (
-    !parsed ||
-    parsed.namespace !== 'eip155' ||
-    !/^[1-9]\d*$/.test(parsed.reference) ||
-    !Number.isSafeInteger(numericChainId) ||
-    String(numericChainId) !== parsed.reference
-  ) {
-    throw standardErrors.provider.unsupportedChain(`Unsupported CAIP-25 chain ${opts.chainId}`);
-  }
-
+}): Record<string, Caip25RequestScope> {
   return {
-    eip155: {
-      chains: [parsed.reference],
+    [EIP155_NAMESPACE]: {
       methods: [...new Set(opts.methods)],
       notifications: ['accountsChanged', 'chainChanged'],
       ...(opts.requestParts.capabilities ? { capabilities: opts.requestParts.capabilities } : {}),
@@ -78,58 +69,7 @@ export function walletConnectScopeRequestParts(
     : { capabilities, params: [params] };
 }
 
-/**
- * Project one granted EIP-155 scope into the dapp-facing ERC-7846 result.
- *
- * Projected through the same `isAddress` filter as `eth_accounts` so a malformed
- * wallet grant cannot surface a non-address here and then disappear from later reads.
- * `connectEip155` rejects the connect when this leaves no accounts.
- */
-function connectResultFromSession(session: Session, chainId: Caip2): ConnectResult {
-  const scope = grantFor(session, chainId);
-  const numericChainId = eip155ChainId(chainId);
-  const addresses =
-    numericChainId === null ? [] : projectEthAccountsForChain(session, numericChainId);
-  return {
-    accounts: addresses.map((address) => ({
-      address,
-      ...(scope?.capabilities ? { capabilities: scope.capabilities } : {}),
-    })),
-  };
-}
-
-/**
- * Ingest non-session caches and emit EIP-1193 connection events.
- */
-function ingestConnectResult(
-  context: Eip1193Context,
-  session: Session,
-  value: ConnectResult,
-  targetChainId: Caip2
-): Session {
-  const { cache, emit } = context;
-  const chainId = eip155ChainId(targetChainId);
-  if (chainId === null) {
-    throw standardErrors.provider.unsupportedChain(
-      `Unsupported wallet_connect chain: ${targetChainId}`
-    );
-  }
-
-  const granted = value.accounts[0]?.capabilities;
-
-  const spend = granted?.spendPermissions;
-  if (isRecord(spend) && Array.isArray(spend.permissions) && spend.permissions.every(isRecord)) {
-    cache.spendPermissions.set(spend.permissions as SpendPermission[]);
-  }
-
-  emit('accountsChanged', projectEthAccountsForChain(session, chainId));
-  emit('connect', { chainId: numberToHex(chainId) });
-  return session;
-}
-
 export type ConnectEip155Options = {
-  chainId?: Caip2;
-  methods?: readonly string[];
   sessionId?: string;
 };
 
@@ -141,25 +81,32 @@ export async function connectEip155(
   request?: RequestArguments,
   options: ConnectEip155Options = {}
 ): Promise<{ session: Session; result: ConnectResult }> {
-  const { transport, chain } = context;
-  const chainId = options.chainId ?? eip155Caip2(chain.get());
-  const scopes = createEip155Scopes({
-    chainId,
-    methods: options.methods ?? EIP155_METHODS,
-    requestParts: walletConnectScopeRequestParts(request),
-  });
-  const grantedSession = await createSession(transport, {
-    scopes,
+  const { transport, emit, chain } = context;
+  const session = await createSession(transport, {
+    scopes: createEip155Scopes({
+      methods: EIP155_METHODS,
+      requestParts: walletConnectScopeRequestParts(request),
+    }),
     ...(options.sessionId ? { sessionId: options.sessionId } : {}),
   });
-  const result = connectResultFromSession(grantedSession, chainId);
-  if (result.accounts.length === 0) {
-    throw standardErrors.provider.unauthorized(
-      `wallet_createSession did not grant accounts for ${chainId}`
-    );
+
+  // Projected through the same `isAddress` filter as `eth_accounts`, so a malformed
+  // wallet grant cannot surface a non-address here and then vanish from later reads.
+  const accounts = projectEthAccounts(session);
+  if (accounts.length === 0) {
+    throw standardErrors.provider.unauthorized('wallet_createSession granted no eip155 accounts');
   }
+  const capabilities = activeEip155Grant(session)?.capabilities;
+
+  // The grant covers every EVM chain, so the connect event reports the chain the
+  // provider is already on rather than one the wallet chose.
+  emit('accountsChanged', accounts);
+  emit('connect', { chainId: numberToHex(chain.get()) });
+
   return {
-    session: ingestConnectResult(context, grantedSession, result, chainId),
-    result,
+    session,
+    result: {
+      accounts: accounts.map((address) => ({ address, ...(capabilities ? { capabilities } : {}) })),
+    },
   };
 }

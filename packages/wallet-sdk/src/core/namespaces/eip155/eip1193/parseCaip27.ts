@@ -4,13 +4,7 @@ import { type Caip2, parseCaip2 } from ':core/session/caip.js';
 import { WALLET_CREATE_SESSION } from ':core/session/caip25.js';
 import { WALLET_INVOKE_METHOD } from ':core/session/caip27.js';
 import type { Caip27Params } from ':core/session/types.js';
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  if (value && typeof value === 'object' && !Array.isArray(value)) {
-    return value as Record<string, unknown>;
-  }
-  return null;
-}
+import { asRecord } from ':util/wire.js';
 
 function parseChainId(value: unknown): Caip2 {
   if (typeof value === 'string') {
@@ -30,8 +24,17 @@ function parseRequest(params: Record<string, unknown>): Caip27Params['request'] 
   if (!request || typeof request.method !== 'string' || request.method.length === 0) {
     throw standardErrors.rpc.invalidParams('wallet_invokeMethod.request.method is required');
   }
-  if (request.method === WALLET_INVOKE_METHOD || request.method === WALLET_CREATE_SESSION) {
-    throw standardErrors.rpc.invalidParams('nested CAIP carrier methods are not supported');
+  // `wallet_invokeMethod` invokes a method on an existing session. Carrier methods and
+  // connection methods do not belong inside one: pairing is `wallet_connect` /
+  // `wallet_createSession`, called directly.
+  if (
+    request.method === WALLET_INVOKE_METHOD ||
+    request.method === WALLET_CREATE_SESSION ||
+    request.method === 'wallet_connect'
+  ) {
+    throw standardErrors.rpc.invalidParams(
+      `${request.method} cannot be nested inside ${WALLET_INVOKE_METHOD}`
+    );
   }
   if (request.params === undefined) {
     throw standardErrors.rpc.invalidParams('wallet_invokeMethod.request.params is required');

@@ -14,18 +14,6 @@ export const logDialogShown = ({ dialogContext }: { dialogContext: DialogContext
   );
 };
 
-export const logDialogDismissed = ({ dialogContext }: { dialogContext: DialogContext }) => {
-  logEvent(
-    `dialog.${dialogContext}.dismissed`,
-    {
-      action: ActionType.dismiss,
-      componentType: ComponentType.modal,
-      dialogContext,
-    },
-    AnalyticsEventImportance.high
-  );
-};
-
 type GenericDialogAction = 'confirm' | 'cancel';
 type SubAccountInsufficientBalanceDialogAction = 'create_permission' | 'continue_in_popup';
 

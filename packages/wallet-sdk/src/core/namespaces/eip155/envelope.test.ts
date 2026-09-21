@@ -1,5 +1,5 @@
-import { sessionFromAccounts } from './session.js';
 import { qualify, toEnvelope } from './envelope.js';
+import { sessionFromAccounts } from './session.fixtures.js';
 
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as const;
 const OTHER = '0x0000000000000000000000000000000000000001' as const;
@@ -79,12 +79,27 @@ describe('eip155 envelope', () => {
     ).toThrow(/not granted on the target chain/);
   });
 
-  it('does not authorize an account from a different chain scope', () => {
-    expect(() =>
+  it('authorizes the same account on an EVM chain the session never enumerated', () => {
+    expect(
       qualify(session, {
         chainId: 'eip155:1',
         request: { method: 'personal_sign', params: ['0x68656c6c6f', ADDRESS] },
       })
+    ).toEqual({
+      chainId: 'eip155:1',
+      request: { method: 'personal_sign', params: ['0x68656c6c6f', ADDRESS] },
+    });
+  });
+
+  it('rejects a chain when the session has no eip155 grant at all', () => {
+    expect(() =>
+      qualify(
+        { namespaces: {} },
+        {
+          chainId: 'eip155:8453',
+          request: { method: 'personal_sign', params: ['0x68656c6c6f', ADDRESS] },
+        }
+      )
     ).toThrow(/No eip155 account granted for target chain/);
   });
 });

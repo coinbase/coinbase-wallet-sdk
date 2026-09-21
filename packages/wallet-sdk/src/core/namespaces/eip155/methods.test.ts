@@ -1,7 +1,7 @@
-import { WALLET_METHODS } from './methods.js';
+import { EIP155_METHODS } from './methods.js';
 
-describe('WALLET_METHODS', () => {
-  it('matches Coinbase Wallet Signer popup methods', () => {
+describe('EIP155_METHODS', () => {
+  it('covers every Coinbase Wallet Signer popup method', () => {
     const signerPopup = [
       'personal_sign',
       'personal_ecRecover',
@@ -20,11 +20,16 @@ describe('WALLET_METHODS', () => {
       'wallet_watchAsset',
     ];
     for (const method of signerPopup) {
-      expect(WALLET_METHODS.has(method)).toBe(true);
+      expect(EIP155_METHODS).toContain(method);
     }
-    expect(WALLET_METHODS.has('eth_call')).toBe(false);
-    expect(WALLET_METHODS.has('eth_getBalance')).toBe(false);
-    expect(WALLET_METHODS.has('wallet_getCapabilities')).toBe(false);
-    expect(WALLET_METHODS.has('wallet_getCallsStatus')).toBe(false);
+  });
+
+  it('excludes the methods that belong on the chain RPC', () => {
+    // Membership is the routing rule, so a read-only method landing here would be sent
+    // to the wallet instead of `chain.rpcUrl`.
+    expect(EIP155_METHODS).not.toContain('eth_call');
+    expect(EIP155_METHODS).not.toContain('eth_getBalance');
+    expect(EIP155_METHODS).not.toContain('wallet_getCapabilities');
+    expect(EIP155_METHODS).not.toContain('wallet_getCallsStatus');
   });
 });

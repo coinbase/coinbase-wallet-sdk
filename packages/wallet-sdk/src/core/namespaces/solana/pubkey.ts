@@ -1,11 +1,6 @@
 import { standardErrors } from ':core/error/errors.js';
+import { asRecord } from ':util/wire.js';
 import { isSolanaPublicKey } from './session.js';
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  return value !== null && typeof value === 'object' && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : null;
-}
 
 function requirePubkey(value: unknown, field: string): string {
   if (typeof value !== 'string' || !isSolanaPublicKey(value)) {

@@ -9,7 +9,7 @@ import {
 } from ':core/namespaces/solana/index.js';
 import type { WalletTransport } from ':core/transport/index.js';
 import type { Store } from ':store/store.js';
-import { activeSession } from ':core/session/activeSession.js';
+import { activeSession } from ':core/session/grants.js';
 import {
   SignAndSendAllTransactions,
   type SolanaSignAndSendAllTransactionsFeature,

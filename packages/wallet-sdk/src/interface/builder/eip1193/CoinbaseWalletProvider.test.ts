@@ -1,7 +1,7 @@
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
-import { sessionFromAccounts } from ':core/namespaces/eip155/index.js';
+import { sessionFromAccounts } from ':core/namespaces/eip155/session.fixtures.js';
 import { RequestArguments } from ':core/provider/interface.js';
 import type { WalletTransport } from ':core/transport/index.js';
 import { store } from ':store/store.js';
@@ -27,14 +27,7 @@ function mockTransport(): WalletTransport {
 }
 
 function createProvider() {
-  return new CoinbaseWalletProvider(
-    {
-      metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1] },
-      preference: { telemetry: false },
-    },
-    mockTransport(),
-    store
-  );
+  return new CoinbaseWalletProvider({ transport: mockTransport(), store });
 }
 
 let provider: CoinbaseWalletProvider;
@@ -48,7 +41,6 @@ beforeEach(() => {
         scopes: Record<
           string,
           {
-            chains?: string[];
             methods: string[];
             notifications: string[];
           }
@@ -60,7 +52,6 @@ beforeEach(() => {
           Object.entries(params.scopes).map(([scopeKey, scope]) => [
             scopeKey,
             {
-              ...(scope.chains ? { chains: scope.chains } : {}),
               accounts: [ACCOUNT],
               methods: scope.methods,
               notifications: scope.notifications,
@@ -92,7 +83,6 @@ beforeEach(() => {
   vi.spyOn(providerUtil, 'fetchRPCRequest').mockImplementation(mockFetchRPCRequest);
 
   store.session.clear();
-  store.eip155.spendPermissions.clear();
 
   provider = createProvider();
 });
@@ -111,6 +101,27 @@ describe('Event handling', () => {
     await provider.disconnect();
 
     expect(mockCleanup).toHaveBeenCalled();
+    expect(disconnectListener).toHaveBeenCalledWith(
+      standardErrors.provider.disconnected('User initiated disconnection')
+    );
+  });
+
+  it('reports a user initiated disconnection exactly once', async () => {
+    // `cleanup` clears the shared session, which fires the subscription that also reports
+    // disconnects. The path that caused the transition owns the event; the echo is silent.
+    store.session.set({
+      ...sessionFromAccounts({ accounts: [ACCOUNT], chainId: 1 }),
+      sessionId: 'shared-session',
+    });
+    mockCleanup.mockImplementation(async () => {
+      store.session.clear();
+    });
+    const disconnectListener = vi.fn();
+    provider.on('disconnect', disconnectListener);
+
+    await provider.disconnect();
+
+    expect(disconnectListener).toHaveBeenCalledTimes(1);
     expect(disconnectListener).toHaveBeenCalledWith(
       standardErrors.provider.disconnected('User initiated disconnection')
     );
@@ -148,23 +159,31 @@ describe('Event handling', () => {
     expect(accountsChangedListener).toHaveBeenCalledWith(['0x123']);
   });
 
-  it('restores the first authorized chain when the metadata chain is not granted', async () => {
-    store.session.set(sessionFromAccounts({ accounts: [ACCOUNT], chainId: 8453 }));
+  it('starts a restored provider on mainnet, silently, even if the catalog omits it', async () => {
+    // The wallet always serves Ethereum mainnet, so the SDK never relocates a provider
+    // onto a chain the restored catalog happens to list. Construction is not a chain move
+    // and must not announce one.
+    store.session.set(sessionFromAccounts({ accounts: [ACCOUNT], chains: [8453, 10] }));
+    const emitSpy = vi.spyOn(CoinbaseWalletProvider.prototype, 'emit');
+
     const restoredProvider = createProvider();
 
-    await expect(restoredProvider.request({ method: 'eth_chainId' })).resolves.toBe('0x2105');
+    expect(emitSpy).not.toHaveBeenCalledWith('chainChanged', expect.anything());
+    emitSpy.mockRestore();
+    await expect(restoredProvider.request({ method: 'eth_chainId' })).resolves.toBe('0x1');
   });
 
-  it('falls back when a session update removes the active chain', async () => {
+  it('does not move the active chain when the shared session changes', async () => {
     const chainChangedListener = vi.fn();
     provider.on('chainChanged', chainChangedListener);
     store.session.set(sessionFromAccounts({ accounts: [ACCOUNT], chainId: 1 }));
 
     store.session.set(sessionFromAccounts({ accounts: [ACCOUNT], chainId: 8453 }));
 
-    expect(chainChangedListener).toHaveBeenCalledOnce();
-    expect(chainChangedListener).toHaveBeenCalledWith('0x2105');
-    await expect(provider.request({ method: 'eth_chainId' })).resolves.toBe('0x2105');
+    // Only `wallet_switchEthereumChain`, or the wallet approving a requested chain, moves
+    // the provider. A catalog change is capability news, not a relocation.
+    expect(chainChangedListener).not.toHaveBeenCalled();
+    await expect(provider.request({ method: 'eth_chainId' })).resolves.toBe('0x1');
   });
 });
 
@@ -230,7 +249,6 @@ describe('ensureSession / createSession', () => {
         params: expect.objectContaining({
           scopes: {
             eip155: expect.objectContaining({
-              chains: ['1'],
               params: [{ version: '1' }],
             }),
           },
@@ -258,7 +276,6 @@ describe('ensureSession / createSession', () => {
         params: expect.objectContaining({
           scopes: {
             eip155: expect.objectContaining({
-              chains: ['1'],
               capabilities: { signInWithEthereum: { nonce: 'n', chainId: '0x1' } },
               params: [{ version: '1' }],
             }),
@@ -303,14 +320,8 @@ describe('ensureSession / createSession', () => {
 });
 
 describe('ephemeral: true', () => {
-  const params = {
-    metadata: { appName: 'Test App', appLogoUrl: null, appChainIds: [1] },
-    preference: { telemetry: false },
-    ephemeral: true as const,
-  };
-
   function createEphemeralProvider() {
-    return new CoinbaseWalletProvider(params, mockTransport(), store);
+    return new CoinbaseWalletProvider({ transport: mockTransport(), store, ephemeral: true });
   }
 
   it.each(['wallet_sendCalls', 'wallet_sign', 'experimental_requestInfo'])(
@@ -331,6 +342,33 @@ describe('ephemeral: true', () => {
       expect(mockCleanup).toHaveBeenCalledTimes(1);
     }
   );
+
+  it('pins the envelope chain through a local switch, with no wallet round trip', async () => {
+    // What `pay()` and `subscribe()` rely on: a one-shot provider starts on mainnet and
+    // is moved to the payment's chain by `wallet_switchEthereumChain`, which must not
+    // touch the wallet and must reach the CAIP-27 envelope.
+    const ephemeral = createEphemeralProvider();
+
+    await expect(
+      ephemeral.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0x2105' }],
+      })
+    ).resolves.toBeUndefined();
+    expect(mockHandshake).not.toHaveBeenCalled();
+    expect(mockSend).not.toHaveBeenCalled();
+
+    const args = { method: 'wallet_sendCalls', params: ['0xdeadbeef'] };
+    await expect(ephemeral.request(args)).resolves.toBe('0xok');
+
+    expect(mockSend).toHaveBeenCalledWith({
+      method: 'wallet_invokeMethod',
+      params: {
+        chainId: 'eip155:8453',
+        request: args,
+      },
+    });
+  });
 
   it('forwards wallet_getCallsStatus to wallet rpc url', async () => {
     const ephemeral = createEphemeralProvider();

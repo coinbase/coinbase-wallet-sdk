@@ -50,14 +50,19 @@ describe('parseCaip27', () => {
         params: { chainId: 'eip155:1', request: { method: 'personal_sign' } },
       })
     ).toThrow();
-    expect(() =>
-      parseCaip27({
-        method: WALLET_INVOKE_METHOD,
-        params: {
-          chainId: 'eip155:1',
-          request: { method: 'wallet_createSession', params: {} },
-        },
-      })
-    ).toThrow(/nested CAIP carrier/);
+  });
+
+  it('rejects carrier and connection methods nested inside wallet_invokeMethod', () => {
+    // `wallet_invokeMethod` invokes a method on a session that already exists. Pairing is
+    // `wallet_connect` / `wallet_createSession` called directly, never smuggled inside an
+    // envelope that presupposes the session it is trying to create.
+    for (const method of ['wallet_createSession', WALLET_INVOKE_METHOD, 'wallet_connect']) {
+      expect(() =>
+        parseCaip27({
+          method: WALLET_INVOKE_METHOD,
+          params: { chainId: 'eip155:1', request: { method, params: {} } },
+        })
+      ).toThrow(`${method} cannot be nested inside ${WALLET_INVOKE_METHOD}`);
+    }
   });
 });

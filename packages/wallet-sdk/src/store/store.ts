@@ -1,30 +1,18 @@
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { StateCreator, createStore } from 'zustand/vanilla';
 import pkg from '../../package.json' with { type: 'json' };
-import type { AppMetadata, Preference, Session, SpendPermission } from '../storage/schema.js';
+import type { AppMetadata, Preference, Session } from '../storage/schema.js';
 
 type Config = {
   metadata?: AppMetadata;
   preference?: Preference;
   version: string;
   deviceId?: string;
-  paymasterUrls?: Record<number, string>;
 };
-type CoreConfig = Omit<Config, 'paymasterUrls'>;
 
 /** ECDH transport keys (`KeyManager`). */
 type KeysSlice = { keys: Record<string, string | null> };
 const createKeysSlice: StateCreator<StoreState, [], [], KeysSlice> = () => ({ keys: {} });
-
-type SpendPermissionsSlice = { spendPermissions: SpendPermission[] };
-const createSpendPermissionsSlice: StateCreator<
-  StoreState,
-  [],
-  [],
-  SpendPermissionsSlice
-> = () => ({
-  spendPermissions: [],
-});
 
 type ConfigSlice = { config: Config };
 const createConfigSlice: StateCreator<StoreState, [], [], ConfigSlice> = () => ({
@@ -40,29 +28,33 @@ type MergeTypes<T extends unknown[]> = T extends [infer First, ...infer Rest]
   ? First & (Rest extends unknown[] ? MergeTypes<Rest> : Record<string, unknown>)
   : Record<string, unknown>;
 
-export type StoreState = MergeTypes<[KeysSlice, SpendPermissionsSlice, ConfigSlice, SessionSlice]>;
+export type StoreState = MergeTypes<[KeysSlice, ConfigSlice, SessionSlice]>;
 
 /**
  * Persisted schema version.
  *
- * v0 is the pre-CAIP blob: removed `account` / `chains` mirrors plus a `Session`
- * shape that predates `scopes` and `properties.chainMetadata`.
+ * v0 is the pre-CAIP blob. v1 keyed `Session.scopes` by CAIP-2 chain id; v2 keys grants
+ * by CAIP-104 namespace, because EVM authorization covers every chain at once.
  */
-const PERSISTED_STORE_VERSION = 1;
+const PERSISTED_STORE_VERSION = 2;
 
 /**
  * Accept only a session the current selectors can read.
  *
- * v0 sessions carry `selected` (an SDK-chosen account per namespace) and `transportKind`,
- * and predate `properties.chainMetadata`, so they have no RPC URLs or native-currency data.
- * Dropping one costs a reconnect; keeping it fails every chain read instead.
+ * Older sessions keyed grants by chain (`scopes`) or carried SDK-chosen state
+ * (`selected`, `transportKind`). Dropping one costs a single reconnect; keeping it would
+ * silently leave the provider with no readable authorization.
  */
 function persistedSession(value: unknown): Session | undefined {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
   const candidate = value as Partial<Session> & Record<string, unknown>;
-  if ('selected' in candidate || 'transportKind' in candidate) return undefined;
-  const { scopes } = candidate;
-  if (!scopes || typeof scopes !== 'object' || Array.isArray(scopes)) return undefined;
+  if ('selected' in candidate || 'transportKind' in candidate || 'scopes' in candidate) {
+    return undefined;
+  }
+  const { namespaces } = candidate;
+  if (!namespaces || typeof namespaces !== 'object' || Array.isArray(namespaces)) {
+    return undefined;
+  }
   return candidate as Session;
 }
 
@@ -78,7 +70,6 @@ function mergePersistedState(persistedState: unknown, currentState: StoreState):
   return {
     ...currentState,
     keys: state.keys ?? currentState.keys,
-    spendPermissions: state.spendPermissions ?? currentState.spendPermissions,
     config: { ...currentState.config, ...state.config },
     session: persistedSession(state.session),
   };
@@ -89,7 +80,6 @@ function migratePersistedState(persistedState: unknown, version: number): StoreS
   if (version >= PERSISTED_STORE_VERSION) return state as StoreState;
   return {
     keys: state.keys ?? {},
-    spendPermissions: state.spendPermissions ?? [],
     config: state.config ?? { version: pkg.version },
     // Same rule as `mergePersistedState`, for blobs that do carry an older version.
     session: persistedSession(state.session),
@@ -109,7 +99,6 @@ export function createStoreInstance(options?: {
 
   const storeCreator = (...args: Parameters<StateCreator<StoreState, [], []>>) => ({
     ...createKeysSlice(...args),
-    ...createSpendPermissionsSlice(...args),
     ...createConfigSlice(...args),
     ...createSessionSlice(...args),
   });
@@ -125,7 +114,6 @@ export function createStoreInstance(options?: {
         partialize: (state) => {
           return {
             keys: state.keys,
-            spendPermissions: state.spendPermissions,
             config: state.config,
             session: state.session,
           } as StoreState;
@@ -143,23 +131,10 @@ export type StoreInstance = ReturnType<typeof createStoreInstance>;
 
 /**
  * Slice accessors for one zustand instance (persisted SDK store or an ephemeral payment store).
- * The backing state stays flat for persistence compatibility; the bound API namespaces EIP-155
- * state so shared infrastructure does not present itself as an EVM-only store.
+ * The backing state stays flat for persistence compatibility.
  */
 export function bindStore(storeInstance: StoreInstance) {
   const flat = {
-    spendPermissions: {
-      get: () => storeInstance.getState().spendPermissions,
-      set: (spendPermissions: SpendPermission[]) => {
-        storeInstance.setState({ spendPermissions });
-      },
-      clear: () => {
-        storeInstance.setState({
-          spendPermissions: [],
-        });
-      },
-    },
-
     keys: {
       get: (key: string) => storeInstance.getState().keys[key],
       set: (key: string, value: string | null) => {
@@ -187,11 +162,10 @@ export function bindStore(storeInstance: StoreInstance) {
       clear: () => {
         storeInstance.setState({ session: undefined });
       },
-      subscribe: (
-        listener: (session: Session | undefined, previousSession: Session | undefined) => void
-      ) =>
+      /** Notify on every change to the canonical session, with the new value. */
+      subscribe: (listener: (session: Session | undefined) => void) =>
         storeInstance.subscribe((state, previous) => {
-          if (state.session !== previous.session) listener(state.session, previous.session);
+          if (state.session !== previous.session) listener(state.session);
         }),
     },
   };
@@ -200,19 +174,8 @@ export function bindStore(storeInstance: StoreInstance) {
     keys: flat.keys,
     session: flat.session,
     config: {
-      get: (): CoreConfig => {
-        const { paymasterUrls: _, ...config } = flat.config.get();
-        return config;
-      },
-      set: (config: Partial<CoreConfig>) => flat.config.set(config),
-    },
-    eip155: {
-      spendPermissions: flat.spendPermissions,
-      paymasterUrls: {
-        get: () => flat.config.get().paymasterUrls,
-        set: (paymasterUrls: Record<number, string> | undefined) =>
-          flat.config.set({ paymasterUrls }),
-      },
+      get: () => flat.config.get(),
+      set: (config: Partial<Config>) => flat.config.set(config),
     },
   };
 }

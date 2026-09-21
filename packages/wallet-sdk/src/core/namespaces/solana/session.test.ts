@@ -1,5 +1,5 @@
 import * as Base58 from 'ox/Base58';
-import { SOLANA_MAINNET, SOLANA_WALLET_STANDARD_MAINNET } from './caip.js';
+import { SOLANA_MAINNET, SOLANA_NAMESPACE, SOLANA_WALLET_STANDARD_MAINNET } from './caip.js';
 import {
   SOLANA_MAINNET_REQUIRED_SCOPES,
   SOLANA_METHODS,
@@ -45,9 +45,10 @@ describe('Solana session helpers', () => {
     expect(SOLANA_MAINNET_REQUIRED_SCOPES).toEqual([
       { chainId: SOLANA_MAINNET, methods: SOLANA_METHODS },
     ]);
+    // Pairing asks for the bare namespace: authorization is per namespace, and the
+    // only supported cluster is enforced by `solanaChainId` / `assertSolanaEnvelope`.
     expect(createSolanaMainnetScopes()).toEqual({
-      solana: {
-        chains: ['5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp'],
+      [SOLANA_NAMESPACE]: {
         methods: [
           'solana_signMessage',
           'solana_signTransaction',

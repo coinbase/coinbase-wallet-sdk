@@ -1,51 +1,79 @@
-import { type Caip2, type Namespace, accountOf } from './caip.js';
-import type { ScopeState, Session } from './types.js';
+import { standardErrors } from ':core/error/errors.js';
+import { type Caip2, type Namespace, namespaceOf } from './caip.js';
+import type { Envelope, ScopeRequirement, ScopeState, Session } from './types.js';
 
 /**
- * Namespace of a `Session.scopes` key.
+ * The persisted session, or `undefined` when it is not usable.
  *
- * Keys are either an exact CAIP-2 chain (`eip155:8453`) or a bare namespace (`eip155`).
+ * Usable means the wallet issued a session id and at least one scope still carries an
+ * account. This only validates cached authorization shape; the wallet may still reject a
+ * stale session id, which `createSession` recovers by creating a fresh session.
  */
-export function scopeNamespace(scopeKey: string): Namespace {
-  const separator = scopeKey.indexOf(':');
-  return separator === -1 ? scopeKey : scopeKey.slice(0, separator);
+export function activeSession(session: Session | undefined): Session | undefined {
+  if (!session?.sessionId) return undefined;
+  const hasAccount = Object.values(session.namespaces).some((grant) => grant.accounts.length > 0);
+  return hasAccount ? session : undefined;
+}
+
+/**
+ * The grant covering one namespace, or `undefined` when nothing is authorized there.
+ *
+ * A grant with no accounts is not a connection: the wallet can revoke every account and
+ * leave the scope behind.
+ */
+export function activeGrantForNamespace(
+  session: Session,
+  namespace: Namespace
+): ScopeState | undefined {
+  const grant = session.namespaces[namespace];
+  return grant?.accounts.length ? grant : undefined;
 }
 
 /**
  * The grant that authorizes one CAIP-2 chain, or `undefined` when nothing does.
  *
- * A namespace key (`eip155`) is the normal shape: connection consent is granted per
- * account, not per chain, and the wallet decides at execution time which chains it
- * supports. Exact chain keys (`eip155:8453`) stay authoritative and narrow, so a dapp
- * that wants a single-chain session — or an older wallet that only grants one chain at
- * a time — keeps working unchanged.
+ * Authorization is per namespace, so every chain in a namespace resolves to the same
+ * grant. Whether the wallet can actually serve that chain is a separate question,
+ * answered by its chain catalog, and its own error if the answer is no.
  */
-export function grantFor(session: Session, chainId: Caip2): ScopeState | undefined {
-  const exact = session.scopes[chainId];
-  if (exact?.accounts.length) return exact;
-  const namespaceGrant = session.scopes[scopeNamespace(chainId)];
-  return namespaceGrant?.accounts.length ? namespaceGrant : undefined;
+export function activeGrantForChain(session: Session, chainId: Caip2): ScopeState | undefined {
+  return activeGrantForNamespace(session, namespaceOf(chainId));
 }
 
 /**
- * Raw accounts authorized on one chain, in wallet order.
+ * The session must cover this chain, and the envelope must belong to this session.
  *
- * Chain-keyed grants store CAIP-10 ids; namespace grants store raw accounts, because
- * there is no single chain to qualify them with. `accountOf` normalizes both.
+ * Method support is deliberately not checked. The SDK asks for the methods it knows about
+ * at connect time, so a method missing from the grant means either the wallet abbreviated
+ * its answer or the method is newer than the request — both the wallet's call to make, and
+ * it answers with a method-level error. Rejecting here would turn "this wallet build does
+ * not do that" into an authorization failure, which the provider treats as a disconnect.
  */
-export function accountsFor(session: Session, chainId: Caip2): string[] {
-  return (grantFor(session, chainId)?.accounts ?? []).map(accountOf);
+export function assertInvokeAuthorized(session: Session, envelope: Envelope): void {
+  if (!activeGrantForChain(session, envelope.chainId)) {
+    throw standardErrors.provider.unauthorized(`chainId ${envelope.chainId} is not in the session`);
+  }
+  if (envelope.sessionId !== undefined && envelope.sessionId !== session.sessionId) {
+    throw standardErrors.provider.unauthorized('sessionId does not match the active session');
+  }
 }
 
-/** Every grant in one namespace, in session order, with its scope key. */
-export function grantsInNamespace(
-  session: Session,
-  namespace: Namespace
-): [scopeKey: string, scope: ScopeState][] {
-  return Object.entries(session.scopes).filter(([key]) => scopeNamespace(key) === namespace);
-}
-
-/** True when any grant in the namespace carries at least one account. */
-export function hasNamespaceGrant(session: Session, namespace: Namespace): boolean {
-  return grantsInNamespace(session, namespace).some(([, scope]) => scope.accounts.length > 0);
+/**
+ * True when the session has accounts and all requested methods on every required chain.
+ *
+ * Used to decide whether a `createSession` round trip can be skipped. Authorization is
+ * per namespace, so a chain is covered by the grant on its namespace.
+ */
+export function sessionCovers(
+  session: Session | undefined,
+  required: readonly ScopeRequirement[]
+): boolean {
+  if (!session) return false;
+  return required.every((requirement) => {
+    const chainId = typeof requirement === 'string' ? requirement : requirement.chainId;
+    const methods = typeof requirement === 'string' ? [] : (requirement.methods ?? []);
+    const scope = activeGrantForChain(session, chainId);
+    if (!scope) return false;
+    return methods.every((method) => scope.methods.includes(method));
+  });
 }

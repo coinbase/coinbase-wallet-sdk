@@ -1,5 +1,6 @@
 import { standardErrorCodes } from ':core/error/constants.js';
-import { eip155Translator, sessionFromAccounts } from ':core/namespaces/eip155/index.js';
+import { eip155Translator } from ':core/namespaces/eip155/index.js';
+import { sessionFromAccounts } from ':core/namespaces/eip155/session.fixtures.js';
 import {
   SOLANA_MAINNET,
   sessionFromSolanaAccounts,
@@ -29,7 +30,7 @@ describe('invoke', () => {
     vi.restoreAllMocks();
   });
 
-  it('delegates eip155 qualification and response unwrapping', async () => {
+  it('qualifies the envelope and unwraps the CAIP-27 result', async () => {
     const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 });
     session.sessionId = 'session-1';
     const response = {
@@ -38,7 +39,6 @@ describe('invoke', () => {
       result: { method: 'personal_sign', result: '0xsig' },
     };
     const send = vi.fn().mockResolvedValue(response);
-    const unwrapResponse = vi.spyOn(eip155Translator, 'unwrapResponse');
 
     await expect(
       invoke(
@@ -60,11 +60,6 @@ describe('invoke', () => {
         request: { method: 'personal_sign', params: ['0x68656c6c6f'] },
       },
     });
-    expect(unwrapResponse).toHaveBeenCalledWith(response, {
-      sessionId: 'session-1',
-      chainId: 'eip155:8453',
-      request: { method: 'personal_sign', params: ['0x68656c6c6f'] },
-    });
   });
 
   it('sends and unwraps a persistent invoke without a session id', async () => {
@@ -78,7 +73,6 @@ describe('invoke', () => {
       result: { method: envelope.request.method, result: '0xsig' },
     };
     const send = vi.fn().mockResolvedValue(response);
-    const unwrapResponse = vi.spyOn(eip155Translator, 'unwrapResponse');
 
     await expect(invoke(session, envelope, transport(send), eip155Translator)).resolves.toBe(
       '0xsig'
@@ -86,7 +80,6 @@ describe('invoke', () => {
 
     expect(send).toHaveBeenCalledWith({ method: 'wallet_invokeMethod', params: envelope });
     expect(send.mock.calls[0]?.[0]).not.toHaveProperty('params.sessionId');
-    expect(unwrapResponse).toHaveBeenCalledWith(response, envelope);
   });
 
   it('unwraps an ephemeral response without session qualification', async () => {
@@ -100,7 +93,6 @@ describe('invoke', () => {
     };
     const send = vi.fn().mockResolvedValue(response);
     const qualify = vi.spyOn(eip155Translator, 'qualify');
-    const unwrapResponse = vi.spyOn(eip155Translator, 'unwrapResponse');
 
     await expect(invokeEphemeral(envelope, transport(send), eip155Translator)).resolves.toBe(
       '0xhash'
@@ -108,7 +100,6 @@ describe('invoke', () => {
 
     expect(send).toHaveBeenCalledWith({ method: 'wallet_invokeMethod', params: envelope });
     expect(qualify).not.toHaveBeenCalled();
-    expect(unwrapResponse).toHaveBeenCalledWith(response, envelope);
   });
 
   it('rejects an ephemeral session id before calling the transport', async () => {
@@ -213,7 +204,7 @@ describe('invoke', () => {
       result: { method: 'solana_signMessage', result: { signature } },
     };
     const send = vi.fn().mockResolvedValue(response);
-    const unwrapResponse = vi.spyOn(solanaTranslator, 'unwrapResponse');
+    const decodeResult = vi.spyOn(solanaTranslator, 'decodeResult');
     const request = {
       method: 'solana_signMessage',
       params: [{ pubkey: 'So11111111111111111111111111111111111111112' }],
@@ -230,6 +221,7 @@ describe('invoke', () => {
         request,
       },
     });
-    expect(unwrapResponse).toHaveBeenCalledWith(response, expect.anything());
+    // The kernel unwrapped the envelope; the namespace only saw the method result.
+    expect(decodeResult).toHaveBeenCalledWith({ signature }, expect.anything());
   });
 });

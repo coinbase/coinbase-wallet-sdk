@@ -275,7 +275,7 @@ export function encodeWalletSign(value: WalletSign): Uint8Array {
 /**
  * Encode GenericJsonRpc message
  */
-export function encodeGenericJsonRpc(value: GenericJsonRpc): Uint8Array {
+function encodeGenericJsonRpc(value: GenericJsonRpc): Uint8Array {
   return concat(
     encodeString(1, value.method),
     encodeBytes(2, value.paramsJson),
