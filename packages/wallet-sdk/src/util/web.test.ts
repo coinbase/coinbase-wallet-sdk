@@ -73,11 +73,11 @@ describe('PopupManager', () => {
   it('should delegate opening completely to a custom opener', async () => {
     const url = new URL('https://example.com');
     const mockWindow = { focus: vi.fn() } as unknown as Window;
-    const openerFn = vi.fn().mockReturnValue(mockWindow);
+    const openFn = vi.fn().mockReturnValue(mockWindow);
 
-    const openedWindow = await openPopup(url, openerFn);
+    const openedWindow = await openPopup(url, openFn);
 
-    expect(openerFn).toHaveBeenCalledWith(url);
+    expect(openFn).toHaveBeenCalledWith(url);
     expect(window.open).not.toHaveBeenCalled();
     expect(mockPresentItem).not.toHaveBeenCalled();
     expect(mockWindow.focus).not.toHaveBeenCalled();
@@ -90,20 +90,20 @@ describe('PopupManager', () => {
 
   it('should support an asynchronous custom opener', async () => {
     const mockWindow = {} as Window;
-    const openerFn = vi.fn().mockResolvedValue(mockWindow);
+    const openFn = vi.fn().mockResolvedValue(mockWindow);
 
-    await expect(openPopup(new URL('https://example.com'), openerFn)).resolves.toBe(mockWindow);
+    await expect(openPopup(new URL('https://example.com'), openFn)).resolves.toBe(mockWindow);
   });
 
   it('should use the default popup when the custom opener returns undefined', async () => {
     const url = new URL('https://example.com');
     const mockPopup = { focus: vi.fn() } as unknown as Window;
-    const openerFn = vi.fn(() => undefined);
+    const openFn = vi.fn(() => undefined);
     (window.open as Mock).mockReturnValue(mockPopup);
 
-    const openedWindow = await openPopup(url, openerFn);
+    const openedWindow = await openPopup(url, openFn);
 
-    expect(openerFn).toHaveBeenCalledWith(url);
+    expect(openFn).toHaveBeenCalledWith(url);
     expect(window.open).toHaveBeenCalledWith(
       url,
       expect.stringContaining('wallet_'),

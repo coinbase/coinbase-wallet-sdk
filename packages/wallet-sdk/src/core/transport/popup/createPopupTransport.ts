@@ -6,7 +6,7 @@ import { handshake } from ':core/transport/popup/handshake.js';
 import { send } from ':core/transport/popup/send.js';
 import type { PopupWire } from ':core/transport/popup/types.js';
 import { correlationIds } from ':store/correlation-ids/store.js';
-import type { OpenerFn } from ':util/web.js';
+import type { OpenFn } from ':util/web.js';
 import type { Session } from '../../../storage/schema.js';
 import type { AppMetadata, Preference } from '../../../storage/schema.js';
 import type { WalletTransport } from '../types.js';
@@ -27,7 +27,7 @@ export function createPopupTransport(opts: {
   preference: Preference;
   keys: KeyStore;
   session: SessionStore;
-  openerFn?: OpenerFn;
+  openFn?: OpenFn;
 }): WalletTransport {
   const { walletUrl, ...preference } = opts.preference;
   const keys = new KeyManager(opts.keys);
@@ -35,7 +35,7 @@ export function createPopupTransport(opts: {
     keys,
     communicator: new Communicator({
       url: walletUrl,
-      openerFn: opts.openerFn,
+      openFn: opts.openFn,
       metadata: opts.metadata,
       preference,
     }),

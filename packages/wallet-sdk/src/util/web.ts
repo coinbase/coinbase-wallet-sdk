@@ -11,13 +11,13 @@ const POPUP_HEIGHT = 700;
 const POPUP_BLOCKED_TITLE = '{app} wants to continue in Coinbase Wallet';
 const POPUP_BLOCKED_MESSAGE = 'This action requires your permission to open a new window.';
 
-export type OpenerFn = (url: URL) => Window | undefined | Promise<Window | undefined>;
+export type OpenFn = (url: URL) => Window | undefined | Promise<Window | undefined>;
 
-export async function openPopup(url: URL, openerFn?: OpenerFn): Promise<Window> {
+export async function openPopup(url: URL, openFn?: OpenFn): Promise<Window> {
   appendAppInfoQueryParams(url);
 
-  if (openerFn) {
-    const customWindow = await openerFn(url);
+  if (openFn) {
+    const customWindow = await openFn(url);
     if (customWindow !== undefined) return customWindow;
   }
 

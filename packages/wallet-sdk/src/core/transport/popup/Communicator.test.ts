@@ -231,19 +231,19 @@ describe('Communicator', () => {
       expect(popup).toBeTruthy();
     });
 
-    it('passes a custom opener to openPopup', async () => {
-      const openerFn = vi.fn();
+    it('passes a custom open function to openPopup', async () => {
+      const openFn = vi.fn();
       communicator = new Communicator({
         url: CB_KEYS_URL,
         metadata: appMetadata,
         preference,
-        openerFn,
+        openFn,
       });
       queueMessageEvent(popupLoadedMessage);
 
       await communicator.waitForPopupLoaded();
 
-      expect(openPopup).toHaveBeenCalledWith(new URL(CB_KEYS_URL), openerFn);
+      expect(openPopup).toHaveBeenCalledWith(new URL(CB_KEYS_URL), openFn);
     });
 
     it('exposes only the setup marker to frozen-v1 mismatch logging', async () => {
