@@ -20,7 +20,7 @@ import {
 export type CreateProviderOptions = Partial<AppMetadata> & {
   preference?: Preference;
   paymasterUrls?: Record<number, string>;
-  /** @internal Overrides the browser function used to open the wallet URL. */
+  /** @internal Overrides how the prepared wallet URL is presented. */
   openerFn?: OpenerFn;
 };
 

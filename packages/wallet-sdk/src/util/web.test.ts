@@ -70,37 +70,29 @@ describe('PopupManager', () => {
     expect(url.searchParams.get('coop')).toBe('null');
   });
 
-  it('should use a custom opener instead of window.open', async () => {
+  it('should delegate opening completely to a custom opener', async () => {
     const url = new URL('https://example.com');
-    const mockPopup = { focus: vi.fn() } as unknown as Window;
-    const openerFn = vi.fn().mockReturnValue(mockPopup);
+    const mockWindow = { focus: vi.fn() } as unknown as Window;
+    const openerFn = vi.fn().mockReturnValue(mockWindow);
 
-    const popup = await openPopup(url, openerFn);
+    const openedWindow = await openPopup(url, openerFn);
 
-    expect(openerFn).toHaveBeenCalledWith(
-      url,
-      expect.stringContaining('wallet_'),
-      'width=420, height=700, left=302, top=34'
-    );
+    expect(openerFn).toHaveBeenCalledWith(url);
     expect(window.open).not.toHaveBeenCalled();
-    expect(popup).toBe(mockPopup);
-    expect(mockPopup.focus).toHaveBeenCalledOnce();
+    expect(mockPresentItem).not.toHaveBeenCalled();
+    expect(mockWindow.focus).not.toHaveBeenCalled();
+    expect(openedWindow).toBe(mockWindow);
+    expect(url.searchParams.get('sdkName')).toBe(PACKAGE_NAME);
+    expect(url.searchParams.get('sdkVersion')).toBe(PACKAGE_VERSION);
+    expect(url.searchParams.get('origin')).toBe(mockOrigin);
+    expect(url.searchParams.get('coop')).toBe('null');
   });
 
-  it('should retry with the custom opener when opening is blocked', async () => {
-    const url = new URL('https://example.com');
-    const mockPopup = { focus: vi.fn() } as unknown as Window;
-    const openerFn = vi.fn().mockReturnValueOnce(null).mockReturnValueOnce(mockPopup);
+  it('should support an asynchronous custom opener', async () => {
+    const mockWindow = {} as Window;
+    const openerFn = vi.fn().mockResolvedValue(mockWindow);
 
-    const promise = openPopup(url, openerFn);
-    await waitFor(() => expect(mockPresentItem).toHaveBeenCalled());
-
-    const retryButton = mockPresentItem.mock.calls[0][0].actionItems[0];
-    retryButton.onClick();
-
-    await expect(promise).resolves.toBe(mockPopup);
-    expect(openerFn).toHaveBeenCalledTimes(2);
-    expect(window.open).not.toHaveBeenCalled();
+    await expect(openPopup(new URL('https://example.com'), openerFn)).resolves.toBe(mockWindow);
   });
 
   it('should not duplicate parameters when opening a popup with existing params', async () => {
