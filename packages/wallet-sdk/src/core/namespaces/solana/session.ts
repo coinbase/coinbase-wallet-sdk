@@ -59,22 +59,30 @@ export function formatSolanaAccount(publicKey: string): Caip10 {
 }
 
 /**
- * Scope sent by Solana pairing. No EVM wallet_connect extensions.
+ * Scope sent by Solana pairing.
  *
  * Keyed by the bare namespace, like eip155: the SDK supports exactly one Solana
  * cluster, and `solanaChainId` / `assertSolanaEnvelope` reject every other one before
  * a grant is ever looked up.
+ *
+ * `capabilities` carries connection extensions the wallet fulfills at approval time,
+ * such as the AOS challenge. The `params` extension stays EVM-only; the wallet rejects
+ * it on a Solana scope.
  */
 export function createSolanaMainnetScopes(
-  methods: readonly string[] = SOLANA_METHODS
+  options: {
+    methods?: readonly string[];
+    capabilities?: Record<string, unknown>;
+  } = {}
 ): Record<string, Caip25RequestScope> {
   // Namespace-keyed with no chain list, the same shape `createEip155Scopes` sends: the
   // grant is stored per namespace either way, since `sessionFromCaip25Result` promotes a
   // lone chain scope to its namespace and `activeGrantForChain` resolves through it.
   return {
     [SOLANA_NAMESPACE]: {
-      methods: [...new Set(methods)],
+      methods: [...new Set(options.methods ?? SOLANA_METHODS)],
       notifications: [],
+      ...(options.capabilities ? { capabilities: options.capabilities } : {}),
     },
   };
 }

@@ -141,11 +141,6 @@ export async function connectWallet({
   if (!includeEvm && !includeSolana) {
     throw standardErrors.rpc.invalidParams('At least one wallet namespace must be requested');
   }
-  // CAIP-25 connection capabilities are an SDK↔SCW extension the wallet accepts on
-  // eip155 scopes only; it rejects the whole session request if one arrives on solana.
-  if (solanaCapabilities) {
-    throw standardErrors.rpc.invalidParams('Solana does not support connection capabilities');
-  }
 
   const scopes = {
     ...(includeEvm
@@ -157,7 +152,9 @@ export async function connectWallet({
           },
         })
       : {}),
-    ...(includeSolana ? createSolanaMainnetScopes() : {}),
+    ...(includeSolana
+      ? createSolanaMainnetScopes(solanaCapabilities ? { capabilities: solanaCapabilities } : {})
+      : {}),
   };
   const currentSession = activeSession(transport.readSession());
   const requestSession = () =>
@@ -180,7 +177,7 @@ export async function connectWallet({
   // Capability requests may contain fresh authentication challenges and must not
   // be answered from a previously persisted session.
   const session =
-    requestedEvmCapabilities || !covered || !currentSession
+    requestedEvmCapabilities || solanaCapabilities || !covered || !currentSession
       ? await requestSession()
       : currentSession;
 

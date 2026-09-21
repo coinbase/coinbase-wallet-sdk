@@ -80,7 +80,12 @@ describe('connectWallet', () => {
       connectWallet({
         request: {
           evm: { capabilities: { aos: { nonce: 'evm-nonce' } } },
-          solana: true,
+          solana: {
+            capabilities: {
+              aos: { nonce: 'solana-nonce' },
+              futureCapability: { value: true },
+            },
+          },
         },
         transport,
       })
@@ -94,7 +99,18 @@ describe('connectWallet', () => {
         ],
       },
       solana: {
-        accounts: [{ address: SOLANA_ACCOUNT }],
+        accounts: [
+          {
+            address: SOLANA_ACCOUNT,
+            capabilities: {
+              aos: { signature: 'solana-signature' },
+              futureCapability: {
+                code: standardErrorCodes.provider.unsupportedMethod,
+                message: 'Unsupported capability "futureCapability" for solana',
+              },
+            },
+          },
+        ],
       },
     });
 
@@ -112,23 +128,13 @@ describe('connectWallet', () => {
           solana: {
             methods: SOLANA_METHODS,
             notifications: [],
+            capabilities: {
+              aos: { nonce: 'solana-nonce' },
+              futureCapability: { value: true },
+            },
           },
         },
       },
-    });
-  });
-
-  it('rejects connection capabilities on solana, which the wallet does not accept', async () => {
-    const { transport } = setup();
-
-    await expect(
-      connectWallet({
-        request: { solana: { capabilities: { aos: { nonce: 'solana-nonce' } } } },
-        transport,
-      })
-    ).rejects.toMatchObject({
-      code: standardErrorCodes.rpc.invalidParams,
-      message: 'Solana does not support connection capabilities',
     });
   });
 

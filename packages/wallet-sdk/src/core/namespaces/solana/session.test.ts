@@ -60,6 +60,24 @@ describe('Solana session helpers', () => {
     });
   });
 
+  it('carries requested connection capabilities on the Solana scope', () => {
+    // The wallet fulfills these at approval time, such as signing an AOS challenge.
+    expect(createSolanaMainnetScopes({ capabilities: { aos: { nonce: 'solana-nonce' } } })).toEqual(
+      {
+        [SOLANA_NAMESPACE]: {
+          methods: [
+            'solana_signMessage',
+            'solana_signTransaction',
+            'solana_signAndSendTransaction',
+            'solana_signAndSendAllTransactions',
+          ],
+          notifications: [],
+          capabilities: { aos: { nonce: 'solana-nonce' } },
+        },
+      }
+    );
+  });
+
   it('projects every granted account in wallet order and removes duplicates', () => {
     const session = sessionFromSolanaAccounts({
       accounts: [PUBLIC_KEY, OTHER_PUBLIC_KEY, PUBLIC_KEY],
