@@ -1,22 +1,23 @@
 import { standardErrors } from ':core/error/errors.js';
 import type { RequestArguments } from ':core/message/RequestArguments.js';
-import { type Caip2, isCaip2 } from './caip.js';
-import { grantFor } from './grants.js';
-import type { Caip27Error, Caip27Params, Caip27Response, Envelope, Session } from './types.js';
+import { asRecord } from ':util/wire.js';
+import { isCaip2 } from './caip.js';
+import type { Caip27Error, Caip27Params, Envelope } from './types.js';
 
 /** CAIP-27 JSON-RPC method used for every wallet invocation. */
 export const WALLET_INVOKE_METHOD = 'wallet_invokeMethod';
 
-function asRecord(value: unknown): Record<string, unknown> | null {
-  if (value && typeof value === 'object' && !Array.isArray(value)) {
-    return value as Record<string, unknown>;
-  }
-  return null;
-}
+const INVALID_RESULT = 'Invalid wallet_invokeMethod result:';
 
-/** CAIP-27 params for the wallet wire. */
-export function toCaip27(envelope: Envelope): Caip27Params {
-  return {
+/**
+ * Namespace-neutral JSON-RPC carrier put in the encrypted transport `action`.
+ *
+ * `Envelope` is already `Caip27Params`, so rebuilding it is normalization rather than a
+ * copy: only these four fields reach the wire, whatever a namespace translator may have
+ * attached to the envelope on its way here.
+ */
+export function createCaip27Request(envelope: Envelope): RequestArguments {
+  const params: Caip27Params = {
     chainId: envelope.chainId,
     request: {
       method: envelope.request.method,
@@ -25,76 +26,67 @@ export function toCaip27(envelope: Envelope): Caip27Params {
     ...(envelope.capabilities ? { capabilities: envelope.capabilities } : {}),
     ...(envelope.sessionId ? { sessionId: envelope.sessionId } : {}),
   };
-}
-
-/** Namespace-neutral JSON-RPC carrier put in the encrypted transport `action`. */
-export function createCaip27Request(envelope: Envelope): RequestArguments {
-  return {
-    method: WALLET_INVOKE_METHOD,
-    params: toCaip27(envelope),
-  };
-}
-
-function responseError(value: unknown): Caip27Error | null {
-  const error = asRecord(value);
-  if (
-    !error ||
-    !Number.isInteger(error.code) ||
-    typeof error.message !== 'string' ||
-    error.message.length === 0
-  ) {
-    return null;
-  }
-  return {
-    code: error.code as number,
-    message: error.message,
-    ...('data' in error ? { data: error.data } : {}),
-  };
+  return { method: WALLET_INVOKE_METHOD, params };
 }
 
 /**
- * Validate the decrypted CAIP-27 result envelope against its issued request.
- * Top-level transport/session errors are thrown by the transport before this.
+ * Validate one decrypted CAIP-27 reply and hand back the method's result.
+ *
+ * A method-level error is thrown rather than returned: to the caller it is the outcome
+ * of the call they made, not a value to inspect. Top-level transport and session errors
+ * are thrown by the transport before this.
  */
-export function parseCaip27Response(value: unknown, request: Envelope): Caip27Response {
-  const invalid = (message: string): never => {
-    throw standardErrors.rpc.internal(`Invalid wallet_invokeMethod result: ${message}`);
-  };
-  const response = asRecord(value);
-  if (!response) invalid('response must be an object');
-  const record = response as Record<string, unknown>;
+export function readCaip27Result(value: unknown, request: Envelope): unknown {
+  const record = asRecord(value);
+  if (!record) {
+    throw standardErrors.rpc.internal(`${INVALID_RESULT} response must be an object`);
+  }
+
+  // A reply is only ours if it names the chain we asked on and the session we asked under.
   if (
     !isCaip2(request.chainId) ||
     typeof record.chainId !== 'string' ||
     !isCaip2(record.chainId) ||
     record.chainId !== request.chainId
   ) {
-    invalid('chainId does not match the request');
+    throw standardErrors.rpc.internal(`${INVALID_RESULT} chainId does not match the request`);
+  }
+  if (
+    record.sessionId !== undefined &&
+    (typeof record.sessionId !== 'string' || record.sessionId.length === 0)
+  ) {
+    throw standardErrors.rpc.internal(`${INVALID_RESULT} sessionId must be a non-empty string`);
+  }
+  if (request.sessionId !== record.sessionId) {
+    throw standardErrors.rpc.internal(`${INVALID_RESULT} sessionId does not match the request`);
   }
 
-  let sessionId: string | undefined;
-  if (record.sessionId !== undefined) {
-    if (typeof record.sessionId !== 'string' || record.sessionId.length === 0) {
-      invalid('sessionId must be a non-empty string');
-    }
-    sessionId = record.sessionId as string;
-  }
-  if (request.sessionId !== sessionId) {
-    invalid('sessionId does not match the request');
-  }
-
+  // JSON-RPC allows exactly one outcome.
   const hasResult = Object.prototype.hasOwnProperty.call(record, 'result');
   const hasError = Object.prototype.hasOwnProperty.call(record, 'error');
-  if (hasResult === hasError) invalid('response must contain exactly one of result or error');
+  if (hasResult === hasError) {
+    throw standardErrors.rpc.internal(
+      `${INVALID_RESULT} response must contain exactly one of result or error`
+    );
+  }
 
   if (hasError) {
-    const error = responseError(record.error);
-    if (!error) invalid('error must be a JSON-RPC error');
-    return {
-      ...(sessionId ? { sessionId } : {}),
-      chainId: record.chainId as Caip2,
-      error: error as Caip27Error,
+    const error = asRecord(record.error);
+    if (
+      !error ||
+      typeof error.code !== 'number' ||
+      !Number.isInteger(error.code) ||
+      typeof error.message !== 'string' ||
+      error.message.length === 0
+    ) {
+      throw standardErrors.rpc.internal(`${INVALID_RESULT} error must be a JSON-RPC error`);
+    }
+    const methodError: Caip27Error = {
+      code: error.code,
+      message: error.message,
+      ...('data' in error ? { data: error.data } : {}),
     };
+    throw methodError;
   }
 
   const result = asRecord(record.result);
@@ -103,43 +95,9 @@ export function parseCaip27Response(value: unknown, request: Envelope): Caip27Re
     result.method !== request.request.method ||
     !Object.prototype.hasOwnProperty.call(result, 'result')
   ) {
-    invalid('result must contain the requested method and its result');
-  }
-  const parsedResult = result as Record<string, unknown>;
-  return {
-    ...(sessionId ? { sessionId } : {}),
-    chainId: record.chainId as Caip2,
-    result: {
-      method: parsedResult.method as string,
-      result: parsedResult.result,
-    },
-  };
-}
-
-/** Return a method result or throw a method-level error from the CAIP-27 envelope. */
-export function unwrapCaip27Response(response: Caip27Response): unknown {
-  if ('error' in response) throw response.error;
-  return response.result.result;
-}
-
-/**
- * CAIP-27 chain, method, and session id must be authorized.
- *
- * The chain is authorized by an exact chain grant or by a grant on its whole
- * namespace; `grantFor` resolves both. Chains the wallet does not support are
- * rejected by the wallet, not invented as an authorization failure here.
- */
-export function assertInvokeAuthorized(session: Session, envelope: Envelope): void {
-  const scope = grantFor(session, envelope.chainId);
-  if (!scope) {
-    throw standardErrors.provider.unauthorized(`chainId ${envelope.chainId} is not in the session`);
-  }
-  if (!scope.methods.includes(envelope.request.method)) {
-    throw standardErrors.provider.unauthorized(
-      `method ${envelope.request.method} is not authorized for ${envelope.chainId}`
+    throw standardErrors.rpc.internal(
+      `${INVALID_RESULT} result must contain the requested method and its result`
     );
   }
-  if (envelope.sessionId !== undefined && envelope.sessionId !== session.sessionId) {
-    throw standardErrors.provider.unauthorized('sessionId does not match the active session');
-  }
+  return result.result;
 }

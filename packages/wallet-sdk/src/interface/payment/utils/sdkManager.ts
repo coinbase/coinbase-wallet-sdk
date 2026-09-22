@@ -2,11 +2,10 @@ import { ProviderInterface } from ':core/provider/interface.js';
 import { loadTelemetryScript } from ':core/telemetry/initCCA.js';
 import { bindStore } from ':store/store.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
-import type { Hex } from 'viem';
+import { type Hex, numberToHex } from 'viem';
 import { createTransport } from '../../builder/createTransport.js';
 import { CoinbaseWalletProvider } from '../../builder/eip1193/CoinbaseWalletProvider.js';
 import { createEphemeralStore } from '../../builder/eip1193/ephemeral.js';
-import { CHAIN_IDS } from '../constants.js';
 import type { PayerInfoResponses } from '../types.js';
 
 /**
@@ -113,22 +112,21 @@ function getQueueKey({ testnet, walletUrl }: QueueKeyParams): string {
  * - Isolated in-memory store (does not share Session / keys with the main SDK)
  * - Public `eth_requestAccounts` / `wallet_connect` calls are rejected
  * - Wallet-bound calls handshake, invoke once through CAIP-27, then clean up
+ * - Starts on Ethereum mainnet; callers select the payment's chain with
+ *   `wallet_switchEthereumChain`, which is local until a session exists
  *
- * @param params.chainId - The chain ID to use
  * @param params.walletUrl - Optional wallet URL to use
  * @param params.telemetry - Whether to enable telemetry (defaults to true)
  * @param params.dataSuffix - Optional attribution data suffix
  * @returns The configured ephemeral provider
  */
 type CreateEphemeralSDKParams = {
-  chainId: number;
   walletUrl?: string;
   telemetry?: boolean;
   dataSuffix?: Hex;
 };
 
 export function createEphemeralSDK({
-  chainId,
   walletUrl,
   telemetry = true,
   dataSuffix,
@@ -149,18 +147,16 @@ export function createEphemeralSDK({
     metadata: {
       appName,
       appLogoUrl: '',
-      appChainIds: [chainId],
     },
     preference: {
       telemetry,
       walletUrl,
       attribution: dataSuffix ? { dataSuffix } : undefined,
     },
-    ephemeral: true,
   };
   const store = bindStore(createEphemeralStore());
   const transport = createTransport(options, store);
-  const provider = new CoinbaseWalletProvider(options, transport, store);
+  const provider = new CoinbaseWalletProvider({ transport, store, ephemeral: true });
 
   // Return SDK-like interface for compatibility
   return {
@@ -178,6 +174,13 @@ export async function executePaymentWithProvider(
   provider: ProviderInterface,
   requestParams: WalletSendCallsRequestParams
 ): Promise<PaymentExecutionResult> {
+  // Point the one-shot provider at the payment's chain. Before a session exists this is a
+  // local selection, and it is what puts the right chain on the CAIP-27 envelope.
+  await provider.request({
+    method: 'wallet_switchEthereumChain',
+    params: [{ chainId: numberToHex(requestParams.chainId) }],
+  });
+
   const result = await provider.request({
     method: 'wallet_sendCalls',
     params: [requestParams],
@@ -217,20 +220,6 @@ export async function executePaymentWithProvider(
 }
 
 /**
- * Executes a payment using the SDK (legacy compatibility wrapper)
- * @param sdk - The SDK instance
- * @param requestParams - The wallet_sendCalls request parameters
- * @returns The payment execution result with transaction hash and optional info responses
- * @deprecated Use executePaymentWithProvider instead
- */
-export async function executePayment(
-  sdk: { getProvider: () => ProviderInterface },
-  requestParams: WalletSendCallsRequestParams
-): Promise<PaymentExecutionResult> {
-  return executePaymentWithProvider(sdk.getProvider(), requestParams);
-}
-
-/**
  * Manages the complete payment flow with SDK lifecycle and request queuing.
  *
  * Features:
@@ -261,11 +250,7 @@ export async function executePaymentWithSDK(
   const execution = (async (): Promise<PaymentExecutionResult> => {
     await previousTask.catch(() => {});
 
-    const network = testnet ? 'baseSepolia' : 'base';
-    const chainId = CHAIN_IDS[network];
-
     const sdk = createEphemeralSDK({
-      chainId,
       walletUrl,
       telemetry,
       dataSuffix,

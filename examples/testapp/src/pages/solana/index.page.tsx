@@ -44,6 +44,7 @@ import {
 import { useState } from 'react';
 import { WIDTH_2XL } from '../../components/Layout';
 import { useEIP1193Provider } from '../../context/EIP1193ProviderContextProvider';
+import { toDisplayableError } from '../../utils/toDisplayableError';
 
 type SolanaFeatures = StandardConnectFeature &
   StandardEventsFeature &
@@ -154,11 +155,7 @@ export default function SolanaPlayground() {
       const result = await request();
       setOutput({ method, status: 'success', value: result });
     } catch (error) {
-      setOutput({
-        method,
-        status: 'error',
-        value: error instanceof Error ? error.message : String(error),
-      });
+      setOutput({ method, status: 'error', value: toDisplayableError(error) });
     } finally {
       setPendingMethod(null);
     }

@@ -1,9 +1,9 @@
 import type { RequestArguments } from ':core/provider/interface.js';
 import type { WalletTransport } from ':core/transport/index.js';
-import type { Store } from ':store/store.js';
-import { numberToHex } from 'viem';
-import { sessionFromAccounts } from '../session.js';
 import * as providerUtil from ':util/provider.js';
+import { numberToHex } from 'viem';
+import { isKnownEip155Chain } from '../session.js';
+import { sessionFromAccounts } from '../session.fixtures.js';
 import { createActiveChain } from './activeChain.js';
 import { handleConnected } from './connected.js';
 import type { Eip1193Context } from './context.js';
@@ -19,14 +19,13 @@ function context(
   let session = initialSession;
   const emit = vi.fn();
   const chain = createActiveChain({
-    defaultChainId: 8453,
-    session,
     onChange: (chainId) => emit('chainChanged', numberToHex(chainId)),
   });
-  const state = {
-    spendPermissions: { get: () => [], set: vi.fn(), clear: vi.fn() },
-    paymasterUrls: { get: () => undefined, set: vi.fn() },
-  } as unknown as Store['eip155'];
+  // Every provider starts on Ethereum mainnet. These cases describe a provider a dapp has
+  // already moved to Base, which only ever happens through a switch, so arrange it that
+  // way and drop the arrange-time event before the assertions run.
+  chain.select(8453);
+  emit.mockClear();
   const transport: WalletTransport = {
     handshake: vi.fn(),
     request: async (request) => {
@@ -51,8 +50,6 @@ function context(
   };
   return {
     transport,
-    cache: state,
-    config: { get: () => ({ version: 'test' }), set: vi.fn() },
     emit,
     chain,
   };
@@ -71,7 +68,6 @@ describe('handleConnected', () => {
     sessionId: 'session-1',
     scopes: {
       eip155: {
-        chains: ['8453'],
         accounts: [OTHER],
         methods: ['wallet_connect'],
         notifications: ['accountsChanged', 'chainChanged'],
@@ -88,27 +84,24 @@ describe('handleConnected', () => {
     await expect(handleConnected(rt, { method: 'eth_coinbase' }, session)).resolves.toBe(ADDRESS);
     await expect(handleConnected(rt, { method: 'eth_chainId' }, session)).resolves.toBe('0x2105');
     await expect(handleConnected(rt, { method: 'net_version' }, session)).resolves.toBe(8453);
+    // This wallet reported no capabilities, and the SDK invents none.
     await expect(
       handleConnected(rt, { method: 'wallet_getCapabilities', params: [ADDRESS] }, session)
-    ).resolves.toEqual({
-      '0x0': { gasLimitOverride: { supported: true } },
-    });
+    ).resolves.toEqual({});
     expect(send).not.toHaveBeenCalled();
   });
 
-  it('returns every account on the active chain and excludes other-chain grants', async () => {
+  it('returns every authorized account in the namespace grant', async () => {
+    // Consent is per account, not per chain: the one eip155 grant is the whole account
+    // list, on chain 8453 and on every other EVM chain alike.
     const multiAccountSession = sessionFromAccounts({
-      accounts: [ADDRESS, OTHER],
+      accounts: [ADDRESS, OTHER, CHAIN_ONE_ONLY],
       chainId: 8453,
     });
-    multiAccountSession.scopes['eip155:1'] = {
-      accounts: [`eip155:1:${CHAIN_ONE_ONLY}`],
-      methods: [],
-    };
 
     await expect(
       handleConnected(context(), { method: 'eth_accounts' }, multiAccountSession)
-    ).resolves.toEqual([ADDRESS, OTHER]);
+    ).resolves.toEqual([ADDRESS, OTHER, CHAIN_ONE_ONLY]);
   });
 
   it('invokes personal_sign through the transport', async () => {
@@ -147,9 +140,7 @@ describe('handleConnected', () => {
       })
     );
     expect(rt.transport.writeSession).toHaveBeenCalledTimes(1);
-    expect(rt.transport.readSession()?.scopes['eip155:8453']?.accounts).toEqual([
-      `eip155:8453:${OTHER}`,
-    ]);
+    expect(rt.transport.readSession()?.namespaces.eip155?.accounts).toEqual([OTHER]);
     expect(rt.chain.get()).toBe(8453);
   });
 
@@ -164,9 +155,10 @@ describe('handleConnected', () => {
     expect(rt.transport.writeSession).not.toHaveBeenCalled();
   });
 
-  it('ingests wallet_connect nested in wallet_invokeMethod', async () => {
-    const connectResult = { accounts: [{ address: OTHER }] };
-    const send = vi.fn().mockResolvedValue(caip25Result);
+  it('rejects wallet_connect nested in wallet_invokeMethod', async () => {
+    // Pairing is `wallet_connect` called directly. Nesting it inside an envelope that
+    // already names a session is a contradiction, so it never reaches the wallet.
+    const send = vi.fn();
     const rt = context(send);
 
     await expect(
@@ -181,35 +173,11 @@ describe('handleConnected', () => {
         },
         session
       )
-    ).resolves.toEqual(connectResult);
+    ).rejects.toThrow('wallet_connect cannot be nested inside wallet_invokeMethod');
 
-    expect(send).toHaveBeenCalledWith(expect.objectContaining({ method: 'wallet_createSession' }));
-    expect(rt.transport.writeSession).toHaveBeenCalledTimes(1);
-    expect(rt.transport.readSession()?.scopes['eip155:8453']?.accounts).toEqual([
-      `eip155:8453:${OTHER}`,
-    ]);
-    expect(rt.chain.get()).toBe(8453);
-  });
-
-  it('rejects a malformed nested wallet_createSession result', async () => {
-    const passthrough = { status: 'pending' };
-    const rt = context(vi.fn().mockResolvedValue(passthrough));
-
-    await expect(
-      handleConnected(
-        rt,
-        {
-          method: 'wallet_invokeMethod',
-          params: {
-            chainId: 'eip155:8453',
-            request: { method: 'wallet_connect', params: [{ version: '1' }] },
-          },
-        },
-        session
-      )
-    ).rejects.toMatchObject({ code: -32603 });
-
+    expect(send).not.toHaveBeenCalled();
     expect(rt.transport.writeSession).not.toHaveBeenCalled();
+    expect(rt.chain.get()).toBe(8453);
   });
 
   it('switches a known chain locally', async () => {
@@ -228,30 +196,29 @@ describe('handleConnected', () => {
     expect(send).not.toHaveBeenCalled();
   });
 
-  it('switches an authorized chain with minimal metadata', async () => {
-    const send = vi.fn();
-    const rt = context(send);
-    const authorizedTarget = {
+  it('asks the wallet for a granted chain the catalog does not list', async () => {
+    const send = vi.fn().mockResolvedValue(null);
+    // The namespace-wide grant already authorizes chain 10; the catalog does not list it.
+    const scopedTarget = {
       ...session,
-      scopes: {
-        ...session.scopes,
-        'eip155:10': session.scopes['eip155:8453'],
-      },
+      sessionId: 'session-1',
     };
+    const rt = context(send, scopedTarget);
+
     await expect(
       handleConnected(
         rt,
         { method: 'wallet_switchEthereumChain', params: [{ chainId: '0xa' }] },
-        authorizedTarget
+        scopedTarget
       )
     ).resolves.toBeNull();
+
+    // A grant is authorization, not chain support. Only the wallet's chain
+    // catalog makes a chain locally selectable, so this still round-trips.
+    expect(send).toHaveBeenCalledWith(expect.objectContaining({ method: 'wallet_invokeMethod' }));
     expect(rt.chain.get()).toBe(10);
     expect(rt.emit).toHaveBeenCalledWith('chainChanged', '0xa');
-    expect(rt.transport.writeSession).not.toHaveBeenCalled();
-    await expect(handleConnected(rt, { method: 'eth_chainId' }, authorizedTarget)).resolves.toBe(
-      '0xa'
-    );
-    expect(send).not.toHaveBeenCalled();
+    await expect(handleConnected(rt, { method: 'eth_chainId' }, scopedTarget)).resolves.toBe('0xa');
   });
 
   it('switches a metadata-known ungranted chain without wallet I/O', async () => {
@@ -308,7 +275,7 @@ describe('handleConnected', () => {
     expect(rt.emit).not.toHaveBeenCalledWith('chainChanged', '0xa');
   });
 
-  it('selects a metadata-unknown chain only after SCW approves it', async () => {
+  it('catalogs and selects a metadata-unknown chain after SCW approves it', async () => {
     const sessionWithId = { ...session, sessionId: 'session-1' };
     const send = vi.fn().mockResolvedValue(null);
     const rt = context(send, sessionWithId);
@@ -323,10 +290,14 @@ describe('handleConnected', () => {
 
     expect(rt.chain.get()).toBe(10);
     expect(rt.emit).toHaveBeenCalledWith('chainChanged', '0xa');
-    expect(rt.transport.writeSession).not.toHaveBeenCalled();
+    // The wallet accepting the chain grows its catalog, so later reads can reach it.
+    expect(rt.transport.writeSession).toHaveBeenCalledTimes(1);
+    const stored = rt.transport.readSession();
+    expect(stored && isKnownEip155Chain(stored, 10)).toBe(true);
+    expect(stored?.namespaces).toEqual(sessionWithId.namespaces);
   });
 
-  it('expands a narrow grant on the first transaction after a local switch', async () => {
+  it('does not re-connect on the first transaction after a local switch', async () => {
     const sessionWithId = {
       ...session,
       sessionId: 'session-1',
@@ -337,20 +308,7 @@ describe('handleConnected', () => {
         },
       },
     };
-    const expandedGrant = {
-      sessionId: 'session-1',
-      scopes: {
-        eip155: {
-          chains: ['10'],
-          accounts: [ADDRESS],
-          methods: ['eth_sendTransaction'],
-          notifications: ['accountsChanged', 'chainChanged'],
-        },
-      },
-    };
-    const send = vi.fn(async (request: RequestArguments) =>
-      request.method === 'wallet_createSession' ? expandedGrant : '0xhash'
-    );
+    const send = vi.fn().mockResolvedValue('0xhash');
     const rt = context(send, sessionWithId);
 
     await expect(
@@ -370,7 +328,10 @@ describe('handleConnected', () => {
       )
     ).resolves.toBe('0xhash');
 
-    expect(send).toHaveBeenCalledWith(expect.objectContaining({ method: 'wallet_createSession' }));
+    // The one EVM grant already authorizes the new chain, so nothing re-authorizes.
+    expect(send).not.toHaveBeenCalledWith(
+      expect.objectContaining({ method: 'wallet_createSession' })
+    );
     expect(send).toHaveBeenCalledWith({
       method: 'wallet_invokeMethod',
       params: {
@@ -381,13 +342,15 @@ describe('handleConnected', () => {
     });
   });
 
-  it('transacts after a switch without expanding when the chain is already granted', async () => {
+  it('transacts after a switch without re-authorizing the target chain', async () => {
     const grantedBoth = {
       ...session,
       sessionId: 'session-1',
-      scopes: {
-        ...session.scopes,
-        'eip155:10': session.scopes['eip155:8453'],
+      properties: {
+        chainMetadata: {
+          'eip155:8453': { rpcUrl: 'https://example.invalid' },
+          'eip155:10': { rpcUrl: 'https://optimism.invalid' },
+        },
       },
     };
     const send = vi.fn().mockResolvedValue('0xhash');
@@ -418,7 +381,7 @@ describe('handleConnected', () => {
     );
   });
 
-  it('still reports accounts after switching to a chain outside the grant', async () => {
+  it('still reports accounts after switching to another catalogued chain', async () => {
     const sessionWithId = {
       ...session,
       properties: {
@@ -443,10 +406,10 @@ describe('handleConnected', () => {
     expect(send).not.toHaveBeenCalled();
   });
 
-  it('transacts on any chain under an eip155 namespace grant', async () => {
+  it('transacts on any chain under the namespace-wide eip155 grant', async () => {
     const namespaceSession = {
       sessionId: 'session-1',
-      scopes: {
+      namespaces: {
         eip155: { accounts: [ADDRESS], methods: ['eth_sendTransaction'] },
       },
       properties: {

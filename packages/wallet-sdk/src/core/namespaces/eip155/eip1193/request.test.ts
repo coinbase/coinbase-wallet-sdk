@@ -2,9 +2,8 @@ import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { sessionFromSolanaAccounts } from ':core/namespaces/solana/session.js';
 import type { Session } from ':core/session/types.js';
 import type { WalletTransport } from ':core/transport/index.js';
-import type { Store } from ':store/store.js';
 import * as providerUtil from ':util/provider.js';
-import { sessionFromAccounts } from '../session.js';
+import { sessionFromAccounts } from '../session.fixtures.js';
 import { createActiveChain } from './activeChain.js';
 import type { Eip1193Context } from './context.js';
 import { handleEip1193Request } from './request.js';
@@ -15,10 +14,6 @@ function context(opts?: { session?: Session }): Eip1193Context {
   const request = vi.fn().mockResolvedValue({
     accounts: [{ address: ADDRESS, capabilities: {} }],
   });
-  const state = {
-    spendPermissions: { get: () => [], set: vi.fn(), clear: vi.fn() },
-    paymasterUrls: { get: () => undefined, set: vi.fn() },
-  } as unknown as Store['eip155'];
   const transport: WalletTransport = {
     handshake: vi.fn().mockResolvedValue(undefined),
     request,
@@ -28,14 +23,8 @@ function context(opts?: { session?: Session }): Eip1193Context {
   };
   return {
     transport,
-    cache: state,
-    config: { get: () => ({ version: 'test' }), set: vi.fn() },
     emit: vi.fn(),
-    chain: createActiveChain({
-      defaultChainId: 1,
-      session: opts?.session,
-      onChange: vi.fn(),
-    }),
+    chain: createActiveChain({ onChange: vi.fn() }),
   };
 }
 

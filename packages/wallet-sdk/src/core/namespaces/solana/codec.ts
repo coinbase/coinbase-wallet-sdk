@@ -1,4 +1,5 @@
 import { standardErrors } from ':core/error/errors.js';
+import { asRecord } from ':util/wire.js';
 import type { SolanaInvokeRequest, SolanaInvokeResult } from './types.js';
 
 function bytesToBase64(bytes: unknown, field: string): string {
@@ -25,10 +26,9 @@ function base64ToBytes(value: unknown, field: string): Uint8Array {
 }
 
 function resultRecord(value: unknown, method: string): Record<string, unknown> {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    throw standardErrors.rpc.internal(`${method} did not return an object`);
-  }
-  return value as Record<string, unknown>;
+  const record = asRecord(value);
+  if (!record) throw standardErrors.rpc.internal(`${method} did not return an object`);
+  return record;
 }
 
 function encodedTransaction(

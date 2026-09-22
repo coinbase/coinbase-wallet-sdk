@@ -1,10 +1,9 @@
 import type { RequestArguments } from ':core/provider/interface.js';
 import type { Session } from ':core/session/types.js';
-import { sessionFromAccounts } from '../session.js';
 import type { WalletTransport } from ':core/transport/index.js';
-import type { Store } from ':store/store.js';
-import { connectEip155, createEip155Scopes, walletConnectScopeRequestParts } from './connect.js';
+import { sessionFromAccounts } from '../session.fixtures.js';
 import { createActiveChain } from './activeChain.js';
+import { connectEip155, createEip155Scopes, walletConnectScopeRequestParts } from './connect.js';
 import type { Eip1193Context } from './context.js';
 
 const ADDRESS = '0x0000000000000000000000000000000000000001';
@@ -13,14 +12,9 @@ function setup(
   request: WalletTransport['request'],
   opts?: {
     restored?: Session;
-    chainId?: number;
   }
 ): { transport: WalletTransport; context: Eip1193Context } {
   let session = opts?.restored;
-  const state = {
-    spendPermissions: { get: () => [], set: vi.fn(), clear: vi.fn() },
-    paymasterUrls: { get: () => undefined, set: vi.fn() },
-  } as unknown as Store['eip155'];
   const transport: WalletTransport = {
     handshake: vi.fn().mockResolvedValue(undefined),
     request,
@@ -30,17 +24,11 @@ function setup(
     }),
     cleanup: vi.fn(),
   };
-  const chain = createActiveChain({
-    defaultChainId: opts?.chainId ?? 1,
-    session,
-    onChange: vi.fn(),
-  });
+  const chain = createActiveChain({ onChange: vi.fn() });
   return {
     transport,
     context: {
       transport,
-      cache: state,
-      config: { get: () => ({ version: 'test' }), set: vi.fn() },
       emit: vi.fn(),
       chain,
     },
@@ -49,7 +37,6 @@ function setup(
 
 function eip155Result(opts?: {
   sessionId?: string;
-  chainId?: number;
   accounts?: string[];
   capabilities?: Record<string, unknown>;
 }) {
@@ -57,7 +44,6 @@ function eip155Result(opts?: {
     sessionId: opts?.sessionId ?? 'session-1',
     scopes: {
       eip155: {
-        chains: [String(opts?.chainId ?? 1)],
         accounts: opts?.accounts ?? [ADDRESS],
         methods: ['personal_sign', 'wallet_connect'],
         notifications: ['accountsChanged', 'chainChanged'],
@@ -96,7 +82,6 @@ describe('EIP-155 CAIP-25 connect translation', () => {
 
   it('builds the EIP-155 CAIP-25 scope without leaking capabilities into params', () => {
     const scopes = createEip155Scopes({
-      chainId: 'eip155:8453',
       methods: ['personal_sign', 'wallet_connect'],
       requestParts: {
         capabilities: { signInWithEthereum: { nonce: 'n' } },
@@ -106,7 +91,6 @@ describe('EIP-155 CAIP-25 connect translation', () => {
 
     expect(scopes).toEqual({
       eip155: {
-        chains: ['8453'],
         methods: ['personal_sign', 'wallet_connect'],
         notifications: ['accountsChanged', 'chainChanged'],
         capabilities: { signInWithEthereum: { nonce: 'n' } },
@@ -115,14 +99,16 @@ describe('EIP-155 CAIP-25 connect translation', () => {
     });
   });
 
-  it('rejects non-EIP-155 session targets', () => {
-    expect(() =>
-      createEip155Scopes({
-        chainId: 'solana:mainnet',
-        methods: ['wallet_connect'],
-        requestParts: { params: [{ version: '1' }] },
-      })
-    ).toThrowError(expect.objectContaining({ code: 4902 }));
+  it('always requests the whole eip155 namespace, never a single chain', () => {
+    const scopes = createEip155Scopes({
+      methods: ['wallet_connect'],
+      requestParts: { params: [{ version: '1' }] },
+    });
+
+    // Connect can no longer be narrowed to (or fail on) a specific chain: there is
+    // exactly one EVM scope, keyed by the bare namespace with no `chains` array.
+    expect(Object.keys(scopes)).toEqual(['eip155']);
+    expect(scopes.eip155).not.toHaveProperty('chains');
   });
 
   it('creates a session, translates its result, and emits EIP-1193 events', async () => {

@@ -27,11 +27,7 @@ vi.mock(':store/store.js', () => ({
     config: {
       set: vi.fn(),
     },
-    eip155: {
-      paymasterUrls: {
-        set: vi.fn(),
-      },
-    },
+    eip155: {},
     persist: {
       rehydrate: vi.fn(),
     },
@@ -111,19 +107,21 @@ describe('createProvider', () => {
     it('should create a provider with minimal parameters', () => {
       const result = createCoinbaseWalletSDK({}).getProvider();
 
-      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
+      expect(mockCreateTransport).toHaveBeenCalledWith(
         {
           metadata: {
             appName: 'App',
             appLogoUrl: '',
-            appChainIds: [],
           },
           preference: {},
-          paymasterUrls: undefined,
         },
-        { mockTransport: true },
-        store
+        store,
+        undefined
       );
+      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith({
+        transport: { mockTransport: true },
+        store,
+      });
 
       expect(result).toEqual({ mockProvider: true });
     });
@@ -132,23 +130,20 @@ describe('createProvider', () => {
       const params: CreateProviderOptions = {
         appName: 'Test App',
         appLogoUrl: 'https://example.com/logo.png',
-        appChainIds: [1, 137],
       };
 
       createCoinbaseWalletSDK(params).getProvider();
 
-      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
+      expect(mockCreateTransport).toHaveBeenCalledWith(
         {
           metadata: {
             appName: 'Test App',
             appLogoUrl: 'https://example.com/logo.png',
-            appChainIds: [1, 137],
           },
           preference: {},
-          paymasterUrls: undefined,
         },
-        { mockTransport: true },
-        store
+        store,
+        undefined
       );
     });
 
@@ -161,42 +156,18 @@ describe('createProvider', () => {
 
       createCoinbaseWalletSDK(params).getProvider();
 
-      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
+      expect(mockCreateTransport).toHaveBeenCalledWith(
         {
           metadata: {
             appName: 'App',
             appLogoUrl: '',
-            appChainIds: [],
           },
           preference: {
             attribution: { auto: true },
           },
-          paymasterUrls: undefined,
         },
-        { mockTransport: true },
-        store
-      );
-    });
-
-    it('should create a provider with paymaster URLs', () => {
-      const params: CreateProviderOptions = {
-        paymasterUrls: {
-          1: 'https://paymaster.example.com',
-          137: 'https://paymaster-polygon.example.com',
-        },
-      };
-
-      createCoinbaseWalletSDK(params).getProvider();
-
-      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
-        expect.objectContaining({
-          paymasterUrls: {
-            1: 'https://paymaster.example.com',
-            137: 'https://paymaster-polygon.example.com',
-          },
-        }),
-        { mockTransport: true },
-        store
+        store,
+        undefined
       );
     });
   });
@@ -206,7 +177,6 @@ describe('createProvider', () => {
       const params: CreateProviderOptions = {
         appName: 'Test App',
         preference: {},
-        paymasterUrls: { 1: 'https://paymaster.example.com' },
       };
 
       createCoinbaseWalletSDK(params).getProvider();
@@ -215,12 +185,8 @@ describe('createProvider', () => {
         metadata: {
           appName: 'Test App',
           appLogoUrl: '',
-          appChainIds: [],
         },
         preference: {},
-      });
-      expect(mockStore.eip155.paymasterUrls.set).toHaveBeenCalledWith({
-        1: 'https://paymaster.example.com',
       });
     });
 
@@ -284,7 +250,7 @@ describe('createProvider', () => {
     it('shares one popup transport when Solana initializes first', () => {
       const sdk = createCoinbaseWalletSDK({});
       let solanaTransport: unknown;
-      mockRegisterSolanaWallet.mockImplementation((transport: unknown) => {
+      mockRegisterSolanaWallet.mockImplementation(({ transport }: { transport: unknown }) => {
         solanaTransport = transport;
       });
 
@@ -292,17 +258,16 @@ describe('createProvider', () => {
       sdk.getProvider();
 
       expect(mockCreateTransport).toHaveBeenCalledOnce();
-      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
-        expect.any(Object),
-        solanaTransport,
-        store
-      );
+      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith({
+        transport: solanaTransport,
+        store,
+      });
     });
 
     it('shares one popup transport when EVM initializes first', () => {
       const sdk = createCoinbaseWalletSDK({});
       let solanaTransport: unknown;
-      mockRegisterSolanaWallet.mockImplementation((transport: unknown) => {
+      mockRegisterSolanaWallet.mockImplementation(({ transport }: { transport: unknown }) => {
         solanaTransport = transport;
       });
 
@@ -310,7 +275,7 @@ describe('createProvider', () => {
       sdk.registerSolanaWallet();
 
       expect(mockCreateTransport).toHaveBeenCalledOnce();
-      expect(solanaTransport).toBe(mockCoinbaseWalletProvider.mock.calls[0][1]);
+      expect(solanaTransport).toBe(mockCoinbaseWalletProvider.mock.calls[0][0].transport);
     });
 
     it('should use injected provider when getInjectedProvider returns a provider', () => {
@@ -335,19 +300,10 @@ describe('createProvider', () => {
       const result = createCoinbaseWalletSDK({}).getProvider();
 
       expect(mockGetInjectedProvider).toHaveBeenCalled();
-      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
-        {
-          metadata: {
-            appName: 'App',
-            appLogoUrl: '',
-            appChainIds: [],
-          },
-          preference: {},
-          paymasterUrls: undefined,
-        },
-        { mockTransport: true },
-        store
-      );
+      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith({
+        transport: { mockTransport: true },
+        store,
+      });
       expect(result).toEqual({ mockProvider: true });
     });
   });
@@ -356,55 +312,41 @@ describe('createProvider', () => {
     it('should handle null app logo URL', () => {
       createCoinbaseWalletSDK({ appLogoUrl: null }).getProvider();
 
-      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
+      expect(mockCreateTransport).toHaveBeenCalledWith(
         expect.objectContaining({
           metadata: expect.objectContaining({
             appLogoUrl: '',
           }),
         }),
-        { mockTransport: true },
-        store
+        store,
+        undefined
       );
     });
 
-    it('should handle empty app chain IDs array', () => {
-      createCoinbaseWalletSDK({ appChainIds: [] }).getProvider();
+    it('should build metadata without any app chain list', () => {
+      createCoinbaseWalletSDK({}).getProvider();
 
-      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
+      // Chain access is authorized for all of EVM, chain support comes from the wallet,
+      // and the provider starts on mainnet until `wallet_switchEthereumChain` moves it,
+      // so the app declares no chain at all.
+      expect(mockCreateTransport).toHaveBeenCalledWith(
         expect.objectContaining({
-          metadata: expect.objectContaining({
-            appChainIds: [],
-          }),
+          metadata: { appName: 'App', appLogoUrl: '' },
         }),
-        { mockTransport: true },
-        store
+        store,
+        undefined
       );
     });
 
-    it('should pass an explicit defaultChainId through to the provider', () => {
-      createCoinbaseWalletSDK({ appChainIds: [1, 137], defaultChainId: 8453 }).getProvider();
+    it('should never pass a chain field to the transport', () => {
+      createCoinbaseWalletSDK({}).getProvider();
 
-      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
-        expect.objectContaining({
-          metadata: expect.objectContaining({
-            defaultChainId: 8453,
-            appChainIds: [1, 137],
-          }),
-        }),
-        { mockTransport: true },
-        store
-      );
-    });
-
-    it('should omit defaultChainId when the app does not set one', () => {
-      createCoinbaseWalletSDK({ appChainIds: [1, 137] }).getProvider();
-
-      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
+      expect(mockCreateTransport).toHaveBeenCalledWith(
         expect.objectContaining({
           metadata: expect.not.objectContaining({ defaultChainId: expect.anything() }),
         }),
-        { mockTransport: true },
-        store
+        store,
+        undefined
       );
     });
 
@@ -418,12 +360,12 @@ describe('createProvider', () => {
       createCoinbaseWalletSDK({ preference: complexPreference }).getProvider();
 
       expect(mockValidatePreferences).toHaveBeenCalledWith(complexPreference);
-      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith(
+      expect(mockCreateTransport).toHaveBeenCalledWith(
         expect.objectContaining({
           preference: complexPreference,
         }),
-        { mockTransport: true },
-        store
+        store,
+        undefined
       );
     });
   });

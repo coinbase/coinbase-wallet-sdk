@@ -18,31 +18,26 @@ const STORED = {
 };
 
 describe('projectCapabilities', () => {
-  it('merges gasLimitOverride onto 0x0 and returns all chains', () => {
-    expect(projectCapabilities(STORED)).toEqual({
+  it('returns every chain when there is no filter', () => {
+    expect(projectCapabilities(STORED)).toEqual(STORED);
+  });
+
+  it('reports only what the wallet granted, adding nothing of its own', () => {
+    expect(projectCapabilities({})).toEqual({});
+  });
+
+  it('keeps the wallet 0x0 entry through a filter', () => {
+    const withWildcard = { ...STORED, '0x0': { gasLimitOverride: { supported: true } } };
+
+    expect(projectCapabilities(withWildcard, ['0x1', '0xa'])).toEqual({
       '0x0': { gasLimitOverride: { supported: true } },
-      ...STORED,
+      '0x1': STORED['0x1'],
+      '0xa': STORED['0xa'],
     });
   });
 
-  it('preserves stored 0x0 keys next to gasLimitOverride', () => {
-    expect(
-      projectCapabilities({
-        '0x0': { atomicBatch: { supported: true } },
-        '0x14a34': { paymasterService: { supported: true } },
-      })
-    ).toEqual({
-      '0x0': {
-        atomicBatch: { supported: true },
-        gasLimitOverride: { supported: true },
-      },
-      '0x14a34': { paymasterService: { supported: true } },
-    });
-  });
-
-  it('filters by chain id and always keeps 0x0', () => {
+  it('filters by chain id', () => {
     expect(projectCapabilities(STORED, ['0x1', '0xa'])).toEqual({
-      '0x0': { gasLimitOverride: { supported: true } },
       '0x1': STORED['0x1'],
       '0xa': STORED['0xa'],
     });
@@ -50,23 +45,17 @@ describe('projectCapabilities', () => {
 
   it('matches padded hex filters to stored keys', () => {
     expect(projectCapabilities(STORED, ['0x01', '0x05'])).toEqual({
-      '0x0': { gasLimitOverride: { supported: true } },
       '0x1': STORED['0x1'],
       '0x5': STORED['0x5'],
     });
   });
 
-  it('returns only 0x0 when the filter matches no chains', () => {
-    expect(projectCapabilities(STORED, ['0x99', '0x100'])).toEqual({
-      '0x0': { gasLimitOverride: { supported: true } },
-    });
+  it('returns nothing when the filter matches no chains', () => {
+    expect(projectCapabilities(STORED, ['0x99', '0x100'])).toEqual({});
   });
 
   it('treats an empty filter as no filter', () => {
-    expect(projectCapabilities(STORED, [])).toEqual({
-      '0x0': { gasLimitOverride: { supported: true } },
-      ...STORED,
-    });
+    expect(projectCapabilities(STORED, [])).toEqual(STORED);
   });
 
   it('drops non-hex keys when filtering', () => {
@@ -76,72 +65,68 @@ describe('projectCapabilities', () => {
         ['0x1']
       )
     ).toEqual({
-      '0x0': { gasLimitOverride: { supported: true } },
       '0x1': { atomicBatch: { supported: true } },
-    });
-  });
-
-  it('still reports 0x0 when stored capabilities are empty', () => {
-    expect(projectCapabilities({})).toEqual({
-      '0x0': { gasLimitOverride: { supported: true } },
     });
   });
 });
 
 describe('getCapabilities', () => {
+  // The wallet's chain catalog is where capabilities that genuinely differ per chain
+  // are reported, alongside the namespace-wide `eip155` authorization.
   const session: Session = {
-    scopes: {
-      'eip155:1': {
-        accounts: [`eip155:1:${ADDRESS}`],
+    namespaces: {
+      eip155: {
+        accounts: [ADDRESS],
         methods: [],
-        capabilities: STORED['0x1'],
+        // The grant's own capabilities hold on every chain, so they land under `0x0`.
+        capabilities: { gasLimitOverride: { supported: true } },
       },
-      'eip155:5': {
-        accounts: [`eip155:5:${ADDRESS}`],
-        methods: [],
-        capabilities: STORED['0x5'],
-      },
-      'eip155:10': {
-        accounts: [`eip155:10:${ADDRESS}`],
-        methods: [],
-        capabilities: STORED['0xa'],
-      },
-      'eip155:8453': {
-        accounts: [`eip155:8453:${ADDRESS}`],
-        methods: [],
+    },
+    properties: {
+      chainMetadata: {
+        'eip155:1': { capabilities: STORED['0x1'] },
+        'eip155:5': { capabilities: STORED['0x5'] },
+        'eip155:10': { capabilities: STORED['0xa'] },
+        'eip155:8453': {},
       },
     },
   };
 
   it('returns the projected map for a connected account', () => {
     expect(
-      getCapabilities({ method: 'wallet_getCapabilities', params: [ADDRESS] }, session, 8453)
+      getCapabilities({ method: 'wallet_getCapabilities', params: [ADDRESS] }, session)
     ).toEqual({
       '0x0': { gasLimitOverride: { supported: true } },
       ...STORED,
     });
   });
 
+  it('reports no all-chains entry when the wallet granted none', () => {
+    const withoutWildcard: Session = {
+      ...session,
+      namespaces: { eip155: { accounts: [ADDRESS], methods: [] } },
+    };
+
+    expect(
+      getCapabilities({ method: 'wallet_getCapabilities', params: [ADDRESS] }, withoutWildcard)
+    ).toEqual(STORED);
+  });
+
   it('throws when the account is not in the session', () => {
     expect(() =>
-      getCapabilities({ method: 'wallet_getCapabilities', params: [OTHER] }, session, 8453)
+      getCapabilities({ method: 'wallet_getCapabilities', params: [OTHER] }, session)
     ).toThrow('no active account found when getting capabilities');
   });
 
   it('throws when params are missing or invalid', () => {
-    expect(() => getCapabilities({ method: 'wallet_getCapabilities' }, session, 8453)).toThrow();
+    expect(() => getCapabilities({ method: 'wallet_getCapabilities' }, session)).toThrow();
     expect(() =>
-      getCapabilities(
-        { method: 'wallet_getCapabilities', params: ['invalid-address'] },
-        session,
-        8453
-      )
+      getCapabilities({ method: 'wallet_getCapabilities', params: ['invalid-address'] }, session)
     ).toThrow();
     expect(() =>
       getCapabilities(
         { method: 'wallet_getCapabilities', params: [ADDRESS, ['0x1', 'invalid-hex']] },
-        session,
-        8453
+        session
       )
     ).toThrow();
   });

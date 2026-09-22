@@ -29,7 +29,6 @@ export interface UseSDKStateReturn {
   loadAndInitializeSDK: (config?: {
     appName?: string;
     appLogoUrl?: string;
-    appChainIds?: number[];
     walletUrl?: string;
   }) => Promise<void>;
   setSdk: (sdk: CoinbaseWalletSDK | null) => void;
@@ -57,7 +56,6 @@ export function useSDKState(): UseSDKStateReturn {
     async (config?: {
       appName?: string;
       appLogoUrl?: string;
-      appChainIds?: number[];
       walletUrl?: string;
     }) => {
       // Increment load version to invalidate any in-flight SDK loads
@@ -81,7 +79,6 @@ export function useSDKState(): UseSDKStateReturn {
         const sdkInstance = loaded.createCoinbaseWalletSDK({
           appName: config?.appName || SDK_CONFIG.APP_NAME,
           appLogoUrl: config?.appLogoUrl || SDK_CONFIG.APP_LOGO_URL,
-          appChainIds: config?.appChainIds || [...SDK_CONFIG.DEFAULT_CHAIN_IDS],
           preference: {
             walletUrl: config?.walletUrl,
           },

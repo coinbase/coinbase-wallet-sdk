@@ -1,4 +1,4 @@
-import { sessionFromAccounts } from ':core/namespaces/eip155/session.js';
+import { sessionFromAccounts } from ':core/namespaces/eip155/session.fixtures.js';
 import { sessionFromSolanaAccounts } from ':core/namespaces/solana/session.js';
 import { send } from ':core/transport/popup/send.js';
 import { bindStore, createStoreInstance } from ':store/store.js';
@@ -27,7 +27,7 @@ vi.mock(':core/transport/popup/send.js', () => ({
   send: vi.fn().mockResolvedValue({ result: { value: '0xok' } }),
 }));
 
-const metadata = { appName: 'Test', appLogoUrl: null, appChainIds: [8453] };
+const metadata = { appName: 'Test', appLogoUrl: null };
 const preference = { telemetry: false };
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as const;
 const SOLANA_PUBLIC_KEY = 'So11111111111111111111111111111111111111112';
@@ -63,7 +63,7 @@ describe('createPopupTransport', () => {
   it('reads and writes session state without applying authorization policy', () => {
     const transport = createTestTransport();
     const sessions: Parameters<typeof transport.writeSession>[0][] = [
-      { scopes: {} },
+      { namespaces: {} },
       sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 }),
       sessionFromSolanaAccounts({ accounts: [SOLANA_PUBLIC_KEY] }),
     ];

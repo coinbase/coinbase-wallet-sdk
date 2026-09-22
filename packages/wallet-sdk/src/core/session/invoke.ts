@@ -1,20 +1,30 @@
 import { standardErrors } from ':core/error/errors.js';
 import type { WalletTransport } from ':core/transport/index.js';
-import { assertInvokeAuthorized, createCaip27Request } from './caip27.js';
+import { createCaip27Request, readCaip27Result } from './caip27.js';
+import { assertInvokeAuthorized } from './grants.js';
 import type { Envelope, NamespaceTranslator, Session } from './types.js';
+
+/** Validate the CAIP-27 reply, then let the namespace decode a non-JSON result. */
+function readResponse(
+  response: unknown,
+  envelope: Envelope,
+  translator: NamespaceTranslator
+): unknown {
+  const result = readCaip27Result(response, envelope);
+  return translator.decodeResult ? translator.decodeResult(result, envelope) : result;
+}
 
 /**
  * Send one request on an **already-paired** session.
  *
- * Use this after `createSession` / `ensureSession` has written a `Session`. It does not
- * open a popup, handshake, or `wallet_connect`. Flow:
+ * Use this after `createSession` has written a `Session`. It does not open a popup,
+ * handshake, or `wallet_connect`. Flow:
  *
- * 1. CAIP-27: `chainId` must already be in the session (`assertInvokeAuthorized`).
- * 2. Apply the namespace translator supplied by the caller.
- * 3. `qualify` — validate namespace-specific session requirements.
- * 4. Add the CAIP-25 `sessionId` when one was issued.
- * 5. `transport.request(wallet_invokeMethod)` — deliver the complete CAIP-27 JSON-RPC request.
- * 6. The selected translator validates and unwraps the opaque response.
+ * 1. CAIP-27: `chainId` and method must already be authorized (`assertInvokeAuthorized`).
+ * 2. `qualify` — namespace-specific checks, such as the signer being granted.
+ * 3. Add the CAIP-25 `sessionId` when one was issued.
+ * 4. `transport.request(wallet_invokeMethod)`.
+ * 5. Validate the reply envelope and unwrap the method result.
  *
  * Contrast with `createSession`, which creates the session.
  */
@@ -30,16 +40,17 @@ export async function invoke(
     ...(session.sessionId ? { sessionId: session.sessionId } : {}),
   });
   const response = await transport.request(createCaip27Request(qualified));
-  return translator.unwrapResponse(response, qualified);
+  return readResponse(response, qualified, translator);
 }
 
 /**
- * Send one namespace envelope without a persisted session.
+ * Handshake, send one namespace envelope, then clear the temporary keys.
  *
- * The caller owns handshake and cleanup. This deliberately skips session
- * authorization and request qualification, then delegates opaque response
- * handling to the namespace translator. A session id is forbidden so this
- * path cannot bypass persisted-session authorization.
+ * Owns the whole one-shot lifecycle, so no session is ever written and the keys it
+ * negotiates are cleared even when the transport or response decoding fails. This
+ * deliberately skips session authorization and request qualification. A session id is
+ * forbidden so this path cannot bypass persisted-session authorization, and it is
+ * rejected before the transport is touched.
  */
 export async function invokeEphemeral(
   envelope: Envelope,
@@ -49,6 +60,11 @@ export async function invokeEphemeral(
   if (envelope.sessionId !== undefined) {
     throw standardErrors.rpc.invalidParams('Ephemeral invoke cannot include a sessionId');
   }
-  const response = await transport.request(createCaip27Request(envelope));
-  return translator.unwrapResponse(response, envelope);
+  try {
+    await transport.handshake({ method: 'handshake' });
+    const response = await transport.request(createCaip27Request(envelope));
+    return readResponse(response, envelope, translator);
+  } finally {
+    await transport.cleanup();
+  }
 }

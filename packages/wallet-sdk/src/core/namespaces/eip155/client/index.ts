@@ -197,22 +197,3 @@ export function getClient(chainId: number): PublicClient | undefined {
 
   return undefined;
 }
-
-export function getBundlerClient(chainId: number): BundlerClient | undefined {
-  // First check if bundler client exists in storage
-  const storedBundlerClient = ChainClients.getState()[chainId]?.bundlerClient;
-  if (storedBundlerClient) {
-    return storedBundlerClient;
-  }
-
-  // If not in storage, try to create a fallback bundler client
-  const fallbackPair = createFallbackClientPair(chainId);
-
-  // If we successfully created fallback clients, store them for future use
-  if (fallbackPair) {
-    storeClientPair(chainId, fallbackPair);
-    return fallbackPair.bundlerClient;
-  }
-
-  return undefined;
-}

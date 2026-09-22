@@ -5,8 +5,9 @@ export type Caip10 = `${Caip2}:${string}`;
 /**
  * One CAIP-25 grant.
  *
- * `accounts` holds CAIP-10 ids under a chain-keyed scope and raw accounts under a
- * namespace-keyed scope, where no single chain qualifies them.
+ * `accounts` holds raw account addresses, never CAIP-10 ids: CAIP-25 dropped the
+ * CAIP-2 prefix from scope accounts, and a null-reference scope has no single chain
+ * to qualify them with anyway.
  */
 export type ScopeState = {
   accounts: string[];
@@ -18,11 +19,15 @@ export type ScopeState = {
 export type Session = {
   sessionId?: string;
   /**
-   * Grants keyed by namespace (`eip155` — every chain in that namespace) or by exact
-   * CAIP-2 chain (`eip155:8453` — that chain only).
+   * Grants keyed by CAIP-104 namespace (`eip155`, `solana`).
+   *
+   * Consent is per account, not per chain: one `eip155` grant authorizes every EVM
+   * chain, and the wallet decides at execution time which it can serve. Which chains
+   * those are — and anything else chain-specific — lives in
+   * `properties.chainMetadata`, never here.
    */
-  scopes: Record<string, ScopeState>;
-  /** Global CAIP-25 session metadata returned by the wallet. */
+  namespaces: Record<Namespace, ScopeState>;
+  /** Global CAIP-25 session metadata returned by the wallet, including chainMetadata. */
   properties?: Record<string, unknown>;
 };
 
@@ -31,21 +36,9 @@ export interface AppMetadata {
   appName: string;
   /** Application logo URL, or null to use the favicon. */
   appLogoUrl: string | null;
-  /**
-   * Chain the provider starts on before a session exists.
-   *
-   * Authorization is per namespace, so this only picks the initial active chain.
-   * Defaults to the first `appChainIds` entry, then Ethereum mainnet.
-   */
-  defaultChainId?: number;
-  /**
-   * EVM chain IDs the application expects to use.
-   *
-   * @deprecated Chain access is authorized per namespace, not per chain, and chain
-   * metadata comes from the wallet grant. Only the first entry is still read, as a
-   * fallback for `defaultChainId`.
-   */
-  appChainIds: number[];
+  // No chain fields: a session authorizes every EVM chain, the wallet's own catalog in
+  // `Session.properties.chainMetadata` says which it can serve, and the provider starts on
+  // Ethereum mainnet until `wallet_switchEthereumChain` moves it.
 }
 
 export type Attribution =

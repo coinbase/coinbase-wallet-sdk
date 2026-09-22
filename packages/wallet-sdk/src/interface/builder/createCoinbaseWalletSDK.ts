@@ -19,7 +19,6 @@ import {
 
 export type CreateProviderOptions = Partial<AppMetadata> & {
   preference?: Preference;
-  paymasterUrls?: Record<number, string>;
   /** @internal Overrides how the prepared wallet URL is presented. */
   openFn?: OpenFn;
 };
@@ -77,7 +76,7 @@ export function _resetGlobalInitialization(): void {
 /**
  * Create a Coinbase Wallet SDK instance with an EIP-1193 compliant provider
  * @param params - Options to create a Coinbase Wallet SDK instance.
- * Connection is `ensureSession` → `createSession` (handshake + CAIP-25). Signing is `invoke`
+ * Connection is `createSession` (handshake + CAIP-25). Signing is `invoke`
  * through the popup transport.
  */
 export function createCoinbaseWalletSDK(params: CreateProviderOptions) {
@@ -85,20 +84,15 @@ export function createCoinbaseWalletSDK(params: CreateProviderOptions) {
     metadata: {
       appName: params.appName || 'App',
       appLogoUrl: params.appLogoUrl || '',
-      appChainIds: params.appChainIds || [],
-      ...(params.defaultChainId !== undefined ? { defaultChainId: params.defaultChainId } : {}),
     },
     preference: params.preference ?? {},
-    paymasterUrls: params.paymasterUrls,
   };
 
   //  ====================================================================
   //  Set the options in the store and rehydrate the store from storage
   //  ====================================================================
 
-  const { paymasterUrls, ...config } = options;
-  store.config.set(config);
-  store.eip155.paymasterUrls.set(paymasterUrls);
+  store.config.set(options);
 
   //  ====================================================================
   //  One-time initialization and validation
@@ -124,12 +118,12 @@ export function createCoinbaseWalletSDK(params: CreateProviderOptions) {
   const sdk = {
     getProvider: () => {
       if (!provider) {
-        provider = getInjectedProvider() ?? new CoinbaseWalletProvider(options, transport, store);
+        provider = getInjectedProvider() ?? new CoinbaseWalletProvider({ transport, store });
       }
 
       return provider;
     },
-    registerSolanaWallet: () => registerSolanaWallet(transport, store.session),
+    registerSolanaWallet: () => registerSolanaWallet({ transport, session: store.session }),
   };
 
   return sdk;

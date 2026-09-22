@@ -1,4 +1,4 @@
-import { SOLANA_MAINNET, handleSolanaRequest } from ':core/namespaces/solana/index.js';
+import { handleSolanaRequest } from ':core/namespaces/solana/index.js';
 import type { WalletTransport } from ':core/transport/index.js';
 import type { Session } from ':core/session/types.js';
 import type { Store } from ':store/store.js';
@@ -87,9 +87,9 @@ describe('createSolanaWallet', () => {
     const wallet = createSolanaWallet(
       transport({
         sessionId: 'session',
-        scopes: {
-          [SOLANA_MAINNET]: {
-            accounts: [`${SOLANA_MAINNET}:${address}`, `${SOLANA_MAINNET}:${otherAddress}`],
+        namespaces: {
+          solana: {
+            accounts: [address, otherAddress],
             methods: ['solana_signMessage'],
           },
         },

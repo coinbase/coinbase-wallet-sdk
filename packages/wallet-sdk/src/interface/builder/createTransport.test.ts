@@ -8,7 +8,7 @@ vi.mock(':core/transport/index.js', () => ({
 }));
 
 const options = {
-  metadata: { appName: 'Test', appLogoUrl: null, appChainIds: [8453] },
+  metadata: { appName: 'Test', appLogoUrl: null },
   preference: { telemetry: false },
 };
 

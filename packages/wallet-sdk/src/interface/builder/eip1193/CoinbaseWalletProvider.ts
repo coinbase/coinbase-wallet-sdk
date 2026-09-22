@@ -10,7 +10,6 @@ import {
   projectEthAccounts,
 } from ':core/namespaces/eip155/index.js';
 import {
-  ConstructorOptions,
   ProviderEventEmitter,
   ProviderInterface,
   RequestArguments,
@@ -24,7 +23,9 @@ import { checkErrorForInvalidRequestArgs } from ':util/provider.js';
 import { assertEphemeralMethod } from './ephemeral.js';
 import { withMeasurement } from './withMeasurement.js';
 
-export type CoinbaseWalletProviderParams = Readonly<ConstructorOptions> & {
+type CoinbaseWalletProviderParams = {
+  transport: WalletTransport;
+  store: Store;
   /**
    * Restricts requests to the one-shot methods used by `pay()`.
    * The caller owns the corresponding isolated transport.
@@ -36,42 +37,43 @@ export type CoinbaseWalletProviderParams = Readonly<ConstructorOptions> & {
 export class CoinbaseWalletProvider extends ProviderEventEmitter implements ProviderInterface {
   private readonly context: Eip1193Context;
   private readonly ephemeral: boolean;
-  private isDisconnecting = false;
+  /** What the application has been told: the last connection state it saw an event for. */
+  private connected: boolean;
+
   public readonly request: ProviderInterface['request'];
 
-  constructor(params: CoinbaseWalletProviderParams, transport: WalletTransport, store: Store) {
+  constructor({ transport, store, ephemeral = false }: CoinbaseWalletProviderParams) {
     super();
-    const { ephemeral = false, metadata } = params;
-    const restored = transport.readSession();
-    const chain = createActiveChain({
-      // Active chain only: a session authorizes the eip155 namespace, not one chain.
-      defaultChainId: metadata.defaultChainId ?? metadata.appChainIds?.[0] ?? 1,
-      session: restored,
+    this.ephemeral = ephemeral;
+    this.request = withMeasurement({ isEphemeral: ephemeral }, this.handleRequest);
+
+    const restoredSession = transport.readSession();
+    this.connected = !!restoredSession && projectEthAccounts(restoredSession).length > 0;
+    if (restoredSession) createClients(projectEip155ChainMetadata(restoredSession));
+
+    // Every provider starts on Ethereum mainnet and moves only when something asks it to.
+    // The wallet serves mainnet, so there is no catalog to reconcile against here.
+    const activeChain = createActiveChain({
       onChange: (chainId) => this.emit('chainChanged', hexStringFromNumber(chainId)),
     });
-    this.ephemeral = ephemeral;
     this.context = {
       transport,
-      cache: store.eip155,
-      config: store.config,
       emit: this.emit.bind(this),
-      chain,
+      chain: activeChain,
     };
-    this.syncSession(restored, false);
-    store.session.subscribe(this.handleSessionChange);
 
-    this.request = withMeasurement({ isEphemeral: ephemeral }, this.handleRequest);
+    store.session.subscribe(this.handleSessionChange);
   }
 
   /** Reflect EVM authorization removed by another interface into EIP-1193 events. */
-  private handleSessionChange = (
-    session: Session | undefined,
-    previousSession: Session | undefined
-  ): void => {
-    const hadEip155Session = !!previousSession && projectEthAccounts(previousSession).length > 0;
-    const hasEip155Session = !!session && projectEthAccounts(session).length > 0;
-    this.syncSession(session);
-    if (!hadEip155Session || hasEip155Session || this.isDisconnecting) return;
+  private handleSessionChange = (session: Session | undefined): void => {
+    if (session) createClients(projectEip155ChainMetadata(session));
+
+    const connected = !!session && projectEthAccounts(session).length > 0;
+
+    const revokedElsewhere = this.connected && !connected;
+    this.connected = connected;
+    if (!revokedElsewhere) return;
 
     this.emit('accountsChanged', []);
     this.emit(
@@ -79,15 +81,6 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
       standardErrors.provider.disconnected('Shared wallet session disconnected')
     );
   };
-
-  private syncSession(session: Session | undefined, emitChainChange = true): void {
-    if (session && projectEthAccounts(session).length > 0) {
-      createClients(projectEip155ChainMetadata(session));
-      if (emitChainChange) this.context.chain.reconcile(session);
-      return;
-    }
-    this.context.cache.spendPermissions.clear();
-  }
 
   private handleRequest = async <T>(args: RequestArguments): Promise<T> => {
     try {
@@ -104,13 +97,9 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
   };
 
   async disconnect() {
-    this.isDisconnecting = true;
-    try {
-      await this.context.transport.cleanup();
-      correlationIds.clear();
-    } finally {
-      this.isDisconnecting = false;
-    }
+    this.connected = false;
+    await this.context.transport.cleanup();
+    correlationIds.clear();
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
 

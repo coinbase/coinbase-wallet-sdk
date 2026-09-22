@@ -1,4 +1,4 @@
-import { extractFrom } from './from.js';
+import { extractFrom } from './extractFrom.js';
 
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca';
 

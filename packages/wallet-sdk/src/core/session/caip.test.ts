@@ -1,11 +1,4 @@
-import {
-  accountOf,
-  chainIdOf,
-  formatCaip2,
-  formatCaip10,
-  namespaceOf,
-  parseCaip2,
-} from './caip.js';
+import { accountOf, formatCaip2, formatCaip10, namespaceOf, parseCaip2 } from './caip.js';
 
 describe('caip', () => {
   it('parses eip155, solana, and bip122', () => {
@@ -21,8 +14,5 @@ describe('caip', () => {
       expect.objectContaining({ code: -32602 })
     );
     expect(() => namespaceOf('invalid')).toThrowError(expect.objectContaining({ code: -32602 }));
-    expect(() => chainIdOf('invalid' as never)).toThrowError(
-      expect.objectContaining({ code: -32602 })
-    );
   });
 });

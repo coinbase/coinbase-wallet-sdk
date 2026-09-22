@@ -2,10 +2,10 @@ import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
 import { isAddress, isAddressEqual } from 'viem';
 import { accountOf, namespaceOf } from ':core/session/caip.js';
-import { accountsFor } from ':core/session/grants.js';
-import type { Envelope, Session } from ':core/session/types.js';
-import { extractFrom } from './from.js';
-import { eip155Caip2 } from './caip.js';
+import { activeGrantForChain } from ':core/session/grants.js';
+import type { Envelope, NamespaceTranslator, Session } from ':core/session/types.js';
+import { extractFrom } from './extractFrom.js';
+import { formatEip155ChainId } from './caip.js';
 
 function sameAccount(a: string, b: string): boolean {
   const addrA = accountOf(a);
@@ -22,7 +22,7 @@ function sameAccount(a: string, b: string): boolean {
  */
 export function toEnvelope(request: RequestArguments, chainId: number): Envelope {
   return {
-    chainId: eip155Caip2(chainId),
+    chainId: formatEip155ChainId(chainId),
     request: { method: request.method, params: request.params ?? [] },
   };
 }
@@ -39,7 +39,7 @@ export function qualify(session: Session, envelope: Envelope): Envelope {
   if (namespaceOf(envelope.chainId) !== 'eip155') {
     throw standardErrors.provider.unsupportedMethod(`eip155 qualify received ${envelope.chainId}`);
   }
-  const accounts = accountsFor(session, envelope.chainId);
+  const accounts = activeGrantForChain(session, envelope.chainId)?.accounts ?? [];
   if (accounts.length === 0) {
     throw standardErrors.provider.unauthorized('No eip155 account granted for target chain');
   }
@@ -49,3 +49,11 @@ export function qualify(session: Session, envelope: Envelope): Envelope {
   }
   return envelope;
 }
+
+/**
+ * eip155 policy for the invoke kernel.
+ *
+ * `qualify` is the whole policy: EVM results are JSON-native, so the kernel's CAIP-27
+ * unwrapping needs no namespace decoder on top of it.
+ */
+export const eip155Translator = { qualify } satisfies NamespaceTranslator;

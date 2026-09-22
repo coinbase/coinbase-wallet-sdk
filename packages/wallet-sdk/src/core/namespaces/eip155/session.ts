@@ -1,84 +1,33 @@
 import { Address } from ':core/type/index.js';
-import { type Caip2, accountOf } from ':core/session/caip.js';
-import { accountsFor, grantFor, grantsInNamespace } from ':core/session/grants.js';
+import { isRecord } from ':util/wire.js';
+import { activeGrantForNamespace } from ':core/session/grants.js';
 import type { Session } from ':core/session/types.js';
 import type { SDKChain } from './client/index.js';
 import { isAddress, numberToHex } from 'viem';
-import { eip155Caip2, eip155ChainId, formatEip155Account } from './caip.js';
+import { EIP155_NAMESPACE, formatEip155ChainId, parseEip155ChainId } from './caip.js';
 
-/** Default methods requested in an eip155 CAIP-25 session scope. */
-export const EIP155_METHODS = [
-  'eth_accounts',
-  'personal_sign',
-  'personal_ecRecover',
-  'eth_ecRecover',
-  'eth_sendTransaction',
-  'eth_signTransaction',
-  'eth_signTypedData',
-  'eth_signTypedData_v1',
-  'eth_signTypedData_v3',
-  'eth_signTypedData_v4',
-  'wallet_sendCalls',
-  'wallet_showCallsStatus',
-  'wallet_sign',
-  'wallet_grantPermissions',
-  'wallet_switchEthereumChain',
-  'wallet_addEthereumChain',
-  'wallet_watchAsset',
-  'wallet_connect',
-  'experimental_requestInfo',
-] as const;
-
-/**
- * Build a Session from a flat eip155 address list.
- *
- * Used for internal tests and local session state.
- */
-export function sessionFromAccounts(opts: {
-  accounts: Address[];
-  chainId: number;
-}): Session {
-  const chainId = eip155Caip2(opts.chainId);
-  const accounts = opts.accounts.map((address) => formatEip155Account(opts.chainId, address));
-  return {
-    scopes: {
-      [chainId]: { accounts, methods: [...EIP155_METHODS] },
-    },
-  };
+/** The eip155 grant, or `undefined` when nothing is authorized. */
+export function activeEip155Grant(session: Session) {
+  return activeGrantForNamespace(session, EIP155_NAMESPACE);
 }
 
 /**
- * eip155 addresses only, across every eip155 grant. Solana / bip122 never appear here.
+ * Every eip155 address in the session, in wallet order.
  *
- * Chain-keyed grants hold CAIP-10 ids and namespace grants hold raw addresses;
- * `accountOf` normalizes both.
+ * Authorization is namespace-wide, so this is the account list on every EVM chain.
  */
 export function projectEthAccounts(session: Session): Address[] {
   const seen = new Set<string>();
   const addresses: Address[] = [];
 
-  for (const [, scope] of grantsInNamespace(session, 'eip155')) {
-    for (const account of scope.accounts) {
-      const address = accountOf(account);
-      if (!isAddress(address)) continue;
-      const key = address.toLowerCase();
-      if (seen.has(key)) continue;
-      seen.add(key);
-      addresses.push(address as Address);
-    }
+  for (const address of activeEip155Grant(session)?.accounts ?? []) {
+    if (!isAddress(address)) continue;
+    const key = address.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    addresses.push(address as Address);
   }
   return addresses;
-}
-
-/** EIP-155 addresses authorized on one chain, preserving wallet order. */
-export function projectEthAccountsForChain(session: Session, chainId: number): Address[] {
-  return accountsFor(session, eip155Caip2(chainId)).flatMap((address) =>
-    isAddress(address) ? [address as Address] : []
-  );
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
 function parseRpcUrl(value: unknown): string | undefined {
@@ -105,20 +54,31 @@ function parseNativeCurrency(value: unknown): SDKChain['nativeCurrency'] | undef
   return { name, symbol, decimal: decimal as number };
 }
 
-/** Wallet-provided EIP-155 chain metadata from CAIP-25 session properties. */
-export function projectEip155ChainMetadata(session: Session): SDKChain[] {
+/** Raw chain catalog entries, keyed by CAIP-2, as the wallet returned them. */
+function chainCatalog(session: Session): [chainId: number, entry: Record<string, unknown>][] {
   const metadata = session.properties?.chainMetadata;
   if (!isRecord(metadata)) return [];
 
   return Object.entries(metadata).flatMap(([caip2, value]) => {
-    const id = eip155ChainId(caip2 as `eip155:${string}`);
-    const entry = isRecord(value) ? value : undefined;
-    if (id === null || !entry) return [];
+    const id = parseEip155ChainId(caip2 as `eip155:${string}`);
+    return id === null || !isRecord(value)
+      ? []
+      : [[id, value] as [number, Record<string, unknown>]];
+  });
+}
 
+/**
+ * The wallet's EVM chain catalog: which chains it can serve, and what it knows about them.
+ *
+ * This is capability, not authorization. A chain missing here is a 4902 (unsupported
+ * chain) concern, never a 4100 (unauthorized) one. An entry with no metadata still
+ * counts — the entry itself is the wallet saying it can serve that chain.
+ */
+export function projectEip155ChainMetadata(session: Session): SDKChain[] {
+  return chainCatalog(session).map(([id, entry]) => {
     const rpcUrl = parseRpcUrl(entry.rpcUrl);
     const nativeCurrency = parseNativeCurrency(entry.nativeCurrency);
-    if (!rpcUrl && !nativeCurrency) return [];
-    return [{ id, ...(rpcUrl ? { rpcUrl } : {}), ...(nativeCurrency ? { nativeCurrency } : {}) }];
+    return { id, ...(rpcUrl ? { rpcUrl } : {}), ...(nativeCurrency ? { nativeCurrency } : {}) };
   });
 }
 
@@ -126,75 +86,60 @@ export function rpcUrlForEip155Chain(session: Session, chainId: number): string 
   return projectEip155ChainMetadata(session).find((chain) => chain.id === chainId)?.rpcUrl;
 }
 
-/** True when a chain is already granted or described by the wallet's chain catalog. */
+/** True when the wallet's chain catalog covers this chain. */
 export function isKnownEip155Chain(session: Session, chainId: number): boolean {
-  return (
-    grantFor(session, eip155Caip2(chainId)) !== undefined ||
-    projectEip155ChainMetadata(session).some((chain) => chain.id === chainId)
-  );
+  return chainCatalog(session).some(([id]) => id === chainId);
 }
 
 /**
  * EIP-5792 capabilities keyed by hex chain id.
  *
- * A namespace grant is not chain-specific, so its capabilities are reported under the
- * EIP-5792 all-chains key (`0x0`). Per-chain wallet capabilities arrive as chain-keyed
- * grants or in `properties.chainMetadata`.
+ * The grant is namespace-wide, so its capabilities are reported under the EIP-5792
+ * all-chains key (`0x0`). Capabilities that differ per chain arrive in the wallet's
+ * chain catalog and are reported under that chain.
  */
 export function projectEip155Capabilities(session: Session): Record<string, unknown> {
-  return Object.fromEntries(
-    grantsInNamespace(session, 'eip155').flatMap(([scopeKey, scope]) => {
-      if (!scope.capabilities) return [];
-      const chainId = eip155ChainId(scopeKey as Caip2);
-      return [[chainId === null ? '0x0' : numberToHex(chainId), scope.capabilities]];
-    })
+  const namespaceCapabilities = activeEip155Grant(session)?.capabilities;
+  const perChain = chainCatalog(session).flatMap(([id, entry]) =>
+    isRecord(entry.capabilities) ? [[numberToHex(id), entry.capabilities] as const] : []
   );
+
+  return Object.fromEntries([
+    ...(namespaceCapabilities ? [['0x0', namespaceCapabilities] as const] : []),
+    ...perChain,
+  ]);
+}
+
+/** Replace the authorized accounts, preserving methods, capabilities, and session id. */
+export function withEip155Accounts(session: Session, addresses: Address[]): Session {
+  const grant = session.namespaces[EIP155_NAMESPACE];
+  if (!grant) return session;
+  return {
+    ...session,
+    namespaces: {
+      ...session.namespaces,
+      [EIP155_NAMESPACE]: { ...grant, accounts: [...addresses] },
+    },
+  };
 }
 
 /**
- * First chain-keyed EIP-155 grant in wallet response order.
+ * Add a chain to the wallet's catalog after the wallet accepted it.
  *
- * A session whose only eip155 grant is namespace-wide has no such chain: the caller
- * already knows which chain it wants, and `grantFor` authorizes it.
+ * Catalog growth is capability discovery, not a new grant: `namespaces` is untouched.
  */
-export function firstEip155ChainId(session: Session): number | undefined {
-  for (const [id, scope] of Object.entries(session.scopes)) {
-    const chainId = eip155ChainId(id as Caip2);
-    if (chainId !== null && scope.accounts.length > 0) return chainId;
-  }
-  return undefined;
-}
-
-export function firstGlobalEip155Account(
-  session: Session,
-  chainId: number,
-  excluded?: Address
-): Address | undefined {
-  return projectEthAccountsForChain(session, chainId).find(
-    (account) => !excluded || account.toLowerCase() !== excluded.toLowerCase()
-  );
-}
-
-/** Replace accounts on one granted scope while preserving methods, capabilities, and session id. */
-export function withEip155Accounts(
-  session: Session,
-  chainId: number,
-  addresses: Address[]
-): Session {
-  const id = eip155Caip2(chainId);
-  const scopeKey = session.scopes[id] ? id : 'eip155';
-  const scope = session.scopes[scopeKey];
-  if (!scope) return session;
-  // Chain-keyed grants store CAIP-10 ids; a namespace grant stores raw addresses.
-  const accounts =
-    scopeKey === id
-      ? addresses.map((address) => formatEip155Account(chainId, address))
-      : [...addresses];
+export function withKnownEip155Chain(session: Session, chainId: number): Session {
+  const metadata = session.properties?.chainMetadata;
+  const catalog: Record<string, unknown> = isRecord(metadata) ? metadata : {};
+  const key = formatEip155ChainId(chainId);
   return {
     ...session,
-    scopes: {
-      ...session.scopes,
-      [scopeKey]: { ...scope, accounts },
+    properties: {
+      ...session.properties,
+      chainMetadata: {
+        ...catalog,
+        [key]: isRecord(catalog[key]) ? catalog[key] : {},
+      },
     },
   };
 }

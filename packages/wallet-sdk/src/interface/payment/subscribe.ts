@@ -4,7 +4,7 @@ import {
   logSubscriptionStarted,
 } from ':core/telemetry/events/subscription.js';
 import { parseErrorMessageFromAny } from ':core/telemetry/utils.js';
-import { parseUnits } from 'viem';
+import { numberToHex, parseUnits } from 'viem';
 import { getHash } from '../public-utilities/spend-permission/index.js';
 import {
   createSpendPermissionTypedData,
@@ -153,8 +153,14 @@ export async function subscribe(options: SubscriptionOptions): Promise<Subscript
           });
 
     // Create SDK instance
-    const sdk = createEphemeralSDK({ chainId, walletUrl, telemetry });
+    const sdk = createEphemeralSDK({ walletUrl, telemetry });
     const provider = sdk.getProvider();
+    // Point the one-shot provider at the subscription's chain. `wallet_sign` carries no
+    // chain of its own, so this is what puts the right chain on the CAIP-27 envelope.
+    await provider.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: numberToHex(chainId) }],
+    });
 
     try {
       // Build capabilities if requireBalance is set

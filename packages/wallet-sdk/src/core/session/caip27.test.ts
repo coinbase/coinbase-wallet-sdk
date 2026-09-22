@@ -1,24 +1,18 @@
-import { sessionFromAccounts } from ':core/namespaces/eip155/session.js';
+import { sessionFromAccounts } from ':core/namespaces/eip155/session.fixtures.js';
 import { SOLANA_MAINNET } from ':core/namespaces/solana/caip.js';
-import {
-  WALLET_INVOKE_METHOD,
-  assertInvokeAuthorized,
-  createCaip27Request,
-  parseCaip27Response,
-  toCaip27,
-  unwrapCaip27Response,
-} from './caip27.js';
+import { WALLET_INVOKE_METHOD, createCaip27Request, readCaip27Result } from './caip27.js';
+import { assertInvokeAuthorized } from './grants.js';
 
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as const;
 
-describe('toCaip27', () => {
-  it('copies CAIP-27 params', () => {
+describe('createCaip27Request', () => {
+  it('copies CAIP-27 params onto the wire request', () => {
     expect(
-      toCaip27({
+      createCaip27Request({
         chainId: 'eip155:8453',
         request: { method: 'personal_sign', params: [] },
         capabilities: { atomic: { status: 'supported' } },
-      })
+      }).params
     ).toEqual({
       chainId: 'eip155:8453',
       request: { method: 'personal_sign', params: [] },
@@ -52,15 +46,16 @@ describe('CAIP-27 responses', () => {
   } as const;
 
   it('validates and unwraps a successful response envelope', () => {
-    const response = parseCaip27Response(
-      {
-        sessionId: 'session-1',
-        chainId: 'eip155:8453',
-        result: { method: 'personal_sign', result: '0xsig' },
-      },
-      request
-    );
-    expect(unwrapCaip27Response(response)).toBe('0xsig');
+    expect(
+      readCaip27Result(
+        {
+          sessionId: 'session-1',
+          chainId: 'eip155:8453',
+          result: { method: 'personal_sign', result: '0xsig' },
+        },
+        request
+      )
+    ).toBe('0xsig');
   });
 
   it('validates a Solana response against its exact CAIP-2 envelope', () => {
@@ -69,18 +64,19 @@ describe('CAIP-27 responses', () => {
       chainId: SOLANA_MAINNET,
       request: { method: 'solana_signMessage', params: [{ message: 'aGVsbG8=' }] },
     } as const;
-    const response = parseCaip27Response(
-      {
-        sessionId: 'solana-session',
-        chainId: SOLANA_MAINNET,
-        result: { method: 'solana_signMessage', result: { signature: 'AQ==' } },
-      },
-      solanaRequest
-    );
 
-    expect(unwrapCaip27Response(response)).toEqual({ signature: 'AQ==' });
+    expect(
+      readCaip27Result(
+        {
+          sessionId: 'solana-session',
+          chainId: SOLANA_MAINNET,
+          result: { method: 'solana_signMessage', result: { signature: 'AQ==' } },
+        },
+        solanaRequest
+      )
+    ).toEqual({ signature: 'AQ==' });
     expect(() =>
-      parseCaip27Response(
+      readCaip27Result(
         {
           sessionId: 'solana-session',
           chainId: 'solana:devnet',
@@ -92,17 +88,15 @@ describe('CAIP-27 responses', () => {
   });
 
   it('throws a method-level error inside the response envelope', () => {
-    const response = parseCaip27Response(
-      {
-        sessionId: 'session-1',
-        chainId: 'eip155:8453',
-        error: { code: 4100, message: 'not authorized', data: { reason: 'method' } },
-      },
-      request
-    );
-    expect(() => unwrapCaip27Response(response)).toThrow();
+    const reply = {
+      sessionId: 'session-1',
+      chainId: 'eip155:8453',
+      error: { code: 4100, message: 'not authorized', data: { reason: 'method' } },
+    };
+
+    expect(() => readCaip27Result(reply, request)).toThrow();
     try {
-      unwrapCaip27Response(response);
+      readCaip27Result(reply, request);
     } catch (error) {
       expect(error).toEqual({
         code: 4100,
@@ -114,7 +108,7 @@ describe('CAIP-27 responses', () => {
 
   it('rejects mismatched targeting and malformed envelopes', () => {
     expect(() =>
-      parseCaip27Response(
+      readCaip27Result(
         {
           sessionId: 'wrong',
           chainId: 'eip155:8453',
@@ -124,7 +118,7 @@ describe('CAIP-27 responses', () => {
       )
     ).toThrow(/sessionId/);
     expect(() =>
-      parseCaip27Response(
+      readCaip27Result(
         {
           sessionId: 'session-1',
           chainId: 'eip155:1',
@@ -134,7 +128,7 @@ describe('CAIP-27 responses', () => {
       )
     ).toThrow(/chainId/);
     expect(() =>
-      parseCaip27Response(
+      readCaip27Result(
         {
           sessionId: 'session-1',
           chainId: 'eip155:8453',
@@ -144,7 +138,7 @@ describe('CAIP-27 responses', () => {
       )
     ).toThrow(/requested method/);
     expect(() =>
-      parseCaip27Response(
+      readCaip27Result(
         {
           sessionId: 'session-1',
           chainId: 'invalid',
@@ -156,11 +150,22 @@ describe('CAIP-27 responses', () => {
         }
       )
     ).toThrow(/chainId/);
+    expect(() =>
+      readCaip27Result(
+        {
+          sessionId: 'session-1',
+          chainId: 'eip155:8453',
+          result: { method: 'personal_sign', result: '0xsig' },
+          error: { code: 4100, message: 'not authorized' },
+        },
+        request
+      )
+    ).toThrow(/exactly one of result or error/);
   });
 });
 
 describe('assertInvokeAuthorized', () => {
-  it('requires an exact chain, granted method, and matching session id', () => {
+  it('requires an authorized namespace and a matching session id', () => {
     const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 });
     session.sessionId = 'session-1';
 
@@ -171,18 +176,27 @@ describe('assertInvokeAuthorized', () => {
         request: { method: 'personal_sign', params: [] },
       })
     ).not.toThrow();
+    // Any EVM chain is authorized by the same grant, declared or not.
     expect(() =>
       assertInvokeAuthorized(session, {
         chainId: 'eip155:1',
         request: { method: 'personal_sign', params: [] },
       })
+    ).not.toThrow();
+    expect(() =>
+      assertInvokeAuthorized(session, {
+        chainId: 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp',
+        request: { method: 'personal_sign', params: [] },
+      })
     ).toThrow(/not in the session/);
+    // Method support is the wallet's answer to give, not ours to guess from a
+    // possibly-abbreviated grant list.
     expect(() =>
       assertInvokeAuthorized(session, {
         chainId: 'eip155:8453',
         request: { method: 'eth_subscribe', params: [] },
       })
-    ).toThrow(/not authorized/);
+    ).not.toThrow();
     expect(() =>
       assertInvokeAuthorized(session, {
         sessionId: 'wrong',

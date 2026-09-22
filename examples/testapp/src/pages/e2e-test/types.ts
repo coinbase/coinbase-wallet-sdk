@@ -192,7 +192,6 @@ export interface LoadedSDK {
 export interface SDKConfig {
   appName: string;
   appLogoUrl?: string;
-  appChainIds: number[];
   preference?: {
     walletUrl?: string;
     // biome-ignore lint/suspicious/noExplicitAny: SDK types vary between local and npm versions

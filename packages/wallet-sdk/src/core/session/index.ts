@@ -9,25 +9,28 @@
  *   CAIP-25 `wallet_createSession`, then write a Session.
  * - `invoke` — already paired: send one envelope on the existing session.
  *
- * `ensureSession` is the gate in front of `createSession` (reuse the stored session when
- * it already covers the required CAIP-2 chains).
+ * `sessionCovers` is the gate in front of `createSession`: reuse the stored session when
+ * it already covers the required CAIP-2 chains and methods.
  *
  * Namespace adapters and transports sit around this kernel:
  * dapp request → CAIP JSON-RPC → transport.request → translator response unwrapping.
  */
-export { activeSession } from './activeSession.js';
+export {
+  activeGrantForChain,
+  activeGrantForNamespace,
+  activeSession,
+  sessionCovers,
+} from './grants.js';
 export {
   accountOf,
-  chainIdOf,
   formatCaip10,
   formatCaip2,
   isCaip10,
   isCaip2,
   namespaceOf,
-  parseCaip10,
   parseCaip2,
 } from './caip.js';
-export type { Caip10, Caip2, ParsedCaip10, ParsedCaip2 } from './caip.js';
+export type { Caip10, Caip2, ParsedCaip2 } from './caip.js';
 export {
   WALLET_CREATE_SESSION,
   createCaip25Request,
@@ -35,41 +38,18 @@ export {
   parseCaip25Result,
   sessionFromCaip25Result,
 } from './caip25.js';
+export { createSession } from './createSession.js';
+export { WALLET_INVOKE_METHOD, createCaip27Request, readCaip27Result } from './caip27.js';
 export type {
   Caip25PrivateRequestScopeExtensions,
   Caip25PrivateScopeParams,
-  Caip25Request,
   Caip25RequestParams,
   Caip25RequestScope,
   Caip25Result,
   Caip25ResultScope,
-} from './caip25.js';
-export {
-  accountsFor,
-  grantFor,
-  grantsInNamespace,
-  hasNamespaceGrant,
-  scopeNamespace,
-} from './grants.js';
-export { createSession } from './createSession.js';
-export type { CreateSessionOptions } from './createSession.js';
-export { ensureSession } from './ensureSession.js';
-export {
-  WALLET_INVOKE_METHOD,
-  assertInvokeAuthorized,
-  createCaip27Request,
-  parseCaip27Response,
-  toCaip27,
-  unwrapCaip27Response,
-} from './caip27.js';
-export { sessionCovers } from './covers.js';
-export type { ScopeRequirement } from './covers.js';
-export type {
   Caip27Error,
   Caip27Params,
   Caip27Request,
-  Caip27Response,
-  Caip27Result,
   Envelope,
   NamespaceTranslator,
   ScopeState,

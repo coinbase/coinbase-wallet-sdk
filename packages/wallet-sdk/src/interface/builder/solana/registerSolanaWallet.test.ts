@@ -83,7 +83,9 @@ describe('registerSolanaWallet', () => {
     (environment) => {
       hostWindow.coinbaseWallet = { environment };
 
-      expect(registerSolanaWallet(walletTransport, walletSession)).toBeUndefined();
+      expect(
+        registerSolanaWallet({ transport: walletTransport, session: walletSession })
+      ).toBeUndefined();
       expect(createSolanaWallet).not.toHaveBeenCalled();
       expect(registerWallet).not.toHaveBeenCalled();
     }
@@ -92,7 +94,9 @@ describe('registerSolanaWallet', () => {
   it('supports the immutable InAppBrowser user-agent fallback', () => {
     setUserAgent('Mozilla/5.0 CoinbaseWalletRN/1.2.3 (org.toshi; Android 35)');
 
-    expect(registerSolanaWallet(walletTransport, walletSession)).toBeUndefined();
+    expect(
+      registerSolanaWallet({ transport: walletTransport, session: walletSession })
+    ).toBeUndefined();
     expect(createSolanaWallet).not.toHaveBeenCalled();
     expect(registerWallet).not.toHaveBeenCalled();
   });
@@ -101,8 +105,12 @@ describe('registerSolanaWallet', () => {
     const popupWallet = walletFixture();
     vi.mocked(createSolanaWallet).mockReturnValue(popupWallet);
 
-    expect(registerSolanaWallet(walletTransport, walletSession)).toBeUndefined();
-    expect(registerSolanaWallet(walletTransport, walletSession)).toBeUndefined();
+    expect(
+      registerSolanaWallet({ transport: walletTransport, session: walletSession })
+    ).toBeUndefined();
+    expect(
+      registerSolanaWallet({ transport: walletTransport, session: walletSession })
+    ).toBeUndefined();
 
     expect(createSolanaWallet).toHaveBeenCalledOnce();
     expect(registerWallet).toHaveBeenCalledOnce();
@@ -115,9 +123,9 @@ describe('registerSolanaWallet', () => {
     const firstTransport = { request: firstRequest } as unknown as WalletTransport;
     const secondTransport = { request: secondRequest } as unknown as WalletTransport;
 
-    registerSolanaWallet(firstTransport, walletSession);
+    registerSolanaWallet({ transport: firstTransport, session: walletSession });
     const registeredTransport = vi.mocked(createSolanaWallet).mock.calls[0]?.[0];
-    registerSolanaWallet(secondTransport, walletSession);
+    registerSolanaWallet({ transport: secondTransport, session: walletSession });
 
     expect(registeredTransport).toBeDefined();
     await expect(registeredTransport!.request({ method: 'test' })).resolves.toBe('second');
@@ -131,10 +139,10 @@ describe('registerSolanaWallet', () => {
     const popupWallet = walletFixture();
     vi.mocked(createSolanaWallet).mockReturnValue(popupWallet);
     vi.mocked(registerWallet).mockImplementationOnce(() =>
-      registerSolanaWallet(walletTransport, walletSession)
+      registerSolanaWallet({ transport: walletTransport, session: walletSession })
     );
 
-    registerSolanaWallet(walletTransport, walletSession);
+    registerSolanaWallet({ transport: walletTransport, session: walletSession });
 
     expect(createSolanaWallet).toHaveBeenCalledOnce();
     expect(registerWallet).toHaveBeenCalledOnce();

@@ -49,7 +49,6 @@ const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
 const appMetadata: AppMetadata = {
   appName: 'Test App',
   appLogoUrl: null,
-  appChainIds: [1],
 };
 
 const preference: Preference = { walletUrl: CB_KEYS_URL };

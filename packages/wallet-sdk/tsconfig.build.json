@@ -5,5 +5,5 @@
     "emitDeclarationOnly": false
   },
   "include": ["src"],
-  "exclude": ["dist", "build", "**/*.test.*", "mocks"]
+  "exclude": ["dist", "build", "**/*.test.*", "**/*.fixtures.*", "mocks"]
 }

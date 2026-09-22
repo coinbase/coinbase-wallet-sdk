@@ -69,7 +69,10 @@ function hostOwnsSolanaWalletRegistration(current: CoinbaseWalletWindow): boolea
 /**
  * Explicitly advertise the popup wallet when a Coinbase Wallet host does not provide one.
  */
-export function registerSolanaWallet(transport: WalletTransport, session: Store['session']): void {
+export function registerSolanaWallet({
+  transport,
+  session,
+}: { transport: WalletTransport; session: Store['session'] }): void {
   const current = browserWindow();
   if (!current) {
     throw standardErrors.provider.disconnected('Solana wallet registration requires a browser');

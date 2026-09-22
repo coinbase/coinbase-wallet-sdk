@@ -1,9 +1,8 @@
 import { standardErrors } from ':core/error/errors.js';
 import type { WalletTransport } from ':core/transport/index.js';
-import { activeSession } from ':core/session/activeSession.js';
-import { sessionCovers } from ':core/session/covers.js';
+import { activeSession } from ':core/session/grants.js';
+import { sessionCovers } from ':core/session/grants.js';
 import { createSession } from ':core/session/createSession.js';
-import { ensureSession } from ':core/session/ensureSession.js';
 import { invoke } from ':core/session/invoke.js';
 import { SOLANA_MAINNET } from './caip.js';
 import {
@@ -22,14 +21,13 @@ import type {
 } from './types.js';
 
 async function connect(transport: WalletTransport): Promise<string[]> {
-  const session = await ensureSession({
-    session: activeSession(transport.readSession()),
-    requiredScopes: SOLANA_MAINNET_REQUIRED_SCOPES,
-    createSession: () =>
-      createSession(transport, {
-        scopes: createSolanaMainnetScopes(),
-      }),
-  });
+  // Reuse a session that already covers mainnet; otherwise pair. Solana authorization is
+  // genuinely per chain, so unlike EVM this check can both succeed and fail.
+  const restored = activeSession(transport.readSession());
+  const session =
+    restored && sessionCovers(restored, SOLANA_MAINNET_REQUIRED_SCOPES)
+      ? restored
+      : await createSession(transport, { scopes: createSolanaMainnetScopes() });
   const accounts = projectSolanaAccounts(session);
   if (accounts.length === 0) {
     throw standardErrors.provider.unauthorized(
