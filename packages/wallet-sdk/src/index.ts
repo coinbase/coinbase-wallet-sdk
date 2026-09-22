@@ -6,6 +6,12 @@ export type {
 } from ':core/provider/interface.js';
 
 export { createCoinbaseWalletSDK } from './interface/builder/createCoinbaseWalletSDK.js';
+export type {
+  ConnectAccount,
+  ConnectNamespaceOptions,
+  ConnectOptions,
+  ConnectResult,
+} from './interface/builder/connect.js';
 
 export { PACKAGE_VERSION as VERSION } from './core/constants.js';
 

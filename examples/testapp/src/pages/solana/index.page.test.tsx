@@ -61,13 +61,91 @@ const wallet = {
   },
 };
 const registerSolanaWallet = vi.fn();
+const sdkConnect = vi.fn();
 
 describe('SolanaPlayground', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    sdkConnect.mockResolvedValue({
+      evm: {
+        accounts: [{ address: '0x0000000000000000000000000000000000000001' }],
+      },
+      solana: {
+        accounts: [{ address: account.address }],
+      },
+    });
     vi.mocked(useEIP1193Provider).mockReturnValue({
-      sdk: { registerSolanaWallet },
+      sdk: { connect: sdkConnect, registerSolanaWallet },
     } as never);
+  });
+
+  it('connects the default EVM and Solana namespaces through sdk.connect', async () => {
+    render(<SolanaPlayground />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Submit sdk.connect()' }));
+
+    await waitFor(() => expect(sdkConnect).toHaveBeenCalledWith());
+    expect(screen.getByText(/"evm":/)).toBeTruthy();
+    expect(screen.getByText(/"solana":/)).toBeTruthy();
+  });
+
+  it('requests and renders independent per-account EVM and Solana AOS results', async () => {
+    sdkConnect.mockResolvedValueOnce({
+      evm: {
+        accounts: [
+          {
+            address: '0x0000000000000000000000000000000000000001',
+            capabilities: { aos: { signature: '0xevm-signature', isSCW: true } },
+          },
+        ],
+      },
+      solana: {
+        accounts: [
+          {
+            address: account.address,
+            capabilities: { aos: { signature: 'solana-base58-signature' } },
+          },
+        ],
+      },
+    });
+    render(<SolanaPlayground />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Submit sdk.connect({ aos })' }));
+
+    await waitFor(() => expect(sdkConnect).toHaveBeenCalledOnce());
+    const request = sdkConnect.mock.calls[0]?.[0];
+    expect(request.evm.capabilities.aos.apiUrl).toBe('https://api.wallet.coinbase.com');
+    expect(request.solana.capabilities.aos.apiUrl).toBe('https://api.wallet.coinbase.com');
+    expect(request.evm.capabilities.aos.nonce).not.toBe(request.solana.capabilities.aos.nonce);
+    expect(screen.getByText(/0xevm-signature/)).toBeTruthy();
+    expect(screen.getByText(/solana-base58-signature/)).toBeTruthy();
+  });
+
+  it('renders a mixed partial sdk.connect result as a success', async () => {
+    sdkConnect.mockResolvedValueOnce({
+      evm: {
+        accounts: [{ address: '0x0000000000000000000000000000000000000001' }],
+      },
+      solana: { accounts: [] },
+    });
+    render(<SolanaPlayground />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Submit sdk.connect()' }));
+
+    await waitFor(() => expect(screen.getByText('success')).toBeTruthy());
+    expect(screen.getByText(/"solana": \{\s+"accounts": \[\]/)).toBeTruthy();
+  });
+
+  it('unlocks signing actions when sdk.connect returns a Solana account', async () => {
+    render(<SolanaPlayground />);
+    const signMessageButton = screen.getByRole('button', {
+      name: 'Submit solana:signMessage',
+    });
+    expect((signMessageButton as HTMLButtonElement).disabled).toBe(true);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Submit sdk.connect()' }));
+
+    await waitFor(() => expect((signMessageButton as HTMLButtonElement).disabled).toBe(false));
   });
 
   it('explicitly registers and connects through Wallet Standard', async () => {

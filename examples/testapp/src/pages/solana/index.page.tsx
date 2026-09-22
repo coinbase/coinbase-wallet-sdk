@@ -125,6 +125,12 @@ type PlaygroundOutput = {
   value: unknown;
 };
 
+const AOS_API_URL = 'https://api.wallet.coinbase.com';
+
+function createPlaygroundNonce(): string {
+  return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
+}
+
 export default function SolanaPlayground() {
   const { sdk } = useEIP1193Provider();
   const [wallet, setWallet] = useState<Wallet | null>(null);
@@ -160,6 +166,38 @@ export default function SolanaPlayground() {
       setPendingMethod(null);
     }
   };
+
+  const applyUnifiedConnection = (result: Awaited<ReturnType<typeof sdk.connect>>) => {
+    const address = result.solana?.accounts[0]?.address;
+    if (address) setConnectedAddress(address);
+    return result;
+  };
+
+  const unifiedConnect = () =>
+    run('sdk.connect()', async () => applyUnifiedConnection(await sdk.connect()));
+
+  const unifiedConnectWithAos = () =>
+    run('sdk.connect({ aos })', async () => {
+      const result = await sdk.connect({
+        evm: {
+          capabilities: {
+            aos: {
+              nonce: createPlaygroundNonce(),
+              apiUrl: AOS_API_URL,
+            },
+          },
+        },
+        solana: {
+          capabilities: {
+            aos: {
+              nonce: createPlaygroundNonce(),
+              apiUrl: AOS_API_URL,
+            },
+          },
+        },
+      });
+      return applyUnifiedConnection(result);
+    });
 
   const connect = () =>
     run(StandardConnect, async () => {
@@ -251,6 +289,31 @@ export default function SolanaPlayground() {
             Register the Coinbase Wallet SDK, establish a Solana session, and exercise each exposed
             Wallet Standard signing feature.
           </Text>
+        </Box>
+
+        <Box>
+          <Heading size="md">Unified SDK Connection</Heading>
+          <Text mt={1} color="gray.600">
+            Connect EVM and Solana together, with optional independent account ownership proofs.
+          </Text>
+          <Grid mt={2} templateColumns={{ base: '100%', md: 'repeat(2, 50%)' }} gap={2}>
+            <GridItem w="100%">
+              <ActionCard
+                method="sdk.connect()"
+                description="Request the default EVM and Solana namespaces in one session."
+                onSubmit={unifiedConnect}
+                isLoading={pendingMethod === 'sdk.connect()'}
+              />
+            </GridItem>
+            <GridItem w="100%">
+              <ActionCard
+                method="sdk.connect({ aos })"
+                description="Request separate EVM and Solana AOS signatures with fresh nonces."
+                onSubmit={unifiedConnectWithAos}
+                isLoading={pendingMethod === 'sdk.connect({ aos })'}
+              />
+            </GridItem>
+          </Grid>
         </Box>
 
         <Card shadow="lg">
