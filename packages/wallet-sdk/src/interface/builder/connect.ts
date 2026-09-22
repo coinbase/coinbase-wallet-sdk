@@ -38,6 +38,23 @@ export type ConnectResult = Record<
 const EVM_CONNECT_METHODS = EIP155_METHODS.filter((method) => method !== 'wallet_addSubAccount');
 const UNSUPPORTED_EVM_CONNECT_CAPABILITIES = new Set(['addSubAccount', 'spendPermissions']);
 
+/** Default to both namespaces; reject anything else and an empty request. */
+export function parseConnectOptions(request?: ConnectOptions): ConnectOptions {
+  const namespaces = request ?? { evm: true, solana: true };
+  const unsupportedNamespaces = Object.keys(namespaces).filter(
+    (namespace) => namespace !== 'evm' && namespace !== 'solana'
+  );
+  if (unsupportedNamespaces.length > 0) {
+    throw standardErrors.rpc.invalidParams(
+      `Unsupported wallet namespace: ${unsupportedNamespaces.join(', ')}`
+    );
+  }
+  if (namespaces.evm === undefined && namespaces.solana === undefined) {
+    throw standardErrors.rpc.invalidParams('At least one wallet namespace must be requested');
+  }
+  return namespaces;
+}
+
 export function requestedCapabilities(
   selection: ConnectNamespaceOptions | undefined
 ): Record<string, unknown> | undefined {
@@ -122,25 +139,12 @@ export async function connectWallet({
   request?: ConnectOptions;
   transport: WalletTransport;
 }): Promise<ConnectResult> {
-  const namespaces = request ?? { evm: true, solana: true };
-  const unsupportedNamespaces = Object.keys(namespaces).filter(
-    (namespace) => namespace !== 'evm' && namespace !== 'solana'
-  );
-  if (unsupportedNamespaces.length > 0) {
-    throw standardErrors.rpc.invalidParams(
-      `Unsupported wallet namespace: ${unsupportedNamespaces.join(', ')}`
-    );
-  }
-
+  const namespaces = parseConnectOptions(request);
   const includeEvm = namespaces.evm !== undefined;
   const includeSolana = namespaces.solana !== undefined;
   const requestedEvmCapabilities = requestedCapabilities(namespaces.evm);
   const evmCapabilities = forwardedEvmCapabilities(requestedEvmCapabilities);
   const solanaCapabilities = requestedCapabilities(namespaces.solana);
-
-  if (!includeEvm && !includeSolana) {
-    throw standardErrors.rpc.invalidParams('At least one wallet namespace must be requested');
-  }
 
   const scopes = {
     ...(includeEvm

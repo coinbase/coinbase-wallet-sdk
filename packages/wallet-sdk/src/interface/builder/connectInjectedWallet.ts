@@ -1,6 +1,6 @@
 import { standardErrorCodes } from ':core/error/constants.js';
-import { standardErrors } from ':core/error/errors.js';
 import type { ProviderInterface } from ':core/provider/interface.js';
+import { asRecord } from ':util/wire.js';
 import { StandardConnect } from '@wallet-standard/features';
 import {
   type ConnectAccount,
@@ -9,15 +9,10 @@ import {
   type ConnectResult,
   connectAccount,
   forwardedEvmCapabilities,
+  parseConnectOptions,
   requestedCapabilities,
 } from './connect.js';
 import { getInjectedSolanaWallet } from './solana/getInjectedSolanaWallet.js';
-
-function asRecord(value: unknown): Record<string, unknown> | undefined {
-  return value !== null && typeof value === 'object' && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : undefined;
-}
 
 function isMethodNotSupported(error: unknown): boolean {
   const code = asRecord(error)?.code;
@@ -42,7 +37,14 @@ function parseWalletConnectAccounts(
   return accounts.flatMap((value) => {
     const account = asRecord(value);
     if (!account || typeof account.address !== 'string') return [];
-    return [connectAccount('evm', account.address, capabilities, asRecord(account.capabilities))];
+    return [
+      connectAccount(
+        'evm',
+        account.address,
+        capabilities,
+        asRecord(account.capabilities) ?? undefined
+      ),
+    ];
   });
 }
 
@@ -87,18 +89,7 @@ export async function connectInjectedWallet(
   provider: ProviderInterface | undefined,
   request?: ConnectOptions
 ): Promise<ConnectResult> {
-  const namespaces = request ?? { evm: true, solana: true };
-  const unsupportedNamespaces = Object.keys(namespaces).filter(
-    (namespace) => namespace !== 'evm' && namespace !== 'solana'
-  );
-  if (unsupportedNamespaces.length > 0) {
-    throw standardErrors.rpc.invalidParams(
-      `Unsupported wallet namespace: ${unsupportedNamespaces.join(', ')}`
-    );
-  }
-  if (namespaces.evm === undefined && namespaces.solana === undefined) {
-    throw standardErrors.rpc.invalidParams('At least one wallet namespace must be requested');
-  }
+  const namespaces = parseConnectOptions(request);
 
   const result: ConnectResult = {};
   if (namespaces.evm !== undefined) {
