@@ -37,6 +37,9 @@ jobs:
       - name: 'Setup'
         uses: ./.github/actions/setup
 
+      - name: Upgrade npm for trusted publishing
+        run: npm install -g npm@latest
+
       - name: Set version
         run: npm version ${{ env.PACKAGE_VERSION }} -w packages/wallet-sdk
 
@@ -59,11 +62,6 @@ jobs:
           commit-message: "v${{ env.PACKAGE_VERSION }}"
           labels: version-update
 
-      # Publish to npm
-      - name: Set deployment token
-        run: npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
-
+      # Publish to npm with the trusted publisher configured for this workflow.
       - name: Publish to npm
         run: cd packages/wallet-sdk && npm publish --tag latest
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
