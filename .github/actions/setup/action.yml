@@ -8,9 +8,9 @@ runs:
         registry-url: https://registry.npmjs.org
         cache: yarn
 
-    # For provenance https://docs.npmjs.com/generating-provenance-statements#prerequisites
-    - name: Install npm 9.5
-      run: npm install -g npm@^9.5.0
+    # npm 11.5.1+ is required for trusted publishing.
+    - name: Install npm 11
+      run: npm install -g npm@11
       shell: bash
 
     - name: Install node modules

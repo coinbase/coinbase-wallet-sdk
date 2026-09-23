@@ -37,9 +37,6 @@ jobs:
       - name: 'Setup'
         uses: ./.github/actions/setup
 
-      - name: Upgrade npm for trusted publishing
-        run: npm install -g npm@latest
-
       - name: Set version
         run: npm version ${{ env.PACKAGE_VERSION }} -w packages/wallet-sdk
 
