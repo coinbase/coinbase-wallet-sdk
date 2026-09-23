@@ -57,6 +57,10 @@ describe('Snackbar', () => {
         expect(
           document.getElementsByClassName('-cbwsdk-snackbar-instance-menu-item-info-is-red').length
         ).toEqual(2);
+        expect(screen.getByRole('img', { name: 'Coinbase Wallet' })).toHaveAttribute(
+          'src',
+          expect.stringContaining('data:image/svg+xml;base64,'),
+        );
       });
     });
 
