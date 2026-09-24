@@ -13,7 +13,7 @@ import eip712 from '../../vendor-js/eth-eip712-util/index.cjs';
 import { WalletLinkSigner } from './WalletLinkSigner.js';
 import { WalletLinkRelay } from './relay/WalletLinkRelay.js';
 import { LOCAL_STORAGE_ADDRESSES_KEY } from './relay/constants.js';
-import { MOCK_ADDERESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from './relay/mocks/fixtures.js';
+import { MOCK_ADDRESS, MOCK_SIGNED_TX, MOCK_TX, MOCK_TYPED_DATA } from './relay/mocks/fixtures.js';
 import { mockedWalletLinkRelay } from './relay/mocks/relay.js';
 
 vi.mock('./relay/WalletLinkRelay', () => {
@@ -41,7 +41,7 @@ vi.mock('./relay/WalletLinkRelay', () => {
       }),
       requestEthereumAccounts: vi.fn().mockResolvedValue({
         method: 'requestEthereumAccounts',
-        result: [MOCK_ADDERESS],
+        result: [MOCK_ADDRESS],
       }),
       signAndSubmitEthereumTransaction: vi.fn().mockResolvedValue({
         method: 'signAndSubmitEthereumTransaction',
@@ -89,7 +89,7 @@ describe('LegacyProvider', () => {
   it('handles enabling the provider successfully', async () => {
     const provider = createAdapter();
     const response = (await provider.request({ method: 'eth_requestAccounts' })) as Address[];
-    expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
+    expect(response[0]).toBe(MOCK_ADDRESS.toLowerCase());
     expect(mockCallback).toHaveBeenCalledWith('connect', { chainId: '0x1' });
   });
 
@@ -107,7 +107,7 @@ describe('LegacyProvider', () => {
     const response = (await provider.request({
       method: 'eth_requestAccounts',
     })) as Address[];
-    expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
+    expect(response[0]).toBe(MOCK_ADDRESS.toLowerCase());
   });
 
   it("does NOT update the providers address on a postMessage's 'addressesChanged' event", () => {
@@ -143,30 +143,30 @@ describe('LegacyProvider', () => {
     const response1 = (await provider.request({
       method: 'eth_requestAccounts',
     })) as Address[];
-    expect(response1[0]).toBe(MOCK_ADDERESS.toLowerCase());
+    expect(response1[0]).toBe(MOCK_ADDRESS.toLowerCase());
 
     // @ts-expect-error accessing private value for test
-    expect(provider._addresses).toEqual([MOCK_ADDERESS.toLowerCase()]);
+    expect(provider._addresses).toEqual([MOCK_ADDRESS.toLowerCase()]);
 
     // Set the account on the first request
     const response2 = (await provider.request({
       method: 'eth_requestAccounts',
     })) as Address[];
-    expect(response2[0]).toBe(MOCK_ADDERESS.toLowerCase());
+    expect(response2[0]).toBe(MOCK_ADDRESS.toLowerCase());
   });
 
   it('gets the users address from storage on init', async () => {
-    testStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDERESS.toLowerCase());
+    testStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDRESS.toLowerCase());
     const provider = createAdapter();
 
     // @ts-expect-error accessing private value for test
-    expect(provider._addresses).toEqual([MOCK_ADDERESS.toLowerCase()]);
+    expect(provider._addresses).toEqual([MOCK_ADDRESS.toLowerCase()]);
 
     // Set the account on the first request
     const response = (await provider.request({
       method: 'eth_requestAccounts',
     })) as Address[];
-    expect(response[0]).toBe(MOCK_ADDERESS.toLowerCase());
+    expect(response[0]).toBe(MOCK_ADDRESS.toLowerCase());
   });
 
   describe('ecRecover', () => {
@@ -176,7 +176,7 @@ describe('LegacyProvider', () => {
 
     beforeEach(() => {
       sendRequestSpy.mockResolvedValue({
-        result: MOCK_ADDERESS,
+        result: MOCK_ADDRESS,
       });
     });
 
@@ -193,7 +193,7 @@ describe('LegacyProvider', () => {
           signature: '0x',
         },
       });
-      expect(response).toBe(MOCK_ADDERESS);
+      expect(response).toBe(MOCK_ADDRESS);
     });
 
     test('personal_ecRecover', async () => {
@@ -209,12 +209,12 @@ describe('LegacyProvider', () => {
           signature: '0x',
         },
       });
-      expect(response).toBe(MOCK_ADDERESS);
+      expect(response).toBe(MOCK_ADDRESS);
     });
   });
 
   describe('personal_sign', () => {
-    testStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDERESS);
+    testStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDRESS);
     const relay = mockedWalletLinkRelay();
     const provider = createAdapter({ relay });
 
@@ -224,12 +224,12 @@ describe('LegacyProvider', () => {
       });
       const response = await provider?.request({
         method: 'personal_sign',
-        params: ['My secret message', MOCK_ADDERESS],
+        params: ['My secret message', MOCK_ADDRESS],
       });
       expect(sendRequestSpy).toBeCalledWith({
         method: 'signEthereumMessage',
         params: {
-          address: MOCK_ADDERESS.toLowerCase(),
+          address: MOCK_ADDRESS.toLowerCase(),
           message: '0x4d7920736563726574206d657373616765',
           addPrefix: true,
           typedDataJson: null,
@@ -252,7 +252,7 @@ describe('LegacyProvider', () => {
   });
 
   describe('signTypedData', () => {
-    testStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDERESS);
+    testStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDRESS);
     const relay = mockedWalletLinkRelay();
     const sendRequestSpy = vi.spyOn(relay, 'sendRequest');
     const provider = createAdapter({ relay });
@@ -271,13 +271,13 @@ describe('LegacyProvider', () => {
       const hashSpy = vi.spyOn(eip712, 'hashForSignTypedDataLegacy');
       const response = await provider?.request({
         method: 'eth_signTypedData_v1',
-        params: [[MOCK_TYPED_DATA], MOCK_ADDERESS],
+        params: [[MOCK_TYPED_DATA], MOCK_ADDRESS],
       });
       expect(hashSpy).toHaveBeenCalled();
       expect(sendRequestSpy).toBeCalledWith({
         method: 'signEthereumMessage',
         params: {
-          address: MOCK_ADDERESS.toLowerCase(),
+          address: MOCK_ADDRESS.toLowerCase(),
           message: ENCODED_MESSAGE,
           addPrefix: false,
           typedDataJson: ENCODED_TYPED_DATA_JSON,
@@ -290,13 +290,13 @@ describe('LegacyProvider', () => {
       const hashSpy = vi.spyOn(eip712, 'hashForSignTypedData_v3');
       const response = await provider?.request({
         method: 'eth_signTypedData_v3',
-        params: [MOCK_ADDERESS, MOCK_TYPED_DATA],
+        params: [MOCK_ADDRESS, MOCK_TYPED_DATA],
       });
       expect(hashSpy).toHaveBeenCalled();
       expect(sendRequestSpy).toBeCalledWith({
         method: 'signEthereumMessage',
         params: {
-          address: MOCK_ADDERESS.toLowerCase(),
+          address: MOCK_ADDRESS.toLowerCase(),
           message: ENCODED_MESSAGE,
           addPrefix: false,
           typedDataJson: ENCODED_TYPED_DATA_JSON,
@@ -309,13 +309,13 @@ describe('LegacyProvider', () => {
       const hashSpy = vi.spyOn(eip712, 'hashForSignTypedData_v4');
       const response = await provider?.request({
         method: 'eth_signTypedData_v4',
-        params: [MOCK_ADDERESS, MOCK_TYPED_DATA],
+        params: [MOCK_ADDRESS, MOCK_TYPED_DATA],
       });
       expect(hashSpy).toHaveBeenCalled();
       expect(sendRequestSpy).toBeCalledWith({
         method: 'signEthereumMessage',
         params: {
-          address: MOCK_ADDERESS.toLowerCase(),
+          address: MOCK_ADDRESS.toLowerCase(),
           message: ENCODED_MESSAGE,
           addPrefix: false,
           typedDataJson: ENCODED_TYPED_DATA_JSON,
@@ -328,13 +328,13 @@ describe('LegacyProvider', () => {
       const hashSpy = vi.spyOn(eip712, 'hashForSignTypedData_v4');
       const response = await provider?.request({
         method: 'eth_signTypedData',
-        params: [MOCK_ADDERESS, MOCK_TYPED_DATA],
+        params: [MOCK_ADDRESS, MOCK_TYPED_DATA],
       });
       expect(hashSpy).toHaveBeenCalled();
       expect(sendRequestSpy).toBeCalledWith({
         method: 'signEthereumMessage',
         params: {
-          address: MOCK_ADDERESS.toLowerCase(),
+          address: MOCK_ADDRESS.toLowerCase(),
           message: ENCODED_MESSAGE,
           addPrefix: false,
           typedDataJson: ENCODED_TYPED_DATA_JSON,
@@ -347,7 +347,7 @@ describe('LegacyProvider', () => {
   describe('RPC Methods', () => {
     let provider: WalletLinkSigner | null = null;
     beforeEach(() => {
-      testStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDERESS.toLowerCase());
+      testStorage.setItem(LOCAL_STORAGE_ADDRESSES_KEY, MOCK_ADDRESS.toLowerCase());
       provider = createAdapter();
     });
 
@@ -359,14 +359,14 @@ describe('LegacyProvider', () => {
       const response = await provider?.request({
         method: 'eth_accounts',
       });
-      expect(response).toEqual([MOCK_ADDERESS.toLowerCase()]);
+      expect(response).toEqual([MOCK_ADDRESS.toLowerCase()]);
     });
 
     test('eth_coinbase', async () => {
       const response = await provider?.request({
         method: 'eth_coinbase',
       });
-      expect(response).toBe(MOCK_ADDERESS.toLowerCase());
+      expect(response).toBe(MOCK_ADDRESS.toLowerCase());
     });
 
     test('net_version', async () => {
@@ -387,7 +387,7 @@ describe('LegacyProvider', () => {
       const response = await provider?.request({
         method: 'eth_requestAccounts',
       });
-      expect(response).toEqual([MOCK_ADDERESS.toLowerCase()]);
+      expect(response).toEqual([MOCK_ADDRESS.toLowerCase()]);
     });
 
     test('eth_signTransaction', async () => {
@@ -395,8 +395,8 @@ describe('LegacyProvider', () => {
         method: 'eth_signTransaction',
         params: [
           {
-            from: MOCK_ADDERESS,
-            to: MOCK_ADDERESS,
+            from: MOCK_ADDRESS,
+            to: MOCK_ADDRESS,
             gasPrice: '21000',
             maxFeePerGas: '10000000000',
             maxPriorityFeePerGas: '10000000000',
@@ -423,8 +423,8 @@ describe('LegacyProvider', () => {
         method: 'eth_sendTransaction',
         params: [
           {
-            from: MOCK_ADDERESS,
-            to: MOCK_ADDERESS,
+            from: MOCK_ADDRESS,
+            to: MOCK_ADDRESS,
             gasPrice: '21000',
             maxFeePerGas: '10000000000',
             maxPriorityFeePerGas: '10000000000',
