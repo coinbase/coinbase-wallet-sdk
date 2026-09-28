@@ -5,9 +5,8 @@
 # tokens minted by any other workflow, so do not rename this file or move
 # publishing out of it.
 #
-# - push to master: when the RELEASE_PLEASE_ENABLED repository variable is
-#   `true`, release-please opens or updates the release PR. Merging that PR
-#   creates the release, and the publish job pushes it to `latest`.
+# - push to master: release-please opens or updates the release PR. Merging
+#   that PR creates the release, and the publish job pushes it to `latest`.
 # - workflow_dispatch: publish a canary, or re-publish a specific version to
 #   `latest` (e.g. one release-please tagged but that never reached npm).
 name: Release
@@ -35,7 +34,7 @@ permissions:
 
 jobs:
   release-please:
-    if: github.event_name == 'push' && vars.RELEASE_PLEASE_ENABLED == 'true'
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: write
