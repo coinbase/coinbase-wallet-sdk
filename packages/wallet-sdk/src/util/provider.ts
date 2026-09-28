@@ -1,10 +1,6 @@
-import { NAME, VERSION } from '../sdk-info.js';
+import { PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
-import {
-  ConstructorOptions,
-  ProviderInterface,
-  RequestArguments,
-} from ':core/provider/interface.js';
+import { RequestArguments } from ':core/provider/interface.js';
 
 export async function fetchRPCRequest(request: RequestArguments, rpcUrl: string) {
   const requestBody = {
@@ -12,67 +8,19 @@ export async function fetchRPCRequest(request: RequestArguments, rpcUrl: string)
     jsonrpc: '2.0',
     id: crypto.randomUUID(),
   };
-  const res = await window.fetch(rpcUrl, {
+  const res = await fetch(rpcUrl, {
     method: 'POST',
     body: JSON.stringify(requestBody),
     mode: 'cors',
     headers: {
       'Content-Type': 'application/json',
-      'X-Cbw-Sdk-Version': VERSION,
-      'X-Cbw-Sdk-Platform': NAME,
+      'X-Cbw-Sdk-Version': PACKAGE_VERSION,
+      'X-Cbw-Sdk-Platform': PACKAGE_NAME,
     },
   });
   const { result, error } = await res.json();
   if (error) throw error;
   return result;
-}
-
-export interface CBWindow {
-  top: CBWindow;
-  ethereum?: CBInjectedProvider;
-  coinbaseWalletExtension?: CBInjectedProvider;
-}
-
-export interface CBInjectedProvider extends ProviderInterface {
-  isCoinbaseBrowser?: boolean;
-  setAppInfo?: (...args: unknown[]) => unknown;
-}
-
-function getCoinbaseInjectedLegacyProvider(): CBInjectedProvider | undefined {
-  const window = globalThis as CBWindow;
-  return window.coinbaseWalletExtension;
-}
-
-function getInjectedEthereum(): CBInjectedProvider | undefined {
-  try {
-    const window = globalThis as CBWindow;
-    return window.ethereum ?? window.top?.ethereum;
-  } catch {
-    return undefined;
-  }
-}
-
-export function getCoinbaseInjectedProvider({
-  metadata,
-  preference,
-}: Readonly<ConstructorOptions>): ProviderInterface | undefined {
-  const { appName, appLogoUrl, appChainIds } = metadata;
-
-  if (preference.options !== 'smartWalletOnly') {
-    const extension = getCoinbaseInjectedLegacyProvider();
-    if (extension) {
-      extension.setAppInfo?.(appName, appLogoUrl, appChainIds, preference);
-      return extension;
-    }
-  }
-
-  const ethereum = getInjectedEthereum();
-  if (ethereum?.isCoinbaseBrowser) {
-    ethereum.setAppInfo?.(appName, appLogoUrl, appChainIds, preference);
-    return ethereum;
-  }
-
-  return undefined;
 }
 
 /**

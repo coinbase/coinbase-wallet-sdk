@@ -1,0 +1,19 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  review:
+    name: Review PR
+    runs-on: [default-config, medium, amd64]
+    steps:
+      - name: Skip on Coinbase GHE
+        run: |
+          echo "Claude Code Review is not available on Coinbase GHE."
+          echo "anthropics/claude-code-action and step-security/harden-runner are not allowlisted."

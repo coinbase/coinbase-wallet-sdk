@@ -1,6 +1,5 @@
-import { SignerType } from ':core/message/ConfigMessage.js';
+import { PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
 import { store } from ':store/store.js';
-import { VERSION } from '../../sdk-info.js';
 
 enum ComponentType {
   unknown = 'unknown',
@@ -58,13 +57,18 @@ type CCAEventData = {
   appOrigin?: string;
   appPreferredSigner?: string;
   // Custom Attributes
-  signerType?: SignerType;
+  signerType?: 'base-account'; // backwards compatibility
   method?: string; // RPC method
   correlationId?: string;
   errorMessage?: string;
-  snackbarContext?: string;
-  snackbarAction?: string;
-  enableAutoSubAccounts?: boolean;
+  dialogContext?: string;
+  dialogAction?: string;
+  isEphemeral?: boolean;
+  // Payment-specific attributes
+  amount?: string;
+  testnet?: boolean;
+  status?: string;
+  periodInDays?: number;
 };
 
 type AnalyticsEventData = {
@@ -84,15 +88,16 @@ export function logEvent(
   event: CCAEventData,
   importance: AnalyticsEventImportance | undefined
 ) {
-  if (window.ClientAnalytics) {
+  // ClientAnalytics only works in the browser environment
+  if (typeof window !== 'undefined' && window.ClientAnalytics) {
     window.ClientAnalytics?.logEvent(
       name,
       {
         ...event,
-        sdkVersion: VERSION,
+        sdkVersion: PACKAGE_VERSION,
+        sdkName: PACKAGE_NAME,
         appName: store.config.get().metadata?.appName ?? '',
         appOrigin: window.location.origin,
-        appPreferredSigner: store.config.get().preference?.options,
       },
       importance
     );

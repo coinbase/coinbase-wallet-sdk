@@ -12,6 +12,10 @@
   - [Signing Commits](#signing-commits)
 - [Coding Conventions](#coding-conventions)
   - [Git Commit Messages](#git-commit-messages)
+- [Releasing](#releasing)
+  - [How it works](#how-it-works)
+  - [Stable release](#stable-release)
+  - [Canary release](#canary-release)
 
 ## How to Contribute
 
@@ -21,15 +25,15 @@ The following is a set of guidelines for contributing to the Coinbase Wallet SDK
 
 ### Reporting Bugs
 
-1. **Ensure the bug was not already reported** by searching on GitHub under [Issues](https://github.com/coinbase/coinbase-wallet-sdk/issues).
+1. **Ensure the bug was not already reported** by searching on GitHub under [Issues](https://coinbase.ghe.com/wallet/coinbase-wallet-sdk-NG-2026/issues).
 
-2. If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/coinbase/coinbase-wallet-sdk/issues/new). Be sure to include a **title and clear description**, as much relevant information as possible, and a **code sample** or an **executable test case** demonstrating the expected behavior that is not occurring.
+2. If you're unable to find an open issue addressing the problem, [open a new one](https://coinbase.ghe.com/wallet/coinbase-wallet-sdk-NG-2026/issues/new). Be sure to include a **title and clear description**, as much relevant information as possible, and a **code sample** or an **executable test case** demonstrating the expected behavior that is not occurring.
 
 ### Suggesting Enhancements
 
-1. **Check the [Issues](https://github.com/coinbase/coinbase-wallet-sdk/issues)** to see if there's someone who has already suggested the same enhancement.
+1. **Check the [Issues](https://coinbase.ghe.com/wallet/coinbase-wallet-sdk-NG-2026/issues)** to see if there's someone who has already suggested the same enhancement.
 
-2. If it doesn't exist, [create a new issue](https://github.com/coinbase/coinbase-wallet-sdk/issues/new). Provide a clear and detailed explanation of the feature you want and why it's important to add.
+2. If it doesn't exist, [create a new issue](https://coinbase.ghe.com/wallet/coinbase-wallet-sdk-NG-2026/issues/new). Provide a clear and detailed explanation of the feature you want and why it's important to add.
 
 ### Pull Requests
 
@@ -52,7 +56,7 @@ The following is a set of guidelines for contributing to the Coinbase Wallet SDK
 First, ensure that the following are installed globally on your machine:
 
 - [Node.js 20.11+](https://nodejs.org/en/download/releases)
-- [Yarn v3](https://yarnpkg.com/getting-started/install)
+- [Yarn v4](https://yarnpkg.com/getting-started/install)
 
 Then, from the root folder run:
 
@@ -74,6 +78,13 @@ Use `yarn dev` to start the example app and build the package with hot reloading
 
 This project uses [Biome](https://github.com/biomejs/biome) for linting and formatting. See the [Biome docs](https://biomejs.dev/guides/editors/first-party-extensions/) for more information on how to configure your editor to use Biome.
 
+Available commands:
+- `yarn lint` - Run linting checks on all workspaces
+- `yarn format` - Format all files in all workspaces
+- `yarn format:check` - Check if all files are properly formatted without making changes
+
+It's recommended to run `yarn format` before committing your changes to ensure consistent code formatting across the project.
+
 ### Signing Commits
 
 All commits need to be signed with a GPG key. This adds a second factor of authentication that proves that it came from
@@ -84,3 +95,39 @@ you, and not someone who managed to compromise your GitHub account. You can enab
 ### Git Commit Messages
 
 We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification for our commit messages. This helps us generate changelogs and follow a standard format.
+
+PR titles are validated against this format in CI. A valid PR title looks like:
+
+- `feat: add wallet connection support`
+- `fix: resolve session timeout issue`
+- `feat!: redesign payment API` (breaking change)
+- `chore: update dependencies`
+
+## Releasing
+
+Releases are automated using [release-please](https://github.com/googleapis/release-please). The process is driven by [Conventional Commits](#git-commit-messages).
+
+### How it works
+
+1. When PRs with `feat:`, `fix:`, or breaking change commits are merged to `master`, release-please automatically opens (or updates) a **Release PR** for each affected package.
+2. The Release PR contains the version bump in `package.json` and an updated `CHANGELOG.md`.
+3. The version is determined automatically from commit types:
+   - `fix:` -> patch (e.g., 2.5.3 -> 2.5.4)
+   - `feat:` -> minor (e.g., 2.5.3 -> 2.6.0)
+   - `feat!:` or `BREAKING CHANGE:` footer -> major (e.g., 2.5.3 -> 3.0.0)
+4. When you're ready to release, **merge the Release PR**. This triggers npm publish, git tag creation, and a GitHub Release automatically.
+
+### Stable release
+
+Merge the release-please PR for the package you want to release. No other steps needed.
+
+### Canary release
+
+Go to **Actions** -> **Release Account (Canary)** -> **Run workflow**. Leave the version field empty to auto-detect from the pending Release PR, or enter a specific version to override.
+
+### Important notes
+
+- Commit messages matter for versioning. Follow the [Conventional Commits](https://www.conventionalcommits.org/) spec.
+- You do not need to manually bump `package.json` versions -- release-please handles this.
+- You can let the Release PR accumulate changes over multiple merges before releasing.
+- The Release PR can be edited before merging if you need to adjust the changelog.

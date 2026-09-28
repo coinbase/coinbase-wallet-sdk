@@ -1,8 +1,8 @@
 {
   "name": "coinbase-wallet-sdk",
   "version": "0.0.1",
-  "repository": "https://github.com/coinbase/coinbase-wallet-sdk",
-  "author": "Coinbase, Inc.",
+  "repository": "https://coinbase.ghe.com/wallet/coinbase-wallet-sdk-NG-2026",
+  "author": "Coinbase",
   "license": "MIT",
   "private": true,
   "workspaces": [
@@ -16,6 +16,8 @@
     "deploy": "yarn build:packages && yarn workspace sdk-playground export",
     "dev": "yarn workspaces foreach -A -ipv run dev",
     "lint": "yarn workspaces foreach -A -pt run lint",
+    "format": "yarn workspaces foreach -A -pt run format",
+    "format:check": "yarn workspaces foreach -A -pt run format:check",
     "test": "yarn workspaces foreach -A -ipv run test",
     "typecheck": "yarn workspaces foreach -A -pt run typecheck"
   },

@@ -1,5 +1,8 @@
 name: CI
 
+# Coinbase GHE has no GitHub-hosted ubuntu-latest fleet.
+# Use the same self-hosted labels as wallet/wallet-mobile.
+
 on:
   pull_request:
   push:
@@ -8,7 +11,7 @@ on:
 jobs:
   lint:
     name: Lint Check
-    runs-on: ubuntu-latest
+    runs-on: [default-config, medium, amd64]
     defaults:
       run:
         working-directory: ./
@@ -29,9 +32,32 @@ jobs:
       - name: Lint
         run: yarn lint
 
+  format:
+    name: Format Check
+    runs-on: [default-config, medium, amd64]
+    defaults:
+      run:
+        working-directory: ./
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout node action
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache-dependency-path: 'yarn.lock'
+
+      - name: 'Setup'
+        uses: ./.github/actions/setup
+
+      - name: Format Check
+        run: yarn format:check
+
   typecheck:
     name: Type Check
-    runs-on: ubuntu-latest
+    runs-on: [default-config, medium, amd64]
     defaults:
       run:
         working-directory: ./
@@ -57,14 +83,14 @@ jobs:
 
   tests:
     name: Tests
-    runs-on: ubuntu-latest
+    runs-on: [default-config, medium, amd64]
     defaults:
       run:
         working-directory: ./
 
     strategy:
       matrix:
-        node-version: [20.x, 22.x]
+        node-version: [20.x, 22.x, 24.x]
 
     steps:
       - name: Checkout
@@ -79,12 +105,8 @@ jobs:
       - name: 'Setup'
         uses: ./.github/actions/setup
 
-      - name: Runs compile asset script
-        run: |
-          cd ./packages/wallet-sdk
-          yarn build
-          node ./compile-assets.cjs
-          cd ../../
+      - name: Build packages
+        run: yarn build:packages
 
       - name: Run Unit Tests
         run: yarn test

@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: [default-config, medium, amd64]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,6 +25,10 @@ jobs:
         with:
           node-version: "20"
           cache: yarn
+      - name: Enable Yarn via Corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.8.1 --activate
       - name: Setup Pages
         uses: actions/configure-pages@v4
         with:
@@ -42,7 +46,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
+    runs-on: [default-config, medium, amd64]
     needs: build
     steps:
       - name: Deploy to GitHub Pages

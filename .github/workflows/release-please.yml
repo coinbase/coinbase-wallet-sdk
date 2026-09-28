@@ -1,0 +1,84 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: [default-config, medium, amd64]
+    outputs:
+      account--release_created: ${{ steps.release.outputs['packages/wallet-sdk--release_created'] }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          # Use a PAT (or GitHub App token) instead of GITHUB_TOKEN so that
+          # release-please's release PRs trigger CI. Events from GITHUB_TOKEN
+          # do not start new workflow runs:
+          # https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+
+  publish-account:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.account--release_created == 'true' }}
+    name: Publish @coinbase/wallet-sdk
+    runs-on: [default-config, medium, amd64]
+    environment: publish
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Update npm
+        run: npm install -g npm@latest
+
+      - name: Prebuild Packages
+        run: yarn workspace @coinbase/wallet-sdk prebuild
+
+      - name: Build Packages
+        run: yarn workspace @coinbase/wallet-sdk build
+
+      - name: Publish to npm
+        run: |
+          cd packages/wallet-sdk
+          npm publish --tag latest --access public
+
+    needs: release-please
+    runs-on: [default-config, medium, amd64]
+    environment: publish
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Update npm
+        run: npm install -g npm@latest
+
+      - name: Build Packages
+        run: yarn build:packages
+
+      - name: Publish to npm
+        run: |
+          npm publish --tag latest --access public
