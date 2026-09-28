@@ -1,8 +1,5 @@
 name: CI
 
-# Coinbase GHE has no GitHub-hosted ubuntu-latest fleet.
-# Use the same self-hosted labels as wallet/wallet-mobile.
-
 on:
   pull_request:
   push:
@@ -11,7 +8,7 @@ on:
 jobs:
   lint:
     name: Lint Check
-    runs-on: [default-config, medium, amd64]
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./
@@ -34,7 +31,7 @@ jobs:
 
   format:
     name: Format Check
-    runs-on: [default-config, medium, amd64]
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./
@@ -57,7 +54,7 @@ jobs:
 
   typecheck:
     name: Type Check
-    runs-on: [default-config, medium, amd64]
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./
@@ -83,7 +80,7 @@ jobs:
 
   tests:
     name: Tests
-    runs-on: [default-config, medium, amd64]
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./

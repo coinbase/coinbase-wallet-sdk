@@ -9,14 +9,6 @@ runs:
         node-version-file: '.nvmrc'
         registry-url: https://registry.npmjs.org
 
-    # GHE self-hosted images do not ship a Yarn binary. Corepack + packageManager
-    # (yarn@4.8.1) puts `yarn` on PATH; .yarnrc.yml still uses the vendored release.
-    - name: Enable Yarn via Corepack
-      run: |
-        corepack enable
-        corepack prepare yarn@4.8.1 --activate
-      shell: bash
-
     # For provenance https://docs.npmjs.com/generating-provenance-statements#prerequisites
     - name: Install npm 9.5
       run: npm install -g npm@^9.5.0
