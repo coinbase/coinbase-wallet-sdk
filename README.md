@@ -144,8 +144,8 @@ const charge = await base.subscription.charge({
 
 For applications that need full wallet connectivity and blockchain interactions beyond payments:
 
-1. [Coinbase Wallet](https://account.base.app)
-   - [Docs](https://docs.base.org/base-account/quickstart/web)
+1. [Coinbase Wallet](https://wallet.coinbase.com)
+   - [Docs](https://docs.cdp.coinbase.com/coinbase-wallet/overview)
 
 ### Installing the SDK
 
@@ -242,7 +242,7 @@ yarn add @coinbase/wallet-sdk
 
 ### Developing locally and running the test app
 
-- The Coinbase Wallet SDK test app can be viewed here https://base.github.io/account-sdk/.
+- The Coinbase Wallet SDK test app can be viewed here https://coinbase.github.io/coinbase-wallet-sdk/.
 - To run it locally follow these steps:
 
   1. Fork this repo and clone it
