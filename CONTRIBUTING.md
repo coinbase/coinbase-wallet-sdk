@@ -123,7 +123,9 @@ Merge the release-please PR for the package you want to release. No other steps 
 
 ### Canary release
 
-Go to **Actions** -> **Release Account (Canary)** -> **Run workflow**. Leave the version field empty to auto-detect from the pending Release PR, or enter a specific version to override.
+Go to **Actions** -> **Release** -> **Run workflow** and pick the `canary` tag. Leave the version field empty to auto-detect from the pending Release PR, or enter a specific version to override.
+
+All publishing runs through `.github/workflows/release.yml`. npm's trusted publisher for `@coinbase/wallet-sdk` only accepts that workflow file, so don't rename it or publish from another workflow.
 
 ### Important notes
 

@@ -1,50 +1,113 @@
+# The only workflow that publishes @coinbase/wallet-sdk to npm.
+#
+# npm's trusted publisher entry for @coinbase/wallet-sdk is tied to this
+# filename (release.yml) and the `release` environment. npm rejects OIDC
+# tokens minted by any other workflow, so do not rename this file or move
+# publishing out of it.
+#
+# - push to master: release-please opens or updates the release PR. Merging
+#   that PR creates the release, and the publish job pushes it to `latest`.
+# - workflow_dispatch: publish a canary, or re-publish a specific version to
+#   `latest` (e.g. one release-please tagged but that never reached npm).
 name: Release
 
 on:
+  push:
+    branches: [master]
   workflow_dispatch:
     inputs:
+      tag:
+        description: "npm dist-tag to publish to"
+        type: choice
+        options: [canary, latest]
+        default: canary
       packageVersion:
-        description: "The version to publish in MAJOR.MINOR.PATCH format"
-        required: true
+        description: >
+          Version in MAJOR.MINOR.PATCH format. Required for latest.
+          For canary, leave empty to use the version from the pending release PR;
+          the published version is <version>-canary.<timestamp>.
+        required: false
         default: ""
 
+permissions:
+  contents: read
+
 jobs:
-  release:
-    env:
-      PACKAGE_VERSION: ${{ github.event.inputs.packageVersion }}
-    name: Release
+  release-please:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    environment: release
     permissions:
       contents: write
       pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs['packages/wallet-sdk--release_created'] }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          # Use a PAT (or GitHub App token) instead of GITHUB_TOKEN so that
+          # release-please's release PRs trigger CI. Events from GITHUB_TOKEN
+          # do not start new workflow runs:
+          # https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+
+  publish:
+    name: Publish @coinbase/wallet-sdk
+    needs: release-please
+    # release-please is skipped on workflow_dispatch; !cancelled() keeps this job from being skipped with it.
+    if: >-
+      ${{ !cancelled() && (github.event_name == 'workflow_dispatch' ||
+      needs.release-please.outputs.release_created == 'true') }}
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      pull-requests: read
       id-token: write
+    timeout-minutes: 15
+    env:
+      NPM_TAG: ${{ github.event_name == 'push' && 'latest' || inputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: 'Setup'
+      - name: Setup
         uses: ./.github/actions/setup
 
-      - name: Set version
-        run: yarn workspace @coinbase/wallet-sdk version ${{ env.PACKAGE_VERSION }}
+      # npm 11.5.1+ is required for trusted publishing.
+      - name: Update npm
+        run: npm install -g npm@latest
 
-      # Build the package
-      - name: Prebuild Packages
+      - name: Set version
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_VERSION: ${{ inputs.packageVersion }}
+        run: |
+          set -euo pipefail
+          VERSION="$INPUT_VERSION"
+          if [ -z "$VERSION" ] && [ "$NPM_TAG" = "canary" ]; then
+            VERSION=$(gh pr list --label "autorelease: pending" --json title \
+              --jq '.[].title | capture("release (wallet-sdk )?(?<v>[0-9]+\\.[0-9]+\\.[0-9]+)") | .v' \
+              | head -n 1)
+          fi
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Set packageVersion to MAJOR.MINOR.PATCH. Got '$VERSION'."
+            exit 1
+          fi
+          if [ "$NPM_TAG" = "canary" ]; then
+            VERSION="$VERSION-canary.$(date +'%Y%m%d%H%M%S')"
+          fi
+          yarn workspace @coinbase/wallet-sdk version "$VERSION"
+
+      - name: Prebuild
         run: yarn workspace @coinbase/wallet-sdk prebuild
 
-      - name: Build Packages
+      - name: Build
         run: yarn workspace @coinbase/wallet-sdk build
 
-      # Publish to npm
-      - name: Set deployment token
-        run: npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
-
       - name: Publish to npm
-        run: |
-          cd packages/wallet-sdk
-          npm publish --tag latest
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        working-directory: packages/wallet-sdk
+        run: npm publish --tag "$NPM_TAG" --access public
