@@ -1,6 +1,6 @@
-const COOP_ERROR_MESSAGE = `Coinbase Wallet SDK requires the Cross-Origin-Opener-Policy header to not be set to 'same-origin'. This is to ensure that the SDK can communicate with the Coinbase Smart Wallet app.
+const COOP_ERROR_MESSAGE = `Coinbase Wallet SDK requires the Cross-Origin-Opener-Policy header to not be set to 'same-origin'. This is to ensure that the SDK can communicate with the Coinbase Wallet app.
 
-Please see https://www.smartwallet.dev/guides/tips/popup-tips#cross-origin-opener-policy for more information.`;
+Please see https://docs.base.org/smart-wallet/quickstart#cross-origin-opener-policy for more information.`;
 
 /**
  * Creates a checker for the Cross-Origin-Opener-Policy (COOP).

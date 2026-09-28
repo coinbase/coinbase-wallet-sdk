@@ -59,6 +59,9 @@ describe('initCCA', () => {
       ClientAnalytics: undefined,
     } as any;
 
+    // Mock the global crypto object using vi.stubGlobal
+    vi.stubGlobal('crypto', mockCrypto);
+
     mockStore.config.get.mockReturnValue({});
     mockStore.config.set.mockImplementation(() => {});
 
@@ -69,6 +72,7 @@ describe('initCCA', () => {
     global.document = originalDocument;
     global.window = originalWindow;
     delete (global.window as any).ClientAnalytics;
+    vi.unstubAllGlobals();
   });
 
   describe('loadTelemetryScript', () => {
@@ -183,6 +187,8 @@ describe('initCCA', () => {
 
       (global.document.createElement as any).mockReturnValue(mockScript);
       mockStore.config.get.mockReturnValue({});
+      // Set both global.crypto and window.crypto to undefined using vi.stubGlobal
+      vi.stubGlobal('crypto', undefined);
       (global.window as any).crypto = undefined;
 
       const mockAppendChild = vi.fn().mockImplementation(() => {
@@ -248,6 +254,17 @@ describe('initCCA', () => {
       expect(consoleSpy).toHaveBeenCalledWith('Failed to execute inlined telemetry script');
 
       consoleSpy.mockRestore();
+    });
+
+    it('should handle Node.js environment (no window/document) gracefully', async () => {
+      // Simulate Node.js environment by removing window and document
+      global.window = undefined as any;
+      global.document = undefined as any;
+
+      // Should reject because window/document are not available
+      await expect(loadTelemetryScript()).rejects.toThrow(
+        'Telemetry is not supported in non-browser environments'
+      );
     });
   });
 });

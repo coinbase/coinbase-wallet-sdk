@@ -1,4 +1,4 @@
-import { base, baseSepolia, harmonyOne, mainnet } from 'viem/chains';
+import { base, harmonyOne, mainnet } from 'viem/chains';
 
 import { ShortcutType } from './ShortcutType';
 
@@ -15,13 +15,6 @@ const walletSwitchEthereumChainShortcuts: ShortcutType[] = [
     data: {
       chainId: '8453',
       chain: base,
-    },
-  },
-  {
-    key: 'Base Sepolia',
-    data: {
-      chainId: '84532',
-      chain: baseSepolia,
     },
   },
   {

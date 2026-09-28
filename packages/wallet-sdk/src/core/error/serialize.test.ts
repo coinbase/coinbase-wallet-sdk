@@ -1,11 +1,10 @@
-import { Web3Response } from '../../sign/walletlink/relay/type/Web3Response.js';
 import { standardErrorCodes } from './constants.js';
 import { standardErrors } from './errors.js';
 import { serializeError } from './serialize.js';
 
 describe('serializeError', () => {
   test('with ErrorResponse object', () => {
-    const errorResponse: Web3Response = {
+    const errorResponse = {
       method: 'generic',
       errorMessage: 'test ErrorResponse object',
       errorCode: standardErrorCodes.provider.unsupportedMethod,

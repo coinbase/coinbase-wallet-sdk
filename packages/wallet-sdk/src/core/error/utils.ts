@@ -48,33 +48,6 @@ export function isValidCode(code: number): boolean {
 }
 
 /**
- * Returns the error code from an error object.
- */
-export function getErrorCode(error: unknown): number | undefined {
-  if (typeof error === 'number') {
-    return error;
-  } 
-  if (isErrorWithCode(error)) {
-    return error.code ?? error.errorCode;
-  }
-  return undefined;
-}
-
-interface ErrorWithCode {
-  code?: number;
-  errorCode?: number;
-}
-
-function isErrorWithCode(error: unknown): error is ErrorWithCode {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    (typeof (error as ErrorWithCode).code === 'number' ||
-      typeof (error as ErrorWithCode).errorCode === 'number')
-  );
-}
-
-/**
  * Serializes the given error to an Ethereum JSON RPC-compatible error object.
  * Merely copies the given error's values if it is already compatible.
  * If the given error is not fully compatible, it will be preserved on the

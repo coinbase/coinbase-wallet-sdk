@@ -1,47 +1,44 @@
 {
-  "include": [
-    "./src",
-    "**/*.test.*",
-  ],
-  "exclude": [
-    "dist",
-  ],  
+  "include": ["./src", "**/*.test.*"],
+  "exclude": ["dist"],
   "compilerOptions": {
-    "allowJs": true,
-    "allowSyntheticDefaultImports": true,
+    "target": "ES2023",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+
     "baseUrl": ".",
+    "rootDir": "./src",
     "outDir": "./dist",
     "paths": {
       ":util/*": ["src/util/*"],
       ":core/*": ["src/core/*"],
       ":store/*": ["src/store/*"],
-      ":sign/*": ["src/sign/*"],
+      ":owner-key/*": ["src/owner-key/*"],
+      ":ui/*": ["src/ui/*"],
+      ":interface/*": ["src/interface/*"]
     },
-    "target": "es2017",
-    "jsx": "react",
-    "jsxFactory": "h",
+
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+
+    "useDefineForClassFields": true,
+
     "esModuleInterop": true,
-    "emitDecoratorMetadata": true,    
-    "experimentalDecorators": true,
-    "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true,
-    "lib": [
-      "dom",
-      "esnext",
-      "dom.iterable",
-      "es2016",
-    ],
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "sourceMap": true,
     "strict": true,
-    "noErrorTruncation": true,
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
+
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "types": ["node", "vitest/globals", "@testing-library/jest-dom"],
+
+    "types": ["node", "vitest/globals", "@testing-library/jest-dom"]
   }
 }
