@@ -1,14 +1,19 @@
 import { Hex } from 'viem';
 
+import type { CallCapabilities } from './wallet_sendCalls.js';
+
+export type PrepareCallsCall = {
+  to: Hex;
+  data: Hex;
+  value: Hex;
+  capabilities?: CallCapabilities;
+};
+
 export type PrepareCallsParams = [
   {
     from: Hex;
     chainId: Hex;
-    calls: {
-      to: Hex;
-      data: Hex;
-      value: Hex;
-    }[];
+    calls: PrepareCallsCall[];
     capabilities: Record<string, unknown>;
   },
 ];

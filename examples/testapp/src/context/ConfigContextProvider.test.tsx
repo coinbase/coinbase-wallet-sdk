@@ -1,14 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  OPTIONS_KEY,
-  SELECTED_SCW_URL_KEY,
-  SELECTED_SDK_KEY,
-  options,
-  scwUrls,
-  sdkVersions,
-} from '../store/config';
+import { SELECTED_SCW_URL_KEY, SELECTED_SDK_KEY, scwUrls, sdkVersions } from '../store/config';
 import { ConfigContextProvider, useConfig } from './ConfigContextProvider';
 
 const TestWrapper = ({ children }: { children: React.ReactNode }) => {
@@ -46,35 +39,19 @@ describe('ConfigContextProvider', () => {
     });
 
     expect(result.current.version).toBe(sdkVersions[0]);
-    expect(result.current.option).toBe('all');
     expect(result.current.scwUrl).toBe(scwUrls[0]);
   });
 
   it('should initialize with values from localStorage', () => {
-    localStorageMock.setItem(SELECTED_SDK_KEY, sdkVersions[1]);
-    localStorageMock.setItem(OPTIONS_KEY, options[1]);
+    localStorageMock.setItem(SELECTED_SDK_KEY, sdkVersions[0]);
     localStorageMock.setItem(SELECTED_SCW_URL_KEY, scwUrls[1]);
 
     const { result } = renderHook(() => useConfig(), {
       wrapper: TestWrapper,
     });
 
-    expect(result.current.version).toBe(sdkVersions[1]);
-    expect(result.current.option).toBe(options[1]);
+    expect(result.current.version).toBe(sdkVersions[0]);
     expect(result.current.scwUrl).toBe(scwUrls[1]);
-  });
-
-  it('should update values when setPreference is called', () => {
-    const { result } = renderHook(() => useConfig(), {
-      wrapper: TestWrapper,
-    });
-
-    act(() => {
-      result.current.setPreference(options[1]);
-    });
-
-    expect(result.current.option).toBe(options[1]);
-    expect(localStorageMock.setItem).toHaveBeenCalledWith(OPTIONS_KEY, options[1]);
   });
 
   it('should update values when setSDKVersion is called', () => {
@@ -83,11 +60,11 @@ describe('ConfigContextProvider', () => {
     });
 
     act(() => {
-      result.current.setSDKVersion(sdkVersions[1]);
+      result.current.setSDKVersion(sdkVersions[0]);
     });
 
-    expect(result.current.version).toBe(sdkVersions[1]);
-    expect(localStorageMock.setItem).toHaveBeenCalledWith(SELECTED_SDK_KEY, sdkVersions[1]);
+    expect(result.current.version).toBe(sdkVersions[0]);
+    expect(localStorageMock.setItem).toHaveBeenCalledWith(SELECTED_SDK_KEY, sdkVersions[0]);
   });
 
   it('should update values when setScwUrlAndSave is called', () => {

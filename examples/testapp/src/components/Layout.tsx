@@ -20,7 +20,7 @@ import {
 import NextLink from 'next/link';
 import React, { useMemo } from 'react';
 import { useConfig } from '../context/ConfigContextProvider';
-import { options, scwUrls, sdkVersions } from '../store/config';
+import { scwUrls } from '../store/config';
 import { cleanupSDKLocalStorage } from '../utils/cleanupSDKLocalStorage';
 type LayoutProps = {
   children: React.ReactNode;
@@ -28,10 +28,19 @@ type LayoutProps = {
 
 export const WIDTH_2XL = '1536px';
 
-const PAGES = ['/', '/add-sub-account', '/import-sub-account', '/auto-sub-account'];
+const PAGES = [
+  '/',
+  '/spend-permission',
+  '/payment',
+  '/pay-playground',
+  '/subscribe-playground',
+  '/prolink-playground',
+  '/solana',
+  '/e2e-test',
+];
 
 export function Layout({ children }: LayoutProps) {
-  const { option, setPreference, version, setSDKVersion, scwUrl, setScwUrlAndSave } = useConfig();
+  const { scwUrl, setScwUrlAndSave } = useConfig();
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const isSmallScreen = useBreakpointValue({ base: true, xl: false });
@@ -44,42 +53,6 @@ export function Layout({ children }: LayoutProps) {
   const configs = useMemo(() => {
     return (
       <>
-        <Menu>
-          <MenuButton colorScheme="telegram" as={Button} rightIcon={<ChevronDownIcon />}>
-            {`SDK: ${version}`}
-          </MenuButton>
-          <MenuList>
-            {sdkVersions.map((v) => (
-              <MenuItem
-                color={'MenuText'}
-                key={v}
-                icon={v === version ? <CheckIcon /> : null}
-                onClick={() => setSDKVersion(v)}
-              >
-                {v}
-              </MenuItem>
-            ))}
-          </MenuList>
-        </Menu>
-
-        <Menu>
-          <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
-            {`Option: ${option}`}
-          </MenuButton>
-          <MenuList>
-            {options.map((b) => (
-              <MenuItem
-                color={'MenuText'}
-                key={b.toString()}
-                icon={b === option ? <CheckIcon /> : null}
-                onClick={() => setPreference(b)}
-              >
-                {b.toString()}
-              </MenuItem>
-            ))}
-          </MenuList>
-        </Menu>
-
         <Menu>
           <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
             {`Env: ${scwUrl}`}
@@ -99,7 +72,11 @@ export function Layout({ children }: LayoutProps) {
         </Menu>
       </>
     );
-  }, [version, option, setPreference, setSDKVersion, scwUrl, setScwUrlAndSave]);
+  }, [scwUrl, setScwUrlAndSave]);
+
+  const handleGoToHome = () => {
+    window.location.href = '/';
+  };
 
   const pages = useMemo(() => {
     return (
@@ -134,7 +111,7 @@ export function Layout({ children }: LayoutProps) {
             direction={isSmallScreen ? 'column' : 'row'}
             gap={2}
           >
-            <Heading>Coinbase Wallet SDK</Heading>
+            <Heading onClick={handleGoToHome}>Coinbase Wallet SDK</Heading>
             <Flex justifyContent="space-between" alignItems="center" gap={4}>
               {isSmallScreen ? (
                 <Button colorScheme="telegram" onClick={onOpen}>

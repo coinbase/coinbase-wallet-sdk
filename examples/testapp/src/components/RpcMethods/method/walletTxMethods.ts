@@ -3,7 +3,12 @@ import { RpcRequestInput } from './RpcRequestInput';
 
 const walletGetCapabilities: RpcRequestInput = {
   method: 'wallet_getCapabilities',
-  params: [],
+  params: [
+    { key: 'address', required: true },
+    { key: 'chainIds', required: false },
+  ],
+  format: (data: Record<string, string>) =>
+    data.chainIds ? [data.address, parseMessage(data.chainIds)] : [data.address],
 };
 
 const walletSendCalls: RpcRequestInput = {

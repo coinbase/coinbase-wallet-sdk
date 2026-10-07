@@ -1,5 +1,5 @@
-import { useToast } from '@chakra-ui/react';
 import { ProviderInterface } from '@coinbase/wallet-sdk';
+import { useToast } from '@chakra-ui/react';
 import { useCallback } from 'react';
 
 export const useEventListeners = () => {

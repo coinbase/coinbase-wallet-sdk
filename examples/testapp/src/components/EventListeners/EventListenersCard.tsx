@@ -5,16 +5,12 @@ import { ProviderConnectInfo } from 'viem';
 import { useEIP1193Provider } from '../../context/EIP1193ProviderContextProvider';
 
 export function EventListenersCard() {
-  const [connect, setConnect] = React.useState<ProviderConnectInfo | null>(
-    null
-  );
+  const [connect, setConnect] = React.useState<ProviderConnectInfo | null>(null);
   const [disconnect, setDisconnect] = React.useState<{
     code: number;
     message: string;
   } | null>(null);
-  const [accountsChanged, setAccountsChanged] = React.useState<string[] | null>(
-    null
-  );
+  const [accountsChanged, setAccountsChanged] = React.useState<string[] | null>(null);
   const [chainChanged, setChainChanged] = React.useState<string | null>(null);
 
   const { provider } = useEIP1193Provider();
@@ -23,12 +19,9 @@ export function EventListenersCard() {
     setConnect(info);
   }, []);
 
-  const handleDisconnect = useCallback(
-    (error: { code: number; message: string }) => {
-      setDisconnect({ code: error.code, message: error.message });
-    },
-    []
-  );
+  const handleDisconnect = useCallback((error: { code: number; message: string }) => {
+    setDisconnect({ code: error.code, message: error.message });
+  }, []);
 
   const handleAccountsChanged = useCallback((accounts: string[]) => {
     setAccountsChanged(accounts);
@@ -53,13 +46,7 @@ export function EventListenersCard() {
       provider?.removeListener('accountsChanged', handleAccountsChanged);
       provider?.removeListener('chainChanged', handleChainChanged);
     };
-  }, [
-    provider,
-    handleConnect,
-    handleDisconnect,
-    handleAccountsChanged,
-    handleChainChanged,
-  ]);
+  }, [provider, handleConnect, handleDisconnect, handleAccountsChanged, handleChainChanged]);
 
   return (
     <Card shadow="lg">
@@ -71,14 +58,7 @@ export function EventListenersCard() {
             </Heading>
           </Flex>
           {accountsChanged && (
-            <Code
-              mt={2}
-              as="pre"
-              p={4}
-              wordBreak="break-word"
-              whiteSpace="pre-wrap"
-              w="100%"
-            >
+            <Code mt={2} as="pre" p={4} wordBreak="break-word" whiteSpace="pre-wrap" w="100%">
               {JSON.stringify(accountsChanged, null, 2)}
             </Code>
           )}
@@ -90,14 +70,7 @@ export function EventListenersCard() {
             </Heading>
           </Flex>
           {chainChanged && (
-            <Code
-              mt={2}
-              as="pre"
-              p={4}
-              wordBreak="break-word"
-              whiteSpace="pre-wrap"
-              w="100%"
-            >
+            <Code mt={2} as="pre" p={4} wordBreak="break-word" whiteSpace="pre-wrap" w="100%">
               {JSON.stringify(chainChanged, null, 2)}
             </Code>
           )}
@@ -109,14 +82,7 @@ export function EventListenersCard() {
             </Heading>
           </Flex>
           {connect && (
-            <Code
-              mt={2}
-              as="pre"
-              p={4}
-              wordBreak="break-word"
-              whiteSpace="pre-wrap"
-              w="100%"
-            >
+            <Code mt={2} as="pre" p={4} wordBreak="break-word" whiteSpace="pre-wrap" w="100%">
               {JSON.stringify(connect, null, 2)}
             </Code>
           )}
@@ -128,14 +94,7 @@ export function EventListenersCard() {
             </Heading>
           </Flex>
           {disconnect && (
-            <Code
-              mt={2}
-              as="pre"
-              p={4}
-              wordBreak="break-word"
-              whiteSpace="pre-wrap"
-              w="100%"
-            >
+            <Code mt={2} as="pre" p={4} wordBreak="break-word" whiteSpace="pre-wrap" w="100%">
               {JSON.stringify(disconnect, null, 2)}
             </Code>
           )}

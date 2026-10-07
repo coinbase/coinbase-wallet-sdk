@@ -27,7 +27,7 @@
 			"**/build",
 			"**/dist",
 			"**/node_modules",
-			"**/src/vendor-js",
+			"**/vendor-js/**",
 			"**/*-css.ts",
 			"**/*-svg.ts"
 		]
@@ -163,7 +163,6 @@
 			"**/dist",
 			"**/node_modules",
 			"**/vendor-js/**",
-			"**/src/vendor-js/**",
 			"**/*.json"
 		]
 	},
@@ -179,12 +178,17 @@
 			"attributePosition": "auto",
 			"bracketSpacing": true
 		},
-		"jsxRuntime": "reactClassic",
+		"jsxRuntime": "transparent",
 		"globals": [
 			"global",
 			"browser",
 			"expect"
 		]
+	},
+	"css": {
+		"parser": {
+			"cssModules": true
+		}
 	},
 	"overrides": [
 		{
