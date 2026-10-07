@@ -41,5 +41,11 @@ examples/**/yarn.lock
 
 # next.js
 .next
+out/
+.vercel
+
+# testapp specific
+examples/testapp/out/
+examples/testapp/.next/
 
 /**/tsconfig.tsbuildinfo

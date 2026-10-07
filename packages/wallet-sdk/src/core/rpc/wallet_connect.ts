@@ -1,7 +1,6 @@
 import { SerializedEthereumRpcError } from ':core/error/utils.js';
 import { SpendPermissionConfig } from ':core/provider/interface.js';
 import { SpendPermission } from './coinbase_fetchSpendPermissions.js';
-import { AddSubAccountAccount } from './wallet_addSubAccount.js';
 
 export type SignInWithEthereumCapabilityRequest = {
   nonce: string;
@@ -25,16 +24,6 @@ export type SignInWithEthereumCapabilityResponse = {
 
 export type SpendPermissionsCapabilityRequest = Record<number, SpendPermissionConfig[]>;
 
-export type AddSubAccountCapabilityRequest = {
-  account: AddSubAccountAccount;
-};
-
-export type AddSubAccountCapabilityResponse = {
-  address?: `0x${string}`;
-  factory?: `0x${string}`;
-  factoryData?: `0x${string}`;
-};
-
 export type SpendPermissionsCapabilityResponse = {
   permissions: SpendPermission[];
 };
@@ -47,7 +36,6 @@ export type WalletConnectRequest = {
       version: string;
       // Optional capabilities to request (e.g. Sign In With Ethereum).
       capabilities?: {
-        addSubAccount?: AddSubAccountCapabilityRequest;
         spendPermissions?: SpendPermissionsCapabilityRequest;
         signInWithEthereum?: SignInWithEthereumCapabilityRequest;
       };
@@ -61,7 +49,6 @@ export type WalletConnectResponse = {
     address: `0x${string}`;
     // Capabilities granted that is associated with this account.
     capabilities?: {
-      subAccounts?: AddSubAccountCapabilityResponse[] | SerializedEthereumRpcError;
       spendPermissions?: SpendPermissionsCapabilityResponse | SerializedEthereumRpcError;
       signInWithEthereum?: SignInWithEthereumCapabilityResponse | SerializedEthereumRpcError;
     };

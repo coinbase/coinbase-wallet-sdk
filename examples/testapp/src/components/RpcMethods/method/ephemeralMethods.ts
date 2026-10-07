@@ -1,3 +1,4 @@
+import { parseMessage } from '../shortcut/ShortcutType';
 import { RpcRequestInput } from './RpcRequestInput';
 
 const walletSendCallsEphemeral: RpcRequestInput = {
@@ -16,12 +17,50 @@ const walletSendCallsEphemeral: RpcRequestInput = {
   ],
 };
 
-const walletSignEphemeral: RpcRequestInput = {
-  method: 'wallet_sign',
-  params: [{ key: 'message', required: true }],
+const walletSignOldSpecEphemeral: RpcRequestInput = {
+  method: 'wallet_sign#old',
+  params: [
+    { key: 'version', required: true },
+    { key: 'type', required: true },
+    { key: 'address', required: false },
+    { key: 'data', required: true },
+    { key: 'capabilities', required: false },
+    { key: 'mutableData', required: false },
+  ],
   format: (data: Record<string, string>) => [
-    `0x${Buffer.from(data.message, 'utf8').toString('hex')}`,
+    {
+      version: data.version,
+      type: data.type,
+      address: data.address,
+      data: parseMessage(data.data),
+      capabilities: data.capabilities,
+      mutableData: data.mutableData,
+    },
   ],
 };
 
-export const ephemeralMethods = [walletSendCallsEphemeral, walletSignEphemeral];
+const walletSignNewSpecEphemeral: RpcRequestInput = {
+  method: 'wallet_sign#new',
+  params: [
+    { key: 'version', required: true },
+    { key: 'request', required: true },
+    { key: 'address', required: false },
+    { key: 'capabilities', required: false },
+    { key: 'mutableData', required: false },
+  ],
+  format: (data: Record<string, string>) => [
+    {
+      version: data.version,
+      request: parseMessage(data.request),
+      address: data.address,
+      capabilities: data.capabilities,
+      mutableData: data.mutableData,
+    },
+  ],
+};
+
+export const ephemeralMethods = [
+  walletSendCallsEphemeral,
+  walletSignOldSpecEphemeral,
+  walletSignNewSpecEphemeral,
+];

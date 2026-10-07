@@ -1,9 +1,59 @@
-// Copyright (c) 2018-2024 Coinbase, Inc. <https://www.coinbase.com/>
-import { CoinbaseWalletSDK } from './CoinbaseWalletSDK.js';
-export default CoinbaseWalletSDK;
+// Copyright (c) 2018-2025 Coinbase, Inc. <https://www.coinbase.com/>
+export type {
+  AppMetadata,
+  Preference,
+  ProviderInterface,
+} from ':core/provider/interface.js';
 
-export type { AppMetadata, Preference, ProviderInterface } from ':core/provider/interface.js';
-export type { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js';
-export { CoinbaseWalletSDK } from './CoinbaseWalletSDK.js';
-export { createCoinbaseWalletSDK } from './createCoinbaseWalletSDK.js';
-export { getCryptoKeyAccount, removeCryptoKey } from './kms/crypto-key/index.js';
+export { createCoinbaseWalletSDK } from './interface/builder/createCoinbaseWalletSDK.js';
+export type {
+  ConnectAccount,
+  ConnectNamespaceOptions,
+  ConnectOptions,
+  ConnectResult,
+} from './interface/builder/connect.js';
+
+export { PACKAGE_VERSION as VERSION } from './core/constants.js';
+
+export {
+  base,
+  CHAIN_IDS,
+  getPaymentStatus,
+  getSubscriptionStatus,
+  pay,
+  prepareCharge,
+  subscribe,
+  TOKENS,
+} from './interface/payment/index.js';
+export type {
+  ChargeOptions,
+  ChargeResult,
+  GetOrCreateSubscriptionOwnerWalletOptions,
+  GetOrCreateSubscriptionOwnerWalletResult,
+  InfoRequest,
+  PayerInfo,
+  PayerInfoResponses,
+  PaymentOptions,
+  PaymentResult,
+  PaymentStatus,
+  PaymentStatusOptions,
+  PaymentStatusType,
+  PaymentSuccess,
+  PrepareChargeCall,
+  PrepareChargeOptions,
+  PrepareChargeResult,
+  SubscriptionOptions,
+  SubscriptionResult,
+  SubscriptionStatus,
+  SubscriptionStatusOptions,
+} from './interface/payment/index.js';
+
+export {
+  createProlinkUrl,
+  decodeProlink,
+  encodeProlink,
+} from './interface/public-utilities/prolink/index.js';
+export type {
+  ProlinkDecoded,
+  ProlinkRequest,
+} from './interface/public-utilities/prolink/index.js';

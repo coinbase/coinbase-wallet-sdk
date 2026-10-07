@@ -1,6 +1,4 @@
 import { createCoinbaseWalletSDK as createCoinbaseWalletSDKHEAD } from '@coinbase/wallet-sdk';
-import { createCoinbaseWalletSDK as createCoinbaseWalletSDKLatest } from '@coinbase/wallet-sdk-latest';
-
 import { ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { DisconnectedAlert } from '../components/alerts/DisconnectedAlert';
 import { useEventListeners } from '../hooks/useEventListeners';
@@ -13,16 +11,14 @@ type EIP1193ProviderContextProviderProps = {
 };
 
 type EIP1193ProviderContextType = {
-  sdk:
-    | ReturnType<typeof createCoinbaseWalletSDKHEAD>
-    | ReturnType<typeof createCoinbaseWalletSDKLatest>;
+  sdk: ReturnType<typeof createCoinbaseWalletSDKHEAD>;
   provider: ReturnType<EIP1193ProviderContextType['sdk']['getProvider']>;
 };
 
 const EIP1193ProviderContext = createContext<EIP1193ProviderContextType | null>(null);
 
 export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderContextProviderProps) {
-  const { option, version, scwUrl, config, subAccountsConfig } = useConfig();
+  const { scwUrl, config } = useConfig();
   const { addEventListeners, removeEventListeners } = useEventListeners();
   const {
     spyOnDisconnectedError,
@@ -36,19 +32,13 @@ export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderCont
   useEffect(() => {
     const sdkParams = {
       appName: 'SDK Playground',
-      appChainIds: [84532, 8452],
       preference: {
-        options: option ?? 'all',
         attribution: config.attribution,
-        keysUrl: scwUrl ?? scwUrls[0],
+        walletUrl: scwUrl ?? scwUrls[0],
       },
-      subAccounts: subAccountsConfig,
     };
 
-    const sdk =
-      version === 'HEAD'
-        ? createCoinbaseWalletSDKHEAD(sdkParams)
-        : createCoinbaseWalletSDKLatest(sdkParams);
+    const sdk = createCoinbaseWalletSDKHEAD(sdkParams);
 
     setSdk(sdk);
 
@@ -66,16 +56,7 @@ export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderCont
     return () => {
       removeEventListeners(newProvider);
     };
-  }, [
-    scwUrl,
-    version,
-    option,
-    config,
-    subAccountsConfig,
-    spyOnDisconnectedError,
-    addEventListeners,
-    removeEventListeners,
-  ]);
+  }, [scwUrl, config, spyOnDisconnectedError, addEventListeners, removeEventListeners]);
 
   const value = useMemo(
     () => ({
