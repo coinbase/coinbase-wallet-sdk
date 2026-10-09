@@ -44,6 +44,20 @@ describe('solanaTranslator.decodeResult', () => {
     ]);
   });
 
+  it('passes the prepared calls result through unchanged', () => {
+    const result = { opaque: 'wallet result' };
+    const preparedEnvelope: Envelope = {
+      sessionId: 'solana-session',
+      chainId: SOLANA_MAINNET,
+      request: {
+        method: 'coinbase_signPreparedCalls',
+        params: [{ opaque: 'params' }],
+      },
+    };
+
+    expect(solanaTranslator.decodeResult(result, preparedEnvelope)).toBe(result);
+  });
+
   it('refuses to decode for a chain outside Solana mainnet', () => {
     expect(() =>
       solanaTranslator.decodeResult(

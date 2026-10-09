@@ -50,11 +50,21 @@ export type SolanaSignAndSendAllTransactionsRequest = {
   };
 };
 
+/**
+ * Sign and submit transactions the backend already prepared. Params pass through exactly
+ * as given; the wallet owns their shape.
+ */
+export type CoinbaseSignPreparedCallsRequest = {
+  method: 'coinbase_signPreparedCalls';
+  params: readonly unknown[] | object;
+};
+
 export type SolanaInvokeRequest =
   | SolanaSignMessageRequest
   | SolanaSignTransactionRequest
   | SolanaSignAndSendTransactionRequest
-  | SolanaSignAndSendAllTransactionsRequest;
+  | SolanaSignAndSendAllTransactionsRequest
+  | CoinbaseSignPreparedCallsRequest;
 export type SolanaRequest = SolanaConnectRequest | SolanaDisconnectRequest | SolanaInvokeRequest;
 
 export type SolanaSignMessageResult = {
@@ -73,11 +83,15 @@ export type SolanaSignAndSendTransactionResult = {
 export type SolanaSignAndSendAllTransactionsResult =
   PromiseSettledResult<SolanaSignAndSendTransactionResult>[];
 
+/** Passed through exactly as the wallet returned it; the caller owns its shape. */
+export type CoinbaseSignPreparedCallsResult = unknown;
+
 export type SolanaInvokeResult =
   | SolanaSignMessageResult
   | SolanaSignTransactionResult
   | SolanaSignAndSendTransactionResult
-  | SolanaSignAndSendAllTransactionsResult;
+  | SolanaSignAndSendAllTransactionsResult
+  | CoinbaseSignPreparedCallsResult;
 
 export type SolanaInvokeResultFor<Request extends SolanaInvokeRequest> =
   Request extends SolanaSignMessageRequest
@@ -86,4 +100,6 @@ export type SolanaInvokeResultFor<Request extends SolanaInvokeRequest> =
       ? SolanaSignTransactionResult
       : Request extends SolanaSignAndSendTransactionRequest
         ? SolanaSignAndSendTransactionResult
-        : SolanaSignAndSendAllTransactionsResult;
+        : Request extends SolanaSignAndSendAllTransactionsRequest
+          ? SolanaSignAndSendAllTransactionsResult
+          : CoinbaseSignPreparedCallsResult;

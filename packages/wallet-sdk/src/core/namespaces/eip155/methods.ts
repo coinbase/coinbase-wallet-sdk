@@ -27,4 +27,5 @@ export const EIP155_METHODS: readonly string[] = [
   'wallet_watchAsset',
   'wallet_connect',
   'experimental_requestInfo',
+  'coinbase_signPreparedCalls',
 ];

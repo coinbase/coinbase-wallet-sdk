@@ -6,14 +6,7 @@ import type { Caip25RequestScope } from ':core/session/types.js';
 import type { ScopeRequirement } from ':core/session/types.js';
 import type { Session } from ':core/session/types.js';
 import { SOLANA_MAINNET, SOLANA_NAMESPACE, SOLANA_WALLET_STANDARD_MAINNET } from './caip.js';
-
-/** CAIP-27 methods requested for the initial Solana mainnet session. */
-export const SOLANA_METHODS = [
-  'solana_signMessage',
-  'solana_signTransaction',
-  'solana_signAndSendTransaction',
-  'solana_signAndSendAllTransactions',
-] as const;
+import { SOLANA_METHODS } from './methods.js';
 
 /** Exact authorization needed by the internal Solana interface. */
 export const SOLANA_MAINNET_REQUIRED_SCOPES = [

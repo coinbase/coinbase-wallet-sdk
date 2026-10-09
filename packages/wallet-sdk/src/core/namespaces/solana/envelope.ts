@@ -1,12 +1,12 @@
 import { standardErrors } from ':core/error/errors.js';
-import type { SolanaInvokeRequest } from './types.js';
 import { activeGrantForChain } from ':core/session/grants.js';
-import { solanaChainId } from './session.js';
 import type { Envelope, Session } from ':core/session/types.js';
-import { encodeSolanaRequest } from './codec.js';
 import { SOLANA_MAINNET, SOLANA_WALLET_STANDARD_MAINNET } from './caip.js';
+import { encodeSolanaRequest } from './codec.js';
 import { SOLANA_WALLET_METHODS } from './methods.js';
 import { extractPubkeys } from './pubkey.js';
+import { solanaChainId } from './session.js';
+import type { SolanaInvokeRequest } from './types.js';
 
 export function assertSolanaEnvelope(envelope: Envelope): void {
   if (envelope.chainId !== SOLANA_MAINNET) {
@@ -19,7 +19,6 @@ export function assertSolanaEnvelope(envelope: Envelope): void {
       `Unsupported Solana method ${envelope.request.method}`
     );
   }
-  extractPubkeys(envelope.request);
 }
 
 function scopeContains(session: Session, envelope: Envelope, publicKey: string): boolean {
@@ -43,14 +42,29 @@ export function toEnvelope(
 /** Require explicitly requested public keys on the exact authorized scope. */
 export function qualify(session: Session, envelope: Envelope): Envelope {
   assertSolanaEnvelope(envelope);
-  const publicKeys = extractPubkeys(envelope.request);
-  if (publicKeys.length === 0) {
-    throw standardErrors.provider.unauthorized('Solana signing request must identify an account');
-  }
-  for (const publicKey of publicKeys) {
-    if (!scopeContains(session, envelope, publicKey)) {
-      throw standardErrors.provider.unauthorized('pubkey is not in the Solana session scope');
+  switch (envelope.request.method) {
+    case 'solana_signMessage':
+    case 'solana_signTransaction':
+    case 'solana_signAndSendTransaction':
+    case 'solana_signAndSendAllTransactions': {
+      const publicKeys = extractPubkeys(envelope.request);
+      if (publicKeys.length === 0) {
+        throw standardErrors.provider.unauthorized(
+          'Solana signing request must identify an account'
+        );
+      }
+      for (const publicKey of publicKeys) {
+        if (!scopeContains(session, envelope, publicKey)) {
+          throw standardErrors.provider.unauthorized('pubkey is not in the Solana session scope');
+        }
+      }
+      return envelope;
     }
+    case 'coinbase_signPreparedCalls':
+      return envelope;
+    default:
+      throw standardErrors.provider.unsupportedMethod(
+        `Unsupported Solana method ${envelope.request.method}`
+      );
   }
-  return envelope;
 }

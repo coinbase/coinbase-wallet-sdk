@@ -28,6 +28,7 @@ describe('CAIP-25 request', () => {
               'solana_signTransaction',
               'solana_signAndSendTransaction',
               'solana_signAndSendAllTransactions',
+              'coinbase_signPreparedCalls',
             ],
             notifications: [],
           },

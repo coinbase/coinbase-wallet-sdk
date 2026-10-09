@@ -71,6 +71,31 @@ describe('Solana envelope', () => {
     expect(() => qualify(session, envelope)).toThrow(/not in the Solana session scope/);
   });
 
+  it('lets prepared calls through without a public key', () => {
+    const envelope = toEnvelope({
+      method: 'coinbase_signPreparedCalls',
+      params: [{ opaque: 'params' }],
+    });
+
+    expect(envelope).toEqual({
+      chainId: SOLANA_MAINNET,
+      request: {
+        method: 'coinbase_signPreparedCalls',
+        params: [{ opaque: 'params' }],
+      },
+    });
+    expect(qualify(session, envelope)).toBe(envelope);
+  });
+
+  it('never reads signers out of prepared calls params', () => {
+    const envelope = toEnvelope({
+      method: 'coinbase_signPreparedCalls',
+      params: [{ pubkey: 'not-a-public-key' }],
+    });
+
+    expect(qualify(session, envelope)).toBe(envelope);
+  });
+
   it('rejects unsupported chains and methods before transport', () => {
     expect(() =>
       toEnvelope(

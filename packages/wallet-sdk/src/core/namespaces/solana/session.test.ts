@@ -1,8 +1,8 @@
 import * as Base58 from 'ox/Base58';
 import { SOLANA_MAINNET, SOLANA_NAMESPACE, SOLANA_WALLET_STANDARD_MAINNET } from './caip.js';
+import { SOLANA_METHODS } from './methods.js';
 import {
   SOLANA_MAINNET_REQUIRED_SCOPES,
-  SOLANA_METHODS,
   createSolanaMainnetScopes,
   formatSolanaAccount,
   isSolanaPublicKey,
@@ -36,12 +36,6 @@ describe('Solana session helpers', () => {
   });
 
   it('defines the pairing scope and exact authorization requirement', () => {
-    expect(SOLANA_METHODS).toEqual([
-      'solana_signMessage',
-      'solana_signTransaction',
-      'solana_signAndSendTransaction',
-      'solana_signAndSendAllTransactions',
-    ]);
     expect(SOLANA_MAINNET_REQUIRED_SCOPES).toEqual([
       { chainId: SOLANA_MAINNET, methods: SOLANA_METHODS },
     ]);
@@ -54,6 +48,7 @@ describe('Solana session helpers', () => {
           'solana_signTransaction',
           'solana_signAndSendTransaction',
           'solana_signAndSendAllTransactions',
+          'coinbase_signPreparedCalls',
         ],
         notifications: [],
       },
@@ -70,6 +65,7 @@ describe('Solana session helpers', () => {
             'solana_signTransaction',
             'solana_signAndSendTransaction',
             'solana_signAndSendAllTransactions',
+            'coinbase_signPreparedCalls',
           ],
           notifications: [],
           capabilities: { aos: { nonce: 'solana-nonce' } },
