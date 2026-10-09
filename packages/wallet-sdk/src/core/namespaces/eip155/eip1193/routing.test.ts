@@ -160,6 +160,38 @@ describe('RPC routing vs Coinbase Wallet SDK', () => {
     );
   });
 
+  it('sends coinbase_signPreparedCalls to the wallet, not the chain RPC, when connected', async () => {
+    const fetchRPC = vi.spyOn(providerUtil, 'fetchRPCRequest');
+    const rt = context({ connected: true });
+    const params = [{ opaque: 'params' }];
+
+    await handleEip1193Request(rt, { method: 'coinbase_signPreparedCalls', params });
+
+    expect(rt.transport.request).toHaveBeenCalledWith({
+      method: 'wallet_invokeMethod',
+      params: {
+        sessionId: 'session-1',
+        chainId: 'eip155:8453',
+        request: { method: 'coinbase_signPreparedCalls', params },
+      },
+    });
+    expect(fetchRPC).not.toHaveBeenCalled();
+    fetchRPC.mockRestore();
+  });
+
+  it('rejects disconnected coinbase_signPreparedCalls without opening a session', async () => {
+    const rt = context();
+
+    await expect(
+      handleEip1193Request(rt, {
+        method: 'coinbase_signPreparedCalls',
+        params: [{ opaque: 'params' }],
+      })
+    ).rejects.toMatchObject({ code: standardErrorCodes.provider.unauthorized });
+    expect(rt.transport.handshake).not.toHaveBeenCalled();
+    expect(rt.transport.request).not.toHaveBeenCalled();
+  });
+
   it.each([
     ['eth_accounts', [ADDRESS]],
     ['eth_coinbase', ADDRESS],
