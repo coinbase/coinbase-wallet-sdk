@@ -51,12 +51,14 @@ export type SolanaSignAndSendAllTransactionsRequest = {
 };
 
 /**
- * Sign and submit transactions the backend already prepared. Params pass through exactly
- * as given; the wallet owns their shape.
+ * Sign and submit transactions the backend already prepared.
+ *
+ * `pubkey` names the signer, like every other Solana signing method, and must be a session
+ * account. Every other field passes through unchanged; the wallet owns its shape.
  */
 export type CoinbaseSignPreparedCallsRequest = {
   method: 'coinbase_signPreparedCalls';
-  params: readonly unknown[] | object;
+  params: readonly [{ pubkey: string; [key: string]: unknown }];
 };
 
 export type SolanaInvokeRequest =

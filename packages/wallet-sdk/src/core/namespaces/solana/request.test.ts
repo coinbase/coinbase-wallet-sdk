@@ -256,7 +256,7 @@ describe('handleSolanaRequest', () => {
     );
   });
 
-  it('invokes prepared calls through CAIP-27 without naming a signer', async () => {
+  it('invokes prepared calls through CAIP-27 for the named signer', async () => {
     const state = transportState({
       ...sessionFromSolanaAccounts({ accounts: [PUBLIC_KEY] }),
       sessionId: 'solana-session',
@@ -271,7 +271,7 @@ describe('handleSolanaRequest', () => {
     await expect(
       handleSolanaRequest(state.transport, {
         method: 'coinbase_signPreparedCalls',
-        params: [{ opaque: 'params' }],
+        params: [{ pubkey: PUBLIC_KEY, opaque: 'params' }],
       })
     ).resolves.toBe(walletResult);
 
@@ -280,7 +280,7 @@ describe('handleSolanaRequest', () => {
       chainId: SOLANA_MAINNET,
       request: {
         method: 'coinbase_signPreparedCalls',
-        params: [{ opaque: 'params' }],
+        params: [{ pubkey: PUBLIC_KEY, opaque: 'params' }],
       },
     });
   });
@@ -300,7 +300,7 @@ describe('handleSolanaRequest', () => {
     await expect(
       handleSolanaRequest(state.transport, {
         method: 'coinbase_signPreparedCalls',
-        params: [{ opaque: 'params' }],
+        params: [{ pubkey: PUBLIC_KEY, opaque: 'params' }],
       })
     ).rejects.toEqual({ code: -32603, message: 'Wallet error', data });
   });
@@ -311,7 +311,7 @@ describe('handleSolanaRequest', () => {
     await expect(
       handleSolanaRequest(state.transport, {
         method: 'coinbase_signPreparedCalls',
-        params: [{ opaque: 'params' }],
+        params: [{ pubkey: PUBLIC_KEY, opaque: 'params' }],
       })
     ).rejects.toMatchObject({ code: standardErrorCodes.provider.unauthorized });
     expect(state.transport.handshake).not.toHaveBeenCalled();

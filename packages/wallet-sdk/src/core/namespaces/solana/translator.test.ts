@@ -51,7 +51,7 @@ describe('solanaTranslator.decodeResult', () => {
       chainId: SOLANA_MAINNET,
       request: {
         method: 'coinbase_signPreparedCalls',
-        params: [{ opaque: 'params' }],
+        params: [{ pubkey: PUBLIC_KEY, opaque: 'params' }],
       },
     };
 

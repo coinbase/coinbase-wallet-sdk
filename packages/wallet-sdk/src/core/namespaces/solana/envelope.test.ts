@@ -71,29 +71,35 @@ describe('Solana envelope', () => {
     expect(() => qualify(session, envelope)).toThrow(/not in the Solana session scope/);
   });
 
-  it('lets prepared calls through without a public key', () => {
+  it('requires prepared calls to name an authorized pubkey like every signing method', () => {
     const envelope = toEnvelope({
       method: 'coinbase_signPreparedCalls',
-      params: [{ opaque: 'params' }],
+      params: [{ pubkey: PUBLIC_KEY, opaque: 'params' }],
     });
 
     expect(envelope).toEqual({
       chainId: SOLANA_MAINNET,
       request: {
         method: 'coinbase_signPreparedCalls',
-        params: [{ opaque: 'params' }],
+        params: [{ pubkey: PUBLIC_KEY, opaque: 'params' }],
       },
     });
     expect(qualify(session, envelope)).toBe(envelope);
-  });
-
-  it('never reads signers out of prepared calls params', () => {
-    const envelope = toEnvelope({
-      method: 'coinbase_signPreparedCalls',
-      params: [{ pubkey: 'not-a-public-key' }],
-    });
-
-    expect(qualify(session, envelope)).toBe(envelope);
+    expect(() =>
+      qualify(session, {
+        chainId: SOLANA_MAINNET,
+        request: { method: 'coinbase_signPreparedCalls', params: [{ opaque: 'params' }] },
+      })
+    ).toThrow(/must identify an account/);
+    expect(() =>
+      qualify(session, {
+        chainId: SOLANA_MAINNET,
+        request: {
+          method: 'coinbase_signPreparedCalls',
+          params: [{ pubkey: OTHER_PUBLIC_KEY, opaque: 'params' }],
+        },
+      })
+    ).toThrow(/not in the Solana session scope/);
   });
 
   it('rejects unsupported chains and methods before transport', () => {
