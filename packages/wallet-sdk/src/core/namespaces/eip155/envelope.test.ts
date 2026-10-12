@@ -70,6 +70,21 @@ describe('eip155 envelope', () => {
     ).toThrow(/not granted on the target chain/);
   });
 
+  it('qualify rejects prepared calls with 4100 unless the session granted them', () => {
+    const envelope = {
+      chainId: 'eip155:8453',
+      request: { method: 'coinbase_signPreparedCalls', params: [{ opaque: 'params' }] },
+    } as const;
+    const withoutPreparedCalls = {
+      namespaces: { eip155: { accounts: [ADDRESS], methods: ['personal_sign'] } },
+    };
+
+    expect(qualify(session, envelope)).toBe(envelope);
+    expect(() => qualify(withoutPreparedCalls, envelope)).toThrowError(
+      expect.objectContaining({ code: 4100 })
+    );
+  });
+
   it('qualify rejects a from that is not in the session', () => {
     expect(() =>
       qualify(session, {

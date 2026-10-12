@@ -115,6 +115,22 @@ describe('createSolanaWallet', () => {
     expect(handleSolanaRequest).not.toHaveBeenCalled();
   });
 
+  it('returns restored accounts on a silent connect without checking or pairing', async () => {
+    const wallet = createSolanaWallet(
+      transport({
+        sessionId: 'session',
+        namespaces: { solana: { accounts: [address], methods: ['solana_signMessage'] } },
+      }),
+      sessionStore()
+    );
+    const features = wallet.features as Features;
+
+    await expect(features['standard:connect'].connect({ silent: true })).resolves.toMatchObject({
+      accounts: [{ address }],
+    });
+    expect(handleSolanaRequest).not.toHaveBeenCalled();
+  });
+
   it('connects and disconnects through the transport interface', async () => {
     const wallet = createSolanaWallet(transport(), sessionStore());
     const features = wallet.features as Features;

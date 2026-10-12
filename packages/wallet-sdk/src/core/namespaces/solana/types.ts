@@ -50,11 +50,23 @@ export type SolanaSignAndSendAllTransactionsRequest = {
   };
 };
 
+/**
+ * Sign and submit transactions the backend already prepared.
+ *
+ * `pubkey` names the signer, like every other Solana signing method, and must be a session
+ * account. Every other field passes through unchanged; the wallet owns its shape.
+ */
+export type CoinbaseSignPreparedCallsRequest = {
+  method: 'coinbase_signPreparedCalls';
+  params: readonly [{ pubkey: string; [key: string]: unknown }];
+};
+
 export type SolanaInvokeRequest =
   | SolanaSignMessageRequest
   | SolanaSignTransactionRequest
   | SolanaSignAndSendTransactionRequest
-  | SolanaSignAndSendAllTransactionsRequest;
+  | SolanaSignAndSendAllTransactionsRequest
+  | CoinbaseSignPreparedCallsRequest;
 export type SolanaRequest = SolanaConnectRequest | SolanaDisconnectRequest | SolanaInvokeRequest;
 
 export type SolanaSignMessageResult = {
@@ -73,11 +85,15 @@ export type SolanaSignAndSendTransactionResult = {
 export type SolanaSignAndSendAllTransactionsResult =
   PromiseSettledResult<SolanaSignAndSendTransactionResult>[];
 
+/** Passed through exactly as the wallet returned it; the caller owns its shape. */
+export type CoinbaseSignPreparedCallsResult = unknown;
+
 export type SolanaInvokeResult =
   | SolanaSignMessageResult
   | SolanaSignTransactionResult
   | SolanaSignAndSendTransactionResult
-  | SolanaSignAndSendAllTransactionsResult;
+  | SolanaSignAndSendAllTransactionsResult
+  | CoinbaseSignPreparedCallsResult;
 
 export type SolanaInvokeResultFor<Request extends SolanaInvokeRequest> =
   Request extends SolanaSignMessageRequest
@@ -86,4 +102,6 @@ export type SolanaInvokeResultFor<Request extends SolanaInvokeRequest> =
       ? SolanaSignTransactionResult
       : Request extends SolanaSignAndSendTransactionRequest
         ? SolanaSignAndSendTransactionResult
-        : SolanaSignAndSendAllTransactionsResult;
+        : Request extends SolanaSignAndSendAllTransactionsRequest
+          ? SolanaSignAndSendAllTransactionsResult
+          : CoinbaseSignPreparedCallsResult;

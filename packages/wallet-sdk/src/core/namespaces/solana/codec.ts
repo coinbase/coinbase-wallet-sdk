@@ -85,6 +85,8 @@ export function encodeSolanaRequest(request: SolanaInvokeRequest) {
           ...(request.params.options ? { options: request.params.options } : {}),
         },
       };
+    case 'coinbase_signPreparedCalls':
+      return { method: request.method, params: request.params };
     default:
       throw standardErrors.provider.unsupportedMethod(
         `Unsupported Solana method ${(request as { method?: unknown }).method}`
@@ -143,6 +145,8 @@ export function decodeSolanaResult(method: string, value: unknown): SolanaInvoke
         );
       });
     }
+    case 'coinbase_signPreparedCalls':
+      return value;
     default:
       throw standardErrors.provider.unsupportedMethod(`Unsupported Solana method ${method}`);
   }

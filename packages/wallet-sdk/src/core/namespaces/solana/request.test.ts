@@ -88,6 +88,7 @@ describe('handleSolanaRequest', () => {
               'solana_signTransaction',
               'solana_signAndSendTransaction',
               'solana_signAndSendAllTransactions',
+              'coinbase_signPreparedCalls',
             ],
             notifications: [],
           },
@@ -109,6 +110,28 @@ describe('handleSolanaRequest', () => {
     ]);
 
     expect(state.transport.handshake).not.toHaveBeenCalled();
+    expect(state.send).not.toHaveBeenCalled();
+  });
+
+  it('reuses a Solana session the wallet granted without optional methods', async () => {
+    const state = transportState({
+      sessionId: 'solana-session',
+      namespaces: {
+        [SOLANA_NAMESPACE]: {
+          accounts: [PUBLIC_KEY],
+          methods: [
+            'solana_signMessage',
+            'solana_signTransaction',
+            'solana_signAndSendTransaction',
+            'solana_signAndSendAllTransactions',
+          ],
+        },
+      },
+    });
+
+    await expect(handleSolanaRequest(state.transport, { method: 'connect' })).resolves.toEqual([
+      PUBLIC_KEY,
+    ]);
     expect(state.send).not.toHaveBeenCalled();
   });
 
@@ -253,6 +276,68 @@ describe('handleSolanaRequest', () => {
         request: expect.objectContaining({ method: 'solana_signAndSendAllTransactions' }),
       })
     );
+  });
+
+  it('invokes prepared calls through CAIP-27 for the named signer', async () => {
+    const state = transportState({
+      ...sessionFromSolanaAccounts({ accounts: [PUBLIC_KEY] }),
+      sessionId: 'solana-session',
+    });
+    const walletResult = { opaque: 'wallet result' };
+    state.transportSend.mockResolvedValueOnce({
+      sessionId: 'solana-session',
+      chainId: SOLANA_MAINNET,
+      result: { method: 'coinbase_signPreparedCalls', result: walletResult },
+    } as never);
+
+    await expect(
+      handleSolanaRequest(state.transport, {
+        method: 'coinbase_signPreparedCalls',
+        params: [{ pubkey: PUBLIC_KEY, opaque: 'params' }],
+      })
+    ).resolves.toBe(walletResult);
+
+    expect(state.transportSend).toHaveBeenCalledWith({
+      sessionId: 'solana-session',
+      chainId: SOLANA_MAINNET,
+      request: {
+        method: 'coinbase_signPreparedCalls',
+        params: [{ pubkey: PUBLIC_KEY, opaque: 'params' }],
+      },
+    });
+  });
+
+  it('passes prepared-call error data from the wallet through unchanged', async () => {
+    const state = transportState({
+      ...sessionFromSolanaAccounts({ accounts: [PUBLIC_KEY] }),
+      sessionId: 'solana-session',
+    });
+    const data = { opaque: 'wallet error data' };
+    state.transportSend.mockResolvedValueOnce({
+      sessionId: 'solana-session',
+      chainId: SOLANA_MAINNET,
+      error: { code: -32603, message: 'Wallet error', data },
+    } as never);
+
+    await expect(
+      handleSolanaRequest(state.transport, {
+        method: 'coinbase_signPreparedCalls',
+        params: [{ pubkey: PUBLIC_KEY, opaque: 'params' }],
+      })
+    ).rejects.toEqual({ code: -32603, message: 'Wallet error', data });
+  });
+
+  it('requires a Solana session for prepared calls', async () => {
+    const state = transportState();
+
+    await expect(
+      handleSolanaRequest(state.transport, {
+        method: 'coinbase_signPreparedCalls',
+        params: [{ pubkey: PUBLIC_KEY, opaque: 'params' }],
+      })
+    ).rejects.toMatchObject({ code: standardErrorCodes.provider.unauthorized });
+    expect(state.transport.handshake).not.toHaveBeenCalled();
+    expect(state.transportSend).not.toHaveBeenCalled();
   });
 
   it('does not treat an EVM-only session as Solana-connected', async () => {

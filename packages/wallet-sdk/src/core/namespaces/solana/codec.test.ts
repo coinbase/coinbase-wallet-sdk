@@ -98,6 +98,13 @@ describe('Solana CAIP codec', () => {
     ]);
   });
 
+  it('passes prepared calls params through unchanged', () => {
+    const params = [{ pubkey: 'pubkey', opaque: 'params' }] as const;
+    expect(encodeSolanaRequest({ method: 'coinbase_signPreparedCalls', params })).toEqual({
+      method: 'coinbase_signPreparedCalls',
+      params,
+    });
+  });
   it('rejects malformed or method-mismatched results', () => {
     expect(() =>
       encodeSolanaRequest({

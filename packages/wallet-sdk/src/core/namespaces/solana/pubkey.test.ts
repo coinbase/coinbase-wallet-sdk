@@ -33,6 +33,15 @@ describe('extractPubkeys', () => {
     ).toEqual([PUBLIC_KEY, OTHER_KEY]);
   });
 
+  it('reads batch signers from inputs even when a top-level pubkey is present', () => {
+    expect(
+      extractPubkeys({
+        method: 'solana_signAndSendAllTransactions',
+        params: { pubkey: PUBLIC_KEY, inputs: [{ pubkey: OTHER_KEY, transaction: 'AQ==' }] },
+      })
+    ).toEqual([OTHER_KEY]);
+  });
+
   it('returns no signers when they are omitted from a single request', () => {
     expect(
       extractPubkeys({ method: 'solana_signMessage', params: [{ message: 'aGVsbG8=' }] })

@@ -70,15 +70,11 @@ export async function handleSolanaRequest(
     case 'solana_signTransaction':
     case 'solana_signAndSendTransaction':
     case 'solana_signAndSendAllTransactions':
+    case 'coinbase_signPreparedCalls':
       if (!sessionCovers(session, [SOLANA_MAINNET]) || !session) {
         throw standardErrors.provider.unauthorized('Must connect the Solana wallet first');
       }
-      return invoke(
-        session,
-        toEnvelope(request),
-        transport,
-        solanaTranslator
-      ) as Promise<SolanaInvokeResult>;
+      return invoke(session, toEnvelope(request), transport, solanaTranslator);
     default:
       throw standardErrors.provider.unsupportedMethod(
         `Unsupported Solana method ${(request as { method?: unknown }).method}`
