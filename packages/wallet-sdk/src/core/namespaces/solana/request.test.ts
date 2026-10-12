@@ -113,6 +113,28 @@ describe('handleSolanaRequest', () => {
     expect(state.send).not.toHaveBeenCalled();
   });
 
+  it('reuses a Solana session the wallet granted without optional methods', async () => {
+    const state = transportState({
+      sessionId: 'solana-session',
+      namespaces: {
+        [SOLANA_NAMESPACE]: {
+          accounts: [PUBLIC_KEY],
+          methods: [
+            'solana_signMessage',
+            'solana_signTransaction',
+            'solana_signAndSendTransaction',
+            'solana_signAndSendAllTransactions',
+          ],
+        },
+      },
+    });
+
+    await expect(handleSolanaRequest(state.transport, { method: 'connect' })).resolves.toEqual([
+      PUBLIC_KEY,
+    ]);
+    expect(state.send).not.toHaveBeenCalled();
+  });
+
   it('extends an EVM session and preserves every wallet-authoritative grant', async () => {
     const evmSession = {
       ...sessionFromAccounts({ accounts: [EVM_ADDRESS], chainId: 1 }),

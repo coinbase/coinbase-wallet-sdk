@@ -238,6 +238,27 @@ describe('connectWallet', () => {
     expect(request).not.toHaveBeenCalled();
   });
 
+  it('reuses a session the wallet granted without optional methods', async () => {
+    const notOptional = (method: string) => method !== 'coinbase_signPreparedCalls';
+    const restored: Session = {
+      sessionId: 'session-1',
+      namespaces: {
+        eip155: { accounts: [EVM_ACCOUNT], methods: EIP155_METHODS.filter(notOptional) },
+        solana: { accounts: [SOLANA_ACCOUNT], methods: SOLANA_METHODS.filter(notOptional) },
+      },
+    };
+    const { transport, request } = setup({ restored });
+
+    await expect(
+      connectWallet({ request: { evm: true, solana: true }, transport })
+    ).resolves.toEqual({
+      evm: { accounts: [{ address: EVM_ACCOUNT }] },
+      solana: { accounts: [{ address: SOLANA_ACCOUNT }] },
+    });
+    expect(transport.handshake).not.toHaveBeenCalled();
+    expect(request).not.toHaveBeenCalled();
+  });
+
   it('requests fresh capability results even when an account session exists', async () => {
     const restored: Session = {
       sessionId: 'session-1',

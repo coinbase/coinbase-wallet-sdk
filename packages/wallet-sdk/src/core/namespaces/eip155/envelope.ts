@@ -6,6 +6,7 @@ import { activeGrantForChain } from ':core/session/grants.js';
 import type { Envelope, NamespaceTranslator, Session } from ':core/session/types.js';
 import { extractFrom } from './extractFrom.js';
 import { formatEip155ChainId } from './caip.js';
+import { EIP155_OPTIONAL_METHODS } from './methods.js';
 
 function sameAccount(a: string, b: string): boolean {
   const addrA = accountOf(a);
@@ -39,9 +40,14 @@ export function qualify(session: Session, envelope: Envelope): Envelope {
   if (namespaceOf(envelope.chainId) !== 'eip155') {
     throw standardErrors.provider.unsupportedMethod(`eip155 qualify received ${envelope.chainId}`);
   }
-  const accounts = activeGrantForChain(session, envelope.chainId)?.accounts ?? [];
+  const grant = activeGrantForChain(session, envelope.chainId);
+  const accounts = grant?.accounts ?? [];
   if (accounts.length === 0) {
     throw standardErrors.provider.unauthorized('No eip155 account granted for target chain');
+  }
+  const { method } = envelope.request;
+  if (EIP155_OPTIONAL_METHODS.includes(method) && !grant?.methods.includes(method)) {
+    throw standardErrors.provider.unauthorized(`${method} is not granted to this session`);
   }
   const extracted = extractFrom(envelope.request);
   if (extracted && !accounts.some((account) => sameAccount(account, extracted))) {

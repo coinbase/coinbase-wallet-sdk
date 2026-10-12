@@ -146,7 +146,8 @@ export function createSolanaWallet(
     [StandardConnect]: {
       version: '1.0.0',
       async connect(options) {
-        if (options?.silent && accounts.length === 0) return { accounts };
+        // Silent connect reports the restored accounts; it never prompts or pairs.
+        if (options?.silent) return { accounts };
         const result = await handleSolanaRequest(transport, { method: 'connect' });
         updateAccounts(result);
         if (accounts.length === 0) {

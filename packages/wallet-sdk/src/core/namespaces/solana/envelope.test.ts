@@ -102,6 +102,24 @@ describe('Solana envelope', () => {
     ).toThrow(/not in the Solana session scope/);
   });
 
+  it('rejects prepared calls with 4100 when the session did not grant them', () => {
+    const withoutPreparedCalls = {
+      namespaces: {
+        solana: { accounts: [PUBLIC_KEY], methods: ['solana_signMessage'] },
+      },
+    };
+
+    expect(() =>
+      qualify(withoutPreparedCalls, {
+        chainId: SOLANA_MAINNET,
+        request: {
+          method: 'coinbase_signPreparedCalls',
+          params: [{ pubkey: PUBLIC_KEY, opaque: 'params' }],
+        },
+      })
+    ).toThrowError(expect.objectContaining({ code: 4100 }));
+  });
+
   it('rejects unsupported chains and methods before transport', () => {
     expect(() =>
       toEnvelope(

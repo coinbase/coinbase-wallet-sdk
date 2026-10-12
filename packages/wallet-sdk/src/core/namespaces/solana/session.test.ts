@@ -36,8 +36,18 @@ describe('Solana session helpers', () => {
   });
 
   it('defines the pairing scope and exact authorization requirement', () => {
+    // Requested, but optional: wallets grant it only to first-party apps.
+    expect(SOLANA_METHODS).toContain('coinbase_signPreparedCalls');
     expect(SOLANA_MAINNET_REQUIRED_SCOPES).toEqual([
-      { chainId: SOLANA_MAINNET, methods: SOLANA_METHODS },
+      {
+        chainId: SOLANA_MAINNET,
+        methods: [
+          'solana_signMessage',
+          'solana_signTransaction',
+          'solana_signAndSendTransaction',
+          'solana_signAndSendAllTransactions',
+        ],
+      },
     ]);
     // Pairing asks for the bare namespace: authorization is per namespace, and the
     // only supported cluster is enforced by `solanaChainId` / `assertSolanaEnvelope`.

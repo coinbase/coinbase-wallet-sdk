@@ -2,7 +2,7 @@ import { standardErrors } from ':core/error/errors.js';
 import { serialize } from ':core/error/utils.js';
 import { EIP155_NAMESPACE } from ':core/namespaces/eip155/caip.js';
 import { createEip155Scopes } from ':core/namespaces/eip155/eip1193/connect.js';
-import { EIP155_METHODS } from ':core/namespaces/eip155/methods.js';
+import { EIP155_METHODS, EIP155_OPTIONAL_METHODS } from ':core/namespaces/eip155/methods.js';
 import { projectEthAccounts } from ':core/namespaces/eip155/session.js';
 import { SOLANA_NAMESPACE } from ':core/namespaces/solana/caip.js';
 import {
@@ -36,6 +36,9 @@ export type ConnectResult = Record<
 >;
 
 const EVM_CONNECT_METHODS = EIP155_METHODS.filter((method) => method !== 'wallet_addSubAccount');
+const EVM_REQUIRED_METHODS = EVM_CONNECT_METHODS.filter(
+  (method) => !EIP155_OPTIONAL_METHODS.includes(method)
+);
 const UNSUPPORTED_EVM_CONNECT_CAPABILITIES = new Set(['addSubAccount', 'spendPermissions']);
 
 /** Default to both namespaces; reject anything else and an empty request. */
@@ -168,14 +171,14 @@ export async function connectWallet({
     });
 
   // A namespace grant has no chain list to check, so EVM coverage is the grant itself
-  // carrying the methods this connect asked for.
+  // carrying the required methods this connect asked for.
   const evmGrant = currentSession && activeGrantForNamespace(currentSession, EIP155_NAMESPACE);
   const covered =
     !!currentSession &&
     (!includeEvm ||
       (!!evmGrant &&
         evmGrant.accounts.length > 0 &&
-        EVM_CONNECT_METHODS.every((method) => evmGrant.methods.includes(method)))) &&
+        EVM_REQUIRED_METHODS.every((method) => evmGrant.methods.includes(method)))) &&
     (!includeSolana || sessionCovers(currentSession, SOLANA_MAINNET_REQUIRED_SCOPES));
 
   // Capability requests may contain fresh authentication challenges and must not

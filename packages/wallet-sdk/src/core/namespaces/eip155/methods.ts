@@ -1,4 +1,10 @@
 /**
+ * Requested, but a session without them still counts as connected: the wallet grants them only
+ * to first-party apps. Calling one the session did not grant is unauthorized.
+ */
+export const EIP155_OPTIONAL_METHODS: readonly string[] = ['coinbase_signPreparedCalls'];
+
+/**
  * Methods requested in the eip155 CAIP-25 session scope.
  *
  * This doubles as the routing rule: anything the session asked the wallet to authorize
@@ -27,5 +33,5 @@ export const EIP155_METHODS: readonly string[] = [
   'wallet_watchAsset',
   'wallet_connect',
   'experimental_requestInfo',
-  'coinbase_signPreparedCalls',
+  ...EIP155_OPTIONAL_METHODS,
 ];
