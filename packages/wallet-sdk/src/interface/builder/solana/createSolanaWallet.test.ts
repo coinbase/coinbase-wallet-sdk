@@ -15,7 +15,11 @@ import type {
 } from '@wallet-standard/features';
 import * as Base58 from 'ox/Base58';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createSolanaWallet, isCompatibleSolanaWallet } from './createSolanaWallet.js';
+import {
+  type SolanaWallet,
+  createSolanaWallet,
+  isCompatibleSolanaWallet,
+} from './createSolanaWallet.js';
 
 type Features = StandardConnectFeature &
   StandardDisconnectFeature &
@@ -43,6 +47,16 @@ function transport(restored?: Session): WalletTransport {
     readSession: () => restored,
     cleanup,
   } as unknown as WalletTransport;
+}
+
+function solanaSession(methods: string[]): Session {
+  return { sessionId: 'session', namespaces: { solana: { accounts: [address], methods } } };
+}
+
+function preparedCalls(wallet: SolanaWallet) {
+  const feature = wallet.features['coinbase:signPreparedCalls'];
+  if (!feature) throw new Error('coinbase:signPreparedCalls is not listed');
+  return feature;
 }
 
 function sessionStore(): Store['session'] {
@@ -296,5 +310,91 @@ describe('createSolanaWallet', () => {
 
     expect(cleanup).toHaveBeenCalledOnce();
     expect(wallet.accounts).toEqual([]);
+  });
+
+  describe('coinbase:signPreparedCalls', () => {
+    it('is listed only while the session grants coinbase_signPreparedCalls', () => {
+      const wallet = createSolanaWallet(transport(), sessionStore());
+      const changed = vi.fn();
+      wallet.features['standard:events'].on('change', changed);
+
+      notifySessionChange?.(solanaSession(['solana_signMessage']), undefined);
+      expect(wallet.features).not.toHaveProperty(['coinbase:signPreparedCalls']);
+      expect(wallet.accounts[0].features).not.toContain('coinbase:signPreparedCalls');
+      expect(changed).toHaveBeenLastCalledWith({ accounts: wallet.accounts });
+
+      notifySessionChange?.(solanaSession(['coinbase_signPreparedCalls']), undefined);
+      expect(wallet.features).toHaveProperty(['coinbase:signPreparedCalls']);
+      expect(wallet.accounts[0].features).toContain('coinbase:signPreparedCalls');
+      expect(changed).toHaveBeenLastCalledWith({
+        accounts: wallet.accounts,
+        features: wallet.features,
+      });
+
+      notifySessionChange?.(undefined, undefined);
+      expect(wallet.features).not.toHaveProperty(['coinbase:signPreparedCalls']);
+      expect(changed).toHaveBeenLastCalledWith({ accounts: [], features: wallet.features });
+    });
+
+    it('is listed for a restored session that grants it', () => {
+      const wallet = createSolanaWallet(
+        transport(solanaSession(['coinbase_signPreparedCalls'])),
+        sessionStore()
+      );
+
+      expect(wallet.features).toHaveProperty(['coinbase:signPreparedCalls']);
+      expect(isCompatibleSolanaWallet(wallet)).toBe(true);
+    });
+
+    it('is listed once connect returns a session that grants it', async () => {
+      let current: Session | undefined;
+      const wallet = createSolanaWallet(
+        { readSession: () => current, cleanup } as unknown as WalletTransport,
+        sessionStore()
+      );
+      mockHandleSolanaRequest.mockImplementationOnce(async () => {
+        current = solanaSession(['coinbase_signPreparedCalls']);
+        return [address];
+      });
+
+      await (wallet.features as Features)['standard:connect'].connect();
+
+      expect(wallet.features).toHaveProperty(['coinbase:signPreparedCalls']);
+    });
+
+    it('signs as the connected account and passes every other field through', async () => {
+      const wallet = createSolanaWallet(
+        transport(solanaSession(['coinbase_signPreparedCalls'])),
+        sessionStore()
+      );
+      const walletResult = { opaque: 'result' };
+      mockHandleSolanaRequest.mockResolvedValueOnce(walletResult);
+
+      await expect(
+        preparedCalls(wallet).signPreparedCalls({
+          account: wallet.accounts[0],
+          opaque: 'params',
+          pubkey: otherAddress,
+        })
+      ).resolves.toBe(walletResult);
+      expect(handleSolanaRequest).toHaveBeenCalledWith(expect.anything(), {
+        method: 'coinbase_signPreparedCalls',
+        params: [{ opaque: 'params', pubkey: address }],
+      });
+    });
+
+    it('rejects an account the session did not authorize', async () => {
+      const wallet = createSolanaWallet(
+        transport(solanaSession(['coinbase_signPreparedCalls'])),
+        sessionStore()
+      );
+
+      await expect(
+        preparedCalls(wallet).signPreparedCalls({
+          account: { ...wallet.accounts[0], address: otherAddress },
+        })
+      ).rejects.toMatchObject({ code: 4100 });
+      expect(handleSolanaRequest).not.toHaveBeenCalled();
+    });
   });
 });
