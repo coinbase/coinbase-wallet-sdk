@@ -2,7 +2,8 @@ import type { WalletTransport } from ':core/transport/index.js';
 import type { Store } from ':store/store.js';
 import { registerWallet } from '@wallet-standard/wallet';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { type SolanaWallet, createSolanaWallet } from './createSolanaWallet.js';
+import { createSolanaWallet } from './createSolanaWallet.js';
+import type { SolanaWallet } from './features.js';
 import { _resetSolanaWalletRegistration, registerSolanaWallet } from './registerSolanaWallet.js';
 
 vi.mock('@wallet-standard/wallet', () => ({

@@ -15,7 +15,8 @@ import type {
 } from '@wallet-standard/features';
 import * as Base58 from 'ox/Base58';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createSolanaWallet, isCompatibleSolanaWallet } from './createSolanaWallet.js';
+import { createSolanaWallet } from './createSolanaWallet.js';
+import type { SolanaWallet } from './features.js';
 
 type Features = StandardConnectFeature &
   StandardDisconnectFeature &
@@ -36,13 +37,36 @@ const otherAddress = Base58.fromBytes(new Uint8Array(32).fill(7));
 let notifySessionChange:
   | ((session: Session | undefined, previousSession: Session | undefined) => void)
   | undefined;
-const cleanup = vi.fn(async () => notifySessionChange?.(undefined, undefined));
+let transportSession: Session | undefined;
+const cleanup = vi.fn(async () => {
+  transportSession = undefined;
+  notifySessionChange?.(undefined, undefined);
+});
 
 function transport(restored?: Session): WalletTransport {
+  transportSession = restored;
   return {
-    readSession: () => restored,
+    readSession: () => transportSession,
     cleanup,
   } as unknown as WalletTransport;
+}
+
+function solanaSession(methods: string[]): Session {
+  return { sessionId: 'session', namespaces: { solana: { accounts: [address], methods } } };
+}
+
+/** Stand-in for a connect that pairs: the new session is written before connect resolves. */
+function mockConnect(methods: string[] = ['solana_signMessage']) {
+  mockHandleSolanaRequest.mockImplementationOnce(async () => {
+    transportSession = solanaSession(methods);
+    return [address];
+  });
+}
+
+function preparedCalls(wallet: SolanaWallet) {
+  const feature = wallet.features['coinbase:signPreparedCalls'];
+  if (!feature) throw new Error('coinbase:signPreparedCalls is not listed');
+  return feature;
 }
 
 function sessionStore(): Store['session'] {
@@ -80,7 +104,6 @@ describe('createSolanaWallet', () => {
         'solana:signTransaction',
       ].sort()
     );
-    expect(isCompatibleSolanaWallet(wallet)).toBe(true);
   });
 
   it('restores every granted account and tracks session changes', () => {
@@ -136,7 +159,8 @@ describe('createSolanaWallet', () => {
     const features = wallet.features as Features;
     const changed = vi.fn();
     features['standard:events'].on('change', changed);
-    mockHandleSolanaRequest.mockResolvedValueOnce([address]).mockResolvedValueOnce(undefined);
+    mockConnect();
+    mockHandleSolanaRequest.mockResolvedValueOnce(undefined);
 
     await expect(features['standard:connect'].connect()).resolves.toMatchObject({
       accounts: [{ address }],
@@ -154,8 +178,8 @@ describe('createSolanaWallet', () => {
     const features = wallet.features as Features;
     const signature = new Uint8Array(64).fill(1);
     const signedTransaction = new Uint8Array([9, 10]);
+    mockConnect();
     mockHandleSolanaRequest
-      .mockResolvedValueOnce([address])
       .mockResolvedValueOnce({ signature })
       .mockResolvedValueOnce({ signedTransaction });
     await features['standard:connect'].connect();
@@ -192,10 +216,8 @@ describe('createSolanaWallet', () => {
       { status: 'fulfilled' as const, value: { signature } },
       { status: 'rejected' as const, reason: { code: 4001, message: 'rejected' } },
     ];
-    mockHandleSolanaRequest
-      .mockResolvedValueOnce([address])
-      .mockResolvedValueOnce({ signature })
-      .mockResolvedValueOnce(batchResult);
+    mockConnect();
+    mockHandleSolanaRequest.mockResolvedValueOnce({ signature }).mockResolvedValueOnce(batchResult);
     await features['standard:connect'].connect();
     const account = wallet.accounts[0];
     const first = new Uint8Array([1]);
@@ -242,7 +264,7 @@ describe('createSolanaWallet', () => {
   it('rejects unknown accounts and chains', async () => {
     const wallet = createSolanaWallet(transport(), sessionStore());
     const features = wallet.features as Features;
-    mockHandleSolanaRequest.mockResolvedValueOnce([address]);
+    mockConnect();
     await features['standard:connect'].connect();
 
     await expect(
@@ -282,9 +304,8 @@ describe('createSolanaWallet', () => {
   it('clears stale transport authorization after a 4100 response', async () => {
     const wallet = createSolanaWallet(transport(), sessionStore());
     const features = wallet.features as Features;
-    mockHandleSolanaRequest
-      .mockResolvedValueOnce([address])
-      .mockRejectedValueOnce({ code: 4100, message: 'Stale session' });
+    mockConnect();
+    mockHandleSolanaRequest.mockRejectedValueOnce({ code: 4100, message: 'Stale session' });
     await features['standard:connect'].connect();
 
     await expect(
@@ -296,5 +317,83 @@ describe('createSolanaWallet', () => {
 
     expect(cleanup).toHaveBeenCalledOnce();
     expect(wallet.accounts).toEqual([]);
+  });
+
+  describe('coinbase:signPreparedCalls', () => {
+    it('is listed only while the session grants coinbase_signPreparedCalls', () => {
+      const wallet = createSolanaWallet(transport(), sessionStore());
+      const changed = vi.fn();
+      wallet.features['standard:events'].on('change', changed);
+
+      notifySessionChange?.(solanaSession(['solana_signMessage']), undefined);
+      expect(wallet.features).not.toHaveProperty(['coinbase:signPreparedCalls']);
+      expect(wallet.accounts[0].features).not.toContain('coinbase:signPreparedCalls');
+      expect(changed).toHaveBeenLastCalledWith({ accounts: wallet.accounts });
+
+      notifySessionChange?.(solanaSession(['coinbase_signPreparedCalls']), undefined);
+      expect(wallet.features).toHaveProperty(['coinbase:signPreparedCalls']);
+      expect(wallet.accounts[0].features).toContain('coinbase:signPreparedCalls');
+      expect(changed).toHaveBeenLastCalledWith({
+        accounts: wallet.accounts,
+        features: wallet.features,
+      });
+
+      notifySessionChange?.(undefined, undefined);
+      expect(wallet.features).not.toHaveProperty(['coinbase:signPreparedCalls']);
+      expect(changed).toHaveBeenLastCalledWith({ accounts: [], features: wallet.features });
+    });
+
+    it('is listed for a restored session that grants it', () => {
+      const wallet = createSolanaWallet(
+        transport(solanaSession(['coinbase_signPreparedCalls'])),
+        sessionStore()
+      );
+
+      expect(wallet.features).toHaveProperty(['coinbase:signPreparedCalls']);
+    });
+
+    it('is listed once connect returns a session that grants it', async () => {
+      const wallet = createSolanaWallet(transport(), sessionStore());
+      mockConnect(['coinbase_signPreparedCalls']);
+
+      await (wallet.features as Features)['standard:connect'].connect();
+
+      expect(wallet.features).toHaveProperty(['coinbase:signPreparedCalls']);
+    });
+
+    it('signs as the connected account and passes every other field through', async () => {
+      const wallet = createSolanaWallet(
+        transport(solanaSession(['coinbase_signPreparedCalls'])),
+        sessionStore()
+      );
+      const walletResult = { opaque: 'result' };
+      mockHandleSolanaRequest.mockResolvedValueOnce(walletResult);
+
+      await expect(
+        preparedCalls(wallet).signPreparedCalls({
+          account: wallet.accounts[0],
+          opaque: 'params',
+          pubkey: otherAddress,
+        })
+      ).resolves.toBe(walletResult);
+      expect(handleSolanaRequest).toHaveBeenCalledWith(expect.anything(), {
+        method: 'coinbase_signPreparedCalls',
+        params: [{ opaque: 'params', pubkey: address }],
+      });
+    });
+
+    it('rejects an account the session did not authorize', async () => {
+      const wallet = createSolanaWallet(
+        transport(solanaSession(['coinbase_signPreparedCalls'])),
+        sessionStore()
+      );
+
+      await expect(
+        preparedCalls(wallet).signPreparedCalls({
+          account: { ...wallet.accounts[0], address: otherAddress },
+        })
+      ).rejects.toMatchObject({ code: 4100 });
+      expect(handleSolanaRequest).not.toHaveBeenCalled();
+    });
   });
 });
