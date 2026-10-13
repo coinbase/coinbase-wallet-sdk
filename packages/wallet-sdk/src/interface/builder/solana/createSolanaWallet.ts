@@ -34,23 +34,10 @@ import {
 } from '@wallet-standard/features';
 import { ReadonlyWalletAccount } from '@wallet-standard/wallet';
 import * as Base58 from 'ox/Base58';
-
-const CoinbaseSignPreparedCalls = 'coinbase:signPreparedCalls';
-
-/**
- * Listed only while the session grants `coinbase_signPreparedCalls`, which the wallet does for
- * first-party apps alone.
- */
-type CoinbaseSignPreparedCallsFeature = {
-  readonly [CoinbaseSignPreparedCalls]: {
-    readonly version: '1.0.0';
-    /** Every field besides `account` passes through; the wallet owns their shape and the result. */
-    readonly signPreparedCalls: (input: {
-      readonly account: WalletAccount;
-      readonly [key: string]: unknown;
-    }) => Promise<unknown>;
-  };
-};
+import {
+  CoinbaseSignPreparedCalls,
+  type CoinbaseSignPreparedCallsFeature,
+} from './signPreparedCalls.js';
 
 const SOLANA_ACCOUNT_FEATURES = [
   SolanaSignMessage,
@@ -88,13 +75,6 @@ export function isCompatibleSolanaWallet(wallet: Wallet): wallet is SolanaWallet
     SolanaSignAndSendTransaction in wallet.features &&
     SignAndSendAllTransactions in wallet.features
   );
-}
-
-/** The wallet lists only what this app may call; a grant without the method means it may not. */
-function grantsPreparedCalls(session: Session | undefined): boolean {
-  if (!session) return false;
-  const grant = activeGrantForChain(session, SOLANA_MAINNET);
-  return grant?.methods.includes('coinbase_signPreparedCalls') ?? false;
 }
 
 function accountFromAddress(
@@ -135,10 +115,11 @@ export function createSolanaWallet(
   let accounts: readonly WalletAccount[] = [];
   let signsPreparedCalls = false;
 
-  const update = ({
-    addresses,
-    preparedCalls,
-  }: { addresses: string[]; preparedCalls: boolean }) => {
+  /** Wallet Standard change events carry only the properties that changed. */
+  const sync = (nextSession: Session | undefined) => {
+    const addresses = nextSession ? projectSolanaAccounts(nextSession) : [];
+    const grant = nextSession && activeGrantForChain(nextSession, SOLANA_MAINNET);
+    const preparedCalls = grant?.methods.includes('coinbase_signPreparedCalls') ?? false;
     const featuresChanged = preparedCalls !== signsPreparedCalls;
     if (
       !featuresChanged &&
@@ -186,8 +167,8 @@ export function createSolanaWallet(
       async connect(options) {
         // Silent connect reports the restored accounts; it never prompts or pairs.
         if (options?.silent) return { accounts };
-        const result = await handleSolanaRequest(transport, { method: 'connect' });
-        update({ addresses: result, preparedCalls: grantsPreparedCalls(transport.readSession()) });
+        await handleSolanaRequest(transport, { method: 'connect' });
+        sync(transport.readSession());
         if (accounts.length === 0) {
           throw standardErrors.rpc.internal('Solana connect did not return an account');
         }
@@ -198,7 +179,7 @@ export function createSolanaWallet(
       version: '1.0.0',
       async disconnect() {
         await handleSolanaRequest(transport, { method: 'disconnect' });
-        update({ addresses: [], preparedCalls: false });
+        sync(undefined);
       },
     },
     [StandardEvents]: { version: '1.0.0', on },
@@ -350,16 +331,7 @@ export function createSolanaWallet(
     },
   };
 
-  const restored = activeSession(transport.readSession());
-  update({
-    addresses: restored ? projectSolanaAccounts(restored) : [],
-    preparedCalls: grantsPreparedCalls(restored),
-  });
-  session.subscribe((nextSession) => {
-    update({
-      addresses: nextSession ? projectSolanaAccounts(nextSession) : [],
-      preparedCalls: grantsPreparedCalls(nextSession),
-    });
-  });
+  sync(activeSession(transport.readSession()));
+  session.subscribe(sync);
   return wallet;
 }
