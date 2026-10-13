@@ -51,7 +51,7 @@ export const SOLANA_ACCOUNT_FEATURES = [
   SignAndSendAllTransactions,
 ] as const;
 
-export const PREPARED_CALLS_ACCOUNT_FEATURES = [
+export const FIRST_PARTY_ACCOUNT_FEATURES = [
   ...SOLANA_ACCOUNT_FEATURES,
   CoinbaseSignPreparedCalls,
 ] as const;

@@ -30,7 +30,7 @@ import * as Base58 from 'ox/Base58';
 import {
   CoinbaseSignPreparedCalls,
   type CoinbaseSignPreparedCallsFeature,
-  PREPARED_CALLS_ACCOUNT_FEATURES,
+  FIRST_PARTY_ACCOUNT_FEATURES,
   type RequiredSolanaFeatures,
   SOLANA_ACCOUNT_FEATURES,
   type SolanaWallet,
@@ -41,7 +41,7 @@ const COINBASE_WALLET_ICON =
 
 function accountFromAddress(
   address: string,
-  features: typeof SOLANA_ACCOUNT_FEATURES | typeof PREPARED_CALLS_ACCOUNT_FEATURES
+  features: typeof SOLANA_ACCOUNT_FEATURES | typeof FIRST_PARTY_ACCOUNT_FEATURES
 ): WalletAccount {
   try {
     const publicKey = Base58.toBytes(address);
@@ -91,9 +91,7 @@ export function createSolanaWallet(
       return;
     }
     signsPreparedCalls = preparedCalls;
-    const accountFeatures = preparedCalls
-      ? PREPARED_CALLS_ACCOUNT_FEATURES
-      : SOLANA_ACCOUNT_FEATURES;
+    const accountFeatures = preparedCalls ? FIRST_PARTY_ACCOUNT_FEATURES : SOLANA_ACCOUNT_FEATURES;
     accounts = addresses.map((address) => accountFromAddress(address, accountFeatures));
     const change = featuresChanged ? { accounts, features: wallet.features } : { accounts };
     listeners.forEach((listener) => listener(change));
