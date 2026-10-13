@@ -15,11 +15,8 @@ import type {
 } from '@wallet-standard/features';
 import * as Base58 from 'ox/Base58';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  type SolanaWallet,
-  createSolanaWallet,
-  isCompatibleSolanaWallet,
-} from './createSolanaWallet.js';
+import { createSolanaWallet } from './createSolanaWallet.js';
+import type { SolanaWallet } from './features.js';
 
 type Features = StandardConnectFeature &
   StandardDisconnectFeature &
@@ -107,7 +104,6 @@ describe('createSolanaWallet', () => {
         'solana:signTransaction',
       ].sort()
     );
-    expect(isCompatibleSolanaWallet(wallet)).toBe(true);
   });
 
   it('restores every granted account and tracks session changes', () => {
@@ -354,7 +350,6 @@ describe('createSolanaWallet', () => {
       );
 
       expect(wallet.features).toHaveProperty(['coinbase:signPreparedCalls']);
-      expect(isCompatibleSolanaWallet(wallet)).toBe(true);
     });
 
     it('is listed once connect returns a session that grants it', async () => {

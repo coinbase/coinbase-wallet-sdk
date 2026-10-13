@@ -14,22 +14,15 @@ import type { Store } from ':store/store.js';
 import { activeGrantForChain, activeSession } from ':core/session/grants.js';
 import {
   SignAndSendAllTransactions,
-  type SolanaSignAndSendAllTransactionsFeature,
   SolanaSignAndSendTransaction,
-  type SolanaSignAndSendTransactionFeature,
   SolanaSignMessage,
-  type SolanaSignMessageFeature,
   SolanaSignTransaction,
-  type SolanaSignTransactionFeature,
 } from '@solana/wallet-standard-features';
 import type { Wallet, WalletAccount, WalletIcon } from '@wallet-standard/base';
 import {
   StandardConnect,
-  type StandardConnectFeature,
   StandardDisconnect,
-  type StandardDisconnectFeature,
   StandardEvents,
-  type StandardEventsFeature,
   type StandardEventsOnMethod,
 } from '@wallet-standard/features';
 import { ReadonlyWalletAccount } from '@wallet-standard/wallet';
@@ -37,45 +30,14 @@ import * as Base58 from 'ox/Base58';
 import {
   CoinbaseSignPreparedCalls,
   type CoinbaseSignPreparedCallsFeature,
-} from './signPreparedCalls.js';
+  PREPARED_CALLS_ACCOUNT_FEATURES,
+  type RequiredSolanaFeatures,
+  SOLANA_ACCOUNT_FEATURES,
+  type SolanaWallet,
+} from './features.js';
 
-const SOLANA_ACCOUNT_FEATURES = [
-  SolanaSignMessage,
-  SolanaSignTransaction,
-  SolanaSignAndSendTransaction,
-  SignAndSendAllTransactions,
-] as const;
-const PREPARED_CALLS_ACCOUNT_FEATURES = [
-  ...SOLANA_ACCOUNT_FEATURES,
-  CoinbaseSignPreparedCalls,
-] as const;
 const COINBASE_WALLET_ICON =
   'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iIzAwNTJGRiIgZD0iTTAgMGgzMnYzMkgweiIvPjxwYXRoIGZpbGw9IiNmZmYiIGQ9Ik04IDEyaDE2djhIOHoiLz48L3N2Zz4=' as WalletIcon;
-
-type RequiredSolanaFeatures = StandardConnectFeature &
-  StandardDisconnectFeature &
-  StandardEventsFeature &
-  SolanaSignMessageFeature &
-  SolanaSignTransactionFeature &
-  SolanaSignAndSendTransactionFeature &
-  SolanaSignAndSendAllTransactionsFeature;
-
-export type SolanaWallet = Wallet & {
-  features: Wallet['features'] & RequiredSolanaFeatures & Partial<CoinbaseSignPreparedCallsFeature>;
-};
-
-export function isCompatibleSolanaWallet(wallet: Wallet): wallet is SolanaWallet {
-  return (
-    wallet.chains.includes(SOLANA_WALLET_STANDARD_MAINNET) &&
-    StandardConnect in wallet.features &&
-    StandardDisconnect in wallet.features &&
-    StandardEvents in wallet.features &&
-    SolanaSignMessage in wallet.features &&
-    SolanaSignTransaction in wallet.features &&
-    SolanaSignAndSendTransaction in wallet.features &&
-    SignAndSendAllTransactions in wallet.features
-  );
-}
 
 function accountFromAddress(
   address: string,
