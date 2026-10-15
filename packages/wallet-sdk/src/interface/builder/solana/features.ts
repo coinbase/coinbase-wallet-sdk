@@ -8,7 +8,7 @@ import {
   SolanaSignTransaction,
   type SolanaSignTransactionFeature,
 } from '@solana/wallet-standard-features';
-import type { Wallet, WalletAccount } from '@wallet-standard/base';
+import type { IdentifierString, Wallet, WalletAccount } from '@wallet-standard/base';
 import type {
   StandardConnectFeature,
   StandardDisconnectFeature,
@@ -40,18 +40,18 @@ export type RequiredSolanaFeatures = StandardConnectFeature &
   SolanaSignAndSendTransactionFeature &
   SolanaSignAndSendAllTransactionsFeature;
 
+/** Each is listed only while the session grants the method behind it. */
+export type OptionalSolanaFeatures = CoinbaseSignPreparedCallsFeature;
+
 export type SolanaWallet = Wallet & {
-  features: Wallet['features'] & RequiredSolanaFeatures & Partial<CoinbaseSignPreparedCallsFeature>;
+  features: Wallet['features'] & RequiredSolanaFeatures & Partial<OptionalSolanaFeatures>;
 };
 
-export const SOLANA_ACCOUNT_FEATURES = [
+/** An account lists whichever of these the wallet currently lists. */
+export const ACCOUNT_FEATURES: readonly IdentifierString[] = [
   SolanaSignMessage,
   SolanaSignTransaction,
   SolanaSignAndSendTransaction,
   SignAndSendAllTransactions,
-] as const;
-
-export const FIRST_PARTY_ACCOUNT_FEATURES = [
-  ...SOLANA_ACCOUNT_FEATURES,
   CoinbaseSignPreparedCalls,
-] as const;
+];
