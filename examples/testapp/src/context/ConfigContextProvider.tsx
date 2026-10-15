@@ -73,10 +73,11 @@ export const ConfigContextProvider = ({ children }: ConfigContextProviderProps) 
     setVersion(version);
   }, []);
 
+  // The SDK registers its Solana wallet once per page, so a new wallet URL needs a fresh page.
   const setScwUrlAndSave = useCallback((url: ScwUrlType) => {
     cleanupSDKLocalStorage();
     localStorage.setItem(SELECTED_SCW_URL_KEY, url);
-    setScwUrl(url);
+    window.location.reload();
   }, []);
 
   const value = useMemo(() => {
