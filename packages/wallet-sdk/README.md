@@ -227,6 +227,8 @@ The initial scope supports Solana mainnet, `connect`, `disconnect`,
 request and preserves serial/parallel mode plus ordered settled results.
 `solana:signIn` is not advertised yet. Inside the Coinbase Wallet InAppBrowser,
 the host already provides Wallet Standard registration, so this function is a no-op.
+Wallet Standard cannot unregister a wallet, so only the first call on a page registers
+one; later calls, including from other SDK instances, do nothing.
 
 For new dapps, Solana recommends
 [`@solana/kit`](https://solana.com/docs/clients/official/javascript) with Wallet

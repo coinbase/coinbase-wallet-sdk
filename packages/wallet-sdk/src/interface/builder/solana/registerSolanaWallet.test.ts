@@ -118,21 +118,15 @@ describe('registerSolanaWallet', () => {
     expect(registerWallet).toHaveBeenCalledWith(popupWallet);
   });
 
-  it('routes the page-global wallet through the latest explicit SDK transport', async () => {
-    const firstRequest = vi.fn();
-    const secondRequest = vi.fn().mockResolvedValue('second');
-    const firstTransport = { request: firstRequest } as unknown as WalletTransport;
-    const secondTransport = { request: secondRequest } as unknown as WalletTransport;
+  it('keeps the first SDK transport for the page-global wallet', () => {
+    const firstTransport = {} as WalletTransport;
+    const secondTransport = {} as WalletTransport;
 
     registerSolanaWallet({ transport: firstTransport, session: walletSession });
-    const registeredTransport = vi.mocked(createSolanaWallet).mock.calls[0]?.[0];
     registerSolanaWallet({ transport: secondTransport, session: walletSession });
 
-    expect(registeredTransport).toBeDefined();
-    await expect(registeredTransport!.request({ method: 'test' })).resolves.toBe('second');
-    expect(firstRequest).not.toHaveBeenCalled();
-    expect(secondRequest).toHaveBeenCalledWith({ method: 'test' });
     expect(createSolanaWallet).toHaveBeenCalledOnce();
+    expect(vi.mocked(createSolanaWallet).mock.calls[0]?.[0]).toBe(firstTransport);
     expect(registerWallet).toHaveBeenCalledOnce();
   });
 
