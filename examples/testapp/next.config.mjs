@@ -23,7 +23,6 @@ export default {
       config.resolve.alias = {
         ...config.resolve.alias,
         '@base-org/account-npm': '@coinbase/wallet-sdk',
-        '@base-org/account-npm/spend-permission': '@coinbase/wallet-sdk/spend-permission',
       };
     }
 

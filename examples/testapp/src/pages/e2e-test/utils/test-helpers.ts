@@ -263,7 +263,7 @@ export async function runTestSequence(
  * Create a test function wrapper that provides simplified test context
  *
  * This is useful for tests that need to be called multiple times or
- * need access to shared test data (like paymentId, subscriptionId, etc.)
+ * need access to shared test context
  */
 export function createTestWrapper(
   config: TestConfig,

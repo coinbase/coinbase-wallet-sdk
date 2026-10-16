@@ -236,6 +236,28 @@ describe('Ephemeral methods', () => {
       expect(mockCleanup).toHaveBeenCalledTimes(1);
     }
   );
+
+  it('pins the envelope chain through a local switch, with no wallet round trip', async () => {
+    await expect(
+      provider.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0x2105' }],
+      })
+    ).resolves.toBeUndefined();
+    expect(mockHandshake).not.toHaveBeenCalled();
+    expect(mockSend).not.toHaveBeenCalled();
+
+    const args = { method: 'wallet_sendCalls', params: ['0xdeadbeef'] };
+    await expect(provider.request(args)).resolves.toBe('0xok');
+
+    expect(mockSend).toHaveBeenCalledWith({
+      method: 'wallet_invokeMethod',
+      params: {
+        chainId: 'eip155:8453',
+        request: args,
+      },
+    });
+  });
 });
 
 describe('ensureSession / createSession', () => {
@@ -316,76 +338,5 @@ describe('ensureSession / createSession', () => {
         }),
       })
     );
-  });
-});
-
-describe('ephemeral: true', () => {
-  function createEphemeralProvider() {
-    return new CoinbaseWalletProvider({ transport: mockTransport(), store, ephemeral: true });
-  }
-
-  it.each(['wallet_sendCalls', 'wallet_sign', 'experimental_requestInfo'])(
-    'invokes isolated %s once and cleans up',
-    async (method) => {
-      const ephemeral = createEphemeralProvider();
-      const args = { method, params: ['0xdeadbeef'] };
-      await expect(ephemeral.request(args)).resolves.toBe('0xok');
-      expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
-      expect(mockSend).toHaveBeenCalledTimes(1);
-      expect(mockSend).toHaveBeenCalledWith({
-        method: 'wallet_invokeMethod',
-        params: {
-          chainId: 'eip155:1',
-          request: args,
-        },
-      });
-      expect(mockCleanup).toHaveBeenCalledTimes(1);
-    }
-  );
-
-  it('pins the envelope chain through a local switch, with no wallet round trip', async () => {
-    // What `pay()` and `subscribe()` rely on: a one-shot provider starts on mainnet and
-    // is moved to the payment's chain by `wallet_switchEthereumChain`, which must not
-    // touch the wallet and must reach the CAIP-27 envelope.
-    const ephemeral = createEphemeralProvider();
-
-    await expect(
-      ephemeral.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0x2105' }],
-      })
-    ).resolves.toBeUndefined();
-    expect(mockHandshake).not.toHaveBeenCalled();
-    expect(mockSend).not.toHaveBeenCalled();
-
-    const args = { method: 'wallet_sendCalls', params: ['0xdeadbeef'] };
-    await expect(ephemeral.request(args)).resolves.toBe('0xok');
-
-    expect(mockSend).toHaveBeenCalledWith({
-      method: 'wallet_invokeMethod',
-      params: {
-        chainId: 'eip155:8453',
-        request: args,
-      },
-    });
-  });
-
-  it('forwards wallet_getCallsStatus to wallet rpc url', async () => {
-    const ephemeral = createEphemeralProvider();
-    const args = { method: 'wallet_getCallsStatus' };
-    await ephemeral.request(args);
-    expect(mockFetchRPCRequest).toHaveBeenCalledWith(args, CB_WALLET_RPC_URL);
-  });
-
-  it('rejects pairing so pay() cannot write a Session', async () => {
-    const ephemeral = createEphemeralProvider();
-    const disconnectSpy = vi.spyOn(ephemeral, 'disconnect');
-
-    await expect(ephemeral.request({ method: 'eth_requestAccounts' })).rejects.toMatchObject({
-      code: standardErrorCodes.provider.unauthorized,
-    });
-
-    expect(disconnectSpy).toHaveBeenCalledTimes(1);
-    expect(mockHandshake).not.toHaveBeenCalled();
   });
 });

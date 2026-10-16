@@ -28,7 +28,7 @@ import {
   VStack,
   useToast,
 } from '@chakra-ui/react';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { WIDTH_2XL } from '../../components/Layout';
 import { UserInteractionModal } from '../../components/UserInteractionModal';
 import { useConfig } from '../../context/ConfigContextProvider';
@@ -49,11 +49,6 @@ export default function E2ETestPage() {
   const { isModalOpen, currentTestName, requestUserInteraction, handleContinue, handleCancel } =
     useUserInteraction();
 
-  // Test data refs (use refs instead of state to avoid async state update issues)
-  const paymentIdRef = useRef<string | null>(null);
-  const subscriptionIdRef = useRef<string | null>(null);
-  const permissionHashRef = useRef<string | null>(null);
-
   // State management hooks
   const testState = useTestState();
   const { testCategories, runningSectionName, isRunningTests } = testState;
@@ -71,9 +66,6 @@ export default function E2ETestPage() {
     loadedSDK,
     provider,
     requestUserInteraction,
-    paymentIdRef,
-    subscriptionIdRef,
-    permissionHashRef,
     walletUrl: scwUrl,
   });
 

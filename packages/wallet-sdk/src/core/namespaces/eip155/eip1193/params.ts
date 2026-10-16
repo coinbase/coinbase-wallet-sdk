@@ -1,6 +1,5 @@
 import { standardErrors } from ':core/error/errors.js';
 import type { RequestArguments } from ':core/provider/interface.js';
-import type { FetchPermissionsRequest } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { ensureIntNumber } from ':core/type/util.js';
 import { isAddress } from 'viem';
 
@@ -44,43 +43,6 @@ export function assertGetCapabilitiesParams(
       if (typeof param !== 'string' || !param.startsWith('0x')) {
         throw standardErrors.rpc.invalidParams();
       }
-    }
-  }
-}
-
-/**
- * `coinbase_fetchPermissions` requires explicit params.
- *
- * The parameter-less form used to be filled in from the cached sub-account, which was
- * the only spender the SDK could infer. With sub-accounts gone there is nothing to
- * infer, so the caller supplies `account`, `chainId` and `spender`.
- */
-export function assertFetchPermissionsRequest(
-  request: RequestArguments
-): asserts request is FetchPermissionsRequest {
-  if (
-    request.method !== 'coinbase_fetchPermissions' ||
-    !Array.isArray(request.params) ||
-    request.params.length !== 1 ||
-    typeof request.params[0] !== 'object' ||
-    request.params[0] === null
-  ) {
-    throw standardErrors.rpc.invalidParams(
-      'FetchPermissions - Invalid params: expected [{ account, chainId, spender }]'
-    );
-  }
-
-  const { account, chainId, spender } = request.params[0] as Record<string, unknown>;
-
-  for (const [name, value] of [
-    ['account', account],
-    ['chainId', chainId],
-    ['spender', spender],
-  ] as const) {
-    if (typeof value !== 'string' || !value.startsWith('0x')) {
-      throw standardErrors.rpc.invalidParams(
-        `FetchPermissions - Invalid params: params[0].${name} must be a hex string`
-      );
     }
   }
 }

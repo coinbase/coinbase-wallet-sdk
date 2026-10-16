@@ -53,21 +53,3 @@ export type Preference = {
   /** Whether functional telemetry is enabled. */
   telemetry?: boolean;
 } & Record<string, unknown>;
-
-export type SpendPermission = {
-  createdAt?: number;
-  permissionHash?: string;
-  signature: string;
-  chainId?: number;
-  permission: {
-    account: string;
-    spender: string;
-    token: string;
-    allowance: string;
-    period: number;
-    start: number;
-    end: number;
-    salt: string;
-    extraData: string;
-  };
-};

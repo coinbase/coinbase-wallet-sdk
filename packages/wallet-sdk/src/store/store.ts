@@ -88,7 +88,7 @@ function migratePersistedState(persistedState: unknown, version: number): StoreS
 
 /**
  * Factory function to create a store instance.
- * Allows creating either persistent (for regular SDK) or ephemeral (for payment flows) stores.
+ * Allows creating either persistent (for regular SDK) or in-memory (for tests) stores.
  */
 export function createStoreInstance(options?: {
   persist?: boolean;
@@ -124,13 +124,13 @@ export function createStoreInstance(options?: {
   return createStore(storeCreator);
 }
 
-/** Default persisted zustand instance. Ephemeral payment flows pass their own. */
+/** Default persisted zustand instance. */
 export const defaultStoreInstance = createStoreInstance({ persist: true });
 
 export type StoreInstance = ReturnType<typeof createStoreInstance>;
 
 /**
- * Slice accessors for one zustand instance (persisted SDK store or an ephemeral payment store).
+ * Slice accessors for one zustand instance.
  * The backing state stays flat for persistence compatibility.
  */
 export function bindStore(storeInstance: StoreInstance) {

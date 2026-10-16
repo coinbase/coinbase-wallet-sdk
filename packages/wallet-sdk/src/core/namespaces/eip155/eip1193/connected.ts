@@ -1,15 +1,8 @@
-import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
-import type {
-  FetchPermissionRequest,
-  FetchPermissionResponse,
-} from ':core/rpc/coinbase_fetchPermission.js';
-import type { FetchPermissionsResponse } from ':core/rpc/coinbase_fetchSpendPermissions.js';
 import { WALLET_INVOKE_METHOD } from ':core/session/caip27.js';
 import type { Session } from ':core/session/index.js';
 import { invoke } from ':core/session/invoke.js';
-import { assertFetchPermissionsRequest } from './params.js';
 import { eip155Translator, toEnvelope } from '../envelope.js';
 import { EIP155_METHODS } from '../methods.js';
 import {
@@ -110,18 +103,6 @@ export async function handleConnected(
         sessionId: session.sessionId,
       });
       return result;
-    }
-
-    // --- Spend-permission HTTP (not the wallet transport) ---
-    case 'coinbase_fetchPermissions': {
-      assertFetchPermissionsRequest(args);
-      return (await fetchRPCRequest(args, CB_WALLET_RPC_URL)) as FetchPermissionsResponse;
-    }
-    case 'coinbase_fetchPermission': {
-      return (await fetchRPCRequest(
-        args as FetchPermissionRequest,
-        CB_WALLET_RPC_URL
-      )) as FetchPermissionResponse;
     }
 
     // --- Sign/send: invoke, else chain JSON-RPC (incl. wallet_getCallsStatus) ---

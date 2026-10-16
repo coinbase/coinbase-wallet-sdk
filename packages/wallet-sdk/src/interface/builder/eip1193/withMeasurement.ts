@@ -7,10 +7,6 @@ import {
 import { parseErrorMessageFromAny } from ':core/telemetry/utils.js';
 import { correlationIds } from ':store/correlation-ids/store.js';
 
-type WithMeasurementOptions = {
-  isEphemeral?: boolean;
-};
-
 /**
  * Higher-order function that wraps a request handler with correlation ID tracking and telemetry.
  *
@@ -23,7 +19,6 @@ type WithMeasurementOptions = {
  * @returns Wrapped handler with measurement instrumentation
  */
 export function withMeasurement(
-  options: WithMeasurementOptions,
   handler: <T>(args: RequestArguments) => Promise<T>
 ): <T>(args: RequestArguments) => Promise<T> {
   return async <T>(args: RequestArguments): Promise<T> => {
@@ -33,7 +28,6 @@ export function withMeasurement(
     const measurementParams = {
       method: args.method,
       correlationId,
-      isEphemeral: !!options.isEphemeral,
     };
     logRequestStarted(measurementParams);
 

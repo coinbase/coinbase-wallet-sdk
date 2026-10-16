@@ -63,12 +63,6 @@ type CCAEventData = {
   errorMessage?: string;
   dialogContext?: string;
   dialogAction?: string;
-  isEphemeral?: boolean;
-  // Payment-specific attributes
-  amount?: string;
-  testnet?: boolean;
-  status?: string;
-  periodInDays?: number;
 };
 
 type AnalyticsEventData = {
