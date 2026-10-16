@@ -260,7 +260,8 @@ Coinbase Wallet can be used directly in HTML pages via a script tag, without any
 <script src="https://cdn.jsdelivr.net/npm/@coinbase/wallet-sdk/dist/coinbase-wallet-sdk.min.js"></script>
 ```
 
-Once loaded, the SDK is available as `window.createCoinbaseWalletSDK`:
+Once loaded, the SDK is available as `window.createCoinbaseWalletSDK` (and as
+`window.CoinbaseWalletSDK`, which also carries `VERSION`):
 
 ```javascript
 // Create Coinbase Wallet Provider

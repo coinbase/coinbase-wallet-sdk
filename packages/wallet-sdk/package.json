@@ -22,21 +22,12 @@
         "import": "./dist/index.js",
         "require": "./dist/index.js"
       },
-      "node": {
-        "import": "./dist/index.node.js",
-        "require": "./dist/index.node.js"
-      },
       "default": "./dist/index.js"
     },
     "./browser": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.js"
-    },
-    "./node": {
-      "types": "./dist/index.node.d.ts",
-      "import": "./dist/index.node.js",
-      "require": "./dist/index.node.js"
     },
     "./ui-assets": {
       "types": "./dist/ui/assets/index.d.ts",

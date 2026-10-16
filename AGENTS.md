@@ -23,13 +23,11 @@ These are defined in each package's `tsconfig.base.json` and resolved at build t
 The SDK uses **Preact**, not React. `jsxImportSource` is set to `"preact"` in tsconfig. Import from `preact` and `preact/hooks`, not `react`.
 
 
-## Browser vs Node entry points
+## Entry points
 
-The SDK has dual entry points using a `*.node.ts` suffix convention:
-- `index.ts` / `index.js` -- browser build
-- `index.node.ts` / `index.node.js` -- Node build (e.g., CDP SDK integration)
-
-The `package.json` `exports` map uses conditional `browser` and `node` fields to resolve the correct entry.
+- `index.ts` / `index.js` -- the package entry, used by both browsers and Node
+- `browser-entry.ts` -- input for the Rollup UMD bundle (`dist/coinbase-wallet-sdk.min.js`),
+  which exposes `window.CoinbaseWalletSDK` and `window.createCoinbaseWalletSDK`
 
 ## Generated files -- do not edit
 
@@ -140,7 +138,7 @@ faster than reasoning about them.
 
 ## Testing
 
-Uses **Vitest** with jsdom environment. Tests are co-located as `*.test.ts` / `*.test.tsx` next to source files. Node-specific tests use `*.node.test.ts`.
+Uses **Vitest** with jsdom environment. Tests are co-located as `*.test.ts` / `*.test.tsx` next to source files.
 
 Always run tests in non-interactive mode: `yarn test --run` (not `yarn test`).
 

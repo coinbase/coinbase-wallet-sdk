@@ -1,27 +1,21 @@
 /**
  * Browser entry point for Coinbase Wallet SDK
- * This file exposes the account interface to the global window object
+ * The UMD bundle exposes this module as `window.CoinbaseWalletSDK`; this file adds the
+ * `window.createCoinbaseWalletSDK` shortcut.
  */
 
-import { PACKAGE_VERSION } from './core/constants.js';
 import { createCoinbaseWalletSDK } from './interface/builder/createCoinbaseWalletSDK.js';
 
 // Extend Window interface for global exports
 declare global {
   interface Window {
     createCoinbaseWalletSDK: typeof createCoinbaseWalletSDK;
-    CoinbaseWalletSDK: {
-      VERSION: string;
-    };
   }
 }
 
 // Expose to global window object
 if (typeof window !== 'undefined') {
   window.createCoinbaseWalletSDK = createCoinbaseWalletSDK;
-  window.CoinbaseWalletSDK = {
-    VERSION: PACKAGE_VERSION,
-  };
 }
 
 // Export for module usage
