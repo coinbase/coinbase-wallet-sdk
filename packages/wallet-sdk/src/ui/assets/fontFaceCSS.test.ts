@@ -11,8 +11,8 @@ describe('FONT_FACE_CSS', () => {
     expect(FONT_FACE_CSS).toContain('@font-face');
   });
 
-  it('specifies BaseSans-Regular font family', () => {
-    expect(FONT_FACE_CSS).toContain('font-family: "BaseSans-Regular"');
+  it('specifies CoinbaseSans-Regular font family', () => {
+    expect(FONT_FACE_CSS).toContain('font-family: "CoinbaseSans-Regular"');
   });
 
   it('includes base64 encoded font data', () => {
