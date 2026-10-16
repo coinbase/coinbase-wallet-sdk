@@ -247,23 +247,3 @@ initialization or global registration.
   1. Fork this repo and clone it
   1. From the root dir run `yarn install`
   1. From the root dir run `yarn dev`
-
-## Script Tag Usage
-
-Coinbase Wallet can be used directly in HTML pages via a script tag, without any build tools:
-
-```html
-<!-- Via unpkg -->
-<script src="https://unpkg.com/@coinbase/wallet-sdk/dist/coinbase-wallet-sdk.min.js"></script>
-
-<!-- Via jsDelivr -->
-<script src="https://cdn.jsdelivr.net/npm/@coinbase/wallet-sdk/dist/coinbase-wallet-sdk.min.js"></script>
-```
-
-Once loaded, the SDK is available as `window.createCoinbaseWalletSDK` (and as
-`window.CoinbaseWalletSDK`, which also carries `VERSION`):
-
-```javascript
-// Create Coinbase Wallet Provider
-const provider = window.createCoinbaseWalletSDK().getProvider()
-```

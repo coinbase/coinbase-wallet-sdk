@@ -23,11 +23,10 @@ These are defined in each package's `tsconfig.base.json` and resolved at build t
 The SDK uses **Preact**, not React. `jsxImportSource` is set to `"preact"` in tsconfig. Import from `preact` and `preact/hooks`, not `react`.
 
 
-## Entry points
+## Entry point
 
-- `index.ts` / `index.js` -- the package entry, used by both browsers and Node
-- `browser-entry.ts` -- input for the Rollup UMD bundle (`dist/coinbase-wallet-sdk.min.js`),
-  which exposes `window.CoinbaseWalletSDK` and `window.createCoinbaseWalletSDK`
+`src/index.ts` (built to `dist/index.js`) is the only package entry, used by both browsers
+and Node. The SDK ships no script-tag bundle.
 
 ## Generated files -- do not edit
 
