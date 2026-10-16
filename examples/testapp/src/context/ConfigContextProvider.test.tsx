@@ -67,7 +67,10 @@ describe('ConfigContextProvider', () => {
     expect(localStorageMock.setItem).toHaveBeenCalledWith(SELECTED_SDK_KEY, sdkVersions[0]);
   });
 
-  it('should update values when setScwUrlAndSave is called', () => {
+  it('should save the wallet URL and reload when setScwUrlAndSave is called', () => {
+    const originalLocation = window.location;
+    delete window.location;
+    window.location = { ...originalLocation, reload: vi.fn() };
     const { result } = renderHook(() => useConfig(), {
       wrapper: TestWrapper,
     });
@@ -76,8 +79,9 @@ describe('ConfigContextProvider', () => {
       result.current.setScwUrlAndSave(scwUrls[1]);
     });
 
-    expect(result.current.scwUrl).toBe(scwUrls[1]);
     expect(localStorageMock.setItem).toHaveBeenCalledWith(SELECTED_SCW_URL_KEY, scwUrls[1]);
+    expect(window.location.reload).toHaveBeenCalledOnce();
+    window.location = originalLocation;
   });
 
   it('should update config when setConfig is called', () => {
