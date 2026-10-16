@@ -38,6 +38,20 @@ import {
 const COINBASE_WALLET_ICON =
   'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iIzAwNTJGRiIgZD0iTTAgMGgzMnYzMkgweiIvPjxwYXRoIGZpbGw9IiNmZmYiIGQ9Ik04IDEyaDE2djhIOHoiLz48L3N2Zz4=' as WalletIcon;
 
+function requireAccount(wallet: Wallet, account: WalletAccount): WalletAccount {
+  const current = wallet.accounts.find((candidate) => candidate.address === account.address);
+  if (!current) {
+    throw standardErrors.provider.unauthorized('Solana account is not authorized');
+  }
+  return current;
+}
+
+function assertMainnet(chain: string): void {
+  if (chain !== SOLANA_WALLET_STANDARD_MAINNET) {
+    throw standardErrors.provider.unsupportedChain(`Unsupported Solana chain ${chain}`);
+  }
+}
+
 function accountFromAddress(address: string, features: readonly IdentifierString[]): WalletAccount {
   let publicKey: Uint8Array;
   try {
@@ -56,20 +70,6 @@ function accountFromAddress(address: string, features: readonly IdentifierString
   });
 }
 
-function requireAccount(wallet: Wallet, account: WalletAccount): WalletAccount {
-  const current = wallet.accounts.find((candidate) => candidate.address === account.address);
-  if (!current) {
-    throw standardErrors.provider.unauthorized('Solana account is not authorized');
-  }
-  return current;
-}
-
-function assertMainnet(chain: string): void {
-  if (chain !== SOLANA_WALLET_STANDARD_MAINNET) {
-    throw standardErrors.provider.unsupportedChain(`Unsupported Solana chain ${chain}`);
-  }
-}
-
 function sameItems<T>(a: readonly T[], b: readonly T[]): boolean {
   return a.length === b.length && a.every((item, index) => item === b[index]);
 }
@@ -80,36 +80,11 @@ export function createSolanaWallet(
   session: Store['session']
 ): SolanaWallet {
   const listeners = new Set<Parameters<StandardEventsOnMethod>[1]>();
-  let accounts: readonly WalletAccount[] = [];
-  let grantedFeatures: readonly Partial<OptionalSolanaFeatures>[] = [];
-
-  /** Wallet Standard change events carry only the properties that changed. */
-  const sync = (nextSession: Session | undefined) => {
-    const addresses = nextSession ? projectSolanaAccounts(nextSession) : [];
-    const grant = nextSession && activeGrantForChain(nextSession, SOLANA_MAINNET);
-    const nextGranted = Object.entries(optionalFeatures)
-      .filter(([method]) => grant?.methods.includes(method))
-      .map(([, feature]) => feature);
-    const featuresChanged = !sameItems(nextGranted, grantedFeatures);
-    const accountsChanged = !sameItems(
-      accounts.map(({ address }) => address),
-      addresses
-    );
-    if (!featuresChanged && !accountsChanged) return;
-
-    if (featuresChanged) {
-      grantedFeatures = nextGranted;
-      listedFeatures = nextGranted.reduce<SolanaWallet['features']>(
-        (all, feature) => ({ ...all, ...feature }),
-        features
-      );
-    }
-
-    const accountFeatures = ACCOUNT_FEATURES.filter((name) => name in listedFeatures);
-    accounts = addresses.map((address) => accountFromAddress(address, accountFeatures));
-    const change = featuresChanged ? { accounts, features: listedFeatures } : { accounts };
-    listeners.forEach((listener) => listener(change));
+  const on: StandardEventsOnMethod = (_event, listener) => {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
   };
+  let accounts: readonly WalletAccount[] = [];
 
   const invoke = async <Request extends SolanaInvokeRequest>(
     request: Request
@@ -127,11 +102,6 @@ export function createSolanaWallet(
       }
       throw error;
     }
-  };
-
-  const on: StandardEventsOnMethod = (_event, listener) => {
-    listeners.add(listener);
-    return () => listeners.delete(listener);
   };
 
   const features: RequiredSolanaFeatures = {
@@ -281,7 +251,39 @@ export function createSolanaWallet(
     },
   };
 
+  let grantedFeatures: readonly Partial<OptionalSolanaFeatures>[] = [];
   let listedFeatures: SolanaWallet['features'] = features;
+
+  /** Wallet Standard change events carry only the properties that changed. */
+  const sync = (nextSession: Session | undefined) => {
+    const addresses = nextSession ? projectSolanaAccounts(nextSession) : [];
+    const grant = nextSession && activeGrantForChain(nextSession, SOLANA_MAINNET);
+    const nextGranted = Object.entries(optionalFeatures)
+      .filter(([method]) => grant?.methods.includes(method))
+      .map(([, feature]) => feature);
+
+    const featuresChanged = !sameItems(nextGranted, grantedFeatures);
+    const accountsChanged = !sameItems(
+      accounts.map(({ address }) => address),
+      addresses
+    );
+
+    if (!featuresChanged && !accountsChanged) return;
+
+    if (featuresChanged) {
+      grantedFeatures = nextGranted;
+      listedFeatures = nextGranted.reduce<SolanaWallet['features']>(
+        (all, feature) => ({ ...all, ...feature }),
+        features
+      );
+    }
+
+    const accountFeatures = ACCOUNT_FEATURES.filter((name) => name in listedFeatures);
+    accounts = addresses.map((address) => accountFromAddress(address, accountFeatures));
+
+    const change = featuresChanged ? { accounts, features: listedFeatures } : { accounts };
+    listeners.forEach((listener) => listener(change));
+  };
 
   const wallet: SolanaWallet = {
     version: '1.0.0',
