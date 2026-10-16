@@ -20,32 +20,24 @@ import { hexStringFromNumber } from ':core/type/util.js';
 import { correlationIds } from ':store/correlation-ids/store.js';
 import type { Store } from ':store/store.js';
 import { checkErrorForInvalidRequestArgs } from ':util/provider.js';
-import { assertEphemeralMethod } from './ephemeral.js';
 import { withMeasurement } from './withMeasurement.js';
 
 type CoinbaseWalletProviderParams = {
   transport: WalletTransport;
   store: Store;
-  /**
-   * Restricts requests to the one-shot methods used by `pay()`.
-   * The caller owns the corresponding isolated transport.
-   */
-  ephemeral?: boolean;
 };
 
 /** EIP-1193 shell. Validates args, then `handleEip1193Request` (createSession / invoke). */
 export class CoinbaseWalletProvider extends ProviderEventEmitter implements ProviderInterface {
   private readonly context: Eip1193Context;
-  private readonly ephemeral: boolean;
   /** What the application has been told: the last connection state it saw an event for. */
   private connected: boolean;
 
   public readonly request: ProviderInterface['request'];
 
-  constructor({ transport, store, ephemeral = false }: CoinbaseWalletProviderParams) {
+  constructor({ transport, store }: CoinbaseWalletProviderParams) {
     super();
-    this.ephemeral = ephemeral;
-    this.request = withMeasurement({ isEphemeral: ephemeral }, this.handleRequest);
+    this.request = withMeasurement(this.handleRequest);
 
     const restoredSession = transport.readSession();
     this.connected = !!restoredSession && projectEthAccounts(restoredSession).length > 0;
@@ -85,7 +77,6 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
   private handleRequest = async <T>(args: RequestArguments): Promise<T> => {
     try {
       checkErrorForInvalidRequestArgs(args);
-      if (this.ephemeral) assertEphemeralMethod(args.method);
       return (await handleEip1193Request(this.context, args)) as T;
     } catch (error) {
       const { code } = error as { code?: number };

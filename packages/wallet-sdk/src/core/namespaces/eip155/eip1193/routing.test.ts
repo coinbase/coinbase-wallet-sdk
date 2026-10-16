@@ -303,26 +303,6 @@ describe('RPC routing vs Coinbase Wallet SDK', () => {
     fetchRPC.mockRestore();
   });
 
-  it('posts coinbase_fetchPermissions / coinbase_fetchPermission to Coinbase HTTP when connected', async () => {
-    const fetchRPC = vi.spyOn(providerUtil, 'fetchRPCRequest').mockResolvedValue({
-      permissions: [],
-      permission: { chainId: 8453 },
-    });
-    const rt = context({ connected: true });
-    await handleEip1193Request(rt, {
-      method: 'coinbase_fetchPermissions',
-      params: [{ account: ADDRESS, chainId: '0x2105', spender: ADDRESS }],
-    });
-    expect(fetchRPC).toHaveBeenCalledWith(expect.anything(), CB_WALLET_RPC_URL);
-    await handleEip1193Request(rt, {
-      method: 'coinbase_fetchPermission',
-      params: [{ permissionHash: '0xabc' }],
-    });
-    expect(fetchRPC).toHaveBeenCalledWith(expect.anything(), CB_WALLET_RPC_URL);
-    expect(rt.transport.request).not.toHaveBeenCalled();
-    fetchRPC.mockRestore();
-  });
-
   it('reads wallet_getSubAccounts from chain RPC when nothing is cached', async () => {
     const fetchRPC = vi.spyOn(providerUtil, 'fetchRPCRequest').mockResolvedValue({});
     const rt = context({ connected: true });

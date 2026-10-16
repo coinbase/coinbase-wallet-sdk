@@ -16,11 +16,9 @@ import { parseCaip27 } from './parseCaip27.js';
  * Everything the disconnected path can serve without creating a session.
  *
  * The switch below answers the first group locally and the second over Coinbase HTTP;
- * the wallet-bound rest handshake, invoke one CAIP-27 envelope, and clean up. `pay()`
- * restricts its one-shot provider to exactly this set, which is what keeps it from
- * ever connecting.
+ * the wallet-bound rest handshake, invoke one CAIP-27 envelope, and clean up.
  */
-export const EPHEMERAL_METHODS = new Set([
+const EPHEMERAL_METHODS = new Set([
   // Local: answered from the active chain, with no wallet round trip.
   'eth_accounts',
   'net_version',

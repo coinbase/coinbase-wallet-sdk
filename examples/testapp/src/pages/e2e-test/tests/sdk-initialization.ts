@@ -42,16 +42,6 @@ export async function testSDKInitialization(
   // Test core exports (these don't need runTest wrapper as they're synchronous checks)
   const coreExports = [
     { name: 'createCoinbaseWalletSDK', value: context.loadedSDK.createCoinbaseWalletSDK },
-    { name: 'base.pay', value: context.loadedSDK.base?.pay },
-    { name: 'base.subscribe', value: context.loadedSDK.base?.subscribe },
-    { name: 'base.subscription.getStatus', value: context.loadedSDK.base?.subscription?.getStatus },
-    {
-      name: 'base.subscription.prepareCharge',
-      value: context.loadedSDK.base?.subscription?.prepareCharge,
-    },
-    { name: 'getPaymentStatus', value: context.loadedSDK.getPaymentStatus },
-    { name: 'TOKENS', value: context.loadedSDK.TOKENS },
-    { name: 'CHAIN_IDS', value: context.loadedSDK.CHAIN_IDS },
     { name: 'VERSION', value: context.loadedSDK.VERSION },
   ];
 
@@ -65,41 +55,6 @@ export async function testSDKInitialization(
         `${exp.name} is exported`,
         'failed',
         `${exp.name} is undefined`
-      );
-    }
-  }
-
-  // Test optional exports (only available in local SDK, not npm CDN)
-  const optionalExports = [
-    { name: 'encodeProlink', value: context.loadedSDK.encodeProlink },
-    { name: 'decodeProlink', value: context.loadedSDK.decodeProlink },
-    { name: 'createProlinkUrl', value: context.loadedSDK.createProlinkUrl },
-    {
-      name: 'spendPermission.requestSpendPermission',
-      value: context.loadedSDK.spendPermission?.requestSpendPermission,
-    },
-    {
-      name: 'spendPermission.fetchPermissions',
-      value: context.loadedSDK.spendPermission?.fetchPermissions,
-    },
-  ];
-
-  for (const exp of optionalExports) {
-    handlers.updateTestStatus(category, `${exp.name} is exported`, 'running');
-    if (exp.value !== undefined && exp.value !== null) {
-      handlers.updateTestStatus(
-        category,
-        `${exp.name} is exported`,
-        'passed',
-        undefined,
-        'Available'
-      );
-    } else {
-      handlers.updateTestStatus(
-        category,
-        `${exp.name} is exported`,
-        'skipped',
-        'Not available (local SDK only)'
       );
     }
   }

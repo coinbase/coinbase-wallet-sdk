@@ -1,5 +1,4 @@
 import { EventEmitter } from 'eventemitter3';
-import { Address, Hex } from 'viem';
 import type { AppMetadata, Preference } from '../../storage/schema.js';
 import type { RequestArguments } from '../message/RequestArguments.js';
 export type {
@@ -36,14 +35,6 @@ export interface ProviderInterface extends ProviderEventEmitter {
 }
 
 export type ProviderEventCallback = ProviderInterface['emit'];
-
-export type SpendPermissionConfig = {
-  token: Address;
-  allowance: Hex;
-  period: number;
-  salt?: Hex;
-  extraData?: Hex;
-};
 
 export interface ConstructorOptions {
   metadata: AppMetadata;

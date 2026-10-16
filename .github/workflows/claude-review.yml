@@ -65,9 +65,9 @@ jobs:
 
             CODEBASE:
             - Yarn 4 (Berry) workspaces monorepo, Node 22
-            - packages/wallet-sdk (@coinbase/wallet-sdk): the SDK — EIP-1193 provider, CAIP-25/27 multichain sessions (EVM and Solana via Wallet Standard), signing, RPC, payments, spend permissions, embedded UI (Preact + zustand)
+            - packages/wallet-sdk (@coinbase/wallet-sdk): the SDK — EIP-1193 provider, CAIP-25/27 multichain sessions (EVM and Solana via Wallet Standard), signing, RPC, embedded UI (Preact + zustand)
             - examples/testapp: Next.js 14 playground/demo app
-            - Key dependencies: viem, ox, @coinbase/cdp-sdk, @wallet-standard/*, preact, zustand, eventemitter3
+            - Key dependencies: viem, ox, @wallet-standard/*, preact, zustand, eventemitter3
             - Dual browser/node entrypoints via conditional exports in package.json
             - Browser bundle built with Rollup + terser, bundle size budget enforced by size-limit (31 KB)
             - CI already enforces: Biome lint + format (explicit ruleset, not recommended preset), TypeScript strict typecheck, Vitest tests on Node 20, 22 & 24, CodeQL

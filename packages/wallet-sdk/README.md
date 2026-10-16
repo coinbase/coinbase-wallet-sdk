@@ -200,10 +200,9 @@ of a request. For example, an account without Solana returns:
 
 An omitted capability result is returned on each connected account as a
 serialized `4200` unsupported-capability error. `addSubAccount` and
-`spendPermissions` are intentionally not forwarded by `sdk.connect()`; use the
-EIP-1193 provider or `sdk.subAccount` APIs for those flows. Inputs remain open
-to future namespaces, while EVM and Solana are the namespaces currently
-implemented.
+`spendPermissions` are intentionally not forwarded by `sdk.connect()`. Inputs
+remain open to future namespaces, while EVM and Solana are the namespaces
+currently implemented.
 
 Inside a Coinbase-hosted in-app browser or extension, EVM uses the injected
 `wallet_connect` method and Solana reads the host Wallet Standard connection
@@ -261,31 +260,10 @@ Coinbase Wallet can be used directly in HTML pages via a script tag, without any
 <script src="https://cdn.jsdelivr.net/npm/@coinbase/wallet-sdk/dist/coinbase-wallet-sdk.min.js"></script>
 ```
 
-Once loaded, the SDK is available as `window.base` and `window.createCoinbaseWalletSDK`:
+Once loaded, the SDK is available as `window.createCoinbaseWalletSDK` (and as
+`window.CoinbaseWalletSDK`, which also carries `VERSION`):
 
 ```javascript
-// Make a payment
-const result = await window.base.pay({
-  amount: "10.50",
-  to: "0xYourAddress...",
-  testnet: true
-});
-
-// Check payment status
-const status = await window.base.getPaymentStatus({
-  id: result.id,
-  expectedPayment: {
-    amount: "10.50",
-    recipient: "0xYourAddress..."
-  },
-  testnet: true
-});
-
 // Create Coinbase Wallet Provider
 const provider = window.createCoinbaseWalletSDK().getProvider()
 ```
-
-For production payment verification, call `getPaymentStatus` on your backend and populate
-`expectedPayment` from trusted server-side order data. Omitting it preserves backward compatibility
-but does not verify the order amount or recipient. Bind each payment ID to one order and reject IDs
-that have already been used for fulfillment.

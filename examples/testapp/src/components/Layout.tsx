@@ -28,16 +28,7 @@ type LayoutProps = {
 
 export const WIDTH_2XL = '1536px';
 
-const PAGES = [
-  '/',
-  '/spend-permission',
-  '/payment',
-  '/pay-playground',
-  '/subscribe-playground',
-  '/prolink-playground',
-  '/solana',
-  '/e2e-test',
-];
+const PAGES = ['/', '/solana', '/e2e-test'];
 
 export function Layout({ children }: LayoutProps) {
   const { scwUrl, setScwUrlAndSave } = useConfig();
