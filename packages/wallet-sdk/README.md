@@ -2,8 +2,8 @@
 
 ## Coinbase Wallet SDK allows dapps to connect to Coinbase Wallet
 
-1. [Coinbase Wallet](https://account.base.org/)
-   - [Docs](https://www.base.org/builders/smart-wallet)
+1. [Coinbase Wallet](https://wallet.coinbase.com)
+   - [Docs](https://docs.cdp.coinbase.com/coinbase-wallet/overview)
 
 ### Installing Coinbase Wallet SDK
 

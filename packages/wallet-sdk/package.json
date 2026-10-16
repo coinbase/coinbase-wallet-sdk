@@ -3,8 +3,8 @@
   "version": "5.0.0",
   "description": "Coinbase Wallet SDK",
   "keywords": [
-    "base",
-    "account",
+    "coinbase",
+    "wallet",
     "sdk",
     "web3"
   ],

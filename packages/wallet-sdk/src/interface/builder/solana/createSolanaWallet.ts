@@ -11,6 +11,7 @@ import {
 import type { WalletTransport } from ':core/transport/index.js';
 import type { Session } from ':core/session/types.js';
 import type { Store } from ':store/store.js';
+import { COINBASE_WALLET_ICON } from ':ui/assets/coinbaseWalletIcon.js';
 import { activeGrantForChain, activeSession } from ':core/session/grants.js';
 import {
   SignAndSendAllTransactions,
@@ -18,7 +19,7 @@ import {
   SolanaSignMessage,
   SolanaSignTransaction,
 } from '@solana/wallet-standard-features';
-import type { Wallet, WalletAccount, WalletIcon } from '@wallet-standard/base';
+import type { Wallet, WalletAccount } from '@wallet-standard/base';
 import {
   StandardConnect,
   StandardDisconnect,
@@ -35,9 +36,6 @@ import {
   SOLANA_ACCOUNT_FEATURES,
   type SolanaWallet,
 } from './features.js';
-
-const COINBASE_WALLET_ICON =
-  'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iIzAwNTJGRiIgZD0iTTAgMGgzMnYzMkgweiIvPjxwYXRoIGZpbGw9IiNmZmYiIGQ9Ik04IDEyaDE2djhIOHoiLz48L3N2Zz4=' as WalletIcon;
 
 function accountFromAddress(
   address: string,

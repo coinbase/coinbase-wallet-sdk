@@ -121,7 +121,7 @@
         gap: 8px;
 
         &-title {
-          font-family: 'BaseSans-Regular', sans-serif;
+          font-family: 'CoinbaseSans-Regular', sans-serif;
           font-size: 14px;
           font-weight: 400;
           color: #5B616E;
@@ -160,7 +160,7 @@
 
     &-content {
       padding: 20px 20px 16px 20px;
-      font-family: 'BaseSans-Regular', sans-serif;
+      font-family: 'CoinbaseSans-Regular', sans-serif;
 
       // Phone portrait mode - better spacing for bottom sheet
       @media (max-width: 600px) and (orientation: portrait) {
@@ -197,7 +197,7 @@
     }
 
     &-button {
-      font-family: 'BaseSans-Regular', sans-serif;
+      font-family: 'CoinbaseSans-Regular', sans-serif;
       font-size: 16px;
       font-weight: 500;
       line-height: 24px;
