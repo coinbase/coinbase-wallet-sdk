@@ -6,7 +6,7 @@ import { FunctionComponent, JSX, render } from 'preact';
 import { projectEthAccounts } from ':core/namespaces/eip155/session.js';
 import { getDisplayableUsername } from ':core/username/getDisplayableUsername.js';
 import { store } from ':store/store.js';
-import { BaseLogo } from ':ui/assets/BaseLogo.js';
+import { COINBASE_WALLET_ICON } from ':ui/assets/coinbaseWalletIcon.js';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import css from './Dialog-css.js';
 
@@ -239,7 +239,7 @@ export const DialogInstance: FunctionComponent<DialogInstanceProps> = ({
     >
       <div class="-coinbase-wallet-sdk-dialog-instance-header">
         <div class="-coinbase-wallet-sdk-dialog-instance-header-icon-and-title">
-          <BaseLogo fill="blue" />
+          <img src={COINBASE_WALLET_ICON} width={16} height={16} alt="Coinbase Wallet" />
           {shouldShowHeaderTitle && (
             <div class="-coinbase-wallet-sdk-dialog-instance-header-icon-and-title-title">
               {headerTitle}
