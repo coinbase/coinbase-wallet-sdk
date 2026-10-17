@@ -3,6 +3,11 @@ import { TELEMETRY_SCRIPT_CONTENT } from './telemetry-content.js';
 
 export const loadTelemetryScript = (): Promise<void> => {
   return new Promise((resolve, reject) => {
+    if (typeof window === 'undefined') {
+      reject(new Error('Telemetry is not supported in non-browser environments'));
+      return;
+    }
+
     if (window.ClientAnalytics) {
       return resolve();
     }
@@ -26,7 +31,7 @@ export const loadTelemetryScript = (): Promise<void> => {
 
 const initCCA = () => {
   if (typeof window !== 'undefined') {
-    const deviceId = store.config.get().deviceId ?? window.crypto?.randomUUID() ?? '';
+    const deviceId = store.config.get().deviceId ?? crypto?.randomUUID() ?? '';
 
     if (window.ClientAnalytics) {
       const { init, identify, PlatformName } = window.ClientAnalytics;

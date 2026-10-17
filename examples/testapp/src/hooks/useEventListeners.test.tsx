@@ -48,7 +48,10 @@ describe('useEventListeners', () => {
 
     expect(mockProvider.removeListener).toHaveBeenCalledTimes(4);
     expect(mockProvider.removeListener).toHaveBeenCalledWith('connect', expect.any(Function));
-    expect(mockProvider.removeListener).toHaveBeenCalledWith('accountsChanged', expect.any(Function));
+    expect(mockProvider.removeListener).toHaveBeenCalledWith(
+      'accountsChanged',
+      expect.any(Function)
+    );
     expect(mockProvider.removeListener).toHaveBeenCalledWith('chainChanged', expect.any(Function));
     expect(mockProvider.removeListener).toHaveBeenCalledWith('disconnect', expect.any(Function));
   });

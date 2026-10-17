@@ -1,13 +1,14 @@
 import { Box, Container, Flex, Grid, GridItem, Heading, Switch, Text } from '@chakra-ui/react';
 import React, { useCallback, useEffect } from 'react';
+import { useRouter } from 'next/router';
 
 import { EventListenersCard } from '../components/EventListeners/EventListenersCard';
 import { WIDTH_2XL } from '../components/Layout';
 import { MethodsSection } from '../components/MethodsSection/MethodsSection';
 import { RpcMethodCard } from '../components/RpcMethods/RpcMethodCard';
-import { useConfig } from '../context/ConfigContextProvider';
 import { connectionMethods } from '../components/RpcMethods/method/connectionMethods';
 import { ephemeralMethods } from '../components/RpcMethods/method/ephemeralMethods';
+import { experimentalMethods } from '../components/RpcMethods/method/experimentalMethods';
 import { multiChainMethods } from '../components/RpcMethods/method/multiChainMethods';
 import { readonlyJsonRpcMethods } from '../components/RpcMethods/method/readonlyJsonRpcMethods';
 import { sendMethods } from '../components/RpcMethods/method/sendMethods';
@@ -15,6 +16,7 @@ import { signMessageMethods } from '../components/RpcMethods/method/signMessageM
 import { walletTxMethods } from '../components/RpcMethods/method/walletTxMethods';
 import { connectionMethodShortcutsMap } from '../components/RpcMethods/shortcut/connectionMethodShortcuts';
 import { ephemeralMethodShortcutsMap } from '../components/RpcMethods/shortcut/ephemeralMethodShortcuts';
+import { baseProfileShortcutsMap } from '../components/RpcMethods/shortcut/experimentalShortcuts';
 import { multiChainShortcutsMap } from '../components/RpcMethods/shortcut/multipleChainShortcuts';
 import { readonlyJsonRpcShortcutsMap } from '../components/RpcMethods/shortcut/readonlyJsonRpcShortcuts';
 import { sendShortcutsMap } from '../components/RpcMethods/shortcut/sendShortcuts';
@@ -23,26 +25,59 @@ import { walletTxShortcutsMap } from '../components/RpcMethods/shortcut/walletTx
 import { SDKConfig } from '../components/SDKConfig/SDKConfig';
 import { useEIP1193Provider } from '../context/EIP1193ProviderContextProvider';
 
+const COOP_QUERY_KEY = 'coop';
+const COOP_QUERY_VALUE = 'same-origin';
+
+async function ensureCoopServiceWorkerReady(basePath: string) {
+  if (!('serviceWorker' in navigator)) {
+    return;
+  }
+
+  await navigator.serviceWorker.register(`${basePath}/coop-service-worker.js`);
+  await navigator.serviceWorker.ready;
+
+  if (navigator.serviceWorker.controller) {
+    return;
+  }
+
+  await new Promise<void>((resolve) => {
+    const timeout = window.setTimeout(resolve, 1000);
+    navigator.serviceWorker.addEventListener(
+      'controllerchange',
+      () => {
+        window.clearTimeout(timeout);
+        resolve();
+      },
+      { once: true }
+    );
+  });
+}
+
 export default function Home() {
   const { provider } = useEIP1193Provider();
-  const { scwUrl, setScwUrlAndSave } = useConfig();
-
-  const simulateCoop = new URL(scwUrl).searchParams.get('coop') === 'same-origin';
+  const router = useRouter();
+  const simulateCoop = router.query[COOP_QUERY_KEY] === COOP_QUERY_VALUE;
 
   const handleSimulateCoopToggle = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const url = new URL(scwUrl);
-      if (e.target.checked) {
-        url.searchParams.set('coop', 'same-origin');
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const url = new URL(window.location.href);
+
+      if (event.target.checked) {
+        url.searchParams.set(COOP_QUERY_KEY, COOP_QUERY_VALUE);
+        try {
+          await ensureCoopServiceWorkerReady(router.basePath);
+        } catch {
+          // Still navigate so the URL reflects the requested simulation state.
+        }
       } else {
-        url.searchParams.delete('coop');
+        url.searchParams.delete(COOP_QUERY_KEY);
       }
-      setScwUrlAndSave(url.toString() as Parameters<typeof setScwUrlAndSave>[0]);
+
+      window.location.assign(url.toString());
     },
-    [scwUrl, setScwUrlAndSave]
+    [router.basePath]
   );
-  // @ts-expect-error refactor soon
-  const [connected, setConnected] = React.useState(Boolean(provider?.connected));
+  const [connected, setConnected] = React.useState(false);
   const [chainId, setChainId] = React.useState<number | undefined>(undefined);
   // This is for Extension compatibility, Extension with SDK3.9 does not emit connect event
   // correctly, so we manually check if the extension is connected, and set the connected state
@@ -58,21 +93,19 @@ export default function Home() {
       setConnected(true);
     });
     provider?.on('chainChanged', (newChainId) => {
-      // @ts-expect-error refactor soon
-      setChainId(newChainId);
+      setChainId(Number.parseInt(newChainId as string, 16));
     });
   }, [provider]);
 
   useEffect(() => {
     if (connected) {
       provider?.request({ method: 'eth_chainId' }).then((chainId) => {
-        // @ts-expect-error refactor soon
-        setChainId(Number.parseInt(chainId, 16));
+        setChainId(Number.parseInt(chainId as string, 16));
       });
     }
 
     // Injected provider does not emit a 'connect' event
-    // @ts-expect-error refactor soon
+    // @ts-expect-error isCoinbaseBrowser only exists on injected providers
     if (provider?.isCoinbaseBrowser) {
       setConnected(true);
     }
@@ -98,7 +131,11 @@ export default function Home() {
         <Heading size="md">Wallet Connection</Heading>
         <Grid
           mt={2}
-          templateColumns={{ base: '100%', md: 'repeat(2, 50%)', xl: 'repeat(3, 33%)' }}
+          templateColumns={{
+            base: '100%',
+            md: 'repeat(2, 50%)',
+            xl: 'repeat(3, 33%)',
+          }}
           gap={2}
         >
           <GridItem w="100%" key="eth_requestAccounts">
@@ -106,10 +143,12 @@ export default function Home() {
               method="eth_requestAccounts"
               params={[]}
               format={undefined}
-              shortcuts={connectionMethodShortcutsMap?.['eth_requestAccounts']}
+              shortcuts={connectionMethodShortcutsMap.eth_requestAccounts}
             >
               <Flex align="center" justify="space-between" mt={4} pt={3} borderTopWidth={1}>
-                <Text fontSize="sm" fontWeight="medium">Simulate COOP</Text>
+                <Text fontSize="sm" fontWeight="medium">
+                  Simulate COOP
+                </Text>
                 <Switch isChecked={simulateCoop} onChange={handleSimulateCoopToggle} />
               </Flex>
             </RpcMethodCard>
@@ -122,7 +161,7 @@ export default function Home() {
                   method={rpc.method}
                   params={rpc.params}
                   format={rpc.format}
-                  shortcuts={connectionMethodShortcutsMap?.[rpc.method]}
+                  shortcuts={connectionMethodShortcutsMap[rpc.method]}
                 />
               </GridItem>
             ))}
@@ -132,6 +171,11 @@ export default function Home() {
         title="Ephemeral Methods"
         methods={ephemeralMethods}
         shortcutsMap={ephemeralMethodShortcutsMap}
+      />
+      <MethodsSection
+        title="Base Profile"
+        methods={experimentalMethods}
+        shortcutsMap={baseProfileShortcutsMap}
       />
       {shouldShowMethodsRequiringConnection && (
         <>

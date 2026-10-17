@@ -1,32 +1,26 @@
 import { vi } from 'vitest';
 
-import {
-  CBInjectedProvider,
-  CBWindow,
-  checkErrorForInvalidRequestArgs,
-  fetchRPCRequest,
-  getCoinbaseInjectedProvider,
-} from './provider.js';
 import { standardErrors } from ':core/error/errors.js';
-import { ProviderInterface } from ':core/provider/interface.js';
+import { checkErrorForInvalidRequestArgs, fetchRPCRequest } from './provider.js';
 
-const window = globalThis as CBWindow;
-
+// vitest 2's toThrow(error) compared the message only, so these helpers could claim
+// invalidRequest (-32600) while the implementation throws invalidParams (-32602) and
+// the assertions still passed. They now state the code that actually ships.
 // @ts-expect-error-next-line
 const invalidArgsError = (args) =>
-  standardErrors.rpc.invalidRequest({
+  standardErrors.rpc.invalidParams({
     message: 'Expected a single, non-array, object argument.',
     data: args,
   });
 // @ts-expect-error-next-line
 const invalidMethodError = (args) =>
-  standardErrors.rpc.invalidRequest({
+  standardErrors.rpc.invalidParams({
     message: "'args.method' must be a non-empty string.",
     data: args,
   });
 // @ts-expect-error-next-line
 const invalidParamsError = (args) =>
-  standardErrors.rpc.invalidRequest({
+  standardErrors.rpc.invalidParams({
     message: "'args.params' must be an object or array if provided.",
     data: args,
   });
@@ -59,151 +53,6 @@ describe('Utils', () => {
       await expect(
         fetchRPCRequest({ method: 'foo', params: [] }, 'https://example.com')
       ).resolves.toBe('some result value');
-    });
-  });
-
-  describe('getCoinbaseInjectedProvider', () => {
-    describe('Extension Provider', () => {
-      afterEach(() => {
-        window.coinbaseWalletExtension = undefined;
-      });
-
-      it('should return extension provider', () => {
-        const mockSetAppInfo = vi.fn();
-        const extensionProvider = {
-          setAppInfo: mockSetAppInfo,
-        } as unknown as ProviderInterface;
-
-        window.coinbaseWalletExtension = extensionProvider;
-
-        expect(
-          getCoinbaseInjectedProvider({
-            metadata: {
-              appName: 'Dapp',
-              appChainIds: [],
-              appLogoUrl: null,
-            },
-            preference: {
-              options: 'all',
-            },
-          })
-        ).toBe(extensionProvider);
-
-        expect(mockSetAppInfo).toHaveBeenCalledWith(
-          'Dapp',
-          null,
-          [],
-          expect.objectContaining({ options: 'all' })
-        );
-      });
-
-      it('smartWalletOnly - should return undefined', () => {
-        window.coinbaseWalletExtension = {} as unknown as ProviderInterface;
-
-        expect(
-          getCoinbaseInjectedProvider({
-            metadata: {
-              appName: 'Dapp',
-              appChainIds: [],
-              appLogoUrl: null,
-            },
-            preference: {
-              options: 'smartWalletOnly',
-            },
-          })
-        ).toBe(undefined);
-      });
-    });
-
-    describe('Browser Provider', () => {
-      const mockCipherProvider = {
-        isCoinbaseBrowser: true,
-        setAppInfo: vi.fn(),
-      } as unknown as CBInjectedProvider;
-
-      beforeAll(() => {
-        window.coinbaseWalletExtension = undefined;
-        window.ethereum = mockCipherProvider;
-      });
-
-      afterAll(() => {
-        window.ethereum = undefined;
-      });
-
-      it('Should return injected browser provider', () => {
-        expect(
-          getCoinbaseInjectedProvider({
-            metadata: {
-              appName: 'Dapp',
-              appChainIds: [],
-              appLogoUrl: null,
-            },
-            preference: {
-              options: 'all',
-            },
-          })
-        ).toBe(mockCipherProvider);
-        expect(mockCipherProvider.setAppInfo).toHaveBeenCalledWith(
-          'Dapp',
-          null,
-          [],
-          expect.objectContaining({
-            options: 'all',
-          })
-        );
-      });
-
-      it('smartWalletOnly - Should still return injected browser provider', () => {
-        expect(
-          getCoinbaseInjectedProvider({
-            metadata: {
-              appName: 'Dapp',
-              appChainIds: [],
-              appLogoUrl: null,
-            },
-            preference: {
-              options: 'smartWalletOnly',
-            },
-          })
-        ).toBe(mockCipherProvider);
-        expect(mockCipherProvider.setAppInfo).toHaveBeenCalledWith(
-          'Dapp',
-          null,
-          [],
-          expect.objectContaining({
-            options: 'all',
-          })
-        );
-      });
-
-      it('should handle exception when accessing window.top', () => {
-        window.ethereum = undefined;
-        const originalWindowTop = window.top;
-        Object.defineProperty(window, 'top', {
-          get: () => {
-            throw new Error('Simulated access error');
-          },
-          configurable: true,
-        });
-
-        expect(
-          getCoinbaseInjectedProvider({
-            metadata: {
-              appName: 'Dapp',
-              appChainIds: [],
-              appLogoUrl: null,
-            },
-            preference: {
-              options: 'all',
-            },
-          })
-        ).toBe(undefined);
-
-        Object.defineProperty(window, 'top', {
-          get: () => originalWindowTop,
-          configurable: true,
-        });
-      });
     });
   });
 

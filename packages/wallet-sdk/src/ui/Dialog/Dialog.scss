@@ -1,0 +1,268 @@
+
+.-coinbase-wallet-sdk-css-reset {
+  -webkit-font-smoothing: antialiased;
+  pointer-events: auto !important; // important to override the parent pointer-events: none;
+  
+  .-coinbase-wallet-sdk-dialog-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2147483647;
+    
+    * {
+      user-select: none;
+      box-sizing: border-box;
+    }
+  }
+
+  .-coinbase-wallet-sdk-dialog-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+
+    // Phone portrait mode - bottom sheet
+    @media (max-width: 600px) and (orientation: portrait) {
+      align-items: flex-end;
+      justify-content: stretch;
+      padding: 0;
+    }
+  }
+
+  .-coinbase-wallet-sdk-dialog {
+    position: relative;
+    z-index: 2147483648;
+
+    // Phone portrait mode - full width
+    @media (max-width: 600px) and (orientation: portrait) {
+      width: 100%;
+    }
+  }
+
+  .-coinbase-wallet-sdk-dialog-instance {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    width: 380px;
+    max-height: 90vh;
+    overflow: hidden;
+    transform: scale(0.95);
+    opacity: 0;
+    transition: all 0.2s ease-in-out;
+
+    // Enable touch-action for better mobile interaction
+    @media (max-width: 600px) and (orientation: portrait) {
+      touch-action: pan-y;
+      user-select: none;
+    }
+
+    &-hidden {
+      transform: scale(0.9);
+      opacity: 0;
+
+      // Phone portrait mode - slide down animation
+      @media (max-width: 600px) and (orientation: portrait) {
+        transform: translateY(100%);
+      }
+    }
+
+    &:not(.-coinbase-wallet-sdk-dialog-instance-hidden) {
+      transform: scale(1);
+      opacity: 1;
+
+      // Phone portrait mode - slide up animation
+      @media (max-width: 600px) and (orientation: portrait) {
+        transform: translateY(0);
+      }
+    }
+
+    // Phone portrait mode - bottom sheet styling
+    @media (max-width: 600px) and (orientation: portrait) {
+      width: 100%;
+      max-width: 100%;
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.15);
+      max-height: 80vh;
+      transform: translateY(0);
+
+      &-hidden {
+        transform: translateY(100%);
+        opacity: 1;
+      }
+
+      &:not(.-coinbase-wallet-sdk-dialog-instance-hidden) {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    &-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px 0 20px;
+
+      // Phone portrait mode - adjusted padding
+      @media (max-width: 600px) and (orientation: portrait) {
+        padding: 16px 20px 12px 20px;
+      }
+
+      &-icon-and-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        &-title {
+          font-family: 'BaseSans-Regular', sans-serif;
+          font-size: 14px;
+          font-weight: 400;
+          color: #5B616E;
+        }
+      }
+
+      &-cblogo {
+        width: 32px;
+        height: 32px;
+      }
+
+      &-close {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        cursor: pointer;
+        border-radius: 6px;
+        transition: background-color 0.2s;
+
+        &:hover {
+          background-color: #f5f7f8;
+        }
+
+        &-icon {
+          width: 14px;
+          height: 14px;
+
+          @media (max-width: 600px) and (orientation: portrait) {
+            display: none;
+          }
+        }
+      }
+    }
+
+    &-content {
+      padding: 20px 20px 16px 20px;
+      font-family: 'BaseSans-Regular', sans-serif;
+
+      // Phone portrait mode - better spacing for bottom sheet
+      @media (max-width: 600px) and (orientation: portrait) {
+        padding: 8px 20px 12px 20px;
+      }
+
+      &-title {
+        font-size: 20px;
+        font-weight: 600;
+        line-height: 28px;
+        color: #0A0B0D;
+        margin-bottom: 10px;
+      }
+
+      &-message {
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 24px;
+        color: #5B616E;
+        margin-bottom: 0;
+      }
+    }
+
+    &-actions {
+      display: flex;
+      padding: 16px 20px 20px 20px;
+      flex-direction: column;
+
+      // Phone portrait mode - bottom sheet actions
+      @media (max-width: 600px) and (orientation: portrait) {
+        padding: 16px 20px calc(20px + env(safe-area-inset-bottom)) 20px;
+        gap: 6px;
+      }
+    }
+
+    &-button {
+      font-family: 'BaseSans-Regular', sans-serif;
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 24px;
+      border: none;
+      border-radius: 12px;
+      padding: 16px 24px;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      width: 100%;
+      margin: 4px 0;
+      
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      &-primary {
+        background-color: #0A0B0D;
+        color: #ffffff;
+        
+        &:hover:not(:disabled) {
+          background-color: #1C1E20;
+        }
+        
+        &:active:not(:disabled) {
+          background-color: #2A2D31;
+        }
+      }
+
+      &-secondary {
+        background-color: #EEF0F3;
+        color: #0A0B0D;
+        
+        &:hover:not(:disabled) {
+          background-color: #E1E4E8;
+        }
+        
+        &:active:not(:disabled) {
+          background-color: #D4D8DD;
+        }
+      }
+    }
+  }
+
+  // Handle bar component styles
+  .-coinbase-wallet-sdk-dialog-handle-bar {
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 64px;
+    height: 4px;
+    background-color: #D1D5DB;
+    border-radius: 2px;
+    opacity: 0;
+    animation: handleBarFadeIn 0.2s ease-in-out 0.2s forwards;
+  }
+
+  // Keyframe animation for handle bar fade in
+  @keyframes handleBarFadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+} 

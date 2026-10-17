@@ -1,0 +1,272 @@
+.editorPanel {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: fit-content;
+}
+
+.panelHeader {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  color: #64748b;
+}
+
+.checkboxContainer {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #475569;
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #cbd5e1;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.checkbox:checked {
+  background: #0052ff;
+  border-color: #0052ff;
+}
+
+.checkbox:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.checkboxText {
+  font-weight: 500;
+  user-select: none;
+}
+
+.editorWrapper {
+  position: relative;
+  height: 390px;
+}
+
+.codeEditor {
+  width: 100%;
+  height: 100%;
+  padding: 1.5rem;
+  font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  background: #0f172a;
+  color: #e2e8f0;
+  border: none;
+  resize: none;
+  outline: none;
+}
+
+.codeEditor::placeholder {
+  color: #475569;
+}
+
+.codeEditor:disabled {
+  opacity: 0.7;
+}
+
+.editorOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, transparent 90%, rgba(15, 23, 42, 0.1));
+  pointer-events: none;
+}
+
+.resetButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.resetButton:hover:not(:disabled) {
+  background: #e2e8f0;
+  color: #334155;
+  transform: translateY(-1px);
+}
+
+.resetButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.securityDisclaimer {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: #fef3c7;
+  border-top: 1px solid #fde68a;
+  border-bottom: 1px solid #fde68a;
+}
+
+.warningIcon {
+  width: 20px;
+  height: 20px;
+  color: #d97706;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.disclaimerText {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: #92400e;
+}
+
+.disclaimerText strong {
+  font-weight: 600;
+  color: #78350f;
+}
+
+.executeButton {
+  margin: 1.5rem;
+  padding: 1rem 2rem;
+  background: #0052ff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: calc(100% - 3rem);
+}
+
+.executeButton:hover:not(:disabled) {
+  background: #0041d0;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 82, 255, 0.25);
+}
+
+.executeButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.executeButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.buttonIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 1600px) {
+  .editorWrapper {
+    height: 260px;
+  }
+}
+
+@media (max-width: 768px) {
+  .panelHeader {
+    padding: 1rem;
+  }
+
+  .panelTitle {
+    font-size: 1rem;
+  }
+
+  .codeEditor {
+    padding: 1rem;
+    font-size: 13px;
+  }
+
+  .executeButton {
+    margin: 1rem;
+    padding: 0.875rem 1.5rem;
+    width: calc(100% - 2rem);
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .resetButton {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  .buttonIcon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .editorWrapper {
+    height: 195px;
+  }
+
+  .codeEditor {
+    font-size: 12px;
+  }
+
+  .executeButton {
+    padding: 0.75rem 1.25rem;
+  }
+}

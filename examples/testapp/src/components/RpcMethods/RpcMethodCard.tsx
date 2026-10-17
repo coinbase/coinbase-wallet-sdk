@@ -18,21 +18,32 @@ import {
   Textarea,
   VStack,
 } from '@chakra-ui/react';
-import React, { useCallback } from 'react';
+import React, { type ReactNode, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { Chain, hexToNumber } from 'viem';
 import { mainnet } from 'viem/chains';
 
 import { useEIP1193Provider } from '../../context/EIP1193ProviderContextProvider';
+import { RpcRequestInput } from './method/RpcRequestInput';
 import { verifySignMsg } from './method/signMessageMethods';
 import { ADDR_TO_FILL, CHAIN_ID_TO_FILL } from './shortcut/const';
 import { multiChainShortcutsMap } from './shortcut/multipleChainShortcuts';
+import { ShortcutType } from './shortcut/ShortcutType';
 
 type ResponseType = string;
+type RequestFormData = Record<string, unknown>;
+type WalletSignRequest = {
+  type?: string;
+  data?: {
+    message?: string;
+  };
+};
 
 // Replace address placeholders in string or object values
-// biome-ignore lint/suspicious/noExplicitAny: old code
-const replaceAddressInValue = async (value: any, getCurrentAddress: () => Promise<[string]>) => {
+const replaceAddressInValue = async (
+  value: unknown,
+  getCurrentAddress: () => Promise<[string]>
+) => {
   if (typeof value === 'string' && (value === ADDR_TO_FILL || value === 'YOUR_ADDRESS_HERE')) {
     const currentAddress = (await getCurrentAddress())[0];
     return currentAddress;
@@ -56,8 +67,20 @@ const replaceAddressInValue = async (value: any, getCurrentAddress: () => Promis
   return value;
 };
 
-export function RpcMethodCard({ format, method, params, shortcuts, children = null }) {
-  const [response, setResponse] = React.useState<Response | null>(null);
+export function RpcMethodCard({
+  format,
+  method,
+  params,
+  shortcuts,
+  children = null,
+}: {
+  format?: RpcRequestInput['format'];
+  method: RpcRequestInput['method'];
+  params?: RpcRequestInput['params'];
+  shortcuts?: ShortcutType[];
+  children?: ReactNode;
+}) {
+  const [response, setResponse] = React.useState<unknown>(null);
   const [verifyResult, setVerifyResult] = React.useState<string | null>(null);
   const [error, setError] = React.useState<Record<string, unknown> | string | number | null>(null);
   const { provider } = useEIP1193Provider();
@@ -69,20 +92,56 @@ export function RpcMethodCard({ format, method, params, shortcuts, children = nu
   } = useForm();
 
   const verify = useCallback(
-    async (response: ResponseType, data: Record<string, string>) => {
+    async (response: ResponseType, data: RequestFormData) => {
       const chainId = (await provider.request({ method: 'eth_chainId' })) as `0x${string}`;
       const chain =
         multiChainShortcutsMap['wallet_switchEthereumChain'].find(
           (shortcut) => Number(shortcut.data.chainId) === hexToNumber(chainId)
         )?.data.chain ?? mainnet;
 
+      if (method.includes('wallet_sign')) {
+        const request =
+          typeof data.request === 'object' && data.request !== null
+            ? (data.request as WalletSignRequest)
+            : undefined;
+        const type = (typeof data.type === 'string' ? data.type : request?.type) ?? null;
+        const walletSignData =
+          (typeof data.data === 'object' && data.data !== null
+            ? (data.data as WalletSignRequest['data'])
+            : request?.data) ?? null;
+        let result: string | null = null;
+        if (type === '0x01') {
+          result = await verifySignMsg({
+            method: 'eth_signTypedData_v4',
+            from: typeof data.address === 'string' ? data.address.toLowerCase() : undefined,
+            sign: response,
+            message: walletSignData,
+            chain: chain as Chain,
+          });
+        }
+        if (type === '0x45') {
+          result = await verifySignMsg({
+            method: 'personal_sign',
+            from: typeof data.address === 'string' ? data.address.toLowerCase() : undefined,
+            sign: response,
+            message: walletSignData.message,
+            chain: chain as Chain,
+          });
+        }
+        if (result) {
+          setVerifyResult(result);
+          return;
+        }
+      }
+
       const verifyResult = await verifySignMsg({
         method,
-        from: data.address?.toLowerCase(),
+        from: typeof data.address === 'string' ? data.address.toLowerCase() : undefined,
         sign: response,
         message: data.message,
         chain: chain as Chain,
       });
+
       if (verifyResult) {
         setVerifyResult(verifyResult);
         return;
@@ -92,14 +151,14 @@ export function RpcMethodCard({ format, method, params, shortcuts, children = nu
   );
 
   const submit = useCallback(
-    async (data: Record<string, string>) => {
+    async (data: RequestFormData) => {
       setError(null);
       setVerifyResult(null);
       setResponse(null);
       if (!provider) return;
 
       const dataToSubmit = { ...data };
-      let values = dataToSubmit;
+      let values: object | readonly unknown[] = dataToSubmit;
       if (format) {
         const getCurrentAddress = async () =>
           (await provider.request({ method: 'eth_accounts' })) as [string];
@@ -114,19 +173,29 @@ export function RpcMethodCard({ format, method, params, shortcuts, children = nu
             }
           }
         }
-        values = format(dataToSubmit);
+        values = format(dataToSubmit as Record<string, string>);
       }
       try {
-        const response = (await provider.request({
-          method,
+        const response = await provider.request({
+          method: method.split('#')[0], // so we can use # to add a description in method name
           params: values,
-          // biome-ignore lint/suspicious/noExplicitAny: old code, refactor soon
-        })) as any;
+        });
         setResponse(response);
-        await verify(response as string, dataToSubmit);
+        if (typeof response === 'string') {
+          await verify(response, dataToSubmit);
+        }
       } catch (err) {
-        const { code, message, data } = err;
-        setError({ code, message, data });
+        if (typeof err === 'object' && err !== null) {
+          const { code, message, data } = err as {
+            code?: unknown;
+            message?: unknown;
+            data?: unknown;
+          };
+          setError({ code, message, data });
+          return;
+        }
+
+        setError(String(err));
       }
     },
     [format, method, provider, verify]

@@ -6,8 +6,10 @@ export default defineConfig({
     alias: {
       ':core': path.resolve(__dirname, 'src/core'),
       ':store': path.resolve(__dirname, 'src/store'),
-      ':sign': path.resolve(__dirname, 'src/sign'),
+      ':owner-key': path.resolve(__dirname, 'src/owner-key'),
       ':util': path.resolve(__dirname, 'src/util'),
+      ':ui': path.resolve(__dirname, 'src/ui'),
+      ':interface': path.resolve(__dirname, 'src/interface'),
     },
     environment: 'jsdom',
     globals: true,

@@ -1,31 +1,28 @@
+import { PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
 import { standardErrors } from ':core/error/errors.js';
-import { logSnackbarActionClicked, logSnackbarShown } from ':core/telemetry/events/snackbar.js';
-import { RETRY_SVG_PATH } from ':sign/walletlink/relay/ui/WalletLinkRelayUI.js';
-import { Snackbar } from ':sign/walletlink/relay/ui/components/Snackbar/Snackbar.js';
-import { NAME, VERSION } from '../sdk-info.js';
+import { logDialogActionClicked, logDialogShown } from ':core/telemetry/events/dialog.js';
+import { store } from ':store/store.js';
+import { initDialog } from '../ui/Dialog/index.js';
 import { getCrossOriginOpenerPolicy } from './checkCrossOriginOpenerPolicy.js';
 
 const POPUP_WIDTH = 420;
 const POPUP_HEIGHT = 700;
 
-const RETRY_BUTTON = {
-  isRed: false,
-  info: 'Retry',
-  svgWidth: '10',
-  svgHeight: '11',
-  path: RETRY_SVG_PATH,
-  defaultFillRule: 'evenodd',
-  defaultClipRule: 'evenodd',
-} as const;
+const POPUP_BLOCKED_TITLE = '{app} wants to continue in Coinbase Wallet';
+const POPUP_BLOCKED_MESSAGE = 'This action requires your permission to open a new window.';
 
-const POPUP_BLOCKED_MESSAGE = 'Popup was blocked. Try again.';
+export type OpenFn = (url: URL) => Window | undefined | Promise<Window | undefined>;
 
-let snackbar: Snackbar | null = null;
+export async function openPopup(url: URL, openFn?: OpenFn): Promise<Window> {
+  appendAppInfoQueryParams(url);
 
-export function openPopup(url: URL): Promise<Window> {
+  if (openFn) {
+    const customWindow = await openFn(url);
+    if (customWindow !== undefined) return customWindow;
+  }
+
   const left = (window.innerWidth - POPUP_WIDTH) / 2 + window.screenX;
   const top = (window.innerHeight - POPUP_HEIGHT) / 2 + window.screenY;
-  appendAppInfoQueryParams(url);
 
   function tryOpenPopup(): Window | null {
     const popupId = `wallet_${crypto.randomUUID()}`;
@@ -44,39 +41,14 @@ export function openPopup(url: URL): Promise<Window> {
     return popup;
   }
 
-  let popup = tryOpenPopup();
+  const popup = tryOpenPopup();
 
   // If the popup was blocked, show a snackbar with a retry button
   if (!popup) {
-    const sb = initSnackbar();
-    return new Promise<Window>((resolve, reject) => {
-      logSnackbarShown({ snackbarContext: 'popup_blocked' });
-      sb.presentItem({
-        autoExpand: true,
-        message: POPUP_BLOCKED_MESSAGE,
-        menuItems: [
-          {
-            ...RETRY_BUTTON,
-            onClick: () => {
-              logSnackbarActionClicked({
-                snackbarContext: 'popup_blocked',
-                snackbarAction: 'confirm',
-              });
-              popup = tryOpenPopup();
-              if (popup) {
-                resolve(popup);
-              } else {
-                reject(standardErrors.rpc.internal('Popup window was blocked'));
-              }
-              sb.clear();
-            },
-          },
-        ],
-      });
-    });
+    return openPopupWithDialog(tryOpenPopup);
   }
 
-  return Promise.resolve(popup);
+  return popup;
 }
 
 export function closePopup(popup: Window | null) {
@@ -87,8 +59,8 @@ export function closePopup(popup: Window | null) {
 
 function appendAppInfoQueryParams(url: URL) {
   const params = {
-    sdkName: NAME,
-    sdkVersion: VERSION,
+    sdkName: PACKAGE_NAME,
+    sdkVersion: PACKAGE_VERSION,
     origin: window.location.origin,
     coop: getCrossOriginOpenerPolicy(),
   };
@@ -100,13 +72,52 @@ function appendAppInfoQueryParams(url: URL) {
   }
 }
 
-export function initSnackbar() {
-  if (!snackbar) {
-    const root = document.createElement('div');
-    root.className = '-cbwsdk-css-reset';
-    document.body.appendChild(root);
-    snackbar = new Snackbar();
-    snackbar.attach(root);
-  }
-  return snackbar;
+function openPopupWithDialog(tryOpenPopup: () => Window | null) {
+  const dappName = store.config.get().metadata?.appName ?? 'App';
+  const dialog = initDialog();
+  return new Promise<Window>((resolve, reject) => {
+    logDialogShown({ dialogContext: 'popup_blocked' });
+    dialog.presentItem({
+      title: POPUP_BLOCKED_TITLE.replace('{app}', dappName),
+      message: POPUP_BLOCKED_MESSAGE,
+      onClose: () => {
+        logDialogActionClicked({
+          dialogContext: 'popup_blocked',
+          dialogAction: 'cancel',
+        });
+        reject(standardErrors.rpc.internal('Popup window was blocked'));
+      },
+      actionItems: [
+        {
+          text: 'Try again',
+          variant: 'primary',
+          onClick: () => {
+            logDialogActionClicked({
+              dialogContext: 'popup_blocked',
+              dialogAction: 'confirm',
+            });
+            const popup = tryOpenPopup();
+            if (popup) {
+              resolve(popup);
+            } else {
+              reject(standardErrors.rpc.internal('Popup window was blocked'));
+            }
+            dialog.clear();
+          },
+        },
+        {
+          text: 'Cancel',
+          variant: 'secondary',
+          onClick: () => {
+            logDialogActionClicked({
+              dialogContext: 'popup_blocked',
+              dialogAction: 'cancel',
+            });
+            reject(standardErrors.rpc.internal('Popup window was blocked'));
+            dialog.clear();
+          },
+        },
+      ],
+    });
+  });
 }

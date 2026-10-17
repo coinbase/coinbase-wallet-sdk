@@ -1,4 +1,4 @@
-import { Chain, createPublicClient, http, TypedDataDomain } from 'viem';
+import { Chain, TypedDataDomain, createPublicClient, http } from 'viem';
 
 import { parseMessage } from '../shortcut/ShortcutType';
 import { RpcRequestInput } from './RpcRequestInput';
@@ -54,12 +54,54 @@ const ethSignTypedDataV4: RpcRequestInput = {
   format: (data: Record<string, string>) => [data.address, parseMessage(data.message)],
 };
 
+const walletSignOldSpec: RpcRequestInput = {
+  method: 'wallet_sign#old',
+  params: [
+    { key: 'version', required: true },
+    { key: 'type', required: true },
+    { key: 'address', required: false },
+    { key: 'data', required: true },
+    { key: 'capabilities', required: false },
+  ],
+  format: (data: Record<string, string>) => [
+    {
+      version: data.version,
+      type: data.type,
+      address: data.address,
+      data: parseMessage(data.data),
+      capabilities: data.capabilities,
+    },
+  ],
+};
+
+const walletSignNewSpec: RpcRequestInput = {
+  method: 'wallet_sign#new',
+  params: [
+    { key: 'version', required: true },
+    { key: 'request', required: true },
+    { key: 'address', required: false },
+    { key: 'capabilities', required: false },
+    { key: 'mutableData', required: false },
+  ],
+  format: (data: Record<string, string>) => [
+    {
+      version: data.version,
+      request: parseMessage(data.request),
+      address: data.address,
+      mutableData: data.mutableData,
+      capabilities: data.capabilities,
+    },
+  ],
+};
+
 export const signMessageMethods = [
   ethSign,
   personalSign,
   ethSignTypedDataV1,
   ethSignTypedDataV3,
   ethSignTypedDataV4,
+  walletSignOldSpec,
+  walletSignNewSpec,
 ];
 
 export const verifySignMsg = async ({

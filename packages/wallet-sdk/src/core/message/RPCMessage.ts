@@ -1,4 +1,4 @@
-import { RequestArguments } from ':core/provider/interface.js';
+import { RequestArguments } from './RequestArguments.js';
 import { SerializedEthereumRpcError } from '../error/utils.js';
 import { Message, MessageID } from './Message.js';
 

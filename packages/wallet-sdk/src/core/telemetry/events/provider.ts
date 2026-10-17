@@ -1,24 +1,13 @@
-import { SignerType } from ':core/message/ConfigMessage.js';
 import { ActionType, AnalyticsEventImportance, ComponentType, logEvent } from '../logEvent.js';
-
-export const logSignerLoadedFromStorage = ({ signerType }: { signerType: SignerType }) => {
-  logEvent(
-    'provider.signer.loaded_from_storage',
-    {
-      action: ActionType.measurement,
-      componentType: ComponentType.unknown,
-      signerType,
-    },
-    AnalyticsEventImportance.low
-  );
-};
 
 export const logRequestStarted = ({
   method,
   correlationId,
+  isEphemeral = false,
 }: {
   method: string;
   correlationId: string | undefined;
+  isEphemeral?: boolean;
 }) => {
   logEvent(
     'provider.request.started',
@@ -26,7 +15,9 @@ export const logRequestStarted = ({
       action: ActionType.unknown,
       componentType: ComponentType.unknown,
       method,
+      signerType: 'base-account',
       correlationId,
+      isEphemeral,
     },
     AnalyticsEventImportance.high
   );
@@ -35,13 +26,13 @@ export const logRequestStarted = ({
 export const logRequestError = ({
   method,
   correlationId,
-  signerType,
   errorMessage,
+  isEphemeral = false,
 }: {
   method: string;
   correlationId: string | undefined;
-  signerType: SignerType | undefined;
   errorMessage: string;
+  isEphemeral?: boolean;
 }) => {
   logEvent(
     'provider.request.error',
@@ -49,9 +40,10 @@ export const logRequestError = ({
       action: ActionType.error,
       componentType: ComponentType.unknown,
       method,
-      signerType,
+      signerType: 'base-account',
       correlationId,
       errorMessage,
+      isEphemeral,
     },
     AnalyticsEventImportance.high
   );
@@ -59,12 +51,12 @@ export const logRequestError = ({
 
 export const logRequestResponded = ({
   method,
-  signerType,
   correlationId,
+  isEphemeral = false,
 }: {
   method: string;
-  signerType: SignerType | undefined;
   correlationId: string | undefined;
+  isEphemeral?: boolean;
 }) => {
   logEvent(
     'provider.request.responded',
@@ -72,19 +64,27 @@ export const logRequestResponded = ({
       action: ActionType.unknown,
       componentType: ComponentType.unknown,
       method,
-      signerType,
+      signerType: 'base-account',
       correlationId,
+      isEphemeral,
     },
     AnalyticsEventImportance.high
   );
 };
 
-export const logEnableFunctionCalled = () => {
+export const logGetInjectedProviderError = ({
+  errorMessage,
+}: {
+  errorMessage: string;
+}) => {
   logEvent(
-    'provider.enable_function.called',
+    'provider.getInjectedProvider.error',
     {
-      action: ActionType.measurement,
+      action: ActionType.error,
       componentType: ComponentType.unknown,
+      method: 'getInjectedProvider',
+      signerType: 'base-account',
+      errorMessage,
     },
     AnalyticsEventImportance.high
   );

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "2ed39ac9ee26f56e327d51e2c75635bc2d8719fc",
+  "packages": {
+    "packages/wallet-sdk": {
+      "package-name": "@coinbase/wallet-sdk",
+      "component": "wallet-sdk",
+      "include-component-in-tag": false,
+      "release-as": "5.0.0",
+      "changelog-path": "CHANGELOG.md",
+      "include-paths": ["packages/wallet-sdk"]
+    }
+  },
+  "separate-pull-requests": true
+}

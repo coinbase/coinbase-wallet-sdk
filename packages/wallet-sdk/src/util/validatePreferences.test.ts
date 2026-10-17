@@ -1,6 +1,5 @@
-import { ToOwnerAccountFn } from ':store/store.js';
 import { Preference } from '../core/provider/interface.js';
-import { validatePreferences, validateSubAccount } from './validatePreferences.js';
+import { validatePreferences } from './validatePreferences.js';
 
 describe('validatePreferences', () => {
   it('should not throw an error if preference is undefined', () => {
@@ -15,17 +14,6 @@ describe('validatePreferences', () => {
       },
     };
     expect(() => validatePreferences(validPreference)).not.toThrow();
-  });
-
-  it('should throw an error if options is invalid', () => {
-    const invalidPreference: Preference = {
-      // @ts-expect-error invalid option
-      options: 'invalidOption',
-      attribution: {
-        auto: true,
-      },
-    };
-    expect(() => validatePreferences(invalidPreference)).toThrow('Invalid options: invalidOption');
   });
 
   it('should not throw an error if attribution is undefined', () => {
@@ -67,17 +55,6 @@ describe('validatePreferences', () => {
       },
     };
     expect(() => validatePreferences(validPreference)).not.toThrow();
-  });
-});
-
-describe('validateSubAccount', () => {
-  it('should throw an error if toSubAccountSigner is not a function', () => {
-    expect(() => validateSubAccount(undefined as any)).toThrow('toAccount is not a function');
-  });
-
-  it('should not throw an error if toSubAccountSigner is a function', () => {
-    const toSubAccountSigner: ToOwnerAccountFn = () => Promise.resolve({} as any);
-    expect(() => validateSubAccount(toSubAccountSigner)).not.toThrow();
   });
 });
 

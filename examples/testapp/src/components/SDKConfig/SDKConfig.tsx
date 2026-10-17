@@ -1,3 +1,4 @@
+import { Preference } from '@coinbase/wallet-sdk';
 import {
   Box,
   Card,
@@ -10,7 +11,6 @@ import {
   Switch,
   Text,
 } from '@chakra-ui/react';
-import { Preference } from '@coinbase/wallet-sdk/dist/core/provider/interface';
 import React, { useCallback, useMemo, useState } from 'react';
 import { keccak256, slice, toHex } from 'viem';
 
@@ -96,8 +96,8 @@ export function SDKConfig() {
                 <Code ml={2}>attribution.dataSuffix</Code>
               </Flex>
               <Text mt={2} fontSize="sm">
-                First 16 bytes of a unique string to identify your onchain activity. Update the text
-                box below to have your data suffix applied
+                A 0x-prefixed hex string to identify your onchain activity. Update the text box
+                below to have your data suffix applied
               </Text>
               <FormControl mt={2}>
                 <Input

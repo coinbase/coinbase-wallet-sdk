@@ -1,4 +1,5 @@
 name: Setup
+description: Set up Node from .nvmrc and install node modules
 permissions:
   contents: read
 runs:

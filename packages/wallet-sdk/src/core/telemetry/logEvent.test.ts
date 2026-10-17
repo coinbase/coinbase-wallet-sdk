@@ -10,8 +10,9 @@ import {
 } from './logEvent.js';
 
 vi.mock(':store/store.js');
-vi.mock('../../sdk-info.js', () => ({
-  VERSION: '1.0.0',
+vi.mock(':core/constants.js', () => ({
+  PACKAGE_NAME: 'test-sdk',
+  PACKAGE_VERSION: '1.0.0',
 }));
 
 const mockStore = store as any;
@@ -69,6 +70,7 @@ describe('logEvent', () => {
         {
           ...eventData,
           sdkVersion: '1.0.0',
+          sdkName: 'test-sdk',
           appName: 'Test App',
           appOrigin: 'https://example.com',
         },
@@ -92,6 +94,7 @@ describe('logEvent', () => {
         {
           ...eventData,
           sdkVersion: '1.0.0',
+          sdkName: 'test-sdk',
           appName: '',
           appOrigin: 'https://example.com',
         },

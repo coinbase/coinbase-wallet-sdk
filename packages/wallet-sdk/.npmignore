@@ -1,5 +1,3 @@
-# Source
-src/**
 ./node_modules/
 __tests__/**
 
@@ -18,3 +16,6 @@ vitest.config.ts
 coverage/**
 
 compile-assets.cjs
+
+# build config
+rollup.config.js
