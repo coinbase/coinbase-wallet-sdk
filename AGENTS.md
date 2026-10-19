@@ -26,7 +26,7 @@ The SDK uses **Preact**, not React. `jsxImportSource` is set to `"preact"` in ts
 ## Entry points
 
 - `index.ts` / `index.js` -- the package entry, used by both browsers and Node
-- `browser-entry.ts` -- input for the Rollup UMD bundle (`dist/coinbase-wallet-sdk.min.js`),
+- `browser-entry.ts` -- input for the Rolldown UMD bundle (`dist/coinbase-wallet-sdk.min.js`),
   which exposes `window.CoinbaseWalletSDK` and `window.createCoinbaseWalletSDK`
 
 ## Generated files -- do not edit
