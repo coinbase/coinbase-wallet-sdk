@@ -2,15 +2,15 @@ import { standardErrorCodes } from ':core/error/constants.js';
 import type { ProviderInterface } from ':core/provider/interface.js';
 import { StandardConnect } from '@wallet-standard/features';
 import { connectInjectedWallet } from './connectInjectedWallet.js';
-import * as injectedSolanaModule from './wallet-standard/getInjectedSolanaWallet.js';
+import * as registeredSolanaModule from './wallet-standard/getRegisteredSolanaWallet.js';
 
-vi.mock('./solana/getInjectedSolanaWallet.js', () => ({
-  getInjectedSolanaWallet: vi.fn(),
+vi.mock('./wallet-standard/getRegisteredSolanaWallet.js', () => ({
+  getRegisteredSolanaWallet: vi.fn(),
 }));
 
 const EVM_ACCOUNT = '0x0000000000000000000000000000000000000001';
 const SOLANA_ACCOUNT = 'So11111111111111111111111111111111111111112';
-const getInjectedSolanaWallet = vi.mocked(injectedSolanaModule.getInjectedSolanaWallet);
+const getRegisteredSolanaWallet = vi.mocked(registeredSolanaModule.getRegisteredSolanaWallet);
 
 function injectedProvider(request: ProviderInterface['request']): ProviderInterface {
   return {
@@ -23,7 +23,7 @@ function injectedProvider(request: ProviderInterface['request']): ProviderInterf
 
 beforeEach(() => {
   vi.clearAllMocks();
-  getInjectedSolanaWallet.mockReturnValue(null);
+  getRegisteredSolanaWallet.mockReturnValue(null);
 });
 
 describe('connectInjectedWallet', () => {
@@ -39,7 +39,7 @@ describe('connectInjectedWallet', () => {
     const connect = vi.fn().mockResolvedValue({
       accounts: [{ address: SOLANA_ACCOUNT }],
     });
-    getInjectedSolanaWallet.mockReturnValue({
+    getRegisteredSolanaWallet.mockReturnValue({
       name: 'Coinbase Wallet',
       features: {
         [StandardConnect]: {
@@ -102,7 +102,7 @@ describe('connectInjectedWallet', () => {
     const connect = vi.fn().mockResolvedValue({
       accounts: [{ address: SOLANA_ACCOUNT }],
     });
-    getInjectedSolanaWallet.mockReturnValue({
+    getRegisteredSolanaWallet.mockReturnValue({
       name: 'Coinbase Wallet',
       features: {
         [StandardConnect]: {

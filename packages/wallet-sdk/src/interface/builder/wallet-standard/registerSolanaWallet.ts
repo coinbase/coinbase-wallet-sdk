@@ -17,6 +17,7 @@ export function registerSolanaWallet({
   if (typeof window === 'undefined') {
     throw standardErrors.provider.disconnected('Solana wallet registration requires a browser');
   }
+
   if (isCoinbaseWalletHost() || popupWalletRegistered) return;
 
   const wallet = createSolanaWallet(transport, session);

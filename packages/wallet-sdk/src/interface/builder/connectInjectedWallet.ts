@@ -12,7 +12,7 @@ import {
   parseConnectOptions,
   requestedCapabilities,
 } from './connect.js';
-import { getInjectedSolanaWallet } from './wallet-standard/getInjectedSolanaWallet.js';
+import { getRegisteredSolanaWallet } from './wallet-standard/getRegisteredSolanaWallet.js';
 
 function isMethodNotSupported(error: unknown): boolean {
   const code = asRecord(error)?.code;
@@ -76,7 +76,7 @@ async function connectInjectedSolana(
   selection: ConnectNamespaceOptions
 ): Promise<ConnectAccount[]> {
   const requested = requestedCapabilities(selection);
-  const wallet = getInjectedSolanaWallet();
+  const wallet = getRegisteredSolanaWallet();
   if (!wallet) return [];
   const { accounts } = await wallet.features[StandardConnect].connect({ silent: true });
   return accounts.map(({ address }) => connectAccount('solana', address, requested, undefined));

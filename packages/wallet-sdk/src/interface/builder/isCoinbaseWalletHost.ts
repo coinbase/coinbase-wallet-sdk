@@ -14,6 +14,7 @@ type CoinbaseWalletHostWindow = Window & {
 export function isCoinbaseWalletHost(): boolean {
   if (typeof window === 'undefined') return false;
   const environment = (window as CoinbaseWalletHostWindow).coinbaseWallet?.environment;
+
   return (
     environment === 'inAppBrowser' ||
     environment === 'extension' ||
