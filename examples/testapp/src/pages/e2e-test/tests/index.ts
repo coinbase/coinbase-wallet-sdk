@@ -7,25 +7,10 @@
 
 import type { TestContext, TestHandlers } from '../types';
 
-import { testGetPaymentStatus, testPay } from './payment-features';
-import { testProlinkEncodeDecode } from './prolink-features';
 import { testProviderEvents } from './provider-events';
 // Import all test functions
 import { testSDKInitialization } from './sdk-initialization';
 import { testSignTypedData, testWalletPrepareCalls, testWalletSendCalls } from './sign-and-send';
-import {
-  testFetchPermission,
-  testFetchPermissions,
-  testGetPermissionStatus,
-  testPrepareRevokeCallData,
-  testPrepareSpendCallData,
-  testRequestSpendPermission,
-} from './spend-permissions';
-import {
-  testGetSubscriptionStatus,
-  testPrepareCharge,
-  testSubscribe,
-} from './subscription-features';
 import {
   testConnectWallet,
   testGetAccounts,
@@ -60,33 +45,6 @@ export const testRegistry: TestCategoryDefinition[] = [
     name: 'Wallet Connection',
     tests: [testConnectWallet, testGetAccounts, testGetChainId, testSignMessage],
     requiresConnection: false, // Connection is established during these tests
-  },
-  {
-    name: 'Payment Features',
-    tests: [testPay, testGetPaymentStatus],
-    requiresConnection: false, // pay() doesn't require explicit connection
-  },
-  {
-    name: 'Subscription Features',
-    tests: [testSubscribe, testGetSubscriptionStatus, testPrepareCharge],
-    requiresConnection: false, // subscribe() doesn't require explicit connection
-  },
-  {
-    name: 'Prolink Features',
-    tests: [testProlinkEncodeDecode],
-    requiresConnection: false,
-  },
-  {
-    name: 'Spend Permissions',
-    tests: [
-      testRequestSpendPermission,
-      testGetPermissionStatus,
-      testFetchPermission,
-      testFetchPermissions,
-      testPrepareSpendCallData,
-      testPrepareRevokeCallData,
-    ],
-    requiresConnection: true,
   },
   {
     name: 'Sub-Account Features',
@@ -174,21 +132,10 @@ export const TEST_INDICES = {
     SIGN_TYPED_DATA: 0,
     WALLET_SEND_CALLS: 1,
   },
-  SPEND_PERMISSIONS: {
-    REQUEST_SPEND_PERMISSION: 0,
-    FETCH_PERMISSIONS: 3,
-  },
   SUB_ACCOUNT_FEATURES: {
     CREATE_SUB_ACCOUNT: 0,
     GET_SUB_ACCOUNTS: 1,
     SEND_CALLS_FROM_SUB_ACCOUNT: 3,
-  },
-  PAYMENT_FEATURES: {
-    PAY: 0,
-    GET_PAYMENT_STATUS: 1,
-  },
-  SUBSCRIPTION_FEATURES: {
-    SUBSCRIBE: 0,
   },
 } as const;
 
@@ -201,25 +148,8 @@ export {
   testSignMessage,
 } from './wallet-connection';
 export {
-  testPay,
-  testGetPaymentStatus,
-} from './payment-features';
-export {
-  testSubscribe,
-  testPrepareCharge,
-} from './subscription-features';
-export {
-  testRequestSpendPermission,
-  testGetPermissionStatus,
-  testFetchPermission,
-  testFetchPermissions,
-  testPrepareSpendCallData,
-  testPrepareRevokeCallData,
-} from './spend-permissions';
-export {
   testSignTypedData,
   testWalletSendCalls,
   testWalletPrepareCalls,
 } from './sign-and-send';
-export { testProlinkEncodeDecode } from './prolink-features';
 export { testProviderEvents } from './provider-events';

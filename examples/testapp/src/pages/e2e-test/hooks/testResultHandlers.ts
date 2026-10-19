@@ -4,12 +4,10 @@
  * Centralized mapping of test names to their result processing logic.
  * Each handler is responsible for:
  * - Extracting relevant data from test results
- * - Updating refs (e.g., paymentId, subscriptionId)
  * - Updating test status with meaningful details
  * - Updating connection state when needed
  */
 
-import type { MutableRefObject } from 'react';
 import type { UseConnectionStateReturn } from './useConnectionState';
 import type { UseTestStateReturn } from './useTestState';
 
@@ -27,9 +25,6 @@ export interface TestResultHandlerContext {
   result: any;
   testState: UseTestStateReturn;
   connectionState: UseConnectionStateReturn;
-  paymentIdRef: MutableRefObject<string | null>;
-  subscriptionIdRef: MutableRefObject<string | null>;
-  permissionHashRef: MutableRefObject<string | null>;
 }
 
 /**
@@ -46,67 +41,6 @@ export type TestResultHandler = (ctx: TestResultHandlerContext) => void;
  * Each test name maps to a handler that processes the result and updates state/refs/details.
  */
 export const TEST_RESULT_HANDLERS: Record<string, TestResultHandler> = {
-  // Payment features
-  'pay() function': (ctx) => {
-    if (ctx.result.id) {
-      ctx.paymentIdRef.current = ctx.result.id;
-      ctx.testState.updateTestStatus(
-        ctx.testCategory,
-        ctx.testName,
-        'passed',
-        undefined,
-        `Payment ID: ${ctx.result.id}`
-      );
-    }
-  },
-
-  // Subscription features
-  'subscribe() function': (ctx) => {
-    if (ctx.result.id) {
-      ctx.subscriptionIdRef.current = ctx.result.id;
-      ctx.testState.updateTestStatus(
-        ctx.testCategory,
-        ctx.testName,
-        'passed',
-        undefined,
-        `Subscription ID: ${ctx.result.id}`
-      );
-    }
-  },
-  'base.subscription.getStatus()': (ctx) => {
-    if (ctx.result.details) {
-      ctx.testState.updateTestStatus(
-        ctx.testCategory,
-        ctx.testName,
-        'passed',
-        undefined,
-        ctx.result.details
-      );
-    }
-  },
-  'prepareCharge() with amount': (ctx) => {
-    if (Array.isArray(ctx.result)) {
-      ctx.testState.updateTestStatus(
-        ctx.testCategory,
-        ctx.testName,
-        'passed',
-        undefined,
-        `Generated ${ctx.result.length} call(s)`
-      );
-    }
-  },
-  'prepareCharge() max-remaining-charge': (ctx) => {
-    if (Array.isArray(ctx.result)) {
-      ctx.testState.updateTestStatus(
-        ctx.testCategory,
-        ctx.testName,
-        'passed',
-        undefined,
-        `Generated ${ctx.result.length} call(s)`
-      );
-    }
-  },
-
   // Sub-account features
   'wallet_sendCalls (sub-account)': (ctx) => {
     // Handle both direct string result and object with txHash property
@@ -129,75 +63,6 @@ export const TEST_RESULT_HANDLERS: Record<string, TestResultHandler> = {
         'passed',
         undefined,
         `Verified: ${ctx.result.isValid}`
-      );
-    }
-  },
-
-  // Spend permission features
-  'spendPermission.requestSpendPermission()': (ctx) => {
-    if (ctx.result.permissionHash) {
-      ctx.permissionHashRef.current = ctx.result.permissionHash;
-      ctx.testState.updateTestStatus(
-        ctx.testCategory,
-        ctx.testName,
-        'passed',
-        undefined,
-        `Hash: ${ctx.result.permissionHash}`
-      );
-    }
-  },
-  'spendPermission.getPermissionStatus()': (ctx) => {
-    if (ctx.result.remainingSpend) {
-      ctx.testState.updateTestStatus(
-        ctx.testCategory,
-        ctx.testName,
-        'passed',
-        undefined,
-        `Remaining: ${ctx.result.remainingSpend}`
-      );
-    }
-  },
-  'spendPermission.fetchPermission()': (ctx) => {
-    if (ctx.result.permissionHash) {
-      ctx.testState.updateTestStatus(
-        ctx.testCategory,
-        ctx.testName,
-        'passed',
-        undefined,
-        `Hash: ${ctx.result.permissionHash}`
-      );
-    }
-  },
-  'spendPermission.fetchPermissions()': (ctx) => {
-    if (Array.isArray(ctx.result)) {
-      ctx.testState.updateTestStatus(
-        ctx.testCategory,
-        ctx.testName,
-        'passed',
-        undefined,
-        `Found ${ctx.result.length} permission(s)`
-      );
-    }
-  },
-  'spendPermission.prepareSpendCallData()': (ctx) => {
-    if (Array.isArray(ctx.result)) {
-      ctx.testState.updateTestStatus(
-        ctx.testCategory,
-        ctx.testName,
-        'passed',
-        undefined,
-        `Generated ${ctx.result.length} call(s)`
-      );
-    }
-  },
-  'spendPermission.prepareRevokeCallData()': (ctx) => {
-    if (ctx.result.to) {
-      ctx.testState.updateTestStatus(
-        ctx.testCategory,
-        ctx.testName,
-        'passed',
-        undefined,
-        `To: ${ctx.result.to}`
       );
     }
   },
@@ -286,30 +151,6 @@ export const TEST_RESULT_HANDLERS: Record<string, TestResultHandler> = {
         'passed',
         undefined,
         `Hash: ${hash}`
-      );
-    }
-  },
-
-  // Prolink features
-  'encodeProlink()': (ctx) => {
-    if (typeof ctx.result === 'string') {
-      ctx.testState.updateTestStatus(
-        ctx.testCategory,
-        ctx.testName,
-        'passed',
-        undefined,
-        `Encoded: ${ctx.result}`
-      );
-    }
-  },
-  'createProlinkUrl()': (ctx) => {
-    if (typeof ctx.result === 'string') {
-      ctx.testState.updateTestStatus(
-        ctx.testCategory,
-        ctx.testName,
-        'passed',
-        undefined,
-        `URL: ${ctx.result}`
       );
     }
   },

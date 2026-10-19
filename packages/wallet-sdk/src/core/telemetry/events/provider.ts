@@ -3,11 +3,9 @@ import { ActionType, AnalyticsEventImportance, ComponentType, logEvent } from '.
 export const logRequestStarted = ({
   method,
   correlationId,
-  isEphemeral = false,
 }: {
   method: string;
   correlationId: string | undefined;
-  isEphemeral?: boolean;
 }) => {
   logEvent(
     'provider.request.started',
@@ -17,7 +15,6 @@ export const logRequestStarted = ({
       method,
       signerType: 'base-account',
       correlationId,
-      isEphemeral,
     },
     AnalyticsEventImportance.high
   );
@@ -27,12 +24,10 @@ export const logRequestError = ({
   method,
   correlationId,
   errorMessage,
-  isEphemeral = false,
 }: {
   method: string;
   correlationId: string | undefined;
   errorMessage: string;
-  isEphemeral?: boolean;
 }) => {
   logEvent(
     'provider.request.error',
@@ -43,7 +38,6 @@ export const logRequestError = ({
       signerType: 'base-account',
       correlationId,
       errorMessage,
-      isEphemeral,
     },
     AnalyticsEventImportance.high
   );
@@ -52,11 +46,9 @@ export const logRequestError = ({
 export const logRequestResponded = ({
   method,
   correlationId,
-  isEphemeral = false,
 }: {
   method: string;
   correlationId: string | undefined;
-  isEphemeral?: boolean;
 }) => {
   logEvent(
     'provider.request.responded',
@@ -66,7 +58,6 @@ export const logRequestResponded = ({
       method,
       signerType: 'base-account',
       correlationId,
-      isEphemeral,
     },
     AnalyticsEventImportance.high
   );

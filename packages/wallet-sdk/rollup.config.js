@@ -11,7 +11,7 @@ export default {
     {
       file: 'dist/base-account.js',
       format: 'umd',
-      name: 'base',
+      name: 'CoinbaseWalletSDK',
       sourcemap: true,
       inlineDynamicImports: true,
       exports: 'named',
@@ -19,7 +19,7 @@ export default {
     {
       file: 'dist/coinbase-wallet-sdk.min.js',
       format: 'umd',
-      name: 'base',
+      name: 'CoinbaseWalletSDK',
       sourcemap: true,
       inlineDynamicImports: true,
       exports: 'named',

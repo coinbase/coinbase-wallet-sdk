@@ -32,22 +32,6 @@ export const TEST_ADDRESSES = {
 } as const;
 
 // ============================================================================
-// Token Configuration
-// ============================================================================
-
-export const TOKENS = {
-  USDC: {
-    decimals: 6,
-    testAmount: '100', // Amount in token units
-    smallTestAmount: '10', // Smaller amount for testing
-  },
-  ETH: {
-    decimals: 18,
-    testAmount: '0.01', // Amount in ETH
-  },
-} as const;
-
-// ============================================================================
 // Test Timing Configuration
 // ============================================================================
 
@@ -56,16 +40,6 @@ export const TEST_DELAYS = {
    * Delay between individual tests in a sequence (milliseconds)
    */
   BETWEEN_TESTS: 500,
-
-  /**
-   * Delay for payment status polling (milliseconds)
-   */
-  PAYMENT_STATUS_POLLING: 500,
-
-  /**
-   * Maximum number of retries for payment status checks
-   */
-  PAYMENT_STATUS_MAX_RETRIES: 10,
 
   /**
    * Toast notification durations (milliseconds)
@@ -111,53 +85,6 @@ export const TEST_MESSAGES = {
    * Typed data test message
    */
   TYPED_DATA_MESSAGE: 'Hello from E2E tests!',
-} as const;
-
-// ============================================================================
-// Payment & Subscription Configuration
-// ============================================================================
-
-export const PAYMENT_CONFIG = {
-  /**
-   * Test payment amount
-   */
-  AMOUNT: '0.01',
-
-  /**
-   * Test subscription recurring charge
-   */
-  SUBSCRIPTION_RECURRING_CHARGE: '9.99',
-
-  /**
-   * Test subscription specific charge
-   */
-  SUBSCRIPTION_CHARGE_AMOUNT: '1.00',
-
-  /**
-   * Subscription period in days
-   */
-  SUBSCRIPTION_PERIOD_DAYS: 30,
-} as const;
-
-// ============================================================================
-// Spend Permission Configuration
-// ============================================================================
-
-export const SPEND_PERMISSION_CONFIG = {
-  /**
-   * Test allowance amount (in USDC base units - 6 decimals)
-   */
-  ALLOWANCE: '100',
-
-  /**
-   * Smaller spend amount for testing (in USDC base units)
-   */
-  SPEND_AMOUNT: '10',
-
-  /**
-   * Permission period in days
-   */
-  PERIOD_DAYS: 30,
 } as const;
 
 // ============================================================================
@@ -227,10 +154,6 @@ export const TYPED_DATA_CONFIG = {
 export const TEST_CATEGORIES = [
   'SDK Initialization & Exports',
   'Wallet Connection',
-  'Payment Features',
-  'Subscription Features',
-  'Prolink Features',
-  'Spend Permissions',
   'Sub-Account Features',
   'Sign & Send',
   'Provider Events',
@@ -247,11 +170,6 @@ export const PLAYGROUND_PAGES = [
   { path: '/add-sub-account', name: 'Add Sub-Account' },
   { path: '/import-sub-account', name: 'Import Sub-Account' },
   { path: '/auto-sub-account', name: 'Auto Sub-Account' },
-  { path: '/spend-permission', name: 'Spend Permission' },
-  { path: '/payment', name: 'Payment' },
-  { path: '/pay-playground', name: 'Pay Playground' },
-  { path: '/subscribe-playground', name: 'Subscribe Playground' },
-  { path: '/prolink-playground', name: 'Prolink Playground' },
 ] as const;
 
 // ============================================================================

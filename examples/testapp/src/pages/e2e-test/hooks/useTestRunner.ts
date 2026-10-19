@@ -6,7 +6,7 @@
  */
 
 import { useToast } from '@chakra-ui/react';
-import { useCallback, useRef, type MutableRefObject } from 'react';
+import { useCallback, useRef } from 'react';
 import { TEST_DELAYS } from '../../../utils/e2e-test-config/test-config';
 import {
   TEST_INDICES,
@@ -38,11 +38,6 @@ export interface UseTestRunnerOptions {
   // User interaction
   requestUserInteraction: (testName: string, skipModal?: boolean) => Promise<void>;
 
-  // Test data refs
-  paymentIdRef: MutableRefObject<string | null>;
-  subscriptionIdRef: MutableRefObject<string | null>;
-  permissionHashRef: MutableRefObject<string | null>;
-
   // Configuration
   walletUrl?: string;
 }
@@ -58,17 +53,8 @@ export interface UseTestRunnerReturn {
 // ============================================================================
 
 export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerReturn {
-  const {
-    testState,
-    connectionState,
-    loadedSDK,
-    provider,
-    requestUserInteraction,
-    paymentIdRef,
-    subscriptionIdRef,
-    permissionHashRef,
-    walletUrl,
-  } = options;
+  const { testState, connectionState, loadedSDK, provider, requestUserInteraction, walletUrl } =
+    options;
 
   const toast = useToast();
 
@@ -90,9 +76,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
       connected: connectionState.connected,
       currentAccount: connectionState.currentAccount,
       chainId: connectionState.chainId,
-      paymentId: paymentIdRef.current,
-      subscriptionId: subscriptionIdRef.current,
-      permissionHash: permissionHashRef.current,
       skipModal,
       walletUrl,
     };
@@ -102,9 +85,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
     connectionState.connected,
     connectionState.currentAccount,
     connectionState.chainId,
-    paymentIdRef,
-    subscriptionIdRef,
-    permissionHashRef,
     walletUrl,
   ]);
 
@@ -146,9 +126,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
             result,
             testState,
             connectionState,
-            paymentIdRef,
-            subscriptionIdRef,
-            permissionHashRef,
           });
         }
       } catch (error) {
@@ -161,15 +138,7 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
         // Other errors are already logged by the test function
       }
     },
-    [
-      buildTestContext,
-      paymentIdRef,
-      subscriptionIdRef,
-      permissionHashRef,
-      testState,
-      connectionState,
-      requestUserInteraction,
-    ]
+    [buildTestContext, testState, connectionState, requestUserInteraction]
   );
 
   /**
@@ -320,30 +289,17 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
       await runTestCategory('Wallet Connection');
       await delay(TEST_DELAYS.BETWEEN_TESTS);
 
-      // 3. Run connection-dependent tests BEFORE pay/subscribe
+      // 3. Run connection-dependent tests
       // These need a stable connection state
 
       // Sign & Send tests
       await runTestCategory('Sign & Send');
       await delay(TEST_DELAYS.BETWEEN_TESTS);
 
-      // Spend Permission tests
-      await runTestCategory('Spend Permissions');
-      await delay(TEST_DELAYS.BETWEEN_TESTS);
       await runTestCategory('Sub-Account Features');
       await delay(TEST_DELAYS.BETWEEN_TESTS);
 
-      // 5. Payment & Subscription tests
-      await runTestCategory('Payment Features');
-      await delay(TEST_DELAYS.BETWEEN_TESTS);
-
-      await runTestCategory('Subscription Features');
-      await delay(TEST_DELAYS.BETWEEN_TESTS);
-
-      // 6. Standalone tests (don't require connection)
-      await runTestCategory('Prolink Features');
-      await delay(TEST_DELAYS.BETWEEN_TESTS);
-
+      // 4. Standalone tests (don't require connection)
       await runTestCategory('Provider Events');
       await delay(TEST_DELAYS.BETWEEN_TESTS);
     } catch (error) {
@@ -394,25 +350,10 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
    * 2. Sign & Send:
    *    - testSignTypedData (opens popup)
    *    - testWalletSendCalls (opens popup)
-   * 3. Spend Permissions:
-   *    - testRequestSpendPermission (opens popup)
-   *    - testGetPermissionStatus
-   *    - testFetchPermission
-   *    - testFetchPermissions
-   * 5. Payment Features:
-   *    - testPay (opens popup)
-   *    - testGetPaymentStatus
-   * 6. Subscription Features:
-   *    - testSubscribe (opens popup)
-   *    - testGetSubscriptionStatus
    *
    * Tests excluded (no external requests or not relevant for SCW Release):
    * - SDK Initialization & Exports (SDK already instantiated on page load)
    * - wallet_prepareCalls (no popup)
-   * - prepareSpendCallData (no popup)
-   * - prepareRevokeCallData (no popup)
-   * - prepareCharge variants (no popup)
-   * - Prolink Features (all tests - no external requests)
    * - Provider Events (all tests - no external requests)
    */
   const runSCWReleaseTests = useCallback(async (): Promise<void> => {
@@ -452,18 +393,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
       await executeTestByIndex('Sign & Send', TEST_INDICES.SIGN_AND_SEND.WALLET_SEND_CALLS);
       // testWalletPrepareCalls doesn't require user interaction - skip
 
-      // 3. Spend Permission tests - testRequestSpendPermission requires user interaction
-      await executeTestByIndex(
-        'Spend Permissions',
-        TEST_INDICES.SPEND_PERMISSIONS.REQUEST_SPEND_PERMISSION
-      );
-      // testGetPermissionStatus, testFetchPermission don't require user interaction - skip
-      // testFetchPermissions doesn't require user interaction
-      await executeTestByIndex(
-        'Spend Permissions',
-        TEST_INDICES.SPEND_PERMISSIONS.FETCH_PERMISSIONS
-      );
-      // testPrepareSpendCallData and testPrepareRevokeCallData don't require user interaction - skip
       await executeTestByIndex(
         'Sub-Account Features',
         TEST_INDICES.SUB_ACCOUNT_FEATURES.CREATE_SUB_ACCOUNT
@@ -476,21 +405,6 @@ export function useTestRunner(options: UseTestRunnerOptions): UseTestRunnerRetur
         'Sub-Account Features',
         TEST_INDICES.SUB_ACCOUNT_FEATURES.SEND_CALLS_FROM_SUB_ACCOUNT
       );
-
-      // 5. Payment tests - testPay requires user interaction
-      await executeTestByIndex('Payment Features', TEST_INDICES.PAYMENT_FEATURES.PAY);
-      await executeTestByIndex(
-        'Payment Features',
-        TEST_INDICES.PAYMENT_FEATURES.GET_PAYMENT_STATUS
-      );
-
-      // 6. Subscription tests - testSubscribe requires user interaction
-      await executeTestByIndex(
-        'Subscription Features',
-        TEST_INDICES.SUBSCRIPTION_FEATURES.SUBSCRIBE
-      );
-      // testGetSubscriptionStatus doesn't require user interaction - skip
-      // testPrepareCharge doesn't require user interaction - skip
     } catch (error) {
       if (error instanceof Error && error.message === 'Test cancelled by user') {
         toast({
