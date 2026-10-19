@@ -1,41 +1,25 @@
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
-import replace from '@rollup/plugin-replace';
 import typescript from '@rollup/plugin-typescript';
 import { terser } from 'rollup-plugin-terser';
 
 export default {
   input: 'src/browser-entry.ts',
-  output: [
-    {
-      file: 'dist/base-account.js',
-      format: 'umd',
-      name: 'CoinbaseWalletSDK',
-      sourcemap: true,
-      inlineDynamicImports: true,
-      exports: 'named',
-    },
-    {
-      file: 'dist/coinbase-wallet-sdk.min.js',
-      format: 'umd',
-      name: 'CoinbaseWalletSDK',
-      sourcemap: true,
-      inlineDynamicImports: true,
-      exports: 'named',
-      plugins: [terser()],
-    },
-  ],
+  output: {
+    file: 'dist/coinbase-wallet-sdk.min.js',
+    format: 'umd',
+    name: 'CoinbaseWalletSDK',
+    sourcemap: true,
+    // UMD cannot code-split, so dependency dynamic imports are inlined.
+    inlineDynamicImports: true,
+    plugins: [terser()],
+  },
   plugins: [
-    replace({
-      'process.env.NODE_ENV': JSON.stringify('production'),
-      preventAssignment: true,
-    }),
     json(),
     nodeResolve({
       browser: true,
       preferBuiltins: false,
-      dedupe: ['viem', 'ox'],
     }),
     commonjs(),
     typescript({
@@ -49,7 +33,6 @@ export default {
       },
     }),
   ],
-  external: [],
   onwarn(warning, warn) {
     // Ignore PURE comment warnings from ox and viem
     if (warning.code === 'INVALID_ANNOTATION' && warning.message.includes('/*#__PURE__*/')) {

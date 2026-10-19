@@ -18,16 +18,7 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "browser": {
-        "import": "./dist/index.js",
-        "require": "./dist/index.js"
-      },
       "default": "./dist/index.js"
-    },
-    "./browser": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.js"
     },
     "./ui-assets": {
       "types": "./dist/ui/assets/index.d.ts",
@@ -81,7 +72,6 @@
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
-    "@rollup/plugin-replace": "^5.0.5",
     "@rollup/plugin-typescript": "^11.1.6",
     "@size-limit/preset-big-lib": "^11.1.6",
     "@testing-library/jest-dom": "^6.5.0",
