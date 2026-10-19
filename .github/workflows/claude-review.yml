@@ -69,7 +69,7 @@ jobs:
             - examples/testapp: Next.js 14 playground/demo app
             - Key dependencies: viem, ox, @wallet-standard/*, preact, zustand, eventemitter3
             - Dual browser/node entrypoints via conditional exports in package.json
-            - Browser bundle built with Rollup + terser, bundle size budget enforced by size-limit (31 KB)
+            - Browser bundle built with Rolldown, bundle size budget enforced by size-limit (31 KB)
             - CI already enforces: Biome lint + format (explicit ruleset, not recommended preset), TypeScript strict typecheck, Vitest tests on Node 20, 22 & 24, CodeQL
 
             PR TITLE ENFORCEMENT (do this FIRST, before the code review):
