@@ -12,7 +12,7 @@ import {
   parseConnectOptions,
   requestedCapabilities,
 } from './connect.js';
-import { getInjectedSolanaWallet } from './solana/getInjectedSolanaWallet.js';
+import { getInjectedSolanaWallet } from './wallet-standard/getInjectedSolanaWallet.js';
 
 function isMethodNotSupported(error: unknown): boolean {
   const code = asRecord(error)?.code;

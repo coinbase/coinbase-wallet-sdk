@@ -2,7 +2,7 @@ import { standardErrorCodes } from ':core/error/constants.js';
 import type { ProviderInterface } from ':core/provider/interface.js';
 import { StandardConnect } from '@wallet-standard/features';
 import { connectInjectedWallet } from './connectInjectedWallet.js';
-import * as injectedSolanaModule from './solana/getInjectedSolanaWallet.js';
+import * as injectedSolanaModule from './wallet-standard/getInjectedSolanaWallet.js';
 
 vi.mock('./solana/getInjectedSolanaWallet.js', () => ({
   getInjectedSolanaWallet: vi.fn(),

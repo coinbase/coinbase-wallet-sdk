@@ -12,7 +12,7 @@ import {
 import * as transportModule from './createTransport.js';
 import { CoinbaseWalletProvider } from './eip1193/CoinbaseWalletProvider.js';
 import * as getInjectedProviderModule from './eip1193/getInjectedProvider.js';
-import * as solanaModule from './solana/registerSolanaWallet.js';
+import * as solanaModule from './wallet-standard/registerSolanaWallet.js';
 
 // Mock all dependencies
 vi.mock(':store/store.js', () => ({

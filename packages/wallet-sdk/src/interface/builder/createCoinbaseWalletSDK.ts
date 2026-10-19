@@ -18,7 +18,7 @@ import { isCoinbaseWalletHost } from './isCoinbaseWalletHost.js';
 import {
   _resetSolanaWalletRegistration,
   registerSolanaWallet,
-} from './solana/registerSolanaWallet.js';
+} from './wallet-standard/registerSolanaWallet.js';
 
 export type CreateProviderOptions = Partial<AppMetadata> & {
   preference?: Preference;
