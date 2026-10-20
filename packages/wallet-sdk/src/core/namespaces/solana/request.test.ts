@@ -141,8 +141,6 @@ describe('handleSolanaRequest', () => {
       sessionId: 'shared-session',
     };
     const state = transportState(evmSession);
-    // The Solana grant comes back chain-keyed here: a namespace with no namespace
-    // grant takes its lone chain scope as the grant.
     state.send.mockResolvedValueOnce({
       sessionId: 'shared-session',
       scopes: {
@@ -151,7 +149,7 @@ describe('handleSolanaRequest', () => {
           methods: ['personal_sign'],
           notifications: ['accountsChanged'],
         },
-        [SOLANA_MAINNET]: {
+        solana: {
           accounts: [PUBLIC_KEY],
           methods: [
             'solana_signMessage',
@@ -191,7 +189,7 @@ describe('handleSolanaRequest', () => {
           methods: ['personal_sign'],
           notifications: [],
         },
-        [SOLANA_MAINNET]: {
+        solana: {
           accounts: [],
           methods: [],
           notifications: [],

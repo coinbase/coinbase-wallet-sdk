@@ -9,10 +9,12 @@ export type Caip10 = `${Caip2}:${string}`;
  * CAIP-2 prefix from scope accounts, and a null-reference scope has no single chain
  * to qualify them with anyway.
  */
-export type ScopeState = {
+export type NamespaceGrant = {
   accounts: string[];
   methods: string[];
   capabilities?: Record<string, unknown>;
+  /** Each account's answers to the capabilities requested at connect, keyed by account. */
+  accountCapabilities?: Record<string, Record<string, unknown>>;
 };
 
 /** Persisted CAIP authorization state. Delivery state never belongs here. */
@@ -26,7 +28,7 @@ export type Session = {
    * those are — and anything else chain-specific — lives in
    * `properties.chainMetadata`, never here.
    */
-  namespaces: Record<Namespace, ScopeState>;
+  namespaces: Record<Namespace, NamespaceGrant>;
   /** Global CAIP-25 session metadata returned by the wallet, including chainMetadata. */
   properties?: Record<string, unknown>;
 };

@@ -27,7 +27,7 @@ async function connect(transport: WalletTransport): Promise<string[]> {
   const session =
     restored && sessionCovers(restored, SOLANA_MAINNET_REQUIRED_SCOPES)
       ? restored
-      : await createSession(transport, { scopes: createSolanaMainnetScopes() });
+      : await createSession(transport, createSolanaMainnetScopes());
   const accounts = projectSolanaAccounts(session);
   if (accounts.length === 0) {
     throw standardErrors.provider.unauthorized(

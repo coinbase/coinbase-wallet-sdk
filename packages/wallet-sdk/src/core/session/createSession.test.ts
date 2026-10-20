@@ -8,7 +8,6 @@ import type { WalletTransport } from ':core/transport/index.js';
 import { createSession } from './createSession.js';
 
 const SOLANA_PUBLIC_KEY = 'So11111111111111111111111111111111111111112';
-const SOLANA_MAINNET = 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp' as const;
 
 function transport(
   request: WalletTransport['request'],
@@ -30,7 +29,7 @@ function solanaResult(sessionId = 'solana-session') {
   return {
     sessionId,
     scopes: {
-      [SOLANA_MAINNET]: {
+      solana: {
         accounts: [SOLANA_PUBLIC_KEY],
         methods: ['solana_signMessage', 'solana_signTransaction'],
         notifications: [],
@@ -44,9 +43,7 @@ describe('createSession', () => {
     const send = vi.fn().mockResolvedValue(solanaResult());
     const rt = transport(send);
 
-    const session = await createSession(rt, {
-      scopes: createSolanaMainnetScopes(),
-    });
+    const session = await createSession(rt, createSolanaMainnetScopes());
 
     expect(rt.handshake).toHaveBeenCalledWith({ method: 'handshake' });
     expect(send).toHaveBeenCalledWith({
@@ -61,12 +58,12 @@ describe('createSession', () => {
     const send = vi.fn().mockResolvedValue({
       sessionId: 'partial-session',
       scopes: {
-        'eip155:1': {
+        eip155: {
           accounts: ['0x0000000000000000000000000000000000000001'],
           methods: ['personal_sign'],
           notifications: [],
         },
-        [SOLANA_MAINNET]: {
+        solana: {
           accounts: [],
           methods: [],
           notifications: [],
@@ -75,9 +72,7 @@ describe('createSession', () => {
     });
     const rt = transport(send);
 
-    const session = await createSession(rt, {
-      scopes: createSolanaMainnetScopes(),
-    });
+    const session = await createSession(rt, createSolanaMainnetScopes());
 
     expect(session.namespaces.solana?.accounts).toEqual([]);
     expect(session.namespaces.eip155?.accounts).toHaveLength(1);
@@ -92,9 +87,7 @@ describe('createSession', () => {
     const send = vi.fn().mockResolvedValue(solanaResult());
     const rt = transport(send, restored);
 
-    await createSession(rt, {
-      scopes: createSolanaMainnetScopes(),
-    });
+    await createSession(rt, createSolanaMainnetScopes());
 
     expect(rt.handshake).not.toHaveBeenCalled();
     expect(send).toHaveBeenCalledWith(
@@ -115,7 +108,7 @@ describe('createSession', () => {
     const send = vi.fn<(request: RequestArguments) => Promise<unknown>>().mockRejectedValue(error);
     const rt = transport(send, restored);
 
-    await expect(createSession(rt, { scopes: createSolanaMainnetScopes() })).rejects.toBe(error);
+    await expect(createSession(rt, createSolanaMainnetScopes())).rejects.toBe(error);
     expect(send).toHaveBeenCalledOnce();
     expect(send.mock.calls[0]?.[0]).toHaveProperty('params.sessionId', 'stale-session');
     // The provider resets on the 4100 it now sees; nothing is re-handshaked here.
@@ -132,11 +125,7 @@ describe('createSession', () => {
     const send = vi.fn().mockRejectedValue(error);
     const rt = transport(send, restored);
 
-    await expect(
-      createSession(rt, {
-        scopes: createSolanaMainnetScopes(),
-      })
-    ).rejects.toBe(error);
+    await expect(createSession(rt, createSolanaMainnetScopes())).rejects.toBe(error);
     expect(send).toHaveBeenCalledOnce();
     expect(rt.handshake).not.toHaveBeenCalled();
   });

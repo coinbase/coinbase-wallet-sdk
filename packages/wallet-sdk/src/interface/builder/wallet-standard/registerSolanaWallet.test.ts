@@ -67,6 +67,7 @@ describe('registerSolanaWallet', () => {
     vi.clearAllMocks();
     setUserAgent('Mozilla/5.0');
     delete hostWindow.coinbaseWallet;
+    delete hostWindow.ethereum;
     _resetSolanaWalletRegistration();
   });
 
@@ -91,6 +92,16 @@ describe('registerSolanaWallet', () => {
       expect(registerWallet).not.toHaveBeenCalled();
     }
   );
+
+  it('does nothing in an older in-app browser that only injects its provider', () => {
+    hostWindow.ethereum = { isCoinbaseBrowser: true } as never;
+
+    expect(
+      registerSolanaWallet({ transport: walletTransport, session: walletSession })
+    ).toBeUndefined();
+    expect(createSolanaWallet).not.toHaveBeenCalled();
+    expect(registerWallet).not.toHaveBeenCalled();
+  });
 
   it('supports the immutable InAppBrowser user-agent fallback', () => {
     setUserAgent('Mozilla/5.0 CoinbaseWalletRN/1.2.3 (org.toshi; Android 35)');

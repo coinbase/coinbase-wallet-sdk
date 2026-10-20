@@ -9,12 +9,11 @@ import { store } from ':store/store.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { validatePreferences } from ':util/validatePreferences.js';
 import type { OpenFn } from ':util/web.js';
-import { type ConnectOptions, type ConnectResult, connectWallet } from './connect.js';
-import { connectInjectedWallet } from './connectInjectedWallet.js';
+import { connectWallet } from './connect/connect.js';
+import type { ConnectOptions, ConnectResult } from './connect/types.js';
 import { createTransport } from './createTransport.js';
 import { CoinbaseWalletProvider } from './eip1193/CoinbaseWalletProvider.js';
 import { getInjectedProvider } from './eip1193/getInjectedProvider.js';
-import { isCoinbaseWalletHost } from './isCoinbaseWalletHost.js';
 import { getRegisteredSolanaWallet } from './wallet-standard/getRegisteredSolanaWallet.js';
 import {
   _resetSolanaWalletRegistration,
@@ -124,11 +123,7 @@ export function createCoinbaseWalletSDK(params: CreateProviderOptions) {
   return {
     connect: async (request?: ConnectOptions): Promise<ConnectResult> => {
       await rehydrationPromise;
-      const injectedProvider = getInjectedProvider();
-      if (injectedProvider || isCoinbaseWalletHost()) {
-        return connectInjectedWallet(injectedProvider ?? undefined, request);
-      }
-      return connectWallet({ request, transport });
+      return connectWallet({ options: request, transport });
     },
     evm: {
       getProvider: () => {

@@ -1,10 +1,10 @@
 import { standardErrors } from ':core/error/errors.js';
-import { asRecord } from ':util/wire.js';
+import { asRecord } from ':util/guards.js';
 import { isSolanaPublicKey } from './session.js';
 
-function requirePubkey(value: unknown, field: string): string {
+function requirePubkey(value: unknown, label: string): string {
   if (typeof value !== 'string' || !isSolanaPublicKey(value)) {
-    throw standardErrors.rpc.invalidParams(`${field} must be a base58-encoded 32-byte public key`);
+    throw standardErrors.rpc.invalidParams(`${label} must be a base58-encoded 32-byte public key`);
   }
   return value;
 }

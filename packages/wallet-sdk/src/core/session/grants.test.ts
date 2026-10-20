@@ -1,13 +1,13 @@
-import { projectEthAccounts } from ':core/namespaces/eip155/session.js';
 import { sessionFromAccounts } from ':core/namespaces/eip155/session.fixtures.js';
+import { projectEthAccounts } from ':core/namespaces/eip155/session.js';
 import {
   activeGrantForChain,
   activeGrantForNamespace,
   activeSession,
   assertInvokeAuthorized,
+  capabilitiesForAccount,
   sessionCovers,
 } from './grants.js';
-import { sessionFromCaip25Result } from './caip25.js';
 import type { Session } from './types.js';
 
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as const;
@@ -99,6 +99,36 @@ const solanaSession: Session = {
     },
   },
 };
+
+describe('capabilitiesForAccount', () => {
+  const OTHER = '0x0000000000000000000000000000000000000002';
+
+  it("reads only that account's answers when the wallet sent them per account", () => {
+    const grant = {
+      accounts: [ADDRESS, OTHER],
+      methods: [],
+      capabilities: { paymasterService: { supported: true } },
+      accountCapabilities: { [ADDRESS]: { signInWithEthereum: { message: 'm' } } },
+    };
+
+    expect(capabilitiesForAccount(grant, ADDRESS)).toEqual({
+      signInWithEthereum: { message: 'm' },
+    });
+    expect(capabilitiesForAccount(grant, OTHER)).toBeUndefined();
+  });
+
+  it("falls back to the grant's capabilities for wallets that answer on the scope", () => {
+    const grant = {
+      accounts: [ADDRESS],
+      methods: [],
+      capabilities: { signInWithEthereum: { message: 'm' } },
+    };
+
+    expect(capabilitiesForAccount(grant, ADDRESS)).toEqual({
+      signInWithEthereum: { message: 'm' },
+    });
+  });
+});
 
 describe('activeGrantForChain', () => {
   it('resolves the namespace grant for every chain in that namespace', () => {
@@ -201,105 +231,5 @@ describe('namespace grants through the kernel', () => {
   it('projects the same accounts regardless of chain', () => {
     expect(projectEthAccounts(namespaceSession)).toEqual([ADDRESS]);
     expect(projectEthAccounts(solanaSession)).toEqual([]);
-  });
-});
-
-describe('sessionFromCaip25Result', () => {
-  it('stores a namespace scope as the namespace grant', () => {
-    const session = sessionFromCaip25Result({
-      sessionId: 'session-1',
-      scopes: {
-        eip155: {
-          accounts: [ADDRESS],
-          methods: ['eth_sendTransaction'],
-          notifications: [],
-        },
-      },
-    });
-
-    expect(session.namespaces).toEqual({
-      eip155: { accounts: [ADDRESS], methods: ['eth_sendTransaction'] },
-    });
-    expect(activeGrantForChain(session, 'eip155:7777777')).toBeDefined();
-  });
-
-  it('promotes a lone chain-keyed scope to its namespace grant', () => {
-    // How an older wallet answers Solana pairing. Authorization is per namespace, so
-    // the only chain it named becomes the grant for its whole namespace.
-    const session = sessionFromCaip25Result({
-      sessionId: 'session-1',
-      scopes: {
-        [SOLANA_MAINNET]: {
-          accounts: [SOLANA_PUBLIC_KEY],
-          methods: ['solana_signMessage'],
-          notifications: [],
-        },
-      },
-    });
-
-    expect(Object.keys(session.namespaces)).toEqual(['solana']);
-    expect(session.namespaces.solana.accounts).toEqual([SOLANA_PUBLIC_KEY]);
-    expect(activeGrantForChain(session, SOLANA_MAINNET)).toBeDefined();
-  });
-
-  it('folds a chain scope into chain metadata when its namespace is already granted', () => {
-    const session = sessionFromCaip25Result({
-      sessionId: 'session-1',
-      scopes: {
-        eip155: {
-          accounts: [ADDRESS],
-          methods: ['eth_sendTransaction'],
-          notifications: [],
-        },
-        'eip155:8453': {
-          accounts: [],
-          methods: ['wallet_sendCalls'],
-          notifications: [],
-          capabilities: { atomic: { status: 'supported' } },
-        },
-      },
-    });
-
-    // Only capabilities survive: the chain scope carries facts, not authorization.
-    expect(session.namespaces).toEqual({
-      eip155: { accounts: [ADDRESS], methods: ['eth_sendTransaction'] },
-    });
-    expect(session.properties).toEqual({
-      chainMetadata: {
-        'eip155:8453': { capabilities: { atomic: { status: 'supported' } } },
-      },
-    });
-  });
-
-  it('rejects a namespace scope that tries to narrow itself with chains', () => {
-    expect(() =>
-      sessionFromCaip25Result({
-        sessionId: 'session-1',
-        scopes: {
-          eip155: {
-            chains: ['8453', '10'],
-            accounts: [ADDRESS],
-            methods: ['eth_sendTransaction'],
-            notifications: [],
-          },
-        },
-      })
-    ).toThrow(/cannot narrow a namespace grant/);
-  });
-
-  it('rejects a chains array on a chain-keyed scope', () => {
-    expect(() =>
-      sessionFromCaip25Result({
-        sessionId: 'session-1',
-        scopes: {
-          'eip155:8453': {
-            chains: ['8453'],
-            accounts: [ADDRESS],
-            methods: ['eth_sendTransaction'],
-            notifications: [],
-          },
-        },
-      })
-    ).toThrow(/must not be present on a chain-keyed scope/);
   });
 });

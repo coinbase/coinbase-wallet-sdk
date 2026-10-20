@@ -108,7 +108,7 @@ describe('handleDisconnected', () => {
         params: expect.objectContaining({
           scopes: {
             eip155: expect.objectContaining({
-              params: [{ version: '1' }],
+              version: '1',
             }),
           },
         }),
@@ -153,7 +153,7 @@ describe('handleDisconnected', () => {
           scopes: {
             eip155: expect.objectContaining({
               methods: expect.arrayContaining(['wallet_connect']),
-              params: [{ version: '1' }],
+              version: '1',
             }),
           },
         }),

@@ -53,8 +53,7 @@ Count callers before defending anything. Most of the rules below are one questio
 
 **Throw inline.** Write `throw standardErrors.rpc.internal('...')` at the check. Do not route
 throws through an `invalid()` / `fail()` helper -- TypeScript narrows a plain `throw` natively,
-so the helper buys nothing and needs a comment explaining why it is typed the way it is. Repeated
-message prefixes go in a `const`, not back into a helper.
+so the helper buys nothing and needs a comment explaining why it is typed the way it is.
 
 **A helper must carry a rule, not restate its body.** Delete helpers whose name is a synonym for
 their one line (`hasNamespaceGrant` for `grant !== undefined`, `accountsFor` for
@@ -76,6 +75,14 @@ caller already had, fix the signature, not the callee.
 **Named params for three or more arguments**, and for any boolean flag. `new
 CoinbaseWalletProvider({ transport, store, ephemeral: true })`, not a trailing `true`.
 
+**Plain loops over clever chains.** To merge many objects into one, write a `for` loop with
+spread. `Object.fromEntries(chains.flatMap((chain) => Object.entries(chain.scopes)))` became a
+three-line loop because it took several reads to see that it only merges.
+
+**Inline single-use constants.** A method name or message used once is a literal at its use
+site: `method: 'wallet_createSession'`, not `WALLET_CREATE_SESSION`. A `const` needs a second
+reader.
+
 ### Naming
 
 **A name states the direction and the outcome.** `parse*` returns a value, `assert*` throws and
@@ -86,6 +93,18 @@ became `parseSwitchChainId` because it reads params rather than switching anythi
 **Inverse operations get symmetric names**: `formatEip155ChainId` / `parseEip155ChainId`, never
 `eip155Caip2` / `eip155ChainId`. And never reuse one word for two types in one signature -- a
 `chainId: Caip2` parameter returning a numeric chain id needs one of them renamed.
+
+**Conversions name both sides: `<source>To<target>`.** `walletConnectToCaip25Scopes`,
+`sessionToWalletConnectResult`. Name each side in protocol terms, not just "request" and
+"response".
+
+**Use the domain noun, not a generic one.** `ScopeState` became `NamespaceGrant`, `wire.ts`
+became `guards.ts`, and `field` became `label` because it only appears in error text. Words like
+`state`, `data`, `requested`, and `wire` usually hide what the thing is.
+
+**RPC types are `<Method>Request`, `<Method>Params`, and `<Method>Result`**, in
+`core/rpc/<method>.ts`. Each file declares the full `{ method, params }` request and the result.
+Builders write `satisfies <Method>Request`, so the literal is checked without being widened.
 
 ### Files
 

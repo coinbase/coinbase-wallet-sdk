@@ -31,27 +31,12 @@ export {
   parseCaip2,
 } from './caip.js';
 export type { Caip10, Caip2, ParsedCaip2 } from './caip.js';
-export {
-  WALLET_CREATE_SESSION,
-  createCaip25Request,
-  parseCaip25Request,
-  parseCaip25Result,
-  sessionFromCaip25Result,
-} from './caip25.js';
+export { sessionFromCaip25Result } from './caip25.js';
 export { createSession } from './createSession.js';
 export { WALLET_INVOKE_METHOD, createCaip27Request, readCaip27Result } from './caip27.js';
 export type {
-  Caip25PrivateRequestScopeExtensions,
-  Caip25PrivateScopeParams,
-  Caip25RequestParams,
-  Caip25RequestScope,
-  Caip25Result,
-  Caip25ResultScope,
-  Caip27Error,
-  Caip27Params,
-  Caip27Request,
   Envelope,
   NamespaceTranslator,
-  ScopeState,
+  NamespaceGrant,
   Session,
 } from './types.js';

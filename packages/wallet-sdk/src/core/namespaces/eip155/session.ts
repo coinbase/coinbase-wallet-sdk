@@ -1,5 +1,5 @@
 import { Address } from ':core/type/index.js';
-import { isRecord } from ':util/wire.js';
+import { isRecord } from ':util/guards.js';
 import { activeGrantForNamespace } from ':core/session/grants.js';
 import type { Session } from ':core/session/types.js';
 import type { SDKChain } from './client/index.js';

@@ -271,7 +271,7 @@ describe('ensureSession / createSession', () => {
         params: expect.objectContaining({
           scopes: {
             eip155: expect.objectContaining({
-              params: [{ version: '1' }],
+              version: '1',
             }),
           },
         }),
@@ -299,7 +299,7 @@ describe('ensureSession / createSession', () => {
           scopes: {
             eip155: expect.objectContaining({
               capabilities: { signInWithEthereum: { nonce: 'n', chainId: '0x1' } },
-              params: [{ version: '1' }],
+              version: '1',
             }),
           },
         }),
@@ -332,7 +332,7 @@ describe('ensureSession / createSession', () => {
           scopes: {
             eip155: expect.objectContaining({
               capabilities: { signInWithEthereum: { nonce: 'n', chainId: '0x1' } },
-              params: [{ version: '1' }],
+              version: '1',
             }),
           },
         }),

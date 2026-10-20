@@ -1,13 +1,13 @@
 import { standardErrors } from ':core/error/errors.js';
 import { type Caip2, type Namespace, namespaceOf } from './caip.js';
-import type { Envelope, ScopeRequirement, ScopeState, Session } from './types.js';
+import type { Envelope, NamespaceGrant, ScopeRequirement, Session } from './types.js';
 
 /**
  * The persisted session, or `undefined` when it is not usable.
  *
  * Usable means the wallet issued a session id and at least one scope still carries an
  * account. This only validates cached authorization shape; the wallet may still reject a
- * stale session id, which `createSession` recovers by creating a fresh session.
+ * stale session id with a 4100, and the caller then clears the stored session.
  */
 export function activeSession(session: Session | undefined): Session | undefined {
   if (!session?.sessionId) return undefined;
@@ -24,9 +24,22 @@ export function activeSession(session: Session | undefined): Session | undefined
 export function activeGrantForNamespace(
   session: Session,
   namespace: Namespace
-): ScopeState | undefined {
+): NamespaceGrant | undefined {
   const grant = session.namespaces[namespace];
   return grant?.accounts.length ? grant : undefined;
+}
+
+/**
+ * The capabilities the wallet answered for one granted account.
+ *
+ * Wallet builds without `accountCapabilities` put those answers on the grant itself, shared by
+ * every account, so the grant's own capabilities stand in until the wallet sends them per account.
+ */
+export function capabilitiesForAccount(
+  grant: NamespaceGrant,
+  account: string
+): Record<string, unknown> | undefined {
+  return grant.accountCapabilities ? grant.accountCapabilities[account] : grant.capabilities;
 }
 
 /**
@@ -36,7 +49,7 @@ export function activeGrantForNamespace(
  * grant. Whether the wallet can actually serve that chain is a separate question,
  * answered by its chain catalog, and its own error if the answer is no.
  */
-export function activeGrantForChain(session: Session, chainId: Caip2): ScopeState | undefined {
+export function activeGrantForChain(session: Session, chainId: Caip2): NamespaceGrant | undefined {
   return activeGrantForNamespace(session, namespaceOf(chainId));
 }
 

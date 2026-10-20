@@ -1,10 +1,9 @@
 import { standardErrors } from ':core/error/errors.js';
 import type { RequestArguments } from ':core/provider/interface.js';
+import type { Caip27Params } from ':core/rpc/wallet_invokeMethod.js';
 import { type Caip2, parseCaip2 } from ':core/session/caip.js';
-import { WALLET_CREATE_SESSION } from ':core/session/caip25.js';
 import { WALLET_INVOKE_METHOD } from ':core/session/caip27.js';
-import type { Caip27Params } from ':core/session/types.js';
-import { asRecord } from ':util/wire.js';
+import { asRecord } from ':util/guards.js';
 
 function parseChainId(value: unknown): Caip2 {
   if (typeof value === 'string') {
@@ -29,7 +28,7 @@ function parseRequest(params: Record<string, unknown>): Caip27Params['request'] 
   // `wallet_createSession`, called directly.
   if (
     request.method === WALLET_INVOKE_METHOD ||
-    request.method === WALLET_CREATE_SESSION ||
+    request.method === 'wallet_createSession' ||
     request.method === 'wallet_connect'
   ) {
     throw standardErrors.rpc.invalidParams(
