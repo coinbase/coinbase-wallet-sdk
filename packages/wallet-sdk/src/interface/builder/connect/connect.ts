@@ -11,7 +11,7 @@ import type {
 } from ':core/rpc/wallet_connect.js';
 import { createSession } from ':core/session/createSession.js';
 import type { WalletTransport } from ':core/transport/index.js';
-import { StandardConnect } from '@wallet-standard/features';
+import { StandardConnect, type StandardConnectOutput } from '@wallet-standard/features';
 import { getInjectedProvider } from '../eip1193/getInjectedProvider.js';
 import { isCoinbaseWalletHost } from '../isCoinbaseWalletHost.js';
 import { sessionToWalletAccounts } from '../wallet-standard/accounts.js';
@@ -41,6 +41,25 @@ function parseConnectOptions(options: ConnectOptions = { evm: true, solana: true
   };
 }
 
+/** `wallet_connect` on the host's injected provider; no accounts when the host injects none. */
+async function connectEvmInHost(params: WalletConnectParams): Promise<WalletConnectResult> {
+  const provider = getInjectedProvider();
+  if (!provider) return { accounts: [] };
+  const response = await provider.request({
+    method: 'wallet_connect',
+    params,
+  } satisfies WalletConnectRequest);
+  // The host's own provider answers `wallet_connect` in the ERC-7846 shape.
+  return response as WalletConnectResult;
+}
+
+/** Silent connect on the host's Wallet Standard wallet; no accounts when it registered none. */
+async function connectSolanaInHost(): Promise<StandardConnectOutput> {
+  const wallet = getRegisteredSolanaWallet();
+  if (!wallet) return { accounts: [] };
+  return wallet.features[StandardConnect].connect({ silent: true });
+}
+
 /**
  * Connect the requested chains: through the Coinbase Wallet host's own wallets when the page
  * runs inside one, otherwise with one popup approval that covers every chain. The popup is
@@ -56,26 +75,10 @@ export async function connectWallet({
   const { evm, solana } = parseConnectOptions(options);
 
   if (isCoinbaseWalletHost()) {
-    let result: ConnectResult = {};
-    if (evm) {
-      const provider = getInjectedProvider();
-      const response = provider
-        ? await provider.request({
-            method: 'wallet_connect',
-            params: evm,
-          } satisfies WalletConnectRequest)
-        : { accounts: [] };
-      // The host's own provider answers `wallet_connect` in the ERC-7846 shape.
-      result = { ...result, evm: response as WalletConnectResult };
-    }
-    if (solana) {
-      const wallet = getRegisteredSolanaWallet();
-      const output = wallet
-        ? await wallet.features[StandardConnect].connect({ silent: true })
-        : { accounts: [] };
-      result = { ...result, solana: output };
-    }
-    return result;
+    return {
+      ...(evm ? { evm: await connectEvmInHost(evm) } : {}),
+      ...(solana ? { solana: await connectSolanaInHost() } : {}),
+    };
   }
 
   const session = await createSession(transport, {
