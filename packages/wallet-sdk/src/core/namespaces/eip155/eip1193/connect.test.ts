@@ -39,14 +39,21 @@ function eip155Result(opts?: {
   accounts?: string[];
   capabilities?: Record<string, unknown>;
 }) {
+  const accounts = opts?.accounts ?? [ADDRESS];
   return {
     sessionId: opts?.sessionId ?? 'session-1',
     scopes: {
       eip155: {
-        accounts: opts?.accounts ?? [ADDRESS],
+        accounts,
         methods: ['personal_sign', 'wallet_connect'],
         notifications: ['accountsChanged', 'chainChanged'],
-        ...(opts?.capabilities ? { capabilities: opts.capabilities } : {}),
+        ...(opts?.capabilities
+          ? {
+              accountCapabilities: Object.fromEntries(
+                accounts.map((account) => [account, opts.capabilities])
+              ),
+            }
+          : {}),
       },
     },
   };

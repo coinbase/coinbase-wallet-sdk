@@ -1,5 +1,47 @@
+import type { Session } from ':core/session/types.js';
 import { EIP155_METHODS } from './methods.js';
-import { walletConnectToCaip25Scopes } from './walletConnect.js';
+import { sessionToWalletConnectResult, walletConnectToCaip25Scopes } from './walletConnect.js';
+
+const ADDRESS = '0x0000000000000000000000000000000000000001';
+const OTHER = '0x0000000000000000000000000000000000000002';
+
+describe('sessionToWalletConnectResult', () => {
+  it("returns each account's own answers and never the namespace-wide capabilities", () => {
+    const session: Session = {
+      sessionId: 'session-1',
+      namespaces: {
+        eip155: {
+          accounts: [ADDRESS, OTHER],
+          methods: [],
+          capabilities: { paymasterService: { supported: true } },
+          accountCapabilities: { [ADDRESS]: { aos: { signature: '0x111' } } },
+        },
+      },
+    };
+
+    expect(sessionToWalletConnectResult(session)).toEqual({
+      accounts: [
+        { address: ADDRESS, capabilities: { aos: { signature: '0x111' } } },
+        { address: OTHER },
+      ],
+    });
+  });
+
+  it('returns no capabilities when the wallet sent no per-account answers', () => {
+    const session: Session = {
+      sessionId: 'session-1',
+      namespaces: {
+        eip155: {
+          accounts: [ADDRESS],
+          methods: [],
+          capabilities: { paymasterService: { supported: true } },
+        },
+      },
+    };
+
+    expect(sessionToWalletConnectResult(session)).toEqual({ accounts: [{ address: ADDRESS }] });
+  });
+});
 
 describe('walletConnectToCaip25Scopes', () => {
   it('puts the version and capabilities on the eip155 scope', () => {

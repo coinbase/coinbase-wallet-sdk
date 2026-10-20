@@ -5,7 +5,6 @@ import {
   activeGrantForNamespace,
   activeSession,
   assertInvokeAuthorized,
-  capabilitiesForAccount,
   sessionCovers,
 } from './grants.js';
 import type { Session } from './types.js';
@@ -95,36 +94,6 @@ const solanaSession: Session = {
     },
   },
 };
-
-describe('capabilitiesForAccount', () => {
-  const OTHER = '0x0000000000000000000000000000000000000002';
-
-  it("reads only that account's answers when the wallet sent them per account", () => {
-    const grant = {
-      accounts: [ADDRESS, OTHER],
-      methods: [],
-      capabilities: { paymasterService: { supported: true } },
-      accountCapabilities: { [ADDRESS]: { signInWithEthereum: { message: 'm' } } },
-    };
-
-    expect(capabilitiesForAccount(grant, ADDRESS)).toEqual({
-      signInWithEthereum: { message: 'm' },
-    });
-    expect(capabilitiesForAccount(grant, OTHER)).toBeUndefined();
-  });
-
-  it("falls back to the grant's capabilities for wallets that answer on the scope", () => {
-    const grant = {
-      accounts: [ADDRESS],
-      methods: [],
-      capabilities: { signInWithEthereum: { message: 'm' } },
-    };
-
-    expect(capabilitiesForAccount(grant, ADDRESS)).toEqual({
-      signInWithEthereum: { message: 'm' },
-    });
-  });
-});
 
 describe('activeGrantForChain', () => {
   it('resolves the namespace grant for every chain in that namespace', () => {

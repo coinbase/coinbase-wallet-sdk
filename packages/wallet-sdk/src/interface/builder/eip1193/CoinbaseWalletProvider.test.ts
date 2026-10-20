@@ -350,9 +350,8 @@ describe('ensureSession / createSession', () => {
         }),
       })
     );
-    expect(result).toEqual({
-      accounts: [{ address: ACCOUNT, capabilities: {} }],
-    });
+    // The mock wallet answers only namespace-wide capabilities, which are not connect answers.
+    expect(result).toEqual({ accounts: [{ address: ACCOUNT }] });
   });
 
   it('forwards wallet_connect capabilities after pairing', async () => {

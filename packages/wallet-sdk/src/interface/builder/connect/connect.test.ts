@@ -83,8 +83,10 @@ function setup({
               // This wallet answers capabilities only when the request asked for some.
               ...(namespace === 'eip155' && scope.capabilities
                 ? {
-                    capabilities: grantedEvmCapabilities ?? {
-                      aos: { signature: '0xevm-signature', isSCW: true },
+                    accountCapabilities: {
+                      [EVM_ACCOUNT]: grantedEvmCapabilities ?? {
+                        aos: { signature: '0xevm-signature', isSCW: true },
+                      },
                     },
                   }
                 : {}),
@@ -483,7 +485,7 @@ describe('connectWallet through the popup', () => {
             accounts: [EVM_ACCOUNT],
             methods: [...EIP155_METHODS],
             notifications: [],
-            capabilities: { walletDefault: { supported: true } },
+            accountCapabilities: { [EVM_ACCOUNT]: { walletDefault: { supported: true } } },
           },
         },
       }),

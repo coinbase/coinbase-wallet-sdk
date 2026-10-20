@@ -1,6 +1,5 @@
 import type { WalletConnectParams, WalletConnectResult } from ':core/rpc/wallet_connect.js';
 import type { Caip25RequestScope } from ':core/rpc/wallet_createSession.js';
-import { capabilitiesForAccount } from ':core/session/grants.js';
 import type { Session } from ':core/session/types.js';
 import { EIP155_NAMESPACE } from './caip.js';
 import { EIP155_METHODS } from './methods.js';
@@ -34,7 +33,9 @@ export function walletConnectToCaip25Scopes([
 }
 
 /**
- * The `wallet_connect` result for a granted session: each account with the wallet's answers.
+ * The `wallet_connect` result for a granted session: each account with its own answers from
+ * `accountCapabilities`. The grant's `capabilities` hold for the whole namespace; they are
+ * reported by `wallet_getCapabilities`, never as an account's connect answers.
  *
  * Accounts go through the same `isAddress` filter as `eth_accounts`, so a malformed wallet
  * grant cannot surface a non-address here and then vanish from later reads.
@@ -44,7 +45,7 @@ export function sessionToWalletConnectResult(session: Session): WalletConnectRes
   if (!grant) return { accounts: [] };
   return {
     accounts: projectEthAccounts(session).map((address) => {
-      const capabilities = capabilitiesForAccount(grant, address);
+      const capabilities = grant.accountCapabilities?.[address];
       return { address, ...(capabilities ? { capabilities } : {}) };
     }),
   };

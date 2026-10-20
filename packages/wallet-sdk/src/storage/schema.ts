@@ -12,6 +12,7 @@ export type Caip10 = `${Caip2}:${string}`;
 export type NamespaceGrant = {
   accounts: string[];
   methods: string[];
+  /** Capabilities that hold for the whole namespace, reported by `wallet_getCapabilities`. */
   capabilities?: Record<string, unknown>;
   /** Each account's answers to the capabilities requested at connect, keyed by account. */
   accountCapabilities?: Record<string, Record<string, unknown>>;

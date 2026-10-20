@@ -30,19 +30,6 @@ export function activeGrantForNamespace(
 }
 
 /**
- * The capabilities the wallet answered for one granted account.
- *
- * Wallet builds without `accountCapabilities` put those answers on the grant itself, shared by
- * every account, so the grant's own capabilities stand in until the wallet sends them per account.
- */
-export function capabilitiesForAccount(
-  grant: NamespaceGrant,
-  account: string
-): Record<string, unknown> | undefined {
-  return grant.accountCapabilities ? grant.accountCapabilities[account] : grant.capabilities;
-}
-
-/**
  * The grant that authorizes one CAIP-2 chain, or `undefined` when nothing does.
  *
  * Authorization is per namespace, so every chain in a namespace resolves to the same
