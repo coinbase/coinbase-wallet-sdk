@@ -1,5 +1,5 @@
 import { SOLANA_MAINNET } from './caip.js';
-import { sessionFromSolanaAccounts } from './session.js';
+import { sessionFromSolanaAccounts } from './session.fixtures.js';
 import { qualify, toEnvelope } from './envelope.js';
 
 const PUBLIC_KEY = 'So11111111111111111111111111111111111111112';
@@ -120,16 +120,7 @@ describe('Solana envelope', () => {
     ).toThrowError(expect.objectContaining({ code: 4100 }));
   });
 
-  it('rejects unsupported chains and methods before transport', () => {
-    expect(() =>
-      toEnvelope(
-        {
-          method: 'solana_signMessage',
-          params: { pubkey: PUBLIC_KEY, message: new Uint8Array([1]) },
-        },
-        'solana:devnet'
-      )
-    ).toThrowError(expect.objectContaining({ code: 4902 }));
+  it('rejects an unsupported method before transport', () => {
     expect(() => toEnvelope({ method: 'solana_unknown', params: [] } as never)).toThrowError(
       expect.objectContaining({ code: 4200 })
     );

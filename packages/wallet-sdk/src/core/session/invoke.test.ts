@@ -1,11 +1,8 @@
 import { standardErrorCodes } from ':core/error/constants.js';
 import { eip155Translator } from ':core/namespaces/eip155/index.js';
 import { sessionFromAccounts } from ':core/namespaces/eip155/session.fixtures.js';
-import {
-  SOLANA_MAINNET,
-  sessionFromSolanaAccounts,
-  solanaTranslator,
-} from ':core/namespaces/solana/index.js';
+import { SOLANA_MAINNET, solanaTranslator } from ':core/namespaces/solana/index.js';
+import { sessionFromSolanaAccounts } from ':core/namespaces/solana/session.fixtures.js';
 import type { WalletTransport } from ':core/transport/index.js';
 import { Address } from ':core/type/index.js';
 import { invoke, invokeEphemeral } from './invoke.js';

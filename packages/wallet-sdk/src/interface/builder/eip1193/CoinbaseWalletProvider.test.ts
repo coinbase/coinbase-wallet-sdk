@@ -2,7 +2,7 @@ import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { sessionFromAccounts } from ':core/namespaces/eip155/session.fixtures.js';
-import { sessionFromSolanaAccounts } from ':core/namespaces/solana/session.js';
+import { sessionFromSolanaAccounts } from ':core/namespaces/solana/session.fixtures.js';
 import { RequestArguments } from ':core/provider/interface.js';
 import type { WalletTransport } from ':core/transport/index.js';
 import { store } from ':store/store.js';

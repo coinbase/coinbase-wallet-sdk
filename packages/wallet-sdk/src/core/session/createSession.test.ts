@@ -1,8 +1,6 @@
 import { standardErrors } from ':core/error/errors.js';
-import {
-  createSolanaMainnetScopes,
-  sessionFromSolanaAccounts,
-} from ':core/namespaces/solana/session.js';
+import { sessionFromSolanaAccounts } from ':core/namespaces/solana/session.fixtures.js';
+import { createSolanaMainnetScopes } from ':core/namespaces/solana/session.js';
 import type { RequestArguments } from ':core/provider/interface.js';
 import type { WalletTransport } from ':core/transport/index.js';
 import { createSession } from './createSession.js';

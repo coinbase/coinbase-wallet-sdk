@@ -1,5 +1,5 @@
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
-import { sessionFromSolanaAccounts } from ':core/namespaces/solana/session.js';
+import { sessionFromSolanaAccounts } from ':core/namespaces/solana/session.fixtures.js';
 import type { Session } from ':core/session/types.js';
 import type { WalletTransport } from ':core/transport/index.js';
 import * as providerUtil from ':util/provider.js';

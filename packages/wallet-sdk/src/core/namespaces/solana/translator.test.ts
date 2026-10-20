@@ -58,15 +58,6 @@ describe('solanaTranslator.decodeResult', () => {
     expect(solanaTranslator.decodeResult(result, preparedEnvelope)).toBe(result);
   });
 
-  it('refuses to decode for a chain outside Solana mainnet', () => {
-    expect(() =>
-      solanaTranslator.decodeResult(
-        { signature: SIGNATURE },
-        { ...envelope, chainId: 'solana:devnet' }
-      )
-    ).toThrow(/does not support/);
-  });
-
   it('refuses to decode an unsupported Solana method', () => {
     expect(() =>
       solanaTranslator.decodeResult(

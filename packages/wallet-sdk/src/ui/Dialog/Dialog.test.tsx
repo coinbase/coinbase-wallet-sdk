@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/preact';
 import { vi } from 'vitest';
 
 import { sessionFromAccounts } from ':core/namespaces/eip155/session.fixtures.js';
-import { sessionFromSolanaAccounts } from ':core/namespaces/solana/session.js';
+import { sessionFromSolanaAccounts } from ':core/namespaces/solana/session.fixtures.js';
 import { getDisplayableUsername } from ':core/username/getDisplayableUsername.js';
 import type { Session } from ':core/session/types.js';
 
