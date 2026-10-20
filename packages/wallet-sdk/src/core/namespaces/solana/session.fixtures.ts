@@ -10,6 +10,7 @@ import { SOLANA_METHODS } from './methods.js';
  */
 export function sessionFromSolanaAccounts(opts: { accounts: string[] }): Session {
   return {
+    sessionId: 'session-1',
     namespaces: {
       [SOLANA_NAMESPACE]: { accounts: [...opts.accounts], methods: [...SOLANA_METHODS] },
     },

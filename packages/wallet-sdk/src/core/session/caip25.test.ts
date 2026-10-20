@@ -26,16 +26,47 @@ describe('sessionFromCaip25Result', () => {
       properties: { walletInfo: { name: 'Coinbase Wallet' } },
     });
 
+    // Only the chain catalog is read out of `properties`; nothing else is kept.
     expect(session).toEqual({
       sessionId: 'session-1',
       namespaces: {
         eip155: { accounts: [ADDRESS], methods: ['personal_sign'], capabilities },
         solana: { accounts: [SOLANA_PUBLIC_KEY], methods: ['solana_signMessage'] },
       },
-      properties: { walletInfo: { name: 'Coinbase Wallet' } },
     });
     expect(activeGrantForChain(session, 'eip155:7777777')).toBeDefined();
     expect(activeGrantForChain(session, SOLANA_MAINNET)).toBeDefined();
+  });
+
+  it('parses the chain catalog once, dropping malformed fields but keeping the entry', () => {
+    const session = sessionFromCaip25Result({
+      sessionId: 'session-1',
+      scopes: {},
+      properties: {
+        chainMetadata: {
+          'eip155:8453': {
+            rpcUrl: 'https://mainnet.base.org',
+            nativeCurrency: { name: 'Ether', symbol: 'ETH', decimal: 18 },
+            capabilities: { atomic: { supported: true } },
+          },
+          'eip155:10': {
+            rpcUrl: 'javascript:alert(1)',
+            nativeCurrency: { name: 'Ether', symbol: 'ETH', decimal: -1 },
+            capabilities: 'not-an-object',
+          },
+          'eip155:1': 'not-an-object',
+        },
+      },
+    });
+
+    expect(session.chainMetadata).toEqual({
+      'eip155:8453': {
+        rpcUrl: 'https://mainnet.base.org',
+        nativeCurrency: { name: 'Ether', symbol: 'ETH', decimal: 18 },
+        capabilities: { atomic: { supported: true } },
+      },
+      'eip155:10': {},
+    });
   });
 
   it('ignores chain-keyed scopes', () => {

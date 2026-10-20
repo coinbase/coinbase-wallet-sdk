@@ -18,7 +18,7 @@ export function formatEip155ChainId(chainId: number): Caip2 {
 }
 
 /** `eip155:<chainId>` back to a numeric EVM chain id, or `null` if not eip155. */
-export function parseEip155ChainId(value: Caip2): number | null {
+export function parseEip155ChainId(value: string): number | null {
   const parsed = parseCaip2(value);
   if (!parsed || parsed.namespace !== 'eip155' || !/^[1-9]\d*$/.test(parsed.reference)) {
     return null;

@@ -24,7 +24,7 @@ function readResponse(
  *
  * 1. CAIP-27: `chainId` and method must already be authorized (`assertInvokeAuthorized`).
  * 2. `qualify` — namespace-specific checks, such as the signer being granted.
- * 3. Add the CAIP-25 `sessionId` when one was issued.
+ * 3. Add the CAIP-25 `sessionId`.
  * 4. `transport.request(wallet_invokeMethod)`.
  * 5. Validate the reply envelope and unwrap the method result.
  *
@@ -41,10 +41,7 @@ export async function invoke(
 ): Promise<unknown> {
   try {
     assertInvokeAuthorized(session, envelope);
-    const qualified = translator.qualify(session, {
-      ...envelope,
-      ...(session.sessionId ? { sessionId: session.sessionId } : {}),
-    });
+    const qualified = translator.qualify(session, { ...envelope, sessionId: session.sessionId });
     const response = await transport.request(createCaip27Request(qualified));
     return readResponse(response, qualified, translator);
   } catch (error) {

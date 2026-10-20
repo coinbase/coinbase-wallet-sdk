@@ -17,14 +17,13 @@ export function sessionFromAccounts(opts: {
 }): Session {
   const catalog = opts.chains ?? (opts.chainId === undefined ? [] : [opts.chainId]);
   return {
+    sessionId: 'session-1',
     namespaces: {
       [EIP155_NAMESPACE]: { accounts: [...opts.accounts], methods: [...EIP155_METHODS] },
     },
     ...(catalog.length > 0
       ? {
-          properties: {
-            chainMetadata: Object.fromEntries(catalog.map((id) => [formatEip155ChainId(id), {}])),
-          },
+          chainMetadata: Object.fromEntries(catalog.map((id) => [formatEip155ChainId(id), {}])),
         }
       : {}),
   };

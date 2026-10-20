@@ -58,10 +58,8 @@ function context(
 describe('handleConnected', () => {
   const session = {
     ...sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 }),
-    properties: {
-      chainMetadata: {
-        'eip155:8453': { rpcUrl: 'https://example.invalid' },
-      },
+    chainMetadata: {
+      'eip155:8453': { rpcUrl: 'https://example.invalid' },
     },
   };
   const caip25Result = {
@@ -113,6 +111,7 @@ describe('handleConnected', () => {
     expect(send).toHaveBeenCalledWith({
       method: 'wallet_invokeMethod',
       params: {
+        sessionId: 'session-1',
         chainId: 'eip155:8453',
         request: { method: 'personal_sign', params: ['0x68656c6c6f'] },
       },
@@ -225,11 +224,9 @@ describe('handleConnected', () => {
     const sessionWithId = {
       ...session,
       sessionId: 'session-1',
-      properties: {
-        chainMetadata: {
-          'eip155:8453': { rpcUrl: 'https://example.invalid' },
-          'eip155:10': { rpcUrl: 'https://optimism.invalid' },
-        },
+      chainMetadata: {
+        'eip155:8453': { rpcUrl: 'https://example.invalid' },
+        'eip155:10': { rpcUrl: 'https://optimism.invalid' },
       },
     };
     const send = vi.fn();
@@ -301,11 +298,9 @@ describe('handleConnected', () => {
     const sessionWithId = {
       ...session,
       sessionId: 'session-1',
-      properties: {
-        chainMetadata: {
-          'eip155:8453': { rpcUrl: 'https://example.invalid' },
-          'eip155:10': { rpcUrl: 'https://optimism.invalid' },
-        },
+      chainMetadata: {
+        'eip155:8453': { rpcUrl: 'https://example.invalid' },
+        'eip155:10': { rpcUrl: 'https://optimism.invalid' },
       },
     };
     const send = vi.fn().mockResolvedValue('0xhash');
@@ -346,11 +341,9 @@ describe('handleConnected', () => {
     const grantedBoth = {
       ...session,
       sessionId: 'session-1',
-      properties: {
-        chainMetadata: {
-          'eip155:8453': { rpcUrl: 'https://example.invalid' },
-          'eip155:10': { rpcUrl: 'https://optimism.invalid' },
-        },
+      chainMetadata: {
+        'eip155:8453': { rpcUrl: 'https://example.invalid' },
+        'eip155:10': { rpcUrl: 'https://optimism.invalid' },
       },
     };
     const send = vi.fn().mockResolvedValue('0xhash');
@@ -384,11 +377,9 @@ describe('handleConnected', () => {
   it('still reports accounts after switching to another catalogued chain', async () => {
     const sessionWithId = {
       ...session,
-      properties: {
-        chainMetadata: {
-          'eip155:8453': { rpcUrl: 'https://example.invalid' },
-          'eip155:10': { rpcUrl: 'https://optimism.invalid' },
-        },
+      chainMetadata: {
+        'eip155:8453': { rpcUrl: 'https://example.invalid' },
+        'eip155:10': { rpcUrl: 'https://optimism.invalid' },
       },
     };
     const send = vi.fn();
@@ -412,11 +403,9 @@ describe('handleConnected', () => {
       namespaces: {
         eip155: { accounts: [ADDRESS], methods: ['eth_sendTransaction'] },
       },
-      properties: {
-        chainMetadata: {
-          'eip155:8453': { rpcUrl: 'https://example.invalid' },
-          'eip155:10': { rpcUrl: 'https://optimism.invalid' },
-        },
+      chainMetadata: {
+        'eip155:8453': { rpcUrl: 'https://example.invalid' },
+        'eip155:10': { rpcUrl: 'https://optimism.invalid' },
       },
     };
     const send = vi.fn().mockResolvedValue('0xhash');

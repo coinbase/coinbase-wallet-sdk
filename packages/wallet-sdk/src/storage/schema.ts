@@ -17,20 +17,30 @@ export type NamespaceGrant = {
   accountCapabilities?: Record<string, Record<string, unknown>>;
 };
 
+/** What the wallet knows about one chain it can serve. */
+export type ChainMetadata = {
+  rpcUrl?: string;
+  nativeCurrency?: { name: string; symbol: string; decimal: number };
+  capabilities?: Record<string, unknown>;
+};
+
 /** Persisted CAIP authorization state. Delivery state never belongs here. */
 export type Session = {
-  sessionId?: string;
+  sessionId: string;
   /**
    * Grants keyed by CAIP-104 namespace (`eip155`, `solana`).
    *
    * Consent is per account, not per chain: one `eip155` grant authorizes every EVM
    * chain, and the wallet decides at execution time which it can serve. Which chains
-   * those are — and anything else chain-specific — lives in
-   * `properties.chainMetadata`, never here.
+   * those are — and anything else chain-specific — lives in `chainMetadata`, never here.
    */
   namespaces: Record<Namespace, NamespaceGrant>;
-  /** Global CAIP-25 session metadata returned by the wallet, including chainMetadata. */
-  properties?: Record<string, unknown>;
+  /**
+   * The wallet's chain catalog, keyed by CAIP-2: which chains it can serve and what it knows
+   * about each. Capability, not authorization. Parsed once where the session enters
+   * (`parseChainMetadata`); each namespace parses the keys it reads.
+   */
+  chainMetadata?: Record<string, ChainMetadata>;
 };
 
 export interface AppMetadata {
@@ -39,7 +49,7 @@ export interface AppMetadata {
   /** Application logo URL, or null to use the favicon. */
   appLogoUrl: string | null;
   // No chain fields: a session authorizes every EVM chain, the wallet's own catalog in
-  // `Session.properties.chainMetadata` says which it can serve, and the provider starts on
+  // `Session.chainMetadata` says which it can serve, and the provider starts on
   // Ethereum mainnet until `wallet_switchEthereumChain` moves it.
 }
 

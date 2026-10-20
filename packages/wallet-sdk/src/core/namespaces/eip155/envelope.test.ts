@@ -76,6 +76,7 @@ describe('eip155 envelope', () => {
       request: { method: 'coinbase_signPreparedCalls', params: [{ opaque: 'params' }] },
     } as const;
     const withoutPreparedCalls = {
+      sessionId: 'session-1',
       namespaces: { eip155: { accounts: [ADDRESS], methods: ['personal_sign'] } },
     };
 
@@ -109,7 +110,7 @@ describe('eip155 envelope', () => {
   it('rejects a chain when the session has no eip155 grant at all', () => {
     expect(() =>
       qualify(
-        { namespaces: {} },
+        { sessionId: 'session-1', namespaces: {} },
         {
           chainId: 'eip155:8453',
           request: { method: 'personal_sign', params: ['0x68656c6c6f', ADDRESS] },

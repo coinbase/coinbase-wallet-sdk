@@ -116,6 +116,7 @@ describe('Solana envelope', () => {
 
   it('rejects prepared calls with 4100 when the session did not grant them', () => {
     const withoutPreparedCalls = {
+      sessionId: 'session-1',
       namespaces: {
         solana: { accounts: [PUBLIC_KEY], methods: ['solana_signMessage'] },
       },

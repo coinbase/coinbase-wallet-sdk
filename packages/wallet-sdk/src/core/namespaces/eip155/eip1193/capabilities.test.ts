@@ -74,6 +74,7 @@ describe('getCapabilities', () => {
   // The wallet's chain catalog is where capabilities that genuinely differ per chain
   // are reported, alongside the namespace-wide `eip155` authorization.
   const session: Session = {
+    sessionId: 'session-1',
     namespaces: {
       eip155: {
         accounts: [ADDRESS],
@@ -82,13 +83,11 @@ describe('getCapabilities', () => {
         capabilities: { gasLimitOverride: { supported: true } },
       },
     },
-    properties: {
-      chainMetadata: {
-        'eip155:1': { capabilities: STORED['0x1'] },
-        'eip155:5': { capabilities: STORED['0x5'] },
-        'eip155:10': { capabilities: STORED['0xa'] },
-        'eip155:8453': {},
-      },
+    chainMetadata: {
+      'eip155:1': { capabilities: STORED['0x1'] },
+      'eip155:5': { capabilities: STORED['0x5'] },
+      'eip155:10': { capabilities: STORED['0xa'] },
+      'eip155:8453': {},
     },
   };
 

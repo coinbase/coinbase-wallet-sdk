@@ -1,6 +1,6 @@
 import type { Caip27Params } from ':core/rpc/wallet_invokeMethod.js';
 import type { Caip2, Session } from '../../storage/schema.js';
-export type { NamespaceGrant, Session } from '../../storage/schema.js';
+export type { ChainMetadata, NamespaceGrant, Session } from '../../storage/schema.js';
 
 /**
  * Kernel request after the namespace adapter has run.

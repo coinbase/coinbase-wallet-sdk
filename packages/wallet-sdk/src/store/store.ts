@@ -1,7 +1,9 @@
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { StateCreator, createStore } from 'zustand/vanilla';
 import pkg from '../../package.json' with { type: 'json' };
+import { parseChainMetadata } from '../storage/chainMetadata.js';
 import type { AppMetadata, Preference, Session } from '../storage/schema.js';
+import { isRecord } from '../util/guards.js';
 
 type Config = {
   metadata?: AppMetadata;
@@ -34,28 +36,35 @@ export type StoreState = MergeTypes<[KeysSlice, ConfigSlice, SessionSlice]>;
  * Persisted schema version.
  *
  * v0 is the pre-CAIP blob. v1 keyed `Session.scopes` by CAIP-2 chain id; v2 keys grants
- * by CAIP-104 namespace, because EVM authorization covers every chain at once.
+ * by CAIP-104 namespace, because EVM authorization covers every chain at once. v3 stores the
+ * wallet's chain catalog parsed, as `chainMetadata`, instead of raw under `properties`.
  */
-const PERSISTED_STORE_VERSION = 2;
+const PERSISTED_STORE_VERSION = 3;
 
 /**
  * Accept only a session the current selectors can read.
  *
- * Older sessions keyed grants by chain (`scopes`) or carried SDK-chosen state
- * (`selected`, `transportKind`). Dropping one costs a single reconnect; keeping it would
- * silently leave the provider with no readable authorization.
+ * Older sessions keyed grants by chain (`scopes`), carried SDK-chosen state (`selected`,
+ * `transportKind`), or had no wallet-issued id. Dropping one costs a single reconnect;
+ * keeping it would silently leave the provider with no readable authorization. A v2 chain
+ * catalog under `properties.chainMetadata` is parsed into `chainMetadata`, so upgrading
+ * does not disconnect anyone.
  */
 function persistedSession(value: unknown): Session | undefined {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
-  const candidate = value as Partial<Session> & Record<string, unknown>;
-  if ('selected' in candidate || 'transportKind' in candidate || 'scopes' in candidate) {
+  if (!isRecord(value)) return undefined;
+  if ('selected' in value || 'transportKind' in value || 'scopes' in value) return undefined;
+  const { sessionId, namespaces } = value;
+  if (typeof sessionId !== 'string' || sessionId.length === 0 || !isRecord(namespaces)) {
     return undefined;
   }
-  const { namespaces } = candidate;
-  if (!namespaces || typeof namespaces !== 'object' || Array.isArray(namespaces)) {
-    return undefined;
-  }
-  return candidate as Session;
+  const legacyCatalog = isRecord(value.properties) ? value.properties.chainMetadata : undefined;
+  const chainMetadata = parseChainMetadata(value.chainMetadata ?? legacyCatalog);
+  return {
+    sessionId,
+    // Grants were parsed by `sessionFromCaip25Result` before the SDK wrote them.
+    namespaces: namespaces as Session['namespaces'],
+    ...(chainMetadata ? { chainMetadata } : {}),
+  };
 }
 
 /**

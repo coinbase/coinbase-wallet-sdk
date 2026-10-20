@@ -1,5 +1,6 @@
 import { standardErrors } from ':core/error/errors.js';
 import { asRecord, nonEmptyString, optionalRecord, stringArray } from ':util/guards.js';
+import { parseChainMetadata } from '../../storage/chainMetadata.js';
 import type { NamespaceGrant, Session } from './types.js';
 
 /**
@@ -7,7 +8,7 @@ import type { NamespaceGrant, Session } from './types.js';
  *
  * Only namespace-keyed scopes become grants. The SDK only asks for whole namespaces and SCW
  * answers with the same keys, sending per-chain facts in `properties.chainMetadata`, so a
- * chain-keyed scope is ignored.
+ * chain-keyed scope is ignored. Nothing else in `properties` is kept.
  */
 export function sessionFromCaip25Result(value: unknown): Session {
   const result = asRecord(value);
@@ -20,6 +21,7 @@ export function sessionFromCaip25Result(value: unknown): Session {
     throw standardErrors.rpc.internal('wallet_createSession.result.scopes must be an object');
   }
   const properties = optionalRecord(result.properties, 'wallet_createSession.result.properties');
+  const chainMetadata = parseChainMetadata(properties?.chainMetadata);
 
   const namespaces = Object.fromEntries(
     Object.entries(scopes).flatMap(([scopeKey, scope]) =>
@@ -28,7 +30,7 @@ export function sessionFromCaip25Result(value: unknown): Session {
         : []
     )
   );
-  return { sessionId, namespaces, ...(properties ? { properties } : {}) };
+  return { sessionId, namespaces, ...(chainMetadata ? { chainMetadata } : {}) };
 }
 
 /** A namespace scope as a stored grant; `notifications` and any chain list are not kept. */

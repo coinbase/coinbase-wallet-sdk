@@ -20,7 +20,7 @@ describe('sessionCovers', () => {
   it('covers an empty requirement list vacuously', () => {
     // Nothing asks for a chain, so nothing is missing. Callers that mean "is this
     // session usable at all" use `activeSession`, which checks for accounts.
-    const empty: Session = { namespaces: {} };
+    const empty: Session = { sessionId: 'session-1', namespaces: {} };
     const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 1 });
     expect(sessionCovers(empty, [])).toBe(true);
     expect(sessionCovers(session, [])).toBe(true);
@@ -52,15 +52,14 @@ describe('sessionCovers', () => {
 });
 
 describe('activeSession', () => {
-  it('requires a wallet-issued id and at least one authorized account', () => {
+  it('requires at least one authorized account', () => {
+    // The wallet-issued id is checked where a session enters: the CAIP-25 parser and the
+    // persisted-store reader.
     const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 1 });
 
     expect(activeSession(undefined)).toBeUndefined();
-    expect(activeSession({ namespaces: {} })).toBeUndefined();
-    expect(activeSession(session)).toBeUndefined();
-
-    const active = { ...session, sessionId: 'session-1' };
-    expect(activeSession(active)).toBe(active);
+    expect(activeSession({ sessionId: 'session-1', namespaces: {} })).toBeUndefined();
+    expect(activeSession(session)).toBe(session);
   });
 
   it('rejects a session whose grants have been emptied', () => {
@@ -147,7 +146,10 @@ describe('activeGrantForChain', () => {
   });
 
   it('ignores an empty grant', () => {
-    const empty: Session = { namespaces: { eip155: { accounts: [], methods: ['personal_sign'] } } };
+    const empty: Session = {
+      sessionId: 'session-1',
+      namespaces: { eip155: { accounts: [], methods: ['personal_sign'] } },
+    };
     expect(activeGrantForChain(empty, 'eip155:8453')).toBeUndefined();
     expect(activeGrantForNamespace(empty, 'eip155')).toBeUndefined();
   });

@@ -59,26 +59,6 @@ describe('invoke', () => {
     });
   });
 
-  it('sends and unwraps a persistent invoke without a session id', async () => {
-    const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 });
-    const envelope: Envelope = {
-      chainId: 'eip155:8453',
-      request: { method: 'personal_sign', params: ['0x68656c6c6f'] },
-    };
-    const response = {
-      chainId: envelope.chainId,
-      result: { method: envelope.request.method, result: '0xsig' },
-    };
-    const send = vi.fn().mockResolvedValue(response);
-
-    await expect(invoke(session, envelope, transport(send), eip155Translator)).resolves.toBe(
-      '0xsig'
-    );
-
-    expect(send).toHaveBeenCalledWith({ method: 'wallet_invokeMethod', params: envelope });
-    expect(send.mock.calls[0]?.[0]).not.toHaveProperty('params.sessionId');
-  });
-
   it('unwraps an ephemeral response without session qualification', async () => {
     const envelope: Envelope = {
       chainId: 'eip155:8453',
@@ -121,6 +101,7 @@ describe('invoke', () => {
     const methodError = { code: 4100, message: 'method denied' };
     const methodTransport = transport(
       vi.fn().mockResolvedValue({
+        sessionId: session.sessionId,
         chainId: 'eip155:8453',
         error: methodError,
       })

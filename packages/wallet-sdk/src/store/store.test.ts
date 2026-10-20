@@ -66,7 +66,7 @@ describe('persisted store', () => {
     // Force a re-persist so the written blob reflects the post-hydrate shape.
     instance.setState({ keys: instance.getState().keys });
     const persisted = JSON.parse(localStorage.getItem(storageName) as string);
-    expect(persisted.version).toBe(2);
+    expect(persisted.version).toBe(3);
     // `session: undefined` is dropped by JSON serialization, so the legacy blob is gone.
     expect(Object.keys(persisted.state).sort()).toEqual(['config', 'keys']);
 
@@ -120,5 +120,50 @@ describe('persisted store', () => {
     await current.persist.rehydrate();
     expect(current.getState().session).toEqual(session);
     localStorage.removeItem(namespaceKeyed);
+  });
+
+  it('upgrades a v2 chain catalog without disconnecting, and drops a session with no id', async () => {
+    const account = '0x0000000000000000000000000000000000000001';
+    const namespaces = { eip155: { accounts: [account], methods: ['personal_sign'] } };
+
+    // v2 kept the raw wallet catalog under `properties.chainMetadata`.
+    const v2 = 'migration-v2-catalog.store';
+    localStorage.setItem(
+      v2,
+      JSON.stringify({
+        version: 2,
+        state: {
+          keys: {},
+          config: { version: 'current' },
+          session: {
+            sessionId: 'session-1',
+            namespaces,
+            properties: {
+              chainMetadata: {
+                'eip155:8453': { rpcUrl: 'https://mainnet.base.org', capabilities: 'bad' },
+              },
+            },
+          },
+        },
+      })
+    );
+    const upgraded = createStoreInstance({ persist: true, storageName: v2 }) as RehydratableStore;
+    await upgraded.persist.rehydrate();
+    expect(upgraded.getState().session).toEqual({
+      sessionId: 'session-1',
+      namespaces,
+      chainMetadata: { 'eip155:8453': { rpcUrl: 'https://mainnet.base.org' } },
+    });
+    localStorage.removeItem(v2);
+
+    const noId = 'migration-no-id.store';
+    localStorage.setItem(
+      noId,
+      JSON.stringify({ version: 3, state: { keys: {}, config: {}, session: { namespaces } } })
+    );
+    const dropped = createStoreInstance({ persist: true, storageName: noId }) as RehydratableStore;
+    await dropped.persist.rehydrate();
+    expect(dropped.getState().session).toBeUndefined();
+    localStorage.removeItem(noId);
   });
 });
