@@ -87,12 +87,16 @@ describe('createProvider', () => {
   });
 
   describe('Basic functionality', () => {
-    it('constructs one inert transport without initializing either interface', () => {
+    it('registers the Solana wallet on creation and defers the EVM provider', () => {
       createCoinbaseWalletSDK({});
 
       expect(mockCreateTransport).toHaveBeenCalledOnce();
+      expect(mockRegisterSolanaWallet).toHaveBeenCalledOnce();
+      expect(mockRegisterSolanaWallet).toHaveBeenCalledWith({
+        transport: { mockTransport: true },
+        session: store.session,
+      });
       expect(mockCoinbaseWalletProvider).not.toHaveBeenCalled();
-      expect(mockRegisterSolanaWallet).not.toHaveBeenCalled();
     });
 
     it('passes the custom open function to the transport without storing it', () => {
@@ -239,43 +243,14 @@ describe('createProvider', () => {
   });
 
   describe('Provider fallback behavior', () => {
-    it('registers Solana only after explicit opt-in', () => {
+    it('shares one popup transport between the Solana wallet and the EVM provider', () => {
       const sdk = createCoinbaseWalletSDK({});
-
-      expect(mockRegisterSolanaWallet).not.toHaveBeenCalled();
-      expect(sdk.solana.registerWallet()).toBeUndefined();
-      expect(mockRegisterSolanaWallet).toHaveBeenCalledOnce();
-    });
-
-    it('shares one popup transport when Solana initializes first', () => {
-      const sdk = createCoinbaseWalletSDK({});
-      let solanaTransport: unknown;
-      mockRegisterSolanaWallet.mockImplementation(({ transport }: { transport: unknown }) => {
-        solanaTransport = transport;
-      });
-
-      sdk.solana.registerWallet();
       sdk.evm.getProvider();
 
       expect(mockCreateTransport).toHaveBeenCalledOnce();
-      expect(mockCoinbaseWalletProvider).toHaveBeenCalledWith({
-        transport: solanaTransport,
-        store,
-      });
-    });
-
-    it('shares one popup transport when EVM initializes first', () => {
-      const sdk = createCoinbaseWalletSDK({});
-      let solanaTransport: unknown;
-      mockRegisterSolanaWallet.mockImplementation(({ transport }: { transport: unknown }) => {
-        solanaTransport = transport;
-      });
-
-      sdk.evm.getProvider();
-      sdk.solana.registerWallet();
-
-      expect(mockCreateTransport).toHaveBeenCalledOnce();
-      expect(solanaTransport).toBe(mockCoinbaseWalletProvider.mock.calls[0][0].transport);
+      expect(mockCoinbaseWalletProvider.mock.calls[0][0].transport).toBe(
+        mockRegisterSolanaWallet.mock.calls[0][0].transport
+      );
     });
 
     it('should use injected provider when getInjectedProvider returns a provider', () => {

@@ -103,6 +103,19 @@ describe('registerSolanaWallet', () => {
     expect(registerWallet).not.toHaveBeenCalled();
   });
 
+  it('does nothing without a browser, so server rendering can create the SDK', () => {
+    vi.stubGlobal('window', undefined);
+    try {
+      expect(
+        registerSolanaWallet({ transport: walletTransport, session: walletSession })
+      ).toBeUndefined();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+    expect(createSolanaWallet).not.toHaveBeenCalled();
+    expect(registerWallet).not.toHaveBeenCalled();
+  });
+
   it('supports the immutable InAppBrowser user-agent fallback', () => {
     setUserAgent('Mozilla/5.0 CoinbaseWalletRN/1.2.3 (org.toshi; Android 35)');
 

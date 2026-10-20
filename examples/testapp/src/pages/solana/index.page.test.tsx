@@ -60,7 +60,6 @@ const wallet = {
     },
   },
 };
-const registerSolanaWallet = vi.fn();
 const sdkConnect = vi.fn();
 
 describe('SolanaPlayground', () => {
@@ -75,7 +74,7 @@ describe('SolanaPlayground', () => {
       },
     });
     vi.mocked(useEIP1193Provider).mockReturnValue({
-      sdk: { connect: sdkConnect, solana: { registerWallet: registerSolanaWallet } },
+      sdk: { connect: sdkConnect },
     } as never);
   });
 
@@ -139,13 +138,12 @@ describe('SolanaPlayground', () => {
     await waitFor(() => expect((signMessageButton as HTMLButtonElement).disabled).toBe(false));
   });
 
-  it('explicitly registers and connects through Wallet Standard', async () => {
+  it('connects through the Wallet Standard wallet the SDK registered', async () => {
     render(<SolanaPlayground />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Submit standard:connect' }));
 
     await waitFor(() => expect(standardConnect).toHaveBeenCalledOnce());
-    expect(registerSolanaWallet).toHaveBeenCalledOnce();
     expect(screen.getByText(/address/)).toBeTruthy();
   });
 

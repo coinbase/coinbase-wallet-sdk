@@ -140,7 +140,6 @@ export default function SolanaPlayground() {
 
   const registeredWallet = () => {
     if (wallet) return wallet;
-    sdk.solana.registerWallet();
     const registered = getWallets()
       .get()
       .find(

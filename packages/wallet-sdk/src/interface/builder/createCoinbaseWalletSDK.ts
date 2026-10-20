@@ -119,6 +119,7 @@ export function createCoinbaseWalletSDK(params: CreateProviderOptions) {
 
   let evmProvider: ProviderInterface | null = null;
   const transport = createTransport(options, store, params.openFn);
+  registerSolanaWallet({ transport, session: store.session });
 
   return {
     connect: async (request?: ConnectOptions): Promise<ConnectResult> => {
@@ -135,7 +136,6 @@ export function createCoinbaseWalletSDK(params: CreateProviderOptions) {
       },
     },
     solana: {
-      registerWallet: () => registerSolanaWallet({ transport, session: store.session }),
       getWallet: () => getRegisteredSolanaWallet(),
     },
   };

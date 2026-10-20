@@ -199,27 +199,28 @@ from the shared session.
 
 ### Experimental Solana API
 
-Solana is explicitly enabled by registering a Wallet Standard wallet:
+Creating the SDK in a browser registers a Coinbase Wallet Standard wallet for
+Solana; there is nothing else to call. `sdk.solana.getWallet()` returns it:
 
 ```ts
 const sdk = createCoinbaseWalletSDK({ appName: 'My dapp' });
-sdk.solana.registerWallet();
+const wallet = sdk.solana.getWallet();
 ```
 
 The initial scope supports Solana mainnet, `connect`, `disconnect`,
 `signMessage`, `signTransaction`, `signAndSendTransaction`, and
 `signAndSendAllTransactions`. Batch sign-and-send uses one dedicated CAIP-27
 request and preserves serial/parallel mode plus ordered settled results.
-`solana:signIn` is not advertised yet. Inside the Coinbase Wallet InAppBrowser,
-the host already provides Wallet Standard registration, so this function is a no-op.
-Wallet Standard cannot unregister a wallet, so only the first call on a page registers
-one; later calls, including from other SDK instances, do nothing.
+`solana:signIn` is not advertised yet. Inside a Coinbase Wallet host, the host
+registers its own Wallet Standard wallet, so the SDK registers nothing. During
+server rendering there is no `window`, so the SDK registers nothing either.
+Wallet Standard cannot unregister a wallet, so only the first SDK instance on a
+page registers one; later instances share it.
 
 For new dapps, Solana recommends
 [`@solana/kit`](https://solana.com/docs/clients/official/javascript) with Wallet
 Standard. The dapp's Wallet Standard or Kit wallet plugin discovers the wallet
-registered above. Calling `createCoinbaseWalletSDK()` by itself performs no Solana
-initialization or global registration.
+the SDK registered.
 
 > **Release boundary:** Normal-browser Solana popup requests require an SCW
 > release that supports the CAIP-25 Solana scopes and CAIP-27 methods described
