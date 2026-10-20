@@ -13,7 +13,7 @@ import {
 
 vi.mock('@coinbase/wallet-sdk', () => ({
   createCoinbaseWalletSDK: vi.fn(() => ({
-    getProvider: vi.fn(() => mockProvider),
+    evm: { getProvider: vi.fn(() => mockProvider) },
   })),
 }));
 

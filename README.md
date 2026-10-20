@@ -57,7 +57,7 @@ yarn add @coinbase/wallet-sdk
 2. Make Coinbase Wallet Provider
 
    ```js
-   const provider = sdk.getProvider();
+   const provider = sdk.evm.getProvider();
    ```
 
 3. Request accounts to initialize a connection to wallet

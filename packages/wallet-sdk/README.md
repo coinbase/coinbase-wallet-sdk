@@ -66,14 +66,13 @@
    ```js
    const sdk = createCoinbaseWalletSDK({
      appName: 'SDK Playground',
-     appChainIds: [8453],
    });
    ```
 
 2. Make Coinbase Wallet Provider
 
    ```js
-   const provider = sdk.getProvider();
+   const provider = sdk.evm.getProvider();
    ```
 
 3. Request accounts to initialize a connection to wallet
@@ -131,18 +130,17 @@ Use `sdk.connect()` to authorize EVM and Solana together with one CAIP-25 approv
 const connection = await sdk.connect();
 ```
 
-EVM chains come from `appChainIds` passed to `createCoinbaseWalletSDK`; they are
-not repeated in `connect()`. Pass `true` to select a basic connection for only
-one namespace:
+The EVM grant covers every chain the wallet serves, so `connect()` takes no chain
+list. Pass `true` to select a basic connection for only one namespace:
 
 ```ts
 const evmConnection = await sdk.connect({ evm: true });
 const solanaConnection = await sdk.connect({ solana: true });
 ```
 
-Use an options object instead of `true` to request capabilities. Capability
-payloads are intentionally opaque so new capabilities and namespaces do not
-require redesigning the shared API:
+Use an options object instead of `true` to request EVM `wallet_connect`
+capabilities. Capabilities are opaque to the SDK: it forwards them as sent and
+returns the wallet's answers unchanged.
 
 ```ts
 const connection = await sdk.connect({
@@ -154,18 +152,12 @@ const connection = await sdk.connect({
       },
     },
   },
-  solana: {
-    capabilities: {
-      aos: {
-        nonce: solanaNonce,
-        apiUrl: 'https://api.wallet.coinbase.com',
-      },
-    },
-  },
+  solana: true,
 });
 ```
 
-Capability results belong to the account that granted them:
+EVM capability results belong to the account that granted them. Solana returns
+Wallet Standard accounts:
 
 ```ts
 {
@@ -178,12 +170,7 @@ Capability results belong to the account that granted them:
     }],
   },
   solana: {
-    accounts: [{
-      address: '9xQeWvG816bUx9EP...',
-      capabilities: {
-        aos: { signature: '4vJ9JU1bJJE96FWS...' },
-      },
-    }],
+    accounts: [{ address: '9xQeWvG816bUx9EP...', publicKey: Uint8Array(32), ... }],
   },
 }
 ```
@@ -198,18 +185,17 @@ of a request. For example, an account without Solana returns:
 }
 ```
 
-An omitted capability result is returned on each connected account as a
-serialized `4200` unsupported-capability error. `addSubAccount` and
-`spendPermissions` are intentionally not forwarded by `sdk.connect()`. Inputs
-remain open to future namespaces, while EVM and Solana are the namespaces
-currently implemented.
+EVM and Solana are the namespaces currently implemented.
 
 Inside a Coinbase-hosted in-app browser or extension, EVM uses the injected
 `wallet_connect` method and Solana reads the host Wallet Standard connection
 silently. The SDK does not open a popup or create a parallel CAIP session there.
-Outside a Coinbase host, calling `sdk.connect()` updates an already-created
-popup EIP-1193 provider and SDK-registered Solana Wallet Standard wallet from
-the shared session.
+
+Outside a Coinbase host, `sdk.connect()` always opens one popup covering every
+requested namespace, even when a session already exists. To restore a connection
+on page load, read `eth_accounts` from the EVM provider or `accounts` from the
+Solana wallet instead. The EVM provider and the registered Solana wallet update
+from the shared session.
 
 ### Experimental Solana API
 
@@ -217,7 +203,7 @@ Solana is explicitly enabled by registering a Wallet Standard wallet:
 
 ```ts
 const sdk = createCoinbaseWalletSDK({ appName: 'My dapp' });
-sdk.registerSolanaWallet();
+sdk.solana.registerWallet();
 ```
 
 The initial scope supports Solana mainnet, `connect`, `disconnect`,
@@ -265,5 +251,5 @@ Once loaded, the SDK is available as `window.createCoinbaseWalletSDK` (and as
 
 ```javascript
 // Create Coinbase Wallet Provider
-const provider = window.createCoinbaseWalletSDK().getProvider()
+const provider = window.createCoinbaseWalletSDK().evm.getProvider()
 ```

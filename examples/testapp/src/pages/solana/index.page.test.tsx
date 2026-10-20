@@ -75,7 +75,7 @@ describe('SolanaPlayground', () => {
       },
     });
     vi.mocked(useEIP1193Provider).mockReturnValue({
-      sdk: { connect: sdkConnect, registerSolanaWallet },
+      sdk: { connect: sdkConnect, solana: { registerWallet: registerSolanaWallet } },
     } as never);
   });
 
@@ -89,7 +89,7 @@ describe('SolanaPlayground', () => {
     expect(screen.getByText(/"solana":/)).toBeTruthy();
   });
 
-  it('requests and renders independent per-account EVM and Solana AOS results', async () => {
+  it('requests EVM AOS alongside Solana and renders the per-account result', async () => {
     sdkConnect.mockResolvedValueOnce({
       evm: {
         accounts: [
@@ -99,14 +99,7 @@ describe('SolanaPlayground', () => {
           },
         ],
       },
-      solana: {
-        accounts: [
-          {
-            address: account.address,
-            capabilities: { aos: { signature: 'solana-base58-signature' } },
-          },
-        ],
-      },
+      solana: { accounts: [{ address: account.address }] },
     });
     render(<SolanaPlayground />);
 
@@ -115,10 +108,8 @@ describe('SolanaPlayground', () => {
     await waitFor(() => expect(sdkConnect).toHaveBeenCalledOnce());
     const request = sdkConnect.mock.calls[0]?.[0];
     expect(request.evm.capabilities.aos.apiUrl).toBe('https://api.wallet.coinbase.com');
-    expect(request.solana.capabilities.aos.apiUrl).toBe('https://api.wallet.coinbase.com');
-    expect(request.evm.capabilities.aos.nonce).not.toBe(request.solana.capabilities.aos.nonce);
+    expect(request.solana).toBe(true);
     expect(screen.getByText(/0xevm-signature/)).toBeTruthy();
-    expect(screen.getByText(/solana-base58-signature/)).toBeTruthy();
   });
 
   it('renders a mixed partial sdk.connect result as a success', async () => {

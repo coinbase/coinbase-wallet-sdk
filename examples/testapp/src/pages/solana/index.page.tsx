@@ -140,7 +140,7 @@ export default function SolanaPlayground() {
 
   const registeredWallet = () => {
     if (wallet) return wallet;
-    sdk.registerSolanaWallet();
+    sdk.solana.registerWallet();
     const registered = getWallets()
       .get()
       .find(
@@ -187,14 +187,7 @@ export default function SolanaPlayground() {
             },
           },
         },
-        solana: {
-          capabilities: {
-            aos: {
-              nonce: createPlaygroundNonce(),
-              apiUrl: AOS_API_URL,
-            },
-          },
-        },
+        solana: true,
       });
       return applyUnifiedConnection(result);
     });

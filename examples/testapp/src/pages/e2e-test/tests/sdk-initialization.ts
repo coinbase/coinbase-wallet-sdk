@@ -31,7 +31,8 @@ export async function testSDKInitialization(
       });
 
       // Update provider in context (this is a side effect but necessary for subsequent tests)
-      const provider = sdkInstance.getProvider();
+      // Published versions expose `getProvider()`; the local build groups it under `evm`.
+      const provider = sdkInstance.evm?.getProvider() ?? sdkInstance.getProvider();
 
       return { sdkInstance, provider };
     },
