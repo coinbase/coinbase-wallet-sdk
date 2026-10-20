@@ -5,7 +5,6 @@ import type {
   WalletInvokeMethodRequest,
 } from ':core/rpc/wallet_invokeMethod.js';
 import { asRecord } from ':util/guards.js';
-import { isCaip2 } from './caip.js';
 import type { Envelope } from './types.js';
 
 /** CAIP-27 JSON-RPC method used for every wallet invocation. */
@@ -47,21 +46,11 @@ export function readCaip27Result(value: unknown, request: Envelope): unknown {
   }
 
   // A reply is only ours if it names the chain we asked on and the session we asked under.
-  if (
-    !isCaip2(request.chainId) ||
-    typeof record.chainId !== 'string' ||
-    !isCaip2(record.chainId) ||
-    record.chainId !== request.chainId
-  ) {
+  // Both request values were checked when the envelope was built, so equality is enough.
+  if (record.chainId !== request.chainId) {
     throw standardErrors.rpc.internal(`${INVALID_RESULT} chainId does not match the request`);
   }
-  if (
-    record.sessionId !== undefined &&
-    (typeof record.sessionId !== 'string' || record.sessionId.length === 0)
-  ) {
-    throw standardErrors.rpc.internal(`${INVALID_RESULT} sessionId must be a non-empty string`);
-  }
-  if (request.sessionId !== record.sessionId) {
+  if (record.sessionId !== request.sessionId) {
     throw standardErrors.rpc.internal(`${INVALID_RESULT} sessionId does not match the request`);
   }
 

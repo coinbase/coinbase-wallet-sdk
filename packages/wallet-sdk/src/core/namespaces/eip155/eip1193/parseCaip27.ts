@@ -1,19 +1,14 @@
 import { standardErrors } from ':core/error/errors.js';
 import type { RequestArguments } from ':core/provider/interface.js';
 import type { Caip27Params } from ':core/rpc/wallet_invokeMethod.js';
-import { type Caip2, parseCaip2 } from ':core/session/caip.js';
+import { type Caip2, isCaip2 } from ':core/session/caip.js';
 import { WALLET_INVOKE_METHOD } from ':core/session/caip27.js';
 import { asRecord } from ':util/guards.js';
+import { parseEip155ChainId } from '../caip.js';
 
 function parseChainId(value: unknown): Caip2 {
-  if (typeof value === 'string') {
-    const parsed = parseCaip2(value);
-    if (parsed?.namespace === 'eip155' && /^[1-9]\d*$/.test(parsed.reference)) {
-      const chainId = Number(parsed.reference);
-      if (Number.isSafeInteger(chainId) && String(chainId) === parsed.reference) {
-        return value as Caip2;
-      }
-    }
+  if (typeof value === 'string' && isCaip2(value) && parseEip155ChainId(value) !== null) {
+    return value;
   }
   throw standardErrors.rpc.invalidParams('wallet_invokeMethod requires an eip155 CAIP-2 chainId');
 }

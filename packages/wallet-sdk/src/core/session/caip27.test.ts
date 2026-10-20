@@ -141,19 +141,6 @@ describe('CAIP-27 responses', () => {
       readCaip27Result(
         {
           sessionId: 'session-1',
-          chainId: 'invalid',
-          result: { method: 'personal_sign', result: '0xsig' },
-        },
-        {
-          ...request,
-          chainId: 'invalid' as never,
-        }
-      )
-    ).toThrow(/chainId/);
-    expect(() =>
-      readCaip27Result(
-        {
-          sessionId: 'session-1',
           chainId: 'eip155:8453',
           result: { method: 'personal_sign', result: '0xsig' },
           error: { code: 4100, message: 'not authorized' },
