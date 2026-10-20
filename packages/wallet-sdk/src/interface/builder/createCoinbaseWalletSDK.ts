@@ -127,6 +127,7 @@ export function createCoinbaseWalletSDK(params: CreateProviderOptions) {
       return connectWallet({ options: request, transport });
     },
     evm: {
+      namespace: 'evm',
       getProvider: () => {
         if (!evmProvider) {
           evmProvider = getInjectedProvider() ?? new CoinbaseWalletProvider({ transport, store });
@@ -136,6 +137,7 @@ export function createCoinbaseWalletSDK(params: CreateProviderOptions) {
       },
     },
     solana: {
+      namespace: 'solana',
       getWallet: () => getRegisteredSolanaWallet(),
     },
   };
