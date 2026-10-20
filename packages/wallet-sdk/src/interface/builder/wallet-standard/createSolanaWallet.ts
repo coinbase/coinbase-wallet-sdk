@@ -1,14 +1,11 @@
-import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import {
-  SOLANA_MAINNET,
   SOLANA_WALLET_STANDARD_MAINNET,
   type SolanaInvokeRequest,
   type SolanaInvokeResultFor,
   handleSolanaRequest,
-  projectSolanaAccounts,
 } from ':core/namespaces/solana/index.js';
-import { activeGrantForChain, activeSession } from ':core/session/grants.js';
+import { activeSession } from ':core/session/grants.js';
 import type { Session } from ':core/session/types.js';
 import type { WalletTransport } from ':core/transport/index.js';
 import type { Store } from ':store/store.js';
@@ -25,10 +22,8 @@ import {
   StandardEvents,
   type StandardEventsOnMethod,
 } from '@wallet-standard/features';
-import { ReadonlyWalletAccount } from '@wallet-standard/wallet';
-import * as Base58 from 'ox/Base58';
+import { grantedOptionalFeatures, sessionToWalletAccounts } from './accounts.js';
 import {
-  ACCOUNT_FEATURES,
   CoinbaseSignPreparedCalls,
   type OptionalSolanaFeatures,
   type RequiredSolanaFeatures,
@@ -52,24 +47,6 @@ function assertMainnet(chain: string): void {
   }
 }
 
-function accountFromAddress(address: string, features: readonly IdentifierString[]): WalletAccount {
-  let publicKey: Uint8Array;
-  try {
-    publicKey = Base58.toBytes(address);
-  } catch {
-    throw standardErrors.rpc.internal('Solana account must be valid base58');
-  }
-  if (publicKey.length !== 32) {
-    throw standardErrors.rpc.internal('Solana account must decode to 32 bytes');
-  }
-  return new ReadonlyWalletAccount({
-    address,
-    publicKey,
-    chains: [SOLANA_WALLET_STANDARD_MAINNET],
-    features,
-  });
-}
-
 function sameItems<T>(a: readonly T[], b: readonly T[]): boolean {
   return a.length === b.length && a.every((item, index) => item === b[index]);
 }
@@ -88,21 +65,8 @@ export function createSolanaWallet(
 
   const invoke = async <Request extends SolanaInvokeRequest>(
     request: Request
-  ): Promise<SolanaInvokeResultFor<Request>> => {
-    try {
-      return (await handleSolanaRequest(transport, request)) as SolanaInvokeResultFor<Request>;
-    } catch (error) {
-      if (
-        error &&
-        typeof error === 'object' &&
-        'code' in error &&
-        error.code === standardErrorCodes.provider.unauthorized
-      ) {
-        await transport.cleanup();
-      }
-      throw error;
-    }
-  };
+  ): Promise<SolanaInvokeResultFor<Request>> =>
+    (await handleSolanaRequest(transport, request)) as SolanaInvokeResultFor<Request>;
 
   const features: RequiredSolanaFeatures = {
     [StandardConnect]: {
@@ -110,11 +74,9 @@ export function createSolanaWallet(
       async connect(options) {
         // Silent connect reports the restored accounts; it never prompts or pairs.
         if (options?.silent) return { accounts };
+        // Core throws 4100 when the wallet grants no Solana account.
         await handleSolanaRequest(transport, { method: 'connect' });
         sync(transport.readSession());
-        if (accounts.length === 0) {
-          throw standardErrors.rpc.internal('Solana connect did not return an account');
-        }
         return { accounts };
       },
     },
@@ -235,9 +197,9 @@ export function createSolanaWallet(
     },
   };
 
-  /** Keyed by the session method that must be granted before the feature is listed. */
+  /** Keyed by feature; each is listed only while `grantedOptionalFeatures` names it. */
   const optionalFeatures: Record<string, Partial<OptionalSolanaFeatures>> = {
-    coinbase_signPreparedCalls: {
+    [CoinbaseSignPreparedCalls]: {
       [CoinbaseSignPreparedCalls]: {
         version: '1.0.0',
         async signPreparedCalls({ account, ...params }) {
@@ -251,21 +213,18 @@ export function createSolanaWallet(
     },
   };
 
-  let grantedFeatures: readonly Partial<OptionalSolanaFeatures>[] = [];
+  let grantedFeatures: readonly IdentifierString[] = [];
   let listedFeatures: SolanaWallet['features'] = features;
 
   /** Wallet Standard change events carry only the properties that changed. */
   const sync = (nextSession: Session | undefined) => {
-    const addresses = nextSession ? projectSolanaAccounts(nextSession) : [];
-    const grant = nextSession && activeGrantForChain(nextSession, SOLANA_MAINNET);
-    const nextGranted = Object.entries(optionalFeatures)
-      .filter(([method]) => grant?.methods.includes(method))
-      .map(([, feature]) => feature);
+    const nextAccounts = nextSession ? sessionToWalletAccounts(nextSession) : [];
+    const nextGranted = nextSession ? grantedOptionalFeatures(nextSession) : [];
 
     const featuresChanged = !sameItems(nextGranted, grantedFeatures);
     const accountsChanged = !sameItems(
       accounts.map(({ address }) => address),
-      addresses
+      nextAccounts.map(({ address }) => address)
     );
 
     if (!featuresChanged && !accountsChanged) return;
@@ -273,13 +232,11 @@ export function createSolanaWallet(
     if (featuresChanged) {
       grantedFeatures = nextGranted;
       listedFeatures = nextGranted.reduce<SolanaWallet['features']>(
-        (all, feature) => ({ ...all, ...feature }),
+        (all, feature) => ({ ...all, ...optionalFeatures[feature] }),
         features
       );
     }
-
-    const accountFeatures = ACCOUNT_FEATURES.filter((name) => name in listedFeatures);
-    accounts = addresses.map((address) => accountFromAddress(address, accountFeatures));
+    accounts = nextAccounts;
 
     const change = featuresChanged ? { accounts, features: listedFeatures } : { accounts };
     listeners.forEach((listener) => listener(change));

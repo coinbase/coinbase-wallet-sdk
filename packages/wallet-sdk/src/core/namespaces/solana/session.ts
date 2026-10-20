@@ -60,26 +60,11 @@ export function formatSolanaAccount(publicKey: string): Caip10 {
  * Keyed by the bare namespace, like eip155: the SDK supports exactly one Solana
  * cluster, and `solanaChainId` / `assertSolanaEnvelope` reject every other one before
  * a grant is ever looked up.
- *
- * `capabilities` carries connection extensions the wallet fulfills at approval time,
- * such as the AOS challenge. The `version` extension stays EVM-only: it versions
- * `wallet_connect`, and Solana connect has no version.
  */
-export function createSolanaMainnetScopes(
-  options: {
-    methods?: readonly string[];
-    capabilities?: Record<string, unknown>;
-  } = {}
-): Record<string, Caip25RequestScope> {
+export function createSolanaMainnetScopes(): Record<string, Caip25RequestScope> {
   // Namespace-keyed with no chain list, the same shape `walletConnectToCaip25Scopes` sends: only
   // namespace-keyed scopes become grants, and `activeGrantForChain` resolves through them.
-  return {
-    [SOLANA_NAMESPACE]: {
-      methods: [...new Set(options.methods ?? SOLANA_METHODS)],
-      notifications: [],
-      ...(options.capabilities ? { capabilities: options.capabilities } : {}),
-    },
-  };
+  return { [SOLANA_NAMESPACE]: { methods: [...SOLANA_METHODS], notifications: [] } };
 }
 
 /** Build a Solana-only session for tests and restored interface state. */

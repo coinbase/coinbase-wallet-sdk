@@ -111,9 +111,24 @@ describe('createSession', () => {
     await expect(createSession(rt, createSolanaMainnetScopes())).rejects.toBe(error);
     expect(send).toHaveBeenCalledOnce();
     expect(send.mock.calls[0]?.[0]).toHaveProperty('params.sessionId', 'stale-session');
-    // The provider resets on the 4100 it now sees; nothing is re-handshaked here.
     expect(rt.handshake).not.toHaveBeenCalled();
     expect(rt.writeSession).not.toHaveBeenCalled();
+  });
+
+  it('clears the session on a 4100, so the next connect starts clean', async () => {
+    const restored = {
+      ...sessionFromSolanaAccounts({ accounts: [SOLANA_PUBLIC_KEY] }),
+      sessionId: 'stale-session',
+    };
+    const rt = transport(
+      vi.fn().mockRejectedValue(standardErrors.provider.unauthorized()),
+      restored
+    );
+
+    await expect(createSession(rt, createSolanaMainnetScopes())).rejects.toMatchObject({
+      code: 4100,
+    });
+    expect(rt.cleanup).toHaveBeenCalledOnce();
   });
 
   it('does not retry other errors either', async () => {
@@ -128,5 +143,6 @@ describe('createSession', () => {
     await expect(createSession(rt, createSolanaMainnetScopes())).rejects.toBe(error);
     expect(send).toHaveBeenCalledOnce();
     expect(rt.handshake).not.toHaveBeenCalled();
+    expect(rt.cleanup).not.toHaveBeenCalled();
   });
 });

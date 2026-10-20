@@ -16,7 +16,7 @@ import {
 import { getCapabilities } from './capabilities.js';
 import { connectEip155 } from './connect.js';
 import type { Eip1193Context } from './context.js';
-import { parseSwitchChainId } from './params.js';
+import { parseSwitchChainId, parseWalletConnectParams } from './params.js';
 import { parseCaip27 } from './parseCaip27.js';
 
 /** Select a wallet-known chain locally and emit `chainChanged`. */
@@ -99,7 +99,7 @@ export async function handleConnected(
 
     // --- Refresh grants through CAIP-25 and translate back to ERC-7846. ---
     case 'wallet_connect': {
-      const { result } = await connectEip155(context, args);
+      const { result } = await connectEip155(context, parseWalletConnectParams(args.params));
       return result;
     }
 

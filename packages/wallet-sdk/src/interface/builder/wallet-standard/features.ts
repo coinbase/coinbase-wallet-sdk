@@ -47,11 +47,15 @@ export type SolanaWallet = Wallet & {
   features: Wallet['features'] & RequiredSolanaFeatures & Partial<OptionalSolanaFeatures>;
 };
 
-/** An account lists whichever of these the wallet currently lists. */
+/** Every account lists these, plus each optional feature its grant allows. */
 export const ACCOUNT_FEATURES: readonly IdentifierString[] = [
   SolanaSignMessage,
   SolanaSignTransaction,
   SolanaSignAndSendTransaction,
   SignAndSendAllTransactions,
-  CoinbaseSignPreparedCalls,
+];
+
+/** Each optional feature, with the session method the wallet must grant before it is listed. */
+export const OPTIONAL_FEATURE_METHODS: readonly { feature: IdentifierString; method: string }[] = [
+  { feature: CoinbaseSignPreparedCalls, method: 'coinbase_signPreparedCalls' },
 ];

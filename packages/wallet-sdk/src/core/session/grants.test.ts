@@ -17,10 +17,6 @@ const SOLANA_PUBLIC_KEY = 'So11111111111111111111111111111111111111112';
 describe('sessionCovers', () => {
   const SOLANA = 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp';
 
-  it('is false when there is no session', () => {
-    expect(sessionCovers(undefined, ['eip155:1'])).toBe(false);
-  });
-
   it('covers an empty requirement list vacuously', () => {
     // Nothing asks for a chain, so nothing is missing. Callers that mean "is this
     // session usable at all" use `activeSession`, which checks for accounts.

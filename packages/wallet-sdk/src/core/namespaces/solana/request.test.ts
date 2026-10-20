@@ -135,6 +135,21 @@ describe('handleSolanaRequest', () => {
     expect(state.send).not.toHaveBeenCalled();
   });
 
+  it('clears a stale session when the wallet answers connect with 4100', async () => {
+    // An EVM-only session does not cover Solana, so connect sends its id to the wallet.
+    const state = transportState({
+      ...sessionFromAccounts({ accounts: [EVM_ADDRESS], chainId: 1 }),
+      sessionId: 'stale-session',
+    });
+    state.send.mockRejectedValueOnce({ code: standardErrorCodes.provider.unauthorized });
+
+    await expect(handleSolanaRequest(state.transport, { method: 'connect' })).rejects.toMatchObject(
+      { code: standardErrorCodes.provider.unauthorized }
+    );
+    expect(state.cleanup).toHaveBeenCalledOnce();
+    expect(state.transport.readSession()).toBeUndefined();
+  });
+
   it('extends an EVM session and preserves every wallet-authoritative grant', async () => {
     const evmSession = {
       ...sessionFromAccounts({ accounts: [EVM_ADDRESS], chainId: 1 }),

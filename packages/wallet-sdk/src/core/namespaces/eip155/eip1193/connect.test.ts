@@ -1,9 +1,8 @@
 import type { Session } from ':core/session/types.js';
 import type { WalletTransport } from ':core/transport/index.js';
-import { EIP155_METHODS } from '../methods.js';
 import { sessionFromAccounts } from '../session.fixtures.js';
 import { createActiveChain } from './activeChain.js';
-import { connectEip155, walletConnectToCaip25Scopes } from './connect.js';
+import { connectEip155 } from './connect.js';
 import type { Eip1193Context } from './context.js';
 
 const ADDRESS = '0x0000000000000000000000000000000000000001';
@@ -53,55 +52,13 @@ function eip155Result(opts?: {
   };
 }
 
-describe('EIP-155 CAIP-25 connect translation', () => {
-  it("puts the dapp's version and capabilities on the eip155 scope and drops anything else", () => {
-    expect(
-      walletConnectToCaip25Scopes([
-        {
-          version: '2',
-          optionalMetadata: 'dropped',
-          capabilities: { signInWithEthereum: { nonce: 'dapp' } },
-        },
-      ])
-    ).toEqual({
-      eip155: {
-        methods: EIP155_METHODS,
-        notifications: ['accountsChanged', 'chainChanged'],
-        capabilities: { signInWithEthereum: { nonce: 'dapp' } },
-        version: '2',
-      },
-    });
-  });
-
-  it('defaults the wallet_connect version to 1', () => {
-    expect(walletConnectToCaip25Scopes(undefined).eip155?.version).toBe('1');
-    expect(walletConnectToCaip25Scopes([{ version: '' }]).eip155?.version).toBe('1');
-  });
-
-  it('leaves out an empty capabilities object', () => {
-    expect(
-      walletConnectToCaip25Scopes([{ version: '1', capabilities: {} }]).eip155
-    ).not.toHaveProperty('capabilities');
-  });
-
-  it('always requests the whole eip155 namespace, never a single chain', () => {
-    const scopes = walletConnectToCaip25Scopes([{ version: '1' }]);
-
-    // Connect can no longer be narrowed to (or fail on) a specific chain: there is
-    // exactly one EVM scope, keyed by the bare namespace with no `chains` array.
-    expect(Object.keys(scopes)).toEqual(['eip155']);
-    expect(scopes.eip155).not.toHaveProperty('chains');
-  });
-
+describe('connectEip155', () => {
   it('creates a session, translates its result, and emits EIP-1193 events', async () => {
     const capabilities = { signInWithEthereum: { message: 'm' } };
     const send = vi.fn().mockResolvedValue(eip155Result({ capabilities }));
     const { transport, context } = setup(send);
 
-    const { session, result } = await connectEip155(context, {
-      method: 'wallet_connect',
-      params: [{ version: '1' }],
-    });
+    const { session, result } = await connectEip155(context, [{ version: '1' }]);
 
     expect(send).toHaveBeenCalledWith(expect.objectContaining({ method: 'wallet_createSession' }));
     expect(result).toEqual({ accounts: [{ address: ADDRESS, capabilities }] });
@@ -129,10 +86,7 @@ describe('EIP-155 CAIP-25 connect translation', () => {
     });
     const { context } = setup(send);
 
-    const { result } = await connectEip155(context, {
-      method: 'wallet_connect',
-      params: [{ version: '1' }],
-    });
+    const { result } = await connectEip155(context, [{ version: '1' }]);
 
     expect(result).toEqual({
       accounts: [
@@ -150,7 +104,7 @@ describe('EIP-155 CAIP-25 connect translation', () => {
     const send = vi.fn().mockResolvedValue(eip155Result({ sessionId: 'session-1' }));
     const { transport, context } = setup(send, { restored });
 
-    await connectEip155(context);
+    await connectEip155(context, [{ version: '1' }]);
 
     expect(transport.handshake).not.toHaveBeenCalled();
     expect(send).toHaveBeenCalledWith(
@@ -165,7 +119,7 @@ describe('EIP-155 CAIP-25 connect translation', () => {
     const send = vi.fn().mockResolvedValue(eip155Result({ accounts: [] }));
     const { context } = setup(send);
 
-    await expect(connectEip155(context)).rejects.toMatchObject({ code: 4100 });
+    await expect(connectEip155(context, [{ version: '1' }])).rejects.toMatchObject({ code: 4100 });
     expect(context.emit).not.toHaveBeenCalled();
   });
 });

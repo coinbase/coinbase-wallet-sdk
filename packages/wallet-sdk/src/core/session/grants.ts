@@ -77,11 +77,7 @@ export function assertInvokeAuthorized(session: Session, envelope: Envelope): vo
  * Used to decide whether a `createSession` round trip can be skipped. Authorization is
  * per namespace, so a chain is covered by the grant on its namespace.
  */
-export function sessionCovers(
-  session: Session | undefined,
-  required: readonly ScopeRequirement[]
-): boolean {
-  if (!session) return false;
+export function sessionCovers(session: Session, required: readonly ScopeRequirement[]): boolean {
   return required.every((requirement) => {
     const chainId = typeof requirement === 'string' ? requirement : requirement.chainId;
     const methods = typeof requirement === 'string' ? [] : (requirement.methods ?? []);

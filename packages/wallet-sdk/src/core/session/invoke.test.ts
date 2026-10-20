@@ -141,6 +141,7 @@ describe('invoke', () => {
     ).rejects.toEqual(methodError);
 
     const transportError = { code: 4900, message: 'transport failed' };
+    const failingTransport = transport(vi.fn().mockRejectedValue(transportError));
     await expect(
       invoke(
         session,
@@ -148,10 +149,38 @@ describe('invoke', () => {
           chainId: 'eip155:8453',
           request: { method: 'personal_sign', params: [] },
         },
-        transport(vi.fn().mockRejectedValue(transportError)),
+        failingTransport,
         eip155Translator
       )
     ).rejects.toBe(transportError);
+    expect(failingTransport.cleanup).not.toHaveBeenCalled();
+  });
+
+  it('clears the session on a 4100, from the wallet or from authorization', async () => {
+    const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 });
+    const staleTransport = transport(
+      vi.fn().mockRejectedValue({ code: standardErrorCodes.provider.unauthorized })
+    );
+    await expect(
+      invoke(
+        session,
+        { chainId: 'eip155:8453', request: { method: 'personal_sign', params: [] } },
+        staleTransport,
+        eip155Translator
+      )
+    ).rejects.toMatchObject({ code: standardErrorCodes.provider.unauthorized });
+    expect(staleTransport.cleanup).toHaveBeenCalledOnce();
+
+    const unauthorizedTransport = transport();
+    await expect(
+      invoke(
+        session,
+        { chainId: SOLANA, request: { method: 'solana_signMessage', params: [] } },
+        unauthorizedTransport,
+        solanaTranslator
+      )
+    ).rejects.toThrow(/not in the session/);
+    expect(unauthorizedTransport.cleanup).toHaveBeenCalledOnce();
   });
 
   it('rejects a from that is not in the session', async () => {

@@ -2,6 +2,7 @@ import { CB_WALLET_RPC_URL } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { sessionFromAccounts } from ':core/namespaces/eip155/session.fixtures.js';
+import { sessionFromSolanaAccounts } from ':core/namespaces/solana/session.js';
 import { RequestArguments } from ':core/provider/interface.js';
 import type { WalletTransport } from ':core/transport/index.js';
 import { store } from ':store/store.js';
@@ -143,6 +144,50 @@ describe('Event handling', () => {
     expect(disconnectListener).toHaveBeenCalledWith(
       standardErrors.provider.disconnected('Shared wallet session disconnected')
     );
+  });
+
+  it('reports a wallet 4100 once, through the session core cleared', async () => {
+    store.session.set({
+      ...sessionFromAccounts({ accounts: [ACCOUNT], chainId: 1 }),
+      sessionId: 'stale-session',
+    });
+    mockSend.mockRejectedValueOnce(standardErrors.provider.unauthorized('stale session'));
+    mockCleanup.mockImplementation(async () => {
+      store.session.clear();
+    });
+    const accountsChangedListener = vi.fn();
+    const disconnectListener = vi.fn();
+    provider.on('accountsChanged', accountsChangedListener);
+    provider.on('disconnect', disconnectListener);
+
+    await expect(
+      provider.request({ method: 'personal_sign', params: ['0x68656c6c6f', ACCOUNT] })
+    ).rejects.toMatchObject({ code: standardErrorCodes.provider.unauthorized });
+
+    expect(mockCleanup).toHaveBeenCalledOnce();
+    expect(accountsChangedListener).toHaveBeenCalledWith([]);
+    expect(disconnectListener).toHaveBeenCalledTimes(1);
+    expect(disconnectListener).toHaveBeenCalledWith(
+      standardErrors.provider.disconnected('Shared wallet session disconnected')
+    );
+  });
+
+  it('keeps a Solana-only session when an EVM request has not connected yet', async () => {
+    const solanaSession = {
+      ...sessionFromSolanaAccounts({ accounts: ['So11111111111111111111111111111111111111112'] }),
+      sessionId: 'solana-session',
+    };
+    store.session.set(solanaSession);
+    const disconnectListener = vi.fn();
+    provider.on('disconnect', disconnectListener);
+
+    await expect(
+      provider.request({ method: 'personal_sign', params: ['0x68656c6c6f', ACCOUNT] })
+    ).rejects.toMatchObject({ code: standardErrorCodes.provider.unauthorized });
+
+    expect(mockCleanup).not.toHaveBeenCalled();
+    expect(store.session.get()).toEqual(solanaSession);
+    expect(disconnectListener).not.toHaveBeenCalled();
   });
 
   it('emits chainChanged', () => {

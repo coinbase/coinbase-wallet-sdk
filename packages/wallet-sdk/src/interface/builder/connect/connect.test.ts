@@ -10,8 +10,6 @@ import { SolanaSignMessage } from '@solana/wallet-standard-features';
 import { StandardConnect, type StandardConnectOutput } from '@wallet-standard/features';
 import * as injectedProviderModule from '../eip1193/getInjectedProvider.js';
 import * as hostModule from '../isCoinbaseWalletHost.js';
-import { createSolanaWallet } from '../wallet-standard/createSolanaWallet.js';
-import type { SolanaWallet } from '../wallet-standard/features.js';
 import * as registeredSolanaModule from '../wallet-standard/getRegisteredSolanaWallet.js';
 import { connectWallet } from './connect.js';
 
@@ -82,7 +80,8 @@ function setup({
             {
               ...grantedScope,
               accounts: [namespace === 'solana' ? SOLANA_ACCOUNT : EVM_ACCOUNT],
-              ...(namespace === 'eip155'
+              // This wallet answers capabilities only when the request asked for some.
+              ...(namespace === 'eip155' && scope.capabilities
                 ? {
                     capabilities: grantedEvmCapabilities ?? {
                       aos: { signature: '0xevm-signature', isSCW: true },
@@ -102,15 +101,7 @@ function setup({
     writeSession: vi.fn(sessionStore.set),
     cleanup: vi.fn(async () => sessionStore.clear()),
   };
-
-  // The SDK's popup wallet, registered the way `sdk.solana.registerWallet` registers it.
-  let wallet: SolanaWallet | null = null;
-  const solanaWallet = () => {
-    wallet ??= createSolanaWallet(transport, sessionStore);
-    return wallet;
-  };
-  getRegisteredSolanaWallet.mockImplementation(solanaWallet);
-  return { transport, request, solanaWallet };
+  return { transport, request };
 }
 
 function addresses(output: StandardConnectOutput | undefined) {
@@ -178,24 +169,25 @@ describe('connectWallet through the popup', () => {
     });
   });
 
-  it("returns the registered Solana wallet's own Wallet Standard accounts", async () => {
-    const { transport, solanaWallet } = setup();
+  it('returns Wallet Standard accounts built from the granted session', async () => {
+    const { transport } = setup();
 
     const result = await connectWallet({ options: { solana: true }, transport });
 
-    expect(result.solana?.accounts).toBe(solanaWallet().accounts);
+    expect(addresses(result.solana)).toEqual([SOLANA_ACCOUNT]);
     expect(result.solana?.accounts[0]?.publicKey).toHaveLength(32);
+    expect(result.solana?.accounts[0]?.chains).toEqual(['solana:mainnet']);
     expect(result.solana?.accounts[0]?.features).toContain(SolanaSignMessage);
   });
 
-  it('returns no Solana accounts when the dapp has not registered the Solana wallet', async () => {
+  it('returns Solana accounts without the dapp registering the Solana wallet', async () => {
     const { transport } = setup();
-    getRegisteredSolanaWallet.mockReturnValue(null);
 
     const result = await connectWallet({ options: { evm: true, solana: true }, transport });
 
+    expect(getRegisteredSolanaWallet).not.toHaveBeenCalled();
     expect(result.evm).toEqual({ accounts: [{ address: EVM_ACCOUNT }] });
-    expect(result.solana).toEqual({ accounts: [] });
+    expect(addresses(result.solana)).toEqual([SOLANA_ACCOUNT]);
   });
 
   it('selects a basic EVM connection with true and returns no capabilities', async () => {
@@ -253,7 +245,7 @@ describe('connectWallet through the popup', () => {
     ]);
   });
 
-  it('reuses an existing session without returning its stored capabilities', async () => {
+  it('asks the wallet even when the stored session already covers the request', async () => {
     const restored: Session = {
       sessionId: 'session-1',
       namespaces: {
@@ -275,32 +267,17 @@ describe('connectWallet through the popup', () => {
       transport,
     });
 
+    // One popup on the existing session id; the stored capability answers are not returned.
+    expect(transport.handshake).not.toHaveBeenCalled();
+    expect(request).toHaveBeenCalledOnce();
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: 'wallet_createSession',
+        params: expect.objectContaining({ sessionId: 'session-1' }),
+      })
+    );
     expect(result.evm).toEqual({ accounts: [{ address: EVM_ACCOUNT }] });
     expect(addresses(result.solana)).toEqual([SOLANA_ACCOUNT]);
-    expect(transport.handshake).not.toHaveBeenCalled();
-    expect(request).not.toHaveBeenCalled();
-  });
-
-  it('reuses a session the wallet granted without optional methods', async () => {
-    const notOptional = (method: string) => method !== 'coinbase_signPreparedCalls';
-    const restored: Session = {
-      sessionId: 'session-1',
-      namespaces: {
-        eip155: { accounts: [EVM_ACCOUNT], methods: EIP155_METHODS.filter(notOptional) },
-        solana: { accounts: [SOLANA_ACCOUNT], methods: SOLANA_METHODS.filter(notOptional) },
-      },
-    };
-    const { transport, request } = setup({ restored });
-
-    const result = await connectWallet({
-      options: { evm: true, solana: true },
-      transport,
-    });
-
-    expect(result.evm).toEqual({ accounts: [{ address: EVM_ACCOUNT }] });
-    expect(addresses(result.solana)).toEqual([SOLANA_ACCOUNT]);
-    expect(transport.handshake).not.toHaveBeenCalled();
-    expect(request).not.toHaveBeenCalled();
   });
 
   it('requests fresh capability results even when an account session exists', async () => {
@@ -481,6 +458,42 @@ describe('connectWallet through the popup', () => {
         }),
       })
     );
+  });
+
+  it('forwards an empty capabilities object as the dapp sent it', async () => {
+    const { transport, request } = setup();
+
+    await connectWallet({ options: { evm: { capabilities: {} } }, transport });
+
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        params: expect.objectContaining({
+          scopes: { eip155: expect.objectContaining({ capabilities: {} }) },
+        }),
+      })
+    );
+  });
+
+  it('returns capability answers the wallet sent even when the dapp asked for none', async () => {
+    const { transport } = setup({
+      result: () => ({
+        sessionId: 'session-1',
+        scopes: {
+          eip155: {
+            accounts: [EVM_ACCOUNT],
+            methods: [...EIP155_METHODS],
+            notifications: [],
+            capabilities: { walletDefault: { supported: true } },
+          },
+        },
+      }),
+    });
+
+    await expect(connectWallet({ options: { evm: true }, transport })).resolves.toEqual({
+      evm: {
+        accounts: [{ address: EVM_ACCOUNT, capabilities: { walletDefault: { supported: true } } }],
+      },
+    });
   });
 
   it("returns each EVM account's own capability answers", async () => {

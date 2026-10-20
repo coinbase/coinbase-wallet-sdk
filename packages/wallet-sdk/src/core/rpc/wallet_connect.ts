@@ -19,7 +19,7 @@ export type WalletConnectParams = [
 export type WalletConnectResult = {
   accounts: {
     address: Address;
-    /** Required by ERC-7846; the SDK omits it when the dapp requested no capabilities. */
+    /** Required by ERC-7846; omitted when the wallet sent none. */
     capabilities?: Record<string, unknown>;
   }[];
 };
