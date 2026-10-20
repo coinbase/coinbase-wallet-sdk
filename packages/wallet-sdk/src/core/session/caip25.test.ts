@@ -99,20 +99,28 @@ describe('sessionFromCaip25Result', () => {
     });
   });
 
-  it('rejects capability answers for an account the scope did not grant', () => {
-    expect(() =>
-      sessionFromCaip25Result({
-        sessionId: 'session-1',
-        scopes: {
-          eip155: {
-            accounts: [ADDRESS],
-            methods: [],
-            notifications: [],
-            accountCapabilities: { '0x0000000000000000000000000000000000000002': {} },
+  it('drops capability answers for an account the scope did not grant', () => {
+    const session = sessionFromCaip25Result({
+      sessionId: 'session-1',
+      scopes: {
+        eip155: {
+          accounts: [ADDRESS],
+          methods: [],
+          notifications: [],
+          accountCapabilities: {
+            [ADDRESS]: { aos: { signature: '0x111' } },
+            '0x0000000000000000000000000000000000000002': { aos: { signature: '0x222' } },
           },
         },
-      })
-    ).toThrow(/is not a granted account/);
+      },
+    });
+
+    expect(session.namespaces.eip155?.accountCapabilities).toEqual({
+      [ADDRESS]: { aos: { signature: '0x111' } },
+    });
+  });
+
+  it("rejects a granted account's capability answers that are not an object", () => {
     expect(() =>
       sessionFromCaip25Result({
         sessionId: 'session-1',

@@ -50,7 +50,11 @@ function parseGrant(value: unknown, label: string): NamespaceGrant {
   };
 }
 
-/** Every key must be an account this scope granted, and every value an object. */
+/**
+ * Each granted account's answers, which must be an object. Keys for accounts the scope did not
+ * grant are dropped rather than failing a connect the user already approved: they are only ever
+ * read by granted account.
+ */
 function parseAccountCapabilities(
   value: unknown,
   accounts: string[],
@@ -58,14 +62,12 @@ function parseAccountCapabilities(
 ): Record<string, Record<string, unknown>> | undefined {
   const record = optionalRecord(value, label);
   if (!record) return undefined;
-  return Object.fromEntries(
-    Object.entries(record).map(([account, capabilities]) => {
-      if (!accounts.includes(account)) {
-        throw standardErrors.rpc.internal(`${label}.${account} is not a granted account`);
-      }
-      const parsed = asRecord(capabilities);
-      if (!parsed) throw standardErrors.rpc.internal(`${label}.${account} must be an object`);
-      return [account, parsed];
-    })
-  );
+  const parsed: Record<string, Record<string, unknown>> = {};
+  for (const [account, capabilities] of Object.entries(record)) {
+    if (!accounts.includes(account)) continue;
+    const answers = asRecord(capabilities);
+    if (!answers) throw standardErrors.rpc.internal(`${label}.${account} must be an object`);
+    parsed[account] = answers;
+  }
+  return parsed;
 }
