@@ -49,14 +49,11 @@ describe('extractPubkeys', () => {
     expect(extractPubkeys({ method: 'solana_signMessage', params: [] })).toEqual([]);
   });
 
-  it.each([123, '0OIl-not-base58', '1111111111111111111111111111111'])(
-    'rejects invalid pubkey %s',
-    (pubkey) => {
-      expect(() => extractPubkeys({ method: 'solana_signMessage', params: [{ pubkey }] })).toThrow(
-        /base58-encoded 32-byte public key/
-      );
-    }
-  );
+  it('rejects a pubkey that is not a string', () => {
+    expect(() =>
+      extractPubkeys({ method: 'solana_signMessage', params: [{ pubkey: 123 }] })
+    ).toThrow(/pubkey must be a string/);
+  });
 
   it('rejects an empty or malformed signer batch', () => {
     expect(() =>

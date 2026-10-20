@@ -52,6 +52,18 @@ describe('Solana envelope', () => {
     ).toThrow(/not in the Solana session scope/);
   });
 
+  it('rejects a malformed pubkey because it can never be a granted account', () => {
+    const malformed = '0OIl-not-base58';
+    const sessionWithMalformedGrant = sessionFromSolanaAccounts({ accounts: [malformed] });
+
+    expect(() =>
+      qualify(sessionWithMalformedGrant, {
+        chainId: SOLANA_MAINNET,
+        request: { method: 'solana_signMessage', params: [{ pubkey: malformed }] },
+      })
+    ).toThrow(/not in the Solana session scope/);
+  });
+
   it('requires every batch signer on the exact Solana scope', () => {
     const batchSession = sessionFromSolanaAccounts({
       accounts: [PUBLIC_KEY, OTHER_PUBLIC_KEY],

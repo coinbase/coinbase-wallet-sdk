@@ -1,6 +1,5 @@
 import { standardErrors } from ':core/error/errors.js';
 import { RequestArguments } from ':core/provider/interface.js';
-import { isAddress, isAddressEqual } from 'viem';
 import { accountOf, namespaceOf } from ':core/session/caip.js';
 import { activeGrantForChain } from ':core/session/grants.js';
 import type { Envelope, NamespaceTranslator, Session } from ':core/session/types.js';
@@ -8,11 +7,9 @@ import { extractFrom } from './extractFrom.js';
 import { formatEip155ChainId } from './caip.js';
 import { EIP155_OPTIONAL_METHODS } from './methods.js';
 
+/** EVM addresses compare case-insensitively, with or without a CAIP-10 prefix. */
 function sameAccount(a: string, b: string): boolean {
-  const addrA = accountOf(a);
-  const addrB = accountOf(b);
-  if (isAddress(addrA) && isAddress(addrB)) return isAddressEqual(addrA, addrB);
-  return addrA.toLowerCase() === addrB.toLowerCase();
+  return accountOf(a).toLowerCase() === accountOf(b).toLowerCase();
 }
 
 /**

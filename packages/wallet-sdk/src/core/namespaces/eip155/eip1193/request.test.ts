@@ -51,6 +51,17 @@ describe('handleEip1193Request', () => {
     ).resolves.toEqual([ADDRESS]);
   });
 
+  it('routes to disconnected when the eip155 grant holds no valid address', async () => {
+    // Same reading as the provider's connection state, so the two can never disagree.
+    const session = {
+      ...sessionFromAccounts({ accounts: ['not-an-address' as `0x${string}`], chainId: 1 }),
+      sessionId: 'session-1',
+    };
+    await expect(
+      handleEip1193Request(context({ session }), { method: 'eth_accounts' })
+    ).resolves.toEqual([]);
+  });
+
   it('routes a Solana-only session through disconnected EIP-1193 handling', async () => {
     const fetchRPC = vi.spyOn(providerUtil, 'fetchRPCRequest').mockResolvedValue({ status: 200 });
     const session = sessionFromSolanaAccounts({

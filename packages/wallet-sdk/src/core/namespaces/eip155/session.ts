@@ -14,18 +14,18 @@ export function activeEip155Grant(session: Session) {
 /**
  * Every eip155 address in the session, in wallet order.
  *
- * Authorization is namespace-wide, so this is the account list on every EVM chain.
+ * Authorization is namespace-wide, so this is the account list on every EVM chain. This is
+ * the one place eip155 account format is checked; every reader goes through it.
  */
 export function projectEthAccounts(session: Session): Address[] {
   const seen = new Set<string>();
   const addresses: Address[] = [];
 
-  for (const address of activeEip155Grant(session)?.accounts ?? []) {
-    if (!isAddress(address)) continue;
+  for (const address of activeEip155Grant(session)?.accounts.filter((a) => isAddress(a)) ?? []) {
     const key = address.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
-    addresses.push(address as Address);
+    addresses.push(address);
   }
   return addresses;
 }

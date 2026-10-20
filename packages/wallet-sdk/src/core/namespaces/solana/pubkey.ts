@@ -1,10 +1,9 @@
 import { standardErrors } from ':core/error/errors.js';
 import { asRecord } from ':util/guards.js';
-import { isSolanaPublicKey } from './session.js';
 
 function requirePubkey(value: unknown, label: string): string {
-  if (typeof value !== 'string' || !isSolanaPublicKey(value)) {
-    throw standardErrors.rpc.invalidParams(`${label} must be a base58-encoded 32-byte public key`);
+  if (typeof value !== 'string') {
+    throw standardErrors.rpc.invalidParams(`${label} must be a string`);
   }
   return value;
 }
@@ -13,6 +12,8 @@ function requirePubkey(value: unknown, label: string): string {
  * Extract the signers a JSON-safe Solana request names.
  *
  * A batch names one `pubkey` per input; every other signing method names a single `pubkey`.
+ * Key format is not checked here: `qualify` requires each signer to be one of the session's
+ * projected accounts, which are all valid keys.
  */
 export function extractPubkeys(request: {
   method: string;

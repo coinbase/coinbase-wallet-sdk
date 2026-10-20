@@ -5,6 +5,7 @@ import { SOLANA_MAINNET } from './caip.js';
 import { encodeSolanaRequest } from './codec.js';
 import { SOLANA_OPTIONAL_METHODS } from './methods.js';
 import { extractPubkeys } from './pubkey.js';
+import { projectSolanaAccounts } from './session.js';
 import type { SolanaInvokeRequest } from './types.js';
 
 /**
@@ -28,8 +29,9 @@ export function qualify(session: Session, envelope: Envelope): Envelope {
   if (publicKeys.length === 0) {
     throw standardErrors.provider.unauthorized('Solana signing request must identify an account');
   }
+  const granted = projectSolanaAccounts(session);
   for (const publicKey of publicKeys) {
-    if (!grant?.accounts.includes(publicKey)) {
+    if (!granted.includes(publicKey)) {
       throw standardErrors.provider.unauthorized('pubkey is not in the Solana session scope');
     }
   }
