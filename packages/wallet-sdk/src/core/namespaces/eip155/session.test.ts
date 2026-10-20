@@ -56,14 +56,12 @@ describe('EIP-155 session selectors', () => {
 
   it('projects chain metadata, RPC URL, and capabilities', () => {
     const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 });
-    session.properties = {
-      chainMetadata: {
-        'eip155:8453': {
-          rpcUrl: 'https://mainnet.base.org',
-          nativeCurrency: { name: 'Ether', symbol: 'ETH', decimal: 18 },
-        },
-        'solana:mainnet': { rpcUrl: 'https://solana.invalid' },
+    session.chainMetadata = {
+      'eip155:8453': {
+        rpcUrl: 'https://mainnet.base.org',
+        nativeCurrency: { name: 'Ether', symbol: 'ETH', decimal: 18 },
       },
+      'solana:mainnet': { rpcUrl: 'https://solana.invalid' },
     };
 
     expect(projectEip155ChainMetadata(session)).toEqual([
@@ -81,10 +79,8 @@ describe('EIP-155 session selectors', () => {
   it('reports namespace-wide capabilities on 0x0 and per-chain ones on their chain', () => {
     const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 });
     session.namespaces.eip155.capabilities = { paymasterService: { supported: true } };
-    session.properties = {
-      chainMetadata: {
-        'eip155:8453': { capabilities: { atomic: { supported: true } } },
-      },
+    session.chainMetadata = {
+      'eip155:8453': { capabilities: { atomic: { supported: true } } },
     };
 
     expect(projectEip155Capabilities(session)).toEqual({
@@ -112,7 +108,7 @@ describe('withEip155Accounts', () => {
   });
 
   it('returns the same session when there is no eip155 grant', () => {
-    const session = { namespaces: {} };
+    const session = { sessionId: 'session-1', namespaces: {} };
 
     expect(withEip155Accounts(session, [OTHER])).toBe(session);
   });

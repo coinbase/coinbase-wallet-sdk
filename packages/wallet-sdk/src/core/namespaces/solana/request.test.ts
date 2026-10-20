@@ -5,7 +5,7 @@ import type { Envelope, Session } from ':core/session/types.js';
 import type { WalletTransport } from ':core/transport/index.js';
 import { SOLANA_MAINNET, SOLANA_NAMESPACE } from './caip.js';
 import { handleSolanaRequest } from './request.js';
-import { sessionFromSolanaAccounts } from './session.js';
+import { sessionFromSolanaAccounts } from './session.fixtures.js';
 
 const PUBLIC_KEY = 'So11111111111111111111111111111111111111112';
 const EVM_ADDRESS = '0x0000000000000000000000000000000000000001';

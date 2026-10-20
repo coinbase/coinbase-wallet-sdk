@@ -1,5 +1,5 @@
 import { CB_WALLET_RPC_URL } from ':core/constants.js';
-import { sessionFromSolanaAccounts } from ':core/namespaces/solana/session.js';
+import { sessionFromSolanaAccounts } from ':core/namespaces/solana/session.fixtures.js';
 import type { Session } from ':core/session/types.js';
 import type { WalletTransport } from ':core/transport/index.js';
 import * as providerUtil from ':util/provider.js';
@@ -49,6 +49,17 @@ describe('handleEip1193Request', () => {
     await expect(
       handleEip1193Request(context({ session }), { method: 'eth_accounts' })
     ).resolves.toEqual([ADDRESS]);
+  });
+
+  it('routes to disconnected when the eip155 grant holds no valid address', async () => {
+    // Same reading as the provider's connection state, so the two can never disagree.
+    const session = {
+      ...sessionFromAccounts({ accounts: ['not-an-address' as `0x${string}`], chainId: 1 }),
+      sessionId: 'session-1',
+    };
+    await expect(
+      handleEip1193Request(context({ session }), { method: 'eth_accounts' })
+    ).resolves.toEqual([]);
   });
 
   it('routes a Solana-only session through disconnected EIP-1193 handling', async () => {

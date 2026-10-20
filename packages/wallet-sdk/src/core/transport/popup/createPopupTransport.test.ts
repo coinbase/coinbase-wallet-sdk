@@ -1,5 +1,5 @@
 import { sessionFromAccounts } from ':core/namespaces/eip155/session.fixtures.js';
-import { sessionFromSolanaAccounts } from ':core/namespaces/solana/session.js';
+import { sessionFromSolanaAccounts } from ':core/namespaces/solana/session.fixtures.js';
 import { send } from ':core/transport/popup/send.js';
 import { bindStore, createStoreInstance } from ':store/store.js';
 import type { OpenFn } from ':util/web.js';
@@ -63,7 +63,7 @@ describe('createPopupTransport', () => {
   it('reads and writes session state without applying authorization policy', () => {
     const transport = createTestTransport();
     const sessions: Parameters<typeof transport.writeSession>[0][] = [
-      { namespaces: {} },
+      { sessionId: 'session-1', namespaces: {} },
       sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 }),
       sessionFromSolanaAccounts({ accounts: [SOLANA_PUBLIC_KEY] }),
     ];

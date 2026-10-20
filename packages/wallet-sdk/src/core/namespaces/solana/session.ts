@@ -1,11 +1,9 @@
-import { standardErrors } from ':core/error/errors.js';
 import type { Caip25RequestScope } from ':core/rpc/wallet_createSession.js';
-import { type Caip2, type Caip10, formatCaip10 } from ':core/session/caip.js';
 import { activeGrantForNamespace } from ':core/session/grants.js';
 import type { ScopeRequirement } from ':core/session/types.js';
 import type { Session } from ':core/session/types.js';
 import * as Base58 from 'ox/Base58';
-import { SOLANA_MAINNET, SOLANA_NAMESPACE, SOLANA_WALLET_STANDARD_MAINNET } from './caip.js';
+import { SOLANA_MAINNET, SOLANA_NAMESPACE } from './caip.js';
 import { SOLANA_METHODS, SOLANA_OPTIONAL_METHODS } from './methods.js';
 
 /** Exact authorization needed by the internal Solana interface. */
@@ -30,57 +28,16 @@ export function isSolanaPublicKey(value: string): boolean {
   }
 }
 
-/** Map the supported Wallet Standard or CAIP chain name to exact CAIP-2. */
-export function solanaChainId(chain: string): typeof SOLANA_MAINNET {
-  if (chain === SOLANA_WALLET_STANDARD_MAINNET || chain === SOLANA_MAINNET) {
-    return SOLANA_MAINNET;
-  }
-  throw standardErrors.provider.unsupportedChain(`Unsupported Solana chain ${chain}`);
-}
-
-/** Map the exact supported CAIP-2 id back to its Wallet Standard cluster name. */
-export function solanaWalletStandardChain(chainId: Caip2): typeof SOLANA_WALLET_STANDARD_MAINNET {
-  if (chainId === SOLANA_MAINNET) return SOLANA_WALLET_STANDARD_MAINNET;
-  throw standardErrors.provider.unsupportedChain(`Unsupported Solana chain ${chainId}`);
-}
-
-/** Format and validate a Solana mainnet CAIP-10 account. */
-export function formatSolanaAccount(publicKey: string): Caip10 {
-  if (!isSolanaPublicKey(publicKey)) {
-    throw standardErrors.rpc.invalidParams(
-      'Solana account must be a base58-encoded 32-byte public key'
-    );
-  }
-  return formatCaip10(SOLANA_MAINNET, publicKey);
-}
-
 /**
  * Scope sent by Solana pairing.
  *
  * Keyed by the bare namespace, like eip155: the SDK supports exactly one Solana
- * cluster, and `solanaChainId` / `assertSolanaEnvelope` reject every other one before
- * a grant is ever looked up.
+ * cluster, and every Solana envelope is built for it.
  */
 export function createSolanaMainnetScopes(): Record<string, Caip25RequestScope> {
   // Namespace-keyed with no chain list, the same shape `walletConnectToCaip25Scopes` sends: only
   // namespace-keyed scopes become grants, and `activeGrantForChain` resolves through them.
   return { [SOLANA_NAMESPACE]: { methods: [...SOLANA_METHODS], notifications: [] } };
-}
-
-/** Build a Solana-only session for tests and restored interface state. */
-export function sessionFromSolanaAccounts(opts: {
-  accounts: string[];
-}): Session {
-  // Scope accounts are raw; `formatSolanaAccount` still validates the key shape.
-  const accounts = opts.accounts.map((publicKey) => {
-    formatSolanaAccount(publicKey);
-    return publicKey;
-  });
-  return {
-    namespaces: {
-      [SOLANA_NAMESPACE]: { accounts, methods: [...SOLANA_METHODS] },
-    },
-  };
 }
 
 /** Raw mainnet public keys in wallet-granted order, without duplicates. */

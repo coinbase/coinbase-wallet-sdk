@@ -1,5 +1,4 @@
 import { Address } from ':core/type/index.js';
-import { isRecord } from ':util/guards.js';
 import { activeGrantForNamespace } from ':core/session/grants.js';
 import type { Session } from ':core/session/types.js';
 import type { SDKChain } from './client/index.js';
@@ -14,57 +13,20 @@ export function activeEip155Grant(session: Session) {
 /**
  * Every eip155 address in the session, in wallet order.
  *
- * Authorization is namespace-wide, so this is the account list on every EVM chain.
+ * Authorization is namespace-wide, so this is the account list on every EVM chain. This is
+ * the one place eip155 account format is checked; every reader goes through it.
  */
 export function projectEthAccounts(session: Session): Address[] {
   const seen = new Set<string>();
   const addresses: Address[] = [];
 
-  for (const address of activeEip155Grant(session)?.accounts ?? []) {
-    if (!isAddress(address)) continue;
+  for (const address of activeEip155Grant(session)?.accounts.filter((a) => isAddress(a)) ?? []) {
     const key = address.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
-    addresses.push(address as Address);
+    addresses.push(address);
   }
   return addresses;
-}
-
-function parseRpcUrl(value: unknown): string | undefined {
-  if (typeof value !== 'string') return undefined;
-  try {
-    const url = new URL(value);
-    return url.protocol === 'http:' || url.protocol === 'https:' ? value : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-function parseNativeCurrency(value: unknown): SDKChain['nativeCurrency'] | undefined {
-  if (!isRecord(value)) return undefined;
-  const { name, symbol, decimal } = value;
-  if (
-    typeof name !== 'string' ||
-    typeof symbol !== 'string' ||
-    !Number.isInteger(decimal) ||
-    (decimal as number) < 0
-  ) {
-    return undefined;
-  }
-  return { name, symbol, decimal: decimal as number };
-}
-
-/** Raw chain catalog entries, keyed by CAIP-2, as the wallet returned them. */
-function chainCatalog(session: Session): [chainId: number, entry: Record<string, unknown>][] {
-  const metadata = session.properties?.chainMetadata;
-  if (!isRecord(metadata)) return [];
-
-  return Object.entries(metadata).flatMap(([caip2, value]) => {
-    const id = parseEip155ChainId(caip2 as `eip155:${string}`);
-    return id === null || !isRecord(value)
-      ? []
-      : [[id, value] as [number, Record<string, unknown>]];
-  });
 }
 
 /**
@@ -75,11 +37,17 @@ function chainCatalog(session: Session): [chainId: number, entry: Record<string,
  * counts — the entry itself is the wallet saying it can serve that chain.
  */
 export function projectEip155ChainMetadata(session: Session): SDKChain[] {
-  return chainCatalog(session).map(([id, entry]) => {
-    const rpcUrl = parseRpcUrl(entry.rpcUrl);
-    const nativeCurrency = parseNativeCurrency(entry.nativeCurrency);
-    return { id, ...(rpcUrl ? { rpcUrl } : {}), ...(nativeCurrency ? { nativeCurrency } : {}) };
-  });
+  const chains: SDKChain[] = [];
+  for (const [caip2, { rpcUrl, nativeCurrency }] of Object.entries(session.chainMetadata ?? {})) {
+    const id = parseEip155ChainId(caip2);
+    if (id === null) continue;
+    chains.push({
+      id,
+      ...(rpcUrl ? { rpcUrl } : {}),
+      ...(nativeCurrency ? { nativeCurrency } : {}),
+    });
+  }
+  return chains;
 }
 
 export function rpcUrlForEip155Chain(session: Session, chainId: number): string | undefined {
@@ -88,7 +56,7 @@ export function rpcUrlForEip155Chain(session: Session, chainId: number): string 
 
 /** True when the wallet's chain catalog covers this chain. */
 export function isKnownEip155Chain(session: Session, chainId: number): boolean {
-  return chainCatalog(session).some(([id]) => id === chainId);
+  return projectEip155ChainMetadata(session).some((chain) => chain.id === chainId);
 }
 
 /**
@@ -99,15 +67,14 @@ export function isKnownEip155Chain(session: Session, chainId: number): boolean {
  * chain catalog and are reported under that chain.
  */
 export function projectEip155Capabilities(session: Session): Record<string, unknown> {
+  const capabilities: Record<string, unknown> = {};
   const namespaceCapabilities = activeEip155Grant(session)?.capabilities;
-  const perChain = chainCatalog(session).flatMap(([id, entry]) =>
-    isRecord(entry.capabilities) ? [[numberToHex(id), entry.capabilities] as const] : []
-  );
-
-  return Object.fromEntries([
-    ...(namespaceCapabilities ? [['0x0', namespaceCapabilities] as const] : []),
-    ...perChain,
-  ]);
+  if (namespaceCapabilities) capabilities['0x0'] = namespaceCapabilities;
+  for (const [caip2, entry] of Object.entries(session.chainMetadata ?? {})) {
+    const id = parseEip155ChainId(caip2);
+    if (id !== null && entry.capabilities) capabilities[numberToHex(id)] = entry.capabilities;
+  }
+  return capabilities;
 }
 
 /** Replace the authorized accounts, preserving methods, capabilities, and session id. */
@@ -129,17 +96,9 @@ export function withEip155Accounts(session: Session, addresses: Address[]): Sess
  * Catalog growth is capability discovery, not a new grant: `namespaces` is untouched.
  */
 export function withKnownEip155Chain(session: Session, chainId: number): Session {
-  const metadata = session.properties?.chainMetadata;
-  const catalog: Record<string, unknown> = isRecord(metadata) ? metadata : {};
   const key = formatEip155ChainId(chainId);
   return {
     ...session,
-    properties: {
-      ...session.properties,
-      chainMetadata: {
-        ...catalog,
-        [key]: isRecord(catalog[key]) ? catalog[key] : {},
-      },
-    },
+    chainMetadata: { ...session.chainMetadata, [key]: session.chainMetadata?.[key] ?? {} },
   };
 }

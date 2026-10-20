@@ -15,6 +15,7 @@ function context(send: (envelope: Envelope) => Promise<unknown>): Eip1193Context
     request: async (request: RequestArguments) => {
       const envelope = request.params as Envelope;
       return {
+        sessionId: envelope.sessionId,
         chainId: envelope.chainId,
         result: {
           method: envelope.request.method,
@@ -52,6 +53,7 @@ describe('wallet_invokeMethod', () => {
 
     expect(result).toBe('0xsig');
     expect(send).toHaveBeenCalledWith({
+      sessionId: 'session-1',
       chainId: 'eip155:8453',
       request: { method: 'personal_sign', params: ['0x68656c6c6f'] },
     });
@@ -73,6 +75,7 @@ describe('wallet_invokeMethod', () => {
 
     expect(accounts).toEqual([ADDRESS]);
     expect(send).toHaveBeenCalledWith({
+      sessionId: 'session-1',
       chainId: 'eip155:8453',
       request: { method: 'eth_accounts', params: [] },
     });

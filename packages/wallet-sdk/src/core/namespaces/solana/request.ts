@@ -16,6 +16,7 @@ import type {
   SolanaDisconnectRequest,
   SolanaInvokeRequest,
   SolanaInvokeResult,
+  SolanaInvokeResultFor,
   SolanaRequest,
 } from './types.js';
 
@@ -50,10 +51,11 @@ export function handleSolanaRequest(
   transport: WalletTransport,
   request: SolanaDisconnectRequest
 ): Promise<void>;
-export function handleSolanaRequest(
+/** `decodeSolanaResult` has already checked the result against the request's method. */
+export function handleSolanaRequest<Request extends SolanaInvokeRequest>(
   transport: WalletTransport,
-  request: SolanaInvokeRequest
-): Promise<SolanaInvokeResult>;
+  request: Request
+): Promise<SolanaInvokeResultFor<Request>>;
 export async function handleSolanaRequest(
   transport: WalletTransport,
   request: SolanaRequest

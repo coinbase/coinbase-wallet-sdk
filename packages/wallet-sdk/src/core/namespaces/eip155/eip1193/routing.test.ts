@@ -50,14 +50,12 @@ function context(opts?: { connected?: boolean }): Eip1193Context {
             capabilities: { gasLimitOverride: { supported: true } },
           },
         },
-        properties: {
-          chainMetadata: {
-            // Capabilities that genuinely differ per chain arrive in the wallet's chain
-            // catalog, alongside the namespace-wide `eip155` grant.
-            'eip155:8453': {
-              rpcUrl: 'https://example.invalid',
-              capabilities: { atomic: { status: 'supported' } },
-            },
+        chainMetadata: {
+          // Capabilities that genuinely differ per chain arrive in the wallet's chain
+          // catalog, alongside the namespace-wide `eip155` grant.
+          'eip155:8453': {
+            rpcUrl: 'https://example.invalid',
+            capabilities: { atomic: { status: 'supported' } },
           },
         },
       }

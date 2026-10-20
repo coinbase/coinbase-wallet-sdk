@@ -1,8 +1,6 @@
 import { standardErrors } from ':core/error/errors.js';
 import {
   SOLANA_WALLET_STANDARD_MAINNET,
-  type SolanaInvokeRequest,
-  type SolanaInvokeResultFor,
   handleSolanaRequest,
 } from ':core/namespaces/solana/index.js';
 import { activeSession } from ':core/session/grants.js';
@@ -63,11 +61,6 @@ export function createSolanaWallet(
   };
   let accounts: readonly WalletAccount[] = [];
 
-  const invoke = async <Request extends SolanaInvokeRequest>(
-    request: Request
-  ): Promise<SolanaInvokeResultFor<Request>> =>
-    (await handleSolanaRequest(transport, request)) as SolanaInvokeResultFor<Request>;
-
   const features: RequiredSolanaFeatures = {
     [StandardConnect]: {
       version: '1.0.0',
@@ -94,22 +87,14 @@ export function createSolanaWallet(
         const outputs = [];
         for (const input of inputs) {
           const account = requireAccount(wallet, input.account);
-          const result = await invoke({
+          const { signature, signedMessage } = await handleSolanaRequest(transport, {
             method: 'solana_signMessage',
             params: {
               pubkey: account.address,
               message: input.message,
             },
           });
-          if (!('signature' in result)) {
-            throw standardErrors.rpc.internal(
-              'Solana message response type does not match request'
-            );
-          }
-          outputs.push({
-            signature: result.signature,
-            signedMessage: result.signedMessage ?? input.message,
-          });
+          outputs.push({ signature, signedMessage: signedMessage ?? input.message });
         }
         return outputs;
       },
@@ -122,7 +107,7 @@ export function createSolanaWallet(
         for (const input of inputs) {
           if (input.chain) assertMainnet(input.chain);
           const account = requireAccount(wallet, input.account);
-          const result = await invoke({
+          const { signedTransaction } = await handleSolanaRequest(transport, {
             method: 'solana_signTransaction',
             params: {
               pubkey: account.address,
@@ -130,12 +115,7 @@ export function createSolanaWallet(
               ...(input.options ? { options: input.options } : {}),
             },
           });
-          if (!('signedTransaction' in result)) {
-            throw standardErrors.rpc.internal(
-              'Solana transaction response type does not match request'
-            );
-          }
-          outputs.push({ signedTransaction: result.signedTransaction });
+          outputs.push({ signedTransaction });
         }
         return outputs;
       },
@@ -148,7 +128,7 @@ export function createSolanaWallet(
         for (const input of inputs) {
           assertMainnet(input.chain);
           const account = requireAccount(wallet, input.account);
-          const result = await invoke({
+          const { signature } = await handleSolanaRequest(transport, {
             method: 'solana_signAndSendTransaction',
             params: {
               pubkey: account.address,
@@ -156,12 +136,7 @@ export function createSolanaWallet(
               ...(input.options ? { options: input.options } : {}),
             },
           });
-          if (Array.isArray(result) || !('signature' in result)) {
-            throw standardErrors.rpc.internal(
-              'Solana sign-and-send response type does not match request'
-            );
-          }
-          outputs.push({ signature: result.signature });
+          outputs.push({ signature });
         }
         return outputs;
       },
@@ -182,17 +157,13 @@ export function createSolanaWallet(
             ...(input.options ? { options: input.options } : {}),
           };
         });
-        const result = await invoke({
+        return handleSolanaRequest(transport, {
           method: 'solana_signAndSendAllTransactions',
           params: {
             inputs: batch,
             ...(options ? { options } : {}),
           },
         });
-        if (!Array.isArray(result)) {
-          throw standardErrors.rpc.internal('Solana batch response type does not match request');
-        }
-        return result;
       },
     },
   };
@@ -204,7 +175,7 @@ export function createSolanaWallet(
         version: '1.0.0',
         async signPreparedCalls({ account, ...params }) {
           const { address } = requireAccount(wallet, account);
-          return invoke({
+          return handleSolanaRequest(transport, {
             method: 'coinbase_signPreparedCalls',
             params: [{ ...params, pubkey: address }],
           });

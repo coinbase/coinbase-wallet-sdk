@@ -1,5 +1,5 @@
 import { SOLANA_MAINNET } from './caip.js';
-import { sessionFromSolanaAccounts } from './session.js';
+import { sessionFromSolanaAccounts } from './session.fixtures.js';
 import { qualify, toEnvelope } from './envelope.js';
 
 const PUBLIC_KEY = 'So11111111111111111111111111111111111111112';
@@ -48,6 +48,18 @@ describe('Solana envelope', () => {
           method: 'solana_signMessage',
           params: [{ pubkey: OTHER_PUBLIC_KEY, message: 'aGVsbG8=' }],
         },
+      })
+    ).toThrow(/not in the Solana session scope/);
+  });
+
+  it('rejects a malformed pubkey because it can never be a granted account', () => {
+    const malformed = '0OIl-not-base58';
+    const sessionWithMalformedGrant = sessionFromSolanaAccounts({ accounts: [malformed] });
+
+    expect(() =>
+      qualify(sessionWithMalformedGrant, {
+        chainId: SOLANA_MAINNET,
+        request: { method: 'solana_signMessage', params: [{ pubkey: malformed }] },
       })
     ).toThrow(/not in the Solana session scope/);
   });
@@ -104,6 +116,7 @@ describe('Solana envelope', () => {
 
   it('rejects prepared calls with 4100 when the session did not grant them', () => {
     const withoutPreparedCalls = {
+      sessionId: 'session-1',
       namespaces: {
         solana: { accounts: [PUBLIC_KEY], methods: ['solana_signMessage'] },
       },
@@ -120,16 +133,7 @@ describe('Solana envelope', () => {
     ).toThrowError(expect.objectContaining({ code: 4100 }));
   });
 
-  it('rejects unsupported chains and methods before transport', () => {
-    expect(() =>
-      toEnvelope(
-        {
-          method: 'solana_signMessage',
-          params: { pubkey: PUBLIC_KEY, message: new Uint8Array([1]) },
-        },
-        'solana:devnet'
-      )
-    ).toThrowError(expect.objectContaining({ code: 4902 }));
+  it('rejects an unsupported method before transport', () => {
     expect(() => toEnvelope({ method: 'solana_unknown', params: [] } as never)).toThrowError(
       expect.objectContaining({ code: 4200 })
     );

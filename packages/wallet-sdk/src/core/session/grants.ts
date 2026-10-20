@@ -5,12 +5,12 @@ import type { Envelope, NamespaceGrant, ScopeRequirement, Session } from './type
 /**
  * The persisted session, or `undefined` when it is not usable.
  *
- * Usable means the wallet issued a session id and at least one scope still carries an
- * account. This only validates cached authorization shape; the wallet may still reject a
- * stale session id with a 4100, and the caller then clears the stored session.
+ * Usable means at least one scope still carries an account. This only validates cached
+ * authorization shape; the wallet may still reject a stale session id with a 4100, and the
+ * session is then cleared.
  */
 export function activeSession(session: Session | undefined): Session | undefined {
-  if (!session?.sessionId) return undefined;
+  if (!session) return undefined;
   const hasAccount = Object.values(session.namespaces).some((grant) => grant.accounts.length > 0);
   return hasAccount ? session : undefined;
 }
