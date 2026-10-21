@@ -80,11 +80,11 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
 
   private handleRequest = async (
     args: RequestArguments,
-    transport: WalletTransport
+    measured: WalletTransport
   ): Promise<unknown> => {
     try {
       checkErrorForInvalidRequestArgs(args);
-      return await handleEip1193Request({ ...this.context, transport }, args);
+      return await handleEip1193Request({ ...this.context, transport: measured }, args);
     } catch (error) {
       return Promise.reject(serializeError(error));
     }
