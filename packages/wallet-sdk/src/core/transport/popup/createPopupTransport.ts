@@ -1,6 +1,4 @@
 import type { RPCResponse } from ':core/message/RPCResponse.js';
-import { logWalletRequestCompleted, logWalletRequestError } from ':core/telemetry/events/wallet.js';
-import { parseErrorCodeFromAny, parseErrorMessageFromAny } from ':core/telemetry/utils.js';
 import { KeyManager } from ':core/transport/crypto/index.js';
 import type { KeyStore } from ':core/transport/crypto/KeyManager.js';
 import { Communicator } from ':core/transport/popup/Communicator.js';
@@ -41,36 +39,16 @@ export function createPopupTransport(opts: {
       preference,
     }),
   };
-
-  /** Post one message to the wallet, unwrap its answer, and log how the wallet answered. */
-  const exchange = async (
-    { method, correlationId }: { method: string; correlationId: string | undefined },
-    post: () => Promise<RPCResponse>
-  ): Promise<unknown> => {
-    try {
-      const response = await post();
-      if ('error' in response.result) throw response.result.error;
-      logWalletRequestCompleted({ method, correlationId });
-      return response.result.value;
-    } catch (error) {
-      logWalletRequestError({
-        method,
-        correlationId,
-        errorCode: parseErrorCodeFromAny(error),
-        errorMessage: parseErrorMessageFromAny(error),
-      });
-      throw error;
-    }
+  const consume = (response: RPCResponse): unknown => {
+    if ('error' in response.result) throw response.result.error;
+    return response.result.value;
   };
 
   return {
     handshake: async (args, correlationId) => {
-      await exchange({ method: 'handshake', correlationId }, () =>
-        handshake(wire, args, correlationId)
-      );
+      consume(await handshake(wire, args, correlationId));
     },
-    request: (request, correlationId) =>
-      exchange({ method: request.method, correlationId }, () => send(wire, request, correlationId)),
+    request: async (request, correlationId) => consume(await send(wire, request, correlationId)),
     readSession: () => opts.session.get(),
     writeSession: (session) => opts.session.set(session),
     cleanup: async () => {

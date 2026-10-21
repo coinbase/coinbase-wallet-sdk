@@ -57,8 +57,7 @@ type CCAEventData = {
   appOrigin?: string;
   appPreferredSigner?: string;
   // Custom Attributes
-  signerType?: 'base-account'; // backwards compatibility
-  surface?: string; // SDK surface the dapp called: `evm`, `solana`, or `connect`
+  surface?: string; // `eip1193_provider`, `wallet_standard`, or `sdk_connect`
   method?: string; // RPC method
   correlationId?: string;
   errorCode?: number;

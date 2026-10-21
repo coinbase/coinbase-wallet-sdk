@@ -1,7 +1,10 @@
 import { ActionType, AnalyticsEventImportance, ComponentType, logEvent } from '../logEvent.js';
 
-/** The public SDK surface a request came through: `sdk.evm`, `sdk.solana`, or `sdk.connect`. */
-export type Surface = 'evm' | 'solana' | 'connect';
+/**
+ * The interface a dapp request came through: the EIP-1193 provider, the Wallet Standard wallet,
+ * or `sdk.connect()`.
+ */
+export type Surface = 'eip1193_provider' | 'wallet_standard' | 'sdk_connect';
 
 type RequestMeasurement = {
   surface: Surface;
@@ -17,7 +20,6 @@ export const logRequestStarted = ({ surface, method, correlationId }: RequestMea
       componentType: ComponentType.unknown,
       surface,
       method,
-      signerType: 'base-account',
       correlationId,
     },
     AnalyticsEventImportance.high
@@ -41,7 +43,6 @@ export const logRequestError = ({
       componentType: ComponentType.unknown,
       surface,
       method,
-      signerType: 'base-account',
       correlationId,
       errorCode,
       errorMessage,
@@ -58,7 +59,6 @@ export const logRequestResponded = ({ surface, method, correlationId }: RequestM
       componentType: ComponentType.unknown,
       surface,
       method,
-      signerType: 'base-account',
       correlationId,
     },
     AnalyticsEventImportance.high
@@ -76,7 +76,6 @@ export const logGetInjectedProviderError = ({
       action: ActionType.error,
       componentType: ComponentType.unknown,
       method: 'getInjectedProvider',
-      signerType: 'base-account',
       errorMessage,
     },
     AnalyticsEventImportance.high

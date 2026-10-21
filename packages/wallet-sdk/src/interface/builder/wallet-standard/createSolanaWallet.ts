@@ -67,8 +67,9 @@ export function createSolanaWallet(
   const invoke = async <Request extends SolanaInvokeRequest>(
     request: Request
   ): Promise<SolanaInvokeResultFor<Request>> =>
-    (await measureRequest({ surface: 'solana', method: request.method, transport }, (transport) =>
-      handleSolanaRequest(transport, request)
+    (await measureRequest(
+      { surface: 'wallet_standard', method: request.method, transport },
+      (measured) => handleSolanaRequest(measured, request)
     )) as SolanaInvokeResultFor<Request>;
 
   const features: RequiredSolanaFeatures = {
@@ -78,8 +79,9 @@ export function createSolanaWallet(
         // Silent connect reports the restored accounts; it never prompts or pairs.
         if (options?.silent) return { accounts };
         // Core throws 4100 when the wallet grants no Solana account.
-        await measureRequest({ surface: 'solana', method: 'connect', transport }, (transport) =>
-          handleSolanaRequest(transport, { method: 'connect' })
+        await measureRequest(
+          { surface: 'wallet_standard', method: 'connect', transport },
+          (measured) => handleSolanaRequest(measured, { method: 'connect' })
         );
         sync(transport.readSession());
         return { accounts };
@@ -88,8 +90,9 @@ export function createSolanaWallet(
     [StandardDisconnect]: {
       version: '1.0.0',
       async disconnect() {
-        await measureRequest({ surface: 'solana', method: 'disconnect', transport }, (transport) =>
-          handleSolanaRequest(transport, { method: 'disconnect' })
+        await measureRequest(
+          { surface: 'wallet_standard', method: 'disconnect', transport },
+          (measured) => handleSolanaRequest(measured, { method: 'disconnect' })
         );
         sync(undefined);
       },

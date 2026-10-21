@@ -6,7 +6,7 @@ import { ActionType, AnalyticsEventImportance, ComponentType, logEvent } from '.
  */
 type WalletRequest = {
   method: string;
-  correlationId: string | undefined;
+  correlationId: string;
 };
 
 export const logWalletRequestCompleted = ({ method, correlationId }: WalletRequest) => {

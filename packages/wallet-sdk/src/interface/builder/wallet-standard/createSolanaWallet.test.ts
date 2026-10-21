@@ -317,7 +317,7 @@ describe('createSolanaWallet', () => {
     expect(cleanup).not.toHaveBeenCalled();
   });
 
-  it('logs each wallet call as a request on the solana surface', async () => {
+  it('logs each wallet call as a request on the wallet_standard surface', async () => {
     const logEvent = vi.fn();
     window.ClientAnalytics = { logEvent } as unknown as typeof window.ClientAnalytics;
     const wallet = createSolanaWallet(transport(), sessionStore());
@@ -335,12 +335,16 @@ describe('createSolanaWallet', () => {
 
     expect(logEvent).toHaveBeenCalledWith(
       'provider.request.responded',
-      expect.objectContaining({ surface: 'solana', method: 'connect' }),
+      expect.objectContaining({ surface: 'wallet_standard', method: 'connect' }),
       'high'
     );
     expect(logEvent).toHaveBeenCalledWith(
       'provider.request.error',
-      expect.objectContaining({ surface: 'solana', method: 'solana_signMessage', errorCode: 4001 }),
+      expect.objectContaining({
+        surface: 'wallet_standard',
+        method: 'solana_signMessage',
+        errorCode: 4001,
+      }),
       'high'
     );
     window.ClientAnalytics = undefined;

@@ -125,8 +125,8 @@ export function createCoinbaseWalletSDK(params: CreateProviderOptions) {
   return {
     connect: async (request?: ConnectOptions): Promise<ConnectResult> => {
       await rehydrationPromise;
-      return measureRequest({ surface: 'connect', method: 'connect', transport }, (transport) =>
-        connectWallet({ options: request, transport })
+      return measureRequest({ surface: 'sdk_connect', method: 'connect', transport }, (measured) =>
+        connectWallet({ options: request, transport: measured })
       );
     },
     evm: {

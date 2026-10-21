@@ -248,7 +248,7 @@ describe('createProvider', () => {
       expect(mockLoadTelemetryScript).not.toHaveBeenCalled();
     });
 
-    it('measures sdk.connect() as a request on the connect surface', async () => {
+    it('measures sdk.connect() as a request on the sdk_connect surface', async () => {
       const logEvent = vi.fn();
       window.ClientAnalytics = { logEvent } as unknown as typeof window.ClientAnalytics;
       vi.mocked(connectWallet).mockResolvedValue({ evm: { accounts: [] } });
@@ -261,7 +261,7 @@ describe('createProvider', () => {
       });
       expect(logEvent).toHaveBeenCalledWith(
         'provider.request.responded',
-        expect.objectContaining({ surface: 'connect', method: 'connect' }),
+        expect.objectContaining({ surface: 'sdk_connect', method: 'connect' }),
         'high'
       );
       window.ClientAnalytics = undefined;

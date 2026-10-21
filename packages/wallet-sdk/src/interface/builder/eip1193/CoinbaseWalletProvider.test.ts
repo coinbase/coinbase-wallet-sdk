@@ -257,7 +257,7 @@ describe('Telemetry', () => {
     await provider.request(sign);
 
     const [started] = logged('provider.request.started');
-    expect(started).toMatchObject({ surface: 'evm', method: 'personal_sign' });
+    expect(started).toMatchObject({ surface: 'eip1193_provider', method: 'personal_sign' });
     expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({ method: 'wallet_invokeMethod' }),
       started.correlationId
