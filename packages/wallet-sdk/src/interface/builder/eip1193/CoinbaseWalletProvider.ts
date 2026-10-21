@@ -19,7 +19,7 @@ import type { WalletTransport } from ':core/transport/index.js';
 import { hexStringFromNumber } from ':core/type/util.js';
 import type { Store } from ':store/store.js';
 import { checkErrorForInvalidRequestArgs } from ':util/provider.js';
-import { withMeasurement } from '../measureRequest.js';
+import { withMeasurement } from '../withMeasurement.js';
 
 type CoinbaseWalletProviderParams = {
   transport: WalletTransport;
@@ -32,11 +32,14 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
   /** What the application has been told: the last connection state it saw an event for. */
   private connected: boolean;
 
-  public readonly request: ProviderInterface['request'];
+  public readonly request: ProviderInterface['request'] = async (args) =>
+    withMeasurement(
+      { surface: 'eip1193_provider', method: args.method, transport: this.context.transport },
+      (measuredTransport) => this.handleRequest(args, measuredTransport)
+    );
 
   constructor({ transport, store }: CoinbaseWalletProviderParams) {
     super();
-
     const restoredSession = transport.readSession();
     this.connected = !!restoredSession && projectEthAccounts(restoredSession).length > 0;
     if (restoredSession) createClients(projectEip155ChainMetadata(restoredSession));
@@ -50,10 +53,6 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
       emit: this.emit.bind(this),
       chain: activeChain,
     };
-    this.request = withMeasurement(
-      { surface: 'eip1193_provider', context: this.context },
-      this.handleRequest
-    );
 
     store.session.subscribe(this.handleSessionChange);
   }
@@ -79,12 +78,12 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
   };
 
   private handleRequest = async (
-    context: Eip1193Context,
-    args: RequestArguments
+    args: RequestArguments,
+    measuredTransport: WalletTransport
   ): Promise<unknown> => {
     try {
       checkErrorForInvalidRequestArgs(args);
-      return await handleEip1193Request(context, args);
+      return await handleEip1193Request({ ...this.context, transport: measuredTransport }, args);
     } catch (error) {
       return Promise.reject(serializeError(error));
     }

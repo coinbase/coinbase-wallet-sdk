@@ -14,7 +14,7 @@ import type { ConnectOptions, ConnectResult } from './connect/types.js';
 import { createTransport } from './createTransport.js';
 import { CoinbaseWalletProvider } from './eip1193/CoinbaseWalletProvider.js';
 import { getInjectedProvider } from './eip1193/getInjectedProvider.js';
-import { measureRequest } from './measureRequest.js';
+import { withMeasurement } from './withMeasurement.js';
 import { getRegisteredSolanaWallet } from './wallet-standard/getRegisteredSolanaWallet.js';
 import {
   _resetSolanaWalletRegistration,
@@ -125,8 +125,9 @@ export function createCoinbaseWalletSDK(params: CreateProviderOptions) {
   return {
     connect: async (request?: ConnectOptions): Promise<ConnectResult> => {
       await rehydrationPromise;
-      return measureRequest({ surface: 'sdk_connect', method: 'connect', transport }, (measured) =>
-        connectWallet({ options: request, transport: measured })
+      return withMeasurement(
+        { surface: 'sdk_connect', method: 'connect', transport },
+        (measuredTransport) => connectWallet({ options: request, transport: measuredTransport })
       );
     },
     evm: {

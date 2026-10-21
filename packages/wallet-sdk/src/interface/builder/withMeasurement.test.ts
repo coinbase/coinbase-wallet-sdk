@@ -1,6 +1,6 @@
 import { standardErrors } from ':core/error/errors.js';
 import type { WalletTransport } from ':core/transport/index.js';
-import { measureRequest, withMeasurement } from './measureRequest.js';
+import { withMeasurement } from './withMeasurement.js';
 
 const logEvent = vi.fn();
 
@@ -27,15 +27,15 @@ afterEach(() => {
   window.ClientAnalytics = undefined;
 });
 
-describe('measureRequest', () => {
+describe('withMeasurement', () => {
   it('sends the logged correlation id with every wallet message the request causes', async () => {
     const rt = transport();
 
-    await measureRequest(
+    await withMeasurement(
       { surface: 'eip1193_provider', method: 'personal_sign', transport: rt },
-      async (measured) => {
-        await measured.handshake({ method: 'handshake' });
-        return measured.request({ method: 'wallet_invokeMethod' });
+      async (measuredTransport) => {
+        await measuredTransport.handshake({ method: 'handshake' });
+        return measuredTransport.request({ method: 'wallet_invokeMethod' });
       }
     );
 
@@ -57,13 +57,14 @@ describe('measureRequest', () => {
 
   it('gives each request its own correlation id', async () => {
     const rt = transport();
-    const send = (measured: WalletTransport) => measured.request({ method: 'wallet_invokeMethod' });
+    const send = (measuredTransport: WalletTransport) =>
+      measuredTransport.request({ method: 'wallet_invokeMethod' });
 
-    await measureRequest(
+    await withMeasurement(
       { surface: 'wallet_standard', method: 'solana_signMessage', transport: rt },
       send
     );
-    await measureRequest(
+    await withMeasurement(
       { surface: 'wallet_standard', method: 'solana_signMessage', transport: rt },
       send
     );
@@ -77,7 +78,7 @@ describe('measureRequest', () => {
     const error = standardErrors.provider.userRejectedRequest('User rejected the request.');
 
     await expect(
-      measureRequest({ surface: 'sdk_connect', method: 'connect', transport: transport() }, () =>
+      withMeasurement({ surface: 'sdk_connect', method: 'connect', transport: transport() }, () =>
         Promise.reject(error)
       )
     ).rejects.toBe(error);
@@ -96,37 +97,15 @@ describe('measureRequest', () => {
   it('leaves session reads and cleanup to the original transport', async () => {
     const rt = transport();
 
-    await measureRequest(
+    await withMeasurement(
       { surface: 'eip1193_provider', method: 'eth_accounts', transport: rt },
-      async (measured) => {
-        measured.readSession();
-        await measured.cleanup();
+      async (measuredTransport) => {
+        measuredTransport.readSession();
+        await measuredTransport.cleanup();
       }
     );
 
     expect(rt.readSession).toHaveBeenCalledOnce();
     expect(rt.cleanup).toHaveBeenCalledOnce();
-  });
-});
-
-describe('withMeasurement', () => {
-  it("runs each call on a copy of the context whose transport carries that call's id", async () => {
-    const rt = transport();
-    const context = { transport: rt, label: 'evm' };
-    const handler = vi.fn(async (callContext: typeof context, args: { method: string }) =>
-      callContext.transport.request({ method: 'wallet_invokeMethod', params: [args.method] })
-    );
-    const request = withMeasurement({ surface: 'eip1193_provider', context }, handler);
-
-    await request({ method: 'personal_sign' });
-    await request({ method: 'eth_sendTransaction' });
-
-    const ids = logged('provider.request.started').map(({ correlationId }) => correlationId);
-    expect(rt.request.mock.calls.map(([, correlationId]) => correlationId)).toEqual(ids);
-    expect(ids[0]).not.toBe(ids[1]);
-    expect(handler).toHaveBeenCalledWith(expect.objectContaining({ label: 'evm' }), {
-      method: 'personal_sign',
-    });
-    expect(context.transport).toBe(rt);
   });
 });
