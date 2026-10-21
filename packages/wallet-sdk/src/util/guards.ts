@@ -8,7 +8,7 @@ import { standardErrors } from ':core/error/errors.js';
  * wants `invalidParams` instead, so it should throw for itself rather than reach for these.
  *
  * `label` names the value in the error message, usually as its dotted path in the payload,
- * such as `wallet_createSession.result.sessionId`.
+ * such as `wallet_createSession.result.scopes.eip155.accounts`.
  */
 
 /**
@@ -24,14 +24,6 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 /** The same check, shaped for callers that want the value rather than a branch. */
 export function asRecord(value: unknown): Record<string, unknown> | null {
   return isRecord(value) ? value : null;
-}
-
-/** The value as a string; throws when it is missing, not a string, or empty. */
-export function nonEmptyString(value: unknown, label: string): string {
-  if (typeof value !== 'string' || value.length === 0) {
-    throw standardErrors.rpc.internal(`${label} must be a string`);
-  }
-  return value;
 }
 
 /** A copy of the value as a string array; throws unless every item is a non-empty string. */

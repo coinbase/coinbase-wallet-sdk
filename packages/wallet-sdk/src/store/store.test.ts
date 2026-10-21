@@ -103,7 +103,6 @@ describe('persisted store', () => {
 
     const namespaceKeyed = 'migration-v2.store';
     const session = {
-      sessionId: 'session-1',
       namespaces: { eip155: { accounts: [account], methods: ['personal_sign'] } },
     };
     localStorage.setItem(

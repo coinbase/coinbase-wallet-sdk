@@ -5,12 +5,12 @@ import type { Envelope, NamespaceGrant, ScopeRequirement, Session } from './type
 /**
  * The persisted session, or `undefined` when it is not usable.
  *
- * Usable means the wallet issued a session id and at least one scope still carries an
- * account. This only validates cached authorization shape; the wallet may still reject a
- * stale session id with a 4100, and the caller then clears the stored session.
+ * Usable means at least one scope still carries an account. This only validates cached
+ * authorization shape; the wallet may no longer hold the pairing, which it answers with a
+ * 4100, and the caller then clears the stored session.
  */
 export function activeSession(session: Session | undefined): Session | undefined {
-  if (!session?.sessionId) return undefined;
+  if (!session) return undefined;
   const hasAccount = Object.values(session.namespaces).some((grant) => grant.accounts.length > 0);
   return hasAccount ? session : undefined;
 }
@@ -41,7 +41,7 @@ export function activeGrantForChain(session: Session, chainId: Caip2): Namespace
 }
 
 /**
- * The session must cover this chain, and the envelope must belong to this session.
+ * The session must cover this chain.
  *
  * Method support is deliberately not checked. The SDK asks for the methods it knows about
  * at connect time, so a method missing from the grant means either the wallet abbreviated
@@ -52,9 +52,6 @@ export function activeGrantForChain(session: Session, chainId: Caip2): Namespace
 export function assertInvokeAuthorized(session: Session, envelope: Envelope): void {
   if (!activeGrantForChain(session, envelope.chainId)) {
     throw standardErrors.provider.unauthorized(`chainId ${envelope.chainId} is not in the session`);
-  }
-  if (envelope.sessionId !== undefined && envelope.sessionId !== session.sessionId) {
-    throw standardErrors.provider.unauthorized('sessionId does not match the active session');
   }
 }
 

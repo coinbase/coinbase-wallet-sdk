@@ -110,7 +110,7 @@ export function projectEip155Capabilities(session: Session): Record<string, unkn
   ]);
 }
 
-/** Replace the authorized accounts, preserving methods, capabilities, and session id. */
+/** Replace the authorized accounts, preserving methods, capabilities, and properties. */
 export function withEip155Accounts(session: Session, addresses: Address[]): Session {
   const grant = session.namespaces[EIP155_NAMESPACE];
   if (!grant) return session;

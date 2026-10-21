@@ -69,20 +69,10 @@ export function parseCaip27(args: RequestArguments): Caip27Params {
     }
   }
 
-  let sessionId: string | undefined;
-  if (params.sessionId !== undefined) {
-    if (typeof params.sessionId !== 'string' || params.sessionId.length === 0) {
-      throw standardErrors.rpc.invalidParams(
-        'wallet_invokeMethod.sessionId must be a non-empty string'
-      );
-    }
-    sessionId = params.sessionId;
-  }
-
+  // A caller's `sessionId` is not read: the session is this browser's pairing.
   return {
     chainId,
     request,
     ...(capabilities ? { capabilities } : {}),
-    ...(sessionId ? { sessionId } : {}),
   };
 }

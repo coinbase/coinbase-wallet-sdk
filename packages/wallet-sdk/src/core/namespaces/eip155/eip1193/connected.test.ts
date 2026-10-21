@@ -32,12 +32,10 @@ function context(
       const result = await send(request);
       if (request.method !== 'wallet_invokeMethod') return result;
       const params = request.params as {
-        sessionId?: string;
         chainId: `eip155:${string}`;
         request: RequestArguments;
       };
       return {
-        sessionId: params.sessionId,
         chainId: params.chainId,
         result: { method: params.request.method, result },
       };
@@ -65,7 +63,6 @@ describe('handleConnected', () => {
     },
   };
   const caip25Result = {
-    sessionId: 'session-1',
     scopes: {
       eip155: {
         accounts: [OTHER],
@@ -122,23 +119,16 @@ describe('handleConnected', () => {
   it('ingests a standalone wallet_connect result', async () => {
     const connectResult = { accounts: [{ address: OTHER }] };
     const send = vi.fn().mockResolvedValue(caip25Result);
-    const connectedSession = { ...session, sessionId: 'session-1' };
-    const rt = context(send, connectedSession);
+    const rt = context(send, session);
 
     await expect(
-      handleConnected(
-        rt,
-        { method: 'wallet_connect', params: [{ version: '1' }] },
-        connectedSession
-      )
+      handleConnected(rt, { method: 'wallet_connect', params: [{ version: '1' }] }, session)
     ).resolves.toEqual(connectResult);
 
-    expect(send).toHaveBeenCalledWith(
-      expect.objectContaining({
-        method: 'wallet_createSession',
-        params: expect.objectContaining({ sessionId: 'session-1' }),
-      })
-    );
+    // An update over the saved pairing: no handshake and no session id.
+    expect(rt.transport.handshake).not.toHaveBeenCalled();
+    expect(send).toHaveBeenCalledWith(expect.objectContaining({ method: 'wallet_createSession' }));
+    expect(send.mock.calls[0]?.[0]).not.toHaveProperty('params.sessionId');
     expect(rt.transport.writeSession).toHaveBeenCalledTimes(1);
     expect(rt.transport.readSession()?.namespaces.eip155?.accounts).toEqual([OTHER]);
     expect(rt.chain.get()).toBe(8453);
@@ -199,10 +189,7 @@ describe('handleConnected', () => {
   it('asks the wallet for a granted chain the catalog does not list', async () => {
     const send = vi.fn().mockResolvedValue(null);
     // The namespace-wide grant already authorizes chain 10; the catalog does not list it.
-    const scopedTarget = {
-      ...session,
-      sessionId: 'session-1',
-    };
+    const scopedTarget = { ...session };
     const rt = context(send, scopedTarget);
 
     await expect(
@@ -222,9 +209,8 @@ describe('handleConnected', () => {
   });
 
   it('switches a metadata-known ungranted chain without wallet I/O', async () => {
-    const sessionWithId = {
+    const connectedSession = {
       ...session,
-      sessionId: 'session-1',
       properties: {
         chainMetadata: {
           'eip155:8453': { rpcUrl: 'https://example.invalid' },
@@ -233,13 +219,13 @@ describe('handleConnected', () => {
       },
     };
     const send = vi.fn();
-    const rt = context(send, sessionWithId);
+    const rt = context(send, connectedSession);
 
     await expect(
       handleConnected(
         rt,
         { method: 'wallet_switchEthereumChain', params: [{ chainId: '0xa' }] },
-        sessionWithId
+        connectedSession
       )
     ).resolves.toBeNull();
 
@@ -250,21 +236,20 @@ describe('handleConnected', () => {
   });
 
   it('routes a metadata-unknown chain to SCW and does not switch when authorization fails', async () => {
-    const sessionWithId = { ...session, sessionId: 'session-1' };
+    const connectedSession = { ...session };
     const send = vi.fn().mockRejectedValue(new Error('rejected'));
-    const rt = context(send, sessionWithId);
+    const rt = context(send, connectedSession);
 
     await expect(
       handleConnected(
         rt,
         { method: 'wallet_switchEthereumChain', params: [{ chainId: '0xa' }] },
-        sessionWithId
+        connectedSession
       )
     ).rejects.toThrow('rejected');
     expect(send).toHaveBeenCalledWith({
       method: 'wallet_invokeMethod',
       params: {
-        sessionId: 'session-1',
         chainId: 'eip155:8453',
         request: {
           method: 'wallet_switchEthereumChain',
@@ -276,15 +261,15 @@ describe('handleConnected', () => {
   });
 
   it('catalogs and selects a metadata-unknown chain after SCW approves it', async () => {
-    const sessionWithId = { ...session, sessionId: 'session-1' };
+    const connectedSession = { ...session };
     const send = vi.fn().mockResolvedValue(null);
-    const rt = context(send, sessionWithId);
+    const rt = context(send, connectedSession);
 
     await expect(
       handleConnected(
         rt,
         { method: 'wallet_switchEthereumChain', params: [{ chainId: '0xa' }] },
-        sessionWithId
+        connectedSession
       )
     ).resolves.toBeNull();
 
@@ -294,13 +279,12 @@ describe('handleConnected', () => {
     expect(rt.transport.writeSession).toHaveBeenCalledTimes(1);
     const stored = rt.transport.readSession();
     expect(stored && isKnownEip155Chain(stored, 10)).toBe(true);
-    expect(stored?.namespaces).toEqual(sessionWithId.namespaces);
+    expect(stored?.namespaces).toEqual(connectedSession.namespaces);
   });
 
   it('does not re-connect on the first transaction after a local switch', async () => {
-    const sessionWithId = {
+    const connectedSession = {
       ...session,
-      sessionId: 'session-1',
       properties: {
         chainMetadata: {
           'eip155:8453': { rpcUrl: 'https://example.invalid' },
@@ -309,13 +293,13 @@ describe('handleConnected', () => {
       },
     };
     const send = vi.fn().mockResolvedValue('0xhash');
-    const rt = context(send, sessionWithId);
+    const rt = context(send, connectedSession);
 
     await expect(
       handleConnected(
         rt,
         { method: 'wallet_switchEthereumChain', params: [{ chainId: '0xa' }] },
-        sessionWithId
+        connectedSession
       )
     ).resolves.toBeNull();
     expect(send).not.toHaveBeenCalled();
@@ -324,7 +308,7 @@ describe('handleConnected', () => {
       handleConnected(
         rt,
         { method: 'eth_sendTransaction', params: [{ from: ADDRESS }] },
-        sessionWithId
+        connectedSession
       )
     ).resolves.toBe('0xhash');
 
@@ -335,7 +319,6 @@ describe('handleConnected', () => {
     expect(send).toHaveBeenCalledWith({
       method: 'wallet_invokeMethod',
       params: {
-        sessionId: 'session-1',
         chainId: 'eip155:10',
         request: { method: 'eth_sendTransaction', params: [{ from: ADDRESS }] },
       },
@@ -345,7 +328,6 @@ describe('handleConnected', () => {
   it('transacts after a switch without re-authorizing the target chain', async () => {
     const grantedBoth = {
       ...session,
-      sessionId: 'session-1',
       properties: {
         chainMetadata: {
           'eip155:8453': { rpcUrl: 'https://example.invalid' },
@@ -382,7 +364,7 @@ describe('handleConnected', () => {
   });
 
   it('still reports accounts after switching to another catalogued chain', async () => {
-    const sessionWithId = {
+    const connectedSession = {
       ...session,
       properties: {
         chainMetadata: {
@@ -392,23 +374,22 @@ describe('handleConnected', () => {
       },
     };
     const send = vi.fn();
-    const rt = context(send, sessionWithId);
+    const rt = context(send, connectedSession);
 
     await handleConnected(
       rt,
       { method: 'wallet_switchEthereumChain', params: [{ chainId: '0xa' }] },
-      sessionWithId
+      connectedSession
     );
 
-    await expect(handleConnected(rt, { method: 'eth_accounts' }, sessionWithId)).resolves.toEqual([
-      ADDRESS,
-    ]);
+    await expect(
+      handleConnected(rt, { method: 'eth_accounts' }, connectedSession)
+    ).resolves.toEqual([ADDRESS]);
     expect(send).not.toHaveBeenCalled();
   });
 
   it('transacts on any chain under the namespace-wide eip155 grant', async () => {
     const namespaceSession = {
-      sessionId: 'session-1',
       namespaces: {
         eip155: { accounts: [ADDRESS], methods: ['eth_sendTransaction'] },
       },
@@ -445,7 +426,6 @@ describe('handleConnected', () => {
     expect(send).toHaveBeenCalledWith({
       method: 'wallet_invokeMethod',
       params: {
-        sessionId: 'session-1',
         chainId: 'eip155:10',
         request: { method: 'eth_sendTransaction', params: [{ from: ADDRESS }] },
       },

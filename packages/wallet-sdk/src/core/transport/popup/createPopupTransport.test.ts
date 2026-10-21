@@ -98,10 +98,7 @@ describe('createPopupTransport', () => {
       session: store.session,
     });
     store.keys.set('ownPrivateKey', 'stale-key-material');
-    transport.writeSession({
-      ...sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 }),
-      sessionId: 'session-1',
-    });
+    transport.writeSession(sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 }));
 
     await transport.cleanup();
 
@@ -112,10 +109,7 @@ describe('createPopupTransport', () => {
 
   it('clears session state', async () => {
     const transport = createTestTransport();
-    transport.writeSession({
-      ...sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 }),
-      sessionId: 'session-1',
-    });
+    transport.writeSession(sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 }));
 
     await transport.cleanup();
 

@@ -18,9 +18,13 @@ export type NamespaceGrant = {
   accountCapabilities?: Record<string, Record<string, unknown>>;
 };
 
-/** Persisted CAIP authorization state. Delivery state never belongs here. */
+/**
+ * Persisted CAIP authorization state. Delivery state never belongs here.
+ *
+ * There is no session id: the session is the wallet's pairing with this browser's
+ * transport keys, and the wallet finds that pairing by the key every message is sent from.
+ */
 export type Session = {
-  sessionId?: string;
   /**
    * Grants keyed by CAIP-104 namespace (`eip155`, `solana`).
    *

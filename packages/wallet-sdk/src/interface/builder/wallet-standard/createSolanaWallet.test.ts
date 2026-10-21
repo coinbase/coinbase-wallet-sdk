@@ -52,7 +52,7 @@ function transport(restored?: Session): WalletTransport {
 }
 
 function solanaSession(methods: string[]): Session {
-  return { sessionId: 'session', namespaces: { solana: { accounts: [address], methods } } };
+  return { namespaces: { solana: { accounts: [address], methods } } };
 }
 
 /** Stand-in for a connect that pairs: the new session is written before connect resolves. */
@@ -109,7 +109,6 @@ describe('createSolanaWallet', () => {
   it('restores every granted account and tracks session changes', () => {
     const wallet = createSolanaWallet(
       transport({
-        sessionId: 'session',
         namespaces: {
           solana: {
             accounts: [address, otherAddress],
@@ -141,7 +140,6 @@ describe('createSolanaWallet', () => {
   it('returns restored accounts on a silent connect without checking or pairing', async () => {
     const wallet = createSolanaWallet(
       transport({
-        sessionId: 'session',
         namespaces: { solana: { accounts: [address], methods: ['solana_signMessage'] } },
       }),
       sessionStore()

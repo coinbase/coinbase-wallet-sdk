@@ -8,17 +8,15 @@ export type WalletInvokeMethodRequest = {
 
 /**
  * CAIP-27 `wallet_invokeMethod` result: the invoked method's result or its error, tagged with
- * the chain and session it ran on. Session and transport errors replace the whole JSON-RPC
- * result instead, so they never appear here.
+ * the chain it ran on. Session and transport errors replace the whole JSON-RPC result
+ * instead, so they never appear here.
  */
 export type WalletInvokeMethodResult =
   | {
-      sessionId?: string;
       chainId: Caip2;
       result: { method: string; result: unknown };
     }
   | {
-      sessionId?: string;
       chainId: Caip2;
       error: Caip27Error;
     };
@@ -35,13 +33,12 @@ export type Caip27Request = {
 /**
  * CAIP-27 `wallet_invokeMethod` params (`chainId` + `request`).
  *
- * `sessionId` is included whenever the CAIP-25 response issued one.
+ * No `sessionId`: the wallet identifies the session by the pairing that sent the request.
  */
 export type Caip27Params = {
   chainId: Caip2;
   request: Caip27Request;
   capabilities?: Record<string, unknown>;
-  sessionId?: string;
 };
 
 export type Caip27Error = {

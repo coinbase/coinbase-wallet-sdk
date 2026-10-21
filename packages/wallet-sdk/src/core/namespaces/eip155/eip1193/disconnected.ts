@@ -77,8 +77,7 @@ export async function handleDisconnected(
     // --- Direct CAIP-27: one-shot only. Anything else needs a session first. ---
     case WALLET_INVOKE_METHOD: {
       const envelope = parseCaip27(args);
-      // A caller-supplied session id expresses persisted-session intent and must never bypass pairing.
-      if (envelope.sessionId === undefined && EPHEMERAL_METHODS.has(envelope.request.method)) {
+      if (EPHEMERAL_METHODS.has(envelope.request.method)) {
         return invokeEphemeral(envelope, transport, eip155Translator);
       }
       throw standardErrors.provider.unauthorized(

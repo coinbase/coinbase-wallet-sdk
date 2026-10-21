@@ -48,7 +48,6 @@ beforeEach(() => {
         >;
       };
       return {
-        sessionId: 'session-1',
         scopes: Object.fromEntries(
           Object.entries(params.scopes).map(([scopeKey, scope]) => [
             scopeKey,
@@ -63,7 +62,6 @@ beforeEach(() => {
       };
     }
     const params = request.params as {
-      sessionId?: string;
       chainId: `eip155:${string}`;
       request: RequestArguments;
     };
@@ -74,7 +72,6 @@ beforeEach(() => {
           ? { address: SUB_ACCOUNT }
           : '0xok';
     return {
-      sessionId: params.sessionId,
       chainId: params.chainId,
       result: { method: params.request.method, result },
     };
@@ -110,10 +107,7 @@ describe('Event handling', () => {
   it('reports a user initiated disconnection exactly once', async () => {
     // `cleanup` clears the shared session, which fires the subscription that also reports
     // disconnects. The path that caused the transition owns the event; the echo is silent.
-    store.session.set({
-      ...sessionFromAccounts({ accounts: [ACCOUNT], chainId: 1 }),
-      sessionId: 'shared-session',
-    });
+    store.session.set(sessionFromAccounts({ accounts: [ACCOUNT], chainId: 1 }));
     mockCleanup.mockImplementation(async () => {
       store.session.clear();
     });
@@ -133,10 +127,7 @@ describe('Event handling', () => {
     const disconnectListener = vi.fn();
     provider.on('accountsChanged', accountsChangedListener);
     provider.on('disconnect', disconnectListener);
-    store.session.set({
-      ...sessionFromAccounts({ accounts: [ACCOUNT], chainId: 1 }),
-      sessionId: 'shared-session',
-    });
+    store.session.set(sessionFromAccounts({ accounts: [ACCOUNT], chainId: 1 }));
 
     store.session.clear();
 
@@ -147,10 +138,7 @@ describe('Event handling', () => {
   });
 
   it('reports a wallet 4100 once, through the session core cleared', async () => {
-    store.session.set({
-      ...sessionFromAccounts({ accounts: [ACCOUNT], chainId: 1 }),
-      sessionId: 'stale-session',
-    });
+    store.session.set(sessionFromAccounts({ accounts: [ACCOUNT], chainId: 1 }));
     mockSend.mockRejectedValueOnce(standardErrors.provider.unauthorized('stale session'));
     mockCleanup.mockImplementation(async () => {
       store.session.clear();
@@ -173,10 +161,9 @@ describe('Event handling', () => {
   });
 
   it('keeps a Solana-only session when an EVM request has not connected yet', async () => {
-    const solanaSession = {
-      ...sessionFromSolanaAccounts({ accounts: ['So11111111111111111111111111111111111111112'] }),
-      sessionId: 'solana-session',
-    };
+    const solanaSession = sessionFromSolanaAccounts({
+      accounts: ['So11111111111111111111111111111111111111112'],
+    });
     store.session.set(solanaSession);
     const disconnectListener = vi.fn();
     provider.on('disconnect', disconnectListener);
@@ -372,7 +359,6 @@ describe('ensureSession / createSession', () => {
       expect.objectContaining({
         method: 'wallet_createSession',
         params: expect.objectContaining({
-          sessionId: 'session-1',
           scopes: {
             eip155: expect.objectContaining({
               capabilities: { signInWithEthereum: { nonce: 'n', chainId: '0x1' } },

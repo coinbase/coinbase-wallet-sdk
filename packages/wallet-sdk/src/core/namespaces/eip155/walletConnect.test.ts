@@ -8,7 +8,6 @@ const OTHER = '0x0000000000000000000000000000000000000002';
 describe('sessionToWalletConnectResult', () => {
   it("returns each account's own answers and never the namespace-wide capabilities", () => {
     const session: Session = {
-      sessionId: 'session-1',
       namespaces: {
         eip155: {
           accounts: [ADDRESS, OTHER],
@@ -29,7 +28,6 @@ describe('sessionToWalletConnectResult', () => {
 
   it('returns no capabilities when the wallet sent no per-account answers', () => {
     const session: Session = {
-      sessionId: 'session-1',
       namespaces: {
         eip155: {
           accounts: [ADDRESS],

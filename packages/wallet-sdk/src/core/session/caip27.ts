@@ -17,7 +17,7 @@ const INVALID_RESULT = 'Invalid wallet_invokeMethod result:';
  * Namespace-neutral JSON-RPC carrier put in the encrypted transport `action`.
  *
  * `Envelope` is already `Caip27Params`, so rebuilding it is normalization rather than a
- * copy: only these four fields reach the wire, whatever a namespace translator may have
+ * copy: only these fields reach the wire, whatever a namespace translator may have
  * attached to the envelope on its way here.
  */
 export function createCaip27Request(envelope: Envelope): WalletInvokeMethodRequest {
@@ -28,7 +28,6 @@ export function createCaip27Request(envelope: Envelope): WalletInvokeMethodReque
       params: envelope.request.params,
     },
     ...(envelope.capabilities ? { capabilities: envelope.capabilities } : {}),
-    ...(envelope.sessionId ? { sessionId: envelope.sessionId } : {}),
   };
   return { method: WALLET_INVOKE_METHOD, params };
 }
@@ -46,7 +45,7 @@ export function readCaip27Result(value: unknown, request: Envelope): unknown {
     throw standardErrors.rpc.internal(`${INVALID_RESULT} response must be an object`);
   }
 
-  // A reply is only ours if it names the chain we asked on and the session we asked under.
+  // A reply is only ours if it names the chain we asked on.
   if (
     !isCaip2(request.chainId) ||
     typeof record.chainId !== 'string' ||
@@ -54,15 +53,6 @@ export function readCaip27Result(value: unknown, request: Envelope): unknown {
     record.chainId !== request.chainId
   ) {
     throw standardErrors.rpc.internal(`${INVALID_RESULT} chainId does not match the request`);
-  }
-  if (
-    record.sessionId !== undefined &&
-    (typeof record.sessionId !== 'string' || record.sessionId.length === 0)
-  ) {
-    throw standardErrors.rpc.internal(`${INVALID_RESULT} sessionId must be a non-empty string`);
-  }
-  if (request.sessionId !== record.sessionId) {
-    throw standardErrors.rpc.internal(`${INVALID_RESULT} sessionId does not match the request`);
   }
 
   // JSON-RPC allows exactly one outcome.

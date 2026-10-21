@@ -41,7 +41,6 @@ function context(opts?: { connected?: boolean }): Eip1193Context {
   const session = opts?.connected
     ? {
         ...granted,
-        sessionId: 'session-1',
         namespaces: {
           ...granted.namespaces,
           // Capabilities the wallet reports as holding on every chain ride on the grant.
@@ -74,7 +73,6 @@ function context(opts?: { connected?: boolean }): Eip1193Context {
         >;
       };
       return {
-        sessionId: 'session-1',
         scopes: Object.fromEntries(
           Object.entries(params.scopes).map(([scopeKey, scope]) => [
             scopeKey,
@@ -89,7 +87,6 @@ function context(opts?: { connected?: boolean }): Eip1193Context {
       };
     }
     const params = request.params as {
-      sessionId?: string;
       chainId: `eip155:${string}`;
       request: RequestArguments;
     };
@@ -100,7 +97,6 @@ function context(opts?: { connected?: boolean }): Eip1193Context {
           ? { address: '0x0000000000000000000000000000000000000002' }
           : '0xok';
     return {
-      sessionId: params.sessionId,
       chainId: params.chainId,
       result: { method: params.request.method, result },
     };
@@ -170,7 +166,6 @@ describe('RPC routing vs Coinbase Wallet SDK', () => {
     expect(rt.transport.request).toHaveBeenCalledWith({
       method: 'wallet_invokeMethod',
       params: {
-        sessionId: 'session-1',
         chainId: 'eip155:8453',
         request: { method: 'coinbase_signPreparedCalls', params },
       },

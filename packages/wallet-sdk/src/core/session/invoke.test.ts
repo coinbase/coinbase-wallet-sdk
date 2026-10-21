@@ -32,9 +32,7 @@ describe('invoke', () => {
 
   it('qualifies the envelope and unwraps the CAIP-27 result', async () => {
     const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 });
-    session.sessionId = 'session-1';
     const response = {
-      sessionId: 'session-1',
       chainId: 'eip155:8453',
       result: { method: 'personal_sign', result: '0xsig' },
     };
@@ -52,34 +50,14 @@ describe('invoke', () => {
       )
     ).resolves.toBe('0xsig');
 
+    // No session id: the wallet knows the session by the pairing that sent the request.
     expect(send).toHaveBeenCalledWith({
       method: 'wallet_invokeMethod',
       params: {
-        sessionId: 'session-1',
         chainId: 'eip155:8453',
         request: { method: 'personal_sign', params: ['0x68656c6c6f'] },
       },
     });
-  });
-
-  it('sends and unwraps a persistent invoke without a session id', async () => {
-    const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 });
-    const envelope: Envelope = {
-      chainId: 'eip155:8453',
-      request: { method: 'personal_sign', params: ['0x68656c6c6f'] },
-    };
-    const response = {
-      chainId: envelope.chainId,
-      result: { method: envelope.request.method, result: '0xsig' },
-    };
-    const send = vi.fn().mockResolvedValue(response);
-
-    await expect(invoke(session, envelope, transport(send), eip155Translator)).resolves.toBe(
-      '0xsig'
-    );
-
-    expect(send).toHaveBeenCalledWith({ method: 'wallet_invokeMethod', params: envelope });
-    expect(send.mock.calls[0]?.[0]).not.toHaveProperty('params.sessionId');
   });
 
   it('unwraps an ephemeral response without session qualification', async () => {
@@ -100,23 +78,6 @@ describe('invoke', () => {
 
     expect(send).toHaveBeenCalledWith({ method: 'wallet_invokeMethod', params: envelope });
     expect(qualify).not.toHaveBeenCalled();
-  });
-
-  it('rejects an ephemeral session id before calling the transport', async () => {
-    const envelope: Envelope = {
-      sessionId: 'session-1',
-      chainId: 'eip155:8453',
-      request: { method: 'wallet_sendCalls', params: [{ calls: [] }] },
-    };
-    const send = vi.fn();
-
-    await expect(
-      invokeEphemeral(envelope, transport(send), eip155Translator)
-    ).rejects.toMatchObject({
-      code: standardErrorCodes.rpc.invalidParams,
-      message: expect.stringContaining('sessionId'),
-    });
-    expect(send).not.toHaveBeenCalled();
   });
 
   it('throws an enveloped method error and preserves top-level transport errors', async () => {
@@ -220,15 +181,11 @@ describe('invoke', () => {
   });
 
   it('delegates a covered Solana request to the registered translator', async () => {
-    const session = {
-      ...sessionFromSolanaAccounts({
-        accounts: ['So11111111111111111111111111111111111111112'],
-      }),
-      sessionId: 'solana-session',
-    };
+    const session = sessionFromSolanaAccounts({
+      accounts: ['So11111111111111111111111111111111111111112'],
+    });
     const signature = btoa(String.fromCharCode(...new Uint8Array(64).fill(1)));
     const response = {
-      sessionId: 'solana-session',
       chainId: SOLANA,
       result: { method: 'solana_signMessage', result: { signature } },
     };
@@ -245,7 +202,6 @@ describe('invoke', () => {
     expect(send).toHaveBeenCalledWith({
       method: 'wallet_invokeMethod',
       params: {
-        sessionId: 'solana-session',
         chainId: SOLANA,
         request,
       },
