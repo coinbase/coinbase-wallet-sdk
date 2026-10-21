@@ -1,6 +1,6 @@
 import { standardErrors } from ':core/error/errors.js';
 import type { WalletTransport } from ':core/transport/index.js';
-import { measureRequest } from './measureRequest.js';
+import { measureRequest, withMeasurement } from './measureRequest.js';
 
 const logEvent = vi.fn();
 
@@ -106,5 +106,27 @@ describe('measureRequest', () => {
 
     expect(rt.readSession).toHaveBeenCalledOnce();
     expect(rt.cleanup).toHaveBeenCalledOnce();
+  });
+});
+
+describe('withMeasurement', () => {
+  it("runs each call on a copy of the context whose transport carries that call's id", async () => {
+    const rt = transport();
+    const context = { transport: rt, label: 'evm' };
+    const handler = vi.fn(async (callContext: typeof context, args: { method: string }) =>
+      callContext.transport.request({ method: 'wallet_invokeMethod', params: [args.method] })
+    );
+    const request = withMeasurement({ surface: 'eip1193_provider', context }, handler);
+
+    await request({ method: 'personal_sign' });
+    await request({ method: 'eth_sendTransaction' });
+
+    const ids = logged('provider.request.started').map(({ correlationId }) => correlationId);
+    expect(rt.request.mock.calls.map(([, correlationId]) => correlationId)).toEqual(ids);
+    expect(ids[0]).not.toBe(ids[1]);
+    expect(handler).toHaveBeenCalledWith(expect.objectContaining({ label: 'evm' }), {
+      method: 'personal_sign',
+    });
+    expect(context.transport).toBe(rt);
   });
 });

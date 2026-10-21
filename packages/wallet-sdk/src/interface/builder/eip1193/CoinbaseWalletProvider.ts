@@ -19,7 +19,7 @@ import type { WalletTransport } from ':core/transport/index.js';
 import { hexStringFromNumber } from ':core/type/util.js';
 import type { Store } from ':store/store.js';
 import { checkErrorForInvalidRequestArgs } from ':util/provider.js';
-import { measureRequest } from '../measureRequest.js';
+import { withMeasurement } from '../measureRequest.js';
 
 type CoinbaseWalletProviderParams = {
   transport: WalletTransport;
@@ -36,10 +36,6 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
 
   constructor({ transport, store }: CoinbaseWalletProviderParams) {
     super();
-    this.request = async (args) =>
-      measureRequest({ surface: 'eip1193_provider', method: args.method, transport }, (measured) =>
-        this.handleRequest(args, measured)
-      );
 
     const restoredSession = transport.readSession();
     this.connected = !!restoredSession && projectEthAccounts(restoredSession).length > 0;
@@ -54,6 +50,10 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
       emit: this.emit.bind(this),
       chain: activeChain,
     };
+    this.request = withMeasurement(
+      { surface: 'eip1193_provider', context: this.context },
+      this.handleRequest
+    );
 
     store.session.subscribe(this.handleSessionChange);
   }
@@ -79,12 +79,12 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
   };
 
   private handleRequest = async (
-    args: RequestArguments,
-    measured: WalletTransport
+    context: Eip1193Context,
+    args: RequestArguments
   ): Promise<unknown> => {
     try {
       checkErrorForInvalidRequestArgs(args);
-      return await handleEip1193Request({ ...this.context, transport: measured }, args);
+      return await handleEip1193Request(context, args);
     } catch (error) {
       return Promise.reject(serializeError(error));
     }

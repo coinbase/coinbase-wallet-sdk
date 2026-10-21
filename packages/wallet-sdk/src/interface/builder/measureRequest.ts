@@ -1,3 +1,4 @@
+import type { RequestArguments } from ':core/provider/interface.js';
 import {
   type Surface,
   logRequestError,
@@ -36,4 +37,18 @@ export async function measureRequest<T>(
     });
     throw error;
   }
+}
+
+/**
+ * `handler` bound to `context`, with every call measured. Each call runs on a copy of `context`
+ * whose transport carries that call's correlation id; `context` itself never changes.
+ */
+export function withMeasurement<Context extends { transport: WalletTransport }, Result>(
+  { surface, context }: { surface: Surface; context: Context },
+  handler: (context: Context, args: RequestArguments) => Promise<Result>
+): (args: RequestArguments) => Promise<Result> {
+  return async (args) =>
+    measureRequest({ surface, method: args.method, transport: context.transport }, (transport) =>
+      handler({ ...context, transport }, args)
+    );
 }
