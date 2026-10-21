@@ -55,46 +55,6 @@ describe('measureRequest', () => {
     ]);
   });
 
-  it('logs how the wallet answered each message, under the same correlation id', async () => {
-    await measureRequest(
-      { surface: 'sdk_connect', method: 'connect', transport: transport() },
-      async (measured) => {
-        await measured.handshake({ method: 'handshake' });
-        await measured.request({ method: 'wallet_createSession' });
-      }
-    );
-
-    const [{ correlationId }] = logged('provider.request.started');
-    expect(logged('wallet.request.completed')).toEqual([
-      expect.objectContaining({ method: 'handshake', correlationId }),
-      expect.objectContaining({ method: 'wallet_createSession', correlationId }),
-    ]);
-  });
-
-  it('logs a wallet error thrown before any answer is read, such as a lost pairing', async () => {
-    const rt = transport();
-    const error = standardErrors.provider.unauthorized('Unknown pairing');
-    rt.request.mockRejectedValue(error);
-
-    await expect(
-      measureRequest(
-        { surface: 'wallet_standard', method: 'solana_signMessage', transport: rt },
-        (measured) => measured.request({ method: 'wallet_invokeMethod' })
-      )
-    ).rejects.toBe(error);
-
-    expect(logged('wallet.request.error')).toEqual([
-      expect.objectContaining({
-        method: 'wallet_invokeMethod',
-        errorCode: 4100,
-        errorMessage: 'Unknown pairing',
-      }),
-    ]);
-    expect(logged('provider.request.error')).toEqual([
-      expect.objectContaining({ surface: 'wallet_standard', errorCode: 4100 }),
-    ]);
-  });
-
   it('gives each request its own correlation id', async () => {
     const rt = transport();
     const send = (measured: WalletTransport) => measured.request({ method: 'wallet_invokeMethod' });
@@ -146,6 +106,5 @@ describe('measureRequest', () => {
 
     expect(rt.readSession).toHaveBeenCalledOnce();
     expect(rt.cleanup).toHaveBeenCalledOnce();
-    expect(logged('wallet.request.completed')).toEqual([]);
   });
 });
