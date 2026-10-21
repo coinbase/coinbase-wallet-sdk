@@ -1,8 +1,12 @@
 import { standardErrors } from ':core/error/errors.js';
-import type { RequestArguments } from ':core/message/RequestArguments.js';
-import { asRecord } from ':util/wire.js';
+import type {
+  Caip27Error,
+  Caip27Params,
+  WalletInvokeMethodRequest,
+} from ':core/rpc/wallet_invokeMethod.js';
+import { asRecord } from ':util/guards.js';
 import { isCaip2 } from './caip.js';
-import type { Caip27Error, Caip27Params, Envelope } from './types.js';
+import type { Envelope } from './types.js';
 
 /** CAIP-27 JSON-RPC method used for every wallet invocation. */
 export const WALLET_INVOKE_METHOD = 'wallet_invokeMethod';
@@ -16,7 +20,7 @@ const INVALID_RESULT = 'Invalid wallet_invokeMethod result:';
  * copy: only these four fields reach the wire, whatever a namespace translator may have
  * attached to the envelope on its way here.
  */
-export function createCaip27Request(envelope: Envelope): RequestArguments {
+export function createCaip27Request(envelope: Envelope): WalletInvokeMethodRequest {
   const params: Caip27Params = {
     chainId: envelope.chainId,
     request: {

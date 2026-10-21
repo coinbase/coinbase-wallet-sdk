@@ -7,7 +7,7 @@ import { projectEthAccounts } from '../session.js';
 import { invokeEphemeral } from ':core/session/invoke.js';
 import { hexStringFromNumber } from ':core/type/util.js';
 import { fetchRPCRequest } from ':util/provider.js';
-import { parseSwitchChainId } from './params.js';
+import { parseSwitchChainId, parseWalletConnectParams } from './params.js';
 import { connectEip155 } from './connect.js';
 import type { Eip1193Context } from './context.js';
 import { parseCaip27 } from './parseCaip27.js';
@@ -66,11 +66,11 @@ export async function handleDisconnected(
 
     // --- Connect: translate EIP-1193 into CAIP-25. ---
     case 'eth_requestAccounts': {
-      const { session } = await connectEip155(context);
+      const { session } = await connectEip155(context, [{ version: '1' }]);
       return projectEthAccounts(session);
     }
     case 'wallet_connect': {
-      const { result } = await connectEip155(context, args);
+      const { result } = await connectEip155(context, parseWalletConnectParams(args.params));
       return result;
     }
 

@@ -1,0 +1,51 @@
+import type { Caip2 } from '../../storage/schema.js';
+
+/** CAIP-27 `wallet_invokeMethod` request. */
+export type WalletInvokeMethodRequest = {
+  method: 'wallet_invokeMethod';
+  params: Caip27Params;
+};
+
+/**
+ * CAIP-27 `wallet_invokeMethod` result: the invoked method's result or its error, tagged with
+ * the chain and session it ran on. Session and transport errors replace the whole JSON-RPC
+ * result instead, so they never appear here.
+ */
+export type WalletInvokeMethodResult =
+  | {
+      sessionId?: string;
+      chainId: Caip2;
+      result: { method: string; result: unknown };
+    }
+  | {
+      sessionId?: string;
+      chainId: Caip2;
+      error: Caip27Error;
+    };
+
+/**
+ * Nested JSON-RPC body inside CAIP-27 `wallet_invokeMethod` params.
+ * Spec: `params` is required and may be empty.
+ */
+export type Caip27Request = {
+  method: string;
+  params: readonly unknown[] | object;
+};
+
+/**
+ * CAIP-27 `wallet_invokeMethod` params (`chainId` + `request`).
+ *
+ * `sessionId` is included whenever the CAIP-25 response issued one.
+ */
+export type Caip27Params = {
+  chainId: Caip2;
+  request: Caip27Request;
+  capabilities?: Record<string, unknown>;
+  sessionId?: string;
+};
+
+export type Caip27Error = {
+  code: number;
+  message: string;
+  data?: unknown;
+};

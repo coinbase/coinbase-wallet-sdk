@@ -1,4 +1,3 @@
-import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import { serializeError } from ':core/error/serialize.js';
 import { createClients } from ':core/namespaces/eip155/client/index.js';
@@ -57,7 +56,10 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
     store.session.subscribe(this.handleSessionChange);
   }
 
-  /** Reflect EVM authorization removed by another interface into EIP-1193 events. */
+  /**
+   * Reflect EVM authorization removed outside `disconnect()` into EIP-1193 events: by another
+   * interface, or by core clearing the session on a 4100.
+   */
   private handleSessionChange = (session: Session | undefined): void => {
     if (session) createClients(projectEip155ChainMetadata(session));
 
@@ -67,6 +69,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
     this.connected = connected;
     if (!revokedElsewhere) return;
 
+    correlationIds.clear();
     this.emit('accountsChanged', []);
     this.emit(
       'disconnect',
@@ -79,10 +82,6 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
       checkErrorForInvalidRequestArgs(args);
       return (await handleEip1193Request(this.context, args)) as T;
     } catch (error) {
-      const { code } = error as { code?: number };
-      if (code === standardErrorCodes.provider.unauthorized) {
-        await this.disconnect();
-      }
       return Promise.reject(serializeError(error));
     }
   };

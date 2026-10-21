@@ -1,10 +1,10 @@
 import { standardErrors } from ':core/error/errors.js';
-import * as Base58 from 'ox/Base58';
+import type { Caip25RequestScope } from ':core/rpc/wallet_createSession.js';
 import { type Caip2, type Caip10, formatCaip10 } from ':core/session/caip.js';
 import { activeGrantForNamespace } from ':core/session/grants.js';
-import type { Caip25RequestScope } from ':core/session/types.js';
 import type { ScopeRequirement } from ':core/session/types.js';
 import type { Session } from ':core/session/types.js';
+import * as Base58 from 'ox/Base58';
 import { SOLANA_MAINNET, SOLANA_NAMESPACE, SOLANA_WALLET_STANDARD_MAINNET } from './caip.js';
 import { SOLANA_METHODS, SOLANA_OPTIONAL_METHODS } from './methods.js';
 
@@ -60,27 +60,11 @@ export function formatSolanaAccount(publicKey: string): Caip10 {
  * Keyed by the bare namespace, like eip155: the SDK supports exactly one Solana
  * cluster, and `solanaChainId` / `assertSolanaEnvelope` reject every other one before
  * a grant is ever looked up.
- *
- * `capabilities` carries connection extensions the wallet fulfills at approval time,
- * such as the AOS challenge. The `params` extension stays EVM-only; the wallet rejects
- * it on a Solana scope.
  */
-export function createSolanaMainnetScopes(
-  options: {
-    methods?: readonly string[];
-    capabilities?: Record<string, unknown>;
-  } = {}
-): Record<string, Caip25RequestScope> {
-  // Namespace-keyed with no chain list, the same shape `createEip155Scopes` sends: the
-  // grant is stored per namespace either way, since `sessionFromCaip25Result` promotes a
-  // lone chain scope to its namespace and `activeGrantForChain` resolves through it.
-  return {
-    [SOLANA_NAMESPACE]: {
-      methods: [...new Set(options.methods ?? SOLANA_METHODS)],
-      notifications: [],
-      ...(options.capabilities ? { capabilities: options.capabilities } : {}),
-    },
-  };
+export function createSolanaMainnetScopes(): Record<string, Caip25RequestScope> {
+  // Namespace-keyed with no chain list, the same shape `walletConnectToCaip25Scopes` sends: only
+  // namespace-keyed scopes become grants, and `activeGrantForChain` resolves through them.
+  return { [SOLANA_NAMESPACE]: { methods: [...SOLANA_METHODS], notifications: [] } };
 }
 
 /** Build a Solana-only session for tests and restored interface state. */

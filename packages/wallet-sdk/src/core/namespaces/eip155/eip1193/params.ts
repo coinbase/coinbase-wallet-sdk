@@ -1,13 +1,25 @@
 import { standardErrors } from ':core/error/errors.js';
 import type { RequestArguments } from ':core/provider/interface.js';
+import type { WalletConnectParams } from ':core/rpc/wallet_connect.js';
 import { ensureIntNumber } from ':core/type/util.js';
+import { isRecord } from ':util/guards.js';
 import { isAddress } from 'viem';
 
+/** Readers for the dapp's EIP-1193 params, run once where the request enters the provider. */
+
 /**
- * Parameter validation for EIP-1193 methods the provider answers locally.
- *
- * These moved out of the removed sub-account module; neither is sub-account policy.
+ * ERC-7846 `wallet_connect` as the dapp sent it. A missing or empty version defaults to `1`.
+ * Capabilities pass through as sent; anything else on the request is dropped.
  */
+export function parseWalletConnectParams(params: RequestArguments['params']): WalletConnectParams {
+  const first = Array.isArray(params) ? params[0] : undefined;
+  const value = isRecord(first) ? first : {};
+  const version =
+    typeof value.version === 'string' && value.version.length > 0 ? value.version : '1';
+  return [
+    { version, ...(isRecord(value.capabilities) ? { capabilities: value.capabilities } : {}) },
+  ];
+}
 
 /**
  * EIP-3326 `wallet_switchEthereumChain`: `[{ chainId }]`, hex, one array and one object

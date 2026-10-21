@@ -3,6 +3,8 @@ import { RequestArguments } from ':core/provider/interface.js';
 import { WALLET_INVOKE_METHOD } from ':core/session/caip27.js';
 import type { Session } from ':core/session/index.js';
 import { invoke } from ':core/session/invoke.js';
+import { fetchRPCRequest } from ':util/provider.js';
+import { numberToHex } from 'viem';
 import { eip155Translator, toEnvelope } from '../envelope.js';
 import { EIP155_METHODS } from '../methods.js';
 import {
@@ -11,12 +13,10 @@ import {
   rpcUrlForEip155Chain,
   withKnownEip155Chain,
 } from '../session.js';
-import { fetchRPCRequest } from ':util/provider.js';
-import { numberToHex } from 'viem';
 import { getCapabilities } from './capabilities.js';
-import { parseSwitchChainId } from './params.js';
 import { connectEip155 } from './connect.js';
 import type { Eip1193Context } from './context.js';
+import { parseSwitchChainId, parseWalletConnectParams } from './params.js';
 import { parseCaip27 } from './parseCaip27.js';
 
 /** Select a wallet-known chain locally and emit `chainChanged`. */
@@ -99,9 +99,7 @@ export async function handleConnected(
 
     // --- Refresh grants through CAIP-25 and translate back to ERC-7846. ---
     case 'wallet_connect': {
-      const { result } = await connectEip155(context, args, {
-        sessionId: session.sessionId,
-      });
+      const { result } = await connectEip155(context, parseWalletConnectParams(args.params));
       return result;
     }
 

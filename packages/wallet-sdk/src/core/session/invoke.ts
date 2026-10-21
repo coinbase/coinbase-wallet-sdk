@@ -1,5 +1,7 @@
+import { standardErrorCodes } from ':core/error/constants.js';
 import { standardErrors } from ':core/error/errors.js';
 import type { WalletTransport } from ':core/transport/index.js';
+import { isRecord } from ':util/guards.js';
 import { createCaip27Request, readCaip27Result } from './caip27.js';
 import { assertInvokeAuthorized } from './grants.js';
 import type { Envelope, NamespaceTranslator, Session } from './types.js';
@@ -26,6 +28,9 @@ function readResponse(
  * 4. `transport.request(wallet_invokeMethod)`.
  * 5. Validate the reply envelope and unwrap the method result.
  *
+ * A 4100 from any of these steps clears the session (keys and stored session), so every
+ * interface sees the disconnect through the session store.
+ *
  * Contrast with `createSession`, which creates the session.
  */
 export async function invoke(
@@ -34,13 +39,20 @@ export async function invoke(
   transport: WalletTransport,
   translator: NamespaceTranslator
 ): Promise<unknown> {
-  assertInvokeAuthorized(session, envelope);
-  const qualified = translator.qualify(session, {
-    ...envelope,
-    ...(session.sessionId ? { sessionId: session.sessionId } : {}),
-  });
-  const response = await transport.request(createCaip27Request(qualified));
-  return readResponse(response, qualified, translator);
+  try {
+    assertInvokeAuthorized(session, envelope);
+    const qualified = translator.qualify(session, {
+      ...envelope,
+      ...(session.sessionId ? { sessionId: session.sessionId } : {}),
+    });
+    const response = await transport.request(createCaip27Request(qualified));
+    return readResponse(response, qualified, translator);
+  } catch (error) {
+    if (isRecord(error) && error.code === standardErrorCodes.provider.unauthorized) {
+      await transport.cleanup();
+    }
+    throw error;
+  }
 }
 
 /**

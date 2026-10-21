@@ -9,16 +9,16 @@ import { store } from ':store/store.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { validatePreferences } from ':util/validatePreferences.js';
 import type { OpenFn } from ':util/web.js';
-import { type ConnectOptions, type ConnectResult, connectWallet } from './connect.js';
-import { connectInjectedWallet } from './connectInjectedWallet.js';
+import { connectWallet } from './connect/connect.js';
+import type { ConnectOptions, ConnectResult } from './connect/types.js';
 import { createTransport } from './createTransport.js';
 import { CoinbaseWalletProvider } from './eip1193/CoinbaseWalletProvider.js';
 import { getInjectedProvider } from './eip1193/getInjectedProvider.js';
-import { isCoinbaseWalletHost } from './isCoinbaseWalletHost.js';
+import { getRegisteredSolanaWallet } from './wallet-standard/getRegisteredSolanaWallet.js';
 import {
   _resetSolanaWalletRegistration,
   registerSolanaWallet,
-} from './solana/registerSolanaWallet.js';
+} from './wallet-standard/registerSolanaWallet.js';
 
 export type CreateProviderOptions = Partial<AppMetadata> & {
   preference?: Preference;
@@ -117,27 +117,28 @@ export function createCoinbaseWalletSDK(params: CreateProviderOptions) {
   //  Return the provider
   //  ====================================================================
 
-  let provider: ProviderInterface | null = null;
+  let evmProvider: ProviderInterface | null = null;
   const transport = createTransport(options, store, params.openFn);
+  registerSolanaWallet({ transport, session: store.session });
 
-  const sdk = {
+  return {
     connect: async (request?: ConnectOptions): Promise<ConnectResult> => {
       await rehydrationPromise;
-      const injectedProvider = getInjectedProvider();
-      if (injectedProvider || isCoinbaseWalletHost()) {
-        return connectInjectedWallet(injectedProvider ?? undefined, request);
-      }
-      return connectWallet({ request, transport });
+      return connectWallet({ options: request, transport });
     },
-    getProvider: () => {
-      if (!provider) {
-        provider = getInjectedProvider() ?? new CoinbaseWalletProvider({ transport, store });
-      }
+    evm: {
+      namespace: 'evm',
+      getProvider: () => {
+        if (!evmProvider) {
+          evmProvider = getInjectedProvider() ?? new CoinbaseWalletProvider({ transport, store });
+        }
 
-      return provider;
+        return evmProvider;
+      },
     },
-    registerSolanaWallet: () => registerSolanaWallet({ transport, session: store.session }),
+    solana: {
+      namespace: 'solana',
+      getWallet: () => getRegisteredSolanaWallet(),
+    },
   };
-
-  return sdk;
 }

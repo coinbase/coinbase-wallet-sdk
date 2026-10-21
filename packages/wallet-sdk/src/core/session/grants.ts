@@ -1,13 +1,13 @@
 import { standardErrors } from ':core/error/errors.js';
 import { type Caip2, type Namespace, namespaceOf } from './caip.js';
-import type { Envelope, ScopeRequirement, ScopeState, Session } from './types.js';
+import type { Envelope, NamespaceGrant, ScopeRequirement, Session } from './types.js';
 
 /**
  * The persisted session, or `undefined` when it is not usable.
  *
  * Usable means the wallet issued a session id and at least one scope still carries an
  * account. This only validates cached authorization shape; the wallet may still reject a
- * stale session id, which `createSession` recovers by creating a fresh session.
+ * stale session id with a 4100, and the caller then clears the stored session.
  */
 export function activeSession(session: Session | undefined): Session | undefined {
   if (!session?.sessionId) return undefined;
@@ -24,7 +24,7 @@ export function activeSession(session: Session | undefined): Session | undefined
 export function activeGrantForNamespace(
   session: Session,
   namespace: Namespace
-): ScopeState | undefined {
+): NamespaceGrant | undefined {
   const grant = session.namespaces[namespace];
   return grant?.accounts.length ? grant : undefined;
 }
@@ -36,7 +36,7 @@ export function activeGrantForNamespace(
  * grant. Whether the wallet can actually serve that chain is a separate question,
  * answered by its chain catalog, and its own error if the answer is no.
  */
-export function activeGrantForChain(session: Session, chainId: Caip2): ScopeState | undefined {
+export function activeGrantForChain(session: Session, chainId: Caip2): NamespaceGrant | undefined {
   return activeGrantForNamespace(session, namespaceOf(chainId));
 }
 
@@ -64,11 +64,7 @@ export function assertInvokeAuthorized(session: Session, envelope: Envelope): vo
  * Used to decide whether a `createSession` round trip can be skipped. Authorization is
  * per namespace, so a chain is covered by the grant on its namespace.
  */
-export function sessionCovers(
-  session: Session | undefined,
-  required: readonly ScopeRequirement[]
-): boolean {
-  if (!session) return false;
+export function sessionCovers(session: Session, required: readonly ScopeRequirement[]): boolean {
   return required.every((requirement) => {
     const chainId = typeof requirement === 'string' ? requirement : requirement.chainId;
     const methods = typeof requirement === 'string' ? [] : (requirement.methods ?? []);

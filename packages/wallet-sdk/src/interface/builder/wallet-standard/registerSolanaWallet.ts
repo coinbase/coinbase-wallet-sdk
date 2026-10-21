@@ -1,4 +1,3 @@
-import { standardErrors } from ':core/error/errors.js';
 import type { WalletTransport } from ':core/transport/index.js';
 import type { Store } from ':store/store.js';
 import { registerWallet } from '@wallet-standard/wallet';
@@ -8,16 +7,17 @@ import { createSolanaWallet } from './createSolanaWallet.js';
 let popupWalletRegistered = false;
 
 /**
- * Explicitly advertise the popup wallet when a Coinbase Wallet host does not provide one.
+ * Advertise the popup wallet once per page.
+ *
+ * Skipped without a browser (server rendering) and when a Coinbase Wallet host registers its
+ * own. Wallet Standard cannot unregister a wallet, so the first SDK instance's transport is
+ * the one the page keeps.
  */
 export function registerSolanaWallet({
   transport,
   session,
 }: { transport: WalletTransport; session: Store['session'] }): void {
-  if (typeof window === 'undefined') {
-    throw standardErrors.provider.disconnected('Solana wallet registration requires a browser');
-  }
-  if (isCoinbaseWalletHost() || popupWalletRegistered) return;
+  if (typeof window === 'undefined' || isCoinbaseWalletHost() || popupWalletRegistered) return;
 
   const wallet = createSolanaWallet(transport, session);
   popupWalletRegistered = true;

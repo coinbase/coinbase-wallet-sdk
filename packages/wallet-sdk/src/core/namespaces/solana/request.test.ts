@@ -135,14 +135,27 @@ describe('handleSolanaRequest', () => {
     expect(state.send).not.toHaveBeenCalled();
   });
 
+  it('clears a stale session when the wallet answers connect with 4100', async () => {
+    // An EVM-only session does not cover Solana, so connect sends its id to the wallet.
+    const state = transportState({
+      ...sessionFromAccounts({ accounts: [EVM_ADDRESS], chainId: 1 }),
+      sessionId: 'stale-session',
+    });
+    state.send.mockRejectedValueOnce({ code: standardErrorCodes.provider.unauthorized });
+
+    await expect(handleSolanaRequest(state.transport, { method: 'connect' })).rejects.toMatchObject(
+      { code: standardErrorCodes.provider.unauthorized }
+    );
+    expect(state.cleanup).toHaveBeenCalledOnce();
+    expect(state.transport.readSession()).toBeUndefined();
+  });
+
   it('extends an EVM session and preserves every wallet-authoritative grant', async () => {
     const evmSession = {
       ...sessionFromAccounts({ accounts: [EVM_ADDRESS], chainId: 1 }),
       sessionId: 'shared-session',
     };
     const state = transportState(evmSession);
-    // The Solana grant comes back chain-keyed here: a namespace with no namespace
-    // grant takes its lone chain scope as the grant.
     state.send.mockResolvedValueOnce({
       sessionId: 'shared-session',
       scopes: {
@@ -151,7 +164,7 @@ describe('handleSolanaRequest', () => {
           methods: ['personal_sign'],
           notifications: ['accountsChanged'],
         },
-        [SOLANA_MAINNET]: {
+        solana: {
           accounts: [PUBLIC_KEY],
           methods: [
             'solana_signMessage',
@@ -191,7 +204,7 @@ describe('handleSolanaRequest', () => {
           methods: ['personal_sign'],
           notifications: [],
         },
-        [SOLANA_MAINNET]: {
+        solana: {
           accounts: [],
           methods: [],
           notifications: [],

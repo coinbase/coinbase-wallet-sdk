@@ -1,6 +1,6 @@
 /**
- * Requested, but a session without them still counts as connected: the wallet grants them only
- * to first-party apps. Calling one the session did not grant is unauthorized.
+ * Requested, but the wallet grants them only to first-party apps. Calling one the session did
+ * not grant is unauthorized.
  */
 export const EIP155_OPTIONAL_METHODS: readonly string[] = ['coinbase_signPreparedCalls'];
 

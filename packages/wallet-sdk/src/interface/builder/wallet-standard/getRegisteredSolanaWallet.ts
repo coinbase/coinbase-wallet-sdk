@@ -11,6 +11,6 @@ function isConnectableCoinbaseWallet(wallet: Wallet): wallet is ConnectableSolan
 }
 
 /** Find the Coinbase Wallet Standard implementation registered by the current host. */
-export function getInjectedSolanaWallet(): ConnectableSolanaWallet | null {
+export function getRegisteredSolanaWallet(): ConnectableSolanaWallet | null {
   return getWallets().get().find(isConnectableCoinbaseWallet) ?? null;
 }

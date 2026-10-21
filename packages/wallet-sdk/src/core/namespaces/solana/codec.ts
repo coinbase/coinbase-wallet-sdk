@@ -1,10 +1,10 @@
 import { standardErrors } from ':core/error/errors.js';
-import { asRecord } from ':util/wire.js';
+import { asRecord } from ':util/guards.js';
 import type { SolanaInvokeRequest, SolanaInvokeResult } from './types.js';
 
-function bytesToBase64(bytes: unknown, field: string): string {
+function bytesToBase64(bytes: unknown, label: string): string {
   if (Object.prototype.toString.call(bytes) !== '[object Uint8Array]') {
-    throw standardErrors.rpc.invalidParams(`${field} must be a Uint8Array`);
+    throw standardErrors.rpc.invalidParams(`${label} must be a Uint8Array`);
   }
   let binary = '';
   for (const byte of Uint8Array.from(bytes as ArrayLike<number>)) {
@@ -13,15 +13,15 @@ function bytesToBase64(bytes: unknown, field: string): string {
   return btoa(binary);
 }
 
-function base64ToBytes(value: unknown, field: string): Uint8Array {
+function base64ToBytes(value: unknown, label: string): Uint8Array {
   if (typeof value !== 'string' || value.length === 0) {
-    throw standardErrors.rpc.internal(`${field} must be a base64 string`);
+    throw standardErrors.rpc.internal(`${label} must be a base64 string`);
   }
   try {
     const binary = atob(value);
     return Uint8Array.from(binary, (character) => character.charCodeAt(0));
   } catch {
-    throw standardErrors.rpc.internal(`${field} must be valid base64`);
+    throw standardErrors.rpc.internal(`${label} must be valid base64`);
   }
 }
 
@@ -37,19 +37,19 @@ function encodedTransaction(
     transaction: Uint8Array;
     options?: object;
   },
-  field: string
+  label: string
 ) {
   return {
     pubkey: input.pubkey,
-    transaction: bytesToBase64(input.transaction, `${field}.transaction`),
+    transaction: bytesToBase64(input.transaction, `${label}.transaction`),
     ...(input.options ? { options: input.options } : {}),
   };
 }
 
-function decodeSignature(value: unknown, field: string): Uint8Array {
-  const signature = base64ToBytes(value, field);
+function decodeSignature(value: unknown, label: string): Uint8Array {
+  const signature = base64ToBytes(value, label);
   if (signature.length !== 64) {
-    throw standardErrors.rpc.internal(`${field} must contain 64 bytes`);
+    throw standardErrors.rpc.internal(`${label} must contain 64 bytes`);
   }
   return signature;
 }

@@ -85,7 +85,8 @@ export function useSDKState(): UseSDKStateReturn {
         });
 
         setSdk(sdkInstance);
-        const providerInstance = sdkInstance.getProvider();
+        // Published versions expose `getProvider()`; the local build groups it under `evm`.
+        const providerInstance = sdkInstance.evm?.getProvider() ?? sdkInstance.getProvider();
         setProvider(providerInstance);
       } catch (error) {
         // Only update error state if this load is still current

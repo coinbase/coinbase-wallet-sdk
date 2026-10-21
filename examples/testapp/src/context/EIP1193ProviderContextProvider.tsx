@@ -12,7 +12,7 @@ type EIP1193ProviderContextProviderProps = {
 
 type EIP1193ProviderContextType = {
   sdk: ReturnType<typeof createCoinbaseWalletSDKHEAD>;
-  provider: ReturnType<EIP1193ProviderContextType['sdk']['getProvider']>;
+  provider: ReturnType<EIP1193ProviderContextType['sdk']['evm']['getProvider']>;
 };
 
 const EIP1193ProviderContext = createContext<EIP1193ProviderContextType | null>(null);
@@ -42,7 +42,7 @@ export function EIP1193ProviderContextProvider({ children }: EIP1193ProviderCont
 
     setSdk(sdk);
 
-    const newProvider = sdk.getProvider();
+    const newProvider = sdk.evm.getProvider();
     // biome-ignore lint/suspicious/noConsole: developer feedback
     console.log('Provider:', newProvider);
 

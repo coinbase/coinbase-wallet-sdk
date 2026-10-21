@@ -122,8 +122,8 @@ describe('handleConnected', () => {
   it('ingests a standalone wallet_connect result', async () => {
     const connectResult = { accounts: [{ address: OTHER }] };
     const send = vi.fn().mockResolvedValue(caip25Result);
-    const rt = context(send);
     const connectedSession = { ...session, sessionId: 'session-1' };
+    const rt = context(send, connectedSession);
 
     await expect(
       handleConnected(

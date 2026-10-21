@@ -301,7 +301,7 @@ describe('createSolanaWallet', () => {
     ).rejects.toMatchObject({ code: -32602 });
   });
 
-  it('clears stale transport authorization after a 4100 response', async () => {
+  it('passes a 4100 through and leaves clearing the session to core', async () => {
     const wallet = createSolanaWallet(transport(), sessionStore());
     const features = wallet.features as Features;
     mockConnect();
@@ -315,8 +315,8 @@ describe('createSolanaWallet', () => {
       })
     ).rejects.toMatchObject({ code: 4100 });
 
-    expect(cleanup).toHaveBeenCalledOnce();
-    expect(wallet.accounts).toEqual([]);
+    // Core's `invoke` clears the session; the wallet's accounts follow the session store.
+    expect(cleanup).not.toHaveBeenCalled();
   });
 
   describe('coinbase:signPreparedCalls', () => {
