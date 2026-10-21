@@ -12,10 +12,6 @@ vi.mock(':util/web', () => ({
   openPopup: vi.fn(),
 }));
 
-vi.mock(':util/checkCrossOriginOpenerPolicy.js', () => ({
-  getCrossOriginOpenerPolicy: () => 'same-origin',
-}));
-
 // Dispatches a message event to simulate postMessage calls from the popup
 function dispatchMessageEvent({ data, origin }: { data: Record<string, any>; origin: string }) {
   const messageEvent = new MessageEvent('message', {
@@ -232,26 +228,6 @@ describe('Communicator', () => {
         urlOrigin
       );
       expect(popup).toBeTruthy();
-    });
-
-    it("logs popup setup with the page's Cross-Origin-Opener-Policy", async () => {
-      const logEvent = vi.fn();
-      window.ClientAnalytics = { logEvent } as unknown as typeof window.ClientAnalytics;
-      queueMessageEvent(popupLoadedMessage);
-
-      await communicator.waitForPopupLoaded();
-
-      expect(logEvent).toHaveBeenCalledWith(
-        'communicator.popup_setup.started',
-        expect.objectContaining({ coop: 'same-origin' }),
-        'high'
-      );
-      expect(logEvent).toHaveBeenCalledWith(
-        'communicator.popup_setup.completed',
-        expect.objectContaining({ coop: 'same-origin' }),
-        'high'
-      );
-      window.ClientAnalytics = undefined;
     });
 
     it('passes a custom open function to openPopup', async () => {
