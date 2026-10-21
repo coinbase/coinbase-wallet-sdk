@@ -65,6 +65,24 @@ export const logRequestResponded = ({ surface, method, correlationId }: RequestM
   );
 };
 
+/**
+ * Which provider `sdk.evm.getProvider()` returned: the Coinbase Wallet browser's own, whose calls
+ * this SDK cannot measure, or this SDK's.
+ */
+type ProviderKind = 'injected' | 'sdk';
+
+export const logProviderSelected = ({ providerKind }: { providerKind: ProviderKind }) => {
+  logEvent(
+    'provider.selected',
+    {
+      action: ActionType.unknown,
+      componentType: ComponentType.unknown,
+      providerKind,
+    },
+    AnalyticsEventImportance.high
+  );
+};
+
 export const logGetInjectedProviderError = ({
   errorMessage,
 }: {

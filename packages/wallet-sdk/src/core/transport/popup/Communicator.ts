@@ -5,6 +5,7 @@ import {
   logPopupSetupStarted,
   logPopupUnloadReceived,
 } from ':core/telemetry/events/communicator.js';
+import { getCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
 import { closePopup, openPopup, type OpenFn } from ':util/web.js';
 
 import { ConfigMessage, PopupSetupV2Message } from ':core/message/ConfigMessage.js';
@@ -104,7 +105,8 @@ export class Communicator {
       return this.popup;
     }
 
-    logPopupSetupStarted();
+    const coop = getCrossOriginOpenerPolicy();
+    logPopupSetupStarted({ coop });
     this.popup = await openPopup(this.url, this.openFn);
 
     this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload')
@@ -133,7 +135,7 @@ export class Communicator {
       })
       .then(() => {
         if (!this.popup) throw standardErrors.rpc.internal();
-        logPopupSetupCompleted();
+        logPopupSetupCompleted({ coop });
         return this.popup;
       });
   };

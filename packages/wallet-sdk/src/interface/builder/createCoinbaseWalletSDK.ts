@@ -4,6 +4,7 @@ import {
   Preference,
   ProviderInterface,
 } from ':core/provider/interface.js';
+import { logProviderSelected } from ':core/telemetry/events/provider.js';
 import { loadTelemetryScript } from ':core/telemetry/initCCA.js';
 import { store } from ':store/store.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
@@ -134,7 +135,9 @@ export function createCoinbaseWalletSDK(params: CreateProviderOptions) {
       namespace: 'evm',
       getProvider: () => {
         if (!evmProvider) {
-          evmProvider = getInjectedProvider() ?? new CoinbaseWalletProvider({ transport, store });
+          const injected = getInjectedProvider();
+          evmProvider = injected ?? new CoinbaseWalletProvider({ transport, store });
+          logProviderSelected({ providerKind: injected ? 'injected' : 'sdk' });
         }
 
         return evmProvider;

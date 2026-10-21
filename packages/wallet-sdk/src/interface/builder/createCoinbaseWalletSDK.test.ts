@@ -269,6 +269,25 @@ describe('createProvider', () => {
   });
 
   describe('Provider fallback behavior', () => {
+    it('logs which provider getProvider() picked, once per SDK', () => {
+      const logEvent = vi.fn();
+      window.ClientAnalytics = { logEvent } as unknown as typeof window.ClientAnalytics;
+      const selected = () =>
+        logEvent.mock.calls
+          .filter(([name]) => name === 'provider.selected')
+          .map(([, data]) => data);
+
+      const sdk = createCoinbaseWalletSDK({});
+      sdk.evm.getProvider();
+      sdk.evm.getProvider();
+      expect(selected()).toEqual([expect.objectContaining({ providerKind: 'sdk' })]);
+
+      mockGetInjectedProvider.mockReturnValue({ request: vi.fn(), isCoinbaseBrowser: true });
+      createCoinbaseWalletSDK({}).evm.getProvider();
+      expect(selected()[1]).toEqual(expect.objectContaining({ providerKind: 'injected' }));
+      window.ClientAnalytics = undefined;
+    });
+
     it('shares one popup transport between the Solana wallet and the EVM provider', () => {
       const sdk = createCoinbaseWalletSDK({});
       sdk.evm.getProvider();

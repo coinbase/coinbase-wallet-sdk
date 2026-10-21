@@ -65,6 +65,8 @@ type CCAEventData = {
   dialogContext?: string;
   dialogAction?: string;
   clearReason?: string;
+  providerKind?: string; // `injected` (the Coinbase Wallet browser's) or `sdk`
+  coop?: string; // the page's Cross-Origin-Opener-Policy header, `null` when unset
 };
 
 type AnalyticsEventData = {
