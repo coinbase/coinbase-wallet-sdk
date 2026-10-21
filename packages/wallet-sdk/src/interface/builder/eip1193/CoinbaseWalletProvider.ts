@@ -28,9 +28,7 @@ type CoinbaseWalletProviderParams = {
 
 /** EIP-1193 shell. Validates args, then `handleEip1193Request` (createSession / invoke). */
 export class CoinbaseWalletProvider extends ProviderEventEmitter implements ProviderInterface {
-  private readonly transport: WalletTransport;
-  /** Everything a request needs but its transport, which `measureRequest` makes per request. */
-  private readonly context: Omit<Eip1193Context, 'transport'>;
+  private readonly context: Eip1193Context;
   /** What the application has been told: the last connection state it saw an event for. */
   private connected: boolean;
 
@@ -38,7 +36,6 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
 
   constructor({ transport, store }: CoinbaseWalletProviderParams) {
     super();
-    this.transport = transport;
     this.request = async (args) =>
       measureRequest({ surface: 'eip1193_provider', method: args.method, transport }, (measured) =>
         this.handleRequest(args, measured)
@@ -53,6 +50,7 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
       onChange: (chainId) => this.emit('chainChanged', hexStringFromNumber(chainId)),
     });
     this.context = {
+      transport,
       emit: this.emit.bind(this),
       chain: activeChain,
     };
@@ -94,8 +92,8 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
 
   async disconnect() {
     this.connected = false;
-    const saved = this.transport.readSession();
-    await this.transport.cleanup();
+    const saved = this.context.transport.readSession();
+    await this.context.transport.cleanup();
     if (saved) logSessionCleared({ clearReason: 'user_disconnect' });
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
