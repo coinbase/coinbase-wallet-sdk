@@ -24,11 +24,17 @@ const createSessionSlice: StateCreator<StoreState, [], [], SessionSlice> = () =>
   session: undefined,
 });
 
+/** The EIP-1193 provider's active chain id, saved and restored by `createActiveChain`. */
+type ActiveChainSlice = { activeChainId?: number };
+const createActiveChainSlice: StateCreator<StoreState, [], [], ActiveChainSlice> = () => ({
+  activeChainId: undefined,
+});
+
 type MergeTypes<T extends unknown[]> = T extends [infer First, ...infer Rest]
   ? First & (Rest extends unknown[] ? MergeTypes<Rest> : Record<string, unknown>)
   : Record<string, unknown>;
 
-export type StoreState = MergeTypes<[KeysSlice, ConfigSlice, SessionSlice]>;
+export type StoreState = MergeTypes<[KeysSlice, ConfigSlice, SessionSlice, ActiveChainSlice]>;
 
 /**
  * Persisted schema version.
@@ -58,6 +64,11 @@ function persistedSession(value: unknown): Session | undefined {
   return candidate as Session;
 }
 
+/** A stored EVM chain id, or `undefined` when the stored value is not one. */
+function parseActiveChainId(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value > 0 ? value : undefined;
+}
+
 /**
  * Rebuild hydrated state from the current keys only.
  *
@@ -72,6 +83,7 @@ function mergePersistedState(persistedState: unknown, currentState: StoreState):
     keys: state.keys ?? currentState.keys,
     config: { ...currentState.config, ...state.config },
     session: persistedSession(state.session),
+    activeChainId: parseActiveChainId(state.activeChainId),
   };
 }
 
@@ -101,6 +113,7 @@ export function createStoreInstance(options?: {
     ...createKeysSlice(...args),
     ...createConfigSlice(...args),
     ...createSessionSlice(...args),
+    ...createActiveChainSlice(...args),
   });
 
   if (shouldPersist) {
@@ -116,6 +129,7 @@ export function createStoreInstance(options?: {
             keys: state.keys,
             config: state.config,
             session: state.session,
+            activeChainId: state.activeChainId,
           } as StoreState;
         },
       })
@@ -168,11 +182,19 @@ export function bindStore(storeInstance: StoreInstance) {
           if (state.session !== previous.session) listener(state.session);
         }),
     },
+
+    activeChain: {
+      get: () => storeInstance.getState().activeChainId,
+      set: (activeChainId: number) => {
+        storeInstance.setState({ activeChainId });
+      },
+    },
   };
 
   return {
     keys: flat.keys,
     session: flat.session,
+    activeChain: flat.activeChain,
     config: {
       get: () => flat.config.get(),
       set: (config: Partial<Config>) => flat.config.set(config),

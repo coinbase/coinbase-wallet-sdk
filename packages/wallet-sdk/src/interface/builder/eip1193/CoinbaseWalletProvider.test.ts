@@ -81,6 +81,7 @@ beforeEach(() => {
   vi.spyOn(providerUtil, 'fetchRPCRequest').mockImplementation(mockFetchRPCRequest);
 
   store.session.clear();
+  store.setState({ activeChainId: undefined });
 
   provider = createProvider();
 });
@@ -203,6 +204,21 @@ describe('Event handling', () => {
     expect(emitSpy).not.toHaveBeenCalledWith('chainChanged', expect.anything());
     emitSpy.mockRestore();
     await expect(restoredProvider.request({ method: 'eth_chainId' })).resolves.toBe('0x1');
+  });
+
+  it('starts on the chain the last provider saved, silently', async () => {
+    await provider.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: '0x2105' }],
+    });
+    expect(store.activeChain.get()).toBe(8453);
+    const emitSpy = vi.spyOn(CoinbaseWalletProvider.prototype, 'emit');
+
+    const reloadedProvider = createProvider();
+
+    expect(emitSpy).not.toHaveBeenCalledWith('chainChanged', expect.anything());
+    emitSpy.mockRestore();
+    await expect(reloadedProvider.request({ method: 'eth_chainId' })).resolves.toBe('0x2105');
   });
 
   it('does not move the active chain when the shared session changes', async () => {

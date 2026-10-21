@@ -42,9 +42,8 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
     this.connected = !!restoredSession && projectEthAccounts(restoredSession).length > 0;
     if (restoredSession) createClients(projectEip155ChainMetadata(restoredSession));
 
-    // Every provider starts on Ethereum mainnet and moves only when something asks it to.
-    // The wallet serves mainnet, so there is no catalog to reconcile against here.
     const activeChain = createActiveChain({
+      store: store.activeChain,
       onChange: (chainId) => this.emit('chainChanged', hexStringFromNumber(chainId)),
     });
     this.context = {
