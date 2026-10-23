@@ -1,6 +1,6 @@
 import { ActionType, AnalyticsEventImportance, ComponentType, logEvent } from '../logEvent.js';
 
-type DialogContext = 'popup_blocked' | 'sub_account_add_owner' | 'sub_account_insufficient_balance';
+type DialogContext = 'popup_blocked';
 
 export const logDialogShown = ({ dialogContext }: { dialogContext: DialogContext }) => {
   logEvent(
@@ -14,15 +14,14 @@ export const logDialogShown = ({ dialogContext }: { dialogContext: DialogContext
   );
 };
 
-type GenericDialogAction = 'confirm' | 'cancel';
-type SubAccountInsufficientBalanceDialogAction = 'create_permission' | 'continue_in_popup';
+type DialogAction = 'confirm' | 'cancel';
 
 export const logDialogActionClicked = ({
   dialogContext,
   dialogAction,
 }: {
   dialogContext: DialogContext;
-  dialogAction: GenericDialogAction | SubAccountInsufficientBalanceDialogAction;
+  dialogAction: DialogAction;
 }) => {
   logEvent(
     `dialog.${dialogContext}.action_clicked`,

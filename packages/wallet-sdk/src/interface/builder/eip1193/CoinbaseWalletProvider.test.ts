@@ -235,6 +235,47 @@ describe('Event handling', () => {
   });
 });
 
+describe('Telemetry', () => {
+  const logEvent = vi.fn();
+
+  beforeEach(() => {
+    window.ClientAnalytics = { logEvent } as unknown as typeof window.ClientAnalytics;
+  });
+
+  afterEach(() => {
+    window.ClientAnalytics = undefined;
+  });
+
+  function logged(name: string) {
+    return logEvent.mock.calls.filter(([eventName]) => eventName === name).map(([, data]) => data);
+  }
+
+  it('sends the wallet the correlation id it logs for the dapp request', async () => {
+    store.session.set(sessionFromAccounts({ accounts: [ACCOUNT], chainId: 1 }));
+    const sign = { method: 'personal_sign', params: ['0x68656c6c6f', ACCOUNT] };
+
+    await provider.request(sign);
+
+    const [started] = logged('provider.request.started');
+    expect(started).toMatchObject({ surface: 'eip1193_provider', method: 'personal_sign' });
+    expect(mockSend).toHaveBeenCalledWith(
+      expect.objectContaining({ method: 'wallet_invokeMethod' }),
+      started.correlationId
+    );
+  });
+
+  it('reports a disconnect only when it cleared a saved session', async () => {
+    await provider.disconnect();
+    expect(logged('session.cleared')).toEqual([]);
+
+    store.session.set(sessionFromAccounts({ accounts: [ACCOUNT], chainId: 1 }));
+    await provider.disconnect();
+    expect(logged('session.cleared')).toEqual([
+      expect.objectContaining({ clearReason: 'user_disconnect' }),
+    ]);
+  });
+});
+
 describe('Request Handling', () => {
   it('returns default chain id before pairing', async () => {
     await expect(provider.request({ method: 'eth_chainId' })).resolves.toBe('0x1');
@@ -272,15 +313,18 @@ describe('Ephemeral methods', () => {
     async (method) => {
       const args = { method, params: ['0xdeadbeef'] };
       await expect(provider.request(args)).resolves.toBe('0xok');
-      expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
+      expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' }, expect.any(String));
       expect(mockSend).toHaveBeenCalledTimes(1);
-      expect(mockSend).toHaveBeenCalledWith({
-        method: 'wallet_invokeMethod',
-        params: {
-          chainId: 'eip155:1',
-          request: args,
+      expect(mockSend).toHaveBeenCalledWith(
+        {
+          method: 'wallet_invokeMethod',
+          params: {
+            chainId: 'eip155:1',
+            request: args,
+          },
         },
-      });
+        expect.any(String)
+      );
       expect(mockCleanup).toHaveBeenCalledTimes(1);
     }
   );
@@ -298,13 +342,16 @@ describe('Ephemeral methods', () => {
     const args = { method: 'wallet_sendCalls', params: ['0xdeadbeef'] };
     await expect(provider.request(args)).resolves.toBe('0xok');
 
-    expect(mockSend).toHaveBeenCalledWith({
-      method: 'wallet_invokeMethod',
-      params: {
-        chainId: 'eip155:8453',
-        request: args,
+    expect(mockSend).toHaveBeenCalledWith(
+      {
+        method: 'wallet_invokeMethod',
+        params: {
+          chainId: 'eip155:8453',
+          request: args,
+        },
       },
-    });
+      expect.any(String)
+    );
   });
 });
 
@@ -312,7 +359,7 @@ describe('ensureSession / createSession', () => {
   it('pairs on eth_requestAccounts and returns eip155 accounts', async () => {
     const accounts = await provider.request({ method: 'eth_requestAccounts' });
 
-    expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
+    expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' }, expect.any(String));
     expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({
         method: 'wallet_createSession',
@@ -323,7 +370,8 @@ describe('ensureSession / createSession', () => {
             }),
           },
         }),
-      })
+      }),
+      expect.any(String)
     );
     expect(accounts).toEqual([ACCOUNT]);
   });
@@ -339,7 +387,7 @@ describe('ensureSession / createSession', () => {
       ],
     });
 
-    expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' });
+    expect(mockHandshake).toHaveBeenCalledWith({ method: 'handshake' }, expect.any(String));
     expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({
         method: 'wallet_createSession',
@@ -351,7 +399,8 @@ describe('ensureSession / createSession', () => {
             }),
           },
         }),
-      })
+      }),
+      expect.any(String)
     );
     // The mock wallet answers only namespace-wide capabilities, which are not connect answers.
     expect(result).toEqual({ accounts: [{ address: ACCOUNT }] });
@@ -382,7 +431,8 @@ describe('ensureSession / createSession', () => {
             }),
           },
         }),
-      })
+      }),
+      expect.any(String)
     );
   });
 });

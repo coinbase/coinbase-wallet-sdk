@@ -1,19 +1,25 @@
 import { ActionType, AnalyticsEventImportance, ComponentType, logEvent } from '../logEvent.js';
 
-export const logRequestStarted = ({
-  method,
-  correlationId,
-}: {
+/**
+ * The interface a dapp request came through: the EIP-1193 provider, the Wallet Standard wallet,
+ * or `sdk.connect()`.
+ */
+export type Surface = 'eip1193_provider' | 'wallet_standard' | 'sdk_connect';
+
+type RequestMeasurement = {
+  surface: Surface;
   method: string;
-  correlationId: string | undefined;
-}) => {
+  correlationId: string;
+};
+
+export const logRequestStarted = ({ surface, method, correlationId }: RequestMeasurement) => {
   logEvent(
     'provider.request.started',
     {
       action: ActionType.unknown,
       componentType: ComponentType.unknown,
+      surface,
       method,
-      signerType: 'base-account',
       correlationId,
     },
     AnalyticsEventImportance.high
@@ -21,12 +27,13 @@ export const logRequestStarted = ({
 };
 
 export const logRequestError = ({
+  surface,
   method,
   correlationId,
+  errorCode,
   errorMessage,
-}: {
-  method: string;
-  correlationId: string | undefined;
+}: RequestMeasurement & {
+  errorCode: number | undefined;
   errorMessage: string;
 }) => {
   logEvent(
@@ -34,30 +41,43 @@ export const logRequestError = ({
     {
       action: ActionType.error,
       componentType: ComponentType.unknown,
+      surface,
       method,
-      signerType: 'base-account',
       correlationId,
+      errorCode,
       errorMessage,
     },
     AnalyticsEventImportance.high
   );
 };
 
-export const logRequestResponded = ({
-  method,
-  correlationId,
-}: {
-  method: string;
-  correlationId: string | undefined;
-}) => {
+export const logRequestResponded = ({ surface, method, correlationId }: RequestMeasurement) => {
   logEvent(
     'provider.request.responded',
     {
       action: ActionType.unknown,
       componentType: ComponentType.unknown,
+      surface,
       method,
-      signerType: 'base-account',
       correlationId,
+    },
+    AnalyticsEventImportance.high
+  );
+};
+
+/**
+ * Which provider `sdk.evm.getProvider()` returned: the Coinbase Wallet browser's own, whose calls
+ * this SDK cannot measure, or this SDK's.
+ */
+type ProviderKind = 'injected' | 'sdk';
+
+export const logProviderSelected = ({ providerKind }: { providerKind: ProviderKind }) => {
+  logEvent(
+    'provider.selected',
+    {
+      action: ActionType.unknown,
+      componentType: ComponentType.unknown,
+      providerKind,
     },
     AnalyticsEventImportance.high
   );
@@ -74,7 +94,6 @@ export const logGetInjectedProviderError = ({
       action: ActionType.error,
       componentType: ComponentType.unknown,
       method: 'getInjectedProvider',
-      signerType: 'base-account',
       errorMessage,
     },
     AnalyticsEventImportance.high

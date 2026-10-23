@@ -317,6 +317,39 @@ describe('createSolanaWallet', () => {
     expect(cleanup).not.toHaveBeenCalled();
   });
 
+  it('logs each wallet call as a request on the wallet_standard surface', async () => {
+    const logEvent = vi.fn();
+    window.ClientAnalytics = { logEvent } as unknown as typeof window.ClientAnalytics;
+    const wallet = createSolanaWallet(transport(), sessionStore());
+    const features = wallet.features as Features;
+    mockConnect();
+    mockHandleSolanaRequest.mockRejectedValueOnce({ code: 4001, message: 'User rejected' });
+    await features['standard:connect'].connect();
+
+    await expect(
+      features['solana:signMessage'].signMessage({
+        account: wallet.accounts[0],
+        message: new Uint8Array([1]),
+      })
+    ).rejects.toMatchObject({ code: 4001 });
+
+    expect(logEvent).toHaveBeenCalledWith(
+      'provider.request.responded',
+      expect.objectContaining({ surface: 'wallet_standard', method: 'connect' }),
+      'high'
+    );
+    expect(logEvent).toHaveBeenCalledWith(
+      'provider.request.error',
+      expect.objectContaining({
+        surface: 'wallet_standard',
+        method: 'solana_signMessage',
+        errorCode: 4001,
+      }),
+      'high'
+    );
+    window.ClientAnalytics = undefined;
+  });
+
   describe('coinbase:signPreparedCalls', () => {
     it('is listed only while the session grants coinbase_signPreparedCalls', () => {
       const wallet = createSolanaWallet(transport(), sessionStore());

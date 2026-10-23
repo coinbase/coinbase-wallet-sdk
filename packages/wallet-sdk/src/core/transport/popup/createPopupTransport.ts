@@ -5,7 +5,6 @@ import { Communicator } from ':core/transport/popup/Communicator.js';
 import { handshake } from ':core/transport/popup/handshake.js';
 import { send } from ':core/transport/popup/send.js';
 import type { PopupWire } from ':core/transport/popup/types.js';
-import { correlationIds } from ':store/correlation-ids/store.js';
 import type { OpenFn } from ':util/web.js';
 import type { Session } from '../../../storage/schema.js';
 import type { AppMetadata, Preference } from '../../../storage/schema.js';
@@ -46,10 +45,10 @@ export function createPopupTransport(opts: {
   };
 
   return {
-    handshake: async (args) => {
-      consume(await handshake(wire, args, args ? correlationIds.get(args) : undefined));
+    handshake: async (args, correlationId) => {
+      consume(await handshake(wire, args, correlationId));
     },
-    request: async (request) => consume(await send(wire, request, correlationIds.get(request))),
+    request: async (request, correlationId) => consume(await send(wire, request, correlationId)),
     readSession: () => opts.session.get(),
     writeSession: (session) => opts.session.set(session),
     cleanup: async () => {

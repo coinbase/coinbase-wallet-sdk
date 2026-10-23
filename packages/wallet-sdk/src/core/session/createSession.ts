@@ -3,6 +3,7 @@ import type {
   Caip25RequestScope,
   WalletCreateSessionRequest,
 } from ':core/rpc/wallet_createSession.js';
+import { logSessionCleared } from ':core/telemetry/events/session.js';
 import type { WalletTransport } from ':core/transport/index.js';
 import { isRecord } from ':util/guards.js';
 import { sessionFromCaip25Result } from './caip25.js';
@@ -38,6 +39,7 @@ export async function createSession(
   } catch (error) {
     if (isRecord(error) && error.code === standardErrorCodes.provider.unauthorized) {
       await transport.cleanup();
+      if (paired) logSessionCleared({ clearReason: 'unauthorized' });
     }
     throw error;
   }

@@ -57,12 +57,15 @@ type CCAEventData = {
   appOrigin?: string;
   appPreferredSigner?: string;
   // Custom Attributes
-  signerType?: 'base-account'; // backwards compatibility
+  surface?: string; // `eip1193_provider`, `wallet_standard`, or `sdk_connect`
   method?: string; // RPC method
   correlationId?: string;
+  errorCode?: number;
   errorMessage?: string;
   dialogContext?: string;
   dialogAction?: string;
+  clearReason?: string;
+  providerKind?: string; // `injected` (the Coinbase Wallet browser's) or `sdk`
 };
 
 type AnalyticsEventData = {
