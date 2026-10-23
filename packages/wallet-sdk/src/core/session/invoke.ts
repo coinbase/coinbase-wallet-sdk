@@ -1,5 +1,4 @@
 import { standardErrorCodes } from ':core/error/constants.js';
-import { standardErrors } from ':core/error/errors.js';
 import type { WalletTransport } from ':core/transport/index.js';
 import { isRecord } from ':util/guards.js';
 import { createCaip27Request, readCaip27Result } from './caip27.js';
@@ -24,9 +23,8 @@ function readResponse(
  *
  * 1. CAIP-27: `chainId` and method must already be authorized (`assertInvokeAuthorized`).
  * 2. `qualify` — namespace-specific checks, such as the signer being granted.
- * 3. Add the CAIP-25 `sessionId` when one was issued.
- * 4. `transport.request(wallet_invokeMethod)`.
- * 5. Validate the reply envelope and unwrap the method result.
+ * 3. `transport.request(wallet_invokeMethod)` over the session's pairing.
+ * 4. Validate the reply envelope and unwrap the method result.
  *
  * A 4100 from any of these steps clears the session (keys and stored session), so every
  * interface sees the disconnect through the session store.
@@ -41,10 +39,7 @@ export async function invoke(
 ): Promise<unknown> {
   try {
     assertInvokeAuthorized(session, envelope);
-    const qualified = translator.qualify(session, {
-      ...envelope,
-      ...(session.sessionId ? { sessionId: session.sessionId } : {}),
-    });
+    const qualified = translator.qualify(session, envelope);
     const response = await transport.request(createCaip27Request(qualified));
     return readResponse(response, qualified, translator);
   } catch (error) {
@@ -60,18 +55,14 @@ export async function invoke(
  *
  * Owns the whole one-shot lifecycle, so no session is ever written and the keys it
  * negotiates are cleared even when the transport or response decoding fails. This
- * deliberately skips session authorization and request qualification. A session id is
- * forbidden so this path cannot bypass persisted-session authorization, and it is
- * rejected before the transport is touched.
+ * deliberately skips session authorization and request qualification: the wallet sees a
+ * pairing that only exists from this handshake and limits it to its one-shot methods.
  */
 export async function invokeEphemeral(
   envelope: Envelope,
   transport: WalletTransport,
   translator: NamespaceTranslator
 ): Promise<unknown> {
-  if (envelope.sessionId !== undefined) {
-    throw standardErrors.rpc.invalidParams('Ephemeral invoke cannot include a sessionId');
-  }
   try {
     await transport.handshake({ method: 'handshake' });
     const response = await transport.request(createCaip27Request(envelope));

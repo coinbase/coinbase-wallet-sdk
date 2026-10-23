@@ -9,7 +9,8 @@ describe('sessionFromCaip25Result', () => {
   it('stores each namespace scope as that namespace grant, with raw accounts', () => {
     const capabilities = { signInWithEthereum: { message: 'm', signature: '0xsig' } };
     const session = sessionFromCaip25Result({
-      sessionId: 'session-1',
+      // CAIP-25 lets a wallet return a session id; the session is the pairing, so it is dropped.
+      sessionId: 'wallet-issued',
       scopes: {
         eip155: {
           accounts: [ADDRESS],
@@ -27,7 +28,6 @@ describe('sessionFromCaip25Result', () => {
     });
 
     expect(session).toEqual({
-      sessionId: 'session-1',
       namespaces: {
         eip155: { accounts: [ADDRESS], methods: ['personal_sign'], capabilities },
         solana: { accounts: [SOLANA_PUBLIC_KEY], methods: ['solana_signMessage'] },
@@ -40,7 +40,6 @@ describe('sessionFromCaip25Result', () => {
 
   it('ignores chain-keyed scopes', () => {
     const session = sessionFromCaip25Result({
-      sessionId: 'session-1',
       scopes: {
         'eip155:8453': {
           accounts: [ADDRESS],
@@ -56,12 +55,11 @@ describe('sessionFromCaip25Result', () => {
       },
     });
 
-    expect(session).toEqual({ sessionId: 'session-1', namespaces: {} });
+    expect(session).toEqual({ namespaces: {} });
   });
 
   it('ignores a chain list on a namespace scope and keeps the grant namespace-wide', () => {
     const session = sessionFromCaip25Result({
-      sessionId: 'session-1',
       scopes: {
         eip155: {
           chains: ['8453', '10'],
@@ -79,7 +77,6 @@ describe('sessionFromCaip25Result', () => {
 
   it("keeps each account's capability answers on the grant", () => {
     const session = sessionFromCaip25Result({
-      sessionId: 'session-1',
       scopes: {
         eip155: {
           accounts: [ADDRESS],
@@ -101,7 +98,6 @@ describe('sessionFromCaip25Result', () => {
 
   it('drops capability answers for an account the scope did not grant', () => {
     const session = sessionFromCaip25Result({
-      sessionId: 'session-1',
       scopes: {
         eip155: {
           accounts: [ADDRESS],
@@ -123,7 +119,6 @@ describe('sessionFromCaip25Result', () => {
   it("rejects a granted account's capability answers that are not an object", () => {
     expect(() =>
       sessionFromCaip25Result({
-        sessionId: 'session-1',
         scopes: {
           eip155: {
             accounts: [ADDRESS],
@@ -139,25 +134,18 @@ describe('sessionFromCaip25Result', () => {
   it('rejects a malformed result', () => {
     expect(() =>
       sessionFromCaip25Result({
-        scopes: { eip155: { accounts: [ADDRESS], methods: [], notifications: [] } },
-      })
-    ).toThrow(/sessionId/);
-    expect(() =>
-      sessionFromCaip25Result({
-        sessionId: 'session-1',
         scopes: {
           eip155: { accounts: [ADDRESS], methods: 'personal_sign', notifications: [] },
         },
       })
     ).toThrow(/array of non-empty strings/);
-    expect(() =>
-      sessionFromCaip25Result({ sessionId: 'session-1', scopes: { eip155: 'granted' } })
-    ).toThrow(/must be an object/);
+    expect(() => sessionFromCaip25Result({ scopes: { eip155: 'granted' } })).toThrow(
+      /must be an object/
+    );
   });
 
   it('leaves account format to the namespace readers', () => {
     const session = sessionFromCaip25Result({
-      sessionId: 'session-1',
       scopes: {
         solana: { accounts: ['0OIl-not-base58'], methods: [], notifications: [] },
       },

@@ -97,13 +97,12 @@ describe('EIP-155 session selectors', () => {
 describe('withEip155Accounts', () => {
   it('updates the grant without adding selected state or losing other fields', () => {
     const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 1 });
-    session.sessionId = 'session-1';
     session.namespaces.eip155.capabilities = { atomic: true };
 
     const updated = withEip155Accounts(session, [OTHER]);
 
     expect(updated).not.toHaveProperty('selected');
-    expect(updated.sessionId).toBe('session-1');
+    expect(updated.properties).toEqual(session.properties);
     expect(updated.namespaces.eip155).toEqual({
       accounts: [OTHER],
       methods: session.namespaces.eip155.methods,

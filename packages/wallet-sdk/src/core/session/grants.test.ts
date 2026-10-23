@@ -51,22 +51,18 @@ describe('sessionCovers', () => {
 });
 
 describe('activeSession', () => {
-  it('requires a wallet-issued id and at least one authorized account', () => {
+  it('requires at least one authorized account', () => {
     const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 1 });
 
     expect(activeSession(undefined)).toBeUndefined();
     expect(activeSession({ namespaces: {} })).toBeUndefined();
-    expect(activeSession(session)).toBeUndefined();
-
-    const active = { ...session, sessionId: 'session-1' };
-    expect(activeSession(active)).toBe(active);
+    expect(activeSession(session)).toBe(session);
   });
 
   it('rejects a session whose grants have been emptied', () => {
-    // An id alone is not a connection: the wallet can revoke every account and leave
-    // the scope keys behind.
+    // Scope keys alone are not a connection: the wallet can revoke every account and
+    // leave the scope keys behind.
     const emptied = {
-      sessionId: 'session-1',
       namespaces: { eip155: { accounts: [], methods: ['personal_sign'] } },
     };
 
@@ -76,7 +72,6 @@ describe('activeSession', () => {
 
 /** What the wallet returns for an EVM connection: one namespace-wide grant. */
 const namespaceSession: Session = {
-  sessionId: 'session-1',
   namespaces: {
     eip155: {
       accounts: [ADDRESS],
@@ -86,7 +81,6 @@ const namespaceSession: Session = {
 };
 
 const solanaSession: Session = {
-  sessionId: 'session-1',
   namespaces: {
     solana: {
       accounts: [SOLANA_PUBLIC_KEY],
@@ -123,7 +117,6 @@ describe('activeGrantForChain', () => {
 
   it('resolves each namespace independently in a mixed session', () => {
     const mixed: Session = {
-      sessionId: 'session-1',
       namespaces: {
         ...namespaceSession.namespaces,
         ...solanaSession.namespaces,
@@ -154,7 +147,6 @@ describe('namespace grants through the kernel', () => {
       assertInvokeAuthorized(namespaceSession, {
         chainId: 'eip155:10',
         request: { method: 'eth_sendTransaction', params: [] },
-        sessionId: 'session-1',
       })
     ).not.toThrow();
   });
@@ -167,7 +159,6 @@ describe('namespace grants through the kernel', () => {
       assertInvokeAuthorized(namespaceSession, {
         chainId: 'eip155:10',
         request: { method: 'wallet_sendCalls', params: [] },
-        sessionId: 'session-1',
       })
     ).not.toThrow();
   });
@@ -177,7 +168,6 @@ describe('namespace grants through the kernel', () => {
       assertInvokeAuthorized(namespaceSession, {
         chainId: SOLANA_MAINNET,
         request: { method: 'solana_signMessage', params: [] },
-        sessionId: 'session-1',
       })
     ).toThrow(/is not in the session/);
   });

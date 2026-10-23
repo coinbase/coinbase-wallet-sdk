@@ -23,24 +23,18 @@ describe('createCaip27Request', () => {
   it('builds the wallet_invokeMethod wire request', () => {
     expect(
       createCaip27Request({
-        sessionId: 'session-1',
         chainId: 'eip155:8453',
         request: { method: 'personal_sign', params: [] },
       })
     ).toEqual({
       method: WALLET_INVOKE_METHOD,
-      params: {
-        sessionId: 'session-1',
-        chainId: 'eip155:8453',
-        request: { method: 'personal_sign', params: [] },
-      },
+      params: { chainId: 'eip155:8453', request: { method: 'personal_sign', params: [] } },
     });
   });
 });
 
 describe('CAIP-27 responses', () => {
   const request = {
-    sessionId: 'session-1',
     chainId: 'eip155:8453',
     request: { method: 'personal_sign', params: [] },
   } as const;
@@ -48,11 +42,7 @@ describe('CAIP-27 responses', () => {
   it('validates and unwraps a successful response envelope', () => {
     expect(
       readCaip27Result(
-        {
-          sessionId: 'session-1',
-          chainId: 'eip155:8453',
-          result: { method: 'personal_sign', result: '0xsig' },
-        },
+        { chainId: 'eip155:8453', result: { method: 'personal_sign', result: '0xsig' } },
         request
       )
     ).toBe('0xsig');
@@ -60,7 +50,6 @@ describe('CAIP-27 responses', () => {
 
   it('validates a Solana response against its exact CAIP-2 envelope', () => {
     const solanaRequest = {
-      sessionId: 'solana-session',
       chainId: SOLANA_MAINNET,
       request: { method: 'solana_signMessage', params: [{ message: 'aGVsbG8=' }] },
     } as const;
@@ -68,7 +57,6 @@ describe('CAIP-27 responses', () => {
     expect(
       readCaip27Result(
         {
-          sessionId: 'solana-session',
           chainId: SOLANA_MAINNET,
           result: { method: 'solana_signMessage', result: { signature: 'AQ==' } },
         },
@@ -78,7 +66,6 @@ describe('CAIP-27 responses', () => {
     expect(() =>
       readCaip27Result(
         {
-          sessionId: 'solana-session',
           chainId: 'solana:devnet',
           result: { method: 'solana_signMessage', result: { signature: 'AQ==' } },
         },
@@ -89,7 +76,6 @@ describe('CAIP-27 responses', () => {
 
   it('throws a method-level error inside the response envelope', () => {
     const reply = {
-      sessionId: 'session-1',
       chainId: 'eip155:8453',
       error: { code: 4100, message: 'not authorized', data: { reason: 'method' } },
     };
@@ -109,41 +95,19 @@ describe('CAIP-27 responses', () => {
   it('rejects mismatched targeting and malformed envelopes', () => {
     expect(() =>
       readCaip27Result(
-        {
-          sessionId: 'wrong',
-          chainId: 'eip155:8453',
-          result: { method: 'personal_sign', result: '0xsig' },
-        },
-        request
-      )
-    ).toThrow(/sessionId/);
-    expect(() =>
-      readCaip27Result(
-        {
-          sessionId: 'session-1',
-          chainId: 'eip155:1',
-          result: { method: 'personal_sign', result: '0xsig' },
-        },
+        { chainId: 'eip155:1', result: { method: 'personal_sign', result: '0xsig' } },
         request
       )
     ).toThrow(/chainId/);
     expect(() =>
       readCaip27Result(
-        {
-          sessionId: 'session-1',
-          chainId: 'eip155:8453',
-          result: { method: 'eth_sendTransaction', result: '0xsig' },
-        },
+        { chainId: 'eip155:8453', result: { method: 'eth_sendTransaction', result: '0xsig' } },
         request
       )
     ).toThrow(/requested method/);
     expect(() =>
       readCaip27Result(
-        {
-          sessionId: 'session-1',
-          chainId: 'invalid',
-          result: { method: 'personal_sign', result: '0xsig' },
-        },
+        { chainId: 'invalid', result: { method: 'personal_sign', result: '0xsig' } },
         {
           ...request,
           chainId: 'invalid' as never,
@@ -153,7 +117,6 @@ describe('CAIP-27 responses', () => {
     expect(() =>
       readCaip27Result(
         {
-          sessionId: 'session-1',
           chainId: 'eip155:8453',
           result: { method: 'personal_sign', result: '0xsig' },
           error: { code: 4100, message: 'not authorized' },
@@ -165,13 +128,11 @@ describe('CAIP-27 responses', () => {
 });
 
 describe('assertInvokeAuthorized', () => {
-  it('requires an authorized namespace and a matching session id', () => {
+  it('requires an authorized namespace', () => {
     const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 });
-    session.sessionId = 'session-1';
 
     expect(() =>
       assertInvokeAuthorized(session, {
-        sessionId: 'session-1',
         chainId: 'eip155:8453',
         request: { method: 'personal_sign', params: [] },
       })
@@ -197,12 +158,5 @@ describe('assertInvokeAuthorized', () => {
         request: { method: 'eth_subscribe', params: [] },
       })
     ).not.toThrow();
-    expect(() =>
-      assertInvokeAuthorized(session, {
-        sessionId: 'wrong',
-        chainId: 'eip155:8453',
-        request: { method: 'personal_sign', params: [] },
-      })
-    ).toThrow(/sessionId/);
   });
 });

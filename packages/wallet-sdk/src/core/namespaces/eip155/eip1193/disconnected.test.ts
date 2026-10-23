@@ -47,7 +47,6 @@ describe('handleDisconnected', () => {
           >;
         };
         return {
-          sessionId: 'session-1',
           scopes: Object.fromEntries(
             Object.entries(params.scopes).map(([scopeKey, scope]) => [
               scopeKey,
@@ -61,12 +60,10 @@ describe('handleDisconnected', () => {
         };
       }
       const params = request.params as {
-        sessionId?: string;
         chainId: `eip155:${string}`;
         request: RequestArguments;
       };
       return {
-        sessionId: params.sessionId,
         chainId: params.chainId,
         result: { method: params.request.method, result },
       };
@@ -223,7 +220,7 @@ describe('handleDisconnected', () => {
     }
   );
 
-  it('uses the one-shot path for a sessionless direct ephemeral invoke', async () => {
+  it('uses the one-shot path for a direct ephemeral invoke, ignoring a caller session id', async () => {
     const order: string[] = [];
     const send = vi.fn(async (request: RequestArguments) => {
       order.push(request.method);
@@ -248,12 +245,14 @@ describe('handleDisconnected', () => {
       handleDisconnected(rt, {
         method: 'wallet_invokeMethod',
         params: {
+          sessionId: 'dapp-supplied',
           chainId: 'eip155:8453',
           request: { method: 'wallet_sign', params: [{ version: '1.0', data: {} }] },
         },
       })
     ).resolves.toBe('0xdirect');
 
+    // The session is the pairing, so a caller's session id never reaches the wallet.
     expect(send).toHaveBeenCalledWith({
       method: 'wallet_invokeMethod',
       params: {
@@ -262,29 +261,6 @@ describe('handleDisconnected', () => {
       },
     });
     expect(order).toEqual(['handshake', 'wallet_invokeMethod', 'cleanup']);
-  });
-
-  it('does not treat a sessionId-bearing direct invoke as ephemeral', async () => {
-    // `wallet_sign` is a one-shot method, but naming a session id asks for a persisted
-    // session. That request cannot be served without one, and it must not be downgraded
-    // to the keys-and-throw-away path.
-    const send = caipWire('0xsession');
-    const rt = context(send);
-
-    await expect(
-      handleDisconnected(rt, {
-        method: 'wallet_invokeMethod',
-        params: {
-          sessionId: 'session-1',
-          chainId: 'eip155:1',
-          request: { method: 'wallet_sign', params: [{ version: '1.0', data: {} }] },
-        },
-      })
-    ).rejects.toMatchObject({ code: standardErrorCodes.provider.unauthorized });
-
-    expect(send).not.toHaveBeenCalled();
-    expect(rt.transport.handshake).not.toHaveBeenCalled();
-    expect(rt.transport.cleanup).not.toHaveBeenCalled();
   });
 
   it.each([

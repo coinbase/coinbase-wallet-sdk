@@ -2,6 +2,11 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { StateCreator, createStore } from 'zustand/vanilla';
 import pkg from '../../package.json' with { type: 'json' };
 import type { AppMetadata, Preference, Session } from '../storage/schema.js';
+import {
+  PERSISTED_STORE_VERSION,
+  mergePersistedState,
+  migratePersistedState,
+} from './migrations.js';
 
 type Config = {
   metadata?: AppMetadata;
@@ -24,67 +29,17 @@ const createSessionSlice: StateCreator<StoreState, [], [], SessionSlice> = () =>
   session: undefined,
 });
 
+/** The EIP-1193 provider's active chain id, saved and restored by `createActiveChain`. */
+type ActiveChainSlice = { activeChainId?: number };
+const createActiveChainSlice: StateCreator<StoreState, [], [], ActiveChainSlice> = () => ({
+  activeChainId: undefined,
+});
+
 type MergeTypes<T extends unknown[]> = T extends [infer First, ...infer Rest]
   ? First & (Rest extends unknown[] ? MergeTypes<Rest> : Record<string, unknown>)
   : Record<string, unknown>;
 
-export type StoreState = MergeTypes<[KeysSlice, ConfigSlice, SessionSlice]>;
-
-/**
- * Persisted schema version.
- *
- * v0 is the pre-CAIP blob. v1 keyed `Session.scopes` by CAIP-2 chain id; v2 keys grants
- * by CAIP-104 namespace, because EVM authorization covers every chain at once.
- */
-const PERSISTED_STORE_VERSION = 2;
-
-/**
- * Accept only a session the current selectors can read.
- *
- * Older sessions keyed grants by chain (`scopes`) or carried SDK-chosen state
- * (`selected`, `transportKind`). Dropping one costs a single reconnect; keeping it would
- * silently leave the provider with no readable authorization.
- */
-function persistedSession(value: unknown): Session | undefined {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
-  const candidate = value as Partial<Session> & Record<string, unknown>;
-  if ('selected' in candidate || 'transportKind' in candidate || 'scopes' in candidate) {
-    return undefined;
-  }
-  const { namespaces } = candidate;
-  if (!namespaces || typeof namespaces !== 'object' || Array.isArray(namespaces)) {
-    return undefined;
-  }
-  return candidate as Session;
-}
-
-/**
- * Rebuild hydrated state from the current keys only.
- *
- * `migrate` runs only when the stored blob carries a numeric `version`, and v0 was
- * written without one, so shape-based sanitizing has to happen on every hydrate.
- * Unknown top-level keys (the removed `account` / `chains` mirrors) are dropped here.
- */
-function mergePersistedState(persistedState: unknown, currentState: StoreState): StoreState {
-  const state = (persistedState ?? {}) as Partial<StoreState>;
-  return {
-    ...currentState,
-    keys: state.keys ?? currentState.keys,
-    config: { ...currentState.config, ...state.config },
-    session: persistedSession(state.session),
-  };
-}
-
-function migratePersistedState(persistedState: unknown, version: number): StoreState {
-  const state = (persistedState ?? {}) as Partial<StoreState>;
-  if (version >= PERSISTED_STORE_VERSION) return state as StoreState;
-  return {
-    keys: state.keys ?? {},
-    config: state.config ?? { version: pkg.version },
-    // Same rule as `mergePersistedState`, for blobs that do carry an older version.
-    session: persistedSession(state.session),
-  } as StoreState;
-}
+export type StoreState = MergeTypes<[KeysSlice, ConfigSlice, SessionSlice, ActiveChainSlice]>;
 
 /**
  * Factory function to create a store instance.
@@ -101,6 +56,7 @@ export function createStoreInstance(options?: {
     ...createKeysSlice(...args),
     ...createConfigSlice(...args),
     ...createSessionSlice(...args),
+    ...createActiveChainSlice(...args),
   });
 
   if (shouldPersist) {
@@ -116,6 +72,7 @@ export function createStoreInstance(options?: {
             keys: state.keys,
             config: state.config,
             session: state.session,
+            activeChainId: state.activeChainId,
           } as StoreState;
         },
       })
@@ -168,11 +125,19 @@ export function bindStore(storeInstance: StoreInstance) {
           if (state.session !== previous.session) listener(state.session);
         }),
     },
+
+    activeChain: {
+      get: () => storeInstance.getState().activeChainId,
+      set: (activeChainId: number) => {
+        storeInstance.setState({ activeChainId });
+      },
+    },
   };
 
   return {
     keys: flat.keys,
     session: flat.session,
+    activeChain: flat.activeChain,
     config: {
       get: () => flat.config.get(),
       set: (config: Partial<Config>) => flat.config.set(config),

@@ -4,9 +4,13 @@ export type WalletCreateSessionRequest = {
   params: Caip25RequestParams;
 };
 
-/** CAIP-25 `wallet_createSession` result. */
+/**
+ * CAIP-25 `wallet_createSession` result.
+ *
+ * No `sessionId`: CAIP-25 lets a wallet return one, but the session is the pairing, so this
+ * SDK never reads it.
+ */
 export type WalletCreateSessionResult = {
-  sessionId: string;
   scopes: Record<string, Caip25ResultScope>;
   properties?: Record<string, unknown>;
 };
@@ -52,7 +56,6 @@ export type Caip25ResultScope = {
 };
 
 export type Caip25RequestParams = {
-  sessionId?: string;
   scopes: Record<string, Caip25RequestScope>;
   /** Generic CAIP-25 session metadata; private request extensions do not live here. */
   properties?: Record<string, unknown>;

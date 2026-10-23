@@ -42,10 +42,7 @@ describe('handleEip1193Request', () => {
   });
 
   it('routes to connected when a session exists', async () => {
-    const session = {
-      ...sessionFromAccounts({ accounts: [ADDRESS], chainId: 1 }),
-      sessionId: 'session-1',
-    };
+    const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 1 });
     await expect(
       handleEip1193Request(context({ session }), { method: 'eth_accounts' })
     ).resolves.toEqual([ADDRESS]);
@@ -56,7 +53,6 @@ describe('handleEip1193Request', () => {
     const session = sessionFromSolanaAccounts({
       accounts: ['So11111111111111111111111111111111111111112'],
     });
-    session.sessionId = 'solana-session';
     const args = { method: 'wallet_getCallsStatus', params: ['0x1'] };
 
     await expect(handleEip1193Request(context({ session }), args)).resolves.toEqual({

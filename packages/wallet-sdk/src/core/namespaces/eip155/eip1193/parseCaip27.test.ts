@@ -3,20 +3,19 @@ import { WALLET_INVOKE_METHOD } from ':core/session/caip27.js';
 import { parseCaip27 } from './parseCaip27.js';
 
 describe('parseCaip27', () => {
-  it('strictly parses named eip155 CAIP-27 params', () => {
+  it('strictly parses named eip155 CAIP-27 params and drops a caller session id', () => {
     expect(
       parseCaip27({
         method: WALLET_INVOKE_METHOD,
         params: {
           chainId: 'eip155:8453',
-          sessionId: 'session-1',
+          sessionId: 'dapp-supplied',
           request: { method: 'personal_sign', params: ['0x68656c6c6f'] },
           capabilities: { atomic: { status: 'supported' } },
         },
       })
     ).toEqual({
       chainId: 'eip155:8453',
-      sessionId: 'session-1',
       request: { method: 'personal_sign', params: ['0x68656c6c6f'] },
       capabilities: { atomic: { status: 'supported' } },
     });

@@ -15,12 +15,10 @@ function transportState(initialSession?: Session) {
   let session = initialSession;
   const send = vi.fn(async (request: RequestArguments) => {
     const params = request.params as {
-      sessionId?: string;
       scopes: Record<string, { methods: string[]; notifications: string[] }>;
     };
     const scope = params.scopes[SOLANA_NAMESPACE];
     return {
-      sessionId: params.sessionId ?? 'solana-session',
       scopes: {
         [SOLANA_NAMESPACE]: {
           accounts: [PUBLIC_KEY],
@@ -46,7 +44,6 @@ function transportState(initialSession?: Session) {
         result = [{ status: 'fulfilled', value: { signature: SIGNATURE } }];
     }
     return {
-      ...(envelope.sessionId ? { sessionId: envelope.sessionId } : {}),
       chainId: envelope.chainId,
       result: { method: envelope.request.method, result },
     };
@@ -101,7 +98,6 @@ describe('handleSolanaRequest', () => {
   it('reuses a Solana session that already covers required methods', async () => {
     const session = {
       ...sessionFromSolanaAccounts({ accounts: [PUBLIC_KEY] }),
-      sessionId: 'solana-session',
     };
     const state = transportState(session);
 
@@ -115,7 +111,6 @@ describe('handleSolanaRequest', () => {
 
   it('reuses a Solana session the wallet granted without optional methods', async () => {
     const state = transportState({
-      sessionId: 'solana-session',
       namespaces: {
         [SOLANA_NAMESPACE]: {
           accounts: [PUBLIC_KEY],
@@ -136,11 +131,8 @@ describe('handleSolanaRequest', () => {
   });
 
   it('clears a stale session when the wallet answers connect with 4100', async () => {
-    // An EVM-only session does not cover Solana, so connect sends its id to the wallet.
-    const state = transportState({
-      ...sessionFromAccounts({ accounts: [EVM_ADDRESS], chainId: 1 }),
-      sessionId: 'stale-session',
-    });
+    // An EVM-only session does not cover Solana, so connect asks the wallet over its pairing.
+    const state = transportState(sessionFromAccounts({ accounts: [EVM_ADDRESS], chainId: 1 }));
     state.send.mockRejectedValueOnce({ code: standardErrorCodes.provider.unauthorized });
 
     await expect(handleSolanaRequest(state.transport, { method: 'connect' })).rejects.toMatchObject(
@@ -153,11 +145,9 @@ describe('handleSolanaRequest', () => {
   it('extends an EVM session and preserves every wallet-authoritative grant', async () => {
     const evmSession = {
       ...sessionFromAccounts({ accounts: [EVM_ADDRESS], chainId: 1 }),
-      sessionId: 'shared-session',
     };
     const state = transportState(evmSession);
     state.send.mockResolvedValueOnce({
-      sessionId: 'shared-session',
       scopes: {
         eip155: {
           accounts: [EVM_ADDRESS],
@@ -179,11 +169,9 @@ describe('handleSolanaRequest', () => {
 
     await handleSolanaRequest(state.transport, { method: 'connect' });
 
-    expect(state.send).toHaveBeenCalledWith(
-      expect.objectContaining({
-        params: expect.objectContaining({ sessionId: 'shared-session' }),
-      })
-    );
+    // An update over the saved pairing: no handshake and no session id.
+    expect(state.transport.handshake).not.toHaveBeenCalled();
+    expect(state.send.mock.calls[0]?.[0]).not.toHaveProperty('params.sessionId');
     expect(state.transport.readSession()?.namespaces).toMatchObject({
       eip155: { accounts: [EVM_ADDRESS] },
       solana: { accounts: [PUBLIC_KEY] },
@@ -193,11 +181,9 @@ describe('handleSolanaRequest', () => {
   it('rejects Solana connect after persisting an EVM-only partial grant', async () => {
     const evmSession = {
       ...sessionFromAccounts({ accounts: [EVM_ADDRESS], chainId: 1 }),
-      sessionId: 'shared-session',
     };
     const state = transportState(evmSession);
     state.send.mockResolvedValueOnce({
-      sessionId: 'shared-session',
       scopes: {
         eip155: {
           accounts: [EVM_ADDRESS],
@@ -224,7 +210,6 @@ describe('handleSolanaRequest', () => {
   it('invokes signing through the exact Solana CAIP-27 envelope', async () => {
     const session = {
       ...sessionFromSolanaAccounts({ accounts: [PUBLIC_KEY] }),
-      sessionId: 'solana-session',
     };
     const state = transportState(session);
 
@@ -236,7 +221,6 @@ describe('handleSolanaRequest', () => {
     ).resolves.toEqual({ signature: new Uint8Array(64).fill(1) });
 
     expect(state.transportSend).toHaveBeenCalledWith({
-      sessionId: 'solana-session',
       chainId: SOLANA_MAINNET,
       request: {
         method: 'solana_signMessage',
@@ -248,7 +232,6 @@ describe('handleSolanaRequest', () => {
   it('invokes single and batch sign-and-send methods through CAIP-27', async () => {
     const session = {
       ...sessionFromSolanaAccounts({ accounts: [PUBLIC_KEY] }),
-      sessionId: 'solana-session',
     };
     const state = transportState(session);
 
@@ -294,11 +277,9 @@ describe('handleSolanaRequest', () => {
   it('invokes prepared calls through CAIP-27 for the named signer', async () => {
     const state = transportState({
       ...sessionFromSolanaAccounts({ accounts: [PUBLIC_KEY] }),
-      sessionId: 'solana-session',
     });
     const walletResult = { opaque: 'wallet result' };
     state.transportSend.mockResolvedValueOnce({
-      sessionId: 'solana-session',
       chainId: SOLANA_MAINNET,
       result: { method: 'coinbase_signPreparedCalls', result: walletResult },
     } as never);
@@ -311,7 +292,6 @@ describe('handleSolanaRequest', () => {
     ).resolves.toBe(walletResult);
 
     expect(state.transportSend).toHaveBeenCalledWith({
-      sessionId: 'solana-session',
       chainId: SOLANA_MAINNET,
       request: {
         method: 'coinbase_signPreparedCalls',
@@ -323,11 +303,9 @@ describe('handleSolanaRequest', () => {
   it('passes prepared-call error data from the wallet through unchanged', async () => {
     const state = transportState({
       ...sessionFromSolanaAccounts({ accounts: [PUBLIC_KEY] }),
-      sessionId: 'solana-session',
     });
     const data = { opaque: 'wallet error data' };
     state.transportSend.mockResolvedValueOnce({
-      sessionId: 'solana-session',
       chainId: SOLANA_MAINNET,
       error: { code: -32603, message: 'Wallet error', data },
     } as never);
@@ -381,7 +359,6 @@ describe('handleSolanaRequest', () => {
 
     const solana = transportState({
       ...sessionFromSolanaAccounts({ accounts: [PUBLIC_KEY] }),
-      sessionId: 'solana-session',
     });
     await handleSolanaRequest(solana.transport, { method: 'disconnect' });
     expect(solana.cleanup).toHaveBeenCalledTimes(1);

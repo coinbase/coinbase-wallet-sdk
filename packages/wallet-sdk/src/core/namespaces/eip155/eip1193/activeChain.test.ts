@@ -8,6 +8,26 @@ describe('createActiveChain', () => {
     expect(DEFAULT_CHAIN_ID).toBe(1);
   });
 
+  it('starts on the saved chain without announcing it, and saves every move', () => {
+    let saved: number | undefined = 8453;
+    const store = {
+      get: () => saved,
+      set: (chainId: number) => {
+        saved = chainId;
+      },
+    };
+    const onChange = vi.fn();
+    const chain = createActiveChain({ store, onChange });
+
+    expect(chain.get()).toBe(8453);
+    expect(chain.select(8453)).toBe(false);
+    expect(onChange).not.toHaveBeenCalled();
+
+    chain.select(10);
+    expect(saved).toBe(10);
+    expect(createActiveChain({ store, onChange }).get()).toBe(10);
+  });
+
   it('announces every chain it actually moves to', () => {
     const onChange = vi.fn();
     const chain = createActiveChain({ onChange });

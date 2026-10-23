@@ -3,7 +3,6 @@ import type { Envelope } from ':core/session/types.js';
 import { solanaTranslator } from './translator.js';
 
 const envelope: Envelope = {
-  sessionId: 'solana-session',
   chainId: SOLANA_MAINNET,
   request: { method: 'solana_signMessage', params: [{ message: 'aGVsbG8=' }] },
 };
@@ -23,7 +22,6 @@ describe('solanaTranslator.decodeResult', () => {
 
   it('decodes ordered batch settlement results', () => {
     const batchEnvelope: Envelope = {
-      sessionId: 'solana-session',
       chainId: SOLANA_MAINNET,
       request: {
         method: 'solana_signAndSendAllTransactions',
@@ -47,7 +45,6 @@ describe('solanaTranslator.decodeResult', () => {
   it('passes the prepared calls result through unchanged', () => {
     const result = { opaque: 'wallet result' };
     const preparedEnvelope: Envelope = {
-      sessionId: 'solana-session',
       chainId: SOLANA_MAINNET,
       request: {
         method: 'coinbase_signPreparedCalls',

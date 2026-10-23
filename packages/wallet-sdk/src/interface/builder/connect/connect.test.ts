@@ -58,7 +58,6 @@ function setup({
   const request = vi.fn(async (args: RequestArguments) => {
     if (result) return result(args);
     const params = args.params as {
-      sessionId?: string;
       scopes: Record<
         string,
         {
@@ -71,7 +70,6 @@ function setup({
       >;
     };
     return {
-      sessionId: params.sessionId ?? 'session-1',
       scopes: Object.fromEntries(
         Object.entries(params.scopes).map(([namespace, scope]) => {
           const { version: _version, ...grantedScope } = scope;
@@ -249,7 +247,6 @@ describe('connectWallet through the popup', () => {
 
   it('asks the wallet even when the stored session already covers the request', async () => {
     const restored: Session = {
-      sessionId: 'session-1',
       namespaces: {
         eip155: {
           accounts: [EVM_ACCOUNT],
@@ -269,22 +266,19 @@ describe('connectWallet through the popup', () => {
       transport,
     });
 
-    // One popup on the existing session id; the stored capability answers are not returned.
+    // One popup over the saved pairing; the stored capability answers are not returned.
     expect(transport.handshake).not.toHaveBeenCalled();
     expect(request).toHaveBeenCalledOnce();
     expect(request).toHaveBeenCalledWith(
-      expect.objectContaining({
-        method: 'wallet_createSession',
-        params: expect.objectContaining({ sessionId: 'session-1' }),
-      })
+      expect.objectContaining({ method: 'wallet_createSession' })
     );
+    expect(request.mock.calls[0]?.[0]).not.toHaveProperty('params.sessionId');
     expect(result.evm).toEqual({ accounts: [{ address: EVM_ACCOUNT }] });
     expect(addresses(result.solana)).toEqual([SOLANA_ACCOUNT]);
   });
 
   it('requests fresh capability results even when an account session exists', async () => {
     const restored: Session = {
-      sessionId: 'session-1',
       namespaces: {
         eip155: {
           accounts: [EVM_ACCOUNT],
@@ -299,17 +293,16 @@ describe('connectWallet through the popup', () => {
       transport,
     });
 
+    // An update over the saved pairing: no handshake and no session id.
     expect(transport.handshake).not.toHaveBeenCalled();
     expect(request).toHaveBeenCalledWith(
-      expect.objectContaining({
-        params: expect.objectContaining({ sessionId: 'session-1' }),
-      })
+      expect.objectContaining({ method: 'wallet_createSession' })
     );
+    expect(request.mock.calls[0]?.[0]).not.toHaveProperty('params.sessionId');
   });
 
   it('clears a stale stored session on 4100 without retrying', async () => {
     const restored: Session = {
-      sessionId: 'stale-session',
       namespaces: { eip155: { accounts: [EVM_ACCOUNT], methods: [...EIP155_METHODS] } },
     };
     const { transport, request } = setup({
@@ -331,7 +324,6 @@ describe('connectWallet through the popup', () => {
 
   it('keeps the stored session when the user rejects the popup', async () => {
     const restored: Session = {
-      sessionId: 'session-1',
       namespaces: { eip155: { accounts: [EVM_ACCOUNT], methods: [...EIP155_METHODS] } },
     };
     const { transport } = setup({
@@ -364,7 +356,6 @@ describe('connectWallet through the popup', () => {
         };
         const { version: _version, ...eip155Scope } = params.scopes.eip155;
         return {
-          sessionId: 'partial-session',
           scopes: {
             eip155: {
               ...eip155Scope,
@@ -387,13 +378,12 @@ describe('connectWallet through the popup', () => {
 
     expect(result.evm).toEqual({ accounts: [{ address: EVM_ACCOUNT }] });
     expect(result.solana).toEqual({ accounts: [] });
-    expect(transport.readSession()?.sessionId).toBe('partial-session');
+    expect(transport.readSession()?.namespaces.solana?.accounts).toEqual([]);
   });
 
   it('projects fresh accounts when the wallet grants only some requested methods', async () => {
     const { transport } = setup({
       result: () => ({
-        sessionId: 'method-partial-session',
         scopes: {
           eip155: {
             accounts: [EVM_ACCOUNT],
@@ -479,7 +469,6 @@ describe('connectWallet through the popup', () => {
   it('returns capability answers the wallet sent even when the dapp asked for none', async () => {
     const { transport } = setup({
       result: () => ({
-        sessionId: 'session-1',
         scopes: {
           eip155: {
             accounts: [EVM_ACCOUNT],
@@ -502,7 +491,6 @@ describe('connectWallet through the popup', () => {
     const OTHER = '0x0000000000000000000000000000000000000002';
     const { transport } = setup({
       result: () => ({
-        sessionId: 'per-account-session',
         scopes: {
           eip155: {
             accounts: [EVM_ACCOUNT, OTHER],
@@ -537,7 +525,6 @@ describe('connectWallet through the popup', () => {
           scopes: Record<string, { chains?: string[]; version?: string }>;
         };
         return {
-          sessionId: 'empty-session',
           scopes: Object.fromEntries(
             Object.entries(params.scopes).map(([namespace, scope]) => {
               const { version: _version, ...grantedScope } = scope;
@@ -562,7 +549,7 @@ describe('connectWallet through the popup', () => {
       code: standardErrorCodes.provider.unauthorized,
       message: 'Wallet did not grant any requested namespace',
     });
-    expect(transport.readSession()?.sessionId).toBe('empty-session');
+    expect(transport.readSession()?.namespaces.eip155?.accounts).toEqual([]);
   });
 
   it('rejects namespaces that are not implemented yet', async () => {

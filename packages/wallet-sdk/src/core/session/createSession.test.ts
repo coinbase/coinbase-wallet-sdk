@@ -25,9 +25,8 @@ function transport(
   } satisfies WalletTransport;
 }
 
-function solanaResult(sessionId = 'solana-session') {
+function solanaResult() {
   return {
-    sessionId,
     scopes: {
       solana: {
         accounts: [SOLANA_PUBLIC_KEY],
@@ -56,7 +55,6 @@ describe('createSession', () => {
 
   it('persists a partial grant without applying namespace policy', async () => {
     const send = vi.fn().mockResolvedValue({
-      sessionId: 'partial-session',
       scopes: {
         eip155: {
           accounts: ['0x0000000000000000000000000000000000000001'],
@@ -79,47 +77,37 @@ describe('createSession', () => {
     expect(rt.readSession()).toBe(session);
   });
 
-  it('reuses restored keys when updating the same session', async () => {
-    const restored = {
-      ...sessionFromSolanaAccounts({ accounts: [SOLANA_PUBLIC_KEY] }),
-      sessionId: 'solana-session',
-    };
+  it('updates over the saved pairing without a handshake', async () => {
+    const restored = sessionFromSolanaAccounts({ accounts: [SOLANA_PUBLIC_KEY] });
     const send = vi.fn().mockResolvedValue(solanaResult());
     const rt = transport(send, restored);
 
     await createSession(rt, createSolanaMainnetScopes());
 
     expect(rt.handshake).not.toHaveBeenCalled();
-    expect(send).toHaveBeenCalledWith(
-      expect.objectContaining({
-        params: expect.objectContaining({ sessionId: 'solana-session' }),
-      })
-    );
+    // No session id: the wallet merges into the pairing the request arrives on.
+    expect(send).toHaveBeenCalledWith({
+      method: 'wallet_createSession',
+      params: { scopes: createSolanaMainnetScopes() },
+    });
   });
 
   it('never retries a 4100, so a decline does not re-prompt', async () => {
-    // The wallet answers 4100 both for a session id it no longer holds and for an
+    // The wallet answers 4100 both for a pairing it no longer holds and for an
     // approval that granted nothing. Retrying would re-prompt the second user.
     const error = standardErrors.provider.unauthorized();
-    const restored = {
-      ...sessionFromSolanaAccounts({ accounts: [SOLANA_PUBLIC_KEY] }),
-      sessionId: 'stale-session',
-    };
+    const restored = sessionFromSolanaAccounts({ accounts: [SOLANA_PUBLIC_KEY] });
     const send = vi.fn<(request: RequestArguments) => Promise<unknown>>().mockRejectedValue(error);
     const rt = transport(send, restored);
 
     await expect(createSession(rt, createSolanaMainnetScopes())).rejects.toBe(error);
     expect(send).toHaveBeenCalledOnce();
-    expect(send.mock.calls[0]?.[0]).toHaveProperty('params.sessionId', 'stale-session');
     expect(rt.handshake).not.toHaveBeenCalled();
     expect(rt.writeSession).not.toHaveBeenCalled();
   });
 
   it('clears the session on a 4100, so the next connect starts clean', async () => {
-    const restored = {
-      ...sessionFromSolanaAccounts({ accounts: [SOLANA_PUBLIC_KEY] }),
-      sessionId: 'stale-session',
-    };
+    const restored = sessionFromSolanaAccounts({ accounts: [SOLANA_PUBLIC_KEY] });
     const rt = transport(
       vi.fn().mockRejectedValue(standardErrors.provider.unauthorized()),
       restored
@@ -133,10 +121,7 @@ describe('createSession', () => {
 
   it('does not retry other errors either', async () => {
     const error = standardErrors.provider.userRejectedRequest();
-    const restored = {
-      ...sessionFromSolanaAccounts({ accounts: [SOLANA_PUBLIC_KEY] }),
-      sessionId: 'session',
-    };
+    const restored = sessionFromSolanaAccounts({ accounts: [SOLANA_PUBLIC_KEY] });
     const send = vi.fn().mockRejectedValue(error);
     const rt = transport(send, restored);
 

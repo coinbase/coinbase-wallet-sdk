@@ -35,13 +35,11 @@ function setup(
 }
 
 function eip155Result(opts?: {
-  sessionId?: string;
   accounts?: string[];
   capabilities?: Record<string, unknown>;
 }) {
   const accounts = opts?.accounts ?? [ADDRESS];
   return {
-    sessionId: opts?.sessionId ?? 'session-1',
     scopes: {
       eip155: {
         accounts,
@@ -77,7 +75,6 @@ describe('connectEip155', () => {
   it("returns each account's own capability answers when the wallet sends them per account", async () => {
     const OTHER = '0x0000000000000000000000000000000000000002';
     const send = vi.fn().mockResolvedValue({
-      sessionId: 'session-1',
       scopes: {
         eip155: {
           accounts: [ADDRESS, OTHER],
@@ -103,23 +100,16 @@ describe('connectEip155', () => {
     });
   });
 
-  it('updates the stored session id without a new handshake', async () => {
-    const restored = {
-      ...sessionFromAccounts({ accounts: [ADDRESS], chainId: 1 }),
-      sessionId: 'session-1',
-    };
-    const send = vi.fn().mockResolvedValue(eip155Result({ sessionId: 'session-1' }));
+  it('updates the saved session without a new handshake', async () => {
+    const restored = sessionFromAccounts({ accounts: [ADDRESS], chainId: 1 });
+    const send = vi.fn().mockResolvedValue(eip155Result());
     const { transport, context } = setup(send, { restored });
 
     await connectEip155(context, [{ version: '1' }]);
 
     expect(transport.handshake).not.toHaveBeenCalled();
-    expect(send).toHaveBeenCalledWith(
-      expect.objectContaining({
-        method: 'wallet_createSession',
-        params: expect.objectContaining({ sessionId: 'session-1' }),
-      })
-    );
+    expect(send).toHaveBeenCalledWith(expect.objectContaining({ method: 'wallet_createSession' }));
+    expect(send.mock.calls[0]?.[0]).not.toHaveProperty('params.sessionId');
   });
 
   it('does not emit when CAIP-25 grants no accounts', async () => {
