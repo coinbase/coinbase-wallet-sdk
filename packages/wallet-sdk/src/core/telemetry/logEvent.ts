@@ -58,11 +58,14 @@ type CCAEventData = {
   appPreferredSigner?: string;
   // Custom Attributes
   signerType?: 'base-account'; // backwards compatibility
+  surface?: string; // SDK surface the dapp called: `evm`, `solana`, or `connect`
   method?: string; // RPC method
   correlationId?: string;
+  errorCode?: number;
   errorMessage?: string;
   dialogContext?: string;
   dialogAction?: string;
+  clearReason?: string;
 };
 
 type AnalyticsEventData = {

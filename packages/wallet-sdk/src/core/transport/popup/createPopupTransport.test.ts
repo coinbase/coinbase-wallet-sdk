@@ -1,5 +1,8 @@
+import { standardErrors } from ':core/error/errors.js';
 import { sessionFromAccounts } from ':core/namespaces/eip155/session.fixtures.js';
 import { sessionFromSolanaAccounts } from ':core/namespaces/solana/session.js';
+import { logWalletRequestCompleted, logWalletRequestError } from ':core/telemetry/events/wallet.js';
+import { handshake } from ':core/transport/popup/handshake.js';
 import { send } from ':core/transport/popup/send.js';
 import { bindStore, createStoreInstance } from ':store/store.js';
 import type { OpenFn } from ':util/web.js';
@@ -25,6 +28,11 @@ vi.mock(':core/transport/popup/handshake.js', () => ({
 
 vi.mock(':core/transport/popup/send.js', () => ({
   send: vi.fn().mockResolvedValue({ result: { value: '0xok' } }),
+}));
+
+vi.mock(':core/telemetry/events/wallet.js', () => ({
+  logWalletRequestCompleted: vi.fn(),
+  logWalletRequestError: vi.fn(),
 }));
 
 const metadata = { appName: 'Test', appLogoUrl: null };
@@ -87,6 +95,46 @@ describe('createPopupTransport', () => {
     await expect(transport.request(request)).resolves.toBe('0xok');
 
     expect(send).toHaveBeenCalledWith(expect.anything(), request, undefined);
+  });
+
+  it("sends the dapp request's correlation id and logs each wallet answer", async () => {
+    const transport = createTestTransport();
+    const request = { method: 'wallet_createSession', params: { scopes: {} } };
+
+    await transport.handshake({ method: 'handshake' }, 'correlation-1');
+    await transport.request(request, 'correlation-1');
+
+    expect(handshake).toHaveBeenCalledWith(
+      expect.anything(),
+      { method: 'handshake' },
+      'correlation-1'
+    );
+    expect(send).toHaveBeenCalledWith(expect.anything(), request, 'correlation-1');
+    expect(logWalletRequestCompleted).toHaveBeenCalledWith({
+      method: 'handshake',
+      correlationId: 'correlation-1',
+    });
+    expect(logWalletRequestCompleted).toHaveBeenCalledWith({
+      method: 'wallet_createSession',
+      correlationId: 'correlation-1',
+    });
+  });
+
+  it('logs the code of an error the wallet answers with, then rethrows it', async () => {
+    const transport = createTestTransport();
+    const error = standardErrors.provider.unauthorized('Unknown pairing');
+    vi.mocked(send).mockResolvedValueOnce({ result: { error } } as never);
+
+    await expect(
+      transport.request({ method: 'wallet_invokeMethod' }, 'correlation-2')
+    ).rejects.toBe(error);
+
+    expect(logWalletRequestError).toHaveBeenCalledWith({
+      method: 'wallet_invokeMethod',
+      correlationId: 'correlation-2',
+      errorCode: 4100,
+      errorMessage: 'Unknown pairing',
+    });
   });
 
   it('clears pairing keys and session state in one cleanup', async () => {

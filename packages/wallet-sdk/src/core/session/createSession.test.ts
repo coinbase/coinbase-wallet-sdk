@@ -4,8 +4,11 @@ import {
   sessionFromSolanaAccounts,
 } from ':core/namespaces/solana/session.js';
 import type { RequestArguments } from ':core/provider/interface.js';
+import { logSessionCleared } from ':core/telemetry/events/session.js';
 import type { WalletTransport } from ':core/transport/index.js';
 import { createSession } from './createSession.js';
+
+vi.mock(':core/telemetry/events/session.js', () => ({ logSessionCleared: vi.fn() }));
 
 const SOLANA_PUBLIC_KEY = 'So11111111111111111111111111111111111111112';
 
@@ -117,6 +120,18 @@ describe('createSession', () => {
       code: 4100,
     });
     expect(rt.cleanup).toHaveBeenCalledOnce();
+    expect(logSessionCleared).toHaveBeenCalledWith({ clearReason: 'unauthorized' });
+  });
+
+  it('reports no cleared session when a first connect is declined', async () => {
+    vi.mocked(logSessionCleared).mockClear();
+    const rt = transport(vi.fn().mockRejectedValue(standardErrors.provider.unauthorized()));
+
+    await expect(createSession(rt, createSolanaMainnetScopes())).rejects.toMatchObject({
+      code: 4100,
+    });
+    expect(rt.cleanup).toHaveBeenCalledOnce();
+    expect(logSessionCleared).not.toHaveBeenCalled();
   });
 
   it('does not retry other errors either', async () => {

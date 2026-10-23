@@ -14,12 +14,12 @@ import {
   RequestArguments,
 } from ':core/provider/interface.js';
 import type { Session } from ':core/session/types.js';
+import { logSessionCleared } from ':core/telemetry/events/session.js';
 import type { WalletTransport } from ':core/transport/index.js';
 import { hexStringFromNumber } from ':core/type/util.js';
-import { correlationIds } from ':store/correlation-ids/store.js';
 import type { Store } from ':store/store.js';
 import { checkErrorForInvalidRequestArgs } from ':util/provider.js';
-import { withMeasurement } from './withMeasurement.js';
+import { measureRequest } from '../measureRequest.js';
 
 type CoinbaseWalletProviderParams = {
   transport: WalletTransport;
@@ -36,7 +36,10 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
 
   constructor({ transport, store }: CoinbaseWalletProviderParams) {
     super();
-    this.request = withMeasurement(this.handleRequest);
+    this.request = async (args) =>
+      measureRequest({ surface: 'evm', method: args.method, transport }, (transport) =>
+        this.handleRequest(args, transport)
+      );
 
     const restoredSession = transport.readSession();
     this.connected = !!restoredSession && projectEthAccounts(restoredSession).length > 0;
@@ -68,7 +71,6 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
     this.connected = connected;
     if (!revokedElsewhere) return;
 
-    correlationIds.clear();
     this.emit('accountsChanged', []);
     this.emit(
       'disconnect',
@@ -76,10 +78,13 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
     );
   };
 
-  private handleRequest = async <T>(args: RequestArguments): Promise<T> => {
+  private handleRequest = async (
+    args: RequestArguments,
+    transport: WalletTransport
+  ): Promise<unknown> => {
     try {
       checkErrorForInvalidRequestArgs(args);
-      return (await handleEip1193Request(this.context, args)) as T;
+      return await handleEip1193Request({ ...this.context, transport }, args);
     } catch (error) {
       return Promise.reject(serializeError(error));
     }
@@ -87,8 +92,9 @@ export class CoinbaseWalletProvider extends ProviderEventEmitter implements Prov
 
   async disconnect() {
     this.connected = false;
+    const saved = this.context.transport.readSession();
     await this.context.transport.cleanup();
-    correlationIds.clear();
+    if (saved) logSessionCleared({ clearReason: 'user_disconnect' });
     this.emit('disconnect', standardErrors.provider.disconnected('User initiated disconnection'));
   }
 

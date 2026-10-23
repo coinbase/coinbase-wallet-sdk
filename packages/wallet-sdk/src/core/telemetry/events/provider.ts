@@ -1,17 +1,21 @@
 import { ActionType, AnalyticsEventImportance, ComponentType, logEvent } from '../logEvent.js';
 
-export const logRequestStarted = ({
-  method,
-  correlationId,
-}: {
+/** The public SDK surface a request came through: `sdk.evm`, `sdk.solana`, or `sdk.connect`. */
+export type Surface = 'evm' | 'solana' | 'connect';
+
+type RequestMeasurement = {
+  surface: Surface;
   method: string;
-  correlationId: string | undefined;
-}) => {
+  correlationId: string;
+};
+
+export const logRequestStarted = ({ surface, method, correlationId }: RequestMeasurement) => {
   logEvent(
     'provider.request.started',
     {
       action: ActionType.unknown,
       componentType: ComponentType.unknown,
+      surface,
       method,
       signerType: 'base-account',
       correlationId,
@@ -21,12 +25,13 @@ export const logRequestStarted = ({
 };
 
 export const logRequestError = ({
+  surface,
   method,
   correlationId,
+  errorCode,
   errorMessage,
-}: {
-  method: string;
-  correlationId: string | undefined;
+}: RequestMeasurement & {
+  errorCode: number | undefined;
   errorMessage: string;
 }) => {
   logEvent(
@@ -34,27 +39,24 @@ export const logRequestError = ({
     {
       action: ActionType.error,
       componentType: ComponentType.unknown,
+      surface,
       method,
       signerType: 'base-account',
       correlationId,
+      errorCode,
       errorMessage,
     },
     AnalyticsEventImportance.high
   );
 };
 
-export const logRequestResponded = ({
-  method,
-  correlationId,
-}: {
-  method: string;
-  correlationId: string | undefined;
-}) => {
+export const logRequestResponded = ({ surface, method, correlationId }: RequestMeasurement) => {
   logEvent(
     'provider.request.responded',
     {
       action: ActionType.unknown,
       componentType: ComponentType.unknown,
+      surface,
       method,
       signerType: 'base-account',
       correlationId,

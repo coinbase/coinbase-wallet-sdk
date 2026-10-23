@@ -1,4 +1,5 @@
 import { standardErrorCodes } from ':core/error/constants.js';
+import { logSessionCleared } from ':core/telemetry/events/session.js';
 import type { WalletTransport } from ':core/transport/index.js';
 import { isRecord } from ':util/guards.js';
 import { createCaip27Request, readCaip27Result } from './caip27.js';
@@ -45,6 +46,7 @@ export async function invoke(
   } catch (error) {
     if (isRecord(error) && error.code === standardErrorCodes.provider.unauthorized) {
       await transport.cleanup();
+      logSessionCleared({ clearReason: 'unauthorized' });
     }
     throw error;
   }
