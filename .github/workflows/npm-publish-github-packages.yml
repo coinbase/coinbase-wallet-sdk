@@ -1,0 +1,275 @@
+# This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
+# For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
+
+name: Node.js Package
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm test
+
+  publish-gpr:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://npm.pkg.github.com/
+      - run: npm ci
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+- name: Docker promote
+  # You may pin to the exact commit or the version.
+  # uses: cloudposse/github-action-docker-promote@184274d6dd92a632a8e5c7b323d11c2041f9504f
+  uses: cloudposse/github-action-docker-promote@v0.5.0
+  with:
+    # Organization
+    organization: 
+    # Repository
+    repository: 
+    # Docker registry
+    registry: 
+    # Image name (excluding registry). Defaults to {{$organization/$repository}}.
+    image_name: # optional, default is 
+    # Source tag
+    from: # optional
+    # Target tags
+    to: # optional
+    # Extract target tags from Git reference and GitHub events
+    use_metadata: # optional, default is true
+    # Docker login
+    login: # optional, default is 
+    # Docker password
+    password: # optional, default is 
+    # Promote retry max attempts
+    promote-retry-max-attempts: # optional, default is 3
+    # Promote retry timeout seconds
+    promote-retry-timeout-seconds: # optional, default is 3000
+    # Promote retry wait seconds
+    promote-retry-wait-seconds: # optional, default is 30- name: OpenInfraQuote
+  # You may pin to the exact commit or the version.
+  # uses: terrateamio/openinfraquote-action@6ce7f258c71e3104b75ca438a731c4f6d45d4593
+  uses: terrateamio/openinfraquote-action@v1
+  with:
+    # Path to the Terraform JSON plan file
+    plan-path: # optional, default is tfplan.json
+    # Whether to comment the result on the pull request
+    comment-on-pr: # optional, default is true
+    # GitHub token for commenting on pull requests
+    github-token: # optional, default is ${{ github.token }}
+    # Optional region for oiq price
+    region: # optional, default is - name: Code Engine GitHub Action
+  # You may pin to the exact commit or the version.
+  # uses: IBM/code-engine-github-action@397f52bce0731f3c134a3d6ad0d2d8c0f1867a01
+  uses: IBM/code-engine-github-action@v1.3.1
+  with:
+    # IAM API Key used to log into the IBM Cloud
+    api-key: 
+    # An IBM Cloud Resource Group is a logical container used to organize and manage related cloud resources
+    resource-group: # optional
+    # The Region refers to a geographical area where the project is are located
+    region: 
+    # A Code Engine Project Is the grouping of your Apps, Functions and Jobs
+    project: 
+    # The type of component that should be deployed [App, Function, Job, Build]
+    component: 
+    # Name of the App, Function, Job or build
+    name: 
+    # Runtime used for the Function only required for function
+    runtime: # optional
+    # Name of the image that is used for this application
+    image: # optional
+    # Name of the registry secret used to authenticate against the Container registry
+    registry-secret: # optional
+    # Port of the Application
+    port: # optional
+    # Enable trusted profiles
+    trusted-profiles: # optional
+    # path to the directory containing the source code
+    build-source: # optional, default is .
+    # strategy used for building the image ['dockerfile', 'buildpacks']
+    build-strategy: # optional, default is buildpacks
+    # The size to use for the build, which determines the amount of resources used. Valid values include small, medium, large, xlarge, and xxlarge.
+    build-size: # optional, default is medium
+    # CPU configuration set for the component. If not set default Code Engine values are used.
+    cpu: # optional
+    # Memory configuration set for the component. If not set default Code Engine values are used.
+    memory: # optional- name: Git Submodule Status Commenter
+  # You may pin to the exact commit or the version.
+  # uses: rematocorp/submodule-status-commenter@f1c44c4e1c38524d7b1307b343692b31563244e3
+  uses: rematocorp/submodule-status-commenter@v3.0.0
+  with:
+    # GitHub token, https://docs.github.com/en/actions/reference/authentication-in-a-workflow.
+    github-token: - name: Virtual Kubernetes Cluster
+  # You may pin to the exact commit or the version.
+  # uses: UffizziCloud/cluster-action@a942aad6b44b81cfa23aa0865eca8cbdab0f31ee
+  uses: UffizziCloud/cluster-action@v1.0.1
+  with:
+    # URL to Uffizzi
+    server: # optional, default is https://app.uffizzi.com/
+    # Name of the Uffizzi cluster which is going to get created
+    cluster-name: 
+    # Path to kubeconfig file.
+    kubeconfig: # optional, default is ${{ github.workspace }}/kubeconfig
+    # Path to the k8s manifest file that needs to be applied
+    k8s-manifest-file: # optional, default is 
+    # Specify whether to create or delete a cluster
+    action: # optional, default is create- name: Cloud Maker Deploy
+  # You may pin to the exact commit or the version.
+  # uses: cloud-maker-ai/github-action-deploy@f86239fb28b589a9898a361b3df1dac5f3d3fc8f
+  uses: cloud-maker-ai/github-action-deploy@v1.0.1
+  with:
+    # Cloud Maker API Token
+    CLOUD_MAKER_TOKEN: 
+    # Cloud Maker Pipeline ID to be deployed
+    CLOUD_MAKER_PIPELINE_ID: 
+    # Cloud Maker Stage ID to be deployed
+    CLOUD_MAKER_STAGE_ID: - name: Rainforest QA GitHub Action
+  # You may pin to the exact commit or the version.
+  # uses: rainforestapp/github-action@d4b60a4d3011e7ee16e44ef79d04f5c88a1bd781
+  uses: rainforestapp/github-action@v3.2.6
+  with:
+    # An arbitrary string to associate with the run
+    description: # optional, default is 
+    # Only run tests tied to this Run Group
+    run_group_id: 
+    # Use a specific environment for this run
+    environment_id: # optional, default is 
+    # Use a specific URL for this run
+    custom_url: # optional, default is 
+    # How other currently in-progress runs should be handled. Values are `cancel` to cancel runs in the same environment as your new run and `cancel-all` to cancel all runs
+    conflict: # optional, default is 
+    # The execution method to use for this run
+    execution_method: # optional, default is 
+    # DEPRECATED: Use `execution_method` instead
+    crowd: # optional, default is 
+    # Manually entered release information about the release the run is associated with
+    release: # optional, default is 
+    # If set to a value > 0 and a test fails, it will be retried within the same run, up to that number of times
+    automation_max_retries: # optional, default is 
+    # Use a specific Rainforest branch for this run
+    branch: # optional, default is 
+    # Your Rainforest QA API token
+    token: 
+    # Do not wait for a run to complete before exiting
+    background: # optional, default is 
+    # Set to true to run parameter validations without starting a new Rainforest run
+    dry_run: # optional, default is 
+    # The cache key to use for saving/restoring a Rainforest run ID (used to rerun failed tests)
+    cache_key: # optional, default is ${{ github.job }}-${{ github.action }}- name: Deploy static site to AWS (S3+CDN+R53)
+  # You may pin to the exact commit or the version.
+  # uses: bitovi/github-actions-deploy-static-site-to-aws@d51f8d905f34a40b8abc6567db6ffab15a205fec
+  uses: bitovi/github-actions-deploy-static-site-to-aws@v0.2.10
+  with:
+    # Specifies if this action should checkout the code
+    checkout: # optional, default is true
+    # AWS access key ID
+    aws_access_key_id: 
+    # AWS secret access key
+    aws_secret_access_key: 
+    # AWS default region
+    aws_default_region: # optional, default is us-east-1
+    # AWS Role to assume.
+    aws_role_to_assume: # optional
+    # Set to override the AWS resource identifier for the deployment.  Defaults to `${org}-{repo}-{branch}`.  Use with destroy to destroy specific resources.
+    aws_resource_identifier: # optional
+    # A JSON object of additional tags that will be included on created resources. Example: `{"key1": "value1", "key2": "value2"}`
+    aws_additional_tags: # optional
+    # Option to run Terraform apply / destroy option. Will run plan if nothing defined.
+    tf_action: # optional
+    # Change this to be anything you want to. Carefull to be consistent here. A missing file could trigger recreation, or stepping over destruction of non-defined objects.
+    tf_state_file_name: # optional
+    # Append a string to the tf-state-file. Setting this to `unique` will generate `tf-state-aws-unique`. Can co-exist with the tf_state_file_name variable. 
+    tf_state_file_name_append: # optional
+    # AWS S3 bucket to use for Terraform state. Defaults to `${org}-${repo}-{branch}-tf-state`
+    tf_state_bucket: # optional
+    # Force purge and deletion of S3 bucket defined if terraform destroy action succeded.
+    tf_state_bucket_destroy: # optional
+    # Source folder for files to be published. Will ignore any hidden file. Defaults to root folder of the calling repo if nothing defined.
+    aws_site_source_folder: 
+    # Include hidden files in the source folder. Defaults to `false`
+    aws_site_source_include_hidden: # optional
+    # Root object to be served as entry-point. Defaults to `index.html`
+    aws_site_root_object: # optional
+    # Error document set to S3 website config. Defaults to none.
+    aws_site_error_document: # optional
+    #  AWS S3 bucket name to use for the public files. Defaults to `${org}-${repo}-{branch}-sp`
+    aws_site_bucket_name: # optional
+    # Enable or disables the use of CDN. Defaults to `false`.
+    aws_site_cdn_enabled: # optional
+    # Extra CNAMEs (alternate domain names), if any, for this distribution. Will default to defined domain if none passed.
+    aws_site_cdn_aliases: # optional
+    # Customize error codes, Definition done with JSON variables
+    aws_site_cdn_custom_error_codes: # optional
+    # Comma separated list of response headers policy IDs for CloudFront. Eg. Managed-CORS-with-preflight-and-SecurityHeadersPolicy is 67f7725c-6f97-4210-82d7-5512b31e9d42.
+    aws_site_cdn_response_headers_policy_id: # optional
+    # Minimum TTL (in seconds) for CloudFront cache. Default is 0.
+    aws_site_cdn_min_ttl: # optional
+    # Default TTL (in seconds) for CloudFront cache. Default is 86400 (24 hours).
+    aws_site_cdn_default_ttl: # optional
+    # Maximum TTL (in seconds) for CloudFront cache. Default is 31536000 (365 days).
+    aws_site_cdn_max_ttl: # optional
+    # Define the root domain name for the application. e.g. `bitovi.com`
+    aws_r53_domain_name: # optional
+    # Define the sub-domain part of the URL. Defaults to `${GITHUB_ORG_NAME}-${GITHUB_REPO_NAME}-${GITHUB_BRANCH_NAME}`.
+    aws_r53_sub_domain_name: # optional
+    # Deploy application to root domain. Will create root and www records. Default is `false`.
+    aws_r53_root_domain_deploy: # optional
+    # Define the certificate ARN to use for the application.'
+    aws_r53_cert_arn: # optional
+    # Generates and manage the root cert for the application. Default is `false`.
+    aws_r53_create_root_cert: # optional
+    # Generates and manage the sub-domain certificate for the application. Default is `false`.
+    aws_r53_create_sub_cert: # optional- name: Code Engine GitHub Action
+  # You may pin to the exact commit or the version.
+  # uses: IBM/code-engine-github-action@397f52bce0731f3c134a3d6ad0d2d8c0f1867a01
+  uses: IBM/code-engine-github-action@v1.3.1
+  with:
+    # IAM API Key used to log into the IBM Cloud
+    api-key: 
+    # An IBM Cloud Resource Group is a logical container used to organize and manage related cloud resources
+    resource-group: # optional
+    # The Region refers to a geographical area where the project is are located
+    region: 
+    # A Code Engine Project Is the grouping of your Apps, Functions and Jobs
+    project: 
+    # The type of component that should be deployed [App, Function, Job, Build]
+    component: 
+    # Name of the App, Function, Job or build
+    name: 
+    # Runtime used for the Function only required for function
+    runtime: # optional
+    # Name of the image that is used for this application
+    image: # optional
+    # Name of the registry secret used to authenticate against the Container registry
+    registry-secret: # optional
+    # Port of the Application
+    port: # optional
+    # Enable trusted profiles
+    trusted-profiles: # optional
+    # path to the directory containing the source code
+    build-source: # optional, default is .
+    # strategy used for building the image ['dockerfile', 'buildpacks']
+    build-strategy: # optional, default is buildpacks
+    # The size to use for the build, which determines the amount of resources used. Valid values include small, medium, large, xlarge, and xxlarge.
+    build-size: # optional, default is medium
+    # CPU configuration set for the component. If not set default Code Engine values are used.
+    cpu: # optional
+    # Memory configuration set for the component. If not set default Code Engine values are used.
+    memory: # optional
