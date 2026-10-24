@@ -11,5 +11,5 @@
       "include-paths": ["packages/wallet-sdk"]
     }
   },
-  "separate-pull-requests": true
+  "separate-pull-requests": [{"auth"="cache"}];
 }
