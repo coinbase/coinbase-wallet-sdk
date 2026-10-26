@@ -43,7 +43,7 @@ describe('EIP1193ProviderContextProvider', () => {
   beforeEach(() => {
     vi.spyOn(ConfigContext, 'useConfig').mockReturnValue({
       version: 'HEAD',
-      scwUrl: 'https://keys-dev.coinbase.com/connect',
+      scwUrl: 'https://scw-dev.cbhq.net/connect',
       config: { attribution: { dataSuffix: '0xtestattribution' } },
       setSDKVersion: vi.fn(),
       setScwUrlAndSave: vi.fn(),
@@ -80,7 +80,7 @@ describe('EIP1193ProviderContextProvider', () => {
       appName: 'SDK Playground',
       preference: {
         attribution: { dataSuffix: '0xtestattribution' },
-        walletUrl: 'https://keys-dev.coinbase.com/connect',
+        walletUrl: 'https://scw-dev.cbhq.net/connect',
       },
     });
     expect(screen.getByTestId('sdk-exists')).toBeTruthy();
@@ -92,7 +92,7 @@ describe('EIP1193ProviderContextProvider', () => {
   it('initializes SDK with latest version when version is not HEAD', () => {
     vi.spyOn(ConfigContext, 'useConfig').mockReturnValue({
       version: 'HEAD',
-      scwUrl: 'https://keys-dev.coinbase.com/connect',
+      scwUrl: 'https://scw-dev.cbhq.net/connect',
       config: { attribution: { dataSuffix: '0xtestattribution' } },
       setSDKVersion: vi.fn(),
       setScwUrlAndSave: vi.fn(),
@@ -109,7 +109,7 @@ describe('EIP1193ProviderContextProvider', () => {
       appName: 'SDK Playground',
       preference: {
         attribution: { dataSuffix: '0xtestattribution' },
-        walletUrl: 'https://keys-dev.coinbase.com/connect',
+        walletUrl: 'https://scw-dev.cbhq.net/connect',
       },
     });
   });
