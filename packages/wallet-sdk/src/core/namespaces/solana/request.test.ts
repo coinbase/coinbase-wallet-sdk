@@ -2,10 +2,13 @@ import { standardErrorCodes } from ':core/error/constants.js';
 import { sessionFromAccounts } from ':core/namespaces/eip155/session.fixtures.js';
 import type { RequestArguments } from ':core/provider/interface.js';
 import type { Envelope, Session } from ':core/session/types.js';
+import { logSessionCleared } from ':core/telemetry/events/session.js';
 import type { WalletTransport } from ':core/transport/index.js';
 import { SOLANA_MAINNET, SOLANA_NAMESPACE } from './caip.js';
 import { handleSolanaRequest } from './request.js';
 import { sessionFromSolanaAccounts } from './session.js';
+
+vi.mock(':core/telemetry/events/session.js', () => ({ logSessionCleared: vi.fn() }));
 
 const PUBLIC_KEY = 'So11111111111111111111111111111111111111112';
 const EVM_ADDRESS = '0x0000000000000000000000000000000000000001';
@@ -348,6 +351,7 @@ describe('handleSolanaRequest', () => {
   });
 
   it('cleans up only when the shared session contains Solana', async () => {
+    vi.mocked(logSessionCleared).mockClear();
     const evm = transportState(
       sessionFromAccounts({
         accounts: ['0x0000000000000000000000000000000000000001'],
@@ -356,12 +360,14 @@ describe('handleSolanaRequest', () => {
     );
     await handleSolanaRequest(evm.transport, { method: 'disconnect' });
     expect(evm.cleanup).not.toHaveBeenCalled();
+    expect(logSessionCleared).not.toHaveBeenCalled();
 
     const solana = transportState({
       ...sessionFromSolanaAccounts({ accounts: [PUBLIC_KEY] }),
     });
     await handleSolanaRequest(solana.transport, { method: 'disconnect' });
     expect(solana.cleanup).toHaveBeenCalledTimes(1);
+    expect(logSessionCleared).toHaveBeenCalledWith({ clearReason: 'user_disconnect' });
   });
 
   it('rejects methods outside the Solana interface', async () => {

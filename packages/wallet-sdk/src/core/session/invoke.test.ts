@@ -6,10 +6,13 @@ import {
   sessionFromSolanaAccounts,
   solanaTranslator,
 } from ':core/namespaces/solana/index.js';
+import { logSessionCleared } from ':core/telemetry/events/session.js';
 import type { WalletTransport } from ':core/transport/index.js';
 import { Address } from ':core/type/index.js';
 import { invoke, invokeEphemeral } from './invoke.js';
 import type { Envelope } from './types.js';
+
+vi.mock(':core/telemetry/events/session.js', () => ({ logSessionCleared: vi.fn() }));
 
 const ADDRESS = '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' as Address;
 const OTHER = '0x0000000000000000000000000000000000000001' as Address;
@@ -118,6 +121,7 @@ describe('invoke', () => {
   });
 
   it('clears the session on a 4100, from the wallet or from authorization', async () => {
+    vi.mocked(logSessionCleared).mockClear();
     const session = sessionFromAccounts({ accounts: [ADDRESS], chainId: 8453 });
     const staleTransport = transport(
       vi.fn().mockRejectedValue({ code: standardErrorCodes.provider.unauthorized })
@@ -142,6 +146,8 @@ describe('invoke', () => {
       )
     ).rejects.toThrow(/not in the session/);
     expect(unauthorizedTransport.cleanup).toHaveBeenCalledOnce();
+    expect(logSessionCleared).toHaveBeenCalledTimes(2);
+    expect(logSessionCleared).toHaveBeenCalledWith({ clearReason: 'unauthorized' });
   });
 
   it('rejects a from that is not in the session', async () => {

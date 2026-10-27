@@ -4,6 +4,7 @@ import * as checkCrossOriginModule from ':util/checkCrossOriginOpenerPolicy.js';
 import * as validatePreferencesModule from ':util/validatePreferences.js';
 import type { Hex } from 'viem';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { connectWallet } from './connect/connect.js';
 import {
   CreateProviderOptions,
   _resetGlobalInitialization,
@@ -25,6 +26,7 @@ vi.mock(':store/store.js', () => ({
       subscribe: vi.fn(),
     },
     config: {
+      get: vi.fn(),
       set: vi.fn(),
     },
     eip155: {},
@@ -36,6 +38,10 @@ vi.mock(':store/store.js', () => ({
 
 vi.mock(':core/telemetry/initCCA.js', () => ({
   loadTelemetryScript: vi.fn(),
+}));
+
+vi.mock('./connect/connect.js', () => ({
+  connectWallet: vi.fn(),
 }));
 
 vi.mock('./createTransport.js', () => ({
@@ -82,6 +88,7 @@ describe('createProvider', () => {
       mockProvider: true,
     });
     mockCreateTransport.mockReturnValue({ mockTransport: true });
+    mockStore.config.get.mockReturnValue({});
     // Default: getInjectedProvider returns null to test CoinbaseWalletProvider fallback
     mockGetInjectedProvider.mockReturnValue(null);
   });
@@ -240,9 +247,47 @@ describe('createProvider', () => {
 
       expect(mockLoadTelemetryScript).not.toHaveBeenCalled();
     });
+
+    it('measures sdk.connect() as a request on the sdk_connect surface', async () => {
+      const logEvent = vi.fn();
+      window.ClientAnalytics = { logEvent } as unknown as typeof window.ClientAnalytics;
+      vi.mocked(connectWallet).mockResolvedValue({ evm: { accounts: [] } });
+
+      await createCoinbaseWalletSDK({}).connect();
+
+      expect(connectWallet).toHaveBeenCalledWith({
+        options: undefined,
+        transport: expect.objectContaining({ mockTransport: true }),
+      });
+      expect(logEvent).toHaveBeenCalledWith(
+        'provider.request.responded',
+        expect.objectContaining({ surface: 'sdk_connect', method: 'connect' }),
+        'high'
+      );
+      window.ClientAnalytics = undefined;
+    });
   });
 
   describe('Provider fallback behavior', () => {
+    it('logs which provider getProvider() picked, once per SDK', () => {
+      const logEvent = vi.fn();
+      window.ClientAnalytics = { logEvent } as unknown as typeof window.ClientAnalytics;
+      const selected = () =>
+        logEvent.mock.calls
+          .filter(([name]) => name === 'provider.selected')
+          .map(([, data]) => data);
+
+      const sdk = createCoinbaseWalletSDK({});
+      sdk.evm.getProvider();
+      sdk.evm.getProvider();
+      expect(selected()).toEqual([expect.objectContaining({ providerKind: 'sdk' })]);
+
+      mockGetInjectedProvider.mockReturnValue({ request: vi.fn(), isCoinbaseBrowser: true });
+      createCoinbaseWalletSDK({}).evm.getProvider();
+      expect(selected()[1]).toEqual(expect.objectContaining({ providerKind: 'injected' }));
+      window.ClientAnalytics = undefined;
+    });
+
     it('shares one popup transport between the Solana wallet and the EVM provider', () => {
       const sdk = createCoinbaseWalletSDK({});
       sdk.evm.getProvider();

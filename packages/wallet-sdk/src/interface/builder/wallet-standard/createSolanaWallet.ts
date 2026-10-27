@@ -22,6 +22,7 @@ import {
   StandardEvents,
   type StandardEventsOnMethod,
 } from '@wallet-standard/features';
+import { withMeasurement } from '../withMeasurement.js';
 import { grantedOptionalFeatures, sessionToWalletAccounts } from './accounts.js';
 import {
   CoinbaseSignPreparedCalls,
@@ -66,7 +67,10 @@ export function createSolanaWallet(
   const invoke = async <Request extends SolanaInvokeRequest>(
     request: Request
   ): Promise<SolanaInvokeResultFor<Request>> =>
-    (await handleSolanaRequest(transport, request)) as SolanaInvokeResultFor<Request>;
+    (await withMeasurement(
+      { surface: 'wallet_standard', method: request.method, transport },
+      (measuredTransport) => handleSolanaRequest(measuredTransport, request)
+    )) as SolanaInvokeResultFor<Request>;
 
   const features: RequiredSolanaFeatures = {
     [StandardConnect]: {
@@ -75,7 +79,10 @@ export function createSolanaWallet(
         // Silent connect reports the restored accounts; it never prompts or pairs.
         if (options?.silent) return { accounts };
         // Core throws 4100 when the wallet grants no Solana account.
-        await handleSolanaRequest(transport, { method: 'connect' });
+        await withMeasurement(
+          { surface: 'wallet_standard', method: 'connect', transport },
+          (measuredTransport) => handleSolanaRequest(measuredTransport, { method: 'connect' })
+        );
         sync(transport.readSession());
         return { accounts };
       },
@@ -83,7 +90,10 @@ export function createSolanaWallet(
     [StandardDisconnect]: {
       version: '1.0.0',
       async disconnect() {
-        await handleSolanaRequest(transport, { method: 'disconnect' });
+        await withMeasurement(
+          { surface: 'wallet_standard', method: 'disconnect', transport },
+          (measuredTransport) => handleSolanaRequest(measuredTransport, { method: 'disconnect' })
+        );
         sync(undefined);
       },
     },

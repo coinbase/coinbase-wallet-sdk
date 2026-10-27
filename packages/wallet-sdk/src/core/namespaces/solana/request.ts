@@ -3,6 +3,7 @@ import type { WalletTransport } from ':core/transport/index.js';
 import { activeSession, sessionCovers } from ':core/session/grants.js';
 import { createSession } from ':core/session/createSession.js';
 import { invoke } from ':core/session/invoke.js';
+import { logSessionCleared } from ':core/telemetry/events/session.js';
 import { SOLANA_MAINNET } from './caip.js';
 import {
   SOLANA_MAINNET_REQUIRED_SCOPES,
@@ -63,7 +64,10 @@ export async function handleSolanaRequest(
     case 'connect':
       return connect(transport);
     case 'disconnect':
-      if (session && sessionCovers(session, [SOLANA_MAINNET])) await transport.cleanup();
+      if (session && sessionCovers(session, [SOLANA_MAINNET])) {
+        await transport.cleanup();
+        logSessionCleared({ clearReason: 'user_disconnect' });
+      }
       return undefined;
     case 'solana_signMessage':
     case 'solana_signTransaction':

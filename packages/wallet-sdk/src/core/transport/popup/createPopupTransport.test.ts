@@ -1,5 +1,6 @@
 import { sessionFromAccounts } from ':core/namespaces/eip155/session.fixtures.js';
 import { sessionFromSolanaAccounts } from ':core/namespaces/solana/session.js';
+import { handshake } from ':core/transport/popup/handshake.js';
 import { send } from ':core/transport/popup/send.js';
 import { bindStore, createStoreInstance } from ':store/store.js';
 import type { OpenFn } from ':util/web.js';
@@ -87,6 +88,21 @@ describe('createPopupTransport', () => {
     await expect(transport.request(request)).resolves.toBe('0xok');
 
     expect(send).toHaveBeenCalledWith(expect.anything(), request, undefined);
+  });
+
+  it("sends the dapp request's correlation id with the handshake and the request", async () => {
+    const transport = createTestTransport();
+    const request = { method: 'wallet_createSession', params: { scopes: {} } };
+
+    await transport.handshake({ method: 'handshake' }, 'correlation-1');
+    await transport.request(request, 'correlation-1');
+
+    expect(handshake).toHaveBeenCalledWith(
+      expect.anything(),
+      { method: 'handshake' },
+      'correlation-1'
+    );
+    expect(send).toHaveBeenCalledWith(expect.anything(), request, 'correlation-1');
   });
 
   it('clears pairing keys and session state in one cleanup', async () => {

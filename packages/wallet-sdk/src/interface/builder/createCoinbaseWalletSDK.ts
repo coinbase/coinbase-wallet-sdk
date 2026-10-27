@@ -4,6 +4,7 @@ import {
   Preference,
   ProviderInterface,
 } from ':core/provider/interface.js';
+import { logProviderSelected } from ':core/telemetry/events/provider.js';
 import { loadTelemetryScript } from ':core/telemetry/initCCA.js';
 import { store } from ':store/store.js';
 import { checkCrossOriginOpenerPolicy } from ':util/checkCrossOriginOpenerPolicy.js';
@@ -14,6 +15,7 @@ import type { ConnectOptions, ConnectResult } from './connect/types.js';
 import { createTransport } from './createTransport.js';
 import { CoinbaseWalletProvider } from './eip1193/CoinbaseWalletProvider.js';
 import { getInjectedProvider } from './eip1193/getInjectedProvider.js';
+import { withMeasurement } from './withMeasurement.js';
 import { getRegisteredSolanaWallet } from './wallet-standard/getRegisteredSolanaWallet.js';
 import {
   _resetSolanaWalletRegistration,
@@ -124,13 +126,18 @@ export function createCoinbaseWalletSDK(params: CreateProviderOptions) {
   return {
     connect: async (request?: ConnectOptions): Promise<ConnectResult> => {
       await rehydrationPromise;
-      return connectWallet({ options: request, transport });
+      return withMeasurement(
+        { surface: 'sdk_connect', method: 'connect', transport },
+        (measuredTransport) => connectWallet({ options: request, transport: measuredTransport })
+      );
     },
     evm: {
       namespace: 'evm',
       getProvider: () => {
         if (!evmProvider) {
-          evmProvider = getInjectedProvider() ?? new CoinbaseWalletProvider({ transport, store });
+          const injected = getInjectedProvider();
+          evmProvider = injected ?? new CoinbaseWalletProvider({ transport, store });
+          logProviderSelected({ providerKind: injected ? 'injected' : 'sdk' });
         }
 
         return evmProvider;
