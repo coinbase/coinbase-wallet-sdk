@@ -1,0 +1,17 @@
+{
+  "name": "Aurora",
+  "website": "https://auroracoin.unaux.com",
+  "description": "Aurora (AUR) is an ERC-20 utility token for the Aurora app—chat, payments, and merchant tools on Ethereum Mainnet.",
+  "explorer": "https://etherscan.io/token/0x4D850B46F71f50B6FfF21aa8fE46a6136403E6bd",
+  "type": "ERC20",
+  "symbol": "AUR",
+  "decimals": 18,
+  "status": "active",
+  "id": "0x4D850B46F71f50B6FfF21aa8fE46a6136403E6bd",
+  "links": [
+    { "name": "twitter", "url": "https://x.com/divinityxamelia" },
+    { "name": "website", "url": "https://auroracoin.unaux.com" }
+  ],
+  "tags": ["defi"],
+  "logoURI": "https://brown-additional-walrus-851.mypinata.cloud/ipfs/bafybeici3dfrn5dscijhjnmgkqaomnw5qnilx2qyrn4ggbhmr52ydgltiu"
+}
