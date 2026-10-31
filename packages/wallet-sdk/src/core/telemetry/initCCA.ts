@@ -44,6 +44,10 @@ const initCCA = () => {
         showDebugLogging: false,
         version: '1.0.0',
         apiEndpoint: 'https://cca-lite.coinbase.com',
+        // Telemetry is best effort. The default handler logs every failure with
+        // `console.error`, so an ad blocker that drops cca-lite requests would put
+        // "Analytics SDK: TypeError: Failed to fetch" in the app's console.
+        onError: () => {},
       });
 
       identify({ deviceId });

@@ -124,7 +124,27 @@ describe('initCCA', () => {
         showDebugLogging: false,
         version: '1.0.0',
         apiEndpoint: 'https://cca-lite.coinbase.com',
+        onError: expect.any(Function),
       });
+    });
+
+    it('should keep analytics errors out of the console', async () => {
+      const mockAppendChild = vi.fn().mockImplementation(() => {
+        (global.window as any).ClientAnalytics = mockClientAnalytics;
+      });
+
+      global.document.head.appendChild = mockAppendChild;
+
+      await loadTelemetryScript();
+
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      // What the analytics script reports when an ad blocker drops a request.
+      const { onError } = mockClientAnalytics.init.mock.calls[0][0];
+      onError(new TypeError('Failed to fetch'), { context: 'AnalyticsSDKApiError' });
+
+      expect(consoleSpy).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
     });
 
     it('should use deviceId from store.config.get() when available', async () => {
