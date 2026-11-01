@@ -146,6 +146,8 @@ interface ClientAnalyticsOptions {
   apiEndpoint?: string;
   showDebugLogging?: boolean;
   trackUserId?: boolean;
+  /** Receives internal and request errors. Defaults to logging them with `console.error`. */
+  onError?: (error: Error, context?: Record<string, unknown>) => void;
 }
 
 /**
