@@ -169,7 +169,14 @@ export default function SolanaPlayground() {
   const applyUnifiedConnection = (result: Awaited<ReturnType<typeof sdk.connect>>) => {
     const address = result.solana?.accounts[0]?.address;
     if (address) setConnectedAddress(address);
-    return result;
+    if (!result.solana) return result;
+    // Wallet Standard accounts keep their fields behind getters, which `JSON.stringify` skips.
+    const accounts = result.solana.accounts.map((account) => ({
+      address: account.address,
+      chains: account.chains,
+      features: account.features,
+    }));
+    return { ...result, solana: { accounts } };
   };
 
   const unifiedConnect = () =>
