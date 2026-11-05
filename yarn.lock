@@ -8815,6 +8815,7 @@ __metadata:
     "@wallet-standard/app": "npm:1.1.0"
     "@wallet-standard/base": "npm:1.1.0"
     "@wallet-standard/features": "npm:1.1.0"
+    "@wallet-standard/wallet": "npm:1.1.0"
     acorn: "npm:^8.15.0"
     framer-motion: "npm:^10.13.1"
     next: "npm:^14.2.10"

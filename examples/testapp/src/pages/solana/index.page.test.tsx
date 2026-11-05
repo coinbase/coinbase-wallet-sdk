@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { WalletAccount } from '@wallet-standard/base';
+import { ReadonlyWalletAccount } from '@wallet-standard/wallet';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useEIP1193Provider } from '../../context/EIP1193ProviderContextProvider';
 import SolanaPlayground from './index.page';
@@ -70,7 +71,7 @@ describe('SolanaPlayground', () => {
         accounts: [{ address: '0x0000000000000000000000000000000000000001' }],
       },
       solana: {
-        accounts: [{ address: account.address }],
+        accounts: [new ReadonlyWalletAccount(account)],
       },
     });
     vi.mocked(useEIP1193Provider).mockReturnValue({
@@ -85,7 +86,7 @@ describe('SolanaPlayground', () => {
 
     await waitFor(() => expect(sdkConnect).toHaveBeenCalledWith());
     expect(screen.getByText(/"evm":/)).toBeTruthy();
-    expect(screen.getByText(/"solana":/)).toBeTruthy();
+    expect(screen.getByText(new RegExp(`"address": "${account.address}"`))).toBeTruthy();
   });
 
   it('requests EVM AOS alongside Solana and renders the per-account result', async () => {
