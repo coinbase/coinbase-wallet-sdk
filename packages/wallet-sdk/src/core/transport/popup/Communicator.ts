@@ -11,6 +11,10 @@ import { ConfigMessage, PopupSetupV2Message } from ':core/message/ConfigMessage.
 import { Message, MessageID } from ':core/message/Message.js';
 import type { AppMetadata, Preference } from '../../../storage/schema.js';
 
+// How often to check whether the popup was closed without posting `PopupUnload`,
+// e.g. when the user closes it before the wallet page has loaded.
+const POPUP_CLOSED_POLL_INTERVAL_MS = 500;
+
 export type CommunicatorOptions = {
   url?: string;
   metadata: AppMetadata;
@@ -30,6 +34,7 @@ export class Communicator {
   private readonly url: URL;
   private readonly openFn?: OpenFn;
   private popup: Window | null = null;
+  private popupClosedPoll: ReturnType<typeof setInterval> | undefined;
   private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>();
 
   constructor({ url = CB_KEYS_URL, metadata, preference, openFn }: CommunicatorOptions) {
@@ -83,6 +88,9 @@ export class Communicator {
    * Closes the popup, rejects all requests and clears the listeners
    */
   private disconnect = () => {
+    clearInterval(this.popupClosedPoll);
+    this.popupClosedPoll = undefined;
+
     // Note: keys popup handles closing itself. this is a fallback.
     closePopup(this.popup);
     this.popup = null;
@@ -106,6 +114,19 @@ export class Communicator {
 
     logPopupSetupStarted();
     this.popup = await openPopup(this.url, this.openFn);
+
+    // A popup closed before the wallet posts `PopupUnload` sends no message at all, so
+    // poll `closed` and reject pending requests the same way an unload does.
+    clearInterval(this.popupClosedPoll);
+    this.popupClosedPoll = setInterval(() => {
+      let closed: boolean;
+      try {
+        closed = !this.popup || this.popup.closed;
+      } catch {
+        return; // unreadable for now; check again on the next tick
+      }
+      if (closed) this.disconnect();
+    }, POPUP_CLOSED_POLL_INTERVAL_MS);
 
     this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload')
       .then(() => {

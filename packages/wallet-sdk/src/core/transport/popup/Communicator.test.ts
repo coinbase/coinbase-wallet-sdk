@@ -5,11 +5,12 @@ import { AppMetadata, Preference } from ':core/provider/interface.js';
 import { CB_KEYS_URL, PACKAGE_NAME, PACKAGE_VERSION } from ':core/constants.js';
 import { standardErrorCodes } from ':core/error/constants.js';
 import { Message, MessageID } from ':core/message/Message.js';
-import { openPopup } from ':util/web.js';
+import { closePopup, openPopup } from ':util/web.js';
 import { Communicator } from './Communicator.js';
 
 vi.mock(':util/web', () => ({
   openPopup: vi.fn(),
+  closePopup: vi.fn(),
 }));
 
 // Dispatches a message event to simulate postMessage calls from the popup
@@ -289,6 +290,125 @@ describe('Communicator', () => {
       await communicator.waitForPopupLoaded();
 
       expect(openPopup).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('popup closed without PopupUnload', () => {
+    const userRejected = {
+      code: standardErrorCodes.provider.userRejectedRequest,
+      message: 'Request rejected',
+    };
+
+    // Earlier tests leave communicators listening on `window`, so count only this popup
+    const closePopupCalls = () =>
+      vi.mocked(closePopup).mock.calls.filter(([popup]) => popup === mockPopup).length;
+
+    // Opens the popup and completes the handshake under fake timers
+    async function loadPopup() {
+      const loaded = communicator.waitForPopupLoaded();
+      await vi.advanceTimersByTimeAsync(0);
+      dispatchMessageEvent({ ...popupLoadedMessage, origin: urlOrigin });
+      await loaded;
+    }
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('rejects the handshake when the popup is closed before it loads', async () => {
+      const loaded = communicator.waitForPopupLoaded();
+      const rejection = expect(loaded).rejects.toMatchObject(userRejected);
+      await vi.advanceTimersByTimeAsync(0);
+
+      (mockPopup as { closed: boolean }).closed = true;
+      await vi.advanceTimersByTimeAsync(500);
+
+      await rejection;
+      expect(removeEventListenerSpy).toHaveBeenCalledTimes(addEventListenerSpy.mock.calls.length);
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('does not let a later popup resolve the closed popup handshake', async () => {
+      const firstPopup = mockPopup;
+      const first = communicator.waitForPopupLoaded();
+      first.catch(() => {});
+      await vi.advanceTimersByTimeAsync(0);
+      (firstPopup as { closed: boolean }).closed = true;
+      await vi.advanceTimersByTimeAsync(500);
+
+      // Earlier tests' communicators may also open popups on this event; give them their own
+      const newPopup = () => ({
+        postMessage: vi.fn(),
+        close: vi.fn(),
+        closed: false,
+        focus: vi.fn(),
+      });
+      const secondPopup = newPopup();
+      (openPopup as Mock).mockImplementation(newPopup).mockImplementationOnce(() => secondPopup);
+      await loadPopup();
+
+      expect(firstPopup.postMessage).not.toHaveBeenCalled();
+      expect(secondPopup.postMessage).toHaveBeenCalledTimes(1);
+    });
+
+    it('rejects a pending request when the popup is closed after it was posted', async () => {
+      await loadPopup();
+      const response = communicator.postRequestAndWaitForResponse({
+        id: 'mock-request-id-1-2',
+        data: {},
+      });
+      const rejection = expect(response).rejects.toMatchObject(userRejected);
+      await vi.advanceTimersByTimeAsync(0);
+      expect(mockPopup.postMessage).toHaveBeenCalledWith(
+        { id: 'mock-request-id-1-2', data: {} },
+        urlOrigin
+      );
+
+      (mockPopup as { closed: boolean }).closed = true;
+      await vi.advanceTimersByTimeAsync(500);
+
+      await rejection;
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('keeps waiting while the popup stays open', async () => {
+      await loadPopup();
+      let settled = false;
+      const response = communicator
+        .postRequestAndWaitForResponse({ id: 'mock-request-id-1-2', data: {} })
+        .finally(() => {
+          settled = true;
+        });
+
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(settled).toBe(false);
+      expect(closePopupCalls()).toBe(0);
+
+      dispatchMessageEvent({ data: { requestId: 'mock-request-id-1-2' }, origin: urlOrigin });
+      await expect(response).resolves.toEqual({ requestId: 'mock-request-id-1-2' });
+    });
+
+    it('disconnects once on PopupUnload and stops polling', async () => {
+      await loadPopup();
+      const response = communicator.postRequestAndWaitForResponse({
+        id: 'mock-request-id-1-2',
+        data: {},
+      });
+      const rejection = expect(response).rejects.toMatchObject(userRejected);
+      await vi.advanceTimersByTimeAsync(0);
+
+      dispatchMessageEvent({ data: { event: 'PopupUnload' }, origin: urlOrigin });
+      await rejection;
+      expect(closePopupCalls()).toBe(1);
+      expect(vi.getTimerCount()).toBe(0);
+
+      (mockPopup as { closed: boolean }).closed = true;
+      await vi.advanceTimersByTimeAsync(1_000);
+      expect(closePopupCalls()).toBe(1);
     });
   });
 });
