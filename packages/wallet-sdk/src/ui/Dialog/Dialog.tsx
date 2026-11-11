@@ -7,7 +7,7 @@ import { projectEthAccounts } from ':core/namespaces/eip155/session.js';
 import { getDisplayableUsername } from ':core/username/getDisplayableUsername.js';
 import { store } from ':store/store.js';
 import { BaseLogo } from ':ui/assets/BaseLogo.js';
-import { useEffect, useMemo, useState } from 'preact/hooks';
+import { useEffect, useId, useMemo, useRef, useState } from 'preact/hooks';
 import css from './Dialog-css.js';
 
 const closeIcon = `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEzIDFMMSAxM20wLTEyTDEzIDEzIiBzdHJva2U9IiM5Q0EzQUYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+`;
@@ -198,6 +198,61 @@ export const DialogInstance: FunctionComponent<DialogInstanceProps> = ({
   const [hidden, setHidden] = useState(true);
   const [isLoadingUsername, setIsLoadingUsername] = useState(true);
   const [username, setUsername] = useState<string | null>(null);
+  const instanceRef = useRef<HTMLDivElement>(null);
+  const handleCloseRef = useRef(handleClose);
+  handleCloseRef.current = handleClose;
+  // Prefixed so the ids cannot collide with a host page's own Preact `useId` values.
+  const id = `-coinbase-wallet-sdk-dialog-${useId()}`;
+  const titleId = `${id}-title`;
+  const messageId = `${id}-message`;
+
+  // Modal focus: move focus into the dialog, keep Tab inside it, close on Escape, and hand
+  // focus back to whatever the page had focused once the dialog goes away.
+  useEffect(() => {
+    const instance = instanceRef.current;
+    if (!instance) return;
+
+    const previouslyFocused =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const initialFocus =
+      instance.querySelector<HTMLElement>('.-coinbase-wallet-sdk-dialog-instance-button') ??
+      instance.querySelector<HTMLElement>('button');
+    initialFocus?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
+
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        handleCloseRef.current();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+
+      // The header close button always renders, so there is at least one.
+      const buttons = instance.querySelectorAll('button');
+      const first = buttons[0];
+      const last = buttons[buttons.length - 1];
+
+      const active = document.activeElement;
+      if (!instance.contains(active)) {
+        event.preventDefault();
+        first.focus();
+      } else if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      if (previouslyFocused?.isConnected) previouslyFocused.focus();
+    };
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -232,6 +287,11 @@ export const DialogInstance: FunctionComponent<DialogInstanceProps> = ({
 
   return (
     <div
+      ref={instanceRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      aria-describedby={messageId}
       class={clsx(
         '-coinbase-wallet-sdk-dialog-instance',
         hidden && '-coinbase-wallet-sdk-dialog-instance-hidden'
@@ -246,18 +306,32 @@ export const DialogInstance: FunctionComponent<DialogInstanceProps> = ({
             </div>
           )}
         </div>
-        <div class="-coinbase-wallet-sdk-dialog-instance-header-close" onClick={handleClose}>
-          <img src={closeIcon} class="-coinbase-wallet-sdk-dialog-instance-header-close-icon" />
-        </div>
+        <button
+          type="button"
+          aria-label="Close"
+          class="-coinbase-wallet-sdk-dialog-instance-header-close"
+          onClick={handleClose}
+        >
+          <img
+            src={closeIcon}
+            alt=""
+            class="-coinbase-wallet-sdk-dialog-instance-header-close-icon"
+          />
+        </button>
       </div>
       <div class="-coinbase-wallet-sdk-dialog-instance-content">
-        <div class="-coinbase-wallet-sdk-dialog-instance-content-title">{title}</div>
-        <div class="-coinbase-wallet-sdk-dialog-instance-content-message">{message}</div>
+        <div id={titleId} class="-coinbase-wallet-sdk-dialog-instance-content-title">
+          {title}
+        </div>
+        <div id={messageId} class="-coinbase-wallet-sdk-dialog-instance-content-message">
+          {message}
+        </div>
       </div>
       {actionItems && actionItems.length > 0 && (
         <div class="-coinbase-wallet-sdk-dialog-instance-actions">
           {actionItems.map((action, i) => (
             <button
+              type="button"
               class={clsx(
                 '-coinbase-wallet-sdk-dialog-instance-button',
                 action.variant === 'primary' &&
