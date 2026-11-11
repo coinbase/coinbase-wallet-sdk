@@ -8,7 +8,12 @@ import { sessionFromSolanaAccounts } from ':core/namespaces/solana/session.js';
 import { getDisplayableUsername } from ':core/username/getDisplayableUsername.js';
 import type { Session } from ':core/session/types.js';
 
-import { DialogContainer, DialogInstance, DialogInstanceProps } from './Dialog.js';
+import {
+  DialogActionItem,
+  DialogContainer,
+  DialogInstance,
+  DialogInstanceProps,
+} from './Dialog.js';
 
 const { sessionRef } = vi.hoisted(() => ({
   sessionRef: { current: undefined as Session | undefined },
@@ -61,7 +66,8 @@ describe('DialogContainer', () => {
     expect(hiddenClass.length).toEqual(1);
 
     vi.runAllTimers();
-    expect(setTimeoutSpy).toHaveBeenCalledTimes(1);
+    // Focusing the dialog also queues jsdom's own selectionchange timer, so match the reveal.
+    expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 1);
     setTimeoutSpy.mockRestore();
   });
 
@@ -161,5 +167,97 @@ describe('DialogInstance session header', () => {
 
     expect(await screen.findByText('Coinbase Wallet')).toBeInTheDocument();
     expect(getDisplayableUsername).not.toHaveBeenCalled();
+  });
+});
+
+describe('DialogInstance accessibility', () => {
+  const actionItems: DialogActionItem[] = [
+    { text: 'Try again', onClick: () => {}, variant: 'primary' },
+    { text: 'Cancel', onClick: () => {}, variant: 'secondary' },
+  ];
+
+  test('exposes a modal dialog named by its title and described by its message', () => {
+    renderDialogContainer();
+
+    const dialog = screen.getByRole('dialog', { name: 'Test Title' });
+    expect(dialog).toHaveAttribute('aria-modal', 'true');
+    expect(dialog).toHaveAccessibleDescription('Test message');
+  });
+
+  test('renders the close control as a labelled button', () => {
+    const handleClose = vi.fn();
+    renderDialogContainer({ handleClose });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+    expect(handleClose).toHaveBeenCalledTimes(1);
+  });
+
+  test('closes on Escape', () => {
+    const handleClose = vi.fn();
+    renderDialogContainer({ handleClose });
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    expect(handleClose).toHaveBeenCalledTimes(1);
+  });
+
+  test('ignores an Escape the page has already handled', () => {
+    const handleClose = vi.fn();
+    const preventEscape = (event: KeyboardEvent) => event.preventDefault();
+    document.addEventListener('keydown', preventEscape);
+    renderDialogContainer({ handleClose });
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    expect(handleClose).not.toHaveBeenCalled();
+    document.removeEventListener('keydown', preventEscape);
+  });
+
+  test('focuses the first action when the dialog opens', () => {
+    renderDialogContainer({ actionItems });
+
+    expect(screen.getByRole('button', { name: 'Try again' })).toHaveFocus();
+  });
+
+  test('focuses the close button when the dialog has no actions', () => {
+    renderDialogContainer();
+
+    expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
+  });
+
+  test('keeps Tab focus inside the dialog', () => {
+    renderDialogContainer({ actionItems });
+    const close = screen.getByRole('button', { name: 'Close' });
+    const cancel = screen.getByRole('button', { name: 'Cancel' });
+
+    cancel.focus();
+    fireEvent.keyDown(document, { key: 'Tab' });
+    expect(close).toHaveFocus();
+
+    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true });
+    expect(cancel).toHaveFocus();
+  });
+
+  test('moves Tab focus back into the dialog when it has left', () => {
+    renderDialogContainer({ actionItems });
+    (document.activeElement as HTMLElement).blur();
+
+    fireEvent.keyDown(document, { key: 'Tab' });
+
+    expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
+  });
+
+  test('restores focus to the previously focused element when closed', () => {
+    const trigger = document.createElement('button');
+    document.body.appendChild(trigger);
+    trigger.focus();
+
+    const { unmount } = renderDialogContainer({ actionItems });
+    expect(trigger).not.toHaveFocus();
+
+    unmount();
+    expect(trigger).toHaveFocus();
+    trigger.remove();
   });
 });
